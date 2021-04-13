@@ -1,0 +1,33 @@
+dist: trusty
+language: php
+
+php:
+  - 7.4
+
+services:
+  - docker
+
+# Make sure we have a recent version of docker.
+addons:
+  apt:
+    packages:
+      - docker-ce
+
+before_script:
+  # Ensure the PHP environment is ready.
+  - phpenv rehash
+
+script:
+  # Get docker information.
+  - docker version
+  - docker-compose version
+
+  # PHP linting
+  - test ! -d ./html/modules/custom || find -L ./html/modules/custom -iregex '.*\.\(php\|module\|inc\|install\)$' -print0 | xargs -0 -n 1 -P 4 php -l
+
+after_success:
+  - echo "The tests completed without errors."
+
+after_failure:
+  - echo "The tests failed. Please check the output above for problems."
+  - ../vendor/bin/drush watchdog:show --extended
