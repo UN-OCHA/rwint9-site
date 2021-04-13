@@ -15,10 +15,10 @@ RUN rm -rf ./vendor && \
     # Update composer to avoid issues with missing drupal files.
     # @see https://github.com/drupal-composer/drupal-project/issues/282
     composer selfupdate && \
-    COMPOSER_MEMORY_LIMIT=-1 COMPOSER_PROCESS_TIMEOUT=600 composer install --no-interaction --prefer-dist --no-dev -vvv
+    COMPOSER_MEMORY_LIMIT=-1 COMPOSER_PROCESS_TIMEOUT=600 composer install --no-interaction --no-dev --prefer-dist
 
 # Clean up previous npm installation and run new one. Those commands correspond
-# to running `composer gulp` but without hitting the PHP timeout.
+# to running `composer gulp` but without hitting the PHP timeout from composer.
 RUN cd html/themes/custom/common_design_subtheme && \
     rm -rf ./node_modules && \
     npm install && \
@@ -60,4 +60,6 @@ COPY --from=builder /srv/www/vendor /srv/www/vendor/
 COPY --from=builder /srv/www/composer.json /srv/www/composer.json
 COPY --from=builder /srv/www/composer.patches.json /srv/www/composer.patches.json
 COPY --from=builder /srv/www/composer.lock /srv/www/composer.lock
+COPY --from=builder /srv/www/patches /srv/www/patches
+COPY --from=builder /srv/www/scripts /srv/www/scripts
 COPY --from=builder /srv/www/docker/fastcgi_drupal.conf /etc/nginx/apps/drupal/fastcgi_drupal.conf
