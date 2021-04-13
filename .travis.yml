@@ -47,10 +47,10 @@ script:
   - docker exec -it -w /srv/www rwint9-test-site composer install
 
   # Ensure the drupal coding standards config is installed.
-  - docker exec -it -w /srv/www rwint9-test-site ./vendor/bin/phpcs --config-set installed_paths vendor/drupal/coder/coder_sniffer
+  - docker exec -it -u appuser -w /srv/www rwint9-test-site ./vendor/bin/phpcs --config-set installed_paths vendor/drupal/coder/coder_sniffer
 
   # Check coding standards.
-  - docker exec -it -u appuser -w /srv/www rwint9-test-site ./vendor/bin/phpcs -p --report=full --standard=phpcs.xml ./html/modules/custom ./html/themes/custom
+  - docker exec -it -u appuser -w /srv/www rwint9-test-site ./vendor/bin/phpcs -p --report=full ./html/modules/custom ./html/themes/custom
 
 after_success:
   - echo "The tests completed without errors."
