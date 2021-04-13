@@ -43,7 +43,6 @@ services:
       - "rwint9-test-site-private:/srv/www/html/sites/default/private:rw"
       # Mount the folders needed for the tests.
       - "../tests:/srv/www/tests:ro"
-      - "../phpcs.xml:/srv/www/phpcs.xml:ro"
     environment:
       - TERM=xterm
       - ENVIRONMENT=dev
