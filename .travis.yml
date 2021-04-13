@@ -43,14 +43,17 @@ script:
   # Ensure the file directories are writable.
   - docker exec -it rwint9-test-site chmod -R 777 /srv/www/html/sites/default/files /srv/www/html/sites/default/private
 
+  # DEBUG - check why phpcs doesn't find the phpcs.xml
+  - docker exec -it -u appuser -w /srv/www rwint9-test-site ls -l /srv/www
+
   # Install the dev dependencies.
-  - docker exec -it -w /srv/www rwint9-test-site composer install
+  #- docker exec -it -w /srv/www rwint9-test-site composer install
 
   # Ensure the drupal coding standards config is installed.
-  - docker exec -it -u appuser -w /srv/www rwint9-test-site ./vendor/bin/phpcs --config-set installed_paths vendor/drupal/coder/coder_sniffer
+  #- docker exec -it -u appuser -w /srv/www rwint9-test-site ./vendor/bin/phpcs --config-set installed_paths vendor/drupal/coder/coder_sniffer
 
   # Check coding standards.
-  - docker exec -it -u appuser -w /srv/www rwint9-test-site ./vendor/bin/phpcs -p --report=full ./html/modules/custom ./html/themes/custom
+  #- docker exec -it -u appuser -w /srv/www rwint9-test-site ./vendor/bin/phpcs -p --report=full ./html/modules/custom ./html/themes/custom
 
 after_success:
   - echo "The tests completed without errors."
