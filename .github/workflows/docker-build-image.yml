@@ -34,7 +34,7 @@ jobs:
       run: |
         export DOCKER_TAG="${GITHUB_REF#refs/*/}"
         export DOCKER_TAG=${DOCKER_TAG//[^[:alnum:].-]/-}
-        aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/unocha || exit 1
+        aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/unocha || exit 1
         docker build \
             --build-arg BRANCH_ENVIRONMENT=${BRANCH_ENVIRONMENT} \
             --build-arg VCS_REF=`git rev-parse --short HEAD` \
@@ -47,29 +47,6 @@ jobs:
          . --file docker/Dockerfile --tag public.ecr.aws/unocha/rwint9-site:${DOCKER_TAG} || exit 1
         docker push public.ecr.aws/unocha/rwint9-site:${DOCKER_TAG} || exit 1
       continue-on-error: true
-
-    - uses: actions/github-script@0.9.0
-      env:
-        BUILD: "docker build\n${{ steps.build.outputs.stdout }}"
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        script: |
-          const output = `#### Docker Build \`${{ steps.build.outcome }}\`
-          
-          <details><summary>Show Build</summary>
-          
-          \`\`\`${process.env.BUILD}\`\`\`
-          
-          </details>
-          
-          *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Workflow: \`${{ github.workflow }}\`*`;
-          
-          github.issues.createComment({
-            issue_number: 0,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: output
-          })
 
     - name: Flowdock Failure
       id: failure
