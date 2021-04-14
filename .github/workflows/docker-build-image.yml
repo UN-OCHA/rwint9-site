@@ -14,17 +14,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
+      id: checkout
       uses: actions/checkout@v1
+
     - name: Determine environment type
+      id: env
       uses: docker://unocha/actions:determine-environment-main
+
+    - name: Configure AWS Credentials
+      id: aws
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
     - name: Build docker image
-      env:
-        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      id: build
       run: |
         export DOCKER_TAG="${GITHUB_REF#refs/*/}"
         export DOCKER_TAG=${DOCKER_TAG//[^[:alnum:].-]/-}
-        echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+        aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/unocha || exit 1
         docker build \
             --build-arg BRANCH_ENVIRONMENT=${BRANCH_ENVIRONMENT} \
             --build-arg VCS_REF=`git rev-parse --short HEAD` \
@@ -34,12 +44,26 @@ jobs:
             --build-arg GITHUB_REPOSITORY=${GITHUB_REPOSITORY} \
             --build-arg GITHUB_SHA=${GITHUB_SHA} \
             --build-arg GITHUB_REF=${GITHUB_REF} \
-         . --file docker/Dockerfile --tag unocha/rwint9-site:${DOCKER_TAG}
-        docker push unocha/rwint9-site:${DOCKER_TAG}
-    - name: Flowdock Notify
+         . --file docker/Dockerfile --tag public.ecr.aws/unocha/rwint9-site:${DOCKER_TAG} || exit 1
+        docker push public.ecr.aws/unocha/rwint9-site:${DOCKER_TAG} || exit 1
+      continue-on-error: true
+
+    - name: Flowdock Failure
+      id: success
+      if: steps.build.outputs.exitcode == 1
+      uses: docker://unocha/actions:flowdock-notify-main
+      env:
+        FLOWDOCK_TOKEN: ${{ secrets.FLOWDOCK_TOKEN }}
+        FLOWDOCK_ICON: 'warning'
+        FLOWDOCK_MESSAGE: 'Failed to build a new `unocha/rwint9-site` image from ${{ github.ref }} , please go check [GitHub](https://github.com/UN-OCHA/rwint9-site/actions/workflows/docker-build-image.yml).'
+        FLOWDOCK_TAGS: 'build,docker,${{ github.actor }}'
+
+    - name: Flowdock Success
+      id: success
+      if: steps.build.outputs.exitcode == 0
       uses: docker://unocha/actions:flowdock-notify-main
       env:
         FLOWDOCK_TOKEN: ${{ secrets.FLOWDOCK_TOKEN }}
         FLOWDOCK_ICON: 'package'
-        FLOWDOCK_MESSAGE: 'Built a new `unocha/rwint9-site` image from ${{ github.ref }} and pushed to [DockerHub](https://hub.docker.com/r/unocha/rwint9-site/tags).'
+        FLOWDOCK_MESSAGE: 'Built a new `unocha/rwint9-site` image from ${{ github.ref }} and pushed to [Amazon ECR](https://gallery.ecr.aws/unocha/rwint9-site).'
         FLOWDOCK_TAGS: 'build,docker,${{ github.actor }}'
