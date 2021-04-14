@@ -48,6 +48,7 @@ jobs:
         docker push public.ecr.aws/unocha/rwint9-site:${DOCKER_TAG} || exit 1
       continue-on-error: true
 
+<<<<<<< HEAD
     - uses: actions/github-script@0.9.0
       env:
         BUILD: "docker build\n${{ steps.build.outputs.stdout }}"
