@@ -1,0 +1,24 @@
+//——————————————————————————————————————————————————————————————————————————————
+// Common Design: Soft Footer
+//
+// Optional space for a CTA, newsletter sign-up, etc
+//——————————————————————————————————————————————————————————————————————————————
+
+.cd-soft-footer {
+  background: rgba($implementation-primary, 0.9);
+
+  a {
+    &:focus {
+      outline: 3px solid $implementation-primary;
+    }
+  }
+}
+
+.cd-soft-footer__button {
+  background: $implementation-primary;
+
+  &:hover,
+  &:focus {
+    background: darken($implementation-primary, 5%);
+  }
+}

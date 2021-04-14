@@ -1,0 +1,25 @@
+uuid: e2fa41d3-d254-40a5-baac-2ffeeacc160b
+langcode: en
+status: true
+dependencies:
+  config:
+    - system.menu.main
+  module:
+    - system
+  theme:
+    - common_design_subtheme
+id: mainnavigation
+theme: common_design_subtheme
+region: header_navigation
+weight: 0
+provider: null
+plugin: 'system_menu_block:main'
+settings:
+  id: 'system_menu_block:main'
+  label: 'Main navigation'
+  provider: system
+  label_display: '0'
+  level: 1
+  depth: 0
+  expand_all_items: false
+visibility: {  }

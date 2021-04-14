@@ -1,0 +1,58 @@
+version: "2.2"
+
+networks:
+  default:
+
+volumes:
+  rwint9-test-site-public:
+  rwint9-test-site-private:
+
+services:
+  redis:
+    restart: always
+    image: unocha/alpine-redis:5
+    hostname: rwint9-test-redis
+    container_name: rwint9-test-redis
+    ports:
+      - "6379"
+    networks:
+      - default
+
+  mysql:
+    image: unocha/alpine-mysql:10.4.13-r0-202006-01
+    hostname: rwint9-test-mysql
+    container_name: rwint9-test-mysql
+    environment:
+      - MYSQL_DB=reliefweb
+      - MYSQL_USER=reliefweb
+      - MYSQL_PASS=reliefweb
+    networks:
+      - default
+
+  drupal:
+    image: unocha/rwint9-site:local
+    hostname: rwint9-test-site
+    container_name: rwint9-test-site
+    depends_on:
+      - redis
+      - mysql
+    volumes:
+      - "./settings:/srv/www/shared/settings:ro"
+      # Mount volumes for the private and public files.
+      - "rwint9-test-site-public:/srv/www/html/sites/default/files:rw"
+      - "rwint9-test-site-private:/srv/www/html/sites/default/private:rw"
+      # Mount the folders needed for the tests.
+      - "../tests:/srv/www/tests:ro"
+    environment:
+      - TERM=xterm
+      - ENVIRONMENT=dev
+      - NGINX_SERVERNAME=rwint9-test-site,localhost,127.0.0.1
+      - NGINX_OVERRIDE_PROTOCOL=HTTP,rwint9-test-site,localhost,127.0.0.1
+      - DRUSH_OPTIONS_URI=http://rwint9-test-site
+      - DRUPAL_DB_DATABASE=reliefweb
+      - DRUPAL_DB_USERNAME=reliefweb
+      - DRUPAL_DB_PASSWORD=reliefweb
+      - DRUPAL_DB_HOST=mysql
+      - DRUPAL_DB_DRIVER=mysql
+    networks:
+      - default
