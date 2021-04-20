@@ -2,7 +2,7 @@
 // Common Design: Header
 //——————————————————————————————————————————————————————————————————————————————
 .cd-header button:focus {
-  outline: 3px solid $implementation-highlight;
+  outline: 3px solid $cd-blue--bright;
 }
 
 .cd-global-header {
@@ -11,7 +11,7 @@
 }
 
 .cd-site-header__inner {
-  @supports(display: grid) {
+  @supports (display: grid) {
     grid-template-columns: 52px 1fr;
 
     @include tablet {

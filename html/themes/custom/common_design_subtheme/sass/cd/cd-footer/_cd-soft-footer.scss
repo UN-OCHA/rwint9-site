@@ -5,20 +5,11 @@
 //——————————————————————————————————————————————————————————————————————————————
 
 .cd-soft-footer {
-  background: rgba($implementation-primary, 0.9);
+  background: rgba($cd-rgb-ocha-blue, 0.9);
 
   a {
     &:focus {
-      outline: 3px solid $implementation-primary;
+      outline: 3px solid $cd-blue--bright;
     }
-  }
-}
-
-.cd-soft-footer__button {
-  background: $implementation-primary;
-
-  &:hover,
-  &:focus {
-    background: darken($implementation-primary, 5%);
   }
 }

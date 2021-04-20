@@ -18,11 +18,11 @@ RUN rm -rf ./vendor && \
     COMPOSER_MEMORY_LIMIT=-1 COMPOSER_PROCESS_TIMEOUT=600 composer install --no-interaction --no-dev --prefer-dist
 
 # Clean up previous npm installation and run new one. Those commands correspond
-# to running `composer gulp` but without hitting the PHP timeout from composer.
+# to running `composer sass` but without hitting the PHP timeout from composer.
 RUN cd html/themes/custom/common_design_subtheme && \
     rm -rf ./node_modules && \
     npm install && \
-    ./node_modules/.bin/gulp build && \
+    ./node_modules/.bin/sass sass:build && \
     rm -rf ./node_modules
 
 # Copy settings to default site location.
