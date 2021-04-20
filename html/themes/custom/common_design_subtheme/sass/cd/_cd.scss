@@ -3,22 +3,22 @@
 //——————————————————————————————————————————————————————————————————————————————
 
 // Sass utilities
-@import 'cd-variables';
-@import 'cd-mixins';
+@import "cd-variables";
+@import "cd-mixins";
 
 // Layout
 
 // Header
-@import 'cd-header/cd-dropdowns';
-@import 'cd-header/cd-header';
-@import 'cd-header/cd-language-switcher';
-@import 'cd-header/cd-logo';
-@import 'cd-header/cd-menu--main';
-@import 'cd-header/cd-nav';
-@import 'cd-header/cd-ocha';
-@import 'cd-header/cd-search';
-@import 'cd-header/cd-user-menu';
+@import "cd-header/cd-dropdowns";
+@import "cd-header/cd-header";
+@import "cd-header/cd-language-switcher";
+@import "cd-header/cd-logo";
+@import "cd-header/cd-menu--main";
+@import "cd-header/cd-nav";
+@import "cd-header/cd-ocha";
+@import "cd-header/cd-search";
+@import "cd-header/cd-user-menu";
 
 // Footer
-@import 'cd-footer/cd-footer';
-@import 'cd-footer/cd-soft-footer';
+@import "cd-footer/cd-footer";
+@import "cd-footer/cd-soft-footer";

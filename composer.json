@@ -39,7 +39,7 @@
         "drupal/social_auth_hid": "2.x-dev",
         "drush/drush": "^10.4",
         "symfony/flex": "^1.12",
-        "unocha/common_design": "^3.0.6",
+        "unocha/common_design": "^3.1.0",
         "webflo/drupal-finder": "^1.2.2"
     },
     "require-dev": {
@@ -89,13 +89,13 @@
             "@git-hooks"
         ],
         "git-hooks": "test -d .git && git config core.hooksPath git-hooks || exit 0",
-        "gulp-prepare": "cd html/themes/custom/common_design_subtheme && npm install",
-        "gulp-build": "cd html/themes/custom/common_design_subtheme && ./node_modules/.bin/gulp build",
-        "gulp-cleanup": "cd html/themes/custom/common_design_subtheme && rm -rf ./node_modules",
-        "gulp": [
-            "@gulp-prepare",
-            "@gulp-build",
-            "@gulp-cleanup"
+        "sass-prepare": "cd html/themes/custom/common_design_subtheme && npm install",
+        "sass-build": "cd html/themes/custom/common_design_subtheme && ./node_modules/.bin/sass sass:build",
+        "sass-cleanup": "cd html/themes/custom/common_design_subtheme && rm -rf ./node_modules",
+        "sass": [
+            "@sass-prepare",
+            "@sass-build",
+            "@sass-cleanup"
         ]
     },
     "extra": {
