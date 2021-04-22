@@ -1,17 +1,14 @@
-dist: trusty
+dist: focal
 language: php
 
 php:
-  - 7.4
+  - 8.0
 
-services:
-  - docker
-
-# Make sure we have a recent version of docker.
+# Make sure we have a recent version of docker-compose.
 addons:
   apt:
     packages:
-      - docker-ce
+      - docker-compose
 
 before_script:
   # Ensure the PHP environment is ready.
