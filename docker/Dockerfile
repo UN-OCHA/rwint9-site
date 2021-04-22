@@ -1,5 +1,5 @@
 # Build the code.
-FROM unocha/unified-builder:7.4-develop as builder
+FROM unocha/unified-builder:8.0-experimental as builder
 
 ARG  BRANCH_ENVIRONMENT
 
@@ -31,7 +31,7 @@ RUN cp -a docker/settings.php docker/services.yml docker/redis.services.yml html
 ################################################################################
 
 # Generate the image.
-FROM unocha/php7-k8s:7.4-develop
+FROM unocha/php8-k8s:8.0-experimental
 
 ARG VCS_REF
 ARG VCS_URL
