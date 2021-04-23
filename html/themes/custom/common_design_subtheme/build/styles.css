@@ -15,7 +15,7 @@
   /* OCHA blue is one colour ramp darker than brand blue */
   --cd-ocha-blue: var(--cd-reliefweb-dark-blue);
   /* Dark blue is two colour ramps darker than brand blue */
-  --cd-blue--dark: #144372;
+  --cd-blue--dark: #04415a;
   /* Bright blue is one colour ramp lighter than brand blue */
   --cd-blue--bright: var(--cd-reliefweb-blue);
   --cd-blue--light: #d4e5f7;
@@ -132,13 +132,13 @@
 }
 @media (max-width: 767px) {
   .cd-site-logo {
-    background: url("../../../../../contrib/common_design/img/logos/ocha-logo-blue@53x37.png") center no-repeat;
-    background: linear-gradient(transparent, transparent), url("../../../../../contrib/common_design/img/logos/ocha-logo-blue.svg") center no-repeat;
+    background: url("../img/logos/rw-logo-mobile.svg") center no-repeat;
+    background: linear-gradient(transparent, transparent), url("../img/logos/rw-logo-mobile.svg") center no-repeat;
   }
 }
 @media (min-width: 768px) {
   .cd-site-logo {
-    width: 186px;
+    width: 140px;
   }
 }
 
