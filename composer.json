@@ -39,7 +39,7 @@
         "drupal/social_auth_hid": "2.x-dev",
         "drush/drush": "^10.4",
         "symfony/flex": "^1.12",
-        "unocha/common_design": "^3.1.0",
+        "unocha/common_design": "^4.0.0",
         "webflo/drupal-finder": "^1.2.2"
     },
     "require-dev": {
