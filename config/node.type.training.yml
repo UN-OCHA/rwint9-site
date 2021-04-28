@@ -1,0 +1,17 @@
+uuid: 2d63a63d-4578-4459-a25c-69666bd32fe0
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+name: Training
+type: training
+description: 'Open training opportunities in the humanitarian field.'
+help: ''
+new_revision: true
+preview_mode: 1
+display_submitted: false

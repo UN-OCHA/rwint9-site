@@ -1,0 +1,11 @@
+uuid: 57da1060-ff7c-4ab7-ae59-8cbf68794685
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.vulnerable_group
+id: taxonomy_term.vulnerable_group
+target_entity_type_id: taxonomy_term
+target_bundle: vulnerable_group
+default_langcode: site_default
+language_alterable: false

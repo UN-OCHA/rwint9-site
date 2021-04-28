@@ -1,0 +1,8 @@
+uuid: c5389dd8-49ea-44d5-a375-733a7621703a
+langcode: en
+status: true
+dependencies: {  }
+name: 'Training format'
+vid: training_format
+description: ''
+weight: 0

@@ -1,0 +1,8 @@
+uuid: ccec743d-d377-45c7-9fdd-fc8a47d0a288
+langcode: en
+status: true
+dependencies: {  }
+name: 'Training type'
+vid: training_type
+description: ''
+weight: 0

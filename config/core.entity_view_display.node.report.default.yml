@@ -1,0 +1,20 @@
+uuid: 21fa0978-1640-4ca5-82d7-6bf99f5c94e7
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.report
+  module:
+    - user
+id: node.report.default
+targetEntityType: node
+bundle: report
+mode: default
+content:
+  links:
+    weight: 100
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+hidden:
+  langcode: true

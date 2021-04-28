@@ -1,0 +1,17 @@
+uuid: c75023ab-0dfb-422f-9de3-e7cbb89327aa
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+name: Job
+type: job
+description: 'Open job opportunities in the humanitarian field.'
+help: ''
+new_revision: true
+preview_mode: 1
+display_submitted: false

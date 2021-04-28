@@ -1,0 +1,8 @@
+uuid: 2aff787d-45e0-4b8b-9310-3cfe506c7e7d
+langcode: en
+status: true
+dependencies: {  }
+name: 'Career category'
+vid: career_category
+description: ''
+weight: 0
