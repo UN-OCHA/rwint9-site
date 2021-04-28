@@ -26,6 +26,9 @@
     "composer/composer": {
         "version": "2.0.12"
     },
+    "composer/metadata-minifier": {
+        "version": "1.0.0"
+    },
     "composer/semver": {
         "version": "3.2.2"
     },
@@ -175,6 +178,12 @@
     },
     "drupal/metatag": {
         "version": "1.16.0"
+    },
+    "drupal/migrate_plus": {
+        "version": "5.1.0"
+    },
+    "drupal/migrate_tools": {
+        "version": "5.x-dev"
     },
     "drupal/paragraphs": {
         "version": "1.12.0"
