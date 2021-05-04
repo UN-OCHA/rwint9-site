@@ -1,0 +1,13 @@
+uuid: 3c0018ec-48bc-489a-b497-94f8ca04891c
+langcode: en
+status: true
+dependencies: {  }
+id: image_announcement
+label: 'Image - Announcement'
+description: 'Images for the announcement banners on the homepage.'
+source: image
+queue_thumbnail_downloads: false
+new_revision: true
+source_configuration:
+  source_field: field_media_image
+field_map: {  }

@@ -1,0 +1,13 @@
+uuid: e1383454-0781-4e6b-9b7b-129c4125b332
+langcode: en
+status: true
+dependencies: {  }
+id: image_report
+label: 'Image - Report'
+description: 'Images for the report articles.'
+source: image
+queue_thumbnail_downloads: false
+new_revision: true
+source_configuration:
+  source_field: field_media_image
+field_map: {  }
