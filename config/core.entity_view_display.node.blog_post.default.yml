@@ -3,18 +3,64 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.node.blog_post.body
+    - field.field.node.blog_post.field_attached_images
+    - field.field.node.blog_post.field_author
+    - field.field.node.blog_post.field_image
+    - field.field.node.blog_post.field_publication_date
+    - field.field.node.blog_post.field_tags
     - node.type.blog_post
   module:
+    - datetime
+    - text
     - user
 id: node.blog_post.default
 targetEntityType: node
 bundle: blog_post
 mode: default
 content:
-  links:
-    weight: 100
+  body:
+    weight: 4
+    label: hidden
     settings: {  }
     third_party_settings: {  }
+    type: text_default
+    region: content
+  field_author:
+    weight: 0
+    label: inline
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+  field_image:
+    weight: 3
+    label: hidden
+    settings:
+      link: true
+      view_mode: default
+    third_party_settings: {  }
+    type: entity_reference_entity_view
+    region: content
+  field_publication_date:
+    weight: 2
+    label: inline
+    settings:
+      format_type: medium
+      timezone_override: ''
+    third_party_settings: {  }
+    type: datetime_default
+    region: content
+  field_tags:
+    weight: 1
+    label: inline
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
     region: content
 hidden:
+  field_attached_images: true
   langcode: true
+  links: true

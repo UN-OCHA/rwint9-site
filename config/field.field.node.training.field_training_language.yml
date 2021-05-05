@@ -1,0 +1,29 @@
+uuid: 722d8198-d944-4ac5-bf9a-9554758ba73b
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_training_language
+    - node.type.training
+    - taxonomy.vocabulary.language
+id: node.training.field_training_language
+field_name: field_training_language
+entity_type: node
+bundle: training
+label: 'Course/Event language'
+description: 'Select the language(s) in which the training will be held.'
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      language: language
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

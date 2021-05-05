@@ -3,18 +3,159 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.node.training.body
+    - field.field.node.training.field_career_categories
+    - field.field.node.training.field_city
+    - field.field.node.training.field_cost
+    - field.field.node.training.field_country
+    - field.field.node.training.field_fee_information
+    - field.field.node.training.field_how_to_register
+    - field.field.node.training.field_language
+    - field.field.node.training.field_link
+    - field.field.node.training.field_registration_deadline
+    - field.field.node.training.field_source
+    - field.field.node.training.field_theme
+    - field.field.node.training.field_training_date
+    - field.field.node.training.field_training_format
+    - field.field.node.training.field_training_language
+    - field.field.node.training.field_training_type
     - node.type.training
   module:
+    - datetime
+    - datetime_range
+    - link
+    - options
+    - text
     - user
 id: node.training.default
 targetEntityType: node
 bundle: training
 mode: default
 content:
-  links:
-    weight: 100
+  body:
+    weight: 5
+    label: hidden
     settings: {  }
     third_party_settings: {  }
+    type: text_default
+    region: content
+  field_career_categories:
+    weight: 10
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
+    region: content
+  field_city:
+    weight: 13
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+  field_cost:
+    weight: 14
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: list_default
+    region: content
+  field_country:
+    weight: 0
+    label: visually_hidden
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
+    region: content
+  field_fee_information:
+    weight: 7
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: basic_string
+    region: content
+  field_how_to_register:
+    weight: 6
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: text_default
+    region: content
+  field_link:
+    weight: 4
+    label: inline
+    settings:
+      trim_length: null
+      url_only: true
+      target: _blank
+      url_plain: false
+      rel: '0'
+    third_party_settings: {  }
+    type: link
+    region: content
+  field_registration_deadline:
+    weight: 3
+    label: inline
+    settings:
+      timezone_override: UTC
+      format_type: date_short
+    third_party_settings: {  }
+    type: datetime_default
+    region: content
+  field_source:
+    weight: 1
+    label: inline
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
+    region: content
+  field_theme:
+    weight: 11
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
+    region: content
+  field_training_date:
+    weight: 2
+    label: inline
+    settings:
+      timezone_override: UTC
+      format_type: date_short
+      separator: '-'
+    third_party_settings: {  }
+    type: daterange_default
+    region: content
+  field_training_format:
+    weight: 8
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
+    region: content
+  field_training_language:
+    weight: 12
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
+    region: content
+  field_training_type:
+    weight: 9
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
     region: content
 hidden:
+  field_language: true
   langcode: true
+  links: true

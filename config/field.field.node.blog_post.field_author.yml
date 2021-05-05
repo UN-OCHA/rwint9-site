@@ -1,0 +1,19 @@
+uuid: 9d74ee77-c7a0-4b8b-a43c-3ade7db6dc4f
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_author
+    - node.type.blog_post
+id: node.blog_post.field_author
+field_name: field_author
+entity_type: node
+bundle: blog_post
+label: Author
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

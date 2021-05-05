@@ -3,18 +3,157 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.node.report.body
+    - field.field.node.report.field_bury
+    - field.field.node.report.field_content_format
+    - field.field.node.report.field_country
+    - field.field.node.report.field_disaster
+    - field.field.node.report.field_disaster_type
+    - field.field.node.report.field_embargo_date
+    - field.field.node.report.field_feature
+    - field.field.node.report.field_file
+    - field.field.node.report.field_headline
+    - field.field.node.report.field_headline_image
+    - field.field.node.report.field_headline_summary
+    - field.field.node.report.field_headline_title
+    - field.field.node.report.field_image
+    - field.field.node.report.field_language
+    - field.field.node.report.field_notify
+    - field.field.node.report.field_ocha_product
+    - field.field.node.report.field_origin
+    - field.field.node.report.field_origin_notes
+    - field.field.node.report.field_original_publication_date
+    - field.field.node.report.field_primary_country
+    - field.field.node.report.field_source
+    - field.field.node.report.field_theme
+    - field.field.node.report.field_vulnerable_groups
     - node.type.report
   module:
+    - datetime
+    - text
     - user
 id: node.report.default
 targetEntityType: node
 bundle: report
 mode: default
 content:
-  links:
-    weight: 100
+  body:
+    weight: 7
+    label: hidden
     settings: {  }
     third_party_settings: {  }
+    type: text_default
+    region: content
+  field_content_format:
+    weight: 2
+    label: visually_hidden
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
+    region: content
+  field_country:
+    weight: 1
+    label: visually_hidden
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
+    region: content
+  field_disaster:
+    weight: 10
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
+    region: content
+  field_disaster_type:
+    weight: 11
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
+    region: content
+  field_file:
+    type: entity_reference_entity_view
+    weight: 8
+    label: visually_hidden
+    settings:
+      view_mode: default
+      link: false
+    third_party_settings: {  }
+    region: content
+  field_image:
+    weight: 6
+    label: hidden
+    settings:
+      link: true
+      view_mode: default
+    third_party_settings: {  }
+    type: entity_reference_entity_view
+    region: content
+  field_language:
+    weight: 12
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
+    region: content
+  field_origin_notes:
+    weight: 5
+    label: inline
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+  field_original_publication_date:
+    weight: 4
+    label: inline
+    settings:
+      timezone_override: UTC
+      format_type: date_short
+    third_party_settings: {  }
+    type: datetime_default
+    region: content
+  field_primary_country:
+    weight: 0
+    label: visually_hidden
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
+    region: content
+  field_source:
+    weight: 3
+    label: inline
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
+    region: content
+  field_theme:
+    weight: 9
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
     region: content
 hidden:
+  field_bury: true
+  field_embargo_date: true
+  field_feature: true
+  field_headline: true
+  field_headline_image: true
+  field_headline_summary: true
+  field_headline_title: true
+  field_notify: true
+  field_ocha_product: true
+  field_origin: true
+  field_vulnerable_groups: true
   langcode: true
+  links: true

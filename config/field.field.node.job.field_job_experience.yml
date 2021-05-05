@@ -1,0 +1,29 @@
+uuid: ff3e125a-4e6e-48d4-9fe5-e91d11f0786e
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_job_experience
+    - node.type.job
+    - taxonomy.vocabulary.job_experience
+id: node.job.field_job_experience
+field_name: field_job_experience
+entity_type: node
+bundle: job
+label: 'Job years of experience'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      job_experience: job_experience
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

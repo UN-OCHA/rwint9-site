@@ -4,18 +4,114 @@ status: true
 dependencies:
   config:
     - core.entity_view_mode.node.teaser
+    - field.field.node.report.body
+    - field.field.node.report.field_bury
+    - field.field.node.report.field_content_format
+    - field.field.node.report.field_country
+    - field.field.node.report.field_disaster
+    - field.field.node.report.field_disaster_type
+    - field.field.node.report.field_embargo_date
+    - field.field.node.report.field_feature
+    - field.field.node.report.field_file
+    - field.field.node.report.field_headline
+    - field.field.node.report.field_headline_image
+    - field.field.node.report.field_headline_summary
+    - field.field.node.report.field_headline_title
+    - field.field.node.report.field_image
+    - field.field.node.report.field_language
+    - field.field.node.report.field_notify
+    - field.field.node.report.field_ocha_product
+    - field.field.node.report.field_origin
+    - field.field.node.report.field_origin_notes
+    - field.field.node.report.field_original_publication_date
+    - field.field.node.report.field_primary_country
+    - field.field.node.report.field_source
+    - field.field.node.report.field_theme
+    - field.field.node.report.field_vulnerable_groups
     - node.type.report
   module:
+    - datetime
+    - text
     - user
 id: node.report.teaser
 targetEntityType: node
 bundle: report
 mode: teaser
 content:
-  links:
-    weight: 100
-    settings: {  }
-    third_party_settings: {  }
+  body:
+    type: text_summary_or_trimmed
+    weight: 3
     region: content
+    label: hidden
+    settings:
+      trim_length: 300
+    third_party_settings: {  }
+  field_content_format:
+    type: entity_reference_label
+    weight: 4
+    region: content
+    label: visually_hidden
+    settings:
+      link: true
+    third_party_settings: {  }
+  field_country:
+    type: entity_reference_label
+    weight: 1
+    region: content
+    label: visually_hidden
+    settings:
+      link: true
+    third_party_settings: {  }
+  field_file:
+    type: entity_reference_label
+    weight: 2
+    region: content
+    label: hidden
+    settings:
+      link: true
+    third_party_settings: {  }
+  field_original_publication_date:
+    type: datetime_default
+    weight: 6
+    region: content
+    label: inline
+    settings:
+      timezone_override: UTC
+      format_type: date_short
+    third_party_settings: {  }
+  field_primary_country:
+    type: entity_reference_label
+    weight: 0
+    region: content
+    label: visually_hidden
+    settings:
+      link: true
+    third_party_settings: {  }
+  field_source:
+    type: entity_reference_label
+    weight: 5
+    region: content
+    label: inline
+    settings:
+      link: true
+    third_party_settings: {  }
 hidden:
+  field_bury: true
+  field_disaster: true
+  field_disaster_type: true
+  field_embargo_date: true
+  field_feature: true
+  field_headline: true
+  field_headline_image: true
+  field_headline_summary: true
+  field_headline_title: true
+  field_image: true
+  field_language: true
+  field_notify: true
+  field_ocha_product: true
+  field_origin: true
+  field_origin_notes: true
+  field_theme: true
+  field_vulnerable_groups: true
   langcode: true
+  links: true
