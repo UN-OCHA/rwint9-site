@@ -27,6 +27,7 @@
         "drupal/core-dev": "^9.1",
         "drupal/core-recommended": "^9.1",
         "drupal/core-composer-scaffold": "^9.1",
+        "drupal/geofield": "^1.22",
         "drupal/google_tag": "^1.4",
         "drupal/imageapi_optimize_binaries": "^1.0-alpha2",
         "drupal/maintenance200": "^1.1",
@@ -48,12 +49,10 @@
         "drupal/coder": "^8.3.12",
         "drupal/console": "^1.9.7",
         "drupal/devel": "^4.1.1",
-        "drupal/yaml_content": "^1.0@alpha",
         "mikey179/vfsstream": "^1.6.8",
         "phpcompatibility/php-compatibility": "^9.3.5",
         "phpmd/phpmd": "^2.9.1",
-        "phpunit/phpunit": "^9.5.4",
-        "weitzman/drupal-test-traits": "^1.5"
+        "phpunit/phpunit": "^9.5.4"
     },
     "conflict": {
         "drupal/drupal": "*",

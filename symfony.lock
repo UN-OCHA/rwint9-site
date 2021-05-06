@@ -164,6 +164,9 @@
     "drupal/entity_reference_revisions": {
         "version": "1.9.0"
     },
+    "drupal/geofield": {
+        "version": "1.22.0"
+    },
     "drupal/google_tag": {
         "version": "1.4.0"
     },
@@ -211,9 +214,6 @@
     },
     "drupal/token": {
         "version": "1.9.0"
-    },
-    "drupal/yaml_content": {
-        "version": "1.0.0-alpha7"
     },
     "drush/drush": {
         "version": "10.4.2"
@@ -307,6 +307,9 @@
     },
     "phar-io/version": {
         "version": "3.1.0"
+    },
+    "phayes/geophp": {
+        "version": "1.2"
     },
     "phpcompatibility/php-compatibility": {
         "version": "9.3.5"
@@ -659,8 +662,5 @@
     },
     "webmozart/path-util": {
         "version": "2.3.0"
-    },
-    "weitzman/drupal-test-traits": {
-        "version": "1.5.0"
     }
 }
