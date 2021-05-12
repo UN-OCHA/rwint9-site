@@ -1,0 +1,31 @@
+uuid: 9d01b74f-8ab8-402e-92d4-b55194465bfb
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.announcement.body
+    - field.field.node.announcement.field_image
+    - field.field.node.announcement.field_link
+    - node.type.announcement
+  module:
+    - user
+id: node.announcement.teaser
+targetEntityType: node
+bundle: announcement
+mode: teaser
+content:
+  field_image:
+    type: entity_reference_entity_view
+    weight: 0
+    region: content
+    label: hidden
+    settings:
+      link: true
+      view_mode: default
+    third_party_settings: {  }
+hidden:
+  body: true
+  field_link: true
+  langcode: true
+  links: true

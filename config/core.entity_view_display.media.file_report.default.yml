@@ -1,0 +1,46 @@
+uuid: bd835a98-8829-40ab-ab23-20823723c94f
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.media.file_report.field_description
+    - field.field.media.file_report.field_language
+    - field.field.media.file_report.field_media_file
+    - media.type.file_report
+  module:
+    - file
+id: media.file_report.default
+targetEntityType: media
+bundle: file_report
+mode: default
+content:
+  field_description:
+    weight: 1
+    label: hidden
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+  field_language:
+    weight: 2
+    label: hidden
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
+    region: content
+  field_media_file:
+    label: visually_hidden
+    weight: 0
+    settings:
+      use_description_as_link_text: true
+    third_party_settings: {  }
+    type: file_default
+    region: content
+hidden:
+  created: true
+  langcode: true
+  name: true
+  thumbnail: true
+  uid: true

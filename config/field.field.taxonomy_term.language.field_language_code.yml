@@ -1,0 +1,19 @@
+uuid: dd97e451-942a-47a6-80f7-d75a46ee8097
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_language_code
+    - taxonomy.vocabulary.language
+id: taxonomy_term.language.field_language_code
+field_name: field_language_code
+entity_type: taxonomy_term
+bundle: language
+label: 'Language code'
+description: '2 letters ISO 639-1 language code.'
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

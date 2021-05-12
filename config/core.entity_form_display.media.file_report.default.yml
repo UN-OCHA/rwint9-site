@@ -1,0 +1,57 @@
+uuid: 73a00834-e218-4830-86b4-787ea12e6fde
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.media.file_report.field_description
+    - field.field.media.file_report.field_language
+    - field.field.media.file_report.field_media_file
+    - media.type.file_report
+  module:
+    - file
+id: media.file_report.default
+targetEntityType: media
+bundle: file_report
+mode: default
+content:
+  field_description:
+    weight: 2
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: string_textfield
+    region: content
+  field_language:
+    weight: 3
+    settings: {  }
+    third_party_settings: {  }
+    type: options_select
+    region: content
+  field_media_file:
+    weight: 1
+    settings:
+      progress_indicator: throbber
+    third_party_settings: {  }
+    type: file_generic
+    region: content
+  name:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  status:
+    type: boolean_checkbox
+    settings:
+      display_label: true
+    weight: 4
+    region: content
+    third_party_settings: {  }
+hidden:
+  created: true
+  langcode: true
+  path: true
+  uid: true

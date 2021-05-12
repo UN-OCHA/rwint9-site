@@ -1,0 +1,21 @@
+uuid: 16ade5f0-1781-48e7-9b05-5f80f2519c3a
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_job_closing_date
+    - node.type.job
+  module:
+    - datetime
+id: node.job.field_job_closing_date
+field_name: field_job_closing_date
+entity_type: node
+bundle: job
+label: 'Closing date'
+description: 'Please make sure it matches the closing date on your ad and/or job application portal, if applicable.'
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: datetime

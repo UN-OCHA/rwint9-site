@@ -1,0 +1,30 @@
+uuid: a2749e87-2ae4-40ba-b97e-4d2200d8271c
+langcode: en
+status: true
+dependencies:
+  module:
+    - options
+    - taxonomy
+id: taxonomy_term.field_allowed_content_types
+field_name: field_allowed_content_types
+entity_type: taxonomy_term
+type: list_integer
+settings:
+  allowed_values:
+    -
+      value: 0
+      label: Job
+    -
+      value: 1
+      label: Report
+    -
+      value: 2
+      label: Training
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 3
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

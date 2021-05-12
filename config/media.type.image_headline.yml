@@ -1,0 +1,13 @@
+uuid: 52b56f89-651a-4975-abd0-9ca1313fbe82
+langcode: en
+status: true
+dependencies: {  }
+id: image_headline
+label: 'Image - Headline'
+description: 'Images for the headlines.'
+source: image
+queue_thumbnail_downloads: false
+new_revision: true
+source_configuration:
+  source_field: field_media_image
+field_map: {  }

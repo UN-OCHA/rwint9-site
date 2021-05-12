@@ -1,0 +1,8 @@
+uuid: 65a96b4d-ecc4-45e5-9539-f0e9077ff9d3
+langcode: en
+status: true
+dependencies: {  }
+name: 'Vulnerable group'
+vid: vulnerable_group
+description: ''
+weight: 0

@@ -1,0 +1,21 @@
+uuid: 5858a019-e3ec-46dd-91a7-4d19ce8b2d1f
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_timezone
+    - taxonomy.vocabulary.country
+  module:
+    - options
+id: taxonomy_term.country.field_timezone
+field_name: field_timezone
+entity_type: taxonomy_term
+bundle: country
+label: 'Time zone'
+description: 'Choose the main time zone for this country. This information will be used for instance to determine at what time to send out notifications for related content.'
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

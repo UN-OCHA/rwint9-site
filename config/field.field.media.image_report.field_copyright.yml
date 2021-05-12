@@ -1,0 +1,19 @@
+uuid: 49041cd0-ad64-4ec6-8164-24a57d47eda3
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.media.field_copyright
+    - media.type.image_report
+id: media.image_report.field_copyright
+field_name: field_copyright
+entity_type: media
+bundle: image_report
+label: Copyright
+description: ''
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

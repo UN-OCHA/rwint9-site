@@ -1,0 +1,19 @@
+uuid: d5611d77-6e6e-447f-a05c-e33eeac06490
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_attention_training
+    - taxonomy.vocabulary.source
+id: taxonomy_term.source.field_attention_training
+field_name: field_attention_training
+entity_type: taxonomy_term
+bundle: source
+label: 'Attention training'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

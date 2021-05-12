@@ -1,0 +1,21 @@
+uuid: 6a92e2b3-86d0-4ada-b153-b8d0fbf97d7e
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_registration_deadline
+    - node.type.training
+  module:
+    - datetime
+id: node.training.field_registration_deadline
+field_name: field_registration_deadline
+entity_type: node
+bundle: training
+label: 'Registration deadline'
+description: 'All advertisements should include a registration deadline unless it is an "ongoing course". Advertisements immediately expire after the registration deadline has passed. Advertisements tagged with "Call for Papers" usually include a submission deadline in the body text, so they should not be ongoing ads. For Universities, any ads advertising degrees should not be ongoing ads and should have a deadline.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: datetime

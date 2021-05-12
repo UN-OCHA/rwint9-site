@@ -1,0 +1,66 @@
+uuid: 80b301b0-e52c-47f7-a168-fe5d5f6f04d1
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.announcement.body
+    - field.field.node.announcement.field_image
+    - field.field.node.announcement.field_link
+    - node.type.announcement
+  module:
+    - link
+    - media_library
+    - text
+id: node.announcement.default
+targetEntityType: node
+bundle: announcement
+mode: default
+content:
+  body:
+    weight: 3
+    settings:
+      rows: 9
+      summary_rows: 3
+      placeholder: ''
+      show_summary: false
+    third_party_settings: {  }
+    type: text_textarea_with_summary
+    region: content
+  field_image:
+    weight: 2
+    settings:
+      media_types: {  }
+    third_party_settings: {  }
+    type: media_library_widget
+    region: content
+  field_link:
+    weight: 1
+    settings:
+      placeholder_url: ''
+      placeholder_title: ''
+    third_party_settings: {  }
+    type: link_default
+    region: content
+  status:
+    type: boolean_checkbox
+    settings:
+      display_label: true
+    weight: 4
+    region: content
+    third_party_settings: {  }
+  title:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden:
+  created: true
+  langcode: true
+  path: true
+  promote: true
+  sticky: true
+  uid: true
+  url_redirects: true

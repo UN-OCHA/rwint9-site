@@ -1,0 +1,49 @@
+uuid: c723279c-00a0-403a-98ca-caf1583bbe20
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.announcement.body
+    - field.field.node.announcement.field_image
+    - field.field.node.announcement.field_link
+    - node.type.announcement
+  module:
+    - link
+    - text
+    - user
+id: node.announcement.default
+targetEntityType: node
+bundle: announcement
+mode: default
+content:
+  body:
+    weight: 2
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: text_default
+    region: content
+  field_image:
+    type: entity_reference_entity_view
+    weight: 1
+    label: above
+    settings:
+      view_mode: default
+      link: false
+    third_party_settings: {  }
+    region: content
+  field_link:
+    weight: 0
+    label: above
+    settings:
+      trim_length: 80
+      url_only: false
+      url_plain: false
+      rel: ''
+      target: ''
+    third_party_settings: {  }
+    type: link
+    region: content
+hidden:
+  langcode: true
+  links: true

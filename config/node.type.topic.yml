@@ -1,0 +1,17 @@
+uuid: ea63ca1b-0f54-4824-a4ae-7c802cfa6638
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+name: Topic
+type: topic
+description: 'Curated pages dedicated to humanitarian themes and specific humanitarian crises.'
+help: ''
+new_revision: true
+preview_mode: 1
+display_submitted: false

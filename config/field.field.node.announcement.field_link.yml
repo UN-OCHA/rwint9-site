@@ -1,0 +1,23 @@
+uuid: e658589f-3fc1-4ba7-aec6-76bc57d33985
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_link
+    - node.type.announcement
+  module:
+    - link
+id: node.announcement.field_link
+field_name: field_link
+entity_type: node
+bundle: announcement
+label: URL
+description: 'Link to the page the announcement is about.'
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  link_type: 17
+  title: 0
+field_type: link

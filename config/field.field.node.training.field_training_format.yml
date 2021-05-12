@@ -1,0 +1,29 @@
+uuid: 5046fffb-e960-4063-a84c-965eb7c5b80e
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_training_format
+    - node.type.training
+    - taxonomy.vocabulary.training_format
+id: node.training.field_training_format
+field_name: field_training_format
+entity_type: node
+bundle: training
+label: 'Training format'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      training_format: training_format
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

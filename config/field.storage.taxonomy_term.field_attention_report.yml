@@ -1,0 +1,19 @@
+uuid: 12b204ff-42f6-4ed6-931a-9238f188d0bd
+langcode: en
+status: true
+dependencies:
+  module:
+    - taxonomy
+id: taxonomy_term.field_attention_report
+field_name: field_attention_report
+entity_type: taxonomy_term
+type: string_long
+settings:
+  case_sensitive: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

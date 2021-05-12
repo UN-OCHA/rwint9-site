@@ -1,0 +1,19 @@
+uuid: e6f5af29-0ee4-4ea0-ac9f-9f311dad8a93
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_headline_summary
+    - node.type.report
+id: node.report.field_headline_summary
+field_name: field_headline_summary
+entity_type: node
+bundle: report
+label: 'Headline summary'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

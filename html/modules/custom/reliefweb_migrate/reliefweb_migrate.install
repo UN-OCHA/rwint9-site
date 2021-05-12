@@ -1,0 +1,17 @@
+<?php
+
+/**
+ * @file
+ * Uninstall ReliefWeb migration files.
+ */
+
+/**
+ * Implements hook_uninstall().
+ *
+ * Uninstall the migration configuration.
+ */
+function reliefweb_migrate_uninstall() {
+  \Drupal::service('config.manager')->uninstall('module', 'reliefweb_migrate');
+
+  drupal_flush_all_caches();
+}

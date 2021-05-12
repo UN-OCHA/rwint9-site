@@ -1,0 +1,19 @@
+uuid: c07ed08e-ce49-4826-9fc7-339b11b75431
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_aliases
+    - taxonomy.vocabulary.country
+id: taxonomy_term.country.field_aliases
+field_name: field_aliases
+entity_type: taxonomy_term
+bundle: country
+label: 'Alternative names'
+description: 'List of alternative or past names of the country. Enter one name per line.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

@@ -1,0 +1,19 @@
+uuid: 401885bb-a0e7-47d7-b18d-7d9a35d41b82
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_aliases
+    - taxonomy.vocabulary.source
+id: taxonomy_term.source.field_aliases
+field_name: field_aliases
+entity_type: taxonomy_term
+bundle: source
+label: 'Alternative names'
+description: 'Previous names, other names etc. One per line.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

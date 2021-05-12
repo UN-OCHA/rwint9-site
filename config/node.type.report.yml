@@ -1,0 +1,17 @@
+uuid: 898f96c0-ffcc-4233-85fc-980587f908d6
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+name: Report
+type: report
+description: 'Latest humanitarian reports, maps and infographics and full document archive.'
+help: ''
+new_revision: true
+preview_mode: 1
+display_submitted: false

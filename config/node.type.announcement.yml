@@ -1,0 +1,17 @@
+uuid: 25180469-ab00-4123-bdf0-faf3870db35b
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+name: Announcement
+type: announcement
+description: 'Announcement from partners etc.'
+help: ''
+new_revision: true
+preview_mode: 1
+display_submitted: false

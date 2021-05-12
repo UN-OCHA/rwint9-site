@@ -1,0 +1,11 @@
+uuid: 3863848a-61f2-4243-9363-6438a15447d6
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.job_experience
+id: taxonomy_term.job_experience
+target_entity_type_id: taxonomy_term
+target_bundle: job_experience
+default_langcode: site_default
+language_alterable: false

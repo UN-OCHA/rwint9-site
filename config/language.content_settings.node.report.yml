@@ -1,0 +1,11 @@
+uuid: b1c60b35-8bee-4876-aa94-c66d7bcd2639
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.report
+id: node.report
+target_entity_type_id: node
+target_bundle: report
+default_langcode: site_default
+language_alterable: false

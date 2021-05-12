@@ -1,0 +1,19 @@
+uuid: 449cf5b9-56cc-4e65-bd0a-797da0b79cd5
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_fee_information
+    - node.type.training
+id: node.training.field_fee_information
+field_name: field_fee_information
+entity_type: node
+bundle: training
+label: 'Fee information'
+description: 'The Fee Information field must contain the exact course fee (including what it does and does not cover) and cannot be substituted by providing a link for "further details". In case a training/event is offered for a fee but is also available in another format (e.g. online at no cost), the "fee-based" option should be selected.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

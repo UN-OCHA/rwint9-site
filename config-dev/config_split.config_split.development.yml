@@ -10,6 +10,7 @@ module:
   config_filter: 0
   config_split: 0
   dblog: 0
+  devel: 0
 theme: {  }
 blacklist: {  }
 graylist: {  }
