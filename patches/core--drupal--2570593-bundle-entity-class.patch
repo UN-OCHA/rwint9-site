@@ -1,7 +1,7 @@
-diff --git a/core/lib/Drupal/Core/Config/Entity/ConfigEntityStorage.php b/core/lib/Drupal/Core/Config/Entity/ConfigEntityStorage.php
+diff --git a/lib/Drupal/Core/Config/Entity/ConfigEntityStorage.php b/lib/Drupal/Core/Config/Entity/ConfigEntityStorage.php
 index b944eea9f9..eea316acb2 100644
---- a/core/lib/Drupal/Core/Config/Entity/ConfigEntityStorage.php
-+++ b/core/lib/Drupal/Core/Config/Entity/ConfigEntityStorage.php
+--- a/lib/Drupal/Core/Config/Entity/ConfigEntityStorage.php
++++ b/lib/Drupal/Core/Config/Entity/ConfigEntityStorage.php
 @@ -225,7 +225,8 @@ protected function doLoadMultiple(array $ids = NULL) {
    protected function doCreate(array $values) {
      // Set default language to current language if not provided.
@@ -9,14 +9,14 @@ index b944eea9f9..eea316acb2 100644
 -    $entity = new $this->entityClass($values, $this->entityTypeId);
 +    $entity_class = $this->getEntityClass();
 +    $entity = new $entity_class($values, $this->entityTypeId);
- 
+
      return $entity;
    }
-diff --git a/core/lib/Drupal/Core/Entity/BundleEntityStorageInterface.php b/core/lib/Drupal/Core/Entity/BundleEntityStorageInterface.php
+diff --git a/lib/Drupal/Core/Entity/BundleEntityStorageInterface.php b/lib/Drupal/Core/Entity/BundleEntityStorageInterface.php
 new file mode 100644
 index 0000000000..9ba915fabd
 --- /dev/null
-+++ b/core/lib/Drupal/Core/Entity/BundleEntityStorageInterface.php
++++ b/lib/Drupal/Core/Entity/BundleEntityStorageInterface.php
 @@ -0,0 +1,33 @@
 +<?php
 +
@@ -51,14 +51,14 @@ index 0000000000..9ba915fabd
 +  public function getBundleKey();
 +
 +}
-diff --git a/core/lib/Drupal/Core/Entity/ContentEntityBase.php b/core/lib/Drupal/Core/Entity/ContentEntityBase.php
+diff --git a/lib/Drupal/Core/Entity/ContentEntityBase.php b/lib/Drupal/Core/Entity/ContentEntityBase.php
 index 35dca9a9c6..e416ced315 100644
---- a/core/lib/Drupal/Core/Entity/ContentEntityBase.php
-+++ b/core/lib/Drupal/Core/Entity/ContentEntityBase.php
+--- a/lib/Drupal/Core/Entity/ContentEntityBase.php
++++ b/lib/Drupal/Core/Entity/ContentEntityBase.php
 @@ -1125,6 +1125,23 @@ public function __unset($name) {
      }
    }
- 
+
 +  /**
 +   * {@inheritdoc}
 +   */
@@ -79,10 +79,10 @@ index 35dca9a9c6..e416ced315 100644
    /**
     * {@inheritdoc}
     */
-diff --git a/core/lib/Drupal/Core/Entity/ContentEntityStorageBase.php b/core/lib/Drupal/Core/Entity/ContentEntityStorageBase.php
+diff --git a/lib/Drupal/Core/Entity/ContentEntityStorageBase.php b/lib/Drupal/Core/Entity/ContentEntityStorageBase.php
 index b69958d8e8..e003838e0b 100644
---- a/core/lib/Drupal/Core/Entity/ContentEntityStorageBase.php
-+++ b/core/lib/Drupal/Core/Entity/ContentEntityStorageBase.php
+--- a/lib/Drupal/Core/Entity/ContentEntityStorageBase.php
++++ b/lib/Drupal/Core/Entity/ContentEntityStorageBase.php
 @@ -5,6 +5,8 @@
  use Drupal\Core\Cache\Cache;
  use Drupal\Core\Cache\CacheBackendInterface;
@@ -98,13 +98,13 @@ index b69958d8e8..e003838e0b 100644
   */
 -abstract class ContentEntityStorageBase extends EntityStorageBase implements ContentEntityStorageInterface, DynamicallyFieldableEntityStorageInterface {
 +abstract class ContentEntityStorageBase extends EntityStorageBase implements ContentEntityStorageInterface, DynamicallyFieldableEntityStorageInterface, BundleEntityStorageInterface {
- 
+
    /**
     * The entity bundle key.
 @@ -73,6 +75,34 @@ public function __construct(EntityTypeInterface $entity_type, EntityFieldManager
      $this->entityTypeBundleInfo = $entity_type_bundle_info;
    }
- 
+
 +  /**
 +   * {@inheritdoc}
 +   */
@@ -173,7 +173,7 @@ index b69958d8e8..e003838e0b 100644
 +    }
 +    return $bundle_for_class;
 +  }
- 
+
 +  /**
 +   * Retrieves the bundle from an array of values.
 +   *
@@ -228,16 +228,16 @@ index b69958d8e8..e003838e0b 100644
 +
 +    return $entity_class;
    }
- 
+
    /**
-diff --git a/core/lib/Drupal/Core/Entity/EntityStorageBase.php b/core/lib/Drupal/Core/Entity/EntityStorageBase.php
+diff --git a/lib/Drupal/Core/Entity/EntityStorageBase.php b/lib/Drupal/Core/Entity/EntityStorageBase.php
 index 8b78be167a..db9bf6efaa 100644
---- a/core/lib/Drupal/Core/Entity/EntityStorageBase.php
-+++ b/core/lib/Drupal/Core/Entity/EntityStorageBase.php
+--- a/lib/Drupal/Core/Entity/EntityStorageBase.php
++++ b/lib/Drupal/Core/Entity/EntityStorageBase.php
 @@ -99,6 +99,13 @@ public function __construct(EntityTypeInterface $entity_type, MemoryCacheInterfa
      $this->memoryCacheTag = 'entity.memory_cache:' . $this->entityTypeId;
    }
- 
+
 +  /**
 +   * {@inheritdoc}
 +   */
@@ -255,7 +255,7 @@ index 8b78be167a..db9bf6efaa 100644
 -    $entity_class = $this->entityClass;
 +    $entity_class = $this->getEntityClass();
      $entity_class::preCreate($this, $values);
- 
+
      // Assign a new UUID if there is none yet.
 @@ -234,7 +241,8 @@ public function create(array $values = []) {
     * @return \Drupal\Core\Entity\EntityInterface
@@ -265,7 +265,7 @@ index 8b78be167a..db9bf6efaa 100644
 +    $entity_class = $this->getEntityClass();
 +    return new $entity_class($values, $this->entityTypeId);
    }
- 
+
    /**
 @@ -353,17 +361,22 @@ protected function preLoad(array &$ids = NULL) {
     *   Associative array of query results, keyed on the entity ID.
@@ -300,7 +300,7 @@ index 8b78be167a..db9bf6efaa 100644
 +      }
      }
    }
- 
+
 @@ -379,7 +392,9 @@ protected function postLoad(array &$entities) {
    protected function mapFromStorageRecords(array $records) {
      $entities = [];
@@ -319,18 +319,18 @@ index 8b78be167a..db9bf6efaa 100644
 +   *   TRUE if this entity exists in storage, FALSE otherwise.
     */
    abstract protected function has($id, EntityInterface $entity);
- 
+
 @@ -406,27 +422,24 @@ public function delete(array $entities) {
        return;
      }
- 
+
 -    // Ensure that the entities are keyed by ID.
 -    $keyed_entities = [];
 -    foreach ($entities as $entity) {
 -      $keyed_entities[$entity->id()] = $entity;
 -    }
 +    $entities_by_class = $this->getEntitiesByClass($entities);
- 
+
      // Allow code to run before deleting.
 -    $entity_class = $this->entityClass;
 -    $entity_class::preDelete($this, $keyed_entities);
@@ -342,14 +342,14 @@ index 8b78be167a..db9bf6efaa 100644
 +      foreach ($items as $entity) {
 +        $this->invokeHook('predelete', $entity);
 +      }
- 
+
 -    // Perform the delete and reset the static cache for the deleted entities.
 -    $this->doDelete($keyed_entities);
 -    $this->resetCache(array_keys($keyed_entities));
 +      // Perform the delete and reset the static cache for the deleted entities.
 +      $this->doDelete($items);
 +      $this->resetCache(array_keys($items));
- 
+
 -    // Allow code to run after deleting.
 -    $entity_class::postDelete($this, $keyed_entities);
 -    foreach ($keyed_entities as $entity) {
@@ -361,11 +361,11 @@ index 8b78be167a..db9bf6efaa 100644
 +      }
      }
    }
- 
+
 @@ -605,4 +618,27 @@ public function getAggregateQuery($conjunction = 'AND') {
     */
    abstract protected function getQueryServiceName();
- 
+
 +  /**
 +   * Group the given array of entities by their class name and ID.
 +   *
@@ -390,14 +390,14 @@ index 8b78be167a..db9bf6efaa 100644
 +  }
 +
  }
-diff --git a/core/lib/Drupal/Core/Entity/EntityStorageInterface.php b/core/lib/Drupal/Core/Entity/EntityStorageInterface.php
+diff --git a/lib/Drupal/Core/Entity/EntityStorageInterface.php b/lib/Drupal/Core/Entity/EntityStorageInterface.php
 index 71898e0026..6d4762be33 100644
---- a/core/lib/Drupal/Core/Entity/EntityStorageInterface.php
-+++ b/core/lib/Drupal/Core/Entity/EntityStorageInterface.php
+--- a/lib/Drupal/Core/Entity/EntityStorageInterface.php
++++ b/lib/Drupal/Core/Entity/EntityStorageInterface.php
 @@ -230,4 +230,16 @@ public function getEntityTypeId();
     */
    public function getEntityType();
- 
+
 +  /**
 +   * Retrieves the class name used to create the entity.
 +   *
@@ -411,20 +411,20 @@ index 71898e0026..6d4762be33 100644
 +  public function getEntityClass($bundle = NULL);
 +
  }
-diff --git a/core/lib/Drupal/Core/Entity/EntityTypeRepository.php b/core/lib/Drupal/Core/Entity/EntityTypeRepository.php
+diff --git a/lib/Drupal/Core/Entity/EntityTypeRepository.php b/lib/Drupal/Core/Entity/EntityTypeRepository.php
 index 0bc900dbbc..e1c1cd5d16 100644
---- a/core/lib/Drupal/Core/Entity/EntityTypeRepository.php
-+++ b/core/lib/Drupal/Core/Entity/EntityTypeRepository.php
+--- a/lib/Drupal/Core/Entity/EntityTypeRepository.php
++++ b/lib/Drupal/Core/Entity/EntityTypeRepository.php
 @@ -2,6 +2,7 @@
- 
+
  namespace Drupal\Core\Entity;
- 
+
 +use Drupal\Core\Entity\Exception\AmbiguousBundleClassException;
  use Drupal\Core\Entity\Exception\AmbiguousEntityClassException;
  use Drupal\Core\Entity\Exception\NoCorrespondingEntityClassException;
  use Drupal\Core\StringTranslation\StringTranslationTrait;
 @@ -80,7 +81,8 @@ public function getEntityTypeFromClass($class_name) {
- 
+
      $same_class = 0;
      $entity_type_id = NULL;
 -    foreach ($this->entityTypeManager->getDefinitions() as $entity_type) {
@@ -436,7 +436,7 @@ index 0bc900dbbc..e1c1cd5d16 100644
 @@ -89,6 +91,20 @@ public function getEntityTypeFromClass($class_name) {
        }
      }
- 
+
 +    // If no match was found check if it is a bundle class. This needs to be in
 +    // a separate loop to avoid false positives, since an entity class can
 +    // subclass another entity class.
@@ -454,10 +454,10 @@ index 0bc900dbbc..e1c1cd5d16 100644
      // Return the matching entity type ID if there is one.
      if ($entity_type_id) {
        $this->classNameEntityTypeMap[$class_name] = $entity_type_id;
-diff --git a/core/lib/Drupal/Core/Entity/EntityTypeRepositoryInterface.php b/core/lib/Drupal/Core/Entity/EntityTypeRepositoryInterface.php
+diff --git a/lib/Drupal/Core/Entity/EntityTypeRepositoryInterface.php b/lib/Drupal/Core/Entity/EntityTypeRepositoryInterface.php
 index 53af033e4d..0d05bc9673 100644
---- a/core/lib/Drupal/Core/Entity/EntityTypeRepositoryInterface.php
-+++ b/core/lib/Drupal/Core/Entity/EntityTypeRepositoryInterface.php
+--- a/lib/Drupal/Core/Entity/EntityTypeRepositoryInterface.php
++++ b/lib/Drupal/Core/Entity/EntityTypeRepositoryInterface.php
 @@ -34,6 +34,8 @@ public function getEntityTypeLabels($group = FALSE);
     *
     * @throws \Drupal\Core\Entity\Exception\AmbiguousEntityClassException
@@ -467,11 +467,11 @@ index 53af033e4d..0d05bc9673 100644
     * @throws \Drupal\Core\Entity\Exception\NoCorrespondingEntityClassException
     *   Thrown when no entity class corresponds to the called class.
     *
-diff --git a/core/lib/Drupal/Core/Entity/Exception/AmbiguousBundleClassException.php b/core/lib/Drupal/Core/Entity/Exception/AmbiguousBundleClassException.php
+diff --git a/lib/Drupal/Core/Entity/Exception/AmbiguousBundleClassException.php b/lib/Drupal/Core/Entity/Exception/AmbiguousBundleClassException.php
 new file mode 100644
 index 0000000000..f556fabbc9
 --- /dev/null
-+++ b/core/lib/Drupal/Core/Entity/Exception/AmbiguousBundleClassException.php
++++ b/lib/Drupal/Core/Entity/Exception/AmbiguousBundleClassException.php
 @@ -0,0 +1,23 @@
 +<?php
 +
@@ -496,11 +496,11 @@ index 0000000000..f556fabbc9
 +  }
 +
 +}
-diff --git a/core/lib/Drupal/Core/Entity/Exception/BundleClassInheritanceException.php b/core/lib/Drupal/Core/Entity/Exception/BundleClassInheritanceException.php
+diff --git a/lib/Drupal/Core/Entity/Exception/BundleClassInheritanceException.php b/lib/Drupal/Core/Entity/Exception/BundleClassInheritanceException.php
 new file mode 100644
 index 0000000000..4f0d1fd2ba
 --- /dev/null
-+++ b/core/lib/Drupal/Core/Entity/Exception/BundleClassInheritanceException.php
++++ b/lib/Drupal/Core/Entity/Exception/BundleClassInheritanceException.php
 @@ -0,0 +1,25 @@
 +<?php
 +
@@ -527,10 +527,10 @@ index 0000000000..4f0d1fd2ba
 +  }
 +
 +}
-diff --git a/core/lib/Drupal/Core/Entity/KeyValueStore/KeyValueEntityStorage.php b/core/lib/Drupal/Core/Entity/KeyValueStore/KeyValueEntityStorage.php
+diff --git a/lib/Drupal/Core/Entity/KeyValueStore/KeyValueEntityStorage.php b/lib/Drupal/Core/Entity/KeyValueStore/KeyValueEntityStorage.php
 index 98c5a41a32..4fe53ca1b6 100644
---- a/core/lib/Drupal/Core/Entity/KeyValueStore/KeyValueEntityStorage.php
-+++ b/core/lib/Drupal/Core/Entity/KeyValueStore/KeyValueEntityStorage.php
+--- a/lib/Drupal/Core/Entity/KeyValueStore/KeyValueEntityStorage.php
++++ b/lib/Drupal/Core/Entity/KeyValueStore/KeyValueEntityStorage.php
 @@ -93,7 +93,8 @@ public static function createInstance(ContainerInterface $container, EntityTypeI
    public function doCreate(array $values = []) {
      // Set default language to site default if not provided.
@@ -538,13 +538,13 @@ index 98c5a41a32..4fe53ca1b6 100644
 -    $entity = new $this->entityClass($values, $this->entityTypeId);
 +    $entity_class = $this->getEntityClass();
 +    $entity = new $entity_class($values, $this->entityTypeId);
- 
+
      // @todo This is handled by ContentEntityStorageBase, which assumes
      //   FieldableEntityInterface. The current approach in
-diff --git a/core/lib/Drupal/Core/Entity/Sql/SqlContentEntityStorage.php b/core/lib/Drupal/Core/Entity/Sql/SqlContentEntityStorage.php
+diff --git a/lib/Drupal/Core/Entity/Sql/SqlContentEntityStorage.php b/lib/Drupal/Core/Entity/Sql/SqlContentEntityStorage.php
 index 696203a6c5..bfc879df40 100644
---- a/core/lib/Drupal/Core/Entity/Sql/SqlContentEntityStorage.php
-+++ b/core/lib/Drupal/Core/Entity/Sql/SqlContentEntityStorage.php
+--- a/lib/Drupal/Core/Entity/Sql/SqlContentEntityStorage.php
++++ b/lib/Drupal/Core/Entity/Sql/SqlContentEntityStorage.php
 @@ -505,7 +505,8 @@ protected function mapFromStorageRecords(array $records, $load_from_revision = F
      foreach ($values as $id => $entity_values) {
        $bundle = $this->bundleKey ? $entity_values[$this->bundleKey][LanguageInterface::LANGCODE_DEFAULT] : FALSE;
@@ -553,12 +553,12 @@ index 696203a6c5..bfc879df40 100644
 +      $entity_class = $this->getEntityClass($bundle);
 +      $entities[$id] = new $entity_class($entity_values, $this->entityTypeId, $bundle, array_keys($translations[$id]));
      }
- 
+
      return $entities;
-diff --git a/core/lib/Drupal/Core/Entity/entity.api.php b/core/lib/Drupal/Core/Entity/entity.api.php
+diff --git a/lib/Drupal/Core/Entity/entity.api.php b/lib/Drupal/Core/Entity/entity.api.php
 index f941695da4..0547183656 100644
---- a/core/lib/Drupal/Core/Entity/entity.api.php
-+++ b/core/lib/Drupal/Core/Entity/entity.api.php
+--- a/lib/Drupal/Core/Entity/entity.api.php
++++ b/lib/Drupal/Core/Entity/entity.api.php
 @@ -846,6 +846,8 @@ function hook_entity_view_mode_info_alter(&$view_modes) {
   *     the entity type and the bundle, the one for the bundle is used.
   *   - translatable: (optional) A boolean value specifying whether this bundle
@@ -575,13 +575,13 @@ index f941695da4..0547183656 100644
 +  // Override the bundle class for the "article" node type in a custom module.
 +  $bundles['node']['article']['class'] = 'Drupal\mymodule\Entity\Article';
  }
- 
+
  /**
-diff --git a/core/modules/system/tests/modules/entity_test_bundle_class/entity_test_bundle_class.info.yml b/core/modules/system/tests/modules/entity_test_bundle_class/entity_test_bundle_class.info.yml
+diff --git a/modules/system/tests/modules/entity_test_bundle_class/entity_test_bundle_class.info.yml b/modules/system/tests/modules/entity_test_bundle_class/entity_test_bundle_class.info.yml
 new file mode 100644
 index 0000000000..2bc73bd55d
 --- /dev/null
-+++ b/core/modules/system/tests/modules/entity_test_bundle_class/entity_test_bundle_class.info.yml
++++ b/modules/system/tests/modules/entity_test_bundle_class/entity_test_bundle_class.info.yml
 @@ -0,0 +1,7 @@
 +name: 'Entity Bundle Class Test'
 +type: module
@@ -590,11 +590,11 @@ index 0000000000..2bc73bd55d
 +version: VERSION
 +dependencies:
 +  - drupal:entity_test
-diff --git a/core/modules/system/tests/modules/entity_test_bundle_class/entity_test_bundle_class.module b/core/modules/system/tests/modules/entity_test_bundle_class/entity_test_bundle_class.module
+diff --git a/modules/system/tests/modules/entity_test_bundle_class/entity_test_bundle_class.module b/modules/system/tests/modules/entity_test_bundle_class/entity_test_bundle_class.module
 new file mode 100644
 index 0000000000..576143a4c1
 --- /dev/null
-+++ b/core/modules/system/tests/modules/entity_test_bundle_class/entity_test_bundle_class.module
++++ b/modules/system/tests/modules/entity_test_bundle_class/entity_test_bundle_class.module
 @@ -0,0 +1,26 @@
 +<?php
 +
@@ -622,11 +622,11 @@ index 0000000000..576143a4c1
 +    $bundles['entity_test']['bundle_class']['class'] = NonInheritingBundleClass::class;
 +  }
 +}
-diff --git a/core/modules/system/tests/modules/entity_test_bundle_class/src/Entity/EntityTestBundleClass.php b/core/modules/system/tests/modules/entity_test_bundle_class/src/Entity/EntityTestBundleClass.php
+diff --git a/modules/system/tests/modules/entity_test_bundle_class/src/Entity/EntityTestBundleClass.php b/modules/system/tests/modules/entity_test_bundle_class/src/Entity/EntityTestBundleClass.php
 new file mode 100644
 index 0000000000..56291da832
 --- /dev/null
-+++ b/core/modules/system/tests/modules/entity_test_bundle_class/src/Entity/EntityTestBundleClass.php
++++ b/modules/system/tests/modules/entity_test_bundle_class/src/Entity/EntityTestBundleClass.php
 @@ -0,0 +1,11 @@
 +<?php
 +
@@ -639,11 +639,11 @@ index 0000000000..56291da832
 + */
 +class EntityTestBundleClass extends EntityTest {
 +}
-diff --git a/core/modules/system/tests/modules/entity_test_bundle_class/src/Entity/NonInheritingBundleClass.php b/core/modules/system/tests/modules/entity_test_bundle_class/src/Entity/NonInheritingBundleClass.php
+diff --git a/modules/system/tests/modules/entity_test_bundle_class/src/Entity/NonInheritingBundleClass.php b/modules/system/tests/modules/entity_test_bundle_class/src/Entity/NonInheritingBundleClass.php
 new file mode 100644
 index 0000000000..1ad9b67fd5
 --- /dev/null
-+++ b/core/modules/system/tests/modules/entity_test_bundle_class/src/Entity/NonInheritingBundleClass.php
++++ b/modules/system/tests/modules/entity_test_bundle_class/src/Entity/NonInheritingBundleClass.php
 @@ -0,0 +1,9 @@
 +<?php
 +
@@ -654,11 +654,11 @@ index 0000000000..1ad9b67fd5
 + */
 +class NonInheritingBundleClass {
 +}
-diff --git a/core/tests/Drupal/KernelTests/Core/Entity/BundleClassTest.php b/core/tests/Drupal/KernelTests/Core/Entity/BundleClassTest.php
+diff --git a/tests/Drupal/KernelTests/Core/Entity/BundleClassTest.php b/tests/Drupal/KernelTests/Core/Entity/BundleClassTest.php
 new file mode 100644
 index 0000000000..21a4958ff6
 --- /dev/null
-+++ b/core/tests/Drupal/KernelTests/Core/Entity/BundleClassTest.php
++++ b/tests/Drupal/KernelTests/Core/Entity/BundleClassTest.php
 @@ -0,0 +1,104 @@
 +<?php
 +

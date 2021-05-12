@@ -102,9 +102,6 @@
     "extra": {
         "enable-patching": true,
         "composer-exit-on-patch-failure": true,
-        "patchLevel": {
-            "drupal/core": "-p2"
-        },
         "patches-file": "composer.patches.json",
         "installer-paths": {
             "html/core": ["type:drupal-core"],
