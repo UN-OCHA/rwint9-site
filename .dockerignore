@@ -9,6 +9,7 @@
 !composer.json
 !composer.lock
 !composer.patches.json
+!symfony.lock
 !load.environment.php
 
 # Ignore the node modules in the common design subtheme.
