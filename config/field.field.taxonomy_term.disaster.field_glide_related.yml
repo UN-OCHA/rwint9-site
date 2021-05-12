@@ -1,0 +1,19 @@
+uuid: 3b19331e-6fd7-4ef1-8cfb-67c665b8a74b
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_glide_related
+    - taxonomy.vocabulary.disaster
+id: taxonomy_term.disaster.field_glide_related
+field_name: field_glide_related
+entity_type: taxonomy_term
+bundle: disaster
+label: 'Related GLIDE numbers'
+description: 'One related GLIDE number per line.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

@@ -14,6 +14,7 @@ module:
   field_ui: 0
   file: 0
   filter: 0
+  geofield: 0
   google_tag: 0
   image: 0
   imageapi_optimize: 0

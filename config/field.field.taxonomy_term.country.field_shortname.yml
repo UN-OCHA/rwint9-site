@@ -1,0 +1,19 @@
+uuid: 778ccedb-cf31-4fe2-ae2b-ef873e1dce35
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_shortname
+    - taxonomy.vocabulary.country
+id: taxonomy_term.country.field_shortname
+field_name: field_shortname
+entity_type: taxonomy_term
+bundle: country
+label: Shortname
+description: 'Country short name (ex: USA). If none is available, simply copy the name of the country.'
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

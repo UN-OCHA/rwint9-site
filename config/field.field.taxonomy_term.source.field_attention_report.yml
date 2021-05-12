@@ -1,0 +1,19 @@
+uuid: 807a47a3-3fc3-4aac-9006-055a67ca95af
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_attention_report
+    - taxonomy.vocabulary.source
+id: taxonomy_term.source.field_attention_report
+field_name: field_attention_report
+entity_type: taxonomy_term
+bundle: source
+label: 'Attention report'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

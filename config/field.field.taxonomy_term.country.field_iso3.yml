@@ -1,0 +1,19 @@
+uuid: e70a2e50-673d-45fe-9817-d73cc834f262
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_iso3
+    - taxonomy.vocabulary.country
+id: taxonomy_term.country.field_iso3
+field_name: field_iso3
+entity_type: taxonomy_term
+bundle: country
+label: 'ISO 3 code'
+description: '3 letters ISO 3166-1 alpha-3 country code.'
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

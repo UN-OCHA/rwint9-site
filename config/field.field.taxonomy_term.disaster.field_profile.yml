@@ -1,0 +1,23 @@
+uuid: 007650ec-b284-4e01-b651-024a7443eead
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_profile
+    - taxonomy.vocabulary.disaster
+id: taxonomy_term.disaster.field_profile
+field_name: field_profile
+entity_type: taxonomy_term
+bundle: disaster
+label: 'Show profile'
+description: 'When selected, the disaster''s profile (description, key content etc.) will be visible to visitors.'
+required: false
+translatable: true
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'Yes'
+  off_label: 'No'
+field_type: boolean

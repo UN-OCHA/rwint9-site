@@ -1,0 +1,37 @@
+uuid: 6938fa0a-93fa-4d7a-aa63-08dc71e7078b
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.job_type
+  module:
+    - allowed_formats
+    - text
+id: taxonomy_term.job_type.default
+targetEntityType: taxonomy_term
+bundle: job_type
+mode: default
+content:
+  description:
+    type: text_textarea
+    weight: 1
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings:
+      allowed_formats:
+        hide_help: '1'
+        hide_guidelines: '1'
+  name:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden:
+  langcode: true
+  path: true
+  status: true
