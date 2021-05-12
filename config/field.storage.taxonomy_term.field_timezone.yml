@@ -1,0 +1,93 @@
+uuid: 030c9d0c-bcd9-4462-93c3-649d0f8d194d
+langcode: en
+status: true
+dependencies:
+  module:
+    - options
+    - taxonomy
+id: taxonomy_term.field_timezone
+field_name: field_timezone
+entity_type: taxonomy_term
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: '-11'
+      label: '-1100'
+    -
+      value: '-10'
+      label: '-1000'
+    -
+      value: '-9'
+      label: '-0900'
+    -
+      value: '-8'
+      label: '-0800'
+    -
+      value: '-7'
+      label: '-0700'
+    -
+      value: '-6'
+      label: '-0600'
+    -
+      value: '-5'
+      label: '-0500'
+    -
+      value: '-4'
+      label: '-0400'
+    -
+      value: '-3'
+      label: '-0300'
+    -
+      value: '-2'
+      label: '-0200'
+    -
+      value: '-1'
+      label: '-0100'
+    -
+      value: '0'
+      label: '0000'
+    -
+      value: '1'
+      label: '0100'
+    -
+      value: '2'
+      label: '0200'
+    -
+      value: '3'
+      label: '0300'
+    -
+      value: '4'
+      label: '0400'
+    -
+      value: '5'
+      label: '0500'
+    -
+      value: '6'
+      label: '0600'
+    -
+      value: '7'
+      label: '0700'
+    -
+      value: '8'
+      label: '0800'
+    -
+      value: '9'
+      label: '0900'
+    -
+      value: '10'
+      label: '1000'
+    -
+      value: '11'
+      label: '1100'
+    -
+      value: '12'
+      label: '1200'
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

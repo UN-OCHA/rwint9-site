@@ -1,0 +1,31 @@
+uuid: f0aa3264-de38-4d79-a2a3-2e7160656628
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.disaster_type.field_disaster_type_code
+    - taxonomy.vocabulary.disaster_type
+  module:
+    - text
+id: taxonomy_term.disaster_type.default
+targetEntityType: taxonomy_term
+bundle: disaster_type
+mode: default
+content:
+  description:
+    label: hidden
+    type: text_default
+    weight: 0
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_disaster_type_code:
+    weight: 1
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+hidden:
+  langcode: true

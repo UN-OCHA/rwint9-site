@@ -1,0 +1,29 @@
+uuid: 2f634013-8583-49e1-9ea9-035379401db0
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_career_categories
+    - node.type.training
+    - taxonomy.vocabulary.career_category
+id: node.training.field_career_categories
+field_name: field_career_categories
+entity_type: node
+bundle: training
+label: 'Professional function'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      career_category: career_category
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

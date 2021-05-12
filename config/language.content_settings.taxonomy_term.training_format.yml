@@ -1,0 +1,11 @@
+uuid: 56ef803a-e4af-47b5-95f3-4f4cee637bef
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.training_format
+id: taxonomy_term.training_format
+target_entity_type_id: taxonomy_term
+target_bundle: training_format
+default_langcode: site_default
+language_alterable: false

@@ -1,0 +1,19 @@
+uuid: cbe76f4c-37f1-42b5-b6e3-e519995a5cb5
+langcode: en
+status: true
+dependencies:
+  module:
+    - taxonomy
+id: taxonomy_term.field_attention_job
+field_name: field_attention_job
+entity_type: taxonomy_term
+type: string_long
+settings:
+  case_sensitive: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

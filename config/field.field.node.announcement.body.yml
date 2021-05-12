@@ -1,0 +1,27 @@
+uuid: 9edb6233-d706-446f-bc10-fb5bf7a5b4a1
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.body
+    - node.type.announcement
+  module:
+    - allowed_formats
+    - text
+third_party_settings:
+  allowed_formats:
+    plain_text: plain_text
+id: node.announcement.body
+field_name: body
+entity_type: node
+bundle: announcement
+label: Description
+description: 'Description of the banner for when it cannot be shown or for those who cannot see it (ex: screenreaders). Do not use special characters.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  display_summary: false
+  required_summary: false
+field_type: text_with_summary

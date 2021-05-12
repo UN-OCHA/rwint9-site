@@ -1,0 +1,21 @@
+uuid: ede14584-4466-4f02-8c3b-d753c25a00fc
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_embargo_date
+    - node.type.report
+  module:
+    - datetime
+id: node.report.field_embargo_date
+field_name: field_embargo_date
+entity_type: node
+bundle: report
+label: 'Embargo date'
+description: 'Date until when the document is embargoed. It will be automatically published on that date. It must be a UTC/GMT date.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: datetime

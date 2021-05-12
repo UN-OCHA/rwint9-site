@@ -1,0 +1,21 @@
+uuid: 42dc608a-1f44-4633-b7db-24c46dbde281
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_cost
+    - node.type.training
+  module:
+    - options
+id: node.training.field_cost
+field_name: field_cost
+entity_type: node
+bundle: training
+label: Cost
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

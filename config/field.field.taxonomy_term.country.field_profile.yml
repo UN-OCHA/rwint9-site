@@ -1,0 +1,23 @@
+uuid: 9af45ea3-3c2a-431d-9c9d-037f2beed960
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_profile
+    - taxonomy.vocabulary.country
+id: taxonomy_term.country.field_profile
+field_name: field_profile
+entity_type: taxonomy_term
+bundle: country
+label: 'Show profile'
+description: 'When selected, the country''s profile (description, key content etc.) will be visible to visitors.'
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'Yes'
+  off_label: 'No'
+field_type: boolean

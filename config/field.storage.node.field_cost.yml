@@ -1,0 +1,27 @@
+uuid: d84a6345-dfe9-4ce5-a540-8834b9a78c9c
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - options
+id: node.field_cost
+field_name: field_cost
+entity_type: node
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: free
+      label: free
+    -
+      value: fee-based
+      label: fee-based
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -46,7 +46,7 @@ processors:
     weight: 5
     data:
       manual_executable_path: ''
-      progressive: 0
+      progressive: false
   fb380dd6-14f0-4b5f-8615-1ed40147ae17:
     uuid: fb380dd6-14f0-4b5f-8615-1ed40147ae17
     id: optipng

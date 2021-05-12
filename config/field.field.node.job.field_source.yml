@@ -1,0 +1,29 @@
+uuid: 792e8002-df17-4393-8a0b-8b8905529560
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_source
+    - node.type.job
+    - taxonomy.vocabulary.source
+id: node.job.field_source
+field_name: field_source
+entity_type: node
+bundle: job
+label: Organization
+description: 'The name of the organization issuing the hiring contract. Please check if your organization is already on our list. New organizations will undergo a brief verification by our team.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      source: source
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

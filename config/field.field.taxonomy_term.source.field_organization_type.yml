@@ -1,0 +1,29 @@
+uuid: 03295425-177a-4ecd-ab27-feb89c19073d
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_organization_type
+    - taxonomy.vocabulary.organization_type
+    - taxonomy.vocabulary.source
+id: taxonomy_term.source.field_organization_type
+field_name: field_organization_type
+entity_type: taxonomy_term
+bundle: source
+label: 'Organization type'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      organization_type: organization_type
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

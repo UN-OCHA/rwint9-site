@@ -1,0 +1,19 @@
+uuid: 1ca6088f-7d29-4d7e-83f6-0ae9ecc7729b
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_shortname
+    - taxonomy.vocabulary.source
+id: taxonomy_term.source.field_shortname
+field_name: field_shortname
+entity_type: taxonomy_term
+bundle: source
+label: Shortname
+description: 'Acronym or short name. If none is available, simply copy the name of the source.'
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

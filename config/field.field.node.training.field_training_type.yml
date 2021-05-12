@@ -1,0 +1,29 @@
+uuid: 18c25b2f-a278-4a38-b56b-1a708da5a904
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_training_type
+    - node.type.training
+    - taxonomy.vocabulary.training_type
+id: node.training.field_training_type
+field_name: field_training_type
+entity_type: node
+bundle: training
+label: Category
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      training_type: training_type
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

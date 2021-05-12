@@ -1,0 +1,91 @@
+uuid: 53e2fe3a-d125-4005-8566-3c2cabbcb92c
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.source.field_aliases
+    - field.field.taxonomy_term.source.field_allowed_content_types
+    - field.field.taxonomy_term.source.field_attention_job
+    - field.field.taxonomy_term.source.field_attention_report
+    - field.field.taxonomy_term.source.field_attention_training
+    - field.field.taxonomy_term.source.field_country
+    - field.field.taxonomy_term.source.field_disclaimer
+    - field.field.taxonomy_term.source.field_fts_id
+    - field.field.taxonomy_term.source.field_homepage
+    - field.field.taxonomy_term.source.field_job_import_feed_url
+    - field.field.taxonomy_term.source.field_links
+    - field.field.taxonomy_term.source.field_logo
+    - field.field.taxonomy_term.source.field_longname
+    - field.field.taxonomy_term.source.field_organization_type
+    - field.field.taxonomy_term.source.field_shortname
+    - field.field.taxonomy_term.source.field_spanish_name
+    - taxonomy.vocabulary.source
+  module:
+    - link
+    - text
+id: taxonomy_term.source.default
+targetEntityType: taxonomy_term
+bundle: source
+mode: default
+content:
+  description:
+    label: hidden
+    type: text_default
+    weight: 0
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_country:
+    weight: 2
+    label: inline
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
+    region: content
+  field_homepage:
+    weight: 3
+    label: inline
+    settings:
+      trim_length: 80
+      url_only: false
+      url_plain: false
+      rel: ''
+      target: ''
+    third_party_settings: {  }
+    type: link
+    region: content
+  field_links:
+    weight: 4
+    label: above
+    settings:
+      trim_length: 80
+      url_only: false
+      url_plain: false
+      rel: ''
+      target: ''
+    third_party_settings: {  }
+    type: link
+    region: content
+  field_organization_type:
+    weight: 1
+    label: inline
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
+    region: content
+hidden:
+  field_aliases: true
+  field_allowed_content_types: true
+  field_attention_job: true
+  field_attention_report: true
+  field_attention_training: true
+  field_disclaimer: true
+  field_fts_id: true
+  field_job_import_feed_url: true
+  field_logo: true
+  field_longname: true
+  field_shortname: true
+  field_spanish_name: true
+  langcode: true

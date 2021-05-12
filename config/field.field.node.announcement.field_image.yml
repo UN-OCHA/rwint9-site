@@ -1,0 +1,29 @@
+uuid: 6a4091b3-1ef5-49fd-b990-1e93027ae005
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_image
+    - media.type.image_announcement
+    - node.type.announcement
+id: node.announcement.field_image
+field_name: field_image
+entity_type: node
+bundle: announcement
+label: Banner
+description: 'Announcement''s banner image. It should be exactly 1200x400 pixels.'
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:media'
+  handler_settings:
+    target_bundles:
+      image_announcement: image_announcement
+    sort:
+      field: mid
+      direction: DESC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

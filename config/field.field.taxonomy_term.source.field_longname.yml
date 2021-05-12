@@ -1,0 +1,19 @@
+uuid: fc5f9589-d4e0-4375-bb3c-bdd1dd72d242
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_longname
+    - taxonomy.vocabulary.source
+id: taxonomy_term.source.field_longname
+field_name: field_longname
+entity_type: taxonomy_term
+bundle: source
+label: Longname
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

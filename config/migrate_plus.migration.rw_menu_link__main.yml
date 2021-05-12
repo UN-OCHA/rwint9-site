@@ -1,0 +1,97 @@
+uuid: 72e0dd61-4cfb-4384-bfe5-330640d946fa
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - reliefweb_migrate
+_core:
+  default_config_hash: RH9Q9AbYNAVmOjwDSK0HzPrXsVNyKxiOmDh3nCMewTw
+id: rw_menu_link__main
+class: null
+field_plugin_method: null
+cck_plugin_method: null
+migration_tags:
+  - 'Drupal 7'
+  - Content
+migration_group: reliefweb
+label: 'Migrate ReliefWeb main menu links.'
+source:
+  plugin: embedded_data
+  data_rows:
+    -
+      id: 1
+      title: Updates
+      description: Updates
+      link_uri: 'internal:/updates'
+      external: 0
+      weight: 0
+    -
+      id: 2
+      title: Countries
+      description: Countries
+      link_uri: 'internal:/countries'
+      external: 0
+      weight: 1
+    -
+      id: 3
+      title: Disasters
+      description: Disasters
+      link_uri: 'internal:/disasters'
+      external: 0
+      weight: 2
+    -
+      id: 4
+      title: Organizations
+      description: Organizations
+      link_uri: 'internal:/organizations'
+      external: 0
+      weight: 3
+    -
+      id: 5
+      title: Topics
+      description: Topics
+      link_uri: 'internal:/topics'
+      external: 0
+      weight: 4
+    -
+      id: 6
+      title: Jobs
+      description: Jobs
+      link_uri: 'internal:/jobs'
+      external: 0
+      weight: 5
+    -
+      id: 7
+      title: Training
+      description: Training
+      link_uri: 'internal:/training'
+      external: 0
+      weight: 6
+  ids:
+    id:
+      type: integer
+  constants:
+    bundle: menu_link_content
+    menu_name: main
+    enabled: 1
+    expanded: 0
+    parent: null
+process:
+  id: id
+  bundle: constants/bundle
+  title: title
+  description: description
+  menu_name: constants/menu_name
+  link/uri: link_uri
+  external: external
+  weight: weight
+  expanded: constants/expanded
+  enabled: constants/enabled
+  parent: constants/parent
+destination:
+  plugin: 'entity:menu_link_content'
+  no_stub: true
+migration_dependencies:
+  required:
+    - null

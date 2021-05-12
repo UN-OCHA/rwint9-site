@@ -1,0 +1,29 @@
+uuid: fd5bef58-731c-4b94-9362-5d6111c23545
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_disaster
+    - node.type.report
+    - taxonomy.vocabulary.disaster
+id: node.report.field_disaster
+field_name: field_disaster
+entity_type: node
+bundle: report
+label: Disaster
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      disaster: disaster
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

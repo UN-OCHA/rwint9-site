@@ -1,0 +1,29 @@
+uuid: b9b5accb-b018-4fb5-ad9e-ea3f4f0eae13
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_source
+    - node.type.training
+    - taxonomy.vocabulary.source
+id: node.training.field_source
+field_name: field_source
+entity_type: node
+bundle: training
+label: Organization
+description: ''
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      source: source
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

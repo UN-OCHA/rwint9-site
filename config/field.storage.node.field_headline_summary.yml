@@ -1,0 +1,19 @@
+uuid: 777b7f5d-2986-44ca-9f57-b4c1fd0946ac
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: node.field_headline_summary
+field_name: field_headline_summary
+entity_type: node
+type: string_long
+settings:
+  case_sensitive: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

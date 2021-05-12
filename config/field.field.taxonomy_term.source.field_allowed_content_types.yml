@@ -1,0 +1,21 @@
+uuid: 6d9be077-3a88-4b33-a54f-1a517c9cf579
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_allowed_content_types
+    - taxonomy.vocabulary.source
+  module:
+    - options
+id: taxonomy_term.source.field_allowed_content_types
+field_name: field_allowed_content_types
+entity_type: taxonomy_term
+bundle: source
+label: 'Allowed content types'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_integer

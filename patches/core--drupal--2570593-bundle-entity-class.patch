@@ -1,0 +1,766 @@
+diff --git a/lib/Drupal/Core/Config/Entity/ConfigEntityStorage.php b/lib/Drupal/Core/Config/Entity/ConfigEntityStorage.php
+index b944eea9f9..eea316acb2 100644
+--- a/lib/Drupal/Core/Config/Entity/ConfigEntityStorage.php
++++ b/lib/Drupal/Core/Config/Entity/ConfigEntityStorage.php
+@@ -225,7 +225,8 @@ protected function doLoadMultiple(array $ids = NULL) {
+   protected function doCreate(array $values) {
+     // Set default language to current language if not provided.
+     $values += [$this->langcodeKey => $this->languageManager->getCurrentLanguage()->getId()];
+-    $entity = new $this->entityClass($values, $this->entityTypeId);
++    $entity_class = $this->getEntityClass();
++    $entity = new $entity_class($values, $this->entityTypeId);
+
+     return $entity;
+   }
+diff --git a/lib/Drupal/Core/Entity/BundleEntityStorageInterface.php b/lib/Drupal/Core/Entity/BundleEntityStorageInterface.php
+new file mode 100644
+index 0000000000..9ba915fabd
+--- /dev/null
++++ b/lib/Drupal/Core/Entity/BundleEntityStorageInterface.php
+@@ -0,0 +1,33 @@
++<?php
++
++namespace Drupal\Core\Entity;
++
++/**
++ * A storage that supports entities with bundle specific classes.
++ */
++interface BundleEntityStorageInterface {
++
++  /**
++   * Retrieves the bundle name for a provided class name.
++   *
++   * @param string $class_name
++   *   The class name to check.
++   *
++   * @return string|null
++   *   The bundle name of the class provided or NULL if unable to determine the
++   *   bundle from the provided class.
++   *
++   * @throws \Drupal\Core\Entity\Exception\AmbiguousBundleClassException
++   *   Thrown when multiple bundles are using the provided class.
++   */
++  public function getBundleFromClass($class_name);
++
++  /**
++   * Retrieves the entity bundle key.
++   *
++   * @return bool|string
++   *   The entity bundle key.
++   */
++  public function getBundleKey();
++
++}
+diff --git a/lib/Drupal/Core/Entity/ContentEntityBase.php b/lib/Drupal/Core/Entity/ContentEntityBase.php
+index 35dca9a9c6..e416ced315 100644
+--- a/lib/Drupal/Core/Entity/ContentEntityBase.php
++++ b/lib/Drupal/Core/Entity/ContentEntityBase.php
+@@ -1125,6 +1125,23 @@ public function __unset($name) {
+     }
+   }
+
++  /**
++   * {@inheritdoc}
++   */
++  public static function create(array $values = []) {
++    $entity_type_repository = \Drupal::service('entity_type.repository');
++    $entity_type_manager = \Drupal::entityTypeManager();
++    $class_name = get_called_class();
++    $storage = $entity_type_manager->getStorage($entity_type_repository->getEntityTypeFromClass($class_name));
++
++    // Always explicitly specify the bundle if the entity has a bundle class.
++    if ($storage instanceof BundleEntityStorageInterface && ($bundle = $storage->getBundleFromClass($class_name))) {
++      $values[$storage->getBundleKey()] = $bundle;
++    }
++
++    return $storage->create($values);
++  }
++
+   /**
+    * {@inheritdoc}
+    */
+diff --git a/lib/Drupal/Core/Entity/ContentEntityStorageBase.php b/lib/Drupal/Core/Entity/ContentEntityStorageBase.php
+index b69958d8e8..e003838e0b 100644
+--- a/lib/Drupal/Core/Entity/ContentEntityStorageBase.php
++++ b/lib/Drupal/Core/Entity/ContentEntityStorageBase.php
+@@ -5,6 +5,8 @@
+ use Drupal\Core\Cache\Cache;
+ use Drupal\Core\Cache\CacheBackendInterface;
+ use Drupal\Core\Cache\MemoryCache\MemoryCacheInterface;
++use Drupal\Core\Entity\Exception\AmbiguousBundleClassException;
++use Drupal\Core\Entity\Exception\BundleClassInheritanceException;
+ use Drupal\Core\Field\FieldDefinitionInterface;
+ use Drupal\Core\Field\FieldStorageDefinitionInterface;
+ use Drupal\Core\Language\LanguageInterface;
+@@ -14,7 +16,7 @@
+ /**
+  * Base class for content entity storage handlers.
+  */
+-abstract class ContentEntityStorageBase extends EntityStorageBase implements ContentEntityStorageInterface, DynamicallyFieldableEntityStorageInterface {
++abstract class ContentEntityStorageBase extends EntityStorageBase implements ContentEntityStorageInterface, DynamicallyFieldableEntityStorageInterface, BundleEntityStorageInterface {
+
+   /**
+    * The entity bundle key.
+@@ -73,6 +75,34 @@ public function __construct(EntityTypeInterface $entity_type, EntityFieldManager
+     $this->entityTypeBundleInfo = $entity_type_bundle_info;
+   }
+
++  /**
++   * {@inheritdoc}
++   */
++  public function create(array $values = []) {
++    // In some cases the entity bundle may be provided by the ::preCreate()
++    // method in the entity class. If a bundle is truly required an exception
++    // will be thrown in ::doCreate() so there's no need to throw one here.
++    $bundle = $this->getBundleFromValues($values);
++    $entity_class = $this->getEntityClass($bundle);
++    $entity_class::preCreate($this, $values);
++
++    // Assign a new UUID if there is none yet.
++    if ($this->uuidKey && $this->uuidService && !isset($values[$this->uuidKey])) {
++      $values[$this->uuidKey] = $this->uuidService->generate();
++    }
++
++    $entity = $this->doCreate($values);
++    $entity->enforceIsNew();
++
++    $entity->postCreate($this);
++
++    // Modules might need to add or change the data initially held by the new
++    // entity object, for instance to fill-in default values.
++    $this->invokeHook('create', $entity);
++
++    return $entity;
++  }
++
+   /**
+    * {@inheritdoc}
+    */
+@@ -90,13 +120,47 @@ public static function createInstance(ContainerInterface $container, EntityTypeI
+    * {@inheritdoc}
+    */
+   protected function doCreate(array $values) {
+-    // We have to determine the bundle first.
+-    $bundle = FALSE;
+-    if ($this->bundleKey) {
+-      if (!isset($values[$this->bundleKey])) {
+-        throw new EntityStorageException('Missing bundle for entity type ' . $this->entityTypeId);
++    $bundle = $this->getBundleFromValues($values);
++    if (!empty($this->bundleKey) && empty($bundle)) {
++      throw new EntityStorageException('Missing bundle for entity type ' . $this->entityTypeId);
++    }
++    $entity_class = $this->getEntityClass($bundle);
++    $entity = new $entity_class([], $this->entityTypeId, $bundle);
++    $this->initFieldValues($entity, $values);
++    return $entity;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getBundleFromClass($class_name) {
++    $bundle_for_class = NULL;
++    foreach ($this->entityTypeBundleInfo->getBundleInfo($this->entityTypeId) as $bundle => $bundle_info) {
++      if (!empty($bundle_info['class']) && $bundle_info['class'] === $class_name) {
++        // There is already a class for that bundle.
++        if (!empty($bundle_for_class)) {
++          throw new AmbiguousBundleClassException($class_name);
++        }
++        else {
++          $bundle_for_class = $bundle;
++        }
+       }
++    }
++    return $bundle_for_class;
++  }
+
++  /**
++   * Retrieves the bundle from an array of values.
++   *
++   * @param array $values
++   *   An array of values to set, keyed by field name.
++   *
++   * @return string|null
++   *   The bundle or NULL if not set.
++   */
++  protected function getBundleFromValues(array $values) {
++    $bundle = NULL;
++    if (!empty($this->bundleKey) && !empty($values[$this->bundleKey])) {
+       // Normalize the bundle value. This is an optimized version of
+       // \Drupal\Core\Field\FieldInputValueNormalizerTrait::normalizeValue()
+       // because we just need the scalar value.
+@@ -115,9 +179,37 @@ protected function doCreate(array $values) {
+         $bundle = reset($bundle_value);
+       }
+     }
+-    $entity = new $this->entityClass([], $this->entityTypeId, $bundle);
+-    $this->initFieldValues($entity, $values);
+-    return $entity;
++    return $bundle;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getBundleKey() {
++    return $this->bundleKey;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getEntityClass($bundle = NULL) {
++    $entity_class = parent::getEntityClass();
++
++    if (!empty($bundle)) {
++      // Return the bundle class if it has been defined for this bundle.
++      $bundle_info = $this->entityTypeBundleInfo->getBundleInfo($this->entityTypeId);
++      $bundle_class = $bundle_info[$bundle]['class'] ?? NULL;
++
++      // Bundle classes should extend the main entity class.
++      if ($bundle_class) {
++        if (!is_subclass_of($bundle_class, $entity_class)) {
++          throw new BundleClassInheritanceException($bundle_class, $entity_class);
++        }
++        return $bundle_class;
++      }
++    }
++
++    return $entity_class;
+   }
+
+   /**
+diff --git a/lib/Drupal/Core/Entity/EntityStorageBase.php b/lib/Drupal/Core/Entity/EntityStorageBase.php
+index 8b78be167a..db9bf6efaa 100644
+--- a/lib/Drupal/Core/Entity/EntityStorageBase.php
++++ b/lib/Drupal/Core/Entity/EntityStorageBase.php
+@@ -99,6 +99,13 @@ public function __construct(EntityTypeInterface $entity_type, MemoryCacheInterfa
+     $this->memoryCacheTag = 'entity.memory_cache:' . $this->entityTypeId;
+   }
+
++  /**
++   * {@inheritdoc}
++   */
++  public function getEntityClass($bundle = NULL) {
++    return $this->entityClass;
++  }
++
+   /**
+    * {@inheritdoc}
+    */
+@@ -205,7 +212,7 @@ protected function invokeHook($hook, EntityInterface $entity) {
+    * {@inheritdoc}
+    */
+   public function create(array $values = []) {
+-    $entity_class = $this->entityClass;
++    $entity_class = $this->getEntityClass();
+     $entity_class::preCreate($this, $values);
+
+     // Assign a new UUID if there is none yet.
+@@ -234,7 +241,8 @@ public function create(array $values = []) {
+    * @return \Drupal\Core\Entity\EntityInterface
+    */
+   protected function doCreate(array $values) {
+-    return new $this->entityClass($values, $this->entityTypeId);
++    $entity_class = $this->getEntityClass();
++    return new $entity_class($values, $this->entityTypeId);
+   }
+
+   /**
+@@ -353,17 +361,22 @@ protected function preLoad(array &$ids = NULL) {
+    *   Associative array of query results, keyed on the entity ID.
+    */
+   protected function postLoad(array &$entities) {
+-    $entity_class = $this->entityClass;
+-    $entity_class::postLoad($this, $entities);
+-    // Call hook_entity_load().
+-    foreach ($this->moduleHandler()->getImplementations('entity_load') as $module) {
+-      $function = $module . '_entity_load';
+-      $function($entities, $this->entityTypeId);
+-    }
+-    // Call hook_TYPE_load().
+-    foreach ($this->moduleHandler()->getImplementations($this->entityTypeId . '_load') as $module) {
+-      $function = $module . '_' . $this->entityTypeId . '_load';
+-      $function($entities);
++    $entities_by_class = $this->getEntitiesByClass($entities);
++
++    foreach ($entities_by_class as $entity_class => &$items) {
++      $entity_class::postLoad($this, $items);
++
++      // Call hook_entity_load().
++      foreach ($this->moduleHandler()->getImplementations('entity_load') as $module) {
++        $function = $module . '_entity_load';
++        $function($items, $this->entityTypeId);
++      }
++
++      // Call hook_TYPE_load().
++      foreach ($this->moduleHandler()->getImplementations($this->entityTypeId . '_load') as $module) {
++        $function = $module . '_' . $this->entityTypeId . '_load';
++        $function($items);
++      }
+     }
+   }
+
+@@ -379,7 +392,9 @@ protected function postLoad(array &$entities) {
+   protected function mapFromStorageRecords(array $records) {
+     $entities = [];
+     foreach ($records as $record) {
+-      $entity = new $this->entityClass($record, $this->entityTypeId);
++      $entity_class = $this->getEntityClass();
++      /* @var $entity \Drupal\Core\Entity\EntityInterface */
++      $entity = new $entity_class($record, $this->entityTypeId);
+       $entities[$entity->id()] = $entity;
+     }
+     return $entities;
+@@ -394,6 +409,7 @@ protected function mapFromStorageRecords(array $records) {
+    *   The entity being saved.
+    *
+    * @return bool
++   *   TRUE if this entity exists in storage, FALSE otherwise.
+    */
+   abstract protected function has($id, EntityInterface $entity);
+
+@@ -406,27 +422,24 @@ public function delete(array $entities) {
+       return;
+     }
+
+-    // Ensure that the entities are keyed by ID.
+-    $keyed_entities = [];
+-    foreach ($entities as $entity) {
+-      $keyed_entities[$entity->id()] = $entity;
+-    }
++    $entities_by_class = $this->getEntitiesByClass($entities);
+
+     // Allow code to run before deleting.
+-    $entity_class = $this->entityClass;
+-    $entity_class::preDelete($this, $keyed_entities);
+-    foreach ($keyed_entities as $entity) {
+-      $this->invokeHook('predelete', $entity);
+-    }
++    foreach ($entities_by_class as $entity_class => &$items) {
++      $entity_class::preDelete($this, $items);
++      foreach ($items as $entity) {
++        $this->invokeHook('predelete', $entity);
++      }
+
+-    // Perform the delete and reset the static cache for the deleted entities.
+-    $this->doDelete($keyed_entities);
+-    $this->resetCache(array_keys($keyed_entities));
++      // Perform the delete and reset the static cache for the deleted entities.
++      $this->doDelete($items);
++      $this->resetCache(array_keys($items));
+
+-    // Allow code to run after deleting.
+-    $entity_class::postDelete($this, $keyed_entities);
+-    foreach ($keyed_entities as $entity) {
+-      $this->invokeHook('delete', $entity);
++      // Allow code to run after deleting.
++      $entity_class::postDelete($this, $items);
++      foreach ($items as $entity) {
++        $this->invokeHook('delete', $entity);
++      }
+     }
+   }
+
+@@ -605,4 +618,27 @@ public function getAggregateQuery($conjunction = 'AND') {
+    */
+   abstract protected function getQueryServiceName();
+
++  /**
++   * Group the given array of entities by their class name and ID.
++   *
++   * @param \Drupal\Core\Entity\EntityInterface[] $entities
++   *   The array of entities to index.
++   *
++   * @return \Drupal\Core\Entity\EntityInterface[][]
++   *   An array of the passed-in entities, grouped by their class name and ID.
++   */
++  protected function getEntitiesByClass(array $entities) {
++    $entity_classes = [];
++
++    foreach ($entities as $entity) {
++      $entity_class = get_class($entity);
++      if (!isset($entity_classes[$entity_class])) {
++        $entity_classes[$entity_class] = [];
++      }
++      $entity_classes[$entity_class][$entity->id()] = $entity;
++    }
++
++    return $entity_classes;
++  }
++
+ }
+diff --git a/lib/Drupal/Core/Entity/EntityStorageInterface.php b/lib/Drupal/Core/Entity/EntityStorageInterface.php
+index 71898e0026..6d4762be33 100644
+--- a/lib/Drupal/Core/Entity/EntityStorageInterface.php
++++ b/lib/Drupal/Core/Entity/EntityStorageInterface.php
+@@ -230,4 +230,16 @@ public function getEntityTypeId();
+    */
+   public function getEntityType();
+
++  /**
++   * Retrieves the class name used to create the entity.
++   *
++   * @param string|null $bundle
++   *   (optional) A specific entity type bundle identifier. Can be omitted in
++   *   the case of entity types without bundles, like User.
++   *
++   * @return string
++   *   The class name.
++   */
++  public function getEntityClass($bundle = NULL);
++
+ }
+diff --git a/lib/Drupal/Core/Entity/EntityTypeRepository.php b/lib/Drupal/Core/Entity/EntityTypeRepository.php
+index 0bc900dbbc..e1c1cd5d16 100644
+--- a/lib/Drupal/Core/Entity/EntityTypeRepository.php
++++ b/lib/Drupal/Core/Entity/EntityTypeRepository.php
+@@ -2,6 +2,7 @@
+
+ namespace Drupal\Core\Entity;
+
++use Drupal\Core\Entity\Exception\AmbiguousBundleClassException;
+ use Drupal\Core\Entity\Exception\AmbiguousEntityClassException;
+ use Drupal\Core\Entity\Exception\NoCorrespondingEntityClassException;
+ use Drupal\Core\StringTranslation\StringTranslationTrait;
+@@ -80,7 +81,8 @@ public function getEntityTypeFromClass($class_name) {
+
+     $same_class = 0;
+     $entity_type_id = NULL;
+-    foreach ($this->entityTypeManager->getDefinitions() as $entity_type) {
++    $definitions = $this->entityTypeManager->getDefinitions();
++    foreach ($definitions as $entity_type) {
+       if ($entity_type->getOriginalClass() == $class_name  || $entity_type->getClass() == $class_name) {
+         $entity_type_id = $entity_type->id();
+         if ($same_class++) {
+@@ -89,6 +91,20 @@ public function getEntityTypeFromClass($class_name) {
+       }
+     }
+
++    // If no match was found check if it is a bundle class. This needs to be in
++    // a separate loop to avoid false positives, since an entity class can
++    // subclass another entity class.
++    if (!$entity_type_id) {
++      foreach ($definitions as $entity_type) {
++        if (is_subclass_of($class_name, $entity_type->getOriginalClass()) || is_subclass_of($class_name, $entity_type->getClass())) {
++          $entity_type_id = $entity_type->id();
++          if ($same_class++) {
++            throw new AmbiguousBundleClassException($class_name);
++          }
++        }
++      }
++    }
++
+     // Return the matching entity type ID if there is one.
+     if ($entity_type_id) {
+       $this->classNameEntityTypeMap[$class_name] = $entity_type_id;
+diff --git a/lib/Drupal/Core/Entity/EntityTypeRepositoryInterface.php b/lib/Drupal/Core/Entity/EntityTypeRepositoryInterface.php
+index 53af033e4d..0d05bc9673 100644
+--- a/lib/Drupal/Core/Entity/EntityTypeRepositoryInterface.php
++++ b/lib/Drupal/Core/Entity/EntityTypeRepositoryInterface.php
+@@ -34,6 +34,8 @@ public function getEntityTypeLabels($group = FALSE);
+    *
+    * @throws \Drupal\Core\Entity\Exception\AmbiguousEntityClassException
+    *   Thrown when multiple subclasses correspond to the called class.
++   * @throws \Drupal\Core\Entity\Exception\AmbiguousBundleClassException
++   *   Thrown when multiple subclasses correspond to the called bundle class.
+    * @throws \Drupal\Core\Entity\Exception\NoCorrespondingEntityClassException
+    *   Thrown when no entity class corresponds to the called class.
+    *
+diff --git a/lib/Drupal/Core/Entity/Exception/AmbiguousBundleClassException.php b/lib/Drupal/Core/Entity/Exception/AmbiguousBundleClassException.php
+new file mode 100644
+index 0000000000..f556fabbc9
+--- /dev/null
++++ b/lib/Drupal/Core/Entity/Exception/AmbiguousBundleClassException.php
+@@ -0,0 +1,23 @@
++<?php
++
++namespace Drupal\Core\Entity\Exception;
++
++/**
++ * Exception thrown if a bundle class is defined for multiple bundles.
++ *
++ * @see \Drupal\Core\Entity\ContentEntityStorageBase::getBundleFromClass()
++ */
++class AmbiguousBundleClassException extends AmbiguousEntityClassException {
++
++  /**
++   * Constructs an AmbiguousBundleClassException.
++   *
++   * @param string $class
++   *   The bundle class which is defined for multiple bundles.
++   */
++  public function __construct(string $class) {
++    $message = sprintf('Multiple bundles are using the bundle class %s.', $class);
++    parent::__construct($message);
++  }
++
++}
+diff --git a/lib/Drupal/Core/Entity/Exception/BundleClassInheritanceException.php b/lib/Drupal/Core/Entity/Exception/BundleClassInheritanceException.php
+new file mode 100644
+index 0000000000..4f0d1fd2ba
+--- /dev/null
++++ b/lib/Drupal/Core/Entity/Exception/BundleClassInheritanceException.php
+@@ -0,0 +1,25 @@
++<?php
++
++namespace Drupal\Core\Entity\Exception;
++
++/**
++ * Exception thrown if a bundle class does not extend the main entity class.
++ *
++ * @see \Drupal\Core\Entity\ContentEntityStorageBase::getEntityClass()
++ */
++class BundleClassInheritanceException extends \Exception {
++
++  /**
++   * Constructs a BundleClassInheritanceException.
++   *
++   * @param string $bundle_class
++   *   The bundle class which should extend the entity class.
++   * @param string $entity_class
++   *   The entity class which should be extended.
++   */
++  public function __construct(string $bundle_class, string $entity_class) {
++    $message = sprintf('Bundle class %s does not extend entity class %s.', $bundle_class, $entity_class);
++    parent::__construct($message);
++  }
++
++}
+diff --git a/lib/Drupal/Core/Entity/KeyValueStore/KeyValueEntityStorage.php b/lib/Drupal/Core/Entity/KeyValueStore/KeyValueEntityStorage.php
+index 98c5a41a32..4fe53ca1b6 100644
+--- a/lib/Drupal/Core/Entity/KeyValueStore/KeyValueEntityStorage.php
++++ b/lib/Drupal/Core/Entity/KeyValueStore/KeyValueEntityStorage.php
+@@ -93,7 +93,8 @@ public static function createInstance(ContainerInterface $container, EntityTypeI
+   public function doCreate(array $values = []) {
+     // Set default language to site default if not provided.
+     $values += [$this->getEntityType()->getKey('langcode') => $this->languageManager->getDefaultLanguage()->getId()];
+-    $entity = new $this->entityClass($values, $this->entityTypeId);
++    $entity_class = $this->getEntityClass();
++    $entity = new $entity_class($values, $this->entityTypeId);
+
+     // @todo This is handled by ContentEntityStorageBase, which assumes
+     //   FieldableEntityInterface. The current approach in
+diff --git a/lib/Drupal/Core/Entity/Sql/SqlContentEntityStorage.php b/lib/Drupal/Core/Entity/Sql/SqlContentEntityStorage.php
+index 696203a6c5..bfc879df40 100644
+--- a/lib/Drupal/Core/Entity/Sql/SqlContentEntityStorage.php
++++ b/lib/Drupal/Core/Entity/Sql/SqlContentEntityStorage.php
+@@ -505,7 +505,8 @@ protected function mapFromStorageRecords(array $records, $load_from_revision = F
+     foreach ($values as $id => $entity_values) {
+       $bundle = $this->bundleKey ? $entity_values[$this->bundleKey][LanguageInterface::LANGCODE_DEFAULT] : FALSE;
+       // Turn the record into an entity class.
+-      $entities[$id] = new $this->entityClass($entity_values, $this->entityTypeId, $bundle, array_keys($translations[$id]));
++      $entity_class = $this->getEntityClass($bundle);
++      $entities[$id] = new $entity_class($entity_values, $this->entityTypeId, $bundle, array_keys($translations[$id]));
+     }
+
+     return $entities;
+diff --git a/lib/Drupal/Core/Entity/entity.api.php b/lib/Drupal/Core/Entity/entity.api.php
+index f941695da4..0547183656 100644
+--- a/lib/Drupal/Core/Entity/entity.api.php
++++ b/lib/Drupal/Core/Entity/entity.api.php
+@@ -846,6 +846,8 @@ function hook_entity_view_mode_info_alter(&$view_modes) {
+  *     the entity type and the bundle, the one for the bundle is used.
+  *   - translatable: (optional) A boolean value specifying whether this bundle
+  *     has translation support enabled. Defaults to FALSE.
++ *   - class: (optional) The fully qualified class name for this bundle. If
++ *     omitted the class from the entity type definition will be used.
+  *
+  * @see \Drupal\Core\Entity\EntityTypeBundleInfo::getBundleInfo()
+  * @see hook_entity_bundle_info_alter()
+@@ -866,6 +868,8 @@ function hook_entity_bundle_info() {
+  */
+ function hook_entity_bundle_info_alter(&$bundles) {
+   $bundles['user']['user']['label'] = t('Full account');
++  // Override the bundle class for the "article" node type in a custom module.
++  $bundles['node']['article']['class'] = 'Drupal\mymodule\Entity\Article';
+ }
+
+ /**
+diff --git a/modules/system/tests/modules/entity_test_bundle_class/entity_test_bundle_class.info.yml b/modules/system/tests/modules/entity_test_bundle_class/entity_test_bundle_class.info.yml
+new file mode 100644
+index 0000000000..2bc73bd55d
+--- /dev/null
++++ b/modules/system/tests/modules/entity_test_bundle_class/entity_test_bundle_class.info.yml
+@@ -0,0 +1,7 @@
++name: 'Entity Bundle Class Test'
++type: module
++description: 'Support module for testing entity bundle classes.'
++package: Testing
++version: VERSION
++dependencies:
++  - drupal:entity_test
+diff --git a/modules/system/tests/modules/entity_test_bundle_class/entity_test_bundle_class.module b/modules/system/tests/modules/entity_test_bundle_class/entity_test_bundle_class.module
+new file mode 100644
+index 0000000000..576143a4c1
+--- /dev/null
++++ b/modules/system/tests/modules/entity_test_bundle_class/entity_test_bundle_class.module
+@@ -0,0 +1,26 @@
++<?php
++
++/**
++ * @file
++ * Support module for testing entity bundle classes.
++ */
++
++use Drupal\entity_test_bundle_class\Entity\EntityTestBundleClass;
++use Drupal\entity_test_bundle_class\Entity\NonInheritingBundleClass;
++
++/**
++ * Implements hook_entity_bundle_info_alter().
++ */
++function entity_test_bundle_class_entity_bundle_info_alter(&$bundles) {
++  if (!empty($bundles['entity_test']['bundle_class'])) {
++    $bundles['entity_test']['bundle_class']['class'] = EntityTestBundleClass::class;
++  }
++
++  if (\Drupal::state()->get('entity_test_bundle_class_enable_ambiguous_entity_types', FALSE)) {
++    $bundles['entity_test']['entity_test_no_label']['class'] = EntityTestBundleClass::class;
++  }
++
++  if (\Drupal::state()->get('entity_test_bundle_class_non_inheriting', FALSE)) {
++    $bundles['entity_test']['bundle_class']['class'] = NonInheritingBundleClass::class;
++  }
++}
+diff --git a/modules/system/tests/modules/entity_test_bundle_class/src/Entity/EntityTestBundleClass.php b/modules/system/tests/modules/entity_test_bundle_class/src/Entity/EntityTestBundleClass.php
+new file mode 100644
+index 0000000000..56291da832
+--- /dev/null
++++ b/modules/system/tests/modules/entity_test_bundle_class/src/Entity/EntityTestBundleClass.php
+@@ -0,0 +1,11 @@
++<?php
++
++namespace Drupal\entity_test_bundle_class\Entity;
++
++use Drupal\entity_test\Entity\EntityTest;
++
++/**
++ * The bundle class for the bundle_class bundle of the entity_test entity.
++ */
++class EntityTestBundleClass extends EntityTest {
++}
+diff --git a/modules/system/tests/modules/entity_test_bundle_class/src/Entity/NonInheritingBundleClass.php b/modules/system/tests/modules/entity_test_bundle_class/src/Entity/NonInheritingBundleClass.php
+new file mode 100644
+index 0000000000..1ad9b67fd5
+--- /dev/null
++++ b/modules/system/tests/modules/entity_test_bundle_class/src/Entity/NonInheritingBundleClass.php
+@@ -0,0 +1,9 @@
++<?php
++
++namespace Drupal\entity_test_bundle_class\Entity;
++
++/**
++ * An invalid bundle class which does not inherit the main entity class.
++ */
++class NonInheritingBundleClass {
++}
+diff --git a/tests/Drupal/KernelTests/Core/Entity/BundleClassTest.php b/tests/Drupal/KernelTests/Core/Entity/BundleClassTest.php
+new file mode 100644
+index 0000000000..21a4958ff6
+--- /dev/null
++++ b/tests/Drupal/KernelTests/Core/Entity/BundleClassTest.php
+@@ -0,0 +1,104 @@
++<?php
++
++namespace Drupal\KernelTests\Core\Entity;
++
++use Drupal\Core\Entity\Exception\AmbiguousBundleClassException;
++use Drupal\Core\Entity\Exception\BundleClassInheritanceException;
++use Drupal\entity_test\Entity\EntityTest;
++use Drupal\entity_test_bundle_class\Entity\EntityTestBundleClass;
++
++/**
++ * Tests entity bundle classes.
++ *
++ * @group Entity
++ */
++class BundleClassTest extends EntityKernelTestBase {
++
++  /**
++   * {@inheritdoc}
++   */
++  protected static $modules = ['entity_test_bundle_class'];
++
++  /**
++   * The entity storage.
++   *
++   * @var \Drupal\Core\Entity\EntityStorageInterface
++   */
++  protected $storage;
++
++  /**
++   * {@inheritdoc}
++   */
++  protected function setUp(): void {
++    parent::setUp();
++    $this->storage = $this->entityTypeManager->getStorage('entity_test');
++  }
++
++  /**
++   * Tests making use of a custom bundle field.
++   */
++  public function testEntitySubclass() {
++    entity_test_create_bundle('bundle_class');
++
++    // Verify statically created entity with bundle class returns correct class.
++    $entity = EntityTestBundleClass::create();
++    $this->assertInstanceOf(EntityTestBundleClass::class, $entity);
++
++    // Verify statically created entity with bundle class returns correct
++    // bundle.
++    $entity = EntityTestBundleClass::create(['type' => 'custom']);
++    $this->assertInstanceOf(EntityTestBundleClass::class, $entity);
++    $this->assertEquals('bundle_class', $entity->bundle());
++
++    // Verify that the entity storage creates the entity using the proper class.
++    $entity = $this->storage->create(['type' => 'bundle_class']);
++    $this->assertInstanceOf(EntityTestBundleClass::class, $entity);
++
++    // Verify that loading an entity returns the proper class.
++    $entity->save();
++    $id = $entity->id();
++    $this->storage->resetCache();
++    $entity = $this->storage->load($id);
++    $this->assertInstanceOf(EntityTestBundleClass::class, $entity);
++
++    // Verify that getEntityClass without bundle returns the default entity
++    // class.
++    $entity_class = $this->storage->getEntityClass(NULL);
++    $this->assertEquals(EntityTest::class, $entity_class);
++
++    // Verify that getEntityClass with a bundle returns the proper class.
++    $entity_class = $this->storage->getEntityClass('bundle_class');
++    $this->assertEquals(EntityTestBundleClass::class, $entity_class);
++
++    // Verify that getEntityClass with a non-existing bundle returns the entity
++    // class.
++    $entity_class = $this->storage->getEntityClass('custom');
++    $this->assertEquals(EntityTest::class, $entity_class);
++  }
++
++  /**
++   * Checks exception is thrown if multiple classes implement the same bundle.
++   */
++  public function testAmbiguousBundleClassException() {
++    $this->container->get('state')->set('entity_test_bundle_class_enable_ambiguous_entity_types', TRUE);
++    $this->entityTypeManager->clearCachedDefinitions();
++    $this->expectException(AmbiguousBundleClassException::class);
++    entity_test_create_bundle('bundle_class');
++
++    // Since we now have two entity types that returns the same class for the
++    // same bundle, we expect this to throw an exception.
++    EntityTestBundleClass::create();
++  }
++
++  /**
++   * Checks exception thrown if a bundle class doesn't extend the entity class.
++   */
++  public function testBundleClassShouldExtendEntityClass() {
++    $this->container->get('state')->set('entity_test_bundle_class_non_inheriting', TRUE);
++    $this->entityTypeManager->clearCachedDefinitions();
++    $this->expectException(BundleClassInheritanceException::class);
++    entity_test_create_bundle('bundle_class');
++    $this->storage->create(['type' => 'bundle_class']);
++  }
++
++}

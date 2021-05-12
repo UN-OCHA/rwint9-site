@@ -1,0 +1,13 @@
+uuid: e13728a4-310a-49ff-b49f-079042403926
+langcode: en
+status: true
+dependencies: {  }
+id: image_blog_post
+label: 'Image - Blog post'
+description: 'Images for the blog posts.'
+source: image
+queue_thumbnail_downloads: false
+new_revision: true
+source_configuration:
+  source_field: field_media_image
+field_map: {  }

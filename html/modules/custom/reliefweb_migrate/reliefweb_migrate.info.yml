@@ -1,0 +1,9 @@
+type: module
+name: ReliefWeb Migration to Drupal 9
+description: 'Migrate ReliefWeb content from Drupal 7 to Drupal 9.'
+package: reliefweb
+core_version_requirement: ^9
+dependencies:
+  - drupal:migrate
+  - migrate_plus:migrate_plus
+  - migrate_tools:migrate_tools

@@ -1,0 +1,21 @@
+uuid: 2e14cbe1-5a85-4274-9405-7b2c5434e240
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_origin
+    - node.type.report
+  module:
+    - options
+id: node.report.field_origin
+field_name: field_origin
+entity_type: node
+bundle: report
+label: Origin
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string
