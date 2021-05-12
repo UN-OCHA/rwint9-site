@@ -62,7 +62,7 @@
     "prefer-stable": true,
     "config": {
         "platform": {
-            "php": "7.4"
+            "php": "8.0"
         },
         "bin-dir": "vendor/bin/",
         "sort-packages": true
@@ -103,6 +103,9 @@
         "enable-patching": true,
         "composer-exit-on-patch-failure": true,
         "patches-file": "composer.patches.json",
+        "patchLevel": {
+            "drupal/core": "-p2"
+        },
         "installer-paths": {
             "html/core": ["type:drupal-core"],
             "html/libraries/ckeditor/plugins/{$name}": ["vendor:ckeditor-plugin"],
