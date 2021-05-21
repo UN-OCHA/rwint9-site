@@ -1,0 +1,4 @@
+services:
+  reliefweb_dsr.client:
+    class: Drupal\reliefweb_dsr\Services\DSRClient
+    arguments: ['@cache.default', '@config.factory', '@datetime.time', '@http_client', '@language_manager', '@logger.factory', '@string_translation']
