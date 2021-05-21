@@ -1,10 +1,17 @@
-uuid: f85bf0c7-02ab-49ce-b489-fd6538700f4e
+uuid: c3cfb42d-71a8-4c0f-abf1-496d722fca68
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  enforced:
+    module:
+      - reliefweb_migrate
+_core:
+  default_config_hash: TumoLurIOQE-UrYPqAC2_YaYH-8CresJCUHaoRXqcmY
 id: reliefweb
-label: reliefweb
-description: ''
-source_type: null
+label: 'ReliefWeb Migration'
+description: 'Migrate ReliefWeb content from Drupal 7 to Drupal 9.'
+source_type: 'Drupal 7'
 module: null
-shared_configuration: null
+shared_configuration:
+  source:
+    key: rwint7

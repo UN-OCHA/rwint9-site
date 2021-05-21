@@ -1,0 +1,71 @@
+uuid: 807c5f21-6569-45c7-a7ea-02b6316a7439
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - reliefweb_migrate
+_core:
+  default_config_hash: j0T5VHt5vh8pENP-xYa-_5VmSF0NSxvWvbmE_2y0cvc
+id: reliefweb_taxonomy_term__country
+class: null
+field_plugin_method: null
+cck_plugin_method: null
+migration_tags: null
+migration_group: reliefweb
+label: 'Migrate ReliefWeb country taxonomy terms.'
+source:
+  plugin: reliefweb_taxonomy_term
+  bundle: country
+  constants:
+    bundle: country
+    format: markdown
+    revision_default: true
+process:
+  tid: tid
+  vid: constants/bundle
+  name: name
+  description/value: description
+  description/format: constants/format
+  weight: weight
+  changed: timestamp
+  revision_id: revision_id
+  field_aliases/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_aliases/0/value
+  field_iso3/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_iso3/0/value
+  field_location/lat:
+    plugin: skip_on_empty
+    method: process
+    source: field_location/0/lat
+  field_location/lon:
+    plugin: skip_on_empty
+    method: process
+    source: field_location/0/lon
+  field_shortname/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_shortname/0/value
+  field_longname/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_longname/0/value
+  field_profile/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_profile/0/value
+  field_timezone/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_timezone/0/value
+destination:
+  plugin: 'entity:taxonomy_term'
+  default_bundle: country
+migration_dependencies:
+  required:
+    - reliefweb_user__default
+    - reliefweb_user
