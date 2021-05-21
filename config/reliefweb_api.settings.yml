@@ -1,0 +1,7 @@
+api_url: https://api.reliefweb.int/v1
+appname: reliefweb.int
+cache_enabled: true
+verify_ssl: true
+elasticsearch: http://elasticserch:7200
+_core:
+  default_config_hash: qlrFo79lCY4kxobmocSAnQRsAcqu3ikDmbm108-Brtw
