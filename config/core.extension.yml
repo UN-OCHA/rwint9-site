@@ -39,7 +39,13 @@ module:
   path_alias: 0
   redirect: 0
   redis: 0
+  reliefweb_api: 0
+  reliefweb_dsr: 0
+  reliefweb_entities: 0
+  reliefweb_key_figures: 0
   reliefweb_migrate: 0
+  reliefweb_rivers: 0
+  reliefweb_utility: 0
   responsive_image: 0
   social_api: 0
   social_auth: 0
@@ -52,6 +58,7 @@ module:
   toolbar: 0
   update: 0
   user: 0
+  views_ui: 0
   pathauto: 1
   content_translation: 10
   views: 10
