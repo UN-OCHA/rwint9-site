@@ -1,0 +1,78 @@
+<?php
+
+/**
+ * @file
+ * Entity management for ReliefWeb.
+ */
+
+use Drupal\Core\Render\BubbleableMetadata;
+
+/**
+ * Implements hook_entity_bundle_info_alter().
+ */
+function reliefweb_entities_entity_bundle_info_alter(&$bundles) {
+  $bundles['taxonomy_term']['country']['class'] = 'Drupal\reliefweb_entities\Entity\Country';
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK().
+ */
+function reliefweb_entities_theme_suggestions_taxonomy_term(array $variables) {
+  $suggestions = [];
+
+  /** @var \Drupal\taxonomy\TermInterface $term */
+  $term = $variables['elements']['#taxonomy_term'];
+
+  if (!empty($variables['elements']['#view_mode'])) {
+    $view_mode = $variables['elements']['#view_mode'];
+    $suggestions[] = 'taxonomy_term__' . $view_mode;
+    $suggestions[] = 'taxonomy_term__' . $term->bundle() . '__' . $view_mode;
+  }
+
+  return $suggestions;
+}
+
+/**
+ * Implements hook_token_info().
+ *
+ * Add content type token that returns "map" if the node is tagged with "Map".
+ */
+function reliefweb_entities_token_info() {
+  $info = [];
+
+  $info['tokens']['node']['reliefweb-content-type'] = [
+    'name' => t('ReliefWeb - custom content type'),
+    'description' => t('The unique machine-readable content type or map or infographic.'),
+  ];
+
+  return $info;
+}
+
+/**
+ * Implements hook_tokens().
+ */
+function reliefweb_entities_tokens($type, $tokens, array $data, array $options, BubbleableMetadata $bubbleable_metadata) {
+  $replacements = [];
+
+  if ($type == 'node' && !empty($data['node'])) {
+    $node = $data['node'];
+
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+        case 'reliefweb-content-type':
+          // Use the bundle as content type.
+          $replacements[$original] = $node->bundle();
+          // Use "map" as content type for maps.
+          if ($node->bundle() === 'report') {
+            $content_format = $node->field_content_format->entity;
+            if (!empty($content_format) && $content_format->label() === 'Map') {
+              $replacements[$original] = 'map';
+            }
+          }
+          break;
+      }
+    }
+  }
+
+  return $replacements;
+}
