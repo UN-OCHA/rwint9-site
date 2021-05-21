@@ -1,0 +1,23 @@
+uuid: 4ff2075e-7b4f-49e4-8994-c63658517d1d
+langcode: en
+status: true
+dependencies:
+  module:
+    - ctools
+    - taxonomy
+id: country
+label: Country
+type: 'canonical_entities:taxonomy_term'
+pattern: 'country/[term:field_iso3]'
+selection_criteria:
+  93afc822-1fd3-4ad1-a44b-e5e0068e0016:
+    id: 'entity_bundle:taxonomy_term'
+    bundles:
+      country: country
+    negate: false
+    context_mapping:
+      taxonomy_term: taxonomy_term
+    uuid: 93afc822-1fd3-4ad1-a44b-e5e0068e0016
+selection_logic: and
+weight: -4
+relationships: {  }

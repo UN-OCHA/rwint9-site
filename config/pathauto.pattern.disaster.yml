@@ -1,0 +1,23 @@
+uuid: d6b35fef-52d0-4f9e-a0bb-850abd1f99c1
+langcode: en
+status: true
+dependencies:
+  module:
+    - ctools
+    - taxonomy
+id: disaster
+label: Disaster
+type: 'canonical_entities:taxonomy_term'
+pattern: 'disaster/[term:field_glide]'
+selection_criteria:
+  3366e40d-d392-435b-aea7-6cfdeae0811b:
+    id: 'entity_bundle:taxonomy_term'
+    bundles:
+      disaster: disaster
+    negate: false
+    context_mapping:
+      taxonomy_term: taxonomy_term
+    uuid: 3366e40d-d392-435b-aea7-6cfdeae0811b
+selection_logic: and
+weight: -3
+relationships: {  }

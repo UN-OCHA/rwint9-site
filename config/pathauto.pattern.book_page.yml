@@ -1,0 +1,22 @@
+uuid: 2e1cd563-b9ff-45b9-afe2-c1a533b6cbd6
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: book_page
+label: 'Book page'
+type: 'canonical_entities:node'
+pattern: 'book/[node:title]'
+selection_criteria:
+  10f6e161-8ba7-4aa5-b187-a0b5189cc8a2:
+    id: node_type
+    bundles:
+      book: book
+    negate: false
+    context_mapping:
+      node: node
+    uuid: 10f6e161-8ba7-4aa5-b187-a0b5189cc8a2
+selection_logic: and
+weight: -9
+relationships: {  }
