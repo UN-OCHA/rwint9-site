@@ -1,0 +1,4 @@
+services:
+  reliefweb_rivers.reports:
+    class: Drupal\reliefweb_rivers\Services\Reports
+    arguments: ['@reliefweb_api.client', '@string_translation']
