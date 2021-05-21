@@ -1,0 +1,14 @@
+uuid: 74c72726-877e-4d76-89c9-d6752f33cba4
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.beta
+  module:
+    - user
+id: user_add_role_action.beta
+label: 'Add the Beta tester role to the selected user(s)'
+type: user
+plugin: user_add_role_action
+configuration:
+  rid: beta

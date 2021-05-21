@@ -1,0 +1,14 @@
+uuid: 22932ef4-40cb-4484-9800-48a09190322d
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.external_disaster_manager
+  module:
+    - user
+id: user_remove_role_action.external_disaster_manager
+label: 'Remove the External disaster manager role from the selected user(s)'
+type: user
+plugin: user_remove_role_action
+configuration:
+  rid: external_disaster_manager
