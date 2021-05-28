@@ -29,6 +29,14 @@ class UrlHelper extends DrupalUrlHelper {
    * @todo review if still need this function and where to add it.
    */
   public static function encodeUrl($url, $alias = TRUE) {
+    if (empty($url)) {
+      return '';
+    }
+
+    if (preg_match('#^(?:(?:https?://)|)/#', $url) !== 1) {
+      $url = '/' . $url;
+    }
+
     $parts = static::parse($url);
     return Url::fromUserInput($parts['path'], [
       'query' => $parts['query'],

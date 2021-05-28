@@ -585,7 +585,7 @@ class HtmlSanitizer {
    * @todo use something more robust than valid_url.
    */
   protected function validateUrl($url) {
-    return UrlHelper::valid($url, UrlHelper::isExternal($url));
+    return UrlHelper::isValid($url, UrlHelper::isExternal($url));
   }
 
 }

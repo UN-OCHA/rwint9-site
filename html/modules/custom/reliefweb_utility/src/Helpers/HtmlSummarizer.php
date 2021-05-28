@@ -49,7 +49,7 @@ class HtmlSummarizer {
     $paragraphs = [];
     $text_length = 0;
     $meta = '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">';
-    $dom = new DomDocument();
+    $dom = new \DomDocument();
     $dom->loadHTML($meta . $html, $flags);
     $body = $dom->getElementsByTagName('body')[0];
     foreach ($body->childNodes as $node) {
