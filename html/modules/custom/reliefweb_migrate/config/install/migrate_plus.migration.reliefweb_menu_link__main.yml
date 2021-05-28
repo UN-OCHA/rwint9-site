@@ -1,4 +1,4 @@
-id: rw_menu_link__main
+id: reliefweb_menu_link__main
 label: Migrate ReliefWeb main menu links.
 migration_group: reliefweb
 dependencies:

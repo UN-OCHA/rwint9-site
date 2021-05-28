@@ -1,0 +1,22 @@
+uuid: 95b01751-92a3-42e1-b7b4-447836040292
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: report
+label: Report
+type: 'canonical_entities:node'
+pattern: '[node:reliefweb-content-type]/[node:field_primary_country:entity:name]/[node:title]'
+selection_criteria:
+  cac24841-112a-498c-92d9-845c71da29f6:
+    id: node_type
+    bundles:
+      report: report
+    negate: false
+    context_mapping:
+      node: node
+    uuid: cac24841-112a-498c-92d9-845c71da29f6
+selection_logic: and
+weight: -7
+relationships: {  }

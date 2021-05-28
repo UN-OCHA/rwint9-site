@@ -1,0 +1,5 @@
+services:
+  reliefweb_utility.twig.extension:
+    class: Drupal\reliefweb_utility\TwigExtension
+    tags:
+      - { name: twig.extension }

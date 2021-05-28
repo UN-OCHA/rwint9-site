@@ -9,9 +9,9 @@ use Drupal\Core\Config\ConfigManager;
 use Drush\Commands\DrushCommands;
 
 /**
- * RW migration Drush commandfile.
+ * ReliefWeb migration Drush commandfile.
  */
-class RWMigrateCommands extends DrushCommands implements SiteAliasManagerAwareInterface {
+class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManagerAwareInterface {
 
   use SiteAliasManagerAwareTrait;
 

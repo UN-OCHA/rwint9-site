@@ -1,0 +1,9 @@
+services:
+  reliefweb_entities.route_subscriber:
+    class: 'Drupal\reliefweb_entities\Routing\RouteSubscriber'
+    tags:
+      - { name: event_subscriber }
+  reliefweb_entities.entity_access_check:
+    class: 'Drupal\reliefweb_entities\Access\EntityAccessCheck'
+    tags:
+      - { name: access_check, applies_to: _reliefweb_entities_entity_access_check }

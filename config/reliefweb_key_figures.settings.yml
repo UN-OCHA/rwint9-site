@@ -1,0 +1,5 @@
+api_url: 'https://raw.githubusercontent.com/reliefweb/crisis-app-data/v2/edition/world/countries/'
+hdx_url: 'https://data.humdata.org/dataset/reliefweb-crisis-figures'
+cache_lifetime: 300
+_core:
+  default_config_hash: y_9DLnHz02BH07C5nzhh2jByumZcMaeNwxMzAlwA0Do

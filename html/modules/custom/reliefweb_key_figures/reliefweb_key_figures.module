@@ -1,0 +1,26 @@
+<?php
+
+/**
+ * @file
+ * Integration of the ReliefWeb Key Figures.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function reliefweb_key_figures_theme() {
+  return [
+    'reliefweb_key_figures' => [
+      'variables' => [
+        'level' => 2,
+        'id' => 'key-figures',
+        'title' => t('Key figures'),
+        'langcode' => 'en',
+        'country' => '',
+        'figures' => [],
+        'more' => FALSE,
+        'dataset' => NULL,
+      ],
+    ],
+  ];
+}

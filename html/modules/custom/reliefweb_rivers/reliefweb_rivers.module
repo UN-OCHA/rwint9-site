@@ -1,0 +1,104 @@
+<?php
+
+/**
+ * @file
+ * Integration of the ReliefWeb Rivers.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function reliefweb_rivers_theme() {
+  $themes = [
+    'reliefweb_rivers_river' => [
+      'variables' => [
+        // Heading level for the river section.
+        'level' => 2,
+        // The id of the river section.
+        'id' => '',
+        // The API resource (ex: reports).
+        'resource' => '',
+        // Title of the river section.
+        'title' => '',
+        // The total number of entities for the river's search query.
+        'total' => 0,
+        // The article entities to display.
+        'entities' => [],
+        // Array with the URL to the full river and a text.
+        'more' => NULL,
+      ],
+    ],
+    'reliefweb_rivers_river_article' => [
+      'variables' => [
+        // Heading level for the river article.
+        'level' => 3,
+        // The aricle entity's data as an associative array with id, bundle,
+        // url, langcode, title etc.
+        'entity' => NULL,
+      ],
+    ],
+    'reliefweb_rivers_river_article_country_slug' => [
+      'variables' => [
+        // List of countries with the a url to either the country page or the
+        // river filtered by the country, a name and a shortname.
+        'countries' => [],
+      ],
+    ],
+    'reliefweb_rivers_river_article_title' => [
+      'variables' => [
+        // Heading level for the river article title.
+        'level' => 3,
+        // Language code of the title.
+        'langcode' => 'en',
+        // An optional HTML safe prefix.
+        'prefix' => '',
+        // URL to the full article.
+        'url' => '',
+        // Title to the article.
+        'title' => '',
+      ],
+    ],
+    'reliefweb_rivers_river_article_meta' => [
+      'variables' => [
+        // List of meta information for an article (ex: dates, sources etc.).
+        // Each meta data has the following properties: type (simple, date,
+        // date-range or taglist), label, value (simple, date, array with start
+        // and end date or list of tags). For tag lists, there are also count
+        // and sort properties.
+        'meta' => [],
+      ],
+    ],
+  ];
+
+  // Add themes for the main riverarticles.
+  $bundles = [
+    'blog_post',
+    'disaster',
+    'job',
+    'report',
+    'source',
+    'training',
+  ];
+  foreach ($bundles as $bundle) {
+    $themes['reliefweb_rivers_river_article__' . $bundle] = [
+      'base hook' => 'reliefweb_rivers_river_article',
+    ];
+  }
+
+  return $themes;
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK().
+ *
+ * Add suggestions for the river article theme based on bundle.
+ */
+function reliefweb_rivers_theme_suggestions_reliefweb_rivers_river_article(array $variables) {
+  $suggestions = [];
+
+  if (!empty($variables['entity']['bundle'])) {
+    $suggestions[] = 'reliefweb_rivers_river_article__' . $variables['entity']['bundle'];
+  }
+
+  return $suggestions;
+}

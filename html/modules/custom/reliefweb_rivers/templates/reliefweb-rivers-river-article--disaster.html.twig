@@ -1,0 +1,69 @@
+{#
+
+/**
+ * @file
+ * Template file for a disaster entity article in a river.
+ *
+ * Available variables;
+ * - level: heading level (defaults to 3)
+ * - entity: the article entity's data as an associative array with notably:
+ *   - url: url to the full article/page
+ *   - title: article title
+ *   - langcode: article language code
+ *   - id: entity id
+ *   - bundle: entity bundle.
+ *   - tags (optional): list of terms the entity is tagged with
+ *   - various properties like posting date, status etc.
+ */
+
+#}
+<article{{ create_attribute()
+  .addClass([
+    'rw-river-article',
+    'rw-river-article--' ~ entity.bundle,
+  ])
+  .setAttribute('data-id', entity.id)
+  .setAttribute('data-disaster-type', entity.id)
+  .setAttribute('data-disaster-status', entity.id)
+}}>
+  {# Header with country slug and title. #}
+  <header>
+    {# Title. #}
+    {{ render_var({
+      '#theme': 'reliefweb_rivers_river_article_title',
+      '#level': level,
+      '#langcode': entity.langcode,
+      '#url': entity.url,
+      '#title': entity.title,
+    }) }}
+  </header>
+
+  {# Footer with meta information (sources, dates etc.). #}
+  <footer class="rw-river-article__footer">
+    {{ render_var({
+      '#theme': 'reliefweb_rivers_river_article_meta',
+      '#meta': {
+        'status': {
+          'type': 'simple',
+          'label': 'Status'|t,
+          'value': entity.status,
+          'classes': [entity.status == 'ongoing' ? 'ongoing'],
+        },
+        'disaster-type': {
+          'type': 'taglist',
+          'label': entity.tags.type|length > 1 ? 'Disaster types'|t : 'Disaster type'|t,
+          'value': entity.tags.type,
+          'count': 1,
+          'sort': 'name',
+        },
+        'country': {
+          'type': 'taglist',
+          'label': entity.tags.country|length > 1 ? 'Affected countries'|t : 'Affected country'|t,
+          'value': entity.tags.country,
+          'count': 1,
+          'sort': 'shortname',
+        },
+      }
+    }) }}
+  </footer>
+</article>

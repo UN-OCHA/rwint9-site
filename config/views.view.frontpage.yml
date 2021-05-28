@@ -1,6 +1,6 @@
 uuid: 3256fc2d-5c4c-4d71-9641-780e0f376bb0
 langcode: en
-status: true
+status: false
 dependencies:
   config:
     - core.entity_view_mode.node.rss

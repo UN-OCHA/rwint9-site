@@ -1,0 +1,68 @@
+id: reliefweb_user
+label: Migrate ReliefWeb users.
+migration_group: reliefweb
+dependencies:
+  enforced:
+    module:
+      - reliefweb_migrate
+source:
+  plugin: reliefweb_user
+destination:
+  plugin: entity:user
+process:
+  uid: uid
+  name: name
+  pass: pass
+  mail: mail
+  status: status
+  created: created
+  changed: changed
+  access: access
+  login: login
+  timezone: timezone
+  langcode:
+    plugin: user_langcode
+    source: language
+    fallback_to_site_default: true
+  preferred_langcode:
+    plugin: user_langcode
+    source: language
+    fallback_to_site_default: true
+  preferred_admin_langcode:
+    plugin: user_langcode
+    source: language
+    fallback_to_site_default: true
+  init: init
+  roles:
+    plugin: static_map
+    default_value: null
+    source: roles
+    map:
+      6: administrator
+      8: beta_tester
+      3: editor
+      14: external_disaster_manager
+      9: user_manager
+      7: webmaster
+  # Fields.
+  field_notes/value:
+    plugin: skip_on_empty
+    method: process
+    source: notes
+  # Disable path alias generation as aliases are already imported.
+  path/pathauto:
+    plugin: default_value
+    default_value: 0
+  path/alias:
+    -
+      plugin: default_value
+      default_value: ''
+    -
+      plugin: skip_on_empty
+      method: process
+migration_dependencies:
+  required:
+    - reliefweb_user__default
+  optional:
+    - language
+    - default_language

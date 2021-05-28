@@ -1,0 +1,75 @@
+id: reliefweb_taxonomy_term__country
+label: Migrate ReliefWeb country taxonomy terms.
+migration_group: reliefweb
+dependencies:
+  enforced:
+    module:
+      - reliefweb_migrate
+source:
+  plugin: reliefweb_taxonomy_term
+  bundle: country
+  constants:
+    bundle: country
+    format: markdown
+    revision_default: true
+destination:
+  plugin: entity:taxonomy_term
+  default_bundle: country
+process:
+  tid: tid
+  vid: constants/bundle
+  name: name
+  description/value: description
+  description/format: constants/format
+  weight: weight
+  changed: timestamp
+  # Revision information.
+  revision_id: revision_id
+  # Fields.
+  field_aliases/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_aliases/0/value
+  field_iso3/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_iso3/0/value
+  field_location/lat:
+    plugin: skip_on_empty
+    method: process
+    source: field_location/0/lat
+  field_location/lon:
+    plugin: skip_on_empty
+    method: process
+    source: field_location/0/lon
+  field_shortname/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_shortname/0/value
+  field_longname/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_longname/0/value
+  field_profile/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_profile/0/value
+  field_timezone/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_timezone/0/value
+  # # Disable path alias generation as aliases are already imported.
+  # path/pathauto:
+  #   plugin: default_value
+  #   default_value: 0
+  # path/alias:
+  #   -
+  #     plugin: default_value
+  #     default_value: ''
+  #   -
+  #     plugin: skip_on_empty
+  #     method: process
+migration_dependencies:
+  required:
+    - reliefweb_user__default
+    - reliefweb_user

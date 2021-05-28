@@ -1,0 +1,58 @@
+{#
+
+/**
+ * @file
+ * Template file for the OCHA digital situation report block.
+ *
+ * Available variables:
+ * - level: heading level (defaults to 2)
+ * - id: section id (defaults to 'digital-sitrep')
+ * - langcode: language iso 2 code
+ * - title: sitrep title
+ * - date: timestamp of the last update
+ * - illustration: object with the illustration information (url etc.) or null
+ * - highlights: list of key updates
+ * - links: array of links to the different DSR versions keyed by language
+ *
+ * @todo use something else than "date" for the formatting to better handle
+ * localization.
+ */
+
+ #}
+<section{{ create_attribute()
+  .setAttribute('id', id)
+  .setAttribute('lang', langcode)
+  .addClass([
+    'rw-dsr',
+    illustration ? 'rw-dsr--with-illustration',
+  ])
+}} >
+  <h{{ level }} class="rw-dsr__title">
+    <span class="rw-dsr__ocha">{{ 'OCHA - '|t }}</span>
+    {{- title -}}
+    {% if date %}
+      <small class="rw-dsr__date">(<time datetime={{ date|date('c') }}>{{ date|date('j M Y') }}</time>)</small>
+    {% endif %}
+  </h{{ level }}>
+  {% if highlights %}
+    <ul class="rw-dsr__highlights">
+      {%- for highlight in highlights -%}
+        <li>{{ highlight }}</li>
+      {%- endfor -%}
+    </ul>
+    {% if illustration %}
+    <figure class="rw-dsr__illustration">
+      <img src="{{ illustration.url ~ '?w=540&q=80' }}" alt="{{ illustation.alt }}">
+      {%- if illustration.description -%}
+        <figcaption class="rw-dsr__illustration__description">{{ illustration.description }}</figcaption>
+      {%- endif -%}
+    </figure>
+    {% endif %}
+  {% endif %}
+  <footer class="view-more rw-dsr__links">
+    <span class="rw-dsr__links__label">{{ 'View full situation report: '|t }}</span>
+    {% for language, version in links %}
+      <a href="{{ version.url }}" target="_blank" rel="noopener" lang="{{ language }}">{{ version.label }}</a>
+    {% endfor %}
+  </footer>
+</section>

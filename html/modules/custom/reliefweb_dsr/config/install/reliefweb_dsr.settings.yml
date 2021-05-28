@@ -1,0 +1,12 @@
+# ContentFul API access token.
+ctf_cda_access_token:
+# ContentFul DSR URL.
+ctf_dsr_url:
+# OCHA DSR site URL.
+ocha_dsr_url: https://reports.unocha.org
+# Number of seconds to cache the data for.
+cache_lifetime: 300
+# Skip of the situation report has'nt been updated for X days.
+last_update_skip: 30
+# Whether to show the DSR illustration or not.
+show_illustration: true

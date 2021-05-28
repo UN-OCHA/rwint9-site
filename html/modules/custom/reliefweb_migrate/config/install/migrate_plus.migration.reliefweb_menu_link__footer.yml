@@ -1,4 +1,4 @@
-id: rw_menu_link__footer
+id: reliefweb_menu_link__footer
 label: Migrate ReliefWeb footer menu links.
 migration_group: reliefweb
 dependencies:

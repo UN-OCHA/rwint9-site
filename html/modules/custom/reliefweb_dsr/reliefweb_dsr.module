@@ -1,0 +1,26 @@
+<?php
+
+/**
+ * @file
+ * Integration of the OCHA Digital Situation Report.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function reliefweb_dsr_theme() {
+  return [
+    'reliefweb_digital_situation_report' => [
+      'variables' => [
+        'level' => 2,
+        'id' => 'digital-sitrep',
+        'langcode' => 'en',
+        'title' => '',
+        'date' => NULL,
+        'illustration' => NULL,
+        'highlights' => NULL,
+        'links' => NULL,
+      ],
+    ],
+  ];
+}

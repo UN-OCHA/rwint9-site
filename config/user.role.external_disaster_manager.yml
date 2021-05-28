@@ -1,0 +1,9 @@
+uuid: 5f99a06f-6144-41f4-a5de-b59a801f17d2
+langcode: en
+status: true
+dependencies: {  }
+id: external_disaster_manager
+label: 'External disaster manager'
+weight: 6
+is_admin: null
+permissions: {  }

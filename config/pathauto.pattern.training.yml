@@ -1,0 +1,22 @@
+uuid: 6d7c16f3-6ab1-4563-ba90-634610769a21
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: training
+label: Training
+type: 'canonical_entities:node'
+pattern: 'training/[node:nid]/[node:title]'
+selection_criteria:
+  5eabdf04-0f4f-4dd4-a921-2a506dae29b8:
+    id: node_type
+    bundles:
+      training: training
+    negate: false
+    context_mapping:
+      node: node
+    uuid: 5eabdf04-0f4f-4dd4-a921-2a506dae29b8
+selection_logic: and
+weight: -5
+relationships: {  }

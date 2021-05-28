@@ -1,0 +1,86 @@
+{#
+
+/**
+ * @file
+ * Template file for a report entity article in a river.
+ *
+ * Available variables;
+ * - level: heading level (defaults to 3)
+ * - entity: the article entity's data as an associative array with notably:
+ *   - url: url to the full article/page
+ *   - title: article title
+ *   - langcode: article language code
+ *   - id: entity id
+ *   - bundle: entity bundle.
+ *   - tags (optional): list of terms the entity is tagged with
+ *   - various properties like posting date, status etc.
+ *
+ * @todo add back "image" for headlines.
+ */
+
+#}
+<article{{ create_attribute()
+  .addClass([
+    'rw-river-article',
+    'rw-river-article--' ~ entity.bundle,
+    entity.summary ? 'rw-river-article--with-summary',
+    entity.preview ? 'rw-river-article--with-preview',
+  ])
+  .setAttribute('data-id', entity.id)
+}}>
+  {# Header with country slug and title. #}
+  <header>
+    {# Country slug. #}
+    {{ render_var({
+      '#theme': 'reliefweb_rivers_river_article_country_slug',
+      '#countries': entity.tags.country,
+    }) }}
+
+    {# Title. #}
+    {{ render_var({
+      '#theme': 'reliefweb_rivers_river_article_title',
+      '#level': level,
+      '#langcode': entity.langcode,
+      '#url': entity.url,
+      '#title': entity.title,
+    }) }}
+  </header>
+
+  {# Article attachment preview and/or summary. #}
+  {% if entity.summary is not empty or entity.preview is not empty %}
+  <div class="rw-river-article__content" lang="{{ entity.langcode }}">
+    {% if entity.preview is not empty %}
+    <img src="{{ entity.preview.url }}" alt="{{ entity.preview.alt ?? '' }}">
+    {% endif %}
+    {% if entity.summary is not empty %}
+    <p>{{ entity.summary }}</p>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {# Footer with meta information (sources, dates etc.). #}
+  <footer class="rw-river-article__footer">
+    {{ render_var({
+      '#theme': 'reliefweb_rivers_river_article_meta',
+      '#meta': {
+        'source': {
+          'type': 'taglist',
+          'label': entity.tags.source|length > 1 ? 'Source'|t : 'Sources'|t,
+          'value': entity.tags.source,
+          'count': 3,
+          'sort': 'shortname',
+        },
+        'posted': {
+          'type': 'date',
+          'label': 'Posted'|t,
+          'value': entity.posted,
+        },
+        'published': {
+          'type': 'date',
+          'label': 'Originally published'|t,
+          'value': entity.published,
+        },
+      }
+    }) }}
+  </footer>
+</article>
