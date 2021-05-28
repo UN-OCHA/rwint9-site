@@ -2,21 +2,21 @@
 
 /**
  * @file
- * Template file for an entity article in a river.
+ * Template file for an entity article meta information in a river.
  *
  * Available variables;
- * - level: heading level (defaults to 3)
- * - entity: the entity's data for the article wrapped in
- *   \Drupal\reliefweb_utility\Helpers\TemplateDataWrapper.
- * - summary: boolean indicating if we should show the summary or not
- * - preview: boolean indicating if we should show an image preview or not
- * - prefix: if defined, HTML safe title prefix.
- * - format: boolean indicating whether to display the entity format or not
+ * - meta: associative array with a list of meta information (ex: dates,
+ *   sources, etc.). Each items has the following properties:
+ *   - type: simple, date, date-range or taglist
+ *   - label: label (singular or plural depending on the value)
+ *   - value: simple, date, array with start and end date or list of tags
+ *   - count: only for taglist - number of tags to display
+ *   - sort: only for taglist - sort property for the tags
  *
- * @todo extend to cover disasters, jobs and training.
- * @todo add back "image" for headlines.
  * @todo better date formatting to respect language format.
  * @todo review the spacing.
+ * @todo move this template elsewhere so that it can be used for the meta
+ * information on full article pages.
  */
 
 #}
