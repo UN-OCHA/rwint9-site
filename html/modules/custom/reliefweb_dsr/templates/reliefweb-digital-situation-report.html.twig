@@ -13,19 +13,19 @@
  * - illustration: object with the illustration information (url etc.) or null
  * - highlights: list of key updates
  * - links: array of links to the different DSR versions keyed by language
+ *
+ * @todo use something else than "date" for the formatting to better handle
+ * localization.
  */
 
  #}
-{%
-  set classes = [
-    'rw-dsr',
-    illustration ? 'rw-dsr--with-illustration',
-  ]
-%}
-<section {{ create_attribute()
+<section{{ create_attribute()
   .setAttribute('id', id)
   .setAttribute('lang', langcode)
-  .addClass(classes)
+  .addClass([
+    'rw-dsr',
+    illustration ? 'rw-dsr--with-illustration',
+  ])
 }} >
   <h{{ level }} class="rw-dsr__title">
     <span class="rw-dsr__ocha">{{ 'OCHA - '|t }}</span>
