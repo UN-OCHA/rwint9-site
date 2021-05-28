@@ -26,19 +26,24 @@
  *
  * @see template_preprocess_taxonomy_term()
  * @see common_design_subtheme_preprocess_taxonomy_term()
- *
- * @todo expand, add "sectioned page content" template.
  */
 #}
-{% if page %}
+{% set content = term.getPageContent() %}
 {{ local_tasks }}
-<article{{ attributes }}>
+<article{{ attributes
+  .addClass([
+    'taxonony-term',
+    'taxonony-term--' ~ term.bundle(),
+    'taxomomy-term--full',
+    'taxonony-term--' ~ term.bundle() ~ '--full',
+    'rw-page--sectioned',
+  ])
+  .setAttribute('data-id', term.id())
+}}>
   <header>
     {{ title }}
+    {{ content.meta }}
   </header>
-  {{ term.getPageTableOfContent() }}
-  {% for id, section in term.getPageSections() %}
-    <section id="{{ id }}">{{ section }}</section>
-  {% endfor %}
+  {{ content.contents }}
+  {{ content.sections }}
 </article>
-{% endif %}
