@@ -1,0 +1,56 @@
+{#
+
+/**
+ * @file
+ * Template file for an entity article in a river.
+ *
+ * Note: this is a base template and is not used as is. See variations like
+ * the "--report one for specific implementations for the acutal content
+ * entities.
+ *
+ * Available variables;
+ * - level: heading level (defaults to 3)
+ * - entity: the article entity's data as an associative array with notably:
+ *   - url: url to the full article/page
+ *   - title: article title
+ *   - langcode: article language code
+ *   - id: entity id
+ *   - bundle: entity bundle.
+ *   - tags (optional): list of terms the entity is tagged with
+ *   - various properties like posting date, status etc.
+ */
+
+#}
+<article{{ create_attribute()
+  .addClass([
+    'rw-river-article',
+    'rw-river-article--' ~ entity.bundle,
+  ])
+  .setAttribute('data-id', entity.id)
+}}>
+  {# Header with title. #}
+  <header>
+    {# Title. #}
+    {{ render_var({
+      '#theme': 'reliefweb_rivers_river_article_title',
+      '#level': level,
+      '#langcode': entity.langcode,
+      '#url': entity.url,
+      '#title': entity.title,
+    }) }}
+  </header>
+
+  {# Footer with meta information (sources, dates etc.). #}
+  <footer class="rw-river-article__footer">
+    {{ render_var({
+      '#theme': 'reliefweb_rivers_river_article_meta',
+      '#meta': {
+        'posted': {
+          'type': 'date',
+          'label': 'Posted'|t,
+          'value': entity.posted,
+        },
+      }
+    }) }}
+  </footer>
+</article>

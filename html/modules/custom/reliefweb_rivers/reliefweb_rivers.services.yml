@@ -1,4 +1,19 @@
 services:
-  reliefweb_rivers.reports:
-    class: Drupal\reliefweb_rivers\Services\Reports
+  reliefweb_rivers.blog_post.river:
+    class: Drupal\reliefweb_rivers\Services\BlogPostRiver
+    arguments: ['@reliefweb_api.client', '@string_translation']
+  reliefweb_rivers.disaster.river:
+    class: Drupal\reliefweb_rivers\Services\DisasterRiver
+    arguments: ['@reliefweb_api.client', '@string_translation']
+  reliefweb_rivers.job.river:
+    class: Drupal\reliefweb_rivers\Services\JobRiver
+    arguments: ['@reliefweb_api.client', '@string_translation']
+  reliefweb_rivers.report.river:
+    class: Drupal\reliefweb_rivers\Services\ReportRiver
+    arguments: ['@reliefweb_api.client', '@string_translation']
+  reliefweb_rivers.source.river:
+    class: Drupal\reliefweb_rivers\Services\SourceRiver
+    arguments: ['@reliefweb_api.client', '@string_translation']
+  reliefweb_rivers.training.river:
+    class: Drupal\reliefweb_rivers\Services\TrainingRiver
     arguments: ['@reliefweb_api.client', '@string_translation']

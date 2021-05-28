@@ -1,0 +1,87 @@
+{#
+
+/**
+ * @file
+ * Template file for an entity article in a river.
+ *
+ * Available variables;
+ * - level: heading level (defaults to 3)
+ * - entity: the entity's data for the article wrapped in
+ *   \Drupal\reliefweb_utility\Helpers\TemplateDataWrapper.
+ * - summary: boolean indicating if we should show the summary or not
+ * - preview: boolean indicating if we should show an image preview or not
+ * - prefix: if defined, HTML safe title prefix.
+ * - format: boolean indicating whether to display the entity format or not
+ *
+ * @todo extend to cover disasters, jobs and training.
+ * @todo add back "image" for headlines.
+ * @todo better date formatting to respect language format.
+ * @todo review the spacing.
+ */
+
+#}
+<dl class="rw-article-meta">
+  {% set meta = meta|filter(data => data.value is not empty) %}
+  {% set last = meta|keys|last %}
+
+  {% for name, data in meta %}
+    {% set classes = data.classes ?? [] %}
+    {% set label = data.label ?? name|replace({'-': ' ', '_': ' '})|capitalize %}
+
+    {# Label. #}
+    <dt{{ create_attribute().setClasses([
+      'rw-article-meta__tag-label',
+      'rw-article-meta__tag-label--' ~ name,
+    ]) }}>{{ label }}</dt>
+
+    {# Value. #}
+    <dd{{ create_attribute().setClasses([
+      'rw-article-meta__tag-value',
+      'rw-article-meta__tag-value--' ~ name,
+      name == last ? 'rw-article-meta__tag-value--last',
+    ]|merge(classes|map(class => 'rw-article-meta__tag-value--' ~ name ~ '--' ~ class))) }}>
+      {# Simple value. #}
+      {% if data.type == 'simple' %}
+        {{- data.value -}}
+
+      {# Date. #}
+      {% elseif data.type == 'date' %}
+        <time datetime="{{ data.value|date('c') }}">{{ data.value|date('j M Y') }}</time>
+
+      {# Date range. #}
+      {% elseif data.type == 'date-range' %}
+        {% if data.value.end is empty or data.value.end == data.value.start %}
+          <time datetime="{{ data.value.start|date('c') }}">{{ data.value.start|date('j M Y') }}</time>
+        {% else %}
+          {% set start_iso = data.value.start|date('c') %}
+          {% set start_medium = data.value.start|date('j M Y') %}
+          {% set end_iso = data.value.start|date('c') %}
+          {% set end_medium = data.value.start|date('j M Y') %}
+          {% trans %}
+            <time datetime="{{ start_iso }}">{{ start_medium  }}</time>
+            to
+            <time datetime="{{ end_iso }}">{{ end_medium }}</time>
+          {% endtrans %}
+        {% endif %}
+
+      {# List of tags. #}
+      {% elseif data.type == 'taglist' %}
+        <ul class="rw-article-meta__tag-value__list">
+          {%- for index, item in data.value|taglist(data.count, data.sort) -%}
+            <li{{ create_attribute().addClass([
+              'rw-article-meta__tag-value__list__item',
+              index == 'last' ? 'rw-article-meta__tag-value__list__item--last',
+            ]) }}><a class="rw-article-meta__tag-link" href="{{ item.url }}">{{ item.shortname ?? item.name }}</a></li>
+          {%- endfor -%}
+          {%- if data.value|length > data.count -%}
+            <li{{ create_attribute().addClass([
+              'rw-article-meta__tag-value__list__item',
+              'rw-article-meta__tag-value__list__item--more',
+              'rw-article-meta__tag-value__list__item--last',
+            ]) }}>{{ '@count more'|t({'@count': (data.value|length) - data.count}) }}</li>
+          {%- endif -%}
+        </ul>
+      {% endif %}
+    </dd>
+  {% endfor %}
+</dl>

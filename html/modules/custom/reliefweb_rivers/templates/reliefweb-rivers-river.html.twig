@@ -1,0 +1,46 @@
+{#
+
+/**
+ * @file
+ * Template file for a river (list of articles) section.
+ *
+ * Available variables;
+ * - level: heading level (defaults to 2)
+ * - id: section id (HTML safe)
+ * - title: section title
+ * - total: total number of entities for the river search query
+ * - articles: list of entities constituting the river
+ * - more: if defined, it's an array with URL to the main river and a text
+ *
+ * @todo provide a count variable to limit the number of items to display in the
+ * river? Should that be determine in a preprocess function for example?
+ *
+ * @todo expand this template for the main rivers or use a separate one?
+ */
+
+#}
+<section {{ create_attribute()
+  .setAttribute('id', id)
+  .addClass([
+    'rw-river',
+    'rw-river--' ~ id,
+  ])
+}}>
+  <h{{ level }}>{{ title }}</h{{ level }}>
+
+  <div class="rw-river__articles">
+    {% for entity in entities %}
+      {{ render_var({
+        '#theme': 'reliefweb_rivers_river_article__' ~ entity.bundle,
+        '#level': level + 1,
+        '#entity': entity,
+      }) }}
+    {% endfor %}
+  </div>
+
+  {% if more is not empty and more.url %}
+  <footer class="rw-river__view-more view-more">
+    <a href="{{ more.url }}">{{ more.label ?? ('View more'|t) }}</a>
+  </footer>
+  {% endif %}
+</section>

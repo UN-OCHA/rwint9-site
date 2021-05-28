@@ -2,14 +2,15 @@
 
 namespace Drupal\reliefweb_rivers\Services;
 
+use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
-use Drupal\reliefweb_utility\Helpers\HtmlSummerizer;
+use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
  * Service class to retrieve report resource for the report rivers.
  */
-class Reports extends River {
+class ReportRiver extends RiverServiceBase {
 
   /**
    * {@inheritdoc}
@@ -37,16 +38,7 @@ class Reports extends River {
   public function parseApiData(array $api_data, $view = '') {
     $headlines = $view === 'headlines';
 
-    // Labels for the item dates and tags.
-    $labels = [
-      'posted' => $this->t('Posted'),
-      'published' => $this->t('Originally published'),
-      'tags' => [
-        'country' => [$this->t('Country'), $this->t('Countries')],
-        'source' => [$this->t('Source'), $this->t('Sources')],
-      ],
-    ];
-
+    // Retrieve the API data (with backward compatibility).
     $items = $api_data['items'] ?? $api_data['data'] ?? [];
 
     // Parse the entities retrieved from the API.
@@ -63,6 +55,7 @@ class Reports extends River {
       }
 
       // Summary.
+      // @todo do the summarization in the template instead?
       $summary = '';
       if ($headlines && !empty($fields['headline']['summary'])) {
         // The headline summary is plain text.
@@ -75,7 +68,7 @@ class Reports extends River {
         // text, so we add a bit of margin to have more useful information in
         // the generated summary.
         $body = HtmlSanitizer::sanitize($fields['body-html']);
-        $summary = HtmlSummerizer::summarize($body, 200);
+        $summary = HtmlSummarizer::summarize($body, 200);
       }
 
       // Tags (countries, sources etc.).
@@ -131,20 +124,30 @@ class Reports extends River {
         $summary = $this->getSummaryFromFormat($format, $fields['file']);
       }
 
+      // Base article data.
       $data = [
         'id' => $item['id'],
+        'bundle' => $this->bundle,
         'title' => $title,
         'summary' => $summary,
-        'url' => $fields['url_alias'] ?? UrlHelper::encodeUrl('node/' . $item['id'], FALSE),
         'format' => $format,
         'tags' => $tags,
       ];
 
+      // Url to the article.
+      if (isset($fields['url_alias'])) {
+        $data['url'] = UrlHelper::stripDangerousProtocols($fields['url_alias']);
+      }
+      else {
+        $data['url'] = UrlHelper::encodeUrl('node/' . $item['id'], FALSE);
+      }
+
+      // Creation and publication dates.
       if (isset($fields['date']['created'])) {
-        $data['posted'] = $fields['date']['created'];
+        $data['posted'] = static::createDate($fields['date']['created']);
       }
       if (isset($fields['date']['original'])) {
-        $data['published'] = $fields['date']['original'];
+        $data['published'] = static::createDate($fields['date']['original']);
       }
 
       // Attachment preview.
@@ -153,7 +156,7 @@ class Reports extends River {
         $url = $preview['url-thumb'] ?? $preview['url-small'] ?? '';
         if (!empty($url)) {
           $data['preview'] = [
-            'url' => $url,
+            'url' => UrlHelper::stripDangerousProtocols($url),
             // We don't have any good label/description for the file
             // previews so we use an empty alt to mark them as decorative
             // so that assistive technologies will ignore them.
@@ -171,7 +174,7 @@ class Reports extends River {
         }
 
         $data['image'] = [
-          'url' => $image['url'],
+          'url' => UrlHelper::stripDangerousProtocols($image['url']),
           'alt' => $image['alt'] ?? '',
           'copyright' => $copyright,
           'width' => $image['width'] ?? 0,
@@ -179,13 +182,10 @@ class Reports extends River {
         ];
       }
 
-      // Wrap the item data for easy access/sanitation in the template.
-      // @todo review if we should re-introduce a wrapper.
-      $entities[$item['id']] = [
-        'bundle' => $this->bundle,
-        'data' => $data,
-        'labels' => $labels,
-      ];
+      // Compute the language code for the resource's data.
+      $data['langcode'] = static::getLanguageCode($data);
+
+      $entities[$item['id']] = $data;
     }
 
     return $entities;

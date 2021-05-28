@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\reliefweb_rivers\Services;
+namespace Drupal\reliefweb_rivers;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
@@ -9,7 +9,7 @@ use Drupal\reliefweb_api\Services\ReliefWebApiClient;
 /**
  * Base for river services.
  */
-abstract class River implements RiverInterface {
+abstract class RiverServiceBase implements RiverServiceInterface {
 
   use StringTranslationTrait;
 
@@ -65,6 +65,39 @@ abstract class River implements RiverInterface {
   /**
    * {@inheritdoc}
    */
-  abstract public function parseData(array $data);
+  abstract public function parseApiData(array $api_data, $view = '');
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getLanguageCode(array &$data = NULL) {
+    if (isset($data['langcode'])) {
+      $langcode = $data['langcode'];
+    }
+    // Extract the main language code from the entity language tag.
+    elseif (isset($data['tags']['language'])) {
+      // English has priority over the other languages. If not present we
+      // just get the first language code in the list.
+      foreach ($data['tags']['language'] as $item) {
+        if (isset($item['code'])) {
+          if ($item['code'] === 'en') {
+            $langcode = 'en';
+            break;
+          }
+          elseif (!isset($langcode)) {
+            $langcode = $item['code'];
+          }
+        }
+      }
+    }
+    return $langcode ?? 'en';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function createDate($date) {
+    return new \DateTime($date, new \DateTimeZone('UTC'));
+  }
 
 }
