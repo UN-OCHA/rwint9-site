@@ -169,8 +169,9 @@ class ReliefWebApiClient {
         }
       }
 
-      $promises[$index] = $this->httpClient->postAsync($url, $payload, [
+      $promises[$index] = $this->httpClient->postAsync($url, [
         'headers' => ['Content-Type: application/json'],
+        'body' => $payload,
         'timeout' => $timeout,
         'connect_timeout' => $timeout,
         'verify' => $verify_ssl,
