@@ -9,17 +9,19 @@ use Drupal\Core\Render\BubbleableMetadata;
 
 /**
  * Implements hook_entity_bundle_info_alter().
+ *
+ * Add bundle classes to nodes and terms to handle business logic.
  */
 function reliefweb_entities_entity_bundle_info_alter(&$bundles) {
   $bundles['taxonomy_term']['country']['class'] = 'Drupal\reliefweb_entities\Entity\Country';
 }
 
 /**
- * Implements hook_theme_suggestions_HOOK().
+ * Implements hook_theme_suggestions_HOOK_alter().
+ *
+ * Add suggestions for the view mode of the taxonomy terms.
  */
-function reliefweb_entities_theme_suggestions_taxonomy_term(array $variables) {
-  $suggestions = [];
-
+function reliefweb_entities_theme_suggestions_taxonomy_term_alter(array &$suggestions, array $variables) {
   /** @var \Drupal\taxonomy\TermInterface $term */
   $term = $variables['elements']['#taxonomy_term'];
 
@@ -28,8 +30,22 @@ function reliefweb_entities_theme_suggestions_taxonomy_term(array $variables) {
     $suggestions[] = 'taxonomy_term__' . $view_mode;
     $suggestions[] = 'taxonomy_term__' . $term->bundle() . '__' . $view_mode;
   }
+}
 
-  return $suggestions;
+/**
+ * Implements hook_theme().
+ */
+function reliefweb_entities_theme() {
+  return [
+    'reliefweb_entities_table_of_contents' => [
+      'variables' => [
+        'level' => 2,
+        'id' => 'table-of-contents',
+        'title' => t('Table of Content'),
+        'sections' => [],
+      ],
+    ],
+  ];
 }
 
 /**
@@ -50,6 +66,8 @@ function reliefweb_entities_token_info() {
 
 /**
  * Implements hook_tokens().
+ *
+ * @todo add token for the country shortname to use in report/job/training urls.
  */
 function reliefweb_entities_tokens($type, $tokens, array $data, array $options, BubbleableMetadata $bubbleable_metadata) {
   $replacements = [];
