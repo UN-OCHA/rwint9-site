@@ -55,8 +55,8 @@
         {% else %}
           {% set start_iso = data.value.start|date('c') %}
           {% set start_medium = data.value.start|date('j M Y') %}
-          {% set end_iso = data.value.start|date('c') %}
-          {% set end_medium = data.value.start|date('j M Y') %}
+          {% set end_iso = data.value.end|date('c') %}
+          {% set end_medium = data.value.end|date('j M Y') %}
           {% trans %}
             <time datetime="{{ start_iso }}">{{ start_medium  }}</time>
             to
