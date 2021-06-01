@@ -1,0 +1,35 @@
+{#
+
+/**
+ * @file
+ * Template for the opprtunities on the ReliefWeb Homepage.
+ *
+ * Available variables:
+ * - level: heading level (defaults to 2)
+ * - id: section id
+ * - opportunities: associative array keyed by type (job, training) and with
+ *   the following properties:
+ *   - type: job, training
+ *   - url: url to the corresponding river
+ *   - total: total number of opportunities for this type
+ *   - title: label for the number of opportunities
+ */
+#}
+<section{{ create_attribute()
+  .setAttribute('id', id)
+  .addClass([
+    'rw-homepage-opportunties',
+  ])
+}}>
+  <h{{ level }} class="rw-homepage-opportunties__title">{{ 'Opportunities'|t }}</h{{ level }}>
+  <ul class="rw-homepage-opportunties__list">
+  {% for item in opportunities %}
+    <li class="rw-homepage-opportunties__list__item rw-homepage-opportunties__list__item--{{ item.type }}">
+      <a class="rw-homepage-opportunties__list__item__link" href="{{ url }}">
+        <data class="rw-homepage-opportunties__list__item__total" value="{{ item.total }}">{{ item.total|number_format }}</data>
+        <span class="rw-homepage-opportunties__list__item__label">{{ item.title }}</span>
+      </a>
+    </li>
+  {% endfor %}
+  </ul>
+</section>
