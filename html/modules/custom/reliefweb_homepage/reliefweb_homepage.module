@@ -1,0 +1,41 @@
+<?php
+
+/**
+ * @file
+ * Module file for the ReliefWeb Homepage module.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function reliefweb_homepage_theme() {
+  return [
+    'reliefweb_homepage' => [
+      'variables' => [
+        'title' => t('ReliefWeb'),
+        'sections' => [],
+      ],
+    ],
+    'reliefweb_homepage_opportunities' => [
+      'variables' => [
+        'level' => 2,
+        'id' => '',
+        'opportunities' => [],
+      ],
+    ],
+    'reliefweb_homepage_announcement' => [
+      'variables' => [
+        'level' => 2,
+        'id' => '',
+        'url' => '',
+        'image' => [
+          'url' => '',
+          'title' => '',
+          'alt' => '',
+          'width' => 1,
+          'height' => 1,
+        ],
+      ],
+    ],
+  ];
+}

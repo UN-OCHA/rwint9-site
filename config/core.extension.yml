@@ -42,6 +42,7 @@ module:
   reliefweb_api: 0
   reliefweb_dsr: 0
   reliefweb_entities: 0
+  reliefweb_homepage: 0
   reliefweb_key_figures: 0
   reliefweb_migrate: 0
   reliefweb_rivers: 0
