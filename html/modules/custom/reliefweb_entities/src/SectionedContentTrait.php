@@ -168,6 +168,7 @@ trait SectionedContentTrait {
           // Use the label override for the section, or the section title
           // is defined or the label from the table of content.
           $sections[$name]['#title'] = $labels[$name] ?? $section['#title'] ?? $label;
+          $sections[$name]['#id'] = $sections[$name]['#id'] ?? $name;
         }
       }
       if (empty($group['sections'])) {
