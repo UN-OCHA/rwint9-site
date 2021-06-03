@@ -75,6 +75,15 @@ function reliefweb_entities_theme() {
         'meta' => [],
       ],
     ],
+    'reliefweb_entities_entity_description' => [
+      'variables' => [
+        'level' => 2,
+        'id' => 'description',
+        'title' => t('Description'),
+        // The description shold be a safe HTML string.
+        'description' => '',
+      ],
+    ],
   ];
 }
 

@@ -1,0 +1,23 @@
+{#
+
+/**
+ * @file
+ * Template file for the description of an entity (ex: disaster overview).
+ *
+ * Available variables;
+ * - level: heading level (defaults to 2)
+ * - id: section id
+ * - title: section title
+ * - description: entity description in HTML.
+ */
+
+#}
+<section{{ create_attribute()
+  .addClass([
+    'rw-entity-description',
+  ])
+  .setAttribute('id', id)
+}}>
+<h{{ level }} class="rw-entity-description__title">{{ title }}</h{{ level }}>
+<div class="rw-entity-description__text">{{ description|raw }}</div>
+</section>
