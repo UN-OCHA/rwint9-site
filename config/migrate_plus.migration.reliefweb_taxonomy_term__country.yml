@@ -1,4 +1,4 @@
-uuid: 807c5f21-6569-45c7-a7ea-02b6316a7439
+uuid: 53e6d1d4-be48-4a54-a654-b1a47df20463
 langcode: en
 status: true
 dependencies:
@@ -6,7 +6,7 @@ dependencies:
     module:
       - reliefweb_migrate
 _core:
-  default_config_hash: j0T5VHt5vh8pENP-xYa-_5VmSF0NSxvWvbmE_2y0cvc
+  default_config_hash: OXgBtAHznnSXlhBefQFn0T0MF8SCQlonItVVvUEQQFo
 id: reliefweb_taxonomy_term__country
 class: null
 field_plugin_method: null
@@ -30,6 +30,13 @@ process:
   weight: weight
   changed: timestamp
   revision_id: revision_id
+  moderation_state:
+    plugin: static_map
+    source: field_status/0/value
+    default_value: normal
+    map:
+      normal: normal
+      current: ongoing
   field_aliases/value:
     plugin: skip_on_empty
     method: process
@@ -69,3 +76,4 @@ migration_dependencies:
   required:
     - reliefweb_user__default
     - reliefweb_user
+    - reliefweb_taxonomy_term

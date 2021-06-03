@@ -1,5 +1,5 @@
 id: reliefweb_taxonomy_term_revision__country
-label: Migrate ReliefWeb country taxonomy terms.
+label: Migrate ReliefWeb country taxonomy term revisions.
 migration_group: reliefweb
 dependencies:
   enforced:
@@ -34,6 +34,14 @@ process:
       1: 2
   revision_log_message: revision_log_message
   revision_created: revision_created
+  # Moderation status.
+  moderation_state:
+    plugin: static_map
+    source: field_status/0/value
+    default_value: normal
+    map:
+      normal: normal
+      current: ongoing
   # Fields.
   field_aliases/value:
     plugin: skip_on_empty

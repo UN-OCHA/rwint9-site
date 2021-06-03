@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Template file for an entity article meta information in a river.
+ * Template file for an entity meta information.
  *
  * Available variables;
  * - meta: associative array with a list of meta information (ex: dates,
@@ -15,12 +15,10 @@
  *
  * @todo better date formatting to respect language format.
  * @todo review the spacing.
- * @todo move this template elsewhere so that it can be used for the meta
- * information on full article pages.
  */
 
 #}
-<dl class="rw-article-meta">
+<dl class="rw-entity-meta">
   {% set meta = meta|filter(data => data.value is not empty) %}
   {% set last = meta|keys|last %}
 
@@ -30,16 +28,16 @@
 
     {# Label. #}
     <dt{{ create_attribute().setClasses([
-      'rw-article-meta__tag-label',
-      'rw-article-meta__tag-label--' ~ name,
+      'rw-entity-meta__tag-label',
+      'rw-entity-meta__tag-label--' ~ name,
     ]) }}>{{ label }}</dt>
 
     {# Value. #}
     <dd{{ create_attribute().setClasses([
-      'rw-article-meta__tag-value',
-      'rw-article-meta__tag-value--' ~ name,
-      name == last ? 'rw-article-meta__tag-value--last',
-    ]|merge(classes|map(class => 'rw-article-meta__tag-value--' ~ name ~ '--' ~ class))) }}>
+      'rw-entity-meta__tag-value',
+      'rw-entity-meta__tag-value--' ~ name,
+      name == last ? 'rw-entity-meta__tag-value--last',
+    ]|merge(classes|map(class => 'rw-entity-meta__tag-value--' ~ name ~ '--' ~ class))) }}>
       {# Simple value. #}
       {% if data.type == 'simple' %}
         {{- data.value -}}
@@ -66,18 +64,18 @@
 
       {# List of tags. #}
       {% elseif data.type == 'taglist' %}
-        <ul class="rw-article-meta__tag-value__list">
+        <ul class="rw-entity-meta__tag-value__list">
           {%- for index, item in data.value|taglist(data.count, data.sort) -%}
             <li{{ create_attribute().addClass([
-              'rw-article-meta__tag-value__list__item',
-              index == 'last' ? 'rw-article-meta__tag-value__list__item--last',
-            ]) }}><a class="rw-article-meta__tag-link" href="{{ item.url }}">{{ item.shortname ?? item.name }}</a></li>
+              'rw-entity-meta__tag-value__list__item',
+              index == 'last' ? 'rw-entity-meta__tag-value__list__item--last',
+            ]) }}><a class="rw-entity-meta__tag-link" href="{{ item.url }}">{{ item.shortname ?? item.name }}</a></li>
           {%- endfor -%}
           {%- if data.value|length > data.count -%}
             <li{{ create_attribute().addClass([
-              'rw-article-meta__tag-value__list__item',
-              'rw-article-meta__tag-value__list__item--more',
-              'rw-article-meta__tag-value__list__item--last',
+              'rw-entity-meta__tag-value__list__item',
+              'rw-entity-meta__tag-value__list__item--more',
+              'rw-entity-meta__tag-value__list__item--last',
             ]) }}>{{ '@count more'|t({'@count': (data.value|length) - data.count}) }}</li>
           {%- endif -%}
         </ul>

@@ -28,7 +28,7 @@
   <header>
     {# Country slug. #}
     {{ render_var({
-      '#theme': 'reliefweb_rivers_river_article_country_slug',
+      '#theme': 'reliefweb_entities_entity_country_slug',
       '#countries': entity.tags.country,
     }) }}
 
@@ -82,7 +82,7 @@
     {% endif %}
 
     {{ render_var({
-      '#theme': 'reliefweb_rivers_river_article_meta',
+      '#theme': 'reliefweb_entities_entity_meta',
       '#meta': meta|merge({
         'registration': {
           'type': 'date',

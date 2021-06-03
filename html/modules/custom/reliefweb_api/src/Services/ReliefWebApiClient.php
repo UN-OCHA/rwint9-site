@@ -183,6 +183,8 @@ class ReliefWebApiClient {
     $promise_results = Utils::settle($promises)->wait();
     foreach ($promise_results as $index => $result) {
       $data = NULL;
+
+      // Parse the response in case of success.
       if ($result['state'] === 'fulfilled') {
         $response = $result['value'];
 
@@ -198,6 +200,15 @@ class ReliefWebApiClient {
           ]);
           $data = '';
         }
+      }
+      // Otherwise log the error.
+      else {
+        $this->logger->notice('Unable to retrieve API data (code: @code) when requesting @url with payload @payload: @reason', [
+          '@code' => $result['reason']->getCode(),
+          '@url' => $api_url . '/' . $queries[$index]['resource'],
+          '@payload' => print_r($queries[$index]['payload'], TRUE),
+          '@reason' => $result['reason']->getMessage(),
+        ]);
       }
 
       // Cache the data unless cache is disabled or there was an issue with the
@@ -230,7 +241,6 @@ class ReliefWebApiClient {
         }
       }
     }
-
     return $results;
   }
 

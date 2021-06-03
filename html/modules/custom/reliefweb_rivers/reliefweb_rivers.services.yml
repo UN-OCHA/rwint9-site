@@ -2,6 +2,9 @@ services:
   reliefweb_rivers.blog_post.river:
     class: Drupal\reliefweb_rivers\Services\BlogPostRiver
     arguments: ['@reliefweb_api.client', '@string_translation']
+  reliefweb_rivers.country.river:
+    class: Drupal\reliefweb_rivers\Services\CountryRiver
+    arguments: ['@reliefweb_api.client', '@string_translation']
   reliefweb_rivers.disaster.river:
     class: Drupal\reliefweb_rivers\Services\DisasterRiver
     arguments: ['@reliefweb_api.client', '@string_translation']

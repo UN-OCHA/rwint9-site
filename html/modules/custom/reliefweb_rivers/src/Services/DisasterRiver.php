@@ -8,7 +8,7 @@ use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
- * Service class to retrieve disaster resource for the training disasters.
+ * Service class to retrieve disaster resource for the disaster rivers.
  */
 class DisasterRiver extends RiverServiceBase {
 

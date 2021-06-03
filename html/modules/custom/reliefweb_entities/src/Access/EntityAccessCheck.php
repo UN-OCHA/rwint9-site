@@ -30,7 +30,7 @@ class EntityAccessCheck implements AccessInterface {
         // @todo check the bundle class.
         $accessible = ['country', 'disaster', 'source'];
         if (!in_array($entity->bundle(), $accessible)) {
-          return AccessResult::denied();
+          return AccessResult::forbidden();
         }
       }
     }

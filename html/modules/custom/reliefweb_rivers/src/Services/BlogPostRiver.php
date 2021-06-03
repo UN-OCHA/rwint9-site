@@ -8,7 +8,7 @@ use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
- * Service class to retrieve training resource for the training rivers.
+ * Service class to retrieve blog post resource for the blog rivers.
  */
 class BlogPostRiver extends RiverServiceBase {
 

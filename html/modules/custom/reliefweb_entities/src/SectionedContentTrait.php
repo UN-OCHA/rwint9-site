@@ -168,6 +168,7 @@ trait SectionedContentTrait {
           // Use the label override for the section, or the section title
           // is defined or the label from the table of content.
           $sections[$name]['#title'] = $labels[$name] ?? $section['#title'] ?? $label;
+          $sections[$name]['#id'] = $sections[$name]['#id'] ?? $name;
         }
       }
       if (empty($group['sections'])) {
@@ -176,12 +177,13 @@ trait SectionedContentTrait {
     }
 
     return [
-      'contents' => [
+      '#theme' => 'reliefweb_entities_sectioned_content',
+      '#contents' => [
         '#theme' => 'reliefweb_entities_table_of_contents',
         '#title' => $this->t('Table of Contents'),
         '#sections' => $contents,
       ],
-      'sections' => $sections,
+      '#sections' => $sections,
     ];
   }
 

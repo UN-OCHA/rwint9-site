@@ -29,6 +29,7 @@
  */
 #}
 {{ local_tasks }}
+{% set disaster_type = term.field_primary_disaster_type.entity.field_disaster_type_code.value %}
 <article{{ attributes
   .addClass([
     'taxonony-term',
@@ -38,22 +39,27 @@
     'rw-page--sectioned',
   ])
   .setAttribute('data-id', term.id())
+  .setAttribute('data-disaster-type', disaster_type)
+  .setAttribute('data-disaster-status', term.getModerationStatus())
 }}>
   <header>
     {{ title }}
 
-    {% if term.getModerationStatus() == 'ongoing' %}
     {{ render_var({
       '#theme': 'reliefweb_entities_entity_meta',
       '#meta': {
         'status': {
           'type': 'simple',
           'label': 'Status'|t,
-          'value': 'Humanitarian Situation'|t,
+          'value': term.getModerationStatusLabel(),
+        },
+        'glide': {
+          'type': 'simple',
+          'label': 'Glide'|t,
+          'value': term.field_glide.value,
         },
       }
     }) }}
-    {% endif %}
   </header>
 
   {{ term.getPageContent() }}
