@@ -4,6 +4,8 @@ namespace Drupal\reliefweb_entities\Entity;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\reliefweb_entities\BundleEntityInterface;
+use Drupal\reliefweb_entities\EntityModeratedInterface;
+use Drupal\reliefweb_entities\EntityModeratedTrait;
 use Drupal\reliefweb_entities\SectionedContentInterface;
 use Drupal\reliefweb_entities\SectionedContentTrait;
 use Drupal\taxonomy\Entity\Term;
@@ -11,8 +13,9 @@ use Drupal\taxonomy\Entity\Term;
 /**
  * Bundle class for country terms.
  */
-class Country extends Term implements BundleEntityInterface, SectionedContentInterface {
+class Country extends Term implements BundleEntityInterface, EntityModeratedInterface, SectionedContentInterface {
 
+  use EntityModeratedTrait;
   use SectionedContentTrait;
   use StringTranslationTrait;
 
@@ -23,7 +26,7 @@ class Country extends Term implements BundleEntityInterface, SectionedContentInt
     $sections = $this->getPageSections();
     $contents = $this->getPageTableOfContents();
 
-    // Section label overrids.
+    // Section label overrides.
     $labels = [
       'disasters' => $this->t('Alert and Ongoing Disasters'),
     ];

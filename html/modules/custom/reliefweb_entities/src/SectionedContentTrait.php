@@ -176,12 +176,13 @@ trait SectionedContentTrait {
     }
 
     return [
-      'contents' => [
+      '#theme' => 'reliefweb_entities_sectioned_content',
+      '#contents' => [
         '#theme' => 'reliefweb_entities_table_of_contents',
         '#title' => $this->t('Table of Contents'),
         '#sections' => $contents,
       ],
-      'sections' => $sections,
+      '#sections' => $sections,
     ];
   }
 

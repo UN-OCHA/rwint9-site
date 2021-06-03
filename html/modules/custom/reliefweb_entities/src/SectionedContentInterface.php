@@ -75,6 +75,9 @@ interface SectionedContentInterface {
    *   Content sections.
    * @param array $labels
    *   Labels for the sections.
+   *
+   * @return array
+   *   Render array with the table of contents and sections.
    */
   public function consolidateSections(array $contents, array $sections, array $labels);
 
