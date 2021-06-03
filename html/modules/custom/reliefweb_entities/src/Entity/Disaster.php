@@ -8,12 +8,11 @@ use Drupal\reliefweb_entities\EntityModeratedInterface;
 use Drupal\reliefweb_entities\EntityModeratedTrait;
 use Drupal\reliefweb_entities\SectionedContentInterface;
 use Drupal\reliefweb_entities\SectionedContentTrait;
-use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
 use Drupal\reliefweb_utility\TwigExtension;
 use Drupal\taxonomy\Entity\Term;
 
 /**
- * Bundle class for country terms.
+ * Bundle class for disaster terms.
  */
 class Disaster extends Term implements BundleEntityInterface, EntityModeratedInterface, SectionedContentInterface {
 
@@ -57,21 +56,7 @@ class Disaster extends Term implements BundleEntityInterface, EntityModeratedInt
 
     // Profile sections. Only display if show profile is selected.
     if (!empty($this->field_profile->value)) {
-      if (!empty($this->description->value)) {
-        // @todo review handling of markdown when there is a proper release of
-        // https://www.drupal.org/project/markdown for Drupal 9.
-        if ($this->description->format === 'markdown') {
-          $description = HtmlSanitizer::sanitizeFromMarkdown($this->description->value);
-        }
-        else {
-          $description = HtmlSanitizer::sanitize(check_markup($this->description->value));
-        }
-
-        $sections['overview'] = [
-          '#theme' => 'reliefweb_entities_entity_description',
-          '#description' => $description,
-        ];
-      }
+      $sections['overview'] = $this->getEntityDescription();
     }
 
     // Get data from the API.
