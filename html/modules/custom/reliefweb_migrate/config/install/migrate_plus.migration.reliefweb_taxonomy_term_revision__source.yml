@@ -1,0 +1,152 @@
+id: reliefweb_taxonomy_term_revision__source
+label: Migrate ReliefWeb source taxonomy term revisions.
+migration_group: reliefweb
+dependencies:
+  enforced:
+    module:
+      - reliefweb_migrate
+source:
+  plugin: reliefweb_taxonomy_term_revision
+  bundle: source
+  constants:
+    bundle: source
+    format: markdown
+destination:
+  plugin: entity_revision:taxonomy_term
+  default_bundle: source
+process:
+  tid: tid
+  vid: constants/bundle
+  name: name
+  description/value: description
+  description/format: constants/format
+  weight: weight
+  changed: timestamp
+  status:
+    plugin: static_map
+    source: field_status/0/value
+    default_value: 0
+    map:
+      active: 1
+      inactive: 1
+  # Revision information.
+  revision_id: revision_id
+  revision_user:
+    plugin: static_map
+    default_value: 2
+    source: revision_user
+    # Map the anonymous and super users to the System user.
+    map:
+      0: 2
+      1: 2
+  revision_log_message: revision_log_message
+  revision_created: revision_created
+  # Moderation status.
+  moderation_state:
+    plugin: static_map
+    source: field_status/0/value
+    default_value: draft
+    map:
+      active: active
+      inactive: inactive
+      archive: archive
+      blocked: blocked
+      duplicate: duplicate
+  # Fields.
+  field_aliases/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_term_alias/0/value
+  field_allowed_content_types:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: field_allowed_content_types
+    -
+      plugin: sub_process
+      process:
+        value: value
+  field_attention_job/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_attention_jobs/0/value
+  field_attention_report/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_attention_report/0/value
+  field_attention_training/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_attention_trainings/0/value
+  field_country:
+    plugin: sub_process
+    source: field_country
+    process:
+      target_id: tid
+  field_disclaimer/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_disclaimer/0/value
+  field_fst_id/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_fst_id/0/value
+  field_homepage/uri:
+    plugin: skip_on_empty
+    method: process
+    source: field_homepage/0/url
+  # @todo review once the custom field has been added for import URL.
+  # field_job_import_feed_url/uri
+  #   plugin: skip_on_empty
+  #   method: process
+  #   source: field_link/0/url
+  field_links:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: field_links
+    -
+      plugin: sub_process
+      process:
+        uri: value
+  # @todo review after figuring out the file directory.
+  # field_logo:
+  #   plugin: sub_process
+  #   source: field_term_image
+  #   process:
+  #     target_id: fid
+  #     alt: alt
+  #     title: title
+  #     width: width
+  #     height: height
+  field_longname/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_longname/0/value
+  field_organization_type:
+    plugin: sub_process
+    source: field_organization_type
+    process:
+      target_id: tid
+  field_shortname/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_shortname/0/value
+  field_spanish_name/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_spanish_name/0/value
+  # # Disable path alias generation as aliases are already imported.
+  # path/pathauto:
+  #   plugin: default_value
+  #   default_value: 0
+  # path/alias:
+  #   -
+  #     plugin: default_value
+  #     default_value: ''
+  #   -
+  #     plugin: skip_on_empty
+  #     method: process
+migration_dependencies:
+  required:
+    - reliefweb_taxonomy_term__source
