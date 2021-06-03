@@ -37,13 +37,6 @@ function reliefweb_rivers_theme() {
         'entity' => NULL,
       ],
     ],
-    'reliefweb_rivers_river_article_country_slug' => [
-      'variables' => [
-        // List of countries with the a url to either the country page or the
-        // river filtered by the country, a name and a shortname.
-        'countries' => [],
-      ],
-    ],
     'reliefweb_rivers_river_article_title' => [
       'variables' => [
         // Heading level for the river article title.
@@ -56,16 +49,6 @@ function reliefweb_rivers_theme() {
         'url' => '',
         // Title to the article.
         'title' => '',
-      ],
-    ],
-    'reliefweb_rivers_river_article_meta' => [
-      'variables' => [
-        // List of meta information for an article (ex: dates, sources etc.).
-        // Each meta data has the following properties: type (simple, date,
-        // date-range or taglist), label, value (simple, date, array with start
-        // and end date or list of tags). For tag lists, there are also count
-        // and sort properties.
-        'meta' => [],
       ],
     ],
   ];

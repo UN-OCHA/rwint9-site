@@ -1,0 +1,17 @@
+{#
+
+/**
+ * @file
+ * Template file for an entity's page content with sections.
+ *
+ * Available variables:
+ * - level: heading level (defaults to 2)
+ * - contents: table of contents
+ * - sections: list of sections
+ */
+
+#}
+<div class="rw-sectioned-content">
+{{ contents|merge({'#level': level}) }}
+{{ sections|merge({'#level': level}) }}
+</div>

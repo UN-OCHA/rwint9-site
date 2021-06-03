@@ -37,12 +37,42 @@ function reliefweb_entities_theme_suggestions_taxonomy_term_alter(array &$sugges
  */
 function reliefweb_entities_theme() {
   return [
+    'reliefweb_entities_sectioned_content' => [
+      'variables' => [
+        'level' => 2,
+        // This is the table of content which is a render array using the
+        // reliefweb_entities_table_of_contents theme.
+        'contents' => NULL,
+        // This is a list of sections as render arrays.
+        'sections' => NULL,
+      ],
+    ],
     'reliefweb_entities_table_of_contents' => [
       'variables' => [
         'level' => 2,
         'id' => 'table-of-contents',
         'title' => t('Table of Content'),
+        // List of sections grouped by category. Each category has a title and
+        // a list of sub-sections which are an array keyed by ids (to use for
+        // anchors) and with the sub-section titles are values.
         'sections' => [],
+      ],
+    ],
+    'reliefweb_entities_entity_country_slug' => [
+      'variables' => [
+        // List of countries with the a url to either the country page or the
+        // river filtered by the country, a name and a shortname.
+        'countries' => [],
+      ],
+    ],
+    'reliefweb_entities_entity_meta' => [
+      'variables' => [
+        // List of meta information for an article (ex: dates, sources etc.).
+        // Each meta data has the following properties: type (simple, date,
+        // date-range or taglist), label, value (simple, date, array with start
+        // and end date or list of tags). For tag lists, there are also count
+        // and sort properties.
+        'meta' => [],
       ],
     ],
   ];
