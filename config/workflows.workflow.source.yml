@@ -1,0 +1,119 @@
+uuid: c4ec4234-f641-4931-9af7-01bbe5c040b2
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.source
+  module:
+    - content_moderation
+id: source
+label: Source
+type: content_moderation
+type_settings:
+  states:
+    active:
+      published: true
+      default_revision: true
+      label: Active
+      weight: 2
+    archive:
+      published: false
+      default_revision: true
+      label: Archive
+      weight: 4
+    blocked:
+      published: false
+      default_revision: true
+      label: Blocked
+      weight: 5
+    draft:
+      label: Draft
+      published: false
+      default_revision: false
+      weight: 0
+    duplicate:
+      published: false
+      default_revision: true
+      label: Duplicate
+      weight: 6
+    inactive:
+      published: true
+      default_revision: true
+      label: Inactive
+      weight: 3
+    published:
+      label: Published
+      published: true
+      default_revision: true
+      weight: 1
+  transitions:
+    active:
+      label: 'Save as Active'
+      from:
+        - active
+        - archive
+        - blocked
+        - draft
+        - duplicate
+        - inactive
+      to: active
+      weight: 1
+    archive:
+      label: Archive
+      from:
+        - active
+        - archive
+        - blocked
+        - draft
+        - duplicate
+        - inactive
+      to: archive
+      weight: 3
+    blocked:
+      label: Block
+      from:
+        - active
+        - archive
+        - blocked
+        - draft
+        - duplicate
+        - inactive
+      to: blocked
+      weight: 4
+    draft:
+      label: 'Save as Draft'
+      from:
+        - active
+        - archive
+        - blocked
+        - draft
+        - duplicate
+        - inactive
+      to: draft
+      weight: 0
+    duplicate:
+      label: 'Mark as Duplicate'
+      from:
+        - active
+        - archive
+        - blocked
+        - draft
+        - duplicate
+        - inactive
+      to: duplicate
+      weight: 5
+    inactive:
+      label: 'Save as Inactive'
+      from:
+        - active
+        - archive
+        - blocked
+        - draft
+        - duplicate
+        - inactive
+      to: inactive
+      weight: 2
+  entity_types:
+    taxonomy_term:
+      - source
+  default_moderation_state: active
