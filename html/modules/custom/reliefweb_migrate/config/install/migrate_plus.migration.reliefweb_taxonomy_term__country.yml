@@ -25,6 +25,14 @@ process:
   changed: timestamp
   # Revision information.
   revision_id: revision_id
+  # Moderation status.
+  moderation_state:
+    plugin: static_map
+    source: field_status/0/value
+    default_value: normal
+    map:
+      normal: normal
+      current: ongoing
   # Fields.
   field_aliases/value:
     plugin: skip_on_empty
@@ -73,3 +81,4 @@ migration_dependencies:
   required:
     - reliefweb_user__default
     - reliefweb_user
+    - reliefweb_taxonomy_term

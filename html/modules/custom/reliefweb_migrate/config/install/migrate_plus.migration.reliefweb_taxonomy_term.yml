@@ -1,0 +1,79 @@
+id: reliefweb_taxonomy_term
+label: Migrate ReliefWeb base taxonomy terms.
+migration_group: reliefweb
+dependencies:
+  enforced:
+    module:
+      - reliefweb_migrate
+source:
+  plugin: reliefweb_taxonomy_term
+  bundle:
+    - career_categories
+    - content_format
+    - disaster_type
+    - feature
+    - job_type
+    - language
+    - ocha_product
+    - organization_type
+    - tags
+    - theme
+    - training_format
+    - training_type
+    - vulnerable_groups
+    - job_experience
+  constants:
+    format: markdown
+destination:
+  plugin: entity:taxonomy_term
+process:
+  tid: tid
+  vid:
+    plugin: static_map
+    source: machine_name
+    map:
+      career_categories: career_category
+      content_format: content_format
+      disaster_type: disaster_type
+      feature: feature
+      job_type: job_type
+      language: language
+      ocha_product: ocha_product
+      organization_type: organization_type
+      tags: tag
+      theme: theme
+      training_format: training_format
+      training_type: training_type
+      vulnerable_groups: vulnerable_group
+      job_experience: job_experience
+  name: name
+  description/value: description
+  description/format: constants/format
+  weight: weight
+  changed: timestamp
+  # Revision information. Not migrated for base terms.
+  # revision_id: revision_id
+  # Fields.
+  field_disaster_type_code/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_abbreviation/0/value
+  field_language_code/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_language_code/0/value
+  # # Disable path alias generation as aliases are already imported.
+  # path/pathauto:
+  #   plugin: default_value
+  #   default_value: 0
+  # path/alias:
+  #   -
+  #     plugin: default_value
+  #     default_value: ''
+  #   -
+  #     plugin: skip_on_empty
+  #     method: process
+migration_dependencies:
+  required:
+    - reliefweb_user__default
+    - reliefweb_user
