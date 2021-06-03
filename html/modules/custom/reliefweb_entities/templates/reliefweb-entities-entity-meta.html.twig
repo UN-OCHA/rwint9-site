@@ -7,7 +7,7 @@
  * Available variables;
  * - meta: associative array with a list of meta information (ex: dates,
  *   sources, etc.). Each items has the following properties:
- *   - type: simple, date, date-range or taglist
+ *   - type: simple, link, date, date-range or taglist
  *   - label: label (singular or plural depending on the value)
  *   - value: simple, date, array with start and end date or list of tags
  *   - count: only for taglist - number of tags to display
@@ -36,11 +36,20 @@
     <dd{{ create_attribute().setClasses([
       'rw-entity-meta__tag-value',
       'rw-entity-meta__tag-value--' ~ name,
+      'rw-entity-meta__tag-value--' ~ data.type,
       name == last ? 'rw-entity-meta__tag-value--last',
     ]|merge(classes|map(class => 'rw-entity-meta__tag-value--' ~ name ~ '--' ~ class))) }}>
       {# Simple value. #}
       {% if data.type == 'simple' %}
         {{- data.value -}}
+
+      {# Link value. #}
+      {% elseif data.type == 'link' %}
+        {% if data.value.external %}
+        <a href="{{ data.value.url }}" target="_blank" rel="noopener">{{ data.value.title }}</a>
+        {% else %}
+        <a href="{{ data.value.url }}">{{ data.value.title }}</a>
+        {% endif %}
 
       {# Date. #}
       {% elseif data.type == 'date' %}
@@ -71,7 +80,7 @@
               index == 'last' ? 'rw-entity-meta__tag-value__list__item--last',
             ]) }}><a class="rw-entity-meta__tag-link" href="{{ item.url }}">{{ item.shortname ?? item.name }}</a></li>
           {%- endfor -%}
-          {%- if data.value|length > data.count -%}
+          {%- if data.count and data.value|length > data.count -%}
             <li{{ create_attribute().addClass([
               'rw-entity-meta__tag-value__list__item',
               'rw-entity-meta__tag-value__list__item--more',
