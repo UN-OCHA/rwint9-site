@@ -15,6 +15,7 @@ use Drupal\Core\Render\BubbleableMetadata;
 function reliefweb_entities_entity_bundle_info_alter(&$bundles) {
   $bundles['taxonomy_term']['country']['class'] = 'Drupal\reliefweb_entities\Entity\Country';
   $bundles['taxonomy_term']['disaster']['class'] = 'Drupal\reliefweb_entities\Entity\Disaster';
+  $bundles['taxonomy_term']['source']['class'] = 'Drupal\reliefweb_entities\Entity\Source';
 }
 
 /**
@@ -83,6 +84,24 @@ function reliefweb_entities_theme() {
         'title' => t('Description'),
         // The description shold be a safe HTML string.
         'description' => '',
+      ],
+    ],
+    'reliefweb_entities_entity_details' => [
+      'variables' => [
+        'level' => 2,
+        'id' => 'details',
+        'title' => t('Details'),
+        // Meta information, see "reliefweb_entities_entity_meta" above.
+        'meta' => '',
+      ],
+    ],
+    'reliefweb_entities_entity_social_media_links' => [
+      'variables' => [
+        'level' => 2,
+        'id' => 'social-media',
+        'title' => t('Social Media'),
+        // List of social media links with a url and title.
+        'links' => [],
       ],
     ],
   ];
