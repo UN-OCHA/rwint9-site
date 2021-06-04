@@ -43,6 +43,11 @@ class Country extends Term implements BundleEntityInterface, EntityModeratedInte
     $sections['digital-sitrep'] = $this->getDigitalSitrepSection();
     $sections['key-figures'] = $this->getKeyFiguresSection();
 
+    // Profile sections. Only display if show profile is selected.
+    if (!empty($this->field_profile->value)) {
+      $sections['overview'] = $this->getEntityDescription();
+    }
+
     // Get data from the API.
     // @todo move those the Reports etc. river services.
     $queries = [

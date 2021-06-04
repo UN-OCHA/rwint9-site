@@ -33,12 +33,15 @@ class UrlHelper extends DrupalUrlHelper {
       return '';
     }
 
-    if (preg_match('#^(?:(?:https?://)|)/#', $url) !== 1) {
+    if (preg_match('#^(?:(?:https?://)|/)#', $url) !== 1) {
       $url = '/' . $url;
+    }
+    if (strpos($url, '/') === 0) {
+      $url = 'internal:' . $url;
     }
 
     $parts = static::parse($url);
-    return Url::fromUserInput($parts['path'], [
+    return Url::fromUri($parts['path'], [
       'query' => $parts['query'],
       'fragment' => $parts['fragment'],
       'alias' => $alias,

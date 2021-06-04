@@ -1,0 +1,29 @@
+
+{#
+
+/**
+ * @file
+ * Template file for entity details (meta informatio like country).
+ *
+ * Available variables:
+ * - level: headling leve (defaults to 2)
+ * - id: section id
+ * - title: section title
+ * - links: list of social media links with a url and a title
+
+#}
+<section{{ create_attribute()
+  .addClass([
+    'rw-entity-social-media-links',
+  ])
+  .setAttribute('id', id)
+}}>
+  <h{{ level }} class="rw-entity-social-media-links__title">{{ title }}</h{{ level }}>
+  <ul class="rw-entity-social-media-links__list">
+  {% for link in links %}
+    <li class="rw-entity-social-media-links__list_item">
+      <a href="{{ link.url }}" target="_blank" rel="noopener" class="rw-entity-social-media-links__link">{{ link.title }}</a>
+    </li>
+  {% endfor %}
+  </ul>
+</section>

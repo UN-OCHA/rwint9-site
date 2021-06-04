@@ -1,4 +1,4 @@
-uuid: 53e6d1d4-be48-4a54-a654-b1a47df20463
+uuid: 7d3be0a4-0dbd-47d7-8984-8e4e507a8a19
 langcode: en
 status: true
 dependencies:
@@ -6,7 +6,7 @@ dependencies:
     module:
       - reliefweb_migrate
 _core:
-  default_config_hash: OXgBtAHznnSXlhBefQFn0T0MF8SCQlonItVVvUEQQFo
+  default_config_hash: W1zfbqFzw9fNmUm2h7xHbNIgK3g8pH-UjwdEVTee2nY
 id: reliefweb_taxonomy_term__country
 class: null
 field_plugin_method: null
@@ -20,7 +20,6 @@ source:
   constants:
     bundle: country
     format: markdown
-    revision_default: true
 process:
   tid: tid
   vid: constants/bundle
@@ -40,7 +39,7 @@ process:
   field_aliases/value:
     plugin: skip_on_empty
     method: process
-    source: field_aliases/0/value
+    source: field_term_alias/0/value
   field_iso3/value:
     plugin: skip_on_empty
     method: process

@@ -1,0 +1,7 @@
+allowed_social_media_links:
+  facebook: 'Facebook'
+  instagram: 'Instagram'
+  medium: 'Medium'
+  linkedin: 'LinkedIn'
+  twitter: 'Twitter'
+  youtube: 'YouTube'

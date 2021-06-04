@@ -11,7 +11,6 @@ source:
   constants:
     bundle: country
     format: markdown
-    revision_default: true
 destination:
   plugin: entity:taxonomy_term
   default_bundle: country
@@ -37,7 +36,7 @@ process:
   field_aliases/value:
     plugin: skip_on_empty
     method: process
-    source: field_aliases/0/value
+    source: field_term_alias/0/value
   field_iso3/value:
     plugin: skip_on_empty
     method: process

@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_entities;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
@@ -185,6 +186,31 @@ trait SectionedContentTrait {
       ],
       '#sections' => $sections,
     ];
+  }
+
+  /**
+   * Get the entity description (for countries, disasters, sources).
+   *
+   * @return array
+   *   Render array with the description.
+   */
+  public function getEntityDescription() {
+    if (!empty($this->description->value)) {
+      // @todo review handling of markdown when there is a proper release of
+      // https://www.drupal.org/project/markdown for Drupal 9.
+      if ($this->description->format === 'markdown') {
+        $description = HtmlSanitizer::sanitizeFromMarkdown($this->description->value);
+      }
+      else {
+        $description = HtmlSanitizer::sanitize(check_markup($this->description->value));
+      }
+
+      return [
+        '#theme' => 'reliefweb_entities_entity_description',
+        '#description' => $description,
+      ];
+    }
+    return [];
   }
 
   /**

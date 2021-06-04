@@ -1,0 +1,33 @@
+{#
+
+/**
+ * @file
+ * Template file for entity details (meta informatio like country).
+ *
+ * Available variables:
+ * - level: headling leve (defaults to 2)
+ * - id: section id
+ * - title: section title
+ * - meta: associative array with a list of meta information (ex: dates,
+ *   sources, etc.). Each items has the following properties:
+ *   - type: simple, date, date-range or taglist
+ *   - label: label (singular or plural depending on the value)
+ *   - value: simple, date, array with start and end date or list of tags
+ *   - count: only for taglist - number of tags to display
+ *   - sort: only for taglist - sort property for the tags
+ */
+
+#}
+<section{{ create_attribute()
+  .addClass([
+    'rw-entity-details',
+  ])
+  .setAttribute('id', id)
+}}>
+  <h{{ level }} class="rw-entity-details__title">{{ title }}</h{{ level }}>
+
+  {{ render_var({
+    '#theme': 'reliefweb_entities_entity_meta',
+    '#meta': meta,
+  }) }}
+</section>
