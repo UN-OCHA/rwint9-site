@@ -9,6 +9,16 @@ rw-announcement:
     theme:
       components/rw-announcement/rw-announcement.css: {}
 
+rw-blog:
+  css:
+    theme:
+      components/rw-blog/rw-blog.css: {}
+
+rw-disasters:
+  css:
+    theme:
+      components/rw-disasters/rw-disasters.css: {}
+
 rw-headlines:
   css:
     theme:
@@ -18,3 +28,4 @@ rw-homepage:
   css:
     theme:
       components/rw-homepage/rw-homepage.css: {}
+      components/rw-homepage/rw-homepage--grid.css: {}
