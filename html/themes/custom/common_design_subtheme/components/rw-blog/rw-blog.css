@@ -1,4 +1,24 @@
 /**
+ * Blog post.
+ *
+ * Latest blog post.
+ *
+ * Id: #blog-post
+ *
+ * Scope: .page-path-home #main
+ */
+.page-path-home #main #blog-post h2 {
+  font-size: 24px;
+}
+.page-path-home #main #blog-post article {
+  padding: 0;
+  border: none;
+}
+.page-path-home #main #blog-post article .content {
+  display: block;
+}
+
+/**
  * Sub article.
  *
  * Articles in a section like headlines etc.
