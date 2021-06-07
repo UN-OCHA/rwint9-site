@@ -1,0 +1,116 @@
+/**
+ * Disasters.
+ *
+ * List of the most recent disasters.
+ *
+ * Id: #disasters
+ *
+ * Scope: .page-path-home #main
+ */
+.page-path-home #main #disasters h2 {
+  font-size: 24px;
+}
+.page-path-home #main #disasters ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.page-path-home #main #disasters li {
+  position: relative;
+  margin: 16px 0 0 0;
+  padding: 16px 0 0 0;
+  border-top: 1px solid #e6ecef;
+}
+.page-path-home #main #disasters li:first-child {
+  margin: 0;
+  padding: 8px 0 0 0;
+  border-top: none;
+}
+.page-path-home #main #disasters li a {
+  position: relative;
+  display: block;
+  /* Space for the disaser icon. */
+  padding-left: 48px;
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 26px;
+}
+.page-path-home #main [data-disaster-type] a:before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 6px;
+  width: 24px;
+  height: 24px;
+  margin-top: -12px;
+  overflow: hidden;
+  background: url(../images/disaster-icons-sprite.png) -64px 0 no-repeat;
+  background: rgba(0,0,0,0) url(../images/disaster-icons-sprite.svg) -64px 0 no-repeat;
+}
+.page-path-home #main [data-disaster-type="AC"] a:before {
+  background-position-y: 0;
+}
+.page-path-home #main [data-disaster-type="AV"] a:before {
+  background-position-y: -24px;
+}
+.page-path-home #main [data-disaster-type="CW"] a:before {
+  background-position-y: -48px;
+}
+.page-path-home #main [data-disaster-type="DR"] a:before {
+  background-position-y: -72px;
+}
+.page-path-home #main [data-disaster-type="EC"] a:before {
+  background-position-y: -96px;
+}
+.page-path-home #main [data-disaster-type="EP"] a:before {
+  background-position-y: -120px;
+}
+.page-path-home #main [data-disaster-type="EQ"] a:before {
+  background-position-y: -144px;
+}
+.page-path-home #main [data-disaster-type="FF"] a:before {
+  background-position-y: -168px;
+}
+.page-path-home #main [data-disaster-type="FL"] a:before {
+  background-position-y: -192px;
+}
+.page-path-home #main [data-disaster-type="FR"] a:before {
+  background-position-y: -216px;
+}
+.page-path-home #main [data-disaster-type="HT"] a:before {
+  background-position-y: -240px;
+}
+.page-path-home #main [data-disaster-type="IN"] a:before {
+  background-position-y: -264px;
+}
+.page-path-home #main [data-disaster-type="LS"] a:before {
+  background-position-y: -288px;
+}
+.page-path-home #main [data-disaster-type="MS"] a:before {
+  background-position-y: -312px;
+}
+.page-path-home #main [data-disaster-type="SS"] a:before {
+  background-position-y: -336px;
+}
+.page-path-home #main [data-disaster-type="ST"] a:before {
+  background-position-y: -360px;
+}
+.page-path-home #main [data-disaster-type="TC"] a:before {
+  background-position-y: -384px;
+}
+.page-path-home #main [data-disaster-type="TS"] a:before {
+  background-position-y: -408px;
+}
+.page-path-home #main [data-disaster-type="VO"] a:before {
+  background-position-y: -432px;
+}
+.page-path-home #main [data-disaster-type="WF"] a:before {
+  background-position-y: -456px;
+}
+.page-path-home #main [data-disaster-status="alert"] a:before {
+  background-position-x: -88px;
+}
+.page-path-home #main [data-disaster-status="current"] a:before,
+.page-path-home #main [data-disaster-status="ongoing"] a:before {
+  background-position-x: -112px;
+}
