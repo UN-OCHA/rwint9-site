@@ -1,0 +1,73 @@
+/**
+ * Sub article.
+ *
+ * Articles in a section like headlines etc.
+ *
+ * Scope: #main section article
+ */
+#main section article {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding: 24px 0;
+  border-top: 1px solid #e6ecef;
+}
+#main section article:first-child {
+  border-top: none;
+}
+#main section article header {
+  /* Compensate the half-leading space from the title line-height. */
+  margin-top: -5px;
+}
+#main section article header p.country {
+  margin: 2px 6px 0 0;
+  padding: 1px 8px;
+  font-size: 14px;
+  line-height: 22px;
+}
+#main section article > header .title,
+#main section article > .title {
+  display: inline;
+  margin: 0;
+  font-size: 17px;
+  font-weight: bold;
+  line-height: 28px;
+  color: #055372;
+}
+#main section article > header .title a,
+#main section article > .title a {
+  color: inherit;
+}
+#main section article .content {
+  flex: 1 0 auto;
+  padding-top: 16px;
+  display: flex;
+  align-items: center;
+  /* #2e3436 with 0.85 opacity on white. */
+  color: #4d5254;
+}
+/* Article with a thumbnail preview (typically Map and Infographic). */
+#main section article .content img {
+  float: left;
+  max-height: 118px;
+  margin: 2px 20px 0px 0;
+  border: 1px solid #e6ecef;
+}
+#main section article .content img + p {
+  margin-top: 0;
+}
+@media all and (max-width: 479px) {
+  #main section article .content img {
+    display: none;
+  }
+}
+#main section article footer {
+  /* Clear any floating from the content. */
+  clear: both;
+  padding-top: 16px;
+  /* Compensate  the half-leading space added by the line-height of the <dl>. */
+  margin-bottom: -8px;
+}
+#main section article header + footer {
+  padding-top: 12px;
+}
