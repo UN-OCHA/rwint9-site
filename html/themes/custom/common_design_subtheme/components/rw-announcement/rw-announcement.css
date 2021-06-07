@@ -5,21 +5,21 @@
  *
  * Id: #announcement
  *
- * Scope: .page-path-home #main
+ * Scope: .path-frontpage #main-content
  */
-.page-path-home #main #announcement a {
+.path-frontpage #main-content #announcement a {
   display: block;
 }
 /* Hide the external link icon. */
-.page-path-home #main #announcement a[target="_blank"][rel="noopener"]:after {
+.path-frontpage #main-content #announcement a[target="_blank"][rel="noopener"]:after {
   display: none;
 }
-.page-path-home #main #announcement a:hover,
-.page-path-home #main #announcement a:active,
-.page-path-home #main #announcement a:focus {
+.path-frontpage #main-content #announcement a:hover,
+.path-frontpage #main-content #announcement a:active,
+.path-frontpage #main-content #announcement a:focus {
   outline: 4px solid #0988bb;
 }
-.page-path-home #main #announcement img {
+.path-frontpage #main-content #announcement img {
   display: block;
   width: 100%;
   max-width: 750px;
