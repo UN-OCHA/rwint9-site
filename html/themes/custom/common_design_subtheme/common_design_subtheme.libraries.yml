@@ -3,8 +3,13 @@ global-styling:
     theme:
       css/styles.css: {}
 
-# Custom components
-# cd-teaser:
-#   css:
-#     theme:
-#       components/cd-teaser/cd-teaser.css: {}
+# RW custom components
+rw-headlines:
+  css:
+    theme:
+      components/rw-headlines/rw-headlines.css: {}
+
+rw-homepage:
+  css:
+    theme:
+      components/rw-homepage/rw-homepage.css: {}
