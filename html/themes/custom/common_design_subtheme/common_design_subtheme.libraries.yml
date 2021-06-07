@@ -4,6 +4,11 @@ global-styling:
       css/styles.css: {}
 
 # RW custom components
+rw-announcement:
+  css:
+    theme:
+      components/rw-announcement/rw-announcement.css: {}
+
 rw-headlines:
   css:
     theme:
