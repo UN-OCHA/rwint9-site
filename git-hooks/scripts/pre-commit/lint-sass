@@ -8,9 +8,9 @@ exclude=' '
 
 # The linter path is relative to the root of the repository.
 relative=1
-linter="html/themes/custom/common_design_subtheme/node_modules/.bin/sass-lint"
-options='-v -q --max-warnings 0 -c html/themes/custom/common_design_subtheme/.sass-lint.yml'
-message='Linting staged SASS files...'
+linter="html/themes/custom/common_design_subtheme/node_modules/.bin/stylelint"
+options="'{sass,components}/**/*.{css,scss}'"
+message='Linting subtheme CSS/SCSS files...'
 
 # Load and execute the linting code.
 . "$(dirname "$0")/lint-common"
