@@ -29,3 +29,13 @@ rw-homepage:
     theme:
       components/rw-homepage/rw-homepage.css: {}
       components/rw-homepage/rw-homepage--grid.css: {}
+
+rw-most-read:
+  css:
+    theme:
+      components/rw-most-read/rw-most-read.css: {}
+
+rw-opportunities:
+  css:
+    theme:
+      components/rw-opportunities/rw-opportunities.css: {}
