@@ -5,48 +5,48 @@
  *
  * Id: #opportunities
  *
- * Scope: .page-path-home #main
+ * Scope: .path-frontpage #main-content
  */
-.page-path-home #main #opportunities h2 {
+.path-frontpage #main-content #opportunities h2 {
   font-size: 24px;
 }
-.page-path-home #main #opportunities ul {
+.path-frontpage #main-content #opportunities ul {
   margin: 24px 0 0 0;
   padding: 0;
   list-style: none;
 }
-.page-path-home #main #opportunities li {
+.path-frontpage #main-content #opportunities li {
   margin: 0;
   background: #e6ecef;
 }
-.page-path-home #main #opportunities li + li {
+.path-frontpage #main-content #opportunities li + li {
   margin-top: 16px;
 }
-.page-path-home #main #opportunities li * {
+.path-frontpage #main-content #opportunities li * {
   display: inline-block;
   line-height: 36px;
   vertical-align: middle;
 }
-.page-path-home #main #opportunities li a {
+.path-frontpage #main-content #opportunities li a {
   position: relative;
   width: 100%;
   padding: 20px 100px 20px 20px;
   font-size: 22px;
   text-decoration: none;
 }
-.page-path-home #main #opportunities li a:hover,
-.page-path-home #main #opportunities li a:active,
-.page-path-home #main #opportunities li a:focus {
+.path-frontpage #main-content #opportunities li a:hover,
+.path-frontpage #main-content #opportunities li a:active,
+.path-frontpage #main-content #opportunities li a:focus {
   outline: 1px solid #055372;
   text-decoration: none;
 }
 /* Number of open ads. */
-.page-path-home #main #opportunities li data {
+.path-frontpage #main-content #opportunities li data {
   margin-right: 12px;
   font-size: 32px;
   font-weight: bold;
 }
-.page-path-home #main #opportunities [data-type] a:before {
+.path-frontpage #main-content #opportunities [data-type] a:before {
   content: "";
   position: absolute;
   top: 50%;
@@ -59,11 +59,11 @@
   background: rgba(0,0,0,0) url(../images/rw-icons-sprite.svg) -268px 0 no-repeat;
   opacity: 0.5;
 }
-.page-path-home #main #opportunities [data-type='training'] a:before {
+.path-frontpage #main-content #opportunities [data-type='training'] a:before {
   background-position-y: -36px;
 }
 /* Border to separate the logo from the text. */
-.page-path-home #main #opportunities [data-type] a:after {
+.path-frontpage #main-content #opportunities [data-type] a:after {
   content: "";
   position: absolute;
   top: 0;
