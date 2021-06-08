@@ -7,14 +7,14 @@
  *
  * Scope: .path-frontpage #main-content
  */
-.path-frontpage #main-content #blog-post h2 {
+.path-frontpage #main-content #blog h2 {
   font-size: 24px;
 }
-.path-frontpage #main-content #blog-post article {
+.path-frontpage #main-content #blog article {
   padding: 0;
   border: none;
 }
-.path-frontpage #main-content #blog-post article .content {
+.path-frontpage #main-content #blog article .content {
   display: block;
 }
 

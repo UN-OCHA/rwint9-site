@@ -25,7 +25,7 @@
   .path-frontpage #main-content #disasters {
     grid-area: disasters;
   }
-  .path-frontpage #main-content #blog-post {
+  .path-frontpage #main-content #blog {
     grid-area: blog;
   }
   .path-frontpage #main-content #opportunities {
@@ -38,7 +38,7 @@
   /* Gaps and borders. */
   .path-frontpage #main-content #announcement,
   .path-frontpage #main-content #disasters,
-  .path-frontpage #main-content #blog-post,
+  .path-frontpage #main-content #blog,
   .path-frontpage #main-content #opportunities,
   .path-frontpage #main-content #most-read {
     margin: 0;
