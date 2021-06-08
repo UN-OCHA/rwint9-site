@@ -1,0 +1,74 @@
+/**
+ * Opportunities.
+ *
+ * Open jobs and training.
+ *
+ * Id: #opportunities
+ *
+ * Scope: .page-path-home #main
+ */
+.page-path-home #main #opportunities h2 {
+  font-size: 24px;
+}
+.page-path-home #main #opportunities ul {
+  margin: 24px 0 0 0;
+  padding: 0;
+  list-style: none;
+}
+.page-path-home #main #opportunities li {
+  margin: 0;
+  background: #e6ecef;
+}
+.page-path-home #main #opportunities li + li {
+  margin-top: 16px;
+}
+.page-path-home #main #opportunities li * {
+  display: inline-block;
+  line-height: 36px;
+  vertical-align: middle;
+}
+.page-path-home #main #opportunities li a {
+  position: relative;
+  width: 100%;
+  padding: 20px 100px 20px 20px;
+  font-size: 22px;
+  text-decoration: none;
+}
+.page-path-home #main #opportunities li a:hover,
+.page-path-home #main #opportunities li a:active,
+.page-path-home #main #opportunities li a:focus {
+  outline: 1px solid #055372;
+  text-decoration: none;
+}
+/* Number of open ads. */
+.page-path-home #main #opportunities li data {
+  margin-right: 12px;
+  font-size: 32px;
+  font-weight: bold;
+}
+.page-path-home #main #opportunities [data-type] a:before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 22px;
+  width: 36px;
+  height: 36px;
+  margin-top: -18px;
+  overflow: hidden;
+  background: url(../images/rw-icons-sprite.png) -268px 0 no-repeat;
+  background: rgba(0,0,0,0) url(../images/rw-icons-sprite.svg) -268px 0 no-repeat;
+  opacity: 0.5;
+}
+.page-path-home #main #opportunities [data-type='training'] a:before {
+  background-position-y: -36px;
+}
+/* Border to separate the logo from the text. */
+.page-path-home #main #opportunities [data-type] a:after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 79px;
+  width: 2px;
+  height: 100%;
+  background: white;
+}
