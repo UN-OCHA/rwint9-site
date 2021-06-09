@@ -1,0 +1,135 @@
+/**
+ * Article meta information.
+ *
+ * Meta information like source or publication date, generally in the header or
+ * footer.
+ *
+ * Scope: #main article dl.meta
+ */
+#main article dl.meta {
+  margin: 0;
+}
+#main article dl.meta + dl.meta {
+  margin-top: 4px;
+}
+#main article dl.meta:after {
+  content: "";
+  clear: both;
+  display: block;
+}
+#main article dl.meta dt {
+  clear: both;
+  float: left;
+  display: inline;
+  margin: 0 4px 0 0;
+  font-size: 15px;
+  font-weight: bold;
+  /* To have enough tapping space between links. */
+  line-height: 29px;
+}
+#main article dl.meta dt:after {
+  content: ": ";
+}
+#main article dl.meta dd {
+  margin: 0;
+  /* To have enough tapping space between links. */
+  line-height: 30px;
+}
+#main article dl.meta dd ul,
+#main article dl.meta dd li {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+#main article dl.meta dd li:after {
+  content: ", ";
+}
+/* This will be ignored in IE8 but it's not a big deal. */
+#main article dl.meta dd li:last-child:after,
+#main article dl.meta dd li[data-last]:after {
+  content: none;
+}
+#main article dl.meta dd li[data-more]:before {
+  content: " + ";
+}
+#main > article header dl.meta {
+  margin: 8px 0 -6px 0;
+}
+/* Show the meta information inline. */
+@media screen and (min-width: 480px) {
+  #main article header dl.meta dt {
+    float: none;
+  }
+  #main article header dl.meta dd {
+    display: inline;
+  }
+  /* Separator. */
+  #main article header dl.meta dd:after {
+    content: "";
+    display: inline-block;
+    vertical-align: middle;
+    width: 4px;
+    height: 4px;
+    margin: 0 8px;
+    padding: 0;
+    border-radius: 4px;
+    background: #2e3436;
+  }
+  #main article header dl.meta dd:last-of-type:after {
+    content: none;
+  }
+}
+
+/**
+ * Meta for river articles.
+ *
+ * Scope: #main section article
+ */
+#main section article dl.meta {
+  margin: 0;
+}
+#main section article dl.meta dt {
+  float: none;
+  display: inline-block;
+  font-size: 14px;
+}
+#main section article dl.meta dd {
+  display: inline-block;
+  font-size: 15px;
+}
+#main section article dl.meta.core {
+  /* #2e3436 with 0.85 opacity on white. */
+  color: #4d5254;
+}
+#main section article dl.meta.core dd:after {
+  content: "";
+  display: inline-block;
+  vertical-align: middle;
+  width: 4px;
+  height: 4px;
+  margin: 0 8px;
+  padding: 0;
+  border-radius: 4px;
+  background: #2e3436;
+}
+#main section article dl.meta.core dd.created:after {
+  margin-left: 12px;
+}
+/* This will be ignored in IE8 but it's not a big deal. */
+#main section article dl.meta.core dd:last-of-type:after,
+#main section article dl.meta.core dd[data-last]:after {
+  content: none;
+}
+/* Display meta one per line on smaller screen to improve readability. */
+@media all and (max-width: 479px) {
+  #main section article dl.meta.core dd {
+    display: inline;
+  }
+  #main section article dl.meta.core dd:after {
+    display: block;
+    width: 0;
+    height: 0;
+    margin: 0;
+  }
+}
