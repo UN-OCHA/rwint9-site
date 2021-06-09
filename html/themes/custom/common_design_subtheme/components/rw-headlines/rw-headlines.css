@@ -6,9 +6,9 @@
  * Scope: #main-content section article
  */
 #main-content section article {
+  position: relative;
   display: flex;
   flex-direction: column;
-  position: relative;
   padding: 24px 0;
   border-top: 1px solid #e6ecef;
 }
@@ -29,20 +29,20 @@
 #main-content section article > .title {
   display: inline;
   margin: 0;
+  color: #055372;
   font-size: 17px;
   font-weight: bold;
   line-height: 28px;
-  color: #055372;
 }
 #main-content section article > header .title a,
 #main-content section article > .title a {
   color: inherit;
 }
 #main-content section article .content {
-  flex: 1 0 auto;
-  padding-top: 16px;
   display: flex;
+  flex: 1 0 auto;
   align-items: center;
+  padding-top: 16px;
   /* #2e3436 with 0.85 opacity on white. */
   color: #4d5254;
 }
@@ -50,12 +50,13 @@
 #main-content section article .content img {
   float: left;
   max-height: 118px;
-  margin: 2px 20px 0px 0;
+  margin: 2px 20px 0 0;
   border: 1px solid #e6ecef;
 }
 #main-content section article .content img + p {
   margin-top: 0;
 }
+
 @media all and (max-width: 479px) {
   #main-content section article .content img {
     display: none;
@@ -64,9 +65,9 @@
 #main-content section article footer {
   /* Clear any floating from the content. */
   clear: both;
-  padding-top: 16px;
   /* Compensate  the half-leading space added by the line-height of the <dl>. */
   margin-bottom: -8px;
+  padding-top: 16px;
 }
 #main-content section article header + footer {
   padding-top: 12px;
@@ -87,14 +88,14 @@
   margin-top: 4px;
 }
 #main-content article dl.meta:after {
-  content: "";
-  clear: both;
   display: block;
+  clear: both;
+  content: "";
 }
 #main-content article dl.meta dt {
-  clear: both;
-  float: left;
   display: inline;
+  float: left;
+  clear: both;
   margin: 0 4px 0 0;
   font-size: 15px;
   font-weight: bold;
@@ -140,13 +141,13 @@
   }
   /* Separator. */
   #main-content article header dl.meta dd:after {
-    content: "";
     display: inline-block;
-    vertical-align: middle;
     width: 4px;
     height: 4px;
     margin: 0 8px;
     padding: 0;
+    content: "";
+    vertical-align: middle;
     border-radius: 4px;
     background: #2e3436;
   }
@@ -164,8 +165,8 @@
   margin: 0;
 }
 #main-content section article dl.meta dt {
-  float: none;
   display: inline-block;
+  float: none;
   font-size: 14px;
 }
 #main-content section article dl.meta dd {
@@ -177,13 +178,13 @@
   color: #4d5254;
 }
 #main-content section article dl.meta.core dd:after {
-  content: "";
   display: inline-block;
-  vertical-align: middle;
   width: 4px;
   height: 4px;
   margin: 0 8px;
   padding: 0;
+  content: "";
+  vertical-align: middle;
   border-radius: 4px;
   background: #2e3436;
 }

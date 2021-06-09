@@ -18,16 +18,16 @@
 /* Display the copyright above the image. */
 .path-frontpage #main-content #headlines article figure footer small {
   position: absolute;
-  left: 4px;
+  z-index: 2;
   right: 4px;
   bottom: 2px;
+  left: 4px;
+  overflow: hidden;
+  text-align: right;
+  opacity: 0.9;
   color: white;
   font-size: 12px;
   font-style: italic;
-  text-align: right;
-  opacity: 0.9;
-  overflow: hidden;
-  z-index: 2;
 }
 /* Hide the edit button if the browser doesn't handle css grid as we cannot
  * display the widget properly. */
@@ -53,15 +53,15 @@
   }
   /* Headline image. */
   .path-frontpage #main-content #headlines article figure {
-    display: block;
     position: relative;
-    width: 100%;
-    height: 0;
-    /* 3/2 aspect ratio. */
-    padding-top: 66.7%;
-    margin: 0 0 16px 0;
+    display: block;
     overflow: hidden;
     order: -1;
+    width: 100%;
+    height: 0;
+    margin: 0 0 16px 0;
+    /* 3/2 aspect ratio. */
+    padding-top: 66.7%;
   }
   .path-frontpage #main-content #headlines article img {
     position: absolute;
@@ -99,9 +99,9 @@
   /* Headlines grid: 1 column. */
   .path-frontpage #main-content #headlines .rw-river__articles {
     display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: repeat(10, min-content);
     grid-template-areas: "header" "article1" "article2" "article3" "article4" "article5" "article6" "article7" "article8" "footer";
+    grid-template-rows: repeat(10, min-content);
+    grid-template-columns: 1fr;
   }
   .path-frontpage #main-content #headlines h2 {
     grid-area: header;
@@ -137,8 +137,8 @@
   /* Remove borders and padding on small screens. */
   @media screen and (max-width: 479px) {
     .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(n+1) {
-      padding-left: 0;
       padding-right: 0;
+      padding-left: 0;
       border-width: 0 0 1px 0;
     }
     .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(1) {
@@ -155,9 +155,9 @@
   /* Headlines grid: 2 columns. */
   @media screen and (min-width: 480px) {
     .path-frontpage #main-content #headlines .rw-river__articles {
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: repeat(6, min-content);
       grid-template-areas: "header header" "article1 article2" "article3 article4" "article5 article6" "article7 article8" "footer footer";
+      grid-template-rows: repeat(6, min-content);
+      grid-template-columns: 1fr 1fr;
     }
     .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(n+1) {
       padding-bottom: 8px;
@@ -172,8 +172,8 @@
     .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(5),
     .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(7) {
       padding-left: 0;
-      border-left: none;
       border-right: none;
+      border-left: none;
     }
     .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(2),
     .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(4),
@@ -195,15 +195,15 @@
   /* Move the view more next to the heading on large screens. */
   @media screen and (min-width: 900px) {
     .path-frontpage #main-content #headlines .view-more {
-      grid-area: none;
-      display: inline-block;
       position: absolute;
       top: 0;
       right: 32px;
+      display: inline-block;
+      grid-area: none;
       width: auto;
       margin: 0;
-      line-height: 48px;
       text-align: right;
+      line-height: 48px;
     }
   }
 }

@@ -11,9 +11,9 @@
   font-size: 24px;
 }
 .path-frontpage #main-content #disasters ul {
-  list-style: none;
-  padding: 0;
   margin: 0;
+  padding: 0;
+  list-style: none;
 }
 .path-frontpage #main-content #disasters li {
   position: relative;
@@ -36,16 +36,16 @@
   line-height: 26px;
 }
 .path-frontpage #main-content [data-disaster-type] a:before {
-  content: "";
   position: absolute;
   top: 50%;
   left: 6px;
+  overflow: hidden;
   width: 24px;
   height: 24px;
   margin-top: -12px;
-  overflow: hidden;
+  content: "";
   background: url(../images/disaster-icons-sprite.png) -64px 0 no-repeat;
-  background: rgba(0,0,0,0) url(../images/disaster-icons-sprite.svg) -64px 0 no-repeat;
+  background: rgba(0, 0, 0, 0) url(../images/disaster-icons-sprite.svg) -64px 0 no-repeat;
 }
 .path-frontpage #main-content [data-disaster-type="AC"] a:before {
   background-position-y: 0;
