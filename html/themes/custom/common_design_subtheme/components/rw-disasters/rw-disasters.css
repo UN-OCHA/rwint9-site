@@ -44,8 +44,8 @@
   height: 24px;
   margin-top: -12px;
   content: "";
-  background: url(../images/disaster-icons-sprite.png) -64px 0 no-repeat;
-  background: rgba(0, 0, 0, 0) url(../images/disaster-icons-sprite.svg) -64px 0 no-repeat;
+  background: url(../../img/icons/disaster-icons-sprite.png) -64px 0 no-repeat;
+  background: rgba(0, 0, 0, 0) url(../../img/icons/disaster-icons-sprite.svg) -64px 0 no-repeat;
 }
 .path-frontpage #main-content [data-disaster-type="AC"] a:before {
   background-position-y: 0;
