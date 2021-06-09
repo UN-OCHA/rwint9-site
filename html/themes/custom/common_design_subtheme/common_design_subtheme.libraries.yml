@@ -30,6 +30,11 @@ rw-homepage:
       components/rw-homepage/rw-homepage.css: {}
       components/rw-homepage/rw-homepage--grid.css: {}
 
+rw-meta:
+  css:
+    theme:
+      components/rw-meta/rw-meta.css: {}
+
 rw-most-read:
   css:
     theme:
