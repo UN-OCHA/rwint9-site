@@ -48,8 +48,8 @@
     margin: 0;
     /* The bottom padding is smaller to compensate the space added by the
      * line-height of the footer elements. */
-    padding: 24px 12px 16px 12px;
-    border-width: 0;
+    /*padding: 24px 12px 16px 12px;*/
+    /*border-width: 0;*/
   }
   /* Headline image. */
   .path-frontpage #main-content #headlines article figure {
@@ -96,102 +96,102 @@
     position: relative;
   }
 
-  /* Headlines grid: 1 column. */
-  .path-frontpage #main-content #headlines .rw-river__articles {
-    display: grid;
-    grid-template-areas: "header" "article1" "article2" "article3" "article4" "article5" "article6" "article7" "article8" "footer";
-    grid-template-rows: repeat(10, min-content);
-    grid-template-columns: 1fr;
-  }
-  .path-frontpage #main-content #headlines h2 {
-    grid-area: header;
-  }
-  .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(1) {
-    grid-area: article1;
-  }
-  .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(2) {
-    grid-area: article2;
-  }
-  .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(3) {
-    grid-area: article3;
-  }
-  .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(4) {
-    grid-area: article4;
-  }
-  .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(5) {
-    grid-area: article5;
-  }
-  .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(6) {
-    grid-area: article6;
-  }
-  .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(7) {
-    grid-area: article7;
-  }
-  .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(8) {
-    grid-area: article8;
-  }
-  .path-frontpage #main-content #headlines .rw-river__articles .view-more {
-    grid-area: footer;
-  }
+  /*!* Headlines grid: 1 column. *!*/
+  /*.path-frontpage #main-content #headlines .rw-river__articles {*/
+  /*  display: grid;*/
+  /*  grid-template-areas: "header" "article1" "article2" "article3" "article4" "article5" "article6" "article7" "article8" "footer";*/
+  /*  grid-template-rows: repeat(10, min-content);*/
+  /*  grid-template-columns: 1fr;*/
+  /*}*/
+  /*.path-frontpage #main-content #headlines h2 {*/
+  /*  grid-area: header;*/
+  /*}*/
+  /*.path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(1) {*/
+  /*  grid-area: article1;*/
+  /*}*/
+  /*.path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(2) {*/
+  /*  grid-area: article2;*/
+  /*}*/
+  /*.path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(3) {*/
+  /*  grid-area: article3;*/
+  /*}*/
+  /*.path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(4) {*/
+  /*  grid-area: article4;*/
+  /*}*/
+  /*.path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(5) {*/
+  /*  grid-area: article5;*/
+  /*}*/
+  /*.path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(6) {*/
+  /*  grid-area: article6;*/
+  /*}*/
+  /*.path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(7) {*/
+  /*  grid-area: article7;*/
+  /*}*/
+  /*.path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(8) {*/
+  /*  grid-area: article8;*/
+  /*}*/
+  /*.path-frontpage #main-content #headlines .rw-river__articles .view-more {*/
+  /*  grid-area: footer;*/
+  /*}*/
 
-  /* Remove borders and padding on small screens. */
-  @media screen and (max-width: 479px) {
-    .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(n+1) {
-      padding-right: 0;
-      padding-left: 0;
-      border-width: 0 0 1px 0;
-    }
-    .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(1) {
-      padding-top: 0;
-    }
-    .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(8) {
-      padding-bottom: 0;
-      border-width: 0;
-    }
-    .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(n+2) figure {
-      display: none;
-    }
-  }
-  /* Headlines grid: 2 columns. */
-  @media screen and (min-width: 480px) {
-    .path-frontpage #main-content #headlines .rw-river__articles {
-      grid-template-areas: "header header" "article1 article2" "article3 article4" "article5 article6" "article7 article8" "footer footer";
-      grid-template-rows: repeat(6, min-content);
-      grid-template-columns: 1fr 1fr;
-    }
-    .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(n+1) {
-      padding-bottom: 8px;
-    }
+  /*!* Remove borders and padding on small screens. *!*/
+  /*@media screen and (max-width: 479px) {*/
+  /*  .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(n+1) {*/
+  /*    padding-right: 0;*/
+  /*    padding-left: 0;*/
+  /*    border-width: 0 0 1px 0;*/
+  /*  }*/
+  /*  .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(1) {*/
+  /*    padding-top: 0;*/
+  /*  }*/
+  /*  .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(8) {*/
+  /*    padding-bottom: 0;*/
+  /*    border-width: 0;*/
+  /*  }*/
+  /*  .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(n+2) figure {*/
+  /*    display: none;*/
+  /*  }*/
+  /*}*/
+  /*!* Headlines grid: 2 columns. *!*/
+  /*@media screen and (min-width: 480px) {*/
+  /*  .path-frontpage #main-content #headlines .rw-river__articles {*/
+  /*    grid-template-areas: "header header" "article1 article2" "article3 article4" "article5 article6" "article7 article8" "footer footer";*/
+  /*    grid-template-rows: repeat(6, min-content);*/
+  /*    grid-template-columns: 1fr 1fr;*/
+  /*  }*/
+  /*  .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(n+1) {*/
+  /*    padding-bottom: 8px;*/
+  /*  }*/
 
-    .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(1),
-    .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(2) {
-      padding-top: 0;
-    }
-    .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(1),
-    .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(3),
-    .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(5),
-    .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(7) {
-      padding-left: 0;
-      border-right: none;
-      border-left: none;
-    }
-    .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(2),
-    .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(4),
-    .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(6),
-    .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(8) {
-      padding-right: 0;
-      border-right: none;
-    }
-    .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(7),
-    .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(8) {
-      border-bottom: none;
-    }
-    /* For optimization images are not added to headlines 5, 6, 7 and 8 but just
-     * in case, hide them if they are present. */
-    .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(n+5) figure {
-      display: none;
-    }
-  }
+  /*  .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(1),*/
+  /*  .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(2) {*/
+  /*    padding-top: 0;*/
+  /*  }*/
+  /*  .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(1),*/
+  /*  .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(3),*/
+  /*  .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(5),*/
+  /*  .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(7) {*/
+  /*    padding-left: 0;*/
+  /*    border-right: none;*/
+  /*    border-left: none;*/
+  /*  }*/
+  /*  .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(2),*/
+  /*  .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(4),*/
+  /*  .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(6),*/
+  /*  .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(8) {*/
+  /*    padding-right: 0;*/
+  /*    border-right: none;*/
+  /*  }*/
+  /*  .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(7),*/
+  /*  .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(8) {*/
+  /*    border-bottom: none;*/
+  /*  }*/
+  /*  !* For optimization images are not added to headlines 5, 6, 7 and 8 but just*/
+  /*   * in case, hide them if they are present. *!*/
+  /*  .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(n+5) figure {*/
+  /*    display: none;*/
+  /*  }*/
+  /*}*/
   /* Move the view more next to the heading on large screens. */
   @media screen and (min-width: 900px) {
     .path-frontpage #main-content #headlines .view-more {
