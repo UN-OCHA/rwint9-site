@@ -18,19 +18,21 @@
 
 #}
 
+{{ attach_library('common_design/cd-title-list') }}
 {{ attach_library('common_design_subtheme/rw-disasters') }}
 
 <article{{ create_attribute()
   .addClass([
     'rw-river-article',
     'rw-river-article--' ~ entity.bundle,
+    'cd-title-list__item',
   ])
   .setAttribute('data-id', entity.id)
   .setAttribute('data-disaster-type', entity.id)
   .setAttribute('data-disaster-status', entity.id)
 }}>
   {# Header with country slug and title. #}
-  <header>
+  <header class="cd-title-list__link">
     {# Title. #}
     {{ render_var({
       '#theme': 'reliefweb_rivers_river_article_title',

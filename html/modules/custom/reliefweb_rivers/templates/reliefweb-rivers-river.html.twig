@@ -20,6 +20,7 @@
 
 #}
 
+{{ attach_library('common_design/cd-grid') }}
 {{ attach_library('common_design_subtheme/rw-headlines') }}
 
 <section {{ create_attribute()
@@ -31,7 +32,7 @@
 }}>
   <h{{ level }}>{{ title }}</h{{ level }}>
 
-  <div class="rw-river__articles">
+  <div class="rw-river__articles cd-grid cd-grid--2-col cd-grid--background">
     {% for entity in entities %}
       {{ render_var({
         '#theme': 'reliefweb_rivers_river_article__' ~ entity.bundle,

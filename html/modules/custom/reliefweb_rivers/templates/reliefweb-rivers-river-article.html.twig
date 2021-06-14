@@ -21,10 +21,14 @@
  */
 
 #}
+
+{{ attach_library('common_design/cd-teaser') }}
+
 <article{{ create_attribute()
   .addClass([
     'rw-river-article',
     'rw-river-article--' ~ entity.bundle,
+    'cd-teaser',
   ])
   .setAttribute('data-id', entity.id)
 }}>

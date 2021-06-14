@@ -18,6 +18,7 @@
 
 #}
 
+{{ attach_library('common_design/cd-teaser') }}
 {{ attach_library('common_design_subtheme/rw-blog') }}
 
 <article{{ create_attribute()
@@ -25,6 +26,7 @@
     'rw-river-article',
     'rw-river-article--' ~ entity.bundle,
     entity.summary ? 'rw-river-article--with-summary',
+    'cd-teaser',
   ])
   .setAttribute('data-id', entity.id)
 }}>
