@@ -44,3 +44,19 @@ rw-opportunities:
   css:
     theme:
       components/rw-opportunities/rw-opportunities.css: {}
+
+# CD components extended
+cd-button:
+  css:
+    theme:
+      components/cd-button/cd-button.css: {}
+
+cd-card:
+  css:
+    theme:
+      components/cd-card/cd-card.css: {}
+
+cd-tag:
+  css:
+    theme:
+      components/cd-tag/cd-tag.css: {}

@@ -25,9 +25,15 @@ regions:
   footer_navigation: Footer navigation
 
 # Add implementation-specific styles to base theme components
-# libraries-extend:
-#   common_design/cd-teaser:
-#     - common_design_subtheme/cd-teaser
+libraries-extend:
+  common_design/cd-button:
+    - common_design_subtheme/cd-button
+
+  common_design/cd-card:
+    - common_design_subtheme/cd-card
+
+  common_design/cd-tag:
+    - common_design_subtheme/cd-tag
 
 # Custom namespace
 # https://www.drupal.org/docs/contributed-modules/components/understanding-twig-namespaces
