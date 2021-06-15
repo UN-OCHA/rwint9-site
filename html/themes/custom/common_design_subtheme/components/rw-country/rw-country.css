@@ -1,0 +1,42 @@
+/**
+ * Article country information.
+ *
+ * Country prefix above article title.
+ *
+ * Scope: #main-content article header p.country
+ */
+#main-content article header p.rw-river-article__country-slug {
+  display: inline-block;
+  vertical-align: top;
+  max-width: 100%;
+  margin: 4px 8px 0 0;
+  padding: 0 12px;
+  background: #e6ecef;
+  color: #2e3436;
+  font-size: 18px;
+  font-weight: bold;
+  line-height: 30px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+#main-content article header p.rw-river-article__country-slug a {
+  color: inherit;
+  font-weight: inherit;
+  text-decoration: none;
+}
+#main-content article header p.rw-river-article__country-slug span {
+  color: inherit;
+  font-weight: normal;
+}
+#main-content article header p.rw-river-article__country-slug a:hover,
+#main-content article header p.rw-river-article__country-slug a:focus,
+#main-content article header p.rw-river-article__country-slug a:active {
+  text-decoration: underline;
+}
+#main-content > article header p.rw-river-article__country-slug {
+  margin: 0 0 16px 0;
+  padding: 3px 8px;
+  font-size: 15px;
+  line-height: 1.6;
+}
