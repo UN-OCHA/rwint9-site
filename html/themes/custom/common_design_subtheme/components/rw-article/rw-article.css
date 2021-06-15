@@ -1,0 +1,13 @@
+#main-content section article > header .rw-river-article__title,
+#main-content section article > .rw-river-article__title {
+  display: inline;
+  margin: 0;
+  font-size: 17px;
+  font-weight: bold;
+  line-height: 28px;
+  color: #055372;
+}
+#main-content section article > header .rw-river-article__title a,
+#main-content section article > .rw-river-article__title a {
+  color: inherit;
+}

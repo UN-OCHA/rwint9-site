@@ -9,6 +9,11 @@ rw-announcement:
     theme:
       components/rw-announcement/rw-announcement.css: {}
 
+rw-article:
+  css:
+    theme:
+      components/rw-article/rw-article.css: {}
+
 rw-blog:
   css:
     theme:
