@@ -19,13 +19,12 @@
  */
 
 #}
-
 <article{{ create_attribute()
   .addClass([
     'rw-river-article',
     'rw-river-article--' ~ entity.bundle,
     entity.summary ? 'rw-river-article--with-summary',
-    entity.preview ? 'rw-river-article--with-preview'
+    entity.preview ? 'rw-river-article--with-preview',
   ])
   .setAttribute('data-id', entity.id)
 }}>
@@ -49,7 +48,7 @@
 
   {# Article attachment preview and/or summary. #}
   {% if entity.summary is not empty or entity.preview is not empty %}
-  <div class="rw-river-article__content lang="{{ entity.langcode }}">
+  <div class="rw-river-article__content" lang="{{ entity.langcode }}">
     {% if entity.preview is not empty %}
     <img src="{{ entity.preview.url }}" alt="{{ entity.preview.alt ?? '' }}">
     {% endif %}

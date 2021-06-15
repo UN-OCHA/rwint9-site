@@ -21,11 +21,10 @@
  */
 
 #}
-
 <article{{ create_attribute()
   .addClass([
     'rw-river-article',
-    'rw-river-article--' ~ entity.bundle
+    'rw-river-article--' ~ entity.bundle,
   ])
   .setAttribute('data-id', entity.id)
 }}>
