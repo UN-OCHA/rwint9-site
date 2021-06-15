@@ -26,6 +26,9 @@ regions:
 
 # Add implementation-specific styles to base theme components
 libraries-extend:
+  common_design/cd-block-title:
+    - common_design_subtheme/cd-block-title
+
   common_design/cd-button:
     - common_design_subtheme/cd-button
 

@@ -30,7 +30,10 @@
     'rw-river--' ~ id|clean_id,
   ])
 }}>
-  <h{{ level }}>{{ title }}</h{{ level }}>
+
+  {% block heading %}
+    <h{{ level }}>{{ title }}</h{{ level }}>
+  {% endblock %}
 
   <div class="rw-river__articles">
     {% for entity in entities %}

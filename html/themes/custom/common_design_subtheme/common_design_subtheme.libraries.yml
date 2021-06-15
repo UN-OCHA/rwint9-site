@@ -14,6 +14,11 @@ rw-blog:
     theme:
       components/rw-blog/rw-blog.css: {}
 
+rw-country:
+  css:
+    theme:
+      components/rw-country/rw-country.css: {}
+
 rw-disasters:
   css:
     theme:
@@ -46,6 +51,11 @@ rw-opportunities:
       components/rw-opportunities/rw-opportunities.css: {}
 
 # CD components extended
+cd-block-title:
+  css:
+    theme:
+      components/cd-block-title/cd-block-title.css: {}
+
 cd-button:
   css:
     theme:
