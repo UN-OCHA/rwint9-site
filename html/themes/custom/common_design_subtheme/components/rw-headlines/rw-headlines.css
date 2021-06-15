@@ -9,15 +9,15 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  /*padding: 24px 0;*/
-  /*border-top: 1px solid #e6ecef;*/
+  padding: 24px 0;
+  border-top: 1px solid #e6ecef;
 }
 #main-content section article:first-child {
-  /*border-top: none;*/
+  border-top: none;
 }
 #main-content section article header {
   /* Compensate the half-leading space from the title line-height. */
-  /*margin-top: -5px;*/
+  margin-top: -5px;
 }
 #main-content section article header p.country {
   margin: 2px 6px 0 0;
