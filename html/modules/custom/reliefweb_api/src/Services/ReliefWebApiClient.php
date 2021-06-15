@@ -83,9 +83,32 @@ class ReliefWebApiClient {
   }
 
   /**
-   * Perform a request against the ReliefWeb API.
+   * Perform a POST request against the ReliefWeb API.
+   *
+   * @param string $resource
+   *   API resource endpoint (ex: reports).
+   * @param array $payload
+   *   API request payload (with fields, filters, sort etc.)
+   * @param bool $decode
+   *   Whether to decode (json) the output or not.
+   * @param int $timeout
+   *   Request timeout.
+   * @param bool $cache_enabled
+   *   Whether to cache the queries or not.
+   *
+   * @return array|null
+   *   The data from the API response or NULL in case of error.
    */
-  public function request() {
+  public function request($resource, array $payload, $decode = TRUE, $timeout = 5, $cache_enabled = TRUE) {
+    $queries = [
+      $resource => [
+        'resource' => $resource,
+        'payload' => $payload,
+      ],
+    ];
+
+    $results = $this->requestMultiple($queries, $decode, $timeout, $cache_enabled);
+    return $results[$resource];
   }
 
   /**
@@ -109,7 +132,7 @@ class ReliefWebApiClient {
    *
    * @see https://docs.guzzlephp.org/en/stable/quickstart.html#concurrent-requests
    */
-  public function requestMultiple(array $queries, $decode = FALSE, $timeout = 2, $cache_enabled = TRUE) {
+  public function requestMultiple(array $queries, $decode = TRUE, $timeout = 5, $cache_enabled = TRUE) {
     $results = [];
     $api_url = $this->config->get('api_url');
     $appname = $this->config->get('appname', 'reliefweb.int');
