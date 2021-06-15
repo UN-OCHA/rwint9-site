@@ -13,10 +13,8 @@
 
 #}
 
-{{ attach_library('common_design/cd-tag') }}
-
 {% if countries %}
-<p class="rw-river-article__country_slug cd-tag cd-tag--linked">
+<p class="rw-river-article__country_slug">
   {% for item in countries|taglist(1, 'shortname') %}
     <a class="rw-river-article__country_slug__link" href="{{ item.url }}">{{ item.shortname ?? item.name }}</a>
   {% endfor %}

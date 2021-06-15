@@ -20,53 +20,47 @@
 
 #}
 
-{{ attach_library('common_design/cd-flow') }}
-{{ attach_library('common_design/cd-card') }}
-
 <article{{ create_attribute()
   .addClass([
     'rw-river-article',
     'rw-river-article--' ~ entity.bundle,
     entity.summary ? 'rw-river-article--with-summary',
-    entity.preview ? 'rw-river-article--with-preview',
-    'cd-card [cd-flow]',
+    entity.preview ? 'rw-river-article--with-preview'
   ])
   .setAttribute('data-id', entity.id)
 }}>
-  <div class="cd-card__container [ cd-flow ]">
-    {# Header with country slug and title. #}
-    <header class="cd-card__title">
-      {# Country slug. #}
-      {{ render_var({
-        '#theme': 'reliefweb_rivers_river_article_country_slug',
-        '#countries': entity.tags.country,
-      }) }}
+  {# Header with country slug and title. #}
+  <header>
+    {# Country slug. #}
+    {{ render_var({
+      '#theme': 'reliefweb_rivers_river_article_country_slug',
+      '#countries': entity.tags.country,
+    }) }}
 
-      {# Title. #}
-      {{ render_var({
-        '#theme': 'reliefweb_rivers_river_article_title',
-        '#level': level,
-        '#langcode': entity.langcode,
-        '#url': entity.url,
-        '#title': entity.title,
-      }) }}
-    </header>
+    {# Title. #}
+    {{ render_var({
+      '#theme': 'reliefweb_rivers_river_article_title',
+      '#level': level,
+      '#langcode': entity.langcode,
+      '#url': entity.url,
+      '#title': entity.title,
+    }) }}
+  </header>
 
-    {# Article attachment preview and/or summary. #}
-    {% if entity.summary is not empty or entity.preview is not empty %}
-    <div class="rw-river-article__content lang="{{ entity.langcode }}">
-      {% if entity.preview is not empty %}
-      <img src="{{ entity.preview.url }}" alt="{{ entity.preview.alt ?? '' }}">
-      {% endif %}
-      {% if entity.summary is not empty %}
-      <p>{{ entity.summary }}</p>
-      {% endif %}
-    </div>
+  {# Article attachment preview and/or summary. #}
+  {% if entity.summary is not empty or entity.preview is not empty %}
+  <div class="rw-river-article__content lang="{{ entity.langcode }}">
+    {% if entity.preview is not empty %}
+    <img src="{{ entity.preview.url }}" alt="{{ entity.preview.alt ?? '' }}">
+    {% endif %}
+    {% if entity.summary is not empty %}
+    <p>{{ entity.summary }}</p>
     {% endif %}
   </div>
+  {% endif %}
 
   {# Footer with meta information (sources, dates etc.). #}
-  <footer class="rw-river-article__footer cd-card__footer">
+  <footer class="rw-river-article__footer">
     {{ render_var({
       '#theme': 'reliefweb_rivers_river_article_meta',
       '#meta': {

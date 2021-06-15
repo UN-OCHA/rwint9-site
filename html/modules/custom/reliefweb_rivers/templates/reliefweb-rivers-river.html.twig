@@ -20,19 +20,18 @@
 
 #}
 
-{{ attach_library('common_design/cd-grid') }}
 {{ attach_library('common_design_subtheme/rw-headlines') }}
 
 <section {{ create_attribute()
-  .setAttribute('id', id)
+  .setAttribute('id', id|clean_id)
   .addClass([
     'rw-river',
-    'rw-river--' ~ id,
+    'rw-river--' ~ id|clean_id,
   ])
 }}>
   <h{{ level }}>{{ title }}</h{{ level }}>
 
-  <div class="rw-river__articles cd-grid cd-grid--2-col cd-grid--background">
+  <div class="rw-river__articles">
     {% for entity in entities %}
       {{ render_var({
         '#theme': 'reliefweb_rivers_river_article__' ~ entity.bundle,
