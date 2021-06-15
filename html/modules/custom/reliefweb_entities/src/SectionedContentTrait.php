@@ -121,7 +121,7 @@ trait SectionedContentTrait {
    */
   public function getSectionsFromReliefWebApiQueries(array $queries) {
     $results = \Drupal::service('reliefweb_api.client')
-      ->requestMultiple(array_filter($queries), TRUE);
+      ->requestMultiple(array_filter($queries));
 
     // Parse the API results, building the page sections data.
     $sections = [];
