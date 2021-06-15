@@ -1,0 +1,14 @@
+# Search experience enhancement.
+search:
+  js:
+    js/search.js: {}
+
+# Advanced search filters.
+advanced-search:
+  js:
+    js/advanced-search.js: {}
+
+# Disaster map.
+disaster-map:
+  js:
+    js/disaster-map.js: {}

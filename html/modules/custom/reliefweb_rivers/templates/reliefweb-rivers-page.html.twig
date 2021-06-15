@@ -1,0 +1,59 @@
+{#
+
+/**
+ * @file
+ * Template for the river pages.
+ *
+ * Available variables:
+ * - views: list (id => label) of alternative views for the river
+ * - search:
+ * - results:
+ * - entities:
+ * - pager
+ */
+
+#}
+<section{{ create_attribute()
+  .addClass([
+    'rw-river-page',
+    'rw-river-page--' ~ river,
+    view ? 'rw-river-page--' ~ river ~ '--' ~ view,
+  ])
+}}>
+  <header class="rw-river-page__header">
+    <h1 class="rw-river-page__title page-title visually-hidden">{{ title }}</h1>
+
+    {{ views }}
+  </header>
+
+  {{ search }}
+
+  {# @todo add letter navigation for country/organization rivers. #}
+
+  {# @todo review if that should/could be combined with the
+     reliefweb_rivers_river template #}
+  <section class="rw-river-page__list">
+    <h2 class="rw-river-page__list__title visually-hidden">{{ 'List'|t }}</h2>
+
+    {{ results }}
+
+    {{ advanced_search }}
+
+    <div class="rw-river__articles">
+      {% for entity in entities %}
+        {{ render_var({
+          '#theme': 'reliefweb_rivers_river_article__' ~ entity.bundle,
+          '#level': 3,
+          '#entity': entity,
+        }) }}
+      {% endfor %}
+    </div>
+
+    {# @todo review if we can add some title. #}
+    {{ pager }}
+  </section>
+
+  <footer class="rw-river-page__footer">
+    {{ links }}
+  </footer>
+</section>

@@ -1,0 +1,7 @@
+reliefweb_rivers.report.river:
+  path: '/updates'
+  defaults:
+    _title: 'Updates'
+    _controller: 'reliefweb_rivers.report.river:getPageContent'
+  requirements:
+    _permission: 'access content'

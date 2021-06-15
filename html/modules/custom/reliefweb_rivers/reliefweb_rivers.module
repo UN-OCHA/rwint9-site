@@ -10,6 +10,87 @@
  */
 function reliefweb_rivers_theme() {
   $themes = [
+    'reliefweb_rivers_page' => [
+      'variables' => [
+        // The river name.
+        'river' => '',
+        // The current river view.
+        'view' => '',
+        // The river title.
+        'title' => '',
+        // The article entities to display.
+        'entities' => [],
+        // Render array. See "reliefweb_rivers_views" below.
+        'views' => [],
+        // Render array. See "reliefweb_rivers_search" below.
+        'search' => NULL,
+        // Render array. See "reliefweb_rivers_results" below.
+        'results' => NULL,
+        // Render array. See "reliefweb_rivers_advanced_search" below.
+        'advanced_search' => NULL,
+        // The pager for the river.
+        'pager' => NULL,
+        // Render array. See "reliefweb_rivers_links" below.
+        'links' => [],
+      ],
+    ],
+    'reliefweb_rivers_views' => [
+      'variables' => [
+        // The headling level.
+        'level' => 2,
+        // Section title.
+        'title' => t('Views'),
+        // The list of alternative views for the river with url, title and
+        // selected flag for each view.
+        'views' => [],
+      ],
+    ],
+    'reliefweb_rivers_search' => [
+      'variables' => [
+        // The headling level.
+        'level' => 2,
+        // Section title.
+        'title' => t('Search'),
+        // The river path.
+        'path' => '',
+        // List (name => value) of query parameters to preserve.
+        'parameters' => [],
+        // The input label and placeholder.
+        'label' => t('Search with keywords'),
+        // The full text search query.
+        'query' => NULL,
+      ],
+    ],
+    'reliefweb_rivers_results' => [
+      'variables' => [
+        // The total number of resources matching the search query.
+        'total' => 0,
+        // The start of the result range.
+        'start' => 0,
+        // The end of the result range.
+        'end' => 0,
+      ],
+    ],
+    'reliefweb_rivers_advanced_search' => [
+      'variables' => [
+        // The headling level.
+        'level' => 3,
+        // Section title.
+        'title' => t('Advanced search'),
+        // The filters for the advanced search.
+        'advanced_search' => NULL,
+      ],
+    ],
+    'reliefweb_rivers_links' => [
+      'variables' => [
+        // The headling level.
+        'level' => 3,
+        // Section title.
+        'title' => t('API and RSS links'),
+        // The API/RSS links for the river.
+        'links' => [],
+      ],
+    ],
     'reliefweb_rivers_river' => [
       'variables' => [
         // Heading level for the river section.

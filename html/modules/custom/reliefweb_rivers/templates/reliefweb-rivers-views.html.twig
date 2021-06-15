@@ -1,0 +1,40 @@
+{#
+
+/**
+ * @file
+ * River view selector template.
+ *
+ * Available variables:
+ * - level: heading level (defaults to 2)
+ * - title: section title (defaults to 'Views')
+ * - views: list of alternative views for the river. Each view has:
+ *   - url: URL to the river for that view
+ *   - title: view title
+ *   - selected: flag indicating if the view is the currently selected one.
+ *
+ * Note: the "river-views" is needed by the "search.js" script to perserve the
+ * search query when switching the river view.
+ */
+
+#}
+{% if views is not empty %}
+<nav{{ create_attribute()
+  .addClass([
+    'rw-river-views',
+  ])
+  .setAttribute('id', 'river-views')
+}}>
+  <h{{ level }} class="rw-river-views__title visually-hidden">{{ title }}</h{{ level }}>
+
+  <ul id="rw-river-views__list">
+    {% for id, view in views %}
+    <li{{ create_attribute()
+      .addClass([
+        'rw-river-views__list__item',
+        view.selected ? 'rw-river-views__list__item--selected',
+      ])
+    }}><a href="{{ view.url }}" class="rw-river-views__link">{{ view.title }}</a></li>
+    {% endfor %}
+  </ul>
+</nav>
+{% endif %}
