@@ -114,3 +114,24 @@
 .path-frontpage #main-content [data-disaster-status="ongoing"] a:before {
   background-position-x: -112px;
 }
+
+.path-frontpage #main-content .rw-river-article--disaster {
+  position: relative;
+  margin: 16px 0 0 0;
+  padding: 16px 0 0 0;
+  border-top: 1px solid #e6ecef;
+}
+.path-frontpage #main-content #disasters .rw-river__articles .rw-river-article--disaster:first-child {
+  margin: 0;
+  padding: 8px 0 0 0;
+  border-top: none;
+}
+.path-frontpage #main-content #disasters .rw-river-article--disaster a {
+  position: relative;
+  display: block;
+  /* Space for the disaser icon. */
+  padding-left: 48px;
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 26px;
+}
