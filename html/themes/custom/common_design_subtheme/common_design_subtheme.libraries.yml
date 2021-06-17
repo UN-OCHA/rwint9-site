@@ -55,6 +55,11 @@ rw-opportunities:
     theme:
       components/rw-opportunities/rw-opportunities.css: {}
 
+rw-view-more:
+  css:
+    theme:
+      components/rw-view-more/rw-view-more.css: {}
+
 # CD components extended
 cd-block-title:
   css:
