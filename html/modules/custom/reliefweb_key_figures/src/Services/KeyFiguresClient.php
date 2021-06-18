@@ -11,6 +11,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Exception\ClientException;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -205,9 +206,14 @@ class KeyFiguresClient {
 
     // Retrieve the key figures data for the country.
     $api_url .= strtoupper($iso3) . '/figures.json';
-    $response = $this->httpClient->get($api_url, [
-      'timeout' => 2,
-    ]);
+    try {
+      $response = $this->httpClient->get($api_url, [
+        'timeout' => 2,
+      ]);
+    }
+    catch (ClientException $exception) {
+      return NULL;
+    }
 
     // Decode the JSON response.
     $data = NULL;
