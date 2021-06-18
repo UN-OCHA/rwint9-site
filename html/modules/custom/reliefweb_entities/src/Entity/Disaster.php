@@ -8,7 +8,7 @@ use Drupal\reliefweb_entities\EntityModeratedInterface;
 use Drupal\reliefweb_entities\EntityModeratedTrait;
 use Drupal\reliefweb_entities\SectionedContentInterface;
 use Drupal\reliefweb_entities\SectionedContentTrait;
-use Drupal\reliefweb_utility\TwigExtension;
+use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Drupal\taxonomy\Entity\Term;
 
 /**
@@ -29,7 +29,7 @@ class Disaster extends Term implements BundleEntityInterface, EntityModeratedInt
 
     // Sort the countries by alpha.
     if (!empty($sections['countries']['#entities'])) {
-      TwigExtension::collatedSort($sections['countries']['#entities'], 'title');
+      LocalizationHelper::collatedSort($sections['countries']['#entities'], 'title');
     }
 
     // Section label overrides.
