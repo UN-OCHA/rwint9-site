@@ -135,8 +135,8 @@ class ReliefWebApiClient {
   public function requestMultiple(array $queries, $decode = TRUE, $timeout = 5, $cache_enabled = TRUE) {
     $results = [];
     $api_url = $this->config->get('api_url');
-    $appname = $this->config->get('appname', 'reliefweb.int');
-    $cache_enabled = $cache_enabled && $this->config->get('cache_enabled', TRUE);
+    $appname = $this->config->get('appname') ?: 'reliefweb.int';
+    $cache_enabled = $cache_enabled && ($this->config->get('cache_enabled') ?: TRUE);
     $verify_ssl = $this->config->get('verify_ssl');
 
     // Initialize the result array and retrieve the data for the cached queries.
@@ -265,6 +265,36 @@ class ReliefWebApiClient {
       }
     }
     return $results;
+  }
+
+  /**
+   * Build an API URL.
+   *
+   * @param string $resource
+   *   API resource.
+   * @param array $parameters
+   *   Query parameters.
+   *
+   * @return string
+   *   API URL.
+   */
+  public function buildApiUrl($resource, array $parameters = []) {
+    // We use a potentially different api url for the facets because it's
+    // called from javascript. This is notably useful for dev/stage as the
+    // reliefweb_api_url points to an interal url that cannot be used
+    // client-side.
+    $api_url = $this->config->get('api_url_external') ?: $this->config->get('api_url');
+    $appname = $this->config->get('appname') ?: 'reliefweb.int';
+
+    // '%QUERY' is added after the http_build_query so that it's not encoded.
+    $api_query = '?' . http_build_query($parameters + [
+      'appname' => $appname,
+      'preset' => 'suggest',
+      'profile' => 'suggest',
+      'query[value]' => '',
+    ]) . '%QUERY';
+
+    return $api_url . '/' . $resource . $api_query;
   }
 
   /**
