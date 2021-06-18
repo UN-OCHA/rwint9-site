@@ -1,5 +1,5 @@
 /**
- * Script to preserve the search query when switch the river view.
+ * Script to preserve the search query when switching the river view.
  *
  * This also removes empty hidden inputs to keep the URL clean.
  *

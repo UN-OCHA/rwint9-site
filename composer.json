@@ -13,6 +13,32 @@
         {
             "type": "composer",
             "url": "https://packages.drupal.org/8"
+        },
+        {
+            "type": "package",
+            "package": {
+                "name": "reliefweb/simple-autocomplete",
+                "version": "v1.3.0",
+                "type":"drupal-library",
+                "source": {
+                    "url": "git@github.com:UN-OCHA/rwint-simple-autocomplete.git",
+                    "type": "git",
+                    "reference": "v1.3.0"
+                }
+            }
+        },
+        {
+            "type": "package",
+            "package": {
+                "name": "reliefweb/simple-datepicker",
+                "version": "v1.3.0",
+                "type":"drupal-library",
+                "source": {
+                    "url": "git@github.com:UN-OCHA/rwint-simple-datepicker.git",
+                    "type": "git",
+                    "reference": "v1.3.0"
+                }
+            }
         }
     ],
     "require": {
@@ -43,6 +69,8 @@
         "drupal/token": "^1.9",
         "drush/drush": "^10.4",
         "league/commonmark": "^1.6",
+        "reliefweb/simple-autocomplete": "v1.3.0",
+        "reliefweb/simple-datepicker": "v1.3.0",
         "symfony/flex": "^1.12",
         "unocha/common_design": "^4.0.0",
         "webflo/drupal-finder": "^1.2.2"
@@ -111,9 +139,7 @@
         "installer-paths": {
             "html/core": ["type:drupal-core"],
             "html/libraries/ckeditor/plugins/{$name}": ["vendor:ckeditor-plugin"],
-            "html/libraries/{$name}": [
-                "type:drupal-library"
-            ],
+            "html/libraries/{$name}": ["type:drupal-library"],
             "html/modules/contrib/{$name}": ["type:drupal-module"],
             "html/profiles/contrib/{$name}": ["type:drupal-profile"],
             "html/themes/contrib/{$name}": ["type:drupal-theme"],

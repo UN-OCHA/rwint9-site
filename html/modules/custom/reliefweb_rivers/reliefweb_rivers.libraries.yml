@@ -6,6 +6,8 @@ search:
 # Advanced search filters.
 advanced-search:
   js:
+    /libraries/simple-autocomplete/simpleautocomplete.js: {}
+    /libraries/simple-datepicker/simpledatepicker.js: {}
     js/advanced-search.js: {}
 
 # Disaster map.
