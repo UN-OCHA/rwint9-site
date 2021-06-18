@@ -6,6 +6,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 /**
  * Advanced search handler.
@@ -122,6 +123,36 @@ class AdvancedSearch {
    */
   public function getParameter() {
     return $this->data['parameter'];
+  }
+
+  /**
+   * Get the selected filters.
+   *
+   * @return array
+   *   Advanced search selected filters.
+   */
+  public function getSelection() {
+    return $this->data['selection'];
+  }
+
+  /**
+   * Get the advanced search filter settings.
+   *
+   * @return array
+   *   Advanced search filter settings.
+   */
+  public function getSettings() {
+    return $this->data['settings'];
+  }
+
+  /**
+   * Get the advanced search URL to clear the selection.
+   *
+   * @return array
+   *   Advanced search sURL to clear the selection.
+   */
+  public function getClearUrl() {
+    return $this->data['remove'];
   }
 
   /**
@@ -917,9 +948,15 @@ class AdvancedSearch {
    *   River URL.
    */
   public function getRiverUrl(array $parameters = []) {
-    return Url::fromRoute('reliefweb_rivers.' . $this->bundle . '.river', [], [
-      'query' => $parameters,
-    ])->toString();
+    try {
+      return Url::fromRoute('reliefweb_rivers.' . $this->bundle . '.river', [], [
+        'query' => $parameters,
+      ])->toString();
+    }
+    catch (RouteNotFoundException $exception) {
+      $url = $this->river . '?' . http_build_query($parameters);
+      return UrlHelper::encodeUrl($url);
+    }
   }
 
   /**

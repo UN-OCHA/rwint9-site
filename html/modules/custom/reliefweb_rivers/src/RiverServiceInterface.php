@@ -24,6 +24,22 @@ interface RiverServiceInterface {
   public function getPageContent();
 
   /**
+   * Get the river parameter handler.
+   *
+   * @return \Drupal\reliefweb_rivers\Parameters
+   *   River parameter handler.
+   */
+  public function getParameters();
+
+  /**
+   * Get the advanced search handler.
+   *
+   * @return \Drupal\reliefweb_rivers\AvancedSearch
+   *   Sanitized advanced search parmeter.
+   */
+  public function getAdvancedSearch();
+
+  /**
    * Get the list of views for the river.
    *
    * @return array
@@ -56,25 +72,23 @@ interface RiverServiceInterface {
   public function getSearch();
 
   /**
-   * Get the sanitized advanced search parameter.
+   * Get the list of filters for the advaneced search.
    *
-   * @return string
-   *   Sanitized advanced search parmeter.
+   * @return array
+   *   List of filters keyed by code, with the following properties:
+   *   - name: filter name
+   *   - type: filter type
+   *   - vocabulary: (optional) for reference type filters
+   *   - field: api field for the filter
+   *   - widget: filter widget info:
+   *     - type: widget type (ex: autocomplete)
+   *     - label: label for the widget input
+   *     - resource: (optional) API resource for autocomplete widgets
+   *     - parameters: (options) extra parameters for the autocomplet API query
+   *   - operator: the default operator for the filter (OR or AND)
+   *   - exclude: list of value to exclude from the list of filter values
    */
-  public function getAdvancedSearch();
-
-  /**
-   * Get a query parameter.
-   *
-   * @param string $parameter
-   *   Query parameter name.
-   * @param mixed $default
-   *   Default value.
-   *
-   * @return mixed
-   *   The parameter value.
-   */
-  public function getQueryParameter($parameter, $default = NULL);
+  public function getFilters();
 
   /**
    * Get the string used as sample of the available filters for the river.
@@ -82,7 +96,7 @@ interface RiverServiceInterface {
    * @return string
    *   Filter sample.
    */
-  public function getFilerSample();
+  public function getFilterSample();
 
   /**
    * Get the river views build.
@@ -144,25 +158,6 @@ interface RiverServiceInterface {
    *   API payload.
    */
   public function getApiPayload($view = '');
-
-  /**
-   * Get the list of filters for the advaneced search.
-   *
-   * @return array
-   *   List of filters keyed by code, with the following properties:
-   *   - name: filter name
-   *   - type: filter type
-   *   - vocabulary: (optional) for reference type filters
-   *   - field: api field for the filter
-   *   - widget: filter widget info:
-   *     - type: widget type (ex: autocomplete)
-   *     - label: label for the widget input
-   *     - resource: (optional) API resource for autocomplete widgets
-   *     - parameters: (options) extra parameters for the autocomplet API query
-   *   - operator: the default operator for the filter (OR or AND)
-   *   - exclude: list of value to exclude from the list of filter values
-   */
-  public function getApiFilters();
 
   /**
    * Get the data from the ReliefWeb API for the given payload.

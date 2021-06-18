@@ -54,7 +54,7 @@ class ReportRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function getApiFilters() {
+  public function getFilters() {
     return [
       'PC' => [
         'name' => $this->t('Primary country'),

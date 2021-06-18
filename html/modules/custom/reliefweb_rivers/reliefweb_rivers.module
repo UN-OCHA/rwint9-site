@@ -76,9 +76,22 @@ function reliefweb_rivers_theme() {
         // The headling level.
         'level' => 3,
         // Section title.
-        'title' => t('Advanced search'),
-        // The filters for the advanced search.
-        'advanced_search' => NULL,
+        'title' => t('Refine the list with filters'),
+        // The path to the river.
+        'path' => '',
+        // The sanitized advanced search parameter.
+        'parameter' => '',
+        // The selected filters.
+        'selection' => [],
+        // The link to clear the selection.
+        'remove' => '',
+        // The filter settings with the following elements:
+        // - labels: translated labels for the UI
+        // - placeholders: translated placeholders for the UI
+        // - announcements: translated announcements for accessibility
+        // - operators: list of operators for the operator "select" element
+        // - filters: filter information to build the facets.
+        'settings' => [],
       ],
     ],
     'reliefweb_rivers_links' => [

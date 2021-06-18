@@ -24,7 +24,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   protected $pagerManager;
 
   /**
-   * The pager parameters servie.
+   * The pager parameters service.
    *
    * @var \Drupal\Core\Pager\PagerParametersInterface
    */
@@ -66,28 +66,27 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    */
   protected $bundle;
 
+
+  /**
+   * The river parameter handler.
+   *
+   * @var \Drupal\reliefweb_rivers\Parameters
+   */
+  protected $parameters;
+
+  /**
+   * The advanced search handler.
+   *
+   * @var \Drupal\reliefweb_rivers\AdvancedSearch
+   */
+  protected $advancedSearch;
+
   /**
    * Maximum number of resources to display in the river.
    *
    * @var int
    */
   protected $limit = 20;
-
-  /**
-   * Advanced search operator mapping.
-   *
-   * @var array
-   */
-  protected $advancedSearchOperators = [
-    'with' => '(',
-    'without' => '!(',
-    'and-with' => ')_(',
-    'and-without' => ')_!(',
-    'or-with' => ').(',
-    'or-without' => ').!(',
-    'or' => '.',
-    'and' => '_',
-  ];
 
   /**
    * Constructor.
@@ -121,12 +120,12 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   /**
    * {@inheritdoc}
    */
-  abstract public function getApiPayload($view = '');
+  abstract public function getFilters();
 
   /**
    * {@inheritdoc}
    */
-  abstract public function getApiFilters();
+  abstract public function getApiPayload($view = '');
 
   /**
    * {@inheritdoc}
@@ -158,6 +157,32 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getParameters() {
+    if (!isset($this->parameters)) {
+      $this->parameters = new Parameters();
+    }
+    return $this->parameters;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getAdvancedSearch() {
+    if (!isset($this->advancedSearch)) {
+      $this->advancedSearch = new AdvancedSearch(
+        $this->bundle,
+        $this->river,
+        $this->getParameters(),
+        $this->getFilters(),
+        $this->getFilterSample()
+      );
+    }
+    return $this->advancedSearch;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getDefaultView() {
     return 'all';
   }
@@ -166,7 +191,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * {@inheritdoc}
    */
   public function getSelectedView() {
-    $view = $this->getQueryParameter('view');
+    $view = $this->getParameters()->get('view');
     $views = $this->getViews();
     return isset($views[$view]) ? $view : $this->getDefaultView();
   }
@@ -175,26 +200,8 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * {@inheritdoc}
    */
   public function getSearch() {
-    $search = $this->getQueryParameter('search', '');
-    // @todo sanitize the parameter, also statically cache it?
-    return $search;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getAdvancedSearch() {
-    $advanced_search = $this->getQueryParameter('advanced-search', '');
-    // @todo sanitize the parameter, also statically cache it?
-    return $advanced_search;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getQueryParameter($parameter, $default = NULL) {
-    $parameters = $this->pagerParameters->getQueryParameters();
-    return $parameters[$parameter] ?? $default;
+    $search = $this->getParameters()->get('search', '');
+    return trim($search);
   }
 
   /**
@@ -247,9 +254,9 @@ abstract class RiverServiceBase implements RiverServiceInterface {
     }
 
     // Add the advanced search as parameter so it's preserved when submitting.
-    $advanced_search = $this->getAdvancedSearch();
-    if (!empty($advanced_search)) {
-      $parameters['advanced-search'] = $advanced_search;
+    $advanced_search_parameter = $this->getAdvancedSearch()->getParameter();
+    if (!empty($advanced_search_parameter)) {
+      $parameters['advanced-search'] = $advanced_search_parameter;
     }
 
     return [
@@ -267,7 +274,17 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * {@inheritdoc}
    */
   public function getRiverAdvancedSearch() {
-    return [];
+    $advanced_search = $this->getAdvancedSearch();
+
+    return [
+      '#theme' => 'reliefweb_rivers_advanced_search',
+      '#title' => $this->t('Refine the list with filters'),
+      '#path' => UrlHelper::encodeUrl($this->river),
+      '#parameter' => $advanced_search->getParameter(),
+      '#selection' => $advanced_search->getSelection(),
+      '#remove' => $advanced_search->getClearUrl(),
+      '#settings' => $advanced_search->getSettings(),
+    ];
   }
 
   /**
@@ -320,7 +337,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function getFilerSample() {
+  public function getFilterSample() {
     return $this->t('(Country, organization...)');
   }
 
@@ -341,6 +358,27 @@ abstract class RiverServiceBase implements RiverServiceInterface {
     $search = $this->getSearch();
     if (!empty($search)) {
       $payload['query']['value'] = $search;
+    }
+    else {
+      unset($payload['query']);
+    }
+
+    // Generate the API filter with the facet and advanced search filters.
+    $filter = $this->getAdvancedSearch()->getApiFilter();
+    if (!empty($filter)) {
+      // Update the payload filter.
+      if (!empty($payload['filter'])) {
+        $payload['filter'] = [
+          'conditions' => [
+            $payload['filter'],
+            $filter,
+          ],
+          'operator' => 'AND',
+        ];
+      }
+      else {
+        $payload['filter'] = $filter;
+      }
     }
 
     // Retrieve the API data.
