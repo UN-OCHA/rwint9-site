@@ -1,0 +1,151 @@
+/**
+ * Datepicker widget.
+ *
+ * Style for the datepicker widgets. They consist of a calendar type widget and
+ * are currently generated via the simpledatepicker.js library.
+ *
+ * Structure:
+ *
+ * <div class="rw-datepicker-container">
+ *   <div class="rw-datepicker-calendar">
+ *     <div class="rw-datepicker-title">
+ *       <button class="rw-datepicker-control rw-datepicker-title-previous rw-datepicker-title-year">Previous Year</button>
+ *       <button class="rw-datepicker-control rw-datepicker-title-previous rw-datepicker-title-month">Previous Month</button>
+ *       <span class="rw-datepicker-title-date">January, 2020</span>
+ *       <button class="rw-datepicker-control rw-datepicker-title-previous rw-datepicker-title-month">Next Month</button>
+ *       <button class="rw-datepicker-control rw-datepicker-title-previous rw-datepicker-title-year">Next Year</button>
+ *     </div>
+ *     <div class="rw-datepicker-header">
+ *       <span>Su</span>
+ *       <span>Mo</span>
+ *       ...
+ *     </div>
+ *     <div class="rw-datepicker-days">
+ *        <button class="rw-datepicker-day-out">31</button>
+ *        <button class="rw-datepicker-day-in">02</button>
+ *        ...
+ *     </div>
+ *   </div>
+ */
+.rw-datepicker-container {
+  position: relative;
+  z-index: 10;
+}
+.rw-datepicker-container[data-hidden="true"] {
+  display: none;
+}
+.rw-datepicker-calendar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: inline-block;
+  width: 272px;
+  padding: 8px;
+  border: 1px solid var(--cd-reliefweb-dark-grey);
+  background: white;
+  box-shadow: 0 1px 4px 1px rgba(var(--cd-rgb-reliefweb-dark-grey), 0.3);
+}
+.rw-datepicker-calendar button {
+  margin: 0;
+  padding: 0;
+  /* Disable text selection of the buttons in the calendar to avoid interfering
+   * with the expected behavior (buttons). */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  color: var(--cd-reliefweb-dark-blue);
+  border: none;
+  background: none;
+  /* @todo review in regards to the standard cd-font sizes. */
+  font-size: 16px;
+}
+.rw-datepicker-calendar button:hover,
+.rw-datepicker-calendar button:focus,
+.rw-datepicker-calendar button:active {
+  color: var(--cd-reliefweb-dark-blue);
+  background: var(--cd-reliefweb-light-grey);
+}
+.rw-datepicker-title {
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  text-align: center;
+  border-bottom: 1px solid var(--cd-reliefweb-light-grey);
+  line-height: 24px;
+}
+/* Previous/next year/month buttons. */
+button.rw-datepicker-control {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  width: 24px;
+  height: 24px;
+  padding-left: 24px;
+  vertical-align: top;
+}
+/* Arrow icons for the previous/next year/month. */
+button.rw-datepicker-control:before {
+  position: absolute;
+  top: 50%;
+  right: 50%;
+  overflow: hidden;
+  width: 12px;
+  height: 12px;
+  margin-top: -6px;
+  margin-right: -6px;
+  content: "";
+  background: var(--rw-icons--common--arrow-right--12--dark-blue);
+}
+button.rw-datepicker-control.rw-datepicker-title-previous.rw-datepicker-title-month:before {
+  background: var(--rw-icons--common--arrow-left--12--dark-blue);
+}
+button.rw-datepicker-control.rw-datepicker-title-next.rw-datepicker-title-year:before {
+  background: var(--rw-icons--common--double-arrow-right--12--dark-blue);
+}
+button.rw-datepicker-control.rw-datepicker-title-previous.rw-datepicker-title-year:before {
+  background: var(--rw-icons--common--double-arrow-left--12--dark-blue);
+}
+/* Selected month and year. */
+.rw-datepicker-title-date {
+  display: inline-block;
+  width: 158px;
+  padding: 0 4px;
+}
+/* Weekdays. */
+.rw-datepicker-header span {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  margin: 2px;
+  padding: 8px;
+  text-align: right;
+}
+/* Days of the month. */
+.rw-datepicker-days button {
+  width: 32px;
+  height: 32px;
+  margin: 2px;
+  padding: 8px;
+  text-align: right;
+  background: none;
+}
+/* Days outside of the selected month are disabled. */
+.rw-datepicker-days button[disabled],
+.rw-datepicker-days button[disabled]:hover,
+.rw-datepicker-days button[disabled]:focus,
+.rw-datepicker-days button[disabled]:active {
+  cursor: default;
+  color: var(--cd-reliefweb-light-grey);
+  background: none;
+}
+/* Highlight the current day. */
+.rw-datepicker-days button.rw-datepicker-today {
+  color: var(--cd-reliefweb-dark-red);
+}
+/* Highlight the currently selected day(s). */
+.rw-datepicker-days button.rw-datepicker-selected-day {
+  color: white;
+  background: var(--cd-reliefweb-dark-blue);
+}

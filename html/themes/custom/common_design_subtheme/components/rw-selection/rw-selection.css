@@ -1,0 +1,122 @@
+/**
+ * Filter/value selection.
+ *
+ * Styling for selected filters/values in the edit forms, admin backends and the
+ * advanced search in the river pages, notably when used with an autocomplete
+ * widget.
+ *
+ * Structure:
+ *
+ * <div class="rw-selection">
+ *   <div data-value="value1">My first selection <button>Remove</button></div>
+ *   <div data-value="value2">My second selection <button>Remove</button></div>
+ * </div>
+ *
+ * @todo It may possibly make more sense to use a <ol> for the list of selected
+ * filters. That would require a modification to the JS scripts.
+ */
+.rw-selection {
+  width: auto;
+  min-width: 100%;
+  /* This is compensate the margin of the descendants. */
+  margin: 4px -4px;
+  padding: 0;
+  border: none;
+}
+.rw-selection [data-value] {
+  position: relative;
+  display: inline-block;
+  margin: 4px;
+  /* The padding right is for the remove button. */
+  padding: 3px 36px 3px 8px;
+  background: var(--cd-reliefweb-light-grey);
+  font-size: 15px;
+  /* Better readability. */
+  line-height: 24px;
+}
+.rw-selection [data-value] .label {
+  font-weight: bold;
+}
+.rw-selection [data-value] button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  overflow: hidden;
+  width: 30px;
+  height: 30px;
+  margin: 0;
+  /* This, combined with the overflow hides the text visually. */
+  padding: 0 0 0 30px;
+  color: var(--cd-reliefweb-dark-blue);
+  border: none;
+  background: var(--cd-reliefweb-light-grey);
+}
+.rw-selection [data-value] button:hover,
+.rw-selection [data-value] button:focus,
+.rw-selection [data-value] button:active {
+  background: var(--cd-reliefweb-dark-blue);
+}
+.rw-selection [data-value] button:before {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  overflow: hidden;
+  width: 12px;
+  height: 12px;
+  margin-top: -6px;
+  margin-left: -6px;
+  content: "";
+  background: url(img/icons-sprite.svg) -84px 0 no-repeat;
+}
+.rw-selection [data-value] button:hover:before,
+.rw-selection [data-value] button:focus:before,
+.rw-selection [data-value] button:active:before {
+  background-position-x: -108px;
+}
+
+/**
+ * Selection with additional message.
+ *
+ * Some selection elements are wrapped in an element with the
+ * `data-selection-messages` attribute to indicate that the selected elements
+ * contain a "message" that need to be displayed in addition to the selected
+ * value. A typical example is the `source` field on report pages where
+ * some editiorial notes are displayed in addition to the source name in the
+ * selection. The message is rendered via the :after pseudo element as a block
+ * below the value.
+ *
+ * Scope: [data-selection-messages]
+ *
+ * Structure:
+ *
+ * <div data-selection-messages>
+ *   <div class="rw-selection">
+ *     <div data-value="value1">My first selection <button>Remove</button><div class="message">message1</div></div>
+ *     <div data-value="value2">My second selection <button>Remove</button><div class="message">message2</div></div>
+ *   </div>
+ * </div>
+ */
+[data-selection-messages] .rw-selection [data-value] {
+  display: block;
+}
+[data-selection-messages] .rw-selection [data-value] .message {
+  overflow-wrap: break-word;
+  overflow-y: auto;
+  max-height: 220px;
+  /* The right margin is to compensate the right padding of the parent used for
+   * the remove button. */
+  margin: 4px -28px 4px 0;
+  padding: 4px 8px;
+  word-wrap: break-word;
+  background: white;
+  /* @todo review in regards to the standard cd-font sizes. */
+  font-size: 15px;
+}
+[data-selection-messages] .rw-selection [data-value] .message .title {
+  display: block;
+  margin-bottom: 8px;
+}
+[data-selection-messages] .rw-selection [data-value] .message ul,
+[data-selection-messages] .rw-selection [data-value] .message ol {
+  padding: 0 0 0 24px;
+}
