@@ -48,4 +48,17 @@ class UrlHelper extends DrupalUrlHelper {
     ])->toString();
   }
 
+  /**
+   * Get the internal entity path from its alias.
+   *
+   * @param string $alias
+   *   Path alias.
+   *
+   * @return string
+   *   Entity path.
+   */
+  public static function getPathFromAlias($alias) {
+    return \Drupal::service('path.alias_manager')->getPathByAlias($alias);
+  }
+
 }
