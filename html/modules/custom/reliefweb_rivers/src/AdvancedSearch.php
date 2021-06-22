@@ -192,6 +192,10 @@ class AdvancedSearch {
           switch ($filter['type']) {
             case 'reference':
               $options = $this->loadReferenceValues($filter, [], $filter['sort'] ?? 'name');
+              // We only keep the values so that the options can be transformed
+              // into a simple array in javascript so that we can perserve the
+              // order.
+              $options = array_values($options);
               break;
 
             case 'fixed':

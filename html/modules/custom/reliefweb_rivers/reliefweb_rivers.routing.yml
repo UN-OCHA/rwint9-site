@@ -1,7 +1,21 @@
+reliefweb_rivers.job.river:
+  path: '/jobs'
+  defaults:
+    _title: 'Jobs'
+    _controller: 'reliefweb_rivers.job.river:getPageContent'
+  requirements:
+    _permission: 'access content'
 reliefweb_rivers.report.river:
   path: '/updates'
   defaults:
     _title: 'Updates'
     _controller: 'reliefweb_rivers.report.river:getPageContent'
+  requirements:
+    _permission: 'access content'
+reliefweb_rivers.training.river:
+  path: '/training'
+  defaults:
+    _title: 'Training'
+    _controller: 'reliefweb_rivers.training.river:getPageContent'
   requirements:
     _permission: 'access content'
