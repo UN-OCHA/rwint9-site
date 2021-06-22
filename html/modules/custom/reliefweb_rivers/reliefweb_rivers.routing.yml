@@ -1,3 +1,10 @@
+reliefweb_rivers.blog_post.river:
+  path: '/blog'
+  defaults:
+    _title: 'Blog'
+    _controller: 'reliefweb_rivers.blog_post.river:getPageContent'
+  requirements:
+    _permission: 'access content'
 reliefweb_rivers.job.river:
   path: '/jobs'
   defaults:

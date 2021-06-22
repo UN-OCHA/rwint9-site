@@ -57,7 +57,30 @@ class BlogPostRiver extends RiverServiceBase {
    * {@inheritdoc}
    */
   public function getApiPayload($view = '') {
-    return [];
+    $payload = [
+      'query' => [
+        'fields' => [
+          'title',
+          'body',
+          'author',
+          'tags',
+        ],
+      ],
+      'fields' => [
+        'include' => [
+          'id',
+          'url_alias',
+          'title',
+          'body-html',
+          'date',
+          'tags',
+          'author',
+        ],
+      ],
+      'sort' => ['date.created:desc'],
+    ];
+
+    return $payload;
   }
 
   /**
