@@ -1,0 +1,11 @@
+{% embed '@reliefweb_entities/reliefweb-entities-table-of-contents.html.twig' %}
+
+  {% block library %}
+    {{ attach_library('common_design_subtheme/rw-toc') }}
+  {% endblock %}
+
+  {% block heading %}
+    <h{{ level }} class="rw-toc__title visually-hidden">{{ title }}</h{{ level }}>
+  {% endblock %}
+
+{% endembed %}
