@@ -1,0 +1,190 @@
+/* Table of contents */
+#main .sectioned #table-of-contents {
+  padding: 32px 0 0 0;
+  font-size: 15px;
+  border-bottom: 1px solid #e6ecef;
+}
+#main .sectioned #table-of-contents ul,
+#main .sectioned #table-of-contents li {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+#main .sectioned #table-of-contents > ul h4 {
+  text-transform: uppercase;
+  font-size: 15px;
+  margin: 0;
+}
+#main .sectioned #table-of-contents ul ul {
+  padding: 16px 0;
+}
+#main .sectioned #table-of-contents ul ul li {
+  margin: 0 0 12px 0;
+}
+#main .sectioned #table-of-contents ul ul li a {
+  display: inline-block;
+  padding-left: 16px;
+}
+#main .sectioned #table-of-contents ul ul li a[data-active] {
+  border-left: 6px solid #0988bb;
+  padding-left: 10px;
+  font-weight: bold;
+}
+
+/* Show the table of content as left sidebar with the content on the right on
+ * large screens. */
+@media screen and (min-width : 768px) {
+  #main .sectioned #table-of-contents {
+    float: left;
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    width: 20%;
+    max-height: 100vh;
+    padding: 32px 16px 0 0;
+    border-bottom: none;
+    overflow-y: auto;
+  }
+  /* Hide the title visually. */
+  #main .sectioned #table-of-contents h3 {
+    position: absolute;
+    height: 1px;
+    width: 1px;
+    clip-path: inset(100%);
+    clip: rect(0,0,0,0);
+    overflow: hidden;
+    margin: -1px;
+    padding: 0;
+    border: none;
+    white-space: nowrap;
+  }
+  #main .sectioned #table-of-contents ~ section,
+  #main .sectioned #table-of-contents ~ article,
+  #main .sectioned #table-of-contents ~ fieldset,
+  #main .sectioned #table-of-contents ~ .form-wrapper,
+  #main .sectioned #table-of-contents ~ .form-item {
+    float: right;
+    width: 80%;
+    min-width: auto;
+    padding-left: 32px;
+    border-left: 1px solid #e6ecef;
+  }
+  .page-form #main > section.default > form.sectioned {
+    padding: 0;
+  }
+}
+
+/* Hide the table of content toggler by default. */
+.js #main .sectioned #table-of-contents-toggler {
+  display: none;
+}
+
+/**
+ * Table of contents - javascript enabled.
+ *
+ * Show the table as a dropdown on small screens.
+ *
+ * Scope: .js #main .sectioned #table-of-contents
+ */
+@media screen and (max-width : 767px) {
+  /* Hide the title visually. */
+  .js #main .sectioned #table-of-contents h3 {
+    position: absolute;
+    height: 1px;
+    width: 1px;
+    clip-path: inset(100%);
+    clip: rect(0,0,0,0);
+    overflow: hidden;
+    margin: -1px;
+    padding: 0;
+    border: none;
+    white-space: nowrap;
+  }
+  .js #main .sectioned #table-of-contents-toggler {
+    display: block;
+    height: 40px;
+    margin: 24px auto;
+    padding: 0 8px;
+    border: 1px solid #e6ecef;
+    background: white;
+    color: #2e3436;
+    font-size: 16px;
+    font-weight: normal;
+  }
+  .js #main .sectioned #table-of-contents-toggler:after {
+    content: "";
+    display: inline-block;
+    vertical-align: middle;
+    width: 9px;
+    height: 9px;
+    margin-left: 8px;
+    overflow: hidden;
+    background: url(../../../images/rw-icons-sprite.png) -150px 0 no-repeat;
+    background: rgba(0,0,0,0) url(../../../images/rw-icons-sprite.svg) -150px 0 no-repeat;
+  }
+  .js #main .sectioned #table-of-contents-toggler[aria-expanded="true"]:after {
+    background-position-y: -9px;
+  }
+  .js #main .sectioned #table-of-contents {
+    display: none;
+    position: absolute;
+    top: auto;
+    left: 50%;
+    width: 300px;
+    height: auto;
+    /* The top margin is to compensate the bottom margin of the button and the
+     * left margin is there, combined with the width and the left to center
+     * the table of contents horizontally. */
+    margin: -24px 0 0 -150px;
+    padding: 16px 16px 0 16px;
+    border: 1px solid #e6ecef;
+    -webkit-box-shadow: 0px 0px 6px 2px #e6ecef;
+    box-shadow: 0px 0px 6px 2px #e6ecef;
+    background: white;
+    z-index: 4;
+  }
+  .js #main .sectioned #table-of-contents[data-hidden="false"] {
+    display: block;
+  }
+  .js #main .sectioned #table-of-contents + section,
+  .js #main .sectioned #table-of-contents + article,
+  .js #main .sectioned #table-of-contents + fieldset,
+  .js #main .sectioned #table-of-contents + .form-wrapper,
+  .js #main .sectioned #table-of-contents + .form-item {
+    border-top: 1px solid #e6ecef;
+  }
+  .js #main .sectioned #table-of-contents ~ section,
+  .js #main .sectioned #table-of-contents ~ article,
+  .js #main .sectioned #table-of-contents ~ fieldset,
+  .js #main .sectioned #table-of-contents ~ .form-wrapper,
+  .js #main .sectioned #table-of-contents ~ .form-item {
+    padding: 24px 0;
+  }
+  .js .page-form #main > section.default > form.sectioned {
+    padding: 0;
+  }
+}
+/* On large screens show the blue border in the space on the left so that the
+ * titles stay aligned with the content. On smaller screens there is not enough
+ * space for that. */
+@media screen and (min-width: 768px) {
+  .js #main .sectioned #table-of-contents ~ section[data-active] > h3,
+  .js #main .sectioned #table-of-contents ~ article[data-active] > h3,
+  .js #main .sectioned #table-of-contents ~ fieldset[data-active] > legend,
+  .js #main .sectioned #table-of-contents ~ .form-wrapper > fieldset[data-active] > legend,
+  .js #main .sectioned #table-of-contents ~ .form-item > fieldset[data-active] > legend {
+    margin-left: -16px;
+    padding-left: 8px;
+    border-left: 8px solid #0988bb;
+  }
+}
+
+/* Print. */
+@media print {
+  #main .sectioned #table-of-content-toggler {
+    display: none!important;
+  }
+  #main .sectioned #table-of-contents {
+    display: none!important;
+  }
+}
