@@ -5,7 +5,7 @@
  *
  * Scope: #main-content article header p.country
  */
-#main-content article header p.rw-river-article__country-slug {
+#main-content article header p.rw-entity-country-slug {
   display: inline-block;
   vertical-align: top;
   max-width: 100%;
@@ -20,21 +20,21 @@
   white-space: nowrap;
   overflow: hidden;
 }
-#main-content article header p.rw-river-article__country-slug a {
+#main-content article header p.rw-entity-country-slug a {
   color: inherit;
   font-weight: inherit;
   text-decoration: none;
 }
-#main-content article header p.rw-river-article__country-slug span {
+#main-content article header p.rw-entity-country-slug span {
   color: inherit;
   font-weight: normal;
 }
-#main-content article header p.rw-river-article__country-slug a:hover,
-#main-content article header p.rw-river-article__country-slug a:focus,
-#main-content article header p.rw-river-article__country-slug a:active {
+#main-content article header p.rw-entity-country-slug a:hover,
+#main-content article header p.rw-entity-country-slug a:focus,
+#main-content article header p.rw-entity-country-slug a:active {
   text-decoration: underline;
 }
-#main-content > article header p.rw-river-article__country-slug {
+#main-content > article header p.rw-entity-country-slug {
   margin: 0 0 16px 0;
   padding: 3px 8px;
   font-size: 15px;
