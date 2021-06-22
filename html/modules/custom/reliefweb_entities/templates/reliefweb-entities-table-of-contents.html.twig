@@ -17,13 +17,19 @@
  */
 
  #}
+
+{% block library %}
+{% endblock %}
+
 <nav{{ create_attribute()
   .setAttribute('id', id)
   .addClass([
     'rw-toc',
   ])
 }} >
-  <h{{ level }} class="rw-toc__title">{{ title }}</h{{ level }}>
+  {% block heading %}
+    <h{{ level }} class="rw-toc__title">{{ title }}</h{{ level }}>
+  {% endblock %}
   <ul>
   {%- for section in sections -%}
     <li class="rw-toc__section">
