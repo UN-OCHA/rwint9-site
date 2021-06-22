@@ -21,7 +21,7 @@
                 "version": "v1.3.0",
                 "type":"drupal-library",
                 "source": {
-                    "url": "git@github.com:UN-OCHA/rwint-simple-autocomplete.git",
+                    "url": "https://github.com/UN-OCHA/rwint-simple-autocomplete.git",
                     "type": "git",
                     "reference": "v1.3.0"
                 }
@@ -34,7 +34,7 @@
                 "version": "v1.3.0",
                 "type":"drupal-library",
                 "source": {
-                    "url": "git@github.com:UN-OCHA/rwint-simple-datepicker.git",
+                    "url": "https://github.com/UN-OCHA/rwint-simple-datepicker.git",
                     "type": "git",
                     "reference": "v1.3.0"
                 }
