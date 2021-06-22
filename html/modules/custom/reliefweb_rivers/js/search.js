@@ -93,7 +93,7 @@
       var target = event.target;
       if (target && target.nodeName === 'A') {
         preventDefault(event);
-        setFormParameter(form, 'view', target.parentNode.id.substr(5));
+        setFormParameter(form, 'view', target.getAttribute('data-view'));
         submitForm(form);
       }
     });

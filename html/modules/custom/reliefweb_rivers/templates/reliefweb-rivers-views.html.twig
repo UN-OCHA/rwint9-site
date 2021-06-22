@@ -33,7 +33,7 @@
         'rw-river-views__list__item',
         view.selected ? 'rw-river-views__list__item--selected',
       ])
-    }}><a href="{{ view.url }}" class="rw-river-views__link">{{ view.title }}</a></li>
+    }}><a href="{{ view.url }}" class="rw-river-views__link" data-view="{{ id }}">{{ view.title }}</a></li>
     {% endfor %}
   </ul>
 </nav>
