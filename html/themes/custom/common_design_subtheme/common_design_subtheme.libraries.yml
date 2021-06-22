@@ -97,6 +97,15 @@ rw-selection:
   dependencies:
     - common_design_subtheme/rw-icons
 
+rw-toc:
+  css:
+    theme:
+      components/rw-toc/rw-toc.css: {}
+  js:
+    components/rw-toc/rw-toc.js: {}
+  dependencies:
+    - common_design/cd-dropdown
+
 rw-view-more:
   css:
     theme:
