@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a20ebb45be4b72ee7ce586205d14ee8f",
+    "content-hash": "c5a9587f9ff5f19070f984a08a928fcd",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -7198,7 +7198,7 @@
             "version": "v1.3.0",
             "source": {
                 "type": "git",
-                "url": "git@github.com:UN-OCHA/rwint-simple-autocomplete.git",
+                "url": "https://github.com/UN-OCHA/rwint-simple-autocomplete.git",
                 "reference": "v1.3.0"
             },
             "type": "drupal-library"
@@ -7208,7 +7208,7 @@
             "version": "v1.3.0",
             "source": {
                 "type": "git",
-                "url": "git@github.com:UN-OCHA/rwint-simple-datepicker.git",
+                "url": "https://github.com/UN-OCHA/rwint-simple-datepicker.git",
                 "reference": "v1.3.0"
             },
             "type": "drupal-library"
