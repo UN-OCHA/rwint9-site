@@ -63,6 +63,12 @@
     {{ render_var({
       '#theme': 'reliefweb_entities_entity_meta',
       '#meta': {
+        'format': {
+          'type': 'simple',
+          'label': 'Format'|t,
+          'value': entity.format,
+          'classes': [entity.format|clean_class],
+        },
         'source': {
           'type': 'taglist',
           'label': entity.tags.source|length > 1 ? 'Source'|t : 'Sources'|t,
