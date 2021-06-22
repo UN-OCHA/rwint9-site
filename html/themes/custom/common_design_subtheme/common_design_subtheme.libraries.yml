@@ -4,6 +4,18 @@ global-styling:
       css/styles.css: {}
 
 # RW custom components
+
+# Filters for the rivers.
+rw-advanced-search:
+  css:
+    theme:
+      components/rw-advanced-search/rw-advanced-search.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+    - common_design_subtheme/rw-autocomplete
+    - common_design_subtheme/rw-datepicker
+    - common_design_subtheme/rw-selection
+
 rw-announcement:
   css:
     theme:
@@ -14,6 +26,14 @@ rw-article:
     theme:
       components/rw-article/rw-article.css: {}
 
+# Autocomplete widget.
+rw-autocomplete:
+  css:
+    theme:
+      components/rw-autocomplete/rw-autocomplete.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+
 rw-blog:
   css:
     theme:
@@ -23,6 +43,14 @@ rw-country:
   css:
     theme:
       components/rw-country/rw-country.css: {}
+
+# Datepicker widget.
+rw-datepicker:
+  css:
+    theme:
+      components/rw-datepicker/rw-datepicker.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
 
 rw-disasters:
   css:
@@ -40,6 +68,12 @@ rw-homepage:
       components/rw-homepage/rw-homepage.css: {}
       components/rw-homepage/rw-homepage--grid.css: {}
 
+# Icon sprite.
+rw-icons:
+  css:
+    theme:
+      components/rw-icons/rw-icons.css: {}
+
 rw-meta:
   css:
     theme:
@@ -54,6 +88,14 @@ rw-opportunities:
   css:
     theme:
       components/rw-opportunities/rw-opportunities.css: {}
+
+# Filter/value selection.
+rw-selection:
+  css:
+    theme:
+      components/rw-selection/rw-selection.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
 
 rw-view-more:
   css:
@@ -80,43 +122,4 @@ cd-tag:
   css:
     theme:
       components/cd-tag/cd-tag.css: {}
-# Icon sprite.
-rw-icons:
-  css:
-    theme:
-      components/rw-icons/rw-icons.css: {}
 
-# Autocomplete widget.
-rw-autocomplete:
-  css:
-    theme:
-      components/rw-autocomplete/rw-autocomplete.css: {}
-  dependencies:
-    - common_design_subtheme/rw-icons
-
-# Datepicker widget.
-rw-datepicker:
-  css:
-    theme:
-      components/rw-datepicker/rw-datepicker.css: {}
-  dependencies:
-    - common_design_subtheme/rw-icons
-
-# Filter/value selection.
-rw-selection:
-  css:
-    theme:
-      components/rw-selection/rw-selection.css: {}
-  dependencies:
-    - common_design_subtheme/rw-icons
-
-# Filters for the rivers.
-rw-advanced-search:
-  css:
-    theme:
-      components/rw-advanced-search/rw-advanced-search.css: {}
-  dependencies:
-    - common_design_subtheme/rw-icons
-    - common_design_subtheme/rw-autocomplete
-    - common_design_subtheme/rw-datepicker
-    - common_design_subtheme/rw-selection
