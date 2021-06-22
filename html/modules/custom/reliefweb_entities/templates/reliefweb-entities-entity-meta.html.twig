@@ -27,13 +27,13 @@
     {% set label = data.label ?? name|replace({'-': ' ', '_': ' '})|capitalize %}
 
     {# Label. #}
-    <dt{{ create_attribute().setClasses([
+    <dt{{ create_attribute().addClass([
       'rw-entity-meta__tag-label',
       'rw-entity-meta__tag-label--' ~ name,
     ]) }}>{{ label }}</dt>
 
     {# Value. #}
-    <dd{{ create_attribute().setClasses([
+    <dd{{ create_attribute().addClass([
       'rw-entity-meta__tag-value',
       'rw-entity-meta__tag-value--' ~ name,
       'rw-entity-meta__tag-value--' ~ data.type,
