@@ -5,11 +5,17 @@
  * Template for the river pages.
  *
  * Available variables:
- * - views: list (id => label) of alternative views for the river
- * - search:
- * - results:
- * - entities:
- * - pager
+ * - river: the river name
+ * - view: the current river view
+ * - title: the river title
+ * - entities: list of article entities constituting the river
+ * - views: list of alternative views for the river
+ * - search: see reliefweb-rivers-search.html.twig
+ * - results: see reliefweb-rivers-results.html.twig
+ * - advanced_search: see reliefweb-rivers-advanced-search.html.twig
+ * - letter_navigation: see reliefweb-rivers-letter-navigation.html.twig
+ * - pager: the pager for the river
+ * - links: see reliefweb-rivers-links.html.twig
  */
 
 #}
@@ -28,7 +34,7 @@
 
   {{ search }}
 
-  {# @todo add letter navigation for country/organization rivers. #}
+  {{ letter_navigation }}
 
   {# @todo review if that should/could be combined with the
      reliefweb_rivers_river template #}

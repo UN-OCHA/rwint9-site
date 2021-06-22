@@ -28,6 +28,8 @@ function reliefweb_rivers_theme() {
         'results' => NULL,
         // Render array. See "reliefweb_rivers_advanced_search" below.
         'advanced_search' => NULL,
+        // Letter navigation/filtering.
+        'letter_navigation' => NULL,
         // The pager for the river.
         'pager' => NULL,
         // Render array. See "reliefweb_rivers_links" below.
@@ -92,6 +94,16 @@ function reliefweb_rivers_theme() {
         // - operators: list of operators for the operator "select" element
         // - filters: filter information to build the facets.
         'settings' => [],
+      ],
+    ],
+    'reliefweb_rivers_letter_navigation' => [
+      'variables' => [
+        // The headling level.
+        'level' => 3,
+        // Section title.
+        'title' => t('Letter Navigation'),
+        // Associative array of letters with their label, url and active state.
+        'letters' => [],
       ],
     ],
     'reliefweb_rivers_links' => [
