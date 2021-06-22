@@ -19,6 +19,13 @@ reliefweb_rivers.report.river:
     _controller: 'reliefweb_rivers.report.river:getPageContent'
   requirements:
     _permission: 'access content'
+reliefweb_rivers.source.river:
+  path: '/organizations'
+  defaults:
+    _title: 'Organizations'
+    _controller: 'reliefweb_rivers.source.river:getPageContent'
+  requirements:
+    _permission: 'access content'
 reliefweb_rivers.training.river:
   path: '/training'
   defaults:
