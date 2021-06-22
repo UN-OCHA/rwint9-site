@@ -21,12 +21,14 @@
 {% block library %}
 {% endblock %}
 
+{% block navigation %}
 <nav{{ create_attribute()
   .setAttribute('id', id)
   .addClass([
     'rw-toc',
   ])
-}} >
+}}>
+{% endblock %}
   {% block heading %}
     <h{{ level }} class="rw-toc__title">{{ title }}</h{{ level }}>
   {% endblock %}
