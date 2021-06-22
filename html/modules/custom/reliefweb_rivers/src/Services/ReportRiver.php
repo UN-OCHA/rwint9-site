@@ -338,7 +338,7 @@ class ReportRiver extends RiverServiceBase {
           'name' => $country['name'],
           'shortname' => $country['shortname'] ?? $country['name'],
           'code' => $country['iso3'] ?? '',
-          'url' => UrlHelper::encodeUrl('taxonomy/term/' . $country['id'], FALSE),
+          'url' => UrlHelper::getAliasFromPath('/taxonomy/term/' . $country['id']),
           'main' => !empty($country['primary']),
         ];
       }
@@ -350,7 +350,7 @@ class ReportRiver extends RiverServiceBase {
         $sources[] = [
           'name' => $source['name'],
           'shortname' => $source['shortname'] ?? $source['name'],
-          'url' => UrlHelper::encodeUrl('taxonomy/term/' . $source['id'], FALSE),
+          'url' => UrlHelper::getAliasFromPath('/taxonomy/term/' . $source['id']),
         ];
       }
       $tags['source'] = $sources;
@@ -366,7 +366,7 @@ class ReportRiver extends RiverServiceBase {
       $tags['language'] = $languages;
 
       // Determine document type.
-      $format = 'Report';
+      $format = '';
       if (!empty($fields['format'])) {
         if (isset($fields['format']['name'])) {
           $format = $fields['format']['name'];
@@ -396,7 +396,7 @@ class ReportRiver extends RiverServiceBase {
         $data['url'] = UrlHelper::stripDangerousProtocols($fields['url_alias']);
       }
       else {
-        $data['url'] = UrlHelper::encodeUrl('node/' . $item['id'], FALSE);
+        $data['url'] = UrlHelper::getAliasFromPath('/node/' . $item['id']);
       }
 
       // Creation and publication dates.

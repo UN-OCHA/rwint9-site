@@ -24,6 +24,14 @@ interface RiverServiceInterface {
   public function getPageContent();
 
   /**
+   * Get the river URL.
+   *
+   * @return string[
+   *   The river URL.
+   */
+  public function getUrl();
+
+  /**
    * Get the river parameter handler.
    *
    * @return \Drupal\reliefweb_rivers\Parameters
@@ -206,5 +214,18 @@ interface RiverServiceInterface {
    *   Date object.
    */
   public static function createDate($date);
+
+  /**
+   * Generate a URL for the river with the given parameters.
+   *
+   * @param string $bundle
+   *   Entity bundle associated with the river.
+   * @param array $parameters
+   *   Query parameters.
+   *
+   * @return string
+   *   River URL.
+   */
+  public static function getRiverUrl($bundle, array $parameters = []);
 
 }

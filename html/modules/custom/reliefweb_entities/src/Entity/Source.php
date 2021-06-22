@@ -8,6 +8,7 @@ use Drupal\reliefweb_entities\EntityModeratedInterface;
 use Drupal\reliefweb_entities\EntityModeratedTrait;
 use Drupal\reliefweb_entities\SectionedContentInterface;
 use Drupal\reliefweb_entities\SectionedContentTrait;
+use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 use Drupal\taxonomy\Entity\Term;
 
@@ -95,7 +96,9 @@ class Source extends Term implements BundleEntityInterface, EntityModeratedInter
       'type' => 'link',
       'label' => $this->t('Organization type'),
       'value' => [
-        'url' => UrlHelper::encodeUrl('/organizations?search=type.exact:"' . $type . '"'),
+        'url' => RiverServiceBase::getRiverUrl('source', [
+          'search' => 'type.exact:"' . $type . '"',
+        ]),
         'title' => $type,
         'external' => FALSE,
       ],
@@ -106,7 +109,9 @@ class Source extends Term implements BundleEntityInterface, EntityModeratedInter
     foreach ($this->field_country as $item) {
       $name = $item->entity->label();
       $countries[] = [
-        'url' => UrlHelper::encodeUrl('/organizations?search=country.exact:"' . $name . '"'),
+        'url' => RiverServiceBase::getRiverUrl('source', [
+          'search' => 'country.exact:"' . $name . '"',
+        ]),
         'name' => $name,
       ];
     }

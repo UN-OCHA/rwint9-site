@@ -3,10 +3,8 @@
 namespace Drupal\reliefweb_rivers;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\Core\Url;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
-use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 /**
  * Advanced search handler.
@@ -216,7 +214,10 @@ class AdvancedSearch {
 
     // Generate a link to clear the filter selection when javascript is not
     // availble.
-    $remove = $this->getRiverUrl($this->parameters->getAll(['advanced-search']));
+    $remove = RiverServiceBase::getRiverUrl(
+      $this->bundle,
+      $this->parameters->getAll(['advanced-search'])
+    );
 
     // Sanitize the advanced search parameter for the entire selection.
     $parameter = $this->getSanitiziedAdvancedSearchParameter($selection);
@@ -943,27 +944,6 @@ class AdvancedSearch {
   }
 
   /**
-   * Generate a URL for the river with the given parameters.
-   *
-   * @param array $parameters
-   *   Query parameters.
-   *
-   * @return string
-   *   River URL.
-   */
-  public function getRiverUrl(array $parameters = []) {
-    try {
-      return Url::fromRoute('reliefweb_rivers.' . $this->bundle . '.river', [], [
-        'query' => $parameters,
-      ])->toString();
-    }
-    catch (RouteNotFoundException $exception) {
-      $url = $this->river . '?' . http_build_query($parameters);
-      return UrlHelper::encodeUrl($url);
-    }
-  }
-
-  /**
    * Get the vocabulary for the given term id.
    *
    * @param int $id
@@ -1064,7 +1044,7 @@ class AdvancedSearch {
       ksort($terms);
     }
     else {
-      LocalizationHelper::collatedSort($terms, 'name');
+      LocalizationHelper::collatedSort($terms, 'name', $current_langcode);
     }
 
     // Keys are not preserved when sorting so we need to regenarate the array.

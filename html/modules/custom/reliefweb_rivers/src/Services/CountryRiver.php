@@ -93,7 +93,7 @@ class CountryRiver extends RiverServiceBase {
         $data['url'] = UrlHelper::stripDangerousProtocols($fields['url_alias']);
       }
       else {
-        $data['url'] = UrlHelper::encodeUrl('taxonomy/term/' . $item['id'], FALSE);
+        $data['url'] = UrlHelper::getAliasFromPath('/taxonomy/term/' . $item['id']);
       }
 
       // Compute the language code for the resource's data.

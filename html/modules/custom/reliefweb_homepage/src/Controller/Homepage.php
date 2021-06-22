@@ -7,7 +7,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\node\NodeInterface;
 use Drupal\reliefweb_api\Services\ReliefWebApiClient;
-use Drupal\reliefweb_utility\Helpers\UrlHelper;
+use Drupal\reliefweb_rivers\RiverServiceBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -169,7 +169,6 @@ class Homepage extends ControllerBase {
           'language.id',
           'language.name',
           'language.code',
-          'format.name',
           'headline',
         ],
       ],
@@ -200,7 +199,9 @@ class Homepage extends ControllerBase {
       'view' => 'headlines',
       // Link to the headlines river for the entity.
       'more' => [
-        'url' => UrlHelper::encodeUrl('/updates?view=headlines'),
+        'url' => RiverServiceBase::getRiverUrl('report', [
+          'view' => 'headlines',
+        ]),
         'label' => $this->t('View all headlines'),
       ],
     ];
@@ -252,7 +253,7 @@ class Homepage extends ControllerBase {
       'callback' => [$this, 'parseMostReadApiData'],
       // Link to the updates river for the entity.
       'more' => [
-        'url' => UrlHelper::encodeUrl('/updates'),
+        'url' => RiverServiceBase::getRiverUrl('report'),
         'label' => $this->t('View all updates'),
       ],
     ];
@@ -294,7 +295,7 @@ class Homepage extends ControllerBase {
       'callback' => [$this, 'parseDisastersApiData'],
       // Link to the disasters river for the entity.
       'more' => [
-        'url' => UrlHelper::encodeUrl('/disasters'),
+        'url' => RiverServiceBase::getRiverUrl('disaster'),
         'label' => $this->t('View all disasters'),
       ],
     ];
@@ -339,7 +340,7 @@ class Homepage extends ControllerBase {
       'callback' => [$this, 'parseBlogPostApiData'],
       // Link to the blog river for the entity.
       'more' => [
-        'url' => UrlHelper::encodeUrl('/blog'),
+        'url' => RiverServiceBase::getRiverUrl('blog_post'),
         'label' => $this->t('View all blog posts'),
       ],
     ];
@@ -363,12 +364,10 @@ class Homepage extends ControllerBase {
     if ($bundle === 'job') {
       $title = $this->t('Open jobs');
       $resource = 'jobs';
-      $river = 'jobs';
     }
     else {
       $title = $this->t('Training programs');
       $resource = 'training';
-      $river = 'training';
     }
 
     return [
@@ -377,7 +376,7 @@ class Homepage extends ControllerBase {
       'payload' => $payload,
       'title' => $title,
       // Link to the job/training river for the entity.
-      'url' => UrlHelper::encodeUrl('/' . $river),
+      'url' => RiverServiceBase::getRiverUrl($bundle),
     ];
   }
 

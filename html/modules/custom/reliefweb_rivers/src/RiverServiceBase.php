@@ -2,12 +2,13 @@
 
 namespace Drupal\reliefweb_rivers;
 
+use Drupal\Core\Url;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\reliefweb_api\Services\ReliefWebApiClient;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Pager\PagerParametersInterface;
-use Drupal\reliefweb_utility\Helpers\UrlHelper;
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 /**
  * Base for river services.
@@ -66,6 +67,12 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    */
   protected $bundle;
 
+  /**
+   * The river URL.
+   *
+   * @var string
+   */
+  protected $url;
 
   /**
    * The river parameter handler.
@@ -105,6 +112,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
     $this->pagerParameters = $pager_parameters;
     $this->apiClient = $api_client;
     $this->stringTranslation = $string_translation;
+    $this->url = static::getRiverUrl($this->bundle);
   }
 
   /**
@@ -131,6 +139,13 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * {@inheritdoc}
    */
   abstract public function parseApiData(array $api_data, $view = '');
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getUrl() {
+    return $this->url;
+  }
 
   /**
    * {@inheritdoc}
@@ -221,10 +236,12 @@ abstract class RiverServiceBase implements RiverServiceInterface {
       // Set the view URL and mark the default one.
       if ($id === $default) {
         $item['default'] = TRUE;
-        $item['url'] = UrlHelper::encodeUrl($this->river);
+        $item['url'] = $this->getUrl();
       }
       else {
-        $item['url'] = UrlHelper::encodeUrl($this->river . '?view=' . $id);
+        $item['url'] = static::getRiverUrl($this->bundle, [
+          'view' => $id,
+        ]);
       }
 
       // Mark the current view as selected.
@@ -261,10 +278,10 @@ abstract class RiverServiceBase implements RiverServiceInterface {
 
     return [
       '#theme' => 'reliefweb_rivers_search',
-      '#path' => UrlHelper::encodeUrl($this->river),
+      '#path' => $this->getUrl(),
       '#parameters' => $parameters,
-      '#label' => $this->t('Search for @resource with keywords', [
-        '@resource' => $this->resource,
+      '#label' => $this->t('Search for @river with keywords', [
+        '@river' => $this->river,
       ]),
       '#query' => $search,
     ];
@@ -279,7 +296,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
     return [
       '#theme' => 'reliefweb_rivers_advanced_search',
       '#title' => $this->t('Refine the list with filters'),
-      '#path' => UrlHelper::encodeUrl($this->river),
+      '#path' => $this->getUrl(),
       '#parameter' => $advanced_search->getParameter(),
       '#selection' => $advanced_search->getSelection(),
       '#remove' => $advanced_search->getClearUrl(),
@@ -427,6 +444,20 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    */
   public static function createDate($date) {
     return new \DateTime($date, new \DateTimeZone('UTC'));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getRiverUrl($bundle, array $parameters = []) {
+    try {
+      return Url::fromRoute('reliefweb_rivers.' . $bundle . '.river', [], [
+        'query' => $parameters,
+      ])->toString();
+    }
+    catch (RouteNotFoundException $exception) {
+      return '';
+    }
   }
 
 }

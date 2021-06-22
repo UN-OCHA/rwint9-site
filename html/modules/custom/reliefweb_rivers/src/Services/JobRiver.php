@@ -264,7 +264,6 @@ class JobRiver extends RiverServiceBase {
 
       // Tags (countries, sources etc.).
       $tags = [];
-      $tag_base_url = '/' . $this->river . '?advanced-search=';
 
       // Countries.
       $countries = [];
@@ -273,7 +272,9 @@ class JobRiver extends RiverServiceBase {
           'name' => $country['name'],
           'shortname' => $country['shortname'] ?? $country['name'],
           'code' => $country['iso3'] ?? '',
-          'url' => UrlHelper::encodeUrl($tag_base_url . '(C' . $country['id'] . ')'),
+          'url' => static::getRiverUrl($this->bundle, [
+            'advanced-search' => '(C' . $country['id'] . ')',
+          ]),
           'main' => !empty($country['primary']),
         ];
       }
@@ -285,7 +286,9 @@ class JobRiver extends RiverServiceBase {
         $sources[] = [
           'name' => $source['name'],
           'shortname' => $source['shortname'] ?? $source['name'],
-          'url' => UrlHelper::encodeUrl($tag_base_url . '(S' . $source['id'] . ')'),
+          'url' => static::getRiverUrl($this->bundle, [
+            'advanced-search' => '(S' . $source['id'] . ')',
+          ]),
         ];
       }
       $tags['source'] = $sources;
@@ -304,7 +307,7 @@ class JobRiver extends RiverServiceBase {
         $data['url'] = UrlHelper::stripDangerousProtocols($fields['url_alias']);
       }
       else {
-        $data['url'] = UrlHelper::encodeUrl('node/' . $item['id'], FALSE);
+        $data['url'] = UrlHelper::getAliasFromPath('/node/' . $item['id']);
       }
 
       if (isset($fields['date']['created'])) {
