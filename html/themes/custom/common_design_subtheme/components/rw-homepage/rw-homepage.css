@@ -7,7 +7,7 @@
  *
  * Scope: .path-frontpage #main-content
  */
-.path-frontpage #main-content #headlines .rw-river__articles {
+.path-frontpage #main-content #headlines {
   position: relative;
   margin-top: 0;
 }
