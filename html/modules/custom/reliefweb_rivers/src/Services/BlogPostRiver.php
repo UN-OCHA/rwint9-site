@@ -35,6 +35,57 @@ class BlogPostRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
+  public function getPageTitle() {
+    return $this->t('Blog');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getViews() {
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFilters() {
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiPayload($view = '') {
+    $payload = [
+      'query' => [
+        'fields' => [
+          'title',
+          'body',
+          'author',
+          'tags',
+        ],
+      ],
+      'fields' => [
+        'include' => [
+          'id',
+          'url_alias',
+          'title',
+          'body-html',
+          'date',
+          'tags',
+          'author',
+        ],
+      ],
+      'sort' => ['date.created:desc'],
+    ];
+
+    return $payload;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function parseApiData(array $api_data, $view = '') {
     // Retrieve the API data (with backward compatibility).
     $items = $api_data['items'] ?? $api_data['data'] ?? [];
@@ -59,7 +110,9 @@ class BlogPostRiver extends RiverServiceBase {
       foreach ($fields['tags'] ?? [] as $tag) {
         $tags[] = [
           'name' => $tag['name'],
-          'url' => UrlHelper::encodeUrl('/' . $this->river . '?search=tags.exact:"' . $tag['name'] . '"'),
+          'url' => static::getRiverUrl($this->bundle, [
+            'search' => 'tags.exact:"' . $tag['name'] . '"',
+          ]),
         ];
       }
 
@@ -78,7 +131,7 @@ class BlogPostRiver extends RiverServiceBase {
         $data['url'] = UrlHelper::stripDangerousProtocols($fields['url_alias']);
       }
       else {
-        $data['url'] = UrlHelper::encodeUrl('node/' . $item['id'], FALSE);
+        $data['url'] = UrlHelper::getAliasFromPath('/node/' . $item['id']);
       }
 
       // Image.

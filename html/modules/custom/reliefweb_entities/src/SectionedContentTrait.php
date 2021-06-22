@@ -3,8 +3,8 @@
 namespace Drupal\reliefweb_entities;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
-use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
  * Trait implementing most methods of the SectionedContentInterface.
@@ -19,6 +19,8 @@ trait SectionedContentTrait {
    * API payloads for the different content sections.
    *
    * @var array
+   *
+   * @todo retrieve the payloads from the river services.
    */
   protected $payloads = [
     'reports' => [
@@ -121,7 +123,7 @@ trait SectionedContentTrait {
    */
   public function getSectionsFromReliefWebApiQueries(array $queries) {
     $results = \Drupal::service('reliefweb_api.client')
-      ->requestMultiple(array_filter($queries), TRUE);
+      ->requestMultiple(array_filter($queries));
 
     // Parse the API results, building the page sections data.
     $sections = [];
@@ -258,7 +260,9 @@ trait SectionedContentTrait {
         'payload' => $payload,
         // Link to the updates river for the entity.
         'more' => [
-          'url' => UrlHelper::encodeUrl('/updates?advanced-search=(' . $code . $entity_id . ')'),
+          'url' => RiverServiceBase::getRiverUrl('report', [
+            'advanced-search' => '(' . $code . $entity_id . ')',
+          ]),
           'label' => $this->t('View all @label updates', [
             '@label' => $this->label(),
           ]),
@@ -297,7 +301,9 @@ trait SectionedContentTrait {
       'payload' => $payload,
       // Link to the updates river for the entity.
       'more' => [
-        'url' => UrlHelper::encodeUrl('/updates?advanced-search=(' . $code . $entity_id . ')'),
+        'url' => RiverServiceBase::getRiverUrl('report', [
+          'advanced-search' => '(' . $code . $entity_id . ')',
+        ]),
         'label' => $this->t('View all @label updates', [
           '@label' => $this->label(),
         ]),
@@ -340,7 +346,9 @@ trait SectionedContentTrait {
       'payload' => $payload,
       // Link to the updates river with the maps/infographics for the entity.
       'more' => [
-        'url' => UrlHelper::encodeUrl('/updates?advanced-search=(' . $code . $entity_id . ')_(F12.F12570)'),
+        'url' => RiverServiceBase::getRiverUrl('report', [
+          'advanced-search' => '(' . $code . $entity_id . ')_(F12.F12570)',
+        ]),
         'label' => $this->t('View all @label maps and infographics', [
           '@label' => $this->label(),
         ]),
@@ -370,7 +378,9 @@ trait SectionedContentTrait {
       'payload' => $payload,
       // Link to the jobs river for the entity.
       'more' => [
-        'url' => UrlHelper::encodeUrl('/jobs?advanced-search=(' . $code . $entity_id . ')'),
+        'url' => RiverServiceBase::getRiverUrl('job', [
+          'advanced-search' => '(' . $code . $entity_id . ')',
+        ]),
         'label' => $this->t('View all @label jobs', [
           '@label' => $this->label(),
         ]),
@@ -400,7 +410,9 @@ trait SectionedContentTrait {
       'payload' => $payload,
       // Link to the training river for the entity.
       'more' => [
-        'url' => UrlHelper::encodeUrl('/training?advanced-search=(' . $code . $entity_id . ')'),
+        'url' => RiverServiceBase::getRiverUrl('training', [
+          'advanced-search' => '(' . $code . $entity_id . ')',
+        ]),
         'label' => $this->t('View all @label training opportunities', [
           '@label' => $this->label(),
         ]),
@@ -440,7 +452,9 @@ trait SectionedContentTrait {
       'payload' => $payload,
       // Link to the disasters river for the country.
       'more' => [
-        'url' => UrlHelper::encodeUrl('/disasters?advanced-search=(' . $code . $entity_id . ')'),
+        'url' => RiverServiceBase::getRiverUrl('disaster', [
+          'advanced-search' => '(' . $code . $entity_id . ')',
+        ]),
         'label' => $this->t('View all @label disasters', [
           '@label' => $this->label(),
         ]),

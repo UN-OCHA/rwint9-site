@@ -2,6 +2,8 @@
 
 namespace Drupal\reliefweb_rivers\Services;
 
+use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\reliefweb_rivers\AdvancedSearch;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
@@ -33,6 +35,112 @@ class SourceRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
+  public function getPageTitle() {
+    return $this->t('Organizations');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPageContent() {
+    // Get the list of the first letters of the all the viewable sources.
+    $letters = static::getFirstLetters();
+
+    // Get the currently selected letter filter and mark the corresponding
+    // letter as active.
+    $letter = $this->getParameters()->get('group', 'all');
+    if (isset($letters[$letter])) {
+      $letters[$letter]['active'] = TRUE;
+    }
+    else {
+      $letters['all']['active'] = TRUE;
+    }
+
+    // Get the resources for the search query.
+    $entities = $this->getApiData($this->limit);
+
+    return [
+      '#theme' => 'reliefweb_rivers_page',
+      '#river' => $this->river,
+      '#title' => $this->getPageTitle(),
+      '#entities' => $entities,
+      '#search' => $this->getRiverSearch(),
+      '#results' => $this->getRiverResults(count($entities)),
+      '#letter_navigation' => [
+        '#theme' => 'reliefweb_rivers_letter_navigation',
+        '#title' => $this->t('Filter by first letter'),
+        '#letters' => $letters,
+      ],
+      '#pager' => $this->getRiverPager(),
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getViews() {
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFilters() {
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiPayload($view = '') {
+    $payload = [
+      'query' => [
+        'fields' => [
+          'name',
+          'shortname',
+        ],
+        'operator' => 'AND',
+      ],
+      'fields' => [
+        'include' => [
+          'id',
+          'name',
+          'shortname',
+          'url_alias',
+        ],
+      ],
+      'filter' => [
+        'field' => 'status',
+        'value' => 'active',
+      ],
+      // @todo just a reminder to try to find a way for the API to sort in
+      // language aware way.
+      'sort' => ['name:asc'],
+    ];
+
+    // Add a filter on the selected letter.
+    $letters = static::getFirstLetters();
+    $letter = $this->getParameters()->get('group', 'all');
+    if (!empty($letters[$letter]['ids'])) {
+      $payload['filter'] = [
+        'conditions' => [
+          $payload['filter'],
+          [
+            'field' => 'id',
+            'value' => $letters[$letter]['ids'],
+            'operator' => 'OR',
+          ],
+        ],
+        'operator' => 'AND',
+      ];
+    }
+
+    return $payload;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function parseApiData(array $api_data, $view = '') {
     // Retrieve the API data (with backward compatibility).
     $items = $api_data['items'] ?? $api_data['data'] ?? [];
@@ -44,7 +152,7 @@ class SourceRiver extends RiverServiceBase {
     }
 
     // Get the publications of the sources.
-    $publications = static::getPublications('source', $ids);
+    $publications = $this->getPublications('source', $ids);
 
     // Parse the entities retrieved from the API.
     $entities = [];
@@ -67,7 +175,7 @@ class SourceRiver extends RiverServiceBase {
 
       $data = [
         'id' => $item['id'],
-        'bundle' => $item['bundle'],
+        'bundle' => $this->bundle,
         'title' => $title,
         'tags' => $tags,
       ];
@@ -77,7 +185,7 @@ class SourceRiver extends RiverServiceBase {
         $data['url'] = UrlHelper::stripDangerousProtocols($fields['url_alias']);
       }
       else {
-        $data['url'] = UrlHelper::encodeUrl('taxonomy/term/' . $item['id'], FALSE);
+        $data['url'] = UrlHelper::getAliasFromPath('/taxonomy/term/' . $item['id']);
       }
 
       // Compute the language code for the resource's data.
@@ -104,7 +212,7 @@ class SourceRiver extends RiverServiceBase {
    *   Associative array with the term ids as keys and the total of published
    *   reports, jobs and training as values.
    */
-  public static function getPublications($field, array $ids) {
+  public function getPublications($field, array $ids) {
     if (empty($ids)) {
       return [];
     }
@@ -150,10 +258,11 @@ class SourceRiver extends RiverServiceBase {
       ],
     ];
 
-    $results = \Drupal::service('reliefweb_api.client')
-      ->requestMulitple($queries, TRUE);
+    $results = $this->apiClient->requestMultiple($queries);
 
     // Parse the results.
+    // @todo the numbers are not formatted properly.
+    // @see https://www.drupal.org/node/2660338
     $publications = [];
     foreach ($results as $index => $data) {
       $resource = $queries[$index]['resource'];
@@ -167,21 +276,27 @@ class SourceRiver extends RiverServiceBase {
               case 'reports':
                 $publications[$id]['reports'] = [
                   'name' => $this->formatPlural($count, '1 published report', '@count published reports'),
-                  'url' => UrlHelper::encodeUrl('/updates?advanced-search=(S' . $id . ')'),
+                  'url' => static::getRiverUrl('report', [
+                    'advanced-search' => '(S' . $id . ')',
+                  ]),
                 ];
                 break;
 
               case 'jobs':
                 $publications[$id]['jobs'] = [
                   'name' => $this->formatPlural($count, '1 open job', '@count open jobs'),
-                  'url' => UrlHelper::encodeUrl('/jobs?advanced-search=(S' . $id . ')'),
+                  'url' => static::getRiverUrl('job', [
+                    'advanced-search' => '(S' . $id . ')',
+                  ]),
                 ];
                 break;
 
               case 'training':
                 $publications[$id]['training'] = [
                   'name' => $this->formatPlural($count, '1 open training', '@count open training'),
-                  'url' => UrlHelper::encodeUrl('/training?advanced-search=(S' . $id . ')'),
+                  'url' => static::getRiverUrl('training', [
+                    'advanced-search' => '(S' . $id . ')',
+                  ]),
                 ];
                 break;
             }
@@ -191,6 +306,66 @@ class SourceRiver extends RiverServiceBase {
     }
 
     return $publications;
+  }
+
+  /**
+   * Get the list of first letters for the viewable organizations.
+   *
+   * @return array
+   *   List of letters keyed by letter and with a label, url and list ids of the
+   *   sources starting with the letter.
+   */
+  public static function getFirstLetters() {
+    /** @var \Drupal\Core\Cache\CacheBackendInterface $cache_backend */
+    $cache_backend = \Drupal::cache();
+
+    // Get the current language code to use for the cache id. The order of the
+    // letters may differ from one language to another.
+    $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
+
+    // Cache information.
+    $cache_id = 'reliefweb_river:source:letters:' . $langcode;
+
+    // Attempt to get the sitrep from the cache.
+    $cache = $cache_backend->get($cache_id);
+    if (isset($cache->data)) {
+      return $cache->data;
+    }
+
+    // We use the loadReferenceValues from the advanced search because it
+    // conveniently returns a list of viewable terms sorted by name so we can
+    // easily extract the first letters.
+    $terms = AdvancedSearch::loadReferenceValues([
+      'vocabulary' => 'source',
+    ]);
+
+    $letters = [];
+    foreach ($terms as $term) {
+      $letter = mb_strtoupper(mb_substr($term['name'], 0, 1));
+
+      if (!isset($letters[$letter])) {
+        $letters[$letter] = [
+          'label' => $letter,
+          'url' => static::getRiverUrl('source', [
+            'group' => $letter,
+          ]),
+          'ids' => [],
+        ];
+      }
+
+      // Store the term ids so we can easily filter the sources.
+      $letters[$letter]['ids'][] = $term['id'];
+    }
+
+    $letters['all'] = [
+      'label' => t('All'),
+      'url' => static::getRiverUrl('source'),
+    ];
+
+    // Cache the list of letters permanently. It will be rebuilt when a source
+    // is modified.
+    $cache_backend->set($cache_id, $letters, CacheBackendInterface::CACHE_PERMANENT, ['taxonomy_term_list:source']);
+    return $letters;
   }
 
 }

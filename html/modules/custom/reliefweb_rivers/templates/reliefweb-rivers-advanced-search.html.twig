@@ -1,0 +1,91 @@
+{#
+
+/**
+ * @file
+ * Template for the river advanced-search.
+ *
+ * Available variables:
+ * - level: headling level (defaults to 3)
+ * - title: section title
+ * - path: the path to the river
+ * - parameter: the sanitized advanced search parameter
+ * - selection: the selected filters
+ * - remove: the link to clear the selection
+ * - settings: The filter settings with the following elements:
+ *   - labels: translated labels for the UI
+ *   - placeholders: translated placeholders for the UI
+ *   - announcements: translated announcements for accessibility
+ *   - operators: list of operators for the operator "select" element
+ *   - filters: filter information to build the facets
+ */
+
+#}
+{% if settings.filters is not empty %}
+
+{# Attach the javascript libraries. They will be added at the bottom. #}
+{{ attach_library('reliefweb_rivers/advanced-search') }}
+
+{# Attributes for the section. #}
+{%
+  set attributes = create_attribute()
+    .addClass(['rw-advanced-search'])
+    .setAttribute('id', 'river-advanced-search')
+    .setAttribute('data-advanced-mode', true)
+%}
+{%
+  set attributes = selection is empty ? attributes.setAttribute('data-empty', '') : attributes
+%}
+
+<section{{ attributes }}>
+  <h{{ level }} id="river-advanced-search-title" class="rw-advanced-search__title">{{ title }}</h{{ level }}>
+
+  <a href="/search-help" target="_blank" class="rw-advanced-search__help">{{ 'Search help'|t }}</a>
+
+  <form id="river-advanced-search-form" class="rw-advanced-search__form" action="{{ path }}" method="GET">
+    {# Preserve the current advanced search parameter. #}
+    {% if parameter is not empty %}
+    <input type="hidden" name="advanced-search" value="{{ parameter }}">
+    {% endif %}
+
+    <div id="river-advanced-search-selection-announcement" aria-live="polite" class="visually-hidden"></div>
+    <div id="river-advanced-search-selection" class="rw-advanced-search__selection rw-selection" data-selection="{{ selection|length }}">
+      {#
+        Note: this is the initial selection and will be overriden by the
+        advanced search javascript library. That means notably that styling
+        should be done via the attributes (data-field etc.) as the library
+        is style agnostic and doesn't set classes.
+      #}
+      {% for item in selection %}
+      <div data-field="{{ item.code }}">
+        <div data-operator="{{ item.operator }}">{{ settings.labels.operators[item.operator|raw] }}</div>
+        <div data-value="{{ item.code ~ item.value }}">
+          <span class="field">{{ item.field }}: </span><span class="label">{{ item.label }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <noscript>
+      {% if selection is not empty %}
+      <a class="rw-advanced-search__selection-clear" href="{{ remove }}">{{ 'Clear filters'|t }}</a>
+      {% endif %}
+
+      <p class="rw-advanced-search__noscript">{{ 'To add filters, please enable Javascript or visit the <a href="/search-help">Search help</a> for more information on alternative ways to filter the results.' }}</p>
+    </noscript>
+
+    <script>
+      (function () {
+        'use strict';
+        window.reliefweb = window.reliefweb || {};
+        window.reliefweb.advancedSearch = {{ settings|json_encode|raw }};
+        window.reliefweb.advancedSearch.headingLevel = {{ level }};
+        window.reliefweb.advancedSearch.classPrefix = 'rw-advanced-search__';
+        window.reliefweb.advancedSearch.widgetClassPrefix = 'rw-';
+      })();
+    </script>
+
+    <div id="river-advanced-search-filter-announcement" aria-live="polite" class="visually-hidden"></div>
+    <div id="river-advanced-search-form-content" class="rw-advanced-search__form__content" hidden></div>
+  </form>
+</section>
+{% endif %}

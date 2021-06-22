@@ -24,7 +24,7 @@
   ])
   .setAttribute('data-id', entity.id)
 }}>
-  {# Header with country slug and title. #}
+  {# Header with title. #}
   <header>
     {# Title. #}
     {{ render_var({
@@ -38,7 +38,7 @@
 
   {# Footer with meta information (sources, dates etc.). #}
   <footer class="rw-river-article__footer">
-    {% if entity.publications is empty %}
+    {% if entity.tags.publication is empty %}
       <p>{{ 'No current publications'|t }}</p>
     {% else %}
       {{ render_var({
@@ -46,7 +46,7 @@
         '#meta': {
           'publication': {
             'type': 'taglist',
-            'label': entity.tags.publication|length > 1 ? 'Publications'|t : 'Publication'|t,
+            'label': 'Publications'|t,
             'value': entity.tags.publication,
             'count': NULL,
             'sort': NULL,

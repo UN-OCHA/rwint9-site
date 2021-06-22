@@ -35,6 +35,289 @@ class TrainingRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
+  public function getPageTitle() {
+    return $this->t('Training');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getViews() {
+    return [
+      'all' => $this->t('All Training'),
+      'closing-soon' => $this->t('Closing soon'),
+      'free' => $this->t('Free courses'),
+      'online' => $this->t('Online courses'),
+      'ongoing' => $this->t('Ongoing / Permanent'),
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFilters() {
+    return [
+      'TY' => [
+        'name' => $this->t('Category'),
+        'type' => 'reference',
+        'vocabulary' => 'training_type',
+        'field' => 'type.id',
+        'widget' => [
+          'type' => 'options',
+          'label' => $this->t('Select a training category'),
+        ],
+      ],
+      'CC' => [
+        'name' => $this->t('Professional function'),
+        'type' => 'reference',
+        'vocabulary' => 'career_category',
+        'field' => 'career_categories.id',
+        'widget' => [
+          'type' => 'options',
+          'label' => $this->t('Select a professional function'),
+        ],
+      ],
+      'F' => [
+        'name' => $this->t('Format'),
+        'type' => 'reference',
+        'vocabulary' => 'training_format',
+        'field' => 'format.id',
+        'widget' => [
+          'type' => 'options',
+          'label' => $this->t('Select a training format'),
+        ],
+      ],
+      'CO' => [
+        'name' => $this->t('Cost'),
+        'type' => 'fixed',
+        'values' => [
+          'free' => $this->t('Free'),
+          'fee-based' => $this->t('Fee-based'),
+        ],
+        'field' => 'cost',
+        'widget' => [
+          'type' => 'options',
+          'label' => $this->t('Select cost'),
+        ],
+      ],
+      'T' => [
+        'name' => $this->t('Theme'),
+        'type' => 'reference',
+        'vocabulary' => 'theme',
+        'field' => 'theme.id',
+        'widget' => [
+          'type' => 'options',
+          'label' => $this->t('Select a theme'),
+        ],
+        'exclude' => [
+          // Remove Contributions (Collab #2327).
+          4589,
+          // Remove Logistics and Telecommunications (Trello #G3YgNUF6).
+          4598,
+          // Camp Coordination and Camp Management.
+          49458,
+        ],
+      ],
+      'C' => [
+        'name' => $this->t('Country'),
+        'type' => 'reference',
+        'vocabulary' => 'country',
+        'field' => 'country.id',
+        'widget' => [
+          'type' => 'autocomplete',
+          'label' => $this->t('Search for a country'),
+          'resource' => 'countries',
+        ],
+      ],
+      'S' => [
+        'name' => $this->t('Organization'),
+        'type' => 'reference',
+        'vocabulary' => 'source',
+        'field' => 'source.id',
+        'widget' => [
+          'type' => 'autocomplete',
+          'label' => $this->t('Search for an organization'),
+          'resource' => 'sources',
+          'parameters' => [
+            'filter' => [
+              'field' => 'content_type',
+              'value' => 'training',
+            ],
+          ],
+        ],
+      ],
+      'OT' => [
+        'name' => $this->t('Organization type'),
+        'type' => 'reference',
+        'vocabulary' => 'organization_type',
+        'field' => 'source.type.id',
+        'widget' => [
+          'type' => 'options',
+          'label' => $this->t('Select an organization type'),
+        ],
+      ],
+      'TL' => [
+        'name' => $this->t('Training language'),
+        'type' => 'reference',
+        'vocabulary' => 'language',
+        'exclude' => [
+          // Other.
+          31996,
+        ],
+        'field' => 'training_language.id',
+        'widget' => [
+          'type' => 'options',
+          'label' => $this->t('Select training language'),
+        ],
+      ],
+      'DS' => [
+        'name' => $this->t('Starting date'),
+        'type' => 'date',
+        'field' => 'date.start',
+        'widget' => [
+          'type' => 'date',
+          'label' => $this->t('Select training start date'),
+        ],
+      ],
+      'DE' => [
+        'name' => $this->t('Ending date'),
+        'type' => 'date',
+        'field' => 'date.end',
+        'widget' => [
+          'type' => 'date',
+          'label' => $this->t('Select training end date'),
+        ],
+      ],
+      'DR' => [
+        'name' => $this->t('Registration deadline'),
+        'type' => 'date',
+        'field' => 'date.registration',
+        'widget' => [
+          'type' => 'date',
+          'label' => $this->t('Select registration deadline'),
+        ],
+      ],
+      'DA' => [
+        'name' => $this->t('Posting date on ReliefWeb'),
+        'type' => 'date',
+        'field' => 'date.created',
+        'widget' => [
+          'type' => 'date',
+          'label' => $this->t('Select posting date on ReliefWeb'),
+        ],
+      ],
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFilterSample() {
+    return $this->t('(Country, cost, deadline...)');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiPayload($view = '') {
+    $payload = [
+      'query' => [
+        'fields' => [
+          'title^20',
+          'body',
+          'how_to_register',
+          'country.name^100',
+          'country.shortname^100',
+          'source.name^100',
+          'source.shortname^100',
+          'theme.name^100',
+          'type.name^100',
+          'career_categories.name^100',
+          'format.name^100',
+          'training_language.name^100',
+          'cost^200',
+        ],
+        'operator' => 'AND',
+      ],
+      'fields' => [
+        'include' => [
+          'id',
+          'url_alias',
+          'title',
+          'body-html',
+          'date',
+          'country.id',
+          'country.iso3',
+          'country.name',
+          'country.shortname',
+          'source.id',
+          'source.name',
+          'source.shortname',
+          'language.id',
+          'language.name',
+          'language.code',
+        ],
+      ],
+      'sort' => ['date.created:desc'],
+    ];
+
+    // Handle the filtered selection (view).
+    switch ($view) {
+      case 'closing-soon':
+        // Training closing within a month.
+        $date = date_create('now', new \DateTimeZone('UTC'));
+        $payload['filter'] = [
+          'field' => 'date.registration',
+          'value' => [
+            'from' => $date->format(DATE_ATOM),
+            'to' => $date->add(new \DateInterval('P1M'))->format(DATE_ATOM),
+          ],
+        ];
+        $payload['sort'] = ['date.registration:asc'];
+        break;
+
+      case 'free':
+        $payload['filter'] = [
+          'field' => 'cost',
+          'value' => 'free',
+        ];
+        break;
+
+      case 'online':
+        $payload['filter'] = [
+          'field' => 'format.id',
+          'value' => 4607,
+        ];
+        break;
+
+      case 'ongoing':
+        $payload['filter'] = [
+          'field' => 'date.start',
+          'negate' => TRUE,
+        ];
+        break;
+
+      case 'workshop':
+        $payload['filter'] = [
+          'field' => 'type.id',
+          'value' => 4609,
+        ];
+        break;
+
+      case 'academic':
+        $payload['filter'] = [
+          'field' => 'type.id',
+          'value' => 4610,
+        ];
+        break;
+    }
+
+    return $payload;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function parseApiData(array $api_data, $view = '') {
     // Retrieve the API data (with backward compatibility).
     $items = $api_data['items'] ?? $api_data['data'] ?? [];
@@ -56,7 +339,6 @@ class TrainingRiver extends RiverServiceBase {
 
       // Tags (countries, sources etc.).
       $tags = [];
-      $tag_base_url = '/' . $this->river . '?advanced-search=';
 
       // Countries.
       $countries = [];
@@ -65,7 +347,9 @@ class TrainingRiver extends RiverServiceBase {
           'name' => $country['name'],
           'shortname' => $country['shortname'] ?? $country['name'],
           'code' => $country['iso3'] ?? '',
-          'url' => UrlHelper::encodeUrl($tag_base_url . '(C' . $country['id'] . ')'),
+          'url' => static::getRiverUrl($this->bundle, [
+            'advanced-search' => '(C' . $country['id'] . ')',
+          ]),
           'main' => !empty($country['primary']),
         ];
       }
@@ -77,7 +361,9 @@ class TrainingRiver extends RiverServiceBase {
         $sources[] = [
           'name' => $source['name'],
           'shortname' => $source['shortname'] ?? $source['name'],
-          'url' => UrlHelper::encodeUrl($tag_base_url . '(S' . $source['id'] . ')'),
+          'url' => static::getRiverUrl($this->bundle, [
+            'advanced-search' => '(S' . $source['id'] . ')',
+          ]),
         ];
       }
       $tags['source'] = $sources;
@@ -106,7 +392,7 @@ class TrainingRiver extends RiverServiceBase {
         $data['url'] = UrlHelper::stripDangerousProtocols($fields['url_alias']);
       }
       else {
-        $data['url'] = UrlHelper::encodeUrl('node/' . $item['id'], FALSE);
+        $data['url'] = UrlHelper::getAliasFromPath('/node/' . $item['id'], FALSE);
       }
 
       if (isset($fields['date']['created'])) {

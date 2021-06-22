@@ -1,4 +1,5 @@
 api_url: 'https://api.reliefweb.int/v1'
+api_url_external: 'https://api.reliefweb.int/v1'
 appname: reliefweb.int
 cache_enabled: true
 verify_ssl: true

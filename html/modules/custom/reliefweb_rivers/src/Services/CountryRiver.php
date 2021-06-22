@@ -33,6 +33,34 @@ class CountryRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
+  public function getPageTitle() {
+    return $this->t('Countries');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getViews() {
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFilters() {
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiPayload($view = '') {
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function parseApiData(array $api_data, $view = '') {
     // Retrieve the API data (with backward compatibility).
     $items = $api_data['items'] ?? $api_data['data'] ?? [];
@@ -65,7 +93,7 @@ class CountryRiver extends RiverServiceBase {
         $data['url'] = UrlHelper::stripDangerousProtocols($fields['url_alias']);
       }
       else {
-        $data['url'] = UrlHelper::encodeUrl('taxonomy/term/' . $item['id'], FALSE);
+        $data['url'] = UrlHelper::getAliasFromPath('/taxonomy/term/' . $item['id']);
       }
 
       // Compute the language code for the resource's data.

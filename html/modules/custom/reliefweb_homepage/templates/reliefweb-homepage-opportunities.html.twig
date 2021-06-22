@@ -25,7 +25,7 @@
   <ul class="rw-homepage-opportunties__list">
   {% for item in opportunities %}
     <li class="rw-homepage-opportunties__list__item rw-homepage-opportunties__list__item--{{ item.type }}">
-      <a class="rw-homepage-opportunties__list__item__link" href="{{ url }}">
+      <a class="rw-homepage-opportunties__list__item__link" href="{{ item.url }}">
         <data class="rw-homepage-opportunties__list__item__total" value="{{ item.total }}">{{ item.total|number_format }}</data>
         <span class="rw-homepage-opportunties__list__item__label">{{ item.title }}</span>
       </a>
