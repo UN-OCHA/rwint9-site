@@ -2,13 +2,13 @@
 
 /**
  * @file
- * Template file for the country slug of a river article.
+ * Template file for the country slug of an entity.
  *
- * Available variables;
+ * Available variables:
  * - countries: list of countries with the following properties:
  *   - url: url to either the country page or the river filtered by the country
  *   - name: country name
- *   - shortname:  country short name.
+ *   - shortname: country short name
  */
 
 #}
@@ -18,13 +18,13 @@
 
 {% if countries %}
   {% block wrapper %}
-    <p class="rw-river-article__country-slug">
+    <p class="rw-entity-country-slug">
   {% endblock %}
   {% for item in countries|taglist(1, 'shortname') %}
-    <a class="rw-river-article__country-slug__link" href="{{ item.url }}">{{ item.shortname ?? item.name }}</a>
+    <a class="rw-entity-country-slug__link" href="{{ item.url }}">{{ item.shortname ?? item.name }}</a>
   {% endfor %}
   {% if countries|length > 1 %}
-    <span class="rw-river-article__country-slug__more">{{ '+ @count more'|t({
+    <span class="rw-entity-country-slug__more">{{ '+ @count more'|t({
       '@count': (countries|length) - 1,
     }) }}</span>
   {% endif %}

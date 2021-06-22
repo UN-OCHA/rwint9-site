@@ -28,7 +28,6 @@
  * @see common_design_subtheme_preprocess_taxonomy_term()
  */
 #}
-{% set content = term.getPageContent() %}
 {{ local_tasks }}
 <article{{ attributes
   .addClass([
@@ -42,8 +41,21 @@
 }}>
   <header>
     {{ title }}
-    {{ content.meta }}
+
+    {% if term.getModerationStatus() == 'ongoing' %}
+    {{ render_var({
+      '#theme': 'reliefweb_entities_entity_meta',
+      '#meta': {
+        'status': {
+          'type': 'simple',
+          'label': 'Status'|t,
+          'value': 'Humanitarian Situation'|t,
+        },
+      }
+    }) }}
+    {% endif %}
   </header>
-  {{ content.contents }}
-  {{ content.sections }}
+
+  {{ term.getPageContent() }}
+
 </article>

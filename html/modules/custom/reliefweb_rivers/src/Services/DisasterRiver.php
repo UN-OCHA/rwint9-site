@@ -8,7 +8,7 @@ use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
- * Service class to retrieve disaster resource for the training disasters.
+ * Service class to retrieve disaster resource for the disaster rivers.
  */
 class DisasterRiver extends RiverServiceBase {
 
@@ -31,6 +31,34 @@ class DisasterRiver extends RiverServiceBase {
    * {@inheritdoc}
    */
   protected $bundle = 'disaster';
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPageTitle() {
+    return $this->t('Disasters');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getViews() {
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFilters() {
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiPayload($view = '') {
+    return [];
+  }
 
   /**
    * {@inheritdoc}
@@ -60,7 +88,7 @@ class DisasterRiver extends RiverServiceBase {
           'name' => $country['name'],
           'shortname' => $country['shortname'] ?? $country['name'],
           'code' => $country['iso3'] ?? '',
-          'url' => UrlHelper::encodeUrl('taxonomy/term/' . $country['id'], FALSE),
+          'url' => UrlHelper::getAliasFromPath('/taxonomy/term/' . $country['id']),
           'main' => !empty($country['primary']),
         ];
       }
@@ -71,7 +99,9 @@ class DisasterRiver extends RiverServiceBase {
       foreach ($fields['type'] ?? [] as $type) {
         $types[] = [
           'name' => $type['name'],
-          'url' => UrlHelper::encodeUrl('/' . $this->river . '?advanced-search=(TY' . $type['id'] . ')'),
+          'url' => static::getRiverUrl($this->bundle, [
+            'advanced-search' => '(TY' . $type['id'] . ')',
+          ]),
           'main' => !empty($country['primary']),
         ];
       }
@@ -93,7 +123,7 @@ class DisasterRiver extends RiverServiceBase {
         $data['url'] = UrlHelper::stripDangerousProtocols($fields['url_alias']);
       }
       else {
-        $data['url'] = UrlHelper::encodeUrl('taxonomy/term/' . $item['id'], FALSE);
+        $data['url'] = UrlHelper::getAliasFromPath('/taxonomy/term/' . $item['id']);
       }
 
       // Summary.

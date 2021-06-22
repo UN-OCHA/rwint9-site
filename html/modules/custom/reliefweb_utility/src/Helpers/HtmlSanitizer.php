@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_utility\Helpers;
 
 use Drupal\Component\Utility\UrlHelper;
+use League\CommonMark\CommonMarkConverter;
 
 /**
  * Helper to sanitize HTML.
@@ -67,6 +68,31 @@ class HtmlSanitizer {
   public static function sanitize($html, $iframe = FALSE, $heading_offset = 2, array $allowed_attributes = []) {
     $sanitizer = new static($iframe, $heading_offset, $allowed_attributes);
     return $sanitizer->sanitizeHtml($html);
+  }
+
+  /**
+   * Convert a markdown text to HTML and sanitize the HTML string.
+   *
+   * This also attempts to fix the heading hierarchy, at least preventing
+   * the use of h1 and h2 in the sanitized content.
+   *
+   * @param string $text
+   *   Markdown string to convert and sanitize.
+   * @param bool $iframe
+   *   Whether to allow iframes or not.
+   * @param int $heading_offset
+   *   Offset for the conversion of the headings to perserve the hierarchy.
+   * @param array $allowed_attributes
+   *   List of attributes that should be preserved (ex: data-disaster-map).
+   *
+   * @return string
+   *   Sanitized HTML string.
+   */
+  public static function sanitizeFromMarkdown($text, $iframe = FALSE, $heading_offset = 2, array $allowed_attributes = []) {
+    // @todo add options notably to allow ID attributes.
+    $converter = new CommonMarkConverter();
+    $html = $converter->convertToHtml($text);
+    return static::sanitize($html, $iframe, $heading_offset, $allowed_attributes);
   }
 
   /**

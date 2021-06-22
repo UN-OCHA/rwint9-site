@@ -10,6 +10,7 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Exception\ClientException;
 
 /**
  * Digital Situation Report client service class.
@@ -187,10 +188,15 @@ class DSRClient {
       ]),
     ];
 
-    $response = $this->httpClient->get($dsr_url, [
-      'timeout' => 2,
-      'query' => $query,
-    ]);
+    try {
+      $response = $this->httpClient->get($dsr_url, [
+        'timeout' => 2,
+        'query' => $query,
+      ]);
+    }
+    catch (ClientException $exception) {
+      return [];
+    }
 
     // Decode the JSON response.
     $data = NULL;

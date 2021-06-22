@@ -35,6 +35,263 @@ class ReportRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
+  public function getPageTitle() {
+    return $this->t('Updates');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getViews() {
+    return [
+      'all' => $this->t('All Updates'),
+      'headlines' => $this->t('Headlines'),
+      'maps' => $this->t('Maps / Infographics'),
+      'reports' => $this->t('Reports only'),
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFilters() {
+    return [
+      'PC' => [
+        'name' => $this->t('Primary country'),
+        'type' => 'reference',
+        'vocabulary' => 'country',
+        'field' => 'primary_country.id',
+        'widget' => [
+          'type' => 'autocomplete',
+          'label' => $this->t('Search for a primary country'),
+          'resource' => 'countries',
+        ],
+        'operator' => 'AND',
+      ],
+      'C' => [
+        'name' => $this->t('Country'),
+        'type' => 'reference',
+        'vocabulary' => 'country',
+        'field' => 'country.id',
+        'widget' => [
+          'type' => 'autocomplete',
+          'label' => $this->t('Search for a country'),
+          'resource' => 'countries',
+        ],
+        'operator' => 'AND',
+      ],
+      'S' => [
+        'name' => $this->t('Organization'),
+        'type' => 'reference',
+        'vocabulary' => 'source',
+        'field' => 'source.id',
+        'widget' => [
+          'type' => 'autocomplete',
+          'label' => $this->t('Search for an organization'),
+          'resource' => 'sources',
+          'parameters' => [
+            'filter' => [
+              'field' => 'content_type',
+              'value' => 'report',
+            ],
+          ],
+        ],
+        'operator' => 'AND',
+      ],
+      'OT' => [
+        'name' => $this->t('Organization type'),
+        'type' => 'reference',
+        'vocabulary' => 'organization_type',
+        'field' => 'source.type.id',
+        'widget' => [
+          'type' => 'options',
+          'label' => $this->t('Select an organization type'),
+        ],
+        'operator' => 'OR',
+      ],
+      'D' => [
+        'name' => $this->t('Disaster'),
+        'type' => 'reference',
+        'vocabulary' => 'disaster',
+        'field' => 'disaster.id',
+        'widget' => [
+          'type' => 'autocomplete',
+          'label' => $this->t('Search for a disaster'),
+          'resource' => 'disasters',
+        ],
+        'operator' => 'OR',
+      ],
+      'DT' => [
+        'name' => $this->t('Disaster type'),
+        'type' => 'reference',
+        'vocabulary' => 'disaster_type',
+        'exclude' => [
+          // Complex Emergency.
+          41764,
+        ],
+        'field' => 'disaster_type.id',
+        'widget' => [
+          'type' => 'options',
+          'label' => $this->t('Select a disaster type'),
+        ],
+        'operator' => 'AND',
+      ],
+      'T' => [
+        'name' => $this->t('Theme'),
+        'type' => 'reference',
+        'vocabulary' => 'theme',
+        'field' => 'theme.id',
+        'widget' => [
+          'type' => 'options',
+          'label' => $this->t('Select a theme'),
+        ],
+        'operator' => 'AND',
+      ],
+      'F' => [
+        'name' => $this->t('Content format'),
+        'type' => 'reference',
+        'vocabulary' => 'content_format',
+        'field' => 'format.id',
+        'widget' => [
+          'type' => 'options',
+          'label' => $this->t('Select a content format'),
+        ],
+        'operator' => 'OR',
+      ],
+      'L' => [
+        'name' => $this->t('Language'),
+        'type' => 'reference',
+        'vocabulary' => 'language',
+        'exclude' => [
+          // Other.
+          31996,
+        ],
+        'field' => 'language.id',
+        'widget' => [
+          'type' => 'options',
+          'label' => $this->t('Select a language'),
+        ],
+        'operator' => 'OR',
+      ],
+      'DO' => [
+        'name' => $this->t('Original publication date'),
+        'type' => 'date',
+        'field' => 'date.original',
+        'widget' => [
+          'type' => 'date',
+          'label' => $this->t('Select original publication date'),
+        ],
+      ],
+      'DA' => [
+        'name' => $this->t('Posting date on ReliefWeb'),
+        'type' => 'date',
+        'field' => 'date.created',
+        'widget' => [
+          'type' => 'date',
+          'label' => $this->t('Select posting date on ReliefWeb'),
+        ],
+      ],
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiPayload($view = '') {
+    $payload = [
+      'query' => [
+        // @todo review the boosts. Maybe the title should have a higher one.
+        'fields' => [
+          'title^20',
+          'body',
+          'primary_country.name^100',
+          'primary_country.shortname^100',
+          'country.name^50',
+          'country.shortname^50',
+          'source.name^100',
+          'source.shortname^100',
+          'format.name^100',
+          'disaster_type.name^100',
+          'disaster.name^100',
+          'language.name^100',
+          'theme.name^100',
+        ],
+        'operator' => 'AND',
+      ],
+      'fields' => [
+        'include' => [
+          'id',
+          'url_alias',
+          'date.created',
+          'date.original',
+          'country.id',
+          'country.iso3',
+          'country.name',
+          'country.shortname',
+          'country.primary',
+          'source.id',
+          'source.name',
+          'source.shortname',
+          'language.id',
+          'language.name',
+          'language.code',
+          'format.name',
+          'file',
+        ],
+      ],
+      'sort' => ['date.created:desc'],
+    ];
+
+    switch ($view) {
+      // Headlines.
+      case 'headlines':
+        $payload['filter'] = [
+          'field' => 'headline',
+        ];
+        $payload['fields']['include'][] = 'headline.title';
+        $payload['fields']['include'][] = 'headline.summary';
+        break;
+
+      // Maps, Infographics and Interactive content.
+      case 'maps':
+        $payload['filter'] = [
+          'field' => 'format.id',
+          // Map, Infographic and Interactive term ids.
+          // @todo use the term names instead?
+          'value' => [12, 12570, 38974],
+          'operator' => 'OR',
+        ];
+        $payload['fields']['include'][] = 'title';
+        $payload['fields']['include'][] = 'body-html';
+        break;
+
+      // Reports only.
+      case 'reports':
+        $payload['filter'] = [
+          'field' => 'format.id',
+          // Map, Infographic and Interactive term ids.
+          // @todo use the term names instead?
+          'value' => [12, 12570, 38974],
+          'operator' => 'OR',
+          'negate' => TRUE,
+        ];
+        $payload['fields']['include'][] = 'title';
+        $payload['fields']['include'][] = 'body-html';
+        break;
+
+      // All updates.
+      default:
+        $payload['fields']['include'][] = 'title';
+        $payload['fields']['include'][] = 'body-html';
+
+    }
+
+    return $payload;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function parseApiData(array $api_data, $view = '') {
     $headlines = $view === 'headlines';
 
@@ -81,7 +338,7 @@ class ReportRiver extends RiverServiceBase {
           'name' => $country['name'],
           'shortname' => $country['shortname'] ?? $country['name'],
           'code' => $country['iso3'] ?? '',
-          'url' => UrlHelper::encodeUrl('taxonomy/term/' . $country['id'], FALSE),
+          'url' => UrlHelper::getAliasFromPath('/taxonomy/term/' . $country['id']),
           'main' => !empty($country['primary']),
         ];
       }
@@ -93,7 +350,7 @@ class ReportRiver extends RiverServiceBase {
         $sources[] = [
           'name' => $source['name'],
           'shortname' => $source['shortname'] ?? $source['name'],
-          'url' => UrlHelper::encodeUrl('taxonomy/term/' . $source['id'], FALSE),
+          'url' => UrlHelper::getAliasFromPath('/taxonomy/term/' . $source['id']),
         ];
       }
       $tags['source'] = $sources;
@@ -109,7 +366,7 @@ class ReportRiver extends RiverServiceBase {
       $tags['language'] = $languages;
 
       // Determine document type.
-      $format = 'Report';
+      $format = '';
       if (!empty($fields['format'])) {
         if (isset($fields['format']['name'])) {
           $format = $fields['format']['name'];
@@ -139,7 +396,7 @@ class ReportRiver extends RiverServiceBase {
         $data['url'] = UrlHelper::stripDangerousProtocols($fields['url_alias']);
       }
       else {
-        $data['url'] = UrlHelper::encodeUrl('node/' . $item['id'], FALSE);
+        $data['url'] = UrlHelper::getAliasFromPath('/node/' . $item['id']);
       }
 
       // Creation and publication dates.

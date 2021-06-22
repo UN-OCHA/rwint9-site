@@ -1,0 +1,113 @@
+uuid: a4efe06e-981f-49c7-ad0b-1a1b01ab6848
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - reliefweb_migrate
+_core:
+  default_config_hash: Rjw-G2di13bnuiSE4h1jkT7xODHtxEU9Z1xMca5YU5k
+id: reliefweb_taxonomy_term__disaster
+class: null
+field_plugin_method: null
+cck_plugin_method: null
+migration_tags: null
+migration_group: reliefweb
+label: 'Migrate ReliefWeb disaster taxonomy terms.'
+source:
+  plugin: reliefweb_taxonomy_term
+  bundle: disaster
+  constants:
+    bundle: disaster
+    format: markdown
+process:
+  tid: tid
+  vid: constants/bundle
+  name: name
+  description/value: description
+  description/format: constants/format
+  weight: weight
+  changed: timestamp
+  status:
+    plugin: static_map
+    source: field_status/0/value
+    default_value: 0
+    map:
+      alert: 1
+      current: 1
+      past: 1
+  revision_id: revision_id
+  moderation_state:
+    plugin: static_map
+    source: field_status/0/value
+    default_value: draft
+    map:
+      draft: draft
+      alert: alert
+      current: ongoing
+      ongoing: ongoing
+      past: past
+      external: external
+      draft-archive: draft_archive
+      alert-archive: alert_archive
+      external-archive: external_archive
+  field_country:
+    plugin: sub_process
+    source: field_country
+    process:
+      target_id: tid
+  field_primary_country:
+    plugin: sub_process
+    source: field_primary_country
+    process:
+      target_id: tid
+  field_disaster_type:
+    plugin: sub_process
+    source: field_disaster_type
+    process:
+      target_id: tid
+  field_primary_disaster_type:
+    plugin: sub_process
+    source: field_primary_disaster_type
+    process:
+      target_id: tid
+  field_disaster_date:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: field_disaster_date
+    -
+      plugin: sub_process
+      process:
+        value:
+          plugin: format_date
+          from_format: U
+          to_format: 'Y-m-d\TH:i:s'
+          from_timezone: UTC
+          to_timezone: UTC
+          source: value
+  field_glide/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_glide/0/value
+  field_glide_related/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_glide_related/0/value
+  field_profile/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_profile/0/value
+  field_timezone/value:
+    plugin: default_value
+    default_value: 0
+    source: field_timezone/0/value
+destination:
+  plugin: 'entity:taxonomy_term'
+  default_bundle: disaster
+migration_dependencies:
+  required:
+    - reliefweb_user__default
+    - reliefweb_user
+    - reliefweb_taxonomy_term
+    - reliefweb_taxomomy_term__country

@@ -3,7 +3,8 @@
 namespace Drupal\reliefweb_entities;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\reliefweb_utility\Helpers\UrlHelper;
+use Drupal\reliefweb_rivers\RiverServiceBase;
+use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
 
 /**
  * Trait implementing most methods of the SectionedContentInterface.
@@ -18,6 +19,8 @@ trait SectionedContentTrait {
    * API payloads for the different content sections.
    *
    * @var array
+   *
+   * @todo retrieve the payloads from the river services.
    */
   protected $payloads = [
     'reports' => [
@@ -120,7 +123,7 @@ trait SectionedContentTrait {
    */
   public function getSectionsFromReliefWebApiQueries(array $queries) {
     $results = \Drupal::service('reliefweb_api.client')
-      ->requestMultiple(array_filter($queries), TRUE);
+      ->requestMultiple(array_filter($queries));
 
     // Parse the API results, building the page sections data.
     $sections = [];
@@ -168,6 +171,7 @@ trait SectionedContentTrait {
           // Use the label override for the section, or the section title
           // is defined or the label from the table of content.
           $sections[$name]['#title'] = $labels[$name] ?? $section['#title'] ?? $label;
+          $sections[$name]['#id'] = $sections[$name]['#id'] ?? $name;
         }
       }
       if (empty($group['sections'])) {
@@ -176,13 +180,39 @@ trait SectionedContentTrait {
     }
 
     return [
-      'contents' => [
+      '#theme' => 'reliefweb_entities_sectioned_content',
+      '#contents' => [
         '#theme' => 'reliefweb_entities_table_of_contents',
         '#title' => $this->t('Table of Contents'),
         '#sections' => $contents,
       ],
-      'sections' => $sections,
+      '#sections' => $sections,
     ];
+  }
+
+  /**
+   * Get the entity description (for countries, disasters, sources).
+   *
+   * @return array
+   *   Render array with the description.
+   */
+  public function getEntityDescription() {
+    if (!empty($this->description->value)) {
+      // @todo review handling of markdown when there is a proper release of
+      // https://www.drupal.org/project/markdown for Drupal 9.
+      if ($this->description->format === 'markdown') {
+        $description = HtmlSanitizer::sanitizeFromMarkdown($this->description->value);
+      }
+      else {
+        $description = HtmlSanitizer::sanitize(check_markup($this->description->value));
+      }
+
+      return [
+        '#theme' => 'reliefweb_entities_entity_description',
+        '#description' => $description,
+      ];
+    }
+    return [];
   }
 
   /**
@@ -230,7 +260,9 @@ trait SectionedContentTrait {
         'payload' => $payload,
         // Link to the updates river for the entity.
         'more' => [
-          'url' => UrlHelper::encodeUrl('/updates?advanced-search=(' . $code . $entity_id . ')'),
+          'url' => RiverServiceBase::getRiverUrl('report', [
+            'advanced-search' => '(' . $code . $entity_id . ')',
+          ]),
           'label' => $this->t('View all @label updates', [
             '@label' => $this->label(),
           ]),
@@ -269,7 +301,9 @@ trait SectionedContentTrait {
       'payload' => $payload,
       // Link to the updates river for the entity.
       'more' => [
-        'url' => UrlHelper::encodeUrl('/updates?advanced-search=(' . $code . $entity_id . ')'),
+        'url' => RiverServiceBase::getRiverUrl('report', [
+          'advanced-search' => '(' . $code . $entity_id . ')',
+        ]),
         'label' => $this->t('View all @label updates', [
           '@label' => $this->label(),
         ]),
@@ -312,7 +346,9 @@ trait SectionedContentTrait {
       'payload' => $payload,
       // Link to the updates river with the maps/infographics for the entity.
       'more' => [
-        'url' => UrlHelper::encodeUrl('/updates?advanced-search=(' . $code . $entity_id . ')_(F12.F12570)'),
+        'url' => RiverServiceBase::getRiverUrl('report', [
+          'advanced-search' => '(' . $code . $entity_id . ')_(F12.F12570)',
+        ]),
         'label' => $this->t('View all @label maps and infographics', [
           '@label' => $this->label(),
         ]),
@@ -342,7 +378,9 @@ trait SectionedContentTrait {
       'payload' => $payload,
       // Link to the jobs river for the entity.
       'more' => [
-        'url' => UrlHelper::encodeUrl('/jobs?advanced-search=(' . $code . $entity_id . ')'),
+        'url' => RiverServiceBase::getRiverUrl('job', [
+          'advanced-search' => '(' . $code . $entity_id . ')',
+        ]),
         'label' => $this->t('View all @label jobs', [
           '@label' => $this->label(),
         ]),
@@ -372,7 +410,9 @@ trait SectionedContentTrait {
       'payload' => $payload,
       // Link to the training river for the entity.
       'more' => [
-        'url' => UrlHelper::encodeUrl('/training?advanced-search=(' . $code . $entity_id . ')'),
+        'url' => RiverServiceBase::getRiverUrl('training', [
+          'advanced-search' => '(' . $code . $entity_id . ')',
+        ]),
         'label' => $this->t('View all @label training opportunities', [
           '@label' => $this->label(),
         ]),
@@ -412,7 +452,9 @@ trait SectionedContentTrait {
       'payload' => $payload,
       // Link to the disasters river for the country.
       'more' => [
-        'url' => UrlHelper::encodeUrl('/disasters?advanced-search=(' . $code . $entity_id . ')'),
+        'url' => RiverServiceBase::getRiverUrl('disaster', [
+          'advanced-search' => '(' . $code . $entity_id . ')',
+        ]),
         'label' => $this->t('View all @label disasters', [
           '@label' => $this->label(),
         ]),

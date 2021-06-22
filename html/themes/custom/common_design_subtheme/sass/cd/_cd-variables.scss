@@ -25,10 +25,14 @@
   --cd-reliefweb-red: #f65c51;
   --cd-reliefweb-dark-blue: #055372;
   --cd-reliefweb-dark-red: #eb1405;
+  --cd-reliefweb-dark-grey: #2e3436;
+  --cd-reliefweb-light-grey: #e6ecef;
   --cd-rgb-reliefweb-blue: 9, 136, 187;
   --cd-rgb-reliefweb-red: 246, 92, 81;
   --cd-rgb-reliefweb-dark-blue: 4, 82, 112;
   --cd-rgb-reliefweb-dark-red: 235, 20, 5;
+  --cd-rgb-reliefweb-dark-grey: 46, 52, 54;
+  --cd-rgb-reliefweb-light-grey: 230, 236, 239;
 
   /* OCHA blue is one colour ramp darker than brand blue */
   --cd-ocha-blue: var(--cd-reliefweb-dark-blue);
@@ -46,7 +50,7 @@
   --cd-grey--dark: #4a4a4a;
   --cd-default-text-color: var(--cd-grey--dark);
   --cd-black: #000;
-  --cd-blue-grey: #e6ecf1;
+  --cd-blue-grey: var(--cd-reliefweb-light-grey);
   --cd-blue-grey--dark: #d3dde5;
   --cd-blue-grey--light: #ebf0f4;
 

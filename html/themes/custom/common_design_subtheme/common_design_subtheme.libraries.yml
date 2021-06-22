@@ -80,3 +80,43 @@ cd-tag:
   css:
     theme:
       components/cd-tag/cd-tag.css: {}
+# Icon sprite.
+rw-icons:
+  css:
+    theme:
+      components/rw-icons/rw-icons.css: {}
+
+# Autocomplete widget.
+rw-autocomplete:
+  css:
+    theme:
+      components/rw-autocomplete/rw-autocomplete.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+
+# Datepicker widget.
+rw-datepicker:
+  css:
+    theme:
+      components/rw-datepicker/rw-datepicker.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+
+# Filter/value selection.
+rw-selection:
+  css:
+    theme:
+      components/rw-selection/rw-selection.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+
+# Filters for the rivers.
+rw-advanced-search:
+  css:
+    theme:
+      components/rw-advanced-search/rw-advanced-search.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+    - common_design_subtheme/rw-autocomplete
+    - common_design_subtheme/rw-datepicker
+    - common_design_subtheme/rw-selection

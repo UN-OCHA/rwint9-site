@@ -36,7 +36,9 @@ class TaxonomyTermRevision extends FieldableEntityBase {
     $query->innerJoin('taxonomy_vocabulary', 'tv', 'tr.vid = tv.vid');
     $query->addField('tv', 'machine_name');
 
-    $query->innerJoin('taxonomy_term_data', 'td', 'td.tid = tr.tid');
+    // @todo remove the condition on the revision_id to allow importing
+    // all the revisions.
+    $query->innerJoin('taxonomy_term_data', 'td', 'td.tid = tr.tid AND td.revision_id = tr.revision_id');
     $query->addExpression('IF(tr.revision_id = td.revision_id, 1, 0)', 'revision_default');
 
     if (isset($this->configuration['bundle'])) {
