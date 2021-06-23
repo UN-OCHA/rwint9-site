@@ -21,8 +21,6 @@
 {% block library %}
 {% endblock %}
 
-{% set title = title ? title : 'Announcement'|t %}
-
 <section{{ attributes
   .setAttribute('id', id)
   .addClass([
@@ -34,7 +32,7 @@
       'rw-homepage-announcement__title',
       'visually-hidden'
     ])
-  }}>{{ title }}</h{{ level }}>
+  }}>{{ title ?? 'Announcement'|t }}</h{{ level }}>
 
   <a class="rw-homepage-announcement__link" href="{{ url }}" target="_blank" rel="noopener">
     {{ render_var({
