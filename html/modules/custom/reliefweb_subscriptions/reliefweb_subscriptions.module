@@ -298,5 +298,17 @@ function reliefweb_subscriptions_subscriptions() {
  *   List of countries keyed by ID.
  */
 function reliefweb_subscriptions_get_countries() {
-  return [];
+  $countries = [];
+  $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadByProperties([
+    'vid' => 'country',
+  ]);
+
+  foreach ($terms as $term) {
+    $countries[$term->id()] = [
+      'name' => $term->label(),
+      'timezone' => $term->get('field_timezone')->value,
+    ];
+  }
+
+  return $countries;
 }
