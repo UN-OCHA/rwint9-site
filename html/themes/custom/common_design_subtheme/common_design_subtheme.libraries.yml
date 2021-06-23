@@ -43,6 +43,7 @@ rw-country:
   css:
     theme:
       components/rw-country/rw-country.css: {}
+      components/rw-country/rw-country-list.css: {}
 
 # Datepicker widget.
 rw-datepicker:
@@ -92,6 +93,12 @@ rw-opportunities:
       components/rw-opportunities/rw-opportunities.css: {}
   dependencies:
     - common_design_subtheme/rw-icons
+
+rw-river:
+  css:
+    theme:
+      components/rw-river/rw-river-letter-navigation.css: {}
+      components/rw-river/rw-river-views.css: {}
 
 # Filter/value selection.
 rw-selection:
