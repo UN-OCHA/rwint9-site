@@ -7,15 +7,16 @@
  * Available variables;
  * - level: heading level (defaults to 2)
  * - id: section id (HTML safe)
+ * - attributes: attributes for the section
  * - title: section title
- * - total: total number of entities for the river search query
+ * - title_attributes: attributes for the river title
+ * - results: (optional) see reliefweb-rivers-results.html.twig
  * - entities: list of article entities constituting the river
- * - more: if defined, it's an array with URL to the main river and a text
+ * - pager: (optional) the pager for the river
+ * - more: (optional) an array with URL to the main river and a text
  *
  * @todo provide a count variable to limit the number of items to display in the
  * river? Should that be determine in a preprocess function for example?
- *
- * @todo expand this template for the main rivers or use a separate one?
  */
 
 #}
@@ -23,17 +24,19 @@
 {% block library %}
 {% endblock %}
 
-<section {{ create_attribute()
-  .setAttribute('id', id|clean_id)
+{% set id = id|clean_id %}
+<section {{ attributes
+  .setAttribute('id', id)
   .addClass([
     'rw-river',
-    'rw-river--' ~ id|clean_id,
+    'rw-river--' ~ id,
   ])
 }}>
+  <h{{ level }}{{ title_attributes.addClass([
+    'rw-river__title',
+  ]) }}>{{ title }}</h{{ level }}>
 
-  {% block heading %}
-    <h{{ level }}>{{ title }}</h{{ level }}>
-  {% endblock %}
+  {{ results }}
 
   <div class="rw-river__articles">
     {% for entity in entities %}
@@ -46,8 +49,10 @@
   </div>
 
   {% if more is not empty and more.url %}
-  <footer class="rw-river__view-more view-more">
-    <a href="{{ more.url }}">{{ more.label ?? ('View more'|t) }}</a>
-  </footer>
+    <footer class="rw-river__view-more view-more">
+      <a href="{{ more.url }}">{{ more.label ?? ('View more'|t) }}</a>
+    </footer>
+  {% elseif pager is not empty %}
+    {{ pager }}
   {% endif %}
 </section>

@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\Core\Template\Attribute;
 
 /**
  * Implements hook_entity_bundle_info_alter().
@@ -41,7 +42,10 @@ function reliefweb_entities_theme() {
   return [
     'reliefweb_entities_sectioned_content' => [
       'variables' => [
+        // Section heading level.
         'level' => 2,
+        // Section attributes.
+        'attributes' => new Attribute(),
         // This is the table of content which is a render array using the
         // reliefweb_entities_table_of_contents theme.
         'contents' => NULL,
@@ -51,9 +55,16 @@ function reliefweb_entities_theme() {
     ],
     'reliefweb_entities_table_of_contents' => [
       'variables' => [
+        // Section headling level.
         'level' => 2,
+        // Section id.
         'id' => 'table-of-contents',
+        // Section attributes.
+        'attributes' => new Attribute(),
+        // Section title.
         'title' => t('Table of Content'),
+        // Section title attributes.
+        'title_attributes' => new Attribute(),
         // List of sections grouped by category. Each category has a title and
         // a list of sub-sections which are an array keyed by ids (to use for
         // anchors) and with the sub-section titles are values.
@@ -62,6 +73,8 @@ function reliefweb_entities_theme() {
     ],
     'reliefweb_entities_entity_country_slug' => [
       'variables' => [
+        // Wrapper attributes.
+        'attributes' => new Attribute(),
         // List of countries with the a url to either the country page or the
         // river filtered by the country, a name and a shortname.
         'countries' => [],
@@ -69,6 +82,8 @@ function reliefweb_entities_theme() {
     ],
     'reliefweb_entities_entity_meta' => [
       'variables' => [
+        // Wrapper attributes.
+        'attributes' => new Attribute(),
         // List of meta information for an article (ex: dates, sources etc.).
         // Each meta data has the following properties: type (simple, date,
         // date-range or taglist), label, value (simple, date, array with start
@@ -79,27 +94,48 @@ function reliefweb_entities_theme() {
     ],
     'reliefweb_entities_entity_description' => [
       'variables' => [
+        // Section heading level.
         'level' => 2,
+        // Section id.
         'id' => 'description',
+        // Section attributes.
+        'attributes' => new Attribute(),
+        // Section title.
         'title' => t('Description'),
+        // Section title attributes.
+        'title_attributes' => new Attribute(),
         // The description shold be a safe HTML string.
         'description' => '',
       ],
     ],
     'reliefweb_entities_entity_details' => [
       'variables' => [
+        // Section heading level.
         'level' => 2,
+        // Section id.
         'id' => 'details',
+        // Section attributes.
+        'attributes' => new Attribute(),
+        // Section title.
         'title' => t('Details'),
+        // Section title attributes.
+        'title_attributes' => new Attribute(),
         // Meta information, see "reliefweb_entities_entity_meta" above.
         'meta' => '',
       ],
     ],
     'reliefweb_entities_entity_social_media_links' => [
       'variables' => [
+        // Section heading level.
         'level' => 2,
+        // Section id.
         'id' => 'social-media',
+        // Section attributes.
+        'attributes' => new Attribute(),
+        // Section title.
         'title' => t('Social Media'),
+        // Section title attributes.
+        'title_attributes' => new Attribute(),
         // List of social media links with a url and title.
         'links' => [],
       ],

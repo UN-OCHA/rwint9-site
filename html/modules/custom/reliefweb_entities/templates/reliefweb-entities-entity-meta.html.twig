@@ -4,7 +4,8 @@
  * @file
  * Template file for an entity meta information.
  *
- * Available variables;
+ * Available variables:
+ * - atreibutes: wrapper attributes
  * - meta: associative array with a list of meta information (ex: dates,
  *   sources, etc.). Each items has the following properties:
  *   - type: simple, link, date, date-range or taglist
@@ -22,7 +23,11 @@
 {% block library %}
 {% endblock %}
 
-<dl class="rw-meta rw-article-meta">
+<dl{{ attributes
+  .addClass([
+    'rw-entity-meta',
+  ])
+}}>
   {% set meta = meta|filter(data => data.value is not empty) %}
   {% set last = meta|keys|last %}
 

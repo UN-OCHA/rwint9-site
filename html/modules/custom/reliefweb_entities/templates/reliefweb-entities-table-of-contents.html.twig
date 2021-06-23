@@ -8,7 +8,9 @@
  * - level: heading level (defaults to 2)
  * - id: section id (defaults to 'digital-sitrep')
  * - langcode: language iso 2 code (defaults to 'en')
+ * - attributes: section attributes
  * - title: table of content's title (defaults to 'Table of Content')
+ * - title_attributes: section title attributes
  * - sections: list of sections of the table of content. Eache section has a
  *   title and a list of sub-sections with ids as keys and titles as values.
  *
@@ -17,13 +19,18 @@
  */
 
  #}
-<nav{{ create_attribute()
+<nav{{ attributes
   .setAttribute('id', id)
   .addClass([
     'rw-toc',
   ])
 }} >
-  <h{{ level }} class="rw-toc__title">{{ title }}</h{{ level }}>
+  <h{{ level }}{{ title_attributes
+    .addClass([
+      'rw-toc__title'
+    ])
+  }}>{{ title }}</h{{ level }}>
+
   <ul>
   {%- for section in sections -%}
     <li class="rw-toc__section">
