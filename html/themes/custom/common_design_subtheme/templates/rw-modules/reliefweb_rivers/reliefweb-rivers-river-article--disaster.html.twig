@@ -1,7 +1,3 @@
-{% embed '@reliefweb_rivers/reliefweb-rivers-river-article--disaster.html.twig' %}
+{{ attach_library('common_design_subtheme/rw-disasters') }}
 
-  {% block library %}
-    {{ attach_library('common_design_subtheme/rw-disasters') }}
-  {% endblock %}
-
-{% endembed %}
+{% include '@reliefweb_rivers/reliefweb-rivers-river-article--disaster.html.twig' %}

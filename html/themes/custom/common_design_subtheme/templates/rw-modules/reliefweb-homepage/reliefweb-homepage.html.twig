@@ -1,7 +1,3 @@
-{% embed '@reliefweb_homepage/reliefweb-homepage.html.twig' %}
+{{ attach_library('common_design_subtheme/rw-homepage') }}
 
-  {% block library %}
-    {{ attach_library('common_design_subtheme/rw-homepage') }}
-  {% endblock %}
-
-{% endembed %}
+{% include '@reliefweb_homepage/reliefweb-homepage.html.twig' %}

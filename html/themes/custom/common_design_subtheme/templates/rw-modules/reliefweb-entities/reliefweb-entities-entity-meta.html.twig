@@ -1,9 +1,5 @@
 {% set attributes = attributes.addClass(['rw-meta', 'rw-article-meta']) %}
 
-{% embed '@reliefweb_entities/reliefweb-entities-entity-meta.html.twig' %}
+{{ attach_library('common_design_subtheme/rw-meta') }}
 
-  {% block library %}
-    {{ attach_library('common_design_subtheme/rw-meta') }}
-  {% endblock %}
-
-{% endembed %}
+{% include '@reliefweb_entities/reliefweb-entities-entity-meta.html.twig' %}
