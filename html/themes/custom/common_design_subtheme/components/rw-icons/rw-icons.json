@@ -8,9 +8,9 @@
     "grey": "#b6c8d0",
     "white": "white",
     "blue": "#0988bb",
-    "green": "88bb09",
-    "orange": "eb8705",
-    "red": "f65c51"
+    "green": "#88bb09",
+    "orange": "#eb8705",
+    "red": "#f65c51"
   },
   "icons": {
     "common": {

@@ -30,8 +30,7 @@
   width: 12px;
   margin: 0 0 0 6px;
   overflow: hidden;
-  background: url(../../img/icons/rw-icons-sprite.png) -84px -120px no-repeat;
-  background: rgba(0,0,0,0) url(../../img/icons/rw-icons-sprite.svg) -84px -120px no-repeat;
+  background: var(--rw-icons--common--next--12--dark-blue);
 }
 #main-content .view-more ul {
   display: inline-block;
