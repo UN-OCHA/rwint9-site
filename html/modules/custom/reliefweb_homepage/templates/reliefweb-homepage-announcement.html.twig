@@ -7,6 +7,9 @@
  * Available variables:
  * - lavel: heading level (defaults to 2)
  * - id: id of the section (default to 'announcement')
+ * - attributes: section attributes
+ * - title: section title
+ * - title_attributes: section title attributes
  * - url: URL to the page the announcement links to
  * - image: array with a url, title, alt, width and height
  *
@@ -18,13 +21,21 @@
 {% block library %}
 {% endblock %}
 
-<section{{ create_attribute()
+{% set title = title ? title : 'Announcement'|t %}
+
+<section{{ attributes
   .setAttribute('id', id)
   .addClass([
     'rw-homepage-announcement',
   ])
 }}>
-  <h{{ level }} class="rw-homepage-announcement__title visually-hidden">{{ 'Announcement'|t }}</h{{ level }}>
+  <h{{ level }}{{ title_attributes
+    .addClass([
+      'rw-homepage-announcement__title',
+      'visually-hidden'
+    ])
+  }}>{{ title }}</h{{ level }}>
+
   <a class="rw-homepage-announcement__link" href="{{ url }}" target="_blank" rel="noopener">
     {{ render_var({
       '#theme': 'image_style',
