@@ -10,7 +10,7 @@ exclude='(\.(js|ico|png|jpg|gif|svg|scss|xsl)$)'
 
 # The linter path is relative to the root of the repository.
 relative=1
-linter="vendor/bin/phpcs"
+linter="phpcs"
 options='-p --report=full --standard=phpcs.xml'
 message='Linting staged PHP/CSS files...'
 
