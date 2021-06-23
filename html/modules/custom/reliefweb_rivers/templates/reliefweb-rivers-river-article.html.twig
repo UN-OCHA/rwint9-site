@@ -10,6 +10,7 @@
  *
  * Available variables;
  * - level: heading level (defaults to 3)
+ * - attributes: article attributes
  * - entity: the article entity's data as an associative array with notably:
  *   - url: url to the full article/page
  *   - title: article title
@@ -21,7 +22,7 @@
  */
 
 #}
-<article{{ create_attribute()
+<article{{ attributes
   .addClass([
     'rw-river-article',
     'rw-river-article--' ~ entity.bundle,

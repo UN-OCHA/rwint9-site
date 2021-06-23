@@ -7,59 +7,63 @@
  * Available variables:
  * - river: the river name
  * - view: the current river view
+ * - attributes: attributes for the river section
  * - title: the river title
- * - entities: list of article entities constituting the river
+ * - title_attrinutes: attributes for the river title
  * - views: list of alternative views for the river
  * - search: see reliefweb-rivers-search.html.twig
- * - results: see reliefweb-rivers-results.html.twig
- * - advanced_search: see reliefweb-rivers-advanced-search.html.twig
  * - letter_navigation: see reliefweb-rivers-letter-navigation.html.twig
- * - pager: the pager for the river
+ * - advanced_search: see reliefweb-rivers-advanced-search.html.twig
+ * - content: the content of the river
  * - links: see reliefweb-rivers-links.html.twig
+ *
+ * @todo disable the cd-page-title block on river pages.
  */
 
 #}
-<section{{ create_attribute()
+<section{{ attributes
   .addClass([
     'rw-river-page',
-    'rw-river-page--' ~ river,
-    view ? 'rw-river-page--' ~ river ~ '--' ~ view,
+    'rw-river-page--' ~ river|clean_class,
+    view ? 'rw-river-page--' ~ river|clean_class ~ '--' ~ view|clean_class,
   ])
 }}>
-  <header class="rw-river-page__header">
-    <h1 class="rw-river-page__title page-title visually-hidden">{{ title }}</h1>
+  {% block header %}
+    <header class="rw-river-page__header">
+      <h1{{ title_attributes
+        .addClass([
+          'rw-river-page__title',
+          'visually-hidden',
+        ])
+      }}>{{ title }}</h1>
 
-    {{ views }}
-  </header>
+      {{ views }}
+    </header>
+  {% endblock %}
 
-  {{ search }}
+  {% block search %}
+    {{ search }}
+  {% endblock %}
 
-  {{ letter_navigation }}
+  {% block letter_navigation %}
+    {{ letter_navigation }}
+  {% endblock %}
 
-  {# @todo review if that should/could be combined with the
-     reliefweb_rivers_river template #}
-  <section class="rw-river-page__list">
-    <h2 class="rw-river-page__list__title visually-hidden">{{ 'List'|t }}</h2>
-
-    {{ results }}
-
+  {% block advanced_search %}
     {{ advanced_search }}
+  {% endblock %}
 
-    <div class="rw-river__articles">
-      {% for entity in entities %}
-        {{ render_var({
-          '#theme': 'reliefweb_rivers_river_article__' ~ entity.bundle,
-          '#level': 3,
-          '#entity': entity,
-        }) }}
-      {% endfor %}
-    </div>
+  {% block content %}
+    {{ content|merge({
+      '#title_attributes': create_attribute().addClass('visually-hidden')
+    }) }}
+  {% endblock %}
 
-    {# @todo review if we can add some title. #}
-    {{ pager }}
-  </section>
-
-  <footer class="rw-river-page__footer">
-    {{ links }}
-  </footer>
+  {% block footer %}
+    {% if links is not empty %}
+      <footer class="rw-river-page__footer">
+        {{ links }}
+      </footer>
+    {% endif %}
+  {% endblock %}
 </section>

@@ -5,8 +5,10 @@
  * Template for the river advanced-search.
  *
  * Available variables:
- * - level: headling level (defaults to 3)
+ * - level: headling level (defaults to 2)
+ * - attributes: section attributes
  * - title: section title
+ * - title_attributes: title attributes
  * - path: the path to the river
  * - parameter: the sanitized advanced search parameter
  * - selection: the selected filters
@@ -27,17 +29,20 @@
 
 {# Attributes for the section. #}
 {%
-  set attributes = create_attribute()
-    .addClass(['rw-advanced-search'])
-    .setAttribute('id', 'river-advanced-search')
-    .setAttribute('data-advanced-mode', true)
-%}
-{%
   set attributes = selection is empty ? attributes.setAttribute('data-empty', '') : attributes
 %}
 
-<section{{ attributes }}>
-  <h{{ level }} id="river-advanced-search-title" class="rw-advanced-search__title">{{ title }}</h{{ level }}>
+<section{{ attributes
+  .addClass(['rw-advanced-search'])
+  .setAttribute('id', 'river-advanced-search')
+  .setAttribute('data-advanced-mode', true)
+}}>
+  <h{{ level }}{{ title_attributes
+    .addClass([
+      'rw-advanced-search__title'
+    ])
+    .setAttribute('id', 'river-advanced-search-title')
+  }}>{{ title }}</h{{ level }}>
 
   <a href="/search-help" target="_blank" class="rw-advanced-search__help">{{ 'Search help'|t }}</a>
 

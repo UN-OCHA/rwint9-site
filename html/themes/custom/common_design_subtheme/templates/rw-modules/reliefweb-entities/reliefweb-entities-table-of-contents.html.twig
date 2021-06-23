@@ -1,24 +1,15 @@
+{% set attributes = attributes
+    .setAttribute('data-cd-toggable', 'Jump to content'|t)
+    .setAttribute('data-cd-icon', 'arrow-down')
+    .setAttribute('data-cd-component', 'rw-toc')
+%}
+
+{% set title_attributes = title_attributes.addClass('visually-hidden') %}
+
 {% embed '@reliefweb_entities/reliefweb-entities-table-of-contents.html.twig' %}
 
   {% block library %}
     {{ attach_library('common_design_subtheme/rw-toc') }}
-  {% endblock %}
-
-  {% block navigation %}
-  <nav{{ create_attribute()
-    .setAttribute('id', id)
-    .setAttribute('data-cd-toggable', 'Jump to content'|t)
-    .setAttribute('data-cd-icon', 'arrow-down')
-    .setAttribute('data-cd-component', 'rw-toc')
-    .addClass([
-      'rw-toc',
-    ])
-  }}>
-  {% endblock %}
-
-
-  {% block heading %}
-    <h{{ level }} class="rw-toc__title visually-hidden">{{ title }}</h{{ level }}>
   {% endblock %}
 
 {% endembed %}

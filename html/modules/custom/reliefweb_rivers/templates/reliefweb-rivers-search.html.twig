@@ -6,7 +6,9 @@
  *
  * Available variables:
  * - level: heading level (defaults to 2)
+ * - attributes: section attributes
  * - title: section title (defaults to 'Search')
+ * - title_attributes: section title attributes
  * - path: river path
  * - parameters: list of query parameters to preserve.
  * - label: label and placeholder for the input
@@ -19,12 +21,18 @@
 {# Attach the search library to enhance the experience. #}
 {{ attach_library('reliefweb_rivers/search') }}
 
-<section{{ create_attribute()
+<section{{ attributes
   .addClass([
     'rw-river-search',
   ])
 }}>
-  <h{{ level }} class="rw-river-search__title visually-hidden">{{ title }}</h{{ level }}>
+  <h{{ level }}{{ title_attributes
+    .addClass([
+      'rw-river-search__title',
+      'visually-hidden',
+    ])
+  }}>{{ title }}</h{{ level }}>
+
   <form id="river-search-form" class="rw-river-search__form" action="{{ path }}" method="GET">
     {# Store the parameters to preserve when submitting the form. #}
     {% for name, value in parameters %}

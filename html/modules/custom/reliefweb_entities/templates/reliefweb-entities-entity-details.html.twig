@@ -7,7 +7,9 @@
  * Available variables:
  * - level: headling leve (defaults to 2)
  * - id: section id
+ * - attributes: section attributes
  * - title: section title
+ * - title_attributes: section title attributes
  * - meta: associative array with a list of meta information (ex: dates,
  *   sources, etc.). Each items has the following properties:
  *   - type: simple, date, date-range or taglist
@@ -18,13 +20,17 @@
  */
 
 #}
-<section{{ create_attribute()
+<section{{ attributes
   .addClass([
     'rw-entity-details',
   ])
   .setAttribute('id', id)
 }}>
-  <h{{ level }} class="rw-entity-details__title">{{ title }}</h{{ level }}>
+  <h{{ level }}{{ title_attributes
+    .addClass([
+      'rw-entity-details__title'
+    ])
+  }}>{{ title }}</h{{ level }}>
 
   {{ render_var({
     '#theme': 'reliefweb_entities_entity_meta',

@@ -38,11 +38,22 @@ function common_design_subtheme_preprocess_taxonomy_term(&$variables) {
  *
  * Remove the default page title and local tasks blocks if they were already
  * rendered by a page title paragraph or when viewing full article terms.
+ *
+ * Do not render the page title block on river pages as they already have a
+ * visually hidden title (the selected main menu item acts as visual cue).
  */
 function common_design_subtheme_preprocess_page(&$variables) {
+  $route_name = \Drupal::routeMatch()->getRouteName();
+
   // Attempt to retrieve the term entity if the current page is a term page.
-  if (\Drupal::routeMatch()->getRouteName() === 'entity.taxonomy_term.canonical') {
+  if ($route_name === 'entity.taxonomy_term.canonical') {
     $term = common_design_subtheme_get_entity_from_route('taxonomy_term');
+  }
+  // Remove the page title block on river pages.
+  elseif (preg_match('#^reliefweb_rivers\.[^\.]+\.river$#', $route_name) === 1) {
+    common_design_hide_rendered_blocks_from_page($variables, [
+      'page_title_block',
+    ]);
   }
 
   // If the term variable is defined then we assume we are on a term page.

@@ -9,6 +9,8 @@ use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
  * Service class to retrieve disaster resource for the disaster rivers.
+ *
+ * @todo add disaster map.
  */
 class DisasterRiver extends RiverServiceBase {
 
@@ -43,21 +45,119 @@ class DisasterRiver extends RiverServiceBase {
    * {@inheritdoc}
    */
   public function getViews() {
-    return [];
+    return [
+      'all' => $this->t('All Disasters'),
+      'ongoing' => $this->t('Alert / Ongoing'),
+    ];
   }
 
   /**
    * {@inheritdoc}
    */
   public function getFilters() {
-    return [];
+    return [
+      'C' => [
+        'name' => $this->t('Country'),
+        'type' => 'reference',
+        'vocabulary' => 'country',
+        'field' => 'country.id',
+        'widget' => [
+          'type' => 'autocomplete',
+          'label' => $this->t('Search for a country'),
+          'resource' => 'countries',
+        ],
+      ],
+      'TY' => [
+        'name' => $this->t('Disaster type'),
+        'type' => 'reference',
+        'vocabulary' => 'disaster_type',
+        'field' => 'type.id',
+        'widget' => [
+          'type' => 'options',
+          'label' => $this->t('Select a disaster type'),
+        ],
+      ],
+      'ST' => [
+        'name' => $this->t('Status'),
+        'type' => 'fixed',
+        'values' => [
+          'alert' => $this->t('Alert'),
+          'ongoing' => $this->t('Ongoing'),
+          'past' => $this->t('Past disaster'),
+        ],
+        'field' => 'status',
+        'widget' => [
+          'type' => 'options',
+          'label' => $this->t('Select a status'),
+        ],
+      ],
+      'DA' => [
+        'name' => $this->t('Date'),
+        'type' => 'date',
+        'field' => 'date.created',
+        'widget' => [
+          'type' => 'date',
+          'label' => $this->t('Select disaster date'),
+        ],
+      ],
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFilterSample() {
+    return $this->t('(Country, type, status...)');
   }
 
   /**
    * {@inheritdoc}
    */
   public function getApiPayload($view = '') {
-    return [];
+    $payload = [
+      'query' => [
+        'fields' => [
+          'name^20',
+          'country.name^50',
+          'country.shortname^50',
+          'type.name^100',
+          'status^100',
+        ],
+        'operator' => 'AND',
+      ],
+      'fields' => [
+        'include' => [
+          'id',
+          'url_alias',
+          'name',
+          'status',
+          'country.id',
+          'country.iso3',
+          'country.name',
+          'country.shortname',
+          'country.primary',
+          'type.id',
+          'type.name',
+          'type.code',
+          'type.primary',
+          'primary_type.code',
+          'date.created',
+        ],
+      ],
+      'sort' => ['date.created:desc'],
+    ];
+
+    // Handle the filtered selection (view).
+    switch ($view) {
+      case 'ongoing':
+        $payload['filter'] = [
+          'field' => 'status',
+          'value' => ['alert', 'current'],
+        ];
+        break;
+    }
+
+    return $payload;
   }
 
   /**
@@ -139,6 +239,19 @@ class DisasterRiver extends RiverServiceBase {
     }
 
     return $entities;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function requestApi(array $payload) {
+    if (!empty($payload['query']['value'])) {
+      // Tiny hack to make searching by "ongoing" status possible as for
+      // legacy reasons the actual status is "current".
+      $payload['query']['value'] = str_replace('ongoing', 'current', $payload['query']['value']);
+    }
+
+    return parent::requestApi($payload);
   }
 
 }

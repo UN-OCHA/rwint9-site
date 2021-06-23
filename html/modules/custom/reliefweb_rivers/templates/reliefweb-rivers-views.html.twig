@@ -6,7 +6,9 @@
  *
  * Available variables:
  * - level: heading level (defaults to 2)
+ * - attributes: section attributes
  * - title: section title (defaults to 'Views')
+ * - title_attributes: section title attributes
  * - views: list of alternative views for the river. Each view has:
  *   - url: URL to the river for that view
  *   - title: view title
@@ -18,13 +20,18 @@
 
 #}
 {% if views is not empty %}
-<nav{{ create_attribute()
+<nav{{ attributes
   .addClass([
     'rw-river-views',
   ])
   .setAttribute('id', 'river-views')
 }}>
-  <h{{ level }} class="rw-river-views__title visually-hidden">{{ title }}</h{{ level }}>
+  <h{{ level }}{{ title_attributes
+    .addClass([
+      'rw-river-views__title',
+      'visually-hidden',
+    ])
+  }}>{{ title }}</h{{ level }}>
 
   <ul id="rw-river-views__list">
     {% for id, view in views %}

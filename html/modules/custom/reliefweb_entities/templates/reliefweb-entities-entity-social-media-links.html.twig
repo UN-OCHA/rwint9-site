@@ -8,17 +8,24 @@
  * Available variables:
  * - level: headling leve (defaults to 2)
  * - id: section id
+ * - attributes: section attributes
  * - title: section title
+ * - title_attributes: section title attributes
  * - links: list of social media links with a url and a title
 
 #}
-<section{{ create_attribute()
+<section{{ attributes
   .addClass([
     'rw-entity-social-media-links',
   ])
   .setAttribute('id', id)
 }}>
-  <h{{ level }} class="rw-entity-social-media-links__title">{{ title }}</h{{ level }}>
+  <h{{ level }}{{ title_attributes
+    .addClass([
+      'rw-entity-social-media-links__title',
+    ])
+  }}>{{ title }}</h{{ level }}>
+
   <ul class="rw-entity-social-media-links__list">
   {% for link in links %}
     <li class="rw-entity-social-media-links__list_item">
