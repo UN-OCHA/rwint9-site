@@ -100,6 +100,11 @@ rw-river:
       components/rw-river/rw-river-letter-navigation.css: {}
       components/rw-river/rw-river-views.css: {}
 
+rw-search:
+  css:
+    theme:
+      components/rw-search/rw-search.css: {}
+
 # Filter/value selection.
 rw-selection:
   css:
