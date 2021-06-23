@@ -47,10 +47,29 @@ class SubscriptionForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, AccountInterface $user = NULL) {
-    $default_options = $this->userSubscriptions($user->id());
+    $sids = $this->userSubscriptions($user->id());
+    $sids = array_flip($sids);
 
     $subscriptions = reliefweb_subscriptions_subscriptions();
+
     $options = [];
+    $defaults = [];
+    foreach ($subscriptions as $sid => $subscription) {
+      if (strpos($sid, 'country_updates') === 0) {
+        $group = 'country_updates';
+        $options[$group][$sid] = $this->t('@country', [
+          '@country' => $subscription['country'],
+        ]);
+      }
+      else {
+        $group = 'global';
+        $options[$group][$sid] = $subscription['description'];
+      }
+
+      if (isset($sids[$sid])) {
+        $defaults[$group][] = $sid;
+      }
+    }
 
     foreach ($subscriptions as $subscription) {
       $options[$subscription['id']] = $subscription['name'];
@@ -61,12 +80,26 @@ class SubscriptionForm extends FormBase {
       '#value' => $user->id(),
     ];
 
-    $form['subscriptions'] = [
+    $form['global'] = [
       '#type' => 'checkboxes',
-      '#title' => $this->t('Subscriptions'),
-      '#description' => $this->t('Select the lists you want to subscribe to.'),
-      '#options' => $options,
-      '#default_value' => $default_options,
+      '#title' => $this->t('Global notifications'),
+      '#options' => $options['global'],
+      '#default_value' => $defaults['global'] ?? [],
+      '#optional' => FALSE,
+    ];
+
+    $form['country_updates'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Updates by Country (daily)'),
+      '#options' => ['_none' => $this->t('- None -')] + $options['country_updates'],
+      '#default_value' => $defaults['country_updates'] ?? [],
+      '#multiple' => TRUE,
+      '#empty_value' => '_none',
+      '#attributes' => [
+        'data-with-autocomplete' => '',
+        'data-autocomplete-placeholder' => $this->t('Type and select a country'),
+      ],
+      '#optional' => FALSE,
     ];
 
     $form['submit'] = [
@@ -81,7 +114,17 @@ class SubscriptionForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $subscriptions = $form_state->getValue('subscriptions');
+    $subscriptions = $form_state->getValue('global');
+    foreach ($subscriptions as $sid => $value) {
+      if (!$value) {
+        $this->unsubscribe($form_state->getValue('uid'), $sid);
+      }
+      else {
+        $this->subscribe($form_state->getValue('uid'), $sid);
+      }
+    }
+
+    $subscriptions = $form_state->getValue('country_updates');
     foreach ($subscriptions as $sid => $value) {
       if (!$value) {
         $this->unsubscribe($form_state->getValue('uid'), $sid);
