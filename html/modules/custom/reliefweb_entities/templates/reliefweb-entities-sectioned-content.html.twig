@@ -14,7 +14,7 @@
 {# Propagrate the heading level. #}
 {% set contents = contents|merge({'#level': level}) %}
 {% set sections = sections|map(section => section|merge({'#level': level})) %}
-<div class="rw-sectioned-content">
+<div{{ attributes.addClass('rw-sectioned-content') }}>
 {{ contents }}
 {{ sections }}
 </div>

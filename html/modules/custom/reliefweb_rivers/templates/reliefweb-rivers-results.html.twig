@@ -5,6 +5,7 @@
  * Template for the river results.
  *
  * Available variables:
+ * - attributes: section attributes
  * - total: total number of resources matching the search query and filters
  * - start: start of the result range
  * - end: end of the result range
@@ -12,7 +13,7 @@
 
 #}
 {% spaceless %}
-<div{{ create_attribute()
+<div{{ attributes
   .addClass([
     'rw-river-results',
     total is empty ? 'rw-river-results--empty',

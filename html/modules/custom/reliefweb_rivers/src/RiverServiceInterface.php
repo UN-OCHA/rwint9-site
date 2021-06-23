@@ -192,6 +192,20 @@ interface RiverServiceInterface {
   public function parseApiData(array $data, $view = '');
 
   /**
+   * Perform a request against the API for the river's resource.
+   *
+   * Note: this function is simply to ease the modification of the payload
+   * by inheriting classes before the actual request.
+   *
+   * @param array $payload
+   *   Request payload.
+   *
+   * @return array|null
+   *   API response's data.
+   */
+  public function requestApi(array $payload);
+
+  /**
    * Get the ISO 639-1 language code for the entity.
    *
    * Defaults to English if not defined.

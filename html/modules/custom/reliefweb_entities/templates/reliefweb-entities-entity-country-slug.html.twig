@@ -5,6 +5,7 @@
  * Template file for the country slug of an entity.
  *
  * Available variables:
+ * - attributes: wrapper attributes
  * - countries: list of countries with the following properties:
  *   - url: url to either the country page or the river filtered by the country
  *   - name: country name
@@ -17,9 +18,7 @@
 {% endblock %}
 
 {% if countries %}
-  {% block wrapper %}
-    <p class="rw-entity-country-slug">
-  {% endblock %}
+<p{{ attributes.addClass('rw-entity-country-slug') }}>
   {% for item in countries|taglist(1, 'shortname') %}
     <a class="rw-entity-country-slug__link" href="{{ item.url }}">{{ item.shortname ?? item.name }}</a>
   {% endfor %}

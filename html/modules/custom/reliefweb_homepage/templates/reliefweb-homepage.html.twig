@@ -5,6 +5,7 @@
  * Template for the ReliefWeb Homepage.
  *
  * Available variables:
+ * - attributes: wrapper attributes
  * - sections: list of sections for the page. Each section is a render array.
  */
 
@@ -13,6 +14,6 @@
 {% block library %}
 {% endblock %}
 
-<div class="rw-homepage-sections">
+<div{{ attributes.addClass('rw-homepage-sections') }}>
   {{ sections }}
 </div>

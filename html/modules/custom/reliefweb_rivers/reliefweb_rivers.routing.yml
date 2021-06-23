@@ -5,6 +5,20 @@ reliefweb_rivers.blog_post.river:
     _controller: 'reliefweb_rivers.blog_post.river:getPageContent'
   requirements:
     _permission: 'access content'
+reliefweb_rivers.country.river:
+  path: '/countries'
+  defaults:
+    _title: 'Countries'
+    _controller: 'reliefweb_rivers.country.river:getPageContent'
+  requirements:
+    _permission: 'access content'
+reliefweb_rivers.disaster.river:
+  path: '/disasters'
+  defaults:
+    _title: 'Disasters'
+    _controller: 'reliefweb_rivers.disaster.river:getPageContent'
+  requirements:
+    _permission: 'access content'
 reliefweb_rivers.job.river:
   path: '/jobs'
   defaults:

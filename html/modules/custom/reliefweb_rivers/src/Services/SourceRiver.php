@@ -35,6 +35,11 @@ class SourceRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
+  protected $limit = 40;
+
+  /**
+   * {@inheritdoc}
+   */
   public function getPageTitle() {
     return $this->t('Organizations');
   }
@@ -56,23 +61,14 @@ class SourceRiver extends RiverServiceBase {
       $letters['all']['active'] = TRUE;
     }
 
-    // Get the resources for the search query.
-    $entities = $this->getApiData($this->limit);
-
-    return [
-      '#theme' => 'reliefweb_rivers_page',
-      '#river' => $this->river,
-      '#title' => $this->getPageTitle(),
-      '#entities' => $entities,
-      '#search' => $this->getRiverSearch(),
-      '#results' => $this->getRiverResults(count($entities)),
-      '#letter_navigation' => [
-        '#theme' => 'reliefweb_rivers_letter_navigation',
-        '#title' => $this->t('Filter by first letter'),
-        '#letters' => $letters,
-      ],
-      '#pager' => $this->getRiverPager(),
+    $content = parent::getPageContent();
+    $content['#letter_navigation'] = [
+      '#theme' => 'reliefweb_rivers_letter_navigation',
+      '#title' => $this->t('Filter by first letter'),
+      '#letters' => $letters,
     ];
+
+    return $content;
   }
 
   /**
