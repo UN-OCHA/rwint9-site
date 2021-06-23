@@ -1,7 +1,3 @@
-{% embed '@reliefweb_rivers/reliefweb-rivers-river-article--blog-post.html.twig' %}
+{{ attach_library('common_design_subtheme/rw-blog') }}
 
-  {% block library %}
-    {{ attach_library('common_design_subtheme/rw-blog') }}
-  {% endblock %}
-
-{% endembed %}
+{% include '@reliefweb_rivers/reliefweb-rivers-river-article--blog-post.html.twig' %}

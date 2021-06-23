@@ -13,10 +13,6 @@
  */
 
 #}
-
-{% block library %}
-{% endblock %}
-
 {% if countries %}
 <p{{ attributes.addClass('rw-entity-country-slug') }}>
   {% for item in countries|taglist(1, 'shortname') %}
