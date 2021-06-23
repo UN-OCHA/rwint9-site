@@ -14,13 +14,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class SubscriptionForm extends FormBase {
 
   /**
-   * User account.
-   *
-   * @var \Drupal\Core\Session\AccountInterface
-   */
-  protected $account;
-
-  /**
    * The database connection.
    *
    * @var \Drupal\Core\Database\Connection
@@ -30,8 +23,7 @@ class SubscriptionForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(AccountInterface $account, Connection $database) {
-    $this->account = $account;
+  public function __construct(Connection $database) {
     $this->database = $database;
   }
 
@@ -40,7 +32,6 @@ class SubscriptionForm extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('current_user'),
       $container->get('database'),
     );
   }
@@ -55,8 +46,8 @@ class SubscriptionForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
-    $default_options = $this->userSubscriptions($this->account->id());
+  public function buildForm(array $form, FormStateInterface $form_state, AccountInterface $user = NULL) {
+    $default_options = $this->userSubscriptions($user->id());
 
     $subscriptions = reliefweb_subscriptions_subscriptions();
     $options = [];
@@ -64,6 +55,11 @@ class SubscriptionForm extends FormBase {
     foreach ($subscriptions as $subscription) {
       $options[$subscription['id']] = $subscription['name'];
     }
+
+    $form['uid'] = [
+      '#type' => 'value',
+      '#value' => $user->id(),
+    ];
 
     $form['subscriptions'] = [
       '#type' => 'checkboxes',
@@ -88,10 +84,10 @@ class SubscriptionForm extends FormBase {
     $subscriptions = $form_state->getValue('subscriptions');
     foreach ($subscriptions as $sid => $value) {
       if (!$value) {
-        $this->unsubscribe($this->account->id(), $sid);
+        $this->unsubscribe($form_state->getValue('uid'), $sid);
       }
       else {
-        $this->subscribe($this->account->id(), $sid);
+        $this->subscribe($form_state->getValue('uid'), $sid);
       }
     }
   }
