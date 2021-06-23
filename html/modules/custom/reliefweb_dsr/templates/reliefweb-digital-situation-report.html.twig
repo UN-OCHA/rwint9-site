@@ -19,7 +19,7 @@
  */
 
  #}
-<section{{ create_attribute()
+<section{{ attributes
   .setAttribute('id', id)
   .setAttribute('lang', langcode)
   .addClass([
@@ -27,7 +27,7 @@
     illustration ? 'rw-dsr--with-illustration',
   ])
 }} >
-  <h{{ level }} class="rw-dsr__title">
+  <h{{ level }}{{ title_attributes.addClass('rw-dsr__title') }}>
     <span class="rw-dsr__ocha">{{ 'OCHA - '|t }}</span>
     {{- title -}}
     {% if date %}
