@@ -1,12 +1,10 @@
+{% set attributes = attributes.addClass(['cd-tag', 'cd-tag--linked']) %}
+
 {% embed '@reliefweb_entities/reliefweb-entities-entity-country-slug.html.twig' %}
 
   {% block library %}
     {{ attach_library('common_design/cd-tag') }}
     {{ attach_library('common_design_subtheme/rw-country') }}
-  {% endblock %}
-
-  {% block wrapper %}
-    <p class="rw-entity-country-slug cd-tag cd-tag--linked">
   {% endblock %}
 
 {% endembed %}
