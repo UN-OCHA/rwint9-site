@@ -1,7 +1,4 @@
 /* Table of contents */
-#main-content .rw-sectioned-content {
-  position: relative;
-}
 #main-content .rw-sectioned-content .rw-toc {
   padding: 32px 0 0 0;
   font-size: 15px;
@@ -173,4 +170,13 @@
   .js #main-content .rw-sectioned-content .rw-toc {
     --dropdown: false;
   }
+}
+
+/* Temp (I hope) - Setting heights on all the parents makes the sticky nav work */
+.cd-layout-content-wrapper,
+.cd-layout-content,
+.region-content,
+.region-content > article,
+#main-content .rw-sectioned-content {
+  height: 100%;
 }
