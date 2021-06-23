@@ -160,3 +160,44 @@
   content: "";
   background: #f65c51;
 }
+
+/**
+ * Content format.
+ *
+ * Hide the label and display an icon in front of the content format.
+ *
+ * Scope: #main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--format
+ */
+/* Visually hidden. */
+#main-content article dl.rw-entity-meta dt.rw-entity-meta__tag-label--format {
+  position: absolute;
+  height: 1px;
+  width: 1px;
+  clip-path: inset(100%);
+  clip: rect(0,0,0,0);
+  overflow: hidden;
+  margin: -1px;
+  padding: 0;
+  border: none;
+  white-space: nowrap;
+}
+#main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--format:before {
+  content: "";
+  display: inline-block;
+  vertical-align: middle;
+  width: 16px;
+  height: 16px;
+  /* The top margin is to have a better vertical alignment. */
+  margin: -2px 6px 0 0;
+  overflow: hidden;
+  background: var(--rw-icons--content--report--16--dark-grey);
+}
+#main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--format.map:before {
+  background: var(--rw-icons--content--map--16--dark-grey);
+}
+#main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--format.infographic:before {
+  background: var(--rw-icons--content--infographic--16--dark-grey);
+}
+#main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--format.interactive:before {
+  background: var(--rw-icons--content--interactive--16--dark-grey);
+}
