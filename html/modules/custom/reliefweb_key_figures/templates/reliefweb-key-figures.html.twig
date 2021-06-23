@@ -30,14 +30,14 @@
  */
 
 #}
-<section{{ create_attribute()
+<section{{ attributes
   .setAttribute('id', id)
   .setAttribute('lang', langcode)
   .addClass([
     'rw-key-figures',
   ])
 }}>
-  <h{{ level }}>{{ title ?? ('Key Figures'|t) }}</h{{ level }}>
+  <h{{ level }}{{ title_attributes }}>{{ title ?? ('Key Figures'|t) }}</h{{ level }}>
   <ul class="rw-key-figures__list">
     {% for figure in figures %}
     <li>
