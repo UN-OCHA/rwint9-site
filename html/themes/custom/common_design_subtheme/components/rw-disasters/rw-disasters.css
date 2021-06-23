@@ -35,7 +35,7 @@
   font-weight: bold;
   line-height: 26px;
 }
-.path-frontpage #main-content [data-disaster-type] a:before {
+.path-frontpage #main-content [data-disaster-type] .rw-river-article__title a:before {
   position: absolute;
   top: 50%;
   left: 6px;
@@ -44,75 +44,73 @@
   height: 24px;
   margin-top: -12px;
   content: "";
-  background: url(../../img/icons/disaster-icons-sprite.png) -64px 0 no-repeat;
-  background: rgba(0, 0, 0, 0) url(../../img/icons/disaster-icons-sprite.svg) -64px 0 no-repeat;
 }
-.path-frontpage #main-content [data-disaster-type="AC"] a:before {
-  background-position-y: 0;
+.path-frontpage #main-content [data-disaster-type="AC"] .rw-river-article__title a:before {
+  background: var(--rw-icons--disaster-type--AC--24--grey);
 }
-.path-frontpage #main-content [data-disaster-type="AV"] a:before {
-  background-position-y: -24px;
+.path-frontpage #main-content [data-disaster-type="AV"] .rw-river-article__title  a:before {
+  background: var(--rw-icons--disaster-type--AV--24--grey);
 }
-.path-frontpage #main-content [data-disaster-type="CW"] a:before {
-  background-position-y: -48px;
+.path-frontpage #main-content [data-disaster-type="CW"] .rw-river-article__title  a:before {
+  background: var(--rw-icons--disaster-type--CW--24--grey);
 }
-.path-frontpage #main-content [data-disaster-type="DR"] a:before {
-  background-position-y: -72px;
+.path-frontpage #main-content [data-disaster-type="DR"] .rw-river-article__title  a:before {
+  background: var(--rw-icons--disaster-type--DR--24--grey);
 }
-.path-frontpage #main-content [data-disaster-type="EC"] a:before {
-  background-position-y: -96px;
+.path-frontpage #main-content [data-disaster-type="EC"] .rw-river-article__title  a:before {
+  background: var(--rw-icons--disaster-type--EC--24--grey);
 }
-.path-frontpage #main-content [data-disaster-type="EP"] a:before {
-  background-position-y: -120px;
+.path-frontpage #main-content [data-disaster-type="EP"] .rw-river-article__title  a:before {
+  background: var(--rw-icons--disaster-type--EP--24--grey);
 }
-.path-frontpage #main-content [data-disaster-type="EQ"] a:before {
-  background-position-y: -144px;
+.path-frontpage #main-content [data-disaster-type="EQ"] .rw-river-article__title  a:before {
+  background: var(--rw-icons--disaster-type--EQ--24--grey);
 }
-.path-frontpage #main-content [data-disaster-type="FF"] a:before {
-  background-position-y: -168px;
+.path-frontpage #main-content [data-disaster-type="FF"] .rw-river-article__title  a:before {
+  background: var(--rw-icons--disaster-type--FF--24--grey);
 }
-.path-frontpage #main-content [data-disaster-type="FL"] a:before {
-  background-position-y: -192px;
+.path-frontpage #main-content [data-disaster-type="FL"] .rw-river-article__title  a:before {
+  background: var(--rw-icons--disaster-type--FL--24--grey);
 }
-.path-frontpage #main-content [data-disaster-type="FR"] a:before {
-  background-position-y: -216px;
+.path-frontpage #main-content [data-disaster-type="FR"] .rw-river-article__title  a:before {
+  background: var(--rw-icons--disaster-type--FR--24--grey);
 }
-.path-frontpage #main-content [data-disaster-type="HT"] a:before {
-  background-position-y: -240px;
+.path-frontpage #main-content [data-disaster-type="HT"] .rw-river-article__title  a:before {
+  background: var(--rw-icons--disaster-type--HT--24--grey);
 }
-.path-frontpage #main-content [data-disaster-type="IN"] a:before {
-  background-position-y: -264px;
+.path-frontpage #main-content [data-disaster-type="IN"] .rw-river-article__title  a:before {
+  background: var(--rw-icons--disaster-type--IN--24--grey);
 }
-.path-frontpage #main-content [data-disaster-type="LS"] a:before {
-  background-position-y: -288px;
+.path-frontpage #main-content [data-disaster-type="LS"] .rw-river-article__title  a:before {
+  background: var(--rw-icons--disaster-type--LS--24--grey);
 }
-.path-frontpage #main-content [data-disaster-type="MS"] a:before {
-  background-position-y: -312px;
+.path-frontpage #main-content [data-disaster-type="MS"] .rw-river-article__title  a:before {
+  background: var(--rw-icons--disaster-type--MS--24--grey);
 }
-.path-frontpage #main-content [data-disaster-type="SS"] a:before {
-  background-position-y: -336px;
+.path-frontpage #main-content [data-disaster-type="SS"] .rw-river-article__title  a:before {
+  background: var(--rw-icons--disaster-type--SS--24--grey);
 }
-.path-frontpage #main-content [data-disaster-type="ST"] a:before {
-  background-position-y: -360px;
+.path-frontpage #main-content [data-disaster-type="ST"] .rw-river-article__title  a:before {
+  background: var(--rw-icons--disaster-type--ST--24--grey);
 }
-.path-frontpage #main-content [data-disaster-type="TC"] a:before {
-  background-position-y: -384px;
+.path-frontpage #main-content [data-disaster-type="TC"] .rw-river-article__title  a:before {
+  background: var(--rw-icons--disaster-type--TC--24--grey);
 }
-.path-frontpage #main-content [data-disaster-type="TS"] a:before {
-  background-position-y: -408px;
+.path-frontpage #main-content [data-disaster-type="TS"] .rw-river-article__title  a:before {
+  background: var(--rw-icons--disaster-type--TS--24--grey);
 }
-.path-frontpage #main-content [data-disaster-type="VO"] a:before {
-  background-position-y: -432px;
+.path-frontpage #main-content [data-disaster-type="VO"] .rw-river-article__title  a:before {
+  background: var(--rw-icons--disaster-type--VO--24--grey);
 }
-.path-frontpage #main-content [data-disaster-type="WF"] a:before {
-  background-position-y: -456px;
+.path-frontpage #main-content [data-disaster-type="WF"] .rw-river-article__title  a:before {
+  background: var(--rw-icons--disaster-type--WF--24--grey);
 }
-.path-frontpage #main-content [data-disaster-status="alert"] a:before {
-  background-position-x: -88px;
+.path-frontpage #main-content [data-disaster-status="alert"] .rw-river-article__title  a:before {
+  background-position-x: var(--rw-icons--disaster-type--24--orange--x);
 }
-.path-frontpage #main-content [data-disaster-status="current"] a:before,
-.path-frontpage #main-content [data-disaster-status="ongoing"] a:before {
-  background-position-x: -112px;
+.path-frontpage #main-content [data-disaster-status="current"] .rw-river-article__title  a:before,
+.path-frontpage #main-content [data-disaster-status="ongoing"] .rw-river-article__title  a:before {
+  background-position-x: var(--rw-icons--disaster-type--24--red--x);
 }
 
 .path-frontpage #main-content .rw-river-article--disaster {

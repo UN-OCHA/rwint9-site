@@ -5,9 +5,9 @@
     .dark-grey { fill: #2e3436; }
     .white { fill: white; }
     .blue { fill: #0988bb; }
-    .green { fill: 88bb09; }
-    .orange { fill: eb8705; }
-    .red { fill: f65c51; }
+    .green { fill: #88bb09; }
+    .orange { fill: #eb8705; }
+    .red { fill: #f65c51; }
     .grey { fill: #b6c8d0; }
   </style>
   <symbol id="common--add" viewBox="0 0 48 48">

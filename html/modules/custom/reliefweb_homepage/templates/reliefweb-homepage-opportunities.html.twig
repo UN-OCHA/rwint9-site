@@ -22,8 +22,6 @@
 {% block library %}
 {% endblock %}
 
-{% set title = title ? title : 'Opportunities'|t %}
-
 <section{{ attributes
   .setAttribute('id', id|clean_id)
   .addClass([
@@ -34,11 +32,11 @@
     .addClass([
       'rw-homepage-opportunties__title'
     ])
-  }}>{{ title }}</h{{ level }}>
+  }}>{{ title ?? 'Opportunities'|t }}</h{{ level }}>
 
   <ul class="rw-homepage-opportunties__list">
   {% for item in opportunities %}
-    <li class="rw-homepage-opportunties__list__item rw-homepage-opportunties__list__item--{{ item.type }}">
+    <li class="rw-homepage-opportunties__list__item" data-type="{{item.type }}">
       <a class="rw-homepage-opportunties__list__item__link" href="{{ item.url }}">
         <data class="rw-homepage-opportunties__list__item__total" value="{{ item.total }}">{{ item.total|number_format }}</data>
         <span class="rw-homepage-opportunties__list__item__label">{{ item.title }}</span>

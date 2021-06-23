@@ -56,6 +56,8 @@ rw-disasters:
   css:
     theme:
       components/rw-disasters/rw-disasters.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
 
 rw-headlines:
   css:
@@ -88,6 +90,8 @@ rw-opportunities:
   css:
     theme:
       components/rw-opportunities/rw-opportunities.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
 
 # Filter/value selection.
 rw-selection:
@@ -110,6 +114,8 @@ rw-view-more:
   css:
     theme:
       components/rw-view-more/rw-view-more.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
 
 # CD components extended
 cd-block-title:

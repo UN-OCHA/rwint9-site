@@ -256,20 +256,28 @@ function generate_css(array $settings, array $icons) {
   $categories = [];
 
   // Generate the CSS file.
-  $base = 'url(../rw-icons/img/rw-icons-sprite.svg) @Xpx @Ypx no-repeat;';
+  $base = 'url(../rw-icons/img/rw-icons-sprite.svg) @x @y no-repeat;';
   $x = 0;
   foreach ($icons as $category => $ids) {
     $sizes = $settings['icons'][$category]['sizes'];
 
     foreach ($sizes as $size => $colors) {
       foreach ($colors as $color) {
+        // Add a variable on the position x for the color and size of the
+        // category that can be used to easily change the color of an icon.
+        $categories[$category][] = strtr("--rw-icons--$category--$size--$color--x: @x;", [
+          '@x' => $x === 0 ? 0 : (-$x) . 'px',
+        ]);
+
+        // Add variables for each icon in the current color and size.
         foreach ($ids as $index => $id) {
           $y = $index * $size;
           $categories[$id][] = strtr("--rw-icons--$id--$size--$color: $base", [
-            '@X' => -$x,
-            '@Y' => -$y,
+            '@x' => $x === 0 ? 0 : (-$x) . 'px',
+            '@y' => $y === 0 ? 0 : (-$y) . 'px',
           ]);
         }
+
         $x += $size;
       }
     }
@@ -283,7 +291,7 @@ function generate_css(array $settings, array $icons) {
     }
   }
 
-  $content = ":root {\n  " . implode("\n  ", $variables) . "\n}";
+  $content = ":root {\n  " . implode("\n  ", $variables) . "\n}\n";
   file_put_contents('rw-icons.css', $content);
 }
 
