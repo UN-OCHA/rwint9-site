@@ -8,9 +8,3 @@ Note
 
 While trying to be library agnostic, the current styling is a tied to the
 `simpledatepicker.js` library, notably in regards to the class names.
-
-Todo
-----
-
-Remove unnecessary things from the icon sprite and see if we can use the
-css variables for the colors.

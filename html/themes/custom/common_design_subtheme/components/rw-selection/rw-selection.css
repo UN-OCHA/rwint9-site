@@ -67,11 +67,12 @@
   margin-left: -6px;
   content: "";
   background: url(img/icons-sprite.svg) -84px 0 no-repeat;
+  background: var(--rw-icons--common--close--12--dark-blue);
 }
 .rw-selection [data-value] button:hover:before,
 .rw-selection [data-value] button:focus:before,
 .rw-selection [data-value] button:active:before {
-  background-position-x: -108px;
+  background-position-x: var(--rw-icons--common--12--white--x);
 }
 
 /**

@@ -34,7 +34,18 @@ Example:
   overflow: hidden;
   width: 12px;
   height: 12px;
-  background: var(--rw-icons--common-help--12--dark-blue);
+  background: var(--rw-icons--common--help--12--dark-blue);
+}
+```
+
+To change the color of an icon, CSS variables for the `background-position-x`
+for the category, size and color can be used.
+
+Example (to change the color of the icon above to red on hover):
+
+```css
+.class-with-icon-as-background:hover::before {
+  background-position-x: var(--rw-icons--common--12--dark-red--x);
 }
 ```
 

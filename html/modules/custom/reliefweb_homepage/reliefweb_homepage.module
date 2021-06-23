@@ -5,8 +5,6 @@
  * Module file for the ReliefWeb Homepage module.
  */
 
-use Drupal\Core\Template\Attribute;
-
 /**
  * Implements hook_theme().
  */
@@ -17,7 +15,7 @@ function reliefweb_homepage_theme() {
         // Page title.
         'title' => t('ReliefWeb'),
         // Title attributes.
-        'title_attributes' => new Attribute(),
+        'title_attributes' => NULL,
         // List of sections constituing the homepage's content.
         'sections' => [],
       ],
@@ -29,11 +27,11 @@ function reliefweb_homepage_theme() {
         // Section id.
         'id' => '',
         // Section attributes.
-        'attributes' => new Attribute(),
+        'attributes' => NULL,
         // Section title.
         'title' => t('Opportunities'),
         // Section title attributes.
-        'title_attributes' => new Attribute(),
+        'title_attributes' => NULL,
         // Associative array keyed by type (job, training) and with the
         // following properties:
         // - type: job, training
@@ -50,11 +48,11 @@ function reliefweb_homepage_theme() {
         // Section id.
         'id' => '',
         // Section attributes.
-        'attributes' => new Attribute(),
+        'attributes' => NULL,
         // Section title.
         'title' => t('Annoucement'),
         // Section title attributes.
-        'title_attributes' => new Attribute(),
+        'title_attributes' => NULL,
         // Announcement URL.
         'url' => '',
         // Announcement banner image.

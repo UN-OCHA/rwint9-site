@@ -12,13 +12,25 @@ function reliefweb_dsr_theme() {
   return [
     'reliefweb_digital_situation_report' => [
       'variables' => [
+        // Section heading level.
         'level' => 2,
+        // Section id.
         'id' => 'digital-sitrep',
+        // Language iso 2 code of the DSR.
         'langcode' => 'en',
+        // Section attributes.
+        'attributes' => NULL,
+        // Section title.
         'title' => '',
+        // Section title attributes.
+        'title_attributes' => NULL,
+        // Timestamp of the last update.
         'date' => NULL,
+        // Object with the illustration information (url etc.) or null.
         'illustration' => NULL,
+        // List of key updates.
         'highlights' => NULL,
+        // Array of links to the different DSR versions keyed by language.
         'links' => NULL,
       ],
     ],

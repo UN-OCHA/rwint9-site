@@ -28,42 +28,30 @@
     view ? 'rw-river-page--' ~ river|clean_class ~ '--' ~ view|clean_class,
   ])
 }}>
-  {% block header %}
-    <header class="rw-river-page__header">
-      <h1{{ title_attributes
-        .addClass([
-          'rw-river-page__title',
-          'visually-hidden',
-        ])
-      }}>{{ title }}</h1>
+  <header class="rw-river-page__header">
+    <h1{{ title_attributes
+      .addClass([
+        'rw-river-page__title',
+        'visually-hidden',
+      ])
+    }}>{{ title }}</h1>
 
-      {{ views }}
-    </header>
-  {% endblock %}
+    {{ views }}
+  </header>
 
-  {% block search %}
-    {{ search }}
-  {% endblock %}
+  {{ search }}
 
-  {% block letter_navigation %}
-    {{ letter_navigation }}
-  {% endblock %}
+  {{ letter_navigation }}
 
-  {% block advanced_search %}
-    {{ advanced_search }}
-  {% endblock %}
+  {{ advanced_search }}
 
-  {% block content %}
-    {{ content|merge({
-      '#title_attributes': create_attribute().addClass('visually-hidden')
-    }) }}
-  {% endblock %}
+  {{ content|merge({
+    '#title_attributes': create_attribute().addClass('visually-hidden')
+  }) }}
 
-  {% block footer %}
-    {% if links is not empty %}
-      <footer class="rw-river-page__footer">
-        {{ links }}
-      </footer>
-    {% endif %}
-  {% endblock %}
+  {% if links is not empty %}
+    <footer class="rw-river-page__footer">
+      {{ links }}
+    </footer>
+  {% endif %}
 </section>

@@ -56,11 +56,10 @@
   margin-top: -18px;
   content: "";
   opacity: 0.5;
-  background: url(../images/rw-icons-sprite.png) -268px 0 no-repeat;
-  background: rgba(0, 0, 0, 0) url(../images/rw-icons-sprite.svg) -268px 0 no-repeat;
+  background: var(--rw-icons--content--job--36--dark-blue);
 }
 .path-frontpage #main-content #opportunities [data-type="training"] a:before {
-  background-position-y: -36px;
+  background: var(--rw-icons--content--training--36--dark-blue);
 }
 /* Border to separate the logo from the text. */
 .path-frontpage #main-content #opportunities [data-type] a:after {

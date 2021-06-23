@@ -5,8 +5,6 @@
  * Integration of the ReliefWeb Rivers.
  */
 
-use Drupal\Core\Template\Attribute;
-
 /**
  * Implements hook_theme().
  */
@@ -19,11 +17,11 @@ function reliefweb_rivers_theme() {
         // The current river view.
         'view' => '',
         // River attributes.
-        'attributes' => new Attribute(),
+        'attributes' => NULL,
         // The river title.
         'title' => '',
         // River attributes.
-        'title_attributes' => new Attribute(),
+        'title_attributes' => NULL,
         // Render array. See "reliefweb_rivers_views" below.
         'views' => [],
         // Render array. See "reliefweb_rivers_search" below.
@@ -43,11 +41,11 @@ function reliefweb_rivers_theme() {
         // The headling level.
         'level' => 2,
         // Section attributes.
-        'attributes' => new Attribute(),
+        'attributes' => NULL,
         // Section title.
         'title' => t('Views'),
         // Title attributes.
-        'title_attributes' => new Attribute(),
+        'title_attributes' => NULL,
         // The list of alternative views for the river with url, title and
         // selected flag for each view.
         'views' => [],
@@ -58,11 +56,11 @@ function reliefweb_rivers_theme() {
         // The headling level.
         'level' => 2,
         // Section attributes.
-        'attributes' => new Attribute(),
+        'attributes' => NULL,
         // Section title.
         'title' => t('Search'),
         // Title attributes.
-        'title_attributes' => new Attribute(),
+        'title_attributes' => NULL,
         // The river path.
         'path' => '',
         // List (name => value) of query parameters to preserve.
@@ -78,11 +76,11 @@ function reliefweb_rivers_theme() {
         // The headling level.
         'level' => 2,
         // Section attributes.
-        'attributes' => new Attribute(),
+        'attributes' => NULL,
         // Section title.
         'title' => t('Letter Navigation'),
         // Title attributes.
-        'title_attributes' => new Attribute(),
+        'title_attributes' => NULL,
         // Associative array of letters with their label, url and active state.
         'letters' => [],
       ],
@@ -92,11 +90,11 @@ function reliefweb_rivers_theme() {
         // The headling level.
         'level' => 2,
         // Section attributes.
-        'attributes' => new Attribute(),
+        'attributes' => NULL,
         // Section title.
         'title' => t('Refine the list with filters'),
         // Title attributes.
-        'title_attributes' => new Attribute(),
+        'title_attributes' => NULL,
         // The path to the river.
         'path' => '',
         // The sanitized advanced search parameter.
@@ -123,11 +121,11 @@ function reliefweb_rivers_theme() {
         // The API resource (ex: reports).
         'resource' => '',
         // Section attributes.
-        'attributes' => new Attribute(),
+        'attributes' => NULL,
         // Title of the river section.
         'title' => t('List'),
         // Title attributes.
-        'title_attributes' => new Attribute(),
+        'title_attributes' => NULL,
         // Results (optional). See "reliefweb_rivers_results" below.
         'results' => NULL,
         // The article entities to display.
@@ -141,7 +139,7 @@ function reliefweb_rivers_theme() {
     'reliefweb_rivers_results' => [
       'variables' => [
         // Section attributes.
-        'attributes' => new Attribute(),
+        'attributes' => NULL,
         // The total number of resources matching the search query.
         'total' => 0,
         // The start of the result range.
@@ -155,7 +153,7 @@ function reliefweb_rivers_theme() {
         // Heading level for the river article.
         'level' => 3,
         // Article attributes.
-        'attributes' => new Attribute(),
+        'attributes' => NULL,
         // The aricle entity's data as an associative array with id, bundle,
         // url, langcode, title etc.
         'entity' => NULL,
@@ -166,7 +164,7 @@ function reliefweb_rivers_theme() {
         // Heading level for the river article title.
         'level' => 3,
         // Article title attributes.
-        'attributes' => new Attribute(),
+        'attributes' => NULL,
         // Language code of the title.
         'langcode' => 'en',
         // An optional HTML safe prefix.
@@ -182,11 +180,11 @@ function reliefweb_rivers_theme() {
         // The headling level.
         'level' => 2,
         // Section attributes.
-        'attributes' => new Attribute(),
+        'attributes' => NULL,
         // Section title.
         'title' => t('API and RSS links'),
         // Title attributes.
-        'title_attributes' => new Attribute(),
+        'title_attributes' => NULL,
         // The API/RSS links for the river.
         'links' => [],
       ],
@@ -196,7 +194,7 @@ function reliefweb_rivers_theme() {
         // The headling level.
         'level' => 2,
         // Wrapper attributes.
-        'attributes' => new Attribute(),
+        'attributes' => NULL,
         // Associative array keyed by the first letters of the countries and
         // each item is a list of countries starting with that letter. Each
         // country has the following properties:

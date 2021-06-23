@@ -12,13 +12,34 @@ function reliefweb_key_figures_theme() {
   return [
     'reliefweb_key_figures' => [
       'variables' => [
+        // Section heading level.
         'level' => 2,
+        // Section id.
         'id' => 'key-figures',
+        // Section attributes.
+        'attributes' => NULL,
+        // Section title.
         'title' => t('Key figures'),
+        // Section title attributes.
+        'title_attributes' => NULL,
+        // Language ISO 2 code of the figures.
         'langcode' => 'en',
+        // Name of the country the figures are for.
         'country' => '',
+        // List of figures. Each figure has the following properties:
+        // - status: standard or recent
+        // - name: figure label
+        // - value: figure value (number)
+        // - trand: if defined, has a message and since properties
+        // - sparkline: if  defined, has a list of points
+        // - date: last update time
+        // - updated: formatted relative update date.
+        // - url: URL to the report the figures came from
+        // - source: short name of the source.
         'figures' => [],
+        // Indicates if there are more figures that can be shown.
         'more' => FALSE,
+        // If defined, has a url and title properties.
         'dataset' => NULL,
       ],
     ],
