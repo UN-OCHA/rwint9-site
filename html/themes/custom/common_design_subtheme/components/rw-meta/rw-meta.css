@@ -133,3 +133,30 @@
     margin: 0;
   }
 }
+
+/**
+ * Country/disaster status.
+ *
+ * Display a color coded dot next to the country/disaster status.
+ *
+ * Scope: #main-content article dl.rw-meta dd.rw-entity-meta__tag-value--status
+ */
+#main-content article dl.rw-meta dd.rw-entity-meta__tag-value--status:before {
+  display: inline-block;
+  height: 10px;
+  width: 10px;
+  border-radius: 5px;
+  margin-right: 8px;
+}
+#main-content article dl.rw-meta dd.rw-entity-meta__tag-value--status[data-past]:before {
+  content: "";
+  background: #b6c8d0;
+}
+#main-content article dl.rw-meta dd.rw-entity-meta__tag-value--status[data-alert]:before {
+  content: "";
+  background: #eb8705;
+}
+#main-content article dl.rw-meta dd.rw-entity-meta__tag-value--status[data-ongoing]:before {
+  content: "";
+  background: #f65c51;
+}
