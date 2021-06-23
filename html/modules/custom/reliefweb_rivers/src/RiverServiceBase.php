@@ -151,20 +151,15 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * {@inheritdoc}
    */
   public function getPageContent() {
-    // Get the resources for the search query.
-    $entities = $this->getApiData($this->limit);
-
     return [
       '#theme' => 'reliefweb_rivers_page',
       '#river' => $this->river,
       '#title' => $this->getPageTitle(),
       '#view' => $this->getSelectedView(),
-      '#entities' => $entities,
       '#views' => $this->getRiverViews(),
       '#search' => $this->getRiverSearch(),
       '#advanced_search' => $this->getRiverAdvancedSearch(),
-      '#results' => $this->getRiverResults(count($entities)),
-      '#pager' => $this->getRiverPager(),
+      '#content' => $this->getRiverContent(),
       '#links' => $this->getRiverLinks(),
     ];
   }
@@ -307,6 +302,23 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getRiverContent() {
+    // Get the resources for the search query.
+    $entities = $this->getApiData($this->limit);
+
+    return [
+      '#theme' => 'reliefweb_rivers_river',
+      '#id' => 'river-list',
+      '#title' => $this->t('List'),
+      '#results' => $this->getRiverResults(count($entities)),
+      '#entities' => $entities,
+      '#pager' => $this->getRiverPager(),
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getRiverResults($count) {
     $total = 0;
     $start = 0;
@@ -399,7 +411,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
     }
 
     // Retrieve the API data.
-    $data = $this->apiClient->request($this->resource, $payload);
+    $data = $this->requestApi($payload);
 
     // Skip if there is no data.
     if (empty($data)) {
@@ -411,6 +423,13 @@ abstract class RiverServiceBase implements RiverServiceInterface {
 
     // Parse the API data and return the entities.
     return $this->parseApiData($data, $view);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function requestApi(array $payload) {
+    return $this->apiClient->request($this->resource, $payload);
   }
 
   /**

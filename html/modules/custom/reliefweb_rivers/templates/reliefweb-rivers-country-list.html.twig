@@ -1,0 +1,46 @@
+{#
+
+/**
+ * @file
+ * Template file for the country list for the country river page.
+ *
+ * Available variables;
+ * - level: heading level (defaults to 2)
+ * - attributes: wrapper list attributes
+ * - groups: associative array keyed by the first letters of the countries and
+ *   each item is a list of countries starting with that letter. Each country
+ *   has the following properties:
+ *   - name: country name
+ *   - status: country status (ongoing for humanitarian situations
+ *   - url: url to the country page
+ */
+
+#}
+
+{% block library %}
+{% endblock %}
+
+<ul{{ attributes
+  .addClass([
+    'rw-river',
+    'rw-river-country-list',
+  ])
+}}>
+  {% for letter, countries in groups %}
+  <li id="group-{{ letter }}" class="rw-river-country-list__group">
+    <h{{ level }} class="rw-river-country-list__group__title">{{ letter }}</h{{ level }}>
+    <ul class="rw-river-country-list__group__list">
+      {% set last = countries|length - 1 %}
+      {% for index, country in countries %}
+      <li{{ create_attribute()
+        .addClass([
+          'rw-river-country-list__country',
+          country.status == 'ongoing' ? 'rw-river-country-list__country--ongoing',
+          index == last ? 'rw-river-country-list__country--last',
+        ])
+      }}><a href="{{ country.url }}">{{ country.title }}</a></li>
+      {% endfor %}
+    </ul>
+  </li>
+  {% endfor %}
+</ul>
