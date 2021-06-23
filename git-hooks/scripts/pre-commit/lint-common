@@ -8,8 +8,8 @@ root="$(git rev-parse --show-toplevel)"
 
 # Docksal compatibility.
 if [ -x "$(command -v fin)" ]; then
-  linter="fin"
   options="exec $linter $options"
+  linter="fin"
   relative=0
   root='.'
 fi
@@ -33,7 +33,7 @@ if [ -x "$(command -v $linter)" ]; then
       file="$root/$file"
 
       if [ -f "$file" ]; then
-        echo "* $file"
+        echo "* $linter $options $file"
         $linter $options "$file"
 
         if [ "$?" -ne 0 ]; then

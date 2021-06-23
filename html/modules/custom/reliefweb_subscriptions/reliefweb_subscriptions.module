@@ -1,0 +1,302 @@
+<?php
+
+/**
+ * @file
+ * User subscription code.
+ */
+
+/**
+ * Get the list of subscriptions.
+ *
+ * @return array
+ *   Subscriptions.
+ */
+function reliefweb_subscriptions_subscriptions() {
+  static $subscriptions;
+
+  if (isset($subscriptions)) {
+    return $subscriptions;
+  }
+
+  // Headlines.
+  $subscriptions['headlines'] = [
+    'id' => 'headlines',
+    'name' => t('ReliefWeb Headlines'),
+    'description' => t('ReliefWeb Headlines (daily)'),
+    // Sengrid category.
+    'category' => 'Headlines',
+    'type' => 'scheduled',
+    // Daily: 13:00 UTC.
+    'frequency' => '0 13 * * *',
+    'template' => 'headlines',
+    // Always in English as we send Bulk emails.
+    'subject' => 'Today\'s ReliefWeb Headlines',
+    'bundle' => 'report',
+    'resource' => 'reports',
+    'payload' => [
+      'filter' => [
+        'field' => 'headline',
+      ],
+      'fields' => [
+        'include' => [
+          'url_alias',
+          'source.name',
+          'source.shortname',
+          'primary_country.name',
+          'date.original',
+          'headline.title',
+          'headline.summary',
+        ],
+        'exclude' => [
+          'title',
+        ],
+      ],
+      'sort' => ['date.original:desc'],
+      'limit' => 20,
+    ],
+  ];
+
+  // Appeals.
+  $subscriptions['appeals'] = [
+    'id' => 'appeals',
+    'name' => t('All Appeals'),
+    'description' => t('Latest Appeals (weekly)'),
+    // Sengrid cateogry.
+    'category' => 'Appeals',
+    'type' => 'scheduled',
+    // Weekly: Monday, 13:00 UTC.
+    'frequency' => '0 13 * * monday',
+    'template' => 'appeals',
+    // Always in English as we send Bulk emails.
+    'subject' => 'New Appeals',
+    'bundle' => 'report',
+    'resource' => 'reports',
+    'payload' => [
+      'filter' => [
+        'field' => 'format.name.exact',
+        'value' => 'Appeal',
+      ],
+      'fields' => [
+        'include' => [
+          'title',
+          'url_alias',
+          'source.name',
+          'source.shortname',
+          'primary_country.name',
+          'date.original',
+          'body',
+        ],
+      ],
+      'sort' => ['date.original:desc'],
+      'limit' => 100,
+    ],
+  ];
+
+  // All jobs.
+  $subscriptions['jobs'] = [
+    'id' => 'jobs',
+    'name' => t('All Jobs'),
+    'description' => t('All Jobs (bi-weekly: Monday, Thursday)'),
+    'group' => 'global',
+    // Sengrid cateogry.
+    'category' => 'Jobs digest',
+    'type' => 'scheduled',
+    // Bi-weekly: Monday, Thursday 10:00 UTC.
+    'frequency' => '0 10 * * monday,thursday',
+    'template' => 'jobs',
+    // Always in English as we send Bulk emails.
+    'subject' => 'New Job Announcements',
+    'bundle' => 'job',
+    'resource' => 'jobs',
+    'payload' => [
+      'fields' => [
+        'include' => [
+          'title',
+          'url_alias',
+          'source.name',
+          'source.shortname',
+          'country.name',
+          'date.closing',
+        ],
+      ],
+      'sort' => ['date.created:desc'],
+      'limit' => 1000,
+    ],
+  ];
+
+  // All training.
+  $subscriptions['training'] = [
+    'id' => 'training',
+    'name' => t('All Training Programs'),
+    'description' => t('All Training Programs (weekly: Wednesday)'),
+    'group' => 'global',
+    // Sengrid cateogry.
+    'category' => 'Training programs digest',
+    'type' => 'scheduled',
+    // Weekly: Wednesday 08:00 UTC.
+    'frequency' => '0 8 * * wednesday',
+    'template' => 'training',
+    // Always in English as we send Bulk emails.
+    'subject' => 'New Training Programs',
+    'bundle' => 'training',
+    'resource' => 'training',
+    'payload' => [
+      'fields' => [
+        'include' => [
+          'title',
+          'url_alias',
+          'source.name',
+          'source.shortname',
+          'country.name',
+          'date.registration',
+          'date.start',
+          'date.end',
+        ],
+      ],
+      'sort' => ['date.created:desc'],
+      'limit' => 1000,
+    ],
+  ];
+
+  // New alert or ongoing disaster.
+  $subscriptions['disaster'] = [
+    'id' => 'disaster',
+    'name' => t('New alert or ongoing disaster'),
+    'description' => t('New alert or ongoing disaster (when published)'),
+    'group' => 'global',
+    // Sengrid cateogry.
+    'category' => 'New Disasters',
+    'type' => 'triggered',
+    'trigger' => 'reliefweb_subscriptions_trigger_disaster_notification',
+    'template' => 'disaster',
+    'subject callback' => 'reliefweb_subscriptions_disaster_subject',
+    'bundle' => 'disaster',
+    'resource' => 'disasters',
+    'payload' => [
+      'filter' => [
+        'field' => 'status',
+        'value' => ['alert', 'current'],
+      ],
+      'fields' => [
+        'include' => [
+          'name',
+          'url_alias',
+          'glide',
+          'date.created',
+          'profile.overview',
+        ],
+      ],
+      'sort' => ['date.created:desc'],
+      'limit' => 1,
+    ],
+  ];
+
+  // New OCHA situation report.
+  $subscriptions['ocha_sitrep'] = [
+    'id' => 'ocha_sitrep',
+    'name' => t('New OCHA situation report'),
+    'description' => t('New OCHA situation report'),
+    'group' => 'global',
+    // Sengrid cateogry.
+    'category' => 'OCHA Sitreps',
+    'type' => 'triggered',
+    'trigger' => 'reliefweb_subscriptions_trigger_ocha_sitrep_notification',
+    'template' => 'ocha_sitrep',
+    'subject callback' => 'reliefweb_subscriptions_ocha_sitrep_subject',
+    'bundle' => 'report',
+    'resource' => 'reports',
+    'payload' => [
+      'filter' => [
+        'conditions' => [
+          [
+            'field' => 'source.shortname.exact',
+            'value' => 'OCHA',
+          ],
+          [
+            'field' => 'format.name.exact',
+            'value' => 'Situation Report',
+          ],
+        ],
+        'operator' => 'AND',
+      ],
+      'fields' => [
+        'include' => [
+          'title',
+          'url_alias',
+          'primary_country.id',
+          'primary_country.name',
+          'date.original',
+          'body',
+          'origin',
+        ],
+      ],
+      'sort' => ['date.original:desc'],
+      'limit' => 1,
+    ],
+  ];
+
+  // Updates by country.
+  foreach (reliefweb_subscriptions_get_countries() as $id => $info) {
+    $sid = 'country_updates_' . $id;
+    $name = $info['name'];
+    // We roughly calculate at which hour of the day the notification for
+    // the country should be sent so that a person in the country would receive
+    // it around 09:00 local time. This helps spread the load.
+    $hour = 9 - $info['timezone'];
+    $hour = $hour < 0 ? $hour + 24 : $hour;
+
+    $subscriptions[$sid] = [
+      'id' => $sid,
+      'name' => t('Updates on @country', ['@country' => $name]),
+      'description' => t('Updates on @country (daily)', ['@country' => $name]),
+      'group' => 'country_updates',
+      // This is just for convenience for the `My subscriptions` page and the
+      // template preprocess function.
+      'country' => $name,
+      // Sengrid cateogry.
+      'category' => 'CountryReports',
+      'type' => 'scheduled',
+      // Daily at $hour.
+      'frequency' => '0 ' . $hour . ' * * *',
+      'template' => 'country_updates',
+      // Always in English as we send Bulk emails.
+      'subject' => $name . ' Updates',
+      'bundle' => 'report',
+      'resource' => 'reports',
+      'payload' => [
+        'filter' => [
+          'field' => 'primary_country.id',
+          'value' => intval($id),
+        ],
+        'fields' => [
+          'include' => [
+            'title',
+            'url_alias',
+            'source.name',
+            'source.shortname',
+            'primary_country.id',
+            'primary_country.name',
+            'date.original',
+            'body',
+            'file.description',
+            'file.preview.url-thumb',
+          ],
+        ],
+        'sort' => ['date.original:desc'],
+        'limit' => 200,
+      ],
+    ];
+  }
+
+  return $subscriptions;
+}
+
+/**
+ * Get countries.
+ *
+ * @return array
+ *   List of countries keyed by ID.
+ */
+function reliefweb_subscriptions_get_countries() {
+  return [];
+}
