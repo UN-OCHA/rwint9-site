@@ -17,11 +17,15 @@
  */
 
 #}
+
+{% block library %}
+{% endblock %}
+
 <article{{ create_attribute()
   .addClass([
     'rw-river-article',
-    'rw-river-article--' ~ entity.bundle,
-    entity.summary ? 'rw-river-article--with-summary',
+    'rw-river-article--' ~ entity.bundle|clean_class,
+    entity.summary ? 'rw-river-article--with-summary'
   ])
   .setAttribute('data-id', entity.id)
 }}>

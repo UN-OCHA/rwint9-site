@@ -17,13 +17,17 @@
  */
 
 #}
+
+{% block library %}
+{% endblock %}
+
 <article{{ create_attribute()
   .addClass([
     'rw-river-article',
     'rw-river-article--' ~ entity.bundle,
   ])
   .setAttribute('data-id', entity.id)
-  .setAttribute('data-disaster-type', entity.id)
+  .setAttribute('data-disaster-type', entity.type)
   .setAttribute('data-disaster-status', entity.status)
 }}>
   {# Header with country slug and title. #}

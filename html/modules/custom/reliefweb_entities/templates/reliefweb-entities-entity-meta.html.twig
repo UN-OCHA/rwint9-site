@@ -18,7 +18,11 @@
  */
 
 #}
-<dl class="rw-entity-meta">
+
+{% block library %}
+{% endblock %}
+
+<dl class="rw-meta rw-article-meta">
   {% set meta = meta|filter(data => data.value is not empty) %}
   {% set last = meta|keys|last %}
 

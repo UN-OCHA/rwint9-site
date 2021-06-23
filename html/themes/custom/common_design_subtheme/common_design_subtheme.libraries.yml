@@ -3,35 +3,7 @@ global-styling:
     theme:
       css/styles.css: {}
 
-# Icon sprite.
-rw-icons:
-  css:
-    theme:
-      components/rw-icons/rw-icons.css: {}
-
-# Autocomplete widget.
-rw-autocomplete:
-  css:
-    theme:
-      components/rw-autocomplete/rw-autocomplete.css: {}
-  dependencies:
-    - common_design_subtheme/rw-icons
-
-# Datepicker widget.
-rw-datepicker:
-  css:
-    theme:
-      components/rw-datepicker/rw-datepicker.css: {}
-  dependencies:
-    - common_design_subtheme/rw-icons
-
-# Filter/value selection.
-rw-selection:
-  css:
-    theme:
-      components/rw-selection/rw-selection.css: {}
-  dependencies:
-    - common_design_subtheme/rw-icons
+# RW custom components
 
 # Filters for the rivers.
 rw-advanced-search:
@@ -43,3 +15,111 @@ rw-advanced-search:
     - common_design_subtheme/rw-autocomplete
     - common_design_subtheme/rw-datepicker
     - common_design_subtheme/rw-selection
+
+rw-announcement:
+  css:
+    theme:
+      components/rw-announcement/rw-announcement.css: {}
+
+rw-article:
+  css:
+    theme:
+      components/rw-article/rw-article.css: {}
+
+# Autocomplete widget.
+rw-autocomplete:
+  css:
+    theme:
+      components/rw-autocomplete/rw-autocomplete.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+
+rw-blog:
+  css:
+    theme:
+      components/rw-blog/rw-blog.css: {}
+
+rw-country:
+  css:
+    theme:
+      components/rw-country/rw-country.css: {}
+
+# Datepicker widget.
+rw-datepicker:
+  css:
+    theme:
+      components/rw-datepicker/rw-datepicker.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+
+rw-disasters:
+  css:
+    theme:
+      components/rw-disasters/rw-disasters.css: {}
+
+rw-headlines:
+  css:
+    theme:
+      components/rw-headlines/rw-headlines.css: {}
+
+rw-homepage:
+  css:
+    theme:
+      components/rw-homepage/rw-homepage.css: {}
+      components/rw-homepage/rw-homepage--grid.css: {}
+
+# Icon sprite.
+rw-icons:
+  css:
+    theme:
+      components/rw-icons/rw-icons.css: {}
+
+rw-meta:
+  css:
+    theme:
+      components/rw-meta/rw-meta.css: {}
+
+rw-most-read:
+  css:
+    theme:
+      components/rw-most-read/rw-most-read.css: {}
+
+rw-opportunities:
+  css:
+    theme:
+      components/rw-opportunities/rw-opportunities.css: {}
+
+# Filter/value selection.
+rw-selection:
+  css:
+    theme:
+      components/rw-selection/rw-selection.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+
+rw-view-more:
+  css:
+    theme:
+      components/rw-view-more/rw-view-more.css: {}
+
+# CD components extended
+cd-block-title:
+  css:
+    theme:
+      components/cd-block-title/cd-block-title.css: {}
+
+cd-button:
+  css:
+    theme:
+      components/cd-button/cd-button.css: {}
+
+cd-card:
+  css:
+    theme:
+      components/cd-card/cd-card.css: {}
+
+cd-tag:
+  css:
+    theme:
+      components/cd-tag/cd-tag.css: {}
+

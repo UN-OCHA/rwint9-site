@@ -1,0 +1,151 @@
+:root {
+  /* Define the Primary colour. */
+  /* Based on OCHA brand guidelines */
+  /* Page 22 https://www.dropbox.com/s/j6tgps8u4u1ht4j/01_visual_identity.pdf?dl=1 */
+
+  /* Custom properties for IE.
+  /* This is needed due to inability to process calc() functions nested within color functions */
+  --cd-ie-primary-color: #0988bb;
+  --cd-ie-primary-color--light: #63cef8;
+  --cd-ie-primary-color--dark: #032b3a;
+  --cd-ie-primary-color--lighter: #c0ebfc;
+
+  --cd-primary-color-h: 197;
+  --cd-primary-color-s: 91%;
+  --cd-primary-color-l: 38%;
+  --cd-primary-color: hsl(var(--cd-primary-color-h), var(--cd-primary-color-s), var(--cd-primary-color-l));
+
+  /* lighten */
+  --cd-primary-color--light: hsl(var(--cd-primary-color-h), var(--cd-primary-color-s), calc(var(--cd-primary-color-l) + 30%));
+
+  /* darken */
+  --cd-primary-color--dark: hsl(var(--cd-primary-color-h), var(--cd-primary-color-s), calc(var(--cd-primary-color-l) - 26%));
+
+  /* For cd-button--light */
+  /* Change the lightness. Other values remain the same */
+  --cd-primary-color--lighter: hsl(var(--cd-primary-color-h), var(--cd-primary-color-s), calc(var(--cd-primary-color-l) + 39%));
+}
+
+/* Default button */
+.cd-button {
+  background-color: var(--cd-primary-color);
+}
+
+/* For IE11 */
+@media all and (-ms-high-contrast: none) {
+  .cd-button {
+    background-color: var(--cd-ie-primary-color);
+  }
+}
+
+.cd-button:hover,
+.cd-button:focus {
+  color: var(--cd-white);
+  background-color: var(--cd-primary-color--light);
+}
+
+/* For IE11 */
+@media all and (-ms-high-contrast: none) {
+  .cd-button:hover,
+  .cd-button:focus {
+    background-color: var(--cd-ie-primary-color--light);
+  }
+}
+
+.cd-button:focus {
+  border: 2px solid var(--cd-primary-color--dark);
+  /* We remove the outline because we are adding a border. */
+  /* so the rounded corners look nicer on hover */
+  outline: 0 solid var(--cd-primary-color--light);
+}
+
+/* For IE11 */
+@media all and (-ms-high-contrast: none) {
+  .cd-button:focus {
+    border: 2px solid var(--cd-ie-primary-color--dark);
+    /* We remove the outline because we are adding a border. */
+    /* so the rounded corners look nicer on hover */
+    outline: 0 solid var(--cd-ie-primary-color--light);
+  }
+}
+
+/* For buttons on dark backgrounds */
+.cd-button--light {
+  color: var(--cd-primary-color--dark);
+  background-color: var(--cd-primary-color--lighter);
+}
+
+/* For IE11 */
+@media all and (-ms-high-contrast: none) {
+  /* For buttons on dark backgrounds */
+  .cd-button--light {
+    color: var(--cd-ie-primary-color--dark);
+    background-color: var(--cd-ie-primary-color--lighter);
+  }
+}
+
+.cd-button--light:hover,
+.cd-button--light:focus {
+  color: var(--cd-primary-color--dark);
+  background-color: var(--cd-primary-color--light);
+}
+
+/* For IE11 */
+@media all and (-ms-high-contrast: none) {
+  .cd-button--light:hover,
+  .cd-button--light:focus {
+    color: var(--cd-ie-primary-color--dark);
+    background-color: var(--cd-ie-primary-color--light);
+  }
+}
+
+.cd-button--outline {
+  color: var(--cd-primary-color);
+  border-color: var(--cd-primary-color);
+  background-color: var(--cd-white);
+  fill: currentColor;
+}
+
+/* For IE11 */
+@media all and (-ms-high-contrast: none) {
+  .cd-button--outline {
+    color: var(--cd-ie-primary-color);
+    border-color: var(--cd-ie-primary-color);
+    background-color: var(--cd-white);
+  }
+}
+
+.cd-button--outline:hover,
+.cd-button--outline:focus {
+  color: var(--cd-white);
+  border-color: var(--cd-primary-color--dark);
+  background-color: var(--cd-primary-color);
+}
+
+/* For IE11 */
+@media all and (-ms-high-contrast: none) {
+  .cd-button--outline:hover,
+  .cd-button--outline:focus {
+    color: var(--cd-ie-primary-color--dark);
+    border-color: var(--cd-ie-primary-color--dark);
+    background-color: var(--cd-white);
+  }
+}
+
+.cd-button--icon:hover svg,
+.cd-button--icon:focus svg {
+  fill: var(--cd-white);
+}
+
+.cd-button--light:hover svg,
+.cd-button--light:focus svg {
+  fill: currentColor;
+}
+
+/* For IE11 */
+@media all and (-ms-high-contrast: none) {
+  .cd-button--light:hover svg,
+  .cd-button--light:focus svg {
+    fill: var(--cd-ie-primary-color--dark);
+  }
+}

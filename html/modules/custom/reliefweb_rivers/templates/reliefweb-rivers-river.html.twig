@@ -19,14 +19,21 @@
  */
 
 #}
+
+{% block library %}
+{% endblock %}
+
 <section {{ create_attribute()
-  .setAttribute('id', id)
+  .setAttribute('id', id|clean_id)
   .addClass([
     'rw-river',
-    'rw-river--' ~ id,
+    'rw-river--' ~ id|clean_id,
   ])
 }}>
-  <h{{ level }}>{{ title }}</h{{ level }}>
+
+  {% block heading %}
+    <h{{ level }}>{{ title }}</h{{ level }}>
+  {% endblock %}
 
   <div class="rw-river__articles">
     {% for entity in entities %}

@@ -1,0 +1,210 @@
+/**
+ * Sub article.
+ *
+ * Articles in a section like headlines etc.
+ *
+ * Scope: #main-content section article
+ */
+#main-content section article {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 0;
+  border-top: 1px solid #e6ecef;
+}
+#main-content section article:first-child {
+  border-top: none;
+}
+#main-content section article header {
+  /* Compensate the half-leading space from the title line-height. */
+  margin-top: -5px;
+}
+#main-content section article header p.country {
+  margin: 2px 6px 0 0;
+  padding: 1px 8px;
+  font-size: 14px;
+  line-height: 22px;
+}
+#main-content section article > header .title,
+#main-content section article > .title {
+  display: inline;
+  margin: 0;
+  color: #055372;
+  font-size: 17px;
+  font-weight: bold;
+  line-height: 28px;
+}
+#main-content section article > header .title a,
+#main-content section article > .title a {
+  color: inherit;
+}
+#main-content section article .content {
+  display: flex;
+  flex: 1 0 auto;
+  align-items: center;
+  padding-top: 16px;
+  /* #2e3436 with 0.85 opacity on white. */
+  color: #4d5254;
+}
+/* Article with a thumbnail preview (typically Map and Infographic). */
+#main-content section article .content img {
+  float: left;
+  max-height: 118px;
+  margin: 2px 20px 0 0;
+  border: 1px solid #e6ecef;
+}
+#main-content section article .content img + p {
+  margin-top: 0;
+}
+
+@media all and (max-width: 479px) {
+  #main-content section article .content img {
+    display: none;
+  }
+}
+#main-content section article footer {
+  /* Clear any floating from the content. */
+  clear: both;
+  /* Compensate  the half-leading space added by the line-height of the <dl>. */
+  margin-bottom: -8px;
+  padding-top: 16px;
+}
+#main-content section article header + footer {
+  padding-top: 12px;
+}
+
+/**
+ * Article meta information.
+ *
+ * Meta information like source or publication date, generally in the header or
+ * footer.
+ *
+ * Scope: #main-content article dl.meta
+ */
+#main-content article dl.meta {
+  margin: 0;
+}
+#main-content article dl.meta + dl.meta {
+  margin-top: 4px;
+}
+#main-content article dl.meta:after {
+  display: block;
+  clear: both;
+  content: "";
+}
+#main-content article dl.meta dt {
+  display: inline;
+  float: left;
+  clear: both;
+  margin: 0 4px 0 0;
+  font-size: 15px;
+  font-weight: bold;
+  /* To have enough tapping space between links. */
+  line-height: 29px;
+}
+#main-content article dl.meta dt:after {
+  content: ": ";
+}
+#main-content article dl.meta dd {
+  margin: 0;
+  /* To have enough tapping space between links. */
+  line-height: 30px;
+}
+#main-content article dl.meta dd ul,
+#main-content article dl.meta dd li {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+#main-content article dl.meta dd li:after {
+  content: ", ";
+}
+/* This will be ignored in IE8 but it's not a big deal. */
+#main-content article dl.meta dd li:last-child:after,
+#main-content article dl.meta dd li[data-last]:after {
+  content: none;
+}
+#main-content article dl.meta dd li[data-more]:before {
+  content: " + ";
+}
+#main-content > article header dl.meta {
+  margin: 8px 0 -6px 0;
+}
+/* Show the meta information inline. */
+@media screen and (min-width: 480px) {
+  #main-content article header dl.meta dt {
+    float: none;
+  }
+  #main-content article header dl.meta dd {
+    display: inline;
+  }
+  /* Separator. */
+  #main-content article header dl.meta dd:after {
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    margin: 0 8px;
+    padding: 0;
+    content: "";
+    vertical-align: middle;
+    border-radius: 4px;
+    background: #2e3436;
+  }
+  #main-content article header dl.meta dd:last-of-type:after {
+    content: none;
+  }
+}
+
+/**
+ * Meta for river articles.
+ *
+ * Scope: #main-content section article
+ */
+#main-content section article dl.meta {
+  margin: 0;
+}
+#main-content section article dl.meta dt {
+  display: inline-block;
+  float: none;
+  font-size: 14px;
+}
+#main-content section article dl.meta dd {
+  display: inline-block;
+  font-size: 15px;
+}
+#main-content section article dl.meta.core {
+  /* #2e3436 with 0.85 opacity on white. */
+  color: #4d5254;
+}
+#main-content section article dl.meta.core dd:after {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  margin: 0 8px;
+  padding: 0;
+  content: "";
+  vertical-align: middle;
+  border-radius: 4px;
+  background: #2e3436;
+}
+#main-content section article dl.meta.core dd.created:after {
+  margin-left: 12px;
+}
+/* This will be ignored in IE8 but it's not a big deal. */
+#main-content section article dl.meta.core dd:last-of-type:after,
+#main-content section article dl.meta.core dd[data-last]:after {
+  content: none;
+}
+/* Display meta one per line on smaller screen to improve readability. */
+@media all and (max-width: 479px) {
+  #main-content section article dl.meta.core dd {
+    display: inline;
+  }
+  #main-content section article dl.meta.core dd:after {
+    display: block;
+    width: 0;
+    height: 0;
+    margin: 0;
+  }
+}

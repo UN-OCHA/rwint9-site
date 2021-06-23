@@ -12,8 +12,14 @@
  */
 
 #}
+
+{% block library %}
+{% endblock %}
+
 {% if countries %}
-<p class="rw-entity-country-slug">
+  {% block wrapper %}
+    <p class="rw-entity-country-slug">
+  {% endblock %}
   {% for item in countries|taglist(1, 'shortname') %}
     <a class="rw-entity-country-slug__link" href="{{ item.url }}">{{ item.shortname ?? item.name }}</a>
   {% endfor %}

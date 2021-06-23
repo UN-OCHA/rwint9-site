@@ -1,0 +1,229 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="344" height="378" viewBox="0 0 344 378">
+  <style>
+    .grey {
+      fill: #b6c8d0;
+    }
+    .dark-grey {
+      fill: #2e3436;
+    }
+    .dark-blue {
+      fill: #055372;
+    }
+    .dark-red {
+      fill: #eb1405;
+    }
+    .white {
+      fill: #ffffff;
+    }
+    .blue {
+      fill: #0988bb;
+    }
+    .green {
+      fill: #88bb09;
+    }
+    .orange {
+      fill: #eb8705;
+    }
+    .red {
+      fill: #f65c51;
+    }
+  </style>
+  <!-- Common -->
+  <symbol viewBox="0 0 46 46" id="close" data-source="exit-cancel">
+    <path d="M28.657 23L44.83 6.828a4 4 0 0 0-5.657-5.657L23 17.343 6.83 1.17a4 4 0 0 0-5.657 5.657L17.342 23 1.173 39.17a4 4 0 0 0 5.657 5.657L23 28.657l16.172 16.171a4 4 0 0 0 5.657-5.657z"/>
+  </symbol>
+  <symbol viewBox="0 0 48 37" id="selected" data-source="selected">
+    <path d="M19 37a3.999 3.999 0 0 1-3-1.354l-15-17a4 4 0 0 1 6-5.293l11.965 13.56L40.97 1.389a4 4 0 0 1 6.06 5.223l-25 29A4 4 0 0 1 19.023 37z"/>
+  </symbol>
+  <symbol viewBox="0 0 48 48" id="add" data-source="add">
+    <path d="M44 19.996h-.001L27.995 20l-.003-16a4 4 0 0 0-4-3.999 4 4 0 0 0-4 4.001l.003 16-15.996.003a4 4 0 0 0 .001 8h.001L19.997 28 20 44A4 4 0 0 0 24 48h.001A4 4 0 0 0 28 43.999l-.003-16L44 27.996a4 4 0 0 0-.001-8z"/>
+  </symbol>
+  <symbol viewBox="0 0 48 8.008" id="remove" data-source="remove">
+    <path d="M4 8.008a4 4 0 0 1-.001-8l40-.008H44a4 4 0 0 1 .001 8l-40 .008z"/>
+  </symbol>
+  <symbol viewBox="0 0 32 42" id="bookmark" data-source="bookmark">
+    <path d="M30.316 41.728l-13.632-12.78a1 1 0 0 0-1.368 0L1.684 41.727A1 1 0 0 1 0 40.998V0h32v40.998a1 1 0 0 1-1.684.73z"/>
+  </symbol>
+  <symbol viewBox="0 0 48 48" id="download" data-source="download">
+    <path d="M7.879 33.121l14 14a2.999 2.999 0 0 0 4.242 0l14-14a3 3 0 1 0-4.242-4.242L27 37.758V12a3 3 0 0 0-6 0v25.758l-8.879-8.88a3 3 0 1 0-4.242 4.243z"/>
+    <path d="M45.799 0H2.2A2.373 2.373 0 0 0 0 2.514v8.972A2.373 2.373 0 0 0 2.201 14H18v-2a6 6 0 0 1 12 0v2h15.799A2.373 2.373 0 0 0 48 11.486V2.514A2.373 2.373 0 0 0 45.799 0zM36 9a2 2 0 1 1 2-2 2 2 0 0 1-2 2zm7 0a2 2 0 1 1 2-2 2 2 0 0 1-2 2z"/>
+  </symbol>
+  <symbol viewBox="0 0 48 42" id="print" data-source="print">
+    <path d="M44 1c0-.552-.689-1-1.538-1H5.538C4.688 0 4 .448 4 1v3h40zM46 6H2a2.006 2.006 0 0 0-2 2v15.96a2.006 2.006 0 0 0 2 2h6v-9.97h32v9.97h6a2.006 2.006 0 0 0 2-2V8a2.006 2.006 0 0 0-2-2zm-15 7a2 2 0 1 1 2-2 2.006 2.006 0 0 1-2 2zm7 0a2 2 0 1 1 2-2 2.006 2.006 0 0 1-2 2z"/>
+    <path d="M10 25.96V41a1.003 1.003 0 0 0 1 1h26a1.003 1.003 0 0 0 1-1V17.99H10zM34 35H14a1 1 0 0 1 0-2h20a1 1 0 0 1 0 2zm0-6H14a1 1 0 0 1 0-2h20a1 1 0 0 1 0 2z"/>
+  </symbol>
+  <symbol viewBox="0 0 48 30" id="email" data-source="e-mail">
+    <path d="M46 0H2a2.006 2.006 0 0 0-2 2v26a2.006 2.006 0 0 0 2 2h44a2.006 2.006 0 0 0 2-2V2a2.006 2.006 0 0 0-2-2zM13.3 20.52l-7 6a2 2 0 0 1-2.6-3.04l7-6a2 2 0 0 1 2.6 3.04zm31.22 5.78a2 2 0 0 1-2.82.22l-7-6a2 2 0 0 1 2.6-3.04l7 6a1.998 1.998 0 0 1 .22 2.82zm-.33-19.69l-19 14a2.01 2.01 0 0 1-2.38 0l-19-14a2.002 2.002 0 1 1 2.38-3.22L24 16.52 41.81 3.39a2.002 2.002 0 1 1 2.38 3.22z"/>
+  </symbol>
+  <symbol viewBox="0 0 46 47.97" id="link" data-source="link">
+    <path d="M44.56 8.392L37.46 1.44a4.916 4.916 0 0 0-6.953 0L13.511 18.435a4.916 4.916 0 0 0 0 6.953l3.476 3.476a1.093 1.093 0 0 0 1.545 0l2.318-2.318a1.092 1.092 0 0 0 0-1.545l-3.09-3.09L33.982 5.69l6.18 6.18-6.952 6.952 1.446 1.445a8.14 8.14 0 0 1 1.88 2.953l8.024-7.874a4.916 4.916 0 0 0 0-6.953z"/>
+    <path d="M28.862 19.108a1.092 1.092 0 0 0-1.545 0l-2.318 2.317a1.093 1.093 0 0 0 0 1.545l.772.773 2.318 2.317-9.27 9.27-6.953 6.953-3.09-3.09-3.09-3.09 6.953-6.953-.386-.386-.002-.001-1.057-1.059a8.135 8.135 0 0 1-1.882-2.952l-7.874 7.875a4.922 4.922 0 0 0 0 6.952l6.952 6.953a4.922 4.922 0 0 0 6.953 0l8.508-8.509 8.487-8.486a4.922 4.922 0 0 0 0-6.953z"/>
+  </symbol>
+  <symbol viewBox="0 0 48 48" id="external-link" data-source="external-link">
+    <path d="M35,20.65V42H6V18H22.09l9-9H4.2A2.2,2.2,0,0,0,2,11.2V43.8A2.2,2.2,0,0,0,4.2,46H36.8A2.2,2.2,0,0,0,39,43.8V16.65ZM12.5,12A1.5,1.5,0,1,1,11,13.5,1.5,1.5,0,0,1,12.5,12Zm-5,0A1.5,1.5,0,1,1,6,13.5,1.5,1.5,0,0,1,7.5,12Z"/>
+    <path d="M44,2H23a2,2,0,0,0,0,4H39L16.51,28.52a2.1,2.1,0,0,0,3,3L42,9V25a2,2,0,0,0,4,0V4A2,2,0,0,0,44,2Z"/>
+  </symbol>
+  <symbol viewBox="0 0 48 36" id="next" data-source="next-item">
+    <path d="M46.829 15.172l-14-14a4 4 0 0 0-5.658 5.656L34.343 14H4a4 4 0 0 0 0 8h30.343l-7.172 7.172a4 4 0 1 0 5.658 5.656l14-14a4 4 0 0 0 0-5.656z"/>
+  </symbol>
+  <symbol viewBox="0 0 48 36" id="previous" data-source="previous-item">
+    <path d="M44 14H13.657l7.172-7.172a4 4 0 0 0-5.657-5.656l-14 14a4 4 0 0 0 0 5.656l14 14a4 4 0 1 0 5.657-5.656L13.657 22H44a4 4 0 0 0 0-8z"/>
+  </symbol>
+  <symbol viewBox="0 0 34 44" id="user" data-source="user">
+    <path d="M19 23h-4A15 15 0 0 0 0 38v6h34v-6a15 15 0 0 0-15-15z"/>
+    <circle cx="17" cy="10" r="10"/>
+  </symbol>
+  <symbol viewBox="0 0 28 48" id="help" data-source="help modified">
+    <circle cx="14" cy="44" r="4"/>
+    <path d="M28 14a14 14 0 0 0-28 0 4 4 0 0 0 8 0 6 6 0 1 1 6 6 4 4 0 0 0-4 4v9a4 4 0 0 0 8 0v-5.59A14.02 14.02 0 0 0 28 14z"/>
+  </symbol>
+  <symbol viewBox="0 0 48 48" id="admin" data-source="settings">
+    <path d="M45 21h-1.25a19.867 19.867 0 0 0-3.668-8.84l.889-.888a3 3 0 1 0-4.242-4.243l-.89.889A19.868 19.868 0 0 0 27 4.25V3a3 3 0 0 0-6 0v1.25a19.868 19.868 0 0 0-8.84 3.668l-.888-.889a3 3 0 1 0-4.243 4.243l.889.889A19.867 19.867 0 0 0 4.25 21H3a3 3 0 0 0 0 6h1.25a19.867 19.867 0 0 0 3.668 8.84l-.889.888a3 3 0 0 0 4.242 4.243l.89-.889A19.868 19.868 0 0 0 21 43.75V45a3 3 0 0 0 6 0v-1.25a19.868 19.868 0 0 0 8.84-3.668l.888.889a3 3 0 1 0 4.243-4.243l-.889-.889A19.867 19.867 0 0 0 43.75 27H45a3 3 0 0 0 0-6zM24 38a14 14 0 1 1 14-14 14.016 14.016 0 0 1-14 14z"/>
+  </symbol>
+  <symbol viewBox="0 0 44 48" id="filter" data-source="filter">
+    <path d="M41.796 0H2.204A2.2 2.2 0 00.65 3.756L18 22.19V48h8V22.19L43.351 3.756A2.2 2.2 0 0041.796 0z"/>
+  </symbol>
+  <symbol viewBox="0 0 28 48" id="arrow-right" data-source="go">
+    <path d="M4 48a4 4 0 01-2.828-6.829L18.343 24 1.172 6.828a4 4 0 015.657-5.657l20 20a4 4 0 010 5.657l-20 20A3.989 3.989 0 014 48z"/>
+  </symbol>
+  <symbol viewBox="0 0 28 48" id="arrow-left" data-source="return">
+    <path d="M24 48a3.989 3.989 0 01-2.828-1.172l-20-20a4 4 0 010-5.657l20-20a4 4 0 015.657 5.657L9.657 24 26.829 41.17A4 4 0 0124 48z"/>
+  </symbol>
+  <symbol viewBox="0 0 48 48" id="double-arrow-right" data-source="go modified">
+    <path d="M4 47.996c-2.194 0-4-1.806-4-4a4 4 0 011.172-2.828l17.172-17.172L1.172 6.825A4 4 0 01.004 4c0-2.194 1.806-4 4.001-4a4 4 0 012.824 1.168l20 20c1.552 1.551 1.552 4.105 0 5.657l-20 20A3.99 3.99 0 014 47.996zm20.008 0h-.001c-2.194 0-4-1.806-4-4a4 4 0 011.172-2.828l17.172-17.172L21.179 6.825A4.004 4.004 0 0120.012 4c0-2.194 1.805-4 4-4 1.058 0 2.075.42 2.824 1.168l20 20c1.552 1.551 1.552 4.105 0 5.657l-20 20a3.99 3.99 0 01-2.828 1.171z"/>
+  </symbol>
+  <symbol viewBox="0 0 48 48" id="double-arrow-left" data-source="return modified">
+    <path d="M23.992 47.996a3.99 3.99 0 01-2.828-1.171l-20-20c-1.552-1.552-1.552-4.106 0-5.657l20-20A3.998 3.998 0 0123.988 0c2.195 0 4 1.806 4 4 0 1.059-.42 2.075-1.167 2.825L9.649 23.996l17.172 17.172a4 4 0 011.172 2.828c0 2.194-1.806 4-4 4h-.001zm20.008 0a3.99 3.99 0 01-2.829-1.171l-20-20c-1.552-1.552-1.552-4.106 0-5.657l20-20A4 4 0 0143.995 0c2.195 0 4.001 1.806 4.001 4a4 4 0 01-1.168 2.825L29.656 23.996l17.172 17.172A4 4 0 0148 43.996c0 2.194-1.806 4-4 4z"/>
+  </symbol>
+  <!-- Toggle -->
+  <symbol viewBox="0 0 48 28" id="down" data-source="down">
+    <path d="M48 4a3.989 3.989 0 0 1-1.172 2.829l-20 20a4 4 0 0 1-5.657 0l-20-20a4 4 0 0 1 5.657-5.657L24 18.343 41.17 1.172A4 4 0 0 1 48 4z"/>
+  </symbol>
+  <symbol viewBox="0 0 48 28" id="up" data-source="up">
+    <path d="M0 24a3.989 3.989 0 0 1 1.171-2.828l20-20a4 4 0 0 1 5.658 0l20 20a4 4 0 1 1-5.658 5.657L24 9.657 6.829 26.829A4 4 0 0 1 0 24z"/>
+  </symbol>
+  <!-- Status -->
+  <symbol viewBox="0 0 42 42" id="info" data-source="about">
+    <path d="M38 0H4a4 4 0 0 0-4 4v34a4 4 0 0 0 4 4h34a4 4 0 0 0 4-4V4a4 4 0 0 0-4-4zM24 35h-4a2 2 0 0 1-2-2V18h4a2 2 0 0 1 2 2zm-3-22a3 3 0 1 1 3-3 3 3 0 0 1-3 3z"/>
+  </symbol>
+  <symbol viewBox="0 0 44 44" id="ok" data-source="not-affected">
+    <path d="M22 0a22 22 0 1 0 22 22A22 22 0 0 0 22 0zm14.15 16.09l-15.5 16a2.994 2.994 0 0 1-2.15.91h-.02a2.951 2.951 0 0 1-2.16-.94l-8.5-9a3 3 0 1 1 4.36-4.12l6.35 6.72 13.32-13.75a2.998 2.998 0 0 1 4.3 4.18z"/>
+  </symbol>
+  <symbol viewBox="0 0 47.996 41.01" id="warning" data-source="alert">
+    <path d="M47.668 37.41L27.118 1.8a3.604 3.604 0 0 0-6.24 0L.328 37.41a2.398 2.398 0 0 0 2.08 3.6h43.18a2.398 2.398 0 0 0 2.08-3.6zm-23.67-3.4a2 2 0 1 1 2-2 2.006 2.006 0 0 1-2 2zm2-9a2 2 0 0 1-4 0v-11a2 2 0 1 1 4 0z"/>
+  </symbol>
+  <symbol viewBox="0 0 44 44" id="error" data-source="destroyed">
+    <path d="M22 0a22 22 0 1 0 22 22A22 22 0 0 0 22 0zm10.12 27.88a3 3 0 0 1 0 4.24 2.994 2.994 0 0 1-4.24 0L22 26l-5.88 6.12a2.994 2.994 0 0 1-4.24 0 3 3 0 0 1 0-4.24L18 22l-6.12-5.88a2.998 2.998 0 0 1 4.24-4.24L22 18l5.88-6.12a2.998 2.998 0 0 1 4.24 4.24L26 22z"/>
+  </symbol>
+  <symbol viewBox="0 0 42 48" id="calendar" data-source="calendar">
+    <path d="M40 6h-5v2.5a3.5 3.5 0 01-7 0V6H15v2.5a3.5 3.5 0 01-7 0V6H2a1.993 1.993 0 00-2 2v38a1.993 1.993 0 002 2h38a1.993 1.993 0 002-2V8a1.993 1.993 0 00-2-2zm-2 38H4V18h34z"/>
+    <path d="M11.5 10A1.498 1.498 0 0013 8.5v-7a1.5 1.5 0 00-3 0v7a1.498 1.498 0 001.5 1.5zm20 0A1.498 1.498 0 0033 8.5v-7a1.5 1.5 0 00-3 0v7a1.498 1.498 0 001.5 1.5zM18.74 30.52l-5.27 4.95a1.444 1.444 0 00-.47 1.06 1.46 1.46 0 00.47 1.06 1.685 1.685 0 002.26 0L21 32.64l5.27 4.95a1.7 1.7 0 001.14.44 1.632 1.632 0 001.12-.44 1.425 1.425 0 000-2.12l-5.27-4.95 5.27-4.95a1.46 1.46 0 00.47-1.06 1.444 1.444 0 00-.47-1.06 1.664 1.664 0 00-2.26 0L21 28.4l-5.27-4.96A1.628 1.628 0 0014.6 23a1.611 1.611 0 00-1.13.44 1.425 1.425 0 000 2.12z"/>
+  </symbol>
+  <!-- Search -->
+  <symbol viewBox="0 0 48 48" id="search" data-source="search">
+    <path d="M46.829 41.172L38.4 32.744a21.018 21.018 0 1 0-5.657 5.657l8.427 8.427a4 4 0 0 0 5.658-5.656zM8 21a13 13 0 1 1 22.325 9.046c-.05.045-.106.078-.154.126s-.08.104-.125.154A12.992 12.992 0 0 1 8 21z"/>
+  </symbol>
+  <!-- Content types -->
+  <symbol viewBox="0 0 49 48" id="job" data-source="monitoring medical-supply combined modified">
+    <path d="M8.38 33.8L1.2 40.98a4.116 4.116 0 0 0-1.199 2.904c0 2.258 1.857 4.115 4.115 4.115A4.116 4.116 0 0 0 7.02 46.8l7.18-7.18a24.01 24.01 0 0 1-5.82-5.82zM28 0C17.028 0 8 9.028 8 20s9.028 20 20 20 20-9.028 20-20v-.006C48 9.026 38.974 0 28.006 0H28zm11 30.18a15.008 15.008 0 0 1-11 4.802c-8.222 0-14.99-6.76-15-14.982v-.018c0-8.229 6.771-15 15-15s15 6.771 15 15c0 3.781-1.43 7.425-4 10.198z"/>
+    <path d="M37.167 14.75h-4.584v-2.917A.839.839 0 0 0 31.75 11h-7.5a.839.839 0 0 0-.833.833v2.917h-4.584a.84.84 0 0 0-.833.833V27.25a.839.839 0 0 0 .833.833h18.334A.839.839 0 0 0 38 27.25V15.583a.84.84 0 0 0-.833-.833zM25.5 13.083h5v1.667h-5v-1.667z"/>
+  </symbol>
+  <symbol viewBox="0 0 48 48" id="training" data-source="training">
+    <circle cx="13" cy="4" r="4"/>
+    <path d="M46 0H24a2 2 0 0 0-2 2v8h-9.024C5.578 10 0 15.16 0 22a2 2 0 0 0 4 0 7.453 7.453 0 0 1 4-6.75V29.1c0 .03.007.057.009.086-.002.03-.009.057-.009.087V46a2 2 0 0 0 4 0V31h2v15a2 2 0 0 0 4 0V29.273c0-.03-.007-.057-.009-.087.002-.029.009-.056.009-.086V14h4v7a2 2 0 0 0 2 2h22a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM30 10h-4V4h18v15H26v-5h4a2 2 0 0 0 0-4z"/>
+  </symbol>
+  <symbol viewBox="0 0 32 44" id="report" data-source="document">
+    <path d="M30 0H2a2.006 2.006 0 0 0-2 2v40a2.006 2.006 0 0 0 2 2h19v-7a3.999 3.999 0 0 1 4-4h7V2a2.006 2.006 0 0 0-2-2zm-4.5 28h-19a1.5 1.5 0 0 1 0-3h19a1.5 1.5 0 0 1 0 3zm0-8h-19a1.5 1.5 0 0 1 0-3h19a1.5 1.5 0 0 1 0 3zm0-8h-19a1.5 1.5 0 0 1 0-3h19a1.5 1.5 0 0 1 0 3z"/>
+    <path d="M23 37v7l9-9h-7a2.006 2.006 0 0 0-2 2z"/>
+  </symbol>
+  <symbol viewBox="0 0 48 48" id="map" data-source="location">
+    <path d="M24 0C15.2 0 8 7.6 8 17c0 8 11.8 25.6 15.2 30.4.4.6 1.3.6 1.7 0C28.2 42.6 40 25 40 17c0-9.4-7.2-17-16-17zm0 23.9c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8z"/>
+  </symbol>
+  <symbol viewBox="0 0 48 48" id="infographic" data-source="chart">
+    <path d="M10 24H2c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V26c0-1.1-.9-2-2-2zM28 13h-7.9c-1.1 0-2 .9-2 2v29c0 1.1.9 2 2 2H28c1.1 0 2-.9 2-2V15c0-1.1-.9-2-2-2zM46 2h-8c-1.1 0-2 .9-2 2v40c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+  </symbol>
+  <symbol viewBox="0 0 48 44.064" id="interactive" data-source="information-management">
+    <path d="M2 8.017h4.317a6.007 6.007 0 0011.334 0H46a2 2 0 000-4H17.651a6.006 6.006 0 00-11.334 0H2a2 2 0 000 4zM11.984 4a2.016 2.016 0 11-2.016 2.017A2.018 2.018 0 0111.984 4zM46 36.049H25.683a6.006 6.006 0 00-11.334 0H2a2 2 0 000 4h12.349a6.007 6.007 0 0011.334 0H46a2 2 0 000-4zm-25.984 4.015a2.016 2.016 0 112.016-2.015 2.018 2.018 0 01-2.016 2.015zM46 20.032h-4.317a6.007 6.007 0 00-11.334 0H2a2 2 0 000 4h28.349a6.006 6.006 0 0011.334 0H46a2 2 0 000-4zm-9.984 4.017a2.016 2.016 0 112.016-2.017 2.018 2.018 0 01-2.016 2.017z"/>
+  </symbol>
+  <!-- Groups -->
+  <symbol id="group-common" viewBox="0 0 48 1008">
+    <use xlink:href="#close" width="48" height="48" y="0"/>
+    <use xlink:href="#selected" width="48" height="48" y="48"/>
+    <use xlink:href="#add" width="48" height="48" y="96"/>
+    <use xlink:href="#remove" width="48" height="48" y="144"/>
+    <use xlink:href="#bookmark" width="48" height="48" y="192"/>
+    <use xlink:href="#download" width="48" height="48" y="240"/>
+    <use xlink:href="#print" width="48" height="48" y="288"/>
+    <use xlink:href="#email" width="48" height="48" y="336"/>
+    <use xlink:href="#link" width="48" height="48" y="384"/>
+    <use xlink:href="#external-link" width="48" height="48" y="432"/>
+    <use xlink:href="#next" width="48" height="48" y="480"/>
+    <use xlink:href="#previous" width="48" height="48" y="528"/>
+    <use xlink:href="#user" width="48" height="48" y="576"/>
+    <use xlink:href="#help" width="48" height="48" y="624"/>
+    <use xlink:href="#admin" width="48" height="48" y="672"/>
+    <use xlink:href="#filter" width="48" height="48" y="720"/>
+    <use xlink:href="#arrow-right" width="48" height="48" y="768"/>
+    <use xlink:href="#arrow-left" width="48" height="48" y="816"/>
+    <use xlink:href="#double-arrow-right" width="48" height="48" y="864"/>
+    <use xlink:href="#double-arrow-left" width="48" height="48" y="912"/>
+    <use xlink:href="#calendar" width="48" height="48" y="960"/>
+  </symbol>
+  <symbol id="group-content" viewBox="0 0 48 288">
+    <use xlink:href="#job" width="48" height="48" y="0"/>
+    <use xlink:href="#training" width="48" height="48" y="48"/>
+    <use xlink:href="#report" width="48" height="48" y="96"/>
+    <use xlink:href="#map" width="48" height="48" y="144"/>
+    <use xlink:href="#infographic" width="48" height="48" y="192"/>
+    <use xlink:href="#interactive" width="48" height="48" y="240"/>
+  </symbol>
+  <symbol id="group-toggle" viewBox="0 0 48 96">
+    <use xlink:href="#down" width="48" height="48" y="0" />
+    <use xlink:href="#up" width="48" height="48" y="48"/>
+  </symbol>
+  <!-- Colored and sized groups -->
+  <symbol id="group-common-colored-18px" viewBox="0 0 72 378">
+    <use xlink:href="#group-common" width="18" height="378" x="0" class="dark-grey"/>
+    <use xlink:href="#group-common" width="18" height="378" x="18" class="dark-blue"/>
+    <use xlink:href="#group-common" width="18" height="378" x="36" class="dark-red"/>
+    <use xlink:href="#group-common" width="18" height="378" x="54" class="white"/>
+  </symbol>
+  <symbol id="group-common-colored-12px" viewBox="0 0 48 252">
+    <use xlink:href="#group-common" width="12" height="252" x="0" class="dark-grey"/>
+    <use xlink:href="#group-common" width="12" height="252" x="12" class="dark-blue"/>
+    <use xlink:href="#group-common" width="12" height="252" x="24" class="dark-red"/>
+    <use xlink:href="#group-common" width="12" height="252" x="36" class="white"/>
+  </symbol>
+  <symbol id="group-toggle-colored-18px-12px-9px" viewBox="0 0 66 36">
+    <use xlink:href="#group-toggle" width="18" height="36" x="0" class="white"/>
+    <use xlink:href="#group-toggle" width="12" height="24" x="18" class="dark-blue"/>
+    <use xlink:href="#group-toggle" width="9" height="18" x="30" class="dark-grey"/>
+    <use xlink:href="#group-toggle" width="9" height="18" x="39" class="dark-blue"/>
+    <use xlink:href="#group-toggle" width="9" height="18" x="48" class="dark-red"/>
+    <use xlink:href="#group-toggle" width="9" height="18" x="57" class="white"/>
+  </symbol>
+  <symbol id="group-status-colored-20px" viewBox="0 0 20 100">
+    <use xlink:href="#info" width="20" height="20" y="0" class="blue"/>
+    <use xlink:href="#info" width="20" height="20" y="20" class="green"/>
+    <use xlink:href="#ok" width="20" height="20" y="40" class="green"/>
+    <use xlink:href="#warning" width="20" height="20" y="60" class="orange"/>
+    <use xlink:href="#error" width="20" height="20" y="80" class="red"/>
+  </symbol>
+  <symbol id="group-search-colored-26px-18px" viewBox="0 0 62 26">
+    <use xlink:href="#search" width="26" height="26" x="0" class="white"/>
+    <use xlink:href="#search" width="18" height="18" x="26" class="dark-blue"/>
+    <use xlink:href="#search" width="18" height="18" x="44" class="dark-red"/>
+  </symbol>
+  <symbol id="group-content-colored-36px-24px-16px" viewBox="0 0 76 216">
+    <use xlink:href="#group-content" width="36" height="216" x="0" class="dark-blue"/>
+    <use xlink:href="#group-content" width="24" height="144" x="36" class="grey"/>
+    <use xlink:href="#group-content" width="16" height="96" x="60" class="dark-grey"/>
+  </symbol>
+  <!-- Actual content -->
+  <use xlink:href="#group-common-colored-18px" width="72" height="378" x="0"/>
+  <use xlink:href="#group-common-colored-12px" width="48" height="252" x="72"/>
+  <use xlink:href="#group-toggle-colored-18px-12px-9px" width="66" height="36" x="120"/>
+  <use xlink:href="#group-status-colored-20px" width="20" height="100" x="186"/>
+  <use xlink:href="#group-search-colored-26px-18px" width="62" height="26" x="206"/>
+  <use xlink:href="#group-content-colored-36px-24px-16px" width="76" height="216" x="268"/>
+</svg>
