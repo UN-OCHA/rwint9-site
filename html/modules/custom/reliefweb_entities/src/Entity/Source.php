@@ -24,6 +24,13 @@ class Source extends Term implements BundleEntityInterface, EntityModeratedInter
   /**
    * {@inheritdoc}
    */
+  public function getApiResource() {
+    return 'sources';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getPageContent() {
     $sections = $this->getPageSections();
     $contents = $this->getPageTableOfContents();

@@ -22,6 +22,13 @@ class Country extends Term implements BundleEntityInterface, EntityModeratedInte
   /**
    * {@inheritdoc}
    */
+  public function getApiResource() {
+    return 'countries';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getPageContent() {
     $sections = $this->getPageSections();
     $contents = $this->getPageTableOfContents();
@@ -43,14 +50,21 @@ class Country extends Term implements BundleEntityInterface, EntityModeratedInte
     $sections['digital-sitrep'] = $this->getDigitalSitrepSection();
     $sections['key-figures'] = $this->getKeyFiguresSection();
 
+    $queries = [];
+
     // Profile sections. Only display if show profile is selected.
     if (!empty($this->field_profile->value)) {
       $sections['overview'] = $this->getEntityDescription();
+      $sections['useful-links'] = $this->getUsefulLinksSection();
+
+      // Retrieve the Key Content and Appeals and Response Plans.
+      $queries['key-content'] = $this->getKeyContentApiQuery();
+      $queries['appeals-response-plans'] = $this->getAppealsResponsePlansApiQuery();
     }
 
     // Get data from the API.
     // @todo move those the Reports etc. river services.
-    $queries = [
+    $queries += [
       'most-read' => $this->getMostReadApiQuery(),
       'updates' => $this->getLatestUpdatesApiQuery(),
       'maps-infographics' => $this->getLatestMapsInfographicsApiQuery(),

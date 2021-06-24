@@ -139,6 +139,23 @@ function reliefweb_entities_theme() {
         'links' => [],
       ],
     ],
+    'reliefweb_entities_entity_useful_links' => [
+      'variables' => [
+        // Section heading level.
+        'level' => 2,
+        // Section id.
+        'id' => 'useful-links',
+        // Section attributes.
+        'attributes' => NULL,
+        // Section title.
+        'title' => t('Useful Links'),
+        // Section title attributes.
+        'title_attributes' => NULL,
+        // Whether to
+        // List of links.
+        'links' => [],
+      ],
+    ],
   ];
 }
 

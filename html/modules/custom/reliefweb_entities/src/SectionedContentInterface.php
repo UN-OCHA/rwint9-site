@@ -24,17 +24,6 @@ interface SectionedContentInterface {
   public function getPageTableOfContents();
 
   /**
-   * Get the base ReliefWeb API query payload for the resource.
-   *
-   * @param string $resource
-   *   ReliefWeb API resource.
-   *
-   * @return array
-   *   API payload.
-   */
-  public function getReliefWebApiPayload($resource);
-
-  /**
    * Get the section data for the given ReliefWeb API queries.
    *
    * @param array $queries
@@ -45,23 +34,6 @@ interface SectionedContentInterface {
    *   queries keyed by section id.
    */
   public function getSectionsFromReliefWebApiQueries(array $queries);
-
-  /**
-   * Parse the data returned by the ReliefWeb API.
-   *
-   * @param string $bundle
-   *   The entity bundle for the data.
-   * @param array $data
-   *   The ReliefWeb API data.
-   * @param string $view
-   *   Current river view.
-   *
-   * @return array
-   *   List of articles to display.
-   *
-   * @see \Drupal\reliefweb_rivers\Services\RiverInterface.php
-   */
-  public function parseReliefWebApiData($bundle, array $data, $view = '');
 
   /**
    * Consolidate content sections.
@@ -80,6 +52,36 @@ interface SectionedContentInterface {
    *   Render array with the table of contents and sections.
    */
   public function consolidateSections(array $contents, array $sections, array $labels);
+
+  /**
+   * Get payload for the key content reports.
+   *
+   * @param string $code
+   *   Filter code for the river link (ex: PC if the entity is a country, or
+   *   D if it's a disaster).
+   * @param int $limit
+   *   Number of resource items to return.
+   *
+   * @return array
+   *   Query data with the API resource and payload, a callback to parse the
+   *   API data and a url to the corresponding river.
+   */
+  public function getKeyContentApiQuery($code = 'PC', $limit = 3);
+
+  /**
+   * Get payload for the appeals and response plans.
+   *
+   * @param string $code
+   *   Filter code for the river link (ex: PC if the entity is a country, or
+   *   D if it's a disaster).
+   * @param int $limit
+   *   Number of resource items to return.
+   *
+   * @return array
+   *   Query data with the API resource and payload, a callback to parse the
+   *   API data and a url to the corresponding river.
+   */
+  public function getAppealsResponsePlansApiQuery($code = 'PC', $limit = 3);
 
   /**
    * Get payload for the most read documents.
@@ -111,8 +113,6 @@ interface SectionedContentInterface {
    * @return array
    *   Query data with the API resource and payload, a callback to parse the
    *   API data and a url to the corresponding river.
-   *
-   * @todo move that to a trait or an ancestor class?
    */
   public function getLatestUpdatesApiQuery($code = 'PC', $limit = 3);
 
@@ -175,5 +175,25 @@ interface SectionedContentInterface {
    *   API data and a url to the corresponding river.
    */
   public function getLatestDisastersApiQuery($code = 'C', $limit = 100);
+
+  /**
+   * Get the section with the useful links for the entity (country/disaster).
+   *
+   * @preturn array
+   *   Render array for the useful links section.
+   */
+  public function getUsefulLinksSection();
+
+  /**
+   * Get the country/disaster profile.
+   *
+   * This includes the Key Content, Appeals and Response Plans and useful links.
+   *
+   * @see \Drupal\reliefweb_entities::getProfileFields()
+   *
+   * @todo replace API query with logic using the actual profile fields on the
+   * entity once ported.
+   */
+  public function getProfileFields();
 
 }

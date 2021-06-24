@@ -8,6 +8,7 @@ use Drupal\reliefweb_entities\EntityModeratedInterface;
 use Drupal\reliefweb_entities\EntityModeratedTrait;
 use Drupal\reliefweb_entities\SectionedContentInterface;
 use Drupal\reliefweb_entities\SectionedContentTrait;
+use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Drupal\taxonomy\Entity\Term;
 
@@ -19,6 +20,13 @@ class Disaster extends Term implements BundleEntityInterface, EntityModeratedInt
   use EntityModeratedTrait;
   use SectionedContentTrait;
   use StringTranslationTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiResource() {
+    return 'disasters';
+  }
 
   /**
    * {@inheritdoc}
@@ -54,14 +62,21 @@ class Disaster extends Term implements BundleEntityInterface, EntityModeratedInt
   public function getPageSections() {
     $sections = [];
 
+    $queries = [];
+
     // Profile sections. Only display if show profile is selected.
     if (!empty($this->field_profile->value)) {
       $sections['overview'] = $this->getEntityDescription();
+      $sections['useful-links'] = $this->getUsefulLinksSection();
+
+      // Retrieve the Key Content and Appeals and Response Plans.
+      $queries['key-content'] = $this->getKeyContentApiQuery();
+      $queries['appeals-response-plans'] = $this->getAppealsResponsePlansApiQuery();
     }
 
     // Get data from the API.
     // @todo move those the Reports etc. river services.
-    $queries = [
+    $queries += [
       'countries' => $this->getAffectedCountriesApiQuery(),
       'most-read' => $this->getMostReadApiQuery('D'),
       'updates' => $this->getLatestUpdatesApiQuery('D'),
@@ -167,7 +182,7 @@ class Disaster extends Term implements BundleEntityInterface, EntityModeratedInt
       $country_ids[] = $item->target_id;
     }
 
-    $payload = $this->getReliefWebApiPayload('disasters');
+    $payload = RiverServiceBase::getRiverApiPayload('disaster');
     $payload['filter'] = [
       'conditions' => [
         // Exclude the current disaster.
