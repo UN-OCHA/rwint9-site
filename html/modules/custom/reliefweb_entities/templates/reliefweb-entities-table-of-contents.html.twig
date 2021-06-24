@@ -19,16 +19,12 @@
  */
 
  #}
-
-{% block library %}
-{% endblock %}
-
 <nav{{ attributes
   .setAttribute('id', id)
-  .addClass([
-    'rw-toc',
-  ])
-}}>
+.addClass([
+  'rw-toc',
+])
+}} >
   <h{{ level }}{{ title_attributes
     .addClass([
       'rw-toc__title'
@@ -36,14 +32,14 @@
   }}>{{ title }}</h{{ level }}>
 
   <ul>
-  {%- for section in sections -%}
-    <li class="rw-toc__section">
-      <h{{ level + 1 }} class="rw-toc__section__title">{{ section.title }}</h{{ level + 1 }}>
-      <ul>
-      {%- for id, title in section.sections -%}
-        <li class="rw-toc__sub_section"><a href="{{ '#' ~ id }}" class="rw-toc__sub_section__link">{{ title }}</a></li>
-      {%- endfor -%}
-      </ul>
-    </li>
-  {%- endfor -%}
+    {%- for section in sections -%}
+      <li class="rw-toc__section">
+        <h{{ level + 1 }} class="rw-toc__section__title">{{ section.title }}</h{{ level + 1 }}>
+        <ul>
+          {%- for id, title in section.sections -%}
+            <li class="rw-toc__sub_section"><a href="{{ '#' ~ id }}" class="rw-toc__sub_section__link">{{ title }}</a></li>
+          {%- endfor -%}
+        </ul>
+      </li>
+    {%- endfor -%}
 </nav>

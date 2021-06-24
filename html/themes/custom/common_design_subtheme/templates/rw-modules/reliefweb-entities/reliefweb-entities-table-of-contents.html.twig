@@ -6,10 +6,7 @@
 
 {% set title_attributes = title_attributes.addClass('visually-hidden') %}
 
-{% embed '@reliefweb_entities/reliefweb-entities-table-of-contents.html.twig' %}
-
-  {% block library %}
     {{ attach_library('common_design_subtheme/rw-toc') }}
-  {% endblock %}
 
-{% endembed %}
+
+{% include '@reliefweb_entities/reliefweb-entities-table-of-contents.html.twig' %}
