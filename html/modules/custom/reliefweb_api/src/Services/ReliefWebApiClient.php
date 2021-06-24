@@ -260,6 +260,12 @@ class ReliefWebApiClient {
               '@payload' => print_r($queries[$index]['payload'], TRUE),
             ]);
           }
+
+          // Ensure the URL aliases of the resources point to the current site.
+          // @todo remove as it's mostly for development?
+          static::updateApiAliases($data);
+
+          // Add the resulting data with same index as the query.
           $results[$index] = $data;
         }
       }
@@ -411,6 +417,26 @@ class ReliefWebApiClient {
     // not worthy.
     $tags[] = 'taxonomy_term_list';
     return $tags;
+  }
+
+  /**
+   * Update the host of the resource URL aliases.
+   *
+   * @param array $data
+   *   API data.
+   */
+  public static function updateApiAliases(array &$data) {
+    $host = \Drupal::request()->getHost();
+
+    if ($host !== 'reliefweb.int') {
+      foreach ($data['data'] as &$item) {
+        if (!empty($item['fields']['url_alias'])) {
+          $alias = $item['fields']['url_alias'];
+          $alias = str_replace('reliefweb.int', $host, $alias);
+          $item['fields']['url_alias'] = $alias;
+        }
+      }
+    }
   }
 
 }
