@@ -60,6 +60,11 @@ rw-disasters:
   dependencies:
     - common_design_subtheme/rw-icons
 
+rw-form:
+  css:
+    theme:
+      components/rw-form/rw-form.css: {}
+
 rw-headlines:
   css:
     theme:
