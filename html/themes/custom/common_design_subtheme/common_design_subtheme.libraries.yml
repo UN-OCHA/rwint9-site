@@ -99,10 +99,16 @@ rw-opportunities:
   dependencies:
     - common_design_subtheme/rw-icons
 
+rw-organizations:
+  css:
+    theme:
+      components/rw-organizations/rw-organizations.css: {}
+
 rw-river:
   css:
     theme:
       components/rw-river/rw-river-letter-navigation.css: {}
+      components/rw-river/rw-river-results.css: {}
       components/rw-river/rw-river-views.css: {}
 
 rw-search:
