@@ -180,7 +180,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    *
    * @command reliefweb_subscriptions:send
    * @usage reliefweb_subscriptions:send
-   *   Update locations from HRinfo api.
+   *   Send emails.
    * @validate-module-enabled reliefweb_subscriptions
    */
   public function send($limit = 50) {
@@ -254,6 +254,124 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     $query = $this->database->delete('reliefweb_subscriptions_queue');
     $query->condition('eid', array_keys($notifications));
     $query->execute();
+  }
+
+  /**
+   * Queue notification.
+   *
+   * @param string $sid
+   *   Subscription id.
+   * @param array $options
+   *   Drush options.
+   *
+   * @command reliefweb_subscriptions:queue
+   * @usage reliefweb_subscriptions:queue
+   *   Queue emails.
+   * @validate-module-enabled reliefweb_subscriptions
+   * @option entity_type
+   *   Entity type.
+   * @option entity_id
+   *   Entity Id.
+   * @option last
+   *   Timestamp to use as the last time notifications were sent.
+   */
+  public function queue($sid, array $options = [
+    'entity_type' => '',
+    'entity_id' => 0,
+    'last' => 0,
+  ]) {
+    $subscriptions = reliefweb_subscriptions_subscriptions();
+    if (!isset($subscriptions[$sid])) {
+      $this->logger->error('Invalid subscription id');
+      return;
+    }
+
+    $subscription = $subscriptions[$sid];
+
+    // Attempt to queue triggered notification.
+    if ($subscription['type'] === 'triggered') {
+      $entity_type = $options['entity_type'];
+      $entity_id = $options['entity_id'];
+
+      if (empty($entity_type) || empty($entity_id)) {
+        $this->logger->error('Invalid entity type or id');
+        return;
+      }
+
+      $entity = entity_load_single($entity_type, $entity_id);
+      if (!empty($entity)) {
+        $this->queueTriggered($entity, $entity_type);
+      }
+      else {
+        $this->logger->warning('Entity not found, skipping');
+        return;
+      }
+    }
+    // Attempt to queue scheduled notification.
+    //
+    // We use almost the same logic as reliefweb_subscriptions_queue_scheduled()
+    // but use the given last timestamp if provided.
+    else {
+      $sids = [$sid];
+
+      // Skip if there are no subscribers for the subscription.
+      $sids = $this->getSubscriptionsWithSubscribers($sids);
+      if (empty($sids)) {
+        $this->logger->warning('No subscribers, skipping');
+        return;
+      }
+
+      // Skip if the subscriptipon is already queued.
+      $sids = $this->getSubscriptionsNotYetQueued($sids);
+      if (empty($sids)) {
+        $this->logger->warning('Already queued, skipping');
+        return;
+      }
+
+      $last = $options['last'];
+      if (empty($last)) {
+        // Get the last and next run timestamps for the subscriptions.
+        $query = $this->database->select('reliefweb_subscriptions_logs', 'l');
+        $query->fields('l', ['sid', 'last', 'next']);
+        $query->condition('l.sid', $sids);
+        $result = $query->execute();
+        $timestamps = !empty($result) ? $result->fetchAllAssoc('sid') : [];
+      }
+      else {
+        $timestamps = [
+          $sid => [
+            'last' => $last,
+            'next' => $last,
+          ],
+        ];
+      }
+
+      $notifications = [];
+      foreach ($sids as $sid) {
+        // If a subscription was never sent then there is no log for it so we
+        // compute what would have been the previous sending time.
+        if (isset($timestamps[$sid])) {
+          $last = $timestamps[$sid]['last'];
+          $next = $timestamps[$sid]['next'];
+        }
+        else {
+          $last = $this->getPreviousSendingTime($subscriptions[$sid]);
+          $next = $last;
+        }
+        // Only queue the subscription is time is due (next run time is before
+        // the current time).
+        if ($next < $this->time->getRequestTime()) {
+          $notifications[] = [
+            'sid' => $sid,
+            'last' => $last,
+          ];
+        }
+      }
+
+      // Queue notifications for all the subscriptions.
+      $this->queueNotifications($notifications);
+    }
+    $this->logger->success('Subscription queued');
   }
 
   /**
@@ -949,6 +1067,165 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
         '@name' => $subscription['name'],
         '@error' => $error,
       ]);
+    }
+  }
+
+  /**
+   * Queue subscriptions for entity events (insert, update).
+   *
+   * @param object $entity
+   *   Entity.
+   * @param string $entity_type
+   *   Entity type.
+   */
+  protected function queueTriggered($entity, $entity_type) {
+    // Skip if explicitly asked to not send notifications.
+    if (!empty($entity->notifications_content_disable)) {
+      return;
+    }
+
+    // phpcs:ignore
+    list($entity_id, $revision_id, $bundle) = entity_extract_ids($entity_type, $entity);
+
+    $subscriptions = reliefweb_subscriptions_subscriptions();
+
+    // Get triggered type subscriptions for this bundle.
+    $sids = [];
+    foreach ($subscriptions as $sid => $subscription) {
+      if ($subscription['type'] === 'triggered' && $subscription['bundle'] === $bundle) {
+        // Check if the subscription trigger is met for the entity.
+        if (!isset($subscription['trigger']) || $subscription['trigger']($entity, $entity_type)) {
+          $sids[] = $sid;
+        }
+      }
+    }
+
+    // Skip if there are no subscriptions with subscribers.
+    $sids = $this->getSubscriptionsWithSubscribers($sids);
+    if (empty($sids)) {
+      return;
+    }
+
+    // Skip if there are no new notifications to queue.
+    $sids = $this->getSubscriptionsNotYetQueued($sids, $bundle, $entity_id);
+    if (empty($sids)) {
+      return;
+    }
+
+    $notifications = [];
+    foreach ($sids as $sid) {
+      $notifications[] = [
+        'sid' => $sid,
+        'bundle' => $bundle,
+        'entity_id' => $entity_id,
+      ];
+    }
+    // Queue notifications for all the subscriptions.
+    $this->queueNotifications($notifications);
+  }
+
+  /**
+   * Get the list of subscriptions with subscribers.
+   *
+   * @param array $sids
+   *   Subscription ids to check against.
+   *
+   * @return array
+   *   Ids of subscriptions with subscribers.
+   */
+  protected function getSubscriptionsWithSubscribers(array $sids) {
+    if (empty($sids)) {
+      return [];
+    }
+    $query = $this->database->select('reliefweb_subscriptions_subscriptions', 's');
+    $query->fields('s', ['sid']);
+    $query->condition('s.sid', $sids);
+    $result = $query->distinct()->execute();
+
+    return !empty($result) ? $result->fetchCol() : [];
+  }
+
+  /**
+   * Get the subscriptions not yet queued for the given entity bundle and id.
+   *
+   * Note that a set (subscription id, bundle and entity) represents a unique
+   * notification.
+   *
+   * @param array $sids
+   *   Subscription ids.
+   * @param string $bundle
+   *   Entity bundle (only for triggered notifications).
+   * @param int $entity_id
+   *   Entity id (only for triggered notifications).
+   *
+   * @return array
+   *   Ids of the subscriptions not yet queued (for this entity bundle and id
+   *   in case of triggered type subscriptions).
+   */
+  public function getSubscriptionsNotYetQueued(array $sids, $bundle = '', $entity_id = 0) {
+    if (empty($sids)) {
+      return [];
+    }
+    $query = $this->database->select('reliefweb_subscriptions_queue', 'q');
+    $query->fields('q', ['sid']);
+    $query->condition('q.sid', $sids);
+
+    if (!empty($bundle) && !empty($entity_id)) {
+      $query->condition('q.bundle', $bundle);
+      $query->condition('q.entity_id', $entity_id);
+    }
+
+    $result = $query->execute();
+
+    if (!empty($result)) {
+      $sids = array_diff($sids, $result->fetchCol());
+    }
+
+    return $sids;
+  }
+
+  /**
+   * Queue notifications.
+   *
+   * @param array $notifications
+   *   Notifications to queue.
+   */
+  protected function queueNotifications(array $notifications) {
+    if (empty($notifications)) {
+      return;
+    }
+
+    $default = [
+      'bundle' => '',
+      'entity_id' => 0,
+      'last' => 0,
+    ];
+
+    // Queue notifications for all the subscriptions.
+    $query = $this->database->insert('reliefweb_subscriptions_queue');
+    $query->fields(['sid', 'bundle', 'entity_id', 'last']);
+    foreach ($notifications as $notification) {
+      $query->values($notification + $default);
+    }
+    $query->execute();
+
+    // Log subscription queueing info.
+    $subscriptions = reliefweb_subscriptions_subscriptions();
+    foreach ($notifications as $notification) {
+      if (isset($subscriptions[$notification['sid']])) {
+        if (!empty($notification['bundle']) && !empty($notification['entity_id'])) {
+          $this->logger->notice('Queueing triggered notification @name for @bundle @entity_id.', [
+            '@name' => $subscriptions[$notification['sid']]['name'],
+            '@bundle' => $notification['bundle'],
+            '@entity_id' => $notification['entity_id'],
+          ]);
+        }
+        else {
+          $this->logger->notice('Queueing scheduled notification @name.', [
+            '@name' => $subscriptions[$notification['sid']]['name'],
+          ]);
+        }
+      }
     }
   }
 
