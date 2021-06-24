@@ -25,6 +25,7 @@ rw-article:
   css:
     theme:
       components/rw-article/rw-article.css: {}
+      components/rw-article/rw-appeals-response-plans.css: {}
 
 # Autocomplete widget.
 rw-autocomplete:
