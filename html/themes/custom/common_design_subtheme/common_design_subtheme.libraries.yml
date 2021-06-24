@@ -82,6 +82,11 @@ rw-icons:
     theme:
       components/rw-icons/rw-icons.css: {}
 
+rw-key-content:
+  css:
+    theme:
+      components/rw-key-content/rw-key-content.css: {}
+
 rw-key-figures:
   css:
     theme:
