@@ -1,12 +1,12 @@
 /* Useful links */
-#main-content .rw-sectioned-content section.rw-entity-useful-rw-entity-useful-links img {
+#main-content .rw-sectioned-content section.rw-entity-useful-links img {
   display: inline-block;
   vertical-align: middle;
   max-width: 200px;
   max-height: 50px;
   margin-right: 10px;
 }
-#main-content .rw-sectioned-content section.rw-entity-useful-rw-entity-useful-links img[src*=".svg"] {
+#main-content .rw-sectioned-content section.rw-entity-useful-links img[src*=".svg"] {
   min-width: 150px;
 }
 
