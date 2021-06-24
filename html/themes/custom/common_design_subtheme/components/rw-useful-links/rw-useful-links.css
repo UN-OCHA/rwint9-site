@@ -1,0 +1,44 @@
+/* Useful links */
+#main-content .rw-sectioned-content section.rw-entity-useful-rw-entity-useful-links img {
+  display: inline-block;
+  vertical-align: middle;
+  max-width: 200px;
+  max-height: 50px;
+  margin-right: 10px;
+}
+#main-content .rw-sectioned-content section.rw-entity-useful-rw-entity-useful-links img[src*=".svg"] {
+  min-width: 150px;
+}
+
+/**
+ * List of links.
+ *
+ * Simple list of links like the useful links on country pages.
+ *
+ * Scope: #main-content section.rw-entity-useful-links ul
+ */
+#main-content section.rw-entity-useful-links > ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+#main-content section.rw-entity-useful-links > ul li {
+  margin: 0;
+  padding: 12px 0;
+  border-bottom: 1px solid #e6ecef;
+  line-height: 24px;
+}
+#main-content section.rw-entity-useful-links > ul li:first-child {
+  padding-top: 0;
+}
+#main-content section.rw-entity-useful-links > ul li:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+#main-content section.rw-entity-useful-links > ul + * {
+  margin-top: 24px;
+}
+/* @todo Needed? */
+#main-content section.rw-entity-useful-links > ul ul + .view-more {
+  margin-top: 24px;
+}

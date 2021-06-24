@@ -115,6 +115,11 @@ rw-toc:
   dependencies:
     - common_design/cd-dropdown
 
+rw-useful-links:
+  css:
+    theme:
+      components/rw-useful-links/rw-useful-links.css: {}
+
 rw-view-more:
   css:
     theme:
