@@ -59,6 +59,11 @@ rw-disasters:
   dependencies:
     - common_design_subtheme/rw-icons
 
+rw-entity-meta:
+  css:
+    theme:
+      components/rw-entity-meta/rw-entity-meta.css: {}
+
 rw-headlines:
   css:
     theme:
@@ -76,10 +81,10 @@ rw-icons:
     theme:
       components/rw-icons/rw-icons.css: {}
 
-rw-entity-meta:
+rw-key-figures:
   css:
     theme:
-      components/rw-entity-meta/rw-entity-meta.css: {}
+      components/rw-key-figures/rw-key-figures.css: {}
 
 rw-most-read:
   css:
