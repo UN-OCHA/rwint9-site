@@ -242,4 +242,36 @@ interface RiverServiceInterface {
    */
   public static function getRiverUrl($bundle, array $parameters = []);
 
+  /**
+   * Get the data of the river for given bundle and API data.
+   *
+   * @param string $bundle
+   *   Entity bundle of a river.
+   * @param array $data
+   *   ReliefWeb API data for the river.
+   * @param string $view
+   *   River view.
+   * @param array $exclude
+   *   Properties to exclude from the river entities.
+   *
+   * @return array
+   *   List of entities with data suitable for use in templates.
+   */
+  public static function getRiverData($bundle, array $data, $view = '', array $exclude = []);
+
+  /**
+   * Get the ReliefWeb API query payload for the bundle's river.
+   *
+   * @param string $bundle
+   *   Entity bundle of a river.
+   * @param string $view
+   *   River view.
+   * @param array $exclude
+   *   Elements to remove from the payload.
+   *
+   * @return array
+   *   ReliefWeb API payload.
+   */
+  public static function getRiverApiPayload($bundle, $view = '', array $exclude = ['query']);
+
 }

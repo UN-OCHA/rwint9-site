@@ -7,6 +7,7 @@
  * Available variables;
  * - level: heading level (defaults to 2)
  * - id: section id (HTML safe)
+ * - resource: the API resource type of the river's content
  * - attributes: attributes for the section
  * - title: section title
  * - title_attributes: attributes for the river title
@@ -26,6 +27,7 @@
   .addClass([
     'rw-river',
     'rw-river--' ~ id,
+    'rw-river--type-' ~ resource|clean_class,
   ])
 }}>
   <h{{ level }}{{ title_attributes.addClass([

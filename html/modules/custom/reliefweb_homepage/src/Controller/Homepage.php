@@ -100,16 +100,21 @@ class Homepage extends ControllerBase {
           if (empty($result['data'])) {
             continue 2;
           }
-          $entities = static::parseReliefWebApiData($query['bundle'], $result, $query['view'] ?? '');
+
+          $bundle = $query['bundle'];
+          $view = $query['view'] ?? '';
+          $exclude = $query['exclude'] ?? [];
+
+          $entities = RiverServiceBase::getRiverData($bundle, $result, $view, $exclude);
           if (empty($entities)) {
             continue 2;
           }
+
           $sections[$index] = [
             '#theme' => 'reliefweb_rivers_river',
             '#id' => $index,
             '#title' => $query['title'],
             '#resource' => $query['resource'],
-            '#total' => $result['totalCount'],
             '#entities' => $entities,
             '#more' => $query['more'] ?? NULL,
           ];
@@ -153,28 +158,11 @@ class Homepage extends ControllerBase {
    *   API Payload.
    */
   public function getHeadlinesApiPayload($limit = 8) {
-    $payload = [
-      'fields' => [
-        'include' => [
-          'id',
-          'url_alias',
-          'country.id',
-          'country.iso3',
-          'country.name',
-          'country.shortname',
-          'country.primary',
-          'source.id',
-          'source.name',
-          'source.shortname',
-          'language.id',
-          'language.name',
-          'language.code',
-          'headline',
-        ],
-      ],
-      'sort' => ['score:desc', 'date.created:desc'],
-      'limit' => $limit,
-    ];
+    $payload = RiverServiceBase::getRiverApiPayload('report', 'headlines');
+    $payload['fields']['exclude'][] = 'file';
+    $payload['fields']['include'][] = 'headline.image';
+    $payload['sort'] = ['score:desc', 'date.created:desc'];
+    $payload['limit'] = $limit;
 
     // Get the list of manually selected headlines.
     $selected = $this->state->get('reliefweb_headline_selection', []);
@@ -194,6 +182,7 @@ class Homepage extends ControllerBase {
       'resource' => 'reports',
       'bundle' => 'report',
       'payload' => $payload,
+      'exclude' => ['posted', 'published', 'format'],
       'title' => $this->t('Latest Headlines'),
       'callback' => [$this, 'parseHeadlinesApiData'],
       'view' => 'headlines',
@@ -220,30 +209,10 @@ class Homepage extends ControllerBase {
    * Refactor after add back redording of most read content.
    */
   public function getMostReadApiPayload($limit = 2) {
-    $payload = [
-      'fields' => [
-        'include' => [
-          'id',
-          'url_alias',
-          'date.created',
-          'date.original',
-          'country.id',
-          'country.iso3',
-          'country.name',
-          'country.shortname',
-          'country.primary',
-          'source.id',
-          'source.name',
-          'source.shortname',
-          'language.id',
-          'language.name',
-          'language.code',
-          'format.name',
-        ],
-      ],
-      'limit' => $limit,
-      'sort' => ['date.created:desc'],
-    ];
+    $payload = RiverServiceBase::getRiverApiPayload('report');
+    $payload['fields']['exclude'][] = 'file';
+    $payload['fields']['exclude'][] = 'body-html';
+    $payload['limit'] = $limit;
 
     return [
       'resource' => 'reports',
@@ -269,23 +238,12 @@ class Homepage extends ControllerBase {
    *   API Payload.
    */
   public function getDisastersApiPayload($limit = 5) {
-    $payload = [
-      'fields' => [
-        'include' => [
-          'id',
-          'name',
-          'status',
-          'url_alias',
-          'primary_type.code',
-        ],
-      ],
-      'filter' => [
-        'field' => 'status',
-        'value' => ['alert', 'current'],
-      ],
-      'sort' => ['id:desc'],
-      'limit' => $limit,
-    ];
+    $payload = RiverServiceBase::getRiverApiPayload('disaster', 'ongoing');
+    $payload['fields']['exclude'][] = 'country';
+    $payload['fields']['exclude'][] = 'type';
+    $payload['fields']['exclude'][] = 'date';
+    $payload['sort'] = ['id:desc'];
+    $payload['limit'] = $limit;
 
     return [
       'resource' => 'disasters',
@@ -308,29 +266,8 @@ class Homepage extends ControllerBase {
    *   API Payload.
    */
   public function getBlogPostApiPayload() {
-    $payload = [
-      'query' => [
-        'fields' => [
-          'title',
-          'body',
-          'author',
-          'tags',
-        ],
-      ],
-      'fields' => [
-        'include' => [
-          'id',
-          'url_alias',
-          'title',
-          'body-html',
-          'date',
-          'tags',
-          'author',
-        ],
-      ],
-      'sort' => ['date.created:desc'],
-      'limit' => 1,
-    ];
+    $payload = RiverServiceBase::getRiverApiPayload('blog_post');
+    $payload['limit'] = 1;
 
     return [
       'resource' => 'blog',
@@ -378,26 +315,6 @@ class Homepage extends ControllerBase {
       // Link to the job/training river for the entity.
       'url' => RiverServiceBase::getRiverUrl($bundle),
     ];
-  }
-
-  /**
-   * Parse the data returned by the ReliefWeb API.
-   *
-   * @param string $bundle
-   *   The entity bundle for the data.
-   * @param array $data
-   *   The ReliefWeb API data.
-   * @param string $view
-   *   Current river view.
-   *
-   * @return array
-   *   List of articles to display.
-   *
-   * @see \Drupal\reliefweb_rivers\Services\RiverInterface.php
-   */
-  public static function parseReliefWebApiData($bundle, array $data, $view = '') {
-    $handler = \Drupal::service('reliefweb_rivers.' . $bundle . '.river');
-    return $handler->parseApiData($data, $view);
   }
 
   /**

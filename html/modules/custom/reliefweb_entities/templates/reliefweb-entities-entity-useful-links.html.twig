@@ -1,0 +1,42 @@
+{#
+
+/**
+ * @file
+ * Template file for the useful links block.
+ *
+ * Available variables:
+ * - level: heading level (defaults to 2)
+ * - id: sectiond id
+ * - attributes: section attributes
+ * - title: section title
+ * - title_attributes: section title attributes
+ * - links: list of links with a URL, title and optional logo URL.
+ */
+
+ #}
+<section{{ attributes
+  .addClass([
+    'rw-entity-useful-links',
+  ])
+  .setAttribute('id', id)
+}}>
+  <h{{ level }}{{ title_attributes
+    .addClass([
+      'rw-entity-useful-links__title',
+    ])
+  }}>{{ title ?? 'Useful links'|t }}</h{{ level }}>
+
+  <ul class="rw-entity-useful-links__list">
+    {% for link in links %}
+      <li class="rw-entity-useful-links__list__item">
+        <a href="{{ link.url }}" target="_blank" rel="noopener" class="rw-entity-useful-links__link">
+        {%- if link.logo is not empty -%}
+          <img src="{{ link.logo }}" alt="{{ link.title }}" class="rw-entity-useful-links__link__logo">
+        {%- else -%}
+          {{ link.title }}
+        {%- endif -%}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+</section>
