@@ -479,4 +479,38 @@ abstract class RiverServiceBase implements RiverServiceInterface {
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public static function getRiverData($bundle, array $data, $view = '', array $exclude = []) {
+    $entities = \Drupal::service('reliefweb_rivers.' . $bundle . '.river')
+      ->parseApiData($data, $view);
+
+    // If instructed so, remove some properties from the entities.
+    if (!empty($exclude)) {
+      $exclude = array_flip($exclude);
+      foreach ($entities as $index => $entity) {
+        $entities[$index] = array_diff_key($entity, $exclude);
+      }
+    }
+
+    return $entities;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getRiverApiPayload($bundle, $view = '', array $exclude = ['query']) {
+    $payload = \Drupal::service('reliefweb_rivers.' . $bundle . '.river')
+      ->getApiPayload($view);
+
+    // If instructed so, remove some properties from the payload.
+    if (!empty($exclude)) {
+      $exclude = array_flip($exclude);
+      $payload = array_diff_key($payload, $exclude);
+    }
+
+    return $payload;
+  }
+
 }
