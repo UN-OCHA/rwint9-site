@@ -76,10 +76,10 @@ rw-icons:
     theme:
       components/rw-icons/rw-icons.css: {}
 
-rw-meta:
+rw-entity-meta:
   css:
     theme:
-      components/rw-meta/rw-meta.css: {}
+      components/rw-entity-meta/rw-entity-meta.css: {}
 
 rw-most-read:
   css:
