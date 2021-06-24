@@ -188,7 +188,8 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     // Triggered notifications have priority.
     $query = $this->database->select('reliefweb_subscriptions_queue', 'q');
     $query->fields('q', ['eid', 'sid', 'bundle', 'entity_id', 'last']);
-    $query->orderBy('IF(q.entity_id > 0, 1, 0)', 'DESC');
+    $query->addExpression('IF(q.entity_id > 0, 1, 0)', 'sortby');
+    $query->orderBy('sortby', 'DESC');
     $query->orderBy('q.eid', 'ASC');
     $query->range(0, $limit);
     $result = $query->execute();
@@ -201,6 +202,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
 
     if (empty($notifications)) {
       $this->logger->info('No queued notifications.');
+      return;
     }
 
     $this->logger->info('Processing @queued queued notifications.', [
