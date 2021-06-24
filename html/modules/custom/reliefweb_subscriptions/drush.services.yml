@@ -1,0 +1,6 @@
+services:
+  reliefweb_subscriptions.send_command:
+    class: \Drupal\reliefweb_subscriptions\Command\ReliefwebSubscriptionsSendCommand
+    arguments: ['@current_user', '@config.factory', '@database', '@entity_field.manager', '@entity.repository', '@entity_type.manager', '@file.mime_type.guesser', '@file_system', '@file.usage', '@state', '@http_client', '@datetime.time']
+    tags:
+      - { name: drush.command }
