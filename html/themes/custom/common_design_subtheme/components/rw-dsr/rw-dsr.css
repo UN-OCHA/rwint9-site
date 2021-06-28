@@ -1,0 +1,106 @@
+/* OCHA digital sitrep */
+#main-content .rw-sectioned-content section.rw-dsr .rw-dsr__title {
+  margin-bottom: 24px;
+}
+#main-content .rw-sectioned-content section.rw-dsr .rw-dsr__title small {
+  white-space: nowrap;
+}
+#main-content .rw-sectioned-content section.rw-dsr .rw-dsr__title span.rw-dsr__ocha {
+  display: inline-block;
+  position: relative;
+  /* Width of the logo below. */
+  width: 80px;
+  /* Space between the logo and the rest of the title. */
+  margin-right: 8px;
+  /* Better vertical alignment. */
+  line-height: 1;
+  /* Better default when the logo cannot be loaded. */
+  text-align: center;
+  /* h3 styles */
+  font-size: 20px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+#main-content .rw-sectioned-content section.rw-dsr .rw-dsr__title span.rw-dsr__ocha:after {
+  content: "";
+  position: absolute;
+  width: 80px;
+  height: 20px;
+  top: 50%;
+  left: 0;
+  /* 1px more that 1/2 the height for better alignment with the rest of the
+   * digital sitrep title as the font size is 18px. */
+  margin-top: -11px;
+  overflow: hidden;
+  /* The logo has a white background and will be display above the text. */
+  background: url(../../img/logos/ocha-logo-sprite.png) 0 -57px no-repeat;
+  background: rgba(0,0,0,0) url(../../img/logos/ocha-logo-sprite.svg) 0 -57px no-repeat;
+}
+#main-content .rw-sectioned-content section.rw-dsr ul {
+  padding-left: 18px;
+}
+#main-content .rw-sectioned-content section.rw-dsr li {
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+#main-content .rw-sectioned-content section.rw-dsr .rw-dsr__title small {
+  font-weight: normal;
+}
+#main-content .rw-sectioned-content section.rw-dsr figure {
+  display: none;
+  max-width: 540px;
+  margin: 0;
+}
+#main-content .rw-sectioned-content section.rw-dsr figure img {
+  width: 100%;
+}
+#main-content .rw-sectioned-content section.rw-dsr figure figcaption {
+  margin-top: 4px;
+  font-size: 15px;
+  font-style: italic;
+}
+#main-content .rw-sectioned-content section.rw-dsr .view-more {
+  margin-top: 12px;
+}
+#main-content .rw-sectioned-content section.rw-dsr .view-more a {
+  padding-right: 0;
+  margin-right: 0;
+  font-style: normal;
+  font-weight: bold;
+  text-decoration: none;
+}
+#main-content .rw-sectioned-content section.rw-dsr .rw-dsr__title + .view-more,
+#main-content .rw-sectioned-content section.rw-dsr .rw-dsr__title + .view-more a {
+  margin-top: 0;
+  text-align: left;
+}
+
+/* Media queries. */
+@media screen and (min-width : 768px) {
+  #main-content .rw-sectioned-content section.rw-dsr {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: start;
+  }
+  #main-content .rw-sectioned-content section.rw-dsr > .rw-dsr__title,
+  #main-content .rw-sectioned-content section.rw-dsr > footer {
+    width: 100%;
+  }
+  #main-content .rw-sectioned-content section.rw-dsr.with-illustration > ul,
+  #main-content .rw-sectioned-content section.rw-dsr.with-illustration > figure {
+    display: block;
+    width: 48%;
+  }
+}
+
+/* Ugly hack for IE8 to hide the text due bad handling of z-index. */
+@media \0screen {
+  #main-content .rw-sectioned-content section.rw-dsr .rw-dsr__title span.rw-dsr__ocha {
+    vertical-align: middle;
+    margin-top: -4px;
+    padding-left: 80px;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+}
