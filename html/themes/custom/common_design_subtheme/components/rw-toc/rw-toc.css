@@ -145,8 +145,8 @@
  * titles stay aligned with the content. On smaller screens there is not enough
  * space for that. */
 @media screen and (min-width: 768px) {
-  .js #main-content .rw-sectioned-content .rw-toc ~ section[data-active] > h3,
-  .js #main-content .rw-sectioned-content .rw-toc ~ article[data-active] > h3,
+  .js #main-content .rw-sectioned-content .rw-toc ~ section[data-active] > h2,
+  .js #main-content .rw-sectioned-content .rw-toc ~ article[data-active] > h2,
   .js #main-content .rw-sectioned-content .rw-toc ~ fieldset[data-active] > legend,
   .js #main-content .rw-sectioned-content .rw-toc ~ .form-wrapper > fieldset[data-active] > legend,
   .js #main-content .rw-sectioned-content .rw-toc ~ .form-item > fieldset[data-active] > legend {

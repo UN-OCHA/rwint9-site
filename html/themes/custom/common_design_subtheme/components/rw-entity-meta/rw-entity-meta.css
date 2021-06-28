@@ -98,11 +98,11 @@
   display: inline-block;
   font-size: 15px;
 }
-#main-content section article dl.rw-entity-meta.core {
+#main-content section article dl.rw-entity-meta.rw-article-meta {
   /* #2e3436 with 0.85 opacity on white. */
   color: #4d5254;
 }
-#main-content section article dl.rw-entity-meta.core dd:after {
+#main-content section article dl.rw-entity-meta.rw-article-meta dd:after {
   content: "";
   display: inline-block;
   vertical-align: middle;
@@ -113,20 +113,20 @@
   border-radius: 4px;
   background: #2e3436;
 }
-#main-content section article dl.rw-entity-meta.core dd.created:after {
+#main-content section article dl.rw-entity-meta.rw-article-meta dd.created:after {
   margin-left: 12px;
 }
 /* This will be ignored in IE8 but it's not a big deal. */
-#main-content section article dl.rw-entity-meta.core dd:last-of-type:after,
-#main-content section article dl.rw-entity-meta.core dd[data-last]:after {
+#main-content section article dl.rw-entity-meta.rw-article-meta dd:last-of-type:after,
+#main-content section article dl.rw-entity-meta.rw-article-meta dd.rw-entity-meta__tag-value--last:after {
   content: none;
 }
 /* Display rw-entity-meta one per line on smaller screen to improve readability. */
 @media all and (max-width: 479px) {
-  #main-content section article dl.rw-entity-meta.core dd {
+  #main-content section article dl.rw-entity-meta.rw-article-meta dd {
     display: inline;
   }
-  #main-content section article dl.rw-entity-meta.core dd:after {
+  #main-content section article dl.rw-entity-meta.rw-article-meta dd:after {
     display: block;
     width: 0;
     height: 0;
@@ -148,15 +148,15 @@
   border-radius: 5px;
   margin-right: 8px;
 }
-#main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--status[data-past]:before {
+#main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--status--past:before {
   content: "";
   background: #b6c8d0;
 }
-#main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--status[data-alert]:before {
+#main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--status--alert:before {
   content: "";
   background: #eb8705;
 }
-#main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--status[data-ongoing]:before {
+#main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--status--ongoing:before {
   content: "";
   background: #f65c51;
 }
@@ -166,10 +166,10 @@
  *
  * Hide the label and display an icon in front of the content format.
  *
- * Scope: #main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--format
+ * Scope: #main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-label--status
  */
 /* Visually hidden. */
-#main-content article dl.rw-entity-meta dt.rw-entity-meta__tag-label--format {
+#main-content article.taxonony-term--country--full dl.rw-entity-meta dt.rw-entity-meta__tag-label--status {
   position: absolute;
   height: 1px;
   width: 1px;
