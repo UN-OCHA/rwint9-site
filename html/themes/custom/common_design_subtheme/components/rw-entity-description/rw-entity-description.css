@@ -1,0 +1,49 @@
+#main-content .rw-sectioned-content section.rw-entity-description {
+  display: flex;
+  flex-direction: column;
+}
+#main-content .rw-sectioned-content section.rw-entity-description .rw-entity-description__text {
+  padding-top: 0;
+}
+#main-content .rw-sectioned-content section.rw-entity-description .rw-entity-description__text p:first-child {
+  margin-top: 0;
+}
+/* Javascript enabled */
+.js #main-content .rw-sectioned-content section.rw-entity-description > button {
+  display: block;
+  padding: 8px 12px;
+  margin: 24px auto 0 auto;
+  border: 1px solid #055372;
+  background: white;
+  color: #055372;
+  font-size: 16px;
+  order: 3;
+}
+.js #main-content .rw-sectioned-content section.rw-entity-description > button:hover,
+.js #main-content .rw-sectioned-content section.rw-entity-description > button:active,
+.js #main-content .rw-sectioned-content section.rw-entity-description > button:focus {
+  background: #055372;
+  color: white;
+}
+.js #main-content .rw-sectioned-content section.rw-entity-description > .rw-entity-description__text > * {
+  display: none;
+}
+.js #main-content .rw-sectioned-content section.rw-entity-description > .rw-entity-description__text > *:nth-last-child(-n+3) {
+  display: block;
+}
+.js #main-content .rw-sectioned-content section.rw-entity-description > .rw-entity-description__text > *:nth-last-child(3) {
+  margin-top: 0;
+}
+.js #main-content .rw-sectioned-content section.rw-entity-description > .rw-entity-description__text[data-hidden="false"] > * {
+  display: block;
+}
+/* Exception for sources, where we start at the top of the rw-entity-description. */
+.js #main-content .source.rw-sectioned-content section.rw-entity-description > .rw-entity-description__text > * {
+  display: none;
+}
+.js #main-content .source.rw-sectioned-content section.rw-entity-description > .rw-entity-description__text > *:nth-child(-n+3) {
+  display: block;
+}
+.js #main-content .source.rw-sectioned-content section.rw-entity-description > .rw-entity-description__text[data-hidden="false"] > * {
+  display: block;
+}
