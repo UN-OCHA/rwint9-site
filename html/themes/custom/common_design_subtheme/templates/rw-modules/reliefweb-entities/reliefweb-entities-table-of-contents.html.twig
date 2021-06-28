@@ -1,0 +1,11 @@
+{% set attributes = attributes
+    .setAttribute('data-cd-toggable', 'Jump to content'|t)
+    .setAttribute('data-cd-icon', 'arrow-down')
+    .setAttribute('data-cd-component', 'rw-toc')
+%}
+
+{% set title_attributes = title_attributes.addClass('visually-hidden') %}
+
+{{ attach_library('common_design_subtheme/rw-toc') }}
+
+{% include '@reliefweb_entities/reliefweb-entities-table-of-contents.html.twig' %}

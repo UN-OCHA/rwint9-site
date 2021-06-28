@@ -36,10 +36,11 @@
     <li class="rw-toc__section">
       <h{{ level + 1 }} class="rw-toc__section__title">{{ section.title }}</h{{ level + 1 }}>
       <ul>
-      {%- for id, title in section.sections -%}
-        <li class="rw-toc__sub_section"><a href="{{ '#' ~ id }}" class="rw-toc__sub_section__link">{{ title }}</a></li>
-      {%- endfor -%}
+        {%- for id, title in section.sections -%}
+          <li class="rw-toc__sub_section"><a href="{{ '#' ~ id }}" class="rw-toc__sub_section__link">{{ title }}</a></li>
+        {%- endfor -%}
       </ul>
     </li>
   {%- endfor -%}
+  </ul>
 </nav>

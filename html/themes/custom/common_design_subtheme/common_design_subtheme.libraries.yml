@@ -25,6 +25,7 @@ rw-article:
   css:
     theme:
       components/rw-article/rw-article.css: {}
+      components/rw-article/rw-appeals-response-plans.css: {}
 
 # Autocomplete widget.
 rw-autocomplete:
@@ -59,6 +60,21 @@ rw-disasters:
   dependencies:
     - common_design_subtheme/rw-icons
 
+rw-dsr:
+  css:
+    theme:
+      components/rw-dsr/rw-dsr.css: {}
+
+rw-entity-description:
+  css:
+    theme:
+      components/rw-entity-description/rw-entity-description.css: {}
+
+rw-entity-meta:
+  css:
+    theme:
+      components/rw-entity-meta/rw-entity-meta.css: {}
+
 rw-headlines:
   css:
     theme:
@@ -76,10 +92,15 @@ rw-icons:
     theme:
       components/rw-icons/rw-icons.css: {}
 
-rw-meta:
+rw-key-content:
   css:
     theme:
-      components/rw-meta/rw-meta.css: {}
+      components/rw-key-content/rw-key-content.css: {}
+
+rw-key-figures:
+  css:
+    theme:
+      components/rw-key-figures/rw-key-figures.css: {}
 
 rw-most-read:
   css:
@@ -100,6 +121,20 @@ rw-selection:
       components/rw-selection/rw-selection.css: {}
   dependencies:
     - common_design_subtheme/rw-icons
+
+rw-toc:
+  css:
+    theme:
+      components/rw-toc/rw-toc.css: {}
+  js:
+    components/rw-toc/rw-toc.js: {}
+  dependencies:
+    - common_design/cd-dropdown
+
+rw-useful-links:
+  css:
+    theme:
+      components/rw-useful-links/rw-useful-links.css: {}
 
 rw-view-more:
   css:
