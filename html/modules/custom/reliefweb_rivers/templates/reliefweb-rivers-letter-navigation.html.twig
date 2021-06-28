@@ -17,32 +17,34 @@
 #}
 {% if letters is not empty %}
 {% set id = id|clean_id %}
-<nav{{ attributes
-  .addClass([
-    'rw-river-letter-navigation',
-  ])
-  .setAttribute('id', id)
-  .setAttribute('data-toggable', title)
-  .setAttribute('aria-labelledby', id ~ '-title')
-}}>
-  <h{{ level }}{{ title_attributes
+<div class="rw-river-letter-navigation-wrapper">
+  <nav{{ attributes
     .addClass([
-      'reliefweb-river-letter-navigation__title',
-      'visually-hidden',
+      'rw-river-letter-navigation',
     ])
-    .setAttribute('id',  id ~ '-title')
-  }}>{{ title }}</h{{ level }}>
-
-  <ul class="rw-river-letter-navigation__list">
-    {% for letter, data in letters %}
-    <li class="rw-river-letter-navigation__list__item"><a{{ create_attribute()
+    .setAttribute('id', id)
+    .setAttribute('data-toggable', title)
+    .setAttribute('aria-labelledby', id ~ '-title')
+  }}>
+    <h{{ level }}{{ title_attributes
       .addClass([
-        'rw-river-letter-navigation__link',
-        data.active ? 'rw-river-letter-navigation__link--active',
+        'reliefweb-river-letter-navigation__title',
+        'visually-hidden',
       ])
-      .setAttribute('href', data.url)
-    }}>{{ data.label }}</a></li>
-    {% endfor %}
-  </ul>
-</nav>
+      .setAttribute('id',  id ~ '-title')
+    }}>{{ title }}</h{{ level }}>
+
+    <ul class="rw-river-letter-navigation__list">
+      {% for letter, data in letters %}
+      <li class="rw-river-letter-navigation__list__item"><a{{ create_attribute()
+        .addClass([
+          'rw-river-letter-navigation__link',
+          data.active ? 'rw-river-letter-navigation__link--active',
+        ])
+        .setAttribute('href', data.url)
+      }}>{{ data.label }}</a></li>
+      {% endfor %}
+    </ul>
+  </nav>
+</div>
 {% endif %}
