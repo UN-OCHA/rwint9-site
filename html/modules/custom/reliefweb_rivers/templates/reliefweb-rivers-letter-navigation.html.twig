@@ -23,12 +23,11 @@
       'rw-river-letter-navigation',
     ])
     .setAttribute('id', id)
-    .setAttribute('data-toggable', title)
     .setAttribute('aria-labelledby', id ~ '-title')
   }}>
     <h{{ level }}{{ title_attributes
       .addClass([
-        'reliefweb-river-letter-navigation__title',
+        'rw-river-letter-navigation__title',
         'visually-hidden',
       ])
       .setAttribute('id',  id ~ '-title')
