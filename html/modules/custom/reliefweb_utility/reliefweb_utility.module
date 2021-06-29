@@ -21,5 +21,8 @@ function reliefweb_utility_preprocess(array &$variables, $hook) {
     if (array_key_exists('title_attributes', $variables) && empty($variables['title_attributes'])) {
       $variables['title_attributes'] = new Attribute();
     }
+    if (array_key_exists('description_attributes', $variables) && empty($variables['description_attributes'])) {
+      $variables['description_attributes'] = new Attribute();
+    }
   }
 }
