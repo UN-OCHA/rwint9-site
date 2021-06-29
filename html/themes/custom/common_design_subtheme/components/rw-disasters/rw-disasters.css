@@ -29,7 +29,7 @@
 .path-frontpage #main-content #disasters li a {
   position: relative;
   display: block;
-  /* Space for the disaser icon. */
+  /* Space for the disaster icon. */
   padding-left: 48px;
   font-size: 16px;
   font-weight: bold;
@@ -54,7 +54,8 @@
 .path-frontpage #main-content [data-disaster-type="CW"] .rw-river-article__title  a:before {
   background: var(--rw-icons--disaster-type--CW--24--grey);
 }
-.path-frontpage #main-content [data-disaster-type="DR"] .rw-river-article__title  a:before {
+#main-content [data-disaster-type="DR"] .rw-river-article__title  a:before,
+.taxonomy-term--disaster--full[data-disaster-type="DR"] > header:before {
   background: var(--rw-icons--disaster-type--DR--24--grey);
 }
 .path-frontpage #main-content [data-disaster-type="EC"] .rw-river-article__title  a:before {
@@ -127,9 +128,105 @@
 .path-frontpage #main-content #disasters .rw-river-article--disaster a {
   position: relative;
   display: block;
-  /* Space for the disaser icon. */
+  /* Space for the disaster icon. */
   padding-left: 48px;
   font-size: 16px;
   font-weight: bold;
   line-height: 26px;
+}
+
+/**
+ * Disaster page.
+ *
+ * Individual disaster pages. Those pages are made of short sections of content
+ * like the overview or maps and infographics.
+ *
+ * Scope: .page-entity-disaster #main
+ */
+.taxonomy-term--disaster--full[data-disaster-type] > header {
+  position: relative;
+  padding-left: 64px;
+}
+.taxonomy-term--disaster--full[data-disaster-type] > header:before {
+  content: "";
+  position: absolute;
+  /* To align with the h2. */
+  top: 6px;
+  left: 0;
+  width: 52px;
+  height: 52px;
+  overflow: hidden;
+  /*background: url(../img/icons/disaster-icons-sprite.png) -256px 0 no-repeat;*/
+  /*background: rgba(0,0,0,0) url(../img/icons/disaster-icons-sprite.svg) -256px 0 no-repeat;*/
+  background-color: #b6c8d0;
+  border: 10px solid #b6c8d0;
+}
+/*.taxonomy-term--disaster--full[data-disaster-type="AC"] > header:before {*/
+/*  background-position-y: 0;*/
+/*}*/
+/*.taxonomy-term--disaster--full[data-disaster-type="AV"] > header:before {*/
+/*  background-position-y: -32px;*/
+/*}*/
+/*.taxonomy-term--disaster--full[data-disaster-type="CW"] > header:before {*/
+/*  background-position-y: -64px;*/
+/*}*/
+/*.taxonomy-term--disaster--full[data-disaster-type="DR"] > header:before {*/
+/*  background-position-y: -96px;*/
+/*}*/
+/*.taxonomy-term--disaster--full[data-disaster-type="EC"] > header:before {*/
+/*  background-position-y: -128px;*/
+/*}*/
+/*.taxonomy-term--disaster--full[data-disaster-type="EP"] > header:before {*/
+/*  background-position-y: -160px;*/
+/*}*/
+/*.taxonomy-term--disaster--full[data-disaster-type="EQ"] > header:before {*/
+/*  background-position-y: -192px;*/
+/*}*/
+/*.taxonomy-term--disaster--full[data-disaster-type="FF"] > header:before {*/
+/*  background-position-y: -224px;*/
+/*}*/
+/*.taxonomy-term--disaster--full[data-disaster-type="FL"] > header:before {*/
+/*  background-position-y: -256px;*/
+/*}*/
+/*.taxonomy-term--disaster--full[data-disaster-type="FR"] > header:before {*/
+/*  background-position-y: -288px;*/
+/*}*/
+/*.taxonomy-term--disaster--full[data-disaster-type="HT"] > header:before {*/
+/*  background-position-y: -320px;*/
+/*}*/
+/*.taxonomy-term--disaster--full[data-disaster-type="IN"] > header:before {*/
+/*  background-position-y: -352px;*/
+/*}*/
+/*.taxonomy-term--disaster--full[data-disaster-type="LS"] > header:before {*/
+/*  background-position-y: -384px;*/
+/*}*/
+/*.taxonomy-term--disaster--full[data-disaster-type="MS"] > header:before {*/
+/*  background-position-y: -416px;*/
+/*}*/
+/*.taxonomy-term--disaster--full[data-disaster-type="SS"] > header:before {*/
+/*  background-position-y: -448px;*/
+/*}*/
+/*.taxonomy-term--disaster--full[data-disaster-type="ST"] > header:before {*/
+/*  background-position-y: -480px;*/
+/*}*/
+/*.taxonomy-term--disaster--full[data-disaster-type="TC"] > header:before {*/
+/*  background-position-y: -512px;*/
+/*}*/
+/*.taxonomy-term--disaster--full[data-disaster-type="TS"] > header:before {*/
+/*  background-position-y: -544px;*/
+/*}*/
+/*.taxonomy-term--disaster--full[data-disaster-type="VO"] > header:before {*/
+/*  background-position-y: -576px;*/
+/*}*/
+/*.taxonomy-term--disaster--full[data-disaster-type="WF"] > header:before {*/
+/*  background-position-y: -608px;*/
+/*}*/
+.taxonomy-term--disaster--full[data-disaster-status="alert"] > header:before {
+  background-color: #eb8705;
+  border-color: #eb8705;
+}
+.taxonomy-term--disaster--full[data-disaster-status="current"] > header:before,
+.taxonomy-term--disaster--full[data-disaster-status="ongoing"] > header:before {
+  background-color: #f65c51;
+  border-color: #f65c51;
 }
