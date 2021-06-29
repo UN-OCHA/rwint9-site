@@ -26,9 +26,11 @@
       'rw-entity-description__title'
     ])
   }}>{{ title }}</h{{ level }}>
-  <div{{ description_attributes
-    .addClass([
-      'rw-entity-description__text'
-    ])
-  }}>{{ description|raw }}</div>
+  <div class="rw-entity-description__wrapper">
+    <div{{ description_attributes
+      .addClass([
+        'rw-entity-description__text'
+      ])
+    }}>{{ description|raw }}</div>
+  </div>
 </section>
