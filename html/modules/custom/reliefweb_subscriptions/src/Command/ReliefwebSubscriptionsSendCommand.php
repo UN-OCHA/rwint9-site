@@ -5,6 +5,7 @@ namespace Drupal\reliefweb_subscriptions\Command;
 use Consolidation\SiteAlias\SiteAliasManagerAwareInterface;
 use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
 use Consolidation\SiteProcess\ProcessManagerAwareTrait;
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
@@ -15,9 +16,10 @@ use Drupal\Core\ProxyClass\File\MimeType\MimeTypeGuesser;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\State\State;
 use Drupal\file\FileUsage\FileUsageInterface;
+use Drupal\reliefweb_subscriptions\CronExpressionParser;
 use Drush\Commands\DrushCommands;
 use GuzzleHttp\ClientInterface;
-use Drupal\Component\Datetime\TimeInterface;
+Use Drupal\Component\Render\FormattableMarkup;
 
 /**
  * Docstore Drush commandfile.
@@ -212,7 +214,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     // Extract the subsciption ids.
     $sids = [];
     foreach ($notifications as $notification) {
-      $sids[$notification['sid']] = $notification['sid'];
+      $sids[$notification->sid] = $notification->sid;
     }
 
     // Get the subscriptions.
@@ -222,7 +224,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     $logs = [];
     $total_sent = 0;
     foreach ($notifications as $notification) {
-      $subscription = $subscriptions[$notification['sid']];
+      $subscription = $subscriptions[$notification->sid];
 
       if ($subscription['type'] === 'scheduled') {
         $sent = $this->sendScheduledNotification($notification, $subscription);
@@ -235,8 +237,8 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
         $total_sent++;
       }
 
-      $logs[$notification['sid']] = [
-        'sid' => $notification['sid'],
+      $logs[$notification->sid] = [
+        'sid' => $notification->sid,
         'last' => $this->time->getRequestTime(),
         'next' => $this->getNextSendingTime($subscription),
       ];
@@ -280,6 +282,9 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     'entity_id' => 0,
     'last' => 0,
   ]) {
+
+    $this->logger->info('Processing ' . $sid);
+
     $subscriptions = reliefweb_subscriptions_subscriptions();
     if (!isset($subscriptions[$sid])) {
       $this->logger->error('Invalid subscription id');
@@ -351,8 +356,8 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
         // If a subscription was never sent then there is no log for it so we
         // compute what would have been the previous sending time.
         if (isset($timestamps[$sid])) {
-          $last = $timestamps[$sid]['last'];
-          $next = $timestamps[$sid]['next'];
+          $last = $timestamps[$sid]->last;
+          $next = $timestamps[$sid]->next;
         }
         else {
           $last = $this->getPreviousSendingTime($subscriptions[$sid]);
@@ -377,7 +382,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
   /**
    * Send scheduled notifications.
    *
-   * @param array $notification
+   * @param object $notification
    *   Notification information.
    * @param array $subscription
    *   Subscription information.
@@ -385,7 +390,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    * @return bool
    *   TRUE if emails were sent.
    */
-  protected function sendScheduledNotification(array $notification, array $subscription) {
+  protected function sendScheduledNotification(object $notification, array $subscription) {
     $data = $this->getScheduledNotificationData($notification, $subscription);
     if (empty($data)) {
       return FALSE;
@@ -417,7 +422,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
   /**
    * Get the API data for a scheduled notification.
    *
-   * @param array $notification
+   * @param object $notification
    *   Notification information.
    * @param array $subscription
    *   Subscription information.
@@ -425,7 +430,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    * @return array
    *   API data with the list of found entities.
    */
-  protected function getScheduledNotificationData(array $notification, array $subscription) {
+  protected function getScheduledNotificationData(object $notification, array $subscription) {
     $payload = $subscription['payload'] ?? [];
 
     // Add a filter to on the creation date to get only the documents created
@@ -433,7 +438,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     $filter = [
       'field' => 'date.created',
       'value' => [
-        'from' => gmdate('c', $notification['last']),
+        'from' => gmdate('c', $notification->last),
       ],
     ];
     if (!empty($payload['filter'])) {
@@ -449,7 +454,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
       $payload['filter'] = $filter;
     }
     // Retrieve the data from the API.
-    $result = $this->query($notification, $subscription, $payload);
+    $result = $this->query((array) $notification, $subscription, $payload);
     if (empty($result) || empty($result['data'])) {
       $this->logger->info('No content, skipping scheduled notification @name', [
         '@name' => $subscription['name'],
@@ -488,17 +493,17 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     static $batch_size;
 
     if (!isset($from)) {
-      $from = variable_get('site_mail', ini_get('sendmail_from'));
+      $from = \Drupal::state()->get('site_mail', ini_get('sendmail_from'));
       // Format the from to include ReliefWeb if not already.
       if (strpos($from, '<') === FALSE) {
-        $from = format_string('!sitename <!sitemail>', [
-          '!sitename' => variable_get('site_name', 'ReliefWeb'),
+        $from = $this->format_string('!sitename <!sitemail>', [
+          '!sitename' => \Drupal::state()->get('site_name', 'ReliefWeb'),
           '!sitemail' => $from,
         ]);
       }
-      $language = language_default();
+      $language = \Drupal::service('language.default')->get()->getId();
       // Number of emails to send by second.
-      $batch_size = variable_get('reliefweb_subscriptions_mail_batch_size', 40);
+      $batch_size = \Drupal::state()->get('reliefweb_subscriptions_mail_batch_size', 40);
     }
 
     $sid = $subscription['id'];
@@ -558,7 +563,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
         $mail_body = strtr($body, ['%unsubscribe%' => $unsubscribe]);
 
         // Send the email.
-        drupal_mail('reliefweb_subscriptions', 'notifications', $subscriber['mail'], $language, [
+        \Drupal::service('plugin.manager.mail')->mail('reliefweb_subscriptions', 'notifications', $subscriber['mail'], $language, [
           'headers' => [
             'List-Id'          => $list_id,
             'List-Unsubscribe' => $unsubscribe,
@@ -614,6 +619,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    *   HTML content.
    */
   protected function generateEmailContent(array $subscription, array $data) {
+    return 'Test mail';
     static $path;
     if (!isset($path)) {
       $path = drupal_get_path('module', 'reliefweb_subscriptions');
@@ -840,7 +846,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
       $url = url('/', ['absolute' => TRUE]);
       $host = parse_url($url, PHP_URL_HOST);
 
-      $lists[$sid] = format_string('@sid.lists.@host', [
+      $lists[$sid] = $this->format_string('@sid.lists.@host', [
         '@sid' => $sid,
         '@host' => $host,
       ]);
@@ -908,7 +914,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     if ($subscription['bundle'] !== $notification['bundle']) {
       return [];
     }
-
+$this->logger->info('getTriggeredNotificationData');
     $payload = $subscription['payload'] ?? [];
 
     // Add a filter to get only the entity for which to send the notification.
@@ -964,7 +970,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     static $appname;
 
     if (!isset($api_url)) {
-      $api_url = variable_get('reliefweb_api_url', 'https://api.reliefweb.int/v1');
+      $api_url = \Drupal::state()->get('reliefweb_api_url', 'https://api.reliefweb.int/v1');
       $appname = !empty($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'reliefweb.int';
     }
 
@@ -1012,7 +1018,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
 
     // Handle timeout and other errors.
     if (!empty($errno)) {
-      $error = format_string('[!status, !code, !error]', [
+      $error = $this->format_string('[!status, !code, !error]', [
         '!status' => $status,
         '!code' => $errno,
         '!error' => $error,
@@ -1023,7 +1029,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
 
     // No strict equality as status may be a numeric string.
     if ($status != 200) {
-      $error = format_string('[!status, !response, !data]', [
+      $error = $this->format_string('[!status, !response, !data]', [
         '!status' => $status,
         '!response' => $response,
         '!data' => $data,
@@ -1229,4 +1235,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     }
   }
 
+  function format_string($string, array $args) {
+    return new FormattableMarkup($string, $args);
+  }
 }
