@@ -2,5 +2,13 @@
 
 {{ attach_library('common_design/cd-block-title') }}
 {{ attach_library('common_design_subtheme/rw-entity-description') }}
+{{ attach_library('common_design_subtheme/rw-entity-description') }}
+
+{% set description_attributes = description_attributes
+  .setAttribute('data-cd-toggable', 'Show full overview'|t)
+  .setAttribute('data-cd-icon', 'arrow-down')
+  .setAttribute('data-cd-component', 'rw-entity-description')
+  .setAttribute('data-cd-label-switch', 'Hide full overview'|t)
+%}
 
 {% include '@reliefweb_entities/reliefweb-entities-entity-description.html.twig' %}
