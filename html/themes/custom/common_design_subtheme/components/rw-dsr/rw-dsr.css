@@ -87,10 +87,21 @@
   #main-content .rw-sectioned-content section.rw-dsr > footer {
     width: 100%;
   }
-  #main-content .rw-sectioned-content section.rw-dsr.with-illustration > ul,
-  #main-content .rw-sectioned-content section.rw-dsr.with-illustration > figure {
+  #main-content .rw-sectioned-content section.rw-dsr--with-illustration > ul,
+  #main-content .rw-sectioned-content section.rw-dsr--with-illustration > figure {
     display: block;
     width: 48%;
+    /* Ensure the top of the highlights is aligned with the illustration.
+     *
+     * @todo currently the top margin of the highlights (ul) comes from the
+     * browser user agent styling (ex: margin-block-start: 1em;). Setting it
+     * to 0 here means the spacing between the title section and the highlights
+     * differs when there is an illustation or not which is not consistent.
+     * So it would be better to have a fixed margin (0 or something else)
+     * regardless of the presence of the illustration. This margin should be
+     * consistent with the other sections on the page the DSR one is displayed
+     * for a more homogeneous experience. See RW-55. */
+    margin-top: 0;
   }
 }
 
