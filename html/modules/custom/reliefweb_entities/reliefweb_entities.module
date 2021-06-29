@@ -83,6 +83,10 @@ function reliefweb_entities_theme() {
       'variables' => [
         // Wrapper attributes.
         'attributes' => NULL,
+        // Flag indicating the list of meta is the "core" meta information,
+        // usually displayed in river articles or below the title on article
+        // pages.
+        'core' => TRUE,
         // List of meta information for an article (ex: dates, sources etc.).
         // Each meta data has the following properties: type (simple, date,
         // date-range or taglist), label, value (simple, date, array with start

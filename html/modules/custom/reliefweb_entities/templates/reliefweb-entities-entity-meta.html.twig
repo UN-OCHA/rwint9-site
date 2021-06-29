@@ -5,7 +5,9 @@
  * Template file for an entity meta information.
  *
  * Available variables:
- * - atreibutes: wrapper attributes
+ * - attributes: wrapper attributes
+ * - core: flag indicating the list of meta is the "core" meta information,
+ *   usually displayed in river articles or below the title on article pages.
  * - meta: associative array with a list of meta information (ex: dates,
  *   sources, etc.). Each items has the following properties:
  *   - type: simple, link, date, date-range or taglist
@@ -15,13 +17,14 @@
  *   - sort: only for taglist - sort property for the tags
  *
  * @todo better date formatting to respect language format.
- * @todo review the spacing.
+ * @todo review the spacing notably for single values.
  */
 
 #}
 <dl{{ attributes
   .addClass([
     'rw-entity-meta',
+    core ? 'rw-entity-meta--core',
   ])
 }}>
   {% set meta = meta|filter(data => data.value is not empty) %}
