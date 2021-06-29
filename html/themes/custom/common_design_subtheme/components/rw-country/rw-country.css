@@ -43,12 +43,12 @@
 
 
 /* Page title and Status in article header */
-.taxonony-term--country--full .cd-page-title {
+.taxonomy-term--country--full .cd-page-title {
   padding-bottom: 0;
   margin-bottom: 0;
   border-bottom: 0 none;
 }
-.taxonony-term--country--full > header {
+.taxonomy-term--country--full > header {
   padding-bottom: 12px;
   border-bottom: 1px solid #eb1405;
 }
