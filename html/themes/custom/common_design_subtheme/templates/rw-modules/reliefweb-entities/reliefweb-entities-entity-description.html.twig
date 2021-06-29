@@ -2,13 +2,32 @@
 
 {{ attach_library('common_design/cd-block-title') }}
 {{ attach_library('common_design_subtheme/rw-entity-description') }}
-{{ attach_library('common_design/cd-dropdown') }}
 
 {% set description_attributes = description_attributes
-  .setAttribute('data-cd-toggable', 'Show full overview'|t)
-  .setAttribute('data-cd-icon', 'arrow-down')
-  .setAttribute('data-cd-component', 'rw-entity-description')
-  .setAttribute('data-cd-label-switch', 'Hide full overview'|t)
+  .setAttribute('id', id ~ '-content')
 %}
 
 {% include '@reliefweb_entities/reliefweb-entities-entity-description.html.twig' %}
+
+<script>
+  (function () {
+    'use strict';
+
+    // If there are more than 3 paragraphs/lists etc. in the overview, we only
+    // display the last 3 ones and add a toggling button to show the full
+    // overview.
+    var overview = document.getElementById('{{ id }}-content');
+    var children = overview.childNodes;
+    var count = 0;
+    for (var i = 0, l = children.length; i < l; i++) {
+      if (children[i].nodeType === 1) {
+        count++;
+      }
+    }
+    if (count > 3) {
+      overview.setAttribute('data-cd-toggable', 'Show full overview');
+      overview.setAttribute('data-cd-label-switch', 'Hide full overview');
+      overview.setAttribute('data-cd-toggable-keep', '');
+    }
+  })();
+</script>
