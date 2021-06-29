@@ -24,6 +24,7 @@ module:
   language: 0
   link: 0
   locale: 0
+  mailsystem: 0
   maintenance200: 0
   media: 0
   media_library: 0
@@ -38,6 +39,7 @@ module:
   page_cache: 0
   path: 0
   path_alias: 0
+  phpmailer_smtp: 0
   redirect: 0
   redis: 0
   reliefweb_api: 0
@@ -47,6 +49,7 @@ module:
   reliefweb_key_figures: 0
   reliefweb_migrate: 0
   reliefweb_rivers: 0
+  reliefweb_subscriptions: 0
   reliefweb_utility: 0
   responsive_image: 0
   social_api: 0

@@ -1,0 +1,6 @@
+theme: common_design_subtheme
+defaults:
+  sender: phpmailer_smtp
+  formatter: phpmailer_smtp
+_core:
+  default_config_hash: IhwTepsVwtbtbcT5GzQKhCXDCRvbk3MNkWqPiuiZ10s
