@@ -312,3 +312,22 @@ function reliefweb_subscriptions_get_countries() {
 
   return $countries;
 }
+
+/**
+ * Implements hook_mail().
+ */
+function reliefweb_subscriptions_mail($key, &$message, $params) {
+  if ($key !== 'notifications') {
+    return;
+  }
+
+  foreach ($params['headers'] as $key => $value) {
+    $message['headers'][$key] = $value;
+  }
+  if (!isset($message['headers']['Reply-To'])) {
+    $message['headers']['Reply-To'] = $message['from'];
+  }
+  $message['subject'] = $params['subject'];
+  $message['body'] = $params['body'];
+}
+

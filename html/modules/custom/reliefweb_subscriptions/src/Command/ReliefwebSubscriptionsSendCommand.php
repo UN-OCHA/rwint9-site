@@ -19,7 +19,10 @@ use Drupal\file\FileUsage\FileUsageInterface;
 use Drupal\reliefweb_subscriptions\CronExpressionParser;
 use Drush\Commands\DrushCommands;
 use GuzzleHttp\ClientInterface;
-Use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Url;
+use Drupal\Component\Utility\Crypt;
+use Drupal\Core\Site\Settings;
 
 /**
  * Docstore Drush commandfile.
@@ -557,13 +560,13 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
       // Send current batch of emails in a simple loop.
       foreach ($batch as $subscriber) {
         // Generate the individual unsubscribe link.
-        $unsubscribe = $this->generateUnsubscribeLink($subscriber['uid'], $sid);
+        $unsubscribe = $this->generateUnsubscribeLink($subscriber->uid, $sid);
 
         // Update the body with the unique ubsubscribe link.
         $mail_body = strtr($body, ['%unsubscribe%' => $unsubscribe]);
 
         // Send the email.
-        \Drupal::service('plugin.manager.mail')->mail('reliefweb_subscriptions', 'notifications', $subscriber['mail'], $language, [
+        \Drupal::service('plugin.manager.mail')->mail('reliefweb_subscriptions', 'notifications', $subscriber->mail, $language, [
           'headers' => [
             'List-Id'          => $list_id,
             'List-Unsubscribe' => $unsubscribe,
@@ -619,7 +622,8 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    *   HTML content.
    */
   protected function generateEmailContent(array $subscription, array $data) {
-    return 'Test mail';
+    // @todo build actual content.
+    return '<html><body><p>Test mail</p></body></html>';
     static $path;
     if (!isset($path)) {
       $path = drupal_get_path('module', 'reliefweb_subscriptions');
@@ -814,7 +818,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     $query = $this->database->select('reliefweb_subscriptions_subscriptions', 's');
     $query->fields('s', ['uid']);
     $query->condition('s.sid', $sid);
-    $query->innerJoin('users', 'u', 'u.uid = s.uid');
+    $query->innerJoin('users_field_data', 'u', 'u.uid = s.uid');
     $query->fields('u', ['name', 'mail']);
     $result = $query->execute();
     return !empty($result) ? $result->fetchAllAssoc('uid') : [];
@@ -843,7 +847,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
 
     // If there is no list ID for this subscription, generate one.
     if (!isset($lists[$sid])) {
-      $url = url('/', ['absolute' => TRUE]);
+      $url = \Drupal::request()->getScheme() . '://' . \Drupal::request()->getHost();
       $host = parse_url($url, PHP_URL_HOST);
 
       $lists[$sid] = $this->format_string('@sid.lists.@host', [
@@ -868,14 +872,16 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    */
   protected function generateUnsubscribeLink($uid, $sid) {
     $path = 'notifications/unsubscribe/user/' . $uid;
+    $path = 'http://' . \Drupal::request()->getHost() . '/user/' . $uid;
     $timestamp = $this->time->getRequestTime();
-    return url($path, [
+    $url = Url::fromUri($path, [
       'absolute' => TRUE,
       'query' => [
         'timestamp' => $timestamp,
         'signature' => $this->getSignature($path, $timestamp),
       ],
     ]);
+    return $url->toString();
   }
 
   /**
@@ -890,7 +896,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    *   Signature.
    */
   protected function getSignature($path, $timestamp) {
-    return drupal_hmac_base64($path, $timestamp . drupal_get_private_key() . drupal_get_hash_salt());
+    return Crypt::hmacBase64($path, $timestamp . \Drupal::service('private_key')->get() . Settings::getHashSalt());
   }
 
   /**
@@ -966,23 +972,6 @@ $this->logger->info('getTriggeredNotificationData');
    *   API response data.
    */
   protected function query(array $notification, array $subscription, array $payload) {
-    static $api_url;
-    static $appname;
-
-    if (!isset($api_url)) {
-      $api_url = \Drupal::state()->get('reliefweb_api_url', 'https://api.reliefweb.int/v1');
-      $appname = !empty($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'reliefweb.int';
-    }
-
-    $parameters = [
-      'appname' => $appname . '-subscriptions',
-      'slim' => 1,
-      // Bypass any cache.
-      'timestamp' => microtime(TRUE),
-    ];
-
-    $url = $api_url . '/' . $subscription['resource'] . '?' . http_build_query($parameters, '', '&');
-
     // Encode the request payload.
     $data = json_encode($payload);
     if ($data === FALSE) {
@@ -991,55 +980,12 @@ $this->logger->info('getTriggeredNotificationData');
       return [];
     }
 
-    $headers = [
-      'Content-Type: application/json',
-      'Content-Length: ' . strlen($data),
-    ];
-
     // Create the request handler.
-    $curl = curl_init($url);
-
-    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-    curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
-
-    curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'POST');
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-
-    // Enough timeout. This query is not so time sensitive and for subscriptions
-    // like jobs, there can be a lot of data to return.
-    curl_setopt($curl, CURLOPT_TIMEOUT, 10);
-    curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 5);
-
-    $response = curl_exec($curl);
-    $status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-    $error = curl_error($curl);
-    $errno = curl_errno($curl);
-    curl_close($curl);
-
-    // Handle timeout and other errors.
-    if (!empty($errno)) {
-      $error = $this->format_string('[!status, !code, !error]', [
-        '!status' => $status,
-        '!code' => $errno,
-        '!error' => $error,
-      ]);
-      $this->logQueryError($notification, $subscription, $error);
-      return [];
-    }
-
-    // No strict equality as status may be a numeric string.
-    if ($status != 200) {
-      $error = $this->format_string('[!status, !response, !data]', [
-        '!status' => $status,
-        '!response' => $response,
-        '!data' => $data,
-      ]);
-      $this->logQueryError($notification, $subscription, $error);
-      return [];
-    }
+    /** @var Drupal\reliefweb_api\Services\ReliefWebApiClient $api_client */
+    $api_client = \Drupal::service('reliefweb_api.client');
+    $result = $api_client->request($subscription['resource'], []);
 
     // Decode the API response.
-    $result = json_decode($response, TRUE);
     if ($result === FALSE) {
       $error = 'Unable to decode response';
       $this->logQueryError($notification, $subscription, $error);
