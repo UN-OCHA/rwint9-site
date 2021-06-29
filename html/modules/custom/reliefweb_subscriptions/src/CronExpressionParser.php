@@ -2,9 +2,6 @@
 
 namespace Drupal\reliefweb_subscriptions;
 
-use ArrayIterator;
-use DateTime;
-
 /**
  * @file
  * Handle cron expression parsing.
@@ -27,20 +24,20 @@ class CronExpressionParser {
    *   Allowed values for each component of the cron expression.
    */
   public static function parse($expression) {
-    static $types = array(
+    static $types = [
       'minute',
       'hour',
       'day',
       'month',
       'weekday',
-    );
+    ];
 
     $components = explode(' ', $expression);
     if (count($components) !== 5) {
-      throw new Exception();
+      throw new \Exception();
     }
 
-    $values = array();
+    $values = [];
     foreach ($types as $index => $type) {
       $values[$type] = self::parseComponent($type, $components[$index]);
     }
@@ -57,23 +54,23 @@ class CronExpressionParser {
    * @param string $timezone
    *   Timezone for the timestamp to date conversion. Defaults to UTC.
    *
-   * @return DateTime
+   * @return \DateTime
    *   Date object representng the next run date.
    */
   public static function getNextRunDate($expression, $time = 'now', $timezone = 'UTC') {
-    static $parts = array(
+    static $parts = [
       'month' => 'n',
       'weekday' => 'w',
       'day' => 'j',
       'hour' => 'G',
       'minute' => 'i',
-    );
+    ];
 
     $values = self::parse($expression);
 
     $date = date_create(is_int($time) ? '@' . $time : $time, timezone_open($timezone));
 
-    $iterator = new ArrayIterator($parts);
+    $iterator = new \ArrayIterator($parts);
 
     // @todo add 1 minute to ensure we skip the current date?
     $max_iteration = 1000;
@@ -197,17 +194,17 @@ class CronExpressionParser {
    * @param string $timezone
    *   Timezone for the timestamp to date conversion. Defaults to UTC.
    *
-   * @return DateTime
+   * @return \DateTime
    *   Date object representng the previous run date.
    */
   public static function getPreviousRunDate($expression, $time = 'now', $timezone = 'UTC') {
-    static $parts = array(
+    static $parts = [
       'minute' => 'i',
       'hour' => 'G',
       'day' => 'j',
       'weekday' => 'w',
       'month' => 'n',
-    );
+    ];
 
     $values = self::parse($expression);
     // Reverse all the values to work with getPrevious.
@@ -217,7 +214,7 @@ class CronExpressionParser {
 
     $date = date_create(is_int($time) ? '@' . $time : $time, timezone_open($timezone));
 
-    $iterator = new ArrayIterator($parts);
+    $iterator = new \ArrayIterator($parts);
 
     // @todo remove 1 minute to ensure we skip the current date?
     $max_iteration = 1000;
@@ -315,7 +312,6 @@ class CronExpressionParser {
           else {
             $date->modify('-1 year')->modify('+' . abs($diff) . ' months');
           }
-          $day = reset($values['day']);
 
           $date->setDate(
             intval($date->format('Y')),
@@ -339,7 +335,7 @@ class CronExpressionParser {
    * This currently adjusts the days to ensure we don't exceed the maximum
    * number of days in the month of the year fo provided date.
    *
-   * @param DateTime $date
+   * @param \DateTime $date
    *   Date being worked with.
    * @param string $type
    *   Component type: minute, hour, day, month, year.
@@ -351,11 +347,11 @@ class CronExpressionParser {
    * @return array|int
    *   Full adjusted allowed values or the first one if reset was TRUE.
    */
-  public static function adjustValues(DateTime $date, $type, array $values, $reset = FALSE) {
+  public static function adjustValues(\DateTime $date, $type, array $values, $reset = FALSE) {
     if ($type === 'day') {
       $max = intval($date->format('t'));
 
-      $days = array();
+      $days = [];
       foreach ($values as $value) {
         if ($value <= $max) {
           $days[] = $value;
@@ -422,13 +418,13 @@ class CronExpressionParser {
    *   Allowed values for the component.
    */
   public static function parseComponent($type, $component) {
-    static $minmax = array(
-      'minute' => array(0, 59),
-      'hour' => array(0, 23),
-      'day' => array(1, 31),
-      'month' => array(1, 12),
-      'weekday' => array(0, 6),
-    );
+    static $minmax = [
+      'minute' => [0, 59],
+      'hour' => [0, 23],
+      'day' => [1, 31],
+      'month' => [1, 12],
+      'weekday' => [0, 6],
+    ];
 
     list($min, $max) = $minmax[$type];
 
@@ -442,7 +438,7 @@ class CronExpressionParser {
         break;
     }
 
-    $values = array();
+    $values = [];
     foreach (explode(',', $component) as $value) {
       $values = array_merge($values, self::getAllowedValues($value, $min, $max));
     }
@@ -463,7 +459,7 @@ class CronExpressionParser {
    *   Translated month component.
    */
   public static function translateMonth($component) {
-    static $replacements = array(
+    static $replacements = [
       'january' => 1,
       'february' => 2,
       'march' => 3,
@@ -488,7 +484,7 @@ class CronExpressionParser {
       'oct' => 10,
       'nov' => 11,
       'dec' => 12,
-    );
+    ];
     return strtr(strtolower($component), $replacements);
   }
 
@@ -502,7 +498,7 @@ class CronExpressionParser {
    *   Translated weekday component.
    */
   public static function translateWeekday($component) {
-    static $replacements = array(
+    static $replacements = [
       // Sunday is 7 when at the end of a range.
       '-sunday' => -7,
       '-sun' => -7,
@@ -521,7 +517,7 @@ class CronExpressionParser {
       'thu' => 4,
       'fri' => 5,
       'sat' => 6,
-    );
+    ];
     return strtr(strtolower($component), $replacements);
   }
 
@@ -580,11 +576,11 @@ class CronExpressionParser {
       // - http://cron.schlitt.info ignores the step for single values:
       //   1/5 * * * * means the cron runs at minute 1 of every hour.
       if (!isset($end) || $step >= $end - $start) {
-        return array($start);
+        return [$start];
       }
       return range($start, $end, $step);
     }
-    return isset($end) ? range($start, $end) : array($start);
+    return isset($end) ? range($start, $end) : [$start];
   }
 
   /**
@@ -601,10 +597,10 @@ class CronExpressionParser {
    *   FALSE if invalid, filtered value otherwise.
    */
   public static function checkInt($value, $min, $max) {
-    $result = filter_var($value, FILTER_VALIDATE_INT, array(
+    $result = filter_var($value, FILTER_VALIDATE_INT, [
       'min_range' => $min,
       'max_range' => $max,
-    ));
+    ]);
     if ($result === FALSE) {
       throw new Exception();
     }

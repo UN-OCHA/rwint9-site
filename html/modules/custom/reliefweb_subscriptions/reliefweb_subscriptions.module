@@ -330,4 +330,3 @@ function reliefweb_subscriptions_mail($key, &$message, $params) {
   $message['subject'] = $params['subject'];
   $message['body'] = $params['body'];
 }
-

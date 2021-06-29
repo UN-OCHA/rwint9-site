@@ -499,7 +499,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
       $from = \Drupal::state()->get('site_mail', ini_get('sendmail_from'));
       // Format the from to include ReliefWeb if not already.
       if (strpos($from, '<') === FALSE) {
-        $from = $this->format_string('!sitename <!sitemail>', [
+        $from = $this->formatString('!sitename <!sitemail>', [
           '!sitename' => \Drupal::state()->get('site_name', 'ReliefWeb'),
           '!sitemail' => $from,
         ]);
@@ -850,7 +850,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
       $url = \Drupal::request()->getScheme() . '://' . \Drupal::request()->getHost();
       $host = parse_url($url, PHP_URL_HOST);
 
-      $lists[$sid] = $this->format_string('@sid.lists.@host', [
+      $lists[$sid] = $this->formatString('@sid.lists.@host', [
         '@sid' => $sid,
         '@host' => $host,
       ]);
@@ -920,7 +920,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     if ($subscription['bundle'] !== $notification['bundle']) {
       return [];
     }
-$this->logger->info('getTriggeredNotificationData');
+    $this->logger->info('getTriggeredNotificationData');
     $payload = $subscription['payload'] ?? [];
 
     // Add a filter to get only the entity for which to send the notification.
@@ -1181,7 +1181,11 @@ $this->logger->info('getTriggeredNotificationData');
     }
   }
 
-  function format_string($string, array $args) {
+  /**
+   * Format string wrapper.
+   */
+  public function formatString($string, array $args) {
     return new FormattableMarkup($string, $args);
   }
+
 }
