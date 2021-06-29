@@ -26,10 +26,13 @@
     }
     if (count > 3) {
       overview.setAttribute('data-cd-toggable', '{% trans %}Show full overview{% endtrans %}');
+      overview.setAttribute('data-cd-toggable', '{% trans %}Show full overview{% endtrans %}');
       overview.setAttribute('data-cd-label-switch', '{% trans %}Hide full overview{% endtrans %}');
       overview.setAttribute('data-cd-toggable-expanded', '{% trans %}Hide full overview{% endtrans %}');
       overview.setAttribute('data-cd-toggable-keep', '');
       overview.setAttribute('data-cd-focus-target', '{{ id }}');
+      overview.setAttribute('data-cd-icon', 'arrow-down')
+      overview.setAttribute('data-cd-component', 'rw-entity-description')
 
     }
   })();

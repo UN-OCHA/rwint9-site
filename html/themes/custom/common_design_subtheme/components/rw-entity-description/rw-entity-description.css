@@ -1,4 +1,4 @@
-#main-content .rw-sectioned-content section.rw-entity-description {
+#main-content .rw-sectioned-content section.rw-entity-description .rw-entity-description__wrapper {
   display: flex;
   flex-direction: column;
 }
@@ -9,7 +9,7 @@
   margin-top: 0;
 }
 /* Javascript enabled */
-.js #main-content .rw-sectioned-content section.rw-entity-description > button {
+.js #main-content .rw-sectioned-content section.rw-entity-description .rw-entity-description__wrapper > button {
   display: block;
   padding: 8px 12px;
   margin: 24px auto 0 auto;
@@ -18,10 +18,14 @@
   color: #055372;
   font-size: 16px;
   order: 3;
+  fill: #055372;
 }
-.js #main-content .rw-sectioned-content section.rw-entity-description > button:hover,
-.js #main-content .rw-sectioned-content section.rw-entity-description > button:active,
-.js #main-content .rw-sectioned-content section.rw-entity-description > button:focus {
+.js #main-content .rw-sectioned-content section.rw-entity-description .rw-entity-description__wrapper > button svg {
+  fill: currentColor;
+}
+.js #main-content .rw-sectioned-content section.rw-entity-description .rw-entity-description__wrapper > button:hover,
+.js #main-content .rw-sectioned-content section.rw-entity-description .rw-entity-description__wrapper > button:active,
+.js #main-content .rw-sectioned-content section.rw-entity-description .rw-entity-description__wrapper > button:focus {
   background: #055372;
   color: white;
 }
