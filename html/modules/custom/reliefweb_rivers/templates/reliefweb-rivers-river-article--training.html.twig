@@ -63,7 +63,7 @@
     {# Training dates. #}
     {% if entity.start is empty %}
       {% set meta = meta|merge({
-        'status': {
+        'training-date': {
           'type': 'simple',
           'label': 'Status'|t,
           'value': 'Ongoing course'|t,

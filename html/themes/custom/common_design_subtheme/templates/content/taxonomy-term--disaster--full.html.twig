@@ -37,6 +37,8 @@
     'taxonomy-term--full',
     'taxonomy-term--' ~ term.bundle() ~ '--full',
     'rw-page--sectioned',
+    'rw-article',
+    'rw-article--' ~ term.bundle(),
   ])
   .setAttribute('data-id', term.id())
   .setAttribute('data-disaster-type', disaster_type)
@@ -52,7 +54,8 @@
           'type': 'simple',
           'label': 'Status'|t,
           'value': term.getModerationStatusLabel(),
-          'classes': ['ongoing'],
+          'value_attributes': create_attribute()
+            .addClass('rw-entity-meta__tag-value--status--ongoing')
         },
         'glide': {
           'type': 'simple',

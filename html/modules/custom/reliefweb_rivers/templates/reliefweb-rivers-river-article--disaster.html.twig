@@ -48,7 +48,8 @@
           'type': 'simple',
           'label': 'Status'|t,
           'value': entity.status,
-          'classes': [entity.status == 'ongoing' ? 'ongoing'],
+          'value_attributes': create_attribute()
+            .addClass('rw-entity-meta__tag-value--status--' ~ entity.status|clean_class),
         },
         'disaster-type': {
           'type': 'taglist',
