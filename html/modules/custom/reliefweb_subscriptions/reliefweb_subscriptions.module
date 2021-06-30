@@ -330,3 +330,30 @@ function reliefweb_subscriptions_mail($key, &$message, $params) {
   $message['subject'] = $params['subject'];
   $message['body'] = $params['body'];
 }
+
+/**
+ * Implements hook_theme().
+ */
+function reliefweb_subscriptions_theme() {
+  $themes = [
+    'reliefweb_subscriptions' => [
+      'variables' => [
+        'today' => '',
+        'preheader' => NULL,
+        'items' => [],
+        'prefooter' => NULL,
+      ],
+    ],
+  ];
+
+  return $themes;
+}
+
+/**
+ * Implements hook_theme_suggestions_alter().
+ *
+ * Add suggestions for the river article theme based on bundle.
+ */
+function reliefweb_subscriptions_theme_suggestions_alter(array &$suggestions, array $variables, $hook) {
+  $suggestions[] = 'reliefweb_subscriptions__headlines';
+}

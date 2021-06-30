@@ -23,6 +23,7 @@ use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Url;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Site\Settings;
+use Drupal\Core\Link;
 
 /**
  * Docstore Drush commandfile.
@@ -566,6 +567,21 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
         $mail_body = strtr($body, ['%unsubscribe%' => $unsubscribe]);
 
         // Send the email.
+/*
+        $send_mail = new \Drupal\Core\Mail\Plugin\Mail\PhpMail();
+
+        $message['headers'] = [
+          'List-Id'          => $list_id,
+          'List-Unsubscribe' => $unsubscribe,
+          'X-RW-Category'    => $category,
+          'from' => 'Reliefwqeb <' . $from . '>',
+        ];
+
+        $message['to'] = $subscriber->mail;
+        $message['subject'] = $subject;
+        $message['body'] = $mail_body;
+        $send_mail->mail($message);
+*/
         \Drupal::service('plugin.manager.mail')->mail('reliefweb_subscriptions', 'notifications', $subscriber->mail, $language, [
           'headers' => [
             'List-Id'          => $list_id,
@@ -622,26 +638,15 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    *   HTML content.
    */
   protected function generateEmailContent(array $subscription, array $data) {
+    switch ($subscription['id']) {
+      case 'headlines':
+        return $this->generateEmailContentHeadlines($subscription, $data);
+        break;
+
+    }
+
     // @todo build actual content.
     return '<html><body><p>Test mail</p></body></html>';
-    static $path;
-    if (!isset($path)) {
-      $path = drupal_get_path('module', 'reliefweb_subscriptions');
-    }
-    $template = $path . '/templates/' . $subscription['template'] . '.tpl.php';
-
-    // Get the template variables from the API data.
-    $preprocess = 'reliefweb_subscriptions_preprocess_' . $subscription['template'] . '_data';
-    if (function_exists($preprocess)) {
-      $variables = $preprocess($subscription, $data);
-    }
-    // There should be a preprocessor for all the subscriptions. Abort if none.
-    else {
-      return '';
-    }
-
-    // Generate HTML content.
-    $html = theme_render_template($template, $variables);
 
     // Remove unnecessary whitespaces.
     $html = preg_replace('/(\s)\s+/', '$1', $html);
@@ -656,6 +661,154 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     // Add inline styling.
     $html = strtr($html, $replacements);
 
+    return $html;
+  }
+
+  /**
+   * Prepare preheader text for titles.
+   *
+   * The truncation logic is the same as reliefweb_subscriptions_summarize.
+   *
+   * @param array $items
+   *   Array of items to extract titles from.
+   *
+   * @return string
+   *   Item titles for preheader.
+   */
+  protected function reliefweb_subscriptions_get_preheader_titles(array $items) {
+    $titles = array();
+    $length = 100;
+    $text_length = 0;
+    $end_marks = ";.!?。؟ \t\n\r\0\x0B";
+    $separator = ' / ';
+    $delta = 3;
+
+    foreach ($items as $item) {
+      $title = $item['title'] ?? $item['headline']['title'] ?? '';
+      if (!empty($title)) {
+        $text_length += strlen($title);
+        $titles[] = $title;
+      }
+    }
+
+    // Ensure the preheader is no longer than 100 characters (+ ellipsis).
+    if ($text_length > $length) {
+      foreach ($titles as $index => $title) {
+        $parts = preg_split('/([\s\n\r]+)/u', $title, -1, PREG_SPLIT_DELIM_CAPTURE);
+        $parts_count = count($parts);
+
+        for ($i = 0; $i < $parts_count; ++$i) {
+          if (($length -= mb_strlen($parts[$i])) <= 0) {
+            // Truncate the title and add an ellipsis.
+            $titles[$index] = trim(implode(array_slice($parts, 0, $i)), $end_marks) . '...';
+            // Truncate the list of titles.
+            $titles = array_slice($titles, 0, $index + 1);
+            // Break from both loops.
+            break 2;
+          }
+        }
+
+        // Adjust the length to reflect the added space separator when
+        // returning the text as plain text.
+        $length -= $delta;
+      }
+    }
+
+    return implode($separator, $titles);
+  }
+
+  /**
+   * Prepare prefooter links.
+   *
+   * @param array $parts
+   *   Array of hrefs and link text to format.
+   *
+   * @return string
+   *   Formatted links.
+   */
+  protected function reliefweb_subscriptions_get_prefooter_links(array $parts) {
+    $links = array();
+    foreach ($parts as $part) {
+      $options = array(
+        'absolute' => TRUE,
+        'attributes' => array('class' => array('prefooter-link')),
+      );
+
+      if (!empty($part['options'])) {
+        $options = $options + $part['options'];
+      }
+
+      $url = Url::fromUserInput($part['link'], $options);
+      $links[] = Link::fromTextAndUrl($part['text'], $url)->toString();
+    }
+
+    return implode(' | ', $links);
+  }
+
+  /**
+   * Generate the email HTML content.
+   *
+   * @param array $subscription
+   *   Subscription information.
+   * @param array $data
+   *   API data for the notification.
+   *
+   * @return string
+   *   HTML content.
+   */
+  protected function generateEmailContentHeadlines(array $subscription, array $data) {
+    $variables = [
+      '#theme' => 'reliefweb_subscriptions__headlines',
+    ];
+
+    $variables['#today'] = date_create('now')->format('j M Y');
+    $variables['#preheader'] = $this->reliefweb_subscriptions_get_preheader_titles($data);
+
+    $items = array();
+    foreach ($data as $fields) {
+      $item = array();
+      $info = array();
+      $item['url'] = $fields['url_alias'];
+
+      // Title.
+      $title = $fields['headline']['title'];
+      $country = $fields['primary_country']['name'];
+      // Prepend the primary country if not already in the title.
+      if (strpos($title, $country) !== 0) {
+        $title = $country . ': ' . $title;
+      }
+      $item['title'] = $title;
+
+      // Sources.
+      $sources = array();
+      foreach (array_slice($fields['source'], 0, 3) as $source) {
+        $sources[] = $source['shortname'] ?? $source['name'];
+      }
+      $info[] = implode(', ', $sources);
+
+      // Date.
+      $info[] = date_create($fields['date']['original'])->format('j M Y');
+      $item['info'] = implode(' &ndash; ', $info);
+
+      $item['summary'] = $fields['headline']['summary'];
+      $items[] = $item;
+    }
+    $variables['#items'] = $items;
+
+    // Prefooter.
+    $prefooter_parts = array(
+      array(
+        'text' => 'ReliefWeb',
+        'link' => '/',
+      ),
+      array(
+        'text' => 'All ReliefWeb Headlines',
+        'link' => '/headlines',
+      ),
+    );
+    $variables['#prefooter'] = $this->reliefweb_subscriptions_get_prefooter_links($prefooter_parts);
+
+    $html = \Drupal::service('renderer')->renderRoot($variables);
     return $html;
   }
 
@@ -981,9 +1134,9 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     }
 
     // Create the request handler.
-    /** @var Drupal\reliefweb_api\Services\ReliefWebApiClient $api_client */
+    /** @var \Drupal\reliefweb_api\Services\ReliefWebApiClient $api_client */
     $api_client = \Drupal::service('reliefweb_api.client');
-    $result = $api_client->request($subscription['resource'], []);
+    $result = $api_client->request($subscription['resource'], $payload);
 
     // Decode the API response.
     if ($result === FALSE) {
