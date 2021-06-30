@@ -38,6 +38,8 @@
     'taxonomy-term--full',
     'taxonomy-term--' ~ term.bundle() ~ '--full',
     'rw-page--sectioned',
+    'rw-article',
+    'rw-article--' ~ term.bundle(),
   ])
   .setAttribute('data-id', term.id())
 }}>
@@ -52,7 +54,10 @@
           'type': 'simple',
           'label': 'Status'|t,
           'value': 'Humanitarian Situation'|t,
-          'classes': ['ongoing'],
+          'label_attributes': create_attribute()
+            .addClass('visually-hidden'),
+          'value_attributes': create_attribute()
+            .addClass('rw-entity-meta__tag-value--status--ongoing'),
         },
       }
     }) }}
