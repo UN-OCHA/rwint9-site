@@ -28,6 +28,8 @@
  * @see common_design_subtheme_preprocess_taxonomy_term()
  */
 #}
+{{ attach_library('common_design_subtheme/rw-disasters') }}
+
 {{ local_tasks }}
 {% set disaster_type = term.field_primary_disaster_type.entity.field_disaster_type_code.value %}
 <article{{ attributes
