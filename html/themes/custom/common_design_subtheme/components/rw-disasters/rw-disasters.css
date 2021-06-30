@@ -5,13 +5,13 @@
  *
  * @todo remove #main-content.
  */
-\#main-content .rw-river-article--disaster .rw-river-article__title a {
+#main-content .rw-river-article--disaster .rw-river-article__title a {
   position: relative;
   display: block;
   /* Space for the disaster icon. */
   padding-left: 48px;
 }
-\#main-content .rw-river-article--disaster .rw-river-article__title a:before {
+#main-content .rw-river-article--disaster .rw-river-article__title a:before {
   position: absolute;
   top: 50%;
   left: 6px;

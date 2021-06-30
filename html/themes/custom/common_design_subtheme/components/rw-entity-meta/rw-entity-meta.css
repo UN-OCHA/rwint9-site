@@ -161,6 +161,10 @@
   background: #f65c51;
 }
 
+.taxonomy-term--disaster--full dl.rw-entity-meta dd.rw-entity-meta__tag-value--status--past:before {
+  content: none;
+}
+
 /**
  * Content format.
  *
@@ -188,3 +192,4 @@
 #main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--format.interactive:before {
   background: var(--rw-icons--content--interactive--16--dark-grey);
 }
+
