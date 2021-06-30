@@ -135,6 +135,8 @@ rw-river-letter-navigation:
   css:
     theme:
       components/rw-river-letter-navigation/rw-river-letter-navigation.css: {}
+  js:
+    components/rw-river-letter-navigation/rw-river-letter-navigation.js: {}
   dependencies:
     - common_design/cd-dropdown
 

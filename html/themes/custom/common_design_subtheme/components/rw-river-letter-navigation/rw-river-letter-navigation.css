@@ -29,11 +29,11 @@
   padding: 0 8px;
   min-width: 40px;
   height: 40px;
-  line-height: 2.6;
+  line-height: 40px;
   text-align: center;
   text-transform: uppercase;
 }
-#main-content .rw-river-letter-navigation li a[data-active],
+#main-content .rw-river-letter-navigation li a.rw-river-letter-navigation__link--active,
 #main-content .rw-river-letter-navigation li a:focus,
 #main-content .rw-river-letter-navigation li a:active,
 #main-content .rw-river-letter-navigation li a:hover {
