@@ -5,13 +5,13 @@
  *
  * @todo remove #main-content.
  */
-#main-content .rw-river-article--disaster .rw-river-article__title a {
+\#main-content .rw-river-article--disaster .rw-river-article__title a {
   position: relative;
   display: block;
   /* Space for the disaster icon. */
   padding-left: 48px;
 }
-#main-content .rw-river-article--disaster .rw-river-article__title a:before {
+\#main-content .rw-river-article--disaster .rw-river-article__title a:before {
   position: absolute;
   top: 50%;
   left: 6px;
@@ -24,68 +24,162 @@
 #main-content .rw-river-article--disaster[data-disaster-type="AC"] .rw-river-article__title a:before {
   background: var(--rw-icons--disaster-type--AC--24--grey);
 }
-#main-content .rw-river-article--disaster[data-disaster-type="AV"] .rw-river-article__title  a:before {
+#main-content .rw-river-article--disaster[data-disaster-type="AV"] .rw-river-article__title a:before {
   background: var(--rw-icons--disaster-type--AV--24--grey);
 }
-#main-content .rw-river-article--disaster[data-disaster-type="CW"] .rw-river-article__title  a:before {
+#main-content .rw-river-article--disaster[data-disaster-type="CW"] .rw-river-article__title a:before {
   background: var(--rw-icons--disaster-type--CW--24--grey);
 }
-.taxonomy-term--disaster--full[data-disaster-type="DR"] > header:before,
-#main-content .rw-river-article--disaster[data-disaster-type="DR"] .rw-river-article__title  a:before {
+#main-content .rw-river-article--disaster[data-disaster-type="DR"] .rw-river-article__title a:before {
   background: var(--rw-icons--disaster-type--DR--24--grey);
 }
-#main-content .rw-river-article--disaster[data-disaster-type="EC"] .rw-river-article__title  a:before {
+#main-content .rw-river-article--disaster[data-disaster-type="EC"] .rw-river-article__title a:before {
   background: var(--rw-icons--disaster-type--EC--24--grey);
 }
-#main-content .rw-river-article--disaster[data-disaster-type="EP"] .rw-river-article__title  a:before {
+#main-content .rw-river-article--disaster[data-disaster-type="EP"] .rw-river-article__title a:before {
   background: var(--rw-icons--disaster-type--EP--24--grey);
 }
-#main-content .rw-river-article--disaster[data-disaster-type="EQ"] .rw-river-article__title  a:before {
+#main-content .rw-river-article--disaster[data-disaster-type="EQ"] .rw-river-article__title a:before {
   background: var(--rw-icons--disaster-type--EQ--24--grey);
 }
-#main-content .rw-river-article--disaster[data-disaster-type="FF"] .rw-river-article__title  a:before {
+#main-content .rw-river-article--disaster[data-disaster-type="FF"] .rw-river-article__title a:before {
   background: var(--rw-icons--disaster-type--FF--24--grey);
 }
-#main-content .rw-river-article--disaster[data-disaster-type="FL"] .rw-river-article__title  a:before {
+#main-content .rw-river-article--disaster[data-disaster-type="FL"] .rw-river-article__title a:before {
   background: var(--rw-icons--disaster-type--FL--24--grey);
 }
-#main-content .rw-river-article--disaster[data-disaster-type="FR"] .rw-river-article__title  a:before {
+#main-content .rw-river-article--disaster[data-disaster-type="FR"] .rw-river-article__title a:before {
   background: var(--rw-icons--disaster-type--FR--24--grey);
 }
-#main-content .rw-river-article--disaster[data-disaster-type="HT"] .rw-river-article__title  a:before {
+#main-content .rw-river-article--disaster[data-disaster-type="HT"] .rw-river-article__title a:before {
   background: var(--rw-icons--disaster-type--HT--24--grey);
 }
-#main-content .rw-river-article--disaster[data-disaster-type="IN"] .rw-river-article__title  a:before {
+#main-content .rw-river-article--disaster[data-disaster-type="IN"] .rw-river-article__title a:before {
   background: var(--rw-icons--disaster-type--IN--24--grey);
 }
-#main-content .rw-river-article--disaster[data-disaster-type="LS"] .rw-river-article__title  a:before {
+#main-content .rw-river-article--disaster[data-disaster-type="LS"] .rw-river-article__title a:before {
   background: var(--rw-icons--disaster-type--LS--24--grey);
 }
-#main-content .rw-river-article--disaster[data-disaster-type="MS"] .rw-river-article__title  a:before {
+#main-content .rw-river-article--disaster[data-disaster-type="MS"] .rw-river-article__title a:before {
   background: var(--rw-icons--disaster-type--MS--24--grey);
 }
-#main-content .rw-river-article--disaster[data-disaster-type="SS"] .rw-river-article__title  a:before {
+#main-content .rw-river-article--disaster[data-disaster-type="SS"] .rw-river-article__title a:before {
   background: var(--rw-icons--disaster-type--SS--24--grey);
 }
-#main-content .rw-river-article--disaster[data-disaster-type="ST"] .rw-river-article__title  a:before {
+#main-content .rw-river-article--disaster[data-disaster-type="ST"] .rw-river-article__title a:before {
   background: var(--rw-icons--disaster-type--ST--24--grey);
 }
-#main-content .rw-river-article--disaster[data-disaster-type="TC"] .rw-river-article__title  a:before {
+#main-content .rw-river-article--disaster[data-disaster-type="TC"] .rw-river-article__title a:before {
   background: var(--rw-icons--disaster-type--TC--24--grey);
 }
-#main-content .rw-river-article--disaster[data-disaster-type="TS"] .rw-river-article__title  a:before {
+#main-content .rw-river-article--disaster[data-disaster-type="TS"] .rw-river-article__title a:before {
   background: var(--rw-icons--disaster-type--TS--24--grey);
 }
-#main-content .rw-river-article--disaster[data-disaster-type="VO"] .rw-river-article__title  a:before {
+#main-content .rw-river-article--disaster[data-disaster-type="VO"] .rw-river-article__title a:before {
   background: var(--rw-icons--disaster-type--VO--24--grey);
 }
-#main-content .rw-river-article--disaster[data-disaster-type="WF"] .rw-river-article__title  a:before {
+#main-content .rw-river-article--disaster[data-disaster-type="WF"] .rw-river-article__title a:before {
   background: var(--rw-icons--disaster-type--WF--24--grey);
 }
-#main-content .rw-river-article--disaster[data-disaster-status="alert"] .rw-river-article__title  a:before {
+#main-content .rw-river-article--disaster[data-disaster-status="alert"] .rw-river-article__title a:before {
   background-position-x: var(--rw-icons--disaster-type--24--orange--x);
 }
-#main-content .rw-river-article--disaster[data-disaster-status="current"] .rw-river-article__title  a:before,
-#main-content .rw-river-article--disaster[data-disaster-status="ongoing"] .rw-river-article__title  a:before {
+#main-content .rw-river-article--disaster[data-disaster-status="current"] .rw-river-article__title a:before,
+#main-content .rw-river-article--disaster[data-disaster-status="ongoing"] .rw-river-article__title a:before {
   background-position-x: var(--rw-icons--disaster-type--24--red--x);
+}
+
+
+/**
+ * Disaster page.
+ *
+ * Individual disaster pages. Those pages are made of short sections of content
+ * like the overview or maps and infographics.
+ *
+ */
+.taxonomy-term--disaster--full[data-disaster-type] > header {
+  position: relative;
+  padding-left: 64px;
+}
+.taxonomy-term--disaster--full[data-disaster-type] > header:before {
+  content: "";
+  position: absolute;
+  /* To align with the h2. */
+  top: 6px;
+  left: 0;
+  width: 52px;
+  height: 52px;
+  overflow: hidden;
+  background-color: #b6c8d0;
+  border: 10px solid #b6c8d0;
+}
+
+.taxonomy-term--disaster--full[data-disaster-type="AC"] > header:before {
+  background: var(--rw-icons--disaster-type--AC--32--white);
+}
+.taxonomy-term--disaster--full[data-disaster-type="Av"] > header:before {
+  background: var(--rw-icons--disaster-type--AV--32--white);
+}
+.taxonomy-term--disaster--full[data-disaster-type="CW"] > header:before {
+  background: var(--rw-icons--disaster-type--CW--32--white);
+}
+.taxonomy-term--disaster--full[data-disaster-type="DR"] > header:before {
+  background: var(--rw-icons--disaster-type--DR--32--white);
+}
+.taxonomy-term--disaster--full[data-disaster-type="EC"] > header:before {
+  background: var(--rw-icons--disaster-type--EC--32--white);
+}
+.taxonomy-term--disaster--full[data-disaster-type="EP"] > header:before {
+  background: var(--rw-icons--disaster-type--EP--32--white);
+}
+.taxonomy-term--disaster--full[data-disaster-type="EQ"] > header:before {
+  background: var(--rw-icons--disaster-type--EQ--32--white);
+}
+.taxonomy-term--disaster--full[data-disaster-type="FF"] > header:before {
+  background: var(--rw-icons--disaster-type--FF--32--white);
+}
+.taxonomy-term--disaster--full[data-disaster-type="FL"] > header:before {
+  background: var(--rw-icons--disaster-type--FL--32--white);
+}
+.taxonomy-term--disaster--full[data-disaster-type="FR"] > header:before {
+  background: var(--rw-icons--disaster-type--FR--32--white);
+}
+.taxonomy-term--disaster--full[data-disaster-type="HT"] > header:before {
+  background: var(--rw-icons--disaster-type--HT--32--white);
+}
+.taxonomy-term--disaster--full[data-disaster-type="IN"] > header:before {
+  background: var(--rw-icons--disaster-type--IN--32--white);
+}
+.taxonomy-term--disaster--full[data-disaster-type="LS"] > header:before {
+  background: var(--rw-icons--disaster-type--LS--32--white);
+}
+.taxonomy-term--disaster--full[data-disaster-type="MS"] > header:before {
+  background: var(--rw-icons--disaster-type--MS--32--white);
+}
+.taxonomy-term--disaster--full[data-disaster-type="SS"] > header:before {
+  background: var(--rw-icons--disaster-type--SS--32--white);
+}
+.taxonomy-term--disaster--full[data-disaster-type="ST"] > header:before {
+  background: var(--rw-icons--disaster-type--ST--32--white);
+}
+.taxonomy-term--disaster--full[data-disaster-type="TC"] > header:before {
+  background: var(--rw-icons--disaster-type--TC--32--white);
+}
+.taxonomy-term--disaster--full[data-disaster-type="TS"] > header:before {
+  background: var(--rw-icons--disaster-type--TS--32--white);
+}
+.taxonomy-term--disaster--full[data-disaster-type="VO"] > header:before {
+  background: var(--rw-icons--disaster-type--VO--32--white);
+}
+.taxonomy-term--disaster--full[data-disaster-type="WF"] > header:before {
+  background: var(--rw-icons--disaster-type--WF--32--white);
+}
+.taxonomy-term--disaster--full[data-disaster-status="alert"] > header:before {
+  background-color: #eb8705;
+  border-color: #eb8705;
+}
+.taxonomy-term--disaster--full[data-disaster-status="current"] > header:before,
+.taxonomy-term--disaster--full[data-disaster-status="ongoing"] > header:before {
+  background-color: #f65c51;
+  border-color: #f65c51;
 }
