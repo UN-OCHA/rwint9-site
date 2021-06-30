@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c5a9587f9ff5f19070f984a08a928fcd",
+    "content-hash": "24a1a5db9673c742b423c4512b12e47f",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -7205,11 +7205,11 @@
         },
         {
             "name": "reliefweb/simple-datepicker",
-            "version": "v1.3.0",
+            "version": "v1.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/rwint-simple-datepicker.git",
-                "reference": "v1.3.0"
+                "reference": "v1.3.1"
             },
             "type": "drupal-library"
         },
