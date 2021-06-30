@@ -567,21 +567,6 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
         $mail_body = strtr($body, ['%unsubscribe%' => $unsubscribe]);
 
         // Send the email.
-/*
-        $send_mail = new \Drupal\Core\Mail\Plugin\Mail\PhpMail();
-
-        $message['headers'] = [
-          'List-Id'          => $list_id,
-          'List-Unsubscribe' => $unsubscribe,
-          'X-RW-Category'    => $category,
-          'from' => 'Reliefwqeb <' . $from . '>',
-        ];
-
-        $message['to'] = $subscriber->mail;
-        $message['subject'] = $subject;
-        $message['body'] = $mail_body;
-        $send_mail->mail($message);
-*/
         \Drupal::service('plugin.manager.mail')->mail('reliefweb_subscriptions', 'notifications', $subscriber->mail, $language, [
           'headers' => [
             'List-Id'          => $list_id,
