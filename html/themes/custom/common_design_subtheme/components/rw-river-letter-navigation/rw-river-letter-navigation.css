@@ -1,0 +1,97 @@
+/* Go to letter navigation */
+#main-content .rw-river-letter-navigation h3 {
+  display: inline-block;
+  margin: 0;
+  vertical-align: middle;
+  line-height: 40px;
+}
+#main-content .rw-river-letter-navigation h3:after {
+  content: ":";
+}
+#main-content .rw-river-letter-navigation ul {
+  display: inline-block;
+  vertical-align: middle;
+  list-style: none;
+  background: rgba(230, 236, 239, 0.2);
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(40px, min-content));
+  justify-content: space-between;
+}
+#main-content .rw-river-letter-navigation li {
+  float: left;
+  margin: 0;
+  padding: 0;
+}
+#main-content .rw-river-letter-navigation li a {
+  display: inline-block;
+  padding: 0 8px;
+  min-width: 40px;
+  height: 40px;
+  line-height: 2.6;
+  text-align: center;
+  text-transform: uppercase;
+}
+#main-content .rw-river-letter-navigation li a[data-active],
+#main-content .rw-river-letter-navigation li a:focus,
+#main-content .rw-river-letter-navigation li a:active,
+#main-content .rw-river-letter-navigation li a:hover {
+  text-decoration: none;
+  font-weight: bold;
+  background: #e6ecef;
+}
+#main-content #search ~ .rw-river-letter-navigation {
+  margin: 24px 0 0 0;
+}
+.js #main-content .rw-river-letter-navigation-toggler {
+  display: none;
+}
+
+/* Media query */
+@media screen and (max-width : 479px) {
+  .js #main-content .rw-river-letter-navigation-toggler {
+    display: block;
+    height: 40px;
+    margin: 24px auto;
+    padding: 0 8px;
+    background: white;
+    border: 1px solid #e6ecef;
+    font-size: 16px;
+  }
+  .js #main-content .rw-river-letter-navigation-toggler:after {
+    content: "";
+    display: inline-block;
+    vertical-align: middle;
+    width: 9px;
+    height: 9px;
+    margin-left: 8px;
+    overflow: hidden;
+    background: url(../../../images/rw-icons-sprite.png) -150px 0 no-repeat;
+    background: rgba(0,0,0,0) url(../../../images/rw-icons-sprite.svg) -150px 0 no-repeat;
+  }
+  .js #main-content .rw-river-letter-navigation-toggler[aria-expanded="true"]:after {
+    background-position-y: -9px;
+  }
+  .js #main-content .rw-river-letter-navigation {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 4;
+    background: white;
+    -webkit-box-shadow: 0px 0px 6px 2px #e6ecef;
+    box-shadow: 0px 0px 6px 2px #e6ecef;
+  }
+  .js #main-content .rw-river-letter-navigation[data-hidden="true"] {
+    display: none;
+  }
+  .js #main-content .rw-river-letter-navigation-toggler + .rw-river-letter-navigation {
+    margin-top: -24px;
+  }
+}
+
+@media screen and (min-width : 768px) {
+  .js #main-content .rw-river-letter-navigation {
+    --dropdown: false;
+  }
+}

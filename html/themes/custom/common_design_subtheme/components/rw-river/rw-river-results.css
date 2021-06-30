@@ -1,0 +1,17 @@
+/**
+ * River results.
+ */
+#main-content .rw-river-results {
+  width: 100%;
+  text-align: center;
+}
+#main-content .rw-river-results span {
+  font-weight: bold;
+}
+@media all and (min-width: 768px) {
+  #main-content section.river.with-filters .rw-river-results {
+    text-align: left;
+    padding: 13px 0;
+    border-bottom: 1px solid #e6ecef;
+  }
+}

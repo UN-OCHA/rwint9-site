@@ -63,10 +63,10 @@
     #main-content .rw-sectioned-content section.rw-river--appeals-response-plans .view-more {
       margin-top: 12px;
     }
-    #main-content .rw-sectioned-content section.rw-river--appeals-response-plans article dl.meta.core dd {
+    #main-content .rw-sectioned-content section.rw-river--appeals-response-plans article dl.rw-entity-meta--core dd {
       display: inline;
     }
-    #main-content .rw-sectioned-content section.rw-river--appeals-response-plans article dl.meta.core dd:after {
+    #main-content .rw-sectioned-content section.rw-river--appeals-response-plans article dl.rw-entity-meta--core dd:after {
       display: block;
       width: 0;
       height: 0;
