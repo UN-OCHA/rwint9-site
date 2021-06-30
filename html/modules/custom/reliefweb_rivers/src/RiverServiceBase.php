@@ -219,6 +219,10 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    */
   public function getRiverViews() {
     $views = $this->getViews();
+    if (empty($views)) {
+      return [];
+    }
+
     $view = $this->getSelectedView();
     $default = $this->getDefaultView();
 
