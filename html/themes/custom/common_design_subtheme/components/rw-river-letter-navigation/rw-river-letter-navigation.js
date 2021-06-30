@@ -6,7 +6,7 @@
    */
   function updateActiveFragmentLink() {
     var hash = location.hash || '#';
-    var links = document.querySelectorAll('[href^="#"]');
+    var links = document.querySelectorAll('.rw-river-letter-navigation__link[href^="#"]');
     for (var i = links.length - 1; i >= 0; i--) {
       var link = links[i];
       if (link.getAttribute('href') !== hash) {
