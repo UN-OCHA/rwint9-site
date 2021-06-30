@@ -15,7 +15,7 @@
  * @todo It may possibly make more sense to use a <ol> for the list of selected
  * filters. That would require a modification to the JS scripts.
  */
-.rw-selection {
+#main-content .rw-selection {
   width: auto;
   min-width: 100%;
   /* This is compensate the margin of the descendants. */
@@ -23,7 +23,7 @@
   padding: 0;
   border: none;
 }
-.rw-selection [data-value] {
+#main-content .rw-selection [data-value] {
   position: relative;
   display: inline-block;
   margin: 4px;
@@ -34,10 +34,10 @@
   /* Better readability. */
   line-height: 24px;
 }
-.rw-selection [data-value] .label {
+#main-content .rw-selection [data-value] .label {
   font-weight: bold;
 }
-.rw-selection [data-value] button {
+#main-content .rw-selection [data-value] button {
   position: absolute;
   top: 0;
   right: 0;
@@ -51,12 +51,12 @@
   border: none;
   background: var(--cd-reliefweb-light-grey);
 }
-.rw-selection [data-value] button:hover,
-.rw-selection [data-value] button:focus,
-.rw-selection [data-value] button:active {
+#main-content .rw-selection [data-value] button:hover,
+#main-content .rw-selection [data-value] button:focus,
+#main-content .rw-selection [data-value] button:active {
   background: var(--cd-reliefweb-dark-blue);
 }
-.rw-selection [data-value] button:before {
+#main-content .rw-selection [data-value] button:before {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -69,9 +69,9 @@
   background: url(img/icons-sprite.svg) -84px 0 no-repeat;
   background: var(--rw-icons--common--close--12--dark-blue);
 }
-.rw-selection [data-value] button:hover:before,
-.rw-selection [data-value] button:focus:before,
-.rw-selection [data-value] button:active:before {
+#main-content .rw-selection [data-value] button:hover:before,
+#main-content .rw-selection [data-value] button:focus:before,
+#main-content .rw-selection [data-value] button:active:before {
   background-position-x: var(--rw-icons--common--12--white--x);
 }
 
@@ -97,10 +97,10 @@
  *   </div>
  * </div>
  */
-[data-selection-messages] .rw-selection [data-value] {
+#main-content [data-selection-messages] .rw-selection [data-value] {
   display: block;
 }
-[data-selection-messages] .rw-selection [data-value] .message {
+#main-content [data-selection-messages] .rw-selection [data-value] .message {
   overflow-wrap: break-word;
   overflow-y: auto;
   max-height: 220px;
@@ -113,11 +113,11 @@
   /* @todo review in regards to the standard cd-font sizes. */
   font-size: 15px;
 }
-[data-selection-messages] .rw-selection [data-value] .message .title {
+#main-content [data-selection-messages] .rw-selection [data-value] .message .title {
   display: block;
   margin-bottom: 8px;
 }
-[data-selection-messages] .rw-selection [data-value] .message ul,
-[data-selection-messages] .rw-selection [data-value] .message ol {
+#main-content [data-selection-messages] .rw-selection [data-value] .message ul,
+#main-content [data-selection-messages] .rw-selection [data-value] .message ol {
   padding: 0 0 0 24px;
 }
