@@ -75,6 +75,8 @@ function reliefweb_rivers_theme() {
       'variables' => [
         // The headling level.
         'level' => 2,
+        // The section id.
+        'id' => 'river-letter-navigation',
         // Section attributes.
         'attributes' => NULL,
         // Section title.

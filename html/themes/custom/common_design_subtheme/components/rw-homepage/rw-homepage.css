@@ -207,3 +207,27 @@
     }
   }
 }
+
+/**
+ * Rules specific to the disasters section in the homepage:
+ *
+ * - tighter list
+ * - hidden meta information
+ */
+.path-frontpage #main-content #disasters .rw-river-article--disaster {
+  position: relative;
+  margin: 16px 0 0 0;
+  padding: 16px 0 0 0;
+  border-top: 1px solid #e6ecef;
+}
+.path-frontpage #main-content #disasters .rw-river-article--disaster:first-child {
+  margin: 0;
+  padding: 8px 0 0 0;
+  border-top: none;
+}
+.path-frontpage #main-content #disasters .rw-river-article--disaster header {
+  margin-top: 0;
+}
+.path-frontpage #main-content #disasters .rw-river-article--disaster .rw-entity-meta {
+  display: none;
+}
