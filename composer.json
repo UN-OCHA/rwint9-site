@@ -61,6 +61,7 @@
         "drupal/metatag": "^1.16",
         "drupal/migrate_plus": "^5.1",
         "drupal/migrate_tools": "^5.0",
+        "drupal/mimemail": "^1.0@alpha",
         "drupal/paragraphs": "^1.12",
         "drupal/paragraphs_viewmode": "^1.0",
         "drupal/pathauto": "^1.8",

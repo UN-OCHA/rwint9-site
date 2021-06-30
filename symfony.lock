@@ -191,6 +191,9 @@
     "drupal/migrate_tools": {
         "version": "5.x-dev"
     },
+    "drupal/mimemail": {
+        "version": "1.0.0-alpha3"
+    },
     "drupal/paragraphs": {
         "version": "1.12.0"
     },
