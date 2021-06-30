@@ -32,6 +32,7 @@
 
 {{ local_tasks }}
 {% set disaster_type = term.field_primary_disaster_type.entity.field_disaster_type_code.value %}
+{% set disaster_status = term.getModerationStatus() %}
 <article{{ attributes
   .addClass([
     'taxonomy-term',
@@ -44,7 +45,7 @@
   ])
   .setAttribute('data-id', term.id())
   .setAttribute('data-disaster-type', disaster_type)
-  .setAttribute('data-disaster-status', term.getModerationStatus())
+  .setAttribute('data-disaster-status', disaster_status)
 }}>
   <header>
     {{ title }}
@@ -57,7 +58,7 @@
           'label': 'Status'|t,
           'value': term.getModerationStatusLabel(),
           'value_attributes': create_attribute()
-            .addClass('rw-entity-meta__tag-value--status--ongoing')
+            .addClass('rw-entity-meta__tag-value--status--' ~ disaster_status|clean_class)
         },
         'glide': {
           'type': 'simple',
