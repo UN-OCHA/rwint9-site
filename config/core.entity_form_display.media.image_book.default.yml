@@ -1,28 +1,27 @@
-uuid: 7c049706-3061-4774-be7f-c0a3be8115b9
+uuid: 3ffadc41-3e25-431b-9924-08e1ca87ec9b
 langcode: en
 status: true
 dependencies:
   config:
-    - core.entity_form_mode.media.media_library
-    - field.field.media.image_headline.field_copyright
-    - field.field.media.image_headline.field_media_image
+    - field.field.media.image_book.field_copyright
+    - field.field.media.image_book.field_media_image
     - image.style.thumbnail
-    - media.type.image_headline
+    - media.type.image_book
   module:
     - image
-id: media.image_headline.media_library
+id: media.image_book.default
 targetEntityType: media
-bundle: image_headline
-mode: media_library
+bundle: image_book
+mode: default
 content:
   field_copyright:
-    type: string_textfield
     weight: 2
-    region: content
     settings:
       size: 60
       placeholder: ''
     third_party_settings: {  }
+    type: string_textfield
+    region: content
   field_media_image:
     weight: 1
     settings:
@@ -33,15 +32,21 @@ content:
     region: content
   name:
     type: string_textfield
+    weight: 0
+    region: content
     settings:
       size: 60
       placeholder: ''
-    weight: 0
     third_party_settings: {  }
+  status:
+    type: boolean_checkbox
+    settings:
+      display_label: true
+    weight: 3
     region: content
+    third_party_settings: {  }
 hidden:
   created: true
   langcode: true
   path: true
-  status: true
   uid: true

@@ -1,0 +1,11 @@
+uuid: 503af5d9-38f0-44f2-8b85-b96d681f0767
+langcode: en
+status: true
+dependencies:
+  config:
+    - media.type.image_book
+id: media.image_book
+target_entity_type_id: media
+target_bundle: image_book
+default_langcode: site_default
+language_alterable: false
