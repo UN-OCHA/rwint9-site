@@ -161,7 +161,7 @@
   background: #f65c51;
 }
 
-.taxonomy-term--disaster--full dl.rw-entity-meta dd.rw-entity-meta__tag-value--status--past:before {
+#main-content .taxonomy-term--disaster--full dl.rw-entity-meta dd.rw-entity-meta__tag-value--status--past:before {
   content: none;
 }
 
