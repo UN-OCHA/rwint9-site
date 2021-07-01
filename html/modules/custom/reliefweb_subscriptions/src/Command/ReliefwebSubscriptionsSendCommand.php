@@ -13,25 +13,20 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\File\FileSystem;
 use Drupal\Core\Language\LanguageDefault;
 use Drupal\Core\Link;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Mail\MailManager;
 use Drupal\Core\PrivateKey;
-use Drupal\Core\ProxyClass\File\MimeType\MimeTypeGuesser;
 use Drupal\Core\Render\Renderer;
-use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\State\State;
 use Drupal\Core\Theme\ThemeInitialization;
 use Drupal\Core\Theme\ThemeManager;
 use Drupal\Core\Url;
-use Drupal\file\FileUsage\FileUsageInterface;
 use Drupal\reliefweb_api\Services\ReliefWebApiClient;
 use Drupal\reliefweb_subscriptions\CronExpressionParser;
 use Drush\Commands\DrushCommands;
-use GuzzleHttp\ClientInterface;
 
 /**
  * Docstore Drush commandfile.
@@ -41,13 +36,6 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
   // Drush traits.
   use ProcessManagerAwareTrait;
   use SiteAliasManagerAwareTrait;
-
-  /**
-   * The current user service.
-   *
-   * @var \Drupal\Core\Session\AccountInterface
-   */
-  protected $currentUser;
 
   /**
    * The config factory.
@@ -85,39 +73,11 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
   protected $entityTypeManager;
 
   /**
-   * The mime type guesser service.
-   *
-   * @var \Drupal\Core\ProxyClass\File\MimeType\MimeTypeGuesser
-   */
-  protected $mimeTypeGuesser;
-
-  /**
-   * The file system.
-   *
-   * @var \Drupal\Core\File\FileSystem
-   */
-  protected $fileSystem;
-
-  /**
-   * The file usage.
-   *
-   * @var \Drupal\file\FileUsage\FileUsageInterface
-   */
-  protected $fileUsage;
-
-  /**
    * The state store.
    *
    * @var \Drupal\Core\State\State
    */
   protected $state;
-
-  /**
-   * The HTTP client.
-   *
-   * @var \GuzzleHttp\ClientInterface
-   */
-  protected $httpClient;
 
   /**
    * The time service.
@@ -186,17 +146,12 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    * {@inheritdoc}
    */
   public function __construct(
-      AccountInterface $current_user,
       ConfigFactoryInterface $config_factory,
       Connection $database,
       EntityFieldManagerInterface $entity_field_manager,
       EntityRepositoryInterface $entity_repository,
       EntityTypeManagerInterface $entity_type_manager,
-      MimeTypeGuesser $mimeTypeGuesser,
-      FileSystem $file_system,
-      FileUsageInterface $file_usage,
       State $state,
-      ClientInterface $httpClient,
       TimeInterface $time,
       ReliefWebApiClient $reliefwebApiClient,
       PrivateKey $privateKey,
@@ -207,17 +162,12 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
       ThemeInitialization $themeInitialization,
       ThemeManager $themeManager,
     ) {
-    $this->currentUser = $current_user;
     $this->configFactory = $config_factory;
     $this->database = $database;
     $this->entityFieldManager = $entity_field_manager;
     $this->entityRepository = $entity_repository;
     $this->entityTypeManager = $entity_type_manager;
-    $this->mimeTypeGuesser = $mimeTypeGuesser;
-    $this->fileSystem = $file_system;
-    $this->fileUsage = $file_usage;
     $this->state = $state;
-    $this->httpClient = $httpClient;
     $this->time = $time;
     $this->reliefwebApiClient = $reliefwebApiClient;
     $this->privateKey = $privateKey;
@@ -227,18 +177,6 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     $this->logger = $loggerFactory->get('reliefweb_subscriptions');
     $this->themeInitialization = $themeInitialization;
     $this->themeManager = $themeManager;
-  }
-
-  /**
-   * Returns the current user.
-   *
-   * This for compatibility with the ResourceTrait.
-   *
-   * @return \Drupal\Core\Session\AccountInterface
-   *   The current user.
-   */
-  protected function currentUser() {
-    return $this->currentUser;
   }
 
   /**

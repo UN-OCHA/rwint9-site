@@ -1,6 +1,6 @@
 services:
   reliefweb_subscriptions.send_command:
     class: \Drupal\reliefweb_subscriptions\Command\ReliefwebSubscriptionsSendCommand
-    arguments: ['@current_user', '@config.factory', '@database', '@entity_field.manager', '@entity.repository', '@entity_type.manager', '@file.mime_type.guesser', '@file_system', '@file.usage', '@state', '@http_client', '@datetime.time', '@reliefweb_api.client', '@private_key', '@renderer', '@plugin.manager.mail', '@language.default', '@logger.factory', '@theme.initialization', '@theme.manager']
+    arguments: ['@config.factory', '@database', '@entity_field.manager', '@entity.repository', '@entity_type.manager', '@state', '@datetime.time', '@reliefweb_api.client', '@private_key', '@renderer', '@plugin.manager.mail', '@language.default', '@logger.factory', '@theme.initialization', '@theme.manager']
     tags:
       - { name: drush.command }
