@@ -626,7 +626,8 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     switch ($subscription['id']) {
       case 'headlines':
         return $this->generateEmailContentHeadlines($subscription, $data);
-        break;
+
+      break;
 
     }
 
@@ -660,8 +661,8 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    * @return string
    *   Item titles for preheader.
    */
-  protected function reliefweb_subscriptions_get_preheader_titles(array $items) {
-    $titles = array();
+  protected function getPreheaderTitles(array $items) {
+    $titles = [];
     $length = 100;
     $text_length = 0;
     $end_marks = ";.!?。؟ \t\n\r\0\x0B";
@@ -711,13 +712,13 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    * @return string
    *   Formatted links.
    */
-  protected function reliefweb_subscriptions_get_prefooter_links(array $parts) {
-    $links = array();
+  protected function getPrefooterLinks(array $parts) {
+    $links = [];
     foreach ($parts as $part) {
-      $options = array(
+      $options = [
         'absolute' => TRUE,
-        'attributes' => array('class' => array('prefooter-link')),
-      );
+        'attributes' => ['class' => ['prefooter-link']],
+      ];
 
       if (!empty($part['options'])) {
         $options = $options + $part['options'];
@@ -747,12 +748,12 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     ];
 
     $variables['#today'] = date_create('now')->format('j M Y');
-    $variables['#preheader'] = $this->reliefweb_subscriptions_get_preheader_titles($data);
+    $variables['#preheader'] = $this->getPreheaderTitles($data);
 
-    $items = array();
+    $items = [];
     foreach ($data as $fields) {
-      $item = array();
-      $info = array();
+      $item = [];
+      $info = [];
       $item['url'] = $fields['url_alias'];
 
       // Title.
@@ -765,7 +766,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
       $item['title'] = $title;
 
       // Sources.
-      $sources = array();
+      $sources = [];
       foreach (array_slice($fields['source'], 0, 3) as $source) {
         $sources[] = $source['shortname'] ?? $source['name'];
       }
@@ -781,17 +782,17 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     $variables['#items'] = $items;
 
     // Prefooter.
-    $prefooter_parts = array(
-      array(
+    $prefooter_parts = [
+      [
         'text' => 'ReliefWeb',
         'link' => '/',
-      ),
-      array(
+      ],
+      [
         'text' => 'All ReliefWeb Headlines',
         'link' => '/headlines',
-      ),
-    );
-    $variables['#prefooter'] = $this->reliefweb_subscriptions_get_prefooter_links($prefooter_parts);
+      ],
+    ];
+    $variables['#prefooter'] = $this->getPrefooterLinks($prefooter_parts);
 
     $html = \Drupal::service('renderer')->renderRoot($variables);
     return $html;
