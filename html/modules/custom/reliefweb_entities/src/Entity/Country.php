@@ -122,8 +122,7 @@ class Country extends Term implements BundleEntityInterface, EntityModeratedInte
   protected function getDigitalSitrepSection() {
     $client = \Drupal::service('reliefweb_dsr.client');
     $iso3 = $this->field_iso3->value;
-    // @todo use the term status once added back.
-    $ongoing = TRUE;
+    $ongoing = $this->getModerationStatus() === 'ongoing';
 
     return $client->getDigitalSitrepBuild($iso3, $ongoing);
   }

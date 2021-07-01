@@ -2,11 +2,7 @@
 
 /**
  * @file
- * Template file for an entity article in a river.
- *
- * Note: this is a base template and is not used as is. See variations like
- * the "--report one for specific implementations for the acutal content
- * entities.
+ * Template file for a country entity article in a river.
  *
  * Available variables;
  * - level: heading level (defaults to 3)
@@ -28,8 +24,9 @@
     'rw-river-article--' ~ entity.bundle,
   ])
   .setAttribute('data-id', entity.id)
+  .setAttribute('data-country-status', entity.status)
 }}>
-  {# Header with title. #}
+  {# Header with country slug and title. #}
   <header class="rw-river-article__header">
     {# Title. #}
     {{ render_var({
@@ -40,20 +37,4 @@
       '#title': entity.title,
     }) }}
   </header>
-
-  {# Footer with meta information (sources, dates etc.). #}
-  {% if entity.posted %}
-    <footer class="rw-river-article__footer">
-      {{ render_var({
-        '#theme': 'reliefweb_entities_entity_meta',
-        '#meta': {
-          'posted': {
-            'type': 'date',
-            'label': 'Posted'|t,
-            'value': entity.posted,
-          },
-        }
-      }) }}
-    </footer>
-  {% endif %}
 </article>

@@ -130,25 +130,28 @@ class KeyFiguresClient {
    */
   public function getKeyFiguresBuild($iso3, $country) {
     $data = $this->getKeyFigures($iso3, $country);
+    if (empty($data['figures'])) {
+      return [];
+    }
 
     // Create the render array.
-    $build = [];
-    if (!empty($data['figures'])) {
-      $build['#theme'] = 'reliefweb_key_figures';
+    $build = ['#theme' => 'reliefweb_key_figures'];
 
-      // Limit the number of figures based on the "figures" query parameter.
-      $figures_parameter = $this->requestStack->getCurrentRequest()->query->get('figures');
-      $count = count($data['figures']);
-      $limit = $figures_parameter === 'all' ? $count : 6;
-      $data['figures'] = array_slice($data['figures'], 0, $limit);
+    // Limit the number of figures based on the "figures" query parameter.
+    $figures_parameter = $this->requestStack->getCurrentRequest()->query->get('figures');
+    $count = count($data['figures']);
+    $limit = $figures_parameter === 'all' ? $count : 6;
+    $data['figures'] = array_slice($data['figures'], 0, $limit);
 
-      foreach ($data as $key => $value) {
-        $build['#' . $key] = $value;
-      }
-
-      $build['#more'] = $count > $limit;
-      $build['#cache']['contexts'][] = 'url.query_args:figures';
+    foreach ($data as $key => $value) {
+      $build['#' . $key] = $value;
     }
+
+    $build['#more'] = $count > $limit;
+
+    // Add a cache context on the figure query parameter as the number of items
+    // in the render array depends on it.
+    $build['#cache']['contexts'][] = 'url.query_args:figures';
 
     // Cache the render array with the minimum max age. The data retrieved from
     // the API may be stored in cache for a longer duration.
