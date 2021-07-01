@@ -4,7 +4,7 @@
     width: 300px;
   }
   /*#main-content section.rw-river-page .rw-river-results,*/
-  #main-content section.rw-river-page .rw-river {
+  #main-content section.rw-river-page:not(.rw-river-page--organizations) .rw-river--river-list {
     float: right;
     width: calc(100% - 340px);
   }
@@ -20,7 +20,7 @@
     width: 320px;
   }
   /*#main-content section.rw-river-page .rw-river-results,*/
-  #main-content section.rw-river-page .rw-river {
+  #main-content section.rw-river-page:not(.rw-river-page--organizations) .rw-river--river-list {
     width: calc(100% - 360px);
   }
 }
