@@ -316,7 +316,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
 
     // Remove the processed notifications from the queue.
     $query = $this->database->delete('reliefweb_subscriptions_queue');
-    $query->condition('eid', array_keys($notifications));
+    $query->condition('eid', array_keys($notifications), 'IN');
     $query->execute();
   }
 
@@ -687,7 +687,11 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
 
     switch ($subscription['id']) {
       case 'headlines':
-        $html = $this->generateEmailContentHeadlines($subscription, $data);
+        $render_array = $this->generateEmailContentHeadlines($subscription, $data);
+        break;
+
+      case 'appeals':
+        $render_array = $this->generateEmailContentAppeals($subscription, $data);
         break;
 
       default:
@@ -695,6 +699,8 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
         break;
 
     }
+
+    $html = $this->renderer->renderRoot($render_array);
 
     // Remove unnecessary whitespaces.
     $html = preg_replace('/(\s)\s+/', '$1', $html);
@@ -797,6 +803,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
   protected function generateEmailContentHeadlines(array $subscription, array $data) {
     $variables = [
       '#theme' => 'reliefweb_subscriptions__headlines',
+      '#subscription_type' => 'headlines',
     ];
 
     $variables['#today'] = date_create('now')->format('j M Y');
@@ -846,8 +853,87 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     ];
     $variables['#prefooter'] = $this->getPrefooterLinks($prefooter_parts);
 
-    $html = $this->renderer->renderRoot($variables);
-    return $html;
+    return $variables;
+  }
+
+  /**
+   * Generate the email HTML content.
+   *
+   * @param array $subscription
+   *   Subscription information.
+   * @param array $data
+   *   API data for the notification.
+   *
+   * @return string
+   *   HTML content.
+   */
+  protected function generateEmailContentAppeals(array $subscription, array $data) {
+    $variables = [
+      '#theme' => 'reliefweb_subscriptions__appeals',
+      '#subscription_type' => 'appeals',
+    ];
+
+    $variables['#today'] = date_create('now')->format('j M Y');
+    $variables['#preheader'] = $this->getPreheaderTitles($data);
+
+    // Sort by country.
+    $groups = [];
+    foreach ($data as $fields) {
+      $groups[$fields['primary_country']['name'] ?? 'zzz'][] = $fields;
+    }
+    ksort($groups);
+    $data = array_merge(...array_values($groups));
+
+    $items = [];
+    foreach ($data as $fields) {
+      $item = [];
+      $info = [];
+      $item['url'] = $fields['url_alias'];
+
+      // Title.
+      $title = $fields['title'];
+      $country = $fields['primary_country']['name'];
+      // Prepend the primary country if not already in the title.
+      if (strpos($title, $country) !== 0) {
+        $title = $country . ': ' . $title;
+      }
+      $item['title'] = $title;
+
+      // Sources.
+      $sources = [];
+      foreach (array_slice($fields['source'], 0, 3) as $source) {
+        $sources[] = $source['shortname'] ?? $source['name'];
+      }
+      $info[] = implode(', ', $sources);
+
+      // Date.
+      $info[] = date_create($fields['date']['original'])->format('j M Y');
+      $item['info'] = implode(' &ndash; ', $info);
+
+      // Summary.
+      $body = !empty($fields['body']) ? check_markup($fields['body'], 'markdown') : '';
+      $item['summary'] = $this->summarize($body, 400, FALSE);
+      $items[] = $item;
+    }
+    $variables['#items'] = $items;
+
+    // Prefooter.
+    $prefooter_parts = [
+      [
+        'text' => 'All appeals on ReliefWeb',
+        'link' => '/updates',
+        'options' => [
+          'query' => [
+            // Content format facet filter: 'Appeal'.
+            'format' => 4,
+          ],
+        ],
+      ],
+    ];
+
+    $variables['#prefooter'] = $this->getPrefooterLinks($prefooter_parts);
+
+    return $variables;
   }
 
   /**
@@ -920,7 +1006,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
 
     // Delete the existing log entries.
     $this->database->delete('reliefweb_subscriptions_logs')
-      ->condition('sid', array_keys($logs))
+      ->condition('sid', array_keys($logs), 'IN')
       ->execute();
 
     // Insert the new log entries.
@@ -1385,6 +1471,90 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
       'absolute' => TRUE,
     ];
     return Url::fromRoute('<front>', [], $url_options)->toString();
+  }
+
+  /**
+   * Summarize and truncate a HTML text to a given length.
+   *
+   * @param string $html
+   *   HTML to summarize.
+   * @param int $length
+   *   Maximum length of the text.
+   * @param bool $plain_text
+   *   Return the truncated text as plain text when set to TRUE or as
+   *   HTML paragraphs when FALSE.
+   *
+   * @return string
+   *   Truncated text.
+   *
+   * @todo this is ported from the responsive site and can be removed later
+   * to use the RWPageDataWrapper version instead.
+   */
+  protected function summarize($html, $length = 600, $plain_text = TRUE) {
+    static $flags = LIBXML_NONET | LIBXML_NOBLANKS | LIBXML_NOERROR | LIBXML_NOWARNING;
+    static $pattern = ['/^\s+|\s+$/u', '/\s{2,}/u'];
+    static $replacement = ['', ' '];
+    static $end_marks = ";.!?。؟ \t\n\r\0\x0B";
+
+    if (empty($html)) {
+      return '';
+    }
+
+    // Extract the paragraphs from the html string.
+    $paragraphs = [];
+    $text_length = 0;
+    $meta = '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">';
+    $dom = new \DomDocument();
+    $dom->loadHTML($meta . $html, $flags);
+    foreach ($dom->getElementsByTagName('p') as $node) {
+      // Sanitize multiple consecutive white spaces and trim the paragraph.
+      $paragraph = preg_replace($pattern, $replacement, $node->textContent);
+      $paragraphs[] = $paragraph;
+      $text_length += mb_strlen($paragraph);
+    }
+
+    // Nothing to return if we couldn't extract paragraphs.
+    if (empty($paragraphs)) {
+      return '';
+    }
+
+    if ($plain_text) {
+      $prefix = '';
+      $suffix = '';
+      $separator = ' ';
+      $delta = 1;
+    }
+    else {
+      $prefix = '<p>';
+      $suffix = '</p>';
+      $separator = '</p><p>';
+      $delta = 0;
+    }
+
+    // Truncate the text to the given length if longer.
+    if ($text_length > $length) {
+      foreach ($paragraphs as $index => $paragraph) {
+        $parts = preg_split('/([\s\n\r]+)/u', $paragraph, NULL, PREG_SPLIT_DELIM_CAPTURE);
+        $parts_count = count($parts);
+
+        for ($i = 0; $i < $parts_count; ++$i) {
+          if (($length -= mb_strlen($parts[$i])) <= 0) {
+            // Truncate the paragraph and add an ellipsis.
+            $paragraphs[$index] = trim(implode(array_slice($parts, 0, $i)), $end_marks) . '...';
+            // Truncate the list of paragraphs.
+            $paragraphs = array_slice($paragraphs, 0, $index + 1);
+            // Break from both loops.
+            break 2;
+          }
+        }
+
+        // Adjust the length to reflect the added space separator when
+        // returning the text as plain text.
+        $length -= $delta;
+      }
+    }
+
+    return $prefix . implode($separator, $paragraphs) . $suffix;
   }
 
 }

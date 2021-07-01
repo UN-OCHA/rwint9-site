@@ -339,6 +339,25 @@ function reliefweb_subscriptions_theme() {
   $themes = [
     'reliefweb_subscriptions' => [
       'variables' => [
+        'subscription_type' => '',
+        'today' => '',
+        'preheader' => NULL,
+        'items' => [],
+        'prefooter' => NULL,
+      ],
+    ],
+    'reliefweb_subscriptions__headlines' => [
+      'variables' => [
+        'subscription_type' => '',
+        'today' => '',
+        'preheader' => NULL,
+        'items' => [],
+        'prefooter' => NULL,
+      ],
+    ],
+    'reliefweb_subscriptions__appeals' => [
+      'variables' => [
+        'subscription_type' => '',
         'today' => '',
         'preheader' => NULL,
         'items' => [],
@@ -351,10 +370,11 @@ function reliefweb_subscriptions_theme() {
 }
 
 /**
- * Implements hook_theme_suggestions_alter().
+ * Implements hook_theme_suggestions_HOOK_alter().
  *
  * Add suggestions for the river article theme based on bundle.
  */
-function reliefweb_subscriptions_theme_suggestions_alter(array &$suggestions, array $variables, $hook) {
-  $suggestions[] = 'reliefweb_subscriptions__headlines';
+function reliefweb_subscriptions_theme_suggestions_reliefweb_subscriptions_alter(array &$suggestions, array $variables) {
+  // This is not detected when building the email.
+  $suggestions[] = 'reliefweb_subscriptions__' . $variables['subscription_type'];
 }
