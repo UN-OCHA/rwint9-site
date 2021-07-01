@@ -128,6 +128,7 @@ rw-organizations:
 rw-river:
   css:
     theme:
+      components/rw-river/rw-river.css: {}
       components/rw-river/rw-river-results.css: {}
       components/rw-river/rw-river-views.css: {}
 

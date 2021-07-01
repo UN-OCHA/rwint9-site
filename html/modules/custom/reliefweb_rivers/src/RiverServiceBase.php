@@ -292,6 +292,11 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   public function getRiverAdvancedSearch() {
     $advanced_search = $this->getAdvancedSearch();
 
+    $settings = $advanced_search->getSettings();
+    if (empty($settings['filters'])) {
+      return [];
+    }
+
     return [
       '#theme' => 'reliefweb_rivers_advanced_search',
       '#title' => $this->t('Refine the list with filters'),
