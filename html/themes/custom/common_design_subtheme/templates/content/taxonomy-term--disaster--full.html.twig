@@ -28,19 +28,24 @@
  * @see common_design_subtheme_preprocess_taxonomy_term()
  */
 #}
+{{ attach_library('common_design_subtheme/rw-disasters') }}
+
 {{ local_tasks }}
 {% set disaster_type = term.field_primary_disaster_type.entity.field_disaster_type_code.value %}
+{% set disaster_status = term.getModerationStatus() %}
 <article{{ attributes
   .addClass([
-    'taxonony-term',
-    'taxonony-term--' ~ term.bundle(),
-    'taxomomy-term--full',
-    'taxonony-term--' ~ term.bundle() ~ '--full',
+    'taxonomy-term',
+    'taxonomy-term--' ~ term.bundle(),
+    'taxonomy-term--full',
+    'taxonomy-term--' ~ term.bundle() ~ '--full',
     'rw-page--sectioned',
+    'rw-article',
+    'rw-article--' ~ term.bundle(),
   ])
   .setAttribute('data-id', term.id())
   .setAttribute('data-disaster-type', disaster_type)
-  .setAttribute('data-disaster-status', term.getModerationStatus())
+  .setAttribute('data-disaster-status', disaster_status)
 }}>
   <header>
     {{ title }}
@@ -52,6 +57,8 @@
           'type': 'simple',
           'label': 'Status'|t,
           'value': term.getModerationStatusLabel(),
+          'value_attributes': create_attribute()
+            .addClass('rw-entity-meta__tag-value--status--' ~ disaster_status|clean_class)
         },
         'glide': {
           'type': 'simple',
