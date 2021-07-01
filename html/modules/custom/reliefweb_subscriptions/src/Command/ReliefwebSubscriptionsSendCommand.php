@@ -6,30 +6,32 @@ use Consolidation\SiteAlias\SiteAliasManagerAwareInterface;
 use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
 use Consolidation\SiteProcess\ProcessManagerAwareTrait;
 use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileSystem;
+use Drupal\Core\Language\LanguageDefault;
+use Drupal\Core\Link;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Mail\MailManager;
+use Drupal\Core\PrivateKey;
 use Drupal\Core\ProxyClass\File\MimeType\MimeTypeGuesser;
+use Drupal\Core\Render\Renderer;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Site\Settings;
 use Drupal\Core\State\State;
+use Drupal\Core\Theme\ThemeInitialization;
+use Drupal\Core\Theme\ThemeManager;
+use Drupal\Core\Url;
 use Drupal\file\FileUsage\FileUsageInterface;
+use Drupal\reliefweb_api\Services\ReliefWebApiClient;
 use Drupal\reliefweb_subscriptions\CronExpressionParser;
 use Drush\Commands\DrushCommands;
 use GuzzleHttp\ClientInterface;
-use Drupal\Component\Render\FormattableMarkup;
-use Drupal\Core\Url;
-use Drupal\Component\Utility\Crypt;
-use Drupal\Core\Site\Settings;
-use Drupal\Core\Link;
-use Drupal\reliefweb_api\Services\ReliefWebApiClient;
-use Drupal\Core\PrivateKey;
-use Drupal\Core\Render\Renderer;
-use Drupal\Core\Mail\MailManager;
-use Drupal\Core\Language\LanguageDefault;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 
 /**
  * Docstore Drush commandfile.
@@ -160,11 +162,25 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
   protected $languageDefault;
 
   /**
-   * Default language.
+   * Logger.
    *
    * @var \Psr\Log\LoggerInterface
    */
   protected $logger;
+
+  /**
+   * Theme initializer.
+   *
+   * @var \Drupal\Core\Theme\ThemeInitialization
+   */
+  protected $themeInitialization;
+
+  /**
+   * Theme manager.
+   *
+   * @var \Drupal\Core\Theme\ThemeManager
+   */
+  protected $themeManager;
 
   /**
    * {@inheritdoc}
@@ -188,6 +204,8 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
       MailManager $mailManager,
       LanguageDefault $languageDefault,
       LoggerChannelFactoryInterface $loggerFactory,
+      ThemeInitialization $themeInitialization,
+      ThemeManager $themeManager,
     ) {
     $this->currentUser = $current_user;
     $this->configFactory = $config_factory;
@@ -207,6 +225,8 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     $this->mailManager = $mailManager;
     $this->languageDefault = $languageDefault;
     $this->logger = $loggerFactory->get('reliefweb_subscriptions');
+    $this->themeInitialization = $themeInitialization;
+    $this->themeManager = $themeManager;
   }
 
   /**
@@ -700,7 +720,10 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
 
     }
 
+    $active_theme = $this->themeManager->getActiveTheme();
+    $this->themeManager->setActiveTheme($this->themeInitialization->getActiveThemeByName('common_design_subtheme'));
     $html = $this->renderer->renderRoot($render_array);
+    $this->themeManager->setActiveTheme($active_theme);
 
     // Remove unnecessary whitespaces.
     $html = preg_replace('/(\s)\s+/', '$1', $html);
