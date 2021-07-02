@@ -1,6 +1,6 @@
-id: reliefweb_taxonomy_term
-label: Migrate ReliefWeb base taxonomy terms.
-migration_group: reliefweb_term
+id: reliefweb_taxonomy_term_revision
+label: Migrate ReliefWeb base taxonomy term revisions.
+migration_group: reliefweb_term_revision
 source:
   bundle:
     - career_categories
@@ -32,3 +32,6 @@ process:
     plugin: skip_on_empty
     method: process
     source: field_language_code/0/value
+migration_dependencies:
+  required:
+    - reliefweb_taxonomy_term

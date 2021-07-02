@@ -1,0 +1,19 @@
+id: reliefweb_node_revision__announcement
+label: Migrate ReliefWeb announcement revisions.
+migration_group: reliefweb_node_revision
+source:
+  bundle: announcement
+process:
+  # Fields.
+  field_image:
+    plugin: sub_process
+    source: field_image
+    process:
+      target_id: fid
+  field_link/uri:
+    plugin: skip_on_empty
+    method: process
+    source: field_link/0/url
+migration_dependencies:
+  required:
+    - reliefweb_node__announcement

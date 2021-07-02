@@ -1,0 +1,24 @@
+id: reliefweb_book
+label: Migrate ReliefWeb book menus.
+migration_group: reliefweb_extra
+migration_tags:
+  - book
+source:
+  plugin: reliefweb_book
+destination:
+  plugin: reliefweb_book
+process:
+  nid: nid
+  'book/bid': bid
+  'book/weight': weight
+  'book/pid':
+    -
+      plugin: skip_on_empty
+      method: process
+      source: plid
+    -
+      plugin: migration_lookup
+      migration: reliefweb_book
+migration_dependencies:
+  required:
+    - reliefweb_node__book

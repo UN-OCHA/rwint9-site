@@ -1,0 +1,75 @@
+id: reliefweb_node_revision
+label: ReliefWeb Migration - Node revisions
+description: Migrate ReliefWeb node revisions from Drupal 7 to Drupal 9.
+source_type: Drupal 7
+shared_configuration:
+  migration_tags:
+    - node
+    - node_revision
+  dependencies:
+    enforced:
+      module:
+        - reliefweb_migrate
+  source:
+    key: rwint7
+    plugin: reliefweb_node_revision
+    constants:
+      format: markdown
+  destination:
+    plugin: entity_revision:node
+  process:
+    # Base properties.
+    nid: nid
+    uid: uid
+    type: type
+    # We let the system set the default language (en).
+    # langcode: en
+    # We skip the sticky and promote values as they are not used. They will be
+    # resetted to 0.
+    # sticky: sticky
+    # promote: promote
+    title: title
+    created: created
+    changed: changed
+    # Publication status.
+    status:
+      plugin: static_map
+      source: field_status/0/value
+      default_value: 0
+      map:
+        published: 1
+        to-review: 1
+    # Moderation status.
+    moderation_state:
+      plugin: static_map
+      source: field_status/0/value
+      default_value: draft
+      map:
+        archive: archive
+        draft: draft
+        duplicate: duplicate
+        expired: expired
+        embargoed: embargoed
+        on-hold: on-hold
+        pending: pending
+        published: published
+        reference: reference
+        refused: refused
+        to-review: to-review
+    # Revision information.
+    vid: revision_id
+    revision_uid:
+      plugin: static_map
+      default_value: 2
+      source: revision_user
+      # Map the anonymous and super users to the System user.
+      map:
+        0: 2
+        1: 2
+    revision_log: revision_log_message
+    revision_timestamp: revision_created
+    revision_default: revision_default
+dependencies:
+  enforced:
+    module:
+      - reliefweb_migrate
