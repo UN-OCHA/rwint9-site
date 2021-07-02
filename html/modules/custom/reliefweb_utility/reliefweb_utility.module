@@ -39,10 +39,11 @@ function reliefweb_utility_file_update(FileInterface $file) {
 
   // Only process files with a valid uuid and uri and if not already processed
   // which can be determined by looking for the file uuid in its uri.
-  if (!empty($uuid) && !empty($uri) && preg_match('#' . $uuid . '#', $uri) !== 1) {
+  if (!empty($uuid) && !empty($uri) && preg_match('#/' . $uuid . '/#', $uri) !== 1) {
     $file_system = \Drupal::service('file_system');
     $logger = \Drupal::logger('reliefweb_utility');
 
+    // Note: the locale is assumed to be UTF-8.
     $info = pathinfo($uri);
 
     // Use the existing directory + the first 4 letters of the uuid.
@@ -52,10 +53,11 @@ function reliefweb_utility_file_update(FileInterface $file) {
       substr($uuid, 2, 2),
     ]);
 
-    // Use the UUID as filename.
-    // @todo preserve the filename so we can compute the original URL, for
-    // consistency with the migrated files?
-    $new_uri = $directory . '/' . $uuid . '.' . $info['extension'];
+    // We add the UUID in the file path but we preserve the filename so we can
+    // compute the original URL for consistency with the migrated files.
+    //
+    // @todo discard the filename and use `uuid.ext`?
+    $new_uri = $directory . '/' . $uuid . '/' . $info['basename'];
 
     // Prepare the destination directory.
     if (!$file_system->prepareDirectory($directory, $file_system::CREATE_DIRECTORY)) {
