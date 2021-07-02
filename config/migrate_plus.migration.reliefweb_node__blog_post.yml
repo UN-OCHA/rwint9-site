@@ -1,0 +1,47 @@
+uuid: cd8a053a-e257-4455-bebb-d42ea4c2ef63
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: _Kh8emhTKgat3O1WcIlkglsBWlGYWlODXIqH1G11ZzY
+id: reliefweb_node__blog_post
+class: null
+field_plugin_method: null
+cck_plugin_method: null
+migration_tags: null
+migration_group: reliefweb_node
+label: 'Migrate ReliefWeb blog posts.'
+source:
+  bundle: blog_post
+process:
+  field_attached_images:
+    plugin: sub_process
+    source: field_attached_images
+    process:
+      target_id: fid
+  field_author/value:
+    plugin: default_value
+    default_value: ReliefWeb
+    source: field_author/0/value
+  field_image:
+    plugin: sub_process
+    source: field_image
+    process:
+      target_id: fid
+  field_publication_date:
+    plugin: sub_process
+    process:
+      value:
+        plugin: format_date
+        from_format: U
+        to_format: 'Y-m-d\TH:i:s'
+        from_timezone: UTC
+        to_timezone: UTC
+        source: created
+  field_tags:
+    plugin: sub_process
+    source: field_tags
+    process:
+      target_id: tid
+destination: null
+migration_dependencies: null

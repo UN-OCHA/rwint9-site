@@ -1,0 +1,70 @@
+uuid: b4b08fe3-3486-4572-9e06-a8779f608ffa
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - reliefweb_migrate
+_core:
+  default_config_hash: eidieew18EbCqjHP49o6iACk9itHCjEWUvI6dgZ5qgs
+id: reliefweb_node_revision
+label: 'ReliefWeb Migration - Node revisions'
+description: 'Migrate ReliefWeb node revisions from Drupal 7 to Drupal 9.'
+source_type: 'Drupal 7'
+module: null
+shared_configuration:
+  migration_tags:
+    - node
+    - node_revision
+  dependencies:
+    enforced:
+      module:
+        - reliefweb_migrate
+  source:
+    key: rwint7
+    plugin: reliefweb_node_revision
+    constants:
+      format: markdown
+  destination:
+    plugin: 'entity_revision:node'
+  process:
+    nid: nid
+    uid: uid
+    type: type
+    title: title
+    created: created
+    changed: changed
+    status:
+      plugin: static_map
+      source: field_status/0/value
+      default_value: 0
+      map:
+        published: 1
+        to-review: 1
+    moderation_state:
+      plugin: static_map
+      source: field_status/0/value
+      default_value: draft
+      map:
+        archive: archive
+        draft: draft
+        duplicate: duplicate
+        expired: expired
+        embargoed: embargoed
+        on-hold: on-hold
+        pending: pending
+        published: published
+        reference: reference
+        refused: refused
+        to-review: to-review
+    vid: revision_id
+    revision_uid:
+      plugin: static_map
+      default_value: 2
+      source: revision_user
+      map:
+        - 2
+        - 2
+    revision_log: revision_log_message
+    revision_timestamp: revision_created
+    revision_default: revision_default

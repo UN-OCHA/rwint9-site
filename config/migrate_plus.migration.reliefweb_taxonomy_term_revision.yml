@@ -1,16 +1,16 @@
-uuid: f665afda-2a0c-4f23-bf6a-ca4f045f5eda
+uuid: ceb3a091-bdda-4b63-b530-f404ddd86918
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: 5x1R22SMhqn5PNlFAmmVuXkiNJrAxmuEmHhDSJr7vSo
-id: reliefweb_taxonomy_term
+  default_config_hash: F9YFxl2kVvKK7yWMzxhiEIcbhAILfsmMOCMtHmOAdB0
+id: reliefweb_taxonomy_term_revision
 class: null
 field_plugin_method: null
 cck_plugin_method: null
 migration_tags: null
-migration_group: reliefweb_term
-label: 'Migrate ReliefWeb base taxonomy terms.'
+migration_group: reliefweb_term_revision
+label: 'Migrate ReliefWeb base taxonomy term revisions.'
 source:
   bundle:
     - career_categories
@@ -41,4 +41,6 @@ process:
     method: process
     source: field_language_code/0/value
 destination: null
-migration_dependencies: null
+migration_dependencies:
+  required:
+    - reliefweb_taxonomy_term

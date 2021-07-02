@@ -1,18 +1,15 @@
-uuid: a8c7928a-595c-4375-81c5-cb7065134592
+uuid: 86eb1002-6654-4518-9fde-01e74209e61e
 langcode: en
 status: true
-dependencies:
-  enforced:
-    module:
-      - reliefweb_migrate
+dependencies: {  }
 _core:
-  default_config_hash: V5eeUBDemHZph-6Wgk7HGFPlr43AxSSls5I2n6xJEh4
+  default_config_hash: aFtgeNR343G7qeSNlMn5h_xZ3eh0amZ0CpK9e5VwK4g
 id: reliefweb_user__default
 class: null
 field_plugin_method: null
 cck_plugin_method: null
 migration_tags: null
-migration_group: reliefweb
+migration_group: reliefweb_base
 label: 'Migrate ReliefWeb default users.'
 source:
   plugin: embedded_data

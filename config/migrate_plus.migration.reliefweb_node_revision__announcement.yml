@@ -1,0 +1,29 @@
+uuid: df974076-7321-4762-829b-188b29430d29
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: s5qY4I0G-raBIZJOouWu1QnQ3i-i1vnLQJ7wz-ij5ts
+id: reliefweb_node_revision__announcement
+class: null
+field_plugin_method: null
+cck_plugin_method: null
+migration_tags: null
+migration_group: reliefweb_node_revision
+label: 'Migrate ReliefWeb announcement revisions.'
+source:
+  bundle: announcement
+process:
+  field_image:
+    plugin: sub_process
+    source: field_image
+    process:
+      target_id: fid
+  field_link/uri:
+    plugin: skip_on_empty
+    method: process
+    source: field_link/0/url
+destination: null
+migration_dependencies:
+  required:
+    - reliefweb_node__announcement

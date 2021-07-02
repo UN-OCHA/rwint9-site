@@ -1,0 +1,21 @@
+uuid: 051f9fbd-d775-48e2-a00c-37d90f1edb7b
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - reliefweb_migrate
+_core:
+  default_config_hash: C0lO62HFOwlM97w4pRZw5-YKU8iXE7wdJVt62UKrzqA
+id: reliefweb_base
+label: 'ReliefWeb Migration - Base'
+description: 'Migrate ReliefWeb base content (e.g. menus, users) from Drupal 7 to Drupal 9.'
+source_type: 'Drupal 7'
+module: null
+shared_configuration:
+  dependencies:
+    enforced:
+      module:
+        - reliefweb_migrate
+  source:
+    key: rwint7
