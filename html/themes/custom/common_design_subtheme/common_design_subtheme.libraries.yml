@@ -128,6 +128,7 @@ rw-organizations:
 rw-river:
   css:
     theme:
+      components/rw-river/rw-river.css: {}
       components/rw-river/rw-river-results.css: {}
       components/rw-river/rw-river-views.css: {}
 
@@ -135,6 +136,8 @@ rw-river-letter-navigation:
   css:
     theme:
       components/rw-river-letter-navigation/rw-river-letter-navigation.css: {}
+  js:
+    components/rw-river-letter-navigation/rw-river-letter-navigation.js: {}
   dependencies:
     - common_design/cd-dropdown
 
@@ -187,6 +190,11 @@ cd-card:
   css:
     theme:
       components/cd-card/cd-card.css: {}
+
+cd-page-title:
+  css:
+    theme:
+      components/cd-page-title/cd-page-title.css: {}
 
 cd-tag:
   css:

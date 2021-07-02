@@ -112,14 +112,14 @@ class DSRClient {
    */
   public function getDigitalSitrepBuild($iso3, $ongoing = FALSE) {
     $sitrep = $this->getDigitalSitrep($iso3, $ongoing);
+    if (empty($sitrep)) {
+      return [];
+    }
 
     // Create the render array.
-    $build = [];
-    if (!empty($sitrep)) {
-      $build['#theme'] = 'reliefweb_digital_situation_report';
-      foreach ($sitrep as $key => $value) {
-        $build['#' . $key] = $value;
-      }
+    $build = ['#theme' => 'reliefweb_digital_situation_report'];
+    foreach ($sitrep as $key => $value) {
+      $build['#' . $key] = $value;
     }
 
     // Cache the render array with the minimum max age. The data retrieved from

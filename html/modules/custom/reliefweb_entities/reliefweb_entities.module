@@ -107,8 +107,10 @@ function reliefweb_entities_theme() {
         'title' => t('Description'),
         // Section title attributes.
         'title_attributes' => NULL,
-        // The description shold be a safe HTML string.
+        // The description should be a safe HTML string.
         'description' => '',
+        // Description attributes.
+        'description_attributes' => NULL,
       ],
     ],
     'reliefweb_entities_entity_details' => [

@@ -9,7 +9,7 @@
   margin-top: 0;
 }
 /* Javascript enabled */
-.js #main-content .rw-sectioned-content section.rw-entity-description > button {
+.js #main-content .rw-sectioned-content section.rw-entity-description button {
   display: block;
   padding: 8px 12px;
   margin: 24px auto 0 auto;
@@ -18,32 +18,41 @@
   color: #055372;
   font-size: 16px;
   order: 3;
+  fill: #055372;
 }
-.js #main-content .rw-sectioned-content section.rw-entity-description > button:hover,
-.js #main-content .rw-sectioned-content section.rw-entity-description > button:active,
-.js #main-content .rw-sectioned-content section.rw-entity-description > button:focus {
+.js #main-content .rw-sectioned-content section.rw-entity-description button svg {
+  fill: currentColor;
+}
+.js #main-content .rw-sectioned-content section.rw-entity-description button:hover,
+.js #main-content .rw-sectioned-content section.rw-entity-description button:active,
+.js #main-content .rw-sectioned-content section.rw-entity-description button:focus {
   background: #055372;
   color: white;
 }
-.js #main-content .rw-sectioned-content section.rw-entity-description > .rw-entity-description__text > * {
-  display: none;
-}
-.js #main-content .rw-sectioned-content section.rw-entity-description > .rw-entity-description__text > *:nth-last-child(-n+3) {
+/* Overrides the default behavior when data-cd-hidden is set as the description
+ * is always displayed, only the number of paragraphs changes. */
+.js #main-content .rw-sectioned-content section.rw-entity-description .rw-entity-description__text[data-cd-hidden] {
   display: block;
 }
-.js #main-content .rw-sectioned-content section.rw-entity-description > .rw-entity-description__text > *:nth-last-child(3) {
+.js #main-content .rw-sectioned-content section.rw-entity-description .rw-entity-description__text > * {
+  display: none;
+}
+.js #main-content .rw-sectioned-content section.rw-entity-description .rw-entity-description__text > *:nth-last-child(-n+3) {
+  display: block;
+}
+.js #main-content .rw-sectioned-content section.rw-entity-description .rw-entity-description__text > *:nth-last-child(3) {
   margin-top: 0;
 }
-.js #main-content .rw-sectioned-content section.rw-entity-description > .rw-entity-description__text[data-hidden="false"] > * {
+.js #main-content .rw-sectioned-content section.rw-entity-description .rw-entity-description__text[data-cd-hidden="false"] > * {
   display: block;
 }
 /* Exception for sources, where we start at the top of the rw-entity-description. */
-.js #main-content .source.rw-sectioned-content section.rw-entity-description > .rw-entity-description__text > * {
+.js #main-content .taxonomy-term--source--full.rw-sectioned-content section.rw-entity-description .rw-entity-description__text > * {
   display: none;
 }
-.js #main-content .source.rw-sectioned-content section.rw-entity-description > .rw-entity-description__text > *:nth-child(-n+3) {
+.js #main-content .taxonomy-term--source--full.rw-sectioned-content section.rw-entity-description .rw-entity-description__text > *:nth-child(-n+3) {
   display: block;
 }
-.js #main-content .source.rw-sectioned-content section.rw-entity-description > .rw-entity-description__text[data-hidden="false"] > * {
+.js #main-content .taxonomy-term--source--full.rw-sectioned-content section.rw-entity-description .rw-entity-description__text[data-cd-hidden="false"] > * {
   display: block;
 }

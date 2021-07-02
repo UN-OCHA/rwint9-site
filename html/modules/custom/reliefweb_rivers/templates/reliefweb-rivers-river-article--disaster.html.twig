@@ -28,7 +28,7 @@
   .setAttribute('data-disaster-status', entity.status)
 }}>
   {# Header with country slug and title. #}
-  <header>
+  <header class="rw-river-article__header">
     {# Title. #}
     {{ render_var({
       '#theme': 'reliefweb_rivers_river_article_title',
@@ -48,7 +48,8 @@
           'type': 'simple',
           'label': 'Status'|t,
           'value': entity.status,
-          'classes': [entity.status == 'ongoing' ? 'ongoing'],
+          'value_attributes': create_attribute()
+            .addClass('rw-entity-meta__tag-value--status--' ~ entity.status|clean_class),
         },
         'disaster-type': {
           'type': 'taglist',

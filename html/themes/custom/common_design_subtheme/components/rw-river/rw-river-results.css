@@ -9,7 +9,7 @@
   font-weight: bold;
 }
 @media all and (min-width: 768px) {
-  #main-content section.river.with-filters .rw-river-results {
+  #main-content section.rw-river-page .rw-river-results {
     text-align: left;
     padding: 13px 0;
     border-bottom: 1px solid #e6ecef;

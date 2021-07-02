@@ -40,15 +40,3 @@
   font-size: 15px;
   line-height: 1.6;
 }
-
-
-/* Page title and Status in article header */
-.taxonony-term--country--full .cd-page-title {
-  padding-bottom: 0;
-  margin-bottom: 0;
-  border-bottom: 0 none;
-}
-.taxonony-term--country--full > header {
-  padding-bottom: 12px;
-  border-bottom: 1px solid #eb1405;
-}

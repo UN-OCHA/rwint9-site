@@ -11,6 +11,7 @@
  * - title: section title
  * - title_attributes: section title attributes
  * - description: entity description in HTML.
+ * - description_attributes: description attributes
  */
 
 #}
@@ -20,10 +21,14 @@
   ])
   .setAttribute('id', id)
 }}>
-<h{{ level }}{{ title_attributes
-  .addClass([
-    'rw-entity-description__title'
-  ])
-}}>{{ title }}</h{{ level }}>
-<div class="rw-entity-description__text">{{ description|raw }}</div>
+  <h{{ level }}{{ title_attributes
+    .addClass([
+      'rw-entity-description__title'
+    ])
+  }}>{{ title }}</h{{ level }}>
+  <div{{ description_attributes
+    .addClass([
+      'rw-entity-description__text'
+    ])
+  }}>{{ description|raw }}</div>
 </section>
