@@ -2,8 +2,6 @@
 
 namespace Drupal\reliefweb_migrate\Plugin\migrate\source;
 
-use Drupal\migrate\Row;
-
 /**
  * Retrieve taxonomy terms from the Drupal 7 database.
  *
@@ -23,14 +21,60 @@ class TaxonomyTerm extends FieldableEntityBase {
   /**
    * {@inheritdoc}
    */
+  protected $entityType = 'taxonomy_term';
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $idField = 'tid';
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $bundleField = 'vid';
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $useRevisionId = FALSE;
+
+  /**
+   * Join condition for the taxonomy_term_data table.
+   *
+   * @var string
+   */
+  protected $join = 'td.revision_id = tdr.revision_id';
+
+  /**
+   * {@inheritdoc}
+   */
   public function query() {
-    $query = $this->select('taxonomy_term_data', 'td')
-      ->fields('td')
-      ->orderBy('tid');
+    $query = $this->select('taxonomy_term_data_revision', 'tdr');
 
-    $query->innerJoin('taxonomy_vocabulary', 'tv', 'td.vid = tv.vid');
-    $query->addField('tv', 'machine_name');
+    // Join the data table.
+    $query->innerJoin('taxonomy_term_data', 'td', $this->join);
 
+    // Join the vocabulary table.
+    $query->innerJoin('taxonomy_vocabulary', 'tv', 'tv.vid = tdr.vid');
+
+    // Base fields.
+    $query->addField('td', 'tid', 'tid');
+    $query->addField('td', 'name', 'name');
+    $query->addField('td', 'description', 'description');
+    $query->addField('td', 'format', 'format');
+    $query->addField('td', 'weight', 'weight');
+
+    // Use the vocabulary machine name for the `vid` as expected by D9.
+    $query->addField('tv', 'machine_name', 'vid');
+
+    // Revision fields.
+    $query->addField('tdr', 'revision_id', 'revision_id');
+    $query->addField('tdr', 'log', 'revision_log_message');
+    $query->addField('tdr', 'uid', 'revision_user');
+    $query->addField('tdr', 'timestamp', 'revision_created');
+    $query->addExpression('IF(tdr.revision_id = td.revision_id, 1, 0)', 'revision_default');
+
+    // Restrict to the given bundles.
     if (isset($this->configuration['bundle'])) {
       $query->condition('tv.machine_name', (array) $this->configuration['bundle'], 'IN');
     }
@@ -44,14 +88,18 @@ class TaxonomyTerm extends FieldableEntityBase {
   public function fields() {
     $fields = [
       'tid' => $this->t('The term ID.'),
-      'vid' => $this->t('Existing term VID'),
-      'machine_name' => $this->t('Vocabulary machine name'),
       'name' => $this->t('The name of the term.'),
       'description' => $this->t('The term description.'),
+      'format' => $this->t('Format of the term description.'),
       'weight' => $this->t('Weight'),
+      'vid' => $this->t('Vocabulary machine name'),
+      // Empty in ReliefWeb as there is no term hierarchy.
       'parent' => $this->t("The Drupal term IDs of the term's parents."),
-      'format' => $this->t("Format of the term description."),
       'revision_id' => $this->t('The term revision ID.'),
+      'revision_log_message' => $this->t('The term revision log message.'),
+      'revision_user' => $this->t('The term revision user id.'),
+      'revision_created' => $this->t('The term revision creation timestamp.'),
+      'revision_default' => $this->t('The term revision default status.'),
     ];
     return $fields;
   }
@@ -59,23 +107,9 @@ class TaxonomyTerm extends FieldableEntityBase {
   /**
    * {@inheritdoc}
    */
-  public function prepareRow(Row $row) {
-    $tid = $row->getSourceProperty('tid');
-    $vocabulary = $row->getSourceProperty('machine_name');
-
-    // Get Field API field values.
-    foreach ($this->getFields('taxonomy_term', $vocabulary) as $field_name => $field) {
-      $row->setSourceProperty($field_name, $this->getFieldValues('taxonomy_term', $field_name, $tid));
-    }
-
-    return parent::prepareRow($row);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getIds() {
     $ids['tid']['type'] = 'integer';
+    $ids['tid']['alias'] = 'td';
     return $ids;
   }
 

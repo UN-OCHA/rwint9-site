@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_migrate\Plugin\migrate\source;
 
 use Drupal\migrate\Plugin\migrate\source\SqlBase;
+use Drupal\migrate\Row;
 
 /**
  * Base class to retrieve entity fields.
@@ -12,11 +13,69 @@ use Drupal\migrate\Plugin\migrate\source\SqlBase;
 abstract class FieldableEntityBase extends SqlBase {
 
   /**
+   * Entity type.
+   *
+   * @var string
+   */
+  protected $entityType;
+
+  /**
+   * Id field.
+   *
+   * @var string
+   */
+  protected $idField;
+
+  /**
+   * Revision id field.
+   *
+   * @var string
+   */
+  protected $revisionIdField = 'revision_id';
+
+
+  /**
+   * Bundle field.
+   *
+   * @var string
+   */
+  protected $bundleField;
+
+  /**
+   * Flag indicating whether to pass the revision id to get the fields.
+   *
+   * When TRUE, this will load the data from the field revision tables.
+   *
+   * @var bool
+   */
+  protected $useRevisionId = FALSE;
+
+  /**
    * Store the field instance data per entity types and bundles.
    *
    * @var array
    */
   protected $fieldInstances = [];
+
+  /**
+   * {@inheritdoc}
+   */
+  public function prepareRow(Row $row) {
+    $id = $row->getSourceProperty($this->idField);
+    $bundle = $row->getSourceProperty($this->bundleField);
+
+    $revision_id = NULL;
+    if ($this->useRevisionId && !empty($this->revisionIdField)) {
+      $revision_id = $row->getSourceProperty($this->revisionIdField);
+    }
+
+    // Get Field API field values.
+    foreach ($this->getFields($entity_type, $bundle) as $field_name => $field) {
+      $row->setSourceProperty($field_name, $this->getFieldValues($entity_type, $field_name, $id, $revision_id));
+    }
+
+    return parent::prepareRow($row);
+  }
 
   /**
    * Returns all non-deleted field instances attached to a specific entity type.
