@@ -781,7 +781,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    */
   protected function generateEmailContentHeadlines(array $subscription, array $data) {
     $variables = [
-      '#theme' => 'reliefweb_subscriptions__headlines',
+      '#theme' => 'reliefweb_subscriptions',
       '#subscription_type' => 'headlines',
     ];
 
@@ -848,7 +848,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    */
   protected function generateEmailContentAppeals(array $subscription, array $data) {
     $variables = [
-      '#theme' => 'reliefweb_subscriptions__appeals',
+      '#theme' => 'reliefweb_subscriptions',
       '#subscription_type' => 'appeals',
     ];
 
@@ -928,7 +928,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    */
   protected function generateEmailContentJobs(array $subscription, array $data) {
     $variables = [
-      '#theme' => 'reliefweb_subscriptions__jobs',
+      '#theme' => 'reliefweb_subscriptions',
       '#subscription_type' => 'jobs',
     ];
 
@@ -1001,7 +1001,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    */
   protected function generateEmailContentTraining(array $subscription, array $data) {
     $variables = [
-      '#theme' => 'reliefweb_subscriptions__training',
+      '#theme' => 'reliefweb_subscriptions',
       '#subscription_type' => 'training',
     ];
 
@@ -1084,7 +1084,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    */
   protected function generateEmailContentDisasters(array $subscription, array $data) {
     $variables = [
-      '#theme' => 'reliefweb_subscriptions__disasters',
+      '#theme' => 'reliefweb_subscriptions',
       '#subscription_type' => 'disasters',
     ];
 
@@ -1099,7 +1099,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     // Overview.
     $variables['#overview'] = '';
     if (!empty($data['profile']['overview'])) {
-      $variables['overview'] = check_markup($data['profile']['overview'], 'markdown');
+      $variables['#overview'] = check_markup($data['profile']['overview'], 'markdown');
     }
 
     // Preheader with a maximum of 100 characters.
@@ -1135,7 +1135,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    */
   protected function generateEmailContentOchaSitrep(array $subscription, array $data) {
     $variables = [
-      '#theme' => 'reliefweb_subscriptions__ocha_sitrep',
+      '#theme' => 'reliefweb_subscriptions',
       '#subscription_type' => 'ocha_sitrep',
     ];
 
@@ -1225,7 +1225,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    */
   protected function generateEmailContentCountry(array $subscription, array $data) {
     $variables = [
-      '#theme' => 'reliefweb_subscriptions__country',
+      '#theme' => 'reliefweb_subscriptions',
       '#subscription_type' => 'countries',
     ];
 
@@ -1340,16 +1340,21 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
   protected function prepareFooterLinks(array $parts) {
     $links = [];
     foreach ($parts as $part) {
-      $options = [
-        'absolute' => TRUE,
-        'attributes' => ['class' => ['prefooter-link']],
-      ];
-      if (!empty($part['options'])) {
-        $options = $options + $part['options'];
+      if (strpos($part['link'], 'http') === 0) {
+        $links[] = '<a class="prefooter-link" href="' . $part['link'] . '">' . $part['text'] . '</a>';
       }
+      else {
+        $options = [
+          'absolute' => TRUE,
+          'attributes' => ['class' => ['prefooter-link']],
+        ];
+        if (!empty($part['options'])) {
+          $options = $options + $part['options'];
+        }
 
-      $url = Url::fromUserInput($part['link'], $options);
-      $links[] = Link::fromTextAndUrl($part['text'], $url)->toString();
+        $url = Url::fromUserInput($part['link'], $options);
+        $links[] = Link::fromTextAndUrl($part['text'], $url)->toString();
+      }
     }
 
     return implode(' | ', $links);

@@ -173,10 +173,6 @@ function reliefweb_subscriptions_subscriptions() {
     'bundle' => 'disaster',
     'resource' => 'disasters',
     'payload' => [
-      'filter' => [
-        'field' => 'status',
-        'value' => ['alert', 'current'],
-      ],
       'fields' => [
         'include' => [
           'name',
