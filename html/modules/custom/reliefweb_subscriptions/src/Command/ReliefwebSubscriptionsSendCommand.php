@@ -325,14 +325,15 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
         return;
       }
 
-      $entity = entity_load_single($entity_type, $entity_id);
-      if (!empty($entity)) {
-        $this->queueTriggered($entity, $entity_type);
-      }
-      else {
-        $this->logger->warning('Entity not found, skipping');
-        return;
-      }
+      $notifications = [];
+      $notifications[] = [
+        'sid' => $sid,
+        'bundle' => $entity_type,
+        'entity_id' => $entity_id,
+      ];
+
+      // Queue notifications for all the subscriptions.
+      $this->queueNotifications($notifications);
     }
     // Attempt to queue scheduled notification.
     //
@@ -424,7 +425,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
   /**
    * Send triggered notifications.
    *
-   * @param array $notification
+   * @param object $notification
    *   Notification information.
    * @param array $subscription
    *   Subscription information.
@@ -432,7 +433,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    * @return bool
    *   TRUE if emails were sent.
    */
-  protected function sendTriggeredNotification(array $notification, array $subscription) {
+  protected function sendTriggeredNotification(object $notification, array $subscription) {
     $data = $this->getTriggeredNotificationData($notification, $subscription);
     if (empty($data)) {
       return FALSE;
@@ -652,8 +653,25 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
         $render_array = $this->generateEmailContentAppeals($subscription, $data);
         break;
 
+      case 'jobs':
+        $render_array = $this->generateEmailContentJobs($subscription, $data);
+        break;
+
+      case 'training':
+        $render_array = $this->generateEmailContentTraining($subscription, $data);
+        break;
+
+      case 'disaster':
+        $render_array = $this->generateEmailContentDisasters($subscription, $data);
+        break;
+
+      case 'ocha_sitrep':
+        $render_array = $this->generateEmailContentOchaSitrep($subscription, $data);
+        break;
+
       default:
-        $html = '<html><body><p>Test mail</p></body></html>';
+        // Countries.
+        $render_array = $this->generateEmailContentCountry($subscription, $data);
         break;
 
     }
@@ -898,6 +916,387 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
   }
 
   /**
+   * Generate the email HTML content.
+   *
+   * @param array $subscription
+   *   Subscription information.
+   * @param array $data
+   *   API data for the notification.
+   *
+   * @return string
+   *   HTML content.
+   */
+  protected function generateEmailContentJobs(array $subscription, array $data) {
+    $variables = [
+      '#theme' => 'reliefweb_subscriptions__jobs',
+      '#subscription_type' => 'jobs',
+    ];
+
+    $variables['#today'] = date_create('now')->format('j M Y');
+    $variables['#preheader'] = $this->getPreheaderTitles($data);
+
+    // Sort by country.
+    $groups = [];
+    foreach ($data as $fields) {
+      $groups[$fields['country'][0]['name'] ?? 'zzz'][] = $fields;
+    }
+    ksort($groups);
+    $data = array_merge(...array_values($groups));
+
+    $items = [];
+    foreach ($data as $fields) {
+      $item = [];
+      $info = [];
+      $item['url'] = $fields['url_alias'];
+
+      // Title.
+      $title = $fields['title'];
+      if (!empty($fields['country'][0]['name'])) {
+        $title = $fields['country'][0]['name'] . ': ' . $title;
+      }
+      else {
+        $title = 'Unspecified location: ' . $title;
+      }
+      $item['title'] = $title;
+
+      // Sources.
+      $sources = [];
+      foreach (array_slice($fields['source'], 0, 3) as $source) {
+        $sources[] = $source['shortname'] ?? $source['name'];
+      }
+      $info[] = implode(', ', $sources);
+
+      // Dates.
+      if (!empty($fields['date']['closing'])) {
+        $info[] = 'Closing date: ' . date_create($fields['date']['closing'])->format('j M Y');
+      }
+
+      $item['info'] = implode(' &ndash; ', $info);
+      $items[] = $item;
+    }
+    $variables['#items'] = $items;
+
+    // Prefooter.
+    $prefooter_parts = [
+      [
+        'text' => 'All job announcements on ReliefWeb',
+        'link' => '/jobs',
+      ],
+    ];
+    $variables['#prefooter'] = $this->prepareFooterLinks($prefooter_parts);
+
+    return $variables;
+  }
+
+  /**
+   * Generate the email HTML content.
+   *
+   * @param array $subscription
+   *   Subscription information.
+   * @param array $data
+   *   API data for the notification.
+   *
+   * @return string
+   *   HTML content.
+   */
+  protected function generateEmailContentTraining(array $subscription, array $data) {
+    $variables = [
+      '#theme' => 'reliefweb_subscriptions__training',
+      '#subscription_type' => 'training',
+    ];
+
+    $variables['#today'] = date_create('now')->format('j M Y');
+
+    // Sort by country.
+    $groups = [];
+    foreach ($data as $fields) {
+      $groups[$fields['country'][0]['name'] ?? 'zzz'][] = $fields;
+    }
+    ksort($groups);
+    $data = array_merge(...array_values($groups));
+
+    // Generate preheader.
+    $variables['#preheader'] = $this->getPreheaderTitles($data);
+
+    $items = [];
+    foreach ($data as $fields) {
+      $item = [];
+      $info = [];
+      $item['url'] = $fields['url_alias'];
+
+      // Title.
+      $title = $fields['title'];
+      if (!empty($fields['country'][0]['name'])) {
+        $title = $fields['country'][0]['name'] . ': ' . $title;
+      }
+      $item['title'] = $title;
+
+      // Sources.
+      $sources = [];
+      foreach (array_slice($fields['source'], 0, 3) as $source) {
+        $sources[] = $source['shortname'] ?? $source['name'];
+      }
+      $info[] = implode(', ', $sources);
+
+      // Dates.
+      if (!empty($fields['date']['start'])) {
+        if (empty($fields['date']['end']) || $fields['date']['end'] === $fields['date']['start']) {
+          $info[] = 'On ' . date_create($fields['date']['start'])->format('j M Y');
+        }
+        else {
+          $info[] = 'From ' . date_create($fields['date']['start'])->format('j M Y') .
+                    ' To ' . date_create($fields['date']['end'])->format('j M Y');
+        }
+        if (!empty($fields['date']['registration'])) {
+          $info[] = 'Registration until ' . date_create($fields['date']['start'])->format('j M Y');
+        }
+      }
+      else {
+        $info[] = 'Ongoing';
+      }
+
+      $item['info'] = implode(' &ndash; ', $info);
+      $items[] = $item;
+    }
+    $variables['#items'] = $items;
+
+    $prefooter_parts = [
+      [
+        'text' => 'All training programs on ReliefWeb',
+        'link' => '/training',
+      ],
+    ];
+    $variables['#prefooter'] = $this->prepareFooterLinks($prefooter_parts);
+
+    return $variables;
+  }
+
+  /**
+   * Generate the email HTML content.
+   *
+   * @param array $subscription
+   *   Subscription information.
+   * @param array $data
+   *   API data for the notification.
+   *
+   * @return string
+   *   HTML content.
+   */
+  protected function generateEmailContentDisasters(array $subscription, array $data) {
+    $variables = [
+      '#theme' => 'reliefweb_subscriptions__disasters',
+      '#subscription_type' => 'disasters',
+    ];
+
+    $variables['#url'] = $data['url_alias'];
+
+    // Title.
+    $variables['#title'] = $data['name'];
+
+    // Event date.
+    $variables['#date'] = date_create($data['date']['created'])->format('j M Y');
+
+    // Overview.
+    $variables['#overview'] = '';
+    if (!empty($data['profile']['overview'])) {
+      $variables['overview'] = check_markup($data['profile']['overview'], 'markdown');
+    }
+
+    // Preheader with a maximum of 100 characters.
+    $preheader = $this->summarize($variables['#overview'], 100, TRUE);
+    $variables['#preheader'] = $preheader;
+
+    // Prefooter.
+    $prefooter_parts = [
+      [
+        'text' => $data['name'] . ' on ReliefWeb',
+        'link' => $data['url_alias'],
+      ],
+      [
+        'text' => 'All disasters on ReliefWeb',
+        'link' => '/disasters',
+      ],
+    ];
+    $variables['#prefooter'] = $this->prepareFooterLinks($prefooter_parts);
+
+    return $variables;
+  }
+
+  /**
+   * Generate the email HTML content.
+   *
+   * @param array $subscription
+   *   Subscription information.
+   * @param array $data
+   *   API data for the notification.
+   *
+   * @return string
+   *   HTML content.
+   */
+  protected function generateEmailContentOchaSitrep(array $subscription, array $data) {
+    $variables = [
+      '#theme' => 'reliefweb_subscriptions__ocha_sitrep',
+      '#subscription_type' => 'ocha_sitrep',
+    ];
+
+    $info = [];
+
+    $variables['#url'] = $data['url_alias'];
+
+    // Title.
+    $title = $data['title'];
+    $country = $data['primary_country']['name'];
+    // Prepend the primary country if not already in the title.
+    if (strpos($title, $country) !== 0) {
+      $title = $country . ': ' . $title;
+    }
+    $variables['#title'] = $title;
+
+    // Sources - OCHA obviously...
+    $info[] = 'OCHA';
+
+    // Date.
+    $info[] = date_create($data['date']['original'])->format('j M Y');
+    $variables['#info'] = implode(' &ndash; ', $info);
+
+    // Summary.
+    $body = !empty($data['body']) ? check_markup($data['body'], 'markdown') : '';
+    $variables['#summary'] = $this->summarize($body, 400, FALSE);
+
+    // Preheader with a maximum of 100 characters.
+    $preheader = $this->summarize($body, 100, TRUE);
+    $variables['#preheader'] = $preheader;
+
+    $country_name = $data['primary_country']['name'];
+    $country_id = $data['primary_country']['id'];
+
+    // Prefooter.
+    $prefooter_parts = [
+      [
+        'text' => $country_name . ' on ReliefWeb',
+        'link' => '/taxonomy/term' . $country_id,
+      ],
+      [
+        'text' => $country_name . ' updates',
+        'link' => '/updates',
+        'options' => [
+          'query' => [
+            // Country facet filter.
+            'country' => $country_id,
+          ],
+        ],
+      ],
+      [
+        'text' => 'OCHA Situation Reports',
+        'link' => '/updates',
+        'options' => [
+          'query' => [
+            // Soruce facet filter: 'OCHA'.
+            'source' => 1503,
+            // Content format facet filter: 'Situation Report'.
+            'format' => 10,
+          ],
+        ],
+      ],
+    ];
+    // Add link to Digital sitrep if there is one.
+    $dsr_url = $this->config->get('ocha_digital_sitrep_url', 'https://reports.unocha.org/');
+    if (isset($data['origin']) && strpos($data['origin'], $dsr_url) === 0) {
+      array_unshift($prefooter_parts, [
+        'text' => 'Digital Situation Report for ' . $country_name,
+        'link' => $data['origin'],
+      ]);
+    }
+    $variables['#prefooter'] = $this->prepareFooterLinks($prefooter_parts);
+
+    return $variables;
+  }
+
+  /**
+   * Generate the email HTML content.
+   *
+   * @param array $subscription
+   *   Subscription information.
+   * @param array $data
+   *   API data for the notification.
+   *
+   * @return string
+   *   HTML content.
+   */
+  protected function generateEmailContentCountry(array $subscription, array $data) {
+    $variables = [
+      '#theme' => 'reliefweb_subscriptions__country',
+      '#subscription_type' => 'countries',
+    ];
+
+    $variables['#today'] = date_create('now')->format('j M Y');
+    $variables['#preheader'] = $this->getPreheaderTitles($data);
+
+    $items = [];
+    foreach ($data as $fields) {
+      $item = [];
+      $info = [];
+      $item['url'] = $fields['url_alias'];
+
+      // Title.
+      $title = $fields['title'];
+      $item['title'] = $title;
+
+      // Sources.
+      $sources = [];
+      foreach (array_slice($fields['source'], 0, 3) as $source) {
+        $sources[] = $source['shortname'] ?? $source['name'];
+      }
+      $info[] = implode(', ', $sources);
+
+      // Date.
+      $info[] = date_create($fields['date']['original'])->format('j M Y');
+      $item['info'] = implode(' &ndash; ', $info);
+
+      // Summary.
+      $body = !empty($fields['body']) ? check_markup($fields['body'], 'markdown') : '';
+      $item['summary'] = $this->summarize($body, 400, FALSE);
+
+      // Image.
+      if (!empty($fields['file'][0]['preview']['url-thumb'])) {
+        $item['image']['url'] = $fields['file'][0]['preview']['url-thumb'];
+        $item['image']['description'] = $fields['file'][0]['description'] ?? 'Report preview';
+      }
+      $items[] = $item;
+    }
+    $variables['#items'] = $items;
+
+    $country_name = $subscription['country'];
+    $country_id = str_replace('country_updates_', '', $subscription['id']);
+
+    $variables['#country_name'] = $country_name;
+
+    // Prefooter.
+    $prefooter_parts = [
+      [
+        'text' => $country_name . ' on ReliefWeb',
+        'link' => '/taxonomy/term/' . $country_id,
+      ],
+      [
+        'text' => $country_name . ' updates',
+        'link' => '/updates',
+        'options' => [
+          'query' => [
+            'country' => $country_id,
+          ],
+        ],
+      ],
+      [
+        'text' => 'All updates on ReliefWeb',
+        'link' => '/updates',
+      ],
+    ];
+    $variables['#prefooter'] = $this->getPrefooterLinks($prefooter_parts);
+
+    return $variables;
+  }
+
+  /**
    * Get the email styles to be used inline.
    *
    * @param string $file
@@ -948,7 +1347,9 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
       if (!empty($part['options'])) {
         $options = $options + $part['options'];
       }
-      $links[] = l($part['text'], $part['link'], $options);
+
+      $url = Url::fromUserInput($part['link'], $options);
+      $links[] = Link::fromTextAndUrl($part['text'], $url)->toString();
     }
 
     return implode(' | ', $links);
@@ -1002,7 +1403,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     }
     // If for some reason we cannot compute the next run date, we set up one 1
     // week later so that we are not fully blocked.
-    catch (Exception $exception) {
+    catch (\Exception $exception) {
       $this->logger->error('Unable to compute the next run date for {name} ({frequency})', [
         'name' => $subscription['name'],
         'frequency' => $subscription['frequency'],
@@ -1034,7 +1435,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     }
     // If for some reason we cannot compute the previous run date, we set up one
     // a week before so that we are not fully blocked.
-    catch (Exception $exception) {
+    catch (\Exception $exception) {
       $this->logger->error('Unable to compute the previous run date for {name} ({frequency})', [
         'name' => $subscription['name'],
         'frequency' => $subscription['frequency'],
@@ -1140,7 +1541,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
   /**
    * Get the API data for the entity that triggered a notification.
    *
-   * @param array $notification
+   * @param object $notification
    *   Notification information with the entity bundle and id.
    * @param array $subscription
    *   Subscription information.
@@ -1148,23 +1549,24 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    * @return array
    *   API data for the entity (entity fields).
    */
-  protected function getTriggeredNotificationData(array $notification, array $subscription) {
+  protected function getTriggeredNotificationData(object $notification, array $subscription) {
+    $this->logger->info('getTriggeredNotificationData');
+
     // Skip if there is no entity_id/bundle.
-    if (empty($notification['entity_id']) || empty($notification['bundle'])) {
+    if (empty($notification->entity_id) || empty($notification->bundle)) {
       return [];
     }
 
     // Skip if the bundles don't match.
-    if ($subscription['bundle'] !== $notification['bundle']) {
+    if ($subscription['bundle'] !== $notification->bundle) {
       return [];
     }
-    $this->logger->info('getTriggeredNotificationData');
     $payload = $subscription['payload'] ?? [];
 
     // Add a filter to get only the entity for which to send the notification.
     $filter = [
       'field' => 'id',
-      'value' => $notification['entity_id'],
+      'value' => $notification->entity_id,
     ];
     if (!empty($payload['filter'])) {
       $payload['filter'] = [
@@ -1184,12 +1586,12 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     $payload['limit'] = 1;
 
     // Retrieve the data from the API.
-    $result = $this->query($notification, $subscription, $payload);
+    $result = $this->query((array) $notification, $subscription, $payload);
     if (empty($result) || empty($result['data'][0]['fields'])) {
       $this->logger->info('No content, skipping triggered notification {name} for {bundle} {entity_id}.', [
         'name' => $subscription['name'],
-        'bundle' => $notification['bundle'],
-        'entity_id' => $notification['entity_id'],
+        'bundle' => $notification->bundle,
+        'entity_id' => $notification->entity_id,
       ]);
       return [];
     }

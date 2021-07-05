@@ -16,12 +16,19 @@
 
 {% include 'modules/custom/reliefweb_subscriptions/templates/reliefweb-subscriptions--header.html.twig' %}
 
-  <h1 class="email-title">GENERIC ReliefWeb Headlines / <span class="email-title-date">{{ 'now'|date('j M Y') }}</span></h1>
+  <h1 class="email-title">COUNTRIES ReliefWeb Headlines / <span class="email-title-date">{{ 'now'|date('j M Y') }}</span></h1>
 
   {% for item in items %}
     <div class="email-resource">
       <h2 class="email-resource-title"><a class="email-resource-title-link" href="{{ item.url }}">{{ item.title }}</a></h2>
       <div class="email-resource-info">{{ item.info|raw }}</div>
+
+      {% if item.image %}
+        <div class="email-resource-image">
+          <img src="{{ item.image.url }}" alt="{{ item.image.description }}">
+        </div>
+      {% endif %}
+
       <div class="email-resource-teaser">
         {{ item.summary|raw }}
         <a class="email-resource-read-more" href="{{ item.url }}">Read more</a>
