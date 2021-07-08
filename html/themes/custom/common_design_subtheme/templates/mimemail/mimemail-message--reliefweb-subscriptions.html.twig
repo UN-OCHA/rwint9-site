@@ -40,6 +40,106 @@
       <!-- {{ css }} -->
     </style>
 {% endif %}
+    <style type="text/css">
+      /**
+       * Email styling is limited.
+       *
+       * Only use classes. They will be converted to inline styling.
+       *
+       * Do not use double quotes.
+       */
+      .body {
+        font-family: Arial, sans-serif;
+        font-size: 16px;
+        line-height: 24px;
+        color: #333;
+        padding: 10px;
+        margin: 10px;
+        width: 520px;
+      }
+
+      .reliefweb-logo {
+        margin-bottom: 20px;
+      }
+
+      .preheader {
+        display: none!important;
+        max-height: 0;
+        max-width: 0;
+        overflow: hidden;
+        visibility: hidden;
+        font-size: 0;
+        line-height: 0;
+        opacity: 0;
+        margin: 0;
+        padding: 0;
+        mso-hide: all;
+      }
+      .header {
+        margin-bottom: 20px;
+      }
+      .prefooter {
+        padding: 15px 0 0;
+        font-size: 12px;
+      }
+      .prefooter-link {
+        text-decoration: underline;
+        color: #18b;
+      }
+      .footer {
+        padding: 15px 0 0;
+        font-size: 11px;
+      }
+      .footer-link {
+        text-decoration: underline;
+        color: #999;
+      }
+
+      .email-title {
+        padding: 0 0 10px;
+        margin: 0;
+        font-family: Georgia, serif;
+        font-size: 20px;
+        font-weight: normal;
+        line-height: 20px;
+        border-bottom: 1px solid #333;
+      }
+      .email-title-date {
+        font-size: 16px;
+        color: #e55;
+      }
+
+      .email-resource {
+        border-bottom: 1px dotted #ccc;
+        padding: 15px 0 14px;
+      }
+      .email-resource-title {
+        font-size: 17px;
+        font-weight: bold;
+        line-height: 24px;
+        margin: 0;
+      }
+      .email-resource-title-link {
+        color: #333;
+        text-decoration: none;
+      }
+      .email-resource-info {
+        font-weight: bold;
+        font-size: 13px;
+        color: #999;
+        padding: 8px 0 8px;
+      }
+      .email-resource-teaser {
+        font-family: Aria, sans-serif;
+        font-size: 16px;
+        line-height: 24px;
+      }
+      .email-resource-read-more {
+        font-weight: bold;
+        color: #18b;
+        text-decoration: underline;
+      }
+    </style>
   </head>
   <body id="mimemail-body"{{ attributes.addClass(classes) }}>
     <div id="center">
