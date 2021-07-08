@@ -27,6 +27,7 @@ use Drupal\Core\Url;
 use Drupal\reliefweb_api\Services\ReliefWebApiClient;
 use Drupal\reliefweb_subscriptions\CronExpressionParser;
 use Drush\Commands\DrushCommands;
+use Pelago\Emogrifier\CssInliner;
 
 /**
  * Docstore Drush commandfile.
@@ -684,6 +685,9 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     // Remove unnecessary whitespaces.
     $html = preg_replace('/(\s)\s+/', '$1', $html);
 
+    // Inline css.
+    $css = file_get_contents('themes/custom/common_design_subtheme/css/mail.css');
+    $html = CssInliner::fromHtml($html)->inlineCss($css)->renderBodyContent();
     return $html;
   }
 
