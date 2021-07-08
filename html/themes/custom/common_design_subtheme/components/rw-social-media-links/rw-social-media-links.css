@@ -1,0 +1,45 @@
+/**
+ * Social media links.
+ *
+ * Block with the a list of links to social media platforms.
+ *
+ * Scope: #main-content .rw-sectioned-content section.rw-entity-social-media-links
+ */
+#main-content .rw-sectioned-content section.rw-entity-social-media-links ul {
+  /* Compensate the top margin of the li. */
+  /*margin: -16px 0 0 0;*/
+  padding: 0;
+  list-style: none;
+}
+#main-content .rw-sectioned-content section.rw-entity-social-media-links li {
+  /* To avoid borders on the next column. */
+  display: inline-block;
+  width: 100%;
+  margin: 16px 0 0 0;
+  padding: 12px;
+  border: 1px solid #e6ecef;
+}
+@media screen and (min-width: 768px) {
+  #main-content .rw-sectioned-content section.rw-entity-social-media-links ul {
+    column-count: 2;
+  }
+}
+@media screen and (min-width: 1024px) {
+  #main-content .rw-sectioned-content section.rw-entity-social-media-links ul {
+    column-count: 3;
+  }
+}
+
+
+/* External links. Display an icon after the link. */
+#main-content a[target="_blank"][rel="noopener"]:after {
+  content: "";
+  display: inline-block;
+  vertical-align: middle;
+  height: 12px;
+  width: 12px;
+  /* The top margin is to have a better vertical alignment. */
+  margin: -2px 0 0 6px;
+  overflow: hidden;
+  background: var(--rw-icons--common--external-link--12--dark-blue);
+}

@@ -146,6 +146,13 @@ rw-search:
     theme:
       components/rw-search/rw-search.css: {}
 
+rw-social-media-links:
+  css:
+    theme:
+      components/rw-social-media-links/rw-social-media-links.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+
 # Filter/value selection.
 rw-selection:
   css:
