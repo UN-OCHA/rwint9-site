@@ -34,6 +34,7 @@
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <base target="_blank" />
     <title>Reliefweb mail template</title>
 {% if css %}
     <style type="text/css">
@@ -42,10 +43,6 @@
 {% endif %}
   </head>
   <body id="mimemail-body"{{ attributes.addClass(classes) }}>
-    <div id="center">
-      <div id="main">
-        {{ body|raw }}
-      </div>
-    </div>
+    {{ body|raw }}
   </body>
 </html>
