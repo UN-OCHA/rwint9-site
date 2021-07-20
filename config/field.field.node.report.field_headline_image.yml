@@ -4,7 +4,7 @@ status: true
 dependencies:
   config:
     - field.storage.node.field_headline_image
-    - media.type.image_headline
+    - media.type.image_report
     - node.type.report
 id: node.report.field_headline_image
 field_name: field_headline_image
@@ -20,7 +20,7 @@ settings:
   handler: 'default:media'
   handler_settings:
     target_bundles:
-      image_headline: image_headline
+      image_report: image_report
     sort:
       field: mid
       direction: DESC
