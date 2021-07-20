@@ -1,10 +1,6 @@
 id: reliefweb_user
 label: Migrate ReliefWeb users.
-migration_group: reliefweb
-dependencies:
-  enforced:
-    module:
-      - reliefweb_migrate
+migration_group: reliefweb_base
 source:
   plugin: reliefweb_user
 destination:

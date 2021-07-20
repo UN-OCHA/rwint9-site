@@ -15,6 +15,8 @@
  *   - value: simple, date, array with start and end date or list of tags
  *   - count: only for taglist - number of tags to display
  *   - sort: only for taglist - sort property for the tags
+ *   - label_attributes: attributes for the label
+ *   - value_attributes: attributes for the value
  *
  * @todo better date formatting to respect language format.
  * @todo review the spacing notably for single values.
@@ -33,20 +35,22 @@
   {% for name, data in meta %}
     {% set classes = data.classes ?? [] %}
     {% set label = data.label ?? name|replace({'-': ' ', '_': ' '})|capitalize %}
+    {% set label_attributes = data.label_attributes ?? create_attribute() %}
+    {% set value_attributes = data.value_attributes ?? create_attribute() %}
 
     {# Label. #}
-    <dt{{ create_attribute().addClass([
+    <dt{{ label_attributes.addClass([
       'rw-entity-meta__tag-label',
       'rw-entity-meta__tag-label--' ~ name,
     ]) }}>{{ label }}</dt>
 
     {# Value. #}
-    <dd{{ create_attribute().addClass([
+    <dd{{ value_attributes.addClass([
       'rw-entity-meta__tag-value',
       'rw-entity-meta__tag-value--' ~ name,
       'rw-entity-meta__tag-value--' ~ data.type,
       name == last ? 'rw-entity-meta__tag-value--last',
-    ]|merge(classes|map(class => 'rw-entity-meta__tag-value--' ~ name ~ '--' ~ class))) }}>
+    ]) }}>
       {# Simple value. #}
       {% if data.type == 'simple' %}
         {{- data.value -}}

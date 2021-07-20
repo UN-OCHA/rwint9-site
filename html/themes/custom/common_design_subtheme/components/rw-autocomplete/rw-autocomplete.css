@@ -15,17 +15,17 @@
  *   </ul>
  * </div>
  */
-.rw-autocomplete {
+#main-content .rw-autocomplete {
   position: relative;
   width: 100%;
   /* The padding is for the button to show all options. */
   padding-right: 60px;
 }
-.rw-autocomplete-input {
+#main-content .rw-autocomplete-input {
   /* The show all button is attached to the input. */
   border-right: none;
 }
-.rw-autocomplete-show-all {
+#main-content .rw-autocomplete-show-all {
   position: absolute;
   top: 0;
   right: 0;
@@ -37,7 +37,7 @@
   text-indent: 60px;
 }
 /* Icon to show the collpased/expanded state of the show all button. */
-.rw-autocomplete-show-all:before {
+#main-content .rw-autocomplete-show-all:before {
   position: absolute;
   /* The positions combined with the margins center the icon horizontally and
    * vertically. */
@@ -51,11 +51,11 @@
   content: "";
   background: var(--rw-icons--toggle--down--18--white);
 }
-.rw-autocomplete[aria-expanded="true"] .rw-autocomplete-show-all:before {
+#main-content .rw-autocomplete[aria-expanded="true"] .rw-autocomplete-show-all:before {
   background: var(--rw-icons--toggle--up--18--white);
 }
 /* List of autocomplete suggestions. */
-.rw-autocomplete-selector {
+#main-content .rw-autocomplete-selector {
   position: absolute;
   /* Ensures the popup is above the content.
    * @todo Review the value. */
@@ -74,7 +74,7 @@
   background: white;
   box-shadow: 0 1px 4px 1px rgba(var(--cd-rgb-reliefweb-dark-grey), 0.3);
 }
-.rw-autocomplete-suggestion {
+#main-content .rw-autocomplete-suggestion {
   margin: 0;
   padding: 8px;
   /* Suggestions are clickable. */
@@ -86,10 +86,10 @@
   line-height: 1.5;
 }
 /* Currently selected suggestion. */
-.rw-autocomplete-suggestion[aria-selected] {
+#main-content .rw-autocomplete-suggestion[aria-selected] {
   background: var(--cd-reliefweb-light-grey);
 }
 /* Highlight the parts of the suggestions that match the query. */
-.rw-autocomplete-suggestion span {
+#main-content .rw-autocomplete-suggestion span {
   font-weight: bold;
 }

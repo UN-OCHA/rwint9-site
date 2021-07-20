@@ -988,6 +988,7 @@ class AdvancedSearch {
     $language_manager = \Drupal::languageManager();
     $current_langcode = $language_manager->getCurrentLanguage()->getId();
     $default_langcode = $language_manager->getDefaultLanguage()->getId();
+    $langcodes = array_unique([$current_langcode, $default_langcode]);
 
     // Query to return the id, name and optionally shortname of the terms
     // for the filter's vocabulary.
@@ -998,7 +999,7 @@ class AdvancedSearch {
       // Only return publicly accessible terms.
       ->condition('td.status', 1)
       // Return the terms in the current and default languages.
-      ->condition('td.langcode', [$current_langcode, $default_langcode], 'IN');
+      ->condition('td.langcode', $langcodes, 'IN');
 
     // Exclude some terms.
     if (!empty($filter['exclude'])) {
@@ -1008,7 +1009,7 @@ class AdvancedSearch {
 
     // Filter by the given values if any.
     if (!empty($values)) {
-      $query->condition('td.tid', $values);
+      $query->condition('td.tid', $values, 'IN');
     }
 
     // Add the shortname if indicated.

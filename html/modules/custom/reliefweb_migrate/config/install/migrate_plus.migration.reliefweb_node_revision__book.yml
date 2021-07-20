@@ -1,0 +1,8 @@
+id: reliefweb_node_revision__book
+label: Migrate ReliefWeb book page revisions.
+migration_group: reliefweb_node_revision
+source:
+  bundle: book
+migration_dependencies:
+  required:
+    - reliefweb_node__book

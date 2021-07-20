@@ -92,7 +92,7 @@ class HtmlSanitizer {
     // Add a space before the heading '#' which is fine as ReliefWeb doesn't use
     // hash tags.
     // @see https://talk.commonmark.org/t/heading-not-working/819/42
-    $text = preg_replace('/^(#+)(\S)/m', '$1 $2', $text);
+    $text = preg_replace('/^(#+)([^# ])/m', '$1 $2', $text);
 
     // Convert markdown to HTML.
     // @todo add options notably to allow ID attributes.

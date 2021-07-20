@@ -44,6 +44,7 @@ rw-country:
   css:
     theme:
       components/rw-country/rw-country.css: {}
+      components/rw-country/rw-country-list.css: {}
 
 # Datepicker widget.
 rw-datepicker:
@@ -74,6 +75,11 @@ rw-entity-meta:
   css:
     theme:
       components/rw-entity-meta/rw-entity-meta.css: {}
+
+rw-form:
+  css:
+    theme:
+      components/rw-form/rw-form.css: {}
 
 rw-headlines:
   css:
@@ -111,6 +117,39 @@ rw-opportunities:
   css:
     theme:
       components/rw-opportunities/rw-opportunities.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+
+rw-organizations:
+  css:
+    theme:
+      components/rw-organizations/rw-organizations.css: {}
+
+rw-river:
+  css:
+    theme:
+      components/rw-river/rw-river.css: {}
+      components/rw-river/rw-river-results.css: {}
+      components/rw-river/rw-river-views.css: {}
+
+rw-river-letter-navigation:
+  css:
+    theme:
+      components/rw-river-letter-navigation/rw-river-letter-navigation.css: {}
+  js:
+    components/rw-river-letter-navigation/rw-river-letter-navigation.js: {}
+  dependencies:
+    - common_design/cd-dropdown
+
+rw-search:
+  css:
+    theme:
+      components/rw-search/rw-search.css: {}
+
+rw-social-media-links:
+  css:
+    theme:
+      components/rw-social-media-links/rw-social-media-links.css: {}
   dependencies:
     - common_design_subtheme/rw-icons
 
@@ -158,6 +197,11 @@ cd-card:
   css:
     theme:
       components/cd-card/cd-card.css: {}
+
+cd-page-title:
+  css:
+    theme:
+      components/cd-page-title/cd-page-title.css: {}
 
 cd-tag:
   css:

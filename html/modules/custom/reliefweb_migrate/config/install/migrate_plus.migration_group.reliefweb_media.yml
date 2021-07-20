@@ -1,0 +1,49 @@
+id: reliefweb_media
+label: ReliefWeb Migration - Media
+description: Migrate ReliefWeb media from Drupal 7 to Drupal 9.
+source_type: Drupal 7
+shared_configuration:
+  migration_tags:
+    - media
+  dependencies:
+    enforced:
+      module:
+        - reliefweb_migrate
+  source:
+    key: rwint7
+    plugin: reliefweb_media
+  destination:
+    plugin: entity:media
+  process:
+    mid: fid
+    uid:
+      plugin: static_map
+      default_value: 2
+      source: uid
+      # Map the anonymous and super users to the System user.
+      map:
+        0: 2
+        1: 2
+    name: filename
+    # Skip the langcode, it will be set to the default language for the entity
+    # and bundle, which is "en" in our case.
+    #langcode:
+    #  plugin: default_value
+    #  source: language
+    #  default_value: 'en'
+    status: status
+    # Drupal 7 didn't keep track of the file's creation or update time -- all it
+    # had was the vague "timestamp" column. So we'll use it for both.
+    created: timestamp
+    changed: timestamp
+    # Image field see media_entity.bundle.image.yml.
+    field_media_image/target_id: fid
+    field_media_image/width: width
+    field_media_image/height: height
+  migration_dependencies:
+    required:
+      - reliefweb_image
+dependencies:
+  enforced:
+    module:
+      - reliefweb_migrate

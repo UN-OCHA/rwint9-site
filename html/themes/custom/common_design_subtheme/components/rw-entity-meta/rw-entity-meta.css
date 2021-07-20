@@ -161,26 +161,17 @@
   background: #f65c51;
 }
 
+#main-content .taxonomy-term--disaster--full dl.rw-entity-meta dd.rw-entity-meta__tag-value--status--past:before {
+  content: none;
+}
+
 /**
  * Content format.
  *
- * Hide the label and display an icon in front of the content format.
+ * Display an icon in front of the content format.
  *
- * Scope: #main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-label--status
+ * Scope: #main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--status--format
  */
-/* Visually hidden. */
-#main-content article.taxonony-term--country--full dl.rw-entity-meta dt.rw-entity-meta__tag-label--status {
-  position: absolute;
-  height: 1px;
-  width: 1px;
-  clip-path: inset(100%);
-  clip: rect(0,0,0,0);
-  overflow: hidden;
-  margin: -1px;
-  padding: 0;
-  border: none;
-  white-space: nowrap;
-}
 #main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--format:before {
   content: "";
   display: inline-block;
@@ -201,3 +192,4 @@
 #main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--format.interactive:before {
   background: var(--rw-icons--content--interactive--16--dark-grey);
 }
+

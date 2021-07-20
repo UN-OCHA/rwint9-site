@@ -1,0 +1,26 @@
+id: reliefweb_media__image_blog_post__field_image
+label: Migrate ReliefWeb image media for blog posts.
+migration_group: reliefweb_media
+dependencies:
+  enforced:
+    module:
+      - reliefweb_migrate
+source:
+  field: field_image
+  entity_type: node
+  bundle: blog_post
+destination:
+  default_bundle: image_blog_post
+process:
+  # Fields.
+  field_copyright/value:
+    plugin: skip_on_empty
+    method: process
+    source: alt
+  field_description/value:
+    plugin: skip_on_empty
+    method: process
+    source: title
+migration_dependencies:
+  required:
+    - reliefweb_image

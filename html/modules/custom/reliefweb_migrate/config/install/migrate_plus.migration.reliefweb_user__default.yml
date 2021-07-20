@@ -1,10 +1,6 @@
 id: reliefweb_user__default
 label: Migrate ReliefWeb default users.
-migration_group: reliefweb
-dependencies:
-  enforced:
-    module:
-      - reliefweb_migrate
+migration_group: reliefweb_base
 source:
   plugin: embedded_data
   data_rows:

@@ -1,0 +1,40 @@
+{#
+
+/**
+ * @file
+ * Template file for a country entity article in a river.
+ *
+ * Available variables;
+ * - level: heading level (defaults to 3)
+ * - attributes: article attributes
+ * - entity: the article entity's data as an associative array with notably:
+ *   - url: url to the full article/page
+ *   - title: article title
+ *   - langcode: article language code
+ *   - id: entity id
+ *   - bundle: entity bundle.
+ *   - tags (optional): list of terms the entity is tagged with
+ *   - various properties like posting date, status etc.
+ */
+
+#}
+<article{{ attributes
+  .addClass([
+    'rw-river-article',
+    'rw-river-article--' ~ entity.bundle,
+  ])
+  .setAttribute('data-id', entity.id)
+  .setAttribute('data-country-status', entity.status)
+}}>
+  {# Header with country slug and title. #}
+  <header class="rw-river-article__header">
+    {# Title. #}
+    {{ render_var({
+      '#theme': 'reliefweb_rivers_river_article_title',
+      '#level': level,
+      '#langcode': entity.langcode,
+      '#url': entity.url,
+      '#title': entity.title,
+    }) }}
+  </header>
+</article>

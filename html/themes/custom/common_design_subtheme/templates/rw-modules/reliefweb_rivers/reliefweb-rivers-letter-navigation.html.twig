@@ -1,0 +1,9 @@
+{% set attributes = attributes
+  .setAttribute('data-cd-toggable', title ?? 'Jump to letter'|t)
+  .setAttribute('data-cd-icon', 'arrow-down')
+  .setAttribute('data-cd-component', 'rw-river-letter-navigation')
+%}
+
+{{ attach_library('common_design_subtheme/rw-river-letter-navigation') }}
+
+{% include '@reliefweb_rivers/reliefweb-rivers-letter-navigation.html.twig' %}

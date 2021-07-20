@@ -75,6 +75,8 @@ function reliefweb_rivers_theme() {
       'variables' => [
         // The headling level.
         'level' => 2,
+        // The section id.
+        'id' => 'river-letter-navigation',
         // Section attributes.
         'attributes' => NULL,
         // Section title.
@@ -206,9 +208,10 @@ function reliefweb_rivers_theme() {
     ],
   ];
 
-  // Add themes for the main riverarticles.
+  // Add themes for the main river articles.
   $bundles = [
     'blog_post',
+    'country',
     'disaster',
     'job',
     'report',

@@ -9,7 +9,7 @@ field_name: field_description
 entity_type: media
 type: string
 settings:
-  max_length: 255
+  max_length: 1024
   is_ascii: false
   case_sensitive: false
 module: core

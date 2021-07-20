@@ -1,10 +1,6 @@
 id: reliefweb_url_alias
 label: Migrate ReliefWeb URL aliases
-migration_group: reliefweb
-dependencies:
-  enforced:
-    module:
-      - reliefweb_migrate
+migration_group: reliefweb_extra
 source:
   plugin: reliefweb_url_alias
   constants:
@@ -32,9 +28,3 @@ process:
   #  plugin: default_value
   #  source: language
   #  default_value: 'en'
-migration_dependencies:
-  required:
-    # This is just to move it at the end of the migration list so that
-    # we can skip adding redirects for url aliases that were generated
-    # when migrating the nodes and terms.
-    - reliefweb_taxonomy_term__country

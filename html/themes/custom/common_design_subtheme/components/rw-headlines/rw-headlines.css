@@ -19,7 +19,7 @@
   /* Compensate the half-leading space from the title line-height. */
   margin-top: -5px;
 }
-#main-content section article header p.country {
+#main-content section article header p.rw-entity-country-slug {
   margin: 2px 6px 0 0;
   padding: 1px 8px;
   font-size: 14px;
@@ -79,20 +79,20 @@
  * Meta information like source or publication date, generally in the header or
  * footer.
  *
- * Scope: #main-content article dl.meta
+ * Scope: #main-content article dl.rw-entity-meta
  */
-#main-content article dl.meta {
+#main-content article dl.rw-entity-meta{
   margin: 0;
 }
-#main-content article dl.meta + dl.meta {
+#main-content article dl.rw-entity-meta + dl.rw-entity-meta {
   margin-top: 4px;
 }
-#main-content article dl.meta:after {
+#main-content article dl.rw-entity-meta:after {
   display: block;
   clear: both;
   content: "";
 }
-#main-content article dl.meta dt {
+#main-content article dl.rw-entity-meta dt {
   display: inline;
   float: left;
   clear: both;
@@ -102,45 +102,45 @@
   /* To have enough tapping space between links. */
   line-height: 29px;
 }
-#main-content article dl.meta dt:after {
+#main-content article dl.rw-entity-meta dt:after {
   content: ": ";
 }
-#main-content article dl.meta dd {
+#main-content article dl.rw-entity-meta dd {
   margin: 0;
   /* To have enough tapping space between links. */
   line-height: 30px;
 }
-#main-content article dl.meta dd ul,
-#main-content article dl.meta dd li {
+#main-content article dl.rw-entity-meta dd ul,
+#main-content article dl.rw-entity-meta dd li {
   display: inline;
   margin: 0;
   padding: 0;
   list-style: none;
 }
-#main-content article dl.meta dd li:after {
+#main-content article dl.rw-entity-meta dd li:after {
   content: ", ";
 }
 /* This will be ignored in IE8 but it's not a big deal. */
-#main-content article dl.meta dd li:last-child:after,
-#main-content article dl.meta dd li[data-last]:after {
+#main-content article dl.rw-entity-meta dd li:last-child:after,
+#main-content article dl.rw-entity-meta dd li[data-last]:after {
   content: none;
 }
-#main-content article dl.meta dd li[data-more]:before {
+#main-content article dl.rw-entity-meta dd li[data-more]:before {
   content: " + ";
 }
-#main-content > article header dl.meta {
+#main-content > article header dl.rw-entity-meta {
   margin: 8px 0 -6px 0;
 }
 /* Show the meta information inline. */
 @media screen and (min-width: 480px) {
-  #main-content article header dl.meta dt {
+  #main-content article header dl.rw-entity-meta dt {
     float: none;
   }
-  #main-content article header dl.meta dd {
+  #main-content article header dl.rw-entity-meta dd {
     display: inline;
   }
   /* Separator. */
-  #main-content article header dl.meta dd:after {
+  #main-content article header dl.rw-entity-meta dd:after {
     display: inline-block;
     width: 4px;
     height: 4px;
@@ -151,7 +151,7 @@
     border-radius: 4px;
     background: #2e3436;
   }
-  #main-content article header dl.meta dd:last-of-type:after {
+  #main-content article header dl.rw-entity-meta dd:last-of-type:after {
     content: none;
   }
 }
@@ -161,23 +161,23 @@
  *
  * Scope: #main-content section article
  */
-#main-content section article dl.meta {
+#main-content section article dl.rw-entity-meta {
   margin: 0;
 }
-#main-content section article dl.meta dt {
+#main-content section article dl.rw-entity-meta dt {
   display: inline-block;
   float: none;
   font-size: 14px;
 }
-#main-content section article dl.meta dd {
+#main-content section article dl.rw-entity-meta dd {
   display: inline-block;
   font-size: 15px;
 }
-#main-content section article dl.meta.core {
+#main-content section article dl.rw-entity-meta--core {
   /* #2e3436 with 0.85 opacity on white. */
   color: #4d5254;
 }
-#main-content section article dl.meta.core dd:after {
+#main-content section article dl.rw-entity-meta--core dd:after {
   display: inline-block;
   width: 4px;
   height: 4px;
@@ -188,20 +188,20 @@
   border-radius: 4px;
   background: #2e3436;
 }
-#main-content section article dl.meta.core dd.created:after {
+#main-content section article dl.rw-entity-meta--core dd.created:after {
   margin-left: 12px;
 }
 /* This will be ignored in IE8 but it's not a big deal. */
-#main-content section article dl.meta.core dd:last-of-type:after,
-#main-content section article dl.meta.core dd[data-last]:after {
+#main-content section article dl.rw-entity-meta--core dd:last-of-type:after,
+#main-content section article dl.rw-entity-meta--core dd[data-last]:after {
   content: none;
 }
 /* Display meta one per line on smaller screen to improve readability. */
 @media all and (max-width: 479px) {
-  #main-content section article dl.meta.core dd {
+  #main-content section article dl.rw-entity-meta--core dd {
     display: inline;
   }
-  #main-content section article dl.meta.core dd:after {
+  #main-content section article dl.rw-entity-meta--core dd:after {
     display: block;
     width: 0;
     height: 0;

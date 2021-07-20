@@ -5,6 +5,7 @@ dependencies:
   config:
     - core.entity_form_mode.media.media_library
     - field.field.media.image_blog_post.field_copyright
+    - field.field.media.image_blog_post.field_description
     - field.field.media.image_blog_post.field_media_image
     - image.style.thumbnail
     - media.type.image_blog_post
@@ -15,8 +16,24 @@ targetEntityType: media
 bundle: image_blog_post
 mode: media_library
 content:
+  field_copyright:
+    type: string_textfield
+    weight: 2
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_description:
+    type: string_textfield
+    weight: 3
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
   field_media_image:
-    weight: 5
+    weight: 1
     settings:
       progress_indicator: throbber
       preview_image_style: thumbnail
@@ -33,7 +50,6 @@ content:
     region: content
 hidden:
   created: true
-  field_copyright: true
   langcode: true
   path: true
   status: true

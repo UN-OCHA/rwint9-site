@@ -26,13 +26,18 @@
     'rw-river-page',
     'rw-river-page--' ~ river|clean_class,
     view ? 'rw-river-page--' ~ river|clean_class ~ '--' ~ view|clean_class,
+    views ? 'rw-river-page--with-views',
+    search ? 'rw-river-page--with-search',
+    letter_navigation ? 'rw-river-page--with-letter-navigation',
+    advanced_search ? 'rw-river-page--with-advanced-search',
+    links ? 'rw-river-page--with-links',
   ])
 }}>
   <header class="rw-river-page__header">
     <h1{{ title_attributes
       .addClass([
         'rw-river-page__title',
-        'visually-hidden',
+        views ? 'visually-hidden',
       ])
     }}>{{ title }}</h1>
 

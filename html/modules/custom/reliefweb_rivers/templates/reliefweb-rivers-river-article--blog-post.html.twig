@@ -27,13 +27,7 @@
   .setAttribute('data-id', entity.id)
 }}>
   {# Header with country slug and title. #}
-  <header>
-    {# Country slug. #}
-    {{ render_var({
-      '#theme': 'reliefweb_rivers_river_article_country_slug',
-      '#countries': entity.tags.country,
-    }) }}
-
+  <header class="rw-river-article__header">
     {# Title. #}
     {{ render_var({
       '#theme': 'reliefweb_rivers_river_article_title',
@@ -43,7 +37,9 @@
       '#title': entity.title,
     }) }}
 
+    {% if entity.author is not empty %}
     <p class="rw-river-article__author">{{ 'By @author'|t({'@author': entity.author}) }}</p>
+    {% endif %}
   </header>
 
   {# Blog post summary, it's already an escaped HTML string. #}

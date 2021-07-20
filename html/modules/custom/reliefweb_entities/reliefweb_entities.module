@@ -14,8 +14,13 @@ use Drupal\Core\Render\BubbleableMetadata;
  */
 function reliefweb_entities_entity_bundle_info_alter(&$bundles) {
   $bundles['taxonomy_term']['country']['class'] = 'Drupal\reliefweb_entities\Entity\Country';
+  $bundles['taxonomy_term']['country']['label'] = 'Country';
+
   $bundles['taxonomy_term']['disaster']['class'] = 'Drupal\reliefweb_entities\Entity\Disaster';
+  $bundles['taxonomy_term']['disaster']['label'] = 'Disaster';
+
   $bundles['taxonomy_term']['source']['class'] = 'Drupal\reliefweb_entities\Entity\Source';
+  $bundles['taxonomy_term']['source']['label'] = 'Country';
 }
 
 /**
@@ -107,8 +112,10 @@ function reliefweb_entities_theme() {
         'title' => t('Description'),
         // Section title attributes.
         'title_attributes' => NULL,
-        // The description shold be a safe HTML string.
+        // The description should be a safe HTML string.
         'description' => '',
+        // Description attributes.
+        'description_attributes' => NULL,
       ],
     ],
     'reliefweb_entities_entity_details' => [

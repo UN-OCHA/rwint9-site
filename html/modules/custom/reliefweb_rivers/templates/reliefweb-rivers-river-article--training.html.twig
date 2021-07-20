@@ -26,7 +26,7 @@
   .setAttribute('data-id', entity.id)
 }}>
   {# Header with country slug and title. #}
-  <header>
+  <header class="rw-river-article__header">
     {# Country slug. #}
     {{ render_var({
       '#theme': 'reliefweb_entities_entity_country_slug',
@@ -63,7 +63,7 @@
     {# Training dates. #}
     {% if entity.start is empty %}
       {% set meta = meta|merge({
-        'status': {
+        'training-date': {
           'type': 'simple',
           'label': 'Status'|t,
           'value': 'Ongoing course'|t,

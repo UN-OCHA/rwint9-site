@@ -1,0 +1,35 @@
+uuid: fc99e992-0fca-4d44-bc85-b0a783da12cd
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.media.media_library
+    - field.field.media.image_book.field_copyright
+    - field.field.media.image_book.field_description
+    - field.field.media.image_book.field_media_image
+    - image.style.medium
+    - media.type.image_book
+  module:
+    - image
+id: media.image_book.media_library
+targetEntityType: media
+bundle: image_book
+mode: media_library
+content:
+  thumbnail:
+    type: image
+    label: hidden
+    settings:
+      image_style: medium
+      image_link: ''
+    weight: 0
+    third_party_settings: {  }
+    region: content
+hidden:
+  created: true
+  field_copyright: true
+  field_description: true
+  field_media_image: true
+  langcode: true
+  name: true
+  uid: true

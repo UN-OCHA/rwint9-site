@@ -219,6 +219,10 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    */
   public function getRiverViews() {
     $views = $this->getViews();
+    if (empty($views)) {
+      return [];
+    }
+
     $view = $this->getSelectedView();
     $default = $this->getDefaultView();
 
@@ -287,6 +291,11 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    */
   public function getRiverAdvancedSearch() {
     $advanced_search = $this->getAdvancedSearch();
+
+    $settings = $advanced_search->getSettings();
+    if (empty($settings['filters'])) {
+      return [];
+    }
 
     return [
       '#theme' => 'reliefweb_rivers_advanced_search',

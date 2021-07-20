@@ -1191,8 +1191,13 @@
       var filter = filters[i];
       options.push(createOption(filter.code, filter.name));
     }
-    var select = createElement('select', {'id': id}, options);
-    var label = createLabel(id, advancedSearch.labels.fieldSelector);
+    var select = createElement('select', {
+      'id': id,
+      'class': advancedSearch.classPrefix + 'field-selector'
+    }, options);
+    var label = createLabel(id, advancedSearch.labels.fieldSelector, {
+      'class': advancedSearch.classPrefix + 'field-selector-label'
+    });
 
     // Keep track of the field selector as it's used in many places.
     advancedSearch.fieldSelector = select;

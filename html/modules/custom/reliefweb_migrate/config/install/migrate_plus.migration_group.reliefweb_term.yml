@@ -1,0 +1,99 @@
+id: reliefweb_term
+label: ReliefWeb Migration - Terms
+description: Migrate ReliefWeb terms from Drupal 7 to Drupal 9.
+source_type: Drupal 7
+shared_configuration:
+  migration_tags:
+    - taxomomy_term
+  dependencies:
+    enforced:
+      module:
+        - reliefweb_migrate
+  source:
+    key: rwint7
+    plugin: reliefweb_taxonomy_term
+    constants:
+      format: markdown
+  destination:
+    plugin: entity:taxonomy_term
+  process:
+    tid: tid
+    vid:
+      plugin: static_map
+      source: vid
+      map:
+        career_categories: career_category
+        content_format: content_format
+        country: country
+        disaster: disaster
+        disaster_type: disaster_type
+        feature: feature
+        job_experience: job_experience
+        job_type: job_type
+        language: language
+        ocha_product: ocha_product
+        organization_type: organization_type
+        source: source
+        tags: tag
+        theme: theme
+        training_format: training_format
+        training_type: training_type
+        vulnerable_groups: vulnerable_group
+    name: name
+    description/value: description
+    description/format: constants/format
+    weight: weight
+    changed: revision_created
+    # Publication status.
+    status:
+      plugin: static_map
+      source: field_status/0/value
+      default_value: 0
+      map:
+        active: 1
+        alert: 1
+        current: 1
+        inactive: 1
+        normal: 1
+        ongoing: 1
+        past: 1
+    # Moderation status.
+    moderation_state:
+      plugin: static_map
+      source: field_status/0/value
+      map:
+        active: active
+        alert: alert
+        alert-archive: alert_archive
+        archive: archive
+        blocked: blocked
+        draft: draft
+        draft-archive: draft_archive
+        duplicate: duplicate
+        current: ongoing
+        external: external
+        external-archive: external_archive
+        inactive: inactive
+        normal: normal
+        ongoing: ongoing
+        past: past
+    # Revision information.
+    revision_id: revision_id
+    revision_user:
+      plugin: static_map
+      default_value: 2
+      source: revision_user
+      # Map the anonymous and super users to the System user.
+      map:
+        0: 2
+        1: 2
+    revision_log_message: revision_log_message
+    revision_created: revision_created
+    revision_default: revision_default
+  migration_dependencies:
+    required:
+      - reliefweb_user
+dependencies:
+  enforced:
+    module:
+      - reliefweb_migrate
