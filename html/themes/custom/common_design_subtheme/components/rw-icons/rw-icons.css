@@ -345,4 +345,12 @@
   --rw-icons--disaster-type--WF--24--orange: url(../rw-icons/img/rw-icons-sprite.svg) -444px -456px no-repeat;
   --rw-icons--disaster-type--WF--24--red: url(../rw-icons/img/rw-icons-sprite.svg) -468px -456px no-repeat;
   --rw-icons--disaster-type--WF--32--white: url(../rw-icons/img/rw-icons-sprite.svg) -492px -608px no-repeat;
+  --rw-icons--social-media--48--dark-blue--x: -524px;
+  --rw-icons--social-media--48--dark-red--x: -572px;
+  --rw-icons--social-media--facebook-full--48--dark-blue: url(../rw-icons/img/rw-icons-sprite.svg) -524px 0 no-repeat;
+  --rw-icons--social-media--facebook-full--48--dark-red: url(../rw-icons/img/rw-icons-sprite.svg) -572px 0 no-repeat;
+  --rw-icons--social-media--linkedin-full--48--dark-blue: url(../rw-icons/img/rw-icons-sprite.svg) -524px -48px no-repeat;
+  --rw-icons--social-media--linkedin-full--48--dark-red: url(../rw-icons/img/rw-icons-sprite.svg) -572px -48px no-repeat;
+  --rw-icons--social-media--twitter-full--48--dark-blue: url(../rw-icons/img/rw-icons-sprite.svg) -524px -96px no-repeat;
+  --rw-icons--social-media--twitter-full--48--dark-red: url(../rw-icons/img/rw-icons-sprite.svg) -572px -96px no-repeat;
 }
