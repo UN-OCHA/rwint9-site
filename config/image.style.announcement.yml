@@ -1,0 +1,15 @@
+uuid: 1d1ec743-6aa3-499b-9568-66e399235fcd
+langcode: en
+status: true
+dependencies: {  }
+name: announcement
+label: Announcement
+effects:
+  3f2a0dc1-ce56-4126-ac00-8073212f14fb:
+    uuid: 3f2a0dc1-ce56-4126-ac00-8073212f14fb
+    id: image_resize
+    weight: 1
+    data:
+      width: 750
+      height: 250
+pipeline: __default__

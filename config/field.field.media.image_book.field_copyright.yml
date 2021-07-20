@@ -1,14 +1,14 @@
-uuid: 8a5cd581-ddb6-41ed-a51a-8eb3b9ae2417
+uuid: 200c5732-b9d2-4d02-b6ae-7dfd5142682f
 langcode: en
 status: true
 dependencies:
   config:
     - field.storage.media.field_copyright
-    - media.type.image_headline
-id: media.image_headline.field_copyright
+    - media.type.image_book
+id: media.image_book.field_copyright
 field_name: field_copyright
 entity_type: media
-bundle: image_headline
+bundle: image_book
 label: Copyright
 description: ''
 required: true

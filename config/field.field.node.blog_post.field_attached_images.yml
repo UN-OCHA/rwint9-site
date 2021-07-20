@@ -23,7 +23,7 @@ settings:
       image_blog_post: image_blog_post
     sort:
       field: mid
-      direction: ASC
+      direction: DESC
     auto_create: false
     auto_create_bundle: ''
 field_type: entity_reference

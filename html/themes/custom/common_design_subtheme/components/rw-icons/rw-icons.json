@@ -135,6 +135,15 @@
           "white"
         ]
       }
+    },
+    "social-media": {
+      "source": "img/icons/social-media",
+      "sizes": {
+        "48": [
+          "dark-blue",
+          "dark-red"
+        ]
+      }
     }
   }
 }

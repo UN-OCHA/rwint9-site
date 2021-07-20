@@ -116,12 +116,9 @@ class User extends SqlBase {
    * {@inheritdoc}
    */
   public function getIds() {
-    return [
-      'uid' => [
-        'type' => 'integer',
-        'alias' => 'u',
-      ],
-    ];
+    $ids['uid']['type'] = 'integer';
+    $ids['uid']['alias'] = 'u';
+    return $ids;
   }
 
   /**

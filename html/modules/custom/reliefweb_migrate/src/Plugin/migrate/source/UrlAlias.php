@@ -49,6 +49,7 @@ class UrlAlias extends SqlBase {
    */
   public function getIds() {
     $ids['pid']['type'] = 'integer';
+    $ids['pid']['alias'] = 'ua';
     return $ids;
   }
 

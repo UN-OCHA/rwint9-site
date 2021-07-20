@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_utility;
 
+use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
@@ -17,6 +18,9 @@ class TwigExtension extends AbstractExtension {
   public function getFilters() {
     return [
       new TwigFilter('taglist', [$this, 'getTagList']),
+      new TwigFilter('sanitize_html', [$this, 'sanitizeHtml'], [
+        'is_safe' => ['html'],
+      ]),
     ];
   }
 
@@ -69,6 +73,29 @@ class TwigExtension extends AbstractExtension {
       $tags[$key] = &$item;
     }
     return $tags;
+  }
+
+  /**
+   * Sanitize an HTML string, removing unallowed tags and attributes.
+   *
+   * This also attempts to fix the heading hierarchy, at least preventing
+   * the use of h1 and h2 in the sanitized content.
+   *
+   * @param string $html
+   *   HTML string to sanitize.
+   * @param bool $iframe
+   *   Whether to allow iframes or not.
+   * @param int $heading_offset
+   *   Offset for the conversion of the headings to perserve the hierarchy.
+   * @param array $allowed_attributes
+   *   List of attributes that should be preserved (ex: data-disaster-map).
+   *
+   * @return string
+   *   Sanitized HTML string.
+   */
+  public static function sanitizeHtml($html, $iframe = FALSE, $heading_offset = 2, array $allowed_attributes = []) {
+    $sanitizer = new HtmlSanitizer($iframe, $heading_offset, $allowed_attributes);
+    return $sanitizer->sanitizeHtml((string) $html);
   }
 
 }

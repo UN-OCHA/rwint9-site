@@ -1,17 +1,18 @@
-uuid: e11684a0-cd13-4cb9-ab94-58824793fbdd
+uuid: 54c3758d-2ef1-42d5-96f2-13921f872cd7
 langcode: en
 status: true
 dependencies:
   config:
-    - field.field.media.image_headline.field_copyright
-    - field.field.media.image_headline.field_media_image
+    - field.field.media.image_book.field_copyright
+    - field.field.media.image_book.field_description
+    - field.field.media.image_book.field_media_image
     - image.style.large
-    - media.type.image_headline
+    - media.type.image_book
   module:
     - image
-id: media.image_headline.default
+id: media.image_book.default
 targetEntityType: media
-bundle: image_headline
+bundle: image_book
 mode: default
 content:
   field_copyright:
@@ -33,6 +34,7 @@ content:
     region: content
 hidden:
   created: true
+  field_description: true
   langcode: true
   name: true
   thumbnail: true

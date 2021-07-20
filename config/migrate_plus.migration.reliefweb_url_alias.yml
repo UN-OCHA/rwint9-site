@@ -1,18 +1,15 @@
-uuid: 0d341fc9-1c6d-4969-9630-e10a62c507ff
+uuid: 4dbccf56-4ad3-4e2c-b51c-67a705ef09a4
 langcode: en
 status: true
-dependencies:
-  enforced:
-    module:
-      - reliefweb_migrate
+dependencies: {  }
 _core:
-  default_config_hash: tVQmkC2lT1MIsn-k910wBCQQNtWRWEHnUYTTgNLs69Y
+  default_config_hash: _GCe7Mu0jNiOJst3TKuIrod_nvHxh7MUZg13XUip6Ug
 id: reliefweb_url_alias
 class: null
 field_plugin_method: null
 cck_plugin_method: null
 migration_tags: null
-migration_group: reliefweb
+migration_group: reliefweb_extra
 label: 'Migrate ReliefWeb URL aliases'
 source:
   plugin: reliefweb_url_alias
@@ -32,6 +29,4 @@ process:
       - source
 destination:
   plugin: 'entity:redirect'
-migration_dependencies:
-  required:
-    - reliefweb_taxonomy_term__country
+migration_dependencies: null

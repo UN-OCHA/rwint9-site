@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Template\Attribute;
+use Drupal\file\FileInterface;
 
 /**
  * Implements hook_preprocess().
@@ -23,6 +24,60 @@ function reliefweb_utility_preprocess(array &$variables, $hook) {
     }
     if (array_key_exists('description_attributes', $variables) && empty($variables['description_attributes'])) {
       $variables['description_attributes'] = new Attribute();
+    }
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update() for files.
+ *
+ * Change the URI of files to use their UUID.
+ */
+function reliefweb_utility_file_update(FileInterface $file) {
+  $uuid = $file->uuid();
+  $uri = $file->getFileUri();
+
+  // Only process files with a valid uuid and uri and if not already processed
+  // which can be determined by looking for the file uuid in its uri.
+  if (!empty($uuid) && !empty($uri) && preg_match('#/' . $uuid . '#', $uri) !== 1) {
+    $file_system = \Drupal::service('file_system');
+    $logger = \Drupal::logger('reliefweb_utility');
+
+    // Note: the locale is assumed to be UTF-8.
+    $info = pathinfo($uri);
+
+    // Use the existing directory + the first 4 letters of the uuid.
+    $directory = implode('/', [
+      $info['dirname'],
+      substr($uuid, 0, 2),
+      substr($uuid, 2, 2),
+    ]);
+
+    // We use the UUID as filename, preserving only the extension so that
+    // the URI is short and predictable.
+    $new_uri = $directory . '/' . $uuid . '.' . $info['extension'];
+
+    // Prepare the destination directory.
+    if (!$file_system->prepareDirectory($directory, $file_system::CREATE_DIRECTORY)) {
+      $logger->warning('Unable to create the destination directory: @directory', [
+        '@directory' => $directory,
+      ]);
+    }
+    // Move the file.
+    elseif (!$file_system->move($uri, $new_uri, $file_system::EXISTS_ERROR)) {
+      $logger->warning('Unable to move file @uri to @new_uri', [
+        '@uri' => $uri,
+        '@new_uri' => $new_uri,
+      ]);
+    }
+    // Update the URI and save the file if the file could be moved.
+    else {
+      $file->setFileUri($new_uri);
+      // @todo maybe better to only update the relevant table rather than
+      // calling save to avoid hook_file_update() etc. from being called twice.
+      // @todo an alternative could be to move and change the URI before the
+      // original "save" is called.
+      $file->save();
     }
   }
 }

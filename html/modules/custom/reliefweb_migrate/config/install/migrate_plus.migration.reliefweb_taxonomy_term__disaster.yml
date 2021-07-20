@@ -1,52 +1,12 @@
 id: reliefweb_taxonomy_term__disaster
 label: Migrate ReliefWeb disaster taxonomy terms.
-migration_group: reliefweb
-dependencies:
-  enforced:
-    module:
-      - reliefweb_migrate
+migration_group: reliefweb_term
 source:
-  plugin: reliefweb_taxonomy_term
   bundle: disaster
-  constants:
-    bundle: disaster
-    format: markdown
-destination:
-  plugin: entity:taxonomy_term
-  default_bundle: disaster
 process:
-  tid: tid
-  vid: constants/bundle
-  name: name
-  description/value: description
-  description/format: constants/format
-  weight: weight
-  changed: timestamp
-  status:
-    plugin: static_map
-    source: field_status/0/value
-    default_value: 0
-    map:
-      alert: 1
-      current: 1
-      past: 1
-  # Revision information.
-  revision_id: revision_id
   # Moderation status.
   moderation_state:
-    plugin: static_map
-    source: field_status/0/value
     default_value: draft
-    map:
-      draft: draft
-      alert: alert
-      current: ongoing
-      ongoing: ongoing
-      past: past
-      external: external
-      draft-archive: draft_archive
-      alert-archive: alert_archive
-      external-archive: external_archive
   # Fields.
   field_country:
     plugin: sub_process
@@ -99,20 +59,7 @@ process:
     plugin: default_value
     default_value: 0
     source: field_timezone/0/value
-  # # Disable path alias generation as aliases are already imported.
-  # path/pathauto:
-  #   plugin: default_value
-  #   default_value: 0
-  # path/alias:
-  #   -
-  #     plugin: default_value
-  #     default_value: ''
-  #   -
-  #     plugin: skip_on_empty
-  #     method: process
 migration_dependencies:
   required:
-    - reliefweb_user__default
-    - reliefweb_user
     - reliefweb_taxonomy_term
     - reliefweb_taxomomy_term__country

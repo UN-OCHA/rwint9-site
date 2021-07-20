@@ -6,7 +6,13 @@ dependencies:
     - field.storage.node.body
     - node.type.book
   module:
+    - allowed_formats
     - text
+third_party_settings:
+  allowed_formats:
+    markdown: markdown
+    html: '0'
+    plain_text: '0'
 _core:
   default_config_hash: 718sPNbCWIXxNeDj1kRMyvll4TdMM9sxlzPrShb1dKU
 id: node.book.body
@@ -15,11 +21,11 @@ entity_type: node
 bundle: book
 label: Body
 description: ''
-required: false
+required: true
 translatable: true
 default_value: {  }
 default_value_callback: ''
 settings:
-  display_summary: true
+  display_summary: false
   required_summary: false
 field_type: text_with_summary

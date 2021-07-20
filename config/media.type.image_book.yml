@@ -1,10 +1,10 @@
-uuid: 52b56f89-651a-4975-abd0-9ca1313fbe82
+uuid: 5e869267-6b7a-4bd4-8604-8d642bb2f8c5
 langcode: en
 status: true
 dependencies: {  }
-id: image_headline
-label: 'Image - Headline'
-description: 'Images for the headlines.'
+id: image_book
+label: 'Image - Book'
+description: 'Images for the book pages'
 source: image
 queue_thumbnail_downloads: false
 new_revision: true

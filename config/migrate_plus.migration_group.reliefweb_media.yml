@@ -1,0 +1,45 @@
+uuid: d9056b33-61e9-4ae7-af54-84889dc33010
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - reliefweb_migrate
+_core:
+  default_config_hash: siylF9cQ58vzIY5hZwdbTLoaVfaASp543nicU9oP_PQ
+id: reliefweb_media
+label: 'ReliefWeb Migration - Media'
+description: 'Migrate ReliefWeb media from Drupal 7 to Drupal 9.'
+source_type: 'Drupal 7'
+module: null
+shared_configuration:
+  migration_tags:
+    - media
+  dependencies:
+    enforced:
+      module:
+        - reliefweb_migrate
+  source:
+    key: rwint7
+    plugin: reliefweb_media
+  destination:
+    plugin: 'entity:media'
+  process:
+    mid: fid
+    uid:
+      plugin: static_map
+      default_value: 2
+      source: uid
+      map:
+        - 2
+        - 2
+    name: filename
+    status: status
+    created: timestamp
+    changed: timestamp
+    field_media_image/target_id: fid
+    field_media_image/width: width
+    field_media_image/height: height
+  migration_dependencies:
+    required:
+      - reliefweb_image

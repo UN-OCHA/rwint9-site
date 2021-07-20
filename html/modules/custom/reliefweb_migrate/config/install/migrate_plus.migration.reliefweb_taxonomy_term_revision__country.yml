@@ -1,52 +1,17 @@
 id: reliefweb_taxonomy_term_revision__country
 label: Migrate ReliefWeb country taxonomy term revisions.
-migration_group: reliefweb
-dependencies:
-  enforced:
-    module:
-      - reliefweb_migrate
+migration_group: reliefweb_term_revision
 source:
-  plugin: reliefweb_taxonomy_term_revision
   bundle: country
-  constants:
-    bundle: country
-    format: markdown
-destination:
-  plugin: entity_revision:taxonomy_term
-  default_bundle: country
 process:
-  tid: tid
-  vid: constants/bundle
-  name: name
-  description/value: description
-  description/format: constants/format
-  weight: weight
-  changed: timestamp
-  # Revision information.
-  revision_id: revision_id
-  revision_user:
-    plugin: static_map
-    default_value: 2
-    source: revision_user
-    # Map the anonymous and super users to the System user.
-    map:
-      0: 2
-      1: 2
-  revision_log_message: revision_log_message
-  revision_created: revision_created
   # Moderation status.
   moderation_state:
-    plugin: static_map
-    source: field_status/0/value
     default_value: normal
-    map:
-      normal: normal
-      current: ongoing
   # Fields.
   field_aliases/value:
     plugin: skip_on_empty
     method: process
-    source: field_aliases/0/value
+    source: field_term_alias/0/value
   field_iso3/value:
     plugin: skip_on_empty
     method: process
@@ -75,17 +40,6 @@ process:
     plugin: skip_on_empty
     method: process
     source: field_timezone/0/value
-  # # Disable path alias generation as aliases are already imported.
-  # path/pathauto:
-  #   plugin: default_value
-  #   default_value: 0
-  # path/alias:
-  #   -
-  #     plugin: default_value
-  #     default_value: ''
-  #   -
-  #     plugin: skip_on_empty
-  #     method: process
 migration_dependencies:
   required:
     - reliefweb_taxonomy_term__country

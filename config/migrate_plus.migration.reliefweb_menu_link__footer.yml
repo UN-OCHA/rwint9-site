@@ -1,4 +1,4 @@
-uuid: 3ed39afb-4e6a-4c85-adc3-4df7d046517a
+uuid: f0602099-1998-4143-9a36-da647398ab45
 langcode: en
 status: true
 dependencies:
@@ -6,7 +6,7 @@ dependencies:
     module:
       - reliefweb_migrate
 _core:
-  default_config_hash: mnec0yC8_zyfrCgzBhdOplg1o_0Qbo1yaUIuH_3gNS8
+  default_config_hash: ubo19RVHa1E89UT1XMl_VqjGR_QfEmE34t05IHYE_mU
 id: reliefweb_menu_link__footer
 class: null
 field_plugin_method: null
@@ -14,7 +14,7 @@ cck_plugin_method: null
 migration_tags:
   - 'Drupal 7'
   - Content
-migration_group: reliefweb
+migration_group: reliefweb_base
 label: 'Migrate ReliefWeb footer menu links.'
 source:
   plugin: embedded_data
