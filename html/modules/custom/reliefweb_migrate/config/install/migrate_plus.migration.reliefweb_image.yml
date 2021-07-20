@@ -8,7 +8,8 @@ dependencies:
 source:
   plugin: reliefweb_image
 destination:
-  plugin: entity:file
+  plugin: reliefweb_image
+
 process:
   uuid: uuid
   fid: fid
@@ -33,3 +34,5 @@ process:
   # had was the vague "timestamp" column. So we'll use it for both.
   created: timestamp
   changed: timestamp
+  # Store the original URI.
+  old_uri: old_uri

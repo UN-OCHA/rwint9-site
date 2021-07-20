@@ -75,6 +75,12 @@ class Node extends FieldableEntityBase {
       $query->condition('n.type', (array) $this->configuration['bundle'], 'IN');
     }
 
+    // Flag to limit the migration to the 1000 most recent nodes.
+    if (\Drupal::state()->get('reliefweb_migrate.restrict', FALSE) === TRUE) {
+      $query->range(0, 1000);
+      $query->orderBy('n.nid', 'DESC');
+    }
+
     return $query;
   }
 

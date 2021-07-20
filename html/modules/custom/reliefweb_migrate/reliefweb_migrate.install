@@ -6,6 +6,50 @@
  */
 
 /**
+ * Implements hook_schema().
+ *
+ * Add a table to store a mapping of new file URIs to old ones.
+ */
+function reliefweb_migrate_schema() {
+  $schema['reliefweb_migrate_uri_mapping'] = [
+    'fields' => [
+      'new_uri' => [
+        'description' => 'New URI',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'old_uri' => [
+        'description' => 'Old URI',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+    ],
+    'primary key' => ['new_uri'],
+  ];
+
+  return $schema;
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * Add the uri mapping table if doesn't already exists.
+ */
+function reliefweb_migrate_update_9001() {
+  $table = 'reliefweb_migrate_uri_mapping';
+  $schema = reliefweb_subscriptions_schema();
+  $database = \Drupal::database();
+
+  if (isset($schema[$table]) && !$database->schema()->tableExists($table)) {
+    $database->schema()->createTable($table, $schema[$table]);
+  }
+}
+
+/**
  * Implements hook_uninstall().
  *
  * Uninstall the migration configuration.

@@ -51,7 +51,7 @@ class Media extends SqlBase {
     $query->addField('f', $field . '_width', 'width');
     $query->addField('f', $field . '_height', 'height');
 
-    return $query;
+    return $query->distinct();
   }
 
   /**

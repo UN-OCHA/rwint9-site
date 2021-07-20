@@ -70,8 +70,8 @@ abstract class FieldableEntityBase extends SqlBase {
     }
 
     // Get Field API field values.
-    foreach ($this->getFields($entity_type, $bundle) as $field_name => $field) {
-      $row->setSourceProperty($field_name, $this->getFieldValues($entity_type, $field_name, $id, $revision_id));
+    foreach ($this->getFields($this->entityType, $bundle) as $field_name => $field) {
+      $row->setSourceProperty($field_name, $this->getFieldValues($this->entityType, $field_name, $id, $revision_id));
     }
 
     return parent::prepareRow($row);

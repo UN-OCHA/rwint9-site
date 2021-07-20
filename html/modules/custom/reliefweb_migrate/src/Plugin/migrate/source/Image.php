@@ -21,11 +21,11 @@ class Image extends SqlBase {
    * @var array
    */
   protected $directoryReplacements = [
-    '/announcements/' => '/images/announcements/',
-    '/attached-images/' => '/images/blog-posts/',
-    '/blog-post-image/' => '/images/blog-posts/',
-    '/headline-images/' => '/images/headlines/',
-    '/report-images/' => '/images/reports/',
+    'announcements' => 'images/announcements',
+    'attached-images' => 'images/blog-posts',
+    'blog-post-images' => 'images/blog-posts',
+    'headline-images' => 'images/reports',
+    'report-images' => 'images/reports',
   ];
 
   /**
@@ -80,17 +80,18 @@ class Image extends SqlBase {
     $query->innerJoin($union_query, 'u', 'u.fid = fm.fid');
 
     // Limit to the known image directories.
-    $or = $query->orConditionGroup();
+    $directories = [];
     foreach ($this->directoryReplacements as $existing => $target) {
-      $or->condition('fm.uri', 'public:/' . $existing . '%', 'LIKE');
+      $directories[] = preg_quote($existing);
     }
-    $query->condition($or);
+    $pattern = '^public://(' . implode('|', $directories) . ')/.+';
+    $query->condition('fm.uri', $pattern, 'RLIKE');
 
     // Limit to files in use.
     $query->innerJoin('file_usage', 'fu', 'fu.fid = fm.fid');
     $query->condition('fu.count', 0, '>');
 
-    return $query;
+    return $query->distinct();
   }
 
   /**
@@ -102,39 +103,38 @@ class Image extends SqlBase {
 
     // Replace the public scheme with the actual reliefweb.int base public file
     // uri so that it's unique.
-    $uri = str_replace('public://', 'https://reliefweb.int/sites/reliefweb.int/files/', $uri);
+    $uuid_uri = str_replace('public://', 'https://reliefweb.int/sites/reliefweb.int/files/', $uri);
 
     // Generate the UUID based on the URI.
-    $uuid = Uuid::v3(Uuid::NAMESPACE_URL, $uri)->toRfc4122();
-
-    // Replace the image directory. We do that after generating the UUID to
-    // avoid collisions between blog post images as they will all end up in the
-    // same `/images/blog-posts/` directory.
-    $uri = strtr($uri, $this->directoryReplacements);
+    $uuid = Uuid::v3(Uuid::fromString(Uuid::NAMESPACE_URL), $uuid_uri)->toRfc4122();
 
     // Note: the locale is assumed to be UTF-8.
     $info = pathinfo($uri);
 
+    // Replace the image directory. We do that after generating the UUID to
+    // avoid collisions between blog post images as they will all end up in the
+    // same `/images/blog-posts/` directory.
+    $dirname = strtr($info['dirname'], $this->directoryReplacements);
+
     // Use the existing directory + the first 4 letters of the uuid.
     $directory = implode('/', [
-      $info['dirname'],
+      $dirname,
       substr($uuid, 0, 2),
       substr($uuid, 2, 2),
     ]);
 
-    // We add the UUID in the file path but we preserve the filename so we can
-    // compute back the original URL.
-    //
-    // @todo keeping the file name is only really useful during development
-    // to proxy the local/stage files to the prod ones. Review if we change
-    // that to `uuid.ext`.
-    $new_uri = $directory . '/' . $uuid . '/' . $info['basename'];
+    // We use the UUID as filename, preserving only the extension so that
+    // the URI is short and predictable.
+    $new_uri = $directory . '/' . $uuid . '.' . $info['extension'];
 
     // Set the new file URI.
     $row->setSourceProperty('uri', $new_uri);
 
     // Save the UUID.
     $row->setSourceProperty('uuid', $uuid);
+
+    // Store the old URI so it can be saved in the mapping table.
+    $row->setSourceProperty('old_uri', $uri);
 
     return parent::prepareRow($row);
   }

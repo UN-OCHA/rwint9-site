@@ -21,3 +21,7 @@ Todo
 
 Use `migration_lookup` plugin to ensure entity reference fields only reference
 existing content?
+
+Parse `blog post` and `book` body field to replace harcoded URL to files as the
+image styles will probably change. Alternatively we could do some URL rewriting
+in nginx which may be easier.

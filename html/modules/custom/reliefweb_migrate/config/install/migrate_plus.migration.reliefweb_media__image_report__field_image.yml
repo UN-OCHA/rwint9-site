@@ -1,16 +1,16 @@
-id: reliefweb_media__image_headline
-label: Migrate ReliefWeb image media for headlines.
+id: reliefweb_media__image_report__field_image
+label: Migrate ReliefWeb image media for reports.
 migration_group: reliefweb_media
 dependencies:
   enforced:
     module:
       - reliefweb_migrate
 source:
-  field: field_headline_image
+  field: field_image
   entity_type: node
   bundle: report
 destination:
-  bundle: image_headline
+  default_bundle: image_report
 process:
   # Fields.
   field_copyright/value:

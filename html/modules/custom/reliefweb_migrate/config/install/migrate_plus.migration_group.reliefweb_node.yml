@@ -49,12 +49,12 @@ shared_configuration:
         duplicate: duplicate
         expired: expired
         embargoed: embargoed
-        on-hold: on-hold
+        on-hold: on_hold
         pending: pending
         published: published
         reference: reference
         refused: refused
-        to-review: to-review
+        to-review: to_review
     # Revision information.
     vid: revision_id
     revision_uid:

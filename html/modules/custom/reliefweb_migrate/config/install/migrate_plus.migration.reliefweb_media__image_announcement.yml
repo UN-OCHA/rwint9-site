@@ -10,7 +10,7 @@ source:
   entity_type: node
   bundle: announcement
 destination:
-  bundle: image_announcement
+  default_bundle: image_announcement
 process:
   # Fields.
   field_copyright/value:

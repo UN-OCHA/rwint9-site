@@ -10,7 +10,7 @@ source:
   entity_type: node
   bundle: blog_post
 destination:
-  bundle: image_blog_post
+  default_bundle: image_blog_post
 process:
   # Fields.
   field_copyright/value:
