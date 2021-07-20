@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6c678d8ec21461669be50b10467a2cc9",
+    "content-hash": "e51559e503f71a7c12440800304989af",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -6191,6 +6191,84 @@
                 "source": "https://github.com/pear/PEAR_Exception"
             },
             "time": "2019-12-10T10:24:42+00:00"
+        },
+        {
+            "name": "pelago/emogrifier",
+            "version": "v5.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/MyIntervals/emogrifier.git",
+                "reference": "37595a9bb62c3c25969bdd9e8d7dd24c3ac62bc9"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/MyIntervals/emogrifier/zipball/37595a9bb62c3c25969bdd9e8d7dd24c3ac62bc9",
+                "reference": "37595a9bb62c3c25969bdd9e8d7dd24c3ac62bc9",
+                "shasum": ""
+            },
+            "require": {
+                "ext-dom": "*",
+                "ext-libxml": "*",
+                "php": "~7.1.0 || ~7.2.0 || ~7.3.0 || ~7.4.0 || ~8.0.0",
+                "symfony/css-selector": "^3.4.32 || ^4.4 || ^5.1"
+            },
+            "require-dev": {
+                "php-parallel-lint/php-parallel-lint": "^1.2.0",
+                "rawr/cross-data-providers": "^2.3.0",
+                "slevomat/coding-standard": "^6.4.1",
+                "squizlabs/php_codesniffer": "^3.5.8"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "6.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Pelago\\Emogrifier\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Oliver Klee",
+                    "email": "github@oliverklee.de"
+                },
+                {
+                    "name": "Zoli Szabó",
+                    "email": "zoli.szabo+github@gmail.com"
+                },
+                {
+                    "name": "John Reeve",
+                    "email": "jreeve@pelagodesign.com"
+                },
+                {
+                    "name": "Jake Hotson",
+                    "email": "jake@qzdesign.co.uk"
+                },
+                {
+                    "name": "Cameron Brooks"
+                },
+                {
+                    "name": "Jaime Prado"
+                }
+            ],
+            "description": "Converts CSS styles into inline style attributes in your HTML code",
+            "homepage": "https://www.myintervals.com/emogrifier.php",
+            "keywords": [
+                "css",
+                "email",
+                "pre-processing"
+            ],
+            "support": {
+                "issues": "https://github.com/MyIntervals/emogrifier/issues",
+                "source": "https://github.com/MyIntervals/emogrifier"
+            },
+            "time": "2021-04-06T08:18:22+00:00"
         },
         {
             "name": "phar-io/manifest",
