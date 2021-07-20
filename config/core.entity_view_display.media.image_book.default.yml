@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - field.field.media.image_book.field_copyright
+    - field.field.media.image_book.field_description
     - field.field.media.image_book.field_media_image
     - image.style.large
     - media.type.image_book
@@ -16,7 +17,7 @@ mode: default
 content:
   field_copyright:
     weight: 1
-    label: above
+    label: visually_hidden
     settings:
       link_to_entity: false
     third_party_settings: {  }
@@ -33,6 +34,7 @@ content:
     region: content
 hidden:
   created: true
+  field_description: true
   langcode: true
   name: true
   thumbnail: true

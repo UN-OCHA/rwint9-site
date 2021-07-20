@@ -5,6 +5,7 @@ dependencies:
   config:
     - core.entity_form_mode.media.media_library
     - field.field.media.image_report.field_copyright
+    - field.field.media.image_report.field_description
     - field.field.media.image_report.field_media_image
     - image.style.thumbnail
     - media.type.image_report
@@ -18,6 +19,14 @@ content:
   field_copyright:
     type: string_textfield
     weight: 2
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_description:
+    type: string_textfield
+    weight: 3
     region: content
     settings:
       size: 60

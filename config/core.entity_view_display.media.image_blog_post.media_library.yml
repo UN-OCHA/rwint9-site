@@ -5,6 +5,7 @@ dependencies:
   config:
     - core.entity_view_mode.media.media_library
     - field.field.media.image_blog_post.field_copyright
+    - field.field.media.image_blog_post.field_description
     - field.field.media.image_blog_post.field_media_image
     - image.style.medium
     - media.type.image_blog_post
@@ -27,6 +28,7 @@ content:
 hidden:
   created: true
   field_copyright: true
+  field_description: true
   field_media_image: true
   langcode: true
   name: true
