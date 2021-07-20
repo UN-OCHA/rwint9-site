@@ -341,21 +341,42 @@ class Homepage extends ControllerBase {
 
     if (!empty($nodes)) {
       $node = reset($nodes);
-      $image = $node->field_image->field_image_file->entity;
+
+      // Get the image field information for the referenced media.
+      $field = $node
+        ?->get('field_image')
+        ?->first()
+        ?->get('entity')
+        ?->getTarget()
+        ?->getValue()
+        ?->get('field_media_image')
+        ?->first();
+      if (empty($field)) {
+        return [];
+      }
+
+      // Get the image entity.
+      $image = $field
+        ?->get('entity')
+        ?->getTarget()
+        ?->getValue();
+      if (empty($image)) {
+        return [];
+      }
 
       return [
         '#theme' => 'reliefweb_homepage_announcement',
         '#id' => 'announcement',
-        '#url' => $node->field_link->url,
+        '#url' => $node->field_link->uri,
         '#image' => [
-          'url' => $image->uri->value,
+          'url' => $image->getFileUri(),
           'title' => $node->label(),
           'alt' => $node->body->value ?? $node->label(),
-          'width' => $image->width,
-          'height' => $image->height,
+          'width' => $field->width,
+          'height' => $field->height,
         ],
         '#cache' => [
-          'contexts' => ['node_list:announcement'],
+          'tags' => ['node_list:announcement'],
         ],
       ];
     }
