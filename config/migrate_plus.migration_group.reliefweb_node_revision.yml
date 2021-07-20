@@ -1,4 +1,4 @@
-uuid: b4b08fe3-3486-4572-9e06-a8779f608ffa
+uuid: d4f7fd61-2a96-4d21-b71a-02ce2c620606
 langcode: en
 status: true
 dependencies:
@@ -6,7 +6,7 @@ dependencies:
     module:
       - reliefweb_migrate
 _core:
-  default_config_hash: eidieew18EbCqjHP49o6iACk9itHCjEWUvI6dgZ5qgs
+  default_config_hash: 8sszw5tLbwdtFfZljUAWNbDbja8rtn-JjbPfjmNEI5E
 id: reliefweb_node_revision
 label: 'ReliefWeb Migration - Node revisions'
 description: 'Migrate ReliefWeb node revisions from Drupal 7 to Drupal 9.'
@@ -51,12 +51,12 @@ shared_configuration:
         duplicate: duplicate
         expired: expired
         embargoed: embargoed
-        on-hold: on-hold
+        on-hold: on_hold
         pending: pending
         published: published
         reference: reference
         refused: refused
-        to-review: to-review
+        to-review: to_review
     vid: revision_id
     revision_uid:
       plugin: static_map
