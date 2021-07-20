@@ -39,7 +39,7 @@ function reliefweb_utility_file_update(FileInterface $file) {
 
   // Only process files with a valid uuid and uri and if not already processed
   // which can be determined by looking for the file uuid in its uri.
-  if (!empty($uuid) && !empty($uri) && preg_match('#/' . $uuid . '/#', $uri) !== 1) {
+  if (!empty($uuid) && !empty($uri) && preg_match('#/' . $uuid . '#', $uri) !== 1) {
     $file_system = \Drupal::service('file_system');
     $logger = \Drupal::logger('reliefweb_utility');
 
@@ -53,11 +53,9 @@ function reliefweb_utility_file_update(FileInterface $file) {
       substr($uuid, 2, 2),
     ]);
 
-    // We add the UUID in the file path but we preserve the filename so we can
-    // compute the original URL for consistency with the migrated files.
-    //
-    // @todo discard the filename and use `uuid.ext`?
-    $new_uri = $directory . '/' . $uuid . '/' . $info['basename'];
+    // We use the UUID as filename, preserving only the extension so that
+    // the URI is short and predictable.
+    $new_uri = $directory . '/' . $uuid . '.' . $info['extension'];
 
     // Prepare the destination directory.
     if (!$file_system->prepareDirectory($directory, $file_system::CREATE_DIRECTORY)) {
@@ -75,6 +73,10 @@ function reliefweb_utility_file_update(FileInterface $file) {
     // Update the URI and save the file if the file could be moved.
     else {
       $file->setFileUri($new_uri);
+      // @todo maybe better to only update the relevant table rather than
+      // calling save to avoid hook_file_update() etc. from being called twice.
+      // @todo an alternative could be to move and change the URI before the
+      // original "save" is called.
       $file->save();
     }
   }
