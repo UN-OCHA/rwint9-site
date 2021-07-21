@@ -41,7 +41,7 @@ function reliefweb_migrate_schema() {
  */
 function reliefweb_migrate_update_9001() {
   $table = 'reliefweb_migrate_uri_mapping';
-  $schema = reliefweb_subscriptions_schema();
+  $schema = reliefweb_migrate_schema();
   $database = \Drupal::database();
 
   if (isset($schema[$table]) && !$database->schema()->tableExists($table)) {
