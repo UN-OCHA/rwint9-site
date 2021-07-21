@@ -8,6 +8,7 @@ use Drupal\Core\State\StateInterface;
 use Drupal\node\NodeInterface;
 use Drupal\reliefweb_api\Services\ReliefWebApiClient;
 use Drupal\reliefweb_rivers\RiverServiceBase;
+use Drupal\reliefweb_utility\Helpers\MediaHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -342,43 +343,25 @@ class Homepage extends ControllerBase {
     if (!empty($nodes)) {
       $node = reset($nodes);
 
-      // Get the image field information for the referenced media.
-      $field = $node
-        ?->get('field_image')
-        ?->first()
-        ?->get('entity')
-        ?->getTarget()
-        ?->getValue()
-        ?->get('field_media_image')
-        ?->first();
-      if (empty($field)) {
-        return [];
-      }
+      if ($node->hasField('field_image') && !$node->field_image->isEmpty()) {
+        $image = MediaHelper::getImage($node->field_image);
 
-      // Get the image entity.
-      $image = $field
-        ?->get('entity')
-        ?->getTarget()
-        ?->getValue();
-      if (empty($image)) {
-        return [];
+        return [
+          '#theme' => 'reliefweb_homepage_announcement',
+          '#id' => 'announcement',
+          '#url' => $node->field_link->uri,
+          '#image' => [
+            'url' => $image['uri'],
+            'title' => $node->label(),
+            'alt' => $node->body->value ?? $node->label(),
+            'width' => $image['width'],
+            'height' => $image['height'],
+          ],
+          '#cache' => [
+            'tags' => ['node_list:announcement'],
+          ],
+        ];
       }
-
-      return [
-        '#theme' => 'reliefweb_homepage_announcement',
-        '#id' => 'announcement',
-        '#url' => $node->field_link->uri,
-        '#image' => [
-          'url' => $image->getFileUri(),
-          'title' => $node->label(),
-          'alt' => $node->body->value ?? $node->label(),
-          'width' => $field->width,
-          'height' => $field->height,
-        ],
-        '#cache' => [
-          'tags' => ['node_list:announcement'],
-        ],
-      ];
     }
     return [];
   }
