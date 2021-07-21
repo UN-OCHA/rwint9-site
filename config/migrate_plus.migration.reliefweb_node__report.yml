@@ -1,9 +1,9 @@
-uuid: 08f27405-8025-4c60-a96a-8d1aec1b374d
+uuid: aded1fdf-dcf7-41b8-a473-fadb23a625d5
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: IPnBPtN7WBVIEnK5WUDQP_QLQgRI4mmkif3-MidyAzE
+  default_config_hash: wAxYRNNXVieg1YWqOLBUlEFRCJOO-gQ98iYZuL7lQy4
 id: reliefweb_node__report
 class: null
 field_plugin_method: null
@@ -18,7 +18,7 @@ process:
     plugin: skip_on_empty
     method: process
     source: field_bury/0/value
-  field_content_format/value:
+  field_content_format:
     plugin: sub_process
     source: field_content_format
     process:

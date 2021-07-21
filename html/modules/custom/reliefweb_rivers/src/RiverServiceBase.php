@@ -491,7 +491,12 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getRiverData($bundle, array $data, $view = '', array $exclude = []) {
+  public static function getRiverData($bundle, ?array $data, $view = '', array $exclude = []) {
+    if (empty($data)) {
+      return [];
+    }
+
+    // Parse the API data using the river service for the entity bundle.
     $entities = \Drupal::service('reliefweb_rivers.' . $bundle . '.river')
       ->parseApiData($data, $view);
 
