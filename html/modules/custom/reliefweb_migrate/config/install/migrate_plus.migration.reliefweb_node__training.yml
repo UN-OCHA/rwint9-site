@@ -30,7 +30,7 @@ process:
   field_how_to_register/value:
     plugin: skip_on_empty
     method: process
-    source: field_how_to_register/0/value
+    source: field_how_to_apply/0/value
   field_how_to_register/format: constants/format
   field_language:
     plugin: sub_process
