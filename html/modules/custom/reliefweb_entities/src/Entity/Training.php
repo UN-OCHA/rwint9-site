@@ -1,0 +1,73 @@
+<?php
+
+namespace Drupal\reliefweb_entities\Entity;
+
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\reliefweb_entities\BundleEntityInterface;
+use Drupal\reliefweb_entities\DocumentInterface;
+use Drupal\reliefweb_entities\DocumentTrait;
+use Drupal\reliefweb_entities\EntityModeratedInterface;
+use Drupal\reliefweb_entities\EntityModeratedTrait;
+use Drupal\reliefweb_rivers\RiverServiceBase;
+use Drupal\reliefweb_utility\Helpers\UrlHelper;
+use Drupal\node\Entity\Node;
+
+/**
+ * Bundle class for training nodes.
+ */
+class Training extends Node implements BundleEntityInterface, EntityModeratedInterface, DocumentInterface {
+
+  use DocumentTrait;
+  use EntityModeratedTrait;
+  use StringTranslationTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiResource() {
+    return 'training';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEntityMeta() {
+    // Event URL.
+    $event_url = $this->field_link->value;
+    if (!UrlHelper::isValid($event_url, TRUE)) {
+      $event_url = '';
+    }
+    else {
+      $event_url = UrlHelper::encodeUrl($event_url);
+    }
+
+    // Cost.
+    $cost = [];
+    if (!$this->field_cost->isEmpty()) {
+      $cost[] = [
+        'name' => $this->field_cost->value,
+        'url' => RiverServiceBase::getRiverUrl($this->bundle(), [
+          'advanced-search' => '(CO' . $this->field_cost->value . ')',
+        ]),
+      ];
+    }
+
+    return [
+      'posted' => static::createDate($this->getCreatedTime()),
+      'registration' => static::createDate($this->field_registration_deadline->value),
+      'start' => static::createDate($this->field_training_date->value),
+      'end' => static::createDate($this->field_training_date->end_value),
+      'event_url' => $event_url,
+      'country' => $this->getEntityMetaFromField('country', 'C'),
+      'source' => $this->getEntityMetaFromField('source', 'S'),
+      'city' => $this->field_city->value ?? '',
+      'format' => $this->getEntityMetaFromField('training_format', 'F'),
+      'category' => $this->getEntityMetaFromField('training_type', 'TY'),
+      'professional_function' => $this->getEntityMetaFromField('career_categories', 'CC'),
+      'theme' => $this->getEntityMetaFromField('theme', 'T'),
+      'training_language' => $this->getEntityMetaFromField('training_language', 'TL'),
+      'cost' => $cost,
+    ];
+  }
+
+}
