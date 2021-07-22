@@ -1,0 +1,41 @@
+//——————————————————————————————————————————————————————————————————————————————
+// Common Design: User Menu
+//
+// Includes user-centered settings and/or actions.
+//
+//——————————————————————————————————————————————————————————————————————————————
+.cd-user-menu {
+  &--no-language-switcher {
+    li:last-child a,
+    li:last-child button {
+      padding-right: 0;
+
+      &::after {
+        content: none;
+      }
+    }
+  }
+}
+
+.cd-user-menu__item {
+  &:focus {
+    outline: 3px solid $cd-blue--bright;
+  }
+}
+
+//——————————————————————————————————————————————————————————————————————————————
+// Drupal selectors
+//——————————————————————————————————————————————————————————————————————————————
+
+.cd-global-header .menu > li a,
+.cd-global-header .menu > li button {
+  @extend .cd-user-menu__item;
+}
+
+.cd-global-header .menu {
+  @extend .cd-user-menu;
+
+  // If there's no language switcher in the Global Header, uncomment this line
+  // to apply special treatment to the last link in the list.
+  @extend .cd-user-menu--no-language-switcher;
+}

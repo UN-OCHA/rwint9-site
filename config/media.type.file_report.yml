@@ -1,0 +1,13 @@
+uuid: 2bd44cd5-9a62-4d4a-aac8-f621d86cb79a
+langcode: en
+status: true
+dependencies: {  }
+id: file_report
+label: 'File - Report'
+description: 'Files attached to reports.'
+source: file
+queue_thumbnail_downloads: false
+new_revision: true
+source_configuration:
+  source_field: field_media_file
+field_map: {  }

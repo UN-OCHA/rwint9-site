@@ -1,0 +1,38 @@
+id: reliefweb_image
+label: Migrate ReliefWeb images.
+migration_group: reliefweb_image
+dependencies:
+  enforced:
+    module:
+      - reliefweb_migrate
+source:
+  plugin: reliefweb_image
+destination:
+  plugin: reliefweb_image
+
+process:
+  uuid: uuid
+  fid: fid
+  uid:
+    plugin: static_map
+    default_value: 2
+    source: uid
+    # Map the anonymous and super users to the System user.
+    map:
+      0: 2
+      1: 2
+  uri: uri
+  # We let Drupal 9 set the language code to the default one ('en').
+  #langcode:
+  #  plugin: default_value
+  #  default_value: 'en'
+  filename: filename
+  filemime: filemime
+  filesize: filesize
+  status: status
+  # Drupal 7 didn't keep track of the file's creation or update time -- all it
+  # had was the vague "timestamp" column. So we'll use it for both.
+  created: timestamp
+  changed: timestamp
+  # Store the original URI.
+  old_uri: old_uri

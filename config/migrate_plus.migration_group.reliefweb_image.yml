@@ -1,0 +1,22 @@
+uuid: f9150141-1867-467d-bb55-4bb943a49d8e
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - reliefweb_migrate
+_core:
+  default_config_hash: H_TNCXbGUv2Uy06WpNUFqazC_cTpkjRlp5TR-6sC7EY
+id: reliefweb_image
+label: 'ReliefWeb Migration - Images'
+description: 'Migrate ReliefWeb images from Drupal 7 to Drupal 9.'
+source_type: 'Drupal 7'
+module: null
+shared_configuration:
+  migration_tags:
+    - image
+  source:
+    key: rwint7
+  migration_dependencies:
+    required:
+      - reliefweb_user

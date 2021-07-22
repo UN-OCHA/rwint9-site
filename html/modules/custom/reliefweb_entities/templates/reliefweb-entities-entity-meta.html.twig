@@ -1,0 +1,108 @@
+{#
+
+/**
+ * @file
+ * Template file for an entity meta information.
+ *
+ * Available variables:
+ * - attributes: wrapper attributes
+ * - core: flag indicating the list of meta is the "core" meta information,
+ *   usually displayed in river articles or below the title on article pages.
+ * - meta: associative array with a list of meta information (ex: dates,
+ *   sources, etc.). Each items has the following properties:
+ *   - type: simple, link, date, date-range or taglist
+ *   - label: label (singular or plural depending on the value)
+ *   - value: simple, date, array with start and end date or list of tags
+ *   - count: only for taglist - number of tags to display
+ *   - sort: only for taglist - sort property for the tags
+ *   - display: only for taglist - property to display, ex: name or shortname
+ *   - format: only for date - date format
+ *   - label_attributes: attributes for the label
+ *   - value_attributes: attributes for the value
+ *
+ * @todo better date formatting to respect language format.
+ * @todo review the spacing notably for single values.
+ */
+
+#}
+<dl{{ attributes
+  .addClass([
+    'rw-entity-meta',
+    core ? 'rw-entity-meta--core',
+  ])
+}}>
+  {% set meta = meta|filter(data => data.value is not empty) %}
+  {% set last = meta|keys|last %}
+
+  {% for name, data in meta %}
+    {% set classes = data.classes ?? [] %}
+    {% set label = data.label ?? name|replace({'-': ' ', '_': ' '})|capitalize %}
+    {% set label_attributes = data.label_attributes ?? create_attribute() %}
+    {% set value_attributes = data.value_attributes ?? create_attribute() %}
+
+    {# Label. #}
+    <dt{{ label_attributes.addClass([
+      'rw-entity-meta__tag-label',
+      'rw-entity-meta__tag-label--' ~ name,
+    ]) }}>{{ label }}</dt>
+
+    {# Value. #}
+    <dd{{ value_attributes.addClass([
+      'rw-entity-meta__tag-value',
+      'rw-entity-meta__tag-value--' ~ name,
+      'rw-entity-meta__tag-value--' ~ data.type,
+      name == last ? 'rw-entity-meta__tag-value--last',
+    ]) }}>
+      {# Simple value. #}
+      {% if data.type == 'simple' %}
+        {{- data.value -}}
+
+      {# Link value. #}
+      {% elseif data.type == 'link' %}
+        {% if data.value.external %}
+        <a href="{{ data.value.url }}" target="_blank" rel="noopener">{{ data.value.title }}</a>
+        {% else %}
+        <a href="{{ data.value.url }}">{{ data.value.title }}</a>
+        {% endif %}
+
+      {# Date. #}
+      {% elseif data.type == 'date' %}
+        <time datetime="{{ data.value|date('c') }}">{{ data.value|date(data.format ?? 'j M Y') }}</time>
+
+      {# Date range. #}
+      {% elseif data.type == 'date-range' %}
+        {% if data.value.end is empty or data.value.end == data.value.start %}
+          <time datetime="{{ data.value.start|date('c') }}">{{ data.value.start|date(data.format ?? 'j M Y') }}</time>
+        {% else %}
+          {% set start_iso = data.value.start|date('c') %}
+          {% set start_medium = data.value.start|date(data.format ?? 'j M Y') %}
+          {% set end_iso = data.value.end|date('c') %}
+          {% set end_medium = data.value.end|date(data.format ?? 'j M Y') %}
+          {% trans %}
+            <time datetime="{{ start_iso }}">{{ start_medium  }}</time>
+            to
+            <time datetime="{{ end_iso }}">{{ end_medium }}</time>
+          {% endtrans %}
+        {% endif %}
+
+      {# List of tags. #}
+      {% elseif data.type == 'taglist' %}
+        <ul class="rw-entity-meta__tag-value__list">
+          {%- for index, item in data.value|taglist(data.count, data.sort) -%}
+            <li{{ create_attribute().addClass([
+              'rw-entity-meta__tag-value__list__item',
+              index == 'last' ? 'rw-entity-meta__tag-value__list__item--last',
+            ]) }}><a class="rw-entity-meta__tag-link" href="{{ item.url }}">{{ attribute(item, data.display ?? 'name') ?? item.name }}</a></li>
+          {%- endfor -%}
+          {%- if data.count and data.value|length > data.count -%}
+            <li{{ create_attribute().addClass([
+              'rw-entity-meta__tag-value__list__item',
+              'rw-entity-meta__tag-value__list__item--more',
+              'rw-entity-meta__tag-value__list__item--last',
+            ]) }}>{{ '@count more'|t({'@count': (data.value|length) - data.count}) }}</li>
+          {%- endif -%}
+        </ul>
+      {% endif %}
+    </dd>
+  {% endfor %}
+</dl>

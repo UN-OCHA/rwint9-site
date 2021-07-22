@@ -1,0 +1,49 @@
+{#
+
+/**
+ * @file
+ * Template for the river go to letter navigation.
+ *
+ * Available variables:
+ * - level: heading level (default to 3)
+ * - id: section id (defaults to 'letter-navigation')
+ * - attributes: section attributes
+ * - title: section title
+ * - title_attributes: title attributes
+ * - letters: Associative array of letters with their label, url and active
+ *   state
+ */
+
+#}
+{% if letters is not empty %}
+{% set id = id|clean_id %}
+<div class="rw-river-letter-navigation-wrapper">
+  <nav{{ attributes
+    .addClass([
+      'rw-river-letter-navigation',
+    ])
+    .setAttribute('id', id)
+    .setAttribute('aria-labelledby', id ~ '-title')
+  }}>
+    <h{{ level }}{{ title_attributes
+      .addClass([
+        'rw-river-letter-navigation__title',
+        'visually-hidden',
+      ])
+      .setAttribute('id',  id ~ '-title')
+    }}>{{ title }}</h{{ level }}>
+
+    <ul class="rw-river-letter-navigation__list">
+      {% for letter, data in letters %}
+      <li class="rw-river-letter-navigation__list__item"><a{{ create_attribute()
+        .addClass([
+          'rw-river-letter-navigation__link',
+          data.active ? 'rw-river-letter-navigation__link--active',
+        ])
+        .setAttribute('href', data.url)
+      }}>{{ data.label }}</a></li>
+      {% endfor %}
+    </ul>
+  </nav>
+</div>
+{% endif %}

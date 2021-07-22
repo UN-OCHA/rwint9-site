@@ -1,0 +1,8 @@
+uuid: 89420aca-6f59-453e-89a9-81366eed33d7
+langcode: en
+status: true
+dependencies: {  }
+name: 'Years of experience'
+vid: job_experience
+description: ''
+weight: 0

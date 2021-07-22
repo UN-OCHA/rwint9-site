@@ -1,0 +1,19 @@
+uuid: a061e1d3-a711-4224-9331-4ae012b613d5
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_notify
+    - node.type.report
+id: node.report.field_notify
+field_name: field_notify
+entity_type: node
+bundle: report
+label: Notify
+description: 'Enter one email address per line.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

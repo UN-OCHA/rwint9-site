@@ -1,0 +1,96 @@
+id: reliefweb_taxonomy_term_revision__source
+label: Migrate ReliefWeb source taxonomy term revisions.
+migration_group: reliefweb_term_revision
+source:
+  bundle: source
+process:
+  # Moderation status.
+  moderation_state:
+    default_value: active
+  # Fields.
+  field_aliases/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_term_alias/0/value
+  field_allowed_content_types:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: field_allowed_content_types
+    -
+      plugin: sub_process
+      process:
+        value: value
+  field_attention_job/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_attention_jobs/0/value
+  field_attention_report/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_attention_report/0/value
+  field_attention_training/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_attention_trainings/0/value
+  field_country:
+    plugin: sub_process
+    source: field_country
+    process:
+      target_id: tid
+  field_disclaimer/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_disclaimer/0/value
+  field_fst_id/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_fst_id/0/value
+  field_homepage/uri:
+    plugin: skip_on_empty
+    method: process
+    source: field_homepage/0/url
+  # @todo review once the custom field has been added for import URL.
+  # field_job_import_feed_url/uri
+  #   plugin: skip_on_empty
+  #   method: process
+  #   source: field_link/0/url
+  field_links:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: field_links
+    -
+      plugin: sub_process
+      process:
+        uri: value
+  # @todo review after figuring out the file directory.
+  # field_logo:
+  #   plugin: sub_process
+  #   source: field_term_image
+  #   process:
+  #     target_id: fid
+  #     alt: alt
+  #     title: title
+  #     width: width
+  #     height: height
+  field_longname/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_longname/0/value
+  field_organization_type:
+    plugin: sub_process
+    source: field_organization_type
+    process:
+      target_id: tid
+  field_shortname/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_shortname/0/value
+  field_spanish_name/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_spanish_name/0/value
+migration_dependencies:
+  required:
+    - reliefweb_taxonomy_term__source

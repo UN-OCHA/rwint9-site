@@ -1,0 +1,74 @@
+uuid: 73db38ec-0d51-4c13-aff7-5b2051cc4d42
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: JpJNvX9g0AQKqbkjMtSk7E4eP_y0nFrBzVEjShKcHU0
+id: reliefweb_taxonomy_term__disaster
+class: null
+field_plugin_method: null
+cck_plugin_method: null
+migration_tags: null
+migration_group: reliefweb_term
+label: 'Migrate ReliefWeb disaster taxonomy terms.'
+source:
+  bundle: disaster
+process:
+  moderation_state:
+    default_value: draft
+  field_country:
+    plugin: sub_process
+    source: field_country
+    process:
+      target_id: tid
+  field_primary_country:
+    plugin: sub_process
+    source: field_primary_country
+    process:
+      target_id: tid
+  field_disaster_type:
+    plugin: sub_process
+    source: field_disaster_type
+    process:
+      target_id: tid
+  field_primary_disaster_type:
+    plugin: sub_process
+    source: field_primary_disaster_type
+    process:
+      target_id: tid
+  field_disaster_date:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: field_disaster_date
+    -
+      plugin: sub_process
+      process:
+        value:
+          plugin: format_date
+          from_format: U
+          to_format: 'Y-m-d\TH:i:s'
+          from_timezone: UTC
+          to_timezone: UTC
+          source: value
+  field_glide/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_glide/0/value
+  field_glide_related/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_glide_related/0/value
+  field_profile/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_profile/0/value
+  field_timezone/value:
+    plugin: default_value
+    default_value: 0
+    source: field_timezone/0/value
+destination: null
+migration_dependencies:
+  required:
+    - reliefweb_taxonomy_term
+    - reliefweb_taxomomy_term__country

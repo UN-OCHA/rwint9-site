@@ -1,0 +1,49 @@
+/**
+ * View more links.
+ *
+ * Links to view more, for example to redirect to a list of documents. They have
+ * an icon to distinguish them from other links.
+ *
+ * Scope: #main-content
+ */
+#main-content .view-more {
+  width: 100%;
+  text-align: center;
+  margin-top: 32px;
+}
+/* Clear the floating of the list items. */
+#main-content .view-more:after {
+  content: "";
+  clear: both;
+  display: block;
+}
+#main-content .view-more a {
+  display: inline-block;
+  position: relative;
+  font-style: italic;
+}
+#main-content .view-more a:after {
+  content: "";
+  display: inline-block;
+  vertical-align: middle;
+  height: 12px;
+  width: 12px;
+  margin: 0 0 0 6px;
+  overflow: hidden;
+  background: var(--rw-icons--common--next--12--dark-blue);
+}
+#main-content .view-more ul {
+  display: inline-block;
+  max-width: 360px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+#main-content .view-more li {
+  float: left;
+}
+/* @todo Is is used anywhere? */
+#main-content .view-more li + li {
+  float: right;
+}

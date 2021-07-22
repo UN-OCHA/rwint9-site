@@ -1,0 +1,29 @@
+uuid: 6a1dd4e9-a35b-4169-9fa2-5e19bfe3a25c
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_headline_image
+    - media.type.image_report
+    - node.type.report
+id: node.report.field_headline_image
+field_name: field_headline_image
+entity_type: node
+bundle: report
+label: 'Headline image'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:media'
+  handler_settings:
+    target_bundles:
+      image_report: image_report
+    sort:
+      field: mid
+      direction: DESC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

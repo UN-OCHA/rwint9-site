@@ -1,0 +1,69 @@
+<?php
+
+/**
+ * @file
+ * Module file for the ReliefWeb Homepage module.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function reliefweb_homepage_theme() {
+  return [
+    'reliefweb_homepage' => [
+      'variables' => [
+        // Page title.
+        'title' => t('ReliefWeb'),
+        // Title attributes.
+        'title_attributes' => NULL,
+        // List of sections constituing the homepage's content.
+        'sections' => [],
+      ],
+    ],
+    'reliefweb_homepage_opportunities' => [
+      'variables' => [
+        // Section heading level.
+        'level' => 2,
+        // Section id.
+        'id' => '',
+        // Section attributes.
+        'attributes' => NULL,
+        // Section title.
+        'title' => t('Opportunities'),
+        // Section title attributes.
+        'title_attributes' => NULL,
+        // Associative array keyed by type (job, training) and with the
+        // following properties:
+        // - type: job, training
+        // - url: url to the corresponding river
+        // - total: total number of opportunities for this type
+        // - title: label for the number of opportunities.
+        'opportunities' => [],
+      ],
+    ],
+    'reliefweb_homepage_announcement' => [
+      'variables' => [
+        // Section heading level.
+        'level' => 2,
+        // Section id.
+        'id' => '',
+        // Section attributes.
+        'attributes' => NULL,
+        // Section title.
+        'title' => t('Annoucement'),
+        // Section title attributes.
+        'title_attributes' => NULL,
+        // Announcement URL.
+        'url' => '',
+        // Announcement banner image.
+        'image' => [
+          'url' => '',
+          'title' => '',
+          'alt' => '',
+          'width' => 1,
+          'height' => 1,
+        ],
+      ],
+    ],
+  ];
+}

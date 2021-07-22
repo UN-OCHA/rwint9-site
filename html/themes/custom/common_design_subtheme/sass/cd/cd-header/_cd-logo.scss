@@ -1,0 +1,23 @@
+//——————————————————————————————————————————————————————————————————————————————
+// Common Design: Logo
+//
+// Replace images with your site logo.
+//——————————————————————————————————————————————————————————————————————————————
+
+.cd-site-logo {
+  width: 52px;
+
+  &:focus {
+    outline: 3px solid $cd-blue--bright;
+  }
+
+  // Logo for mobile.
+  @include max-width(md) {
+    background: url("../img/logos/rw-logo-mobile.svg") center no-repeat;
+    background: linear-gradient(transparent, transparent), url("../img/logos/rw-logo-mobile.svg") center no-repeat;
+  }
+
+  @include tablet {
+    width: 140px; // width may need to be adjusted depending on logo width.
+  }
+}

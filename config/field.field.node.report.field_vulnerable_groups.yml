@@ -1,0 +1,29 @@
+uuid: 62b3344e-720c-49fe-9ec5-a61815362b66
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_vulnerable_groups
+    - node.type.report
+    - taxonomy.vocabulary.vulnerable_group
+id: node.report.field_vulnerable_groups
+field_name: field_vulnerable_groups
+entity_type: node
+bundle: report
+label: 'Vulnerable groups'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      vulnerable_group: vulnerable_group
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

@@ -1,0 +1,7 @@
+reliefweb_homepage.homepage.page:
+  path: '/home'
+  defaults:
+    _title: 'ReliefWeb'
+    _controller: '\Drupal\reliefweb_homepage\Controller\Homepage::getPageContent'
+  requirements:
+    _permission: 'access content'

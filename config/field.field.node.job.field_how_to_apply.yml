@@ -1,0 +1,27 @@
+uuid: 4fa9a999-ac8f-43af-be22-7e4b65bfb10c
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_how_to_apply
+    - node.type.job
+  module:
+    - allowed_formats
+    - text
+third_party_settings:
+  allowed_formats:
+    markdown: markdown
+    html: '0'
+    plain_text: '0'
+id: node.job.field_how_to_apply
+field_name: field_how_to_apply
+entity_type: node
+bundle: job
+label: 'How to apply'
+description: 'Brief and clear instructions how to apply only. Not to be used to duplicate the job description.'
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: text_long

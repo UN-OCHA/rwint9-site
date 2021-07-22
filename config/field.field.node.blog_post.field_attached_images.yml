@@ -1,0 +1,29 @@
+uuid: c983edd3-d269-4bd1-ac90-394435f6f3b2
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_attached_images
+    - media.type.image_blog_post
+    - node.type.blog_post
+id: node.blog_post.field_attached_images
+field_name: field_attached_images
+entity_type: node
+bundle: blog_post
+label: 'Attached images'
+description: 'Screenshots and illustrations to be embedded within the blog post. No copyrighted images to be used here. Once uploaded, embed them with: <code>![title](path-to-image-uploaded-here)</code>. Recommended width is 750px.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:media'
+  handler_settings:
+    target_bundles:
+      image_blog_post: image_blog_post
+    sort:
+      field: mid
+      direction: DESC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

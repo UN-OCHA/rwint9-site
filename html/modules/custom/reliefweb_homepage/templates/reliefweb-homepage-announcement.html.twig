@@ -1,0 +1,47 @@
+{#
+
+/**
+ * @file
+ * Template file for the ReliefWeb Homepage announcement.
+ *
+ * Available variables:
+ * - lavel: heading level (defaults to 2)
+ * - id: id of the section (default to 'announcement')
+ * - attributes: section attributes
+ * - title: section title
+ * - title_attributes: section title attributes
+ * - url: URL to the page the announcement links to
+ * - image: array with a url, title, alt, width and height
+ *
+ * @todo handle responsive image style.
+ */
+
+#}
+<section{{ attributes
+  .setAttribute('id', id)
+  .addClass([
+    'rw-homepage-announcement',
+  ])
+}}>
+  <h{{ level }}{{ title_attributes
+    .addClass([
+      'rw-homepage-announcement__title',
+      'visually-hidden'
+    ])
+  }}>{{ title ?? 'Announcement'|t }}</h{{ level }}>
+
+  <a class="rw-homepage-announcement__link" href="{{ url }}" target="_blank" rel="noopener">
+    {{ render_var({
+      '#theme': 'image_style',
+      '#style_name': 'announcement',
+      '#uri': image.url,
+      '#alt': image.alt,
+      '#attributes': {
+        'class': ['rw-homepage-announcement__image']
+      },
+      '#title': image.title,
+      '#width': image.width,
+      '#height': image.height
+    }) }}
+  </a>
+</section>

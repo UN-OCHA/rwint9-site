@@ -1,0 +1,57 @@
+dist: focal
+language: php
+
+php:
+  - 8.0
+
+# Make sure we have a recent version of docker-compose.
+addons:
+  apt:
+    packages:
+      - docker-compose
+
+before_script:
+  # Ensure the PHP environment is ready.
+  - phpenv rehash
+
+script:
+  # Get docker information.
+  - docker version
+  - docker-compose version
+
+  # PHP linting
+  - test ! -d ./html/modules/custom || find -L ./html/modules/custom -iregex '.*\.\(php\|module\|inc\|install\)$' -print0 | xargs -0 -n 1 -P 4 php -l
+
+  # Build local image.
+  - make
+
+  # Create the site, redis and mysql containers.
+  - docker-compose -p rwint9-test -f tests/docker-compose.yml up -d
+
+  # Dump some information about the created containers.
+  - docker ps -a
+
+  # Wait a bit for solr and mysql to be ready.
+  - sleep 10
+
+  # Install the site with the existing config.
+  - docker exec -it rwint9-test-site drush -y si --existing-config
+
+  # Ensure the file directories are writable.
+  - docker exec -it rwint9-test-site chmod -R 777 /srv/www/html/sites/default/files /srv/www/html/sites/default/private
+
+  # Install the dev dependencies.
+  - docker exec -it -w /srv/www rwint9-test-site composer install
+
+  # Ensure the drupal coding standards config is installed.
+  - docker exec -it -u appuser -w /srv/www rwint9-test-site ./vendor/bin/phpcs --config-set installed_paths vendor/drupal/coder/coder_sniffer
+
+  # Check coding standards.
+  - docker exec -it -u appuser -w /srv/www rwint9-test-site ./vendor/bin/phpcs -p --report=full --standard=tests/phpcs.xml ./html/modules/custom ./html/themes/custom
+
+after_success:
+  - echo "The tests completed without errors."
+
+after_failure:
+  - echo "The tests failed. Please check the output above for problems."
+  - ../vendor/bin/drush watchdog:show --extended

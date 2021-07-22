@@ -1,0 +1,27 @@
+uuid: e816ea7e-66d0-4e51-b9b5-ed896ca8cc67
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_how_to_register
+    - node.type.training
+  module:
+    - allowed_formats
+    - text
+third_party_settings:
+  allowed_formats:
+    markdown: markdown
+    html: '0'
+    plain_text: '0'
+id: node.training.field_how_to_register
+field_name: field_how_to_register
+entity_type: node
+bundle: training
+label: 'How to register'
+description: 'The requirements for this field are: the application procedure/condition(s) and contact details. This core information cannot be substituted by providing a link for "further details". If no registration is required, provide contact details, a link to the advertisement (on the Organization’s website) or include the text: "No registration required."'
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: text_long

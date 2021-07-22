@@ -1,0 +1,99 @@
+uuid: 5118aca8-67a5-4f3b-83e8-b2f986e50cfe
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - reliefweb_migrate
+_core:
+  default_config_hash: DmsLHCJizfCZno1dvZDxmbRCo09UJPlw0I-MlOhh59E
+id: reliefweb_node
+label: 'ReliefWeb Migration - Nodes'
+description: 'Migrate ReliefWeb nodes from Drupal 7 to Drupal 9.'
+source_type: 'Drupal 7'
+module: null
+shared_configuration:
+  migration_tags:
+    - node
+  dependencies:
+    enforced:
+      module:
+        - reliefweb_migrate
+  source:
+    key: rwint7
+    plugin: reliefweb_node
+    constants:
+      format: markdown
+  destination:
+    plugin: 'entity:node'
+  process:
+    nid: nid
+    uid: uid
+    type: type
+    title: title
+    created: created
+    changed: changed
+    status:
+      plugin: static_map
+      source: field_status/0/value
+      default_value: 0
+      map:
+        published: 1
+        to-review: 1
+    moderation_state:
+      plugin: static_map
+      source: field_status/0/value
+      default_value: draft
+      map:
+        archive: archive
+        draft: draft
+        duplicate: duplicate
+        expired: expired
+        embargoed: embargoed
+        on-hold: on_hold
+        pending: pending
+        published: published
+        reference: reference
+        refused: refused
+        to-review: to_review
+    vid: revision_id
+    revision_uid:
+      plugin: static_map
+      default_value: 2
+      source: revision_user
+      map:
+        - 2
+        - 2
+    revision_log: revision_log_message
+    revision_timestamp: revision_created
+    revision_default: revision_default
+    body/value:
+      plugin: skip_on_empty
+      method: process
+      source: body/0/value
+    body/format:
+      -
+        plugin: skip_on_empty
+        method: process
+        source: body/0/format
+      -
+        plugin: static_map
+        default_value: markdown
+        map:
+          full_html: html
+          legacy: markdown
+          markdown: markdown
+          plain_text: markdown
+          token_markdown: markdown
+  migration_dependencies:
+    required:
+      - reliefweb_user
+      - reliefweb_media__image_announcement
+      - reliefweb_media__image_blog_post__field_attached_images
+      - reliefweb_media__image_blog_post__field_image
+      - reliefweb_media__image_headline
+      - reliefweb_media__image_report
+      - reliefweb_taxonomy_term
+      - reliefweb_taxonomy_term__country
+      - reliefweb_taxonomy_term__disaster
+      - reliefweb_taxonomy_term__source

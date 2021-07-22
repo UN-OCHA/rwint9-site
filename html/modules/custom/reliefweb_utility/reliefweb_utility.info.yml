@@ -1,0 +1,5 @@
+type: module
+name: ReliefWeb Utility
+description: 'Provides various utility helpers.'
+package: reliefweb
+core_version_requirement: ^9

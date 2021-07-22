@@ -1,0 +1,20 @@
+uuid: 38fd3006-a0ed-4031-8a18-e68b134ea8db
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - taxonomy
+id: node.field_ocha_product
+field_name: field_ocha_product
+entity_type: node
+type: entity_reference
+settings:
+  target_type: taxonomy_term
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -1,0 +1,40 @@
+{#
+
+/**
+ * @file
+ * Template file for an image displayed in an entity article.
+ *
+ * Available variables;
+ * - attributes: figure attributes
+ * - style: image style
+ * - image: array with uri, alt, width, height, alt and copyright
+ */
+
+#}
+<figure{{ attributes
+  .addClass([
+    'rw-entity-image',
+    image.alt is not empty or image.copyright is not empty ? 'rw-entity-image--with-caption',
+  ])
+}}>
+  {{ render_var({
+    '#theme': 'image_style',
+    '#style_name': style ?? 'small',
+    '#uri': image.uri,
+    '#alt': image.alt,
+    '#attributes': {
+      'class': ['rw-entity-image__image'],
+    },
+    '#width': image.width,
+    '#height': image.height
+  }) }}
+
+  {% if image.alt is not empty or image.copyright is not empty %}
+  <figcaption class="rw-entity-image__caption" aria-hidden="true">
+    {{ image.alt }}
+    {% if image.copyright is not empty %}
+    <small class="rw-entity-image__copyright">&copy; {{ image.copyright }}</small>
+    {% endif %}
+  </figcaption>
+  {% endif %}
+</figure>

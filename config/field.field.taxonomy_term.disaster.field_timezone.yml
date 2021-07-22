@@ -1,0 +1,21 @@
+uuid: d8297309-413d-48b4-8426-0bef5672c5c5
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_timezone
+    - taxonomy.vocabulary.disaster
+  module:
+    - options
+id: taxonomy_term.disaster.field_timezone
+field_name: field_timezone
+entity_type: taxonomy_term
+bundle: disaster
+label: 'Notifications time zone'
+description: 'Choose the main time zone for this disaster entry. This information will be used for instance to determine at what time to send out notifications for related content.'
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

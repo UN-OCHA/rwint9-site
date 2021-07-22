@@ -1,0 +1,45 @@
+id: reliefweb_taxonomy_term__country
+label: Migrate ReliefWeb country taxonomy terms.
+migration_group: reliefweb_term
+source:
+  bundle: country
+process:
+  # Moderation status.
+  moderation_state:
+    default_value: normal
+  # Fields.
+  field_aliases/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_term_alias/0/value
+  field_iso3/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_iso3/0/value
+  field_location/lat:
+    plugin: skip_on_empty
+    method: process
+    source: field_location/0/lat
+  field_location/lon:
+    plugin: skip_on_empty
+    method: process
+    source: field_location/0/lon
+  field_shortname/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_shortname/0/value
+  field_longname/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_longname/0/value
+  field_profile/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_profile/0/value
+  field_timezone/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_timezone/0/value
+migration_dependencies:
+  required:
+    - reliefweb_taxonomy_term

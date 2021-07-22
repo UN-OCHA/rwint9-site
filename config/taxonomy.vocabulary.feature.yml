@@ -1,0 +1,8 @@
+uuid: 26b6a49c-72f1-4a1f-830b-570d64666552
+langcode: en
+status: true
+dependencies: {  }
+name: Feature
+vid: feature
+description: ''
+weight: 0

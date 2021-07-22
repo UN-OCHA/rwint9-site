@@ -1,0 +1,27 @@
+/**
+ * 2 columns layout on tablet/desktop for rivers with advanced search.
+ */
+@media screen and (min-width : 768px) {
+  #main-content section.rw-river-page--with-advanced-search .rw-advanced-search {
+    float: left;
+    width: 300px;
+  }
+  #main-content section.rw-river-page--with-advanced-search .rw-river--river-list {
+    float: right;
+    width: calc(100% - 340px);
+  }
+  /* Clear the floating above. */
+  #main-content section.rw-river-page--with-advanced-search #list:after {
+    content: "";
+    display: block;
+    clear: both;
+  }
+}
+@media screen and (min-width : 1024px) {
+  #main-content section.rw-river-page--with-advanced-search .rw-advanced-search {
+    width: 320px;
+  }
+  #main-content section.rw-river-page--with-advanced-search .rw-river--river-list {
+    width: calc(100% - 360px);
+  }
+}

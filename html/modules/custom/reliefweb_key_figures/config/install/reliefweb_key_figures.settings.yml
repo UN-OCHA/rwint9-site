@@ -1,0 +1,6 @@
+# API URL for the key figures.
+api_url: 'https://raw.githubusercontent.com/reliefweb/crisis-app-data/v2/edition/world/countries/'
+# URL to the HDX page for the ReliefWeb key figures.
+hdx_url: 'https://data.humdata.org/dataset/reliefweb-crisis-figures'
+# Number of seconds to cache the data for.
+cache_lifetime: 300

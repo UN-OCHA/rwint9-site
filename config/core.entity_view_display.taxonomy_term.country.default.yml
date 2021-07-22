@@ -1,0 +1,28 @@
+uuid: 1abc3fa6-1452-4cd6-a19d-ce0150dcce74
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.country.field_aliases
+    - field.field.taxonomy_term.country.field_iso3
+    - field.field.taxonomy_term.country.field_location
+    - field.field.taxonomy_term.country.field_longname
+    - field.field.taxonomy_term.country.field_profile
+    - field.field.taxonomy_term.country.field_shortname
+    - field.field.taxonomy_term.country.field_timezone
+    - taxonomy.vocabulary.country
+id: taxonomy_term.country.default
+targetEntityType: taxonomy_term
+bundle: country
+mode: default
+content: {  }
+hidden:
+  description: true
+  field_aliases: true
+  field_iso3: true
+  field_location: true
+  field_longname: true
+  field_profile: true
+  field_shortname: true
+  field_timezone: true
+  langcode: true

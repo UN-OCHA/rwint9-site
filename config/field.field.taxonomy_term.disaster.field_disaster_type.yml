@@ -1,0 +1,29 @@
+uuid: e0ec45fa-6b53-4822-9149-a6796bd164c9
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_disaster_type
+    - taxonomy.vocabulary.disaster
+    - taxonomy.vocabulary.disaster_type
+id: taxonomy_term.disaster.field_disaster_type
+field_name: field_disaster_type
+entity_type: taxonomy_term
+bundle: disaster
+label: 'Disaster type'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      disaster_type: disaster_type
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

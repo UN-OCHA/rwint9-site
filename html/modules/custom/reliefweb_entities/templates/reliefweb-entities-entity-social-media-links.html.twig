@@ -1,0 +1,46 @@
+
+{#
+
+/**
+ * @file
+ * Template file for entity details (meta informatio like country).
+ *
+ * Available variables:
+ * - level: headling leve (defaults to 2)
+ * - id: section id
+ * - attributes: section attributes
+ * - title: section title
+ * - title_attributes: section title attributes
+ * - links: list of social media links with a url and a title
+ * - icons_only: flag indicating that the section title should be hidden and
+ *   the links displayed has icons.
+
+#}
+<section{{ attributes
+  .addClass([
+    'rw-entity-social-media-links',
+    icons_only ? 'rw-entity-social-media-links--icons-only',
+  ])
+  .setAttribute('id', id)
+}}>
+  <h{{ level }}{{ title_attributes
+    .addClass([
+      'rw-entity-social-media-links__title',
+      icons_only ? 'visually-hidden',
+    ])
+  }}>{{ title }}</h{{ level }}>
+
+  <ul class="rw-entity-social-media-links__list">
+  {% for link in links %}
+    <li class="rw-entity-social-media-links__list_item">
+      {%- if icons_only -%}
+        <a href="{{ link.url }}" target="_blank" rel="nofollow noopener noreferrer" class="rw-entity-social-media-links__link" title="{{ link.title }}">
+          <span class="visually-hidden">{{ link.title }}</span>
+        </a>
+      {%- else -%}
+        <a href="{{ link.url }}" target="_blank" rel="nofollow noopener noreferrer" class="rw-entity-social-media-links__link">{{ link.title }}</a>
+      {%- endif -%}
+    </li>
+  {% endfor %}
+  </ul>
+</section>

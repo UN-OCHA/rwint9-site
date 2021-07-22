@@ -1,0 +1,22 @@
+uuid: cdb2ee79-f404-4560-876d-52819eca5240
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.report
+id: node.report.status
+field_name: status
+entity_type: node
+bundle: report
+label: Published
+description: ''
+required: false
+translatable: true
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

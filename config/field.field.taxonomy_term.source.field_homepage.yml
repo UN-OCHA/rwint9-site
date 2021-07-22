@@ -1,0 +1,23 @@
+uuid: 229218d1-c4d0-4aa4-8b8a-792a4f941361
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_homepage
+    - taxonomy.vocabulary.source
+  module:
+    - link
+id: taxonomy_term.source.field_homepage
+field_name: field_homepage
+entity_type: taxonomy_term
+bundle: source
+label: 'Home page'
+description: 'URL of the homepage of the organization starting with https:// or http://'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  link_type: 16
+  title: 0
+field_type: link

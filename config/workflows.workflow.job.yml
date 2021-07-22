@@ -1,0 +1,114 @@
+uuid: e1ab65a5-debf-44c7-9a27-b73a7cf3cbad
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.job
+  module:
+    - content_moderation
+id: job
+label: Job
+type: content_moderation
+type_settings:
+  states:
+    draft:
+      label: Draft
+      published: false
+      default_revision: false
+      weight: 0
+    duplicate:
+      published: false
+      default_revision: true
+      label: Duplicate
+      weight: 5
+    expired:
+      published: false
+      default_revision: true
+      label: Expired
+      weight: 6
+    on_hold:
+      published: false
+      default_revision: true
+      label: On-hold
+      weight: 3
+    pending:
+      published: false
+      default_revision: true
+      label: Pending
+      weight: 2
+    published:
+      label: Published
+      published: true
+      default_revision: true
+      weight: 1
+    refused:
+      published: false
+      default_revision: true
+      label: Refused
+      weight: 4
+  transitions:
+    draft:
+      label: 'Save as Draft'
+      from:
+        - draft
+        - on_hold
+        - pending
+      to: draft
+      weight: 0
+    duplicate:
+      label: 'Mark as Duplicate'
+      from:
+        - draft
+        - duplicate
+        - on_hold
+        - pending
+        - published
+        - refused
+      to: duplicate
+      weight: 5
+    expired:
+      label: 'Mark as Expired'
+      from:
+        - published
+      to: expired
+      weight: 6
+    on_hold:
+      label: 'Put on-hold'
+      from:
+        - draft
+        - on_hold
+        - pending
+        - published
+      to: on_hold
+      weight: 3
+    pending:
+      label: 'Save as Pending'
+      from:
+        - draft
+        - on_hold
+        - pending
+      to: pending
+      weight: 2
+    published:
+      label: Publish
+      from:
+        - on_hold
+        - pending
+        - published
+      to: published
+      weight: 1
+    refused:
+      label: Refuse
+      from:
+        - draft
+        - duplicate
+        - on_hold
+        - pending
+        - published
+        - refused
+      to: refused
+      weight: 4
+  entity_types:
+    node:
+      - job
+  default_moderation_state: draft

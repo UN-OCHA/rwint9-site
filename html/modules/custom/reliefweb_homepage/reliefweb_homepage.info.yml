@@ -1,0 +1,5 @@
+type: module
+name: ReliefWeb Homepage
+description: 'Provides a route controller for the homepage as well has the headline manager.'
+package: reliefweb
+core_version_requirement: ^9

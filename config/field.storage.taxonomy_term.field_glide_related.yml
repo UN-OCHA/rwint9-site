@@ -1,0 +1,19 @@
+uuid: fe603e23-966d-4c52-acad-0acf0f38ac9d
+langcode: en
+status: true
+dependencies:
+  module:
+    - taxonomy
+id: taxonomy_term.field_glide_related
+field_name: field_glide_related
+entity_type: taxonomy_term
+type: string_long
+settings:
+  case_sensitive: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

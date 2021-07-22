@@ -1,0 +1,29 @@
+uuid: 6fec9477-ec47-40d2-9f61-5d405f12f6a4
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_content_format
+    - node.type.report
+    - taxonomy.vocabulary.content_format
+id: node.report.field_content_format
+field_name: field_content_format
+entity_type: node
+bundle: report
+label: 'Content format'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      content_format: content_format
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

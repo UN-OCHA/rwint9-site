@@ -1,0 +1,22 @@
+uuid: 50a44d48-312a-452b-a082-c6c1cb055cf7
+langcode: en
+status: true
+dependencies:
+  theme:
+    - common_design
+_core:
+  default_config_hash: c-06bbElRY5sKmglk74ppgTW93Et4-EJFyNiUZMb8JY
+id: common_design_local_tasks
+theme: common_design
+region: content
+weight: -20
+provider: null
+plugin: local_tasks_block
+settings:
+  id: local_tasks_block
+  label: Tabs
+  provider: core
+  label_display: '0'
+  primary: true
+  secondary: true
+visibility: {  }

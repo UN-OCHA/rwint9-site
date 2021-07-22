@@ -1,0 +1,76 @@
+{#
+
+/**
+ * @file
+ * Template file for the key figures block.
+ *
+ * Available variables;
+ * - level: heading level (defaults to 2)
+ * - id: section id (defaults to 'key-figures')
+ * - title: the title for the section
+ * - country: name of the country the figures are for
+ * - figures: list of figures. Each figure has the following properties:
+ *   - status: standard or recent
+ *   - name: figure label
+ *   - value: figure value (number)
+ *   - trand: if defined, has a message and since properties
+ *   - sparkline: if  defined, has a list of points
+ *   - date: last update time
+ *   - updated: formatted relative update date.
+ *   - url: URL to the report the figures came from
+ *   - source: short name of the source
+ * - more: indicates if there are more figures that can be shown.
+ * - dataset: if defined, has a url and title properties
+ *
+ * @todo provide a better alternative to "number_format" that supports
+ * localization.
+ *
+ * @todo use something else than "date" for the formatting to better handle
+ * localization.
+ */
+
+#}
+<section{{ attributes
+  .setAttribute('id', id)
+  .setAttribute('lang', langcode)
+  .addClass([
+    'rw-key-figures',
+  ])
+}}>
+  <h{{ level }}{{ title_attributes }}>{{ title ?? ('Key Figures'|t) }}</h{{ level }}>
+  <ul class="rw-key-figures__list">
+    {% for figure in figures %}
+    <li>
+      <figure class="rw-key-figures__figure rw-key-figures__figure--{{ figure.status }}">
+        <figcaption class="rw-key-figures__figure__label">{{ figure.name }}</figcaption>
+        <div class="rw-key-figures__figure__content">
+          <p>
+            <data value="{{ figure.value }}" class="rw-key-figures__figure__value">{{ figure.value|number_format }}</data>
+            {% if figure.trend %}
+              <small class="rw-key-figures__figure__trend"><span class="rw-key-figures__figure__trend__message">{{ figure.trend.message }}</span> <span class="rw-key-figures__figure__trend__since">{{ figure.trend.since }}</span></small>
+            {% endif %}
+          </p>
+          {% if figure.sparkline %}
+          <svg viewBox="0 0 120 40" xmlns="http://www.w3.org/2000/svg" width="120" fill="none" stroke="#999" aria-hidden="true">
+            <polyline points="{{ figure.sparkline.points|join(' ') }}"/>
+          </svg>
+          {% endif %}
+        </div>
+        <footer class="rw-key-figures__figure__footer">
+          <time datetime="{{ figure.date|date('c') }}" class="rw-key-figures__figure__updated">{{ figure.updated }}</time>
+          <cite class="rw-key-figures__figure__source"><span class="visually-hidden">{{ 'Source: '|t }} </span><a href="{{ figure.url }}">{{ figure.source }}</a></cite>
+        </footer>
+      </figure>
+    </li>
+    {% endfor %}
+  </ul>
+
+  <footer class="view-more rw-key-figures__links">
+    {% if more %}
+    <a href="{{ url('<current>', {}, {'query': {'figures': 'all'}, 'fragment': id}) }}">{{ 'View all @country figures'|t({'@country': country}) }}</a>
+    {% endif %}
+    {% if dataset %}
+    <a href="{{ dataset.url }}" target="_blank" rel="noopener">{{ dataset.title }}</a>
+    {% endif %}
+  </footer>
+</section>

@@ -1,0 +1,8 @@
+uuid: 38705e0e-6fde-4c93-870d-4f6327f2f27f
+langcode: en
+status: true
+dependencies: {  }
+name: 'Disaster type'
+vid: disaster_type
+description: ''
+weight: 0

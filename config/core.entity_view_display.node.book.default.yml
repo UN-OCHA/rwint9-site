@@ -1,0 +1,30 @@
+uuid: b5b49834-7824-427b-a3e1-e8054dfbae11
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.book.body
+    - field.field.node.book.field_attached_images
+    - node.type.book
+  module:
+    - text
+    - user
+_core:
+  default_config_hash: UWTnZUj-u-jp8I_S1C1nUCTlM5iIV2QKdxm37ehFjoI
+id: node.book.default
+targetEntityType: node
+bundle: book
+mode: default
+content:
+  body:
+    label: hidden
+    type: text_default
+    weight: 0
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+hidden:
+  content_moderation_control: true
+  field_attached_images: true
+  langcode: true
+  links: true

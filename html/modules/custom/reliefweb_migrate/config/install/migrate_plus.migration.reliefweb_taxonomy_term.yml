@@ -1,0 +1,34 @@
+id: reliefweb_taxonomy_term
+label: Migrate ReliefWeb base taxonomy terms.
+migration_group: reliefweb_term
+source:
+  bundle:
+    - career_categories
+    - content_format
+    - disaster_type
+    - feature
+    - job_experience
+    - job_type
+    - language
+    - ocha_product
+    - organization_type
+    - tags
+    - theme
+    - training_format
+    - training_type
+    - vulnerable_groups
+process:
+  # Moderation status.
+  moderation_state:
+    plugin: skip_on_empty
+    method: process
+    source: field_status/0/value
+  # Fields.
+  field_disaster_type_code/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_abbreviation/0/value
+  field_language_code/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_language_code/0/value

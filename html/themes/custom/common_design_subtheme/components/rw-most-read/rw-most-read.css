@@ -1,0 +1,31 @@
+/**
+ * Updates.
+ *
+ * Latest updates or most read content in the past 24 hours.
+ *
+ * Id: #most-read
+ *
+ * Scope: .path-frontpage #main-content
+ */
+/* "Last 24h hours" text. */
+.path-frontpage #main-content #most-read h2 {
+  font-size: 24px;
+}
+.path-frontpage #main-content #most-read h2 span {
+  display: inline-block;
+  vertical-align: middle;
+  text-transform: none;
+  font-size: 16px;
+  font-weight: normal;
+}
+.path-frontpage #main-content #most-read article {
+  padding: 0 0 24px 0;
+  border: none;
+}
+.path-frontpage #main-content #most-read article + article {
+  padding-top: 24px;
+  border-top: 1px solid #e6ecef;
+}
+.path-frontpage #main-content #most-read .view-more {
+  margin-top: 8px;
+}

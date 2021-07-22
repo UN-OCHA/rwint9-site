@@ -1,0 +1,19 @@
+uuid: 11350577-66bb-4ce1-a714-34c3e47a2ac5
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_disaster_type_code
+    - taxonomy.vocabulary.disaster_type
+id: taxonomy_term.disaster_type.field_disaster_type_code
+field_name: field_disaster_type_code
+entity_type: taxonomy_term
+bundle: disaster_type
+label: Code
+description: '2 letters disaster type code (ex: FL for Floods).'
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

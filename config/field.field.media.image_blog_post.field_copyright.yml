@@ -1,0 +1,19 @@
+uuid: 46cac358-5e7e-4575-999e-ed4bbd13b888
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.media.field_copyright
+    - media.type.image_blog_post
+id: media.image_blog_post.field_copyright
+field_name: field_copyright
+entity_type: media
+bundle: image_blog_post
+label: Copyright
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

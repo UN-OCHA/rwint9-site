@@ -1,0 +1,29 @@
+uuid: a7d5d6f7-397d-4075-aa07-b9219f51fcae
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_image
+    - media.type.image_report
+    - node.type.report
+id: node.report.field_image
+field_name: field_image
+entity_type: node
+bundle: report
+label: Image
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:media'
+  handler_settings:
+    target_bundles:
+      image_report: image_report
+    sort:
+      field: mid
+      direction: DESC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

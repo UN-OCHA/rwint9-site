@@ -1,0 +1,65 @@
+id: reliefweb_taxonomy_term__disaster
+label: Migrate ReliefWeb disaster taxonomy terms.
+migration_group: reliefweb_term
+source:
+  bundle: disaster
+process:
+  # Moderation status.
+  moderation_state:
+    default_value: draft
+  # Fields.
+  field_country:
+    plugin: sub_process
+    source: field_country
+    process:
+      target_id: tid
+  field_primary_country:
+    plugin: sub_process
+    source: field_primary_country
+    process:
+      target_id: tid
+  field_disaster_type:
+    plugin: sub_process
+    source: field_disaster_type
+    process:
+      target_id: tid
+  field_primary_disaster_type:
+    plugin: sub_process
+    source: field_primary_disaster_type
+    process:
+      target_id: tid
+  field_disaster_date:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: field_disaster_date
+    -
+      plugin: sub_process
+      process:
+        value:
+          plugin: format_date
+          from_format: 'U'
+          to_format: 'Y-m-d\TH:i:s'
+          from_timezone: UTC
+          to_timezone: UTC
+          source: value
+  field_glide/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_glide/0/value
+  field_glide_related/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_glide_related/0/value
+  field_profile/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_profile/0/value
+  field_timezone/value:
+    plugin: default_value
+    default_value: 0
+    source: field_timezone/0/value
+migration_dependencies:
+  required:
+    - reliefweb_taxonomy_term
+    - reliefweb_taxomomy_term__country

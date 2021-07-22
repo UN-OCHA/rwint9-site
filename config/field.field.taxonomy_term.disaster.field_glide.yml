@@ -1,0 +1,19 @@
+uuid: 4a1b28f8-47b0-4bbc-80eb-b184ff415535
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_glide
+    - taxonomy.vocabulary.disaster
+id: taxonomy_term.disaster.field_glide
+field_name: field_glide
+entity_type: taxonomy_term
+bundle: disaster
+label: 'GLIDE number'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

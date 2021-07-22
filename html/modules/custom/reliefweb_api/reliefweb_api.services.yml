@@ -1,0 +1,4 @@
+services:
+  reliefweb_api.client:
+    class: Drupal\reliefweb_api\Services\ReliefWebApiClient
+    arguments: ['@cache.default', '@config.factory', '@datetime.time', '@http_client', '@logger.factory']

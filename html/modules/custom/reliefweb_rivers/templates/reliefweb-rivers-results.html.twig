@@ -1,0 +1,37 @@
+{#
+
+/**
+ * @file
+ * Template for the river results.
+ *
+ * Available variables:
+ * - attributes: section attributes
+ * - total: total number of resources matching the search query and filters
+ * - start: start of the result range
+ * - end: end of the result range
+ */
+
+#}
+{% spaceless %}
+<div{{ attributes
+  .addClass([
+    'rw-river-results',
+    total is empty ? 'rw-river-results--empty',
+  ])
+}}>
+
+{# Display the result range and total. #}
+{% if total is not empty %}
+  {% set start = start|number_format %}
+  {% set end = end|number_format %}
+  {% set total = total|number_format %}
+  {% trans %}
+  Showing <span>{{ start }}</span> - <span>{{ end }}</span> of <span>{{ total }}</span> results
+  {% endtrans %}
+{# Otherwise display a simple message saying there are no results. #}
+{% else %}
+  {{ 'No results found. Please modify your search or filter selection.'|t }}
+{% endif %}
+
+</div>
+{% endspaceless %}

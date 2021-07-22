@@ -1,0 +1,14 @@
+uuid: bf096b5a-c15c-43f6-806d-ac8620554da7
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.external_disaster_manager
+  module:
+    - user
+id: user_add_role_action.external_disaster_manager
+label: 'Add the External disaster manager role to the selected user(s)'
+type: user
+plugin: user_add_role_action
+configuration:
+  rid: external_disaster_manager

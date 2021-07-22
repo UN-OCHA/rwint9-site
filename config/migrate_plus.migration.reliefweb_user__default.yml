@@ -1,0 +1,76 @@
+uuid: 594fa784-9576-44e5-9a78-4719cb36d986
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: aFtgeNR343G7qeSNlMn5h_xZ3eh0amZ0CpK9e5VwK4g
+id: reliefweb_user__default
+class: null
+field_plugin_method: null
+cck_plugin_method: null
+migration_tags: null
+migration_group: reliefweb_base
+label: 'Migrate ReliefWeb default users.'
+source:
+  plugin: embedded_data
+  data_rows:
+    -
+      uid: 2
+      name: System
+      pass: ''
+      mail: ''
+      status: 1
+      timezone: UTC
+      roles: null
+  ids:
+    uid:
+      type: integer
+process:
+  uid: uid
+  name: name
+  pass: pass
+  mail: mail
+  status: status
+  timezone: timezone
+  langcode:
+    plugin: user_langcode
+    source: language
+    fallback_to_site_default: true
+  preferred_langcode:
+    plugin: user_langcode
+    source: language
+    fallback_to_site_default: true
+  preferred_admin_langcode:
+    plugin: user_langcode
+    source: language
+    fallback_to_site_default: true
+  roles:
+    plugin: static_map
+    default_value: null
+    source: roles
+    map:
+      6: administrator
+      8: beta_tester
+      3: editor
+      14: external_disaster_manager
+      9: user_manager
+      7: webmaster
+  field_notes/value:
+    plugin: default_value
+    default_value: 'System account used for automated tasks/changes'
+  path/pathauto:
+    plugin: default_value
+    default_value: 0
+  path/alias:
+    -
+      plugin: default_value
+      default_value: ''
+    -
+      plugin: skip_on_empty
+      method: process
+destination:
+  plugin: 'entity:user'
+migration_dependencies:
+  optional:
+    - language
+    - default_language

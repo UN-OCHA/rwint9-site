@@ -1,0 +1,55 @@
+{#
+
+/**
+ * @file
+ * Template file for the book menu.
+ *
+ * Available variables:
+ * - level: section level (defaults to 2)
+ * - title: section title
+ * - attributes: section attributes
+ * - title_attributes: section title attributes.
+ * - links: list of book links with a url, title and optionally a list of
+ *   children links under the "below" key.
+ */
+
+#}
+
+{# Macro to render a tree. #}
+{% macro render_book_tree(links, level) %}
+  <ol{{ create_attribute()
+    .addClass([
+      'rw-book-menu__list',
+      'rw-book-menu__list--level-' ~ level,
+    ])
+  }}>
+    {% for link in links %}
+    <li class="rw-book-menu__list__item">
+      {{ link(link.title, link.url, {
+        'class': [
+          'rw-book-menu__link',
+          link.active ? 'rw-book-menu__link--active',
+        ],
+      }) }}
+
+      {% if link.below is not empty %}
+        {{ _self.render_book_tree(link.below, level + 1) }}
+      {% endif %}
+    {% endfor %}
+  </ol>
+{% endmacro %}
+
+{# Book navigation menu. #}
+<nav{{ attributes
+  .addClass([
+    'rw-book-menu',
+  ])
+}}>
+  <h{{ level }}{{ title_attributes
+    .addClass([
+      'rw-book-menu__title',
+    ])
+  }}>{{ title }}</h{{ level }}>
+
+  {{ _self.render_book_tree(links, 0) }}
+</nav>

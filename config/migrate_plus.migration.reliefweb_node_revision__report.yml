@@ -1,0 +1,139 @@
+uuid: a8ffe244-8194-405a-a379-88568a809c6d
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: Nj6eqfEo3TAvQ2PT3wQcoGtj38pcUxG3AWCOtLGZuEM
+id: reliefweb_node_revision__report
+class: null
+field_plugin_method: null
+cck_plugin_method: null
+migration_tags: null
+migration_group: reliefweb_node_revision
+label: 'Migrate ReliefWeb report revisions.'
+source:
+  bundle: report
+process:
+  field_bury/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_bury/0/value
+  field_content_format/value:
+    plugin: sub_process
+    source: field_content_format
+    process:
+      target_id: tid
+  field_country:
+    plugin: sub_process
+    source: field_country
+    process:
+      target_id: tid
+  field_disaster:
+    plugin: sub_process
+    source: field_disaster
+    process:
+      target_id: tid
+  field_disaster_type:
+    plugin: sub_process
+    source: field_disaster_type
+    process:
+      target_id: tid
+  field_embargo_date:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: field_embargo_date
+    -
+      plugin: sub_process
+      process:
+        value:
+          plugin: format_date
+          from_format: U
+          to_format: 'Y-m-d\TH:i:s'
+          from_timezone: UTC
+          to_timezone: UTC
+          source: value
+  field_feature:
+    plugin: sub_process
+    source: field_feature
+    process:
+      target_id: tid
+  field_headline/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_headline/0/value
+  field_headline_image:
+    plugin: sub_process
+    source: field_headline_image
+    process:
+      target_id: fid
+  field_headline_summary:
+    plugin: skip_on_empty
+    method: process
+    source: body/0/summary
+  field_headline_title:
+    plugin: skip_on_empty
+    method: process
+    source: field_headline_title/0/value
+  field_image:
+    plugin: sub_process
+    source: field_image
+    process:
+      target_id: fid
+  field_language:
+    plugin: sub_process
+    source: field_language
+    process:
+      target_id: tid
+  field_ocha_product:
+    plugin: sub_process
+    source: field_ocha_product
+    process:
+      target_id: tid
+  field_origin:
+    plugin: skip_on_empty
+    method: process
+    source: field_origin/0/value
+  field_origin_notes:
+    plugin: skip_on_empty
+    method: process
+    source: field_origin_notes/0/value
+  field_primary_country:
+    plugin: sub_process
+    source: field_primary_country
+    process:
+      target_id: tid
+  field_original_publication_date:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: field_report_date
+    -
+      plugin: sub_process
+      process:
+        value:
+          plugin: format_date
+          from_format: U
+          to_format: 'Y-m-d\TH:i:s'
+          from_timezone: UTC
+          to_timezone: UTC
+          source: value
+  field_source:
+    plugin: sub_process
+    source: field_source
+    process:
+      target_id: tid
+  field_theme:
+    plugin: sub_process
+    source: field_theme
+    process:
+      target_id: tid
+  field_vulnerable_groups:
+    plugin: sub_process
+    source: field_vulnerable_groups
+    process:
+      target_id: tid
+destination: null
+migration_dependencies:
+  required:
+    - reliefweb_node__report

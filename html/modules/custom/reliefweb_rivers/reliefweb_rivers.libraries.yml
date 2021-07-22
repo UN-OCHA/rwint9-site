@@ -1,0 +1,16 @@
+# Search experience enhancement.
+search:
+  js:
+    js/search.js: {}
+
+# Advanced search filters.
+advanced-search:
+  js:
+    /libraries/simple-autocomplete/simpleautocomplete.js: {}
+    /libraries/simple-datepicker/simpledatepicker.js: {}
+    js/advanced-search.js: {}
+
+# Disaster map.
+disaster-map:
+  js:
+    js/disaster-map.js: {}

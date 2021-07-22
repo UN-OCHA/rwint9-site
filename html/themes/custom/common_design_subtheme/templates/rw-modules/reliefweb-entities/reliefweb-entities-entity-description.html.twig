@@ -1,0 +1,50 @@
+{% set title_attributes = title_attributes.addClass('cd-block-title') %}
+
+{{ attach_library('common_design/cd-block-title') }}
+{{ attach_library('common_design_subtheme/rw-entity-description') }}
+
+{% set description_attributes = description_attributes
+  .setAttribute('id', id ~ '-content')
+%}
+
+{% include '@reliefweb_entities/reliefweb-entities-entity-description.html.twig' %}
+
+<script>
+  (function () {
+    'use strict';
+
+    // If there are more than 3 paragraphs/lists etc. in the overview, we only
+    // display the last 3 ones and add a toggling button to show the full
+    // overview.
+    var overview = document.getElementById('{{ id }}-content');
+    var children = overview.childNodes;
+    var count = 0;
+    for (var i = 0, l = children.length; i < l; i++) {
+      if (children[i].nodeType === 1) {
+        count++;
+      }
+    }
+    if (count > 3) {
+      overview.setAttribute('data-cd-toggable', '{% trans %}Show full overview{% endtrans %}');
+      overview.setAttribute('data-cd-toggable-expanded', '{% trans %}Hide full overview{% endtrans %}');
+      overview.setAttribute('data-cd-toggable-keep', '');
+      overview.setAttribute('data-cd-icon', 'arrow-down');
+      overview.setAttribute('data-cd-component', 'rw-entity-description');
+      overview.setAttribute('data-cd-replace', '{{ id }}-dummy');
+    }
+
+    // Scroll to the top of the description when expanding it.
+    if ('MutationObserver' in window) {
+      var observer = new MutationObserver(function (mutations) {
+        for (var mutation of mutations) {
+          if (mutation.type === 'attributes' &&
+              mutation.attributeName === 'data-cd-hidden' &&
+              mutation.target.getAttribute('data-cd-hidden') === 'false') {
+            mutation.target.parentNode.scrollIntoView();
+          }
+        }
+      });
+      observer.observe(overview, {attributes: true});
+    }
+  })();
+</script>

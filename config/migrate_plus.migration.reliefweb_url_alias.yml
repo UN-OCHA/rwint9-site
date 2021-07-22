@@ -1,0 +1,32 @@
+uuid: c5d81896-7130-4f92-8e24-cfa3ea2b32a6
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: _GCe7Mu0jNiOJst3TKuIrod_nvHxh7MUZg13XUip6Ug
+id: reliefweb_url_alias
+class: null
+field_plugin_method: null
+cck_plugin_method: null
+migration_tags: null
+migration_group: reliefweb_extra
+label: 'Migrate ReliefWeb URL aliases'
+source:
+  plugin: reliefweb_url_alias
+  constants:
+    uid: 2
+    code: 301
+    prefix: 'internal:/'
+process:
+  rid: pid
+  uid: constants/uid
+  status_code: constants/code
+  redirect_source/path: alias
+  redirect_source/uri:
+    plugin: concat
+    source:
+      - constants/prefix
+      - source
+destination:
+  plugin: 'entity:redirect'
+migration_dependencies: null

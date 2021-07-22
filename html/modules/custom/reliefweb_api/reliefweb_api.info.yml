@@ -1,0 +1,5 @@
+type: module
+name: ReliefWeb API
+description: 'Provides integration with the ReliefWeb API.'
+package: reliefweb
+core_version_requirement: ^9

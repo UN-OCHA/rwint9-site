@@ -1,0 +1,38 @@
+
+{#
+
+/**
+ * @file
+ * Template file for entity source disclaimers.
+ *
+ * Available variables:
+ * - level: headling leve (defaults to 2)
+ * - attributes: section attributes
+ * - title: section title
+ * - title_attributes: section title attributes
+ * - disclaimers: list of source disclaimers. Each item has those properties:
+ *   - name: source name
+ *   - disclaimer: source disclaimer
+ */
+
+#}
+{% set title = title ?? (disclaimers|length > 1 ? 'Disclaimers'|t : 'Disclaimer'|t) %}
+<section{{ attributes
+  .addClass([
+    'rw-entity-source-disclaimers',
+  ])
+}}>
+  <h{{ level }}{{ title_attributes
+    .addClass([
+      'rw-entity-source-disclaimers__title',
+      'visually-hidden',
+    ])
+  }}>{{ title }}</h{{ level }}>
+
+  <dl class="rw-entity-source-disclaimers__list">
+  {% for item in disclaimers %}
+    <dt class="rw-entity-source-disclaimers__source">{{ item.name }}</dt>
+    <dd class="rw-entity-source-disclaimers__disclaimer">{{ item.disclaimer }}</dd>
+  {% endfor %}
+  </dl>
+</section>

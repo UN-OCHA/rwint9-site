@@ -1,0 +1,19 @@
+uuid: c1a088a9-7bf0-4314-b3de-5bde23fe3bcd
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_spanish_name
+    - taxonomy.vocabulary.source
+id: taxonomy_term.source.field_spanish_name
+field_name: field_spanish_name
+entity_type: taxonomy_term
+bundle: source
+label: 'Spanish name'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

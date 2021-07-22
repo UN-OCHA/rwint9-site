@@ -1,0 +1,149 @@
+{
+  "style": "../../css/styles.css",
+  "colors": {
+    "dark-blue": "--cd-reliefweb-dark-blue",
+    "dark-red": "--cd-reliefweb-dark-red",
+    "dark-grey": "--cd-reliefweb-dark-grey",
+    "light-grey": "--cd-reliefweb-light-grey",
+    "grey": "#b6c8d0",
+    "white": "white",
+    "blue": "#0988bb",
+    "green": "#88bb09",
+    "orange": "#eb8705",
+    "red": "#f65c51"
+  },
+  "icons": {
+    "common": {
+      "source": "img/icons/common",
+      "exclude": [
+        "search",
+        "up",
+        "down",
+        "info",
+        "ok",
+        "warning",
+        "error",
+        "job",
+        "training",
+        "report",
+        "map",
+        "infographic",
+        "interactive"
+      ],
+      "sizes": {
+        "12": [
+          "dark-blue",
+          "dark-red",
+          "dark-grey",
+          "white"
+        ],
+        "18": [
+          "dark-blue",
+          "dark-red",
+          "dark-grey",
+          "white"
+        ]
+      }
+    },
+    "search": {
+      "source": "img/icons/common",
+      "include": [
+        "search"
+      ],
+      "sizes": {
+        "18": [
+          "dark-blue",
+          "dark-red"
+        ],
+        "26": [
+          "white"
+        ]
+      }
+    },
+    "toggle": {
+      "source": "img/icons/common",
+      "include": [
+        "up",
+        "down"
+      ],
+      "sizes": {
+        "9": [
+          "dark-blue",
+          "dark-red",
+          "dark-grey",
+          "white"
+        ],
+        "12": [
+          "dark-blue"
+        ],
+        "18": [
+          "white"
+        ]
+      }
+    },
+    "status": {
+      "source": "img/icons/common",
+      "include": [
+        "info",
+        "ok",
+        "warning",
+        "error"
+      ],
+      "sizes": {
+        "20": [
+          "blue",
+          "green",
+          "orange",
+          "red"
+        ]
+      }
+    },
+    "content": {
+      "source": "img/icons/common",
+      "include": [
+        "job",
+        "training",
+        "report",
+        "map",
+        "infographic",
+        "interactive"
+      ],
+      "sizes": {
+        "16": [
+          "dark-grey"
+        ],
+        "24": [
+          "grey"
+        ],
+        "36": [
+          "dark-blue"
+        ]
+      }
+    },
+    "disaster-type": {
+      "source": "img/icons/disaster-types",
+      "sizes": {
+        "16": [
+          "white"
+        ],
+        "24": [
+          "grey",
+          "orange",
+          "red"
+        ],
+        "32": [
+          "white"
+        ]
+      }
+    },
+    "social-media": {
+      "source": "img/icons/social-media",
+      "sizes": {
+        "48": [
+          "dark-blue",
+          "dark-red"
+        ]
+      }
+    }
+  }
+}

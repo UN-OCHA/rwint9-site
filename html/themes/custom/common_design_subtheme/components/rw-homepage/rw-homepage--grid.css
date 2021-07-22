@@ -1,0 +1,62 @@
+/**
+ * Homepage grid layout.
+ *
+ * Grid layout for the homepage that handles placement and borders.
+ *
+ * Scope: .path-frontpage #main-content
+ */
+@supports (display: grid) {
+  /* Page grid. */
+  .path-frontpage #main-content .rw-homepage-sections {
+    display: grid;
+    grid-template-areas: "messages" "announcement" "headlines" "disasters" "blog" "opportunities" "updates";
+    grid-template-rows: repeat(7, min-content);
+    grid-template-columns: 1fr;
+  }
+  .path-frontpage #main-content [data-messages] {
+    grid-area: messages;
+  }
+  .path-frontpage #main-content #headlines {
+    grid-area: headlines;
+  }
+  .path-frontpage #main-content #announcement {
+    grid-area: announcement;
+  }
+  .path-frontpage #main-content #disasters {
+    grid-area: disasters;
+  }
+  .path-frontpage #main-content #blog {
+    grid-area: blog;
+  }
+  .path-frontpage #main-content #opportunities {
+    grid-area: opportunities;
+  }
+  .path-frontpage #main-content #most-read {
+    grid-area: updates;
+  }
+
+  /* Gaps and borders. */
+  .path-frontpage #main-content #announcement,
+  .path-frontpage #main-content #disasters,
+  .path-frontpage #main-content #blog,
+  .path-frontpage #main-content #opportunities,
+  .path-frontpage #main-content #most-read {
+    margin: 0;
+    padding: 0 0 32px 0;
+    border: none;
+  }
+
+  @media screen and (min-width: 768px) {
+    .path-frontpage #main-content .rw-homepage-sections {
+      grid-template-areas: "messages messages" "headlines announcement" "headlines disasters" "headlines disasters" "headlines blog" "headlines blog" "headlines opportunities" "headlines updates" "headlines updates";
+      grid-template-rows: repeat(8, min-content) 1fr;
+      grid-template-columns: 65% 35%;
+    }
+    .path-frontpage #main-content #headlines {
+      padding-right: 32px;
+    }
+    .path-frontpage #main-content #announcement {
+      padding: 12px 0 32px 0;
+    }
+  }
+}

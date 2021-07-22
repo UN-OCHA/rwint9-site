@@ -1,0 +1,12 @@
+# ReliefWeb API URL.
+api_url: https://api.reliefweb.int/v1
+# ReliefWeb API URL external, for autocomplete calls from the frontend (JS).
+api_url_external: https://api.reliefweb.int/v1
+# App name parameter to indentify the API requests.
+appname: reliefweb.int
+# Cache the query results.
+cache_enabled: true
+# Verify the SSL certificate of the API query performing requests.
+verify_ssl: true
+# URL of the elaticsearch instance for indexing.
+elasticsearch: http://elasticserch:7200

@@ -1,0 +1,122 @@
+uuid: af6a4803-0a4e-4ed9-a24e-cdd8eb6d6195
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.job.body
+    - field.field.node.job.field_career_categories
+    - field.field.node.job.field_city
+    - field.field.node.job.field_country
+    - field.field.node.job.field_how_to_apply
+    - field.field.node.job.field_job_closing_date
+    - field.field.node.job.field_job_experience
+    - field.field.node.job.field_job_type
+    - field.field.node.job.field_source
+    - field.field.node.job.field_theme
+    - node.type.job
+  module:
+    - allowed_formats
+    - datetime
+    - text
+id: node.job.default
+targetEntityType: node
+bundle: job
+mode: default
+content:
+  body:
+    weight: 9
+    settings:
+      rows: 20
+      placeholder: ''
+      summary_rows: 3
+      show_summary: false
+    third_party_settings:
+      allowed_formats:
+        hide_help: '1'
+        hide_guidelines: '1'
+    type: text_textarea_with_summary
+    region: content
+  field_career_categories:
+    weight: 7
+    settings: {  }
+    third_party_settings: {  }
+    type: options_buttons
+    region: content
+  field_city:
+    weight: 3
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: string_textfield
+    region: content
+  field_country:
+    weight: 2
+    settings: {  }
+    third_party_settings: {  }
+    type: options_select
+    region: content
+  field_how_to_apply:
+    weight: 10
+    settings:
+      rows: 10
+      placeholder: ''
+    third_party_settings:
+      allowed_formats:
+        hide_help: '1'
+        hide_guidelines: '1'
+    type: text_textarea
+    region: content
+  field_job_closing_date:
+    weight: 4
+    settings: {  }
+    third_party_settings: {  }
+    type: datetime_default
+    region: content
+  field_job_experience:
+    weight: 6
+    settings: {  }
+    third_party_settings: {  }
+    type: options_buttons
+    region: content
+  field_job_type:
+    weight: 5
+    settings: {  }
+    third_party_settings: {  }
+    type: options_buttons
+    region: content
+  field_source:
+    weight: 1
+    settings: {  }
+    third_party_settings: {  }
+    type: options_select
+    region: content
+  field_theme:
+    weight: 8
+    settings: {  }
+    third_party_settings: {  }
+    type: options_buttons
+    region: content
+  status:
+    type: boolean_checkbox
+    settings:
+      display_label: true
+    weight: 11
+    region: content
+    third_party_settings: {  }
+  title:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 150
+      placeholder: ''
+    third_party_settings: {  }
+hidden:
+  created: true
+  langcode: true
+  path: true
+  promote: true
+  sticky: true
+  uid: true
+  url_redirects: true

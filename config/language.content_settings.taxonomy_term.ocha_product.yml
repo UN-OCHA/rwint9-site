@@ -1,0 +1,11 @@
+uuid: cae1051f-09ef-4b3c-b76a-0bbf6ddb7794
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.ocha_product
+id: taxonomy_term.ocha_product
+target_entity_type_id: taxonomy_term
+target_bundle: ocha_product
+default_langcode: site_default
+language_alterable: false

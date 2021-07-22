@@ -1,0 +1,90 @@
+id: reliefweb_menu_link__main
+label: Migrate ReliefWeb main menu links.
+migration_group: reliefweb_base
+dependencies:
+  enforced:
+    module:
+      - reliefweb_migrate
+audit: true
+migration_tags:
+  - Drupal 7
+  - Content
+source:
+  plugin: embedded_data
+  data_rows:
+    -
+      id: 1
+      title: Updates
+      description: Updates
+      link_uri: internal:/updates
+      external: 0
+      weight: 0
+    -
+      id: 2
+      title: Countries
+      description: Countries
+      link_uri: internal:/countries
+      external: 0
+      weight: 1
+    -
+      id: 3
+      title: Disasters
+      description: Disasters
+      link_uri: internal:/disasters
+      external: 0
+      weight: 2
+    -
+      id: 4
+      title: Organizations
+      description: Organizations
+      link_uri: internal:/organizations
+      external: 0
+      weight: 3
+    -
+      id: 5
+      title: Topics
+      description: Topics
+      link_uri: internal:/topics
+      external: 0
+      weight: 4
+    -
+      id: 6
+      title: Jobs
+      description: Jobs
+      link_uri: internal:/jobs
+      external: 0
+      weight: 5
+    -
+      id: 7
+      title: Training
+      description: Training
+      link_uri: internal:/training
+      external: 0
+      weight: 6
+  ids:
+    id:
+      type: integer
+  constants:
+    bundle: menu_link_content
+    menu_name: main
+    enabled: 1
+    expanded: 0
+    parent: null
+destination:
+  plugin: entity:menu_link_content
+  no_stub: true
+process:
+  id: id
+  bundle: constants/bundle
+  title: title
+  description: description
+  menu_name: constants/menu_name
+  link/uri: link_uri
+  external: external
+  weight: weight
+  expanded: constants/expanded
+  enabled: constants/enabled
+  parent: constants/parent
+migration_dependencies:
+  required:
+    -

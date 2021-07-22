@@ -1,0 +1,46 @@
+{#
+
+/**
+ * @file
+ * Template file for the Table of Content shown on country pages etc.
+ *
+ * Available variables:
+ * - level: heading level (defaults to 2)
+ * - id: section id (defaults to 'digital-sitrep')
+ * - langcode: language iso 2 code (defaults to 'en')
+ * - attributes: section attributes
+ * - title: table of content's title (defaults to 'Table of Content')
+ * - title_attributes: section title attributes
+ * - sections: list of sections of the table of content. Eache section has a
+ *   title and a list of sub-sections with ids as keys and titles as values.
+ *
+ * @todo move that template elsewhere? Consolidate with other places where
+ * there is a table of content (if any)?
+ */
+
+ #}
+<nav{{ attributes
+  .setAttribute('id', id)
+  .addClass([
+    'rw-toc',
+  ])
+}} >
+  <h{{ level }}{{ title_attributes
+    .addClass([
+      'rw-toc__title'
+    ])
+  }}>{{ title }}</h{{ level }}>
+
+  <ul>
+  {%- for section in sections -%}
+    <li class="rw-toc__section">
+      <h{{ level + 1 }} class="rw-toc__section__title">{{ section.title }}</h{{ level + 1 }}>
+      <ul>
+        {%- for id, title in section.sections -%}
+          <li class="rw-toc__sub_section"><a href="{{ '#' ~ id }}" class="rw-toc__sub_section__link">{{ title }}</a></li>
+        {%- endfor -%}
+      </ul>
+    </li>
+  {%- endfor -%}
+  </ul>
+</nav>

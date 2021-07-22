@@ -1,0 +1,19 @@
+uuid: f4caff7b-b289-4235-9d9e-989148d3ccd1
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_headline_title
+    - node.type.report
+id: node.report.field_headline_title
+field_name: field_headline_title
+entity_type: node
+bundle: report
+label: 'Headline title'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

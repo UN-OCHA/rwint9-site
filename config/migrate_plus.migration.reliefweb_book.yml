@@ -1,0 +1,33 @@
+uuid: 73c9a6a6-e11e-4f51-8f82-518aa4b5adf2
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: j5sxLfym_LtC-n8qqM66M_8S1tbpepCLVN1Qial8FY8
+id: reliefweb_book
+class: null
+field_plugin_method: null
+cck_plugin_method: null
+migration_tags:
+  - book
+migration_group: reliefweb_extra
+label: 'Migrate ReliefWeb book menus.'
+source:
+  plugin: reliefweb_book
+process:
+  nid: nid
+  book/bid: bid
+  book/weight: weight
+  book/pid:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: plid
+    -
+      plugin: migration_lookup
+      migration: reliefweb_book
+destination:
+  plugin: reliefweb_book
+migration_dependencies:
+  required:
+    - reliefweb_node__book

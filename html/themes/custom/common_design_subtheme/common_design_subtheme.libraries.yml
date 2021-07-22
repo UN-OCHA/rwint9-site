@@ -1,0 +1,210 @@
+global-styling:
+  css:
+    theme:
+      css/styles.css: {}
+
+# RW custom components
+
+# Filters for the rivers.
+rw-advanced-search:
+  css:
+    theme:
+      components/rw-advanced-search/rw-advanced-search.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+    - common_design_subtheme/rw-autocomplete
+    - common_design_subtheme/rw-datepicker
+    - common_design_subtheme/rw-selection
+
+rw-announcement:
+  css:
+    theme:
+      components/rw-announcement/rw-announcement.css: {}
+
+rw-article:
+  css:
+    theme:
+      components/rw-article/rw-article.css: {}
+      components/rw-article/rw-appeals-response-plans.css: {}
+
+# Autocomplete widget.
+rw-autocomplete:
+  css:
+    theme:
+      components/rw-autocomplete/rw-autocomplete.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+
+rw-blog:
+  css:
+    theme:
+      components/rw-blog/rw-blog.css: {}
+
+rw-country:
+  css:
+    theme:
+      components/rw-country/rw-country.css: {}
+      components/rw-country/rw-country-list.css: {}
+
+# Datepicker widget.
+rw-datepicker:
+  css:
+    theme:
+      components/rw-datepicker/rw-datepicker.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+
+rw-disasters:
+  css:
+    theme:
+      components/rw-disasters/rw-disasters.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+
+rw-dsr:
+  css:
+    theme:
+      components/rw-dsr/rw-dsr.css: {}
+
+rw-entity-description:
+  css:
+    theme:
+      components/rw-entity-description/rw-entity-description.css: {}
+
+rw-entity-meta:
+  css:
+    theme:
+      components/rw-entity-meta/rw-entity-meta.css: {}
+
+rw-form:
+  css:
+    theme:
+      components/rw-form/rw-form.css: {}
+
+rw-headlines:
+  css:
+    theme:
+      components/rw-headlines/rw-headlines.css: {}
+
+rw-homepage:
+  css:
+    theme:
+      components/rw-homepage/rw-homepage.css: {}
+      components/rw-homepage/rw-homepage--grid.css: {}
+
+# Icon sprite.
+rw-icons:
+  css:
+    theme:
+      components/rw-icons/rw-icons.css: {}
+
+rw-key-content:
+  css:
+    theme:
+      components/rw-key-content/rw-key-content.css: {}
+
+rw-key-figures:
+  css:
+    theme:
+      components/rw-key-figures/rw-key-figures.css: {}
+
+rw-most-read:
+  css:
+    theme:
+      components/rw-most-read/rw-most-read.css: {}
+
+rw-opportunities:
+  css:
+    theme:
+      components/rw-opportunities/rw-opportunities.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+
+rw-organizations:
+  css:
+    theme:
+      components/rw-organizations/rw-organizations.css: {}
+
+rw-river:
+  css:
+    theme:
+      components/rw-river/rw-river.css: {}
+      components/rw-river/rw-river-results.css: {}
+      components/rw-river/rw-river-views.css: {}
+
+rw-river-letter-navigation:
+  css:
+    theme:
+      components/rw-river-letter-navigation/rw-river-letter-navigation.css: {}
+  js:
+    components/rw-river-letter-navigation/rw-river-letter-navigation.js: {}
+  dependencies:
+    - common_design/cd-dropdown
+
+rw-search:
+  css:
+    theme:
+      components/rw-search/rw-search.css: {}
+
+rw-social-media-links:
+  css:
+    theme:
+      components/rw-social-media-links/rw-social-media-links.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+
+# Filter/value selection.
+rw-selection:
+  css:
+    theme:
+      components/rw-selection/rw-selection.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+
+rw-toc:
+  css:
+    theme:
+      components/rw-toc/rw-toc.css: {}
+  js:
+    components/rw-toc/rw-toc.js: {}
+  dependencies:
+    - common_design/cd-dropdown
+
+rw-useful-links:
+  css:
+    theme:
+      components/rw-useful-links/rw-useful-links.css: {}
+
+rw-view-more:
+  css:
+    theme:
+      components/rw-view-more/rw-view-more.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+
+# CD components extended
+cd-block-title:
+  css:
+    theme:
+      components/cd-block-title/cd-block-title.css: {}
+
+cd-button:
+  css:
+    theme:
+      components/cd-button/cd-button.css: {}
+
+cd-card:
+  css:
+    theme:
+      components/cd-card/cd-card.css: {}
+
+cd-page-title:
+  css:
+    theme:
+      components/cd-page-title/cd-page-title.css: {}
+
+cd-tag:
+  css:
+    theme:
+      components/cd-tag/cd-tag.css: {}
+

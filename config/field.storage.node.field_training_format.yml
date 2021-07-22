@@ -1,0 +1,20 @@
+uuid: e0cfc8a9-ac60-4780-9086-5b2256b9222f
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - taxonomy
+id: node.field_training_format
+field_name: field_training_format
+entity_type: node
+type: entity_reference
+settings:
+  target_type: taxonomy_term
+module: core
+locked: false
+cardinality: 2
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

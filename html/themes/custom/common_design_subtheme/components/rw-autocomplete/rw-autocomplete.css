@@ -1,0 +1,95 @@
+/**
+ * Autocomplete widget.
+ *
+ * Style for the autocomplete widgets. The widgets consist of an element
+ * (often a <div>) with the `rw-autocomplete` class wrapping an <input> element.
+ *
+ * Structure:
+ *
+ * <div class="rw-autocomplete">
+ *   <input type="search" class="rw-autocomplete-input">
+ *   <button class="rw-autocomplete-show-all">Show all</button>
+ *   <ul class="rw-autocomplete-selector">
+ *     <li class="rw-autocomplete-suggestion"><span>Highlighted</span> part of the suggestion.</li>
+ *     ...
+ *   </ul>
+ * </div>
+ */
+#main-content .rw-autocomplete {
+  position: relative;
+  width: 100%;
+  /* The padding is for the button to show all options. */
+  padding-right: 60px;
+}
+#main-content .rw-autocomplete-input {
+  /* The show all button is attached to the input. */
+  border-right: none;
+}
+#main-content .rw-autocomplete-show-all {
+  position: absolute;
+  top: 0;
+  right: 0;
+  overflow: hidden;
+  width: 60px;
+  height: 100%;
+  /* The following rules are to hide visually the text as an icon is used. */
+  white-space: nowrap;
+  text-indent: 60px;
+}
+/* Icon to show the collpased/expanded state of the show all button. */
+#main-content .rw-autocomplete-show-all:before {
+  position: absolute;
+  /* The positions combined with the margins center the icon horizontally and
+   * vertically. */
+  top: 50%;
+  left: 50%;
+  overflow: hidden;
+  width: 18px;
+  height: 18px;
+  margin-top: -9px;
+  margin-left: -9px;
+  content: "";
+  background: var(--rw-icons--toggle--down--18--white);
+}
+#main-content .rw-autocomplete[aria-expanded="true"] .rw-autocomplete-show-all:before {
+  background: var(--rw-icons--toggle--up--18--white);
+}
+/* List of autocomplete suggestions. */
+#main-content .rw-autocomplete-selector {
+  position: absolute;
+  /* Ensures the popup is above the content.
+   * @todo Review the value. */
+  z-index: 120;
+  top: 100%;
+  left: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  width: 100%;
+  /* The height is determined to display at least five suggestions. */
+  max-height: 208px;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  border: 1px solid var(--cd-reliefweb-dark-grey);
+  background: white;
+  box-shadow: 0 1px 4px 1px rgba(var(--cd-rgb-reliefweb-dark-grey), 0.3);
+}
+#main-content .rw-autocomplete-suggestion {
+  margin: 0;
+  padding: 8px;
+  /* Suggestions are clickable. */
+  cursor: pointer;
+  white-space: pre-wrap;
+  /* @todo review in regards to the standard cd-font sizes. */
+  font-size: 16px;
+  /* Better readability. */
+  line-height: 1.5;
+}
+/* Currently selected suggestion. */
+#main-content .rw-autocomplete-suggestion[aria-selected] {
+  background: var(--cd-reliefweb-light-grey);
+}
+/* Highlight the parts of the suggestions that match the query. */
+#main-content .rw-autocomplete-suggestion span {
+  font-weight: bold;
+}

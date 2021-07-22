@@ -1,0 +1,11 @@
+uuid: 60d21872-7883-4e9e-9816-7f35a153e039
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.disaster
+id: taxonomy_term.disaster
+target_entity_type_id: taxonomy_term
+target_bundle: disaster
+default_langcode: site_default
+language_alterable: false

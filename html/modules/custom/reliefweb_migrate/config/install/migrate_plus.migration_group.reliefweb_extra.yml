@@ -1,0 +1,18 @@
+id: reliefweb_extra
+label: ReliefWeb Migration - Extra
+description: Migrate ReliefWeb extra content (e.g. book, url aliases) from Drupal 7 to Drupal 9.
+source_type: Drupal 7
+shared_configuration:
+  dependencies:
+    enforced:
+      module:
+        - reliefweb_migrate
+  source:
+    key: rwint7
+  migration_dependencies:
+    required:
+      - reliefweb_node__book
+dependencies:
+  enforced:
+    module:
+      - reliefweb_migrate

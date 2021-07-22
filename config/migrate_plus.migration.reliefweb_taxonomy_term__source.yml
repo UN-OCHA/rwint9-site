@@ -1,0 +1,91 @@
+uuid: 819ec8a1-85cf-45d8-9bfb-7ab76449243f
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: JKCmsUoPaelSjBIJ78azrn6thyyue4i5nLE5wMLYEwU
+id: reliefweb_taxonomy_term__source
+class: null
+field_plugin_method: null
+cck_plugin_method: null
+migration_tags: null
+migration_group: reliefweb_term
+label: 'Migrate ReliefWeb source taxonomy terms.'
+source:
+  bundle: source
+process:
+  moderation_state:
+    default_value: active
+  field_aliases/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_term_alias/0/value
+  field_allowed_content_types:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: field_allowed_content_types
+    -
+      plugin: sub_process
+      process:
+        value: value
+  field_attention_job/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_attention_jobs/0/value
+  field_attention_report/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_attention_report/0/value
+  field_attention_training/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_attention_trainings/0/value
+  field_country:
+    plugin: sub_process
+    source: field_country
+    process:
+      target_id: tid
+  field_disclaimer/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_disclaimer/0/value
+  field_fst_id/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_fst_id/0/value
+  field_homepage/uri:
+    plugin: skip_on_empty
+    method: process
+    source: field_homepage/0/url
+  field_links:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: field_links
+    -
+      plugin: sub_process
+      process:
+        uri: value
+  field_longname/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_longname/0/value
+  field_organization_type:
+    plugin: sub_process
+    source: field_organization_type
+    process:
+      target_id: tid
+  field_shortname/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_shortname/0/value
+  field_spanish_name/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_spanish_name/0/value
+destination: null
+migration_dependencies:
+  required:
+    - reliefweb_taxonomy_term
+    - reliefweb_taxomomy_term__country

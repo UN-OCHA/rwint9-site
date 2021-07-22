@@ -1,0 +1,56 @@
+{#
+
+/**
+ * @file
+ * Template file for a river (list of articles) section.
+ *
+ * Available variables;
+ * - level: heading level (defaults to 2)
+ * - id: section id (HTML safe)
+ * - resource: the API resource type of the river's content
+ * - attributes: attributes for the section
+ * - title: section title
+ * - title_attributes: attributes for the river title
+ * - results: (optional) see reliefweb-rivers-results.html.twig
+ * - entities: list of article entities constituting the river
+ * - pager: (optional) the pager for the river
+ * - more: (optional) an array with URL to the main river and a text
+ *
+ * @todo provide a count variable to limit the number of items to display in the
+ * river? Should that be determine in a preprocess function for example?
+ */
+
+#}
+{% set id = id|clean_id %}
+<section {{ attributes
+  .setAttribute('id', id)
+  .addClass([
+    'rw-river',
+    'rw-river--' ~ id,
+    'rw-river--type-' ~ resource|clean_class,
+  ])
+}}>
+  <h{{ level }}{{ title_attributes.addClass([
+    'rw-river__title',
+  ]) }}>{{ title }}</h{{ level }}>
+
+  {{ results }}
+
+  <div class="rw-river__articles">
+    {% for entity in entities %}
+      {{ render_var({
+        '#theme': 'reliefweb_rivers_river_article__' ~ entity.bundle,
+        '#level': level + 1,
+        '#entity': entity,
+      }) }}
+    {% endfor %}
+  </div>
+
+  {% if more is not empty and more.url %}
+    <footer class="rw-river__view-more view-more">
+      <a href="{{ more.url }}">{{ more.label ?? ('View more'|t) }}</a>
+    </footer>
+  {% elseif pager is not empty %}
+    {{ pager }}
+  {% endif %}
+</section>

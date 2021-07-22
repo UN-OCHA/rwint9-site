@@ -1,0 +1,5 @@
+.path-frontpage .cd-block-title {
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #eb1405;
+  font-size: var(--cd-font-size--2xbase);
+}

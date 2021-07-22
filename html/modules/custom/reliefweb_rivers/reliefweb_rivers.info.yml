@@ -1,0 +1,8 @@
+type: module
+name: ReliefWeb Rivers
+description: 'Provides services to get lists of content (rivers).'
+package: reliefweb
+core_version_requirement: ^9
+dependencies:
+  - drupal:reliefweb_api
+  - drupal:reliefweb_utility
