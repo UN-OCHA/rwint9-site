@@ -206,9 +206,11 @@ function reliefweb_entities_theme() {
         // Wrapper attributes.
         'attributes' => NULL,
         // Image style.
-        'style' => 'small',
+        'style' => NULL,
         // Image information with uri, width, height, alt and copyright.
         'image' => [],
+        // Flag to indicate whether to show the caption or not.
+        'caption' => TRUE,
       ],
     ],
     'reliefweb_entities_book_menu' => [
