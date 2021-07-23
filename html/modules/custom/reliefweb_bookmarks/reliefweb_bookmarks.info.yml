@@ -1,0 +1,6 @@
+name: Reliefweb Bookmarks
+type: module
+description: 'Allows content to be added to Bookmarks.'
+configure: reliefweb_bookmarks.collection
+package: reliefweb
+core_version_requirement: ^9

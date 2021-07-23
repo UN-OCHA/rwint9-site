@@ -1,0 +1,5 @@
+reliefweb_bookmarks.collection:
+  title: Entity Bookmarks
+  parent: system.admin_structure
+  description: 'Manage content type for showing entity Bookmarks feature.'
+  route_name: reliefweb_bookmarks.collection

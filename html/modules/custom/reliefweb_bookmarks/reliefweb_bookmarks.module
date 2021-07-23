@@ -1,0 +1,74 @@
+<?php
+
+/**
+ * @file
+ * Module file.
+ */
+
+use Drupal\Core\Link;
+use Drupal\Core\Url;
+use Drupal\user\Entity\User;
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function reliefweb_bookmarks_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.reliefweb_bookmarks':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Reliefweb bookmarks module is very useful for the site with large content. This module allow site visitors to add any node into there bookmarks and then they can read later.') . '</p>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_preprocess_node().
+ */
+function reliefweb_bookmarks_preprocess_node(&$variables) {
+  return;
+  $node = $variables['elements']['#node'];
+  $nid = $node->id();
+  $config = \Drupal::config('reliefweb_bookmarks.settings');
+  if (isset($config->get('content_types')[$node->getType()]) && $config->get('content_types')[$node->getType()]) {
+    $user = User::load(\Drupal::currentUser()->id());
+    $uid = $user->get('uid')->value;
+    $request = \Drupal::destination();
+    $path = '/node/' . $nid . '/add-to-bookmarks';
+    $url = Url::fromUri('internal:' . $path, [
+      'query' => ['destination' => $request->get()],
+      'absolute' => TRUE,
+    ]
+    );
+    $db = \Drupal::database();
+    $query = $db->select('reliefweb_bookmarks', 'ew');
+    $query->fields('ew');
+    $query->condition('entity_id', $nid);
+    $query->condition('uid', $uid);
+    $check_entry = $query->execute()->FetchField();
+    if ($check_entry) {
+      $link = Link::fromTextAndUrl(t("Remove from bookmarks"), $url);
+    }
+    else {
+      $link = Link::fromTextAndUrl(t("Add to bookmarks"), $url);
+    }
+    if (!$uid) {
+      $path = "/user/login";
+      $url = Url::fromUri('internal:' . $path, [
+        'query' => ['destination' => $request->get()],
+        'absolute' => TRUE,
+      ]
+      );
+      $link = Link::fromTextAndUrl(t("Read Later"), $url, [
+        'query' => ['destination' => $request],
+        'absolute' => TRUE,
+      ]);
+    }
+    $variables['content']['reliefweb_bookmarks_link'] = [
+      '#markup' => $link->toString(),
+      '#weight' => 3,
+    ];
+    dpm($variables['content']['reliefweb_bookmarks_link']);
+  }
+}

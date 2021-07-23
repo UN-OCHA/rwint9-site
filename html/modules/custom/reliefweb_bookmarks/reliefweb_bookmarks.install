@@ -1,0 +1,49 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the reliefweb_bookmarks module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function reliefweb_bookmarks_schema() {
+  $schema['reliefweb_bookmarks'] = [
+    'description' => 'Stores user entity Bookmarks',
+    'fields' => [
+      'entity_type' => [
+        'type' => 'varchar',
+        'length' => 100,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'entity type',
+      ],
+      'entity_id' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'Entity ID',
+      ],
+      'uid' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'User ID',
+      ],
+    ],
+    'primary key' => [
+      'entity_type',
+      'entity_id',
+      'uid',
+    ],
+  ];
+  return $schema;
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function reliefweb_bookmarks_uninstall() {
+  if (\Drupal::config('entityBookmarks.settings')->get('entityBookmarks_content_type')) {
+    \Drupal::configFactory()->getEditable('entityBookmarks.settings')->delete();
+  }
+}
