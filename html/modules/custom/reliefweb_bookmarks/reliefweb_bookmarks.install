@@ -10,7 +10,7 @@
  */
 function reliefweb_bookmarks_schema() {
   $schema['reliefweb_bookmarks'] = [
-    'description' => 'Stores user entity Bookmarks',
+    'description' => 'Stores reliefweb bookmarks',
     'fields' => [
       'entity_type' => [
         'type' => 'varchar',
@@ -37,13 +37,4 @@ function reliefweb_bookmarks_schema() {
     ],
   ];
   return $schema;
-}
-
-/**
- * Implements hook_uninstall().
- */
-function reliefweb_bookmarks_uninstall() {
-  if (\Drupal::config('entityBookmarks.settings')->get('entityBookmarks_content_type')) {
-    \Drupal::configFactory()->getEditable('entityBookmarks.settings')->delete();
-  }
 }
