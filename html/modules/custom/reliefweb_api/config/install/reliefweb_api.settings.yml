@@ -9,4 +9,4 @@ cache_enabled: true
 # Verify the SSL certificate of the API query performing requests.
 verify_ssl: true
 # URL of the elaticsearch instance for indexing.
-elasticsearch: http://elasticserch:7200
+elasticsearch: http://elasticsearch:7200
