@@ -24,6 +24,7 @@
   .addClass([
     'rw-river-article',
     'rw-river-article--' ~ entity.bundle,
+    entity.image ? 'rw-river-article--with-image',
     entity.summary ? 'rw-river-article--with-summary',
     entity.preview ? 'rw-river-article--with-preview',
   ])
@@ -46,6 +47,16 @@
       '#title': entity.title,
     }) }}
   </header>
+
+  {# Image (ex: headline). #}
+  {% if entity.image is not empty %}
+    {{ render_var({
+      '#theme': 'reliefweb_entities_entity_image',
+      '#style': 'medium',
+      '#image': entity.image,
+      '#caption': false,
+    }) }}
+  {% endif %}
 
   {# Article attachment preview and/or summary. #}
   {% if entity.summary is not empty or entity.preview is not empty %}
