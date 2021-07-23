@@ -413,6 +413,8 @@ class ReportRiver extends RiverServiceBase {
         $url = $preview['url-thumb'] ?? $preview['url-small'] ?? '';
         if (!empty($url)) {
           $data['preview'] = [
+            // @todo once the report attachments have been added back,
+            // generate the appropriate preview URL based on the file name.
             'url' => UrlHelper::stripDangerousProtocols($url),
             // We don't have any good label/description for the file
             // previews so we use an empty alt to mark them as decorative
@@ -425,15 +427,11 @@ class ReportRiver extends RiverServiceBase {
       // Headline image.
       if ($headlines && isset($fields['headline']['image']['url'])) {
         $image = $fields['headline']['image'];
-        $copyright = trim($image['copyright'] ?? '');
-        if (!empty($copyright) && mb_strpos($copyright, '©') === FALSE) {
-          $copyright = '© ' . $copyright;
-        }
 
         $data['image'] = [
-          'url' => UrlHelper::stripDangerousProtocols($image['url']),
+          'uri' => UrlHelper::getImageUriFromUrl($image['url']),
           'alt' => $image['alt'] ?? '',
-          'copyright' => $copyright,
+          'copyright' => trim($image['copyright'] ?? '', " \n\r\t\v\0@"),
           'width' => $image['width'] ?? 0,
           'height' => $image['height'] ?? 0,
         ];

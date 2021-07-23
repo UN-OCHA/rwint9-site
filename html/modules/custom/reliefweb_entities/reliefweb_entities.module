@@ -13,6 +13,21 @@ use Drupal\Core\Render\BubbleableMetadata;
  * Add bundle classes to nodes and terms to handle business logic.
  */
 function reliefweb_entities_entity_bundle_info_alter(&$bundles) {
+  $bundles['node']['blog_post']['class'] = 'Drupal\reliefweb_entities\Entity\BlogPost';
+  $bundles['node']['blog_post']['label'] = 'Blog Post';
+
+  $bundles['node']['book']['class'] = 'Drupal\reliefweb_entities\Entity\Book';
+  $bundles['node']['book']['label'] = 'Book Page';
+
+  $bundles['node']['job']['class'] = 'Drupal\reliefweb_entities\Entity\Job';
+  $bundles['node']['job']['label'] = 'Job';
+
+  $bundles['node']['report']['class'] = 'Drupal\reliefweb_entities\Entity\Report';
+  $bundles['node']['report']['label'] = 'Report';
+
+  $bundles['node']['training']['class'] = 'Drupal\reliefweb_entities\Entity\Training';
+  $bundles['node']['training']['label'] = 'Training';
+
   $bundles['taxonomy_term']['country']['class'] = 'Drupal\reliefweb_entities\Entity\Country';
   $bundles['taxonomy_term']['country']['label'] = 'Country';
 
@@ -130,6 +145,8 @@ function reliefweb_entities_theme() {
         'title' => t('Details'),
         // Section title attributes.
         'title_attributes' => NULL,
+        // Core flag, see "reliefweb_entities_entity_meta" above.
+        'core' => FALSE,
         // Meta information, see "reliefweb_entities_entity_meta" above.
         'meta' => '',
       ],
@@ -148,6 +165,8 @@ function reliefweb_entities_theme() {
         'title_attributes' => NULL,
         // List of social media links with a url and title.
         'links' => [],
+        // Flag to indicate that the links should be icons only.
+        'icons_only' => FALSE,
       ],
     ],
     'reliefweb_entities_entity_useful_links' => [
@@ -162,8 +181,50 @@ function reliefweb_entities_theme() {
         'title' => t('Useful Links'),
         // Section title attributes.
         'title_attributes' => NULL,
-        // Whether to
         // List of links.
+        'links' => [],
+      ],
+    ],
+    'reliefweb_entities_entity_source_disclaimers' => [
+      'variables' => [
+        // Section heading level.
+        'level' => 2,
+        // Section attributes.
+        'attributes' => NULL,
+        // Section title.
+        'title' => NULL,
+        // Section title attributes.
+        'title_attributes' => NULL,
+        // List of source disclaimers. Each item has those properties:
+        // - name: source name
+        // - disclaimer: source disclaimer.
+        'disclaimers' => [],
+      ],
+    ],
+    'reliefweb_entities_entity_image' => [
+      'variables' => [
+        // Wrapper attributes.
+        'attributes' => NULL,
+        // Image style.
+        'style' => NULL,
+        // Image information with uri, width, height, alt and copyright.
+        'image' => [],
+        // Flag to indicate whether to show the caption or not.
+        'caption' => TRUE,
+      ],
+    ],
+    'reliefweb_entities_book_menu' => [
+      'variables' => [
+        // Section heading level.
+        'level' => 2,
+        // Section attributes.
+        'attributes' => NULL,
+        // Section title.
+        'title' => t('Book navigation'),
+        // Section title attributes.
+        'title_attributes' => NULL,
+        // List of menu links with a url, title and optional "below" property
+        // that contains child links.
         'links' => [],
       ],
     ],

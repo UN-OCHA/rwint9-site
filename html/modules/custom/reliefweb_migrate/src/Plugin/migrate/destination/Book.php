@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\reliefweb_migrate\Plugin\migrate\source;
+namespace Drupal\reliefweb_migrate\Plugin\migrate\destination;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\migrate\Plugin\migrate\destination\EntityContentBase;

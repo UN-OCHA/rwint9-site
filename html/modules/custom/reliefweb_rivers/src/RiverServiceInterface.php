@@ -247,7 +247,7 @@ interface RiverServiceInterface {
    *
    * @param string $bundle
    *   Entity bundle of a river.
-   * @param array $data
+   * @param array|null $data
    *   ReliefWeb API data for the river.
    * @param string $view
    *   River view.
@@ -257,7 +257,7 @@ interface RiverServiceInterface {
    * @return array
    *   List of entities with data suitable for use in templates.
    */
-  public static function getRiverData($bundle, array $data, $view = '', array $exclude = []);
+  public static function getRiverData($bundle, ?array $data, $view = '', array $exclude = []);
 
   /**
    * Get the ReliefWeb API query payload for the bundle's river.

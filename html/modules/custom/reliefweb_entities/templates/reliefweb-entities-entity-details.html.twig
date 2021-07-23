@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Template file for entity details (meta informatio like country).
+ * Template file for entity details (meta information like country).
  *
  * Available variables:
  * - level: headling leve (defaults to 2)
@@ -10,6 +10,8 @@
  * - attributes: section attributes
  * - title: section title
  * - title_attributes: section title attributes
+ * - core: flag indicating the list of meta is the "core" meta information,
+ *   usually displayed in river articles or below the title on article pages.
  * - meta: associative array with a list of meta information (ex: dates,
  *   sources, etc.). Each items has the following properties:
  *   - type: simple, date, date-range or taglist
@@ -34,6 +36,7 @@
 
   {{ render_var({
     '#theme': 'reliefweb_entities_entity_meta',
+    '#core': core,
     '#meta': meta,
   }) }}
 </section>

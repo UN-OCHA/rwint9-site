@@ -15,6 +15,8 @@
  *   - value: simple, date, array with start and end date or list of tags
  *   - count: only for taglist - number of tags to display
  *   - sort: only for taglist - sort property for the tags
+ *   - display: only for taglist - property to display, ex: name or shortname
+ *   - format: only for date - date format
  *   - label_attributes: attributes for the label
  *   - value_attributes: attributes for the value
  *
@@ -65,17 +67,17 @@
 
       {# Date. #}
       {% elseif data.type == 'date' %}
-        <time datetime="{{ data.value|date('c') }}">{{ data.value|date('j M Y') }}</time>
+        <time datetime="{{ data.value|date('c') }}">{{ data.value|date(data.format ?? 'j M Y') }}</time>
 
       {# Date range. #}
       {% elseif data.type == 'date-range' %}
         {% if data.value.end is empty or data.value.end == data.value.start %}
-          <time datetime="{{ data.value.start|date('c') }}">{{ data.value.start|date('j M Y') }}</time>
+          <time datetime="{{ data.value.start|date('c') }}">{{ data.value.start|date(data.format ?? 'j M Y') }}</time>
         {% else %}
           {% set start_iso = data.value.start|date('c') %}
-          {% set start_medium = data.value.start|date('j M Y') %}
+          {% set start_medium = data.value.start|date(data.format ?? 'j M Y') %}
           {% set end_iso = data.value.end|date('c') %}
-          {% set end_medium = data.value.end|date('j M Y') %}
+          {% set end_medium = data.value.end|date(data.format ?? 'j M Y') %}
           {% trans %}
             <time datetime="{{ start_iso }}">{{ start_medium  }}</time>
             to
@@ -90,7 +92,7 @@
             <li{{ create_attribute().addClass([
               'rw-entity-meta__tag-value__list__item',
               index == 'last' ? 'rw-entity-meta__tag-value__list__item--last',
-            ]) }}><a class="rw-entity-meta__tag-link" href="{{ item.url }}">{{ item.shortname ?? item.name }}</a></li>
+            ]) }}><a class="rw-entity-meta__tag-link" href="{{ item.url }}">{{ attribute(item, data.display ?? 'name') ?? item.name }}</a></li>
           {%- endfor -%}
           {%- if data.count and data.value|length > data.count -%}
             <li{{ create_attribute().addClass([

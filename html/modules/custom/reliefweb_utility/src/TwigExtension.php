@@ -21,6 +21,8 @@ class TwigExtension extends AbstractExtension {
       new TwigFilter('sanitize_html', [$this, 'sanitizeHtml'], [
         'is_safe' => ['html'],
       ]),
+      new TwigFilter('dpm', 'dpm'),
+      new TwigFilter('values', 'array_values'),
     ];
   }
 
