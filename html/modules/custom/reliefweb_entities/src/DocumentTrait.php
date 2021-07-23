@@ -114,66 +114,6 @@ trait DocumentTrait {
   }
 
   /**
-   * Get bookmark link.
-   */
-  public function getBookmarkLink() {
-    dpm('getBookmarkLink');
-    $config = \Drupal::config('reliefweb_bookmarks.settings');
-    if (!isset($config->get('content_types')[$this->getType()]) || !$config->get('content_types')[$this->getType()]) {
-      return;
-    }
-
-    if (!\Drupal::currentUser()->id()) {
-      return;
-    }
-
-    $uid = \Drupal::currentUser()->id();
-    $request = \Drupal::destination();
-    $path = '/node/' . $this->id() . '/add-to-bookmarks';
-    $url = Url::fromUri('internal:' . $path, [
-      'query' => ['destination' => $request->get()],
-      'absolute' => TRUE,
-    ]);
-
-    $db = \Drupal::database();
-    $query = $db->select('reliefweb_bookmarks', 'ew');
-    $query->fields('ew');
-    $query->condition('entity_id', $this->id(),);
-    $query->condition('uid', $uid);
-    $check_entry = $query->execute()->FetchField();
-
-    if ($check_entry) {
-      $label = $this->t('Remove from bookmarks');
-    }
-    else {
-      $label = $this->t('Add to bookmarks');
-    }
-
-    $links['bookmark'] = [
-      'title' => $label,
-      'url' => $url,
-      'attributes' => [
-        'class' => [
-          'use-ajax',
-          'bookmark--link',
-          $check_entry ? 'bookmark--link--remove' : 'bookmark--link--add',
-        ],
-      ],
-    ];
-
-    return [
-      '#theme' => 'links',
-      '#title' => $this->t('Bookmark'),
-      '#links' => $links,
-      '#attached' => [
-        'library' => [
-          'core/drupal.ajax',
-        ],
-      ],
-    ];
-  }
-
-  /**
    * Get the reports related to the entity.
    *
    * @see Drupal\reliefweb_entities\DocumentInterface::getRelatedContent()

@@ -1,5 +1,5 @@
 reliefweb_bookmarks.user:
   route_name: reliefweb_bookmarks.user
   base_route: entity.user.canonical
-  title: 'My Content Bookmarks'
+  title: 'My bookmarks'
   weight: 100

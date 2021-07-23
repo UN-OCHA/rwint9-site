@@ -1,24 +1,24 @@
 reliefweb_bookmarks.collection:
-  path: '/admin/structure/entity-Bookmarks'
+  path: '/admin/structure/reliefweb-bookmarks'
   defaults:
-    _form: '\Drupal\reliefweb_bookmarks\Form\EntityBookmarksConfigurationForm'
-    _title: 'Entity Bookmarks configuration page'
+    _form: '\Drupal\reliefweb_bookmarks\Form\BookmarksConfigurationForm'
+    _title: 'Reliefweb bookmarks configuration page'
   requirements:
     _permission: 'administer site configuration'
 
 reliefweb_bookmarks.user:
-  path: '/user/{user}/entity-Bookmarks'
+  path: '/user/{user}/bookmarks'
   defaults:
-    _controller: '\Drupal\reliefweb_bookmarks\Controller\EntityUserBookmarksController::content'
-    _title: 'My Content Bookmarks'
+    _controller: '\Drupal\reliefweb_bookmarks\Controller\UserBookmarksController::content'
+    _title: 'My bookmarks'
   requirements:
     _user_is_logged_in: 'TRUE'
     user: \d+
 
-reliefweb_bookmarks.read_later:
+reliefweb_bookmarks.add:
   path: '/node/{node}/add-to-bookmarks'
   defaults:
-    _controller: '\Drupal\reliefweb_bookmarks\Controller\EntityBookmarksReadLaterController::content'
-    _title: 'Add to my content Bookmarks'
+    _controller: '\Drupal\reliefweb_bookmarks\Controller\BookmarksToggleController::content'
+    _title: 'Add to my bookmarks'
   requirements:
      _user_is_logged_in: 'TRUE'

@@ -4,7 +4,7 @@ namespace Drupal\reliefweb_bookmarks\Form;
 
 /**
  * @file
- * Contains Drupal\reliefweb_bookmarks\Form\EntityBookmarksConfigurationForm.
+ * Contains Drupal\reliefweb_bookmarks\Form\BookmarksConfigurationForm.
  */
 
 
@@ -17,20 +17,20 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 /**
  * Class SettingsForm.
  */
-class EntityBookmarksConfigurationForm extends ConfigFormBase {
+class BookmarksConfigurationForm extends ConfigFormBase {
 
   /**
    * Entity type manager.
    *
-   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $entity_type_manager;
+  protected $entityTypeManager;
 
   /**
    * {@inheritdoc}
    */
   public function __construct(EntityTypeManagerInterface $entity_type_manager, ConfigFactoryInterface $config_factory) {
-    $this->entity_type_manager = $entity_type_manager;
+    $this->entityTypeManager = $entity_type_manager;
     parent::__construct($config_factory);
   }
 
@@ -42,8 +42,6 @@ class EntityBookmarksConfigurationForm extends ConfigFormBase {
       $container->get('entity_type.manager'),
       $container->get('config.factory')
     );
-
-    \Drupal::entityTypeManager();
   }
 
   /**
@@ -67,7 +65,7 @@ class EntityBookmarksConfigurationForm extends ConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->configFactory->get('reliefweb_bookmarks.settings');
-    $contentTypes = $this->entity_type_manager->getStorage('node_type')->loadMultiple();
+    $contentTypes = $this->entityTypeManager->getStorage('node_type')->loadMultiple();
 
     $contentTypesList = [];
     foreach ($contentTypes as $contentType) {
