@@ -4,7 +4,7 @@ namespace Drupal\reliefweb_bookmarks\Controller;
 
 /**
  * @file
- * Contains \Drupal\reliefweb_bookmarks\Controller\EntityBookmarksReadLaterController.
+ * Toggles bookmark.
  */
 
 use Drupal\Core\Ajax\AjaxResponse;
