@@ -29,20 +29,19 @@
  * @ingroup themeable
  */
 #}
-{% set classes = module ? (key ? module ~ '-' ~ key) %}
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+{% apply inline_css %}
+<!DOCTYPE html>
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <base target="_blank" />
-    <title>Reliefweb mail template</title>
-{% if css %}
+    <title>ReliefWeb notification</title>
     <style type="text/css">
-      <!-- {{ css }} -->
+      {{ source('@common_design_subtheme/../components/rw-subscriptions/rw-subscriptions.css') }}
     </style>
-{% endif %}
   </head>
-  <body id="mimemail-body"{{ attributes.addClass(classes) }}>
+  <body class="body">
     {{ body|raw }}
   </body>
 </html>
+{% endapply %}

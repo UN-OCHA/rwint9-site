@@ -13,6 +13,7 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ThemeHandlerInterface;
 use Drupal\Core\Language\LanguageDefault;
 use Drupal\Core\Link;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
@@ -27,7 +28,6 @@ use Drupal\Core\Url;
 use Drupal\reliefweb_api\Services\ReliefWebApiClient;
 use Drupal\reliefweb_subscriptions\CronExpressionParser;
 use Drush\Commands\DrushCommands;
-use Pelago\Emogrifier\CssInliner;
 
 /**
  * Docstore Drush commandfile.
@@ -144,6 +144,13 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
   protected $themeManager;
 
   /**
+   * Theme handler.
+   *
+   * @var \Drupal\Core\Etension\ThemeHandlerInterface
+   */
+  protected $themeHandler;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(
@@ -162,6 +169,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
       LoggerChannelFactoryInterface $loggerFactory,
       ThemeInitialization $themeInitialization,
       ThemeManager $themeManager,
+      ThemeHandlerInterface $themeHandler
     ) {
     $this->configFactory = $config_factory;
     $this->database = $database;
@@ -178,6 +186,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     $this->logger = $loggerFactory->get('reliefweb_subscriptions');
     $this->themeInitialization = $themeInitialization;
     $this->themeManager = $themeManager;
+    $this->themeHandler = $themeHandler;
   }
 
   /**
@@ -326,10 +335,19 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
         return;
       }
 
+      // Check if the entity exists.
+      $entity = $this->entityTypeManager
+        ->getStorage($entity_type)
+        ->load($entity_id);
+      if (empty($entity)) {
+        $this->logger->warning('Entity not found, skipping');
+        return;
+      }
+
       $notifications = [];
       $notifications[] = [
         'sid' => $sid,
-        'bundle' => $entity_type,
+        'bundle' => $entity->bundle(),
         'entity_id' => $entity_id,
       ];
 
@@ -368,7 +386,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
       }
       else {
         $timestamps = [
-          $sid => [
+          $sid => (object) [
             'last' => $last,
             'next' => $last,
           ],
@@ -387,7 +405,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
           $last = $this->getPreviousSendingTime($subscriptions[$sid]);
           $next = $last;
         }
-        // Only queue the subscription is time is due (next run time is before
+        // Only queue the subscription if time is due (next run time is before
         // the current time).
         if ($next < $this->time->getRequestTime()) {
           $notifications[] = [
@@ -517,12 +535,12 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     static $batch_size;
 
     if (!isset($from)) {
-      $from = $this->state->get('site_mail', ini_get('sendmail_from'));
+      $from = $this->config('system.site')->get('mail') ?? ini_get('sendmail_from');
       // Format the from to include ReliefWeb if not already.
       if (strpos($from, '<') === FALSE) {
-        $from = $this->formatString('!sitename <!sitemail>', [
-          '!sitename' => $this->state->get('site_name', 'ReliefWeb'),
-          '!sitemail' => $from,
+        $from = $this->formatString('@sitename <@sitemail>', [
+          '@sitename' => $this->config('system.site')->get('name') ?? 'ReliefWeb',
+          '@sitemail' => $from,
         ]);
       }
       $language = $this->languageDefault->get()->getId();
@@ -584,7 +602,9 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
         $unsubscribe = $this->generateUnsubscribeLink($subscriber->uid, $sid);
 
         // Update the body with the unique ubsubscribe link.
-        $mail_body = strtr($body, ['%unsubscribe%' => $unsubscribe]);
+        $mail_body = new FormattableMarkup($body, [
+          '@unsubscribe' => $unsubscribe,
+        ]);
 
         // Send the email.
         $this->mailManager->mail('reliefweb_subscriptions', 'notifications', $subscriber->mail, $language, [
@@ -663,7 +683,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
         break;
 
       case 'disaster':
-        $render_array = $this->generateEmailContentDisasters($subscription, $data);
+        $render_array = $this->generateEmailContentDisaster($subscription, $data);
         break;
 
       case 'ocha_sitrep':
@@ -671,23 +691,20 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
         break;
 
       default:
-        // Countries.
-        $render_array = $this->generateEmailContentCountry($subscription, $data);
-        break;
-
+        // Country updates.
+        $render_array = $this->generateEmailContentCountryUpdates($subscription, $data);
     }
 
+    // Render the email using the default frontend theme so that template
+    // overrides, if any, can be used.
     $active_theme = $this->themeManager->getActiveTheme();
-    $this->themeManager->setActiveTheme($this->themeInitialization->getActiveThemeByName('common_design_subtheme'));
+    $default_theme_name = $this->themeHandler->getDefault();
+    $default_theme = $this->themeInitialization->getActiveThemeByName($default_theme_name);
+
+    $this->themeManager->setActiveTheme($default_theme);
     $html = $this->renderer->renderRoot($render_array);
     $this->themeManager->setActiveTheme($active_theme);
 
-    // Remove unnecessary whitespaces.
-    $html = preg_replace('/(\s)\s+/', '$1', $html);
-
-    // Inline css.
-    $css = file_get_contents('themes/custom/common_design_subtheme/css/mail.css');
-    $html = CssInliner::fromHtml($html)->inlineCss($css)->renderBodyContent();
     return $html;
   }
 
@@ -773,7 +790,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
   }
 
   /**
-   * Generate the email HTML content.
+   * Generate the email content for the headlines notifications.
    *
    * @param array $subscription
    *   Subscription information.
@@ -781,15 +798,14 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    *   API data for the notification.
    *
    * @return string
-   *   HTML content.
+   *   Render array.
    */
   protected function generateEmailContentHeadlines(array $subscription, array $data) {
     $variables = [
-      '#theme' => 'reliefweb_subscriptions',
-      '#subscription_type' => 'headlines',
+      '#theme' => 'reliefweb_subscriptions_content',
     ];
 
-    $variables['#today'] = date_create('now')->format('j M Y');
+    $variables['#title'] = $subscription['title'];
     $variables['#preheader'] = $this->getPreheaderTitles($data);
 
     $items = [];
@@ -840,7 +856,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
   }
 
   /**
-   * Generate the email HTML content.
+   * Generate the email content for the appeals notifications.
    *
    * @param array $subscription
    *   Subscription information.
@@ -848,15 +864,14 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    *   API data for the notification.
    *
    * @return string
-   *   HTML content.
+   *   Render array.
    */
   protected function generateEmailContentAppeals(array $subscription, array $data) {
     $variables = [
-      '#theme' => 'reliefweb_subscriptions',
-      '#subscription_type' => 'appeals',
+      '#theme' => 'reliefweb_subscriptions_content',
     ];
 
-    $variables['#today'] = date_create('now')->format('j M Y');
+    $variables['#title'] = $subscription['title'];
     $variables['#preheader'] = $this->getPreheaderTitles($data);
 
     // Sort by country.
@@ -920,7 +935,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
   }
 
   /**
-   * Generate the email HTML content.
+   * Generate the email content for the jobs notifications.
    *
    * @param array $subscription
    *   Subscription information.
@@ -928,15 +943,14 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    *   API data for the notification.
    *
    * @return string
-   *   HTML content.
+   *   Render array.
    */
   protected function generateEmailContentJobs(array $subscription, array $data) {
     $variables = [
-      '#theme' => 'reliefweb_subscriptions',
-      '#subscription_type' => 'jobs',
+      '#theme' => 'reliefweb_subscriptions_content',
     ];
 
-    $variables['#today'] = date_create('now')->format('j M Y');
+    $variables['#title'] = $subscription['title'];
     $variables['#preheader'] = $this->getPreheaderTitles($data);
 
     // Sort by country.
@@ -989,11 +1003,15 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     ];
     $variables['#prefooter'] = $this->prepareFooterLinks($prefooter_parts);
 
+    // Label for the read more links (not translated on purpose as mails are
+    // always in English).
+    $variables['#read_more_label'] = 'Find out more';
+
     return $variables;
   }
 
   /**
-   * Generate the email HTML content.
+   * Generate the email content for the training notifications.
    *
    * @param array $subscription
    *   Subscription information.
@@ -1001,15 +1019,14 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    *   API data for the notification.
    *
    * @return string
-   *   HTML content.
+   *   Render array.
    */
   protected function generateEmailContentTraining(array $subscription, array $data) {
     $variables = [
-      '#theme' => 'reliefweb_subscriptions',
-      '#subscription_type' => 'training',
+      '#theme' => 'reliefweb_subscriptions_content',
     ];
 
-    $variables['#today'] = date_create('now')->format('j M Y');
+    $variables['#title'] = $subscription['title'];
 
     // Sort by country.
     $groups = [];
@@ -1072,24 +1089,27 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     ];
     $variables['#prefooter'] = $this->prepareFooterLinks($prefooter_parts);
 
+    // Label for the read more links (not translated on purpose as mails are
+    // always in English).
+    $variables['#read_more_label'] = 'Find out more';
+
     return $variables;
   }
 
   /**
-   * Generate the email HTML content.
+   * Generate the email content for the disaster notifications.
    *
    * @param array $subscription
    *   Subscription information.
    * @param array $data
    *   API data for the notification.
    *
-   * @return string
-   *   HTML content.
+   * @return array
+   *   Render array.
    */
-  protected function generateEmailContentDisasters(array $subscription, array $data) {
+  protected function generateEmailContentDisaster(array $subscription, array $data) {
     $variables = [
-      '#theme' => 'reliefweb_subscriptions',
-      '#subscription_type' => 'disasters',
+      '#theme' => 'reliefweb_subscriptions_content__disaster',
     ];
 
     $variables['#url'] = $data['url_alias'];
@@ -1127,7 +1147,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
   }
 
   /**
-   * Generate the email HTML content.
+   * Generate the email content for the OCHA sitrep notifications.
    *
    * @param array $subscription
    *   Subscription information.
@@ -1135,12 +1155,11 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    *   API data for the notification.
    *
    * @return string
-   *   HTML content.
+   *   Render array.
    */
   protected function generateEmailContentOchaSitrep(array $subscription, array $data) {
     $variables = [
-      '#theme' => 'reliefweb_subscriptions',
-      '#subscription_type' => 'ocha_sitrep',
+      '#theme' => 'reliefweb_subscriptions_content__ocha_sitrep',
     ];
 
     $info = [];
@@ -1195,7 +1214,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
         'link' => '/updates',
         'options' => [
           'query' => [
-            // Soruce facet filter: 'OCHA'.
+            // Source facet filter: 'OCHA'.
             'source' => 1503,
             // Content format facet filter: 'Situation Report'.
             'format' => 10,
@@ -1204,8 +1223,8 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
       ],
     ];
     // Add link to Digital sitrep if there is one.
-    $dsr_url = $this->config->get('ocha_digital_sitrep_url', 'https://reports.unocha.org/');
-    if (isset($data['origin']) && strpos($data['origin'], $dsr_url) === 0) {
+    $dsr_url = $this->config('reliefweb_dsr')->get('ocha_dsr_url');
+    if (!empty($dsr_url) && isset($data['origin']) && strpos($data['origin'], $dsr_url) === 0) {
       array_unshift($prefooter_parts, [
         'text' => 'Digital Situation Report for ' . $country_name,
         'link' => $data['origin'],
@@ -1217,7 +1236,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
   }
 
   /**
-   * Generate the email HTML content.
+   * Generate the email content for the country updates notifications.
    *
    * @param array $subscription
    *   Subscription information.
@@ -1225,15 +1244,14 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    *   API data for the notification.
    *
    * @return string
-   *   HTML content.
+   *   Render array.
    */
-  protected function generateEmailContentCountry(array $subscription, array $data) {
+  protected function generateEmailContentCountryUpdates(array $subscription, array $data) {
     $variables = [
-      '#theme' => 'reliefweb_subscriptions',
-      '#subscription_type' => 'countries',
+      '#theme' => 'reliefweb_subscriptions_content',
     ];
 
-    $variables['#today'] = date_create('now')->format('j M Y');
+    $variables['#title'] = $subscription['title'];
     $variables['#preheader'] = $this->getPreheaderTitles($data);
 
     $items = [];
@@ -1495,7 +1513,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
 
     // If there is no list ID for this subscription, generate one.
     if (!isset($lists[$sid])) {
-      $url = $this->getHostAndSchema();
+      $url = $this->getSchemeAndHttpHost();
       $host = parse_url($url, PHP_URL_HOST);
 
       $lists[$sid] = $this->formatString('@sid.lists.@host', [
@@ -1519,8 +1537,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    *   Unsubscribe link.
    */
   protected function generateUnsubscribeLink($uid, $sid) {
-    $path = 'notifications/unsubscribe/user/' . $uid;
-    $path = $this->getHostAndSchema() . '/user/' . $uid;
+    $path = $this->getSchemeAndHttpHost() . '/notifications/unsubscribe/user/' . $uid;
     $timestamp = $this->time->getRequestTime();
     $url = Url::fromUri($path, [
       'absolute' => TRUE,
@@ -1676,6 +1693,9 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    *   Entity.
    * @param string $entity_type
    *   Entity type.
+   *
+   * @todo update logic to be compatible with Drupal 9 and add trigger
+   * callbacks.
    */
   protected function queueTriggered($entity, $entity_type) {
     // Skip if explicitly asked to not send notifications.
@@ -1836,13 +1856,15 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
   }
 
   /**
-   * Get hostname and schema.
+   * Get scheme and host.
+   *
+   * @todo use \Symfony\Component\HttpFoundation\Request::getSchemeAndHttpHost()?
    */
-  protected function getHostAndSchema() {
+  protected function getSchemeAndHttpHost() {
     $url_options = [
       'absolute' => TRUE,
     ];
-    return Url::fromRoute('<front>', [], $url_options)->toString();
+    return rtrim(Url::fromRoute('<front>', [], $url_options)->toString(), '/');
   }
 
   /**

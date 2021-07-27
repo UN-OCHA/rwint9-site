@@ -1,0 +1,31 @@
+{#
+
+/**
+ * @file
+ * Template for the OCHA situation report notifications.
+ *
+ * Available variables are:
+ * - preheader: string for preheader.
+ * - title: OCHA sitrep title.
+ * - info: OCHA sitrep info like sources.
+ * - summary: OCHA sitrep summary.
+ * - prefooter: string for prefooter.
+ */
+
+#}
+{% embed '@reliefweb_subscriptions/reliefweb-subscriptions-content.html.twig' %}
+
+{% block content %}
+  <h1 class="email-title">New OCHA Situation Report - {{ title }}</h1>
+
+  <div class="email-resource">
+    <div class="email-resource-info">{{ info|raw }}</div>
+
+    <div class="email-resource-teaser">
+      {{ summary|raw }}
+      <a class="email-resource-read-more" href="{{ url }}">Read more</a>
+    </div>
+  </div>
+{% endblock %}
+
+{% endembed %}

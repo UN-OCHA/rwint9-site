@@ -31,6 +31,7 @@ function reliefweb_subscriptions_subscriptions() {
     'template' => 'headlines',
     // Always in English as we send Bulk emails.
     'subject' => 'Today\'s ReliefWeb Headlines',
+    'title' => 'ReliefWeb Headlines',
     'bundle' => 'report',
     'resource' => 'reports',
     'payload' => [
@@ -69,6 +70,7 @@ function reliefweb_subscriptions_subscriptions() {
     'template' => 'appeals',
     // Always in English as we send Bulk emails.
     'subject' => 'New Appeals',
+    'title' => 'Latest Appeals',
     'bundle' => 'report',
     'resource' => 'reports',
     'payload' => [
@@ -106,6 +108,7 @@ function reliefweb_subscriptions_subscriptions() {
     'template' => 'jobs',
     // Always in English as we send Bulk emails.
     'subject' => 'New Job Announcements',
+    'title' => 'New Job Announcements',
     'bundle' => 'job',
     'resource' => 'jobs',
     'payload' => [
@@ -138,6 +141,7 @@ function reliefweb_subscriptions_subscriptions() {
     'template' => 'training',
     // Always in English as we send Bulk emails.
     'subject' => 'New Training Programs',
+    'title' => 'New Training Programs',
     'bundle' => 'training',
     'resource' => 'training',
     'payload' => [
@@ -257,6 +261,7 @@ function reliefweb_subscriptions_subscriptions() {
       'template' => 'country_updates',
       // Always in English as we send Bulk emails.
       'subject' => $name . ' Updates',
+      'title' => $name . ' Updates',
       'bundle' => 'report',
       'resource' => 'reports',
       'payload' => [
@@ -333,44 +338,48 @@ function reliefweb_subscriptions_mail($key, &$message, $params) {
  */
 function reliefweb_subscriptions_theme() {
   $themes = [
-    'reliefweb_subscriptions' => [
+    'reliefweb_subscriptions_header' => [
       'variables' => [
-        'subscription_type' => '',
-        'today' => '',
+        'logo' => '',
+        'header' => NULL,
         'preheader' => NULL,
-        'items' => [],
+      ],
+    ],
+    'reliefweb_subscriptions_footer' => [
+      'variables' => [
         'prefooter' => NULL,
       ],
     ],
-    'reliefweb_subscriptions__headlines' => [
+    'reliefweb_subscriptions_content' => [
       'variables' => [
-        'subscription_type' => '',
-        'today' => '',
         'preheader' => NULL,
+        'title' => '',
         'items' => [],
+        'read_more_label' => 'Read more',
         'prefooter' => NULL,
       ],
     ],
-    'reliefweb_subscriptions__appeals' => [
+    'reliefweb_subscriptions_content__disaster' => [
       'variables' => [
-        'subscription_type' => '',
-        'today' => '',
         'preheader' => NULL,
-        'items' => [],
+        'title' => '',
+        'date' => '',
+        'overview' => '',
+        'url' => '',
+        'prefooter' => NULL,
+      ],
+    ],
+    'reliefweb_subscriptions_content__ocha_sitrep' => [
+      'variables' => [
+        'preheader' => NULL,
+        'title' => '',
+        'info' => '',
+        'summary' => '',
+        'url' => '',
         'prefooter' => NULL,
       ],
     ],
   ];
 
   return $themes;
-}
-
-/**
- * Implements hook_theme_suggestions_HOOK_alter().
- *
- * Add suggestions for the river article theme based on bundle.
- */
-function reliefweb_subscriptions_theme_suggestions_reliefweb_subscriptions_alter(array &$suggestions, array $variables) {
-  // This is not detected when building the email.
-  $suggestions[] = 'reliefweb_subscriptions__' . $variables['subscription_type'];
 }

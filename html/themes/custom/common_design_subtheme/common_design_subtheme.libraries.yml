@@ -161,6 +161,11 @@ rw-selection:
   dependencies:
     - common_design_subtheme/rw-icons
 
+rw-subscriptions:
+  css:
+    theme:
+      components/rw-subscriptions/rw-subscriptions.css: {}
+
 rw-toc:
   css:
     theme:
