@@ -1,0 +1,42 @@
+/**
+ * Book page.
+ *
+ * Individual book pages. Those are made of a main content body and a sidebar
+ * with the navigation into the book hierarchy.
+ *
+ * Scope: .node--book
+ */
+.node--book > header h1 {
+  margin-bottom: 0;
+}
+.rw-book-menu h2 {
+  padding-left: 8px;
+  border-left: 8px solid #0988bb;
+}
+.rw-book-menu {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+.rw-book-menu a {
+  /* Ensure there is enough tapping space. */
+  line-height: 30px;
+}
+.rw-book-menu ol {
+  list-style: none;
+  font-size: 15px;
+  margin: 0;
+  padding: 0;
+}
+.rw-book-menu > ol {
+  padding: 0 16px 16px 16px;
+}
+.rw-book-menu ol ol {
+  padding-left: 32px;
+}
+.rw-book-menu ol li {
+  margin: 0;
+}
+.rw-book-menu ol li a.rw-book-menu__link--active {
+  color: black;
+  font-weight: bold;
+}

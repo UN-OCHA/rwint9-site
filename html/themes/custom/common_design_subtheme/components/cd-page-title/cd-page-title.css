@@ -1,9 +1,11 @@
 /* Page title and Status in article header */
+.rw-document .cd-page-title,
 .taxonomy-term--full .cd-page-title {
   margin-bottom: 0;
   padding-bottom: 0;
   border-bottom: 0 none;
 }
+.rw-document > header,
 .taxonomy-term--full > header {
   padding-bottom: 12px;
   border-bottom: 1px solid #eb1405;
