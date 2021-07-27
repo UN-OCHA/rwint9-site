@@ -27,7 +27,19 @@
 .rw-document > header h2 {
   margin: 0 0 8px 0;
 }
-
+.rw-document figure {
+  margin: 0 0 16px 0;
+}
+.rw-document figure img {
+  display: block;
+  width: 100%;
+}
+.rw-document figure figcaption {
+  padding-top: 4px;
+  font-size: 15px;
+  font-style: italic;
+  line-height: 1.5;
+}
 .rw-document > .rw-article__content {
   padding: 24px 0 24px 0;
 }
