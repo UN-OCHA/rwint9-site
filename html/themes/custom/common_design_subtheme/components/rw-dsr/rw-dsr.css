@@ -4,6 +4,7 @@
 }
 #main-content .rw-sectioned-content section.rw-dsr .rw-dsr__title small {
   white-space: nowrap;
+  font-weight: normal;
 }
 #main-content .rw-sectioned-content section.rw-dsr .rw-dsr__title span.rw-dsr__ocha {
   position: relative;
@@ -42,9 +43,6 @@
 #main-content .rw-sectioned-content section.rw-dsr li {
   margin-bottom: 16px;
   line-height: 1.5;
-}
-#main-content .rw-sectioned-content section.rw-dsr .rw-dsr__title small {
-  font-weight: normal;
 }
 #main-content .rw-sectioned-content section.rw-dsr figure {
   display: none;

@@ -76,7 +76,7 @@
   @media screen and (min-width: 480px) {
     #main-content .rw-sectioned-content section.rw-river--maps-infographics .rw-river__articles {
       display: grid;
-      grid-template-columns: repeat(1, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       grid-column-gap: 24px;
       padding-top: 24px;
     }
@@ -120,9 +120,6 @@
       padding: 16px 16px 8px 16px;
       border: 1px solid #e6ecef;
       border-width: 0 1px 1px 1px;
-    }
-    #main-content .rw-sectioned-content section.rw-river--maps-infographics .rw-river__articles {
-      grid-template-columns: repeat(2, 1fr);
     }
   }
 
