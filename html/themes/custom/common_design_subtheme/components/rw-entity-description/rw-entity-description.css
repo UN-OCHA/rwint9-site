@@ -1,15 +1,15 @@
-#main-content .rw-sectioned-content section.rw-entity-description {
+.rw-entity-description {
   display: flex;
   flex-direction: column;
 }
-#main-content .rw-sectioned-content section.rw-entity-description .rw-entity-description__text {
+.rw-entity-description .rw-entity-description__text {
   padding-top: 0;
 }
-#main-content .rw-sectioned-content section.rw-entity-description .rw-entity-description__text p:first-child {
+.rw-entity-description .rw-entity-description__text p:first-child {
   margin-top: 0;
 }
 /* Javascript enabled */
-.js #main-content .rw-sectioned-content section.rw-entity-description button {
+.js .rw-entity-description button {
   display: block;
   order: 3;
   margin: 24px auto 0 auto;
@@ -20,39 +20,39 @@
   font-size: 16px;
   fill: #055372;
 }
-.js #main-content .rw-sectioned-content section.rw-entity-description button svg {
+.js .rw-entity-description button svg {
   fill: currentColor;
 }
-.js #main-content .rw-sectioned-content section.rw-entity-description button:hover,
-.js #main-content .rw-sectioned-content section.rw-entity-description button:active,
-.js #main-content .rw-sectioned-content section.rw-entity-description button:focus {
+.js .rw-entity-description button:hover,
+.js .rw-entity-description button:active,
+.js .rw-entity-description button:focus {
   color: white;
   background: #055372;
 }
 /* Overrides the default behavior when data-cd-hidden is set as the description
  * is always displayed, only the number of paragraphs changes. */
-.js #main-content .rw-sectioned-content section.rw-entity-description .rw-entity-description__text[data-cd-hidden] {
+.js .rw-entity-description .rw-entity-description__text[data-cd-hidden] {
   display: block;
 }
-.js #main-content .rw-sectioned-content section.rw-entity-description .rw-entity-description__text > * {
+.js .rw-entity-description .rw-entity-description__text > * {
   display: none;
 }
-.js #main-content .rw-sectioned-content section.rw-entity-description .rw-entity-description__text > *:nth-last-child(-n+3) {
+.js .rw-entity-description .rw-entity-description__text > *:nth-last-child(-n+3) {
   display: block;
 }
-.js #main-content .rw-sectioned-content section.rw-entity-description .rw-entity-description__text > *:nth-last-child(3) {
+.js .rw-entity-description .rw-entity-description__text > *:nth-last-child(3) {
   margin-top: 0;
 }
-.js #main-content .rw-sectioned-content section.rw-entity-description .rw-entity-description__text[data-cd-hidden="false"] > * {
+.js .rw-entity-description .rw-entity-description__text[data-cd-hidden="false"] > * {
   display: block;
 }
 /* Exception for sources, where we start at the top of the rw-entity-description. */
-.js #main-content .taxonomy-term--source--full.rw-sectioned-content section.rw-entity-description .rw-entity-description__text > * {
+.js .taxonomy-term--source--full.rw-sectioned-content section.rw-entity-description .rw-entity-description__text > * {
   display: none;
 }
-.js #main-content .taxonomy-term--source--full.rw-sectioned-content section.rw-entity-description .rw-entity-description__text > *:nth-child(-n+3) {
+.js .taxonomy-term--source--full.rw-sectioned-content section.rw-entity-description .rw-entity-description__text > *:nth-child(-n+3) {
   display: block;
 }
-.js #main-content .taxonomy-term--source--full.rw-sectioned-content section.rw-entity-description .rw-entity-description__text[data-cd-hidden="false"] > * {
+.js .taxonomy-term--source--full.rw-sectioned-content section.rw-entity-description .rw-entity-description__text[data-cd-hidden="false"] > * {
   display: block;
 }

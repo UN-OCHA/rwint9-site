@@ -2,8 +2,6 @@
  * Base form elements.
  *
  * This provides basic styling for form elements in the main-content content area.
- *
- * Scope: global
  */
 /* Todo: remove? */
 #main-content form + * {
@@ -125,8 +123,6 @@
  *
  * Ensures the loading overlay (see loading overlay component) uses the entire
  * viewport.
- *
- * Scope: #main-content form
  */
 #main-content form[data-loading]:before,
 #main-content form[data-loading]:after {
@@ -139,8 +135,6 @@
  * Styling of the Drupal for elements. Due to the way those elements are
  * (often unnecessarily) wrapped etc., we cannot rely only on the basic form
  * styling.
- *
- * Scope: global
  */
 #main-content form .form-type-checkbox,
 #main-content form .form-type-radio {

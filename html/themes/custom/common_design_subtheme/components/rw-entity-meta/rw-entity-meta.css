@@ -3,8 +3,6 @@
  *
  * rw-entity-meta information like source or publication date, generally in the header or
  * footer.
- *
- * Scope: #main-content-content article dl.rw-entity-meta
  */
 #main-content article dl.rw-entity-meta {
   margin: 0;
@@ -83,8 +81,6 @@
 
 /**
  * rw-entity-meta for river articles.
- *
- * Scope: #main-content section article
  */
 #main-content section article dl.rw-entity-meta {
   margin: 0;
@@ -138,8 +134,6 @@
  * Country/disaster status.
  *
  * Display a color coded dot next to the country/disaster status.
- *
- * Scope: #main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--status
  */
 #main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--status:before {
   display: inline-block;
@@ -169,8 +163,6 @@
  * Content format.
  *
  * Display an icon in front of the content format.
- *
- * Scope: #main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--status--format
  */
 #main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--format:before {
   display: inline-block;

@@ -3,23 +3,20 @@
  *
  * Communication banner (ex: event from partner like World Humanitarian Day).
  *
- * Id: #announcement
- *
- * Scope: .path-frontpage #main-content
  */
-.path-frontpage #main-content #announcement a {
+.rw-homepage-announcement a {
   display: block;
 }
 /* Hide the external link icon. */
-.path-frontpage #main-content #announcement a[target="_blank"][rel="noopener"]:after {
+.rw-homepage-announcement a[target="_blank"][rel="noopener"]:after {
   display: none;
 }
-.path-frontpage #main-content #announcement a:hover,
-.path-frontpage #main-content #announcement a:active,
-.path-frontpage #main-content #announcement a:focus {
+.rw-homepage-announcement a:hover,
+.rw-homepage-announcement a:active,
+.rw-homepage-announcement a:focus {
   outline: 4px solid #0988bb;
 }
-.path-frontpage #main-content #announcement img {
+.rw-homepage-announcement img {
   display: block;
   width: 100%;
   max-width: 750px;

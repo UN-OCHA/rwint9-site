@@ -27,14 +27,14 @@
  *     </div>
  *   </div>
  */
-#main-content .rw-datepicker-container {
+.rw-datepicker-container {
   position: relative;
   z-index: 10;
 }
-#main-content .rw-datepicker-container[data-hidden="true"] {
+.rw-datepicker-container[data-hidden="true"] {
   display: none;
 }
-#main-content .rw-datepicker-calendar {
+.rw-datepicker-calendar {
   position: absolute;
   top: 0;
   left: 0;
@@ -45,7 +45,7 @@
   background: white;
   box-shadow: 0 1px 4px 1px rgba(var(--cd-rgb-reliefweb-dark-grey), 0.3);
 }
-#main-content .rw-datepicker-calendar button {
+.rw-datepicker-calendar button {
   margin: 0;
   padding: 0;
   -webkit-user-select: none;
@@ -63,13 +63,13 @@
    * with the expected behavior (buttons). */
   -webkit-touch-callout: none;
 }
-#main-content .rw-datepicker-calendar button:hover,
-#main-content .rw-datepicker-calendar button:focus,
-#main-content .rw-datepicker-calendar button:active {
+.rw-datepicker-calendar button:hover,
+.rw-datepicker-calendar button:focus,
+.rw-datepicker-calendar button:active {
   color: var(--cd-reliefweb-dark-blue);
   background: var(--cd-reliefweb-light-grey);
 }
-#main-content .rw-datepicker-title {
+.rw-datepicker-title {
   margin-bottom: 8px;
   padding-bottom: 8px;
   text-align: center;
@@ -77,7 +77,7 @@
   line-height: 24px;
 }
 /* Previous/next year/month buttons. */
-#main-content .rw-datepicker-container button.rw-datepicker-control {
+.rw-datepicker-container button.rw-datepicker-control {
   position: relative;
   display: inline-block;
   overflow: hidden;
@@ -87,7 +87,7 @@
   vertical-align: top;
 }
 /* Arrow icons for the previous/next year/month. */
-#main-content .rw-datepicker-container button.rw-datepicker-control:before {
+.rw-datepicker-container button.rw-datepicker-control:before {
   position: absolute;
   top: 50%;
   right: 50%;
@@ -99,17 +99,17 @@
   content: "";
   background: var(--rw-icons--common--arrow-right--12--dark-blue);
 }
-#main-content .rw-datepicker-container button.rw-datepicker-control.rw-datepicker-title-previous.rw-datepicker-title-month:before {
+.rw-datepicker-container button.rw-datepicker-control.rw-datepicker-title-previous.rw-datepicker-title-month:before {
   background: var(--rw-icons--common--arrow-left--12--dark-blue);
 }
-#main-content .rw-datepicker-container button.rw-datepicker-control.rw-datepicker-title-next.rw-datepicker-title-year:before {
+.rw-datepicker-container button.rw-datepicker-control.rw-datepicker-title-next.rw-datepicker-title-year:before {
   background: var(--rw-icons--common--double-arrow-right--12--dark-blue);
 }
-#main-content .rw-datepicker-container button.rw-datepicker-control.rw-datepicker-title-previous.rw-datepicker-title-year:before {
+.rw-datepicker-container button.rw-datepicker-control.rw-datepicker-title-previous.rw-datepicker-title-year:before {
   background: var(--rw-icons--common--double-arrow-left--12--dark-blue);
 }
 /* Selected month and year. */
-#main-content .rw-datepicker-title-date {
+.rw-datepicker-title-date {
   display: inline-block;
   width: 158px;
   padding: 0 4px;
@@ -117,7 +117,7 @@
   line-height: 16px;
 }
 /* Weekdays. */
-#main-content .rw-datepicker-header span {
+.rw-datepicker-header span {
   display: inline-block;
   width: 32px;
   height: 32px;
@@ -128,7 +128,7 @@
   line-height: 16px;
 }
 /* Days of the month. */
-#main-content .rw-datepicker-days button {
+.rw-datepicker-days button {
   width: 32px;
   height: 32px;
   margin: 2px;
@@ -137,20 +137,20 @@
   background: none;
 }
 /* Days outside of the selected month are disabled. */
-#main-content .rw-datepicker-days button[disabled],
-#main-content .rw-datepicker-days button[disabled]:hover,
-#main-content .rw-datepicker-days button[disabled]:focus,
-#main-content .rw-datepicker-days button[disabled]:active {
+.rw-datepicker-days button[disabled],
+.rw-datepicker-days button[disabled]:hover,
+.rw-datepicker-days button[disabled]:focus,
+.rw-datepicker-days button[disabled]:active {
   cursor: default;
   color: var(--cd-reliefweb-light-grey);
   background: none;
 }
 /* Highlight the current day. */
-#main-content .rw-datepicker-days button.rw-datepicker-today {
+.rw-datepicker-days button.rw-datepicker-today {
   color: var(--cd-reliefweb-dark-red);
 }
 /* Highlight the currently selected day(s). */
-#main-content .rw-datepicker-days button.rw-datepicker-selected-day {
+.rw-datepicker-days button.rw-datepicker-selected-day {
   color: white;
   background: var(--cd-reliefweb-dark-blue);
 }

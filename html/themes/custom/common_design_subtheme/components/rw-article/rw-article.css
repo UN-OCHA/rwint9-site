@@ -16,20 +16,18 @@
  * Maps and Infographics.
  *
  * Section with the maps and inforgraphics for the countries/disasters/sources.
- *
- * Scope: #main-content .rw-sectioned-content section.rw-river--maps-infographics
  */
 @supports (display: grid) {
-  #main-content .rw-sectioned-content section.rw-river--maps-infographics article {
+  .rw-river--maps-infographics article {
     display: flex;
     flex-direction: column;
     min-height: 174px;
     padding-left: 222px;
   }
-  #main-content .rw-sectioned-content section.rw-river--maps-infographics article header {
+  .rw-river--maps-infographics article header {
     flex: 1 0 auto;
   }
-  #main-content .rw-sectioned-content section.rw-river--maps-infographics article .content img {
+  .rw-river--maps-infographics article .content img {
     position: absolute;
     top: 24px;
     left: 24px;
@@ -40,10 +38,10 @@
     max-height: none;
     margin: 0;
   }
-  #main-content .rw-sectioned-content section.rw-river--maps-infographics article .content p {
+  .rw-river--maps-infographics article .content p {
     margin-top: 0;
   }
-  #main-content .rw-sectioned-content section.rw-river--maps-infographics article .content:after {
+  .rw-river--maps-infographics article .content:after {
     position: absolute;
     top: 16px;
     left: 16px;
@@ -53,10 +51,10 @@
     border: 8px solid #e6ecef;
     background: linear-gradient(rgba(230, 236, 239, 0) 50%, rgba(230, 236, 239, 0.8));
   }
-  #main-content .rw-sectioned-content section.rw-river--maps-infographics article dl.rw-entity-meta--core dd {
+  .rw-river--maps-infographics article dl.rw-entity-meta--core dd {
     display: inline;
   }
-  #main-content .rw-sectioned-content section.rw-river--maps-infographics article dl.rw-entity-meta--core dd:after {
+  .rw-river--maps-infographics article dl.rw-entity-meta--core dd:after {
     display: block;
     width: 0;
     height: 0;
@@ -64,36 +62,36 @@
   }
 
   @media screen and (max-width: 479px) {
-    #main-content .rw-sectioned-content section.rw-river--maps-infographics article {
+    .rw-river--maps-infographics article {
       min-height: auto;
       padding-left: 0;
     }
-    #main-content .rw-sectioned-content section.rw-river--maps-infographics article .content {
+    .rw-river--maps-infographics article .content {
       display: none;
     }
   }
   /* Media queries. */
   @media screen and (min-width: 480px) {
-    #main-content .rw-sectioned-content section.rw-river--maps-infographics .rw-river__articles {
+    .rw-river--maps-infographics .rw-river__articles {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       grid-column-gap: 24px;
       padding-top: 24px;
     }
-    #main-content .rw-sectioned-content section.rw-river--maps-infographics article {
+    .rw-river--maps-infographics article {
       justify-content: flex-end;
       min-height: auto;
       margin: 0;
       padding: 0 0 24px 0;
       border: none;
     }
-    #main-content .rw-sectioned-content section.rw-river--maps-infographics article header {
+    .rw-river--maps-infographics article header {
       flex: 1 0 auto;
       padding: 16px 16px 0 16px;
       border: 1px solid #e6ecef;
       border-width: 0 1px;
     }
-    #main-content .rw-sectioned-content section.rw-river--maps-infographics article .content {
+    .rw-river--maps-infographics article .content {
       position: relative;
       overflow: hidden;
       flex: none;
@@ -102,20 +100,20 @@
       margin: 0;
       padding: 60% 8px 8px 8px;
     }
-    #main-content .rw-sectioned-content section.rw-river--maps-infographics article .content img {
+    .rw-river--maps-infographics article .content img {
       top: 0;
       left: 0;
       clip: auto;
       width: 100%;
       margin: 0;
     }
-    #main-content .rw-sectioned-content section.rw-river--maps-infographics article .content:after {
+    .rw-river--maps-infographics article .content:after {
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
     }
-    #main-content .rw-sectioned-content section.rw-river--maps-infographics article footer {
+    .rw-river--maps-infographics article footer {
       margin: 0;
       padding: 16px 16px 8px 16px;
       border: 1px solid #e6ecef;
@@ -124,19 +122,19 @@
   }
 
   @media screen and (min-width: 640px) {
-    #main-content .rw-sectioned-content section.rw-river--maps-infographics .rw-river__articles {
+    .rw-river--maps-infographics .rw-river__articles {
       grid-template-columns: repeat(3, 1fr);
     }
   }
 
   @media screen and (min-width: 768px) {
-    #main-content .rw-sectioned-content section.rw-river--maps-infographics .rw-river__articles {
+    .rw-river--maps-infographics .rw-river__articles {
       grid-template-columns: repeat(2, 1fr);
     }
   }
 
   @media screen and (min-width: 900px) {
-    #main-content .rw-sectioned-content section.rw-river--maps-infographics .rw-river__articles {
+    .rw-river--maps-infographics .rw-river__articles {
       grid-template-columns: repeat(3, 1fr);
     }
   }

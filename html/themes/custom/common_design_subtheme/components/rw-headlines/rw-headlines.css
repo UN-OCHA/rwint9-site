@@ -2,31 +2,29 @@
  * Sub article.
  *
  * Articles in a section like headlines etc.
- *
- * Scope: #main-content section article
  */
-#main-content section article {
+.rw-river-article {
   position: relative;
   display: flex;
   flex-direction: column;
   padding: 24px 0;
   border-top: 1px solid #e6ecef;
 }
-#main-content section article:first-child {
+.rw-river-article:first-child {
   border-top: none;
 }
-#main-content section article header {
+.rw-river-article header {
   /* Compensate the half-leading space from the title line-height. */
   margin-top: -5px;
 }
-#main-content section article header p.rw-entity-country-slug {
+.rw-river-article header p.rw-entity-country-slug {
   margin: 2px 6px 0 0;
   padding: 1px 8px;
   font-size: 14px;
   line-height: 22px;
 }
-#main-content section article > header .title,
-#main-content section article > .title {
+.rw-river-article > header .title,
+.rw-river-article > .title {
   display: inline;
   margin: 0;
   color: #055372;
@@ -34,11 +32,11 @@
   font-weight: bold;
   line-height: 28px;
 }
-#main-content section article > header .title a,
-#main-content section article > .title a {
+.rw-river-article > header .title a,
+.rw-river-article > .title a {
   color: inherit;
 }
-#main-content section article .content {
+.rw-river-article .content {
   display: flex;
   flex: 1 0 auto;
   align-items: center;
@@ -47,29 +45,29 @@
   color: #4d5254;
 }
 /* Article with a thumbnail preview (typically Map and Infographic). */
-#main-content section article .content img {
+.rw-river-article .content img {
   float: left;
   max-height: 118px;
   margin: 2px 20px 0 0;
   border: 1px solid #e6ecef;
 }
-#main-content section article .content img + p {
+.rw-river-article .content img + p {
   margin-top: 0;
 }
 
 @media all and (max-width: 479px) {
-  #main-content section article .content img {
+  .rw-river-article .content img {
     display: none;
   }
 }
-#main-content section article footer {
+.rw-river-article footer {
   /* Clear any floating from the content. */
   clear: both;
   /* Compensate  the half-leading space added by the line-height of the <dl>. */
   margin-bottom: -8px;
   padding-top: 16px;
 }
-#main-content section article header + footer {
+.rw-river-article header + footer {
   padding-top: 12px;
 }
 
@@ -78,8 +76,6 @@
  *
  * Meta information like source or publication date, generally in the header or
  * footer.
- *
- * Scope: #main-content article dl.rw-entity-meta
  */
 #main-content article dl.rw-entity-meta {
   margin: 0;
@@ -158,26 +154,24 @@
 
 /**
  * Meta for river articles.
- *
- * Scope: #main-content section article
  */
-#main-content section article dl.rw-entity-meta {
+.rw-river-article dl.rw-entity-meta {
   margin: 0;
 }
-#main-content section article dl.rw-entity-meta dt {
+.rw-river-article dl.rw-entity-meta dt {
   display: inline-block;
   float: none;
   font-size: 14px;
 }
-#main-content section article dl.rw-entity-meta dd {
+.rw-river-article dl.rw-entity-meta dd {
   display: inline-block;
   font-size: 15px;
 }
-#main-content section article dl.rw-entity-meta--core {
+.rw-river-article dl.rw-entity-meta--core {
   /* #2e3436 with 0.85 opacity on white. */
   color: #4d5254;
 }
-#main-content section article dl.rw-entity-meta--core dd:after {
+.rw-river-article dl.rw-entity-meta--core dd:after {
   display: inline-block;
   width: 4px;
   height: 4px;
@@ -188,20 +182,20 @@
   border-radius: 4px;
   background: #2e3436;
 }
-#main-content section article dl.rw-entity-meta--core dd.created:after {
+.rw-river-article dl.rw-entity-meta--core dd.created:after {
   margin-left: 12px;
 }
 /* This will be ignored in IE8 but it's not a big deal. */
-#main-content section article dl.rw-entity-meta--core dd:last-of-type:after,
-#main-content section article dl.rw-entity-meta--core dd[data-last]:after {
+.rw-river-article dl.rw-entity-meta--core dd:last-of-type:after,
+.rw-river-article dl.rw-entity-meta--core dd[data-last]:after {
   content: none;
 }
 /* Display meta one per line on smaller screen to improve readability. */
 @media all and (max-width: 479px) {
-  #main-content section article dl.rw-entity-meta--core dd {
+  .rw-river-article dl.rw-entity-meta--core dd {
     display: inline;
   }
-  #main-content section article dl.rw-entity-meta--core dd:after {
+  .rw-river-article dl.rw-entity-meta--core dd:after {
     display: block;
     width: 0;
     height: 0;
