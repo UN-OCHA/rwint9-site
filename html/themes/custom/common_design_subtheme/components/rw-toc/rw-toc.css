@@ -1,19 +1,19 @@
 /* Table of contents */
 #main-content .rw-sectioned-content .rw-toc {
   padding: 32px 0 0 0;
-  font-size: 15px;
   border-bottom: 1px solid #e6ecef;
+  font-size: 15px;
 }
 #main-content .rw-sectioned-content .rw-toc ul,
 #main-content .rw-sectioned-content .rw-toc li {
-  list-style: none;
-  padding: 0;
   margin: 0;
+  padding: 0;
+  list-style: none;
 }
 #main-content .rw-sectioned-content .rw-toc > ul .rw-toc__section__title {
+  margin: 0;
   text-transform: uppercase;
   font-size: 15px;
-  margin: 0;
 }
 #main-content .rw-sectioned-content .rw-toc ul ul {
   padding: 16px 0;
@@ -26,24 +26,24 @@
   padding-left: 16px;
 }
 #main-content .rw-sectioned-content .rw-toc ul ul li a[data-active] {
-  border-left: 6px solid #0988bb;
   padding-left: 10px;
+  border-left: 6px solid #0988bb;
   font-weight: bold;
 }
 
 /* Show the table of content as left sidebar with the content on the right on
  * large screens. */
-@media screen and (min-width : 768px) {
+@media screen and (min-width: 768px) {
   #main-content .rw-sectioned-content .rw-toc {
-    float: left;
     position: -webkit-sticky;
     position: sticky;
     top: 0;
+    float: left;
+    overflow-y: auto;
     width: 20%;
     max-height: 100vh;
     padding: 32px 16px 0 0;
     border-bottom: none;
-    overflow-y: auto;
   }
   #main-content .rw-sectioned-content .rw-toc ~ section,
   #main-content .rw-sectioned-content .rw-toc ~ article,
@@ -73,38 +73,39 @@
  *
  * Scope: .js #main-content .rw-sectioned-content .rw-toc
  */
-@media screen and (max-width : 767px) {
+@media screen and (max-width: 767px) {
   .js #main-content .rw-sectioned-content .rw-toc__btn {
     display: block;
     height: 40px;
     margin: 24px auto;
     padding: 0 8px;
+    color: #2e3436;
     border: 1px solid #e6ecef;
     background: white;
-    color: #2e3436;
     font-size: 16px;
     font-weight: normal;
   }
   .rw-toc__btn[aria-expanded] .cd-icon--arrow-down {
     fill: #2e3436;
   }
-  /*.js #main-content .rw-sectioned-content .rw-toc__btn:after {*/
-  /*  content: "";*/
-  /*  display: inline-block;*/
-  /*  vertical-align: middle;*/
-  /*  width: 9px;*/
-  /*  height: 9px;*/
-  /*  margin-left: 8px;*/
-  /*  overflow: hidden;*/
-  /*  background: url(../../img/rw-icons-sprite.png) -150px 0 no-repeat;*/
-  /*  background: rgba(0,0,0,0) url(../../img/rw-icons-sprite.svg) -150px 0 no-repeat;*/
-  /*}*/
-  /*.js #main-content .rw-sectioned-content .rw-toc-toggler[aria-expanded="true"]:after {*/
-  /*  background-position-y: -9px;*/
-  /*}*/
+  /* .js #main-content .rw-sectioned-content .rw-toc__btn:after { */
+  /*  content: ""; */
+  /*  display: inline-block; */
+  /*  vertical-align: middle; */
+  /*  width: 9px; */
+  /*  height: 9px; */
+  /*  margin-left: 8px; */
+  /*  overflow: hidden; */
+  /*  background: url(../../img/rw-icons-sprite.png) -150px 0 no-repeat; */
+  /*  background: rgba(0,0,0,0) url(../../img/rw-icons-sprite.svg) -150px 0 no-repeat; */
+  /* } */
+  /* .js #main-content .rw-sectioned-content .rw-toc-toggler[aria-expanded="true"]:after { */
+  /*  background-position-y: -9px; */
+  /* } */
   .js #main-content .rw-sectioned-content .rw-toc {
-    /*display: none;*/
+    /* display: none; */
     position: absolute;
+    z-index: 4;
     top: auto;
     left: 50%;
     width: 300px;
@@ -115,10 +116,9 @@
     margin: -24px 0 0 -150px;
     padding: 16px 16px 0 16px;
     border: 1px solid #e6ecef;
-    -webkit-box-shadow: 0px 0px 6px 2px #e6ecef;
-    box-shadow: 0px 0px 6px 2px #e6ecef;
     background: white;
-    z-index: 4;
+    -webkit-box-shadow: 0 0 6px 2px #e6ecef;
+    box-shadow: 0 0 6px 2px #e6ecef;
   }
   .js #main-content .rw-sectioned-content .rw-toc[data-hidden="false"] {
     display: block;
@@ -159,14 +159,14 @@
 /* Print. */
 @media print {
   #main-content .rw-sectioned-content #table-of-content-toggler {
-    display: none!important;
+    display: none !important;
   }
   #main-content .rw-sectioned-content .rw-toc {
-    display: none!important;
+    display: none !important;
   }
 }
 
-@media screen and (min-width : 768px) {
+@media screen and (min-width: 768px) {
   .js #main-content .rw-sectioned-content .rw-toc {
     --dropdown: false;
   }

@@ -48,9 +48,6 @@
 #main-content .rw-datepicker-calendar button {
   margin: 0;
   padding: 0;
-  /* Disable text selection of the buttons in the calendar to avoid interfering
-   * with the expected behavior (buttons). */
-  -webkit-touch-callout: none;
   -webkit-user-select: none;
   -khtml-user-select: none;
   -moz-user-select: none;
@@ -59,9 +56,12 @@
   color: var(--cd-reliefweb-dark-blue);
   border: none;
   background: none;
-  line-height: 16px;
   /* @todo review if we can use a CD variable. */
   font-size: 16px;
+  line-height: 16px;
+  /* Disable text selection of the buttons in the calendar to avoid interfering
+   * with the expected behavior (buttons). */
+  -webkit-touch-callout: none;
 }
 #main-content .rw-datepicker-calendar button:hover,
 #main-content .rw-datepicker-calendar button:focus,
@@ -113,8 +113,8 @@
   display: inline-block;
   width: 158px;
   padding: 0 4px;
-  line-height: 16px;
   font-size: 16px;
+  line-height: 16px;
 }
 /* Weekdays. */
 #main-content .rw-datepicker-header span {
@@ -123,9 +123,9 @@
   height: 32px;
   margin: 2px;
   padding: 8px;
-  line-height: 16px;
   text-align: right;
   font-size: 16px;
+  line-height: 16px;
 }
 /* Days of the month. */
 #main-content .rw-datepicker-days button {

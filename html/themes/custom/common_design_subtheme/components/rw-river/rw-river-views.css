@@ -1,41 +1,42 @@
 /* View selector */
 #main-content .rw-river-page .rw-river-views {
   width: 100%;
-  padding: 0;
   margin: 8px 0;
+  padding: 0;
   list-style: none;
 }
 #main-content .rw-river-page .rw-river-views ul {
-  list-style: none;
-  padding: 0;
   margin: -12px;
+  padding: 0;
+  list-style: none;
 }
 #main-content .rw-river-page .rw-river-views li {
   display: inline-block;
-  vertical-align: bottom;
   margin: 12px 16px;
+  vertical-align: bottom;
 }
 #main-content .rw-river-page .rw-river-views a {
   position: relative;
   display: inline-block;
   padding-bottom: 3px;
-  border-bottom: 3px solid transparent;
-  color: #2e3436;
-  font-size: 18px;
   text-decoration: none;
+  color: #2e3436;
+  border-bottom: 3px solid transparent;
+  font-size: 18px;
 }
 #main-content .rw-river-page .rw-river-views a:hover,
 #main-content .rw-river-page .rw-river-views a:focus,
 #main-content .rw-river-page .rw-river-views a:active {
-  border-color: #e6ecef;
   text-decoration: none;
+  border-color: #e6ecef;
 }
 #main-content .rw-river-page .rw-river-views .rw-river-views__list__item--selected a {
   border-color: #eb1405;
   font-size: 22px;
   font-weight: bold;
 }
-@media screen and (min-width : 768px) {
+
+@media screen and (min-width: 768px) {
   #main-content .rw-river-page .rw-river-views a {
     font-size: 20px;
   }

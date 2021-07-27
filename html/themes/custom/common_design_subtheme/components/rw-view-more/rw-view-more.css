@@ -8,34 +8,34 @@
  */
 #main-content .view-more {
   width: 100%;
-  text-align: center;
   margin-top: 32px;
+  text-align: center;
 }
 /* Clear the floating of the list items. */
 #main-content .view-more:after {
-  content: "";
-  clear: both;
   display: block;
+  clear: both;
+  content: "";
 }
 #main-content .view-more a {
-  display: inline-block;
   position: relative;
+  display: inline-block;
   font-style: italic;
 }
 #main-content .view-more a:after {
-  content: "";
   display: inline-block;
-  vertical-align: middle;
-  height: 12px;
-  width: 12px;
-  margin: 0 0 0 6px;
   overflow: hidden;
+  width: 12px;
+  height: 12px;
+  margin: 0 0 0 6px;
+  content: "";
+  vertical-align: middle;
   background: var(--rw-icons--common--next--12--dark-blue);
 }
 #main-content .view-more ul {
   display: inline-block;
-  max-width: 360px;
   width: 100%;
+  max-width: 360px;
   margin: 0;
   padding: 0;
   list-style: none;

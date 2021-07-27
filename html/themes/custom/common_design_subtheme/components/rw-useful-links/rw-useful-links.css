@@ -1,10 +1,10 @@
 /* Useful links */
 #main-content .rw-sectioned-content section.rw-entity-useful-links img {
   display: inline-block;
-  vertical-align: middle;
   max-width: 200px;
   max-height: 50px;
   margin-right: 10px;
+  vertical-align: middle;
 }
 #main-content .rw-sectioned-content section.rw-entity-useful-links img[src*=".svg"] {
   min-width: 150px;
@@ -45,13 +45,13 @@
 
 /* External links. Display an icon after the link. */
 #main-content a[target="_blank"][rel="noopener"]:after {
-  content: "";
   display: inline-block;
-  vertical-align: middle;
-  height: 12px;
+  overflow: hidden;
   width: 12px;
+  height: 12px;
   /* The top margin is to have a better vertical alignment. */
   margin: -2px 0 0 6px;
-  overflow: hidden;
+  content: "";
+  vertical-align: middle;
   background: var(--rw-icons--common--external-link--12--dark-grey);
 }

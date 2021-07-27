@@ -163,23 +163,23 @@
   background: var(--rw-icons--disaster-type--WF--32--white);
 }
 .taxonomy-term--disaster--full[data-disaster-type] > header:before {
-  content: "";
   position: absolute;
   /* To align with the h2. */
   top: 6px;
   left: 0;
+  overflow: hidden;
   width: 52px;
   height: 52px;
-  overflow: hidden;
-  background-color: #b6c8d0;
+  content: "";
   border: 10px solid #b6c8d0;
+  background-color: #b6c8d0;
 }
 .taxonomy-term--disaster--full[data-disaster-status="alert"] > header:before {
-  background-color: #eb8705;
   border-color: #eb8705;
+  background-color: #eb8705;
 }
 .taxonomy-term--disaster--full[data-disaster-status="current"] > header:before,
 .taxonomy-term--disaster--full[data-disaster-status="ongoing"] > header:before {
-  background-color: #f65c51;
   border-color: #f65c51;
+  background-color: #f65c51;
 }

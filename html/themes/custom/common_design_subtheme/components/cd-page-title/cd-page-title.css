@@ -1,7 +1,7 @@
 /* Page title and Status in article header */
 .taxonomy-term--full .cd-page-title {
-  padding-bottom: 0;
   margin-bottom: 0;
+  padding-bottom: 0;
   border-bottom: 0 none;
 }
 .taxonomy-term--full > header {

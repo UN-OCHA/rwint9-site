@@ -96,7 +96,7 @@
     position: relative;
   }
 
-  /*!* Headlines grid: 1 column. *!*/
+  /* !* Headlines grid: 1 column. *! */
   .path-frontpage #main-content #headlines .rw-river__articles {
     display: grid;
     grid-template-areas: "header" "article1" "article2" "article3" "article4" "article5" "article6" "article7" "article8" "footer";
@@ -134,7 +134,7 @@
     grid-area: footer;
   }
 
-  /*!* Remove borders and padding on small screens. *!*/
+  /* !* Remove borders and padding on small screens. *! */
   @media screen and (max-width: 479px) {
     .path-frontpage #main-content #headlines .rw-river__articles > article:nth-of-type(n+1) {
       padding-right: 0;

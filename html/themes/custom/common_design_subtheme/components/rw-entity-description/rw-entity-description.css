@@ -11,13 +11,13 @@
 /* Javascript enabled */
 .js #main-content .rw-sectioned-content section.rw-entity-description button {
   display: block;
-  padding: 8px 12px;
+  order: 3;
   margin: 24px auto 0 auto;
+  padding: 8px 12px;
+  color: #055372;
   border: 1px solid #055372;
   background: white;
-  color: #055372;
   font-size: 16px;
-  order: 3;
   fill: #055372;
 }
 .js #main-content .rw-sectioned-content section.rw-entity-description button svg {
@@ -26,8 +26,8 @@
 .js #main-content .rw-sectioned-content section.rw-entity-description button:hover,
 .js #main-content .rw-sectioned-content section.rw-entity-description button:active,
 .js #main-content .rw-sectioned-content section.rw-entity-description button:focus {
-  background: #055372;
   color: white;
+  background: #055372;
 }
 /* Overrides the default behavior when data-cd-hidden is set as the description
  * is always displayed, only the number of paragraphs changes. */

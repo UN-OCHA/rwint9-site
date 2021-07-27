@@ -387,10 +387,10 @@
   padding: 0;
 }
 #main-content .rw-advanced-search__filter-selector [data-autocomplete] > input {
+  box-sizing: border-box;
   height: 36px;
   padding: 8px;
   border: 1px solid var(--cd-reliefweb-light-grey);
-  box-sizing: border-box;
 }
 
 /**

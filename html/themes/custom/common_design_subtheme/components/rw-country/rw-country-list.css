@@ -1,39 +1,39 @@
 .path-countries #main-content .rw-river-page--countries > ul {
+  position: relative;
+  z-index: 1;
   display: block;
   margin: 12px -12px -12px -12px;
   padding: 0;
   list-style: none;
-  position: relative;
-  z-index: 1;
 }
 .path-countries #main-content .rw-river-page--countries > ul ul,
 .path-countries #main-content .rw-river-page--countries > ul li {
+  position: relative;
   display: inline-block;
   width: 100%;
   margin: 0;
   padding: 0;
   list-style: none;
-  position: relative;
 }
 .path-countries #main-content .rw-river-page--countries > ul > li {
   padding: 12px;
 }
 .path-countries #main-content .rw-river-page--countries > ul > li:target:before {
-  content: "";
   position: absolute;
+  z-index: -1;
   top: 8px;
-  left: 0;
   right: 0;
   bottom: 12px;
+  left: 0;
+  content: "";
   border: 4px solid #e6ecef;
-  z-index: -1;
 }
 .path-countries #main-content .rw-river-page--countries > ul .rw-river-country-list__group__title {
-  font-weight: bold;
-  font-size: 24px;
-  border-bottom: 1px solid #2e3436;
-  padding: 0 0 16px 0;
   margin: 8px 0 24px 0;
+  padding: 0 0 16px 0;
+  border-bottom: 1px solid #2e3436;
+  font-size: 24px;
+  font-weight: bold;
 }
 .path-countries #main-content .rw-river-page--countries > ul li li {
   margin: 0 0 8px 0;
@@ -47,19 +47,21 @@
   line-height: 1.5;
 }
 
-@media screen and (min-width : 480px) {
+@media screen and (min-width: 480px) {
   .path-countries #main-content .rw-river-page--countries > ul {
     columns: 2;
     column-gap: 8px;
   }
 }
-@media screen and (min-width : 768px) {
+
+@media screen and (min-width: 768px) {
   .path-countries #main-content .rw-river-page--countries > ul {
     columns: 3;
     column-gap: 8px;
   }
 }
-@media screen and (min-width : 1024px) {
+
+@media screen and (min-width: 1024px) {
   .path-countries #main-content .rw-river-page--countries > ul {
     columns: 4;
     column-gap: 8px;

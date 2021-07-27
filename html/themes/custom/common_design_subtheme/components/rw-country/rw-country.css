@@ -7,23 +7,23 @@
  */
 #main-content article header p.rw-entity-country-slug {
   display: inline-block;
-  vertical-align: top;
+  overflow: hidden;
   max-width: 100%;
   margin: 4px 8px 0 0;
   padding: 0 12px;
-  background: #e6ecef;
+  vertical-align: top;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   color: #2e3436;
+  background: #e6ecef;
   font-size: 18px;
   font-weight: bold;
   line-height: 30px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
 }
 #main-content article header p.rw-entity-country-slug a {
+  text-decoration: none;
   color: inherit;
   font-weight: inherit;
-  text-decoration: none;
 }
 #main-content article header p.rw-entity-country-slug span {
   color: inherit;

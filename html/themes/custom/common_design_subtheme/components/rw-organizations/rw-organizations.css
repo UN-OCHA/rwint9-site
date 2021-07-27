@@ -15,8 +15,8 @@
     margin: 0 -8px;
   }
   .path-organizations #main-content section.rw-river .rw-river__articles article {
-    width: 100%;
     flex: 1 0 40%;
+    width: 100%;
     margin: 16px 8px 0 8px;
     padding: 16px;
     border: 1px solid #e6ecef;

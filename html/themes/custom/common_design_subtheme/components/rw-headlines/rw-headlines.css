@@ -81,7 +81,7 @@
  *
  * Scope: #main-content article dl.rw-entity-meta
  */
-#main-content article dl.rw-entity-meta{
+#main-content article dl.rw-entity-meta {
   margin: 0;
 }
 #main-content article dl.rw-entity-meta + dl.rw-entity-meta {

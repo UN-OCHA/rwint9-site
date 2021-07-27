@@ -7,7 +7,7 @@
  */
 #main-content .rw-sectioned-content section.rw-entity-social-media-links ul {
   /* Compensate the top margin of the li. */
-  /*margin: -16px 0 0 0;*/
+  /* margin: -16px 0 0 0; */
   padding: 0;
   list-style: none;
 }
@@ -19,11 +19,13 @@
   padding: 12px;
   border: 1px solid #e6ecef;
 }
+
 @media screen and (min-width: 768px) {
   #main-content .rw-sectioned-content section.rw-entity-social-media-links ul {
     column-count: 2;
   }
 }
+
 @media screen and (min-width: 1024px) {
   #main-content .rw-sectioned-content section.rw-entity-social-media-links ul {
     column-count: 3;
@@ -32,14 +34,14 @@
 
 /* External links. Display an icon after the link. */
 #main-content .rw-entity-social-media-links a[target="_blank"][rel="noopener"]:after {
-  content: "";
   display: inline-block;
-  vertical-align: middle;
-  height: 12px;
+  overflow: hidden;
   width: 12px;
+  height: 12px;
   /* The top margin is to have a better vertical alignment. */
   margin: -2px 0 0 6px;
-  overflow: hidden;
+  content: "";
+  vertical-align: middle;
   background: var(--rw-icons--common--external-link--12--dark-blue);
 }
 
@@ -48,10 +50,10 @@
  */
 #main-content .rw-entity-social-media-links--icons-only ul {
   display: inline-block;
-  vertical-align: middle;
   margin: 0;
   padding: 0;
   list-style: none;
+  vertical-align: middle;
 }
 #main-content .rw-entity-social-media-links--icons-only li {
   float: left;
@@ -70,14 +72,14 @@
   font-size: 12px;
 }
 #main-content .rw-entity-social-media-links--icons-only a:before {
-  content: "";
   display: inline-block;
+  overflow: hidden;
+  width: 48px;
+  height: 48px;
+  content: "";
   /* Aligning top is important to ensure the links have a height of 48px and
    * not bigger. */
   vertical-align: top;
-  height: 48px;
-  width: 48px;
-  overflow: hidden;
 }
 #main-content .rw-entity-social-media-links--icons-only a[href*="facebook"]:before {
   background: var(--rw-icons--social-media--facebook-full--48--dark-blue);
@@ -101,7 +103,7 @@
 #main-content .rw-document .rw-entity-social-media-links {
   margin: 24px 0 0 0;
   padding: 24px 0;
+  text-align: center;
   border-top: 1px solid #e6ecef;
   line-height: 1;
-  text-align: center;
 }

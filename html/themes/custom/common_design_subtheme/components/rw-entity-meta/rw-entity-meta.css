@@ -13,14 +13,14 @@
   margin-top: 4px;
 }
 #main-content article dl.rw-entity-meta:after {
-  content: "";
-  clear: both;
   display: block;
+  clear: both;
+  content: "";
 }
 #main-content article dl.rw-entity-meta dt {
-  clear: both;
-  float: left;
   display: inline;
+  float: left;
+  clear: both;
   margin: 0 4px 0 0;
   font-size: 15px;
   font-weight: bold;
@@ -66,13 +66,13 @@
   }
   /* Separator. */
   #main-content article header dl.rw-entity-meta dd:after {
-    content: "";
     display: inline-block;
-    vertical-align: middle;
     width: 4px;
     height: 4px;
     margin: 0 8px;
     padding: 0;
+    content: "";
+    vertical-align: middle;
     border-radius: 4px;
     background: #2e3436;
   }
@@ -90,8 +90,8 @@
   margin: 0;
 }
 #main-content section article dl.rw-entity-meta dt {
-  float: none;
   display: inline-block;
+  float: none;
   font-size: 14px;
 }
 #main-content section article dl.rw-entity-meta dd {
@@ -103,13 +103,13 @@
   color: #4d5254;
 }
 #main-content section article dl.rw-entity-meta.rw-article-meta dd:after {
-  content: "";
   display: inline-block;
-  vertical-align: middle;
   width: 4px;
   height: 4px;
   margin: 0 8px;
   padding: 0;
+  content: "";
+  vertical-align: middle;
   border-radius: 4px;
   background: #2e3436;
 }
@@ -143,10 +143,10 @@
  */
 #main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--status:before {
   display: inline-block;
-  height: 10px;
   width: 10px;
-  border-radius: 5px;
+  height: 10px;
   margin-right: 8px;
+  border-radius: 5px;
 }
 #main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--status--past:before {
   content: "";
@@ -173,14 +173,14 @@
  * Scope: #main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--status--format
  */
 #main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--format:before {
-  content: "";
   display: inline-block;
-  vertical-align: middle;
+  overflow: hidden;
   width: 16px;
   height: 16px;
   /* The top margin is to have a better vertical alignment. */
   margin: -2px 6px 0 0;
-  overflow: hidden;
+  content: "";
+  vertical-align: middle;
   background: var(--rw-icons--content--report--16--dark-grey);
 }
 #main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--format.map:before {
@@ -192,4 +192,3 @@
 #main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--format.interactive:before {
   background: var(--rw-icons--content--interactive--16--dark-grey);
 }
-
