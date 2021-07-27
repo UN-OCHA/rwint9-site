@@ -52,7 +52,45 @@ function reliefweb_bookmarks_preprocess_node(&$variables) {
       'tags' => [
         'user:' . \Drupal::currentUser()->id(),
         'reliefweb_bookmarks:user:' . \Drupal::currentUser()->id(),
-        'reliefweb_bookmarks:entity_id:' . $node->id(),
+        'reliefweb_bookmarks:node:' . $node->id(),
+      ],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_preprocess_taxonomy_term().
+ */
+function reliefweb_bookmarks_preprocess_taxonomy_term(&$variables) {
+  $taxonomy_term = $variables['elements']['#taxonomy_term'];
+  $config = \Drupal::config('reliefweb_bookmarks.settings');
+  if (!isset($config->get('vocabularies')[$taxonomy_term->bundle()]) || !$config->get('vocabularies')[$taxonomy_term->bundle()]) {
+    return;
+  }
+
+  if (!\Drupal::currentUser()->id()) {
+    return;
+  }
+
+  $links[] = reliefweb_bookmarks_build_link('taxonomy_term', $taxonomy_term->id(), \Drupal::currentUser()->id());
+
+  $variables['content']['reliefweb_bookmarks_link'] = [
+    '#theme' => 'links',
+    '#title' => t('Bookmark'),
+    '#links' => $links,
+    '#attached' => [
+      'library' => [
+        'core/drupal.ajax',
+      ],
+    ],
+    '#cache' => [
+      'contexts' => [
+        'user',
+      ],
+      'tags' => [
+        'user:' . \Drupal::currentUser()->id(),
+        'reliefweb_bookmarks:user:' . \Drupal::currentUser()->id(),
+        'reliefweb_bookmarks:taxonomy_term:' . $taxonomy_term->id(),
       ],
     ],
   ];
@@ -62,13 +100,19 @@ function reliefweb_bookmarks_preprocess_node(&$variables) {
  * Build bookmark link.
  */
 function reliefweb_bookmarks_build_link($entity_type, $entity_id, $uid) {
-  // Only nodes for now.
-  if ($entity_type !== 'node') {
-    return;
+  $request = \Drupal::destination();
+
+  switch ($entity_type) {
+    case 'node':
+      $path = '/node/' . $entity_id . '/add-to-bookmarks';
+      break;
+
+    case 'taxonomy_term':
+      $path = '/taxonomy/term/' . $entity_id . '/add-to-bookmarks';
+      break;
+
   }
 
-  $request = \Drupal::destination();
-  $path = '/node/' . $entity_id . '/add-to-bookmarks';
   $url = Url::fromUri('internal:' . $path, [
     'query' => ['destination' => $request->get()],
     'absolute' => TRUE,

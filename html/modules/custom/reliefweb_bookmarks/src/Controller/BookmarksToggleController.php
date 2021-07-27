@@ -14,12 +14,13 @@ use Drupal\Core\Cache\Cache;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Link;
+use Drupal\Core\Routing\RedirectDestinationInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\node\NodeInterface;
+use Drupal\taxonomy\TermInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Drupal\Core\Routing\RedirectDestinationInterface;
 
 /**
  * A Bookmarks toggle controller.
@@ -76,9 +77,9 @@ class BookmarksToggleController extends ControllerBase {
   }
 
   /**
-   * {@inheritdoc}
+   * Add or remove node from bookmarks.
    */
-  public function content(NodeInterface $node) {
+  public function addNode(NodeInterface $node) {
     $check_entry = reliefweb_bookmarks_toggle_bookmark('node', $node->id(), $this->account->id());
 
     if ($check_entry) {
@@ -90,11 +91,51 @@ class BookmarksToggleController extends ControllerBase {
 
     Cache::invalidateTags([
       'reliefweb_bookmarks:user:' . $this->account->id(),
-      'reliefweb_bookmarks:entity_id:' . $node->id(),
+      'reliefweb_bookmarks:node:' . $node->id(),
     ]);
 
     if ($this->request->isXmlHttpRequest()) {
       $link_data = reliefweb_bookmarks_build_link('node', $node->id(), $this->account->id());
+
+      $url = $link_data['url'];
+      $link_options = [
+        'attributes' => $link_data['attributes'],
+      ];
+      $url->setOptions($link_options);
+      $link = Link::fromTextAndUrl($link_data['title'], $url);
+
+      $response = new AjaxResponse();
+      $response->addCommand(new MessageCommand($message));
+      $response->addCommand(new ReplaceCommand('.bookmark--link', $link->toString()));
+
+      return $response;
+    }
+    else {
+      $this->messenger()->addStatus($message);
+      return new RedirectResponse($this->destination->get());
+    }
+  }
+
+  /**
+   * Add or remove term from bookmarks.
+   */
+  public function addTerm(TermInterface $taxonomy_term) {
+    $check_entry = reliefweb_bookmarks_toggle_bookmark('taxonomy_term', $taxonomy_term->id(), $this->account->id());
+
+    if ($check_entry) {
+      $message = $this->t('Item removed from your bookmarks.');
+    }
+    else {
+      $message = $this->t('Item added to your bookmarks.');
+    }
+
+    Cache::invalidateTags([
+      'reliefweb_bookmarks:user:' . $this->account->id(),
+      'reliefweb_bookmarks:taxonomy_term:' . $taxonomy_term->id(),
+    ]);
+
+    if ($this->request->isXmlHttpRequest()) {
+      $link_data = reliefweb_bookmarks_build_link('taxonomy_term', $taxonomy_term->id(), $this->account->id());
 
       $url = $link_data['url'];
       $link_options = [

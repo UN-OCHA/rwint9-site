@@ -10,12 +10,11 @@ namespace Drupal\reliefweb_bookmarks\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\user\UserInterface;
-use Drupal\Core\Link;
-use Drupal\Core\Url;
 use Drupal\Core\Session\AccountInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Database\Connection;
+use Drupal\reliefweb_rivers\RiverServiceBase;
 
 /**
  * A UserBookmarksController controller.
@@ -61,67 +60,127 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
     $query = $this->database->select('reliefweb_bookmarks', 'ew');
     $query->fields('ew');
     $query->condition('uid', $user->id());
-    $pager = $query->extend('Drupal\Core\Database\Query\PagerSelectExtender')->limit(10);
-    $records = $pager->execute()->fetchAll();
+    $query->condition('entity_type', 'node');
+    $records = $query->execute()->fetchAllAssoc('entity_id');
 
-    $rows = [];
-    $tags = [
-      'user:' . $user->id(),
-      'reliefweb_bookmarks:user:' . $user->id(),
-    ];
+    // Load all at once.
+    $storage = $this->entityTypeManager()->getStorage('node');
+    $nodes = $storage->loadMultiple(array_keys($records));
 
-    foreach ($records as $key => $data) {
-      $storage = $this->entityTypeManager()->getStorage($data->entity_type);
-      $node = $storage->load($data->entity_id);
-      $node_title = $node->label();
-      $path = $node->toUrl()->toString();
-      $url = Url::fromUri('internal:' . $path);
-      $link = Link::fromTextAndUrl($node_title, $url);
-      $bookmark_link = [
-        '#theme' => 'links',
-        '#links' => [
-          reliefweb_bookmarks_build_link($data->entity_type, $data->entity_id, $user->id()),
-        ],
-        '#attached' => [
-          'library' => [
-            'core/drupal.ajax',
-          ],
-        ],
-      ];
-      $rows[] = [
-        'data' => [
-          'name' => $key + 1,
-          'content' => $link,
-          'link' => render($bookmark_link),
-        ],
-      ];
-      $tags[] = 'reliefweb_bookmarks:entity_id:' . $node->id();
-    }
+    $query = $this->database->select('reliefweb_bookmarks', 'ew');
+    $query->fields('ew');
+    $query->condition('uid', $user->id());
+    $query->condition('entity_type', 'taxonomy_term');
+    $records = $query->execute()->fetchAllAssoc('entity_id');
 
-    $header = [
-      ['name' => $this->t('No.')],
-      ['content' => $this->t('Title')],
-      ['link' => $this->t('Bookmark')],
-    ];
+    // Load all at once.
+    $storage = $this->entityTypeManager()->getStorage('taxonomy_term');
+    $taxonomy_terms = $storage->loadMultiple(array_keys($records));
 
-    $build['config_table'] = [
-      '#theme' => 'table',
-      '#header' => $header,
-      '#rows' => $rows,
-      '#empty' => $this->t('No bookmarks found.'),
-      '#cache' => [
-        'contexts' => [
-          'user',
+    $grouped = [
+      'report' => [
+        'resource' => 'reports',
+        'title' => $this->t('Latest Headlines'),
+        'view' => 'headlines',
+        'more' => [
+          'url' => RiverServiceBase::getRiverUrl('report', [
+            'view' => 'headlines',
+          ]),
+          'label' => $this->t('View all headlines'),
         ],
-        'tags' => $tags,
+        'data' => [],
+      ],
+      'disaster' => [
+        'resource' => 'disasters',
+        'title' => $this->t('Recent Disasters'),
+        'more' => [
+          'url' => RiverServiceBase::getRiverUrl('disaster'),
+          'label' => $this->t('View all disasters'),
+        ],
+        'data' => [],
+      ],
+      'blog_post' => [
+        'resource' => 'blog',
+        'title' => $this->t('Latest Blog'),
+        'more' => [
+          'url' => RiverServiceBase::getRiverUrl('blog_post'),
+          'label' => $this->t('View all blog posts'),
+        ],
+        'data' => [],
+      ],
+      'job' => [
+        'resource' => 'jobs',
+        'title' => $this->t('Open jobs'),
+        'more' => [
+          'url' => RiverServiceBase::getRiverUrl('job'),
+          'label' => $this->t('View all jobs'),
+        ],
+        'data' => [],
+      ],
+      'training' => [
+        'resource' => 'training',
+        'title' => $this->t('Training programs'),
+        'more' => [
+          'url' => RiverServiceBase::getRiverUrl('training'),
+          'label' => $this->t('View all training programs'),
+        ],
+        'data' => [],
       ],
     ];
 
-    $build['pager'] = [
-      '#type' => 'pager',
-    ];
+    // Group by type.
+    foreach ($nodes as $node) {
+      $grouped[$node->getType()]['data'][] = $node;
+    }
 
-    return $build;
+    // Add terms.
+    $grouped['disaster']['data'] = $taxonomy_terms;
+
+    // Build output.
+    $sections = [];
+    foreach ($grouped as $section_key => $group) {
+      if (empty($group['data'])) {
+        continue;
+      }
+
+      // Generate the section.
+      switch ($section_key) {
+        case 'report':
+        case 'disaster':
+        case 'blog_post':
+          $sections[$section_key] = [
+            '#theme' => 'reliefweb_rivers_river',
+            '#id' => $section_key,
+            '#title' => $group['title'],
+            '#resource' => $group['resource'],
+            '#entities' => $group['data'],
+            '#more' => $group['more'] ?? NULL,
+          ];
+          break;
+
+        case 'job':
+        case 'training':
+          if (!isset($sections['opportunities'])) {
+            $sections['opportunities'] = [
+              '#theme' => 'reliefweb_homepage_opportunities',
+              '#id' => 'opportunities',
+            ];
+          }
+          $sections['opportunities']['#opportunities'][] = [
+            'type' => $section_key,
+            'title' => $group['title'],
+            'url' => $group['more']['url'],
+            'total' => count($group['data']),
+          ];
+          break;
+      }
+    }
+
+    return [
+      '#theme' => 'reliefweb_homepage',
+      '#title' => $this->t('ReliefWeb'),
+      '#sections' => $sections,
+    ];
   }
 
 }
