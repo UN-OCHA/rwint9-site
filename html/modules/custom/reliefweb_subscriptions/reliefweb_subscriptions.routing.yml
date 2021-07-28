@@ -1,0 +1,13 @@
+reliefweb_subscriptions.subscription_form:
+  path: '/user/{user}/subscriptions'
+  defaults:
+    _form: '\Drupal\reliefweb_subscriptions\Form\SubscriptionForm'
+    _title: 'Subscriptions'
+  options:
+    parameters:
+      user:
+        type: 'entity:user'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: manage own subscriptions
+    user: \d+

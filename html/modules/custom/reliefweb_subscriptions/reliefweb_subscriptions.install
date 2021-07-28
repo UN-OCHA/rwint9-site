@@ -1,0 +1,114 @@
+<?php
+
+/**
+ * @file
+ * Defines schema for the user subscriptions table.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function reliefweb_subscriptions_schema() {
+  // Table to store user subscriptions.
+  $schema['reliefweb_subscriptions_subscriptions'] = [
+    'fields' => [
+      'sid' => [
+        'description' => 'Subscription ID',
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'uid' => [
+        'description' => 'User ID',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+    ],
+    'primary key' => ['sid', 'uid'],
+  ];
+
+  // Table to store the subscription last sent log information.
+  $schema['reliefweb_subscriptions_logs'] = [
+    'fields' => [
+      'sid' => [
+        'description' => 'Subscription ID',
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'last' => [
+        'description' => 'Timestamp of the last time notifications for this subscription were sent',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'next' => [
+        'description' => 'Timestamp of the next time notifications for this subscription should be sent',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+    ],
+    'primary key' => ['sid'],
+    'indexes' => [
+      'next' => [
+        'next',
+      ],
+    ],
+  ];
+
+  // Table to store the queued notifications.
+  $schema['reliefweb_subscriptions_queue'] = [
+    'fields' => [
+      'eid' => [
+        'description' => 'Unique auto-incremented event ID',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'size' => 'normal',
+        'not null' => TRUE,
+      ],
+      'sid' => [
+        'description' => 'Subscription ID',
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'bundle' => [
+        'description' => 'Entity bundle. Empty for scheduled type subscriptions',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'entity_id' => [
+        'description' => 'Entity ID. Empty for scheduled type subscriptions',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'last' => [
+        'description' => 'Timestamp of the last time notifications for this subscription were sent',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'default' => 0,
+      ],
+    ],
+    'primary key' => ['sid', 'bundle', 'entity_id'],
+    'indexes' => [
+      'eid' => [
+        'eid',
+      ],
+    ],
+  ];
+
+  return $schema;
+}
