@@ -43,6 +43,7 @@ module:
   redirect: 0
   redis: 0
   reliefweb_api: 0
+  reliefweb_bookmarks: 0
   reliefweb_dsr: 0
   reliefweb_entities: 0
   reliefweb_homepage: 0
