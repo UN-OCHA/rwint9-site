@@ -34,12 +34,18 @@
   display: block;
   width: 100%;
 }
-.rw-document figure figcaption {
+.rw-document figure figcaption,
+.rw-document figure footer {
+  display: inline;
   padding-top: 4px;
   font-size: 15px;
   font-style: italic;
   line-height: 1.5;
 }
+.rw-document figure footer small {
+  font-size: inherit;
+}
+
 .rw-document > .rw-article__content {
   padding: 24px 0 24px 0;
 }
