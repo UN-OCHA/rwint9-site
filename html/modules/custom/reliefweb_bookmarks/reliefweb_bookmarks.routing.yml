@@ -9,7 +9,16 @@ reliefweb_bookmarks.collection:
 reliefweb_bookmarks.user:
   path: '/user/{user}/bookmarks'
   defaults:
-    _controller: '\Drupal\reliefweb_bookmarks\Controller\UserBookmarksController::content'
+    _controller: '\Drupal\reliefweb_bookmarks\Controller\UserBookmarksController::bookmarks'
+    _title: 'My bookmarks'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    user: \d+
+
+reliefweb_bookmarks.user.type:
+  path: '/user/{user}/bookmarks/{entity_type}/{bundle}'
+  defaults:
+    _controller: '\Drupal\reliefweb_bookmarks\Controller\UserBookmarksController::bookmarksByType'
     _title: 'My bookmarks'
   requirements:
     _user_is_logged_in: 'TRUE'
