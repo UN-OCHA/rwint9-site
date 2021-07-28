@@ -330,6 +330,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
       '#results' => $this->getRiverResults(count($entities)),
       '#entities' => $entities,
       '#pager' => $this->getRiverPager(),
+      '#empty' => $this->t('No results found. Please modify your search or filter selection.'),
     ];
   }
 
