@@ -1,0 +1,33 @@
+{#
+
+/**
+ * @file
+ * Header template for the notifications.
+ *
+ * Available variables are:
+ * - logo: url of the ReliefWeb logo.
+ * - preheader: string for preheader.
+ * - header: string for header.
+ */
+?>
+
+#}
+{% if logo is not empty %}
+<div class="reliefweb-logo">
+  <a href="{{ url('<front>') }}">
+    <img src="{{ logo }}" width="95" height="30" alt="Logo"/>
+  </a>
+</div>
+{% endif %}
+
+{% if preheader %}
+<div id="preheader" class="preheader">
+  {{ preheader }}
+</div>
+{% endif %}
+
+{% if header %}
+<div class="header">
+  {{ header }}
+</div>
+{% endif %}

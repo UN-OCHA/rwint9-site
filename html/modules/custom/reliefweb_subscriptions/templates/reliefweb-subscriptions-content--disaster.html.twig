@@ -1,0 +1,32 @@
+{#
+
+/**
+ * @file
+ * Template for the disaster notifications.
+ *
+ * Available variables are:
+ * - preheader: string for preheader.
+ * - title: disaster name.
+ * - date: disaster date.
+ * - overview: disaster's description.
+ * - url: disaster url.
+ * - prefooter: string for prefooter.
+ */
+?>
+
+#}
+{% embed '@reliefweb_subscriptions/reliefweb-subscriptions-content.html.twig' %}
+
+{% block content %}
+  <h1 class="email-title">New Disaster - {{ title }} / <span class="email-title-date">{{ date }}</span></h1>
+
+  <div class="email-resource">
+    <h2>Overview</h2>
+    <div class="email-resource-teaser">
+      {{ overview|raw }}
+      <a class="email-resource-read-more" href="{{ url }}">View on ReliefWeb</a>
+    </div>
+  </div>
+{% endblock %}
+
+{% endembed %}

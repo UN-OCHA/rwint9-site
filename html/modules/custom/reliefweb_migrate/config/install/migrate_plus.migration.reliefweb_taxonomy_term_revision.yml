@@ -23,6 +23,8 @@ process:
     plugin: skip_on_empty
     method: process
     source: field_status/0/value
+  status:
+    default_value: 1
   # Fields.
   field_disaster_type_code/value:
     plugin: skip_on_empty
