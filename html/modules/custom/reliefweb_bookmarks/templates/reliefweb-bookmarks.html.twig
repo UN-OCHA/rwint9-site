@@ -13,4 +13,7 @@
 <div{{ attributes.addClass('rw-bookmarks__sections') }}>
   {{ sections }}
   {{ pager }}
+  {% if link %}
+    <a href="{{ link.url }}">{{ link.label }}</a>
+  {% endif %}
 </div>

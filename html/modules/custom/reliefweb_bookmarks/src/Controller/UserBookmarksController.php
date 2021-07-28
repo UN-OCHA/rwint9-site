@@ -174,7 +174,9 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
         '#entities' => $entities,
         '#more' => [
           'url' => '/user/' . $uid . '/bookmarks/' . $query['entity_type'] .'/' . $bundle,
-          'label' => $this->t('More'),
+          'label' => $this->t('More bookmarked @resource', [
+            '@resource' => strtr($query['resource'], '_', ' '),
+          ]),
         ],
         '#cache' => [
           'contexts' => [
@@ -288,6 +290,10 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
       '#pager' => [
         '#type' => 'pager',
       ],
+      '#link' => [
+        'url' => '/user/' . $uid . '/bookmarks',
+        'label' => $this->t('All bookmarks'),
+      ]
     ];
   }
 

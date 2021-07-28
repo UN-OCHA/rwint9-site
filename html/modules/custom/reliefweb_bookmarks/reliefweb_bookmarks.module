@@ -188,6 +188,7 @@ function reliefweb_bookmarks_theme() {
         'attributes' => NULL,
         'sections' => [],
         'pager' => NULL,
+        'link' => [],
       ],
     ],
   ];
