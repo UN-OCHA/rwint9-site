@@ -1,0 +1,34 @@
+/**
+ * Book menu.
+ *
+ * Navigation of the book pages hierarchy.
+ *
+ * Scope: .rw-book-menu
+ */
+.rw-book-menu {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+.rw-book-menu a {
+  /* Ensure there is enough tapping space. */
+  line-height: 30px;
+}
+.rw-book-menu ol {
+  list-style: none;
+  font-size: 15px;
+  margin: 0;
+  padding: 0;
+}
+.rw-book-menu > ol {
+  padding: 0 16px 16px 16px;
+}
+.rw-book-menu ol ol {
+  padding-left: 32px;
+}
+.rw-book-menu ol li {
+  margin: 0;
+}
+.rw-book-menu ol li a.rw-book-menu__link--active {
+  color: black;
+  font-weight: bold;
+}

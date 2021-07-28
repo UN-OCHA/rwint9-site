@@ -202,10 +202,6 @@ trait DocumentTrait {
       '#title' => $title,
       '#resource' => 'reports',
       '#entities' => $entities,
-      '#more' => [
-        'url' => RiverServiceBase::getRiverUrl('report'),
-        'label' => $this->t('View all reports'),
-      ],
     ];
   }
 

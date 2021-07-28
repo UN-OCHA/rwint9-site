@@ -73,6 +73,7 @@
  */
 #}
 {{ attach_library('common_design_subtheme/rw-document') }}
+{{ attach_library('common_design_subtheme/rw-related-content') }}
 
 {% set meta = node.getEntityMeta() %}
 
@@ -144,6 +145,13 @@
 
   <div class="rw-article__content">
     {{ content.body.0|render|sanitize_html(false, 2) }}
+
+    {% if not cotent.field_fee_information.isEmpty() %}
+    <section class="rw-fee-information">
+      <h2 class="rw-fee-information__title">{{ 'Fee information'|t }}</h2>
+      {{ content.field_fee_information.0|render|sanitize_html(false, 2) }}
+    </section>
+    {% endif %}
 
     <section class="rw-how-to-apply">
       <h2 class="rw-how-to-apply__title">{{ 'How to register'|t }}</h2>
