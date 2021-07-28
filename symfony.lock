@@ -203,9 +203,6 @@
     "drupal/pathauto": {
         "version": "1.8.0"
     },
-    "drupal/phpmailer_smtp": {
-        "version": "2.0.2"
-    },
     "drupal/redirect": {
         "version": "1.6.0"
     },
@@ -314,6 +311,9 @@
     "pear/pear_exception": {
         "version": "v1.0.1"
     },
+    "pelago/emogrifier": {
+        "version": "v5.0.1"
+    },
     "phar-io/manifest": {
         "version": "2.0.1"
     },
@@ -334,9 +334,6 @@
     },
     "phpdocumentor/type-resolver": {
         "version": "1.4.0"
-    },
-    "phpmailer/phpmailer": {
-        "version": "v6.5.0"
     },
     "phpmd/phpmd": {
         "version": "2.10.1"

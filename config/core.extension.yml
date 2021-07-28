@@ -40,7 +40,6 @@ module:
   page_cache: 0
   path: 0
   path_alias: 0
-  phpmailer_smtp: 0
   redirect: 0
   redis: 0
   reliefweb_api: 0
