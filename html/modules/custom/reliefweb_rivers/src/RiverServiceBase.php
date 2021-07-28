@@ -8,6 +8,7 @@ use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\reliefweb_api\Services\ReliefWebApiClient;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Pager\PagerParametersInterface;
+use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 /**
@@ -139,6 +140,13 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * {@inheritdoc}
    */
   abstract public function parseApiData(array $api_data, $view = '');
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getResource() {
+    return $this->resource;
+  }
 
   /**
    * {@inheritdoc}
@@ -496,9 +504,13 @@ abstract class RiverServiceBase implements RiverServiceInterface {
       return [];
     }
 
+    $service = static::getRiverService($bundle);
+    if (empty($service)) {
+      return [];
+    }
+
     // Parse the API data using the river service for the entity bundle.
-    $entities = \Drupal::service('reliefweb_rivers.' . $bundle . '.river')
-      ->parseApiData($data, $view);
+    $entities = $service->parseApiData($data, $view);
 
     // If instructed so, remove some properties from the entities.
     if (!empty($exclude)) {
@@ -515,8 +527,12 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * {@inheritdoc}
    */
   public static function getRiverApiPayload($bundle, $view = '', array $exclude = ['query']) {
-    $payload = \Drupal::service('reliefweb_rivers.' . $bundle . '.river')
-      ->getApiPayload($view);
+    $service = static::getRiverService($bundle);
+    if (empty($service)) {
+      return [];
+    }
+
+    $payload = $service->getApiPayload($view);
 
     // If instructed so, remove some properties from the payload.
     if (!empty($exclude)) {
@@ -525,6 +541,18 @@ abstract class RiverServiceBase implements RiverServiceInterface {
     }
 
     return $payload;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getRiverService($bundle) {
+    try {
+      return \Drupal::service('reliefweb_rivers.' . $bundle . '.river');
+    }
+    catch (ServiceNotFoundException $exception) {
+      return NULL;
+    }
   }
 
 }
