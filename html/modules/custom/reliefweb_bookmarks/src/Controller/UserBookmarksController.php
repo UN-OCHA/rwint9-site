@@ -173,7 +173,7 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
         '#resource' => $query['resource'],
         '#entities' => $entities,
         '#more' => [
-          'url' => '/user/' . $uid . '/bookmarks/' . $query['entity_type'] .'/' . $bundle,
+          'url' => '/user/' . $uid . '/bookmarks/' . $query['entity_type'] . '/' . $bundle,
           'label' => $this->t('More bookmarked @resource', [
             '@resource' => strtr($query['resource'], '_', ' '),
           ]),
@@ -212,8 +212,6 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
     if (empty($entity_types[$entity_type][$bundle])) {
       return;
     }
-
-    $queries = [];
 
     // Get the river service for the bundle.
     $service = RiverServiceBase::getRiverService($bundle);
@@ -293,7 +291,7 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
       '#link' => [
         'url' => '/user/' . $uid . '/bookmarks',
         'label' => $this->t('All bookmarks'),
-      ]
+      ],
     ];
   }
 
@@ -347,7 +345,7 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
   }
 
   /**
-   * Get the count of bookmarked entities for the given entity type, bundle and uid.
+   * Get the count of bookmarked entities for entity type, bundle and uid.
    *
    * @param string $entity_type
    *   Entity type.
