@@ -1,0 +1,4 @@
+reliefweb_subscriptions.subscription_form:
+  route_name: reliefweb_subscriptions.subscription_form
+  base_route: entity.user.canonical
+  title: Subscriptions

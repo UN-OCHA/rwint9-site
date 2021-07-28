@@ -8,33 +8,46 @@
  * - attributes: figure attributes
  * - style: image style
  * - image: array with uri, alt, width, height, alt and copyright
+ * - caption: flag to indicate whether to show the caption or not.
+ *
+ * @todo handle responsive image styles when/if introduced.
  */
 
 #}
 <figure{{ attributes
   .addClass([
     'rw-entity-image',
-    image.alt is not empty or image.copyright is not empty ? 'rw-entity-image--with-caption',
+    caption and image.alt is not empty ? 'rw-entity-image--with-caption',
+    image.copyright is not empty ? 'rw-entity-image--with-copyright',
   ])
 }}>
-  {{ render_var({
-    '#theme': 'image_style',
-    '#style_name': style ?? 'small',
-    '#uri': image.uri,
-    '#alt': image.alt,
-    '#attributes': {
-      'class': ['rw-entity-image__image'],
-    },
-    '#width': image.width,
-    '#height': image.height
-  }) }}
+  {% if style is not empty %}
+    {{ render_var({
+      '#theme': 'image_style',
+      '#style_name': style,
+      '#uri': image.uri,
+      '#alt': image.alt,
+      '#attributes': {
+        'class': ['rw-entity-image__image'],
+      },
+      '#width': image.width,
+      '#height': image.height
+    }) }}
+  {% else %}
+    <img class="rw-entity-image__image" src="{{ image.uri }}" alt="{{ image.alt }}">
+  {% endif %}
 
-  {% if image.alt is not empty or image.copyright is not empty %}
+  {% if caption and image.alt is not empty %}
+  {# We use aria-hidden="true" because we already set the image alt. This
+     prevents the alt text to be read twice by screen readers. #}
   <figcaption class="rw-entity-image__caption" aria-hidden="true">
     {{ image.alt }}
-    {% if image.copyright is not empty %}
-    <small class="rw-entity-image__copyright">&copy; {{ image.copyright }}</small>
-    {% endif %}
   </figcaption>
+  {% endif %}
+
+  {% if image.copyright is not empty %}
+  <footer class="rw-entity-image__copyright">
+    <small>&copy; {{ image.copyright }}</small>
+  </footer>
   {% endif %}
 </figure>

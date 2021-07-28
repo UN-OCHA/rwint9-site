@@ -75,6 +75,13 @@ class ProxySubscriber implements EventSubscriberInterface {
     // Get the file path.
     $path = $request->getPathInfo();
 
+    // Hotlink to the production site.
+    // @todo remove when attachments are added.
+    if (strpos($path, '/resources-pdf-previews/') !== FALSE) {
+      header('Location: ' . 'https://reliefweb.int' . $path);
+      exit;
+    }
+
     // Check if the request is for an image.
     // @todo we may want to allow report attachments as well at some point.
     if (strpos(\GuzzleHttp\Psr7\mimetype_from_filename($path), 'image/') !== 0) {
@@ -91,7 +98,7 @@ class ProxySubscriber implements EventSubscriberInterface {
 
     // Remove any style info to retrieve the original image.
     if (strpos($path, 'styles/') === 0) {
-      $uri = preg_replace('/^styles\/.+\/(.+)\/(.+)/U', '$1://$2', $path);
+      $uri = preg_replace('#^styles/[^/]+/(?<scheme>[^/]+)/(?<path>.+)#U', '$1://$2', $path);
     }
     else {
       $uri = 'public://' . $path;
@@ -161,6 +168,7 @@ class ProxySubscriber implements EventSubscriberInterface {
       // Avoid redirection caching in upstream proxies.
       header('Cache-Control: must-revalidate, no-cache, post-check=0, pre-check=0, private');
       header('Location: ' . $request->getRequestUri());
+      exit;
     }
   }
 
