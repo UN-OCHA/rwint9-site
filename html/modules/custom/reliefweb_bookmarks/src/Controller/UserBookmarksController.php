@@ -17,6 +17,7 @@ use Drupal\reliefweb_api\Services\ReliefWebApiClient;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * A UserBookmarksController controller.
@@ -204,72 +205,93 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
     $config = $this->configFactory->get('reliefweb_bookmarks.settings');
     $uid = $this->account->id();
 
+    // Number of items per page.
+    $limit = 10;
+
     $entity_types = [
       'node' => $config->get('content_types') ?? [],
       'taxonomy_term' => $config->get('vocabularies') ?? [],
     ];
 
     if (empty($entity_types[$entity_type][$bundle])) {
-      return;
+      throw new NotFoundHttpException();
     }
 
     // Get the river service for the bundle.
     $service = RiverServiceBase::getRiverService($bundle);
     if (empty($service)) {
-      return;
+      throw new NotFoundHttpException();
     }
 
-    // Get any bookmarked ids for the bundle.
+    // Get the total number of bookmarked items for this bundle and user.
     $count = $this->getEntityCount($entity_type, $bundle, $uid);
-    if ($count < 10) {
+    if ($count < $limit) {
       $currentPage = 0;
     }
     else {
-      $currentPage = $this->pagerManager->createPager($count, 10)->getCurrentPage();
-    }
-    $ids = $this->getEntityIds($entity_type, $bundle, $uid, $currentPage * 10, 10);
-    if (empty($ids)) {
-      return;
+      $currentPage = $this->pagerManager->createPager($count, $limit)->getCurrentPage();
     }
 
-    // Get the ReliefWeb API payload for the bundle.
-    $payload = $service->getApiPayload();
+    // Get the section content.
+    $entities = [];
+    if ($count > 0) {
+      // Get the ids of the bookmarked items for the current page.
+      $ids = $this->getEntityIds($entity_type, $bundle, $uid, $currentPage * $limit, $limit);
+      if (!empty($ids)) {
+        // Get the ReliefWeb API payload for the bundle.
+        $payload = $service->getApiPayload();
 
-    // Filter on the ids.
-    $filter = [
-      'field' => 'id',
-      'value' => $ids,
-    ];
-    if (isset($payload['filter'])) {
-      $payload['filter'] = [
-        'conditions' => [
-          $payload['filter'],
-          $filter,
-        ],
-        'operator' => 'AND',
-      ];
+        // Filter on the ids.
+        $filter = [
+          'field' => 'id',
+          'value' => $ids,
+        ];
+        if (isset($payload['filter'])) {
+          $payload['filter'] = [
+            'conditions' => [
+              $payload['filter'],
+              $filter,
+            ],
+            'operator' => 'AND',
+          ];
+        }
+        else {
+          $payload['filter'] = $filter;
+        }
+
+        // Sort by id to have the most recent first.
+        $payload['sort'] = 'id:desc';
+
+        // Ensure we retrieve the expected amount of items.
+        $payload['limit'] = $limit;
+
+        // Get the API data.
+        $result = $this->reliefWebApiClient
+          ->request($service->getResource(), $payload);
+
+        // Prepare the data from the API.
+        $entities = RiverServiceBase::getRiverData($bundle, $result);
+      }
     }
-    else {
-      $payload['filter'] = $filter;
-    }
 
-    // Sort by id to have the most recent first.
-    $payload['sort'] = 'id:desc';
-
-    // Get the API data.
-    $result = $this->reliefWebApiClient
-      ->request($service->getResource(), $payload);
-
-    // Prepare the sections.
-    $sections = [];
-    $entities = RiverServiceBase::getRiverData($bundle, $result);
-
-    $sections[$bundle] = [
+    $section = [
       '#theme' => 'reliefweb_rivers_river',
       '#id' => $bundle,
       '#title' => ucfirst(strtr($service->getResource(), '_', ' ')),
       '#resource' => $service->getResource(),
       '#entities' => $entities,
+      '#results' => [
+        '#theme' => 'reliefweb_rivers_results',
+        '#total' => $count,
+        '#start' => ($currentPage * $limit) + 1,
+        '#end' => ($currentPage * $limit) + count($entities),
+      ],
+      '#pager' => [
+        '#type' => 'pager',
+      ],
+      '#empty' => $this->t('No bookmarked @resource.', [
+        '@resource' => $service->getResource(),
+      ]),
       '#cache' => [
         'contexts' => [
           'user',
@@ -284,10 +306,7 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
 
     return [
       '#theme' => 'reliefweb_bookmarks',
-      '#sections' => $sections,
-      '#pager' => [
-        '#type' => 'pager',
-      ],
+      '#sections' => [$bundle => $section],
       '#link' => [
         'url' => '/user/' . $uid . '/bookmarks',
         'label' => $this->t('All bookmarks'),
@@ -321,12 +340,14 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
     $query->range($offset, $limit);
 
     if ($entity_type === 'node') {
-      $query->innerJoin('node', 'n', 'n.nid = rb.entity_id');
+      $query->innerJoin('node_field_data', 'n', 'n.nid = rb.entity_id');
       $query->condition('n.type', $bundle, '=');
+      $query->condition('n.status', 1, '=');
     }
     elseif ($entity_type === 'taxonomy_term') {
-      $query->innerJoin('taxonomy_term_data', 'td', 'td.tid = rb.entity_id');
-      $query->condition('td.vid', $bundle, '=');
+      $query->innerJoin('taxonomy_term_field_data', 't', 't.tid = rb.entity_id');
+      $query->condition('t.vid', $bundle, '=');
+      $query->condition('t.status', 1, '=');
     }
     else {
       return [];
@@ -362,15 +383,16 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
     $query->fields('rb', ['entity_id']);
     $query->condition('rb.entity_type', $entity_type);
     $query->condition('rb.uid', $uid);
-    $query->orderBy('rb.entity_id', 'DESC');
 
     if ($entity_type === 'node') {
-      $query->innerJoin('node', 'n', 'n.nid = rb.entity_id');
+      $query->innerJoin('node_field_data', 'n', 'n.nid = rb.entity_id');
       $query->condition('n.type', $bundle, '=');
+      $query->condition('n.status', 1, '=');
     }
     elseif ($entity_type === 'taxonomy_term') {
-      $query->innerJoin('taxonomy_term_data', 'td', 'td.tid = rb.entity_id');
-      $query->condition('td.vid', $bundle, '=');
+      $query->innerJoin('taxonomy_term_field_data', 't', 't.tid = rb.entity_id');
+      $query->condition('t.vid', $bundle, '=');
+      $query->condition('t.status', 1, '=');
     }
     else {
       return 0;

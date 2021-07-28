@@ -15,7 +15,7 @@ function reliefweb_bookmarks_help($route_name) {
     case 'help.page.reliefweb_bookmarks':
       $output = '';
       $output .= '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('Reliefweb bookmarks module is very useful for the site with large content. This module allow site visitors to add any node into there bookmarks and then they can read later.') . '</p>';
+      $output .= '<p>' . t('Reliefweb bookmarks module is very useful for such a site with large content. This module allows site visitors to add any content into their bookmarks so they can read them later.') . '</p>';
       return $output;
   }
 }
@@ -119,8 +119,8 @@ function reliefweb_bookmarks_build_link($entity_type, $entity_id, $uid) {
   ]);
 
   $db = \Drupal::database();
-  $query = $db->select('reliefweb_bookmarks', 'ew');
-  $query->fields('ew');
+  $query = $db->select('reliefweb_bookmarks', 'rb');
+  $query->fields('rb');
   $query->condition('entity_type', $entity_type);
   $query->condition('entity_id', $entity_id);
   $query->condition('uid', $uid);
@@ -150,8 +150,8 @@ function reliefweb_bookmarks_build_link($entity_type, $entity_id, $uid) {
  * Toggle bookmark.
  */
 function reliefweb_bookmarks_toggle_bookmark($entity_type, $entity_id, $uid) {
-  $query = \Drupal::database()->select('reliefweb_bookmarks', 'ew');
-  $query->fields('ew');
+  $query = \Drupal::database()->select('reliefweb_bookmarks', 'rb');
+  $query->fields('rb');
   $query->condition('entity_type', $entity_type);
   $query->condition('entity_id', $entity_id);
   $query->condition('uid', $uid);
@@ -187,7 +187,6 @@ function reliefweb_bookmarks_theme() {
       'variables' => [
         'attributes' => NULL,
         'sections' => [],
-        'pager' => NULL,
         'link' => [],
       ],
     ],

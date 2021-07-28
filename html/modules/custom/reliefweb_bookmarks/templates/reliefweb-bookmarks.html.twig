@@ -10,10 +10,10 @@
    */
 
 #}
-<div{{ attributes.addClass('rw-bookmarks__sections') }}>
+<div{{ attributes.addClass('rw-bookmarks') }}>
   {{ sections }}
   {{ pager }}
   {% if link %}
-    <a href="{{ link.url }}">{{ link.label }}</a>
+    <a class="rw-bookmarks__link" href="{{ link.url }}">{{ link.label }}</a>
   {% endif %}
 </div>
