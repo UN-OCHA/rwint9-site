@@ -67,7 +67,7 @@
         "drupal/pathauto": "^1.8",
         "drupal/redirect": "^1.6",
         "drupal/redis": "^1.5",
-        "drupal/social_auth_hid": "2.x-dev",
+        "drupal/social_auth_hid": "2.x-dev@dev",
         "drupal/token": "^1.9",
         "drush/drush": "^10.4",
         "league/commonmark": "^1.6",
