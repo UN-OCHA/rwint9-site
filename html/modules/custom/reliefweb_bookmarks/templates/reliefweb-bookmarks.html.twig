@@ -1,1 +1,15 @@
-<!-- Add you custom twig html here -->
+{#
+
+  /**
+   * @file
+   * Template for the bookmark overview page.
+   *
+   * Available variables:
+   * - attributes: wrapper attributes.
+   * - sections: list of rivers fo content.
+   */
+
+#}
+<div{{ attributes.addClass('rw-bookmarks__sections') }}>
+  {{ sections }}
+</div>

@@ -177,3 +177,19 @@ function reliefweb_bookmarks_toggle_bookmark($entity_type, $entity_id, $uid) {
 
   return $check_entry;
 }
+
+/**
+ * Implements hook_theme().
+ */
+function reliefweb_bookmarks_theme() {
+  return [
+    'reliefweb_bookmarks' => [
+      'variables' => [
+        // Section wrapper attributes.
+        'attributes' => NULL,
+        // List of sections containing the bookmarked content.
+        'sections' => [],
+      ],
+    ],
+  ];
+}

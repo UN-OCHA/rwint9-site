@@ -40,6 +40,11 @@ rw-blog:
     theme:
       components/rw-blog/rw-blog.css: {}
 
+rw-book-menu:
+  css:
+    theme:
+      components/rw-book-menu/rw-book-menu.css: {}
+
 rw-country:
   css:
     theme:
@@ -60,6 +65,11 @@ rw-disasters:
       components/rw-disasters/rw-disasters.css: {}
   dependencies:
     - common_design_subtheme/rw-icons
+
+rw-document:
+  css:
+    theme:
+      components/rw-document/rw-document.css: {}
 
 rw-dsr:
   css:
@@ -125,6 +135,11 @@ rw-organizations:
     theme:
       components/rw-organizations/rw-organizations.css: {}
 
+rw-related-content:
+  css:
+    theme:
+      components/rw-related-content/rw-related-content.css: {}
+
 rw-river:
   css:
     theme:
@@ -160,6 +175,11 @@ rw-selection:
       components/rw-selection/rw-selection.css: {}
   dependencies:
     - common_design_subtheme/rw-icons
+
+rw-subscriptions:
+  css:
+    theme:
+      components/rw-subscriptions/rw-subscriptions.css: {}
 
 rw-toc:
   css:

@@ -14,5 +14,10 @@ linter="vendor/bin/phpcs"
 options='-p --report=full --standard=phpcs.xml'
 message='Linting staged PHP/CSS files...'
 
+# Docksal compatibility.
+if [ -x "$(command -v fin)" ]; then
+  linter="phpcs"
+fi
+
 # Load and execute the linting code.
 . "$(dirname "$0")/lint-common"

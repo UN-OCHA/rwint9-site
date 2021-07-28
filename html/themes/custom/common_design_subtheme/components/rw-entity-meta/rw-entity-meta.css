@@ -170,9 +170,9 @@
  *
  * Display an icon in front of the content format.
  *
- * Scope: #main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--status--format
+ * Scope: #main-content article dl.rw-entity-meta--core dd.rw-entity-meta__tag-value--status--format
  */
-#main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--format:before {
+#main-content article dl.rw-entity-meta--core dd.rw-entity-meta__tag-value--format:before {
   content: "";
   display: inline-block;
   vertical-align: middle;
@@ -183,13 +183,13 @@
   overflow: hidden;
   background: var(--rw-icons--content--report--16--dark-grey);
 }
-#main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--format.map:before {
+#main-content article dl.rw-entity-meta--core dd.rw-entity-meta__tag-value--format--map:before {
   background: var(--rw-icons--content--map--16--dark-grey);
 }
-#main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--format.infographic:before {
+#main-content article dl.rw-entity-meta--core dd.rw-entity-meta__tag-value--format--infographic:before {
   background: var(--rw-icons--content--infographic--16--dark-grey);
 }
-#main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--format.interactive:before {
+#main-content article dl.rw-entity-meta--core dd.rw-entity-meta__tag-value--format--interactive:before {
   background: var(--rw-icons--content--interactive--16--dark-grey);
 }
 
