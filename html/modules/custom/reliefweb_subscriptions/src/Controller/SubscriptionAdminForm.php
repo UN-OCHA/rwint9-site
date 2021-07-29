@@ -137,22 +137,12 @@ class SubscriptionAdminForm extends ControllerBase {
    */
   public function adminPreview($sid) {
     $content = $this->mailer->generatePreview($sid);
-
-    $body = '<!DOCTYPE html>
-      <html>
-      <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-        <base target="_blank" />
-        <link rel="stylesheet" media="all" href="/themes/custom/common_design_subtheme/components/rw-subscriptions/rw-subscriptions.css">
-      </head>
-      <body class="body">' . $content['body'] . '</body></html>';
-
     $build['preview'] = [
       '#type' => 'inline_template',
-      '#template' => '<h2>{{ subject }}</h2><iframe srcdoc="<!DOCTYPE html><body>{{ body }}</body>" width="100%" height="500"></iframe>',
+      '#template' => '<h2>{{ subject }}</h2><iframe sandbox srcdoc="{{ body }}" width="100%" height="500"></iframe>',
       '#context' => [
         'subject' => $content['subject'],
-        'body' => $body,
+        'body' => str_replace('"', '\'', $content['body']),
       ],
     ];
 

@@ -1950,9 +1950,29 @@ class ReliefwebSubscriptionsMailer {
       return '';
     }
 
+    // Render the email using the default frontend theme so that template
+    // overrides, if any, can be used.
+    $active_theme = $this->themeManager->getActiveTheme();
+    $default_theme_name = $this->themeHandler->getDefault();
+    $default_theme = $this->themeInitialization->getActiveThemeByName($default_theme_name);
+
+    $render_array = [
+      '#theme' => 'mimemail_message',
+      '#module' => 'reliefweb_subscriptions',
+      '#key' => 'notifications',
+      '#recipient' => '',
+      '#subject' => $subject,
+      '#body' => $body,
+
+    ];
+
+    $this->themeManager->setActiveTheme($default_theme);
+    $html = $this->renderer->renderRoot($render_array);
+    $this->themeManager->setActiveTheme($active_theme);
+
     return [
       'subject' => $subject,
-      'body' => $body,
+      'body' => $html,
     ];
   }
 
