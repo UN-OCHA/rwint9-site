@@ -2,21 +2,19 @@
  * Document page specifics.
  *
  * Individual document pages like reports, jobs or training.
- *
- * Scope: .rw-document
  */
 .rw-document {
   display: flex;
   flex-wrap: wrap;
-  border-bottom: none;
   padding: 0;
+  border-bottom: none;
 }
 /* Clear any floating from the content. */
 .rw-document:after {
-  content: "";
-  clear: both;
   display: block;
+  clear: both;
   width: 100%;
+  content: "";
 }
 .rw-document > header {
   width: 100%;
@@ -55,9 +53,9 @@
   width: 100%;
   margin: 0;
   padding: 24px 0 0 0;
-  border-color: #e6ecef;
-  border-style: solid;
   border-width: 1px 0 0 0;
+  border-style: solid;
+  border-color: #e6ecef;
 }
 .rw-document > footer dl.meta dt {
   margin: 16px 0 0 0;
@@ -69,8 +67,8 @@
   clear: both;
 }
 .rw-document > footer dl.meta dd li:after {
-  content: " / ";
   margin: 0 4px;
+  content: " / ";
 }
 .rw-document > footer dl.meta dd li:last-child:after,
 .rw-document > footer dl.meta dd li[data-last]:after {

@@ -156,7 +156,7 @@
 
 /* Print. */
 @media print {
-   #table-of-content-toggler {
+  #table-of-content-toggler {
     display: none !important;
   }
   .rw-toc {
@@ -175,6 +175,6 @@
 .cd-layout-content,
 .region-content,
 .region-content > article,
-#main-content .rw-sectioned-content {
+.rw-sectioned-content {
   height: 100%;
 }
