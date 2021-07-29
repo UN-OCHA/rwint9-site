@@ -45,6 +45,11 @@ rw-book-menu:
     theme:
       components/rw-book-menu/rw-book-menu.css: {}
 
+rw-bookmark-link:
+  css:
+    theme:
+      components/rw-bookmark-link/rw-bookmark-link.css: {}
+
 rw-country:
   css:
     theme:
