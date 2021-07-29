@@ -13,6 +13,7 @@ use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Routing\RedirectDestinationInterface;
 use Drupal\Core\Session\AccountInterface;
@@ -80,47 +81,31 @@ class BookmarksToggleController extends ControllerBase {
    * Add or remove node from bookmarks.
    */
   public function addNode(NodeInterface $node) {
-    $check_entry = reliefweb_bookmarks_toggle_bookmark('node', $node->id(), $this->account->id());
-
-    if ($check_entry) {
-      $message = $this->t('Item removed from your bookmarks.');
-    }
-    else {
-      $message = $this->t('Item added to your bookmarks.');
-    }
-
-    Cache::invalidateTags([
-      'reliefweb_bookmarks:user:' . $this->account->id(),
-      'reliefweb_bookmarks:node:' . $node->id(),
-    ]);
-
-    if ($this->request->isXmlHttpRequest()) {
-      $link_data = reliefweb_bookmarks_build_link('node', $node->id(), $this->account->id());
-
-      $url = $link_data['url'];
-      $link_options = [
-        'attributes' => $link_data['attributes'],
-      ];
-      $url->setOptions($link_options);
-      $link = Link::fromTextAndUrl($link_data['title'], $url);
-
-      $response = new AjaxResponse();
-      $response->addCommand(new MessageCommand($message));
-      $response->addCommand(new ReplaceCommand('.bookmark--link', $link->toString()));
-
-      return $response;
-    }
-    else {
-      $this->messenger()->addStatus($message);
-      return new RedirectResponse($this->destination->get());
-    }
+    return $this->bookmarkEntity($node);
   }
 
   /**
    * Add or remove term from bookmarks.
    */
   public function addTerm(TermInterface $taxonomy_term) {
-    $check_entry = reliefweb_bookmarks_toggle_bookmark('taxonomy_term', $taxonomy_term->id(), $this->account->id());
+    return $this->bookmarkEntity($taxonomy_term);
+  }
+
+  /**
+   * Add or remove from bookmarks.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   Entity to add or remove from the bookmarks.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   Ajax response if the request was from javascript or a redirect otherwise.
+   */
+  public function bookmarkEntity(EntityInterface $entity) {
+    $entity_type_id = $entity->getEntityTypeId();
+    $entity_id = $entity->id();
+    $uid = $this->account->id();
+
+    $check_entry = reliefweb_bookmarks_toggle_bookmark($entity_type_id, $entity_id, $uid);
 
     if ($check_entry) {
       $message = $this->t('Item removed from your bookmarks.');
@@ -130,12 +115,12 @@ class BookmarksToggleController extends ControllerBase {
     }
 
     Cache::invalidateTags([
-      'reliefweb_bookmarks:user:' . $this->account->id(),
-      'reliefweb_bookmarks:taxonomy_term:' . $taxonomy_term->id(),
+      'reliefweb_bookmarks:user:' . $uid,
+      'reliefweb_bookmarks:' . $entity_type_id . ':' . $entity_id,
     ]);
 
     if ($this->request->isXmlHttpRequest()) {
-      $link_data = reliefweb_bookmarks_build_link('taxonomy_term', $taxonomy_term->id(), $this->account->id());
+      $link_data = reliefweb_bookmarks_build_link($entity_type_id, $entity_id, $uid);
 
       $url = $link_data['url'];
       $link_options = [
@@ -146,7 +131,7 @@ class BookmarksToggleController extends ControllerBase {
 
       $response = new AjaxResponse();
       $response->addCommand(new MessageCommand($message));
-      $response->addCommand(new ReplaceCommand('.bookmark--link', $link->toString()));
+      $response->addCommand(new ReplaceCommand('#' . $link_data['attributes']['id'], $link->toString()));
 
       return $response;
     }
