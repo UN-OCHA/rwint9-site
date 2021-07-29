@@ -1,0 +1,45 @@
+reliefweb_bookmarks.collection:
+  path: '/admin/structure/reliefweb-bookmarks'
+  defaults:
+    _form: '\Drupal\reliefweb_bookmarks\Form\BookmarksConfigurationForm'
+    _title: 'Reliefweb bookmarks configuration page'
+  requirements:
+    _permission: 'administer site configuration'
+
+reliefweb_bookmarks.user:
+  path: '/user/{user}/bookmarks'
+  defaults:
+    _controller: '\Drupal\reliefweb_bookmarks\Controller\UserBookmarksController::bookmarks'
+    _title: 'My bookmarks'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'bookmark content'
+    user: \d+
+
+reliefweb_bookmarks.user.type:
+  path: '/user/{user}/bookmarks/{entity_type}/{bundle}'
+  defaults:
+    _controller: '\Drupal\reliefweb_bookmarks\Controller\UserBookmarksController::bookmarksByType'
+    _title: 'My bookmarks'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: 'bookmark content'
+    user: \d+
+
+reliefweb_bookmarks.add_node:
+  path: '/node/{node}/add-to-bookmarks'
+  defaults:
+    _controller: '\Drupal\reliefweb_bookmarks\Controller\BookmarksToggleController::addNode'
+    _title: 'Add to my bookmarks'
+  requirements:
+     _user_is_logged_in: 'TRUE'
+     _permission: 'bookmark content'
+
+reliefweb_bookmarks.add_term:
+  path: '/taxonomy/term/{taxonomy_term}/add-to-bookmarks'
+  defaults:
+    _controller: '\Drupal\reliefweb_bookmarks\Controller\BookmarksToggleController::addTerm'
+    _title: 'Add to my bookmarks'
+  requirements:
+     _user_is_logged_in: 'TRUE'
+     _permission: 'bookmark content'

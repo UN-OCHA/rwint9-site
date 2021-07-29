@@ -1,0 +1,26 @@
+node:
+  job: job
+  report: report
+  training: training
+  announcement: 0
+  blog_post: 0
+  book: 0
+  topic: 0
+taxonomy_term:
+  disaster: disaster
+  career_category: 0
+  content_format: 0
+  country: 0
+  disaster_type: 0
+  feature: 0
+  job_experience: 0
+  job_type: 0
+  language: 0
+  ocha_product: 0
+  organization_type: 0
+  source: 0
+  tag: 0
+  theme: 0
+  training_format: 0
+  training_type: 0
+  vulnerable_group: 0

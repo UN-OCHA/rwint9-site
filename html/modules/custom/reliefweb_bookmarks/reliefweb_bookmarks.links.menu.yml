@@ -1,0 +1,5 @@
+reliefweb_bookmarks.collection:
+  title: Reliefweb bookmarks
+  parent: system.admin_structure
+  description: 'Manage content type for Reliefweb bookmarks feature.'
+  route_name: reliefweb_bookmarks.collection

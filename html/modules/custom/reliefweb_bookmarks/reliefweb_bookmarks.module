@@ -1,0 +1,301 @@
+<?php
+
+/**
+ * @file
+ * Module file.
+ */
+
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityPublishedInterface;
+use Drupal\Core\Url;
+
+/**
+ * Implements hook_help().
+ */
+function reliefweb_bookmarks_help($route_name) {
+  switch ($route_name) {
+    case 'help.page.reliefweb_bookmarks':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Reliefweb bookmarks module is very useful for such a site with large content. This module allows site visitors to add any content into their bookmarks so they can read them later.') . '</p>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_preprocess_node().
+ */
+function reliefweb_bookmarks_preprocess_node(&$variables) {
+  reliefweb_bookmarks_add_link($variables, $variables['elements']['#node']);
+}
+
+/**
+ * Implements hook_preprocess_taxonomy_term().
+ */
+function reliefweb_bookmarks_preprocess_taxonomy_term(&$variables) {
+  reliefweb_bookmarks_add_link($variables, $variables['elements']['#taxonomy_term']);
+}
+
+/**
+ * Add a link to bookmark the entity.
+ *
+ * @param array $variables
+ *   Variables from the corresponding hook_preprorcess_ENTITY_TYPE().
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   Entity.
+ *
+ * @return array
+ *   Render array for the link.
+ */
+function reliefweb_bookmarks_add_link(array &$variables, EntityInterface $entity) {
+  // Only published content can be bookmarked.
+  if ($entity instanceof EntityPublishedInterface && !$entity->isPublished()) {
+    return [];
+  }
+
+  // Check if the user is logged in and has permission to bookmark content.
+  $account = \Drupal::currentUser();
+  if (!$account->isAuthenticated() || !$account->hasPermission('bookmark content')) {
+    return [];
+  }
+
+  $entity_type_id = $entity->getEntityTypeId();
+  $entity_id = $entity->id();
+  $uid = $account->id();
+
+  // Check if the bundle is allowed to be bookmarked.
+  $config = \Drupal::config('reliefweb_bookmarks.settings');
+  $bundles = $config->get($entity_type_id) ?? [];
+  if (empty($bundles[$entity->bundle()])) {
+    return [];
+  }
+
+  $link = reliefweb_bookmarks_build_link($entity_type_id, $entity_id, $uid);
+
+  $variables['content']['reliefweb_bookmarks_link'] = [
+    '#theme' => 'reliefweb_bookmarks_link',
+    '#link' => $link,
+    '#attached' => [
+      'library' => [
+        'core/drupal.ajax',
+      ],
+    ],
+    '#cache' => [
+      'contexts' => [
+        'user',
+      ],
+      'tags' => [
+        'user:' . $uid,
+        'reliefweb_bookmarks:user:' . $uid,
+        'reliefweb_bookmarks:' . $entity_type_id . ':' . $entity_id,
+      ],
+    ],
+  ];
+}
+
+/**
+ * Build bookmark link.
+ *
+ * @param string $entity_type
+ *   Entity type.
+ * @param string $entity_id
+ *   Entity id.
+ * @param int $uid
+ *   User id.
+ *
+ * @return array
+ *   Link data with title, url and attributes.
+ */
+function reliefweb_bookmarks_build_link($entity_type, $entity_id, $uid) {
+  $request = \Drupal::destination();
+
+  switch ($entity_type) {
+    case 'node':
+      $path = '/node/' . $entity_id . '/add-to-bookmarks';
+      break;
+
+    case 'taxonomy_term':
+      $path = '/taxonomy/term/' . $entity_id . '/add-to-bookmarks';
+      break;
+
+    default:
+      return [];
+  }
+
+  $url = Url::fromUri('internal:' . $path, [
+    'query' => ['destination' => $request->get()],
+    'absolute' => TRUE,
+  ]);
+
+  $check_entry = reliefweb_bookmarks_check_bookmark($entity_type, $entity_id, $uid);
+
+  if ($check_entry) {
+    $label = t('Remove from bookmarks');
+  }
+  else {
+    $label = t('Add to bookmarks');
+  }
+
+  return [
+    'title' => $label,
+    'url' => $url,
+    'attributes' => [
+      'id' => Html::getId('rw-bookmark-link-' . $entity_type . '-' . $entity_id),
+      'class' => [
+        'use-ajax',
+        'rw-bookmark-link',
+        $check_entry ? 'rw-bookmark-link--remove' : 'rw-bookmark-link--add',
+      ],
+    ],
+  ];
+}
+
+/**
+ * Toggle bookmark.
+ *
+ * @param string $entity_type
+ *   Entity type.
+ * @param string $entity_id
+ *   Entity id.
+ * @param int $uid
+ *   User id.
+ */
+function reliefweb_bookmarks_toggle_bookmark($entity_type, $entity_id, $uid) {
+  $check_entry = reliefweb_bookmarks_check_bookmark($entity_type, $entity_id, $uid);
+
+  if ($check_entry) {
+    reliefweb_bookmarks_remove_bookmark($entity_type, $entity_id, $uid);
+  }
+  else {
+    reliefweb_bookmarks_add_bookmark($entity_type, $entity_id, $uid);
+  }
+
+  return $check_entry;
+}
+
+/**
+ * Check if an entity is bookmarked.
+ *
+ * @param string $entity_type
+ *   Entity type.
+ * @param string $entity_id
+ *   Entity id.
+ * @param int|null $uid
+ *   User id.
+ */
+function reliefweb_bookmarks_check_bookmark($entity_type, $entity_id, $uid = NULL) {
+  $query = \Drupal::database()->select('reliefweb_bookmarks', 'rb');
+  $query->fields('rb', ['entity_id']);
+  $query->condition('rb.entity_type', $entity_type);
+  $query->condition('rb.entity_id', $entity_id);
+  if (!empty($uid)) {
+    $query->condition('rb.uid', $uid);
+  }
+  // Only 1 result is needed to confirm existence.
+  return $query->range(0, 1)->execute()->FetchField();
+}
+
+/**
+ * Remove a bookmarked entity.
+ *
+ * @param string $entity_type
+ *   Entity type.
+ * @param string $entity_id
+ *   Entity id.
+ * @param int|null $uid
+ *   User id.
+ */
+function reliefweb_bookmarks_remove_bookmark($entity_type, $entity_id, $uid = NULL) {
+  $query = \Drupal::database()->delete('reliefweb_bookmarks');
+  $query->condition('entity_type', $entity_type);
+  $query->condition('entity_id', $entity_id);
+  if (!empty($uid)) {
+    $query->condition('uid', $uid);
+  }
+  $query->execute();
+
+  // Invalidate the cache tags for the entity and user.
+  $tags_to_invalidate = [
+    'reliefweb_bookmarks:' . $entity_type . ':' . $entity_id,
+  ];
+  if (!empty($uid)) {
+    $tags_to_invalidate[] = 'reliefweb_bookmarks:user:' . $uid;
+  }
+  else {
+    $tags_to_invalidate[] = 'reliefweb_bookmarks:user';
+  }
+  Cache::invalidateTags($tags_to_invalidate);
+}
+
+/**
+ * Add a bookmarked entity.
+ *
+ * @param string $entity_type
+ *   Entity type.
+ * @param string $entity_id
+ *   Entity id.
+ * @param int $uid
+ *   User id.
+ */
+function reliefweb_bookmarks_add_bookmark($entity_type, $entity_id, $uid) {
+  $query = \Drupal::database()->insert('reliefweb_bookmarks');
+  $query->fields([
+    'entity_type' => $entity_type,
+    'entity_id' => $entity_id,
+    'uid' => $uid,
+  ]);
+  $query->execute();
+
+  // Invalidate the cache for the user.
+  Cache::invalidateTags([
+    'reliefweb_bookmarks:user:' . $uid,
+  ]);
+}
+
+/**
+ * Implements hook_theme().
+ */
+function reliefweb_bookmarks_theme() {
+  return [
+    // Theme for the My bookmarks page.
+    'reliefweb_bookmarks' => [
+      'variables' => [
+        // Wrapper attributes.
+        'attributes' => NULL,
+        // List of river sections for each bookmarked content type/vocabulary.
+        'sections' => [],
+        // Link to go back to the bookmark list for example.
+        'link' => [],
+      ],
+    ],
+    // Theme for the add/remove bookmark link.
+    'reliefweb_bookmarks_link' => [
+      'variables' => [
+        // Wrapper attributes.
+        'attributes' => NULL,
+        // Link.
+        'link' => NULL,
+      ],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function reliefweb_bookmarks_entity_update(EntityInterface $entity) {
+  // Remove any bookmarks to that entity if it's not published.
+  if ($entity instanceof EntityPublishedInterface && !$entity->isPublished()) {
+    reliefweb_bookmarks_remove_bookmark($entity->getEntityTypeId(), $entity->id());
+  }
+}
+
+/**
+ * Implements hook_entity_delete().
+ */
+function reliefweb_bookmarks_entity_delete(EntityInterface $entity) {
+  // Remove any bookmarks to that entity.
+  reliefweb_bookmarks_remove_bookmark($entity->getEntityTypeId(), $entity->id());
+}

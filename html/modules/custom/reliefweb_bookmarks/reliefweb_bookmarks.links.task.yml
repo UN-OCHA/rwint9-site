@@ -1,0 +1,10 @@
+reliefweb_bookmarks.user:
+  route_name: reliefweb_bookmarks.user
+  base_route: entity.user.canonical
+  title: 'My bookmarks'
+  weight: 100
+
+reliefweb_bookmarks.user.tab:
+  route_name: reliefweb_bookmarks.user.type
+  title: 'My bookmarks'
+  parent_id: reliefweb_bookmarks.user
