@@ -41,7 +41,7 @@
   background: #e6ecef;
   font-weight: bold;
 }
-#main-content #search ~ .rw-river-letter-navigation {
+.rw-river-search ~ .rw-river-letter-navigation-wrapper {
   margin: 24px 0 0 0;
 }
 .js .rw-river-letter-navigation-toggler {
