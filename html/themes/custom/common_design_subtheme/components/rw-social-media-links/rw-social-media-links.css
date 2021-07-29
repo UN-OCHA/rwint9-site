@@ -12,26 +12,29 @@
 .rw-entity-social-media-links li {
   /* To avoid borders on the next column. */
   display: inline-block;
-  width: 100%;
   margin: 16px 0 0 0;
   padding: 12px;
+}
+
+.rw-entity-social-media-links--tiles li {
+  width: 100%;
   border: 1px solid #e6ecef;
 }
 
 @media screen and (min-width: 768px) {
-  .rw-entity-social-media-links ul {
+  .rw-entity-social-media-links--tiles ul {
     column-count: 2;
   }
 }
 
 @media screen and (min-width: 1024px) {
-  .rw-entity-social-media-links ul {
+  .rw-entity-social-media-links--tiles ul {
     column-count: 3;
   }
 }
 
 /* External links. Display an icon after the link. */
-.rw-entity-social-media-links a[target="_blank"][rel="noopener"]:after {
+.rw-entity-social-media-links a[target="_blank"][rel~="noopener"]:after {
   display: inline-block;
   overflow: hidden;
   width: 12px;
@@ -46,6 +49,10 @@
 /**
  * Social media links with icons only (ex: report page).
  */
+.rw-entity-social-media-links--icons-only {
+  line-height: 1;
+  text-align: center;
+}
 .rw-entity-social-media-links--icons-only ul {
   display: inline-block;
   margin: 0;
