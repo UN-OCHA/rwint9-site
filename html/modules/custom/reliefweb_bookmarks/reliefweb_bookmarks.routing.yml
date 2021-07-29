@@ -13,6 +13,7 @@ reliefweb_bookmarks.user:
     _title: 'My bookmarks'
   requirements:
     _user_is_logged_in: 'TRUE'
+    _permission: 'bookmark content'
     user: \d+
 
 reliefweb_bookmarks.user.type:
@@ -22,6 +23,7 @@ reliefweb_bookmarks.user.type:
     _title: 'My bookmarks'
   requirements:
     _user_is_logged_in: 'TRUE'
+    _permission: 'bookmark content'
     user: \d+
 
 reliefweb_bookmarks.add_node:
@@ -31,6 +33,7 @@ reliefweb_bookmarks.add_node:
     _title: 'Add to my bookmarks'
   requirements:
      _user_is_logged_in: 'TRUE'
+     _permission: 'bookmark content'
 
 reliefweb_bookmarks.add_term:
   path: '/taxonomy/term/{taxonomy_term}/add-to-bookmarks'
@@ -39,3 +42,4 @@ reliefweb_bookmarks.add_term:
     _title: 'Add to my bookmarks'
   requirements:
      _user_is_logged_in: 'TRUE'
+     _permission: 'bookmark content'
