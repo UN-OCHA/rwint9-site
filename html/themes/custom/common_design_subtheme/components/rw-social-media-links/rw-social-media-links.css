@@ -34,7 +34,7 @@
 }
 
 /* External links. Display an icon after the link. */
-.rw-entity-social-media-links a[target="_blank"][rel~="noopener"]:after {
+.rw-entity-social-media-links--tiles a[target="_blank"][rel~="noopener"]:after {
   display: inline-block;
   overflow: hidden;
   width: 12px;
