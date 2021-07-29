@@ -4,20 +4,20 @@
  * Meta information like source or publication date, generally in the header or
  * footer.
  */
-.rw-article .rw-entity-meta {
+.rw-entity-meta {
   margin: 0;
 }
-.rw-article .rw-entity-meta + dl.rw-entity-meta {
+.rw-entity-meta + dl.rw-entity-meta {
   margin-top: 4px;
 }
-.rw-article .rw-entity-meta:after {
+.rw-entity-meta:after {
   display: block;
   clear: both;
   content: "";
 }
-.rw-article .rw-entity-meta dt {
+.rw-entity-meta dt {
   display: inline;
-  float: left;
+  /*float: left;*/
   clear: both;
   margin: 0 4px 0 0;
   font-size: 15px;
@@ -25,30 +25,30 @@
   /* To have enough tapping space between links. */
   line-height: 29px;
 }
-.rw-article .rw-entity-meta dt:after {
+.rw-entity-meta dt:after {
   content: ": ";
 }
-.rw-article .rw-entity-meta dd {
+.rw-entity-meta dd {
   margin: 0;
   /* To have enough tapping space between links. */
   line-height: 30px;
 }
-.rw-article .rw-entity-meta dd ul,
-.rw-article .rw-entity-meta dd li {
+.rw-entity-meta dd ul,
+.rw-entity-meta dd li {
   display: inline;
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.rw-article .rw-entity-meta dd li:after {
+.rw-entity-meta dd li:after {
   content: ", ";
 }
 /* This will be ignored in IE8 but it's not a big deal. */
-.rw-article .rw-entity-meta dd li:last-child:after,
-.rw-article .rw-entity-meta dd li[data-last]:after {
+.rw-entity-meta dd li:last-child:after,
+.rw-entity-meta dd li[data-last]:after {
   content: none;
 }
-.rw-article .rw-entity-meta dd li[data-more]:before {
+.rw-entity-meta dd li[data-more]:before {
   content: " + ";
 }
 .rw-article header dl.rw-entity-meta {
@@ -82,9 +82,6 @@
 /**
  * Meta for river articles.
  */
-.rw-river dl.rw-entity-meta {
-  margin: 0;
-}
 .rw-river dl.rw-entity-meta dt {
   display: inline-block;
   float: none;
@@ -97,6 +94,10 @@
 .rw-river dl.rw-entity-meta.rw-article-meta {
   /* #2e3436 with 0.85 opacity on white. */
   color: #4d5254;
+}
+.rw-entity-details dl.rw-entity-meta.rw-article-meta dt {
+  display: block;
+  margin: 16px 0 0 0;
 }
 .rw-river dl.rw-entity-meta.rw-article-meta dd:after {
   display: inline-block;
