@@ -92,8 +92,8 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
     $uid = $user->id();
 
     $entity_types = [
-      'node' => $config->get('content_types') ?? [],
-      'taxonomy_term' => $config->get('vocabularies') ?? [],
+      'node' => $config->get('node') ?? [],
+      'taxonomy_term' => $config->get('taxonomy_term') ?? [],
     ];
 
     $queries = [];
@@ -149,47 +149,46 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
       }
     }
 
-    if (empty($queries)) {
-      return [];
-    }
-
-    // Get the API data.
-    $results = $this->reliefWebApiClient
-      ->requestMultiple(array_filter($queries), TRUE);
-
-    // Prepare the sections.
     $sections = [];
-    foreach ($results as $bundle => $result) {
-      $query = $queries[$bundle];
+    if (!empty($queries)) {
+      // Get the API data.
+      $results = $this->reliefWebApiClient
+        ->requestMultiple(array_filter($queries), TRUE);
 
-      $entities = RiverServiceBase::getRiverData($bundle, $result);
-      if (empty($entities)) {
-        continue;
+      // Prepare the sections.
+      foreach ($results as $bundle => $result) {
+        $query = $queries[$bundle];
+
+        $entities = RiverServiceBase::getRiverData($bundle, $result);
+        if (empty($entities)) {
+          continue;
+        }
+
+        $sections[$bundle] = [
+          '#theme' => 'reliefweb_rivers_river',
+          '#id' => $bundle,
+          '#title' => ucfirst(strtr($query['resource'], '_', ' ')),
+          '#resource' => $query['resource'],
+          '#entities' => $entities,
+          '#more' => [
+            'url' => '/user/' . $uid . '/bookmarks/' . $query['entity_type'] . '/' . $bundle,
+            'label' => $this->t('View your @count bookmarked @resource', [
+              '@count' => $this->getEntityCount($query['entity_type'], $bundle, $uid),
+              '@resource' => strtr($query['resource'], '_', ' '),
+            ]),
+          ],
+          '#cache' => [
+            'contexts' => [
+              'user',
+            ],
+            'tags' => [
+              'reliefweb_bookmarks:user:' . $uid,
+              'reliefweb_bookmarks:' . $query['entity_type'],
+              $query['entity_type'] . '_list:' . $bundle,
+            ],
+          ],
+        ];
       }
-
-      $sections[$bundle] = [
-        '#theme' => 'reliefweb_rivers_river',
-        '#id' => $bundle,
-        '#title' => ucfirst(strtr($query['resource'], '_', ' ')),
-        '#resource' => $query['resource'],
-        '#entities' => $entities,
-        '#more' => [
-          'url' => '/user/' . $uid . '/bookmarks/' . $query['entity_type'] . '/' . $bundle,
-          'label' => $this->t('More bookmarked @resource', [
-            '@resource' => strtr($query['resource'], '_', ' '),
-          ]),
-        ],
-        '#cache' => [
-          'contexts' => [
-            'user',
-          ],
-          'tags' => [
-            'reliefweb_bookmarks:user:' . $uid,
-            'reliefweb_bookmarks:' . $query['entity_type'],
-            $query['entity_type'] . '_list:' . $bundle,
-          ],
-        ],
-      ];
     }
 
     return [
@@ -209,8 +208,8 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
     $limit = 10;
 
     $entity_types = [
-      'node' => $config->get('content_types') ?? [],
-      'taxonomy_term' => $config->get('vocabularies') ?? [],
+      'node' => $config->get('node') ?? [],
+      'taxonomy_term' => $config->get('taxonomy_term') ?? [],
     ];
 
     if (empty($entity_types[$entity_type][$bundle])) {
