@@ -1,5 +1,5 @@
-#main-content section article > header .rw-river-article__title,
-#main-content section article > .rw-river-article__title {
+.rw-river-article > header .rw-river-article__title,
+.rw-river-article > .rw-river-article__title {
   display: inline;
   margin: 0;
   color: #055372;
@@ -7,8 +7,8 @@
   font-weight: bold;
   line-height: 28px;
 }
-#main-content section article > header .rw-river-article__title a,
-#main-content section article > .rw-river-article__title a {
+.rw-river-article > header .rw-river-article__title a,
+.rw-river-article > .rw-river-article__title a {
   color: inherit;
 }
 
