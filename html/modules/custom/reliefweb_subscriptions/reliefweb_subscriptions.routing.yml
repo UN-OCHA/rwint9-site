@@ -1,5 +1,5 @@
 reliefweb_subscriptions.subscription_form:
-  path: '/user/{user}/subscriptions'
+  path: '/user/{user}/notifications'
   defaults:
     _form: '\Drupal\reliefweb_subscriptions\Form\SubscriptionForm'
     _title: 'Subscriptions'
@@ -10,4 +10,12 @@ reliefweb_subscriptions.subscription_form:
   requirements:
     _user_is_logged_in: 'TRUE'
     _permission: manage own subscriptions
+    user: \d+
+reliefweb_subscriptions.unsubscribe:
+  path: '/notifications/unsubscribe/user/{user}'
+  defaults:
+    _controller: '\Drupal\reliefweb_subscriptions\Controller\UnsubscribeForm::unsubscribe'
+    _title: 'Unsubscribe'
+  requirements:
+    _access: 'TRUE'
     user: \d+
