@@ -78,17 +78,17 @@ class BookmarksConfigurationForm extends ConfigFormBase {
       $vocabularies_list[$vocabulary->id()] = $vocabulary->label();
     }
 
-    $form['content_types'] = [
+    $form['node'] = [
       '#type' => 'checkboxes',
       '#options' => $content_types_list,
-      '#default_value' => $config->get('content_types') ? $config->get('content_types') : [],
+      '#default_value' => $config->get('node') ?? [],
       '#title' => $this->t('Please choose any content type which you want for bookmarks.'),
     ];
 
-    $form['vocabularies'] = [
+    $form['taxonomy_term'] = [
       '#type' => 'checkboxes',
       '#options' => $vocabularies_list,
-      '#default_value' => $config->get('vocabularies') ? $config->get('vocabularies') : [],
+      '#default_value' => $config->get('taxonomy_term') ?? [],
       '#title' => $this->t('Please choose any vocabulary which you want for bookmarks.'),
     ];
 
@@ -102,8 +102,8 @@ class BookmarksConfigurationForm extends ConfigFormBase {
     parent::submitForm($form, $form_state);
 
     $this->config('reliefweb_bookmarks.settings')
-      ->set('content_types', $form_state->getValue('content_types'))
-      ->set('vocabularies', $form_state->getValue('vocabularies'))
+      ->set('node', $form_state->getValue('node'))
+      ->set('taxonomy_term', $form_state->getValue('taxonomy_term'))
       ->save();
   }
 

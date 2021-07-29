@@ -1,4 +1,4 @@
-content_types:
+node:
   job: job
   report: report
   training: training
@@ -6,7 +6,7 @@ content_types:
   blog_post: 0
   book: 0
   topic: 0
-vocabularies:
+taxonomy_term:
   disaster: disaster
   career_category: 0
   content_format: 0
