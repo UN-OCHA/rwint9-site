@@ -11,8 +11,12 @@
 
 #}
 <div{{ attributes.addClass('rw-bookmarks') }}>
-  {{ sections }}
-  {{ pager }}
+  {% if sections is not empty %}
+    {{ sections }}
+  {% else %}
+    <p class="rw-bookmarks__empty">{{ 'No bookmarked content.'|t }}</p>
+  {% endif %}
+
   {% if link %}
     <a class="rw-bookmarks__link" href="{{ link.url }}">{{ link.label }}</a>
   {% endif %}
