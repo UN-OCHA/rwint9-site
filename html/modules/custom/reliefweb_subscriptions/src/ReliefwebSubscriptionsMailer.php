@@ -1662,15 +1662,12 @@ class ReliefwebSubscriptionsMailer {
       return;
     }
 
-    // phpcs:ignore
-    list($entity_id, $revision_id, $bundle) = entity_extract_ids($entity_type, $entity);
-
     $subscriptions = reliefweb_subscriptions_subscriptions();
 
     // Get triggered type subscriptions for this bundle.
     $sids = [];
     foreach ($subscriptions as $sid => $subscription) {
-      if ($subscription['type'] === 'triggered' && $subscription['bundle'] === $bundle) {
+      if ($subscription['type'] === 'triggered' && $subscription['bundle'] === $entity->entityType()) {
         // Check if the subscription trigger is met for the entity.
         if (!isset($subscription['trigger']) || $subscription['trigger']($entity, $entity_type)) {
           $sids[] = $sid;
@@ -1685,7 +1682,7 @@ class ReliefwebSubscriptionsMailer {
     }
 
     // Skip if there are no new notifications to queue.
-    $sids = $this->getSubscriptionsNotYetQueued($sids, $bundle, $entity_id);
+    $sids = $this->getSubscriptionsNotYetQueued($sids, $entity->entityType(), $entity->id());
     if (empty($sids)) {
       return;
     }
@@ -1694,8 +1691,8 @@ class ReliefwebSubscriptionsMailer {
     foreach ($sids as $sid) {
       $notifications[] = [
         'sid' => $sid,
-        'bundle' => $bundle,
-        'entity_id' => $entity_id,
+        'bundle' => $entity->entityType(),
+        'entity_id' => $entity->id(),
       ];
     }
     // Queue notifications for all the subscriptions.
