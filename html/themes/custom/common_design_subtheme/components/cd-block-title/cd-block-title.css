@@ -1,5 +1,16 @@
+.cd-block-title {
+  /*padding-bottom: 0.5rem;*/
+  font-size: 20px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  line-height: 1.3;
+}
+
 .path-frontpage .cd-block-title {
-  padding-bottom: 0.5rem;
   border-bottom: 1px solid #eb1405;
+  font-size: 24px;
+}
+
+.rw-river--headlines h2.cd-block-title {
   font-size: var(--cd-font-size--2xbase);
 }
