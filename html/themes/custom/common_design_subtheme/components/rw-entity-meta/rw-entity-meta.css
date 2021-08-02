@@ -78,7 +78,11 @@
     content: none;
   }
 }
-
+.rw-entity-meta--empty {
+  margin: 0;
+  font-size: 15px;
+  line-height: 29px;
+}
 /**
  * Meta for river articles.
  */
