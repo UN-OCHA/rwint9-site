@@ -36,7 +36,7 @@
 .rw-river-article > .title a {
   color: inherit;
 }
-.rw-river-article .content {
+.rw-river-article .rw-river-article__content {
   display: flex;
   flex: 1 0 auto;
   align-items: center;
@@ -45,18 +45,18 @@
   color: #4d5254;
 }
 /* Article with a thumbnail preview (typically Map and Infographic). */
-.rw-river-article .content img {
+.rw-river-article .rw-river-article__content img {
   float: left;
   max-height: 118px;
   margin: 2px 20px 0 0;
   border: 1px solid #e6ecef;
 }
-.rw-river-article .content img + p {
+.rw-river-article .rw-river-article__content img + p {
   margin-top: 0;
 }
 
 @media all and (max-width: 479px) {
-  .rw-river-article .content img {
+  .rw-river-article .rw-river-article__content img {
     display: none;
   }
 }
