@@ -5,7 +5,9 @@
   border-bottom: 0 none;
 }
 .rw-document > header,
-.taxonomy-term--full > header {
+.taxonomy-term--full > header,
+.rw-river-page > header {
+  margin-bottom: 2rem;
   padding-bottom: 12px;
   border-bottom: 1px solid #eb1405;
 }
