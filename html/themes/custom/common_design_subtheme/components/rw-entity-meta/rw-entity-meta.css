@@ -135,10 +135,12 @@
   }
 }
 
-.rw-river dl.rw-entity-meta.rw-entity-meta--core dd {
+.rw-river--maps-infographics dl.rw-entity-meta.rw-entity-meta--core dd,
+.rw-river--appeals-response-plans dl.rw-entity-meta.rw-entity-meta--core dd {
   display: inline;
 }
-.rw-river dl.rw-entity-meta.rw-entity-meta--core dd:after {
+.rw-river--maps-infographics dl.rw-entity-meta.rw-entity-meta--core dd:after,
+.rw-river--appeals-response-plans dl.rw-entity-meta.rw-entity-meta--core dd:after {
   display: block;
   width: 0;
   height: 0;
