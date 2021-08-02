@@ -26,6 +26,7 @@ rw-article:
     theme:
       components/rw-article/rw-article.css: {}
       components/rw-article/rw-appeals-response-plans.css: {}
+      components/rw-article/rw-maps-inforgraphics.css: {}
 
 # Autocomplete widget.
 rw-autocomplete:
