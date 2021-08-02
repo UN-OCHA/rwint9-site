@@ -27,7 +27,7 @@
   .rw-river--maps-infographics article header {
     flex: 1 0 auto;
   }
-  .rw-river--maps-infographics article .content img {
+  .rw-river--maps-infographics article .rw-river-article__content img {
     position: absolute;
     top: 24px;
     left: 24px;
@@ -38,10 +38,10 @@
     max-height: none;
     margin: 0;
   }
-  .rw-river--maps-infographics article .content p {
+  .rw-river--maps-infographics article .rw-river-article__content p {
     margin-top: 0;
   }
-  .rw-river--maps-infographics article .content:after {
+  .rw-river--maps-infographics article .rw-river-article__content:after {
     position: absolute;
     top: 16px;
     left: 16px;
@@ -91,7 +91,7 @@
       border: 1px solid #e6ecef;
       border-width: 0 1px;
     }
-    .rw-river--maps-infographics article .content {
+    .rw-river--maps-infographics article .rw-river-article__content {
       position: relative;
       overflow: hidden;
       flex: none;
@@ -100,14 +100,14 @@
       margin: 0;
       padding: 60% 8px 8px 8px;
     }
-    .rw-river--maps-infographics article .content img {
+    .rw-river--maps-infographics article .rw-river-article__content img {
       top: 0;
       left: 0;
       clip: auto;
       width: 100%;
       margin: 0;
     }
-    .rw-river--maps-infographics article .content:after {
+    .rw-river--maps-infographics article .rw-river-article__content:after {
       top: 0;
       left: 0;
       width: 100%;
