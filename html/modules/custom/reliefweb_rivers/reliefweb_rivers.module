@@ -136,6 +136,8 @@ function reliefweb_rivers_theme() {
         'more' => NULL,
         // Pager (optional). See "reliefweb_rivers_results" below.
         'pager' => NULL,
+        // Message for when there are no items.
+        'empty' => t('No results found.'),
       ],
     ],
     'reliefweb_rivers_results' => [

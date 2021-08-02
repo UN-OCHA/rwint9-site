@@ -35,7 +35,7 @@
     flex: 1 0 40%;
     margin: 0 16px;
   }
-  .rw-document + .rw-river--type-reports .rw-river__articles article:nth-child(-n+2) {
+  #main-content .rw-document + .rw-river--type-reports .rw-river__articles article:nth-child(-n+2) {
     border-top: none;
   }
 }

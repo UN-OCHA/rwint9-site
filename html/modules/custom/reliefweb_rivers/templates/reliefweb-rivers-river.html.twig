@@ -15,6 +15,7 @@
  * - entities: list of article entities constituting the river
  * - pager: (optional) the pager for the river
  * - more: (optional) an array with URL to the main river and a text
+ * - empty: message for when there are no results.
  *
  * @todo provide a count variable to limit the number of items to display in the
  * river? Should that be determine in a preprocess function for example?
@@ -34,23 +35,27 @@
     'rw-river__title',
   ]) }}>{{ title }}</h{{ level }}>
 
-  {{ results }}
+  {% if entities is not empty %}
+    {{ results }}
 
-  <div class="rw-river__articles">
-    {% for entity in entities %}
-      {{ render_var({
-        '#theme': 'reliefweb_rivers_river_article__' ~ entity.bundle,
-        '#level': level + 1,
-        '#entity': entity,
-      }) }}
-    {% endfor %}
-  </div>
+    <div class="rw-river__articles">
+      {% for entity in entities %}
+        {{ render_var({
+          '#theme': 'reliefweb_rivers_river_article__' ~ entity.bundle,
+          '#level': level + 1,
+          '#entity': entity,
+        }) }}
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="rw-river__emtpy">{{ empty }}</p>
+  {% endif %}
 
   {% if more is not empty and more.url %}
     <footer class="rw-river__view-more view-more">
       <a href="{{ more.url }}">{{ more.label ?? ('View more'|t) }}</a>
     </footer>
-  {% elseif pager is not empty %}
+  {% elseif entities is not empty and pager is not empty %}
     {{ pager }}
   {% endif %}
 </section>

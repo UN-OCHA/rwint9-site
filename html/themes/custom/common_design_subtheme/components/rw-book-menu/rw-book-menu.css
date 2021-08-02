@@ -1,18 +1,10 @@
 /**
- * Book page.
+ * Book menu.
  *
- * Individual book pages. Those are made of a main content body and a sidebar
- * with the navigation into the book hierarchy.
+ * Navigation of the book pages hierarchy.
  *
- * Scope: .node--book
+ * Scope: .rw-book-menu
  */
-.node--book > header h1 {
-  margin-bottom: 0;
-}
-.rw-book-menu h2 {
-  padding-left: 8px;
-  border-left: 8px solid #0988bb;
-}
 .rw-book-menu {
   word-wrap: break-word;
   overflow-wrap: break-word;

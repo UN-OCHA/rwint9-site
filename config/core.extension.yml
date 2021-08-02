@@ -24,6 +24,7 @@ module:
   language: 0
   link: 0
   locale: 0
+  mailsystem: 0
   maintenance200: 0
   media: 0
   media_library: 0
@@ -33,6 +34,7 @@ module:
   migrate: 0
   migrate_plus: 0
   migrate_tools: 0
+  mimemail: 0
   node: 0
   options: 0
   page_cache: 0
@@ -41,12 +43,14 @@ module:
   redirect: 0
   redis: 0
   reliefweb_api: 0
+  reliefweb_bookmarks: 0
   reliefweb_dsr: 0
   reliefweb_entities: 0
   reliefweb_homepage: 0
   reliefweb_key_figures: 0
   reliefweb_migrate: 0
   reliefweb_rivers: 0
+  reliefweb_subscriptions: 0
   reliefweb_utility: 0
   responsive_image: 0
   social_api: 0

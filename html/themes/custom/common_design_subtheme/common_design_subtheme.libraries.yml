@@ -46,6 +46,11 @@ rw-book-menu:
     theme:
       components/rw-book-menu/rw-book-menu.css: {}
 
+rw-bookmark-link:
+  css:
+    theme:
+      components/rw-bookmark-link/rw-bookmark-link.css: {}
+
 rw-country:
   css:
     theme:
@@ -181,6 +186,11 @@ rw-selection:
       components/rw-selection/rw-selection.css: {}
   dependencies:
     - common_design_subtheme/rw-icons
+
+rw-subscriptions:
+  css:
+    theme:
+      components/rw-subscriptions/rw-subscriptions.css: {}
 
 rw-toc:
   css:
