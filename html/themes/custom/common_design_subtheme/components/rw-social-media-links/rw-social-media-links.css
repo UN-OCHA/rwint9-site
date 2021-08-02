@@ -50,8 +50,8 @@
  * Social media links with icons only (ex: report page).
  */
 .rw-entity-social-media-links--icons-only {
-  line-height: 1;
   text-align: center;
+  line-height: 1;
 }
 .rw-entity-social-media-links--icons-only ul {
   display: inline-block;
