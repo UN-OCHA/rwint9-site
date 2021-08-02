@@ -10,3 +10,63 @@ a {
     color: $cd-ocha-blue;
   }
 }
+
+p {
+  margin: 1rem 0;
+  line-height: 1.6;
+}
+p:first-child {
+  margin-top: 0;
+}
+p:last-child {
+  margin-bottom: 0;
+}
+
+/* Allow styling of search inputs. */
+input[type="search"] {
+  -moz-appearance: none;
+  -ms-appearance: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+/* Fix Safari and older Chrome extra padding. */
+input::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+/* Placeholder style. */
+input::-webkit-input-placeholder {
+  opacity: 0.7;
+  color: inherit;
+  font-style: italic;
+}
+input:-ms-input-placeholder {
+  opacity: 0.7;
+  color: inherit;
+  font-style: italic;
+}
+input::-moz-placeholder {
+  opacity: 0.7;
+  color: inherit;
+  font-style: italic;
+}
+input::placeholder {
+  opacity: 0.7;
+  color: inherit;
+  font-style: italic;
+}
+
+/* Prevent select from not respecting their container width. */
+select {
+  max-width: 100%;
+}
+/* Ensure the button is displayed for select dropdowns while allowing a bit
+ * more flexibility in the styling like setting a height. */
+select:not([multitple]) {
+  -moz-appearance: menulist-button;
+  -webkit-appearance: menulist-button;
+}
+/* Prevent weird behavior with select inside a fieldset not respecting the
+ * wanted max-width; */
+fieldset {
+  min-inline-size: auto;
+}

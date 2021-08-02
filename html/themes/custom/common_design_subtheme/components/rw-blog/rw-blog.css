@@ -47,8 +47,8 @@
     margin: 0 -8px;
   }
   .rw-river-page--blog .rw-river__articles .rw-river-article--blog-post {
-    width: 100%;
     flex: 1 0 40%;
+    width: 100%;
     margin: 16px 8px 0 8px;
     padding: 16px;
     border: 1px solid #e6ecef;
