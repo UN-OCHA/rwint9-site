@@ -1,12 +1,12 @@
 /* Page title and Status in article header */
-.rw-document .cd-page-title,
-.taxonomy-term--full .cd-page-title {
+.rw-river-page__title,
+.rw-article__title {
   margin-bottom: 0;
   padding-bottom: 0;
   border-bottom: 0 none;
 }
-.rw-document > header,
-.taxonomy-term--full > header {
+.rw-river-page__title > header,
+.rw-article__title > header {
   padding-bottom: 12px;
   border-bottom: 1px solid #eb1405;
 }

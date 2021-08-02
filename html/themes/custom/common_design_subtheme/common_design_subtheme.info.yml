@@ -35,9 +35,6 @@ libraries-extend:
   common_design/cd-card:
     - common_design_subtheme/cd-card
 
-  common_design/cd-page-title:
-    - common_design_subtheme/cd-page-title
-
 # Custom namespace
 # https://www.drupal.org/docs/contributed-modules/components/understanding-twig-namespaces
 # Requires Components module
