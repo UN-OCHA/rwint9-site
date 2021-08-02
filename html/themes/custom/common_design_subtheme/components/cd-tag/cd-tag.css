@@ -1,8 +1,0 @@
-:root {
-  /* --cd-tag--color: #e6ecef; */
-  --cd-tag--color: #0988bb;
-}
-
-.cd-tag span {
-  text-transform: initial;
-}
