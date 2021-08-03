@@ -40,16 +40,3 @@
 .rw-entity-useful-links > ul ul + .view-more {
   margin-top: 24px;
 }
-
-/* External links. Display an icon after the link. */
-#main-content a[target="_blank"][rel="noopener"]:after {
-  display: inline-block;
-  overflow: hidden;
-  width: 12px;
-  height: 12px;
-  /* The top margin is to have a better vertical alignment. */
-  margin: -2px 0 0 6px;
-  content: "";
-  vertical-align: middle;
-  background: var(--rw-icons--common--external-link--12--dark-grey);
-}
