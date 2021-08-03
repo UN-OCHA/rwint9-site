@@ -87,6 +87,11 @@
   content: "";
 }
 
+/* Hide format icons */
+.rw-document > footer .rw-entity-meta__tag-value:before {
+  content: none;
+}
+
 @media screen and (min-width: 768px) {
   .rw-document > .rw-article__content {
     float: left;
