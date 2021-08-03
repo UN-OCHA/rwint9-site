@@ -12,6 +12,7 @@
 .node--report--full #attachments.report {
   max-width: 220px;
 }
+
 @media screen and (min-width: 480px) {
   .node--report--full #attachments.report {
     float: right;
@@ -26,8 +27,8 @@
 .node--report--full #attachments li {
   margin: 0;
   padding: 16px 0;
-  border: 1px solid #e6ecef;
   text-align: center;
+  border: 1px solid #e6ecef;
 }
 .node--report--full #attachments li + li {
   margin-top: 24px;
@@ -51,8 +52,8 @@
 }
 /* Interactive tool screenshots. */
 .node--report--full #interactive {
-  text-align: center;
   padding-top: 0;
+  text-align: center;
 }
 .node--report--full #interactive h3 {
   margin: 0;
