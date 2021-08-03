@@ -72,6 +72,7 @@
  * @see \Drupal\reliefweb_entities\Entity\Report.php
  */
 #}
+{{ attach_library('common_design_subtheme/rw-report') }}
 {{ attach_library('common_design_subtheme/rw-document') }}
 {{ attach_library('common_design_subtheme/rw-related-content') }}
 
@@ -159,9 +160,10 @@
     {# @todo add attachments. #}
 
     {{ content.body.0|render|sanitize_html(false, 2) }}
-  </div>
 
-  {{ node.getSourceDisclaimers() }}
+    {{ node.getSourceDisclaimers() }}
+
+  </div>
 
   <footer class="rw-article__footer">
     {# Pre-sort the countries so that we can easily extract the primary country
