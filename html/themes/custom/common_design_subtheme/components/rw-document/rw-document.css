@@ -72,18 +72,18 @@
 #main-content .rw-document .rw-entity-details dl.rw-entity-meta dt {
   margin: 16px 0 0 0;
 }
-.rw-document > footer dl.meta dt:first-of-type {
+.rw-document > footer dl.rw-entity-meta dt:first-of-type {
   margin: 0;
 }
-.rw-document > footer dl.meta dd {
+.rw-document > footer dl.rw-entity-meta dd {
   clear: both;
 }
-.rw-document > footer dl.meta dd li:after {
+.rw-document > footer dl.rw-entity-meta dd li:after {
   margin: 0 4px;
   content: " / ";
 }
-.rw-document > footer dl.meta dd li:last-child:after,
-.rw-document > footer dl.meta dd li[data-last]:after {
+.rw-document > footer dl.rw-entity-meta dd li:last-child:after,
+.rw-document > footer dl.rw-entity-meta dd li.rw-entity-meta__tag-value__list__item--last:after {
   content: "";
 }
 
