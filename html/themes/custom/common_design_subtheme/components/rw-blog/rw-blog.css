@@ -19,17 +19,17 @@
  *
  * List of the blog posts.
  */
-.page-path-blog #main .rw-river-article--blog-post > h3 {
+.rw-river-page--blog .rw-river-article--blog-post > h3 {
   margin: 0;
   font-weight: normal;
 }
-.page-path-blog #main section .rw-river-article--blog-post > header .rw-river-article__header {
+.rw-river-page--blog .rw-river-article--blog-post > header .rw-river-article__header {
   font-size: 18px;
 }
-.page-path-blog #main section .rw-river-article--blog-post .rw-river-article__content {
+.rw-river-page--blog .rw-river-article--blog-post .rw-river-article__content {
   display: block;
 }
-.page-path-blog #main .rw-river-article--blog-post header p.author {
+.rw-river-article__author  {
   margin: 12px 0 0 0;
   font-size: 15px;
   font-style: italic;
