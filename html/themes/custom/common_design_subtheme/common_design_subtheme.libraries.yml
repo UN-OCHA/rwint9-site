@@ -141,6 +141,11 @@ rw-page-title:
     theme:
       components/rw-page-title/rw-page-title.css: {}
 
+rw-pager:
+  css:
+    theme:
+      components/rw-pager/rw-pager.css: {}
+
 rw-related-content:
   css:
     theme:
@@ -223,9 +228,4 @@ cd-button:
   css:
     theme:
       components/cd-button/cd-button.css: {}
-
-cd-card:
-  css:
-    theme:
-      components/cd-card/cd-card.css: {}
 

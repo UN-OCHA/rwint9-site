@@ -1,0 +1,50 @@
+/* River information and pager */
+.pager {
+  width: 100%;
+  text-align: center;
+  margin-top: 32px;
+}
+.pager:after {
+  content: "";
+  display: table;
+  clear: both;
+  width: 100%;
+}
+.pager a {
+  display: inline-block;
+  font-weight: bold;
+  padding: 8px 16px;
+  line-height: 1;
+}
+.pager .is-active a {
+  color: #eb1405;
+  text-decoration: underline;
+}
+.pager ul {
+  list-style: none;
+  display: inline-block;
+  vertical-align: top;
+  padding: 0;
+  margin: 0;
+}
+.pager li {
+  float: left;
+  margin: 0;
+}
+.pager li:after {
+  content: "";
+  display: inline-block;
+  width: 1px;
+  height: 10px;
+  margin-bottom: 1px;
+  background: #2e3436;
+}
+.pager li:last-child:after {
+  content: none;
+}
+.pager {
+  clear: both;
+  margin-top: 0;
+  padding-top: 32px;
+  border-top: 1px solid #e6ecef;
+}
