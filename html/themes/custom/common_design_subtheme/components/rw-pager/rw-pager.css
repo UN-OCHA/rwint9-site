@@ -48,3 +48,12 @@
   padding-top: 32px;
   border-top: 1px solid #e6ecef;
 }
+.cd-pager__item--ellipsis {
+  display: block;
+  font-weight: bold;
+  padding: 8px 0 8px 16px;
+  line-height: 1;
+}
+.pager li.cd-pager__item--ellipsis:after {
+  margin-left: 16px;
+}
