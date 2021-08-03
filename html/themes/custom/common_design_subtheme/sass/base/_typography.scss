@@ -61,10 +61,10 @@ h6 {
   font-weight: bold;
 }
 /* Headings in content following something. */
-#main .content * + h3,
-#main .content * + h4,
-#main .content * + h5,
-#main .content * + h6 {
+.rw-article__content * + h3,
+.rw-article__content * + h4,
+.rw-article__content * + h5,
+.rw-article__content * + h6 {
   margin-top: 16px;
 }
 /* Smaller size on small screen to reduce used real estate. */
