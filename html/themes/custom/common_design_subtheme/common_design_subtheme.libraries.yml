@@ -97,11 +97,6 @@ rw-form:
     theme:
       components/rw-form/rw-form.css: {}
 
-rw-headlines:
-  css:
-    theme:
-      components/rw-headlines/rw-headlines.css: {}
-
 rw-homepage:
   css:
     theme:
@@ -150,6 +145,11 @@ rw-related-content:
   css:
     theme:
       components/rw-related-content/rw-related-content.css: {}
+
+rw-report:
+  css:
+    theme:
+      components/rw-report/rw-report.css: {}
 
 rw-river:
   css:
