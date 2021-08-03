@@ -20,7 +20,7 @@
     padding: 16px;
     border: 1px solid #e6ecef;
   }
-  .path-organizations section.rw-river #pager {
+  .path-organizations .pager {
     border-top: none;
   }
 }
