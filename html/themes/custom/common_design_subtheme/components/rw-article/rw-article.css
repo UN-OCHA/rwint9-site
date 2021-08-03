@@ -86,7 +86,7 @@
 }
 
 /* External links. Display an icon after the link. */
-#main-content a[target="_blank"][rel="noopener"]:after {
+.cd-layout-content a[target="_blank"][rel="noopener"]:after {
   display: inline-block;
   overflow: hidden;
   width: 12px;
