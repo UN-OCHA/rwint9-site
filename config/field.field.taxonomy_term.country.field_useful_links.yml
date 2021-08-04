@@ -1,0 +1,24 @@
+uuid: 33b78c83-40c2-40a4-b665-3eff4d75df17
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_useful_links
+    - taxonomy.vocabulary.country
+  module:
+    - reliefweb_fields
+id: taxonomy_term.country.field_useful_links
+field_name: field_useful_links
+entity_type: taxonomy_term
+bundle: country
+label: 'Useful Links'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  internal: 0
+  use_cover: 0
+  keep_archives: 0
+field_type: reliefweb_links

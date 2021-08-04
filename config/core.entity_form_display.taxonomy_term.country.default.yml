@@ -4,14 +4,20 @@ status: true
 dependencies:
   config:
     - field.field.taxonomy_term.country.field_aliases
+    - field.field.taxonomy_term.country.field_appeals_response_plans
     - field.field.taxonomy_term.country.field_iso3
+    - field.field.taxonomy_term.country.field_key_content
     - field.field.taxonomy_term.country.field_location
     - field.field.taxonomy_term.country.field_longname
     - field.field.taxonomy_term.country.field_profile
     - field.field.taxonomy_term.country.field_shortname
     - field.field.taxonomy_term.country.field_timezone
+    - field.field.taxonomy_term.country.field_useful_links
     - taxonomy.vocabulary.country
+    - workflows.workflow.country
   module:
+    - allowed_formats
+    - content_moderation
     - geofield
     - text
 id: taxonomy_term.country.default
@@ -24,9 +30,12 @@ content:
     weight: 4
     region: content
     settings:
-      placeholder: ''
       rows: 5
-    third_party_settings: {  }
+      placeholder: ''
+    third_party_settings:
+      allowed_formats:
+        hide_help: '1'
+        hide_guidelines: '1'
   field_aliases:
     weight: 3
     settings:
@@ -79,6 +88,12 @@ content:
     third_party_settings: {  }
     type: options_select
     region: content
+  moderation_state:
+    type: moderation_state_default
+    weight: 10
+    settings: {  }
+    region: content
+    third_party_settings: {  }
   name:
     type: string_textfield
     weight: 0
@@ -95,5 +110,8 @@ content:
     region: content
     third_party_settings: {  }
 hidden:
+  field_appeals_response_plans: true
+  field_key_content: true
+  field_useful_links: true
   langcode: true
   path: true

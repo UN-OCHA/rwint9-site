@@ -1,0 +1,10 @@
+uuid: 4018f092-dea4-4870-b0a9-bd0e30393869
+langcode: en
+status: true
+dependencies:
+  module:
+    - taxonomy
+id: taxonomy_term.profile
+label: Profile
+targetEntityType: taxonomy_term
+cache: true

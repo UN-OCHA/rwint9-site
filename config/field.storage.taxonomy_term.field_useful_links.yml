@@ -1,0 +1,19 @@
+uuid: e067aaf5-781c-4d79-a5ce-64ff713adcdd
+langcode: en
+status: true
+dependencies:
+  module:
+    - reliefweb_fields
+    - taxonomy
+id: taxonomy_term.field_useful_links
+field_name: field_useful_links
+entity_type: taxonomy_term
+type: reliefweb_links
+settings: {  }
+module: reliefweb_fields
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

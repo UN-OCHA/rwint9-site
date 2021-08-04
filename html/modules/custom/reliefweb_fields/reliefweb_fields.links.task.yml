@@ -1,0 +1,4 @@
+reliefweb_fields.taxonomy_term.profile_form:
+  title: 'Profile'
+  route_name: reliefweb_fields.taxonomy_term.profile_form
+  base_route: entity.taxonomy_term.canonical

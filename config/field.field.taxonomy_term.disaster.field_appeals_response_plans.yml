@@ -1,0 +1,24 @@
+uuid: e1a43e8f-b449-4955-8fab-a73c6ae5a962
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_appeals_response_plans
+    - taxonomy.vocabulary.disaster
+  module:
+    - reliefweb_fields
+id: taxonomy_term.disaster.field_appeals_response_plans
+field_name: field_appeals_response_plans
+entity_type: taxonomy_term
+bundle: disaster
+label: 'Appeals and Response Plans'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  internal: 1
+  use_cover: 1
+  keep_archives: 1
+field_type: reliefweb_links

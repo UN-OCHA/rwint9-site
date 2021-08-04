@@ -46,6 +46,7 @@ module:
   reliefweb_bookmarks: 0
   reliefweb_dsr: 0
   reliefweb_entities: 0
+  reliefweb_fields: 0
   reliefweb_homepage: 0
   reliefweb_key_figures: 0
   reliefweb_migrate: 0
@@ -59,6 +60,7 @@ module:
   syslog: 0
   system: 0
   taxonomy: 0
+  taxonomy_term_revision: 0
   text: 0
   token: 0
   toolbar: 0

@@ -1,0 +1,6 @@
+reliefweb-links:
+  css:
+    component:
+      components/reliefweb-links/reliefweb-links.css: {}
+  js:
+    components/reliefweb-links/reliefweb-links.js: {}
