@@ -1,0 +1,6 @@
+edit taxonomy term profile:
+  title: 'Edit taxonomy term profile'
+  description: "Allow users to edit a taxonomy term's profile."
+access reliefweb links field validation:
+  title: 'Access reliefweb links field validation'
+  description: "Allow ajax callbacks to the ReliefWeb Links field validation."

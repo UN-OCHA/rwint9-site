@@ -1,0 +1,19 @@
+uuid: 1e3027d2-a4a9-417e-bd66-ffa02f1b37eb
+langcode: en
+status: true
+dependencies:
+  module:
+    - reliefweb_fields
+    - taxonomy
+id: taxonomy_term.field_appeals_response_plans
+field_name: field_appeals_response_plans
+entity_type: taxonomy_term
+type: reliefweb_links
+settings: {  }
+module: reliefweb_fields
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

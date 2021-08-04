@@ -1,8 +1,9 @@
-uuid: e36c5174-de83-4ce8-beef-49861c180cea
+uuid: b4f8e377-22e0-419d-9a6b-080546c4da31
 langcode: en
 status: true
 dependencies:
   config:
+    - core.entity_form_mode.taxonomy_term.profile
     - field.field.taxonomy_term.disaster.field_appeals_response_plans
     - field.field.taxonomy_term.disaster.field_country
     - field.field.taxonomy_term.disaster.field_disaster_date
@@ -17,68 +18,61 @@ dependencies:
     - field.field.taxonomy_term.disaster.field_useful_links
     - taxonomy.vocabulary.disaster
   module:
+    - allowed_formats
     - reliefweb_fields
-id: taxonomy_term.disaster.default
+    - text
+id: taxonomy_term.disaster.profile
 targetEntityType: taxonomy_term
 bundle: disaster
-mode: default
+mode: profile
 content:
-  content_moderation_control:
-    weight: -20
-    settings: {  }
-    third_party_settings: {  }
-    region: content
-  field_appeals_response_plans:
-    weight: 3
-    label: above
-    settings: {  }
-    third_party_settings: {  }
-    type: reliefweb_links
-    region: content
-  field_country:
-    weight: 2
-    label: inline
-    settings:
-      link: true
-    third_party_settings: {  }
-    type: entity_reference_label
-    region: content
-  field_disaster_type:
+  description:
+    type: text_textarea
     weight: 1
-    label: inline
-    settings:
-      link: true
-    third_party_settings: {  }
-    type: entity_reference_label
     region: content
-  field_glide:
-    weight: 0
-    label: inline
     settings:
-      link_to_entity: false
-    third_party_settings: {  }
-    type: string
+      rows: 5
+      placeholder: ''
+    third_party_settings:
+      allowed_formats:
+        hide_help: '1'
+        hide_guidelines: '1'
+  field_appeals_response_plans:
+    type: reliefweb_links
+    weight: 3
     region: content
+    settings: {  }
+    third_party_settings: {  }
   field_key_content:
-    weight: 4
-    label: above
+    type: reliefweb_links
+    weight: 2
+    region: content
     settings: {  }
     third_party_settings: {  }
-    type: reliefweb_links
+  field_profile:
+    type: boolean_checkbox
+    weight: 0
     region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
   field_useful_links:
-    weight: 5
-    label: above
+    type: reliefweb_links
+    weight: 4
+    region: content
     settings: {  }
     third_party_settings: {  }
-    type: reliefweb_links
-    region: content
 hidden:
-  description: true
+  field_country: true
   field_disaster_date: true
+  field_disaster_type: true
+  field_glide: true
   field_glide_related: true
   field_primary_country: true
   field_primary_disaster_type: true
-  field_profile: true
   field_timezone: true
   langcode: true
+  moderation_state: true
+  name: true
+  path: true
+  status: true

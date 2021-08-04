@@ -1,0 +1,24 @@
+uuid: f9a1288e-87de-4b27-ad70-5a01e4e58a70
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_useful_links
+    - taxonomy.vocabulary.disaster
+  module:
+    - reliefweb_fields
+id: taxonomy_term.disaster.field_useful_links
+field_name: field_useful_links
+entity_type: taxonomy_term
+bundle: disaster
+label: 'Useful Links'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  internal: 0
+  use_cover: 0
+  keep_archives: 0
+field_type: reliefweb_links
