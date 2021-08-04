@@ -1,9 +1,9 @@
-uuid: 6a314a4d-6d7a-443b-bd35-ed298638001b
+uuid: 2465c00a-f18a-40d0-a79d-c326c852add2
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: 4IITBggrNnwAvIsJSHnSOh_92jgV43LBGr8xP84U9OM
+  default_config_hash: sFolnH-YiMmaAMMfspP6IJkwOKKJlIcvdV7FLHsXkM0
 id: reliefweb_taxonomy_term__country
 class: null
 field_plugin_method: null
@@ -24,14 +24,11 @@ process:
     plugin: skip_on_empty
     method: process
     source: field_iso3/0/value
-  field_location/lat:
-    plugin: skip_on_empty
-    method: process
-    source: field_location/0/lat
-  field_location/lon:
-    plugin: skip_on_empty
-    method: process
-    source: field_location/0/lon
+  field_location:
+    plugin: geofield_latlon
+    source:
+      - field_location/0/lat
+      - field_location/0/lon
   field_shortname/value:
     plugin: skip_on_empty
     method: process
@@ -44,6 +41,18 @@ process:
     plugin: skip_on_empty
     method: process
     source: field_profile/0/value
+  field_key_content:
+    plugin: skip_on_empty
+    method: process
+    source: field_key_content
+  field_appeals_response_plans:
+    plugin: skip_on_empty
+    method: process
+    source: field_appeals_response_plans
+  field_useful_links:
+    plugin: skip_on_empty
+    method: process
+    source: field_useful_links
   field_timezone/value:
     plugin: skip_on_empty
     method: process
