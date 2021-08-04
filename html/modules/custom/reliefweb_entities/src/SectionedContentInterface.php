@@ -197,15 +197,16 @@ interface SectionedContentInterface {
   public function getUsefulLinksSection();
 
   /**
-   * Get the country/disaster profile.
+   * Get the links of a country/disaster profile field.
    *
    * This includes the Key Content, Appeals and Response Plans and useful links.
    *
-   * @see \Drupal\reliefweb_entities::getProfileFields()
+   * @param string $field
+   *   Field name.
    *
-   * @todo replace API query with logic using the actual profile fields on the
-   * entity once ported.
+   * @return array
+   *   Field data (links) with url, title, image and active flag.
    */
-  public function getProfileFields();
+  public function getProfileFieldLinks($field);
 
 }
