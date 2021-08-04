@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3a86f8d851354e8f8951516e242a6a1c",
+    "content-hash": "70c5243ec6a942f974e44cd38d182ed4",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -4038,11 +4038,17 @@
         },
         {
             "name": "drupal/social_auth_hid",
-            "version": "dev-2.x",
+            "version": "2.6.0",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/social_auth_hid.git",
-                "reference": "6b971b496d1de4c3f761749ace5cb698d67a0336"
+                "reference": "8.x-2.6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/social_auth_hid-8.x-2.6.zip",
+                "reference": "8.x-2.6",
+                "shasum": "a3c7941c6285631b6af7b05b535a758e78ce9db9"
             },
             "require": {
                 "drupal/core": "^8.8 || ^9",
@@ -4051,15 +4057,12 @@
             },
             "type": "drupal-module",
             "extra": {
-                "branch-alias": {
-                    "dev-2.x": "2.x-dev"
-                },
                 "drupal": {
-                    "version": "8.x-2.5+4-dev",
-                    "datestamp": "1627474464",
+                    "version": "8.x-2.6",
+                    "datestamp": "1627483045",
                     "security-coverage": {
-                        "status": "not-covered",
-                        "message": "Dev releases are not covered by Drupal security advisories."
+                        "status": "covered",
+                        "message": "Covered by Drupal's security advisory policy"
                     }
                 }
             },
@@ -4086,6 +4089,47 @@
             "support": {
                 "source": "http://cgit.drupalcode.org/social_auth_hid",
                 "issues": "https://www.drupal.org/project/issues/social_auth_hid"
+            }
+        },
+        {
+            "name": "drupal/taxonomy_term_revision",
+            "version": "dev-1.x",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupalcode.org/project/taxonomy_term_revision.git",
+                "reference": "d403d6cc9dc6658a1635f21bad40c5543cf69b62"
+            },
+            "require": {
+                "drupal/core": "^8 || ^9"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "branch-alias": {
+                    "dev-1.x": "1.x-dev"
+                },
+                "drupal": {
+                    "version": "8.x-1.0-alpha2+3-dev",
+                    "datestamp": "1613990349",
+                    "security-coverage": {
+                        "status": "not-covered",
+                        "message": "Project has not opted into security advisory coverage!"
+                    }
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "n4r3n",
+                    "homepage": "https://www.drupal.org/user/3591861"
+                }
+            ],
+            "description": "Taxonomy Revision module for Drupal 8.7 onwards",
+            "homepage": "https://www.drupal.org/project/taxonomy_term_revision",
+            "support": {
+                "source": "https://git.drupalcode.org/project/taxonomy_term_revision"
             }
         },
         {
@@ -13718,7 +13762,7 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "drupal/mimemail": 15,
-        "drupal/social_auth_hid": 20
+        "drupal/taxonomy_term_revision": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
@@ -13729,5 +13773,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.0.0"
+    "plugin-api-version": "2.1.0"
 }
