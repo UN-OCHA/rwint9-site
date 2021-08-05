@@ -26,6 +26,7 @@ rw-article:
     theme:
       components/rw-article/rw-article.css: {}
       components/rw-article/rw-appeals-response-plans.css: {}
+      components/rw-article/rw-maps-inforgraphics.css: {}
 
 # Autocomplete widget.
 rw-autocomplete:
@@ -96,11 +97,6 @@ rw-form:
     theme:
       components/rw-form/rw-form.css: {}
 
-rw-headlines:
-  css:
-    theme:
-      components/rw-headlines/rw-headlines.css: {}
-
 rw-homepage:
   css:
     theme:
@@ -140,10 +136,25 @@ rw-organizations:
     theme:
       components/rw-organizations/rw-organizations.css: {}
 
+rw-page-title:
+  css:
+    theme:
+      components/rw-page-title/rw-page-title.css: {}
+
+rw-pager:
+  css:
+    theme:
+      components/rw-pager/rw-pager.css: {}
+
 rw-related-content:
   css:
     theme:
       components/rw-related-content/rw-related-content.css: {}
+
+rw-report:
+  css:
+    theme:
+      components/rw-report/rw-report.css: {}
 
 rw-river:
   css:
@@ -217,19 +228,4 @@ cd-button:
   css:
     theme:
       components/cd-button/cd-button.css: {}
-
-cd-card:
-  css:
-    theme:
-      components/cd-card/cd-card.css: {}
-
-cd-page-title:
-  css:
-    theme:
-      components/cd-page-title/cd-page-title.css: {}
-
-cd-tag:
-  css:
-    theme:
-      components/cd-tag/cd-tag.css: {}
 

@@ -1,27 +1,51 @@
 /**
  * 2 columns layout on tablet/desktop for rivers with advanced search.
  */
-@media screen and (min-width : 768px) {
-  #main-content section.rw-river-page--with-advanced-search .rw-advanced-search {
+@media screen and (min-width: 768px) {
+  .rw-river-page--with-advanced-search .rw-advanced-search {
     float: left;
     width: 300px;
   }
-  #main-content section.rw-river-page--with-advanced-search .rw-river--river-list {
+  .rw-river-page--with-advanced-search .rw-river--river-list {
     float: right;
     width: calc(100% - 340px);
   }
   /* Clear the floating above. */
-  #main-content section.rw-river-page--with-advanced-search #list:after {
-    content: "";
+  .rw-river-page--with-advanced-search #list:after {
     display: block;
     clear: both;
+    content: "";
   }
 }
-@media screen and (min-width : 1024px) {
-  #main-content section.rw-river-page--with-advanced-search .rw-advanced-search {
+
+@media screen and (min-width: 1024px) {
+  .rw-river-page--with-advanced-search .rw-advanced-search {
     width: 320px;
   }
-  #main-content section.rw-river-page--with-advanced-search .rw-river--river-list {
+  .rw-river-page--with-advanced-search .rw-river--river-list {
     width: calc(100% - 360px);
   }
+}
+
+.rw-sectioned-content > section,
+.rw-sectioned-content > form > fieldset,
+.rw-sectioned-content > form > .form-wrapper,
+.rw-sectioned-content > form > .form-item {
+  position: relative;
+  width: 100%;
+  padding: 32px 0;
+  border-bottom: 1px solid #e6ecef;
+}
+.rw-sectioned-content > section:first-child,
+.rw-sectioned-content > form > fieldset:first-child,
+.rw-sectioned-content > form > .form-wrapper:first-child,
+.rw-sectioned-content > form > .form-item:first-child {
+  padding-top: 0;
+}
+.rw-sectioned-content > section:last-child,
+.rw-sectioned-content > form > fieldset:last-child,
+.rw-sectioned-content > form > .form-wrapper:last-child,
+.rw-sectioned-content > form > .form-item:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
 }

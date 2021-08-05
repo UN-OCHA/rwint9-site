@@ -2,21 +2,19 @@
  * Document page specifics.
  *
  * Individual document pages like reports, jobs or training.
- *
- * Scope: .rw-document
  */
 .rw-document {
   display: flex;
   flex-wrap: wrap;
-  border-bottom: none;
   padding: 0;
+  border-bottom: none;
 }
 /* Clear any floating from the content. */
 .rw-document:after {
-  content: "";
-  clear: both;
   display: block;
+  clear: both;
   width: 100%;
+  content: "";
 }
 .rw-document > header {
   width: 100%;
@@ -49,14 +47,21 @@
 .rw-document > .rw-article__content {
   padding: 24px 0 24px 0;
 }
+.rw-document .rw-article__content section {
+  padding-top: 24px;
+}
+.rw-document .rw-article__content section > h3 {
+  padding: 0 0 0 8px;
+  border-left: 8px solid #0988bb;
+}
 
 .rw-document > footer {
   width: 100%;
   margin: 0;
   padding: 24px 0 0 0;
-  border-color: #e6ecef;
-  border-style: solid;
   border-width: 1px 0 0 0;
+  border-style: solid;
+  border-color: #e6ecef;
 }
 
 .rw-document dl.rw-entity-meta dd {
@@ -67,19 +72,24 @@
 #main-content .rw-document .rw-entity-details dl.rw-entity-meta dt {
   margin: 16px 0 0 0;
 }
-#main-content .rw-document.rw-entity-details dl.rw-entity-meta dt:first-of-type {
+.rw-document > footer dl.rw-entity-meta dt:first-of-type {
   margin: 0;
 }
-#main-content .rw-document .rw-entity-details dl.rw-entity-meta dd {
+.rw-document > footer dl.rw-entity-meta dd {
   clear: both;
 }
-#main-content .rw-document .rw-entity-details dl.rw-entity-meta dd li:after {
-  content: " / ";
+.rw-document > footer dl.rw-entity-meta dd li:after {
   margin: 0 4px;
+  content: " / ";
 }
-#main-content .rw-document .rw-entity-details dl.rw-entity-meta dd li:last-child:after,
-#main-content .rw-document .rw-entity-details dl.rw-entity-meta dd li[data-last]:after {
+.rw-document > footer dl.rw-entity-meta dd li:last-child:after,
+.rw-document > footer dl.rw-entity-meta dd li.rw-entity-meta__tag-value__list__item--last:after {
   content: "";
+}
+
+/* Hide format icons */
+.rw-document > footer .rw-entity-meta__tag-value:before {
+  content: none;
 }
 
 @media screen and (min-width: 768px) {

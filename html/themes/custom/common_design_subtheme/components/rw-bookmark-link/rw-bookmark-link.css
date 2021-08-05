@@ -4,16 +4,16 @@
  * Scope: .rw-bookmark-link
  */
 .rw-bookmark-link {
-  display: inline-block;
-  vertical-align: middle;
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
   position: relative;
+  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 10px;
+  vertical-align: middle;
+  text-decoration: none;
   background: #e6ecef;
   font-size: 15px;
-  text-decoration: none;
 }
 .rw-bookmark-link:hover,
 .rw-bookmark-link:focus,
@@ -21,20 +21,20 @@
   text-decoration: underline;
 }
 .rw-bookmark-link:before {
-  content: "";
   display: inline-block;
-  vertical-align: middle;
+  overflow: hidden;
   width: 18px;
   height: 18px;
   margin-right: 6px;
-  overflow: hidden;
+  content: "";
+  vertical-align: middle;
   background: var(--rw-icons--common--bookmark--18--dark-blue);
 }
 
 /* When the bookmark link is on a document page. */
 .rw-document .rw-article__footer .rw-bookmark-link-wrapper {
-  text-align: center;
   padding: 24px 0;
+  text-align: center;
 }
 .rw-document .rw-article__footer .rw-entity-social-media-links + .rw-bookmark-link-wrapper {
   /* To be closer to the share buttons. */

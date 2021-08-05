@@ -2,79 +2,69 @@
  * Appeals and Response Plans.
  *
  * Block with a list of Appeals and Response plans and their document cover.
- *
- * Scope: #main-content .rw-sectioned-content section.rw-river--appeals-response-plans
  */
-#main-content .rw-sectioned-content section.rw-river--appeals-response-plans article {
+.rw-river--appeals-response-plans article {
   display: flex;
   flex-direction: column;
   min-height: 212px;
   padding-left: 164px;
 }
-#main-content .rw-sectioned-content section.rw-river--appeals-response-plans article header {
+.rw-river--appeals-response-plans article header {
   flex: 1 0 auto;
 }
-#main-content .rw-sectioned-content section.rw-river--appeals-response-plans article img {
+.rw-river--appeals-response-plans article img {
   position: absolute;
   top: 32px;
   left: 8px;
+  overflow: hidden;
+  clip: rect(0, 124px, 154px, 0);
   width: 124px;
   /* Reset max-height from the base.css. */
   max-height: none;
   margin: 0;
-  clip: rect(0, 124px, 154px, 0);
-  overflow: hidden;
 }
-#main-content .rw-sectioned-content section.rw-river--appeals-response-plans article .content {
+.rw-river--appeals-response-plans article .rw-river-article__content {
   padding: 0;
 }
-#main-content .rw-sectioned-content section.rw-river--appeals-response-plans article .content:after {
-  content: "";
+.rw-river--appeals-response-plans article .rw-river-article__content:after {
   position: absolute;
   top: 24px;
   left: 0;
   width: 140px;
   height: 170px;
+  content: "";
   border: 8px solid #e6ecef;
   background: linear-gradient(rgba(230, 236, 239, 0) 50%, rgba(230, 236, 239, 0.8));
 }
 
 /* Hide the cover on small screens. */
-@media screen and (max-width : 479px) {
-  #main-content .rw-sectioned-content section.rw-river--appeals-response-plans article {
+@media screen and (max-width: 479px) {
+  .rw-river--appeals-response-plans article {
     min-height: auto;
     padding-left: 0;
   }
-  #main-content .rw-sectioned-content section.rw-river--appeals-response-plans .content {
+  .rw-river--appeals-response-plans .rw-river-article__content {
     display: none;
   }
 }
 /* Two columns layout on large screens. */
 @supports (display: grid) {
   @media screen {
-    #main-content .rw-sectioned-content section.rw-river--appeals-response-plans .rw-river__articles {
+    .rw-river--appeals-response-plans .rw-river__articles {
       display: grid;
-      grid-gap: 0 32px;
       grid-template-columns: repeat(1, 1fr);
+      grid-gap: 0 32px;
     }
-    #main-content .rw-sectioned-content section.rw-river--appeals-response-plans article:nth-child(-n+2) {
+    .rw-river--appeals-response-plans article:nth-child(-n+2) {
       border-top: none;
     }
-    #main-content .rw-sectioned-content section.rw-river--appeals-response-plans .view-more {
+    .rw-river--appeals-response-plans .rw-river__rw-river__view-more {
       margin-top: 12px;
     }
-    #main-content .rw-sectioned-content section.rw-river--appeals-response-plans article dl.rw-entity-meta--core dd {
-      display: inline;
-    }
-    #main-content .rw-sectioned-content section.rw-river--appeals-response-plans article dl.rw-entity-meta--core dd:after {
-      display: block;
-      width: 0;
-      height: 0;
-      margin: 0;
-    }
   }
-  @media screen and (min-width : 1024px) {
-    #main-content .rw-sectioned-content section.rw-river--appeals-response-plans .rw-river__articles {
+
+  @media screen and (min-width: 1024px) {
+    .rw-river--appeals-response-plans .rw-river__articles {
       grid-template-columns: repeat(2, 1fr);
     }
   }

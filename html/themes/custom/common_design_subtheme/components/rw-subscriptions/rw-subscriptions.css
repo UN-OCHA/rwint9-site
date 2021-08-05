@@ -6,13 +6,13 @@
  * Do not use double quotes.
  */
 .body {
+  width: 520px;
+  margin: 10px;
+  padding: 10px;
+  color: #333;
   font-family: Arial, sans-serif;
   font-size: 16px;
   line-height: 24px;
-  color: #333;
-  padding: 10px;
-  margin: 10px;
-  width: 520px;
 }
 
 .reliefweb-logo {
@@ -20,17 +20,17 @@
 }
 
 .preheader {
-  display: none!important;
-  max-height: 0;
-  max-width: 0;
-  overflow: hidden;
+  display: none !important;
   visibility: hidden;
-  font-size: 0;
-  line-height: 0;
-  opacity: 0;
+  overflow: hidden;
+  max-width: 0;
+  max-height: 0;
   margin: 0;
   padding: 0;
-  mso-hide: all;
+  opacity: 0;
+  font-size: 0;
+  line-height: 0;
+  /* mso-hide: all; */
 }
 .header {
   margin-bottom: 20px;
@@ -53,38 +53,38 @@
 }
 
 .email-title {
-  padding: 0 0 10px;
   margin: 0;
+  padding: 0 0 10px;
+  border-bottom: 1px solid #333;
   font-family: Georgia, serif;
   font-size: 20px;
   font-weight: normal;
   line-height: 20px;
-  border-bottom: 1px solid #333;
 }
 .email-title-date {
-  font-size: 16px;
   color: #e55;
+  font-size: 16px;
 }
 
 .email-resource {
-  border-bottom: 1px dotted #ccc;
   padding: 15px 0 14px;
+  border-bottom: 1px dotted #ccc;
 }
 .email-resource-title {
+  margin: 0;
   font-size: 17px;
   font-weight: bold;
   line-height: 24px;
-  margin: 0;
 }
 .email-resource-title-link {
-  color: #333;
   text-decoration: none;
+  color: #333;
 }
 .email-resource-info {
-  font-weight: bold;
-  font-size: 13px;
-  color: #999;
   padding: 8px 0 8px;
+  color: #999;
+  font-size: 13px;
+  font-weight: bold;
 }
 .email-resource-teaser {
   font-family: Aria, sans-serif;
@@ -92,7 +92,7 @@
   line-height: 24px;
 }
 .email-resource-read-more {
-  font-weight: bold;
-  color: #18b;
   text-decoration: underline;
+  color: #18b;
+  font-weight: bold;
 }

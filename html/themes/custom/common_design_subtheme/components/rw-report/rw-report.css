@@ -1,0 +1,98 @@
+/**
+ * Report page.
+ *
+ * Individual report pages. Those are made of the main content body with
+ * eventual attachments.
+ */
+/* Attachments. */
+.node--report--full #attachments {
+  margin: 0 auto 24px auto;
+  padding-top: 0;
+}
+.node--report--full #attachments.report {
+  max-width: 220px;
+}
+
+@media screen and (min-width: 480px) {
+  .node--report--full #attachments.report {
+    float: right;
+    margin-left: 24px;
+  }
+}
+.node--report--full #attachments ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.node--report--full #attachments li {
+  margin: 0;
+  padding: 16px 0;
+  text-align: center;
+  border: 1px solid #e6ecef;
+}
+.node--report--full #attachments li + li {
+  margin-top: 24px;
+}
+.node--report--full #attachments img {
+  width: 100%;
+  margin: -16px 0 8px 0;
+  border-bottom: 1px solid #e6ecef;
+}
+.node--report--full #attachments strong {
+  display: block;
+  padding: 0 16px;
+}
+.node--report--full #attachments strong:first-letter {
+  text-transform: capitalize;
+}
+.node--report--full #attachments span {
+  display: block;
+  padding: 4px 16px 0 16px;
+  font-size: 14px;
+}
+/* Interactive tool screenshots. */
+.node--report--full #interactive {
+  padding-top: 0;
+  text-align: center;
+}
+.node--report--full #interactive h3 {
+  margin: 0;
+  padding: 0 0 20px 0;
+  border: none;
+  font-size: 16px;
+  font-weight: normal;
+}
+.node--report--full #interactive figure a:after {
+  display: none;
+}
+.node--report--full #interactive figure figcaption {
+  padding: 4px;
+  background: #e6ecef;
+}
+.node--report--full #interactive figure img {
+  width: 100%;
+  border: 1px solid #e6ecef;
+}
+.node--report--full #interactive figure a:hover img,
+.node--report--full #interactive figure a:active img,
+.node--report--full #interactive figure a:focus img {
+  border-color: #055372;
+}
+.node--report--full #interactive footer {
+  padding-top: 4px;
+}
+
+.node--report--full .rw-entity-source-disclaimers {
+  margin: 24px 0 0 0;
+  font-size: 13px;
+}
+.node--report--full .rw-entity-source-disclaimers dt {
+  font-weight: bold;
+}
+.node--report--full .rw-entity-source-disclaimers dt:after {
+  content: ": ";
+}
+.node--report--full .rw-entity-source-disclaimers dd {
+  margin: 4px 0 0 0;
+  padding: 0;
+}
