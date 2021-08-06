@@ -23,11 +23,6 @@ targetEntityType: taxonomy_term
 bundle: disaster
 mode: default
 content:
-  content_moderation_control:
-    weight: -20
-    settings: {  }
-    third_party_settings: {  }
-    region: content
   field_appeals_response_plans:
     weight: 3
     label: above
@@ -74,6 +69,7 @@ content:
     type: reliefweb_links
     region: content
 hidden:
+  content_moderation_control: true
   description: true
   field_disaster_date: true
   field_glide_related: true

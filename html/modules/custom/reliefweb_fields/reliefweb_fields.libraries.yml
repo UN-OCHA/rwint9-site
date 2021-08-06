@@ -4,3 +4,10 @@ reliefweb-links:
       components/reliefweb-links/reliefweb-links.css: {}
   js:
     components/reliefweb-links/reliefweb-links.js: {}
+
+reliefweb-user-posting-rights:
+  css:
+    component:
+      components/reliefweb-user-posting-rights/reliefweb-user-posting-rights.css: {}
+  js:
+    components/reliefweb-user-posting-rights/reliefweb-user-posting-rights.js: {}

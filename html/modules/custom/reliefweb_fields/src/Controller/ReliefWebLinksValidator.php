@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 class ReliefWebLinksValidator extends ControllerBase {
 
   /**
-   * Returns a render-able array for a test page.
+   * Validate a link.
    *
    * @param string $entity_type_id
    *   Entity type id.

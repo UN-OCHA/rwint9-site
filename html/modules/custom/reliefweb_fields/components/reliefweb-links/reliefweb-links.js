@@ -18,9 +18,6 @@
     // unarchiving links. Each link row in the active and archive tables
     // will have a unique index.
     this.links = [];
-
-    // Initialize the form.
-    this.createFieldForm(field);
   }
 
   /**
@@ -91,6 +88,7 @@
 
         var image = document.createElement('img');
         image.setAttribute('src', imageUrl);
+        image.setAttribute('alt', link.title);
 
         title.appendChild(image);
 
@@ -285,8 +283,8 @@
     /**
      * Create a fieldset with new link, active and archive lists for a field.
      */
-    createFieldForm: function (field) {
-      var links = this.getFieldData(field);
+    createFieldForm: function () {
+      var links = this.getFieldData();
       var settings = this.getFieldSettings();
 
       var container = document.createElement('fieldset');
@@ -310,16 +308,12 @@
       }
 
       // Add the form to the field.
-      field.appendChild(container);
+      this.field.appendChild(container);
 
       // Handle click events on the different buttons in the form.
-      field.addEventListener('click', this.handleEvents.bind(this));
+      this.field.addEventListener('click', this.handleEvents.bind(this));
 
-      // Save the container.
-      this.form = container;
-
-      // Initialize the form state.
-      this.disableForm(false);
+      return container;
     },
 
     /**
@@ -776,6 +770,17 @@
      */
     setFieldData: function (data) {
       this.data.value = data ? JSON.stringify(data) : '';
+    },
+
+    /**
+     * Initialize the field.
+     */
+    initialize: function () {
+      // Create the field form.
+      this.form = this.createFieldForm();
+
+      // Enable the form (starting state is disabled).
+      this.disableForm(false);
     }
   };
 
@@ -790,6 +795,7 @@
         var field = fields[i];
         field.setAttribute('data-processed', '');
         var handler = new ReliefWebLinksField(field);
+        handler.initialize();
       }
     }
   };

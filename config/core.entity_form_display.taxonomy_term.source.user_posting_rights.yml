@@ -1,8 +1,9 @@
-uuid: 53e2fe3a-d125-4005-8566-3c2cabbcb92c
+uuid: 73d61b3f-fe58-435d-bfec-31a327e58c74
 langcode: en
 status: true
 dependencies:
   config:
+    - core.entity_form_mode.taxonomy_term.user_posting_rights
     - field.field.taxonomy_term.source.field_aliases
     - field.field.taxonomy_term.source.field_allowed_content_types
     - field.field.taxonomy_term.source.field_attention_job
@@ -22,73 +23,38 @@ dependencies:
     - field.field.taxonomy_term.source.field_user_posting_rights
     - taxonomy.vocabulary.source
   module:
-    - link
-    - text
-id: taxonomy_term.source.default
+    - reliefweb_fields
+id: taxonomy_term.source.user_posting_rights
 targetEntityType: taxonomy_term
 bundle: source
-mode: default
+mode: user_posting_rights
 content:
-  description:
-    label: hidden
-    type: text_default
+  field_user_posting_rights:
+    type: reliefweb_user_posting_rights
     weight: 0
     region: content
     settings: {  }
     third_party_settings: {  }
-  field_country:
-    weight: 2
-    label: inline
-    settings:
-      link: true
-    third_party_settings: {  }
-    type: entity_reference_label
-    region: content
-  field_homepage:
-    weight: 3
-    label: inline
-    settings:
-      trim_length: 80
-      url_only: false
-      url_plain: false
-      rel: ''
-      target: ''
-    third_party_settings: {  }
-    type: link
-    region: content
-  field_links:
-    weight: 4
-    label: above
-    settings:
-      trim_length: 80
-      url_only: false
-      url_plain: false
-      rel: ''
-      target: ''
-    third_party_settings: {  }
-    type: link
-    region: content
-  field_organization_type:
-    weight: 1
-    label: inline
-    settings:
-      link: true
-    third_party_settings: {  }
-    type: entity_reference_label
-    region: content
 hidden:
-  content_moderation_control: true
+  description: true
   field_aliases: true
   field_allowed_content_types: true
   field_attention_job: true
   field_attention_report: true
   field_attention_training: true
+  field_country: true
   field_disclaimer: true
   field_fts_id: true
+  field_homepage: true
   field_job_import_feed_url: true
+  field_links: true
   field_logo: true
   field_longname: true
+  field_organization_type: true
   field_shortname: true
   field_spanish_name: true
-  field_user_posting_rights: true
   langcode: true
+  moderation_state: true
+  name: true
+  path: true
+  status: true

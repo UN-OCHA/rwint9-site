@@ -4,3 +4,9 @@ edit taxonomy term profile:
 access reliefweb links field validation:
   title: 'Access reliefweb links field validation'
   description: "Allow ajax callbacks to the ReliefWeb Links field validation."
+edit user posting rights:
+  title: 'Edit user posting rights'
+  description: "Allow users to edit user posting rights for an organization."
+access reliefweb user posting rights field validation:
+  title: 'Access reliefweb user posting rights field validation'
+  description: "Allow ajax callbacks to the ReliefWeb User Posting Rights field validation."
