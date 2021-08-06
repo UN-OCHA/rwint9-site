@@ -47,3 +47,10 @@ reliefweb_rivers.training.river:
     _controller: 'reliefweb_rivers.training.river:getPageContent'
   requirements:
     _permission: 'access content'
+reliefweb_rivers.search.results:
+  path: '/search/results'
+  defaults:
+    _title: 'Search results'
+    _controller: '\Drupal\reliefweb_rivers\Controller\SearchResults::getPageContent'
+  requirements:
+    _permission: 'access content'
