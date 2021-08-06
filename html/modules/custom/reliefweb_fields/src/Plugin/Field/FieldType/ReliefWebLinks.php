@@ -16,10 +16,11 @@ use Drupal\Core\TypedData\DataDefinition;
  * @FieldType(
  *   id = "reliefweb_links",
  *   label = @Translation("ReliefWeb Links"),
- *   description = @Translation("A field to store list of internal or external links."),
+ *   description = @Translation("A field to store a list of internal or external links."),
  *   category = @Translation("ReliefWeb"),
  *   default_widget = "reliefweb_links",
- *   default_formatter = "reliefweb_links"
+ *   default_formatter = "reliefweb_links",
+ *   cardinality = -1,
  * )
  */
 class ReliefWebLinks extends FieldItemBase {
@@ -214,12 +215,6 @@ class ReliefWebLinks extends FieldItemBase {
     $values['active'] = mt_rand(0, 1);
 
     return $values;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function preSave() {
   }
 
 }

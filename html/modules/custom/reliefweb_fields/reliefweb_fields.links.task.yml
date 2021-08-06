@@ -2,3 +2,9 @@ reliefweb_fields.taxonomy_term.profile_form:
   title: 'Profile'
   route_name: reliefweb_fields.taxonomy_term.profile_form
   base_route: entity.taxonomy_term.canonical
+  weight: 1
+reliefweb_fields.taxonomy_term.user_posting_rights_form:
+  title: 'User posting rights'
+  route_name: reliefweb_fields.taxonomy_term.user_posting_rights_form
+  base_route: entity.taxonomy_term.canonical
+  weight: 1
