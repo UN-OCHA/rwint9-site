@@ -19,6 +19,7 @@
  *   - value: simple, date, array with start and end date or list of tags
  *   - count: only for taglist - number of tags to display
  *   - sort: only for taglist - sort property for the tags
+ * - meta_attributes: meta information attributes.
  */
 
 #}
@@ -36,6 +37,7 @@
 
   {{ render_var({
     '#theme': 'reliefweb_entities_entity_meta',
+    '#attributes': meta_attributes,
     '#core': core,
     '#meta': meta,
   }) }}

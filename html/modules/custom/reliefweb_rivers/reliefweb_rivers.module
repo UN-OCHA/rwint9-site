@@ -132,6 +132,8 @@ function reliefweb_rivers_theme() {
         'results' => NULL,
         // The article entities to display.
         'entities' => [],
+        // Article attributes.
+        'article_attributes' => NULL,
         // View more link (optional) URL to the full river and link text.
         'more' => NULL,
         // Pager (optional). See "reliefweb_rivers_results" below.
@@ -161,6 +163,8 @@ function reliefweb_rivers_theme() {
         // The aricle entity's data as an associative array with id, bundle,
         // url, langcode, title etc.
         'entity' => NULL,
+        // Meta information attributes.
+        'meta_attributes' => NULL,
       ],
     ],
     'reliefweb_rivers_river_article_title' => [
