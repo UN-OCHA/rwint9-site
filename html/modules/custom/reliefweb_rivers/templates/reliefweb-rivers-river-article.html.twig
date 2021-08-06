@@ -19,6 +19,7 @@
  *   - bundle: entity bundle.
  *   - tags (optional): list of terms the entity is tagged with
  *   - various properties like posting date, status etc.
+ * - meta_attributes: meta information attributes.
  */
 
 #}
@@ -46,6 +47,7 @@
     <footer class="rw-river-article__footer">
       {{ render_var({
         '#theme': 'reliefweb_entities_entity_meta',
+        '#attributes': meta_attributes,
         '#meta': {
           'posted': {
             'type': 'date',

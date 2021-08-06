@@ -163,6 +163,8 @@ function reliefweb_rivers_theme() {
         // The aricle entity's data as an associative array with id, bundle,
         // url, langcode, title etc.
         'entity' => NULL,
+        // Meta information attributes.
+        'meta_attributes' => NULL,
       ],
     ],
     'reliefweb_rivers_river_article_title' => [
