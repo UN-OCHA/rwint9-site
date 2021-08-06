@@ -143,33 +143,27 @@ trait SectionedContentTrait {
     $ids = [];
     foreach ($links as $link) {
       if (isset($link['url']) && preg_match('#/node/(?<id>\d+)#', $link['url'], $match) === 1) {
-        $ids[] = (int) $match['id'];
+        $ids[] = $match['id'];
       }
     }
     if (empty($ids)) {
       return [];
     }
 
-    $bundle = $this->bundle();
-    $entity_id = $this->id();
-    $field_name = $bundle === 'country' ? 'primary_country' : $bundle;
+    // Apply the given limit.
+    $ids = array_slice($ids, 0, $limit);
+
+    // Build the query, boosting the ids to preserve the order.
+    $count = count($ids);
+    foreach ($ids as $index => $id) {
+      $ids[$index] .= '^' . (($count - $index) * 10);
+    }
 
     $payload = RiverServiceBase::getRiverApiPayload('report');
     $payload['fields']['exclude'][] = 'file.preview.url-thumb';
     $payload['fields']['include'][] = 'headline.summary';
-    $payload['filter'] = [
-      'conditions' => [
-        [
-          'field' => $field_name . '.id',
-          'value' => $entity_id,
-        ],
-        [
-          'field' => 'id',
-          'value' => $ids,
-        ],
-      ],
-      'operator' => 'AND',
-    ];
+    $payload['query']['value'] = 'id:' . implode(' OR id:', $ids);
+    $payload['sort'] = ['score:desc', 'date.created:desc'];
     $payload['limit'] = $limit;
 
     return [
@@ -179,7 +173,7 @@ trait SectionedContentTrait {
       // Link to the updates river for the entity.
       'more' => [
         'url' => RiverServiceBase::getRiverUrl('report', [
-          'advanced-search' => '(' . $code . $entity_id . ')',
+          'advanced-search' => '(' . $code . $this->id() . ')',
         ]),
         'label' => $this->t('View all @label Situation Reports', [
           '@label' => $this->label(),
@@ -203,33 +197,27 @@ trait SectionedContentTrait {
     $ids = [];
     foreach ($links as $link) {
       if (isset($link['url']) && preg_match('#/node/(?<id>\d+)#', $link['url'], $match) === 1) {
-        $ids[] = (int) $match['id'];
+        $ids[] = $match['id'];
       }
     }
     if (empty($ids)) {
       return [];
     }
 
-    $bundle = $this->bundle();
-    $entity_id = $this->id();
-    $field_name = $bundle === 'country' ? 'primary_country' : $bundle;
+    // Apply the given limit.
+    $ids = array_slice($ids, 0, $limit);
+
+    // Build the query, boosting the ids to preserve the order.
+    $count = count($ids);
+    foreach ($ids as $index => $id) {
+      $ids[$index] .= '^' . (($count - $index) * 10);
+    }
 
     $payload = RiverServiceBase::getRiverApiPayload('report');
     $payload['fields']['exclude'][] = 'file.preview.url-thumb';
     $payload['fields']['exclude'][] = 'body-html';
-    $payload['filter'] = [
-      'conditions' => [
-        [
-          'field' => $field_name . '.id',
-          'value' => $entity_id,
-        ],
-        [
-          'field' => 'id',
-          'value' => $ids,
-        ],
-      ],
-      'operator' => 'AND',
-    ];
+    $payload['query']['value'] = 'id:' . implode(' OR id:', $ids);
+    $payload['sort'] = ['score:desc', 'date.created:desc'];
     $payload['limit'] = $limit;
 
     return [
@@ -240,7 +228,7 @@ trait SectionedContentTrait {
       // Link to the updates river for the entity.
       'more' => [
         'url' => RiverServiceBase::getRiverUrl('report', [
-          'advanced-search' => '(' . $code . $entity_id . ')',
+          'advanced-search' => '(' . $code . $this->id() . ')',
         ]),
         'label' => $this->t('View all @label Appeals and Response Plans', [
           '@label' => $this->label(),

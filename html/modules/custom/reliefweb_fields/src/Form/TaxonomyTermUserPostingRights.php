@@ -6,9 +6,9 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\taxonomy\TermForm;
 
 /**
- * Taxonomy term profile form handler.
+ * Taxonomy term user posting rights form handler.
  */
-class TaxonomyTermProfile extends TermForm {
+class TaxonomyTermUserPostingRights extends TermForm {
 
   /**
    * {@inheritdoc}
@@ -24,9 +24,7 @@ class TaxonomyTermProfile extends TermForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    $this->entity->setRevisionLogMessage(strtr('!type profile update', [
-      '!type' => ucfirst($this->entity->bundle()),
-    ]));
+    $this->entity->setRevisionLogMessage('User posting rights update');
     parent::save($form, $form_state);
   }
 
@@ -34,9 +32,7 @@ class TaxonomyTermProfile extends TermForm {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $this->messenger()->addStatus($this->t('@type profile successfully updated.', [
-      '@type' => ucfirst($this->entity->bundle()),
-    ]));
+    $this->messenger()->addStatus($this->t('User posting rights successfully updated.'));
     parent::submitForm($form, $form_state);
   }
 

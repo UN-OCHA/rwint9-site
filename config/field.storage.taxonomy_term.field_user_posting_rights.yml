@@ -1,0 +1,19 @@
+uuid: 6b16000a-7ad0-4d73-a0cf-c8271f74dfd8
+langcode: en
+status: true
+dependencies:
+  module:
+    - reliefweb_fields
+    - taxonomy
+id: taxonomy_term.field_user_posting_rights
+field_name: field_user_posting_rights
+entity_type: taxonomy_term
+type: reliefweb_user_posting_rights
+settings: {  }
+module: reliefweb_fields
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -1,0 +1,21 @@
+uuid: 5ed08ec1-0944-4050-a6f4-f71ac5e2dddf
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_user_posting_rights
+    - taxonomy.vocabulary.source
+  module:
+    - reliefweb_fields
+id: taxonomy_term.source.field_user_posting_rights
+field_name: field_user_posting_rights
+entity_type: taxonomy_term
+bundle: source
+label: 'User posting rights'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: reliefweb_user_posting_rights

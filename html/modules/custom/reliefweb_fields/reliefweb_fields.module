@@ -7,12 +7,14 @@
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\reliefweb_fields\Plugin\Field\FieldWidget\ReliefWebLinks;
+use Drupal\reliefweb_fields\Plugin\Field\FieldWidget\ReliefWebUserPostingRights;
 
 /**
  * Implements hook_entity_type_build().
  */
 function reliefweb_fields_entity_type_build(array &$entity_types) {
   $entity_types['taxonomy_term']->setFormClass('profile', 'Drupal\reliefweb_fields\Form\TaxonomyTermProfile');
+  $entity_types['taxonomy_term']->setFormClass('user_posting_rights', 'Drupal\reliefweb_fields\Form\TaxonomyTermUserPostingRights');
 }
 
 /**
@@ -27,4 +29,18 @@ function reliefweb_fields_node_update(EntityInterface $entity) {
  */
 function reliefweb_fields_node_delete(EntityInterface $entity) {
   ReliefWebLinks::updateFields('delete', $entity);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update() for users.
+ */
+function reliefweb_fields_user_update(EntityInterface $entity) {
+  ReliefWebUserPostingRights::updateFields('update', $entity);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_delete() for nodes.
+ */
+function reliefweb_fields_user_delete(EntityInterface $entity) {
+  ReliefWebUserPostingRights::updateFields('delete', $entity);
 }

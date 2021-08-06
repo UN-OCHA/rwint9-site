@@ -467,11 +467,7 @@ class ReliefWebLinks extends WidgetBase implements ContainerFactoryPluginInterfa
 
           if (!empty($settings['internal'])) {
             // Store the prepared link data.
-            $field_map[$entity_type_id][$field_name] = [
-              'url' => $link['url'],
-              'title' => $link['title'],
-              'image' => !empty($settings['use_cover']) ? $link['image'] : '',
-            ];
+            $field_map[$entity_type_id][$field_name] = $instance;
           }
         }
       }
@@ -487,8 +483,31 @@ class ReliefWebLinks extends WidgetBase implements ContainerFactoryPluginInterfa
       $storage = $entity_type_manager->getStorage($entity_type_id);
 
       $entities = [];
-      foreach ($field_list as $field_name => $link) {
-        foreach ($storage->loadByProperties([$field_name . '.' . 'url' => $url]) as $entity) {
+      foreach ($field_list as $field_name => $instance) {
+        $settings = $instance->getSettings();
+
+        // Link data.
+        $data = [
+          'url' => $link['url'],
+          'title' => $link['title'],
+          'image' => !empty($settings['use_cover']) ? $link['image'] : '',
+        ];
+
+        // Retrieve the ids of the entities referencing the node.
+        $ids = $storage
+          ->getQuery()
+          ->condition($field_name . '.url', $url, '=')
+          // This is a system update so the results should not be limited to
+          // what the current user has access to.
+          ->accessCheck(FALSE)
+          ->execute();
+
+        if (empty($ids)) {
+          continue;
+        }
+
+        // Update the entities.
+        foreach ($storage->loadMultiple($ids) as $entity) {
           $field = $entity->get($field_name);
           $items = $field->getValue();
           $changed = FALSE;
@@ -500,8 +519,8 @@ class ReliefWebLinks extends WidgetBase implements ContainerFactoryPluginInterfa
                 unset($items[$delta]);
                 $changed = TRUE;
               }
-              elseif ($link['title'] !== $item['title'] || $link['image'] !== $item['image']) {
-                $items[$delta] = array_merge($item, $link);
+              elseif ($data['title'] !== $item['title'] || $data['image'] !== $item['image']) {
+                $items[$delta] = array_merge($item, $data);
                 $changed = TRUE;
               }
             }
@@ -510,7 +529,7 @@ class ReliefWebLinks extends WidgetBase implements ContainerFactoryPluginInterfa
           if ($changed) {
             $field->setValue(array_values($items));
             $entities[$entity->id()]['entity'] = $entity;
-            $entities[$entity->id()]['fields'][] = $field_name;
+            $entities[$entity->id()]['fields'][$field_name] = $instance;
           }
         }
       }
@@ -518,10 +537,13 @@ class ReliefWebLinks extends WidgetBase implements ContainerFactoryPluginInterfa
       // Update the entities.
       foreach ($entities as $data) {
         $entity = $data['entity'];
-        $fields = $data['fields'];
+        $fields = array_map(function ($instance) {
+          return $instance->getLabel();
+        }, $data['fields']);
 
-        // Set the revision log.
-        $entity->setRevisionLogMessage(strtr('Automatic update of !fields !plural due to changes to node #!nodeid.', [
+        // Set the revision log. Not using `t` as it's an editorial message
+        // that should always be in English.
+        $entity->setRevisionLogMessage(strtr('Automatic update of the !fields !plural due to changes to node #!nodeid.', [
           '!fields' => implode(', ', $fields),
           '!plural' => count($fields) > 1 ? 'fields' : 'field',
           '!nodeid' => $node->id(),

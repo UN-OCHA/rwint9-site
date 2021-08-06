@@ -91,6 +91,10 @@ process:
     plugin: skip_on_empty
     method: process
     source: field_spanish_name/0/value
+  field_user_posting_rights:
+    plugin: skip_on_empty
+    method: process
+    source: field_user_posting_rights
 migration_dependencies:
   required:
     - reliefweb_taxonomy_term

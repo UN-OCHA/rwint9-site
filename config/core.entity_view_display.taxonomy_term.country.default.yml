@@ -18,13 +18,9 @@ id: taxonomy_term.country.default
 targetEntityType: taxonomy_term
 bundle: country
 mode: default
-content:
-  content_moderation_control:
-    weight: 0
-    region: content
-    settings: {  }
-    third_party_settings: {  }
+content: {  }
 hidden:
+  content_moderation_control: true
   description: true
   field_aliases: true
   field_appeals_response_plans: true
