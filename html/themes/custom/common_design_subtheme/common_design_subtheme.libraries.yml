@@ -2,6 +2,8 @@ global-styling:
   css:
     theme:
       css/styles.css: {}
+  dependencies:
+    - common_design_subtheme/rw-form
 
 # RW custom components
 
@@ -113,6 +115,11 @@ rw-key-content:
   css:
     theme:
       components/rw-key-content/rw-key-content.css: {}
+
+rw-local-tasks:
+  css:
+    theme:
+      components/rw-local-tasks/rw-local-tasks.css: {}
 
 rw-key-figures:
   css:
