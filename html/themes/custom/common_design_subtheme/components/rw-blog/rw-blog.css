@@ -14,6 +14,19 @@
   display: block;
 }
 
+.rw-river--latest-blog-posts h2 {
+  padding-left: 8px;
+  border-left: 8px solid #0988bb;
+}
+
+.rw-river-article--blog-post {
+  padding: 12px 0;
+}
+
+.rw-river-article--blog-post header + footer {
+  padding-top: 0;
+}
+
 /**
  * Blog river.
  *
