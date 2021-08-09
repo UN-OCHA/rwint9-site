@@ -20,8 +20,7 @@
     overflow: hidden;
     clip: rect(0, 174px, 124px, 0);
     width: 174px;
-    /* Reset max-height from the base.css. */
-    max-height: none;
+    /*max-height: 118px;*/
     margin: 0;
   }
   .rw-river--maps-infographics article .rw-river-article__content p {
@@ -52,7 +51,7 @@
       min-height: auto;
       padding-left: 0;
     }
-    .rw-river--maps-infographics article .content {
+    .rw-river--maps-infographics article .rw-river-article__content {
       display: none;
     }
   }
@@ -91,7 +90,7 @@
       left: 0;
       clip: auto;
       width: 100%;
-      margin: 0;
+      margin: 2px 20px 0 0;
     }
     .rw-river--maps-infographics article .rw-river-article__content:after {
       top: 0;
