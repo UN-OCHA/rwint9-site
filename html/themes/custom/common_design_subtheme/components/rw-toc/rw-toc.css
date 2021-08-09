@@ -44,6 +44,7 @@
     max-height: 100vh;
     padding: 32px 16px 0 0;
     border-bottom: none;
+    margin-bottom: 2rem; /* Matches main element bottom margin */
   }
   .rw-sectioned-content .rw-toc ~ section {
     padding-top: 32px;
@@ -172,6 +173,12 @@
 @media screen and (min-width: 768px) {
   .js .rw-toc {
     --dropdown: false;
+  }
+}
+
+@media screen and (min-width: 1024px) {
+  .rw-toc {
+    margin-bottom: 4rem; /* Matches main element bottom margin */
   }
 }
 
