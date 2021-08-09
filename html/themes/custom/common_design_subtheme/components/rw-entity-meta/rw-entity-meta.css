@@ -99,10 +99,6 @@
   /* #2e3436 with 0.85 opacity on white. */
   color: #4d5254;
 }
-.rw-entity-details dl.rw-entity-meta.rw-article-meta dt {
-  display: block;
-  margin: 16px 0 0 0;
-}
 .rw-river dl.rw-entity-meta.rw-article-meta dd:after {
   display: inline-block;
   width: 4px;
