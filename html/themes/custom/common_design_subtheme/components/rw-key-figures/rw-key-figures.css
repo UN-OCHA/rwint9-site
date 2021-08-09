@@ -88,6 +88,13 @@
   color: inherit;
 }
 
+.rw-key-figures__links a {
+  display: block;
+}
+.rw-key-figures__links a + a {
+  margin-top: 16px;
+}
+
 /* Media queries. */
 @media screen {
   .rw-key-figures ul {

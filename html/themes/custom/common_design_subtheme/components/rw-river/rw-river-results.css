@@ -10,7 +10,7 @@
 }
 
 @media all and (min-width: 768px) {
-  section.rw-river-page .rw-river-results {
+  .rw-river-results {
     padding: 13px 0;
     text-align: left;
     border-bottom: 1px solid #e6ecef;
