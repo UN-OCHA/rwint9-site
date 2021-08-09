@@ -107,9 +107,9 @@ class SearchResults extends ControllerBase {
           '#results' => [
             // @todo create helper that properly format plural AND format the
             // number.
-            '#markup' => $this->formatPlural($total, '1 entry found', '@total entries found', [
+            '#markup' => '<p>' . $this->formatPlural($total, '1 entry found', '@total entries found', [
               '@total' => number_format($total),
-            ]),
+            ]) . '</p>',
           ],
           '#resource' => $query['resource'],
           '#entities' => $entities,
