@@ -34,6 +34,10 @@
   font-size: 15px;
   font-style: italic;
 }
+.rw-river-page--blog .rw-river-results {
+  text-align: center;
+  border-bottom: none;
+}
 
 @media screen and (min-width: 768px) {
   .rw-river-page--blog .rw-river-page--blog {
@@ -57,3 +61,8 @@
     border-top: none;
   }
 }
+
+
+
+
+
