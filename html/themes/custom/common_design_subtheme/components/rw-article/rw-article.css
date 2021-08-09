@@ -61,6 +61,8 @@
 /* Article with a thumbnail preview (typically Map and Infographic). */
 .rw-river-article .rw-river-article__content img {
   float: left;
+  max-height: 118px;
+  margin: 2px 20px 0 0;
   border: 1px solid #e6ecef;
 }
 .rw-river-article .rw-river-article__content img + p {

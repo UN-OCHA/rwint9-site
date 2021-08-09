@@ -1,7 +1,7 @@
 /**
  * Maps and Infographics.
  *
- * Section with the maps and inforgraphics for the countries/disasters/sources.
+ * Section with the maps and infographics for the countries/disasters/sources.
  */
 @supports (display: grid) {
   .rw-river--maps-infographics article {
@@ -20,7 +20,7 @@
     overflow: hidden;
     clip: rect(0, 174px, 124px, 0);
     width: 174px;
-    /* max-height: 118px; */
+    max-height: none;
     margin: 0;
   }
   .rw-river--maps-infographics article .rw-river-article__content p {
