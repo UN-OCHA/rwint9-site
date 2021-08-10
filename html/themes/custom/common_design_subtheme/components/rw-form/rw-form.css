@@ -283,3 +283,163 @@ form button.form-actions {
 form .messages + * {
   margin-top: 12px;
 }
+
+/**
+ * List of checkboxes/radios.
+ *
+ * Display checkboxes and radios inline.
+ */
+form .form-checkboxes,
+form .form-radios {
+  /* Compensate for the padding around the checkbox and radio wrapper. */
+  margin: -4px 0;
+}
+form .form-checkboxes .form-type-checkbox,
+form .form-radios .form-type-radio {
+  display: inline-block;
+  margin-right: 24px;
+  margin-top: 0;
+}
+
+/**
+ * Details fieldset.
+ *
+ * Display the checkboxes and radios one per line instead of inline as there
+ * are often lots of choices and this improves readability. On large screens
+ * we display them in 2 or 3 columns.
+ */
+form fieldset.details .form-checkboxes .form-item,
+form fieldset.details .form-radios .form-item {
+  display: block;
+  margin-right: 0;
+  margin-top: 0;
+}
+@media screen and (min-width : 768px) {
+  form fieldset.details .form-checkboxes,
+  form fieldset.details .form-radios {
+    column-count: 2;
+  }
+  form fieldset.details .form-checkboxes .form-item,
+  form fieldset.details .form-radios .form-item {
+    display: inline-block;
+    width: 100%;
+  }
+}
+@media screen and (min-width : 1024px) {
+  form fieldset.details .form-checkboxes,
+  form fieldset.details .form-radios {
+    column-count: 3;
+  }
+}
+
+/**
+ * Specific fields.
+ */
+form .text-summary-wrapper {
+  display: none;
+}
+form .book-outline-form > div {
+  margin-bottom: 8px;
+}
+form > #actions legend + .form-type-checkbox {
+  margin-bottom: 24px;
+}
+form #legal {
+  text-align: center;
+}
+form #legal .form-item-legal {
+  margin-top: 0;
+}
+form .field-type-file .form-type-managed-file > label {
+  display: none;
+}
+form .field-widget-date-select .fieldset-content label,
+form .field-widget-date-select .fieldset-content div {
+  display: inline-block;
+  margin: 0;
+  font-weight: normal;
+}
+form .field-widget-date-select .fieldset-content div.form-type-select {
+  margin: 6px 12px 0 0;
+}
+form .field-widget-date-select .fieldset-content div.form-type-select:last-child {
+  margin: 0;
+}
+form .age-textfield {
+  display: none;
+}
+form .user-posts-links.form-wrapper:first-child {
+  padding-top: 8px;
+  text-align: center;
+}
+form #edit-organization .form-type-checkbox,
+form #edit-organization .form-type-radio {
+  display: block;
+  margin-right: 0;
+}
+form #edit-organization #edit-field-source-allowed .form-item:last-child {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 2px dotted #e6ecef;
+}
+
+/**
+ * Disaster status.
+ */
+form [autocomplete-processed] [data-status] {
+  border-left: 8px solid white;
+}
+form [autocomplete-processed] div[data-status] {
+  padding-left: 8px;
+}
+form [autocomplete-processed] div[data-status$="-archive"] {
+  /* Base dark grey with 0.8 opacity on white. */
+  color: #575c5e;
+  font-style: italic;
+  text-decoration: line-through;
+}
+form [autocomplete-processed] [data-status="draft"] {
+  border-color: #d9d9d9;
+}
+form [autocomplete-processed] [data-status="pending"],
+form [autocomplete-processed] [data-status="embargoed"],
+form [autocomplete-processed] [data-status="external-archive"] {
+  border-color: #56c9f7;
+}
+form [autocomplete-processed] [data-status="on-hold"],
+form [autocomplete-processed] [data-status="alert"],
+form [autocomplete-processed] [data-status="inactive"] {
+  border-color: #f49e2c;
+}
+form [autocomplete-processed] [data-status="to-review"],
+form [autocomplete-processed] [data-status="external"] {
+  border-color: #076d96;
+}
+form [autocomplete-processed] [data-status="published"],
+form [autocomplete-processed] [data-status="past"],
+form [autocomplete-processed] [data-status="active"],
+form [autocomplete-processed] [data-status="normal"] {
+  border-color: #88bb09;
+}
+form [autocomplete-processed] [data-status="refused"],
+form [autocomplete-processed] [data-status="blocked"],
+form [autocomplete-processed] [data-status="current"],
+form [autocomplete-processed] [data-status="ongoing"] {
+  border-color: #da190b;
+}
+form [autocomplete-processed] [data-status="expired"],
+form [autocomplete-processed] [data-status="archive"],
+form [autocomplete-processed] [data-status="alert-archive"] {
+  border-color: #9509bb;
+}
+form [autocomplete-processed] [data-status="draft-archive"] {
+  border-color: #4b4b4b;
+}
+form [autocomplete-processed] [data-status="duplicate"],
+form [autocomplete-processed] [data-status="monitoring-archive"] {
+  border-color: #8f5507;
+}
+form [autocomplete-processed] [data-status="monitoring"],
+form [autocomplete-processed] [data-status="reference"] {
+  border-color: #f5cb2f;
+}
