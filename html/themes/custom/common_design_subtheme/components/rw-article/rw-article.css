@@ -29,15 +29,15 @@
   border-bottom: 1px solid #e6ecef;
 }
 .rw-river-article:last-child {
-  border-bottom: none;
   padding-bottom: 0;
+  border-bottom: none;
 }
 .rw-river-article:only-child {
   padding-bottom: 0;
 }
 .rw-river-article header {
   /* Compensate the half-leading space from the title line-height. */
-  /*margin-top: -5px;*/
+  /* margin-top: -5px; */
 }
 .rw-river-article header p.rw-entity-country-slug {
   margin: 2px 6px 0 0;
@@ -86,7 +86,7 @@
   /* Clear any floating from the content. */
   clear: both;
   /* Compensate  the half-leading space added by the line-height of the <dl>. */
-  /*margin-bottom: -8px;*/
+  /* margin-bottom: -8px; */
   padding-top: 16px;
 }
 .rw-river-article header + footer {
