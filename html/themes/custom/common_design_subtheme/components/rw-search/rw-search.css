@@ -101,6 +101,11 @@
   }
 }
 
-.rw-search-results .rw-river-article:first-child {
+.rw-search-results .rw-river-search {
+  border-bottom: none;
+}
+.rw-search-results .rw-river__articles {
   border-top: 1px solid #e6ecef;
+  padding-top: 24px;
+  margin-top: 8px;
 }
