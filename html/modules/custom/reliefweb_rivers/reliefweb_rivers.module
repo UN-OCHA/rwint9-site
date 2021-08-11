@@ -212,6 +212,22 @@ function reliefweb_rivers_theme() {
         'groups' => [],
       ],
     ],
+    'reliefweb_rivers_search_results' => [
+      'variables' => [
+        // Page title.
+        'title' => t('Search Results'),
+        // Title attributes.
+        'title_attributes' => NULL,
+        // Render array. See "reliefweb_rivers_search" below.
+        'search' => NULL,
+        // Associative array with the type of resources as keys and the
+        // total of resources matching the search query and river title
+        // as values.
+        'totals' => [],
+        // List of sections constituing the page's content.
+        'sections' => [],
+      ],
+    ],
   ];
 
   // Add themes for the main river articles.
