@@ -29,7 +29,7 @@
   .addClass([
     'rw-river',
     'rw-river--' ~ id,
-    'rw-river--type-' ~ resource|clean_class,
+    'rw-river--type-' ~ resource|clean_class
   ])
 }}>
   <h{{ level }}{{ title_attributes.addClass([
@@ -39,7 +39,9 @@
   {% if entities is not empty %}
     {{ results }}
 
-    <div class="rw-river__articles">
+    <div{{ river_attributes.addClass([
+      'rw-river__articles',
+      ]) }}>
       {% for entity in entities %}
         {{ render_var({
           '#theme': 'reliefweb_rivers_river_article__' ~ entity.bundle,

@@ -20,7 +20,7 @@ function reliefweb_rivers_theme() {
         'attributes' => NULL,
         // The river title.
         'title' => '',
-        // River attributes.
+        // Title attributes.
         'title_attributes' => NULL,
         // Render array. See "reliefweb_rivers_views" below.
         'views' => [],
@@ -128,6 +128,8 @@ function reliefweb_rivers_theme() {
         'title' => t('List'),
         // Title attributes.
         'title_attributes' => NULL,
+        // River attributes.
+        'river_attributes' => NULL,
         // Results (optional). See "reliefweb_rivers_results" below.
         'results' => NULL,
         // The article entities to display.
