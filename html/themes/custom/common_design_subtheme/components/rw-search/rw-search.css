@@ -101,8 +101,11 @@
   }
 }
 
+/* Search Results page */
 .rw-search-results .rw-river-search {
   border-bottom: none;
+  padding-bottom: 0;
+  margin: 0;
 }
 .rw-search-results .rw-river__articles {
   border-top: 1px solid #e6ecef;
