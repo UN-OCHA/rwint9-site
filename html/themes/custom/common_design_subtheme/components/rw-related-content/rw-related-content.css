@@ -2,10 +2,6 @@
  * Related content.
  *
  * List of documents related to the main document.
- *
- * Id: .rw-river--type-reports
- *
- * Scope: .rw-document + .rw-river--type-reports
  */
 .rw-document + .rw-river--type-reports {
   margin: 0;
@@ -13,8 +9,10 @@
   border-top: 1px solid #e6ecef;
 }
 .rw-document + .rw-river--type-reports h2 {
-  margin: 0 0 8px 0;
+  /*margin: 0 0 8px 0;*/
   font-size: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eb1405;
 }
 .rw-document + .rw-river--type-reports .rw-river__articles {
   display: flex;
@@ -33,10 +31,14 @@
   }
   .rw-document + .rw-river--type-reports .rw-river__articles article {
     flex: 1 0 40%;
-    margin: 0 16px;
+    margin-left: 16px;
+    margin-right: 16px;
   }
-  #main-content .rw-document + .rw-river--type-reports .rw-river__articles article:nth-child(-n+2) {
-    border-top: none;
+  .rw-document + .rw-river--type-reports .rw-river__articles article:nth-last-child(2) {
+    border-bottom: none;
+  }
+  .rw-document + .rw-river--type-reports .rw-river__articles article:nth-child(2) {
+    margin-top: 0; /* Compensate for cd-flow top margin */
   }
 }
 .rw-document + .rw-river--type-reports .rw-river__articles article footer {

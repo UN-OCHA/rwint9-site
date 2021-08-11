@@ -46,11 +46,10 @@
     border-bottom: none;
     margin-bottom: 2rem; /* Matches main element bottom margin */
   }
-  .rw-sectioned-content .rw-toc ~ section {
-    padding-top: 32px;
-    padding-bottom: 32px;
-    border-bottom: 1px solid #e6ecef;
-  }
+  /*.rw-sectioned-content .rw-toc ~ section {*/
+  /*  padding-top: 32px;*/
+  /*  padding-bottom: 32px;*/
+  /*}*/
   .rw-toc ~ section,
   .rw-toc ~ article,
   .rw-toc ~ fieldset,

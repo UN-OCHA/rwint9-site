@@ -20,7 +20,11 @@
 }
 
 .rw-river-article--blog-post {
-  padding: 12px 0;
+  --cd-flow-space: 12px;
+  padding: 0 0 12px;
+}
+.rw-river-article--blog-post:last-child {
+  padding-bottom: 0;
 }
 
 .rw-river-article--blog-post header + footer {
@@ -50,6 +54,7 @@
 .rw-river-page--blog .rw-river-results {
   text-align: center;
   border-bottom: none;
+  padding-top: 0;
 }
 
 @media screen and (min-width: 768px) {

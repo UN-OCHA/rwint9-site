@@ -9,7 +9,7 @@
 }
 .rw-river--key-content article.rw-river-article--with-preview .rw-river-article__content img {
   position: absolute;
-  top: 32px;
+  top: 0;
   left: 8px;
   overflow: hidden;
   clip: rect(0, 124px, 154px, 0);
@@ -20,7 +20,7 @@
 }
 .rw-river--key-content article.rw-river-article--with-preview .rw-river-article__content:after {
   position: absolute;
-  top: 24px;
+  top: 0;
   left: 0;
   width: 140px;
   height: 170px;
