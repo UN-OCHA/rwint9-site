@@ -100,3 +100,7 @@
     background: var(--rw-icons--search--search--26--white);
   }
 }
+
+.rw-search-results .rw-river-article:first-child {
+  border-top: 1px solid #e6ecef;
+}
