@@ -42,14 +42,14 @@
     overflow-y: auto;
     width: 20%;
     max-height: 100vh;
+    margin-bottom: 2rem; /* Matches main element bottom margin */
     padding: 32px 16px 0 0;
     border-bottom: none;
-    margin-bottom: 2rem; /* Matches main element bottom margin */
   }
-  /*.rw-sectioned-content .rw-toc ~ section {*/
-  /*  padding-top: 32px;*/
-  /*  padding-bottom: 32px;*/
-  /*}*/
+  /* .rw-sectioned-content .rw-toc ~ section { */
+  /*  padding-top: 32px; */
+  /*  padding-bottom: 32px; */
+  /* } */
   .rw-toc ~ section,
   .rw-toc ~ article,
   .rw-toc ~ fieldset,

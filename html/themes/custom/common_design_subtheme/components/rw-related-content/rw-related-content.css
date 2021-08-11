@@ -9,10 +9,10 @@
   border-top: 1px solid #e6ecef;
 }
 .rw-document + .rw-river--type-reports h2 {
-  /*margin: 0 0 8px 0;*/
-  font-size: 24px;
   padding-bottom: 12px;
   border-bottom: 1px solid #eb1405;
+  /* margin: 0 0 8px 0; */
+  font-size: 24px;
 }
 .rw-document + .rw-river--type-reports .rw-river__articles {
   display: flex;
@@ -31,8 +31,8 @@
   }
   .rw-document + .rw-river--type-reports .rw-river__articles article {
     flex: 1 0 40%;
-    margin-left: 16px;
     margin-right: 16px;
+    margin-left: 16px;
   }
   .rw-document + .rw-river--type-reports .rw-river__articles article:nth-last-child(2) {
     border-bottom: none;

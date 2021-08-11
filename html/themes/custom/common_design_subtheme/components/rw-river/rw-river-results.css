@@ -22,10 +22,10 @@
   text-align: center;
 }
 .rw-search-results__totals ul {
-  list-style: none;
   display: inline-block;
-  padding: 0;
   margin: 0;
+  padding: 0;
+  list-style: none;
 }
 .rw-search-results__totals li {
   float: left;
@@ -36,16 +36,16 @@
   padding: 12px 24px;
   border-radius: 6px;
   background: #e6ecef;
-  font-weight: bold;
   font-size: 17px;
+  font-weight: bold;
 }
 .rw-search-results__totals li:last-child {
   margin-right: 0;
 }
 .rw-search-results section > h2 {
+  margin-bottom: 16px;
   padding-left: 8px;
   border-left: 8px solid #0988bb;
-  margin-bottom: 16px;
 }
 .rw-search-results section > h2 + p {
   margin: 0 0 8px 0;

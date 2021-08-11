@@ -21,6 +21,7 @@
 
 .rw-river-article--blog-post {
   --cd-flow-space: 12px;
+
   padding: 0 0 12px;
 }
 .rw-river-article--blog-post:last-child {
@@ -52,9 +53,9 @@
   font-style: italic;
 }
 .rw-river-page--blog .rw-river-results {
+  padding-top: 0;
   text-align: center;
   border-bottom: none;
-  padding-top: 0;
 }
 
 @media screen and (min-width: 768px) {
