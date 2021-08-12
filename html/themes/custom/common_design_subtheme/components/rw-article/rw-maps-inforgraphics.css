@@ -37,6 +37,7 @@
     border: 8px solid #e6ecef;
     background: linear-gradient(rgba(230, 236, 239, 0) 50%, rgba(230, 236, 239, 0.8));
   }
+
   @media screen and (max-width: 479px) {
     .rw-river--maps-infographics article {
       min-height: auto;
