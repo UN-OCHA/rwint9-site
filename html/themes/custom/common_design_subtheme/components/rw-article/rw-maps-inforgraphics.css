@@ -36,16 +36,6 @@
     border: 8px solid #e6ecef;
     background: linear-gradient(rgba(230, 236, 239, 0) 50%, rgba(230, 236, 239, 0.8));
   }
-  .rw-river--maps-infographics article dl.rw-entity-meta--core dd {
-    display: inline;
-  }
-  .rw-river--maps-infographics article dl.rw-entity-meta--core dd:after {
-    display: block;
-    width: 0;
-    height: 0;
-    margin: 0;
-  }
-
   @media screen and (max-width: 479px) {
     .rw-river--maps-infographics article {
       min-height: auto;
