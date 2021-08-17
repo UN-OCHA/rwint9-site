@@ -89,10 +89,12 @@
 }
 
 .rw-key-figures__links a {
-  display: block;
+  display: inline;
 }
-.rw-key-figures__links a + a {
+.rw-key-figures__links a + a:before {
+  display: block;
   margin-top: 16px;
+  content: "";
 }
 
 /* Media queries. */
