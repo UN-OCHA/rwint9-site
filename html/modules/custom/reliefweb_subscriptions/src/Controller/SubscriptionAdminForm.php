@@ -67,7 +67,7 @@ class SubscriptionAdminForm extends ControllerBase {
     $query = $this->database->select('reliefweb_subscriptions_logs', 'l');
     $query->fields('l', ['sid', 'last', 'next']);
     $result = $query->execute();
-    $logs = !empty($result) ? $result->fetchAllAssoc('sid') : [];
+    $logs = !empty($result) ? $result->fetchAllAssoc('sid', \PDO::FETCH_ASSOC) : [];
 
     // Get number of subscribers per subscription.
     $query = $this->database->select('reliefweb_subscriptions_subscriptions', 's');
