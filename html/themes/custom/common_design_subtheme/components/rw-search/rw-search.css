@@ -104,3 +104,52 @@
 .rw-search-results .rw-river-article:first-child {
   border-top: 1px solid #e6ecef;
 }
+
+.rw-search-results__totals {
+  width: 100%;
+  text-align: center;
+}
+.rw-search-results__totals ul {
+  display: inline-block;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rw-search-results__totals li {
+  float: left;
+  margin: 8px;
+}
+.rw-search-results__totals li a {
+  display: block;
+  padding: 12px 24px;
+  border-radius: 6px;
+  background: #e6ecef;
+  font-size: 17px;
+  font-weight: bold;
+}
+.rw-search-results__totals li:last-child {
+  margin-right: 0;
+}
+.rw-search-results .rw-river__title {
+  margin-bottom: 16px;
+  padding-left: 8px;
+  border-left: 8px solid #0988bb;
+}
+.rw-search-results .rw-river__title + p {
+  margin: 0 0 8px 0;
+}
+.rw-search-results .rw-river {
+  margin-top: 32px;
+  border-bottom: 1px solid #e6ecef;
+  padding-bottom: 32px;
+}
+.rw-search-results .rw-river + .rw-river {
+  margin-top: 56px;
+}
+.rw-search-results .rw-river:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.rw-search-results h3 {
+  margin: 0 0 8px 0;
+}
