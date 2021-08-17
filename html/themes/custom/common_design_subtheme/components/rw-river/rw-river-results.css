@@ -10,7 +10,7 @@
 }
 
 @media all and (min-width: 768px) {
-  section.rw-river-page .rw-river-results {
+  .rw-river-results {
     padding: 13px 0;
     text-align: left;
     border-bottom: 1px solid #e6ecef;
@@ -22,10 +22,10 @@
   text-align: center;
 }
 .rw-search-results__totals ul {
-  list-style: none;
   display: inline-block;
-  padding: 0;
   margin: 0;
+  padding: 0;
+  list-style: none;
 }
 .rw-search-results__totals li {
   float: left;
@@ -36,22 +36,31 @@
   padding: 12px 24px;
   border-radius: 6px;
   background: #e6ecef;
-  font-weight: bold;
   font-size: 17px;
+  font-weight: bold;
 }
 .rw-search-results__totals li:last-child {
   margin-right: 0;
 }
-.rw-search-results section > h2 {
+.rw-search-results .rw-river__title {
+  margin-bottom: 16px;
   padding-left: 8px;
   border-left: 8px solid #0988bb;
-  margin-bottom: 16px;
 }
-.rw-search-results section > h2 + p {
+.rw-search-results .rw-river__title + p {
   margin: 0 0 8px 0;
 }
-.rw-search-results section + section {
-  margin-top: 24px;
+.rw-search-results .rw-river {
+  margin-top: 32px;
+  border-bottom: 1px solid #e6ecef;
+  padding-bottom: 32px;
+}
+.rw-search-results .rw-river + .rw-river {
+  margin-top: 56px;
+}
+.rw-search-results .rw-river:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 .rw-search-results h3 {
   margin: 0 0 8px 0;

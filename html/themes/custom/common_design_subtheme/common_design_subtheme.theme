@@ -49,6 +49,12 @@ function common_design_subtheme_preprocess_page(&$variables) {
   if ($route_name === 'entity.taxonomy_term.canonical') {
     $term = common_design_subtheme_get_entity_from_route('taxonomy_term');
   }
+  // Remove the page title block from the search results page.
+  elseif ($route_name === 'reliefweb_rivers.search.results') {
+    common_design_hide_rendered_blocks_from_page($variables, [
+      'page_title_block',
+    ]);
+  }
   // Remove the page title block on river pages.
   elseif (preg_match('#^reliefweb_rivers\.[^\.]+\.river$#', $route_name) === 1) {
     common_design_hide_rendered_blocks_from_page($variables, [
