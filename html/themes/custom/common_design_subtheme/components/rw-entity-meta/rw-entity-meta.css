@@ -48,6 +48,33 @@
   content: " + ";
 }
 
+/**
+ * Content format.
+ *
+ * Display an icon in front of the content format.
+ */
+.rw-entity-meta dd.rw-entity-meta__tag-value--format:before {
+  display: inline-block;
+  overflow: hidden;
+  width: 16px;
+  height: 16px;
+  /* The top margin is to have a better vertical alignment. */
+  margin: -2px 6px 0 0;
+  content: "";
+  vertical-align: middle;
+  background: var(--rw-icons--content--report--16--dark-grey);
+}
+.rw-entity-meta dd.rw-entity-meta__tag-value--format.map:before {
+  background: var(--rw-icons--content--map--16--dark-grey);
+}
+.rw-entity-meta dd.rw-entity-meta__tag-value--format.infographic:before {
+  background: var(--rw-icons--content--infographic--16--dark-grey);
+}
+.rw-entity-meta dd.rw-entity-meta__tag-value--format.interactive:before {
+  background: var(--rw-icons--content--interactive--16--dark-grey);
+}
+
+/* Meta core styles */
 .rw-entity-meta--core dt {
   display: inline;
   float: left;
@@ -141,28 +168,8 @@ dl.rw-entity-meta--stacked.rw-entity-meta dd:after {
   content: none;
 }
 
-/**
- * Content format.
- *
- * Display an icon in front of the content format.
- */
-.rw-entity-meta dd.rw-entity-meta__tag-value--format:before {
-  display: inline-block;
-  overflow: hidden;
-  width: 16px;
-  height: 16px;
-  /* The top margin is to have a better vertical alignment. */
-  margin: -2px 6px 0 0;
-  content: "";
-  vertical-align: middle;
-  background: var(--rw-icons--content--report--16--dark-grey);
-}
-.rw-entity-meta dd.rw-entity-meta__tag-value--format.map:before {
-  background: var(--rw-icons--content--map--16--dark-grey);
-}
-.rw-entity-meta dd.rw-entity-meta__tag-value--format.infographic:before {
-  background: var(--rw-icons--content--infographic--16--dark-grey);
-}
-.rw-entity-meta dd.rw-entity-meta__tag-value--format.interactive:before {
-  background: var(--rw-icons--content--interactive--16--dark-grey);
+/* Organization Details */
+.rw-entity-details .rw-entity-meta dt {
+  float: left;
+  margin: 0 4px 0 0;
 }
