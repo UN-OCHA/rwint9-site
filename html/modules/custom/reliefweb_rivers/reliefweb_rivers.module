@@ -132,6 +132,8 @@ function reliefweb_rivers_theme() {
         'results' => NULL,
         // The article entities to display.
         'entities' => [],
+        // Article attributes.
+        'article_attributes' => NULL,
         // View more link (optional) URL to the full river and link text.
         'more' => NULL,
         // Pager (optional). See "reliefweb_rivers_results" below.
@@ -161,6 +163,8 @@ function reliefweb_rivers_theme() {
         // The aricle entity's data as an associative array with id, bundle,
         // url, langcode, title etc.
         'entity' => NULL,
+        // Meta information attributes.
+        'meta_attributes' => NULL,
       ],
     ],
     'reliefweb_rivers_river_article_title' => [
@@ -206,6 +210,22 @@ function reliefweb_rivers_theme() {
         // - status: country status (ongoing for humanitarian situations
         // - url: url to the country page.
         'groups' => [],
+      ],
+    ],
+    'reliefweb_rivers_search_results' => [
+      'variables' => [
+        // Page title.
+        'title' => t('Search Results'),
+        // Title attributes.
+        'title_attributes' => NULL,
+        // Render array. See "reliefweb_rivers_search" below.
+        'search' => NULL,
+        // Associative array with the type of resources as keys and the
+        // total of resources matching the search query and river title
+        // as values.
+        'totals' => [],
+        // List of sections constituing the page's content.
+        'sections' => [],
       ],
     ],
   ];

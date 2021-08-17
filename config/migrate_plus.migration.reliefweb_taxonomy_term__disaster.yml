@@ -1,9 +1,9 @@
-uuid: 47d074d8-cc27-4a7a-a6c6-7f0bb001e9aa
+uuid: 0e1b1c4a-76b5-4414-b7e4-df21a52a82ed
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: JpJNvX9g0AQKqbkjMtSk7E4eP_y0nFrBzVEjShKcHU0
+  default_config_hash: C7X7bRBeVAWSa585YLK7ZR7N1h0RY447A98seUZ1u48
 id: reliefweb_taxonomy_term__disaster
 class: null
 field_plugin_method: null
@@ -63,6 +63,18 @@ process:
     plugin: skip_on_empty
     method: process
     source: field_profile/0/value
+  field_key_content:
+    plugin: skip_on_empty
+    method: process
+    source: field_key_content
+  field_appeals_response_plans:
+    plugin: skip_on_empty
+    method: process
+    source: field_appeals_response_plans
+  field_useful_links:
+    plugin: skip_on_empty
+    method: process
+    source: field_useful_links
   field_timezone/value:
     plugin: default_value
     default_value: 0

@@ -1,9 +1,9 @@
-uuid: 8afca14e-aeb4-4030-b3a4-98853257d617
+uuid: fdd20342-a0f5-4c63-9e33-7d1e62097c64
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: bXtVYRzAYGHdn9BlMuPHi1UcR8bCQArT7jvAaEb88Ww
+  default_config_hash: R4SXF45VNLJ90348a0j4CKMFpiN7gMK0oD4vs-MHO1k
 id: reliefweb_taxonomy_term_revision__source
 class: null
 field_plugin_method: null
@@ -84,6 +84,10 @@ process:
     plugin: skip_on_empty
     method: process
     source: field_spanish_name/0/value
+  field_user_posting_rights:
+    plugin: skip_on_empty
+    method: process
+    source: field_user_posting_rights
 destination: null
 migration_dependencies:
   required:

@@ -2,66 +2,73 @@
  * Social media links.
  *
  * Block with the a list of links to social media platforms.
- *
- * Scope: #main-content .rw-sectioned-content section.rw-entity-social-media-links
  */
-#main-content .rw-sectioned-content section.rw-entity-social-media-links ul {
+.rw-entity-social-media-links ul {
   /* Compensate the top margin of the li. */
-  /*margin: -16px 0 0 0;*/
+  /* margin: -16px 0 0 0; */
   padding: 0;
   list-style: none;
 }
-#main-content .rw-sectioned-content section.rw-entity-social-media-links li {
+.rw-entity-social-media-links li {
   /* To avoid borders on the next column. */
   display: inline-block;
-  width: 100%;
   margin: 16px 0 0 0;
   padding: 12px;
+}
+
+.rw-entity-social-media-links--tiles li {
+  width: 100%;
   border: 1px solid #e6ecef;
 }
+
 @media screen and (min-width: 768px) {
-  #main-content .rw-sectioned-content section.rw-entity-social-media-links ul {
+  .rw-entity-social-media-links--tiles ul {
     column-count: 2;
   }
 }
+
 @media screen and (min-width: 1024px) {
-  #main-content .rw-sectioned-content section.rw-entity-social-media-links ul {
+  .rw-entity-social-media-links--tiles ul {
     column-count: 3;
   }
 }
 
 /* External links. Display an icon after the link. */
-#main-content .rw-entity-social-media-links a[target="_blank"][rel="noopener"]:after {
-  content: "";
+.rw-entity-social-media-links--tiles a[target="_blank"][rel~="noopener"]:after {
   display: inline-block;
-  vertical-align: middle;
-  height: 12px;
+  overflow: hidden;
   width: 12px;
+  height: 12px;
   /* The top margin is to have a better vertical alignment. */
   margin: -2px 0 0 6px;
-  overflow: hidden;
+  content: "";
+  vertical-align: middle;
   background: var(--rw-icons--common--external-link--12--dark-blue);
 }
 
 /**
  * Social media links with icons only (ex: report page).
  */
-#main-content .rw-entity-social-media-links--icons-only ul {
+.rw-entity-social-media-links--icons-only {
+  text-align: center;
+  line-height: 1;
+}
+.rw-entity-social-media-links--icons-only ul {
   display: inline-block;
-  vertical-align: middle;
   margin: 0;
   padding: 0;
   list-style: none;
+  vertical-align: middle;
 }
-#main-content .rw-entity-social-media-links--icons-only li {
+.rw-entity-social-media-links--icons-only li {
   float: left;
   margin: 0;
   padding: 0 0 0 20px;
 }
-#main-content .rw-entity-social-media-links--icons-only li:first-child {
+.rw-entity-social-media-links--icons-only li:first-child {
   padding-left: 0;
 }
-#main-content .rw-entity-social-media-links--icons-only a {
+.rw-entity-social-media-links--icons-only a {
   display: inline-block;
   /* Aligning top is important to ensure the links have a height of 48px and
    * not bigger. */
@@ -69,39 +76,39 @@
   color: white;
   font-size: 12px;
 }
-#main-content .rw-entity-social-media-links--icons-only a:before {
-  content: "";
+.rw-entity-social-media-links--icons-only a:before {
   display: inline-block;
+  overflow: hidden;
+  width: 48px;
+  height: 48px;
+  content: "";
   /* Aligning top is important to ensure the links have a height of 48px and
    * not bigger. */
   vertical-align: top;
-  height: 48px;
-  width: 48px;
-  overflow: hidden;
 }
-#main-content .rw-entity-social-media-links--icons-only a[href*="facebook"]:before {
+.rw-entity-social-media-links--icons-only a[href*="facebook"]:before {
   background: var(--rw-icons--social-media--facebook-full--48--dark-blue);
 }
-#main-content .rw-entity-social-media-links--icons-only a[href*="twitter"]:before {
+.rw-entity-social-media-links--icons-only a[href*="twitter"]:before {
   background: var(--rw-icons--social-media--twitter-full--48--dark-blue);
 }
-#main-content .rw-entity-social-media-links--icons-only a[href*="linkedin"]:before {
+.rw-entity-social-media-links--icons-only a[href*="linkedin"]:before {
   background: var(--rw-icons--social-media--linkedin-full--48--dark-blue);
 }
-#main-content .rw-entity-social-media-links--icons-only a:hover:before,
-#main-content .rw-entity-social-media-links--icons-only a:active:before,
-#main-content .rw-entity-social-media-links--icons-only a:focus:before {
+.rw-entity-social-media-links--icons-only a:hover:before,
+.rw-entity-social-media-links--icons-only a:active:before,
+.rw-entity-social-media-links--icons-only a:focus:before {
   background-position-x: var(--rw-icons--social-media--48--dark-red--x);
 }
 /* Hide the external link icon. */
-#main-content .rw-entity-social-media-links--icons-only a[target="_blank"][rel="noopener"]:after {
+.rw-entity-social-media-links--icons-only a[target="_blank"][rel="noopener"]:after {
   content: none;
 }
 /* Center the links on document pages. */
-#main-content .rw-document .rw-entity-social-media-links {
+.rw-document .rw-entity-social-media-links {
   margin: 24px 0 0 0;
   padding: 24px 0;
+  text-align: center;
   border-top: 1px solid #e6ecef;
   line-height: 1;
-  text-align: center;
 }

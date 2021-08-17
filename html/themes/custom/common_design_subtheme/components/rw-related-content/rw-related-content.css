@@ -24,6 +24,7 @@
 .rw-document + .rw-river--type-reports .rw-river__articles article {
   width: 100%;
 }
+
 @media screen and (min-width: 768px) {
   .rw-document + .rw-river--type-reports .rw-river__articles {
     width: auto;
@@ -39,8 +40,8 @@
   }
 }
 .rw-document + .rw-river--type-reports .rw-river__articles article footer {
-  flex: 1 0 auto;
   display: flex;
+  flex: 1 0 auto;
   flex-direction: column;
   justify-content: flex-end;
 }

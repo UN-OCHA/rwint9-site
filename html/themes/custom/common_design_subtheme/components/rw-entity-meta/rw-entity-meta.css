@@ -1,132 +1,133 @@
 /**
- * Article rw-entity-meta information.
+ * Article Meta information.
  *
- * rw-entity-meta information like source or publication date, generally in the header or
+ * Meta information like source or publication date, generally in the header or
  * footer.
- *
- * Scope: #main-content-content article dl.rw-entity-meta
  */
-#main-content article dl.rw-entity-meta {
+.rw-entity-meta {
   margin: 0;
 }
-#main-content article dl.rw-entity-meta + dl.rw-entity-meta {
+.rw-entity-meta + dl.rw-entity-meta {
   margin-top: 4px;
 }
-#main-content article dl.rw-entity-meta:after {
-  content: "";
-  clear: both;
+.rw-entity-meta:after {
   display: block;
-}
-#main-content article dl.rw-entity-meta dt {
   clear: both;
-  float: left;
+  content: "";
+}
+.rw-entity-meta dt {
   display: inline;
+  float: left;
+  clear: both;
   margin: 0 4px 0 0;
   font-size: 15px;
   font-weight: bold;
   /* To have enough tapping space between links. */
   line-height: 29px;
 }
-#main-content article dl.rw-entity-meta dt:after {
+.rw-entity-meta dt:after {
   content: ": ";
 }
-#main-content article dl.rw-entity-meta dd {
+.rw-entity-meta dd {
   margin: 0;
   /* To have enough tapping space between links. */
   line-height: 30px;
 }
-#main-content article dl.rw-entity-meta dd ul,
-#main-content article dl.rw-entity-meta dd li {
+.rw-entity-meta dd ul,
+.rw-entity-meta dd li {
   display: inline;
   margin: 0;
   padding: 0;
   list-style: none;
 }
-#main-content article dl.rw-entity-meta dd li:after {
+.rw-entity-meta dd li:after {
   content: ", ";
 }
 /* This will be ignored in IE8 but it's not a big deal. */
-#main-content article dl.rw-entity-meta dd li:last-child:after,
-#main-content article dl.rw-entity-meta dd li[data-last]:after {
+.rw-entity-meta dd li:last-child:after,
+.rw-entity-meta dd li[data-last]:after {
   content: none;
 }
-#main-content article dl.rw-entity-meta dd li[data-more]:before {
+.rw-entity-meta dd li[data-more]:before {
   content: " + ";
 }
-#main-content > article header dl.rw-entity-meta {
+.rw-article header dl.rw-entity-meta {
   margin: 8px 0 -6px 0;
 }
-/* Show the rw-entity-meta information inline. */
+/* Show the meta information inline. */
 @media screen and (min-width: 480px) {
-  #main-content article header dl.rw-entity-meta dt {
+  .rw-article header .rw-entity-meta dt {
     float: none;
   }
-  #main-content article header dl.rw-entity-meta dd {
+  .rw-article header .rw-entity-meta dd {
     display: inline;
   }
   /* Separator. */
-  #main-content article header dl.rw-entity-meta dd:after {
-    content: "";
+  .rw-article header .rw-entity-meta dd:after {
     display: inline-block;
-    vertical-align: middle;
     width: 4px;
     height: 4px;
     margin: 0 8px;
     padding: 0;
+    content: "";
+    vertical-align: middle;
     border-radius: 4px;
     background: #2e3436;
   }
-  #main-content article header dl.rw-entity-meta dd:last-of-type:after {
+  .rw-article header .rw-entity-meta dd:last-of-type:after {
     content: none;
   }
 }
-
-/**
- * rw-entity-meta for river articles.
- *
- * Scope: #main-content section article
- */
-#main-content section article dl.rw-entity-meta {
+.rw-entity-meta--empty {
   margin: 0;
+  font-size: 15px;
+  line-height: 29px;
 }
-#main-content section article dl.rw-entity-meta dt {
-  float: none;
+/**
+ * Meta for river articles.
+ */
+.rw-river dl.rw-entity-meta dt {
   display: inline-block;
+  float: none;
   font-size: 14px;
 }
-#main-content section article dl.rw-entity-meta dd {
+.rw-river dl.rw-entity-meta dd {
   display: inline-block;
   font-size: 15px;
 }
-#main-content section article dl.rw-entity-meta.rw-article-meta {
+.rw-river dl.rw-entity-meta.rw-article-meta {
   /* #2e3436 with 0.85 opacity on white. */
   color: #4d5254;
 }
-#main-content section article dl.rw-entity-meta.rw-article-meta dd:after {
-  content: "";
+.rw-entity-details dl.rw-entity-meta.rw-article-meta dt {
+  display: block;
+  margin: 16px 0 0 0;
+}
+.rw-river dl.rw-entity-meta.rw-article-meta dd:after {
   display: inline-block;
-  vertical-align: middle;
   width: 4px;
   height: 4px;
   margin: 0 8px;
   padding: 0;
+  content: "";
+  vertical-align: middle;
   border-radius: 4px;
   background: #2e3436;
 }
-#main-content section article dl.rw-entity-meta.rw-article-meta dd.created:after {
+.rw-river dl.rw-entity-meta.rw-article-meta dd.created:after {
   margin-left: 12px;
 }
 /* This will be ignored in IE8 but it's not a big deal. */
-#main-content section article dl.rw-entity-meta.rw-article-meta dd:last-of-type:after,
-#main-content section article dl.rw-entity-meta.rw-article-meta dd.rw-entity-meta__tag-value--last:after {
+.rw-river dl.rw-entity-meta.rw-article-meta dd:last-of-type:after,
+.rw-river dl.rw-entity-meta.rw-article-meta dd.rw-entity-meta__tag-value--last:after {
   content: none;
 }
-/* Display rw-entity-meta one per line on smaller screen to improve readability. */
+/* Display .rw-entity-meta one per line on smaller screen to improve readability. */
 @media all and (max-width: 479px) {
-  #main-content section article dl.rw-entity-meta.rw-article-meta dd {
+  .rw-river dl.rw-entity-meta.rw-article-meta dd {
     display: inline;
   }
-  #main-content section article dl.rw-entity-meta.rw-article-meta dd:after {
+  .rw-river dl.rw-entity-meta.rw-article-meta dd:after {
     display: block;
     width: 0;
     height: 0;
@@ -134,34 +135,44 @@
   }
 }
 
+.rw-river--maps-infographics dl.rw-entity-meta.rw-entity-meta--core dd,
+.rw-river--appeals-response-plans dl.rw-entity-meta.rw-entity-meta--core dd {
+  display: inline;
+}
+.rw-river--maps-infographics dl.rw-entity-meta.rw-entity-meta--core dd:after,
+.rw-river--appeals-response-plans dl.rw-entity-meta.rw-entity-meta--core dd:after {
+  display: block;
+  width: 0;
+  height: 0;
+  margin: 0;
+}
+
 /**
  * Country/disaster status.
  *
  * Display a color coded dot next to the country/disaster status.
- *
- * Scope: #main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--status
  */
-#main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--status:before {
+.rw-entity-meta dd.rw-entity-meta__tag-value--status:before {
   display: inline-block;
-  height: 10px;
   width: 10px;
-  border-radius: 5px;
+  height: 10px;
   margin-right: 8px;
+  border-radius: 5px;
 }
-#main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--status--past:before {
+.rw-entity-meta dd.rw-entity-meta__tag-value--status--past:before {
   content: "";
   background: #b6c8d0;
 }
-#main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--status--alert:before {
+.rw-entity-meta dd.rw-entity-meta__tag-value--status--alert:before {
   content: "";
   background: #eb8705;
 }
-#main-content article dl.rw-entity-meta dd.rw-entity-meta__tag-value--status--ongoing:before {
+.rw-entity-meta dd.rw-entity-meta__tag-value--status--ongoing:before {
   content: "";
   background: #f65c51;
 }
 
-#main-content .taxonomy-term--disaster--full dl.rw-entity-meta dd.rw-entity-meta__tag-value--status--past:before {
+.taxonomy-term--disaster--full dl.rw-entity-meta dd.rw-entity-meta__tag-value--status--past:before {
   content: none;
 }
 
@@ -169,27 +180,24 @@
  * Content format.
  *
  * Display an icon in front of the content format.
- *
- * Scope: #main-content article dl.rw-entity-meta--core dd.rw-entity-meta__tag-value--status--format
  */
-#main-content article dl.rw-entity-meta--core dd.rw-entity-meta__tag-value--format:before {
-  content: "";
+.rw-entity-meta dd.rw-entity-meta__tag-value--format:before {
   display: inline-block;
-  vertical-align: middle;
+  overflow: hidden;
   width: 16px;
   height: 16px;
   /* The top margin is to have a better vertical alignment. */
   margin: -2px 6px 0 0;
-  overflow: hidden;
+  content: "";
+  vertical-align: middle;
   background: var(--rw-icons--content--report--16--dark-grey);
 }
-#main-content article dl.rw-entity-meta--core dd.rw-entity-meta__tag-value--format--map:before {
+.rw-entity-meta dd.rw-entity-meta__tag-value--format.map:before {
   background: var(--rw-icons--content--map--16--dark-grey);
 }
-#main-content article dl.rw-entity-meta--core dd.rw-entity-meta__tag-value--format--infographic:before {
+.rw-entity-meta dd.rw-entity-meta__tag-value--format.infographic:before {
   background: var(--rw-icons--content--infographic--16--dark-grey);
 }
-#main-content article dl.rw-entity-meta--core dd.rw-entity-meta__tag-value--format--interactive:before {
+.rw-entity-meta dd.rw-entity-meta__tag-value--format.interactive:before {
   background: var(--rw-icons--content--interactive--16--dark-grey);
 }
-

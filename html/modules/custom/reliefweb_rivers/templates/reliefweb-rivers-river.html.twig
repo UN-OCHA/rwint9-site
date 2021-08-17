@@ -13,6 +13,7 @@
  * - title_attributes: attributes for the river title
  * - results: (optional) see reliefweb-rivers-results.html.twig
  * - entities: list of article entities constituting the river
+ * - article_attributes: attributes for the river articles
  * - pager: (optional) the pager for the river
  * - more: (optional) an array with URL to the main river and a text
  * - empty: message for when there are no results.
@@ -44,6 +45,7 @@
           '#theme': 'reliefweb_rivers_river_article__' ~ entity.bundle,
           '#level': level + 1,
           '#entity': entity,
+          '#attributes': article_attributes,
         }) }}
       {% endfor %}
     </div>

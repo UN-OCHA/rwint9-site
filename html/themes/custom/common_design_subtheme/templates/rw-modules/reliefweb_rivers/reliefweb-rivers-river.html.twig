@@ -1,8 +1,19 @@
 {% set title_attributes = title_attributes.addClass('cd-block-title') %}
 
 {{ attach_library('common_design/cd-block-title') }}
-{{ attach_library('common_design_subtheme/rw-headlines') }}
+{{ attach_library('common_design_subtheme/rw-article') }}
 {{ attach_library('common_design_subtheme/rw-river') }}
 {{ attach_library('common_design_subtheme/rw-view-more') }}
+
+{# Some logic to differentiate the types of styling to apply. We could also
+   provide some theme suggestions based on the section ID and use different
+   templates rather than the following conditions. #}
+{% if id == 'headlines' %}
+  {% set article_attributes = article_attributes.addClass('rw-river-article--headline') %}
+{% elseif id == 'maps-infographics' %}
+  {% set article_attributes = article_attributes.addClass('rw-river-article--map') %}
+{% elseif id == 'appeals-response-plans' %}
+  {% set article_attributes = article_attributes.addClass('rw-river-article--appeal') %}
+{% endif %}
 
 {% include '@reliefweb_rivers/reliefweb-rivers-river.html.twig' %}

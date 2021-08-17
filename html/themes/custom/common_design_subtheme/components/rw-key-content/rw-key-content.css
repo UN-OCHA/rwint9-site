@@ -2,44 +2,43 @@
  * Key Content.
  *
  * Section with the key content for the countries/disasters.
- *
- * Scope: #main-content .rw-sectioned-content section.rw-river--key-content
  */
-#main-content .rw-sectioned-content section.rw-river--key-content article.rw-river-article--with-preview {
+.rw-river--key-content article.rw-river-article--with-preview {
   min-height: 216px;
   padding-left: 164px;
 }
-#main-content .rw-sectioned-content section.rw-river--key-content article.rw-river-article--with-preview .rw-river-article__content img {
+.rw-river--key-content article.rw-river-article--with-preview .rw-river-article__content img {
   position: absolute;
   top: 32px;
   left: 8px;
+  overflow: hidden;
+  clip: rect(0, 124px, 154px, 0);
   width: 124px;
   /* Reset max-height from the base.css. */
   max-height: none;
   margin: 0;
-  clip: rect(0, 124px, 154px, 0);
-  overflow: hidden;
 }
-#main-content .rw-sectioned-content section.rw-river--key-content article.rw-river-article--with-preview .rw-river-article__content:after {
-  content: "";
+.rw-river--key-content article.rw-river-article--with-preview .rw-river-article__content:after {
   position: absolute;
   top: 24px;
   left: 0;
   width: 140px;
   height: 170px;
+  content: "";
   border: 8px solid #e6ecef;
   background: linear-gradient(rgba(230, 236, 239, 0) 50%, rgba(230, 236, 239, 0.8));
 }
-#main-content .rw-sectioned-content section.rw-river--key-content article .rw-river-article__content p {
+.rw-river--key-content article .rw-river-article__content p {
   margin-top: 0;
 }
-@media screen and (max-width : 479px) {
-  #main-content .rw-sectioned-content section.rw-river--key-content article.rw-river-article--with-preview {
+
+@media screen and (max-width: 479px) {
+  .rw-river--key-content article.rw-river-article--with-preview {
     min-height: auto;
     padding-left: 0;
   }
-  #main-content .rw-sectioned-content section.rw-river--key-content article.rw-river-article--with-preview .rw-river-article__content img,
-  #main-content .rw-sectioned-content section.rw-river--key-content article.rw-river-article--with-preview .rw-river-article__content:after {
+  .rw-river--key-content article.rw-river-article--with-preview .rw-river-article__content img,
+  .rw-river--key-content article.rw-river-article--with-preview .rw-river-article__content:after {
     display: none;
   }
 }

@@ -1,0 +1,38 @@
+<div class="cd-search">
+
+  <section{{ create_attribute()
+    .setAttribute('id', 'site-search')
+    .setAttribute('role', 'search')
+    .setAttribute('aria-labelledby', 'site-search-title')
+    .setAttribute('data-cd-toggable', 'Search'|t)
+    .setAttribute('data-cd-component', 'cd-search')
+    .setAttribute('data-cd-logo', 'search')
+    .setAttribute('data-cd-focus-target', 'site-search-input')
+    .addClass('cd-search__form')
+  }}>
+    <h2 id="site-search-title" class="visually-hidden"><?php rwpt("Content Search"); ?></h2>
+    <form action="/search/results" method="GET" accept-charset="UTF-8" class="cd-flow">
+      <div class="cd-form__item">
+        <label for="site-search-input" class="visually-hidden">{{ 'What are you looking for?'|t }}</label>
+        <input {{ create_attribute()
+          .setAttribute('type', 'search')
+          .setAttribute('name', 'search')
+          .setAttribute('id', 'site-search-input')
+          .setAttribute('autocomplete', 'off')
+          .setAttribute('placeholder', 'What are you looking for?'|t)
+          .setAttribute('size', '30')
+          .addClass('cd-search__input')
+        }}>
+      </div>
+      <div class="cd-form__item">
+        <button type="submit" value="search" class="cd-search__submit">
+          <svg class="cd-icon cd-icon--search" width="16" height="16">
+            <use xlink:href="#cd-icon--search"></use>
+          </svg>
+          <span class="visually-hidden">{{ 'Search|t' }}</span>
+        </button>
+      </div>
+    </form>
+  </section>
+
+</div>

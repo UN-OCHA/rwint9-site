@@ -1,102 +1,106 @@
 /* Search */
-#main-content .rw-river-search {
+.rw-river-search {
   margin: -8px 0 0 0;
   padding: 0;
   border: none;
 }
-#main-content .rw-river-search .rw-river-search__wrapper {
+.rw-river-search .rw-river-search__wrapper {
   position: relative;
   width: 100%;
   height: 46px;
   /* Space for the search button. */
   padding-right: 100px;
 }
-#main-content .rw-river-search .rw-river-search__form label {
+.rw-river-search .rw-river-search__form label {
   /* Visually hidden */
   position: absolute;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
   width: 1px;
   height: 1px;
   margin: -1px;
-  border: 0;
   padding: 0;
   white-space: nowrap;
+  border: 0;
   clip-path: inset(100%);
-  clip: rect(0,0,0,0);
-  overflow: hidden;
 }
-#main-content .rw-river-search .rw-river-search__form input {
+.rw-river-search .rw-river-search__form input {
   position: relative;
-  height: 100%;
-  border-right: none;
   overflow: hidden;
+  box-sizing: border-box;
+  height: 100%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  border-right: none;
   font-size: 17px;
   font-weight: bold;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  box-sizing: border-box;
 }
-#main-content .rw-river-search .rw-river-search__form input:focus {
+.rw-river-search .rw-river-search__form input:focus {
   z-index: 2;
 }
 /* Placeholder style. */
-#main-content .rw-river-search .rw-river-search__form input::-webkit-input-placeholder {
+.rw-river-search .rw-river-search__form input::-webkit-input-placeholder {
   font-weight: normal;
 }
-#main-content .rw-river-search .rw-river-search__form input:-ms-input-placeholder {
+.rw-river-search .rw-river-search__form input:-ms-input-placeholder {
   font-weight: normal;
 }
-#main-content .rw-river-search .rw-river-search__form input::-moz-placeholder {
+.rw-river-search .rw-river-search__form input::-moz-placeholder {
   font-weight: normal;
 }
-#main-content .rw-river-search .rw-river-search__form input::placeholder {
+.rw-river-search .rw-river-search__form input::placeholder {
   font-weight: normal;
 }
-#main-content .rw-river-search .rw-river-search__form button {
+.rw-river-search .rw-river-search__form button {
   position: absolute;
   top: 0;
   right: 0;
   width: 100px;
   height: 100%;
 }
-#main-content .rw-river-search .rw-river-search__form button:before {
-  content: '';
+.rw-river-search .rw-river-search__form button:before {
   position: absolute;
   top: 16px;
   left: -8px;
-  border-color: transparent;
+  content: "";
   border-width: 8px 8px 8px 0;
   border-style: solid;
+  border-color: transparent;
   border-right-color: #055372;
 }
-#main-content .rw-river-search .rw-river-search__form button:hover:before,
-#main-content .rw-river-search .rw-river-search__form button:focus:before,
-#main-content .rw-river-search .rw-river-search__form button:active:before {
+.rw-river-search .rw-river-search__form button:hover:before,
+.rw-river-search .rw-river-search__form button:focus:before,
+.rw-river-search .rw-river-search__form button:active:before {
   border-right-color: #eb1405;
 }
 
 /* Show an icon for the search button on small screens. */
-@media screen and (max-width : 767px) {
-  #main-content .rw-river-search .rw-river-search__wrapper {
+@media screen and (max-width: 767px) {
+  .rw-river-search .rw-river-search__wrapper {
     padding-right: 48px;
   }
-  #main-content .rw-river-search .rw-river-search__form button {
+  .rw-river-search .rw-river-search__form button {
+    overflow: hidden;
     width: 48px;
     /* Padding to hide the text visually. */
     padding: 0 0 0 48px;
-    overflow: hidden;
     white-space: nowrap;
   }
-  #main-content .rw-river-search .rw-river-search__form button:after {
-    content: "";
-    display: inline-block;
+  .rw-river-search .rw-river-search__form button:after {
     position: absolute;
     top: 50%;
     left: 50%;
+    display: inline-block;
+    overflow: hidden;
     width: 26px;
     height: 26px;
     margin-top: -13px;
     margin-left: -13px;
-    overflow: hidden;
+    content: "";
     background: var(--rw-icons--search--search--26--white);
   }
+}
+
+.rw-search-results .rw-river-article:first-child {
+  border-top: 1px solid #e6ecef;
 }

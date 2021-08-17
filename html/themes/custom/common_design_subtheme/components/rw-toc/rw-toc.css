@@ -1,55 +1,60 @@
 /* Table of contents */
-#main-content .rw-sectioned-content .rw-toc {
+.rw-toc {
   padding: 32px 0 0 0;
-  font-size: 15px;
   border-bottom: 1px solid #e6ecef;
+  font-size: 15px;
 }
-#main-content .rw-sectioned-content .rw-toc ul,
-#main-content .rw-sectioned-content .rw-toc li {
-  list-style: none;
-  padding: 0;
+.rw-toc ul,
+.rw-toc li {
   margin: 0;
+  padding: 0;
+  list-style: none;
 }
-#main-content .rw-sectioned-content .rw-toc > ul .rw-toc__section__title {
+.rw-toc > ul .rw-toc__section__title {
+  margin: 0;
   text-transform: uppercase;
   font-size: 15px;
-  margin: 0;
 }
-#main-content .rw-sectioned-content .rw-toc ul ul {
+.rw-toc ul ul {
   padding: 16px 0;
 }
-#main-content .rw-sectioned-content .rw-toc ul ul li {
+.rw-toc ul ul li {
   margin: 0 0 12px 0;
 }
-#main-content .rw-sectioned-content .rw-toc ul ul li a {
+.rw-toc ul ul li a {
   display: inline-block;
   padding-left: 16px;
 }
-#main-content .rw-sectioned-content .rw-toc ul ul li a[data-active] {
-  border-left: 6px solid #0988bb;
+.rw-toc ul ul li a[data-active] {
   padding-left: 10px;
+  border-left: 6px solid #0988bb;
   font-weight: bold;
 }
 
 /* Show the table of content as left sidebar with the content on the right on
  * large screens. */
-@media screen and (min-width : 768px) {
-  #main-content .rw-sectioned-content .rw-toc {
-    float: left;
+@media screen and (min-width: 768px) {
+  .rw-toc {
     position: -webkit-sticky;
     position: sticky;
     top: 0;
+    float: left;
+    overflow-y: auto;
     width: 20%;
     max-height: 100vh;
     padding: 32px 16px 0 0;
     border-bottom: none;
-    overflow-y: auto;
   }
-  #main-content .rw-sectioned-content .rw-toc ~ section,
-  #main-content .rw-sectioned-content .rw-toc ~ article,
-  #main-content .rw-sectioned-content .rw-toc ~ fieldset,
-  #main-content .rw-sectioned-content .rw-toc ~ .form-wrapper,
-  #main-content .rw-sectioned-content .rw-toc ~ .form-item {
+  .rw-sectioned-content .rw-toc ~ section {
+    padding-top: 32px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid #e6ecef;
+  }
+  .rw-toc ~ section,
+  .rw-toc ~ article,
+  .rw-toc ~ fieldset,
+  .rw-toc ~ .form-wrapper,
+  .rw-toc ~ .form-item {
     float: right;
     width: 80%;
     min-width: auto;
@@ -62,7 +67,7 @@
 }
 
 /* Hide the table of content toggler by default. */
-.js #main-content .rw-sectioned-content .rw-toc-toggler {
+.js .rw-toc-toggler {
   display: none;
 }
 
@@ -70,41 +75,40 @@
  * Table of contents - javascript enabled.
  *
  * Show the table as a dropdown on small screens.
- *
- * Scope: .js #main-content .rw-sectioned-content .rw-toc
  */
-@media screen and (max-width : 767px) {
-  .js #main-content .rw-sectioned-content .rw-toc__btn {
+@media screen and (max-width: 767px) {
+  .js .rw-toc__btn {
     display: block;
     height: 40px;
     margin: 24px auto;
     padding: 0 8px;
+    color: #2e3436;
     border: 1px solid #e6ecef;
     background: white;
-    color: #2e3436;
     font-size: 16px;
     font-weight: normal;
   }
   .rw-toc__btn[aria-expanded] .cd-icon--arrow-down {
     fill: #2e3436;
   }
-  /*.js #main-content .rw-sectioned-content .rw-toc__btn:after {*/
-  /*  content: "";*/
-  /*  display: inline-block;*/
-  /*  vertical-align: middle;*/
-  /*  width: 9px;*/
-  /*  height: 9px;*/
-  /*  margin-left: 8px;*/
-  /*  overflow: hidden;*/
-  /*  background: url(../../img/rw-icons-sprite.png) -150px 0 no-repeat;*/
-  /*  background: rgba(0,0,0,0) url(../../img/rw-icons-sprite.svg) -150px 0 no-repeat;*/
-  /*}*/
-  /*.js #main-content .rw-sectioned-content .rw-toc-toggler[aria-expanded="true"]:after {*/
-  /*  background-position-y: -9px;*/
-  /*}*/
-  .js #main-content .rw-sectioned-content .rw-toc {
-    /*display: none;*/
+  /* .js .rw-toc__btn:after { */
+  /*  content: ""; */
+  /*  display: inline-block; */
+  /*  vertical-align: middle; */
+  /*  width: 9px; */
+  /*  height: 9px; */
+  /*  margin-left: 8px; */
+  /*  overflow: hidden; */
+  /*  background: url(../../img/rw-icons-sprite.png) -150px 0 no-repeat; */
+  /*  background: rgba(0,0,0,0) url(../../img/rw-icons-sprite.svg) -150px 0 no-repeat; */
+  /* } */
+  /* .js .rw-toc-toggler[aria-expanded="true"]:after { */
+  /*  background-position-y: -9px; */
+  /* } */
+  .js .rw-toc {
+    /* display: none; */
     position: absolute;
+    z-index: 4;
     top: auto;
     left: 50%;
     width: 300px;
@@ -115,26 +119,25 @@
     margin: -24px 0 0 -150px;
     padding: 16px 16px 0 16px;
     border: 1px solid #e6ecef;
-    -webkit-box-shadow: 0px 0px 6px 2px #e6ecef;
-    box-shadow: 0px 0px 6px 2px #e6ecef;
     background: white;
-    z-index: 4;
+    -webkit-box-shadow: 0 0 6px 2px #e6ecef;
+    box-shadow: 0 0 6px 2px #e6ecef;
   }
-  .js #main-content .rw-sectioned-content .rw-toc[data-hidden="false"] {
+  .js .rw-toc[data-hidden="false"] {
     display: block;
   }
-  .js #main-content .rw-sectioned-content .rw-toc + section,
-  .js #main-content .rw-sectioned-content .rw-toc + article,
-  .js #main-content .rw-sectioned-content .rw-toc + fieldset,
-  .js #main-content .rw-sectioned-content .rw-toc + .form-wrapper,
-  .js #main-content .rw-sectioned-content .rw-toc + .form-item {
+  .js .rw-toc + section,
+  .js .rw-toc + article,
+  .js .rw-toc + fieldset,
+  .js .rw-toc + .form-wrapper,
+  .js .rw-toc + .form-item {
     border-top: 1px solid #e6ecef;
   }
-  .js #main-content .rw-sectioned-content .rw-toc ~ section,
-  .js #main-content .rw-sectioned-content .rw-toc ~ article,
-  .js #main-content .rw-sectioned-content .rw-toc ~ fieldset,
-  .js #main-content .rw-sectioned-content .rw-toc ~ .form-wrapper,
-  .js #main-content .rw-sectioned-content .rw-toc ~ .form-item {
+  .js .rw-toc ~ section,
+  .js .rw-toc ~ article,
+  .js .rw-toc ~ fieldset,
+  .js .rw-toc ~ .form-wrapper,
+  .js .rw-toc ~ .form-item {
     padding: 24px 0;
   }
   .js .page-form #main-content > section.default > form.rw-sectioned-content {
@@ -145,11 +148,11 @@
  * titles stay aligned with the content. On smaller screens there is not enough
  * space for that. */
 @media screen and (min-width: 768px) {
-  .js #main-content .rw-sectioned-content .rw-toc ~ section[data-active] > h2,
-  .js #main-content .rw-sectioned-content .rw-toc ~ article[data-active] > h2,
-  .js #main-content .rw-sectioned-content .rw-toc ~ fieldset[data-active] > legend,
-  .js #main-content .rw-sectioned-content .rw-toc ~ .form-wrapper > fieldset[data-active] > legend,
-  .js #main-content .rw-sectioned-content .rw-toc ~ .form-item > fieldset[data-active] > legend {
+  .js .rw-toc ~ section[data-active] > h2,
+  .js .rw-toc ~ article[data-active] > h2,
+  .js .rw-toc ~ fieldset[data-active] > legend,
+  .js .rw-toc ~ .form-wrapper > fieldset[data-active] > legend,
+  .js .rw-toc ~ .form-item > fieldset[data-active] > legend {
     margin-left: -16px;
     padding-left: 8px;
     border-left: 8px solid #0988bb;
@@ -158,16 +161,16 @@
 
 /* Print. */
 @media print {
-  #main-content .rw-sectioned-content #table-of-content-toggler {
-    display: none!important;
+  #table-of-content-toggler {
+    display: none !important;
   }
-  #main-content .rw-sectioned-content .rw-toc {
-    display: none!important;
+  .rw-toc {
+    display: none !important;
   }
 }
 
-@media screen and (min-width : 768px) {
-  .js #main-content .rw-sectioned-content .rw-toc {
+@media screen and (min-width: 768px) {
+  .js .rw-toc {
     --dropdown: false;
   }
 }
@@ -177,6 +180,6 @@
 .cd-layout-content,
 .region-content,
 .region-content > article,
-#main-content .rw-sectioned-content {
+.rw-sectioned-content {
   height: 100%;
 }

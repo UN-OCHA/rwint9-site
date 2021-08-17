@@ -1,0 +1,10 @@
+uuid: cea6c8f4-7e61-43a2-b8ba-e53133ea475c
+langcode: en
+status: true
+dependencies:
+  module:
+    - taxonomy
+id: taxonomy_term.user_posting_rights
+label: 'User posting rights'
+targetEntityType: taxonomy_term
+cache: true

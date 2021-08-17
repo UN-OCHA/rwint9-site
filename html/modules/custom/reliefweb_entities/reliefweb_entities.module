@@ -149,6 +149,8 @@ function reliefweb_entities_theme() {
         'core' => FALSE,
         // Meta information, see "reliefweb_entities_entity_meta" above.
         'meta' => '',
+        // Meta information attributes.
+        'meta_attributes' => NULL,
       ],
     ],
     'reliefweb_entities_entity_social_media_links' => [

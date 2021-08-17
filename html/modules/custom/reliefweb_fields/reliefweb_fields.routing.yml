@@ -1,0 +1,59 @@
+reliefweb_fields.taxonomy_term.profile_form:
+  path: '/taxonomy/term/{taxonomy_term}/profile'
+  defaults:
+    _entity_form: 'taxonomy_term.profile'
+    _title: 'Profile'
+  options:
+    _admin_route: TRUE
+    parameters:
+      taxonomy_term:
+        type: 'entity:taxonomy_term'
+  requirements:
+    _entity_access: 'taxonomy_term.update'
+    _entity_bundles: 'taxonomy_term:country|disaster'
+    _permission: 'edit taxonomy term profile'
+    taxonomy_term: \d+
+
+reliefweb_fields.validate.reliefweb_links:
+  path: '/admin/reliefweb_fields/validate/reliefweb_links/{entity_type_id}/{bundle}/{field_name}'
+  defaults:
+    _controller: '\Drupal\reliefweb_fields\Controller\ReliefWebLinksValidator::validateLink'
+    _title: 'Link validation for ReliefWeb Links fields'
+  methods: [POST]
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'access reliefweb links field validation'
+    entity_type: '[a-z0-9_]+'
+    bundle: '[a-z0-9_]+'
+    field_name: '[a-z0-9_]+'
+
+reliefweb_fields.taxonomy_term.user_posting_rights_form:
+  path: '/taxonomy/term/{taxonomy_term}/user-posting-rights'
+  defaults:
+    _entity_form: 'taxonomy_term.user_posting_rights'
+    _title: 'User posting rights'
+  options:
+    _admin_route: TRUE
+    parameters:
+      taxonomy_term:
+        type: 'entity:taxonomy_term'
+  requirements:
+    _entity_access: 'taxonomy_term.update'
+    _entity_bundles: 'taxonomy_term:source'
+    _permission: 'edit user posting rights'
+    taxonomy_term: \d+
+
+reliefweb_fields.validate.reliefweb_user_posting_rights:
+  path: '/admin/reliefweb_fields/validate/reliefweb_user_posting_rights/{entity_type_id}/{bundle}/{field_name}'
+  defaults:
+    _controller: '\Drupal\reliefweb_fields\Controller\ReliefWebUserPostingRightsValidator::validateUser'
+    _title: 'User validation for ReliefWeb user posting rights fields'
+  methods: [POST]
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'access reliefweb user posting rights field validation'
+    entity_type: '[a-z0-9_]+'
+    bundle: '[a-z0-9_]+'
+    field_name: '[a-z0-9_]+'

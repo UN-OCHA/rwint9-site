@@ -2,93 +2,58 @@
  * Blog post.
  *
  * Latest blog post.
- *
- * Id: #blog-post
- *
- * Scope: .path-frontpage #main-content
  */
-.path-frontpage #main-content #blog h2 {
+.path-frontpage .rw-river--blog h2 {
   font-size: 24px;
 }
-.path-frontpage #main-content #blog article {
+.path-frontpage .rw-river--blog article {
   padding: 0;
   border: none;
 }
-.path-frontpage #main-content #blog article .content {
+.path-frontpage .rw-river--blog article .rw-river-article__content {
   display: block;
 }
 
 /**
- * Sub article.
+ * Blog river.
  *
- * Articles in a section like headlines etc.
- *
- * Scope: #main-content section article
+ * List of the blog posts.
  */
-#main-content section article {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  padding: 24px 0;
-  border-top: 1px solid #e6ecef;
-}
-#main-content section article:first-child {
-  border-top: none;
-}
-#main-content section article header {
-  /* Compensate the half-leading space from the title line-height. */
-  margin-top: -5px;
-}
-#main-content section article header p.country {
-  margin: 2px 6px 0 0;
-  padding: 1px 8px;
-  font-size: 14px;
-  line-height: 22px;
-}
-#main-content section article > header .title,
-#main-content section article > .title {
-  display: inline;
+.rw-river-page--blog .rw-river-article--blog-post > h3 {
   margin: 0;
-  color: #055372;
-  font-size: 17px;
-  font-weight: bold;
-  line-height: 28px;
+  font-weight: normal;
 }
-#main-content section article > header .title a,
-#main-content section article > .title a {
-  color: inherit;
+.rw-river-page--blog .rw-river-article--blog-post > header .rw-river-article__header {
+  font-size: 18px;
 }
-#main-content section article .content {
-  display: flex;
-  flex: 1 0 auto;
-  align-items: center;
-  padding-top: 16px;
-  /* #2e3436 with 0.85 opacity on white. */
-  color: #4d5254;
+.rw-river-page--blog .rw-river-article--blog-post .rw-river-article__content {
+  display: block;
 }
-/* Article with a thumbnail preview (typically Map and Infographic). */
-#main-content section article .content img {
-  float: left;
-  max-height: 118px;
-  margin: 2px 20px 0 0;
-  border: 1px solid #e6ecef;
-}
-#main-content section article .content img + p {
-  margin-top: 0;
+.rw-river-article__author {
+  margin: 12px 0 0 0;
+  font-size: 15px;
+  font-style: italic;
 }
 
-@media all and (max-width: 479px) {
-  #main-content section article .content img {
-    display: none;
+@media screen and (min-width: 768px) {
+  .rw-river-page--blog .rw-river-page--blog {
+    margin-bottom: 12px;
   }
-}
-#main-content section article footer {
-  /* Clear any floating from the content. */
-  clear: both;
-  /* Compensate  the half-leading space added by the line-height of the <dl>. */
-  margin-bottom: -8px;
-  padding-top: 16px;
-}
-#main-content section article header + footer {
-  padding-top: 12px;
+  .rw-river-page--blog .rw-river__articles {
+    display: flex;
+    flex-wrap: wrap;
+    width: auto;
+    /* Compensate the margin from the articles. */
+    margin: 0 -8px;
+  }
+  .rw-river-page--blog .rw-river__articles .rw-river-article--blog-post {
+    flex: 1 0 40%;
+    width: 100%;
+    margin: 16px 8px 0 8px;
+    padding: 16px;
+    border: 1px solid #e6ecef;
+  }
+  .rw-river-page--blog .pager {
+    border-top: none;
+  }
 }

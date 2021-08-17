@@ -218,6 +218,9 @@
     "drupal/social_auth_hid": {
         "version": "2.x-dev"
     },
+    "drupal/taxonomy_term_revision": {
+        "version": "1.0.0"
+    },
     "drupal/token": {
         "version": "1.9.0"
     },
