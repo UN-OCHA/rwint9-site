@@ -1526,6 +1526,32 @@ class ReliefwebSubscriptionsMailer {
   }
 
   /**
+   * Check unsubscribe links.
+   *
+   * @param string $uid
+   *   Unsubscribe path.
+   * @param int $timestamp
+   *   Timestamp.
+   * @param int $signature
+   *   Signature.
+   *
+   * @return bool
+   *   Valid or not.
+   */
+  public function checkUnsubscribeLink($uid, $timestamp, $signature) {
+    if (empty($uid) || empty($timestamp) || empty($signature)) {
+      return FALSE;
+    }
+
+    $path = $this->getSchemeAndHttpHost() . '/notifications/unsubscribe/user/' . $uid;
+    if ($signature !== $this->getSignature($path, $timestamp)) {
+      return FALSE;
+    }
+
+    return TRUE;
+  }
+
+  /**
    * Get the API data for the entity that triggered a notification.
    *
    * @param object $notification

@@ -10,12 +10,13 @@ namespace Drupal\reliefweb_subscriptions\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Session\AccountInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
- * A Bookmarks toggle controller.
+ * Unsubscribe controller.
  */
-class UnsubscribeForm extends ControllerBase {
+class UnsubscribeController extends ControllerBase {
   /**
    * Account.
    *
@@ -24,10 +25,18 @@ class UnsubscribeForm extends ControllerBase {
   protected $account;
 
   /**
+   * Account.
+   *
+   * @var \Symfony\Component\HttpFoundation\Request
+   */
+  protected $request;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(AccountInterface $account) {
+  public function __construct(AccountInterface $account, RequestStack $request_stack) {
     $this->account = $account;
+    $this->request = $request_stack->getCurrentRequest();
   }
 
   /**
@@ -36,6 +45,7 @@ class UnsubscribeForm extends ControllerBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('current_user'),
+      $container->get('request_stack')
     );
   }
 
@@ -44,8 +54,10 @@ class UnsubscribeForm extends ControllerBase {
    */
   public function unsubscribe(AccountInterface $user) {
     if ($this->account->isAnonymous()) {
-      return $this->redirect('user.login', [], [
-        'query' => ['destination' => '/user/' . $user->id() . '/notifications'],
+      return $this->redirect('reliefweb_subscriptions.unsubscription_form', [
+        'user' => $user->id(),
+        'timestamp' => $this->request->get('timestamp'),
+        'signature' => $this->request->get('signature'),
       ]);
     }
 
