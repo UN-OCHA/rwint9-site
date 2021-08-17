@@ -18,8 +18,8 @@
 .view-more a {
   position: relative;
   display: inline-block;
-  font-style: italic;
   font-size: 16px;
+  font-style: italic;
 }
 .view-more a:after {
   display: inline-block;

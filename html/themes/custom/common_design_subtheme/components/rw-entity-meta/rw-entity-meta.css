@@ -25,8 +25,8 @@
   line-height: 30px;
 }
 .rw-entity-meta dd {
-  font-size: 16px;
   margin: 0;
+  font-size: 16px;
   /* To have enough tapping space between links. */
   line-height: 30px;
 }
