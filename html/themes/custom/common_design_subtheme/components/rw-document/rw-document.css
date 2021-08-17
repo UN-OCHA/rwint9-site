@@ -64,10 +64,6 @@
   border-color: #e6ecef;
 }
 
-.rw-document dl.rw-entity-meta dd {
-  font-size: 16px;
-}
-
 /* Entity details in the sidebar/footer */
 .rw-document .rw-entity-details dl.rw-entity-meta dt {
   margin: 16px 0 0 0;
@@ -89,7 +85,6 @@
 .rw-entity-details dl.rw-entity-meta.rw-article-meta dd::after {
   content: none;
 }
-
 /* Hide format icons */
 .rw-document > footer .rw-entity-meta__tag-value:before {
   content: none;
