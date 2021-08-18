@@ -1,7 +1,7 @@
 /* Page title and Status in article header */
 .rw-page-title {
   margin: 0;
-  padding-bottom: 0;
+  padding-bottom: 8px;
   border-bottom: 0 none;
 }
 .rw-document > header,
