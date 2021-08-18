@@ -23,7 +23,7 @@ reliefweb_subscriptions.unsubscription_form:
   path: '/user/{user}/notifications/unsubscribe/{timestamp}/{signature}'
   defaults:
     _form: '\Drupal\reliefweb_subscriptions\Form\UnsubscribeForm'
-    _title: 'Subscriptions'
+    _title: 'Unsubscribe'
   options:
     parameters:
       user:

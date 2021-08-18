@@ -4,7 +4,9 @@ namespace Drupal\reliefweb_subscriptions\Form;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
 use Drupal\reliefweb_subscriptions\ReliefwebSubscriptionsMailer;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -22,11 +24,19 @@ class UnsubscribeForm extends SubscriptionForm {
   protected $mailer;
 
   /**
+   * The kill switch.
+   *
+   * @var \Drupal\Core\PageCache\ResponsePolicy\KillSwitch
+   */
+  protected $killSwitch;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(Connection $database, ReliefwebSubscriptionsMailer $mailer) {
+  public function __construct(Connection $database, ReliefwebSubscriptionsMailer $mailer, KillSwitch $kill_switch) {
     $this->database = $database;
     $this->mailer = $mailer;
+    $this->killSwitch = $kill_switch;
   }
 
   /**
@@ -36,6 +46,7 @@ class UnsubscribeForm extends SubscriptionForm {
     return new static(
       $container->get('database'),
       $container->get('reliefweb_subscriptions.mailer'),
+      $container->get('page_cache_kill_switch'),
     );
   }
 
@@ -83,9 +94,28 @@ class UnsubscribeForm extends SubscriptionForm {
       $options[$subscription['id']] = $subscription['name'];
     }
 
+    // No active subscriptions.
+    if (empty($options['global']) && empty($options['country_updates'])) {
+      $form['empty']['#markup'] = $this->t('You currently have no active subscriptions.');
+      return $form;
+    }
+
+    // Store uid.
     $form['uid'] = [
       '#type' => 'value',
       '#value' => $user->id(),
+    ];
+
+    $login_link = Url::fromRoute('user.login', [], [
+      'query' => ['destination' => '/user/' . $user->id() . '/notifications'],
+    ]);
+
+    $form['description'] = [
+      '#prefix' => '<p class="notice">',
+      '#suffix' => '</p>',
+      '#markup' => $this->t('This is the list of your currently active subscriptions. Please unselect the notifications you no longer want to receive. To add new subscriptions or manage your list, please <a href=":login_link">log in</a>.', [
+        ':login_link' => $login_link->toString(),
+      ]),
     ];
 
     if (!empty($options['global'])) {
@@ -108,10 +138,20 @@ class UnsubscribeForm extends SubscriptionForm {
       ];
     }
 
-    $form['submit'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Save subscriptions'),
+    $form['actions'] = [
+      'submit' => [
+        '#type' => 'submit',
+        '#value' => $this->t('Save subscriptions'),
+      ],
+      'cancel' => [
+        '#markup' => $this->t('<a href=":url">Cancel</a>', [
+          ':url' => Url::fromRoute('<front>')->toString(),
+        ]),
+      ],
     ];
+
+    // Disable caching.
+    $this->killSwitch->trigger();
 
     return $form;
   }
@@ -120,17 +160,19 @@ class UnsubscribeForm extends SubscriptionForm {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $subscriptions = $form_state->getValue('global');
-    foreach ($subscriptions as $sid => $value) {
-      if (!$value) {
-        $this->unsubscribe($form_state->getValue('uid'), $sid);
+    if ($subscriptions = $form_state->getValue('global')) {
+      foreach ($subscriptions as $sid => $value) {
+        if (!$value) {
+          $this->unsubscribe($form_state->getValue('uid'), $sid);
+        }
       }
     }
 
-    $subscriptions = $form_state->getValue('country_updates');
-    foreach ($subscriptions as $sid => $value) {
-      if (!$value) {
-        $this->unsubscribe($form_state->getValue('uid'), $sid);
+    if ($subscriptions = $form_state->getValue('country_updates')) {
+      foreach ($subscriptions as $sid => $value) {
+        if (!$value) {
+          $this->unsubscribe($form_state->getValue('uid'), $sid);
+        }
       }
     }
 
