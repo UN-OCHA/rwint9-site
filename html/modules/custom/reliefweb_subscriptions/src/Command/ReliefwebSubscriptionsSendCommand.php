@@ -63,19 +63,17 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     $query->orderBy('sortby', 'DESC');
     $query->orderBy('q.eid', 'ASC');
     $query->range(0, $limit);
-    $result = $query->execute();
 
-    if (empty($result)) {
-      return;
-    }
-
-    $notifications = $result->fetchAllAssoc('eid');
+    // Send the notifications.
+    $notifications = $query?->execute()?->fetchAllAssoc('eid');
     $this->mailer->send($notifications);
 
     // Remove the processed notifications from the queue.
-    $query = $this->database->delete('reliefweb_subscriptions_queue');
-    $query->condition('eid', array_keys($notifications), 'IN');
-    $query->execute();
+    if (!empty($notifications)) {
+      $query = $this->database->delete('reliefweb_subscriptions_queue');
+      $query->condition('eid', array_keys($notifications), 'IN');
+      $query->execute();
+    }
   }
 
   /**
