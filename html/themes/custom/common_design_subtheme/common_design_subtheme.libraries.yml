@@ -97,6 +97,11 @@ rw-form:
     theme:
       components/rw-form/rw-form.css: {}
 
+rw-headlines:
+  css:
+    theme:
+      components/rw-headlines/rw-headlines.css: {}
+
 rw-homepage:
   css:
     theme:

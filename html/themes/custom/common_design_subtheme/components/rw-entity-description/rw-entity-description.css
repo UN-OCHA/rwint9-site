@@ -8,6 +8,19 @@
 .rw-entity-description .rw-entity-description__text p:first-child {
   margin-top: 0;
 }
+.rw-entity-description ul {
+  margin: 0;
+  padding: 0 0 0 32px;
+  list-style-position: outside;
+}
+.rw-entity-description li {
+  margin: 8px 0 0 0;
+  padding: 0;
+}
+.rw-entity-description li:first-child {
+  margin: 0;
+}
+
 /* Javascript enabled */
 .js .rw-entity-description button {
   display: block;

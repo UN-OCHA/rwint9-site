@@ -2,10 +2,10 @@
 // Typography
 //——————————————————————————————————————————————————————————————————————————————
 
-body {
-  /* Default font size for the main content. */
-  font-size: 16px;
-}
+//body {
+//  /* Default font size for the main content. */
+//  font-size: 16px;
+//}
 
 a {
   color: $cd-blue--dark;
@@ -21,7 +21,7 @@ a {
  *
  * Base heading styles in the main content. They start at h2 because h1 is the
  * the ReliefWeb logo in the header. h2 are always used for the main section(s)
- * or article of the page (main contnet heading). h3 are for sub-sections
+ * or article of the page (main content heading). h3 are for sub-sections
  * or articles. Their style differs whether they are section headings or article
  * headings.
  */

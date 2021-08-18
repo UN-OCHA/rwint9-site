@@ -7,7 +7,16 @@
 .rw-document > header,
 .taxonomy-term--full > header,
 .rw-river-page > header {
-  margin-bottom: 2rem;
   padding-bottom: 12px;
   border-bottom: 1px solid #eb1405;
+}
+.rw-document > header,
+.rw-river-page > header {
+  margin-bottom: 2rem;
+}
+.rw-river-page--with-views.rw-document > header,
+.rw-river-page--with-views.taxonomy-term--full > header,
+.rw-river-page--with-views.rw-river-page > header {
+  padding-bottom: 0;
+  border-bottom: 0 none;
 }
