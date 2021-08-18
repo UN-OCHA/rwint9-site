@@ -148,15 +148,15 @@
 }
 .rw-search-results .rw-river {
   margin-top: 32px;
-  border-bottom: 1px solid #e6ecef;
   padding-bottom: 32px;
+  border-bottom: 1px solid #e6ecef;
 }
 .rw-search-results .rw-river + .rw-river {
   margin-top: 56px;
 }
 .rw-search-results .rw-river:last-of-type {
-  border-bottom: none;
   padding-bottom: 0;
+  border-bottom: none;
 }
 .rw-search-results h3 {
   margin: 0 0 8px 0;
