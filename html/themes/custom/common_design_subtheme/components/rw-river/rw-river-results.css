@@ -9,6 +9,9 @@
   font-weight: bold;
 }
 
+.rw-river-results {
+  padding: 13px 0 0;
+}
 @media all and (min-width: 768px) {
   .rw-river-results {
     padding: 13px 0;
