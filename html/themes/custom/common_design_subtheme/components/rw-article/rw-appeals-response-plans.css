@@ -55,12 +55,6 @@
       grid-template-columns: repeat(1, 1fr);
       grid-gap: 0 32px;
     }
-    .rw-river--appeals-response-plans article:nth-last-child(2) {
-      border-bottom: none;
-    }
-    .rw-river--appeals-response-plans article:nth-child(2) {
-      margin-top: 0; /* Compensate for cd-flow top margin */
-    }
     .rw-river--appeals-response-plans .rw-river__rw-river__view-more {
       margin-top: 12px;
     }
@@ -69,6 +63,12 @@
   @media screen and (min-width: 1024px) {
     .rw-river--appeals-response-plans .rw-river__articles {
       grid-template-columns: repeat(2, 1fr);
+    }
+    .rw-river--appeals-response-plans article:nth-child(2) {
+      margin-top: 0; /* Compensate for cd-flow top margin */
+    }
+    .rw-river--appeals-response-plans article:nth-last-child(2) {
+      border-bottom: none;
     }
   }
 }
