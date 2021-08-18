@@ -171,9 +171,9 @@ function reliefweb_subscriptions_subscriptions() {
     // Sengrid cateogry.
     'category' => 'New Disasters',
     'type' => 'triggered',
-    'trigger' => 'reliefweb_subscriptions_trigger_disaster_notification',
+    'trigger' => 'triggerDisasterNotification',
     'template' => 'disaster',
-    'subject callback' => 'reliefweb_subscriptions_disaster_subject',
+    'subject callback' => 'disasterSubject',
     'bundle' => 'disaster',
     'resource' => 'disasters',
     'payload' => [
@@ -200,9 +200,9 @@ function reliefweb_subscriptions_subscriptions() {
     // Sengrid cateogry.
     'category' => 'OCHA Sitreps',
     'type' => 'triggered',
-    'trigger' => 'reliefweb_subscriptions_trigger_ocha_sitrep_notification',
+    'trigger' => 'triggerOchaSitrepNotification',
     'template' => 'ocha_sitrep',
-    'subject callback' => 'reliefweb_subscriptions_ocha_sitrep_subject',
+    'subject callback' => 'ochaSitrepSubject',
     'bundle' => 'report',
     'resource' => 'reports',
     'payload' => [

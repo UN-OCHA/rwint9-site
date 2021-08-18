@@ -11,6 +11,7 @@ use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ThemeHandlerInterface;
+use Drupal\Core\Language\Language;
 use Drupal\Core\Language\LanguageDefault;
 use Drupal\Core\Link;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
@@ -302,6 +303,28 @@ class ReliefwebSubscriptionsMailer {
         ->load($entity_id);
       if (empty($entity)) {
         $this->logger->warning('Entity not found, skipping');
+        return;
+      }
+
+      $sids = [];
+      foreach ($subscriptions as $sid => $subscription) {
+        if ($subscription['type'] === 'triggered' && $subscription['bundle'] === $entity_type) {
+          // Check if the subscription trigger is met for the entity.
+          if (!isset($subscription['trigger']) || $subscription['trigger']($entity, $entity_type)) {
+            $sids[] = $sid;
+          }
+        }
+      }
+
+      // Skip if there are no subscriptions with subscribers.
+      $sids = $this->getSubscriptionsWithSubscribers($sids);
+      if (empty($sids)) {
+        return;
+      }
+
+      // Skip if there are no new notifications to queue.
+      $sids = $this->getSubscriptionsNotYetQueued($sids, $entity_type, $entity_id);
+      if (empty($sids)) {
         return;
       }
 
@@ -604,8 +627,8 @@ class ReliefwebSubscriptionsMailer {
    *   Email subject.
    */
   protected function generateEmailSubject(array $subscription, array $data) {
-    if (isset($subscription['subject callback']) && is_callable($subscription['subject callback'])) {
-      return $subscription['subject callback']($data);
+    if (isset($subscription['subject callback'])) {
+      return call_user_func([$this, $subscription['subject callback']], $data);
     }
     else {
       return $subscription['subject'] ?? $subscription['name'] ?? '';
@@ -1695,7 +1718,10 @@ class ReliefwebSubscriptionsMailer {
     foreach ($subscriptions as $sid => $subscription) {
       if ($subscription['type'] === 'triggered' && $subscription['bundle'] === $entity->entityType()) {
         // Check if the subscription trigger is met for the entity.
-        if (!isset($subscription['trigger']) || $subscription['trigger']($entity, $entity_type)) {
+        if (!isset($subscription['trigger']) || call_user_func([
+          $this,
+          $subscription['trigger'],
+        ], $entity, $entity_type)) {
           $sids[] = $sid;
         }
       }
@@ -1910,7 +1936,7 @@ class ReliefwebSubscriptionsMailer {
     // Truncate the text to the given length if longer.
     if ($text_length > $length) {
       foreach ($paragraphs as $index => $paragraph) {
-        $parts = preg_split('/([\s\n\r]+)/u', $paragraph, NULL, PREG_SPLIT_DELIM_CAPTURE);
+        $parts = preg_split('/([\s\n\r]+)/u', $paragraph, -1, PREG_SPLIT_DELIM_CAPTURE);
         $parts_count = count($parts);
 
         for ($i = 0; $i < $parts_count; ++$i) {
@@ -1997,6 +2023,120 @@ class ReliefwebSubscriptionsMailer {
       'subject' => $subject,
       'body' => $html,
     ];
+  }
+
+  /**
+   * Trigger for sitreps.
+   */
+  protected function triggerOchaSitrepNotification($entity, $entity_type) {
+    if (!isset($entity->type) || $entity->type !== 'report') {
+      return FALSE;
+    }
+
+    $language = $entity->language ?? Language::LANGCODE_NOT_SPECIFIED;
+
+    // Check if the source is OCHA (id: 1503).
+    if (!empty($entity->field_source[$language])) {
+      $found = FALSE;
+      foreach ($entity->field_source[$language] as $item) {
+        // No strict equality as tid may be a numeric string.
+        if (isset($item['tid']) && $item['tid'] == 1503) {
+          $found = TRUE;
+          break;
+        }
+      }
+      if (!$found) {
+        return FALSE;
+      }
+    }
+
+    // Check if the format is Situation Report (id: 10).
+    if (!empty($entity->field_content_format[$language])) {
+      $found = FALSE;
+      foreach ($entity->field_content_format[$language] as $item) {
+        // No strict equality as tid may be a numeric string.
+        if (isset($item['tid']) && $item['tid'] == 10) {
+          $found = TRUE;
+          break;
+        }
+      }
+      if (!$found) {
+        return FALSE;
+      }
+    }
+
+    // Check status.
+    if (!empty($entity->is_new)) {
+      $status = $this->getEntityStatus($entity);
+      return in_array($status, ['published', 'to-review']);
+    }
+    elseif (isset($entity->original)) {
+      $status_new = $this->getEntityStatus($entity);
+      $status_old = $this->getEntityStatus($entity->original);
+      return $status_new !== $status_old &&
+        in_array($status_new, ['published', 'to-review']) &&
+        !in_array($status_old, ['published', 'to-review']);
+    }
+    return FALSE;
+  }
+
+  /**
+   * Trigger for disasters.
+   */
+  protected function triggerDisasterNotification($entity, $entity_type) {
+    if (!isset($entity->vocabulary_machine_name) || $entity->vocabulary_machine_name !== 'disaster') {
+      return FALSE;
+    }
+    if (!empty($entity->is_new)) {
+      $status = $this->getEntityStatus($entity);
+      return in_array($status, ['alert', 'current']);
+    }
+    elseif (isset($entity->original)) {
+      $status_new = $this->getEntityStatus($entity);
+      $status_old = $this->getEntityStatus($entity->original);
+      return $status_new !== $status_old && in_array($status_new, [
+        'alert',
+        'current',
+      ]);
+    }
+    return FALSE;
+  }
+
+  /**
+   * Generate sitrep subject.
+   */
+  protected function ochaSitrepSubject($data) {
+    if (!empty($data['title'])) {
+      return 'New OCHA Situation Report - ' . $data['title'];
+    }
+    return '';
+  }
+
+  /**
+   * Generate disaster subject.
+   */
+  protected function disasterSubject($data) {
+    if (!empty($data['name'])) {
+      return 'New Alert/Disaster - ' . $data['name'];
+    }
+    return '';
+  }
+
+  /**
+   * Get the status of an entity.
+   *
+   * @param object $entity
+   *   Entity.
+   *
+   * @return string
+   *   Entity status or empty string.
+   */
+  protected function getEntityStatus($entity) {
+    $language = $entity->language ?? Language::LANGCODE_NOT_SPECIFIED;
+    if (isset($entity->field_status, $entity->field_status[$language][0]['value'])) {
+      return $entity->field_status[$language][0]['value'];
+    }
+    return '';
   }
 
 }
