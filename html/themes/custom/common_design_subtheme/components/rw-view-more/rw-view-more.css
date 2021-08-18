@@ -18,6 +18,7 @@
 .view-more a {
   position: relative;
   display: inline-block;
+  font-size: 16px;
   font-style: italic;
 }
 .view-more a:after {
