@@ -1,7 +1,7 @@
 /**
  * Maps and Infographics.
  *
- * Section with the maps and inforgraphics for the countries/disasters/sources.
+ * Section with the maps and infographics for the countries/disasters/sources.
  */
 @supports (display: grid) {
   .rw-river--maps-infographics article {
@@ -20,7 +20,7 @@
     overflow: hidden;
     clip: rect(0, 174px, 124px, 0);
     width: 174px;
-    /* Reset max-height from the base.css. */
+    /* Reset max-height from river article image. */
     max-height: none;
     margin: 0;
   }
@@ -37,22 +37,13 @@
     border: 8px solid #e6ecef;
     background: linear-gradient(rgba(230, 236, 239, 0) 50%, rgba(230, 236, 239, 0.8));
   }
-  .rw-river--maps-infographics article dl.rw-entity-meta--core dd {
-    display: inline;
-  }
-  .rw-river--maps-infographics article dl.rw-entity-meta--core dd:after {
-    display: block;
-    width: 0;
-    height: 0;
-    margin: 0;
-  }
 
   @media screen and (max-width: 479px) {
     .rw-river--maps-infographics article {
       min-height: auto;
       padding-left: 0;
     }
-    .rw-river--maps-infographics article .content {
+    .rw-river--maps-infographics article .rw-river-article__content {
       display: none;
     }
   }
@@ -91,7 +82,7 @@
       left: 0;
       clip: auto;
       width: 100%;
-      margin: 0;
+      margin: 2px 20px 0 0;
     }
     .rw-river--maps-infographics article .rw-river-article__content:after {
       top: 0;

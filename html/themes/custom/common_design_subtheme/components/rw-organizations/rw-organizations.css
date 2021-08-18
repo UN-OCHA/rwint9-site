@@ -5,6 +5,7 @@
   .path-organizations section.rw-river .rw-river-results {
     margin-bottom: 12px;
     text-align: center;
+    border-bottom: none;
   }
   .path-organizations section.rw-river .rw-river__articles {
     display: flex;
