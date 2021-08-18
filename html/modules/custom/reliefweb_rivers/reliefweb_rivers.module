@@ -216,6 +216,8 @@ function reliefweb_rivers_theme() {
     ],
     'reliefweb_rivers_search_results' => [
       'variables' => [
+        // Wrapper attributes.
+        'attributes' => NULL,
         // Page title.
         'title' => t('Search Results'),
         // Title attributes.

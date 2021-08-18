@@ -6,6 +6,8 @@
  *
  * Available variables:
  * - attributes: wrapper attributes
+ * - title: page title
+ * - title_attributes: title attributes
  * - search: see reliefweb-rivers-search.html.twig
  * - totals: Associative array with the type of resources as keys and the
  *   total of resources matching the search query and river title as values
@@ -13,7 +15,21 @@
  */
 
 #}
-<div{{ attributes.addClass('rw-search-results rw-sectioned-content') }}>
+<section{{ attributes
+  .addClass([
+    'rw-river-page',
+    'rw-river-page--with-search',
+    'rw-search-results',
+  ])
+}}>
+  <header class="rw-river-page__header">
+    <h1{{ title_attributes
+      .addClass([
+        'rw-river-page__title',
+      ])
+    }}>{{ title }}</h1>
+  </header>
+
   {{ search }}
 
   {% if totals is not empty %}
@@ -31,4 +47,4 @@
   {% endif %}
 
   {{ sections }}
-</div>
+</section>

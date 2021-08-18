@@ -1,3 +1,6 @@
-{{ attach_library('common_design_subtheme/rw-river-results') }}
+{% set title_attributes = title_attributes.addClass('rw-page-title') %}
+
+{{ attach_library('common_design_subtheme/rw-page-title') }}
+{{ attach_library('common_design_subtheme/rw-river') }}
 
 {% include '@reliefweb_rivers/reliefweb-rivers-search-results.html.twig' %}
