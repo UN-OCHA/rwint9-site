@@ -322,13 +322,25 @@ function reliefweb_subscriptions_mail($key, &$message, $params) {
     return;
   }
 
+  // Copy any extra headers (like the List-ID to identify the notification).
   foreach ($params['headers'] as $key => $value) {
     $message['headers'][$key] = $value;
   }
-  if (!isset($message['headers']['Reply-To'])) {
-    $message['headers']['Reply-To'] = $message['from'];
+
+  // Ensure the Reply-To header is set and not duplicated due to different case.
+  $reply_to = $message['from'];
+  foreach (['reply-to', 'Reply-to', 'Reply-To'] as $key) {
+    if (isset($message['headers'][$key])) {
+      $reply_to = $message['headers'][$key];
+      unset($message['headers'][$key]);
+    }
   }
+  $message['headers']['Reply-To'] = $reply_to;
+
+  // Set the proper content type for the HTML content. Mimemail will then
+  // generate the text version and set a global "multipart/mixed" content type.
   $message['headers']['Content-Type'] = 'text/html; charset=UTF-8; format=flowed; delsp=yes';
+
   $message['subject'] = $params['subject'];
   $message['body'] = $params['body'];
 }
