@@ -62,6 +62,9 @@
       padding: 0 0 24px 0;
       border: none;
     }
+    .rw-river--maps-infographics .rw-river-article:last-child {
+      padding-bottom: 24px;
+    }
     .rw-river--maps-infographics article header {
       flex: 1 0 auto;
       padding: 16px 16px 0 16px;
