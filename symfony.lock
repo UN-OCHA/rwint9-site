@@ -239,6 +239,9 @@
     "fabpot/goutte": {
         "version": "v3.3.1"
     },
+    "friends-of-behat/mink-browserkit-driver": {
+        "version": "v1.5.0"
+    },
     "grasmash/expander": {
         "version": "1.0.0"
     },
@@ -372,6 +375,9 @@
             "phpunit.xml.dist",
             "tests/bootstrap.php"
         ]
+    },
+    "psr/cache": {
+        "version": "1.0.1"
     },
     "psr/container": {
         "version": "1.0.0"

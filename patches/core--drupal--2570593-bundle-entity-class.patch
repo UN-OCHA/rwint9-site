@@ -1,8 +1,8 @@
 diff --git a/core/lib/Drupal/Core/Config/Entity/ConfigEntityStorage.php b/core/lib/Drupal/Core/Config/Entity/ConfigEntityStorage.php
-index b944eea9f9..eea316acb2 100644
+index 9dcec1835b..440dd52bc4 100644
 --- a/core/lib/Drupal/Core/Config/Entity/ConfigEntityStorage.php
 +++ b/core/lib/Drupal/Core/Config/Entity/ConfigEntityStorage.php
-@@ -225,7 +225,8 @@ protected function doLoadMultiple(array $ids = NULL) {
+@@ -214,7 +214,8 @@ protected function doLoadMultiple(array $ids = NULL) {
    protected function doCreate(array $values) {
      // Set default language to current language if not provided.
      $values += [$this->langcodeKey => $this->languageManager->getCurrentLanguage()->getId()];
@@ -52,7 +52,7 @@ index 0000000000..9ba915fabd
 +
 +}
 diff --git a/core/lib/Drupal/Core/Entity/ContentEntityBase.php b/core/lib/Drupal/Core/Entity/ContentEntityBase.php
-index 35dca9a9c6..e416ced315 100644
+index 3e82c6f95f..70d69c0b38 100644
 --- a/core/lib/Drupal/Core/Entity/ContentEntityBase.php
 +++ b/core/lib/Drupal/Core/Entity/ContentEntityBase.php
 @@ -1125,6 +1125,23 @@ public function __unset($name) {
@@ -231,7 +231,7 @@ index b69958d8e8..e003838e0b 100644
  
    /**
 diff --git a/core/lib/Drupal/Core/Entity/EntityStorageBase.php b/core/lib/Drupal/Core/Entity/EntityStorageBase.php
-index 8b78be167a..db9bf6efaa 100644
+index 8b78be167a..4d890c868d 100644
 --- a/core/lib/Drupal/Core/Entity/EntityStorageBase.php
 +++ b/core/lib/Drupal/Core/Entity/EntityStorageBase.php
 @@ -99,6 +99,13 @@ public function __construct(EntityTypeInterface $entity_type, MemoryCacheInterfa
@@ -307,7 +307,7 @@ index 8b78be167a..db9bf6efaa 100644
      foreach ($records as $record) {
 -      $entity = new $this->entityClass($record, $this->entityTypeId);
 +      $entity_class = $this->getEntityClass();
-+      /* @var $entity \Drupal\Core\Entity\EntityInterface */
++      /** @var \Drupal\Core\Entity\EntityInterface $entity */
 +      $entity = new $entity_class($record, $this->entityTypeId);
        $entities[$entity->id()] = $entity;
      }
@@ -391,7 +391,7 @@ index 8b78be167a..db9bf6efaa 100644
 +
  }
 diff --git a/core/lib/Drupal/Core/Entity/EntityStorageInterface.php b/core/lib/Drupal/Core/Entity/EntityStorageInterface.php
-index 71898e0026..6d4762be33 100644
+index 71898e0026..9a1297b6ef 100644
 --- a/core/lib/Drupal/Core/Entity/EntityStorageInterface.php
 +++ b/core/lib/Drupal/Core/Entity/EntityStorageInterface.php
 @@ -230,4 +230,16 @@ public function getEntityTypeId();
@@ -405,8 +405,8 @@ index 71898e0026..6d4762be33 100644
 +   *   (optional) A specific entity type bundle identifier. Can be omitted in
 +   *   the case of entity types without bundles, like User.
 +   *
-+   * @return string
-+   *   The class name.
++   * @return string|null
++   *   The class name or NULL if none exists.
 +   */
 +  public function getEntityClass($bundle = NULL);
 +
@@ -542,7 +542,7 @@ index 98c5a41a32..4fe53ca1b6 100644
      // @todo This is handled by ContentEntityStorageBase, which assumes
      //   FieldableEntityInterface. The current approach in
 diff --git a/core/lib/Drupal/Core/Entity/Sql/SqlContentEntityStorage.php b/core/lib/Drupal/Core/Entity/Sql/SqlContentEntityStorage.php
-index 696203a6c5..bfc879df40 100644
+index ba319da7a1..b017bbfc5d 100644
 --- a/core/lib/Drupal/Core/Entity/Sql/SqlContentEntityStorage.php
 +++ b/core/lib/Drupal/Core/Entity/Sql/SqlContentEntityStorage.php
 @@ -505,7 +505,8 @@ protected function mapFromStorageRecords(array $records, $load_from_revision = F
@@ -556,7 +556,7 @@ index 696203a6c5..bfc879df40 100644
  
      return $entities;
 diff --git a/core/lib/Drupal/Core/Entity/entity.api.php b/core/lib/Drupal/Core/Entity/entity.api.php
-index f941695da4..0547183656 100644
+index f31561d70c..6c184a8868 100644
 --- a/core/lib/Drupal/Core/Entity/entity.api.php
 +++ b/core/lib/Drupal/Core/Entity/entity.api.php
 @@ -846,6 +846,8 @@ function hook_entity_view_mode_info_alter(&$view_modes) {
