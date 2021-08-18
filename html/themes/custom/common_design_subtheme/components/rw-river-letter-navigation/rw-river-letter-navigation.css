@@ -44,13 +44,13 @@
 .rw-river-search ~ .rw-river-letter-navigation-wrapper {
   margin: 24px 0 0 0;
 }
-.js .rw-river-letter-navigation-toggler {
-  display: none;
-}
+/*.js .rw-river-letter-navigation__btn {*/
+/*  display: none;*/
+/*}*/
 
 /* Media query */
 @media screen and (max-width: 479px) {
-  .js .rw-river-letter-navigation-toggler {
+  .js .rw-river-letter-navigation__btn {
     display: block;
     height: 40px;
     margin: 24px auto;
@@ -59,38 +59,47 @@
     background: white;
     font-size: 16px;
   }
-  .js .rw-river-letter-navigation-toggler:after {
-    display: inline-block;
-    overflow: hidden;
-    width: 9px;
-    height: 9px;
-    margin-left: 8px;
-    content: "";
-    vertical-align: middle;
-    background: url(../../../images/rw-icons-sprite.png) -150px 0 no-repeat;
-    background: rgba(0, 0, 0, 0) url(../../../images/rw-icons-sprite.svg) -150px 0 no-repeat;
+  .rw-river-letter-navigation__btn[aria-expanded] .cd-icon--arrow-down {
+    fill: #2e3436;
   }
-  .js .rw-river-letter-navigation-toggler[aria-expanded="true"]:after {
-    background-position-y: -9px;
+  [dir="ltr"] .rw-river-letter-navigation__btn[aria-expanded] .cd-icon--arrow-down {
+    margin-left: 0.5rem;
   }
+  [dir="rtl"] .rw-river-letter-navigation__btn[aria-expanded] .cd-icon--arrow-down {
+    margin-right: 0.5rem;
+  }
+  /*.js .rw-river-letter-navigation__btn:after {*/
+  /*  display: inline-block;*/
+  /*  overflow: hidden;*/
+  /*  width: 9px;*/
+  /*  height: 9px;*/
+  /*  margin-left: 8px;*/
+  /*  content: "";*/
+  /*  vertical-align: middle;*/
+  /*  background: url(../../../images/rw-icons-sprite.png) -150px 0 no-repeat;*/
+  /*  background: rgba(0, 0, 0, 0) url(../../../images/rw-icons-sprite.svg) -150px 0 no-repeat;*/
+  /*}*/
+  /*.js .rw-river-letter-navigation__btn[aria-expanded="true"]:after {*/
+  /*  background-position-y: -9px;*/
+  /*}*/
   .js .rw-river-letter-navigation {
     position: absolute;
     z-index: 4;
-    right: 0;
-    left: 0;
+    right: 12px;
+    left: 12px;
     background: white;
     -webkit-box-shadow: 0 0 6px 2px #e6ecef;
     box-shadow: 0 0 6px 2px #e6ecef;
   }
-  .js .rw-river-letter-navigation[data-hidden="true"] {
-    display: none;
-  }
-  .js .rw-river-letter-navigation-toggler + .rw-river-letter-navigation {
+  /*.js .rw-river-letter-navigation[data-hidden="true"] {*/
+  /*  display: none;*/
+  /*}*/
+  .js .rw-river-letter-navigation__btn + .rw-river-letter-navigation {
     margin-top: -24px;
   }
 }
 
-@media screen and (min-width: 768px) {
+@media screen and (min-width: 480px) {
   .js .rw-river-letter-navigation {
     --dropdown: false;
   }
