@@ -18,11 +18,14 @@
   }
 }
 
-.rw-river-results--with-advanced-search {
-  padding: 11px 0 0;
-}
 @media all and (min-width: 768px) {
   .rw-river-results--with-advanced-search {
     padding: 11px 0;
+  }
+}
+
+@media all and (min-width: 1024px) {
+  .rw-river-results--with-advanced-search {
+    padding: 10px 0;
   }
 }
