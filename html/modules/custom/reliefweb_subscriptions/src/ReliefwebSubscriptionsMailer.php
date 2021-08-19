@@ -2,6 +2,9 @@
 
 namespace Drupal\reliefweb_subscriptions;
 
+use Drupal\reliefweb_entities\Entity\Report;
+use Drupal\reliefweb_entities\Entity\Disaster;
+use Drupal\reliefweb_entities\EntityModeratedInterface;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Crypt;
@@ -11,7 +14,6 @@ use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ThemeHandlerInterface;
-use Drupal\Core\Language\Language;
 use Drupal\Core\Language\LanguageDefault;
 use Drupal\Core\Link;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
@@ -306,37 +308,7 @@ class ReliefwebSubscriptionsMailer {
         return;
       }
 
-      $sids = [];
-      foreach ($subscriptions as $sid => $subscription) {
-        if ($subscription['type'] === 'triggered' && $subscription['bundle'] === $entity_type) {
-          // Check if the subscription trigger is met for the entity.
-          if (!isset($subscription['trigger']) || $subscription['trigger']($entity, $entity_type)) {
-            $sids[] = $sid;
-          }
-        }
-      }
-
-      // Skip if there are no subscriptions with subscribers.
-      $sids = $this->getSubscriptionsWithSubscribers($sids);
-      if (empty($sids)) {
-        return;
-      }
-
-      // Skip if there are no new notifications to queue.
-      $sids = $this->getSubscriptionsNotYetQueued($sids, $entity_type, $entity_id);
-      if (empty($sids)) {
-        return;
-      }
-
-      $notifications = [];
-      $notifications[] = [
-        'sid' => $sid,
-        'bundle' => $entity->bundle(),
-        'entity_id' => $entity_id,
-      ];
-
-      // Queue notifications for all the subscriptions.
-      $this->queueNotifications($notifications);
+      $this->queueTriggered($entity, $entity_type);
     }
     // Attempt to queue scheduled notification.
     //
@@ -1716,7 +1688,7 @@ class ReliefwebSubscriptionsMailer {
     // Get triggered type subscriptions for this bundle.
     $sids = [];
     foreach ($subscriptions as $sid => $subscription) {
-      if ($subscription['type'] === 'triggered' && $subscription['bundle'] === $entity->entityType()) {
+      if ($subscription['type'] === 'triggered' && $subscription['bundle'] === $entity->bundle()) {
         // Check if the subscription trigger is met for the entity.
         if (!isset($subscription['trigger']) || call_user_func([
           $this,
@@ -1734,7 +1706,7 @@ class ReliefwebSubscriptionsMailer {
     }
 
     // Skip if there are no new notifications to queue.
-    $sids = $this->getSubscriptionsNotYetQueued($sids, $entity->entityType(), $entity->id());
+    $sids = $this->getSubscriptionsNotYetQueued($sids, $entity->bundle(), $entity->id());
     if (empty($sids)) {
       return;
     }
@@ -2027,20 +1999,22 @@ class ReliefwebSubscriptionsMailer {
 
   /**
    * Trigger for sitreps.
+   *
+   * @param \Drupal\reliefweb_entities\Entity\Report $report
+   *   Sitrep report.
+   * @param string $entity_type
+   *   Entity type.
    */
-  protected function triggerOchaSitrepNotification($entity, $entity_type) {
-    if (!isset($entity->type) || $entity->type !== 'report') {
+  protected function triggerOchaSitrepNotification(Report $report, $entity_type) {
+    if ($report->bundle() !== 'report') {
       return FALSE;
     }
 
-    $language = $entity->language ?? Language::LANGCODE_NOT_SPECIFIED;
-
     // Check if the source is OCHA (id: 1503).
-    if (!empty($entity->field_source[$language])) {
+    if (!$report->field_source->isEmpty()) {
       $found = FALSE;
-      foreach ($entity->field_source[$language] as $item) {
-        // No strict equality as tid may be a numeric string.
-        if (isset($item['tid']) && $item['tid'] == 1503) {
+      foreach ($report->field_source->referencedEntities() as $item) {
+        if ($item->id() == 1503) {
           $found = TRUE;
           break;
         }
@@ -2051,11 +2025,10 @@ class ReliefwebSubscriptionsMailer {
     }
 
     // Check if the format is Situation Report (id: 10).
-    if (!empty($entity->field_content_format[$language])) {
+    if (!$report->field_content_format->isEmpty()) {
       $found = FALSE;
-      foreach ($entity->field_content_format[$language] as $item) {
-        // No strict equality as tid may be a numeric string.
-        if (isset($item['tid']) && $item['tid'] == 10) {
+      foreach ($report->field_content_format->referencedEntities() as $item) {
+        if ($item->id() == 10) {
           $found = TRUE;
           break;
         }
@@ -2066,39 +2039,47 @@ class ReliefwebSubscriptionsMailer {
     }
 
     // Check status.
-    if (!empty($entity->is_new)) {
-      $status = $this->getEntityStatus($entity);
+    if ($report->isNew()) {
+      $status = $this->getEntityStatus($report);
       return in_array($status, ['published', 'to-review']);
     }
-    elseif (isset($entity->original)) {
-      $status_new = $this->getEntityStatus($entity);
-      $status_old = $this->getEntityStatus($entity->original);
+    elseif (isset($report->original)) {
+      $status_new = $this->getEntityStatus($report);
+      $status_old = $this->getEntityStatus($report->original);
       return $status_new !== $status_old &&
         in_array($status_new, ['published', 'to-review']) &&
         !in_array($status_old, ['published', 'to-review']);
     }
+
     return FALSE;
   }
 
   /**
    * Trigger for disasters.
+   *
+   * @param \Drupal\reliefweb_entities\Entity\Disaster $disaster
+   *   Disaster.
+   * @param string $entity_type
+   *   Entity type.
    */
-  protected function triggerDisasterNotification($entity, $entity_type) {
-    if (!isset($entity->vocabulary_machine_name) || $entity->vocabulary_machine_name !== 'disaster') {
+  protected function triggerDisasterNotification(Disaster $disaster, $entity_type) {
+    if ($disaster->bundle() !== 'disaster') {
       return FALSE;
     }
-    if (!empty($entity->is_new)) {
-      $status = $this->getEntityStatus($entity);
+
+    if ($disaster->isNew()) {
+      $status = $this->getEntityStatus($disaster);
       return in_array($status, ['alert', 'current']);
     }
-    elseif (isset($entity->original)) {
-      $status_new = $this->getEntityStatus($entity);
-      $status_old = $this->getEntityStatus($entity->original);
+    elseif (isset($disaster->original)) {
+      $status_new = $this->getEntityStatus($disaster);
+      $status_old = $this->getEntityStatus($disaster->original);
       return $status_new !== $status_old && in_array($status_new, [
         'alert',
         'current',
       ]);
     }
+
     return FALSE;
   }
 
@@ -2132,10 +2113,10 @@ class ReliefwebSubscriptionsMailer {
    *   Entity status or empty string.
    */
   protected function getEntityStatus($entity) {
-    $language = $entity->language ?? Language::LANGCODE_NOT_SPECIFIED;
-    if (isset($entity->field_status, $entity->field_status[$language][0]['value'])) {
-      return $entity->field_status[$language][0]['value'];
+    if ($entity instanceof EntityModeratedInterface) {
+      return $entity->getModerationStatus();
     }
+
     return '';
   }
 
