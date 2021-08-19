@@ -4,19 +4,26 @@
  * - tighter list
  * - hidden meta information
  */
+.rw-river--disasters {
+  --cd-flow-space: 1rem;
+  /* border-top: 1px solid #e6ecef; */
+}
 .rw-river--disasters .rw-river-article--disaster {
   position: relative;
-  margin: 16px 0 0 0;
-  padding: 16px 0 0 0;
-  border-top: 1px solid #e6ecef;
+  /* margin: 16px 0 0 0; */
+  padding: 0 0 16px;
+  /* border-top: 1px solid #e6ecef; */
 }
 .rw-river--disasters .rw-river-article--disaster:first-child {
   margin: 0;
-  padding: 8px 0 0 0;
+  /* padding: 8px 0 0 0; */
   border-top: none;
 }
 .rw-river--disasters .rw-river-article--disaster header {
   margin-top: 0;
+}
+.rw-river--disasters .rw-river-article--disaster footer {
+  padding-top: 0;
 }
 .rw-river--disasters .rw-river-article--disaster .rw-entity-meta {
   display: none;

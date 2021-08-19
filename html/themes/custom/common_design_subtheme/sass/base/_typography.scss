@@ -25,13 +25,21 @@ a {
  * or articles. Their style differs whether they are section headings or article
  * headings.
  */
+
 h1,
 h2 {
   margin: 0 0 24px 0;
   letter-spacing: 0.5px;
-  font-size: 30px;
+  font-size: 24px;
   font-weight: bold;
   line-height: 1.3;
+}
+
+@media screen and (min-width: 480px) {
+  h1,
+  h2 {
+    font-size: var(--cd-font-size--2xbase);
+  }
 }
 h3 {
   margin: 0 0 16px 0;
