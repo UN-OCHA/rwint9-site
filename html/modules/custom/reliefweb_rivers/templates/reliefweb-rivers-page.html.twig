@@ -51,7 +51,10 @@
   {{ advanced_search }}
 
   {{ content|merge({
-    '#title_attributes': create_attribute().addClass('visually-hidden')
+    '#title_attributes': create_attribute().addClass('visually-hidden'),
+    '#results_attributes': create_attribute().addClass([
+      advanced_search ? 'rw-river-results--with-advanced-search',
+    ]),
   }) }}
 
   {% if links is not empty %}
