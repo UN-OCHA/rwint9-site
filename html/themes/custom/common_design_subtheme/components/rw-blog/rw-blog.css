@@ -61,9 +61,6 @@
 }
 
 @media screen and (min-width: 768px) {
-  .rw-river-page--blog .rw-river-page--blog {
-    margin-bottom: 12px;
-  }
   .rw-river-page--blog .rw-river__articles {
     display: flex;
     flex-wrap: wrap;
