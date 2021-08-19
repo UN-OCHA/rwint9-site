@@ -11,6 +11,8 @@
  * - attributes: attributes for the section
  * - title: section title
  * - title_attributes: attributes for the river title
+ * - results_attributes: attributes for the river results
+ * - river_attributes: attributes for the river article list
  * - results: (optional) see reliefweb-rivers-results.html.twig
  * - entities: list of article entities constituting the river
  * - article_attributes: attributes for the river articles
@@ -29,7 +31,7 @@
   .addClass([
     'rw-river',
     'rw-river--' ~ id,
-    'rw-river--type-' ~ resource|clean_class
+    resource ? 'rw-river--type-' ~ resource|clean_class
   ])
 }}>
   <h{{ level }}{{ title_attributes.addClass([
@@ -37,7 +39,9 @@
   ]) }}>{{ title }}</h{{ level }}>
 
   {% if entities is not empty %}
-    {{ results }}
+    {{ results|merge({
+      '#attributes': results_attributes,
+    }) }}
 
     <div{{ river_attributes.addClass([
       'rw-river__articles',
