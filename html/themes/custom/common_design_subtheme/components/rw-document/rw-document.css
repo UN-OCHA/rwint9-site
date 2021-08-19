@@ -64,12 +64,8 @@
   border-color: #e6ecef;
 }
 
-.rw-document dl.rw-entity-meta dd {
-  font-size: 16px;
-}
-
 /* Entity details in the sidebar/footer */
-#main-content .rw-document .rw-entity-details dl.rw-entity-meta dt {
+.rw-document .rw-entity-details dl.rw-entity-meta dt {
   margin: 16px 0 0 0;
 }
 .rw-document > footer dl.rw-entity-meta dt:first-of-type {
@@ -86,7 +82,9 @@
 .rw-document > footer dl.rw-entity-meta dd li.rw-entity-meta__tag-value__list__item--last:after {
   content: "";
 }
-
+.rw-entity-details dl.rw-entity-meta.rw-article-meta dd::after {
+  content: none;
+}
 /* Hide format icons */
 .rw-document > footer .rw-entity-meta__tag-value:before {
   content: none;
