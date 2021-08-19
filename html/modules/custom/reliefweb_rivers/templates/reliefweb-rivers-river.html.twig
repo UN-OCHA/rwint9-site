@@ -39,7 +39,7 @@
   ]) }}>{{ title }}</h{{ level }}>
 
   {% if entities is not empty %}
-    {{ results|merge({
+    {{ results ? results|merge({
       '#attributes': results_attributes,
     }) }}
 
