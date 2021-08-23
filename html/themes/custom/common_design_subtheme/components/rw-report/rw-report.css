@@ -4,6 +4,10 @@
  * Individual report pages. Those are made of the main content body with
  * eventual attachments.
  */
+/* Lists in content */
+.node--report--full li {
+  margin: 8px 0 0;
+}
 /* Attachments. */
 .node--report--full #attachments {
   margin: 0 auto 24px auto;

@@ -64,13 +64,13 @@
   vertical-align: middle;
   background: var(--rw-icons--content--report--16--dark-grey);
 }
-.rw-entity-meta dd.rw-entity-meta__tag-value--format.map:before {
+.rw-entity-meta dd.rw-entity-meta__tag-value--format--map:before {
   background: var(--rw-icons--content--map--16--dark-grey);
 }
-.rw-entity-meta dd.rw-entity-meta__tag-value--format.infographic:before {
+.rw-entity-meta dd.rw-entity-meta__tag-value--format--infographic:before {
   background: var(--rw-icons--content--infographic--16--dark-grey);
 }
-.rw-entity-meta dd.rw-entity-meta__tag-value--format.interactive:before {
+.rw-entity-meta dd.rw-entity-meta__tag-value--format--interactive:before {
   background: var(--rw-icons--content--interactive--16--dark-grey);
 }
 

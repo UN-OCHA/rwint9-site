@@ -1,9 +1,12 @@
 /**
  * Organization landing page styling.
  */
+.rw-river-page--organizations {
+  --cd-flow-space: 1rem;
+}
+
 @media screen and (min-width: 768px) {
   .path-organizations section.rw-river .rw-river-results {
-    margin-bottom: 12px;
     text-align: center;
     border-bottom: none;
   }
@@ -17,9 +20,13 @@
   .path-organizations section.rw-river .rw-river__articles article {
     flex: 1 0 40%;
     width: 100%;
-    margin: 16px 8px 0 8px;
+    margin-right: 8px;
+    margin-left: 8px;
     padding: 16px;
     border: 1px solid #e6ecef;
+  }
+  .path-organizations .rw-river__articles .rw-river-article--source:nth-child(2) {
+    margin-top: 0; /* Compensate for cd-flow top margin */
   }
   .path-organizations .pager {
     border-top: none;

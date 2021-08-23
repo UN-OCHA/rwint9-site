@@ -53,7 +53,7 @@
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       grid-column-gap: 24px;
-      padding-top: 24px;
+      /* padding-top: 24px; */
     }
     .rw-river--maps-infographics article {
       justify-content: flex-end;
@@ -61,6 +61,9 @@
       margin: 0;
       padding: 0 0 24px 0;
       border: none;
+    }
+    .rw-river--maps-infographics .rw-river-article:last-child {
+      padding-bottom: 24px;
     }
     .rw-river--maps-infographics article header {
       flex: 1 0 auto;
