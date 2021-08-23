@@ -41,13 +41,11 @@
     <li class="rw-toc__section">
       <h3 class="rw-toc__section__title">{% trans %}Fields{% endtrans %}</h3>
       <ul>
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#content">{% trans %}Description{% endtrans %}</a></li>
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#files">{% trans %}Files{% endtrans %}</a></li>
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#dates">{% trans %}Dates{% endtrans %}</a></li>
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#source">{% trans %}Source{% endtrans %}</a></li>
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#countries-disasters">{% trans %}Countries & disasters{% endtrans %}</a></li>
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#details">{% trans %}Details{% endtrans %}</a></li>
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#headline">{% trans %}Headline{% endtrans %}</a></li>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#description">{% trans %}Description{% endtrans %}</a></li>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#overview">{% trans %}Overview{% endtrans %}</a></li>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#resources">{% trans %}Resources{% endtrans %}</a></li>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#sections">{% trans %}Sections{% endtrans %}</a></li>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#related">{% trans %}Related content{% endtrans %}</a></li>
       </ul>
     </li>
     <li class="rw-toc__section">
@@ -63,39 +61,35 @@
   </ul>
 </nav>
 
-<fieldset id="content">
+<fieldset id="description">
   <legend>{% trans %}Description{% endtrans %}</legend>
-  {{ form.field_language }}
   {{ form.title }}
   {{ form.body }}
+  {{ form.field_term_image }}
 </fieldset>
 
-<fieldset id="files">
-  <legend>{% trans %}Files{% endtrans %}</legend>
-  {{ form.field_file }}
-  {{ form.field_image }}
+<fieldset id="overview">
+  <legend>{% trans %}Overview{% endtrans %}</legend>
+  {{ form.field_sandbox }}
+  {{ form.field_topics_overview }}
 </fieldset>
 
-<fieldset id="dates">
-  <legend>{% trans %}Dates{% endtrans %}</legend>
-  {{ form.field_report_date }}
-  {{ form.field_embargo_date }}
+<fieldset id="resources">
+  <legend>{% trans %}Resources{% endtrans %}</legend>
+  {{ form.field_topics_sidebar }}
 </fieldset>
 
-<fieldset id="source">
-  <legend>{% trans %}Source{% endtrans %}</legend>
-  {{ form.field_source }}
-  {{ form.field_ocha_product }}
-  {{ form.field_origin }}
-  {{ form.field_origin_notes }}
+<fieldset id="sections">
+  <legend>{% trans %}Sections{% endtrans %}</legend>
+  {{ form.field_topics_grid_content }}
 </fieldset>
 
-<fieldset id="countries-disasters" class="details">
-  <legend>{% trans %}Countries & disasters{% endtrans %}</legend>
-  {{ form.field_country }}
-  {{ form.field_primary_country }}
-  {{ form.field_disaster }}
-  {{ form.field_disaster_type }}
+<fieldset id="related">
+  <legend>{% trans %}Related Content{% endtrans %}</legend>
+  {{ form.field_topics_reports_search }}
+  {{ form.field_topics_jobs_search }}
+  {{ form.field_topics_training_search }}
+  {{ form.field_topics_disasters_search }}
 </fieldset>
 
 <fieldset id="details" class="details">
@@ -104,18 +98,12 @@
   {{ form.field_theme }}
 </fieldset>
 
-<fieldset id="headline">
-  <legend class="accessibility">{% trans %}Headline{% endtrans %}</legend>
-  {{ form.field_headline }}
-  {{ form.field_headline_title }}
-  {{ form.summary }}
-  {{ form.field_headline_image }}
-</fieldset>
-
 <fieldset id="editorial-flags">
   <legend class="accessibility">{% trans %}Editorial flags{% endtrans %}</legend>
   {{ form.field_bury }}
   {{ form.field_feature }}
+  {{ form.field_disaster_type }}
+  {{ form.field_theme }}
 </fieldset>
 
 <fieldset id="actions">
