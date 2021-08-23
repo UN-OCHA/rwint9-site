@@ -2,4 +2,11 @@
 
 {{ attach_library('common_design_subtheme/rw-page-title') }}
 
+{% if river == 'organizations' or river == 'blog' %}
+  {% set content = content|merge({
+    '#attributes': create_attribute().addClass('rw-river--river-columns'),
+  }) %}
+
+{% endif %}
+
 {% include '@reliefweb_rivers/reliefweb-rivers-page.html.twig' %}
