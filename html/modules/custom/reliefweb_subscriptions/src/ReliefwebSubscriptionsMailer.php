@@ -4,15 +4,16 @@ namespace Drupal\reliefweb_subscriptions;
 
 use Drupal\reliefweb_entities\Entity\Report;
 use Drupal\reliefweb_entities\Entity\Disaster;
-use Drupal\reliefweb_entities\EntityModeratedInterface;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\RevisionableInterface;
 use Drupal\Core\Extension\ThemeHandlerInterface;
 use Drupal\Core\Language\LanguageDefault;
 use Drupal\Core\Link;
@@ -302,79 +303,18 @@ class ReliefwebSubscriptionsMailer {
       // Check if the entity exists.
       $entity = $this->entityTypeManager
         ->getStorage($entity_type)
-        ->load($entity_id);
+        ?->load($entity_id);
       if (empty($entity)) {
         $this->logger->warning('Entity not found, skipping');
         return;
       }
 
-      $this->queueTriggered($entity, $entity_type);
+      $this->queueTriggered($entity);
     }
     // Attempt to queue scheduled notification.
-    //
-    // We use almost the same logic as reliefweb_subscriptions_queue_scheduled()
-    // but use the given last timestamp if provided.
     else {
-      $sids = [$sid];
-
-      // Skip if there are no subscribers for the subscription.
-      $sids = $this->getSubscriptionsWithSubscribers($sids);
-      if (empty($sids)) {
-        $this->logger->warning('No subscribers, skipping');
-        return;
-      }
-
-      // Skip if the subscriptipon is already queued.
-      $sids = $this->getSubscriptionsNotYetQueued($sids);
-      if (empty($sids)) {
-        $this->logger->warning('Already queued, skipping');
-        return;
-      }
-
-      $last = $options['last'];
-      if (empty($last)) {
-        // Get the last and next run timestamps for the subscriptions.
-        $query = $this->database->select('reliefweb_subscriptions_logs', 'l');
-        $query->fields('l', ['sid', 'last', 'next']);
-        $query->condition('l.sid', $sids);
-        $result = $query->execute();
-        $timestamps = !empty($result) ? $result->fetchAllAssoc('sid') : [];
-      }
-      else {
-        $timestamps = [
-          $sid => (object) [
-            'last' => $last,
-            'next' => $last,
-          ],
-        ];
-      }
-
-      $notifications = [];
-      foreach ($sids as $sid) {
-        // If a subscription was never sent then there is no log for it so we
-        // compute what would have been the previous sending time.
-        if (isset($timestamps[$sid])) {
-          $last = $timestamps[$sid]->last;
-          $next = $timestamps[$sid]->next;
-        }
-        else {
-          $last = $this->getPreviousSendingTime($subscriptions[$sid]);
-          $next = $last;
-        }
-        // Only queue the subscription if time is due (next run time is before
-        // the current time).
-        if ($next < $this->time->getRequestTime()) {
-          $notifications[] = [
-            'sid' => $sid,
-            'last' => $last,
-          ];
-        }
-      }
-
-      // Queue notifications for all the subscriptions.
-      $this->queueNotifications($notifications);
+      $this->queueScheduled([$sid], $options['last'] ?? 0);
     }
-    $this->logger->notice('Subscription queued');
   }
 
   /**
@@ -879,7 +819,7 @@ class ReliefwebSubscriptionsMailer {
         'options' => [
           'query' => [
             // Content format facet filter: 'Appeal'.
-            'format' => 4,
+            'advanced-search' => '(F4)',
           ],
         ],
       ],
@@ -1153,7 +1093,7 @@ class ReliefwebSubscriptionsMailer {
     $prefooter_parts = [
       [
         'text' => $country_name . ' on ReliefWeb',
-        'link' => '/taxonomy/term' . $country_id,
+        'link' => '/taxonomy/term/' . $country_id,
       ],
       [
         'text' => $country_name . ' updates',
@@ -1161,7 +1101,7 @@ class ReliefwebSubscriptionsMailer {
         'options' => [
           'query' => [
             // Country facet filter.
-            'country' => $country_id,
+            'advanced-search' => '(C' . $country_id . ')',
           ],
         ],
       ],
@@ -1171,9 +1111,8 @@ class ReliefwebSubscriptionsMailer {
         'options' => [
           'query' => [
             // Source facet filter: 'OCHA'.
-            'source' => 1503,
             // Content format facet filter: 'Situation Report'.
-            'format' => 10,
+            'advanced-search' => '(S1503)_(F10)',
           ],
         ],
       ],
@@ -1260,7 +1199,7 @@ class ReliefwebSubscriptionsMailer {
         'link' => '/updates',
         'options' => [
           'query' => [
-            'country' => $country_id,
+            'advanced-search' => '(C' . $country_id . ')',
           ],
         ],
       ],
@@ -1667,19 +1606,107 @@ class ReliefwebSubscriptionsMailer {
   }
 
   /**
+   * Queue scheduled notifications.
+   *
+   * @param array $sids
+   *   Ids of the subscriptions to queue. If empty, retrieve all the scheduled
+   *   subscriptions.
+   * @param int $last
+   *   Timestamp of the last time the notifications are considered to have
+   *   been sent. If empty, get the timestamps from the database.
+   */
+  public function queueScheduled(array $sids = [], $last = 0) {
+    $subscriptions = reliefweb_subscriptions_subscriptions();
+
+    // Retrieve all the scheduled subscriptions if none is provided.
+    if (empty($sids)) {
+      foreach ($subscriptions as $sid => $subscription) {
+        if ($subscription['type'] === 'scheduled') {
+          $sids[] = $sid;
+        }
+      }
+    }
+    else {
+      $sids = array_filter($sids, function ($sid) use ($subscriptions) {
+        return isset($subscriptions[$sid]);
+      });
+    }
+
+    // Skip if there are no subscribers for the subscription.
+    $sids = $this->getSubscriptionsWithSubscribers($sids);
+    if (empty($sids)) {
+      $this->logger->warning('No subscribers, skipping');
+      return;
+    }
+
+    // Skip if the subscriptipon is already queued.
+    $sids = $this->getSubscriptionsNotYetQueued($sids);
+    if (empty($sids)) {
+      $this->logger->warning('Already queued, skipping');
+      return;
+    }
+
+    if (empty($last)) {
+      // Get the last and next run timestamps for the subscriptions.
+      $query = $this->database->select('reliefweb_subscriptions_logs', 'l');
+      $query->fields('l', ['sid', 'last', 'next']);
+      $query->condition('l.sid', $sids);
+      $result = $query->execute();
+      $timestamps = !empty($result) ? $result->fetchAllAssoc('sid') : [];
+    }
+    else {
+      $timestamps = [];
+      foreach ($sids as $sid) {
+        $timestamps[$sid] = (object) [
+          'last' => $last,
+          'next' => $last,
+        ];
+      }
+    }
+
+    $notifications = [];
+    $request_time = $this->time->getRequestTime();
+    foreach ($sids as $sid) {
+      // If a subscription was never sent then there is no log for it so we
+      // compute what would have been the previous sending time.
+      if (isset($timestamps[$sid])) {
+        $last = $timestamps[$sid]->last;
+        $next = $timestamps[$sid]->next;
+      }
+      else {
+        $last = $this->getPreviousSendingTime($subscriptions[$sid]);
+        $next = $last;
+      }
+      // Only queue the subscription if time is due (next run time is before
+      // the current time).
+      if ($next < $request_time) {
+        $notifications[] = [
+          'sid' => $sid,
+          'last' => $last,
+        ];
+      }
+    }
+
+    // Queue notifications for all the subscriptions.
+    $this->queueNotifications($notifications);
+  }
+
+  /**
    * Queue subscriptions for entity events (insert, update).
    *
-   * @param object $entity
+   * @param \Drupal\Core\Entity\EntityInterface $entity
    *   Entity.
-   * @param string $entity_type
-   *   Entity type.
    *
    * @todo update logic to be compatible with Drupal 9 and add trigger
    * callbacks.
    */
-  protected function queueTriggered($entity, $entity_type) {
+  public function queueTriggered(EntityInterface $entity) {
     // Skip if explicitly asked to not send notifications.
     if (!empty($entity->notifications_content_disable)) {
+      $this->logger->notice('Notifications disabled for the @bundle entity @id.', [
+        '@bundle' => $entity->bundle(),
+        '@id' => $entity->id(),
+      ]);
       return;
     }
 
@@ -1693,21 +1720,43 @@ class ReliefwebSubscriptionsMailer {
         if (!isset($subscription['trigger']) || call_user_func([
           $this,
           $subscription['trigger'],
-        ], $entity, $entity_type)) {
+        ], $entity)) {
           $sids[] = $sid;
         }
+        else {
+          $this->logger->notice('Triggering criteria not met for the @bundle entity @id.', [
+            '@bundle' => $entity->bundle(),
+            '@id' => $entity->id(),
+          ]);
+        }
       }
+    }
+
+    // Skip if no subscriptions were found for the entity.
+    if (empty($sids)) {
+      $this->logger->notice('No Notifications to queue for the @bundle entity @id.', [
+        '@bundle' => $entity->bundle(),
+        '@id' => $entity->id(),
+      ]);
+      return;
     }
 
     // Skip if there are no subscriptions with subscribers.
     $sids = $this->getSubscriptionsWithSubscribers($sids);
     if (empty($sids)) {
+      $this->logger->notice('No subscribers for @bundle notifications.', [
+        '@bundle' => $entity->bundle(),
+      ]);
       return;
     }
 
     // Skip if there are no new notifications to queue.
     $sids = $this->getSubscriptionsNotYetQueued($sids, $entity->bundle(), $entity->id());
     if (empty($sids)) {
+      $this->logger->notice('Notifications for the @bundle entity @id already queued.', [
+        '@bundle' => $entity->bundle(),
+        '@id' => $entity->id(),
+      ]);
       return;
     }
 
@@ -1715,7 +1764,7 @@ class ReliefwebSubscriptionsMailer {
     foreach ($sids as $sid) {
       $notifications[] = [
         'sid' => $sid,
-        'bundle' => $entity->entityType(),
+        'bundle' => $entity->bundle(),
         'entity_id' => $entity->id(),
       ];
     }
@@ -1791,6 +1840,7 @@ class ReliefwebSubscriptionsMailer {
    */
   protected function queueNotifications(array $notifications) {
     if (empty($notifications)) {
+      $this->logger->notice('No notifications to queue.');
       return;
     }
 
@@ -1938,14 +1988,32 @@ class ReliefwebSubscriptionsMailer {
     $subscriptions = reliefweb_subscriptions_subscriptions();
     $subscription = $subscriptions[$sid];
 
+    // For scheduled notifications, we retrieve the content published after
+    // the last time the notifications were sent.
     if ($subscription['type'] === 'scheduled') {
-      $last = $this->getPreviousSendingTime($subscription);
+      // Get the last time notifications for this subscription were sent.
+      $last = $this->database
+        ->select('reliefweb_subscriptions_logs', 'l')
+        ->fields('l', ['last'])
+        ->condition('l.sid', $sid)
+        ->range(0, 1)
+        ->execute()
+        ?->fetchField();
+
+      // If notifications were never sent for this subscription we retrieve
+      // what would have been the last sending time based on the subscription's
+      // schedule.
+      if (empty($last)) {
+        $last = $this->getPreviousSendingTime($subscription);
+      }
       $notification = [
         'sid' => $sid,
         'last' => $last,
       ];
       $data = $this->getScheduledNotificationData((object) $notification, $subscription);
     }
+    // For triggered noticications, we use fake data by retrieving the most
+    // recent entity matching the criteria (ex: latest ongoing disaster).
     else {
       $payload = $subscription['payload'];
       $payload['sort'] = ['id:desc'];
@@ -2002,10 +2070,8 @@ class ReliefwebSubscriptionsMailer {
    *
    * @param \Drupal\reliefweb_entities\Entity\Report $report
    *   Sitrep report.
-   * @param string $entity_type
-   *   Entity type.
    */
-  protected function triggerOchaSitrepNotification(Report $report, $entity_type) {
+  protected function triggerOchaSitrepNotification(Report $report) {
     if ($report->bundle() !== 'report') {
       return FALSE;
     }
@@ -2013,8 +2079,8 @@ class ReliefwebSubscriptionsMailer {
     // Check if the source is OCHA (id: 1503).
     if (!$report->field_source->isEmpty()) {
       $found = FALSE;
-      foreach ($report->field_source->referencedEntities() as $item) {
-        if ($item->id() == 1503) {
+      foreach ($report->field_source as $item) {
+        if ($item->target_id == 1503) {
           $found = TRUE;
           break;
         }
@@ -2027,8 +2093,8 @@ class ReliefwebSubscriptionsMailer {
     // Check if the format is Situation Report (id: 10).
     if (!$report->field_content_format->isEmpty()) {
       $found = FALSE;
-      foreach ($report->field_content_format->referencedEntities() as $item) {
-        if ($item->id() == 10) {
+      foreach ($report->field_content_format as $item) {
+        if ($item->target_id == 10) {
           $found = TRUE;
           break;
         }
@@ -2038,17 +2104,31 @@ class ReliefwebSubscriptionsMailer {
       }
     }
 
-    // Check status.
+    // Get the status of the entity.
+    $status = $report->getModerationStatus();
+
+    // For a newly created entity, check the current status.
     if ($report->isNew()) {
-      $status = $this->getEntityStatus($report);
       return in_array($status, ['published', 'to-review']);
     }
-    elseif (isset($report->original)) {
-      $status_new = $this->getEntityStatus($report);
-      $status_old = $this->getEntityStatus($report->original);
-      return $status_new !== $status_old &&
-        in_array($status_new, ['published', 'to-review']) &&
-        !in_array($status_old, ['published', 'to-review']);
+    // Otherwise compare with the status of the previous revision.
+    else {
+      // When this is called in a an hook_entity_update, then the previous
+      // revision is stored as the "original" property. Otherwise, for example,
+      // when queueing via drush, then we load the previous revision.
+      $previous = $report->original ?? $this->loadPreviousEntityRevision($report);
+
+      // If there is no previous revision, check the current status.
+      if ($previous === $report) {
+        return in_array($status, ['published', 'to-review']);
+      }
+
+      // Queue only if the document was not previously already published to
+      // avoid sending multiple times notifications for the document.
+      $previous_status = $previous->getModerationStatus();
+      return $status !== $previous_status &&
+        in_array($status, ['published', 'to-review']) &&
+        !in_array($previous_status, ['published', 'to-review']);
     }
 
     return FALSE;
@@ -2059,25 +2139,37 @@ class ReliefwebSubscriptionsMailer {
    *
    * @param \Drupal\reliefweb_entities\Entity\Disaster $disaster
    *   Disaster.
-   * @param string $entity_type
-   *   Entity type.
    */
-  protected function triggerDisasterNotification(Disaster $disaster, $entity_type) {
+  protected function triggerDisasterNotification(Disaster $disaster) {
     if ($disaster->bundle() !== 'disaster') {
       return FALSE;
     }
 
+    // Get the status of the entity.
+    $status = $disaster->getModerationStatus();
+
+    // For a newly created entity, check the current status.
     if ($disaster->isNew()) {
-      $status = $this->getEntityStatus($disaster);
-      return in_array($status, ['alert', 'current']);
+      return in_array($status, ['alert', 'ongoing']);
     }
-    elseif (isset($disaster->original)) {
-      $status_new = $this->getEntityStatus($disaster);
-      $status_old = $this->getEntityStatus($disaster->original);
-      return $status_new !== $status_old && in_array($status_new, [
-        'alert',
-        'current',
-      ]);
+    else {
+      // When this is called in a an hook_entity_update, then the previous
+      // revision is stored as the "original" property. Otherwise, for example,
+      // when queueing via drush, then we load the previous revision.
+      $previous = $report->original ?? $this->loadPreviousEntityRevision($disaster);
+
+      // If there is no previous revision, check the current status.
+      if ($previous === $disaster) {
+        return in_array($status, ['alert', 'ongoing']);
+      }
+
+      // Allow queueing notifications for the disaster from different previous
+      // states (ex: draft, alert, past etc.). This allows notably to send
+      // a notification when the disaster changes status from draft to alert
+      // and from alert to ongoing.
+      $previous_status = $previous->getModerationStatus();
+      return $status !== $previous_status &&
+        in_array($status, ['alert', 'ongoing']);
     }
 
     return FALSE;
@@ -2104,20 +2196,36 @@ class ReliefwebSubscriptionsMailer {
   }
 
   /**
-   * Get the status of an entity.
+   * Load the previous revision of an entity.
    *
-   * @param object $entity
+   * @param \Drupal\Core\Entity\RevisionableInterface $entity
    *   Entity.
    *
-   * @return string
-   *   Entity status or empty string.
+   * @return \Drupal\Core\Entity\RevisionableInterface
+   *   Entity revision.
    */
-  protected function getEntityStatus($entity) {
-    if ($entity instanceof EntityModeratedInterface) {
-      return $entity->getModerationStatus();
-    }
+  protected function loadPreviousEntityRevision(RevisionableInterface $entity) {
+    $storage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
+    $entity_type = $storage->getEntityType();
+    $id_key = $entity_type->getKey('id');
+    $revision_key = $entity_type->getKey('revision');
+    $revision_table = $storage->getRevisionTable();
 
-    return '';
+    // We only retrieve the previous revision id if any.
+    $previous_revision_id = $this->database
+      ->select($revision_table, 'r')
+      ->fields('r', [$revision_key])
+      ->condition('r.' . $id_key, $entity->id())
+      ->orderBy($revision_key, 'DESC')
+      ->range(1, 1)
+      ->execute()
+      ?->fetchField();
+
+    // Load the previous revision.
+    if (!empty($previous_revision_id)) {
+      return $storage->loadRevision($previous_revision_id);
+    }
+    return $entity;
   }
 
 }
