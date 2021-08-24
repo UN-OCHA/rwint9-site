@@ -3,9 +3,13 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.node.topic.field_sections
     - node.type.topic
+    - workflows.workflow.topic
   module:
+    - content_moderation
     - path
+    - reliefweb_fields
 id: node.topic.default
 targetEntityType: node
 bundle: topic
@@ -17,12 +21,24 @@ content:
     region: content
     settings: {  }
     third_party_settings: {  }
+  field_sections:
+    weight: 121
+    settings: {  }
+    third_party_settings: {  }
+    type: reliefweb_section_links
+    region: content
   langcode:
     type: language_select
     weight: 2
     region: content
     settings:
       include_locked: true
+    third_party_settings: {  }
+  moderation_state:
+    type: moderation_state_default
+    weight: 100
+    settings: {  }
+    region: content
     third_party_settings: {  }
   path:
     type: path
@@ -71,7 +87,7 @@ content:
     third_party_settings: {  }
   url_redirects:
     weight: 50
+    region: content
     settings: {  }
     third_party_settings: {  }
-    region: content
 hidden: {  }

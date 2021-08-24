@@ -3,14 +3,28 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.node.topic.field_sections
     - node.type.topic
   module:
+    - reliefweb_fields
     - user
 id: node.topic.default
 targetEntityType: node
 bundle: topic
 mode: default
 content:
+  content_moderation_control:
+    weight: -20
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+  field_sections:
+    weight: 101
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: reliefweb_section_links
+    region: content
   links:
     weight: 100
     settings: {  }

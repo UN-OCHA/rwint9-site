@@ -1,0 +1,22 @@
+uuid: e2eeb534-5e14-4d6e-b423-c0ffb8a54607
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_sections
+    - node.type.topic
+  module:
+    - reliefweb_fields
+id: node.topic.field_sections
+field_name: field_sections
+entity_type: node
+bundle: topic
+label: Sections
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  use_override: 1
+field_type: reliefweb_section_links

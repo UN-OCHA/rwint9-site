@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - core.entity_view_mode.node.teaser
+    - field.field.node.topic.field_sections
     - node.type.topic
   module:
     - user
@@ -12,10 +13,16 @@ targetEntityType: node
 bundle: topic
 mode: teaser
 content:
+  content_moderation_control:
+    weight: -20
+    settings: {  }
+    third_party_settings: {  }
+    region: content
   links:
     weight: 100
     settings: {  }
     third_party_settings: {  }
     region: content
 hidden:
+  field_sections: true
   langcode: true
