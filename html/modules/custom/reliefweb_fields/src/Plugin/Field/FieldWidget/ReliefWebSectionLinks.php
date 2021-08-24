@@ -44,7 +44,7 @@ class ReliefWebSectionLinks extends WidgetBase {
     $parents = $form['#parents'];
 
     // Url of the link validation route for the field.
-    $validate_url = Url::fromRoute('reliefweb_fields.validate.reliefweb_links', [
+    $validate_url = Url::fromRoute('reliefweb_fields.validate.reliefweb_section_links', [
       'entity_type_id' => $this->fieldDefinition->getTargetEntityTypeId(),
       'bundle' => $this->fieldDefinition->getTargetBundle(),
       'field_name' => $field_name,
@@ -61,7 +61,7 @@ class ReliefWebSectionLinks extends WidgetBase {
       '#attributes' => [
         'data-settings-field' => $field_name,
         'data-settings-label' => $this->fieldDefinition->getLabel(),
-        'data-settings-use-override' => !empty($settings['use_override']) ? 'true' : 'false',
+        'data-settings-use-override' => $settings['use_override'] ? 'true' : 'false',
         'data-settings-validate-url' => $validate_url,
       ],
     ];
@@ -106,7 +106,7 @@ class ReliefWebSectionLinks extends WidgetBase {
           $links[] = [
             'url' => $link['url'],
             'title' => $link['title'],
-            'override' => $use_override ? $link['override'] : NULL,
+            'override' => $use_override ? $link['override'] : '',
           ];
         }
       }
@@ -162,7 +162,7 @@ class ReliefWebSectionLinks extends WidgetBase {
     }
 
     $settings = $instance->getSettings();
-    $use_override = !empty($settings['use_override']);
+    $use_override = $settings['use_override'];
 
     $link = [
       'url' => $data['url'],
@@ -194,48 +194,41 @@ class ReliefWebSectionLinks extends WidgetBase {
       return t('Missing link url.');
     }
 
-    $path = static::getInternalPath($item['url']);
-    $title = '';
-
-    // Only nodes are supported as internal links.
-    if (empty($path)) {
-      $invalid = t('Invalid internal URL.');
-    }
-    elseif (strpos($path, '/node/') === 0 && strlen($path) > 6) {
-      $nid = intval(substr($path, 6), 10);
-
-      // Get document information.
-      $result = $database
-        ->select('node_field_data', 'n')
-        ->fields('n', ['title', 'status', 'type'])
-        ->condition('n.nid', $nid)
-        ->execute()
-        ?->fetchObject();
-
-      // Check that the document exists and is published.
-      if (empty($result->title)) {
-        $invalid = t('Invalid internal URL: the document was not found.');
-      }
-      // Only published documents are valid.
-      elseif (!isset($result->status) || (int) $result->status !== NodeInterface::PUBLISHED) {
-        $invalid = t('Invalid internal URL: the document is not published.');
-      }
-      else {
-        // Retrieve the first document source by alpha.
-        $source = static::getReportSourceShortname($nid);
-
-        // Prepend the source shortname if available.
-        $title = !empty($source) ? $source . ': ' . $result->title : $result->title;
-      }
-    }
-    else {
-      $invalid = t('Invalid internal URL: only links to reports are accepted.');
+    if (empty($item['title'])) {
+      return t('Title is mandatory.');
     }
 
-    // Update the item url, title amd image.
-    if (empty($invalid)) {
-      $item['url'] = $path;
-      $item['title'] = $title;
+    $path = $item['url'];
+    $override = $item['override'] ?? NULL;
+
+    // Override has to link to a node.
+    if ($override) {
+      $override = static::getInternalPath($item['override']);
+      if (strpos($override, '/node/') === 0 && strlen($override) > 6) {
+        $nid = intval(substr($override, 6), 10);
+
+        // Get document information.
+        $result = $database
+          ->select('node_field_data', 'n')
+          ->fields('n', ['title', 'status', 'type'])
+          ->condition('n.nid', $nid)
+          ->execute()
+          ?->fetchObject();
+
+        // Check that the document exists and is published.
+        if (empty($result->title)) {
+          $invalid = t('Invalid internal URL: the document was not found.');
+        }
+        // Only published documents are valid.
+        elseif (!isset($result->status) || (int) $result->status !== NodeInterface::PUBLISHED) {
+          $invalid = t('Invalid internal URL: the document is not published.');
+        }
+      }
+    }
+
+    // Path has to link to updates.
+    if (strpos($path, '/updates') === FALSE) {
+      $invalid = t('Invalid URL: use a link to a river.');
     }
 
     return $invalid;

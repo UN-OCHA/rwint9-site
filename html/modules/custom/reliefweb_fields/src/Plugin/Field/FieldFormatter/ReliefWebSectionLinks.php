@@ -24,6 +24,7 @@ class ReliefWebSectionLinks extends FormatterBase {
   public function viewElements(FieldItemListInterface $items, $langcode) {
 
     // Simple link.
+    // @todo output river.
     $links = [];
     foreach ($items as $item) {
       $links[] = [

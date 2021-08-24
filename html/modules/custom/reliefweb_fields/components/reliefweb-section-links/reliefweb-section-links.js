@@ -76,10 +76,10 @@
 
       if (settings.useOverride) {
         if (link.override) {
-          title.appendChild(document.createTextNode(link.override));
+          title.appendChild(document.createTextNode(' [' + link.override + ']'));
         }
         else {
-          title.appendChild(document.createTextNode(this.t('No override set')));
+          title.appendChild(document.createTextNode(' [' + t('No override set') + ']'));
         }
       }
 
@@ -95,10 +95,10 @@
       var container = document.createElement('td');
       container.setAttribute('data-link-form', '');
 
-      var internal = settings.internal;
-      container.appendChild(this.createLinkFormComponent('url', link.url, internal));
-      container.appendChild(this.createLinkFormComponent('title', link.title, internal, internal));
-      container.appendChild(this.createLinkFormComponent('override', link.override, internal, internal));
+      container.appendChild(this.createLinkFormComponent('url', link.url));
+      container.appendChild(this.createLinkFormComponent('title', link.title));
+      container.appendChild(this.createLinkFormComponent('override', link.override, !settings.useOverride));
+
       container.appendChild(this.createButton('update', t('Update'), true));
       container.appendChild(this.createButton('delete', t('Delete'), true));
 
@@ -108,7 +108,7 @@
     /**
      * Create an input form compoment for the given property.
      */
-    createLinkFormComponent: function (name, value, internal, hidden) {
+    createLinkFormComponent: function (name, value, hidden) {
       var input = document.createElement('input');
       input.setAttribute('value', value || '');
       input.setAttribute('data-name', name);
@@ -167,10 +167,9 @@
       var container = document.createElement('div');
       container.setAttribute('data-link-form', '');
 
-      var internal = settings.internal;
-      container.appendChild(this.createLinkFormComponent('url', '', internal));
-      container.appendChild(this.createLinkFormComponent('title', '', internal, internal));
-      container.appendChild(this.createLinkFormComponent('override', '', internal, internal));
+      container.appendChild(this.createLinkFormComponent('url', ''));
+      container.appendChild(this.createLinkFormComponent('title', ''));
+      container.appendChild(this.createLinkFormComponent('override', '', !settings.useOverride));
       container.appendChild(this.createButton('add', t('Add'), true));
       container.appendChild(this.createButton('clear', t('Clear')));
 
@@ -499,7 +498,7 @@
         this.settings = {
           field: this.data.getAttribute('data-settings-field'),
           label: this.data.getAttribute('data-settings-label'),
-          useOverride: this.data.getAttribute('data-settings-use-override') === 'true',
+          useOverride: this.data.getAttribute('data-settings-use-override'),
           validateUrl: this.data.getAttribute('data-settings-validate-url')
         };
       }
