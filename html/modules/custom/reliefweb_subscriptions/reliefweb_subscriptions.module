@@ -5,6 +5,8 @@
  * User subscription code.
  */
 
+use Drupal\Core\Entity\EntityInterface;
+
 /**
  * Get the list of subscriptions.
  *
@@ -171,12 +173,16 @@ function reliefweb_subscriptions_subscriptions() {
     // Sengrid cateogry.
     'category' => 'New Disasters',
     'type' => 'triggered',
-    'trigger' => 'reliefweb_subscriptions_trigger_disaster_notification',
+    'trigger' => 'triggerDisasterNotification',
     'template' => 'disaster',
-    'subject callback' => 'reliefweb_subscriptions_disaster_subject',
+    'subject callback' => 'disasterSubject',
     'bundle' => 'disaster',
     'resource' => 'disasters',
     'payload' => [
+      'filter' => [
+        'field' => 'status',
+        'value' => ['alert', 'current'],
+      ],
       'fields' => [
         'include' => [
           'name',
@@ -200,9 +206,9 @@ function reliefweb_subscriptions_subscriptions() {
     // Sengrid cateogry.
     'category' => 'OCHA Sitreps',
     'type' => 'triggered',
-    'trigger' => 'reliefweb_subscriptions_trigger_ocha_sitrep_notification',
+    'trigger' => 'triggerOchaSitrepNotification',
     'template' => 'ocha_sitrep',
-    'subject callback' => 'reliefweb_subscriptions_ocha_sitrep_subject',
+    'subject callback' => 'ochaSitrepSubject',
     'bundle' => 'report',
     'resource' => 'reports',
     'payload' => [
@@ -322,13 +328,25 @@ function reliefweb_subscriptions_mail($key, &$message, $params) {
     return;
   }
 
+  // Copy any extra headers (like the List-ID to identify the notification).
   foreach ($params['headers'] as $key => $value) {
     $message['headers'][$key] = $value;
   }
-  if (!isset($message['headers']['Reply-To'])) {
-    $message['headers']['Reply-To'] = $message['from'];
+
+  // Ensure the Reply-To header is set and not duplicated due to different case.
+  $reply_to = $message['from'];
+  foreach (['reply-to', 'Reply-to', 'Reply-To'] as $key) {
+    if (isset($message['headers'][$key])) {
+      $reply_to = $message['headers'][$key];
+      unset($message['headers'][$key]);
+    }
   }
+  $message['headers']['Reply-To'] = $reply_to;
+
+  // Set the proper content type for the HTML content. Mimemail will then
+  // generate the text version and set a global "multipart/mixed" content type.
   $message['headers']['Content-Type'] = 'text/html; charset=UTF-8; format=flowed; delsp=yes';
+
   $message['subject'] = $params['subject'];
   $message['body'] = $params['body'];
 }
@@ -382,4 +400,65 @@ function reliefweb_subscriptions_theme() {
   ];
 
   return $themes;
+}
+
+/**
+ * Implements hook_cron().
+ *
+ * Queue scheduled notifications.
+ */
+function reliefweb_subscriptions_cron() {
+  \Drupal::service('reliefweb_subscriptions.mailer')->queueScheduled();
+}
+
+/**
+ * Implements hook_entity_insert().
+ *
+ * Queue notifications for the entity.
+ */
+function reliefweb_subscriptions_entity_insert(EntityInterface $entity) {
+  if (in_array($entity->getEntityTypeId(), ['node', 'taxonomy_term'])) {
+    \Drupal::service('reliefweb_subscriptions.mailer')->queueTriggered($entity);
+  }
+}
+
+/**
+ * Implements hook_entity_update().
+ *
+ * Queue notifications for the entity.
+ */
+function reliefweb_subscriptions_entity_update(EntityInterface $entity) {
+  if (in_array($entity->getEntityTypeId(), ['node', 'taxonomy_term'])) {
+    \Drupal::service('reliefweb_subscriptions.mailer')->queueTriggered($entity);
+  }
+}
+
+/**
+ * Implements hook_entity_delete().
+ *
+ * Remove subscriptions for a country to be deleted.
+ *
+ * Remove queued subscriptions for the entity.
+ */
+function reliefweb_subscriptions_entity_delete(EntityInterface $entity) {
+  if ($entity->bundle() === 'country') {
+    $sid = 'country_updates_' . $entity->id();
+    $database = \Drupal::database();
+    // Remove queued notifications for this subscription.
+    $database->delete('reliefweb_subscriptions_queue')
+      ->condition('sid', $sid)
+      ->execute();
+    // Delete the subscriptions for this country.
+    $database->delete('reliefweb_subscriptions_subscriptions')
+      ->condition('sid', $sid)
+      ->execute();
+  }
+  elseif (in_array($entity->getEntityTypeId(), ['node', 'taxonomy_term'])) {
+    $database = \Drupal::database();
+    // Remove queued notifications for this entity.
+    $database->delete('reliefweb_subscriptions_queue')
+      ->condition('bundle', $entity->bundle())
+      ->condition('entity_id', $entity->id())
+      ->execute();
+  }
 }

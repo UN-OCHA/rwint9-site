@@ -1,0 +1,73 @@
+<?php
+
+namespace Drupal\reliefweb_subscriptions\Controller;
+
+/**
+ * @file
+ * Unsubscribe controller.
+ */
+
+use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Session\AccountInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+
+/**
+ * Unsubscribe controller.
+ */
+class UnsubscribeController extends ControllerBase {
+  /**
+   * Account.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
+  protected $account;
+
+  /**
+   * Account.
+   *
+   * @var \Symfony\Component\HttpFoundation\Request
+   */
+  protected $request;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(AccountInterface $account, RequestStack $request_stack) {
+    $this->account = $account;
+    $this->request = $request_stack->getCurrentRequest();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('current_user'),
+      $container->get('request_stack')
+    );
+  }
+
+  /**
+   * Add or remove node from bookmarks.
+   */
+  public function unsubscribe(AccountInterface $user) {
+    if ($this->account->isAnonymous()) {
+      return $this->redirect('reliefweb_subscriptions.unsubscription_form', [
+        'user' => $user->id(),
+        'timestamp' => $this->request->get('timestamp'),
+        'signature' => $this->request->get('signature'),
+      ]);
+    }
+
+    if ($this->account->id() === $user->id()) {
+      return $this->redirect('reliefweb_subscriptions.subscription_form', [
+        'user' => $user->id(),
+      ]);
+    }
+
+    throw new AccessDeniedHttpException();
+  }
+
+}
