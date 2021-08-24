@@ -5,6 +5,8 @@
  * User subscription code.
  */
 
+use Drupal\Core\Entity\EntityInterface;
+
 /**
  * Get the list of subscriptions.
  *
@@ -398,4 +400,65 @@ function reliefweb_subscriptions_theme() {
   ];
 
   return $themes;
+}
+
+/**
+ * Implements hook_cron().
+ *
+ * Queue scheduled notifications.
+ */
+function reliefweb_subscriptions_cron() {
+  \Drupal::service('reliefweb_subscriptions.mailer')->queueScheduled();
+}
+
+/**
+ * Implements hook_entity_insert().
+ *
+ * Queue notifications for the entity.
+ */
+function reliefweb_subscriptions_entity_insert(EntityInterface $entity) {
+  if (in_array($entity->getEntityTypeId(), ['node', 'taxonomy_term'])) {
+    \Drupal::service('reliefweb_subscriptions.mailer')->queueTriggered($entity);
+  }
+}
+
+/**
+ * Implements hook_entity_update().
+ *
+ * Queue notifications for the entity.
+ */
+function reliefweb_subscriptions_entity_update(EntityInterface $entity) {
+  if (in_array($entity->getEntityTypeId(), ['node', 'taxonomy_term'])) {
+    \Drupal::service('reliefweb_subscriptions.mailer')->queueTriggered($entity);
+  }
+}
+
+/**
+ * Implements hook_entity_delete().
+ *
+ * Remove subscriptions for a country to be deleted.
+ *
+ * Remove queued subscriptions for the entity.
+ */
+function reliefweb_subscriptions_entity_delete(EntityInterface $entity) {
+  if ($entity->bundle() === 'country') {
+    $sid = 'country_updates_' . $entity->id();
+    $database = \Drupal::database();
+    // Remove queued notifications for this subscription.
+    $database->delete('reliefweb_subscriptions_queue')
+      ->condition('sid', $sid)
+      ->execute();
+    // Delete the subscriptions for this country.
+    $database->delete('reliefweb_subscriptions_subscriptions')
+      ->condition('sid', $sid)
+      ->execute();
+  }
+  elseif (in_array($entity->getEntityTypeId(), ['node', 'taxonomy_term'])) {
+    $database = \Drupal::database();
+    // Remove queued notifications for this entity.
+    $database->delete('reliefweb_subscriptions_queue')
+      ->condition('bundle', $entity->bundle())
+      ->condition('entity_id', $entity->id())
+      ->execute();
+  }
 }

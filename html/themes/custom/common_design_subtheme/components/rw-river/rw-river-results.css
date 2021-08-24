@@ -3,6 +3,7 @@
  */
 .rw-river-results {
   width: 100%;
+  padding: 24px 0 0;
   text-align: center;
 }
 .rw-river-results span {
@@ -11,8 +12,20 @@
 
 @media all and (min-width: 768px) {
   .rw-river-results {
-    padding: 13px 0;
+    padding: 24px 0;
     text-align: left;
     border-bottom: 1px solid #e6ecef;
+  }
+}
+
+@media all and (min-width: 768px) {
+  .rw-river-results--with-advanced-search {
+    padding: 11px 0;
+  }
+}
+
+@media all and (min-width: 1024px) {
+  .rw-river-results--with-advanced-search {
+    padding: 10px 0;
   }
 }
