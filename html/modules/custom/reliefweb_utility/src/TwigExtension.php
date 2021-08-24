@@ -126,7 +126,6 @@ class TwigExtension extends AbstractExtension {
 
     // Remove redundant elements and classes.
     $pruner = HtmlPruner::fromDomDocument($inliner->getDomDocument())
-      ->removeElementsWithDisplayNone()
       ->removeRedundantClassesAfterCssInlined($inliner);
 
     // Return either the content of the body or the full HTML.

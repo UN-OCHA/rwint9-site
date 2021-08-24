@@ -65,7 +65,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     $query->range(0, $limit);
 
     // Send the notifications.
-    $notifications = $query?->execute()?->fetchAllAssoc('eid');
+    $notifications = $query->execute()?->fetchAllAssoc('eid');
     $this->mailer->send($notifications);
 
     // Remove the processed notifications from the queue.
