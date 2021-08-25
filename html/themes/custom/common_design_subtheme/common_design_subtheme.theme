@@ -139,4 +139,19 @@ function common_design_subtheme_theme_suggestions_alter(array &$suggestions, arr
       $suggestions[] = 'term_edit_form__' . $vocabulary_name;
     }
   }
+
+  if (isset($variables['element']) && isset($variables['element']['#type']) && $variables['element']['#type'] == 'form') {
+    $original_theme_hook = $variables['theme_hook_original'];
+
+    $suggestions[] = $original_theme_hook . '__' . str_replace('-', '_', $variables['element']['#id']);
+  }
+
+  return $suggestions;
+}
+
+/**
+ * Implementation of hook_theme_suggestions_form_element_alter().
+ */
+function common_design_subtheme_theme_suggestions_form_element_alter(array &$suggestions, array $variables) {
+  $suggestions[] = $variables['theme_hook_original'] . '--user-login';
 }
