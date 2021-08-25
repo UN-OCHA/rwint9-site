@@ -4,7 +4,7 @@
 
 {% if river == 'organizations' or river == 'blog' %}
   {% set content = content|merge({
-    '#attributes': create_attribute().addClass('rw-river--river-columns'),
+    '#attributes': create_attribute().addClass('rw-river--river-columns','rw-river--river-columns--two'),
   }) %}
 
 {% endif %}
