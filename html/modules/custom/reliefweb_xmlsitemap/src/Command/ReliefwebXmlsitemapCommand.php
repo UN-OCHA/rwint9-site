@@ -65,11 +65,11 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
   protected $httpClient;
 
   /**
-   * The logger.
+   * The logger factory.
    *
-   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface
    */
-  protected $logger;
+  protected $loggerFactory;
 
   /**
    * The state store.
@@ -91,8 +91,35 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
     $this->database = $database;
     $this->fileSystem = $file_system;
     $this->httpClient = $http_client;
-    $this->logger = $logger_factory->get('reliefweb_xmlsitemap');
+    $this->loggerFactory = $logger_factory;
     $this->state = $state;
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * Ensure messages are logged into all the logging facilities (ex: syslog)
+   * and use the classic Drupal placeholder replacement.
+   *
+   * By default DrushCommands::logger() returns a \Drush\Log\Logger that only
+   * logs to the console and uses a different placeholder replacement:
+   * {placeholder} rather than @placeholder.
+   *
+   * However this drush command file being provided by a module, the boostrap
+   * level is full by default, so we have access to the normal log stack and
+   * can simply use the logger factory to get the logger channel with all the
+   * loggers initialized (including \Drush\Log\DrushLog).
+   *
+   * If we wanted to only log to the console, we could use DrushLog directly
+   * here.
+   *
+   * Finally we cannot replace the logger using the logger factory in the
+   * constructor because the site is not yet fully boostrap when the constructor
+   * is called and all the loggers haven't been added to the logger channel
+   * yet at that time.
+   */
+  protected function logger() {
+    return $this->loggerFactory->get('reliefweb_xmlsitemap');
   }
 
   /**
@@ -185,7 +212,7 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
     $this->writeIndex($page_count);
 
     // Log the result.
-    $this->logger->info('Successfully created @page_count sitemap files for a total of @processed links.', [
+    $this->logger()->info('Successfully created @page_count sitemap page file(s) for a total of @processed links.', [
       '@page_count' => $page_count,
       '@processed' => $processed,
     ]);
@@ -207,7 +234,7 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
 
     $result = $this->fileSystem->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
     if (!$result) {
-      $this->logger->error('The directory %directory does not exist or is not writable.', [
+      $this->logger()->error('The directory %directory does not exist or is not writable.', [
         '%directory' => $directory,
       ]);
     }
@@ -242,7 +269,7 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
         // If the path couldn't be deleted, stop the process and log the error.
         if (!$this->fileSystem->deleteRecursive($path)) {
           $dir->close();
-          $this->logger->error('Enable to delete %path', [
+          $this->logger()->error('Enable to delete %path', [
             '%path' => $path,
           ]);
 
@@ -283,7 +310,7 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
 
         // Copy the file.
         if (!$this->fileSystem->copy($source, $destination, TRUE)) {
-          $this->logger->error('Unable to copy file @file', [
+          $this->logger()->error('Unable to copy file @file', [
             '@file' => $destination,
           ]);
         }
@@ -305,7 +332,7 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
     // Check that the xmlsitemap actually exists before trying to submit it.
     $directory = $this->getDirectory();
     if (!file_exists($directory . '/sitemap.xml')) {
-      $this->logger->error('Sitemap missing. Unable to submit it to search engines.');
+      $this->logger()->error('Sitemap missing. Unable to submit it to search engines.');
       return;
     }
 
@@ -317,13 +344,13 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
       $ping_url = str_replace('[sitemap]', $sitemap, $engine['url']);
       $response = $this->httpClient->request('GET', $ping_url);
       if (!empty($response->error)) {
-        $this->logger->error('Failed to submit sitemap to @engine with error: @error.', [
+        $this->logger()->error('Failed to submit sitemap to @engine with error: @error.', [
           '@engine' => $engine['name'],
           '@error' => $response->error,
         ]);
       }
       else {
-        $this->logger->info('Sitemap successfully submitted to @engine.', [
+        $this->logger()->info('Sitemap successfully submitted to @engine.', [
           '@engine' => $engine['name'],
         ]);
       }
@@ -604,12 +631,6 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
           'changefreq' => 'weekly',
           'priority' => 0.8,
         ],
-        'faq' => [
-          'loc' => $base_url . '/faq',
-          'lastmod' => $this->getLastModifiedNode('faq'),
-          'changefreq' => 'monthly',
-          'priority' => 0.8,
-        ],
       ];
     }
 
@@ -806,7 +827,7 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
     $base_url = $this->getBaseUrl();
 
     // Derive the base source path from the entity type.
-    $base = str_replace('_', '/', $entity_type) . '/';
+    $base = '/' . str_replace('_', '/', $entity_type) . '/';
 
     // Generate a map entity id => entity uri.
     $map = [];
@@ -815,15 +836,16 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
     }
 
     // Get the url aliases.
-    $aliases = $this->database->select('path_alias', 'ua')
-      ->fields('ua', ['path', 'alias'])
-      ->condition('ua.path', $map, 'IN')
-      ->orderBy('ua.id', 'ASC')
-      ->execute()->fetchAllKeyed();
+    $aliases = $this->database->select('path_alias', 'pa')
+      ->fields('pa', ['path', 'alias'])
+      ->condition('pa.path', $map, 'IN')
+      ->orderBy('pa.id', 'ASC')
+      ->execute()
+      ?->fetchAllKeyed() ?? [];
 
     // Generate the links using the alias if available.
-    foreach ($map as $id => $source) {
-      $map[$id] = $base_url . '/' . UrlHelper::encodePath($aliases[$source] ?? $source);
+    foreach ($map as $id => $path) {
+      $map[$id] = $base_url . UrlHelper::encodePath($aliases[$path] ?? $path);
     }
 
     return $map;
