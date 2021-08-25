@@ -58,17 +58,44 @@ class Topic extends Node implements BundleEntityInterface, EntityModeratedInterf
    * {@inheritdoc}
    */
   public function getPageSections() {
+    $sections = [];
+
     if (!$this->hasField('field_sections')) {
-      return [];
+      return $sections;
     }
+
+    $sections['introduction'] = $this->getEntityTextField('body');
+    $sections['overview'] = $this->getEntityTextField('field_overview');
+    $sections['resources'] = $this->getEntityTextField('field_resources');
 
     $queries = [];
     $section_links = $this->get('field_sections');
+
+    // Append searches to section links.
+    $rivers = [
+      'reports' => $this->t('Latest Updates'),
+      'jobs' => $this->t('Jobs'),
+      'training' => $this->t('Training'),
+      'disasters' => $this->t('Disasters'),
+    ];
+
+    foreach ($rivers as $river => $title) {
+      $url = $this->get('field_' . $river . '_search')->url;
+      if (!empty($url)) {
+        $section_links[] = [
+          'title' => $title,
+          'url' => $url,
+        ];
+      }
+    }
+
     foreach ($section_links as $index => $section_link) {
       $queries[$index] = $this->riverUrlToApi($section_link->url);
     }
 
-    return $this->getSectionsFromReliefWebApiQueries($queries);
+    $sections += $this->getSectionsFromReliefWebApiQueries($queries);
+
+    return $sections;
   }
 
   /**

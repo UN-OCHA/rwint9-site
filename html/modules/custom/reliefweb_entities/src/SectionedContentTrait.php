@@ -129,6 +129,31 @@ trait SectionedContentTrait {
   }
 
   /**
+   * Get the entity description (for countries, disasters, sources).
+   *
+   * @return array
+   *   Render array with the description.
+   */
+  public function getEntityTextField($field_name) {
+    if (!empty($this->{$field_name}->value)) {
+      // @todo review handling of markdown when there is a proper release of
+      // https://www.drupal.org/project/markdown for Drupal 9.
+      if ($this->{$field_name}->format === 'markdown') {
+        $description = HtmlSanitizer::sanitizeFromMarkdown($this->{$field_name}->value);
+      }
+      else {
+        $description = HtmlSanitizer::sanitize(check_markup($this->{$field_name}->value));
+      }
+
+      return [
+        '#theme' => 'reliefweb_entities_entity_' . str_replace('field_', '', $field_name),
+        '#description' => $description,
+      ];
+    }
+    return [];
+  }
+
+  /**
    * Get payload for the key content reports.
    *
    * @see \Drupal\reliefweb_entities\SectionedContentInterfacegetKeyContentApiQuery()
