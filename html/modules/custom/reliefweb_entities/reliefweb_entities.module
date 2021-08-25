@@ -25,6 +25,9 @@ function reliefweb_entities_entity_bundle_info_alter(&$bundles) {
   $bundles['node']['report']['class'] = 'Drupal\reliefweb_entities\Entity\Report';
   $bundles['node']['report']['label'] = 'Report';
 
+  $bundles['node']['topic']['class'] = 'Drupal\reliefweb_entities\Entity\Topic';
+  $bundles['node']['topic']['label'] = 'Topic';
+
   $bundles['node']['training']['class'] = 'Drupal\reliefweb_entities\Entity\Training';
   $bundles['node']['training']['label'] = 'Training';
 

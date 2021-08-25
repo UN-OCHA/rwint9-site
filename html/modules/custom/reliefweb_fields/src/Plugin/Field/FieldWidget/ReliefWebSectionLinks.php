@@ -156,7 +156,7 @@ class ReliefWebSectionLinks extends WidgetBase {
     }
 
     // Limit to 10,000 bytes (should never be reached).
-    $data = json_decode(file_get_contents('php://input', NULL, NULL, 0, 10000), TRUE);
+    $data = json_decode(file_get_contents('php://input', FALSE, NULL, 0, 10000), TRUE);
     if (empty($data['url'])) {
       return ['error' => t('Invalid link data')];
     }
@@ -269,26 +269,6 @@ class ReliefWebSectionLinks extends WidgetBase {
 
     // Only accept links resolved to a node internal path.
     return preg_match('#^/node/[0-9]+$#', $path) === 1 ? $path : '';
-  }
-
-  /**
-   * Get the shortname of the first source by alpha for the given report.
-   *
-   * @param int $nid
-   *   Node id.
-   *
-   * @return string
-   *   Source shortname.
-   */
-  public static function getReportSourceShortname($nid) {
-    $query = \Drupal::database()->select('node__field_source', 'ns');
-    $query->innerJoin('taxonomy_term__field_shortname', 'ts', 'ts.entity_id = ns.field_source_target_id');
-    $query->fields('ts', ['field_shortname_value']);
-    $query->condition('ns.entity_id', $nid, '=');
-    $query->orderBy('ts.field_shortname_value', 'ASC');
-    $query->range(0, 1);
-
-    return $query->execute()?->fetchField();
   }
 
   /**
