@@ -1,0 +1,22 @@
+uuid: 9cf3bc35-e636-4e62-979e-7606d863efa3
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_reports_search
+    - node.type.topic
+  module:
+    - reliefweb_fields
+id: node.topic.field_reports_search
+field_name: field_reports_search
+entity_type: node
+bundle: topic
+label: 'Reports search'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  use_override: 0
+field_type: reliefweb_section_links

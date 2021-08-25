@@ -1,0 +1,19 @@
+uuid: ed534f23-2ef5-4f2f-a8db-52d4893f7cbc
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - reliefweb_fields
+id: node.field_training_search
+field_name: field_training_search
+entity_type: node
+type: reliefweb_section_links
+settings: {  }
+module: reliefweb_fields
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
