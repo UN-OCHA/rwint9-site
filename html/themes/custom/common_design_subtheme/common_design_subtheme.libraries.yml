@@ -6,6 +6,14 @@ global-styling:
     - common_design_subtheme/rw-form
 
 # RW custom components
+rw-admin-menu:
+  css:
+    theme:
+      components/rw-admin-menu/rw-admin-menu.css: {}
+  js:
+    components/rw-admin-menu/admin-menu.js: {}
+  dependencies:
+    - common_design/cd-dropdown
 
 # Filters for the rivers.
 rw-advanced-search:
@@ -222,6 +230,11 @@ rw-useful-links:
   css:
     theme:
       components/rw-useful-links/rw-useful-links.css: {}
+
+rw-user:
+  css:
+    theme:
+      components/rw-user/rw-user.css: {}
 
 rw-view-more:
   css:
