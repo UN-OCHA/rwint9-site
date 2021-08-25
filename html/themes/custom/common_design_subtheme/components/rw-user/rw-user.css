@@ -1,0 +1,19 @@
+/**
+ * User notifications form.
+ *
+ * Style the form in the page where users can subscribe to ReliefWeb
+ * notifications.
+ */
+.subscription-form .form-checkboxes .form-type-checkbox {
+  display: block;
+}
+
+/**
+ * Unsubscribe form.
+ *
+ * This doesn't really belong here but is related to the notifications.
+ */
+.subscription-form .form-type-checkbox {
+  display: block;
+  margin-top: 8px;
+}

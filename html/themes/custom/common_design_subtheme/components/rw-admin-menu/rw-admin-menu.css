@@ -1,0 +1,159 @@
+/**
+ * Administration menu.
+ *
+ * This menu contains links to the administration or editorial related pages.
+ */
+.admin-menu nav {
+  /* The padding is for the blank space between the admin menu and the ocha
+   * services.*/
+  padding: 0 0 48px 0;
+  background: #055372;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.admin-menu ul,
+.admin-menu li {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.admin-menu h2 {
+  margin-top: 0;
+  font-size: 16px;
+}
+.admin-menu h3 {
+  margin: 0;
+  padding: 0;
+  color: #cef0fd;
+  font-size: 12px;
+  font-weight: lighter;
+}
+.admin-menu nav > ul > li + li {
+  margin-top: 20px;
+}
+.admin-menu ul ul li {
+  display: inline-block;
+  margin: 12px 24px 0 0;
+}
+.admin-menu li a {
+  color: white;
+  font-weight: bold;
+  text-decoration: none;
+}
+.admin-menu li a:hover,
+.admin-menu li a:active,
+.admin-menu li a:focus {
+  text-decoration: underline;
+}
+
+/**
+ * Admin menu - javascript enabled.
+ */
+/*.js .cd-header .admin-menu nav {*/
+/*  !* Hide by default when javascript is enabled to avoid flickering before the*/
+/*   * toggling button is added. *!*/
+/*  display: none;*/
+/*  position: absolute;*/
+/*  left: 0;*/
+/*  width: 100%;*/
+/*  padding: 22px 0;*/
+/*  !* Inherit the padding from the header wrapper. *!*/
+/*  padding-left: inherit;*/
+/*  padding-right: inherit;*/
+/*  -webkit-box-shadow: 0 4px 4px -2px rgba(0, 0, 0, 0.3);*/
+/*  box-shadow: 0 4px 4px -2px rgba(0, 0, 0, 0.3);*/
+/*  !* Ensures the admin menu popup is above the rest of the header and the main*/
+/*   * content. *!*/
+/*  z-index: 3;*/
+/*}*/
+/*.js .cd-header .admin-menu[data-hidden="false"] {*/
+/*  display: block;*/
+/*}*/
+/* Visually hidden. */
+.js .cd-header .admin-menu h2 {
+  position: absolute;
+  height: 1px;
+  width: 1px;
+  margin: -1px;
+  border: none;
+  padding: 0;
+  clip-path: inset(100%);
+  clip: rect(0,0,0,0);
+  overflow: hidden;
+  white-space: nowrap;
+}
+.js .cd-header .admin-menu > ul {
+  max-width: 1140px;
+  margin: 0 auto;
+  position: relative;
+}
+/*.js .cd-header .admin-menu-toggler {*/
+/*  display: inline-block;*/
+/*  position: relative;*/
+/*  height: 35px;*/
+/*  padding: 0 20px;*/
+/*  margin: 0;*/
+/*  border: none;*/
+/*  background: none;*/
+/*  color: white;*/
+/*  font-size: 12px;*/
+/*  font-weight: lighter;*/
+/*  line-height: 35px;*/
+/*  !* Ensures the menu is above the background. *!*/
+/*  z-index: 2;*/
+/*}*/
+/*.js .cd-header .admin-menu-toggler:hover,*/
+/*.js .cd-header .admin-menu-toggler:focus,*/
+/*.js .cd-header .admin-menu-toggler:active {*/
+/*  text-decoration: underline;*/
+/*}*/
+/* Arrow to show the show that the popup is controlled by the button. */
+/*.js .cd-header .admin-menu-toggler[aria-expanded="true"]:before {*/
+/*  content: "";*/
+/*  position: absolute;*/
+/*  bottom: 0;*/
+/*  left: 50%;*/
+/*  width: 12px;*/
+/*  margin-left: -6px;*/
+/*  border-left: 6px solid transparent;*/
+/*  border-right: 6px solid transparent;*/
+/*  border-bottom: 6px solid #055372;*/
+/*}*/
+/*.js .cd-header .admin-menu-toggler:after {*/
+/*  content: "";*/
+/*  display: inline-block;*/
+/*  vertical-align: middle;*/
+/*  width: 9px;*/
+/*  height: 9px;*/
+/*  margin-left: 5px;*/
+/*  overflow: hidden;*/
+/*  background: url(../../images/rw-icons-sprite.png) -177px 0 no-repeat;*/
+/*  background: rgba(0,0,0,0) url(../../images/rw-icons-sprite.svg) -177px 0 no-repeat;*/
+/*}*/
+/*.js .cd-header  .admin-menu-toggler[aria-expanded="true"]:after {*/
+/*  background-position-y: -9px;*/
+/*}*/
+/* Show an icon and hide the text on small screens. */
+/*@media screen and (max-width: 767px) {*/
+/*  .js .cd-header .admin-menu-toggler span {*/
+/*    display: inline-block;*/
+/*    position: relative;*/
+/*    top: 2px;*/
+/*    width: 12px;*/
+/*    height: 12px;*/
+/*    text-indent: 12px;*/
+/*    overflow: hidden;*/
+/*    background: url(../../images/rw-icons-sprite.png) -108px -168px no-repeat;*/
+/*    background: rgba(0,0,0,0) url(../../images/rw-icons-sprite.svg) -108px -168px no-repeat;*/
+/*  }*/
+/*}*/
+
+/* Print. */
+@media print {
+  .admin-menu-button {
+    display: none!important;
+  }
+  .admin-menu {
+    display: none!important;
+  }
+}
