@@ -3,11 +3,64 @@
  *
  * This menu contains links to the administration or editorial related pages.
  */
-.admin-menu nav {
+.admin-menu {
+  text-align: left;
   /* The padding is for the blank space between the admin menu and the ocha
    * services.*/
   padding: 0 0 48px 0;
-  background: #055372;
+}
+.admin-menu__btn {
+  display: flex;
+  width: auto;
+  position: relative;
+  align-items: center;
+  height: 35px;
+  padding: 0 20px;
+  transition: background .3s ease;
+  color: var(--cd-white);
+  background: transparent;
+  font-size: var(--cd-font-size--tiny);
+}
+
+.admin-menu__btn span {
+  display: inline-block;
+  position: relative;
+  top: 2px;
+  width: 12px;
+  height: 12px;
+  text-indent: 12px;
+  overflow: hidden;
+  background: var(--rw-icons--common--admin--12--white);
+}
+
+.admin-menu__btn::after {
+  position: absolute;
+  top: 50%;
+  right: -1px;
+  width: 2px;
+  height: calc(35px / 3);
+  content:"";
+  transform: translateY(-50%);
+  background: var(--cd-blue--light);
+}
+
+.admin-menu-dropdown__inner {
+  max-width: var(--cd-max-width);
+  padding: 0 var(--cd-container-padding);
+}
+@media screen and (min-width: 768px) {
+  .admin-menu-dropdown__inner {
+    margin: 0 auto;
+    padding: 0 var(--cd-container-padding-tablet);
+  }
+}
+@media screen and (min-width: 1024px) {
+  .admin-menu-dropdown__inner {
+    padding: 0 var(--cd-container-padding-xlarge);
+  }
+}
+
+.admin-menu nav {
   font-size: 12px;
   line-height: 1.5;
 }
@@ -19,7 +72,7 @@
 }
 .admin-menu h2 {
   margin-top: 0;
-  font-size: 16px;
+  color: var(--cd-white);
 }
 .admin-menu h3 {
   margin: 0;
@@ -49,6 +102,12 @@
 /**
  * Admin menu - javascript enabled.
  */
+
+.js .admin-menu {
+  float: right;
+  padding: 0;
+}
+
 /*.js .cd-header .admin-menu nav {*/
 /*  !* Hide by default when javascript is enabled to avoid flickering before the*/
 /*   * toggling button is added. *!*/
@@ -70,23 +129,23 @@
 /*  display: block;*/
 /*}*/
 /* Visually hidden. */
-.js .cd-header .admin-menu h2 {
-  position: absolute;
-  height: 1px;
-  width: 1px;
-  margin: -1px;
-  border: none;
-  padding: 0;
-  clip-path: inset(100%);
-  clip: rect(0,0,0,0);
-  overflow: hidden;
-  white-space: nowrap;
-}
-.js .cd-header .admin-menu > ul {
-  max-width: 1140px;
-  margin: 0 auto;
-  position: relative;
-}
+/*.js .cd-header .admin-menu h2 {*/
+/*  position: absolute;*/
+/*  height: 1px;*/
+/*  width: 1px;*/
+/*  margin: -1px;*/
+/*  border: none;*/
+/*  padding: 0;*/
+/*  clip-path: inset(100%);*/
+/*  clip: rect(0,0,0,0);*/
+/*  overflow: hidden;*/
+/*  white-space: nowrap;*/
+/*}*/
+/*.js .cd-header .admin-menu > ul {*/
+/*  max-width: 1140px;*/
+/*  margin: 0 auto;*/
+/*  position: relative;*/
+/*}*/
 /*.js .cd-header .admin-menu-toggler {*/
 /*  display: inline-block;*/
 /*  position: relative;*/
