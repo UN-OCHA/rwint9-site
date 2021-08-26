@@ -17,8 +17,8 @@
 }
 
 // Hide label on mobile.
-//.cd-global-header button[aria-expanded] span[class*='__btn-label'] {
-//  @include max-width(md) {
-//    @include visually-hidden;
-//  }
-//}
+.cd-global-header button[aria-expanded] span[class*='__btn-label'] {
+  @include max-width(md) {
+    @include visually-hidden;
+  }
+}

@@ -100,6 +100,17 @@
   border-color: transparent transparent var(--cd-ocha-blue);
 }
 
+@media (max-width: 767px) {
+  .cd-global-header button[aria-expanded] span[class*=__btn-label] {
+    position: absolute !important;
+    overflow: hidden;
+    clip: rect(1px, 1px, 1px, 1px);
+    width: 1px;
+    height: 1px;
+    word-wrap: normal;
+  }
+}
+
 .cd-header button:focus {
   outline: 3px solid var(--cd-blue--bright);
 }
@@ -249,6 +260,17 @@
 .cd-user-menu__item:focus, .cd-global-header .menu > li a:focus,
 .cd-global-header .menu > li button:focus {
   outline: 3px solid var(--cd-blue--bright);
+}
+
+@media (max-width: 767px) {
+  .cd-global-header__user-menu a svg + span {
+    position: absolute !important;
+    overflow: hidden;
+    clip: rect(1px, 1px, 1px, 1px);
+    width: 1px;
+    height: 1px;
+    word-wrap: normal;
+  }
 }
 
 .cd-footer {
