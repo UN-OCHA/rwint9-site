@@ -17,3 +17,40 @@
   display: block;
   margin-top: 8px;
 }
+
+/**
+ * User dashboard.
+ *
+ * Style of the user account landing page (dashboard).
+ *
+ * Scope: .page-user #main
+ */
+.rw-user-dashboard ul {
+  list-style: none;
+  margin: 0;
+  padding: 24px 0 12px 0;
+  column-count: 2;
+  column-width: 352px;
+  vertical-align: top;
+}
+.rw-user-dashboard li > * {
+  display: inline-block;
+  width: 100%;
+}
+.rw-user-dashboard li + li {
+  margin-top: 32px;
+}
+[dir="ltr"] .rw-user-dashboard li {
+  padding-right: 32px;
+}
+[dir="rtl"] .rw-user-dashboard li {
+  padding-left: 32px;
+}
+.rw-user-dashboard li a {
+  font-size: 18px;
+  font-weight: bold;
+}
+.rw-user-dashboard li p {
+  display: inline-block;
+  margin: 4px 0 0 0;
+}

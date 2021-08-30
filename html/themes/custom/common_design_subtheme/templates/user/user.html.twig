@@ -16,7 +16,16 @@
  * @see template_preprocess_user()
  */
 #}
+
+{{ attach_library('common_design_subtheme/rw-user') }}
+
 <article{{ attributes.addClass('profile rw-profile') }}>
+
+
+  {% if logged_in %}
+    {% include '@common_design_subtheme/user/user-dashboard.html.twig' %}
+  {% endif %}
+
   {% if content %}
     {{- content -}}
   {% endif %}
