@@ -106,7 +106,7 @@
     text-decoration: underline;
   }
   /* Draggable element for the headlines editor. */
-  .page-path-home article[data-dragged] {
+  .path-frontpage article[data-dragged] {
     position: absolute;
     width: 200px;
     height: auto;
@@ -116,22 +116,22 @@
     background-color: rgba(0, 0, 0, 0.8);
     z-index: 100100;
   }
-  .page-path-home article[data-dragged] dl,
-  .page-path-home article[data-dragged] figure,
-  .page-path-home article[data-dragged] .content {
+  .path-frontpage article[data-dragged] dl,
+  .path-frontpage article[data-dragged] figure,
+  .path-frontpage article[data-dragged] .content {
     display: none;
   }
-  .page-path-home article[data-dragged] * {
+  .path-frontpage article[data-dragged] * {
     padding: 0;
     margin: 0;
   }
-  .page-path-home article[data-dragged] a {
+  .path-frontpage article[data-dragged] a {
     font-size: 16px;
     font-weight: normal;
     color: white;
     text-decoration: none;
   }
-  .page-path-home[data-drag-on] {
+  .path-frontpage[data-drag-on] {
     position: relative;
     cursor: move;
   }
