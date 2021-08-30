@@ -1,0 +1,138 @@
+/**
+ * Headline selection widget.
+ */
+@supports (display: grid) {
+  .rw-river--headlines[data-with-editor] > header {
+    grid-area: header;
+  }
+  .rw-river--headlines[data-with-editor] button[value="edit"] {
+    border: none;
+    background: #055372;
+    border-radius: 6px;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    display: inline-block;
+    vertical-align: middle;
+    margin: -2px 12px 0 12px;
+  }
+  .rw-river--headlines[data-with-editor] button[value="edit"]:hover,
+  .rw-river--headlines[data-with-editor] button[value="edit"]:focus,
+  .rw-river--headlines[data-with-editor] button[value="edit"]:active {
+    background: #eb1405;
+  }
+  .rw-river--headlines[data-with-editor][data-visible] > header {
+    padding-top: 50px;
+  }
+  .rw-river--headlines[data-with-editor] div[data-wrapper] {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: black;
+    box-shadow: 0px 5px 5px 0 rgba(0,0,0,0.5);
+    z-index: 2000;
+    display: none;
+  }
+  .rw-river--headlines[data-with-editor][data-visible] div[data-wrapper] {
+    display: block;
+  }
+  .rw-river--headlines[data-with-editor] article[data-duplicate] {
+    outline: 3px solid red;
+  }
+  .rw-river--headlines[data-with-editor] div[data-headlines] {
+    display: grid;
+    grid-template-columns: repeat(24, 273px);
+    width: 100%;
+    overflow-y: hidden;
+    overflow-x: auto;
+    background: black;
+    padding: 4px 4px 0 4px;
+  }
+  .rw-river--headlines[data-with-editor] div[data-headlines] article {
+    grid-area: unset;
+    width: 273px;
+    height: 230px;
+    overflow: hidden;
+    padding: 12px;
+    border: none;
+    border-left: 4px solid black;
+    background: white;
+  }
+  .rw-river--headlines[data-with-editor] div[data-headlines] article header {
+    position: absolute;
+    top: 110px;
+    left: 12px;
+    right: 12px;
+    padding-top: 10px;
+    background: white;
+    z-index: 2;
+  }
+  .rw-river--headlines[data-with-editor] div[data-headlines] article header p.country {
+    position: absolute;
+    top: -30px;
+  }
+  .rw-river--headlines[data-with-editor] div[data-headlines] article header h3 {
+    font-size: 16px;
+  }
+  .rw-river--headlines[data-with-editor] div[data-headlines] article .content {
+    display: none;
+  }
+  .rw-river--headlines[data-with-editor] div[data-headlines] article footer {
+    display: none;
+  }
+  .rw-river--headlines[data-with-editor] div[data-headlines] article:first-child {
+    border-left: none;
+  }
+  .rw-river--headlines[data-with-editor] div[data-headlines] article[data-selected] {
+    opacity: 0.7;
+  }
+  .rw-river--headlines[data-with-editor] div[data-actions] {
+    width: 100%;
+    text-align: center;
+  }
+  .rw-river--headlines[data-with-editor] div[data-actions] button {
+    border: none;
+    background: black;
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+    text-transform: uppercase;
+    padding: 8px 12px;
+  }
+  .rw-river--headlines[data-with-editor] div[data-actions] button:hover {
+    text-decoration: underline;
+  }
+  /* Draggable element for the headlines editor. */
+  .page-path-home article[data-dragged] {
+    position: absolute;
+    width: 200px;
+    height: auto;
+    padding: 4px;
+    margin: -24px 0 0 0;
+    border: 5px solid black;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 100100;
+  }
+  .page-path-home article[data-dragged] dl,
+  .page-path-home article[data-dragged] figure,
+  .page-path-home article[data-dragged] .content {
+    display: none;
+  }
+  .page-path-home article[data-dragged] * {
+    padding: 0;
+    margin: 0;
+  }
+  .page-path-home article[data-dragged] a {
+    font-size: 16px;
+    font-weight: normal;
+    color: white;
+    text-decoration: none;
+  }
+  .page-path-home[data-drag-on] {
+    position: relative;
+    cursor: move;
+  }
+}
