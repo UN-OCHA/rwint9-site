@@ -110,9 +110,9 @@ function common_design_subtheme_form_node_form_alter(&$form, FormStateInterface 
   $form['#theme'] = ['node_edit_form'];
 }
 
-function common_design_subtheme_form_taxonomy_term_form_alter(&$form, FormStateInterface $form_state) {
-  $form['#theme'] = ['node_edit_form'];
-}
+//function common_design_subtheme_form_taxonomy_term_form_alter(&$form, FormStateInterface $form_state) {
+//  $form['#theme'] = ['node_edit_form'];
+//}
 
 //function common_design_subtheme_form_alter(&$form, FormStateInterface $form_state, $form_id) {
 //  dpm($form);
@@ -131,22 +131,8 @@ function common_design_subtheme_theme_suggestions_alter(array &$suggestions, arr
         $content_type = $path_args[3];
       }
 
-    if ($node = \Drupal::routeMatch()->getParameter('node')) {
       $suggestions[] = 'node_edit_form__' . $content_type;
-
-    } else {
-      $vocabulary_name = str_replace('-', '_', $variables['form']['vid']['#value']);
-      $suggestions[] = 'term_edit_form__' . $vocabulary_name;
-    }
   }
-
-  if (isset($variables['element']) && isset($variables['element']['#type']) && $variables['element']['#type'] == 'form') {
-    $original_theme_hook = $variables['theme_hook_original'];
-
-    $suggestions[] = $original_theme_hook . '__' . str_replace('-', '_', $variables['element']['#id']);
-  }
-
-  return $suggestions;
 }
 
 /**
