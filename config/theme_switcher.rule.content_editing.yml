@@ -1,0 +1,67 @@
+uuid: de55d957-9441-46c5-a8f0-5c7f5a925752
+langcode: en
+status: true
+dependencies:
+  module:
+    - ctools
+    - node
+    - system
+id: content_editing
+label: 'Content editing'
+weight: 0
+theme: common_design_subtheme
+admin_theme: common_design_subtheme
+visibility:
+  'entity_bundle:node':
+    id: 'entity_bundle:node'
+    bundles:
+      announcement: announcement
+      blog_post: blog_post
+      book: book
+      job: job
+      report: report
+      topic: topic
+      training: training
+    negate: false
+    context_mapping:
+      node: '@node.node_route_context:node'
+  'entity_bundle:taxonomy_term':
+    id: 'entity_bundle:taxonomy_term'
+    bundles:
+      career_category: career_category
+      content_format: content_format
+      country: country
+      disaster: disaster
+      disaster_type: disaster_type
+      feature: feature
+      job_experience: job_experience
+      job_type: job_type
+      language: language
+      ocha_product: ocha_product
+      organization_type: organization_type
+      source: source
+      tag: tag
+      theme: theme
+      training_format: training_format
+      training_type: training_type
+      vulnerable_group: vulnerable_group
+    negate: false
+    context_mapping:
+      taxonomy_term: '@taxonomy_term.taxonomy_term_route_context:taxonomy_term'
+  node_type:
+    id: node_type
+    bundles:
+      announcement: announcement
+      blog_post: blog_post
+      book: book
+      job: job
+      report: report
+      topic: topic
+      training: training
+    negate: false
+    context_mapping:
+      node: '@node.node_route_context:node'
+  request_path:
+    id: request_path
+    pages: '/taxonomy/term/*/profile'
+    negate: false
