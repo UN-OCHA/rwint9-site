@@ -36,8 +36,12 @@
     <li class="rw-toc__section">
       <h3 class="rw-toc__section__title">{{ 'Fields'|t }}</h3>
       <ul>
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#description">{{ 'Description'|t }}</a></li>
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#details">{{ 'Details'|t }}</a></li>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#name">{{ 'Name'|t }}</a></li>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#countries">{{ 'Countries'|t }}</a></li>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#disaster-types">{{ 'Disaster types'|t }}</a></li>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#date">{{ 'Event date'|t }}</a></li>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#profile">{{ 'Profile'|t }}</a></li>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#glide">{{ 'GLIDE'|t }}</a></li>
       </ul>
     </li>
     <li class="rw-toc__section">
@@ -53,25 +57,42 @@
   </ul>
 </nav>
 
-<fieldset id="description">
-  <legend>{{ 'Description'|t }}</legend>
+<fieldset id="name">
+  <legend>{{ 'Name'|t }}</legend>
   {{ element.name }}
-  {{ element.field_shortname }}
-  {{ element.field_longname }}
-  {{ element.field_aliases }}
-  {{ element.description }}
 </fieldset>
 
-<fieldset id="details" class="details">
-  <legend>{{ 'Details'|t }}</legend>
-  {{ element.field_iso3 }}
-  {{ element.field_location }}
+<fieldset id="countries">
+  <legend>{{ 'Countries'|t }}</legend>
+  {{ element.field_country }}
+  {{ element.field_primary_country }}
+</fieldset>
+
+<fieldset id="disaster-types">
+  <legend>{{ 'Disaster types'|t }}</legend>
+  {{ element.field_disaster_type }}
+  {{ element.field_primary_disaster_type }}
+</fieldset>
+
+<fieldset id="date">
+  <legend>{{ 'Event date'|t }}</legend>
+  {{ element.field_disaster_date }}
+</fieldset>
+
+<fieldset id="profile">
+  <legend>{{ 'Profile'|t }}</legend>
+  {{ element.body }}
+</fieldset>
+
+<fieldset id="glide">
+  <legend>{{ 'GLIDE'|t }}</legend>
+  {{ element.field_glide }}
+  {{ element.field_glide_related }}
 </fieldset>
 
 <fieldset id="editorial-flags">
-  <legend>{{ 'Editorial flags'|t }}</legend>
-  {{ element.field_profile }}
-  {{ element.field_timezone }}
+  <legend class="accessibility">{{ 'Editorial flags'|t }}</legend>
+  {{ element.actions }}
 </fieldset>
 
 <fieldset id="actions">
@@ -82,14 +103,18 @@
 {%
   set skip_elements = [
   'name',
-  'field_shortname',
-  'field_longname',
-  'field_aliases',
-  'description',
-  'field_iso3',
-  'field_location',
-  'field_profile',
+  'field_appeals_response_plans',
+  'field_country',
+  'field_disaster_type',
+  'field_disaster_date',
+  'field_glide',
+  'field_key_content',
   'field_timezone',
+  'field_primary_country',
+  'field_primary_disaster_type',
+  'field_glide_related',
+  'field_profile',
+  'field_useful_links',
   'actions',
 ]
 %}
