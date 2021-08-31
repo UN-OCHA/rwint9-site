@@ -1,0 +1,25 @@
+uuid: 07f12c1d-951f-46dd-9559-7b33a4fbacf5
+langcode: en
+status: true
+dependencies:
+  module:
+    - ctools
+id: content_type
+label: 'Content type'
+weight: -9
+theme: common_design_subtheme
+admin_theme: common_design_subtheme
+visibility:
+  'entity_bundle:node':
+    id: 'entity_bundle:node'
+    bundles:
+      announcement: announcement
+      blog_post: blog_post
+      book: book
+      job: job
+      report: report
+      topic: topic
+      training: training
+    negate: false
+    context_mapping:
+      node: '@node.node_route_context:node'

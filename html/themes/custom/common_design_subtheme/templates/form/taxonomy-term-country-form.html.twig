@@ -1,21 +1,44 @@
-{#
-/**
- * @file
- * Theme override for a 'form' element.
- *
- * Available variables
- * - attributes: A list of HTML attributes for the wrapper element.
- * - children: The child elements of the form.
- *
- * @see template_preprocess_form()
- */
-#}
+<fieldset id="description">
+  <legend>{{ 'Description'|t }}</legend>
+  {{ element.name }}
+  {{ element.field_shortname }}
+  {{ element.field_longname }}
+  {{ element.field_aliases }}
+  {{ element.description }}
+</fieldset>
 
-{{ attach_library('common_design_subtheme/rw-user') }}
+<fieldset id="details" class="details">
+  <legend>{{ 'Details'|t }}</legend>
+  {{ element.field_iso3 }}
+  {{ element.field_location }}
+</fieldset>
 
-<form{{ attributes.addClass('cd-flow cd-form') }}>
-{#  {{ children }}#}
+<fieldset id="editorial-flags">
+  <legend>{{ 'Editorial flags'|t }}</legend>
+  {{ element.field_profile }}
+  {{ element.field_timezone }}
+</fieldset>
 
+<fieldset id="actions">
+  <legend class="accessibility">{{ 'Form submission and other actions'|t }}</legend>
+  {{ element.actions }}
+</fieldset>
 
-  {{ form.field_longname }}
-</form>
+{%
+  set skip_elements = [
+    'name',
+    'field_shortname',
+    'field_longname',
+    'field_aliases',
+    'description',
+    'field_iso3',
+    'field_location',
+    'field_profile',
+    'field_timezone',
+    'actions',
+  ]
+%}
+
+{% for key, child in element if key|first != '#' %}
+  {{ key not in skip_elements ? child }}
+{% endfor %}

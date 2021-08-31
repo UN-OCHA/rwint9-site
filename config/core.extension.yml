@@ -53,6 +53,7 @@ module:
   reliefweb_rivers: 0
   reliefweb_subscriptions: 0
   reliefweb_utility: 0
+  reliefweb_xmlsitemap: 0
   responsive_image: 0
   social_api: 0
   social_auth: 0
@@ -62,6 +63,7 @@ module:
   taxonomy: 0
   taxonomy_term_revision: 0
   text: 0
+  theme_switcher: 0
   token: 0
   toolbar: 0
   update: 0
