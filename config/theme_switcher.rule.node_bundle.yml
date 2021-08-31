@@ -1,0 +1,25 @@
+uuid: a7a94d3a-c6f5-493f-a1eb-6cc6bef2949b
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: node_bundle
+label: 'Node bundle'
+weight: -8
+theme: common_design_subtheme
+admin_theme: common_design_subtheme
+visibility:
+  node_type:
+    id: node_type
+    bundles:
+      announcement: announcement
+      blog_post: blog_post
+      book: book
+      job: job
+      report: report
+      topic: topic
+      training: training
+    negate: false
+    context_mapping:
+      node: '@node.node_route_context:node'

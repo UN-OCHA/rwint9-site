@@ -1,30 +1,15 @@
-uuid: de55d957-9441-46c5-a8f0-5c7f5a925752
+uuid: ff598791-fdee-402c-a163-5e2f6353807e
 langcode: en
 status: true
 dependencies:
   module:
     - ctools
-    - node
-    - system
-id: content_editing
-label: 'Content editing'
-weight: 0
+id: vocabulary
+label: Vocabulary
+weight: -10
 theme: common_design_subtheme
 admin_theme: common_design_subtheme
 visibility:
-  'entity_bundle:node':
-    id: 'entity_bundle:node'
-    bundles:
-      announcement: announcement
-      blog_post: blog_post
-      book: book
-      job: job
-      report: report
-      topic: topic
-      training: training
-    negate: false
-    context_mapping:
-      node: '@node.node_route_context:node'
   'entity_bundle:taxonomy_term':
     id: 'entity_bundle:taxonomy_term'
     bundles:
@@ -48,20 +33,3 @@ visibility:
     negate: false
     context_mapping:
       taxonomy_term: '@taxonomy_term.taxonomy_term_route_context:taxonomy_term'
-  node_type:
-    id: node_type
-    bundles:
-      announcement: announcement
-      blog_post: blog_post
-      book: book
-      job: job
-      report: report
-      topic: topic
-      training: training
-    negate: false
-    context_mapping:
-      node: '@node.node_route_context:node'
-  request_path:
-    id: request_path
-    pages: '/taxonomy/term/*/profile'
-    negate: false
