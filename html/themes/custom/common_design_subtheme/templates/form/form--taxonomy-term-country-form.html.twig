@@ -1,0 +1,101 @@
+{#
+/**
+ * @file
+ * Theme override for a 'form' element.
+ *
+ * Available variables
+ * - attributes: A list of HTML attributes for the wrapper element.
+ * - children: The child elements of the form.
+ *
+ * @see template_preprocess_form()
+ */
+#}
+{% set attributes = attributes
+  .setAttribute('data-cd-toggable', 'Jump to content'|t)
+  .setAttribute('data-cd-icon', 'arrow-down')
+  .setAttribute('data-cd-component', 'rw-toc')
+%}
+
+{% set title_attributes = title_attributes.addClass('visually-hidden') %}
+
+{{ attach_library('common_design_subtheme/rw-form') }}
+{{ attach_library('common_design_subtheme/rw-toc') }}
+
+<form{{ attributes }}>
+  <nav{{ attributes
+    .setAttribute('id', id)
+  .addClass([
+    'rw-toc',
+  ])
+  }} >
+    <h2{{ level }}{{ title_attributes
+      .addClass([
+        'rw-toc__title'
+      ])
+    }}>{{ 'Table of Contents'|t }}</h2>
+    <ul>
+      <li class="rw-toc__section">
+        <h3 class="rw-toc__section__title">{{ 'Fields'|t }}</h3>
+        <ul>
+          <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#description">{{ 'Description'|t }}</a></li>
+          <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#details">{{ 'Details'|t }}</a></li>
+        </ul>
+      </li>
+      <li class="rw-toc__section">
+        <h3 class="rw-toc__section__title">{{ 'Submission'|t }}</h3>
+        <ul>
+          <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#editorial-flags">{{ 'Editorial flags'|t }}</a></li>
+          <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#actions">{{ 'Save'|t }}</a></li>
+          {#        <?php if (!empty($form['revision_information'])): ?>#}
+          <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#edit-revision-information">{{ 'Revisions'|t }}</a></li>
+          {#        <?php endif; ?>#}
+        </ul>
+      </li>
+    </ul>
+  </nav>
+
+  <fieldset id="description">
+    <legend>{{ 'Description'|t }}</legend>
+    {{ element.name }}
+    {{ element.field_shortname }}
+    {{ element.field_longname }}
+    {{ element.field_aliases }}
+    {{ element.description }}
+  </fieldset>
+
+  <fieldset id="details" class="details">
+    <legend>{{ 'Details'|t }}</legend>
+    {{ element.field_iso3 }}
+    {{ element.field_location }}
+  </fieldset>
+
+  <fieldset id="editorial-flags">
+    <legend>{{ 'Editorial flags'|t }}</legend>
+    {{ element.field_profile }}
+    {{ element.field_timezone }}
+  </fieldset>
+
+  <fieldset id="actions">
+    <legend class="accessibility">{{ 'Form submission and other actions'|t }}</legend>
+    {{ element.actions }}
+  </fieldset>
+
+  {%
+    set skip_elements = [
+    'name',
+    'field_shortname',
+    'field_longname',
+    'field_aliases',
+    'description',
+    'field_iso3',
+    'field_location',
+    'field_profile',
+    'field_timezone',
+    'actions',
+  ]
+  %}
+
+  {% for key, child in element if key|first != '#' %}
+    {{ key not in skip_elements ? child }}
+  {% endfor %}
+</form>

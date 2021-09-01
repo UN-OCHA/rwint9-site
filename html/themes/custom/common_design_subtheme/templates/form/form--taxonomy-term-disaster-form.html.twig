@@ -1,0 +1,126 @@
+{#
+/**
+ * @file
+ * Theme override for a 'form' element.
+ *
+ * Available variables
+ * - attributes: A list of HTML attributes for the wrapper element.
+ * - children: The child elements of the form.
+ *
+ * @see template_preprocess_form()
+ */
+#}
+{% set attributes = attributes
+  .setAttribute('data-cd-toggable', 'Jump to content'|t)
+  .setAttribute('data-cd-icon', 'arrow-down')
+  .setAttribute('data-cd-component', 'rw-toc')
+%}
+
+{% set title_attributes = title_attributes.addClass('visually-hidden') %}
+
+{{ attach_library('common_design_subtheme/rw-form') }}
+{{ attach_library('common_design_subtheme/rw-toc') }}
+
+<form{{ attributes }}>
+  <nav{{ attributes
+    .setAttribute('id', id)
+  .addClass([
+    'rw-toc',
+  ])
+  }} >
+    <h2{{ level }}{{ title_attributes
+      .addClass([
+        'rw-toc__title'
+      ])
+    }}>{{ 'Table of Contents'|t }}</h2>
+    <ul>
+      <li class="rw-toc__section">
+        <h3 class="rw-toc__section__title">{{ 'Fields'|t }}</h3>
+        <ul>
+          <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#name">{{ 'Name'|t }}</a></li>
+          <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#countries">{{ 'Countries'|t }}</a></li>
+          <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#disaster-types">{{ 'Disaster types'|t }}</a></li>
+          <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#date">{{ 'Event date'|t }}</a></li>
+          <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#profile">{{ 'Profile'|t }}</a></li>
+          <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#glide">{{ 'GLIDE'|t }}</a></li>
+        </ul>
+      </li>
+      <li class="rw-toc__section">
+        <h3 class="rw-toc__section__title">{{ 'Submission'|t }}</h3>
+        <ul>
+          <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#editorial-flags">{{ 'Editorial flags'|t }}</a></li>
+          <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#actions">{{ 'Save'|t }}</a></li>
+          {#        <?php if (!empty($form['revision_information'])): ?>#}
+          <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#edit-revision-information">{{ 'Revisions'|t }}</a></li>
+          {#        <?php endif; ?>#}
+        </ul>
+      </li>
+    </ul>
+  </nav>
+
+  <fieldset id="name">
+    <legend>{{ 'Name'|t }}</legend>
+    {{ element.name }}
+  </fieldset>
+
+  <fieldset id="countries">
+    <legend>{{ 'Countries'|t }}</legend>
+    {{ element.field_country }}
+    {{ element.field_primary_country }}
+  </fieldset>
+
+  <fieldset id="disaster-types">
+    <legend>{{ 'Disaster types'|t }}</legend>
+    {{ element.field_disaster_type }}
+    {{ element.field_primary_disaster_type }}
+  </fieldset>
+
+  <fieldset id="date">
+    <legend>{{ 'Event date'|t }}</legend>
+    {{ element.field_disaster_date }}
+  </fieldset>
+
+  <fieldset id="profile">
+    <legend>{{ 'Profile'|t }}</legend>
+    {{ element.body }}
+  </fieldset>
+
+  <fieldset id="glide">
+    <legend>{{ 'GLIDE'|t }}</legend>
+    {{ element.field_glide }}
+    {{ element.field_glide_related }}
+  </fieldset>
+
+  <fieldset id="editorial-flags">
+    <legend class="accessibility">{{ 'Editorial flags'|t }}</legend>
+    {{ element.actions }}
+  </fieldset>
+
+  <fieldset id="actions">
+    <legend class="accessibility">{{ 'Form submission and other actions'|t }}</legend>
+    {{ element.actions }}
+  </fieldset>
+
+  {%
+    set skip_elements = [
+    'name',
+    'field_appeals_response_plans',
+    'field_country',
+    'field_disaster_type',
+    'field_disaster_date',
+    'field_glide',
+    'field_key_content',
+    'field_timezone',
+    'field_primary_country',
+    'field_primary_disaster_type',
+    'field_glide_related',
+    'field_profile',
+    'field_useful_links',
+    'actions',
+  ]
+  %}
+
+  {% for key, child in element if key|first != '#' %}
+    {{ key not in skip_elements ? child }}
+  {% endfor %}
+</form>
