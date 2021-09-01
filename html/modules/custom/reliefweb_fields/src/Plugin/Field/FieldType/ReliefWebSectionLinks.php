@@ -45,7 +45,7 @@ class ReliefWebSectionLinks extends FieldItemBase {
         'override' => [
           'type' => 'int',
           'description' => 'Node Id of node to use as first item.',
-          'not null' => TRUE,
+          'not null' => FALSE,
         ],
       ],
       'indexes' => [

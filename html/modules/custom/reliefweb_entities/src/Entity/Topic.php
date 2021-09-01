@@ -51,6 +51,7 @@ class Topic extends Node implements BundleEntityInterface, EntityModeratedInterf
     ];
 
     // @todo build toc based on values.
+    /*
     return [
       '#theme' => 'reliefweb_entities_sectioned_content',
       '#contents' => [
@@ -60,7 +61,7 @@ class Topic extends Node implements BundleEntityInterface, EntityModeratedInterf
       ],
       '#sections' => $sections,
     ];
-
+*/
     // Consolidate sections, removing empty ones.
     return  $this->consolidateSections($contents, $sections, $labels);
   }
@@ -117,20 +118,55 @@ class Topic extends Node implements BundleEntityInterface, EntityModeratedInterf
       return [];
     }
 
-    $toc = [];
-    $section_links = $this->get('field_sections');
-    foreach ($section_links as $index => $section_link) {
-      $toc['section-' . $index] = [
-        'title' => $section_link->title,
+    // Table of contents.
+    $toc = array(
+      'information' => array(
+        'title' => t('Overview'),
+        'sections' => array(
+          'introduction' => t('Introduction'),
+          'overview' => t('Overview'),
+        ),
+      ),
+      'sections' => array(
+        'title' => t('Sections'),
+        'sections' => [],
+      ),
+      'related' => array(
+        'title' => t('Related Content'),
         'sections' => [
-          'digital-sitrep' => $this->t('OCHA Situation Report'),
-          'overview' => $this->t('In Focus'),
-          'key-content' => $this->t('Key Content'),
-          'updates' => $this->t('Latest Updates'),
-          'maps-infographics' => $this->t('Maps and Infographics'),
-          'most-read' => $this->t('Most Read'),
+          'resources' => $this->t('Resources'),
         ],
-      ];
+      ),
+    );
+
+    $sections['introduction'] = $this->getEntityTextField('body');
+    $sections['overview'] = $this->getEntityTextField('field_overview');
+    $sections['resources'] = $this->getEntityTextField('field_resources');
+
+    $queries = [];
+    $section_links = $this->get('field_sections');
+
+    // Append searches to section links.
+    $rivers = [
+      'reports' => $this->t('Latest Updates'),
+      'jobs' => $this->t('Jobs'),
+      'training' => $this->t('Training'),
+      'disasters' => $this->t('Disasters'),
+    ];
+
+    foreach ($rivers as $river => $title) {
+      $url = $this->get('field_' . $river . '_search')->url;
+      if (!empty($url)) {
+        $section_links[] = [
+          'title' => $title,
+          'url' => $url,
+        ];
+      }
+    }
+
+    foreach ($section_links as $index => $section_link) {
+      $queries[$index] = $this->riverUrlToApi($section_link->url);
+      $toc['sections']['sections'][$index] = $section_link->title;
     }
 
     return $toc;
@@ -167,10 +203,14 @@ class Topic extends Node implements BundleEntityInterface, EntityModeratedInterf
       return;
     }
 
-    $path = $parts['path'];
     // Strip leading /.
+    $path = $parts['path'];
     $path = substr($path, 1);
-    $query = $parts['query'] ?? [];
+
+    $query = [];
+    if (isset($parts['query'])) {
+      parse_str($parts['query'], $query);
+    }
 
     // Maybe check the host as well?
     if (!isset($mapping[$path])) {

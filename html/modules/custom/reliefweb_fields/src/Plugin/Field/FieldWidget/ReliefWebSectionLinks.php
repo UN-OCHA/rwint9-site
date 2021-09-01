@@ -167,7 +167,7 @@ class ReliefWebSectionLinks extends WidgetBase {
     $link = [
       'url' => $data['url'],
       'title' => $data['title'] ?? '',
-      'override' => $use_override ? $data['override'] ?? NULL : NULL,
+      'override' => $use_override ? $data['override'] ?? 0 : 0,
     ];
 
     $invalid = static::parseLinkData($link);
