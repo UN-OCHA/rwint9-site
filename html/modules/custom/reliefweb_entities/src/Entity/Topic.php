@@ -50,8 +50,19 @@ class Topic extends Node implements BundleEntityInterface, EntityModeratedInterf
       'disasters' => $this->t('Alert and Ongoing Disasters'),
     ];
 
+    // @todo build toc based on values.
+    return [
+      '#theme' => 'reliefweb_entities_sectioned_content',
+      '#contents' => [
+        '#theme' => 'reliefweb_entities_table_of_contents',
+        '#title' => $this->t('Table of Contents'),
+        '#sections' => $contents,
+      ],
+      '#sections' => $sections,
+    ];
+
     // Consolidate sections, removing empty ones.
-    return $this->consolidateSections($contents, $sections, $labels);
+    return  $this->consolidateSections($contents, $sections, $labels);
   }
 
   /**
@@ -111,6 +122,14 @@ class Topic extends Node implements BundleEntityInterface, EntityModeratedInterf
     foreach ($section_links as $index => $section_link) {
       $toc['section-' . $index] = [
         'title' => $section_link->title,
+        'sections' => [
+          'digital-sitrep' => $this->t('OCHA Situation Report'),
+          'overview' => $this->t('In Focus'),
+          'key-content' => $this->t('Key Content'),
+          'updates' => $this->t('Latest Updates'),
+          'maps-infographics' => $this->t('Maps and Infographics'),
+          'most-read' => $this->t('Most Read'),
+        ],
       ];
     }
 
@@ -121,20 +140,104 @@ class Topic extends Node implements BundleEntityInterface, EntityModeratedInterf
    * Convert a river URL to API payload.
    */
   protected function riverUrlToApi($url) {
+    $mapping = [
+      'updates' => [
+        'bundle' => 'report',
+        'resource' => 'reports',
+      ],
+      // Legacy path.
+      'maps' => [
+        'resource' => 'reports',
+        'bundle' => 'report',
+        'river' => 'updates',
+        'view' => 'maps',
+      ],
+      'jobs' => [
+        'resource' => 'jobs',
+        'bundle' => 'job',
+      ],
+      'training' => [
+        'resource' => 'training',
+        'bundle' => 'training',
+      ],
+    ];
+
     $parts = parse_url($url);
-
-    if (!isset($parts['query'])) {
-      return [];
+    if ($parts === FALSE) {
+      return;
     }
 
-    $query = [];
-    parse_str($parts['query'], $query);
+    $path = $parts['path'];
+    // Strip leading /.
+    $path = substr($path, 1);
+    $query = $parts['query'] ?? [];
 
-    if (!isset($query['advanced-search'])) {
-      return [];
+    // Maybe check the host as well?
+    if (!isset($mapping[$path])) {
+      return;
     }
 
-    return explode('_', $query['advanced-search']);
+    $resource = $mapping[$path]['resource'];
+    $bundle = $mapping[$path]['bundle'];
+    $river = $mapping[$path]['river'] ?? $path;
+    $view = $mapping[$path]['view'] ?? 'all';
+
+    // Get the river service for the bundle.
+    $service = \Drupal\reliefweb_rivers\RiverServiceBase::getRiverService($bundle);
+
+    // Parse the query parameters.
+    $parameters = new \Drupal\reliefweb_rivers\Parameters($query);
+
+    // Get the advanced search handler.
+    $advanced_search = new \Drupal\reliefweb_rivers\AdvancedSearch(
+      $bundle,
+      $river,
+      $parameters,
+      $service->getFilters(),
+      $service->getFilterSample()
+    );
+
+    // Get the sanitized search parameter.
+    $search = $service->getParameters()->get('search', '');
+
+    // Get the API payload for the river and limit the results to 3 items.
+    $payload = $service->getApiPayload($view);
+    $payload['limit'] = 3;
+
+    // Set the full text search query or remove it if empty.
+    if (!empty($search)) {
+      $payload['query']['value'] = $search;
+    }
+    else {
+      unset($payload['query']);
+    }
+
+    // Generate the API filter with the facet and advanced search filters.
+    $filter = $advanced_search->getApiFilter();
+    if (!empty($filter)) {
+      // Update the payload filter.
+      if (!empty($payload['filter'])) {
+        $payload['filter'] = [
+          'conditions' => [
+            $payload['filter'],
+            $filter,
+          ],
+          'operator' => 'AND',
+        ];
+      }
+      else {
+        $payload['filter'] = $filter;
+      }
+    }
+
+    return [
+      'resource' => $resource,
+      'bundle' => $bundle,
+      'river' => $river,
+      'view' => $view,
+      'payload' => $payload,
+      'more' => $url,
+    ];
   }
 
 }
