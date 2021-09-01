@@ -53,6 +53,7 @@ module:
   reliefweb_rivers: 0
   reliefweb_subscriptions: 0
   reliefweb_utility: 0
+  reliefweb_xmlsitemap: 0
   responsive_image: 0
   social_api: 0
   social_auth: 0
