@@ -442,11 +442,11 @@
       function handleEvents(event) {
         var target = event.target;
 
-        if (target && target.tagName === 'BUTTON' && typeof target.value !== 'undefined') {
+        if (target && (target.tagName === 'BUTTON' || target.tagName === 'INPUT') && typeof target.value !== 'undefined') {
           event.stopPropagation();
           event.preventDefault();
 
-          switch (target.value) {
+          switch (target.value.toLowerCase()) {
             // Create a new topic link.
             case 'add':
               var element = getParentElement(target, 'DIV');
@@ -529,6 +529,7 @@
               // Parse the topic links and build the data to save.
               var data = parseLinks();
               if (data) {
+                console.log(data);
                 form.querySelector('[name="data"]').value = JSON.stringify(data);
               }
               form.submit();

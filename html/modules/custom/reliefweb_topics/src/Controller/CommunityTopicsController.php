@@ -21,11 +21,11 @@ class CommunityTopicsController extends ControllerBase {
     $data = json_decode(file_get_contents('php://input', FALSE, NULL, 0, 10000), TRUE);
 
     // Validate the URL.
-    if (empty($link['url'])) {
+    if (empty($data['url'])) {
       $invalid = $this->t('Missing link url.');
     }
     // Validate the title.
-    elseif (empty($link['title'])) {
+    elseif (empty($data['title'])) {
       $invalid = $this->t('The link title is mandatory.');
     }
     // Path has to link to updates.

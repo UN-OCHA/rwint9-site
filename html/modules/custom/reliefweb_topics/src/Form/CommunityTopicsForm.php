@@ -85,7 +85,7 @@ class CommunityTopicsForm extends FormBase {
     // Drupal Form API to create a fieldset to avoid useless markup and classes.
     $form['submit'] = [
       '#type' => 'submit',
-      '#value' => 'save',
+      '#value' => 'Save',
       '#title' => $this->t('Save changes'),
       '#name' => 'save',
       '#prefix' => '<fieldset id="actions" disabled>',
@@ -112,7 +112,9 @@ class CommunityTopicsForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    // @todo $links = $form_state->getValue('data');
+    $links = $form_state->getValue('data');
+    $links = json_decode($links);
+    $this->setCommunityTopics($links);
   }
 
   /**
