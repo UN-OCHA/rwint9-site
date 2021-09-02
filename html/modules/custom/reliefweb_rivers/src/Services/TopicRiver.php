@@ -51,277 +51,107 @@ class TopicRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function getFilters() {
+  public function getRiverContent() {
+    $page = $this->pagerParameters->findPage();
+    $offset = $page * $this->limit;
+    $totalCount = 0;
+
+    $query = \Drupal::entityQuery('node')
+      ->condition('type', 'topic')
+      ->condition('status', 1)
+      ->sort('created', 'DESC');
+
+    $totalCount = $query->count()->execute();
+
+    $nids = \Drupal::entityQuery('node')
+      ->condition('type', 'topic')
+      ->condition('status', 1)
+      ->sort('created', 'DESC')
+      ->range($offset, $this->limit)
+      ->execute();
+
+    $topics = \Drupal\node\Entity\Node::loadMultiple($nids);
+
+    $reliefweb_topics = [];
+    foreach ($topics as $nid => $topic) {
+      $key = $topic->field_featured->value . '_' . $nid;
+      $topic = array(
+        'title' => $topic->title->value,
+        'url' => $topic->toUrl()->toString(),
+        'summary' => HtmlSummarizer::summarize($topic->body->value, 300),
+        'featured' => !empty($topic->field_featured->value),
+        'icon' => array(
+          'url' => $topic->icon,
+        ),
+      );
+      $reliefweb_topics[$key] = $topic;
+    }
+    // Sort by most recent (nid descending) but prioritizing featured topics.
+    krsort($reliefweb_topics, SORT_NATURAL);
+
+    // Get the community topics.
+    $community_topics = [];
+/*
+    foreach (variable_get('reliefweb_topics_community_topics_links', []) as $data) {
+      $topic = array(
+        'title' => $data['title'],
+        'url' => static::encodeUrl($data['url']),
+        'summary' => $data['description'],
+      );
+      $community_topics[] = static::wrapEntity($bundle, $topic, $labels);
+    }
+*/
+
+    // Initialize the pager.
+    $this->pagerManager->createPager($totalCount ?? 0, $this->limit);
+
     return [
-      'TY' => [
-        'name' => $this->t('Job type'),
-        'type' => 'reference',
-        'vocabulary' => 'job_type',
-        'field' => 'type.id',
-        'widget' => [
-          'type' => 'options',
-          'label' => $this->t('Select a job type'),
-        ],
+      'reliefweb' => [
+        '#theme' => 'reliefweb_rivers_river',
+        '#id' => 'river-list',
+        '#title' => $this->t('List'),
+        '#results' => $this->getRiverResults(count($reliefweb_topics)),
+        '#entities' => $reliefweb_topics,
+        '#pager' => $this->getRiverPager(),
+        '#empty' => $this->t('No results found. Please modify your search or filter selection.'),
       ],
-      'CC' => [
-        'name' => $this->t('Career category'),
-        'type' => 'reference',
-        'vocabulary' => 'career_category',
-        'field' => 'career_categories.id',
-        'widget' => [
-          'type' => 'options',
-          'label' => $this->t('Select a career categories'),
-        ],
-      ],
-      'E' => [
-        'name' => $this->t('Experience'),
-        'type' => 'reference',
-        'vocabulary' => 'job_experience',
-        'field' => 'experience.id',
-        'widget' => [
-          'type' => 'options',
-          'label' => $this->t('Select years of experience'),
-        ],
-        'sort' => 'id',
-      ],
-      'T' => [
-        'name' => $this->t('Theme'),
-        'type' => 'reference',
-        'vocabulary' => 'theme',
-        'field' => 'theme.id',
-        'widget' => [
-          'type' => 'options',
-          'label' => $this->t('Select a theme'),
-        ],
-        'exclude' => [
-          // Remove Contributions (Collab #2327).
-          4589,
-          // Remove Humanitarian Financing (Trello #OnXq5cCC).
-          4597,
-          // Remove Logistics and Telecommunications (Trello #G3YgNUF6).
-          4598,
-        ],
-      ],
-      'C' => [
-        'name' => $this->t('Country'),
-        'type' => 'reference',
-        'vocabulary' => 'country',
-        'field' => 'country.id',
-        'widget' => [
-          'type' => 'autocomplete',
-          'label' => $this->t('Search for a country'),
-          'resource' => 'countries',
-        ],
-        'exclude' => [
-          // Remove World (254) (Trello #DI9bxljg).
-          254,
-        ],
-      ],
-      'S' => [
-        'name' => $this->t('Organization'),
-        'type' => 'reference',
-        'vocabulary' => 'source',
-        'field' => 'source.id',
-        'widget' => [
-          'type' => 'autocomplete',
-          'label' => $this->t('Search for an organization'),
-          'resource' => 'sources',
-          'parameters' => [
-            'filter' => [
-              'field' => 'content_type',
-              'value' => 'job',
-            ],
-          ],
-        ],
-      ],
-      'OT' => [
-        'name' => $this->t('Organization type'),
-        'type' => 'reference',
-        'vocabulary' => 'organization_type',
-        'field' => 'source.type.id',
-        'widget' => [
-          'type' => 'options',
-          'label' => $this->t('Select an organization type'),
-        ],
-      ],
-      'DC' => [
-        'name' => $this->t('Closing date'),
-        'type' => 'date',
-        'field' => 'date.closing',
-        'widget' => [
-          'type' => 'date',
-          'label' => $this->t('Select closing date'),
-        ],
-      ],
-      'DA' => [
-        'name' => $this->t('Posting date on ReliefWeb'),
-        'type' => 'date',
-        'field' => 'date.created',
-        'widget' => [
-          'type' => 'date',
-          'label' => $this->t('Select posting date on ReliefWeb'),
-        ],
+      'reliefweb' => [
+        '#theme' => 'reliefweb_rivers_river',
+        '#id' => 'river-list',
+        '#title' => $this->t('List'),
+        '#results' => $this->getRiverResults(count($community_topics)),
+        '#entities' => $community_topics,
+        '#empty' => $this->t('No results found. Please modify your search or filter selection.'),
       ],
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFilters() {
+    return [];
   }
 
   /**
    * {@inheritdoc}
    */
   public function getFilterSample() {
-    return $this->t('(Country, job type, experience...)');
+    return $this->t('(Topics ...)');
   }
 
   /**
    * {@inheritdoc}
    */
   public function getApiPayload($view = '') {
-    $payload = [
-      'query' => [
-        'fields' => [
-          'title^20',
-          'body',
-          'how_to_apply',
-          'country.name^100',
-          'country.shortname^100',
-          'source.name^100',
-          'source.shortname^100',
-          'theme.name^100',
-          'type.name^100',
-          'career_categories.name^100',
-        ],
-        'operator' => 'AND',
-      ],
-      'fields' => [
-        'include' => [
-          'id',
-          'url_alias',
-          'title',
-          'body-html',
-          'date.closing',
-          'date.created',
-          'country.id',
-          'country.iso3',
-          'country.name',
-          'country.shortname',
-          'source.id',
-          'source.name',
-          'source.shortname',
-        ],
-      ],
-      'sort' => ['date.created:desc'],
-    ];
-
-    // Handle the filtered selection (view).
-    switch ($view) {
-      case 'closing-soon':
-        // Jobs closing within a week.
-        $date = date_create('now', new \DateTimeZone('UTC'));
-        $payload['filter'] = [
-          'field' => 'date.closing',
-          'value' => [
-            'from' => $date->format(DATE_ATOM),
-            'to' => $date->add(new \DateInterval('P1W'))->format(DATE_ATOM),
-          ],
-        ];
-        $payload['sort'] = ['date.closing:asc'];
-        break;
-
-      case 'unspecified-location':
-        $payload['filter'] = [
-          'field' => 'country',
-          'negate' => TRUE,
-        ];
-        break;
-    }
-
-    return $payload;
+    return [];
   }
 
   /**
    * {@inheritdoc}
    */
   public function parseApiData(array $api_data, $view = '') {
-    // Retrieve the API data (with backward compatibility).
-    $items = $api_data['items'] ?? $api_data['data'] ?? [];
-
-    // Parse the entities retrieved from the API.
-    $entities = [];
-    foreach ($items as $item) {
-      $fields = $item['fields'];
-
-      // Title.
-      $title = $fields['title'];
-
-      // Summary.
-      $summary = '';
-      if (!empty($fields['body-html'])) {
-        $body = HtmlSanitizer::sanitize($fields['body-html']);
-        $summary = HtmlSummarizer::summarize($body, 200);
-      }
-
-      // Tags (countries, sources etc.).
-      $tags = [];
-
-      // Countries.
-      $countries = [];
-      foreach ($fields['country'] ?? [] as $country) {
-        $countries[] = [
-          'name' => $country['name'],
-          'shortname' => $country['shortname'] ?? $country['name'],
-          'code' => $country['iso3'] ?? '',
-          'url' => static::getRiverUrl($this->bundle, [
-            'advanced-search' => '(C' . $country['id'] . ')',
-          ]),
-          'main' => !empty($country['primary']),
-        ];
-      }
-      $tags['country'] = $countries;
-
-      // Sources.
-      $sources = [];
-      foreach ($fields['source'] ?? [] as $source) {
-        $sources[] = [
-          'name' => $source['name'],
-          'shortname' => $source['shortname'] ?? $source['name'],
-          'url' => static::getRiverUrl($this->bundle, [
-            'advanced-search' => '(S' . $source['id'] . ')',
-          ]),
-        ];
-      }
-      $tags['source'] = $sources;
-
-      // Base article data.
-      $data = [
-        'id' => $item['id'],
-        'bundle' => $this->bundle,
-        'title' => $title,
-        'summary' => $summary,
-        'tags' => $tags,
-      ];
-
-      // Url to the article.
-      if (isset($fields['url_alias'])) {
-        $data['url'] = UrlHelper::stripDangerousProtocols($fields['url_alias']);
-      }
-      else {
-        $data['url'] = UrlHelper::getAliasFromPath('/node/' . $item['id']);
-      }
-
-      if (isset($fields['date']['created'])) {
-        $data['posted'] = static::createDate($fields['date']['created']);
-      }
-      if (isset($fields['date']['closing'])) {
-        $data['closing'] = static::createDate($fields['date']['closing']);
-      }
-
-      // Compute the language code for the resource's data.
-      $data['langcode'] = static::getLanguageCode($data);
-
-      $entities[$item['id']] = $data;
-    }
-
-    return $entities;
+    // Not used.
   }
 
 }
