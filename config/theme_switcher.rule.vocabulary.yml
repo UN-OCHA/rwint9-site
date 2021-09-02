@@ -6,7 +6,7 @@ dependencies:
     - ctools
 id: vocabulary
 label: Vocabulary
-weight: -10
+weight: -9
 theme: common_design_subtheme
 admin_theme: common_design_subtheme
 visibility:
