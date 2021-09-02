@@ -6,11 +6,11 @@ dependencies:
     - system
 id: request_path
 label: 'Request path'
-weight: -7
+weight: -10
 theme: common_design_subtheme
 admin_theme: common_design_subtheme
 visibility:
   request_path:
     id: request_path
-    pages: '/taxonomy/term/*/profile'
+    pages: '/moderation/content/*'
     negate: false

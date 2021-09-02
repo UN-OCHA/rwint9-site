@@ -1,0 +1,90 @@
+{#
+
+/**
+ * @file
+ * Template of the list of entities on the content moderation backend pages.
+ *
+ * Available variables:
+ * - headers: list of table headers keyed by id with at least a label. When the
+ *   sort property is present then the header
+#}
+
+{{ totals }}
+
+{% if rows is not empty %}
+<table class="rw-moderation-table">
+  <thead>
+    <tr>
+    {% for id, header in headers %}
+      <th{{ create_attribute()
+        .addClass([
+          'rw-moderation-table__header',
+          'rw-moderation-table__header--' ~ id|clean_class,
+          header.sortable ? 'rw-moderation-table__header--sortable',
+          header.sort ? 'rw-moderation-table__header--sort--' ~ header.sort|clean_class,
+        ])
+      }}>{{ header.label }}</th>
+    {% endfor %}
+    </tr>
+  </thead>
+
+  <tbody>
+  {% for row in rows %}
+    <tr>
+    {% for id, cell in row %}
+      <td{{ create_attribute()
+        .addClass([
+        ])
+      }}>
+        {% if id == 'edit' %}
+          <div class="rw-moderation-table__cell__edit">{{ cell.link }}</div>
+          <div class="rw-moderation-table__cell__status" data-moderation-status="{{ cell.status.value }}">{{ cell.status.label }}</div>
+        {% elseif id == 'data' %}
+          {# Entity title linking to entity page. #}
+          <div class="rw-moderation-table__cell__title">{{ cell.title }}</div>
+          {# Headline title for reports. #}
+          {% if cell.headline_title %}
+            <div class="rw-moderation-table__cell__headline-title">{{ cell.headline_title }}</div>
+          {% endif %}
+          {# Info like country and source. #}
+          <div class="rw-moderation-table__cell__info">
+          {% for id, item in cell.info %}
+            <span class="rw-moderation-table__cell__info__{{ id|clean_class }}">{{ item is iterable ? item|join(', ')|raw : item }}</span>
+            {{- loop.last ? '' : ' - ' -}}
+          {% endfor %}
+          </div>
+          {# Details like content format, language and creator. #}
+          <div class="rw-moderation-table__cell__details">
+          {% for id, item in cell.details %}
+            <span class="rw-moderation-table__cell__datails__{{ id|clean_class }}">{{ item is iterable ? item|join(', ')|raw : item }}</span>
+            {{- loop.last ? '' : ' - ' -}}
+          {% endfor %}
+          </div>
+          {# Revision information. #}
+          {% if cell.revision is not empty %}
+          <div class="rw-moderation-table__cell__revision">
+            <span class="rw-moderation-table__cell__revision__message" data-log-message="{{ cell.revision.type }}">{{ cell.revision.message }}</span>
+            &mdash;
+            <span class="rw-moderation-table__cell__revision__reviewer">{{ cell.revision.reviewer }}</span>
+          </div>
+          {% endif %}
+        {% elseif id == 'date' %}
+          <div class="rw-moderation-table__cell__date">{{ cell.date|date('j M Y') }}</div>
+          {% if cell.bury is not empty %}
+             <div class="rw-moderation-table__cell__bury">{{ 'Burried'|t }}</div>
+          {% endif %}
+        {# In case there are additional cells, we assume the content is r
+           enderable. #}
+        {% else %}
+          {{ cell }}
+        {% endif %}
+      </td>
+    {% endfor %}
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{{ pager }}
+{% else %}
+  <div class="rw-moderation-table__empty">{{ empty ? empty : 'No results'|t }}</div>
+{% endif %}
