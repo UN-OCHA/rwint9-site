@@ -106,6 +106,17 @@ class TopicRiver extends RiverServiceBase {
     $this->pagerManager->createPager($totalCount ?? 0, $this->limit);
 
     return [
+      '#theme' => 'reliefweb_rivers_river',
+      '#id' => 'river-list',
+      '#title' => $this->t('List'),
+      '#results' => $this->getRiverResults(count($reliefweb_topics)),
+      '#entities' => $reliefweb_topics,
+      '#pager' => $this->getRiverPager(),
+      '#empty' => $this->t('No results found. Please modify your search or filter selection.'),
+    ];
+
+    // Should ideally return both.
+    return [
       'reliefweb' => [
         '#theme' => 'reliefweb_rivers_river',
         '#id' => 'river-list',
