@@ -13,6 +13,9 @@ use Drupal\Core\Render\BubbleableMetadata;
  * Add bundle classes to nodes and terms to handle business logic.
  */
 function reliefweb_entities_entity_bundle_info_alter(&$bundles) {
+  $bundles['node']['announcement']['class'] = 'Drupal\reliefweb_entities\Entity\Announcement';
+  $bundles['node']['announcement']['label'] = 'Announcement';
+
   $bundles['node']['blog_post']['class'] = 'Drupal\reliefweb_entities\Entity\BlogPost';
   $bundles['node']['blog_post']['label'] = 'Blog Post';
 
@@ -27,6 +30,9 @@ function reliefweb_entities_entity_bundle_info_alter(&$bundles) {
 
   $bundles['node']['training']['class'] = 'Drupal\reliefweb_entities\Entity\Training';
   $bundles['node']['training']['label'] = 'Training';
+
+  $bundles['node']['topic']['class'] = 'Drupal\reliefweb_entities\Entity\Topic';
+  $bundles['node']['topic']['label'] = 'Topic';
 
   $bundles['taxonomy_term']['country']['class'] = 'Drupal\reliefweb_entities\Entity\Country';
   $bundles['taxonomy_term']['country']['label'] = 'Country';
