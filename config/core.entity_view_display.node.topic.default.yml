@@ -5,6 +5,7 @@ dependencies:
   config:
     - field.field.node.topic.body
     - field.field.node.topic.field_disasters_search
+    - field.field.node.topic.field_featured
     - field.field.node.topic.field_jobs_search
     - field.field.node.topic.field_overview
     - field.field.node.topic.field_reports_search
@@ -39,6 +40,16 @@ content:
     settings: {  }
     third_party_settings: {  }
     type: reliefweb_section_links
+    region: content
+  field_featured:
+    weight: 109
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    type: boolean
     region: content
   field_jobs_search:
     weight: 106

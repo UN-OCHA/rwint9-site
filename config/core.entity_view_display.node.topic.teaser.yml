@@ -6,6 +6,7 @@ dependencies:
     - core.entity_view_mode.node.teaser
     - field.field.node.topic.body
     - field.field.node.topic.field_disasters_search
+    - field.field.node.topic.field_featured
     - field.field.node.topic.field_jobs_search
     - field.field.node.topic.field_overview
     - field.field.node.topic.field_reports_search
@@ -33,6 +34,7 @@ content:
 hidden:
   body: true
   field_disasters_search: true
+  field_featured: true
   field_jobs_search: true
   field_overview: true
   field_reports_search: true
