@@ -2,10 +2,18 @@
 
 namespace Drupal\reliefweb_rivers\Services;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\node\Entity\Node;
 use Drupal\reliefweb_rivers\RiverServiceBase;
-use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
 use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
-use Drupal\reliefweb_utility\Helpers\UrlHelper;
+use Drupal\Core\Url;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\reliefweb_api\Services\ReliefWebApiClient;
+use Drupal\Core\Pager\PagerManagerInterface;
+use Drupal\Core\Pager\PagerParametersInterface;
+use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 /**
  * Service class to retrieve job resource for the job rivers.
@@ -33,6 +41,13 @@ class TopicRiver extends RiverServiceBase {
   protected $bundle = 'topic';
 
   /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
    * {@inheritdoc}
    */
   public function getPageTitle() {
@@ -49,6 +64,29 @@ class TopicRiver extends RiverServiceBase {
   }
 
   /**
+   * Constructor.
+   *
+   * @param \Drupal\Core\Pager\PagerManagerInterface $pager_manager
+   *   The pager manager service.
+   * @param \Drupal\Core\Pager\PagerParametersInterface $pager_parameters
+   *   The pager parameter service.
+   * @param \Drupal\reliefweb_api\Services\ReliefWebApiClient $api_client
+   *   The ReliefWeb API Client service.
+   * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
+   *   The translation manager service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager service.
+   */
+  public function __construct(PagerManagerInterface $pager_manager, PagerParametersInterface $pager_parameters, ReliefWebApiClient $api_client, TranslationInterface $string_translation, EntityTypeManagerInterface $entity_type_manager) {
+    $this->pagerManager = $pager_manager;
+    $this->pagerParameters = $pager_parameters;
+    $this->apiClient = $api_client;
+    $this->stringTranslation = $string_translation;
+    $this->url = static::getRiverUrl($this->bundle);
+    $this->entityTypeManager = $entity_type_manager;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getRiverContent() {
@@ -56,34 +94,32 @@ class TopicRiver extends RiverServiceBase {
     $offset = $page * $this->limit;
     $totalCount = 0;
 
-    $query = \Drupal::entityQuery('node')
+    $query = $this->entityTypeManager->getStorage('node')->getQuery()
       ->condition('type', 'topic')
       ->condition('status', 1)
       ->sort('created', 'DESC');
-
     $totalCount = $query->count()->execute();
 
-    $nids = \Drupal::entityQuery('node')
+    $nids = $this->entityTypeManager->getStorage('node')->getQuery()
       ->condition('type', 'topic')
       ->condition('status', 1)
       ->sort('created', 'DESC')
       ->range($offset, $this->limit)
       ->execute();
-
-    $topics = \Drupal\node\Entity\Node::loadMultiple($nids);
+    $topics = $this->entityTypeManager->getStorage('node')->loadMultiple($nids);
 
     $reliefweb_topics = [];
     foreach ($topics as $nid => $topic) {
       $key = $topic->field_featured->value . '_' . $nid;
-      $topic = array(
+      $topic = [
         'title' => $topic->title->value,
         'url' => $topic->toUrl()->toString(),
         'summary' => HtmlSummarizer::summarize($topic->body->value, 300),
         'featured' => !empty($topic->field_featured->value),
-        'icon' => array(
+        'icon' => [
           'url' => $topic->icon,
-        ),
-      );
+        ],
+      ];
       $reliefweb_topics[$key] = $topic;
     }
     // Sort by most recent (nid descending) but prioritizing featured topics.
@@ -91,16 +127,16 @@ class TopicRiver extends RiverServiceBase {
 
     // Get the community topics.
     $community_topics = [];
-/*
+    /*
     foreach (variable_get('reliefweb_topics_community_topics_links', []) as $data) {
-      $topic = array(
-        'title' => $data['title'],
-        'url' => static::encodeUrl($data['url']),
-        'summary' => $data['description'],
-      );
-      $community_topics[] = static::wrapEntity($bundle, $topic, $labels);
+    $topic = array(
+    'title' => $data['title'],
+    'url' => static::encodeUrl($data['url']),
+    'summary' => $data['description'],
+    );
+    $community_topics[] = static::wrapEntity($bundle, $topic, $labels);
     }
-*/
+     */
 
     // Initialize the pager.
     $this->pagerManager->createPager($totalCount ?? 0, $this->limit);

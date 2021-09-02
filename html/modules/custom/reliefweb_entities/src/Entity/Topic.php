@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_entities\Entity;
 
+use Drupal\reliefweb_rivers\AdvancedSearch;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\node\Entity\Node;
 use Drupal\reliefweb_entities\BundleEntityInterface;
@@ -10,6 +11,9 @@ use Drupal\reliefweb_entities\DocumentTrait;
 use Drupal\reliefweb_entities\EntityModeratedInterface;
 use Drupal\reliefweb_entities\EntityModeratedTrait;
 use Drupal\reliefweb_entities\SectionedContentInterface;
+use Drupal\reliefweb_rivers\RiverServiceBase;
+use Drupal\reliefweb_rivers\Parameters;
+
 use Drupal\reliefweb_entities\SectionedContentTrait;
 
 /**
@@ -53,17 +57,17 @@ class Topic extends Node implements BundleEntityInterface, EntityModeratedInterf
     // @todo build toc based on values.
     /*
     return [
-      '#theme' => 'reliefweb_entities_sectioned_content',
-      '#contents' => [
-        '#theme' => 'reliefweb_entities_table_of_contents',
-        '#title' => $this->t('Table of Contents'),
-        '#sections' => $contents,
-      ],
-      '#sections' => $sections,
+    '#theme' => 'reliefweb_entities_sectioned_content',
+    '#contents' => [
+    '#theme' => 'reliefweb_entities_table_of_contents',
+    '#title' => $this->t('Table of Contents'),
+    '#sections' => $contents,
+    ],
+    '#sections' => $sections,
     ];
-*/
+     */
     // Consolidate sections, removing empty ones.
-    return  $this->consolidateSections($contents, $sections, $labels);
+    return $this->consolidateSections($contents, $sections, $labels);
   }
 
   /**
@@ -119,25 +123,25 @@ class Topic extends Node implements BundleEntityInterface, EntityModeratedInterf
     }
 
     // Table of contents.
-    $toc = array(
-      'information' => array(
-        'title' => t('Overview'),
-        'sections' => array(
-          'introduction' => t('Introduction'),
-          'overview' => t('Overview'),
-        ),
-      ),
-      'sections' => array(
-        'title' => t('Sections'),
+    $toc = [
+      'information' => [
+        'title' => $this->t('Overview'),
+        'sections' => [
+          'introduction' => $this->t('Introduction'),
+          'overview' => $this->t('Overview'),
+        ],
+      ],
+      'sections' => [
+        'title' => $this->t('Sections'),
         'sections' => [],
-      ),
-      'related' => array(
-        'title' => t('Related Content'),
+      ],
+      'related' => [
+        'title' => $this->t('Related Content'),
         'sections' => [
           'resources' => $this->t('Resources'),
         ],
-      ),
-    );
+      ],
+    ];
 
     $sections['introduction'] = $this->getEntityTextField('body');
     $sections['overview'] = $this->getEntityTextField('field_overview');
@@ -223,13 +227,13 @@ class Topic extends Node implements BundleEntityInterface, EntityModeratedInterf
     $view = $mapping[$path]['view'] ?? 'all';
 
     // Get the river service for the bundle.
-    $service = \Drupal\reliefweb_rivers\RiverServiceBase::getRiverService($bundle);
+    $service = RiverServiceBase::getRiverService($bundle);
 
     // Parse the query parameters.
-    $parameters = new \Drupal\reliefweb_rivers\Parameters($query);
+    $parameters = new Parameters($query);
 
     // Get the advanced search handler.
-    $advanced_search = new \Drupal\reliefweb_rivers\AdvancedSearch(
+    $advanced_search = new AdvancedSearch(
       $bundle,
       $river,
       $parameters,

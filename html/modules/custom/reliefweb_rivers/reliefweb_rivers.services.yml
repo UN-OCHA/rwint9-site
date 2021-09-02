@@ -13,7 +13,7 @@ services:
     arguments: ['@pager.manager', '@pager.parameters', '@reliefweb_api.client', '@string_translation']
   reliefweb_rivers.topic.river:
     class: Drupal\reliefweb_rivers\Services\TopicRiver
-    arguments: ['@pager.manager', '@pager.parameters', '@reliefweb_api.client', '@string_translation']
+    arguments: ['@pager.manager', '@pager.parameters', '@reliefweb_api.client', '@string_translation', '@entity_type.manager']
   reliefweb_rivers.report.river:
     class: Drupal\reliefweb_rivers\Services\ReportRiver
     arguments: ['@pager.manager', '@pager.parameters', '@reliefweb_api.client', '@string_translation']
