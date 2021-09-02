@@ -52,6 +52,7 @@ module:
   reliefweb_migrate: 0
   reliefweb_rivers: 0
   reliefweb_subscriptions: 0
+  reliefweb_topics: 0
   reliefweb_utility: 0
   reliefweb_xmlsitemap: 0
   responsive_image: 0

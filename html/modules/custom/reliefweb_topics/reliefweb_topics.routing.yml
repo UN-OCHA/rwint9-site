@@ -1,0 +1,14 @@
+reliefweb_topics.community_topics_form:
+  path: '/admin/community-topics'
+  defaults:
+    _form: '\Drupal\reliefweb_topics\Form\CommunityTopicsForm'
+    _title: 'Community Topics Administration'
+  requirements:
+    _permission: administer community topics
+reliefweb_topics.community_topics.validate:
+  path: '/admin/community-topics/validate'
+  defaults:
+    _controller: '\Drupal\reliefweb_topics\Controller\CommunityTopicsController::validate'
+    _title: 'Link validation for ReliefWeb link fields'
+  requirements:
+    _permission: administer community topics

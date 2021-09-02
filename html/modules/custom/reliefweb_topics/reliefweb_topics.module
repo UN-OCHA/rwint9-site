@@ -1,0 +1,100 @@
+<?php
+
+/**
+ * @file
+ * Code for the ReliefWeb Topics feature.
+ */
+
+/**
+ * Implements hook_token_info().
+ */
+function reliefweb_topics_token_info() {
+  $info['types']['disaster-map'] = [
+    'name' => t('Disaster type map'),
+    'description' => t('Display maps of the latest disasters per type (can be combined, ex: [disaster-map:ST-SS])'),
+    'type' => 'disaster-map',
+  ];
+
+  // Disaster type map tokens.
+  foreach (reliefweb_topics_get_disaster_type_tokens() as $token_name => $disaster_type) {
+    $info['tokens']['disaster-map'][$token_name] = [
+      'name' => $disaster_type['name'],
+      'description' => t('Map of latest @disaster_type disasters', ['@disaster_type' => $disaster_type['name']]),
+    ];
+  }
+  $info['tokens']['disaster-map']['ID'] = [
+    'name' => 'Disasters with IDs',
+    'description' => t('Map of latest disasters with IDs (separated with a "-", ex: [disaster-map:123-456])'),
+  ];
+
+  return $info;
+}
+
+/**
+ * Implements hook_tokens().
+ */
+function reliefweb_topics_tokens($type, $tokens, array $data = [], array $options = []) {
+  $replacements = [];
+  if ($type === 'disaster-map') {
+    foreach ($tokens as $name => $original) {
+      $replacements[$original] = reliefweb_topics_get_disaster_map_token_replacement($name);
+    }
+  }
+  return $replacements;
+}
+
+/**
+ * Get array of disaster types keyed by token name.
+ */
+function reliefweb_topics_get_disaster_type_tokens() {
+  static $disaster_type_tokens;
+
+  if (!isset($disaster_type_tokens)) {
+    $disaster_type_tokens = [];
+    foreach (reliefweb_rivers_get_terms_cache('disaster_type') as $term) {
+      if (!empty($term['code'])) {
+        $disaster_type_tokens[$term['code']] = $term;
+      }
+    }
+  }
+  return $disaster_type_tokens;
+}
+
+/**
+ * Get the disaster map markup for the given token.
+ */
+function reliefweb_topics_get_disaster_map_token_replacement($token) {
+  $tokens = reliefweb_topics_get_disaster_type_tokens();
+  $values = explode('-', $token);
+  $options = [];
+
+  if (!empty($values) && is_numeric($values[0])) {
+    $options['ids'] = array_map('intval', $values);
+    $title = t('Disasters');
+  }
+  else {
+    $terms = array_intersect_key($tokens, array_flip($values));
+    if (!empty($terms)) {
+      $options['types'] = array_keys($terms);
+      $options['from'] = strtotime('-1 year', time());
+
+      $types = [];
+      foreach ($terms as $term) {
+        $types[] = $term['name'];
+      }
+
+      $type = array_pop($types);
+      $type = (count($types) > 0 ? implode(', ', $types) . ' and ' : '') . $type;
+      $title = t('@type disasters covered by ReliefWeb in the last 12 months.', [
+        '@type' => $type,
+      ]);
+    }
+  }
+
+  if (!empty($title)) {
+    $id = 'disaster-map-' . $token;
+    return RWPageHandler::getDisasterMap($id, $title, $options, 'html');
+  }
+
+  return '';
+}
