@@ -29,6 +29,7 @@ dependencies:
     - image
     - link
     - path
+    - reliefweb_fields
     - text
 id: taxonomy_term.source.default
 targetEntityType: taxonomy_term
@@ -58,7 +59,7 @@ content:
     weight: 11
     settings: {  }
     third_party_settings: {  }
-    type: options_select
+    type: options_buttons
     region: content
   field_attention_job:
     weight: 14
@@ -87,12 +88,38 @@ content:
   field_country:
     weight: 7
     settings:
-      match_operator: CONTAINS
-      match_limit: 10
-      size: 60
-      placeholder: ''
+      sort: label
+      extra_data:
+        field_shortname: field_shortname
+        tid: '0'
+        uuid: '0'
+        revision_id: '0'
+        langcode: '0'
+        vid: '0'
+        revision_created: '0'
+        revision_user: '0'
+        revision_log_message: '0'
+        status: '0'
+        name: '0'
+        description: '0'
+        weight: '0'
+        parent: '0'
+        changed: '0'
+        default_langcode: '0'
+        revision_default: '0'
+        revision_translation_affected: '0'
+        moderation_state: '0'
+        field_aliases: '0'
+        field_appeals_response_plans: '0'
+        field_iso3: '0'
+        field_key_content: '0'
+        field_location: '0'
+        field_longname: '0'
+        field_profile: '0'
+        field_timezone: '0'
+        field_useful_links: '0'
     third_party_settings: {  }
-    type: entity_reference_autocomplete
+    type: reliefweb_entity_reference_select
     region: content
   field_disclaimer:
     weight: 12

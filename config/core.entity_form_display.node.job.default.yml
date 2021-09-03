@@ -14,9 +14,12 @@ dependencies:
     - field.field.node.job.field_source
     - field.field.node.job.field_theme
     - node.type.job
+    - workflows.workflow.job
   module:
     - allowed_formats
+    - content_moderation
     - datetime
+    - reliefweb_fields
     - text
 id: node.job.default
 targetEntityType: node
@@ -52,9 +55,39 @@ content:
     region: content
   field_country:
     weight: 2
-    settings: {  }
+    settings:
+      sort: label
+      extra_data:
+        field_shortname: field_shortname
+        tid: '0'
+        uuid: '0'
+        revision_id: '0'
+        langcode: '0'
+        vid: '0'
+        revision_created: '0'
+        revision_user: '0'
+        revision_log_message: '0'
+        status: '0'
+        name: '0'
+        description: '0'
+        weight: '0'
+        parent: '0'
+        changed: '0'
+        default_langcode: '0'
+        revision_default: '0'
+        revision_translation_affected: '0'
+        moderation_state: '0'
+        field_aliases: '0'
+        field_appeals_response_plans: '0'
+        field_iso3: '0'
+        field_key_content: '0'
+        field_location: '0'
+        field_longname: '0'
+        field_profile: '0'
+        field_timezone: '0'
+        field_useful_links: '0'
     third_party_settings: {  }
-    type: options_select
+    type: reliefweb_entity_reference_select
     region: content
   field_how_to_apply:
     weight: 10
@@ -87,9 +120,46 @@ content:
     region: content
   field_source:
     weight: 1
-    settings: {  }
+    settings:
+      sort: label
+      extra_data:
+        moderation_state: moderation_state
+        field_allowed_content_types: field_allowed_content_types
+        field_shortname: field_shortname
+        tid: '0'
+        uuid: '0'
+        revision_id: '0'
+        langcode: '0'
+        vid: '0'
+        revision_created: '0'
+        revision_user: '0'
+        revision_log_message: '0'
+        status: '0'
+        name: '0'
+        description: '0'
+        weight: '0'
+        parent: '0'
+        changed: '0'
+        default_langcode: '0'
+        revision_default: '0'
+        revision_translation_affected: '0'
+        field_aliases: '0'
+        field_attention_job: '0'
+        field_attention_report: '0'
+        field_attention_training: '0'
+        field_country: '0'
+        field_disclaimer: '0'
+        field_fts_id: '0'
+        field_homepage: '0'
+        field_job_import_feed_url: '0'
+        field_links: '0'
+        field_logo: '0'
+        field_longname: '0'
+        field_organization_type: '0'
+        field_spanish_name: '0'
+        field_user_posting_rights: '0'
     third_party_settings: {  }
-    type: options_select
+    type: reliefweb_entity_reference_select
     region: content
   field_theme:
     weight: 8
@@ -97,6 +167,12 @@ content:
     third_party_settings: {  }
     type: options_buttons
     region: content
+  moderation_state:
+    type: moderation_state_default
+    weight: 100
+    settings: {  }
+    region: content
+    third_party_settings: {  }
   status:
     type: boolean_checkbox
     settings:
