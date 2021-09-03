@@ -112,7 +112,7 @@ class CommunityTopicsForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $links = $form_state->getValue('data');
+    $links = $form_state->getUserInput()['data'];
     $links = json_decode($links);
     $this->setCommunityTopics($links);
   }
