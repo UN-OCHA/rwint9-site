@@ -6,6 +6,13 @@
  */
 
 /**
+ * Get all community topics.
+ */
+function reliefweb_topics_get_all() {
+  return \Drupal::state()->get('reliefweb_topics', []);
+}
+
+/**
  * Implements hook_token_info().
  */
 function reliefweb_topics_token_info() {
