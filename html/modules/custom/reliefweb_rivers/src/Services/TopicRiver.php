@@ -125,33 +125,19 @@ class TopicRiver extends RiverServiceBase {
     // Sort by most recent (nid descending) but prioritizing featured topics.
     krsort($reliefweb_topics, SORT_NATURAL);
 
-    // Get the community topics.
-    $community_topics = [];
-    /*
-    foreach (variable_get('reliefweb_topics_community_topics_links', []) as $data) {
-    $topic = array(
-    'title' => $data['title'],
-    'url' => static::encodeUrl($data['url']),
-    'summary' => $data['description'],
-    );
-    $community_topics[] = static::wrapEntity($bundle, $topic, $labels);
-    }
-     */
-
     // Initialize the pager.
     $this->pagerManager->createPager($totalCount ?? 0, $this->limit);
 
-    return [
-      '#theme' => 'reliefweb_rivers_river',
-      '#id' => 'river-list',
-      '#title' => $this->t('List'),
-      '#results' => $this->getRiverResults(count($reliefweb_topics)),
-      '#entities' => $reliefweb_topics,
-      '#pager' => $this->getRiverPager(),
-      '#empty' => $this->t('No results found. Please modify your search or filter selection.'),
-    ];
+    // Get the community topics.
+    $community_topics = [];
+    foreach (reliefweb_topics_get_all() as $data) {
+      $community_topics[] = array(
+        'title' => $data->title,
+        'url' => \Drupal\Core\Url::fromUri($data->url),
+        'summary' => $data->description,
+      );
+    }
 
-    // Should ideally return both.
     return [
       'reliefweb' => [
         '#theme' => 'reliefweb_rivers_river',
@@ -162,13 +148,17 @@ class TopicRiver extends RiverServiceBase {
         '#pager' => $this->getRiverPager(),
         '#empty' => $this->t('No results found. Please modify your search or filter selection.'),
       ],
-      'reliefweb' => [
-        '#theme' => 'reliefweb_rivers_river',
-        '#id' => 'river-list',
-        '#title' => $this->t('List'),
-        '#results' => $this->getRiverResults(count($community_topics)),
-        '#entities' => $community_topics,
-        '#empty' => $this->t('No results found. Please modify your search or filter selection.'),
+      'community_topics' => [
+        '#theme' => 'links',
+        '#attributes' => [
+          'class' => [
+            'links--community-topics',
+          ],
+        ],
+        '#heading' => [
+          'text' => $this->t('Community topics'),
+        ],
+        '#links' => $community_topics,
       ],
     ];
   }
