@@ -18,6 +18,7 @@ use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Pager\PagerParametersInterface;
+use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -26,6 +27,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  */
 abstract class ModerationServiceBase implements ModerationServiceInterface {
 
+  use EntityDatabaseInfoTrait;
   use StringTranslationTrait;
 
   /**
@@ -763,209 +765,6 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   }
 
   /**
-   * Get the table name for a field.
-   *
-   * @param string $entity_type_id
-   *   Entity type id.
-   * @param string $field_name
-   *   Field name.
-   *
-   * @return string
-   *   Field table name.
-   */
-  protected function getFieldTableName($entity_type_id, $field_name) {
-    return $this->entityTypeManager
-      ->getStorage($entity_type_id)
-      ->getTableMapping()
-      ->getFieldTableName($field_name);
-  }
-
-  /**
-   * Generates a column name for a field property.
-   *
-   * @param string $entity_type_id
-   *   Entity type id.
-   * @param string $field_name
-   *   Field name.
-   * @param string $property_name
-   *   Field property name.
-   *
-   * @return string
-   *   Field table name.
-   */
-  protected function getFieldColumnName($entity_type_id, $field_name, $property_name) {
-    $field_storage_definitions = $this->entityFieldManager
-      ->getFieldStorageDefinitions($entity_type_id);
-
-    return $this->entityTypeManager
-      ->getStorage($entity_type_id)
-      ->getTableMapping()
-      ->getFieldColumnName($field_storage_definitions[$field_name], $property_name);
-  }
-
-  /**
-   * Get the data table for the entity type.
-   *
-   * @param string $entity_type_id
-   *   Entity type id.
-   *
-   * @return string
-   *   Entity type data table name.
-   */
-  protected function getEntityTypeDataTable($entity_type_id) {
-    return $this->entityTypeManager
-      ->getStorage($entity_type_id)
-      ->getEntityType()
-      ->getDataTable();
-  }
-
-  /**
-   * Get the base table for the entity type.
-   *
-   * @param string $entity_type_id
-   *   Entity type id.
-   *
-   * @return string
-   *   Entity type base table name.
-   */
-  protected function getEntityTypeBaseTable($entity_type_id) {
-    return $this->entityTypeManager
-      ->getStorage($entity_type_id)
-      ->getEntityType()
-      ->getBaseTable();
-  }
-
-  /**
-   * Get the revision table for the entity type.
-   *
-   * @param string $entity_type_id
-   *   Entity type id.
-   *
-   * @return string
-   *   Entity type revision table name.
-   */
-  protected function getEntityTypeRevisionTable($entity_type_id) {
-    return $this->entityTypeManager
-      ->getStorage($entity_type_id)
-      ->getEntityType()
-      ->getRevisionTable();
-  }
-
-  /**
-   * Get the revision data table for the entity type.
-   *
-   * @param string $entity_type_id
-   *   Entity type id.
-   *
-   * @return string
-   *   Entity type revision table name.
-   */
-  protected function getEntityTypeRevisionDataTable($entity_type_id) {
-    return $this->entityTypeManager
-      ->getStorage($entity_type_id)
-      ->getEntityType()
-      ->getRevisionDataTable();
-  }
-
-  /**
-   * Get the id field for the entity type.
-   *
-   * @param string $entity_type_id
-   *   Entity type id.
-   *
-   * @return string
-   *   Entity type id field name.
-   */
-  protected function getEntityTypeIdField($entity_type_id) {
-    return $this->entityTypeManager
-      ->getStorage($entity_type_id)
-      ->getEntityType()
-      ->getKey('id');
-  }
-
-  /**
-   * Get the bundle field for the entity type.
-   *
-   * @param string $entity_type_id
-   *   Entity type id.
-   *
-   * @return string
-   *   Entity type bundle field name.
-   */
-  protected function getEntityTypeBundleField($entity_type_id) {
-    return $this->entityTypeManager
-      ->getStorage($entity_type_id)
-      ->getEntityType()
-      ->getKey('bundle');
-  }
-
-  /**
-   * Get the label field for the entity type.
-   *
-   * @param string $entity_type_id
-   *   Entity type id.
-   *
-   * @return string
-   *   Entity type label field name.
-   */
-  protected function getEntityTypeLabelField($entity_type_id) {
-    return $this->entityTypeManager
-      ->getStorage($entity_type_id)
-      ->getEntityType()
-      ->getKey('label');
-  }
-
-  /**
-   * Get the revision id field for the entity type.
-   *
-   * @param string $entity_type_id
-   *   Entity type id.
-   *
-   * @return string
-   *   Entity type revision id field name.
-   */
-  protected function getEntityTypeRevisionIdField($entity_type_id) {
-    return $this->entityTypeManager
-      ->getStorage($entity_type_id)
-      ->getEntityType()
-      ->getKey('revision');
-  }
-
-  /**
-   * Get the revision user field for the entity type.
-   *
-   * @param string $entity_type_id
-   *   Entity type id.
-   *
-   * @return string
-   *   Entity type revision id field name.
-   */
-  protected function getEntityTypeRevisionUserField($entity_type_id) {
-    $keys = $this->entityTypeManager
-      ->getStorage($entity_type_id)
-      ->getEntityType()
-      ->getRevisionMetadataKeys();
-    return $keys['revision_user'];
-  }
-
-  /**
-   * Get the revision created field for the entity type.
-   *
-   * @param string $entity_type_id
-   *   Entity type id.
-   *
-   * @return string
-   *   Entity type revision created field name.
-   */
-  protected function getEntityTypeRevisionCreatedField($entity_type_id) {
-    $keys = $this->entityTypeManager
-      ->getStorage($entity_type_id)
-      ->getEntityType()
-      ->getRevisionMetadataKeys();
-    return $keys['revision_created'];
-  }
-
-  /**
    * Parse selected values for a filter, keeping only the valid ones.
    *
    * @param array|scalar $values
@@ -991,50 +790,6 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     }));
 
     return $values;
-  }
-
-  /**
-   * Get the base table name for a select query.
-   *
-   * The first table without a join type is the base table.
-   *
-   * @param \Drupal\Core\Database\Query\Select $query
-   *   Query.
-   *
-   * @return string
-   *   Base table alias.
-   *
-   * @see \Drupal\Core\Database\Query\Select::__construct()
-   */
-  protected function getQueryBaseTable(Select $query) {
-    foreach ($query->getTables() as $info) {
-      if (!isset($info['join type'])) {
-        return $info['table'] ?? '';
-      }
-    }
-    return '';
-  }
-
-  /**
-   * Get the base table alias for a select query.
-   *
-   * The first table without a join type is the base table.
-   *
-   * @param \Drupal\Core\Database\Query\Select $query
-   *   Query.
-   *
-   * @return string
-   *   Base table alias.
-   *
-   * @see \Drupal\Core\Database\Query\Select::__construct()
-   */
-  protected function getQueryBaseTableAlias(Select $query) {
-    foreach ($query->getTables() as $alias => $info) {
-      if (!isset($info['join type'])) {
-        return $alias;
-      }
-    }
-    return '';
   }
 
   /**
