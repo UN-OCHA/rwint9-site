@@ -1,0 +1,141 @@
+{#
+/**
+ * @file
+ * Theme override for a node edit form.
+ *
+ * Two column template for the node add/edit form.
+ *
+ * This template will be used when a node edit form specifies 'node_edit_form'
+ * as its #theme callback.  Otherwise, by default, node add/edit forms will be
+ * themed by form.html.twig.
+ *
+ * Available variables:
+ * - form: The node add/edit form.
+ *
+ * @see seven_form_node_form_alter()
+ */
+#}
+{% set attributes = attributes
+  .setAttribute('data-cd-toggable', 'Jump to content'|t)
+  .setAttribute('data-cd-icon', 'arrow-down')
+  .setAttribute('data-cd-component', 'rw-toc')
+%}
+
+{% set title_attributes = title_attributes.addClass('visually-hidden') %}
+
+{{ attach_library('common_design_subtheme/rw-form') }}
+{{ attach_library('common_design_subtheme/rw-toc') }}
+
+<nav{{ attributes
+  .setAttribute('id', id)
+  .addClass([
+    'rw-toc',
+  ])
+}} >
+  <h2{{ level }}{{ title_attributes
+    .addClass([
+      'rw-toc__title'
+    ])
+  }}>{% trans %}Table of Contents{% endtrans %}</h2>
+  <ul>
+    {#    <?php if (!empty($form['user_information'])): ?>#}
+    <li class="rw-toc__section">
+      <h3 class="rw-toc__section__title">{% trans %}Information{% endtrans %}</h3>
+      <ul>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#user-information">{% trans %}User information{% endtrans %}</a></li>
+      </ul>
+    </li>
+    {#      <?php endif; ?>#}
+    <li class="rw-toc__section">
+      <h3 class="rw-toc__section__title">{% trans %}Information{% endtrans %}</h3>
+      <ul>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#user-information">{% trans %}User information{% endtrans %}</a></li>
+      </ul>
+    </li>
+    <li class="rw-toc__section">
+      <h3 class="rw-toc__section__title">{% trans %}Fields{% endtrans %}</h3>
+      <ul>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#organization">{% trans %}Organization{% endtrans %}</a></li>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#location">{% trans %}Location{% endtrans %}</a></li>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#date">{% trans %}Date{% endtrans %}</a></li>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#event-url">{% trans %}Event URL{% endtrans %}</a></li>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#fee">{% trans %}Fee{% endtrans %}</a></li>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#details">{% trans %}Details{% endtrans %}</a></li>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#content">{% trans %}Description{% endtrans %}</a></li>
+      </ul>
+    </li>
+    <li class="rw-toc__section">
+      <h3 class="rw-toc__section__title">{% trans %}Submission{% endtrans %}</h3>
+      <ul>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#legal">{% trans %}Terms & conditions{% endtrans %}</a></li>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#actions">{% trans %}Save{% endtrans %}</a></li>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#edit-revision-information">{% trans %}Revisions{% endtrans %}</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+{#<?php if (!empty($form['user_information'])): ?>#}
+<fieldset id="user-information">
+  <legend>{% trans %}User information{% endtrans %}</legend>
+  {{ form.user_information }}
+</fieldset>
+{#<?php endif; ?>#}
+
+<fieldset id="organization">
+  <legend>{% trans %}Organization{% endtrans %}</legend>
+  {{ form.field_source }}
+</fieldset>
+
+<fieldset id="location">
+  <legend>{% trans %}Location{% endtrans %}</legend>
+  {{ form.field_training_format }}
+  {{ form.field_country }}
+  {{ form.field_city }}
+</fieldset>
+
+<fieldset id="dates">
+  <legend>{% trans %}Dates{% endtrans %}</legend>
+{#  <?php print drupal_render($form['ongoing']); ?>#}
+  {{ form.field_training_date }}
+  {{ form.field_registration_deadline }}
+</fieldset>
+
+<fieldset id="event-url">
+  <legend>{% trans %}Event URL{% endtrans %}</legend>
+  {{ form.field_link }}
+</fieldset>
+
+<fieldset id="fee">
+  <legend>{% trans %}Fee{% endtrans %}</legend>
+  {{ form.field_cost }}
+  {{ form.field_fee_information }}
+</fieldset>
+
+<fieldset id="details" class="details">
+  <legend>{% trans %}Details{% endtrans %}</legend>
+  <p>{% trans %}For definitions of the options see: {% endtrans %}
+    <strong><a href="/taxonomy-descriptions" target="_blank">{% trans %}Humanitarian Terms{% endtrans %}</a></strong>
+  </p>
+  {{ form.field_training_type }}
+  {{ form.field_training_language }}
+  {{ form.field_career_categories }}
+  {{ form.field_theme }}
+</fieldset>
+
+<fieldset id="content">
+  <legend>{% trans %}Description{% endtrans %}</legend>
+  {{ form.title }}
+  {{ form.body }}
+  {{ form.field_how_to_apply }}
+</fieldset>
+
+<fieldset id="legal">
+  <legend class="visually-hidden">{% trans %}Legal{% endtrans %}</legend>
+  {{ form.legal }}
+</fieldset>
+
+<fieldset id="actions">
+  <legend class="visually-hidden">{% trans %}Form submission and other actions{% endtrans %}</legend>
+{#  <?php print $actions; ?>#}
+</fieldset>

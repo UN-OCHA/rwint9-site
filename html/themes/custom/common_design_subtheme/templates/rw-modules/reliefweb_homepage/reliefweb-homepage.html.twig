@@ -1,4 +1,9 @@
 {{ attach_library('common_design_subtheme/rw-homepage') }}
 {{ attach_library('common_design_subtheme/rw-headlines') }}
 
+{% if logged_in %}
+  {{ attach_library('common_design_subtheme/rw-headlines--admin') }}
+{% endif %}
+
+
 {% include '@reliefweb_homepage/reliefweb-homepage.html.twig' %}

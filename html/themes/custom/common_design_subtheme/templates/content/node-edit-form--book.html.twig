@@ -1,0 +1,68 @@
+{#
+/**
+ * @file
+ * Theme override for a node edit form.
+ *
+ * Two column template for the node add/edit form.
+ *
+ * This template will be used when a node edit form specifies 'node_edit_form'
+ * as its #theme callback.  Otherwise, by default, node add/edit forms will be
+ * themed by form.html.twig.
+ *
+ * Available variables:
+ * - form: The node add/edit form.
+ *
+ * @see seven_form_node_form_alter()
+ */
+#}
+{% set attributes = attributes
+  .setAttribute('data-cd-toggable', 'Jump to content'|t)
+  .setAttribute('data-cd-icon', 'arrow-down')
+  .setAttribute('data-cd-component', 'rw-toc')
+%}
+
+{% set title_attributes = title_attributes.addClass('visually-hidden') %}
+
+{{ attach_library('common_design_subtheme/rw-form') }}
+{{ attach_library('common_design_subtheme/rw-toc') }}
+
+<nav{{ attributes
+  .setAttribute('id', id)
+  .addClass([
+    'rw-toc',
+  ])
+}} >
+  <h2{{ level }}{{ title_attributes
+    .addClass([
+      'rw-toc__title'
+    ])
+  }}>{% trans %}Table of Contents{% endtrans %}</h2>
+  <ul>
+    <li class="rw-toc__section">
+      <h3 class="rw-toc__section__title">{% trans %}Fields{% endtrans %}</h3>
+      <ul>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#description">{% trans %}Description{% endtrans %}</a></li>
+      </ul>
+    </li>
+    <li class="rw-toc__section">
+      <h3 class="rw-toc__section__title">{% trans %}Submission{% endtrans %}</h3>
+      <ul>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#actions">{% trans %}Save{% endtrans %}</a></li>
+{#        <?php if (!empty($form['revision_information'])): ?>#}
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#edit-revision-information">{% trans %}Revisions{% endtrans %}</a></li>
+{#        <?php endif; ?>#}
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+<fieldset id="content">
+  <legend>{% trans %}Description{% endtrans %}</legend>
+  {{ form.title }}
+  {{ form.body }}
+</fieldset>
+
+<fieldset id="actions">
+  <legend class="visually-hidden">{% trans %}Form submission and other actions{% endtrans %}</legend>
+  {#  <?php print $actions; ?>#}
+</fieldset>
