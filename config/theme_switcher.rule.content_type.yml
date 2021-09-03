@@ -6,7 +6,7 @@ dependencies:
     - ctools
 id: content_type
 label: 'Content type'
-weight: -9
+weight: -8
 theme: common_design_subtheme
 admin_theme: common_design_subtheme
 visibility:

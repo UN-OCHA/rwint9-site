@@ -1,0 +1,69 @@
+reliefweb_moderation.content:
+  route_name: reliefweb_moderation.content
+  base_route: reliefweb_moderation.content
+  route_parameters:
+    service: report
+  title: Reports
+
+reliefweb_moderation.content.job:
+  route_name: reliefweb_moderation.content
+  base_route: reliefweb_moderation.content
+  route_parameters:
+    service: job
+  title: Jobs
+
+reliefweb_moderation.content.training:
+  route_name: reliefweb_moderation.content
+  base_route: reliefweb_moderation.content
+  route_parameters:
+    service: training
+  title: Training
+
+reliefweb_moderation.content.disaster:
+  route_name: reliefweb_moderation.content
+  base_route: reliefweb_moderation.content
+  route_parameters:
+    service: disaster
+  title: Disasters
+
+reliefweb_moderation.content.source:
+  route_name: reliefweb_moderation.content
+  base_route: reliefweb_moderation.content
+  route_parameters:
+    service: source
+  title: Sources
+
+reliefweb_moderation.content.country:
+  route_name: reliefweb_moderation.content
+  base_route: reliefweb_moderation.content
+  route_parameters:
+    service: country
+  title: Countries
+
+reliefweb_moderation.content.topic:
+  route_name: reliefweb_moderation.content
+  base_route: reliefweb_moderation.content
+  route_parameters:
+    service: topic
+  title: Topics
+
+reliefweb_moderation.content.blog_post:
+  route_name: reliefweb_moderation.content
+  base_route: reliefweb_moderation.content
+  route_parameters:
+    service: blog_post
+  title: Blog posts
+
+reliefweb_moderation.content.book:
+  route_name: reliefweb_moderation.content
+  base_route: reliefweb_moderation.content
+  route_parameters:
+    service: book
+  title: Books
+
+reliefweb_moderation.content.announcement:
+  route_name: reliefweb_moderation.content
+  base_route: reliefweb_moderation.content
+  route_parameters:
+    service: announcement
+  title: Announcements

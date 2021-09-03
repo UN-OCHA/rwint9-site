@@ -82,7 +82,7 @@ shared_configuration:
     revision_id: revision_id
     revision_user:
       plugin: static_map
-      default_value: 2
+      bypass: true
       source: revision_user
       # Map the anonymous and super users to the System user.
       map:

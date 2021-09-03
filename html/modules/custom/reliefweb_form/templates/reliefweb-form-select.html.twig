@@ -1,0 +1,32 @@
+{#
+/**
+ * @file
+ * Theme override for a select element.
+ *
+ * This extends the core select template with handling of attributes for the
+ * options and optgroups.
+ *
+ * Available variables:
+ * - attributes: HTML attributes for the <select> tag.
+ * - options: The <option> element children.
+ *
+ * @see template_preprocess_select()
+ * @see reliefweb_form_preprocess_select()
+ */
+#}
+{% apply spaceless %}
+  <select{{ attributes }}>
+    {% for option in options %}
+      {% set option_attributes = option.attributes ?? create_attribute() %}
+      {% if option.type == 'optgroup' %}
+        <optgroup{{ option_attributes.setAttribute('label', option.label) }}>
+          {% for sub_option in option.options %}
+            <option{{ option_attributes.setAttribute('value', option.value) }}{{ sub_option.selected ? ' selected="selected"' }}>{{ sub_option.label }}</option>
+          {% endfor %}
+        </optgroup>
+      {% elseif option.type == 'option' %}
+        <option{{ option_attributes.setAttribute('value', option.value) }}{{ option.selected ? ' selected="selected"' }}>{{ option.label }}</option>
+      {% endif %}
+    {% endfor %}
+  </select>
+{% endapply %}
