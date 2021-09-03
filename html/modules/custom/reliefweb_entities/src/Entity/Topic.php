@@ -54,18 +54,6 @@ class Topic extends Node implements BundleEntityInterface, EntityModeratedInterf
       'disasters' => $this->t('Alert and Ongoing Disasters'),
     ];
 
-    // @todo build toc based on values.
-    /*
-    return [
-    '#theme' => 'reliefweb_entities_sectioned_content',
-    '#contents' => [
-    '#theme' => 'reliefweb_entities_table_of_contents',
-    '#title' => $this->t('Table of Contents'),
-    '#sections' => $contents,
-    ],
-    '#sections' => $sections,
-    ];
-     */
     // Consolidate sections, removing empty ones.
     return $this->consolidateSections($contents, $sections, $labels);
   }

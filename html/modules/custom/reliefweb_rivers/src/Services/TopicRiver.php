@@ -114,10 +114,14 @@ class TopicRiver extends RiverServiceBase {
       $topic = [
         'title' => $topic->title->value,
         'url' => $topic->toUrl()->toString(),
+        'bundle' => 'topic',
         'summary' => HtmlSummarizer::summarize($topic->body->value, 300),
         'featured' => !empty($topic->field_featured->value),
         'icon' => [
-          'url' => $topic->icon,
+          'uri' => file_create_url($topic->field_icon->entity->getFileUri()),
+          'alt' => $topic->field_icon->first()->get('alt')->getString(),
+          'width' => 100,
+          'height' => 100,
         ],
       ];
       $reliefweb_topics[$key] = $topic;
