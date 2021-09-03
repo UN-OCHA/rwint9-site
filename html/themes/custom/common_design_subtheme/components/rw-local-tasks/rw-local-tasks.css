@@ -1,0 +1,39 @@
+/* Local tasks */
+.block-local-tasks-block {
+  display: table-row;
+}
+.block-local-tasks-block ul,
+.tabs {
+  margin: 0;
+  padding: 0 0 32px 0;
+  list-style: none;
+}
+.block-local-tasks-block li,
+.tabs li{
+  display: inline-block;
+  padding: 0;
+  margin: 0 12px 0 0;
+}
+.block-local-tasks-block li:last-child,
+.tabs li:last-child {
+  margin-right: 0;
+}
+.block-local-tasks-block li:after,
+.tabs li:after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 14px;
+  background: #2e3436;
+  margin-left: 14px;
+  margin-top: -2px;
+  vertical-align: middle;
+}
+.block-local-tasks-block li:last-child:after,
+.tabs li:last-child:after {
+  display: none;
+}
+.block-local-tasks-block a[aria-current],
+.tabs a[aria-current] {
+  font-weight: bold;
+}

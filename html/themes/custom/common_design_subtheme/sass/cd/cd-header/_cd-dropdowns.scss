@@ -15,3 +15,10 @@
     border-color: transparent transparent $implementation-primary;
   }
 }
+
+// Hide label on mobile.
+.cd-global-header button[aria-expanded] span[class*='__btn-label'] {
+  @include max-width(md) {
+    @include visually-hidden;
+  }
+}

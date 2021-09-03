@@ -1,0 +1,112 @@
+{#
+/**
+ * @file
+ * Theme override for a node edit form.
+ *
+ * Two column template for the node add/edit form.
+ *
+ * This template will be used when a node edit form specifies 'node_edit_form'
+ * as its #theme callback.  Otherwise, by default, node add/edit forms will be
+ * themed by form.html.twig.
+ *
+ * Available variables:
+ * - form: The node add/edit form.
+ *
+ * @see seven_form_node_form_alter()
+ */
+#}
+{% set attributes = attributes
+  .setAttribute('data-cd-toggable', 'Jump to content'|t)
+  .setAttribute('data-cd-icon', 'arrow-down')
+  .setAttribute('data-cd-component', 'rw-toc')
+%}
+
+{% set title_attributes = title_attributes.addClass('visually-hidden') %}
+
+{{ attach_library('common_design_subtheme/rw-form') }}
+{{ attach_library('common_design_subtheme/rw-toc') }}
+
+<nav{{ attributes
+  .setAttribute('id', id)
+  .addClass([
+    'rw-toc',
+  ])
+}} >
+  <h2{{ level }}{{ title_attributes
+    .addClass([
+      'rw-toc__title'
+    ])
+  }}>{% trans %}Table of Contents{% endtrans %}</h2>
+  <ul>
+    <li class="rw-toc__section">
+      <h3 class="rw-toc__section__title">{% trans %}Fields{% endtrans %}</h3>
+      <ul>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#description">{% trans %}Description{% endtrans %}</a></li>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#overview">{% trans %}Overview{% endtrans %}</a></li>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#resources">{% trans %}Resources{% endtrans %}</a></li>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#sections">{% trans %}Sections{% endtrans %}</a></li>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#related">{% trans %}Related content{% endtrans %}</a></li>
+      </ul>
+    </li>
+    <li class="rw-toc__section">
+      <h3 class="rw-toc__section__title">{% trans %}Submission{% endtrans %}</h3>
+      <ul>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#editorial-flags">{% trans %}Editorial flags{% endtrans %}</a></li>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#actions">{% trans %}Save{% endtrans %}</a></li>
+{#        <?php if (!empty($form['revision_information'])): ?>#}
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#edit-revision-information">{% trans %}Revisions{% endtrans %}</a></li>
+{#        <?php endif; ?>#}
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+<fieldset id="description">
+  <legend>{% trans %}Description{% endtrans %}</legend>
+  {{ form.title }}
+  {{ form.body }}
+  {{ form.field_term_image }}
+</fieldset>
+
+<fieldset id="overview">
+  <legend>{% trans %}Overview{% endtrans %}</legend>
+  {{ form.field_sandbox }}
+  {{ form.field_topics_overview }}
+</fieldset>
+
+<fieldset id="resources">
+  <legend>{% trans %}Resources{% endtrans %}</legend>
+  {{ form.field_topics_sidebar }}
+</fieldset>
+
+<fieldset id="sections">
+  <legend>{% trans %}Sections{% endtrans %}</legend>
+  {{ form.field_topics_grid_content }}
+</fieldset>
+
+<fieldset id="related">
+  <legend>{% trans %}Related Content{% endtrans %}</legend>
+  {{ form.field_topics_reports_search }}
+  {{ form.field_topics_jobs_search }}
+  {{ form.field_topics_training_search }}
+  {{ form.field_topics_disasters_search }}
+</fieldset>
+
+<fieldset id="details" class="details">
+  <legend>{% trans %}Details{% endtrans %}</legend>
+  {{ form.field_content_format }}
+  {{ form.field_theme }}
+</fieldset>
+
+<fieldset id="editorial-flags">
+  <legend class="visually-hidden">{% trans %}Editorial flags{% endtrans %}</legend>
+  {{ form.field_bury }}
+  {{ form.field_feature }}
+  {{ form.field_disaster_type }}
+  {{ form.field_theme }}
+</fieldset>
+
+<fieldset id="actions">
+  <legend class="visually-hidden">{% trans %}Form submission and other actions{% endtrans %}</legend>
+  {#  <?php print $actions; ?>#}
+</fieldset>
