@@ -1028,7 +1028,7 @@ class AdvancedSearch {
       $id = (int) $record->tid;
       // The record in the current language takes precedence over the default
       // language verion.
-      if ($record->langcode === $current_langcode || !isset($reference[$id])) {
+      if ($record->langcode === $current_langcode || !isset($terms[$id])) {
         $term = [
           'id' => $id,
           'name' => $record->name,
@@ -1045,16 +1045,10 @@ class AdvancedSearch {
       ksort($terms);
     }
     else {
-      LocalizationHelper::collatedSort($terms, 'name', $current_langcode);
+      LocalizationHelper::collatedAsort($terms, 'name', $current_langcode);
     }
 
-    // Keys are not preserved when sorting so we need to regenarate the array.
-    $result = [];
-    foreach ($terms as $term) {
-      $result[$term['id']] = $term;
-    }
-
-    return $result;
+    return $terms;
   }
 
   /**
