@@ -142,12 +142,14 @@ trait SectionedContentTrait {
         $description = HtmlSanitizer::sanitizeFromMarkdown($this->{$field_name}->value);
       }
       else {
-        dpm('<pre>' . $this->{$field_name}->value . '</pre>', 'value');
-        \Drupal::logger('value')->notice('<pre>' . print_r($this->{$field_name}->value, TRUE) . '</pre>');
-        //$description = HtmlSanitizer::sanitize(check_markup($this->{$field_name}->value, $this->{$field_name}->format), TRUE);
-        $description = check_markup($this->{$field_name}->value, $this->{$field_name}->format);
-        dpm('<pre>' . html_entity_decode($description) . '</pre>');
-        \Drupal::logger('description')->notice('<pre>' . print_r($description, TRUE) . '</pre>');
+        /** @var \Drupal\Component\Render\MarkupInterface $markup */
+        $markup = check_markup($this->{$field_name}->value, $this->{$field_name}->format);
+        if ($markup instanceof \Drupal\Core\Render\Markup) {
+          $description = $markup;
+        }
+        else {
+          $description = HtmlSanitizer::sanitize($markup, TRUE);
+        }
       }
 
       return [
