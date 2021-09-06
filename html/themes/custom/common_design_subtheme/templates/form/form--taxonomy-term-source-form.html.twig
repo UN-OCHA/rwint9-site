@@ -58,7 +58,34 @@
   <fieldset id="description">
     <legend>{{ 'Description'|t }}</legend>
     {{ element.name }}
-    {{ element.body }}
+    {{ element.field_shortname }}
+    {{ element.field_longname }}
+    {{ element.field_spanish_name }}
+    {{ element.field_aliases }}
+    {{ element.description }}
+  </fieldset>
+
+  <fieldset id="details" class="details">
+    <legend>{{ 'Details'|t }}</legend>
+    {{ element.field_organization_type }}
+    {{ element.field_country }}
+    {{ element.field_term_image }}
+  </fieldset>
+
+  <fieldset id="links">
+    <legend>{{ 'Links'|t }}</legend>
+    {{ element.field_homepage }}
+    {{ element.field_links }}
+  </fieldset>
+
+  <fieldset id="editorial-flags">
+    <legend>{{ 'Editorial flags'|t }}</legend>
+    {{ element.field_allowed_content_types }}
+    {{ element.field_disclaimer }}
+    {{ element.field_attention_report }}
+    {{ element.field_attention_jobs }}
+    {{ element.field_attention_trainings }}
+    {{ element.field_fts_id }}
   </fieldset>
 
   <fieldset id="actions">
