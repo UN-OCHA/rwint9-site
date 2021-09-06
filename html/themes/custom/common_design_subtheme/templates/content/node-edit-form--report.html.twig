@@ -78,7 +78,7 @@
 
 <fieldset id="dates">
   <legend>{% trans %}Dates{% endtrans %}</legend>
-  {{ form.field_report_date }}
+  {{ form.field_original_publication_date }}
   {{ form.field_embargo_date }}
 </fieldset>
 
@@ -105,20 +105,28 @@
 </fieldset>
 
 <fieldset id="headline">
-  <legend class="visually-hidden">{% trans %}Headline{% endtrans %}</legend>
+  <legend>{% trans %}Headline information{% endtrans %}</legend>
   {{ form.field_headline }}
   {{ form.field_headline_title }}
-  {{ form.summary }}
+  {{ form.field_headline_summary }}
   {{ form.field_headline_image }}
 </fieldset>
 
 <fieldset id="editorial-flags">
-  <legend class="visually-hidden">{% trans %}Editorial flags{% endtrans %}</legend>
+  <legend>{% trans %}Editorial flags{% endtrans %}</legend>
   {{ form.field_bury }}
   {{ form.field_feature }}
 </fieldset>
 
 <fieldset id="actions">
   <legend class="visually-hidden">{% trans %}Form submission and other actions{% endtrans %}</legend>
-  {#  <?php print $actions; ?>#}
+  {{ form.actions }}
 </fieldset>
+
+{% if form.revision_information %}
+  {{ form.revision_information }}
+{% endif %}
+
+{{ form.footer }}
+{{ form.advanced }}
+
