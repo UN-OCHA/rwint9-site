@@ -137,5 +137,12 @@
 
 <fieldset id="actions">
   <legend class="visually-hidden">{% trans %}Form submission and other actions{% endtrans %}</legend>
-{#  <?php print $actions; ?>#}
+{{ form.actions }}
 </fieldset>
+
+{% if form.revision_information %}
+  {{ form.revision_information }}
+{% endif %}
+
+{{ form.footer }}
+{{ form.advanced }}
