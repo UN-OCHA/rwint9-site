@@ -47,9 +47,11 @@ module:
   reliefweb_dsr: 0
   reliefweb_entities: 0
   reliefweb_fields: 0
+  reliefweb_form: 0
   reliefweb_homepage: 0
   reliefweb_key_figures: 0
   reliefweb_migrate: 0
+  reliefweb_moderation: 0
   reliefweb_rivers: 0
   reliefweb_subscriptions: 0
   reliefweb_topics: 0
@@ -65,6 +67,7 @@ module:
   taxonomy: 0
   taxonomy_term_revision: 0
   text: 0
+  theme_switcher: 0
   token: 0
   token_filter: 0
   toolbar: 0

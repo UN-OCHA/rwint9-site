@@ -70,6 +70,7 @@
         "drupal/social_auth_hid": "^2.6",
         "drupal/svg_image": "^1.15",
         "drupal/taxonomy_term_revision": "1.x-dev",
+        "drupal/theme_switcher": "^1.2",
         "drupal/token": "^1.9",
         "drupal/token_filter": "^1.2",
         "drush/drush": "^10.4",

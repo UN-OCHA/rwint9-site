@@ -154,3 +154,70 @@
   color: white;
   background: var(--cd-reliefweb-dark-blue);
 }
+
+/**
+ * Dual datepicker widget used for example on the moderation backend.
+ *
+ * Structure:
+ *
+ * <div class="rw-datepicker-dual-widget">
+ *   <div class="rw-datepicker-dual-widget__wrapper">
+ *     <div class="rw-datepicker-container">
+ *       <input class="rw-datepicker-input" type="text"/>
+ *       <div class="rw-datepicker-calendar">
+ *         // See structure above for the calendar content.
+ *       </div>
+ *     </div>
+ *     <div class="rw-datepicker-container">
+ *       <input class="rw-datepicker-input" type="text"/>
+ *       <div class="rw-datepicker-calendar">
+ *         // See structure above for the calendar content.
+ *       </div>
+ *     </div>
+ *     <button class="rw-datepicker-select">Select</button>
+ *   </div>
+ * </div>
+ */
+.rw-datepicker-dual-widget {
+  position: relative;
+}
+.rw-datepicker-dual-widget[data-hidden] {
+  display: none;
+}
+.rw-datepicker-dual-widget__wrapper {
+  position: absolute;
+  z-index: 100;
+  top: 0;
+  left: 0;
+  display: grid;
+  grid-template-areas: "widget1 widget2" "select select";
+  grid-template-rows: repeat(2, min-content);
+  grid-template-columns: repeat(2, min-content);
+  border: 1px solid var(--cd-reliefweb-dark-grey);
+  background: white;
+  box-shadow: 0 1px 4px 1px rgba(var(--cd-rgb-reliefweb-dark-grey), 0.3);
+}
+.rw-datepicker-dual-widget .rw-datepicker-container:nth-child(1) {
+  grid-area: widget1;
+  border-right: 1px solid var(--cd-reliefweb-dark-grey);
+}
+.rw-datepicker-dual-widget .rw-datepicker-container:nth-child(2) {
+  grid-area: widget2;
+}
+.rw-datepicker-dual-widget .rw-datepicker-input {
+  display: block;
+  width: 100%;
+  height: 46px;
+  text-align: center;
+  border: none;
+}
+.rw-datepicker-dual-widget .rw-datepicker-select {
+  grid-area: select;
+  width: 100%;
+}
+.rw-datepicker-dual-widget .rw-datepicker-calendar {
+  position: relative;
+  border-right: none;
+  border-left: none;
+  box-shadow: none;
+}

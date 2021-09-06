@@ -1,0 +1,5 @@
+type: module
+name: ReliefWeb Form
+description: 'Provides various form improvements.'
+package: reliefweb
+core_version_requirement: ^9

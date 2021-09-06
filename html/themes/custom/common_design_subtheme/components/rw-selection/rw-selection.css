@@ -66,7 +66,6 @@
   margin-top: -6px;
   margin-left: -6px;
   content: "";
-  background: url(img/icons-sprite.svg) -84px 0 no-repeat;
   background: var(--rw-icons--common--close--12--dark-blue);
 }
 .rw-selection [data-value] button:hover:before,

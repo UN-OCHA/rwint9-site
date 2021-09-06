@@ -2,7 +2,6 @@
 
 namespace Drupal\reliefweb_entities\Entity;
 
-use Drupal\reliefweb_rivers\AdvancedSearch;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\node\Entity\Node;
 use Drupal\reliefweb_entities\BundleEntityInterface;
@@ -11,10 +10,10 @@ use Drupal\reliefweb_entities\DocumentTrait;
 use Drupal\reliefweb_entities\EntityModeratedInterface;
 use Drupal\reliefweb_entities\EntityModeratedTrait;
 use Drupal\reliefweb_entities\SectionedContentInterface;
-use Drupal\reliefweb_rivers\RiverServiceBase;
-use Drupal\reliefweb_rivers\Parameters;
-
 use Drupal\reliefweb_entities\SectionedContentTrait;
+use Drupal\reliefweb_rivers\AdvancedSearch;
+use Drupal\reliefweb_rivers\Parameters;
+use Drupal\reliefweb_rivers\RiverServiceBase;
 
 /**
  * Bundle class for topic nodes.

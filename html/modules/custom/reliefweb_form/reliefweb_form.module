@@ -1,0 +1,50 @@
+<?php
+
+/**
+ * @file
+ * Form improvements.
+ */
+
+use Drupal\Core\Template\Attribute;
+
+/**
+ * Implements hook_theme().
+ */
+function reliefweb_form_theme() {
+  $themes = [
+    // Select form element theme with option attributes support.
+    'reliefweb_form_select' => [
+      'base hook' => 'select',
+    ],
+  ];
+  return $themes;
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK_alter() for `select`.
+ *
+ * Add a theme suggestion to use our select template that supports option
+ * attributes.
+ */
+function reliefweb_form_theme_suggestions_select_alter(array &$suggestions, array $variables) {
+  if (isset($variables['element']['#option_attributes'])) {
+    $suggestions[] = 'reliefweb_form_select';
+  }
+}
+
+/**
+ * Implements hook_preprocess_select().
+ *
+ * Handle option attributes.
+ */
+function reliefweb_form_preprocess_select(&$variables) {
+  $option_attributes = $variables['element']['#option_attributes'] ?? [];
+  $options = $variables['options'] ?? [];
+  foreach ($options as $index => $option) {
+    $key = $option['type'] === 'option' ? 'value' : 'label';
+    if (isset($option_attributes[$option[$key]])) {
+      $options[$index]['attributes'] = new Attribute($option_attributes[$option[$key]]);
+    }
+  }
+  $variables['options'] = $options;
+}
