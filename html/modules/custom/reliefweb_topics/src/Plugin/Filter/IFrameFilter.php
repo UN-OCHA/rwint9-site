@@ -48,12 +48,15 @@ class IFrameFilter extends FilterBase {
     if (empty($data['url'])) {
       return '';
     }
+
     $width = !empty($data['width']) ? intval($data['width'], 10) : 1000;
     $height = !empty($data['height']) ? intval($data['height'], 10) : round($width / 2);
     $title = !empty($data['title']) ?? 'iframe';
     $url = $data['url'];
 
-    return '<iframe width="' . $width . '" height="' . $height . '" title="' . $title . '" src="' . $url . '" frameborder="0" allowfullscreen></iframe>';
+    $text = '<iframe width="' . $width . '" height="' . $height . '" title="' . $title . '" src="' . $url . '" frameborder="0" allowfullscreen></iframe>';
+
+    return $text;
   }
 
 }
