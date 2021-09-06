@@ -18,6 +18,8 @@
  * RelieWeb's copyright notice.
  */
 .cd-footer-copyright {
+  display: block;
+  margin-top: 0;
   text-align: right;
   color: white;
   font-size: 12px;
@@ -34,8 +36,8 @@
   margin: 0 0 -4px 0;
   /* The padding combined with the overflow: hidden, hides the text. */
   padding: 0 0 0 140px;
-  background: url(../../../images/rw-logo-sprite.png) 0 -60px no-repeat;
-  background: rgba(0, 0, 0, 0) url(../../../images/rw-logo-sprite.svg) 0 -60px no-repeat;
+  background: url(../img/logos/rw-logo-sprite.png) 0 -60px no-repeat;
+  background: rgba(0, 0, 0, 0) url(../img/logos/rw-logo-sprite.svg) 0 -60px no-repeat;
 }
 .cd-footer-copyright a:hover,
 .cd-footer-copyright a:active,
