@@ -124,7 +124,7 @@
   </header>
 
   <div class="rw-article__content">
-    {{ content.body.0|render|sanitize_html(false, 2) }}
+    {{ content.body }}
 
     <section class="rw-xxx">
       {{ node.getPageContent() }}

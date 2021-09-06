@@ -142,7 +142,7 @@ trait SectionedContentTrait {
         $description = HtmlSanitizer::sanitizeFromMarkdown($this->{$field_name}->value);
       }
       else {
-        $description = HtmlSanitizer::sanitize(check_markup($this->{$field_name}->value));
+        $description = HtmlSanitizer::sanitize(check_markup($this->{$field_name}->value, $this->{$field_name}->format));
       }
 
       return [

@@ -25,8 +25,8 @@ function reliefweb_topics_token_info() {
   // Disaster type map tokens.
   foreach (reliefweb_topics_get_disaster_type_tokens() as $token_name => $disaster_type) {
     $info['tokens']['disaster-map'][$token_name] = [
-      'name' => $disaster_type['name'],
-      'description' => t('Map of latest @disaster_type disasters', ['@disaster_type' => $disaster_type['name']]),
+      'name' => $disaster_type->label,
+      'description' => t('Map of latest @disaster_type disasters', ['@disaster_type' => $disaster_type->label]),
     ];
   }
   $info['tokens']['disaster-map']['ID'] = [
@@ -57,10 +57,14 @@ function reliefweb_topics_get_disaster_type_tokens() {
   static $disaster_type_tokens;
 
   if (!isset($disaster_type_tokens)) {
+    $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadByProperties([
+      'vid' => 'disaster_type'
+    ]);
+
     $disaster_type_tokens = [];
-    foreach (reliefweb_rivers_get_terms_cache('disaster_type') as $term) {
-      if (!empty($term['code'])) {
-        $disaster_type_tokens[$term['code']] = $term;
+    foreach ($terms as $term) {
+      if (!$term->field_disaster_type_code->isEmpty()) {
+        $disaster_type_tokens[$term->field_disaster_type_code->value] = $term;
       }
     }
   }
@@ -87,7 +91,7 @@ function reliefweb_topics_get_disaster_map_token_replacement($token) {
 
       $types = [];
       foreach ($terms as $term) {
-        $types[] = $term['name'];
+        $types[] = $term->label;
       }
 
       $type = array_pop($types);
@@ -100,7 +104,7 @@ function reliefweb_topics_get_disaster_map_token_replacement($token) {
 
   if (!empty($title)) {
     $id = 'disaster-map-' . $token;
-    return RWPageHandler::getDisasterMap($id, $title, $options, 'html');
+    return $id;
   }
 
   return '';
