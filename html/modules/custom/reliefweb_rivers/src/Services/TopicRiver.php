@@ -3,17 +3,13 @@
 namespace Drupal\reliefweb_rivers\Services;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\node\Entity\Node;
-use Drupal\reliefweb_rivers\RiverServiceBase;
-use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
-use Drupal\Core\Url;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\Core\StringTranslation\TranslationInterface;
-use Drupal\reliefweb_api\Services\ReliefWebApiClient;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Pager\PagerParametersInterface;
-use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
-use Symfony\Component\Routing\Exception\RouteNotFoundException;
+use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\Core\Url;
+use Drupal\reliefweb_api\Services\ReliefWebApiClient;
+use Drupal\reliefweb_rivers\RiverServiceBase;
+use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
 
 /**
  * Service class to retrieve job resource for the job rivers.
@@ -135,11 +131,11 @@ class TopicRiver extends RiverServiceBase {
     // Get the community topics.
     $community_topics = [];
     foreach (reliefweb_topics_get_all() as $data) {
-      $community_topics[] = array(
+      $community_topics[] = [
         'title' => $data->title,
-        'url' => \Drupal\Core\Url::fromUri($data->url),
+        'url' => Url::fromUri($data->url),
         'summary' => $data->description,
-      );
+      ];
     }
 
     return [

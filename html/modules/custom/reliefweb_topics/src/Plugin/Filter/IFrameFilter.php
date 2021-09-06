@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * Contains IFrame filter
- */
 
 namespace Drupal\reliefweb_topics\Plugin\Filter;
 
@@ -10,7 +6,7 @@ use Drupal\filter\FilterProcessResult;
 use Drupal\filter\Plugin\FilterBase;
 
 /**
- * Provides a filter to allow iframes
+ * Provides a filter to allow iframes.
  *
  * @Filter(
  *   id = "filter_iframe",
@@ -26,7 +22,7 @@ class IFrameFilter extends FilterBase {
    */
   public function process($text, $langcode) {
     $result = new FilterProcessResult();
-    $result->setProcessedText($this->reliefweb_settings_convert_iframe_markup($text));
+    $result->setProcessedText($this->convertIframeMarkup($text));
     return $result;
   }
 
@@ -35,16 +31,18 @@ class IFrameFilter extends FilterBase {
    *
    * Syntax is: [iframe:widthxheight title](link).
    */
-  protected function reliefweb_settings_convert_iframe_markup($text) {
-    // Replace iframes.
+  protected function convertIframeMarkup($text) {
     $pattern = "/\[iframe(?:[:](?<width>\d+))?(?:[:x](?<height>\d+))?(?:[ ]+\"?(?<title>[^\"\]]+)\"?)?\]\((?<url>[^\)]+)\)/";
-    return preg_replace_callback($pattern, [IFrameFilter::class, 'reliefweb_settings_render_iframe_token'], $text);
+    return preg_replace_callback($pattern, [
+      IFrameFilter::class,
+      'renderIframeToken',
+    ], $text);
   }
 
   /**
    * Generate iframe html markup.
    */
-  public static function reliefweb_settings_render_iframe_token($data) {
+  public static function renderIframeToken($data) {
     if (empty($data['url'])) {
       return '';
     }

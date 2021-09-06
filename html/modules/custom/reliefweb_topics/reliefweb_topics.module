@@ -58,7 +58,7 @@ function reliefweb_topics_get_disaster_type_tokens() {
 
   if (!isset($disaster_type_tokens)) {
     $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadByProperties([
-      'vid' => 'disaster_type'
+      'vid' => 'disaster_type',
     ]);
 
     $disaster_type_tokens = [];

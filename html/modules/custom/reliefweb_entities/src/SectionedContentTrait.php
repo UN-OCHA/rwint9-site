@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_entities;
 
+use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
@@ -129,7 +130,7 @@ trait SectionedContentTrait {
       else {
         /** @var \Drupal\Component\Render\MarkupInterface $markup */
         $markup = check_markup($this->{$field_name}->value, $this->{$field_name}->format);
-        if ($markup instanceof \Drupal\Core\Render\Markup) {
+        if ($markup instanceof Markup) {
           $description = HtmlSanitizer::sanitize($markup->__toString(), TRUE);
           $description = $markup->create($description);
         }
