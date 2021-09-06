@@ -110,26 +110,11 @@ trait SectionedContentTrait {
    *   Render array with the description.
    */
   public function getEntityDescription() {
-    if (!empty($this->description->value)) {
-      // @todo review handling of markdown when there is a proper release of
-      // https://www.drupal.org/project/markdown for Drupal 9.
-      if ($this->description->format === 'markdown') {
-        $description = HtmlSanitizer::sanitizeFromMarkdown($this->description->value);
-      }
-      else {
-        $description = HtmlSanitizer::sanitize(check_markup($this->description->value));
-      }
-
-      return [
-        '#theme' => 'reliefweb_entities_entity_description',
-        '#description' => $description,
-      ];
-    }
-    return [];
+    return $this->getEntityTextField('description');
   }
 
   /**
-   * Get the entity description (for countries, disasters, sources).
+   * Get the entity description of a field.
    *
    * @return array
    *   Render array with the description.
@@ -145,7 +130,8 @@ trait SectionedContentTrait {
         /** @var \Drupal\Component\Render\MarkupInterface $markup */
         $markup = check_markup($this->{$field_name}->value, $this->{$field_name}->format);
         if ($markup instanceof \Drupal\Core\Render\Markup) {
-          $description = $markup;
+          $description = HtmlSanitizer::sanitize($markup->__toString(), TRUE);
+          $description = $markup->create($description);
         }
         else {
           $description = HtmlSanitizer::sanitize($markup, TRUE);
