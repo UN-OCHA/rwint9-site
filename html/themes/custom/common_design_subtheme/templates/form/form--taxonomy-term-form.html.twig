@@ -26,11 +26,14 @@
     {{ element.actions }}
   </fieldset>
 
+  {{ dpm(element) }}
+
   {%
     set skip_elements = [
     'name',
     'description',
     'actions',
+    'relations',
   ]
   %}
 
