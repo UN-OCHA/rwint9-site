@@ -49,9 +49,9 @@
       <h3 class="rw-toc__section__title">{% trans %}Submission{% endtrans %}</h3>
       <ul>
         <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#actions">{% trans %}Save{% endtrans %}</a></li>
-{#        <?php if (!empty($form['revision_information'])): ?>#}
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#edit-revision-information">{% trans %}Revisions{% endtrans %}</a></li>
-{#        <?php endif; ?>#}
+        {% if form.revision_information %}
+          <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#edit-revision-information">{% trans %}Revisions{% endtrans %}</a></li>
+        {% endif %}
       </ul>
     </li>
   </ul>
