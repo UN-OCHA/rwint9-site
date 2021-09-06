@@ -6,6 +6,7 @@ dependencies:
     - field.field.node.topic.body
     - field.field.node.topic.field_disasters_search
     - field.field.node.topic.field_featured
+    - field.field.node.topic.field_icon
     - field.field.node.topic.field_jobs_search
     - field.field.node.topic.field_overview
     - field.field.node.topic.field_reports_search
@@ -14,6 +15,7 @@ dependencies:
     - field.field.node.topic.field_training_search
     - node.type.topic
   module:
+    - image
     - reliefweb_fields
     - text
     - user
@@ -50,6 +52,15 @@ content:
       format_custom_true: ''
     third_party_settings: {  }
     type: boolean
+    region: content
+  field_icon:
+    weight: 110
+    label: above
+    settings:
+      image_style: ''
+      image_link: ''
+    third_party_settings: {  }
+    type: image
     region: content
   field_jobs_search:
     weight: 106
