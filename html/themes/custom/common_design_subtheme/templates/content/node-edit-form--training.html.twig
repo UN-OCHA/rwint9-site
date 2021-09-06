@@ -38,14 +38,14 @@
     ])
   }}>{% trans %}Table of Contents{% endtrans %}</h2>
   <ul>
-    {#    <?php if (!empty($form['user_information'])): ?>#}
-    <li class="rw-toc__section">
-      <h3 class="rw-toc__section__title">{% trans %}Information{% endtrans %}</h3>
-      <ul>
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#user-information">{% trans %}User information{% endtrans %}</a></li>
-      </ul>
-    </li>
-    {#      <?php endif; ?>#}
+    {% if form.user_information %}
+      <li class="rw-toc__section">
+        <h3 class="rw-toc__section__title">{% trans %}Information{% endtrans %}</h3>
+        <ul>
+          <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#user-information">{% trans %}User information{% endtrans %}</a></li>
+        </ul>
+      </li>
+    {% endif %}
     <li class="rw-toc__section">
       <h3 class="rw-toc__section__title">{% trans %}Information{% endtrans %}</h3>
       <ul>
@@ -75,12 +75,12 @@
   </ul>
 </nav>
 
-{#<?php if (!empty($form['user_information'])): ?>#}
-<fieldset id="user-information">
-  <legend>{% trans %}User information{% endtrans %}</legend>
-  {{ form.user_information }}
-</fieldset>
-{#<?php endif; ?>#}
+{% if form.user_information %}
+  <fieldset id="user-information">
+    <legend>{% trans %}User information{% endtrans %}</legend>
+    {{ form.user_information }}
+  </fieldset>
+{% endif %}
 
 <fieldset id="organization">
   <legend>{% trans %}Organization{% endtrans %}</legend>
@@ -96,7 +96,7 @@
 
 <fieldset id="dates">
   <legend>{% trans %}Dates{% endtrans %}</legend>
-{#  <?php print drupal_render($form['ongoing']); ?>#}
+{#  {{ form.ongoing }}#}
   {{ form.field_training_date }}
   {{ form.field_registration_deadline }}
 </fieldset>
