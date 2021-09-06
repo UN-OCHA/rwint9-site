@@ -27,7 +27,7 @@
 {{ attach_library('common_design_subtheme/rw-toc') }}
 
 <nav{{ attributes
-  .setAttribute('id', id)
+  .setAttribute('id', 'table-of-contents')
   .addClass([
     'rw-toc',
   ])
@@ -41,7 +41,7 @@
     <li class="rw-toc__section">
       <h3 class="rw-toc__section__title">{% trans %}Fields{% endtrans %}</h3>
       <ul>
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#content">{% trans %}Description{% endtrans %}</a></li>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#content">{% trans %}Content{% endtrans %}</a></li>
         <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#files">{% trans %}Files{% endtrans %}</a></li>
         <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#dates">{% trans %}Dates{% endtrans %}</a></li>
         <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#source">{% trans %}Source{% endtrans %}</a></li>
@@ -64,7 +64,7 @@
 </nav>
 
 <fieldset id="content">
-  <legend>{% trans %}Description{% endtrans %}</legend>
+  <legend>{% trans %}Content{% endtrans %}</legend>
   {{ form.field_language }}
   {{ form.title }}
   {{ form.body }}
