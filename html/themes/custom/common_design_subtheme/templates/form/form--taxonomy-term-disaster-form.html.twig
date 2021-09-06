@@ -82,7 +82,7 @@
 
   <fieldset id="profile">
     <legend>{{ 'Profile'|t }}</legend>
-    {{ element.body }}
+    {{ element.description }}
   </fieldset>
 
   <fieldset id="glide">
@@ -92,8 +92,9 @@
   </fieldset>
 
   <fieldset id="editorial-flags">
-    <legend class="visually-hidden">{{ 'Editorial flags'|t }}</legend>
-    {{ element.actions }}
+    <legend>{{ 'Editorial flags'|t }}</legend>
+    {{ element.field_profile }}
+    {{ element.field_timezone }}
   </fieldset>
 
   <fieldset id="actions">
@@ -116,6 +117,7 @@
     'field_glide_related',
     'field_profile',
     'field_useful_links',
+    'description',
     'actions',
   ]
   %}
