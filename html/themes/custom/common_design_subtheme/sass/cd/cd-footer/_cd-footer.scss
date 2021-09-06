@@ -11,3 +11,40 @@
     }
   }
 }
+
+/**
+ * Copyright.
+ *
+ * RelieWeb's copyright notice.
+ */
+.cd-footer-copyright {
+  color: white;
+  font-size: 12px;
+  font-weight: lighter;
+  text-align: right;
+}
+.cd-footer-copyright p {
+  margin: 0;
+}
+.cd-footer-copyright a {
+  display: inline-block;
+  width: 140px;
+  height: 60px;
+  margin: 0 0 -4px 0;
+  /* The padding combined with the overflow: hidden, hides the text. */
+  padding: 0 0 0 140px;
+  overflow: hidden;
+  background: url(../../../images/rw-logo-sprite.png) 0 -60px no-repeat;
+  background: rgba(0,0,0,0) url(../../../images/rw-logo-sprite.svg) 0 -60px no-repeat;
+}
+.cd-footer-copyright a:hover,
+.cd-footer-copyright a:active,
+.cd-footer-copyright a:focus {
+  opacity: 0.8;
+}
+@media all and (max-width : 1023px) {
+  .cd-footer-copyright {
+    width: 100%;
+    text-align: center;
+  }
+}
