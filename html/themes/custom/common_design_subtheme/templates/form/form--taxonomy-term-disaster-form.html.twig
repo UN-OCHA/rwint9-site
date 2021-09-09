@@ -105,7 +105,6 @@
   {%
     set skip_elements = [
     'name',
-    'field_appeals_response_plans',
     'field_country',
     'field_disaster_type',
     'field_disaster_date',
@@ -120,7 +119,7 @@
     'description',
     'actions',
     'relations',
-  ]
+    ]
   %}
 
   {% for key, child in element if key|first != '#' %}
