@@ -139,3 +139,13 @@ form table.file-list .image-widget {
   border: none;
   border-left: 1px solid #e6ecef;
 }
+
+
+/* Specific form elements */
+form .js-media-library-widget .fieldset-wrapper {
+  /* Necessary to ensure the progress overlay stays within the limits of the
+   * file element. */
+  position: relative;
+  border: 1px solid #e6ecef;
+  padding: 8px;
+}
