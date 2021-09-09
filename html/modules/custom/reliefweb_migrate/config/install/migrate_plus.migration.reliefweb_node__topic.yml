@@ -35,14 +35,18 @@ process:
     source:
       - field_sandbox/0/value
       - field_topics_overview/0/value
-    delimiter: '\r\n'
-  field_overview/format: constants/token_markdown
+    delimiter: "\r\n\r\n"
+  field_overview/format:
+    - plugin: default_value
+      default_value: token_markdown
 
   field_resources/value:
     plugin: skip_on_empty
     method: process
     source: field_resources/0/value
-  field_resources/format: constants/token_markdown
+  field_resources/format:
+    - plugin: default_value
+      default_value: token_markdown
 
   field_disasters_search/url:
     plugin: skip_on_empty
