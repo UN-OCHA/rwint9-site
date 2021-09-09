@@ -69,7 +69,7 @@
     <legend>{{ 'Details'|t }}</legend>
     {{ element.field_organization_type }}
     {{ element.field_country }}
-    {{ element.field_term_image }}
+    {{ element.field_logo }}
   </fieldset>
 
   <fieldset id="links">
@@ -96,7 +96,22 @@
   {%
     set skip_elements = [
     'name',
-    'body',
+    'field_shortname',
+    'field_longname',
+    'field_spanish_name',
+    'field_aliases',
+    'field_organization_type',
+    'field_country',
+    'field_logo',
+    'field_homepage',
+    'field_links',
+    'field_allowed_content_types',
+    'field_disclaimer',
+    'field_attention_report',
+    'field_attention_jobs',
+    'field_attention_trainings',
+    'field_fts_id',
+    'description',
     'actions',
     'relations',
   ]
