@@ -1,0 +1,94 @@
+uuid: 2a7a28e8-4d3f-45b4-b5c9-717d5dd124ec
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: q-j5aYFyNi_KQr6ixvOJrH6tPuboyeFF0wbWf7U9ff4
+id: reliefweb_node__topic
+class: null
+field_plugin_method: null
+cck_plugin_method: null
+migration_tags: null
+migration_group: reliefweb_node
+label: 'Migrate ReliefWeb topic ads.'
+source:
+  bundle: topics
+process:
+  type:
+    plugin: static_map
+    bypass: true
+    source: type
+    map:
+      announcement: announcement
+      blog_post: blog_post
+      book: book
+      job: job
+      report: report
+      topic: topic
+      topics: topic
+      training: training
+  field_icon:
+    plugin: sub_process
+    source: field_term_image
+    process:
+      target_id: fid
+  field_featured/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_featured/0/value
+  field_overview/value:
+    plugin: concat
+    source:
+      - field_sandbox/0/value
+      - field_topics_overview/0/value
+    delimiter: "\r\n\r\n"
+  field_overview/format:
+    plugin: default_value
+    default_value: token_markdown
+  field_resources/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_resources/0/value
+  field_resources/format:
+    plugin: default_value
+    default_value: token_markdown
+  field_disasters_search:
+    plugin: sub_process
+    source: field_topics_disasters_search
+    process:
+      url: value
+      title:
+        plugin: default_value
+        default_value: ''
+  field_jobs_search:
+    plugin: sub_process
+    source: field_topics_jobs_search
+    process:
+      url: value
+      title:
+        plugin: default_value
+        default_value: ''
+  field_reports_search:
+    plugin: sub_process
+    source: field_topics_reports_search
+    process:
+      url: value
+      title:
+        plugin: default_value
+        default_value: ''
+  field_training_search:
+    plugin: sub_process
+    source: field_topics_training_search
+    process:
+      url: value
+      title:
+        plugin: default_value
+        default_value: ''
+  field_sections:
+    plugin: sub_process
+    source: field_topics_grid_content
+    process:
+      url: url
+      title: title
+destination: null
+migration_dependencies: null

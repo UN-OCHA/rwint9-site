@@ -227,6 +227,9 @@
     "drupal/taxonomy_term_revision": {
         "version": "1.0.0"
     },
+    "drupal/theme_switcher": {
+        "version": "1.2.0"
+    },
     "drupal/token": {
         "version": "1.9.0"
     },
