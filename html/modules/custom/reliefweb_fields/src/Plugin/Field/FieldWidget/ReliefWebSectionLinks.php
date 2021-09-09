@@ -104,8 +104,8 @@ class ReliefWebSectionLinks extends WidgetBase {
         // seldom changes for existing links.
         foreach (array_reverse($items) as $link) {
           $links[] = [
-            'url' => $link['url'],
-            'title' => $link['title'],
+            'url' => $link['url'] ?? '',
+            'title' => $link['title'] ?? '',
             'override' => $use_override ? $link['override'] : '',
           ];
         }
