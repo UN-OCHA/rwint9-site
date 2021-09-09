@@ -37,31 +37,61 @@ process:
       - field_topics_overview/0/value
     delimiter: "\r\n\r\n"
   field_overview/format:
-    - plugin: default_value
-      default_value: token_markdown
+    plugin: default_value
+    default_value: token_markdown
 
   field_resources/value:
     plugin: skip_on_empty
     method: process
     source: field_resources/0/value
   field_resources/format:
-    - plugin: default_value
-      default_value: token_markdown
+    plugin: default_value
+    default_value: token_markdown
 
-  field_disasters_search/url:
-    plugin: skip_on_empty
-    method: process
-    source: field_disasters_search/0/url
-  field_disasters_search/title:
-    plugin: skip_on_empty
-    method: process
-    source: field_disasters_search/0/title
-  field_disasters_search/override:
-    plugin: skip_on_empty
-    method: process
-    source: field_disasters_search/0/alt
+  field_disasters_search:
+    plugin: sub_process
+    source: field_topics_disasters_search
+    process:
+      url: value
+      title:
+        plugin: default_value
+        default_value: ''
 
-  # field_jobs_search/value:
-  # field_reports_search/value:
-  # field_sections/value:
-  # field_training_search/value:
+#  field_disasters_search/override:
+#    plugin: skip_on_empty
+#    method: process
+#    source: field_topics_disasters_search/0/alt
+  field_jobs_search:
+    plugin: sub_process
+    source: field_topics_jobs_search
+    process:
+      url: value
+      title:
+        plugin: default_value
+        default_value: ''
+
+  field_reports_search:
+    plugin: sub_process
+    source: field_topics_reports_search
+    process:
+      url: value
+      title:
+        plugin: default_value
+        default_value: ''
+
+  field_training_search:
+    plugin: sub_process
+    source: field_topics_training_search
+    process:
+      url: value
+      title:
+        plugin: default_value
+        default_value: ''
+
+  field_sections:
+    plugin: sub_process
+    source: field_topics_grid_content
+    process:
+      url: url
+      title: title
+
