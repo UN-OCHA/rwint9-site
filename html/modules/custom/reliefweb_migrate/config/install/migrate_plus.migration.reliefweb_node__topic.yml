@@ -1,0 +1,63 @@
+id: reliefweb_node__topic
+label: Migrate ReliefWeb topic ads.
+migration_group: reliefweb_node
+source:
+  bundle: topics
+process:
+  type:
+    plugin: static_map
+    bypass: true
+    source: type
+    map:
+      announcement: announcement
+      blog_post: blog_post
+      book: book
+      job: job
+      report: report
+      topic: topic
+      topics: topic
+      training: training
+
+  # Fields.
+  field_icon:
+    plugin: sub_process
+    source: field_term_image
+    process:
+      target_id: fid
+
+  field_featured/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_featured/0/value
+
+  field_overview/value:
+    plugin: concat
+    source:
+      - field_sandbox/0/value
+      - field_topics_overview/0/value
+    delimiter: '\r\n'
+  field_overview/format: constants/token_markdown
+
+  field_resources/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_resources/0/value
+  field_resources/format: constants/token_markdown
+
+  field_disasters_search/url:
+    plugin: skip_on_empty
+    method: process
+    source: field_disasters_search/0/url
+  field_disasters_search/title:
+    plugin: skip_on_empty
+    method: process
+    source: field_disasters_search/0/title
+  field_disasters_search/override:
+    plugin: skip_on_empty
+    method: process
+    source: field_disasters_search/0/alt
+
+  # field_jobs_search/value:
+  # field_reports_search/value:
+  # field_sections/value:
+  # field_training_search/value:
