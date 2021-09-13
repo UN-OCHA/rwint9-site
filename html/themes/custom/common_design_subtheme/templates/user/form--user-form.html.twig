@@ -1,0 +1,54 @@
+{#
+/**
+ * @file
+ * Theme override for a 'form' element.
+ *
+ * Available variables
+ * - attributes: A list of HTML attributes for the wrapper element.
+ * - children: The child elements of the form.
+ *
+ * @see template_preprocess_form()
+ */
+#}
+{{ attach_library('common_design_subtheme/rw-form') }}
+{{ attach_library('common_design_subtheme/rw-toc') }}
+
+{{ dpm(element) }}
+
+<form{{ attributes }}>
+  <fieldset id="account">
+    <legend>{{ 'Account information'|t }}</legend>
+    {{ element.name }}
+    {{ element.current_pass }}
+    {{ element.mail }}
+    {{ element.pass }}
+    {{ element.reset_pass }}
+  </fieldset>
+
+  <fieldset id="details" class="details">
+    <legend>{{ 'Details'|t }}</legend>
+    {{ element.status }}
+    {{ element.roles }}
+    {{ element.notes }}
+  </fieldset>
+
+  <fieldset id="actions">
+    <legend class="visually-hidden">{{ 'Form submission and other actions'|t }}</legend>
+    {{ element.actions }}
+  </fieldset>
+
+  {%
+    set skip_elements = [
+    'name',
+    'current_pass',
+    'mail',
+    'pass',
+    'reset_pass',
+    'actions',
+    ]
+  %}
+
+  {% for key, child in element if key|first != '#' %}
+    {{ key not in skip_elements ? child }}
+  {% endfor %}
+</form>
