@@ -3,3 +3,5 @@ name: ReliefWeb Fields
 description: 'Provides custom field types, widgets and formatters.'
 package: reliefweb
 core_version_requirement: ^9
+dependencies:
+  - drupal:reliefweb_form

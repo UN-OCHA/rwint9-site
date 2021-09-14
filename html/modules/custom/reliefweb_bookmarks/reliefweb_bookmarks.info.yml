@@ -4,3 +4,6 @@ description: 'Allows content to be added to Bookmarks.'
 configure: reliefweb_bookmarks.collection
 package: reliefweb
 core_version_requirement: ^9
+dependencies:
+  - drupal:reliefweb_api
+  - drupal:reliefweb_rivers
