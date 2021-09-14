@@ -106,6 +106,7 @@ rw-form:
   css:
     theme:
       components/rw-form/rw-form.css: {}
+      components/rw-form/rw-form--widget.css: {}
 
 rw-headlines:
   css:

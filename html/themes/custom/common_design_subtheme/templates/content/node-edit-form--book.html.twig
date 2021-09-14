@@ -27,7 +27,7 @@
 {{ attach_library('common_design_subtheme/rw-toc') }}
 
 <nav{{ attributes
-  .setAttribute('id', id)
+  .setAttribute('id', 'table-of-contents')
   .addClass([
     'rw-toc',
   ])
@@ -42,15 +42,16 @@
       <h3 class="rw-toc__section__title">{% trans %}Fields{% endtrans %}</h3>
       <ul>
         <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#description">{% trans %}Description{% endtrans %}</a></li>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#files">{% trans %}Files{% endtrans %}</a></li>
       </ul>
     </li>
     <li class="rw-toc__section">
       <h3 class="rw-toc__section__title">{% trans %}Submission{% endtrans %}</h3>
       <ul>
         <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#actions">{% trans %}Save{% endtrans %}</a></li>
-{#        <?php if (!empty($form['revision_information'])): ?>#}
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#edit-revision-information">{% trans %}Revisions{% endtrans %}</a></li>
-{#        <?php endif; ?>#}
+        {% if form.revision_information %}
+          <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#edit-revision-information">{% trans %}Revisions{% endtrans %}</a></li>
+        {% endif %}
       </ul>
     </li>
   </ul>
@@ -62,7 +63,26 @@
   {{ form.body }}
 </fieldset>
 
+<fieldset id="files">
+  <legend>{% trans %}Files{% endtrans %}</legend>
+  {{ form.field_attached_images }}
+</fieldset>
+
 <fieldset id="actions">
   <legend class="visually-hidden">{% trans %}Form submission and other actions{% endtrans %}</legend>
-  {#  <?php print $actions; ?>#}
+  {{ form.actions }}
 </fieldset>
+
+{% if form.revision_information %}
+  {{ form.revision_information }}
+{% endif %}
+
+{{
+  form|without([
+    'title',
+    'body',
+    'field_attached_images',
+    'actions',
+    'revision_information',
+  ])
+}}

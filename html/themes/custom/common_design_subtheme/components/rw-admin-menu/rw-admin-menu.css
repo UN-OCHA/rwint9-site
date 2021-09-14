@@ -4,19 +4,19 @@
  * This menu contains links to the administration or editorial related pages.
  */
 .admin-menu {
-  text-align: left;
   /* The padding is for the blank space between the admin menu and the ocha
-   * services.*/
+   * services. */
   padding: 0 0 48px 0;
+  text-align: left;
 }
 .admin-menu__btn {
-  display: flex;
-  width: auto;
   position: relative;
+  display: flex;
   align-items: center;
+  width: auto;
   height: 35px;
   padding: 0 20px;
-  transition: background .3s ease;
+  transition: background 0.3s ease;
   color: var(--cd-white);
   background: transparent;
   font-size: var(--cd-font-size--tiny);
@@ -24,13 +24,13 @@
 
 @media screen and (max-width: 767px) {
   .admin-menu__btn span {
-    display: inline-block;
     position: relative;
     top: 2px;
+    display: inline-block;
+    overflow: hidden;
     width: 12px;
     height: 12px;
     text-indent: 12px;
-    overflow: hidden;
     background: var(--rw-icons--common--admin--12--white);
   }
 }
@@ -41,7 +41,7 @@
   right: -1px;
   width: 2px;
   height: calc(35px / 3);
-  content:"";
+  content: "";
   transform: translateY(-50%);
   background: var(--cd-blue--light);
 }
@@ -50,12 +50,14 @@
   max-width: var(--cd-max-width);
   padding: 0 var(--cd-container-padding);
 }
+
 @media screen and (min-width: 768px) {
   .admin-menu-dropdown__inner {
     margin: 0 auto;
     padding: 0 var(--cd-container-padding-tablet);
   }
 }
+
 @media screen and (min-width: 1024px) {
   .admin-menu-dropdown__inner {
     padding: 0 var(--cd-container-padding-xlarge);
@@ -91,9 +93,9 @@
   margin: 12px 24px 0 0;
 }
 .admin-menu li a {
+  text-decoration: none;
   color: white;
   font-weight: bold;
-  text-decoration: none;
 }
 .admin-menu li a:hover,
 .admin-menu li a:active,
@@ -110,111 +112,111 @@
   padding: 0;
 }
 
-/*.js .cd-header .admin-menu nav {*/
-/*  !* Hide by default when javascript is enabled to avoid flickering before the*/
-/*   * toggling button is added. *!*/
-/*  display: none;*/
-/*  position: absolute;*/
-/*  left: 0;*/
-/*  width: 100%;*/
-/*  padding: 22px 0;*/
-/*  !* Inherit the padding from the header wrapper. *!*/
-/*  padding-left: inherit;*/
-/*  padding-right: inherit;*/
-/*  -webkit-box-shadow: 0 4px 4px -2px rgba(0, 0, 0, 0.3);*/
-/*  box-shadow: 0 4px 4px -2px rgba(0, 0, 0, 0.3);*/
-/*  !* Ensures the admin menu popup is above the rest of the header and the main*/
-/*   * content. *!*/
-/*  z-index: 3;*/
-/*}*/
-/*.js .cd-header .admin-menu[data-hidden="false"] {*/
-/*  display: block;*/
-/*}*/
+/* .js .cd-header .admin-menu nav { */
+/*  !* Hide by default when javascript is enabled to avoid flickering before the */
+/*   * toggling button is added. *! */
+/*  display: none; */
+/*  position: absolute; */
+/*  left: 0; */
+/*  width: 100%; */
+/*  padding: 22px 0; */
+/*  !* Inherit the padding from the header wrapper. *! */
+/*  padding-left: inherit; */
+/*  padding-right: inherit; */
+/*  -webkit-box-shadow: 0 4px 4px -2px rgba(0, 0, 0, 0.3); */
+/*  box-shadow: 0 4px 4px -2px rgba(0, 0, 0, 0.3); */
+/*  !* Ensures the admin menu popup is above the rest of the header and the main */
+/*   * content. *! */
+/*  z-index: 3; */
+/* } */
+/* .js .cd-header .admin-menu[data-hidden="false"] { */
+/*  display: block; */
+/* } */
 /* Visually hidden. */
-/*.js .cd-header .admin-menu h2 {*/
-/*  position: absolute;*/
-/*  height: 1px;*/
-/*  width: 1px;*/
-/*  margin: -1px;*/
-/*  border: none;*/
-/*  padding: 0;*/
-/*  clip-path: inset(100%);*/
-/*  clip: rect(0,0,0,0);*/
-/*  overflow: hidden;*/
-/*  white-space: nowrap;*/
-/*}*/
-/*.js .cd-header .admin-menu > ul {*/
-/*  max-width: 1140px;*/
-/*  margin: 0 auto;*/
-/*  position: relative;*/
-/*}*/
-/*.js .cd-header .admin-menu-toggler {*/
-/*  display: inline-block;*/
-/*  position: relative;*/
-/*  height: 35px;*/
-/*  padding: 0 20px;*/
-/*  margin: 0;*/
-/*  border: none;*/
-/*  background: none;*/
-/*  color: white;*/
-/*  font-size: 12px;*/
-/*  font-weight: lighter;*/
-/*  line-height: 35px;*/
-/*  !* Ensures the menu is above the background. *!*/
-/*  z-index: 2;*/
-/*}*/
-/*.js .cd-header .admin-menu-toggler:hover,*/
-/*.js .cd-header .admin-menu-toggler:focus,*/
-/*.js .cd-header .admin-menu-toggler:active {*/
-/*  text-decoration: underline;*/
-/*}*/
+/* .js .cd-header .admin-menu h2 { */
+/*  position: absolute; */
+/*  height: 1px; */
+/*  width: 1px; */
+/*  margin: -1px; */
+/*  border: none; */
+/*  padding: 0; */
+/*  clip-path: inset(100%); */
+/*  clip: rect(0,0,0,0); */
+/*  overflow: hidden; */
+/*  white-space: nowrap; */
+/* } */
+/* .js .cd-header .admin-menu > ul { */
+/*  max-width: 1140px; */
+/*  margin: 0 auto; */
+/*  position: relative; */
+/* } */
+/* .js .cd-header .admin-menu-toggler { */
+/*  display: inline-block; */
+/*  position: relative; */
+/*  height: 35px; */
+/*  padding: 0 20px; */
+/*  margin: 0; */
+/*  border: none; */
+/*  background: none; */
+/*  color: white; */
+/*  font-size: 12px; */
+/*  font-weight: lighter; */
+/*  line-height: 35px; */
+/*  !* Ensures the menu is above the background. *! */
+/*  z-index: 2; */
+/* } */
+/* .js .cd-header .admin-menu-toggler:hover, */
+/* .js .cd-header .admin-menu-toggler:focus, */
+/* .js .cd-header .admin-menu-toggler:active { */
+/*  text-decoration: underline; */
+/* } */
 /* Arrow to show the show that the popup is controlled by the button. */
-/*.js .cd-header .admin-menu-toggler[aria-expanded="true"]:before {*/
-/*  content: "";*/
-/*  position: absolute;*/
-/*  bottom: 0;*/
-/*  left: 50%;*/
-/*  width: 12px;*/
-/*  margin-left: -6px;*/
-/*  border-left: 6px solid transparent;*/
-/*  border-right: 6px solid transparent;*/
-/*  border-bottom: 6px solid #055372;*/
-/*}*/
-/*.js .cd-header .admin-menu-toggler:after {*/
-/*  content: "";*/
-/*  display: inline-block;*/
-/*  vertical-align: middle;*/
-/*  width: 9px;*/
-/*  height: 9px;*/
-/*  margin-left: 5px;*/
-/*  overflow: hidden;*/
-/*  background: url(../../images/rw-icons-sprite.png) -177px 0 no-repeat;*/
-/*  background: rgba(0,0,0,0) url(../../images/rw-icons-sprite.svg) -177px 0 no-repeat;*/
-/*}*/
-/*.js .cd-header  .admin-menu-toggler[aria-expanded="true"]:after {*/
-/*  background-position-y: -9px;*/
-/*}*/
+/* .js .cd-header .admin-menu-toggler[aria-expanded="true"]:before { */
+/*  content: ""; */
+/*  position: absolute; */
+/*  bottom: 0; */
+/*  left: 50%; */
+/*  width: 12px; */
+/*  margin-left: -6px; */
+/*  border-left: 6px solid transparent; */
+/*  border-right: 6px solid transparent; */
+/*  border-bottom: 6px solid #055372; */
+/* } */
+/* .js .cd-header .admin-menu-toggler:after { */
+/*  content: ""; */
+/*  display: inline-block; */
+/*  vertical-align: middle; */
+/*  width: 9px; */
+/*  height: 9px; */
+/*  margin-left: 5px; */
+/*  overflow: hidden; */
+/*  background: url(../../images/rw-icons-sprite.png) -177px 0 no-repeat; */
+/*  background: rgba(0,0,0,0) url(../../images/rw-icons-sprite.svg) -177px 0 no-repeat; */
+/* } */
+/* .js .cd-header  .admin-menu-toggler[aria-expanded="true"]:after { */
+/*  background-position-y: -9px; */
+/* } */
 /* Show an icon and hide the text on small screens. */
-/*@media screen and (max-width: 767px) {*/
-/*  .js .cd-header .admin-menu-toggler span {*/
-/*    display: inline-block;*/
-/*    position: relative;*/
-/*    top: 2px;*/
-/*    width: 12px;*/
-/*    height: 12px;*/
-/*    text-indent: 12px;*/
-/*    overflow: hidden;*/
-/*    background: url(../../images/rw-icons-sprite.png) -108px -168px no-repeat;*/
-/*    background: rgba(0,0,0,0) url(../../images/rw-icons-sprite.svg) -108px -168px no-repeat;*/
-/*  }*/
-/*}*/
+/* @media screen and (max-width: 767px) { */
+/*  .js .cd-header .admin-menu-toggler span { */
+/*    display: inline-block; */
+/*    position: relative; */
+/*    top: 2px; */
+/*    width: 12px; */
+/*    height: 12px; */
+/*    text-indent: 12px; */
+/*    overflow: hidden; */
+/*    background: url(../../images/rw-icons-sprite.png) -108px -168px no-repeat; */
+/*    background: rgba(0,0,0,0) url(../../images/rw-icons-sprite.svg) -108px -168px no-repeat; */
+/*  } */
+/* } */
 
 /* Print. */
 @media print {
   .admin-menu-button {
-    display: none!important;
+    display: none !important;
   }
   .admin-menu {
-    display: none!important;
+    display: none !important;
   }
 }

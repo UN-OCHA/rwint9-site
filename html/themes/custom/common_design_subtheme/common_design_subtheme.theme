@@ -147,3 +147,15 @@ function common_design_subtheme_theme_suggestions_form_alter(array &$suggestions
     array_unshift($suggestions, 'form__taxonomy_term_form');
   }
 }
+
+/**
+ * Implements hook_theme_suggestions_HOOK_alter() for the page title.
+ *
+ * Add a suggestion for the page title of non entity pages.
+ */
+function common_design_subtheme_theme_suggestions_page_title_alter(array &$suggestions, array $variables) {
+  $route_name = \Drupal::routeMatch()->getRouteName();
+  if (strpos($route_name, 'entity.') !== 0) {
+    $suggestions[] = 'page_title__wrapped';
+  }
+}
