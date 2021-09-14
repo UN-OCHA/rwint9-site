@@ -273,6 +273,20 @@
   }
 }
 
+[dir=ltr] .admin-menu__btn svg + span {
+  margin-left: 10px;
+}
+[dir=rtl] .admin-menu__btn svg + span {
+  margin-right: 10px;
+}
+.admin-menu__btn .cd-icon:not(.cd-icon--arrow-down) {
+  width: 14px;
+  height: 14px;
+  fill: var(--cd-white);
+  display: inline-block;
+  vertical-align: middle;
+}
+
 .cd-footer {
   background: var(--cd-ocha-blue);
 }
@@ -287,11 +301,11 @@
  */
 .cd-footer-copyright {
   display: block;
+  margin-top: 0;
   text-align: right;
   color: white;
   font-size: 12px;
   font-weight: lighter;
-  margin-top: 0;
 }
 
 .cd-footer-copyright p {
