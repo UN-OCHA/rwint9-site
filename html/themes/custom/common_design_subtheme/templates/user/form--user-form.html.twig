@@ -18,18 +18,18 @@
 <form{{ attributes }}>
   <fieldset id="account">
     <legend>{{ 'Account information'|t }}</legend>
-    {{ element.name }}
-    {{ element.current_pass }}
-    {{ element.mail }}
-    {{ element.pass }}
-    {{ element.reset_pass }}
+    {{ element.account.name }}
+    {{ element.account.current_pass }}
+    {{ element.account.mail }}
+    {{ element.account.pass }}
+    {{ element.account.reset_pass }}
   </fieldset>
 
   <fieldset id="details" class="details">
     <legend>{{ 'Details'|t }}</legend>
-    {{ element.status }}
-    {{ element.roles }}
-    {{ element.notes }}
+    {{ element.account.status }}
+    {{ element.account.roles }}
+    {{ element.account.notes }}
   </fieldset>
 
   <fieldset id="actions">
@@ -40,10 +40,13 @@
   {%
     set skip_elements = [
     'name',
-    'current_pass',
-    'mail',
-    'pass',
-    'reset_pass',
+    'account.current_pass',
+    'account.mail',
+    'account.pass',
+    'account.reset_pass',
+    'account.status',
+    'account.roles',
+    'account.notes',
     'actions',
     ]
   %}
