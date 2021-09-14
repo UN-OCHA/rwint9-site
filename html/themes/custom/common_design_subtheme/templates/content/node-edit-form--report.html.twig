@@ -116,6 +116,7 @@
   <legend>{% trans %}Editorial flags{% endtrans %}</legend>
   {{ form.field_bury }}
   {{ form.field_feature }}
+  {{ form.field_notify }}
 </fieldset>
 
 <fieldset id="actions">
@@ -127,6 +128,33 @@
   {{ form.revision_information }}
 {% endif %}
 
-{{ form.footer }}
-{{ form.advanced }}
-
+{{
+  form|without([
+    'field_language',
+    'title',
+    'body',
+    'field_file',
+    'field_image',
+    'field_original_publication_date',
+    'field_embargo_date',
+    'field_source',
+    'field_ocha_product',
+    'field_origin',
+    'field_origin_notes',
+    'field_country',
+    'field_primary_country',
+    'field_disaster',
+    'field_disaster_type',
+    'field_content_format',
+    'field_theme',
+    'field_headline',
+    'field_headline_title',
+    'field_headline_summary',
+    'field_headline_image',
+    'field_bury',
+    'field_feature',
+    'field_notify',
+    'actions',
+    'revision_information',
+  ])
+}}

@@ -125,9 +125,10 @@
 
 <fieldset id="content">
   <legend>{% trans %}Description{% endtrans %}</legend>
+  {{ form.field_language }}
   {{ form.title }}
   {{ form.body }}
-  {{ form.field_how_to_apply }}
+  {{ form.field_how_to_register }}
 </fieldset>
 
 <fieldset id="legal">
@@ -144,5 +145,28 @@
   {{ form.revision_information }}
 {% endif %}
 
-{{ form.footer }}
-{{ form.advanced }}
+{{
+  form|without([
+    'user_information',
+    'field_source',
+    'field_training_format',
+    'field_country',
+    'field_city',
+    'field_training_date',
+    'field_registration_deadline',
+    'field_link',
+    'field_cost',
+    'field_fee_information',
+    'field_training_type',
+    'field_training_language',
+    'field_career_categories',
+    'field_theme',
+    'field_language',
+    'title',
+    'body',
+    'field_how_to_register',
+    'legal',
+    'actions',
+    'revision_information',
+  ])
+}}

@@ -74,5 +74,15 @@
   {{ form.revision_information }}
 {% endif %}
 
-{{ form.footer }}
-{{ form.advanced }}
+{{
+  form|without([
+    'field_language',
+    'title',
+    'field_link',
+    'body',
+    'field_image',
+    'actions',
+    'revision_information',
+  ])
+}}
+

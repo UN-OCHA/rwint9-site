@@ -43,6 +43,7 @@
       <ul>
         <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#details">{% trans %}Details{% endtrans %}</a></li>
         <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#description">{% trans %}Description{% endtrans %}</a></li>
+        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#files">{% trans %}Files{% endtrans %}</a></li>
       </ul>
     </li>
     <li class="rw-toc__section">
@@ -60,15 +61,20 @@
 <fieldset id="details" class="details">
   <legend>{% trans %}Details{% endtrans %}</legend>
   {{ form.field_author }}
+  {{ form.field_publication_date }}
   {{ form.field_tags }}
-  {{ form.field_image }}
-  {{ form.field_attached_images }}
 </fieldset>
 
-<fieldset id="content">
+<fieldset id="description">
   <legend>{% trans %}Description{% endtrans %}</legend>
   {{ form.title }}
   {{ form.body }}
+</fieldset>
+
+<fieldset id="files">
+  <legend>{% trans %}Files{% endtrans %}</legend>
+  {{ form.field_image }}
+  {{ form.field_attached_images }}
 </fieldset>
 
 <fieldset id="actions">
@@ -80,5 +86,16 @@
   {{ form.revision_information }}
 {% endif %}
 
-{{ form.footer }}
-{{ form.advanced }}
+{{
+  form|without([
+    'field_author',
+    'field_tags',
+    'field_publication_date',
+    'title',
+    'body',
+    'field_image',
+    'field_attached_images',
+    'actions',
+    'revision_information',
+  ])
+}}

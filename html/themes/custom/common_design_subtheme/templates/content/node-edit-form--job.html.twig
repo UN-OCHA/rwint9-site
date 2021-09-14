@@ -125,5 +125,24 @@
   {{ form.revision_information }}
 {% endif %}
 
-{{ form.footer }}
-{{ form.advanced }}
+{{
+  form|without([
+    'user_information',
+    'field_source',
+    'field_unspecified_location',
+    'field_country',
+    'field_city',
+    'field_job_closing_date',
+    'field_job_type',
+    'field_job_experience',
+    'field_career_categories',
+    'field_career_categories',
+    'field_theme',
+    'title',
+    'body',
+    'field_how_to_apply',
+    'legal',
+    'actions',
+    'revision_information',
+  ])
+}}
