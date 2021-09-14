@@ -1,0 +1,151 @@
+
+/**
+ * File and image fields.
+ *
+ * This includes single and multiple values field. Both file and image fields
+ * share some basic styling.
+ */
+form .file-widget .fieldset-wrapper {
+  /* Necessary to ensure the progress overlay stays within the limits of the
+   * file element. */
+  position: relative;
+  border: 1px solid #e6ecef;
+  padding: 8px;
+}
+form table.file-list thead {
+  display: none;
+}
+form table.file-list td:first-child {
+  padding: 0;
+  min-width: 400px;
+}
+form table.file-list td:last-child {
+  width: 200px;
+  min-width: 200px;
+}
+form table.file-list td:last-child .description {
+  display: block;
+  margin-top: 12px;
+}
+form table.file-list td:last-child button {
+  display: block;
+  margin: 0 auto;
+}
+form table.file-list .file-widget .fieldset-wrapper {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+  border-top-style: hidden;
+  border-bottom-style: hidden;
+  border-right-style: hidden;
+}
+form table.file-list .file-widget .fieldset-wrapper > div {
+  display: table-cell;
+  width: 50%;
+  padding: 8px 16px;
+  border-left: 1px solid #e6ecef;
+}
+form table.file-list .file-widget .fieldset-wrapper > div.file-details a[download] {
+  display: block;
+  margin-bottom: 12px;
+}
+form table.file-list .file-widget .fieldset-wrapper .file-preview > div + div {
+  margin-top: 0;
+}
+form table.file-list .file-widget .fieldset-wrapper .preview-image {
+  float: left;
+  width: 100px;
+  height: 100px;
+  margin: 12px 12px 0 0;
+  text-align: center;
+}
+form table.file-list .file-widget .fieldset-wrapper .preview-image a {
+  /* Fallback if flex is not available. */
+  display: block;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 102px;
+  height: 102px;
+  text-align: center;
+  border: 1px solid #e6ecef;
+}
+form table.file-list .file-widget .fieldset-wrapper .preview-image a img {
+  max-width: 100%;
+  max-height: 100%;
+}
+form table.file-list .file-widget .fieldset-wrapper .preview-image + div {
+  margin-top: 0;
+  padding-top: 12px;
+}
+form .table-wrapper + .form-type-managed-file {
+  margin-top: 12px;
+}
+/* No need to display the extra field label as the fieldset legend is enough. */
+form .field-type-image fieldset .form-type-managed-file > label {
+  display: none;
+}
+form .image-widget {
+  border: 1px solid #e6ecef;
+}
+form .image-widget-data {
+  /* Necessary to ensure the progress overlay stays within the limits of the
+   * image element. */
+  position: relative;
+  padding: 8px;
+}
+form .image-widget.uploaded {
+  display: flex;
+  flex-wrap: wrap;
+}
+form .image-widget.uploaded .image-widget-details {
+  display: flex;
+  flex-direction: column;
+}
+form .image-widget.uploaded .image-widget-name {
+  margin-bottom: 16px;
+}
+form .image-widget.uploaded .image-widget-preview {
+  flex: 1 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+form .image-widget.uploaded .image-widget-preview figure {
+  width: 220px;
+  height: 147px;
+  margin: 0;
+}
+form .image-widget.uploaded .image-widget-preview img {
+  width: auto;
+  height: auto;
+  margin: 0 auto;
+  max-width: 100%;
+  max-height: 100%;
+}
+form .image-widget.uploaded .image-widget-data {
+  flex: 1 0 auto;
+  min-width: 200px;
+}
+form .image-widget.uploaded .image-widget-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+form .image-widget.uploaded > * {
+  padding: 16px;
+}
+form table.file-list .image-widget {
+  border: none;
+  border-left: 1px solid #e6ecef;
+}
+
+
+/* Specific form elements */
+form .js-media-library-widget .fieldset-wrapper {
+  /* Necessary to ensure the progress overlay stays within the limits of the
+   * file element. */
+  position: relative;
+  border: 1px solid #e6ecef;
+  padding: 8px;
+}

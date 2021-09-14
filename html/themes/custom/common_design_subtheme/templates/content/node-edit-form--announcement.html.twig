@@ -27,7 +27,7 @@
 {{ attach_library('common_design_subtheme/rw-toc') }}
 
 <nav{{ attributes
-  .setAttribute('id', id)
+  .setAttribute('id', 'table-of-contents')
   .addClass([
     'rw-toc',
   ])
@@ -47,18 +47,17 @@
     <li class="rw-toc__section">
       <h3 class="rw-toc__section__title">{% trans %}Submission{% endtrans %}</h3>
       <ul>
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#editorial-flags">{% trans %}Editorial flags{% endtrans %}</a></li>
         <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#actions">{% trans %}Save{% endtrans %}</a></li>
-{#        <?php if (!empty($form['revision_information'])): ?>#}
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#edit-revision-information">{% trans %}Revisions{% endtrans %}</a></li>
-{#        <?php endif; ?>#}
+        {% if form.revision_information %}
+          <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#edit-revision-information">{% trans %}Revisions{% endtrans %}</a></li>
+        {% endif %}
       </ul>
     </li>
   </ul>
 </nav>
 
-<fieldset id="content">
-  <legend>{% trans %}Content{% endtrans %}</legend>
+<fieldset id="description">
+  <legend>{% trans %}Description{% endtrans %}</legend>
   {{ form.field_language }}
   {{ form.title }}
   {{ form.field_link }}
@@ -68,5 +67,22 @@
 
 <fieldset id="actions">
   <legend class="visually-hidden">{% trans %}Form submission and other actions{% endtrans %}</legend>
-  {#  <?php print $actions; ?>#}
+  {{ form.actions }}
 </fieldset>
+
+{% if form.revision_information %}
+  {{ form.revision_information }}
+{% endif %}
+
+{{
+  form|without([
+    'field_language',
+    'title',
+    'field_link',
+    'body',
+    'field_image',
+    'actions',
+    'revision_information',
+  ])
+}}
+

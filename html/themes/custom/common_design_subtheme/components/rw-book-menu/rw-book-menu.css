@@ -32,3 +32,14 @@
   color: black;
   font-weight: bold;
 }
+
+/**
+ * Book page.
+ *
+ * Individual book pages. Those are made of a main content body and a sidebar
+ * with the navigation into the book hierarchy.
+ */
+.rw-book-menu .rw-book-menu__title {
+  padding-left: 8px;
+  border-left: 8px solid #0988bb;
+}

@@ -31,6 +31,44 @@
   font-weight: bold;
 }
 
+
+/* Temp (I hope) - Setting heights on all the parents makes the sticky nav work */
+.cd-layout-content-wrapper,
+.cd-layout-content,
+.region-content,
+.region-content > article,
+.rw-sectioned-content,
+.node-form {
+  height: 100%;
+}
+
+.rw-sectioned-content > section,
+.rw-sectioned-content > form > fieldset,
+.rw-sectioned-content > form > .form-wrapper,
+.rw-sectioned-content > form > .form-item,
+.node-form > fieldset {
+  position: relative;
+  width: 100%;
+  padding: 32px 0;
+  border-bottom: 1px solid #e6ecef;
+}
+.rw-sectioned-content > section:first-child,
+.rw-sectioned-content > form > fieldset:first-child,
+.rw-sectioned-content > form > .form-wrapper:first-child,
+.rw-sectioned-content > form > .form-item:first-child,
+.node-form > fieldset:first-child {
+  padding-top: 0;
+}
+.rw-sectioned-content > section:last-child,
+.rw-sectioned-content > form > fieldset:last-child,
+.rw-sectioned-content > form > .form-wrapper:last-child,
+.rw-sectioned-content > form > .form-item:last-child,
+.node-form > fieldset:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+
 /* Show the table of content as left sidebar with the content on the right on
  * large screens. */
 @media screen and (min-width: 768px) {
@@ -185,13 +223,4 @@
   .rw-toc {
     margin-bottom: 4rem; /* Matches main element bottom margin */
   }
-}
-
-/* Temp (I hope) - Setting heights on all the parents makes the sticky nav work */
-.cd-layout-content-wrapper,
-.cd-layout-content,
-.region-content,
-.region-content > article,
-.rw-sectioned-content {
-  height: 100%;
 }
