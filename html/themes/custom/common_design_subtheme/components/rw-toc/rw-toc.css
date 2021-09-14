@@ -31,7 +31,6 @@
   font-weight: bold;
 }
 
-
 /* Temp (I hope) - Setting heights on all the parents makes the sticky nav work */
 .cd-layout-content-wrapper,
 .cd-layout-content,
@@ -67,7 +66,6 @@
   padding-bottom: 0;
   border-bottom: none;
 }
-
 
 /* Show the table of content as left sidebar with the content on the right on
  * large screens. */

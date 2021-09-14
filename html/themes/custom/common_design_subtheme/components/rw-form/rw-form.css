@@ -247,8 +247,8 @@ form fieldset > legend + a[href="#actions"] {
   font-variant: small-caps;
 }
 form #actions {
-  /*width: auto;*/
-  /*min-width: 100%;*/
+  /* width: auto; */
+  /* min-width: 100%; */
   padding: 12px;
   text-align: center;
   border: 1px solid #e6ecef;
