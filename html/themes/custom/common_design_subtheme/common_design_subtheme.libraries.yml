@@ -243,6 +243,7 @@ rw-user:
   css:
     theme:
       components/rw-user/rw-user.css: {}
+      components/rw-user/rw-user-bookmarks.css: {}
 
 rw-view-more:
   css:
