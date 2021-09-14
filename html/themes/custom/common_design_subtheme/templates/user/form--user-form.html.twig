@@ -11,9 +11,6 @@
  */
 #}
 {{ attach_library('common_design_subtheme/rw-form') }}
-{{ attach_library('common_design_subtheme/rw-toc') }}
-
-{{ dpm(element) }}
 
 <form{{ attributes }}>
   <fieldset id="account">
@@ -26,7 +23,7 @@
   </fieldset>
 
   <fieldset id="details" class="details">
-    <legend>{{ 'Details'|t }}</legend>
+    <legend>{{ 'Account status and note'|t }}</legend>
     {{ element.account.status }}
     {{ element.account.roles }}
     {{ element.account.notes }}
@@ -37,21 +34,17 @@
     {{ element.actions }}
   </fieldset>
 
-  {%
-    set skip_elements = [
-    'name',
-    'account.current_pass',
-    'account.mail',
-    'account.pass',
-    'account.reset_pass',
-    'account.status',
-    'account.roles',
-    'account.notes',
-    'actions',
-    ]
-  %}
-
-  {% for key, child in element if key|first != '#' %}
-    {{ key not in skip_elements ? child }}
-  {% endfor %}
+  {{
+    form|without([
+      'name',
+      'account.current_pass',
+      'account.mail',
+      'account.pass',
+      'account.reset_pass',
+      'account.status',
+      'account.roles',
+      'account.notes',
+      'actions',
+    ])
+  }}
 </form>
