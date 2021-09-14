@@ -9,10 +9,10 @@
   list-style: none;
 }
 .block-local-tasks-block li,
-.tabs li{
+.tabs li {
   display: inline-block;
-  padding: 0;
   margin: 0 12px 0 0;
+  padding: 0;
 }
 .block-local-tasks-block li:last-child,
 .tabs li:last-child {
@@ -20,14 +20,14 @@
 }
 .block-local-tasks-block li:after,
 .tabs li:after {
-  content: "";
   display: inline-block;
   width: 2px;
   height: 14px;
-  background: #2e3436;
-  margin-left: 14px;
   margin-top: -2px;
+  margin-left: 14px;
+  content: "";
   vertical-align: middle;
+  background: #2e3436;
 }
 .block-local-tasks-block li:last-child:after,
 .tabs li:last-child:after {

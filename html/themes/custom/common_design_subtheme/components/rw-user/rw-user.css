@@ -26,11 +26,11 @@
  * Scope: .page-user #main
  */
 .rw-user-dashboard ul {
-  list-style: none;
   margin: 0;
   padding: 24px 0 12px 0;
-  column-count: 2;
   column-width: 352px;
+  column-count: 2;
+  list-style: none;
   vertical-align: top;
 }
 .rw-user-dashboard li > * {
