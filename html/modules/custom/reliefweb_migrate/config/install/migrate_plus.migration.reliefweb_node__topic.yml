@@ -26,9 +26,22 @@ process:
       target_id: fid
 
   field_featured/value:
-    plugin: skip_on_empty
-    method: process
-    source: field_featured/0/value
+    -
+      plugin: skip_on_empty
+      method: process
+      source: field_featured/0/value
+    -
+      plugin: default_value
+      default_value: 0
+
+  field_bury/value:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: field_bury/0/value
+    -
+      plugin: default_value
+      default_value: 0
 
   field_overview/value:
     plugin: concat

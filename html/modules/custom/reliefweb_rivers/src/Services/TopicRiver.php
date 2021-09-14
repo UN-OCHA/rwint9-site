@@ -94,31 +94,47 @@ class TopicRiver extends RiverServiceBase {
       ->condition('type', 'topic')
       ->condition('status', 1)
       ->sort('created', 'DESC');
+
+    $group = $query->orConditionGroup()
+      ->notExists('field_bury')
+      ->condition('field_bury', 0, '<>');
+    $query->condition($group);
     $totalCount = $query->count()->execute();
 
-    $nids = $this->entityTypeManager->getStorage('node')->getQuery()
+    $query = $this->entityTypeManager->getStorage('node')->getQuery()
       ->condition('type', 'topic')
       ->condition('status', 1)
-      ->sort('created', 'DESC')
-      ->range($offset, $this->limit)
+      ->sort('created', 'DESC');
+
+    $group = $query->orConditionGroup()
+      ->notExists('field_bury')
+      ->condition('field_bury', 0, '<>');
+    $query->condition($group);
+    $nids = $query->range($offset, $this->limit)
       ->execute();
     $topics = $this->entityTypeManager->getStorage('node')->loadMultiple($nids);
 
     $reliefweb_topics = [];
     foreach ($topics as $nid => $topic) {
       $key = $topic->field_featured->value . '_' . $nid;
-      $topic = [
-        'title' => $topic->title->value,
-        'url' => $topic->toUrl()->toString(),
-        'bundle' => 'topic',
-        'summary' => HtmlSummarizer::summarize($topic->body->value, 300),
-        'featured' => !empty($topic->field_featured->value),
-        'icon' => [
+      $icon = [];
+
+      if (!$topic->field_icon->isEmpty() && $topic->field_icon->entity) {
+        $icon = [
           'uri' => file_create_url($topic->field_icon->entity->getFileUri()),
           'alt' => $topic->field_icon->first()->get('alt')->getString(),
           'width' => 100,
           'height' => 100,
-        ],
+        ];
+      }
+
+      $topic = [
+        'title' => $topic->title->value,
+        'url' => $topic->toUrl()->toString(),
+        'bundle' => 'topic',
+        'summary' => HtmlSummarizer::summarize(check_markup($topic->body->value, $topic->body->format), 300),
+        'featured' => !empty($topic->field_featured->value),
+        'icon' => $icon,
       ];
       $reliefweb_topics[$key] = $topic;
     }
