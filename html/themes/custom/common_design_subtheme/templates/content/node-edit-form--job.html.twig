@@ -27,7 +27,7 @@
 {{ attach_library('common_design_subtheme/rw-toc') }}
 
 <nav{{ attributes
-  .setAttribute('id', id)
+  .setAttribute('id', 'table-of-contents')
   .addClass([
     'rw-toc',
   ])
@@ -38,14 +38,14 @@
     ])
   }}>{% trans %}Table of Contents{% endtrans %}</h2>
   <ul>
-{#    <?php if (!empty($form['user_information'])): ?>#}
-    <li class="rw-toc__section">
-      <h3 class="rw-toc__section__title">{% trans %}Information{% endtrans %}</h3>
-      <ul>
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#user-information">{% trans %}User information{% endtrans %}</a></li>
-      </ul>
-    </li>
-{#      <?php endif; ?>#}
+    {% if form.user_information %}
+      <li class="rw-toc__section">
+        <h3 class="rw-toc__section__title">{% trans %}Information{% endtrans %}</h3>
+        <ul>
+          <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#user-information">{% trans %}User information{% endtrans %}</a></li>
+        </ul>
+      </li>
+    {% endif %}
     <li class="rw-toc__section">
       <h3 class="rw-toc__section__title">{% trans %}Fields{% endtrans %}</h3>
       <ul>
@@ -61,20 +61,20 @@
       <ul>
         <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#legal">{% trans %}Terms & conditions{% endtrans %}</a></li>
         <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#actions">{% trans %}Save{% endtrans %}</a></li>
-{#        <?php if (!empty($form['revision_information'])): ?>#}
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#edit-revision-information">{% trans %}Revisions{% endtrans %}</a></li>
-{#        <?php endif; ?>#}
+        {% if form.revision_information %}
+          <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#edit-revision-information">{% trans %}Revisions{% endtrans %}</a></li>
+        {% endif %}
       </ul>
     </li>
   </ul>
 </nav>
 
-{#<?php if (!empty($form['user_information'])): ?>#}
+{% if form.user_information %}
 <fieldset id="user-information">
   <legend>{% trans %}User information{% endtrans %}</legend>
   {{ form.user_information }}
 </fieldset>
-{#<?php endif; ?>#}
+{% endif %}
 
 <fieldset id="organization">
   <legend>{% trans %}Organization{% endtrans %}</legend>
@@ -118,5 +118,31 @@
 
 <fieldset id="actions">
   <legend class="visually-hidden">{% trans %}Form submission and other actions{% endtrans %}</legend>
-{#  <?php print $actions; ?>#}
+{{ form.actions }}
 </fieldset>
+
+{% if form.revision_information %}
+  {{ form.revision_information }}
+{% endif %}
+
+{{
+  form|without([
+    'user_information',
+    'field_source',
+    'field_unspecified_location',
+    'field_country',
+    'field_city',
+    'field_job_closing_date',
+    'field_job_type',
+    'field_job_experience',
+    'field_career_categories',
+    'field_career_categories',
+    'field_theme',
+    'title',
+    'body',
+    'field_how_to_apply',
+    'legal',
+    'actions',
+    'revision_information',
+  ])
+}}
