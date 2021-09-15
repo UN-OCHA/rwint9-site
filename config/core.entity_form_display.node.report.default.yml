@@ -281,10 +281,10 @@ content:
   field_source:
     weight: 7
     settings:
+      sort: label
       extra_data:
         moderation_state: moderation_state
         field_allowed_content_types: field_allowed_content_types
-        field_attention_report: field_attention_report
         field_shortname: field_shortname
         tid: '0'
         uuid: '0'
@@ -305,6 +305,7 @@ content:
         revision_translation_affected: '0'
         field_aliases: '0'
         field_attention_job: '0'
+        field_attention_report: '0'
         field_attention_training: '0'
         field_country: '0'
         field_disclaimer: '0'
@@ -317,7 +318,6 @@ content:
         field_organization_type: '0'
         field_spanish_name: '0'
         field_user_posting_rights: '0'
-      sort: label
     third_party_settings: {  }
     type: reliefweb_entity_reference_select
     region: content
