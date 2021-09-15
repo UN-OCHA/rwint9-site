@@ -4,105 +4,109 @@ migration_group: reliefweb_node_revision
 source:
   bundle: topics
 process:
+  type:
+    plugin: static_map
+    bypass: true
+    source: type
+    map:
+      announcement: announcement
+      blog_post: blog_post
+      book: book
+      job: job
+      report: report
+      topic: topic
+      topics: topic
+      training: training
+
   # Fields.
-  field_career_categories/value:
+  field_icon:
     plugin: sub_process
-    source: field_career_categories
+    source: field_term_image
     process:
-      target_id: tid
-  field_city/value:
-    plugin: skip_on_empty
-    method: process
-    source: field_city/0/value
-  field_cost/value:
-    plugin: skip_on_empty
-    method: process
-    source: field_cost/0/value
-  field_country:
-    plugin: sub_process
-    source: field_country
-    process:
-      target_id: tid
-  field_fee_information/value:
-    plugin: skip_on_empty
-    method: process
-    source: field_fee_information/0/value
-  field_how_to_register/value:
-    plugin: skip_on_empty
-    method: process
-    source: field_how_to_register/0/value
-  field_how_to_register/format: constants/format
-  field_language:
-    plugin: sub_process
-    source: field_language
-    process:
-      target_id: tid
-  field_link/uri:
-    plugin: skip_on_empty
-    method: process
-    source: field_link/0/url
-  field_registration_deadline:
+      target_id: fid
+
+  field_featured/value:
     -
       plugin: skip_on_empty
       method: process
-      source: field_registration_deadline
+      source: field_featured/0/value
     -
-      plugin: sub_process
-      process:
-        value:
-          plugin: format_date
-          from_format: 'U'
-          to_format: 'Y-m-d\TH:i:s'
-          from_timezone: UTC
-          to_timezone: UTC
-          source: value
-  field_source:
-    plugin: sub_process
-    source: field_source
-    process:
-      target_id: tid
-  field_theme:
-    plugin: sub_process
-    source: field_theme
-    process:
-      target_id: tid
-  field_training_date:
+      plugin: default_value
+      default_value: 0
+
+  field_bury/value:
     -
       plugin: skip_on_empty
       method: process
-      source: field_training_date
+      source: field_bury/0/value
     -
-      plugin: sub_process
-      process:
-        value:
-          plugin: format_date
-          from_format: 'U'
-          to_format: 'Y-m-d\TH:i:s'
-          from_timezone: UTC
-          to_timezone: UTC
-          source: value
-        end_value:
-          plugin: format_date
-          from_format: 'U'
-          to_format: 'Y-m-d\TH:i:s'
-          from_timezone: UTC
-          to_timezone: UTC
-          source: value2
-  field_training_format:
+      plugin: default_value
+      default_value: 0
+
+  field_overview/value:
+    plugin: concat
+    source:
+      - field_sandbox/0/value
+      - field_topics_overview/0/value
+    delimiter: "\r\n\r\n"
+  field_overview/format:
+    plugin: default_value
+    default_value: token_markdown
+
+  field_resources/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_resources/0/value
+  field_resources/format:
+    plugin: default_value
+    default_value: token_markdown
+
+  field_disasters_search:
     plugin: sub_process
-    source: field_training_format
+    source: field_topics_disasters_search
     process:
-      target_id: tid
-  field_training_language:
+      url: value
+      title:
+        plugin: default_value
+        default_value: ''
+
+#  field_disasters_search/override:
+#    plugin: skip_on_empty
+#    method: process
+#    source: field_topics_disasters_search/0/alt
+  field_jobs_search:
     plugin: sub_process
-    source: field_training_language
+    source: field_topics_jobs_search
     process:
-      target_id: tid
-  field_training_type:
+      url: value
+      title:
+        plugin: default_value
+        default_value: ''
+
+  field_reports_search:
     plugin: sub_process
-    source: field_training_type
+    source: field_topics_reports_search
     process:
-      target_id: tid
+      url: value
+      title:
+        plugin: default_value
+        default_value: ''
+
+  field_training_search:
+    plugin: sub_process
+    source: field_topics_training_search
+    process:
+      url: value
+      title:
+        plugin: default_value
+        default_value: ''
+
+  field_sections:
+    plugin: sub_process
+    source: field_topics_grid_content
+    process:
+      url: url
+      title: title
 migration_dependencies:
   required:
     - reliefweb_node__topic

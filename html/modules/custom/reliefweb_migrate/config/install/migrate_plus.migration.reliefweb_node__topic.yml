@@ -1,5 +1,5 @@
 id: reliefweb_node__topic
-label: Migrate ReliefWeb topic ads.
+label: Migrate ReliefWeb topics.
 migration_group: reliefweb_node
 source:
   bundle: topics
