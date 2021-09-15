@@ -135,7 +135,7 @@ function common_design_subtheme_theme_suggestions_alter(array &$suggestions, arr
  */
 function common_design_subtheme_theme_suggestions_form_alter(array &$suggestions, array $variables) {
   $route_match = \Drupal::routeMatch();
-  if ($route_match->getRouteName() === 'entity.taxonomy_term.edit_form') {
+  if ($route_match->getRouteName() === 'entity.taxonomy_term.edit_form' || $route_match->getRouteName() === 'entity.taxonomy_term.add_form') {
 
     $suggestions[] = 'form__taxonomy_term_form';
     // Suggestion in the form "form__taxonomy_term_VOCABULARY_form".

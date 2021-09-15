@@ -23,10 +23,10 @@
 
 <form{{ attributes }}>
   <nav{{ attributes
-    .setAttribute('id', id)
-  .addClass([
-    'rw-toc',
-  ])
+    .setAttribute('id', 'table-of-contents')
+    .addClass([
+      'rw-toc',
+    ])
   }} >
     <h2{{ level }}{{ title_attributes
       .addClass([
@@ -86,12 +86,13 @@
     'field_shortname',
     'field_longname',
     'field_aliases',
-    'description',
     'field_iso3',
     'field_location',
     'field_profile',
     'field_timezone',
     'actions',
+    'description',
+    'relations',
   ]
   %}
 

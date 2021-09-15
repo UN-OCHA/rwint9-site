@@ -23,10 +23,10 @@
 
 <form{{ attributes }}>
   <nav{{ attributes
-    .setAttribute('id', id)
-  .addClass([
-    'rw-toc',
-  ])
+    .setAttribute('id', 'table-of-contents')
+    .addClass([
+      'rw-toc',
+    ])
   }} >
     <h2{{ level }}{{ title_attributes
       .addClass([
@@ -58,7 +58,34 @@
   <fieldset id="description">
     <legend>{{ 'Description'|t }}</legend>
     {{ element.name }}
-    {{ element.body }}
+    {{ element.field_shortname }}
+    {{ element.field_longname }}
+    {{ element.field_spanish_name }}
+    {{ element.field_aliases }}
+    {{ element.description }}
+  </fieldset>
+
+  <fieldset id="details" class="details">
+    <legend>{{ 'Details'|t }}</legend>
+    {{ element.field_organization_type }}
+    {{ element.field_country }}
+    {{ element.field_logo }}
+  </fieldset>
+
+  <fieldset id="links">
+    <legend>{{ 'Links'|t }}</legend>
+    {{ element.field_homepage }}
+    {{ element.field_links }}
+  </fieldset>
+
+  <fieldset id="editorial-flags">
+    <legend>{{ 'Editorial flags'|t }}</legend>
+    {{ element.field_allowed_content_types }}
+    {{ element.field_disclaimer }}
+    {{ element.field_attention_report }}
+    {{ element.field_attention_jobs }}
+    {{ element.field_attention_trainings }}
+    {{ element.field_fts_id }}
   </fieldset>
 
   <fieldset id="actions">
@@ -69,8 +96,24 @@
   {%
     set skip_elements = [
     'name',
-    'body',
+    'field_shortname',
+    'field_longname',
+    'field_spanish_name',
+    'field_aliases',
+    'field_organization_type',
+    'field_country',
+    'field_logo',
+    'field_homepage',
+    'field_links',
+    'field_allowed_content_types',
+    'field_disclaimer',
+    'field_attention_report',
+    'field_attention_jobs',
+    'field_attention_trainings',
+    'field_fts_id',
+    'description',
     'actions',
+    'relations',
   ]
   %}
 
