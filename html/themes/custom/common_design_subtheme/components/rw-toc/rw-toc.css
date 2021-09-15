@@ -37,7 +37,8 @@
 .region-content,
 .region-content > article,
 .rw-sectioned-content,
-.node-form {
+.node-form,
+.taxonomy-term-form {
   height: 100%;
 }
 
@@ -45,7 +46,8 @@
 .rw-sectioned-content > form > fieldset,
 .rw-sectioned-content > form > .form-wrapper,
 .rw-sectioned-content > form > .form-item,
-.node-form > fieldset {
+.node-form > fieldset,
+.taxonomy-term-form > fieldset {
   position: relative;
   width: 100%;
   padding: 32px 0;
@@ -62,7 +64,8 @@
 .rw-sectioned-content > form > fieldset:last-child,
 .rw-sectioned-content > form > .form-wrapper:last-child,
 .rw-sectioned-content > form > .form-item:last-child,
-.node-form > fieldset:last-child {
+.node-form > fieldset:last-child,
+.taxonomy-term-form > fieldset:last-child {
   padding-bottom: 0;
   border-bottom: none;
 }
