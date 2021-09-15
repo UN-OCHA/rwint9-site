@@ -26,7 +26,7 @@
     <legend>{{ 'Account status and note'|t }}</legend>
     {{ element.account.status }}
     {{ element.account.roles }}
-    {{ element.account.notes }}
+    {{ element.field_notes }}
   </fieldset>
 
   <fieldset id="actions">
@@ -34,17 +34,4 @@
     {{ element.actions }}
   </fieldset>
 
-  {{
-    form|without([
-      'name',
-      'account.current_pass',
-      'account.mail',
-      'account.pass',
-      'account.reset_pass',
-      'account.status',
-      'account.roles',
-      'account.notes',
-      'actions',
-    ])
-  }}
 </form>
