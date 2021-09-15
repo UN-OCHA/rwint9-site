@@ -5,6 +5,8 @@
  * Form improvements.
  */
 
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
 use Drupal\Core\Template\Attribute;
 
 /**
@@ -47,4 +49,146 @@ function reliefweb_form_preprocess_select(&$variables) {
     }
   }
   $variables['options'] = $options;
+}
+
+/**
+ * Implements hook_form_alter().
+ *
+ * Add form enhancements.
+ */
+function reliefweb_form_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  // Enhancements for the node and term forms.
+  if (preg_match('#^(node|taxonomy_term)_.+_form$#', $form_id) === 1) {
+    if (\Drupal::currentUser()->hasPermission('use enhanced input forms')) {
+      // Attach the widget libraries if there are fields using them.
+      reliefweb_form_attach_autocomplete($form);
+      reliefweb_form_attach_datepicker($form);
+      reliefweb_form_attach_formatting($form);
+      reliefweb_form_attach_lengthchecker($form);
+      reliefweb_form_attach_selection_limit($form);
+
+      // Attach the guidelines.
+      reliefweb_form_attach_guidelines($form);
+
+      // Attach the main enhanced form library.
+      $form['#attached']['library'][] = 'reliefweb_form/form.main';
+
+      // Mark the form has being "enhanced".
+      $form['#attributes']['data-enhanced'] = '';
+    }
+  }
+}
+
+/**
+ * Attach the autocomplete js scripts to the given form.
+ *
+ * @param array $form
+ *   Form to which attach the js files.
+ */
+function reliefweb_form_attach_autocomplete(array &$form) {
+  if (reliefweb_form_uses_widget($form, 'autocomplete')) {
+    $form['#attached']['library'][] = 'reliefweb_form/widget.autocomplete';
+  }
+}
+
+/**
+ * Attach the datepicker js scripts to the given form.
+ *
+ * @param array $form
+ *   Form to which attach the js files.
+ */
+function reliefweb_form_attach_datepicker(array &$form) {
+  if (reliefweb_form_uses_widget($form, 'datepicker')) {
+    $form['#attached']['library'][] = 'reliefweb_form/widget.datepicker';
+  }
+}
+
+/**
+ * Attach the formatting js scripts to the given form.
+ *
+ * @param array $form
+ *   Form to which attach the js files.
+ */
+function reliefweb_form_attach_formatting(array &$form) {
+  if (reliefweb_form_uses_widget($form, 'formatting')) {
+    $form['#attached']['library'][] = 'reliefweb_form/widget.formatting';
+  }
+}
+
+/**
+ * Attach the guidelines js scripts to the given form.
+ *
+ * @param array $form
+ *   Form to which attach the js files.
+ */
+function reliefweb_form_attach_guidelines(array &$form) {
+  if (isset($form['#attributes']['data-with-guidelines'])) {
+    // @todo add logic once guidelines have been migrated.
+  }
+}
+
+/**
+ * Attach the text length checker js scripts to the given form.
+ *
+ * @param array $form
+ *   Form to which attach the js files.
+ */
+function reliefweb_form_attach_lengthchecker(array &$form) {
+  if (reliefweb_form_uses_widget($form, 'lengthchecker')) {
+    $form['#attached']['library'][] = 'reliefweb_form/widget.lengthchecker';
+  }
+}
+
+/**
+ * Attach the text length checker js scripts to the given form.
+ *
+ * @param array $form
+ *   Form to which attach the js files.
+ */
+function reliefweb_form_attach_selection_limit(array &$form) {
+  if (reliefweb_form_uses_widget($form, 'lengthchecker')) {
+    $form['#attached']['library'][] = 'reliefweb_form/widget.selectionlimit';
+  }
+}
+
+/**
+ * Check if the form has a field that uses a widget (ex: datepicker, wysiwyg).
+ *
+ * @param array $element
+ *   Form element to check.
+ * @param string $widget
+ *   Name of the widget.
+ *
+ * @return bool
+ *   Whether the form has a field that uses the widget or not.
+ */
+function reliefweb_form_uses_widget(array $element, $widget) {
+  foreach (Element::children($element) as $key) {
+    $child = $element[$key];
+    if (is_array($child)) {
+      if (isset($child['#attributes']['data-with-' . $widget])) {
+        return TRUE;
+      }
+      // Check children as well.
+      if (reliefweb_form_uses_widget($child, $widget)) {
+        return TRUE;
+      }
+    }
+  }
+  return FALSE;
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ *
+ * Try to ensure that the reliefweb_form form_alter hook runs last as it
+ * needs to parse the form element to decide whether to attach the widget
+ * libraries.
+ */
+function reliefweb_form_module_implements_alter(&$implementations, $hook) {
+  if ($hook == 'form_alter' && isset($implementations['reliefweb_form'])) {
+    $group = $implementations['reliefweb_form'];
+    unset($implementations['reliefweb_form']);
+    $implementations['reliefweb_form'] = $group;
+  }
 }

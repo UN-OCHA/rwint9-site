@@ -1,0 +1,39 @@
+# Autocomplete form widget.
+widget.autocomplete:
+  js:
+    /libraries/simple-autocomplete/simpleautocomplete.js: {}
+    js/widget.autocomplete.js: {}
+
+
+# Datepicker form widget.
+widget.datepicker:
+  js:
+    /libraries/simple-datepicker/simpledatepicker.js: {}
+    js/widget.datepicker.js: {}
+
+# Formatting form widget.
+widget.formatting:
+  js:
+    js/widget.formatting.js: {}
+
+# Length checker form widget.
+widget.lengthchecker:
+  js:
+    js/widget.lengthchecker.js: {}
+  dependencies:
+    - core/drupalSettings
+
+# Formatting form widget.
+widget.selectionlimit:
+  js:
+    js/widget.selectionlimit.js: {}
+
+# Guidelines form enhancements.
+form.guidelines:
+  js:
+    js/form.guidelines.js: {}
+
+# Main form enhancements.
+form.main:
+  js:
+    js/form.main.js: {}
