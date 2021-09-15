@@ -107,4 +107,9 @@ process:
     process:
       url: url
       title: title
-
+      override:
+        -
+          plugin: unserialize
+          source: attributes
+          index:
+            - title
