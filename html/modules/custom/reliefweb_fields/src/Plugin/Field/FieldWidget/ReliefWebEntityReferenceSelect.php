@@ -11,7 +11,7 @@ use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
 
 /**
- * Plugin implementation of the 'reliefweb_links' widget.
+ * Plugin implementation of the 'reliefweb_entity_reference_select' widget.
  *
  * @FieldWidget(
  *   id = "reliefweb_entity_reference_select",

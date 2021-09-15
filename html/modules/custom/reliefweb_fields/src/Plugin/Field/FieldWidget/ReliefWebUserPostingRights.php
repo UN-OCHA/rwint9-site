@@ -248,7 +248,7 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
     }
 
     // Limit to 10,000 bytes (should never be reached).
-    $input = json_decode(file_get_contents('php://input', NULL, NULL, 0, 10000), TRUE);
+    $input = json_decode(file_get_contents('php://input', FALSE, NULL, 0, 10000) ?? '', TRUE);
     if (empty($input['value']) || !is_scalar($input['value'])) {
       return ['error' => t('Invalid user data')];
     }
