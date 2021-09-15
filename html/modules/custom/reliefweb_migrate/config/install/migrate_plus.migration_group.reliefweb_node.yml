@@ -14,7 +14,6 @@ shared_configuration:
     plugin: reliefweb_node
     constants:
       format: markdown
-      format_token: token_markdown
   destination:
     plugin: entity:node
   process:
