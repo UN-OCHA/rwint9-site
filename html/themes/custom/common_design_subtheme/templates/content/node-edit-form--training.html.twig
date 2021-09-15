@@ -27,7 +27,7 @@
 {{ attach_library('common_design_subtheme/rw-toc') }}
 
 <nav{{ attributes
-  .setAttribute('id', id)
+  .setAttribute('id', 'table-of-contents')
   .addClass([
     'rw-toc',
   ])
@@ -38,14 +38,14 @@
     ])
   }}>{% trans %}Table of Contents{% endtrans %}</h2>
   <ul>
-    {#    <?php if (!empty($form['user_information'])): ?>#}
-    <li class="rw-toc__section">
-      <h3 class="rw-toc__section__title">{% trans %}Information{% endtrans %}</h3>
-      <ul>
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#user-information">{% trans %}User information{% endtrans %}</a></li>
-      </ul>
-    </li>
-    {#      <?php endif; ?>#}
+    {% if form.user_information %}
+      <li class="rw-toc__section">
+        <h3 class="rw-toc__section__title">{% trans %}Information{% endtrans %}</h3>
+        <ul>
+          <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#user-information">{% trans %}User information{% endtrans %}</a></li>
+        </ul>
+      </li>
+    {% endif %}
     <li class="rw-toc__section">
       <h3 class="rw-toc__section__title">{% trans %}Information{% endtrans %}</h3>
       <ul>
@@ -75,12 +75,12 @@
   </ul>
 </nav>
 
-{#<?php if (!empty($form['user_information'])): ?>#}
-<fieldset id="user-information">
-  <legend>{% trans %}User information{% endtrans %}</legend>
-  {{ form.user_information }}
-</fieldset>
-{#<?php endif; ?>#}
+{% if form.user_information %}
+  <fieldset id="user-information">
+    <legend>{% trans %}User information{% endtrans %}</legend>
+    {{ form.user_information }}
+  </fieldset>
+{% endif %}
 
 <fieldset id="organization">
   <legend>{% trans %}Organization{% endtrans %}</legend>
@@ -96,7 +96,7 @@
 
 <fieldset id="dates">
   <legend>{% trans %}Dates{% endtrans %}</legend>
-{#  <?php print drupal_render($form['ongoing']); ?>#}
+{#  {{ form.ongoing }}#}
   {{ form.field_training_date }}
   {{ form.field_registration_deadline }}
 </fieldset>
@@ -125,9 +125,10 @@
 
 <fieldset id="content">
   <legend>{% trans %}Description{% endtrans %}</legend>
+  {{ form.field_language }}
   {{ form.title }}
   {{ form.body }}
-  {{ form.field_how_to_apply }}
+  {{ form.field_how_to_register }}
 </fieldset>
 
 <fieldset id="legal">
@@ -137,5 +138,35 @@
 
 <fieldset id="actions">
   <legend class="visually-hidden">{% trans %}Form submission and other actions{% endtrans %}</legend>
-{#  <?php print $actions; ?>#}
+{{ form.actions }}
 </fieldset>
+
+{% if form.revision_information %}
+  {{ form.revision_information }}
+{% endif %}
+
+{{
+  form|without([
+    'user_information',
+    'field_source',
+    'field_training_format',
+    'field_country',
+    'field_city',
+    'field_training_date',
+    'field_registration_deadline',
+    'field_link',
+    'field_cost',
+    'field_fee_information',
+    'field_training_type',
+    'field_training_language',
+    'field_career_categories',
+    'field_theme',
+    'field_language',
+    'title',
+    'body',
+    'field_how_to_register',
+    'legal',
+    'actions',
+    'revision_information',
+  ])
+}}

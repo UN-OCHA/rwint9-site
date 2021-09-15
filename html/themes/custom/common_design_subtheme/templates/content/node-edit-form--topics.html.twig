@@ -27,7 +27,7 @@
 {{ attach_library('common_design_subtheme/rw-toc') }}
 
 <nav{{ attributes
-  .setAttribute('id', id)
+  .setAttribute('id', 'table-of-contents')
   .addClass([
     'rw-toc',
   ])
@@ -53,9 +53,9 @@
       <ul>
         <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#editorial-flags">{% trans %}Editorial flags{% endtrans %}</a></li>
         <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#actions">{% trans %}Save{% endtrans %}</a></li>
-{#        <?php if (!empty($form['revision_information'])): ?>#}
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#edit-revision-information">{% trans %}Revisions{% endtrans %}</a></li>
-{#        <?php endif; ?>#}
+        {% if form.revision_information %}
+          <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#edit-revision-information">{% trans %}Revisions{% endtrans %}</a></li>
+        {% endif %}
       </ul>
     </li>
   </ul>
@@ -65,48 +65,66 @@
   <legend>{% trans %}Description{% endtrans %}</legend>
   {{ form.title }}
   {{ form.body }}
-  {{ form.field_term_image }}
+  {{ form.field_icon }}
 </fieldset>
 
 <fieldset id="overview">
   <legend>{% trans %}Overview{% endtrans %}</legend>
-  {{ form.field_sandbox }}
-  {{ form.field_topics_overview }}
+  {{ form.field_overview }}
 </fieldset>
 
 <fieldset id="resources">
   <legend>{% trans %}Resources{% endtrans %}</legend>
-  {{ form.field_topics_sidebar }}
+  {{ form.field_resources }}
 </fieldset>
 
 <fieldset id="sections">
   <legend>{% trans %}Sections{% endtrans %}</legend>
-  {{ form.field_topics_grid_content }}
+  {{ form.field_sections }}
 </fieldset>
 
 <fieldset id="related">
   <legend>{% trans %}Related Content{% endtrans %}</legend>
-  {{ form.field_topics_reports_search }}
-  {{ form.field_topics_jobs_search }}
-  {{ form.field_topics_training_search }}
-  {{ form.field_topics_disasters_search }}
-</fieldset>
-
-<fieldset id="details" class="details">
-  <legend>{% trans %}Details{% endtrans %}</legend>
-  {{ form.field_content_format }}
-  {{ form.field_theme }}
+  {{ form.field_reports_search }}
+  {{ form.field_jobs_search }}
+  {{ form.field_training_search }}
+  {{ form.field_disasters_search }}
 </fieldset>
 
 <fieldset id="editorial-flags">
   <legend class="visually-hidden">{% trans %}Editorial flags{% endtrans %}</legend>
   {{ form.field_bury }}
-  {{ form.field_feature }}
+  {{ form.field_featured }}
   {{ form.field_disaster_type }}
   {{ form.field_theme }}
 </fieldset>
 
 <fieldset id="actions">
   <legend class="visually-hidden">{% trans %}Form submission and other actions{% endtrans %}</legend>
-  {#  <?php print $actions; ?>#}
+  {{ form.actions }}
 </fieldset>
+
+{% if form.revision_information %}
+  {{ form.revision_information }}
+{% endif %}
+
+{{
+  form|without([
+    'title',
+    'body',
+    'field_icon',
+    'field_overview',
+    'field_resources',
+    'field_sections',
+    'field_reports_search',
+    'field_jobs_search',
+    'field_training_search',
+    'field_disasters_search',
+    'field_bury',
+    'field_featured',
+    'field_disaster_type',
+    'field_theme',
+    'actions',
+    'revision_information',
+  ])
+}}

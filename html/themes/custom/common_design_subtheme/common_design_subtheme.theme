@@ -135,7 +135,7 @@ function common_design_subtheme_theme_suggestions_alter(array &$suggestions, arr
  */
 function common_design_subtheme_theme_suggestions_form_alter(array &$suggestions, array $variables) {
   $route_match = \Drupal::routeMatch();
-  if ($route_match->getRouteName() === 'entity.taxonomy_term.edit_form') {
+  if ($route_match->getRouteName() === 'entity.taxonomy_term.edit_form' || $route_match->getRouteName() === 'entity.taxonomy_term.add_form') {
 
     $suggestions[] = 'form__taxonomy_term_form';
     // Suggestion in the form "form__taxonomy_term_VOCABULARY_form".
@@ -145,5 +145,17 @@ function common_design_subtheme_theme_suggestions_form_alter(array &$suggestions
     // the suggestion with the vocabulary takes precedence if there is a
     // corresponding template.
     array_unshift($suggestions, 'form__taxonomy_term_form');
+  }
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK_alter() for the page title.
+ *
+ * Add a suggestion for the page title of non entity pages.
+ */
+function common_design_subtheme_theme_suggestions_page_title_alter(array &$suggestions, array $variables) {
+  $route_name = \Drupal::routeMatch()->getRouteName();
+  if (strpos($route_name, 'entity.') !== 0) {
+    $suggestions[] = 'page_title__wrapped';
   }
 }

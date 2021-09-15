@@ -40,7 +40,6 @@
   @extend .cd-user-menu--no-language-switcher;
 }
 
-
 .cd-global-header__user-menu a svg + span {
   @include max-width(md) {
     @include visually-hidden;

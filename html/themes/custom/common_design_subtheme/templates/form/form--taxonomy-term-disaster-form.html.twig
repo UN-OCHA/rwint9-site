@@ -23,10 +23,10 @@
 
 <form{{ attributes }}>
   <nav{{ attributes
-    .setAttribute('id', id)
-  .addClass([
-    'rw-toc',
-  ])
+    .setAttribute('id', 'table-of-contents')
+    .addClass([
+      'rw-toc',
+    ])
   }} >
     <h2{{ level }}{{ title_attributes
       .addClass([
@@ -82,7 +82,7 @@
 
   <fieldset id="profile">
     <legend>{{ 'Profile'|t }}</legend>
-    {{ element.body }}
+    {{ element.description }}
   </fieldset>
 
   <fieldset id="glide">
@@ -92,8 +92,9 @@
   </fieldset>
 
   <fieldset id="editorial-flags">
-    <legend class="visually-hidden">{{ 'Editorial flags'|t }}</legend>
-    {{ element.actions }}
+    <legend>{{ 'Editorial flags'|t }}</legend>
+    {{ element.field_profile }}
+    {{ element.field_timezone }}
   </fieldset>
 
   <fieldset id="actions">
@@ -104,7 +105,6 @@
   {%
     set skip_elements = [
     'name',
-    'field_appeals_response_plans',
     'field_country',
     'field_disaster_type',
     'field_disaster_date',
@@ -116,8 +116,10 @@
     'field_glide_related',
     'field_profile',
     'field_useful_links',
+    'description',
     'actions',
-  ]
+    'relations',
+    ]
   %}
 
   {% for key, child in element if key|first != '#' %}
