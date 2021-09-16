@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\reliefweb_topics\Plugin\Filter;
+namespace Drupal\reliefweb_utility\Plugin\Filter;
 
 use Drupal\filter\FilterProcessResult;
 use Drupal\filter\Plugin\FilterBase;
