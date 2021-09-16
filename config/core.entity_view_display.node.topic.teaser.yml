@@ -5,6 +5,7 @@ dependencies:
   config:
     - core.entity_view_mode.node.teaser
     - field.field.node.topic.body
+    - field.field.node.topic.field_bury
     - field.field.node.topic.field_disasters_search
     - field.field.node.topic.field_featured
     - field.field.node.topic.field_icon
@@ -34,6 +35,7 @@ content:
     region: content
 hidden:
   body: true
+  field_bury: true
   field_disasters_search: true
   field_featured: true
   field_icon: true

@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - field.field.node.topic.body
+    - field.field.node.topic.field_bury
     - field.field.node.topic.field_disasters_search
     - field.field.node.topic.field_featured
     - field.field.node.topic.field_icon
@@ -15,8 +16,8 @@ dependencies:
     - field.field.node.topic.field_training_search
     - node.type.topic
   module:
-    - image
     - reliefweb_fields
+    - svg_image
     - text
     - user
 id: node.topic.default
@@ -35,6 +36,16 @@ content:
     weight: -20
     settings: {  }
     third_party_settings: {  }
+    region: content
+  field_bury:
+    weight: 111
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    type: boolean
     region: content
   field_disasters_search:
     weight: 108

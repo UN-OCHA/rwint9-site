@@ -10,8 +10,8 @@ dependencies:
     - text
 third_party_settings:
   allowed_formats:
+    markdown: markdown
     token_markdown: token_markdown
-    markdown: '0'
     plain_text: '0'
     html: '0'
 id: node.topic.body

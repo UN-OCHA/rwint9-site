@@ -1,0 +1,23 @@
+uuid: 9fe9941a-088e-4a7f-9ff2-f92131b1cbd1
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_bury
+    - node.type.topic
+id: node.topic.field_bury
+field_name: field_bury
+entity_type: node
+bundle: topic
+label: Bury
+description: ''
+required: false
+translatable: true
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - field.field.node.topic.body
+    - field.field.node.topic.field_bury
     - field.field.node.topic.field_disasters_search
     - field.field.node.topic.field_featured
     - field.field.node.topic.field_icon
@@ -18,9 +19,9 @@ dependencies:
     - workflows.workflow.topic
   module:
     - content_moderation
-    - image
     - path
     - reliefweb_fields
+    - svg_image
     - text
 id: node.topic.default
 targetEntityType: node
@@ -43,6 +44,13 @@ content:
     region: content
     settings: {  }
     third_party_settings: {  }
+  field_bury:
+    weight: 131
+    settings:
+      display_label: true
+    third_party_settings: {  }
+    type: boolean_checkbox
+    region: content
   field_disasters_search:
     weight: 128
     settings: {  }
