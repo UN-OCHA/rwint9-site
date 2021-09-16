@@ -29,8 +29,8 @@ class CommunityTopicsController extends ControllerBase {
       $invalid = $this->t('The link title is mandatory.');
     }
     // Path has to link to updates.
-    elseif (strpos($data['url'], '/updates') === FALSE) {
-      $invalid = $this->t('Invalid URL: use a link to a river.');
+    elseif (filter_var($data['url'], FILTER_VALIDATE_URL) === FALSE) {
+      $invalid = $this->t('Invalid URL.');
     }
 
     if (empty($invalid)) {
