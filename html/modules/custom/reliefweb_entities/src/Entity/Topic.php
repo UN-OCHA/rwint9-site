@@ -128,11 +128,6 @@ class Topic extends Node implements BundleEntityInterface, EntityModeratedInterf
       ],
     ];
 
-    $sections['introduction'] = $this->getEntityTextField('body');
-    $sections['overview'] = $this->getEntityTextField('field_overview');
-    $sections['resources'] = $this->getEntityTextField('field_resources');
-
-    $queries = [];
     $section_links = $this->get('field_sections');
 
     // Append searches to section links.
@@ -154,7 +149,6 @@ class Topic extends Node implements BundleEntityInterface, EntityModeratedInterf
     }
 
     foreach ($section_links as $index => $section_link) {
-      $queries[$index] = $this->riverUrlToApi($section_link->url);
       $toc['sections']['sections'][$index] = $section_link->title;
     }
 
