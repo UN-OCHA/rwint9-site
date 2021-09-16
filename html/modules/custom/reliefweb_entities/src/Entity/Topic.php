@@ -49,9 +49,7 @@ class Topic extends Node implements BundleEntityInterface, EntityModeratedInterf
     $contents = $this->getPageTableOfContents();
 
     // Section label overrides.
-    $labels = [
-      'disasters' => $this->t('Alert and Ongoing Disasters'),
-    ];
+    $labels = [];
 
     // Consolidate sections, removing empty ones.
     return $this->consolidateSections($contents, $sections, $labels);
