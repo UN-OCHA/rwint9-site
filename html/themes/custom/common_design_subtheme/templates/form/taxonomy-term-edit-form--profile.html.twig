@@ -1,0 +1,23 @@
+{#
+/**
+ * @file
+ * Theme override for the taxonomy term form content.
+ *
+ * This template will be used when a taxonomy term edit form specifies
+ * 'taxonomy_term_edit_form' as its #theme callback.  Otherwise, by default,
+ * the taxonomy term add/edit forms will be themed by form.html.twig.
+ *
+ * Available variables:
+ * - form: The taxonomy term add/edit form.
+ *
+ * @see common_design_subtheme_form_taxonomy_term_form_alter()
+ *
+ * @todo review revision section.
+ */
+#}
+
+{{ attach_library('common_design_subtheme/rw-form') }}
+
+{{ form|without(['revision_information']) }}
+
+{{ form.revision_information }}
