@@ -190,11 +190,13 @@ class ReliefWebSectionLinks extends WidgetBase {
    *
    * @param array &$item
    *   Link item with url, title and image fields.
+   * @param array $settings
+   *   Field settings.
    *
    * @return string
    *   Return an error message if the link is invalid.
    */
-  public static function parseLinkData(array &$item, $settings) {
+  public static function parseLinkData(array &$item, array $settings = []) {
     $invalid = '';
     $database = \Drupal::database();
 
@@ -278,7 +280,5 @@ class ReliefWebSectionLinks extends WidgetBase {
     // Only accept links resolved to a node internal path.
     return preg_match('#^/node/[0-9]+$#', $path) === 1 ? $path : '';
   }
-
-
 
 }
