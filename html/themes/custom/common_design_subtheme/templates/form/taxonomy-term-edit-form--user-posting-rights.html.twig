@@ -20,12 +20,8 @@
 
 {# Form content. #}
 <fieldset id="description">
-  <legend class="visually-hidden">{% trans %}Profile{% endtrans %}</legend>
-  {{ form.field_profile }}
-  {{ form.description }}
-  {{ form.field_key_content }}
-  {{ form.field_appeals_response_plans }}
-  {{ form.field_useful_links }}
+  <legend class="visually-hidden">{% trans %}User posting rights{% endtrans %}</legend>
+  {{ form.field_user_posting_rights }}
 </fieldset>
 
 <fieldset id="actions">
@@ -37,11 +33,7 @@
 
 {{
   form|without([
-    'field_profile',
-    'description',
-    'field_key_content',
-    'field_appeals_response_plans',
-    'field_useful_links',
+    'field_user_posting_rights',
     'actions',
     'relations',
     'revision_information',
