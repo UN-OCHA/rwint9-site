@@ -73,8 +73,6 @@
  */
 #}
 {{ attach_library('common_design_subtheme/rw-document') }}
-{{ attach_library('common_design_subtheme/rw-related-content') }}
-{{ attach_library('common_design_subtheme/rw-opportunities') }}
 
 {% set meta = node.getEntityMeta() %}
 
@@ -91,103 +89,12 @@
   ])
   .setAttribute('data-id', node.id())
 }}>
-  <header class="rw-article__header rw-article__header--with-meta">
-    {{ render_var({
-      '#theme': 'reliefweb_entities_entity_country_slug',
-      '#countries': meta.country,
-    }) }}
 
-    {{ title|merge({'#title_attributes': title_attributes.addClass('rw-article__title')}) }}
-
-    {{ render_var({
-      '#theme': 'reliefweb_entities_entity_meta',
-      '#meta': {
-        'source': {
-          'type': 'taglist',
-          'label': 'Organization'|t,
-          'value': meta.source,
-          'count': 1,
-          'sort': 'shortname',
-        },
-        'posted': {
-          'type': 'date',
-          'label': 'Posted'|t,
-          'value': meta.posted,
-        },
-        'closing': {
-          'type': 'date',
-          'label': 'Closing date'|t,
-          'value': meta.closing,
-        },
-      }
-    }) }}
+  <header>
+    {{ title }}
   </header>
 
-  <div class="rw-article__content">
-    <section class="rw-xxx">
-      {{ node.getPageContent() }}
-    </section>
-  </div>
-
-  <footer class="rw-article__footer">
-    {{ render_var({
-      '#theme': 'reliefweb_entities_entity_details',
-      '#title': 'Job details'|t,
-      '#title_attributes': create_attribute().addClass('visually-hidden'),
-      '#meta': {
-        'country': {
-          'type': 'taglist',
-          'label': meta.country|length > 1 ? 'Countries'|t : 'Country'|t,
-          'value': meta.country,
-          'count': null,
-          'sort': 'name',
-        },
-        'city': {
-          'type': 'simple',
-          'label': 'City'|t,
-          'value': meta.city,
-        },
-        'source': {
-          'type': 'taglist',
-          'label': meta.source|length > 1 ? 'Sources'|t : 'Source'|t,
-          'value': meta.source,
-          'count': null,
-          'sort': 'name',
-        },
-        'type': {
-          'type': 'taglist',
-          'label': meta.type|length > 1 ? 'Types'|t : 'Type'|t,
-          'value': meta.type,
-          'count': null,
-          'sort': 'name',
-        },
-        'career-category': {
-          'type': 'taglist',
-          'label': meta.career_category|length > 1 ? 'Career categories'|t : 'Career category'|t,
-          'value': meta.career_category,
-          'count': null,
-          'sort': 'name',
-        },
-        'experience': {
-          'type': 'taglist',
-          'label': 'Years of experience'|t,
-          'value': meta.experience,
-          'count': null,
-        },
-        'theme': {
-          'type': 'taglist',
-          'label': meta.theme|length > 1 ? 'Themes'|t : 'Theme'|t,
-          'value': meta.theme,
-          'count': null,
-          'sort': 'name',
-        },
-      }
-    }) }}
-
-    {{ node.getShareLinks() }}
-    {{ content.reliefweb_bookmarks_link }}
-  </footer>
+  {{ content.reliefweb_bookmarks_link }}
+  {{ node.getPageContent() }}
 
 </article>
-
-{{ node.getRelatedContent() }}
