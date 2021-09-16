@@ -61,10 +61,6 @@ class Topic extends Node implements BundleEntityInterface, EntityModeratedInterf
   public function getPageSections() {
     $sections = [];
 
-    if (!$this->hasField('field_sections')) {
-      return $sections;
-    }
-
     $sections['introduction'] = $this->getEntityTextField('body');
     $sections['overview'] = $this->getEntityTextField('field_overview');
     $sections['resources'] = $this->getEntityTextField('field_resources');
@@ -103,10 +99,6 @@ class Topic extends Node implements BundleEntityInterface, EntityModeratedInterf
    * {@inheritdoc}
    */
   public function getPageTableOfContents() {
-    if (!$this->hasField('field_sections')) {
-      return [];
-    }
-
     // Table of contents.
     $toc = [
       'information' => [
