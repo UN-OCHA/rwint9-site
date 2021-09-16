@@ -53,6 +53,20 @@ class TopicRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
+  public function getPageContent() {
+    return [
+      '#theme' => 'reliefweb_rivers_page',
+      '#river' => $this->river,
+      '#title' => $this->getPageTitle(),
+      '#view' => $this->getSelectedView(),
+      '#content' => $this->getRiverContent(),
+      '#links' => $this->getRiverLinks(),
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getViews() {
     return [
       'all' => $this->t('All Topics'),
