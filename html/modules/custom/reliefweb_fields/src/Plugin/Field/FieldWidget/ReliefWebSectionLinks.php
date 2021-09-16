@@ -196,7 +196,7 @@ class ReliefWebSectionLinks extends WidgetBase {
    * @return string
    *   Return an error message if the link is invalid.
    */
-  public static function parseLinkData(array &$item, $settings = []) {
+  public static function parseLinkData(array &$item, array $settings = []) {
     $invalid = '';
     $database = \Drupal::database();
 
