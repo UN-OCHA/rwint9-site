@@ -72,10 +72,16 @@
       var title = document.createElement('a');
       title.setAttribute('href', link.url);
       title.setAttribute('target', '_blank');
-      title.appendChild(document.createTextNode(link.title));
+
+      if (settings.useTitle && link.title) {
+        title.appendChild(document.createTextNode(link.title));
+      }
+      else {
+        title.appendChild(document.createTextNode(link.url));
+      }
 
       if (settings.useOverride) {
-        if (link.override) {
+        if (link.override && link.override != '0') {
           title.appendChild(document.createTextNode(' [' + link.override + ']'));
         }
         else {
@@ -96,8 +102,14 @@
       container.setAttribute('data-link-form', '');
 
       container.appendChild(this.createLinkFormComponent('url', link.url));
-      container.appendChild(this.createLinkFormComponent('title', link.title));
-      container.appendChild(this.createLinkFormComponent('override', link.override, !settings.useOverride));
+
+      if (settings.useTitle) {
+        container.appendChild(this.createLinkFormComponent('title', link.title));
+      }
+
+      if (settings.useOverride) {
+        container.appendChild(this.createLinkFormComponent('override', link.override, !settings.useOverride));
+      }
 
       container.appendChild(this.createButton('update', t('Update'), true));
       container.appendChild(this.createButton('delete', t('Delete'), true));
@@ -168,8 +180,15 @@
       container.setAttribute('data-link-form', '');
 
       container.appendChild(this.createLinkFormComponent('url', ''));
-      container.appendChild(this.createLinkFormComponent('title', ''));
-      container.appendChild(this.createLinkFormComponent('override', '', !settings.useOverride));
+
+      if (settings.useTitle) {
+        container.appendChild(this.createLinkFormComponent('title', ''));
+      }
+
+      if (settings.useOverride) {
+        container.appendChild(this.createLinkFormComponent('override', '', !settings.useOverride));
+      }
+
       container.appendChild(this.createButton('add', t('Add'), true));
       container.appendChild(this.createButton('clear', t('Clear')));
 
@@ -185,7 +204,10 @@
       // Set the id of the link to be retrieved from the store.
       container.setAttribute('data-id', this.createLinkId(link));
 
-      container.appendChild(this.createLinkMove());
+      if (settings.cardinality != 1) {
+        container.appendChild(this.createLinkMove());
+      }
+
       container.appendChild(this.createLinkDisplay(link, settings));
       container.appendChild(this.createLinkForm(link, settings));
       container.appendChild(this.createLinkEdit());
@@ -220,7 +242,16 @@
 
       container.appendChild(legend);
       container.appendChild(link);
-      container.appendChild(this.createNewLinkForm(settings));
+
+      if (settings.cardinality > 0) {
+        if (settings.cardinality > links.length) {
+          container.appendChild(this.createNewLinkForm(settings));
+        }
+      }
+      else {
+        container.appendChild(this.createNewLinkForm(settings));
+      }
+
       container.appendChild(this.createList(links, settings));
 
       // Add the form to the field.
@@ -452,11 +483,32 @@
      */
     emptyNewLinkForm: function (element) {
       element.querySelector('input[data-name="url"]').value = '';
-      element.querySelector('input[data-name="title"]').value = '';
-      element.querySelector('input[data-name="override"]').value = '';
+      if (element.querySelector('input[data-name="title"]')) {
+        element.querySelector('input[data-name="title"]').value = '';
+      }
+      if (element.querySelector('input[data-name="override"]')) {
+        element.querySelector('input[data-name="override"]').value = '';
+      }
 
       if (element.hasAttribute('data-error')) {
         this.resetError(this.getParentElement(element, 'FIELDSET'));
+      }
+    },
+
+    /**
+     * Hide new link form if needed.
+     */
+    hideNewLinkForm: function (element) {
+      if (this.settings.cardinality > 0) {
+        if (this.settings.cardinality <= this.links.length) {
+          element.style.display = 'none';
+        }
+        else {
+          element.style.display = '';
+        }
+      }
+      else {
+        element.style.display = '';
       }
     },
 
@@ -466,8 +518,12 @@
     resetLinkForm: function (element) {
       var data = this.getLinkData(element);
       element.querySelector('input[data-name="url"]').value = data.url;
-      element.querySelector('input[data-name="title"]').value = data.title;
-      element.querySelector('input[data-name="override"]').value = data.image;
+      if (element.querySelector('input[data-name="title"]')) {
+        element.querySelector('input[data-name="title"]').value = data.title;
+      }
+      if (element.querySelector('input[data-name="override"]')) {
+        element.querySelector('input[data-name="override"]').value = data.override;
+      }
 
       if (element.hasAttribute('data-error')) {
         this.resetError(this.getParentElement(element, 'FIELDSET'));
@@ -481,8 +537,8 @@
       if (edited === true) {
         return {
           url: element.querySelector('input[data-name="url"]').value,
-          title: element.querySelector('input[data-name="title"]').value,
-          override: element.querySelector('input[data-name="override"]').value
+          title: element.querySelector('input[data-name="title"]') ? element.querySelector('input[data-name="title"]').value : '',
+          override: element.querySelector('input[data-name="override"]') ? element.querySelector('input[data-name="override"]').value : 0
         };
       }
       else {
@@ -498,8 +554,10 @@
         this.settings = {
           field: this.data.getAttribute('data-settings-field'),
           label: this.data.getAttribute('data-settings-label'),
-          useOverride: this.data.getAttribute('data-settings-use-override'),
-          validateUrl: this.data.getAttribute('data-settings-validate-url')
+          useOverride: this.data.getAttribute('data-settings-use-override') === 'true',
+          useTitle: this.data.getAttribute('data-settings-use-title') === 'true',
+          validateUrl: this.data.getAttribute('data-settings-validate-url'),
+          cardinality: this.data.getAttribute('data-settings-cardinality')
         };
       }
       return this.settings;
@@ -546,6 +604,7 @@
                 // Empty the new link inputs.
                 this.emptyNewLinkForm(element);
                 this.updateData();
+                this.hideNewLinkForm(element);
               }
             });
             break;
@@ -573,9 +632,11 @@
 
           // Remove an active link.
           case 'delete':
+            var element = this.getParentElement(target, 'DIV');
             var row = this.getParentElement(target, 'TR');
             row.parentNode.removeChild(row);
             this.updateData();
+            this.hideNewLinkForm(element.querySelector('[data-link-form]'));
             break;
 
           // Toggle the display of the other actions in an active link form.
@@ -624,6 +685,7 @@
      */
     setFieldData: function (data) {
       this.data.value = data ? JSON.stringify(data) : '';
+      this.links = data;
     },
 
     /**

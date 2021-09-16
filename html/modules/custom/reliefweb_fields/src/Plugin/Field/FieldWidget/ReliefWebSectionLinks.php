@@ -41,6 +41,7 @@ class ReliefWebSectionLinks extends WidgetBase {
   protected function formMultipleElements(FieldItemListInterface $items, array &$form, FormStateInterface $form_state) {
     $field_name = $this->fieldDefinition->getName();
     $settings = $this->fieldDefinition->getSettings();
+    $cardinality = $this->fieldDefinition->getFieldStorageDefinition()->getCardinality();
     $parents = $form['#parents'];
 
     // Url of the link validation route for the field.
@@ -62,7 +63,9 @@ class ReliefWebSectionLinks extends WidgetBase {
         'data-settings-field' => $field_name,
         'data-settings-label' => $this->fieldDefinition->getLabel(),
         'data-settings-use-override' => $settings['use_override'] ? 'true' : 'false',
+        'data-settings-use-title' => $settings['use_title'] ? 'true' : 'false',
         'data-settings-validate-url' => $validate_url,
+        'data-settings-cardinality' => $cardinality,
       ],
     ];
 
@@ -136,7 +139,12 @@ class ReliefWebSectionLinks extends WidgetBase {
     $links = !empty($data) ? json_decode($data, TRUE) : [];
 
     // Reverse the links so that the most recent have a higher delta.
-    return array_reverse($links);
+    $links = array_reverse($links);
+
+    $cardinality = $this->fieldDefinition->getFieldStorageDefinition()->getCardinality();
+    if ($cardinality > 0) {
+      $links = array_chunk($links, $cardinality, TRUE);
+    }
   }
 
   /**
@@ -170,7 +178,7 @@ class ReliefWebSectionLinks extends WidgetBase {
       'override' => $use_override ? $data['override'] ?? 0 : 0,
     ];
 
-    $invalid = static::parseLinkData($link);
+    $invalid = static::parseLinkData($link, $settings);
     if (empty($invalid)) {
       return $link;
     }
@@ -186,7 +194,7 @@ class ReliefWebSectionLinks extends WidgetBase {
    * @return string
    *   Return an error message if the link is invalid.
    */
-  public static function parseLinkData(array &$item) {
+  public static function parseLinkData(array &$item, $settings) {
     $invalid = '';
     $database = \Drupal::database();
 
@@ -194,7 +202,7 @@ class ReliefWebSectionLinks extends WidgetBase {
       return t('Missing link url.');
     }
 
-    if (empty($item['title'])) {
+    if ($settings['use_title'] && empty($item['title'])) {
       return t('Title is mandatory.');
     }
 
@@ -227,7 +235,7 @@ class ReliefWebSectionLinks extends WidgetBase {
     }
 
     // Path has to link to updates.
-    if (strpos($path, '/updates') === FALSE) {
+    if (strpos($path, '/updates') === FALSE && strpos($path, '/training') === FALSE && strpos($path, '/jobs') === FALSE && strpos($path, '/disasters') === FALSE) {
       $invalid = t('Invalid URL: use a link to a river.');
     }
 
@@ -271,168 +279,6 @@ class ReliefWebSectionLinks extends WidgetBase {
     return preg_match('#^/node/[0-9]+$#', $path) === 1 ? $path : '';
   }
 
-  /**
-   * Update entities on node change.
-   *
-   * Update entities which have a reliefweb_field_link field
-   * when a node is updated or deleted to avoid broken links.
-   *
-   * @param string $op
-   *   Operation on the node: update or delete.
-   * @param Drupal\node\NodeInterface $node
-   *   Node that is being updated or deleted.
-   */
-  public static function updateFields($op, NodeInterface $node) {
-    // We only handle reports.
-    if ($node->bundle() !== 'report') {
-      return;
-    }
 
-    // We only proceed if the node was updated or deleted.
-    // In theory there is no other possible operation.
-    if ($op !== 'delete' && $op !== 'update') {
-      return;
-    }
-
-    // Internal short url used to identify the link.
-    $url = '/node/' . $node->id();
-
-    // Link data for the node.
-    $link = [
-      'url' => $url,
-      'title' => '',
-      'image' => '',
-    ];
-
-    // Remove links to the node if not published.
-    if (!$node->isPublished()) {
-      $op = 'delete';
-    }
-    // Otherwise if the node is to be updated, retrieve its data.
-    elseif ($op !== 'delete') {
-      $invalid = self::parseLinkData($link, TRUE, TRUE, FALSE);
-      // Remove links to the node if something was invalid.
-      if (!empty($invalid)) {
-        $op = 'delete';
-      }
-    }
-
-    // Entity services.
-    $entity_field_manager = \Drupal::service('entity_field.manager');
-    $entity_type_manager = \Drupal::service('entity_type.manager');
-
-    // Retrieve the 'reliefweb_field_link' fields that accepts internal links.
-    $field_map = [];
-    foreach ($entity_field_manager->getFieldMap() as $entity_type_id => $field_list) {
-      foreach ($field_list as $field_name => $field_info) {
-        // Skip non reliefweb_links fields.
-        if (!isset($field_info['type']) || $field_info['type'] !== 'reliefweb_links') {
-          continue;
-        }
-
-        // For each bundle using the field, check if the field is for internal
-        // links in which case store the link data for the field.
-        foreach ($field_info['bundles'] as $bundle) {
-          $instance = FieldConfig::loadByName($entity_type_id, $bundle, $field_name);
-          $settings = $instance->getSettings();
-
-          if (!empty($settings['internal'])) {
-            // Store the prepared link data.
-            $field_map[$entity_type_id][$field_name] = $instance;
-          }
-        }
-      }
-    }
-
-    // Skip if there are no fields to update.
-    if (empty($field_map)) {
-      return;
-    }
-
-    // For each field, load the entities to update.
-    foreach ($field_map as $entity_type_id => $field_list) {
-      $storage = $entity_type_manager->getStorage($entity_type_id);
-
-      $entities = [];
-      foreach ($field_list as $field_name => $instance) {
-        $settings = $instance->getSettings();
-
-        // Link data.
-        $data = [
-          'url' => $link['url'],
-          'title' => $link['title'],
-          'image' => !empty($settings['use_cover']) ? $link['image'] : '',
-        ];
-
-        // Retrieve the ids of the entities referencing the node.
-        $ids = $storage
-          ->getQuery()
-          ->condition($field_name . '.url', $url, '=')
-          // This is a system update so the results should not be limited to
-          // what the current user has access to.
-          ->accessCheck(FALSE)
-          ->execute();
-
-        if (empty($ids)) {
-          continue;
-        }
-
-        // Update the entities.
-        foreach ($storage->loadMultiple($ids) as $entity) {
-          $field = $entity->get($field_name);
-          $items = $field->getValue();
-          $changed = FALSE;
-
-          // Update or delete the node link.
-          foreach ($items as $delta => $item) {
-            if (isset($item['url']) && $item['url'] === $url) {
-              if ($op === 'delete') {
-                unset($items[$delta]);
-                $changed = TRUE;
-              }
-              elseif ($data['title'] !== $item['title'] || $data['image'] !== $item['image']) {
-                $items[$delta] = array_merge($item, $data);
-                $changed = TRUE;
-              }
-            }
-          }
-
-          if ($changed) {
-            $field->setValue(array_values($items));
-            $entities[$entity->id()]['entity'] = $entity;
-            $entities[$entity->id()]['fields'][$field_name] = $instance;
-          }
-        }
-      }
-
-      // Update the entities.
-      foreach ($entities as $data) {
-        $entity = $data['entity'];
-        $fields = array_map(function ($instance) {
-          return $instance->getLabel();
-        }, $data['fields']);
-
-        // Set the revision log. Not using `t` as it's an editorial message
-        // that should always be in English.
-        $entity->setRevisionLogMessage(strtr('Automatic update of the !fields !plural due to changes to node #!nodeid.', [
-          '!fields' => implode(', ', $fields),
-          '!plural' => count($fields) > 1 ? 'fields' : 'field',
-          '!nodeid' => $node->id(),
-        ]));
-
-        // Force a new revision.
-        $entity->setNewRevision(TRUE);
-
-        // Save as the System user.
-        $entity->setRevisionUserId(2);
-
-        // Ensure notifications are disabled.
-        $entity->notifications_content_disable = TRUE;
-
-        // Update the entity.
-        $entity->save();
-      }
-    }
-  }
 
 }

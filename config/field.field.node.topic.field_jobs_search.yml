@@ -19,4 +19,5 @@ default_value: {  }
 default_value_callback: ''
 settings:
   use_override: 0
+  use_title: 0
 field_type: reliefweb_section_links

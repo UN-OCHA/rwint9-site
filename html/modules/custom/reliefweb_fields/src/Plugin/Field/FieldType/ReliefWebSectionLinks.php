@@ -79,6 +79,7 @@ class ReliefWebSectionLinks extends FieldItemBase {
   public static function defaultFieldSettings() {
     return [
       'use_override' => 0,
+      'use_title' => 0,
     ] + parent::defaultFieldSettings();
   }
 
@@ -93,6 +94,13 @@ class ReliefWebSectionLinks extends FieldItemBase {
       '#title' => $this->t('Use override'),
       '#description' => $this->t('Check to use the override option.'),
       '#default_value' => $this->getSetting('use_override'),
+    ];
+
+    $element['use_title'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Use title'),
+      '#description' => $this->t('Check to use the title option.'),
+      '#default_value' => $this->getSetting('use_title'),
     ];
 
     return $element;
