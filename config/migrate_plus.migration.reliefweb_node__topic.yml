@@ -1,16 +1,16 @@
-uuid: 2a7a28e8-4d3f-45b4-b5c9-717d5dd124ec
+uuid: 06cf13b9-5664-4531-a695-14e44010bc5e
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: q-j5aYFyNi_KQr6ixvOJrH6tPuboyeFF0wbWf7U9ff4
+  default_config_hash: OX7xOlnQWYl1PQouUyD4ccknSO9zWKNyvTo5Ivgh9QM
 id: reliefweb_node__topic
 class: null
 field_plugin_method: null
 cck_plugin_method: null
 migration_tags: null
 migration_group: reliefweb_node
-label: 'Migrate ReliefWeb topic ads.'
+label: 'Migrate ReliefWeb topics.'
 source:
   bundle: topics
 process:
@@ -33,9 +33,21 @@ process:
     process:
       target_id: fid
   field_featured/value:
-    plugin: skip_on_empty
-    method: process
-    source: field_featured/0/value
+    -
+      plugin: skip_on_empty
+      method: process
+      source: field_featured/0/value
+    -
+      plugin: default_value
+      default_value: 0
+  field_bury/value:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: field_bury/0/value
+    -
+      plugin: default_value
+      default_value: 0
   field_overview/value:
     plugin: concat
     source:
@@ -90,5 +102,11 @@ process:
     process:
       url: url
       title: title
+      override:
+        -
+          plugin: unserialize
+          source: attributes
+          index:
+            - title
 destination: null
 migration_dependencies: null
