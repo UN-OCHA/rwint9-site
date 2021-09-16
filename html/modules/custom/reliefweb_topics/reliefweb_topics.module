@@ -8,8 +8,8 @@
 /**
  * Get all community topics.
  */
-function reliefweb_topics_get_all() {
-  return \Drupal::state()->get('reliefweb_topics', []);
+function reliefweb_topics_get_all_community_topics() {
+  return \Drupal::state()->get('reliefweb_topics_community_topics', []);
 }
 
 /**

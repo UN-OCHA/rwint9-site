@@ -121,14 +121,14 @@ class CommunityTopicsForm extends FormBase {
    * Get all community topics.
    */
   protected function getCommunityTopics() {
-    return $this->state->get('reliefweb_topics', []);
+    return $this->state->get('reliefweb_topics_community_topics', []);
   }
 
   /**
    * Set all community topics.
    */
   protected function setCommunityTopics($topics) {
-    return $this->state->set('reliefweb_topics', $topics);
+    return $this->state->set('reliefweb_topics_community_topics', $topics);
   }
 
 }
