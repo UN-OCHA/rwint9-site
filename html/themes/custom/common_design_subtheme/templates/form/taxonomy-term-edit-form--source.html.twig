@@ -1,0 +1,110 @@
+{#
+/**
+ * @file
+ * Theme override for the taxonomy term form content.
+ *
+ * This template will be used when a taxonomy term edit form specifies
+ * 'taxonomy_term_edit_form' as its #theme callback.  Otherwise, by default,
+ * the taxonomy term add/edit forms will be themed by form.html.twig.
+ *
+ * Available variables:
+ * - form: The taxonomy term add/edit form.
+ *
+ * @see common_design_subtheme_form_taxonomy_term_form_alter()
+ *
+ * @todo review revision section.
+ */
+#}
+
+{{ attach_library('common_design_subtheme/rw-form') }}
+
+{# Table of contents. #}
+{{
+  render_var({
+    '#theme': 'reliefweb_entities_table_of_contents',
+    '#sections': {
+      'fields': {
+        'title': 'Fields'|t,
+        'sections': {
+          'description': 'Description'|t,
+          'details': 'Details'|t,
+          'links': 'Links'|t,
+        },
+      },
+      'submission': {
+        'title': 'Submission'|t,
+        'sections': {
+          'editorial-flags': 'Editorial flags'|t,
+          'actions': 'Save'|t,
+          'edit-revision-information': 'Revisions'|t,
+        },
+      },
+    },
+  })
+}}
+
+{# Form content. #}
+<fieldset id="description">
+  <legend>{% trans %}Description{% endtrans %}</legend>
+  {{ form.name }}
+  {{ form.field_shortname }}
+  {{ form.field_longname }}
+  {{ form.field_spanish_name }}
+  {{ form.field_aliases }}
+  {{ form.description }}
+</fieldset>
+
+<fieldset id="details" class="details">
+  <legend>{% trans %}Details{% endtrans %}</legend>
+  {{ form.field_organization_type }}
+  {{ form.field_country }}
+  {{ form.field_logo }}
+</fieldset>
+
+<fieldset id="links">
+  <legend>{% trans %}Links{% endtrans %}</legend>
+  {{ form.field_homepage }}
+  {{ form.field_links }}
+</fieldset>
+
+<fieldset id="editorial-flags">
+  <legend>{% trans %}Editorial flags{% endtrans %}</legend>
+  {{ form.field_allowed_content_types }}
+  {{ form.field_disclaimer }}
+  {{ form.field_attention_report }}
+  {{ form.field_attention_job }}
+  {{ form.field_attention_training }}
+  {{ form.field_fts_id }}
+</fieldset>
+
+<fieldset id="actions">
+  <legend class="visually-hidden">{% trans %}Form submission and other actions{% endtrans %}</legend>
+  {{ form.actions }}
+</fieldset>
+
+{{ form.revision_information }}
+
+{{
+  form|without([
+    'name',
+    'field_shortname',
+    'field_longname',
+    'field_spanish_name',
+    'field_aliases',
+    'description',
+    'field_organization_type',
+    'field_country',
+    'field_logo',
+    'field_homepage',
+    'field_links',
+    'field_allowed_content_types',
+    'field_disclaimer',
+    'field_attention_report',
+    'field_attention_job',
+    'field_attention_training',
+    'field_fts_id',
+    'actions',
+    'relations',
+    'revision_information',
+  ])
+}}
