@@ -148,7 +148,7 @@
         });
       }
 
-      var body = document.querySelect('body');
+      var body = document.querySelector('body');
       if (!body.hasAttribute('data-datepicker-processed')) {
         body.setAttribute('data-datepicker-processed', '');
 
