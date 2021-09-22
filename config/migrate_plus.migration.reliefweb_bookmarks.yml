@@ -1,0 +1,38 @@
+uuid: 6b716651-311e-48a4-868a-c0185be74621
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: gttyxwzZgyV35Bq9mIgmnWBHM9CON936bEWXuqv4uSY
+id: reliefweb_bookmarks
+class: null
+field_plugin_method: null
+cck_plugin_method: null
+migration_tags: null
+migration_group: reliefweb_base
+label: 'Migrate ReliefWeb bookmarks.'
+source:
+  plugin: table
+  table_name: reliefweb_bookmarks_favorites
+  id_fields:
+    entity_type:
+      type: string
+    entity_id:
+      type: integer
+    uid:
+      type: integer
+process:
+  entity_type: entity_type
+  entity_id: entity_id
+  uid: uid
+destination:
+  plugin: table
+  table_name: reliefweb_bookmarks
+  id_fields:
+    entity_type:
+      type: string
+    entity_id:
+      type: integer
+    uid:
+      type: integer
+migration_dependencies: null

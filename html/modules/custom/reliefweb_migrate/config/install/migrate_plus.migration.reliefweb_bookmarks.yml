@@ -1,0 +1,27 @@
+id: reliefweb_bookmarks
+label: Migrate ReliefWeb bookmarks.
+migration_group: reliefweb_base
+source:
+  plugin: table
+  table_name: reliefweb_bookmarks_favorites
+  id_fields:
+    entity_type:
+      type: string
+    entity_id:
+      type: integer
+    uid:
+      type: integer
+destination:
+  plugin: table
+  table_name: reliefweb_bookmarks
+  id_fields:
+    entity_type:
+      type: string
+    entity_id:
+      type: integer
+    uid:
+      type: integer
+process:
+  entity_type: entity_type
+  entity_id: entity_id
+  uid: uid
