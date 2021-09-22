@@ -1,0 +1,22 @@
+id: reliefweb_subscriptions
+label: Migrate ReliefWeb Subscriptions.
+migration_group: reliefweb_base
+source:
+  plugin: table
+  table_name: reliefweb_subscriptions_subscriptions
+  id_fields:
+    sid:
+      type: string
+    uid:
+      type: integer
+destination:
+  plugin: table
+  table_name: reliefweb_subscriptions_subscriptions
+  id_fields:
+    sid:
+      type: string
+    uid:
+      type: integer
+process:
+  sid: sid
+  uid: uid
