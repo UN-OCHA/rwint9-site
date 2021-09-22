@@ -5,7 +5,9 @@
  * Entity management for ReliefWeb.
  */
 
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
 
 /**
  * Implements hook_entity_bundle_info_alter().
@@ -284,4 +286,18 @@ function reliefweb_entities_tokens($type, $tokens, array $data, array $options, 
   }
 
   return $replacements;
+}
+
+/**
+ * Implements hook_form_HOOK_alter() for "node_form".
+ */
+function reliefweb_entities_form_node_form_alter(array &$form, FormStateInterface $form_state) {
+  EntityFormAlterServiceBase::alterEntityForm($form, $form_state);
+}
+
+/**
+ * Implements hook_form_HOOK_alter() for "taxonomy_term_form".
+ */
+function reliefweb_entities_form_taxonomy_term_form_alter(array &$form, FormStateInterface $form_state) {
+  EntityFormAlterServiceBase::alterEntityForm($form, $form_state);
 }

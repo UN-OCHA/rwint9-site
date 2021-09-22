@@ -7,3 +7,7 @@ services:
     class: 'Drupal\reliefweb_entities\Access\EntityAccessCheck'
     tags:
       - { name: access_check, applies_to: _reliefweb_entities_entity_access_check }
+  # Form alteration services.
+  reliefweb_entities.report.form_alter:
+    class: Drupal\reliefweb_entities\Services\ReportFormAlter
+    arguments: ['@database', '@entity_field.manager', '@entity_type.manager', '@string_translation']
