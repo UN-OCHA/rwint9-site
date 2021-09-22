@@ -8,8 +8,8 @@ use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
-use Drupal\node\NodeInterface;
-use Drupal\reliefweb_utility\Helpers\UrlHelper;
+use Drupal\reliefweb_fields\Plugin\Field\FieldType\ReliefWebSectionLinks as ReliefWebSectionLinksFieldType;
+use Drupal\reliefweb_rivers\RiverServiceBase;
 
 /**
  * Plugin implementation of the 'reliefweb_section_links' widget.
@@ -109,7 +109,7 @@ class ReliefWebSectionLinks extends WidgetBase {
           $links[] = [
             'url' => $link['url'] ?? '',
             'title' => $link['title'] ?? '',
-            'override' => $use_override ? $link['override'] : '',
+            'override' => $use_override && !empty($link['override']) ? $link['override'] : '',
           ];
         }
       }
@@ -197,88 +197,79 @@ class ReliefWebSectionLinks extends WidgetBase {
    *   Return an error message if the link is invalid.
    */
   public static function parseLinkData(array &$item, array $settings = []) {
-    $invalid = '';
-    $database = \Drupal::database();
-
+    // Ensure there is a URL.
     if (empty($item['url'])) {
       return t('Missing link url.');
     }
 
+    // Check if the link title is set.
     if ($settings['use_title'] && empty($item['title'])) {
       return t('Title is mandatory.');
     }
 
-    $path = $item['url'];
-    $override = $item['override'] ?? NULL;
+    // Check the URL is for a river on the current site or reliefweb.int.
+    // This ensures compatibility with local and dev sites.
+    $allowed_hosts = [\Drupal::request()->getHost(), 'reliefweb.int'];
+    $host = preg_replace('/^www\./', '', parse_url($item['url'], PHP_URL_HOST));
+    if (!in_array($host, $allowed_hosts)) {
+      return t('Invalid URL host.');
+    }
 
-    // Override has to link to a node.
-    if ($override) {
-      $override = static::getInternalPath($item['override']);
-      if (strpos($override, '/node/') === 0 && strlen($override) > 6) {
-        $nid = intval(substr($override, 6), 10);
+    // Ensure the url is to one of the allowed rivers for the field.
+    $allowed_rivers = array_filter($settings['rivers'] ?? []);
+    if (empty($allowed_rivers)) {
+      return t('Invalid configuration: no river allowed.');
+    }
 
-        // Get document information.
-        $result = $database
-          ->select('node_field_data', 'n')
-          ->fields('n', ['title', 'status', 'type'])
-          ->condition('n.nid', $nid)
-          ->execute()
-          ?->fetchObject();
+    $info = RiverServiceBase::getRiverServiceFromUrl($item['url']);
+    if (empty($info) || !isset($allowed_rivers[$info['bundle']])) {
+      $allowed_rivers = array_intersect_key(ReliefWebSectionLinksFieldType::getAllowedRivers(), $allowed_rivers);
+      return t('Invalid URL: use a link to one of the following rivers: @rivers.', [
+        '@rivers' => implode(', ', $allowed_rivers),
+      ]);
+    }
 
-        // Check that the document exists and is published.
-        if (empty($result->title)) {
-          $invalid = t('Invalid internal URL: the document was not found.');
-        }
-        // Only published documents are valid.
-        elseif (!isset($result->status) || (int) $result->status !== NodeInterface::PUBLISHED) {
-          $invalid = t('Invalid internal URL: the document is not published.');
-        }
+    // Check that the override if defined, corresponds to a published entity
+    // of the same type of the river entities.
+    if (!empty($item['override'])) {
+      if (!is_numeric($item['override'])) {
+        return t('The override must be a valid entity ID.');
+      }
+
+      $entity_type = \Drupal::entityTypeManager()
+        ->getStorage($info['service']->getEntityTypeId())
+        ->getEntityType();
+
+      $table = $entity_type->getDataTable();
+      $id_key = $entity_type->getKey('id');
+      $bundle_key = $entity_type->getKey('bundle');
+      $published_key = $entity_type->getKey('published');
+
+      // Get document information.
+      $result = \Drupal::database()
+        ->select($table, $table)
+        ->fields($table, [$bundle_key, $published_key])
+        ->condition($table . '.' . $id_key, $item['override'], '=')
+        ->execute()
+        ?->fetchObject();
+
+      // Check that the document exists and is published.
+      if (empty($result)) {
+        return t('Invalid internal URL: the document was not found.');
+      }
+      // Check that the document's type matches the river bundle.
+      elseif ($result->{$bundle_key} !== $info['bundle']) {
+        return t('Invalid internal URL: the document is not a @bundle.', [
+          '@bundle' => $info['bundle'],
+        ]);
+      }
+      // Only published documents are valid.
+      elseif (empty($result->{$published_key})) {
+        return t('Invalid internal URL: the document is not published.');
       }
     }
 
-    // Path has to link to updates.
-    if (strpos($path, '/updates') === FALSE && strpos($path, '/training') === FALSE && strpos($path, '/jobs') === FALSE && strpos($path, '/disasters') === FALSE) {
-      $invalid = t('Invalid URL: use a link to a river.');
-    }
-
-    return $invalid;
-  }
-
-  /**
-   * Get the internal path from a url if it's the url of a node.
-   *
-   * @param string $url
-   *   URL or path.
-   *
-   * @return string
-   *   Internal path.
-   */
-  public static function getInternalPath($url) {
-    $base_host = \Drupal::request()->getHost();
-    if (empty($base_host)) {
-      return '';
-    }
-    $parts = parse_url($url);
-    if (empty($parts['path'])) {
-      return '';
-    }
-    // If the url is absolute, the scheme must be http or https.
-    if (!empty($parts['scheme']) && $parts['scheme'] !== 'http' && $parts['scheme'] !== 'https') {
-      return '';
-    }
-    // Ensure the host, if defined, matches the current one or reliefweb.int.
-    // This is to ensure the compatibility with stage or local site instances.
-    if (!empty($parts['host'])) {
-      $host = preg_replace('/^www\./', '', $parts['host']);
-      if ($host !== $base_host && $host !== 'reliefweb.int') {
-        return '';
-      }
-    }
-    // Resolve aliases to their corresponding internal path.
-    $path = UrlHelper::getPathFromAlias(urldecode($parts['path']));
-
-    // Only accept links resolved to a node internal path.
-    return preg_match('#^/node/[0-9]+$#', $path) === 1 ? $path : '';
+    return '';
   }
 
 }

@@ -29,9 +29,9 @@
      * Placeholders for the input fields.
      */
      placeholders: {
-      url: t('River URL'),
+      url: t('River URL (mandatory)'),
       title: t('Link title (mandatory)'),
-      override: t('Node Id to promote to beginning of list')
+      override: t('Entity Id to promote to beginning of list')
     },
 
     /**
@@ -232,16 +232,10 @@
       var container = document.createElement('fieldset');
       container.setAttribute('data-internal', settings.internal);
 
-      // Link to the save button.
-      var link = document.createElement('a');
-      link.setAttribute('href', '#edit-actions');
-      link.appendChild(document.createTextNode(t('Jump to save button')));
-
       var legend = document.createElement('legend');
       legend.appendChild(document.createTextNode(settings.label));
 
       container.appendChild(legend);
-      container.appendChild(link);
 
       if (settings.cardinality > 0) {
         if (settings.cardinality > links.length) {

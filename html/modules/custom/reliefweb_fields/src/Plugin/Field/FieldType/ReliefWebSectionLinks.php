@@ -44,7 +44,7 @@ class ReliefWebSectionLinks extends FieldItemBase {
         ],
         'override' => [
           'type' => 'int',
-          'description' => 'Node Id of node to use as first item.',
+          'description' => 'Id of entity to use as first item.',
           'not null' => FALSE,
         ],
       ],
@@ -80,6 +80,7 @@ class ReliefWebSectionLinks extends FieldItemBase {
     return [
       'use_override' => 0,
       'use_title' => 0,
+      'rivers' => ['report'],
     ] + parent::defaultFieldSettings();
   }
 
@@ -101,6 +102,14 @@ class ReliefWebSectionLinks extends FieldItemBase {
       '#title' => $this->t('Use title'),
       '#description' => $this->t('Check to use the title option.'),
       '#default_value' => $this->getSetting('use_title'),
+    ];
+
+    $element['rivers'] = [
+      '#type' => 'checkboxes',
+      '#title' => $this->t('Allowed rivers'),
+      '#description' => $this->t('Select the rivers that can be linked in this field.'),
+      '#options' => static::getAllowedRivers(),
+      '#default_value' => $this->getSetting('rivers'),
     ];
 
     return $element;
@@ -164,6 +173,22 @@ class ReliefWebSectionLinks extends FieldItemBase {
     $values['override'] = mt_rand(1111, 9999);
 
     return $values;
+  }
+
+  /**
+   * Get the list of rivers that can be used in section links.
+   *
+   * @return array
+   *   List of rivers keyed by their entity bundle. Those have a corresponding
+   *   river service.
+   */
+  public static function getAllowedRivers() {
+    return [
+      'disaster' => t('Disasters'),
+      'job' => t('Jobs'),
+      'report' => t('Updates'),
+      'training' => t('Training'),
+    ];
   }
 
 }
