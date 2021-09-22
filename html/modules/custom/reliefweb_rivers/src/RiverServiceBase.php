@@ -55,14 +55,14 @@ abstract class RiverServiceBase implements RiverServiceInterface {
 
 
   /**
-   * The entity type associated with the resource.
+   * The entity type id associated with the river.
    *
    * @var string
    */
-  protected $entityType;
+  protected $entityTypeId;
 
   /**
-   * The entity bundle associated with the resource.
+   * The entity bundle associated with the river.
    *
    * @var string
    */
@@ -113,7 +113,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
     $this->pagerParameters = $pager_parameters;
     $this->apiClient = $api_client;
     $this->stringTranslation = $string_translation;
-    $this->url = static::getRiverUrl($this->bundle);
+    $this->url = static::getRiverUrl($this->getBundle());
   }
 
   /**
@@ -144,6 +144,27 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getRiver() {
+    return $this->river;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBundle() {
+    return $this->bundle;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEntityTypeId() {
+    return $this->entityTypeId;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getResource() {
     return $this->resource;
   }
@@ -161,7 +182,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   public function getPageContent() {
     return [
       '#theme' => 'reliefweb_rivers_page',
-      '#river' => $this->river,
+      '#river' => $this->getRiver(),
       '#title' => $this->getPageTitle(),
       '#view' => $this->getSelectedView(),
       '#views' => $this->getRiverViews(),
@@ -188,8 +209,8 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   public function getAdvancedSearch() {
     if (!isset($this->advancedSearch)) {
       $this->advancedSearch = new AdvancedSearch(
-        $this->bundle,
-        $this->river,
+        $this->getBundle(),
+        $this->getRiver(),
         $this->getParameters(),
         $this->getFilters(),
         $this->getFilterSample()
@@ -246,7 +267,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
         $item['url'] = $this->getUrl();
       }
       else {
-        $item['url'] = static::getRiverUrl($this->bundle, [
+        $item['url'] = static::getRiverUrl($this->getBundle(), [
           'view' => $id,
         ]);
       }
@@ -288,7 +309,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
       '#path' => $this->getUrl(),
       '#parameters' => $parameters,
       '#label' => $this->t('Search for @river with keywords', [
-        '@river' => $this->river,
+        '@river' => $this->getRiver(),
       ]),
       '#query' => $search,
     ];
@@ -554,6 +575,75 @@ abstract class RiverServiceBase implements RiverServiceInterface {
     catch (ServiceNotFoundException $exception) {
       return NULL;
     }
+  }
+
+  /**
+   * Get the river path to river data mapping.
+   *
+   * This notably handles the legacy river paths like "maps".
+   *
+   * @return array
+   *   Mapping with the river path as key and an array with the entity bundle
+   *   associated with the river and an optional view for legacy paths.
+   *
+   * @todo check if nginx handles the redirections correctly.
+   */
+  public static function getRiverMapping() {
+    return [
+      'blog' => [
+        'bundle' => 'blog_post',
+      ],
+      'countries' => [
+        'bundle' => 'country',
+      ],
+      'disasters' => [
+        'bundle' => 'disaster',
+      ],
+      'jobs' => [
+        'bundle' => 'job',
+      ],
+      'organizations' => [
+        'bundle' => 'source',
+      ],
+      'topics' => [
+        'bundle' => 'topic',
+      ],
+      'training' => [
+        'bundle' => 'training',
+      ],
+      'updates' => [
+        'bundle' => 'report',
+      ],
+      // Legacy path.
+      'maps' => [
+        'bundle' => 'report',
+        'view' => 'maps',
+      ],
+    ];
+  }
+
+  /**
+   * Get the river service from a river URL.
+   *
+   * @param string $url
+   *   River url.
+   *
+   * @return array
+   *   If there is a match, then an array with the river service, associated
+   *   entity bundle and view.
+   */
+  public static function getRiverServiceFromUrl($url) {
+    $mapping = static::getRiverMapping();
+    $path = trim(parse_url($url, PHP_URL_PATH), '/');
+
+    if (isset($mapping[$path]['bundle'])) {
+      $data = $mapping[$path];
+      $service = static::getRiverService($data['bundle']);
+      if (isset($service)) {
+        return $data + ['service' => $service];
+      }
+    }
+    return [];
   }
 
 }

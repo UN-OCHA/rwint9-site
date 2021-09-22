@@ -8,6 +8,30 @@ namespace Drupal\reliefweb_rivers;
 interface RiverServiceInterface {
 
   /**
+   * Get the river name.
+   *
+   * @return string
+   *   River.
+   */
+  public function getRiver();
+
+  /**
+   * Get the entity bundle associated with the river.
+   *
+   * @return string
+   *   Entity bundle.
+   */
+  public function getBundle();
+
+  /**
+   * Get the entity type id associated with the river.
+   *
+   * @return string
+   *   Entity type id.
+   */
+  public function getEntityTypeId();
+
+  /**
    * Get the Api resource for the river.
    *
    * @return string
