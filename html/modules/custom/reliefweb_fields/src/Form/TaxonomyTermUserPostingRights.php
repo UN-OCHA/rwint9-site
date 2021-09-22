@@ -17,6 +17,10 @@ class TaxonomyTermUserPostingRights extends TermForm {
     $form = parent::form($form, $form_state);
     $form['relations']['#access'] = FALSE;
     $form['revision_log_message']['#access'] = FALSE;
+    $form['#title'] = $this->t('<em>Edit User Posting Rights for</em> @title', [
+      '@bundle' => $this->getBundleLabel(),
+      '@title' => $this->entity->label(),
+    ]);
     return $form;
   }
 
@@ -34,6 +38,17 @@ class TaxonomyTermUserPostingRights extends TermForm {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $this->messenger()->addStatus($this->t('User posting rights successfully updated.'));
     parent::submitForm($form, $form_state);
+  }
+
+  /**
+   * Get the bundle label.
+   *
+   * @return string
+   *   Bundle label.
+   */
+  protected function getBundleLabel() {
+    $bundle_key = $this->entity->getEntityType()->getKey('bundle');
+    return $this->entity->get($bundle_key)->entity->label();
   }
 
 }
