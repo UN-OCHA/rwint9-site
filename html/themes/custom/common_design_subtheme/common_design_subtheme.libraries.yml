@@ -92,15 +92,15 @@ rw-dsr:
     theme:
       components/rw-dsr/rw-dsr.css: {}
 
-rw-entity-description:
-  css:
-    theme:
-      components/rw-entity-description/rw-entity-description.css: {}
-
 rw-entity-meta:
   css:
     theme:
       components/rw-entity-meta/rw-entity-meta.css: {}
+
+rw-entity-text:
+  css:
+    theme:
+      components/rw-entity-text/rw-entity-text.css: {}
 
 rw-form:
   css:

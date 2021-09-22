@@ -2,10 +2,8 @@
 
 namespace Drupal\reliefweb_entities;
 
-use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\reliefweb_rivers\RiverServiceBase;
-use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
 
 /**
  * Trait implementing most methods of the SectionedContentInterface.
@@ -107,41 +105,45 @@ trait SectionedContentTrait {
   /**
    * Get the entity description (for countries, disasters, sources).
    *
-   * @return array
-   *   Render array with the description.
-   */
-  public function getEntityDescription() {
-    return $this->getEntityTextField('description');
-  }
-
-  /**
-   * Get the entity description of a field.
+   * @param string $id
+   *   Section id.
    *
    * @return array
    *   Render array with the description.
    */
-  public function getEntityTextField($field_name) {
-    if (!empty($this->{$field_name}->value)) {
-      // @todo review handling of markdown when there is a proper release of
-      // https://www.drupal.org/project/markdown for Drupal 9.
-      if ($this->{$field_name}->format === 'markdown') {
-        $description = HtmlSanitizer::sanitizeFromMarkdown($this->{$field_name}->value);
-      }
-      else {
-        /** @var \Drupal\Component\Render\MarkupInterface $markup */
-        $markup = check_markup($this->{$field_name}->value, $this->{$field_name}->format);
-        if ($markup instanceof Markup) {
-          $description = HtmlSanitizer::sanitize($markup->__toString(), TRUE);
-          $description = $markup->create($description);
-        }
-        else {
-          $description = HtmlSanitizer::sanitize($markup, TRUE);
-        }
-      }
+  public function getEntityDescription($id) {
+    return $this->getEntityTextField('description', $id, $this->t('Description'), FALSE);
+  }
 
+  /**
+   * Get the content of a text field.
+   *
+   * @param string $field_name
+   *   Text field name.
+   * @param string $id
+   *   Section id.
+   * @param string $title
+   *   Section title.
+   * @param bool $iframe
+   *   Flag indicating whether iframes are allowed in the rendred HTML or not.
+   * @param array $allowed_attributes
+   *   Extra attributes allowed in the rendered HtmL.
+   *
+   * @return array
+   *   Render array with the text content.
+   */
+  public function getEntityTextField($field_name, $id, $title, $iframe = TRUE, array $allowed_attributes = []) {
+    if (!$this->{$field_name}->isEmpty()) {
       return [
-        '#theme' => 'reliefweb_entities_entity_' . str_replace('field_', '', $field_name),
-        '#description' => $description,
+        '#theme' => [
+          'reliefweb_entities_entity_text__' . $this->bundle() . '__' . $id,
+          'reliefweb_entities_entity_text__' . $id,
+          'reliefweb_entities_entity_text',
+        ],
+        '#id' => $id,
+        '#content' => $this->{$field_name}->first()->view(),
+        '#iframe' => $iframe,
+        '#allowed_attributes' => $allowed_attributes,
       ];
     }
     return [];
