@@ -20,8 +20,6 @@ widget.formatting:
 widget.lengthchecker:
   js:
     js/widget.lengthchecker.js: {}
-  dependencies:
-    - core/drupalSettings
 
 # Formatting form widget.
 widget.selectionlimit:
@@ -37,3 +35,10 @@ form.guidelines:
 form.main:
   js:
     js/form.main.js: {}
+
+# Drupal states extension.
+drupal.states:
+  js:
+    js/drupal.states.js: {}
+  dependencies:
+    - core/drupal.states
