@@ -31,7 +31,7 @@ reliefweb_fields.validate.reliefweb_links:
 reliefweb_fields.validate.reliefweb_section_links:
   path: '/admin/reliefweb_fields/validate/reliefweb_section_links/{entity_type_id}/{bundle}/{field_name}'
   defaults:
-    _controller: '\Drupal\reliefweb_fields\Controller\ReliefWebLinksValidator::validateSectionLink'
+    _controller: '\Drupal\reliefweb_fields\Controller\ReliefWebSectionLinksValidator::validateSectionLink'
     _title: 'Link validation for ReliefWeb Section Links fields'
   methods: [POST]
   options:
