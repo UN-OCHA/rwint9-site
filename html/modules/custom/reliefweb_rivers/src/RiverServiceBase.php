@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_rivers;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Url;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
@@ -180,8 +181,10 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * {@inheritdoc}
    */
   public function getPageContent() {
+    $river = Html::getId($this->getRiver());
+
     return [
-      '#theme' => 'reliefweb_rivers_page',
+      '#theme' => 'reliefweb_rivers_page__' . $river,
       '#river' => $this->getRiver(),
       '#title' => $this->getPageTitle(),
       '#view' => $this->getSelectedView(),

@@ -6,7 +6,6 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Pager\PagerParametersInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
-use Drupal\Core\Url;
 use Drupal\reliefweb_api\Services\ReliefWebApiClient;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
@@ -55,12 +54,10 @@ class TopicRiver extends RiverServiceBase {
    */
   public function getPageContent() {
     return [
-      '#theme' => 'reliefweb_rivers_page',
+      '#theme' => 'reliefweb_rivers_page__topics',
       '#river' => $this->river,
       '#title' => $this->getPageTitle(),
-      '#view' => $this->getSelectedView(),
       '#content' => $this->getRiverContent(),
-      '#links' => $this->getRiverLinks(),
     ];
   }
 
@@ -100,95 +97,80 @@ class TopicRiver extends RiverServiceBase {
    * {@inheritdoc}
    */
   public function getRiverContent() {
-    $page = $this->pagerParameters->findPage();
-    $offset = $page * $this->limit;
-    $totalCount = 0;
+    $storage = $this->entityTypeManager
+      ->getStorage('node');
 
-    $query = $this->entityTypeManager->getStorage('node')->getQuery()
+    $query = $storage->getQuery()
       ->condition('type', 'topic')
-      ->condition('status', 1)
-      ->sort('created', 'DESC');
+      ->condition('status', 1);
 
+    // Exclude buried topics.
     $group = $query->orConditionGroup()
       ->notExists('field_bury')
-      ->condition('field_bury', 0, '<>');
+      ->condition('field_bury', 1, '<>');
     $query->condition($group);
-    $totalCount = $query->count()->execute();
 
-    $query = $this->entityTypeManager->getStorage('node')->getQuery()
-      ->condition('type', 'topic')
-      ->condition('status', 1)
-      ->sort('created', 'DESC');
+    $nids = $query->execute();
 
-    $group = $query->orConditionGroup()
-      ->notExists('field_bury')
-      ->condition('field_bury', 0, '<>');
-    $query->condition($group);
-    $nids = $query->range($offset, $this->limit)
-      ->execute();
-    $topics = $this->entityTypeManager->getStorage('node')->loadMultiple($nids);
+    $topics = $storage->loadMultiple($nids);
 
     $reliefweb_topics = [];
     foreach ($topics as $nid => $topic) {
-      $key = $topic->field_featured->value . '_' . $nid;
-      $icon = [];
+      // Prefix the array key with the featured value this will results in
+      // featured topics to appear first and the node id part will ensure
+      // the topics are sorted by creation date.
+      $featured = $topic->field_featured->value ?? 0;
+      $key = $featured . '_' . $nid;
 
-      if (!$topic->field_icon->isEmpty() && $topic->field_icon->entity) {
-        $icon = [
-          'uri' => file_create_url($topic->field_icon->entity->getFileUri()),
-          'alt' => $topic->field_icon->first()->get('alt')->getString(),
-          'width' => 100,
-          'height' => 100,
-        ];
-      }
+      // Convert the body to HTML.
+      $body = check_markup($topic->body->value, $topic->body->format);
 
-      $topic = [
+      $reliefweb_topics[$key] = [
         'title' => $topic->title->value,
         'url' => $topic->toUrl()->toString(),
         'bundle' => 'topic',
-        'summary' => HtmlSummarizer::summarize(check_markup($topic->body->value, $topic->body->format), 300),
-        'featured' => !empty($topic->field_featured->value),
-        'icon' => $icon,
+        'summary' => HtmlSummarizer::summarize($body, 300),
+        'featured' => !empty($featured),
+        'icon' => $topic->getIcon(),
       ];
-      $reliefweb_topics[$key] = $topic;
     }
     // Sort by most recent (nid descending) but prioritizing featured topics.
     krsort($reliefweb_topics, SORT_NATURAL);
 
-    // Initialize the pager.
-    $this->pagerManager->createPager($totalCount ?? 0, $this->limit);
-
     // Get the community topics.
     $community_topics = [];
     foreach (reliefweb_topics_get_all_community_topics() as $data) {
-      $community_topics[] = [
-        'title' => $data->title,
-        'url' => Url::fromUri($data->url),
-        'summary' => $data->description,
-      ];
+      if (!empty($data->title) && !empty($data->url)) {
+        $community_topics[] = [
+          'title' => $data->title,
+          'url' => $data->url,
+          'summary' => $data->description ?? '',
+        ];
+      }
     }
 
     return [
-      'reliefweb' => [
+      'reliefweb_topics' => [
         '#theme' => 'reliefweb_rivers_river',
-        '#id' => 'river-list',
-        '#title' => $this->t('List'),
-        '#results' => $this->getRiverResults(count($reliefweb_topics)),
+        '#id' => 'reliefweb-topics',
+        '#title' => $this->t('ReliefWeb Topics'),
         '#entities' => $reliefweb_topics,
-        '#pager' => $this->getRiverPager(),
-        '#empty' => $this->t('No results found. Please modify your search or filter selection.'),
-      ],
-      'community_topics' => [
-        '#theme' => 'links',
-        '#attributes' => [
-          'class' => [
-            'links--community-topics',
+        '#cache' => [
+          'tags' => [
+            'node_list:topic',
           ],
         ],
-        '#heading' => [
-          'text' => $this->t('Community topics'),
+      ],
+      'community_topics' => [
+        '#theme' => 'reliefweb_rivers_river',
+        '#id' => 'community-topics',
+        '#title' => $this->t('Community Topics'),
+        '#entities' => $community_topics,
+        '#cache' => [
+          'tags' => [
+            'reliefweb_community_topics',
+          ],
         ],
-        '#links' => $community_topics,
       ],
     ];
   }

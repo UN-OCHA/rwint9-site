@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Template file for a report entity article in a river.
+ * Template file for a topic entity article in a river.
  *
  * Available variables;
  * - level: heading level (defaults to 3)
@@ -16,8 +16,6 @@
  *   - tags (optional): list of terms the entity is tagged with
  *   - various properties like posting date, status etc.
  * - meta_attributes: meta information attributes.
- *
- * @todo add back "image" for headlines.
  */
 
 #}
@@ -25,19 +23,24 @@
   .addClass([
     'rw-river-article',
     'rw-river-article--' ~ entity.bundle,
-    entity.image ? 'rw-river-article--with-image',
+    entity.icon ? 'rw-river-article--topic--with-icon',
     entity.summary ? 'rw-river-article--with-summary',
-    entity.preview ? 'rw-river-article--with-preview',
   ])
   .setAttribute('data-id', entity.id)
 }}>
-  {# Header with country slug and title. #}
+  {# Header with icon and title. #}
   <header class="rw-river-article__header">
-    {# Country slug. #}
-    {{ render_var({
-      '#theme': 'reliefweb_entities_entity_country_slug',
-      '#countries': entity.tags.country,
-    }) }}
+    {% if entity.icon is not empty %}
+      <div class="rw-article--topic__icon">
+        {{ render_var({
+          '#theme': 'image_style',
+          '#style_name': 'icon',
+          '#uri': entity.icon.uri,
+          '#width': entity.icon.width,
+          '#height': entity.icon.height
+        }) }}
+      </div>
+    {% endif %}
 
     {# Title. #}
     {{ render_var({
@@ -49,62 +52,10 @@
     }) }}
   </header>
 
-  {# Icon (ex: headline). #}
-  {% if entity.icon is not empty %}
-    {{ render_var({
-      '#theme': 'reliefweb_entities_entity_image',
-      '#style': 'medium',
-      '#image': entity.icon,
-      '#caption': false,
-    }) }}
-  {% endif %}
-
-  {# Article attachment preview and/or summary. #}
-  {% if entity.summary is not empty or entity.preview is not empty %}
+  {# Article summary. #}
+  {% if entity.summary is not empty %}
   <div class="rw-river-article__content" lang="{{ entity.langcode }}">
-    {% if entity.preview is not empty %}
-    <img src="{{ entity.preview.url }}" alt="{{ entity.preview.alt ?? '' }}">
-    {% endif %}
-    {% if entity.summary is not empty %}
     <p>{{ entity.summary }}</p>
-    {% endif %}
   </div>
   {% endif %}
-
-  {# Footer with meta information (sources, dates etc.). #}
-  <footer class="rw-river-article__footer">
-    {{ render_var({
-      '#theme': 'reliefweb_entities_entity_meta',
-      '#attributes': meta_attributes,
-      '#meta': {
-        'format': {
-          'type': 'simple',
-          'label': 'Format'|t,
-          'value': entity.format,
-          'label_attributes': create_attribute()
-            .addClass('visually-hidden'),
-          'value_attributes': create_attribute()
-            .addClass('rw-entity-meta__tag-value--format--' ~ entity.format|clean_class),
-        },
-        'source': {
-          'type': 'taglist',
-          'label': entity.tags.source|length > 1 ? 'Sources'|t : 'Source'|t,
-          'value': entity.tags.source,
-          'count': 3,
-          'sort': 'shortname',
-          'display': 'shortname',
-        },
-        'posted': {
-          'type': 'date',
-          'label': 'Posted'|t,
-          'value': entity.posted,
-        },
-        'published': {
-          'type': 'date',
-          'label': 'Originally published'|t,
-          'value': entity.published,
-        },
-      }
-    }) }}
-  </footer>
 </article>

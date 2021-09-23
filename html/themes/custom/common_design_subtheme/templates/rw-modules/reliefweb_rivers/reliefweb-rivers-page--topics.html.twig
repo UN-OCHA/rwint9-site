@@ -1,0 +1,51 @@
+{#
+
+/**
+ * @file
+ * Template for the river pages.
+ *
+ * Available variables:
+ * - river: the river name
+ * - view: the current river view
+ * - attributes: attributes for the river section
+ * - title: the river title
+ * - title_attributes: attributes for the river title
+ * - views: list of alternative views for the river
+ * - search: see reliefweb-rivers-search.html.twig
+ * - letter_navigation: see reliefweb-rivers-letter-navigation.html.twig
+ * - advanced_search: see reliefweb-rivers-advanced-search.html.twig
+ * - content: the content of the river
+ * - links: see reliefweb-rivers-links.html.twig
+ *
+ * @todo disable the cd-page-title block on river pages.
+ */
+
+#}
+<section{{ attributes
+  .addClass([
+    'rw-river-page',
+    'rw-river-page--' ~ river|clean_class,
+  ])
+}}>
+  <header class="rw-river-page__header visually-hidden">
+    <h1{{ title_attributes }}>{{ title }}</h1>
+  </header>
+
+  {{ content.reliefweb_topics['#entities'] is not empty ? content.reliefweb_topics|merge({
+    '#title_attributes': create_attribute().addClass('rw-page-title'),
+    '#results': {
+      '#prefix': '<p class="rw-river-page--topics__byline">',
+      '#suffix': '</p>',
+      '#markup': 'Curated pages dedicated to humanitarian themes and specific humanitarian crises.'|t,
+    },
+  }) }}
+
+  {{ content.community_topics['#entities'] is not empty ? content.community_topics|merge({
+    '#title_attributes': create_attribute().addClass('rw-page-title'),
+    '#results': {
+      '#prefix': '<p class="rw-river-page--topics__byline">',
+      '#suffix': '</p>',
+      '#markup': 'Links to pages provided by the humanitarian community.'|t,
+    },
+  }) }}
+</section>
