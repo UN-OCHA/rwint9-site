@@ -30,7 +30,8 @@ class ReliefWebSectionLinks extends WidgetBase {
    * {@inheritdoc}
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
-    return $this->formMultipleElements($items, $form, $form_state);
+    $element['#type'] = 'fieldset';
+    return $element + $this->formMultipleElements($items, $form, $form_state);
   }
 
   /**
@@ -93,34 +94,51 @@ class ReliefWebSectionLinks extends WidgetBase {
    *   Field state.
    */
   public static function getFieldState(array $parents, $field_name, FormStateInterface &$form_state, array $items = [], array $settings = []) {
-    $initialize = FALSE;
     $field_state = static::getWidgetState($parents, $field_name, $form_state);
 
     if (!isset($field_state['data'])) {
-      $use_override = !empty($settings['use_override']);
+      $field_state = static::setFieldState($parents, $field_name, $form_state, $items, $settings);
+    }
 
-      $links = [];
+    return $field_state;
+  }
 
-      if (!empty($items)) {
-        // We reverse the links as they are displayed by newer first in the
-        // form while they are stored by oldest first so that the deltas
-        // seldom changes for existing links.
-        foreach (array_reverse($items) as $link) {
-          $links[] = [
-            'url' => $link['url'] ?? '',
-            'title' => $link['title'] ?? '',
-            'override' => $use_override && !empty($link['override']) ? $link['override'] : '',
-          ];
-        }
+  /**
+   * Set the field state.
+   *
+   * @param array $parents
+   *   Form element parents.
+   * @param string $field_name
+   *   Field name.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   * @param array $items
+   *   Existing items to initialize the state with.
+   * @param array $settings
+   *   Field instance settings.
+   *
+   * @return array
+   *   Field state.
+   */
+  public static function setFieldState(array $parents, $field_name, FormStateInterface &$form_state, array $items = [], array $settings = []) {
+    $use_override = !empty($settings['use_override']);
+    $field_state = static::getWidgetState($parents, $field_name, $form_state);
+
+    // Generate the links of links and store the JSON serialized version which
+    // for use by the JS script.
+    $links = [];
+    if (!empty($items)) {
+      foreach ($items as $link) {
+        $links[] = [
+          'url' => $link['url'] ?? '',
+          'title' => $link['title'] ?? '',
+          'override' => $use_override && !empty($link['override']) ? $link['override'] : '',
+        ];
       }
-
-      $field_state['data'] = json_encode($links);
-      $initialize = TRUE;
     }
+    $field_state['data'] = json_encode($links);
 
-    if ($initialize) {
-      static::setWidgetState($parents, $field_name, $form_state, $field_state);
-    }
+    static::setWidgetState($parents, $field_name, $form_state, $field_state);
 
     return $field_state;
   }
@@ -129,8 +147,10 @@ class ReliefWebSectionLinks extends WidgetBase {
    * {@inheritdoc}
    */
   public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
+    $settings = $this->fieldDefinition->getSettings();
+    $parents = $form['#parents'];
     $field_name = $this->fieldDefinition->getName();
-    $field_path = array_merge($form['#parents'], [$field_name, 'data']);
+    $field_path = array_merge($parents, [$field_name, 'data']);
 
     // Get the raw JSON data from the widget.
     $data = NestedArray::getValue($form_state->getUserInput(), $field_path);
@@ -138,13 +158,28 @@ class ReliefWebSectionLinks extends WidgetBase {
     // Extract and combined the links.
     $links = !empty($data) ? json_decode($data, TRUE) : [];
 
-    // Reverse the links so that the most recent have a higher delta.
-    $links = array_reverse($links);
-
+    // Limit the number of links if the cardinality is not unlimited.
     $cardinality = $this->fieldDefinition->getFieldStorageDefinition()->getCardinality();
     if ($cardinality > 0) {
-      $links = array_chunk($links, $cardinality, TRUE);
+      $links = array_slice($links, 0, $cardinality);
     }
+
+    // Normalize the links.
+    foreach ($links as $delta => $link) {
+      if (empty($link['override'])) {
+        unset($link['override']);
+      }
+      if (empty($link['title'])) {
+        $link['title'] = "";
+      }
+      $links[$delta] = $link;
+    }
+
+    // Update the field state so that we modified values are the ones used when
+    // going back from the preview for example.
+    static::setFieldState($form['#parents'], $field_name, $form_state, $links, $settings);
+
+    return $links;
   }
 
   /**
@@ -166,7 +201,7 @@ class ReliefWebSectionLinks extends WidgetBase {
     // Limit to 10,000 bytes (should never be reached).
     $data = json_decode(file_get_contents('php://input', FALSE, NULL, 0, 10000), TRUE);
     if (empty($data['url'])) {
-      return ['error' => t('Invalid link data')];
+      return ['error' => t('Invalid link data: missing URL.')];
     }
 
     $settings = $instance->getSettings();
@@ -175,8 +210,11 @@ class ReliefWebSectionLinks extends WidgetBase {
     $link = [
       'url' => $data['url'],
       'title' => $data['title'] ?? '',
-      'override' => $use_override ? $data['override'] ?? 0 : 0,
     ];
+
+    if ($use_override && isset($data['override']) && $data['override'] !== '') {
+      $link['override'] = $data['override'];
+    }
 
     $invalid = static::parseLinkData($link, $settings);
     if (empty($invalid)) {
@@ -230,9 +268,9 @@ class ReliefWebSectionLinks extends WidgetBase {
     }
 
     // Check that the override if defined, corresponds to a published entity
-    // of the same type of the river entities.
-    if (!empty($item['override'])) {
-      if (!is_numeric($item['override'])) {
+    // of the same type as the river entities.
+    if (isset($item['override'])) {
+      if (!is_numeric($item['override']) || (int) $item['override'] < 1) {
         return t('The override must be a valid entity ID.');
       }
 
@@ -255,17 +293,17 @@ class ReliefWebSectionLinks extends WidgetBase {
 
       // Check that the document exists and is published.
       if (empty($result)) {
-        return t('Invalid internal URL: the document was not found.');
+        return t('Invalid override: the document was not found.');
       }
       // Check that the document's type matches the river bundle.
       elseif ($result->{$bundle_key} !== $info['bundle']) {
-        return t('Invalid internal URL: the document is not a @bundle.', [
+        return t('Invalid override: the document is not a @bundle.', [
           '@bundle' => $info['bundle'],
         ]);
       }
       // Only published documents are valid.
       elseif (empty($result->{$published_key})) {
-        return t('Invalid internal URL: the document is not published.');
+        return t('Invalid override: the document is not published.');
       }
     }
 

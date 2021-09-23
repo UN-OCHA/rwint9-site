@@ -28,10 +28,10 @@
     /**
      * Placeholders for the input fields.
      */
-     placeholders: {
-      url: t('River URL (mandatory)'),
-      title: t('Link title (mandatory)'),
-      override: t('Entity Id to promote to beginning of list')
+    placeholders: {
+      url: t('River URL'),
+      title: t('Link title'),
+      override: t('Entity Id to promote to beginning of list (optional)')
     },
 
     /**
@@ -81,11 +81,8 @@
       }
 
       if (settings.useOverride) {
-        if (link.override && link.override != '0') {
-          title.appendChild(document.createTextNode(' [' + link.override + ']'));
-        }
-        else {
-          title.appendChild(document.createTextNode(' [' + t('No override set') + ']'));
+        if (link.override && parseInt(link.override, 10)) {
+          title.appendChild(document.createTextNode(' [override: ' + link.override + ']'));
         }
       }
 
@@ -158,7 +155,9 @@
     createList: function (links, settings) {
       var container = document.createElement('table');
       container.setAttribute('data-list-active', '');
+      container.setAttribute('data-link-count', links.length);
 
+      // @todo add visually hidden table header and caption for accessibility.
       var body = document.createElement('tbody');
       for (var i = 0, l = links.length; i < l; i++) {
         body.appendChild(this.createLink(links[i], settings, true));
@@ -229,30 +228,24 @@
       var links = this.getFieldData();
       var settings = this.getFieldSettings();
 
-      var container = document.createElement('fieldset');
-      container.setAttribute('data-internal', settings.internal);
+      var container = document.createElement('div');
+      container.className = 'rw-section-links';
 
-      var legend = document.createElement('legend');
-      legend.appendChild(document.createTextNode(settings.label));
+      // Create the form to add new links.
+      this.newLinkForm = this.createNewLinkForm(settings);
+      container.appendChild(this.newLinkForm);
 
-      container.appendChild(legend);
-
-      if (settings.cardinality > 0) {
-        if (settings.cardinality > links.length) {
-          container.appendChild(this.createNewLinkForm(settings));
-        }
-      }
-      else {
-        container.appendChild(this.createNewLinkForm(settings));
-      }
-
+      // Create the list of already added links.
       container.appendChild(this.createList(links, settings));
 
+      // Hide the create new link form if necessary based on the cardinality.
+      this.hideNewLinkForm(links.length);
+
       // Add the form to the field.
-      this.field.appendChild(container);
+      this.data.parentNode.insertBefore(container, this.data.nextElementSibling);
 
       // Handle click events on the different buttons in the form.
-      this.field.addEventListener('click', this.handleEvents.bind(this));
+      container.addEventListener('click', this.handleEvents.bind(this));
 
       return container;
     },
@@ -332,15 +325,16 @@
     /**
      * Remove error messages for the given field.
      */
-    resetError: function (field) {
+    resetError: function () {
       // Remove existing error messages in this container.
-      var messages = field.querySelectorAll('[data-error-message]');
+      var messages = this.form.querySelectorAll('[data-error-message]');
       for (var i = 0, l = messages.length; i < l; i++) {
-        field.removeChild(messages[i]);
+        var message = messages[i];
+        message.parentNode.removeChild(message);
       }
 
       // Remove existing highligted errors.
-      var elements = field.querySelectorAll('[data-error]');
+      var elements = this.form.querySelectorAll('[data-error]');
       for (var i = 0, l = elements.length; i < l; i++) {
         elements[i].removeAttribute('data-error');
       }
@@ -349,9 +343,9 @@
     /**
      * Display an error message at the top of a field fieldset.
      */
-    displayError: function (field, element, error) {
+    displayError: function (element, error) {
       // Remove existing error messages in this container.
-      this.resetError(field);
+      this.resetError();
 
       // Display the error message and highlight the faulty element.
       if (typeof error === 'string' && error !== '') {
@@ -361,8 +355,8 @@
         message.appendChild(document.createTextNode(error));
 
         // Add the message at the top of the fieldset.
-        var sibling = field.querySelector('div[data-link-form]');
-        field.insertBefore(message, sibling);
+        var sibling = this.form.querySelector('div[data-link-form]');
+        this.form.insertBefore(message, sibling);
 
         // Mark the element as erroneous.
         element.setAttribute('data-error', '');
@@ -386,8 +380,8 @@
     /**
      * Check the given field already contains a link with the same url.
      */
-    checkDuplicate: function (field, element, url) {
-      var links = field.querySelectorAll('table[data-list-active] tr[data-id]');
+    checkDuplicate: function (element, url) {
+      var links = this.form.querySelectorAll('table[data-list-active] tr[data-id]');
       for (var j = 0, m = links.length; j < m; j++) {
         var link = links[j];
         if (link !== element && this.getLinkData(link).url === url) {
@@ -401,7 +395,7 @@
     /**
      * Validate a link, calling a validation endpoint for the field.
      */
-    validateLink: function (data, field, element, callback) {
+    validateLink: function (data, element, callback) {
       var self = this;
       var settings = this.getFieldSettings();
       // Disable the form while validating the link data.
@@ -415,18 +409,18 @@
         try {
           data = JSON.parse(xhr.responseText);
           // Error message from the validation endpoint or from duplication.
-          error = data.error || self.checkDuplicate(field, element, data.url);
+          error = data.error || self.checkDuplicate(element, data.url);
         }
         catch (exception) {
           error = t('Unable to parse response.');
         }
-        self.displayError(field, element, error);
+        self.displayError(element, error);
         callback.call(self, error === '' ? data : null);
         self.disableForm(false);
       });
       // Display error message in case of failure.
       xhr.addEventListener('error', function () {
-        self.displayError(field, element, t('Request failed.'));
+        self.displayError(element, t('Request failed.'));
         callback.call(self, null);
         self.disableForm(false);
       });
@@ -468,6 +462,10 @@
       var data = this.parseLinks(urls, 'active');
       // Update the data.
       this.setFieldData(data);
+      // Hide the new link form if necessary.
+      this.hideNewLinkForm(data.length);
+      // Update the list count.
+      this.form.querySelector('table[data-list-active]').setAttribute('data-link-count', data.length);
       // Restore use of the form.
       this.disableForm(false);
     },
@@ -492,17 +490,14 @@
     /**
      * Hide new link form if needed.
      */
-    hideNewLinkForm: function (element) {
-      if (this.settings.cardinality > 0) {
-        if (this.settings.cardinality <= this.links.length) {
-          element.style.display = 'none';
-        }
-        else {
-          element.style.display = '';
-        }
+    hideNewLinkForm: function (linkCount) {
+      var settings = this.getFieldSettings();
+      // Hide the new link form if we already have the maximum number of links.
+      if (settings.cardinality > 0 && settings.cardinality <= linkCount) {
+        this.newLinkForm.style.display = 'none';
       }
       else {
-        element.style.display = '';
+        this.newLinkForm.style.display = '';
       }
     },
 
@@ -532,7 +527,7 @@
         return {
           url: element.querySelector('input[data-name="url"]').value,
           title: element.querySelector('input[data-name="title"]') ? element.querySelector('input[data-name="title"]').value : '',
-          override: element.querySelector('input[data-name="override"]') ? element.querySelector('input[data-name="override"]').value : 0
+          override: element.querySelector('input[data-name="override"]') ? element.querySelector('input[data-name="override"]').value : ''
         };
       }
       else {
@@ -543,7 +538,7 @@
     /**
      * Retrieve a field's settings.
      */
-    getFieldSettings: function (field) {
+    getFieldSettings: function () {
       if (!this.settings) {
         this.settings = {
           field: this.data.getAttribute('data-settings-field'),
@@ -581,24 +576,16 @@
           // Create a new link.
           case 'add':
             var element = this.getParentElement(target, 'DIV');
-            var field = this.getParentElement(element, 'FIELDSET');
             // Validate the link data.
-            this.validateLink(this.getLinkData(element, true), field, element, function (data) {
+            this.validateLink(this.getLinkData(element, true), element, function (data) {
               // If valid, add new row at the top of the active list.
               if (data !== null) {
                 var link = this.createLink(data, this.getFieldSettings(), true);
-                var container = field.querySelector('table[data-list-active] tbody');
-                if (container.firstElementChild) {
-                  container.insertBefore(link, container.firstElementChild);
-                }
-                else {
-                  container.appendChild(link);
-                }
-
+                var container = this.form.querySelector('table[data-list-active] tbody');
+                container.insertBefore(link, container.firstElementChild);
                 // Empty the new link inputs.
                 this.emptyNewLinkForm(element);
                 this.updateData();
-                this.hideNewLinkForm(element);
               }
             });
             break;
@@ -612,9 +599,8 @@
           // Update an active link.
           case 'update':
             var row = this.getParentElement(target, 'TR');
-            var field = this.getParentElement(row, 'FIELDSET');
             // Validate the link data.
-            this.validateLink(this.getLinkData(row, true), field, row, function (data) {
+            this.validateLink(this.getLinkData(row, true), row, function (data) {
               // Replace the link with the validated data.
               if (data !== null) {
                 var link = this.createLink(data, this.getFieldSettings(), true);
@@ -630,7 +616,6 @@
             var row = this.getParentElement(target, 'TR');
             row.parentNode.removeChild(row);
             this.updateData();
-            this.hideNewLinkForm(element.querySelector('[data-link-form]'));
             break;
 
           // Toggle the display of the other actions in an active link form.
@@ -671,7 +656,7 @@
      * Get the field's data.
      */
     getFieldData: function () {
-      return this.data ? JSON.parse(this.data.value) : [];
+      return this.data.value ? JSON.parse(this.data.value) : [];
     },
 
     /**
@@ -679,7 +664,6 @@
      */
     setFieldData: function (data) {
       this.data.value = data ? JSON.stringify(data) : '';
-      this.links = data;
     },
 
     /**
