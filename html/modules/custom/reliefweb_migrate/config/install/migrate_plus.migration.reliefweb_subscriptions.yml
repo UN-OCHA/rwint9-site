@@ -1,6 +1,6 @@
 id: reliefweb_subscriptions
 label: Migrate ReliefWeb Subscriptions.
-migration_group: reliefweb_base
+migration_group: reliefweb_extra
 source:
   plugin: table
   table_name: reliefweb_subscriptions_subscriptions
