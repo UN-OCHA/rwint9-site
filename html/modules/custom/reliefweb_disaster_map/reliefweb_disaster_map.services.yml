@@ -1,4 +1,4 @@
 services:
   reliefweb_disaster_map.service:
     class: Drupal\reliefweb_disaster_map\DisasterMapService
-    arguments: ['@reliefweb_api.client']
+    arguments: ['@reliefweb_api.client', '@renderer']
