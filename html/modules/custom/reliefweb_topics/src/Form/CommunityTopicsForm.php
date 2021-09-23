@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_topics\Form;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\State\State;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Form\FormBase;
@@ -128,7 +129,8 @@ class CommunityTopicsForm extends FormBase {
    * Set all community topics.
    */
   protected function setCommunityTopics($topics) {
-    return $this->state->set('reliefweb_topics_community_topics', $topics);
+    $this->state->set('reliefweb_topics_community_topics', $topics);
+    Cache::invalidateTags(['reliefweb_community_topics']);
   }
 
 }
