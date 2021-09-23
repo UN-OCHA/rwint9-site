@@ -56,7 +56,7 @@ process:
   field_resources/value:
     plugin: skip_on_empty
     method: process
-    source: field_resources/0/value
+    source: field_topics_sidebar/0/value
   field_resources/format:
     plugin: default_value
     default_value: token_markdown
@@ -70,10 +70,6 @@ process:
         plugin: default_value
         default_value: ''
 
-#  field_disasters_search/override:
-#    plugin: skip_on_empty
-#    method: process
-#    source: field_topics_disasters_search/0/alt
   field_jobs_search:
     plugin: sub_process
     source: field_topics_jobs_search

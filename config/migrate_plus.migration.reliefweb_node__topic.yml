@@ -1,9 +1,9 @@
-uuid: 06cf13b9-5664-4531-a695-14e44010bc5e
+uuid: 8b344316-47b4-4bac-a6a3-f2d29f64cb45
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: OX7xOlnQWYl1PQouUyD4ccknSO9zWKNyvTo5Ivgh9QM
+  default_config_hash: 0HLTqLwZpBT9mmGmCIJAprMq39qzYSfLGLlWnAXzP94
 id: reliefweb_node__topic
 class: null
 field_plugin_method: null
@@ -60,7 +60,7 @@ process:
   field_resources/value:
     plugin: skip_on_empty
     method: process
-    source: field_resources/0/value
+    source: field_topics_sidebar/0/value
   field_resources/format:
     plugin: default_value
     default_value: token_markdown
