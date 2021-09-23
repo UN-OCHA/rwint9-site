@@ -26,6 +26,13 @@ reliefweb_rivers.job.river:
     _controller: 'reliefweb_rivers.job.river:getPageContent'
   requirements:
     _permission: 'access content'
+reliefweb_rivers.topic.river:
+  path: '/topics'
+  defaults:
+    _title: 'Topics'
+    _controller: 'reliefweb_rivers.topic.river:getPageContent'
+  requirements:
+    _permission: 'access content'
 reliefweb_rivers.report.river:
   path: '/updates'
   defaults:

@@ -4,7 +4,6 @@ namespace Drupal\reliefweb_entities;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\reliefweb_rivers\RiverServiceBase;
-use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
 
 /**
  * Trait implementing most methods of the SectionedContentInterface.
@@ -44,6 +43,7 @@ trait SectionedContentTrait {
           '#resource' => $query['resource'],
           '#entities' => $entities,
           '#more' => $query['more'] ?? NULL,
+          '#title' => $query['title'] ?? NULL,
         ];
       }
     }
@@ -55,7 +55,7 @@ trait SectionedContentTrait {
    *
    * @see \Drupal\reliefweb_entities\SectionedContentInterfaceconsolidateSections()
    */
-  public function consolidateSections(array $contents, array $sections, array $labels) {
+  public function consolidateSections(array $contents, array $sections, array $labels = []) {
     $consolidated = [];
 
     // Parse the table of content, remove empty sections and update the title
@@ -106,23 +106,45 @@ trait SectionedContentTrait {
   /**
    * Get the entity description (for countries, disasters, sources).
    *
+   * @param string $id
+   *   Section id.
+   *
    * @return array
    *   Render array with the description.
    */
-  public function getEntityDescription() {
-    if (!empty($this->description->value)) {
-      // @todo review handling of markdown when there is a proper release of
-      // https://www.drupal.org/project/markdown for Drupal 9.
-      if ($this->description->format === 'markdown') {
-        $description = HtmlSanitizer::sanitizeFromMarkdown($this->description->value);
-      }
-      else {
-        $description = HtmlSanitizer::sanitize(check_markup($this->description->value));
-      }
+  public function getEntityDescription($id) {
+    return $this->getEntityTextField('description', $id, $this->t('Description'), FALSE);
+  }
 
+  /**
+   * Get the content of a text field.
+   *
+   * @param string $field_name
+   *   Text field name.
+   * @param string $id
+   *   Section id.
+   * @param string $title
+   *   Section title.
+   * @param bool $iframe
+   *   Flag indicating whether iframes are allowed in the rendred HTML or not.
+   * @param array $allowed_attributes
+   *   Extra attributes allowed in the rendered HtmL.
+   *
+   * @return array
+   *   Render array with the text content.
+   */
+  public function getEntityTextField($field_name, $id, $title, $iframe = TRUE, array $allowed_attributes = []) {
+    if (!$this->{$field_name}->isEmpty()) {
       return [
-        '#theme' => 'reliefweb_entities_entity_description',
-        '#description' => $description,
+        '#theme' => [
+          'reliefweb_entities_entity_text__' . $this->bundle() . '__' . $id,
+          'reliefweb_entities_entity_text__' . $id,
+          'reliefweb_entities_entity_text',
+        ],
+        '#id' => $id,
+        '#content' => $this->{$field_name}->first()->view(),
+        '#iframe' => $iframe,
+        '#allowed_attributes' => $allowed_attributes,
       ];
     }
     return [];
@@ -460,7 +482,8 @@ trait SectionedContentTrait {
         ],
         [
           'field' => 'status',
-          'value' => ['alert', 'current'],
+          // Current is the legacy equivalent of ongoing.
+          'value' => ['alert', 'current', 'ongoing'],
         ],
       ],
       'operator' => 'AND',

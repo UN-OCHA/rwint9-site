@@ -13,4 +13,5 @@ permissions:
   - 'bookmark content'
   - 'manage own subscriptions'
   - 'use text format markdown'
+  - 'use text format token_markdown'
   - 'view media'

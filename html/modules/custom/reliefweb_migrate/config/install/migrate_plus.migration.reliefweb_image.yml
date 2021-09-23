@@ -15,7 +15,7 @@ process:
   fid: fid
   uid:
     plugin: static_map
-    default_value: 2
+    bypass: true
     source: uid
     # Map the anonymous and super users to the System user.
     map:

@@ -47,7 +47,7 @@ class Source extends Term implements BundleEntityInterface, EntityModeratedInter
    */
   public function getPageSections() {
     $sections = [];
-    $sections['overview'] = $this->getEntityDescription();
+    $sections['description'] = $this->getEntityDescription('description');
     $sections['organization-details'] = $this->getOrganizationDetails();
     $sections['social-media-links'] = $this->getOrganizationSocialMediaLinks();
 
@@ -72,7 +72,7 @@ class Source extends Term implements BundleEntityInterface, EntityModeratedInter
       'information' => [
         'title' => $this->t('Information'),
         'sections' => [
-          'overview' => $this->t('Description'),
+          'description' => $this->t('Description'),
           'organization-details' => $this->t('Details'),
           'social-media-links' => $this->t('Social Media'),
         ],

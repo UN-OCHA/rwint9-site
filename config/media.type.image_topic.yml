@@ -1,0 +1,13 @@
+uuid: 37842627-fc65-45af-9b16-963e38f7ae17
+langcode: en
+status: true
+dependencies: {  }
+id: image_topic
+label: 'Image - Topics'
+description: 'Icon images for topics.'
+source: image
+queue_thumbnail_downloads: false
+new_revision: true
+source_configuration:
+  source_field: field_media_image
+field_map: {  }

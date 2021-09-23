@@ -1,0 +1,70 @@
+.rw-entity-text {
+  display: flex;
+  flex-direction: column;
+}
+.rw-entity-text .rw-entity-text__content {
+  padding-top: 0;
+}
+.rw-entity-text .rw-entity-text__content p:first-child {
+  margin-top: 0;
+}
+.rw-entity-text ul {
+  margin: 0;
+  padding: 0 0 0 32px;
+  list-style-position: outside;
+}
+.rw-entity-text li {
+  margin: 8px 0 0 0;
+  padding: 0;
+}
+.rw-entity-text li:first-child {
+  margin: 0;
+}
+
+/* Javascript enabled */
+.js .rw-entity-text--collapsible button {
+  display: block;
+  order: 3;
+  margin: 24px auto 0 auto;
+  padding: 8px 12px;
+  color: #055372;
+  border: 1px solid #055372;
+  background: white;
+  font-size: 16px;
+  fill: #055372;
+}
+.js .rw-entity-text--collapsible button svg {
+  fill: currentColor;
+}
+.js .rw-entity-text--collapsible button:hover,
+.js .rw-entity-text--collapsible button:active,
+.js .rw-entity-text--collapsible button:focus {
+  color: white;
+  background: #055372;
+}
+/* Overrides the default behavior when data-cd-hidden is set as the description
+ * is always displayed, only the number of paragraphs changes. */
+.js .rw-entity-text--collapsible .rw-entity-text__content[data-cd-hidden] {
+  display: block;
+}
+.js .rw-entity-text--collapsible .rw-entity-text__content > * {
+  display: none;
+}
+/* Display only the 3 last paragraphs. */
+.js .rw-entity-text--collapsible--last .rw-entity-text__content > *:nth-last-child(-n+3) {
+  display: block;
+}
+.js .rw-entity-text--collapsible--last .rw-entity-text__content > *:nth-last-child(3) {
+  margin-top: 0;
+}
+/* Display only the first 3 paragraphs. */
+.js .rw-entity-text--collapsible--first .rw-entity-text__content > * {
+  display: none;
+}
+.js .rw-entity-text--collapsible--first .rw-entity-text__content > *:nth-child(-n+3) {
+  display: block;
+}
+/* Show all the paragraphs when toggled. */
+.js .rw-entity-text--collapsible .rw-entity-text__content[data-cd-hidden="false"] > * {
+  display: block;
+}

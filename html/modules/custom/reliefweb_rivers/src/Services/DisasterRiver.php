@@ -27,7 +27,7 @@ class DisasterRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
-  protected $entityType = 'taxomomy_term';
+  protected $entityTypeId = 'taxomomy_term';
 
   /**
    * {@inheritdoc}

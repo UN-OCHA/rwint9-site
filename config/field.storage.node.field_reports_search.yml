@@ -1,0 +1,19 @@
+uuid: 11af7bcf-0baf-458f-bc88-fb1cf45c3d76
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - reliefweb_fields
+id: node.field_reports_search
+field_name: field_reports_search
+entity_type: node
+type: reliefweb_section_links
+settings: {  }
+module: reliefweb_fields
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

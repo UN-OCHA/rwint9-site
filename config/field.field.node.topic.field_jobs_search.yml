@@ -1,0 +1,28 @@
+uuid: ba14eda2-7e36-46d3-8cd4-9b4b71a97a19
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_jobs_search
+    - node.type.topic
+  module:
+    - reliefweb_fields
+id: node.topic.field_jobs_search
+field_name: field_jobs_search
+entity_type: node
+bundle: topic
+label: 'Jobs search'
+description: 'Display a list of the latest related Jobs. Use a search query from the <a href="/jobs">Jobs</a> river.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  use_override: 0
+  use_title: 0
+  rivers:
+    job: job
+    disaster: 0
+    report: 0
+    training: 0
+field_type: reliefweb_section_links

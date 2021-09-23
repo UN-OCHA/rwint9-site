@@ -1,0 +1,29 @@
+uuid: e63ff5ca-30d5-4f13-bd66-6f0fc3815472
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_icon
+    - media.type.image_topic
+    - node.type.topic
+id: node.topic.field_icon
+field_name: field_icon
+entity_type: node
+bundle: topic
+label: Icon
+description: 'Use relevant icons from <a href="/report/world/humanitarian-and-country-icons-2018">OCHA''s Humanitarian and Country Icons 2018</a> with modifications in size (600x600) and color (ReliefWeb blue: #0988bb).'
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:media'
+  handler_settings:
+    target_bundles:
+      image_topic: image_topic
+    sort:
+      field: mid
+      direction: DESC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference
