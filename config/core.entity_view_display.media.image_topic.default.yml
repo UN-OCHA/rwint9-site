@@ -1,0 +1,34 @@
+uuid: 1ca305bf-1510-4e73-8c8a-00f7f48d00d7
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.media.image_topic.field_media_image
+    - image.style.icon
+    - media.type.image_topic
+  module:
+    - svg_image
+id: media.image_topic.default
+targetEntityType: media
+bundle: image_topic
+mode: default
+content:
+  field_media_image:
+    label: hidden
+    weight: 0
+    settings:
+      image_style: icon
+      image_link: ''
+      svg_render_as_image: true
+      svg_attributes:
+        width: 64
+        height: 64
+    third_party_settings: {  }
+    type: image
+    region: content
+hidden:
+  created: true
+  langcode: true
+  name: true
+  thumbnail: true
+  uid: true

@@ -50,7 +50,7 @@ filters:
       replace_empty: '0'
   filter_iframe:
     id: filter_iframe
-    provider: reliefweb_topics
+    provider: reliefweb_utility
     status: true
     weight: -49
     settings: {  }

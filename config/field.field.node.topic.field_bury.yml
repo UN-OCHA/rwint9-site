@@ -10,7 +10,7 @@ field_name: field_bury
 entity_type: node
 bundle: topic
 label: Bury
-description: ''
+description: 'The page will continue to be published, but will not show up on the landing page. Use for topic pages in progress.'
 required: false
 translatable: true
 default_value:

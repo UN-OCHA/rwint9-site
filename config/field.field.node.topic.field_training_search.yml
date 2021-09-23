@@ -12,7 +12,7 @@ field_name: field_training_search
 entity_type: node
 bundle: topic
 label: 'Training search'
-description: ''
+description: 'Display a list of the latest related Training. Use a search query from the <a href="/training">Training</a> river.'
 required: false
 translatable: false
 default_value: {  }
@@ -20,4 +20,9 @@ default_value_callback: ''
 settings:
   use_override: 0
   use_title: 0
+  rivers:
+    training: training
+    disaster: 0
+    job: 0
+    report: 0
 field_type: reliefweb_section_links
