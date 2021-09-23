@@ -93,19 +93,14 @@ shared_configuration:
       method: process
       source: body/0/value
     body/format:
-      -
-        plugin: skip_on_empty
-        method: process
-        source: body/0/format
-      -
-        plugin: static_map
-        default_value: markdown
-        map:
-          full_html: html
-          legacy: markdown
-          markdown: markdown
-          plain_text: markdown
-          token_markdown: token_markdown
+      plugin: static_map
+      default_value: markdown
+      map:
+        full_html: html
+        legacy: markdown
+        markdown: markdown
+        plain_text: markdown
+        token_markdown: token_markdown
   migration_dependencies:
     required:
       - reliefweb_user

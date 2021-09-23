@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_topics\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\reliefweb_utility\Helpers\UrlHelper;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
@@ -28,9 +29,9 @@ class CommunityTopicsController extends ControllerBase {
     elseif (empty($data['title'])) {
       $invalid = $this->t('The link title is mandatory.');
     }
-    // Path has to link to updates.
-    elseif (filter_var($data['url'], FILTER_VALIDATE_URL) === FALSE) {
-      $invalid = $this->t('Invalid URL.');
+    // Ensure the URL is a valid aboslute URL.
+    elseif (!UrlHelper::isValid($data['url'], TRUE)) {
+      $invalid = $this->t("Invalid URL. It must a full URL starting with https or http.");
     }
 
     if (empty($invalid)) {

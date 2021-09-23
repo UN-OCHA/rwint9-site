@@ -3,8 +3,6 @@
  * @file
  * Theme override for a node edit form.
  *
- * Two column template for the node add/edit form.
- *
  * This template will be used when a node edit form specifies 'node_edit_form'
  * as its #theme callback.  Otherwise, by default, node add/edit forms will be
  * themed by form.html.twig.
@@ -13,56 +11,42 @@
  * - form: The node add/edit form.
  *
  * @see seven_form_node_form_alter()
+ *
+ * @todo review revision section.
  */
 #}
-{% set attributes = attributes
-  .setAttribute('data-cd-toggable', 'Jump to content'|t)
-  .setAttribute('data-cd-icon', 'arrow-down')
-  .setAttribute('data-cd-component', 'rw-toc')
-%}
-
-{% set title_attributes = title_attributes.addClass('visually-hidden') %}
-
 {{ attach_library('common_design_subtheme/rw-form') }}
-{{ attach_library('common_design_subtheme/rw-toc') }}
 
-<nav{{ attributes
-  .setAttribute('id', 'table-of-contents')
-  .addClass([
-    'rw-toc',
-  ])
-}} >
-  <h2{{ level }}{{ title_attributes
-    .addClass([
-      'rw-toc__title'
-    ])
-  }}>{% trans %}Table of Contents{% endtrans %}</h2>
-  <ul>
-    <li class="rw-toc__section">
-      <h3 class="rw-toc__section__title">{% trans %}Fields{% endtrans %}</h3>
-      <ul>
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#content">{% trans %}Content{% endtrans %}</a></li>
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#files">{% trans %}Files{% endtrans %}</a></li>
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#dates">{% trans %}Dates{% endtrans %}</a></li>
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#source">{% trans %}Source{% endtrans %}</a></li>
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#countries-disasters">{% trans %}Countries & disasters{% endtrans %}</a></li>
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#details">{% trans %}Details{% endtrans %}</a></li>
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#headline">{% trans %}Headline{% endtrans %}</a></li>
-      </ul>
-    </li>
-    <li class="rw-toc__section">
-      <h3 class="rw-toc__section__title">{% trans %}Submission{% endtrans %}</h3>
-      <ul>
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#editorial-flags">{% trans %}Editorial flags{% endtrans %}</a></li>
-        <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#actions">{% trans %}Save{% endtrans %}</a></li>
-        {% if form.revision_information %}
-          <li class="rw-toc__sub_section"><a class="rw-toc__sub_section__link" href="#edit-revision-information">{% trans %}Revisions{% endtrans %}</a></li>
-        {% endif %}
-      </ul>
-    </li>
-  </ul>
-</nav>
+{# Table of contents. #}
+{{
+  render_var({
+    '#theme': 'reliefweb_entities_table_of_contents',
+    '#sections': {
+      'fields': {
+        'title': 'Fields'|t,
+        'sections': {
+          'content': 'Content'|t,
+          'files': 'Files'|t,
+          'dates': 'Dates'|t,
+          'source': 'Source'|t,
+          'countries-disasters': 'Countries & Disasters'|t,
+          'details': 'Details'|t,
+          'headline': 'Headline'|t,
+        },
+      },
+      'submission': {
+        'title': 'Submission'|t,
+        'sections': {
+          'editorial-flags': 'Editorial flags'|t,
+          'actions': 'Save'|t,
+          'edit-revision-information': 'Revisions'|t,
+        },
+      },
+    },
+  })
+}}
 
+{# Form content. #}
 <fieldset id="content">
   <legend>{% trans %}Content{% endtrans %}</legend>
   {{ form.field_language }}
@@ -124,9 +108,7 @@
   {{ form.actions }}
 </fieldset>
 
-{% if form.revision_information %}
-  {{ form.revision_information }}
-{% endif %}
+{{ form.revision_information }}
 
 {{
   form|without([

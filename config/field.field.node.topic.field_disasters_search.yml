@@ -12,7 +12,7 @@ field_name: field_disasters_search
 entity_type: node
 bundle: topic
 label: 'Disasters search'
-description: ''
+description: 'Display a list of related Disasters. Use a search query from the <a href="/disasters">Disasters</a> river'
 required: false
 translatable: false
 default_value: {  }
@@ -20,4 +20,9 @@ default_value_callback: ''
 settings:
   use_override: 0
   use_title: 0
+  rivers:
+    disaster: disaster
+    job: 0
+    report: 0
+    training: 0
 field_type: reliefweb_section_links

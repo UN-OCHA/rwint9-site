@@ -17,7 +17,6 @@ dependencies:
     - node.type.topic
   module:
     - reliefweb_fields
-    - svg_image
     - text
     - user
 id: node.topic.default
@@ -26,19 +25,14 @@ bundle: topic
 mode: default
 content:
   body:
-    weight: 102
+    weight: 1
     label: above
     settings: {  }
     third_party_settings: {  }
     type: text_default
     region: content
-  content_moderation_control:
-    weight: -20
-    settings: {  }
-    third_party_settings: {  }
-    region: content
   field_bury:
-    weight: 111
+    weight: 10
     label: above
     settings:
       format: default
@@ -48,14 +42,14 @@ content:
     type: boolean
     region: content
   field_disasters_search:
-    weight: 108
+    weight: 8
     label: above
     settings: {  }
     third_party_settings: {  }
     type: reliefweb_section_links
     region: content
   field_featured:
-    weight: 109
+    weight: 9
     label: above
     settings:
       format: default
@@ -65,60 +59,57 @@ content:
     type: boolean
     region: content
   field_icon:
-    weight: 110
-    label: above
+    type: entity_reference_entity_view
+    weight: 0
+    label: hidden
     settings:
-      image_style: ''
-      image_link: ''
+      view_mode: default
+      link: false
     third_party_settings: {  }
-    type: image
     region: content
   field_jobs_search:
-    weight: 106
+    weight: 6
     label: above
     settings: {  }
     third_party_settings: {  }
     type: reliefweb_section_links
     region: content
   field_overview:
-    weight: 103
+    weight: 2
     label: above
     settings: {  }
     third_party_settings: {  }
     type: text_default
     region: content
   field_reports_search:
-    weight: 105
+    weight: 4
     label: above
     settings: {  }
     third_party_settings: {  }
     type: reliefweb_section_links
     region: content
   field_resources:
-    weight: 104
+    weight: 5
     label: above
     settings: {  }
     third_party_settings: {  }
     type: text_default
     region: content
   field_sections:
-    weight: 101
+    weight: 3
     label: above
     settings: {  }
     third_party_settings: {  }
     type: reliefweb_section_links
     region: content
   field_training_search:
-    weight: 107
+    weight: 7
     label: above
     settings: {  }
     third_party_settings: {  }
     type: reliefweb_section_links
     region: content
-  links:
-    weight: 100
-    settings: {  }
-    third_party_settings: {  }
-    region: content
 hidden:
+  content_moderation_control: true
   langcode: true
+  links: true

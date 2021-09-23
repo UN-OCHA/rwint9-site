@@ -12,7 +12,7 @@ field_name: field_sections
 entity_type: node
 bundle: topic
 label: Sections
-description: ''
+description: 'Sections of documents like Maps and Infographics or Response Plans. Use a search query from the <a href="/updates">Updates</a> river. Avoid full capitalized titles.'
 required: false
 translatable: false
 default_value: {  }
@@ -20,4 +20,9 @@ default_value_callback: ''
 settings:
   use_override: 1
   use_title: 1
+  rivers:
+    report: report
+    disaster: 0
+    job: 0
+    training: 0
 field_type: reliefweb_section_links

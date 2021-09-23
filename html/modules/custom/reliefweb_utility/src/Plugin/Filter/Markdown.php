@@ -34,7 +34,6 @@ class Markdown extends FilterBase {
     $environment = Environment::createCommonMarkEnvironment();
 
     // Add the extension to convert ID attributes.
-    // @todo review if there is a way to
     $environment->addExtension(new AttributesExtension());
 
     // Create the converter with the extension(s).

@@ -45,3 +45,23 @@
     @include visually-hidden;
   }
 }
+
+.admin-menu__btn {
+  svg + span {
+    [dir="ltr"] & {
+      margin-left: 10px;
+    }
+
+    [dir="rtl"] & {
+      margin-right: 10px;
+    }
+  }
+  
+  .cd-icon:not(.cd-icon--arrow-down) {
+    width: 14px;
+    height: 14px;
+    fill: $cd-white;
+    display: inline-block;
+    vertical-align: middle;
+  }
+}

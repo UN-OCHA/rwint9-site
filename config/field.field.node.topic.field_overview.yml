@@ -10,7 +10,8 @@ dependencies:
     - text
 third_party_settings:
   allowed_formats:
-    markdown: markdown
+    token_markdown: token_markdown
+    markdown: '0'
     plain_text: '0'
     html: '0'
 id: node.topic.field_overview
@@ -18,7 +19,7 @@ field_name: field_overview
 entity_type: node
 bundle: topic
 label: Overview
-description: ''
+description: 'Text content about the topic in markdown format. Can contain images using the <code>![alt](link-to-image)</code> format, embedded content via the special <code>[iframe&#58;widthxheight "title"](link-to-content)</code> format or disaster maps using the disaster map tokens.'
 required: false
 translatable: false
 default_value: {  }

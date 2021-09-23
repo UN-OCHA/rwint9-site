@@ -9,15 +9,15 @@ form .file-widget .fieldset-wrapper {
   /* Necessary to ensure the progress overlay stays within the limits of the
    * file element. */
   position: relative;
-  border: 1px solid #e6ecef;
   padding: 8px;
+  border: 1px solid #e6ecef;
 }
 form table.file-list thead {
   display: none;
 }
 form table.file-list td:first-child {
-  padding: 0;
   min-width: 400px;
+  padding: 0;
 }
 form table.file-list td:last-child {
   width: 200px;
@@ -36,8 +36,8 @@ form table.file-list .file-widget .fieldset-wrapper {
   width: 100%;
   border-collapse: collapse;
   border-top-style: hidden;
-  border-bottom-style: hidden;
   border-right-style: hidden;
+  border-bottom-style: hidden;
 }
 form table.file-list .file-widget .fieldset-wrapper > div {
   display: table-cell;
@@ -63,8 +63,8 @@ form table.file-list .file-widget .fieldset-wrapper .preview-image a {
   /* Fallback if flex is not available. */
   display: block;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   width: 102px;
   height: 102px;
   text-align: center;
@@ -106,8 +106,8 @@ form .image-widget.uploaded .image-widget-name {
   margin-bottom: 16px;
 }
 form .image-widget.uploaded .image-widget-preview {
-  flex: 1 0 auto;
   display: flex;
+  flex: 1 0 auto;
   align-items: center;
   justify-content: center;
 }
@@ -118,10 +118,10 @@ form .image-widget.uploaded .image-widget-preview figure {
 }
 form .image-widget.uploaded .image-widget-preview img {
   width: auto;
-  height: auto;
-  margin: 0 auto;
   max-width: 100%;
+  height: auto;
   max-height: 100%;
+  margin: 0 auto;
 }
 form .image-widget.uploaded .image-widget-data {
   flex: 1 0 auto;
@@ -140,12 +140,11 @@ form table.file-list .image-widget {
   border-left: 1px solid #e6ecef;
 }
 
-
 /* Specific form elements */
 form .js-media-library-widget .fieldset-wrapper {
   /* Necessary to ensure the progress overlay stays within the limits of the
    * file element. */
   position: relative;
-  border: 1px solid #e6ecef;
   padding: 8px;
+  border: 1px solid #e6ecef;
 }

@@ -72,9 +72,10 @@
  * @see \Drupal\reliefweb_entities\Entity\Job.php
  */
 #}
+{{ attach_library('common_design_subtheme/rw-report') }}
 {{ attach_library('common_design_subtheme/rw-document') }}
 
-{% set meta = node.getEntityMeta() %}
+{% set icon = node.getIcon() %}
 
 {{ local_tasks }}
 <article{{ attributes
@@ -85,16 +86,35 @@
     'node--' ~ node.bundle() ~ '--full',
     'rw-article',
     'rw-article--' ~ node.bundle(),
+    icon is not empty ? 'rw-article--' ~ node.bundle() ~ '--with-icon',
+    'rw-page--sectioned',
     'rw-document',
   ])
   .setAttribute('data-id', node.id())
 }}>
 
   <header>
+    {% if icon is not empty %}
+      <div class="rw-article--topic__icon">
+        {{ render_var({
+          '#theme': 'image_style',
+          '#style_name': 'icon',
+          '#uri': icon.uri,
+          '#width': icon.width,
+          '#height': icon.height
+        }) }}
+      </div>
+    {% endif %}
+
     {{ title }}
   </header>
 
-  {{ content.reliefweb_bookmarks_link }}
   {{ node.getPageContent() }}
+
+  {% if content.reliefweb_bookmarks_link is not empty %}
+    <footer>
+      {{ content.reliefweb_bookmarks_link }}
+    </footer>
+  {% endif %}
 
 </article>
