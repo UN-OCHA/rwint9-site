@@ -43,6 +43,7 @@ trait SectionedContentTrait {
           '#resource' => $query['resource'],
           '#entities' => $entities,
           '#more' => $query['more'] ?? NULL,
+          '#title' => $query['title'] ?? NULL,
         ];
       }
     }
@@ -54,7 +55,7 @@ trait SectionedContentTrait {
    *
    * @see \Drupal\reliefweb_entities\SectionedContentInterfaceconsolidateSections()
    */
-  public function consolidateSections(array $contents, array $sections, array $labels) {
+  public function consolidateSections(array $contents, array $sections, array $labels = []) {
     $consolidated = [];
 
     // Parse the table of content, remove empty sections and update the title
@@ -481,7 +482,8 @@ trait SectionedContentTrait {
         ],
         [
           'field' => 'status',
-          'value' => ['alert', 'current'],
+          // Current is the legacy equivalent of ongoing.
+          'value' => ['alert', 'current', 'ongoing'],
         ],
       ],
       'operator' => 'AND',
