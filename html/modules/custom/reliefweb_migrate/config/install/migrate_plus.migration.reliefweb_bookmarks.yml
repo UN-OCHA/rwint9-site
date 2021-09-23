@@ -1,6 +1,6 @@
 id: reliefweb_bookmarks
 label: Migrate ReliefWeb bookmarks.
-migration_group: reliefweb_base
+migration_group: reliefweb_extra
 source:
   plugin: table
   table_name: reliefweb_bookmarks_favorites
