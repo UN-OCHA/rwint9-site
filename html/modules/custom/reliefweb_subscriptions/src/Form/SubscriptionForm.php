@@ -83,7 +83,7 @@ class SubscriptionForm extends FormBase {
     $form['global'] = [
       '#type' => 'checkboxes',
       '#title' => $this->t('Global notifications'),
-      '#options' => $options['global'],
+      '#options' => $options['global'] ?? [],
       '#default_value' => $defaults['global'] ?? [],
       '#optional' => FALSE,
     ];
@@ -91,7 +91,7 @@ class SubscriptionForm extends FormBase {
     $form['country_updates'] = [
       '#type' => 'select',
       '#title' => $this->t('Updates by Country (daily)'),
-      '#options' => ['_none' => $this->t('- None -')] + $options['country_updates'],
+      '#options' => ['_none' => $this->t('- None -')] + ($options['country_updates'] ?? []),
       '#default_value' => $defaults['country_updates'] ?? [],
       '#multiple' => TRUE,
       '#empty_value' => '_none',
