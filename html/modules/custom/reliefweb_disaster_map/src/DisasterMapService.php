@@ -4,14 +4,15 @@ namespace Drupal\reliefweb_disaster_map;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Render\Renderer;
+use Drupal\Core\Security\TrustedCallbackInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\reliefweb_api\Services\ReliefWebApiClient;
 use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
  * ReliefWeb disaster map service.
  */
-class DisasterMapService {
+class DisasterMapService implements TrustedCallbackInterface {
 
   use StringTranslationTrait;
 
@@ -40,6 +41,15 @@ class DisasterMapService {
   public function __construct(ReliefWebApiClient $reliefweb_api_client, Renderer $renderer) {
     $this->reliefWebApiClient = $reliefweb_api_client;
     $this->renderer = $renderer;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function trustedCallbacks() {
+    return [
+      'parseDisasterMapApiData',
+    ];
   }
 
   /**
@@ -150,7 +160,7 @@ class DisasterMapService {
         'title' => $title,
         'resource' => 'disasters',
         'payload' => $payload,
-        'callback' => self::class . '::parseDisasterMapApiData',
+        'callback' => [$this, 'parseDisasterMapApiData'],
       ];
     }
 
@@ -162,7 +172,7 @@ class DisasterMapService {
     // displayed.
     $statuses = [];
     foreach ($entities as $entity) {
-      $statuses[$entity->status->raw()] = TRUE;
+      $statuses[$entity['status']] = TRUE;
     }
 
     // Skip if there is no content.
@@ -181,23 +191,18 @@ class DisasterMapService {
       ],
     ];
 
-    $content = [
-      'id' => Html::getId($id),
-      'title' => $title,
-      'settings' => [
+    $render_array = [
+      '#theme' => 'reliefweb_disaster_map',
+      '#id' => Html::getId($id),
+      '#title' => $title,
+      '#settings' => [
         'legend' => array_intersect_key($legend, $statuses),
-        // Label for the close button.
         'close' => $this->t('Close'),
         'fitBounds' => TRUE,
       ],
-      'entities' => $entities,
-      'bundle' => $bundle,
-      'labels' => $labels,
-    ];
-
-    $render_array = [
-      '#theme' => 'reliefweb_disaster_map',
-      '#content' => $content,
+      '#entities' => $entities,
+      '#bundle' => $bundle,
+      '#labels' => $labels,
     ];
 
     if ($mode === 'html') {

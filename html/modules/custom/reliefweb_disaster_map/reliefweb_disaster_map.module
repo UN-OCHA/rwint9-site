@@ -12,7 +12,12 @@ function reliefweb_disaster_map_theme() {
   $themes = [
     'reliefweb_disaster_map' => [
       'variables' => [
-        'content' => NULL,
+        'id' => '',
+        'title' => '',
+        'settings' => [],
+        'entities' => [],
+        'bundle' => '',
+        'labels' => [],
       ],
     ],
   ];
