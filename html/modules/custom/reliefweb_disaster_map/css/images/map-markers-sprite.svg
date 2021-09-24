@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="40" height="180" viewBox="0 0 40 180">
+  <style>
+    .shadow {
+      fill: #000000;
+      fill-opacity: 0.04;
+    }
+    .border {
+      fill: #000000;
+      fill-opacity: 0.25;
+    }
+    .grey {
+      fill: #b6c8d0;
+    }
+    .orange {
+      fill: #eb8705;
+    }
+    .red {
+      fill: #f65c51;
+    }
+    .blue {
+      fill: #0988bb;
+    }
+  </style>
+  <symbol viewBox="0 0 30 45" id="shadow" class="shadow">
+    <ellipse cx="15" cy="38.667" rx="11.667" ry="5.833"/>
+    <ellipse cx="15" cy="38.667" rx="11.667" ry="5.833"/>
+    <ellipse cx="15" cy="38.667" rx="10.556" ry="5.303"/>
+    <ellipse cx="15" cy="38.667" rx="9.444" ry="4.772"/>
+    <ellipse cx="15" cy="38.667" rx="8.333" ry="4.242"/>
+    <ellipse cx="15" cy="38.667" rx="7.222" ry="3.712"/>
+    <ellipse cx="15" cy="38.667" rx="6.111" ry="3.182"/>
+    <ellipse cx="15" cy="38.667" rx="5" ry="2.651"/>
+  </symbol>
+  <symbol viewBox="0 0 30 45" id="content">
+    <path d="M30 15c0 6.194-7.5 15-13.611 23.333-.815 1.111-1.963 1.111-2.778 0C7.5 30 0 21.359 0 15 0 6.716 6.716 0 15 0c8.284 0 15 6.716 15 15z"/>
+  </symbol>
+  <symbol viewBox="0 0 30 45" id="border" class="border">
+    <path d="M15 0C6.716 0 0 6.716 0 15c0 6.359 7.5 15 13.611 23.333.833 1.137 1.963 1.111 2.778 0C22.5 30 30 21.194 30 15c0-8.284-6.716-15-15-15zm-.048 38.217a5.349 5.349 0 01-.444-.541c-3.069-4.185-6.67-8.459-9.197-12.412-2.529-3.952-4.2-7.598-4.2-10.264A13.873 13.873 0 0115 1.111h.09A13.873 13.873 0 0128.889 15c0 2.666-1.671 6.312-4.2 10.264-2.527 3.953-6.128 8.227-9.197 12.412a5.283 5.283 0 01-.492.592l-.048-.051z"/>
+  </symbol>
+  <!-- Colored markers -->
+  <symbol id="marker-grey" viewBox="0 0 30 45">
+    <use xlink:href="#shadow"/>
+    <use xlink:href="#content" class="grey"/>
+    <use xlink:href="#border"/>
+  </symbol>
+  <symbol id="marker-orange" viewBox="0 0 30 45">
+    <use xlink:href="#shadow"/>
+    <use xlink:href="#content" class="orange"/>
+    <use xlink:href="#border"/>
+  </symbol>
+  <symbol id="marker-red" viewBox="0 0 30 45">
+    <use xlink:href="#shadow"/>
+    <use xlink:href="#content" class="red"/>
+    <use xlink:href="#border"/>
+  </symbol>
+  <symbol id="marker-blue" viewBox="0 0 30 45">
+    <use xlink:href="#shadow"/>
+    <use xlink:href="#content" class="blue"/>
+    <use xlink:href="#border"/>
+  </symbol>
+  <symbol id="group-marker-colored" viewBox="0 0 30 180">
+    <use xlink:href="#marker-grey" width="30" height="45" x="0" y="0"/>
+    <use xlink:href="#marker-orange" width="30" height="45" x="0" y="45"/>
+    <use xlink:href="#marker-red" width="30" height="45" x="0" y="90"/>
+    <use xlink:href="#marker-blue" width="30" height="45" x="0" y="135"/>
+  </symbol>
+  <!-- Actual content -->
+  <use xlink:href="#group-marker-colored" width="10" height="60"/>
+  <use xlink:href="#group-marker-colored" width="30" height="180" x="10"/>
+</svg>
