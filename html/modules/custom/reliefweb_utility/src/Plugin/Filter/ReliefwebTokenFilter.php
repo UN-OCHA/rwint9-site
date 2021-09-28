@@ -2,14 +2,12 @@
 
 namespace Drupal\reliefweb_utility\Plugin\Filter;
 
-use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Utility\Token;
 use Drupal\filter\FilterProcessResult;
 use Drupal\filter\Plugin\FilterBase;
-use Drupal\token\TokenEntityMapperInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -34,13 +32,6 @@ class ReliefwebTokenFilter extends FilterBase implements ContainerFactoryPluginI
   protected $token;
 
   /**
-   * The token entity mapper service.
-   *
-   * @var \Drupal\token\TokenEntityMapperInterface
-   */
-  protected $tokenEntityMapper;
-
-  /**
    * Constructs a token filter plugin.
    *
    * @param array $configuration
@@ -51,13 +42,10 @@ class ReliefwebTokenFilter extends FilterBase implements ContainerFactoryPluginI
    *   The plugin implementation definition.
    * @param \Drupal\Core\Utility\Token $token
    *   The token service.
-   * @param \Drupal\token\TokenEntityMapperInterface $token_entity_mapper
-   *   The token entity mapper service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, Token $token, TokenEntityMapperInterface $token_entity_mapper) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, Token $token) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->token = $token;
-    $this->tokenEntityMapper = $token_entity_mapper;
   }
 
   /**
@@ -69,7 +57,6 @@ class ReliefwebTokenFilter extends FilterBase implements ContainerFactoryPluginI
       $plugin_id,
       $plugin_definition,
       $container->get('token'),
-      $container->get('token.entity_mapper'),
     );
   }
 
@@ -93,14 +80,7 @@ class ReliefwebTokenFilter extends FilterBase implements ContainerFactoryPluginI
   public function process($text, $langcode) {
     $data = [];
 
-    $entity = drupal_static('token_filter_entity', NULL);
     $cache = new BubbleableMetadata();
-    if (!is_null($entity) && $entity instanceof ContentEntityInterface) {
-      $cache->addCacheableDependency($entity);
-      $token_type = $this->tokenEntityMapper->getTokenTypeForEntityType($entity->getEntityTypeId());
-      $data[$token_type] = $entity;
-    }
-
     $options = [
       'clear' => $this->settings['replace_empty'],
       'callback' => [$this, 'tokenCallback'],
