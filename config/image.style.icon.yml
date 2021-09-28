@@ -1,0 +1,16 @@
+uuid: 1cab541c-d797-46eb-aa28-8d3e54d461bc
+langcode: en
+status: true
+dependencies: {  }
+name: icon
+label: Icon
+effects:
+  6cc37dbc-5135-4c6a-8eab-6b799c7961e4:
+    uuid: 6cc37dbc-5135-4c6a-8eab-6b799c7961e4
+    id: image_scale
+    weight: 1
+    data:
+      width: 64
+      height: 64
+      upscale: true
+pipeline: __default__

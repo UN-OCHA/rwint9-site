@@ -25,7 +25,7 @@ class SourceRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
-  protected $entityType = 'taxonomy_term';
+  protected $entityTypeId = 'taxonomy_term';
 
   /**
    * {@inheritdoc}

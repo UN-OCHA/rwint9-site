@@ -63,7 +63,7 @@ interface SectionedContentInterface {
    * @return array
    *   Render array with the table of contents and sections.
    */
-  public function consolidateSections(array $contents, array $sections, array $labels);
+  public function consolidateSections(array $contents, array $sections, array $labels = []);
 
   /**
    * Get payload for the key content reports.

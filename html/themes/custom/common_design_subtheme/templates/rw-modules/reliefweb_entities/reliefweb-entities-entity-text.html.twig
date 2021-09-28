@@ -1,0 +1,55 @@
+{% set title_attributes = title_attributes.addClass('cd-block-title') %}
+
+{{ attach_library('common_design/cd-block-title') }}
+{{ attach_library('common_design_subtheme/rw-entity-text') }}
+
+{% set content_id = (id ~ '-content')|clean_id %}
+{% set content_attributes = content_attributes
+  .setAttribute('id', content_id)
+%}
+
+{% include '@reliefweb_entities/reliefweb-entities-entity-text.html.twig' %}
+
+{# Script to show only the first or last 3 paragraphs. #}
+{% if attributes.hasClass('rw-entity-text--collapsible') %}
+  {% set content_title = content_title ?? 'description'|t %}
+  <script>
+    (function () {
+      'use strict';
+
+      // If there are more than 3 paragraphs/lists etc. in the content, we only
+      // display the last 3 ones and add a toggling button to show the full
+      // content.
+      var content = document.getElementById('{{ content_id }}');
+      var children = content.childNodes;
+      var count = 0;
+      for (var i = 0, l = children.length; i < l; i++) {
+        if (children[i].nodeType === 1) {
+          count++;
+        }
+      }
+      if (count > 3) {
+        content.setAttribute('data-cd-toggable', '{% trans %}Show full {{ content_title }}{% endtrans %}');
+        content.setAttribute('data-cd-toggable-expanded', '{% trans %}Hide full {{ content_title }}{% endtrans %}');
+        content.setAttribute('data-cd-toggable-keep', '');
+        content.setAttribute('data-cd-icon', 'arrow-down');
+        content.setAttribute('data-cd-component', 'rw-entity-text');
+        content.setAttribute('data-cd-replace', '{{ content_id }}-dummy');
+      }
+
+      // Scroll to the top of the text content when expanding it.
+      if ('MutationObserver' in window) {
+        var observer = new MutationObserver(function (mutations) {
+          for (var mutation of mutations) {
+            if (mutation.type === 'attributes' &&
+                mutation.attributeName === 'data-cd-hidden' &&
+                mutation.target.getAttribute('data-cd-hidden') === 'false') {
+              mutation.target.parentNode.scrollIntoView();
+            }
+          }
+        });
+        observer.observe(content, {attributes: true});
+      }
+    })();
+  </script>
+{% endif %}

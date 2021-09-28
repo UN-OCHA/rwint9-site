@@ -181,17 +181,14 @@ function common_design_subtheme_form_user_form_alter(array &$form, FormStateInte
  * @see common_design_get_block_render_array()
  */
 function common_design_subtheme_preprocess_taxonomy_term(&$variables) {
+  $term = $variables['term'] ?? NULL;
   $view_mode = $variables['view_mode'] ?? $variables['elements']['#view_mode'] ?? '';
 
   // Prepare the title and local tasks so we have better control over where
   // to display them for content in full term.
-  if ($view_mode === 'full') {
-    $variables['title'] = common_design_get_block_render_array('page_title_block');
-    $variables['local_tasks'] = common_design_get_block_render_array('local_tasks_block');
-    // Copy the title attributes.
-    if (!empty($variables['title']) && !empty($variables['title_attributes'])) {
-      $variables['title']['#title_attributes'] = $variables['title_attributes'];
-    }
+  // @todo review after term perview is added.
+  if (isset($term) && is_a($term, '\Drupal\taxonomy\TermInterface') && $view_mode === 'full') {
+    common_design_set_page_title($variables, $term->label(), TRUE);
   }
 }
 
@@ -208,8 +205,25 @@ function common_design_subtheme_preprocess_page(&$variables) {
   $route_name = \Drupal::routeMatch()->getRouteName();
 
   // Attempt to retrieve the term entity if the current page is a term page.
+  // @todo handle term preview once added.
   if ($route_name === 'entity.taxonomy_term.canonical') {
     $term = common_design_subtheme_get_entity_from_route('taxonomy_term');
+
+    if (isset($term) && is_a($term, '\Drupal\taxonomy\TermInterface')) {
+      // This gives us an array with the page view mode for the term.
+      $build = \Drupal::entityTypeManager()
+        ->getViewBuilder('taxonomy_term')
+        ->view($term);
+
+      $view_mode = $build['#view_mode'] ?? '';
+
+      if ($view_mode === 'full') {
+        common_design_hide_rendered_blocks_from_page($variables, [
+          'page_title_block',
+          'local_tasks_block',
+        ]);
+      }
+    }
   }
   // Remove the page title block from the search results page.
   elseif ($route_name === 'reliefweb_rivers.search.results') {
@@ -222,26 +236,6 @@ function common_design_subtheme_preprocess_page(&$variables) {
     common_design_hide_rendered_blocks_from_page($variables, [
       'page_title_block',
     ]);
-  }
-
-  // If the term variable is defined then we assume we are on a term page.
-  // We retrieve the view mode for the page and compare it against the settings
-  // to render the page title inside the term. If so, we hide the page title
-  // and local tasks blocks from their original region in the page.
-  if (isset($term) && is_a($term, '\Drupal\taxonomy\TermInterface')) {
-    // This gives us an array with the page view mode for the term.
-    $build = \Drupal::entityTypeManager()
-      ->getViewBuilder('taxonomy_term')
-      ->view($term);
-
-    $view_mode = $build['#view_mode'] ?? '';
-
-    if ($view_mode === 'full') {
-      common_design_hide_rendered_blocks_from_page($variables, [
-        'page_title_block',
-        'local_tasks_block',
-      ]);
-    }
   }
 }
 

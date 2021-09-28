@@ -1,0 +1,28 @@
+uuid: 94a07fa9-906a-46f7-9a4e-ba3df7ed365a
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_disasters_search
+    - node.type.topic
+  module:
+    - reliefweb_fields
+id: node.topic.field_disasters_search
+field_name: field_disasters_search
+entity_type: node
+bundle: topic
+label: 'Disasters search'
+description: 'Display a list of related Disasters. Use a search query from the <a href="/disasters">Disasters</a> river'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  use_override: 0
+  use_title: 0
+  rivers:
+    disaster: disaster
+    job: 0
+    report: 0
+    training: 0
+field_type: reliefweb_section_links

@@ -30,6 +30,9 @@ function reliefweb_entities_entity_bundle_info_alter(&$bundles) {
   $bundles['node']['report']['class'] = 'Drupal\reliefweb_entities\Entity\Report';
   $bundles['node']['report']['label'] = 'Report';
 
+  $bundles['node']['topic']['class'] = 'Drupal\reliefweb_entities\Entity\Topic';
+  $bundles['node']['topic']['label'] = 'Topic';
+
   $bundles['node']['training']['class'] = 'Drupal\reliefweb_entities\Entity\Training';
   $bundles['node']['training']['label'] = 'Training';
 
@@ -123,22 +126,26 @@ function reliefweb_entities_theme() {
         'meta' => [],
       ],
     ],
-    'reliefweb_entities_entity_description' => [
+    'reliefweb_entities_entity_text' => [
       'variables' => [
         // Section heading level.
         'level' => 2,
         // Section id.
-        'id' => 'description',
+        'id' => '',
         // Section attributes.
         'attributes' => NULL,
         // Section title.
-        'title' => t('Description'),
+        'title' => '',
         // Section title attributes.
         'title_attributes' => NULL,
-        // The description should be a safe HTML string.
-        'description' => '',
-        // Description attributes.
-        'description_attributes' => NULL,
+        // The text content should be a safe HTML string.
+        'content' => '',
+        // Text content attributes.
+        'content_attributes' => NULL,
+        // Flag indicating if iframes are allowed in the rendered HTML content.
+        'iframe' => TRUE,
+        // List of extra attributes allowed in the rendered HTML content.
+        'allowed_attributes' => [],
       ],
     ],
     'reliefweb_entities_entity_details' => [

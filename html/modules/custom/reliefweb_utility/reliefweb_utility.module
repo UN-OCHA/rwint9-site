@@ -18,7 +18,7 @@ function reliefweb_utility_preprocess(array &$variables, $hook) {
   if (strpos($hook, 'reliefweb_') === 0) {
     foreach ($variables as $key => $value) {
       if ($key === 'attributes' || strpos($key, '_attributes') !== FALSE) {
-        if (empty($value)) {
+        if (is_null($value)) {
           $variables[$key] = new Attribute();
         }
       }

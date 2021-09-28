@@ -66,7 +66,7 @@ class Disaster extends Term implements BundleEntityInterface, EntityModeratedInt
 
     // Profile sections. Only display if show profile is selected.
     if (!empty($this->field_profile->value)) {
-      $sections['overview'] = $this->getEntityDescription();
+      $sections['overview'] = $this->getEntityDescription('overview');
       $sections['useful-links'] = $this->getUsefulLinksSection();
 
       // Retrieve the Key Content and Appeals and Response Plans.

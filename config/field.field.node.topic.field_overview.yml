@@ -1,0 +1,28 @@
+uuid: e62ab899-8bc7-4823-a62d-e71fa4fc2373
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_overview
+    - node.type.topic
+  module:
+    - allowed_formats
+    - text
+third_party_settings:
+  allowed_formats:
+    token_markdown: token_markdown
+    markdown: '0'
+    plain_text: '0'
+    html: '0'
+id: node.topic.field_overview
+field_name: field_overview
+entity_type: node
+bundle: topic
+label: Overview
+description: 'Text content about the topic in markdown format. Can contain images using the <code>![alt](link-to-image)</code> format, embedded content via the special <code>[iframe&#58;widthxheight "title"](link-to-content)</code> format or disaster maps using the disaster map tokens.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: text_long

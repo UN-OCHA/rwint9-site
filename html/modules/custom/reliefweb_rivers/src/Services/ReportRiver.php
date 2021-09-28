@@ -25,7 +25,7 @@ class ReportRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
-  protected $entityType = 'node';
+  protected $entityTypeId = 'node';
 
   /**
    * {@inheritdoc}

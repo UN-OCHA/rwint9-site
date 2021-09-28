@@ -1,0 +1,23 @@
+uuid: bfcd84ba-8a5c-41c3-b307-1c8b055436c1
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_featured
+    - node.type.topic
+id: node.topic.field_featured
+field_name: field_featured
+entity_type: node
+bundle: topic
+label: Featured
+description: 'Featured topics are given more emphasis on the main topics landing page.'
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: Featured
+  off_label: '0'
+field_type: boolean

@@ -11,3 +11,10 @@ reliefweb-user-posting-rights:
       components/reliefweb-user-posting-rights/reliefweb-user-posting-rights.css: {}
   js:
     components/reliefweb-user-posting-rights/reliefweb-user-posting-rights.js: {}
+
+reliefweb-section-links:
+  css:
+    component:
+      components/reliefweb-section-links/reliefweb-section-links.css: {}
+  js:
+    components/reliefweb-section-links/reliefweb-section-links.js: {}

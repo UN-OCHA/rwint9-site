@@ -3,18 +3,113 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.node.topic.body
+    - field.field.node.topic.field_bury
+    - field.field.node.topic.field_disasters_search
+    - field.field.node.topic.field_featured
+    - field.field.node.topic.field_icon
+    - field.field.node.topic.field_jobs_search
+    - field.field.node.topic.field_overview
+    - field.field.node.topic.field_reports_search
+    - field.field.node.topic.field_resources
+    - field.field.node.topic.field_sections
+    - field.field.node.topic.field_training_search
     - node.type.topic
   module:
+    - reliefweb_fields
+    - text
     - user
 id: node.topic.default
 targetEntityType: node
 bundle: topic
 mode: default
 content:
-  links:
-    weight: 100
+  body:
+    weight: 1
+    label: above
     settings: {  }
     third_party_settings: {  }
+    type: text_default
+    region: content
+  field_bury:
+    weight: 10
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    type: boolean
+    region: content
+  field_disasters_search:
+    weight: 8
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: reliefweb_section_links
+    region: content
+  field_featured:
+    weight: 9
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    type: boolean
+    region: content
+  field_icon:
+    type: entity_reference_entity_view
+    weight: 0
+    label: hidden
+    settings:
+      view_mode: default
+      link: false
+    third_party_settings: {  }
+    region: content
+  field_jobs_search:
+    weight: 6
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: reliefweb_section_links
+    region: content
+  field_overview:
+    weight: 2
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: text_default
+    region: content
+  field_reports_search:
+    weight: 4
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: reliefweb_section_links
+    region: content
+  field_resources:
+    weight: 5
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: text_default
+    region: content
+  field_sections:
+    weight: 3
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: reliefweb_section_links
+    region: content
+  field_training_search:
+    weight: 7
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: reliefweb_section_links
     region: content
 hidden:
+  content_moderation_control: true
   langcode: true
+  links: true

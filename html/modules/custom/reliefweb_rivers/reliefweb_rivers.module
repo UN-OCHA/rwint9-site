@@ -245,6 +245,7 @@ function reliefweb_rivers_theme() {
     'report',
     'source',
     'training',
+    'topic',
   ];
   foreach ($bundles as $bundle) {
     $themes['reliefweb_rivers_river_article__' . $bundle] = [
