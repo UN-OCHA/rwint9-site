@@ -104,7 +104,7 @@ class ReliefwebTokenFilter extends FilterBase implements ContainerFactoryPluginI
   public static function tokenCallback(&$replacements, $data, $options, $bubbleable_metadata) {
     foreach ($replacements as $key => $replacement) {
       if (strpos($key, '[disaster-map') === FALSE) {
-        unset($replacements[$key]);
+        $replacements[$key] = !empty($options['clear']) ? '' : $key;
       }
     }
   }
