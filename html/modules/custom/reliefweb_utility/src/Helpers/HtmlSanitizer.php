@@ -196,7 +196,7 @@ class HtmlSanitizer {
       'h6' => TRUE,
     ];
 
-    // Allow iframs if instructed to.
+    // Allow iframes if instructed to.
     if (!empty($this->iframe)) {
       // No children.
       $tags['iframe'] = TRUE;
@@ -264,10 +264,18 @@ class HtmlSanitizer {
       // Process the node, converting if necessary and removing attributes.
       else {
         if (isset($convert[$tag])) {
-          static::changeTag($node, $convert[$tag]);
+          $this->changeTag($node, $convert[$tag]);
         }
         else {
-          static::removeAttributes($node);
+          $this->removeAttributes($node, [
+            'data-disaster-map',
+            'data-map-enabled',
+            'data-map-content',
+            'data-disaster-type',
+            'data-disaster-status',
+            'data-disaster-lon',
+            'data-disaster-lat',
+          ]);
         }
       }
     }

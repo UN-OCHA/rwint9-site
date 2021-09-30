@@ -1,0 +1,11 @@
+map:
+  css:
+    component:
+      https://api.mapbox.com/mapbox-gl-js/v1.7.0/mapbox-gl.css: { type: external, minified: true }
+      css/disaster-map.css: {}
+  js:
+    https://api.mapbox.com/mapbox-gl-js/v1.7.0/mapbox-gl.js: { type: external, minified: true, weight: -50 }
+    js/mapbox.js: { weight: -20 }
+    js/disaster-map.js: { weight: -10 }
+  dependencies:
+    - core/drupalSettings

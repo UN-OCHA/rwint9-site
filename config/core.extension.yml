@@ -44,6 +44,7 @@ module:
   redis: 0
   reliefweb_api: 0
   reliefweb_bookmarks: 0
+  reliefweb_disaster_map: 0
   reliefweb_dsr: 0
   reliefweb_entities: 0
   reliefweb_fields: 0

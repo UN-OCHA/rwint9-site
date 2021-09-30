@@ -1,0 +1,26 @@
+<?php
+
+/**
+ * @file
+ * Disaster map service.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function reliefweb_disaster_map_theme() {
+  $themes = [
+    'reliefweb_disaster_map' => [
+      'variables' => [
+        'id' => '',
+        'title' => '',
+        'settings' => [],
+        'entities' => [],
+        'bundle' => '',
+        'labels' => [],
+      ],
+    ],
+  ];
+
+  return $themes;
+}

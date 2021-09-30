@@ -1,0 +1,60 @@
+{#
+
+/**
+ * @file
+ * Default template for disaster map.
+ *
+ * @see https://github.com/UN-OCHA/rwint-site/blob/a60043df21ca200da35ea53cf8a91f6ffa65d4e1/site/profiles/reliefweb/modules/features/reliefweb_page/templates/components/disaster-map.tpl.php
+ */
+
+#}
+
+
+{% block content %}
+
+{{ attach_library('reliefweb_disaster_map/map') }}
+
+<section data-disaster-map="{{ id }}" data-map-enabled>
+  <header>
+    <h2>{{ title }}</h2>
+  </header>
+
+  <div data-map-content>
+    {% for entity in entities %}
+    <article lang="{{ entity.langcode }}"
+      data-disaster-type="{{ entity.type }}"
+      data-disaster-status="{{ entity.status }}"
+      data-disaster-lon="{{ entity.location.lon }}"
+      data-disaster-lat="{{ entity.location.lat }}"
+    >
+      <header>
+        <h3><a href="{{ entity.url }}">{{ entity.title }}</a></h3>
+        <dl class="meta">
+          <dt class="status">{{ 'Status'|t }}</dt>
+          <dd class="status" data-{{ entity.status }}>{{ entity.status }}</dd>
+        </dl>
+      </header>
+      {% if entity.summary %}
+        <p>{{ entity.summary }}</p>
+      {% endif %}
+      {% if entity.references %}
+      <footer>
+        <section>
+          <h3>{{ 'Related disasters'|t }}</h3>
+          <ul>
+            {% for reference in entity.references %}
+            <li data-disaster-type="{{ reference.type }}" data-disaster-status="{{ reference.status }}">
+              <a href="{{ reference.url }}">{{ reference.title }}</a>
+            </li>
+            {% endfor %}
+          </ul>
+        </section>
+      </footer>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+{% endblock %}
+

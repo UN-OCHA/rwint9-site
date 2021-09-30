@@ -5,6 +5,8 @@
  * Code for the ReliefWeb Topics feature.
  */
 
+use Drupal\Core\Render\BubbleableMetadata;
+
 /**
  * Get all community topics.
  */
@@ -14,6 +16,8 @@ function reliefweb_topics_get_all_community_topics() {
 
 /**
  * Implements hook_token_info().
+ *
+ * @todo move to reliefweb_disaster_map.
  */
 function reliefweb_topics_token_info() {
   $info['types']['disaster-map'] = [
@@ -40,11 +44,11 @@ function reliefweb_topics_token_info() {
 /**
  * Implements hook_tokens().
  */
-function reliefweb_topics_tokens($type, $tokens, array $data = [], array $options = []) {
+function reliefweb_topics_tokens($type, $tokens, array $data, array $options, BubbleableMetadata $bubbleable_metadata) {
   $replacements = [];
   if ($type === 'disaster-map') {
     foreach ($tokens as $name => $original) {
-      $replacements[$original] = reliefweb_topics_get_disaster_map_token_replacement($name);
+      $replacements[$original] = reliefweb_topics_get_disaster_map_token_replacement($name, $bubbleable_metadata);
     }
   }
   return $replacements;
@@ -74,7 +78,7 @@ function reliefweb_topics_get_disaster_type_tokens() {
 /**
  * Get the disaster map markup for the given token.
  */
-function reliefweb_topics_get_disaster_map_token_replacement($token) {
+function reliefweb_topics_get_disaster_map_token_replacement($token, BubbleableMetadata $bubbleable_metadata) {
   $tokens = reliefweb_topics_get_disaster_type_tokens();
   $values = explode('-', $token);
   $options = [];
@@ -103,8 +107,29 @@ function reliefweb_topics_get_disaster_map_token_replacement($token) {
   }
 
   if (!empty($title)) {
-    $id = 'disaster-map-' . $token;
-    return $id;
+    $id = strtolower('disaster-map-' . $token);
+    /** @var \Drupal\reliefweb_disaster_map\DisasterMapService $service */
+    $service = \Drupal::service('reliefweb_disaster_map.service');
+    $render_array = $service->getDisasterMap($id, $title, $options, 'render');
+
+    $mapbox_key = \Drupal::config('reliefweb_topics.settings')->get('mapbox_key');
+    $mapbox_token = \Drupal::config('reliefweb_topics.settings')->get('mapbox_token');
+    $bubbleable_metadata->addAttachments([
+      'library' => [
+        'reliefweb_disaster_map/map',
+      ],
+      'drupalSettings' => [
+        'reliefweb' => [
+          'mapbox_key' => $mapbox_key,
+          'mapbox_token' => $mapbox_token,
+          'maps' => [
+            $id => $render_array['#settings'],
+          ],
+        ],
+      ],
+    ]);
+
+    return Drupal::service('renderer')->renderRoot($render_array);
   }
 
   return '';
