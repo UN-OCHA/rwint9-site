@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_fields\Plugin\Field\FieldWidget;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\Plugin\Field\FieldWidget\OptionsSelectWidget;
@@ -304,8 +305,7 @@ class ReliefWebEntityReferenceSelect extends OptionsSelectWidget {
       // Create the list of options.
       $options = [];
       $option_attributes = [];
-      $records = $query->execute() ?? [];
-      foreach ($records as $record) {
+      foreach ($this->executeOptionQuery($query, $entity) as $record) {
         $id = (int) $record->id;
         // The record in the current language takes precedence over the default
         // language verion.
@@ -361,6 +361,21 @@ class ReliefWebEntityReferenceSelect extends OptionsSelectWidget {
   }
 
   /**
+   * Execute the query to get the options.
+   *
+   * This mainly to give a chance to classes extending this one to modify
+   * the query before it's executed.
+   *
+   * @param \Drupal\Core\Database\Query\SelectInterface $query
+   *   Select query to get the options.
+   * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
+   *   The entity for which to return options.
+   */
+  protected function executeOptionQuery(SelectInterface $query, FieldableEntityInterface $entity) {
+    return $query->execute() ?? [];
+  }
+
+  /**
    * Get the attributes for the options.
    *
    * The attributes are computed when getting the widget options.
@@ -370,6 +385,13 @@ class ReliefWebEntityReferenceSelect extends OptionsSelectWidget {
    */
   protected function getOptionAttributes() {
     return $this->optionAttributes ?? [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getEmptyLabel() {
+    return !$this->required ? $this->t('- None -') : $this->t('- Select a value -');
   }
 
 }
