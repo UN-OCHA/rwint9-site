@@ -42,4 +42,25 @@ class FormHelper {
     }
   }
 
+  /**
+   * Order options by value.
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param string $field
+   *   Name of the field to alter.
+   * @param bool $descending
+   *   If TRUE sort by value descending.
+   */
+  public static function orderOptionsByValue(array &$form, $field, $descending = FALSE) {
+    if (isset($form[$field]['widget']['#options'])) {
+      if ($descending) {
+        krsort($form[$field]['widget']['#options']);
+      }
+      else {
+        ksort($form[$field]['widget']['#options']);
+      }
+    }
+  }
+
 }
