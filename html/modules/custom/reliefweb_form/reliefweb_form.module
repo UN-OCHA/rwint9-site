@@ -146,7 +146,7 @@ function reliefweb_form_attach_lengthchecker(array &$form) {
  *   Form to which attach the js files.
  */
 function reliefweb_form_attach_selection_limit(array &$form) {
-  if (reliefweb_form_uses_widget($form, 'lengthchecker')) {
+  if (reliefweb_form_uses_widget($form, 'selection-limit')) {
     $form['#attached']['library'][] = 'reliefweb_form/widget.selectionlimit';
   }
 }
