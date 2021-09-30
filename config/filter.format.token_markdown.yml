@@ -5,7 +5,6 @@ dependencies:
   module:
     - media
     - reliefweb_utility
-    - token_filter
 name: 'Token & Markdown'
 format: token_markdown
 weight: 0
@@ -40,13 +39,6 @@ filters:
     status: true
     weight: -49
     settings: {  }
-  token_filter:
-    id: token_filter
-    provider: token_filter
-    status: false
-    weight: -46
-    settings:
-      replace_empty: '0'
   filter_iframe:
     id: filter_iframe
     provider: reliefweb_utility
