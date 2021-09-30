@@ -39,6 +39,10 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
       'bundle' => 'report',
     ])->toString();
 
+    // Add an autocomplete widget to the disaster field.
+    // @todo review the javascript.
+    $form['field_disaster']['#attributes']['data-with-autocomplete'] = '';
+
     // Add an autocomplete widget to the tags.
     $form['field_disaster_type']['#attributes']['data-with-autocomplete'] = '';
     $form['field_content_format']['#attributes']['data-with-autocomplete'] = '';
@@ -79,9 +83,12 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     FormHelper::removeOptions($form, 'field_disaster_type', [41764]);
 
     // Add validation callbacks for the file, source and embargo date fields.
-    $form['#validate'][] = get_class() . '::validateAttachment';
-    $form['#validate'][] = get_class() . '::validateSource';
-    $form['#validate'][] = get_class() . '::validateEmbargoDate';
+    $form['#validate'][] = [$this, 'validateAttachment'];
+    $form['#validate'][] = [$this, 'validateSource'];
+    $form['#validate'][] = [$this, 'validateEmbargoDate'];
+
+    // Let the base service add additional alterations.
+    parent::alterForm($form, $form_state);
   }
 
   /**
@@ -107,7 +114,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     $form['field_headline_summary']['widget'][0]['value']['#states']['required'] = $condition;
 
     // Validate headline title.
-    $form['#validate'][] = get_class() . '::validateHeadlineFields';
+    $form['#validate'][] = [$this, 'validateHeadlineFields'];
   }
 
   /**
@@ -121,21 +128,21 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   Form state.
    */
-  public static function validateHeadlineFields(array $form, FormStateInterface $form_state) {
+  public function validateHeadlineFields(array $form, FormStateInterface $form_state) {
     $headline = $form_state->getValue(['field_headline', 'value']);
     if (!empty($headline)) {
       // Check the title.
       $headline_title = $form_state
         ->getValue(['field_headline_title', 0, 'value']);
       if (empty($headline_title)) {
-        $form_state->setErrorByName('field_headline_title][0][value', t('You must enter a headline title if you set this document as a headline.'));
+        $form_state->setErrorByName('field_headline_title][0][value', $this->t('You must enter a headline title if you set this document as a headline.'));
       }
 
       // Check the summary.
       $headline_summary = $form_state
         ->getValue(['field_headline_summary', 0, 'value']);
       if (empty($headline_summary)) {
-        $form_state->setErrorByName('field_headline_summary][0][value', t('You must enter a headline summary if you set this document as a headline.'));
+        $form_state->setErrorByName('field_headline_summary][0][value', $this->t('You must enter a headline summary if you set this document as a headline.'));
       }
     }
   }
@@ -158,7 +165,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     $form['field_origin_notes']['widget'][0]['value']['#states']['required'] = $condition;
 
     // Validate the origin notes field when URL is selected as origin.
-    $form['#validate'][] = get_class() . '::validateOriginFields';
+    $form['#validate'][] = [$this, 'validateOriginFields'];
   }
 
   /**
@@ -171,7 +178,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   Form state.
    */
-  public static function validateOriginFields(array $form, FormStateInterface &$form_state) {
+  public function validateOriginFields(array $form, FormStateInterface &$form_state) {
     $origin = $form_state->getValue(['field_origin', 0, 'value']);
 
     // The origin field is mandatory so if it's not set, then an error will be
@@ -188,17 +195,17 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
       // meaning.
       if ($origin === '0') {
         if (empty($notes) || !UrlHelper::isValid($notes, TRUE)) {
-          $form_state->setErrorByName('field_origin_notes][0][value', t('Identify the origin of this report (URL starting with https or http).'));
+          $form_state->setErrorByName('field_origin_notes][0][value', $this->t('Identify the origin of this report (URL starting with https or http).'));
         }
       }
       elseif ($origin === '1') {
         if (!empty($notes) && !UrlHelper::isValid($notes, TRUE)) {
-          $form_state->setErrorByName('field_origin_notes][0][value', t('Invalid origin notes. It must be empty or the origin URL of the document (starting with https or http).'));
+          $form_state->setErrorByName('field_origin_notes][0][value', $this->t('Invalid origin notes. It must be empty or the origin URL of the document (starting with https or http).'));
         }
       }
       else {
         if (!empty($notes)) {
-          $form_state->setErrorByName('field_origin_notes][0][value', t('Invalid origin notes. It must be empty.'));
+          $form_state->setErrorByName('field_origin_notes][0][value', $this->t('Invalid origin notes. It must be empty.'));
         }
       }
     }
@@ -239,7 +246,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
 
     // Add a validation callback to ensure that an OCHA product is selected
     // when OCHA is selected as source.
-    $form['#validate'][] = get_class() . '::validateOchaProductField';
+    $form['#validate'][] = [$this, 'validateOchaProductField'];
   }
 
   /**
@@ -253,7 +260,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   Form state.
    */
-  public static function validateOchaProductField(array $form, FormStateInterface &$form_state) {
+  public function validateOchaProductField(array $form, FormStateInterface &$form_state) {
     $ocha_product = $form_state->getValue(['field_ocha_product', 0, 'target_id']);
 
     // Check if OCHA (id: 1503) is selected.
@@ -268,7 +275,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
 
     // The OCHA product is mandatory when OCHA is selected.
     if ($selected && empty($ocha_product)) {
-      $form_state->setErrorByName('field_ocha_product', t('OCHA Product is mandatory when OCHA is selected as source.'));
+      $form_state->setErrorByName('field_ocha_product', $this->t('OCHA Product is mandatory when OCHA is selected as source.'));
     }
     // Remove the ocha product otherwise.
     elseif (!$selected && !empty($ocha_product)) {
@@ -287,7 +294,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   Form state.
    */
-  public static function validateAttachment(array $form, FormStateInterface &$form_state) {
+  public function validateAttachment(array $form, FormStateInterface &$form_state) {
     $visual_formats = [
       '12' => 'Map',
       '12570' => 'Infographic',
@@ -312,8 +319,10 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
    *   Form to alter.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   Form state.
+   *
+   * @todo Extends that to jobs and training.
    */
-  public static function validateSource(array $form, FormStateInterface &$form_state) {
+  public function validateSource(array $form, FormStateInterface &$form_state) {
     $ids = [];
     foreach ($form_state->getValue('field_source', []) as $item) {
       if (!empty($item['target_id'])) {
@@ -322,7 +331,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     }
 
     if (!empty($ids)) {
-      $entity_type_manager = \Drupal::entityTypeManager();
+      $entity_type_manager = $this->getEntityTypeManager();
 
       $taxonomy_term_entity_type = $entity_type_manager
         ->getStorage('taxonomy_term')
@@ -332,7 +341,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
       $id_field = $taxonomy_term_entity_type->getKey('id');
       $label_field = $taxonomy_term_entity_type->getKey('label');
 
-      $query = \Drupal::database()->select($table, $table);
+      $query = $this->getDatabase()()->select($table, $table);
       $query->fields($table, [$label_field]);
       $query->condition($table . '.' . $id_field, $ids, 'IN');
 
@@ -349,7 +358,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
       $sources = $query->execute()?->fetchCol() ?? [];
 
       if (!empty($sources)) {
-        $form_state->setErrorByName('field_source', t('Publications from "@sources" are not allowed.', [
+        $form_state->setErrorByName('field_source', $this->t('Publications from "@sources" are not allowed.', [
           '@sources' => implode('", "', $sources),
         ]));
       }
@@ -366,10 +375,10 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   Form state.
    */
-  public static function validateEmbargoDate(array $form, FormStateInterface &$form_state) {
+  public function validateEmbargoDate(array $form, FormStateInterface &$form_state) {
     $embargo_date = $form_state->getValue(['field_embargo_date', 0, 'value']);
     if (!empty($embargo_date) && $embargo_date->getTimestamp() < time()) {
-      $form_state->setErrorByName('field_embargo_date][0][value', t('The embargo date cannot be in the past.'));
+      $form_state->setErrorByName('field_embargo_date][0][value', $this->t('The embargo date cannot be in the past.'));
     }
   }
 
