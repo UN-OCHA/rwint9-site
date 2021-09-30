@@ -245,6 +245,22 @@ function reliefweb_entities_theme() {
         'links' => [],
       ],
     ],
+    'reliefweb_entities_form_user_information' => [
+      'variables' => [
+        // Section attributes.
+        'attributes' => NULL,
+        // Entity information with type, url, id and creation date.
+        'entity' => NULL,
+        // Entity author information with name, mail and url.
+        'author' => NULL,
+        // Source information with author rights for the sources. Each element
+        // has a URL to the source and the right information with id and label.
+        'sources' => NULL,
+        // Potential new source information with the name, url and right with
+        // id and label.
+        'new_source' => NULL,
+      ],
+    ],
   ];
 }
 
