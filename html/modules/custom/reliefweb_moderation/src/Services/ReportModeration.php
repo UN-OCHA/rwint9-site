@@ -4,7 +4,9 @@ namespace Drupal\reliefweb_moderation\Services;
 
 use Drupal\Core\Link;
 use Drupal\Core\Url;
+use Drupal\reliefweb_entities\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
+use Drupal\reliefweb_utility\Helpers\UserHelper;
 
 /**
  * Moderation service for the report nodes.
@@ -202,6 +204,38 @@ class ReportModeration extends ModerationServiceBase {
       'archive' => $this->t('Archived'),
       'reference' => $this->t('Reference'),
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEntityFormSubmitButtons($status, EntityModeratedInterface $entity) {
+    $buttons = [
+      'draft' => [
+        '#value' => $this->t('Save as draft'),
+      ],
+      'to_review' => [
+        '#value' => $this->t('To review'),
+      ],
+      'published' => [
+        '#value' => $this->t('Publish'),
+      ],
+      'on_hold' => [
+        '#value' => $this->t('On-hold'),
+      ],
+      'reference' => [
+        '#value' => $this->t('Reference'),
+      ],
+    ];
+
+    // @todo replace with permission.
+    if (UserHelper::userHasRoles(['administrator', 'Webmaster'])) {
+      $buttons['archive'] = [
+        '#value' => $this->t('Archive'),
+      ];
+    }
+
+    return $buttons;
   }
 
   /**

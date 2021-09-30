@@ -4,6 +4,7 @@ namespace Drupal\reliefweb_moderation\Services;
 
 use Drupal\Core\Link;
 use Drupal\Core\Url;
+use Drupal\reliefweb_entities\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 
 /**
@@ -169,6 +170,62 @@ class SourceModeration extends ModerationServiceBase {
       'blocked' => $this->t('Blocked'),
       'duplicate' => $this->t('Duplicate'),
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEntityFormSubmitButtons($status, EntityModeratedInterface $entity) {
+    return [
+      'active' => [
+        '#value' => $this->t('Active'),
+      ],
+      'inactive' => [
+        '#value' => $this->t('Inactive'),
+      ],
+      'archive' => [
+        '#value' => $this->t('Archive'),
+      ],
+      'blocked' => [
+        '#value' => $this->t('Blocked'),
+      ],
+      'duplicate' => [
+        '#value' => $this->t('Duplicate'),
+      ],
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function entityPresave(EntityModeratedInterface $entity) {
+    // Ensure all posting rights are 'blocked' if the status is 'blocked'.
+    $status = $entity->getModerationStatus();
+    if ($status === 'blocked') {
+      $changed = FALSE;
+
+      // Update the posting rights field, setting everything as blocked.
+      if (!$entity->get('field_user_posting_rights')->isEmpty()) {
+        foreach ($entity->get('field_user_posting_rights') as $item) {
+          if ($item->job->getValue() != 1 || $item->training->getValue() != 1) {
+            $item->job->setValue(1);
+            $item->training->setValue(1);
+            $changed = TRUE;
+          }
+        }
+      }
+
+      // Add a message if something changed.
+      if ($changed) {
+        $entity->setNewRevision(TRUE);
+        $entity->setRevisionLogMessage(trim(implode(' ', [
+          'Posting rights changed to blocked due to source being blocked.',
+          $entity->getRevisionLogMessage() ?? '',
+        ])));
+      }
+    }
+
+    return $status;
   }
 
   /**

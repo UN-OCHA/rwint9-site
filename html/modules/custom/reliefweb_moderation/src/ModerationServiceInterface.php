@@ -2,8 +2,6 @@
 
 namespace Drupal\reliefweb_moderation;
 
-use Drupal\Core\Session\AccountProxyInterface;
-
 /**
  * Interface for the moderation services.
  */
@@ -119,22 +117,6 @@ interface ModerationServiceInterface {
    *   TRUE if the service has the given filter.
    */
   public function hasFilterDefinition($name);
-
-  /**
-   * Check if the account has the current role.
-   *
-   * @param array $roles
-   *   Role machine names.
-   * @param \Drupal\Core\Session\AccountProxyInterface|null $account
-   *   User account. Defaults to the current user if NULL.
-   * @param bool $all
-   *   If TRUE, then check that the user has all the given role otherwise
-   *   only check if the user has one of the roles.
-   *
-   * @return bool
-   *   TRUE if the user has the given role.
-   */
-  public function userHasRoles(array $roles, ?AccountProxyInterface $account = NULL, $all = FALSE);
 
   /**
    * Get the autocomplete suggestions for the filter and the query parameter.

@@ -5,12 +5,13 @@ namespace Drupal\reliefweb_moderation;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\Condition;
 use Drupal\Core\Database\Query\Select;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldItemInterface;
-use Drupal\Core\Field\EntityReferenceFieldItemList;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -18,6 +19,7 @@ use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Pager\PagerParametersInterface;
+use Drupal\reliefweb_entities\EntityModeratedInterface;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -27,6 +29,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  */
 abstract class ModerationServiceBase implements ModerationServiceInterface {
 
+  use DependencySerializationTrait;
   use EntityDatabaseInfoTrait;
   use StringTranslationTrait;
 
@@ -91,7 +94,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
    *
    * @var array
    */
-  private $filterDefinitions;
+  protected $filterDefinitions;
 
   /**
    * Constructor.
@@ -184,6 +187,101 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getEntityFormSubmitButtons($status, EntityModeratedInterface $entity) {
+    return [
+      'draft' => [
+        '#value' => $this->t('Save as draft'),
+      ],
+      'published' => [
+        '#value' => $this->t('Publish'),
+      ],
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function alterEntityForm(array &$form, FormStateInterface $form_state) {
+    $entity = $form_state->getFormObject()->getEntity();
+    $status = $entity->getModerationStatus();
+
+    // Disable the moderation status widget and the default submit buttons.
+    $form['moderation_state']['#access'] = FALSE;
+    $form['actions']['submit']['#access'] = FALSE;
+
+    // Move the preview button at the beginning if it exists.
+    if (isset($form['actions']['preview'])) {
+      $form['actions']['preview']['#weight'] = -1;
+    }
+
+    // Add validation callback at the beginning to update the moderation status
+    // based on the clicked status button.
+    $form['#validate'] = $form['#validate'] ?? [];
+    array_unshift($form['#validate'], [$this, 'validateEntityStatus']);
+
+    // Ensure we call all the submit handlers.
+    $submit_handlers = [];
+    if (!empty($form['#submit'])) {
+      $submit_handlers = array_merge($submit_handlers, $form['#submit']);
+    }
+    if (!empty($form['actions']['submit']['#submit'])) {
+      $submit_handlers = array_merge($submit_handlers, $form['actions']['submit']['#submit']);
+    }
+
+    // Add submit handler at the end to finalize the selection of the status
+    // based on the rest of the submitted data.
+    $submit_handlers[] = [$this, 'handleEntitySubmission'];
+
+    // Add the buttons.
+    foreach ($this->getEntityFormSubmitButtons($status, $entity) as $status => $info) {
+      $form['actions'][$status] = array_merge_recursive([
+        '#type' => 'submit',
+        '#name' => $status,
+        '#submit' => $submit_handlers,
+        '#entity_status' => $status,
+      ], $info);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateEntityStatus(array $form, FormStateInterface $form_state) {
+    // Update the moderation status based on the clicked submit button.
+    $triggering_element = $form_state->getTriggeringElement();
+    if (!empty($triggering_element['#entity_status'])) {
+      $status = $triggering_element['#entity_status'];
+      $form_state->setValue(['moderation_state', 0, 'state'], $status);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function handleEntitySubmission(array $form, FormStateInterface $form_state) {
+    // Alter the status based on the rest of the submitted form.
+    // @todo review if that should not be done in the entity presave instead.
+    $status = $form_state->getValue(['moderation_state', 0, 'state'], $status);
+    $status = $this->alterSubmittedEntityStatus($status, $form_state);
+    $form_state->setValue(['moderation_state', 0, 'state'], $status);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function alterSubmittedEntityStatus($status, FormStateInterface $form_state) {
+    return $status;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function entityPresave(EntityModeratedInterface $entity) {
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getTable(array $filters, $limit = 30) {
     // Execute the query.
     $results = $this->executeQuery($filters, $limit);
@@ -227,23 +325,6 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   public function hasFilterDefinition($name) {
     $filters = $this->getFilterDefinitions();
     return isset($filters[$name]);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function userHasRoles(array $roles, ?AccountProxyInterface $account = NULL, $all = FALSE) {
-    $account = $account ?: $this->currentUser;
-    // Always return TRUE for the administrator user.
-    if ($account->id() == 1) {
-      return TRUE;
-    }
-    // Check the roles.
-    elseif (!empty($roles)) {
-      $intersection = count(array_intersect($roles, $account->getRoles()));
-      return $all ? count($roles) === $intersection : $intersection > 0;
-    }
-    return FALSE;
   }
 
   /**
@@ -326,7 +407,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
           // We don't use a \Drupal\Core\Database\Query\Condition because
           // we need to replace the `@field` later on.
           $conditions[] = '@field LIKE :term' . $index;
-          $replacements[':term' . $index] = $term_prefix . $this->database->escapeLike($term) . '%';
+          $replacements[':term' . $index] = $term_prefix . $this->getDatabase()->escapeLike($term) . '%';
         }
         // Call the filter's autocomplete callback.
         if (!empty($conditions)) {
@@ -853,7 +934,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     $base_table = $this->getEntityTypeDataTable('content_moderation_state');
 
     // Main query.
-    $query = $this->database->select($base_table, 'cms')
+    $query = $this->getDatabase()->select($base_table, 'cms')
       ->fields('cms', ['moderation_state', 'content_entity_id'])
       ->condition('cms.content_entity_type_id', $entity_type_id, '=');
 
@@ -896,7 +977,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     $variables_keys = array_keys($variables);
 
     // Initialize the counters.
-    $this->database
+    $this->getDatabase()
       ->query('SET ' . implode(' := 0, ', $variables_keys) . ' := 0');
 
     // Retrieve the entity ids.
@@ -905,7 +986,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
       ?->fetchCol() ?? [];
 
     // Retrieve the counters.
-    $totals = $this->database
+    $totals = $this->getDatabase()
       ->query('SELECT ' . implode(', ', $variables_keys))
       ?->fetchAssoc() ?? [];
 
@@ -1097,7 +1178,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     }
 
     // Wrap the query.
-    $wrapper = $this->database->select($query, 'subquery');
+    $wrapper = $this->getDatabase()->select($query, 'subquery');
     $wrapper->addField('subquery', 'content_entity_id', 'entity_id');
 
     // Keep track of the subquery.
@@ -1219,7 +1300,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
                   }
                 }
                 elseif ($widget === 'search') {
-                  $this->addFilterCondition($definition, $condition, $field, '%' . $this->database->escapeLike($value) . '%', 'LIKE');
+                  $this->addFilterCondition($definition, $condition, $field, '%' . $this->getDatabase()->escapeLike($value) . '%', 'LIKE');
                 }
                 elseif ($widget === 'fieldnotset') {
                   // We change the join type of the table to a LEFT join so
@@ -1267,7 +1348,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
               }
               elseif ($widget === 'search') {
                 foreach ($values as $value) {
-                  $this->addFilterCondition($definition, $condition, $field, '%' . $this->database->escapeLike($value) . '%', 'LIKE');
+                  $this->addFilterCondition($definition, $condition, $field, '%' . $this->getDatabase()->escapeLike($value) . '%', 'LIKE');
                 }
               }
             }
@@ -1430,7 +1511,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     $revision_user_field = $this->getEntityTypeRevisionUserField('taxonomy_term');
 
     // Revision table subquery.
-    $revision_query = (string) $this->database
+    $revision_query = (string) $this->getDatabase()
       ->select($revision_table, $revision_table)
       ->fields($revision_table, [$revision_user_field])
       ->where("{$revision_table}.{$id_field} = {$entity_base_table}.{$entity_id_field}")
@@ -1485,7 +1566,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     $field_name = $this->getFieldColumnName('taxonomy_term', 'field_key_content', 'url');
 
     // Get all the node ids.
-    $subquery = $this->database->select($table, $table);
+    $subquery = $this->getDatabase()->select($table, $table);
     $subquery->addExpression("SUBSTR({$table}.{$field_name}, 7)", 'entity_id');
     $subquery->where("LEFT({$table}.{$field_name}, 6) = '/node/'");
 
@@ -1511,7 +1592,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     $bundle_field = $this->getEntityTypeBundleField($entity_type_id);
 
     // Subquery to find all the node matching the requested rights.
-    $subquery = $this->database->select($entity_base_table, $entity_base_table);
+    $subquery = $this->getDatabase()->select($entity_base_table, $entity_base_table);
     $subquery->addField($entity_base_table, $entity_id_field);
     $subquery->condition($entity_base_table . '.' . $bundle_field, $bundle, '=');
     $subquery->groupBy($entity_base_table . '.' . $entity_id_field);
@@ -1622,7 +1703,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     if ($type === 'INNER' || $type === 'LEFT OUTER') {
       $tables = &$query->getTables();
       if (isset($tables[$alias])) {
-        $tables[$alias][$type] = $type;
+        $tables[$alias]['join type'] = $type;
       }
     }
   }
@@ -1667,7 +1748,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     $fields = [$alias . '.' . $label_field];
 
     // Base query.
-    $query = $this->database->select($table, $alias);
+    $query = $this->getDatabase()->select($table, $alias);
     $query->condition($alias . '.' . $bundle_field, $vocabulary, '=');
     $query->addField($alias, $id_field, 'value');
     $query->addField($alias, $label_field, 'label');
@@ -1759,7 +1840,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     }
 
     // Base query.
-    $query = $this->database->select($table, $alias);
+    $query = $this->getDatabase()->select($table, $alias);
     $query->addField($alias, $id_field, 'value');
     $query->addField($alias, 'name', 'label');
     $query->addField($alias, 'mail', 'abbr');
@@ -1858,7 +1939,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     $related_glide_field = $this->getFieldColumnName($entity_type_id, 'field_glide_related', 'value');
 
     // Base query.
-    $query = $this->database->select($entity_table, $entity_table);
+    $query = $this->getDatabase()->select($entity_table, $entity_table);
     $query->condition($entity_table . '.' . $entity_bundle_field, $bundle, '=');
 
     // Join the Glide fields.
@@ -2076,7 +2157,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
         $revision_id_field = $this->getEntityTypeRevisionIdField($entity_type_id);
         $revision_user_field = $this->getEntityTypeRevisionUserField($entity_type_id);
 
-        $query = $this->database->select($revision_table, $revision_table);
+        $query = $this->getDatabase()->select($revision_table, $revision_table);
         $query->fields($revision_table, [$revision_user_field]);
         $query->condition($revision_table . '.' . $entity_id_field, $entity->id(), '=');
         $query->orderBy($revision_table . '.' . $revision_id_field, 'ASC');
@@ -2146,75 +2227,6 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   }
 
   /**
-   * Get the user posting rights for an entity's author.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $entity
-   *   Entity.
-   *
-   * @return string
-   *   Consolidated posting rights for the author of the entity based on the
-   *   user posting rights of the sources of the entity for that user:
-   *   - "blocked" if the user is blocked for at least one of the sources
-   *   - "unverified" if the user is unverified for at least one of the sources
-   *     or if the are no posting rights for the user in any of the sources
-   *   - "trusted" if the user is trusted for all the sources
-   *   - "allowed" if the user is allowed or trusted for the sources.
-   *
-   * @todo consolidate with the other posting rights methods once ported.
-   */
-  protected function getEntityAuthorPostingRights(EntityInterface $entity) {
-    if (!$entity->hasField('field_source') || !method_exists($entity, 'getOwnerId')) {
-      return 'unknown';
-    }
-
-    $source_item_list = $entity->get('field_source');
-    if (!$source_item_list instanceof EntityReferenceFieldItemList) {
-      return 'unknown';
-    }
-
-    $rights = [
-      'unverified' => 0,
-      'blocked' => 0,
-      'allowed' => 0,
-      'trusted' => 0,
-    ];
-    $rights_keys = array_keys($rights);
-
-    $bundle = $entity->bundle();
-    $uid = $entity->getOwnerId();
-
-    $source_entities = $source_item_list->referencedEntities();
-    foreach ($source_entities as $source_entity) {
-      if (!$source_entity->hasField('field_user_posting_rights')) {
-        continue;
-      }
-
-      foreach ($source_entity->get('field_user_posting_rights') as $item) {
-        if ($item->get('id')->getValue() != $uid) {
-          continue;
-        }
-        $right = $item->get($bundle)->getValue();
-        $rights[$rights_keys[$right] ?? 'unverified']++;
-      }
-    }
-
-    // Compute the consolidated right for the user.
-    if ($rights['blocked'] > 0) {
-      return 'blocked';
-    }
-    elseif ($rights['unverified'] > 0) {
-      return 'unverified';
-    }
-    elseif ($rights['trusted'] === count($source_entities)) {
-      return 'trusted';
-    }
-    elseif ($rights['allowed'] > 0) {
-      return 'allowed';
-    }
-    return 'unverified';
-  }
-
-  /**
    * Get the entity creation date.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
@@ -2242,7 +2254,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
         $revision_id_field = $this->getEntityTypeRevisionIdField($entity_type_id);
         $revision_created_field = $this->getEntityTypeRevisionCreatedField($entity_type_id);
 
-        $query = $this->database->select($revision_table, $revision_table);
+        $query = $this->getDatabase()->select($revision_table, $revision_table);
         $query->fields($revision_table, [$revision_created_field]);
         $query->condition($revision_table . '.' . $entity_id_field, $entity->id(), '=');
         $query->orderBy($revision_table . '.' . $revision_id_field, 'ASC');
