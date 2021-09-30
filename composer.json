@@ -76,7 +76,6 @@
         "drupal/taxonomy_term_revision": "1.x-dev",
         "drupal/theme_switcher": "^1.2",
         "drupal/token": "^1.9",
-        "drupal/token_filter": "^1.2",
         "drush/drush": "^10.4",
         "league/commonmark": "^1.6",
         "pelago/emogrifier": "^5.0",
