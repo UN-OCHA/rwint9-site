@@ -1,12 +1,19 @@
 {#
-  Allow the class attribute so that disaster maps if any can be styled
+  Allow attributes so that the disaster maps if any can be styled
   properly. This is safe because the token_markdown text format will have
-  removed the class attributes of all the other HTML elements from the user
+  removed those attributes from all the other HTML elements from the user
   text input before rendering the disaster maps.
 #}
 {%
   set allowed_attributes = allowed_attributes|merge([
     'class',
+    'data-disaster-map',
+    'data-map-enabled',
+    'data-map-content',
+    'data-disaster-type',
+    'data-disaster-status',
+    'data-disaster-lon',
+    'data-disaster-lat',
   ])
 %}
 
