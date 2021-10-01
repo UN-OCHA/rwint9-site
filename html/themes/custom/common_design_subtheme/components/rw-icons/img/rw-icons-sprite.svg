@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 620 640" width="620" height="640">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 892 640" width="892" height="640">
   <style>
     .dark-blue { fill: #055372; }
     .dark-red { fill: #eb1405; }
@@ -298,8 +298,11 @@
     <use xlink:href="#disaster-type--VO" width="48" height="48" y="864"/>
     <use xlink:href="#disaster-type--WF" width="48" height="48" y="912"/>
   </symbol>
-  <symbol id="group-disaster-type--16" viewBox="0 0 16 320">
+  <symbol id="group-disaster-type--16" viewBox="0 0 64 320">
     <use xlink:href="#group-disaster-type" width="16" height="320" class="white"/>
+    <use xlink:href="#group-disaster-type" width="16" height="320" x="16" class="grey"/>
+    <use xlink:href="#group-disaster-type" width="16" height="320" x="32" class="orange"/>
+    <use xlink:href="#group-disaster-type" width="16" height="320" x="48" class="red"/>
   </symbol>
   <symbol id="group-disaster-type--24" viewBox="0 0 72 480">
     <use xlink:href="#group-disaster-type" width="24" height="480" class="grey"/>
@@ -327,6 +330,44 @@
     <use xlink:href="#group-social-media" width="48" height="144" class="dark-blue"/>
     <use xlink:href="#group-social-media" width="48" height="144" x="48" class="dark-red"/>
   </symbol>
+  <symbol id="map-marker--marker" viewBox="0 0 30 45">
+    <style xmlns:default="http://www.w3.org/2000/svg">
+    .shadow {
+      fill: #000000;
+      fill-opacity: 0.04;
+    }
+    .border {
+      fill: #000000;
+      fill-opacity: 0.25;
+    }
+  </style>
+    <g class="shadow">
+      <ellipse cx="15" cy="38.667" rx="11.667" ry="5.833"/>
+      <ellipse cx="15" cy="38.667" rx="11.667" ry="5.833"/>
+      <ellipse cx="15" cy="38.667" rx="10.556" ry="5.303"/>
+      <ellipse cx="15" cy="38.667" rx="9.444" ry="4.772"/>
+      <ellipse cx="15" cy="38.667" rx="8.333" ry="4.242"/>
+      <ellipse cx="15" cy="38.667" rx="7.222" ry="3.712"/>
+      <ellipse cx="15" cy="38.667" rx="6.111" ry="3.182"/>
+      <ellipse cx="15" cy="38.667" rx="5" ry="2.651"/>
+    </g>
+    <path d="M30 15c0 6.194-7.5 15-13.611 23.333-.815 1.111-1.963 1.111-2.778 0C7.5 30 0 21.359 0 15 0 6.716 6.716 0 15 0c8.284 0 15 6.716 15 15z"/>
+    <path d="M15 0C6.716 0 0 6.716 0 15c0 6.359 7.5 15 13.611 23.333.833 1.137 1.963 1.111 2.778 0C22.5 30 30 21.194 30 15c0-8.284-6.716-15-15-15zm-.048 38.217a5.349 5.349 0 01-.444-.541c-3.069-4.185-6.67-8.459-9.197-12.412-2.529-3.952-4.2-7.598-4.2-10.264A13.873 13.873 0 0115 1.111h.09A13.873 13.873 0 0128.889 15c0 2.666-1.671 6.312-4.2 10.264-2.527 3.953-6.128 8.227-9.197 12.412a5.283 5.283 0 01-.492.592l-.048-.051z" class="border"/>
+  </symbol>
+  <symbol id="group-map-marker" viewBox="0 0 48 48">
+    <use xlink:href="#map-marker--marker" width="48" height="48"/>
+  </symbol>
+  <symbol id="group-map-marker--16" viewBox="0 0 48 16">
+    <use xlink:href="#group-map-marker" width="16" height="16" class="grey"/>
+    <use xlink:href="#group-map-marker" width="16" height="16" x="16" class="orange"/>
+    <use xlink:href="#group-map-marker" width="16" height="16" x="32" class="red"/>
+  </symbol>
+  <symbol id="group-map-marker--44" viewBox="0 0 176 44">
+    <use xlink:href="#group-map-marker" width="44" height="44" class="blue"/>
+    <use xlink:href="#group-map-marker" width="44" height="44" x="44" class="grey"/>
+    <use xlink:href="#group-map-marker" width="44" height="44" x="88" class="orange"/>
+    <use xlink:href="#group-map-marker" width="44" height="44" x="132" class="red"/>
+  </symbol>
   <use xlink:href="#group-common--12" width="48" height="252"/>
   <use xlink:href="#group-common--18" width="72" height="378" x="48"/>
   <use xlink:href="#group-search--18" width="36" height="18" x="120"/>
@@ -338,8 +379,10 @@
   <use xlink:href="#group-content--16" width="16" height="96" x="328"/>
   <use xlink:href="#group-content--24" width="24" height="144" x="344"/>
   <use xlink:href="#group-content--36" width="36" height="216" x="368"/>
-  <use xlink:href="#group-disaster-type--16" width="16" height="320" x="404"/>
-  <use xlink:href="#group-disaster-type--24" width="72" height="480" x="420"/>
-  <use xlink:href="#group-disaster-type--32" width="32" height="640" x="492"/>
-  <use xlink:href="#group-social-media--48" width="96" height="144" x="524"/>
+  <use xlink:href="#group-disaster-type--16" width="64" height="320" x="404"/>
+  <use xlink:href="#group-disaster-type--24" width="72" height="480" x="468"/>
+  <use xlink:href="#group-disaster-type--32" width="32" height="640" x="540"/>
+  <use xlink:href="#group-social-media--48" width="96" height="144" x="572"/>
+  <use xlink:href="#group-map-marker--16" width="48" height="16" x="668"/>
+  <use xlink:href="#group-map-marker--44" width="176" height="44" x="716"/>
 </svg>
