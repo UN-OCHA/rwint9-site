@@ -121,6 +121,7 @@
 <fieldset id="legal">
   <legend class="visually-hidden">{% trans %}Legal{% endtrans %}</legend>
   {{ form.legal }}
+  {{ form.field_source_reminder }}
 </fieldset>
 
 <fieldset id="actions">
@@ -134,7 +135,7 @@
   form|without([
     'user_information',
     'field_source',
-    'field_unspecified_location',
+    'unspecified_location',
     'field_country',
     'field_city',
     'field_job_closing_date',
@@ -147,6 +148,7 @@
     'body',
     'field_how_to_apply',
     'legal',
+    'field_source_reminder',
     'actions',
     'revision_information',
   ])

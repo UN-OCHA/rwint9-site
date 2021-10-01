@@ -3,3 +3,7 @@ name: ReliefWeb Homepage
 description: 'Provides a route controller for the homepage as well has the headline manager.'
 package: reliefweb
 core_version_requirement: ^9
+dependencies:
+  - drupal:reliefweb_api
+  - drupal:reliefweb_rivers
+  - drupal:reliefweb_utility

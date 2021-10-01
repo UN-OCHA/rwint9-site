@@ -7,3 +7,13 @@ services:
     class: 'Drupal\reliefweb_entities\Access\EntityAccessCheck'
     tags:
       - { name: access_check, applies_to: _reliefweb_entities_entity_access_check }
+  # Form alteration services.
+  reliefweb_entities.job.form_alter:
+    class: Drupal\reliefweb_entities\Services\JobFormAlter
+    arguments: ['@database', '@current_user', '@entity_field.manager', '@entity_type.manager', '@state', '@string_translation']
+  reliefweb_entities.report.form_alter:
+    class: Drupal\reliefweb_entities\Services\ReportFormAlter
+    arguments: ['@database', '@current_user', '@entity_field.manager', '@entity_type.manager', '@state', '@string_translation']
+  reliefweb_entities.training.form_alter:
+    class: Drupal\reliefweb_entities\Services\TrainingFormAlter
+    arguments: ['@database', '@current_user', '@entity_field.manager', '@entity_type.manager', '@state', '@string_translation']

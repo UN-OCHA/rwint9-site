@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_moderation\Services;
 
+use Drupal\reliefweb_entities\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 
 /**
@@ -103,6 +104,23 @@ class CountryModeration extends ModerationServiceBase {
       'draft' => $this->t('Draft'),
       'ongoing' => $this->t('Ongoing'),
       'normal' => $this->t('Normal'),
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEntityFormSubmitButtons($status, EntityModeratedInterface $entity) {
+    return [
+      'draft' => [
+        '#value' => $this->t('Save as draft'),
+      ],
+      'ongoing' => [
+        '#value' => $this->t('Ongoing situation'),
+      ],
+      'normal' => [
+        '#value' => $this->t('Normal'),
+      ],
     ];
   }
 

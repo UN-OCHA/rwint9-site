@@ -8,6 +8,44 @@ namespace Drupal\reliefweb_utility\Helpers;
 class LocalizationHelper {
 
   /**
+   * Sort an array using a collator for the given language, perserving the keys.
+   *
+   * @param array $items
+   *   Items to sort.
+   * @param string|null $property
+   *   Property of the items used to sort them.
+   * @param string $language
+   *   Language for the collator (ISO2 code).
+   *
+   * @return bool
+   *   TRUE on success or FALSE on failure.
+   */
+  public static function collatedAsort(array &$items, $property = NULL, $language = NULL) {
+    if (empty($items)) {
+      return TRUE;
+    }
+
+    $collator = static::getCollator($language);
+
+    if ($collator !== FALSE) {
+      if (isset($property)) {
+        return uasort($items, function ($a, $b) use ($collator, $property) {
+          return $collator->compare($a[$property], $b[$property]);
+        });
+      }
+      return collator_asort($collator, $items);
+    }
+    else {
+      if (isset($property)) {
+        return uasort($items, function ($a, $b) use ($property) {
+          return $a[$property] <=> $b[$property];
+        });
+      }
+      return asort($items);
+    }
+  }
+
+  /**
    * Sort an array using a collator for the given language.
    *
    * @param array $items
@@ -19,8 +57,6 @@ class LocalizationHelper {
    *
    * @return bool
    *   TRUE on success or FALSE on failure.
-   *
-   * @todo Move that to some utils?
    */
   public static function collatedSort(array &$items, $property = NULL, $language = NULL) {
     if (empty($items)) {
@@ -57,8 +93,6 @@ class LocalizationHelper {
    *
    * @return bool
    *   TRUE on success or FALSE on failure.
-   *
-   * @todo Move that to some utils?
    */
   public static function collatedKsort(array &$items, $language = NULL) {
     if (empty($items)) {
@@ -93,8 +127,6 @@ class LocalizationHelper {
    *
    * @return Collator
    *   Collator.
-   *
-   * @todo Move that to some utils?
    */
   public static function getCollator($language = NULL) {
     static $collators = [];

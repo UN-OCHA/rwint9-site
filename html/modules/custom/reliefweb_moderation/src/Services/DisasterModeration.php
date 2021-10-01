@@ -2,7 +2,10 @@
 
 namespace Drupal\reliefweb_moderation\Services;
 
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\reliefweb_entities\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
+use Drupal\reliefweb_utility\Helpers\UserHelper;
 
 /**
  * Moderation service for the disaster terms.
@@ -139,11 +142,89 @@ class DisasterModeration extends ModerationServiceBase {
    */
   public function getFilterStatuses() {
     $statuses = parent::getFilterStatuses();
-    if (!$this->userHasRoles(['external_disaster_manager'])) {
+    // @todo replace with permission.
+    if (!UserHelper::userHasRoles(['external_disaster_manager'])) {
       unset($statuses['external']);
       unset($statuses['external_archive']);
     }
     return $statuses;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEntityFormSubmitButtons($status, EntityModeratedInterface $entity) {
+    $buttons = [];
+
+    // @todo replace with permission.
+    if (UserHelper::userHasRoles(['Editor'])) {
+      $buttons['draft'] = [
+        '#value' => $this->t('Draft'),
+      ];
+      $buttons['alert'] = [
+        '#value' => $this->t('Alert'),
+      ];
+      $buttons['current'] = [
+        '#value' => $this->t('Ongoing'),
+      ];
+    }
+
+    // @todo replace with permission.
+    if (UserHelper::userHasRoles(['External disaster manager'])) {
+      $buttons['external'] = [
+        '#value' => $this->t('External'),
+      ];
+    }
+
+    // Existing disaster.
+    if (!empty($status)) {
+      $buttons['archive'] = [
+        '#value' => $this->t('Archive'),
+      ];
+    }
+
+    return $buttons;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function alterSubmittedEntityStatus($status, FormStateInterface $form_state) {
+    // Compute the real status when saving as "archive".
+    if ($status === 'archive') {
+      $current_status = $form_state
+        ?->getFormObject()
+        ?->getEntity()
+        ?->getModerationStatus();
+
+      switch ($current_status) {
+        case 'draft':
+        case 'draft-archive':
+          $status = 'draft-archive';
+          break;
+
+        case 'alert':
+        case 'alert-archive':
+          $status = 'alert-archive';
+          break;
+
+        case 'external':
+        case 'external-archive':
+          $status = 'external-archive';
+          break;
+
+        case 'current':
+        case 'ongoing':
+        case 'past':
+          $status = 'past';
+          break;
+
+        // Compatibility with previous archive status.
+        default:
+          $status = 'alert-archive';
+      }
+    }
+    return $status;
   }
 
   /**

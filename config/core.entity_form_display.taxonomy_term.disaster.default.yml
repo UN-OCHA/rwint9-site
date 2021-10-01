@@ -21,6 +21,7 @@ dependencies:
     - allowed_formats
     - content_moderation
     - datetime
+    - reliefweb_fields
     - text
 id: taxonomy_term.disaster.default
 targetEntityType: taxonomy_term
@@ -41,12 +42,38 @@ content:
   field_country:
     weight: 2
     settings:
-      match_operator: CONTAINS
-      match_limit: 10
-      size: 60
-      placeholder: ''
+      sort: label
+      extra_data:
+        moderation_state: moderation_state
+        field_shortname: field_shortname
+        tid: '0'
+        uuid: '0'
+        revision_id: '0'
+        langcode: '0'
+        vid: '0'
+        revision_created: '0'
+        revision_user: '0'
+        revision_log_message: '0'
+        status: '0'
+        name: '0'
+        description: '0'
+        weight: '0'
+        parent: '0'
+        changed: '0'
+        default_langcode: '0'
+        revision_default: '0'
+        revision_translation_affected: '0'
+        field_aliases: '0'
+        field_appeals_response_plans: '0'
+        field_iso3: '0'
+        field_key_content: '0'
+        field_location: '0'
+        field_longname: '0'
+        field_profile: '0'
+        field_timezone: '0'
+        field_useful_links: '0'
     third_party_settings: {  }
-    type: entity_reference_autocomplete
+    type: reliefweb_entity_reference_select
     region: content
   field_disaster_date:
     weight: 5
@@ -57,12 +84,10 @@ content:
   field_disaster_type:
     weight: 4
     settings:
-      match_operator: CONTAINS
-      match_limit: 10
-      size: 60
-      placeholder: ''
+      extra_data: {  }
+      sort: label
     third_party_settings: {  }
-    type: entity_reference_autocomplete
+    type: reliefweb_entity_reference_select
     region: content
   field_glide:
     weight: 7
@@ -83,22 +108,46 @@ content:
   field_primary_country:
     weight: 1
     settings:
-      match_operator: CONTAINS
-      match_limit: 10
-      size: 60
-      placeholder: ''
+      sort: label
+      extra_data:
+        moderation_state: moderation_state
+        field_shortname: field_shortname
+        tid: '0'
+        uuid: '0'
+        revision_id: '0'
+        langcode: '0'
+        vid: '0'
+        revision_created: '0'
+        revision_user: '0'
+        revision_log_message: '0'
+        status: '0'
+        name: '0'
+        description: '0'
+        weight: '0'
+        parent: '0'
+        changed: '0'
+        default_langcode: '0'
+        revision_default: '0'
+        revision_translation_affected: '0'
+        field_aliases: '0'
+        field_appeals_response_plans: '0'
+        field_iso3: '0'
+        field_key_content: '0'
+        field_location: '0'
+        field_longname: '0'
+        field_profile: '0'
+        field_timezone: '0'
+        field_useful_links: '0'
     third_party_settings: {  }
-    type: entity_reference_autocomplete
+    type: reliefweb_entity_reference_select
     region: content
   field_primary_disaster_type:
     weight: 3
     settings:
-      match_operator: CONTAINS
-      match_limit: 10
-      size: 60
-      placeholder: ''
+      extra_data: {  }
+      sort: label
     third_party_settings: {  }
-    type: entity_reference_autocomplete
+    type: reliefweb_entity_reference_select
     region: content
   field_profile:
     weight: 9

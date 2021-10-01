@@ -1,0 +1,11 @@
+reliefweb_form.node_form.source_attention_messages:
+  path: '/admin/reliefweb_form/node_form/source_attention_messages/{bundle}'
+  defaults:
+    _controller: '\Drupal\reliefweb_form\Controller\NodeForm::getSourceAttentionMessages'
+    _title: 'Retrieve the source attention messages for the node bundle'
+  methods: [POST]
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'display source attention messages'
+    bundle: '(job|report|training)'

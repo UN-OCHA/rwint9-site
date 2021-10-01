@@ -180,7 +180,7 @@ class ReliefWebLinks extends WidgetBase implements ContainerFactoryPluginInterfa
     }
 
     // Limit to 10,000 bytes (should never be reached).
-    $data = json_decode(file_get_contents('php://input', FALSE, NULL, 0, 10000), TRUE);
+    $data = json_decode(file_get_contents('php://input', FALSE, NULL, 0, 10000) ?? '', TRUE);
     if (empty($data['url'])) {
       return ['error' => t('Invalid link data')];
     }

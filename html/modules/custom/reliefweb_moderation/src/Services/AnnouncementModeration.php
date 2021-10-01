@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_moderation\Services;
 
+use Drupal\reliefweb_entities\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 
 /**
@@ -105,6 +106,23 @@ class AnnouncementModeration extends ModerationServiceBase {
       'draft' => $this->t('Draft'),
       'published' => $this->t('Published'),
       'archive' => $this->t('Archived'),
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEntityFormSubmitButtons($status, EntityModeratedInterface $entity) {
+    return [
+      'draft' => [
+        '#value' => $this->t('Save as draft'),
+      ],
+      'published' => [
+        '#value' => $this->t('Publish'),
+      ],
+      'archive' => [
+        '#value' => $this->t('Archive'),
+      ],
     ];
   }
 

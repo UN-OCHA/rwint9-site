@@ -22,7 +22,7 @@ trait DocumentTrait {
   /**
    * Get the meta information for the entity.
    *
-   * @see Drupal\reliefweb_entities\DocumentInterface::getMetaInformation()
+   * @see Drupal\reliefweb_entities\DocumentInterface::getEntityMeta()
    */
   public function getEntityMeta() {
     return [];
@@ -31,7 +31,7 @@ trait DocumentTrait {
   /**
    * Get the entity image.
    *
-   * @see Drupal\reliefweb_entities\DocumentInterface::getShareLinks()
+   * @see Drupal\reliefweb_entities\DocumentInterface::getEntityImage()
    */
   public function getEntityImage() {
     if ($this->field_image->isEmpty()) {
@@ -46,6 +46,14 @@ trait DocumentTrait {
    * @see Drupal\reliefweb_entities\DocumentInterface::getShareLinks()
    */
   public function getShareLinks() {
+    $entity_id = $this->id();
+
+    // Skip if the entity doesn't have an id, for example when previewing
+    // an entity being created.
+    if (empty($entity_id)) {
+      return [];
+    }
+
     $source = 'ReliefWeb';
 
     // Title.
@@ -62,7 +70,7 @@ trait DocumentTrait {
     }
 
     // Url with the tracking parameters.
-    $url = Url::fromUri('entity:node/' . $this->id(), [
+    $url = Url::fromUri('entity:node/' . $entity_id, [
       'absolute' => TRUE,
       'query' => [
         'utm_medium' => 'social',
