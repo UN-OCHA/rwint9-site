@@ -88,6 +88,105 @@
 }
 
 /**
+ * Related disaters.
+ *
+ * .rw-disaster-map ul
+ */
+.rw-river-article--disaster .rw-river-article--disaster__related-disasters__title {
+  margin: 16px 0 8px 0;
+  font-size: 16px;
+  font-style: normal;
+}
+.rw-river-article--disaster .rw-river-article--disaster__related-disasters__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rw-river-article--disaster .rw-river-article--disaster__related-disasters__list__item {
+  position: relative;
+  margin: 8px 0 0 0;
+  padding: 0 0 0 24px;
+  font-size: 16px;
+}
+.rw-river-article--disaster .rw-river-article--disaster__related-disasters__list__item:before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  overflow: hidden;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  content: "";
+}
+.rw-river-article--disaster .rw-river-article--disaster__related-disasters__list__item[data-disaster-type="AC"]:before {
+  background: var(--rw-icons--disaster-type--AC--16--grey);
+}
+.rw-river-article--disaster .rw-river-article--disaster__related-disasters__list__item[data-disaster-type="AV"]:before {
+  background: var(--rw-icons--disaster-type--AV--16--grey);
+}
+.rw-river-article--disaster .rw-river-article--disaster__related-disasters__list__item[data-disaster-type="CW"]:before {
+  background: var(--rw-icons--disaster-type--CW--16--grey);
+}
+.rw-river-article--disaster .rw-river-article--disaster__related-disasters__list__item[data-disaster-type="DR"]:before {
+  background: var(--rw-icons--disaster-type--DR--16--grey);
+}
+.rw-river-article--disaster .rw-river-article--disaster__related-disasters__list__item[data-disaster-type="EC"]:before {
+  background: var(--rw-icons--disaster-type--EC--16--grey);
+}
+.rw-river-article--disaster .rw-river-article--disaster__related-disasters__list__item[data-disaster-type="EP"]:before {
+  background: var(--rw-icons--disaster-type--EP--16--grey);
+}
+.rw-river-article--disaster .rw-river-article--disaster__related-disasters__list__item[data-disaster-type="EQ"]:before {
+  background: var(--rw-icons--disaster-type--EQ--16--grey);
+}
+.rw-river-article--disaster .rw-river-article--disaster__related-disasters__list__item[data-disaster-type="FF"]:before {
+  background: var(--rw-icons--disaster-type--FF--16--grey);
+}
+.rw-river-article--disaster .rw-river-article--disaster__related-disasters__list__item[data-disaster-type="FL"]:before {
+  background: var(--rw-icons--disaster-type--FL--16--grey);
+}
+.rw-river-article--disaster .rw-river-article--disaster__related-disasters__list__item[data-disaster-type="FR"]:before {
+  background: var(--rw-icons--disaster-type--FR--16--grey);
+}
+.rw-river-article--disaster .rw-river-article--disaster__related-disasters__list__item[data-disaster-type="HT"]:before {
+  background: var(--rw-icons--disaster-type--HT--16--grey);
+}
+.rw-river-article--disaster .rw-river-article--disaster__related-disasters__list__item[data-disaster-type="IN"]:before {
+  background: var(--rw-icons--disaster-type--IN--16--grey);
+}
+.rw-river-article--disaster .rw-river-article--disaster__related-disasters__list__item[data-disaster-type="LS"]:before {
+  background: var(--rw-icons--disaster-type--LS--16--grey);
+}
+.rw-river-article--disaster .rw-river-article--disaster__related-disasters__list__item[data-disaster-type="MS"]:before {
+  background: var(--rw-icons--disaster-type--MS--16--grey);
+}
+.rw-river-article--disaster .rw-river-article--disaster__related-disasters__list__item[data-disaster-type="SS"]:before {
+  background: var(--rw-icons--disaster-type--SS--16--grey);
+}
+.rw-river-article--disaster .rw-river-article--disaster__related-disasters__list__item[data-disaster-type="ST"]:before {
+  background: var(--rw-icons--disaster-type--ST--16--grey);
+}
+.rw-river-article--disaster .rw-river-article--disaster__related-disasters__list__item[data-disaster-type="TC"]:before {
+  background: var(--rw-icons--disaster-type--TC--16--grey);
+}
+.rw-river-article--disaster .rw-river-article--disaster__related-disasters__list__item[data-disaster-type="TS"]:before {
+  background: var(--rw-icons--disaster-type--TS--16--grey);
+}
+.rw-river-article--disaster .rw-river-article--disaster__related-disasters__list__item[data-disaster-type="VO"]:before {
+  background: var(--rw-icons--disaster-type--VO--16--grey);
+}
+.rw-river-article--disaster .rw-river-article--disaster__related-disasters__list__item[data-disaster-type="WF"]:before {
+  background: var(--rw-icons--disaster-type--WF--16--grey);
+}
+.rw-river-article--disaster .rw-river-article--disaster__related-disasters__list__item[data-disaster-status="alert"]:before {
+  background-position-x: var(--rw-icons--disaster-type--16--orange--x);
+}
+.rw-river-article--disaster .rw-river-article--disaster__related-disasters__list__item[data-disaster-status="current"]:before,
+.rw-river-article--disaster .rw-river-article--disaster__related-disasters__list__item[data-disaster-status="ongoing"]:before {
+  background-position-x: var(--rw-icons--disaster-type--24--red--x);
+}
+
+/**
  * Disaster page.
  *
  * Individual disaster pages. Those pages are made of short sections of content
