@@ -1,9 +1,9 @@
 /* River type, updates, jobs, training etc. */
 .rw-bookmarks article {
   position: relative;
+  margin: 0 0 20px 0;
   padding: 0 0 0 56px;
   border: 1px solid #e6ecef;
-  margin: 0 0 20px 0;
 }
 .rw-bookmarks article:last-child {
   border-bottom: 1px solid #e6ecef;
@@ -18,14 +18,14 @@
   border-left: 1px solid #e6ecef;
 }
 .rw-bookmarks article:before {
-  content: "";
   position: absolute;
   top: 50%;
   left: 16px;
-  margin-top: -12px;
+  overflow: hidden;
   width: 24px;
   height: 24px;
-  overflow: hidden;
+  margin-top: -12px;
+  content: "";
   background: var(--rw-icons--content--report--24--grey);
 }
 .rw-bookmarks article.rw-river-article--job:before {

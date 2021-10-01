@@ -56,12 +56,12 @@
       margin-right: 10px;
     }
   }
-  
+
   .cd-icon:not(.cd-icon--arrow-down) {
+    display: inline-block;
     width: 14px;
     height: 14px;
-    fill: $cd-white;
-    display: inline-block;
     vertical-align: middle;
+    fill: $cd-white;
   }
 }
