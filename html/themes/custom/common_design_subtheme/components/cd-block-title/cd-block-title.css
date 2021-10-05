@@ -5,7 +5,8 @@
   line-height: 1.3;
 }
 
-.path-frontpage .cd-block-title {
+.path-frontpage .cd-block-title,
+.rw-page-title.cd-block-title {
   padding-bottom: 0.5rem;
   border-bottom: 1px solid #eb1405;
   font-size: 24px;
@@ -16,7 +17,8 @@
 }
 
 @media screen and (min-width: 480px) {
-  .rw-river--headlines h2.cd-block-title {
+  .rw-river--headlines h2.cd-block-title,
+  .rw-page-title.cd-block-title {
     font-size: var(--cd-font-size--2xbase);
   }
 }
