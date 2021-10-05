@@ -1,0 +1,21 @@
+/**
+ * Topics landing page.
+ */
+.path-topics .rw-river-article--topic .rw-river-article__title {
+  font-size: 18px;
+}
+.path-topics .rw-river-article--topic .rw-river-article__content {
+  display: block;
+}
+.path-topics .rw-river-article--topic .rw-river-article__header img {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 32px;
+  height: 32px;
+  margin-top: -16px;
+}
+.path-topics .rw-river-article--topic .rw-river-article__header {
+  position: relative;
+  padding-left: 48px;
+}
