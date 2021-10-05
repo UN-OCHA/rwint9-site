@@ -134,7 +134,7 @@
     margin-top: 0;
   }
   /* Remove bottom border from second last item in two column layout */
-  .rw-river--river-columns--two .rw-river-article:nth-last-child(2) {
+  .rw-river--river-columns--two .rw-river-article:not(.rw-river-article--card):nth-last-child(2) {
     padding-bottom: 0;
     border-bottom: none;
   }
