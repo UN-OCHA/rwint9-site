@@ -106,6 +106,35 @@
   background: var(--rw-icons--common--external-link--12--dark-grey);
 }
 
+/**
+ * Iframes.
+ *
+ * To be responsive, iframes are wrapped in a container with a top padding
+ * defining the aspect ratio of the iframe content (for example,
+ * 50% for a iframe where the height is half the width). The iframe is then
+ * positioned to fill the space in the wrapper so that when the wrapper is
+ * resized so is the iframe.
+ */
+.cd-layout-content iframe {
+  width: 100%;
+  border: 0;
+}
+.cd-layout-content .iframe-wrapper {
+  position: relative;
+  /* Default padding for the iframes, assuming a 2/1 aspect ratio.
+   * This can be overloaded via a style attribute on the wrapper with the
+   * correct aspect ratio. */
+  padding-top: 50%;
+  overflow: hidden;
+}
+.cd-layout-content .iframe-wrapper iframe {
+  /* Those rules ensure the iframe uses all the space of the wrapper. */
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+}
+
 @media screen and (min-width: 768px) {
   .rw-river--river-columns {
     --cd-flow-space: 1rem;
