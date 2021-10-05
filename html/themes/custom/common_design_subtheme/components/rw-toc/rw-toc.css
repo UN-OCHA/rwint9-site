@@ -225,3 +225,8 @@
     margin-bottom: 4rem; /* Matches main element bottom margin */
   }
 }
+
+.node-form fieldset,
+.taxonomy-term-form fieldset {
+  margin-top: 0; /* reset flow */
+}
