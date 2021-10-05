@@ -19,3 +19,26 @@
   position: relative;
   padding-left: 48px;
 }
+
+/**
+ * Topic page.
+ */
+.node--topic--full.rw-document > header {
+  position: relative;
+  padding-left: 64px;
+}
+.node--topic--full.rw-document > header .rw-page-title {
+  padding-bottom: 0;
+}
+.node--topic--full > header .rw-article--topic__icon img {
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  width: 40px;
+  height: 40px;
+  margin-top: -26px;
+}
+.node--topic--full #main section.resources img[src*=".svg"] {
+  min-width: 150px;
+  max-width: 320px;
+}
