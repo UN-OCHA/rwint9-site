@@ -35,7 +35,7 @@
 }
 .rw-user-dashboard li > * {
   display: inline-block;
-  width: 100%;
+  /* width: 100%; */
 }
 .rw-user-dashboard li + li {
   margin-top: 32px;
@@ -51,6 +51,11 @@
   font-weight: bold;
 }
 .rw-user-dashboard li p {
-  display: inline-block;
+  display: block;
   margin: 4px 0 0 0;
+}
+
+.subscription-form fieldset:first-of-type,
+.user-form fieldset:first-of-type {
+  padding-top: 24px;
 }
