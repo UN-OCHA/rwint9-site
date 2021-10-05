@@ -36,9 +36,6 @@
  *
  * List of the blog posts.
  */
-.rw-river-page--blog {
-  --cd-flow-space: 1rem;
-}
 .rw-river-page--blog .rw-river-article--blog-post > h3 {
   margin: 0;
   font-weight: normal;
@@ -58,28 +55,4 @@
   padding-top: 0;
   text-align: center;
   border-bottom: none;
-}
-
-@media screen and (min-width: 768px) {
-  .rw-river-page--blog .rw-river__articles {
-    display: flex;
-    flex-wrap: wrap;
-    width: auto;
-    /* Compensate the margin from the articles. */
-    margin: 0 -8px;
-  }
-  .rw-river-page--blog .rw-river__articles .rw-river-article--blog-post {
-    flex: 1 0 40%;
-    width: 100%;
-    margin-right: 8px;
-    margin-left: 8px;
-    padding: 16px;
-    border: 1px solid #e6ecef;
-  }
-  .rw-river-page--blog .rw-river__articles .rw-river-article--blog-post:nth-child(2) {
-    margin-top: 0; /* Compensate for cd-flow top margin */
-  }
-  .rw-river-page--blog .pager {
-    border-top: none;
-  }
 }
