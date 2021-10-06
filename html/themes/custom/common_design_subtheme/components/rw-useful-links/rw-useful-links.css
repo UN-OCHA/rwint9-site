@@ -1,5 +1,6 @@
 /* Useful links */
-.rw-entity-useful-links img {
+.rw-entity-useful-links img,
+.rw-entity-text--resources img {
   display: inline-block;
   max-width: 200px;
   max-height: 50px;
@@ -9,7 +10,6 @@
 .rw-entity-useful-links img[src*=".svg"],
 .rw-entity-text--resources img[src*=".svg"] {
   min-width: 150px;
-  max-width: 320px;
 }
 
 /**
