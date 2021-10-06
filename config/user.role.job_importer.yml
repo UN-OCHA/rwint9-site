@@ -1,0 +1,13 @@
+uuid: b927268a-c7ab-43e4-a806-dbd949f7aaf6
+langcode: en
+status: true
+dependencies: {  }
+id: job_importer
+label: 'Job importer'
+weight: 8
+is_admin: null
+permissions:
+  - 'create job content'
+  - 'edit own job content'
+  - 'use job transition draft'
+  - 'use job transition published'
