@@ -359,6 +359,9 @@
     "phpspec/prophecy": {
         "version": "1.13.0"
     },
+    "phpspec/prophecy-phpunit": {
+        "version": "v2.0.1"
+    },
     "phpunit/php-code-coverage": {
         "version": "9.2.6"
     },

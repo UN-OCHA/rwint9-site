@@ -347,7 +347,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    * @param string $data
    *   Raw data from XML.
    */
-  protected function validateBody($data) {
+  public function validateBody($data) {
     // Clean the body field.
     $body = $this->sanitizeText('body', $data, 'plain_text');
 
