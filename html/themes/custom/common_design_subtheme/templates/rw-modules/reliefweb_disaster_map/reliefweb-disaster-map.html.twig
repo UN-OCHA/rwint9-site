@@ -16,4 +16,6 @@
 {% set river_attributes = river_attributes.addClass('rw-disaster-map__content') %}
 {% set article_attributes = article_attributes.addClass('rw-disaster-map__article') %}
 
-{% include '@reliefweb_rivers/reliefweb-rivers-river.html.twig' %}
+{{ attach_library('common_design_subtheme/rw-disaster-map') }}
+
+{% include '@common_design_subtheme/rw-modules/reliefweb_rivers/reliefweb-rivers-river.html.twig' %}

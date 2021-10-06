@@ -1,4 +1,11 @@
 /**
+ * Spacing when there is content before the search bar.
+ */
+.rw-river-page--with-pre-content .rw-river-search {
+  margin-top: 32px;
+}
+
+/**
  * 2 columns layout on tablet/desktop for rivers with advanced search.
  */
 @media screen and (min-width: 768px) {

@@ -267,15 +267,7 @@ class HtmlSanitizer {
           $this->changeTag($node, $convert[$tag]);
         }
         else {
-          $this->removeAttributes($node, [
-            'data-disaster-map',
-            'data-map-enabled',
-            'data-map-content',
-            'data-disaster-type',
-            'data-disaster-status',
-            'data-disaster-lon',
-            'data-disaster-lat',
-          ]);
+          $this->removeAttributes($node);
         }
       }
     }

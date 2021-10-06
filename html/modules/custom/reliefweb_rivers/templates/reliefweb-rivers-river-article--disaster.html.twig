@@ -19,6 +19,13 @@
  */
 
 #}
+{% if entity.location is not empty %}
+  {%
+    set attributes = attributes
+      .setAttribute('data-disaster-lon', entity.location.lon)
+      .setAttribute('data-disaster-lat', entity.location.lat)
+  %}
+{% endif %}
 <article{{ attributes
   .addClass([
     'rw-river-article',
@@ -39,6 +46,12 @@
       '#title': entity.title,
     }) }}
   </header>
+
+  {% if entity.summary is not empty %}
+  <div class="rw-river-article__content" lang="{{ entity.langcode }}">
+    <p>{{ entity.summary }}</p>
+  </div>
+  {% endif %}
 
   {# Footer with meta information (sources, dates etc.). #}
   <footer class="rw-river-article__footer">
@@ -70,5 +83,23 @@
         },
       }
     }) }}
+
+    {# Related disasters. #}
+    {% if entity.related_disasters %}
+      <section class="rw-river-article--disaster__related-disasters">
+        <h{{ level + 1 }} class="rw-river-article--disaster__related-disasters__title">{{ 'Related disasters'|t }}</h{{ level + 1 }}>
+        <ul class="rw-river-article--disaster__related-disasters__list">
+          {% for related_disaster in entity.related_disasters %}
+          <li{{ create_attribute()
+            .addClass('rw-river-article--disaster__related-disasters__list__item')
+            .setAttribute('data-disaster-type', related_disaster.type)
+            .setAttribute('data-disaster-status', related_disaster.status)
+          }}>
+            <a href="{{ related_disaster.url }}">{{ related_disaster.title }}</a>
+          </li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
   </footer>
 </article>

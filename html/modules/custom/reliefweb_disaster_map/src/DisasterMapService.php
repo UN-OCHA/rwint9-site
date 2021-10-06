@@ -3,25 +3,32 @@
 namespace Drupal\reliefweb_disaster_map;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Render\Renderer;
-use Drupal\Core\Security\TrustedCallbackInterface;
+use Drupal\Core\Template\Attribute;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\reliefweb_api\Services\ReliefWebApiClient;
-use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
+use Drupal\reliefweb_rivers\Services\DisasterRiver;
 
 /**
  * ReliefWeb disaster map service.
  */
-class DisasterMapService implements TrustedCallbackInterface {
+class DisasterMapService {
 
   use StringTranslationTrait;
 
   /**
-   * The ReliefWeb API client.
+   * ReliefWeb Disaster Map config.
    *
-   * @var \Drupal\reliefweb_api\Services\ReliefWebApiClient
+   * @var \Drupal\Core\Config\ImmutableConfig
    */
-  protected $reliefWebApiClient;
+  protected $config;
+
+  /**
+   * The ReliefWeb Disaster River service.
+   *
+   * @var \Drupal\reliefweb_rivers\Services\DisasterRiver
+   */
+  protected $disasterRiver;
 
   /**
    * Renderer.
@@ -33,13 +40,16 @@ class DisasterMapService implements TrustedCallbackInterface {
   /**
    * Constructor.
    *
-   * @param \Drupal\reliefweb_api\Services\ReliefWebApiClient $reliefweb_api_client
-   *   The reliefweb api client service.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory service.
+   * @param \Drupal\reliefweb_rivers\Services\DisasterRiver $disaster_river
+   *   The reliefweb disaster river service.
    * @param \Drupal\Core\Render\Renderer $renderer
    *   The reliefweb api client service.
    */
-  public function __construct(ReliefWebApiClient $reliefweb_api_client, Renderer $renderer) {
-    $this->reliefWebApiClient = $reliefweb_api_client;
+  public function __construct(ConfigFactoryInterface $config_factory, DisasterRiver $disaster_river, Renderer $renderer) {
+    $this->config = $config_factory->get('reliefweb_disaster_map.settings');
+    $this->disasterRiver = $disaster_river;
     $this->renderer = $renderer;
   }
 
@@ -65,55 +75,52 @@ class DisasterMapService implements TrustedCallbackInterface {
    *   - types (array): list of disaster type codes (ex: EP for epidemic)
    *   - ids (array): list of disaster ids
    *   - from (int): to retrieve disasters creatrd after the timestamp.
-   * @param string $mode
-   *   Type of data to be returned by the function:
-   *   - data (default): RWPageDataWrapper to be passed to the template
-   *   - html: render the template and return the generated HTML
-   *   - query: API query as an associative array with:
-   *     - title: map title
-   *     - resource: 'disasters' API resource
-   *     - payload: API payload to get the disasters
-   *     - callback: callback to parse the API data and get a RWPageDataWrapper.
    *
-   * @return mixed
-   *   Disaster map data based on the $mode parameter.
+   * @return \Drupal\Component\Render\MarkupInterface|string
+   *   The disaster map rendered HTML.
    */
-  public function getDisasterMap($id, $title, array $options = [], $mode = 'data') {
+  public function getDisasterMap($id, $title, array $options = []) {
+    $id = Html::getUniqueId($id);
+
     $legend = [
       'ongoing' => $this->t('Red markers indicate ongoing situations.'),
       'alert' => $this->t('Orange markers indicate disaster alerts.'),
       'past' => $this->t('Grey markers indicate events that are no longer considered emergencies.'),
     ];
 
-    $payload = [
-      'fields' => [
-        'include' => [
-          'name',
-          'status',
-          'primary_country',
-          'url_alias',
-          'primary_type.code',
-          'profile.overview-html',
-        ],
-      ],
-      'sort' => ['date.created:desc'],
-      'limit' => 200,
-    ];
+    $payload = $this->disasterRiver->getApiPayload();
+    $payload['fields']['include'][] = 'profile.overview-html';
+    $payload['fields']['include'][] = 'primary_country';
+    $payload['limit'] = 200;
 
     // Query conditions.
     $conditions = [];
 
     // Filter by status.
-    $statuses = ['current', 'alert', 'past'];
     if (!empty($options['statuses'])) {
-      $options['statuses'] = array_intersect($statuses, $options['statuses']);
-      $statuses = $options['statuses'] ?? $statuses;
+      $statuses = [];
+      foreach ($options['statuses'] as $status) {
+        switch ($status) {
+          case 'current':
+          case 'ongoing':
+            // Current is the legacy ongoing status. Add both for compatibility.
+            $statuses['current'] = 'current';
+            $statuses['ongoing'] = 'ongoing';
+            break;
+
+          case 'alert':
+          case 'part':
+            $statuses[$status] = $status;
+            break;
+        }
+      }
+
+      $conditions[] = [
+        'field' => 'status',
+        'value' => $statuses,
+        'operator' => 'OR',
+      ];
     }
-    $conditions[] = [
-      'field' => 'status',
-      'value' => $statuses,
-      'operator' => 'OR',
-    ];
 
     // Filter by disaster type.
     if (!empty($options['types'])) {
@@ -144,29 +151,48 @@ class DisasterMapService implements TrustedCallbackInterface {
     }
 
     // Add the combined filter to the payload.
-    if (count($conditions) === 1) {
-      $payload['filter'] = $conditions[0];
-    }
-    else {
-      $payload['filter'] = [
-        'conditions' => $conditions,
-        'operator' => 'AND',
-      ];
-    }
-
-    // Return a query that could be used with reliefweb_api_query_multiple().
-    if ($mode === 'query') {
-      return [
-        'title' => $title,
-        'resource' => 'disasters',
-        'payload' => $payload,
-        'callback' => [$this, 'parseDisasterMapApiData'],
-      ];
-    }
+    $payload['filter'] = [
+      'conditions' => $conditions,
+      'operator' => 'AND',
+    ];
 
     // Get the disasters.
-    $data = $this->reliefWebApiClient->request('disasters', $payload);
-    $entities = self::parseDisasterMapApiData($data);
+    $data = $this->disasterRiver->requestApi($payload);
+
+    // We group the disasters by primary country and add other disasters
+    // affecting the same primary country as related.
+    $entities = [];
+    foreach ($this->disasterRiver->parseApiData($data ?? []) as $entity) {
+      // Get the primary country.
+      $primary_country_id = NULL;
+      foreach ($entity['tags']['country'] as $country) {
+        if (!empty($country['main'])) {
+          $primary_country_id = $country['id'];
+          break;
+        }
+      }
+
+      // Skip if there is no primary country or no locations for the disaster
+      // as we will not be able to render it on the map. This should never
+      // happen though.
+      if (empty($primary_country_id) || empty($entity['location'])) {
+        continue;
+      }
+
+      // There is already a more recent disaster affecting the primary country
+      // so we simply add this disaster as a related disaster.
+      if (isset($entities[$primary_country_id])) {
+        $entities[$primary_country_id]['related_disasters'][] = $entity;
+      }
+      else {
+        $entities[$primary_country_id] = $entity;
+      }
+    }
+
+    // Skip if there is no content.
+    if (empty($entities)) {
+      return '';
+    }
 
     // Limit the statuses for the legend to those of the disasters that would be
     // displayed.
@@ -175,101 +201,64 @@ class DisasterMapService implements TrustedCallbackInterface {
       $statuses[$entity['status']] = TRUE;
     }
 
-    // Skip if there is no content.
-    if (empty($entities)) {
-      return $mode === 'data' ? NULL : '';
-    }
-
-    // Wrap the page data.
-    $bundle = 'disaster';
-
-    $labels = [
-      'status' => [
-        'alert' => $this->t('Alert'),
-        'ongoing' => $this->t('Ongoing'),
-        'past' => $this->t('Past disaster'),
-      ],
+    // Map settings.
+    $settings = [
+      'legend' => array_intersect_key($legend, $statuses),
+      'close' => $this->t('Close'),
+      'fitBounds' => TRUE,
     ];
 
+    // We use the reliefweb river template with a few additional attributes
+    // and attaching the disaster map library to convert the river to a map.
     $render_array = [
       '#theme' => 'reliefweb_disaster_map',
-      '#id' => Html::getId($id),
+      '#id' => $id,
       '#title' => $title,
-      '#settings' => [
-        'legend' => array_intersect_key($legend, $statuses),
-        'close' => $this->t('Close'),
-        'fitBounds' => TRUE,
-      ],
+      '#attributes' => new Attribute([
+        'data-disaster-map' => $id,
+        'data-map-enabled' => '',
+      ]),
+      '#river_attributes' => new Attribute([
+        'data-map-content' => '',
+      ]),
       '#entities' => $entities,
-      '#bundle' => $bundle,
-      '#labels' => $labels,
+      '#attached' => [
+        'library' => [
+          'reliefweb_disaster_map/map',
+        ],
+        'drupalSettings' => [
+          'reliefwebDisasterMap' => [
+            'mapboxKey' => $this->config->get('mapbox_key') ?? '',
+            'mapboxToken' => $this->config->get('mapbox_token') ?? '',
+            'maps' => [
+              $id => $settings,
+            ],
+          ],
+        ],
+      ],
+      '#cache' => [
+        'tag' => [
+          'taxonomy_term_list:disaster',
+        ],
+      ],
     ];
 
-    if ($mode === 'html') {
-      return $this->renderer->renderRoot($render_array);
-    }
-
-    return $render_array;
+    return $this->renderer->render($render_array);
   }
 
   /**
-   * Parse the API data for the disaster map.
+   * Get the map of the latest alert and ongoing diasters.
    *
-   * @param array $api_data
-   *   API data.
-   *
-   * @return array
-   *   List of disaster entities wrapped in a RWPageDataWrapper.
+   * @return \Drupal\Component\Render\MarkupInterface|string
+   *   The disaster map rendered HTML.
    */
-  public static function parseDisasterMapApiData(array $api_data) {
-    $items = $api_data['items'] ?? $api_data['data'] ?? [];
-
-    // Parse the entities retrieved from the API.
-    // We group the disasters by primary country and add other disasters
-    // affecting the same primary country as references.
-    $entities = [];
-    foreach ($items as $item) {
-      $fields = $item['fields'];
-      $data = [];
-
-      // Skip if there are no locations for the primary country.
-      // That should never happen though.
-      if (empty($fields['primary_country']['location'])) {
-        continue;
-      }
-
-      // Url.
-      $data['url'] = $fields['url_alias'] ?? urlencode('taxonomy/term/' . $item['id']);
-
-      // Title.
-      $data['title'] = $fields['name'];
-
-      // Status.
-      $data['status'] = $fields['status'] === 'current' ? 'ongoing' : $fields['status'];
-
-      // Primary type, default to Other if not defined.
-      $data['type'] = $fields['primary_type']['code'] ?? 'OT';
-
-      // There is already a more recent disaster affecting the primary country
-      // so we simply add this disaster as additional disaster reference.
-      $primary_country_id = $fields['primary_country']['id'];
-      if (isset($entities[$primary_country_id])) {
-        $entities[$primary_country_id]['references'][] = $data;
-      }
-      else {
-        // Disaster location (= centroid coordinates of the primary country).
-        $data['location'] = $fields['primary_country']['location'];
-
-        // Summary.
-        if (!empty($fields['profile']['overview-html'])) {
-          $data['summary'] = HtmlSummarizer::summarize($fields['profile']['overview-html'], 260);
-        }
-
-        $entities[$primary_country_id] = $data;
-      }
-    }
-
-    return $entities;
+  public static function getAlertAndOngoingDisasterMap() {
+    return [
+      '#markup' => \Drupal::service('reliefweb_disaster_map.service')
+        ->getDisasterMap('disaster-map', t('Alert and Ongoing Disasters'), [
+          'statuses' => ['alert', 'ongoing'],
+        ]),
+    ];
   }
 
 }
