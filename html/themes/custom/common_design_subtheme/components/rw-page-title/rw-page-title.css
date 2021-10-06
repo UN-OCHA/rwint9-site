@@ -8,6 +8,7 @@
 .taxonomy-term--full > header,
 .rw-river-page > header {
   border-bottom: 1px solid #eb1405;
+  padding-bottom: 12px;
 }
 .rw-document > header,
 .rw-river-page > header {
