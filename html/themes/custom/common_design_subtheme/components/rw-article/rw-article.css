@@ -121,11 +121,11 @@
 }
 .cd-layout-content .iframe-wrapper {
   position: relative;
+  overflow: hidden;
   /* Default padding for the iframes, assuming a 2/1 aspect ratio.
    * This can be overloaded via a style attribute on the wrapper with the
    * correct aspect ratio. */
   padding-top: 50%;
-  overflow: hidden;
 }
 .cd-layout-content .iframe-wrapper iframe {
   /* Those rules ensure the iframe uses all the space of the wrapper. */
