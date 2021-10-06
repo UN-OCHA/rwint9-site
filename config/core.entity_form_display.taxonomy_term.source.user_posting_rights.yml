@@ -46,6 +46,7 @@ hidden:
   field_disclaimer: true
   field_fts_id: true
   field_homepage: true
+  field_job_import_feed: true
   field_job_import_feed_url: true
   field_links: true
   field_logo: true
