@@ -236,7 +236,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       ':id' => $id,
     ])->fetchCol();
 
-    return $count != 0;
+    return $count[0] != 0;
   }
 
   /**
