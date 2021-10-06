@@ -4,5 +4,5 @@
 
 ### Todo
 
-- Custom field to store url and user
+- ~~Custom field to store url and user~~
 - Add Unit tests

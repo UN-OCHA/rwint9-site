@@ -111,7 +111,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     // Load terms having a job URL.
     $query = $this->entityTypeManager->getStorage('taxonomy_term')->getQuery();
     $query->condition('vid', 'source');
-    $query->condition('field_job_import_feed_url', NULL, 'IS NOT NULL');
+    $query->condition('field_job_import_feed', NULL, 'IS NOT NULL');
 
     $tids = $query->execute();
     $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadMultiple($tids);
@@ -127,7 +127,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    *   Source term.
    */
   protected function fetchJobs(Term $term) {
-    $this->url = $term->field_job_import_feed_url->first()->getUrl()->toString();
+    $this->url = $term->field_job_import_feed->first()->feed_url;
 
     $this->logger()->info('Processing @name, fetching jobs from @url.', [
       '@name' => $term->label(),
@@ -141,7 +141,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
 
       // Switch to proper user and import XML.
       /** @var \Drupal\Core\Session\AccountInterface $account */
-      $account = $this->entityTypeManager->getStorage('user')->load(1);
+      $account = $this->entityTypeManager->getStorage('user')->load($term->field_job_import_feed->first()->uid);
       $this->accountSwitcher->switchTo($account);
 
       $this->processXml($data);
