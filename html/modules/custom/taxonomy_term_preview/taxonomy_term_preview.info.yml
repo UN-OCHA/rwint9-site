@@ -1,0 +1,7 @@
+type: module
+name: Taxonomy term preview
+description: 'Extends the taxonomy term form to handle previewing the term.'
+package: taxonomy
+core_version_requirement: ^9
+dependencies:
+  - drupal:taxonomy
