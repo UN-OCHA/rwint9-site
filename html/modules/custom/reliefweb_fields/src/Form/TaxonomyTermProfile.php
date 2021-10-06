@@ -3,7 +3,7 @@
 namespace Drupal\reliefweb_fields\Form;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\taxonomy\TermForm;
+use Drupal\taxonomy_term_preview\Form\TermForm;
 
 /**
  * Taxonomy term profile form handler.
@@ -22,6 +22,20 @@ class TaxonomyTermProfile extends TermForm {
       '@title' => $this->entity->label(),
     ]);
     return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function actions(array $form, FormStateInterface $form_state) {
+    $element = parent::actions($form, $form_state);
+    if (isset($element['submit'])) {
+      $element['submit']['#value'] = $this->t('Save changes');
+    }
+    if (isset($element['delete'])) {
+      $element['delete']['#access'] = FALSE;
+    }
+    return $element;
   }
 
   /**
