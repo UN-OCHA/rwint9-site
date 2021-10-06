@@ -34,7 +34,7 @@ class EntityAccessCheck implements AccessInterface {
         }
       }
     }
-    // Let other modules decide the access to the entity.
+    // Allow access.
     return AccessResult::allowed();
   }
 
