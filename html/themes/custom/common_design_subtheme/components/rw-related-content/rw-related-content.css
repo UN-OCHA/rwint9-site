@@ -3,48 +3,32 @@
  *
  * List of documents related to the main document.
  */
-.rw-document + .rw-river--type-reports {
+.rw-river--related {
   margin: 0;
   padding: 32px 0 24px;
   border-top: 1px solid #e6ecef;
 }
-.rw-document + .rw-river--type-reports h2 {
+.rw-river--related h2 {
   padding-bottom: 12px;
   border-bottom: 1px solid #eb1405;
   /* margin: 0 0 8px 0; */
   font-size: 24px;
 }
-.rw-document + .rw-river--type-reports .rw-river__articles {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-}
-.rw-document + .rw-river--type-reports .rw-river__articles article {
-  width: 100%;
-}
-
-@media screen and (min-width: 768px) {
-  .rw-document + .rw-river--type-reports .rw-river__articles {
-    width: auto;
-    /* Compensate the margin from the articles. */
-    margin: 0 -16px;
-  }
-  .rw-document + .rw-river--type-reports .rw-river__articles article {
-    flex: 1 0 40%;
-    margin-right: 16px;
-    margin-left: 16px;
-  }
-  .rw-document + .rw-river--type-reports .rw-river__articles article:nth-last-child(2) {
-    padding-bottom: 0;
-    border-bottom: none;
-  }
-  .rw-document + .rw-river--type-reports .rw-river__articles article:nth-child(2) {
-    margin-top: 0; /* Compensate for cd-flow top margin */
-  }
-}
-.rw-document + .rw-river--type-reports .rw-river__articles article footer {
+.rw-river--related article footer {
   display: flex;
   flex: 1 0 auto;
   flex-direction: column;
   justify-content: flex-end;
+}
+
+@media screen and (min-width: 768px) {
+  .rw-river--related .rw-river__articles {
+    width: auto;
+    /* Compensate the margin from the articles. */
+    margin: 0 -16px;
+  }
+  .rw-river--related .rw-river__articles article {
+    margin-right: 16px;
+    margin-left: 16px;
+  }
 }

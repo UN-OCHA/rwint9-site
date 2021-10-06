@@ -207,6 +207,7 @@ trait DocumentTrait {
 
     return [
       '#theme' => 'reliefweb_rivers_river',
+      '#id' => 'related',
       '#title' => $title,
       '#resource' => 'reports',
       '#entities' => $entities,
