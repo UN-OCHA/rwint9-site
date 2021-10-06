@@ -96,6 +96,7 @@
  */
 .taxonomy-term--disaster--full[data-disaster-type] > header {
   position: relative;
+  padding-bottom: 12px;
   padding-left: 64px;
 }
 

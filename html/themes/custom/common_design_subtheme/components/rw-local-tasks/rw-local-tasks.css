@@ -1,11 +1,12 @@
 /* Local tasks */
 .block-local-tasks-block {
-  display: table-row;
+  /* display: table-row; */
+  border-bottom: 1px solid #eb1405;
 }
 .block-local-tasks-block ul,
 .tabs {
   margin: 0;
-  padding: 0 0 32px 0;
+  padding: 0 0 16px 0;
   list-style: none;
 }
 .block-local-tasks-block li,
@@ -34,6 +35,7 @@
   display: none;
 }
 .block-local-tasks-block a[aria-current],
-.tabs a[aria-current] {
+.tabs a[aria-current],
+.tabs a.is-active {
   font-weight: bold;
 }
