@@ -65,13 +65,13 @@ class ReliefWebApiClient {
    *
    * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
    *   The default cache backend.
-   * @param Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory service.
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The time service.
    * @param \GuzzleHttp\ClientInterface $http_client
    *   The HTTP client service.
-   * @param Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
    *   The logger factory service.
    */
   public function __construct(CacheBackendInterface $cache_backend, ConfigFactoryInterface $config_factory, TimeInterface $time, ClientInterface $http_client, LoggerChannelFactoryInterface $logger_factory) {

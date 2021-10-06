@@ -124,7 +124,10 @@
       "source": "img/icons/disaster-types",
       "sizes": {
         "16": [
-          "white"
+          "white",
+          "grey",
+          "orange",
+          "red"
         ],
         "24": [
           "grey",
@@ -142,6 +145,22 @@
         "48": [
           "dark-blue",
           "dark-red"
+        ]
+      }
+    },
+    "map-marker": {
+      "source": "img/icons/map",
+      "sizes": {
+        "16": [
+          "grey",
+          "orange",
+          "red"
+        ],
+        "44": [
+          "blue",
+          "grey",
+          "orange",
+          "red"
         ]
       }
     }

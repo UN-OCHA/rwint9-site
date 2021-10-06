@@ -1,0 +1,51 @@
+<?php
+
+/**
+ * @file
+ * Taxonomy term preview module file.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function taxonomy_term_preview_help($route_name, RouteMatchInterface $route_match) {
+  if ($route_name === 'help.page.taxonomy_term_preview') {
+    $output = '<h3>' . t('About') . '</h3>';
+    $output .= '<p>' . t('This module enables previewing taxonomy terms.') . '</p>';
+    return $output;
+  }
+}
+
+/**
+ * Implements hook_entity_type_build().
+ */
+function taxonomy_term_preview_entity_type_build(array &$entity_types) {
+  $entity_types['taxonomy_term']->setFormClass('default', 'Drupal\taxonomy_term_preview\Form\TermForm');
+}
+
+/**
+ * Implements hook_page_top().
+ */
+function taxonomy_term_preview_page_top(array &$page) {
+  // Add 'Back to content editing' link and the view mode selector
+  // at the top of the taxonomy term preview page.
+  $route_match = \Drupal::routeMatch();
+  if ($route_match->getRouteName() == 'entity.taxonomy_term.preview') {
+    $term = $route_match->getParameter('term_preview');
+
+    if (isset($term)) {
+      $form = \Drupal::formBuilder()
+        ->getForm('\Drupal\taxonomy_term_preview\Form\TermPreviewForm', $term);
+
+      $page['page_top']['term_preview'] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['term-preview-container', 'container-inline'],
+        ],
+        'view_mode' => $form,
+      ];
+    }
+  }
+}

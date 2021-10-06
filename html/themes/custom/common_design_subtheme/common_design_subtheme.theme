@@ -183,12 +183,17 @@ function common_design_subtheme_form_user_form_alter(array &$form, FormStateInte
 function common_design_subtheme_preprocess_taxonomy_term(&$variables) {
   $term = $variables['term'] ?? NULL;
   $view_mode = $variables['view_mode'] ?? $variables['elements']['#view_mode'] ?? '';
+  $route_name = \Drupal::routeMatch()->getRouteName();
 
   // Prepare the title and local tasks so we have better control over where
   // to display them for content in full term.
-  // @todo review after term perview is added.
-  if (isset($term) && is_a($term, '\Drupal\taxonomy\TermInterface') && $view_mode === 'full') {
-    common_design_set_page_title($variables, $term->label(), TRUE);
+  if (isset($term) && is_a($term, '\Drupal\taxonomy\TermInterface')) {
+    if ($route_name === 'entity.taxonomy_term.canonical' && $view_mode === 'full') {
+      common_design_set_page_title($variables, $term->label(), TRUE);
+    }
+    elseif ($route_name === 'entity.taxonomy_term.preview') {
+      common_design_set_page_title($variables, $term->label(), TRUE);
+    }
   }
 }
 
@@ -205,7 +210,7 @@ function common_design_subtheme_preprocess_page(&$variables) {
   $route_name = \Drupal::routeMatch()->getRouteName();
 
   // Attempt to retrieve the term entity if the current page is a term page.
-  // @todo handle term preview once added.
+  // @see common_design_subtheme_preprocess_taxonomy_term()
   if ($route_name === 'entity.taxonomy_term.canonical') {
     $term = common_design_subtheme_get_entity_from_route('taxonomy_term');
 
@@ -224,6 +229,12 @@ function common_design_subtheme_preprocess_page(&$variables) {
         ]);
       }
     }
+  }
+  // Hide the page title block on the taxonomy term preview page.
+  elseif ($route_name === 'entity.taxonomy_term.preview') {
+    common_design_hide_rendered_blocks_from_page($variables, [
+      'page_title_block',
+    ]);
   }
   // Remove the page title block from the search results page.
   elseif ($route_name === 'reliefweb_rivers.search.results') {

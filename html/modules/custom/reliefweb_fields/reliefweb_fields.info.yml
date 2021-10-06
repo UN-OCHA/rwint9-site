@@ -7,3 +7,4 @@ dependencies:
   - drupal:reliefweb_form
   - drupal:taxonomy
   - drupal:taxonomy_term_revision
+  - drupal:taxonomy_term_preview

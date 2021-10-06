@@ -5,22 +5,136 @@
  * Disaster map service.
  */
 
+use Drupal\Core\Render\BubbleableMetadata;
+
 /**
  * Implements hook_theme().
  */
 function reliefweb_disaster_map_theme() {
+  // Variation of the river theme for the disaster map.
   $themes = [
     'reliefweb_disaster_map' => [
-      'variables' => [
-        'id' => '',
-        'title' => '',
-        'settings' => [],
-        'entities' => [],
-        'bundle' => '',
-        'labels' => [],
-      ],
+      'base hook' => 'reliefweb_rivers_river',
     ],
   ];
 
   return $themes;
+}
+
+/**
+ * Implements hook_token_info().
+ */
+function reliefweb_disaster_map_token_info() {
+  $info['types']['disaster-map'] = [
+    'name' => t('Disaster type map'),
+    'description' => t('Display maps of the latest disasters per type (can be combined, ex: [disaster-map:ST-SS])'),
+    'type' => 'disaster-map',
+  ];
+
+  // Disaster type map tokens.
+  foreach (reliefweb_disaster_map_get_disaster_type_tokens() as $token_name => $disaster_type) {
+    $info['tokens']['disaster-map'][$token_name] = [
+      'name' => $disaster_type->label(),
+      'description' => t('Map of latest @disaster_type disasters', [
+        '@disaster_type' => $disaster_type->label(),
+      ]),
+    ];
+  }
+  $info['tokens']['disaster-map']['ID'] = [
+    'name' => 'Disasters with IDs',
+    'description' => t('Map of latest disasters with IDs (separated with a "-", ex: [disaster-map:123-456])'),
+  ];
+
+  return $info;
+}
+
+/**
+ * Implements hook_tokens().
+ */
+function reliefweb_disaster_map_tokens($type, $tokens, array $data, array $options, BubbleableMetadata $bubbleable_metadata) {
+  $replacements = [];
+  if ($type === 'disaster-map') {
+    foreach ($tokens as $name => $original) {
+      $replacements[$original] = reliefweb_disaster_map_get_disaster_map_token_replacement($name, $bubbleable_metadata);
+    }
+  }
+  return $replacements;
+}
+
+/**
+ * Get array of disaster types keyed by token name.
+ *
+ * @return array
+ *   Disaster type terms keyed by disaster type code.
+ */
+function reliefweb_disaster_map_get_disaster_type_tokens() {
+  static $disaster_type_tokens;
+
+  if (!isset($disaster_type_tokens)) {
+    $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadByProperties([
+      'vid' => 'disaster_type',
+    ]);
+
+    $disaster_type_tokens = [];
+    foreach ($terms as $term) {
+      if (!$term->field_disaster_type_code->isEmpty()) {
+        $disaster_type_tokens[$term->field_disaster_type_code->value] = $term;
+      }
+    }
+  }
+  return $disaster_type_tokens;
+}
+
+/**
+ * Get the disaster map markup for the given token.
+ *
+ * @param string $token
+ *   Token to replace.
+ * @param \Drupal\Core\Render\BubbleableMetadata $bubbleable_metadata
+ *   Metadata to bubble to the renderer.
+ *
+ * @return \Drupal\Component\Render\MarkupInterface|string
+ *   The rendered disaster map HTML content to use as token replacement.
+ */
+function reliefweb_disaster_map_get_disaster_map_token_replacement($token, BubbleableMetadata $bubbleable_metadata) {
+  $tokens = reliefweb_disaster_map_get_disaster_type_tokens();
+  $values = explode('-', $token);
+  $options = [];
+  $id = strtolower('disaster-map-' . $token);
+
+  $title = '';
+  if (!empty($values) && is_numeric($values[0])) {
+    $options['ids'] = array_map('intval', $values);
+    $title = t('Disasters');
+  }
+  else {
+    $terms = array_intersect_key($tokens, array_flip($values));
+    if (!empty($terms)) {
+      $options['types'] = array_keys($terms);
+      $options['from'] = strtotime('-1 year', time());
+
+      $types = [];
+      foreach ($terms as $term) {
+        $types[] = $term->label();
+      }
+
+      $type = array_pop($types);
+      if (count($types) > 0) {
+        // @todo review how translate that in a better way.
+        $type = t('@types and @type', [
+          '@types' => implode(', ', $types),
+          '@type' => $type,
+        ]);
+      }
+      $title = t('@type disasters covered by ReliefWeb in the last 12 months.', [
+        '@type' => $type,
+      ]);
+    }
+  }
+
+  if (!empty($title)) {
+    return \Drupal::service('reliefweb_disaster_map.service')
+      ->getDisasterMap($id, $title, $options, 'render');
+  }
+  return '';
 }

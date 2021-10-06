@@ -3,14 +3,15 @@
 # Lint sass files.
 
 # We only lint files from custom themes.
-include='^html/themes/custom/common_design_subtheme/.*\.scss$'
+include='^html/themes/custom/common_design_subtheme/(sass|components).*\.s?css$'
 exclude=' '
 
 # The linter path is relative to the root of the repository.
 relative=1
 linter="html/themes/custom/common_design_subtheme/node_modules/.bin/stylelint"
-options="'{sass,components}/**/*.{css,scss}'"
+options=""
 message='Linting subtheme CSS/SCSS files...'
+changedir=1
 
 # Load and execute the linting code.
 . "$(dirname "$0")/lint-common"

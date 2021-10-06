@@ -1,0 +1,388 @@
+/**
+ * Disaster map - default.
+ *
+ * Default to a list of articles.
+ *
+ * Scope: .rw-disaster-map
+ */
+.rw-disaster-map__title {
+  border-bottom: none;
+}
+
+/**
+ * Disaster map - javascript enabled.
+ *
+ * Display the map if possible.
+ *
+ * Scope: .js .rw-disaster-map
+ */
+.js .rw-disaster-map[data-map-enabled] {
+  position: relative;
+}
+.js .rw-disaster-map[data-map-enabled] .rw-disaster-map__title {
+  margin-bottom: 0;
+  padding: 4px 8px 4px 8px;
+  background: #e6ecef;
+  font-size: 18px;
+}
+.js .rw-disaster-map[data-map-enabled] .rw-disaster-map__header {
+  padding-bottom: 4px;
+}
+.js .rw-disaster-map[data-map-enabled] .rw-disaster-map__content {
+  position: relative;
+  overflow: hidden;
+  margin-top: 0;
+  /* This is for the map ratio: height is 40% of the width. */
+  padding-top: 40%;
+  border: 1px solid #e6ecef;
+}
+.js .rw-disaster-map[data-map-enabled] .rw-disaster-map__map {
+  position: relative;
+  /* For some reason there is a 1px space between the map and the container so
+   * we compensate it. */
+  top: -1px;
+  margin: -40% 0 0 0;
+  padding: 0;
+}
+.js .rw-disaster-map[data-map-enabled] .rw-disaster-map__map .mapboxgl-map {
+  position: relative;
+  overflow: hidden;
+  padding-top: 40%;
+}
+.js .rw-disaster-map[data-map-processed] .mapboxgl-canvas-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+.js .rw-disaster-map[data-map-enabled] .rw-disaster-map__legend {
+  /* The padding top is compensate the top: -1px of the figure. */
+  padding: 7px 6px 6px 6px;
+  border-top: 1px solid #e6ecef;
+  font-size: 14px;
+}
+.js .rw-disaster-map[data-map-enabled] .rw-disaster-map__legend__item {
+  position: relative;
+  padding-right: 8px;
+}
+.js .rw-disaster-map[data-map-enabled] .rw-disaster-map__legend__item:last-child {
+  margin-right: 0;
+}
+.js .rw-disaster-map[data-map-enabled] .rw-disaster-map__legend__item:before {
+  display: inline-block;
+  overflow: hidden;
+  width: 16px;
+  height: 16px;
+  margin: 0 4px -3px 0;
+  content: "";
+  background: var(--rw-icons--map-marker--marker--16--grey);
+}
+.js .rw-disaster-map[data-map-enabled] .rw-disaster-map__legend__item[data-disaster-status="alert"]:before {
+  background: var(--rw-icons--map-marker--marker--16--orange);
+}
+.js .rw-disaster-map[data-map-enabled] .rw-disaster-map__legend__item[data-disaster-status="ongoing"]:before {
+  background: var(--rw-icons--map-marker--marker--16--red);
+}
+/* If the map is supported so is ":not()". */
+.js .rw-disaster-map[data-map-enabled] .rw-disaster-map__article:not([data-active]) {
+  /* Visually hidden */
+  position: absolute;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  white-space: nowrap;
+  border: none;
+  clip-path: inset(100%);
+}
+.js .rw-disaster-map[data-map-enabled] .rw-disaster-map__article[data-active] {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  overflow-y: auto;
+  width: 40%;
+  max-height: 258px;
+  margin: 8px;
+  padding: 12px;
+  border: 1px solid #e6ecef;
+  background: white;
+}
+.js .rw-disaster-map[data-map-enabled] .rw-disaster-map__article[data-active="right"] {
+  right: 0;
+}
+.js .rw-disaster-map[data-map-enabled] .rw-disaster-map__article[data-active] .rw-river-article__title a {
+  padding-left: 0;
+}
+.js .rw-disaster-map[data-map-enabled] .rw-disaster-map__article[data-active] .rw-river-article__title a:before {
+  display: none;
+}
+.js .rw-disaster-map[data-map-enabled] .rw-disaster-map__article[data-active] > * {
+  padding: 0;
+  border: none;
+}
+.js .rw-disaster-map[data-map-enabled] .rw-disaster-map__article[data-active] > * + * {
+  padding-top: 8px;
+}
+.js .rw-disaster-map[data-map-enabled] .rw-disaster-map__article[data-active] * {
+  margin: 0;
+  font-size: 15px;
+}
+.js .rw-disaster-map[data-map-enabled] .rw-disaster-map__article[data-active] li[data-disaster-type] {
+  margin: 8px 0 0 0;
+}
+.js .rw-disaster-map[data-map-enabled] .rw-disaster-map__article[data-active] dl {
+  /* Visually hidden */
+  position: absolute;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  white-space: nowrap;
+  border: none;
+  clip-path: inset(100%);
+}
+
+/**
+ * Map markers.
+ */
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-marker[data-disaster-status] {
+  position: absolute;
+  top: 6px;
+  left: 6;
+  width: 44px;
+  height: 44px;
+  cursor: pointer;
+  background: var(--rw-icons--map-marker--marker--44--grey);
+  will-change: transform;
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-marker[data-disaster-status="alert"] {
+  background: var(--rw-icons--map-marker--marker--44--orange);
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-marker[data-disaster-status="ongoing"] {
+  background: var(--rw-icons--map-marker--marker--44--red);
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-marker[data-disaster-status][data-active] {
+  background: var(--rw-icons--map-marker--marker--44--blue);
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-marker[data-disaster-type]:after {
+  position: absolute;
+  top: 7px;
+  left: 14px;
+  width: 16px;
+  height: 16px;
+  content: "";
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-marker[data-disaster-type="AC"]:after {
+  background: var(--rw-icons--disaster-type--AC--16--white);
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-marker[data-disaster-type="AV"]:after {
+  background: var(--rw-icons--disaster-type--AV--16--white);
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-marker[data-disaster-type="CW"]:after {
+  background: var(--rw-icons--disaster-type--CW--16--white);
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-marker[data-disaster-type="DR"]:after {
+  background: var(--rw-icons--disaster-type--DR--16--white);
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-marker[data-disaster-type="EC"]:after {
+  background: var(--rw-icons--disaster-type--EC--16--white);
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-marker[data-disaster-type="EP"]:after {
+  background: var(--rw-icons--disaster-type--EP--16--white);
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-marker[data-disaster-type="EQ"]:after {
+  background: var(--rw-icons--disaster-type--EQ--16--white);
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-marker[data-disaster-type="FF"]:after {
+  background: var(--rw-icons--disaster-type--FF--16--white);
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-marker[data-disaster-type="FL"]:after {
+  background: var(--rw-icons--disaster-type--FL--16--white);
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-marker[data-disaster-type="FR"]:after {
+  background: var(--rw-icons--disaster-type--FR--16--white);
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-marker[data-disaster-type="HT"]:after {
+  background: var(--rw-icons--disaster-type--HT--16--white);
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-marker[data-disaster-type="IN"]:after {
+  background: var(--rw-icons--disaster-type--IN--16--white);
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-marker[data-disaster-type="LS"]:after {
+  background: var(--rw-icons--disaster-type--LS--16--white);
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-marker[data-disaster-type="MS"]:after {
+  background: var(--rw-icons--disaster-type--MS--16--white);
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-marker[data-disaster-type="SS"]:after {
+  background: var(--rw-icons--disaster-type--SS--16--white);
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-marker[data-disaster-type="ST"]:after {
+  background: var(--rw-icons--disaster-type--ST--16--white);
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-marker[data-disaster-type="TC"]:after {
+  background: var(--rw-icons--disaster-type--TC--16--white);
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-marker[data-disaster-type="TS"]:after {
+  background: var(--rw-icons--disaster-type--TS--16--white);
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-marker[data-disaster-type="VO"]:after {
+  background: var(--rw-icons--disaster-type--VO--16--white);
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-marker[data-disaster-type="WF"]:after {
+  background: var(--rw-icons--disaster-type--WF--16--white);
+}
+
+/**
+ * Mapbox styling.
+ *
+ * This is extracted from the mapbox-gl.css file.
+ */
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-canary {
+  background-color: salmon;
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-ctrl-top-left,
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-ctrl-top-right,
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-ctrl-bottom-left,
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-ctrl-bottom-right {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-ctrl-top-left {
+  top: 0;
+  left: 0;
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-ctrl-top-right {
+  top: 0;
+  right: 0;
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-ctrl-bottom-left {
+  bottom: 0;
+  left: 0;
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-ctrl-bottom-right {
+  right: 0;
+  bottom: 0;
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-ctrl {
+  clear: both;
+  /* Workaround for a Safari bug:
+   * https://github.com/mapbox/mapbox-gl-js/issues/8185 */
+  transform: translate(0, 0);
+  pointer-events: auto;
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-ctrl-top-left .mapboxgl-ctrl {
+  float: left;
+  margin: 10px 0 0 10px;
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-ctrl-top-right .mapboxgl-ctrl {
+  float: right;
+  margin: 10px 10px 0 0;
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-ctrl-bottom-left .mapboxgl-ctrl {
+  float: left;
+  margin: 0 0 10px 10px;
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-ctrl-bottom-right .mapboxgl-ctrl {
+  float: right;
+  margin: 0 10px 10px 0;
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-ctrl-group {
+  border-radius: 4px;
+  background: #fff;
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-ctrl-group:not(:empty) {
+  -moz-box-shadow: 0 0 2px rgba(0, 0, 0, 0.1);
+  -webkit-box-shadow: 0 0 2px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-ctrl-group > button {
+  display: block;
+  box-sizing: border-box;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  cursor: pointer;
+  border: 0;
+  outline: none;
+  background-color: transparent;
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-ctrl-group > button + button {
+  border-top: 1px solid #ddd;
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-ctrl-group > button:disabled {
+  opacity: 0.25;
+  border-color: #373737;
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-ctrl-zoom-out {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 9c-.554 0-1 .446-1 1s.446 1 1 1h6c.554 0 1-.446 1-1s-.446-1-1-1z' fill='%23333'/%3E%3C/svg%3E");
+}
+.js .rw-disaster-map[data-map-enabled] .mapboxgl-ctrl-zoom-in {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 6c-.554 0-1 .446-1 1v2H7c-.554 0-1 .446-1 1s.446 1 1 1h2v2c0 .554.446 1 1 1s1-.446 1-1v-2h2c.554 0 1-.446 1-1s-.446-1-1-1h-2V7c0-.554-.446-1-1-1z' fill='%23333'/%3E%3C/svg%3E");
+}
+.js .rw-disaster-map[data-map-enabled] a.mapboxgl-ctrl-logo {
+  display: block;
+  width: 21px;
+  height: 21px;
+  margin: 0 0 -3px -3px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 21 21'%3E%3Cpath d='M10.5 1.25c-5.11 0-9.25 4.15-9.25 9.25s4.15 9.25 9.25 9.25 9.25-4.15 9.25-9.25c0-5.11-4.14-9.25-9.25-9.25zm4.39 11.53c-1.93 1.93-4.78 2.31-6.7 2.31-.7 0-1.41-.05-2.1-.16 0 0-1.02-5.64 2.14-8.81a4.4 4.4 0 013.13-1.28c1.27 0 2.49.51 3.39 1.42 1.84 1.84 1.89 4.75.14 6.52z' opacity='.9' fill='%23fff'/%3E%3Cpath d='M10.5 0C4.7 0 0 4.71 0 10.5S4.7 21 10.5 21 21 16.3 21 10.5C20.99 4.71 16.3 0 10.5 0zm0 19.75c-5.11 0-9.25-4.15-9.25-9.25s4.14-9.26 9.25-9.26 9.25 4.15 9.25 9.25c0 5.13-4.14 9.26-9.25 9.26z' opacity='.35'/%3E%3Cpath d='M14.74 6.26c-1.84-1.84-4.76-1.9-6.51-.15-3.16 3.17-2.14 8.81-2.14 8.81s5.64 1.02 8.81-2.14c1.74-1.77 1.69-4.68-.16-6.52zm-2.27 4.09l-.91 1.87-.9-1.87-1.86-.91 1.86-.9.9-1.87.91 1.87 1.86.9z' opacity='.35'/%3E%3Cpath opacity='.9' fill='%23fff' d='M11.56 12.22l-.9-1.87-1.86-.91 1.86-.9.9-1.87.91 1.87 1.86.9-1.86.91z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+}
+
+/**
+ * Button to close the disaster description popup.
+ *
+ * Scope: .js .rw-disaster-map
+ */
+.js .rw-disaster-map .rw-disaster-map__close {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  right: 0;
+  display: none;
+  overflow: hidden;
+  width: 20px;
+  height: 20px;
+  padding: 0 0 0 20px;
+  border: none;
+  border-radius: 50%;
+  background: #055372;
+}
+.js .rw-disaster-map .rw-disaster-map__close:hover,
+.js .rw-disaster-map .rw-disaster-map__close:active,
+.js .rw-disaster-map .rw-disaster-map__close:focus {
+  background: #eb1405;
+}
+.js .rw-disaster-map .rw-disaster-map__close:before {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  overflow: hidden;
+  width: 12px;
+  height: 12px;
+  margin-top: -6px;
+  margin-left: -6px;
+  content: "";
+  background: var(--rw-icons--common--close--12--white);
+}
+.js .rw-disaster-map .rw-disaster-map__article[data-active] ~ .rw-disaster-map__map .rw-disaster-map__close {
+  display: block;
+}
+.js .rw-disaster-map .rw-disaster-map__article[data-active="left"] ~ .rw-disaster-map__map .rw-disaster-map__close {
+  right: auto;
+  left: 0;
+}
+
+/* Hide on small screens. */
+@media all and (max-width: 767px) {
+  .rw-disaster-map {
+    display: none;
+  }
+}

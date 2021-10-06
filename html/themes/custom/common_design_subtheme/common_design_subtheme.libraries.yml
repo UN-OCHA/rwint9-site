@@ -75,6 +75,13 @@ rw-datepicker:
   dependencies:
     - common_design_subtheme/rw-icons
 
+rw-disaster-map:
+  css:
+    theme:
+      components/rw-disaster-map/rw-disaster-map.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+
 rw-disasters:
   css:
     theme:
