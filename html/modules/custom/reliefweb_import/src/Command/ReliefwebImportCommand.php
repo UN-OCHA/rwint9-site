@@ -140,8 +140,9 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       $data = $this->getTestXml();
 
       // Switch to proper user and import XML.
-      /** @var \Drupal\Core\Session\AccountInterface $account */
+      /** @var \Drupal\user\UserInterface $account */
       $account = $this->entityTypeManager->getStorage('user')->load($term->field_job_import_feed->first()->uid);
+      $account->addRole('job_importer');
       $this->accountSwitcher->switchTo($account);
 
       $this->processXml($data);
