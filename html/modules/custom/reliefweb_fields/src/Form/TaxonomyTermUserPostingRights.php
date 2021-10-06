@@ -27,6 +27,20 @@ class TaxonomyTermUserPostingRights extends TermForm {
   /**
    * {@inheritdoc}
    */
+  public function actions(array $form, FormStateInterface $form_state) {
+    $element = parent::actions($form, $form_state);
+    if (isset($element['submit'])) {
+      $element['submit']['#value'] = $this->t('Save changes');
+    }
+    if (isset($element['delete'])) {
+      $element['delete']['#access'] = FALSE;
+    }
+    return $element;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function save(array $form, FormStateInterface $form_state) {
     $this->entity->setRevisionLogMessage('User posting rights update');
     parent::save($form, $form_state);
