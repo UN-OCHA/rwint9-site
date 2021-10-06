@@ -20,6 +20,10 @@
   padding-left: 48px;
 }
 
+.rw-river-page--topics__byline {
+  margin-bottom: 20px;
+}
+
 /**
  * Topic page.
  */
