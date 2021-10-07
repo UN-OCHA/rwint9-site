@@ -219,7 +219,7 @@ class JobFormAlter extends EntityFormAlterServiceBase {
     $status = $this->getEntityModerationStatus($form_state);
     // Make sure the closing date is in the future for non editors.
     // We also do the validation for the preview to help spot issues.
-    if ($preview || (!UserHelper::userHasRoles('Editor') && ($status === 'pending' || $status === 'published'))) {
+    if ($preview || (!UserHelper::userHasRoles('editor') && ($status === 'pending' || $status === 'published'))) {
       $time = gmmktime(0, 0, 0);
       $date = $this->getDateTimeStamp($form_state->getValue([
         'field_job_closing_date', 0, 'value',

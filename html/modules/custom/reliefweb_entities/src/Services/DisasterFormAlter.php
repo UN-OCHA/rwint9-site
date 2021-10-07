@@ -50,8 +50,8 @@ class DisasterFormAlter extends EntityFormAlterServiceBase {
     ];
 
     // Limit form for External disaster managers who are not Editors.
-    if (UserHelper::userHasRoles(['External disaster manager'])) {
-      if (!UserHelper::userHasRoles(['Editor'])) {
+    if (UserHelper::userHasRoles(['external_disaster_manager'])) {
+      if (!UserHelper::userHasRoles(['editor'])) {
         $this->restrictFormForExternalDisasterManagers($form, $form_state);
       }
     }

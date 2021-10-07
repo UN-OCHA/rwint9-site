@@ -240,7 +240,7 @@ class TrainingFormAlter extends EntityFormAlterServiceBase {
       }
       // Make sure the dates are in the future for non editors.
       // We also do the validation for the preview to help spot issues.
-      elseif ($preview || (!UserHelper::userHasRoles(['Editor']) && ($status === 'pending' || $status === 'published'))) {
+      elseif ($preview || (!UserHelper::userHasRoles(['editor']) && ($status === 'pending' || $status === 'published'))) {
         $time = gmmktime(0, 0, 0);
 
         if ($dates['deadline'] < $time) {
