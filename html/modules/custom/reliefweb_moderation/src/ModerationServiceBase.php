@@ -261,7 +261,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   public function handleEntitySubmission(array $form, FormStateInterface $form_state) {
     // Alter the status based on the rest of the submitted form.
     // @todo review if that should not be done in the entity presave instead.
-    $status = $form_state->getValue(['moderation_state', 0, 'state'], $status);
+    $status = $form_state->getValue(['moderation_state', 0, 'state']);
     $status = $this->alterSubmittedEntityStatus($status, $form_state);
     $form_state->setValue(['moderation_state', 0, 'state'], $status);
   }

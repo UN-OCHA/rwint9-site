@@ -398,7 +398,7 @@
           var options = fieldElement.getElementsByTagName('option');
           for (var i = 0, l = options.length; i < l; i++) {
             var option = options[i];
-            if (option.selected) {
+            if (option.selected && option.value !== '_none') {
               var clone = option.cloneNode(true);
               clone.selected = selected[option.value] || false;
               fragment.appendChild(clone);

@@ -16,10 +16,7 @@ class JobFormAlter extends EntityFormAlterServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function alterForm(array &$form, FormStateInterface $form_state) {
-    // Add the guidelines.
-    $form['#attributes']['data-with-guidelines'] = '';
-
+  protected function addBundleFormAlterations(array &$form, FormStateInterface $form_state) {
     // Add a guide on how to populate the field as description to the title
     // field.
     $form['title']['#description'] = $this->t('The best job titles are brief and specific. Please refrain from indicating location, salary and other details in the title, if possible.');
@@ -78,9 +75,6 @@ class JobFormAlter extends EntityFormAlterServiceBase {
 
     // Validate that the closing date is not in the past.
     $form['#validate'][] = [$this, 'validateJobDateField'];
-
-    // Let the base service add additional alterations.
-    parent::alterForm($form, $form_state);
   }
 
   /**

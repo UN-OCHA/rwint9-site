@@ -10,8 +10,8 @@ field_name: field_glide
 entity_type: taxonomy_term
 bundle: disaster
 label: 'GLIDE number'
-description: ''
-required: true
+description: 'The GLIDE number is only optional when saving as Draft. See <a href="https://glidenumber.net/">glidenumber.net</a> for details.'
+required: false
 translatable: false
 default_value: {  }
 default_value_callback: ''
