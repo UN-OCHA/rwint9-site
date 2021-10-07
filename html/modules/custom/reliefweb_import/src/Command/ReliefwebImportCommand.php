@@ -264,7 +264,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       'uid' => 1,
       'field_job_id' => (string) $data->link,
       'title' => (string) $data->title,
-      'field_career_categories' => $data->field_career_categories[0] ? (array) $data->field_career_categories : 0,
+      'field_career_categories' => $data->field_career_categories[0] ? (array) $data->field_career_categories : [],
       'field_city' => (string) $data->field_city,
       'field_job_closing_date' => (string) $data->field_job_closing_date,
       'field_country' => $this->mapCountries((array) $data->field_country),
@@ -273,10 +273,10 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
         'value' => $this->validateBody((string) $data->body),
         'format' => 'markdown',
       ],
-      'field_job_type' => $data->field_job_type[0] ? (array) $data->field_job_type : 0,
-      'field_job_experience' => $data->field_job_experience[0] ? $this->validateJobExperience((array) $data->field_job_experience) : 0,
-      'field_source' => $data->field_source[0] ? (array) $data->field_source : 0,
-      'field_theme' => $data->field_theme[0] ? (array) $data->field_theme : 0,
+      'field_job_type' => $data->field_job_type[0] ? (array) $data->field_job_type : [],
+      'field_job_experience' => $data->field_job_experience[0] ? $this->validateJobExperience((array) $data->field_job_experience) : [],
+      'field_source' => $data->field_source[0] ? (array) $data->field_source : [],
+      'field_theme' => $data->field_theme[0] ? (array) $data->field_theme : [],
     ];
 
     $job = Job::create($values);
@@ -289,7 +289,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    */
   protected function updateJob(Job $job, $data) {
     $job->title = (string) $data->title;
-    $job->field_career_categories = $data->field_career_categories[0] ? (array) $data->field_career_categories : 0;
+    $job->field_career_categories = $data->field_career_categories[0] ? (array) $data->field_career_categories : [];
     $job->field_city = (string) $data->field_city;
     $job->field_job_closing_date = (string) $data->field_job_closing_date;
     $job->field_country = $this->mapCountries((array) $data->field_country);
@@ -298,10 +298,10 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       'value' => $this->validateBody((string) $data->body),
       'format' => 'markdown',
     ];
-    $job->field_job_type = $data->field_job_type[0] ? (array) $data->field_job_type : 0;
-    $job->field_job_experience = $data->field_job_experience[0] ? $this->validateJobExperience((array) $data->field_job_experience) : 0;
-    $job->field_source = $data->field_source[0] ? (array) $data->field_source : 0;
-    $job->field_theme = $data->field_theme[0] ? (array) $data->field_theme : 0;
+    $job->field_job_type = $data->field_job_type[0] ? (array) $data->field_job_type : [];
+    $job->field_job_experience = $data->field_job_experience[0] ? $this->validateJobExperience((array) $data->field_job_experience) : [];
+    $job->field_source = $data->field_source[0] ? (array) $data->field_source : [];
+    $job->field_theme = $data->field_theme[0] ? (array) $data->field_theme : [];
 
     $this->validateAndSaveJob($job);
   }
@@ -567,7 +567,6 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
  <field_job_type>263</field_job_type>
  <field_career_categories>36601</field_career_categories>
  <field_job_experience>260</field_job_experience>
- <field_job_experience>262</field_job_experience>
 </item><item>
  <link>https://www.aplitrak.com/?adid=ZmsuODgzMjguMTIxODVAc2F2ZXRoZWNoaWxkcmVuYW8uYXBsaXRyYWsuY29t</link>
  <title>Humanitarian Policy and Advocacy Advisor</title>
