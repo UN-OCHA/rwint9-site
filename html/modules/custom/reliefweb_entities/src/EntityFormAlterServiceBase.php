@@ -105,7 +105,49 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
   /**
    * {@inheritdoc}
    */
+  abstract protected function addBundleFormAlterations(array &$form, FormStateInterface $form_state);
+
+  /**
+   * {@inheritdoc}
+   */
   public function alterForm(array &$form, FormStateInterface $form_state) {
+    $operation = $form_state->getFormObject()?->getOperation() ?? 'default';
+
+    // Only apply the form alterations to allowed forms.
+    if (!in_array($operation, $this->getAllowedForms())) {
+      return;
+    }
+
+    // Add the form alterations specific to the bundle.
+    $this->addBundleFormAlterations($form, $form_state);
+
+    // Add the guidelines.
+    $this->addGuidelineFormAlterations($form, $form_state);
+
+    // Add the moderation form alterations to handle the moderation status.
+    // This needs to be added last so that the buttons to save the entity
+    // can run all the submit callbacks added by the other form alterations.
+    $this->addModerarionFormAlterations($form, $form_state);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getAllowedForms() {
+    return ['default'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function addGuidelineFormAlterations(array &$form, FormStateInterface $form_state) {
+    $form['#attributes']['data-with-guidelines'] = '';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function addModerarionFormAlterations(array &$form, FormStateInterface $form_state) {
     $entity = $form_state->getFormObject()->getEntity();
     $moderation_service = ModerationServiceBase::getModerationService($entity->bundle());
     if (!empty($moderation_service)) {
@@ -162,7 +204,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
     $found = FALSE;
     if (!empty($primary_value)) {
       foreach ($form_state->getValue($non_primary_field) as $value) {
-        if ($value[$key_column] === $primary_value) {
+        if ($value === $primary_value) {
           $found = TRUE;
           break;
         }
@@ -787,6 +829,21 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
       }
     }
     return NULL;
+  }
+
+  /**
+   * Redirect to the entity page.
+   *
+   * @param array $form
+   *   Form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  public function redirectToEntityPage(array $form, FormStateInterface $form_state) {
+    $entity = $form_state->getFormObject()?->getEntity();
+    if (!empty($entity) && empty($entity->in_preview) && $entity->id() !== NULL) {
+      $form_state->setRedirectUrl($entity->toUrl());
+    }
   }
 
   /**

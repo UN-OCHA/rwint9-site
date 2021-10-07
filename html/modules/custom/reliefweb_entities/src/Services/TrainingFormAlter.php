@@ -17,10 +17,7 @@ class TrainingFormAlter extends EntityFormAlterServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function alterForm(array &$form, FormStateInterface $form_state) {
-    // Add the guidelines.
-    $form['#attributes']['data-with-guidelines'] = '';
-
+  protected function addBundleFormAlterations(array &$form, FormStateInterface $form_state) {
     // Add a guide on how to populate the field as description to the title
     // field.
     $form['title']['#description'] = $this->t('Should contain only the title of the training. Other information such as location, date and Organization should not be included in this field.');
@@ -83,9 +80,6 @@ class TrainingFormAlter extends EntityFormAlterServiceBase {
 
     // Add a validation callback to handle the altered fields above.
     $form['#validate'][] = [$this, 'validateTrainingEventUrl'];
-
-    // Let the base service add additional alterations.
-    parent::alterForm($form, $form_state);
   }
 
   /**
