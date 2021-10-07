@@ -24,18 +24,19 @@
   /* This is to center vertically the text while staying whithin the defined
    * 50px height. */
   display: table-cell;
-  vertical-align: middle;
   height: 50px;
+  vertical-align: middle;
   /* This gives a better alignment with the OCHA logo which has a height of
    * 20px. */
   line-height: 20px;
 }
+
 @media all and (min-width: 767px) {
   .cd-header #site-slogan .cd-container > span {
     display: flex;
-    justify-content: center;
-    align-items: center;
     flex-direction: row;
+    align-items: center;
+    justify-content: center;
   }
 }
 /* Do not wrap the "a service provided by OCHA" line. */
