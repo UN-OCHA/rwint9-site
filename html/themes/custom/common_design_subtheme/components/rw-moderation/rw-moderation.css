@@ -1,0 +1,233 @@
+/**
+ * Moderation backend form.
+ *
+ * Style the moderation forms used by the editorial teams to review posted
+ * documents.
+ */
+/* Hide visually the filters title to reduce scrolling. */
+.path-moderation .rw-moderation-filters > legend {
+  position: absolute;
+  height: 1px;
+  width: 1px;
+  clip-path: inset(100%);
+  clip: rect(0,0,0,0);
+  overflow: hidden;
+  margin: -1px;
+  padding: 0;
+  border: none;
+  white-space: nowrap;
+}
+.path-moderation #edit-filters {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+.path-moderation #edit-filters-status [data-status] {
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 2px 8px;
+  border-left-width: 8px;
+  background: none;
+  font-size: 16px;
+  line-height: 16px;
+  text-transform: none;
+  white-space: nowrap;
+}
+.path-moderation #edit-filters-status .form-checkboxes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-gap: 0 24px;
+  margin-bottom: -12px;
+}
+.path-moderation.path-moderation-content-disaster #edit-filters-status .form-checkboxes {
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+}
+.path-moderation #edit-filters-other .fieldset-content > * {
+  display: inline-block;
+  vertical-align: middle;
+  margin-top: 0;
+}
+.path-moderation #edit-omnibox .fieldset-content {
+  display: table;
+}
+.path-moderation #edit-omnibox .fieldset-content > * {
+  display: table-cell;
+  vertical-align: middle;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+}
+.path-moderation #edit-omnibox .fieldset-content > :first-child {
+  padding-right: 8px;
+}
+.path-moderation #edit-omnibox .fieldset-content select {
+  height: 100%;
+}
+.path-moderation #edit-omnibox div[data-autocomplete] > input {
+  border-right: 2px solid #e6ecef;
+}
+.path-moderation [data-selection] > span span + span {
+  font-weight: bold;
+}
+.path-moderation #actions {
+  margin-top: 16px;
+}
+/* Link to create a new entity. */
+.path-moderation #actions a {
+  display: inline-block;
+  margin: 8px;
+  padding: 4px 8px;
+  border: 2px solid #055372;
+  border-radius: 8px;
+  line-height: 20px;
+  text-transform: lowercase;
+}
+
+/**
+ * Double datepicker widget.
+ *
+ * This extends the normal datepicker widget (form/components/datepicker.css) to
+ * display two calendars for the `from` and `to` dates in a wrapper with a
+ * select button.
+ *
+ * Scope: .path-moderation #main
+ */
+.path-moderation [data-datepicker] {
+  position: relative;
+  z-index: 10;
+}
+.path-moderation [data-datepicker] > div {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 547px;
+  border: 1px solid #2e3436;
+  box-shadow: 0px 1px 4px 1px rgba(46,52,54,0.3);
+  background: white;
+}
+.path-moderation [data-datepicker] > div > button {
+  width: 100%;
+}
+.path-moderation [data-datepicker] .simpledatepicker-container {
+  display: inline-block;
+}
+.path-moderation [data-datepicker] .simpledatepicker-container + .simpledatepicker-container {
+  border-left: 1px solid #2e3436;
+}
+.path-moderation [data-datepicker] .simpledatepicker-container > input {
+  border: none;
+  text-align: center;
+}
+.path-moderation [data-datepicker] .simpledatepicker-calendar {
+  position: relative;
+  border: none;
+  border-top: 1px solid #2e3436;
+  box-shadow: none;
+}
+.path-moderation [data-datepicker][data-hidden] {
+  display: none;
+}
+
+/**
+ * Result list.
+ *
+ * List of results below the filter section.
+ */
+/* Hide visually the list title to reduce scrolling. */
+.path-moderation .rw-moderation-list > h3 {
+  position: absolute;
+  height: 1px;
+  width: 1px;
+  clip-path: inset(100%);
+  clip: rect(0,0,0,0);
+  overflow: hidden;
+  margin: -1px;
+  padding: 0;
+  border: none;
+  white-space: nowrap;
+}
+.path-moderation .rw-moderation-content__total-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  grid-gap: 24px;
+  margin: 0 0 24px 0;
+  text-align: center;
+  padding: 0;
+}
+.path-moderation .rw-moderation-content__total-list [data-status] {
+  display: inline-block;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0 0 8px 0;
+  border-bottom-width: 4px;
+  border-bottom-style: solid;
+  border-left: none;
+  background: none;
+  font-weight: normal;
+  text-transform: none;
+}
+.path-moderation .rw-moderation-content__total-list [data-status] * {
+  display: block;
+  line-height: 1.2;
+}
+.path-moderation .rw-moderation-content__total-list [data-status] strong {
+  margin-top: 8px;
+}
+.path-moderation .moderation-content-list td [data-status] {
+  margin: 12px 0 0 0;
+  padding: 6px;
+  font-size: 12px;
+  line-height: 10px;
+}
+.path-moderation .moderation-content-list td.edit {
+  text-align: center;
+  white-space: pre;
+}
+.path-moderation .moderation-content-list td.data {
+  width: 100%;
+  word-break: break-word;
+}
+.path-moderation .moderation-content-list td.data > * {
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.path-moderation .moderation-content-list td.data div + div {
+  margin-top: 4px;
+}
+.path-moderation .moderation-content-list td.data .title {
+  font-size: 16px;
+  font-weight: bold;
+}
+.path-moderation .moderation-content-list td.data .headline-title {
+  font-size: 15px;
+  font-style: italic;
+}
+.path-moderation .moderation-content-list td.data .info {
+  font-size: 15px;
+}
+.path-moderation .moderation-content-list td.data .info .country a,
+.path-moderation .moderation-content-list td.data .details .source a {
+  color: #2e3436;
+  font-weight: bold;
+}
+.path-moderation .moderation-content-list td.date .bury {
+  margin-top: 12px;
+}
+.path-moderation .moderation-content-list td.data .closing-date {
+  font-weight: bold;
+}
+.path-moderation .moderation-content-list td.data .dates,
+.path-moderation .moderation-content-list td.data .cost {
+  font-weight: bold;
+}
+.path-moderation .moderation-content-list td.data .value {
+  font-weight: normal;
+}
+.path-moderation .moderation-content-list td.date {
+  font-size: 15px;
+  text-align: center;
+  white-space: pre;
+}

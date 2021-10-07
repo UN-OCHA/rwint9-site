@@ -155,6 +155,11 @@ rw-key-figures:
     theme:
       components/rw-key-figures/rw-key-figures.css: {}
 
+rw-moderation:
+  css:
+    theme:
+      components/rw-moderation/rw-moderation.css: {}
+
 rw-most-read:
   css:
     theme:
