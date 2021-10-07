@@ -2,68 +2,65 @@
  * Site slogan.
  */
 .cd-header #site-slogan {
-  /* This is to center vertically the text. */
-  display: table;
-  table-layout: fixed;
-  /*position: absolute;*/
-  /*bottom: 0;*/
-  /*left: 0;*/
-  width: 100%;
-  height: 50px;
+  min-height: 50px;
   margin: 0;
   padding: 0;
-  /* Inherit the padding from the header wrapper. */
-  padding-left: inherit;
-  padding-right: inherit;
-  /* #e6ecef with 0.4 opacity on white. */
-  background: #f5f7f9;
-  /*border-top: 3px solid #e6ecef;*/
   /* #2e3436 with 0.7 opacity on white. */
   color: #6d7172;
+  color: white; /* TEMPORARY - COVID-19 */
+  /* #e6ecef with 0.4 opacity on white. */
+  background: #f5f7f9;
+  background: #2e3436; /* TEMPORARY - COVID-19 */
   font-size: 16px;
-  font-weight: lighter;
-  text-align: center;
-  /* TEMPORARY - COVID-19 */
-  background: #2e3436;
-  color: white;
 }
 .cd-header #site-slogan a {
-  color: white;
+  color: white; /* TEMPORARY - COVID-19 */
 }
-.cd-header #site-slogan > span {
+.cd-header #site-slogan .cd-container {
+  display: table;
+  text-align: center;
+}
+.cd-header #site-slogan .cd-container > span {
   /* This is to center vertically the text while staying whithin the defined
    * 50px height. */
   display: table-cell;
   vertical-align: middle;
-  /* Account for the top border. */
-  height: 47px;
+  height: 50px;
   /* This gives a better alignment with the OCHA logo which has a height of
    * 20px. */
   line-height: 20px;
 }
+@media all and (min-width: 767px) {
+  .cd-header #site-slogan .cd-container > span {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+  }
+}
 /* Do not wrap the "a service provided by OCHA" line. */
-.cd-header #site-slogan > span > span {
+.cd-header #site-slogan span > span {
   white-space: nowrap;
 }
 .cd-header #site-slogan span.ocha {
-  content: "";
   position: relative;
   display: inline-block;
   width: 81px;
   height: 20px;
+  content: "";
   text-align: left;
 }
 /* Logo displayed on top of the UN OCHA text. */
 .cd-header #site-slogan span.ocha:after {
-  content: "";
   position: absolute;
   top: 0;
   left: 0;
+  overflow: hidden;
   width: 81px;
   height: 20px;
-  overflow: hidden;
-  background: url(../../../images/ocha-logo-sprite.png) 0 -37px no-repeat;
-  background: rgba(0,0,0,0) url(../../../images/ocha-logo-sprite.svg) 0 -37px no-repeat;
+  content: "";
+  background: url(../../img/logos/ocha-logo-sprite.png) 0 -37px no-repeat;
+  background: rgba(0, 0, 0, 0) url(../../img/logos/ocha-logo-sprite.svg) 0 -37px no-repeat;
 }
 /* Reduce the size so that it looks better when the lines wrap. */
 @media all and (max-width: 767px) {
@@ -71,6 +68,7 @@
     font-size: 15px;
   }
 }
+
 @media all and (max-width: 479px) {
   .cd-header #site-slogan {
     font-size: 14px;
@@ -79,9 +77,9 @@
 /* Ugly hack for IE8 to hide the text due bad handling of z-index. */
 @media \0screen {
   .cd-header #site-slogan span.ocha {
-    vertical-align: middle;
-    padding-left: 81px;
     overflow: hidden;
+    padding-left: 81px;
+    vertical-align: middle;
     white-space: nowrap;
   }
 }
