@@ -5,4 +5,4 @@ namespace Drupal\reliefweb_import\Exception;
 /**
  * Exceptions on violations.
  */
-class ReliefwebImportExceptionViolations extends ReliefwebImportException {}
+class ReliefwebImportExceptionViolation extends ReliefwebImportException {}

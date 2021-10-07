@@ -5,13 +5,15 @@ namespace Drupal\reliefweb_import\Command;
 use Consolidation\SiteAlias\SiteAliasManagerAwareInterface;
 use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
 use Consolidation\SiteProcess\ProcessManagerAwareTrait;
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\State\State;
 use Drupal\reliefweb_entities\Entity\Job;
 use Drupal\reliefweb_import\Exception\ReliefwebImportException;
-use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionViolations;
+use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionSoftViolation;
+use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionViolation;
 use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
 use Drupal\taxonomy\Entity\Term;
 use Drush\Commands\DrushCommands;
@@ -78,6 +80,20 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
   protected $url;
 
   /**
+   * The errors.
+   *
+   * @var array
+   */
+  protected $errors;
+
+  /**
+   * The wanings.
+   *
+   * @var array
+   */
+  protected $warnings;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(
@@ -129,6 +145,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
   protected function fetchJobs(Term $term) {
     $this->url = $term->field_job_import_feed->first()->feed_url;
     $uid = $term->field_job_import_feed->first()->uid ?? 2;
+    $base_url = $term->field_job_import_feed->first()->base_url ?? '';
 
     $this->logger()->info('Processing @name, fetching jobs from @url.', [
       '@name' => $term->label(),
@@ -146,10 +163,14 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       $account->addRole('job_importer');
       $this->accountSwitcher->switchTo($account);
 
-      $this->processXml($data, $uid);
+      $this->processXml($data, $uid, $base_url);
 
       // Restore user account.
       $this->accountSwitcher->switchBack();
+
+      // Report errors and warnings.
+      print_r($this->errors);
+      print_r($this->warnings);
     }
     catch (\Exception $exception) {
       $this->logger()->error('Unable to process @name, got @code: @message.', [
@@ -191,14 +212,14 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       return $body;
     }
     catch (ClientException $exception) {
-      $this->logger()->error('Unable to process @name, got @code: @message.', [
+      $this->logger()->error('Unable to process @name, got http error @code: @message.', [
         '@name' => $label,
         '@code' => $exception->getCode(),
         '@message' => $exception->getMessage(),
       ]);
     }
     catch (\Exception $exception) {
-      $this->logger()->error('Unable to process @name, got @code: @message.', [
+      $this->logger()->error('Unable to process @name, general error @code: @message.', [
         '@name' => $label,
         '@code' => $exception->getCode(),
         '@message' => $exception->getMessage(),
@@ -209,19 +230,37 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
   /**
    * Process XML data.
    */
-  protected function processXml($body, $uid) {
+  protected function processXml($body, $uid, $base_url) {
     $xml = new \SimpleXMLElement($body);
     foreach ($xml as $item) {
-      // Check if job already exist.
-      if ($this->jobExists((string) $item->link)) {
-        $this->logger()->notice('Update existing job');
-        $this->updateJob($this->loadJobById((string) $item->link), $item);
+      try {
+        $this->checkMandatoryFields($item, $base_url);
+
+        // Check if job already exist.
+        if ($this->jobExists((string) $item->link)) {
+          $this->logger()->notice('Update existing job');
+          $this->updateJob($this->loadJobById((string) $item->link), $item);
+        }
+        else {
+          $this->logger()->notice('Create new job');
+          $this->createJob($item, $uid);
+        }
       }
-      else {
-        $this->logger()->notice('Create new job');
-        $this->createJob($item, $uid);
+      catch (ReliefwebImportExceptionViolation $exception) {
+        $this->errors[] = $exception->getMessage();
+      }
+      catch (ReliefwebImportExceptionSoftViolation $exception) {
+        $this->warnings[] = $exception->getMessage();
       }
     }
+  }
+
+  /**
+   * Check mandatory fields.
+   */
+  protected function checkMandatoryFields($data, $base_url) {
+    $this->validateLink($data->link[0], $base_url);
+    $this->validateTitle($data->title[0]);
   }
 
   /**
@@ -264,7 +303,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       'type' => 'job',
       'uid' => $uid,
       'field_job_id' => (string) $data->link,
-      'title' => (string) $data->title,
+      'title' => (string) $this->validateTitle((string) $data->title),
       'field_career_categories' => $data->field_career_categories[0] ? (array) $data->field_career_categories : [],
       'field_city' => (string) $data->field_city,
       'field_job_closing_date' => (string) $data->field_job_closing_date,
@@ -289,7 +328,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    * Create a new job.
    */
   protected function updateJob(Job $job, $data) {
-    $job->title = (string) $data->title;
+    $job->title = $this->validateTitle((string) $data->title);
     $job->field_career_categories = $data->field_career_categories[0] ? (array) $data->field_career_categories : [];
     $job->field_city = (string) $data->field_city;
     $job->field_job_closing_date = (string) $data->field_job_closing_date;
@@ -311,29 +350,36 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    * Validate and save job.
    */
   protected function validateAndSaveJob(Job $job) {
+    // Revision user is always 'System'.
+    $job->setRevisionUserId(2);
+    $job->setNewRevision(TRUE);
+    $job->setRevisionLogMessage(strtr('Job @guid updated from @url', [
+      '@guid' => $job->field_job_id->value,
+      '@url' => $this->url,
+    ]));
+
     $violations = $job->validate();
     if (count($violations) === 0) {
-      // Revision user is always 'System'.
-      $job->setRevisionUserId(2);
-      $job->setNewRevision(TRUE);
-      $job->setRevisionLogMessage(strtr('Job @guid updated from @url', [
-        '@guid' => $job->field_job_id->value,
-        '@url' => $this->url,
-      ]));
-
+      // Save as published.
+      $job->setPublished();
       $job->save();
     }
     else {
+      // Save as draft.
+      $job->setUnpublished();
+      $job->save();
+
       $errors = [];
       /** @var \Symfony\Component\Validator\ConstraintViolation $violation */
       foreach ($violations as $violation) {
-        $errors[] = strtr('Validation failed in @path with message: @message', [
+        $errors[] = strtr('Validation failed in @path with message: @message for job @guid', [
           '@path' => $violation->getPropertyPath(),
           '@message' => $violation->getMessage()->__toString(),
+          '@guid' => $job->field_job_id->value,
         ]);
       }
 
-      throw new ReliefwebImportExceptionViolations(implode("\n", $errors));
+      throw new ReliefwebImportExceptionSoftViolation(implode("\n", $errors));
     }
   }
 
@@ -342,6 +388,57 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    */
   protected function logger() {
     return $this->loggerFactory->get('reliefweb_import');
+  }
+
+  /**
+   * Validate link.
+   */
+  protected function validateLink($link, $base_url) {
+    if (empty(trim($link))) {
+      throw new ReliefwebImportExceptionViolation('Feed item found without a link.');
+    }
+
+    if (!UrlHelper::isValid($link, TRUE)) {
+      throw new ReliefwebImportExceptionViolation('Invalid feed item link');
+    }
+
+    if (strpos($link, $base_url) !== 0) {
+      throw new ReliefwebImportExceptionViolation('Invalid feed item link base');
+    }
+  }
+
+  /**
+   * Validate title.
+   */
+  protected function validateTitle($title) {
+    if (empty(trim($title))) {
+      throw new ReliefwebImportExceptionViolation('Job found with empty title.');
+    }
+
+    // Clean the title.
+    $options = [
+      'line_breaks' => TRUE,
+      'consecutive' => TRUE,
+    ];
+    $title = $this->cleanText(strip_tags($title), $options);
+
+    // Ensure the title size is reasonable. The max length matches the one from
+    // the job form (see reliefweb_opportunities_form_alter()).
+    $length = mb_strlen($title);
+    if ($length < 10 || $length > 150) {
+      throw new ReliefwebImportExceptionViolation('Invalid title length');
+    }
+
+    return $title;
+  }
+
+  /**
+   * Validate source.
+   */
+  protected function validateSource($title) {
+    if (empty(trim($title))) {
+      throw new ReliefwebImportExceptionViolation('Job @guid found with empty title.');
+    }
   }
 
   /**
@@ -568,6 +665,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
  <field_job_type>263</field_job_type>
  <field_career_categories>36601</field_career_categories>
  <field_job_experience>260</field_job_experience>
+ <field_job_experience>262</field_job_experience>
 </item><item>
  <link>https://www.aplitrak.com/?adid=ZmsuODgzMjguMTIxODVAc2F2ZXRoZWNoaWxkcmVuYW8uYXBsaXRyYWsuY29t</link>
  <title>Humanitarian Policy and Advocacy Advisor</title>
