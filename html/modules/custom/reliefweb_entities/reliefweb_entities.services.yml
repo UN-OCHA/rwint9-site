@@ -8,6 +8,15 @@ services:
     tags:
       - { name: access_check, applies_to: _reliefweb_entities_entity_access_check }
   # Form alteration services.
+  reliefweb_entities.announcement.form_alter:
+    class: Drupal\reliefweb_entities\Services\AnnouncementFormAlter
+    arguments: ['@database', '@current_user', '@entity_field.manager', '@entity_type.manager', '@state', '@string_translation']
+  reliefweb_entities.blog_post.form_alter:
+    class: Drupal\reliefweb_entities\Services\BlogPostFormAlter
+    arguments: ['@database', '@current_user', '@entity_field.manager', '@entity_type.manager', '@state', '@string_translation']
+  reliefweb_entities.book.form_alter:
+    class: Drupal\reliefweb_entities\Services\BookFormAlter
+    arguments: ['@database', '@current_user', '@entity_field.manager', '@entity_type.manager', '@state', '@string_translation']
   reliefweb_entities.country.form_alter:
     class: Drupal\reliefweb_entities\Services\CountryFormAlter
     arguments: ['@database', '@current_user', '@entity_field.manager', '@entity_type.manager', '@state', '@string_translation']
@@ -22,6 +31,9 @@ services:
     arguments: ['@database', '@current_user', '@entity_field.manager', '@entity_type.manager', '@state', '@string_translation']
   reliefweb_entities.source.form_alter:
     class: Drupal\reliefweb_entities\Services\SourceFormAlter
+    arguments: ['@database', '@current_user', '@entity_field.manager', '@entity_type.manager', '@state', '@string_translation']
+  reliefweb_entities.topic.form_alter:
+    class: Drupal\reliefweb_entities\Services\TopicFormAlter
     arguments: ['@database', '@current_user', '@entity_field.manager', '@entity_type.manager', '@state', '@string_translation']
   reliefweb_entities.training.form_alter:
     class: Drupal\reliefweb_entities\Services\TrainingFormAlter
