@@ -1,4 +1,4 @@
-uuid: 91dd37e8-9421-42a4-89cc-9755fec61994
+uuid: ea2434e4-dbf2-4f53-bcaf-da4cc391ac27
 langcode: en
 status: true
 dependencies:
@@ -6,7 +6,7 @@ dependencies:
     module:
       - reliefweb_migrate
 _core:
-  default_config_hash: SJNoR5cvbNaVH0Fw6Wl0Ij0swq8MrSsGnLkOxBbQezE
+  default_config_hash: WIBKXl-kxgaIkIX_T_Jq7CEuYCIK6bGOncGk0DoJC-M
 id: reliefweb_term
 label: 'ReliefWeb Migration - Terms'
 description: 'Migrate ReliefWeb terms from Drupal 7 to Drupal 9.'
@@ -96,6 +96,9 @@ shared_configuration:
     revision_log_message: revision_log_message
     revision_created: revision_created
     revision_default: revision_default
+    notifications_content_disable:
+      plugin: default_value
+      default_value: 1
   migration_dependencies:
     required:
       - reliefweb_user

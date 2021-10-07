@@ -101,6 +101,10 @@ shared_configuration:
         markdown: markdown
         plain_text: markdown
         token_markdown: token_markdown
+    # Disable notifications.
+    notifications_content_disable:
+      plugin: default_value
+      default_value: 1
   migration_dependencies:
     required:
       - reliefweb_user
