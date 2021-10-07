@@ -25,4 +25,25 @@ class ReliefwebImportCommandStub extends ReliefwebImportCommand {
     return parent::sanitizeText($field, $text, $format);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function validateBaseUrl($base_url) {
+    return parent::validateBaseUrl($base_url);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateLink($link, $base_url) {
+    return parent::validateLink($link, $base_url);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateTitle($title) {
+    return parent::validateTitle($title);
+  }
+
 }
