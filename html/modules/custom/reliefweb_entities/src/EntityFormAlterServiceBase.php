@@ -585,7 +585,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
 
     // Only when editing a node and for editors only.
     // @todo replace with permission.
-    if (empty($entity_id) || !UserHelper::userHasRoles(['Editor'])) {
+    if (empty($entity_id) || !UserHelper::userHasRoles(['editor'])) {
       return;
     }
 

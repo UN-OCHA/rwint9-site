@@ -229,7 +229,7 @@ class ReportModeration extends ModerationServiceBase {
     ];
 
     // @todo replace with permission.
-    if (UserHelper::userHasRoles(['administrator', 'Webmaster'])) {
+    if (UserHelper::userHasRoles(['administrator', 'webmaster'])) {
       $buttons['archive'] = [
         '#value' => $this->t('Archive'),
       ];

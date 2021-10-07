@@ -157,7 +157,7 @@ class DisasterModeration extends ModerationServiceBase {
     $buttons = [];
 
     // @todo replace with permission.
-    if (UserHelper::userHasRoles(['Editor'])) {
+    if (UserHelper::userHasRoles(['editor'])) {
       $buttons['draft'] = [
         '#value' => $this->t('Draft'),
       ];
@@ -170,7 +170,7 @@ class DisasterModeration extends ModerationServiceBase {
     }
 
     // @todo replace with permission.
-    if (UserHelper::userHasRoles(['External disaster manager'])) {
+    if (UserHelper::userHasRoles(['external_disaster_manager'])) {
       $buttons['external'] = [
         '#value' => $this->t('External'),
       ];

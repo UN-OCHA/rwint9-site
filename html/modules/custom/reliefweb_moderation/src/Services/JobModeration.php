@@ -169,7 +169,7 @@ class JobModeration extends ModerationServiceBase {
 
     // Editors can publish, put on hold or refuse a document.
     // @todo use permission.
-    if (UserHelper::userHasRoles(['Editor'])) {
+    if (UserHelper::userHasRoles(['editor'])) {
       $buttons['published'] = [
         '#value' => $this->t('Publish'),
       ];
@@ -222,7 +222,7 @@ class JobModeration extends ModerationServiceBase {
   public function alterSubmittedEntityStatus($status, FormStateInterface $form_state) {
     // For non editors, we determine the real status based on the user
     // posting rights for the selected sources.
-    if (!UserHelper::userHasRoles(['Editor']) && $status === 'pending') {
+    if (!UserHelper::userHasRoles(['editor']) && $status === 'pending') {
       // Retrieve the list of sources and check the user rights.
       if (!$form_state->isValueEmpty('field_source')) {
         // Extract source ids.
