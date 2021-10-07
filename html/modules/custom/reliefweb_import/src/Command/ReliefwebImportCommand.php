@@ -312,6 +312,8 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
   protected function validateAndSaveJob(Job $job) {
     $violations = $job->validate();
     if (count($violations) === 0) {
+      // Revision user is always 'System'.
+      $job->setRevisionUserId(2);
       $job->setNewRevision(TRUE);
       $job->setRevisionLogMessage(strtr('Job @guid updated from @url', [
         '@guid' => $job->field_job_id->value,
