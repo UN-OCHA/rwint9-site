@@ -12,6 +12,13 @@ use Drupal\reliefweb_import\Command\ReliefwebImportCommand;
 class ReliefwebImportCommandStub extends ReliefwebImportCommand {
 
   /**
+   * Set http client.
+   */
+  public function setHttpClient($http_client) {
+    $this->httpClient = $http_client;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function validateBody($data) {
@@ -44,6 +51,13 @@ class ReliefwebImportCommandStub extends ReliefwebImportCommand {
    */
   public function validateTitle($title) {
     return parent::validateTitle($title);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fetchXml($url) {
+    return parent::fetchXml($url);
   }
 
 }

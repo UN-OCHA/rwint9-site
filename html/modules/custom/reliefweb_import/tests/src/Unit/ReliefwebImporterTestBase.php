@@ -1,5 +1,7 @@
 <?php
 
+// phpcs:ignoreFile
+
 namespace Drupal\Tests\reliefweb_import\Unit;
 
 use Drupal\Component\Utility\Random;
@@ -17,6 +19,36 @@ use GuzzleHttp\ClientInterface;
 class ReliefwebImporterTestBase extends UnitTestCase {
 
   /**
+   * The database connection.
+   */
+  protected $database;
+
+  /**
+   * The entity type manager.
+   */
+  protected $entityTypeManager;
+
+  /**
+   * The account switcher.
+   */
+  protected $accountSwitcher;
+
+  /**
+   * An http client.
+   */
+  protected $httpClient;
+
+  /**
+   * The logger factory.
+   */
+  protected $loggerFactory;
+
+  /**
+   * The state store.
+   */
+  protected $state;
+
+  /**
    * Reliefweb importer.
    *
    * @var \Drupal\Tests\reliefweb_import\Unit\Stub\ReliefwebImportCommandStub
@@ -31,47 +63,23 @@ class ReliefwebImporterTestBase extends UnitTestCase {
   protected $random;
 
   /**
+   * Prophesize services.
+   */
+  protected function prophesizeServices() {
+    $this->database = $this->prophesize(Connection::class);
+    $this->entityTypeManager = $this->prophesize(EntityTypeManagerInterface::class);
+    $this->accountSwitcher = $this->prophesize(AccountSwitcherInterface::class);
+    $this->httpClient = $this->prophesize(ClientInterface::class);
+    $this->loggerFactory = $this->prophesize(LoggerChannelFactoryInterface::class);
+    $this->state = $this->prophesize(State::class);
+  }
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
-    $database = $this
-      ->getMockBuilder(Connection::class)
-      ->disableOriginalConstructor()
-      ->getMock();
-
-    $entityTypeManager = $this
-      ->getMockBuilder(EntityTypeManagerInterface::class)
-      ->disableOriginalConstructor()
-      ->getMock();
-
-    $accountSwitcher = $this
-      ->getMockBuilder(AccountSwitcherInterface::class)
-      ->disableOriginalConstructor()
-      ->getMock();
-
-    $httpClient = $this
-      ->getMockBuilder(ClientInterface::class)
-      ->disableOriginalConstructor()
-      ->getMock();
-
-    $loggerFactory = $this
-      ->getMockBuilder(LoggerChannelFactoryInterface::class)
-      ->disableOriginalConstructor()
-      ->getMock();
-
-    $state = $this
-      ->getMockBuilder(State::class)
-      ->disableOriginalConstructor()
-      ->getMock();
-
-    $database = $this->prophesize(Connection::class)->reveal();
-    $entityTypeManager = $this->prophesize(EntityTypeManagerInterface::class)->reveal();
-    $accountSwitcher = $this->prophesize(AccountSwitcherInterface::class)->reveal();
-    $httpClient = $this->prophesize(ClientInterface::class)->reveal();
-    $loggerFactory = $this->prophesize(LoggerChannelFactoryInterface::class)->reveal();
-    $state = $this->prophesize(State::class)->reveal();
-
-    $this->reliefwebImporter = new ReliefwebImportCommandStub($database, $entityTypeManager, $accountSwitcher, $httpClient, $loggerFactory, $state);
+    $this->prophesizeServices();
+    $this->reliefwebImporter = new ReliefwebImportCommandStub($this->database->reveal(), $this->entityTypeManager->reveal(), $this->accountSwitcher->reveal(), $this->httpClient->reveal(), $this->loggerFactory->reveal(), $this->state->reveal());
     $this->random = new Random();
   }
 
