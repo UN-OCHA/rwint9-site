@@ -128,6 +128,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    */
   protected function fetchJobs(Term $term) {
     $this->url = $term->field_job_import_feed->first()->feed_url;
+    $uid = $term->field_job_import_feed->first()->uid ?? 2;
 
     $this->logger()->info('Processing @name, fetching jobs from @url.', [
       '@name' => $term->label(),
@@ -145,7 +146,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       $account->addRole('job_importer');
       $this->accountSwitcher->switchTo($account);
 
-      $this->processXml($data);
+      $this->processXml($data, $uid);
 
       // Restore user account.
       $this->accountSwitcher->switchBack();
@@ -208,7 +209,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
   /**
    * Process XML data.
    */
-  protected function processXml($body) {
+  protected function processXml($body, $uid) {
     $xml = new \SimpleXMLElement($body);
     foreach ($xml as $item) {
       // Check if job already exist.
@@ -218,7 +219,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       }
       else {
         $this->logger()->notice('Create new job');
-        $this->createJob($item);
+        $this->createJob($item, $uid);
       }
     }
   }
@@ -258,10 +259,10 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
   /**
    * Create a new job.
    */
-  protected function createJob($data) {
+  protected function createJob($data, $uid) {
     $values = [
       'type' => 'job',
-      'uid' => 1,
+      'uid' => $uid,
       'field_job_id' => (string) $data->link,
       'title' => (string) $data->title,
       'field_career_categories' => $data->field_career_categories[0] ? (array) $data->field_career_categories : [],
