@@ -219,6 +219,9 @@ class ReliefWebEntityReferenceSelect extends OptionsSelectWidget {
       $entity_type_id = $this->getReferencedEntityTypeId();
       $bundles = $this->getReferencedBundles();
 
+      // Extra data fields to for the option attributes.
+      $extra_data_fields = $this->getExtraDataFields();
+
       // Get the datbase info for the referenced entity type.
       $table = $this->getEntityTypeDataTable($entity_type_id);
       $id_field = $this->getEntityTypeIdField($entity_type_id);
@@ -241,83 +244,51 @@ class ReliefWebEntityReferenceSelect extends OptionsSelectWidget {
       $query->condition($table . '.' . $bundle_field, $bundles, 'IN');
       $query->condition($table . '.' . $langcode_field, $langcodes, 'IN');
 
-      // Add the extra information.
-      $extra_data_fields = $this->getSetting('extra_data');
-      $field_storage_definitions = $this->getEntityFieldManager()
-        ->getFieldStorageDefinitions($entity_type_id);
-
-      $group = FALSE;
-      $extra_data = [];
-      foreach ($field_storage_definitions as $field_name => $definition) {
-        if (empty($extra_data_fields[$field_name])) {
-          continue;
+      // Add any extra data from the base table.
+      foreach ($extra_data_fields as $field_name => $field_info) {
+        if ($field_info['definition']->isBaseField()) {
+          $query->addField($table, $field_name);
         }
-
-        if ($definition->isBaseField()) {
-          $field_alias = $query->addField($table, $field_name);
-        }
-        else {
-          $column = $definition->getMainPropertyName();
-          $field_table = $this->getFieldTableName($entity_type_id, $field_name);
-          $field_field = $this->getFieldColumnName($entity_type_id, $field_name, $column);
-          $field_table_alias = $query->leftJoin($field_table, $field_table, implode(' AND ', [
-            "%alias.entity_id = {$table}.{$id_field}",
-            "%alias.langcode = {$table}.{$langcode_field}",
-          ]));
-
-          if ($definition->isMultiple()) {
-            $field_alias = $query->addExpression("GROUP_CONCAT({$field_table_alias}.{$field_field} SEPARATOR ',')");
-            $group = TRUE;
-          }
-          else {
-            $field_alias = $query->addField($field_table_alias, $field_field);
-          }
-
-          $field_name = preg_replace('#^field_#', '', $field_name);
-        }
-
-        // Keep track of the property to be returned.
-        $extra_data[$field_alias] = $field_name;
       }
 
-      // Special handling of the moderation state.
-      if (!empty($extra_data_fields['moderation_state'])) {
-        $status_table = $this->getEntityTypeDataTable('content_moderation_state');
-        $status_table_alias = $query->leftJoin($status_table, $status_table, implode(' AND ', [
-          "%alias.content_entity_type_id = :entity_type_id",
-          "%alias.content_entity_id = {$table}.{$id_field}",
-          "%alias.langcode = {$table}.{$langcode_field}",
-        ]), [
-          ':entity_type_id' => $entity_type_id,
-        ]);
-        $status_field_alias = $query->addField($status_table_alias, 'moderation_state');
-        // @todo This could be removed if we use `moderation-state`
-        // everywhere.
-        $extra_data[$status_field_alias] = 'moderation-status';
+      // Execute the query, giving the opportunity for classes extending this
+      // one to alter it.
+      $records = $this->executeOptionQuery($query, $entity);
+
+      // Extract the ids. Use a map to ensure uniqueness in case of mulitple
+      // languages.
+      $ids = [];
+      foreach ($records as $record) {
+        $ids[$record->id] = $record->id;
       }
 
-      // Group by id and langcode if are adding a field with multiple values.
-      if ($group) {
-        $query->groupBy($table . '.' . $id_field);
-        $query->groupBy($table . '.' . $langcode_field);
-      }
+      // Retrieve the extra data for non-base fields.
+      $extra_data = $this->getExtraData($extra_data_fields, $ids, $langcodes);
 
       // Create the list of options.
       $options = [];
       $option_attributes = [];
-      foreach ($this->executeOptionQuery($query, $entity) as $record) {
+      foreach ($records as $record) {
         $id = (int) $record->id;
+        $langcode = $record->langcode;
+
         // The record in the current language takes precedence over the default
-        // language verion.
-        if ($record->langcode === $current_langcode || !isset($options[$id])) {
+        // language version.
+        if ($langcode === $current_langcode || !isset($options[$id])) {
           $options[$id] = $record->label;
-          // Add the extra data as data attributes.
           $attributes = [];
-          foreach ($extra_data as $field => $attribute) {
-            if (!is_null($record->{$field})) {
-              $attributes['data-' . $attribute] = $record->{$field};
+
+          // Add the extra data as data attributes.
+          foreach ($extra_data_fields as $field_name => $field_info) {
+            $attribute = $field_info['attribute'];
+            if ($field_info['definition']->isBaseField() && isset($record->{$field_name})) {
+              $attributes[$attribute] = $record->{$field_name};
+            }
+            elseif (isset($extra_data[$field_name][$langcode][$id])) {
+              $attributes[$attribute] = implode(',', $extra_data[$field_name][$langcode][$id]);
             }
           }
+
           $option_attributes[$id] = $attributes;
         }
       }
@@ -361,6 +332,96 @@ class ReliefWebEntityReferenceSelect extends OptionsSelectWidget {
   }
 
   /**
+   * Get the list of fields from which to get the option extra data.
+   *
+   * @return array
+   *   Associative array keyed by field name and with their associated data
+   *   attribute and the field definition.
+   */
+  protected function getExtraDataFields() {
+    $entity_type_id = $this->getReferencedEntityTypeId();
+    $definitions = $this->getEntityFieldManager()
+      ->getFieldStorageDefinitions($entity_type_id);
+
+    $fields = [];
+    foreach ($this->getSetting('extra_data') as $field_name => $selected) {
+      if (!empty($selected) && isset($definitions[$field_name])) {
+        $fields[$field_name] = [
+          'attribute' => 'data-' . preg_replace('#^field_#', '', $field_name),
+          'definition' => $definitions[$field_name],
+        ];
+      }
+    }
+
+    return $fields;
+  }
+
+  /**
+   * Get the extra data to add as optiona attributes.
+   *
+   * @param array $extra_data_fields
+   *   Entity fields.
+   * @param array $ids
+   *   List of entity ids.
+   * @param array $langcodes
+   *   Langcodes for which to retrieve data.
+   *
+   * @return array
+   *   Nested ssociative array keyed by field name, then langcode then id
+   *   and finally with the field values as values.
+   */
+  protected function getExtraData(array $extra_data_fields, array $ids, array $langcodes) {
+    $entity_type_id = $this->getReferencedEntityTypeId();
+    $data = [];
+
+    // Retrieve the data for each extra field.
+    foreach ($extra_data_fields as $field_name => $field_info) {
+      $definition = $field_info['definition'];
+      // Skip base fields as their data is retrieved from the main option query.
+      if ($definition->isBaseField()) {
+        continue;
+      }
+
+      $query = NULL;
+
+      // Special handling of the moderation status as it's not an entity field.
+      if ($field_name === 'moderation_state') {
+        $table = $this->getEntityTypeDataTable('content_moderation_state');
+
+        $query = $this->getDatabase()
+          ->select($table, $table)
+          ->condition($table . '.content_entity_type_id', $entity_type_id, '=')
+          ->condition($table . '.content_entity_id', $ids, 'IN')
+          ->condition($table . '.langcode', $langcodes, 'IN');
+        $query->addField($table, 'content_entity_id', 'id');
+        $query->addField($table, 'langcode', 'langcode');
+        $query->addField($table, 'moderation_state', 'value');
+      }
+      else {
+        $column = $definition->getMainPropertyName();
+        $table = $this->getFieldTableName($entity_type_id, $field_name);
+        $field = $this->getFieldColumnName($entity_type_id, $field_name, $column);
+
+        $query = $this->getDatabase()
+          ->select($table, $table)
+          ->condition($table . '.entity_id', $ids, 'IN')
+          ->condition($table . '.langcode', $langcodes, 'IN')
+          ->isNotNull($table . '.' . $field);
+        $query->addField($table, 'entity_id', 'id');
+        $query->addField($table, 'langcode', 'langcode');
+        $query->addField($table, $field, 'value');
+      }
+
+      if (isset($query)) {
+        foreach ($query->execute() ?? [] as $record) {
+          $data[$field_name][$record->langcode][$record->id][] = $record->value;
+        }
+      }
+    }
+    return $data;
+  }
+
+  /**
    * Execute the query to get the options.
    *
    * This mainly to give a chance to classes extending this one to modify
@@ -370,9 +431,12 @@ class ReliefWebEntityReferenceSelect extends OptionsSelectWidget {
    *   Select query to get the options.
    * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
    *   The entity for which to return options.
+   *
+   * @return array
+   *   The list of records (objects).
    */
   protected function executeOptionQuery(SelectInterface $query, FieldableEntityInterface $entity) {
-    return $query->execute() ?? [];
+    return $query->execute()?->fetchAll() ?? [];
   }
 
   /**
