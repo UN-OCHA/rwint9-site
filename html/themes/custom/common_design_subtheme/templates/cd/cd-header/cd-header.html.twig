@@ -3,6 +3,14 @@
   {% block header_content %}
     {% include '@common_design_subtheme/cd/cd-header/cd-global-header.html.twig' %}
     {% include '@common_design_subtheme/cd/cd-header/cd-site-header.html.twig' %}
+
+    <p id="site-slogan">
+      <!-- TEMPORARY - COVID-19 - disabled
+      {% trans %}<span>Informing humanitarians worldwide 24/7 &mdash; <span>a service provided by <span class="ocha">UN OCHA</span></span></span>{% endtrans %}
+      -->
+      <!-- TEMPORARY - COVID-19 -->
+      <span><strong>{% trans %}RW COVID-19 page:</strong> <a href="/topics/covid-19">Find latest updates on global humanitarian responses{% endtrans %}</a></span>
+    </p>
   {% endblock %}
 
 {% endembed %}
