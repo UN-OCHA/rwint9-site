@@ -136,7 +136,7 @@ content:
         field_timezone: '0'
         field_useful_links: '0'
     third_party_settings: {  }
-    type: reliefweb_entity_reference_select
+    type: reliefweb_disaster
     region: content
   field_disaster_type:
     weight: 14
