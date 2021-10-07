@@ -1,9 +1,9 @@
-uuid: 62fb4193-1cb6-444c-b569-be0fb4b88273
+uuid: deb8f5b1-6b51-4d7f-9b11-ea3baad1ac22
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: HUBdr88XGRh9Mks6WRDGNYElE3C_vmMaDzY56g7SRHg
+  default_config_hash: BVGj3jE1igU5o-CdyPFDYaS99ZWd59pn47hNx6uWWr4
 id: reliefweb_subscriptions
 class: null
 field_plugin_method: null
