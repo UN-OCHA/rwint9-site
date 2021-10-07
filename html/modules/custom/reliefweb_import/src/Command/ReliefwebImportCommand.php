@@ -347,7 +347,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    * @param string $data
    *   Raw data from XML.
    */
-  public function validateBody($data) {
+  protected function validateBody($data) {
     // Clean the body field.
     $body = $this->sanitizeText('body', $data, 'plain_text');
 
@@ -401,17 +401,21 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       $end = mb_strpos($text, ']]>');
       $text = mb_substr($text, 9, $end !== FALSE ? $end - 9 : NULL);
     }
-    /*
+
     // Check if the content contains some non encoded html tags, in which case
     // we will assume that the text is non encoded html/markdown. For that we
     // simply search for a closing tag '</...>'. Otherwise we decode the text.
     if (preg_match('#</[^>]+>#', $text) !== 1) {
-    $text = html_entity_decode($text, ENT_QUOTES, 'UTF-8');
+      $text = html_entity_decode($text, ENT_QUOTES, 'UTF-8');
     }
 
     // Convert the text to HTML.
+    /*
+    if (function_exists('check_markup')) {
     $text = check_markup($text, $format)->__toString();
+    }
      */
+
     // We then sanitize the HTML string.
     $sanitizer = new HtmlSanitizer();
     $text = $sanitizer->sanitizeHtml($text);

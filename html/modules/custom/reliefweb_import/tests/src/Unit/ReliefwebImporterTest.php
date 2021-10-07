@@ -7,7 +7,7 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\State\State;
-use Drupal\reliefweb_import\Command\ReliefwebImportCommand;
+use Drupal\Tests\reliefweb_import\Unit\Stub\ReliefwebImportCommandStub;
 use Drupal\Tests\UnitTestCase;
 use GuzzleHttp\ClientInterface;
 
@@ -19,7 +19,7 @@ class ReliefwebImporterTest extends UnitTestCase {
   /**
    * Reliefweb importer.
    *
-   * @var \Drupal\reliefweb_import\Command\ReliefwebImportCommand
+   * @var \Drupal\Tests\reliefweb_import\Unit\Stub\ReliefwebImportCommandStub
    */
   protected $reliefwebImporter;
 
@@ -71,7 +71,7 @@ class ReliefwebImporterTest extends UnitTestCase {
     $loggerFactory = $this->prophesize(LoggerChannelFactoryInterface::class)->reveal();
     $state = $this->prophesize(State::class)->reveal();
 
-    $this->reliefwebImporter = new ReliefwebImportCommand($database, $entityTypeManager, $accountSwitcher, $httpClient, $loggerFactory, $state);
+    $this->reliefwebImporter = new ReliefwebImportCommandStub($database, $entityTypeManager, $accountSwitcher, $httpClient, $loggerFactory, $state);
     $this->random = new Random();
   }
 
@@ -145,7 +145,7 @@ class ReliefwebImporterTest extends UnitTestCase {
    */
   public function testsanitizeTextClosingTag() {
     $test_string = $this->random->sentences(300);
-    $this->assertEquals($test_string, $this->reliefwebImporter->validateBody($test_string . '</body>'));
+    $this->assertEquals($test_string, $this->reliefwebImporter->sanitizeText('body', $test_string . '</body>'));
   }
 
   /**
@@ -153,7 +153,7 @@ class ReliefwebImporterTest extends UnitTestCase {
    */
   public function testsanitizeTextCdata() {
     $test_string = $this->random->sentences(300);
-    $this->assertEquals($test_string, $this->reliefwebImporter->validateBody('<![CDATA[' . $test_string . ']]>'));
+    $this->assertEquals($test_string, $this->reliefwebImporter->sanitizeText('body', '<![CDATA[' . $test_string . ']]>'));
   }
 
   /**
@@ -161,7 +161,15 @@ class ReliefwebImporterTest extends UnitTestCase {
    */
   public function testsanitizeTextEmbedImage() {
     $test_string = $this->random->sentences(300);
-    $this->assertEquals($test_string, $this->reliefwebImporter->validateBody($test_string . '<img src="">'));
+    $this->assertEquals($test_string, $this->reliefwebImporter->sanitizeText('body', $test_string . '<img src="">'));
+  }
+
+  /**
+   * Tests for sanize text.
+   */
+  public function testsanitizeTextPtag() {
+    $test_string = '<p style="font-family: Arial;">The Opportunity</p>';
+    $this->assertEquals('The Opportunity', $this->reliefwebImporter->sanitizeText('body', $test_string));
   }
 
 }
