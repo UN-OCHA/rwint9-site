@@ -4,6 +4,7 @@ global-styling:
       css/styles.css: {}
   dependencies:
     - common_design_subtheme/rw-form
+    - common_design_subtheme/rw-site-slogan
 
 # RW custom components
 rw-admin-menu:
@@ -211,6 +212,11 @@ rw-search:
   css:
     theme:
       components/rw-search/rw-search.css: {}
+
+rw-site-slogan:
+  css:
+    theme:
+      components/rw-site-slogan/rw-site-slogan.css: {}
 
 rw-social-media-links:
   css:
