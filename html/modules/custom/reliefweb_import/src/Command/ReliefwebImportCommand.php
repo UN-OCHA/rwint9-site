@@ -544,6 +544,8 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
         $value = 258;
       }
     }
+
+    return $values;
   }
 
   /**
