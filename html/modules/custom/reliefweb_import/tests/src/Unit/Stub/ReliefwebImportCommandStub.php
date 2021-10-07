@@ -1,5 +1,7 @@
 <?php
 
+// phpcs:ignoreFile
+
 namespace Drupal\Tests\reliefweb_import\Unit\Stub;
 
 use Drupal\reliefweb_import\Command\ReliefwebImportCommand;
@@ -8,7 +10,6 @@ use Drupal\reliefweb_import\Command\ReliefwebImportCommand;
  * Stub class for testing.
  */
 class ReliefwebImportCommandStub extends ReliefwebImportCommand {
-  // @codingStandardsIgnoreStart
 
   /**
    * {@inheritdoc}
@@ -23,7 +24,5 @@ class ReliefwebImportCommandStub extends ReliefwebImportCommand {
   public function sanitizeText($field, $text, $format = 'plain_text') {
     return parent::sanitizeText($field, $text, $format);
   }
-
-  // @codingStandardsIgnoreEnd
 
 }
