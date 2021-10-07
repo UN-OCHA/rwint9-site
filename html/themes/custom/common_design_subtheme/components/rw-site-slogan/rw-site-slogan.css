@@ -75,12 +75,3 @@
     font-size: 14px;
   }
 }
-/* Ugly hack for IE8 to hide the text due bad handling of z-index. */
-@media \0screen {
-  .cd-header #site-slogan span.ocha {
-    overflow: hidden;
-    padding-left: 81px;
-    vertical-align: middle;
-    white-space: nowrap;
-  }
-}
