@@ -16,10 +16,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function alterForm(array &$form, FormStateInterface $form_state) {
-    // Add the guidelines.
-    $form['#attributes']['data-with-guidelines'] = '';
-
+  protected function addBundleFormAlterations(array &$form, FormStateInterface $form_state) {
     // Use a small textarea to handle long report titles.
     if (isset($form['title'])) {
       $form['title']['widget'][0]['value']['#type'] = 'textarea';
@@ -86,9 +83,6 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     $form['#validate'][] = [$this, 'validateAttachment'];
     $form['#validate'][] = [$this, 'validateSource'];
     $form['#validate'][] = [$this, 'validateEmbargoDate'];
-
-    // Let the base service add additional alterations.
-    parent::alterForm($form, $form_state);
   }
 
   /**
