@@ -251,9 +251,9 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
 
     $nid = $this->database->query($sql, [
       ':id' => $id,
-    ])->fetchCol();
+    ])->fetchField();
 
-    return Job::load(reset($nid));
+    return Job::load($nid);
   }
 
   /**
