@@ -1180,6 +1180,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     // Wrap the query.
     $wrapper = $this->getDatabase()->select($query, 'subquery');
     $wrapper->addField('subquery', 'content_entity_id', 'entity_id');
+    $wrapper->addField('subquery', $sort_field_alias, 'sort');
 
     // Keep track of the subquery.
     // @todo review if that's still necessary.
