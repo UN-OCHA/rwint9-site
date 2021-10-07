@@ -168,7 +168,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       // Check status code.
       if ($response->getStatusCode() !== 200) {
         $this->logger()->error('Unable to process @name, got @statuscode.', [
-          '@name' => $label(),
+          '@name' => $label,
           '@statuscode' => $response->getStatusCode(),
         ]);
 
@@ -181,7 +181,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       // Return if empty.
       if (empty($body)) {
         $this->logger()->info('Nothing to do for @name.', [
-          '@name' => $label(),
+          '@name' => $label,
         ]);
 
         return;
@@ -191,14 +191,14 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     }
     catch (ClientException $exception) {
       $this->logger()->error('Unable to process @name, got @code: @message.', [
-        '@name' => $label(),
+        '@name' => $label,
         '@code' => $exception->getCode(),
         '@message' => $exception->getMessage(),
       ]);
     }
     catch (\Exception $exception) {
       $this->logger()->error('Unable to process @name, got @code: @message.', [
-        '@name' => $label(),
+        '@name' => $label,
         '@code' => $exception->getCode(),
         '@message' => $exception->getMessage(),
       ]);
@@ -274,7 +274,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
         'format' => 'markdown',
       ],
       'field_job_type' => $data->field_job_type[0] ? (array) $data->field_job_type : 0,
-      'field_job_experience' => $data->field_job_experience[0] ? (array) $data->field_job_experience : 0,
+      'field_job_experience' => $data->field_job_experience[0] ? $this->validateJobExperience((array) $data->field_job_experience) : 0,
       'field_source' => $data->field_source[0] ? (array) $data->field_source : 0,
       'field_theme' => $data->field_theme[0] ? (array) $data->field_theme : 0,
     ];
@@ -299,7 +299,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       'format' => 'markdown',
     ];
     $job->field_job_type = $data->field_job_type[0] ? (array) $data->field_job_type : 0;
-    $job->field_job_experience = $data->field_job_experience[0] ? (array) $data->field_job_experience : 0;
+    $job->field_job_experience = $data->field_job_experience[0] ? $this->validateJobExperience((array) $data->field_job_experience) : 0;
     $job->field_source = $data->field_source[0] ? (array) $data->field_source : 0;
     $job->field_theme = $data->field_theme[0] ? (array) $data->field_theme : 0;
 
@@ -535,6 +535,18 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
   }
 
   /**
+   * Validate the job_experience field for the feed item.
+   */
+  protected function validateJobExperience(array $values) {
+    // Map "N/A" to "0-3 years" to accomodate changes to the specifications.
+    foreach ($values as &$value) {
+      if ($value == 262) {
+        $value = 258;
+      }
+    }
+  }
+
+  /**
    * Test data.
    */
   protected function getTestXml() {
@@ -551,6 +563,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
  <field_job_type>263</field_job_type>
  <field_career_categories>36601</field_career_categories>
  <field_job_experience>260</field_job_experience>
+ <field_job_experience>262</field_job_experience>
 </item><item>
  <link>https://www.aplitrak.com/?adid=ZmsuODgzMjguMTIxODVAc2F2ZXRoZWNoaWxkcmVuYW8uYXBsaXRyYWsuY29t</link>
  <title>Humanitarian Policy and Advocacy Advisor</title>
