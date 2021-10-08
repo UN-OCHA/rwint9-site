@@ -28,7 +28,10 @@
     <div class="rw-entities-form-user-information__author'">
       <strong>{{ 'Author:'|t }}</strong>
       {% if author is not empty %}
-        <a href="{{ author.url }}" target="_blank" rel="noopener">{{ author.name }}</a> <em>({{ author.mail }})</em>
+        <a href="{{ author.url }}" target="_blank" rel="noopener">{{ author.name }}</a>
+        {% if author.mail is not empty %}
+          <em>({{ author.mail }})</em>
+        {% endif %}
       {% else %}
         <em>{{ 'Anonymous'|t }}</em>
       {% endif %}

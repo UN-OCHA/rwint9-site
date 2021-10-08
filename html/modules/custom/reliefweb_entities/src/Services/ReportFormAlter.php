@@ -335,7 +335,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
       $id_field = $taxonomy_term_entity_type->getKey('id');
       $label_field = $taxonomy_term_entity_type->getKey('label');
 
-      $query = $this->getDatabase()()->select($table, $table);
+      $query = $this->getDatabase()->select($table, $table);
       $query->fields($table, [$label_field]);
       $query->condition($table . '.' . $id_field, $ids, 'IN');
 

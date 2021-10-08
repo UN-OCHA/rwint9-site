@@ -2,7 +2,11 @@
 
 namespace Drupal\reliefweb_moderation\Services;
 
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\reliefweb_entities\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
+use Drupal\reliefweb_utility\Helpers\UserHelper;
 
 /**
  * Moderation service for the topic nodes.
@@ -58,7 +62,7 @@ class TopicModeration extends ModerationServiceBase {
       return [];
     }
 
-    /** @var \Drupal\Core\Entity\EntityInterface[] $entities */
+    /** @var \Drupal\reliefweb_entities\EntityModeratedInterface[] $entities */
     $entities = $results['entities'];
 
     // Prepare the table rows' data from the entities.
@@ -100,7 +104,18 @@ class TopicModeration extends ModerationServiceBase {
   /**
    * {@inheritdoc}
    */
-  protected function initFilterDefinitions($filters = []) {
+  public function entityAccess(EntityModeratedInterface $entity, $operation = 'view', ?AccountInterface $account = NULL) {
+    // Trello #y0B0wxLi: allow beta tested to view unpublished topics.
+    if ($operation === 'view' && UserHelper::userHasRoles(['beta_tester'], $account)) {
+      return AccessResult::allowed();
+    }
+    return parent::entityAccess($entity, $operation, $account);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function initFilterDefinitions(array $filters = []) {
     $definitions = parent::initFilterDefinitions([
       'status',
       'author',

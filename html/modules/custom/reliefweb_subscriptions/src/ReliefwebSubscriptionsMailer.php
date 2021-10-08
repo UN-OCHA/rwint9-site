@@ -1378,7 +1378,7 @@ class ReliefwebSubscriptionsMailer {
   protected function getSubscribers($sid) {
     $query = $this->database->select('reliefweb_subscriptions_subscriptions', 's');
     $query->fields('s', ['uid']);
-    $query->condition('s.sid', $sid);
+    $query->condition('s.sid', $sid, '=');
     $query->innerJoin('users_field_data', 'u', 'u.uid = s.uid');
     $query->fields('u', ['name', 'mail']);
     $result = $query->execute();
@@ -1650,7 +1650,7 @@ class ReliefwebSubscriptionsMailer {
       // Get the last and next run timestamps for the subscriptions.
       $query = $this->database->select('reliefweb_subscriptions_logs', 'l');
       $query->fields('l', ['sid', 'last', 'next']);
-      $query->condition('l.sid', $sids);
+      $query->condition('l.sid', $sids, 'IN');
       $result = $query->execute();
       $timestamps = !empty($result) ? $result->fetchAllAssoc('sid') : [];
     }
@@ -1787,7 +1787,7 @@ class ReliefwebSubscriptionsMailer {
     }
     $query = $this->database->select('reliefweb_subscriptions_subscriptions', 's');
     $query->fields('s', ['sid']);
-    $query->condition('s.sid', $sids);
+    $query->condition('s.sid', $sids, 'IN');
     $result = $query->distinct()->execute();
 
     return !empty($result) ? $result->fetchCol() : [];
@@ -1816,11 +1816,11 @@ class ReliefwebSubscriptionsMailer {
     }
     $query = $this->database->select('reliefweb_subscriptions_queue', 'q');
     $query->fields('q', ['sid']);
-    $query->condition('q.sid', $sids);
+    $query->condition('q.sid', $sids, 'IN');
 
     if (!empty($bundle) && !empty($entity_id)) {
-      $query->condition('q.bundle', $bundle);
-      $query->condition('q.entity_id', $entity_id);
+      $query->condition('q.bundle', $bundle, '=');
+      $query->condition('q.entity_id', $entity_id, '=');
     }
 
     $result = $query->execute();
@@ -1995,7 +1995,7 @@ class ReliefwebSubscriptionsMailer {
       $last = $this->database
         ->select('reliefweb_subscriptions_logs', 'l')
         ->fields('l', ['last'])
-        ->condition('l.sid', $sid)
+        ->condition('l.sid', $sid, '=')
         ->range(0, 1)
         ->execute()
         ?->fetchField();
@@ -2215,7 +2215,7 @@ class ReliefwebSubscriptionsMailer {
     $previous_revision_id = $this->database
       ->select($revision_table, 'r')
       ->fields('r', [$revision_key])
-      ->condition('r.' . $id_key, $entity->id())
+      ->condition('r.' . $id_key, $entity->id(), '=')
       ->orderBy($revision_key, 'DESC')
       ->range(1, 1)
       ->execute()

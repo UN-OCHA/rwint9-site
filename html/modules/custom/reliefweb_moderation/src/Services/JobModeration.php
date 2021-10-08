@@ -3,10 +3,13 @@
 namespace Drupal\reliefweb_moderation\Services;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\reliefweb_entities\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
+use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
 
@@ -64,7 +67,7 @@ class JobModeration extends ModerationServiceBase {
       return [];
     }
 
-    /** @var \Drupal\Core\Entity\EntityInterface[] $entities */
+    /** @var \Drupal\reliefweb_entities\EntityModeratedInterface[] $entities */
     $entities = $results['entities'];
 
     // Prepare the table rows' data from the entities.
@@ -151,6 +154,60 @@ class JobModeration extends ModerationServiceBase {
       'duplicate' => $this->t('Duplicate'),
       'expired' => $this->t('Expired'),
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isEditableStatus($status, ?AccountInterface $account = NULL) {
+    return in_array($status, [
+      'draft',
+      'pending',
+      'on-hold',
+      'published',
+      'expired',
+    ]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function entityPresave(EntityModeratedInterface $entity) {
+    // Set the status of the entity as expired if past the deadline.
+    $status = $entity->getModerationStatus();
+
+    if ($status === 'published') {
+      $time = gmmktime(0, 0, 0);
+      $date = DateHelper::getDateTimeStamp($entity->field_job_closing_date->value);
+
+      // Set status to expired if the current date is past the deadline.
+      if (!empty($date) && $date < $time) {
+        $entity->setModerationStatus('expired');
+      }
+    }
+
+    parent::entityPresave($entity);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function entityAccess(EntityModeratedInterface $entity, $operation = 'view', ?AccountInterface $account = NULL) {
+    $account = $account ?: $this->currentUser;
+
+    $access_result = parent::entityAccess($entity, $operation, $account);
+    $access = $access_result->isAllowed();
+
+    // Allow deletion of draft, pending and on-hold only or of any documents
+    // for editors.
+    if ($operation === 'delete') {
+      $statuses = ['draft', 'pending', 'on-hold'];
+      $access = $account->hasPermission('bypass node access') ||
+                $account->hasPermission('administer nodes') ||
+                ($access && in_array($entity->getModerationStatus(), $statuses));
+    }
+
+    return $access ? AccessResult::allowed() : AccessResult::forbidden();
   }
 
   /**
@@ -286,7 +343,7 @@ class JobModeration extends ModerationServiceBase {
   /**
    * {@inheritdoc}
    */
-  protected function initFilterDefinitions($filters = []) {
+  protected function initFilterDefinitions(array $filters = []) {
     $definitions = parent::initFilterDefinitions([
       'status',
       'country',
