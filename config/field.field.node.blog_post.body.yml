@@ -11,8 +11,9 @@ dependencies:
 third_party_settings:
   allowed_formats:
     markdown: markdown
-    html: '0'
+    html: html
     plain_text: '0'
+    token_markdown: '0'
 id: node.blog_post.body
 field_name: body
 entity_type: node
