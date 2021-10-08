@@ -144,7 +144,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    * @param \Drupal\taxonomy\Entity\Term $term
    *   Source term.
    */
-  protected function fetchJobs(Term $term) {
+  public function fetchJobs(Term $term) {
     $this->url = $term->field_job_import_feed->first()->feed_url;
     $uid = $term->field_job_import_feed->first()->uid ?? 2;
     $base_url = $term->field_job_import_feed->first()->base_url ?? '';
@@ -158,6 +158,9 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     $this->validateBaseUrl($base_url);
 
     try {
+      $this->errors = [];
+      $this->warnings = [];
+
       // Fetch the XML.
       $data = $this->fetchXml($this->url);
 
@@ -171,10 +174,6 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
 
       // Restore user account.
       $this->accountSwitcher->switchBack();
-
-      // Report errors and warnings.
-      print_r($this->errors);
-      print_r($this->warnings);
     }
     catch (ClientException $exception) {
       $this->logger()->error('Unable to process @name, got http error @code: @message.', [
@@ -226,6 +225,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    * Process XML data.
    */
   protected function processXml($body, $uid, $base_url) {
+    $index = 0;
     $xml = new \SimpleXMLElement($body);
     foreach ($xml as $item) {
       try {
@@ -242,12 +242,28 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
         }
       }
       catch (ReliefwebImportExceptionViolation $exception) {
-        $this->errors[] = $exception->getMessage();
+        $this->errors[$index] = $exception->getMessage();
       }
       catch (ReliefwebImportExceptionSoftViolation $exception) {
-        $this->warnings[] = $exception->getMessage();
+        $this->warnings[$index] = $exception->getMessage();
       }
+
+      $index++;
     }
+  }
+
+  /**
+   * Get errors.
+   */
+  public function getErrors() {
+    return $this->errors;
+  }
+
+  /**
+   * Get warnings.
+   */
+  public function getWarnings() {
+    return $this->warnings;
   }
 
   /**
