@@ -73,8 +73,8 @@ class DrushCommandsTest extends ExistingSiteBase {
     $this->state = \Drupal::service('state');
 
     $mock = new MockHandler([
-      new Response(200, [], $this->getTestXml()),
-      new Response(200, [], $this->getTestXml()),
+      new Response(200, [], $this->getTestXml1()),
+      new Response(200, [], $this->getTestXml2()),
     ]);
 
     $handlerStack = HandlerStack::create($mock);
@@ -126,7 +126,7 @@ class DrushCommandsTest extends ExistingSiteBase {
 
     $this->assertArrayNotHasKey(0, $warnings);
     $this->assertCount(0, $errors);
-    $this->assertSame($job->title->value, 'Head of Supply Chain');
+    $this->assertSame($job->title->value, 'The head of Supply Chain');
   }
 
 }
