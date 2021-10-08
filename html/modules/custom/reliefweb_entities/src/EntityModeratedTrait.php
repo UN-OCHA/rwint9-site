@@ -8,6 +8,17 @@ namespace Drupal\reliefweb_entities;
 trait EntityModeratedTrait {
 
   /**
+   * Set the moderation status.
+   *
+   * @see \Drupal\reliefweb_entities\EntityModeratedInterface::setModerationStatus()
+   */
+  public function setModerationStatus($status) {
+    if ($this->hasField('moderation_state')) {
+      $this->set('moderation_state', $status, FALSE);
+    }
+  }
+
+  /**
    * Get the moderation status.
    *
    * @see \Drupal\reliefweb_entities\EntityModeratedInterface::getModerationStatus()

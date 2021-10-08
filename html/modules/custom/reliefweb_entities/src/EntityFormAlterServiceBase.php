@@ -134,7 +134,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
    * {@inheritdoc}
    */
   protected function getAllowedForms() {
-    return ['default'];
+    return ['default', 'edit'];
   }
 
   /**
@@ -204,7 +204,20 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
     $found = FALSE;
     if (!empty($primary_value)) {
       foreach ($form_state->getValue($non_primary_field) as $value) {
-        if ($value === $primary_value) {
+        // Depending on the order in which the fields are processed the values
+        // for entity reference fields can either be scalars with the target id
+        // or arrays with the `target_id` property so we need to check.
+        if (is_array($value) && isset($value['target_id'])) {
+          $non_primary_value = $value['target_id'];
+        }
+        elseif (is_scalar($value)) {
+          $non_primary_value = $value;
+        }
+        else {
+          continue;
+        }
+
+        if ($non_primary_value === $primary_value) {
           $found = TRUE;
           break;
         }
@@ -799,36 +812,6 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
    */
   protected function setEntityModerationStatus($status, FormStateInterface $form_state) {
     return $form_state->setValue(['moderation_state', 0, 'value'], $status);
-  }
-
-  /**
-   * Get the timestamp from a date value extracted from the form state.
-   *
-   * The type of data returned from a date field is not consistent so we
-   * we ensure we get a timestamp to be able to do some comparison.
-   *
-   * @param mixed $date
-   *   Date field value.
-   *
-   * @return int|null
-   *   A UNIX timestamp or NULL if the type of the date couldn't be inferred.
-   */
-  protected function getDateTimeStamp($date) {
-    if (!empty($date)) {
-      // Date object. It can be a PHP DateTime or DrupalDateTime...
-      if (is_object($date)) {
-        return $date->getTimeStamp();
-      }
-      // Date in the expected format YYYY-MM-DD.
-      elseif (is_string($date) && !is_numeric($date)) {
-        return date_create($date, timezone_open('UTC'))->getTimeStamp();
-      }
-      // Assume it's a timestamp.
-      elseif (is_numeric($date)) {
-        return intval($date);
-      }
-    }
-    return NULL;
   }
 
   /**
