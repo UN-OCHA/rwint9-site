@@ -1,0 +1,22 @@
+reliefweb_api.settings:
+  type: config_object
+  label: 'Reliefweb API settings'
+  mapping:
+    api_url:
+      type: string
+      label: 'ReliefWeb API URL'
+    api_url_external:
+      type: string
+      label: 'ReliefWeb API URL external, for autocomplete calls from the frontend (JS).'
+    appname:
+      type: string
+      label: 'App name parameter to indentify the API requests.'
+    cache_enabled:
+      type: boolean
+      label: 'Cache the query results.'
+    verify_ssl:
+      type: boolean
+      label: 'Verify the SSL certificate of the API query performing requests.'
+    elasticsearch:
+      type: string
+      label: 'URL of the elaticsearch instance for indexing.'
