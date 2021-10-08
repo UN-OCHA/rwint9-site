@@ -98,7 +98,8 @@
         "phpmd/phpmd": "^2.9.1",
         "phpspec/prophecy-phpunit": "^2",
         "phpunit/php-code-coverage": "^9.2",
-        "phpunit/phpunit": "^9.5.4"
+        "phpunit/phpunit": "^9.5.4",
+        "weitzman/drupal-test-traits": "^1.5"
     },
     "conflict": {
         "drupal/drupal": "*",
