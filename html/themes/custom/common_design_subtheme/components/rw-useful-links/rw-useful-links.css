@@ -1,12 +1,14 @@
 /* Useful links */
-#main-content .rw-sectioned-content section.rw-entity-useful-links img {
+.rw-entity-useful-links img,
+.rw-entity-text--resources img {
   display: inline-block;
-  vertical-align: middle;
   max-width: 200px;
   max-height: 50px;
   margin-right: 10px;
+  vertical-align: middle;
 }
-#main-content .rw-sectioned-content section.rw-entity-useful-links img[src*=".svg"] {
+.rw-entity-useful-links img[src*=".svg"],
+.rw-entity-text--resources img[src*=".svg"] {
   min-width: 150px;
 }
 
@@ -14,44 +16,34 @@
  * List of links.
  *
  * Simple list of links like the useful links on country pages.
- *
- * Scope: #main-content section.rw-entity-useful-links ul
  */
-#main-content section.rw-entity-useful-links > ul {
+.rw-entity-useful-links > ul,
+.rw-entity-text--resources ul {
   margin: 0;
   padding: 0;
   list-style: none;
 }
-#main-content section.rw-entity-useful-links > ul li {
+.rw-entity-useful-links > ul li,
+.rw-entity-text--resources ul li {
   margin: 0;
   padding: 12px 0;
   border-bottom: 1px solid #e6ecef;
   line-height: 24px;
 }
-#main-content section.rw-entity-useful-links > ul li:first-child {
+.rw-entity-useful-links > ul li:first-child,
+.rw-entity-text--resources ul li:first-child {
   padding-top: 0;
 }
-#main-content section.rw-entity-useful-links > ul li:last-child {
+.rw-entity-useful-links > ul li:last-child,
+.rw-entity-text--resources ul li:last-child {
   padding-bottom: 0;
   border-bottom: none;
 }
-#main-content section.rw-entity-useful-links > ul + * {
+.rw-entity-useful-links > ul + *,
+.rw-entity-text--resources ul + * {
   margin-top: 24px;
 }
 /* @todo Needed? */
-#main-content section.rw-entity-useful-links > ul ul + .view-more {
+.rw-entity-useful-links > ul ul + .view-more {
   margin-top: 24px;
-}
-
-/* External links. Display an icon after the link. */
-#main-content a[target="_blank"][rel="noopener"]:after {
-  content: "";
-  display: inline-block;
-  vertical-align: middle;
-  height: 12px;
-  width: 12px;
-  /* The top margin is to have a better vertical alignment. */
-  margin: -2px 0 0 6px;
-  overflow: hidden;
-  background: var(--rw-icons--common--external-link--12--dark-grey);
 }

@@ -1,0 +1,155 @@
+{#
+/**
+ * @file
+ * Theme override for a node edit form.
+ *
+ * This template will be used when a node edit form specifies 'node_edit_form'
+ * as its #theme callback.  Otherwise, by default, node add/edit forms will be
+ * themed by form.html.twig.
+ *
+ * Available variables:
+ * - form: The node add/edit form.
+ *
+ * @see seven_form_node_form_alter()
+ *
+ * @todo review revision section.
+ */
+#}
+{{ attach_library('common_design_subtheme/rw-form') }}
+
+{# Table of contents. #}
+{%
+  set toc = {
+    'fields': {
+      'title': 'Fields'|t,
+      'sections': {
+        'organization': 'Organization'|t,
+        'location': 'Location'|t,
+        'date': 'Date'|t,
+        'details': 'Details'|t,
+        'content': 'Content'|t,
+      },
+    },
+    'submission': {
+      'title': 'Submission'|t,
+      'sections': {
+        'legal': 'Terms & conditions'|t,
+        'actions': 'Save'|t,
+        'edit-revision-information': 'Revisions'|t,
+      },
+    },
+  }
+%}
+
+{# Add the user information at the beginning. It's disabled for non editors. #}
+{% if form.user_information is not empty %}
+  {%
+    set toc = {
+      'information': {
+        'title': 'Information'|t,
+        'sections': {
+          'user-information': 'User information'|t,
+        },
+      },
+    }|merge(toc)
+  %}
+{% endif %}
+
+{# Add the revision information at the end. It's disabled for non editors. #}
+{% if form.revision_information is not empty %}
+  {%
+    set toc = toc|merge({
+      'submission': toc.submission|merge({
+        'sections': toc.submission.sections|merge({
+          'edit-revision-information': 'Revisions'|t,
+        }),
+      }),
+    })
+  %}
+{% endif %}
+
+{{
+  render_var({
+    '#theme': 'reliefweb_entities_table_of_contents',
+    '#sections': toc,
+  })
+}}
+
+{# Form content. #}
+{% if form.user_information %}
+<fieldset id="user-information">
+  <legend>{% trans %}User information{% endtrans %}</legend>
+  {{ form.user_information }}
+</fieldset>
+{% endif %}
+
+<fieldset id="organization">
+  <legend>{% trans %}Organization{% endtrans %}</legend>
+  {{ form.field_source }}
+</fieldset>
+
+<fieldset id="location">
+  <legend>{% trans %}Location{% endtrans %}</legend>
+  {{ form.unspecified_location }}
+  {{ form.field_country }}
+  {{ form.field_city }}
+</fieldset>
+
+<fieldset id="date">
+  <legend>{% trans %}Date{% endtrans %}</legend>
+  {{ form.field_job_closing_date }}
+</fieldset>
+
+<fieldset id="details" class="details">
+  <legend>{% trans %}Details{% endtrans %}</legend>
+  <p>{% trans %}For definitions of the options see: {% endtrans %}
+    <strong><a href="/taxonomy-descriptions" target="_blank">{% trans %}Humanitarian Terms{% endtrans %}</a></strong>
+  </p>
+  {{ form.field_job_type }}
+  {{ form.field_job_experience }}
+  {{ form.field_career_categories }}
+  {{ form.field_theme }}
+</fieldset>
+
+<fieldset id="content">
+  <legend>{% trans %}Description{% endtrans %}</legend>
+  {{ form.title }}
+  {{ form.body }}
+  {{ form.field_how_to_apply }}
+</fieldset>
+
+<fieldset id="legal">
+  <legend class="visually-hidden">{% trans %}Legal{% endtrans %}</legend>
+  {{ form.legal }}
+  {{ form.field_source_reminder }}
+</fieldset>
+
+<fieldset id="actions">
+  <legend class="visually-hidden">{% trans %}Form submission and other actions{% endtrans %}</legend>
+{{ form.actions }}
+</fieldset>
+
+{{ form.revision_information }}
+
+{{
+  form|without([
+    'user_information',
+    'field_source',
+    'unspecified_location',
+    'field_country',
+    'field_city',
+    'field_job_closing_date',
+    'field_job_type',
+    'field_job_experience',
+    'field_career_categories',
+    'field_career_categories',
+    'field_theme',
+    'title',
+    'body',
+    'field_how_to_apply',
+    'legal',
+    'field_source_reminder',
+    'actions',
+    'revision_information',
+  ])
+}}

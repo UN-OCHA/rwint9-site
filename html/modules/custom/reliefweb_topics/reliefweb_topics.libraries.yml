@@ -1,0 +1,6 @@
+reliefweb-topics-admin:
+  css:
+    component:
+      css/reliefweb_topics_community_topics.admin.css: {}
+  js:
+    js/reliefweb_topics_community_topics.admin.js: {}

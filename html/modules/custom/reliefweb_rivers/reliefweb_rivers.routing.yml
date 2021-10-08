@@ -26,6 +26,13 @@ reliefweb_rivers.job.river:
     _controller: 'reliefweb_rivers.job.river:getPageContent'
   requirements:
     _permission: 'access content'
+reliefweb_rivers.topic.river:
+  path: '/topics'
+  defaults:
+    _title: 'Topics'
+    _controller: 'reliefweb_rivers.topic.river:getPageContent'
+  requirements:
+    _permission: 'access content'
 reliefweb_rivers.report.river:
   path: '/updates'
   defaults:
@@ -45,5 +52,12 @@ reliefweb_rivers.training.river:
   defaults:
     _title: 'Training'
     _controller: 'reliefweb_rivers.training.river:getPageContent'
+  requirements:
+    _permission: 'access content'
+reliefweb_rivers.search.results:
+  path: '/search/results'
+  defaults:
+    _title: 'Search results'
+    _controller: '\Drupal\reliefweb_rivers\Controller\SearchResults::getPageContent'
   requirements:
     _permission: 'access content'

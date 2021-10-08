@@ -66,7 +66,7 @@ class DSRClient {
    *
    * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
    *   The default cache backend.
-   * @param Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory service.
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The time service.
@@ -74,7 +74,7 @@ class DSRClient {
    *   The HTTP client service.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   The language manager service.
-   * @param Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
    *   The logger factory service.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The translation manager service.

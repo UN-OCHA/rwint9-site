@@ -1,11 +1,30 @@
-{% embed '@common_design/cd/cd-footer/cd-footer.html.twig' %}
+{# Displays the site footer #}
 
-  {% block social_menu %}
-    {% include '@common_design_subtheme/cd/cd-footer/cd-social-menu.html.twig' %}
-  {% endblock %}
+{{ attach_library('common_design/cd-ocha-services') }}
 
-  {% block ocha %}
-    {% include '@common_design_subtheme/cd/cd-header/cd-ocha.html.twig' %}
-  {% endblock %}
+<footer class="cd-footer" role="contentinfo">
+  <div class="cd-container cd-footer__inner">
 
-{% endembed %}
+    {% block footer_menu %}
+      {% include '@common_design/cd/cd-footer/cd-footer-menu.html.twig' %}
+    {% endblock %}
+    {% block social_menu %}
+      {% include '@common_design_subtheme/cd/cd-footer/cd-social-menu.html.twig' %}
+    {% endblock %}
+    {% block mandate %}
+      {% include '@common_design/cd/cd-footer/cd-mandate.html.twig' %}
+    {% endblock %}
+    {% block copyright %}
+      {% include '@common_design_subtheme/cd/cd-footer/cd-copyright.html.twig' %}
+    {% endblock %}
+
+    {% if ('editor' in user.getroles) or ('webmaster' in user.getroles) or ('administrator' in user.getroles) or (user.id == '1')%}
+      {% include '@common_design_subtheme/user/admin-menu.html.twig' %}
+    {% endif %}
+
+    {% block ocha %}
+      {% include '@common_design_subtheme/cd/cd-header/cd-ocha.html.twig' %}
+    {% endblock %}
+
+  </div>
+</footer>

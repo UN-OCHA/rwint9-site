@@ -1,0 +1,50 @@
+{#
+
+/**
+ * @file
+ * Template for the search results page.
+ *
+ * Available variables:
+ * - attributes: wrapper attributes
+ * - title: page title
+ * - title_attributes: title attributes
+ * - search: see reliefweb-rivers-search.html.twig
+ * - totals: Associative array with the type of resources as keys and the
+ *   total of resources matching the search query and river title as values
+ * - sections: list of sections for the page. Each section is a render array.
+ */
+
+#}
+<section{{ attributes
+  .addClass([
+    'rw-river-page',
+    'rw-river-page--with-search',
+    'rw-search-results',
+  ])
+}}>
+  <header class="rw-river-page__header">
+    <h1{{ title_attributes
+      .addClass([
+        'rw-river-page__title',
+      ])
+    }}>{{ title }}</h1>
+  </header>
+
+  {{ search }}
+
+  {% if totals is not empty %}
+  <nav id="search-results-totals" class="rw-search-results__totals" aria-labelledby="search-results-totals-title">
+    <h2 id="search-results-totals-title" class="visually-hidden">{{ 'Results'|t }}</h2>
+    <ul class="rw-search-results__totals__list">
+      {% for target, item in totals %}
+        <li class="rw-search-results__totals__list__item"><a href="#{{ target }}">{{ '@total @label'|t({
+          '@total': item.total|number_format,
+          '@label': item.label,
+        }) }}</a></li>
+      {% endfor %}
+    </ul>
+  </nav>
+  {% endif %}
+
+  {{ sections }}
+</section>

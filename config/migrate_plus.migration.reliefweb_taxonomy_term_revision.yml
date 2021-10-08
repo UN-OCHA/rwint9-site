@@ -1,9 +1,9 @@
-uuid: 507382fd-55f3-405a-a8a6-0a0a96ddca97
+uuid: c24092f2-c024-4e88-9198-f18c4751012f
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: F9YFxl2kVvKK7yWMzxhiEIcbhAILfsmMOCMtHmOAdB0
+  default_config_hash: pUAXb-jawtDLreM83zTBkIp68pW4-eAGUNijLc3LfMU
 id: reliefweb_taxonomy_term_revision
 class: null
 field_plugin_method: null
@@ -32,6 +32,8 @@ process:
     plugin: skip_on_empty
     method: process
     source: field_status/0/value
+  status:
+    default_value: 1
   field_disaster_type_code/value:
     plugin: skip_on_empty
     method: process

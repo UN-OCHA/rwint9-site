@@ -72,7 +72,9 @@
  * @see \Drupal\reliefweb_entities\Entity\Report.php
  */
 #}
+{{ attach_library('common_design_subtheme/rw-report') }}
 {{ attach_library('common_design_subtheme/rw-document') }}
+{{ attach_library('common_design_subtheme/rw-related-content') }}
 
 {% set meta = node.getEntityMeta() %}
 {% set image = node.getEntityImage() %}
@@ -108,7 +110,7 @@
           'label_attributes': create_attribute()
             .addClass('visually-hidden'),
           'value_attributes': create_attribute()
-            .addClass('rw-entity-meta__tag-value--status--' ~ (meta.format|first).name|clean_class),
+            .addClass('rw-entity-meta__tag-value--format--' ~ (meta.format|first).name|clean_class),
         },
         'source': {
           'type': 'taglist',
@@ -158,9 +160,10 @@
     {# @todo add attachments. #}
 
     {{ content.body.0|render|sanitize_html(false, 2) }}
-  </div>
 
-  {{ node.getSourceDisclaimers() }}
+    {{ node.getSourceDisclaimers() }}
+
+  </div>
 
   <footer class="rw-article__footer">
     {# Pre-sort the countries so that we can easily extract the primary country
@@ -233,6 +236,7 @@
     }) }}
 
     {{ node.getShareLinks() }}
+    {{ content.reliefweb_bookmarks_link }}
   </footer>
 
 </article>

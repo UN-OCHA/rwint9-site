@@ -1,0 +1,11 @@
+//——————————————————————————————————————————————————————————————————————————————
+// Common Design: Layout
+//——————————————————————————————————————————————————————————————————————————————
+.cd-layout-container {
+  @supports (display: grid) {
+    @include tablet {
+      /* Increase grid row height to accommodate site-slogan 50px */
+      grid-template-rows: 151px auto 1fr auto;
+    }
+  }
+}

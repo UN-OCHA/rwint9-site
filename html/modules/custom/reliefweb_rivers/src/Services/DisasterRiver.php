@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_rivers\Services;
 
+use Drupal\reliefweb_disaster_map\DisasterMapService;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
 use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
@@ -27,7 +28,7 @@ class DisasterRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
-  protected $entityType = 'taxomomy_term';
+  protected $entityTypeId = 'taxomomy_term';
 
   /**
    * {@inheritdoc}
@@ -39,6 +40,23 @@ class DisasterRiver extends RiverServiceBase {
    */
   public function getPageTitle() {
     return $this->t('Disasters');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPageContent() {
+    $content = parent::getPageContent();
+
+    // Add the map with the alert and ongoing disasters if the river is
+    // not filtered.
+    $search = $this->getSearch();
+    $filter_selection = $this->getAdvancedSearch()->getSelection();
+    if (empty($search) && empty($filter_selection)) {
+      $content['#pre_content'] = DisasterMapService::getAlertAndOngoingDisasterMap();
+    }
+
+    return $content;
   }
 
   /**
@@ -152,7 +170,7 @@ class DisasterRiver extends RiverServiceBase {
       case 'ongoing':
         $payload['filter'] = [
           'field' => 'status',
-          'value' => ['alert', 'current'],
+          'value' => ['alert', 'current', 'ongoing'],
         ];
         break;
     }
@@ -185,6 +203,7 @@ class DisasterRiver extends RiverServiceBase {
       $countries = [];
       foreach ($fields['country'] ?? [] as $country) {
         $countries[] = [
+          'id' => $country['id'],
           'name' => $country['name'],
           'shortname' => $country['shortname'] ?? $country['name'],
           'code' => $country['iso3'] ?? '',
@@ -230,6 +249,11 @@ class DisasterRiver extends RiverServiceBase {
       if (!empty($fields['profile']['overview-html'])) {
         $overview = HtmlSanitizer::sanitize($fields['profile']['overview-html']);
         $data['summary'] = HtmlSummarizer::summarize($overview, 260);
+      }
+
+      // Disaster location (= centroid coordinates of the primary country).
+      if (!empty($fields['primary_country']['location'])) {
+        $data['location'] = $fields['primary_country']['location'];
       }
 
       // Compute the language code for the resource's data.

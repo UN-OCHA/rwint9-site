@@ -1,0 +1,54 @@
+{#
+/**
+ * @file
+ * Theme override to present all user data.
+ *
+ * This template is used when viewing a registered user's page,
+ * e.g., example.com/user/123. 123 being the user's ID.
+ *
+ * Available variables:
+ * - content: A list of content items. Use 'content' to print all content, or
+ *   print a subset such as 'content.field_example'. Fields attached to a user
+ *   such as 'user_picture' are available as 'content.user_picture'.
+ * - attributes: HTML attributes for the container element.
+ * - user: A Drupal User entity.
+ *
+ * @see template_preprocess_user()
+ */
+#}
+
+{{ attach_library('common_design_subtheme/rw-user') }}
+
+<article{{ attributes.addClass('profile rw-profile') }}>
+
+  <nav id="user-dashboard" aria-labelledby="user-dashboard-title" class="rw-user-dashboard">
+    <h3 id="user-dashboard-title" class="visually-hidden">{% trans %}Dashboard{% endtrans %}</h3>
+    <ul>
+      <li>
+        <a href="/user/{{ user.id() }}/edit">{% trans %}Edit your account details{% endtrans %}</a>
+        <p>{% trans %}Edit your credentials and account information.{% endtrans %}</p>
+      </li>
+      <li>
+        <a href="/user/{{ user.id() }}/notifications">{% trans %}Manage your subscriptions{% endtrans %}</a>
+        <p>{% trans %}Setup and manage your email subscriptions to new reports, jobs and more.{% endtrans %}</p>
+      </li>
+      <li>
+        <a href="/user/{{ user.id() }}/bookmarks">{% trans %}Manage your bookmarks{% endtrans %}</a>
+        <p>{% trans %}Track content relevant to you on the site.{% endtrans %}</p>
+      </li>
+      <li>
+        <a href="/node/add/job">{% trans %}Post a job vacancy{% endtrans %}</a>
+        <p>{% trans %}Advertise job, consulting and internships vacancies.{% endtrans %}</p>
+      </li>
+      <li>
+        <a href="/node/add/training">{% trans %}Post a training program{% endtrans %}</a>
+        <p>{% trans %}Advertise training programs for the humanitarian community.{% endtrans %}</p>
+      </li>
+      <li>
+        <a href="/user/{{ user.id() }}/posts">{% trans %}View your posts{% endtrans %}</a>
+        <p>{% trans %}Manage the Job vacancies or Training programs you posted.{% endtrans %}</p>
+      </li>
+    </ul>
+  </nav>
+
+</article>

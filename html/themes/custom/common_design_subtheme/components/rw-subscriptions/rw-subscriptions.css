@@ -1,0 +1,98 @@
+/**
+ * Email styling is limited.
+ *
+ * Only use classes. They will be converted to inline styling.
+ *
+ * Do not use double quotes.
+ */
+.body {
+  width: 520px;
+  margin: 10px;
+  padding: 10px;
+  color: #333;
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.reliefweb-logo {
+  margin-bottom: 20px;
+}
+
+.preheader {
+  display: none !important;
+  visibility: hidden;
+  overflow: hidden;
+  max-width: 0;
+  max-height: 0;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  font-size: 0;
+  line-height: 0;
+  /* mso-hide: all; */
+}
+.header {
+  margin-bottom: 20px;
+}
+.prefooter {
+  padding: 15px 0 0;
+  font-size: 12px;
+}
+.prefooter-link {
+  text-decoration: underline;
+  color: #18b;
+}
+.footer {
+  padding: 15px 0 0;
+  font-size: 11px;
+}
+.footer-link {
+  text-decoration: underline;
+  color: #999;
+}
+
+.email-title {
+  margin: 0;
+  padding: 0 0 10px;
+  border-bottom: 1px solid #333;
+  font-family: Georgia, serif;
+  font-size: 20px;
+  font-weight: normal;
+  line-height: 20px;
+}
+.email-title-date {
+  color: #e55;
+  font-size: 16px;
+}
+
+.email-resource {
+  padding: 15px 0 14px;
+  border-bottom: 1px dotted #ccc;
+}
+.email-resource-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: bold;
+  line-height: 24px;
+}
+.email-resource-title-link {
+  text-decoration: none;
+  color: #333;
+}
+.email-resource-info {
+  padding: 8px 0 8px;
+  color: #999;
+  font-size: 13px;
+  font-weight: bold;
+}
+.email-resource-teaser {
+  font-family: Aria, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+}
+.email-resource-read-more {
+  text-decoration: underline;
+  color: #18b;
+  font-weight: bold;
+}

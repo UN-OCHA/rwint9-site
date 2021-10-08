@@ -6,4 +6,9 @@ id: user_manager
 label: 'User manager'
 weight: 3
 is_admin: null
-permissions: {  }
+permissions:
+  - 'access user profiles'
+  - 'administer subscriptions'
+  - 'administer users'
+  - 'change own username'
+  - 'view user email addresses'

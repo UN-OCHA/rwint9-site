@@ -8,6 +8,38 @@ namespace Drupal\reliefweb_rivers;
 interface RiverServiceInterface {
 
   /**
+   * Get the river name.
+   *
+   * @return string
+   *   River.
+   */
+  public function getRiver();
+
+  /**
+   * Get the entity bundle associated with the river.
+   *
+   * @return string
+   *   Entity bundle.
+   */
+  public function getBundle();
+
+  /**
+   * Get the entity type id associated with the river.
+   *
+   * @return string
+   *   Entity type id.
+   */
+  public function getEntityTypeId();
+
+  /**
+   * Get the Api resource for the river.
+   *
+   * @return string
+   *   Page title.
+   */
+  public function getResource();
+
+  /**
    * Get the page title for the river.
    *
    * @return string
@@ -273,5 +305,16 @@ interface RiverServiceInterface {
    *   ReliefWeb API payload.
    */
   public static function getRiverApiPayload($bundle, $view = '', array $exclude = ['query']);
+
+  /**
+   * Get a river service from its associated bundle.
+   *
+   * @param string $bundle
+   *   Entity bundle associated with the river.
+   *
+   * @return Drupal\reliefweb_rivers\RiverServiceInterface|null
+   *   The river service or NULL if not found.
+   */
+  public static function getRiverService($bundle);
 
 }

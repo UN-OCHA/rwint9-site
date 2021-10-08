@@ -1,0 +1,12 @@
+{% set title_attributes = title_attributes.addClass('rw-page-title') %}
+
+{{ attach_library('common_design_subtheme/rw-page-title') }}
+
+{% if river == 'organizations' or river == 'blog' %}
+  {% set content = content|merge({
+    '#attributes': create_attribute().addClass('rw-river--river-columns','rw-river--river-columns--two'),
+  }) %}
+
+{% endif %}
+
+{% include '@reliefweb_rivers/reliefweb-rivers-page.html.twig' %}

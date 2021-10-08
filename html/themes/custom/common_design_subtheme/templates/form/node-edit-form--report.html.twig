@@ -1,0 +1,142 @@
+{#
+/**
+ * @file
+ * Theme override for a node edit form.
+ *
+ * This template will be used when a node edit form specifies 'node_edit_form'
+ * as its #theme callback.  Otherwise, by default, node add/edit forms will be
+ * themed by form.html.twig.
+ *
+ * Available variables:
+ * - form: The node add/edit form.
+ *
+ * @see seven_form_node_form_alter()
+ *
+ * @todo review revision section.
+ */
+#}
+{{ attach_library('common_design_subtheme/rw-form') }}
+
+{# Table of contents. #}
+{{
+  render_var({
+    '#theme': 'reliefweb_entities_table_of_contents',
+    '#sections': {
+      'fields': {
+        'title': 'Fields'|t,
+        'sections': {
+          'content': 'Content'|t,
+          'files': 'Files'|t,
+          'dates': 'Dates'|t,
+          'source': 'Source'|t,
+          'countries-disasters': 'Countries & Disasters'|t,
+          'details': 'Details'|t,
+          'headline': 'Headline'|t,
+        },
+      },
+      'submission': {
+        'title': 'Submission'|t,
+        'sections': {
+          'editorial-flags': 'Editorial flags'|t,
+          'actions': 'Save'|t,
+          'edit-revision-information': 'Revisions'|t,
+        },
+      },
+    },
+  })
+}}
+
+{# Form content. #}
+<fieldset id="content">
+  <legend>{% trans %}Content{% endtrans %}</legend>
+  {{ form.field_language }}
+  {{ form.title }}
+  {{ form.body }}
+</fieldset>
+
+<fieldset id="files">
+  <legend>{% trans %}Files{% endtrans %}</legend>
+  {{ form.field_file }}
+  {{ form.field_image }}
+</fieldset>
+
+<fieldset id="dates">
+  <legend>{% trans %}Dates{% endtrans %}</legend>
+  {{ form.field_original_publication_date }}
+  {{ form.field_embargo_date }}
+</fieldset>
+
+<fieldset id="source">
+  <legend>{% trans %}Source{% endtrans %}</legend>
+  {{ form.field_source }}
+  {{ form.field_ocha_product }}
+  {{ form.field_origin }}
+  {{ form.field_origin_notes }}
+</fieldset>
+
+<fieldset id="countries-disasters" class="details">
+  <legend>{% trans %}Countries & disasters{% endtrans %}</legend>
+  {{ form.field_country }}
+  {{ form.field_primary_country }}
+  {{ form.field_disaster }}
+  {{ form.field_disaster_type }}
+</fieldset>
+
+<fieldset id="details" class="details">
+  <legend>{% trans %}Details{% endtrans %}</legend>
+  {{ form.field_content_format }}
+  {{ form.field_theme }}
+</fieldset>
+
+<fieldset id="headline">
+  <legend>{% trans %}Headline information{% endtrans %}</legend>
+  {{ form.field_headline }}
+  {{ form.field_headline_title }}
+  {{ form.field_headline_summary }}
+  {{ form.field_headline_image }}
+</fieldset>
+
+<fieldset id="editorial-flags">
+  <legend>{% trans %}Editorial flags{% endtrans %}</legend>
+  {{ form.field_bury }}
+  {{ form.field_feature }}
+  {{ form.field_notify }}
+</fieldset>
+
+<fieldset id="actions">
+  <legend class="visually-hidden">{% trans %}Form submission and other actions{% endtrans %}</legend>
+  {{ form.actions }}
+</fieldset>
+
+{{ form.revision_information }}
+
+{{
+  form|without([
+    'field_language',
+    'title',
+    'body',
+    'field_file',
+    'field_image',
+    'field_original_publication_date',
+    'field_embargo_date',
+    'field_source',
+    'field_ocha_product',
+    'field_origin',
+    'field_origin_notes',
+    'field_country',
+    'field_primary_country',
+    'field_disaster',
+    'field_disaster_type',
+    'field_content_format',
+    'field_theme',
+    'field_headline',
+    'field_headline_title',
+    'field_headline_summary',
+    'field_headline_image',
+    'field_bury',
+    'field_feature',
+    'field_notify',
+    'actions',
+    'revision_information',
+  ])
+}}

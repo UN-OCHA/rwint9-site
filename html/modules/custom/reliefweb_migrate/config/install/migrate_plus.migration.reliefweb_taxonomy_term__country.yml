@@ -16,14 +16,11 @@ process:
     plugin: skip_on_empty
     method: process
     source: field_iso3/0/value
-  field_location/lat:
-    plugin: skip_on_empty
-    method: process
-    source: field_location/0/lat
-  field_location/lon:
-    plugin: skip_on_empty
-    method: process
-    source: field_location/0/lon
+  field_location:
+    plugin: geofield_latlon
+    source:
+      - field_location/0/lat
+      - field_location/0/lon
   field_shortname/value:
     plugin: skip_on_empty
     method: process
@@ -36,6 +33,19 @@ process:
     plugin: skip_on_empty
     method: process
     source: field_profile/0/value
+  # @todo transform the image urls for internal paths.
+  field_key_content:
+    plugin: skip_on_empty
+    method: process
+    source: field_key_content
+  field_appeals_response_plans:
+    plugin: skip_on_empty
+    method: process
+    source: field_appeals_response_plans
+  field_useful_links:
+    plugin: skip_on_empty
+    method: process
+    source: field_useful_links
   field_timezone/value:
     plugin: skip_on_empty
     method: process

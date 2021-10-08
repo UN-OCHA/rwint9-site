@@ -1,4 +1,4 @@
-uuid: 5118aca8-67a5-4f3b-83e8-b2f986e50cfe
+uuid: 10d45c3d-f46e-4fb9-9c51-42d491c09568
 langcode: en
 status: true
 dependencies:
@@ -6,7 +6,7 @@ dependencies:
     module:
       - reliefweb_migrate
 _core:
-  default_config_hash: DmsLHCJizfCZno1dvZDxmbRCo09UJPlw0I-MlOhh59E
+  default_config_hash: vOF0IpmCact_JnxvJP_245wKdlaKS4Ft87fmzqSPPKs
 id: reliefweb_node
 label: 'ReliefWeb Migration - Nodes'
 description: 'Migrate ReliefWeb nodes from Drupal 7 to Drupal 9.'
@@ -28,8 +28,26 @@ shared_configuration:
     plugin: 'entity:node'
   process:
     nid: nid
-    uid: uid
-    type: type
+    uid:
+      plugin: static_map
+      bypass: true
+      source: uid
+      map:
+        - 2
+        - 2
+    type:
+      plugin: static_map
+      bypass: true
+      source: type
+      map:
+        announcement: announcement
+        blog_post: blog_post
+        book: book
+        job: job
+        report: report
+        topic: topic
+        topics: topic
+        training: training
     title: title
     created: created
     changed: changed
@@ -59,7 +77,7 @@ shared_configuration:
     vid: revision_id
     revision_uid:
       plugin: static_map
-      default_value: 2
+      bypass: true
       source: revision_user
       map:
         - 2
@@ -72,19 +90,17 @@ shared_configuration:
       method: process
       source: body/0/value
     body/format:
-      -
-        plugin: skip_on_empty
-        method: process
-        source: body/0/format
-      -
-        plugin: static_map
-        default_value: markdown
-        map:
-          full_html: html
-          legacy: markdown
-          markdown: markdown
-          plain_text: markdown
-          token_markdown: markdown
+      plugin: static_map
+      default_value: markdown
+      map:
+        full_html: html
+        legacy: markdown
+        markdown: markdown
+        plain_text: markdown
+        token_markdown: token_markdown
+    notifications_content_disable:
+      plugin: default_value
+      default_value: 1
   migration_dependencies:
     required:
       - reliefweb_user

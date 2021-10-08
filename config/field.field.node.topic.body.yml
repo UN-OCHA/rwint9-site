@@ -1,0 +1,30 @@
+uuid: fa31742f-81d2-4953-ac1a-bf0bfa3a5af3
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.body
+    - node.type.topic
+  module:
+    - allowed_formats
+    - text
+third_party_settings:
+  allowed_formats:
+    markdown: markdown
+    plain_text: '0'
+    html: '0'
+    token_markdown: '0'
+id: node.topic.body
+field_name: body
+entity_type: node
+bundle: topic
+label: Introduction
+description: 'Introduction to the topic. Should not contain iframes or images.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  display_summary: false
+  required_summary: false
+field_type: text_with_summary

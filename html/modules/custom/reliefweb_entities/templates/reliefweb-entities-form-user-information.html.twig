@@ -1,0 +1,62 @@
+{#
+
+/**
+ * @file
+ * Template for the user information on the job/training entity forms.
+ *
+ * Available variables:
+ * - attributes: Section attributes.
+ * - entity: Entity information with type, url, id and creation date.
+ * - author: Entity author information with name, mail and url.
+ * - sources: Source information with author rights for the sources. Each
+ *   element has a URL to the source and the right information with id and
+ *   label.
+ * - new_source: Potential new source information with the name, url and right
+ *   with id and label.
+ */
+
+#}
+<div{{ attributes
+  .addClass('rw-entities-form-user-information')
+}}>
+  <div class="rw-entities-form-user-information__content">
+    <div class="rw-entities-form-user-information__entity'">
+      <strong>{{ entity.type }}:</strong>
+      <a href="{{ entity.url }}">#{{ entity.id }}</a>  &mdash;  <em>{{ entity.date|date('d M Y H:i:s e', 'UTC') }}</em>
+    </div>
+
+    <div class="rw-entities-form-user-information__author'">
+      <strong>{{ 'Author:'|t }}</strong>
+      {% if author is not empty %}
+        <a href="{{ author.url }}" target="_blank" rel="noopener">{{ author.name }}</a>
+        {% if author.mail is not empty %}
+          <em>({{ author.mail }})</em>
+        {% endif %}
+      {% else %}
+        <em>{{ 'Anonymous'|t }}</em>
+      {% endif %}
+    </div>
+
+    {% if sources is not empty %}
+      <div class="rw-entities-form-user-information__sources'">
+        <strong>{{ 'Sources:'|t }}</strong>
+        <ul>
+        {% for source in sources %}
+          <li>
+             <a href="{{ source.url }}" target="_blank" rel="noopener">{{ source.name }}</a>
+            <span class="user-rights"><span class="{{ source.right.id }}">{{ source.right.label }}</span></span>
+          </li>
+        {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    {% if new_source is not empty %}
+      <div class="rw-entities-form-user-information__new-source'">
+        <strong>{{ 'Potential new source:'|t }}</strong>
+        <span> {{ new_source.name }} ( {{ new_source.url }} )</span>
+        <span class="user-rights"><span class="{{ source.right.id }}">{{ source.right.label }}</span></span>
+      </div>
+    {% endif %}
+  </div>
+</div>

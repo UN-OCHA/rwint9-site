@@ -1,0 +1,16 @@
+uuid: 4f609365-7397-4f15-b7c2-70bac119531d
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+id: request_path
+label: 'Request path'
+weight: -10
+theme: common_design_subtheme
+admin_theme: common_design_subtheme
+visibility:
+  request_path:
+    id: request_path
+    pages: "/moderation/content/*\r\n/user/*/edit\r\n/user/*/notifications\r\n/user/*/bookmarks\r\n/user/*/posts\r\n/user/*/contact\r\n/admin/community-topics"
+    negate: false

@@ -1,0 +1,32 @@
+reliefweb_moderation.content:
+  # The parameter is the entity bundle associated to a moderation service.
+  path: '/moderation/content/{service}'
+  defaults:
+    _controller: '\Drupal\reliefweb_moderation\Controller\ModerationPage::getPageContent'
+    _title_callback: '\Drupal\reliefweb_moderation\Controller\ModerationPage::getPageTitle'
+  options:
+    _admin_route: TRUE
+    parameters:
+      service:
+        type: reliefweb_moderation_service
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: access content moderation backend
+    service: "[a-z0-9_]+"
+
+reliefweb_moderation.content.autocomplete:
+  # The parameter is the entity bundle associated to a moderation service.
+  path: '/moderation/content/{service}/autocomplete/{filter}'
+  defaults:
+    _controller: '\Drupal\reliefweb_moderation\Controller\ModerationPage::autocomplete'
+    _title_callback: '\Drupal\reliefweb_moderation\Controller\ModerationPage::getPageTitle'
+  options:
+    _admin_route: TRUE
+    parameters:
+      service:
+        type: reliefweb_moderation_service
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: access content moderation backend
+    service: "[a-z0-9_]+"
+    filter: "[a-z0-9_]+"

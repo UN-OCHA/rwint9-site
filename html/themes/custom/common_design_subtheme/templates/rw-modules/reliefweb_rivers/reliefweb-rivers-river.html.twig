@@ -1,8 +1,33 @@
 {% set title_attributes = title_attributes.addClass('cd-block-title') %}
+{% set attributes = attributes.addClass('cd-flow') %}
+{% set river_attributes = river_attributes.addClass('cd-flow') %}
 
 {{ attach_library('common_design/cd-block-title') }}
-{{ attach_library('common_design_subtheme/rw-headlines') }}
+{{ attach_library('common_design_subtheme/rw-article') }}
 {{ attach_library('common_design_subtheme/rw-river') }}
 {{ attach_library('common_design_subtheme/rw-view-more') }}
+
+{# Some logic to differentiate the types of styling to apply. We could also
+   provide some theme suggestions based on the section ID and use different
+   templates rather than the following conditions. #}
+{% if id == 'headlines' %}
+  {% set article_attributes = article_attributes.addClass('rw-river-article--headline') %}
+{% elseif id == 'river-list' %}
+  {% set article_attributes = article_attributes.addClass('rw-river-article--card') %}
+{% elseif id == 'maps-infographics' %}
+  {% set article_attributes = article_attributes.addClass('rw-river-article--map') %}
+  {% set attributes = attributes.addClass('rw-river--river-columns') %}
+{% elseif id == 'appeals-response-plans' %}
+  {% set article_attributes = article_attributes.addClass('rw-river-article--appeal') %}
+  {% set attributes = attributes.addClass('rw-river--river-columns','rw-river--river-columns--two','rw-river--river-columns--desktop') %}
+{% elseif id == 'related' %}
+  {% set attributes = attributes.addClass('rw-river--river-columns','rw-river--river-columns--two') %}
+{% elseif id == 'reliefweb-topics' %}
+  {% set article_attributes = article_attributes.addClass('rw-river-article--card') %}
+  {% set attributes = attributes.addClass('rw-river--river-columns','rw-river--river-columns--two','rw-river--river-cards') %}
+{% elseif id == 'community-topics' %}
+  {% set article_attributes = article_attributes.addClass('rw-river-article--card') %}
+  {% set attributes = attributes.addClass('rw-river--river-columns','rw-river--river-columns--two','rw-river--river-cards') %}
+{% endif %}
 
 {% include '@reliefweb_rivers/reliefweb-rivers-river.html.twig' %}

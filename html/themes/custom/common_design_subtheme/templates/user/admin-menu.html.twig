@@ -1,0 +1,58 @@
+{{ attach_library('common_design_subtheme/rw-admin-menu') }}
+
+<section id="admin-menu" class="admin-menu">
+
+  {# Dropdown toggle is created with javascript #}
+
+  <h2 id="admin-menu-title">{% trans %}Admin menu{% endtrans %}</h2>
+
+  <div class="cd-global-header__dropdown cd-ocha-dropdown cd-dropdown" id="admin-menu-dropdown" aria-labelledby="admin-menu-title" data-cd-toggable="{{ 'Admin menu'|t }}" data-cd-component="admin-menu" data-cd-icon="arrow-down" data-cd-replace="admin-menu-title" data-cd-logo="admin">
+
+    <div class="admin-menu-dropdown__inner">
+      <nav>
+        <ul>
+          <li>
+            <h3 id="admin-menu-create">Create</h3>
+            <ul aria-labelledby="admin-menu-create">
+              <li><a href="/node/add/report">Report</a></li>
+              <li><a href="/node/add/job">Job</a></li>
+              <li><a href="/node/add/training">Training</a></li>
+              <li><a href="/node/add/topic">Topic</a></li>
+              <li><a href="/admin/structure/taxonomy/manage/country/add">Country</a></li>
+              <li><a href="/admin/structure/taxonomy/manage/disaster/add">Disaster</a></li>
+              <li><a href="/admin/structure/taxonomy/manage/source/add">Source</a></li>
+              <li><a href="/node/add/blog_post">Blog post</a></li>
+              <li><a href="/node/add/book">Book page</a></li>
+              <li><a href="/node/add/announcement">Announcement</a></li>
+            </ul>
+          </li>
+          <li>
+            <h3 id="admin-menu-moderate">Moderate</h3>
+            <ul aria-labelledby="admin-menu-moderate">
+              <li><a href="/moderation/content/report">Reports</a></li>
+              <li><a href="/moderation/content/job">Jobs</a></li>
+              <li><a href="/moderation/content/training">Training</a></li>
+              <li><a href="/moderation/content/topic">Topics</a></li>
+              <li><a href="/moderation/content/country">Countries</a></li>
+              <li><a href="/moderation/content/disaster">Disasters</a></li>
+              <li><a href="/moderation/content/source">Sources</a></li>
+              <li><a href="/moderation/content/blog_post">Blog posts</a></li>
+              <li><a href="/moderation/content/book">Book pages</a></li>
+              <li><a href="/moderation/content/announcement">Announcements</a></li>
+            </ul>
+          </li>
+          <li>
+            <h3 id="admin-menu-manage">Manage</h3>
+            <ul aria-labelledby="admin-menu-manage">
+              <li><a href="/admin/index">Administration</a></li>
+              <li><a href="/admin/people">People</a></li>
+              <li><a href="/admin/structure/taxonomy">Taxonomy</a></li>
+              <li><a href="/admin/community-topics">Community topics</a></li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+    </div>
+
+  </div>
+</section>

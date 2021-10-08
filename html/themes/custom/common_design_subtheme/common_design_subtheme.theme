@@ -6,6 +6,168 @@
  */
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_theme().
+ *
+ * Add themes for the taxonomy term and user edit forms.
+ *
+ * @todo move to CD base theme.
+ */
+function common_design_subtheme_theme(array $existing, $type, $theme, $path) {
+  $hooks = [
+    'taxonomy_term_edit_form',
+    'user_edit_form',
+  ];
+
+  return common_design_subtheme_get_entity_edit_form_themes($hooks, $existing, $theme, $path);
+}
+
+/**
+ * Generate the list of themes for entity edit forms.
+ *
+ * @param array $hooks
+ *   List of base edit form theme ids to create.
+ * @param array $existing
+ *   List of existing themes.
+ * @param string $theme
+ *   The current theme (ex: common_design) name.
+ * @param string $path
+ *   The path of the current theme.
+ *
+ * @return array
+ *   Theme data as returned by hook_theme().
+ *
+ * @todo move to CD base theme.
+ */
+function common_design_subtheme_get_entity_edit_form_themes(array $hooks, array $existing, $theme, $path) {
+  $themes = [];
+  $scan = is_dir($path);
+  foreach ($hooks as $hook) {
+    // In case Drupal becomes consistent and adds the term and user edit form
+    // themes like it does with the `node_edit_form` theme for nodes...
+    if (isset($existing[$hook])) {
+      continue;
+    }
+
+    // We need to explicily add a preprocess function so that the
+    // `preprocess functions` key is not removed in
+    // \Drupal\Core\Theme\Registry::postProcessExtension()
+    // which causes a PHP "null given" error when calling array_diff in
+    // \Drupal\Core\Theme\Registry::mergePreprocessFunctions()...
+    //
+    // @see \Drupal\Core\Theme\Registry::postProcessExtension()
+    // @see \Drupal\Core\Theme\Registry::mergePreprocessFunctions()
+    $themes[$hook] = [
+      'render element' => 'form',
+      'path' => $path . '/templates/form',
+      'preprocess functions' => [$theme . '_preprocess_' . $hook],
+    ];
+
+    // Drupal doesn't allow finding suggestions for themes declared in the
+    // current theme's hook_theme. So we do a light scan to populate the theme
+    // registry with suggestions.
+    //
+    // Note: we don't need to do that for the node_edit_form theme defined
+    // in the core node module because it's not defined in this theme and
+    // drupal_find_theme_templates() will pick the template override and
+    // suggestions properly.
+    //
+    // @see drupal_find_theme_templates()
+    // @see twig_theme()
+    if ($scan) {
+      $regex = '#(^|/)' . strtr($hook, '_', '-') . '--.*\.html\.twig$#';
+      $files = \Drupal::service('file_system')->scanDirectory($path, $regex);
+      foreach ($files as $file) {
+        $template = str_replace('.html.twig', '', $file->filename);
+        $suggestion = strtr($template, '-', '_');
+        $themes[$suggestion] = [
+          'render element' => 'form',
+          'template' => $template,
+          'path' => dirname($file->uri),
+          'base hook' => $hook,
+          'preprocess functions' => [$theme . '_preprocess_' . $suggestion],
+        ];
+      }
+    }
+  }
+
+  return $themes;
+}
+
+/**
+ * Add bundle and view mode theme suggestions for the edit form of an entity.
+ *
+ * @param array $form
+ *   The form array.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The form state.
+ *
+ * @see seven_form_node_form_alter()
+ *
+ * @todo move to CD base theme.
+ */
+function common_design_subtheme_add_entity_edit_form_theme(array &$form, FormStateInterface $form_state) {
+  $display = $form_state->get('form_display');
+  $entity_type_id = $display->getTargetEntityTypeId();
+  $bundle = $display->getTargetBundle();
+  $view_mode = $display->getMode();
+  $base = $entity_type_id . '_edit_form';
+
+  // The order is important.
+  $form['#theme'][] = $base . '__' . $bundle . '__' . $view_mode;
+  $form['#theme'][] = $base . '__' . $view_mode;
+  $form['#theme'][] = $base . '__' . $bundle;
+  $form['#theme'][] = $base;
+}
+
+/**
+ * Implements hook_form_node_HOOK_alter().
+ *
+ * @todo move to CD base theme.
+ */
+function common_design_subtheme_form_node_form_alter(&$form, FormStateInterface $form_state) {
+  common_design_subtheme_add_entity_edit_form_theme($form, $form_state);
+}
+
+/**
+ * Implements hook_form_node_HOOK_alter().
+ *
+ * @todo move to CD base theme.
+ */
+function common_design_subtheme_form_taxonomy_term_form_alter(&$form, FormStateInterface $form_state) {
+  common_design_subtheme_add_entity_edit_form_theme($form, $form_state);
+
+  // Make the form page title consistent with the nodes to avoid the generic
+  // "Add term" and "Edit term" page titles.
+  if (!isset($form['#title'])) {
+    $entity = $form_state->getFormObject()->getEntity();
+    $bundle_key = $entity->getEntityType()->getKey('bundle');
+    $bundle_label = $entity->get($bundle_key)->entity->label();
+
+    if (empty($form['tid']['#value'])) {
+      $form['#title'] = t('Create @bundle_label', [
+        '@bundle_label' => $bundle_label,
+      ]);
+    }
+    else {
+      $form['#title'] = t('<em>Edit @bundle_label</em> @title', [
+        '@bundle_label' => $bundle_label,
+        '@title' => $entity->label(),
+      ]);
+    }
+  }
+}
+
+/**
+ * Implements hook_form_node_HOOK_alter().
+ *
+ * @todo move to CD base theme.
+ */
+function common_design_subtheme_form_user_form_alter(array &$form, FormStateInterface $form_state) {
+  common_design_subtheme_add_entity_edit_form_theme($form, $form_state);
+}
 
 /**
  * Implements hook_preprocess_taxonomy_term().
@@ -19,16 +181,18 @@ use Drupal\Core\Entity\EntityInterface;
  * @see common_design_get_block_render_array()
  */
 function common_design_subtheme_preprocess_taxonomy_term(&$variables) {
+  $term = $variables['term'] ?? NULL;
   $view_mode = $variables['view_mode'] ?? $variables['elements']['#view_mode'] ?? '';
+  $route_name = \Drupal::routeMatch()->getRouteName();
 
   // Prepare the title and local tasks so we have better control over where
   // to display them for content in full term.
-  if ($view_mode === 'full') {
-    $variables['title'] = common_design_get_block_render_array('page_title_block');
-    $variables['local_tasks'] = common_design_get_block_render_array('local_tasks_block');
-    // Copy the title attributes.
-    if (!empty($variables['title']) && !empty($variables['title_attributes'])) {
-      $variables['title']['#title_attributes'] = $variables['title_attributes'];
+  if (isset($term) && is_a($term, '\Drupal\taxonomy\TermInterface')) {
+    if ($route_name === 'entity.taxonomy_term.canonical' && $view_mode === 'full') {
+      common_design_set_page_title($variables, $term->label(), TRUE);
+    }
+    elseif ($route_name === 'entity.taxonomy_term.preview') {
+      common_design_set_page_title($variables, $term->label(), TRUE);
     }
   }
 }
@@ -46,34 +210,43 @@ function common_design_subtheme_preprocess_page(&$variables) {
   $route_name = \Drupal::routeMatch()->getRouteName();
 
   // Attempt to retrieve the term entity if the current page is a term page.
+  // @see common_design_subtheme_preprocess_taxonomy_term()
   if ($route_name === 'entity.taxonomy_term.canonical') {
     $term = common_design_subtheme_get_entity_from_route('taxonomy_term');
+
+    if (isset($term) && is_a($term, '\Drupal\taxonomy\TermInterface')) {
+      // This gives us an array with the page view mode for the term.
+      $build = \Drupal::entityTypeManager()
+        ->getViewBuilder('taxonomy_term')
+        ->view($term);
+
+      $view_mode = $build['#view_mode'] ?? '';
+
+      if ($view_mode === 'full') {
+        common_design_hide_rendered_blocks_from_page($variables, [
+          'page_title_block',
+          'local_tasks_block',
+        ]);
+      }
+    }
+  }
+  // Hide the page title block on the taxonomy term preview page.
+  elseif ($route_name === 'entity.taxonomy_term.preview') {
+    common_design_hide_rendered_blocks_from_page($variables, [
+      'page_title_block',
+    ]);
+  }
+  // Remove the page title block from the search results page.
+  elseif ($route_name === 'reliefweb_rivers.search.results') {
+    common_design_hide_rendered_blocks_from_page($variables, [
+      'page_title_block',
+    ]);
   }
   // Remove the page title block on river pages.
   elseif (preg_match('#^reliefweb_rivers\.[^\.]+\.river$#', $route_name) === 1) {
     common_design_hide_rendered_blocks_from_page($variables, [
       'page_title_block',
     ]);
-  }
-
-  // If the term variable is defined then we assume we are on a term page.
-  // We retrieve the view mode for the page and compare it against the settings
-  // to render the page title inside the term. If so, we hide the page title
-  // and local tasks blocks from their original region in the page.
-  if (isset($term) && is_a($term, '\Drupal\taxonomy\TermInterface')) {
-    // This gives us an array with the page view mode for the term.
-    $build = \Drupal::entityTypeManager()
-      ->getViewBuilder('taxonomy_term')
-      ->view($term);
-
-    $view_mode = $build['#view_mode'] ?? '';
-
-    if ($view_mode === 'full') {
-      common_design_hide_rendered_blocks_from_page($variables, [
-        'page_title_block',
-        'local_tasks_block',
-      ]);
-    }
   }
 }
 
@@ -95,4 +268,16 @@ function common_design_subtheme_get_entity_from_route($entity_type) {
     }
   }
   return NULL;
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK_alter() for the page title.
+ *
+ * Add a suggestion for the page title of non entity pages.
+ */
+function common_design_subtheme_theme_suggestions_page_title_alter(array &$suggestions, array $variables) {
+  $route_name = \Drupal::routeMatch()->getRouteName();
+  if (strpos($route_name, 'entity.') !== 0) {
+    $suggestions[] = 'page_title__wrapped';
+  }
 }

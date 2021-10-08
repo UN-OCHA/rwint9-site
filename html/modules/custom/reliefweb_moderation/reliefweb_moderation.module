@@ -1,0 +1,80 @@
+<?php
+
+/**
+ * @file
+ * Theme declaration etc. for the reliefweb_moderation module.
+ */
+
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\reliefweb_moderation\ModerationServiceBase;
+
+/**
+ * Implements hook_theme().
+ */
+function reliefweb_moderation_theme() {
+  $themes = [
+    'reliefweb_moderation_page' => [
+      'variables' => [
+        // Entity list filters.
+        'filters' => NULL,
+        // Attributes for the filters.
+        'filters_attributes' => NULL,
+        // List of entities. @see reliefweb_moderation_table below.
+        'list' => NULL,
+        // Attributes for the list.
+        'list_attributes' => NULL,
+      ],
+    ],
+    'reliefweb_moderation_table' => [
+      'variables' => [
+        // Count of results per status. @see reliefweb_moderation_totals below.
+        'totals' => NULL,
+        // Headers for the table with the list of entities. In general it will
+        // contain a header for the edit links, a header for the main entity
+        // data and a header for the date, notably used for sorting.
+        'headers' => [],
+        // Table rows with entity information. It should contain cells as
+        // describe above for the headers.
+        'rows' => [],
+        // Message for when there are no results.
+        'empty' => '',
+        // Pager.
+        'pager' => NULL,
+      ],
+    ],
+    'reliefweb_moderation_totals' => [
+      'variables' => [
+        // Associative array. Each item has the following keys:
+        // - status: entity status
+        // - label: entity status label
+        // - total: number of entities with that status.
+        'totals' => NULL,
+      ],
+    ],
+  ];
+  return $themes;
+}
+
+/**
+ * Implements hook_entity_access().
+ */
+function reliefweb_moderation_entity_access(EntityInterface $entity, $operation, AccountInterface $account) {
+  $service = ModerationServiceBase::getModerationService($entity->bundle());
+  if (!empty($service)) {
+    return $service->entityAccess($entity, $operation, $account);
+  }
+  // No opinion.
+  return AccessResult::neutral();
+}
+
+/**
+ * Implements hook_entity_presave().
+ */
+function reliefweb_moderation_entity_presave(EntityInterface $entity) {
+  $service = ModerationServiceBase::getModerationService($entity->bundle());
+  if (!empty($service)) {
+    $service->entityPresave($entity);
+  }
+}

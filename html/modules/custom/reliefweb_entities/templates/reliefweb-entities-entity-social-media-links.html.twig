@@ -20,6 +20,7 @@
   .addClass([
     'rw-entity-social-media-links',
     icons_only ? 'rw-entity-social-media-links--icons-only',
+    not icons_only ? 'rw-entity-social-media-links--tiles',
   ])
   .setAttribute('id', id)
 }}>
@@ -32,7 +33,7 @@
 
   <ul class="rw-entity-social-media-links__list">
   {% for link in links %}
-    <li class="rw-entity-social-media-links__list_item">
+    <li class="rw-entity-social-media-links__list-item">
       {%- if icons_only -%}
         <a href="{{ link.url }}" target="_blank" rel="nofollow noopener noreferrer" class="rw-entity-social-media-links__link" title="{{ link.title }}">
           <span class="visually-hidden">{{ link.title }}</span>

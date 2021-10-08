@@ -19,8 +19,27 @@ shared_configuration:
   process:
     # Base properties.
     nid: nid
-    uid: uid
-    type: type
+    uid:
+      plugin: static_map
+      bypass: true
+      source: uid
+      # Map the anonymous and super users to the System user.
+      map:
+        0: 2
+        1: 2
+    type:
+      plugin: static_map
+      bypass: true
+      source: type
+      map:
+        announcement: announcement
+        blog_post: blog_post
+        book: book
+        job: job
+        report: report
+        topic: topic
+        topics: topic
+        training: training
     # We let the system set the default language (en).
     # langcode: en
     # We skip the sticky and promote values as they are not used. They will be
@@ -59,7 +78,7 @@ shared_configuration:
     vid: revision_id
     revision_uid:
       plugin: static_map
-      default_value: 2
+      bypass: true
       source: revision_user
       # Map the anonymous and super users to the System user.
       map:
@@ -74,19 +93,18 @@ shared_configuration:
       method: process
       source: body/0/value
     body/format:
-      -
-        plugin: skip_on_empty
-        method: process
-        source: body/0/format
-      -
-        plugin: static_map
-        default_value: markdown
-        map:
-          full_html: html
-          legacy: markdown
-          markdown: markdown
-          plain_text: markdown
-          token_markdown: markdown
+      plugin: static_map
+      default_value: markdown
+      map:
+        full_html: html
+        legacy: markdown
+        markdown: markdown
+        plain_text: markdown
+        token_markdown: token_markdown
+    # Disable notifications.
+    notifications_content_disable:
+      plugin: default_value
+      default_value: 1
   migration_dependencies:
     required:
       - reliefweb_user

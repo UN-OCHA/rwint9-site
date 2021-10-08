@@ -4,7 +4,6 @@ namespace Drupal\reliefweb_entities;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\reliefweb_rivers\RiverServiceBase;
-use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
 
 /**
  * Trait implementing most methods of the SectionedContentInterface.
@@ -18,7 +17,7 @@ trait SectionedContentTrait {
   /**
    * Get the section data for the given ReliefWeb API queries.
    *
-   * @see \Drupal\reliefweb_entities::getSectionsFromReliefWebApiQueries()
+   * @see \Drupal\reliefweb_entities\SectionedContentInterfacegetSectionsFromReliefWebApiQueries()
    */
   public function getSectionsFromReliefWebApiQueries(array $queries) {
     $results = \Drupal::service('reliefweb_api.client')
@@ -44,6 +43,7 @@ trait SectionedContentTrait {
           '#resource' => $query['resource'],
           '#entities' => $entities,
           '#more' => $query['more'] ?? NULL,
+          '#title' => $query['title'] ?? NULL,
         ];
       }
     }
@@ -53,9 +53,9 @@ trait SectionedContentTrait {
   /**
    * Consolidate content sections.
    *
-   * @see \Drupal\reliefweb_entities::consolidateSections()
+   * @see \Drupal\reliefweb_entities\SectionedContentInterfaceconsolidateSections()
    */
-  public function consolidateSections(array $contents, array $sections, array $labels) {
+  public function consolidateSections(array $contents, array $sections, array $labels = []) {
     $consolidated = [];
 
     // Parse the table of content, remove empty sections and update the title
@@ -106,23 +106,45 @@ trait SectionedContentTrait {
   /**
    * Get the entity description (for countries, disasters, sources).
    *
+   * @param string $id
+   *   Section id.
+   *
    * @return array
    *   Render array with the description.
    */
-  public function getEntityDescription() {
-    if (!empty($this->description->value)) {
-      // @todo review handling of markdown when there is a proper release of
-      // https://www.drupal.org/project/markdown for Drupal 9.
-      if ($this->description->format === 'markdown') {
-        $description = HtmlSanitizer::sanitizeFromMarkdown($this->description->value);
-      }
-      else {
-        $description = HtmlSanitizer::sanitize(check_markup($this->description->value));
-      }
+  public function getEntityDescription($id) {
+    return $this->getEntityTextField('description', $id, $this->t('Description'), FALSE);
+  }
 
+  /**
+   * Get the content of a text field.
+   *
+   * @param string $field_name
+   *   Text field name.
+   * @param string $id
+   *   Section id.
+   * @param string $title
+   *   Section title.
+   * @param bool $iframe
+   *   Flag indicating whether iframes are allowed in the rendred HTML or not.
+   * @param array $allowed_attributes
+   *   Extra attributes allowed in the rendered HtmL.
+   *
+   * @return array
+   *   Render array with the text content.
+   */
+  public function getEntityTextField($field_name, $id, $title, $iframe = TRUE, array $allowed_attributes = []) {
+    if (!$this->{$field_name}->isEmpty()) {
       return [
-        '#theme' => 'reliefweb_entities_entity_description',
-        '#description' => $description,
+        '#theme' => [
+          'reliefweb_entities_entity_text__' . $this->bundle() . '__' . $id,
+          'reliefweb_entities_entity_text__' . $id,
+          'reliefweb_entities_entity_text',
+        ],
+        '#id' => $id,
+        '#content' => $this->{$field_name}->first()->view(),
+        '#iframe' => $iframe,
+        '#allowed_attributes' => $allowed_attributes,
       ];
     }
     return [];
@@ -131,45 +153,39 @@ trait SectionedContentTrait {
   /**
    * Get payload for the key content reports.
    *
-   * @see \Drupal\reliefweb_entities::getKeyContentApiQuery()
+   * @see \Drupal\reliefweb_entities\SectionedContentInterfacegetKeyContentApiQuery()
    */
   public function getKeyContentApiQuery($code = 'PC', $limit = 3) {
-    $fields = $this->getProfileFields();
-    if (empty($fields['key_content'])) {
+    $links = $this->getProfileFieldLinks('field_key_content');
+    if (empty($links)) {
       return [];
     }
 
     // Extract the report ids from the key content profile field.
     $ids = [];
-    foreach ($fields['key_content'] as $link) {
+    foreach ($links as $link) {
       if (isset($link['url']) && preg_match('#/node/(?<id>\d+)#', $link['url'], $match) === 1) {
-        $ids[] = (int) $match['id'];
+        $ids[] = $match['id'];
       }
     }
     if (empty($ids)) {
       return [];
     }
 
-    $bundle = $this->bundle();
-    $entity_id = $this->id();
-    $field_name = $bundle === 'country' ? 'primary_country' : $bundle;
+    // Apply the given limit.
+    $ids = array_slice($ids, 0, $limit);
+
+    // Build the query, boosting the ids to preserve the order.
+    $count = count($ids);
+    foreach ($ids as $index => $id) {
+      $ids[$index] .= '^' . (($count - $index) * 10);
+    }
 
     $payload = RiverServiceBase::getRiverApiPayload('report');
     $payload['fields']['exclude'][] = 'file.preview.url-thumb';
     $payload['fields']['include'][] = 'headline.summary';
-    $payload['filter'] = [
-      'conditions' => [
-        [
-          'field' => $field_name . '.id',
-          'value' => $entity_id,
-        ],
-        [
-          'field' => 'id',
-          'value' => $ids,
-        ],
-      ],
-      'operator' => 'AND',
-    ];
+    $payload['query']['value'] = 'id:' . implode(' OR id:', $ids);
+    $payload['sort'] = ['score:desc', 'date.created:desc'];
     $payload['limit'] = $limit;
 
     return [
@@ -179,7 +195,7 @@ trait SectionedContentTrait {
       // Link to the updates river for the entity.
       'more' => [
         'url' => RiverServiceBase::getRiverUrl('report', [
-          'advanced-search' => '(' . $code . $entity_id . ')',
+          'advanced-search' => '(' . $code . $this->id() . ')',
         ]),
         'label' => $this->t('View all @label Situation Reports', [
           '@label' => $this->label(),
@@ -191,45 +207,39 @@ trait SectionedContentTrait {
   /**
    * Get payload for the appeals and response plans.
    *
-   * @see \Drupal\reliefweb_entities::getAppealsResponsePlansApiQuery()
+   * @see \Drupal\reliefweb_entities\SectionedContentInterfacegetAppealsResponsePlansApiQuery()
    */
   public function getAppealsResponsePlansApiQuery($code = 'PC', $limit = 50) {
-    $fields = $this->getProfileFields();
-    if (empty($fields['appeals_response_plans'])) {
+    $links = $this->getProfileFieldLinks('field_appeals_response_plans');
+    if (empty($links)) {
       return [];
     }
 
     // Extract the report ids from the appeals/response plans profile field.
     $ids = [];
-    foreach ($fields['appeals_response_plans'] as $link) {
+    foreach ($links as $link) {
       if (isset($link['url']) && preg_match('#/node/(?<id>\d+)#', $link['url'], $match) === 1) {
-        $ids[] = (int) $match['id'];
+        $ids[] = $match['id'];
       }
     }
     if (empty($ids)) {
       return [];
     }
 
-    $bundle = $this->bundle();
-    $entity_id = $this->id();
-    $field_name = $bundle === 'country' ? 'primary_country' : $bundle;
+    // Apply the given limit.
+    $ids = array_slice($ids, 0, $limit);
+
+    // Build the query, boosting the ids to preserve the order.
+    $count = count($ids);
+    foreach ($ids as $index => $id) {
+      $ids[$index] .= '^' . (($count - $index) * 10);
+    }
 
     $payload = RiverServiceBase::getRiverApiPayload('report');
     $payload['fields']['exclude'][] = 'file.preview.url-thumb';
     $payload['fields']['exclude'][] = 'body-html';
-    $payload['filter'] = [
-      'conditions' => [
-        [
-          'field' => $field_name . '.id',
-          'value' => $entity_id,
-        ],
-        [
-          'field' => 'id',
-          'value' => $ids,
-        ],
-      ],
-      'operator' => 'AND',
-    ];
+    $payload['query']['value'] = 'id:' . implode(' OR id:', $ids);
+    $payload['sort'] = ['score:desc', 'date.created:desc'];
     $payload['limit'] = $limit;
 
     return [
@@ -240,7 +250,7 @@ trait SectionedContentTrait {
       // Link to the updates river for the entity.
       'more' => [
         'url' => RiverServiceBase::getRiverUrl('report', [
-          'advanced-search' => '(' . $code . $entity_id . ')',
+          'advanced-search' => '(' . $code . $this->id() . ')',
         ]),
         'label' => $this->t('View all @label Appeals and Response Plans', [
           '@label' => $this->label(),
@@ -252,7 +262,7 @@ trait SectionedContentTrait {
   /**
    * Get payload for the most read documents.
    *
-   * @see \Drupal\reliefweb_entities::getMostReadApiQuery()
+   * @see \Drupal\reliefweb_entities\SectionedContentInterfacegetMostReadApiQuery()
    */
   public function getMostReadApiQuery($code = 'PC', $limit = 5) {
     $entity_id = $this->id();
@@ -311,7 +321,7 @@ trait SectionedContentTrait {
   /**
    * Get payload for latest updates.
    *
-   * @see \Drupal\reliefweb_entities::getLatestUpdatesApiQuery()
+   * @see \Drupal\reliefweb_entities\SectionedContentInterfacegetLatestUpdatesApiQuery()
    */
   public function getLatestUpdatesApiQuery($code = 'PC', $limit = 3) {
     $bundle = $this->bundle();
@@ -346,7 +356,7 @@ trait SectionedContentTrait {
   /**
    * Get payload for maps and infographics.
    *
-   * @see \Drupal\reliefweb_entities::getLatestMapsInfographicsApiQuery()
+   * @see \Drupal\reliefweb_entities\SectionedContentInterfacegetLatestMapsInfographicsApiQuery()
    */
   public function getLatestMapsInfographicsApiQuery($code = 'PC', $limit = 3) {
     $bundle = $this->bundle();
@@ -393,7 +403,7 @@ trait SectionedContentTrait {
   /**
    * Get payload for latest jobs.
    *
-   * @see \Drupal\reliefweb_entities::getLatestJobsApiQuery()
+   * @see \Drupal\reliefweb_entities\SectionedContentInterfacegetLatestJobsApiQuery()
    */
   public function getLatestJobsApiQuery($code = 'C', $limit = 3) {
     $bundle = $this->bundle();
@@ -425,7 +435,7 @@ trait SectionedContentTrait {
   /**
    * Get payload for latest training.
    *
-   * @see \Drupal\reliefweb_entities::getLatestTrainingApiQuery()
+   * @see \Drupal\reliefweb_entities\SectionedContentInterfacegetLatestTrainingApiQuery()
    */
   public function getLatestTrainingApiQuery($code = 'C', $limit = 3) {
     $bundle = $this->bundle();
@@ -457,7 +467,7 @@ trait SectionedContentTrait {
   /**
    * Get payload for latest alert and ongoing disasters.
    *
-   * @see \Drupal\reliefweb_entities::getLatestDisastersApiQuery()
+   * @see \Drupal\reliefweb_entities\SectionedContentInterfacegetLatestDisastersApiQuery()
    */
   public function getLatestDisastersApiQuery($code = 'C', $limit = 100) {
     $bundle = $this->bundle();
@@ -472,7 +482,8 @@ trait SectionedContentTrait {
         ],
         [
           'field' => 'status',
-          'value' => ['alert', 'current'],
+          // Current is the legacy equivalent of ongoing.
+          'value' => ['alert', 'current', 'ongoing'],
         ],
       ],
       'operator' => 'AND',
@@ -499,64 +510,42 @@ trait SectionedContentTrait {
   /**
    * Get the section with the useful links for the entity (country/disaster).
    *
-   * @see \Drupal\reliefweb_entities::getUsefulLinksSection()
+   * @see \Drupal\reliefweb_entities\SectionedContentInterfacegetUsefulLinksSection()
    */
   public function getUsefulLinksSection() {
-    $fields = $this->getProfileFields();
-
-    if (empty($fields['useful_links'])) {
+    $links = $this->getProfileFieldLinks('field_useful_links');
+    if (empty($links)) {
       return [];
     }
 
+    $links = array_map(function ($item) {
+      return [
+        'url' => $item['url'],
+        'title' => $item['title'] ?? $item['url'],
+        'logo' => $item['image'] ?? '',
+      ];
+    }, $links);
+
     return [
       '#theme' => 'reliefweb_entities_entity_useful_links',
-      '#links' => $fields['useful_links'],
+      '#links' => $links,
     ];
   }
 
   /**
-   * Get the country/disaster profile.
+   * Get the links of a country/disaster profile field.
    *
-   * @see \Drupal\reliefweb_entities::getProfileFields()
+   * @see \Drupal\reliefweb_entities\SectionedContentInterface::getProfileFieldLinks()
    */
-  public function getProfileFields() {
-    if (!isset($this->profileFields)) {
-      $this->profileFields = [];
-
-      $resources = [
-        'country' => 'countries',
-        'disaster' => 'disasters',
-      ];
-
-      if (isset($resources[$this->bundle()])) {
-        $payload = [
-          'fields' => [
-            'include' => [
-              'profile.key_content.active',
-              'profile.appeals_response_plans.active',
-              'profile.useful_links.active',
-            ],
-          ],
-          'filter' => [
-            'field' => 'id',
-            'value' => $this->id(),
-          ],
-          'limit' => 1,
-        ];
-
-        $result = \Drupal::service('reliefweb_api.client')
-          ->request($this->getApiResource(), $payload);
-
-        if (!empty($result['data'][0]['fields']['profile'])) {
-          foreach ($result['data'][0]['fields']['profile'] as $id => $data) {
-            if (!empty($data['active'])) {
-              $this->profileFields[$id] = $data['active'];
-            }
-          }
-        }
-      }
+  public function getProfileFieldLinks($field) {
+    if ($this->hasField($field)) {
+      $links = array_filter($this->get($field)->getValue(), function ($item) {
+        return !empty($item['url']) && !empty($item['active']);
+      });
+      // Reverse the array to have the most recent first.
+      return array_reverse($links);
     }
-    return $this->profileFields;
+    return [];
   }
 
 }

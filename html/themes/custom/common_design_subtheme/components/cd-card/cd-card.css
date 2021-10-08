@@ -1,7 +1,9 @@
-.cd-card__title, .cd-card__title h3 > a {
+.cd-card__title,
+.cd-card__title h3 > a {
   display: block;
 }
 
-.cd-card__title, .cd-card__title a {
+.cd-card__title,
+.cd-card__title a {
   display: initial;
 }

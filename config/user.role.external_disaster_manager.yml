@@ -6,4 +6,10 @@ id: external_disaster_manager
 label: 'External disaster manager'
 weight: 6
 is_admin: null
-permissions: {  }
+permissions:
+  - 'create terms in disaster'
+  - 'delete terms in disaster'
+  - 'edit terms in disaster'
+  - 'use disaster transition archive_external'
+  - 'use disaster transition draft'
+  - 'use disaster transition external'

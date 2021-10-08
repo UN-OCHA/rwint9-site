@@ -196,7 +196,7 @@ class HtmlSanitizer {
       'h6' => TRUE,
     ];
 
-    // Allow iframs if instructed to.
+    // Allow iframes if instructed to.
     if (!empty($this->iframe)) {
       // No children.
       $tags['iframe'] = TRUE;
@@ -264,10 +264,10 @@ class HtmlSanitizer {
       // Process the node, converting if necessary and removing attributes.
       else {
         if (isset($convert[$tag])) {
-          static::changeTag($node, $convert[$tag]);
+          $this->changeTag($node, $convert[$tag]);
         }
         else {
-          static::removeAttributes($node);
+          $this->removeAttributes($node);
         }
       }
     }

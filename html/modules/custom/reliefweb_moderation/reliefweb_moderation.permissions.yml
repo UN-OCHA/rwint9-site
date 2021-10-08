@@ -1,0 +1,11 @@
+access content moderation backend:
+  title: 'Access content moderation backend'
+  description: 'Allow users to access the content moderation pages.'
+
+access content moderation features:
+  title: 'Access content moderation features'
+  description: 'Allow users to access the content moderation features.'
+
+archive content:
+  title: 'Archive content'
+  description: 'Allow users to archive content.'

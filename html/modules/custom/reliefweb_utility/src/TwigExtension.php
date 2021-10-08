@@ -4,6 +4,8 @@ namespace Drupal\reliefweb_utility;
 
 use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
+use Pelago\Emogrifier\CssInliner;
+use Pelago\Emogrifier\HtmlProcessor\HtmlPruner;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
 
@@ -19,6 +21,9 @@ class TwigExtension extends AbstractExtension {
     return [
       new TwigFilter('taglist', [$this, 'getTagList']),
       new TwigFilter('sanitize_html', [$this, 'sanitizeHtml'], [
+        'is_safe' => ['html'],
+      ]),
+      new TwigFilter('inline_css', [$this, 'inlineCss'], [
         'is_safe' => ['html'],
       ]),
       new TwigFilter('dpm', 'dpm'),
@@ -98,6 +103,33 @@ class TwigExtension extends AbstractExtension {
   public static function sanitizeHtml($html, $iframe = FALSE, $heading_offset = 2, array $allowed_attributes = []) {
     $sanitizer = new HtmlSanitizer($iframe, $heading_offset, $allowed_attributes);
     return $sanitizer->sanitizeHtml((string) $html);
+  }
+
+  /**
+   * Inline CSS in an HTML string.
+   *
+   * @param string $html
+   *   HTML string.
+   * @param string $css
+   *   Optional CSS string. If empty, this will attempt to extract the CSS
+   *   from any `<style>` tags in the head.
+   * @param bool $content_only
+   *   Return either the content of the body or the full HTML.
+   *
+   * @return string
+   *   HTML string with the CSS inlined.
+   */
+  public static function inlineCss($html, $css = '', $content_only = FALSE) {
+    // Inline css.
+    $inliner = CssInliner::fromHtml($html)
+      ->inlineCss($css);
+
+    // Remove redundant elements and classes.
+    $pruner = HtmlPruner::fromDomDocument($inliner->getDomDocument())
+      ->removeRedundantClassesAfterCssInlined($inliner);
+
+    // Return either the content of the body or the full HTML.
+    return $content_only ? $pruner->renderBodyContent() : $pruner->render();
   }
 
 }

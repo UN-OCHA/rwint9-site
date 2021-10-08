@@ -3,18 +3,25 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.taxonomy_term.disaster.field_appeals_response_plans
     - field.field.taxonomy_term.disaster.field_country
     - field.field.taxonomy_term.disaster.field_disaster_date
     - field.field.taxonomy_term.disaster.field_disaster_type
     - field.field.taxonomy_term.disaster.field_glide
     - field.field.taxonomy_term.disaster.field_glide_related
+    - field.field.taxonomy_term.disaster.field_key_content
     - field.field.taxonomy_term.disaster.field_primary_country
     - field.field.taxonomy_term.disaster.field_primary_disaster_type
     - field.field.taxonomy_term.disaster.field_profile
     - field.field.taxonomy_term.disaster.field_timezone
+    - field.field.taxonomy_term.disaster.field_useful_links
     - taxonomy.vocabulary.disaster
+    - workflows.workflow.disaster
   module:
+    - allowed_formats
+    - content_moderation
     - datetime
+    - reliefweb_fields
     - text
 id: taxonomy_term.disaster.default
 targetEntityType: taxonomy_term
@@ -26,18 +33,47 @@ content:
     weight: 6
     region: content
     settings:
-      placeholder: ''
       rows: 5
-    third_party_settings: {  }
+      placeholder: ''
+    third_party_settings:
+      allowed_formats:
+        hide_help: '1'
+        hide_guidelines: '1'
   field_country:
     weight: 2
     settings:
-      match_operator: CONTAINS
-      match_limit: 10
-      size: 60
-      placeholder: ''
+      sort: label
+      extra_data:
+        moderation_state: moderation_state
+        field_shortname: field_shortname
+        tid: '0'
+        uuid: '0'
+        revision_id: '0'
+        langcode: '0'
+        vid: '0'
+        revision_created: '0'
+        revision_user: '0'
+        revision_log_message: '0'
+        status: '0'
+        name: '0'
+        description: '0'
+        weight: '0'
+        parent: '0'
+        changed: '0'
+        default_langcode: '0'
+        revision_default: '0'
+        revision_translation_affected: '0'
+        field_aliases: '0'
+        field_appeals_response_plans: '0'
+        field_iso3: '0'
+        field_key_content: '0'
+        field_location: '0'
+        field_longname: '0'
+        field_profile: '0'
+        field_timezone: '0'
+        field_useful_links: '0'
     third_party_settings: {  }
-    type: entity_reference_autocomplete
+    type: reliefweb_entity_reference_select
     region: content
   field_disaster_date:
     weight: 5
@@ -48,12 +84,10 @@ content:
   field_disaster_type:
     weight: 4
     settings:
-      match_operator: CONTAINS
-      match_limit: 10
-      size: 60
-      placeholder: ''
+      extra_data: {  }
+      sort: label
     third_party_settings: {  }
-    type: entity_reference_autocomplete
+    type: reliefweb_entity_reference_select
     region: content
   field_glide:
     weight: 7
@@ -74,22 +108,46 @@ content:
   field_primary_country:
     weight: 1
     settings:
-      match_operator: CONTAINS
-      match_limit: 10
-      size: 60
-      placeholder: ''
+      sort: label
+      extra_data:
+        moderation_state: moderation_state
+        field_shortname: field_shortname
+        tid: '0'
+        uuid: '0'
+        revision_id: '0'
+        langcode: '0'
+        vid: '0'
+        revision_created: '0'
+        revision_user: '0'
+        revision_log_message: '0'
+        status: '0'
+        name: '0'
+        description: '0'
+        weight: '0'
+        parent: '0'
+        changed: '0'
+        default_langcode: '0'
+        revision_default: '0'
+        revision_translation_affected: '0'
+        field_aliases: '0'
+        field_appeals_response_plans: '0'
+        field_iso3: '0'
+        field_key_content: '0'
+        field_location: '0'
+        field_longname: '0'
+        field_profile: '0'
+        field_timezone: '0'
+        field_useful_links: '0'
     third_party_settings: {  }
-    type: entity_reference_autocomplete
+    type: reliefweb_entity_reference_select
     region: content
   field_primary_disaster_type:
     weight: 3
     settings:
-      match_operator: CONTAINS
-      match_limit: 10
-      size: 60
-      placeholder: ''
+      extra_data: {  }
+      sort: label
     third_party_settings: {  }
-    type: entity_reference_autocomplete
+    type: reliefweb_entity_reference_select
     region: content
   field_profile:
     weight: 9
@@ -104,6 +162,12 @@ content:
     third_party_settings: {  }
     type: options_select
     region: content
+  moderation_state:
+    type: moderation_state_default
+    weight: 12
+    settings: {  }
+    region: content
+    third_party_settings: {  }
   name:
     type: string_textfield
     weight: 0
@@ -120,5 +184,8 @@ content:
     region: content
     third_party_settings: {  }
 hidden:
+  field_appeals_response_plans: true
+  field_key_content: true
+  field_useful_links: true
   langcode: true
   path: true

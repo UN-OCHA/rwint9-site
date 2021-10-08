@@ -2,8 +2,19 @@ global-styling:
   css:
     theme:
       css/styles.css: {}
+  dependencies:
+    - common_design_subtheme/rw-form
+    - common_design_subtheme/rw-site-slogan
 
 # RW custom components
+rw-admin-menu:
+  css:
+    theme:
+      components/rw-admin-menu/rw-admin-menu.css: {}
+  js:
+    components/rw-admin-menu/admin-menu.js: {}
+  dependencies:
+    - common_design/cd-dropdown
 
 # Filters for the rivers.
 rw-advanced-search:
@@ -26,6 +37,7 @@ rw-article:
     theme:
       components/rw-article/rw-article.css: {}
       components/rw-article/rw-appeals-response-plans.css: {}
+      components/rw-article/rw-maps-inforgraphics.css: {}
 
 # Autocomplete widget.
 rw-autocomplete:
@@ -39,6 +51,16 @@ rw-blog:
   css:
     theme:
       components/rw-blog/rw-blog.css: {}
+
+rw-book-menu:
+  css:
+    theme:
+      components/rw-book-menu/rw-book-menu.css: {}
+
+rw-bookmark-link:
+  css:
+    theme:
+      components/rw-bookmark-link/rw-bookmark-link.css: {}
 
 rw-country:
   css:
@@ -54,6 +76,13 @@ rw-datepicker:
   dependencies:
     - common_design_subtheme/rw-icons
 
+rw-disaster-map:
+  css:
+    theme:
+      components/rw-disaster-map/rw-disaster-map.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+
 rw-disasters:
   css:
     theme:
@@ -61,30 +90,43 @@ rw-disasters:
   dependencies:
     - common_design_subtheme/rw-icons
 
+rw-document:
+  css:
+    theme:
+      components/rw-document/rw-document.css: {}
+
 rw-dsr:
   css:
     theme:
       components/rw-dsr/rw-dsr.css: {}
-
-rw-entity-description:
-  css:
-    theme:
-      components/rw-entity-description/rw-entity-description.css: {}
 
 rw-entity-meta:
   css:
     theme:
       components/rw-entity-meta/rw-entity-meta.css: {}
 
+rw-entity-text:
+  css:
+    theme:
+      components/rw-entity-text/rw-entity-text.css: {}
+
 rw-form:
   css:
     theme:
       components/rw-form/rw-form.css: {}
+      components/rw-form/rw-form--widget.css: {}
 
 rw-headlines:
   css:
     theme:
       components/rw-headlines/rw-headlines.css: {}
+
+rw-headlines--admin:
+  css:
+    theme:
+      components/rw-headlines--admin/rw-headlines--admin.css: {}
+  js:
+    components/rw-headlines--admin/rw-headlines--admin.js: {}
 
 rw-homepage:
   css:
@@ -102,6 +144,11 @@ rw-key-content:
   css:
     theme:
       components/rw-key-content/rw-key-content.css: {}
+
+rw-local-tasks:
+  css:
+    theme:
+      components/rw-local-tasks/rw-local-tasks.css: {}
 
 rw-key-figures:
   css:
@@ -125,6 +172,26 @@ rw-organizations:
     theme:
       components/rw-organizations/rw-organizations.css: {}
 
+rw-page-title:
+  css:
+    theme:
+      components/rw-page-title/rw-page-title.css: {}
+
+rw-pager:
+  css:
+    theme:
+      components/rw-pager/rw-pager.css: {}
+
+rw-related-content:
+  css:
+    theme:
+      components/rw-related-content/rw-related-content.css: {}
+
+rw-report:
+  css:
+    theme:
+      components/rw-report/rw-report.css: {}
+
 rw-river:
   css:
     theme:
@@ -146,6 +213,11 @@ rw-search:
     theme:
       components/rw-search/rw-search.css: {}
 
+rw-site-slogan:
+  css:
+    theme:
+      components/rw-site-slogan/rw-site-slogan.css: {}
+
 rw-social-media-links:
   css:
     theme:
@@ -161,6 +233,11 @@ rw-selection:
   dependencies:
     - common_design_subtheme/rw-icons
 
+rw-subscriptions:
+  css:
+    theme:
+      components/rw-subscriptions/rw-subscriptions.css: {}
+
 rw-toc:
   css:
     theme:
@@ -170,10 +247,21 @@ rw-toc:
   dependencies:
     - common_design/cd-dropdown
 
+rw-topics:
+  css:
+    theme:
+      components/rw-topics/rw-topics.css: {}
+
 rw-useful-links:
   css:
     theme:
       components/rw-useful-links/rw-useful-links.css: {}
+
+rw-user:
+  css:
+    theme:
+      components/rw-user/rw-user.css: {}
+      components/rw-user/rw-user-bookmarks.css: {}
 
 rw-view-more:
   css:
@@ -192,19 +280,4 @@ cd-button:
   css:
     theme:
       components/cd-button/cd-button.css: {}
-
-cd-card:
-  css:
-    theme:
-      components/cd-card/cd-card.css: {}
-
-cd-page-title:
-  css:
-    theme:
-      components/cd-page-title/cd-page-title.css: {}
-
-cd-tag:
-  css:
-    theme:
-      components/cd-tag/cd-tag.css: {}
 

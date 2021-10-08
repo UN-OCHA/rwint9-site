@@ -71,4 +71,10 @@
 
   {{ term.getPageContent() }}
 
+  {% if content.reliefweb_bookmarks_link is not empty %}
+    <footer>
+      {{ content.reliefweb_bookmarks_link }}
+    </footer>
+  {% endif %}
+
 </article>

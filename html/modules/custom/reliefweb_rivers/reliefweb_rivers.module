@@ -20,10 +20,13 @@ function reliefweb_rivers_theme() {
         'attributes' => NULL,
         // The river title.
         'title' => '',
-        // River attributes.
+        // Title attributes.
         'title_attributes' => NULL,
         // Render array. See "reliefweb_rivers_views" below.
         'views' => [],
+        // Area before the search bar. It's mostly used to display the
+        // disaster map on the disasters landing page.
+        'pre_content' => NULL,
         // Render array. See "reliefweb_rivers_search" below.
         'search' => NULL,
         // Letter navigation/filtering.
@@ -128,14 +131,22 @@ function reliefweb_rivers_theme() {
         'title' => t('List'),
         // Title attributes.
         'title_attributes' => NULL,
+        // Results attributes.
+        'results_attributes' => NULL,
+        // River attributes.
+        'river_attributes' => NULL,
         // Results (optional). See "reliefweb_rivers_results" below.
         'results' => NULL,
         // The article entities to display.
         'entities' => [],
+        // Article attributes.
+        'article_attributes' => NULL,
         // View more link (optional) URL to the full river and link text.
         'more' => NULL,
         // Pager (optional). See "reliefweb_rivers_results" below.
         'pager' => NULL,
+        // Message for when there are no items.
+        'empty' => t('No results found.'),
       ],
     ],
     'reliefweb_rivers_results' => [
@@ -159,6 +170,8 @@ function reliefweb_rivers_theme() {
         // The aricle entity's data as an associative array with id, bundle,
         // url, langcode, title etc.
         'entity' => NULL,
+        // Meta information attributes.
+        'meta_attributes' => NULL,
       ],
     ],
     'reliefweb_rivers_river_article_title' => [
@@ -206,6 +219,24 @@ function reliefweb_rivers_theme() {
         'groups' => [],
       ],
     ],
+    'reliefweb_rivers_search_results' => [
+      'variables' => [
+        // Wrapper attributes.
+        'attributes' => NULL,
+        // Page title.
+        'title' => t('Search Results'),
+        // Title attributes.
+        'title_attributes' => NULL,
+        // Render array. See "reliefweb_rivers_search" below.
+        'search' => NULL,
+        // Associative array with the type of resources as keys and the
+        // total of resources matching the search query and river title
+        // as values.
+        'totals' => [],
+        // List of sections constituing the page's content.
+        'sections' => [],
+      ],
+    ],
   ];
 
   // Add themes for the main river articles.
@@ -217,6 +248,7 @@ function reliefweb_rivers_theme() {
     'report',
     'source',
     'training',
+    'topic',
   ];
   foreach ($bundles as $bundle) {
     $themes['reliefweb_rivers_river_article__' . $bundle] = [

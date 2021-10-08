@@ -1,0 +1,6 @@
+use enhanced input forms:
+  title: 'Use enhanced input forms'
+  description: 'Use enhanced input forms on Node and Taxonomy input forms.'
+display source attention messages:
+  title: 'Display source attention messages:'
+  description: 'Display source attention messages when selecting sources in the node/term forms.'

@@ -1,0 +1,42 @@
+/**
+ * Bookmark link.
+ *
+ * Scope: .rw-bookmark-link
+ */
+.rw-bookmark-link {
+  position: relative;
+  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  vertical-align: middle;
+  text-decoration: none;
+  background: #e6ecef;
+  font-size: 15px;
+}
+.rw-bookmark-link:hover,
+.rw-bookmark-link:focus,
+.rw-bookmark-link:active {
+  text-decoration: underline;
+}
+.rw-bookmark-link:before {
+  display: inline-block;
+  overflow: hidden;
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+  content: "";
+  vertical-align: middle;
+  background: var(--rw-icons--common--bookmark--18--dark-blue);
+}
+
+/* When the bookmark link is on a document page. */
+.rw-document .rw-article__footer .rw-bookmark-link-wrapper {
+  padding: 24px 0;
+  text-align: center;
+}
+.rw-document .rw-article__footer .rw-entity-social-media-links + .rw-bookmark-link-wrapper {
+  /* To be closer to the share buttons. */
+  margin: -24px 0 0 0;
+}

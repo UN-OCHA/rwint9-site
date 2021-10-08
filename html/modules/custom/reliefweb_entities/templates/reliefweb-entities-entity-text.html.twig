@@ -1,0 +1,40 @@
+{#
+
+/**
+ * @file
+ * Template file for a text content of an entity (ex: disaster overview).
+ *
+ * Available variables;
+ * - level: heading level (defaults to 2)
+ * - id: section id
+ * - attributes: section attributes
+ * - title: section title
+ * - title_attributes: section title attributes
+ * - content: entity text content (renderable array or HTML string)
+ * - contnet_attributes: text content attributes
+ * - iframe: flag indicating whether iframes are allowed
+ * - allowed_attributes: array with a list of extra attributes allowed in the
+ *   the resulting HTML.
+ */
+
+#}
+{% set id = id|clean_id %}
+<section{{ attributes
+  .addClass([
+    'rw-entity-text',
+    'rw-entity-text--' ~ id
+  ])
+  .setAttribute('id', id)
+}}>
+  <h{{ level }}{{ title_attributes
+    .addClass([
+      'rw-entity-text__title'
+    ])
+  }}>{{ title }}</h{{ level }}>
+  <div{{ content_attributes
+    .addClass([
+      'rw-entity-text__content'
+    ])
+    .setAttribute('id', id ~ '-content')
+  }}>{{ content|render|sanitize_html(iframe, level, allowed_attributes) }}</div>
+</section>

@@ -1,0 +1,14 @@
+{#
+
+  /**
+   * @file
+   * Template for the add/remove bookmark link.
+   *
+   * Available variables:
+   * - attributes: wrapper attributes
+   * - link: link info with title, url and attributes.
+   */
+#}
+<div{{ attributes.addClass('rw-bookmark-link-wrapper') }}>
+  {{ link(link.title, link.url, link.attributes) }}
+</div>

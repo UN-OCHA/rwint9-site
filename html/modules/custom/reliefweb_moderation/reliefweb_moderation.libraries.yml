@@ -1,0 +1,6 @@
+# Moderation page filters.
+moderation:
+  js:
+    /libraries/simple-autocomplete/simpleautocomplete.js: {}
+    /libraries/simple-datepicker/simpledatepicker.js: {}
+    js/moderation.js: {}

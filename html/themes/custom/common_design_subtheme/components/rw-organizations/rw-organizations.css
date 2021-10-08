@@ -1,27 +1,9 @@
 /**
  * Organization landing page styling.
- *
- * Scope: .path-organizations #main-content
  */
 @media screen and (min-width: 768px) {
-  .path-organizations #main-content section.rw-river .rw-river-results {
-    margin-bottom: 12px;
-  }
-  .path-organizations #main-content section.rw-river .rw-river__articles {
-    display: flex;
-    flex-wrap: wrap;
-    width: auto;
-    /* Compensate the margin from the rw-river__articles. */
-    margin: 0 -8px;
-  }
-  .path-organizations #main-content section.rw-river .rw-river__articles article {
-    width: 100%;
-    flex: 1 0 40%;
-    margin: 16px 8px 0 8px;
-    padding: 16px;
-    border: 1px solid #e6ecef;
-  }
-  .path-organizations #main-content section.rw-river #pager {
-    border-top: none;
+  .path-organizations section.rw-river .rw-river-results {
+    text-align: center;
+    border-bottom: none;
   }
 }

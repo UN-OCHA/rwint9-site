@@ -39,7 +39,7 @@ process:
         value:
           plugin: format_date
           from_format: 'U'
-          to_format: 'Y-m-d\TH:i:s'
+          to_format: 'Y-m-d'
           from_timezone: UTC
           to_timezone: UTC
           source: value
@@ -55,6 +55,19 @@ process:
     plugin: skip_on_empty
     method: process
     source: field_profile/0/value
+  # @todo transform the image urls for internal paths.
+  field_key_content:
+    plugin: skip_on_empty
+    method: process
+    source: field_key_content
+  field_appeals_response_plans:
+    plugin: skip_on_empty
+    method: process
+    source: field_appeals_response_plans
+  field_useful_links:
+    plugin: skip_on_empty
+    method: process
+    source: field_useful_links
   field_timezone/value:
     plugin: default_value
     default_value: 0

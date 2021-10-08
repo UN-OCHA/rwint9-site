@@ -65,13 +65,13 @@ class ReliefWebApiClient {
    *
    * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
    *   The default cache backend.
-   * @param Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory service.
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The time service.
    * @param \GuzzleHttp\ClientInterface $http_client
    *   The HTTP client service.
-   * @param Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
    *   The logger factory service.
    */
   public function __construct(CacheBackendInterface $cache_backend, ConfigFactoryInterface $config_factory, TimeInterface $time, ClientInterface $http_client, LoggerChannelFactoryInterface $logger_factory) {
@@ -262,8 +262,9 @@ class ReliefWebApiClient {
           }
 
           // Ensure the URL aliases of the resources point to the current site.
-          // @todo remove as it's mostly for development?
-          static::updateApiAliases($data);
+          if (!empty($data['data'])) {
+            static::updateApiUrls($data['data']);
+          }
 
           // Add the resulting data with same index as the query.
           $results[$index] = $data;
@@ -420,20 +421,29 @@ class ReliefWebApiClient {
   }
 
   /**
-   * Update the host of the resource URL aliases.
+   * Update the host of API URLs.
+   *
+   * Note: this mostly for development to convert the URLs from the API used
+   * for dev (ex: stage) to URLs with the current host and scheme.
    *
    * @param array $data
    *   API data.
    */
-  public static function updateApiAliases(array &$data) {
-    $host = \Drupal::request()->getHost();
+  public static function updateApiUrls(array &$data) {
+    $request = \Drupal::request();
+    $host = $request->getHost();
+    $scheme = $request->getScheme();
 
     if ($host !== 'reliefweb.int') {
-      foreach ($data['data'] as &$item) {
-        if (!empty($item['fields']['url_alias'])) {
-          $alias = $item['fields']['url_alias'];
-          $alias = str_replace('reliefweb.int', $host, $alias);
-          $item['fields']['url_alias'] = $alias;
+      $pattern = '#https?://[^/]+/#';
+      $replacement = $scheme . '://' . $host . '/';
+
+      foreach ($data as $key => $item) {
+        if (is_string($item) && strpos($key, 'url') === 0) {
+          $data[$key] = preg_replace($pattern, $replacement, $item);
+        }
+        elseif (is_array($item)) {
+          static::updateApiUrls($data[$key]);
         }
       }
     }

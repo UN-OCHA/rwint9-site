@@ -1,0 +1,61 @@
+/**
+ * User notifications form.
+ *
+ * Style the form in the page where users can subscribe to ReliefWeb
+ * notifications.
+ */
+.subscription-form .form-checkboxes .form-type-checkbox {
+  display: block;
+}
+
+/**
+ * Unsubscribe form.
+ *
+ * This doesn't really belong here but is related to the notifications.
+ */
+.subscription-form .form-type-checkbox {
+  display: block;
+  margin-top: 8px;
+}
+
+/**
+ * User dashboard.
+ *
+ * Style of the user account landing page (dashboard).
+ *
+ * Scope: .page-user #main
+ */
+.rw-user-dashboard ul {
+  margin: 0;
+  padding: 24px 0 12px 0;
+  column-width: 352px;
+  column-count: 2;
+  list-style: none;
+  vertical-align: top;
+}
+.rw-user-dashboard li > * {
+  display: inline-block;
+  /* width: 100%; */
+}
+.rw-user-dashboard li + li {
+  margin-top: 32px;
+}
+[dir="ltr"] .rw-user-dashboard li {
+  padding-right: 32px;
+}
+[dir="rtl"] .rw-user-dashboard li {
+  padding-left: 32px;
+}
+.rw-user-dashboard li a {
+  font-size: 18px;
+  font-weight: bold;
+}
+.rw-user-dashboard li p {
+  display: block;
+  margin: 4px 0 0 0;
+}
+
+.subscription-form fieldset:first-of-type,
+.user-form fieldset:first-of-type {
+  padding-top: 24px;
+}

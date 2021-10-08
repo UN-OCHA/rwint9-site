@@ -1,0 +1,115 @@
+id: reliefweb_node_revision__topic
+label: Migrate ReliefWeb topic revisions.
+migration_group: reliefweb_node_revision
+source:
+  bundle: topics
+process:
+  type:
+    plugin: static_map
+    bypass: true
+    source: type
+    map:
+      announcement: announcement
+      blog_post: blog_post
+      book: book
+      job: job
+      report: report
+      topic: topic
+      topics: topic
+      training: training
+
+  # Fields.
+  field_icon:
+    plugin: sub_process
+    source: field_term_image
+    process:
+      target_id: fid
+
+  field_featured/value:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: field_featured/0/value
+    -
+      plugin: default_value
+      default_value: 0
+
+  field_bury/value:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: field_bury/0/value
+    -
+      plugin: default_value
+      default_value: 0
+
+  field_overview/value:
+    plugin: concat
+    source:
+      - field_sandbox/0/value
+      - field_topics_overview/0/value
+    delimiter: "\r\n\r\n"
+  field_overview/format:
+    plugin: default_value
+    default_value: token_markdown
+
+  field_resources/value:
+    plugin: skip_on_empty
+    method: process
+    source: field_topics_sidebar/0/value
+  field_resources/format:
+    plugin: default_value
+    default_value: token_markdown
+
+  field_disasters_search:
+    plugin: sub_process
+    source: field_topics_disasters_search
+    process:
+      url: value
+      title:
+        plugin: default_value
+        default_value: ''
+
+  field_jobs_search:
+    plugin: sub_process
+    source: field_topics_jobs_search
+    process:
+      url: value
+      title:
+        plugin: default_value
+        default_value: ''
+
+  field_reports_search:
+    plugin: sub_process
+    source: field_topics_reports_search
+    process:
+      url: value
+      title:
+        plugin: default_value
+        default_value: ''
+
+  field_training_search:
+    plugin: sub_process
+    source: field_topics_training_search
+    process:
+      url: value
+      title:
+        plugin: default_value
+        default_value: ''
+
+  field_sections:
+    plugin: sub_process
+    source: field_topics_grid_content
+    process:
+      url: url
+      title: title
+      override:
+        -
+          plugin: unserialize
+          source: attributes
+          index:
+            - title
+
+migration_dependencies:
+  required:
+    - reliefweb_node__topic

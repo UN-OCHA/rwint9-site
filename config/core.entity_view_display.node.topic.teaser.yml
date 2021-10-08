@@ -4,6 +4,17 @@ status: true
 dependencies:
   config:
     - core.entity_view_mode.node.teaser
+    - field.field.node.topic.body
+    - field.field.node.topic.field_bury
+    - field.field.node.topic.field_disasters_search
+    - field.field.node.topic.field_featured
+    - field.field.node.topic.field_icon
+    - field.field.node.topic.field_jobs_search
+    - field.field.node.topic.field_overview
+    - field.field.node.topic.field_reports_search
+    - field.field.node.topic.field_resources
+    - field.field.node.topic.field_sections
+    - field.field.node.topic.field_training_search
     - node.type.topic
   module:
     - user
@@ -12,10 +23,26 @@ targetEntityType: node
 bundle: topic
 mode: teaser
 content:
+  content_moderation_control:
+    weight: -20
+    settings: {  }
+    third_party_settings: {  }
+    region: content
   links:
     weight: 100
     settings: {  }
     third_party_settings: {  }
     region: content
 hidden:
+  body: true
+  field_bury: true
+  field_disasters_search: true
+  field_featured: true
+  field_icon: true
+  field_jobs_search: true
+  field_overview: true
+  field_reports_search: true
+  field_resources: true
+  field_sections: true
+  field_training_search: true
   langcode: true

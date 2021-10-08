@@ -1,9 +1,9 @@
-uuid: 5243ba4b-e4d9-4980-b967-c12db6d787cb
+uuid: ffb046dd-1934-4d1c-8ee4-2599e4fd8ea7
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: F3f3Hjw2iCqNGqu4U1e1JLYzR20l2NnJoaiHuTO6VrI
+  default_config_hash: 28hKbSSm2NXGzfz6wF5A1u0yv_mDqf6Jf_jijb8scms
 id: reliefweb_taxonomy_term_revision__disaster
 class: null
 field_plugin_method: null
@@ -47,7 +47,7 @@ process:
         value:
           plugin: format_date
           from_format: U
-          to_format: 'Y-m-d\TH:i:s'
+          to_format: Y-m-d
           from_timezone: UTC
           to_timezone: UTC
           source: value
@@ -63,6 +63,18 @@ process:
     plugin: skip_on_empty
     method: process
     source: field_profile/0/value
+  field_key_content:
+    plugin: skip_on_empty
+    method: process
+    source: field_key_content
+  field_appeals_response_plans:
+    plugin: skip_on_empty
+    method: process
+    source: field_appeals_response_plans
+  field_useful_links:
+    plugin: skip_on_empty
+    method: process
+    source: field_useful_links
   field_timezone/value:
     plugin: default_value
     default_value: 0

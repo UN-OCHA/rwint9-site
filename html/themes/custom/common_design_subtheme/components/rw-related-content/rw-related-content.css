@@ -1,0 +1,34 @@
+/**
+ * Related content.
+ *
+ * List of documents related to the main document.
+ */
+.rw-river--related {
+  margin: 0;
+  padding: 32px 0 24px;
+  border-top: 1px solid #e6ecef;
+}
+.rw-river--related h2 {
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eb1405;
+  /* margin: 0 0 8px 0; */
+  font-size: 24px;
+}
+.rw-river--related article footer {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+@media screen and (min-width: 768px) {
+  .rw-river--related .rw-river__articles {
+    width: auto;
+    /* Compensate the margin from the articles. */
+    margin: 0 -16px;
+  }
+  .rw-river--related .rw-river__articles article {
+    margin-right: 16px;
+    margin-left: 16px;
+  }
+}

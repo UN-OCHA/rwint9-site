@@ -1,0 +1,75 @@
+/**
+ * Country/disaster profile forms.
+ *
+ * This the form to manage the country and disaster profiles (overview, key
+ * content, appeals and response plans and useful links).
+ *
+ * Scope: .field--type-reliefweb-section-links
+ */
+.field--type-reliefweb-section-links table {
+  width: 100%;
+}
+.field--type-reliefweb-section-links table[data-list-archives] tbody {
+  display: none;
+  max-height: 400px;
+  overflow-y: auto;
+}
+.field--type-reliefweb-section-links table[data-list-archives][data-visible] tbody {
+  display: table-row-group;
+  background: #e6ecef;
+  /* #e6ecef with a 0.3 opacity. */
+  background: rgba(230, 236, 239, 0.3);
+}
+.field--type-reliefweb-section-links [data-link-form] {
+  margin-bottom: 16px;
+  padding: 8px;
+  border: 1px solid #e6ecef;
+}
+.field--type-reliefweb-section-links [data-link-form] label {
+  display: block;
+  margin-bottom: 8px;
+}
+.field--type-reliefweb-section-links [data-link-form] label input {
+  margin-top: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.field--type-reliefweb-section-links fieldset[data-internal="true"] td img {
+  max-width: 35px;
+  margin-right: 5px;
+}
+.field--type-reliefweb-section-links td img {
+  vertical-align: middle;
+  max-height: 50px;
+  max-width: 200px;
+}
+.field--type-reliefweb-section-links td[data-link-form] {
+  display: none;
+}
+.field--type-reliefweb-section-links [data-edited] td[data-link-form] {
+  display: table-cell;
+}
+.field--type-reliefweb-section-links [data-edited] td[data-link-display] {
+  display: none;
+}
+.field--type-reliefweb-section-links td:last-child {
+  width: 90px;
+  text-align: center;
+}
+.field--type-reliefweb-section-links button[value="other-actions"] ~ button {
+  display: none;
+}
+.field--type-reliefweb-section-links button[value="other-actions"][data-toggled] ~ button {
+  display: inline-block;
+}
+.field--type-reliefweb-section-links td[data-drag-handle] {
+  width: 25px;
+  padding: 12px;
+  /* Simple icon reproducing the move cursor. */
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='14' height='14' fill='none' stroke='%23999' stroke-width='3'%3E%3Cpath d='M3 16L29 16M16 3L16 29M12 7L16 3 20 7M12 25L16 29 20 25M25 12L29 16 25 20M7 12L3 16 7 20'/%3E%3C/svg%3E") 50% 50% no-repeat;
+  cursor: move;
+}
+.field--type-reliefweb-section-links tr[data-dragged] td {
+  background-color: #e6ecef;
+  cursor: move;
+}

@@ -15,6 +15,7 @@
  *   - bundle: entity bundle.
  *   - tags (optional): list of terms the entity is tagged with
  *   - various properties like posting date, status etc.
+ * - meta_attributes: meta information attributes.
  */
 
 #}
@@ -85,6 +86,7 @@
 
     {{ render_var({
       '#theme': 'reliefweb_entities_entity_meta',
+      '#attributes': meta_attributes,
       '#meta': meta|merge({
         'registration': {
           'type': 'date',

@@ -1,0 +1,24 @@
+uuid: 858bae4a-5223-4883-af57-f3d69a5b1882
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_key_content
+    - taxonomy.vocabulary.disaster
+  module:
+    - reliefweb_fields
+id: taxonomy_term.disaster.field_key_content
+field_name: field_key_content
+entity_type: taxonomy_term
+bundle: disaster
+label: 'Key Content'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  internal: 1
+  use_cover: 1
+  keep_archives: 1
+field_type: reliefweb_links

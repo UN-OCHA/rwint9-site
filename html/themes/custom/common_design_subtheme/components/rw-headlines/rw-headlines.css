@@ -1,210 +1,205 @@
 /**
- * Sub article.
+ * Headlines.
  *
- * Articles in a section like headlines etc.
- *
- * Scope: #main-content section article
+ * List of the latest headlines.
  */
-#main-content section article {
+.rw-river--headlines {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  padding: 24px 0;
-  border-top: 1px solid #e6ecef;
-}
-#main-content section article:first-child {
-  border-top: none;
-}
-#main-content section article header {
-  /* Compensate the half-leading space from the title line-height. */
-  margin-top: -5px;
-}
-#main-content section article header p.rw-entity-country-slug {
-  margin: 2px 6px 0 0;
-  padding: 1px 8px;
-  font-size: 14px;
-  line-height: 22px;
-}
-#main-content section article > header .title,
-#main-content section article > .title {
-  display: inline;
-  margin: 0;
-  color: #055372;
-  font-size: 17px;
-  font-weight: bold;
-  line-height: 28px;
-}
-#main-content section article > header .title a,
-#main-content section article > .title a {
-  color: inherit;
-}
-#main-content section article .content {
-  display: flex;
-  flex: 1 0 auto;
-  align-items: center;
-  padding-top: 16px;
-  /* #2e3436 with 0.85 opacity on white. */
-  color: #4d5254;
-}
-/* Article with a thumbnail preview (typically Map and Infographic). */
-#main-content section article .content img {
-  float: left;
-  max-height: 118px;
-  margin: 2px 20px 0 0;
-  border: 1px solid #e6ecef;
-}
-#main-content section article .content img + p {
   margin-top: 0;
 }
-
-@media all and (max-width: 479px) {
-  #main-content section article .content img {
-    display: none;
-  }
+/* Hide the headline images by default. */
+.rw-river--headlines article figure {
+  display: none;
 }
-#main-content section article footer {
-  /* Clear any floating from the content. */
-  clear: both;
-  /* Compensate  the half-leading space added by the line-height of the <dl>. */
-  margin-bottom: -8px;
-  padding-top: 16px;
+/* Display the copyright above the image. */
+.rw-river--headlines article figure footer small {
+  position: absolute;
+  z-index: 2;
+  right: 4px;
+  bottom: 2px;
+  left: 4px;
+  overflow: hidden;
+  text-align: right;
+  opacity: 0.9;
+  color: white;
+  font-size: 12px;
+  font-style: italic;
 }
-#main-content section article header + footer {
-  padding-top: 12px;
+/* Hide the edit button if the browser doesn't handle css grid as we cannot
+ * display the widget properly. */
+.rw-river--headlines button[value="edit"] {
+  display: none;
 }
-
-/**
- * Article meta information.
- *
- * Meta information like source or publication date, generally in the header or
- * footer.
- *
- * Scope: #main-content article dl.rw-entity-meta
- */
-#main-content article dl.rw-entity-meta{
-  margin: 0;
-}
-#main-content article dl.rw-entity-meta + dl.rw-entity-meta {
-  margin-top: 4px;
-}
-#main-content article dl.rw-entity-meta:after {
-  display: block;
-  clear: both;
-  content: "";
-}
-#main-content article dl.rw-entity-meta dt {
-  display: inline;
-  float: left;
-  clear: both;
-  margin: 0 4px 0 0;
-  font-size: 15px;
-  font-weight: bold;
-  /* To have enough tapping space between links. */
-  line-height: 29px;
-}
-#main-content article dl.rw-entity-meta dt:after {
-  content: ": ";
-}
-#main-content article dl.rw-entity-meta dd {
-  margin: 0;
-  /* To have enough tapping space between links. */
-  line-height: 30px;
-}
-#main-content article dl.rw-entity-meta dd ul,
-#main-content article dl.rw-entity-meta dd li {
-  display: inline;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-#main-content article dl.rw-entity-meta dd li:after {
-  content: ", ";
-}
-/* This will be ignored in IE8 but it's not a big deal. */
-#main-content article dl.rw-entity-meta dd li:last-child:after,
-#main-content article dl.rw-entity-meta dd li[data-last]:after {
-  content: none;
-}
-#main-content article dl.rw-entity-meta dd li[data-more]:before {
-  content: " + ";
-}
-#main-content > article header dl.rw-entity-meta {
-  margin: 8px 0 -6px 0;
-}
-/* Show the meta information inline. */
-@media screen and (min-width: 480px) {
-  #main-content article header dl.rw-entity-meta dt {
-    float: none;
-  }
-  #main-content article header dl.rw-entity-meta dd {
-    display: inline;
-  }
-  /* Separator. */
-  #main-content article header dl.rw-entity-meta dd:after {
-    display: inline-block;
-    width: 4px;
-    height: 4px;
-    margin: 0 8px;
-    padding: 0;
-    content: "";
-    vertical-align: middle;
-    border-radius: 4px;
-    background: #2e3436;
-  }
-  #main-content article header dl.rw-entity-meta dd:last-of-type:after {
-    content: none;
-  }
+.rw-river--headlines .view-more {
+  margin-bottom: 24px;
 }
 
-/**
- * Meta for river articles.
- *
- * Scope: #main-content section article
- */
-#main-content section article dl.rw-entity-meta {
-  margin: 0;
-}
-#main-content section article dl.rw-entity-meta dt {
-  display: inline-block;
-  float: none;
-  font-size: 14px;
-}
-#main-content section article dl.rw-entity-meta dd {
-  display: inline-block;
-  font-size: 15px;
-}
-#main-content section article dl.rw-entity-meta--core {
-  /* #2e3436 with 0.85 opacity on white. */
-  color: #4d5254;
-}
-#main-content section article dl.rw-entity-meta--core dd:after {
-  display: inline-block;
-  width: 4px;
-  height: 4px;
-  margin: 0 8px;
-  padding: 0;
-  content: "";
-  vertical-align: middle;
-  border-radius: 4px;
-  background: #2e3436;
-}
-#main-content section article dl.rw-entity-meta--core dd.created:after {
-  margin-left: 12px;
-}
-/* This will be ignored in IE8 but it's not a big deal. */
-#main-content section article dl.rw-entity-meta--core dd:last-of-type:after,
-#main-content section article dl.rw-entity-meta--core dd[data-last]:after {
-  content: none;
-}
-/* Display meta one per line on smaller screen to improve readability. */
-@media all and (max-width: 479px) {
-  #main-content section article dl.rw-entity-meta--core dd {
-    display: inline;
+/* Grid layout for the headline articles. */
+@supports (display: grid) {
+  .rw-river--headlines article p.country {
+    max-width: 250px;
   }
-  #main-content section article dl.rw-entity-meta--core dd:after {
-    display: block;
-    width: 0;
-    height: 0;
+  .rw-river--headlines article {
+    display: flex;
     margin: 0;
+    /* The bottom padding is smaller to compensate the space added by the
+     * line-height of the footer elements. */
+    padding: 24px 12px 16px 12px;
+    border-width: 0;
+  }
+  /* Headline image. */
+  .rw-river--headlines article figure {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    order: -1;
+    width: 100%;
+    height: 0;
+    margin: 0 0 16px 0;
+    /* 3/2 aspect ratio. */
+    padding-top: 66.7%;
+  }
+  .rw-river--headlines article img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Object-fit has similar support as feature queries (@supports)
+     * so we can use it here without problems. */
+    object-fit: cover;
+    /* This with the translate, centers the image and simulates
+     * object-fit: cover but not as good when the aspect ratio is lower than
+     * the wanted one.
+     *
+     * @reference Keeping it here as reference as it has better support
+     * than the object-fit. */
+    /*
+      left: 50%;
+      top: 50%;
+      width: auto;
+      height: 100%;
+      -webkit-transform: translate(-50%, -50%);
+      -ms-transform: translate(-50%, -50%);
+      transform: translate(-50%, -50%);
+    */
+  }
+  /* Headline summary. */
+  .rw-river--headlines article .rw-river-article__content {
+    flex: none;
+  }
+  .rw-river--headlines article header {
+    position: relative;
+  }
+
+  /* !* Headlines grid: 1 column. *! */
+  .rw-river--headlines .rw-river__articles {
+    display: grid;
+    grid-template-areas: "header" "article1" "article2" "article3" "article4" "article5" "article6" "article7" "article8" "footer";
+    grid-template-rows: repeat(10, min-content);
+    grid-template-columns: 1fr;
+  }
+  .rw-river--headlines h2 {
+    grid-area: header;
+  }
+  .rw-river--headlines .rw-river__articles > article:nth-of-type(1) {
+    grid-area: article1;
+  }
+  .rw-river--headlines .rw-river__articles > article:nth-of-type(2) {
+    grid-area: article2;
+  }
+  .rw-river--headlines .rw-river__articles > article:nth-of-type(3) {
+    grid-area: article3;
+  }
+  .rw-river--headlines .rw-river__articles > article:nth-of-type(4) {
+    grid-area: article4;
+  }
+  .rw-river--headlines .rw-river__articles > article:nth-of-type(5) {
+    grid-area: article5;
+  }
+  .rw-river--headlines .rw-river__articles > article:nth-of-type(6) {
+    grid-area: article6;
+  }
+  .rw-river--headlines .rw-river__articles > article:nth-of-type(7) {
+    grid-area: article7;
+  }
+  .rw-river--headlines .rw-river__articles > article:nth-of-type(8) {
+    grid-area: article8;
+  }
+  .rw-river--headlines .rw-river__articles .view-more {
+    grid-area: footer;
+  }
+
+  /* !* Remove borders and padding on small screens. *! */
+  @media screen and (max-width: 479px) {
+    .rw-river--headlines .rw-river__articles > article:nth-of-type(n+1) {
+      padding-right: 0;
+      padding-left: 0;
+      border-width: 1px 0 0 0;
+    }
+    .rw-river--headlines .rw-river__articles > article:nth-of-type(1) {
+      padding-top: 0;
+    }
+    .rw-river--headlines .rw-river__articles > article:nth-of-type(8) {
+      padding-bottom: 0;
+      border-width: 0;
+    }
+    .rw-river--headlines .rw-river__articles > article:nth-of-type(n+2) figure {
+      display: none;
+    }
+  }
+  /* Headlines grid: 2 columns. */
+  @media screen and (min-width: 480px) {
+    .rw-river--headlines .rw-river__articles {
+      grid-template-areas: "header header" "article1 article2" "article3 article4" "article5 article6" "article7 article8" "footer footer";
+      grid-template-rows: repeat(6, min-content);
+      grid-template-columns: 1fr 1fr;
+    }
+    .rw-river--headlines .rw-river__articles > article:nth-of-type(n+1) {
+      padding-bottom: 8px;
+    }
+
+    .rw-river--headlines .rw-river__articles > article:nth-of-type(1),
+    .rw-river--headlines .rw-river__articles > article:nth-of-type(2) {
+      padding-top: 0;
+    }
+    .rw-river--headlines .rw-river__articles > article:nth-of-type(1),
+    .rw-river--headlines .rw-river__articles > article:nth-of-type(3),
+    .rw-river--headlines .rw-river__articles > article:nth-of-type(5),
+    .rw-river--headlines .rw-river__articles > article:nth-of-type(7) {
+      padding-left: 0;
+      border-right: none;
+      border-left: none;
+    }
+    .rw-river--headlines .rw-river__articles > article:nth-of-type(2),
+    .rw-river--headlines .rw-river__articles > article:nth-of-type(4),
+    .rw-river--headlines .rw-river__articles > article:nth-of-type(6),
+    .rw-river--headlines .rw-river__articles > article:nth-of-type(8) {
+      padding-right: 0;
+      border-right: none;
+    }
+    .rw-river--headlines .rw-river__articles > article:nth-of-type(7),
+    .rw-river--headlines .rw-river__articles > article:nth-of-type(8) {
+      border-bottom: none;
+    }
+    /* For optimization images are not added to headlines 5, 6, 7 and 8 but just
+     * in case, hide them if they are present. */
+    .rw-river--headlines .rw-river__articles > article:nth-of-type(n+5) figure {
+      display: none;
+    }
+  }
+  /* Move the view more next to the heading on large screens. */
+  @media screen and (min-width: 900px) {
+    .rw-river--headlines .view-more {
+      position: absolute;
+      top: 0;
+      right: 32px;
+      display: inline-block;
+      grid-area: none;
+      width: auto;
+      margin: 0;
+      text-align: right;
+      line-height: 48px;
+    }
   }
 }

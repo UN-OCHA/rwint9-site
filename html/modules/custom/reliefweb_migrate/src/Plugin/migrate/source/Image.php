@@ -26,6 +26,19 @@ class Image extends SqlBase {
     'blog-post-images' => 'images/blog-posts',
     'headline-images' => 'images/reports',
     'report-images' => 'images/reports',
+    'topic-icons' => 'images/topics',
+  ];
+
+  /**
+   * Directory per entity bundle.
+   *
+   * @var array
+   */
+  protected $directoriesByBundle = [
+    'announcement' => 'images/announcements',
+    'blog_post' => 'images/blog-posts',
+    'report' => 'images/reports',
+    'topics' => 'images/topics',
   ];
 
   /**
@@ -56,6 +69,11 @@ class Image extends SqlBase {
           'report',
         ],
       ],
+      'field_term_image' => [
+        'node' => [
+          'topics',
+        ],
+      ],
     ];
 
     // Limit to the file ids in the used fields, ignoring legacy one.
@@ -66,6 +84,9 @@ class Image extends SqlBase {
 
         $sub_query = $this->select($table, $table);
         $sub_query->addField($table, $field . '_fid', 'fid');
+        // Store the entity bundle using the file. On RW, there are no
+        // files shared across entities so it's 1-1 mapping normally.
+        $sub_query->addField($table, 'bundle', 'usage_bundle');
         $sub_query->condition($table . '.entity_type', $entity_type, '=');
         $sub_query->condition($table . '.bundle', $bundles, 'IN');
 
@@ -78,14 +99,7 @@ class Image extends SqlBase {
       }
     }
     $query->innerJoin($union_query, 'u', 'u.fid = fm.fid');
-
-    // Limit to the known image directories.
-    $directories = [];
-    foreach ($this->directoryReplacements as $existing => $target) {
-      $directories[] = preg_quote($existing);
-    }
-    $pattern = '^public://(' . implode('|', $directories) . ')/.+';
-    $query->condition('fm.uri', $pattern, 'RLIKE');
+    $query->addField('u', 'usage_bundle', 'usage_bundle');
 
     // Limit to files in use.
     $query->innerJoin('file_usage', 'fu', 'fu.fid = fm.fid');
@@ -115,6 +129,15 @@ class Image extends SqlBase {
     // avoid collisions between blog post images as they will all end up in the
     // same `/images/blog-posts/` directory.
     $dirname = strtr($info['dirname'], $this->directoryReplacements);
+
+    // Some old files like topic icons are not stored in a proper directory.
+    // We can detect that by checking if a directory replacement occured.
+    // If that's not the case, we assign a directory based on the bundle of
+    // the entity using the file.
+    if ($dirname === $info['dirname']) {
+      $bundle = $row->getSourceProperty('usage_bundle');
+      $dirname = 'public://' . $this->directoriesByBundle[$bundle];
+    }
 
     // Use the existing directory + the first 4 letters of the uuid.
     $directory = implode('/', [

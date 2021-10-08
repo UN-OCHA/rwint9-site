@@ -81,7 +81,7 @@ shared_configuration:
     revision_id: revision_id
     revision_user:
       plugin: static_map
-      default_value: 2
+      bypass: true
       source: revision_user
       # Map the anonymous and super users to the System user.
       map:
@@ -90,6 +90,10 @@ shared_configuration:
     revision_log_message: revision_log_message
     revision_created: revision_created
     revision_default: revision_default
+    # Disable notifications.
+    notifications_content_disable:
+      plugin: default_value
+      default_value: 1
   migration_dependencies:
     required:
       - reliefweb_user

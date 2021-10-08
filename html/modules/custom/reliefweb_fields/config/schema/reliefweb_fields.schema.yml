@@ -1,0 +1,13 @@
+field.widget.settings.reliefweb_entity_reference_select:
+  type: mapping
+  label: 'ReliefWeb Entity Reference Select widget settings'
+  mapping:
+    sort:
+      type: string
+      label: 'Sort'
+    extra_data:
+      type: sequence
+      label: 'Extra data'
+      sequence:
+        - type: string
+          label: 'Extra data'

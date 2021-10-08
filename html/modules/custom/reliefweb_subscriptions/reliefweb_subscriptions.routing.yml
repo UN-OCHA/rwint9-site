@@ -1,0 +1,49 @@
+reliefweb_subscriptions.subscription_form:
+  path: '/user/{user}/notifications'
+  defaults:
+    _form: '\Drupal\reliefweb_subscriptions\Form\SubscriptionForm'
+    _title: 'Subscriptions'
+  options:
+    parameters:
+      user:
+        type: 'entity:user'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: manage own subscriptions
+    user: \d+
+reliefweb_subscriptions.unsubscribe:
+  path: '/notifications/unsubscribe/user/{user}'
+  defaults:
+    _controller: '\Drupal\reliefweb_subscriptions\Controller\UnsubscribeController::unsubscribe'
+    _title: 'Unsubscribe'
+  requirements:
+    _access: 'TRUE'
+    user: \d+
+reliefweb_subscriptions.unsubscription_form:
+  path: '/user/{user}/notifications/unsubscribe/{timestamp}/{signature}'
+  defaults:
+    _form: '\Drupal\reliefweb_subscriptions\Form\UnsubscribeForm'
+    _title: 'Unsubscribe'
+  options:
+    parameters:
+      user:
+        type: 'entity:user'
+  requirements:
+    _user_is_logged_in: 'FALSE'
+    user: \d+
+reliefweb_subscriptions.admin_subscription_form:
+  path: '/admin/subscriptions/overview'
+  defaults:
+    _controller: '\Drupal\reliefweb_subscriptions\Controller\SubscriptionAdminForm::adminOverview'
+    _title: 'Subscriptions overview'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: administer subscriptions
+reliefweb_subscriptions.subscription_preview:
+  path: '/admin/subscriptions/preview/{sid}'
+  defaults:
+    _controller: '\Drupal\reliefweb_subscriptions\Controller\SubscriptionAdminForm::adminPreview'
+    _title: 'Subscription preview'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: administer subscriptions

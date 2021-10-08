@@ -39,3 +39,29 @@
   // to apply special treatment to the last link in the list.
   @extend .cd-user-menu--no-language-switcher;
 }
+
+.cd-global-header__user-menu a svg + span {
+  @include max-width(md) {
+    @include visually-hidden;
+  }
+}
+
+.admin-menu__btn {
+  svg + span {
+    [dir="ltr"] & {
+      margin-left: 10px;
+    }
+
+    [dir="rtl"] & {
+      margin-right: 10px;
+    }
+  }
+
+  .cd-icon:not(.cd-icon--arrow-down) {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    vertical-align: middle;
+    fill: $cd-white;
+  }
+}

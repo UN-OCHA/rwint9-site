@@ -1,9 +1,9 @@
-uuid: db33a702-754b-47d7-8578-eed758550b44
+uuid: e1a602bf-ec25-4b05-8db1-6250d4eefdbb
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: 9_JvD9kifpwbss-4MP5nre_AaMd_FbzCE9ooWPX0xFs
+  default_config_hash: gA4d2zju51IuVcuSKQX6T80_kGIlP4FyBQ3L6Q6BbHs
 id: reliefweb_node_revision__training
 class: null
 field_plugin_method: null
@@ -61,7 +61,7 @@ process:
         value:
           plugin: format_date
           from_format: U
-          to_format: 'Y-m-d\TH:i:s'
+          to_format: Y-m-d
           from_timezone: UTC
           to_timezone: UTC
           source: value
@@ -86,14 +86,14 @@ process:
         value:
           plugin: format_date
           from_format: U
-          to_format: 'Y-m-d\TH:i:s'
+          to_format: Y-m-d
           from_timezone: UTC
           to_timezone: UTC
           source: value
         end_value:
           plugin: format_date
           from_format: U
-          to_format: 'Y-m-d\TH:i:s'
+          to_format: Y-m-d
           from_timezone: UTC
           to_timezone: UTC
           source: value2

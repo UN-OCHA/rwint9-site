@@ -1,0 +1,26 @@
+uuid: d532ab6f-33fc-4ec6-be86-28556da2dffa
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - reliefweb_migrate
+_core:
+  default_config_hash: IBir5xni9_AkofO_euSBbaG3jSIeK3-yp6mRyQqIxWw
+id: reliefweb_media__image_topic
+class: null
+field_plugin_method: null
+cck_plugin_method: null
+migration_tags: null
+migration_group: reliefweb_media
+label: 'Migrate ReliefWeb image media for topics.'
+source:
+  field: field_term_image
+  entity_type: node
+  bundle: topics
+process: null
+destination:
+  default_bundle: image_topic
+migration_dependencies:
+  required:
+    - reliefweb_image

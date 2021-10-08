@@ -9,8 +9,10 @@
  * - view: the current river view
  * - attributes: attributes for the river section
  * - title: the river title
- * - title_attrinutes: attributes for the river title
+ * - title_attributes: attributes for the river title
  * - views: list of alternative views for the river
+ * - pre_content: area before the search bar. It's mostly used to display the
+ *   disaster map on the disasters landing page.
  * - search: see reliefweb-rivers-search.html.twig
  * - letter_navigation: see reliefweb-rivers-letter-navigation.html.twig
  * - advanced_search: see reliefweb-rivers-advanced-search.html.twig
@@ -27,6 +29,7 @@
     'rw-river-page--' ~ river|clean_class,
     view ? 'rw-river-page--' ~ river|clean_class ~ '--' ~ view|clean_class,
     views ? 'rw-river-page--with-views',
+    pre_content ? 'rw-river-page--with-pre-content',
     search ? 'rw-river-page--with-search',
     letter_navigation ? 'rw-river-page--with-letter-navigation',
     advanced_search ? 'rw-river-page--with-advanced-search',
@@ -44,6 +47,8 @@
     {{ views }}
   </header>
 
+  {{ pre_content }}
+
   {{ search }}
 
   {{ letter_navigation }}
@@ -51,7 +56,10 @@
   {{ advanced_search }}
 
   {{ content|merge({
-    '#title_attributes': create_attribute().addClass('visually-hidden')
+    '#title_attributes': create_attribute().addClass('visually-hidden'),
+    '#results_attributes': create_attribute().addClass([
+      advanced_search ? 'rw-river-results--with-advanced-search',
+    ]),
   }) }}
 
   {% if links is not empty %}

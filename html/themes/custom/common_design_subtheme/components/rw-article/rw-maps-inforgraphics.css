@@ -1,0 +1,133 @@
+/**
+ * Maps and Infographics.
+ *
+ * Section with the maps and infographics for the countries/disasters/sources.
+ */
+@supports (display: grid) {
+  .rw-river--maps-infographics article {
+    display: flex;
+    flex-direction: column;
+    min-height: 174px;
+    padding-left: 222px;
+  }
+  .rw-river--maps-infographics article header {
+    flex: 1 0 auto;
+  }
+  .rw-river--maps-infographics article .rw-river-article__content img {
+    position: absolute;
+    top: 24px;
+    left: 24px;
+    overflow: hidden;
+    clip: rect(0, 174px, 124px, 0);
+    width: 174px;
+    /* Reset max-height from river article image. */
+    max-height: none;
+    margin: 0;
+  }
+  .rw-river--maps-infographics article .rw-river-article__content p {
+    margin-top: 0;
+  }
+  .rw-river--maps-infographics article .rw-river-article__content:after {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    width: 190px;
+    height: 140px;
+    content: "";
+    border: 8px solid #e6ecef;
+    background: linear-gradient(rgba(230, 236, 239, 0) 50%, rgba(230, 236, 239, 0.8));
+  }
+
+  @media screen and (max-width: 479px) {
+    .rw-river--maps-infographics article {
+      min-height: auto;
+      padding-left: 0;
+    }
+    .rw-river--maps-infographics article .rw-river-article__content {
+      display: none;
+    }
+  }
+  /* Media queries. */
+  @media screen and (min-width: 480px) {
+    .rw-river--maps-infographics .rw-river__articles {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-column-gap: 24px;
+      /* padding-top: 24px; */
+    }
+    .rw-river--maps-infographics article {
+      justify-content: flex-end;
+      min-height: auto;
+      margin: 0;
+      padding: 0 0 24px 0;
+      border: none;
+    }
+    .rw-river--maps-infographics article header {
+      flex: 1 0 auto;
+      padding: 16px 16px 0 16px;
+      border: 1px solid #e6ecef;
+      border-width: 0 1px;
+    }
+    .rw-river--maps-infographics article .rw-river-article__content {
+      position: relative;
+      overflow: hidden;
+      flex: none;
+      order: -1;
+      width: 100%;
+      margin: 0;
+      padding: 60% 8px 8px 8px;
+    }
+    .rw-river--maps-infographics article .rw-river-article__content img {
+      top: 0;
+      left: 0;
+      clip: auto;
+      width: 100%;
+      margin: 2px 20px 0 0;
+    }
+    .rw-river--maps-infographics article .rw-river-article__content:after {
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .rw-river--maps-infographics article footer {
+      margin: 0;
+      padding: 16px 16px 8px 16px;
+      border: 1px solid #e6ecef;
+      border-width: 0 1px 1px 1px;
+    }
+  }
+
+  @media screen and (min-width: 640px) {
+    .rw-river--maps-infographics .rw-river__articles {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .rw-river--maps-infographics article {
+      padding-bottom: 0;
+    }
+  }
+
+  @media screen and (min-width: 768px) {
+    .rw-river--maps-infographics .rw-river__articles {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .rw-river--maps-infographics article {
+      padding-bottom: 24px;
+    }
+    .rw-river--maps-infographics .rw-river-article:last-child {
+      padding-bottom: 0;
+    }
+  }
+
+  @media screen and (min-width: 900px) {
+    .rw-river--maps-infographics .rw-river__articles {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .rw-river--maps-infographics article {
+      padding-bottom: 0;
+    }
+  }
+}

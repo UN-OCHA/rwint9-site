@@ -2,7 +2,18 @@
 
   {% block header_content %}
     {% include '@common_design_subtheme/cd/cd-header/cd-global-header.html.twig' %}
-    {% include '@common_design/cd/cd-header/cd-site-header.html.twig' %}
+    {% include '@common_design_subtheme/cd/cd-header/cd-site-header.html.twig' %}
+
+    <div id="site-slogan">
+      <div class="cd-container">
+        <!-- TEMPORARY - COVID-19 - disabled
+        {% trans %}<span>Informing humanitarians worldwide 24/7 &mdash; <span>a service provided by&nbsp;<span class="ocha">UN OCHA</span></span></span>{% endtrans %}
+         -->
+        <!-- TEMPORARY - COVID-19 -->
+        {% set covid_topic_url = url('entity.node.canonical', {'node': 3563703})|render %}
+        <span><strong>{% trans %}RW COVID-19 page:&nbsp;</strong><a href="{{ covid_topic_url  }}">Find latest updates on global humanitarian responses{% endtrans %}</a></span>
+      </div>
+    </div>
   {% endblock %}
 
 {% endembed %}

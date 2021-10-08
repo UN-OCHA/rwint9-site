@@ -3,21 +3,33 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.taxonomy_term.disaster.field_appeals_response_plans
     - field.field.taxonomy_term.disaster.field_country
     - field.field.taxonomy_term.disaster.field_disaster_date
     - field.field.taxonomy_term.disaster.field_disaster_type
     - field.field.taxonomy_term.disaster.field_glide
     - field.field.taxonomy_term.disaster.field_glide_related
+    - field.field.taxonomy_term.disaster.field_key_content
     - field.field.taxonomy_term.disaster.field_primary_country
     - field.field.taxonomy_term.disaster.field_primary_disaster_type
     - field.field.taxonomy_term.disaster.field_profile
     - field.field.taxonomy_term.disaster.field_timezone
+    - field.field.taxonomy_term.disaster.field_useful_links
     - taxonomy.vocabulary.disaster
+  module:
+    - reliefweb_fields
 id: taxonomy_term.disaster.default
 targetEntityType: taxonomy_term
 bundle: disaster
 mode: default
 content:
+  field_appeals_response_plans:
+    weight: 3
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: reliefweb_links
+    region: content
   field_country:
     weight: 2
     label: inline
@@ -42,7 +54,22 @@ content:
     third_party_settings: {  }
     type: string
     region: content
+  field_key_content:
+    weight: 4
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: reliefweb_links
+    region: content
+  field_useful_links:
+    weight: 5
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: reliefweb_links
+    region: content
 hidden:
+  content_moderation_control: true
   description: true
   field_disaster_date: true
   field_glide_related: true

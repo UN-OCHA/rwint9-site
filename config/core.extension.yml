@@ -24,6 +24,7 @@ module:
   language: 0
   link: 0
   locale: 0
+  mailsystem: 0
   maintenance200: 0
   media: 0
   media_library: 0
@@ -33,6 +34,7 @@ module:
   migrate: 0
   migrate_plus: 0
   migrate_tools: 0
+  mimemail: 0
   node: 0
   options: 0
   page_cache: 0
@@ -41,25 +43,38 @@ module:
   redirect: 0
   redis: 0
   reliefweb_api: 0
+  reliefweb_bookmarks: 0
+  reliefweb_disaster_map: 0
   reliefweb_dsr: 0
   reliefweb_entities: 0
+  reliefweb_fields: 0
+  reliefweb_form: 0
   reliefweb_homepage: 0
   reliefweb_key_figures: 0
   reliefweb_migrate: 0
+  reliefweb_moderation: 0
   reliefweb_rivers: 0
+  reliefweb_subscriptions: 0
+  reliefweb_topics: 0
   reliefweb_utility: 0
+  reliefweb_xmlsitemap: 0
   responsive_image: 0
   social_api: 0
   social_auth: 0
   social_auth_hid: 0
+  svg_image: 0
   syslog: 0
   system: 0
   taxonomy: 0
+  taxonomy_term_preview: 0
+  taxonomy_term_revision: 0
   text: 0
+  theme_switcher: 0
   token: 0
   toolbar: 0
   update: 0
   user: 0
+  user_display_name: 0
   views_ui: 0
   workflows: 0
   pathauto: 1

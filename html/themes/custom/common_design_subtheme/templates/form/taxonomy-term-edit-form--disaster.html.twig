@@ -1,0 +1,114 @@
+{#
+/**
+ * @file
+ * Theme override for the taxonomy term form content.
+ *
+ * This template will be used when a taxonomy term edit form specifies
+ * 'taxonomy_term_edit_form' as its #theme callback.  Otherwise, by default,
+ * the taxonomy term add/edit forms will be themed by form.html.twig.
+ *
+ * Available variables:
+ * - form: The taxonomy term add/edit form.
+ *
+ * @see common_design_subtheme_form_taxonomy_term_form_alter()
+ *
+ * @todo review revision section.
+ */
+#}
+
+{{ attach_library('common_design_subtheme/rw-form') }}
+
+{# Table of contents. #}
+{{
+  render_var({
+    '#theme': 'reliefweb_entities_table_of_contents',
+    '#sections': {
+      'fields': {
+        'title': 'Fields'|t,
+        'sections': {
+          'name': 'Name'|t,
+          'countries': 'Countries'|t,
+          'disaster-types': 'Disaster types'|t,
+          'date': 'Event date'|t,
+          'profile': 'Profile'|t,
+          'glide': 'GLIDE'|t,
+        },
+      },
+      'submission': {
+        'title': 'Submission'|t,
+        'sections': {
+          'editorial-flags': 'Editorial flags'|t,
+          'actions': 'Save'|t,
+          'edit-revision-information': 'Revisions'|t,
+        },
+      },
+    },
+  })
+}}
+
+{# Form content. #}
+<fieldset id="name">
+  <legend>{% trans %}Name{% endtrans %}</legend>
+  {{ form.name }}
+</fieldset>
+
+<fieldset id="countries">
+  <legend>{% trans %}Countries{% endtrans %}</legend>
+  {{ form.field_country }}
+  {{ form.field_primary_country }}
+</fieldset>
+
+<fieldset id="disaster-types">
+  <legend>{% trans %}Disaster types{% endtrans %}</legend>
+  {{ form.field_disaster_type }}
+  {{ form.field_primary_disaster_type }}
+</fieldset>
+
+<fieldset id="date">
+  <legend>{% trans %}Event date{% endtrans %}</legend>
+  {{ form.field_disaster_date }}
+</fieldset>
+
+<fieldset id="profile">
+  <legend>{% trans %}Profile{% endtrans %}</legend>
+  {{ form.description }}
+</fieldset>
+
+<fieldset id="glide">
+  <legend>{% trans %}GLIDE{% endtrans %}</legend>
+  {{ form.field_glide }}
+  {{ form.field_glide_related }}
+</fieldset>
+
+<fieldset id="editorial-flags">
+  <legend>{% trans %}Editorial flags{% endtrans %}</legend>
+  {{ form.field_profile }}
+  {{ form.field_timezone }}
+</fieldset>
+
+<fieldset id="actions">
+  <legend class="visually-hidden">{% trans %}Form submission and other actions{% endtrans %}</legend>
+  {{ form.actions }}
+</fieldset>
+
+{{ form.revision_information }}
+
+{{
+  form|without([
+    'name',
+    'field_country',
+    'field_disaster_type',
+    'field_disaster_date',
+    'field_glide',
+    'field_key_content',
+    'field_timezone',
+    'field_primary_country',
+    'field_primary_disaster_type',
+    'field_glide_related',
+    'field_profile',
+    'field_useful_links',
+    'description',
+    'actions',
+    'relations',
+  ])
+}}

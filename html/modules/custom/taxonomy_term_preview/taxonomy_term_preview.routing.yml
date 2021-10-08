@@ -1,0 +1,11 @@
+entity.taxonomy_term.preview:
+  path: '/taxonomy/term/preview/{term_preview}/{view_mode_id}'
+  defaults:
+    _controller: '\Drupal\taxonomy_term_preview\Controller\TermPreviewController::view'
+    _title_callback: '\Drupal\taxonomy_term_preview\Controller\TermPreviewController::title'
+  requirements:
+    _term_preview_access: '{term_preview}'
+  options:
+    parameters:
+      term_preview:
+        type: 'term_preview'
