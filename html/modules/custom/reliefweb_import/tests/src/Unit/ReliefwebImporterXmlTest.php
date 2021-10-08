@@ -13,6 +13,8 @@ use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionXml;
 
 /**
  * Tests reliefweb importer.
+ *
+ * @covers \Drupal\reliefweb_import\Command\ReliefwebImportCommand
  */
 class ReliefwebImporterXmlTest extends ReliefwebImporterTestBase {
 
@@ -31,6 +33,8 @@ class ReliefwebImporterXmlTest extends ReliefwebImporterTestBase {
 
   /**
    * Tests fetching.
+   *
+   * @covers \Drupal\reliefweb_import\Command\ReliefwebImportCommand::fetchXml
    */
   public function testfetchXmlException() {
     $url = '';
@@ -48,8 +52,10 @@ class ReliefwebImporterXmlTest extends ReliefwebImporterTestBase {
 
   /**
    * Tests fetching.
+   *
+   * @covers \Drupal\reliefweb_import\Command\ReliefwebImportCommand::fetchXml
    */
-  public function testfetchXmlStatusCode() {
+  public function testfetchXmlStatusCode500() {
     $url = '';
 
     $mock = new MockHandler([
@@ -65,6 +71,46 @@ class ReliefwebImporterXmlTest extends ReliefwebImporterTestBase {
 
   /**
    * Tests fetching.
+   *
+   * @covers \Drupal\reliefweb_import\Command\ReliefwebImportCommand::fetchXml
+   */
+  public function testfetchXmlStatusCode404() {
+    $url = '';
+
+    $mock = new MockHandler([
+      new Response(404, ['Content-Length' => 0]),
+    ]);
+
+    $handlerStack = HandlerStack::create($mock);
+    $this->reliefwebImporter->setHttpClient(new Client(['handler' => $handlerStack]));
+
+    $this->expectException(RequestException::class);
+    $this->reliefwebImporter->fetchXml($url);
+  }
+
+  /**
+   * Tests fetching.
+   *
+   * @covers \Drupal\reliefweb_import\Command\ReliefwebImportCommand::fetchXml
+   */
+  public function testfetchXmlStatusCode218() {
+    $url = '';
+
+    $mock = new MockHandler([
+      new Response(218, ['Content-Length' => 0]),
+    ]);
+
+    $handlerStack = HandlerStack::create($mock);
+    $this->reliefwebImporter->setHttpClient(new Client(['handler' => $handlerStack]));
+
+    $this->expectException(ReliefwebImportExceptionXml::class);
+    $this->reliefwebImporter->fetchXml($url);
+  }
+
+  /**
+   * Tests fetching.
+   *
+   * @covers \Drupal\reliefweb_import\Command\ReliefwebImportCommand::fetchXml
    */
   public function testfetchXmlEmpty() {
     $url = '';
@@ -82,6 +128,8 @@ class ReliefwebImporterXmlTest extends ReliefwebImporterTestBase {
 
   /**
    * Tests fetching.
+   *
+   * @covers \Drupal\reliefweb_import\Command\ReliefwebImportCommand::fetchXml
    */
   public function testfetchXmlWithBody() {
     $url = '';

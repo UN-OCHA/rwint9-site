@@ -4,6 +4,8 @@ namespace Drupal\Tests\reliefweb_import\Unit;
 
 /**
  * Tests reliefweb importer.
+ *
+ * @covers \Drupal\reliefweb_import\Command\ReliefwebImportCommand
  */
 class ReliefwebImporterStringTest extends ReliefwebImporterTestBase {
 

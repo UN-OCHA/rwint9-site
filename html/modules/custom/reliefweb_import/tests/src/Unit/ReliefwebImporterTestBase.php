@@ -15,6 +15,8 @@ use GuzzleHttp\ClientInterface;
 
 /**
  * Tests reliefweb importer.
+ *
+ * @covers \Drupal\reliefweb_import\Command\ReliefwebImportCommand
  */
 class ReliefwebImporterTestBase extends UnitTestCase {
 
