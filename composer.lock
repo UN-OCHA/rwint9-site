@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7eb23c3d7bc48d64dc69ef0919fcdf91",
+    "content-hash": "76dac75a03a14a156b01f3a3e3d3b5c7",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -4249,6 +4249,51 @@
             "homepage": "https://www.drupal.org/project/token",
             "support": {
                 "source": "https://git.drupalcode.org/project/token"
+            }
+        },
+        {
+            "name": "drupal/user_display_name",
+            "version": "1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupalcode.org/project/user_display_name.git",
+                "reference": "1.0.1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/user_display_name-1.0.1.zip",
+                "reference": "1.0.1",
+                "shasum": "91311275109bd6b15229744263227e13b8d072a8"
+            },
+            "require": {
+                "drupal/core": "^9"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "drupal": {
+                    "version": "1.0.1",
+                    "datestamp": "1633666017",
+                    "security-coverage": {
+                        "status": "not-covered",
+                        "message": "Project has not opted into security advisory coverage!"
+                    }
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0+"
+            ],
+            "authors": [
+                {
+                    "name": "orakili",
+                    "homepage": "https://www.drupal.org/u/orakili"
+                }
+            ],
+            "description": "Adds a display name field to user entities.",
+            "homepage": "https://www.drupal.org/project/user_display_name",
+            "support": {
+                "source": "https://git.drupal.org/project/user_display_name.git",
+                "issues": "https://www.drupal.org/project/issues/user_display_name"
             }
         },
         {
