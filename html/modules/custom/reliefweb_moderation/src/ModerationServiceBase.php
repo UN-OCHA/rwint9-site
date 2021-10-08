@@ -2,17 +2,19 @@
 
 namespace Drupal\reliefweb_moderation;
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\Condition;
 use Drupal\Core\Database\Query\Select;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Datetime\DateFormatterInterface;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldItemInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
@@ -20,7 +22,9 @@ use Drupal\Core\Url;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Pager\PagerParametersInterface;
 use Drupal\reliefweb_entities\EntityModeratedInterface;
+use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
+use Drupal\user\EntityOwnerInterface;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -201,6 +205,151 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   /**
    * {@inheritdoc}
    */
+  public function isViewableStatus($status, ?AccountInterface $account = NULL) {
+    return $status === 'published';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isEditableStatus($status, ?AccountInterface $account = NULL) {
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasStatus($status) {
+    $statuses = $this->getStatuses();
+    return isset($statuses[$status]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function disableNotifications(EntityModeratedInterface $entity, $status) {
+    $entity->notifications_content_disable = TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function entityPresave(EntityModeratedInterface $entity) {
+    $status = $entity->getModerationStatus();
+
+    // If notifications are not already disabled, check if they need to be.
+    if (empty($entity->in_preview) && empty($entity->notifications_content_disable)) {
+      // Check if notifications should be disabled based on status.
+      $this->disableNotifications($entity, $status);
+
+      // Disable notifications for buried entities.
+      if ($entity->hasField('field_bury') && !$entity->field_bury->isEmpty()) {
+        $entity->notifications_content_disable = TRUE;
+      }
+    }
+
+    // Mark as published if the status is viewable by everybody.
+    if ($entity instanceof EntityPublishedInterface) {
+      $entity->setPublished($this->isViewableStatus($status));
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function entityAccess(EntityModeratedInterface $entity, $operation = 'view', ?AccountInterface $account = NULL) {
+    $account = $account ?: $this->currentUser;
+
+    $access = FALSE;
+
+    $bundle = $entity->bundle();
+
+    $entity_type_id = $entity->getEntityTypeId();
+
+    $status = $entity->getModerationStatus();
+
+    $viewable = $this->isViewableStatus($status, $account);
+
+    $editable = $this->isEditableStatus($status, $account);
+
+    $owner = FALSE;
+    if ($entity instanceof EntityOwnerInterface) {
+      $owner = $entity->getOwnerId() === $account->id() && $account->id() > 0;
+    }
+
+    switch ($entity_type_id) {
+      case 'node':
+        // Access to everything for those permissions.
+        $access = $account->hasPermission('bypass node access') || $account->hasPermission('administer nodes');
+
+        if (!$access) {
+          switch ($operation) {
+            case 'view':
+              // Document owners are allowed to view their documents even if
+              // they don't have the posting rights on it (due to being blocked
+              // for one of the sources for example).
+              $posting_rights = $owner || UserPostingRightsHelper::userHasPostingRights($account, $entity, $status);
+
+              $access = $account->hasPermission('access content') &&
+                        ($viewable || ($account->hasPermission('view own unpublished content') && $posting_rights));
+              break;
+
+            case 'create':
+              $access = $account->hasPermission('create any content') ||
+                        $account->hasPermission('create ' . $bundle . ' content');
+              break;
+
+            case 'update':
+              $posting_rights = UserPostingRightsHelper::userHasPostingRights($account, $entity, $status);
+
+              $access = $account->hasPermission('edit any ' . $bundle . ' content') ||
+                        ($editable && $account->hasPermission('edit own ' . $bundle . ' content') && $posting_rights);
+              break;
+
+            case 'delete':
+              $posting_rights = UserPostingRightsHelper::userHasPostingRights($account, $entity, $status);
+
+              $access = $account->hasPermission('delete any ' . $bundle . ' content') ||
+                        ($account->hasPermission('delete own ' . $bundle . ' content') && $posting_rights);
+              break;
+          }
+        }
+
+        break;
+
+      case 'taxonomy_term':
+        // Access to everything for those permissions.
+        $access = $account->hasPermission('administer taxonomy');
+
+        if (!$access) {
+          switch ($operation) {
+            case 'view':
+              $access = $account->hasPermission('access content') && $viewable;
+              break;
+
+            case 'create':
+              $access = $account->hasPermission('edit terms in ' . $bundle);
+              break;
+
+            case 'update':
+              $access = $account->hasPermission('edit terms in ' . $bundle) && $editable;
+              break;
+
+            case 'delete':
+              $access = $account->hasPermission('delete terms in ' . $bundle);
+              break;
+          }
+        }
+
+        break;
+    }
+
+    return $access ? AccessResult::allowed() : AccessResult::forbidden();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function alterEntityForm(array &$form, FormStateInterface $form_state) {
     $entity = $form_state->getFormObject()->getEntity();
     $status = $entity->getModerationStatus();
@@ -261,7 +410,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   public function handleEntitySubmission(array $form, FormStateInterface $form_state) {
     // Alter the status based on the rest of the submitted form.
     // @todo review if that should not be done in the entity presave instead.
-    $status = $form_state->getValue(['moderation_state', 0, 'state'], $status);
+    $status = $form_state->getValue(['moderation_state', 0, 'state']);
     $status = $this->alterSubmittedEntityStatus($status, $form_state);
     $form_state->setValue(['moderation_state', 0, 'state'], $status);
   }
@@ -271,12 +420,6 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
    */
   public function alterSubmittedEntityStatus($status, FormStateInterface $form_state) {
     return $status;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function entityPresave(EntityModeratedInterface $entity) {
   }
 
   /**
@@ -2115,13 +2258,13 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   /**
    * Get the edit link and moderation status info for the entity.
    *
-   * @param \Drupal\Core\Entity\EntityInterface $entity
+   * @param \Drupal\reliefweb_entities\EntityModeratedInterface $entity
    *   Entity.
    *
    * @return array
    *   Array with the edit link and the status info (label and value).
    */
-  protected function getEntityEditAndStatusData(EntityInterface $entity) {
+  protected function getEntityEditAndStatusData(EntityModeratedInterface $entity) {
     return [
       'link' => $entity->toLink($this->t('edit'), 'edit-form')->toString(),
       'status' => [
@@ -2134,14 +2277,14 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   /**
    * Get the entity creator.
    *
-   * @param \Drupal\Core\Entity\EntityInterface $entity
+   * @param \Drupal\reliefweb_entities\EntityModeratedInterface $entity
    *   Entity.
    *
    * @return \Drupal\Core\GeneratedLink|null
    *   Link to the page filtered by the user or NULL if the creator couldn't be
    *   determined.
    */
-  protected function getEntityAuthorData(EntityInterface $entity) {
+  protected function getEntityAuthorData(EntityModeratedInterface $entity) {
     $entity_type_id = $entity->getEntityTypeId();
 
     switch ($entity_type_id) {
@@ -2187,14 +2330,14 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   /**
    * Get the revision information for the entity.
    *
-   * @param \Drupal\Core\Entity\EntityInterface $entity
+   * @param \Drupal\reliefweb_entities\EntityModeratedInterface $entity
    *   Entity.
    *
    * @return array
    *   Array with the revision information (type, message, reviewer) to display
    *   in the moderation backend pages if there is a revision message.
    */
-  protected function getEntityRevisionData(EntityInterface $entity) {
+  protected function getEntityRevisionData(EntityModeratedInterface $entity) {
     // Revision information.
     $revision_message = $entity->getRevisionLogMessage();
 
@@ -2229,14 +2372,14 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   /**
    * Get the entity creation date.
    *
-   * @param \Drupal\Core\Entity\EntityInterface $entity
+   * @param \Drupal\reliefweb_entities\EntityModeratedInterface $entity
    *   Entity.
    *
    * @return string|int
    *   Timestamp or ISO 8601 date string. If the date couldn't be
    *   determined we use the creation date of ReliefWeb...
    */
-  protected function getEntityCreationDate(EntityInterface $entity) {
+  protected function getEntityCreationDate(EntityModeratedInterface $entity) {
     $entity_type_id = $entity->getEntityTypeId();
 
     switch ($entity_type_id) {

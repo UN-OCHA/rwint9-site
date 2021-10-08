@@ -105,7 +105,49 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
   /**
    * {@inheritdoc}
    */
+  abstract protected function addBundleFormAlterations(array &$form, FormStateInterface $form_state);
+
+  /**
+   * {@inheritdoc}
+   */
   public function alterForm(array &$form, FormStateInterface $form_state) {
+    $operation = $form_state->getFormObject()?->getOperation() ?? 'default';
+
+    // Only apply the form alterations to allowed forms.
+    if (!in_array($operation, $this->getAllowedForms())) {
+      return;
+    }
+
+    // Add the form alterations specific to the bundle.
+    $this->addBundleFormAlterations($form, $form_state);
+
+    // Add the guidelines.
+    $this->addGuidelineFormAlterations($form, $form_state);
+
+    // Add the moderation form alterations to handle the moderation status.
+    // This needs to be added last so that the buttons to save the entity
+    // can run all the submit callbacks added by the other form alterations.
+    $this->addModerarionFormAlterations($form, $form_state);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getAllowedForms() {
+    return ['default', 'edit'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function addGuidelineFormAlterations(array &$form, FormStateInterface $form_state) {
+    $form['#attributes']['data-with-guidelines'] = '';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function addModerarionFormAlterations(array &$form, FormStateInterface $form_state) {
     $entity = $form_state->getFormObject()->getEntity();
     $moderation_service = ModerationServiceBase::getModerationService($entity->bundle());
     if (!empty($moderation_service)) {
@@ -162,7 +204,20 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
     $found = FALSE;
     if (!empty($primary_value)) {
       foreach ($form_state->getValue($non_primary_field) as $value) {
-        if ($value[$key_column] === $primary_value) {
+        // Depending on the order in which the fields are processed the values
+        // for entity reference fields can either be scalars with the target id
+        // or arrays with the `target_id` property so we need to check.
+        if (is_array($value) && isset($value['target_id'])) {
+          $non_primary_value = $value['target_id'];
+        }
+        elseif (is_scalar($value)) {
+          $non_primary_value = $value;
+        }
+        else {
+          continue;
+        }
+
+        if ($non_primary_value === $primary_value) {
           $found = TRUE;
           break;
         }
@@ -543,7 +598,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
 
     // Only when editing a node and for editors only.
     // @todo replace with permission.
-    if (empty($entity_id) || !UserHelper::userHasRoles(['Editor'])) {
+    if (empty($entity_id) || !UserHelper::userHasRoles(['editor'])) {
       return;
     }
 
@@ -760,33 +815,18 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
   }
 
   /**
-   * Get the timestamp from a date value extracted from the form state.
+   * Redirect to the entity page.
    *
-   * The type of data returned from a date field is not consistent so we
-   * we ensure we get a timestamp to be able to do some comparison.
-   *
-   * @param mixed $date
-   *   Date field value.
-   *
-   * @return int|null
-   *   A UNIX timestamp or NULL if the type of the date couldn't be inferred.
+   * @param array $form
+   *   Form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
    */
-  protected function getDateTimeStamp($date) {
-    if (!empty($date)) {
-      // Date object. It can be a PHP DateTime or DrupalDateTime...
-      if (is_object($date)) {
-        return $date->getTimeStamp();
-      }
-      // Date in the expected format YYYY-MM-DD.
-      elseif (is_string($date) && !is_numeric($date)) {
-        return date_create($date, timezone_open('UTC'))->getTimeStamp();
-      }
-      // Assume it's a timestamp.
-      elseif (is_numeric($date)) {
-        return intval($date);
-      }
+  public function redirectToEntityPage(array $form, FormStateInterface $form_state) {
+    $entity = $form_state->getFormObject()?->getEntity();
+    if (!empty($entity) && empty($entity->in_preview) && $entity->id() !== NULL) {
+      $form_state->setRedirectUrl($entity->toUrl());
     }
-    return NULL;
   }
 
   /**

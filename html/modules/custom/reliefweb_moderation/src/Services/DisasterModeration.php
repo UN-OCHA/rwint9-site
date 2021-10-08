@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_moderation\Services;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\reliefweb_entities\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
@@ -67,7 +68,7 @@ class DisasterModeration extends ModerationServiceBase {
       return [];
     }
 
-    /** @var \Drupal\Core\Entity\EntityInterface[] $entities */
+    /** @var \Drupal\reliefweb_entities\EntityModeratedInterface[] $entities */
     $entities = $results['entities'];
 
     // Prepare the table rows' data from the entities.
@@ -157,7 +158,7 @@ class DisasterModeration extends ModerationServiceBase {
     $buttons = [];
 
     // @todo replace with permission.
-    if (UserHelper::userHasRoles(['Editor'])) {
+    if (UserHelper::userHasRoles(['editor'])) {
       $buttons['draft'] = [
         '#value' => $this->t('Draft'),
       ];
@@ -170,7 +171,7 @@ class DisasterModeration extends ModerationServiceBase {
     }
 
     // @todo replace with permission.
-    if (UserHelper::userHasRoles(['External disaster manager'])) {
+    if (UserHelper::userHasRoles(['external_disaster_manager'])) {
       $buttons['external'] = [
         '#value' => $this->t('External'),
       ];
@@ -230,7 +231,58 @@ class DisasterModeration extends ModerationServiceBase {
   /**
    * {@inheritdoc}
    */
-  protected function initFilterDefinitions($filters = []) {
+  public function isViewableStatus($status, ?AccountInterface $account = NULL) {
+    $account = $account ?: $this->currentUser;
+    // External disasters are only viewable by "External disaster managers".
+    if ($status === 'external' || $status === 'external-archive') {
+      return UserHelper::userHasRoles(['external_disaster_manager'], $account);
+    }
+    // Editors can view any disaster.
+    elseif (UserHelper::userHasRoles(['editor'], $account)) {
+      return TRUE;
+    }
+    // Hide draft and archive disasters.
+    else {
+      return in_array($status, ['alert', 'current', 'past']);
+    }
+    return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isEditableStatus($status, ?AccountInterface $account = NULL) {
+    $account = $account ?: $this->currentUser;
+    if (!$account->hasPermission('edit terms in disaster')) {
+      return FALSE;
+    }
+    // External disasters are only editable by "External disaster managers".
+    if ($status === 'external' || $status === 'external-archive') {
+      return UserHelper::userHasRoles(['external_disaster_manager'], $account);
+    }
+    // Only Editors are allowed to edit disasters.
+    return UserHelper::userHasRoles(['editor'], $account);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasStatus($status) {
+    return $status === 'archive' || parent::hasStatus($status);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function disableNotifications(EntityModeratedInterface $entity, $status) {
+    $allowed_statuses = ['alert', 'current'];
+    $entity->notifications_content_disable = !in_array($status, $allowed_statuses);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function initFilterDefinitions(array $filters = []) {
     $definitions = parent::initFilterDefinitions([
       'status',
       'country',

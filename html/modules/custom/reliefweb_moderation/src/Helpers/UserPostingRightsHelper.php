@@ -6,6 +6,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Field\EntityReferenceFieldItemList;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
+use Drupal\user\EntityOwnerInterface;
 
 /**
  * Helper to get user posting rights information.
@@ -214,6 +215,78 @@ class UserPostingRightsHelper {
       'name' => 'allowed',
       'sources' => $sources,
     ];
+  }
+
+  /**
+   * Check if a user has posting rights on the entity.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   A user's account object or the current user if NULL.
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   Entity for which to check access.
+   * @param string $status
+   *   Entity status.
+   *
+   * @return bool
+   *   Whether the user has posting rights or not.
+   */
+  public static function userHasPostingRights(AccountInterface $account, EntityInterface $entity, $status) {
+    // Disallow for anonymous or undefined users.
+    if ($account->id() === NULL || $account->id() === 0) {
+      return FALSE;
+    }
+
+    // Disallow in case of unknown entity id (ex: new entity).
+    if ($entity->id() === NULL) {
+      return FALSE;
+    }
+
+    $bundle = $entity->bundle();
+    $allowed = FALSE;
+
+    $owner = FALSE;
+    if ($entity instanceof EntityOwnerInterface) {
+      $owner = $entity->getOwnerId() === $account->id() && $account->id() > 0;
+    }
+
+    // Only applies to job and training.
+    if ($bundle === 'job' || $bundle === 'training') {
+      // Check for sources for which the user is blocked, allowed or trusted.
+      //
+      // Note: if there is no source or the user in unverified for the sources
+      // then we default to the base behavior: disallowed unless owner.
+      if ($entity->hasField('field_source') && !$entity->field_source->isEmpty()) {
+        // Get the document sources.
+        $sources = [];
+        foreach ($entity->field_source as $item) {
+          if (!empty($item->target_id)) {
+            $sources[] = $item->target_id;
+          }
+        }
+
+        // Check if the user is allowed or blocked.
+        foreach (static::userGetPostingRights($account, $sources) as $data) {
+          $right = $data[$bundle] ?? 0;
+          // If the user is blocked for one of the sources always disallow even
+          // if the user is the owner of the document, except for drafts.
+          //
+          // No strict equality as $right can be a numeric string or an integer.
+          if ($right == 1) {
+            return $owner && $status === 'draft';
+          }
+          // Allowed for at least one of the sources. That means that in the
+          // case of joint ads, being allowed to post for one of the sources
+          // is enough to be considered having posting rights on the document
+          // (unless blocked for one of the sources, of course).
+          elseif ($right > 1) {
+            $allowed = TRUE;
+          }
+        }
+      }
+    }
+
+    // Owner can edit their own posts (unless blocked for a source, see above).
+    return $allowed || $owner;
   }
 
 }

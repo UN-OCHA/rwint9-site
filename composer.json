@@ -76,6 +76,7 @@
         "drupal/taxonomy_term_revision": "1.x-dev",
         "drupal/theme_switcher": "^1.2",
         "drupal/token": "^1.9",
+        "drupal/user_display_name": "^1.0",
         "drush/drush": "^10.4",
         "league/commonmark": "^1.6",
         "league/html-to-markdown": "^5.0",

@@ -30,8 +30,6 @@
           'resources': 'Resources'|t,
           'sections': 'Sections'|t,
           'related': 'Related'|t,
-          'details': 'Details'|t,
-          'headline': 'Headline'|t,
         },
       },
       'submission': {
@@ -78,7 +76,7 @@
 </fieldset>
 
 <fieldset id="editorial-flags">
-  <legend class="visually-hidden">{% trans %}Editorial flags{% endtrans %}</legend>
+  <legend>{% trans %}Editorial flags{% endtrans %}</legend>
   {{ form.field_bury }}
   {{ form.field_featured }}
   {{ form.field_disaster_type }}

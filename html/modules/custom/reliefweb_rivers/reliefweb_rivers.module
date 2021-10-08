@@ -24,6 +24,9 @@ function reliefweb_rivers_theme() {
         'title_attributes' => NULL,
         // Render array. See "reliefweb_rivers_views" below.
         'views' => [],
+        // Area before the search bar. It's mostly used to display the
+        // disaster map on the disasters landing page.
+        'pre_content' => NULL,
         // Render array. See "reliefweb_rivers_search" below.
         'search' => NULL,
         // Letter navigation/filtering.

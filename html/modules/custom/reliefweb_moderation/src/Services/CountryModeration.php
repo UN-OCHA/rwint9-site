@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_moderation\Services;
 
+use Drupal\Core\Session\AccountInterface;
 use Drupal\reliefweb_entities\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 
@@ -62,7 +63,7 @@ class CountryModeration extends ModerationServiceBase {
       return [];
     }
 
-    /** @var \Drupal\Core\Entity\EntityInterface[] $entities */
+    /** @var \Drupal\reliefweb_entities\EntityModeratedInterface[] $entities */
     $entities = $results['entities'];
 
     // Prepare the table rows' data from the entities.
@@ -127,7 +128,14 @@ class CountryModeration extends ModerationServiceBase {
   /**
    * {@inheritdoc}
    */
-  protected function initFilterDefinitions($filters = []) {
+  public function isViewableStatus($status, ?AccountInterface $account = NULL) {
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function initFilterDefinitions(array $filters = []) {
     $definitions = parent::initFilterDefinitions([
       'status',
       'name',

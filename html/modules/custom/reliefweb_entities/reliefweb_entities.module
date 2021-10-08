@@ -5,9 +5,14 @@
  * Entity management for ReliefWeb.
  */
 
+use Drupal\Core\Entity\EntityFormInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\taxonomy\TermInterface;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
+use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
+use Drupal\reliefweb_utility\Helpers\TextHelper;
 
 /**
  * Implements hook_entity_bundle_info_alter().
@@ -323,4 +328,64 @@ function reliefweb_entities_form_node_form_alter(array &$form, FormStateInterfac
  */
 function reliefweb_entities_form_taxonomy_term_form_alter(array &$form, FormStateInterface $form_state) {
   EntityFormAlterServiceBase::alterEntityForm($form, $form_state);
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function reliefweb_entities_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  // Prevent deletion of taxonomy term referenced by other entities.
+  $form_object = $form_state->getFormObject();
+  if ($form_object instanceof EntityFormInterface && $form_object->getOperation() === 'delete') {
+    $entity = $form_state->getFormObject()->getEntity();
+    if (isset($entity) && $entity instanceof TermInterface && $entity->id() !== NULL) {
+      if (TaxonomyHelper::isTermReferenced($entity)) {
+        $form['actions']['submit']['#access'] = FALSE;
+        $form['description']['#markup'] = t('The term CANNOT be deleted because there is content (reports, jobs, training etc.) tagged with it.');
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_presave().
+ *
+ * Remove control characters from text fields.
+ */
+function reliefweb_entities_entity_presave(EntityInterface $entity) {
+  $entity_type_id = $entity->getEntityTypeId();
+  if ($entity_type_id === 'node' || $entity_type_id === 'taxonomy_term') {
+    $field_definitions = \Drupal::service('entity_field.manager')
+      ->getFieldDefinitions($entity_type_id, $entity->bundle());
+
+    $text_field_types = [
+      'text',
+      'text_long',
+      'text_with_summary',
+      'string',
+      'string_long',
+    ];
+    $columns = [
+      'value',
+      'summary',
+    ];
+    $options = [
+      'title' => ['line_breaks' => TRUE, 'consecutive' => TRUE],
+      'name' => ['line_breaks' => TRUE, 'consecutive' => TRUE],
+    ];
+
+    // Clean the text fields.
+    foreach ($field_definitions as $field => $definition) {
+      if ($entity->hasField($field) && in_array($definition->getType(), $text_field_types)) {
+        foreach ($entity->get($field) as $item) {
+          foreach ($columns as $column) {
+            if (isset($item->{$column})) {
+              $value = $item->get($column)->getValue();
+              $item->set($column, TextHelper::cleanText($value, $options[$field] ?? []));
+            }
+          }
+        }
+      }
+    }
+  }
 }

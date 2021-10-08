@@ -1,12 +1,14 @@
 /* Useful links */
-.rw-entity-useful-links img {
+.rw-entity-useful-links img,
+.rw-entity-text--resources img {
   display: inline-block;
   max-width: 200px;
   max-height: 50px;
   margin-right: 10px;
   vertical-align: middle;
 }
-.rw-entity-useful-links img[src*=".svg"] {
+.rw-entity-useful-links img[src*=".svg"],
+.rw-entity-text--resources img[src*=".svg"] {
   min-width: 150px;
 }
 
@@ -15,25 +17,30 @@
  *
  * Simple list of links like the useful links on country pages.
  */
-.rw-entity-useful-links > ul {
+.rw-entity-useful-links > ul,
+.rw-entity-text--resources ul {
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.rw-entity-useful-links > ul li {
+.rw-entity-useful-links > ul li,
+.rw-entity-text--resources ul li {
   margin: 0;
   padding: 12px 0;
   border-bottom: 1px solid #e6ecef;
   line-height: 24px;
 }
-.rw-entity-useful-links > ul li:first-child {
+.rw-entity-useful-links > ul li:first-child,
+.rw-entity-text--resources ul li:first-child {
   padding-top: 0;
 }
-.rw-entity-useful-links > ul li:last-child {
+.rw-entity-useful-links > ul li:last-child,
+.rw-entity-text--resources ul li:last-child {
   padding-bottom: 0;
   border-bottom: none;
 }
-.rw-entity-useful-links > ul + * {
+.rw-entity-useful-links > ul + *,
+.rw-entity-text--resources ul + * {
   margin-top: 24px;
 }
 /* @todo Needed? */

@@ -2,7 +2,9 @@
 
 namespace Drupal\reliefweb_moderation\Services;
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Link;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_entities\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
@@ -62,7 +64,7 @@ class ReportModeration extends ModerationServiceBase {
       return [];
     }
 
-    /** @var \Drupal\Core\Entity\EntityInterface[] $entities */
+    /** @var \Drupal\reliefweb_entities\EntityModeratedInterface[] $entities */
     $entities = $results['entities'];
 
     // Check if the reports are linked as Key Content.
@@ -229,7 +231,7 @@ class ReportModeration extends ModerationServiceBase {
     ];
 
     // @todo replace with permission.
-    if (UserHelper::userHasRoles(['administrator', 'Webmaster'])) {
+    if (UserHelper::userHasRoles(['administrator', 'webmaster'])) {
       $buttons['archive'] = [
         '#value' => $this->t('Archive'),
       ];
@@ -241,7 +243,50 @@ class ReportModeration extends ModerationServiceBase {
   /**
    * {@inheritdoc}
    */
-  protected function initFilterDefinitions($filters = []) {
+  public function isViewableStatus($status, $account = NULL) {
+    return in_array($status, ['to-review', 'published']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isEditableStatus($status, $account = NULL) {
+    if ($status === 'archive') {
+      return UserHelper::userHasRoles(['administrator', 'webmaster'], $account);
+    }
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function disableNotifications(EntityModeratedInterface $entity, $status) {
+    $previous_status = isset($entity->original) ? $entity->original->getModerationStatus() : '';
+    // Disable if not published or previously published to avoid resending
+    // notifications when making modification to a published report.
+    $entity->notifications_content_disable = $status !== 'published' || $previous_status === 'published';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function entityAccess(EntityModeratedInterface $entity, $operation = 'view', ?AccountInterface $account = NULL) {
+    $access_result = parent::entityAccess($entity, $operation, $account);
+    $access = $access_result->isAllowed();
+
+    if ($operation !== 'view') {
+      // Normally editors can edit any kind of reports
+      // but there are some exceptions like archived reports.
+      return $access && $this->isEditableStatus($entity->getModerationStatus(), $account);
+    }
+
+    return $access ? AccessResult::allowed() : AccessResult::forbidden();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function initFilterDefinitions(array $filters = []) {
     $definitions = parent::initFilterDefinitions([
       'status',
       'primary_country',

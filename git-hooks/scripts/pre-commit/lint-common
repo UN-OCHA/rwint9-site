@@ -2,6 +2,7 @@
 
 result=0
 relative=${relative:-0}
+changedir=${changedir:-0}
 
 # Get the full path to the root of the repository.
 root="$(git rev-parse --show-toplevel)"
@@ -34,7 +35,14 @@ if [ -x "$(command -v $linter)" ]; then
 
       if [ -f "$file" ]; then
         echo "* $linter $options $file"
-        $linter $options "$file"
+        # Execute in a subshell so that we can handle directory switching.
+        if [ "$changedir" -eq 1 ]; then
+          echo $(dirname "$linter");
+          echo $(basename "$linter");
+          (cd $(dirname "$linter"); ./$(basename "$linter") $options "$file")
+        else
+          $linter $options "$file"
+        fi
 
         if [ "$?" -ne 0 ]; then
           result=1

@@ -3,9 +3,11 @@
 namespace Drupal\reliefweb_moderation\Services;
 
 use Drupal\Core\Link;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_entities\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
+use Drupal\reliefweb_utility\Helpers\UserHelper;
 
 /**
  * Moderation service for the source terms.
@@ -64,7 +66,7 @@ class SourceModeration extends ModerationServiceBase {
       return [];
     }
 
-    /** @var \Drupal\Core\Entity\EntityInterface[] $entities */
+    /** @var \Drupal\reliefweb_entities\EntityModeratedInterface[] $entities */
     $entities = $results['entities'];
 
     // Prepare the table rows' data from the entities.
@@ -198,6 +200,13 @@ class SourceModeration extends ModerationServiceBase {
   /**
    * {@inheritdoc}
    */
+  public function isViewableStatus($status, ?AccountInterface $account = NULL) {
+    return $status === 'active' || $status === 'inactive' || UserHelper::userHasRoles(['editor'], $account);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function entityPresave(EntityModeratedInterface $entity) {
     // Ensure all posting rights are 'blocked' if the status is 'blocked'.
     $status = $entity->getModerationStatus();
@@ -231,7 +240,7 @@ class SourceModeration extends ModerationServiceBase {
   /**
    * {@inheritdoc}
    */
-  protected function initFilterDefinitions($filters = []) {
+  protected function initFilterDefinitions(array $filters = []) {
     $definitions = parent::initFilterDefinitions([
       'status',
       'name',

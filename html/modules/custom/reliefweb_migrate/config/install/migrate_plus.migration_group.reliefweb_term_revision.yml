@@ -91,6 +91,10 @@ shared_configuration:
     revision_log_message: revision_log_message
     revision_created: revision_created
     revision_default: revision_default
+    # Disable notifications.
+    notifications_content_disable:
+      plugin: default_value
+      default_value: 1
 dependencies:
   enforced:
     module:

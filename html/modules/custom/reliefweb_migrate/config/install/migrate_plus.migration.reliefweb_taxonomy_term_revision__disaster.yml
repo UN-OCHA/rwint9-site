@@ -39,7 +39,7 @@ process:
         value:
           plugin: format_date
           from_format: 'U'
-          to_format: 'Y-m-d\TH:i:s'
+          to_format: 'Y-m-d'
           from_timezone: UTC
           to_timezone: UTC
           source: value

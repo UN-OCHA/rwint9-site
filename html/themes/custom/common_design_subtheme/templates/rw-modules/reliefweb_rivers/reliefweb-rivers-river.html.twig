@@ -22,6 +22,12 @@
   {% set attributes = attributes.addClass('rw-river--river-columns','rw-river--river-columns--two','rw-river--river-columns--desktop') %}
 {% elseif id == 'related' %}
   {% set attributes = attributes.addClass('rw-river--river-columns','rw-river--river-columns--two') %}
+{% elseif id == 'reliefweb-topics' %}
+  {% set article_attributes = article_attributes.addClass('rw-river-article--card') %}
+  {% set attributes = attributes.addClass('rw-river--river-columns','rw-river--river-columns--two','rw-river--river-cards') %}
+{% elseif id == 'community-topics' %}
+  {% set article_attributes = article_attributes.addClass('rw-river-article--card') %}
+  {% set attributes = attributes.addClass('rw-river--river-columns','rw-river--river-columns--two','rw-river--river-cards') %}
 {% endif %}
 
 {% include '@reliefweb_rivers/reliefweb-rivers-river.html.twig' %}

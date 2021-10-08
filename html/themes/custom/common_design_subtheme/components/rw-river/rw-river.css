@@ -1,4 +1,11 @@
 /**
+ * Spacing when there is content before the search bar.
+ */
+.rw-river-page--with-pre-content .rw-river-search {
+  margin-top: 32px;
+}
+
+/**
  * 2 columns layout on tablet/desktop for rivers with advanced search.
  */
 @media screen and (min-width: 768px) {
@@ -16,6 +23,11 @@
     clear: both;
     content: "";
   }
+
+  .rw-river--river-cards .rw-river__articles {
+    margin-right: -8px;
+    margin-left: -8px;
+  }
 }
 
 @media screen and (min-width: 1024px) {
@@ -25,4 +37,8 @@
   .rw-river-page--with-advanced-search .rw-river--river-list {
     width: calc(100% - 360px);
   }
+}
+
+.rw-river-page section + section {
+  margin-top: 32px;
 }

@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
 use Drupal\reliefweb_form\Helpers\FormHelper;
+use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
 
 /**
@@ -16,10 +17,7 @@ class JobFormAlter extends EntityFormAlterServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function alterForm(array &$form, FormStateInterface $form_state) {
-    // Add the guidelines.
-    $form['#attributes']['data-with-guidelines'] = '';
-
+  protected function addBundleFormAlterations(array &$form, FormStateInterface $form_state) {
     // Add a guide on how to populate the field as description to the title
     // field.
     $form['title']['#description'] = $this->t('The best job titles are brief and specific. Please refrain from indicating location, salary and other details in the title, if possible.');
@@ -78,9 +76,6 @@ class JobFormAlter extends EntityFormAlterServiceBase {
 
     // Validate that the closing date is not in the past.
     $form['#validate'][] = [$this, 'validateJobDateField'];
-
-    // Let the base service add additional alterations.
-    parent::alterForm($form, $form_state);
   }
 
   /**
@@ -225,9 +220,9 @@ class JobFormAlter extends EntityFormAlterServiceBase {
     $status = $this->getEntityModerationStatus($form_state);
     // Make sure the closing date is in the future for non editors.
     // We also do the validation for the preview to help spot issues.
-    if ($preview || (!UserHelper::userHasRoles('Editor') && ($status === 'pending' || $status === 'published'))) {
+    if ($preview || (!UserHelper::userHasRoles(['editor']) && ($status === 'pending' || $status === 'published'))) {
       $time = gmmktime(0, 0, 0);
-      $date = $this->getDateTimeStamp($form_state->getValue([
+      $date = DateHelper::getDateTimeStamp($form_state->getValue([
         'field_job_closing_date', 0, 'value',
       ]));
       if (empty($date) || ($date < $time)) {

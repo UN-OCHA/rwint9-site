@@ -4,6 +4,7 @@ global-styling:
       css/styles.css: {}
   dependencies:
     - common_design_subtheme/rw-form
+    - common_design_subtheme/rw-site-slogan
 
 # RW custom components
 rw-admin-menu:
@@ -72,6 +73,13 @@ rw-datepicker:
   css:
     theme:
       components/rw-datepicker/rw-datepicker.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+
+rw-disaster-map:
+  css:
+    theme:
+      components/rw-disaster-map/rw-disaster-map.css: {}
   dependencies:
     - common_design_subtheme/rw-icons
 
@@ -205,6 +213,11 @@ rw-search:
     theme:
       components/rw-search/rw-search.css: {}
 
+rw-site-slogan:
+  css:
+    theme:
+      components/rw-site-slogan/rw-site-slogan.css: {}
+
 rw-social-media-links:
   css:
     theme:
@@ -233,6 +246,11 @@ rw-toc:
     components/rw-toc/rw-toc.js: {}
   dependencies:
     - common_design/cd-dropdown
+
+rw-topics:
+  css:
+    theme:
+      components/rw-topics/rw-topics.css: {}
 
 rw-useful-links:
   css:

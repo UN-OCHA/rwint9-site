@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
 use Drupal\reliefweb_form\Helpers\FormHelper;
+use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
 
@@ -17,10 +18,7 @@ class TrainingFormAlter extends EntityFormAlterServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function alterForm(array &$form, FormStateInterface $form_state) {
-    // Add the guidelines.
-    $form['#attributes']['data-with-guidelines'] = '';
-
+  protected function addBundleFormAlterations(array &$form, FormStateInterface $form_state) {
     // Add a guide on how to populate the field as description to the title
     // field.
     $form['title']['#description'] = $this->t('Should contain only the title of the training. Other information such as location, date and Organization should not be included in this field.');
@@ -83,9 +81,6 @@ class TrainingFormAlter extends EntityFormAlterServiceBase {
 
     // Add a validation callback to handle the altered fields above.
     $form['#validate'][] = [$this, 'validateTrainingEventUrl'];
-
-    // Let the base service add additional alterations.
-    parent::alterForm($form, $form_state);
   }
 
   /**
@@ -214,13 +209,13 @@ class TrainingFormAlter extends EntityFormAlterServiceBase {
     if ($ongoing !== 'ongoing') {
       // Extract the dates and convert them to timestamps
       // as the amazing Date module give us inconsistent data.
-      $dates['start'] = $this->getDateTimeStamp($form_state->getValue([
+      $dates['start'] = DateHelper::getDateTimeStamp($form_state->getValue([
         'field_training_date', 0, 'value',
       ]));
-      $dates['end'] = $this->getDateTimeStamp($form_state->getValue([
+      $dates['end'] = DateHelper::getDateTimeStamp($form_state->getValue([
         'field_training_date', 0, 'end_value',
       ]));
-      $dates['deadline'] = $this->getDateTimeStamp($form_state->getValue([
+      $dates['deadline'] = DateHelper::getDateTimeStamp($form_state->getValue([
         'field_registration_deadline', 0, 'value',
       ]));
 
@@ -246,7 +241,7 @@ class TrainingFormAlter extends EntityFormAlterServiceBase {
       }
       // Make sure the dates are in the future for non editors.
       // We also do the validation for the preview to help spot issues.
-      elseif ($preview || (!UserHelper::userHasRoles(['Editor']) && ($status === 'pending' || $status === 'published'))) {
+      elseif ($preview || (!UserHelper::userHasRoles(['editor']) && ($status === 'pending' || $status === 'published'))) {
         $time = gmmktime(0, 0, 0);
 
         if ($dates['deadline'] < $time) {

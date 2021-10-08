@@ -1,0 +1,21 @@
+{#
+
+/**
+ * @file
+ * Disaster map template.
+ *
+ * It's extending the reliefweb_rivers_river template with a few more
+ * attributes.
+ *
+ * @see reliefweb_rivers/templates/reliefweb_rivers_river.html.twig
+ */
+
+#}
+{% set attributes = attributes.addClass('rw-disaster-map')%}
+{% set title_attributes = title_attributes.addClass('rw-disaster-map__title') %}
+{% set river_attributes = river_attributes.addClass('rw-disaster-map__content') %}
+{% set article_attributes = article_attributes.addClass('rw-disaster-map__article') %}
+
+{{ attach_library('common_design_subtheme/rw-disaster-map') }}
+
+{% include '@common_design_subtheme/rw-modules/reliefweb_rivers/reliefweb-rivers-river.html.twig' %}

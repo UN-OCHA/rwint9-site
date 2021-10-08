@@ -1,0 +1,48 @@
+/**
+ * Topics landing page.
+ */
+.path-topics .rw-river-article--topic .rw-river-article__title {
+  font-size: 18px;
+}
+.path-topics .rw-river-article--topic .rw-river-article__content {
+  display: block;
+}
+.path-topics .rw-river-article--topic .rw-river-article__header img {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 32px;
+  height: 32px;
+  margin-top: -16px;
+}
+.path-topics .rw-river-article--topic .rw-river-article__header {
+  position: relative;
+  padding-left: 48px;
+}
+
+.rw-river-page--topics__byline {
+  margin-bottom: 20px;
+}
+
+/**
+ * Topic page.
+ */
+.node--topic--full.rw-document > header {
+  position: relative;
+  padding-left: 64px;
+}
+.node--topic--full.rw-document > header .rw-page-title {
+  padding-bottom: 0;
+}
+.node--topic--full > header .rw-article--topic__icon img {
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  width: 40px;
+  height: 40px;
+  margin-top: -26px;
+}
+.node--topic--full #main section.resources img[src*=".svg"] {
+  min-width: 150px;
+  max-width: 320px;
+}
