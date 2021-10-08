@@ -57,6 +57,7 @@
       <directory>./html/modules/custom/*/tests</directory>
       <directory>./html/modules/custom/*/*/src/Tests</directory>
       <directory>./html/modules/custom/*/*/tests</directory>
+      <directory>./html/modules/custom/*/src/Exception</directory>
     </exclude>
     <report>
       <html outputDirectory="coverage/html" lowUpperBound="50" highLowerBound="90"/>
