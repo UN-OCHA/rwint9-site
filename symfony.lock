@@ -719,5 +719,8 @@
     },
     "webmozart/path-util": {
         "version": "2.3.0"
+    },
+    "weitzman/drupal-test-traits": {
+        "version": "1.5.0"
     }
 }
