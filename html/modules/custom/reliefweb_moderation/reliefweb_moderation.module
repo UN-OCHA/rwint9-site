@@ -5,6 +5,11 @@
  * Theme declaration etc. for the reliefweb_moderation module.
  */
 
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\reliefweb_moderation\ModerationServiceBase;
+
 /**
  * Implements hook_theme().
  */
@@ -50,4 +55,26 @@ function reliefweb_moderation_theme() {
     ],
   ];
   return $themes;
+}
+
+/**
+ * Implements hook_entity_access().
+ */
+function reliefweb_moderation_entity_access(EntityInterface $entity, $operation, AccountInterface $account) {
+  $service = ModerationServiceBase::getModerationService($entity->bundle());
+  if (!empty($service)) {
+    return $service->entityAccess($entity, $operation, $account);
+  }
+  // No opinion.
+  return AccessResult::neutral();
+}
+
+/**
+ * Implements hook_entity_presave().
+ */
+function reliefweb_moderation_entity_presave(EntityInterface $entity) {
+  $service = ModerationServiceBase::getModerationService($entity->bundle());
+  if (!empty($service)) {
+    $service->entityPresave($entity);
+  }
 }
