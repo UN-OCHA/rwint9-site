@@ -5,7 +5,7 @@
  or your current system user. See core/tests/README.md and
  https://www.drupal.org/node/2116263 for details.
 -->
-<phpunit bootstrap="../html/core/tests/bootstrap.php" colors="true"
+<phpunit bootstrap="./html/core/tests/bootstrap.php" colors="true"
          beStrictAboutTestsThatDoNotTestAnything="true"
          beStrictAboutOutputDuringTests="true"
          beStrictAboutChangesToGlobalState="true"
@@ -41,10 +41,10 @@
   </php>
   <testsuites>
     <testsuite name="Unit">
-      <directory>../html/modules/custom/*/tests/src/Unit</directory>
+      <directory>./html/modules/custom/*/tests/src/Unit</directory>
     </testsuite>
     <testsuite name="Existing">
-      <directory>../html/modules/custom/*/tests/src/ExistingSite</directory>
+      <directory>./html/modules/custom/*/tests/src/ExistingSite</directory>
     </testsuite>
   </testsuites>
   <coverage includeUncoveredFiles="false"
@@ -53,14 +53,14 @@
             ignoreDeprecatedCodeUnits="true"
             disableCodeCoverageIgnore="true">
     <include>
-      <directory suffix=".php">../html/modules/custom</directory>
+      <directory suffix=".php">./html/modules/custom</directory>
     </include>
     <exclude>
-      <directory>../html/modules/custom/*/src/Tests</directory>
-      <directory>../html/modules/custom/*/tests</directory>
-      <directory>../html/modules/custom/*/*/src/Tests</directory>
-      <directory>../html/modules/custom/*/*/tests</directory>
-      <directory>../html/modules/custom/*/src/Exception</directory>
+      <directory>./html/modules/custom/*/src/Tests</directory>
+      <directory>./html/modules/custom/*/tests</directory>
+      <directory>./html/modules/custom/*/*/src/Tests</directory>
+      <directory>./html/modules/custom/*/*/tests</directory>
+      <directory>./html/modules/custom/*/src/Exception</directory>
     </exclude>
     <report>
       <html outputDirectory="coverage/html" lowUpperBound="50" highLowerBound="90"/>
