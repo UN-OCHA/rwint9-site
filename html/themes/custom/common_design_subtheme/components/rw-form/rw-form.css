@@ -238,7 +238,8 @@ form fieldset.error .form-checkbox.error {
   outline: initial;
   outline-offset: initial;
 }
-form fieldset > legend + a[href="#edit-actions"] {
+form fieldset > legend + a[href="#edit-actions"],
+form fieldset > legend + a[href="#actions"] {
   position: absolute;
   right: 0;
   margin-top: 4px;
