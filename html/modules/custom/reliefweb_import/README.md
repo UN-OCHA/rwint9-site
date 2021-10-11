@@ -6,10 +6,12 @@
 
 ```bash
 # with coverage
-fin exec 'XDEBUG_MODE=coverage vendor/bin/phpunit html/modules/custom/reliefweb_import/tests/src/Unit'
+fin exec 'XDEBUG_MODE=coverage ./vendor/bin/phpunit --testsuite Unit'
+fin exec 'XDEBUG_MODE=coverage ./vendor/bin/phpunit --testsuite Existing'
 
 # without coverage
-fin exec 'vendor/bin/phpunit html/modules/custom/reliefweb_import/tests/src/Unit'
+fin exec './vendor/bin/phpunit --testsuite Unit'
+fin exec './vendor/bin/phpunit --testsuite Existing'
 ```
 
 or run all test in custom
