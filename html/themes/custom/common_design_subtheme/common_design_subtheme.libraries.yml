@@ -159,6 +159,7 @@ rw-moderation:
   css:
     theme:
       components/rw-moderation/rw-moderation.css: {}
+      components/rw-moderation/rw-moderation--status.css: {}
 
 rw-most-read:
   css:
