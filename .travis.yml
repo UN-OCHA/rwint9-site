@@ -49,6 +49,7 @@ script:
 
   # Run unit tests.
   # - docker exec -it -u appuser -w /srv/www -e XDEBUG_MODE=coverage rwint9-test-site ./vendor/bin/phpunit --testsuite Unit --debug
+  - docker exec -it -u appuser -w /srv/www rwint9-test-site ./vendor/bin/phpunit --version --debug
   - docker exec -it -u appuser -w /srv/www rwint9-test-site ./vendor/bin/phpunit --testsuite Unit --debug
 
   # Install the site with the existing config.
