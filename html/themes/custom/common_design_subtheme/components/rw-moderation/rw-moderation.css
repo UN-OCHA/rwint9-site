@@ -63,8 +63,8 @@
   padding-right: 8px;
 }
 .path-moderation #edit-omnibox .fieldset-wrapper select {
-  height: 100%;
   width: auto;
+  height: 100%;
 }
 .path-moderation #edit-omnibox div[data-autocomplete] > input {
   border-right: 2px solid #e6ecef;
@@ -136,8 +136,8 @@
  * List of results below the filter section.
  */
 .rw-moderation-list {
-  padding: 32px 0;
   margin-top: 16px;
+  padding: 32px 0;
 }
 /* Hide visually the list title to reduce scrolling. */
 .path-moderation .rw-rw-moderation-list > h3 {
@@ -188,7 +188,7 @@
 }
 .path-moderation .rw-moderation-list .rw-moderation-table tr td:first-child {
   text-align: center;
-  /*white-space: pre;*/
+  /* white-space: pre; */
 }
 .path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) {
   width: 100%;

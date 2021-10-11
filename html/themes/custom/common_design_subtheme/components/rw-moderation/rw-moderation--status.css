@@ -8,12 +8,12 @@
 [class*="form-item-filters-status-"] {
   display: block;
   padding: 10px;
-  line-height: 12px;
-  text-transform: uppercase;
-  font-weight: bold;
-  font-size: 14px;
   letter-spacing: 0.5px;
+  text-transform: uppercase;
   border-left: 10px solid;
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 12px;
 }
 [data-status="draft"],
 [data-moderation-status="draft"],
@@ -116,7 +116,7 @@
 [data-moderation-status="external_archive"],
 #edit-filters-status [class*="pending"],
 #edit-filters-status [class*="embargoed"],
-#edit-filters-status [class*="external-archive"]  {
+#edit-filters-status [class*="external-archive"] {
   border-color: #56c9f7;
   background: rgba(86, 201, 247, 0.2);
 }
@@ -124,13 +124,13 @@
   padding: 8px 8px 8px 0;
 }
 [data-log-message]:before {
-  content: "";
   display: inline-block;
-  height: 20px;
-  width: 20px;
-  vertical-align: middle;
-  margin: -1px 8px 0 0;
   overflow: hidden;
+  width: 20px;
+  height: 20px;
+  margin: -1px 8px 0 0;
+  content: "";
+  vertical-align: middle;
   background: var(--rw-icons--status--info--20--blue);
 }
 [data-log-message="feedback"]:before {
@@ -146,11 +146,11 @@
  */
 #main .user-rights span {
   padding: 2px 4px;
+  text-transform: uppercase;
   border: 1px solid #d9d9d9;
   background: rgba(217, 217, 217, 0.2);
-  font-weight: bold;
   font-size: 10px;
-  text-transform: uppercase;
+  font-weight: bold;
 }
 #main .user-rights .blocked {
   border-color: #da190b;

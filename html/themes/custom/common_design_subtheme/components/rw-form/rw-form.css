@@ -269,7 +269,7 @@ form div.form-actions {
   width: auto;
   min-width: 100%;
   /* The negative margins are to compensate the button margins. */
-  /*margin: 8px -8px -8px -8px;*/
+  /* margin: 8px -8px -8px -8px; */
   margin: 8px -8px 0;
 }
 form #actions div.form-actions {
