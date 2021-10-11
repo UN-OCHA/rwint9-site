@@ -1,0 +1,174 @@
+/* Moderation statuses and messages */
+[data-moderation] {
+  display: block;
+  margin-bottom: 32px;
+}
+[data-status],
+[data-moderation-status],
+[class*="form-item-filters-status-"] {
+  display: block;
+  padding: 10px;
+  line-height: 12px;
+  text-transform: uppercase;
+  font-weight: bold;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  border-left: 10px solid;
+}
+[data-status="draft"],
+[data-moderation-status="draft"],
+#edit-filters-status [class*="draft"] {
+  border-color: #d9d9d9;
+  background: rgba(217, 217, 217, 0.2);
+}
+[data-status="on_hold"],
+[data-status="alert"],
+[data-status="inactive"],
+[data-moderation-status="on_hold"],
+[data-moderation-status="alert"],
+[data-moderation-status="inactive"],
+#edit-filters-status [class*="on-hold"],
+#edit-filters-status [class*="alert"],
+#edit-filters-status [class*="inactive"] {
+  border-color: #f49e2c;
+  background: rgba(244, 158, 44, 0.2);
+}
+[data-status="to_review"],
+[data-status="external"],
+[data-moderation-status="to_review"],
+[data-moderation-status="external"],
+#edit-filters-status [class*="to-review"],
+#edit-filters-status [class*="external"] {
+  border-color: #076d96;
+  background: rgba(7, 109, 150, 0.2);
+}
+[data-status="published"],
+[data-status="past"],
+[data-status="active"],
+[data-status="normal"],
+[data-moderation-status="published"],
+[data-moderation-status="past"],
+[data-moderation-status="active"],
+[data-moderation-status="normal"],
+#edit-filters-status [class*="published"],
+#edit-filters-status [class*="past"],
+#edit-filters-status [class*="active"],
+#edit-filters-status [class*="normal"] {
+  border-color: #88bb09;
+  background: rgba(136, 187, 9, 0.2);
+}
+[data-status="refused"],
+[data-status="blocked"],
+[data-status="current"],
+[data-status="ongoing"],
+[data-moderation-status="refused"],
+[data-moderation-status="blocked"],
+[data-moderation-status="current"],
+[data-moderation-status="ongoing"],
+#edit-filters-status [class*="refused"],
+#edit-filters-status [class*="blocked"],
+#edit-filters-status [class*="current"],
+#edit-filters-status [class*="ongoing"] {
+  border-color: #da190b;
+  background: rgba(218, 25, 11, 0.2);
+}
+[data-status="expired"],
+[data-status="archive"],
+[data-status="alert_archive"],
+[data-moderation-status="expired"],
+[data-moderation-status="archive"],
+[data-moderation-status="alert_archive"],
+#edit-filters-status [class*="expired"],
+#edit-filters-status [class*="archive"],
+#edit-filters-status [class*="alert-archive"] {
+  border-color: #9509bb;
+  background: rgba(149, 9, 187, 0.2);
+}
+[data-status="draft_archive"],
+[data-moderation-status="draft_archive"],
+#edit-filters-status [class*="draft-archive"] {
+  border-color: #4b4b4b;
+  background: rgba(75, 75, 75, 0.2);
+}
+[data-status="duplicate"],
+[data-status="monitoring_archive"],
+[data-moderation-status="duplicate"],
+[data-moderation-status="monitoring_archive"],
+#edit-filters-status [class*="duplicate"],
+#edit-filters-status [class*="monitoring-archive"] {
+  border-color: #8f5507;
+  background: rgba(143, 85, 7, 0.2);
+}
+[data-status="monitoring"],
+[data-status="reference"],
+[data-moderation-status="monitoring"],
+[data-moderation-status="reference"],
+#edit-filters-status [class*="monitoring"],
+#edit-filters-status [class*="reference"] {
+  border-color: #f5cb2f;
+  background: rgba(245, 203, 47, 0.2);
+}
+[data-status="pending"],
+[data-status="embargoed"],
+[data-status="external_archive"],
+[data-moderation-status="pending"],
+[data-moderation-status="embargoed"],
+[data-moderation-status="external_archive"],
+#edit-filters-status [class*="pending"],
+#edit-filters-status [class*="embargoed"],
+#edit-filters-status [class*="external-archive"]  {
+  border-color: #56c9f7;
+  background: rgba(86, 201, 247, 0.2);
+}
+[data-log-message] {
+  padding: 8px 8px 8px 0;
+}
+[data-log-message]:before {
+  content: "";
+  display: inline-block;
+  height: 20px;
+  width: 20px;
+  vertical-align: middle;
+  margin: -1px 8px 0 0;
+  overflow: hidden;
+  background: var(--rw-icons--status--info--20--blue);
+}
+[data-log-message="feedback"]:before {
+  background: var(--rw-icons--status--info--20--green);
+}
+
+/**
+ * User posting rights.
+ *
+ * Text showing the user posting rights for a source.
+ *
+ * Scope: #main .user-rights
+ */
+#main .user-rights span {
+  padding: 2px 4px;
+  border: 1px solid #d9d9d9;
+  background: rgba(217, 217, 217, 0.2);
+  font-weight: bold;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+#main .user-rights .blocked {
+  border-color: #da190b;
+  background: rgba(218, 25, 11, 0.2);
+}
+#main .user-rights .unverified {
+  border-color: #f49e2c;
+  background: rgba(244, 158, 44, 0.2);
+}
+#main .user-rights .allowed {
+  border-color: #076d96;
+  background: rgba(7, 109, 150, 0.2);
+}
+#main .user-rights .trusted {
+  border-color: #88bb09;
+  background: rgba(136, 187, 9, 0.2);
+}
+#main #user-information .user-rights span {
+  vertical-align: top;
+  line-height: 16px;
+}
