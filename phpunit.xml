@@ -17,6 +17,7 @@
     <ini name="error_reporting" value="32767"/>
     <!-- Do not limit the amount of memory tests take to run. -->
     <ini name="memory_limit" value="-1"/>
+    <env name="SYMFONY_DEPRECATIONS_HELPER" value="weak"/>
     <env name="DTT_BASE_URL" value="http://rwint9-site.docksal"/>
     <env name="DTT_API_URL" value="http://localhost:9222"/>
     <!-- Example SIMPLETEST_BASE_URL value: http://localhost -->
