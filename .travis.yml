@@ -57,7 +57,7 @@ script:
   - docker exec -it rwint9-test-site chmod -R 777 /srv/www/html/sites/default/files /srv/www/html/sites/default/private
 
   # Run existing site tests.
-  - docker exec -it -u root -w /srv/www -e DTT_BASE_URL=http://127.0.0.1 -e XDEBUG_MODE=coverage rwint9-test-site ./vendor/bin/phpunit --testsuite Existing --debug
+  - docker exec -it -u root -w /srv/www -e BROWSERTEST_OUTPUT_DIRECTORY=/srv/www/html/sites/default/files/browser_output -e DTT_BASE_URL=http://127.0.0.1 -e XDEBUG_MODE=coverage rwint9-test-site ./vendor/bin/phpunit --testsuite Existing --debug
 
 after_success:
   - echo "The tests completed without errors."
