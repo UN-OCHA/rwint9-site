@@ -135,6 +135,12 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadMultiple($tids);
     foreach ($terms as $term) {
       $this->fetchJobs($term);
+
+      if (!empty($this->errors)) {
+        foreach ($this->errors as $error) {
+          $this->logger()->error($error);
+        }
+      }
     }
   }
 
@@ -176,21 +182,21 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       $this->accountSwitcher->switchBack();
     }
     catch (ClientException $exception) {
-      $this->logger()->error('Unable to process @name, got http error @code: @message.', [
+      $this->errors[] = strtr('Unable to process @name, got http error @code: @message.', [
         '@name' => $label,
         '@code' => $exception->getCode(),
         '@message' => $exception->getMessage(),
       ]);
     }
     catch (RequestException $exception) {
-      $this->logger()->error('Unable to process @name, general error @code: @message.', [
+      $this->errors[] = strtr('Unable to process @name, general error @code: @message.', [
         '@name' => $label,
         '@code' => $exception->getCode(),
         '@message' => $exception->getMessage(),
       ]);
     }
     catch (\Exception $exception) {
-      $this->logger()->error('Unable to process @name, got @code: @message.', [
+      $this->errors[] = strtr('Unable to process @name, got @code: @message.', [
         '@name' => $label,
         '@code' => $exception->getCode(),
         '@message' => $exception->getMessage(),

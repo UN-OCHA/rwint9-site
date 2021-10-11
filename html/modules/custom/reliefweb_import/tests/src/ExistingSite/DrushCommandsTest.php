@@ -146,9 +146,30 @@ class DrushCommandsTest extends ExistingSiteBase {
 
     // Exception log messages.
     $this->reliefwebImporter->jobs();
-    $this->reliefwebImporter->jobs();
+
+    $warnings = $this->reliefwebImporter->getWarnings();
+    $errors = $this->reliefwebImporter->getErrors();
+
+    $this->assertArrayNotHasKey(0, $warnings);
+    $this->assertCount(1, $errors);
+
+    // Exception log messages.
     $this->reliefwebImporter->jobs();
 
+    $warnings = $this->reliefwebImporter->getWarnings();
+    $errors = $this->reliefwebImporter->getErrors();
+
+    $this->assertArrayNotHasKey(0, $warnings);
+    $this->assertCount(1, $errors);
+
+    // Exception log messages.
+    $this->reliefwebImporter->jobs();
+
+    $warnings = $this->reliefwebImporter->getWarnings();
+    $errors = $this->reliefwebImporter->getErrors();
+
+    $this->assertArrayNotHasKey(0, $warnings);
+    $this->assertCount(1, $errors);
   }
 
 }
