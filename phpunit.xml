@@ -40,8 +40,11 @@
     <env name="MINK_DRIVER_ARGS_WEBDRIVER" value=''/>
   </php>
   <testsuites>
-    <testsuite name="reliefweb">
-      <directory>./html/modules/custom</directory>
+    <testsuite name="Unit">
+      <directory>./html/modules/custom/*/tests/src/Unit</directory>
+    </testsuite>
+    <testsuite name="Existing">
+      <directory>./html/modules/custom/*/tests/src/ExistingSite</directory>
     </testsuite>
   </testsuites>
   <coverage includeUncoveredFiles="false"
@@ -50,7 +53,7 @@
             ignoreDeprecatedCodeUnits="true"
             disableCodeCoverageIgnore="true">
     <include>
-      <directory suffix=".php">./html/modules/custom/reliefweb_import</directory>
+      <directory suffix=".php">./html/modules/custom</directory>
     </include>
     <exclude>
       <directory>./html/modules/custom/*/src/Tests</directory>
