@@ -27,7 +27,12 @@ class DateHelper {
       }
       // Date in the expected format YYYY-MM-DD.
       elseif (is_string($date) && !is_numeric($date)) {
-        return date_create($date, timezone_open('UTC'))->getTimeStamp();
+        $date = date_create($date, timezone_open('UTC'));
+        if (!$date) {
+          return NULL;
+        }
+
+        return $date->getTimeStamp();
       }
       // Assume it's a timestamp.
       elseif (is_numeric($date)) {
