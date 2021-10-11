@@ -48,7 +48,8 @@ script:
   - docker exec -it -u appuser -w /srv/www rwint9-test-site ./vendor/bin/phpcs -p --report=full ./html/modules/custom ./html/themes/custom
 
   # Run unit tests.
-  - docker exec -it -u appuser -w /srv/www -e XDEBUG_MODE=coverage rwint9-test-site ./vendor/bin/phpunit --testsuite Unit --debug
+  # - docker exec -it -u appuser -w /srv/www -e XDEBUG_MODE=coverage rwint9-test-site ./vendor/bin/phpunit --testsuite Unit --debug
+  - docker exec -it -u appuser -w /srv/www rwint9-test-site ./vendor/bin/phpunit --testsuite Unit --debug
 
   # Install the site with the existing config.
   - docker exec -it rwint9-test-site drush -y si --existing-config
