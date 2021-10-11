@@ -246,8 +246,7 @@ form fieldset > legend + a[href="#edit-actions"] {
   font-weight: bold;
   font-variant: small-caps;
 }
-form #actions,
-.form-actions {
+form #actions {
   /* width: auto; */
   /* min-width: 100%; */
   padding: 12px;
@@ -256,9 +255,9 @@ form #actions,
   background: #e6ecef;
   background: rgba(230, 236, 239, 0.4);
 }
-form fieldset + #actions {
-  border-top: none;
-}
+/*form fieldset + #actions {*/
+/*  border-top: none;*/
+/*}*/
 form #actions + * {
   border-top: none;
 }
@@ -270,11 +269,11 @@ form div.form-actions {
   min-width: 100%;
   /* The negative margins are to compensate the button margins. */
   /* margin: 8px -8px -8px -8px; */
-  margin: 8px -8px 0;
+  margin: 0 -8px;
 }
-form #actions div.form-actions {
-  margin-top: -8px;
-}
+/*form #actions div.form-actions {*/
+/*  margin-top: -8px;*/
+/*}*/
 form div.form-actions button {
   margin: 8px;
 }

@@ -85,6 +85,13 @@
   border-radius: 8px;
   line-height: 20px;
 }
+.path-moderation form #edit-actions {
+  padding: 12px;
+  text-align: center;
+  border: 1px solid #e6ecef;
+  background: #e6ecef;
+  background: rgba(230, 236, 239, 0.4);
+}
 
 /**
  * Double datepicker widget.
