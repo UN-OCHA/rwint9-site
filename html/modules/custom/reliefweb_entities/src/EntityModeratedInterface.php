@@ -8,6 +8,14 @@ namespace Drupal\reliefweb_entities;
 interface EntityModeratedInterface {
 
   /**
+   * Set the moderation status.
+   *
+   * @param string $status
+   *   The moderation status.
+   */
+  public function setModerationStatus($status);
+
+  /**
    * Get the moderation status.
    *
    * @return string

@@ -233,6 +233,9 @@
     "drupal/token": {
         "version": "1.9.0"
     },
+    "drupal/user_display_name": {
+        "version": "1.0.1"
+    },
     "drush/drush": {
         "version": "10.5.0"
     },

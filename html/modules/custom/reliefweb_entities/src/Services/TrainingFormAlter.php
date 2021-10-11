@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
 use Drupal\reliefweb_form\Helpers\FormHelper;
+use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
 
@@ -208,13 +209,13 @@ class TrainingFormAlter extends EntityFormAlterServiceBase {
     if ($ongoing !== 'ongoing') {
       // Extract the dates and convert them to timestamps
       // as the amazing Date module give us inconsistent data.
-      $dates['start'] = $this->getDateTimeStamp($form_state->getValue([
+      $dates['start'] = DateHelper::getDateTimeStamp($form_state->getValue([
         'field_training_date', 0, 'value',
       ]));
-      $dates['end'] = $this->getDateTimeStamp($form_state->getValue([
+      $dates['end'] = DateHelper::getDateTimeStamp($form_state->getValue([
         'field_training_date', 0, 'end_value',
       ]));
-      $dates['deadline'] = $this->getDateTimeStamp($form_state->getValue([
+      $dates['deadline'] = DateHelper::getDateTimeStamp($form_state->getValue([
         'field_registration_deadline', 0, 'value',
       ]));
 
