@@ -33,6 +33,9 @@
   vertical-align: middle;
   margin: 0 8px 0 0;
 }
+.field--type-reliefweb-user-posting-rights label select {
+  width: auto;
+}
 .field--type-reliefweb-user-posting-rights div[data-filters] ~ ul li {
   display: none;
   flex-wrap: wrap;
