@@ -106,7 +106,7 @@ class DrushCommandsTest extends ExistingSiteBase {
         'field_job_import_feed' => [
           'feed_url' => 'https://example.com/feed',
           'uid' => $author->id(),
-          'base_url' => 'https://example.com',
+          'base_url' => 'https://www.aplitrak.com',
         ],
       ],
       [
@@ -157,8 +157,6 @@ class DrushCommandsTest extends ExistingSiteBase {
       ],
     ];
 
-    $source = Term::load(2865);
-
     foreach ($terms as $term) {
       if (!Term::load($term['tid'])) {
         $vocab = Vocabulary::load($term['vocabulary']);
@@ -169,6 +167,9 @@ class DrushCommandsTest extends ExistingSiteBase {
       }
     }
 
+    /** @var \Drupal\taxonomy\Entity\Term $source */
+    $source = Term::load(2865);
+
     // Import jobs.
     $this->reliefwebImporter->jobs();
 
@@ -177,14 +178,14 @@ class DrushCommandsTest extends ExistingSiteBase {
 
     $query = $this->entityTypeManager->getStorage('node')->getQuery();
     $query->condition('type', 'job');
-    $query->condition('field_job_id', 'https://example.com?adid=1');
+    $query->condition('field_job_id', 'https://www.aplitrak.com?adid=1');
     $nids = $query->execute();
     $jobs = $this->entityTypeManager->getStorage('node')->loadMultiple($nids);
 
     /** @var Drupal\reliefweb_entities\Entity\Job $job */
     $job = reset($jobs);
 
-    $this->assertSame($warnings[0], 'Validation failed in field_job_experience with message: <em class="placeholder">Job years of experience</em>: this field cannot hold more than 1 values. for job https://example.com?adid=1');
+    $this->assertSame($warnings[0], 'Validation failed in field_job_experience with message: <em class="placeholder">Job years of experience</em>: this field cannot hold more than 1 values. for job https://www.aplitrak.com?adid=1');
     $this->assertCount(0, $errors);
     $this->assertSame($job->title->value, 'Head of Supply Chain');
 

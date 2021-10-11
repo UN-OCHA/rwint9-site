@@ -141,6 +141,12 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
           $this->logger()->error($error);
         }
       }
+
+      if (!empty($this->warnings)) {
+        foreach ($this->warnings as $warning) {
+          $this->logger()->warning($warning);
+        }
+      }
     }
   }
 
