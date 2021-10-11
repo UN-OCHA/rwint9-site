@@ -106,4 +106,19 @@ XML;
 XML;
   }
 
+  /**
+   * Test data 3.
+   */
+  private function getTestXml3() {
+    return <<<XML
+<?xml version="1.0" standalone="yes"?><channel><item>
+ <link>https://example.com?adid=1</link>
+ <title>   </title>
+ <field_job_closing_date>2021-10-05</field_job_closing_date>
+ <field_country>AFG</field_country>
+ <field_city>Kabul</field_city>
+ </item></channel>
+XML;
+  }
+
 }
