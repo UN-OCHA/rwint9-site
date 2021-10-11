@@ -48,7 +48,8 @@ script:
   - docker exec -it -u appuser -w /srv/www rwint9-test-site ./vendor/bin/phpcs -p --report=full ./html/modules/custom ./html/themes/custom
 
   # Run unit tests.
-  - docker exec -it -u root -w /srv/www -e XDEBUG_MODE=coverage rwint9-test-site ./vendor/bin/phpunit --testsuite Unit --debug
+  - docker exec -it -u root -w /srv/www rwint9-test-site mkdir -p /srv/www/html/sites/default/files/browser_output
+  - docker exec -it -u root -w /srv/www -e BROWSERTEST_OUTPUT_DIRECTORY=/srv/www/html/sites/default/files/browser_output rwint9-test-site ./vendor/bin/phpunit --testsuite Unit --debug
 
   # Install the site with the existing config.
   - docker exec -it rwint9-test-site drush -y si --existing-config
@@ -58,7 +59,7 @@ script:
 
   # Run existing site tests.
   - docker exec -it -u root -w /srv/www rwint9-test-site mkdir -p /srv/www/html/sites/default/files/browser_output
-  - docker exec -it -u root -w /srv/www -e BROWSERTEST_OUTPUT_DIRECTORY=/srv/www/html/sites/default/files/browser_output -e DTT_BASE_URL=http://127.0.0.1 -e XDEBUG_MODE=coverage rwint9-test-site ./vendor/bin/phpunit --testsuite Existing --debug
+  - docker exec -it -u root -w /srv/www -e BROWSERTEST_OUTPUT_DIRECTORY=/srv/www/html/sites/default/files/browser_output -e DTT_BASE_URL=http://127.0.0.1 rwint9-test-site ./vendor/bin/phpunit --testsuite Existing --debug
 
 after_success:
   - echo "The tests completed without errors."
