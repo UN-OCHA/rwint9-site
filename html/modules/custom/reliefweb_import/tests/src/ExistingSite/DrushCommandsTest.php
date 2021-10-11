@@ -5,6 +5,7 @@
 namespace Drupal\Tests\reliefweb_import\ExistingSite;
 
 use Drupal\reliefweb_import\Command\ReliefwebImportCommand;
+use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
 use Drupal\Tests\reliefweb_import\Traits\XmlTestDataTrait;
 use GuzzleHttp\Client;
@@ -96,15 +97,75 @@ class DrushCommandsTest extends ExistingSiteBase {
     // Creates a user.
     $author = $this->createUser([], NULL, TRUE);
 
-    // Create a source term.
-    $vocab = Vocabulary::load('source');
-    $source = $this->createTerm($vocab, [
-      'field_job_import_feed' => [
-        'feed_url' => 'https://example.com/feed',
-        'uid' => $author->id(),
-        'base_url' => 'https://example.com',
+    // Create referenced data.
+    $terms = [
+      [
+        'vocabulary' => 'source',
+        'tid' => 2865,
+        'label' => 'test source',
+        'field_job_import_feed' => [
+          'feed_url' => 'https://example.com/feed',
+          'uid' => $author->id(),
+          'base_url' => 'https://example.com',
+        ],
       ],
-    ]);
+      [
+        'vocabulary' => 'career_category',
+        'tid' => 36601,
+      ],
+      [
+        'vocabulary' => 'career_category',
+        'tid' => 6867,
+      ],
+      [
+        'vocabulary' => 'career_category',
+        'tid' => 6865,
+      ],
+      [
+        'vocabulary' => 'job_experience',
+        'tid' => 260,
+      ],
+      [
+        'vocabulary' => 'job_experience',
+        'tid' => 258,
+      ],
+      [
+        'vocabulary' => 'job_type',
+        'tid' => 263,
+      ],
+      [
+        'vocabulary' => 'theme',
+        'tid' => 4600,
+      ],
+      [
+        'vocabulary' => 'theme',
+        'tid' => 4594,
+      ],
+      [
+        'vocabulary' => 'country',
+        'field_iso3_value' => [
+          'value' => 'AFG',
+        ]
+      ],
+      [
+        'vocabulary' => 'country',
+        'field_iso3_value' => [
+          'value' => 'COL',
+        ]
+      ],
+    ];
+
+    $source = Term::load(2865);
+
+    foreach ($terms as $term) {
+      if (!Term::load($term['tid'])) {
+        $vocab = Vocabulary::load($term['vocabulary']);
+        $this->createTerm($vocab, [
+          'uid' => $author->id(),
+          'label' => 'Term ' . $term['tid'],
+        ] + $term);
+      }
+    }
 
     // Import jobs.
     $this->reliefwebImporter->jobs();
