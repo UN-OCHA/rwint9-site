@@ -48,7 +48,7 @@ script:
   - docker exec -it -u appuser -w /srv/www rwint9-test-site ./vendor/bin/phpcs -p --report=full --standard=tests/phpcs.xml ./html/modules/custom ./html/themes/custom
 
   # Run unit tests.
-  - docker exec -it -u appuser -w /srv/www -e XDEBUG_MODE=coverage rwint9-test-site ./vendor/bin/phpunit --testsuite Unit
+  - docker exec -it -u appuser -w /srv/www -e XDEBUG_MODE=coverage rwint9-test-site ./vendor/bin/phpunit -c tests/phpunit.xml --testsuite Unit
 
   # Install the site with the existing config.
   - docker exec -it rwint9-test-site drush -y si --existing-config
@@ -57,7 +57,7 @@ script:
   - docker exec -it rwint9-test-site chmod -R 777 /srv/www/html/sites/default/files /srv/www/html/sites/default/private
 
   # Run existing site tests.
-  - docker exec -it -u appuser -w /srv/www -e XDEBUG_MODE=coverage rwint9-test-site ./vendor/bin/phpunit --testsuite Existing
+  - docker exec -it -u appuser -w /srv/www -e XDEBUG_MODE=coverage rwint9-test-site ./vendor/bin/phpunit -c tests/phpunit.xml --testsuite Existing
 
 after_success:
   - echo "The tests completed without errors."

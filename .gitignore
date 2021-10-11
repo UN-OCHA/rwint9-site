@@ -29,6 +29,7 @@ buildlog.txt
 ###> squizlabs/php_codesniffer ###
 /.phpcs-cache
 /coverage
+/tests/coverage/
 ###< squizlabs/php_codesniffer ###
 
 ###> phpunit/phpunit ###

@@ -42,7 +42,7 @@ services:
       - "rwint9-test-site-public:/srv/www/html/sites/default/files:rw"
       - "rwint9-test-site-private:/srv/www/html/sites/default/private:rw"
       # Mount the folders needed for the tests.
-      - "../tests:/srv/www/tests:ro"
+      - "../tests:/srv/www/tests:rw"
     environment:
       - TERM=xterm
       - ENVIRONMENT=dev
