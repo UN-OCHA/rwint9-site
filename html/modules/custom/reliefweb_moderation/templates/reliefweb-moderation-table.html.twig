@@ -38,7 +38,7 @@
       }}>
         {% if id == 'edit' %}
           <div class="rw-moderation-table__cell__edit">{{ cell.link }}</div>
-          <div class="rw-moderation-table__cell__status" data-moderation-status="{{ cell.status.value }}">{{ cell.status.label }}</div>
+          <div class="rw-moderation-table__cell__status rw-moderation-status" data-moderation-status="{{ cell.status.value }}">{{ cell.status.label }}</div>
         {% elseif id == 'data' %}
           {# Entity title linking to entity page. #}
           <div class="rw-moderation-table__cell__title">{{ cell.title }}</div>
@@ -63,7 +63,7 @@
           {# Revision information. #}
           {% if cell.revision is not empty %}
           <div class="rw-moderation-table__cell__revision">
-            <span class="rw-moderation-table__cell__revision__message" data-log-message="{{ cell.revision.type }}">{{ cell.revision.message }}</span>
+            <span class="rw-moderation-table__cell__revision__message rw-revision-message" data-revision-message="{{ cell.revision.type }}">{{ cell.revision.message }}</span>
             &mdash;
             <span class="rw-moderation-table__cell__revision__reviewer">{{ cell.revision.reviewer }}</span>
           </div>
