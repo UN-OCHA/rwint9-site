@@ -1,5 +1,5 @@
 /* Moderation statuses and messages */
-[data-moderation] {
+.rw-moderation-information {
   display: block;
   margin-bottom: 32px;
 }
@@ -120,10 +120,10 @@
   border-color: #56c9f7;
   background: rgba(86, 201, 247, 0.2);
 }
-[data-log-message] {
+.rw-moderation-information__message {
   padding: 8px 8px 8px 0;
 }
-[data-log-message]:before {
+.rw-moderation-information__message:before {
   display: inline-block;
   overflow: hidden;
   width: 20px;
@@ -133,6 +133,6 @@
   vertical-align: middle;
   background: var(--rw-icons--status--info--20--blue);
 }
-[data-log-message="feedback"]:before {
+[data-revision-message="feedback"]:before {
   background: var(--rw-icons--status--info--20--green);
 }
