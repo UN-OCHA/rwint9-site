@@ -3,7 +3,7 @@
   display: block;
   margin-bottom: 32px;
 }
-[data-status],
+.rw-moderation-list [data-status],
 [data-moderation-status],
 [class*="form-item-filters-status-"] {
   display: block;
@@ -15,15 +15,15 @@
   font-weight: bold;
   line-height: 12px;
 }
-[data-status="draft"],
+.rw-moderation-list .rw-moderation-list [data-status="draft"],
 [data-moderation-status="draft"],
 #edit-filters-status [class*="draft"] {
   border-color: #d9d9d9;
   background: rgba(217, 217, 217, 0.2);
 }
-[data-status="on_hold"],
-[data-status="alert"],
-[data-status="inactive"],
+.rw-moderation-list [data-status="on_hold"],
+.rw-moderation-list [data-status="alert"],
+.rw-moderation-list [data-status="inactive"],
 [data-moderation-status="on_hold"],
 [data-moderation-status="alert"],
 [data-moderation-status="inactive"],
@@ -33,8 +33,8 @@
   border-color: #f49e2c;
   background: rgba(244, 158, 44, 0.2);
 }
-[data-status="to_review"],
-[data-status="external"],
+.rw-moderation-list [data-status="to_review"],
+.rw-moderation-list [data-status="external"],
 [data-moderation-status="to_review"],
 [data-moderation-status="external"],
 #edit-filters-status [class*="to-review"],
@@ -42,10 +42,10 @@
   border-color: #076d96;
   background: rgba(7, 109, 150, 0.2);
 }
-[data-status="published"],
-[data-status="past"],
-[data-status="active"],
-[data-status="normal"],
+.rw-moderation-list [data-status="published"],
+.rw-moderation-list [data-status="past"],
+.rw-moderation-list [data-status="active"],
+.rw-moderation-list [data-status="normal"],
 [data-moderation-status="published"],
 [data-moderation-status="past"],
 [data-moderation-status="active"],
@@ -57,10 +57,10 @@
   border-color: #88bb09;
   background: rgba(136, 187, 9, 0.2);
 }
-[data-status="refused"],
-[data-status="blocked"],
-[data-status="current"],
-[data-status="ongoing"],
+.rw-moderation-list [data-status="refused"],
+.rw-moderation-list [data-status="blocked"],
+.rw-moderation-list [data-status="current"],
+.rw-moderation-list [data-status="ongoing"],
 [data-moderation-status="refused"],
 [data-moderation-status="blocked"],
 [data-moderation-status="current"],
@@ -72,9 +72,9 @@
   border-color: #da190b;
   background: rgba(218, 25, 11, 0.2);
 }
-[data-status="expired"],
-[data-status="archive"],
-[data-status="alert_archive"],
+.rw-moderation-list [data-status="expired"],
+.rw-moderation-list [data-status="archive"],
+.rw-moderation-list [data-status="alert_archive"],
 [data-moderation-status="expired"],
 [data-moderation-status="archive"],
 [data-moderation-status="alert_archive"],
@@ -84,14 +84,14 @@
   border-color: #9509bb;
   background: rgba(149, 9, 187, 0.2);
 }
-[data-status="draft_archive"],
+.rw-moderation-list [data-status="draft_archive"],
 [data-moderation-status="draft_archive"],
 #edit-filters-status [class*="draft-archive"] {
   border-color: #4b4b4b;
   background: rgba(75, 75, 75, 0.2);
 }
-[data-status="duplicate"],
-[data-status="monitoring_archive"],
+.rw-moderation-list [data-status="duplicate"],
+.rw-moderation-list [data-status="monitoring_archive"],
 [data-moderation-status="duplicate"],
 [data-moderation-status="monitoring_archive"],
 #edit-filters-status [class*="duplicate"],
@@ -99,8 +99,8 @@
   border-color: #8f5507;
   background: rgba(143, 85, 7, 0.2);
 }
-[data-status="monitoring"],
-[data-status="reference"],
+.rw-moderation-list [data-status="monitoring"],
+.rw-moderation-list [data-status="reference"],
 [data-moderation-status="monitoring"],
 [data-moderation-status="reference"],
 #edit-filters-status [class*="monitoring"],
@@ -108,9 +108,9 @@
   border-color: #f5cb2f;
   background: rgba(245, 203, 47, 0.2);
 }
-[data-status="pending"],
-[data-status="embargoed"],
-[data-status="external_archive"],
+.rw-moderation-list [data-status="pending"],
+.rw-moderation-list [data-status="embargoed"],
+.rw-moderation-list [data-status="external_archive"],
 [data-moderation-status="pending"],
 [data-moderation-status="embargoed"],
 [data-moderation-status="external_archive"],
