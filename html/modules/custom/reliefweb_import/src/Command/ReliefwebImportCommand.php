@@ -245,11 +245,15 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
 
         // Check if job already exist.
         if ($this->jobExists((string) $item->link)) {
-          $this->logger()->notice('Update existing job');
+          $this->logger()->notice(strtr('Update job for @link', [
+            '@link' => $item->link,
+          ]));
           $this->updateJob($this->loadJobById((string) $item->link), $item);
         }
         else {
-          $this->logger()->notice('Create new job');
+          $this->logger()->notice(strtr('Create new job for @link', [
+            '@link' => $item->link,
+          ]));
           $this->createJob($item, $uid);
         }
       }
