@@ -20,12 +20,12 @@
   .addClass('rw-entities-form-user-information')
 }}>
   <div class="rw-entities-form-user-information__content">
-    <div class="rw-entities-form-user-information__entity'">
+    <div class="rw-entities-form-user-information__entity">
       <strong>{{ entity.type }}:</strong>
-      <a href="{{ entity.url }}">#{{ entity.id }}</a>  &mdash;  <em>{{ entity.date|date('d M Y H:i:s e', 'UTC') }}</em>
+      <a href="{{ entity.url }}">#{{ entity.id }}</a>&nbsp — &nbsp<em>{{ entity.date|date('d M Y H:i:s e', 'UTC') }}</em>
     </div>
-
-    <div class="rw-entities-form-user-information__author'">
+    &nbsp — &nbsp
+    <div class="rw-entities-form-user-information__author">
       <strong>{{ 'Author:'|t }}</strong>
       {% if author is not empty %}
         <a href="{{ author.url }}" target="_blank" rel="noopener">{{ author.name }}</a>
@@ -36,15 +36,15 @@
         <em>{{ 'Anonymous'|t }}</em>
       {% endif %}
     </div>
-
     {% if sources is not empty %}
-      <div class="rw-entities-form-user-information__sources'">
+      &nbsp — &nbsp
+      <div class="rw-entities-form-user-information__sources">
         <strong>{{ 'Sources:'|t }}</strong>
         <ul>
         {% for source in sources %}
           <li>
              <a href="{{ source.url }}" target="_blank" rel="noopener">{{ source.name }}</a>
-            <span class="user-rights"><span class="{{ source.right.id }}">{{ source.right.label }}</span></span>
+            <span class="user-rights"><span class="{{ source.right.type }}">{{ source.right.id }}{{ source.right.label }}</span></span>
           </li>
         {% endfor %}
         </ul>
@@ -52,7 +52,8 @@
     {% endif %}
 
     {% if new_source is not empty %}
-      <div class="rw-entities-form-user-information__new-source'">
+      &nbsp — &nbsp
+      <div class="rw-entities-form-user-information__new-source">
         <strong>{{ 'Potential new source:'|t }}</strong>
         <span> {{ new_source.name }} ( {{ new_source.url }} )</span>
         <span class="user-rights"><span class="{{ source.right.id }}">{{ source.right.label }}</span></span>
