@@ -4,10 +4,10 @@
  * Style the moderation forms used by the editorial teams to review posted
  * documents.
  */
-/* Hide visually the filters title to reduce scrolling. */
 .path-moderation .rw-moderation-content-filters {
   padding: 24px 0 0 0;
 }
+/* Hide visually the filters title to reduce scrolling. */
 .path-moderation .rw-moderation-filters > legend {
   position: absolute;
   overflow: hidden;
