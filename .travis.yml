@@ -68,9 +68,9 @@ after_success:
   - chmod -R 777 html/build/logs
   - docker cp rwint9-test-site:/srv/www/html/build/logs/clover.xml ./html/build/logs/
   # Fix source files path.
+  - cd html
   - sed -i 's#/srv/www/html#.#g' build/logs/clover.xml
   # Get coveralls and execute.
-  - cd html
   - wget https://github.com/php-coveralls/php-coveralls/releases/download/v2.4.3/php-coveralls.phar
   - chmod +x php-coveralls.phar
   - ./php-coveralls.phar --dry-run -vv
