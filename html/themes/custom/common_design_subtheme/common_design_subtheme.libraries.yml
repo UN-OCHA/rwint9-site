@@ -161,7 +161,10 @@ rw-moderation:
       components/rw-moderation/rw-moderation.css: {}
       components/rw-moderation/rw-moderation--status.css: {}
   dependencies:
+    - common_design_subtheme/rw-autocomplete
+    - common_design_subtheme/rw-datepicker
     - common_design_subtheme/rw-icons
+    - common_design_subtheme/rw-selection
 
 rw-most-read:
   css:
