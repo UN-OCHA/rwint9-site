@@ -7,8 +7,13 @@
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\RevisionLogInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
+use Drupal\reliefweb_utility\Helpers\EntityHelper;
+use Drupal\user\EntityOwnerInterface;
 
 /**
  * Implements hook_theme().
@@ -53,6 +58,16 @@ function reliefweb_moderation_theme() {
         'totals' => NULL,
       ],
     ],
+    // Template for the moderation information (status, revision log message).
+    'reliefweb_moderation_information' => [
+      'variables' => [
+        // Associative array with the moderation status value and its label.
+        'status' => [],
+        // Associative array with the type of log message (feedback or
+        // instruction) and the message.
+        'log' => [],
+      ],
+    ],
   ];
   return $themes;
 }
@@ -76,5 +91,80 @@ function reliefweb_moderation_entity_presave(EntityInterface $entity) {
   $service = ModerationServiceBase::getModerationService($entity->bundle());
   if (!empty($service)) {
     $service->entityPresave($entity);
+  }
+}
+
+/**
+ * Implements hook_preprocess_page().
+ *
+ * Add the moderation information block to entity pages and forms.
+ */
+function reliefweb_moderation_preprocess_page(&$variables) {
+  if (!\Drupal::currentUser()->hasPermission('access content moderation features')) {
+    return;
+  }
+
+  $route_match = \Drupal::routeMatch();
+  $route_name = $route_match->getRouteName();
+  switch ($route_name) {
+    case 'entity.node.canonical':
+      $entity = $route_match->getParameter('node');
+      break;
+
+    case 'entity.node.edit_form':
+      $entity = $route_match->getParameter('node');
+      $load_revision = TRUE;
+      break;
+
+    case 'entity.taxonomy_term.canonical':
+      $entity = $route_match->getParameter('taxonomy_term');
+      break;
+
+    case 'entity.taxonomy_term.edit_form':
+      $entity = $route_match->getParameter('taxonomy_term');
+      $load_revision = TRUE;
+      break;
+  }
+
+  // For existing revisionable and moderated entities, add the moderation
+  // information at the top of the entity page/form.
+  if (
+      !empty($entity) &&
+      $entity->id() !== NULL &&
+      $entity instanceof EntityModeratedInterface &&
+      $entity instanceof RevisionLogInterface
+  ) {
+    // If the revision user is the same as the creator of the entity, then
+    // we consider the message from being an instruction for other editors,
+    // otherwise we consider the message as being some feedback to the author
+    // or previous reviewers.
+    $type = 'instruction';
+    if ($entity instanceof EntityOwnerInterface) {
+      $type = $entity->getOwnerId() == $entity->getRevisionUserId() ? 'instruction' : 'feedback';
+    }
+
+    $log = EntityHelper::getRevisionLogMessage($entity, !empty($load_revision));
+    if (!empty($log)) {
+      // Convert the log message to markdown to generated links notably.
+      // Wrap in a Markup so that the HTML is not escaped when rendered.
+      $log = Markup::create(strip_tags(check_markup($log, 'markdown'), '<a><em><strong><br>'));
+    }
+
+    $element = [
+      '#theme' => 'reliefweb_moderation_information',
+      '#status' => [
+        'value' => $entity->getModerationStatus(),
+        'label' => $entity->getModerationStatusLabel(),
+      ],
+      '#log' => [
+        'type' => $type,
+        'message' => $log,
+      ],
+      // Display the moderation information before the page title and local
+      // tasks.
+      '#weight' => -100,
+    ];
+
+    $variables['page']['content']['moderation-information'] = $element;
   }
 }

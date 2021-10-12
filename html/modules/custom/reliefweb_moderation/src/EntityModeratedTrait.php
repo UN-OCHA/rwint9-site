@@ -2,8 +2,11 @@
 
 namespace Drupal\reliefweb_moderation;
 
+use Drupal\Core\Entity\RevisionLogInterface;
+use Drupal\user\EntityOwnerInterface;
+
 /**
- * Provides a trait for the entity moderation status.
+ * Provides a trait for moderated entities.
  */
 trait EntityModeratedTrait {
 
@@ -55,6 +58,40 @@ trait EntityModeratedTrait {
       return $label;
     }
     return '';
+  }
+
+  /**
+   * Get the original revision log message.
+   *
+   * @see \Drupal\reliefweb_moderation\EntityModeratedInterface::getOriginalRevisionLogMessage()
+   */
+  public function getOriginalRevisionLogMessage() {
+    if ($this instanceof RevisionLogInterface) {
+      $key = $this->getEntityType()->getRevisionMetadataKey('revision_log_message');
+      if (isset($this->values[$key][$this->activeLangcode])) {
+        return trim($this->values[$key][$this->activeLangcode]);
+      }
+    }
+    return '';
+  }
+
+  /**
+   * Get the type of the original revision log message.
+   *
+   * @see \Drupal\reliefweb_moderation\EntityModeratedInterface::getOriginalRevisionLogMessageType()
+   */
+  public function getOriginalRevisionLogMessageType() {
+    // If the revision user is the same as the creator of the entity, then
+    // we consider the message from being an instruction for other editors,
+    // otherwise we consider the message as being some feedback to the author
+    // or previous reviewers.
+    if ($this instanceof EntityOwnerInterface && $this instanceof RevisionLogInterface) {
+      $key = $this->getEntityType()->getRevisionMetadataKey('revision_user');
+      if (isset($this->values[$key][$this->activeLangcode])) {
+        return $this->getOwnerId() == $this->values[$key][$this->activeLangcode] ? 'instruction' : 'feedback';
+      }
+    }
+    return 'instruction';
   }
 
 }

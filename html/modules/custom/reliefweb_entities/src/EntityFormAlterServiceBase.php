@@ -6,7 +6,6 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -16,9 +15,9 @@ use Drupal\Core\State\StateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
+use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
-use Drupal\reliefweb_utility\Helpers\EntityHelper;
 use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
@@ -563,16 +562,16 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
   /**
    * Get the potential new source information from the entity's last revision.
    *
-   * @param \Drupal\Core\Entity\EntityInterface $entity
+   * @param \Drupal\reliefweb_moderation\EntityModeratedInterface $entity
    *   The entity this field is attached to.
    *
    * @return array
    *   If the information was found, then return an array containing the source
    *   name and URL.
    */
-  public static function retrievePotentialNewSourceInformation(EntityInterface $entity) {
+  public static function retrievePotentialNewSourceInformation(EntityModeratedInterface $entity) {
     $pattern = '/Potential new source: \*\*(?<name>[^*]+)\*\*( \((?<url>[^)]+)\).)?/';
-    $log = EntityHelper::getRevisionLogMessage($entity, TRUE);
+    $log = $entity->getOriginalRevisionLogMessage();
     if (!empty($log) && preg_match($pattern, $log, $matches) === 1) {
       return [
         'name' => $matches['name'],
