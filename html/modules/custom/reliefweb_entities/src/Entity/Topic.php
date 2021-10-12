@@ -12,6 +12,8 @@ use Drupal\reliefweb_entities\EntityModeratedInterface;
 use Drupal\reliefweb_entities\EntityModeratedTrait;
 use Drupal\reliefweb_entities\SectionedContentInterface;
 use Drupal\reliefweb_entities\SectionedContentTrait;
+use Drupal\reliefweb_revisions\EntityRevisionedInterface;
+use Drupal\reliefweb_revisions\EntityRevisionedTrait;
 use Drupal\reliefweb_rivers\AdvancedSearch;
 use Drupal\reliefweb_rivers\Parameters;
 use Drupal\reliefweb_rivers\RiverServiceBase;
@@ -20,10 +22,11 @@ use Drupal\reliefweb_utility\Helpers\MediaHelper;
 /**
  * Bundle class for topic nodes.
  */
-class Topic extends Node implements BundleEntityInterface, EntityModeratedInterface, DocumentInterface, SectionedContentInterface {
+class Topic extends Node implements BundleEntityInterface, EntityModeratedInterface, EntityRevisionedInterface, DocumentInterface, SectionedContentInterface {
 
   use DocumentTrait;
   use EntityModeratedTrait;
+  use EntityRevisionedTrait;
   use SectionedContentTrait;
   use StringTranslationTrait;
 

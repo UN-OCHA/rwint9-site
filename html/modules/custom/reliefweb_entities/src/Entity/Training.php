@@ -8,6 +8,8 @@ use Drupal\reliefweb_entities\DocumentInterface;
 use Drupal\reliefweb_entities\DocumentTrait;
 use Drupal\reliefweb_entities\EntityModeratedInterface;
 use Drupal\reliefweb_entities\EntityModeratedTrait;
+use Drupal\reliefweb_revisions\EntityRevisionedInterface;
+use Drupal\reliefweb_revisions\EntityRevisionedTrait;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 use Drupal\node\Entity\Node;
@@ -15,10 +17,11 @@ use Drupal\node\Entity\Node;
 /**
  * Bundle class for training nodes.
  */
-class Training extends Node implements BundleEntityInterface, EntityModeratedInterface, DocumentInterface {
+class Training extends Node implements BundleEntityInterface, EntityModeratedInterface, EntityRevisionedInterface, DocumentInterface {
 
   use DocumentTrait;
   use EntityModeratedTrait;
+  use EntityRevisionedTrait;
   use StringTranslationTrait;
 
   /**

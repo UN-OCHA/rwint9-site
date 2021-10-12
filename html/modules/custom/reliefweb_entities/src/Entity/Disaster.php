@@ -8,6 +8,8 @@ use Drupal\reliefweb_entities\EntityModeratedInterface;
 use Drupal\reliefweb_entities\EntityModeratedTrait;
 use Drupal\reliefweb_entities\SectionedContentInterface;
 use Drupal\reliefweb_entities\SectionedContentTrait;
+use Drupal\reliefweb_revisions\EntityRevisionedInterface;
+use Drupal\reliefweb_revisions\EntityRevisionedTrait;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Drupal\taxonomy\Entity\Term;
@@ -15,9 +17,10 @@ use Drupal\taxonomy\Entity\Term;
 /**
  * Bundle class for disaster terms.
  */
-class Disaster extends Term implements BundleEntityInterface, EntityModeratedInterface, SectionedContentInterface {
+class Disaster extends Term implements BundleEntityInterface, EntityModeratedInterface, EntityRevisionedInterface, SectionedContentInterface {
 
   use EntityModeratedTrait;
+  use EntityRevisionedTrait;
   use SectionedContentTrait;
   use StringTranslationTrait;
 

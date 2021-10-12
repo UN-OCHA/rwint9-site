@@ -8,15 +8,18 @@ use Drupal\reliefweb_entities\DocumentInterface;
 use Drupal\reliefweb_entities\DocumentTrait;
 use Drupal\reliefweb_entities\EntityModeratedInterface;
 use Drupal\reliefweb_entities\EntityModeratedTrait;
+use Drupal\reliefweb_revisions\EntityRevisionedInterface;
+use Drupal\reliefweb_revisions\EntityRevisionedTrait;
 use Drupal\node\Entity\Node;
 
 /**
  * Bundle class for book nodes.
  */
-class Book extends Node implements BundleEntityInterface, EntityModeratedInterface, DocumentInterface {
+class Book extends Node implements BundleEntityInterface, EntityModeratedInterface, EntityRevisionedInterface, DocumentInterface {
 
   use DocumentTrait;
   use EntityModeratedTrait;
+  use EntityRevisionedTrait;
   use StringTranslationTrait;
 
   /**
