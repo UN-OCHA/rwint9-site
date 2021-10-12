@@ -9,7 +9,6 @@ use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Session\AccountProxyInterface;
@@ -19,6 +18,7 @@ use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
+use Drupal\reliefweb_utility\Helpers\EntityHelper;
 use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
@@ -131,21 +131,34 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
   }
 
   /**
-   * {@inheritdoc}
+   * Get the list of forms that can be altered.
+   *
+   * @return array
+   *   List of form operations.
    */
   protected function getAllowedForms() {
     return ['default', 'edit'];
   }
 
   /**
-   * {@inheritdoc}
+   * Add the guidelines form alterations.
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
    */
   protected function addGuidelineFormAlterations(array &$form, FormStateInterface $form_state) {
     $form['#attributes']['data-with-guidelines'] = '';
   }
 
   /**
-   * {@inheritdoc}
+   * Add the moderation service form alterations.
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
    */
   protected function addModerarionFormAlterations(array &$form, FormStateInterface $form_state) {
     $entity = $form_state->getFormObject()->getEntity();
@@ -558,23 +571,14 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
    *   name and URL.
    */
   public static function retrievePotentialNewSourceInformation(EntityInterface $entity) {
-    $entity_id = $entity->id();
-    if (!empty($entity_id) && $entity instanceof RevisionLogInterface) {
-      // We need to load the unchanged version because the entity in the
-      // form object is the new version with some fields emptied.
-      $log = \Drupal::entityTypeManager()
-        ?->getStorage($entity->getEntityTypeId())
-        ?->loadUnchanged($entity->id())
-        ?->getRevisionLogMessage() ?? '';
-
-      if (preg_match('/Potential new source: \*\*(?<name>[^*]+)\*\*( \((?<url>[^)]+)\).)?/', $log, $matches) === 1) {
-        return [
-          'name' => $matches['name'],
-          'url' => $matches['url'] ?? '',
-        ];
-      }
+    $pattern = '/Potential new source: \*\*(?<name>[^*]+)\*\*( \((?<url>[^)]+)\).)?/';
+    $log = EntityHelper::getRevisionLogMessage($entity, TRUE);
+    if (!empty($log) && preg_match($pattern, $log, $matches) === 1) {
+      return [
+        'name' => $matches['name'],
+        'url' => $matches['url'] ?? '',
+      ];
     }
-
     return [];
   }
 
