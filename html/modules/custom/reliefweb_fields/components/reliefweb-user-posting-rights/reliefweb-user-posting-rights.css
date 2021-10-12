@@ -40,6 +40,7 @@
   display: none;
   flex-wrap: wrap;
   align-items: center;
+  background: transparent;
 }
 .field--type-reliefweb-user-posting-rights div[data-filters][data-job="all"][data-training="all"] ~ ul li {
   display: flex;
