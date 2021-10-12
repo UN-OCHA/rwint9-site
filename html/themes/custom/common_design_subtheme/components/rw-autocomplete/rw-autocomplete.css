@@ -36,7 +36,7 @@
   white-space: nowrap;
   text-indent: 60px;
 }
-/* Icon to show the collpased/expanded state of the show all button. */
+/* Icon to show the collapsed/expanded state of the show all button. */
 .rw-autocomplete-show-all:before {
   position: absolute;
   /* The positions combined with the margins center the icon horizontally and
@@ -92,4 +92,62 @@
 /* Highlight the parts of the suggestions that match the query. */
 .rw-autocomplete-suggestion span {
   font-weight: bold;
+}
+
+[data-autocomplete] {
+  position: relative;
+  width: 100%;
+  padding-right: 60px;
+}
+[data-autocomplete] button {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 60px;
+  height: 100%;
+  text-indent: 60px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+[data-autocomplete] button::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 18px;
+  margin-top: -9px;
+  margin-left: -9px;
+  overflow: hidden;
+  background: var(--rw-icons--toggle--down--18--white);
+}
+[data-autocomplete] > input {
+  border-right: none;
+}
+[data-autocomplete] > ul {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 208px;
+  margin: 0;
+  padding: 4px;
+  border: 1px solid #2e3436;
+  box-shadow: 0px 1px 4px 1px rgba(46,52,54,0.3);
+  background: white;
+  list-style: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+  z-index: 120;
+}
+[data-autocomplete] > ul li[aria-selected] {
+  background: #e6ecef;
+}
+[data-autocomplete] > ul li {
+  margin: 0;
+  padding: 8px;
+  font-size: 16px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  cursor: pointer;
 }
