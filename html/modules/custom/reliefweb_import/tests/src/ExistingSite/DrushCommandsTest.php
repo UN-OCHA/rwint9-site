@@ -80,6 +80,7 @@ class DrushCommandsTest extends ExistingSiteBase {
       new Response(200, [], $this->getTestXml1()),
       new Response(200, [], $this->getTestXml2()),
       new Response(200, [], $this->getTestXml3()),
+      new Response(200, [], $this->getTestXml4()),
       new ClientException('Client exception', new Request('GET', '')),
       new RequestException('Request exception', new Request('GET', '')),
       new \Exception('General exception'),
@@ -207,6 +208,16 @@ class DrushCommandsTest extends ExistingSiteBase {
 
     $this->assertArrayNotHasKey(0, $warnings);
     $this->assertCount(1, $errors);
+
+    // Import job in the past.
+    $this->reliefwebImporter->fetchJobs($source);
+
+    $warnings = $this->reliefwebImporter->getWarnings();
+    $errors = $this->reliefwebImporter->getErrors();
+
+    $this->assertCount(1, $warnings);
+    $this->assertSame($warnings[0], 'Validation failed in field_job_closing_date with message: Job closing date is in the past for job https://www.aplitrak.com?adid=20');
+    $this->assertArrayNotHasKey(0, $errors);
 
     // Exception log messages.
     $this->reliefwebImporter->jobs();

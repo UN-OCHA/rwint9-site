@@ -10,6 +10,7 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\State\State;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\reliefweb_entities\Entity\Job;
 use Drupal\reliefweb_import\Exception\ReliefwebImportException;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionSoftViolation;
@@ -22,6 +23,7 @@ use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\RequestException;
 use League\HTMLToMarkdown\HtmlConverter;
+use Symfony\Component\Validator\ConstraintViolation;
 
 /**
  * Docstore Drush commandfile.
@@ -343,7 +345,6 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     ];
 
     $job = Job::create($values);
-
     $this->validateAndSaveJob($job);
   }
 
@@ -381,7 +382,16 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       '@url' => $this->url,
     ]));
 
+    // Validate job.
     $violations = $job->validate();
+
+    // Check job closing date.
+    if ($job->isNew()) {
+      if (!$this->isValidJobClosingDate($job->field_job_closing_date->value)) {
+        $violations[] = new ConstraintViolation(new TranslatableMarkup('Job closing date is in the past'), 'Job closing date is in the past', [], $job->field_job_closing_date->value, 'field_job_closing_date', $job->field_job_closing_date->value);
+      }
+    }
+
     if (count($violations) === 0) {
       // Save as published.
       $job->setPublished();
@@ -489,6 +499,25 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     }
 
     return $body;
+  }
+
+  /**
+   * Validate the date of the feed item.
+   *
+   * The data must in the future in case of a new feed item.
+   * Otherwise it's used to set the job as expired
+   * in JobModerationHandler->entityPresave.
+   *
+   * @param string $date
+   *   Date in format YYYY-MM-DD.
+   */
+  protected function isValidJobClosingDate($date) {
+    // The date must be in the future in case of a new feed item.
+    if (empty($date) || strtotime($date) < gmmktime(0, 0, 0)) {
+      return FALSE;
+    }
+
+    return TRUE;
   }
 
   /**
