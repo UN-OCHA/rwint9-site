@@ -57,7 +57,9 @@
   {{ form.actions }}
 </fieldset>
 
-{{ form.revision_information }}
+{{ form.revision_information}}
+{{ form.book }}
+{{ form.path }}
 
 {{
   form|without([
@@ -66,5 +68,8 @@
     'field_attached_images',
     'actions',
     'revision_information',
+    'advanced',
+    'book',
+    'path',
   ])
 }}

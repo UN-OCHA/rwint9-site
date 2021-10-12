@@ -21,7 +21,6 @@ use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Pager\PagerParametersInterface;
-use Drupal\reliefweb_entities\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
 use Drupal\user\EntityOwnerInterface;
@@ -2259,7 +2258,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   /**
    * Get the edit link and moderation status info for the entity.
    *
-   * @param \Drupal\reliefweb_entities\EntityModeratedInterface $entity
+   * @param \Drupal\reliefweb_moderation\EntityModeratedInterface $entity
    *   Entity.
    *
    * @return array
@@ -2278,7 +2277,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   /**
    * Get the entity creator.
    *
-   * @param \Drupal\reliefweb_entities\EntityModeratedInterface $entity
+   * @param \Drupal\reliefweb_moderation\EntityModeratedInterface $entity
    *   Entity.
    *
    * @return \Drupal\Core\GeneratedLink|null
@@ -2331,7 +2330,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   /**
    * Get the revision information for the entity.
    *
-   * @param \Drupal\reliefweb_entities\EntityModeratedInterface $entity
+   * @param \Drupal\reliefweb_moderation\EntityModeratedInterface $entity
    *   Entity.
    *
    * @return array
@@ -2373,7 +2372,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   /**
    * Get the entity creation date.
    *
-   * @param \Drupal\reliefweb_entities\EntityModeratedInterface $entity
+   * @param \Drupal\reliefweb_moderation\EntityModeratedInterface $entity
    *   Entity.
    *
    * @return string|int

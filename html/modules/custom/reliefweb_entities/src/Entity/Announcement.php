@@ -5,8 +5,8 @@ namespace Drupal\reliefweb_entities\Entity;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\node\Entity\Node;
 use Drupal\reliefweb_entities\BundleEntityInterface;
-use Drupal\reliefweb_entities\EntityModeratedInterface;
-use Drupal\reliefweb_entities\EntityModeratedTrait;
+use Drupal\reliefweb_moderation\EntityModeratedInterface;
+use Drupal\reliefweb_moderation\EntityModeratedTrait;
 
 /**
  * Bundle class for announcement nodes.

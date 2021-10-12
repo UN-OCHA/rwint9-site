@@ -19,6 +19,7 @@ dependencies:
     - allowed_formats
     - content_moderation
     - geofield
+    - path
     - text
 id: taxonomy_term.country.default
 targetEntityType: taxonomy_term
@@ -102,6 +103,12 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
+  path:
+    type: path
+    weight: 11
+    region: content
+    settings: {  }
+    third_party_settings: {  }
   status:
     type: boolean_checkbox
     settings:
@@ -114,4 +121,3 @@ hidden:
   field_key_content: true
   field_useful_links: true
   langcode: true
-  path: true

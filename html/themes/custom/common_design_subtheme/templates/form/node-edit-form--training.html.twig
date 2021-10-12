@@ -146,6 +146,7 @@
 </fieldset>
 
 {{ form.revision_information }}
+{{ form.path }}
 
 {{
   form|without([
@@ -172,5 +173,7 @@
     'field_source_reminder',
     'actions',
     'revision_information',
+    'advanced',
+    'path',
   ])
 }}

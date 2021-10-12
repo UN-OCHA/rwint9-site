@@ -6,10 +6,8 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Session\AccountProxyInterface;
@@ -17,6 +15,7 @@ use Drupal\Core\State\StateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
+use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
@@ -127,31 +126,90 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
     // Add the moderation form alterations to handle the moderation status.
     // This needs to be added last so that the buttons to save the entity
     // can run all the submit callbacks added by the other form alterations.
-    $this->addModerarionFormAlterations($form, $form_state);
+    $this->addModerationFormAlterations($form, $form_state);
+
+    // Add the revision form alterations.
+    $this->addRevisionFormAlterations($form, $form_state);
+
+    // Force separate display of the URL alias fields.
+    if (isset($form['path']['widget'][0])) {
+      unset($form['path']['widget'][0]['#group']);
+      $form['path']['#type'] = 'fieldset';
+      $form['path']['#title'] = $this->t('URL alias');
+      $form['path']['widget'][0]['#type'] = 'container';
+    }
   }
 
   /**
-   * {@inheritdoc}
+   * Get the list of forms that can be altered.
+   *
+   * @return array
+   *   List of form operations.
    */
   protected function getAllowedForms() {
     return ['default', 'edit'];
   }
 
   /**
-   * {@inheritdoc}
+   * Add the guidelines form alterations.
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
    */
   protected function addGuidelineFormAlterations(array &$form, FormStateInterface $form_state) {
     $form['#attributes']['data-with-guidelines'] = '';
   }
 
   /**
-   * {@inheritdoc}
+   * Add the moderation form alterations.
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
    */
-  protected function addModerarionFormAlterations(array &$form, FormStateInterface $form_state) {
+  protected function addModerationFormAlterations(array &$form, FormStateInterface $form_state) {
     $entity = $form_state->getFormObject()->getEntity();
     $moderation_service = ModerationServiceBase::getModerationService($entity->bundle());
     if (!empty($moderation_service)) {
       $moderation_service->alterEntityForm($form, $form_state);
+    }
+  }
+
+  /**
+   * Add the revision form alterations.
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   *
+   * @todo move the revision service once ported.
+   */
+  protected function addRevisionFormAlterations(array &$form, FormStateInterface $form_state) {
+    $entity_type_id = $form_state->getFormObject()->getEntity()->getEntityTypeId();
+    $revision_field = $this->getEntityTypeRevisionLogMessageField($entity_type_id);
+
+    if (!isset($revision_field)) {
+      return;
+    }
+
+    // Container for the revision log and history.
+    unset($form['revision_information']['#group']);
+    $form['revision_information']['#type'] = 'fieldset';
+    $form['revision_information']['#title'] = $this->t('Revisions');
+
+    // Hide the revision checkbox if defined to force new revisions.
+    if (isset($form['revision'])) {
+      $form['revision']['#access'] = FALSE;
+    }
+
+    // Update the title of the revision log message field.
+    if (isset($form[$revision_field]['widget'][0]['value'])) {
+      $form[$revision_field]['widget'][0]['value']['#title'] = $this->t('New comment');
+      $form[$revision_field]['#group'] = 'revision_information';
     }
   }
 
@@ -550,31 +608,22 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
   /**
    * Get the potential new source information from the entity's last revision.
    *
-   * @param \Drupal\Core\Entity\EntityInterface $entity
+   * @param \Drupal\reliefweb_moderation\EntityModeratedInterface $entity
    *   The entity this field is attached to.
    *
    * @return array
    *   If the information was found, then return an array containing the source
    *   name and URL.
    */
-  public static function retrievePotentialNewSourceInformation(EntityInterface $entity) {
-    $entity_id = $entity->id();
-    if (!empty($entity_id) && $entity instanceof RevisionLogInterface) {
-      // We need to load the unchanged version because the entity in the
-      // form object is the new version with some fields emptied.
-      $log = \Drupal::entityTypeManager()
-        ?->getStorage($entity->getEntityTypeId())
-        ?->loadUnchanged($entity->id())
-        ?->getRevisionLogMessage() ?? '';
-
-      if (preg_match('/Potential new source: \*\*(?<name>[^*]+)\*\*( \((?<url>[^)]+)\).)?/', $log, $matches) === 1) {
-        return [
-          'name' => $matches['name'],
-          'url' => $matches['url'] ?? '',
-        ];
-      }
+  public static function retrievePotentialNewSourceInformation(EntityModeratedInterface $entity) {
+    $pattern = '/Potential new source: \*\*(?<name>[^*]+)\*\*( \((?<url>[^)]+)\).)?/';
+    $log = $entity->getOriginalRevisionLogMessage();
+    if (!empty($log) && preg_match($pattern, $log, $matches) === 1) {
+      return [
+        'name' => $matches['name'],
+        'url' => $matches['url'] ?? '',
+      ];
     }
-
     return [];
   }
 

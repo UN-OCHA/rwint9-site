@@ -1,0 +1,19 @@
+{#
+
+/**
+ * @file
+ * Template for the moderation information on entity pages and forms.
+ *
+ * Available variables:
+ * - status: asssociative array with the moderation status value and its label
+ * - message: associative array with the type of message (feedback or
+ *   instruction) and the message content.
+ */
+
+#}
+<div class="rw-modetation-information">
+  <div class="rw-modetation-information__status rw-moderation-status" data-moderation-status="{{ status.value }}">{{ status.label }}</div>
+  {% if message.content is not empty %}
+  <div class="rw-modetation-information__message rw-revision-message" data-revision-message="{{ message.type }}">{{ message.content }}</div>
+  {% endif %}
+</div>

@@ -27,6 +27,7 @@ dependencies:
     - datetime
     - datetime_range
     - link
+    - path
     - reliefweb_fields
     - text
 id: node.training.default
@@ -217,9 +218,15 @@ content:
     region: content
   moderation_state:
     type: moderation_state_default
-    weight: 100
+    weight: 18
     settings: {  }
     region: content
+    third_party_settings: {  }
+  path:
+    type: path
+    weight: 19
+    region: content
+    settings: {  }
     third_party_settings: {  }
   status:
     type: boolean_checkbox
@@ -239,7 +246,6 @@ content:
 hidden:
   created: true
   langcode: true
-  path: true
   promote: true
   sticky: true
   uid: true
