@@ -68,3 +68,5 @@ COPY --from=builder /srv/www/docker/etc/nginx/apps/drupal/drupal.conf /etc/nginx
 
 RUN apk add php8-pecl-xdebug && \
     echo 'zend_extension=xdebug;' >> /etc/php8/conf.d/90_xdebug.ini
+
+RUN mkdir -p /srv/www/html/build/logs
