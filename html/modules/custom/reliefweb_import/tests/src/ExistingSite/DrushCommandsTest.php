@@ -216,7 +216,7 @@ class DrushCommandsTest extends ExistingSiteBase {
     $errors = $this->reliefwebImporter->getErrors();
 
     $this->assertCount(1, $warnings);
-    $this->assertSame($warnings[0], 'Validation failed in field_job_closing_date with message: Job closing date is in the past for job https://www.aplitrak.com?adid=20');
+    $this->assertSame($warnings[0], 'Validation failed in field_job_closing_date with message: <em class="placeholder">Closing date</em> field has to be in the future. for job https://www.aplitrak.com?adid=20');
     $this->assertArrayNotHasKey(0, $errors);
 
     // Exception log messages.

@@ -10,7 +10,6 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\State\State;
-use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\reliefweb_entities\Entity\Job;
 use Drupal\reliefweb_import\Exception\ReliefwebImportException;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionSoftViolation;
@@ -23,7 +22,6 @@ use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\RequestException;
 use League\HTMLToMarkdown\HtmlConverter;
-use Symfony\Component\Validator\ConstraintViolation;
 
 /**
  * Docstore Drush commandfile.
@@ -385,35 +383,35 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     // Validate job.
     $violations = $job->validate();
 
-    // Check job closing date.
-    if ($job->isNew()) {
-      if (!$this->isValidJobClosingDate($job->field_job_closing_date->value)) {
-        $violations[] = new ConstraintViolation(new TranslatableMarkup('Job closing date is in the past'), 'Job closing date is in the past', [], $job->field_job_closing_date->value, 'field_job_closing_date', $job->field_job_closing_date->value);
-      }
-    }
-
     if (count($violations) === 0) {
       // Save as published.
       $job->setPublished();
-      $job->save();
-    }
-    else {
-      // Save as draft.
-      $job->setUnpublished();
-      $job->save();
+      $job->setModerationStatus('pending');
 
-      $errors = [];
-      /** @var \Symfony\Component\Validator\ConstraintViolation $violation */
-      foreach ($violations as $violation) {
-        $errors[] = strtr('Validation failed in @path with message: @message for job @guid', [
-          '@path' => $violation->getPropertyPath(),
-          '@message' => $violation->getMessage()->__toString(),
-          '@guid' => $job->field_job_id->value,
-        ]);
+      // Re validate.
+      $violations = $job->validate();
+      if (count($violations) === 0) {
+        $job->save();
+        return;
       }
-
-      throw new ReliefwebImportExceptionSoftViolation(implode("\n", $errors));
     }
+
+    // Save as draft.
+    $job->setUnpublished();
+    $job->setModerationStatus('draft');
+    $job->save();
+
+    $errors = [];
+    /** @var \Symfony\Component\Validator\ConstraintViolation $violation */
+    foreach ($violations as $violation) {
+      $errors[] = strtr('Validation failed in @path with message: @message for job @guid', [
+        '@path' => $violation->getPropertyPath(),
+        '@message' => $violation->getMessage()->__toString(),
+        '@guid' => $job->field_job_id->value,
+      ]);
+    }
+
+    throw new ReliefwebImportExceptionSoftViolation(implode("\n", $errors));
   }
 
   /**
