@@ -1,0 +1,12 @@
+reliefweb_revisions.entity.history:
+  path: '/admin/reliefweb_revisions/history/{entity_type_id}/{entity}'
+  options:
+    _admin_route: TRUE
+    parameters:
+      entity:
+        type: entity:{entity_type_id}
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _permission: access entity revision history
+    entity_type_id: "[a-z0-9_]+"
+    entity: "\d+"
