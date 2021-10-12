@@ -375,10 +375,18 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     // Revision user is always 'System'.
     $job->setRevisionUserId(2);
     $job->setNewRevision(TRUE);
-    $job->setRevisionLogMessage(strtr('Job @guid updated from @url', [
-      '@guid' => $job->field_job_id->value,
-      '@url' => $this->url,
-    ]));
+    if ($job->isNew()) {
+      $job->setRevisionLogMessage(strtr('Job @guid imported from @url', [
+        '@guid' => $job->field_job_id->value,
+        '@url' => $this->url,
+      ]));
+    }
+    else {
+      $job->setRevisionLogMessage(strtr('Job @guid updated from @url', [
+        '@guid' => $job->field_job_id->value,
+        '@url' => $this->url,
+      ]));
+    }
 
     // Validate job.
     $violations = $job->validate();
@@ -497,25 +505,6 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     }
 
     return $body;
-  }
-
-  /**
-   * Validate the date of the feed item.
-   *
-   * The data must in the future in case of a new feed item.
-   * Otherwise it's used to set the job as expired
-   * in JobModerationHandler->entityPresave.
-   *
-   * @param string $date
-   *   Date in format YYYY-MM-DD.
-   */
-  protected function isValidJobClosingDate($date) {
-    // The date must be in the future in case of a new feed item.
-    if (empty($date) || strtotime($date) < gmmktime(0, 0, 0)) {
-      return FALSE;
-    }
-
-    return TRUE;
   }
 
   /**
