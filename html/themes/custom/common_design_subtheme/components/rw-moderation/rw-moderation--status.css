@@ -136,39 +136,3 @@
 [data-log-message="feedback"]:before {
   background: var(--rw-icons--status--info--20--green);
 }
-
-/**
- * User posting rights.
- *
- * Text showing the user posting rights for a source.
- *
- * Scope: #main .user-rights
- */
-#main .user-rights span {
-  padding: 2px 4px;
-  text-transform: uppercase;
-  border: 1px solid #d9d9d9;
-  background: rgba(217, 217, 217, 0.2);
-  font-size: 10px;
-  font-weight: bold;
-}
-#main .user-rights .blocked {
-  border-color: #da190b;
-  background: rgba(218, 25, 11, 0.2);
-}
-#main .user-rights .unverified {
-  border-color: #f49e2c;
-  background: rgba(244, 158, 44, 0.2);
-}
-#main .user-rights .allowed {
-  border-color: #076d96;
-  background: rgba(7, 109, 150, 0.2);
-}
-#main .user-rights .trusted {
-  border-color: #88bb09;
-  background: rgba(136, 187, 9, 0.2);
-}
-#main #user-information .user-rights span {
-  vertical-align: top;
-  line-height: 16px;
-}
