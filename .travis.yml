@@ -57,12 +57,15 @@ script:
   # Ensure the file directories are writable.
   - docker exec -it rwint9-test-site chmod -R 777 /srv/www/html/sites/default/files /srv/www/html/sites/default/private
 
-  # Run existing site tests.
+  # Run all tests and generate coverage report.
   - docker exec -it -u root -w /srv/www rwint9-test-site mkdir -p /srv/www/html/sites/default/files/browser_output
-  - docker exec -it -u root -w /srv/www -e BROWSERTEST_OUTPUT_DIRECTORY=/srv/www/html/sites/default/files/browser_output -e DTT_BASE_URL=http://127.0.0.1 rwint9-test-site ./vendor/bin/phpunit --testsuite Existing --debug
+  - docker exec -it -u root -w /srv/www -e XDEBUG_MODE=coverage -e BROWSERTEST_OUTPUT_DIRECTORY=/srv/www/html/sites/default/files/browser_output -e DTT_BASE_URL=http://127.0.0.1 rwint9-test-site ./vendor/bin/phpunit --coverage-clover /srv/www/html/sites/default/files/clover.xml --debug
 
 after_success:
   - echo "The tests completed without errors."
+  - wget https://github.com/php-coveralls/php-coveralls/releases/download/v2.4.3/php-coveralls.phar
+  - chmod +x php-coveralls.phar
+  - ./php-coveralls.phar --dry-run -vv
 
 after_failure:
   - echo "The tests failed. Please check the output above for problems."

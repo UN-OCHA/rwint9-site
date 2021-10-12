@@ -44,6 +44,7 @@ services:
       # Mount the folders needed for the tests.
       - "../phpcs.xml:/srv/www/phpcs.xml:ro"
       - "../phpunit.xml:/srv/www/phpunit.xml:ro"
+      - "../.coveralls.yml:/srv/www/.coveralls.yml:ro"
     environment:
       - TERM=xterm
       - ENVIRONMENT=dev
