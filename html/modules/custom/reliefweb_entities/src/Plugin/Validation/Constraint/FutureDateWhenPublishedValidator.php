@@ -21,14 +21,10 @@ class FutureDateWhenPublishedValidator extends ConstraintValidator {
     /** @var \Drupal\node\Entity\Node $entity */
     $entity = $this->context->getRoot()->getValue();
 
-    \Drupal::logger('my_module')->notice('called');
-
     if ($entity instanceof EntityPublishedInterface) {
       if ($entity instanceof EntityModeratedInterface) {
-        \Drupal::logger('my_status')->notice($entity->getModerationStatus());
         if ($entity->getModerationStatus() === 'published' || $entity->getModerationStatus() === 'pending') {
           $date = $items->value;
-          \Drupal::logger('my_date')->notice($date);
           if (empty($date) || strtotime($date) < gmmktime(0, 0, 0)) {
             $this->context->addViolation($constraint->message, [
               '%field' => $items->getFieldDefinition()->getLabel(),
