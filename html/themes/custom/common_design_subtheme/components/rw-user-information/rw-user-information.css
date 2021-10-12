@@ -1,0 +1,49 @@
+.rw-entities-form-user-information__content {
+  display: flex;
+  flex-wrap: wrap;
+}
+/* Hide labels */
+.rw-entities-form-user-information__entity > strong,
+.rw-entities-form-user-information__author > strong {
+  display: none;
+}
+.rw-entities-form-user-information__sources ul {
+  margin: 0;
+  padding: 0;
+  display: inline-block;
+  list-style-type: none;
+}
+/**
+ * User posting rights.
+ *
+ * Text showing the user posting rights for a source.
+ */
+.rw-entities-form-user-information .user-rights span {
+  padding: 2px 4px;
+  text-transform: uppercase;
+  border: 1px solid #d9d9d9;
+  background: rgba(217, 217, 217, 0.2);
+  font-size: 10px;
+  font-weight: bold;
+  margin-left: 2px;
+}
+.rw-entities-form-user-information .user-rights .blocked {
+  border-color: #da190b;
+  background: rgba(218, 25, 11, 0.2);
+}
+.rw-entities-form-user-information .user-rights .unverified {
+  border-color: #f49e2c;
+  background: rgba(244, 158, 44, 0.2);
+}
+.rw-entities-form-user-information .user-rights .allowed {
+  border-color: #076d96;
+  background: rgba(7, 109, 150, 0.2);
+}
+.rw-entities-form-user-information .user-rights .trusted {
+  border-color: #88bb09;
+  background: rgba(136, 187, 9, 0.2);
+}
+#user-information .user-rights span {
+  vertical-align: top;
+  line-height: 16px;
+}
