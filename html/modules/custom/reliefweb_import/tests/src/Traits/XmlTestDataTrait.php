@@ -129,13 +129,11 @@ XML;
    * Test data 4.
    */
   private function getTestXml4() {
-    $year = date('Y') - 1;
-
     return <<<XML
 <?xml version="1.0" standalone="yes"?><channel><item>
  <link>https://www.aplitrak.com?adid=20</link>
  <title>Job in the past</title>
- <field_job_closing_date>{$year}-10-05</field_job_closing_date>
+ <field_job_closing_date>2000-10-05</field_job_closing_date>
  <field_country>AFG</field_country>
  <field_city>Kabul</field_city>
  <field_source>2865</field_source>
