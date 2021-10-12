@@ -73,7 +73,7 @@ after_success:
   # Get coveralls and execute.
   - wget https://github.com/php-coveralls/php-coveralls/releases/download/v2.4.3/php-coveralls.phar
   - chmod +x php-coveralls.phar
-  - ./php-coveralls.phar --dry-run -vv
+  - ./php-coveralls.phar -vv
 
 after_failure:
   - echo "The tests failed. Please check the output above for problems."
