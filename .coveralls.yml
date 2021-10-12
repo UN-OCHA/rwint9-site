@@ -1,6 +1,6 @@
 # Set folder to clover (must be the same on travis)
-coverage_clover: /srv/www/html/sites/default/files/clover.xml
+coverage_clover: ./clover/clover.xml
 # Same folder here
-json_path: /srv/www/html/sites/default/files/coveralls-upload.json
+json_path: ./clover/coveralls-upload.json
 # Don't touch that
 service_name: travis-ci

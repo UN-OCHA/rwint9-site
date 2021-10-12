@@ -63,6 +63,9 @@ script:
 
 after_success:
   - echo "The tests completed without errors."
+  - mkdir -p clover
+  - chmod -R 777 clover
+  - docker cp rwint9-test-site:/srv/www/html/sites/default/files/clover.xml ./clover
   - wget https://github.com/php-coveralls/php-coveralls/releases/download/v2.4.3/php-coveralls.phar
   - chmod +x php-coveralls.phar
   - ./php-coveralls.phar --dry-run -vv
