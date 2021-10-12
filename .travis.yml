@@ -53,6 +53,7 @@ script:
 
   # Install the site with the existing config.
   - docker exec -it rwint9-test-site drush -y si --existing-config
+  - docker exec -it rwint9-test-site drush -y en dblog
 
   # Ensure the file directories are writable.
   - docker exec -it rwint9-test-site chmod -R 777 /srv/www/html/sites/default/files /srv/www/html/sites/default/private
@@ -77,4 +78,4 @@ after_success:
 
 after_failure:
   - echo "The tests failed. Please check the output above for problems."
-  - ../vendor/bin/drush watchdog:show --extended
+  - docker exec -it rwint9-test-site watchdog:show --extended
