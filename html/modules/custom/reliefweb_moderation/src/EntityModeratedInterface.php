@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\reliefweb_entities;
+namespace Drupal\reliefweb_moderation;
 
 /**
  * Interface for entities with a moderation status.

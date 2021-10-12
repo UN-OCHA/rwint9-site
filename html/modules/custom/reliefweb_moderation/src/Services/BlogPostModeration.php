@@ -58,7 +58,7 @@ class BlogPostModeration extends ModerationServiceBase {
       return [];
     }
 
-    /** @var \Drupal\reliefweb_entities\EntityModeratedInterface[] $entities */
+    /** @var \Drupal\reliefweb_moderation\EntityModeratedInterface[] $entities */
     $entities = $results['entities'];
 
     // Prepare the table rows' data from the entities.

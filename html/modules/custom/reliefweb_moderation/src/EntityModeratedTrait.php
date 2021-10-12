@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\reliefweb_entities;
+namespace Drupal\reliefweb_moderation;
 
 /**
  * Provides a trait for the entity moderation status.
@@ -10,7 +10,7 @@ trait EntityModeratedTrait {
   /**
    * Set the moderation status.
    *
-   * @see \Drupal\reliefweb_entities\EntityModeratedInterface::setModerationStatus()
+   * @see \Drupal\reliefweb_moderation\EntityModeratedInterface::setModerationStatus()
    */
   public function setModerationStatus($status) {
     if ($this->hasField('moderation_state')) {
@@ -21,7 +21,7 @@ trait EntityModeratedTrait {
   /**
    * Get the moderation status.
    *
-   * @see \Drupal\reliefweb_entities\EntityModeratedInterface::getModerationStatus()
+   * @see \Drupal\reliefweb_moderation\EntityModeratedInterface::getModerationStatus()
    */
   public function getModerationStatus() {
     if ($this->hasField('moderation_state')) {
@@ -33,7 +33,7 @@ trait EntityModeratedTrait {
   /**
    * Get the moderation status label.
    *
-   * @see \Drupal\reliefweb_entities\EntityModeratedInterface::getModerationStatusLabel()
+   * @see \Drupal\reliefweb_moderation\EntityModeratedInterface::getModerationStatusLabel()
    *
    * @todo review that because this doesn't allow for translation of the status.
    */

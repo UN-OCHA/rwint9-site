@@ -7,8 +7,8 @@ use Drupal\node\Entity\Node;
 use Drupal\reliefweb_entities\BundleEntityInterface;
 use Drupal\reliefweb_entities\DocumentInterface;
 use Drupal\reliefweb_entities\DocumentTrait;
-use Drupal\reliefweb_entities\EntityModeratedInterface;
-use Drupal\reliefweb_entities\EntityModeratedTrait;
+use Drupal\reliefweb_moderation\EntityModeratedInterface;
+use Drupal\reliefweb_moderation\EntityModeratedTrait;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 
 /**
