@@ -92,51 +92,6 @@
   background: #e6ecef;
   background: rgba(230, 236, 239, 0.4);
 }
-
-/**
- * Double datepicker widget.
- *
- * This extends the normal datepicker widget (form/components/datepicker.css) to
- * display two calendars for the `from` and `to` dates in a wrapper with a
- * select button.
- */
-.path-moderation [data-datepicker] {
-  position: relative;
-  z-index: 10;
-}
-.path-moderation [data-datepicker] > div {
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: block;
-  width: 547px;
-  border: 1px solid #2e3436;
-  background: white;
-  box-shadow: 0 1px 4px 1px rgba(46, 52, 54, 0.3);
-}
-.path-moderation [data-datepicker] > div > button {
-  width: 100%;
-}
-.path-moderation [data-datepicker] .simpledatepicker-container {
-  display: inline-block;
-}
-.path-moderation [data-datepicker] .simpledatepicker-container + .simpledatepicker-container {
-  border-left: 1px solid #2e3436;
-}
-.path-moderation [data-datepicker] .simpledatepicker-container > input {
-  text-align: center;
-  border: none;
-}
-.path-moderation [data-datepicker] .simpledatepicker-calendar {
-  position: relative;
-  border: none;
-  border-top: 1px solid #2e3436;
-  box-shadow: none;
-}
-.path-moderation [data-datepicker][data-hidden] {
-  display: none;
-}
-
 /**
  * Result list.
  *
