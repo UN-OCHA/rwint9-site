@@ -6,14 +6,14 @@
  *
  * Available variables:
  * - status: asssociative array with the moderation status value and its label
- * - log: associative array with the type of log message (feedback or
- *   instruction) and the message.
+ * - message: associative array with the type of message (feedback or
+ *   instruction) and the message content.
  */
 
 #}
 <div class="rw-modetation-information">
   <div class="rw-modetation-information__status rw-moderation-status" data-moderation-status="{{ status.value }}">{{ status.label }}</div>
-  {% if log.message is not empty %}
-  <div class="rw-modetation-information__log rw-revision-message" data-revision-message="{{ log.type }}">{{ log.message }}</div>
+  {% if message.content is not empty %}
+  <div class="rw-modetation-information__log rw-revision-message" data-revision-message="{{ message.type }}">{{ message.content }}</div>
   {% endif %}
 </div>
