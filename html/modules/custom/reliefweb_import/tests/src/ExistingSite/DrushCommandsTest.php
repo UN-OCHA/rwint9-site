@@ -8,6 +8,7 @@ use Drupal\reliefweb_import\Command\ReliefwebImportCommand;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
 use Drupal\Tests\reliefweb_import\Traits\XmlTestDataTrait;
+use Drupal\user\Entity\User;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\RequestException;
@@ -95,8 +96,15 @@ class DrushCommandsTest extends ExistingSiteBase {
    * Test XML import.
    */
   public function testSourceImport() {
-    // Creates a user.
-    $author = $this->createUser([], NULL, TRUE);
+    // Create system user.
+    if (!User::load(2)) {
+      $this->createUser([], 'System user', TRUE, [
+        'uid' => 2,
+      ]);
+    }
+
+    // Create a user for the import.
+    $author = $this->createUser([], 'Regular', FALSE);
 
     // Create referenced data.
     $terms = [
@@ -214,6 +222,9 @@ class DrushCommandsTest extends ExistingSiteBase {
 
     $warnings = $this->reliefwebImporter->getWarnings();
     $errors = $this->reliefwebImporter->getErrors();
+
+    $this->loggerFactory->get('reliefweb_import_test')->notice(print_r($warnings, TRUE));
+    $this->loggerFactory->get('reliefweb_import_test')->notice(print_r($errors, TRUE));
 
     $this->assertCount(1, $warnings);
     $this->assertSame($warnings[0], 'Validation failed in field_job_closing_date with message: <em class="placeholder">Closing date</em> field has to be in the future. for job https://www.aplitrak.com?adid=20');

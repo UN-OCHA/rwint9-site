@@ -59,7 +59,6 @@ script:
   - docker exec -it rwint9-test-site chmod -R 777 /srv/www/html/sites/default/files /srv/www/html/sites/default/private
 
   # Run all tests and generate coverage report.
-  - docker exec -it -u root -w /srv/www rwint9-test-site mkdir -p /srv/www/html/sites/default/files/browser_output
   - docker exec -it -u root -w /srv/www -e XDEBUG_MODE=coverage -e BROWSERTEST_OUTPUT_DIRECTORY=/srv/www/html/sites/default/files/browser_output -e DTT_BASE_URL=http://127.0.0.1 rwint9-test-site ./vendor/bin/phpunit --coverage-clover /srv/www/html/build/logs/clover.xml --debug
 
 after_success:
@@ -78,4 +77,4 @@ after_success:
 
 after_failure:
   - echo "The tests failed. Please check the output above for problems."
-  - docker exec -it rwint9-test-site watchdog:show --extended
+  - docker exec -it rwint9-test-site drush watchdog:show --count=50 --extended
