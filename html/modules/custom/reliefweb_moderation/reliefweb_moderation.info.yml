@@ -4,6 +4,7 @@ description: 'Provides content moderation handling.'
 package: reliefweb
 core_version_requirement: ^9
 dependencies:
-  - drupal:reliefweb_entities
+  - drupal:content_moderation
+  - drupal:user
   - drupal:reliefweb_form
   - drupal:reliefweb_utility

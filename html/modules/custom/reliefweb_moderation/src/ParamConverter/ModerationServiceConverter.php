@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\reliefweb_moderation\Routing;
+namespace Drupal\reliefweb_moderation\ParamConverter;
 
 use Drupal\Core\ParamConverter\ParamConverterInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
@@ -9,7 +9,7 @@ use Symfony\Component\Routing\Route;
 /**
  * Convert an entity bundle into the corresponding moderation service.
  */
-class ModerationServiceParamConverter implements ParamConverterInterface {
+class ModerationServiceConverter implements ParamConverterInterface {
 
   /**
    * {@inheritdoc}

@@ -3,3 +3,7 @@ name: ReliefWeb Entities
 description: 'Manage entities, define access and bundle classes.'
 package: reliefweb
 core_version_requirement: ^9
+dependencies:
+  - drupal:reliefweb_moderation
+  - drupal:reliefweb_form
+  - drupal:reliefweb_utility
