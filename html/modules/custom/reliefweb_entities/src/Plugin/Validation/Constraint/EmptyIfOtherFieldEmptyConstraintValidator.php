@@ -29,7 +29,7 @@ class EmptyIfOtherFieldEmptyConstraintValidator extends ConstraintValidator {
           ->getLabel();
 
         $other_label = $entity
-          ->get($field_name)
+          ->get($other_field_name)
           ->getFieldDefinition()
           ->getLabel();
 
