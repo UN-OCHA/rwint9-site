@@ -59,18 +59,16 @@ script:
   - docker exec -it rwint9-test-site chmod -R 777 /srv/www/html/sites/default/files /srv/www/html/sites/default/private
 
   # Run all tests and generate coverage report.
-  - docker exec -it rwint9-test-site date
   - docker exec -it -u root -w /srv/www -e XDEBUG_MODE=coverage -e BROWSERTEST_OUTPUT_DIRECTORY=/srv/www/html/sites/default/files/browser_output -e DTT_BASE_URL=http://127.0.0.1 rwint9-test-site ./vendor/bin/phpunit --coverage-clover /srv/www/html/build/logs/clover.xml --debug
 
 after_success:
   - echo "The tests completed without errors."
   # Create directory for clover.
-  - mkdir -p html/build/logs
-  - chmod -R 777 html/build/logs
-  - docker cp rwint9-test-site:/srv/www/html/build/logs/clover.xml ./html/build/logs/
+  - mkdir -p ./build/logs
+  - chmod -R 777 ./build/logs
+  - docker cp rwint9-test-site:/srv/www/html/build/logs/clover.xml ./build/logs/
   # Fix source files path.
-  - cd html
-  - sed -i 's#/srv/www/html#.#g' build/logs/clover.xml
+  - sed -i 's#/srv/www#.#g' build/logs/clover.xml
   # Get coveralls and execute.
   - wget https://github.com/php-coveralls/php-coveralls/releases/download/v2.4.3/php-coveralls.phar
   - chmod +x php-coveralls.phar
