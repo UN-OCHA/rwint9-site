@@ -96,13 +96,7 @@ form [autocomplete-processed] select {
 .rw-autocomplete-suggestion span {
   font-weight: bold;
 }
-
-[data-autocomplete] {
-  position: relative;
-  width: 100%;
-  padding-right: 60px;
-}
-[data-autocomplete] button {
+.rw-autocomplete button {
   position: absolute;
   right: 0;
   top: 0;
@@ -112,7 +106,7 @@ form [autocomplete-processed] select {
   white-space: nowrap;
   overflow: hidden;
 }
-[data-autocomplete] button::before {
+.rw-autocomplete button::before {
   content: "";
   position: absolute;
   top: 50%;
@@ -124,10 +118,10 @@ form [autocomplete-processed] select {
   overflow: hidden;
   background: var(--rw-icons--toggle--down--18--white);
 }
-[data-autocomplete] > input {
+.rw-autocomplete > input {
   border-right: none;
 }
-[data-autocomplete] > ul {
+.rw-autocomplete > ul {
   position: absolute;
   top: 100%;
   left: 0;
@@ -143,10 +137,10 @@ form [autocomplete-processed] select {
   overflow-y: auto;
   z-index: 120;
 }
-[data-autocomplete] > ul li[aria-selected] {
+.rw-autocomplete > ul li[aria-selected] {
   background: #e6ecef;
 }
-[data-autocomplete] > ul li {
+.rw-autocomplete > ul li {
   margin: 0;
   padding: 8px;
   font-size: 16px;
