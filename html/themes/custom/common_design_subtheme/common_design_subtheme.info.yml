@@ -38,7 +38,7 @@ libraries-extend:
 
   # Datepicker form widget.
   reliefweb_form/widget.datepicker:
-    - common_design_subtheme/rw-autocomplete
+    - common_design_subtheme/rw-datepicker
 
 
 # Custom namespace
