@@ -43,4 +43,35 @@ class TextHelper {
     return trim(preg_replace($patterns, $replacements, $text));
   }
 
+  /**
+   * Remove embedded content in html or markdown format from the given text.
+   *
+   * Note: it's using a very basic pattern matching that may not work with
+   * broken html (missing </iframe> ending tag for example)
+   *
+   * @param string $text
+   *   Text to clean.
+   *
+   * @return string
+   *   Cleaned up text.
+   */
+  public static function stripEmbeddedContent($text) {
+    $patterns = [
+      "<embed [^>]+>",
+      "<img [^>]+>",
+      "<param [^>]+>",
+      "<source [^>]+>",
+      "<track [^>]+>",
+      "<audio [^>]+>.*</audio>",
+      "<iframe [^>]+>.*</iframe>",
+      "<map [^>]+>.*</map>",
+      "<object [^>]+>.*</object>",
+      "<video [^>]+>.*</video>",
+      "<svg [^>]+>.*</svg>",
+      "!\[[^\]]*\]\([^\)]+\)",
+      "\[iframe[^\]]*\]\([^\)]+\)",
+    ];
+    return preg_replace('@' . implode("|", $patterns) . '@i', '', $text);
+  }
+
 }

@@ -23,7 +23,3 @@ The system user 2 is only used as user for the revisions. (I think it was the an
 ### Convert to html
 
 Text from the feeds can be in markdown format, in which case we need to convert it HTML to do the sanitation. It's possible the escaping issue you experienced was due to the wrong text format id as it has changed in D9 (see comment above: "plain_text" => "markdown").
-
-### stripEmbeddedContent
-
-This could be moved to the TextHelper: https://github.com/UN-OCHA/rwint9-site/blob/develop/html/modules/custom/reliefweb_utility/src/Helpers/TextHelper.php

@@ -595,7 +595,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     $text = $sanitizer->sanitizeHtml($text);
 
     // Remove embedded content.
-    $text = $this->stripEmbeddedContent($text);
+    $text = TextHelper::stripEmbeddedContent($text);
 
     // Finally we convert it to markdown.
     $converter = new HtmlConverter();
@@ -607,37 +607,6 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     $text = trim($converter->convert($text));
 
     return $text;
-  }
-
-  /**
-   * Remove embedded content in html or markdown format from the given text.
-   *
-   * Note: it's using a very basic pattern matching that may not work with
-   * broken html (missing </iframe> ending tag for example)
-   *
-   * @param string $text
-   *   Text to clean.
-   *
-   * @return string
-   *   Cleaned up text.
-   */
-  protected function stripEmbeddedContent($text) {
-    $patterns = [
-      "<embed [^>]+>",
-      "<img [^>]+>",
-      "<param [^>]+>",
-      "<source [^>]+>",
-      "<track [^>]+>",
-      "<audio [^>]+>.*</audio>",
-      "<iframe [^>]+>.*</iframe>",
-      "<map [^>]+>.*</map>",
-      "<object [^>]+>.*</object>",
-      "<video [^>]+>.*</video>",
-      "<svg [^>]+>.*</svg>",
-      "!\[[^\]]*\]\([^\)]+\)",
-      "\[iframe[^\]]*\]\([^\)]+\)",
-    ];
-    return preg_replace('@' . implode("|", $patterns) . '@i', '', $text);
   }
 
   /**
