@@ -31,31 +31,25 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
    * {@inheritdoc}
    */
   public static function addFieldConstraints(&$fields) {
-    // Restrict title length.
-    $field['title']->addConstraint('Length', [
-      'min' => 10,
-      'max' => 150,
-    ]);
-
     // Restrict body length.
-    $field['body']->addConstraint('Length', [
+    $fields['body']->addConstraint('Length', [
       'min' => 400,
       'max' => 50000,
     ]);
 
     // Restrict how to apply length.
-    $field['field_how_to_apply']->addConstraint('Length', [
+    $fields['field_how_to_apply']->addConstraint('Length', [
       'min' => 100,
       'max' => 10000,
     ]);
 
     // The city field cannot have a value if the country field is empty.
-    $field['field_city']->addConstraint('EmptyIfOtherFieldEmpty', [
+    $fields['field_city']->addConstraint('EmptyIfOtherFieldEmpty', [
       'otherFieldName' => 'field_country',
     ]);
 
     // Restrict the city length if not empty.
-    $field['field_city']->addConstraint('Length', [
+    $fields['field_city']->addConstraint('Length', [
       'allowEmptyString' => TRUE,
       'min' => 3,
       'max' => 255,
