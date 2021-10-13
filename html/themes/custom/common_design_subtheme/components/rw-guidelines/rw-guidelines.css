@@ -78,9 +78,9 @@ form[data-with-guidelines] .rw-guideline > div {
 form[data-with-guidelines] .rw-guideline > div > h3 {
   text-align: center;
 }
-form[data-with-guidelines] .rw-guideline > div > .content {
+form[data-with-guidelines] .rw-guideline > div > .rw-guideline__content {
   padding-top: 0;
 }
-form[data-with-guidelines] .rw-guideline > div > .content img {
+form[data-with-guidelines] .rw-guideline > div > .rw-guideline__content img {
   border: 4px solid #e6ecef;
 }
