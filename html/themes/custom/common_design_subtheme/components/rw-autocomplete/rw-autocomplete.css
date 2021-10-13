@@ -15,6 +15,9 @@
  *   </ul>
  * </div>
  */
+form [autocomplete-processed] select {
+  display: none;
+}
 .rw-autocomplete {
   position: relative;
   width: 100%;
