@@ -158,23 +158,25 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    *   Source term.
    */
   public function fetchJobs(Term $term) {
-    $this->url = $term->field_job_import_feed->first()->feed_url;
-    $uid = $term->field_job_import_feed->first()->uid ?? 2;
-    $base_url = $term->field_job_import_feed->first()->base_url ?? '';
+    // Reset errors and warnings.
+    $this->errors = [];
+    $this->warnings = [];
+
     $label = $term->label();
     $source_id = $term->id();
+    $base_url = $term->field_job_import_feed->first()->base_url ?? '';
+    $uid = $term->field_job_import_feed->first()->uid ?? FALSE;
+    $this->url = $term->field_job_import_feed->first()->feed_url;
 
     $this->logger()->info('Processing @name, fetching jobs from @url.', [
       '@name' => $label,
       '@url' => $this->url,
     ]);
 
+    $this->validateUser($uid);
     $this->validateBaseUrl($base_url);
 
     try {
-      $this->errors = [];
-      $this->warnings = [];
-
       // Fetch the XML.
       $data = $this->fetchXml($this->url);
 
@@ -434,6 +436,23 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    */
   protected function logger() {
     return $this->loggerFactory->get('reliefweb_import');
+  }
+
+  /**
+   * Validate user.
+   */
+  protected function validateUser($uid) {
+    if (empty(trim($uid))) {
+      throw new ReliefwebImportExceptionViolation('User Id is not defined.');
+    }
+
+    if (!is_numeric($uid)) {
+      throw new ReliefwebImportExceptionViolation('User Id is not numeric.');
+    }
+
+    if ($uid <= 2) {
+      throw new ReliefwebImportExceptionViolation('User Id is an admin.');
+    }
   }
 
   /**

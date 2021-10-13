@@ -178,4 +178,34 @@ class ReliefwebImporterMandatoryTest extends ReliefwebImporterTestBase {
     $this->assertEquals($source, $this->reliefwebImporter->validateSource($source, $source_id));
   }
 
+  /**
+   * Test validate base URL.
+   */
+  public function testvalidateUserEmpty() {
+    $uid = ' ';
+
+    $this->expectExceptionMessage('User Id is not defined.');
+    $this->reliefwebImporter->validateUser($uid);
+  }
+
+  /**
+   * Test validate base URL.
+   */
+  public function testvalidateUserSpaces() {
+    $uid = 'abcd';
+
+    $this->expectExceptionMessage('User Id is not numeric.');
+    $this->reliefwebImporter->validateUser($uid);
+  }
+
+  /**
+   * Test validate base URL.
+   */
+  public function testvalidateUserInvalidUrl() {
+    $uid = 1;
+
+    $this->expectExceptionMessage('User Id is an admin.');
+    $this->reliefwebImporter->validateUser($uid);
+  }
+
 }
