@@ -644,6 +644,7 @@
         container.setAttribute('role', 'combobox');
         container.setAttribute('aria-expanded', 'false');
         container.setAttribute('aria-haspopup', 'listbox');
+        container.classList.add('rw-autocomplete');
         container.appendChild(input);
         container.appendChild(button);
 
