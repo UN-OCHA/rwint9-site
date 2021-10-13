@@ -182,9 +182,6 @@ class DrushCommandsTest extends ExistingSiteBase {
     // Import jobs.
     $this->reliefwebImporter->jobs();
 
-    $warnings = $this->reliefwebImporter->getWarnings();
-    $errors = $this->reliefwebImporter->getErrors();
-
     $query = $this->entityTypeManager->getStorage('node')->getQuery();
     $query->condition('type', 'job');
     $query->condition('field_job_id', 'https://www.aplitrak.com?adid=1');
@@ -193,6 +190,9 @@ class DrushCommandsTest extends ExistingSiteBase {
 
     /** @var Drupal\reliefweb_entities\Entity\Job $job */
     $job = reset($jobs);
+
+    $warnings = $this->reliefwebImporter->getWarnings();
+    $errors = $this->reliefwebImporter->getErrors();
 
     $this->assertSame($warnings[0], 'Validation failed in field_job_experience with message: <em class="placeholder">Job years of experience</em>: this field cannot hold more than 1 values. for job https://www.aplitrak.com?adid=1');
     $this->assertCount(0, $errors);
