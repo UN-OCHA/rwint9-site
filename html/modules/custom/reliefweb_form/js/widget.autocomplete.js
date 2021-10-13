@@ -636,6 +636,7 @@
         // Prepare the selection container.
         var selection = document.createElement('div');
         selection.setAttribute('data-selection', '');
+        selection.classList.add('rw-selection');
 
         // Wrapper for the autocomplete components.
         var container = document.createElement('div');
