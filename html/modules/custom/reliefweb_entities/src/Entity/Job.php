@@ -32,13 +32,13 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
    */
   public static function addFieldConstraints(&$fields) {
     // Restrict body length.
-    $fields['body']->addConstraint('Length', [
+    $fields['body']->addConstraint('TextLengthWithinRange', [
       'min' => 400,
       'max' => 50000,
     ]);
 
     // Restrict how to apply length.
-    $fields['field_how_to_apply']->addConstraint('Length', [
+    $fields['field_how_to_apply']->addConstraint('TextLengthWithinRange', [
       'min' => 100,
       'max' => 10000,
     ]);
@@ -49,8 +49,8 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
     ]);
 
     // Restrict the city length if not empty.
-    $fields['field_city']->addConstraint('Length', [
-      'allowEmptyString' => TRUE,
+    $fields['field_city']->addConstraint('TextLengthWithinRange', [
+      'skipIfEmpty' => TRUE,
       'min' => 3,
       'max' => 255,
     ]);
@@ -62,7 +62,7 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
     ]);
 
     // Limit to 3 themes max.
-    $fields['field_theme']->addConstraint('Count', [
+    $fields['field_theme']->addConstraint('MaxNumberOfValues', [
       'max' => 3,
     ]);
   }
