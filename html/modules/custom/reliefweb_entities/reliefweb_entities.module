@@ -16,43 +16,85 @@ use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\taxonomy\TermInterface;
 
 /**
+ * Get the list of entity bundle classes.
+ *
+ * @return array
+ *   List of entity bundle classes, keyed by entity type id then bundle. Each
+ *   item has a class and label attributes.
+ */
+function reliefweb_entities_get_entity_bundle_classes() {
+  return [
+    'node' => [
+      'announcement' => [
+        'class' => '\Drupal\reliefweb_entities\Entity\Announcement',
+        'label' => 'Announcement',
+      ],
+      'blog_post' => [
+        'class' => '\Drupal\reliefweb_entities\Entity\BlogPost',
+        'label' => 'Blog Post',
+      ],
+      'book' => [
+        'class' => '\Drupal\reliefweb_entities\Entity\Book',
+        'label' => 'Book',
+      ],
+      'job' => [
+        'class' => '\Drupal\reliefweb_entities\Entity\Job',
+        'label' => 'Job',
+      ],
+      'report' => [
+        'class' => '\Drupal\reliefweb_entities\Entity\Report',
+        'label' => 'Report',
+      ],
+      'topic' => [
+        'class' => '\Drupal\reliefweb_entities\Entity\Topic',
+        'label' => 'Topic',
+      ],
+      'training' => [
+        'class' => '\Drupal\reliefweb_entities\Entity\Training',
+        'label' => 'Training',
+      ],
+    ],
+    'taxonomy_term' => [
+      'country' => [
+        'class' => '\Drupal\reliefweb_entities\Entity\Country',
+        'label' => 'Country',
+      ],
+      'disaster' => [
+        'class' => '\Drupal\reliefweb_entities\Entity\Disaster',
+        'label' => 'Disaster',
+      ],
+      'source' => [
+        'class' => '\Drupal\reliefweb_entities\Entity\Source',
+        'label' => 'Source',
+      ],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_entity_bundle_field_info_alter().
+ */
+function reliefweb_entities_entity_bundle_field_info_alter(array &$fields, EntityTypeInterface $entity_type, $bundle) {
+  $entity_bundle_classes = reliefweb_entities_get_entity_bundle_classes();
+  if (isset($entity_bundle_classes[$entity_type->id()][$bundle]['class'])) {
+    $class = $entity_bundle_classes[$entity_type->id()][$bundle]['class'];
+    $class::addFieldConstraints($fields);
+  }
+}
+
+/**
  * Implements hook_entity_bundle_info_alter().
  *
  * Add bundle classes to nodes and terms to handle business logic.
  */
 function reliefweb_entities_entity_bundle_info_alter(&$bundles) {
-  $bundles['node']['announcement']['class'] = 'Drupal\reliefweb_entities\Entity\Announcement';
-  $bundles['node']['announcement']['label'] = 'Announcement';
-
-  $bundles['node']['blog_post']['class'] = 'Drupal\reliefweb_entities\Entity\BlogPost';
-  $bundles['node']['blog_post']['label'] = 'Blog Post';
-
-  $bundles['node']['book']['class'] = 'Drupal\reliefweb_entities\Entity\Book';
-  $bundles['node']['book']['label'] = 'Book Page';
-
-  $bundles['node']['job']['class'] = 'Drupal\reliefweb_entities\Entity\Job';
-  $bundles['node']['job']['label'] = 'Job';
-
-  $bundles['node']['report']['class'] = 'Drupal\reliefweb_entities\Entity\Report';
-  $bundles['node']['report']['label'] = 'Report';
-
-  $bundles['node']['topic']['class'] = 'Drupal\reliefweb_entities\Entity\Topic';
-  $bundles['node']['topic']['label'] = 'Topic';
-
-  $bundles['node']['training']['class'] = 'Drupal\reliefweb_entities\Entity\Training';
-  $bundles['node']['training']['label'] = 'Training';
-
-  $bundles['node']['topic']['class'] = 'Drupal\reliefweb_entities\Entity\Topic';
-  $bundles['node']['topic']['label'] = 'Topic';
-
-  $bundles['taxonomy_term']['country']['class'] = 'Drupal\reliefweb_entities\Entity\Country';
-  $bundles['taxonomy_term']['country']['label'] = 'Country';
-
-  $bundles['taxonomy_term']['disaster']['class'] = 'Drupal\reliefweb_entities\Entity\Disaster';
-  $bundles['taxonomy_term']['disaster']['label'] = 'Disaster';
-
-  $bundles['taxonomy_term']['source']['class'] = 'Drupal\reliefweb_entities\Entity\Source';
-  $bundles['taxonomy_term']['source']['label'] = 'Country';
+  foreach (reliefweb_entities_get_entity_bundle_classes() as $entity_type_id => $items) {
+    foreach ($items as $bundle => $info) {
+      foreach ($info as $property => $value) {
+        $bundles[$entity_type_id][$bundle][$property] = $value;
+      }
+    }
+  }
 }
 
 /**

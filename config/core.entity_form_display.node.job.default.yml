@@ -18,7 +18,7 @@ dependencies:
   module:
     - allowed_formats
     - content_moderation
-    - datetime
+    - path
     - reliefweb_fields
     - text
 id: node.job.default
@@ -104,7 +104,7 @@ content:
     weight: 4
     settings: {  }
     third_party_settings: {  }
-    type: datetime_default
+    type: reliefweb_datetime
     region: content
   field_job_experience:
     weight: 6
@@ -169,9 +169,15 @@ content:
     region: content
   moderation_state:
     type: moderation_state_default
-    weight: 100
+    weight: 12
     settings: {  }
     region: content
+    third_party_settings: {  }
+  path:
+    type: path
+    weight: 13
+    region: content
+    settings: {  }
     third_party_settings: {  }
   status:
     type: boolean_checkbox
@@ -192,7 +198,6 @@ hidden:
   created: true
   field_job_id: true
   langcode: true
-  path: true
   promote: true
   sticky: true
   uid: true

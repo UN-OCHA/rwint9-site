@@ -4,8 +4,8 @@ namespace Drupal\reliefweb_entities\Entity;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\reliefweb_entities\BundleEntityInterface;
-use Drupal\reliefweb_entities\EntityModeratedInterface;
-use Drupal\reliefweb_entities\EntityModeratedTrait;
+use Drupal\reliefweb_moderation\EntityModeratedInterface;
+use Drupal\reliefweb_moderation\EntityModeratedTrait;
 use Drupal\reliefweb_entities\SectionedContentInterface;
 use Drupal\reliefweb_entities\SectionedContentTrait;
 use Drupal\reliefweb_rivers\RiverServiceBase;
@@ -26,6 +26,13 @@ class Disaster extends Term implements BundleEntityInterface, EntityModeratedInt
    */
   public function getApiResource() {
     return 'disasters';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function addFieldConstraints(&$fields) {
+    // No specific constraints.
   }
 
   /**

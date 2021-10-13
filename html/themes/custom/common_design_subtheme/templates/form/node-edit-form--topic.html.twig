@@ -89,6 +89,7 @@
 </fieldset>
 
 {{ form.revision_information }}
+{{ form.path }}
 
 {{
   form|without([
@@ -108,5 +109,7 @@
     'field_theme',
     'actions',
     'revision_information',
+    'advanced',
+    'path',
   ])
 }}

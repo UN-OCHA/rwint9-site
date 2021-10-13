@@ -5,7 +5,7 @@ namespace Drupal\reliefweb_moderation\Services;
 use Drupal\Core\Link;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
-use Drupal\reliefweb_entities\EntityModeratedInterface;
+use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
 
@@ -66,7 +66,7 @@ class SourceModeration extends ModerationServiceBase {
       return [];
     }
 
-    /** @var \Drupal\reliefweb_entities\EntityModeratedInterface[] $entities */
+    /** @var \Drupal\reliefweb_moderation\EntityModeratedInterface[] $entities */
     $entities = $results['entities'];
 
     // Prepare the table rows' data from the entities.

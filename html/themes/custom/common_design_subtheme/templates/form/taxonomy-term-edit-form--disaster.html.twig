@@ -92,6 +92,7 @@
 </fieldset>
 
 {{ form.revision_information }}
+{{ form.path }}
 
 {{
   form|without([
@@ -110,5 +111,8 @@
     'description',
     'actions',
     'relations',
+    'revision_information',
+    'advanced',
+    'path',
   ])
 }}

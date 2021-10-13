@@ -148,9 +148,12 @@ content:
     region: content
   field_embargo_date:
     weight: 6
-    settings: {  }
+    settings:
+      date_order: YMD
+      time_type: '24'
+      increment: 1
     third_party_settings: {  }
-    type: datetime_default
+    type: datetime_datelist
     region: content
   field_feature:
     weight: 21
@@ -240,7 +243,7 @@ content:
     weight: 5
     settings: {  }
     third_party_settings: {  }
-    type: datetime_default
+    type: reliefweb_datetime
     region: content
   field_primary_country:
     weight: 12

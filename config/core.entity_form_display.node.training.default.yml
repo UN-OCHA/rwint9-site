@@ -24,9 +24,8 @@ dependencies:
   module:
     - allowed_formats
     - content_moderation
-    - datetime
-    - datetime_range
     - link
+    - path
     - reliefweb_fields
     - text
 id: node.training.default
@@ -140,7 +139,7 @@ content:
     weight: 5
     settings: {  }
     third_party_settings: {  }
-    type: datetime_default
+    type: reliefweb_datetime
     region: content
   field_source:
     weight: 0
@@ -195,7 +194,7 @@ content:
     weight: 4
     settings: {  }
     third_party_settings: {  }
-    type: daterange_default
+    type: reliefweb_daterange
     region: content
   field_training_format:
     weight: 1
@@ -217,9 +216,15 @@ content:
     region: content
   moderation_state:
     type: moderation_state_default
-    weight: 100
+    weight: 18
     settings: {  }
     region: content
+    third_party_settings: {  }
+  path:
+    type: path
+    weight: 19
+    region: content
+    settings: {  }
     third_party_settings: {  }
   status:
     type: boolean_checkbox
@@ -239,7 +244,6 @@ content:
 hidden:
   created: true
   langcode: true
-  path: true
   promote: true
   sticky: true
   uid: true
