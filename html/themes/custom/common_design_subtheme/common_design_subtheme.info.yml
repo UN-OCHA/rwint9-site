@@ -32,6 +32,15 @@ libraries-extend:
   common_design/cd-button:
     - common_design_subtheme/cd-button
 
+  # Autocomplete form widget.
+  reliefweb_form/widget.autocomplete:
+    - common_design_subtheme/rw-autocomplete
+
+  # Datepicker form widget.
+  reliefweb_form/widget.datepicker:
+    - common_design_subtheme/rw-datepicker
+
+
 # Custom namespace
 # https://www.drupal.org/docs/contributed-modules/components/understanding-twig-namespaces
 # Requires Components module

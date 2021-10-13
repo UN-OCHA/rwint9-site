@@ -1,0 +1,201 @@
+/**
+ * Moderation backend form.
+ *
+ * Style the moderation forms used by the editorial teams to review posted
+ * documents.
+ */
+.path-moderation .rw-moderation-content-filters {
+  padding: 24px 0 0 0;
+}
+/* Hide visually the filters title to reduce scrolling. */
+.path-moderation .rw-moderation-filters > legend {
+  position: absolute;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  white-space: nowrap;
+  border: none;
+  clip-path: inset(100%);
+}
+.path-moderation #edit-filters {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+.path-moderation #edit-filters-status [class*="form-item-filters-status-"] {
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 2px 8px;
+  white-space: nowrap;
+  text-transform: none;
+  border-left-width: 8px;
+  background: none;
+  font-size: 16px;
+  line-height: 16px;
+}
+.path-moderation #edit-filters-status.form-checkboxes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-gap: 0 24px;
+  margin-bottom: -12px;
+}
+.path-moderation.path-moderation-content-disaster #edit-filters-status .form-checkboxes {
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+}
+.path-moderation #edit-filters-other .fieldset-wrapper > * {
+  display: inline-block;
+  margin-top: 0;
+  vertical-align: middle;
+}
+.path-moderation #edit-omnibox .fieldset-wrapper {
+  display: table;
+}
+.path-moderation #edit-omnibox .fieldset-wrapper > * {
+  display: table-cell;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  vertical-align: middle;
+}
+.path-moderation #edit-omnibox .fieldset-wrapper > :first-child {
+  padding-right: 8px;
+}
+.path-moderation #edit-omnibox .fieldset-wrapper select {
+  width: auto;
+  height: 100%;
+}
+.path-moderation #edit-omnibox div[data-autocomplete] > input {
+  border-right: 2px solid #e6ecef;
+}
+.path-moderation [data-selection] > span span + span {
+  font-weight: bold;
+}
+.path-moderation .form-actions {
+  margin-top: 16px;
+}
+/* Link to create a new entity. */
+.path-moderation .form-actions a {
+  display: inline-block;
+  margin: 8px;
+  padding: 4px 8px;
+  text-transform: lowercase;
+  border: 2px solid #055372;
+  border-radius: 8px;
+  line-height: 20px;
+}
+.path-moderation form #edit-actions {
+  padding: 12px;
+  text-align: center;
+  border: 1px solid #e6ecef;
+  background: #e6ecef;
+  background: rgba(230, 236, 239, 0.4);
+}
+/**
+ * Result list.
+ *
+ * List of results below the filter section.
+ */
+.rw-moderation-list {
+  margin-top: 16px;
+  padding: 32px 0;
+}
+/* Hide visually the list title to reduce scrolling. */
+.path-moderation .rw-rw-moderation-list > h3 {
+  position: absolute;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  white-space: nowrap;
+  border: none;
+  clip-path: inset(100%);
+}
+.path-moderation .rw-moderation-content__total-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  grid-gap: 24px;
+  margin: 0 0 24px 0;
+  padding: 0;
+  text-align: center;
+}
+.path-moderation .rw-moderation-content__total-list [data-status] {
+  display: inline-block;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0 0 8px 0;
+  text-transform: none;
+  border-bottom-width: 4px;
+  border-bottom-style: solid;
+  border-left: none;
+  background: none;
+  font-weight: normal;
+}
+.path-moderation .rw-moderation-content__total-list [data-status] * {
+  display: block;
+  line-height: 1.2;
+}
+.path-moderation .rw-moderation-content__total-list [data-status] strong {
+  margin-top: 8px;
+}
+.path-moderation .rw-moderation-list td [data-moderation-status] {
+  margin: 12px 0 0 0;
+  padding: 6px;
+  font-size: 12px;
+  line-height: 10px;
+}
+.path-moderation .rw-moderation-list .rw-moderation-table tr td:first-child {
+  text-align: center;
+  /* white-space: pre; */
+}
+.path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) {
+  width: 100%;
+  word-break: break-word;
+}
+.path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) > * {
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) div + div {
+  margin-top: 4px;
+}
+.path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) .rw-moderation-table__cell__title {
+  font-size: 16px;
+  font-weight: bold;
+}
+.path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) .headline-title {
+  font-size: 15px;
+  font-style: italic;
+}
+.path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) .rw-moderation-table__cell__info {
+  font-size: 15px;
+}
+.path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) .rw-moderation-table__cell__info .rw-moderation-table__cell__info__country a,
+.path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) .rw-moderation-table__cell__details .rw-moderation-table__cell__info__source a {
+  color: #2e3436;
+  font-weight: bold;
+}
+.path-moderation .rw-moderation-list td.rw-moderation-table__cell__date .bury {
+  margin-top: 12px;
+}
+.path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) .closing-date {
+  font-weight: bold;
+}
+.path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) .dates,
+.path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) .cost {
+  font-weight: bold;
+}
+.path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) .value {
+  font-weight: normal;
+}
+.path-moderation .rw-moderation-list .rw-moderation-table__cell__date {
+  text-align: center;
+  white-space: pre;
+  font-size: 15px;
+}

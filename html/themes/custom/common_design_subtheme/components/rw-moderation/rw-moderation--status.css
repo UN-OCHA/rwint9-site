@@ -1,0 +1,138 @@
+/* Moderation statuses and messages */
+.rw-moderation-information {
+  display: block;
+  margin-bottom: 32px;
+}
+.rw-moderation-list [data-status],
+[data-moderation-status],
+[class*="form-item-filters-status-"] {
+  display: block;
+  padding: 10px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-left: 10px solid;
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 12px;
+}
+.rw-moderation-list [data-status="draft"],
+[data-moderation-status="draft"],
+#edit-filters-status [class*="draft"] {
+  border-color: #d9d9d9;
+  background: rgba(217, 217, 217, 0.2);
+}
+.rw-moderation-list [data-status="on_hold"],
+.rw-moderation-list [data-status="alert"],
+.rw-moderation-list [data-status="inactive"],
+[data-moderation-status="on_hold"],
+[data-moderation-status="alert"],
+[data-moderation-status="inactive"],
+#edit-filters-status [class*="on-hold"],
+#edit-filters-status [class*="alert"],
+#edit-filters-status [class*="inactive"] {
+  border-color: #f49e2c;
+  background: rgba(244, 158, 44, 0.2);
+}
+.rw-moderation-list [data-status="to_review"],
+.rw-moderation-list [data-status="external"],
+[data-moderation-status="to_review"],
+[data-moderation-status="external"],
+#edit-filters-status [class*="to-review"],
+#edit-filters-status [class*="external"] {
+  border-color: #076d96;
+  background: rgba(7, 109, 150, 0.2);
+}
+.rw-moderation-list [data-status="published"],
+.rw-moderation-list [data-status="past"],
+.rw-moderation-list [data-status="active"],
+.rw-moderation-list [data-status="normal"],
+[data-moderation-status="published"],
+[data-moderation-status="past"],
+[data-moderation-status="active"],
+[data-moderation-status="normal"],
+#edit-filters-status [class*="published"],
+#edit-filters-status [class*="past"],
+#edit-filters-status [class*="active"],
+#edit-filters-status [class*="normal"] {
+  border-color: #88bb09;
+  background: rgba(136, 187, 9, 0.2);
+}
+.rw-moderation-list [data-status="refused"],
+.rw-moderation-list [data-status="blocked"],
+.rw-moderation-list [data-status="current"],
+.rw-moderation-list [data-status="ongoing"],
+[data-moderation-status="refused"],
+[data-moderation-status="blocked"],
+[data-moderation-status="current"],
+[data-moderation-status="ongoing"],
+#edit-filters-status [class*="refused"],
+#edit-filters-status [class*="blocked"],
+#edit-filters-status [class*="current"],
+#edit-filters-status [class*="ongoing"] {
+  border-color: #da190b;
+  background: rgba(218, 25, 11, 0.2);
+}
+.rw-moderation-list [data-status="expired"],
+.rw-moderation-list [data-status="archive"],
+.rw-moderation-list [data-status="alert_archive"],
+[data-moderation-status="expired"],
+[data-moderation-status="archive"],
+[data-moderation-status="alert_archive"],
+#edit-filters-status [class*="expired"],
+#edit-filters-status [class*="archive"],
+#edit-filters-status [class*="alert-archive"] {
+  border-color: #9509bb;
+  background: rgba(149, 9, 187, 0.2);
+}
+.rw-moderation-list [data-status="draft_archive"],
+[data-moderation-status="draft_archive"],
+#edit-filters-status [class*="draft-archive"] {
+  border-color: #4b4b4b;
+  background: rgba(75, 75, 75, 0.2);
+}
+.rw-moderation-list [data-status="duplicate"],
+.rw-moderation-list [data-status="monitoring_archive"],
+[data-moderation-status="duplicate"],
+[data-moderation-status="monitoring_archive"],
+#edit-filters-status [class*="duplicate"],
+#edit-filters-status [class*="monitoring-archive"] {
+  border-color: #8f5507;
+  background: rgba(143, 85, 7, 0.2);
+}
+.rw-moderation-list [data-status="monitoring"],
+.rw-moderation-list [data-status="reference"],
+[data-moderation-status="monitoring"],
+[data-moderation-status="reference"],
+#edit-filters-status [class*="monitoring"],
+#edit-filters-status [class*="reference"] {
+  border-color: #f5cb2f;
+  background: rgba(245, 203, 47, 0.2);
+}
+.rw-moderation-list [data-status="pending"],
+.rw-moderation-list [data-status="embargoed"],
+.rw-moderation-list [data-status="external_archive"],
+[data-moderation-status="pending"],
+[data-moderation-status="embargoed"],
+[data-moderation-status="external_archive"],
+#edit-filters-status [class*="pending"],
+#edit-filters-status [class*="embargoed"],
+#edit-filters-status [class*="external-archive"] {
+  border-color: #56c9f7;
+  background: rgba(86, 201, 247, 0.2);
+}
+.rw-revision-message {
+  padding: 8px 8px 8px 0;
+}
+.rw-revision-message:before {
+  display: inline-block;
+  overflow: hidden;
+  width: 20px;
+  height: 20px;
+  margin: -1px 8px 0 0;
+  content: "";
+  vertical-align: middle;
+  background: var(--rw-icons--status--info--20--blue);
+}
+.rw-revision-message[data-revision-message="feedback"]:before {
+  background: var(--rw-icons--status--info--20--green);
+}

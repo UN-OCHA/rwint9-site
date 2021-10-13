@@ -238,7 +238,8 @@ form fieldset.error .form-checkbox.error {
   outline: initial;
   outline-offset: initial;
 }
-form fieldset > legend + a[href="#edit-actions"] {
+form fieldset > legend + a[href="#edit-actions"],
+form fieldset > legend + a[href="#actions"] {
   position: absolute;
   right: 0;
   margin-top: 4px;
@@ -255,9 +256,9 @@ form #actions {
   background: #e6ecef;
   background: rgba(230, 236, 239, 0.4);
 }
-form fieldset + #actions {
-  border-top: none;
-}
+/* form fieldset + #actions { */
+/*  border-top: none; */
+/* } */
 form #actions + * {
   border-top: none;
 }
@@ -268,11 +269,12 @@ form div.form-actions {
   width: auto;
   min-width: 100%;
   /* The negative margins are to compensate the button margins. */
-  margin: 8px -8px -8px -8px;
+  /* margin: 8px -8px -8px -8px; */
+  margin: 0 -8px;
 }
-form #actions div.form-actions {
-  margin-top: -8px;
-}
+/* form #actions div.form-actions { */
+/*  margin-top: -8px; */
+/* } */
 form div.form-actions button {
   margin: 8px;
 }
