@@ -85,6 +85,7 @@ hidden:
   field_attention_training: true
   field_disclaimer: true
   field_fts_id: true
+  field_job_import_feed: true
   field_job_import_feed_url: true
   field_logo: true
   field_longname: true

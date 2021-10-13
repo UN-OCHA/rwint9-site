@@ -30,6 +30,13 @@ class BlogPost extends Node implements BundleEntityInterface, EntityModeratedInt
   /**
    * {@inheritdoc}
    */
+  public static function addFieldConstraints(&$fields) {
+    // No specific constraints.
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getEntityMeta() {
     $tags = [];
     foreach ($this->field_tags->referencedEntities() as $entity) {

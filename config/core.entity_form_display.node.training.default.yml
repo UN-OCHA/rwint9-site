@@ -24,8 +24,6 @@ dependencies:
   module:
     - allowed_formats
     - content_moderation
-    - datetime
-    - datetime_range
     - link
     - path
     - reliefweb_fields
@@ -141,7 +139,7 @@ content:
     weight: 5
     settings: {  }
     third_party_settings: {  }
-    type: datetime_default
+    type: reliefweb_datetime
     region: content
   field_source:
     weight: 0
@@ -196,7 +194,7 @@ content:
     weight: 4
     settings: {  }
     third_party_settings: {  }
-    type: daterange_default
+    type: reliefweb_daterange
     region: content
   field_training_format:
     weight: 1

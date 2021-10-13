@@ -1,0 +1,19 @@
+uuid: 3033f169-5eb4-4337-be99-6560adae4906
+langcode: en
+status: true
+dependencies:
+  module:
+    - reliefweb_fields
+    - taxonomy
+id: taxonomy_term.field_job_import_feed
+field_name: field_job_import_feed
+entity_type: taxonomy_term
+type: reliefweb_import_info
+settings: {  }
+module: reliefweb_fields
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
