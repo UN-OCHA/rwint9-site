@@ -114,23 +114,6 @@ function reliefweb_entities_theme_suggestions_taxonomy_term_alter(array &$sugges
 }
 
 /**
- * Implements hook_entity_bundle_field_info_alter().
- */
-function reliefweb_entities_entity_bundle_field_info_alter(
-  array &$fields,
-  EntityTypeInterface $entity_type,
-  $bundle
-) {
-  if (
-    $entity_type->id() === 'node' &&
-    $bundle === 'job' &&
-    isset($fields['field_job_closing_date'])
-  ) {
-    $fields['field_job_closing_date']->addConstraint('FutureDateWhenPublished', []);
-  }
-}
-
-/**
  * Implements hook_theme().
  */
 function reliefweb_entities_theme() {
