@@ -189,9 +189,9 @@ class ReliefwebImporterMandatoryTest extends ReliefwebImporterTestBase {
   }
 
   /**
-   * Test validate base URL.
+   * Test validate user numeric.
    */
-  public function testvalidateUserSpaces() {
+  public function testvalidateUserNumeric() {
     $uid = 'abcd';
 
     $this->expectExceptionMessage('User Id is not numeric.');
