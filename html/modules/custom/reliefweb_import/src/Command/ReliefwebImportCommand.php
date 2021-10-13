@@ -161,6 +161,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     $uid = $term->field_job_import_feed->first()->uid ?? 2;
     $base_url = $term->field_job_import_feed->first()->base_url ?? '';
     $label = $term->label();
+    $source_id = $term->id();
 
     $this->logger()->info('Processing @name, fetching jobs from @url.', [
       '@name' => $label,
@@ -182,7 +183,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       $account->addRole('job_importer');
       $this->accountSwitcher->switchTo($account);
 
-      $this->processXml($data, $uid, $base_url);
+      $this->processXml($data, $uid, $base_url, $source_id);
 
       // Restore user account.
       $this->accountSwitcher->switchBack();
@@ -236,12 +237,12 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
   /**
    * Process XML data.
    */
-  protected function processXml($body, $uid, $base_url) {
+  protected function processXml($body, $uid, $base_url, $source_id) {
     $index = 0;
     $xml = new \SimpleXMLElement($body);
     foreach ($xml as $item) {
       try {
-        $this->checkMandatoryFields($item, $base_url);
+        $this->checkMandatoryFields($item, $base_url, $source_id);
 
         // Check if job already exist.
         if ($this->jobExists((string) $item->link)) {
@@ -285,9 +286,10 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
   /**
    * Check mandatory fields.
    */
-  protected function checkMandatoryFields($data, $base_url) {
+  protected function checkMandatoryFields($data, $base_url, $source_id) {
     $this->validateLink($data->link[0], $base_url);
     $this->validateTitle($data->title[0]);
+    $this->validateSource((string) $data->field_source[0], $source_id);
   }
 
   /**
@@ -488,6 +490,28 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     }
 
     return $title;
+  }
+
+  /**
+   * Validate source.
+   */
+  protected function validateSource($source, $source_id) {
+    if (empty(trim($source))) {
+      throw new ReliefwebImportExceptionViolation('Job found with empty source.');
+    }
+
+    if (!is_numeric($source)) {
+      throw new ReliefwebImportExceptionViolation('Job found with non numeric source.');
+    }
+
+    if ($source !== $source_id) {
+      throw new ReliefwebImportExceptionViolation(strtr('Invalid source expected @source_id, got @source.', [
+        '@source_id' => $source_id,
+        '@source' => $source,
+      ]));
+    }
+
+    return $source;
   }
 
   /**

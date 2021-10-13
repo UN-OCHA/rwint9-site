@@ -56,6 +56,13 @@ class ReliefwebImportCommandStub extends ReliefwebImportCommand {
   /**
    * {@inheritdoc}
    */
+  public function validateSource($source, $source_id) {
+    return parent::validateSource($source, $source_id);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function fetchXml($url) {
     return parent::fetchXml($url);
   }

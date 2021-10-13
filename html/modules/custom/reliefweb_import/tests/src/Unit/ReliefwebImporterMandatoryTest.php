@@ -133,4 +133,49 @@ class ReliefwebImporterMandatoryTest extends ReliefwebImporterTestBase {
     $this->assertEquals($title, $this->reliefwebImporter->validateTitle('    <p>   ' . $title . '   </p>   '));
   }
 
+  /**
+   * Test validate source.
+   */
+  public function testvalidateSourceEmpty() {
+    $source = '';
+    $source_id = 2865;
+
+    $this->expectExceptionMessage('Job found with empty source.');
+    $this->reliefwebImporter->validateSource($source, $source_id);
+  }
+
+  /**
+   * Test validate source.
+   */
+  public function testvalidateSourceNonNumeric() {
+    $source = 'abcd';
+    $source_id = 2865;
+
+    $this->expectExceptionMessage('Job found with non numeric source.');
+    $this->reliefwebImporter->validateSource($source, $source_id);
+  }
+
+  /**
+   * Test validate source.
+   */
+  public function testvalidateSourceDifferent() {
+    $source = 666;
+    $source_id = 2865;
+
+    $this->expectExceptionMessage(strtr('Invalid source expected @source_id, got @source.', [
+      '@source_id' => $source_id,
+      '@source' => $source,
+    ]));
+    $this->reliefwebImporter->validateSource($source, $source_id);
+  }
+
+  /**
+   * Test validate source.
+   */
+  public function testvalidateSourceOk() {
+    $source = $source_id = 2865;
+
+    $this->assertEquals($source, $this->reliefwebImporter->validateSource($source, $source_id));
+  }
+
 }
