@@ -583,7 +583,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
       $revision_log_field = $entity_type->getRevisionMetadataKey('revision_log_message');
 
       $log = $form_state->getValue([$revision_log_field, 0, 'value'], '');
-      $status = $form_state->getValue(['moderation_state', 0, 'state']);
+      $status = $form_state->getValue(['moderation_state', 0, 'value']);
 
       // Add the information about potential new source and update the status.
       if (!$form_state->isValueEmpty('field_source_none') &&
@@ -599,7 +599,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
         // If the status is "published" or "pending", change as appropriate.
         if ($status === 'published' || $status === 'pending') {
           $status = $this->state->get('reliefweb_no_source_status', 'pending');
-          $form_state->setValue(['moderation_state', 0, 'state'], $status);
+          $form_state->setValue(['moderation_state', 0, 'value'], $status);
         }
       }
     }

@@ -175,12 +175,12 @@ interface ModerationServiceInterface {
   /**
    * Validate the moderation status.
    *
-   * @param array $form
-   *   Entity form.
+   * @param array $element
+   *   Status button form element.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   Form state.
    */
-  public function validateEntityStatus(array $form, FormStateInterface $form_state);
+  public function validateEntityStatus(array $element, FormStateInterface $form_state);
 
   /**
    * Submit handler to alter the moderation status.

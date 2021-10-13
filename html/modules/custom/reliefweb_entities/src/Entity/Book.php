@@ -27,6 +27,13 @@ class Book extends Node implements BundleEntityInterface, EntityModeratedInterfa
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public static function addFieldConstraints(&$fields) {
+    // No specific constraints.
+  }
+
+  /**
    * Get the book outline.
    *
    * @return array

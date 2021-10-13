@@ -23,4 +23,11 @@ class Announcement extends Node implements BundleEntityInterface, EntityModerate
     return '';
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public static function addFieldConstraints(&$fields) {
+    // No specific constraints.
+  }
+
 }

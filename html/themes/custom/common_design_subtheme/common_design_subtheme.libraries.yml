@@ -278,8 +278,6 @@ rw-user-information:
   css:
     theme:
       components/rw-user-information/rw-user-information.css: {}
-  dependencies:
-    - common_design_subtheme/rw-icons
 
 rw-view-more:
   css:

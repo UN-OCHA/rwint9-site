@@ -92,6 +92,7 @@ type_settings:
     published:
       label: Publish
       from:
+        - draft
         - on_hold
         - pending
         - published

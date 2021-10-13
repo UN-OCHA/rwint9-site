@@ -37,6 +37,13 @@ class Topic extends Node implements BundleEntityInterface, EntityModeratedInterf
   /**
    * {@inheritdoc}
    */
+  public static function addFieldConstraints(&$fields) {
+    // No specific constraints.
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getEntityMeta() {
     return [
       'posted' => $this->createDate($this->getCreatedTime()),
