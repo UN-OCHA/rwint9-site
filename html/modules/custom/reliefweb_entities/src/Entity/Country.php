@@ -29,6 +29,13 @@ class Country extends Term implements BundleEntityInterface, EntityModeratedInte
   /**
    * {@inheritdoc}
    */
+  public static function addFieldConstraints(&$fields) {
+    // No specific constraints.
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getPageContent() {
     $sections = $this->getPageSections();
     $contents = $this->getPageTableOfContents();
