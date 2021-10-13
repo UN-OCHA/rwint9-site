@@ -179,7 +179,7 @@ class ReliefwebImporterMandatoryTest extends ReliefwebImporterTestBase {
   }
 
   /**
-   * Test validate base URL.
+   * Test validate user empty
    */
   public function testvalidateUserEmpty() {
     $uid = ' ';
