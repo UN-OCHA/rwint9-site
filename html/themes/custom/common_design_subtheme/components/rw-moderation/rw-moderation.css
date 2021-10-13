@@ -199,3 +199,17 @@
   white-space: pre;
   font-size: 15px;
 }
+
+/* Moderation tablesort */
+.rw-moderation-table__header--sort--asc:after,
+.rw-moderation-table__header--sort--desc:after {
+  content: "";
+  width: 13px;
+  height: 13px;
+  display: inline-block;
+  margin-left: 4px;
+  background: url(../../img/tablesort/arrow-desc.png) 50% 100% no-repeat transparent;
+}
+.rw-moderation-table__header--sort--asc:after {
+  background-image: url(../../img/tablesort/arrow-asc.png);
+}
