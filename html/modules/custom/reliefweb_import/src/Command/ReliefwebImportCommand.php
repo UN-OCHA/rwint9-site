@@ -16,6 +16,7 @@ use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionSoftViolation;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionViolation;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionXml;
 use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
+use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\taxonomy\Entity\Term;
 use Drush\Commands\DrushCommands;
 use GuzzleHttp\ClientInterface;
@@ -480,7 +481,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       'line_breaks' => TRUE,
       'consecutive' => TRUE,
     ];
-    $title = $this->cleanText($title, $options);
+    $title = TextHelper::cleanText($title, $options);
 
     // Ensure the title size is reasonable. The max length matches the one from
     // the job form.
@@ -567,7 +568,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     }
 
     // Clean the text, removing notably control characters.
-    $text = $this->cleanText($text);
+    $text = TextHelper::cleanText($text);
 
     // Check if the text is wrapped in a CDATA.
     if (mb_stripos($text, '<![CDATA[') === 0) {
@@ -606,41 +607,6 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     $text = trim($converter->convert($text));
 
     return $text;
-  }
-
-  /**
-   * Clean a text.
-   *
-   * 1. Replace tabulations with double spaces.
-   * 2. Replace non breaking spaces with normal spaces.
-   * 3. Remove control characters (except line feed).
-   * 4. Optionally, replace line breaks and consecutive whitespaces.
-   * 4. Trim the text.
-   *
-   * @param string $text
-   *   Text to clean.
-   * @param array $options
-   *   Associative array with the following replacement options:
-   *   - line_breaks (boolean): replace line breaks with spaces.
-   *   - consecutive (boolean): replace consecutive whitespaces.
-   *
-   * @return string
-   *   Cleaned text.
-   */
-  protected function cleanText($text, array $options = []) {
-    $patterns = ['/[\t]/u', '/[\xA0]+/u', '/[\x00-\x09\x0B-\x1F\x7F]/u'];
-    $replacements = ['  ', ' ', ''];
-    // Replace (consecutive) line breaks with a single space.
-    if (!empty($options['line_breaks'])) {
-      $patterns[] = '/[\x0A]+/u';
-      $replacements[] = ' ';
-    }
-    // Replace consecutive whitespaces with single space.
-    if (!empty($options['consecutive'])) {
-      $patterns[] = '/\s{2,}/u';
-      $replacements[] = ' ';
-    }
-    return trim(preg_replace($patterns, $replacements, $text));
   }
 
   /**
