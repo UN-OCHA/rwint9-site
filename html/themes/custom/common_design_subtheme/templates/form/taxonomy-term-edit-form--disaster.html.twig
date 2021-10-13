@@ -88,6 +88,7 @@
 
 <fieldset id="actions">
   <legend class="visually-hidden">{% trans %}Form submission and other actions{% endtrans %}</legend>
+  {{ form.notifications_content_disable }}
   {{ form.actions }}
 </fieldset>
 
@@ -109,6 +110,7 @@
     'field_profile',
     'field_useful_links',
     'description',
+    'notifications_content_disable',
     'actions',
     'relations',
     'revision_information',
