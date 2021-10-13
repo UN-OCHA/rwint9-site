@@ -523,7 +523,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    */
   protected function validateBody($data) {
     // Clean the body field.
-    $body = $this->sanitizeText('body', $data, 'plain_text');
+    $body = $this->sanitizeText('body', $data, 'markdown');
 
     // Ensure the body field size is reasonable.
     $length = mb_strlen($body);
@@ -583,12 +583,10 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       $text = html_entity_decode($text, ENT_QUOTES, 'UTF-8');
     }
 
-    // Convert the text to HTML.
-    /*
+    // Convert the text to HTML, source might be markdown.
     if (function_exists('check_markup')) {
-    $text = check_markup($text, $format)->__toString();
+      $text = check_markup($text, $format)->__toString();
     }
-     */
 
     // We then sanitize the HTML string.
     $sanitizer = new HtmlSanitizer();
