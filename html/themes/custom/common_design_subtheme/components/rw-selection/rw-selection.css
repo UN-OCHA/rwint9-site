@@ -15,8 +15,7 @@
  * @todo It may possibly make more sense to use a <ol> for the list of selected
  * filters. That would require a modification to the JS scripts.
  */
-.rw-selection,
-[data-selection] {
+.rw-selection {
   width: auto;
   min-width: 100%;
   /* This is compensate the margin of the descendants. */
@@ -24,7 +23,6 @@
   padding: 0;
   border: none;
 }
-[data-selection] [data-value],
 .rw-selection [data-value] {
   position: relative;
   display: inline-block;
@@ -36,11 +34,9 @@
   /* Better readability. */
   line-height: 24px;
 }
-[data-selection] [data-value] .label,
 .rw-selection [data-value] .label {
   font-weight: bold;
 }
-[data-selection] [data-value] button,
 .rw-selection [data-value] button {
   position: absolute;
   top: 0;
@@ -55,15 +51,11 @@
   border: none;
   background: var(--cd-reliefweb-light-grey);
 }
-[data-selection] [data-value] button:hover,
-[data-selection] [data-value] button:focus,
-[data-selection] [data-value] button:active,
 .rw-selection [data-value] button:hover,
 .rw-selection [data-value] button:focus,
 .rw-selection [data-value] button:active {
   background: var(--cd-reliefweb-dark-blue);
 }
-[data-selection] [data-value] button:before,
 .rw-selection [data-value] button:before {
   position: absolute;
   top: 50%;
@@ -76,9 +68,6 @@
   content: "";
   background: var(--rw-icons--common--close--12--dark-blue);
 }
-[data-selection] [data-value] button:hover:before,
-[data-selection] [data-value] button:focus:before,
-[data-selection] [data-value] button:active:before,
 .rw-selection [data-value] button:hover:before,
 .rw-selection [data-value] button:focus:before,
 .rw-selection [data-value] button:active:before {
@@ -105,11 +94,9 @@
  *   </div>
  * </div>
  */
-#main-content [data-selection-messages] [data-value],
 #main-content [data-selection-messages] .rw-selection [data-value] {
   display: block;
 }
-#main-content [data-selection-messages] [data-value] .message,
 #main-content [data-selection-messages] .rw-selection [data-value] .message {
   overflow-wrap: break-word;
   overflow-y: auto;
@@ -123,13 +110,10 @@
   /* @todo review in regards to the standard cd-font sizes. */
   font-size: 15px;
 }
-#main-content [data-selection-messages] [data-value] .message .title,
 #main-content [data-selection-messages] .rw-selection [data-value] .message .title {
   display: block;
   margin-bottom: 8px;
 }
-#main-content [data-selection-messages] [data-value] .message ul,
-#main-content [data-selection-messages] [data-value] .message ol,
 #main-content [data-selection-messages] .rw-selection [data-value] .message ul,
 #main-content [data-selection-messages] .rw-selection [data-value] .message ol {
   padding: 0 0 0 24px;
