@@ -153,14 +153,14 @@ class DrushCommandsTest extends ExistingSiteBase {
       [
         'vocabulary' => 'country',
         'tid' => 999991,
-        'field_iso3_value' => [
+        'field_iso3' => [
           'value' => 'AFG',
         ]
       ],
       [
         'vocabulary' => 'country',
         'tid' => 999992,
-        'field_iso3_value' => [
+        'field_iso3' => [
           'value' => 'COL',
         ]
       ],
