@@ -199,9 +199,9 @@ class ReliefwebImporterMandatoryTest extends ReliefwebImporterTestBase {
   }
 
   /**
-   * Test validate base URL.
+   * Test validate user ID.
    */
-  public function testvalidateUserInvalidUrl() {
+  public function testvalidateUserId() {
     $uid = 1;
 
     $this->expectExceptionMessage('User Id is an admin.');
