@@ -7,7 +7,6 @@
 
 use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
@@ -68,23 +67,6 @@ function reliefweb_entities_theme_suggestions_taxonomy_term_alter(array &$sugges
     $view_mode = $variables['elements']['#view_mode'];
     $suggestions[] = 'taxonomy_term__' . $view_mode;
     $suggestions[] = 'taxonomy_term__' . $term->bundle() . '__' . $view_mode;
-  }
-}
-
-/**
- * Implements hook_entity_bundle_field_info_alter().
- */
-function reliefweb_entities_entity_bundle_field_info_alter(
-  array &$fields,
-  EntityTypeInterface $entity_type,
-  $bundle
-) {
-  if (
-    $entity_type->id() === 'node' &&
-    $bundle === 'job' &&
-    isset($fields['field_job_closing_date'])
-  ) {
-    $fields['field_job_closing_date']->addConstraint('FutureDateWhenPublished', []);
   }
 }
 
