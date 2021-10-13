@@ -68,8 +68,17 @@ trait EntityModeratedTrait {
   public function getOriginalRevisionLogMessage() {
     if ($this instanceof RevisionLogInterface) {
       $key = $this->getEntityType()->getRevisionMetadataKey('revision_log_message');
-      if (isset($this->values[$key][$this->activeLangcode])) {
-        return trim($this->values[$key][$this->activeLangcode]);
+      if (!empty($this->values[$key][$this->activeLangcode])) {
+        $log = $this->values[$key][$this->activeLangcode];
+        if (is_string($log)) {
+          return trim($log);
+        }
+        // For some reason when the form is rebuilt after previewing the entity
+        // the log field is an array with a value property while it's a string
+        // otherwise...
+        elseif (is_array($log) && isset($log['value'])) {
+          return trim($log['value']);
+        }
       }
     }
     return '';
