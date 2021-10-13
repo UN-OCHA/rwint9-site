@@ -175,8 +175,6 @@ class JobFormAlter extends EntityFormAlterServiceBase {
       ];
 
       $form['field_theme']['widget']['#states']['disabled'] = [$conditions];
-
-      $form['#validate'][] = [$this, 'validateJobThemeField'];
     }
   }
 
