@@ -15,7 +15,7 @@
   font-weight: bold;
   line-height: 12px;
 }
-.rw-moderation-list .rw-moderation-list [data-status="draft"],
+.rw-moderation-list [data-status="draft"],
 [data-moderation-status="draft"],
 #edit-filters-status [class*="draft"] {
   border-color: #d9d9d9;
