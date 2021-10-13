@@ -30,7 +30,7 @@ services:
       - default
 
   drupal:
-    image: unocha/rwint9-site:local
+    build: ./
     hostname: rwint9-test-site
     container_name: rwint9-test-site
     depends_on:
