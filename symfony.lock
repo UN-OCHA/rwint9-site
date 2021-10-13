@@ -20,6 +20,9 @@
     "chi-teck/drupal-code-generator": {
         "version": "1.33.1"
     },
+    "cogpowered/finediff": {
+        "version": "0.3.1"
+    },
     "composer/ca-bundle": {
         "version": "1.2.9"
     },
