@@ -30,6 +30,6 @@ services:
     class: Drupal\reliefweb_moderation\Services\TrainingModeration
     arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation']
   reliefweb_moderation.service.param_converter:
-    class: Drupal\reliefweb_moderation\Routing\ModerationServiceParamConverter
+    class: Drupal\reliefweb_moderation\ParamConverter\ModerationServiceConverter
     tags:
       - { name: paramconverter }

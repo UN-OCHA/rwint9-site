@@ -14,7 +14,9 @@ class BookFormAlter extends EntityFormAlterServiceBase {
    * {@inheritdoc}
    */
   protected function addBundleFormAlterations(array &$form, FormStateInterface $form_state) {
-    // No customizations.
+    // Display the book outline as a separate section.
+    unset($form['book']['#group']);
+    $form['book']['#type'] = 'fieldset';
   }
 
 }

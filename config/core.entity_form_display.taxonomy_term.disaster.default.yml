@@ -21,6 +21,7 @@ dependencies:
     - allowed_formats
     - content_moderation
     - datetime
+    - path
     - reliefweb_fields
     - text
 id: taxonomy_term.disaster.default
@@ -176,6 +177,12 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
+  path:
+    type: path
+    weight: 13
+    region: content
+    settings: {  }
+    third_party_settings: {  }
   status:
     type: boolean_checkbox
     settings:
@@ -188,4 +195,3 @@ hidden:
   field_key_content: true
   field_useful_links: true
   langcode: true
-  path: true

@@ -10,9 +10,12 @@ dependencies:
     - field.field.node.blog_post.field_publication_date
     - field.field.node.blog_post.field_tags
     - node.type.blog_post
+    - workflows.workflow.blog_post
   module:
+    - content_moderation
     - datetime
     - media_library
+    - path
     - text
 id: node.blog_post.default
 targetEntityType: node
@@ -67,6 +70,18 @@ content:
     third_party_settings: {  }
     type: entity_reference_autocomplete
     region: content
+  moderation_state:
+    type: moderation_state_default
+    weight: 8
+    settings: {  }
+    region: content
+    third_party_settings: {  }
+  path:
+    type: path
+    weight: 9
+    region: content
+    settings: {  }
+    third_party_settings: {  }
   status:
     type: boolean_checkbox
     settings:
@@ -85,7 +100,6 @@ content:
 hidden:
   created: true
   langcode: true
-  path: true
   promote: true
   sticky: true
   uid: true

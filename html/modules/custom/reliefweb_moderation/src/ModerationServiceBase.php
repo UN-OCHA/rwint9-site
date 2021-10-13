@@ -21,7 +21,6 @@ use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Pager\PagerParametersInterface;
-use Drupal\reliefweb_entities\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
 use Drupal\user\EntityOwnerInterface;
@@ -363,11 +362,6 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
       $form['actions']['preview']['#weight'] = -1;
     }
 
-    // Add validation callback at the beginning to update the moderation status
-    // based on the clicked status button.
-    $form['#validate'] = $form['#validate'] ?? [];
-    array_unshift($form['#validate'], [$this, 'validateEntityStatus']);
-
     // Ensure we call all the submit handlers.
     $submit_handlers = [];
     if (!empty($form['#submit'])) {
@@ -388,6 +382,11 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
         '#name' => $status,
         '#submit' => $submit_handlers,
         '#entity_status' => $status,
+        // Add validation callback to update the moderation status based on the
+        // clicked status button. This needs to be added as element_validate
+        // so that it runs before any other validation which may rely on the
+        // entity status.
+        '#element_validate' => [[$this, 'validateEntityStatus']],
       ], $info);
     }
   }
@@ -395,12 +394,10 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function validateEntityStatus(array $form, FormStateInterface $form_state) {
-    // Update the moderation status based on the clicked submit button.
+  public function validateEntityStatus(array $element, FormStateInterface $form_state) {
     $triggering_element = $form_state->getTriggeringElement();
-    if (!empty($triggering_element['#entity_status'])) {
-      $status = $triggering_element['#entity_status'];
-      $form_state->setValue(['moderation_state', 0, 'state'], $status);
+    if (isset($triggering_element['#entity_status']) && $triggering_element['#entity_status'] === $element['#entity_status']) {
+      $form_state->setValue(['moderation_state', 0, 'value'], $element['#entity_status']);
     }
   }
 
@@ -410,9 +407,9 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   public function handleEntitySubmission(array $form, FormStateInterface $form_state) {
     // Alter the status based on the rest of the submitted form.
     // @todo review if that should not be done in the entity presave instead.
-    $status = $form_state->getValue(['moderation_state', 0, 'state']);
+    $status = $form_state->getValue(['moderation_state', 0, 'value']);
     $status = $this->alterSubmittedEntityStatus($status, $form_state);
-    $form_state->setValue(['moderation_state', 0, 'state'], $status);
+    $form_state->setValue(['moderation_state', 0, 'value'], $status);
   }
 
   /**
@@ -2259,7 +2256,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   /**
    * Get the edit link and moderation status info for the entity.
    *
-   * @param \Drupal\reliefweb_entities\EntityModeratedInterface $entity
+   * @param \Drupal\reliefweb_moderation\EntityModeratedInterface $entity
    *   Entity.
    *
    * @return array
@@ -2278,7 +2275,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   /**
    * Get the entity creator.
    *
-   * @param \Drupal\reliefweb_entities\EntityModeratedInterface $entity
+   * @param \Drupal\reliefweb_moderation\EntityModeratedInterface $entity
    *   Entity.
    *
    * @return \Drupal\Core\GeneratedLink|null
@@ -2331,7 +2328,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   /**
    * Get the revision information for the entity.
    *
-   * @param \Drupal\reliefweb_entities\EntityModeratedInterface $entity
+   * @param \Drupal\reliefweb_moderation\EntityModeratedInterface $entity
    *   Entity.
    *
    * @return array
@@ -2373,7 +2370,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   /**
    * Get the entity creation date.
    *
-   * @param \Drupal\reliefweb_entities\EntityModeratedInterface $entity
+   * @param \Drupal\reliefweb_moderation\EntityModeratedInterface $entity
    *   Entity.
    *
    * @return string|int
