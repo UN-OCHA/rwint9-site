@@ -1,0 +1,14 @@
+uuid: f10e801b-e289-4f1d-b501-a5fcacc29ca1
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.job_importer
+  module:
+    - user
+id: user_add_role_action.job_importer
+label: 'Add the Job importer role to the selected user(s)'
+type: user
+plugin: user_add_role_action
+configuration:
+  rid: job_importer

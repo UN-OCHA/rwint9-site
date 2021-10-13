@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\reliefweb_fields\Plugin\Field\Fieldtype;
+namespace Drupal\reliefweb_fields\Plugin\Field\FieldType;
 
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemBase;

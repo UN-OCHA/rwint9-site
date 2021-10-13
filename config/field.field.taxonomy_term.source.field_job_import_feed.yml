@@ -1,0 +1,21 @@
+uuid: 25da6f0b-a479-438a-aefc-ed2a2336ff92
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_job_import_feed
+    - taxonomy.vocabulary.source
+  module:
+    - reliefweb_fields
+id: taxonomy_term.source.field_job_import_feed
+field_name: field_job_import_feed
+entity_type: taxonomy_term
+bundle: source
+label: 'Job import feed'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: reliefweb_import_info

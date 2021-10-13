@@ -15,4 +15,12 @@ interface BundleEntityInterface {
    */
   public function getApiResource();
 
+  /**
+   * Add constraints to bundle fields.
+   *
+   * @param array $fields
+   *   Fields for this bundle.
+   */
+  public static function addFieldConstraints(array &$fields);
+
 }
