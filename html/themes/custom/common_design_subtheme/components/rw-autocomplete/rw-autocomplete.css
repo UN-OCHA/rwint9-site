@@ -99,3 +99,18 @@
 .rw-autocomplete-suggestion span {
   font-weight: bold;
 }
+
+/* Suggestion with a moderation status. */
+.rw-autocomplete-suggestion [data-moderation-status] {
+  padding-left: 8px;
+  border-left-width: 8px;
+  border-left-style: solid;
+  background: none;
+}
+.rw-autocomplete-suggestion [data-moderation-status="blocked"],
+.rw-autocomplete-suggestion [data-moderation-status="duplicate"],
+.rw-autocomplete-suggestion [data-moderation-status*="archive"] {
+  text-decoration: line-through;
+  opacity: 0.8;
+  font-style: italic;
+}
