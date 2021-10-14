@@ -57,25 +57,20 @@ function reliefweb_form_preprocess_select(&$variables) {
  * Add form enhancements.
  */
 function reliefweb_form_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
-  // Enhancements for the node and term forms.
-  if (preg_match('#^(node|taxonomy_term)_.+_form$#', $form_id) === 1) {
-    if (\Drupal::currentUser()->hasPermission('use enhanced input forms')) {
-      // Attach the widget libraries if there are fields using them.
-      reliefweb_form_attach_autocomplete($form);
-      reliefweb_form_attach_datepicker($form);
-      reliefweb_form_attach_formatting($form);
-      reliefweb_form_attach_lengthchecker($form);
-      reliefweb_form_attach_selection_limit($form);
+  // Enhance the form.
+  if (isset($form['#attributes']['data-enhanced']) && \Drupal::currentUser()->hasPermission('use enhanced input forms')) {
+    // Attach the widget libraries if there are fields using them.
+    reliefweb_form_attach_autocomplete($form);
+    reliefweb_form_attach_datepicker($form);
+    reliefweb_form_attach_formatting($form);
+    reliefweb_form_attach_lengthchecker($form);
+    reliefweb_form_attach_selection_limit($form);
 
-      // Attach the guidelines.
-      reliefweb_form_attach_guidelines($form);
+    // Attach the guidelines.
+    reliefweb_form_attach_guidelines($form);
 
-      // Attach the main enhanced form library.
-      $form['#attached']['library'][] = 'reliefweb_form/form.main';
-
-      // Mark the form has being "enhanced".
-      $form['#attributes']['data-enhanced'] = '';
-    }
+    // Attach the main enhanced form library.
+    $form['#attached']['library'][] = 'reliefweb_form/form.main';
   }
 }
 
