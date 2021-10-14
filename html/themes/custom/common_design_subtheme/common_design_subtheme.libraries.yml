@@ -193,6 +193,11 @@ rw-pager:
     theme:
       components/rw-pager/rw-pager.css: {}
 
+rw-preview:
+  css:
+    theme:
+      components/rw-preview/rw-preview.css: {}
+
 rw-related-content:
   css:
     theme:
