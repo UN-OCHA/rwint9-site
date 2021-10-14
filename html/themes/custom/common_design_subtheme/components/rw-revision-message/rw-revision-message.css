@@ -1,0 +1,22 @@
+.rw-revision-message {
+  padding: 8px 0;
+}
+.rw-revision-message:before {
+  display: inline-block;
+  overflow: hidden;
+  width: 20px;
+  height: 20px;
+  margin: -1px 8px 0 0;
+  content: "";
+  vertical-align: middle;
+  background: var(--rw-icons--status--info--20--blue);
+}
+.rw-revision-message[data-revision-message="feedback"]:before {
+  background: var(--rw-icons--status--info--20--green);
+}
+.rw-revision-author {
+  font-style: italic;
+}
+.rw-moderation-information .rw-revision-message {
+  font-size: 16px;
+}

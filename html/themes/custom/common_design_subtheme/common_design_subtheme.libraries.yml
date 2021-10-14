@@ -46,6 +46,8 @@ rw-autocomplete:
       components/rw-autocomplete/rw-autocomplete.css: {}
   dependencies:
     - common_design_subtheme/rw-icons
+    - common_design_subtheme/rw-moderation-status
+    - common_design_subtheme/rw-selection
 
 rw-blog:
   css:
@@ -159,12 +161,26 @@ rw-moderation:
   css:
     theme:
       components/rw-moderation/rw-moderation.css: {}
-      components/rw-moderation/rw-moderation--status.css: {}
   dependencies:
+    - common_design_subtheme/rw-moderation-status
+    - common_design_subtheme/rw-revision-message
     - common_design_subtheme/rw-autocomplete
     - common_design_subtheme/rw-datepicker
     - common_design_subtheme/rw-icons
     - common_design_subtheme/rw-selection
+
+rw-moderation-information:
+  css:
+    theme:
+      components/rw-moderation-information/rw-moderation-information.css: {}
+  dependencies:
+    - common_design_subtheme/rw-moderation-status
+    - common_design_subtheme/rw-revision-message
+
+rw-moderation-status:
+  css:
+    theme:
+      components/rw-moderation-status/rw-moderation-status.css: {}
 
 rw-most-read:
   css:
@@ -202,6 +218,13 @@ rw-report:
   css:
     theme:
       components/rw-report/rw-report.css: {}
+
+rw-revision-message:
+  css:
+    theme:
+      components/rw-revision-message/rw-revision-message.css: {}
+  dependencies:
+   - common_design_subtheme/rw-icons
 
 rw-river:
   css:
@@ -243,6 +266,7 @@ rw-selection:
       components/rw-selection/rw-selection.css: {}
   dependencies:
     - common_design_subtheme/rw-icons
+    - common_design_subtheme/rw-moderation-status
 
 rw-subscriptions:
   css:
