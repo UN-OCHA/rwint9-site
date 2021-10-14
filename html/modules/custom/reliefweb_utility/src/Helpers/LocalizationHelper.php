@@ -113,7 +113,6 @@ class LocalizationHelper {
         $items = $reordered;
         return TRUE;
       }
-      return FALSE;
     }
     return ksort($items);
   }
@@ -125,7 +124,7 @@ class LocalizationHelper {
    *   Language for which to return a Collator. Defaults to the current
    *   language.
    *
-   * @return Collator
+   * @return \Collator
    *   Collator.
    */
   public static function getCollator($language = NULL) {
@@ -134,10 +133,13 @@ class LocalizationHelper {
     $language = static::getLanguage($language);
 
     if (!isset($collators[$language])) {
-      if (function_exists('collator_create')) {
-        $collator = collator_create($language);
+      $collator = static::collatorCreate($language);
 
-        switch (intl_get_error_code()) {
+      if (!$collator) {
+        $collators[$language] = FALSE;
+      }
+      else {
+        switch (static::intlGetErrorCode()) {
           case U_ZERO_ERROR:
             // No errors.
             break;
@@ -150,7 +152,7 @@ class LocalizationHelper {
             //
             // @see https://www.php.net/manual/en/class.collator.php
             if ($language === 'fr') {
-              $collator->setAttribute(Collator::FRENCH_COLLATION, Collator::ON);
+              $collator->setAttribute(\Collator::FRENCH_COLLATION, \Collator::ON);
             }
             break;
 
@@ -159,15 +161,33 @@ class LocalizationHelper {
             // the collated_(k)sort functions can default to the basic (k)sort.
             $collator = FALSE;
         }
+      }
 
-        $collators[$language] = $collator;
-      }
-      else {
-        $collators[$language] = FALSE;
-      }
+      $collators[$language] = $collator;
     }
 
     return $collators[$language];
+  }
+
+  /**
+   * Get the collator for the given language.
+   *
+   * @param string $language
+   *   Language for which to return a Collator. Defaults to the current
+   *   language.
+   *
+   * @return \Collator
+   *   Collator.
+   */
+  protected static function collatorCreate($language) {
+    return collator_create($language);
+  }
+
+  /**
+   * Get the last error code.
+   */
+  protected static function intlGetErrorCode() {
+    return intl_get_error_code();
   }
 
   /**
