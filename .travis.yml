@@ -49,7 +49,7 @@ script:
 
   # Run unit tests.
   - docker exec -it -u root -w /srv/www rwint9-test-site mkdir -p /srv/www/html/sites/default/files/browser_output
-  - docker exec -it -u root -w /srv/www -e BROWSERTEST_OUTPUT_DIRECTORY=/srv/www/html/sites/default/files/browser_output rwint9-test-site ./vendor/bin/phpunit --testsuite Unit --debug
+  - docker exec -it -u root -w /srv/www -e BROWSERTEST_OUTPUT_DIRECTORY=/srv/www/html/sites/default/files/browser_output rwint9-test-site php -d zend_extension=xdebug ./vendor/bin/phpunit --testsuite Unit --debug
 
   # Install the site with the existing config.
   - docker exec -it rwint9-test-site drush -y si --existing-config
@@ -63,7 +63,7 @@ script:
   - docker exec -it -u root rwint9-test-site chmod -R 777 /srv/www/html/build/logs
 
   # Run all tests and generate coverage report.
-  - docker exec -it -u root -w /srv/www -e XDEBUG_MODE=coverage -e BROWSERTEST_OUTPUT_DIRECTORY=/srv/www/html/sites/default/files/browser_output -e DTT_BASE_URL=http://127.0.0.1 rwint9-test-site ./vendor/bin/phpunit --coverage-clover /srv/www/html/build/logs/clover.xml --debug
+  - docker exec -it -u root -w /srv/www -e XDEBUG_MODE=coverage -e BROWSERTEST_OUTPUT_DIRECTORY=/srv/www/html/sites/default/files/browser_output -e DTT_BASE_URL=http://127.0.0.1 rwint9-test-site php -d zend_extension=xdebug ./vendor/bin/phpunit --coverage-clover /srv/www/html/build/logs/clover.xml --debug
 
 after_success:
   - echo "The tests completed without errors."
