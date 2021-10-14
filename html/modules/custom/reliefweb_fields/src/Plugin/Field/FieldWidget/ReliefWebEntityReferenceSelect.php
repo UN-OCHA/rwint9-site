@@ -191,7 +191,7 @@ class ReliefWebEntityReferenceSelect extends OptionsSelectWidget {
           // The moderation state field is a particular case. We can retrieve it
           // easily so we allow it.
           if (isset($field_storage_definitions[$field_name]) || $field_name === 'moderation_state') {
-            $fields[$field_name] = $this->t('@bundle > @field', [
+            $fields[$bundle . ':' . $field_name] = $this->t('@bundle > @field', [
               '@bundle' => $bundle_label,
               '@field' => $field_definition->getLabel(),
             ]);
@@ -241,14 +241,13 @@ class ReliefWebEntityReferenceSelect extends OptionsSelectWidget {
       $query->addField($table, $id_field, 'id');
       $query->addField($table, $label_field, 'label');
       $query->addField($table, $langcode_field, 'langcode');
+      $query->addField($table, $bundle_field, 'bundle');
       $query->condition($table . '.' . $bundle_field, $bundles, 'IN');
       $query->condition($table . '.' . $langcode_field, $langcodes, 'IN');
 
       // Add any extra data from the base table.
-      foreach ($extra_data_fields as $field_name => $field_info) {
-        if ($field_info['definition']->isBaseField()) {
-          $query->addField($table, $field_name);
-        }
+      foreach ($extra_data_fields['base'] as $field_info) {
+        $query->addField($table, $field_info['definition']->getName());
       }
 
       // Execute the query, giving the opportunity for classes extending this
@@ -259,7 +258,7 @@ class ReliefWebEntityReferenceSelect extends OptionsSelectWidget {
       // languages.
       $ids = [];
       foreach ($records as $record) {
-        $ids[$record->id] = $record->id;
+        $ids[$record->bundle][$record->id] = $record->id;
       }
 
       // Retrieve the extra data for non-base fields.
@@ -271,6 +270,7 @@ class ReliefWebEntityReferenceSelect extends OptionsSelectWidget {
       foreach ($records as $record) {
         $id = (int) $record->id;
         $langcode = $record->langcode;
+        $bundle = $record->bundle;
 
         // The record in the current language takes precedence over the default
         // language version.
@@ -278,14 +278,22 @@ class ReliefWebEntityReferenceSelect extends OptionsSelectWidget {
           $options[$id] = $record->label;
           $attributes = [];
 
-          // Add the extra data as data attributes.
-          foreach ($extra_data_fields as $field_name => $field_info) {
-            $attribute = $field_info['attribute'];
-            if ($field_info['definition']->isBaseField() && isset($record->{$field_name})) {
-              $attributes[$attribute] = $record->{$field_name};
+          // Add the extra data base properties as data attributes.
+          foreach ($extra_data_fields['base'] as $field_info) {
+            $field_name = $field_info['definition']->getName();
+
+            if (isset($record->{$field_name})) {
+              $attributes[$field_info['attribute']] = $record->{$field_name};
             }
-            elseif (isset($extra_data[$field_name][$langcode][$id])) {
-              $attributes[$attribute] = implode(',', $extra_data[$field_name][$langcode][$id]);
+          }
+
+          // Add the extra data bundle fields as data attributes.
+          foreach ($extra_data_fields['bundle'] as $field_info) {
+            $field_name = $field_info['definition']->getName();
+
+            if (isset($extra_data[$bundle][$field_name][$langcode][$id])) {
+              $attribute_value = implode(',', $extra_data[$bundle][$field_name][$langcode][$id]);
+              $attributes[$field_info['attribute']] = $attribute_value;
             }
           }
 
@@ -340,16 +348,38 @@ class ReliefWebEntityReferenceSelect extends OptionsSelectWidget {
    */
   protected function getExtraDataFields() {
     $entity_type_id = $this->getReferencedEntityTypeId();
-    $definitions = $this->getEntityFieldManager()
-      ->getFieldStorageDefinitions($entity_type_id);
 
-    $fields = [];
-    foreach ($this->getSetting('extra_data') as $field_name => $selected) {
-      if (!empty($selected) && isset($definitions[$field_name])) {
-        $fields[$field_name] = [
-          'attribute' => 'data-' . preg_replace('#^field_#', '', $field_name),
-          'definition' => $definitions[$field_name],
-        ];
+    $fields = [
+      'base' => [],
+      'bundle' => [],
+    ];
+    foreach ($this->getSetting('extra_data') as $field => $selected) {
+      if (!empty($selected) && strpos($field, ':') !== FALSE) {
+        list($bundle, $field_name) = explode(':', $field);
+
+        $definitions = $this->getEntityFieldManager()
+          ->getFieldDefinitions($entity_type_id, $bundle);
+
+        if (isset($definitions[$field_name])) {
+          $definition = $definitions[$field_name];
+          $type = $definition->getFieldStorageDefinition()->isBaseField() ? 'base' : 'bundle';
+
+          // The moderation is a special case. It's a base field but its not
+          // using the entity type's table. We add it to the list of bundle
+          // fields and execute the appropriate query in `getExtraData`.
+          if ($field_name === 'moderation_state') {
+            $attribute = 'data-moderation-status';
+            $type = 'bundle';
+          }
+          else {
+            $attribute = 'data-' . preg_replace('#^field_#', '', $field_name);
+          }
+
+          $fields[$type][$field] = [
+            'attribute' => $attribute,
+            'definition' => $definition,
+          ];
+        }
       }
     }
 
@@ -367,22 +397,23 @@ class ReliefWebEntityReferenceSelect extends OptionsSelectWidget {
    *   Langcodes for which to retrieve data.
    *
    * @return array
-   *   Nested ssociative array keyed by field name, then langcode then id
-   *   and finally with the field values as values.
+   *   Nested associative array keyed by bundle then field name, then langcode
+   *   then id and finally with the field values as values.
    */
   protected function getExtraData(array $extra_data_fields, array $ids, array $langcodes) {
     $entity_type_id = $this->getReferencedEntityTypeId();
     $data = [];
 
     // Retrieve the data for each extra field.
-    foreach ($extra_data_fields as $field_name => $field_info) {
+    foreach ($extra_data_fields['bundle'] as $field_info) {
       $definition = $field_info['definition'];
-      // Skip base fields as their data is retrieved from the main option query.
-      if ($definition->isBaseField()) {
+      $bundle = $definition->getTargetBundle();
+      $field_name = $definition->getName();
+
+      // Skip if there are not entity ids for this bundle.
+      if (empty($ids[$bundle])) {
         continue;
       }
-
-      $query = NULL;
 
       // Special handling of the moderation status as it's not an entity field.
       if ($field_name === 'moderation_state') {
@@ -391,20 +422,20 @@ class ReliefWebEntityReferenceSelect extends OptionsSelectWidget {
         $query = $this->getDatabase()
           ->select($table, $table)
           ->condition($table . '.content_entity_type_id', $entity_type_id, '=')
-          ->condition($table . '.content_entity_id', $ids, 'IN')
+          ->condition($table . '.content_entity_id', $ids[$bundle], 'IN')
           ->condition($table . '.langcode', $langcodes, 'IN');
         $query->addField($table, 'content_entity_id', 'id');
         $query->addField($table, 'langcode', 'langcode');
         $query->addField($table, 'moderation_state', 'value');
       }
       else {
-        $column = $definition->getMainPropertyName();
+        $column = $definition->getFieldStorageDefinition()->getMainPropertyName();
         $table = $this->getFieldTableName($entity_type_id, $field_name);
         $field = $this->getFieldColumnName($entity_type_id, $field_name, $column);
 
         $query = $this->getDatabase()
           ->select($table, $table)
-          ->condition($table . '.entity_id', $ids, 'IN')
+          ->condition($table . '.entity_id', $ids[$bundle], 'IN')
           ->condition($table . '.langcode', $langcodes, 'IN')
           ->isNotNull($table . '.' . $field);
         $query->addField($table, 'entity_id', 'id');
@@ -412,10 +443,8 @@ class ReliefWebEntityReferenceSelect extends OptionsSelectWidget {
         $query->addField($table, $field, 'value');
       }
 
-      if (isset($query)) {
-        foreach ($query->execute() ?? [] as $record) {
-          $data[$field_name][$record->langcode][$record->id][] = $record->value;
-        }
+      foreach ($query->execute() ?? [] as $record) {
+        $data[$bundle][$field_name][$record->langcode][$record->id][] = $record->value;
       }
     }
     return $data;
