@@ -72,7 +72,7 @@
 .path-moderation [data-selection] > span span + span {
   font-weight: bold;
 }
-.path-moderation .form-actions {
+.path-moderation .form-actions.form-item {
   margin-top: 16px;
 }
 /* Link to create a new entity. */
@@ -85,13 +85,6 @@
   border-radius: 8px;
   line-height: 20px;
 }
-.path-moderation form #edit-actions {
-  padding: 12px;
-  text-align: center;
-  border: 1px solid #e6ecef;
-  background: #e6ecef;
-  background: rgba(230, 236, 239, 0.4);
-}
 /**
  * Result list.
  *
@@ -102,7 +95,7 @@
   padding: 32px 0;
 }
 /* Hide visually the list title to reduce scrolling. */
-.path-moderation .rw-rw-moderation-list > h3 {
+.path-moderation .rw-moderation-list > h3 {
   position: absolute;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);

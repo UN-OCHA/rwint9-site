@@ -221,9 +221,14 @@ class ModerationPageFilterForm extends FormBase {
     // Add the filter and reset buttons.
     $form['actions'] = [
       '#type' => 'actions',
+      '#theme_wrappers' => [
+        'fieldset' => [
+          '#id' => 'actions',
+          '#title' => $this->t('Filter actions'),
+          '#title_display' => 'invisible',
+        ],
+      ],
       '#weight' => 99,
-      '#prefix' => '<fieldset id="actions">',
-      '#suffix' => '</fieldset>',
     ];
     $form['actions']['submit'] = [
       '#type' => 'submit',
