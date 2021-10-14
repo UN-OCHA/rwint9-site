@@ -426,11 +426,26 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     // Execute the query.
     $results = $this->executeQuery($filters, $limit);
 
+    // Get the headers with the one currently used for sorting flagged.
+    $headers = $this->getOrderInformation()['headers'];
+
+    // Compute the sort URL for the sortable headers.
+    $query = $this->request->query->all();
+    $remove = ['form_build_id', 'form_id', 'submit', 'page'];
+    $query = array_diff_key($query, array_flip($remove));
+    foreach ($headers as $header => $info) {
+      if (isset($info['sortable'])) {
+        $headers[$header]['url'] = Url::fromRoute('<current>', [
+          'order' => $header,
+          'sort' => ($info['sort'] ?? 'desc') === 'desc' ? 'asc' : 'desc',
+        ] + $query);
+      }
+    }
+
     return [
       '#theme' => 'reliefweb_moderation_table',
       '#totals' => $this->getTotals($results),
-      // Get the headers with the one currently used for sorting flagged.
-      '#headers' => $this->getOrderInformation()['headers'],
+      '#headers' => $headers,
       '#rows' => $this->getRows($results),
       '#empty' => $this->t('No results'),
       // @todo check if there are some parameters like `op` that should be
