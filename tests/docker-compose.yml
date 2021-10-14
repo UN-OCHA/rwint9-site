@@ -6,7 +6,6 @@ networks:
 volumes:
   rwint9-test-site-public:
   rwint9-test-site-private:
-  rwint9-test-build-logs:
 
 services:
   redis:
@@ -42,8 +41,6 @@ services:
       # Mount volumes for the private and public files.
       - "rwint9-test-site-public:/srv/www/html/sites/default/files:rw"
       - "rwint9-test-site-private:/srv/www/html/sites/default/private:rw"
-      # Mount the volume to store the build logs.
-      - "rwint9-test-build-logs:/srv/www/html/build/logs"
       # Mount the folders needed for the tests.
       - "../phpcs.xml:/srv/www/phpcs.xml:ro"
       - "../phpunit.xml:/srv/www/phpunit.xml:ro"
