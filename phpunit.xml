@@ -57,6 +57,8 @@
       <directory suffix=".php">./html/modules/custom</directory>
     </include>
     <exclude>
+      <directory suffix="Interface.php">./html/modules/custom</directory>
+      <directory suffix="Constraint.php">./html/modules/custom</directory>
       <directory>./html/modules/custom/*/src/Tests</directory>
       <directory>./html/modules/custom/*/tests</directory>
       <directory>./html/modules/custom/*/*/src/Tests</directory>

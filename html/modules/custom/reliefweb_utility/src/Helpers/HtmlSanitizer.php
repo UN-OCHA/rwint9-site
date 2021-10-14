@@ -278,7 +278,7 @@ class HtmlSanitizer {
     $end = mb_strrpos($html, '</body>');
     if ($start !== FALSE && $end !== FALSE) {
       $start += 6;
-      return mb_substr($html, $start, $end - $start);
+      return trim(mb_substr($html, $start, $end - $start));
     }
 
     return '';
