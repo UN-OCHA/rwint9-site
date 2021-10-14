@@ -1,0 +1,21 @@
+.node-preview-form-select .node-preview-backlink {
+  display: inline-block;
+  padding: 2px 8px 4px;
+  color: var(--cd-white);
+  border-radius: 0 0 10px 10px;
+  background: var(--cd-black);
+  font-size: var(--cd-font-size--small);
+  font-weight: 500;
+  z-index: 1000;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.node-preview-form-select .node-preview-backlink:hover {
+  background: var(--cd-reliefweb-blue);
+}
+
+.node-preview-form-select .form-item-view-mode {
+  display: none;
+}
