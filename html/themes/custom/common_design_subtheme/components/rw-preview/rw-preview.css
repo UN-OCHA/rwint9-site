@@ -15,7 +15,7 @@
 .node-preview-form-select .node-preview-backlink:hover {
   background: var(--cd-reliefweb-blue);
 }
-
+/* Hide View mode select element */
 .node-preview-form-select .form-item-view-mode {
   display: none;
 }
