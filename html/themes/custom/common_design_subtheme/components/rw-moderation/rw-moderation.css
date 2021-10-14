@@ -192,3 +192,16 @@
   white-space: pre;
   font-size: 15px;
 }
+.path-moderation .rw-moderation-list .rw-moderation-table__header--sort--asc:after,
+.path-moderation .rw-moderation-list .rw-moderation-table__header--sort--desc:after {
+  display: inline-block;
+  overflow: hidden;
+  width: 12px;
+  height: 12px;
+  content: "";
+  vertical-align: middle;
+  background: var(--rw-icons--toggle--up--12--dark-blue);
+}
+.path-moderation .rw-moderation-list .rw-moderation-table__header--sort--desc:after {
+  background: var(--rw-icons--toggle--down--12--dark-blue);
+}

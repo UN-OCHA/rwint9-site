@@ -23,7 +23,13 @@
           header.sortable ? 'rw-moderation-table__header--sortable',
           header.sort ? 'rw-moderation-table__header--sort--' ~ header.sort|clean_class,
         ])
-      }}>{{ header.label }}</th>
+      }}>
+        {% if header.sortable and header.url %}
+          {{ link(header.label, header.url) }}
+        {% else %}
+          {{ header.label }}
+        {% endif %}
+      </th>
     {% endfor %}
     </tr>
   </thead>
