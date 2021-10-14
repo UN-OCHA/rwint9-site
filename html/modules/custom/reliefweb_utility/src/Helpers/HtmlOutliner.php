@@ -403,7 +403,7 @@ class HtmlOutliner {
   }
 
   /**
-   * Fix the heading heriarchy of the given DOM node.
+   * Fix the heading hierarchy of the given DOM node.
    *
    * @param \DOMNode $node
    *   DOM node.
