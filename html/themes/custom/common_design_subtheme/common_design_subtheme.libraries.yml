@@ -116,6 +116,13 @@ rw-form:
       components/rw-form/rw-form.css: {}
       components/rw-form/rw-form--widget.css: {}
 
+rw-guidelines:
+  css:
+    theme:
+      components/rw-guidelines/rw-guidelines.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+
 rw-headlines:
   css:
     theme:

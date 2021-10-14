@@ -24,7 +24,6 @@
       <strong>{{ entity.type }}:</strong>
       <a href="{{ entity.url }}">#{{ entity.id }}</a>&nbsp — &nbsp<em>{{ entity.date|date('d M Y H:i:s e', 'UTC') }}</em>
     </div>
-    &nbsp — &nbsp
     <div class="rw-entities-form-user-information__author">
       <strong>{{ 'Author:'|t }}</strong>
       {% if author is not empty %}
@@ -37,7 +36,6 @@
       {% endif %}
     </div>
     {% if sources is not empty %}
-      &nbsp — &nbsp
       <div class="rw-entities-form-user-information__sources">
         <strong>{{ 'Sources:'|t }}</strong>
         <ul>

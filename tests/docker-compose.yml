@@ -56,5 +56,6 @@ services:
       - DRUPAL_DB_PASSWORD=reliefweb
       - DRUPAL_DB_HOST=mysql
       - DRUPAL_DB_DRIVER=mysql
+      - PHP_XDEBUG=true
     networks:
       - default

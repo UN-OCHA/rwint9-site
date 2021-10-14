@@ -15,13 +15,19 @@
  *   </ul>
  * </div>
  */
+/* This selector is to have enough specificity. */
+.rw-autocomplete-select.rw-autocomplete-select--processed {
+  display: none;
+}
 .rw-autocomplete {
   position: relative;
   width: 100%;
+}
+.rw-autocomplete--with-show-all {
   /* The padding is for the button to show all options. */
   padding-right: 60px;
 }
-.rw-autocomplete-input {
+.rw-autocomplete--with-show-all .rw-autocomplete-input {
   /* The show all button is attached to the input. */
   border-right: none;
 }
@@ -36,7 +42,7 @@
   white-space: nowrap;
   text-indent: 60px;
 }
-/* Icon to show the collpased/expanded state of the show all button. */
+/* Icon to show the collapsed/expanded state of the show all button. */
 .rw-autocomplete-show-all:before {
   position: absolute;
   /* The positions combined with the margins center the icon horizontally and

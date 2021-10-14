@@ -16,6 +16,7 @@ use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionSoftViolation;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionViolation;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionXml;
 use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
+use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\taxonomy\Entity\Term;
 use Drush\Commands\DrushCommands;
 use GuzzleHttp\ClientInterface;
@@ -157,23 +158,25 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    *   Source term.
    */
   public function fetchJobs(Term $term) {
-    $this->url = $term->field_job_import_feed->first()->feed_url;
-    $uid = $term->field_job_import_feed->first()->uid ?? 2;
-    $base_url = $term->field_job_import_feed->first()->base_url ?? '';
+    // Reset errors and warnings.
+    $this->errors = [];
+    $this->warnings = [];
+
     $label = $term->label();
     $source_id = $term->id();
+    $base_url = $term->field_job_import_feed->first()->base_url ?? '';
+    $uid = $term->field_job_import_feed->first()->uid ?? FALSE;
+    $this->url = $term->field_job_import_feed->first()->feed_url;
 
     $this->logger()->info('Processing @name, fetching jobs from @url.', [
       '@name' => $label,
       '@url' => $this->url,
     ]);
 
+    $this->validateUser($uid);
     $this->validateBaseUrl($base_url);
 
     try {
-      $this->errors = [];
-      $this->warnings = [];
-
       // Fetch the XML.
       $data = $this->fetchXml($this->url);
 
@@ -436,6 +439,23 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
   }
 
   /**
+   * Validate user.
+   */
+  protected function validateUser($uid) {
+    if (empty(trim($uid))) {
+      throw new ReliefwebImportExceptionViolation('User Id is not defined.');
+    }
+
+    if (!is_numeric($uid)) {
+      throw new ReliefwebImportExceptionViolation('User Id is not numeric.');
+    }
+
+    if ($uid <= 2) {
+      throw new ReliefwebImportExceptionViolation('User Id is an admin.');
+    }
+  }
+
+  /**
    * Validate base URL.
    */
   protected function validateBaseUrl($base_url) {
@@ -480,7 +500,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       'line_breaks' => TRUE,
       'consecutive' => TRUE,
     ];
-    $title = $this->cleanText($title, $options);
+    $title = TextHelper::cleanText($title, $options);
 
     // Ensure the title size is reasonable. The max length matches the one from
     // the job form.
@@ -522,7 +542,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    */
   protected function validateBody($data) {
     // Clean the body field.
-    $body = $this->sanitizeText('body', $data, 'plain_text');
+    $body = $this->sanitizeText('body', $data, 'markdown');
 
     // Ensure the body field size is reasonable.
     $length = mb_strlen($body);
@@ -567,7 +587,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     }
 
     // Clean the text, removing notably control characters.
-    $text = $this->cleanText($text);
+    $text = TextHelper::cleanText($text);
 
     // Check if the text is wrapped in a CDATA.
     if (mb_stripos($text, '<![CDATA[') === 0) {
@@ -582,19 +602,17 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       $text = html_entity_decode($text, ENT_QUOTES, 'UTF-8');
     }
 
-    // Convert the text to HTML.
-    /*
+    // Convert the text to HTML, source might be markdown.
     if (function_exists('check_markup')) {
-    $text = check_markup($text, $format)->__toString();
+      $text = check_markup($text, $format)->__toString();
     }
-     */
 
     // We then sanitize the HTML string.
     $sanitizer = new HtmlSanitizer();
     $text = $sanitizer->sanitizeHtml($text);
 
     // Remove embedded content.
-    $text = $this->stripEmbeddedContent($text);
+    $text = TextHelper::stripEmbeddedContent($text);
 
     // Finally we convert it to markdown.
     $converter = new HtmlConverter();
@@ -606,72 +624,6 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     $text = trim($converter->convert($text));
 
     return $text;
-  }
-
-  /**
-   * Clean a text.
-   *
-   * 1. Replace tabulations with double spaces.
-   * 2. Replace non breaking spaces with normal spaces.
-   * 3. Remove control characters (except line feed).
-   * 4. Optionally, replace line breaks and consecutive whitespaces.
-   * 4. Trim the text.
-   *
-   * @param string $text
-   *   Text to clean.
-   * @param array $options
-   *   Associative array with the following replacement options:
-   *   - line_breaks (boolean): replace line breaks with spaces.
-   *   - consecutive (boolean): replace consecutive whitespaces.
-   *
-   * @return string
-   *   Cleaned text.
-   */
-  protected function cleanText($text, array $options = []) {
-    $patterns = ['/[\t]/u', '/[\xA0]+/u', '/[\x00-\x09\x0B-\x1F\x7F]/u'];
-    $replacements = ['  ', ' ', ''];
-    // Replace (consecutive) line breaks with a single space.
-    if (!empty($options['line_breaks'])) {
-      $patterns[] = '/[\x0A]+/u';
-      $replacements[] = ' ';
-    }
-    // Replace consecutive whitespaces with single space.
-    if (!empty($options['consecutive'])) {
-      $patterns[] = '/\s{2,}/u';
-      $replacements[] = ' ';
-    }
-    return trim(preg_replace($patterns, $replacements, $text));
-  }
-
-  /**
-   * Remove embedded content in html or markdown format from the given text.
-   *
-   * Note: it's using a very basic pattern matching that may not work with
-   * broken html (missing </iframe> ending tag for example)
-   *
-   * @param string $text
-   *   Text to clean.
-   *
-   * @return string
-   *   Cleaned up text.
-   */
-  protected function stripEmbeddedContent($text) {
-    $patterns = [
-      "<embed [^>]+>",
-      "<img [^>]+>",
-      "<param [^>]+>",
-      "<source [^>]+>",
-      "<track [^>]+>",
-      "<audio [^>]+>.*</audio>",
-      "<iframe [^>]+>.*</iframe>",
-      "<map [^>]+>.*</map>",
-      "<object [^>]+>.*</object>",
-      "<video [^>]+>.*</video>",
-      "<svg [^>]+>.*</svg>",
-      "!\[[^\]]*\]\([^\)]+\)",
-      "\[iframe[^\]]*\]\([^\)]+\)",
-    ];
-    return preg_replace('@' . implode("|", $patterns) . '@i', '', $text);
   }
 
   /**
