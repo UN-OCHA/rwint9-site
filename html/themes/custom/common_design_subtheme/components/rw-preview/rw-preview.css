@@ -1,16 +1,33 @@
+/* Override Core preview rule position to add Preview label */
+.node-preview-container {
+  position: relative;
+  padding: 0;
+}
+.node-preview-container header {
+  height: 40px;
+  text-align: center;
+  color: var(--cd-white);
+  background: var(--cd-reliefweb-dark-grey);
+}
+.node-preview-container header h3 {
+  height: 40px;
+  margin: 0;
+  color: var(--cd-white);
+  line-height: 40px;
+}
 .node-preview-form-select .node-preview-backlink {
+  position: absolute;
+  z-index: 1000;
+  top: 40px; /* Height of Preview label */
+  left: 50%;
   display: inline-block;
   padding: 2px 8px 4px;
+  transform: translateX(-50%);
   color: var(--cd-white);
   border-radius: 0 0 10px 10px;
   background: var(--cd-black);
   font-size: var(--cd-font-size--small);
   font-weight: 500;
-  z-index: 1000;
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
 }
 .node-preview-form-select .node-preview-backlink:hover {
   background: var(--cd-reliefweb-blue);
