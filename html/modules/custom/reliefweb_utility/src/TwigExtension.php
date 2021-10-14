@@ -2,12 +2,14 @@
 
 namespace Drupal\reliefweb_utility;
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Pelago\Emogrifier\CssInliner;
 use Pelago\Emogrifier\HtmlProcessor\HtmlPruner;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
+use Twig\TwigFunction;
 
 /**
  * Custom twig functions.
@@ -28,6 +30,20 @@ class TwigExtension extends AbstractExtension {
       ]),
       new TwigFilter('dpm', 'dpm'),
       new TwigFilter('values', 'array_values'),
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFunctions() {
+    return [
+      // May be in core one day...
+      // @see https://www.drupal.org/project/drupal/issues/3184316
+      new TwigFunction('entity_url', [$this, 'getEntityUrl']),
+      new TwigFunction('entity_link', [$this, 'getEntityLink'], [
+        'is_safe' => ['html'],
+      ]),
     ];
   }
 
@@ -130,6 +146,45 @@ class TwigExtension extends AbstractExtension {
 
     // Return either the content of the body or the full HTML.
     return $content_only ? $pruner->renderBodyContent() : $pruner->render();
+  }
+
+  /**
+   * Get an entity's URL.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   Entity.
+   * @param string $rel
+   *   The link relationship type, for example: canonical or edit-form.
+   * @param array $options
+   *   See \Drupal\Core\Routing\UrlGeneratorInterface::generateFromRoute() for
+   *   the available options.
+   *
+   * @return string
+   *   The entity URL.
+   */
+  public static function getEntityUrl(EntityInterface $entity, $rel = 'canonical', array $options = []) {
+    return $entity->toUrl($rel, $options)->toString();
+  }
+
+  /**
+   * Get an entity's Link.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   Entity.
+   * @param string|null $text
+   *   The link text for the anchor tag as a translated string. If NULL, it will
+   *   use the entity's label. Defaults to NULL.
+   * @param string $rel
+   *   The link relationship type, for example: canonical or edit-form.
+   * @param array $options
+   *   See \Drupal\Core\Routing\UrlGeneratorInterface::generateFromRoute() for
+   *   the available options.
+   *
+   * @return \Drupal\Core\GeneratedLink
+   *   The entity link HTML.
+   */
+  public static function getEntityLink(EntityInterface $entity, $text = NULL, $rel = 'canonical', array $options = []) {
+    return $entity->toLink($text, $rel, $options)->toString();
   }
 
 }

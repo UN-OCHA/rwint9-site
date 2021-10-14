@@ -2337,7 +2337,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
    */
   protected function getEntityRevisionData(EntityModeratedInterface $entity) {
     // Revision information.
-    $revision_message = $entity->getRevisionLogMessage();
+    $revision_message = trim($entity->getRevisionLogMessage() ?? '');
 
     // Skip if there is no log message.
     if (empty($revision_message)) {

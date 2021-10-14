@@ -277,7 +277,7 @@ class ReportModeration extends ModerationServiceBase {
     if ($operation !== 'view') {
       // Normally editors can edit any kind of reports
       // but there are some exceptions like archived reports.
-      return $access && $this->isEditableStatus($entity->getModerationStatus(), $account);
+      $access = $access && $this->isEditableStatus($entity->getModerationStatus(), $account);
     }
 
     return $access ? AccessResult::allowed() : AccessResult::forbidden();

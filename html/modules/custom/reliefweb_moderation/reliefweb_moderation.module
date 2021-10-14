@@ -61,7 +61,7 @@ function reliefweb_moderation_theme() {
         // Associative array with the moderation status value and its label.
         'status' => [],
         // Associative array with the type of message (feedback or
-        // instruction) and the message content.
+        // instruction), the message content and the message author.
         'message' => [],
       ],
     ],
@@ -111,6 +111,8 @@ function reliefweb_moderation_preprocess_page(&$variables) {
       $entity instanceof EntityModeratedInterface &&
       !$entity->isNew()
   ) {
+    // Note: when comming back from the preview, the original revision log will
+    // not be available...
     $message = $entity->getOriginalRevisionLogMessage();
     if (!empty($message)) {
       // Convert the message to markdown to generated links notably.
@@ -127,6 +129,7 @@ function reliefweb_moderation_preprocess_page(&$variables) {
       '#message' => [
         'type' => $entity->getOriginalRevisionLogMessageType(),
         'content' => $message,
+        'author' => $entity->getOriginalRevisionUser(),
       ],
       // Display the moderation information before the page title and local
       // tasks.
