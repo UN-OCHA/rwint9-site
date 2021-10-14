@@ -1,0 +1,67 @@
+[data-moderation-status="draft"] {
+  border-color: #d9d9d9;
+  background-color: rgba(217, 217, 217, 0.2);
+}
+[data-moderation-status="on_hold"],
+[data-moderation-status="alert"],
+[data-moderation-status="inactive"] {
+  border-color: #f49e2c;
+  background-color: rgba(244, 158, 44, 0.2);
+}
+[data-moderation-status="to_review"],
+[data-moderation-status="external"] {
+  border-color: #076d96;
+  background-color: rgba(7, 109, 150, 0.2);
+}
+[data-moderation-status="published"],
+[data-moderation-status="past"],
+[data-moderation-status="active"],
+[data-moderation-status="normal"] {
+  border-color: #88bb09;
+  background-color: rgba(136, 187, 9, 0.2);
+}
+[data-moderation-status="refused"],
+[data-moderation-status="blocked"],
+[data-moderation-status="current"],
+[data-moderation-status="ongoing"] {
+  border-color: #da190b;
+  background-color: rgba(218, 25, 11, 0.2);
+}
+[data-moderation-status="expired"],
+[data-moderation-status="archive"],
+[data-moderation-status="alert_archive"] {
+  border-color: #9509bb;
+  background-color: rgba(149, 9, 187, 0.2);
+}
+[data-moderation-status="draft_archive"], {
+  border-color: #4b4b4b;
+  background-color: rgba(75, 75, 75, 0.2);
+}
+[data-moderation-status="duplicate"],
+[data-moderation-status="monitoring_archive"] {
+  border-color: #8f5507;
+  background-color: rgba(143, 85, 7, 0.2);
+}
+[data-moderation-status="monitoring"],
+[data-moderation-status="reference"] {
+  border-color: #f5cb2f;
+  background: rgba(245, 203, 47, 0.2);
+}
+[data-moderation-status="pending"],
+[data-moderation-status="embargoed"],
+[data-moderation-status="external_archive"] {
+  border-color: #56c9f7;
+  background-color: rgba(86, 201, 247, 0.2);
+}
+
+.rw-moderation-status[data-moderation-status] {
+  display: block;
+  padding: 10px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-left-width: 10px;
+  border-left-style: solid;
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 12px;
+}

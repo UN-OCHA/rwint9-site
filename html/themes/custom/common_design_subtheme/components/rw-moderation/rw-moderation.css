@@ -31,6 +31,7 @@
   white-space: nowrap;
   text-transform: none;
   border-left-width: 8px;
+  border-left-style: solid;
   background: none;
   font-size: 16px;
   line-height: 16px;
@@ -115,7 +116,7 @@
   padding: 0;
   text-align: center;
 }
-.path-moderation .rw-moderation-content__total-list [data-status] {
+.path-moderation .rw-moderation-content__total-list [data-moderation-status] {
   display: inline-block;
   display: flex;
   flex-direction: column;
@@ -128,18 +129,18 @@
   background: none;
   font-weight: normal;
 }
-.path-moderation .rw-moderation-content__total-list [data-status] * {
+.path-moderation .rw-moderation-content__total-list [data-moderation-status] * {
   display: block;
+  font-size: 16px;
   line-height: 1.2;
 }
-.path-moderation .rw-moderation-content__total-list [data-status] strong {
+.path-moderation .rw-moderation-content__total-list [data-moderation-status] strong {
   margin-top: 8px;
 }
-.path-moderation .rw-moderation-list td [data-moderation-status] {
+.path-moderation .rw-moderation-list td .rw-moderation-status[data-moderation-status] {
   margin: 12px 0 0 0;
   padding: 6px;
   font-size: 12px;
-  line-height: 10px;
 }
 .path-moderation .rw-moderation-list .rw-moderation-table tr td:first-child {
   text-align: center;
