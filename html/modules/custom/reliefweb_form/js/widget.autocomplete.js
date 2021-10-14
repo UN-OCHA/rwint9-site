@@ -75,9 +75,10 @@
         var removeButton = document.createElement('button');
         removeButton.appendChild(document.createTextNode(t('Remove')));
         removeButton.setAttribute('type', 'button');
+        removeButton.classList.add('remove');
 
         var label = document.createElement('span');
-        label.className = 'label';
+        label.classList.add('label');
         label.appendChild(document.createTextNode(option.text));
 
         var item = document.createElement('div');
@@ -91,7 +92,7 @@
         if (option.hasAttribute('data-message') && option.getAttribute('data-message') !== '') {
           var message = document.createElement('div');
           message.innerHTML = option.getAttribute('data-message');
-          message.className = 'message';
+          message.classList.add('message');
           item.appendChild(message);
         }
 
@@ -611,8 +612,9 @@
 
         var multiple = element.hasAttribute('multiple');
 
-        // Mark the parent of the select as being processed for autocomplete.
-        element.parentNode.setAttribute('autocomplete-processed', '');
+        // Mark the select as being processed for autocomplete.
+        element.classList.add('rw-autocomplete-select');
+        element.classList.add('rw-autocomplete-select--processed');
 
         // Move the autocomplete path attribute if defined to the select element
         // for consistency.
@@ -626,16 +628,19 @@
         input.setAttribute('type', 'search');
         input.setAttribute('autocomplete', 'off');
         input.setAttribute('placeholder', t('type and select...'));
+        input.classList.add('rw-autocomplete-input');
 
         // Toggler button to display all the options.
         var button = document.createElement('button');
         button.appendChild(document.createTextNode(t('Show all options')));
         button.setAttribute('type', 'button');
         button.setAttribute('tabindex', '-1');
+        button.classList.add('rw-autocomplete-show-all');
 
         // Prepare the selection container.
         var selection = document.createElement('div');
         selection.setAttribute('data-selection', '');
+        selection.classList.add('rw-selection');
 
         // Wrapper for the autocomplete components.
         var container = document.createElement('div');
@@ -643,6 +648,8 @@
         container.setAttribute('role', 'combobox');
         container.setAttribute('aria-expanded', 'false');
         container.setAttribute('aria-haspopup', 'listbox');
+        container.classList.add('rw-autocomplete');
+        container.classList.add('rw-autocomplete--with-show-all');
         container.appendChild(input);
         container.appendChild(button);
 
@@ -726,6 +733,8 @@
           delay: 0,
           // No need to cache all the queries.
           disableCache: true,
+          // class namespace.
+          namespace: 'rw-autocomplete',
           // Prepare the source.
           prepare: function (query, source) {
             var data = typeof source === 'function' ? source() : source;
@@ -763,9 +772,9 @@
             }
             var content = this.highlight(query, label);
             // Add the status attribute to enable custom styling.
-            if (suggestion.option && suggestion.option.hasAttribute('data-status')) {
-              var status = suggestion.option.getAttribute('data-status');
-              content = '<div data-status=' + status + '>' + content + '</div>';
+            if (suggestion.option && suggestion.option.hasAttribute('data-moderation-status')) {
+              var status = suggestion.option.getAttribute('data-moderation-status');
+              content = '<div data-moderation-status=' + status + '>' + content + '</div>';
             }
             return content;
           }
