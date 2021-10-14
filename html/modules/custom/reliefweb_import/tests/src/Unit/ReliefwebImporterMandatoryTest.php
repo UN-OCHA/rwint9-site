@@ -179,7 +179,7 @@ class ReliefwebImporterMandatoryTest extends ReliefwebImporterTestBase {
   }
 
   /**
-   * Test validate user empty
+   * Test validate user.
    */
   public function testvalidateUserEmpty() {
     $uid = ' ';
@@ -189,7 +189,7 @@ class ReliefwebImporterMandatoryTest extends ReliefwebImporterTestBase {
   }
 
   /**
-   * Test validate user numeric.
+   * Test validate user.
    */
   public function testvalidateUserNumeric() {
     $uid = 'abcd';
@@ -199,7 +199,7 @@ class ReliefwebImporterMandatoryTest extends ReliefwebImporterTestBase {
   }
 
   /**
-   * Test validate user ID.
+   * Test validate user.
    */
   public function testvalidateUserId() {
     $uid = 1;
