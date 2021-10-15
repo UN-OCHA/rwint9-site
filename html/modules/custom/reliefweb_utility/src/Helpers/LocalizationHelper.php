@@ -113,8 +113,10 @@ class LocalizationHelper {
         $items = $reordered;
         return TRUE;
       }
+
       return FALSE;
     }
+
     return ksort($items);
   }
 
@@ -125,7 +127,7 @@ class LocalizationHelper {
    *   Language for which to return a Collator. Defaults to the current
    *   language.
    *
-   * @return Collator
+   * @return \Collator|null
    *   Collator.
    */
   public static function getCollator($language = NULL) {
@@ -134,40 +136,61 @@ class LocalizationHelper {
     $language = static::getLanguage($language);
 
     if (!isset($collators[$language])) {
-      if (function_exists('collator_create')) {
-        $collator = collator_create($language);
+      $collator = static::collatorCreate($language);
 
-        switch (intl_get_error_code()) {
-          case U_ZERO_ERROR:
-            // No errors.
-            break;
-
-          case U_USING_DEFAULT_WARNING:
-            // For some reason, the French locale for the collation defaults
-            // to English and doesn't enable the French Collation. This is not
-            // an issue per se, as we can have the correct behavior by enabling
-            // the French collation so that accents are handled properly.
-            //
-            // @see https://www.php.net/manual/en/class.collator.php
-            if ($language === 'fr') {
-              $collator->setAttribute(Collator::FRENCH_COLLATION, Collator::ON);
-            }
-            break;
-
-          default:
-            // Some other error happened, we mark the collator as FALSE so that
-            // the collated_(k)sort functions can default to the basic (k)sort.
-            $collator = FALSE;
-        }
-
-        $collators[$language] = $collator;
-      }
-      else {
+      if (!$collator) {
         $collators[$language] = FALSE;
+        return FALSE;
       }
+
+      switch (static::intlGetErrorCode()) {
+        case U_ZERO_ERROR:
+          // No errors.
+          break;
+
+        case U_USING_DEFAULT_WARNING:
+          // For some reason, the French locale for the collation defaults
+          // to English and doesn't enable the French Collation. This is not
+          // an issue per se, as we can have the correct behavior by enabling
+          // the French collation so that accents are handled properly.
+          //
+          // @see https://www.php.net/manual/en/class.collator.php
+          if ($language === 'fr') {
+            $collator->setAttribute(\Collator::FRENCH_COLLATION, \Collator::ON);
+          }
+          break;
+
+        default:
+          // Some other error happened, we mark the collator as FALSE so that
+          // the collated_(k)sort functions can default to the basic (k)sort.
+          $collator = FALSE;
+      }
+
+      $collators[$language] = $collator;
     }
 
     return $collators[$language];
+  }
+
+  /**
+   * Get the collator for the given language.
+   *
+   * @param string $language
+   *   Language for which to return a Collator. Defaults to the current
+   *   language.
+   *
+   * @return \Collator
+   *   Collator.
+   */
+  protected static function collatorCreate($language) {
+    return collator_create($language);
+  }
+
+  /**
+   * Get the last error code.
+   */
+  protected static function intlGetErrorCode() {
+    return intl_get_error_code();
   }
 
   /**
