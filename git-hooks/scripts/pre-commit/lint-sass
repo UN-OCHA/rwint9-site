@@ -1,9 +1,9 @@
 #!/bin/sh
 
-# Lint sass files.
+# Lint CSS and SASS files.
 
-# We only lint files from custom themes.
-include='^html/themes/custom/common_design_subtheme/(sass|components).*\.s?css$'
+# We only lint files from the custom themes and modules.
+include='^(html/themes/custom/[^/]+/(sass|components)|html/modules/custom)/.*\.s?css$'
 exclude=' '
 
 # The linter path is relative to the root of the repository.
@@ -11,6 +11,7 @@ relative=1
 linter="html/themes/custom/common_design_subtheme/node_modules/.bin/stylelint"
 options=""
 message='Linting subtheme CSS/SCSS files...'
+# We need to change to the linter's directory to load its dependencies.
 changedir=1
 
 # Load and execute the linting code.
