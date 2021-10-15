@@ -28,6 +28,7 @@ function reliefweb_form_theme() {
 function reliefweb_form_element_info_alter(array &$info) {
   $info['checkboxes']['#process'][] = 'reliefweb_form_checkboxes_element_process';
   $info['radios']['#process'][] = 'reliefweb_form_radios_element_process';
+  $info['date']['#process'][] = 'reliefweb_form_date_element_process';
 }
 
 /**
@@ -73,6 +74,37 @@ function reliefweb_form_radios_element_process(array $element, FormStateInterfac
   foreach ($element['#options'] as $key => $choice) {
     $element[$key]['#wrapper_attributes'] = $option_attributes[$key] ?? [];
   }
+  return $element;
+}
+
+/**
+ * Process date elements.
+ *
+ * Add the date format as description of the date input.
+ *
+ * @param array $element
+ *   The form element.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The form interface.
+ * @param array $form
+ *   The complete form.
+ *
+ * @return array
+ *   The modified form element.
+ */
+function reliefweb_form_date_element_process(array $element, FormStateInterface $form_state, array $form) {
+  $description = trim($element['#description'] ?? '');
+  if (!empty($description)) {
+    if (substr($description, -1) !== '.') {
+      $description .= '.';
+    }
+    $description .= ' ';
+  }
+  $description .= t('Format: @format (e.g., @date)', [
+    '@format' => 'YYYY-MM-DD',
+    '@date' => gmdate('Y-m-d'),
+  ]);
+  $element['#description'] = $description;
   return $element;
 }
 
