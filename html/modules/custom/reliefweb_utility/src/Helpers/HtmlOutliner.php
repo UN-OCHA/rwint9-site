@@ -117,7 +117,7 @@ class HtmlOutliner {
     if ($node->nodeName === 'hgroup') {
       for ($i = 1; $i <= 6; $i++) {
         $headings = static::getElementsByTagName($node, 'h' . $i);
-        if ($headings->length > 0) {
+        if (count($headings) > 0) {
           return $headings[0];
         }
       }

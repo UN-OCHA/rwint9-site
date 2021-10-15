@@ -21,7 +21,7 @@ class HtmlOutlinerTest extends UnitTestCase {
    *
    * @covers \Drupal\reliefweb_utility\Helpers\HtmlOutliner::fixNodeHeadingHierarchy
    */
-  public function testfixNodeHeadingHierarchy() {
+  public function testFixNodeHeadingHierarchy() {
     $html = $expected = '';
     $dom = $this->buildDom($html);
     HtmlOutliner::fixNodeHeadingHierarchy($dom);
@@ -47,11 +47,45 @@ class HtmlOutlinerTest extends UnitTestCase {
   }
 
   /**
+   * Test fix node heading hierarchy.
+   *
+   * @covers \Drupal\reliefweb_utility\Helpers\HtmlOutliner::getRankingHeading
+   */
+  public function testGetRankingHeading() {
+    $html = $expected = '';
+    $dom = $this->buildDom($html);
+    /** @var \DOMElement */
+    $dom_element = HtmlOutliner::getRankingHeading(HtmlOutliner::getBody($dom));
+    $this->assertEquals('', $expected);
+
+    $html = '<h1>Handle heading</h1>';
+    $expected = '';
+    $dom = $this->buildDom($html);
+    /** @var \DOMElement */
+    $dom_element = HtmlOutliner::getRankingHeading(HtmlOutliner::getBody($dom)->firstChild);
+    $this->assertEquals('', $expected);
+
+    $html = '<section><h1>Handle heading</h1><h3>Sub heading</h3></section>';
+    $expected = '';
+    $dom = $this->buildDom($html);
+    /** @var \DOMElement */
+    $dom_element = HtmlOutliner::getRankingHeading(HtmlOutliner::getBody($dom)->firstChild);
+    $this->assertEquals('', $expected);
+
+    $html = '<hgroup><h1>Handle heading</h1><h3>Sub heading</h3></hgroup><p>content</p>';
+    $expected = 'Handle heading';
+    $dom = $this->buildDom($html);
+    /** @var \DOMElement */
+    $dom_element = HtmlOutliner::getRankingHeading(HtmlOutliner::getBody($dom)->firstChild);
+    $this->assertEquals($dom_element->textContent, $expected);
+  }
+
+  /**
    * Test outline.
    *
-   * @covers \Drupal\reliefweb_utility\Helpers\HtmlOutliner::fixNodeHeadingHierarchy
+   * @covers \Drupal\reliefweb_utility\Helpers\Outline::getLastSection
    */
-  public function testOutline() {
+  public function testOutlineGetLastSection() {
     $html = $expected = '';
     $dom = $this->buildDom($html);
     $section = new Section($dom);
