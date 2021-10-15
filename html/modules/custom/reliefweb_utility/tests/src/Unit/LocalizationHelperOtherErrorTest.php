@@ -47,8 +47,8 @@ class LocalizationHelperOtherErrorTest extends UnitTestCase {
     $this->assertTrue($isSorted);
     $this->assertEquals($items, $sorted);
 
-    $items = ['c', 'b', 'a'];
-    $sorted = ['a', 'b', 'c'];
+    $items = ['c', 'b', 'a', 'é', 'ê', 'è', 'â'];
+    $sorted = ['a', 'b', 'c', 'â', 'è', 'é', 'ê'];
     $isSorted = LocalizationHelperStubOtherError::collatedSort($items, NULL, 'zero');
     $this->assertTrue($isSorted);
     $this->assertEquals($items, $sorted);
