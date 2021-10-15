@@ -78,6 +78,13 @@ class HtmlOutlinerTest extends UnitTestCase {
     /** @var \DOMElement */
     $dom_element = HtmlOutliner::getRankingHeading(HtmlOutliner::getBody($dom)->firstChild);
     $this->assertEquals($dom_element->textContent, $expected);
+
+    $html = '<hgroup>But no Hx tags</hgroup><p>content</p>';
+    $expected = '';
+    $dom = $this->buildDom($html);
+    /** @var \DOMElement */
+    $dom_element = HtmlOutliner::getRankingHeading(HtmlOutliner::getBody($dom)->firstChild);
+    $this->assertEquals($dom_element, $expected);
   }
 
   /**
