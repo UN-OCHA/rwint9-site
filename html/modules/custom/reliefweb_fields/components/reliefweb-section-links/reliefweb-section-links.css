@@ -11,8 +11,8 @@
 }
 .field--type-reliefweb-section-links table[data-list-archives] tbody {
   display: none;
-  max-height: 400px;
   overflow-y: auto;
+  max-height: 400px;
 }
 .field--type-reliefweb-section-links table[data-list-archives][data-visible] tbody {
   display: table-row-group;
@@ -30,18 +30,18 @@
   margin-bottom: 8px;
 }
 .field--type-reliefweb-section-links [data-link-form] label input {
-  margin-top: 4px;
-  width: 100%;
   box-sizing: border-box;
+  width: 100%;
+  margin-top: 4px;
 }
 .field--type-reliefweb-section-links fieldset[data-internal="true"] td img {
   max-width: 35px;
   margin-right: 5px;
 }
 .field--type-reliefweb-section-links td img {
-  vertical-align: middle;
-  max-height: 50px;
   max-width: 200px;
+  max-height: 50px;
+  vertical-align: middle;
 }
 .field--type-reliefweb-section-links td[data-link-form] {
   display: none;
@@ -65,11 +65,11 @@
 .field--type-reliefweb-section-links td[data-drag-handle] {
   width: 25px;
   padding: 12px;
+  cursor: move;
   /* Simple icon reproducing the move cursor. */
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='14' height='14' fill='none' stroke='%23999' stroke-width='3'%3E%3Cpath d='M3 16L29 16M16 3L16 29M12 7L16 3 20 7M12 25L16 29 20 25M25 12L29 16 25 20M7 12L3 16 7 20'/%3E%3C/svg%3E") 50% 50% no-repeat;
-  cursor: move;
 }
 .field--type-reliefweb-section-links tr[data-dragged] td {
-  background-color: #e6ecef;
   cursor: move;
+  background-color: #e6ecef;
 }
