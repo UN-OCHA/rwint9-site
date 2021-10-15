@@ -109,7 +109,9 @@
       }
       // Remove an item from the selection.
       function deleteSelectedItem(selection, item) {
-        selection.removeChild(item);
+        if (item.parentNode === selection) {
+          selection.removeChild(item);
+        }
       }
       // Add an item to the selection if not present.
       function addToSelection(selection, option) {
@@ -139,7 +141,7 @@
         var options = select.getElementsByTagName('option');
         for (var i = 0, l = options.length; i < l; i++) {
           var option = options[i];
-          if (option.selected && option.value !== '_none') {
+          if (option.selected && option.value !== '_none' && !option.disabled) {
             createSelectedItem(selection, option);
           }
         }
@@ -173,38 +175,91 @@
         }
       }
 
+      // Get the list of selected options in the given select element.
+      function getSelectedOptions(element) {
+        var selected = {};
+        var options = element.getElementsByTagName('option');
+        for (var i = 0, l = options.length; i < l; i++) {
+          var option = options[i];
+          if (option.selected) {
+            selected[option.value] = true;
+          }
+        }
+        return selected;
+      }
+
+      // Check if an option is selectable.
+      //
+      // If attribute is defined, then check that one of the option's attribute
+      // values is in the available values. Otherwise check that the option
+      // value is in the available values.
+      function optionIsSelectable(option, available, attribute) {
+        if (attribute) {
+          var items = option.getAttribute(attribute).split(',');
+          for (var i = 0, l = items.length; i < l; i++) {
+            if (available[items[i]] === true) {
+              return true;
+            }
+          }
+        }
+        else {
+          return available[option.value] === true;
+        }
+        return false;
+      }
+
+      // Update the select element options matching the available values.
+      //
+      // If attribute is passed, then the attribute values of the options
+      // are compared with the available values instead of checking the
+      // option value.
+      function updateAvailableOptions(element, available, attribute) {
+        var options = element.getElementsByTagName('option');
+        for (var i = 0, l = options.length; i < l; i++) {
+          var option = options[i];
+          if (option.value !== '_none' && !optionIsSelectable(option, available, attribute)) {
+            option.selected = false;
+            option.disabled = true;
+          }
+          else {
+            option.disabled = false;
+          }
+        }
+      }
+
+      // Get the attribute values of the selected options of the given element.
+      function getSelectedOptionAttributeValues(element, attribute) {
+        var selected = {};
+        var options = element.getElementsByTagName('option');
+        for (var i = 0, l = options.length; i < l; i++) {
+          var option = options[i];
+          if (option.selected && option.hasAttribute(attribute)) {
+            var values = option.getAttribute(attribute).split(',');
+            for (var j = 0, m = values.length; j < m; j++) {
+              selected[values[j]] = true;
+            }
+          }
+        }
+        return selected;
+      }
+
       /**
        * Specific handlers.
        */
 
-      // Handle the update of the disaster field options based on the
-      // selected countries.
+      // Handle the update of the disaster type field options based on the
+      // selected disaster types.
       //
-      // This updates the options of the disaster select field to match
-      // the disasters tagged with the selected countries.
-      function handleDisasters(selection, element) {
-        // If the autocomplete path is not defined, just ignore.
-        var url = element.getAttribute('data-autocomplete-path');
-        if (!url) {
-          return null;
-        }
-
-        // Keep track of the autocomplete request so that we can
-        // cancel the running one when a new one needs to be performed.
-        var xhr = null;
-
-        // Retrieve the country field.
-        var id = element.id.replace('disaster', 'country');
-        var countryElement = document.getElementById(id);
-        if (countryElement === null) {
-          return null;
-        }
-
+      // This updates the options of the disaster type select field to match
+      // the disaster types from the the selected disasters.
+      function handleDisasterTypes(disasterSelection, disasterElement) {
         // Retrieve the disaster type field.
-        var id = element.id.replace('disaster', 'disaster-type');
+        var id = disasterElement.id.replace('disaster', 'disaster-type');
         var disasterTypeElement = document.getElementById(id);
+
         // Place holder to keep track of the disaster type selection container
-        // which is created later.
+        // which is created later when the disaster type field is transformed
+        // into an autocomplete.
         var disasterTypeSelection = null;
 
         // Update the disaster types.
@@ -228,11 +283,11 @@
 
           // Parse the selected disasters and store their disaster types.
           var newTypes = {};
-          var options = element.getElementsByTagName('option');
+          var options = disasterElement.getElementsByTagName('option');
           for (var i = 0, l = options.length; i < l; i++) {
             var option = options[i];
-            if (option.selected && option !== exclude && option.hasAttribute('data-type')) {
-              var types = option.getAttribute('data-type').split(',');
+            if (option.selected && option !== exclude && option.hasAttribute('data-disaster_type')) {
+              var types = option.getAttribute('data-disaster_type').split(',');
               for (var j = 0, m = types.length; j < m; j++) {
                 newTypes[types[j]] = true;
               }
@@ -252,105 +307,25 @@
           }
 
           if (disasterTypeSelection === null) {
-            disasterTypeSelection = disasterTypeElement.parentNode.querySelector('[data-selection]');
+            disasterTypeSelection = document.getElementById(disasterTypeElement.id + '--selection');
           }
           updateSelection(disasterTypeSelection, disasterTypeElement);
         };
 
-        // Callback to update the disasters.
-        var callback = function (data) {
-          var selected = {};
-          var oldTypes = {};
-
-          // Remove all the options, keeping trace of the selected ones
-          // and their associated disaster types.
-          while (element.lastChild) {
-            var lastChild = element.lastChild;
-            if (lastChild.selected) {
-              selected[lastChild.value] = true;
-              // Keep track of the disaster types.
-              if (lastChild.hasAttribute('data-type')) {
-                var types = lastChild.getAttribute('data-type').split(',');
-                for (var i = 0, l = types.length; i < l; i++) {
-                  oldTypes[types[i]] = true;
-                }
-              }
-            }
-            // Remove all options but the empty one.
-            if (lastChild.value !== '_none') {
-              element.removeChild(lastChild);
-            }
-            else {
-              break;
-            }
-          }
-
-          // Populate the disaster field with the new options and refresh the
-          // the selection.
-          if (data.constructor.name === 'Array' && data.length > 0) {
-            var fragment = document.createDocumentFragment();
-            for (var i = 0, l = data.length; i < l; i++) {
-              var disaster = data[i];
-              if (disaster.id && disaster.name && disaster.status) {
-                // Add a new option with the disaster information.
-                var option = document.createElement('option');
-                option.setAttribute('value', disaster.id);
-                option.setAttribute('data-status', disaster.status);
-                option.setAttribute('data-type', disaster.type);
-                option.appendChild(document.createTextNode(disaster.name));
-                option.selected = selected[disaster.id] || false;
-                fragment.appendChild(option);
-              }
-            }
-            element.appendChild(fragment);
-          }
-
-          // Update the disaster selection.
-          updateSelection(selection, element);
-
-          // Update the disaster types.
-          updateDisasterTypes(oldTypes);
-        };
-
-        // Function to handle the changes to the country field.
-        var changeHandler = function () {
-          // Get the list of selected countries.
-          var selected = [];
-          var options = countryElement.getElementsByTagName('option');
-          for (var i = 0, l = options.length; i < l; i++) {
-            var option = options[i];
-            if (option.selected) {
-              selected.push(option.value);
-            }
-          }
-
-          // Fetch the new data if there are selected countries.
-          if (selected.length > 0) {
-            xhr = request(url, selected, callback, xhr);
-          }
-          // Or clear the disaster field.
-          else {
-            callback([]);
-          }
-        };
-
-        // Listen to any change to the country field and update the list
-        // of disasters accordingly.
-        countryElement.addEventListener('change', changeHandler);
-
         // Listen to changes to the disaster to update the list of the disaster
         // types.
-        element.addEventListener('change', function (event) {
+        disasterElement.addEventListener('change', function (event) {
           updateDisasterTypes({});
         });
+
         // Listen to changes to the disaster selection to update the list
         // of disaster types (remove types) when a disaster is removed.
-        selection.addEventListener('click', function (event) {
+        disasterSelection.addEventListener('click', function (event) {
           if (event.target && event.target.nodeName === 'BUTTON') {
-            var option = findOption(element, event.target.parentNode.getAttribute('data-value'));
-            if (option !== false && option.hasAttribute('data-type')) {
+            var option = findOption(disasterElement, event.target.parentNode.getAttribute('data-value'));
+            if (option !== false && option.hasAttribute('data-disaster_type')) {
               var oldTypes = {};
-              var types = option.getAttribute('data-type').split(',');
+              var types = option.getAttribute('data-disaster_type').split(',');
               for (var i = 0, l = types.length; i < l; i++) {
                 oldTypes[types[i]] = true;
               }
@@ -358,6 +333,48 @@
             }
           }
         });
+
+        return updateDisasterTypes;
+      }
+
+      // Handle the update of the disaster field options based on the
+      // selected countries.
+      //
+      // This updates the options of the disaster select field to match
+      // the disasters tagged with the selected countries.
+      function handleDisasters(disasterSelection, disasterElement) {
+        // Retrieve the country field.
+        var id = disasterElement.id.replace('disaster', 'country');
+        var countryElement = document.getElementById(id);
+        if (countryElement === null) {
+          return null;
+        }
+
+        // Set disater type handling.
+        var updateDisasterTypes = handleDisasterTypes(disasterSelection, disasterElement);
+
+        // Function to handle the changes to the country field.
+        var changeHandler = function () {
+          // Retrieve the selected disaster types.
+          var disasterTypes = getSelectedOptionAttributeValues(disasterElement, 'data-disaster_type');
+
+          // Get the selected options from the country field.
+          var available = getSelectedOptions(countryElement);
+
+          // Update the disaster element.
+          updateAvailableOptions(disasterElement, available, 'data-country');
+
+          // Update the disaster selection.
+          updateSelection(disasterSelection, disasterElement);
+
+          // Update the list of disaster types.
+          updateDisasterTypes(disasterTypes);
+        };
+
+        // Add a change event listener on the matching non primary field to
+        // update the allowed values for the primary field and remove any
+        // unallowed values from the selected ones for the primary field.
+        countryElement.addEventListener('change', changeHandler);
 
         // Return the callback to call after the autocomplete widget is created.
         return changeHandler;
@@ -368,62 +385,38 @@
       //
       // This updates the options of the primary field with the selected values
       // of the "normal" field.
-      function handlePrimary(selection, element) {
-        var id = element.id.replace('primary-', '');
-        var fieldElement = document.getElementById(id);
-        if (fieldElement === null) {
+      function handlePrimary(primaryFieldSelection, primaryFieldElement) {
+        var id = primaryFieldElement.id.replace('primary-', '');
+        var nonPrimaryFieldElement = document.getElementById(id);
+        if (nonPrimaryFieldElement === null) {
           return null;
         }
 
-        // Function to handle the changes to the "normal" field.
+        // Function to handle the changes to the non primary field.
         var changeHandler = function () {
-          var selected = {};
-          // Remove all the options, keeping trace of the selected ones.
-          while (element.lastChild) {
-            if (element.lastChild.selected) {
-              selected[element.lastChild.value] = true;
-            }
-            // Remove all options but the empty one.
-            // @todo disable instead of removing?
-            if (element.lastChild.value !== '_none') {
-              element.removeChild(element.lastChild);
-            }
-            else {
-              break;
-            }
-          }
+          // Get the selected options from the non primary field.
+          var available = getSelectedOptions(nonPrimaryFieldElement);
 
-          // Get the selected field options and populate the primary field
-          // select element.
-          var fragment = document.createDocumentFragment();
-          var options = fieldElement.getElementsByTagName('option');
-          for (var i = 0, l = options.length; i < l; i++) {
-            var option = options[i];
-            if (option.selected && option.value !== '_none') {
-              var clone = option.cloneNode(true);
-              clone.selected = selected[option.value] || false;
-              fragment.appendChild(clone);
-            }
-          }
-          element.appendChild(fragment);
+          // Update the primary field values.
+          updateAvailableOptions(primaryFieldElement, available);
 
           // Update the primary field selection.
-          updateSelection(selection, element);
+          updateSelection(primaryFieldSelection, primaryFieldElement);
         };
 
         // Add a change event listener on the matching non primary field to
         // update the allowed values for the primary field and remove any
         // unallowed values from the selected ones for the primary field.
-        fieldElement.addEventListener('change', changeHandler);
+        nonPrimaryFieldElement.addEventListener('change', changeHandler);
 
         // Return the callback to call after the autocomplete widget is created.
         return changeHandler;
       }
 
       // Handle loading the attention messages for the sources.
-      function handleSources(selection, element) {
+      function handleSources(sourceSelection, sourceElement) {
         // If the autocomplete path is not defined, just ignore.
-        var url = element.getAttribute('data-autocomplete-path');
+        var url = sourceElement.getAttribute('data-autocomplete-path');
         if (!url) {
           return null;
         }
@@ -439,7 +432,7 @@
             for (var i = 0, l = data.length; i < l; i++) {
               var item = data[i];
               if (item.id) {
-                var option = findOption(element, item.id);
+                var option = findOption(sourceElement, item.id);
                 if (option) {
                   option.setAttribute('data-message', item.message || '');
                 }
@@ -448,15 +441,15 @@
           }
 
           // Update the source selection.
-          updateSelection(selection, element);
+          updateSelection(sourceSelection, sourceElement);
         };
 
-        // Function to handle the changes to the "normal" field.
+        // Function to handle the changes to the non primary field.
         var changeHandler = function () {
           // Retrieve the list of selected sources without an already loaded
           // attention message.
           var selected = [];
-          var options = element.getElementsByTagName('option');
+          var options = sourceElement.getElementsByTagName('option');
           for (var i = 0, l = options.length; i < l; i++) {
             var option = options[i];
             if (option.selected && !option.hasAttribute('data-message')) {
@@ -475,7 +468,7 @@
         };
 
         // Load the attention message when selection changes.
-        element.addEventListener('change', changeHandler);
+        sourceElement.addEventListener('change', changeHandler);
 
         // Return the callback to call after the autocomplete widget is created.
         return changeHandler;
@@ -640,6 +633,7 @@
         // Prepare the selection container.
         var selection = document.createElement('div');
         selection.setAttribute('data-selection', '');
+        selection.setAttribute('id', element.id + '--selection');
         selection.classList.add('rw-selection');
 
         // Wrapper for the autocomplete components.
@@ -664,7 +658,7 @@
           var options = element.getElementsByTagName('option');
           for (var i = 0, l = options.length; i < l; i++) {
             var option = options[i];
-            if (option.value !== '_none') {
+            if (option.value !== '_none' && !option.disabled) {
               var text = option.text;
               var shortname = option.getAttribute('data-shortname');
               if (shortname && shortname !== text) {
@@ -733,7 +727,7 @@
           delay: 0,
           // No need to cache all the queries.
           disableCache: true,
-          // class namespace.
+          // Class namespace.
           namespace: 'rw-autocomplete',
           // Prepare the source.
           prepare: function (query, source) {
