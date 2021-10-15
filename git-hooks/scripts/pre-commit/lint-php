@@ -4,7 +4,7 @@
 
 # We only lint files from the custom themes and modules.
 include='^html/(modules|themes)/custom/.*\.(php|module|inc|install|test|profile|theme)$'
-exclude=' '
+exclude='(node_modules|vendor)'
 
 # Assume that the php command is global.
 linter="php"

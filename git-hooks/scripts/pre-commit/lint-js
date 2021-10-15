@@ -3,8 +3,8 @@
 # Lint js files.
 
 # We only lint files from the custom themes and modules.
-include='^html/(modules|themes)/custom/.*\.js$'
-exclude=' '
+include='^(html/themes/custom/[^/]+/(js|components)|html/modules/custom)/.*\.js$'
+exclude='(node_modules|vendor)'
 
 # The linter path is relative to the root of the repository.
 relative=1

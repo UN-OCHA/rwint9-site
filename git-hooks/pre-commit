@@ -13,6 +13,9 @@ while getopts "d:" opt; do
   esac
 done
 
+# Disable node deprecation warnings.
+export NODE_OPTIONS="${NODE_OPTIONS:-} --no-deprecation"
+
 # Get the list of pre-commit scripts.
 scripts=$(find "$base/scripts/pre-commit" -maxdepth 1 ! -name '*-common' -type f -perm -111 -print0 | xargs -0);
 

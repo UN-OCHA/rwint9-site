@@ -4,7 +4,7 @@
 
 # We only lint files from the custom themes and modules.
 include='^(html/themes/custom/[^/]+/(sass|components)|html/modules/custom)/.*\.s?css$'
-exclude=' '
+exclude='(node_modules|vendor)'
 
 # The linter path is relative to the root of the repository.
 relative=1
