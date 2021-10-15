@@ -139,6 +139,7 @@ class LocalizationHelper {
       $collator = static::collatorCreate($language);
 
       if (!$collator) {
+        $collators[$language] = FALSE;
         return FALSE;
       }
 
