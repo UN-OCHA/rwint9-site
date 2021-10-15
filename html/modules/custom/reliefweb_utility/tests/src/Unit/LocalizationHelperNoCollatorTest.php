@@ -47,8 +47,8 @@ class LocalizationHelperNoCollatorTest extends UnitTestCase {
     $this->assertTrue($isSorted);
     $this->assertEquals($items, $sorted);
 
-    $items = ['c', 'b', 'a'];
-    $sorted = ['a', 'b', 'c'];
+    $items = ['c', 'b', 'a', 'é', 'ê', 'è', 'â'];
+    $sorted = ['a', 'b', 'c', 'â', 'è', 'é', 'ê'];
     $isSorted = LocalizationHelperStubNoCollator::collatedSort($items, NULL, 'no');
     $this->assertTrue($isSorted);
     $this->assertEquals($items, $sorted);

@@ -49,8 +49,8 @@ class LocalizationHelperTest extends UnitTestCase {
     $this->assertTrue($isSorted);
     $this->assertEquals($items, $sorted);
 
-    $items = ['c', 'b', 'a'];
-    $sorted = ['a', 'b', 'c'];
+    $items = ['c', 'b', 'a', 'é', 'ê', 'è', 'â'];
+    $sorted = ['a', 'â', 'b', 'c', 'é', 'è', 'ê'];
     $isSorted = LocalizationHelperStub::collatedSort($items);
     $this->assertTrue($isSorted);
     $this->assertEquals($items, $sorted);
