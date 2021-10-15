@@ -27,20 +27,20 @@ class HtmlOutlinerTest extends UnitTestCase {
     HtmlOutliner::fixNodeHeadingHierarchy($dom);
     $this->assertEquals($this->domToHtml($dom), $expected);
 
-    $html = '<h1>Handle heading</h1>';
-    $expected = '<h1>Handle heading</h1>';
+    $html = '<h1 data-test=3>Handle heading</h1>';
+    $expected = '<h1 data-test="3">Handle heading</h1>';
     $dom = $this->buildDom($html);
     HtmlOutliner::fixNodeHeadingHierarchy($dom);
     $this->assertEquals($this->domToHtml($dom), $expected);
 
-    $html = '<section><h1>Handle heading</h1><h3>Sub heading</h3></section>';
-    $expected = '<section><h1>Handle heading</h1><h2>Sub heading</h2></section>';
+    $html = '<section><h1 data-test="3">Handle heading</h1><h3>Sub heading</h3></section>';
+    $expected = '<section><h1 data-test="3">Handle heading</h1><h2>Sub heading</h2></section>';
     $dom = $this->buildDom($html);
     HtmlOutliner::fixNodeHeadingHierarchy($dom);
     $this->assertEquals($this->domToHtml($dom), $expected);
 
-    $html = '<section><hgroup><h1>Handle heading</h1><h3>Sub heading</h3></hgroup><p>content</p></section>';
-    $expected = '<section><hgroup><h1>Handle heading</h1><h2>Sub heading</h2></hgroup><p>content</p></section>';
+    $html = '<section><hgroup><h1 data-test="3">Handle heading</h1><h3>Sub heading</h3></hgroup><p>content</p></section>';
+    $expected = '<section><hgroup><h1 data-test="3">Handle heading</h1><h2>Sub heading</h2></hgroup><p>content</p></section>';
     $dom = $this->buildDom($html);
     HtmlOutliner::fixNodeHeadingHierarchy($dom);
     $this->assertEquals($this->domToHtml($dom), $expected);
