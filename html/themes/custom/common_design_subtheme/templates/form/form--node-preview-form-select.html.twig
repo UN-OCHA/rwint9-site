@@ -10,10 +10,10 @@
  * @see template_preprocess_form()
  */
 #}
-
-{{ attach_library('common_design/cd-form') }}
-{{ attach_library('common_design_subtheme/rw-user') }}
-
-<form{{ attributes.addClass('cd-flow cd-form') }}>
+{{ attach_library('common_design_subtheme/rw-preview') }}
+<header>
+  <h3>{{ 'Preview'|t }}</h3>
+</header>
+<form{{ attributes }}>
   {{ children }}
 </form>
