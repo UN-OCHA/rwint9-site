@@ -74,6 +74,22 @@
   background-position-x: var(--rw-icons--common--12--white--x);
 }
 
+/* Selection with a moderation status. */
+.rw-selection [data-moderation-status] {
+  border-left-width: 8px;
+  border-left-style: solid;
+}
+.rw-selection [data-moderation-status="blocked"] .label,
+.rw-selection [data-moderation-status="duplicate"] .label,
+.rw-selection [data-moderation-status*="archive"] .label {
+  text-decoration: line-through;
+  opacity: 0.8;
+  font-style: italic;
+}
+[data-selection-messages] .rw-selection [data-moderation-status] {
+  padding-left: 8px;
+}
+
 /**
  * Selection with additional message.
  *
