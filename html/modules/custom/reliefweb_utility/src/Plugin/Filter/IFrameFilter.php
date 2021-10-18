@@ -31,8 +31,8 @@ class IFrameFilter extends FilterBase {
    *
    * Syntax is: [iframe:widthxheight title](link).
    */
-  protected function convertIframeMarkup($text) {
-    $pattern = "/\[iframe(?:[:](?<width>\d+))?(?:[:x](?<height>\d+))?(?:[ ]+\"?(?<title>[^\"\]]+)\"?)?\]\((?<url>[^\)]+)\)/";
+  public function convertIframeMarkup($text) {
+    $pattern = "/\[iframe(?:[:](?<width>\d+))?(?:[:x](?<height>\d+))?(?:[ ]+\"?(?<title>[^\"\]]+)\"?)?\](\((?<url>[^\)]+)\))?/";
     return preg_replace_callback($pattern, [
       IFrameFilter::class,
       'renderIframeToken',
@@ -49,7 +49,7 @@ class IFrameFilter extends FilterBase {
 
     $width = !empty($data['width']) ? intval($data['width'], 10) : 1000;
     $height = !empty($data['height']) ? intval($data['height'], 10) : round($width / 2);
-    $title = !empty($data['title']) ?? 'iframe';
+    $title = !empty($data['title']) ? $data['title'] : 'iframe';
     $url = $data['url'];
 
     $text = '<iframe width="' . $width . '" height="' . $height . '" title="' . $title . '" src="' . $url . '" frameborder="0" allowfullscreen></iframe>';
