@@ -163,6 +163,9 @@ table th {
 table thead th {
   border-left-color: white;
 }
+th.field-label > h4.label {
+  margin: 0;
+}
 table thead th:first-child {
   border-left-color: #e6ecef;
 }

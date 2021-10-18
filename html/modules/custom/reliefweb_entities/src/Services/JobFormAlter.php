@@ -30,7 +30,7 @@ class JobFormAlter extends EntityFormAlterServiceBase {
     $form['field_how_to_apply']['#attributes']['data-with-wysiwyg'] = '';
 
     // Add a datepicker to the job closing date.
-    $form['field_job_closing_date']['#attributes']['data-with-datepicker'] = '';
+    $form['field_job_closing_date']['widget'][0]['value']['#attributes']['data-with-datepicker'] = '';
 
     // Add an autocomplete widget to the country and source fields.
     $form['field_country']['#attributes']['data-with-autocomplete'] = '';
