@@ -48,10 +48,10 @@ class ReliefwebTokenFilterTest extends UnitTestCase {
       ],
       [
         [
-          '[disaster-map-BE]' => 'BE',
+          '[disaster-map:WF]' => 'BE',
         ],
         [
-          '[disaster-map-BE]' => 'BE',
+          '[disaster-map:WF]' => 'BE',
         ],
         [],
       ],
@@ -71,10 +71,10 @@ class ReliefwebTokenFilterTest extends UnitTestCase {
       ],
       [
         [
-          '[disaster-map-BE]' => 'BE',
+          '[disaster-map:WF]' => 'BE',
         ],
         [
-          '[disaster-map-BE]' => 'BE',
+          '[disaster-map:WF]' => 'BE',
         ],
         ['clear' => FALSE],
       ],
@@ -94,10 +94,10 @@ class ReliefwebTokenFilterTest extends UnitTestCase {
       ],
       [
         [
-          '[disaster-map-BE]' => 'BE',
+          '[disaster-map:WF]' => 'BE',
         ],
         [
-          '[disaster-map-BE]' => 'BE',
+          '[disaster-map:WF]' => 'BE',
         ],
         ['clear' => TRUE],
       ],
@@ -112,11 +112,11 @@ class ReliefwebTokenFilterTest extends UnitTestCase {
       ],
       [
         [
-          '[disaster-map-BE]' => 'BE',
+          '[disaster-map:WF]' => 'BE',
           '[node:title]' => '[node:title]',
         ],
         [
-          '[disaster-map-BE]' => 'BE',
+          '[disaster-map:WF]' => 'BE',
           '[node:title]' => '',
         ],
         ['clear' => TRUE],
