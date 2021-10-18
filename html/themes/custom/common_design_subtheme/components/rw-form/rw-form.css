@@ -402,7 +402,9 @@ form #edit-organization #edit-field-source-allowed .form-item:last-child {
 }
 
 /* Field with text that is not wrapped in description div */
+.field--widget-reliefweb-datetime,
 .field--name-field-job-closing-date,
+.field--name-field-registration-deadline,
 .field--name-body .text-full,
 .field--name-field-how-to-apply .text-full {
   font-size: 15px;
