@@ -16,9 +16,12 @@
   padding-bottom: 12px;
   border-bottom: 1px solid #eb1405;
 }
-.path-admin .rw-page-title {
+.path-admin .rw-page-title,
+.user-logged-in.path-node .rw-page-title {
   padding-bottom: 16px;
   border-bottom: 1px solid #eb1405;
+}
+.path-admin .rw-page-title {
   margin-bottom: 24px;
 }
 .rw-document > header,
