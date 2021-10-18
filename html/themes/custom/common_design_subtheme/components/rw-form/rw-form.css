@@ -203,6 +203,10 @@ form .description a:focus {
 form .description + div {
   margin-top: 8px;
 }
+form .description ul {
+  padding: 0 0 0 16px;
+  margin: 0;
+}
 form .form-optional {
   font-size: 16px;
   font-weight: 300;
@@ -398,6 +402,7 @@ form #edit-organization #edit-field-source-allowed .form-item:last-child {
 /* Embargo Date .field--name-field-embargo-date, */
 .field--widget-datetime-datelist .fieldset-wrapper .form-type-select {
   display: inline-block;
+  margin: 0;
   margin: 0;
 }
 
