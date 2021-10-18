@@ -171,6 +171,7 @@ form > * .form-wrapper.form-item:first-child .fieldset-wrapper > h4:first-child 
 form > * .form-wrapper > h4,
 form > * .form-wrapper.form-item:first-child .fieldset-wrapper > h4 {
   margin: 24px 0 6px;
+  font-style: normal;
 }
 form .form-actions.form-item {
   margin-top: 8px;
@@ -398,4 +399,13 @@ form #edit-organization #edit-field-source-allowed .form-item:last-child {
 .field--widget-datetime-datelist .fieldset-wrapper .form-type-select {
   display: inline-block;
   margin: 0;
+}
+
+/* Field with text that is not wrapped in description div */
+.field--name-field-job-closing-date,
+.field--name-body .text-full,
+.field--name-field-how-to-apply .text-full {
+  font-size: 15px;
+  font-style: italic;
+  line-height: 24px;
 }
