@@ -165,11 +165,11 @@ form > * .form-wrapper,
 form > * .form-item {
   margin-top: 24px;
 }
-form > * .form-wrapper.form-item:first-child .fieldset-wrapper h4:first-child {
+form > * .form-wrapper.form-item:first-child .fieldset-wrapper > h4:first-child {
   margin: 0 0 6px;
 }
-form > * .form-wrapper h4,
-form > * .form-wrapper.form-item:first-child .fieldset-wrapper h4 {
+form > * .form-wrapper > h4,
+form > * .form-wrapper.form-item:first-child .fieldset-wrapper > h4 {
   margin: 24px 0 6px;
 }
 form .form-actions.form-item {
@@ -394,7 +394,7 @@ form #edit-organization #edit-field-source-allowed .form-item:last-child {
   border-top: 2px dotted #e6ecef;
 }
 
-/* Embargo Date .field--name-field-embargo-date,*/
+/* Embargo Date .field--name-field-embargo-date, */
 .field--widget-datetime-datelist .fieldset-wrapper .form-type-select {
   display: inline-block;
   margin: 0;
