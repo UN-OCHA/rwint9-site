@@ -31,7 +31,7 @@ class IFrameFilter extends FilterBase {
    *
    * Syntax is: [iframe:widthxheight title](link).
    */
-  public function convertIframeMarkup($text) {
+  protected function convertIframeMarkup($text) {
     $pattern = "/\[iframe(?:[:](?<width>\d+))?(?:[:x](?<height>\d+))?(?:[ ]+\"?(?<title>[^\"\]]+)\"?)?\](\((?<url>[^\)]+)\))?/";
     return preg_replace_callback($pattern, [
       IFrameFilter::class,

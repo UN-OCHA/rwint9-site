@@ -54,7 +54,7 @@ class IFrameFilterTest extends UnitTestCase {
   public function testIframeMarkup($html, $expected) {
     $this
       ->assertSame($expected, $this->filter
-      ->convertIframeMarkup($html));
+      ->process($html, 'en')->__toString());
   }
 
   /**
