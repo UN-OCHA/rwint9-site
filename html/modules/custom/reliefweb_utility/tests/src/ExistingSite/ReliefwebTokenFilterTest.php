@@ -51,9 +51,9 @@ class ReliefwebTokenFilterTest extends ExistingSiteBase {
 
     $term = [
       'vocabulary' => 'disaster_type',
-      'tid' => 4648,
+      'tid' => 9994648,
       'field_disaster_type_code' => [
-        'value' => 'WF',
+        'value' => 'XX',
       ]
     ];
 
@@ -99,8 +99,8 @@ class ReliefwebTokenFilterTest extends ExistingSiteBase {
         '',
       ],
       [
-        '[disaster-map:WF]',
-        'disaster-map-wf',
+        '[disaster-map:XX]',
+        'disaster-map-xx',
       ],
       [
         '[node:title]',
