@@ -4,20 +4,13 @@
 
 namespace Drupal\Tests\reliefweb_utility\ExistingSite;
 
-use Drupal\Core\Utility\Token;
-use Drupal\reliefweb_utility\Plugin\Filter\ReliefwebTokenFilter;
-use weitzman\DrupalTestTraits\ExistingSiteBase;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
-use Drupal\Tests\reliefweb_import\Traits\XmlTestDataTrait;
-use Drupal\user\Entity\User;
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\ClientException;
-use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
+use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
  * Tests date helper.
@@ -35,16 +28,32 @@ class ReliefwebTokenFilterTest extends ExistingSiteBase {
   protected $token;
 
   /**
+   * An http client.
+   */
+  protected $httpClient;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp() {
     parent::setUp();
 
+    $mock = new MockHandler([
+      new Response(200, [], json_encode($this->getTestResponse())),
+    ]);
+
+    $handlerStack = HandlerStack::create($mock);
+    $this->httpClient = new Client(['handler' => $handlerStack]);
+
+    $this->container = $this->kernel->getContainer();
+    $this->container->set('http_client', $this->httpClient);
+    \Drupal::setContainer($this->container);
+
     $term = [
       'vocabulary' => 'disaster_type',
       'tid' => 4648,
       'field_disaster_type_code' => [
-        'value' => 'XX',
+        'value' => 'WF',
       ]
     ];
 
@@ -54,15 +63,6 @@ class ReliefwebTokenFilterTest extends ExistingSiteBase {
         'label' => 'Term ' . $term['tid'],
       ] + $term);
     }
-
-    $mock = new MockHandler([
-      new Response(200, [], json_encode($this->getTestResponse())),
-    ]);
-
-    $handlerStack = HandlerStack::create($mock);
-
-    $container = \Drupal::getContainer();
-    $container->set('http_client', new Client(['handler' => $handlerStack]));
 
     $this->token = \Drupal::token();
   }
