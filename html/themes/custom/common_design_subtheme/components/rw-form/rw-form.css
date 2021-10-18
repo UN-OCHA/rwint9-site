@@ -416,3 +416,11 @@ form #edit-organization #edit-field-source-allowed .form-item:last-child {
 .field--type-text-long .text-full {
   padding-top: 6px;
 }
+
+form [data-lengthchecker-status] {
+  padding: 8px 8px;
+  margin-top: -2px;
+  font-size: 15px;
+  background-color: rgba(246, 92, 81, 0.2);
+  line-height: 1.2;
+}
