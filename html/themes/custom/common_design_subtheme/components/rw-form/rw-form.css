@@ -413,6 +413,7 @@ form #edit-organization #edit-field-source-allowed .form-item:last-child {
   font-style: italic;
   line-height: 24px;
 }
+.field--name-body .text-full,
 .field--type-text-long .text-full {
   padding-top: 6px;
 }
@@ -423,4 +424,9 @@ form [data-lengthchecker-status] {
   font-size: 15px;
   background-color: rgba(246, 92, 81, 0.2);
   line-height: 1.2;
+}
+
+/* New Organisation field for Jobs */
+.node-form fieldset.field-new-source-wrapper {
+  margin-top: 24px;
 }
