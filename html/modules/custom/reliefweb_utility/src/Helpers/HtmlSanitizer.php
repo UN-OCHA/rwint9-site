@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_utility\Helpers;
 
+use Drupal\Component\Render\MarkupInterface;
 use Drupal\Component\Utility\UrlHelper;
 use League\CommonMark\CommonMarkConverter;
 
@@ -108,7 +109,7 @@ class HtmlSanitizer {
    * This also attempts to fix the heading hierarchy, at least preventing
    * the use of h1 and h2 in the sanitized content.
    *
-   * @param string $html
+   * @param string|\Drupal\Component\Render\MarkupInterface $html
    *   HTML string to sanitize.
    *
    * @return string
@@ -116,7 +117,7 @@ class HtmlSanitizer {
    */
   public function sanitizeHtml($html) {
     // Skip if html is not a string.
-    if (!is_string($html)) {
+    if (!is_string($html) && !($html instanceof MarkupInterface)) {
       return '';
     }
 
