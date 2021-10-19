@@ -127,8 +127,8 @@ class LocalizationHelper {
    *   Language for which to return a Collator. Defaults to the current
    *   language.
    *
-   * @return \Collator|null
-   *   Collator.
+   * @return \Collator|false
+   *   Collator or FALSE if there is no collator for the language.
    */
   public static function getCollator($language = NULL) {
     static $collators = [];
@@ -179,8 +179,8 @@ class LocalizationHelper {
    *   Language for which to return a Collator. Defaults to the current
    *   language.
    *
-   * @return \Collator
-   *   Collator.
+   * @return \Collator|null
+   *   Collator or NULL if the collator couldn't be created.
    */
   protected static function collatorCreate($language) {
     return collator_create($language);
@@ -188,6 +188,9 @@ class LocalizationHelper {
 
   /**
    * Get the last error code.
+   *
+   * @return int
+   *   Error code.
    */
   protected static function intlGetErrorCode() {
     return intl_get_error_code();
