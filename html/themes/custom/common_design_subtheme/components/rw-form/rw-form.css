@@ -455,7 +455,13 @@ form button[data-formatter="pdf"] {
   right: 0;
 }
 
+/* Table drag */
 .field--name-field-tags .tabledrag-handle .handle {
   width: auto;
   height: auto;
+}
+/* Show/Hide row weight button */
+.tabledrag-toggle-weight {
+  padding: 8px;
+  font-size: 14px;
 }
