@@ -302,6 +302,9 @@
     "league/container": {
         "version": "2.5.0"
     },
+    "league/html-to-markdown": {
+        "version": "5.0.1"
+    },
     "league/oauth2-client": {
         "version": "2.6.0"
     },
