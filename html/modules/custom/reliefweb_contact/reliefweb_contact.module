@@ -1,0 +1,42 @@
+<?php
+
+/**
+ * @file
+ * Reliefweb contact module.
+ */
+
+/**
+ * Implements hook_mail_alter().
+ */
+function reliefweb_contact_mail_alter(&$message) {
+  if ($message['module'] !== 'contact' && $message['key'] !== 'user_mail') {
+    return;
+  }
+
+  /** @var Drupal\contact\Entity\Message $contact_message */
+  $contact_message = $message['params']['contact_message'];
+  $sender = $contact_message->field_sender->value;
+
+  // Set sender.
+  /** @var \Drupal\Core\Field\FieldStorageDefinitionInterface $field_definition */
+  $field_definition = $contact_message->field_sender->getFieldDefinition()->getFieldStorageDefinition();
+  $field_allowed_options = options_allowed_values($field_definition, $contact_message);
+  $sender_name = $field_allowed_options[$sender];
+
+  // Clean subject.
+  $config = \Drupal::config('system.site');
+  $message['subject'] = t('[@site-name - @category] @subject', [
+    '@site-name' => $config->get('name'),
+    '@category' => $sender_name,
+    '@subject' => $contact_message->subject->value,
+  ]);
+
+  // Clean body.
+  unset($message['body'][1]);
+  unset($message['body'][2]);
+
+  // Set sender headers.
+  $message['from'] = $sender;
+  $message['headers']['From'] = $sender_name . ' <' . $message['from'] . '>';
+  $message['headers']['Reply-to'] = $message['from'];
+}
