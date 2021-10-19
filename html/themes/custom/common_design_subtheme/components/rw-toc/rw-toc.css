@@ -231,6 +231,6 @@
 /* Reset flow on TOC elements so there is no gap between them */
 .node-form fieldset,
 .taxonomy-term-form fieldset ,
-.taxonomy-term-form .form-wrapper {
+.taxonomy-term-form .field--name-field-job-import-feed.form-wrapper {
   margin-top: 0;
 }
