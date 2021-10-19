@@ -110,6 +110,10 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
    * {@inheritdoc}
    */
   public function alterForm(array &$form, FormStateInterface $form_state) {
+    // Mark the form for enhancement by the reliefweb_form module.
+    $form['#attributes']['data-enhanced'] = '';
+
+    // Get what entity form is being used.
     $operation = $form_state->getFormObject()?->getOperation() ?? 'default';
 
     // Only apply the form alterations to allowed forms.

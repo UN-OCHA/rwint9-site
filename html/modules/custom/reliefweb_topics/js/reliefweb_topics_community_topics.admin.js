@@ -550,9 +550,6 @@
       // Settings for the community topics, including the list of links.
       var topicsSettings = JSON.parse(form.querySelector('[name="data"]').value);
 
-      // Placeholders for the input fields.
-      var placeholders = topicsSettings.placeholders;
-
       // Store the links data (url, title, image)
       //
       // The store will grow when adding, removing or updating links. Each link

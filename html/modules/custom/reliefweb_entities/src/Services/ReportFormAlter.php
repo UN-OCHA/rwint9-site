@@ -37,8 +37,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     ])->toString();
 
     // Add an autocomplete widget to the disaster field.
-    // @todo review the javascript.
-    $form['field_disaster']['#attributes']['data-with-autocomplete'] = '';
+    $form['field_disaster']['#attributes']['data-with-autocomplete'] = 'disasters';
 
     // Add an autocomplete widget to the tags.
     $form['field_disaster_type']['#attributes']['data-with-autocomplete'] = '';
@@ -47,7 +46,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     $form['field_vulnerable_groups']['#attributes']['data-with-autocomplete'] = '';
 
     // Add a datepicker widget to the report date field.
-    $form['field_original_publication_date']['#attributes']['data-with-datepicker'] = '';
+    $form['field_original_publication_date']['widget'][0]['value']['#attributes']['data-with-datepicker'] = '';
 
     // Add PDF formatting widget to the body field.
     $form['body']['#attributes']['data-with-formatting'] = 'pdf';

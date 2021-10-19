@@ -62,7 +62,7 @@
 
       function enableDatepicker(element) {
         if (element.nodeName !== 'INPUT') {
-          element = element.querySelector('input[type="text"]');
+          element = element.querySelector('input');
         }
 
         // Skip if we couldn't find the input.
@@ -70,17 +70,22 @@
           return;
         }
 
+        // Change to a text input because the date input accessibility is still
+        // not really good (as of 2021-10-15).
+        element.setAttribute('type', 'text');
+
         // Prepare the datepicker input field.
         element.setAttribute('autocomplete', 'off');
         element.setAttribute('placeholder', t('Click to select a date...'));
 
         // Localized date format.
-        var localizedFormat = t('D MMM YYYY');
+        var localizedFormat = t('YYYY-MM-DD');
 
         // Add the datepicker widget.
         var datepicker = new DatePicker({
           element: element,
           container: element.parentNode,
+          namespace: 'rw-datepicker',
           visible: false,
           dateFunction: function (date, options) {
             return new LocalizedDate(date, options);
@@ -135,7 +140,7 @@
 
         // @todo hide widget when the widget or input loses focus.
         element.addEventListener('keyup', function (event) {
-          if (event.key === 'Esc' || event.key === 'Escape') {
+          if (event.key === 'Esc' || event.key === 'Escape' || event.key === 'Enter') {
             datepicker.hide().clear();
           }
           else {

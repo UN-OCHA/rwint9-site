@@ -16,9 +16,9 @@
   margin-bottom: 8px;
 }
 .field--type-reliefweb-user-posting-rights [data-new-form] label input {
-  margin-top: 4px;
-  width: 100%;
   box-sizing: border-box;
+  width: 100%;
+  margin-top: 4px;
 }
 .field--type-reliefweb-user-posting-rights div[data-filters] * {
   vertical-align: middle;
@@ -30,8 +30,8 @@
 .field--type-reliefweb-user-posting-rights label span,
 .field--type-reliefweb-user-posting-rights label select {
   display: inline-block;
-  vertical-align: middle;
   margin: 0 8px 0 0;
+  vertical-align: middle;
 }
 .field--type-reliefweb-user-posting-rights label select {
   width: auto;
@@ -70,12 +70,12 @@
 }
 .field--type-reliefweb-user-posting-rights [data-job] label.job span:after,
 .field--type-reliefweb-user-posting-rights [data-training] label.training span:after {
-  content: "";
   display: inline-block;
-  vertical-align: middle;
   width: 12px;
   height: 12px;
   margin: -2px 0 0 4px;
+  content: "";
+  vertical-align: middle;
   border-radius: 4px;
 }
 .field--type-reliefweb-user-posting-rights [data-job="0"] label.job span:after,
@@ -95,11 +95,9 @@
   background: #88bb09;
 }
 .field--type-reliefweb-user-posting-rights ul {
-  list-style: none;
   margin: 0;
   padding: 0;
-}
-.field--type-reliefweb-user-posting-rights ul {
+  list-style: none;
   border-top: 1px solid #e6ecef;
 }
 .field--type-reliefweb-user-posting-rights ul li {
@@ -119,9 +117,9 @@
 }
 .field--type-reliefweb-user-posting-rights ul li div > * {
   display: table-cell;
+  min-width: 90px;
   vertical-align: middle;
   word-break: break-all;
-  min-width: 90px;
 }
 .field--type-reliefweb-user-posting-rights ul li div a {
   width: 80px;
@@ -132,33 +130,33 @@
   font-weight: bold;
 }
 .field--type-reliefweb-user-posting-rights ul li div button {
-  float: right;
   position: relative;
+  float: right;
+  overflow: hidden;
   width: 30px;
   min-width: auto;
   height: 30px;
+  white-space: nowrap;
   /* Hide the text. */
   text-indent: 30px;
-  white-space: nowrap;
-  overflow: hidden;
   border: none;
   background: #055372;
 }
 .field--type-reliefweb-user-posting-rights ul li div button:hover,
-.field--type-reliefweb-user-posting-rights ul li div button:focus
+.field--type-reliefweb-user-posting-rights ul li div button:focus,
 .field--type-reliefweb-user-posting-rights ul li div button:active {
   background: #eb1405;
 }
 .field--type-reliefweb-user-posting-rights ul li div button:before {
-  content: "";
   position: absolute;
   top: 50%;
   left: 50%;
+  overflow: hidden;
   width: 12px;
   height: 12px;
   margin-top: -6px;
   margin-left: -6px;
-  overflow: hidden;
+  content: "";
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 46 46' width='12' height='12' fill='%23fff'%3E%3Cpath d='M28.657 23L44.83 6.828a4 4 0 0 0-5.657-5.657L23 17.343 6.83 1.17a4 4 0 0 0-5.657 5.657L17.342 23 1.173 39.17a4 4 0 0 0 5.657 5.657L23 28.657l16.172 16.171a4 4 0 0 0 5.657-5.657z'/%3E%3C/svg%3E") 0 0 no-repeat;
 }
 .field--type-reliefweb-user-posting-rights ul li [data-notes] {
@@ -175,10 +173,11 @@
   border-left: 4px solid #055372;
 }
 .field--type-reliefweb-user-posting-rights li[data-status="blocked"] {
+  opacity: 0.7;
   border-left: 4px solid #da190b;
   background: #e6ecef;
-  opacity: 0.7;
 }
+
 @media screen and (max-width: 479px) {
   .field--type-reliefweb-user-posting-rights ul li div[data-info] {
     display: block;
@@ -190,6 +189,7 @@
     padding: 0 0 8px 0;
   }
 }
+
 @media screen and (min-width: 768px) {
   .field--type-reliefweb-user-posting-rights ul li div[data-info] {
     width: 60%;
