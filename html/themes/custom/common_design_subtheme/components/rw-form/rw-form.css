@@ -454,3 +454,8 @@ form button[data-formatter="pdf"] {
   top: -7px;
   right: 0;
 }
+
+.field--name-field-tags .tabledrag-handle .handle {
+  width: auto;
+  height: auto;
+}
