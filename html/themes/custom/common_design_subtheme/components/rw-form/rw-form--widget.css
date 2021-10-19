@@ -5,90 +5,90 @@
  * This includes single and multiple values field. Both file and image fields
  * share some basic styling.
  */
-/*form .file-widget .fieldset-wrapper {*/
-/*  !* Necessary to ensure the progress overlay stays within the limits of the*/
-/*   * file element. *!*/
-/*  position: relative;*/
-/*  padding: 8px;*/
-/*  border: 1px solid #e6ecef;*/
-/*}*/
-/*form table.file-list thead {*/
-/*  display: none;*/
-/*}*/
-/*form table.file-list td:first-child {*/
-/*  min-width: 400px;*/
-/*  padding: 0;*/
-/*}*/
-/*form table.file-list td:last-child {*/
-/*  width: 200px;*/
-/*  min-width: 200px;*/
-/*}*/
-/*form table.file-list td:last-child .description {*/
-/*  display: block;*/
-/*  margin-top: 12px;*/
-/*}*/
-/*form table.file-list td:last-child button {*/
-/*  display: block;*/
-/*  margin: 0 auto;*/
-/*}*/
-/*form table.file-list .file-widget .fieldset-wrapper {*/
-/*  display: table;*/
-/*  width: 100%;*/
-/*  border-collapse: collapse;*/
-/*  border-top-style: hidden;*/
-/*  border-right-style: hidden;*/
-/*  border-bottom-style: hidden;*/
-/*}*/
-/*form table.file-list .file-widget .fieldset-wrapper > div {*/
-/*  display: table-cell;*/
-/*  width: 50%;*/
-/*  padding: 8px 16px;*/
-/*  border-left: 1px solid #e6ecef;*/
-/*}*/
-/*form table.file-list .file-widget .fieldset-wrapper > div.file-details a[download] {*/
-/*  display: block;*/
-/*  margin-bottom: 12px;*/
-/*}*/
-/*form table.file-list .file-widget .fieldset-wrapper .file-preview > div + div {*/
-/*  margin-top: 0;*/
-/*}*/
-/*form table.file-list .file-widget .fieldset-wrapper .preview-image {*/
-/*  float: left;*/
-/*  width: 100px;*/
-/*  height: 100px;*/
-/*  margin: 12px 12px 0 0;*/
-/*  text-align: center;*/
-/*}*/
-/*form table.file-list .file-widget .fieldset-wrapper .preview-image a {*/
-/*  !* Fallback if flex is not available. *!*/
-/*  display: block;*/
-/*  display: flex;*/
-/*  align-items: center;*/
-/*  justify-content: center;*/
-/*  width: 102px;*/
-/*  height: 102px;*/
-/*  text-align: center;*/
-/*  border: 1px solid #e6ecef;*/
-/*}*/
-/*form table.file-list .file-widget .fieldset-wrapper .preview-image a img {*/
-/*  max-width: 100%;*/
-/*  max-height: 100%;*/
-/*}*/
-/*form table.file-list .file-widget .fieldset-wrapper .preview-image + div {*/
-/*  margin-top: 0;*/
-/*  padding-top: 12px;*/
-/*}*/
-/*form .table-wrapper + .form-type-managed-file {*/
-/*  margin-top: 12px;*/
-/*}*/
-/*!* No need to display the extra field label as the fieldset legend is enough. *!*/
-/*form .field-type-image fieldset .form-type-managed-file > label {*/
-/*  display: none;*/
-/*}*/
-/*form table.file-list .image-widget {*/
-/*   border: none;*/
-/*   border-left: 1px solid #e6ecef;*/
-/*}*/
+/* form .file-widget .fieldset-wrapper { */
+/*  !* Necessary to ensure the progress overlay stays within the limits of the */
+/*   * file element. *! */
+/*  position: relative; */
+/*  padding: 8px; */
+/*  border: 1px solid #e6ecef; */
+/* } */
+/* form table.file-list thead { */
+/*  display: none; */
+/* } */
+/* form table.file-list td:first-child { */
+/*  min-width: 400px; */
+/*  padding: 0; */
+/* } */
+/* form table.file-list td:last-child { */
+/*  width: 200px; */
+/*  min-width: 200px; */
+/* } */
+/* form table.file-list td:last-child .description { */
+/*  display: block; */
+/*  margin-top: 12px; */
+/* } */
+/* form table.file-list td:last-child button { */
+/*  display: block; */
+/*  margin: 0 auto; */
+/* } */
+/* form table.file-list .file-widget .fieldset-wrapper { */
+/*  display: table; */
+/*  width: 100%; */
+/*  border-collapse: collapse; */
+/*  border-top-style: hidden; */
+/*  border-right-style: hidden; */
+/*  border-bottom-style: hidden; */
+/* } */
+/* form table.file-list .file-widget .fieldset-wrapper > div { */
+/*  display: table-cell; */
+/*  width: 50%; */
+/*  padding: 8px 16px; */
+/*  border-left: 1px solid #e6ecef; */
+/* } */
+/* form table.file-list .file-widget .fieldset-wrapper > div.file-details a[download] { */
+/*  display: block; */
+/*  margin-bottom: 12px; */
+/* } */
+/* form table.file-list .file-widget .fieldset-wrapper .file-preview > div + div { */
+/*  margin-top: 0; */
+/* } */
+/* form table.file-list .file-widget .fieldset-wrapper .preview-image { */
+/*  float: left; */
+/*  width: 100px; */
+/*  height: 100px; */
+/*  margin: 12px 12px 0 0; */
+/*  text-align: center; */
+/* } */
+/* form table.file-list .file-widget .fieldset-wrapper .preview-image a { */
+/*  !* Fallback if flex is not available. *! */
+/*  display: block; */
+/*  display: flex; */
+/*  align-items: center; */
+/*  justify-content: center; */
+/*  width: 102px; */
+/*  height: 102px; */
+/*  text-align: center; */
+/*  border: 1px solid #e6ecef; */
+/* } */
+/* form table.file-list .file-widget .fieldset-wrapper .preview-image a img { */
+/*  max-width: 100%; */
+/*  max-height: 100%; */
+/* } */
+/* form table.file-list .file-widget .fieldset-wrapper .preview-image + div { */
+/*  margin-top: 0; */
+/*  padding-top: 12px; */
+/* } */
+/* form .table-wrapper + .form-type-managed-file { */
+/*  margin-top: 12px; */
+/* } */
+/* !* No need to display the extra field label as the fieldset legend is enough. *! */
+/* form .field-type-image fieldset .form-type-managed-file > label { */
+/*  display: none; */
+/* } */
+/* form table.file-list .image-widget { */
+/*   border: none; */
+/*   border-left: 1px solid #e6ecef; */
+/* } */
 
 
 /* Media widget */
@@ -102,13 +102,13 @@ form .image-widget {
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  /*border: 1px solid #e6ecef;*/
+  /* border: 1px solid #e6ecef; */
   padding: 0 16px 16px;
 }
 form .image-widget article {
   display: flex;
-  flex-direction: column;
   flex: 1 0 220px;
+  flex-direction: column;
   order: 1;
 }
 /* File name */
@@ -130,30 +130,49 @@ form .image-widget .js-media-library-item-preview img {
 form .image-widget .form-submit {
   order: 2;
 }
-/* Media library */
+/* Show/Hide media item weight button */
+.js-media-library-widget-toggle-weight {
+  position: absolute;
+  right: 0;
+  padding: 8px;
+  font-size: 14px;
+}
+/* Media item weight select */
+form .image-widget .form-type-number {
+  flex: 0 1 auto;
+  order: 3;
+  margin-top: 0;
+  padding: 0 0 0 16px;
+}
+/* Media library dialog */
 ul.js-media-library-add-form-added-media {
-  list-style-type: none;
-  padding: 0;
   margin: 0;
+  padding: 0;
+  list-style-type: none;
 }
 ul.js-media-library-add-form-added-media li {
-  padding: 0;
   margin: 0;
+  padding: 0;
 }
 .js-media-library-add-form-added-media .form-submit {
   margin-top: 16px;
 }
-/* Show/Hide media item weight button */
-.js-media-library-widget-toggle-weight {
-  padding: 8px;
-  font-size: 14px;
-  position: absolute;
-  right: 0;
+.ui-dialog .ui-dialog-buttonpane button {
+  margin: 0;
+  border-width: 2px;
+  border-color: inherit;
 }
-/* Mwdia item weight select */
-form .image-widget .form-type-number {
-  flex: 0 1 auto;
-  order: 3;
-  padding: 0 0 0 16px;
-  margin-top: 0;
+
+/* CD form overrides */
+.view-media-library .cd-form--inline {
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+}
+.view-media-library .cd-form--inline > div {
+  margin-right: 1rem;
+}
+.view-media-library .cd-form--inline .cd-form__item {
+  display: flex;
+  flex-direction: column;
 }
