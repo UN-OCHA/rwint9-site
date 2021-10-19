@@ -1,0 +1,7 @@
+reliefweb_revisions.settings:
+  type: config_object
+  label: 'Reliefweb Revisions settings'
+  mapping:
+    limit:
+      type: integer
+      label: 'Maximum number of history entries to show in the list.'

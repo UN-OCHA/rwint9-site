@@ -1,8 +1,9 @@
 services:
   reliefweb_revisions.entity.history:
     class: Drupal\reliefweb_revisions\Services\EntityHistory
-    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation']
+    arguments: ['@config.factory', '@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@request_stack', '@string_translation']
   reliefweb_revisions.entity.param_converter:
     class: Drupal\reliefweb_revisions\ParamConverter\EntityRevisionedConverter
+    arguments: ['@entity_type.manager', '@entity.repository']
     tags:
       - { name: paramconverter }
