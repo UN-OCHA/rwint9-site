@@ -398,7 +398,7 @@ form #edit-organization #edit-field-source-allowed .form-item:last-child {
   border-top: 2px dotted #e6ecef;
 }
 
-/* Embargo Date .field--name-field-embargo-date, */
+/* Embargo Date .field--name-field-embargo-date */
 .field--widget-datetime-datelist .fieldset-wrapper .form-type-select {
   display: inline-block;
   margin: 0;
@@ -416,6 +416,14 @@ form #edit-organization #edit-field-source-allowed .form-item:last-child {
 .field--name-body .text-full,
 .field--type-text-long .text-full {
   padding-top: 6px;
+}
+
+/* Text format wrapper */
+.form-type-textarea + .filter-wrapper.form-wrapper {
+  margin-top: 0;
+}
+.filter-wrapper {
+  border: 1px solid #e6ecef;
 }
 
 form [data-lengthchecker-status] {
@@ -462,6 +470,14 @@ a.tabledrag-handle .handle {
 }
 /* Show/Hide row weight button */
 .tabledrag-toggle-weight {
+  padding: 8px;
+  font-size: 14px;
+}
+
+/* Add/Clear/Edit buttons for field UI */
+form button[value="add"],
+form button[value="clear"],
+form button[value="edit"] {
   padding: 8px;
   font-size: 14px;
 }
