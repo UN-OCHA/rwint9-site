@@ -102,10 +102,24 @@ class SubscriptionForm extends FormBase {
       '#optional' => FALSE,
     ];
 
-    $form['submit'] = [
+    $form['actions'] = [
+      '#type' => 'actions',
+      '#theme_wrappers' => [
+        'fieldset' => [
+          '#id' => 'actions',
+          '#title' => $this->t('Form actions'),
+          '#title_display' => 'invisible',
+        ],
+      ],
+      '#weight' => 99,
+    ];
+    $form['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Save subscriptions'),
     ];
+
+    // Mark the form for enhancement by the reliefweb_form module.
+    $form['#attributes']['data-enhanced'] = '';
 
     return $form;
   }

@@ -33,7 +33,7 @@ class DisasterFormAlter extends EntityFormAlterServiceBase {
     $this->alterPrimaryField('field_primary_disaster_type', $form, $form_state);
 
     // Add a datepicker widget to the disaster date field.
-    $form['field_disaster_date']['#attributes']['data-with-datepicker'] = '';
+    $form['field_disaster_date']['widget'][0]['value']['#attributes']['data-with-datepicker'] = '';
 
     // Use an autocomplete widget for the country and disaster type fields.
     $form['field_country']['#attributes']['data-with-autocomplete'] = '';
