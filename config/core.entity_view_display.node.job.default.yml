@@ -30,6 +30,11 @@ content:
     third_party_settings: {  }
     type: text_default
     region: content
+  content_moderation_control:
+    weight: -20
+    settings: {  }
+    third_party_settings: {  }
+    region: content
   field_career_categories:
     weight: 7
     label: above
@@ -103,5 +108,6 @@ content:
     type: entity_reference_label
     region: content
 hidden:
+  field_job_id: true
   langcode: true
   links: true

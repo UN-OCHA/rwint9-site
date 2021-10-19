@@ -23,7 +23,13 @@
           header.sortable ? 'rw-moderation-table__header--sortable',
           header.sort ? 'rw-moderation-table__header--sort--' ~ header.sort|clean_class,
         ])
-      }}>{{ header.label }}</th>
+      }}>
+        {% if header.sortable and header.url %}
+          {{ link(header.label, header.url) }}
+        {% else %}
+          {{ header.label }}
+        {% endif %}
+      </th>
     {% endfor %}
     </tr>
   </thead>
@@ -65,7 +71,7 @@
           <div class="rw-moderation-table__cell__revision">
             <span class="rw-moderation-table__cell__revision__message rw-revision-message" data-revision-message="{{ cell.revision.type }}">{{ cell.revision.message }}</span>
             &mdash;
-            <span class="rw-moderation-table__cell__revision__reviewer">{{ cell.revision.reviewer }}</span>
+            <span class="rw-moderation-table__cell__revision__reviewer rw-revision-author">{{ cell.revision.reviewer }}</span>
           </div>
           {% endif %}
         {% elseif id == 'date' %}

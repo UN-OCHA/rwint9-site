@@ -12,6 +12,7 @@ dependencies:
     - field.field.taxonomy_term.source.field_disclaimer
     - field.field.taxonomy_term.source.field_fts_id
     - field.field.taxonomy_term.source.field_homepage
+    - field.field.taxonomy_term.source.field_job_import_feed
     - field.field.taxonomy_term.source.field_job_import_feed_url
     - field.field.taxonomy_term.source.field_links
     - field.field.taxonomy_term.source.field_logo
@@ -26,10 +27,10 @@ dependencies:
   module:
     - allowed_formats
     - content_moderation
-    - image
     - link
     - path
     - reliefweb_fields
+    - svg_image
     - text
 id: taxonomy_term.source.default
 targetEntityType: taxonomy_term
@@ -90,34 +91,34 @@ content:
     settings:
       sort: label
       extra_data:
-        field_shortname: field_shortname
-        tid: '0'
-        uuid: '0'
-        revision_id: '0'
-        langcode: '0'
-        vid: '0'
-        revision_created: '0'
-        revision_user: '0'
-        revision_log_message: '0'
-        status: '0'
-        name: '0'
-        description: '0'
-        weight: '0'
-        parent: '0'
-        changed: '0'
-        default_langcode: '0'
-        revision_default: '0'
-        revision_translation_affected: '0'
-        moderation_state: '0'
-        field_aliases: '0'
-        field_appeals_response_plans: '0'
-        field_iso3: '0'
-        field_key_content: '0'
-        field_location: '0'
-        field_longname: '0'
-        field_profile: '0'
-        field_timezone: '0'
-        field_useful_links: '0'
+        'country:field_shortname': 'country:field_shortname'
+        'country:tid': '0'
+        'country:uuid': '0'
+        'country:revision_id': '0'
+        'country:langcode': '0'
+        'country:vid': '0'
+        'country:revision_created': '0'
+        'country:revision_user': '0'
+        'country:revision_log_message': '0'
+        'country:status': '0'
+        'country:name': '0'
+        'country:description': '0'
+        'country:weight': '0'
+        'country:parent': '0'
+        'country:changed': '0'
+        'country:default_langcode': '0'
+        'country:revision_default': '0'
+        'country:revision_translation_affected': '0'
+        'country:moderation_state': '0'
+        'country:field_aliases': '0'
+        'country:field_appeals_response_plans': '0'
+        'country:field_iso3': '0'
+        'country:field_key_content': '0'
+        'country:field_location': '0'
+        'country:field_longname': '0'
+        'country:field_profile': '0'
+        'country:field_timezone': '0'
+        'country:field_useful_links': '0'
     third_party_settings: {  }
     type: reliefweb_entity_reference_select
     region: content
@@ -145,14 +146,12 @@ content:
     third_party_settings: {  }
     type: link_default
     region: content
-  field_job_import_feed_url:
-    weight: 17
-    settings:
-      placeholder_url: ''
-      placeholder_title: ''
-    third_party_settings: {  }
-    type: link_default
+  field_job_import_feed:
+    type: reliefweb_import_info
+    weight: 18
     region: content
+    settings: {  }
+    third_party_settings: {  }
   field_links:
     weight: 10
     settings:
@@ -215,7 +214,7 @@ content:
     third_party_settings: {  }
   path:
     type: path
-    weight: 18
+    weight: 17
     region: content
     settings: {  }
     third_party_settings: {  }
@@ -227,5 +226,6 @@ content:
     region: content
     third_party_settings: {  }
 hidden:
+  field_job_import_feed_url: true
   field_user_posting_rights: true
   langcode: true

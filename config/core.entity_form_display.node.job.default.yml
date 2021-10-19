@@ -10,6 +10,7 @@ dependencies:
     - field.field.node.job.field_how_to_apply
     - field.field.node.job.field_job_closing_date
     - field.field.node.job.field_job_experience
+    - field.field.node.job.field_job_id
     - field.field.node.job.field_job_type
     - field.field.node.job.field_source
     - field.field.node.job.field_theme
@@ -18,7 +19,6 @@ dependencies:
   module:
     - allowed_formats
     - content_moderation
-    - datetime
     - path
     - reliefweb_fields
     - text
@@ -59,34 +59,34 @@ content:
     settings:
       sort: label
       extra_data:
-        field_shortname: field_shortname
-        tid: '0'
-        uuid: '0'
-        revision_id: '0'
-        langcode: '0'
-        vid: '0'
-        revision_created: '0'
-        revision_user: '0'
-        revision_log_message: '0'
-        status: '0'
-        name: '0'
-        description: '0'
-        weight: '0'
-        parent: '0'
-        changed: '0'
-        default_langcode: '0'
-        revision_default: '0'
-        revision_translation_affected: '0'
-        moderation_state: '0'
-        field_aliases: '0'
-        field_appeals_response_plans: '0'
-        field_iso3: '0'
-        field_key_content: '0'
-        field_location: '0'
-        field_longname: '0'
-        field_profile: '0'
-        field_timezone: '0'
-        field_useful_links: '0'
+        'country:field_shortname': 'country:field_shortname'
+        'country:tid': '0'
+        'country:uuid': '0'
+        'country:revision_id': '0'
+        'country:langcode': '0'
+        'country:vid': '0'
+        'country:revision_created': '0'
+        'country:revision_user': '0'
+        'country:revision_log_message': '0'
+        'country:status': '0'
+        'country:name': '0'
+        'country:description': '0'
+        'country:weight': '0'
+        'country:parent': '0'
+        'country:changed': '0'
+        'country:default_langcode': '0'
+        'country:revision_default': '0'
+        'country:revision_translation_affected': '0'
+        'country:moderation_state': '0'
+        'country:field_aliases': '0'
+        'country:field_appeals_response_plans': '0'
+        'country:field_iso3': '0'
+        'country:field_key_content': '0'
+        'country:field_location': '0'
+        'country:field_longname': '0'
+        'country:field_profile': '0'
+        'country:field_timezone': '0'
+        'country:field_useful_links': '0'
     third_party_settings: {  }
     type: reliefweb_entity_reference_select
     region: content
@@ -105,7 +105,7 @@ content:
     weight: 4
     settings: {  }
     third_party_settings: {  }
-    type: datetime_default
+    type: reliefweb_datetime
     region: content
   field_job_experience:
     weight: 6
@@ -124,41 +124,42 @@ content:
     settings:
       sort: label
       extra_data:
-        moderation_state: moderation_state
-        field_shortname: field_shortname
-        tid: 0
-        uuid: 0
-        revision_id: 0
-        langcode: 0
-        vid: 0
-        revision_created: 0
-        revision_user: 0
-        revision_log_message: 0
-        status: 0
-        name: 0
-        description: 0
-        weight: 0
-        parent: 0
-        changed: 0
-        default_langcode: 0
-        revision_default: 0
-        revision_translation_affected: 0
-        field_aliases: 0
-        field_allowed_content_types: 0
-        field_attention_job: 0
-        field_attention_report: 0
-        field_attention_training: 0
-        field_country: 0
-        field_disclaimer: 0
-        field_fts_id: 0
-        field_homepage: 0
-        field_job_import_feed_url: 0
-        field_links: 0
-        field_logo: 0
-        field_longname: 0
-        field_organization_type: 0
-        field_spanish_name: 0
-        field_user_posting_rights: 0
+        'source:moderation_state': 'source:moderation_state'
+        'source:field_shortname': 'source:field_shortname'
+        'source:tid': 0
+        'source:uuid': 0
+        'source:revision_id': 0
+        'source:langcode': 0
+        'source:vid': 0
+        'source:revision_created': 0
+        'source:revision_user': 0
+        'source:revision_log_message': 0
+        'source:status': 0
+        'source:name': 0
+        'source:description': 0
+        'source:weight': 0
+        'source:parent': 0
+        'source:changed': 0
+        'source:default_langcode': 0
+        'source:revision_default': 0
+        'source:revision_translation_affected': 0
+        'source:field_aliases': 0
+        'source:field_allowed_content_types': 0
+        'source:field_attention_job': 0
+        'source:field_attention_report': 0
+        'source:field_attention_training': 0
+        'source:field_country': 0
+        'source:field_disclaimer': 0
+        'source:field_fts_id': 0
+        'source:field_homepage': 0
+        'source:field_job_import_feed': 0
+        'source:field_job_import_feed_url': 0
+        'source:field_links': 0
+        'source:field_logo': 0
+        'source:field_longname': 0
+        'source:field_organization_type': 0
+        'source:field_spanish_name': 0
+        'source:field_user_posting_rights': 0
     third_party_settings: {  }
     type: reliefweb_source
     region: content
@@ -197,6 +198,7 @@ content:
     third_party_settings: {  }
 hidden:
   created: true
+  field_job_id: true
   langcode: true
   promote: true
   sticky: true

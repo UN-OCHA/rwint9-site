@@ -24,6 +24,10 @@ class HtmlSummarizer {
    *   Truncated text.
    */
   public static function summarize($html, $length = 600, $plain_text = TRUE) {
+    if (!is_string($html)) {
+      return '';
+    }
+
     static $flags = LIBXML_NONET | LIBXML_NOBLANKS | LIBXML_NOERROR | LIBXML_NOWARNING;
     static $pattern = ['/^\s+|\s+$/u', '/\s{2,}/u'];
     static $replacement = ['', ' '];
@@ -41,6 +45,9 @@ class HtmlSummarizer {
       'h6' => TRUE,
     ];
 
+    // Trim.
+    $html = trim($html);
+
     if (empty($html)) {
       return '';
     }
@@ -51,7 +58,13 @@ class HtmlSummarizer {
     $meta = '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">';
     $dom = new \DomDocument();
     $dom->loadHTML($meta . $html, $flags);
+
+    // Try to get the body.
     $body = $dom->getElementsByTagName('body')[0];
+    if (!$body) {
+      return '';
+    }
+
     foreach ($body->childNodes as $node) {
       if (isset($node->tagName, $tags[$node->tagName])) {
         // Sanitize multiple consecutive white spaces and trim the paragraph.

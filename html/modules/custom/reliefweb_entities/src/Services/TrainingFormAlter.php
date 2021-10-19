@@ -32,8 +32,10 @@ class TrainingFormAlter extends EntityFormAlterServiceBase {
     $form['field_how_to_register']['#attributes']['data-with-wysiwyg'] = '';
 
     // Add a datepicker to the training date and registration deadline.
-    $form['field_training_date']['#attributes']['data-with-datepicker'] = '';
-    $form['field_registration_deadline']['#attributes']['data-with-datepicker'] = '';
+    $form['field_training_date']['widget'][0]['#title_display'] = 'invisible';
+    $form['field_training_date']['widget'][0]['value']['#attributes']['data-with-datepicker'] = '';
+    $form['field_training_date']['widget'][0]['end_value']['#attributes']['data-with-datepicker'] = '';
+    $form['field_registration_deadline']['widget'][0]['value']['#attributes']['data-with-datepicker'] = '';
 
     // Add an autocomplete widget to the country and source fields.
     $form['field_country']['#attributes']['data-with-autocomplete'] = '';

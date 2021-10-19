@@ -23,6 +23,11 @@ targetEntityType: node
 bundle: job
 mode: teaser
 content:
+  content_moderation_control:
+    weight: -20
+    settings: {  }
+    third_party_settings: {  }
+    region: content
   field_job_closing_date:
     type: datetime_default
     weight: 1
@@ -47,6 +52,7 @@ hidden:
   field_country: true
   field_how_to_apply: true
   field_job_experience: true
+  field_job_id: true
   field_job_type: true
   field_theme: true
   langcode: true

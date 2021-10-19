@@ -34,6 +34,13 @@ class Disaster extends Term implements BundleEntityInterface, EntityModeratedInt
   /**
    * {@inheritdoc}
    */
+  public static function addFieldConstraints(&$fields) {
+    // No specific constraints.
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getPageContent() {
     $sections = $this->getPageSections();
     $contents = $this->getPageTableOfContents();

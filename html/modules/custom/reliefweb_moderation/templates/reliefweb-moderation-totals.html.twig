@@ -1,6 +1,6 @@
 <ul class="rw-moderation-content__total-list">
 {% for item in totals %}
-  <li class="rw-moderation-content__total" data-status="{{ item.status }}">
+  <li class="rw-moderation-content__total" data-moderation-status="{{ item.status }}">
     <span class="rw-moderation-content__total__label">{{ item.label }}</span>
     <strong class="rw-moderation-content__total__value">{{ item.total|number_format }}</strong>
   </li>

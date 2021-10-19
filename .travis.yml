@@ -45,17 +45,39 @@ script:
   - docker exec -it -u appuser -w /srv/www rwint9-test-site ./vendor/bin/phpcs --config-set installed_paths vendor/drupal/coder/coder_sniffer
 
   # Check coding standards.
-  - docker exec -it -u appuser -w /srv/www rwint9-test-site ./vendor/bin/phpcs -p --report=full --standard=tests/phpcs.xml ./html/modules/custom ./html/themes/custom
+  - docker exec -it -u appuser -w /srv/www rwint9-test-site ./vendor/bin/phpcs -p --report=full ./html/modules/custom ./html/themes/custom
+
+  # Run unit tests.
+  - docker exec -it -u root -w /srv/www rwint9-test-site mkdir -p /srv/www/html/sites/default/files/browser_output
+  - docker exec -it -u root -w /srv/www -e BROWSERTEST_OUTPUT_DIRECTORY=/srv/www/html/sites/default/files/browser_output rwint9-test-site php -d zend_extension=xdebug ./vendor/bin/phpunit --testsuite Unit --debug
 
   # Install the site with the existing config.
   - docker exec -it rwint9-test-site drush -y si --existing-config
+  - docker exec -it rwint9-test-site drush -y en dblog
 
   # Ensure the file directories are writable.
   - docker exec -it rwint9-test-site chmod -R 777 /srv/www/html/sites/default/files /srv/www/html/sites/default/private
 
+  # Create the build logs directory and make sure it's writable.
+  - docker exec -it -u root rwint9-test-site mkdir -p /srv/www/html/build/logs
+  - docker exec -it -u root rwint9-test-site chmod -R 777 /srv/www/html/build/logs
+
+  # Run all tests and generate coverage report.
+  - docker exec -it -u root -w /srv/www -e XDEBUG_MODE=coverage -e BROWSERTEST_OUTPUT_DIRECTORY=/srv/www/html/sites/default/files/browser_output -e DTT_BASE_URL=http://127.0.0.1 rwint9-test-site php -d zend_extension=xdebug ./vendor/bin/phpunit --coverage-clover /srv/www/html/build/logs/clover.xml --debug
+
 after_success:
   - echo "The tests completed without errors."
+  # Create directory for clover.
+  - mkdir -p ./build/logs
+  - chmod -R 777 ./build/logs
+  - docker cp rwint9-test-site:/srv/www/html/build/logs/clover.xml ./build/logs/
+  # Fix source files path.
+  - sed -i 's#/srv/www#.#g' build/logs/clover.xml
+  # Get coveralls and execute.
+  - wget https://github.com/php-coveralls/php-coveralls/releases/download/v2.4.3/php-coveralls.phar
+  - chmod +x php-coveralls.phar
+  - ./php-coveralls.phar -vv
 
 after_failure:
   - echo "The tests failed. Please check the output above for problems."
-  - ../vendor/bin/drush watchdog:show --extended
+  - docker exec -it rwint9-test-site drush watchdog:show --count=50 --extended

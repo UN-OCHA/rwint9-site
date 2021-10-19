@@ -33,6 +33,13 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
   /**
    * {@inheritdoc}
    */
+  public static function addFieldConstraints(&$fields) {
+    // No specific constraints.
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getEntityMeta() {
     $origin = $this->field_origin_notes->value;
     if (!UrlHelper::isValid($origin, TRUE)) {

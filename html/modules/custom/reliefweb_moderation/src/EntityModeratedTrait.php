@@ -103,4 +103,22 @@ trait EntityModeratedTrait {
     return 'instruction';
   }
 
+  /**
+   * Get the original revision user.
+   *
+   * @see \Drupal\reliefweb_moderation\EntityModeratedInterface::getOriginalRevisionUser()
+   */
+  public function getOriginalRevisionUser() {
+    if ($this instanceof RevisionLogInterface) {
+      $key = $this->getEntityType()->getRevisionMetadataKey('revision_user');
+      if (isset($this->values[$key][$this->activeLangcode])) {
+        $uid = $this->values[$key][$this->activeLangcode];
+        return \Drupal::entityTypeManager()
+          ->getStorage('user')
+          ->load($uid);
+      }
+    }
+    return NULL;
+  }
+
 }
