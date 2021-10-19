@@ -203,8 +203,8 @@ form .description + div {
   margin-top: 8px;
 }
 form .description ul {
-  padding: 0 0 0 16px;
   margin: 0;
+  padding: 0 0 0 16px;
 }
 form .form-optional {
   font-size: 16px;
@@ -419,10 +419,10 @@ form #edit-organization #edit-field-source-allowed .form-item:last-child {
 }
 
 form [data-lengthchecker-status] {
-  padding: 8px 8px;
   margin-top: -2px;
-  font-size: 15px;
+  padding: 8px 8px;
   background-color: rgba(246, 92, 81, 0.2);
+  font-size: 15px;
   line-height: 1.2;
 }
 

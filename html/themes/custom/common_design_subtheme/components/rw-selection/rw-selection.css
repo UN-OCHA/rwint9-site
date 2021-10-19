@@ -132,8 +132,8 @@
 }
 #main-content [data-selection-messages] .rw-selection [data-value] .message ul,
 #main-content [data-selection-messages] .rw-selection [data-value] .message ol {
-  padding: 0 0 0 24px;
   margin: 0;
+  padding: 0 0 0 24px;
 }
 #main-content [data-selection-messages] .rw-selection [data-value] .message li {
   margin: 8px 0 0 0;
