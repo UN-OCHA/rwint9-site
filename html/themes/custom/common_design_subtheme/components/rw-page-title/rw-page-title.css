@@ -15,9 +15,6 @@
 .user-logged-in.path-node:not([class*="page-node-type-"]) .rw-page-title {
   border-bottom: 1px solid #eb1405;
 }
-.path-admin .rw-page-title {
-  margin-bottom: 24px;
-}
 .rw-document > header,
 .rw-river-page > header {
   margin-bottom: 2rem;
