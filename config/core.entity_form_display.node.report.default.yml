@@ -105,6 +105,7 @@ content:
     settings:
       sort: id
       extra_data:
+        'disaster:moderation_state': 'disaster:moderation_state'
         'disaster:field_country': 'disaster:field_country'
         'disaster:field_disaster_type': 'disaster:field_disaster_type'
         'disaster:field_glide': 'disaster:field_glide'
@@ -125,7 +126,6 @@ content:
         'disaster:default_langcode': 0
         'disaster:revision_default': 0
         'disaster:revision_translation_affected': 0
-        'disaster:moderation_state': 0
         'disaster:field_appeals_response_plans': 0
         'disaster:field_disaster_date': 0
         'disaster:field_glide_related': 0
