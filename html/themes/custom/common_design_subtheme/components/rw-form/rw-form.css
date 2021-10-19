@@ -171,7 +171,6 @@ form > * .form-wrapper.form-item:first-child .fieldset-wrapper > h4:first-child 
 form > * .form-wrapper > h4,
 form > * .form-wrapper.form-item:first-child .fieldset-wrapper > h4 {
   margin: 24px 0 6px;
-  font-style: normal;
 }
 form .form-actions.form-item {
   margin-top: 8px;
@@ -403,13 +402,9 @@ form #edit-organization #edit-field-source-allowed .form-item:last-child {
 .field--widget-datetime-datelist .fieldset-wrapper .form-type-select {
   display: inline-block;
   margin: 0;
-  margin: 0;
 }
 
 /* Field with text that is not wrapped in description div */
-.field--widget-reliefweb-datetime, /* Generic selector? */
-.field--name-field-job-closing-date,
-.field--name-field-registration-deadline,
 .field--name-body .text-full,
 .field--name-field-how-to-apply .text-full,
 .field--type-text-long .text-full, /* Generic selector? */
@@ -434,4 +429,28 @@ form [data-lengthchecker-status] {
 /* New Organisation field for Jobs */
 .node-form fieldset.field-new-source-wrapper {
   margin-top: 24px;
+}
+
+/**
+ * Text formatter buttons.
+ *
+ * Style for the buttons to alter the text format of an input or textarea.
+ */
+form [data-with-formatting] {
+  position: relative;
+}
+form button[data-formatter] {
+  margin-right: 4px;
+  padding: 8px;
+  font-size: 14px;
+}
+form button[data-formatter]:last-child {
+  margin-right: 0;
+}
+form button[data-formatter="pdf"] {
+  /* Display the format PDf button in the top right corner above the textarea.
+   * The editorial team is used to this position. */
+  position: absolute;
+  top: -7px;
+  right: 0;
 }
