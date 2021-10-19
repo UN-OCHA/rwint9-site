@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_utility\Helpers;
 
+use Drupal\Component\Render\MarkupInterface;
 use Drupal\Component\Utility\Html;
 
 /**
@@ -12,7 +13,7 @@ class HtmlSummarizer {
   /**
    * Summarize and truncate a HTML text to a given length.
    *
-   * @param string $html
+   * @param string|\Drupal\Component\Render\MarkupInterface $html
    *   HTML to summarize.
    * @param int $length
    *   Maximum length of the text.
@@ -24,7 +25,7 @@ class HtmlSummarizer {
    *   Truncated text.
    */
   public static function summarize($html, $length = 600, $plain_text = TRUE) {
-    if (!is_string($html)) {
+    if (!is_string($html) && !($html instanceof MarkupInterface)) {
       return '';
     }
 
