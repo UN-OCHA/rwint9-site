@@ -64,7 +64,10 @@ class ReliefwebTokenFilterTest extends ExistingSiteBase {
       ] + $term);
     }
 
+    // Reset the token cache so that it can use the newly created term.
+    drupal_static_reset('reliefweb_disaster_map_get_disaster_type_tokens');
     $this->token = \Drupal::token();
+    $this->token->resetInfo();
   }
 
   /**
