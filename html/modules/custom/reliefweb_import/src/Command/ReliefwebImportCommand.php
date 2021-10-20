@@ -340,7 +340,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       'field_city' => (string) $data->field_city,
       'field_job_closing_date' => (string) $data->field_job_closing_date,
       'field_country' => $this->mapCountries((array) $data->field_country),
-      'field_how_to_apply' => (string) $data->field_how_to_apply,
+      'field_how_to_apply' => $this->validateHowToApply((string) $data->field_how_to_apply),
       'body' => [
         'value' => $this->validateBody((string) $data->body),
         'format' => 'markdown',
@@ -364,7 +364,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     $job->field_city = (string) $data->field_city;
     $job->field_job_closing_date = (string) $data->field_job_closing_date;
     $job->field_country = $this->mapCountries((array) $data->field_country);
-    $job->field_how_to_apply = (string) $data->field_how_to_apply;
+    $job->field_how_to_apply = $this->validateHowToApply((string) $data->field_how_to_apply);
     $job->body = [
       'value' => $this->validateBody((string) $data->body),
       'format' => 'markdown',
@@ -402,7 +402,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
 
     if (count($violations) === 0) {
       // Save as published.
-      $job->setPublished();
+      $job->setUnpublished();
       $job->setModerationStatus('pending');
 
       // Re validate.
@@ -553,6 +553,27 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     }
 
     return $body;
+  }
+
+  /**
+   * Validate the how to apply field.
+   *
+   * @param string $data
+   *   Raw data from XML.
+   */
+  protected function validateHowToApply($data) {
+    // Clean the field.
+    $field_how_to_apply = $this->sanitizeText('field_how_to_apply', $data, 'markdown');
+
+    // Ensure the field size is reasonable.
+    $length = mb_strlen($field_how_to_apply);
+    if ($length < 100 || $length > 10000) {
+      throw new ReliefwebImportExceptionSoftViolation(strtr('Invalid field size for field_how_to_apply, @length characters found, has to be between 100 and 10000', [
+        '@length' => $length,
+      ]));
+    }
+
+    return $field_how_to_apply;
   }
 
   /**
