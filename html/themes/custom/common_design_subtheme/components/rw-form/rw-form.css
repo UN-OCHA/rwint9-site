@@ -284,14 +284,14 @@ form div.form-actions {
   min-width: 100%;
   /* The negative margins are to compensate the button margins. */
   /* margin: 8px -8px -8px -8px; */
-  /*margin: 0 -8px;*/
+  /* margin: 0 -8px; */
 }
 /* form #actions div.form-actions { */
 /*  margin-top: -8px; */
 /* } */
-/*form div.form-actions button {*/
-/*  margin: 8px;*/
-/*}*/
+/* form div.form-actions button { */
+/*  margin: 8px; */
+/* } */
 form .form-item + button,
 form button.form-actions {
   margin-top: 16px;

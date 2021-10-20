@@ -105,6 +105,7 @@ form .image-widget {
   /* border: 1px solid #e6ecef; */
   padding: 0 16px 16px;
 }
+
 @media (min-width: 576px) {
   form .image-widget {
     flex-direction: row;
@@ -118,6 +119,7 @@ form .image-widget article {
   flex-direction: column;
   order: 1;
 }
+
 @media (min-width: 576px) {
   form .image-widget article {
     flex: 1 0 220px;
@@ -125,13 +127,14 @@ form .image-widget article {
 }
 /* File name */
 form .image-widget article > div {
-  font-size: 14px;
   margin-bottom: 16px;
+  font-size: 14px;
 }
+
 @media (min-width: 576px) {
   form .image-widget article > div {
-    font-size: 14px;
     margin-bottom: 0;
+    font-size: 14px;
   }
 }
 form .image-widget .js-media-library-item-preview {
@@ -164,6 +167,7 @@ form .image-widget .form-type-number {
 form .image-widget .form-type-number input {
   width: 100%;
 }
+
 @media (min-width: 576px) {
   form .image-widget .form-type-number {
     flex: 0 1 100px;
