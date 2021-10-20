@@ -34,6 +34,7 @@ function reliefweb_contact_mail_alter(&$message) {
   // Clean body.
   unset($message['body'][1]);
   unset($message['body'][2]);
+  $message['body'][3] = check_markup($contact_message->message->value, 'plain_text');
 
   // Set sender headers.
   $message['from'] = $sender;
