@@ -1,0 +1,22 @@
+uuid: fc5b530c-8df5-47e4-af50-928f91b06c10
+langcode: en
+status: true
+dependencies:
+  config:
+    - contact.form.personal
+    - field.field.contact_message.personal.field_sender
+id: contact_message.personal.default
+targetEntityType: contact_message
+bundle: personal
+mode: default
+content:
+  message:
+    type: basic_string
+    weight: 0
+    label: hidden
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+hidden:
+  field_sender: true
+  langcode: true

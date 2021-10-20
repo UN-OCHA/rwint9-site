@@ -1,0 +1,36 @@
+uuid: 2b3fca87-671b-4902-b00c-20eb56113f68
+langcode: en
+status: true
+dependencies:
+  module:
+    - contact
+    - options
+id: contact_message.field_sender
+field_name: field_sender
+entity_type: contact_message
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: feedback@reliefweb.int
+      label: Feedback
+    -
+      value: jobs@reliefweb.int
+      label: Jobs
+    -
+      value: training@reliefweb.int
+      label: Training
+    -
+      value: submit@reliefweb.int
+      label: Submit
+    -
+      value: labs@reliefweb.int
+      label: Labs
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
