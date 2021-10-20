@@ -261,11 +261,14 @@ form fieldset > legend + a[href="#actions"] {
 form #actions {
   /* width: auto; */
   /* min-width: 100%; */
-  padding: 12px;
+  padding: 0 12px 12px;
   text-align: center;
   border: 1px solid #e6ecef;
   background: #e6ecef;
   background: rgba(230, 236, 239, 0.4);
+}
+form #actions .cd-button {
+  margin-top: 12px;
 }
 /* form fieldset + #actions { */
 /*  border-top: none; */
@@ -281,14 +284,14 @@ form div.form-actions {
   min-width: 100%;
   /* The negative margins are to compensate the button margins. */
   /* margin: 8px -8px -8px -8px; */
-  margin: 0 -8px;
+  /*margin: 0 -8px;*/
 }
 /* form #actions div.form-actions { */
 /*  margin-top: -8px; */
 /* } */
-form div.form-actions button {
-  margin: 8px;
-}
+/*form div.form-actions button {*/
+/*  margin: 8px;*/
+/*}*/
 form .form-item + button,
 form button.form-actions {
   margin-top: 16px;
