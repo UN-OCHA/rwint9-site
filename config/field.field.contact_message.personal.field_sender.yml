@@ -1,0 +1,21 @@
+uuid: 1d75c6ee-57f9-4cd6-b3df-429a0560bc0f
+langcode: en
+status: true
+dependencies:
+  config:
+    - contact.form.personal
+    - field.storage.contact_message.field_sender
+  module:
+    - options
+id: contact_message.personal.field_sender
+field_name: field_sender
+entity_type: contact_message
+bundle: personal
+label: Sender
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string
