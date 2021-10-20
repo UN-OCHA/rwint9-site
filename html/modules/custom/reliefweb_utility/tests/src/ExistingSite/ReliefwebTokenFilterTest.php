@@ -126,6 +126,10 @@ class ReliefwebTokenFilterTest extends ExistingSiteBase {
         'disaster-map-50894',
       ],
       [
+        '[disaster-map:ZZ]',
+        '',
+      ],
+      [
         '[node:title]',
         '[node:title]',
       ],
