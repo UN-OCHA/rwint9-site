@@ -40,6 +40,7 @@ class ReliefwebTokenFilterTest extends ExistingSiteBase {
 
     $mock = new MockHandler([
       new Response(200, [], json_encode($this->getTestResponse())),
+      new Response(200, [], json_encode($this->getTestResponse())),
     ]);
 
     $handlerStack = HandlerStack::create($mock);
@@ -49,19 +50,30 @@ class ReliefwebTokenFilterTest extends ExistingSiteBase {
     $this->container->set('http_client', $this->httpClient);
     \Drupal::setContainer($this->container);
 
-    $term = [
-      'vocabulary' => 'disaster_type',
-      'tid' => 9994648,
-      'field_disaster_type_code' => [
-        'value' => 'XX',
-      ]
+    $terms = [
+      [
+        'vocabulary' => 'disaster_type',
+        'tid' => 9994648,
+        'field_disaster_type_code' => [
+          'value' => 'XX',
+        ]
+      ],
+      [
+        'vocabulary' => 'disaster_type',
+        'tid' => 9994649,
+        'field_disaster_type_code' => [
+          'value' => 'YY',
+        ]
+      ],
     ];
 
-    if (!Term::load($term['tid'])) {
-      $vocab = Vocabulary::load($term['vocabulary']);
-      $this->createTerm($vocab, [
-        'label' => 'Term ' . $term['tid'],
-      ] + $term);
+    foreach ($terms as $term) {
+      if (!Term::load($term['tid'])) {
+        $vocab = Vocabulary::load($term['vocabulary']);
+        $this->createTerm($vocab, [
+          'label' => 'Term ' . $term['tid'],
+        ] + $term);
+      }
     }
 
     // Reset the token cache so that it can use the newly created term.
@@ -106,6 +118,14 @@ class ReliefwebTokenFilterTest extends ExistingSiteBase {
         'disaster-map-xx',
       ],
       [
+        '[disaster-map:XX-YY]',
+        'disaster-map-xx-yy',
+      ],
+      [
+        '[disaster-map:50894]',
+        'disaster-map-50894',
+      ],
+      [
         '[node:title]',
         '[node:title]',
       ],
@@ -136,7 +156,7 @@ class ReliefwebTokenFilterTest extends ExistingSiteBase {
               'created' => '2021-10-02T00:00:00+00:00',
             ),
             'primary_type' => array(
-              'code' => 'WF',
+              'code' => 'XX',
             ),
             'country' => array(
               array(
