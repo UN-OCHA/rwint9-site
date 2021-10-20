@@ -8,6 +8,9 @@ use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
@@ -130,22 +133,80 @@ class EntityHistory {
    *   Render array with the revision history.
    */
   public function getEntityHistory(EntityRevisionedInterface $entity) {
+    if (!$this->currentUser->hasPermission('view entity history') || $entity->id() === NULL) {
+      return [];
+    }
+
+    $entity_id = $entity->id();
     $entity_type_id = $entity->getEntityTypeId();
 
     // Get the list of revisions for the entity.
     $revision_ids = $this->getRevisionIds($entity);
 
+    // Create a stub entity so we can show the diff for the first revision.
+    $previous_revision = $this->createStubRevision($entity);
+
+    $rows = [];
     foreach ($revision_ids as $revision_id) {
       $revision = $this->loadRevision($entity_type_id, $revision_id);
 
-      if (!isset($previous_revision)) {
-        $this->loadRevision($entity_type_id, $revision_id);
-      }
+      // Get the changes between the revisions.
+      $diff = $this->getRevisionDiff($revision, $previous_revision);
+      dpm($diff);
 
-      $this->getRevisionDiff($revision, $previous_revision);
+      // Format the differences.
+      //$formatted = $this->formatRevisionDiff($diff)
+      //dpm($diff);
+
+      $previous_revision = $revision;
     }
 
     return [];
+  }
+
+  protected function formatRevisionDiff(EntityRevisionedInterface $revision, array $diff) {
+    $fields = [];
+    foreach ($revision->getFieldDefinitions() as $field_name => $field_definition) {
+      if (isset($diff[$field_name])) {
+        $fields[$field_name] = $this->formatFieldDiff($field_definition, $diff[$field_name]);
+      }
+    }
+    return $fields;
+  }
+
+  /**
+   * Format the difference between 2 fields.
+   */
+  protected function formatFieldDiff(FieldDefinitionInterface $field_definition, array $diff) {
+    $label = $field_definition->getLabel();
+    dpm($field_definition->getName() . ' - ' . $field_definition->getType());
+
+    /*witch ($field_definition->getType()) {
+
+    }*/
+  }
+
+  /**
+   * Create a stub entity revision.
+   *
+   * @param \Drupal\reliefweb_revisions\EntityRevisionedInterface $entity
+   *   Entity.
+   *
+   * @return \Drupal\reliefweb_revisions\EntityRevisionedInterface
+   *   Stub entity revision.
+   */
+  protected function createStubRevision(EntityRevisionedInterface $entity) {
+    $class = get_class($entity);
+
+    $values = [];
+    foreach ($entity->getEntityType()->getKeys() as $field) {
+      $values[$field] = $entity->get($field)->getValue();
+    }
+    foreach ($entity->getEntityType()->getRevisionMetadataKeys() as $field) {
+      $values[$field] = $entity->get($field)->getValue();
+    }
+
+    return $class::create($values);
   }
 
   /**
@@ -153,20 +214,63 @@ class EntityHistory {
    *
    * @param \Drupal\reliefweb_revisions\EntityRevisionedInterface $revision
    *   Revision to compare with the previous one.
-   * @param \Drupal\reliefweb_revisions\EntityRevisionedInterface $previous_revision
-   *   Previous revision.
+   * @param \Drupal\reliefweb_revisions\EntityRevisionedInterface|null $previous_revision
+   *   Previous revision (NULL if there is none).
    *
    * @return array
    *   Differences as an associative with the added and removed properties,
    *   each containing the list of field changes between the 2 revisions.
    */
-  protected function getRevisionDiff(EntityRevisionedInterface $revision, EntityRevisionedInterface $previous_revision) {
+  protected function getRevisionDiff(EntityRevisionedInterface $revision, ?EntityRevisionedInterface $previous_revision = NULL) {
+    /** @var \Drupal\Core\Field\FieldDefintionInterface[] $field_definitions */
+    $field_definitions = $revision->getFieldDefinitions();
 
-    $diff = [
-      'added' => [],
-      'removed' => [],
-    ];
+    $diff = [];
+    foreach ($field_definitions as $field_name => $field_definition) {
+      $current = $revision->get($field_name)->getValue();
+      $previous = $previous_revision->get($field_name)->getValue();
 
+      $added = $this->getArrayDiff($current, $previous);
+      $removed = $this->getArrayDiff($previous, $current);
+
+      if (!empty($added) || !empty($removed)) {
+        $diff[$field_name] = [
+          'added' => $added,
+          'removed' => $removed,
+        ];
+      }
+    }
+
+    return $diff;
+  }
+
+  /**
+   * Get the difference between 2 nested associative arrays.
+   *
+   * @param array $array1
+   *   First array.
+   * @param array $array2
+   *   Second array.
+   *
+   * @return array
+   *   Values from the first array not present in the second array.
+   *
+   * @todo move to a helper function?
+   */
+  protected function getArrayDiff(array $array1, array $array2) {
+    if (empty($array2)) {
+      return $array1;
+    }
+    elseif (empty($array1)) {
+      return $array2;
+    }
+
+    $diff = [];
+    foreach ($array1 as $key => $value1) {
+      if (array_search($value1, $array2) === FALSE) {
+        $diff[$key] = $value1;
+      }
+    }
     return $diff;
   }
 
@@ -218,7 +322,7 @@ class EntityHistory {
     $ids = array_keys($results);
 
     // Extract the first revision.
-    $first = pop($ids);
+    $first = array_pop($ids);
 
     // Limit the number of revisions to the most recent and add back the first
     // revision.
@@ -226,6 +330,28 @@ class EntityHistory {
     $ids[] = $first;
 
     return $ids;
+  }
+
+  /**
+   * Add the entity history to a form.
+   *
+   * @param array $form
+   *   Entity form.
+   *
+   * @return array
+   *   Render array with the history
+   */
+  public static function addHistoryToForm(array &$form, FormStateInterface $form_state) {
+    $entity = $form_state?->getFormObject()?->getEntity();
+    if (!empty($entity) && $entity instanceof EntityRevisionedInterface) {
+      $history = \Drupal::service('reliefweb_revisions.entity.history')
+        ->getEntityHistory($entity);
+
+      if (!empty($history)) {
+        $form['revision_history'] = $history;
+        $form['revision_history']['#group'] = 'revision_information';
+      }
+    }
   }
 
 }

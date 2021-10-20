@@ -1,0 +1,31 @@
+<?php
+
+/**
+ * @file
+ * ReliefWeb revisions module file.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\reliefweb_revisions\Services\EntityHistory;
+
+/**
+ * Implements hook_theme().
+ */
+function reliefweb_revisions_theme() {
+  $themes = [];
+  return $themes;
+}
+
+/**
+ * Implements hook_form_HOOK_alter() for "node_form".
+ */
+function reliefweb_revisions_form_node_form_alter(array &$form, FormStateInterface $form_state) {
+  EntityHistory::addHistoryToForm($form, $form_state);
+}
+
+/**
+ * Implements hook_form_HOOK_alter() for "taxonomy_term_form".
+ */
+function reliefweb_revisions_form_taxonomy_term_form_alter(array &$form, FormStateInterface $form_state) {
+  EntityHistory::addHistoryToForm($form, $form_state);
+}
