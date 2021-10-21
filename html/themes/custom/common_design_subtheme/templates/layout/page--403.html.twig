@@ -5,6 +5,9 @@
   {% endblock %}
 
   {% block main %}
+
+    {{ attach_library('common_design_subtheme/rw-useful-links') }}
+
     {# Link to skip to the main content is in html.html.twig #}
     <main role="main" id="main-content" class="cd-container">
 
@@ -12,34 +15,36 @@
 
         <div class="cd-layout-content">
 
-          <section class="403">
+          <section class="rw-403">
             <header>
               <h1 class="rw-page-title">{{ '403 - Access denied'|t }}</h1>
             </header>
             <p>{{ 'Sorry for any inconvenience.'|t }}</p>
             <p>{{ 'Here are some useful pages to help you get back on track:'|t }}</p>
-            <ul class="useful-links">
-              <li>
-                <a href="/">{{ 'Homepage'|t }}</a>
-                <p>{{ 'View ongoing crises and latest headlines.'|t }}</p>
-              </li>
-              <li>
-                <a href="/updates">{{ 'Updates'|t }}</a>
-                <p>{{ 'Access the latest humanitarian reports, maps and infographics and an archive of more than 20 years of humanitarian information.'|t }}</p>
-              </li>
-              <li>
-                <a href="/jobs">{{ 'Jobs'|t }}</a>
-                <p>{{ 'Browse open job opportunities in the humanitarian field.'|t }}</p>
-              </li>
-              <li>
-                <a href="/training">{{ 'Training'|t }}</a>
-                <p>{{ 'Discover training opportunities in the humanitarian field.'|t }}</p>
-              </li>
-              <li>
-                <a href="/help">{{ 'Help Section'|t }}</a>
-                <p>{{ 'Find help on how to use the site, read terms and conditions, view the FAQs and API documentation.'|t }}</p>
-              </li>
-            </ul>
+            <div class="rw-entity-useful-links">
+              <ul>
+                <li>
+                  <a href="/">{{ 'Homepage'|t }}</a>
+                  <p>{{ 'View ongoing crises and latest headlines.'|t }}</p>
+                </li>
+                <li>
+                  <a href="/updates">{{ 'Updates'|t }}</a>
+                  <p>{{ 'Access the latest humanitarian reports, maps and infographics and an archive of more than 20 years of humanitarian information.'|t }}</p>
+                </li>
+                <li>
+                  <a href="/jobs">{{ 'Jobs'|t }}</a>
+                  <p>{{ 'Browse open job opportunities in the humanitarian field.'|t }}</p>
+                </li>
+                <li>
+                  <a href="/training">{{ 'Training'|t }}</a>
+                  <p>{{ 'Discover training opportunities in the humanitarian field.'|t }}</p>
+                </li>
+                <li>
+                  <a href="/help">{{ 'Help Section'|t }}</a>
+                  <p>{{ 'Find help on how to use the site, read terms and conditions, view the FAQs and API documentation.'|t }}</p>
+                </li>
+              </ul>
+            </div>
           </section>
 
         </div>{# /.layout-content #}
