@@ -165,7 +165,8 @@ class ReliefwebImporterStringTest extends ReliefwebImporterTestBase {
    */
   public function testValidateJobClosingDate2() {
     $test_string = 'aaaa-bb-cc';
-    $this->expectExceptionMessage(strtr('Invalid data for field_job_closing_date, aaaa-bb-cc has to in format yyyy-mm-dd', [
+    $this->expectExceptionMessage(strtr('Invalid data for field_job_closing_date, @test_string has to be in format yyyy-mm-dd', [
+      '@test_string' => $test_string,
       '@length' => mb_strlen($test_string),
     ]));
     $this->reliefwebImporter->validateJobClosingDate($test_string);

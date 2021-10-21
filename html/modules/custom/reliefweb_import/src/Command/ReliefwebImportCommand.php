@@ -619,8 +619,8 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     }
 
     // Make sure field can be converted to a date.
-    if ($length === 10 && !strtotime($field_job_closing_date)) {
-      throw new ReliefwebImportExceptionSoftViolation(strtr('Invalid data for field_job_closing_date, @data has to in format yyyy-mm-dd', [
+    if ($length === 10 && !date_create_from_format('Y-m-d', $field_job_closing_date)) {
+      throw new ReliefwebImportExceptionSoftViolation(strtr('Invalid data for field_job_closing_date, @data has to be in format yyyy-mm-dd', [
         '@data' => $field_job_closing_date,
       ]));
     }
