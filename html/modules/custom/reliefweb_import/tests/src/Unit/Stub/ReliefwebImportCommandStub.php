@@ -81,4 +81,11 @@ class ReliefwebImportCommandStub extends ReliefwebImportCommand {
     return parent::validateCity($data);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function validateJobClosingDate($data) {
+    return parent::validateJobClosingDate($data);
+  }
+
 }

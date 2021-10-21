@@ -133,6 +133,34 @@ class ReliefwebImporterStringTest extends ReliefwebImporterTestBase {
       '@length' => mb_strlen($test_string),
     ]));
     $this->reliefwebImporter->validateCity($test_string);
-
   }
+
+  /**
+   * Tests for validateJobClosingDate.
+   */
+  public function testValidateJobClosingDate() {
+    $test_strings = [
+      '' => '',
+      '2010-01-01' => '2010-01-01',
+      '2010-01-01T10:00:00' => '2010-01-01',
+      '2010-01-01T10:00:00 +02:00' => '2010-01-01',
+    ];
+
+    foreach ($test_strings as $test_string => $expected) {
+      $this->assertEquals($expected, $this->reliefwebImporter->validateJobClosingDate($test_string));
+    }
+
+    $test_string = '2010-01';
+    $this->expectExceptionMessage(strtr('Invalid data for field_job_closing_date, 7 characters found, format has to be yyyy-mm-dd', [
+      '@length' => mb_strlen($test_string),
+    ]));
+    $this->reliefwebImporter->validateJobClosingDate($test_string);
+
+    $test_string = 'aaaa-bb-cc';
+    $this->expectExceptionMessage(strtr('Invalid data for field_job_closing_date, 7 characters found, format has to be yyyy-mm-dd', [
+      '@length' => mb_strlen($test_string),
+    ]));
+    $this->reliefwebImporter->validateJobClosingDate($test_string);
+  }
+
 }

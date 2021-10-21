@@ -338,7 +338,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       'title' => $this->validateTitle((string) $data->title),
       'field_career_categories' => $data->field_career_categories[0] ? (array) $data->field_career_categories : [],
       'field_city' => $this->validateCity((string) $data->field_city),
-      'field_job_closing_date' => (string) $data->field_job_closing_date,
+      'field_job_closing_date' => $this->validateJobClosingDate((string) $data->field_job_closing_date),
       'field_country' => $this->mapCountries((array) $data->field_country),
       'field_how_to_apply' => $this->validateHowToApply((string) $data->field_how_to_apply),
       'body' => [
@@ -362,7 +362,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     $job->title = $this->validateTitle((string) $data->title);
     $job->field_career_categories = $data->field_career_categories[0] ? (array) $data->field_career_categories : [];
     $job->field_city = $this->validateCity((string) $data->field_city);
-    $job->field_job_closing_date = (string) $data->field_job_closing_date;
+    $job->field_job_closing_date = $this->validateJobClosingDate((string) $data->field_job_closing_date);
     $job->field_country = $this->mapCountries((array) $data->field_country);
     $job->field_how_to_apply = $this->validateHowToApply((string) $data->field_how_to_apply);
     $job->body = [
@@ -595,6 +595,34 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     }
 
     return $field_city;
+  }
+
+  /**
+   * Validate job closing date field.
+   *
+   * @param string $data
+   *   Raw data from XML.
+   */
+  protected function validateJobClosingDate($data) {
+    // Clean the field.
+    $field_job_closing_date = mb_substr($data, 0, 10);
+
+    // Ensure the field size is reasonable.
+    $length = mb_strlen($field_job_closing_date);
+    if ($length !== 0 && $length !== 10) {
+      throw new ReliefwebImportExceptionSoftViolation(strtr('Invalid data for field_job_closing_date, @length characters found, format has to be yyyy-mm-dd', [
+        '@length' => $length,
+      ]));
+    }
+
+    // Make sure field can be converted to a date.
+    if ($length === 10 && !strtotime($field_job_closing_date)) {
+      throw new ReliefwebImportExceptionSoftViolation(strtr('Invalid data for field_job_closing_date, @data has to in format yyyy-mm-dd', [
+        '@data' => $field_job_closing_date,
+      ]));
+    }
+
+    return $field_job_closing_date;
   }
 
   /**
