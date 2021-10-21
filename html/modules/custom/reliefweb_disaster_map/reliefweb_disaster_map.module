@@ -68,7 +68,7 @@ function reliefweb_disaster_map_tokens($type, $tokens, array $data, array $optio
  *   Disaster type terms keyed by disaster type code.
  */
 function reliefweb_disaster_map_get_disaster_type_tokens() {
-  static $disaster_type_tokens;
+  $disaster_type_tokens = &drupal_static(__FUNCTION__);
 
   if (!isset($disaster_type_tokens)) {
     $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadByProperties([
