@@ -47,9 +47,9 @@
     ],
     "require": {
         "php": ">=8.0",
-        "cogpowered/finediff": "^0.3.1",
         "composer/installers": "^1.10",
         "cweagans/composer-patches": "^1.7",
+        "d4h/finediff": "^1.0",
         "drupal-composer/preserve-paths": "^0.1.6",
         "drupal/admin_denied": "^1.1",
         "drupal/allowed_formats": "^1.3",
