@@ -142,6 +142,10 @@ form .image-widget .js-media-library-item-preview {
   max-height: 147px;
   margin: 0 0 16px;
 }
+.node-announcement-edit-form .image-widget .js-media-library-item-preview {
+  max-width: 600px;
+  max-height: 200px;
+}
 form .image-widget .js-media-library-item-preview img {
   width: auto;
   max-width: 100%;
