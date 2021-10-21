@@ -23,6 +23,13 @@ if (file_exists($app_root . '/' . $site_path . '/settings.local.php')) {
 }
 ```
 
+## Local development
+
+For local development, add this line to settings.local.php:
+`$config['config_split.config_split.config_dev']['status'] = TRUE;`
+After importing a fresh database, run `drush csim` to enable devel, database
+log and stage_file_proxy.
+
 ## Testing [![Coverage Status](https://coveralls.io/repos/github/UN-OCHA/rwint9-site/badge.svg)](https://coveralls.io/github/UN-OCHA/rwint9-site)
 
 ```bash
