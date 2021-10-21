@@ -165,7 +165,8 @@ form > * .form-wrapper,
 form > * .form-item {
   margin-top: 24px;
 }
-form > * .form-wrapper.form-item:first-child .fieldset-wrapper > h4:first-child {
+form > * .form-wrapper.form-item:first-child .fieldset-wrapper > h4:first-child,
+fieldset > legend + .form-wrapper > h4 {
   margin: 0 0 6px;
 }
 form > * .form-wrapper > h4,
