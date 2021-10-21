@@ -5,6 +5,7 @@ global-styling:
   dependencies:
     - common_design_subtheme/rw-form
     - common_design_subtheme/rw-site-slogan
+    - common_design_subtheme/rw-page-title
 
 # RW custom components
 rw-admin-menu:
