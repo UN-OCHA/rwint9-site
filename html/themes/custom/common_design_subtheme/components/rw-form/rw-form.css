@@ -432,9 +432,9 @@ form #edit-organization #edit-field-source-allowed .form-item:last-child {
   font-size: 14px;
 }
 .filter-wrapper ul {
-  list-style-type: none;
-  padding: 0;
   margin: 0;
+  padding: 0;
+  list-style-type: none;
   font-size: 14px;
 }
 
@@ -449,6 +449,11 @@ form [data-lengthchecker-status] {
 /* New Organisation field for Jobs */
 .node-form fieldset.field-new-source-wrapper {
   margin-top: 24px;
+}
+/* Term Profile form */
+.taxonomy-term-country-profile-form,
+.taxonomy-term-disaster-profile-form {
+  padding-top: 24px;
 }
 
 /**
