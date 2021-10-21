@@ -335,9 +335,9 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       'type' => 'job',
       'uid' => $uid,
       'field_job_id' => (string) $data->link,
-      'title' => (string) $this->validateTitle((string) $data->title),
+      'title' => $this->validateTitle((string) $data->title),
       'field_career_categories' => $data->field_career_categories[0] ? (array) $data->field_career_categories : [],
-      'field_city' => (string) $data->field_city,
+      'field_city' => $this->validateCity((string) $data->field_city),
       'field_job_closing_date' => (string) $data->field_job_closing_date,
       'field_country' => $this->mapCountries((array) $data->field_country),
       'field_how_to_apply' => $this->validateHowToApply((string) $data->field_how_to_apply),
@@ -361,7 +361,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
   protected function updateJob(Job $job, $data) {
     $job->title = $this->validateTitle((string) $data->title);
     $job->field_career_categories = $data->field_career_categories[0] ? (array) $data->field_career_categories : [];
-    $job->field_city = (string) $data->field_city;
+    $job->field_city = $this->validateCity((string) $data->field_city);
     $job->field_job_closing_date = (string) $data->field_job_closing_date;
     $job->field_country = $this->mapCountries((array) $data->field_country);
     $job->field_how_to_apply = $this->validateHowToApply((string) $data->field_how_to_apply);
@@ -574,6 +574,27 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     }
 
     return $field_how_to_apply;
+  }
+
+  /**
+   * Validate city field.
+   *
+   * @param string $data
+   *   Raw data from XML.
+   */
+  protected function validateCity($data) {
+    // Clean the field.
+    $field_city = $this->sanitizeText('field_city', $data, 'markdown');
+
+    // Ensure the field size is reasonable.
+    $length = mb_strlen($field_city);
+    if ($length < 3 || $length > 255) {
+      throw new ReliefwebImportExceptionSoftViolation(strtr('Invalid field size for field_city, @length characters found, has to be between 3 and 255', [
+        '@length' => $length,
+      ]));
+    }
+
+    return $field_city;
   }
 
   /**

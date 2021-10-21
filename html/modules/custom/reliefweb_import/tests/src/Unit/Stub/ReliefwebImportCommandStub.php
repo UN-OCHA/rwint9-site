@@ -74,4 +74,11 @@ class ReliefwebImportCommandStub extends ReliefwebImportCommand {
     return parent::fetchXml($url);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function validateCity($data) {
+    return parent::validateCity($data);
+  }
+
 }

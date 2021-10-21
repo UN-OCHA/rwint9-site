@@ -106,4 +106,33 @@ class ReliefwebImporterStringTest extends ReliefwebImporterTestBase {
     $this->assertEquals('The Opportunity', $this->reliefwebImporter->sanitizeText('body', $test_string));
   }
 
+  /**
+   * Tests for validateCity.
+   */
+  public function testValidateCity() {
+    $test_strings = [
+      'Geneva' => 'Geneva',
+      "Geneva\n\n" => 'Geneva',
+      "Geneva\n\ncity" => 'Geneva city',
+    ];
+
+    foreach ($test_strings as $test_string => $expected) {
+      $this->assertEquals($expected, $this->reliefwebImporter->validateCity($test_string));
+    }
+
+    $test_string = '';
+
+    $this->expectExceptionMessage(strtr('Invalid field size for field_city, 0 characters found, has to be between 3 and 255', [
+      '@length' => mb_strlen($test_string),
+    ]));
+    $this->reliefwebImporter->validateCity($test_string);
+
+    $test_string = $this->random->string(500);
+
+    $this->expectExceptionMessage(strtr('Invalid field size for field_city, 0 characters found, has to be between 3 and 255', [
+      '@length' => mb_strlen($test_string),
+    ]));
+    $this->reliefwebImporter->validateCity($test_string);
+
+  }
 }
