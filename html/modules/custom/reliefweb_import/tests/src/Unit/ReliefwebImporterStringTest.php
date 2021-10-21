@@ -171,4 +171,29 @@ class ReliefwebImporterStringTest extends ReliefwebImporterTestBase {
     $this->reliefwebImporter->validateJobClosingDate($test_string);
   }
 
+  /**
+   * Tests for validateCity.
+   */
+  public function testValidateHowToApply() {
+    $test_string = $this->random->sentences(50);
+    $this->assertEquals($test_string, $this->reliefwebImporter->validateHowToApply($test_string));
+
+    $test_string = '';
+    $this->expectExceptionMessage(strtr('Invalid field size for field_how_to_apply, @length characters found, has to be between 100 and 10000', [
+      '@length' => mb_strlen($test_string),
+    ]));
+    $this->reliefwebImporter->validateHowToApply($test_string);
+  }
+
+  /**
+   * Tests for validateHowToApply.
+   */
+  public function testValidateHowToApply2() {
+    $test_string = $this->random->sentences(5000);
+    $this->expectExceptionMessage(strtr('Invalid field size for field_how_to_apply, @length characters found, has to be between 100 and 10000', [
+      '@length' => mb_strlen($test_string),
+    ]));
+    $this->reliefwebImporter->validateHowToApply($test_string);
+  }
+
 }
