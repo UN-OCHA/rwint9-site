@@ -584,7 +584,10 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    */
   protected function validateCity($data) {
     // Clean the field.
-    $field_city = $this->sanitizeText('field_city', $data, 'markdown');
+    $field_city = TextHelper::cleanText(strip_tags($data), [
+      'line_breaks' => TRUE,
+      'consecutive' => TRUE,
+    ]);
 
     // Ensure the field size is reasonable.
     $length = mb_strlen($field_city);
