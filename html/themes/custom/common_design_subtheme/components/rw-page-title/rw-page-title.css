@@ -21,6 +21,11 @@
 .path-error--403 header .rw-page-title {
   padding-bottom: 8px;
 }
+.path-admin .rw-page-title,
+  /* Exclude specific node page titles as the border is on the header element */
+.user-logged-in.path-node:not([class*="page-node-type-"]) .rw-page-title {
+  border-bottom: 1px solid #eb1405;
+}
 .rw-document > header,
 .rw-river-page > header {
   margin-bottom: 2rem;
