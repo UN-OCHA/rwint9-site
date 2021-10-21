@@ -121,15 +121,18 @@ class ReliefwebImporterStringTest extends ReliefwebImporterTestBase {
     }
 
     $test_string = '';
-
-    $this->expectExceptionMessage(strtr('Invalid field size for field_city, 0 characters found, has to be between 3 and 255', [
+    $this->expectExceptionMessage(strtr('Invalid field size for field_city, @length characters found, has to be between 3 and 255', [
       '@length' => mb_strlen($test_string),
     ]));
     $this->reliefwebImporter->validateCity($test_string);
+  }
 
-    $test_string = $this->random->string(500);
-
-    $this->expectExceptionMessage(strtr('Invalid field size for field_city, 0 characters found, has to be between 3 and 255', [
+  /**
+   * Tests for validateCity.
+   */
+  public function testValidateCity2() {
+    $test_string = $this->random->sentences(100);
+    $this->expectExceptionMessage(strtr('Invalid field size for field_city, @length characters found, has to be between 3 and 255', [
       '@length' => mb_strlen($test_string),
     ]));
     $this->reliefwebImporter->validateCity($test_string);
@@ -155,9 +158,14 @@ class ReliefwebImporterStringTest extends ReliefwebImporterTestBase {
       '@length' => mb_strlen($test_string),
     ]));
     $this->reliefwebImporter->validateJobClosingDate($test_string);
+  }
 
+  /**
+   * Tests for validateJobClosingDate.
+   */
+  public function testValidateJobClosingDate2() {
     $test_string = 'aaaa-bb-cc';
-    $this->expectExceptionMessage(strtr('Invalid data for field_job_closing_date, 7 characters found, format has to be yyyy-mm-dd', [
+    $this->expectExceptionMessage(strtr('Invalid data for field_job_closing_date, aaaa-bb-cc has to in format yyyy-mm-dd', [
       '@length' => mb_strlen($test_string),
     ]));
     $this->reliefwebImporter->validateJobClosingDate($test_string);
