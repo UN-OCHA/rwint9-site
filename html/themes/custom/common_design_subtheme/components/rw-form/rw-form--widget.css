@@ -105,7 +105,6 @@ form .image-widget {
   /* border: 1px solid #e6ecef; */
   padding: 0 16px 16px;
 }
-
 @media (min-width: 576px) {
   form .image-widget {
     flex-direction: row;
@@ -142,6 +141,7 @@ form .image-widget .js-media-library-item-preview {
   max-height: 147px;
   margin: 0 0 16px;
 }
+.node-announcement-form .image-widget .js-media-library-item-preview,
 .node-announcement-edit-form .image-widget .js-media-library-item-preview {
   max-width: 600px;
   max-height: 200px;
@@ -231,4 +231,13 @@ ul.js-media-library-add-form-added-media li {
     display: flex;
     flex-direction: column;
   }
+}
+
+/* Prevent empty divs from taking up space */
+form .js-media-library-widget .js-media-library-selection.form-wrapper,
+.js-media-library-add-form .field--type-image {
+  margin-top: 0;
+}
+.js-media-library-add-form .image-widget {
+  padding: 0;
 }
