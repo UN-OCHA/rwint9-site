@@ -6,12 +6,23 @@
 }
 .rw-document > header,
 .taxonomy-term--full > header,
-.rw-river-page > header {
+.rw-river-page > header,
+.path-error--404 header,
+.path-error--403 header {
   padding-bottom: 12px;
   border-bottom: 1px solid #eb1405;
 }
+.path-error--404 header,
+.path-error--403 header {
+  margin-bottom: 24px;
+  padding: 0;
+}
+.path-error--404 header .rw-page-title,
+.path-error--403 header .rw-page-title {
+  padding-bottom: 8px;
+}
 .path-admin .rw-page-title,
-/* Exclude specific nde page titles as the border is on the header element */
+  /* Exclude specific node page titles as the border is on the header element */
 .user-logged-in.path-node:not([class*="page-node-type-"]) .rw-page-title {
   border-bottom: 1px solid #eb1405;
 }
