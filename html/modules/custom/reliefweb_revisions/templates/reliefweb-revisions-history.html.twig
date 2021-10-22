@@ -1,0 +1,52 @@
+{#
+
+/**
+ * @file
+ * Template of the entity history.
+ *
+ * Available variables:
+ * - level: the heading level (defaults to 2)
+ * - title: the section title (default to 'History')
+ * - entity: the entity
+ * - history: list of revisions. Each revision has the following properties:
+ *   - user: user who created the revision
+ *   - date: the revision timestamp
+ *   - status: associative array with the moderation status value and its label
+ *   - message: associative array with the revision log message and its type
+ *   - content: list of fields with their label and formatted differences.
+ */
+
+#}
+<section{{ attributes.addClass('rw-revisions-history') }}>
+  <header class="rw-revisions-history__header">
+    <h{{ level }}>{{ title }} - <em>{{ entity.id() }}</em></h{{ level }}>
+  </header>
+
+  <div data-count="{{ history|length }}" class="rw-revisions-history__content">
+  {% for entry in history %}
+    <article class="rw-revisions-history-entry">
+      <header class="rw-revisions-history-entry__header">
+        <h{{ level + 1 }}>{{ '@date by @user'|t({
+          '@date': entry.date|date('d M Y H:i:s e', 'UTC'),
+          '@user': entity_link(entry.user),
+        }) }}</h{{ level + 1 }}>
+        <div class="rw-moderation-status" data-moderation-status="{{ entry.status.value }}">{{ entry.status.label }}</div>
+      </header>
+
+      <dl class="rw-revisions-history-entry__content">
+      {% for item in entry.content %}
+        <dt class="rw-revisions-history-entry__content__field">{{ item.label }}</dt>
+        <dd class="rw-revisions-history-entry__content__value">{{ item.value }}</dd>
+      {% endfor %}
+      </dl>
+
+      {% if entry.message.content is not empty %}
+      <footer class="rw-revisions-history-entry__footer">
+        <div class="rw-revision-message" data-revision-message="{{ entry.message.type }}">{{ entry.message.content }}</div>
+      </footer>
+      {% endif %}
+    </article>
+  {% endfor %}
+  </div>
+</section>
+

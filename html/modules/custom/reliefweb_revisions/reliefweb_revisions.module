@@ -12,7 +12,30 @@ use Drupal\reliefweb_revisions\Services\EntityHistory;
  * Implements hook_theme().
  */
 function reliefweb_revisions_theme() {
-  $themes = [];
+  $themes = [
+    'reliefweb_revisions_history' => [
+      'variables' => [
+        // The headling level.
+        'level' => 2,
+        // Section attributes.
+        'attributes' => NULL,
+        // Section title.
+        'title' => t('History'),
+        // Entity whose history is displayed.
+        'entity' => NULL,
+        // history: list of revisions. Each revision has the following
+        // properties:
+        // - user: user who created the revision
+        // - date: the revision timestamp
+        // - status: associative array with the moderation status value and its
+        //   label
+        // - message: associative array with the revision log message and its
+        //   type
+        // - content: list of fields with their label and formatted differences.
+        'history' => [],
+      ],
+    ],
+  ];
   return $themes;
 }
 
