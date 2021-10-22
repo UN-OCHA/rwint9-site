@@ -181,7 +181,7 @@ function reliefweb_subscriptions_subscriptions() {
     'payload' => [
       'filter' => [
         'field' => 'status',
-        'value' => ['alert', 'current'],
+        'value' => ['alert', 'current', 'ongoing'],
       ],
       'fields' => [
         'include' => [
