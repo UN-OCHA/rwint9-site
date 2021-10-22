@@ -83,6 +83,8 @@ class DrushCommandsTest extends ExistingSiteBase {
       new Response(200, [], $this->getTestXml3()),
       new Response(200, [], $this->getTestXml4()),
       new Response(200, [], $this->getTestXml5()),
+      new Response(200, [], $this->getTestXml6()),
+      new Response(200, [], $this->getTestXml7()),
       new ClientException('Client exception', new Request('GET', '')),
       new RequestException('Request exception', new Request('GET', '')),
       new \Exception('General exception'),
@@ -199,6 +201,9 @@ class DrushCommandsTest extends ExistingSiteBase {
     $this->assertCount(0, $errors);
     $this->assertSame($job->title->value, 'Head of Supply Chain');
 
+    $year = date('Y') + 1;
+    $this->assertSame($job->field_job_closing_date->value, $year . '-10-05');
+
     // Import jobs again, triggering updates.
     $this->reliefwebImporter->fetchJobs($source);
 
@@ -224,8 +229,6 @@ class DrushCommandsTest extends ExistingSiteBase {
     $warnings = $this->reliefwebImporter->getWarnings();
     $errors = $this->reliefwebImporter->getErrors();
 
-    // @see RW-202 $this->assertCount(1, $warnings);
-    // @see RW-202  $this->assertSame($warnings[0], 'Validation failed in field_job_closing_date with message: <em class="placeholder">Closing date</em> field has to be in the future. for job https://www.aplitrak.com?adid=20');
     $this->assertArrayNotHasKey(0, $errors);
 
     // Import job in the past.
@@ -234,8 +237,29 @@ class DrushCommandsTest extends ExistingSiteBase {
     $warnings = $this->reliefwebImporter->getWarnings();
     $errors = $this->reliefwebImporter->getErrors();
 
-    $this->assertArrayNotHasKey(0, $warnings);
-    $this->assertArrayNotHasKey(1, $errors);
+    $this->assertArrayNotHasKey(1, $warnings);
+    $this->assertArrayNotHasKey(0, $errors);
+    $this->assertSame($warnings[0], 'Validation failed in field_job_closing_date.0.value with message: The <em class="placeholder">Closing date</em> cannot be in the past for job https://www.aplitrak.com?adid=30');
+
+    // Import job with city, no country.
+    $this->reliefwebImporter->fetchJobs($source);
+
+    $warnings = $this->reliefwebImporter->getWarnings();
+    $errors = $this->reliefwebImporter->getErrors();
+
+    $this->assertArrayNotHasKey(1, $warnings);
+    $this->assertArrayNotHasKey(0, $errors);
+    $this->assertSame($warnings[0], 'Validation failed in field_city with message: The <em class="placeholder">City</em> cannot have a value when <em class="placeholder">Country</em> has no value for job https://www.aplitrak.com?adid=21');
+
+    // Import job with too short how to apply.
+    $this->reliefwebImporter->fetchJobs($source);
+
+    $warnings = $this->reliefwebImporter->getWarnings();
+    $errors = $this->reliefwebImporter->getErrors();
+
+    $this->assertArrayNotHasKey(1, $warnings);
+    $this->assertArrayNotHasKey(0, $errors);
+    $this->assertSame($warnings[0], 'Invalid field size for field_how_to_apply, 13 characters found, has to be between 100 and 10000');
 
     // Exception log messages.
     $this->reliefwebImporter->jobs();
