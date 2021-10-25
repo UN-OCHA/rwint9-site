@@ -10,7 +10,6 @@ storage: folder
 folder: ../config_dev
 module:
   config_filter: 0
-  config_split: 0
   dblog: 0
   devel: 0
   stage_file_proxy: 0
