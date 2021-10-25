@@ -68,8 +68,14 @@ rw-bookmark-link:
 rw-country:
   css:
     theme:
-      components/rw-country/rw-country.css: {}
       components/rw-country/rw-country-list.css: {}
+  dependencies:
+    - common_design_subtheme/rw-country-slug
+
+rw-country-slug:
+  css:
+    theme:
+      components/rw-country-slug/rw-country-slug.css: {}
 
 # Datepicker widget.
 rw-datepicker:

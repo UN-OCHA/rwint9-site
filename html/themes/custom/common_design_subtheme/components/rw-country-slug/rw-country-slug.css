@@ -33,7 +33,8 @@
   text-decoration: underline;
 }
 
-.rw-article--report p.rw-entity-country-slug {
+.rw-article--report p.rw-entity-country-slug,
+.rw-article--job p.rw-entity-country-slug {
   margin: 0 0 16px 0;
   padding: 3px 8px;
   font-size: 15px;
