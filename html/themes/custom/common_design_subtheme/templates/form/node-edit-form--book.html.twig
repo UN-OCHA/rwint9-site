@@ -58,8 +58,8 @@
 </fieldset>
 
 {{ form.revision_information}}
-{{ form.book }}
 {{ form.path }}
+{{ form.book }}
 
 {{
   form|without([
@@ -69,7 +69,7 @@
     'actions',
     'revision_information',
     'advanced',
-    'book',
     'path',
+    'book',
   ])
 }}
