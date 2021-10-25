@@ -88,7 +88,7 @@
 }
 
 /**
- * Related disaters.
+ * Related disasters.
  *
  * .rw-disaster-map ul
  */
@@ -279,4 +279,15 @@
 .taxonomy-term--disaster--full[data-disaster-status="ongoing"] > header:before {
   border-color: #f65c51;
   background-color: #f65c51;
+}
+
+/* Reset styles for Disaster Affected Countries Section */
+.rw-river--countries .rw-river-article {
+  padding: 0 0 12px;
+  margin-top: 0;
+}
+.rw-river--countries .rw-river-article > header .rw-river-article__title {
+  font-size: 16px;
+  font-weight: normal;
+  line-height: 24px;
 }
