@@ -12,6 +12,9 @@
   padding-bottom: 12px;
   border-bottom: 1px solid #eb1405;
 }
+.taxonomy-term--source > header {
+  padding-bottom: 0;
+}
 .path-error--404 header,
 .path-error--403 header {
   margin-bottom: 24px;
