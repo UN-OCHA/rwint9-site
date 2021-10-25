@@ -283,8 +283,8 @@
 
 /* Reset styles for Disaster Affected Countries Section */
 .rw-river--countries .rw-river-article {
-  padding: 0 0 12px;
   margin-top: 0;
+  padding: 0 0 12px;
 }
 .rw-river--countries .rw-river-article > header .rw-river-article__title {
   font-size: 16px;
