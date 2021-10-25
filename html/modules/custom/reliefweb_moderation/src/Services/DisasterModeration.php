@@ -165,7 +165,7 @@ class DisasterModeration extends ModerationServiceBase {
       $buttons['alert'] = [
         '#value' => $this->t('Alert'),
       ];
-      $buttons['current'] = [
+      $buttons['ongoing'] = [
         '#value' => $this->t('Ongoing'),
       ];
     }
@@ -243,7 +243,7 @@ class DisasterModeration extends ModerationServiceBase {
     }
     // Hide draft and archive disasters.
     else {
-      return in_array($status, ['alert', 'current', 'past']);
+      return in_array($status, ['alert', 'current', 'ongoing', 'past']);
     }
     return FALSE;
   }
@@ -275,7 +275,7 @@ class DisasterModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function disableNotifications(EntityModeratedInterface $entity, $status) {
-    $allowed_statuses = ['alert', 'current'];
+    $allowed_statuses = ['alert', 'current', 'ongoing'];
     $entity->notifications_content_disable = !in_array($status, $allowed_statuses);
   }
 

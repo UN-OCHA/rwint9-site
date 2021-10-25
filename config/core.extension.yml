@@ -7,6 +7,7 @@ module:
   components: 0
   config: 0
   config_split: 0
+  contact: 0
   content_moderation: 0
   ctools: 0
   datetime: 0
@@ -45,6 +46,7 @@ module:
   redis: 0
   reliefweb_api: 0
   reliefweb_bookmarks: 0
+  reliefweb_contact: 0
   reliefweb_disaster_map: 0
   reliefweb_dsr: 0
   reliefweb_entities: 0

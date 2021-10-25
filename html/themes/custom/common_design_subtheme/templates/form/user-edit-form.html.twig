@@ -21,6 +21,7 @@
 <fieldset id="account">
   <legend>{% trans %}Account information{% endtrans %}</legend>
   {{ form.account.name }}
+  {{ form.display_name }}
   {{ form.account.current_pass }}
   {{ form.account.mail }}
   {{ form.account.pass }}
@@ -56,5 +57,6 @@
     'account',
     'field_notes',
     'actions',
+    'display_name'
   ])
 }}

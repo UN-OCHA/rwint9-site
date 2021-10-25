@@ -55,7 +55,17 @@
   margin: 4px 0 0 0;
 }
 
+.subscription-form,
+.user-form {
+  --cd-flow-space: 2rem;
+}
+
 .subscription-form fieldset:first-of-type,
-.user-form fieldset:first-of-type {
+.user-form fieldset:first-of-type,
+.community-topics-form fieldset:first-of-type {
   padding-top: 24px;
+}
+/* Nested fieldset */
+.user-form fieldset fieldset:first-of-type {
+  padding-top: 0;
 }
