@@ -9,6 +9,10 @@
   margin-top: 32px;
   text-align: center;
 }
+/* Recent Disasters on the homepage */
+.rw-river--disasters .view-more {
+  margin-top: 16px;
+}
 /* Clear the floating of the list items. */
 .view-more:after {
   display: block;
