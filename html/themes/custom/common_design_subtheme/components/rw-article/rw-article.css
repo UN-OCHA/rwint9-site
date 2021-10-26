@@ -142,6 +142,7 @@
   .rw-river--river-columns .rw-river__articles {
     display: flex;
     flex-wrap: wrap;
+    margin-top: 0;
   }
   .rw-river--river-columns.rw-river--river-list {
     width: auto;
