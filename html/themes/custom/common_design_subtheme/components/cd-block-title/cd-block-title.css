@@ -20,5 +20,6 @@
   .rw-river--headlines h2.cd-block-title,
   .rw-page-title.cd-block-title {
     font-size: var(--cd-font-size--2xbase);
+    margin-bottom: 24px;
   }
 }
