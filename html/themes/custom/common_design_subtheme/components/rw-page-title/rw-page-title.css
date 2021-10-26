@@ -13,7 +13,8 @@
   border-bottom: 1px solid #eb1405;
 }
 .rw-river-page--blog > header,
-.taxonomy-term--source > header {
+.taxonomy-term--source > header,
+.rw-article--book.rw-document > header {
   padding-bottom: 0;
 }
 .path-error--404 header,
