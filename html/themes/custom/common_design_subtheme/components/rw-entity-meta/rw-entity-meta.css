@@ -81,6 +81,9 @@
   clear: both;
   margin: 0 4px 0 0;
 }
+.rw-entity-meta--core .rw-entity-meta__tag-label--status {
+  margin-right: 8px;
+}
 .rw-entity-meta--core dt:after {
   content: ": ";
 }
