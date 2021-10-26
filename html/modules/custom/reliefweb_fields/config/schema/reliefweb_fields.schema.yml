@@ -1,13 +1,13 @@
-field.widget.settings.reliefweb_entity_reference_select:
+field.field_settings.reliefweb_links:
   type: mapping
-  label: 'ReliefWeb Entity Reference Select widget settings'
+  label: 'Reliefweb links settings'
   mapping:
-    sort:
-      type: string
-      label: 'Sort'
-    extra_data:
-      type: sequence
-      label: 'Extra data'
-      sequence:
-        - type: string
-          label: 'Extra data'
+    internal:
+      type: boolean
+      label: 'Internal links'
+    use_cover:
+      type: boolean
+      label: 'Use cover'
+    keep_archives:
+      type: boolean
+      label: 'Keep archives'
