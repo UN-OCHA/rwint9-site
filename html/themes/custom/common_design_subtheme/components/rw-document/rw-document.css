@@ -34,7 +34,6 @@
 }
 .rw-document figure figcaption,
 .rw-document figure footer {
-  display: inline;
   padding-top: 4px;
   font-size: 15px;
   font-style: italic;
@@ -108,11 +107,15 @@
   }
 }
 
+.rw-article__content ul {
+  margin: 0;
+  padding: 0 0 0 32px;
+  list-style-position: outside;
+}
 .rw-article__content li {
   margin: 8px 0 0 0;
   padding: 0;
 }
-
 .rw-article__content li:first-child {
   margin: 0;
 }
