@@ -51,6 +51,7 @@
 }
 .rw-dsr figure img {
   width: 100%;
+  display: block;
 }
 .rw-dsr figure figcaption {
   margin-top: 4px;
