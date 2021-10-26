@@ -157,6 +157,8 @@ class ReliefWebSectionLinks extends FieldItemBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @codeCoverageIgnore
    */
   public static function generateSampleValue(FieldDefinitionInterface $field_definition) {
     $random = new Random();
