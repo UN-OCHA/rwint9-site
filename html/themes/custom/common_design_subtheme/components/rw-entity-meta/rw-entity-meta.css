@@ -84,6 +84,9 @@
 .rw-entity-meta--core .rw-entity-meta__tag-label--status {
   margin-right: 8px;
 }
+.rw-entity-meta__tag-value--status {
+  text-transform: capitalize;
+}
 .rw-entity-meta--core dt:after {
   content: ": ";
 }
