@@ -11,7 +11,7 @@
 }
 .rw-river-article--disaster .rw-river-article__title a:before {
   position: absolute;
-  top: 50%;
+  top: 12px;
   left: 6px;
   overflow: hidden;
   width: 24px;
