@@ -135,8 +135,7 @@ class ReliefWebSectionLinks extends FieldItemBase {
       'url' => [
         'Length' => [
           'max' => 2048,
-          'maxMessage' => $this->t('%name: the URL may not be longer than @max characters.', [
-            '%name' => $this->getFieldDefinition()->getLabel(),
+          'maxMessage' => $this->t('The URL may not be longer than @max characters.', [
             '@max' => 2048,
           ]),
         ],
@@ -146,8 +145,7 @@ class ReliefWebSectionLinks extends FieldItemBase {
       'title' => [
         'Length' => [
           'max' => 1024,
-          'maxMessage' => $this->t('%name: the Title may not be longer than @max characters.', [
-            '%name' => $this->getFieldDefinition()->getLabel(),
+          'maxMessage' => $this->t('The title may not be longer than @max characters.', [
             '@max' => 1024,
           ]),
         ],
