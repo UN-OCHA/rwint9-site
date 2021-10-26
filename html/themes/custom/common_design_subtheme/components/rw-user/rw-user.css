@@ -78,6 +78,3 @@
   padding: 16px 0 32px;
   border-bottom: 1px solid #e6ecef;
 }
-.field--name-field-sender > .form-item {
-  display: flex;
-}
