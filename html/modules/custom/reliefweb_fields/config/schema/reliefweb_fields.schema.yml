@@ -11,3 +11,19 @@ field.field_settings.reliefweb_links:
     keep_archives:
       type: boolean
       label: 'Keep archives'
+
+field.field_settings.reliefweb_section_links:
+  type: mapping
+  label: 'Reliefweb section links settings'
+  mapping:
+    use_override:
+      type: boolean
+      label: 'Use override'
+    use_title:
+      type: boolean
+      label: 'Use title'
+    rivers:
+      type: sequence
+      sequence:
+        -  type: string
+           label: 'River name'
