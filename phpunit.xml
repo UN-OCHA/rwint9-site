@@ -44,6 +44,9 @@
     <testsuite name="Unit">
       <directory>./html/modules/custom/*/tests/src/Unit</directory>
     </testsuite>
+    <testsuite name="Kernel">
+      <directory>./html/modules/custom/*/tests/src/Kernel</directory>
+    </testsuite>
     <testsuite name="Existing">
       <directory>./html/modules/custom/*/tests/src/ExistingSite</directory>
     </testsuite>
