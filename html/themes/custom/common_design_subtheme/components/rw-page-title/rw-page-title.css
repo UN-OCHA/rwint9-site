@@ -12,6 +12,7 @@
   padding-bottom: 12px;
   border-bottom: 1px solid #eb1405;
 }
+.rw-river-page--blog > header,
 .taxonomy-term--source > header {
   padding-bottom: 0;
 }
