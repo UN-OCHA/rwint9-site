@@ -50,8 +50,8 @@
   margin: 0;
 }
 .rw-dsr figure img {
-  width: 100%;
   display: block;
+  width: 100%;
 }
 .rw-dsr figure figcaption {
   margin-top: 4px;

@@ -61,6 +61,7 @@
   text-align: center;
   border-bottom: none;
 }
+
 @media screen and (min-width: 768px) {
   .rw-river-page--blog .rw-river-results {
     padding-top: 24px;
