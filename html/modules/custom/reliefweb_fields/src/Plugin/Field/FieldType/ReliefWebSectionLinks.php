@@ -139,6 +139,7 @@ class ReliefWebSectionLinks extends FieldItemBase {
             '@max' => 2048,
           ]),
         ],
+        'Url' => [],
       ],
     ]);
     $constraints[] = $constraint_manager->create('ComplexData', [

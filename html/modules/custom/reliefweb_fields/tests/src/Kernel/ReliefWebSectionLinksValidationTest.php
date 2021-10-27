@@ -76,6 +76,7 @@ class ReliefWebSectionLinksValidationTest extends FieldKernelTestBase {
           'override' => 0,
         ], [
           $violation_0,
+          '',
         ],
       ],
       [
@@ -85,6 +86,7 @@ class ReliefWebSectionLinksValidationTest extends FieldKernelTestBase {
           'override' => 0,
         ], [
           $violation_0,
+          '',
           $violation_1,
         ],
       ],
@@ -103,6 +105,15 @@ class ReliefWebSectionLinksValidationTest extends FieldKernelTestBase {
           'title' => $this->randomMachineName(100),
           'override' => 123456,
         ], [],
+      ],
+      [
+        [
+          'url' => '/node/1',
+          'title' => $this->randomMachineName(100),
+          'override' => 123456,
+        ], [
+          'The url is not a valid external Url.',
+        ],
       ],
     ];
   }
