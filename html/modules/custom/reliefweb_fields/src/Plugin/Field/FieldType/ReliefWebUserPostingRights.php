@@ -107,7 +107,7 @@ class ReliefWebUserPostingRights extends FieldItemBase {
       'id' => [
         'Range' => [
           'min' => 3,
-          'minMessage' => $this->t('%name: the User IS must be a number superior or equal to @min.', [
+          'minMessage' => $this->t('%name: the User Id must be a number superior or equal to @min.', [
             '%name' => $this->getFieldDefinition()->getLabel(),
             '@min' => 3,
           ]),
