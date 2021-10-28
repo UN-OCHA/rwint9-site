@@ -13,7 +13,7 @@ const config = {
 if (DEBUG_MODE) {
   config.launch.headless = false;
   config.testTimeout = 10000;
-  config.launch.slowMo = 100;
+  config.launch.slowMo = 1000;
 }
 
 // Export
