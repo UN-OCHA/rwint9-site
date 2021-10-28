@@ -11,13 +11,16 @@
 }
 .rw-river-article--disaster .rw-river-article__title a:before {
   position: absolute;
-  top: 12px;
+  top: 50%;
   left: 6px;
   overflow: hidden;
   width: 24px;
   height: 24px;
   margin-top: -12px;
   content: "";
+}
+.rw-river--river-list .rw-river-article--disaster .rw-river-article__title a:before {
+  top: 12px;
 }
 .rw-river-article--disaster[data-disaster-type="AC"] .rw-river-article__title a:before {
   background: var(--rw-icons--disaster-type--AC--24--grey);
