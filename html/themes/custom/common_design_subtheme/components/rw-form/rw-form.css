@@ -511,3 +511,7 @@ form button[value="edit"] {
   padding: 8px;
   font-size: 14px;
 }
+
+/*details > summary + .cd-form__item {*/
+/*  margin-top: 1.5rem;*/
+/*}*/
