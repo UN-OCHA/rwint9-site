@@ -2,7 +2,7 @@
 
 namespace Drupal\reliefweb_revisions\Services;
 
-use Drupal\Component\Utility\Xss;
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
@@ -11,17 +11,19 @@ use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\Core\Url;
 use Drupal\media\MediaInterface;
+use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\MediaHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
-use Drupal\user\Entity\User;
 use Drupal\user\EntityOwnerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -233,7 +235,9 @@ class EntityHistory {
       ?->fetchField();
 
     // Default to the System user if no user could be found.
-    return User::load($uid ?: 2);
+    return $this->getEntityTypeManager()
+      ->getStorage('user')
+      ->load($uid ?: 2);
   }
 
   /**
@@ -271,10 +275,14 @@ class EntityHistory {
    * @param array $diff
    *   The differences between 2 revisions of the field.
    *
-   * @return \Drupal\Component\Render\MarkupInteface
-   *   The formatted differences.
+   * @return array|null
+   *   The render array for the difference or NULL if there is no difference.
    */
   protected function formatFieldDiff(FieldDefinitionInterface $field_definition, array $diff) {
+    if (!empty($diff['re-ordered'])) {
+      return ['#theme' => 'reliefweb_revisions_diff_reordered'];
+    }
+
     switch ($field_definition->getType()) {
       case 'text':
       case 'text_long':
@@ -296,26 +304,32 @@ class EntityHistory {
       case 'daterange':
         return $this->formatDaterangeFieldDiff($field_definition, $diff);
 
-      case 'integer':
-        return $this->formatScalarFieldDiff($field_definition, $diff);
-
       case 'boolean':
         return $this->formatBooleanFieldDiff($field_definition, $diff);
 
-      case 'link':
-        return $this->formatComplexFieldDiff($field_definition, $diff);
+      case 'integer':
+        return $this->formatFieldDiffDefault($field_definition, $diff);
 
-      /*case 'reliefweb_links':
-        break;
+      case 'geofield':
+        return $this->formatFieldDiffDefault($field_definition, $diff, [], [
+          'lat',
+          'lon',
+        ]);
+
+      case 'link':
+        return $this->formatLinkFieldDiff($field_definition, $diff);
+
+      case 'reliefweb_links':
+        return $this->formatReliefWebLinksFieldDiff($field_definition, $diff);
 
       case 'reliefweb_section_links':
-        break;
+        return $this->formatReliefWebSectionLinksFieldDiff($field_definition, $diff);
 
       case 'reliefweb_user_posting_rights':
-        break;*/
+        return $this->formatReliefWebUserPostingRightsFieldDiff($field_definition, $diff);
 
       default:
-        return $this->formatComplexFieldDiff($field_definition, $diff);
+        return $this->formatFieldDiffDefault($field_definition, $diff);
     }
     return NULL;
   }
@@ -323,15 +337,16 @@ class EntityHistory {
   /**
    * Format text field differences.
    *
+   * Note: there are no text fields on ReliefWeb which accept multiple values
+   * so we only deal with the first value.
+   *
    * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
    *   Field definition.
    * @param array $diff
    *   Field value differences.
    *
-   * @return \Drupal\Core\Render\MarkupInterface|null
-   *   The HTML showing the difference.
-   *
-   * @todo review if there are text type fields that accept multiple values.
+   * @return array|null
+   *   The render array for the difference or NULL if there is no difference.
    */
   protected function formatTextFieldDiff(FieldDefinitionInterface $field_definition, array $diff) {
     if (empty($diff['added']) && empty($diff['removed'])) {
@@ -343,19 +358,11 @@ class EntityHistory {
 
     // Get the differences between the 2 texts.
     $diff_text = TextHelper::getTextDiff($from_text, $to_text);
-    if (empty($diff_text)) {
-      return NULL;
-    }
 
-    // If the text is too long (ex: body), then we wrap it in a `<details>`.
-    if (mb_strlen($diff_text) > 400) {
-      $markup = '<details class="rw-revision-text-content"><summary>View changes</summary>' . $diff_text . '</details>';
-    }
-    else {
-      $markup = $diff_text;
-    }
-
-    return Markup::create($markup);
+    return empty($diff_text) ? NULL : [
+      '#theme' => 'reliefweb_revisions_diff_text',
+      '#text' => Markup::create($diff_text),
+    ];
   }
 
   /**
@@ -366,11 +373,8 @@ class EntityHistory {
    * @param array $diff
    *   Field value differences.
    *
-   * @return \Drupal\Core\Render\MarkupInterface|null
-   *   The HTML showing the difference.
-   *
-   * @todo Check how that is and use an accumulator to store the terms ids
-   * and load all their labels at once.
+   * @return array|null
+   *   The render array for the difference or NULL if there is no difference.
    */
   protected function formatEntityReferenceFieldDiff(FieldDefinitionInterface $field_definition, array $diff) {
     if (empty($diff['added']) && empty($diff['removed'])) {
@@ -399,18 +403,22 @@ class EntityHistory {
     // labels.
     if ($entity_type_id !== 'media') {
       $labels = $this->loadEntityLabels($entity_type_id, $added + $removed);
-      $values = [];
+
+      $output = [];
       foreach ($added as $id) {
         if (isset($labels[$id])) {
-          $values[] = '<ins>' . Xss::filter($labels[$id]) . '</ins>';
+          $output['#added'][] = $labels[$id];
         }
       }
       foreach ($removed as $id) {
         if (isset($labels[$id])) {
-          $values[] = '<del>' . Xss::filter($labels[$id]) . '</del>';
+          $output['#removed'][] = $labels[$id];
         }
       }
-      return Markup::create(implode(', ', $values));
+
+      return empty($output) ? NULL : [
+        '#theme' => 'reliefweb_revisions_diff_list',
+      ] + $output;
     }
     // For media, we load the entities to be able to show the thumbnail.
     else {
@@ -418,31 +426,24 @@ class EntityHistory {
         ->getStorage($entity_type_id)
         ->loadMultiple($added + $removed);
 
-      $values = [];
+      $output = [];
       foreach ($media_entities as $id => $media_entity) {
         // Link to the edit form because media don't have a page.
-        $value = $media_entity->toLink(NULL, 'edit-form')->toString();
-        $thumbnail = $this->getMediaThumbnail($media_entity);
-        if (!empty($thumbnail)) {
-          $value = $thumbnail . ' ' . $value;
-        }
+        $item = [
+          'link' => $media_entity->toLink(NULL, 'edit-form')->toString(),
+          'thumbnail' => $this->getMediaThumbnail($media_entity),
+        ];
         if (isset($added[$id])) {
-          $values['added'][] = $value;
+          $output['#added'][] = $item;
         }
         elseif (isset($removed[$id])) {
-          $values['removed'][] = $value;
+          $output['#removed'][] = $item;
         }
       }
 
-      $markup = [];
-      foreach ($values as $key => $items) {
-        $markup[] = '<dt class="' . $key . '">' . $key . '</dt>';
-        foreach ($items as $item) {
-          $markup[] = '<dd>' . $item . '</dd>';
-        }
-      }
-
-      return Markup::create('<dl>' . implode('', $markup) . '</dl>');
+      return empty($output) ? NULL : [
+        '#theme' => 'reliefweb_revisions_diff_media',
+      ] + $output;
     }
   }
 
@@ -452,20 +453,19 @@ class EntityHistory {
    * @param \Drupal\media\MediaInterface $media
    *   Media.
    *
-   * @return \Drupal\Core\Render\MarkupInterface|null
-   *   Thumbnail markup.
+   * @return array|null
+   *   Thumbnail build array or NULL if no image could be found.
    */
   protected function getMediaThumbnail(MediaInterface $media) {
     $image = MediaHelper::getImageFromMediaEntity($media);
     if (!empty($image)) {
-      $build = [
+      return [
         '#theme' => 'image_style',
         '#style_name' => 'thumbnail',
         '#uri' => $image['uri'],
         '#width' => $image['width'],
         '#height' => $image['height'],
       ];
-      return \Drupal::service('renderer')->render($build);
     }
     return NULL;
   }
@@ -478,8 +478,8 @@ class EntityHistory {
    * @param array $diff
    *   Field value differences.
    *
-   * @return \Drupal\Core\Render\MarkupInterface|null
-   *   The HTML showing the difference.
+   * @return array|null
+   *   The render array for the difference or NULL if there is no difference.
    */
   protected function formatListFieldDiff(FieldDefinitionInterface $field_definition, array $diff) {
     if (empty($diff['added']) && empty($diff['removed'])) {
@@ -488,19 +488,18 @@ class EntityHistory {
 
     $allowed_values = $field_definition->getSetting('allowed_values') ?? [];
 
-    $values = [];
-    foreach ($diff['added'] ?? [] as $value) {
-      if (isset($allowed_values[$value['value']])) {
-        $values[] = '<ins>' . Xss::filter($allowed_values[$value['value']], []) . '</ins>';
-      }
-    }
-    foreach ($diff['removed'] ?? [] as $value) {
-      if (isset($allowed_values[$value['value']])) {
-        $values[] = '<del>' . Xss::filter($allowed_values[$value['value']], []) . '</del>';
+    $output = [];
+    foreach (['added', 'removed'] as $key) {
+      foreach ($diff[$key] ?? [] as $value) {
+        if (isset($allowed_values[$value['value']])) {
+          $output['#' . $key][] = $allowed_values[$value['value']];
+        }
       }
     }
 
-    return !empty($values) ? Markup::create(implode(', ', $values)) : NULL;
+    return empty($output) ? NULL : [
+      '#theme' => 'reliefweb_revisions_diff_list',
+    ] + $output;
   }
 
   /**
@@ -514,29 +513,21 @@ class EntityHistory {
    * @param array $diff
    *   Field value differences.
    *
-   * @return \Drupal\Core\Render\MarkupInterface|null
-   *   The HTML showing the difference.
+   * @return array|null
+   *   The render array for the difference or NULL if there is no difference.
    */
   protected function formatBooleanFieldDiff(FieldDefinitionInterface $field_definition, array $diff) {
-    $markup = [];
-    if (isset($diff['removed'][0]['value'])) {
-      if (empty($diff['removed'][0]['value'])) {
-        $markup[] = '<del class="unchecked">unchecked</del>';
-      }
-      else {
-        $markup[] = '<del class="checked">checked</del>';
-      }
-    }
-    if (isset($diff['added'][0]['value'])) {
-      if (empty($diff['added'][0]['value'])) {
-        $markup[] = '<ins class="unchecked">unchecked</ins>';
-      }
-      else {
-        $markup[] = '<ins class="checked">checked</ins>';
+    $output = [];
+    foreach (['added', 'removed'] as $key) {
+      if (isset($diff[$key][0]['value'])) {
+        // TRUE if checked, FALSE if unchecked.
+        $output['#' . $key] = !empty($diff[$key][0]['value']);
       }
     }
 
-    return !empty($markup) ? Markup::create(implode(' ', $markup)) : NULL;
+    return empty($output) ? NULL : [
+      '#theme' => 'reliefweb_revisions_diff_boolean',
+    ] + $output;
   }
 
   /**
@@ -550,27 +541,24 @@ class EntityHistory {
    * @param array $diff
    *   Field value differences.
    *
-   * @return \Drupal\Core\Render\MarkupInterface|null
-   *   The HTML showing the difference.
+   * @return array|null
+   *   The render array for the difference or NULL if there is no difference.
    */
   protected function formatDatetimeFieldDiff(FieldDefinitionInterface $field_definition, array $diff) {
     if (empty($diff['added']) && empty($diff['removed'])) {
       return NULL;
     }
 
-    $values = [];
-    if (!empty($diff['removed'][0]['value'])) {
-      $date = DateHelper::getDateTimeStamp($diff['removed'][0]['value']);
-      $date = $this->dateFormatter->format($date, 'custom', 'd M Y H:i:s e', 'UTC');
-      $values[] = '<del>' . $date . '</del>';
-    }
-    if (!empty($diff['added'][0]['value'])) {
-      $date = DateHelper::getDateTimeStamp($diff['added'][0]['value']);
-      $date = $this->dateFormatter->format($date, 'custom', 'd M Y H:i:s e', 'UTC');
-      $values[] = '<ins>' . $date . '</ins>';
+    $output = [];
+    foreach (['added', 'removed'] as $key) {
+      if (!empty($diff[$key][0]['value'])) {
+        $output['#' . $key][] = DateHelper::format($diff[$key][0]['value'], 'custom', 'd M Y H:i:s e', 'UTC');
+      }
     }
 
-    return !empty($values) ? Markup::create(implode(', ', $values)) : NULL;
+    return empty($output) ? NULL : [
+      '#theme' => 'reliefweb_revisions_diff_list',
+    ] + $output;
   }
 
   /**
@@ -584,8 +572,8 @@ class EntityHistory {
    * @param array $diff
    *   Field value differences.
    *
-   * @return \Drupal\Core\Render\MarkupInterface|null
-   *   The HTML showing the difference.
+   * @return array|null
+   *   The render array for the difference or NULL if there is no difference.
    */
   protected function formatDaterangeFieldDiff(FieldDefinitionInterface $field_definition, array $diff) {
     if (empty($diff['added']) && empty($diff['removed'])) {
@@ -594,64 +582,360 @@ class EntityHistory {
 
     $fields = ['value' => 'start', 'end_value' => 'end'];
 
-    $markup = [];
-    foreach ($fields as $key => $name) {
-      $values = [];
-      if (!empty($diff['removed'][0][$key])) {
-        $date = DateHelper::getDateTimeStamp($diff['removed'][0][$key]);
-        $date = $this->dateFormatter->format($date, 'custom', 'd M Y H:i:s e', 'UTC');
-        $values['start'] = '<del>' . $date . '</del>';
-      }
-      if (!empty($diff['added'][0][$key])) {
-        $date = DateHelper::getDateTimeStamp($diff['added'][0][$key]);
-        $date = $this->dateFormatter->format($date, 'custom', 'd M Y H:i:s e', 'UTC');
-        $values[] = '<ins>' . $date . '</ins>';
-      }
-      if (!empty($values)) {
-        $markup[] = '<dt>' . $name . '</dt>';
-        $markup[] = '<dd>' . implode(' ', $values) . '</dd>';
+    $output = [];
+    foreach ($fields as $field => $name) {
+      foreach (['added', 'removed'] as $key) {
+        if (!empty($diff[$key][0][$field])) {
+          $output['#dates'][$name][$key] = DateHelper::format($diff[$key][0][$field], 'custom', 'd M Y H:i:s e', 'UTC');
+        }
       }
     }
 
-    return !empty($markup) ? Markup::create('<dl>' . implode('', $markup) . '</dl>') : NULL;
+    return empty($output) ? NULL : [
+      '#theme' => 'reliefweb_revisions_diff_daterange',
+    ] + $output;
   }
 
   /**
-   * Format a scalar field differences.
+   * Format link field differences.
    *
    * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
    *   Field definition.
    * @param array $diff
    *   Field value differences.
    *
-   * @return \Drupal\Core\Render\MarkupInterface|null
-   *   The HTML showing the difference.
+   * @return array|null
+   *   The render array for the difference or NULL if there is no difference.
    */
-  protected function formatScalarFieldDiff(FieldDefinitionInterface $field_definition, array $diff) {
+  protected function formatLinkFieldDiff(FieldDefinitionInterface $field_definition, array $diff) {
     if (empty($diff['added']) && empty($diff['removed'])) {
       return NULL;
     }
 
-    $main_property = $field_definition
-      ->getFieldStorageDefinition()
-      ->getMainPropertyName();
+    $title_setting = $field_definition->getSetting('title');
+    if (!empty($title_setting)) {
+      return $this->formatFieldDiffDefault($field_definition, $diff);
+    }
 
-    return $this->formatArrayDiff($diff, $main_property);
+    // Whether the field accepts mulitple values or not.
+    $multiple = $field_definition->getFieldStorageDefinition()->isMultiple();
+
+    $output = $this->formatArrayDiff($diff, 'uri');
+    if (!empty($output) && $multiple) {
+      $output['#theme'] = 'reliefweb_revisions_diff_nested';
+    }
+    return $output;
   }
 
   /**
-   * Format a complex field differences.
+   * Format link field differences.
    *
    * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
    *   Field definition.
    * @param array $diff
    *   Field value differences.
    *
-   * @return \Drupal\Core\Render\MarkupInterface|null
-   *   The HTML showing the difference.
+   * @return array|null
+   *   The render array for the difference or NULL if there is no difference.
    */
+  protected function formatReliefWebLinksFieldDiff(FieldDefinitionInterface $field_definition, array $diff) {
+    // Keep track of any active content re-ordering.
+    $current_active = [];
+    $previous_active = [];
 
-  protected function formatComplexFieldDiff(FieldDefinitionInterface $field_definition, array $diff) {
+    // Previous revision links.
+    $previous = [];
+    foreach ($diff['previous'] as $item) {
+      $previous[$item['url']] = $item;
+      if ($item['active'] == 1) {
+        $previous_active[] = $item['url'];
+      }
+    }
+
+    // Current revision links.
+    $current = [];
+    foreach ($diff['current'] as $item) {
+      $current[$item['url']] = $item;
+      if ($item['active'] == 1) {
+        $current_active[] = $item['url'];
+      }
+    }
+
+    $categories = [
+      'added' => array_diff_key($current, $previous),
+      'removed' => array_diff_key($previous, $current),
+      'modified-title' => [],
+      'modified-image' => [],
+      'archived' => [],
+      'unarchived' => [],
+    ];
+
+    $labels = [
+      'added' => $this->t('Added'),
+      'removed' => $this->t('Removed'),
+      'modified-title' => $this->t('Modified Title'),
+      'modified-image' => $this->t('Modified Image'),
+      'archived' => $this->t('Archived'),
+      'unarchived' => $this->t('Unarchived'),
+    ];
+
+    // Check if something changed for the links that are
+    // in both current and previous revisions.
+    foreach (array_intersect_key($current, $previous) as $key => $item) {
+      $previous_item = $previous[$key];
+      $current_item = $current[$key];
+      if ($previous_item['active'] == 0 && $current_item['active'] == 1) {
+        $categories['unarchived'][] = $item;
+      }
+      elseif ($previous_item['active'] == 1 && $current_item['active'] == 0) {
+        $categories['archived'][] = $item;
+      }
+      elseif ($previous_item['title'] !== $current_item['title']) {
+        $item['title'] = $previous_item['title'] . ' => ' . $current_item['title'];
+        $categories['modified-title'][] = $item;
+      }
+      elseif ($previous_item['image'] !== $current_item['image']) {
+        $categories['modified-image'][] = $previous_item;
+      }
+    }
+
+    // Keep track of the number of changes to hide them if too many.
+    $change_count = 0;
+
+    // URL options.
+    $url_options = [
+      'attributes' => [
+        'target' => '_blank',
+      ],
+    ];
+
+    // Format the links.
+    $output = [];
+    foreach ($categories as $category => $items) {
+      if (!empty($items)) {
+        $changes = [];
+        foreach ($items as $item) {
+          $title = !empty($item['title']) ? $item['title'] : $item['url'];
+          if (mb_strpos($item['url'], '/') === 0) {
+            $url = Url::fromUserInput($item['url'], $url_options);
+          }
+          else {
+            $url = Url::fromUri($item['url'], $url_options);
+          }
+          $changes[] = Link::fromTextAndUrl($title, $url);
+          $change_count++;
+        }
+
+        $output['#categories'][$category] = [
+          'label' => $labels[$category],
+          'changes' => $changes,
+        ];
+      }
+    }
+
+    // If no other changes, check if the active links have been reordered.
+    if (empty($output)) {
+      if ($current_active !== $previous_active) {
+        return [
+          '#theme' => 'reliefweb_revisions_diff_reordered',
+          '#message' => $this->t('Active links reordered'),
+        ];
+      }
+      return NULL;
+    }
+
+    return [
+      '#theme' => 'reliefweb_revisions_diff_categories',
+      '#change_count' => $change_count,
+    ] + $output;
+  }
+
+  /**
+   * Format link field differences.
+   *
+   * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
+   *   Field definition.
+   * @param array $diff
+   *   Field value differences.
+   *
+   * @return array|null
+   *   The render array for the difference or NULL if there is no difference.
+   */
+  protected function formatReliefWebSectionLinksFieldDiff(FieldDefinitionInterface $field_definition, array $diff) {
+    if (empty($diff['added']) && empty($diff['removed'])) {
+      return NULL;
+    }
+
+    $use_title = $field_definition->getSetting('use_title');
+    $use_override = $field_definition->getSetting('use_override');
+
+    $exclude = [];
+    if (empty($use_title)) {
+      $exclude[] = 'title';
+    }
+    if (empty($use_override)) {
+      $exclude[] = 'override';
+    }
+
+    if (!empty($use_title) || !empty($use_override)) {
+      return $this->formatFieldDiffDefault($field_definition, $diff, $exclude);
+    }
+
+    // Whether the field accepts mulitple values or not.
+    $multiple = $field_definition->getFieldStorageDefinition()->isMultiple();
+
+    $output = $this->formatArrayDiff($diff, 'url');
+    if (!empty($output) && $multiple) {
+      $output['#theme'] = 'reliefweb_revisions_diff_nested';
+    }
+    return $output;
+  }
+
+  /**
+   * Format user posting rights field differences.
+   *
+   * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
+   *   Field definition.
+   * @param array $diff
+   *   Field value differences.
+   *
+   * @return array|null
+   *   The render array for the difference or NULL if there is no difference.
+   */
+  protected function formatReliefWebUserPostingRightsFieldDiff(FieldDefinitionInterface $field_definition, array $diff) {
+    if (empty($diff['previous']) && empty($diff['current'])) {
+      return NULL;
+    }
+
+    // Previous revision user info.
+    $previous = [];
+    foreach ($diff['previous'] as $item) {
+      $previous[$item['id']] = $item;
+    }
+
+    // Current revision user info.
+    $current = [];
+    foreach ($diff['current'] as $item) {
+      $current[$item['id']] = $item;
+    }
+
+    $categories = [
+      'added' => array_diff_key($current, $previous),
+      'removed' => array_diff_key($previous, $current),
+      'modified-training' => [],
+      'modified-job' => [],
+      'modified-notes' => [],
+    ];
+
+    $labels = [
+      'added' => $this->t('Added'),
+      'removed' => $this->t('Removed'),
+      'modified-training' => $this->t('Modified Training'),
+      'modified-job' => $this->t('Modified Job'),
+      'modified-notes' => $this->t('Modified Notes'),
+    ];
+
+    $rights = [
+      0 => 'unverified',
+      1 => 'blocked',
+      2 => 'allowed',
+      3 => 'trusted',
+    ];
+
+    // Check if something changed for the users that are in both current and
+    // previous revisions.
+    foreach (array_intersect_key($current, $previous) as $key => $item) {
+      $previous_item = $previous[$key];
+      $current_item = $current[$key];
+      // Rights change.
+      foreach (['job', 'training'] as $type) {
+        if ($previous_item[$type] !== $current_item[$type]) {
+          $item['change'] = new FormattableMarkup('@before &rarr; @after', [
+            '@before' => UserPostingRightsHelper::renderRight($rights[$previous_item[$type]]),
+            '@after' => UserPostingRightsHelper::renderRight($rights[$current_item[$type]]),
+          ]);
+          $categories['modified-' . $type][] = $item;
+        }
+      }
+      // Notes change.
+      if ($previous_item['notes'] !== $current_item['notes']) {
+        $text_diff = TextHelper::getTextDiff($previous_item['notes'], $current_item['notes']);
+        $item['change'] = Markup::create($text_diff);
+        $categories['modified-notes'][] = $item;
+      }
+    }
+
+    // Keep track of the number of changes to hide them if too many.
+    $change_count = 0;
+
+    // URL attributes.
+    $url_options = [
+      'attributes' => [
+        'target' => '_blank',
+      ],
+    ];
+
+    // Prepare the changes.
+    $output = [];
+    foreach ($categories as $category => $items) {
+      if (!empty($items)) {
+        $changes = [];
+
+        foreach ($items as $item) {
+          $replacements = [];
+          $markup = [];
+
+          // Label. Link to the user.
+          $markup[] = 'User: @link';
+          $url = Url::fromUserInput('/user/' . $item['id'], $url_options);
+          $replacements['@link'] = Link::fromTextAndUrl($item['id'], $url)->toString();
+
+          // Add the rights when a user is added.
+          if ($category === 'added') {
+            $markup[] = '(job: @job, training: @training)';
+            $replacements['@job'] = UserPostingRightsHelper::renderRight($rights[$item['job']]);
+            $replacements['@training'] = UserPostingRightsHelper::renderRight($rights[$item['training']]);
+          }
+
+          // Add the rights changes.
+          if (isset($item['change'])) {
+            $markup[] = '(@change)';
+            $replacements['@change'] = $item['change'];
+          }
+
+          $changes[] = new FormattableMarkup(implode(' ', $markup), $replacements);
+          $change_count++;
+        }
+
+        $output['#categories'][$category] = [
+          'label' => $labels[$category],
+          'changes' => $changes,
+        ];
+      }
+    }
+
+    return empty($output) ? NULL : [
+      '#theme' => 'reliefweb_revisions_diff_categories',
+      '#change_count' => $change_count,
+    ] + $output;
+  }
+
+  /**
+   * Default field differences formatting function.
+   *
+   * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
+   *   Field definition.
+   * @param array $diff
+   *   Field value differences.
+   * @param array $exclude
+   *   Properties to exclude.
+   * @param array $include
+   *   Properties to include.
+   *
+   * @return array|null
+   *   The render array for the difference or NULL if there is no difference.
+   */
+  protected function formatFieldDiffDefault(FieldDefinitionInterface $field_definition, array $diff, array $exclude = [], array $include = []) {
     if (empty($diff['added']) && empty($diff['removed'])) {
       return NULL;
     }
@@ -660,62 +944,70 @@ class EntityHistory {
     $main_property = $storage_definition->getMainPropertyName();
     $properties = $storage_definition->getPropertyDefinitions();
 
-    /*if (!$storage_definition->isMultiple()) {
-      $diff = [
-        'added' => $diff['added'][0] ?? NULL,
-        'removed' => $diff['removed'][0] ?? NULL,
-      ];
-    }*/
+    // Limit the properties to consider.
+    if (!empty($exclude)) {
+      $properties = array_diff_key($properties, array_flip($exclude));
+    }
+    if (!empty($include)) {
+      $properties = array_intersect_key($properties, array_flip($include));
+    }
 
-    dpm($properties);
-    dpm($field_definition);
-
+    // If there is a single property (or none, if the field value is a direct
+    // value), then use a simple array diff formatting.
     if (count($properties) <= 1) {
       return $this->formatArrayDiff($diff, $main_property);
     }
 
-    $values = [];
-    foreach (['removed', 'added'] as $key) {
+    // If the field only accepts one value, we only show the difference of the
+    // changed properties.
+    if (!$storage_definition->isMultiple()) {
+      $added = $diff['added'][0] ?? [];
+      $removed = $diff['removed'][0] ?? [];
+      $diff['added'] = [array_diff($added, $removed)];
+      $diff['removed'] = [array_diff_assoc($removed, $added)];
+    }
+
+    $output = [];
+    foreach (['added', 'removed'] as $key) {
       foreach ($diff[$key] as $item) {
-        dpm($item);
-        $markup = [];
+        $values = [];
         foreach ($properties as $property => $definition) {
           if ($definition->isReadOnly() || !isset($item[$property]) || !is_scalar($item[$property])) {
             continue;
           }
-          $value = $item[$property];
-          if (is_string($value)) {
-            if ($value === '') {
-              $value = '<em>empty</em>';
-            }
-            else {
-              $value = Xss::filter($value, []);
-            }
-          }
-          $markup[] = '<dt>' . $definition->getLabel() . '</dt>';
-          $markup[] = '<dd>' . $value . '</dd>';
+          $values[] = [
+            'label' => $definition->getLabel(),
+            'value' => $item[$property],
+          ];
         }
-        if (!empty($markup)) {
-          $values[$key][] = '<li><dl>' . implode('', $markup) . '</dl></li>';
+        if (!empty($values)) {
+          $output['#' . $key][] = $values;
         }
-      }
-      if (!empty($values[$key])) {
-        $values[$key] = '<dt>' . $key . '</dt><dd><ul>' . implode('', $values[$key]) . '</ul></dd>';
       }
     }
 
-    return !empty($values) ? Markup::create('<dl>' . implode('', $values) . '</dl>') : NULL;
+    return empty($output) ? NULL : [
+      '#theme' => 'reliefweb_revisions_diff_nested',
+    ] + $output;
   }
 
+  /**
+   * Format the differences for an array of values.
+   *
+   * @param array $diff
+   *   Associative array containing the added and removed values.
+   * @param string|null $property
+   *   If defined, it's the main property of the values that will be used
+   *   to format the differences.
+   *
+   * @return array|null
+   *   The render array for the difference or NULL if there is no difference.
+   */
   protected function formatArrayDiff(array $diff, $property = NULL) {
-    $values = [];
     $direct = empty($property);
 
-    foreach (['removed' => 'del', 'added' => 'ins'] as $key => $tag) {
-      if (empty($diff[$key])) {
-        continue;
-      }
-
+    $output = [];
+    foreach (['added', 'removed'] as $key) {
       foreach ($diff[$key] as $item) {
         $value = NULL;
         if ($direct) {
@@ -725,18 +1017,15 @@ class EntityHistory {
           $value = $item[$property];
         }
 
-        if (is_null($value)) {
-          continue;
+        if (!is_null($value)) {
+          $output['#' . $key][] = $value;
         }
-        elseif (is_string($value)) {
-          $value = Xss::filter($value, []);
-        }
-
-        $values[] = '<' . $tag . '>' . $value . '</' . $tag . '>';
       }
     }
 
-    return !empty($values) ? Markup::create(implode(', ', $values)) : NULL;
+    return empty($output) ? NULL : [
+      '#theme' => 'reliefweb_revisions_diff_list',
+    ] + $output;
   }
 
   /**
@@ -838,8 +1127,6 @@ class EntityHistory {
 
     $diff = [];
     foreach ($field_definitions as $field_name => $field_definition) {
-      //dpm($field_definition->getName() . ' - ' . $field_definition->getType());
-
       $storage_definition = $field_definition->getFieldStorageDefinition();
       $is_revisionable = $storage_definition->isRevisionable();
       $is_base_field = $storage_definition->isBaseField();
@@ -863,8 +1150,11 @@ class EntityHistory {
 
       if (!empty($added) || !empty($removed)) {
         $diff[$field_name] = [
-          'added' => $added,
-          'removed' => $removed,
+          'current' => $current,
+          'previous' => $previous,
+          'added' => is_array($added) ? $added : [],
+          'removed' => is_array($removed) ? $removed : [],
+          're-ordered' => $added === TRUE && $removed === TRUE,
         ];
       }
     }
@@ -880,23 +1170,28 @@ class EntityHistory {
    * @param array $array2
    *   Second array.
    *
-   * @return array
-   *   Values from the first array not present in the second array.
-   *
-   * @todo move to a helper function?
+   * @return array|bool
+   *   Values from the first array not present in the second array. If there
+   *   is no difference, return whether the second array has a different order
+   *   than the first one.
    */
   protected function getArrayDiff(array $array1, array $array2) {
     if (empty($array2)) {
       return $array1;
     }
 
+    $reordered = FALSE;
     $diff = [];
-    foreach ($array1 as $key => $value1) {
-      if (array_search($value1, $array2) === FALSE) {
-        $diff[$key] = $value1;
+    foreach ($array1 as $key1 => $value1) {
+      $key2 = array_search($value1, $array2);
+      if ($key2 === FALSE) {
+        $diff[] = $value1;
+      }
+      elseif ($key2 !== $key1) {
+        $reordered = TRUE;
       }
     }
-    return $diff;
+    return !empty($diff) ? $diff : $reordered;
   }
 
   /**

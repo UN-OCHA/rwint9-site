@@ -1,0 +1,21 @@
+{#
+
+/**
+ * @file
+ * Template file for field revision differences displayed as an inline list.
+ *
+ * Available variables:
+ * - attributes: wrapper attributes
+ * - added: list of added values
+ * - removed: list of removed values.
+ */
+
+#}
+<div{{ attributes.addClass('rw-revisions-diff-list') }}>
+{% for item in removed %}
+  <del>{{ item }}</del>{{ not loop.last ? ', ' }}
+{% endfor %}
+{% for item in added %}
+  <ins>{{ item }}</ins>{{ not loop.last ? ', ' }}
+{% endfor %}
+</div>

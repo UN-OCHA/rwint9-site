@@ -1,0 +1,28 @@
+{#
+
+/**
+ * @file
+ * Template file for a daterange field revision differences.
+ *
+ * Available variables:
+ * - attributes: wrapper attributes
+ * - dates: associative array with the "start" and "end" as keys and
+ *   arrays containing the added and/or removed value as values.
+ */
+
+#}
+<div{{ attributes.addClass('rw-revisions-diff-daterange') }}>
+  <dl>
+  {% for name, item in dates %}
+    <dt>{{ name == 'start' ? 'Start'|t : 'End'|t }}</dt>
+    <dd>
+    {% if item.removed is not empty %}
+      <del>{{ item.removed }}</del>
+    {% endif %}
+    {% if item.added is not empty %}
+      <ins>{{ item.added }}</ins>
+    {% endif %}
+    </dd>
+  {% endfor %}
+  </dl>
+</div>

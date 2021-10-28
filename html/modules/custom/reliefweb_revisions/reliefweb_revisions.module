@@ -35,6 +35,85 @@ function reliefweb_revisions_theme() {
         'history' => [],
       ],
     ],
+    'reliefweb_revisions_diff_boolean' => [
+      'variables' => [
+        // Wrapper attributes.
+        'attributes' => NULL,
+        // Added value. TRUE if checked, FALSE if unchecked, NULL if not set.
+        'added' => NULL,
+        // Removed value. TRUE if checked, FALSE if unchecked, NULL if not set.
+        'removed' => NULL,
+      ],
+    ],
+    'reliefweb_revisions_diff_categories' => [
+      'variables' => [
+        // Wrapper attributes.
+        'attributes' => NULL,
+        // List of change categories keyed by the category id and with a label
+        // and a list of changes for each category.
+        'categories' => [],
+        // Total number of changes to determines whether to hide the changes
+        // or not.
+        'change_count' => 0,
+      ],
+    ],
+    'reliefweb_revisions_diff_daterange' => [
+      'variables' => [
+        // Wrapper attributes.
+        'attributes' => NULL,
+        // Dates: associative array with the "start" and "end" as keys and
+        // arrays containing the added and/or removed value as values.
+        'dates' => [],
+      ],
+    ],
+    'reliefweb_revisions_diff_list' => [
+      'variables' => [
+        // Wrapper attributes.
+        'attributes' => NULL,
+        // List of added values.
+        'added' => [],
+        // List of removed values.
+        'removed' => [],
+      ],
+    ],
+    'reliefweb_revisions_diff_media' => [
+      'variables' => [
+        // Wrapper attributes.
+        'attributes' => NULL,
+        // List of added media items with a link and optional thumbnail each.
+        'added' => [],
+        // List of removed media items with a link and optional thumbnail each.
+        'removed' => [],
+      ],
+    ],
+    'reliefweb_revisions_diff_nested' => [
+      'variables' => [
+        // Wrapper attributes.
+        'attributes' => NULL,
+        // List of added items. Each item can have multiple properties with
+        // a label and value, or be a scalar value.
+        'added' => [],
+        // List of removed items. Each item can have multiple properties with
+        // a label and value, or be a scalar value.
+        'removed' => [],
+      ],
+    ],
+    'reliefweb_revisions_diff_reordered' => [
+      'variables' => [
+        // Wrapper attributes.
+        'attributes' => NULL,
+        // Message.
+        'message' => t('Re-ordered'),
+      ],
+    ],
+    'reliefweb_revisions_diff_text' => [
+      'variables' => [
+        // Wrapper attributes.
+        'attributes' => NULL,
+        // Inline differences of the current and previous versions of the text.
+        'text' => '',
+      ],
+    ],
   ];
   return $themes;
 }
