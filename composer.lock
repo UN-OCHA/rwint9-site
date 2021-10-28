@@ -12391,12 +12391,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/common_design.git",
-                "reference": "7b7bd6f287d02f1cac78e17ccfb0afbc4d254eb8"
+                "reference": "63d9a416067a3e3b8a5bef52ab1518628d88ac1b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/common_design/zipball/7b7bd6f287d02f1cac78e17ccfb0afbc4d254eb8",
-                "reference": "7b7bd6f287d02f1cac78e17ccfb0afbc4d254eb8",
+                "url": "https://api.github.com/repos/UN-OCHA/common_design/zipball/63d9a416067a3e3b8a5bef52ab1518628d88ac1b",
+                "reference": "63d9a416067a3e3b8a5bef52ab1518628d88ac1b",
                 "shasum": ""
             },
             "require": {
@@ -12411,7 +12411,7 @@
                 "source": "https://github.com/UN-OCHA/common_design/tree/cd-304-forms",
                 "issues": "https://github.com/UN-OCHA/common_design/issues"
             },
-            "time": "2021-10-27T22:33:03+00:00"
+            "time": "2021-10-28T23:07:52+00:00"
         },
         {
             "name": "webflo/drupal-finder",
