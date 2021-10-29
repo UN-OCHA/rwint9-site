@@ -155,10 +155,26 @@ class EntityHistory {
 
     // Get the list of revisions for the entity.
     $revision_ids = $this->getRevisionIds($entity);
+    $total_revision_ids = count($revision_ids);
+
+    // Extract the first revision.
+    $first_revision = array_pop($revision_ids);
+
+    // Limit the number of revisions to the most recent and add back the first
+    // revision.
+    $revision_ids = array_slice($revision_ids, 0, $this->config->get('limit') ?? 10);
+    $revision_ids[] = $first_revision;
+
+    // Oldest first so we can compute the proper differences.
+    $revision_ids = array_reverse($revision_ids);
+
+    // Keep track of the number of skipped revisions.
+    $skipped_revisions = $total_revision_ids - count($revision_ids);
 
     // Keep track of the previous revision.
     $previous_revision = NULL;
 
+    // Compute the history.
     $history = [];
     foreach ($revision_ids as $revision_id) {
       $revision = $this->loadRevision($entity_type_id, $revision_id);
@@ -205,6 +221,7 @@ class EntityHistory {
       '#entity' => $entity,
       // Show the most recent history first.
       '#history' => array_reverse($history),
+      '#skipped' => $skipped_revisions,
     ];
   }
 
@@ -1239,18 +1256,7 @@ class EntityHistory {
       ->sort($revision_id_field, 'DESC')
       ->execute();
 
-    $ids = array_keys($results);
-
-    // Extract the first revision.
-    $first = array_pop($ids);
-
-    // Limit the number of revisions to the most recent and add back the first
-    // revision.
-    $ids = array_slice($ids, 0, $this->config->get('limit') ?? 10);
-    $ids[] = $first;
-
-    // Oldest first so we can compute the proper differences.
-    return array_reverse($ids);
+    return array_keys($results);
   }
 
   /**

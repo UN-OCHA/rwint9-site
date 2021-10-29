@@ -33,6 +33,8 @@ function reliefweb_revisions_theme() {
         //   type
         // - content: list of fields with their label and formatted differences.
         'history' => [],
+        // Number of revisions that were ignored due to their large number.
+        'skipped' => 0,
       ],
     ],
     'reliefweb_revisions_diff_boolean' => [
