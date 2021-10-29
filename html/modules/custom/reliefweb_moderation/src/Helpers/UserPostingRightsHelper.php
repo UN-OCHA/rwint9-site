@@ -289,4 +289,21 @@ class UserPostingRightsHelper {
     return $allowed || $owner;
   }
 
+  /**
+   * Format a user posting right.
+   *
+   * @param string $right
+   *   Right.
+   *
+   * @return \Drupl\Component\Render\MarkupInterface
+   *   Formatted right.
+   */
+  public static function renderRight($right) {
+    $build = [
+      '#theme' => 'reliefweb_moderation_user_posting_right',
+      '#right' => $right,
+    ];
+    return \Drupal::service('renderer')->render($build);
+  }
+
 }
