@@ -1,5 +1,8 @@
 reliefweb_revisions.entity.history:
   path: '/admin/reliefweb_revisions/history/{entity_type_id}/{entity}'
+  defaults:
+    _title: 'View entity history'
+    _controller: '\Drupal\reliefweb_revisions\Controller\EntityHistory::view'
   options:
     _admin_route: TRUE
     parameters:
@@ -7,6 +10,6 @@ reliefweb_revisions.entity.history:
         type: entity_revisioned:{entity_type_id}
   requirements:
     _user_is_logged_in: 'TRUE'
-    _permission: access entity revision history
+    _permission: view entity history
     entity_type_id: '[a-z0-9_]+'
-    entity: '\d+'
+    entity: '[0-9]+'

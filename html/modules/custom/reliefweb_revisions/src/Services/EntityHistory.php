@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_revisions\Services;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
@@ -135,6 +136,8 @@ class EntityHistory {
   /**
    * Get the revision history of an entity.
    *
+   * Note: the revision history content is loaded asynchronously.
+   *
    * @param \Drupal\reliefweb_revisions\EntityRevisionedInterface $entity
    *   Entity.
    *
@@ -142,20 +145,64 @@ class EntityHistory {
    *   Render array with the revision history.
    */
   public function getEntityHistory(EntityRevisionedInterface $entity) {
-    if (!$this->currentUser->hasPermission('view entity history') || $entity->id() === NULL) {
-      return [];
+    $cache = [
+      'contexts' => ['user.permissions'],
+      'tags' => $entity->getCacheTags(),
+    ];
+
+    // Skip if the user doesn't have permission to view the history or its an
+    // entity being created.
+    if (!$this->currentUser->hasPermission('view entity history') || $entity->id() === NULL || !empty($entity->in_preview)) {
+      return ['#cache' => $cache];
+    }
+
+    // History render array.
+    return [
+      '#theme' => 'reliefweb_revisions_history',
+      '#id' => Html::getUniqueId('rw-revisions-history-' . $entity->id()),
+      '#entity' => $entity,
+      '#url' => Url::fromRoute('reliefweb_revisions.entity.history', [
+        'entity_type_id' => $entity->getEntityTypeId(),
+        'entity' => $entity->id(),
+      ])->toString(),
+      '#cache' => $cache,
+    ];
+  }
+
+  /**
+   * Get an entity's revision history's content.
+   *
+   * @param \Drupal\reliefweb_revisions\EntityRevisionedInterface $entity
+   *   Entity.
+   *
+   * @return array
+   *   Render array with the revision history content.
+   */
+  public function getEntityHistoryContent(EntityRevisionedInterface $entity) {
+    $cache = [
+      'contexts' => ['user.permissions'],
+      'tags' => $entity->getCacheTags(),
+    ];
+
+    // Skip if the user doesn't have permission to view the history or its an
+    // entity being created.
+    if (!$this->currentUser->hasPermission('view entity history') || $entity->id() === NULL || !empty($entity->in_preview)) {
+      return ['#cache' => $cache];
     }
 
     $entity_type_id = $entity->getEntityTypeId();
     $revision_user_field = $this->getEntityTypeRevisionUserField($entity_type_id);
     $revision_created_field = $this->getEntityTypeRevisionCreatedField($entity_type_id);
 
-    // Retrieve the author of the entity.
-    $author = $this->getEntityAuthor($entity);
-
     // Get the list of revisions for the entity.
     $revision_ids = $this->getRevisionIds($entity);
     $total_revision_ids = count($revision_ids);
+
+    // Retrieve the author of the entity.
+    $author = $this->getEntityAuthor($entity);
+
+    // Keep track of the previous revision.
+    $previous_revision = NULL;
 
     // Extract the first revision.
     $first_revision = array_pop($revision_ids);
@@ -167,12 +214,6 @@ class EntityHistory {
 
     // Oldest first so we can compute the proper differences.
     $revision_ids = array_reverse($revision_ids);
-
-    // Keep track of the number of skipped revisions.
-    $skipped_revisions = $total_revision_ids - count($revision_ids);
-
-    // Keep track of the previous revision.
-    $previous_revision = NULL;
 
     // Compute the history.
     $history = [];
@@ -217,11 +258,12 @@ class EntityHistory {
     }
 
     return [
-      '#theme' => 'reliefweb_revisions_history',
-      '#entity' => $entity,
+      '#theme' => 'reliefweb_revisions_history_content',
       // Show the most recent history first.
       '#history' => array_reverse($history),
-      '#skipped' => $skipped_revisions,
+      // Number of ignored revisions.
+      '#ignored' => $total_revision_ids - count($revision_ids),
+      '#cache' => $cache,
     ];
   }
 
@@ -1270,8 +1312,7 @@ class EntityHistory {
   public static function addHistoryToForm(array &$form, FormStateInterface $form_state) {
     $entity = $form_state?->getFormObject()?->getEntity();
     if (!empty($entity) && $entity instanceof EntityRevisionedInterface) {
-      $history = \Drupal::service('reliefweb_revisions.entity.history')
-        ->getEntityHistory($entity);
+      $history = $entity->getHistory();
 
       if (!empty($history)) {
         $form['revision_history'] = [

@@ -5,60 +5,65 @@
  * Template of the entity history.
  *
  * Available variables:
+ * - id: section id
  * - level: the heading level (defaults to 2)
+ * - attributes: section attributes
+ * - wrapper_attributes: section content wrapper attributes
  * - title: the section title (default to 'History')
- * - entity: the entity
- * - history: list of revisions. Each revision has the following properties:
- *   - user: user who created the revision
- *   - date: the revision timestamp
- *   - status: associative array with the moderation status value and its label
- *   - message: associative array with the revision log message and its type
- *   - content: list of fields with their label and formatted differences
- *   - skipped: optional number of revisions that were ignored before this one
- *     due to the large number of revisions.
+ * - entity: the entity whose history is displayed
+ * - url: URL to load the revision content.
  */
 
 #}
-<section{{ attributes.addClass('rw-revisions-history') }}>
+<section{{ attributes
+  .setAttribute('id', id)
+  .addClass(['rw-revisions-history', 'rw-loading'])
+}}>
   <header class="rw-revisions-history__header">
     <h{{ level }} class="rw-revisions-history__title">{{ title }} - <em>{{ entity.id() }}</em></h{{ level }}>
   </header>
 
-  <div data-count="{{ history|length }}" class="rw-revisions-history__content">
-  {% for entry in history %}
-    {% if loop.index == 2 and skipped is not empty %}
-      <article class="rw-revisions-history-entry rw-revisions-history-entry--skipped">
-        <header class="rw-revisions-history-entry__header">
-          <h{{ level + 1 }} class="rw-revisions-history-entry__title">
-            {{ '... @skipped revisions were ignored ...'|t({'@skipped': skipped}) }}
-          </h{{ level + 1 }}>
-        </header>
-      </article>
-    {% else %}
-      <article class="rw-revisions-history-entry">
-        <header class="rw-revisions-history-entry__header">
-          <h{{ level + 1 }} class="rw-revisions-history-entry__title">{{ '@date by @user'|t({
-            '@date': entry.date|date('d M Y H:i:s e', 'UTC'),
-            '@user': entity_link(entry.user),
-          }) }}</h{{ level + 1 }}>
-          <div class="rw-moderation-status" data-moderation-status="{{ entry.status.value }}">{{ entry.status.label }}</div>
-        </header>
-
-        <dl class="rw-revisions-history-entry__content">
-        {% for item in entry.content %}
-          <dt class="rw-revisions-history-entry__content__field">{{ item.label }}</dt>
-          <dd class="rw-revisions-history-entry__content__value">{{ item.value }}</dd>
-        {% endfor %}
-        </dl>
-
-        {% if entry.message.content is not empty %}
-        <footer class="rw-revisions-history-entry__footer">
-          <div class="rw-revision-message" data-revision-message="{{ entry.message.type }}">{{ entry.message.content }}</div>
-        </footer>
-        {% endif %}
-      </article>
-    {% endif %}
-  {% endfor %}
+  <div{{ wrapper_attributes
+    .setAttribute('id', id ~ '-wrapper')
+    .setAttribute('data-cd-toggable', 'Show all revisions'|t)
+    .setAttribute('data-cd-toggable-expanded', 'Hide old revisions'|t)
+    .setAttribute('data-cd-toggable-keep', '')
+    .setAttribute('data-cd-component', 'rw-revisions-history')
+    .setAttribute('data-cd-replace', id ~ '-dummy')
+    .addClass('rw-revisions-history__wrapper')
+  }}>
+    <p class="rw-revisions-history__placeholder">{{ 'Loading history...'|t }}</p>
   </div>
 </section>
+
+{# Load the revisions asynchronously. #}
+<script>
+  (function () {
+    'use strict';
+
+    if ('XMLHttpRequest' in window) {
+      var xhr = new XMLHttpRequest();
+
+      xhr.addEventListener('load', function () {
+        var history = document.getElementById('{{ id }}');
+        var wrapper = document.getElementById('{{ id }}-wrapper');
+        // Set the history content.
+        wrapper.innerHTML = xhr.responseText || '';
+        // Remove the toggler if there are less than 5 revisions.
+        var content = wrapper.querySelector('.rw-revisions-history-content');
+        if (content && content.getAttribute('data-revision-count') < 5) {
+          var toggler = document.getElementById('{{ id }}-wrapper-toggler');
+          if (toggler) {
+            toggler.parentNode.removeChild(toggler);
+          }
+        }
+        // Remove the loading overlay.
+        history.classList.remove('rw-loading');
+      });
+
+      xhr.open('GET', '{{ url }}');
+      xhr.send(null);
+    }
+  })();
+</script>
 

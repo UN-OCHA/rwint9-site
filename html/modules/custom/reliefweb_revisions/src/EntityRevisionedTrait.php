@@ -24,6 +24,15 @@ trait EntityRevisionedTrait {
   }
 
   /**
+   * Get the entity's revision history content.
+   *
+   * @see \Drupal\reliefweb_revisions\EntityRevisionedInterface::getHistoryContent()
+   */
+  public function getHistoryContent() {
+    return $this->getEntityHistoryService()->getEntityHistoryContent($this);
+  }
+
+  /**
    * Get the entity history service.
    *
    * @return \Drupal\reliefweb_revisions\Services\EntityHistory

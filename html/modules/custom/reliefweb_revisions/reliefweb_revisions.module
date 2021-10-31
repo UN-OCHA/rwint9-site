@@ -15,14 +15,28 @@ function reliefweb_revisions_theme() {
   $themes = [
     'reliefweb_revisions_history' => [
       'variables' => [
+        // Section id.
+        'id' => 'rw-revisions-history',
         // The headling level.
         'level' => 2,
         // Section attributes.
         'attributes' => NULL,
+        // Section content wrapper attributes.
+        'wrapper_attributes' => NULL,
         // Section title.
         'title' => t('History'),
         // Entity whose history is displayed.
         'entity' => NULL,
+        // URL to load the history content.
+        'url' => '',
+      ],
+    ],
+    'reliefweb_revisions_history_content' => [
+      'variables' => [
+        // The headling level.
+        'level' => 3,
+        // Wrapper attributes.
+        'attributes' => NULL,
         // history: list of revisions. Each revision has the following
         // properties:
         // - user: user who created the revision
@@ -34,7 +48,7 @@ function reliefweb_revisions_theme() {
         // - content: list of fields with their label and formatted differences.
         'history' => [],
         // Number of revisions that were ignored due to their large number.
-        'skipped' => 0,
+        'ignored' => 0,
       ],
     ],
     'reliefweb_revisions_diff_boolean' => [
