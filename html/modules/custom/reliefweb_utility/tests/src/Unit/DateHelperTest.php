@@ -61,28 +61,4 @@ class DateHelperTest extends UnitTestCase {
     $this->assertEquals(DateHelper::getDateTimeStamp($date), 1633910411);
   }
 
-  /**
-   * Test date format.
-   *
-   * @covers \Drupal\reliefweb_utility\Helpers\DateHelper::format
-   */
-  public function testFormat() {
-    $date = '';
-    $this->assertEquals(DateHelper::format($date), '');
-
-    $date = 'abcd';
-    $this->assertEquals(DateHelper::format($date), '');
-
-    $date = new DateTime();
-    $this->assertEquals(DateHelper::format($date, 'custom', 'Y-m-d'), $date->format('Y-m-d'));
-
-    $date = new DrupalDateTime();
-    $this->assertEquals(DateHelper::format($date, 'custom', 'Y-m-d'), $date->format('Y-m-d'));
-
-    $date = '2021-10-11';
-    $this->assertEquals(DateHelper::format($date, 'custom', 'Y-m-d'), $date);
-
-    $date = 1633910411;
-    $this->assertEquals(DateHelper::format($date, 'custom', 'c'), '2021-10-29T00:00:00+00:00');
-  }
 }
