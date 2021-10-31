@@ -74,7 +74,7 @@ class TextHelperTest extends UnitTestCase {
   public function testGetTextDiff() {
     $from_text = 'Totam est quasi aliquam sit quibusdam';
     $to_text = 'Totam est quasi dignissimos sit quibusdam';
-    $expected = 'Totam est quasi <del>aliquam<del><ins>dignissimos</ins> sit quibusdam';
+    $expected = 'Totam est quasi <del>al</del><ins>d</ins>i<del>qua</del><ins>gnissi</ins>m<ins>os</ins> sit quibusdam';
 
     $this->assertEquals(TextHelper::getTextDiff($from_text, $to_text), $expected);
   }
