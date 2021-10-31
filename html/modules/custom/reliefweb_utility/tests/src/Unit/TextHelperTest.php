@@ -55,7 +55,7 @@ class TextHelperTest extends UnitTestCase {
   }
 
   /**
-   * Test clean text.
+   * Test strip embedded content..
    *
    * @covers \Drupal\reliefweb_utility\Helpers\TextHelper::stripEmbeddedContent
    */
@@ -64,6 +64,19 @@ class TextHelperTest extends UnitTestCase {
     $expected = $text;
 
     $this->assertEquals(TextHelper::stripEmbeddedContent($text), $expected);
+  }
+
+  /**
+   * Test get text diff.
+   *
+   * @covers \Drupal\reliefweb_utility\Helpers\TextHelper::getTextDiff
+   */
+  public function testGetTextDiff() {
+    $from_text = 'Totam est quasi aliquam sit quibusdam';
+    $to_text = 'Totam est quasi dignissimos sit quibusdam';
+    $expected = 'Totam est quasi <del>aliquam<del><ins>dignissimos</ins> sit quibusdam';
+
+    $this->assertEquals(TextHelper::getTextDiff($from_text, $to_text), $expected);
   }
 
 }
