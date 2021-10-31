@@ -155,15 +155,20 @@ rw-key-content:
     theme:
       components/rw-key-content/rw-key-content.css: {}
 
+rw-key-figures:
+  css:
+    theme:
+      components/rw-key-figures/rw-key-figures.css: {}
+
 rw-local-tasks:
   css:
     theme:
       components/rw-local-tasks/rw-local-tasks.css: {}
 
-rw-key-figures:
+rw-loading:
   css:
     theme:
-      components/rw-key-figures/rw-key-figures.css: {}
+      components/rw-loading/rw-loading.css: {}
 
 rw-moderation:
   css:
@@ -243,6 +248,9 @@ rw-revisions:
   css:
     theme:
       components/rw-revisions/rw-revisions.css: {}
+  dependencies:
+   - common_design_subtheme/rw-icons
+   - common_design_subtheme/rw-loading
 
 rw-river:
   css:
