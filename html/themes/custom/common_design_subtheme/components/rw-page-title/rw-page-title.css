@@ -2,7 +2,9 @@
 .rw-page-title {
   margin: 0;
   padding-bottom: 8px;
-  border-bottom: 0 none;
+}
+.user-logged-in .rw-page-title {
+  border-bottom: 1px solid #eb1405;
 }
 .rw-document > header,
 .taxonomy-term--full > header,
@@ -11,6 +13,10 @@
 .rw-404 header {
   padding-bottom: 12px;
   border-bottom: 1px solid #eb1405;
+}
+.user-logged-in header > .rw-page-title {
+  padding-bottom: 0;
+  border-bottom: 0 none;
 }
 .rw-river-page--organizations > header,
 .rw-river-page--blog > header,
@@ -27,11 +33,11 @@
 .rw-404 header .rw-page-title {
   padding-bottom: 8px;
 }
-.path-admin .rw-page-title,
-  /* Exclude specific node page titles as the border is on the header element */
-.user-logged-in.path-node:not([class*="page-node-type-"]) .rw-page-title {
-  border-bottom: 1px solid #eb1405;
-}
+/* .path-admin .rw-page-title, */
+/*  !* Exclude specific node page titles as the border is on the header element *! */
+/* .user-logged-in.path-node:not([class*="page-node-type-"]) .rw-page-title { */
+/*  border-bottom: 1px solid #eb1405; */
+/* } */
 .rw-document > header,
 .rw-river-page > header {
   margin-bottom: 2rem;
