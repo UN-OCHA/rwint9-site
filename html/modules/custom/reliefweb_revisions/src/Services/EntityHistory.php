@@ -7,7 +7,6 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
-use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
@@ -26,7 +25,6 @@ use Drupal\reliefweb_utility\Helpers\MediaHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
 use Drupal\user\EntityOwnerInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Entity history service class.
@@ -59,13 +57,6 @@ class EntityHistory {
   protected $database;
 
   /**
-   * The date formatter service.
-   *
-   * @var \Drupal\Core\Datetime\DateFormatterInterface
-   */
-  protected $dateFormatter;
-
-  /**
    * The entity field manager service.
    *
    * @var \Drupal\Core\Entity\EntityFieldManagerInterface
@@ -80,20 +71,6 @@ class EntityHistory {
   protected $entityTypeManager;
 
   /**
-   * The current request.
-   *
-   * @var \Symfony\Component\HttpFoundation\Request
-   */
-  protected $request;
-
-  /**
-   * Filters definition for the filter block on the moderation page.
-   *
-   * @var array
-   */
-  protected $filterDefinitions;
-
-  /**
    * Constructor.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
@@ -102,14 +79,10 @@ class EntityHistory {
    *   The current user.
    * @param \Drupal\Core\Database\Connection $database
    *   The database connection.
-   * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
-   *   The date formatter service.
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
    *   The entity field manager service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager service.
-   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
-   *   The request stack.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The translation manager service.
    */
@@ -117,19 +90,15 @@ class EntityHistory {
     ConfigFactoryInterface $config_factory,
     AccountProxyInterface $current_user,
     Connection $database,
-    DateFormatterInterface $date_formatter,
     EntityFieldManagerInterface $entity_field_manager,
     EntityTypeManagerInterface $entity_type_manager,
-    RequestStack $request_stack,
     TranslationInterface $string_translation
   ) {
     $this->config = $config_factory->get('reliefweb_revisions.settings');
     $this->currentUser = $current_user;
     $this->database = $database;
-    $this->dateFormatter = $date_formatter;
     $this->entityFieldManager = $entity_field_manager;
     $this->entityTypeManager = $entity_type_manager;
-    $this->request = $request_stack->getCurrentRequest();
     $this->stringTranslation = $string_translation;
   }
 
@@ -145,15 +114,10 @@ class EntityHistory {
    *   Render array with the revision history.
    */
   public function getEntityHistory(EntityRevisionedInterface $entity) {
-    $cache = [
-      'contexts' => ['user.permissions'],
-      'tags' => $entity->getCacheTags(),
-    ];
-
     // Skip if the user doesn't have permission to view the history or its an
     // entity being created.
     if (!$this->currentUser->hasPermission('view entity history') || $entity->id() === NULL || !empty($entity->in_preview)) {
-      return ['#cache' => $cache];
+      return [];
     }
 
     // History render array.
@@ -165,7 +129,10 @@ class EntityHistory {
         'entity_type_id' => $entity->getEntityTypeId(),
         'entity' => $entity->id(),
       ])->toString(),
-      '#cache' => $cache,
+      '#cache' => [
+        'contexts' => ['user.permissions'],
+        'tags' => $entity->getCacheTags(),
+      ],
     ];
   }
 
@@ -179,15 +146,10 @@ class EntityHistory {
    *   Render array with the revision history content.
    */
   public function getEntityHistoryContent(EntityRevisionedInterface $entity) {
-    $cache = [
-      'contexts' => ['user.permissions'],
-      'tags' => $entity->getCacheTags(),
-    ];
-
     // Skip if the user doesn't have permission to view the history or its an
     // entity being created.
     if (!$this->currentUser->hasPermission('view entity history') || $entity->id() === NULL || !empty($entity->in_preview)) {
-      return ['#cache' => $cache];
+      return [];
     }
 
     $entity_type_id = $entity->getEntityTypeId();
@@ -263,7 +225,10 @@ class EntityHistory {
       '#history' => array_reverse($history),
       // Number of ignored revisions.
       '#ignored' => $total_revision_ids - count($revision_ids),
-      '#cache' => $cache,
+      '#cache' => [
+        'contexts' => ['user.permissions'],
+        'tags' => $entity->getCacheTags(),
+      ],
     ];
   }
 
