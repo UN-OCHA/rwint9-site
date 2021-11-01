@@ -119,18 +119,3 @@ function common_design_subtheme_theme_suggestions_page_title_alter(array &$sugge
     $suggestions[] = 'page_title__wrapped';
   }
 }
-
-/**
- * Implemenents hook_preprocess_fieldset().
- *
- * @todo move to the base theme?
- */
-function common_design_subtheme_preprocess_fieldset(array &$variables) {
-  // Set the visually-hidden class to the legend element itself rather than
-  // its span when the title is supposed to be hidden.
-  // @see template_preprocess_fieldset()
-  if ($variables['title_display'] === 'invisible') {
-    $variables['legend']['attributes']->addClass('visually-hidden');
-    $variables['legend_span']['attributes']->removeClass('visually-hidden');
-  }
-}
