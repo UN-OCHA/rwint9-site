@@ -9,7 +9,7 @@ _core:
 id: common_design_subtheme_page_title
 theme: common_design_subtheme
 region: content
-weight: -30
+weight: -3
 provider: null
 plugin: page_title_block
 settings:

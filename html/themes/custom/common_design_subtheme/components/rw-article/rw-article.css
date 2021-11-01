@@ -171,6 +171,11 @@
   .rw-river--river-columns .pager {
     border-top: none;
   }
+
+  /* Compensate for margin removal when there are no results */
+  .rw-river--river-columns .visually-hidden:first-child + .rw-river__empty {
+    margin: 1rem 0.5rem;
+  }
 }
 
 @media screen and (min-width: 768px) and (max-width: 1023px) {

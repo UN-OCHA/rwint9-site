@@ -9,7 +9,7 @@ _core:
 id: common_design_subtheme_local_tasks
 theme: common_design_subtheme
 region: content
-weight: -20
+weight: -4
 provider: null
 plugin: local_tasks_block
 settings:
