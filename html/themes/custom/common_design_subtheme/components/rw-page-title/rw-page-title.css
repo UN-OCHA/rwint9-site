@@ -7,7 +7,7 @@
 .rw-document > header,
 .taxonomy-term--full > header,
 .rw-river-page > header,
-.rw-404 header,
+.rw-403 header,
 .rw-404 header {
   padding-bottom: 12px;
   border-bottom: 1px solid #eb1405;
@@ -18,12 +18,12 @@
 .rw-article--book.rw-document > header {
   padding-bottom: 0;
 }
-.rw-404 header,
+.rw-403 header,
 .rw-404 header {
   margin-bottom: 24px;
   padding: 0;
 }
-.rw-404 header .rw-page-title,
+.rw-403 header .rw-page-title,
 .rw-404 header .rw-page-title {
   padding-bottom: 8px;
 }
