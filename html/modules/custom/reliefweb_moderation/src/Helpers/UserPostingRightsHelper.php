@@ -265,7 +265,7 @@ class UserPostingRightsHelper {
         }
 
         // Check if the user is allowed or blocked.
-        foreach (static::userGetPostingRights($account, $sources) as $data) {
+        foreach (static::getUserPostingRights($account, $sources) as $data) {
           $right = $data[$bundle] ?? 0;
           // If the user is blocked for one of the sources always disallow even
           // if the user is the owner of the document, except for drafts.
