@@ -1,0 +1,8 @@
+type: module
+name: ReliefWeb Revisions
+description: 'Provides entity history display.'
+package: reliefweb
+core_version_requirement: ^9
+dependencies:
+  - drupal:reliefweb_utility
+  - taxonomy_term_revision:taxonomy_term_revision

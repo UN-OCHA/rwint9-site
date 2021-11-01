@@ -4,6 +4,7 @@ namespace Drupal\reliefweb_utility\Helpers;
 
 use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
 use Drupal\Core\Field\Plugin\Field\FieldType\EntityReferenceItem;
+use Drupal\media\MediaInterface;
 
 /**
  * Helper to get media images.
@@ -66,6 +67,19 @@ class MediaHelper {
       return [];
     }
 
+    return static::getImageFromMediaEntity($media_entity);
+  }
+
+  /**
+   * Get the image information from a media entity.
+   *
+   * @param \Drupal\media\MediaInterface $media_entity
+   *   Media entity.
+   *
+   * @return array
+   *   Image information with the uri, width, height, alt and copyright.
+   */
+  public static function getImageFromMediaEntity(MediaInterface $media_entity) {
     // Get the image field.
     $image_field = $media_entity
       ?->get('field_media_image')

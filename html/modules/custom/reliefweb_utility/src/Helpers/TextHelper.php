@@ -2,6 +2,9 @@
 
 namespace Drupal\reliefweb_utility\Helpers;
 
+use FineDiff\Diff;
+use FineDiff\Render\Html as DiffHtmlRenderer;
+
 /**
  * Helper to manipulate texts.
  */
@@ -72,6 +75,24 @@ class TextHelper {
       "\[iframe[^\]]*\]\([^\)]+\)",
     ];
     return preg_replace('@' . implode("|", $patterns) . '@i', '', $text);
+  }
+
+  /**
+   * Get the formatted difference between 2 texts.
+   *
+   * @param string $from_text
+   *   Original text.
+   * @param string $to_text
+   *   Modified text.
+   *
+   * @return string
+   *   HTML text with the differences between the 2 provided texts highlighted.
+   */
+  public static function getTextDiff($from_text, $to_text) {
+    $diff = new Diff();
+    $opcodes = $diff->getOperationCodes($from_text, $to_text);
+    $renderer = new DiffHtmlRenderer();
+    return $renderer->process($from_text, $opcodes);
   }
 
 }

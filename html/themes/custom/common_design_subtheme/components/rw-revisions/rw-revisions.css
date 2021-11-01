@@ -1,0 +1,198 @@
+.rw-revisions-history {
+  display: flex;
+  flex-direction: column;
+}
+.rw-revisions-history__title {
+  margin: 0;
+  padding: 8px;
+  background: #e6ecef;
+  font-size: 16px;
+}
+.rw-revisions-history__placeholder {
+  padding: 8px;
+  border-width: 0 1px 1px 1px;
+  border-style: solid;
+  border-color: #e6ecef;
+  font-size: 15px;
+  font-style: italic;
+}
+.rw-revisions-history-entry {
+  padding: 8px;
+  border-width: 0 1px 1px 1px;
+  border-style: solid;
+  border-color: #e6ecef;
+  font-size: 15px;
+}
+.rw-revisions-history-entry__title {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: normal;
+  font-style: italic;
+}
+.rw-revisions-history-entry--ignored .rw-revisions-history-entry__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: bold;
+  font-style: normal;
+}
+.rw-revisions-history-entry__header .rw-moderation-status[data-moderation-status] {
+  display: inline-block;
+  padding: 6px;
+  font-size: 12px;
+}
+.rw-revisions-history-entry__content {
+  margin: 0;
+}
+.rw-revisions-history-entry__content__field {
+  display: inline;
+  font-weight: bold;
+}
+.rw-revisions-history-entry__content__field:after {
+  content: ":";
+}
+.rw-revisions-history-entry__content__field:before {
+  display: block;
+  margin-top: 6px;
+  content: "";
+}
+.rw-revisions-history-entry__content__value {
+  display: inline;
+  margin: 0;
+}
+.rw-revisions-history-entry__content__value dl {
+  margin: 0 0 0 8px;
+  padding: 4px 0 0 12px;
+  border-left: 1px solid #e6ecef;
+}
+.rw-revisions-history-entry__content__value dd {
+  margin: 4px 0 0 16px;
+}
+.rw-revisions-history-entry__content__value ul {
+  margin: 8px 0;
+  padding: 0;
+  list-style-type: none;
+}
+.rw-revisions-history-entry__content__value dt {
+  font-weight: bold;
+}
+.rw-revisions-history-entry__content__value dt:after {
+  content: ":";
+}
+.rw-revisions-history-entry__content__value details summary {
+  display: inline-block;
+  margin: 0;
+  padding: 4px 6px;
+  cursor: pointer;
+  text-transform: uppercase;
+  color: #055372;
+  border: 1px solid #e6ecef;
+  font-size: 11px;
+  font-weight: bold;
+  line-height: 1;
+}
+.rw-revisions-history-entry__content__value details summary:after {
+  display: inline-block;
+  overflow: hidden;
+  width: 9px;
+  height: 9px;
+  margin: -2px 0 0 4px;
+  content: "";
+  vertical-align: middle;
+  background: var(--rw-icons--toggle--down--9--dark-blue);
+}
+.rw-revisions-history-entry__content__value details[open] summary:after {
+  background: var(--rw-icons--toggle--up--9--dark-blue);
+}
+.rw-revisions-history-entry__content__value details summary:hover,
+.rw-revisions-history-entry__content__value details summary:focus,
+.rw-revisions-history-entry__content__value details summary:active {
+  text-decoration: underline;
+}
+.rw-revisions-history-entry__content__value ins {
+  text-decoration: none;
+  color: green;
+}
+.rw-revisions-history-entry__content__value del {
+  text-decoration: line-through;
+  color: red;
+}
+.rw-revisions-history-entry__content__value .rw-revisions-added {
+  color: green;
+}
+.rw-revisions-history-entry__content__value .rw-revisions-removed {
+  color: red;
+}
+.rw-revisions-history-entry__content__value .rw-revisions-added:after,
+.rw-revisions-history-entry__content__value .rw-revisions-removed:after {
+  content: ":";
+}
+.rw-revisions-history-entry__content__value .rw-revisions-diff-boolean,
+.rw-revisions-history-entry__content__value .rw-revisions-diff-list,
+.rw-revisions-history-entry__content__value .rw-revisions-diff-reordered,
+.rw-revisions-history-entry__content__value .rw-revisions-diff-text {
+  display: inline;
+}
+.rw-revisions-history-entry__content__value .rw-revisions-diff-media dd {
+  display: flex;
+  align-items: center;
+}
+.rw-revisions-history-entry__content__value .rw-revisions-diff-media img {
+  max-width: 120px;
+  max-height: 100px;
+  margin-right: 8px;
+}
+.rw-revisions-history-entry .rw-revision-message {
+  margin: 12px 0 0 0;
+  padding: 0;
+}
+.rw-revisions-history-entry .rw-revision-message * {
+  display: inline;
+}
+
+/**
+ * Show/hide all revisions.
+ */
+.rw-revisions-history__btn {
+  display: inline-block;
+  order: 3;
+  width: 100%;
+  margin: 0;
+  padding: 8px;
+  text-transform: uppercase;
+  color: #055372;
+  border: 1px solid #e6ecef;
+  background: #e6ecef;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 1;
+}
+.rw-revisions-history__btn:hover,
+.rw-revisions-history__btn:focus,
+.rw-revisions-history__btn:active {
+  text-decoration: underline;
+  background: #e6ecef;
+}
+.rw-revisions-history__btn:before,
+.rw-revisions-history__btn:after {
+  display: inline-block;
+  overflow: hidden;
+  width: 9px;
+  height: 9px;
+  margin: -2px 4px 0 4px;
+  content: "";
+  vertical-align: middle;
+  background: var(--rw-icons--toggle--down--9--dark-blue);
+}
+.rw-revisions-history__btn[aria-expanded="true"]:before,
+.rw-revisions-history__btn[aria-expanded="true"]:after {
+  background: var(--rw-icons--toggle--up--9--dark-blue);
+}
+.rw-revisions-history__wrapper[data-cd-hidden="true"] {
+  display: block;
+}
+.rw-revisions-history__wrapper[data-cd-hidden="true"] .rw-revisions-history-entry:nth-child(n+5) {
+  display: none;
+}
+.rw-revisions-history.rw-loading .rw-revisions-history__btn {
+  display: none;
+}

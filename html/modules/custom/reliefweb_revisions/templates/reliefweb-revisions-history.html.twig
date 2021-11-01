@@ -1,0 +1,69 @@
+{#
+
+/**
+ * @file
+ * Template of the entity history.
+ *
+ * Available variables:
+ * - id: section id
+ * - level: the heading level (defaults to 2)
+ * - attributes: section attributes
+ * - wrapper_attributes: section content wrapper attributes
+ * - title: the section title (default to 'History')
+ * - entity: the entity whose history is displayed
+ * - url: URL to load the revision content.
+ */
+
+#}
+<section{{ attributes
+  .setAttribute('id', id)
+  .addClass(['rw-revisions-history', 'rw-loading'])
+}}>
+  <header class="rw-revisions-history__header">
+    <h{{ level }} class="rw-revisions-history__title">{{ title }} - <em>{{ entity.id() }}</em></h{{ level }}>
+  </header>
+
+  <div{{ wrapper_attributes
+    .setAttribute('id', id ~ '-wrapper')
+    .setAttribute('data-cd-toggable', 'Show all revisions'|t)
+    .setAttribute('data-cd-toggable-expanded', 'Hide old revisions'|t)
+    .setAttribute('data-cd-toggable-keep', '')
+    .setAttribute('data-cd-component', 'rw-revisions-history')
+    .setAttribute('data-cd-replace', id ~ '-dummy')
+    .addClass('rw-revisions-history__wrapper')
+  }}>
+    <p class="rw-revisions-history__placeholder">{{ 'Loading history...'|t }}</p>
+  </div>
+</section>
+
+{# Load the revisions asynchronously. #}
+<script>
+  (function () {
+    'use strict';
+
+    if ('XMLHttpRequest' in window) {
+      var xhr = new XMLHttpRequest();
+
+      xhr.addEventListener('load', function () {
+        var history = document.getElementById('{{ id }}');
+        var wrapper = document.getElementById('{{ id }}-wrapper');
+        // Set the history content.
+        wrapper.innerHTML = xhr.responseText || '';
+        // Remove the toggler if there are less than 5 revisions.
+        var content = wrapper.querySelector('.rw-revisions-history-content');
+        if (content && content.getAttribute('data-revision-count') < 5) {
+          var toggler = document.getElementById('{{ id }}-wrapper-toggler');
+          if (toggler) {
+            toggler.parentNode.removeChild(toggler);
+          }
+        }
+        // Remove the loading overlay.
+        history.classList.remove('rw-loading');
+      });
+
+      xhr.open('GET', '{{ url }}');
+      xhr.send(null);
+    }
+  })();
+</script>
+

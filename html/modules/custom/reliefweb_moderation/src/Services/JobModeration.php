@@ -2,7 +2,6 @@
 
 namespace Drupal\reliefweb_moderation\Services;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
@@ -87,9 +86,7 @@ class JobModeration extends ModerationServiceBase {
       // User, source and country info.
       $info = [];
       // User posting rights.
-      $info['posting_rights'] = new FormattableMarkup('<span data-user-posting-rights="@right">@right</span>', [
-        '@right' => UserPostingRightsHelper::getEntityAuthorPostingRights($entity),
-      ]);
+      $info['posting_rights'] = UserPostingRightsHelper::renderRight(UserPostingRightsHelper::getEntityAuthorPostingRights($entity));
       // Author.
       $info['author'] = $this->getEntityAuthorData($entity);
       // Source.

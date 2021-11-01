@@ -9,3 +9,7 @@ access content moderation features:
 archive content:
   title: 'Archive content'
   description: 'Allow users to archive content.'
+
+view any content:
+  title: 'View any content'
+  description: 'Allow users to view any content.'
