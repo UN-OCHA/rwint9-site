@@ -12,7 +12,7 @@ const environments = {
     testTimeout: 120000,
   },
   'production': {
-    baseUrl: 'https://.reliefweb.int/',
+    baseUrl: 'https://reliefweb.int/',
     testTimeout: 10000,
   },
 };
