@@ -4,7 +4,7 @@
 //
 const environments = {
   'local': {
-    baseUrl: 'http://rwint9-site.test/',
+    baseUrl: 'https://rwint9-site.test/',
     testTimeout: 10000,
   },
   'travis': {
