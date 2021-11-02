@@ -169,6 +169,7 @@
     border-bottom: none;
   }
   .rw-river--river-columns .pager {
+    margin-top: 0;
     border-top: none;
   }
 
