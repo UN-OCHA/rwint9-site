@@ -95,6 +95,7 @@
     {{ render_var({
       '#theme': 'reliefweb_entities_entity_country_slug',
       '#countries': meta.country,
+      '#attributes': create_attribute().addClass('rw-entity-country-slug--above'),
     }) }}
 
     {{ title|merge({'#title_attributes': title_attributes.addClass('rw-article__title')}) }}
