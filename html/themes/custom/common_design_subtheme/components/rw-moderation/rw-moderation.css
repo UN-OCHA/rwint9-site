@@ -208,3 +208,7 @@
 .path-moderation .rw-moderation-list .rw-moderation-table__header--sort--desc:after {
   background: var(--rw-icons--toggle--down--12--dark-blue);
 }
+.path-moderation .rw-moderation-list .pager {
+  padding-top: 0;
+  border-top: none;
+}
