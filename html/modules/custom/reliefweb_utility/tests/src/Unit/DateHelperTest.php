@@ -42,7 +42,7 @@ class DateHelperTest extends UnitTestCase {
    *
    * @covers \Drupal\reliefweb_utility\Helpers\DateHelper::getDateTimeStamp
    */
-  public function testDateHelper() {
+  public function testGetTimeStamp() {
     $this->assertEquals(DateHelper::getDateTimeStamp(''), NULL);
 
     $date = new DateTime();
@@ -60,4 +60,5 @@ class DateHelperTest extends UnitTestCase {
     $date = 1633910411;
     $this->assertEquals(DateHelper::getDateTimeStamp($date), 1633910411);
   }
+
 }

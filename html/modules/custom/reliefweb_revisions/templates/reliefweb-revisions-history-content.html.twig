@@ -1,0 +1,60 @@
+{#
+
+/**
+ * @file
+ * Template of the entity history content.
+ *
+ * Available variables:
+ * - level: the heading level (defaults to 3)
+ * - attributes: wrapper attributes
+ * - history: list of revisions. Each revision has the following properties:
+ *   - user: user who created the revision
+ *   - date: the revision timestamp
+ *   - status: associative array with the moderation status value and its label
+ *   - message: associative array with the revision log message and its type
+ *   - content: list of fields with their label and formatted differences
+ * - ignored: optional number of revisions that were ignored before this one
+ *   due to the large number of revisions.
+ */
+
+#}
+{% set ignored_index = history|length - 1 %}
+<div{{ attributes
+  .addClass('rw-revisions-history-content')
+  .setAttribute('data-revision-count', history|length)
+}}>
+{% for entry in history %}
+  {% if loop.index == ignored_index and ignored > 0 %}
+    <article class="rw-revisions-history-entry rw-revisions-history-entry--ignored">
+      <header class="rw-revisions-history-entry__header">
+        <h{{ level + 1 }} class="rw-revisions-history-entry__title">
+          {{ '... @ignored revisions were ignored ...'|t({'@ignored': ignored}) }}
+        </h{{ level + 1 }}>
+      </header>
+    </article>
+  {% else %}
+    <article class="rw-revisions-history-entry">
+      <header class="rw-revisions-history-entry__header">
+        <h{{ level }} class="rw-revisions-history-entry__title">{{ '@date by @user'|t({
+          '@date': entry.date|date('d M Y H:i:s e', 'UTC'),
+          '@user': entity_link(entry.user),
+        }) }}</h{{ level }}>
+        <div class="rw-moderation-status" data-moderation-status="{{ entry.status.value }}">{{ entry.status.label }}</div>
+      </header>
+
+      <dl class="rw-revisions-history-entry__content">
+      {% for item in entry.content %}
+        <dt class="rw-revisions-history-entry__content__field">{{ item.label }}</dt>
+        <dd class="rw-revisions-history-entry__content__value">{{ item.value }}</dd>
+      {% endfor %}
+      </dl>
+
+      {% if entry.message.content is not empty %}
+      <footer class="rw-revisions-history-entry__footer">
+        <div class="rw-revision-message" data-revision-message="{{ entry.message.type }}">{{ entry.message.content }}</div>
+      </footer>
+      {% endif %}
+    </article>
+  {% endif %}
+{% endfor %}
+</div>

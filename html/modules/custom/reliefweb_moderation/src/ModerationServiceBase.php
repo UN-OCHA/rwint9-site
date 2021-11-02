@@ -284,13 +284,17 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
         if (!$access) {
           switch ($operation) {
             case 'view':
-              // Document owners are allowed to view their documents even if
-              // they don't have the posting rights on it (due to being blocked
-              // for one of the sources for example).
-              $posting_rights = $owner || UserPostingRightsHelper::userHasPostingRights($account, $entity, $status);
+              if ($account->hasPermission('access content')) {
+                $access = $viewable || $account->hasPermission('view any content');
 
-              $access = $account->hasPermission('access content') &&
-                        ($viewable || ($account->hasPermission('view own unpublished content') && $posting_rights));
+                // Check if the user is the owner or has posting rights.
+                // Document owners are allowed to view their documents even if
+                // they don't have the posting rights on it (due to being
+                // blocked for one of the sources for example).
+                if (!$access && $account->hasPermission('view own unpublished content')) {
+                  $access = $owner || UserPostingRightsHelper::userHasPostingRights($account, $entity, $status);
+                }
+              }
               break;
 
             case 'create':
@@ -299,17 +303,21 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
               break;
 
             case 'update':
-              $posting_rights = UserPostingRightsHelper::userHasPostingRights($account, $entity, $status);
-
-              $access = $account->hasPermission('edit any ' . $bundle . ' content') ||
-                        ($editable && $account->hasPermission('edit own ' . $bundle . ' content') && $posting_rights);
+              if ($account->hasPermission('edit any ' . $bundle . ' content')) {
+                $access = TRUE;
+              }
+              elseif ($editable && $account->hasPermission('edit own ' . $bundle . ' content')) {
+                $access = UserPostingRightsHelper::userHasPostingRights($account, $entity, $status);
+              }
               break;
 
             case 'delete':
-              $posting_rights = UserPostingRightsHelper::userHasPostingRights($account, $entity, $status);
-
-              $access = $account->hasPermission('delete any ' . $bundle . ' content') ||
-                        ($account->hasPermission('delete own ' . $bundle . ' content') && $posting_rights);
+              if ($account->hasPermission('delete any ' . $bundle . ' content')) {
+                $access = TRUE;
+              }
+              elseif ($account->hasPermission('delete own ' . $bundle . ' content')) {
+                $access = UserPostingRightsHelper::userHasPostingRights($account, $entity, $status);
+              }
               break;
           }
         }
@@ -323,7 +331,9 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
         if (!$access) {
           switch ($operation) {
             case 'view':
-              $access = $account->hasPermission('access content') && $viewable;
+              if ($account->hasPermission('access content')) {
+                $access = $viewable || $account->hasPermission('view any content');
+              }
               break;
 
             case 'create':
