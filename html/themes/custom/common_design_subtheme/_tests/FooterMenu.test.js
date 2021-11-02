@@ -7,7 +7,7 @@ describe('FooterLinks', () => {
 
   it('should contain specific links in the Footer menu', async() => {
     const footerMenuItems = ["Blog", "Labs", "About", "Terms", "Contact"];
-    const footerMenuItemsHref = ["https://.reliefweb.int/blog", "https://labs.reliefweb.int/", "https://.reliefweb.int/about", "https://.reliefweb.int/terms-conditions", "https://.reliefweb.int/contact"];
+    const footerMenuItemsHref = ["http://rwint9-site.test/blog", "https://labs.reliefweb.int/", "http://rwint9-site.test/about", "http://rwint9-site.test/terms-conditions", "http://rwint9-site.test/contact"];
     const footerLinks = await page.$$eval('.cd-footer ul a', text => { return text.map(text => text.textContent) });
     const footerLinksHref = await page.$$eval('.cd-footer ul a', anchors => { return anchors.map(anchor => anchor.href) });
     await expect(footerLinks).toEqual(expect.arrayContaining(footerMenuItems));
