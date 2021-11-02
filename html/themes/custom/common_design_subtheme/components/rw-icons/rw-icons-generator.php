@@ -253,10 +253,11 @@ function parse_icon($category, $path, \DomElement $parent) {
  *   List of icon ids grouped by icon categories.
  */
 function generate_css(array $settings, array $icons) {
+  $path = $settings['path'] ?? '../rw-icons';
   $categories = [];
 
   // Generate the CSS file.
-  $base = 'url(../rw-icons/img/rw-icons-sprite.svg) @x @y no-repeat;';
+  $base = 'url(' . $path . '/img/rw-icons-sprite.svg) @x @y no-repeat;';
   $x = 0;
   foreach ($icons as $category => $ids) {
     $sizes = $settings['icons'][$category]['sizes'];

@@ -1,5 +1,6 @@
 {
   "style": "../../css/styles.css",
+  "path": "/themes/custom/common_design_subtheme/components/rw-icons",
   "colors": {
     "dark-blue": "--cd-reliefweb-dark-blue",
     "dark-red": "--cd-reliefweb-dark-red",
