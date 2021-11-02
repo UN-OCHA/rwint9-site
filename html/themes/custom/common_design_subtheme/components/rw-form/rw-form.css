@@ -463,9 +463,10 @@ form [data-lengthchecker-status] {
 .node-form fieldset.field-new-source-wrapper {
   margin-top: 24px;
 }
-/* Term Profile form */
+/* Term forms */
 .taxonomy-term-country-profile-form,
-.taxonomy-term-disaster-profile-form {
+.taxonomy-term-disaster-profile-form,
+.taxonomy-term-source-user-posting-rights-form {
   padding-top: 24px;
 }
 
@@ -512,6 +513,6 @@ form button[value="edit"] {
   font-size: 14px;
 }
 
-/*details > summary + .cd-form__item {*/
-/*  margin-top: 1.5rem;*/
-/*}*/
+/* details > summary + .cd-form__item { */
+/*  margin-top: 1.5rem; */
+/* } */

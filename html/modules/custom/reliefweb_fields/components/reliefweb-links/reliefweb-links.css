@@ -35,6 +35,8 @@
   margin-top: 4px;
 }
 .field--type-reliefweb-links fieldset[data-internal="true"] td img {
+  display: inline-block;
+  overflow: hidden;
   max-width: 35px;
   margin-right: 5px;
 }
