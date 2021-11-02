@@ -16,15 +16,6 @@
   width: 100%;
   content: "";
 }
-.rw-document > header {
-  width: 100%;
-  margin: 0;
-  padding: 0 0 12px 0;
-  border-bottom: 1px solid #eb1405;
-}
-.rw-document > header h2 {
-  margin: 0 0 8px 0;
-}
 .rw-document figure {
   margin: 0 0 16px 0;
 }
