@@ -1,22 +1,22 @@
-uuid: 77ceb060-8d40-4564-9d5a-0e43778e7ff4
+uuid: 7217d281-ab2e-49ff-ae6b-4605eca07d84
 langcode: en
 status: true
 dependencies:
   config:
-    - system.menu.account
+    - system.menu.help
   module:
     - system
   theme:
     - common_design_subtheme
-id: useraccountmenu
+id: help
 theme: common_design_subtheme
 region: header_top
-weight: -2
+weight: -3
 provider: null
-plugin: 'system_menu_block:account'
+plugin: 'system_menu_block:help'
 settings:
-  id: 'system_menu_block:account'
-  label: 'User account menu'
+  id: 'system_menu_block:help'
+  label: Help
   provider: system
   label_display: '0'
   level: 1

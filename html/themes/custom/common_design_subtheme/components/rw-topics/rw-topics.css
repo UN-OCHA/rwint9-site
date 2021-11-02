@@ -27,13 +27,6 @@
 /**
  * Topic page.
  */
-.node--topic--full.rw-document > header {
-  position: relative;
-  padding-left: 64px;
-}
-.node--topic--full.rw-document > header .rw-page-title {
-  padding-bottom: 0;
-}
 .node--topic--full > header .rw-article--topic__icon img {
   position: absolute;
   top: 50%;

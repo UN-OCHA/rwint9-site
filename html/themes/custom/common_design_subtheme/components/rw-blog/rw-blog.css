@@ -24,6 +24,11 @@
 
   padding: 0 0 12px;
 }
+/* Reset h3 font-weight */
+.rw-river--latest-blog-posts header .rw-river-article__title {
+  font-weight: normal;
+}
+
 .rw-river--latest-blog-posts .rw-river-article--blog-post:last-child {
   padding-bottom: 0;
 }
@@ -55,4 +60,10 @@
   padding-top: 0;
   text-align: center;
   border-bottom: none;
+}
+
+@media screen and (min-width: 768px) {
+  .rw-river-page--blog .rw-river-results {
+    padding-top: 24px;
+  }
 }

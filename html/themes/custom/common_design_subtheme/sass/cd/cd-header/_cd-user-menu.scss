@@ -37,7 +37,20 @@
 
   // If there's no language switcher in the Global Header, uncomment this line
   // to apply special treatment to the last link in the list.
-  @extend .cd-user-menu--no-language-switcher;
+  //@extend .cd-user-menu--no-language-switcher;
+}
+
+// If there's a second menu in the Global Header and no language switcher,
+// uncomment this rule to apply special treatment to the last link in the list.
+.cd-global-header__user-menu + .cd-global-header__user-menu {
+  li:last-child a,
+  li:last-child button {
+    padding-right: 0;
+
+    &::after {
+      content: none;
+    }
+  }
 }
 
 .cd-global-header__user-menu a svg + span {

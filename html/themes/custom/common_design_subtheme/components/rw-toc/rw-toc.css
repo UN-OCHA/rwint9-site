@@ -31,11 +31,17 @@
   font-weight: bold;
 }
 
-/* Temp (I hope) - Setting heights on all the parents makes the sticky nav work */
-.cd-layout-content-wrapper,
-.cd-layout-content,
+.rw-page--sectioned {
+  display: flex;
+  flex-wrap: wrap;
+}
+.rw-page--sectioned > header {
+  width: 100%;
+  margin: 0;
+}
+
+/* To facilitate the sticky TOC */
 .region-content,
-.region-content > article,
 .rw-sectioned-content,
 .node-form,
 .taxonomy-term-form {
