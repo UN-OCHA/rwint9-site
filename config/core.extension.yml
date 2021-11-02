@@ -6,6 +6,7 @@ module:
   breakpoint: 0
   components: 0
   config: 0
+  config_split: 0
   contact: 0
   content_moderation: 0
   ctools: 0
@@ -79,7 +80,6 @@ module:
   update: 0
   user: 0
   user_display_name: 0
-  views_ui: 0
   workflows: 0
   pathauto: 1
   content_translation: 10
