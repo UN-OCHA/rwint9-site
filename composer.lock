@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c138329241ec80dbac08405984a7a30e",
+    "content-hash": "8db2f3649b52fc7fb83aabb714b29d48",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -1559,6 +1559,67 @@
                 "source": "https://github.com/cweagans/composer-patches/tree/1.7.1"
             },
             "time": "2021-06-08T15:12:46+00:00"
+        },
+        {
+            "name": "d4h/finediff",
+            "version": "1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/D4H/php-finediff.git",
+                "reference": "a324fc42c1d68f238f7ba84135ddc054dade2902"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/D4H/php-finediff/zipball/a324fc42c1d68f238f7ba84135ddc054dade2902",
+                "reference": "a324fc42c1d68f238f7ba84135ddc054dade2902",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.2.0"
+            },
+            "require-dev": {
+                "mockery/mockery": "^1.3",
+                "phpunit/phpunit": "^8.5 || ^9.2"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "FineDiff\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Raymond Hill"
+                },
+                {
+                    "name": "Rob Crowe"
+                },
+                {
+                    "name": "Hannes Van De Vreken",
+                    "email": "vandevreken.hannes@gmail.com"
+                },
+                {
+                    "name": "Igor Finagin",
+                    "email": "igor@finag.in"
+                }
+            ],
+            "description": "PHP implementation of a Fine granularity Diff engine",
+            "keywords": [
+                "diff",
+                "finediff",
+                "opcode",
+                "string",
+                "text"
+            ],
+            "support": {
+                "issues": "https://github.com/D4H/php-finediff/issues",
+                "source": "https://github.com/D4H/php-finediff/tree/1.x"
+            },
+            "time": "2020-08-05T20:41:25+00:00"
         },
         {
             "name": "dflydev/dot-access-data",
@@ -12327,12 +12388,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/common_design.git",
-                "reference": "24108d8e717d3215de429d83d247fb08599278cf"
+                "reference": "0a459b0735645492ba48c85127a2e5da70cf3b56"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/common_design/zipball/24108d8e717d3215de429d83d247fb08599278cf",
-                "reference": "24108d8e717d3215de429d83d247fb08599278cf",
+                "url": "https://api.github.com/repos/UN-OCHA/common_design/zipball/0a459b0735645492ba48c85127a2e5da70cf3b56",
+                "reference": "0a459b0735645492ba48c85127a2e5da70cf3b56",
                 "shasum": ""
             },
             "require": {
@@ -12347,7 +12408,7 @@
                 "source": "https://github.com/UN-OCHA/common_design/tree/cd-304-forms",
                 "issues": "https://github.com/UN-OCHA/common_design/issues"
             },
-            "time": "2021-10-07T22:49:00+00:00"
+            "time": "2021-10-28T23:40:49+00:00"
         },
         {
             "name": "webflo/drupal-finder",

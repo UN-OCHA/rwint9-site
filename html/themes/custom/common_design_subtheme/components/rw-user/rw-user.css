@@ -62,10 +62,19 @@
 
 .subscription-form fieldset:first-of-type,
 .user-form fieldset:first-of-type,
-.community-topics-form fieldset:first-of-type {
+.community-topics-form fieldset:first-of-type,
+.contact-message-form {
   padding-top: 24px;
 }
 /* Nested fieldset */
 .user-form fieldset fieldset:first-of-type {
   padding-top: 0;
+}
+
+/* Personal contact form */
+.contact-message-form > .form-wrapper:not(.form-actions) {
+  position: relative;
+  width: 100%;
+  padding: 16px 0 32px;
+  border-bottom: 1px solid #e6ecef;
 }

@@ -1,0 +1,21 @@
+{#
+
+/**
+ * @file
+ * Template file for a text field revision differences.
+ *
+ * Available variables:
+ * - attributes: wrapper attributes
+ * - text: the diff-ed text.
+
+#}
+<div{{ attributes.addClass('rw-revisions-diff-text') }}>
+{% if text|length > 400 %}
+  <details>
+    <summary>{{ 'View changes'|t }}</summary>
+    {{ text }}
+  </details>
+{% else %}
+  {{ text }}
+{% endif %}
+</div>

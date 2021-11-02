@@ -265,7 +265,7 @@ class UserPostingRightsHelper {
         }
 
         // Check if the user is allowed or blocked.
-        foreach (static::userGetPostingRights($account, $sources) as $data) {
+        foreach (static::getUserPostingRights($account, $sources) as $data) {
           $right = $data[$bundle] ?? 0;
           // If the user is blocked for one of the sources always disallow even
           // if the user is the owner of the document, except for drafts.
@@ -287,6 +287,23 @@ class UserPostingRightsHelper {
 
     // Owner can edit their own posts (unless blocked for a source, see above).
     return $allowed || $owner;
+  }
+
+  /**
+   * Format a user posting right.
+   *
+   * @param string $right
+   *   Right.
+   *
+   * @return \Drupl\Component\Render\MarkupInterface
+   *   Formatted right.
+   */
+  public static function renderRight($right) {
+    $build = [
+      '#theme' => 'reliefweb_moderation_user_posting_right',
+      '#right' => $right,
+    ];
+    return \Drupal::service('renderer')->render($build);
   }
 
 }

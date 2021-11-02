@@ -1,0 +1,61 @@
+{#
+
+/**
+ * @file
+ * Template file for multi-properties field revision differences.
+ *
+ * Available variables:
+ * - attributes: wrapper attributes
+ * - added: list of added items. Each item can have multiple properties with
+ *   a label and value, or be a scalar value.
+ * - removed: list of removed items. Each item can have multiple properties with
+ *   a label and value, or be a scalar value.
+ */
+
+#}
+<div{{ attributes.addClass('rw-revisions-diff-nested') }}>
+  <dl>
+  {% if added is not empty %}
+    <dt class="rw-revisions-added">{{ 'Added'|t }}</dt>
+    <dd>
+      <ul>
+      {% for item in added %}
+        <li>
+        {% if item is iterable %}
+          <dl>
+          {% for property in item %}
+            <dt>{{ property.label }}</dt>
+            <dd>{{ property.value ? property.value : '<em>empty</em>' }}</dd>
+          {% endfor %}
+          </dl>
+        {% else %}
+          {{- item -}}
+        {% endif %}
+        </li>
+      {% endfor %}
+      </ul>
+    </dd>
+  {% endif %}
+  {% if removed is not empty %}
+    <dt class="rw-revisions-removed">{{ 'Removed'|t }}</dt>
+    <dd>
+      <ul>
+      {% for item in removed %}
+        <li>
+        {% if item is iterable %}
+          <dl>
+          {% for property in item %}
+            <dt>{{ property.label }}</dt>
+            <dd>{{ property.value ? property.value : '<em>empty</em>' }}</dd>
+          {% endfor %}
+          </dl>
+        {% else %}
+          {{- item -}}
+        {% endif %}
+        </li>
+      {% endfor %}
+      </ul>
+    </dd>
+  {% endif %}
+  </dl>
+</div>
