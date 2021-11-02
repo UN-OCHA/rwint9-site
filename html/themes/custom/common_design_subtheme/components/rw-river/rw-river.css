@@ -1,8 +1,16 @@
 /**
- * Spacing when there is content before the search bar.
+ * Spacing between the sections on a river page.
+ *
+ * @todo replace with `cd-flow` on the `rw-river-page` parent section?
  */
-.rw-river-page--with-pre-content .rw-river-search {
+.rw-river-page .rw-river-search,
+.rw-river-page .rw-river-letter-navigation-wrapper,
+.rw-river-page .rw-river--disaster-map,
+.rw-river-page section + section {
   margin-top: 32px;
+}
+.rw-river-page .rw-river-search ~ .rw-river-letter-navigation-wrapper {
+  margin-top: 24px;
 }
 
 /**
@@ -37,8 +45,4 @@
   .rw-river-page--with-advanced-search .rw-river--river-list {
     width: calc(100% - 360px);
   }
-}
-
-.rw-river-page section + section {
-  margin-top: 32px;
 }

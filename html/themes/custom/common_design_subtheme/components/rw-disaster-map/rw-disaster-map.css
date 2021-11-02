@@ -65,6 +65,7 @@
 .js .rw-disaster-map[data-map-enabled] .rw-disaster-map__legend__item {
   position: relative;
   padding-right: 8px;
+  font-style: italic;
 }
 .js .rw-disaster-map[data-map-enabled] .rw-disaster-map__legend__item:last-child {
   margin-right: 0;

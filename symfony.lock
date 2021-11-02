@@ -68,6 +68,9 @@
     "container-interop/container-interop": {
         "version": "1.2.0"
     },
+    "d4h/finediff": {
+        "version": "1.0.1"
+    },
     "dflydev/dot-access-configuration": {
         "version": "v1.0.3"
     },
@@ -221,6 +224,9 @@
     "drupal/social_auth_hid": {
         "version": "2.x-dev"
     },
+    "drupal/stage_file_proxy": {
+        "version": "1.1.0"
+    },
     "drupal/svg_image": {
         "version": "1.15.0"
     },
@@ -278,6 +284,9 @@
     "justinrainbow/json-schema": {
         "version": "5.2.10"
     },
+    "kint-php/kint": {
+        "version": "3.3"
+    },
     "laminas/laminas-diactoros": {
         "version": "2.5.0"
     },
@@ -298,6 +307,9 @@
     },
     "league/container": {
         "version": "2.5.0"
+    },
+    "league/html-to-markdown": {
+        "version": "5.0.1"
     },
     "league/oauth2-client": {
         "version": "2.6.0"

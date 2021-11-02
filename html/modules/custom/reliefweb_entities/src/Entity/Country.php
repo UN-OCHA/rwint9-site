@@ -8,14 +8,17 @@ use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\EntityModeratedTrait;
 use Drupal\reliefweb_entities\SectionedContentInterface;
 use Drupal\reliefweb_entities\SectionedContentTrait;
+use Drupal\reliefweb_revisions\EntityRevisionedInterface;
+use Drupal\reliefweb_revisions\EntityRevisionedTrait;
 use Drupal\taxonomy\Entity\Term;
 
 /**
  * Bundle class for country terms.
  */
-class Country extends Term implements BundleEntityInterface, EntityModeratedInterface, SectionedContentInterface {
+class Country extends Term implements BundleEntityInterface, EntityModeratedInterface, EntityRevisionedInterface, SectionedContentInterface {
 
   use EntityModeratedTrait;
+  use EntityRevisionedTrait;
   use SectionedContentTrait;
   use StringTranslationTrait;
 

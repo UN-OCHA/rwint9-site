@@ -6,6 +6,9 @@
   padding: 24px 0 0;
   text-align: center;
 }
+.rw-river-results--with-advanced-search {
+  padding: 0;
+}
 .rw-river-results span {
   font-weight: bold;
 }

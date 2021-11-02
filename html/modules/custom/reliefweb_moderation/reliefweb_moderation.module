@@ -65,6 +65,15 @@ function reliefweb_moderation_theme() {
         'message' => [],
       ],
     ],
+    // Template to display a user posting right.
+    'reliefweb_moderation_user_posting_right' => [
+      'variables' => [
+        // Wrapper attributes.
+        'attributes' => NULL,
+        // User posting right.
+        'right' => '',
+      ],
+    ],
   ];
   return $themes;
 }

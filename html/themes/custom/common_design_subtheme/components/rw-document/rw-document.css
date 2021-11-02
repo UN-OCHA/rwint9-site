@@ -16,15 +16,6 @@
   width: 100%;
   content: "";
 }
-.rw-document > header {
-  width: 100%;
-  margin: 0;
-  padding: 0 0 12px 0;
-  border-bottom: 1px solid #eb1405;
-}
-.rw-document > header h2 {
-  margin: 0 0 8px 0;
-}
 .rw-document figure {
   margin: 0 0 16px 0;
 }
@@ -34,7 +25,6 @@
 }
 .rw-document figure figcaption,
 .rw-document figure footer {
-  display: inline;
   padding-top: 4px;
   font-size: 15px;
   font-style: italic;
@@ -108,11 +98,15 @@
   }
 }
 
+.rw-article__content ul {
+  margin: 0;
+  padding: 0 0 0 32px;
+  list-style-position: outside;
+}
 .rw-article__content li {
   margin: 8px 0 0 0;
   padding: 0;
 }
-
 .rw-article__content li:first-child {
   margin: 0;
 }

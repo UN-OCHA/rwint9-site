@@ -1,0 +1,35 @@
+{#
+
+/**
+ * @file
+ * Template file for field revision differences split into categories.
+ *
+ * Available variables:
+ * - attributes: wrapper attributes
+ * - change_count: total number of changes to determines whether to hide the
+ *   changes or not.
+ * - categories: list of change categories keyed by the category id and with a
+ *   label and a list of changes for each category.
+ */
+
+#}
+<div{{ attributes.addClass('rw-revisions-diff-categories') }}>
+{% if change_count > 10 %}
+  <details><summary>{{ 'View changes'|t }}</summary>
+{% endif %}
+  <dl>
+  {% for category, item in categories %}
+    <dt class="rw-revisions-{{ category }}">{{ item.label }}</dt>
+    <dd>
+      <ul>
+      {% for change in item.changes %}
+        <li>{{ change }}</li>
+      {% endfor %}
+      </ul>
+    </dd>
+  {% endfor %}
+  </dl>
+{% if change_count > 10 %}
+  </details>
+{% endif %}
+</div>

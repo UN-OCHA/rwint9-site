@@ -68,8 +68,14 @@ rw-bookmark-link:
 rw-country:
   css:
     theme:
-      components/rw-country/rw-country.css: {}
       components/rw-country/rw-country-list.css: {}
+  dependencies:
+    - common_design_subtheme/rw-country-slug
+
+rw-country-slug:
+  css:
+    theme:
+      components/rw-country-slug/rw-country-slug.css: {}
 
 # Datepicker widget.
 rw-datepicker:
@@ -155,15 +161,20 @@ rw-key-content:
     theme:
       components/rw-key-content/rw-key-content.css: {}
 
+rw-key-figures:
+  css:
+    theme:
+      components/rw-key-figures/rw-key-figures.css: {}
+
 rw-local-tasks:
   css:
     theme:
       components/rw-local-tasks/rw-local-tasks.css: {}
 
-rw-key-figures:
+rw-loading:
   css:
     theme:
-      components/rw-key-figures/rw-key-figures.css: {}
+      components/rw-loading/rw-loading.css: {}
 
 rw-moderation:
   css:
@@ -238,6 +249,14 @@ rw-revision-message:
       components/rw-revision-message/rw-revision-message.css: {}
   dependencies:
    - common_design_subtheme/rw-icons
+
+rw-revisions:
+  css:
+    theme:
+      components/rw-revisions/rw-revisions.css: {}
+  dependencies:
+   - common_design_subtheme/rw-icons
+   - common_design_subtheme/rw-loading
 
 rw-river:
   css:
@@ -315,6 +334,13 @@ rw-user-information:
   css:
     theme:
       components/rw-user-information/rw-user-information.css: {}
+  dependencies:
+   - common_design_subtheme/rw-user-posting-rights
+
+rw-user-posting-rights:
+  css:
+    theme:
+      components/rw-user-posting-rights/rw-user-posting-rights.css: {}
 
 rw-view-more:
   css:

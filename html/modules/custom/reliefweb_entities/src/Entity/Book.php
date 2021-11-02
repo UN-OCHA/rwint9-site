@@ -3,20 +3,23 @@
 namespace Drupal\reliefweb_entities\Entity;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\node\Entity\Node;
 use Drupal\reliefweb_entities\BundleEntityInterface;
 use Drupal\reliefweb_entities\DocumentInterface;
 use Drupal\reliefweb_entities\DocumentTrait;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\EntityModeratedTrait;
-use Drupal\node\Entity\Node;
+use Drupal\reliefweb_revisions\EntityRevisionedInterface;
+use Drupal\reliefweb_revisions\EntityRevisionedTrait;
 
 /**
  * Bundle class for book nodes.
  */
-class Book extends Node implements BundleEntityInterface, EntityModeratedInterface, DocumentInterface {
+class Book extends Node implements BundleEntityInterface, EntityModeratedInterface, EntityRevisionedInterface, DocumentInterface {
 
   use DocumentTrait;
   use EntityModeratedTrait;
+  use EntityRevisionedTrait;
   use StringTranslationTrait;
 
   /**

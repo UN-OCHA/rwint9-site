@@ -65,7 +65,7 @@
 }
 .path-moderation #edit-omnibox .fieldset-wrapper select {
   width: auto;
-  height: 100%;
+  /*height: 100%;*/
 }
 .path-moderation #edit-omnibox div[data-autocomplete] > input {
   border-right: 2px solid #e6ecef;
@@ -176,8 +176,9 @@
   color: #2e3436;
   font-weight: bold;
 }
-.path-moderation .rw-moderation-list td.rw-moderation-table__cell__date .bury {
+.path-moderation .rw-moderation-list .rw-moderation-table__cell__bury {
   margin-top: 12px;
+  font-size: 15px;
 }
 .path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) .closing-date {
   font-weight: bold;
@@ -206,4 +207,8 @@
 }
 .path-moderation .rw-moderation-list .rw-moderation-table__header--sort--desc:after {
   background: var(--rw-icons--toggle--down--12--dark-blue);
+}
+.path-moderation .rw-moderation-list .pager {
+  padding-top: 0;
+  border-top: none;
 }

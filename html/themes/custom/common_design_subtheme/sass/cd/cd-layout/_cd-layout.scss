@@ -9,3 +9,19 @@
     }
   }
 }
+
+/* Decrease breakpoints from base theme
+   To facilitate the sticky TOC
+*/
+.cd-layout-container .cd-layout-content-wrapper {
+  @include tablet {
+    display: flex;
+    flex-wrap: wrap;
+  }
+}
+.cd-layout-content {
+  @include tablet {
+    flex-basis: 0;
+    flex-grow: 999;
+  }
+}

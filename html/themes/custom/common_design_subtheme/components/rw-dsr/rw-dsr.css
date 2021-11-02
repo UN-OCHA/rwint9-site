@@ -50,6 +50,7 @@
   margin: 0;
 }
 .rw-dsr figure img {
+  display: block;
   width: 100%;
 }
 .rw-dsr figure figcaption {

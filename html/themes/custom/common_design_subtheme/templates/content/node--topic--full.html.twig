@@ -96,7 +96,12 @@
   .setAttribute('data-id', node.id())
 }}>
 
-  <header>
+  <header{{ create_attribute()
+    .addClass([
+      'rw-article__header',
+      icon is not empty ? 'rw-article__header--with-icon',
+    ])
+  }}>
     {% if icon is not empty %}
       <div class="rw-article--topic__icon">
         {{ render_var({

@@ -19,6 +19,7 @@
 @media screen and (min-width: 480px) {
   .rw-river--headlines h2.cd-block-title,
   .rw-page-title.cd-block-title {
+    margin-bottom: 24px;
     font-size: var(--cd-font-size--2xbase);
   }
 }
