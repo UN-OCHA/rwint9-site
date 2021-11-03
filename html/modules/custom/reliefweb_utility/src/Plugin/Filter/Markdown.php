@@ -6,6 +6,7 @@ use Drupal\filter\FilterProcessResult;
 use Drupal\filter\Plugin\FilterBase;
 use League\CommonMark\Environment;
 use League\CommonMark\Extension\Attributes\AttributesExtension;
+use League\CommonMark\Extension\Table\TableExtension;
 use League\CommonMark\MarkdownConverter;
 
 /**
@@ -35,6 +36,9 @@ class Markdown extends FilterBase {
 
     // Add the extension to convert ID attributes.
     $environment->addExtension(new AttributesExtension());
+
+    // Add the extension to convert the tables.
+    $environment->addExtension(new TableExtension());
 
     // Create the converter with the extension(s).
     $converter = new MarkdownConverter($environment);
