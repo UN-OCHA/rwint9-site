@@ -100,7 +100,10 @@ class DisasterRiver extends RiverServiceBase {
         'type' => 'fixed',
         'values' => [
           'alert' => $this->t('Alert'),
-          'ongoing' => $this->t('Ongoing'),
+          // The legacy status for "ongoing" is "current".
+          // @todo change to "ongoing" once the conversion is handled by the
+          // API itself.
+          'current' => $this->t('Ongoing'),
           'past' => $this->t('Past disaster'),
         ],
         'field' => 'status',

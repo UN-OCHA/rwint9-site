@@ -525,14 +525,15 @@
               break;
 
             // Submit the changes made to the form.
-            case 'save':
-              // Parse the topic links and build the data to save.
-              var data = parseLinks();
-              if (data) {
-                console.log(data);
-                form.querySelector('[name="data"]').value = JSON.stringify(data);
+            default:
+              if (target.name === 'save') {
+                // Parse the topic links and build the data to save.
+                var data = parseLinks();
+                if (data) {
+                  form.querySelector('[name="data"]').value = JSON.stringify(data);
+                }
+                form.submit();
               }
-              form.submit();
               break;
           }
         }

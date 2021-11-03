@@ -7,13 +7,11 @@ dependencies:
     - field.field.node.blog_post.field_attached_images
     - field.field.node.blog_post.field_author
     - field.field.node.blog_post.field_image
-    - field.field.node.blog_post.field_publication_date
     - field.field.node.blog_post.field_tags
     - node.type.blog_post
     - workflows.workflow.blog_post
   module:
     - content_moderation
-    - datetime
     - media_library
     - path
     - text
@@ -53,12 +51,6 @@ content:
       media_types: {  }
     third_party_settings: {  }
     type: media_library_widget
-    region: content
-  field_publication_date:
-    weight: 3
-    settings: {  }
-    third_party_settings: {  }
-    type: datetime_default
     region: content
   field_tags:
     weight: 1
