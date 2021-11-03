@@ -305,9 +305,10 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
    */
   protected function addPotentialNewSourceFields(array &$form, FormStateInterface $form_state) {
     $entity = $form_state->getFormObject()->getEntity();
+    $bundle = $entity->bundle();
 
     // The following only applies to job and training nodes.
-    if (!in_array($entity->bundle(), ['job', 'training'])) {
+    if (!in_array($bundle, ['job', 'training'])) {
       return;
     }
 
@@ -315,7 +316,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
     $element = &$form['field_source'];
 
     // Jobs only accept 1 source.
-    $multiple = !empty($element['widget']['#multiple']) && $entity->bundle() !== 'job';
+    $multiple = !empty($element['widget']['#multiple']) && $bundle !== 'job';
 
     // The job source field only accepts one value. The field storage being
     // used across several content type we need to enforce the cardinality here.
@@ -367,7 +368,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
     ];
 
     // @todo this not great notably because it's not translatable.
-    $new_source_help = $this->state->get('reliefweb_form_new_source_help', '');
+    $new_source_help = $this->state->get('reliefweb_form_new_source_help_' . $bundle, '');
     if (!empty($new_source_help)) {
       $element['field_source_new']['#description'] = Markup::create($new_source_help);
     }
@@ -466,7 +467,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
     }
 
     // Add a reminder to fill in the potential new source.
-    $new_source_reminder = $this->state->get('reliefweb_form_new_source_reminder', '');
+    $new_source_reminder = $this->state->get('reliefweb_form_new_source_reminder_' . $bundle, '');
     if (!empty($new_source_reminder)) {
       $form['field_source_reminder'] = [
         '#title' => Markup::create($new_source_reminder),
