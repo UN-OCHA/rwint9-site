@@ -19,10 +19,10 @@ class JobFormAlter extends EntityFormAlterServiceBase {
   protected function addBundleFormAlterations(array &$form, FormStateInterface $form_state) {
     // Add a guide on how to populate the field as description to the title
     // field.
-    $form['title']['#description'] = $this->t('The best job titles are brief and specific. Please refrain from indicating location, salary and other details in the title, if possible.');
+    $form['title']['widget'][0]['value']['#description'] = $this->t('The best job titles are brief and specific. Please refrain from indicating location, salary and other details in the title, if possible.');
 
     // Force shorter titles.
-    $form['title']['#maxlength'] = 150;
+    $form['title']['widget'][0]['value']['#maxlength'] = 150;
 
     // @todo review if that is still needed when introducing the WYSIWYG.
     // Add the WYSIWYG to the body and how to apply fields.
@@ -105,6 +105,12 @@ class JobFormAlter extends EntityFormAlterServiceBase {
     // Make the country field non optional.
     // @todo review.
     $form['field_country']['widget']['#optional'] = FALSE;
+
+    // Flag the country field as mandatory when "unspecified" is not checked.
+    $condition = [
+      ':input[name="unspecified_location"]' => ['checked' => FALSE],
+    ];
+    $form['field_country']['widget']['#states']['required'] = $condition;
 
     // Hide the country and city field when "unspecified" is selected.
     $condition = [

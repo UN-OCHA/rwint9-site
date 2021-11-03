@@ -10,6 +10,7 @@ use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -368,7 +369,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
     // @todo this not great notably because it's not translatable.
     $new_source_help = $this->state->get('reliefweb_form_new_source_help', '');
     if (!empty($new_source_help)) {
-      $container['field_source_new']['#description'] = $new_source_help;
+      $element['field_source_new']['#description'] = Markup::create($new_source_help);
     }
 
     // Create a checkbox field with the sources the user is allowed to post for
@@ -465,10 +466,10 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
     }
 
     // Add a reminder to fill in the potential new source.
-    $reminder = $this->state->get('reliefweb_new_source_reminder', '');
-    if (!empty($reminder)) {
+    $new_source_reminder = $this->state->get('reliefweb_form_new_source_reminder', '');
+    if (!empty($new_source_reminder)) {
       $form['field_source_reminder'] = [
-        '#title' => $reminder,
+        '#title' => Markup::create($new_source_reminder),
         '#type' => 'checkbox',
         '#states' => [
           'visible' => [
