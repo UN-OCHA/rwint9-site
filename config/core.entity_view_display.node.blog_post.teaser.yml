@@ -8,11 +8,9 @@ dependencies:
     - field.field.node.blog_post.field_attached_images
     - field.field.node.blog_post.field_author
     - field.field.node.blog_post.field_image
-    - field.field.node.blog_post.field_publication_date
     - field.field.node.blog_post.field_tags
     - node.type.blog_post
   module:
-    - datetime
     - text
     - user
 id: node.blog_post.teaser
@@ -28,6 +26,11 @@ content:
     settings:
       trim_length: 600
     third_party_settings: {  }
+  content_moderation_control:
+    weight: -20
+    settings: {  }
+    third_party_settings: {  }
+    region: content
   field_author:
     type: string
     weight: 0
@@ -35,15 +38,6 @@ content:
     label: visually_hidden
     settings:
       link_to_entity: false
-    third_party_settings: {  }
-  field_publication_date:
-    type: datetime_default
-    weight: 2
-    region: content
-    label: inline
-    settings:
-      timezone_override: UTC
-      format_type: date_short
     third_party_settings: {  }
   field_tags:
     type: entity_reference_label
