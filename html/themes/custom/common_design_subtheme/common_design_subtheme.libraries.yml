@@ -3,6 +3,7 @@ global-styling:
     theme:
       css/styles.css: {}
   dependencies:
+    - common_design_subtheme/rw-external-links
     - common_design_subtheme/rw-form
     - common_design_subtheme/rw-site-slogan
     - common_design_subtheme/rw-page-title
@@ -119,6 +120,13 @@ rw-entity-text:
     theme:
       components/rw-entity-text/rw-entity-text.css: {}
 
+rw-external-links:
+  css:
+    theme:
+      components/rw-external-links/rw-external-links.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+
 rw-form:
   css:
     theme:
@@ -155,6 +163,11 @@ rw-icons:
   css:
     theme:
       components/rw-icons/rw-icons.css: {}
+
+rw-iframe:
+  css:
+    theme:
+      components/rw-iframe/rw-iframe.css: {}
 
 rw-key-content:
   css:
