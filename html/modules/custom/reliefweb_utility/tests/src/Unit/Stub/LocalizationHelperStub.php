@@ -14,8 +14,8 @@ class LocalizationHelperStub extends LocalizationHelper {
   /**
    * {@inheritdoc}
    */
-  protected static function collatorCreate($language) {
-    return parent::collatorCreate($language);
+  protected static function createCollator($language) {
+    return parent::createCollator($language);
   }
 
   /**
