@@ -78,3 +78,8 @@
   padding: 16px 0 32px;
   border-bottom: 1px solid #e6ecef;
 }
+
+/* Community topics actions */
+.community-topics-form .form-actions.form-item {
+  margin-top: 32px;
+}
