@@ -237,7 +237,7 @@ class TrainingModeration extends ModerationServiceBase {
    */
   public function getEntityFormSubmitButtons($status, EntityModeratedInterface $entity) {
     $buttons = [];
-    $new = empty($status) || $status === 'draft';
+    $new = empty($status) || $status === 'draft' || $entity->isNew();
 
     // Only show save as draft for non-published but editable documents.
     if ($new || in_array($status, ['draft', 'pending', 'on-hold'])) {

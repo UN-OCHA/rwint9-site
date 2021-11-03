@@ -156,6 +156,7 @@ class DisasterModeration extends ModerationServiceBase {
    */
   public function getEntityFormSubmitButtons($status, EntityModeratedInterface $entity) {
     $buttons = [];
+    $new = empty($status) || $entity->isNew();
 
     // @todo replace with permission.
     if (UserHelper::userHasRoles(['editor'])) {
@@ -170,6 +171,13 @@ class DisasterModeration extends ModerationServiceBase {
       ];
     }
 
+    // Allow to save new disasters as past disasters directly.
+    if ($new) {
+      $buttons['past'] = [
+        '#value' => $this->t('Past disaster'),
+      ];
+    }
+
     // @todo replace with permission.
     if (UserHelper::userHasRoles(['external_disaster_manager'])) {
       $buttons['external'] = [
@@ -177,8 +185,9 @@ class DisasterModeration extends ModerationServiceBase {
       ];
     }
 
-    // Existing disaster.
-    if (!empty($status)) {
+    // Use a catch all button to archive existing disasters.
+    // @see ::alterSubmittedEntityStatus()
+    if (!$new) {
       $buttons['archive'] = [
         '#value' => $this->t('Archive'),
       ];
