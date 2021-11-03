@@ -44,6 +44,7 @@ trait SectionedContentTrait {
           '#entities' => $entities,
           '#more' => $query['more'] ?? NULL,
           '#title' => $query['title'] ?? NULL,
+          '#total' => $result['totalCount'] ?? NULL,
         ];
       }
     }

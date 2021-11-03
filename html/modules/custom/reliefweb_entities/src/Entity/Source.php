@@ -11,6 +11,7 @@ use Drupal\reliefweb_entities\SectionedContentTrait;
 use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_revisions\EntityRevisionedTrait;
 use Drupal\reliefweb_rivers\RiverServiceBase;
+use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 use Drupal\taxonomy\Entity\Term;
 
@@ -70,6 +71,43 @@ class Source extends Term implements BundleEntityInterface, EntityModeratedInter
     ];
 
     $sections += $this->getSectionsFromReliefWebApiQueries($queries);
+
+    // Update the content rivers to show the total number of items in the
+    // more link label.
+    $name = $this->field_shortname->isEmpty() ? $this->label() : $this->field_shortname->value;
+    if (isset($sections['updates']['#total'], $sections['updates']['#more']['label'])) {
+      $sections['updates']['#more']['label'] = $this->formatPlural(
+        $sections['updates']['#total'],
+        'View the published report from @name',
+        'View the @total published reports from @name',
+        [
+          '@name' => $name,
+          '@total' => LocalizationHelper::formatNumber($sections['updates']['#total']),
+        ]
+      );
+    }
+    if (isset($sections['jobs']['#total'], $sections['jobs']['#more']['label'])) {
+      $sections['jobs']['#more']['label'] = $this->formatPlural(
+        $sections['jobs']['#total'],
+        'View the open job from @name',
+        'View the @total open jobs from @name',
+        [
+          '@name' => $name,
+          '@total' => LocalizationHelper::formatNumber($sections['jobs']['#total']),
+        ]
+      );
+    }
+    if (isset($sections['training']['#total'], $sections['training']['#more']['label'])) {
+      $sections['training']['#more']['label'] = $this->formatPlural(
+        $sections['training']['#total'],
+        'View the open training from @name',
+        'View the @count open training from @name',
+        [
+          '@name' => $name,
+          '@total' => LocalizationHelper::formatNumber($sections['training']['#total']),
+        ]
+      );
+    }
 
     return $sections;
   }
