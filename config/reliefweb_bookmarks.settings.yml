@@ -7,10 +7,10 @@ node:
   book: 0
   topic: 0
 taxonomy_term:
-  disaster: disaster
   career_category: 0
   content_format: 0
   country: 0
+  disaster: 0
   disaster_type: 0
   feature: 0
   job_experience: 0
