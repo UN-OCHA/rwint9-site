@@ -5,6 +5,7 @@ namespace Drupal\reliefweb_rivers\Services;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\reliefweb_rivers\AdvancedSearch;
 use Drupal\reliefweb_rivers\RiverServiceBase;
+use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
@@ -257,8 +258,6 @@ class SourceRiver extends RiverServiceBase {
     $results = $this->apiClient->requestMultiple($queries);
 
     // Parse the results.
-    // @todo the numbers are not formatted properly.
-    // @see https://www.drupal.org/node/2660338
     $publications = [];
     foreach ($results as $index => $data) {
       $resource = $queries[$index]['resource'];
@@ -271,7 +270,9 @@ class SourceRiver extends RiverServiceBase {
             switch ($resource) {
               case 'reports':
                 $publications[$id]['reports'] = [
-                  'name' => $this->formatPlural($count, '1 published report', '@count published reports'),
+                  'name' => $this->formatPlural($count, '1 published report', '@total published reports', [
+                    '@total' => LocalizationHelper::formatNumber($count),
+                  ]),
                   'url' => static::getRiverUrl('report', [
                     'advanced-search' => '(S' . $id . ')',
                   ]),
@@ -280,7 +281,9 @@ class SourceRiver extends RiverServiceBase {
 
               case 'jobs':
                 $publications[$id]['jobs'] = [
-                  'name' => $this->formatPlural($count, '1 open job', '@count open jobs'),
+                  'name' => $this->formatPlural($count, '1 open job', '@total open jobs', [
+                    '@total' => LocalizationHelper::formatNumber($count),
+                  ]),
                   'url' => static::getRiverUrl('job', [
                     'advanced-search' => '(S' . $id . ')',
                   ]),
@@ -289,7 +292,9 @@ class SourceRiver extends RiverServiceBase {
 
               case 'training':
                 $publications[$id]['training'] = [
-                  'name' => $this->formatPlural($count, '1 open training', '@count open training'),
+                  'name' => $this->formatPlural($count, '1 open training', '@total open training', [
+                    '@total' => LocalizationHelper::formatNumber($count),
+                  ]),
                   'url' => static::getRiverUrl('training', [
                     'advanced-search' => '(S' . $id . ')',
                   ]),
