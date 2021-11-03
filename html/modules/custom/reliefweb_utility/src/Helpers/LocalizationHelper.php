@@ -121,6 +121,31 @@ class LocalizationHelper {
   }
 
   /**
+   * Format a number with grouped thousands.
+   *
+   * @param float|int $number
+   *   Number to format.
+   * @param string $language
+   *   Language (ISO2 code).
+   *
+   * @return string
+   *   Formatted number.
+   */
+  public static function formatNumber($number, $language = NULL) {
+    $formatter = static::getNumberFormatter($language);
+
+    if (!empty($formatter)) {
+      $formatted = $formatter->format($number);
+      if (intl_is_failure($formatter->getErrorCode())) {
+        return $number;
+      }
+      return $formatted;
+    }
+
+    return number_format($number);
+  }
+
+  /**
    * Get the collator for the given language.
    *
    * @param string $language
@@ -136,34 +161,31 @@ class LocalizationHelper {
     $language = static::getLanguage($language);
 
     if (!isset($collators[$language])) {
-      $collator = static::collatorCreate($language);
+      $collator = static::createCollator($language);
 
-      if (!$collator) {
-        $collators[$language] = FALSE;
-        return FALSE;
-      }
+      if ($collator) {
+        switch (static::intlGetErrorCode()) {
+          case U_ZERO_ERROR:
+            // No errors.
+            break;
 
-      switch (static::intlGetErrorCode()) {
-        case U_ZERO_ERROR:
-          // No errors.
-          break;
+          case U_USING_DEFAULT_WARNING:
+            // For some reason, the French locale for the collation defaults
+            // to English and doesn't enable the French Collation. This is not
+            // an issue per se, as we can have the correct behavior by enabling
+            // the French collation so that accents are handled properly.
+            //
+            // @see https://www.php.net/manual/en/class.collator.php
+            if ($language === 'fr') {
+              $collator->setAttribute(\Collator::FRENCH_COLLATION, \Collator::ON);
+            }
+            break;
 
-        case U_USING_DEFAULT_WARNING:
-          // For some reason, the French locale for the collation defaults
-          // to English and doesn't enable the French Collation. This is not
-          // an issue per se, as we can have the correct behavior by enabling
-          // the French collation so that accents are handled properly.
-          //
-          // @see https://www.php.net/manual/en/class.collator.php
-          if ($language === 'fr') {
-            $collator->setAttribute(\Collator::FRENCH_COLLATION, \Collator::ON);
-          }
-          break;
-
-        default:
-          // Some other error happened, we mark the collator as FALSE so that
-          // the collated_(k)sort functions can default to the basic (k)sort.
-          $collator = FALSE;
+          default:
+            // Some other error happened, we mark the collator as FALSE so that
+            // the collated_(k)sort functions can default to the basic (k)sort.
+            $collator = FALSE;
+        }
       }
 
       $collators[$language] = $collator;
@@ -173,17 +195,59 @@ class LocalizationHelper {
   }
 
   /**
-   * Get the collator for the given language.
+   * Get the number formatter for the given language.
+   *
+   * @param string $language
+   *   Language for which to return a NumberFormatter. Defaults to the current
+   *   language.
+   *
+   * @return \NumberFormatter|false
+   *   Number formatter or FALSE if there is no formatter for the language.
+   */
+  protected static function getNumberFormatter($language = NULL) {
+    static $formatters = [];
+
+    $language = static::getLanguage($language);
+
+    if (!isset($formatters[$language])) {
+      $formatters[$language] = static::createNumberFormatter($language);
+    }
+
+    return $formatters[$language];
+  }
+
+  /**
+   * Create the collator for the given language.
    *
    * @param string $language
    *   Language for which to return a Collator. Defaults to the current
    *   language.
    *
-   * @return \Collator|null
-   *   Collator or NULL if the collator couldn't be created.
+   * @return \Collator|false
+   *   Collator or FALSE if the collator couldn't be created.
    */
-  protected static function collatorCreate($language) {
-    return collator_create($language);
+  protected static function createCollator($language) {
+    if (function_exists('collator_create')) {
+      return collator_create($language) ?: FALSE;
+    }
+    return FALSE;
+  }
+
+  /**
+   * Create the number formatter for the given language.
+   *
+   * @param string $language
+   *   Language for which to return a NumberFormatter. Defaults to the current
+   *   language.
+   *
+   * @return \NumberFormatter|false
+   *   Number formatter or FALSE if the formatter couldn't be created.
+   */
+  protected static function createNumberFormatter($language) {
+    if (function_exists('numfmt_create')) {
+      return numfmt_create($language, \NumberFormatter::DECIMAL) ?: FALSE;
+    }
+    return FALSE;
   }
 
   /**
