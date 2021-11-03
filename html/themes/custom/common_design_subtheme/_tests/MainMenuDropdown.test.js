@@ -1,10 +1,8 @@
-import env from './_env';
-
-jest.setTimeout(env.timeout);
+import env from './_env'
 
 describe('MainMenuDropdown', () => {
   beforeAll(async() => {
-    await page.goto(`${env.baseUrl}`);
+    await page.goto(env.baseUrl);
   });
 
   it('should expand when clicked', async() => {
