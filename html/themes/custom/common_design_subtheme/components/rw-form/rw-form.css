@@ -458,6 +458,9 @@ form [data-lengthchecker-status] {
   font-size: 15px;
   line-height: 1.2;
 }
+form [data-lengthchecker-status="ok"] {
+  background-color: rgba(136, 187, 9, 0.2);
+}
 
 /* New Organisation field for Jobs */
 .node-form fieldset.field-new-source-wrapper {

@@ -60,9 +60,11 @@ content:
     region: content
   field_content_format:
     weight: 15
-    settings: {  }
+    settings:
+      extra_data: {  }
+      sort: label
     third_party_settings: {  }
-    type: options_buttons
+    type: reliefweb_entity_reference_select
     region: content
   field_country:
     weight: 11
@@ -214,7 +216,7 @@ content:
   field_notify:
     weight: 23
     settings:
-      rows: 5
+      rows: 3
       placeholder: ''
     third_party_settings: {  }
     type: string_textarea
@@ -327,9 +329,11 @@ content:
     region: content
   field_theme:
     weight: 16
-    settings: {  }
+    settings:
+      extra_data: {  }
+      sort: label
     third_party_settings: {  }
-    type: options_buttons
+    type: reliefweb_entity_reference_select
     region: content
   moderation_state:
     type: moderation_state_default
