@@ -5,12 +5,12 @@ namespace Drupal\Tests\reliefweb_utility\Unit\Stub;
 /**
  * Helper to sort or format content in proper localized way.
  */
-class LocalizationHelperStubNoCollator extends LocalizationHelperStub {
+class LocalizationHelperStubNoNumberFormatter extends LocalizationHelperStub {
 
   /**
    * {@inheritdoc}
    */
-  protected static function createCollator($language) {
+  protected static function createNumberFormatter($language) {
     return FALSE;
   }
 
