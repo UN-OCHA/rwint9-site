@@ -244,7 +244,7 @@ class ReportModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function isViewableStatus($status, $account = NULL) {
-    return in_array($status, ['to-review', 'published']);
+    return in_array($status, ['to_review', 'published']);
   }
 
   /**
