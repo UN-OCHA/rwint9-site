@@ -38,3 +38,8 @@
 .rw-entity-country-slug a:active {
   text-decoration: underline;
 }
+
+/* Hide country slug on Country pages */
+.taxonomy-term--country--full .rw-entity-country-slug {
+  display: none;
+}
