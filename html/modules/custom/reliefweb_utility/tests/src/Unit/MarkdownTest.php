@@ -6,6 +6,9 @@ namespace Drupal\Tests\reliefweb_utility\Unit;
 
 use Drupal\reliefweb_utility\Plugin\Filter\Markdown;
 use Drupal\Tests\UnitTestCase;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Tests date helper.
@@ -25,6 +28,17 @@ class MarkdownTest extends UnitTestCase {
    */
   protected function setUp() {
     parent::setUp();
+
+    //
+    $request = $this->prophesize(Request::class);
+    $request->getHost()->willReturn('internal.test');
+
+    $request_stack = $this->prophesize(RequestStack::class);
+    $request_stack->getCurrentRequest()->willReturn($request->reveal());
+
+    $container = new ContainerBuilder();
+    \Drupal::setContainer($container);
+    $container->set('request_stack', $request_stack->reveal());
 
     $configuration['settings'] = [];
     $this->filter = new Markdown($configuration, 'filter_markdown', [
@@ -95,6 +109,14 @@ class MarkdownTest extends UnitTestCase {
       [
         'heading' . "\n" . '===============',
         '<h1>heading</h1>' . "\n",
+      ],
+      [
+        '[Internal](https://internal.test)',
+        '<p><a href="https://internal.test">Internal</a></p>' . "\n",
+      ],
+      [
+        '[External](https://external.test)',
+        '<p><a rel="noopener noreferrer" target="_blank" href="https://external.test">External</a></p>' . "\n",
       ],
     ];
   }
