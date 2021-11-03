@@ -8,6 +8,9 @@
 .rw-entity-text .rw-entity-text__content p:first-child {
   margin-top: 0;
 }
+.rw-entity-text .rw-entity-text__content .table-wrapper + * {
+  margin-top: 24px;
+}
 .rw-entity-text ul {
   margin: 0;
   padding: 0 0 0 32px;
