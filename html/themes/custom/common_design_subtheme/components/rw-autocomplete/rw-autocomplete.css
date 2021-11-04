@@ -78,7 +78,7 @@
   list-style: none;
   border: 1px solid var(--cd-reliefweb-brand-grey--dark);
   background: white;
-  box-shadow: 0 1px 4px 1px rgba(var(--cd-rgb-reliefweb-dark-grey), 0.3);
+  box-shadow: 0 1px 4px 1px rgba(var(--cd-rgb-reliefweb-brand-grey--dark), 0.3);
 }
 .rw-autocomplete-suggestion {
   margin: 0;
