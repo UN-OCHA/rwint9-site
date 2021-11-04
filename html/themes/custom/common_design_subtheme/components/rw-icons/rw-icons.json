@@ -8,7 +8,7 @@
     "light-grey": "--cd-reliefweb-light-grey",
     "grey": "#b6c8d0",
     "white": "white",
-    "blue": "#0988bb",
+    "blue": "--cd-reliefweb-blue",
     "green": "#88bb09",
     "orange": "#eb8705",
     "red": "#f65c51"
