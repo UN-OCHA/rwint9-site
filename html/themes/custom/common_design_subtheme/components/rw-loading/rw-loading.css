@@ -16,7 +16,7 @@
 }
 .rw-loading:before {
   position: absolute;
-  z-index: 1000;
+  z-index: 10000;
   top: 0;
   right: 0;
   bottom: 0;
@@ -26,7 +26,7 @@
 }
 .rw-loading:after {
   position: absolute;
-  z-index: 1001;
+  z-index: 10001;
   top: 50%;
   left: 50%;
   box-sizing: border-box;
