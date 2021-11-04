@@ -165,7 +165,7 @@
 }
 .rw-entity-meta dd.rw-entity-meta__tag-value--status--alert:before {
   content: "";
-  background: var(--cd-reliefweb-orange);
+  background: var(--cd-reliefweb-orange--alert);
 }
 .rw-entity-meta dd.rw-entity-meta__tag-value--status--ongoing:before {
   content: "";

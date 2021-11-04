@@ -9,9 +9,9 @@
     "grey": "#b6c8d0",
     "white": "white",
     "blue": "--cd-reliefweb-brand-blue",
-    "green": "var(--cd-reliefweb-green)",
-    "orange": "var(--cd-reliefweb-orange)",
-    "red": "var(--cd-reliefweb-brand-red)"
+    "green": "--cd-reliefweb-green",
+    "orange": "--cd-reliefweb-orange--alert",
+    "red": "--cd-reliefweb-brand-red"
   },
   "icons": {
     "common": {

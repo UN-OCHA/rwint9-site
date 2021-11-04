@@ -8,24 +8,24 @@
   padding: 2px 4px;
   vertical-align: middle;
   text-transform: uppercase;
-  border: 1px solid #d9d9d9;
-  background: rgba(217, 217, 217, 0.2);
+  border: 1px solid var(--cd-reliefweb-grey--light);
+  background: var(--cd-reliefweb-orange--bg);
   font-size: 10px;
   font-weight: bold;
 }
 .rw-user-posting-right[data-user-posting-right="blocked"] {
-  border-color: #da190b;
-  background: rgba(218, 25, 11, 0.2);
+  border-color: var(--cd-reliefweb-red);
+  background: var(--cd-reliefweb-red--bg);
 }
 .rw-user-posting-right[data-user-posting-right="unverified"] {
-  border-color: #f49e2c;
-  background: rgba(244, 158, 44, 0.2);
+  border-color: var(--cd-reliefweb-orange);
+  background: var(--cd-reliefweb-orange--bg);
 }
 .rw-user-posting-right[data-user-posting-right="allowed"] {
-  border-color: #076d96;
-  background: rgba(7, 109, 150, 0.2);
+  border-color: var(--cd-reliefweb-blue);
+  background: var(--cd-reliefweb-blue--bg);
 }
 .rw-user-posting-right[data-user-posting-right="trusted"] {
   border-color: var(--cd-reliefweb-green);
-  background: rgba(136, 187, 9, 0.2);
+  background: var(--cd-reliefweb-green--bg);
 }

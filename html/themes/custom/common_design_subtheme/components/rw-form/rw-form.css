@@ -454,12 +454,12 @@ form #edit-organization #edit-field-source-allowed .form-item:last-child {
 form [data-lengthchecker-status] {
   margin-top: -2px;
   padding: 8px 8px;
-  background-color: rgba(246, 92, 81, 0.2);
+  background-color: var(--cd-reliefweb-pink);
   font-size: 15px;
   line-height: 1.2;
 }
 form [data-lengthchecker-status="ok"] {
-  background-color: rgba(136, 187, 9, 0.2);
+  background-color: var(--cd-reliefweb-green--bg);
 }
 
 /* New Organisation field for Jobs */
