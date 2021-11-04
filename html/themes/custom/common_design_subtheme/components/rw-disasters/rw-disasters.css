@@ -274,8 +274,8 @@
 }
 .taxonomy-term--disaster--full[data-disaster-status="current"] .rw-article__header:before,
 .taxonomy-term--disaster--full[data-disaster-status="ongoing"] .rw-article__header:before {
-  border-color: var(--cd-reliefweb-red);
-  background-color: var(--cd-reliefweb-red);
+  border-color: var(--cd-reliefweb-brand-red);
+  background-color: var(--cd-reliefweb-brand-red);
 }
 
 /* Reset styles for Disaster Affected Countries Section */

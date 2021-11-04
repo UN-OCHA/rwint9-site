@@ -17,7 +17,7 @@
   width: 100%;
   margin: 0 0 20px 0;
   padding: 16px;
-  border: 1px solid var(--cd-reliefweb-light-grey);
+  border: 1px solid var(--cd-reliefweb-brand-grey--light);
 }
 .rw-key-figures figure figcaption {
   margin: 0 0 20px 0;
@@ -32,7 +32,7 @@
 }
 .rw-key-figures figure data {
   display: block;
-  color: var(--cd-reliefweb-dark-blue);
+  color: var(--cd-reliefweb-brand-blue--dark);
   font-size: 22px;
   font-weight: bold;
 }
@@ -50,7 +50,7 @@
   padding: 10px 0;
   opacity: 0.5;
   fill: none;
-  stroke: var(--cd-reliefweb-dark-grey);
+  stroke: var(--cd-reliefweb-brand-grey--dark);
   stroke-width: 2px;
 }
 .rw-key-figures figure footer {
@@ -74,14 +74,14 @@
   content: "";
   vertical-align: middle;
   border-radius: 6px;
-  background: var(--cd-reliefweb-dark-red);
+  background: var(--cd-reliefweb-brand-red--dark);
 }
 .rw-key-figures figure cite {
   float: right;
   padding: 1px 6px;
   color: white;
   border-radius: 5px;
-  background: var(--cd-reliefweb-dark-blue);
+  background: var(--cd-reliefweb-brand-blue--dark);
   font-style: normal;
 }
 .rw-key-figures figure cite a {

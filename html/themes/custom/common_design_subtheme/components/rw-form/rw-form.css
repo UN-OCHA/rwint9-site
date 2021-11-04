@@ -21,7 +21,7 @@ form button {
   padding: 14px;
   color: white;
   border: none;
-  background: var(--cd-reliefweb-dark-blue);
+  background: var(--cd-reliefweb-brand-blue--dark);
   font-size: 15px;
   font-weight: bold;
 }
@@ -29,7 +29,7 @@ form button:hover,
 form button:focus,
 form button:active {
   text-decoration: underline;
-  background: var(--cd-reliefweb-dark-red);
+  background: var(--cd-reliefweb-brand-red--dark);
 }
 form input[type="text"],
 form input[type="search"],
@@ -40,7 +40,7 @@ form input[type="url"] {
   height: 46px;
   margin: 0;
   padding: 12px;
-  border: 2px solid var(--cd-reliefweb-light-grey);
+  border: 2px solid var(--cd-reliefweb-brand-grey--light);
   background: white;
 }
 input[type="text"],
@@ -61,7 +61,7 @@ form textarea {
   margin: 0;
   padding: 12px;
   resize: vertical;
-  border: 2px solid var(--cd-reliefweb-light-grey);
+  border: 2px solid var(--cd-reliefweb-brand-grey--light);
   background: white;
   /* Better readibility similar to paragraphs. */
   line-height: 1.5;
@@ -100,7 +100,7 @@ form fieldset legend {
 form > div.form-item,
 form > fieldset,
 form > section {
-  border-top: 1px solid var(--cd-reliefweb-light-grey);
+  border-top: 1px solid var(--cd-reliefweb-brand-grey--light);
   padding: 32px 0;
 } */
 form > div > fieldset > legend,
@@ -210,7 +210,7 @@ form .description a:hover,
 form .description a:active,
 form .description a:focus {
   text-decoration: underline;
-  background: var(--cd-reliefweb-light-grey);
+  background: var(--cd-reliefweb-brand-grey--light);
 }
 form .description + div {
   margin-top: 8px;
@@ -236,7 +236,7 @@ form .form-disabled [data-irrelevant] > div {
 form input[disabled],
 form textarea[disabled],
 form select[disabled] {
-  background: var(--cd-reliefweb-light-grey);
+  background: var(--cd-reliefweb-brand-grey--light);
   background: rgba(230, 236, 239, 0.5);
 }
 form input[disabled] + label {
@@ -244,7 +244,7 @@ form input[disabled] + label {
 }
 form .notice {
   padding: 32px;
-  background: var(--cd-reliefweb-light-grey);
+  background: var(--cd-reliefweb-brand-grey--light);
 }
 form .notice :first-child {
   margin-top: 0;
@@ -254,7 +254,7 @@ form input.error,
 form textarea.error,
 form select.error,
 form fieldset.error > .fieldset-content {
-  outline: 2px solid var(--cd-reliefweb-red);
+  outline: 2px solid var(--cd-reliefweb-brand-red);
   outline-offset: -2px;
 }
 form fieldset.error .form-radio.error,
@@ -276,8 +276,8 @@ form #actions {
   /* min-width: 100%; */
   padding: 0 12px 12px;
   text-align: center;
-  border: 1px solid var(--cd-reliefweb-light-grey);
-  background: var(--cd-reliefweb-light-grey);
+  border: 1px solid var(--cd-reliefweb-brand-grey--light);
+  background: var(--cd-reliefweb-brand-grey--light);
   background: rgba(230, 236, 239, 0.4);
 }
 form #actions .cd-button {
@@ -411,7 +411,7 @@ form #edit-organization .form-type-radio {
 form #edit-organization #edit-field-source-allowed .form-item:last-child {
   margin-top: 8px;
   padding-top: 8px;
-  border-top: 2px dotted var(--cd-reliefweb-light-grey);
+  border-top: 2px dotted var(--cd-reliefweb-brand-grey--light);
 }
 
 /* Embargo Date .field--name-field-embargo-date */
@@ -439,7 +439,7 @@ form #edit-organization #edit-field-source-allowed .form-item:last-child {
   margin-top: 0;
 }
 .filter-wrapper {
-  border: 1px solid var(--cd-reliefweb-light-grey);
+  border: 1px solid var(--cd-reliefweb-brand-grey--light);
 }
 .filter-wrapper .filter-help {
   font-size: 14px;

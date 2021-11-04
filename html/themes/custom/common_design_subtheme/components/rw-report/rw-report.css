@@ -32,7 +32,7 @@
   margin: 0;
   padding: 16px 0;
   text-align: center;
-  border: 1px solid var(--cd-reliefweb-light-grey);
+  border: 1px solid var(--cd-reliefweb-brand-grey--light);
 }
 .node--report--full #attachments li + li {
   margin-top: 24px;
@@ -40,7 +40,7 @@
 .node--report--full #attachments img {
   width: 100%;
   margin: -16px 0 8px 0;
-  border-bottom: 1px solid var(--cd-reliefweb-light-grey);
+  border-bottom: 1px solid var(--cd-reliefweb-brand-grey--light);
 }
 .node--report--full #attachments strong {
   display: block;
@@ -71,16 +71,16 @@
 }
 .node--report--full #interactive figure figcaption {
   padding: 4px;
-  background: var(--cd-reliefweb-light-grey);
+  background: var(--cd-reliefweb-brand-grey--light);
 }
 .node--report--full #interactive figure img {
   width: 100%;
-  border: 1px solid var(--cd-reliefweb-light-grey);
+  border: 1px solid var(--cd-reliefweb-brand-grey--light);
 }
 .node--report--full #interactive figure a:hover img,
 .node--report--full #interactive figure a:active img,
 .node--report--full #interactive figure a:focus img {
-  border-color: var(--cd-reliefweb-dark-blue);
+  border-color: var(--cd-reliefweb-brand-blue--dark);
 }
 .node--report--full #interactive footer {
   padding-top: 4px;

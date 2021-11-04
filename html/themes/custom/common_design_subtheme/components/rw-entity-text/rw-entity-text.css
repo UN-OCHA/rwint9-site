@@ -30,11 +30,11 @@
   order: 3;
   margin: 24px auto 0 auto;
   padding: 8px 12px;
-  color: var(--cd-reliefweb-dark-blue);
-  border: 1px solid var(--cd-reliefweb-dark-blue);
+  color: var(--cd-reliefweb-brand-blue--dark);
+  border: 1px solid var(--cd-reliefweb-brand-blue--dark);
   background: white;
   font-size: 16px;
-  fill: var(--cd-reliefweb-dark-blue);
+  fill: var(--cd-reliefweb-brand-blue--dark);
 }
 .js .rw-entity-text--collapsible button svg {
   fill: currentColor;
@@ -43,7 +43,7 @@
 .js .rw-entity-text--collapsible button:active,
 .js .rw-entity-text--collapsible button:focus {
   color: white;
-  background: var(--cd-reliefweb-dark-blue);
+  background: var(--cd-reliefweb-brand-blue--dark);
 }
 /* Overrides the default behavior when data-cd-hidden is set as the description
  * is always displayed, only the number of paragraphs changes. */

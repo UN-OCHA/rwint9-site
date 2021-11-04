@@ -27,7 +27,7 @@
 .rw-entity-text--resources ul li {
   margin: 0;
   padding: 12px 0;
-  border-bottom: 1px solid var(--cd-reliefweb-light-grey);
+  border-bottom: 1px solid var(--cd-reliefweb-brand-grey--light);
   line-height: 24px;
 }
 .rw-entity-useful-links > ul li:first-child,

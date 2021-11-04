@@ -42,7 +42,7 @@
 }
 /* .rw-document .rw-article__content section > h3 { */
 /*  padding: 0 0 0 8px; */
-/*  border-left: 8px solid var(--cd-reliefweb-blue); */
+/*  border-left: 8px solid var(--cd-reliefweb-brand-blue); */
 /* } */
 
 .rw-document > footer {
@@ -51,7 +51,7 @@
   padding: 24px 0 0 0;
   border-width: 1px 0 0 0;
   border-style: solid;
-  border-color: var(--cd-reliefweb-light-grey);
+  border-color: var(--cd-reliefweb-brand-grey--light);
 }
 
 /* Entity details in the sidebar/footer */

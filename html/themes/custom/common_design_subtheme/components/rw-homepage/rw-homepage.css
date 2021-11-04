@@ -6,13 +6,13 @@
  */
 .rw-river--disasters {
   --cd-flow-space: 1rem;
-  /* border-top: 1px solid var(--cd-reliefweb-light-grey); */
+  /* border-top: 1px solid var(--cd-reliefweb-brand-grey--light); */
 }
 .rw-river--disasters .rw-river-article--disaster {
   position: relative;
   /* margin: 16px 0 0 0; */
   padding: 0 0 16px;
-  /* border-top: 1px solid var(--cd-reliefweb-light-grey); */
+  /* border-top: 1px solid var(--cd-reliefweb-brand-grey--light); */
 }
 .rw-river--disasters .rw-river-article--disaster:first-child {
   margin: 0;

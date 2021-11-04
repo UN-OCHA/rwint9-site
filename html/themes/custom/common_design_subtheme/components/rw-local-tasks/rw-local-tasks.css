@@ -27,7 +27,7 @@
   margin-left: 14px;
   content: "";
   vertical-align: middle;
-  background: var(--cd-reliefweb-dark-grey);
+  background: var(--cd-reliefweb-brand-grey--dark);
 }
 .block-local-tasks-block li:last-child:after,
 .tabs li:last-child:after {

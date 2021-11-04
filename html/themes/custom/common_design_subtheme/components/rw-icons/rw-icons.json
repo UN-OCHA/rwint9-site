@@ -2,16 +2,16 @@
   "style": "../../css/styles.css",
   "path": "/themes/custom/common_design_subtheme/components/rw-icons",
   "colors": {
-    "dark-blue": "--cd-reliefweb-dark-blue",
-    "dark-red": "--cd-reliefweb-dark-red",
-    "dark-grey": "--cd-reliefweb-dark-grey",
-    "light-grey": "--cd-reliefweb-light-grey",
+    "dark-blue": "--cd-reliefweb-brand-blue--dark",
+    "dark-red": "--cd-reliefweb-brand-red--dark",
+    "dark-grey": "--cd-reliefweb-brand-grey--dark",
+    "light-grey": "--cd-reliefweb-brand-grey--light",
     "grey": "#b6c8d0",
     "white": "white",
-    "blue": "--cd-reliefweb-blue",
+    "blue": "--cd-reliefweb-brand-blue",
     "green": "var(--cd-reliefweb-green)",
     "orange": "var(--cd-reliefweb-orange)",
-    "red": "var(--cd-reliefweb-red)"
+    "red": "var(--cd-reliefweb-brand-red)"
   },
   "icons": {
     "common": {

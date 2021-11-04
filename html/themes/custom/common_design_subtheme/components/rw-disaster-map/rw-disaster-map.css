@@ -22,7 +22,7 @@
 .js .rw-disaster-map[data-map-enabled] .rw-disaster-map__title {
   margin-bottom: 0;
   padding: 4px 8px 4px 8px;
-  background: var(--cd-reliefweb-light-grey);
+  background: var(--cd-reliefweb-brand-grey--light);
   font-size: 18px;
 }
 .js .rw-disaster-map[data-map-enabled] .rw-disaster-map__header {
@@ -34,7 +34,7 @@
   margin-top: 0;
   /* This is for the map ratio: height is 40% of the width. */
   padding-top: 40%;
-  border: 1px solid var(--cd-reliefweb-light-grey);
+  border: 1px solid var(--cd-reliefweb-brand-grey--light);
 }
 .js .rw-disaster-map[data-map-enabled] .rw-disaster-map__map {
   position: relative;
@@ -59,7 +59,7 @@
 .js .rw-disaster-map[data-map-enabled] .rw-disaster-map__legend {
   /* The padding top is compensate the top: -1px of the figure. */
   padding: 7px 6px 6px 6px;
-  border-top: 1px solid var(--cd-reliefweb-light-grey);
+  border-top: 1px solid var(--cd-reliefweb-brand-grey--light);
   font-size: 14px;
 }
 .js .rw-disaster-map[data-map-enabled] .rw-disaster-map__legend__item {
@@ -108,7 +108,7 @@
   max-height: 258px;
   margin: 8px;
   padding: 12px;
-  border: 1px solid var(--cd-reliefweb-light-grey);
+  border: 1px solid var(--cd-reliefweb-brand-grey--light);
   background: white;
 }
 .js .rw-disaster-map[data-map-enabled] .rw-disaster-map__article[data-active="right"] {
@@ -354,12 +354,12 @@
   padding: 0 0 0 20px;
   border: none;
   border-radius: 50%;
-  background: var(--cd-reliefweb-dark-blue);
+  background: var(--cd-reliefweb-brand-blue--dark);
 }
 .js .rw-disaster-map .rw-disaster-map__close:hover,
 .js .rw-disaster-map .rw-disaster-map__close:active,
 .js .rw-disaster-map .rw-disaster-map__close:focus {
-  background: var(--cd-reliefweb-dark-red);
+  background: var(--cd-reliefweb-brand-red--dark);
 }
 .js .rw-disaster-map .rw-disaster-map__close:before {
   position: absolute;

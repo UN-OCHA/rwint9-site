@@ -21,7 +21,7 @@
 }
 .pager .is-active a {
   text-decoration: underline;
-  color: var(--cd-reliefweb-dark-red);
+  color: var(--cd-reliefweb-brand-red--dark);
 }
 .pager ul {
   display: inline-block;
@@ -40,7 +40,7 @@
   height: 10px;
   margin-bottom: 1px;
   content: "";
-  background: var(--cd-reliefweb-dark-grey);
+  background: var(--cd-reliefweb-brand-grey--dark);
 }
 .pager li:last-child:after {
   content: none;

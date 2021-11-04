@@ -13,7 +13,7 @@
 }
 .rw-homepage-opportunties li {
   margin: 0;
-  background: var(--cd-reliefweb-light-grey);
+  background: var(--cd-reliefweb-brand-grey--light);
 }
 .rw-homepage-opportunties li + li {
   margin-top: 16px;
@@ -34,7 +34,7 @@
 .rw-homepage-opportunties li a:active,
 .rw-homepage-opportunties li a:focus {
   text-decoration: none;
-  outline: 1px solid var(--cd-reliefweb-dark-blue);
+  outline: 1px solid var(--cd-reliefweb-brand-blue--dark);
 }
 /* Number of open ads. */
 .rw-homepage-opportunties li data {
@@ -72,5 +72,5 @@
 .rw-how-to-apply__title,
 .rw-fee-information__title {
   padding-left: 8px;
-  border-left: 8px solid var(--cd-reliefweb-blue);
+  border-left: 8px solid var(--cd-reliefweb-brand-blue);
 }

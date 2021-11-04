@@ -76,7 +76,7 @@
   margin: 0;
   padding: 4px;
   list-style: none;
-  border: 1px solid var(--cd-reliefweb-dark-grey);
+  border: 1px solid var(--cd-reliefweb-brand-grey--dark);
   background: white;
   box-shadow: 0 1px 4px 1px rgba(var(--cd-rgb-reliefweb-dark-grey), 0.3);
 }
@@ -93,7 +93,7 @@
 }
 /* Currently selected suggestion. */
 .rw-autocomplete-suggestion[aria-selected] {
-  background: var(--cd-reliefweb-light-grey);
+  background: var(--cd-reliefweb-brand-grey--light);
 }
 /* Highlight the parts of the suggestions that match the query. */
 .rw-autocomplete-suggestion span {
