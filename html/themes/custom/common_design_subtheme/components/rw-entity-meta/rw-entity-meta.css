@@ -169,7 +169,7 @@
 }
 .rw-entity-meta dd.rw-entity-meta__tag-value--status--ongoing:before {
   content: "";
-  background: #f65c51;
+  background: var(--cd-reliefweb-red);
 }
 
 .taxonomy-term--disaster--full dl.rw-entity-meta dd.rw-entity-meta__tag-value--status--past:before {

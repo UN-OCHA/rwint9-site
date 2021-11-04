@@ -11,7 +11,7 @@
     "blue": "--cd-reliefweb-blue",
     "green": "#88bb09",
     "orange": "#eb8705",
-    "red": "#f65c51"
+    "red": "var(--cd-reliefweb-red)"
   },
   "icons": {
     "common": {

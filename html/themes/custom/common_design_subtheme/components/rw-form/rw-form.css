@@ -254,7 +254,7 @@ form input.error,
 form textarea.error,
 form select.error,
 form fieldset.error > .fieldset-content {
-  outline: 2px solid #f65c51;
+  outline: 2px solid var(--cd-reliefweb-red);
   outline-offset: -2px;
 }
 form fieldset.error .form-radio.error,
