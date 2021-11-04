@@ -10,7 +10,7 @@
     "white": "white",
     "blue": "--cd-reliefweb-blue",
     "green": "var(--cd-reliefweb-green)",
-    "orange": "#eb8705",
+    "orange": "var(--cd-reliefweb-orange)",
     "red": "var(--cd-reliefweb-red)"
   },
   "icons": {

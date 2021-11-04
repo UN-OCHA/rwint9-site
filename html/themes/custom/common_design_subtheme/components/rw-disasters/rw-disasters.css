@@ -269,8 +269,8 @@
   background-color: #b6c8d0;
 }
 .taxonomy-term--disaster--full[data-disaster-status="alert"] .rw-article__header:before {
-  border-color: #eb8705;
-  background-color: #eb8705;
+  border-color: var(--cd-reliefweb-orange);
+  background-color: var(--cd-reliefweb-orange);
 }
 .taxonomy-term--disaster--full[data-disaster-status="current"] .rw-article__header:before,
 .taxonomy-term--disaster--full[data-disaster-status="ongoing"] .rw-article__header:before {
