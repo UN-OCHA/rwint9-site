@@ -31,23 +31,26 @@
   font-weight: bold;
 }
 
-.rw-page--sectioned {
-  display: flex;
-  flex-wrap: wrap;
+@media screen and (min-width: 768px) {
+  .rw-page--sectioned {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .rw-page--sectioned > header {
+    width: 100%;
+    margin: 0;
+  }
+  /* To facilitate the sticky TOC */
+  .region-content,
+  .rw-sectioned-content,
+  .node-form,
+  .taxonomy-term-form {
+    height: 100%;
+  }
+  .rw-sectioned-content {
+    flex: 1 0 20%;
+  }
 }
-.rw-page--sectioned > header {
-  width: 100%;
-  margin: 0;
-}
-
-/* To facilitate the sticky TOC */
-.region-content,
-.rw-sectioned-content,
-.node-form,
-.taxonomy-term-form {
-  height: 100%;
-}
-
 .rw-sectioned-content > section,
 .rw-sectioned-content > form > fieldset,
 .rw-sectioned-content > form > .form-wrapper,
@@ -239,4 +242,27 @@
 .taxonomy-term-form fieldset,
 .taxonomy-term-form .field--name-field-job-import-feed.form-wrapper {
   margin-top: 0;
+}
+
+@media all and (min-width: 768px) and (-ms-high-contrast: none) {
+  /* This is needed for IE11
+  No support for CSS custom properties means
+  --dropdown: false; property on nav container is not recognised
+  so the cd-dropdown.js creates a toggler button on desktop
+  This hides it when that happens.
+  */
+  .rw-toc__btn {
+    display: none;
+  }
+
+  /* This is needed for IE11
+  No support for CSS custom properties means
+  --dropdown: false; property on nav container is not recognised
+  so the cd-dropdown.js does not run the updateToggler function
+  which toggles the data-cd-hidden attribute.
+  This displays the nav regardless of that attribute value.
+  */
+  .rw-toc[data-cd-hidden="true"] {
+    display: block;
+  }
 }
