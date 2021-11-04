@@ -34,7 +34,7 @@
 .rw-river-article .rw-river-article__title {
   display: inline;
   margin: 0;
-  color: #055372;
+  color: var(--cd-reliefweb-dark-blue);
   font-size: 17px;
   font-weight: bold;
   line-height: 28px;

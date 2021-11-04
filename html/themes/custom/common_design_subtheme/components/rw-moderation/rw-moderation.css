@@ -83,7 +83,7 @@
   margin-inline-start: 0.5rem;
   padding: 4px 8px;
   text-transform: lowercase;
-  border: 2px solid #055372;
+  border: 2px solid var(--cd-reliefweb-dark-blue);
   border-radius: 8px;
   line-height: 20px;
 }

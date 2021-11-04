@@ -32,7 +32,7 @@
 }
 .rw-key-figures figure data {
   display: block;
-  color: #055372;
+  color: var(--cd-reliefweb-dark-blue);
   font-size: 22px;
   font-weight: bold;
 }
@@ -81,7 +81,7 @@
   padding: 1px 6px;
   color: white;
   border-radius: 5px;
-  background: #055372;
+  background: var(--cd-reliefweb-dark-blue);
   font-style: normal;
 }
 .rw-key-figures figure cite a {

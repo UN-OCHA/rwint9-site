@@ -21,7 +21,7 @@ form button {
   padding: 14px;
   color: white;
   border: none;
-  background: #055372;
+  background: var(--cd-reliefweb-dark-blue);
   font-size: 15px;
   font-weight: bold;
 }

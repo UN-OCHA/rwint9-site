@@ -66,7 +66,7 @@
   border-width: 8px 8px 8px 0;
   border-style: solid;
   border-color: transparent;
-  border-right-color: #055372;
+  border-right-color: var(--cd-reliefweb-dark-blue);
 }
 .rw-river-search .rw-river-search__form button:hover:before,
 .rw-river-search .rw-river-search__form button:focus:before,

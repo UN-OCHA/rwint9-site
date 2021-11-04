@@ -80,7 +80,7 @@
 .node--report--full #interactive figure a:hover img,
 .node--report--full #interactive figure a:active img,
 .node--report--full #interactive figure a:focus img {
-  border-color: #055372;
+  border-color: var(--cd-reliefweb-dark-blue);
 }
 .node--report--full #interactive footer {
   padding-top: 4px;
