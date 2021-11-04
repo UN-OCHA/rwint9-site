@@ -1,0 +1,151 @@
+/**
+ * Headline selection widget.
+ */
+/* Hide the edit button if the browser doesn't handle css grid as we cannot
+ * display the widget properly. */
+.rw-headlines-widget-processed .rw-headlines-widget__button--edit {
+  display: none;
+}
+
+@supports (display: grid) {
+  .rw-headlines-widget-processed .rw-headlines-widget-wrapper {
+    grid-area: header;
+  }
+  .rw-headlines-widget-processed.rw-headlines-widget-visible .rw-headlines-widget-wrapper {
+    padding-top: 50px;
+  }
+  .rw-headlines-widget-processed .rw-headlines-widget {
+    position: fixed;
+    z-index: 2000;
+    top: 0;
+    right: 0;
+    left: 0;
+    display: none;
+    background: black;
+    box-shadow: 0 5px 5px 0 rgba(0, 0, 0, 0.5);
+  }
+  .rw-headlines-widget-processed.rw-headlines-widget-visible .rw-headlines-widget {
+    display: block;
+  }
+  .rw-headlines-widget-processed .rw-headlines-widget__button--edit {
+    display: inline-block;
+    margin: -2px 12px 0 12px;
+    padding: 6px 12px;
+    vertical-align: middle;
+    text-transform: uppercase;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    background: #055372;
+    font-size: 14px;
+    font-weight: bold;
+  }
+  .rw-headlines-widget-processed .rw-headlines-widget__button--edit:hover,
+  .rw-headlines-widget-processed .rw-headlines-widget__button--edit:focus,
+  .rw-headlines-widget-processed .rw-headlines-widget__button--edit:active {
+    background: #eb1405;
+  }
+
+  .rw-headlines-widget-processed .rw-river-article[data-headlines-widget-duplicate] {
+    outline: 3px solid red;
+  }
+  .rw-headlines-widget-processed .rw-headlines-widget__content {
+    display: grid;
+    overflow-x: auto;
+    overflow-y: hidden;
+    grid-template-columns: repeat(24, 273px);
+    width: 100%;
+    padding: 4px 4px 0 4px;
+    background: black;
+  }
+  .rw-headlines-widget-processed .rw-headlines-widget__content .rw-river-article {
+    overflow: hidden;
+    grid-area: unset;
+    width: 273px;
+    height: 230px;
+    padding: 12px;
+    border: none;
+    border-left: 4px solid black;
+    background: white;
+  }
+  .rw-headlines-widget-processed .rw-headlines-widget__content .rw-river-article__header {
+    position: absolute;
+    z-index: 2;
+    top: 110px;
+    right: 12px;
+    left: 12px;
+    padding-top: 10px;
+    background: white;
+  }
+  .rw-headlines-widget-processed .rw-headlines-widget__content .rw-river-article .rw-country-slug {
+    position: absolute;
+    top: -30px;
+  }
+  .rw-headlines-widget-processed .rw-entity-image__copyright {
+    display: none;
+  }
+  .rw-headlines-widget-processed .rw-headlines-widget__content .rw-river-article__content {
+    display: none;
+  }
+  .rw-headlines-widget-processed .rw-headlines-widget__content .rw-river-article__footer {
+    display: none;
+  }
+  .rw-headlines-widget-processed .rw-headlines-widget__content .rw-river-article:first-child {
+    border-left: none;
+  }
+  .rw-headlines-widget-processed .rw-headlines-widget__content .rw-river-article[data-headlines-widget-selected] {
+    opacity: 0.7;
+  }
+  .rw-headlines-widget-processed .rw-headlines-widget__actions {
+    width: 100%;
+    text-align: center;
+  }
+  .rw-headlines-widget-processed .rw-headlines-widget__actions .rw-headlines-widget__button {
+    padding: 8px 12px;
+    text-transform: uppercase;
+    color: white;
+    border: none;
+    background: black;
+    font-size: 12px;
+    font-weight: bold;
+  }
+  .rw-headlines-widget-processed .rw-headlines-widget__actions .rw-headlines-widget__button:hover {
+    text-decoration: underline;
+  }
+  .rw-headlines-widget-processed .rw-headlines-widget__button:disabled {
+    opacity: 0.6;
+  }
+  .rw-headlines-widget-processed .rw-headlines-widget__error {
+    padding: 8px;
+    text-align: center;
+    color: red;
+  }
+  /* Draggable element for the headlines editor. */
+  .rw-river-article[data-headlines-widget-dragged] {
+    position: absolute;
+    z-index: 100100;
+    width: 200px;
+    height: auto;
+    margin: -24px 0 0 0;
+    padding: 4px;
+    border: 5px solid black;
+    background-color: rgba(0, 0, 0, 0.8);
+  }
+  .rw-river-article[data-headlines-widget-dragged] * {
+    margin: 0;
+    padding: 0;
+  }
+  .rw-river-article[data-headlines-widget-dragged] > *:not(.rw-river-article__header) {
+    display: none;
+  }
+  .rw-river-article[data-headlines-widget-dragged] .rw-river-article__title a {
+    text-decoration: none;
+    color: white;
+    font-size: 16px;
+    font-weight: normal;
+  }
+  body[data-headlines-widget-drag-on] {
+    position: relative;
+    cursor: move;
+  }
+}
