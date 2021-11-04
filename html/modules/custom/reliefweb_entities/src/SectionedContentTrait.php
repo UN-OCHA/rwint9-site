@@ -135,7 +135,7 @@ trait SectionedContentTrait {
    *   Render array with the text content.
    */
   public function getEntityTextField($field_name, $id, $title, $iframe = TRUE, array $allowed_attributes = []) {
-    if (!$this->{$field_name}->isEmpty()) {
+    if (!$this->{$field_name}->isEmpty() && trim($this->{$field_name}->value) !== '') {
       return [
         '#theme' => [
           'reliefweb_entities_entity_text__' . $this->bundle() . '__' . $id,
