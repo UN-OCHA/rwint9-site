@@ -8,11 +8,11 @@
 //}
 
 a {
-  color: $cd-blue--dark;
+  color: $implementation-primary;
 
   &:hover,
   &:focus {
-    color: $cd-ocha-blue;
+    color: $implementation-primary;
   }
 }
 
