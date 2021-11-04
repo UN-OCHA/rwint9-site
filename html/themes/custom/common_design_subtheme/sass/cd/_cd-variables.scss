@@ -48,7 +48,6 @@
   --cd-reliefweb-orange--text: #f49e2c;
   --disable: rgba(230, 236, 239, 0.5);
 
-
   // Moderation
   //  border-color: #d9d9d9;
   //  background-color: rgba(217, 217, 217, 0.2);
@@ -77,22 +76,22 @@
   --cd-reliefweb-orange--background: rgba(235, 135, 5, 0.2);
 
   /* OCHA blue is one colour ramp darker than brand blue */
-  --cd-ocha-blue: var(--cd-reliefweb-dark-blue);
+  --cd-ocha-blue: #1f69b3;
   /* Dark blue is two colour ramps darker than brand blue */
-  --cd-blue--dark: #04415a;
+  --cd-blue--dark: #144372;
   /* Bright blue is one colour ramp lighter than brand blue */
-  --cd-blue--bright: var(--cd-reliefweb-blue);
+  --cd-blue--bright: #82b5e9;
   --cd-blue--light: #d4e5f7;
-  --cd-highlight-red: var(--cd-reliefweb-red);
+  --cd-highlight-red: #e56a54;
   // This shade of red has been selected based on WCAG AAA requirements for contrast.
-  --cd-contrast-red: var(--cd-reliefweb-dark-red);
+  --cd-contrast-red: #e00000;
   --cd-white: #fff;
   --cd-grey--light: #f2f2f2;
   --cd-grey--mid: #595959;
   --cd-grey--dark: #4a4a4a;
   --cd-default-text-color: var(--cd-grey--dark);
   --cd-black: #000;
-  --cd-blue-grey: var(--cd-reliefweb-light-grey);
+  --cd-blue-grey: #e6ecf1;
   --cd-blue-grey--dark: #d3dde5;
   --cd-blue-grey--light: #ebf0f4;
 
@@ -273,8 +272,10 @@ $zindex: (
 // Implementation colours
 //——————————————————————————————————————————————————————————————————————————————
 
-$implementation-primary: $cd-ocha-blue;
-$implementation-primary-dark: $cd-blue--dark;
-$implementation-secondary: $cd-blue--bright;
-$implementation-highlight: $cd-highlight-red;
+$implementation-primary: var(--cd-reliefweb-dark-blue);
+$implementation-primary-dark: #04415a;
+$implementation-secondary: var(--cd-reliefweb-blue);
+$implementation-highlight: var(--cd-reliefweb-red);
+$cd-contrast-red: var(--cd-reliefweb-dark-red);
+$cd-blue-grey: var(--cd-reliefweb-light-grey);
 $cd-reliefweb-light-grey: var(--cd-reliefweb-light-grey);
