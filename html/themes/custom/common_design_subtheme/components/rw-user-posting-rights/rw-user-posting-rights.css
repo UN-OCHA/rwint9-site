@@ -26,6 +26,6 @@
   background: rgba(7, 109, 150, 0.2);
 }
 .rw-user-posting-right[data-user-posting-right="trusted"] {
-  border-color: #88bb09;
+  border-color: var(--cd-reliefweb-green);
   background: rgba(136, 187, 9, 0.2);
 }

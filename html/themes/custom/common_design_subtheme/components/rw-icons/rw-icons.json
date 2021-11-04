@@ -9,7 +9,7 @@
     "grey": "#b6c8d0",
     "white": "white",
     "blue": "--cd-reliefweb-blue",
-    "green": "#88bb09",
+    "green": "var(--cd-reliefweb-green)",
     "orange": "#eb8705",
     "red": "var(--cd-reliefweb-red)"
   },

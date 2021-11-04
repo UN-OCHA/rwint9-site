@@ -17,7 +17,7 @@
 [data-moderation-status="past"],
 [data-moderation-status="active"],
 [data-moderation-status="normal"] {
-  border-color: #88bb09;
+  border-color: var(--cd-reliefweb-green);
   background-color: rgba(136, 187, 9, 0.2);
 }
 [data-moderation-status="refused"],
@@ -33,7 +33,7 @@
   border-color: #9509bb;
   background-color: rgba(149, 9, 187, 0.2);
 }
-[data-moderation-status="draft_archive"], {
+[data-moderation-status="draft_archive"] {
   border-color: #4b4b4b;
   background-color: rgba(75, 75, 75, 0.2);
 }
