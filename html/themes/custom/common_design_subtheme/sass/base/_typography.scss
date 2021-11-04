@@ -154,11 +154,11 @@ table caption {
 table th,
 table td {
   padding: 8px;
-  border: 1px solid $cd-reliefweb-light-grey;
+  border: 1px solid $cd-reliefweb-brand-grey--light;
 }
 table th {
   border-left-color: white;
-  background: $cd-reliefweb-light-grey;
+  background: $cd-reliefweb-brand-grey--light;
 }
 table thead th {
   border-left-color: white;
@@ -167,11 +167,11 @@ th.field-label > h4.label {
   margin: 0;
 }
 table thead th:first-child {
-  border-left-color: $cd-reliefweb-light-grey;
+  border-left-color: $cd-reliefweb-brand-grey--light;
 }
 table tbody th {
   border-top-color: white;
 }
 table tbody th:first-child {
-  border-top-color: $cd-reliefweb-light-grey;
+  border-top-color: $cd-reliefweb-brand-grey--light;
 }
