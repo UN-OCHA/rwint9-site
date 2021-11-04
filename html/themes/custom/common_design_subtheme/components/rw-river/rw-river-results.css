@@ -17,7 +17,7 @@
   .rw-river-results {
     padding: 24px 0;
     text-align: left;
-    border-bottom: 1px solid var(--cd-reliefweb-light-grey);
+    border-bottom: 1px solid var(--cd-reliefweb-brand-grey--light);
   }
 }
 

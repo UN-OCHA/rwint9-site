@@ -34,7 +34,7 @@
     width: 190px;
     height: 140px;
     content: "";
-    border: 8px solid var(--cd-reliefweb-light-grey);
+    border: 8px solid var(--cd-reliefweb-brand-grey--light);
     background: linear-gradient(rgba(230, 236, 239, 0) 50%, rgba(230, 236, 239, 0.8));
   }
 
@@ -65,7 +65,7 @@
     .rw-river--maps-infographics article header {
       flex: 1 0 auto;
       padding: 16px 16px 0 16px;
-      border: 1px solid var(--cd-reliefweb-light-grey);
+      border: 1px solid var(--cd-reliefweb-brand-grey--light);
       border-width: 0 1px;
     }
     .rw-river--maps-infographics article .rw-river-article__content {
@@ -93,7 +93,7 @@
     .rw-river--maps-infographics article footer {
       margin: 0;
       padding: 16px 16px 8px 16px;
-      border: 1px solid var(--cd-reliefweb-light-grey);
+      border: 1px solid var(--cd-reliefweb-brand-grey--light);
       border-width: 0 1px 1px 1px;
     }
   }
