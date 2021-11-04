@@ -1,0 +1,6 @@
+headlines-widget:
+  css:
+    component:
+      components/headlines-widget/headlines-widget.css: {}
+  js:
+    components/headlines-widget/headlines-widget.js: {}

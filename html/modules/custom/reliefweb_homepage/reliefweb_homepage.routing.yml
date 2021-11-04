@@ -5,3 +5,23 @@ reliefweb_homepage.homepage.page:
     _controller: '\Drupal\reliefweb_homepage\Controller\Homepage::getPageContent'
   requirements:
     _permission: 'access content'
+reliefweb_homepage.retrieve.headlines:
+  path: '/admin/reliefweb_homepage/headlines/retrieve'
+  defaults:
+    _controller: '\Drupal\reliefweb_homepage\Controller\Homepage::retrieveHeadlines'
+    _title: 'Retrieve list of selected headlines'
+  methods: [GET]
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'edit homepage headlines'
+reliefweb_homepage.update.headlines:
+  path: '/admin/reliefweb_homepage/headlines/update'
+  defaults:
+    _controller: '\Drupal\reliefweb_homepage\Controller\Homepage::updateHeadlines'
+    _title: 'Update list of selected headlines'
+  methods: [POST]
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'edit homepage headlines'

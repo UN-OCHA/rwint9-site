@@ -145,13 +145,6 @@ rw-headlines:
     theme:
       components/rw-headlines/rw-headlines.css: {}
 
-rw-headlines--admin:
-  css:
-    theme:
-      components/rw-headlines--admin/rw-headlines--admin.css: {}
-  js:
-    components/rw-headlines--admin/rw-headlines--admin.js: {}
-
 rw-homepage:
   css:
     theme:
