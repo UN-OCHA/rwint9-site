@@ -6,7 +6,7 @@
 .rw-river--related {
   margin: 0;
   padding: 32px 0 24px;
-  border-top: 1px solid #e6ecef;
+  border-top: 1px solid var(--cd-reliefweb-light-grey);
 }
 .rw-river--related h2 {
   padding-bottom: 12px;

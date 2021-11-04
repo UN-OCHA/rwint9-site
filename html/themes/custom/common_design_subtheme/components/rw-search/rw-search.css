@@ -110,7 +110,7 @@
 .rw-search-results .rw-river__articles {
   margin-top: 8px;
   padding-top: 24px;
-  border-top: 1px solid #e6ecef;
+  border-top: 1px solid var(--cd-reliefweb-light-grey);
 }
 
 .rw-search-results__totals {
@@ -131,7 +131,7 @@
   display: block;
   padding: 12px 24px;
   border-radius: 6px;
-  background: #e6ecef;
+  background: var(--cd-reliefweb-light-grey);
   font-size: 17px;
   font-weight: bold;
 }
@@ -149,7 +149,7 @@
 .rw-search-results .rw-river {
   margin-top: 32px;
   padding-bottom: 32px;
-  border-bottom: 1px solid #e6ecef;
+  border-bottom: 1px solid var(--cd-reliefweb-light-grey);
 }
 .rw-search-results .rw-river + .rw-river {
   margin-top: 56px;

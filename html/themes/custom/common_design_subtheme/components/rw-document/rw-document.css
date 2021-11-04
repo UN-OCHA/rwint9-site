@@ -51,7 +51,7 @@
   padding: 24px 0 0 0;
   border-width: 1px 0 0 0;
   border-style: solid;
-  border-color: #e6ecef;
+  border-color: var(--cd-reliefweb-light-grey);
 }
 
 /* Entity details in the sidebar/footer */

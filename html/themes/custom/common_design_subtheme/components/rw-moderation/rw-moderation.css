@@ -68,7 +68,7 @@
   /*height: 100%;*/
 }
 .path-moderation #edit-omnibox div[data-autocomplete] > input {
-  border-right: 2px solid #e6ecef;
+  border-right: 2px solid var(--cd-reliefweb-light-grey);
 }
 .path-moderation [data-selection] > span span + span {
   font-weight: bold;

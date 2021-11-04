@@ -13,7 +13,7 @@
 }
 .rw-homepage-opportunties li {
   margin: 0;
-  background: #e6ecef;
+  background: var(--cd-reliefweb-light-grey);
 }
 .rw-homepage-opportunties li + li {
   margin-top: 16px;

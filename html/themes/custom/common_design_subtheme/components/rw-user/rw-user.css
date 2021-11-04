@@ -76,7 +76,7 @@
   position: relative;
   width: 100%;
   padding: 16px 0 32px;
-  border-bottom: 1px solid #e6ecef;
+  border-bottom: 1px solid var(--cd-reliefweb-light-grey);
 }
 
 /* Community topics actions */

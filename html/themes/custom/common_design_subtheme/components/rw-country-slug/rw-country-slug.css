@@ -13,7 +13,7 @@
   white-space: nowrap;
   text-overflow: ellipsis;
   color: var(--cd-reliefweb-dark-grey);
-  background: #e6ecef;
+  background: var(--cd-reliefweb-light-grey);
   font-size: 18px;
   font-weight: bold;
   line-height: 30px;

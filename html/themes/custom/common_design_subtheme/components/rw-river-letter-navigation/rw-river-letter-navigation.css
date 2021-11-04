@@ -38,7 +38,7 @@
 .rw-river-letter-navigation li a:active,
 .rw-river-letter-navigation li a:hover {
   text-decoration: none;
-  background: #e6ecef;
+  background: var(--cd-reliefweb-light-grey);
   font-weight: bold;
 }
 /* .js .rw-river-letter-navigation__btn { */
@@ -52,7 +52,7 @@
     height: 40px;
     margin: 0 auto;
     padding: 0 8px;
-    border: 1px solid #e6ecef;
+    border: 1px solid var(--cd-reliefweb-light-grey);
     background: white;
     font-size: 16px;
   }
@@ -85,8 +85,8 @@
     right: 12px;
     left: 12px;
     background: white;
-    -webkit-box-shadow: 0 0 6px 2px #e6ecef;
-    box-shadow: 0 0 6px 2px #e6ecef;
+    -webkit-box-shadow: 0 0 6px 2px var(--cd-reliefweb-light-grey);
+    box-shadow: 0 0 6px 2px var(--cd-reliefweb-light-grey);
   }
   /* .js .rw-river-letter-navigation[data-hidden="true"] { */
   /*  display: none; */

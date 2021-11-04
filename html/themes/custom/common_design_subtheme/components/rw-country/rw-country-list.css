@@ -26,7 +26,7 @@
   bottom: 12px;
   left: 0;
   content: "";
-  border: 4px solid #e6ecef;
+  border: 4px solid var(--cd-reliefweb-light-grey);
 }
 .rw-river-page--countries > ul .rw-river-country-list__group__title {
   margin: 8px 0 24px 0;

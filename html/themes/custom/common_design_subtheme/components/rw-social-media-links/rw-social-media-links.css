@@ -17,7 +17,7 @@
 
 .rw-entity-social-media-links--tiles li {
   width: 100%;
-  border: 1px solid #e6ecef;
+  border: 1px solid var(--cd-reliefweb-light-grey);
 }
 
 @media screen and (min-width: 768px) {
@@ -108,6 +108,6 @@
   margin: 24px 0 0 0;
   padding: 24px 0;
   text-align: center;
-  border-top: 1px solid #e6ecef;
+  border-top: 1px solid var(--cd-reliefweb-light-grey);
   line-height: 1;
 }

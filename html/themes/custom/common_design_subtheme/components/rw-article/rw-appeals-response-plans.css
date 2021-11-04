@@ -33,7 +33,7 @@
   width: 140px;
   height: 170px;
   content: "";
-  border: 8px solid #e6ecef;
+  border: 8px solid var(--cd-reliefweb-light-grey);
   background: linear-gradient(rgba(230, 236, 239, 0) 50%, rgba(230, 236, 239, 0.8));
 }
 
