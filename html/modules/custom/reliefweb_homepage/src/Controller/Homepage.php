@@ -4,17 +4,27 @@ namespace Drupal\reliefweb_homepage\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\node\NodeInterface;
 use Drupal\reliefweb_api\Services\ReliefWebApiClient;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\MediaHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Controller for the homepage route.
  */
 class Homepage extends ControllerBase {
+
+  /**
+   * The current user.
+   *
+   * @var \Drupal\Core\Session\AccountProxyInterface
+   */
+  protected $currentUser;
 
   /**
    * The entity type manager.
@@ -31,6 +41,13 @@ class Homepage extends ControllerBase {
   protected $reliefWebApiClient;
 
   /**
+   * The drupal renderer service.
+   *
+   * @var \Drupal\Core\Render\RendererInterface
+   */
+  protected $renderer;
+
+  /**
    * The state service.
    *
    * @var \Drupal\Core\State\StateInterface
@@ -40,16 +57,28 @@ class Homepage extends ControllerBase {
   /**
    * Constructor.
    *
+   * @param \Drupal\Core\Session\AccountProxyInterface $current_user
+   *   The current user.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager service.
    * @param \Drupal\reliefweb_api\Services\ReliefWebApiClient $reliefweb_api_client
    *   The reliefweb api client service.
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   *   The renderer service.
    * @param \Drupal\Core\State\StateInterface $state
    *   The state service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, ReliefWebApiClient $reliefweb_api_client, StateInterface $state) {
+  public function __construct(
+    AccountProxyInterface $current_user,
+    EntityTypeManagerInterface $entity_type_manager,
+    ReliefWebApiClient $reliefweb_api_client,
+    RendererInterface $renderer,
+    StateInterface $state
+  ) {
+    $this->currentUser = $current_user;
     $this->entityTypeManager = $entity_type_manager;
     $this->reliefWebApiClient = $reliefweb_api_client;
+    $this->renderer = $renderer;
     $this->state = $state;
   }
 
@@ -58,8 +87,10 @@ class Homepage extends ControllerBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
+      $container->get('current_user'),
       $container->get('entity_type.manager'),
       $container->get('reliefweb_api.client'),
+      $container->get('renderer'),
       $container->get('state')
     );
   }
@@ -142,11 +173,23 @@ class Homepage extends ControllerBase {
       }
     }
 
-    return [
+    $build = [
       '#theme' => 'reliefweb_homepage',
       '#title' => $this->t('ReliefWeb'),
       '#sections' => $sections,
+      // Necessary because the headlines widget is added depending on the user
+      // pemissions.
+      '#cache' => [
+        'contexts' => ['user.permissions'],
+      ],
     ];
+
+    // Add the headlines widget.
+    if ($this->currentUser->hasPermission('edit homepage headlines')) {
+      $build['#attached']['library'][] = 'reliefweb_homepage/headlines-widget';
+    }
+
+    return $build;
   }
 
   /**
@@ -364,6 +407,66 @@ class Homepage extends ControllerBase {
       }
     }
     return [];
+  }
+
+  /**
+   * Ajax callback to retrieve the list of selected headlines.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   Rendered headline list.
+   */
+  public function retrieveHeadlines() {
+    // Get the latest 24 headlines.
+    $query = $this->getHeadlinesApiPayload(24);
+
+    // Get the API data.
+    $results = $this->reliefWebApiClient
+      ->requestMultiple(['headlines' => $query]);
+
+    $build = [];
+    if (!empty($results['headlines']['data'])) {
+      $result = $results['headlines'];
+
+      // Sort the headlines by id DESC to have the most recent first.
+      uasort($result['data'], function ($a, $b) {
+        return $b['id'] <=> $a['id'];
+      });
+
+      $bundle = $query['bundle'];
+      $view = $query['view'] ?? '';
+      $exclude = $query['exclude'] ?? [];
+
+      $entities = RiverServiceBase::getRiverData($bundle, $result, $view, $exclude);
+      if (!empty($entities)) {
+        $build = [
+          '#theme' => 'reliefweb_rivers_river',
+          '#id' => '#headlines',
+          '#title' => $query['title'],
+          '#resource' => $query['resource'],
+          '#entities' => $entities,
+        ];
+      }
+    }
+
+    return new Response($this->renderer->render($build));
+  }
+
+  /**
+   * Ajax callback to update the list of selected headlines.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   200 if the update was successful, 500 otherwise.
+   */
+  public function updateHeadlines() {
+    $success = FALSE;
+    // Limit to 10,000 bytes (should never be reached).
+    $data = json_decode(file_get_contents('php://input', FALSE, NULL, 0, 10000) ?? '', TRUE);
+    if (!empty($data) && is_array($data)) {
+      $selection = array_slice(array_filter($data, 'is_int'), 0, 8);
+      $this->state->set('reliefweb_headline_selection', $selection);
+      $success = TRUE;
+    }
+    return new Response('', $success ? 200 : 500);
   }
 
 }

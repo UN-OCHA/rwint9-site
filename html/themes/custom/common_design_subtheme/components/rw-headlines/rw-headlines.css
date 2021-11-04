@@ -25,18 +25,13 @@
   font-size: 12px;
   font-style: italic;
 }
-/* Hide the edit button if the browser doesn't handle css grid as we cannot
- * display the widget properly. */
-.rw-river--headlines button[value="edit"] {
-  display: none;
-}
 .rw-river--headlines .view-more {
   margin-bottom: 24px;
 }
 
 /* Grid layout for the headline articles. */
 @supports (display: grid) {
-  .rw-river--headlines article p.country {
+  .rw-river--headlines article .rw-country-slug {
     max-width: 250px;
   }
   .rw-river--headlines article {
