@@ -116,6 +116,17 @@
   text-decoration: line-through;
   color: red;
 }
+.rw-revisions-history-entry__content__value .rw-revisions-checked::before {
+  content: "\2713 ";
+  display: inline-block;
+  border: 1px solid #e6ecef;
+  width: 12px;
+  height: 12px;
+  color: #2e3436;
+  line-height: 11px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
 .rw-revisions-history-entry__content__value .rw-revisions-added {
   color: green;
 }
