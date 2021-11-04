@@ -117,15 +117,15 @@
   color: red;
 }
 .rw-revisions-history-entry__content__value .rw-revisions-checked::before {
-  content: "\2713 ";
   display: inline-block;
-  border: 1px solid var(--cd-reliefweb-light-grey);
   width: 12px;
   height: 12px;
-  color: var(--cd-reliefweb-dark-grey);
-  line-height: 11px;
   margin-right: 4px;
+  content: "\2713 ";
   vertical-align: middle;
+  color: var(--cd-reliefweb-dark-grey);
+  border: 1px solid var(--cd-reliefweb-light-grey);
+  line-height: 11px;
 }
 .rw-revisions-history-entry__content__value .rw-revisions-added {
   color: green;

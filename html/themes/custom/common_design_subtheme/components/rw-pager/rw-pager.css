@@ -56,11 +56,12 @@
 }
 /* So the pager nav element expands the entire width of the cd-layout-content area. */
 @media screen and (min-width: 768px) {
-.rw-river-page--with-advanced-search .pager {
+  .rw-river-page--with-advanced-search .pager {
     width: calc(100% + 340px);
     margin-left: -340px;
   }
 }
+
 @media screen and (min-width: 1024px) {
   .rw-river-page--with-advanced-search .pager {
     width: calc(100% + 360px);
