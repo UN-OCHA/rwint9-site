@@ -237,7 +237,7 @@ form input[disabled],
 form textarea[disabled],
 form select[disabled] {
   background: var(--cd-reliefweb-brand-grey--light);
-  background: rgba(230, 236, 239, 0.5);
+  background: var(--cd-reliefweb-grey--disable);
 }
 form input[disabled] + label {
   opacity: 0.6;

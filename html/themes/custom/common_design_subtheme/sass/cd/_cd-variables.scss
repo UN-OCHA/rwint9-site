@@ -30,12 +30,7 @@
   --cd-reliefweb-brand-grey--mid: #4d5254;
   --cd-reliefweb-brand-grey--light: #e6ecef;
 
-  // Slogan
-  /* #2e3436 with 0.7 opacity on white. */
-  //color: #6d7172;
-  /* #e6ecef with 0.4 opacity on white. */
-  //background: #f5f7f9;
-
+  /* RGB variables to use with rgba() */
   --cd-rgb-reliefweb-brand-blue: 9, 136, 187;
   --cd-rgb-reliefweb-brand-red: 246, 92, 81;
   --cd-rgb-reliefweb-brand-blue--dark: 4, 82, 112;
@@ -77,7 +72,7 @@
   // Colour variations.
   --cd-reliefweb-orange--alert: #eb8705;
   --cd-reliefweb-pink: rgba(246, 92, 81, 0.2);
-  --disable: rgba(230, 236, 239, 0.5);
+  --cd-reliefweb-grey--disable: rgba(230, 236, 239, 0.5);
 
   /* OCHA blue is one colour ramp darker than brand blue */
   --cd-ocha-blue: #1f69b3;
