@@ -81,7 +81,7 @@
     position: absolute;
     top: -30px;
   }
-  .rw-headlines-widget-processed .rw-entity-image__copyright {
+  .rw-headlines-widget-processed .rw-headlines-widget__content .rw-entity-image__copyright {
     display: none;
   }
   .rw-headlines-widget-processed .rw-headlines-widget__content .rw-river-article__content {
