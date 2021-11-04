@@ -20,7 +20,7 @@
   display: inline-block;
   padding-bottom: 3px;
   text-decoration: none;
-  color: #2e3436;
+  color: var(--cd-reliefweb-dark-grey);
   border-bottom: 3px solid transparent;
   font-size: 18px;
 }

@@ -108,7 +108,7 @@
     content: "";
     vertical-align: middle;
     border-radius: 4px;
-    background: #2e3436;
+    background: var(--cd-reliefweb-dark-grey);
   }
   .rw-entity-meta--core dd:last-of-type:after {
     content: none;
@@ -132,7 +132,7 @@
 }
 .rw-river dl.rw-entity-meta.rw-article-meta {
   /* #2e3436 with 0.85 opacity on white. */
-  color: #4d5254;
+  color: var(--cd-reliefweb-mid-grey);
 }
 
 @media screen and (min-width: 480px) {

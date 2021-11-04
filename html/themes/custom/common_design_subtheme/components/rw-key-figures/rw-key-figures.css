@@ -50,7 +50,7 @@
   padding: 10px 0;
   opacity: 0.5;
   fill: none;
-  stroke: #2e3436;
+  stroke: var(--cd-reliefweb-dark-grey);
   stroke-width: 2px;
 }
 .rw-key-figures figure footer {

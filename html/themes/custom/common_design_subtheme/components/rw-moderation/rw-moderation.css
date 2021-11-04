@@ -173,7 +173,7 @@
 }
 .path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) .rw-moderation-table__cell__info .rw-moderation-table__cell__info__country a,
 .path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) .rw-moderation-table__cell__details .rw-moderation-table__cell__info__source a {
-  color: #2e3436;
+  color: var(--cd-reliefweb-dark-grey);
   font-weight: bold;
 }
 .path-moderation .rw-moderation-list .rw-moderation-table__cell__bury {

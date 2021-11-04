@@ -57,7 +57,7 @@
     font-size: 16px;
   }
   .rw-river-letter-navigation__btn[aria-expanded] .cd-icon--arrow-down {
-    fill: #2e3436;
+    fill: var(--cd-reliefweb-dark-grey);
   }
   [dir="ltr"] .rw-river-letter-navigation__btn[aria-expanded] .cd-icon--arrow-down {
     margin-left: 0.5rem;

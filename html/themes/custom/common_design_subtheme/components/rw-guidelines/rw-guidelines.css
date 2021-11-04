@@ -45,7 +45,7 @@ form[data-with-guidelines] .rw-guideline > button[value="close"] {
   width: 28px;
   height: 28px;
   padding: 0 0 0 22px;
-  border: 2px solid #2e3436;
+  border: 2px solid var(--cd-reliefweb-dark-grey);
   border-radius: 50%;
   background: white;
 }

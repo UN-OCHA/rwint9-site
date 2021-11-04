@@ -89,7 +89,7 @@
   display: inline-block;
   margin: 0 0 8px 0;
   padding: 4px 8px;
-  color: #2e3436;
+  color: var(--cd-reliefweb-dark-grey);
   border: 1px solid var(--cd-reliefweb-light-grey);
   background: white;
   font-size: 13px;

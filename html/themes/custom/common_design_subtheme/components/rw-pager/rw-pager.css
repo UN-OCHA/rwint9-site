@@ -40,7 +40,7 @@
   height: 10px;
   margin-bottom: 1px;
   content: "";
-  background: #2e3436;
+  background: var(--cd-reliefweb-dark-grey);
 }
 .pager li:last-child:after {
   content: none;

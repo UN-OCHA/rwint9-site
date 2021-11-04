@@ -48,7 +48,7 @@
   align-items: center;
   padding-top: 16px;
   /* #2e3436 with 0.85 opacity on white. */
-  color: #4d5254;
+  color: var(--cd-reliefweb-mid-grey);
 }
 /* Article with a thumbnail preview (typically Map and Infographic). */
 .rw-river-article .rw-river-article__content img {
