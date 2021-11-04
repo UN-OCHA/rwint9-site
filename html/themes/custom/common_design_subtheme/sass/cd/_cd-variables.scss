@@ -29,6 +29,13 @@
   /* #2e3436 with 0.85 opacity on white. */
   --cd-reliefweb-mid-grey: #4d5254;
   --cd-reliefweb-light-grey: #e6ecef;
+
+  // Slogan
+  /* #2e3436 with 0.7 opacity on white. */
+  //color: #6d7172;
+  /* #e6ecef with 0.4 opacity on white. */
+  //background: #f5f7f9;
+
   --cd-rgb-reliefweb-blue: 9, 136, 187;
   --cd-rgb-reliefweb-red: 246, 92, 81;
   --cd-rgb-reliefweb-dark-blue: 4, 82, 112;
@@ -37,18 +44,14 @@
   --cd-rgb-reliefweb-light-grey: 230, 236, 239;
   --cd-reliefweb-green: #88bb09;
   --cd-reliefweb-orange: #eb8705;
-
   --cd-reliefweb-red--text: #da190b;
   --cd-reliefweb-orange--text: #f49e2c;
-
   --disable: rgba(230, 236, 239, 0.5);
 
   /* On white background */
   --cd-reliefweb-green--background: rgba(136, 187, 9, 0.2);
   --cd-reliefweb-red--background: rgba(246, 92, 81, 0.2);
   --cd-reliefweb-orange--background: rgba(235, 135, 5, 0.2);
-
-
 
   /* OCHA blue is one colour ramp darker than brand blue */
   --cd-ocha-blue: var(--cd-reliefweb-dark-blue);
@@ -69,12 +72,6 @@
   --cd-blue-grey: var(--cd-reliefweb-light-grey);
   --cd-blue-grey--dark: #d3dde5;
   --cd-blue-grey--light: #ebf0f4;
-
-
-
-
-
-
 
   // Colours used with rgba().
   // https://stackoverflow.com/questions/40010597/how-do-i-apply-opacity-to-a-css-color-variable
@@ -257,3 +254,4 @@ $implementation-primary: $cd-ocha-blue;
 $implementation-primary-dark: $cd-blue--dark;
 $implementation-secondary: $cd-blue--bright;
 $implementation-highlight: $cd-highlight-red;
+$cd-reliefweb-light-grey: var(--cd-reliefweb-light-grey);
