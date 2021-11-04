@@ -21,7 +21,7 @@
 }
 .pager .is-active a {
   text-decoration: underline;
-  color: #eb1405;
+  color: var(--cd-reliefweb-dark-red);
 }
 .pager ul {
   display: inline-block;

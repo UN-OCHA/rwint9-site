@@ -29,7 +29,7 @@ form button:hover,
 form button:focus,
 form button:active {
   text-decoration: underline;
-  background: #eb1405;
+  background: var(--cd-reliefweb-dark-red);
 }
 form input[type="text"],
 form input[type="search"],

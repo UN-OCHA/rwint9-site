@@ -74,7 +74,7 @@
   content: "";
   vertical-align: middle;
   border-radius: 6px;
-  background: #eb1405;
+  background: var(--cd-reliefweb-dark-red);
 }
 .rw-key-figures figure cite {
   float: right;

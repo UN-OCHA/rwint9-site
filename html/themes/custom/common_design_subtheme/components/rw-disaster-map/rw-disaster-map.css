@@ -359,7 +359,7 @@
 .js .rw-disaster-map .rw-disaster-map__close:hover,
 .js .rw-disaster-map .rw-disaster-map__close:active,
 .js .rw-disaster-map .rw-disaster-map__close:focus {
-  background: #eb1405;
+  background: var(--cd-reliefweb-dark-red);
 }
 .js .rw-disaster-map .rw-disaster-map__close:before {
   position: absolute;

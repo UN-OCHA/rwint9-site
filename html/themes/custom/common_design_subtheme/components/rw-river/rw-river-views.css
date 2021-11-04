@@ -31,7 +31,7 @@
   border-color: #e6ecef;
 }
 .rw-river-page .rw-river-views .rw-river-views__list__item--selected a {
-  border-color: #eb1405;
+  border-color: var(--cd-reliefweb-dark-red);
   font-size: 22px;
   font-weight: bold;
 }

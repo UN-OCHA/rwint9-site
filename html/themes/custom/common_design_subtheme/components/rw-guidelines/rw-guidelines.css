@@ -60,7 +60,7 @@ form[data-with-guidelines] .rw-guideline > button[value="close"]:after {
   background: var(--rw-icons--common--close--18--dark-grey);
 }
 form[data-with-guidelines] .rw-guideline > button[value="close"]:hover {
-  border-color: #eb1405;
+  border-color: var(--cd-reliefweb-dark-red);
 }
 form[data-with-guidelines] .rw-guideline > button[value="close"]:hover:after {
   background: var(--rw-icons--common--close--18--dark-red);
