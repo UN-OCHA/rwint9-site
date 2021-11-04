@@ -21,14 +21,14 @@
 //——————————————————————————————————————————————————————————————————————————————
 :root {
   /* Color palette */
-  --cd-reliefweb-blue: #0988bb;
-  --cd-reliefweb-red: #f65c51;
-  --cd-reliefweb-dark-blue: #055372;
-  --cd-reliefweb-dark-red: #eb1405;
-  --cd-reliefweb-dark-grey: #2e3436;
+  --cd-reliefweb-brand-blue: #0988bb;
+  --cd-reliefweb-brand-red: #f65c51;
+  --cd-reliefweb-brand-blue--dark: #055372;
+  --cd-reliefweb-brand-red--dark: #eb1405;
+  --cd-reliefweb-brand-grey--dark: #2e3436;
   /* #2e3436 with 0.85 opacity on white. */
-  --cd-reliefweb-mid-grey: #4d5254;
-  --cd-reliefweb-light-grey: #e6ecef;
+  --cd-reliefweb-brand-grey--mid: #4d5254;
+  --cd-reliefweb-brand-grey--light: #e6ecef;
 
   // Slogan
   /* #2e3436 with 0.7 opacity on white. */
@@ -272,10 +272,10 @@ $zindex: (
 // Implementation colours
 //——————————————————————————————————————————————————————————————————————————————
 
-$implementation-primary: var(--cd-reliefweb-dark-blue);
+$implementation-primary: var(--cd-reliefweb-brand-blue--dark);
 $implementation-primary-dark: #04415a;
-$implementation-secondary: var(--cd-reliefweb-blue);
-$implementation-highlight: var(--cd-reliefweb-red);
-$cd-contrast-red: var(--cd-reliefweb-dark-red);
-$cd-blue-grey: var(--cd-reliefweb-light-grey);
-$cd-reliefweb-light-grey: var(--cd-reliefweb-light-grey);
+$implementation-secondary: var(--cd-reliefweb-brand-blue);
+$implementation-highlight: var(--cd-reliefweb-brand-red);
+$cd-contrast-red: var(--cd-reliefweb-brand-red--dark);
+$cd-blue-grey: var(--cd-reliefweb-brand-grey--light);
+$cd-reliefweb-light-grey: var(--cd-reliefweb-brand-grey--light);
