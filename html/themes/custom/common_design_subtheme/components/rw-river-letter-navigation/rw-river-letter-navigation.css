@@ -98,3 +98,26 @@
     --dropdown: false;
   }
 }
+
+@media all and (min-width: 480px) and (-ms-high-contrast: none) {
+  /* This is needed for IE11
+  No support for CSS custom properties means
+  --dropdown: false; property on nav container is not recognised
+  so the cd-dropdown.js creates a toggler button on desktop
+  This hides it when that happens.
+  */
+  .rw-river-letter-navigation__btn {
+    display: none;
+  }
+
+  /* This is needed for IE11
+  No support for CSS custom properties means
+  --dropdown: false; property on nav container is not recognised
+  so the cd-dropdown.js does not run the updateToggler function
+  which toggles the data-cd-hidden attribute.
+  This displays the nav regardless of that attribute value.
+  */
+  .rw-river-letter-navigation[data-cd-hidden="true"] {
+    display: block;
+  }
+}
