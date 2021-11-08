@@ -32,7 +32,7 @@
 .rw-river--latest-blog-posts .rw-river-article--blog-post:last-child {
   padding-bottom: 0;
 }
-.rw-river--latest-blog-posts .rw-river-article--blog-post header + footer {
+.rw-river--latest-blog-posts .rw-river-article--blog-post .rw-river-article__header + .rw-river-article__footer {
   padding-top: 0;
 }
 
