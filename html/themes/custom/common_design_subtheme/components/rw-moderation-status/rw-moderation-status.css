@@ -1,6 +1,6 @@
 [data-moderation-status="draft"] {
   border-color: var(--cd-reliefweb-grey--light);
-  background-color: var(--cd-reliefweb-orange--bg);
+  background-color: var(--cd-reliefweb-grey--light--bg);
 }
 [data-moderation-status="on_hold"],
 [data-moderation-status="alert"],

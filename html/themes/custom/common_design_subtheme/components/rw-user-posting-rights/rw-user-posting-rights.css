@@ -9,7 +9,7 @@
   vertical-align: middle;
   text-transform: uppercase;
   border: 1px solid var(--cd-reliefweb-grey--light);
-  background: var(--cd-reliefweb-orange--bg);
+  background: var(--cd-reliefweb-grey--light--bg);
   font-size: 10px;
   font-weight: bold;
 }
