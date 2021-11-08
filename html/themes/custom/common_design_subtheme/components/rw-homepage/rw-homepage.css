@@ -19,10 +19,10 @@
   /* padding: 8px 0 0 0; */
   border-top: none;
 }
-.rw-river--disasters .rw-river-article--disaster header {
+.rw-river--disasters .rw-river-article--disaster .rw-river-article__header {
   margin-top: 0;
 }
-.rw-river--disasters .rw-river-article--disaster footer {
+.rw-river--disasters .rw-river-article--disaster .rw-river-article__footer {
   padding-top: 0;
 }
 .rw-river--disasters .rw-river-article--disaster .rw-entity-meta {
