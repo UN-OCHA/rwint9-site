@@ -6,23 +6,23 @@
  */
 .rw-river--disasters {
   --cd-flow-space: 1rem;
-  /* border-top: 1px solid #e6ecef; */
+  /* border-top: 1px solid var(--cd-reliefweb-brand-grey--light); */
 }
 .rw-river--disasters .rw-river-article--disaster {
   position: relative;
   /* margin: 16px 0 0 0; */
   padding: 0 0 16px;
-  /* border-top: 1px solid #e6ecef; */
+  /* border-top: 1px solid var(--cd-reliefweb-brand-grey--light); */
 }
 .rw-river--disasters .rw-river-article--disaster:first-child {
   margin: 0;
   /* padding: 8px 0 0 0; */
   border-top: none;
 }
-.rw-river--disasters .rw-river-article--disaster header {
+.rw-river--disasters .rw-river-article--disaster .rw-river-article__header {
   margin-top: 0;
 }
-.rw-river--disasters .rw-river-article--disaster footer {
+.rw-river--disasters .rw-river-article--disaster .rw-river-article__footer {
   padding-top: 0;
 }
 .rw-river--disasters .rw-river-article--disaster .rw-entity-meta {
