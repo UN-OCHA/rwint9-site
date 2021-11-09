@@ -22,7 +22,7 @@
   text-align: center;
 }
 .cd-header #site-slogan .cd-container > span {
-  /* This is to center vertically the text while staying whithin the defined
+  /* This is to center vertically the text while staying within the defined
    * 50px height. */
   display: table-cell;
   height: 50px;

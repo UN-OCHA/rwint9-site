@@ -97,7 +97,6 @@
   content: "";
 }
 
-/* Media queries. */
 @media screen {
   .rw-key-figures ul {
     display: grid;

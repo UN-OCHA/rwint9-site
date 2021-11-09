@@ -40,11 +40,6 @@
 .rw-document .rw-article__content section {
   padding-top: 24px;
 }
-/* .rw-document .rw-article__content section > h3 { */
-/*  padding: 0 0 0 8px; */
-/*  border-left: 8px solid var(--cd-reliefweb-brand-blue); */
-/* } */
-
 .rw-document > footer {
   width: 100%;
   margin: 0;

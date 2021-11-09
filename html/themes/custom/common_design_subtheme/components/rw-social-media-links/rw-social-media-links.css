@@ -9,7 +9,6 @@
   list-style: none;
 }
 .rw-entity-social-media-links li {
-  /* To avoid borders on the next column. */
   display: inline-block;
   margin: 0 0 16px;
   padding: 12px;
@@ -30,19 +29,6 @@
   .rw-entity-social-media-links--tiles ul {
     column-count: 3;
   }
-}
-
-/* External links. Display an icon after the link. */
-.rw-entity-social-media-links--tiles a[target="_blank"][rel~="noopener"]:after {
-  display: inline-block;
-  overflow: hidden;
-  width: 12px;
-  height: 12px;
-  /* The top margin is to have a better vertical alignment. */
-  margin: -2px 0 0 6px;
-  content: "";
-  vertical-align: middle;
-  background: var(--rw-icons--common--external-link--12--dark-blue);
 }
 
 /**

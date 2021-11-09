@@ -123,7 +123,6 @@
   padding: 4px 8px;
   word-wrap: break-word;
   background: white;
-  /* @todo review in regards to the standard cd-font sizes. */
   font-size: 15px;
 }
 #main-content [data-selection-messages] .rw-selection [data-value] .message .title {

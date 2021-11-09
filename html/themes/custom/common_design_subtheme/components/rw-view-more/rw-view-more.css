@@ -51,6 +51,6 @@
   float: left;
 }
 /* @todo Is is used anywhere? */
-.view-more li + li {
-  float: right;
-}
+/* .view-more li + li { */
+/*  float: right; */
+/* } */

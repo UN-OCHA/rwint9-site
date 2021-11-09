@@ -44,9 +44,9 @@
   margin-top: 24px;
 }
 /* @todo Needed? */
-.rw-entity-useful-links > ul ul + .view-more {
-  margin-top: 24px;
-}
+/* .rw-entity-useful-links > ul ul + .view-more { */
+/*  margin-top: 24px; */
+/* } */
 /* Useful links on 403/404 page */
 .rw-404 .rw-entity-useful-links > ul,
 .rw-403 .rw-entity-useful-links > ul {

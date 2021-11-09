@@ -41,11 +41,7 @@
   background: var(--cd-reliefweb-brand-grey--light);
   font-weight: bold;
 }
-/* .js .rw-river-letter-navigation__btn { */
-/*  display: none; */
-/* } */
 
-/* Media query */
 @media screen and (max-width: 479px) {
   .js .rw-river-letter-navigation__btn {
     display: block;
@@ -65,20 +61,6 @@
   [dir="rtl"] .rw-river-letter-navigation__btn[aria-expanded] .cd-icon--arrow-down {
     margin-right: 0.5rem;
   }
-  /* .js .rw-river-letter-navigation__btn:after { */
-  /*  display: inline-block; */
-  /*  overflow: hidden; */
-  /*  width: 9px; */
-  /*  height: 9px; */
-  /*  margin-left: 8px; */
-  /*  content: ""; */
-  /*  vertical-align: middle; */
-  /*  background: url(../../../images/rw-icons-sprite.png) -150px 0 no-repeat; */
-  /*  background: rgba(0, 0, 0, 0) url(../../../images/rw-icons-sprite.svg) -150px 0 no-repeat; */
-  /* } */
-  /* .js .rw-river-letter-navigation__btn[aria-expanded="true"]:after { */
-  /*  background-position-y: -9px; */
-  /* } */
   .js .rw-river-letter-navigation {
     position: absolute;
     z-index: 4;
@@ -88,9 +70,6 @@
     -webkit-box-shadow: 0 0 6px 2px var(--cd-reliefweb-brand-grey--light);
     box-shadow: 0 0 6px 2px var(--cd-reliefweb-brand-grey--light);
   }
-  /* .js .rw-river-letter-navigation[data-hidden="true"] { */
-  /*  display: none; */
-  /* } */
 }
 
 @media screen and (min-width: 480px) {

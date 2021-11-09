@@ -145,7 +145,6 @@
 }
 .path-moderation .rw-moderation-list .rw-moderation-table tr td:first-child {
   text-align: center;
-  /* white-space: pre; */
 }
 .path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) {
   width: 100%;
