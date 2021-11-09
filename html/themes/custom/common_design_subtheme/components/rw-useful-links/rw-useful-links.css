@@ -1,6 +1,6 @@
 /* Useful links */
 .rw-entity-useful-links img,
-.rw-entity-text--resources img {
+.rw-entity-text--resources ul img {
   display: inline-block;
   max-width: 200px;
   max-height: 50px;
@@ -8,7 +8,7 @@
   vertical-align: middle;
 }
 .rw-entity-useful-links img[src*=".svg"],
-.rw-entity-text--resources img[src*=".svg"] {
+.rw-entity-text--resources ul img[src*=".svg"] {
   min-width: 150px;
 }
 
@@ -46,4 +46,9 @@
 /* @todo Needed? */
 .rw-entity-useful-links > ul ul + .view-more {
   margin-top: 24px;
+}
+/* Useful links on 403/404 page */
+.rw-404 .rw-entity-useful-links > ul,
+.rw-403 .rw-entity-useful-links > ul {
+  padding: 16px 0;
 }

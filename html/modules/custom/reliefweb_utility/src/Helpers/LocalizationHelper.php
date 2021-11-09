@@ -113,9 +113,36 @@ class LocalizationHelper {
         $items = $reordered;
         return TRUE;
       }
+
       return FALSE;
     }
+
     return ksort($items);
+  }
+
+  /**
+   * Format a number with grouped thousands.
+   *
+   * @param float|int $number
+   *   Number to format.
+   * @param string $language
+   *   Language (ISO2 code).
+   *
+   * @return string
+   *   Formatted number.
+   */
+  public static function formatNumber($number, $language = NULL) {
+    $formatter = static::getNumberFormatter($language);
+
+    if (!empty($formatter)) {
+      $formatted = $formatter->format($number);
+      if (intl_is_failure($formatter->getErrorCode())) {
+        return $number;
+      }
+      return $formatted;
+    }
+
+    return number_format($number);
   }
 
   /**
@@ -125,8 +152,8 @@ class LocalizationHelper {
    *   Language for which to return a Collator. Defaults to the current
    *   language.
    *
-   * @return Collator
-   *   Collator.
+   * @return \Collator|false
+   *   Collator or FALSE if there is no collator for the language.
    */
   public static function getCollator($language = NULL) {
     static $collators = [];
@@ -134,10 +161,10 @@ class LocalizationHelper {
     $language = static::getLanguage($language);
 
     if (!isset($collators[$language])) {
-      if (function_exists('collator_create')) {
-        $collator = collator_create($language);
+      $collator = static::createCollator($language);
 
-        switch (intl_get_error_code()) {
+      if ($collator) {
+        switch (static::intlGetErrorCode()) {
           case U_ZERO_ERROR:
             // No errors.
             break;
@@ -150,7 +177,7 @@ class LocalizationHelper {
             //
             // @see https://www.php.net/manual/en/class.collator.php
             if ($language === 'fr') {
-              $collator->setAttribute(Collator::FRENCH_COLLATION, Collator::ON);
+              $collator->setAttribute(\Collator::FRENCH_COLLATION, \Collator::ON);
             }
             break;
 
@@ -159,15 +186,78 @@ class LocalizationHelper {
             // the collated_(k)sort functions can default to the basic (k)sort.
             $collator = FALSE;
         }
+      }
 
-        $collators[$language] = $collator;
-      }
-      else {
-        $collators[$language] = FALSE;
-      }
+      $collators[$language] = $collator;
     }
 
     return $collators[$language];
+  }
+
+  /**
+   * Get the number formatter for the given language.
+   *
+   * @param string $language
+   *   Language for which to return a NumberFormatter. Defaults to the current
+   *   language.
+   *
+   * @return \NumberFormatter|false
+   *   Number formatter or FALSE if there is no formatter for the language.
+   */
+  protected static function getNumberFormatter($language = NULL) {
+    static $formatters = [];
+
+    $language = static::getLanguage($language);
+
+    if (!isset($formatters[$language])) {
+      $formatters[$language] = static::createNumberFormatter($language);
+    }
+
+    return $formatters[$language];
+  }
+
+  /**
+   * Create the collator for the given language.
+   *
+   * @param string $language
+   *   Language for which to return a Collator. Defaults to the current
+   *   language.
+   *
+   * @return \Collator|false
+   *   Collator or FALSE if the collator couldn't be created.
+   */
+  protected static function createCollator($language) {
+    if (function_exists('collator_create')) {
+      return collator_create($language) ?: FALSE;
+    }
+    return FALSE;
+  }
+
+  /**
+   * Create the number formatter for the given language.
+   *
+   * @param string $language
+   *   Language for which to return a NumberFormatter. Defaults to the current
+   *   language.
+   *
+   * @return \NumberFormatter|false
+   *   Number formatter or FALSE if the formatter couldn't be created.
+   */
+  protected static function createNumberFormatter($language) {
+    if (function_exists('numfmt_create')) {
+      return numfmt_create($language, \NumberFormatter::DECIMAL) ?: FALSE;
+    }
+    return FALSE;
+  }
+
+  /**
+   * Get the last error code.
+   *
+   * @return int
+   *   Error code.
+   */
+  protected static function intlGetErrorCode() {
+    return intl_get_error_code();
   }
 
   /**

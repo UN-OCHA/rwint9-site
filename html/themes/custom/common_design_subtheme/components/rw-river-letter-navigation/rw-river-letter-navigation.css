@@ -41,9 +41,6 @@
   background: #e6ecef;
   font-weight: bold;
 }
-.rw-river-search ~ .rw-river-letter-navigation-wrapper {
-  margin: 24px 0 0 0;
-}
 /* .js .rw-river-letter-navigation__btn { */
 /*  display: none; */
 /* } */
@@ -53,7 +50,7 @@
   .js .rw-river-letter-navigation__btn {
     display: block;
     height: 40px;
-    margin: 24px auto;
+    margin: 0 auto;
     padding: 0 8px;
     border: 1px solid #e6ecef;
     background: white;
@@ -94,9 +91,6 @@
   /* .js .rw-river-letter-navigation[data-hidden="true"] { */
   /*  display: none; */
   /* } */
-  .js .rw-river-letter-navigation__btn + .rw-river-letter-navigation {
-    margin-top: -24px;
-  }
 }
 
 @media screen and (min-width: 480px) {

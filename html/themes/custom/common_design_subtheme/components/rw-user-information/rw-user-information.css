@@ -1,0 +1,37 @@
+.rw-entities-form-user-information__sources {
+  display: flex;
+  flex-wrap: wrap;
+}
+.rw-entities-form-user-information__sources ul {
+  display: inline-block;
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+.rw-entities-form-user-information__sources ul li {
+  display: inline-block;
+  margin-right: 4px;
+}
+.rw-entities-form-user-information__sources ul li:after {
+  content: ", ";
+}
+.rw-entities-form-user-information__sources ul li:only-of-type,
+.rw-entities-form-user-information__sources ul li:last-child {
+  margin-right: 0;
+}
+.rw-entities-form-user-information__sources ul li:only-of-type:after,
+.rw-entities-form-user-information__sources ul li:last-child:after {
+  content: none;
+}
+.rw-entities-form-user-information__content {
+  margin: 0;
+  font-size: 16px;
+  line-height: 30px;
+}
+.rw-entities-form-user-information__content strong {
+  margin: 0 4px 0 0;
+  font-size: 15px;
+}
+.rw-entities-form-user-information__content .rw-user-posting-right {
+  vertical-align: top;
+}

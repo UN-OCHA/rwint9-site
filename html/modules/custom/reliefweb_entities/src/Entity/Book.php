@@ -3,20 +3,24 @@
 namespace Drupal\reliefweb_entities\Entity;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Url;
+use Drupal\node\Entity\Node;
 use Drupal\reliefweb_entities\BundleEntityInterface;
 use Drupal\reliefweb_entities\DocumentInterface;
 use Drupal\reliefweb_entities\DocumentTrait;
-use Drupal\reliefweb_entities\EntityModeratedInterface;
-use Drupal\reliefweb_entities\EntityModeratedTrait;
-use Drupal\node\Entity\Node;
+use Drupal\reliefweb_moderation\EntityModeratedInterface;
+use Drupal\reliefweb_moderation\EntityModeratedTrait;
+use Drupal\reliefweb_revisions\EntityRevisionedInterface;
+use Drupal\reliefweb_revisions\EntityRevisionedTrait;
 
 /**
  * Bundle class for book nodes.
  */
-class Book extends Node implements BundleEntityInterface, EntityModeratedInterface, DocumentInterface {
+class Book extends Node implements BundleEntityInterface, EntityModeratedInterface, EntityRevisionedInterface, DocumentInterface {
 
   use DocumentTrait;
   use EntityModeratedTrait;
+  use EntityRevisionedTrait;
   use StringTranslationTrait;
 
   /**
@@ -24,6 +28,13 @@ class Book extends Node implements BundleEntityInterface, EntityModeratedInterfa
    */
   public function getApiResource() {
     return '';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function addFieldConstraints(&$fields) {
+    // No specific constraints.
   }
 
   /**
@@ -80,18 +91,27 @@ class Book extends Node implements BundleEntityInterface, EntityModeratedInterfa
    *   TRUE of the active link was found and marked.
    */
   protected function markBookMenuActiveLink(array &$links) {
-    // This book's url which we assume is the active link when `getBookOutline`
-    // is called.
-    $url = 'entity:node/' . $this->id();
+    // We assume the current book is the active one when `getBookOutline` is
+    // called so we'll check the menu links for a link matching this book.
+    $id = $this->id();
 
     $found = FALSE;
     foreach ($links as &$link) {
-      if (isset($link['url']) && $link['url'] === $url) {
-        $found = $link['active'] = TRUE;
+      $url = $link['url'] ?? NULL;
+
+      if ($url instanceof Url && $url->isRouted() && $url->getRouteName() === 'entity.node.canonical') {
+        $route_parameters = $url->getRouteParameters();
+        if (isset($route_parameters['node']) && $route_parameters['node'] == $id) {
+          $link['active'] = TRUE;
+          return TRUE;
+        }
       }
-      elseif ($link['below']) {
+
+      // Check the menu children.
+      if (!empty($link['below'])) {
         $found = $this->markBookMenuActiveLink($link['below']);
       }
+
       // No need to proceed further if we found the active link.
       if ($found) {
         return TRUE;

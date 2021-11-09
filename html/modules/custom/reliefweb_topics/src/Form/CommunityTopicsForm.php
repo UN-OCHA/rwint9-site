@@ -81,16 +81,21 @@ class CommunityTopicsForm extends FormBase {
       '#optional' => FALSE,
     ];
 
-    // We wrap the submit button into a fieldset so that it can easily be
-    // disabled using HTML5 <fieldset disabled> feature but we don't use the
-    // Drupal Form API to create a fieldset to avoid useless markup and classes.
-    $form['submit'] = [
+    $form['actions'] = [
+      '#type' => 'actions',
+      '#theme_wrappers' => [
+        'fieldset' => [
+          '#id' => 'actions',
+          '#title' => $this->t('Form actions'),
+          '#title_display' => 'invisible',
+        ],
+      ],
+      '#weight' => 99,
+    ];
+    $form['actions']['submit'] = [
       '#type' => 'submit',
-      '#value' => 'Save',
-      '#title' => $this->t('Save changes'),
+      '#value' => $this->t('Save changes'),
       '#name' => 'save',
-      '#prefix' => '<fieldset id="actions" disabled>',
-      '#suffix' => '</fieldset>',
     ];
 
     // Placeholder for the topics data. This will be filled with a json encoded

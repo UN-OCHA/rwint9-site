@@ -43,6 +43,18 @@ form input[type="url"] {
   border: 2px solid #e6ecef;
   background: white;
 }
+input[type="text"],
+input[type="number"],
+input[type="password"],
+input[type="email"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+input[type="date"],
+input[type="file"] {
+  max-width: unset;
+}
+
 form textarea {
   display: block;
   width: 100%;
@@ -165,6 +177,14 @@ form > * .form-wrapper,
 form > * .form-item {
   margin-top: 24px;
 }
+form > * .form-wrapper.form-item:first-child .fieldset-wrapper > h4:first-child,
+fieldset > legend + .form-wrapper > h4 {
+  margin: 0 0 6px;
+}
+form > * .form-wrapper > h4,
+form > * .form-wrapper.form-item:first-child .fieldset-wrapper > h4 {
+  margin: 24px 0 6px;
+}
 form .form-actions.form-item {
   margin-top: 8px;
 }
@@ -194,6 +214,10 @@ form .description a:focus {
 }
 form .description + div {
   margin-top: 8px;
+}
+form .description ul {
+  margin: 0;
+  padding: 0 0 0 16px;
 }
 form .form-optional {
   font-size: 16px;
@@ -238,7 +262,8 @@ form fieldset.error .form-checkbox.error {
   outline: initial;
   outline-offset: initial;
 }
-form fieldset > legend + a[href="#edit-actions"] {
+form fieldset > legend + a[href="#edit-actions"],
+form fieldset > legend + a[href="#actions"] {
   position: absolute;
   right: 0;
   margin-top: 4px;
@@ -249,15 +274,18 @@ form fieldset > legend + a[href="#edit-actions"] {
 form #actions {
   /* width: auto; */
   /* min-width: 100%; */
-  padding: 12px;
+  padding: 0 12px 12px;
   text-align: center;
   border: 1px solid #e6ecef;
   background: #e6ecef;
   background: rgba(230, 236, 239, 0.4);
 }
-form fieldset + #actions {
-  border-top: none;
+form #actions .cd-button {
+  margin-top: 12px;
 }
+/* form fieldset + #actions { */
+/*  border-top: none; */
+/* } */
 form #actions + * {
   border-top: none;
 }
@@ -268,14 +296,15 @@ form div.form-actions {
   width: auto;
   min-width: 100%;
   /* The negative margins are to compensate the button margins. */
-  margin: 8px -8px -8px -8px;
+  /* margin: 8px -8px -8px -8px; */
+  /* margin: 0 -8px; */
 }
-form #actions div.form-actions {
-  margin-top: -8px;
-}
-form div.form-actions button {
-  margin: 8px;
-}
+/* form #actions div.form-actions { */
+/*  margin-top: -8px; */
+/* } */
+/* form div.form-actions button { */
+/*  margin: 8px; */
+/* } */
 form .form-item + button,
 form button.form-actions {
   margin-top: 16px;
@@ -385,63 +414,108 @@ form #edit-organization #edit-field-source-allowed .form-item:last-child {
   border-top: 2px dotted #e6ecef;
 }
 
-/**
- * Disaster status.
- */
-form [autocomplete-processed] [data-status] {
-  border-left: 8px solid white;
+/* Embargo Date .field--name-field-embargo-date */
+.field--widget-datetime-datelist .fieldset-wrapper .form-type-select {
+  display: inline-block;
+  margin: 0;
 }
-form [autocomplete-processed] div[data-status] {
-  padding-left: 8px;
-}
-form [autocomplete-processed] div[data-status$="-archive"] {
-  text-decoration: line-through;
-  /* Base dark grey with 0.8 opacity on white. */
-  color: #575c5e;
+
+/* Field with text that is not wrapped in description div */
+.field--name-body .text-full,
+.field--name-field-how-to-apply .text-full,
+.field--type-text-long .text-full, /* Generic selector? */
+.field--name-field-how-to-register .text-full {
+  font-size: 15px;
   font-style: italic;
+  line-height: 24px;
 }
-form [autocomplete-processed] [data-status="draft"] {
-  border-color: #d9d9d9;
+.field--name-body .text-full,
+.field--type-text-long .text-full {
+  padding-top: 6px;
 }
-form [autocomplete-processed] [data-status="pending"],
-form [autocomplete-processed] [data-status="embargoed"],
-form [autocomplete-processed] [data-status="external-archive"] {
-  border-color: #56c9f7;
+
+/* Text format wrapper */
+.form-type-textarea + .filter-wrapper.form-wrapper {
+  margin-top: 0;
 }
-form [autocomplete-processed] [data-status="on-hold"],
-form [autocomplete-processed] [data-status="alert"],
-form [autocomplete-processed] [data-status="inactive"] {
-  border-color: #f49e2c;
+.filter-wrapper {
+  border: 1px solid #e6ecef;
 }
-form [autocomplete-processed] [data-status="to-review"],
-form [autocomplete-processed] [data-status="external"] {
-  border-color: #076d96;
+.filter-wrapper .filter-help {
+  font-size: 14px;
 }
-form [autocomplete-processed] [data-status="published"],
-form [autocomplete-processed] [data-status="past"],
-form [autocomplete-processed] [data-status="active"],
-form [autocomplete-processed] [data-status="normal"] {
-  border-color: #88bb09;
+.filter-wrapper ul {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+  font-size: 14px;
 }
-form [autocomplete-processed] [data-status="refused"],
-form [autocomplete-processed] [data-status="blocked"],
-form [autocomplete-processed] [data-status="current"],
-form [autocomplete-processed] [data-status="ongoing"] {
-  border-color: #da190b;
+
+form [data-lengthchecker-status] {
+  margin-top: -2px;
+  padding: 8px 8px;
+  background-color: rgba(246, 92, 81, 0.2);
+  font-size: 15px;
+  line-height: 1.2;
 }
-form [autocomplete-processed] [data-status="expired"],
-form [autocomplete-processed] [data-status="archive"],
-form [autocomplete-processed] [data-status="alert-archive"] {
-  border-color: #9509bb;
+form [data-lengthchecker-status="ok"] {
+  background-color: rgba(136, 187, 9, 0.2);
 }
-form [autocomplete-processed] [data-status="draft-archive"] {
-  border-color: #4b4b4b;
+
+/* New Organisation field for Jobs */
+.node-form fieldset.field-new-source-wrapper {
+  margin-top: 24px;
 }
-form [autocomplete-processed] [data-status="duplicate"],
-form [autocomplete-processed] [data-status="monitoring-archive"] {
-  border-color: #8f5507;
+/* Term forms */
+.taxonomy-term-country-profile-form,
+.taxonomy-term-disaster-profile-form,
+.taxonomy-term-source-user-posting-rights-form {
+  padding-top: 24px;
 }
-form [autocomplete-processed] [data-status="monitoring"],
-form [autocomplete-processed] [data-status="reference"] {
-  border-color: #f5cb2f;
+
+/**
+ * Text formatter buttons.
+ *
+ * Style for the buttons to alter the text format of an input or textarea.
+ */
+form [data-with-formatting] {
+  position: relative;
 }
+form button[data-formatter] {
+  margin-right: 4px;
+  padding: 8px;
+  font-size: 14px;
+}
+form button[data-formatter]:last-child {
+  margin-right: 0;
+}
+form button[data-formatter="pdf"] {
+  /* Display the format PDf button in the top right corner above the textarea.
+   * The editorial team is used to this position. */
+  position: absolute;
+  top: -7px;
+  right: 0;
+}
+
+/* Table drag */
+a.tabledrag-handle .handle {
+  width: auto;
+  height: auto;
+}
+/* Show/Hide row weight button */
+.tabledrag-toggle-weight {
+  padding: 8px;
+  font-size: 14px;
+}
+
+/* Add/Clear/Edit buttons for field UI */
+form button[value="add"],
+form button[value="clear"],
+form button[value="edit"] {
+  padding: 8px;
+  font-size: 14px;
+}
+
+/* details > summary + .cd-form__item { */
+/*  margin-top: 1.5rem; */
+/* } */

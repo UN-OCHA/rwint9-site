@@ -108,13 +108,17 @@ class UrlHelper extends DrupalUrlHelper {
    *
    * @param string $uri
    *   Legacy URI.
-   * @param string $preserve_style
+   * @param bool $preserve_style
    *   Whether to keep the style in the uri or not.
    *
    * @return string
    *   New URI (starting with the public:// scheme).
    */
   public static function getImageUriFromUrl($uri, $preserve_style = FALSE) {
+    if (empty($uri)) {
+      return '';
+    }
+
     // Extract the path.
     $path = parse_url($uri, PHP_URL_PATH);
 
@@ -176,7 +180,12 @@ class UrlHelper extends DrupalUrlHelper {
 
     // We use the UUID as filename, preserving only the extension so that
     // the URI is short and predictable.
-    return $directory . '/' . $uuid . '.' . $info['extension'];
+    if (isset($info['extension']) && !empty($info['extension'])) {
+      return $directory . '/' . $uuid . '.' . $info['extension'];
+    }
+    else {
+      return $directory . '/' . $uuid;
+    }
   }
 
 }

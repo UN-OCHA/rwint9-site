@@ -1,0 +1,42 @@
+/**
+ * Loading overlay.
+ *
+ * Overlay with a spinning loading logo, that can be attached to any element via
+ * the `rw-loading` class.
+ *
+ * Scope: .rw-loading
+ */
+@keyframes rw-overlay-loader {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.rw-loading {
+  position: relative;
+}
+.rw-loading:before {
+  position: absolute;
+  z-index: 10000;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  content: "";
+  background-color: rgba(0, 0, 0, 0.2);
+}
+.rw-loading:after {
+  position: absolute;
+  z-index: 10001;
+  top: 50%;
+  left: 50%;
+  box-sizing: border-box;
+  width: 40px;
+  height: 40px;
+  margin-top: -20px;
+  margin-left: -20px;
+  content: "";
+  animation: rw-overlay-loader 0.8s linear infinite;
+  border: 3px solid #999;
+  border-top-color: #333;
+  border-radius: 50%;
+}

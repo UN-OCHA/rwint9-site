@@ -10,7 +10,7 @@ field_name: field_iso3
 entity_type: taxonomy_term
 bundle: country
 label: 'ISO 3 code'
-description: '3 letters ISO 3166-1 alpha-3 country code.'
+description: 'The 3 letter <a href="https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3" rel="noopener noreferrer" target="_blank">ISO 3166-1 alpha-3 code</a> for this country.'
 required: true
 translatable: false
 default_value: {  }

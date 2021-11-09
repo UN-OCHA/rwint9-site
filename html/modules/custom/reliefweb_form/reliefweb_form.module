@@ -23,6 +23,92 @@ function reliefweb_form_theme() {
 }
 
 /**
+ * Implements hook_element_info_alter().
+ */
+function reliefweb_form_element_info_alter(array &$info) {
+  $info['checkboxes']['#process'][] = 'reliefweb_form_checkboxes_element_process';
+  $info['radios']['#process'][] = 'reliefweb_form_radios_element_process';
+  $info['date']['#process'][] = 'reliefweb_form_date_element_process';
+}
+
+/**
+ * Process checkboxes elements.
+ *
+ * Add the option attributes to the checkbox form element wrappers.
+ *
+ * @param array $element
+ *   The form element.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The form interface.
+ * @param array $form
+ *   The complete form.
+ *
+ * @return array
+ *   The modified form element.
+ */
+function reliefweb_form_checkboxes_element_process(array $element, FormStateInterface $form_state, array $form) {
+  $option_attributes = $element['#option_attributes'] ?? [];
+  foreach ($element['#options'] as $key => $choice) {
+    $element[$key]['#wrapper_attributes'] = $option_attributes[$key] ?? [];
+  }
+  return $element;
+}
+
+/**
+ * Process radios elements.
+ *
+ * Add the option attributes to the radio form element wrappers.
+ *
+ * @param array $element
+ *   The form element.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The form interface.
+ * @param array $form
+ *   The complete form.
+ *
+ * @return array
+ *   The modified form element.
+ */
+function reliefweb_form_radios_element_process(array $element, FormStateInterface $form_state, array $form) {
+  $option_attributes = $element['#option_attributes'] ?? [];
+  foreach ($element['#options'] as $key => $choice) {
+    $element[$key]['#wrapper_attributes'] = $option_attributes[$key] ?? [];
+  }
+  return $element;
+}
+
+/**
+ * Process date elements.
+ *
+ * Add the date format as description of the date input.
+ *
+ * @param array $element
+ *   The form element.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The form interface.
+ * @param array $form
+ *   The complete form.
+ *
+ * @return array
+ *   The modified form element.
+ */
+function reliefweb_form_date_element_process(array $element, FormStateInterface $form_state, array $form) {
+  $description = trim($element['#description'] ?? '');
+  if (!empty($description)) {
+    if (substr($description, -1) !== '.') {
+      $description .= '.';
+    }
+    $description .= ' ';
+  }
+  $description .= t('Format: @format (e.g., @date)', [
+    '@format' => 'YYYY-MM-DD',
+    '@date' => gmdate('Y-m-d'),
+  ]);
+  $element['#description'] = $description;
+  return $element;
+}
+
+/**
  * Implements hook_theme_suggestions_HOOK_alter() for `select`.
  *
  * Add a theme suggestion to use our select template that supports option
@@ -57,25 +143,20 @@ function reliefweb_form_preprocess_select(&$variables) {
  * Add form enhancements.
  */
 function reliefweb_form_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
-  // Enhancements for the node and term forms.
-  if (preg_match('#^(node|taxonomy_term)_.+_form$#', $form_id) === 1) {
-    if (\Drupal::currentUser()->hasPermission('use enhanced input forms')) {
-      // Attach the widget libraries if there are fields using them.
-      reliefweb_form_attach_autocomplete($form);
-      reliefweb_form_attach_datepicker($form);
-      reliefweb_form_attach_formatting($form);
-      reliefweb_form_attach_lengthchecker($form);
-      reliefweb_form_attach_selection_limit($form);
+  // Enhance the form.
+  if (isset($form['#attributes']['data-enhanced']) && \Drupal::currentUser()->hasPermission('use enhanced input forms')) {
+    // Attach the widget libraries if there are fields using them.
+    reliefweb_form_attach_autocomplete($form);
+    reliefweb_form_attach_datepicker($form);
+    reliefweb_form_attach_formatting($form);
+    reliefweb_form_attach_lengthchecker($form);
+    reliefweb_form_attach_selection_limit($form);
 
-      // Attach the guidelines.
-      reliefweb_form_attach_guidelines($form);
+    // Attach the guidelines.
+    reliefweb_form_attach_guidelines($form);
 
-      // Attach the main enhanced form library.
-      $form['#attached']['library'][] = 'reliefweb_form/form.main';
-
-      // Mark the form has being "enhanced".
-      $form['#attributes']['data-enhanced'] = '';
-    }
+    // Attach the main enhanced form library.
+    $form['#attached']['library'][] = 'reliefweb_form/form.main';
   }
 }
 

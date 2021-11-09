@@ -3,8 +3,10 @@ global-styling:
     theme:
       css/styles.css: {}
   dependencies:
+    - common_design_subtheme/rw-external-links
     - common_design_subtheme/rw-form
     - common_design_subtheme/rw-site-slogan
+    - common_design_subtheme/rw-page-title
 
 # RW custom components
 rw-admin-menu:
@@ -46,6 +48,8 @@ rw-autocomplete:
       components/rw-autocomplete/rw-autocomplete.css: {}
   dependencies:
     - common_design_subtheme/rw-icons
+    - common_design_subtheme/rw-moderation-status
+    - common_design_subtheme/rw-selection
 
 rw-blog:
   css:
@@ -65,8 +69,14 @@ rw-bookmark-link:
 rw-country:
   css:
     theme:
-      components/rw-country/rw-country.css: {}
       components/rw-country/rw-country-list.css: {}
+  dependencies:
+    - common_design_subtheme/rw-country-slug
+
+rw-country-slug:
+  css:
+    theme:
+      components/rw-country-slug/rw-country-slug.css: {}
 
 # Datepicker widget.
 rw-datepicker:
@@ -110,23 +120,30 @@ rw-entity-text:
     theme:
       components/rw-entity-text/rw-entity-text.css: {}
 
+rw-external-links:
+  css:
+    theme:
+      components/rw-external-links/rw-external-links.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+
 rw-form:
   css:
     theme:
       components/rw-form/rw-form.css: {}
       components/rw-form/rw-form--widget.css: {}
 
+rw-guidelines:
+  css:
+    theme:
+      components/rw-guidelines/rw-guidelines.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+
 rw-headlines:
   css:
     theme:
       components/rw-headlines/rw-headlines.css: {}
-
-rw-headlines--admin:
-  css:
-    theme:
-      components/rw-headlines--admin/rw-headlines--admin.css: {}
-  js:
-    components/rw-headlines--admin/rw-headlines--admin.js: {}
 
 rw-homepage:
   css:
@@ -140,20 +157,55 @@ rw-icons:
     theme:
       components/rw-icons/rw-icons.css: {}
 
+rw-iframe:
+  css:
+    theme:
+      components/rw-iframe/rw-iframe.css: {}
+
 rw-key-content:
   css:
     theme:
       components/rw-key-content/rw-key-content.css: {}
+
+rw-key-figures:
+  css:
+    theme:
+      components/rw-key-figures/rw-key-figures.css: {}
 
 rw-local-tasks:
   css:
     theme:
       components/rw-local-tasks/rw-local-tasks.css: {}
 
-rw-key-figures:
+rw-loading:
   css:
     theme:
-      components/rw-key-figures/rw-key-figures.css: {}
+      components/rw-loading/rw-loading.css: {}
+
+rw-moderation:
+  css:
+    theme:
+      components/rw-moderation/rw-moderation.css: {}
+  dependencies:
+    - common_design_subtheme/rw-moderation-status
+    - common_design_subtheme/rw-revision-message
+    - common_design_subtheme/rw-autocomplete
+    - common_design_subtheme/rw-datepicker
+    - common_design_subtheme/rw-icons
+    - common_design_subtheme/rw-selection
+
+rw-moderation-information:
+  css:
+    theme:
+      components/rw-moderation-information/rw-moderation-information.css: {}
+  dependencies:
+    - common_design_subtheme/rw-moderation-status
+    - common_design_subtheme/rw-revision-message
+
+rw-moderation-status:
+  css:
+    theme:
+      components/rw-moderation-status/rw-moderation-status.css: {}
 
 rw-most-read:
   css:
@@ -182,6 +234,11 @@ rw-pager:
     theme:
       components/rw-pager/rw-pager.css: {}
 
+rw-preview:
+  css:
+    theme:
+      components/rw-preview/rw-preview.css: {}
+
 rw-related-content:
   css:
     theme:
@@ -191,6 +248,21 @@ rw-report:
   css:
     theme:
       components/rw-report/rw-report.css: {}
+
+rw-revision-message:
+  css:
+    theme:
+      components/rw-revision-message/rw-revision-message.css: {}
+  dependencies:
+   - common_design_subtheme/rw-icons
+
+rw-revisions:
+  css:
+    theme:
+      components/rw-revisions/rw-revisions.css: {}
+  dependencies:
+   - common_design_subtheme/rw-icons
+   - common_design_subtheme/rw-loading
 
 rw-river:
   css:
@@ -232,6 +304,7 @@ rw-selection:
       components/rw-selection/rw-selection.css: {}
   dependencies:
     - common_design_subtheme/rw-icons
+    - common_design_subtheme/rw-moderation-status
 
 rw-subscriptions:
   css:
@@ -262,6 +335,18 @@ rw-user:
     theme:
       components/rw-user/rw-user.css: {}
       components/rw-user/rw-user-bookmarks.css: {}
+
+rw-user-information:
+  css:
+    theme:
+      components/rw-user-information/rw-user-information.css: {}
+  dependencies:
+   - common_design_subtheme/rw-user-posting-rights
+
+rw-user-posting-rights:
+  css:
+    theme:
+      components/rw-user-posting-rights/rw-user-posting-rights.css: {}
 
 rw-view-more:
   css:

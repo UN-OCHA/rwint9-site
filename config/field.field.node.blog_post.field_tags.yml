@@ -11,7 +11,7 @@ field_name: field_tags
 entity_type: node
 bundle: blog_post
 label: Tags
-description: ''
+description: 'Add the tags that best describe the content of the blogpost. Ex: mobile, search, topics, jobs, labs, filter, API, statistics, data, training, maps, disasters.'
 required: false
 translatable: false
 default_value: {  }

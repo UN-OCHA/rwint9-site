@@ -1,0 +1,38 @@
+{#
+
+/**
+ * @file
+ * Template file for a daterange field revision differences.
+ *
+ * Available variables:
+ * - attributes: wrapper attributes
+ * - added: list of added media items with a link and optional thumbnail each
+ * - removed: list of removed media items with a link and optional thumbnail
+ *   each.
+ */
+
+#}
+<div{{ attributes.addClass('rw-revisions-diff-media') }}>
+  <dl>
+  {% if added is not empty %}
+    <dt class="rw-revisions-added">{{ 'Added'|t }}</dt>
+    {% for item in added %}
+      {% if item.thumbnail %}
+        <dd>{{ item.thumbnail }} {{ item.link }}</dd>
+      {% else %}
+        <dd>{{ item.link }}</dd>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+  {% if removed is not empty %}
+    <dt class="rw-revisions-removed">{{ 'Removed'|t }}</dt>
+    {% for item in removed %}
+      {% if item.thumbnail %}
+        <dd>{{ item.thumbnail }} {{ item.link }}</dd>
+      {% else %}
+        <dd>{{ item.link }}</dd>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+  </dl>
+</div>

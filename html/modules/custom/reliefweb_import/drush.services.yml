@@ -1,0 +1,6 @@
+services:
+  reliefweb_import.commands:
+    class: \Drupal\reliefweb_import\Command\ReliefwebImportCommand
+    arguments: ['@database', '@entity_type.manager', '@account_switcher', '@http_client', '@logger.factory', '@state']
+    tags:
+      - { name: drush.command }

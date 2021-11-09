@@ -2,11 +2,10 @@
 
 namespace Drupal\reliefweb_moderation\Services;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\reliefweb_entities\EntityModeratedInterface;
+use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
@@ -67,7 +66,7 @@ class TrainingModeration extends ModerationServiceBase {
       return [];
     }
 
-    /** @var \Drupal\reliefweb_entities\EntityModeratedInterface[] $entities */
+    /** @var \Drupal\reliefweb_moderation\EntityModeratedInterface[] $entities */
     $entities = $results['entities'];
 
     // Prepare the table rows' data from the entities.
@@ -88,9 +87,7 @@ class TrainingModeration extends ModerationServiceBase {
       $info = [];
       // User posting rights.
       // @todo use a template instead?
-      $info['posting_rights'] = new FormattableMarkup('<span data-user-posting-rights="@right">@right</span>', [
-        '@right' => UserPostingRightsHelper::getEntityAuthorPostingRights($entity),
-      ]);
+      $info['posting_rights'] = UserPostingRightsHelper::renderRight(UserPostingRightsHelper::getEntityAuthorPostingRights($entity));
       // Author.
       $info['author'] = $this->getEntityAuthorData($entity);
       // Source.
@@ -189,7 +186,7 @@ class TrainingModeration extends ModerationServiceBase {
     return in_array($status, [
       'draft',
       'pending',
-      'on-hold',
+      'on_hold',
       'published',
     ]);
   }
@@ -226,7 +223,7 @@ class TrainingModeration extends ModerationServiceBase {
     // Allow deletion of draft, pending and on-hold only or of any documents
     // for editors.
     if ($operation === 'delete') {
-      $statuses = ['draft', 'pending', 'on-hold'];
+      $statuses = ['draft', 'pending', 'on_hold'];
       $access = $account->hasPermission('bypass node access') ||
                 $account->hasPermission('administer nodes') ||
                 ($access && in_array($entity->getModerationStatus(), $statuses));
@@ -240,10 +237,10 @@ class TrainingModeration extends ModerationServiceBase {
    */
   public function getEntityFormSubmitButtons($status, EntityModeratedInterface $entity) {
     $buttons = [];
-    $new = empty($status) || $status === 'draft';
+    $new = empty($status) || $status === 'draft' || $entity->isNew();
 
     // Only show save as draft for non-published but editable documents.
-    if ($new || in_array($status, ['draft', 'pending', 'on-hold'])) {
+    if ($new || in_array($status, ['draft', 'pending', 'on_hold'])) {
       $buttons['draft'] = [
         '#value' => $this->t('Save as draft'),
       ];
@@ -255,7 +252,7 @@ class TrainingModeration extends ModerationServiceBase {
       $buttons['published'] = [
         '#value' => $this->t('Publish'),
       ];
-      $buttons['on-hold'] = [
+      $buttons['on_hold'] = [
         '#value' => $this->t('On hold'),
       ];
       $buttons['duplicate'] = [

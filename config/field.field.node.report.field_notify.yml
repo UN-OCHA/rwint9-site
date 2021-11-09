@@ -10,7 +10,7 @@ field_name: field_notify
 entity_type: node
 bundle: report
 label: Notify
-description: 'Enter one email address per line.'
+description: "Use this field to notify people about the submission of this report.\r\nEnter one email address per line."
 required: false
 translatable: false
 default_value: {  }

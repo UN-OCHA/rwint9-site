@@ -6,7 +6,7 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Link;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
-use Drupal\reliefweb_entities\EntityModeratedInterface;
+use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
 
@@ -64,7 +64,7 @@ class ReportModeration extends ModerationServiceBase {
       return [];
     }
 
-    /** @var \Drupal\reliefweb_entities\EntityModeratedInterface[] $entities */
+    /** @var \Drupal\reliefweb_moderation\EntityModeratedInterface[] $entities */
     $entities = $results['entities'];
 
     // Check if the reports are linked as Key Content.
@@ -244,7 +244,7 @@ class ReportModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function isViewableStatus($status, $account = NULL) {
-    return in_array($status, ['to-review', 'published']);
+    return in_array($status, ['to_review', 'published']);
   }
 
   /**
@@ -277,7 +277,7 @@ class ReportModeration extends ModerationServiceBase {
     if ($operation !== 'view') {
       // Normally editors can edit any kind of reports
       // but there are some exceptions like archived reports.
-      return $access && $this->isEditableStatus($entity->getModerationStatus(), $account);
+      $access = $access && $this->isEditableStatus($entity->getModerationStatus(), $account);
     }
 
     return $access ? AccessResult::allowed() : AccessResult::forbidden();

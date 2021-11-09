@@ -4,7 +4,7 @@ namespace Drupal\reliefweb_moderation\Services;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\reliefweb_entities\EntityModeratedInterface;
+use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
 
@@ -68,7 +68,7 @@ class DisasterModeration extends ModerationServiceBase {
       return [];
     }
 
-    /** @var \Drupal\reliefweb_entities\EntityModeratedInterface[] $entities */
+    /** @var \Drupal\reliefweb_moderation\EntityModeratedInterface[] $entities */
     $entities = $results['entities'];
 
     // Prepare the table rows' data from the entities.
@@ -156,6 +156,7 @@ class DisasterModeration extends ModerationServiceBase {
    */
   public function getEntityFormSubmitButtons($status, EntityModeratedInterface $entity) {
     $buttons = [];
+    $new = empty($status) || $entity->isNew();
 
     // @todo replace with permission.
     if (UserHelper::userHasRoles(['editor'])) {
@@ -165,8 +166,15 @@ class DisasterModeration extends ModerationServiceBase {
       $buttons['alert'] = [
         '#value' => $this->t('Alert'),
       ];
-      $buttons['current'] = [
+      $buttons['ongoing'] = [
         '#value' => $this->t('Ongoing'),
+      ];
+    }
+
+    // Allow to save new disasters as past disasters directly.
+    if ($new) {
+      $buttons['past'] = [
+        '#value' => $this->t('Past disaster'),
       ];
     }
 
@@ -177,8 +185,9 @@ class DisasterModeration extends ModerationServiceBase {
       ];
     }
 
-    // Existing disaster.
-    if (!empty($status)) {
+    // Use a catch all button to archive existing disasters.
+    // @see ::alterSubmittedEntityStatus()
+    if (!$new) {
       $buttons['archive'] = [
         '#value' => $this->t('Archive'),
       ];
@@ -200,18 +209,18 @@ class DisasterModeration extends ModerationServiceBase {
 
       switch ($current_status) {
         case 'draft':
-        case 'draft-archive':
-          $status = 'draft-archive';
+        case 'draft_archive':
+          $status = 'draft_archive';
           break;
 
         case 'alert':
-        case 'alert-archive':
-          $status = 'alert-archive';
+        case 'alert_archive':
+          $status = 'alert_archive';
           break;
 
         case 'external':
-        case 'external-archive':
-          $status = 'external-archive';
+        case 'external_archive':
+          $status = 'external_archive';
           break;
 
         case 'current':
@@ -222,7 +231,7 @@ class DisasterModeration extends ModerationServiceBase {
 
         // Compatibility with previous archive status.
         default:
-          $status = 'alert-archive';
+          $status = 'alert_archive';
       }
     }
     return $status;
@@ -234,7 +243,7 @@ class DisasterModeration extends ModerationServiceBase {
   public function isViewableStatus($status, ?AccountInterface $account = NULL) {
     $account = $account ?: $this->currentUser;
     // External disasters are only viewable by "External disaster managers".
-    if ($status === 'external' || $status === 'external-archive') {
+    if ($status === 'external' || $status === 'external_archive') {
       return UserHelper::userHasRoles(['external_disaster_manager'], $account);
     }
     // Editors can view any disaster.
@@ -243,7 +252,7 @@ class DisasterModeration extends ModerationServiceBase {
     }
     // Hide draft and archive disasters.
     else {
-      return in_array($status, ['alert', 'current', 'past']);
+      return in_array($status, ['alert', 'current', 'ongoing', 'past']);
     }
     return FALSE;
   }
@@ -257,7 +266,7 @@ class DisasterModeration extends ModerationServiceBase {
       return FALSE;
     }
     // External disasters are only editable by "External disaster managers".
-    if ($status === 'external' || $status === 'external-archive') {
+    if ($status === 'external' || $status === 'external_archive') {
       return UserHelper::userHasRoles(['external_disaster_manager'], $account);
     }
     // Only Editors are allowed to edit disasters.
@@ -275,7 +284,7 @@ class DisasterModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function disableNotifications(EntityModeratedInterface $entity, $status) {
-    $allowed_statuses = ['alert', 'current'];
+    $allowed_statuses = ['alert', 'current', 'ongoing'];
     $entity->notifications_content_disable = !in_array($status, $allowed_statuses);
   }
 

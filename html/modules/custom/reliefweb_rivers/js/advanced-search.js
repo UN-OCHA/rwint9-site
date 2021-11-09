@@ -1589,16 +1589,6 @@
     content.appendChild(createAdvancedModeSwitch(advancedSearch));
     content.removeAttribute('hidden');
     return content;
-    /*var form = createElement('div', {
-      'id': 'river-advanced-search-form-content'
-    }, [
-      createCombinedFilter(advancedSearch),
-      createActions(advancedSearch),
-      createSimplifiedFilters(advancedSearch),
-      createFilterSelector(advancedSearch),
-      createAdvancedModeSwitch(advancedSearch)
-    ]);
-    return form;*/
   }
 
   // Create the autocomplete and datepicker widgets.

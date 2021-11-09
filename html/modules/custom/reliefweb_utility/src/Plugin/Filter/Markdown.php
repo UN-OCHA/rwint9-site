@@ -6,6 +6,8 @@ use Drupal\filter\FilterProcessResult;
 use Drupal\filter\Plugin\FilterBase;
 use League\CommonMark\Environment;
 use League\CommonMark\Extension\Attributes\AttributesExtension;
+use League\CommonMark\Extension\ExternalLink\ExternalLinkExtension;
+use League\CommonMark\Extension\Table\TableExtension;
 use League\CommonMark\MarkdownConverter;
 
 /**
@@ -33,8 +35,26 @@ class Markdown extends FilterBase {
     // parsers/renderers ready-to-go.
     $environment = Environment::createCommonMarkEnvironment();
 
+    // Configuration to add attributes to external links.
+    $external_link_config = [
+      'external_link' => [
+        'internal_hosts' => [
+          \Drupal::request()->getHost(),
+          'reliefweb.int',
+        ],
+        'open_in_new_window' => TRUE,
+      ],
+    ];
+    $environment->mergeConfig($external_link_config);
+
+    // Add the extension to convert external links.
+    $environment->addExtension(new ExternalLinkExtension());
+
     // Add the extension to convert ID attributes.
     $environment->addExtension(new AttributesExtension());
+
+    // Add the extension to convert the tables.
+    $environment->addExtension(new TableExtension());
 
     // Create the converter with the extension(s).
     $converter = new MarkdownConverter($environment);

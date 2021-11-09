@@ -141,3 +141,37 @@ select:not([multitple]) {
 fieldset {
   min-inline-size: auto;
 }
+
+/* Tables. */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+table caption {
+  margin: 12px 0;
+  font-weight: bold;
+}
+table th,
+table td {
+  padding: 8px;
+  border: 1px solid #e6ecef;
+}
+table th {
+  border-left-color: white;
+  background: #e6ecef;
+}
+table thead th {
+  border-left-color: white;
+}
+th.field-label > h4.label {
+  margin: 0;
+}
+table thead th:first-child {
+  border-left-color: #e6ecef;
+}
+table tbody th {
+  border-top-color: white;
+}
+table tbody th:first-child {
+  border-top-color: #e6ecef;
+}

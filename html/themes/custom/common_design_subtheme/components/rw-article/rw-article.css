@@ -2,20 +2,6 @@
   --cd-flow-space: 24px;
 }
 
-.rw-river-article > header .rw-river-article__title,
-.rw-river-article > .rw-river-article__title {
-  display: inline;
-  margin: 0;
-  color: #055372;
-  font-size: 17px;
-  font-weight: bold;
-  line-height: 28px;
-}
-.rw-river-article > header .rw-river-article__title a,
-.rw-river-article > .rw-river-article__title a {
-  color: inherit;
-}
-
 /**
  * Sub article.
  *
@@ -35,18 +21,17 @@
 .rw-river-article:only-child {
   padding-bottom: 0;
 }
-.rw-river-article header {
+.rw-river-article .rw-river-article__header {
   /* Compensate the half-leading space from the title line-height. */
   /* margin-top: -5px; */
 }
-.rw-river-article header p.rw-entity-country-slug {
+.rw-river-article .rw-river-article__header p.rw-entity-country-slug {
   margin: 2px 6px 0 0;
   padding: 1px 8px;
   font-size: 14px;
   line-height: 22px;
 }
-.rw-river-article > header .title,
-.rw-river-article > .title {
+.rw-river-article .rw-river-article__title {
   display: inline;
   margin: 0;
   color: #055372;
@@ -54,8 +39,7 @@
   font-weight: bold;
   line-height: 28px;
 }
-.rw-river-article > header .title a,
-.rw-river-article > .title a {
+.rw-river-article .rw-river-article__title a {
   color: inherit;
 }
 .rw-river-article .rw-river-article__content {
@@ -82,57 +66,15 @@
     display: none;
   }
 }
-.rw-river-article footer {
+.rw-river-article .rw-river-article__footer {
   /* Clear any floating from the content. */
   clear: both;
   /* Compensate  the half-leading space added by the line-height of the <dl>. */
   /* margin-bottom: -8px; */
   padding-top: 16px;
 }
-.rw-river-article header + footer {
+.rw-river-article .rw-river-article__header + .rw-river-article__footer {
   padding-top: 12px;
-}
-
-/* External links. Display an icon after the link. */
-.cd-layout-content a[target="_blank"][rel="noopener"]:after {
-  display: inline-block;
-  overflow: hidden;
-  width: 12px;
-  height: 12px;
-  /* The top margin is to have a better vertical alignment. */
-  margin: -2px 0 0 6px;
-  content: "";
-  vertical-align: middle;
-  background: var(--rw-icons--common--external-link--12--dark-grey);
-}
-
-/**
- * Iframes.
- *
- * To be responsive, iframes are wrapped in a container with a top padding
- * defining the aspect ratio of the iframe content (for example,
- * 50% for a iframe where the height is half the width). The iframe is then
- * positioned to fill the space in the wrapper so that when the wrapper is
- * resized so is the iframe.
- */
-.cd-layout-content iframe {
-  width: 100%;
-  border: 0;
-}
-.cd-layout-content .iframe-wrapper {
-  position: relative;
-  overflow: hidden;
-  /* Default padding for the iframes, assuming a 2/1 aspect ratio.
-   * This can be overloaded via a style attribute on the wrapper with the
-   * correct aspect ratio. */
-  padding-top: 50%;
-}
-.cd-layout-content .iframe-wrapper iframe {
-  /* Those rules ensure the iframe uses all the space of the wrapper. */
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
 }
 
 @media screen and (min-width: 768px) {
@@ -142,6 +84,7 @@
   .rw-river--river-columns .rw-river__articles {
     display: flex;
     flex-wrap: wrap;
+    margin-top: 0;
   }
   .rw-river--river-columns.rw-river--river-list {
     width: auto;
@@ -168,7 +111,13 @@
     border-bottom: none;
   }
   .rw-river--river-columns .pager {
+    margin-top: 0;
     border-top: none;
+  }
+
+  /* Compensate for margin removal when there are no results */
+  .rw-river--river-columns .visually-hidden:first-child + .rw-river__empty {
+    margin: 1rem 0.5rem;
   }
 }
 
@@ -176,5 +125,10 @@
   /* Add top margin to second item when two column layout doesn't start until desktop breakpoint */
   .rw-river--river-columns--two.rw-river--river-columns--desktop .rw-river-article:nth-child(2) {
     margin-top: var(--cd-flow-space);
+  }
+  /* Add bottom border to second last item in two column layout */
+  .rw-river--river-columns--two.rw-river--river-columns--desktop .rw-river-article:nth-last-child(2) {
+    padding-bottom: 24px;
+    border-bottom: 1px solid #e6ecef;
   }
 }

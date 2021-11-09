@@ -1,0 +1,3 @@
+view entity history:
+  title: 'View entity history'
+  description: "Allow users to view an entity's history."

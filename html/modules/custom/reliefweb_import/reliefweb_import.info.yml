@@ -1,0 +1,8 @@
+type: module
+name: ReliefWeb Import
+description: 'Importers for reliefweb.'
+package: reliefweb
+core_version_requirement: ^9
+dependencies:
+  - drupal:reliefweb_api
+  - drupal:reliefweb_utility

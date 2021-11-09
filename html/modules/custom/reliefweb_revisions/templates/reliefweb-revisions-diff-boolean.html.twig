@@ -1,0 +1,29 @@
+{#
+
+/**
+ * @file
+ * Template file for boolean field revision differences.
+ *
+ * Available variables:
+ * - attributes: wrapper attributes
+ * - added: TRUE if checked, FALSE if unchecked, NULL if not set
+ * - removed: TRUE if checked, FALSE if unchecked, NULL if not set.
+ */
+
+#}
+<div{{ attributes.addClass('rw-revisions-diff-boolean') }}>
+{% if removed is not null %}
+  {% if removed is empty %}
+    <del class="rw-revisions-unchecked">{{ 'unchecked'|t }}</del>
+  {% else %}
+    <del class="rw-revisions-checked">{{ 'checked'|t }}</del>
+  {% endif %}
+{% endif %}
+{% if added is not null %}
+  {% if added is empty %}
+    <ins class="rw-revisions-unchecked">{{ 'unchecked'|t }}</ins>
+  {% else %}
+    <ins class="rw-revisions-checked">{{ 'checked'|t }}</ins>
+  {% endif %}
+{% endif %}
+</div>

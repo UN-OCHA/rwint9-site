@@ -21,10 +21,10 @@ class TrainingFormAlter extends EntityFormAlterServiceBase {
   protected function addBundleFormAlterations(array &$form, FormStateInterface $form_state) {
     // Add a guide on how to populate the field as description to the title
     // field.
-    $form['title']['#description'] = $this->t('Should contain only the title of the training. Other information such as location, date and Organization should not be included in this field.');
+    $form['title']['widget'][0]['value']['#description'] = $this->t('Should contain only the title of the training. Other information such as location, date and Organization should not be included in this field.');
 
     // Force shorter titles.
-    $form['title']['#maxlength'] = 150;
+    $form['title']['widget'][0]['value']['#maxlength'] = 150;
 
     // @todo review if that is still needed when introducing the WYSIWYG.
     // Add the WYSIWYG to the body and how to register fields.
@@ -32,8 +32,10 @@ class TrainingFormAlter extends EntityFormAlterServiceBase {
     $form['field_how_to_register']['#attributes']['data-with-wysiwyg'] = '';
 
     // Add a datepicker to the training date and registration deadline.
-    $form['field_training_date']['#attributes']['data-with-datepicker'] = '';
-    $form['field_registration_deadline']['#attributes']['data-with-datepicker'] = '';
+    $form['field_training_date']['widget'][0]['#title_display'] = 'invisible';
+    $form['field_training_date']['widget'][0]['value']['#attributes']['data-with-datepicker'] = '';
+    $form['field_training_date']['widget'][0]['end_value']['#attributes']['data-with-datepicker'] = '';
+    $form['field_registration_deadline']['widget'][0]['value']['#attributes']['data-with-datepicker'] = '';
 
     // Add an autocomplete widget to the country and source fields.
     $form['field_country']['#attributes']['data-with-autocomplete'] = '';
@@ -101,10 +103,13 @@ class TrainingFormAlter extends EntityFormAlterServiceBase {
       ':input[name="field_training_format[4606]"]' => ['checked' => FALSE],
     ];
     $form['field_country']['#states']['invisible'] = $condition;
-    $form['field_country']['#states']['disabled'] = $condition;
-    $form['field_country']['#states']['optional'] = $condition;
     $form['field_city']['#states']['invisible'] = $condition;
-    $form['field_city']['#states']['disabled'] = $condition;
+
+    // Flag the country as required when "on-site" is selected.
+    $condition = [
+      ':input[name="field_training_format[4606]"]' => ['checked' => TRUE],
+    ];
+    $form['field_country']['widget']['#states']['required'] = $condition;
 
     // Add a validation callback to add 'World' as country if 'online' is
     // selected and remove other countries and empty the city field if 'on-site'

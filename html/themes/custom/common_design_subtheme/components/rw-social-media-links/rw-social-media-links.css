@@ -100,7 +100,7 @@
   background-position-x: var(--rw-icons--social-media--48--dark-red--x);
 }
 /* Hide the external link icon. */
-.rw-entity-social-media-links--icons-only a[target="_blank"][rel="noopener"]:after {
+.rw-entity-social-media-links--icons-only a[target="_blank"][rel~="noopener"]::after {
   content: none;
 }
 /* Center the links on document pages. */

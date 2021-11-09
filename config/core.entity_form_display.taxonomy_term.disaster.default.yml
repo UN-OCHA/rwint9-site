@@ -21,6 +21,7 @@ dependencies:
     - allowed_formats
     - content_moderation
     - datetime
+    - path
     - reliefweb_fields
     - text
 id: taxonomy_term.disaster.default
@@ -44,34 +45,34 @@ content:
     settings:
       sort: label
       extra_data:
-        moderation_state: moderation_state
-        field_shortname: field_shortname
-        tid: '0'
-        uuid: '0'
-        revision_id: '0'
-        langcode: '0'
-        vid: '0'
-        revision_created: '0'
-        revision_user: '0'
-        revision_log_message: '0'
-        status: '0'
-        name: '0'
-        description: '0'
-        weight: '0'
-        parent: '0'
-        changed: '0'
-        default_langcode: '0'
-        revision_default: '0'
-        revision_translation_affected: '0'
-        field_aliases: '0'
-        field_appeals_response_plans: '0'
-        field_iso3: '0'
-        field_key_content: '0'
-        field_location: '0'
-        field_longname: '0'
-        field_profile: '0'
-        field_timezone: '0'
-        field_useful_links: '0'
+        'country:moderation_state': 'country:moderation_state'
+        'country:field_shortname': 'country:field_shortname'
+        'country:tid': '0'
+        'country:uuid': '0'
+        'country:revision_id': '0'
+        'country:langcode': '0'
+        'country:vid': '0'
+        'country:revision_created': '0'
+        'country:revision_user': '0'
+        'country:revision_log_message': '0'
+        'country:status': '0'
+        'country:name': '0'
+        'country:description': '0'
+        'country:weight': '0'
+        'country:parent': '0'
+        'country:changed': '0'
+        'country:default_langcode': '0'
+        'country:revision_default': '0'
+        'country:revision_translation_affected': '0'
+        'country:field_aliases': '0'
+        'country:field_appeals_response_plans': '0'
+        'country:field_iso3': '0'
+        'country:field_key_content': '0'
+        'country:field_location': '0'
+        'country:field_longname': '0'
+        'country:field_profile': '0'
+        'country:field_timezone': '0'
+        'country:field_useful_links': '0'
     third_party_settings: {  }
     type: reliefweb_entity_reference_select
     region: content
@@ -110,34 +111,34 @@ content:
     settings:
       sort: label
       extra_data:
-        moderation_state: moderation_state
-        field_shortname: field_shortname
-        tid: '0'
-        uuid: '0'
-        revision_id: '0'
-        langcode: '0'
-        vid: '0'
-        revision_created: '0'
-        revision_user: '0'
-        revision_log_message: '0'
-        status: '0'
-        name: '0'
-        description: '0'
-        weight: '0'
-        parent: '0'
-        changed: '0'
-        default_langcode: '0'
-        revision_default: '0'
-        revision_translation_affected: '0'
-        field_aliases: '0'
-        field_appeals_response_plans: '0'
-        field_iso3: '0'
-        field_key_content: '0'
-        field_location: '0'
-        field_longname: '0'
-        field_profile: '0'
-        field_timezone: '0'
-        field_useful_links: '0'
+        'country:moderation_state': 'country:moderation_state'
+        'country:field_shortname': 'country:field_shortname'
+        'country:tid': '0'
+        'country:uuid': '0'
+        'country:revision_id': '0'
+        'country:langcode': '0'
+        'country:vid': '0'
+        'country:revision_created': '0'
+        'country:revision_user': '0'
+        'country:revision_log_message': '0'
+        'country:status': '0'
+        'country:name': '0'
+        'country:description': '0'
+        'country:weight': '0'
+        'country:parent': '0'
+        'country:changed': '0'
+        'country:default_langcode': '0'
+        'country:revision_default': '0'
+        'country:revision_translation_affected': '0'
+        'country:field_aliases': '0'
+        'country:field_appeals_response_plans': '0'
+        'country:field_iso3': '0'
+        'country:field_key_content': '0'
+        'country:field_location': '0'
+        'country:field_longname': '0'
+        'country:field_profile': '0'
+        'country:field_timezone': '0'
+        'country:field_useful_links': '0'
     third_party_settings: {  }
     type: reliefweb_entity_reference_select
     region: content
@@ -176,6 +177,12 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
+  path:
+    type: path
+    weight: 13
+    region: content
+    settings: {  }
+    third_party_settings: {  }
   status:
     type: boolean_checkbox
     settings:
@@ -188,4 +195,3 @@ hidden:
   field_key_content: true
   field_useful_links: true
   langcode: true
-  path: true

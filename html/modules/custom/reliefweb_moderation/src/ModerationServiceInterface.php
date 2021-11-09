@@ -4,7 +4,6 @@ namespace Drupal\reliefweb_moderation;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\reliefweb_entities\EntityModeratedInterface;
 
 /**
  * Interface for the moderation services.
@@ -84,7 +83,7 @@ interface ModerationServiceInterface {
    *
    * @param string $status
    *   Current entity status.
-   * @param \Drupal\reliefweb_entities\EntityModeratedInterface $entity
+   * @param \Drupal\reliefweb_moderation\EntityModeratedInterface $entity
    *   Entity.
    *
    * @return array
@@ -133,7 +132,7 @@ interface ModerationServiceInterface {
   /**
    * Check if the nofitications should be disable depending on the status.
    *
-   * @param \Drupal\reliefweb_entities\EntityModeratedInterface $entity
+   * @param \Drupal\reliefweb_moderation\EntityModeratedInterface $entity
    *   Entity for which to disable notifications.
    * @param string $status
    *   Moderation status.
@@ -143,7 +142,7 @@ interface ModerationServiceInterface {
   /**
    * Handle changes to the entity before saving.
    *
-   * @param \Drupal\reliefweb_entities\EntityModeratedInterface $entity
+   * @param \Drupal\reliefweb_moderation\EntityModeratedInterface $entity
    *   Entity.
    */
   public function entityPresave(EntityModeratedInterface $entity);
@@ -151,7 +150,7 @@ interface ModerationServiceInterface {
   /**
    * Check the if the entity is accessible for view or edition etc.
    *
-   * @param \Drupal\reliefweb_entities\EntityModeratedInterface $entity
+   * @param \Drupal\reliefweb_moderation\EntityModeratedInterface $entity
    *   Entity.
    * @param string $operation
    *   Operation: view, create, edit or delete.
@@ -176,12 +175,12 @@ interface ModerationServiceInterface {
   /**
    * Validate the moderation status.
    *
-   * @param array $form
-   *   Entity form.
+   * @param array $element
+   *   Status button form element.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   Form state.
    */
-  public function validateEntityStatus(array $form, FormStateInterface $form_state);
+  public function validateEntityStatus(array $element, FormStateInterface $form_state);
 
   /**
    * Submit handler to alter the moderation status.

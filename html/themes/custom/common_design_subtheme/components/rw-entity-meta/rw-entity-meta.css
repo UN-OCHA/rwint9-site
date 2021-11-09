@@ -81,6 +81,12 @@
   clear: both;
   margin: 0 4px 0 0;
 }
+.rw-entity-meta--core .rw-entity-meta__tag-label--status {
+  margin-right: 8px;
+}
+.rw-entity-meta__tag-value--status {
+  text-transform: capitalize;
+}
 .rw-entity-meta--core dt:after {
   content: ": ";
 }
@@ -129,14 +135,16 @@
   color: #4d5254;
 }
 
-dl.rw-entity-meta--stacked.rw-entity-meta dd {
-  display: inline;
-}
-dl.rw-entity-meta--stacked.rw-entity-meta dd:after {
-  display: block;
-  width: 0;
-  height: 0;
-  margin: 0;
+@media screen and (min-width: 480px) {
+  dl.rw-entity-meta--stacked.rw-entity-meta dd {
+    display: inline;
+  }
+  dl.rw-entity-meta--stacked.rw-entity-meta dd:after {
+    display: block;
+    width: 0;
+    height: 0;
+    margin: 0;
+  }
 }
 
 /**
