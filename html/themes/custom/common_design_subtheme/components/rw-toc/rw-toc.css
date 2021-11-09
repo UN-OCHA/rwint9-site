@@ -51,6 +51,30 @@
     flex: 1 0 20%;
   }
 }
+/* Node and Term edit page rules so the TOC acts the same as on the full
+   View pages.
+   The parent selectors `user-logged-in.path-[entity]` are also present on
+   Term and Node full node view pages, but the rules below are not applied
+   due to the additional markup present in only `page--[entity]--edit.html.twig`
+   template overrides
+*/
+@media screen and (min-width: 768px) {
+  .user-logged-in.path-taxonomy .rw-page--sectioned .region-content,
+  .user-logged-in.path-node .rw-page--sectioned .region-content {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .user-logged-in.path-taxonomy .rw-page--sectioned .region-content > header,
+  .user-logged-in.path-node .rw-page--sectioned .region-content > header,
+  .user-logged-in.path-taxonomy .rw-page--sectioned .region-content .rw-moderation-information,
+  .user-logged-in.path-node .rw-page--sectioned .region-content .rw-moderation-information,
+  .user-logged-in.path-taxonomy .rw-page--sectioned .region-content .block-local-tasks-block,
+  .user-logged-in.path-node .rw-page--sectioned .region-content .block-local-tasks-block,
+  .user-logged-in.path-taxonomy .rw-page--sectioned .region-content .rw-page-title,
+  .user-logged-in.path-node .rw-page--sectioned .region-content .rw-page-title {
+    width: 100%;
+  }
+}
 .rw-sectioned-content > section,
 .rw-sectioned-content > form > fieldset,
 .rw-sectioned-content > form > .form-wrapper,
