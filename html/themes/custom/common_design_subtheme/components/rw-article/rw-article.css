@@ -14,6 +14,12 @@
   padding: 0 0 24px 0;
   border-bottom: 1px solid var(--cd-reliefweb-brand-grey--light);
 }
+/* Prevent overflow in IE11 */
+@media all and (min-width: 768px) and (-ms-high-contrast: none) {
+  .rw-river-article {
+    flex: 1 0 100%;
+  }
+}
 .rw-river-article:last-child {
   padding-bottom: 0;
   border-bottom: none;
