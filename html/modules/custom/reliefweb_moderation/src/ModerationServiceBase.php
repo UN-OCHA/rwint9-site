@@ -1125,7 +1125,9 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     $entity_table_alias = $query->innerJoin($entity_table, $entity_table, "%alias.{$entity_id_field} = cms.content_entity_id");
 
     // Filter for the service entity bundle.
-    $query->condition($entity_table_alias . '.' . $entity_bundle_field, $bundle, '=');
+    if (!empty($bundle)) {
+      $query->condition($entity_table_alias . '.' . $entity_bundle_field, $bundle, '=');
+    }
 
     // Filter the query with the form filters.
     $this->filterQuery($query, $filters);
@@ -1749,6 +1751,11 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
    */
   protected function joinPostingRights(Select $query, array $definition, $entity_type_id, $entity_base_table, $entity_id_field, $or = FALSE, $values = []) {
     $bundle = $this->getBundle();
+
+    // Skip for empty bundle.
+    if ($bundle === '') {
+      return '';
+    }
 
     // This is only valid for jobs and training. Skip it otherwise.
     if ($bundle !== 'job' && $bundle !== 'training') {

@@ -241,11 +241,14 @@ class ModerationPageFilterForm extends FormBase {
       '#value' => $this->t('Reset'),
       '#submit' => ['::resetForm'],
     ];
-    $form['actions']['create'] = [
-      '#type' => 'link',
-      '#url' => $create_url,
-      '#title' => $this->t('Create @bundle', ['@bundle' => $bundle]),
-    ];
+
+    if (!empty($bundle)) {
+      $form['actions']['create'] = [
+        '#type' => 'link',
+        '#url' => $create_url,
+        '#title' => $this->t('Create @bundle', ['@bundle' => $bundle]),
+      ];
+    }
 
     // Add the data to be passed to the js scripts (shortcuts etc.).
     $form['content']['#attached'] = [
