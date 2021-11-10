@@ -5,22 +5,26 @@
 
   /* Custom properties for IE.
   /* This is needed due to inability to process calc() functions nested within color functions */
+  --cd-ie-primary-color: #1f69b3;
+  --cd-ie-primary-color--light: #82b5e9;
+  --cd-ie-primary-color--dark: #0b2641;
+  --cd-ie-primary-color--lighter: #a8ccf0;
+  --cd-ie-highlight-red: #eb5c6d;
+  --cd-ie-highlight-red--light: #f08995;
+  --cd-primary-color-h: 210;
+  --cd-primary-color-s: 70%;
+  --cd-primary-color-l: 41%;
+
+  /* RW Colours in buttons */
   --cd-ie-primary-color: #0988bb;
   --cd-ie-primary-color--light: #63cef8;
   --cd-ie-primary-color--dark: #032b3a;
-  --cd-ie-primary-color--lighter: #c0ebfc;
+  --cd-ie-primary-color--lighter: #8fdbfa;
+  --cd-ie-highlight-red: #f65c51;
+  --cd-ie-highlight-red--light: #f88981;
   --cd-primary-color-h: 197;
   --cd-primary-color-s: 91%;
   --cd-primary-color-l: 38%;
-
-  /* RW Colours in buttons */
-  /* --cd-ie-primary-color: #055372; */
-  /* --cd-ie-primary-color--light: #19b7f5; */
-  /* --cd-ie-primary-color--dark: #032e40; */
-  /* --cd-ie-primary-color--lighter: #45c5f7; */
-  /* --cd-primary-color-h: 197; */
-  /* --cd-primary-color-s: 92%; */
-  /* --cd-primary-color-l: 23%; */
 
   --cd-primary-color: hsl(var(--cd-primary-color-h), var(--cd-primary-color-s), var(--cd-primary-color-l));
 
@@ -28,7 +32,7 @@
   --cd-primary-color--light: hsl(var(--cd-primary-color-h), var(--cd-primary-color-s), calc(var(--cd-primary-color-l) + 30%));
 
   /* darken */
-  --cd-primary-color--dark: hsl(var(--cd-primary-color-h), var(--cd-primary-color-s), calc(var(--cd-primary-color-l) - 13%));
+  --cd-primary-color--dark: hsl(var(--cd-primary-color-h), var(--cd-primary-color-s), calc(var(--cd-primary-color-l) - 26%));
 
   /* For cd-button--light */
   /* Change the lightness. Other values remain the same */
@@ -156,5 +160,30 @@
   .cd-button--light:hover svg,
   .cd-button--light:focus svg {
     fill: var(--cd-ie-primary-color--dark);
+  }
+}
+
+.cd-button--danger {
+  /* --cd-highlight-red: hsl(4, 90%, 64%) */
+  --cd-primary-color-h: 4;
+  --cd-primary-color-s: 90%;
+  --cd-primary-color-l: 64%;
+  --cd-primary-color: hsl(var(--cd-primary-color-h), var(--cd-primary-color-s), var(--cd-primary-color-l));
+  /* lighten */
+  --cd-primary-color--light: hsl(var(--cd-primary-color-h), var(--cd-primary-color-s), calc(var(--cd-primary-color-l) + 10%));
+}
+
+/* For IE11 */
+@media all and (-ms-high-contrast: none) {
+  .cd-button--danger {
+    background-color: var(--cd-ie-highlight-red);
+  }
+}
+
+/* For IE11 */
+@media all and (-ms-high-contrast: none) {
+  .cd-button--danger:hover,
+  .cd-button--danger:focus {
+    background-color: var(--cd-ie-highlight-red--light);
   }
 }
