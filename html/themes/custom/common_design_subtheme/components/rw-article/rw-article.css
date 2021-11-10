@@ -131,3 +131,26 @@
     border-bottom: 1px solid var(--cd-reliefweb-brand-grey--light);
   }
 }
+
+/* Article header and h1.page-title */
+.rw-article__header {
+  width: 100%;
+}
+.rw-article__header--with-icon {
+  position: relative;
+  padding-bottom: 12px;
+  padding-left: 64px;
+  border-bottom: 1px solid var(--cd-reliefweb-brand-red--dark);
+}
+.rw-article__header--with-icon .rw-page-title {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+.rw-article__header--with-meta {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--cd-reliefweb-brand-red--dark);
+}
+.rw-article__header--with-meta .rw-page-title {
+  padding-bottom: 8px;
+  border-bottom: none;
+}
