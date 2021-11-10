@@ -59,7 +59,7 @@ form textarea {
   resize: vertical;
   border: 2px solid var(--cd-reliefweb-brand-grey--light);
   background: white;
-  /* Better readibility similar to paragraphs. */
+  /* Better readability similar to paragraphs. */
   line-height: 1.5;
 }
 form select {
