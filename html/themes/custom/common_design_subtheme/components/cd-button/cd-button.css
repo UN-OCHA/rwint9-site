@@ -5,15 +5,15 @@
 
   /* Custom properties for IE.
   /* This is needed due to inability to process calc() functions nested within color functions */
-  --cd-ie-primary-color: #1f69b3;
-  --cd-ie-primary-color--light: #82b5e9;
-  --cd-ie-primary-color--dark: #0b2641;
-  --cd-ie-primary-color--lighter: #a8ccf0;
-  --cd-ie-highlight-red: #eb5c6d;
-  --cd-ie-highlight-red--light: #f08995;
-  --cd-primary-color-h: 210;
-  --cd-primary-color-s: 70%;
-  --cd-primary-color-l: 41%;
+  /* --cd-ie-primary-color: #1f69b3; */
+  /* --cd-ie-primary-color--light: #82b5e9; */
+  /* --cd-ie-primary-color--dark: #0b2641; */
+  /* --cd-ie-primary-color--lighter: #a8ccf0; */
+  /* --cd-ie-highlight-red: #eb5c6d; */
+  /* --cd-ie-highlight-red--light: #f08995; */
+  /* --cd-primary-color-h: 210; */
+  /* --cd-primary-color-s: 70%; */
+  /* --cd-primary-color-l: 41%; */
 
   /* RW Colours in buttons */
   --cd-ie-primary-color: #0988bb;
@@ -25,7 +25,6 @@
   --cd-primary-color-h: 197;
   --cd-primary-color-s: 91%;
   --cd-primary-color-l: 38%;
-
   --cd-primary-color: hsl(var(--cd-primary-color-h), var(--cd-primary-color-s), var(--cd-primary-color-l));
 
   /* lighten */
