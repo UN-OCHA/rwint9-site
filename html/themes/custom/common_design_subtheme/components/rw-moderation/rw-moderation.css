@@ -116,6 +116,12 @@
   margin: 0 0 24px 0;
   padding: 0;
   text-align: center;
+  font-size: 14px;
+}
+.path-moderation .rw-moderation-content__total-list span {
+  font-size: 14px;
+  line-height: 1.2;
+  display: block;
 }
 .path-moderation .rw-moderation-content__total-list [data-moderation-status] {
   display: inline-block;
@@ -129,11 +135,6 @@
   border-left: none;
   background: none;
   font-weight: normal;
-}
-.path-moderation .rw-moderation-content__total-list [data-moderation-status] * {
-  display: block;
-  font-size: 16px;
-  line-height: 1.2;
 }
 .path-moderation .rw-moderation-content__total-list [data-moderation-status] strong {
   margin-top: 8px;
@@ -150,28 +151,18 @@
   width: 100%;
   word-break: break-word;
 }
-.path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) > * {
-  margin: 0;
-  padding: 0;
-  font-size: 14px;
-  line-height: 1.5;
-}
 .path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) div + div {
   margin-top: 4px;
 }
-.path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) .rw-moderation-table__cell__title {
+.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__title {
   font-size: 16px;
   font-weight: bold;
 }
-.path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) .headline-title {
-  font-size: 15px;
-  font-style: italic;
-}
-.path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) .rw-moderation-table__cell__info {
+.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__info {
   font-size: 15px;
 }
-.path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) .rw-moderation-table__cell__info .rw-moderation-table__cell__info__country a,
-.path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) .rw-moderation-table__cell__details .rw-moderation-table__cell__info__source a {
+.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__info .rw-moderation-table__cell__info__country a,
+.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__info .rw-moderation-table__cell__info__source a {
   color: var(--cd-reliefweb-brand-grey--dark);
   font-weight: bold;
 }
@@ -179,14 +170,20 @@
   margin-top: 12px;
   font-size: 15px;
 }
-.path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) .closing-date {
+.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__datails,
+.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__revision {
+  font-size: 14px;
+}
+.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__datails__closing-date,
+.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__datails__registration-deadline,
+.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__datails__training-date,
+.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__datails__cost {
   font-weight: bold;
 }
-.path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) .dates,
-.path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) .cost {
-  font-weight: bold;
-}
-.path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) .value {
+.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__datails__closing-date em,
+.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__datails__registration-deadline em,
+.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__datails__training-date em,
+.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__datails__cost em {
   font-weight: normal;
 }
 .path-moderation .rw-moderation-list .rw-moderation-table__cell__date {
