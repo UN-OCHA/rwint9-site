@@ -63,7 +63,7 @@
 /* List of autocomplete suggestions. */
 .rw-autocomplete-selector {
   position: absolute;
-  /* Ensures the popup is above the content.
+  /* Ensures the popup is above the content. */
   z-index: 120;
   top: 100%;
   left: 0;
