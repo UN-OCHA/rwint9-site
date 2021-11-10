@@ -3,10 +3,6 @@
  *
  * This provides basic styling for form elements in the main-content content area.
  */
-/* Todo: remove? */
-/* form + * { */
-/*  margin-top: 16px; */
-/* } */
 form input,
 form label,
 form button,
