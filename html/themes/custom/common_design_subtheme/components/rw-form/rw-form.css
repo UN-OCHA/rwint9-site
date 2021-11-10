@@ -449,7 +449,8 @@ form [data-lengthchecker-status="ok"] {
 /* Term forms */
 .taxonomy-term-country-profile-form,
 .taxonomy-term-disaster-profile-form,
-.taxonomy-term-source-user-posting-rights-form {
+.taxonomy-term-source-user-posting-rights-form,
+.taxonomy-term-confirm-form {
   padding-top: 24px;
 }
 
