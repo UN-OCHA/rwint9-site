@@ -12,7 +12,8 @@ form textarea {
   font-size: 16px;
   font-weight: normal;
 }
-form button {
+form button,
+.form-item .cd-button {
   margin: 0 12px 0 0;
   padding: 14px;
   color: white;
@@ -23,9 +24,16 @@ form button {
 }
 form button:hover,
 form button:focus,
-form button:active {
+form button:active,
+.form-item .cd-button:hover,
+.form-item .cd-button:focus,
+.form-item .cd-button:active {
   text-decoration: underline;
   background: var(--cd-reliefweb-brand-red--dark);
+}
+.form-item .cd-button {
+  transition: none;
+  border-radius: 0;
 }
 form input[type="text"],
 form input[type="search"],
@@ -446,11 +454,12 @@ form [data-lengthchecker-status="ok"] {
 .node-form fieldset.field-new-source-wrapper {
   margin-top: 24px;
 }
-/* Term forms */
+/* Term and Node edit forms */
 .taxonomy-term-country-profile-form,
 .taxonomy-term-disaster-profile-form,
 .taxonomy-term-source-user-posting-rights-form,
-.taxonomy-term-confirm-form {
+.taxonomy-term-confirm-form,
+.node-confirm-form {
   padding-top: 24px;
 }
 
