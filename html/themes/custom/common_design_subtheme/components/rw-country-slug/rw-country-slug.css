@@ -12,8 +12,8 @@
   vertical-align: top;
   white-space: nowrap;
   text-overflow: ellipsis;
-  color: #2e3436;
-  background: #e6ecef;
+  color: var(--cd-reliefweb-brand-grey--dark);
+  background: var(--cd-reliefweb-brand-grey--light);
   font-size: 18px;
   font-weight: bold;
   line-height: 30px;

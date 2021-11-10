@@ -6,19 +6,19 @@
   position: relative;
   margin: 0 0 20px 0;
   padding: 0 0 0 56px;
-  border: 1px solid #e6ecef;
+  border: 1px solid var(--cd-reliefweb-brand-grey--light);
 }
 .rw-bookmarks article:last-child {
-  border-bottom: 1px solid #e6ecef;
+  border-bottom: 1px solid var(--cd-reliefweb-brand-grey--light);
 }
 .rw-bookmarks article header,
 .rw-bookmarks article footer {
   padding: 16px;
-  border-left: 1px solid #e6ecef;
+  border-left: 1px solid var(--cd-reliefweb-brand-grey--light);
 }
 .rw-bookmarks article .rw-river-article__content {
   padding: 0 16px;
-  border-left: 1px solid #e6ecef;
+  border-left: 1px solid var(--cd-reliefweb-brand-grey--light);
 }
 .rw-bookmarks article:before {
   position: absolute;

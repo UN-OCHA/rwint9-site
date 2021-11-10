@@ -41,9 +41,9 @@
   display: inline-block;
   width: 272px;
   padding: 8px;
-  border: 1px solid var(--cd-reliefweb-dark-grey);
+  border: 1px solid var(--cd-reliefweb-brand-grey--dark);
   background: white;
-  box-shadow: 0 1px 4px 1px rgba(var(--cd-rgb-reliefweb-dark-grey), 0.3);
+  box-shadow: 0 1px 4px 1px rgba(var(--cd-rgb-reliefweb-brand-grey--dark), 0.3);
 }
 .rw-datepicker-calendar button {
   margin: 0;
@@ -53,7 +53,7 @@
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
-  color: var(--cd-reliefweb-dark-blue);
+  color: var(--cd-reliefweb-brand-blue--dark);
   border: none;
   background: none;
   /* @todo review if we can use a CD variable. */
@@ -66,14 +66,14 @@
 .rw-datepicker-calendar button:hover,
 .rw-datepicker-calendar button:focus,
 .rw-datepicker-calendar button:active {
-  color: var(--cd-reliefweb-dark-blue);
-  background: var(--cd-reliefweb-light-grey);
+  color: var(--cd-reliefweb-brand-blue--dark);
+  background: var(--cd-reliefweb-brand-grey--light);
 }
 .rw-datepicker-title {
   margin-bottom: 8px;
   padding-bottom: 8px;
   text-align: center;
-  border-bottom: 1px solid var(--cd-reliefweb-light-grey);
+  border-bottom: 1px solid var(--cd-reliefweb-brand-grey--light);
   line-height: 24px;
 }
 /* Previous/next year/month buttons. */
@@ -142,17 +142,17 @@
 .rw-datepicker-days button[disabled]:focus,
 .rw-datepicker-days button[disabled]:active {
   cursor: default;
-  color: var(--cd-reliefweb-light-grey);
+  color: var(--cd-reliefweb-brand-grey--light);
   background: none;
 }
 /* Highlight the current day. */
 .rw-datepicker-days button.rw-datepicker-today {
-  color: var(--cd-reliefweb-dark-red);
+  color: var(--cd-reliefweb-brand-red--dark);
 }
 /* Highlight the currently selected day(s). */
 .rw-datepicker-days button.rw-datepicker-selected-day {
   color: white;
-  background: var(--cd-reliefweb-dark-blue);
+  background: var(--cd-reliefweb-brand-blue--dark);
 }
 
 /**
@@ -193,13 +193,13 @@
   grid-template-areas: "widget1 widget2" "select select";
   grid-template-rows: repeat(2, min-content);
   grid-template-columns: repeat(2, min-content);
-  border: 1px solid var(--cd-reliefweb-dark-grey);
+  border: 1px solid var(--cd-reliefweb-brand-grey--dark);
   background: white;
-  box-shadow: 0 1px 4px 1px rgba(var(--cd-rgb-reliefweb-dark-grey), 0.3);
+  box-shadow: 0 1px 4px 1px rgba(var(--cd-rgb-reliefweb-brand-grey--dark), 0.3);
 }
 .rw-datepicker-dual-widget .rw-datepicker-container:nth-child(1) {
   grid-area: widget1;
-  border-right: 1px solid var(--cd-reliefweb-dark-grey);
+  border-right: 1px solid var(--cd-reliefweb-brand-grey--dark);
 }
 .rw-datepicker-dual-widget .rw-datepicker-container:nth-child(2) {
   grid-area: widget2;

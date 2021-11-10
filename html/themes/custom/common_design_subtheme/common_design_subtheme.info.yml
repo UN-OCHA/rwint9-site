@@ -32,6 +32,15 @@ libraries-extend:
   common_design/cd-button:
     - common_design_subtheme/cd-button
 
+  reliefweb_fields/reliefweb-links:
+    - common_design_subtheme/rw-links
+
+  reliefweb_fields/reliefweb-section-links:
+    - common_design_subtheme/rw-section-links
+
+  reliefweb_fields/reliefweb-user-posting-rights:
+    - common_design_subtheme/rw-user-posting-rights
+
   # Autocomplete form widget.
   reliefweb_form/widget.autocomplete:
     - common_design_subtheme/rw-autocomplete

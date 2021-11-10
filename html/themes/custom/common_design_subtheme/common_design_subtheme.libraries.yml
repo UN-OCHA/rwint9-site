@@ -172,6 +172,11 @@ rw-key-figures:
     theme:
       components/rw-key-figures/rw-key-figures.css: {}
 
+rw-links:
+  css:
+    theme:
+      components/rw-links/rw-links.css: {}
+
 rw-local-tasks:
   css:
     theme:
@@ -284,6 +289,11 @@ rw-search:
   css:
     theme:
       components/rw-search/rw-search.css: {}
+
+rw-section-links:
+  css:
+    theme:
+      components/rw-section-links/rw-section-links.css: {}
 
 rw-site-slogan:
   css:

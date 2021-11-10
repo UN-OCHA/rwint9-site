@@ -6,10 +6,10 @@ form[data-with-guidelines] button[data-guideline] {
   margin: -3px 0 0 8px;
   padding: 0 0 0 12px;
   vertical-align: middle;
-  border: 4px solid #e6ecef;
+  border: 4px solid var(--cd-reliefweb-brand-grey--light);
   border-radius: 50%;
   background: var(--rw-icons--common--help--12--dark-blue);
-  background-color: #e6ecef;
+  background-color: var(--cd-reliefweb-brand-grey--light);
 }
 form[data-with-guidelines] button[data-guideline]:hover {
   background: var(--rw-icons--common--help--12--dark-red);
@@ -45,7 +45,7 @@ form[data-with-guidelines] .rw-guideline > button[value="close"] {
   width: 28px;
   height: 28px;
   padding: 0 0 0 22px;
-  border: 2px solid #2e3436;
+  border: 2px solid var(--cd-reliefweb-brand-grey--dark);
   border-radius: 50%;
   background: white;
 }
@@ -60,7 +60,7 @@ form[data-with-guidelines] .rw-guideline > button[value="close"]:after {
   background: var(--rw-icons--common--close--18--dark-grey);
 }
 form[data-with-guidelines] .rw-guideline > button[value="close"]:hover {
-  border-color: #eb1405;
+  border-color: var(--cd-reliefweb-brand-red--dark);
 }
 form[data-with-guidelines] .rw-guideline > button[value="close"]:hover:after {
   background: var(--rw-icons--common--close--18--dark-red);
@@ -82,5 +82,5 @@ form[data-with-guidelines] .rw-guideline > div > .rw-guideline__content {
   padding-top: 0;
 }
 form[data-with-guidelines] .rw-guideline > div > .rw-guideline__content img {
-  border: 4px solid #e6ecef;
+  border: 4px solid var(--cd-reliefweb-brand-grey--light);
 }

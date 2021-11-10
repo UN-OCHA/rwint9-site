@@ -2,7 +2,7 @@
 .rw-page-title {
   margin: 0;
   padding-bottom: 12px;
-  border-bottom: 1px solid #eb1405;
+  border-bottom: 1px solid var(--cd-reliefweb-brand-red--dark);
 }
 
 /* @todo move that to the rw-article component? Or change class name? */
@@ -13,7 +13,7 @@
   position: relative;
   padding-bottom: 12px;
   padding-left: 64px;
-  border-bottom: 1px solid #eb1405;
+  border-bottom: 1px solid var(--cd-reliefweb-brand-red--dark);
 }
 .rw-article__header--with-icon .rw-page-title {
   padding-bottom: 0;
@@ -21,7 +21,7 @@
 }
 .rw-article__header--with-meta {
   padding-bottom: 12px;
-  border-bottom: 1px solid #eb1405;
+  border-bottom: 1px solid var(--cd-reliefweb-brand-red--dark);
 }
 .rw-article__header--with-meta .rw-page-title {
   padding-bottom: 8px;

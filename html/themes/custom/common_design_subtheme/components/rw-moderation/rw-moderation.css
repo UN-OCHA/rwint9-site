@@ -65,10 +65,10 @@
 }
 .path-moderation #edit-omnibox .fieldset-wrapper select {
   width: auto;
-  /*height: 100%;*/
+  /* height: 100%; */
 }
 .path-moderation #edit-omnibox div[data-autocomplete] > input {
-  border-right: 2px solid #e6ecef;
+  border-right: 2px solid var(--cd-reliefweb-brand-grey--light);
 }
 .path-moderation [data-selection] > span span + span {
   font-weight: bold;
@@ -83,7 +83,7 @@
   margin-inline-start: 0.5rem;
   padding: 4px 8px;
   text-transform: lowercase;
-  border: 2px solid #055372;
+  border: 2px solid var(--cd-reliefweb-brand-blue--dark);
   border-radius: 8px;
   line-height: 20px;
 }
@@ -173,7 +173,7 @@
 }
 .path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) .rw-moderation-table__cell__info .rw-moderation-table__cell__info__country a,
 .path-moderation .rw-moderation-list .rw-moderation-table tr td:nth-child(2) .rw-moderation-table__cell__details .rw-moderation-table__cell__info__source a {
-  color: #2e3436;
+  color: var(--cd-reliefweb-brand-grey--dark);
   font-weight: bold;
 }
 .path-moderation .rw-moderation-list .rw-moderation-table__cell__bury {

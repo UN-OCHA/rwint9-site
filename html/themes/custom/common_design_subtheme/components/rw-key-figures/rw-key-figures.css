@@ -17,7 +17,7 @@
   width: 100%;
   margin: 0 0 20px 0;
   padding: 16px;
-  border: 1px solid #e6ecef;
+  border: 1px solid var(--cd-reliefweb-brand-grey--light);
 }
 .rw-key-figures figure figcaption {
   margin: 0 0 20px 0;
@@ -32,7 +32,7 @@
 }
 .rw-key-figures figure data {
   display: block;
-  color: #055372;
+  color: var(--cd-reliefweb-brand-blue--dark);
   font-size: 22px;
   font-weight: bold;
 }
@@ -50,7 +50,7 @@
   padding: 10px 0;
   opacity: 0.5;
   fill: none;
-  stroke: #2e3436;
+  stroke: var(--cd-reliefweb-brand-grey--dark);
   stroke-width: 2px;
 }
 .rw-key-figures figure footer {
@@ -64,7 +64,7 @@
   padding: 1px 6px;
   vertical-align: middle;
   border-radius: 5px;
-  background: rgba(230, 236, 239, 0.5);
+  background: var(--cd-reliefweb-grey--disable);
 }
 .rw-key-figures figure.recent time:before {
   display: inline-block;
@@ -74,14 +74,14 @@
   content: "";
   vertical-align: middle;
   border-radius: 6px;
-  background: #eb1405;
+  background: var(--cd-reliefweb-brand-red--dark);
 }
 .rw-key-figures figure cite {
   float: right;
   padding: 1px 6px;
   color: white;
   border-radius: 5px;
-  background: #055372;
+  background: var(--cd-reliefweb-brand-blue--dark);
   font-style: normal;
 }
 .rw-key-figures figure cite a {
