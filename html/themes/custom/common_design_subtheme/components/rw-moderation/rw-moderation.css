@@ -119,9 +119,9 @@
   font-size: 14px;
 }
 .path-moderation .rw-moderation-content__total-list span {
+  display: block;
   font-size: 14px;
   line-height: 1.2;
-  display: block;
 }
 .path-moderation .rw-moderation-content__total-list [data-moderation-status] {
   display: inline-block;

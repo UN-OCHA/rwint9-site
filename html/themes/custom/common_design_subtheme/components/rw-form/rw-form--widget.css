@@ -6,11 +6,13 @@ form .js-media-library-widget .fieldset-wrapper {
 form .image-widget {
   padding: 0 16px 16px;
 }
+
 @media (min-width: 576px) {
   form .image-widget {
     justify-content: center;
   }
 }
+
 @media (min-width: 576px) {
   form .image-widget article {
     flex: 1 0 220px;
@@ -20,6 +22,7 @@ form .image-widget {
 form .image-widget article > div {
   font-size: 14px;
 }
+
 @media (min-width: 576px) {
   form .image-widget article > div {
     font-size: 14px;
