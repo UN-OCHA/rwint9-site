@@ -34,10 +34,8 @@
   /* Better readability. */
   line-height: 24px;
 }
-.rw-selection [data-value] > span {
-  display: inline-block;
-}
 .rw-selection [data-value] .label {
+  display: inline;
   margin-left: 0.25rem;
   color: var(--cd-reliefweb-brand-grey--dark);
   font-weight: bold;
