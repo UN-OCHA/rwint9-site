@@ -204,20 +204,6 @@ class ModerationPageFilterForm extends FormBase {
       '#weight' => 4,
     ];
 
-    // Link to create a new entity.
-    $bundle = $service->getBundle();
-    $url_options = ['attributes' => ['target' => '_blank']];
-    if ($service->getEntityTypeId() === 'taxonomy_term') {
-      $create_url = Url::fromRoute('entity.taxonomy_term.add_form', [
-        'taxonomy_vocabulary' => $bundle,
-      ], $url_options);
-    }
-    else {
-      $create_url = Url::fromRoute('node.add', [
-        'node_type' => $bundle,
-      ], $url_options);
-    }
-
     // Add the filter and reset buttons.
     $form['actions'] = [
       '#type' => 'actions',
@@ -242,12 +228,50 @@ class ModerationPageFilterForm extends FormBase {
       '#submit' => ['::resetForm'],
     ];
 
+    // Link to create a new entity.
+    $bundle = $service->getBundle();
+
     if (!empty($bundle)) {
-      $form['actions']['create'] = [
-        '#type' => 'link',
-        '#url' => $create_url,
-        '#title' => $this->t('Create @bundle', ['@bundle' => $bundle]),
-      ];
+      if (is_array($bundle)) {
+        foreach ($bundle as $b) {
+          $url_options = ['attributes' => ['target' => '_blank']];
+          if ($service->getEntityTypeId() === 'taxonomy_term') {
+            $create_url = Url::fromRoute('entity.taxonomy_term.add_form', [
+              'taxonomy_vocabulary' => $b,
+            ], $url_options);
+          }
+          else {
+            $create_url = Url::fromRoute('node.add', [
+              'node_type' => $b,
+            ], $url_options);
+          }
+
+          $form['actions']['create_' . $b] = [
+            '#type' => 'link',
+            '#url' => $create_url,
+            '#title' => $this->t('Create @bundle', ['@bundle' => $b]),
+          ];
+        }
+      }
+      else {
+        $url_options = ['attributes' => ['target' => '_blank']];
+        if ($service->getEntityTypeId() === 'taxonomy_term') {
+          $create_url = Url::fromRoute('entity.taxonomy_term.add_form', [
+            'taxonomy_vocabulary' => $bundle,
+          ], $url_options);
+        }
+        else {
+          $create_url = Url::fromRoute('node.add', [
+            'node_type' => $bundle,
+          ], $url_options);
+        }
+
+        $form['actions']['create'] = [
+          '#type' => 'link',
+          '#url' => $create_url,
+          '#title' => $this->t('Create @bundle', ['@bundle' => $bundle]),
+        ];
+      }
     }
 
     // Add the data to be passed to the js scripts (shortcuts etc.).

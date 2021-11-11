@@ -89,7 +89,7 @@ class UserPostsPage extends ModerationPage {
       // Status + Other filters.
       $filters = $values['filters'] ?? [];
 
-      // @todo filter by current user.
+      // Filter by current user.
       $filters['author'] = $user->id();
 
       // Omnibox selections.

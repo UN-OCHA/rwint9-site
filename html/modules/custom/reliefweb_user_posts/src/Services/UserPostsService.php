@@ -17,7 +17,10 @@ class UserPostsService extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function getBundle() {
-    return '';
+    return [
+      'job',
+      'training',
+    ];
   }
 
   /**
@@ -37,18 +40,51 @@ class UserPostsService extends ModerationServiceBase {
   /**
    * {@inheritdoc}
    */
+  public function getStatuses() {
+    return [
+      'draft' => $this->t('draft'),
+      'pending' => $this->t('pending'),
+      'published' => $this->t('published'),
+      'on_hold' => $this->t('on-hold'),
+      'refused' => $this->t('refused'),
+      'expired' => $this->t('expired'),
+      'duplicate' => $this->t('duplicate'),
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getHeaders() {
     return [
-      'edit' => [
-        'label' => '',
+      'id' => [
+        'label' => $this->t('Id'),
       ],
-      'data' => [
-        'label' => $this->t('Topic'),
+      'type' => [
+        'label' => $this->t('Type'),
+      ],
+      'status' => [
+        'label' => $this->t('Status'),
+      ],
+      'poster' => [
+        'label' => $this->t('Poster'),
+      ],
+      'source' => [
+        'label' => $this->t('Source'),
+      ],
+      'title' => [
+        'label' => $this->t('Title'),
       ],
       'date' => [
         'label' => $this->t('Posted'),
         'type' => 'property',
         'specifier' => 'created',
+        'sortable' => TRUE,
+      ],
+      'deadline' => [
+        'label' => $this->t('Deadline'),
+        'type' => 'property',
+        'specifier' => 'deadline',
         'sortable' => TRUE,
       ],
     ];
@@ -76,6 +112,12 @@ class UserPostsService extends ModerationServiceBase {
       // Entity data cell.
       $data = [];
 
+      // Id.
+      $data['title'] = $entity->id();
+
+      // Id.
+      $data['type'] = $entity->bundle();
+
       // Title.
       $data['title'] = $entity->toLink()->toString();
 
@@ -86,6 +128,20 @@ class UserPostsService extends ModerationServiceBase {
 
       // Revision information.
       $data['revision'] = $this->getEntityRevisionData($entity);
+
+      // Source.
+      $sources = [];
+      if ($entity->field_source) {
+        foreach ($entity->field_source as $item) {
+          $source_link = $this->getTaxonomyTermLink($item);
+          if (!empty($source_link)) {
+            $sources[] = $source_link;
+          }
+        }
+        if (!empty($sources)) {
+          $info['source'] = $sources;
+        }
+      }
 
       // Filter out empty data.
       $cells['data'] = array_filter($data);
@@ -122,6 +178,9 @@ class UserPostsService extends ModerationServiceBase {
       'created',
       'user_role',
       'title',
+      'type',
+      'poster',
+      'source',
     ]);
     return $definitions;
   }

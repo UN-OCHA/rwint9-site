@@ -1126,7 +1126,12 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
 
     // Filter for the service entity bundle.
     if (!empty($bundle)) {
-      $query->condition($entity_table_alias . '.' . $entity_bundle_field, $bundle, '=');
+      if (is_array($bundle)) {
+        $query->condition($entity_table_alias . '.' . $entity_bundle_field, $bundle, 'IN');
+      }
+      else {
+        $query->condition($entity_table_alias . '.' . $entity_bundle_field, $bundle, '=');
+      }
     }
 
     // Filter the query with the form filters.
@@ -1753,7 +1758,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     $bundle = $this->getBundle();
 
     // Skip for empty bundle.
-    if ($bundle === '') {
+    if ($bundle === '' || is_array($bundle)) {
       return '';
     }
 
