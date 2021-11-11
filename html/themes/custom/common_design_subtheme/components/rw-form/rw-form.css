@@ -13,7 +13,9 @@ form textarea {
   font-weight: normal;
 }
 form button,
-.form-item .cd-button {
+/* Apply styles to field UI buttons
+  with some exceptions (Notably "Save" buttons) */
+form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button {
   margin: 0 12px 0 0;
   padding: 14px;
   color: white;
@@ -25,13 +27,13 @@ form button,
 form button:hover,
 form button:focus,
 form button:active,
-.form-item .cd-button:hover,
-.form-item .cd-button:focus,
-.form-item .cd-button:active {
+form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button:hover,
+form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button:focus,
+form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button:active {
   text-decoration: underline;
   background: var(--cd-reliefweb-brand-red--dark);
 }
-.form-item .cd-button {
+form:not('.subscription-form'):not('community-topics-form') .form-item .cd-button {
   transition: none;
   border-radius: 0;
 }
