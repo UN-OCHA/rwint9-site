@@ -1,0 +1,45 @@
+{#
+
+/**
+ * @file
+ * Template for the reliefweb_file form widget file item.
+ *
+ * Available variables:
+ * - element: the form element.
+ */
+
+#}
+{%
+  set rendered = [
+    'link',
+    'description',
+    'language',
+    'preview',
+    'preview_page',
+    'preview_rotation',
+    '_delete',
+    '_weight',
+  ]
+%}
+<tr{{ attributes.addClass(['rw-file-widget-item', 'draggable']) }}>
+  <td class="rw-file-widget-item__information">
+    {{ element.link }}
+    {{ element.description }}
+    {{ element.language }}
+    {# Make sure all the element children are rendered. #}
+    {% for key, child in element|without(rendered) if key|first != '#' %}
+      {{ child }}
+    {% endfor %}
+  </td>
+  <td class="rw-file-widget-item__preview">
+    {{ element.preview }}
+    {{ element.preview_page }}
+    {{ element.preview_rotation }}
+  </td>
+  <td class="rw-file-widget-item__operations">
+    {{ element._delete }}
+  </td>
+  <td class="rw-file-widget-item__weight">
+    {{ element._weight }}
+  </td>
+</tr>

@@ -1,0 +1,6 @@
+# The URL of the OCHA docstore.
+docstore_url: ''
+# The API key for the OCHA docstore provider.
+api_key: ''
+# The prefix used when creating new content (ex: reliefweb_reports).
+prefix: 'reliefweb_'

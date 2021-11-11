@@ -1,0 +1,29 @@
+{#
+
+/**
+ * @file
+ * Template for the reliefweb_file form widget.
+ *
+ * Available variables:
+ * - element: the form element.
+ */
+
+#}
+{% set files = element|without(['add_more'])|filter((v, k) => k|first != '#') %}
+{% set add_more = element['add_more'] %}
+
+<div{{ attributes.addClass('rw-file-widget') }}>
+  {% if files is not empty %}
+  <table id="{{ attributes.id ~ '-table' }}">
+    <thead class="visually-hidden">
+      <tr><th>Information</th><th>Preview</th><th>Operations</th><th>Weight</th></tr>
+    </thead>
+    <tbody>
+      {{ files }}
+    </tbody>
+  </table>
+  </table>
+  {% endif %}
+
+  {{ add_more }}
+</div>

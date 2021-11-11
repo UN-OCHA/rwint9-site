@@ -1,0 +1,13 @@
+reliefweb_docstore.settings:
+  type: config_object
+  label: 'ReliefWeb Docstore settings'
+  mapping:
+    docstore_url:
+      type: string
+      label: 'The URL of the OCHA docstore.'
+    api_key:
+      type: string
+      label: 'The API key for the OCHA docstore provider.'
+    prefix:
+      type: string
+      label: 'The prefix used when creating new content (ex: reliefweb_reports).'
