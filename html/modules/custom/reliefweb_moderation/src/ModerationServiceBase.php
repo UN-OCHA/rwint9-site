@@ -86,11 +86,11 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   protected $pagerParameters;
 
   /**
-   * The current request.
+   * The request stack.
    *
-   * @var \Symfony\Component\HttpFoundation\Request
+   * @var \Symfony\Component\HttpFoundation\RequestStack
    */
-  protected $request;
+  protected $requestStack;
 
   /**
    * Filters definition for the filter block on the moderation page.
@@ -139,7 +139,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     $this->entityTypeManager = $entity_type_manager;
     $this->pagerManager = $pager_manager;
     $this->pagerParameters = $pager_parameters;
-    $this->request = $request_stack->getCurrentRequest();
+    $this->requestStack = $request_stack;
     $this->stringTranslation = $string_translation;
   }
 
@@ -440,7 +440,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     $headers = $this->getOrderInformation()['headers'];
 
     // Compute the sort URL for the sortable headers.
-    $query = $this->request->query->all();
+    $query = $this->getCurrentRequest()->query->all();
     $remove = ['form_build_id', 'form_id', 'submit', 'page'];
     $query = array_diff_key($query, array_flip($remove));
     foreach ($headers as $header => $info) {
@@ -496,7 +496,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
    * {@inheritdoc}
    */
   public function getAutocompleteSuggestions($filter) {
-    $query = $this->request->query->get('query', '');
+    $query = $this->getCurrentRequest()->query->get('query', '');
 
     if (empty($query) || !$this->hasFilterDefinition($filter)) {
       return [];
@@ -1192,10 +1192,10 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
    */
   protected function getOrderInformation() {
     $headers = $this->getHeaders();
-    $order = $this->request->query->get('order', '');
+    $order = $this->getCurrentRequest()->query->get('order', '');
     // We assume the date header is present and sortable.
     $order = !empty($headers[$order]['sortable']) ? $order : 'date';
-    $sort = strtolower($this->request->query->get('sort', ''));
+    $sort = strtolower($this->getCurrentRequest()->query->get('sort', ''));
     $sort = in_array($sort, ['asc', 'desc']) ? $sort : 'desc';
     $headers[$order]['sort'] = $sort;
 
@@ -2190,7 +2190,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     // Get the query parameters, keeping only the moderation page filter form
     // paremeters.
     // @see \Drupal\reliefweb_moderation\Form\ModerationPageFilterForm
-    $parameters = $this->request->query->all();
+    $parameters = $this->getCurrentRequest()->query->all();
     $parameters = array_intersect_key($parameters, [
       'filters' => TRUE,
       'omnibox' => TRUE,
@@ -2430,6 +2430,16 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     }
 
     return empty($date) ? '1996-04-01T00:00:00+0000' : $date;
+  }
+
+  /**
+   * Get the current request.
+   *
+   * @return \Symfony\Component\HttpFoundation\Request
+   *   The current request.
+   */
+  protected function getCurrentRequest() {
+    return $this->requestStack->getCurrentRequest();
   }
 
 }
