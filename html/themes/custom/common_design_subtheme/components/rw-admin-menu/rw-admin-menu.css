@@ -180,7 +180,7 @@
 /*  margin-left: -6px; */
 /*  border-left: 6px solid transparent; */
 /*  border-right: 6px solid transparent; */
-/*  border-bottom: 6px solid #055372; */
+/*  border-bottom: 6px solid var(--cd-reliefweb-brand-blue--dark); */
 /* } */
 /* .js .cd-header .admin-menu-toggler:after { */
 /*  content: ""; */

@@ -82,6 +82,7 @@ permissions:
   - 'edit any report content'
   - 'edit any topic content'
   - 'edit any training content'
+  - 'edit homepage headlines'
   - 'edit own announcement content'
   - 'edit own blog_post content'
   - 'edit own book content'

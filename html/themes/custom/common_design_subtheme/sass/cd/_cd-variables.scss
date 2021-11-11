@@ -21,36 +21,76 @@
 //——————————————————————————————————————————————————————————————————————————————
 :root {
   /* Color palette */
-  --cd-reliefweb-blue: #0988bb;
-  --cd-reliefweb-red: #f65c51;
-  --cd-reliefweb-dark-blue: #055372;
-  --cd-reliefweb-dark-red: #eb1405;
-  --cd-reliefweb-dark-grey: #2e3436;
-  --cd-reliefweb-light-grey: #e6ecef;
-  --cd-rgb-reliefweb-blue: 9, 136, 187;
-  --cd-rgb-reliefweb-red: 246, 92, 81;
-  --cd-rgb-reliefweb-dark-blue: 4, 82, 112;
-  --cd-rgb-reliefweb-dark-red: 235, 20, 5;
-  --cd-rgb-reliefweb-dark-grey: 46, 52, 54;
-  --cd-rgb-reliefweb-light-grey: 230, 236, 239;
+  --cd-reliefweb-brand-blue: #0988bb;
+  --cd-reliefweb-brand-red: #f65c51;
+  --cd-reliefweb-brand-blue--dark: #055372;
+  --cd-reliefweb-brand-red--dark: #eb1405;
+  --cd-reliefweb-brand-grey--dark: #2e3436;
+  /* #2e3436 with 0.85 opacity on white. */
+  --cd-reliefweb-brand-grey--mid: #4d5254;
+  --cd-reliefweb-brand-grey--light: #e6ecef;
+
+  /* RGB variables to use with rgba() */
+  --cd-rgb-reliefweb-brand-blue: 9, 136, 187;
+  --cd-rgb-reliefweb-brand-red: 246, 92, 81;
+  --cd-rgb-reliefweb-brand-blue--dark: 4, 82, 112;
+  --cd-rgb-reliefweb-brand-red--dark: 235, 20, 5;
+  --cd-rgb-reliefweb-brand-grey--dark: 46, 52, 54;
+  --cd-rgb-reliefweb-brand-grey--light: 230, 236, 239;
+
+  // Moderation
+  --cd-reliefweb-grey--light: #d9d9d9;
+  --cd-reliefweb-grey--light--bg: rgba(217, 217, 217, 0.2);
+  // Orange
+  --cd-reliefweb-orange: #f49e2c;
+  --cd-reliefweb-orange--bg: rgba(244, 158, 44, 0.2);
+  // Blue
+  --cd-reliefweb-blue: #076d96;
+  --cd-reliefweb-blue--bg: rgba(7, 109, 150, 0.2);
+  // Green
+  --cd-reliefweb-green: #88bb09;
+  --cd-reliefweb-green--bg: rgba(136, 187, 9, 0.2);
+  // Red
+  --cd-reliefweb-red: #da190b;
+  --cd-reliefweb-red--bg: rgba(218, 25, 11, 0.2);
+  // Purple
+  --cd-reliefweb-purple: #9509bb;
+  --cd-reliefweb-purple--bg: rgba(149, 9, 187, 0.2);
+  // Grey
+  --cd-reliefweb-grey: #4b4b4b;
+  --cd-reliefweb-grey--bg: rgba(75, 75, 75, 0.2);
+  // Brown
+  --cd-reliefweb-brown: #8f5507;
+  --cd-reliefweb-brown--bg: rgba(143, 85, 7, 0.2);
+  // Yellow
+  --cd-reliefweb-yellow: #f5cb2f;
+  --cd-reliefweb-yellow--bg: rgba(245, 203, 47, 0.2);
+  // Cyan
+  --cd-reliefweb-cyan: #56c9f7;
+  --cd-reliefweb-cyan--bg: rgba(86, 201, 247, 0.2);
+
+  // Colour variations.
+  --cd-reliefweb-orange--alert: #eb8705;
+  --cd-reliefweb-pink: rgba(246, 92, 81, 0.2);
+  --cd-reliefweb-grey--disable: rgba(230, 236, 239, 0.5);
 
   /* OCHA blue is one colour ramp darker than brand blue */
-  --cd-ocha-blue: var(--cd-reliefweb-dark-blue);
+  --cd-ocha-blue: #1f69b3;
   /* Dark blue is two colour ramps darker than brand blue */
-  --cd-blue--dark: #04415a;
+  --cd-blue--dark: #144372;
   /* Bright blue is one colour ramp lighter than brand blue */
-  --cd-blue--bright: var(--cd-reliefweb-blue);
+  --cd-blue--bright: #82b5e9;
   --cd-blue--light: #d4e5f7;
-  --cd-highlight-red: var(--cd-reliefweb-red);
+  --cd-highlight-red: #e56a54;
   // This shade of red has been selected based on WCAG AAA requirements for contrast.
-  --cd-contrast-red: var(--cd-reliefweb-dark-red);
+  --cd-contrast-red: #e00000;
   --cd-white: #fff;
   --cd-grey--light: #f2f2f2;
   --cd-grey--mid: #595959;
   --cd-grey--dark: #4a4a4a;
   --cd-default-text-color: var(--cd-grey--dark);
   --cd-black: #000;
-  --cd-blue-grey: var(--cd-reliefweb-light-grey);
+  --cd-blue-grey: #e6ecf1;
   --cd-blue-grey--dark: #d3dde5;
   --cd-blue-grey--light: #ebf0f4;
 
@@ -231,7 +271,10 @@ $zindex: (
 // Implementation colours
 //——————————————————————————————————————————————————————————————————————————————
 
-$implementation-primary: $cd-ocha-blue;
-$implementation-primary-dark: $cd-blue--dark;
-$implementation-secondary: $cd-blue--bright;
-$implementation-highlight: $cd-highlight-red;
+$implementation-primary: var(--cd-reliefweb-brand-blue--dark);
+$implementation-primary-dark: #04415a;
+$implementation-secondary: var(--cd-reliefweb-brand-blue);
+$implementation-highlight: var(--cd-reliefweb-brand-red--dark);
+$cd-contrast-red: var(--cd-reliefweb-brand-red--dark);
+$cd-blue-grey: var(--cd-reliefweb-brand-grey--light);
+$cd-reliefweb-brand-grey--light: var(--cd-reliefweb-brand-grey--light);

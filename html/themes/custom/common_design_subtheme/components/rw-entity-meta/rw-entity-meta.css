@@ -108,7 +108,7 @@
     content: "";
     vertical-align: middle;
     border-radius: 4px;
-    background: #2e3436;
+    background: var(--cd-reliefweb-brand-grey--dark);
   }
   .rw-entity-meta--core dd:last-of-type:after {
     content: none;
@@ -132,7 +132,7 @@
 }
 .rw-river dl.rw-entity-meta.rw-article-meta {
   /* #2e3436 with 0.85 opacity on white. */
-  color: #4d5254;
+  color: var(--cd-reliefweb-brand-grey--mid);
 }
 
 @media screen and (min-width: 480px) {
@@ -165,11 +165,11 @@
 }
 .rw-entity-meta dd.rw-entity-meta__tag-value--status--alert:before {
   content: "";
-  background: #eb8705;
+  background: var(--cd-reliefweb-orange--alert);
 }
 .rw-entity-meta dd.rw-entity-meta__tag-value--status--ongoing:before {
   content: "";
-  background: #f65c51;
+  background: var(--cd-reliefweb-brand-red);
 }
 
 .taxonomy-term--disaster--full dl.rw-entity-meta dd.rw-entity-meta__tag-value--status--past:before {

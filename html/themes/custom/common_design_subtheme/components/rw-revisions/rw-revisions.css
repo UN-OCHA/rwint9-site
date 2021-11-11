@@ -5,14 +5,14 @@
 .rw-revisions-history__title {
   margin: 0;
   padding: 8px;
-  background: #e6ecef;
+  background: var(--cd-reliefweb-brand-grey--light);
   font-size: 16px;
 }
 .rw-revisions-history__placeholder {
   padding: 8px;
   border-width: 0 1px 1px 1px;
   border-style: solid;
-  border-color: #e6ecef;
+  border-color: var(--cd-reliefweb-brand-grey--light);
   font-size: 15px;
   font-style: italic;
 }
@@ -20,7 +20,7 @@
   padding: 8px;
   border-width: 0 1px 1px 1px;
   border-style: solid;
-  border-color: #e6ecef;
+  border-color: var(--cd-reliefweb-brand-grey--light);
   font-size: 15px;
 }
 .rw-revisions-history-entry__title {
@@ -62,7 +62,7 @@
 .rw-revisions-history-entry__content__value dl {
   margin: 0 0 0 8px;
   padding: 4px 0 0 12px;
-  border-left: 1px solid #e6ecef;
+  border-left: 1px solid var(--cd-reliefweb-brand-grey--light);
 }
 .rw-revisions-history-entry__content__value dd {
   margin: 4px 0 0 16px;
@@ -84,8 +84,8 @@
   padding: 4px 6px;
   cursor: pointer;
   text-transform: uppercase;
-  color: #055372;
-  border: 1px solid #e6ecef;
+  color: var(--cd-reliefweb-brand-blue--dark);
+  border: 1px solid var(--cd-reliefweb-brand-grey--light);
   font-size: 11px;
   font-weight: bold;
   line-height: 1;
@@ -117,15 +117,15 @@
   color: red;
 }
 .rw-revisions-history-entry__content__value .rw-revisions-checked::before {
-  content: "\2713 ";
   display: inline-block;
-  border: 1px solid #e6ecef;
   width: 12px;
   height: 12px;
-  color: #2e3436;
-  line-height: 11px;
   margin-right: 4px;
+  content: "\2713 ";
   vertical-align: middle;
+  color: var(--cd-reliefweb-brand-grey--dark);
+  border: 1px solid var(--cd-reliefweb-brand-grey--light);
+  line-height: 11px;
 }
 .rw-revisions-history-entry__content__value .rw-revisions-added {
   color: green;
@@ -170,9 +170,9 @@
   margin: 0;
   padding: 8px;
   text-transform: uppercase;
-  color: #055372;
-  border: 1px solid #e6ecef;
-  background: #e6ecef;
+  color: var(--cd-reliefweb-brand-blue--dark);
+  border: 1px solid var(--cd-reliefweb-brand-grey--light);
+  background: var(--cd-reliefweb-brand-grey--light);
   font-size: 12px;
   font-weight: bold;
   line-height: 1;
@@ -181,7 +181,7 @@
 .rw-revisions-history__btn:focus,
 .rw-revisions-history__btn:active {
   text-decoration: underline;
-  background: #e6ecef;
+  background: var(--cd-reliefweb-brand-grey--light);
 }
 .rw-revisions-history__btn:before,
 .rw-revisions-history__btn:after {

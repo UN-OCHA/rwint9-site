@@ -145,13 +145,6 @@ rw-headlines:
     theme:
       components/rw-headlines/rw-headlines.css: {}
 
-rw-headlines--admin:
-  css:
-    theme:
-      components/rw-headlines--admin/rw-headlines--admin.css: {}
-  js:
-    components/rw-headlines--admin/rw-headlines--admin.js: {}
-
 rw-homepage:
   css:
     theme:
@@ -178,6 +171,11 @@ rw-key-figures:
   css:
     theme:
       components/rw-key-figures/rw-key-figures.css: {}
+
+rw-links:
+  css:
+    theme:
+      components/rw-links/rw-links.css: {}
 
 rw-local-tasks:
   css:
@@ -291,6 +289,11 @@ rw-search:
   css:
     theme:
       components/rw-search/rw-search.css: {}
+
+rw-section-links:
+  css:
+    theme:
+      components/rw-section-links/rw-section-links.css: {}
 
 rw-site-slogan:
   css:

@@ -9,6 +9,8 @@
     var button = document.createElement('button');
     button.setAttribute('type', 'button');
     button.setAttribute('value', value);
+    button.classList.add('rw-headlines-widget__button');
+    button.classList.add('rw-headlines-widget__button--' + value);
     button.appendChild(document.createTextNode(label));
     button.disabled = disabled === true;
     return button;
@@ -19,10 +21,10 @@
    */
   function toggleLoading(show) {
     if (show === true) {
-      document.body.setAttribute('data-loading', '');
+      document.body.classList.add('rw-loading');
     }
     else {
-      document.body.removeAttribute('data-loading');
+      document.body.classList.remove('rw-loading');
     }
   }
 
@@ -75,10 +77,10 @@
       var article = articles[i];
       var id = article.getAttribute('data-id');
       if (headlines[id] === id) {
-        article.setAttribute('data-selected', '');
+        article.setAttribute('data-headlines-widget-selected', '');
       }
       else {
-        article.removeAttribute('data-selected');
+        article.removeAttribute('data-headlines-widget-selected');
       }
     }
   }
@@ -108,15 +110,20 @@
     }
     var xhr = new XMLHttpRequest();
     xhr.onload = function () {
+      if (xhr.status == 200) {
+        cleanManager();
+      }
+      else {
+        showError('Unable to save the headline selection.');
+      }
       toggleLoading(false);
-      cleanManager();
     };
     xhr.onerror = function () {
       showError('Unable to save the headline selection.');
       toggleLoading(false);
     };
     toggleLoading(true);
-    xhr.open('POST', '/admin/reliefweb/data/headlines?' + Date.now());
+    xhr.open('POST', '/admin/reliefweb_homepage/headlines/update?' + Date.now());
     xhr.send(JSON.stringify(getHeadlines()));
   }
 
@@ -127,13 +134,7 @@
     var xhr = new XMLHttpRequest();
     xhr.onload = function () {
       if (xhr.responseText) {
-        var html = JSON.parse(xhr.responseText);
-        if (typeof html === 'string') {
-          createHeadlines(html);
-        }
-        else {
-          showError('Invalid headlines data.');
-        }
+        createHeadlines(xhr.responseText);
       }
       else {
         showError('No headlines loaded.');
@@ -145,7 +146,7 @@
       toggleLoading(false);
     };
     toggleLoading(true);
-    xhr.open('GET', '/admin/reliefweb/data/headlines?' + Date.now());
+    xhr.open('GET', '/admin/reliefweb_homepage/headlines/retrieve?' + Date.now());
     xhr.send();
   }
 
@@ -174,12 +175,12 @@
         if (selection[id].length > 1) {
           var articles = selection[id];
           for (var i = 0, l = articles.length; i < l; i++) {
-            articles[i].setAttribute('data-duplicate', '');
+            articles[i].setAttribute('data-headlines-widget-duplicate', '');
           }
           duplicates = true;
         }
         else {
-          selection[id][0].removeAttribute('data-duplicate');
+          selection[id][0].removeAttribute('data-headlines-widget-duplicate');
         }
       }
     }
@@ -239,7 +240,7 @@
 
       // Replace the currently hovered article with the dragged one.
       replacement = draggable.cloneNode(true);
-      replacement.removeAttribute('data-dragged');
+      replacement.removeAttribute('data-headlines-widget-dragged');
       replacement.removeAttribute('style');
       replaced = container.replaceChild(replacement, article);
 
@@ -267,7 +268,7 @@
       replacement = null;
 
       // Clean the document.
-      document.body.removeAttribute('data-drag-on');
+      document.body.removeAttribute('data-headlines-widget-drag-on');
       document.removeEventListener('mousemove', swap);
       document.removeEventListener('mouseup', stop);
     }
@@ -306,12 +307,12 @@
 
         // Used to ensure the cursor stays consistent when dragging
         // across the page.
-        document.body.setAttribute('data-drag-on', '');
+        document.body.setAttribute('data-headlines-widget-drag-on', '');
 
         // Create the draggable element.
         draggable = target.cloneNode(true);
-        draggable.removeAttribute('data-selected');
-        draggable.setAttribute('data-dragged', '');
+        draggable.removeAttribute('data-headlines-widget-selected');
+        draggable.setAttribute('data-headlines-widget-dragged', '');
         updatePosition(event.pageX, event.pageY);
         document.body.appendChild(draggable);
 
@@ -354,44 +355,52 @@
   /**
    * Create the headline manager
    */
-  function createManager(container) {
-    container.setAttribute('data-with-editor', '');
-
+  function createManager(section) {
+    section.classList.add('rw-headlines-widget-processed');
     // Handle click events.
-    container.addEventListener('click', handleClick);
+    section.addEventListener('click', handleClick);
+
+    // Get the container of the section headlines.
+    var container = section.querySelector('article').parentNode;
     // Handle drag and drop of articles.
     handleDragDrop(container);
 
+    // Create the widget.
     var edit = createButton('edit', 'Edit');
     var save = createButton('save', 'Save', true);
     var cancel = createButton('cancel', 'Cancel', true);
 
     var actions = document.createElement('div');
-    actions.setAttribute('data-actions', '');
+    actions.classList.add('rw-headlines-widget__actions');
     actions.appendChild(save);
     actions.appendChild(cancel);
 
     var content = document.createElement('div');
-    content.setAttribute('data-headlines', '');
+    content.classList.add('rw-headlines-widget__content');
 
-    var wrapper = document.createElement('div');
-    wrapper.setAttribute('data-wrapper', '');
-    wrapper.appendChild(content);
-    wrapper.appendChild(actions);
+    var widget = document.createElement('div');
+    widget.classList.add('rw-headlines-widget');
+    widget.appendChild(content);
+    widget.appendChild(actions);
 
-    var title = container.querySelector('h2');
+    // Add the edit button close to the title.
+    var title = section.querySelector('.rw-river__title');
     title.appendChild(edit);
 
-    var header = document.createElement('header');
-    header.appendChild(title.cloneNode(true));
-    header.appendChild(wrapper);
-
-    title.parentNode.replaceChild(header, title);
+    var header = title.parentNode;
+    if (header.tagName !== 'HEADER') {
+      header = document.createElement('header');
+      header = title.parentNode.insertBefore(header, title);
+      header.appendChild(title);
+    }
+    header.classList.add('rw-headlines-widget-wrapper');
+    header.appendChild(widget);
 
     return {
       backup: [],
+      section: section,
       container: container,
-      wrapper: wrapper,
+      widget: widget,
       content: content,
       edit: edit,
       save: save,
@@ -436,12 +445,12 @@
    * Show an error message and disable the 'save' button.
    */
   function showError(message) {
-    var error = manager.container.querySelector('[data-error]');
+    var error = manager.section.querySelector('.rw-headlines-widget__error');
     if (error) {
-      manager.container.removeChild(error);
+      manager.section.removeChild(error);
     }
     error = document.createElement('div');
-    error.setAttribute('data-error', '');
+    error.classList.add('rw-headlines-widget__error');
     error.appendChild(document.createTextNode(message + ' Please reload the page and try again.'));
 
     manager.content.parentNode.replaceChild(error, manager.content);
@@ -455,7 +464,7 @@
    */
   function cleanManager() {
     manager.edit.disabled = false;
-    manager.container.removeAttribute('data-visible');
+    manager.section.classList.remove('rw-headlines-widget-visible');
     emptyHeadlines();
   }
 
@@ -482,10 +491,14 @@
     manager.cancel.disabled = false;
     createBackup();
     loadHeadlines();
-    manager.container.setAttribute('data-visible', '');
+    manager.section.classList.add('rw-headlines-widget-visible');
     manager.open = true;
   }
 
-  var manager = createManager(document.querySelector('#main-content #headlines'));
+  var manager;
+  var headlines = document.querySelector('.rw-river--headlines:not(.rw-headlines-widget-processed)');
+  if (headlines) {
+    manager = createManager(headlines);
+  }
 
 })();

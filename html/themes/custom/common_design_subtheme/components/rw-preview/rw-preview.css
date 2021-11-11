@@ -8,7 +8,7 @@
   height: 40px;
   text-align: center;
   color: var(--cd-white);
-  background: var(--cd-reliefweb-dark-red);
+  background: var(--cd-reliefweb-brand-red--dark);
 }
 .node-preview-container header h3,
 .term-preview-container header h3 {
@@ -34,7 +34,7 @@
 }
 .node-preview-form-select .node-preview-backlink:hover,
 .term-preview-form-select .term-preview-backlink:hover {
-  background: var(--cd-reliefweb-blue);
+  background: var(--cd-reliefweb-brand-blue);
 }
 /* Hide View mode select element */
 .node-preview-form-select .form-item-view-mode,

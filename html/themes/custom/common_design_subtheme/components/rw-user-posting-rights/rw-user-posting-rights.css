@@ -8,24 +8,74 @@
   padding: 2px 4px;
   vertical-align: middle;
   text-transform: uppercase;
-  border: 1px solid #d9d9d9;
-  background: rgba(217, 217, 217, 0.2);
+  border: 1px solid var(--cd-reliefweb-grey--light);
+  background: var(--cd-reliefweb-grey--light--bg);
   font-size: 10px;
   font-weight: bold;
 }
 .rw-user-posting-right[data-user-posting-right="blocked"] {
-  border-color: #da190b;
-  background: rgba(218, 25, 11, 0.2);
+  border-color: var(--cd-reliefweb-red);
+  background: var(--cd-reliefweb-red--bg);
 }
 .rw-user-posting-right[data-user-posting-right="unverified"] {
-  border-color: #f49e2c;
-  background: rgba(244, 158, 44, 0.2);
+  border-color: var(--cd-reliefweb-orange);
+  background: var(--cd-reliefweb-orange--bg);
 }
 .rw-user-posting-right[data-user-posting-right="allowed"] {
-  border-color: #076d96;
-  background: rgba(7, 109, 150, 0.2);
+  border-color: var(--cd-reliefweb-blue);
+  background: var(--cd-reliefweb-blue--bg);
 }
 .rw-user-posting-right[data-user-posting-right="trusted"] {
-  border-color: #88bb09;
-  background: rgba(136, 187, 9, 0.2);
+  border-color: var(--cd-reliefweb-green);
+  background: var(--cd-reliefweb-green--bg);
+}
+
+/**
+ * User posting rights form.
+ *
+ * This is the form used to manage user posting rights per organization.
+ *
+ * Scope: .field--type-reliefweb-user-posting-rights
+ */
+.field--type-reliefweb-user-posting-rights [data-filters],
+.field--type-reliefweb-user-posting-rights [data-new-form] {
+  border: 1px solid var(--cd-reliefweb-brand-grey--light);
+}
+.field--type-reliefweb-user-posting-rights [data-job="0"] label.job span:after,
+.field--type-reliefweb-user-posting-rights [data-training="0"] label.training span:after {
+  background: var(--cd-reliefweb-orange);
+}
+.field--type-reliefweb-user-posting-rights [data-job="1"] label.job span:after,
+.field--type-reliefweb-user-posting-rights [data-training="1"] label.training span:after {
+  background: var(--cd-reliefweb-red);
+}
+.field--type-reliefweb-user-posting-rights [data-job="2"] label.job span:after,
+.field--type-reliefweb-user-posting-rights [data-training="2"] label.training span:after {
+  background: var(--cd-reliefweb-blue);
+}
+.field--type-reliefweb-user-posting-rights [data-job="3"] label.job span:after,
+.field--type-reliefweb-user-posting-rights [data-training="3"] label.training span:after {
+  background: var(--cd-reliefweb-green);
+}
+.field--type-reliefweb-user-posting-rights ul {
+  border-top: 1px solid var(--cd-reliefweb-brand-grey--light);
+}
+.field--type-reliefweb-user-posting-rights ul li {
+  border: 1px solid var(--cd-reliefweb-brand-grey--light);
+  border-top: none;
+}
+.field--type-reliefweb-user-posting-rights ul li div button {
+  background: var(--cd-reliefweb-brand-blue--dark);
+}
+.field--type-reliefweb-user-posting-rights ul li div button:hover,
+.field--type-reliefweb-user-posting-rights ul li div button:focus,
+.field--type-reliefweb-user-posting-rights ul li div button:active {
+  background: var(--cd-reliefweb-brand-red--dark);
+}
+.field--type-reliefweb-user-posting-rights li[data-modified] {
+  border-left: 4px solid #055372;
+}
+.field--type-reliefweb-user-posting-rights li[data-status="blocked"] {
+  border-left: 4px solid var(--cd-reliefweb-red);
+  background: var(--cd-reliefweb-brand-grey--light);
 }

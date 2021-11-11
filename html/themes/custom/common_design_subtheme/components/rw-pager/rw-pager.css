@@ -5,7 +5,7 @@
   margin-top: 32px;
   padding-top: 32px;
   text-align: center;
-  border-top: 1px solid #e6ecef;
+  border-top: 1px solid var(--cd-reliefweb-brand-grey--light);
 }
 .pager:after {
   display: table;
@@ -21,7 +21,7 @@
 }
 .pager .is-active a {
   text-decoration: underline;
-  color: #eb1405;
+  color: var(--cd-reliefweb-brand-red--dark);
 }
 .pager ul {
   display: inline-block;
@@ -40,7 +40,7 @@
   height: 10px;
   margin-bottom: 1px;
   content: "";
-  background: #2e3436;
+  background: var(--cd-reliefweb-brand-grey--dark);
 }
 .pager li:last-child:after {
   content: none;
@@ -56,11 +56,12 @@
 }
 /* So the pager nav element expands the entire width of the cd-layout-content area. */
 @media screen and (min-width: 768px) {
-.rw-river-page--with-advanced-search .pager {
+  .rw-river-page--with-advanced-search .pager {
     width: calc(100% + 340px);
     margin-left: -340px;
   }
 }
+
 @media screen and (min-width: 1024px) {
   .rw-river-page--with-advanced-search .pager {
     width: calc(100% + 360px);

@@ -12,13 +12,23 @@
   --cd-primary-color-h: 197;
   --cd-primary-color-s: 91%;
   --cd-primary-color-l: 38%;
+
+  /* RW Colours in buttons */
+  /*--cd-ie-primary-color: #055372;*/
+  /*--cd-ie-primary-color--light: #19b7f5;*/
+  /*--cd-ie-primary-color--dark: #032e40;*/
+  /*--cd-ie-primary-color--lighter: #45c5f7;*/
+  /*--cd-primary-color-h: 197;*/
+  /*--cd-primary-color-s: 92%;*/
+  /*--cd-primary-color-l: 23%;*/
+
   --cd-primary-color: hsl(var(--cd-primary-color-h), var(--cd-primary-color-s), var(--cd-primary-color-l));
 
   /* lighten */
   --cd-primary-color--light: hsl(var(--cd-primary-color-h), var(--cd-primary-color-s), calc(var(--cd-primary-color-l) + 30%));
 
   /* darken */
-  --cd-primary-color--dark: hsl(var(--cd-primary-color-h), var(--cd-primary-color-s), calc(var(--cd-primary-color-l) - 26%));
+  --cd-primary-color--dark: hsl(var(--cd-primary-color-h), var(--cd-primary-color-s), calc(var(--cd-primary-color-l) - 13%));
 
   /* For cd-button--light */
   /* Change the lightness. Other values remain the same */

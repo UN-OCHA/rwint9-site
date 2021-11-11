@@ -38,7 +38,7 @@
 .rw-river-letter-navigation li a:active,
 .rw-river-letter-navigation li a:hover {
   text-decoration: none;
-  background: #e6ecef;
+  background: var(--cd-reliefweb-brand-grey--light);
   font-weight: bold;
 }
 /* .js .rw-river-letter-navigation__btn { */
@@ -52,12 +52,12 @@
     height: 40px;
     margin: 0 auto;
     padding: 0 8px;
-    border: 1px solid #e6ecef;
+    border: 1px solid var(--cd-reliefweb-brand-grey--light);
     background: white;
     font-size: 16px;
   }
   .rw-river-letter-navigation__btn[aria-expanded] .cd-icon--arrow-down {
-    fill: #2e3436;
+    fill: var(--cd-reliefweb-brand-grey--dark);
   }
   [dir="ltr"] .rw-river-letter-navigation__btn[aria-expanded] .cd-icon--arrow-down {
     margin-left: 0.5rem;
@@ -85,8 +85,8 @@
     right: 12px;
     left: 12px;
     background: white;
-    -webkit-box-shadow: 0 0 6px 2px #e6ecef;
-    box-shadow: 0 0 6px 2px #e6ecef;
+    -webkit-box-shadow: 0 0 6px 2px var(--cd-reliefweb-brand-grey--light);
+    box-shadow: 0 0 6px 2px var(--cd-reliefweb-brand-grey--light);
   }
   /* .js .rw-river-letter-navigation[data-hidden="true"] { */
   /*  display: none; */
@@ -96,5 +96,28 @@
 @media screen and (min-width: 480px) {
   .js .rw-river-letter-navigation {
     --dropdown: false;
+  }
+}
+
+@media all and (min-width: 480px) and (-ms-high-contrast: none) {
+  /* This is needed for IE11
+  No support for CSS custom properties means
+  --dropdown: false; property on nav container is not recognised
+  so the cd-dropdown.js creates a toggler button on desktop
+  This hides it when that happens.
+  */
+  .rw-river-letter-navigation__btn {
+    display: none;
+  }
+
+  /* This is needed for IE11
+  No support for CSS custom properties means
+  --dropdown: false; property on nav container is not recognised
+  so the cd-dropdown.js does not run the updateToggler function
+  which toggles the data-cd-hidden attribute.
+  This displays the nav regardless of that attribute value.
+  */
+  .rw-river-letter-navigation[data-cd-hidden="true"] {
+    display: block;
   }
 }
