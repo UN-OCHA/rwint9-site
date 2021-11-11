@@ -231,47 +231,24 @@ class ModerationPageFilterForm extends FormBase {
     // Link to create a new entity.
     $bundle = $service->getBundle();
 
-    if (!empty($bundle)) {
-      if (is_array($bundle)) {
-        foreach ($bundle as $b) {
-          $url_options = ['attributes' => ['target' => '_blank']];
-          if ($service->getEntityTypeId() === 'taxonomy_term') {
-            $create_url = Url::fromRoute('entity.taxonomy_term.add_form', [
-              'taxonomy_vocabulary' => $b,
-            ], $url_options);
-          }
-          else {
-            $create_url = Url::fromRoute('node.add', [
-              'node_type' => $b,
-            ], $url_options);
-          }
-
-          $form['actions']['create_' . $b] = [
-            '#type' => 'link',
-            '#url' => $create_url,
-            '#title' => $this->t('Create @bundle', ['@bundle' => $b]),
-          ];
-        }
+    if (!empty($bundle) && is_string($bundle)) {
+      $url_options = ['attributes' => ['target' => '_blank']];
+      if ($service->getEntityTypeId() === 'taxonomy_term') {
+        $create_url = Url::fromRoute('entity.taxonomy_term.add_form', [
+          'taxonomy_vocabulary' => $bundle,
+        ], $url_options);
       }
       else {
-        $url_options = ['attributes' => ['target' => '_blank']];
-        if ($service->getEntityTypeId() === 'taxonomy_term') {
-          $create_url = Url::fromRoute('entity.taxonomy_term.add_form', [
-            'taxonomy_vocabulary' => $bundle,
-          ], $url_options);
-        }
-        else {
-          $create_url = Url::fromRoute('node.add', [
-            'node_type' => $bundle,
-          ], $url_options);
-        }
-
-        $form['actions']['create'] = [
-          '#type' => 'link',
-          '#url' => $create_url,
-          '#title' => $this->t('Create @bundle', ['@bundle' => $bundle]),
-        ];
+        $create_url = Url::fromRoute('node.add', [
+          'node_type' => $bundle,
+        ], $url_options);
       }
+
+      $form['actions']['create'] = [
+        '#type' => 'link',
+        '#url' => $create_url,
+        '#title' => $this->t('Create @bundle', ['@bundle' => $bundle]),
+      ];
     }
 
     // Add the data to be passed to the js scripts (shortcuts etc.).

@@ -41,14 +41,23 @@ class UserPostsPage extends ModerationPage {
   /**
    * Get the page title.
    *
+   * @param \Drupal\user\UserInterface $user
+   *   User accoutn.
    * @param \Drupal\reliefweb_moderation\ModerationServiceInterface $service
    *   Moderation service.
    *
    * @return string|\Drupal\Component\Render\MarkupInterface
    *   Moderation title.
    */
-  public function getPageTitle(ModerationServiceInterface $service) {
-    return $this->t('My posts');
+  public function getTitle(UserInterface $user, ModerationServiceInterface $service) {
+    if ($user->id() === $this->currentUser()->id()) {
+      return $this->t('My posts');
+    }
+    else {
+      return $this->t("@name's posts", [
+        '@name' => $user->label(),
+      ]);
+    }
   }
 
   /**
@@ -76,7 +85,7 @@ class UserPostsPage extends ModerationPage {
     // @todo review the URL parameters and eventually remove the unnecessary
     // parameters (list can be retrieved with FormState::getCleanValueKeys()).
     $form = $this->formBuilder
-      ->buildForm('\Drupal\reliefweb_moderation\Form\ModerationPageFilterForm', $form_state);
+      ->buildForm('\Drupal\reliefweb_user_posts\Form\UserPostsPageFilterForm', $form_state);
 
     // Filter the results.
     $filters = [];

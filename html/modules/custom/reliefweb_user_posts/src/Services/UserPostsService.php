@@ -2,11 +2,7 @@
 
 namespace Drupal\reliefweb_user_posts\Services;
 
-use Drupal\Core\Access\AccessResult;
-use Drupal\Core\Session\AccountInterface;
-use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
-use Drupal\reliefweb_utility\Helpers\UserHelper;
 
 /**
  * Moderation service for the report nodes.
@@ -34,7 +30,7 @@ class UserPostsService extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function getTitle() {
-    return $this->t('Topics');
+    return $this->t('My posts');
   }
 
   /**
@@ -65,6 +61,9 @@ class UserPostsService extends ModerationServiceBase {
       ],
       'status' => [
         'label' => $this->t('Status'),
+        'type' => 'property',
+        'specifier' => 'status',
+        'sortable' => TRUE,
       ],
       'poster' => [
         'label' => $this->t('Poster'),
@@ -74,6 +73,9 @@ class UserPostsService extends ModerationServiceBase {
       ],
       'title' => [
         'label' => $this->t('Title'),
+        'type' => 'property',
+        'specifier' => 'title',
+        'sortable' => TRUE,
       ],
       'date' => [
         'label' => $this->t('Posted'),
@@ -124,28 +126,22 @@ class UserPostsService extends ModerationServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function entityAccess(EntityModeratedInterface $entity, $operation = 'view', ?AccountInterface $account = NULL) {
-    // Trello #y0B0wxLi: allow beta tested to view unpublished topics.
-    if ($operation === 'view' && UserHelper::userHasRoles(['beta_tester'], $account)) {
-      return AccessResult::allowed();
-    }
-    return parent::entityAccess($entity, $operation, $account);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   protected function initFilterDefinitions(array $filters = []) {
     $definitions = parent::initFilterDefinitions([
-      'status',
-      'author',
-      'created',
-      'user_role',
+      'content_type',
       'title',
-      'type',
-      'poster',
+      'status',
+      'job_closing_date',
+      'created',
       'source',
+      'author',
     ]);
+
+    $definitions['content_type']['values'] = [
+      0 => 'Jobs',
+      2 => 'Training',
+    ];
+
     return $definitions;
   }
 
