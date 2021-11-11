@@ -16,6 +16,9 @@
   width: 100%;
   content: "";
 }
+.rw-document .rw-article__header {
+  width: 100%;
+}
 .rw-document figure {
   margin: 0 0 16px 0;
 }
