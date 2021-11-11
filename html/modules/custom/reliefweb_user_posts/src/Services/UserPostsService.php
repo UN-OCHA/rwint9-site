@@ -107,50 +107,14 @@ class UserPostsService extends ModerationServiceBase {
       $cells = [];
 
       // Edit link + status cell.
-      $cells['edit'] = $this->getEntityEditAndStatusData($entity);
-
-      // Entity data cell.
-      $data = [];
-
-      // Id.
-      $data['title'] = $entity->id();
-
-      // Id.
-      $data['type'] = $entity->bundle();
-
-      // Title.
-      $data['title'] = $entity->toLink()->toString();
-
-      // Author information.
-      $info = [];
-      $info['author'] = $this->getEntityAuthorData($entity);
-      $data['info'] = array_filter($info);
-
-      // Revision information.
-      $data['revision'] = $this->getEntityRevisionData($entity);
-
-      // Source.
-      $sources = [];
-      if ($entity->field_source) {
-        foreach ($entity->field_source as $item) {
-          $source_link = $this->getTaxonomyTermLink($item);
-          if (!empty($source_link)) {
-            $sources[] = $source_link;
-          }
-        }
-        if (!empty($sources)) {
-          $info['source'] = $sources;
-        }
-      }
-
-      // Filter out empty data.
-      $cells['data'] = array_filter($data);
-
-      // Date cell.
-      $cells['date'] = [
-        'date' => $this->getEntityCreationDate($entity),
-      ];
-
+      $cells['id'] = $entity->id();
+      $cells['type'] = $entity->bundle();
+      $cells['status'] = $entity->getModerationStatusLabel();
+      $cells['poster'] = $entity->getOwner()->label();
+      $cells['source'] = '';
+      $cells['title'] = $entity->toLink()->toString();
+      $cells['date'] = $this->getEntityCreationDate($entity);
+      $cells['deadline'] = $entity->field_registration_deadline ? $entity->field_registration_deadline->value : '';
       $rows[] = $cells;
     }
 
