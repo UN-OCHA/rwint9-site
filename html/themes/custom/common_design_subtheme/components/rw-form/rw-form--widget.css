@@ -5,11 +5,13 @@ form .js-media-library-widget .fieldset-wrapper {
 form .image-widget {
   padding: 0 0 16px;
 }
+
 @media (min-width: 576px) {
   form .image-widget {
     justify-content: center;
   }
 }
+
 @media (min-width: 576px) {
   form .image-widget article {
     flex: 1 0 220px;
@@ -19,6 +21,7 @@ form .image-widget {
 form .image-widget article > div {
   font-size: 14px;
 }
+
 @media (min-width: 576px) {
   form .image-widget article > div {
     font-size: 14px;
@@ -48,13 +51,13 @@ form .js-media-library-widget .js-media-library-selection.form-wrapper,
 .view-media-library .cd-button,
 .js-media-library-add-form-added-media .cd-button {
   padding: 14px;
+  transition: none;
   color: white;
   border: none;
+  border-radius: 0;
   background: var(--cd-reliefweb-brand-blue--dark);
   font-size: 15px;
   font-weight: bold;
-  transition: none;
-  border-radius: 0;
 }
 .ui-dialog .ui-dialog-buttonpane .cd-button:hover,
 .ui-dialog .ui-dialog-buttonpane .cd-button:focus,
