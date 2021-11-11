@@ -198,6 +198,7 @@ rw-moderation:
     - common_design_subtheme/rw-datepicker
     - common_design_subtheme/rw-icons
     - common_design_subtheme/rw-selection
+    - common_design_subtheme/rw-user-posting-right
 
 rw-moderation-information:
   css:
@@ -268,6 +269,7 @@ rw-revisions:
   dependencies:
    - common_design_subtheme/rw-icons
    - common_design_subtheme/rw-loading
+   - common_design_subtheme/rw-user-posting-right
 
 rw-river:
   css:
@@ -351,7 +353,12 @@ rw-user-information:
     theme:
       components/rw-user-information/rw-user-information.css: {}
   dependencies:
-   - common_design_subtheme/rw-user-posting-rights
+    - common_design_subtheme/rw-user-posting-right
+
+rw-user-posting-right:
+  css:
+    theme:
+      components/rw-user-posting-right/rw-user-posting-right.css: {}
 
 rw-user-posting-rights:
   css:

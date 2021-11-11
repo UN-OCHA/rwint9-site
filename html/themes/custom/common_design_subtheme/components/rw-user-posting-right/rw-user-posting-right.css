@@ -1,0 +1,31 @@
+/**
+ * User posting rights.
+ *
+ * Text showing the user posting rights for a source.
+ */
+.rw-user-posting-right {
+  margin-left: 2px;
+  padding: 2px 4px;
+  vertical-align: middle;
+  text-transform: uppercase;
+  border: 1px solid var(--cd-reliefweb-grey--light);
+  background: var(--cd-reliefweb-grey--light--bg);
+  font-size: 10px;
+  font-weight: bold;
+}
+.rw-user-posting-right[data-user-posting-right="blocked"] {
+  border-color: var(--cd-reliefweb-red);
+  background: var(--cd-reliefweb-red--bg);
+}
+.rw-user-posting-right[data-user-posting-right="unverified"] {
+  border-color: var(--cd-reliefweb-orange);
+  background: var(--cd-reliefweb-orange--bg);
+}
+.rw-user-posting-right[data-user-posting-right="allowed"] {
+  border-color: var(--cd-reliefweb-blue);
+  background: var(--cd-reliefweb-blue--bg);
+}
+.rw-user-posting-right[data-user-posting-right="trusted"] {
+  border-color: var(--cd-reliefweb-green);
+  background: var(--cd-reliefweb-green--bg);
+}
