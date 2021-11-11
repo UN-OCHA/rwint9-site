@@ -170,20 +170,20 @@
   margin-top: 12px;
   font-size: 15px;
 }
-.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__datails,
+.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__details,
 .path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__revision {
   font-size: 14px;
 }
-.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__datails__closing-date,
-.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__datails__registration-deadline,
-.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__datails__training-date,
-.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__datails__cost {
+.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__details__closing-date,
+.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__details__registration-deadline,
+.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__details__training-date,
+.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__details__cost {
   font-weight: bold;
 }
-.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__datails__closing-date em,
-.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__datails__registration-deadline em,
-.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__datails__training-date em,
-.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__datails__cost em {
+.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__details__closing-date em,
+.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__details__registration-deadline em,
+.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__details__training-date em,
+.path-moderation .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__details__cost em {
   font-weight: normal;
 }
 .path-moderation .rw-moderation-list .rw-moderation-table__cell__date {
