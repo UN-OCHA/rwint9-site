@@ -1556,7 +1556,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     }
 
     if (!empty($definition['condition_callback']) && method_exists($this, $definition['condition_callback'])) {
-      $this->{$definition['condition_callback']}($definition, $base, $field, $value, $operator);
+      $this->{$definition['condition_callback']}($definition, $base, $fields, $value, $operator);
     }
     else {
       if (is_array($fields)) {
