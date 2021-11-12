@@ -153,6 +153,7 @@ class UserPostsService extends ModerationServiceBase {
       'author',
     ]);
 
+    // Filter by bundle.
     $definitions['bundle'] = [
       'type' => 'property',
       'field' => 'type',
@@ -164,6 +165,9 @@ class UserPostsService extends ModerationServiceBase {
         'training' => $this->t('Training'),
       ],
     ];
+
+    // Limti sources.
+    $definitions['source']['autocomplete_callback'] = 'getSourcesTheUserHasPostedFor';
 
     $definitions['author2'] = [
       'type' => 'property',
@@ -180,6 +184,32 @@ class UserPostsService extends ModerationServiceBase {
     ];
 
     return $definitions;
+  }
+
+  /**
+   * Get taxonomy term suggestions for the given term.
+   *
+   * @param string $filter
+   *   Filter name.
+   * @param string $term
+   *   Autocomplete search term.
+   * @param string $conditions
+   *   Stringified database conditions in the form:
+   *   "(@field = 'bar' AND @field = 'bar')".
+   *   This conditions will be duplicated for each passed field and combined
+   *   into a OR condition.
+   * @param array $replacements
+   *   Value replacements for the search condition.
+   *
+   * @return array
+   *   List of suggestions. Each suggestion is an object with a value, label
+   *   and optional abbreviation (abbr).
+   */
+  protected function getSourcesTheUserHasPostedFor($filter, $term, $conditions, array $replacements) {
+    $sources = parent::getTaxonomyTermAutocompleteSuggestions($filter, $term, $conditions, $replacements);
+
+    // @todo filter sources.
+    return $sources;
   }
 
 }
