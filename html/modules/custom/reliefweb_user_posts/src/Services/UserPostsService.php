@@ -2,8 +2,9 @@
 
 namespace Drupal\reliefweb_user_posts\Services;
 
-use Drupal\reliefweb_moderation\ModerationServiceBase;
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
+use Drupal\reliefweb_moderation\ModerationServiceBase;
 
 /**
  * Moderation service for the report nodes.
@@ -206,10 +207,29 @@ class UserPostsService extends ModerationServiceBase {
    *   and optional abbreviation (abbr).
    */
   protected function getSourcesTheUserHasPostedFor($filter, $term, $conditions, array $replacements) {
-    $sources = parent::getTaxonomyTermAutocompleteSuggestions($filter, $term, $conditions, $replacements);
+    $all_sources = parent::getTaxonomyTermAutocompleteSuggestions($filter, $term, $conditions, $replacements);
 
-    // @todo filter sources.
-    return $sources;
+    // Filter sources.
+    $sources = [];
+    foreach ($all_sources as $source) {
+      $sources[] = $source->value;
+    }
+
+    $rights = UserPostingRightsHelper::getUserPostingRights($this->currentUser, $sources);
+
+    $allowed_sources = [];
+    foreach ($all_sources as $source) {
+      if (isset($rights[$source->value])) {
+        if (isset($rights[$source->value]['job']) && $rights[$source->value]['job'] > 1) {
+          $allowed_sources[] = $source;
+        }
+        elseif (isset($rights[$source->value]['training']) && $rights[$source->value]['training'] > 1) {
+          $allowed_sources[] = $source;
+        }
+      }
+    }
+
+    return $allowed_sources;
   }
 
 }
