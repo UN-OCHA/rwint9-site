@@ -68,8 +68,8 @@ class UserPostsService extends ModerationServiceBase {
       ],
       'status' => [
         'label' => $this->t('Status'),
-        'type' => 'property',
-        'specifier' => 'status',
+        'type' => '',
+        'specifier' => 'moderation_state',
         'sortable' => TRUE,
       ],
       'poster' => [
@@ -138,7 +138,6 @@ class UserPostsService extends ModerationServiceBase {
    */
   protected function initFilterDefinitions(array $filters = []) {
     $definitions = parent::initFilterDefinitions([
-      'content_type',
       'title',
       'status',
       'job_closing_date',
