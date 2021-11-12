@@ -140,7 +140,6 @@ class UserPostsService extends ModerationServiceBase {
     $definitions = parent::initFilterDefinitions([
       'title',
       'status',
-      'job_closing_date',
       'created',
       'source',
       'author',
