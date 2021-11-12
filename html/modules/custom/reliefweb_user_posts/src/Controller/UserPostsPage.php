@@ -123,7 +123,7 @@ class UserPostsPage extends ModerationPage {
     }
 
     return [
-      '#theme' => 'reliefweb_moderation_page',
+      '#theme' => 'reliefweb_moderation_page__user_posts',
       '#filters' => $form,
       // List of results as a table with a pager.
       '#list' => $service->getTable($filters, 30),
