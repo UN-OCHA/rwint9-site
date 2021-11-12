@@ -154,6 +154,16 @@ class UserPostsService extends ModerationServiceBase {
       'author',
     ]);
 
+    // Filter by node id.
+    $definitions['nid'] = [
+      'type' => 'property',
+      'field' => 'nid',
+      'label' => $this->t('Id'),
+      'shortcut' => 'i',
+      'form' => 'omnibox',
+      'widget' => 'search',
+    ];
+
     // Filter by bundle.
     $definitions['bundle'] = [
       'type' => 'property',
