@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_user_posts\Services;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Database\Query\Select;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 
@@ -93,9 +94,11 @@ class UserPostsService extends ModerationServiceBase {
       ],
       'deadline' => [
         'label' => $this->t('Deadline'),
-        'type' => 'property',
+        'type' => '',
         'specifier' => 'deadline',
         'sortable' => TRUE,
+        'join_callback' => 'joinDeadline',
+        'condition_callback' => 'conditionDeadline',
       ],
     ];
   }
@@ -177,8 +180,20 @@ class UserPostsService extends ModerationServiceBase {
       ],
     ];
 
-    // Limti sources.
+    // Limit sources.
     $definitions['source']['autocomplete_callback'] = 'getSourcesTheUserHasPostedFor';
+
+    // Filter on deadline.
+    $definitions['deadline'] = [
+      'type' => 'property',
+      'field' => 'deadline',
+      'label' => $this->t('Deadline'),
+      'form' => 'omnibox',
+      'widget' => 'datepicker',
+      'join_callback' => 'joinDeadline',
+      'condition_callback' => 'conditionDeadline',
+      'operator' => 'AND',
+    ];
 
     $definitions['author2'] = [
       'type' => 'property',
@@ -240,6 +255,35 @@ class UserPostsService extends ModerationServiceBase {
     }
 
     return $allowed_sources;
+  }
+
+  /**
+   * Deadline join callback.
+   *
+   * @see ::joinField()
+   */
+  protected function joinDeadline(Select $query, array $definition, $entity_type_id, $entity_base_table, $entity_id_field, $or = FALSE, $values = []) {
+    $table_job = $this->getFieldTableName('node', 'field_job_closing_date');
+    $field_name_job = $this->getFieldColumnName('node', 'field_job_closing_date', 'value');
+
+    $table_training = $this->getFieldTableName('node', 'field_registration_deadline');
+    $field_name_training = $this->getFieldColumnName('node', 'field_registration_deadline', 'value');
+
+    // Add deadline field.
+    $query->addExpression("COALESCE({$table_job}.{$field_name_job}, {$table_training}.{$field_name_training})", 'deadline');
+
+    // Add joins.
+    $query->leftJoin($table_job, NULL, "{$table_job}.entity_id = {$entity_base_table}.{$entity_id_field}");
+    $query->leftJoin($table_training, NULL, "{$table_training}.entity_id = {$entity_base_table}.{$entity_id_field}");
+
+    return "COALESCE({$table_job}.{$field_name_job}, {$table_training}.{$field_name_training})";
+  }
+
+  /**
+   * Condition callback.
+   */
+  protected function conditionDeadline($definition, $base, $fields, $value, $operator) {
+    $base->where("UNIX_TIMESTAMP({$fields}) {$operator} {$value[0]} AND {$value[1]}");
   }
 
 }
