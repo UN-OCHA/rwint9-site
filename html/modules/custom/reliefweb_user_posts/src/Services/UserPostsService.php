@@ -55,9 +55,15 @@ class UserPostsService extends ModerationServiceBase {
     return [
       'id' => [
         'label' => $this->t('Id'),
+        'type' => 'property',
+        'specifier' => 'nid',
+        'sortable' => TRUE,
       ],
       'type' => [
         'label' => $this->t('Type'),
+        'type' => 'property',
+        'specifier' => 'type',
+        'sortable' => TRUE,
       ],
       'status' => [
         'label' => $this->t('Status'),
