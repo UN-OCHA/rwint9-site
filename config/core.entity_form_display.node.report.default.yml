@@ -11,7 +11,6 @@ dependencies:
     - field.field.node.report.field_disaster_type
     - field.field.node.report.field_embargo_date
     - field.field.node.report.field_feature
-    - field.field.node.report.field_file
     - field.field.node.report.field_headline
     - field.field.node.report.field_headline_image
     - field.field.node.report.field_headline_summary
@@ -162,13 +161,6 @@ content:
     settings: {  }
     third_party_settings: {  }
     type: options_buttons
-    region: content
-  field_file:
-    type: media_library_widget
-    weight: 3
-    settings:
-      media_types: {  }
-    third_party_settings: {  }
     region: content
   field_headline:
     weight: 17

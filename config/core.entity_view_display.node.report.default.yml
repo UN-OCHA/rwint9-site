@@ -11,7 +11,6 @@ dependencies:
     - field.field.node.report.field_disaster_type
     - field.field.node.report.field_embargo_date
     - field.field.node.report.field_feature
-    - field.field.node.report.field_file
     - field.field.node.report.field_headline
     - field.field.node.report.field_headline_image
     - field.field.node.report.field_headline_summary
@@ -44,6 +43,11 @@ content:
     third_party_settings: {  }
     type: text_default
     region: content
+  content_moderation_control:
+    weight: -20
+    settings: {  }
+    third_party_settings: {  }
+    region: content
   field_content_format:
     weight: 2
     label: visually_hidden
@@ -75,15 +79,6 @@ content:
       link: true
     third_party_settings: {  }
     type: entity_reference_label
-    region: content
-  field_file:
-    type: entity_reference_entity_view
-    weight: 8
-    label: visually_hidden
-    settings:
-      view_mode: default
-      link: false
-    third_party_settings: {  }
     region: content
   field_image:
     weight: 6
