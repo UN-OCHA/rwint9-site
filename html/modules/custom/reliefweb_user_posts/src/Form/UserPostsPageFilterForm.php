@@ -38,10 +38,16 @@ class UserPostsPageFilterForm extends ModerationPageFilterForm {
       ], $url_options)->toString(),
     ]);
 
+    // Add intro.
     $form['intro'] = [
       '#weight' => -100,
       '#markup' => new FormattableMarkup('<div class="rw-moderation-intro">' . $links . '</div>', []),
     ];
+
+    // Fix data bundle.
+    if (isset($form['filters']['omnibox']['input']['#attributes']['data-bundle'])) {
+      $form['filters']['omnibox']['input']['#attributes']['data-bundle'] = 'user_posts';
+    }
 
     return $form;
   }
