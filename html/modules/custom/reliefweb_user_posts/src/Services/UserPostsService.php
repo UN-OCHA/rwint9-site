@@ -126,7 +126,15 @@ class UserPostsService extends ModerationServiceBase {
       $cells['source'] = '';
       $cells['title'] = $entity->toLink()->toString();
       $cells['date'] = $this->getEntityCreationDate($entity);
-      $cells['deadline'] = $entity->field_registration_deadline ? $entity->field_registration_deadline->value : '';
+
+      $cells['deadline'] = '';
+      if ($entity->field_registration_deadline) {
+        $cells['deadline'] = $this->formatDate($entity->field_registration_deadline->value);
+      }
+      elseif ($entity->field_job_closing_date) {
+        $cells['deadline'] = $this->formatDate($entity->field_job_closing_date->value);
+      }
+
       $rows[] = $cells;
     }
 
