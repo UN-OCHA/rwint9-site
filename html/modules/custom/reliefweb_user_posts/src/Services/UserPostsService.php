@@ -122,7 +122,7 @@ class UserPostsService extends ModerationServiceBase {
         '@status' => $entity->getModerationStatus(),
         '@label' => $entity->getModerationStatusLabel(),
       ]);
-      $cells['poster'] = $entity->getOwner()->label();
+      $cells['poster'] = $this->currentUser->id() == $entity->getOwner()->id() ? $this->t('me') : $this->t('other');
       $cells['source'] = '';
       $cells['title'] = $entity->toLink()->toString();
       $cells['date'] = $this->getEntityCreationDate($entity);
@@ -154,6 +154,20 @@ class UserPostsService extends ModerationServiceBase {
       'values' => [
         'job' => $this->t('Job'),
         'training' => $this->t('Training'),
+      ],
+    ];
+
+    $definitions['author2'] = [
+      'type' => 'property',
+      'field' => 'uid',
+      'label' => $this->t('Posted by'),
+      'shortcut' => 'a',
+      'form' => 'other',
+      'join_callback' => 'joinPoster',
+      'operator' => 'OR',
+      'values' => [
+        'me' => $this->t('Me'),
+        'other' => $this->t('Other'),
       ],
     ];
 
