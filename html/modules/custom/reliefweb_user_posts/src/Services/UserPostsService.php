@@ -117,7 +117,10 @@ class UserPostsService extends ModerationServiceBase {
       // Edit link + status cell.
       $cells['id'] = $entity->id();
       $cells['type'] = $entity->bundle();
-      $cells['status'] = $entity->getModerationStatusLabel();
+      $cells['status'] = new FormattableMarkup('<div class="rw-moderation-status" data-moderation-status="@status">@label</div>', [
+        '@status' => $entity->getModerationStatus(),
+        '@label' => $entity->getModerationStatusLabel(),
+      ]);
       $cells['poster'] = $entity->getOwner()->label();
       $cells['source'] = '';
       $cells['title'] = $entity->toLink()->toString();
