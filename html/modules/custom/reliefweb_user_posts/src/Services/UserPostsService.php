@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_user_posts\Services;
 
 use Drupal\reliefweb_moderation\ModerationServiceBase;
+use Drupal\Component\Render\FormattableMarkup;
 
 /**
  * Moderation service for the report nodes.
