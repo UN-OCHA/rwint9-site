@@ -146,9 +146,16 @@ class UserPostsService extends ModerationServiceBase {
       'author',
     ]);
 
-    $definitions['content_type']['values'] = [
-      0 => 'Jobs',
-      2 => 'Training',
+    $definitions['bundle'] = [
+      'type' => 'property',
+      'field' => 'type',
+      'label' => $this->t('Type'),
+      'shortcut' => 'ty',
+      'form' => 'other',
+      'values' => [
+        'job' => $this->t('Job'),
+        'training' => $this->t('Training'),
+      ],
     ];
 
     return $definitions;
