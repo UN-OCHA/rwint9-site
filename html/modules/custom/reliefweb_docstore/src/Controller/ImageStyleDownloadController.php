@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_docstore\Controller;
 
 use Drupal\Component\Utility\Crypt;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Image\ImageFactory;
@@ -25,6 +26,13 @@ use Symfony\Component\HttpKernel\Exception\ServiceUnavailableHttpException;
 class ImageStyleDownloadController extends OriginalImageStyleDownloadController {
 
   /**
+   * ReliefWeb Docstore config.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
+  protected $config;
+
+  /**
    * The current user.
    *
    * @var \Drupal\Core\Session\AccountProxyInterface
@@ -41,6 +49,8 @@ class ImageStyleDownloadController extends OriginalImageStyleDownloadController 
   /**
    * Constructs an ImageStyleDownloadController object.
    *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory service.
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
    *   The current user.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -55,6 +65,7 @@ class ImageStyleDownloadController extends OriginalImageStyleDownloadController 
    *   The file system service.
    */
   public function __construct(
+    ConfigFactoryInterface $config_factory,
     AccountProxyInterface $current_user,
     EntityTypeManagerInterface $entity_type_manager,
     LockBackendInterface $lock,
@@ -64,6 +75,7 @@ class ImageStyleDownloadController extends OriginalImageStyleDownloadController 
   ) {
     parent::__construct($lock, $image_factory, $stream_wrapper_manager, $file_system);
 
+    $this->config = $config_factory->get('reliefweb_docstore.settings');
     $this->currentUser = $current_user;
     $this->entityTypeManager = $entity_type_manager;
   }
@@ -73,6 +85,7 @@ class ImageStyleDownloadController extends OriginalImageStyleDownloadController 
    */
   public static function create(ContainerInterface $container) {
     return new static(
+      $container->get('config.factory'),
       $container->get('current_user'),
       $container->get('entity_type.manager'),
       $container->get('lock'),
@@ -93,8 +106,13 @@ class ImageStyleDownloadController extends OriginalImageStyleDownloadController 
     // This is normally the URI of the source image.
     $uri = $scheme . '://' . $request->query->get('file');
 
-    // @todo use a config setting for the attachments/previews path.
-    $pattern = '#^(?:private|public)://(?:attachments|previews)/([a-z0-9]{2})/([a-z0-9]{2})/\1\2[a-z0-9-]{32}\.#';
+    // Retrieve the base directory in which the previews are stored.
+    $preview_directory = $this->config->get('preview_directory') ?? 'previews';
+
+    // Pattern for the preview files.
+    $pattern = '#^(?:private|public)://' .
+               preg_quote($preview_directory) .
+               '/([a-z0-9]{2})/([a-z0-9]{2})/\1\2[a-z0-9-]{32}\.#';
 
     // Let other modules handle the file if it's not a file matching the pattern
     // used for the reliefweb files.
@@ -140,10 +158,7 @@ class ImageStyleDownloadController extends OriginalImageStyleDownloadController 
     $headers = [
       'Content-Type' => $image->getMimeType(),
       'Content-Length' => $image->getFileSize(),
-      // No caching so that the new derivative image can be returned when the
-      // base image is changed.
       'Cache-Control' => 'private',
-      'Last-Modified' => gmdate('F d Y H:i:s.', filemtime($derivative_uri)),
     ];
 
     return new BinaryFileResponse($image->getSource(), 200, $headers, TRUE);

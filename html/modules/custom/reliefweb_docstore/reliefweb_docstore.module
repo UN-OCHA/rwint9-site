@@ -69,8 +69,34 @@ function reliefweb_docstore_preprocess_image_style(&$variables) {
   // when the image is regenerated.
   if (isset($variables['image']['#attributes']['data-no-cache'])) {
     $uri = $variables['image']['#uri'];
-    $uri .= (strpos($uri, '?') !== FALSE ? '&' : '?') . microtime(TRUE);
+    $uri .= (strpos($uri, '?') !== FALSE ? '&' : '?') . 'time=' . microtime(TRUE);
     $variables['image']['#uri'] = $uri;
     unset($variables['image']['#attributes']['data-no-cache']);
   }
+}
+
+/**
+ * Get the list of languages supported by ReliefWeb.
+ *
+ * @return array
+ *   List of languages keyed by their ISO 639-1 code.
+ */
+function reliefweb_docstore_get_languages() {
+  static $languages;
+
+  if (!isset($languages)) {
+    $storage = \Drupal::service('entity_type.manager')->getStorage('taxonomy_term');
+    $bundle_key = $storage->getEntityType()->getkey('bundle');
+    $entities = $storage->loadByProperties([$bundle_key => 'language']);
+
+    $languages = [];
+    foreach ($entities as $entity) {
+      $code = $entity->field_language_code->value;
+      if (!empty($code)) {
+        $languages[$code] = $entity->label();
+      }
+    }
+  }
+
+  return $languages;
 }

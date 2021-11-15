@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_docstore\Controller;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
@@ -16,6 +17,13 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  * System file controller.
  */
 class FileDownloadController extends OriginalFileDownloadController {
+
+  /**
+   * ReliefWeb Docstore config.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
+  protected $config;
 
   /**
    * The current user.
@@ -34,6 +42,8 @@ class FileDownloadController extends OriginalFileDownloadController {
   /**
    * FileDownloadController constructor.
    *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory service.
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
    *   The current user.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -42,12 +52,14 @@ class FileDownloadController extends OriginalFileDownloadController {
    *   The stream wrapper manager.
    */
   public function __construct(
+    ConfigFactoryInterface $config_factory,
     AccountProxyInterface $current_user,
     EntityTypeManagerInterface $entity_type_manager,
     StreamWrapperManagerInterface $stream_wrapper_manager
   ) {
     parent::__construct($stream_wrapper_manager);
 
+    $this->config = $config_factory->get('reliefweb_docstore.settings');
     $this->currentUser = $current_user;
     $this->entityTypeManager = $entity_type_manager;
   }
@@ -57,6 +69,7 @@ class FileDownloadController extends OriginalFileDownloadController {
    */
   public static function create(ContainerInterface $container) {
     return new static(
+      $container->get('config.factory'),
       $container->get('current_user'),
       $container->get('entity_type.manager'),
       $container->get('stream_wrapper_manager')
@@ -67,16 +80,15 @@ class FileDownloadController extends OriginalFileDownloadController {
    * {@inheritdoc}
    */
   public function download(Request $request, $scheme = 'private') {
-    // Public files don't need special here handling so we default to the parent
-    // download controller.
-    if ($scheme !== 'private') {
-      return parent::download($request, $scheme);
-    }
-
     $uri = $scheme . '://' . $request->query->get('file');
 
-    // @todo use a config setting for the attachments/previews path.
-    $pattern = '#^private://(?:attachments|previews)/([a-z0-9]{2})/([a-z0-9]{2})/\1\2[a-z0-9-]{32}\.#';
+    // Retrieve the base directory in which the previews are stored.
+    $file_directory = $this->config->get('file_directory') ?? 'attachments';
+
+    // Pattern for the preview files.
+    $pattern = '#^(?:private|public)://' .
+               preg_quote($file_directory) .
+               '/([a-z0-9]{2})/([a-z0-9]{2})/\1\2[a-z0-9-]{32}\.#';
 
     // Let other modules handle the file if it's not a file matching the pattern
     // used for the reliefweb files.
@@ -85,7 +97,7 @@ class FileDownloadController extends OriginalFileDownloadController {
     }
 
     // Deny access if the user doesn't have the proper permission.
-    if (!$this->currentUser->hasPermission('access reliefweb private files')) {
+    if ($scheme === 'private' && !$this->currentUser->hasPermission('access reliefweb private files')) {
       throw new AccessDeniedHttpException();
     }
 
@@ -96,13 +108,10 @@ class FileDownloadController extends OriginalFileDownloadController {
     }
 
     // Retrieve the file headers and return the file content.
-    // @todo review if we should disable the cache altogether.
+    // @todo review how to deal with the file caching to deal with file
+    // replacements.
     $headers = file_get_content_headers($file);
-    if (!empty($headers)) {
-      return new BinaryFileResponse($uri, 200, $headers, FALSE);
-    }
-
-    throw new NotFoundHttpException();
+    return new BinaryFileResponse($uri, 200, $headers, FALSE);
   }
 
   /**

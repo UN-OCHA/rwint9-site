@@ -70,9 +70,9 @@ class ReliefWebFile extends FieldItemBase {
       ->setDescription(new TranslatableMarkup('The ID of the file revision.'))
       ->setRequired(TRUE);
 
-    // The status of the file: private or public.
-    $properties['status'] = DataDefinition::create('boolean')
-      ->setLabel(new TranslatableMarkup('Status'))
+    // Whether the file is private or public.
+    $properties['private'] = DataDefinition::create('boolean')
+      ->setLabel(new TranslatableMarkup('Private'))
       ->setDescription(new TranslatableMarkup('Whether the file is private or public.'))
       ->setRequired(TRUE);
 
@@ -116,7 +116,7 @@ class ReliefWebFile extends FieldItemBase {
     $properties['preview_uuid'] = DataDefinition::create('string')
       ->setLabel(new TranslatableMarkup('Preview UUID'))
       ->setDescription(new TranslatableMarkup('The UUID of the preview file.'))
-      ->setRequired(TRUE);
+      ->setRequired(FALSE);
 
     // The page used for the file preview.
     $properties['preview_page'] = DataDefinition::create('integer')
@@ -149,7 +149,7 @@ class ReliefWebFile extends FieldItemBase {
           'size' => 'medium',
           'not null' => TRUE,
         ],
-        'status' => [
+        'private' => [
           'type' => 'int',
           'size' => 'tiny',
           'not null' => TRUE,
@@ -187,7 +187,7 @@ class ReliefWebFile extends FieldItemBase {
         'preview_uuid' => [
           'type' => 'varchar_ascii',
           'length' => 36,
-          'not null' => TRUE,
+          'not null' => FALSE,
         ],
         'preview_page' => [
           'type' => 'int',
@@ -233,7 +233,7 @@ class ReliefWebFile extends FieldItemBase {
 
     $values['uuid'] = static::generateUuid();
     $values['revision_id'] = mt_rand(1111, 9999);
-    $valyes['status'] = (bool) mt_rand(0, 1);
+    $valyes['private'] = (bool) mt_rand(0, 1);
     $valyes['file_name'] = $random->string(mt_rand(1, 250)) . '.' . $random->string(mt_rand(1, 4));
     $valyes['file_mime'] = $random->string(mt_rand(32, 128));
     $valyes['file_size'] = mt_rand(1111, 99999);
@@ -664,10 +664,16 @@ class ReliefWebFile extends FieldItemBase {
    *   The directory URI.
    */
   public static function getFileDirectoryUriFromUuid($uuid, $private = TRUE, $preview = FALSE) {
-    // @todo use a config setting for the attachments/previews path.
+    $settings = \Drupal::service('config.factory')->get('reliefweb_docstore.settings');
+
     $directory = $private ? 'private://' : 'public://';
-    $directory .= $preview ? 'previews/' : 'attachments/';
-    $directory .= substr($uuid, 0, 2);
+    if ($preview) {
+      $directory .= $settings->get('preview_directory') ?? 'previews';
+    }
+    else {
+      $directory .= $settings->get('file_directory') ?? 'attachments';
+    }
+    $directory .= '/' . substr($uuid, 0, 2);
     $directory .= '/' . substr($uuid, 2, 2);
     return $directory;
   }
@@ -714,6 +720,7 @@ class ReliefWebFile extends FieldItemBase {
       // global files that have nothing to do with the current user.
       'uid' => 2,
       'uri' => $uri,
+      // Temporary file that can be garbage collected if not set permanent.
       'status' => 0,
       'filename' => $file_name,
       'filemime' => $file_mime,
@@ -733,6 +740,28 @@ class ReliefWebFile extends FieldItemBase {
     $file_system = \Drupal::service('file_system');
     $directory = $file_system->dirname($uri);
     return $file_system->prepareDirectory($directory, $file_system::CREATE_DIRECTORY);
+  }
+
+  /**
+   * Delete a managed file with the given UUID.
+   *
+   * @param string $uuid
+   *   File UUID.
+   * @param bool $preview
+   *   Whether the file is a preview or not.
+   */
+  public static function deleteFileFromUuid($uuid, $preview = FALSE) {
+    $file = \Drupal::service('entity.repository')
+      ->loadEntityByUuid('file', $uuid);
+
+    if (!empty($file)) {
+      // Remove the derivative images.
+      if ($preview) {
+        image_path_flush($file->getFileUri());
+      }
+
+      $file->delete();
+    }
   }
 
   /**
