@@ -39,9 +39,6 @@ form .image-widget article > div {
   height: auto;
   max-height: 200px;
 }
-.node-announcement-edit-form .image-widget .js-media-library-item-preview img {
-  width: auto;
-}
 
 /* Prevent empty divs from taking up space */
 form .js-media-library-widget .js-media-library-selection.form-wrapper,
