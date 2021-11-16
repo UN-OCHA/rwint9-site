@@ -3,10 +3,6 @@
  *
  * This provides basic styling for form elements in the main-content content area.
  */
-/* Todo: remove? */
-form + * {
-  margin-top: 16px;
-}
 form input,
 form label,
 form button,
@@ -16,7 +12,10 @@ form textarea {
   font-size: 16px;
   font-weight: normal;
 }
-form button {
+form button,
+/* Apply styles to field UI buttons
+  with some exceptions (Notably "Save" buttons) */
+form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button {
   margin: 0 12px 0 0;
   padding: 14px;
   color: white;
@@ -27,9 +26,16 @@ form button {
 }
 form button:hover,
 form button:focus,
-form button:active {
+form button:active,
+form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button:hover,
+form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button:focus,
+form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button:active {
   text-decoration: underline;
   background: var(--cd-reliefweb-brand-red--dark);
+}
+form:not('.subscription-form'):not('community-topics-form') .form-item .cd-button {
+  transition: none;
+  border-radius: 0;
 }
 form input[type="text"],
 form input[type="search"],
@@ -63,7 +69,7 @@ form textarea {
   resize: vertical;
   border: 2px solid var(--cd-reliefweb-brand-grey--light);
   background: white;
-  /* Better readibility similar to paragraphs. */
+  /* Better readability similar to paragraphs. */
   line-height: 1.5;
 }
 form select {
@@ -95,14 +101,6 @@ form fieldset legend {
   margin: 0;
   padding: 0;
 }
-/* First level form sections. */
-/* form > div > fieldset,
-form > div.form-item,
-form > fieldset,
-form > section {
-  border-top: 1px solid var(--cd-reliefweb-brand-grey--light);
-  padding: 32px 0;
-} */
 form > div > fieldset > legend,
 form > fieldset > legend,
 form > section > h3 {
@@ -272,8 +270,6 @@ form fieldset > legend + a[href="#actions"] {
   font-variant: small-caps;
 }
 form #actions {
-  /* width: auto; */
-  /* min-width: 100%; */
   padding: 0 12px 12px;
   text-align: center;
   border: 1px solid var(--cd-reliefweb-brand-grey--light);
@@ -283,9 +279,6 @@ form #actions {
 form #actions .cd-button {
   margin-top: 12px;
 }
-/* form fieldset + #actions { */
-/*  border-top: none; */
-/* } */
 form #actions + * {
   border-top: none;
 }
@@ -295,16 +288,7 @@ form button:last-child {
 form div.form-actions {
   width: auto;
   min-width: 100%;
-  /* The negative margins are to compensate the button margins. */
-  /* margin: 8px -8px -8px -8px; */
-  /* margin: 0 -8px; */
 }
-/* form #actions div.form-actions { */
-/*  margin-top: -8px; */
-/* } */
-/* form div.form-actions button { */
-/*  margin: 8px; */
-/* } */
 form .form-item + button,
 form button.form-actions {
   margin-top: 16px;
@@ -420,6 +404,12 @@ form #edit-organization #edit-field-source-allowed .form-item:last-child {
   margin: 0;
 }
 
+/* Term form Disable Notifications checkbox is inside #actions fieldset */
+form > #actions legend + .form-type-checkbox.form-item-notifications-content-disable,
+.form-item-notifications-content-disable + .form-actions {
+  margin: 0;
+}
+
 /* Field with text that is not wrapped in description div */
 .field--name-body .text-full,
 .field--name-field-how-to-apply .text-full,
@@ -466,10 +456,12 @@ form [data-lengthchecker-status="ok"] {
 .node-form fieldset.field-new-source-wrapper {
   margin-top: 24px;
 }
-/* Term forms */
+/* Term and Node edit forms */
 .taxonomy-term-country-profile-form,
 .taxonomy-term-disaster-profile-form,
-.taxonomy-term-source-user-posting-rights-form {
+.taxonomy-term-source-user-posting-rights-form,
+.taxonomy-term-confirm-form,
+.node-confirm-form {
   padding-top: 24px;
 }
 
@@ -515,7 +507,3 @@ form button[value="edit"] {
   padding: 8px;
   font-size: 14px;
 }
-
-/* details > summary + .cd-form__item { */
-/*  margin-top: 1.5rem; */
-/* } */

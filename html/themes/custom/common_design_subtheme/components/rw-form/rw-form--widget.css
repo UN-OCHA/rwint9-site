@@ -1,122 +1,15 @@
-
-/**
- * File and image fields.
- *
- * This includes single and multiple values field. Both file and image fields
- * share some basic styling.
- */
-/* form .file-widget .fieldset-wrapper { */
-/*  !* Necessary to ensure the progress overlay stays within the limits of the */
-/*   * file element. *! */
-/*  position: relative; */
-/*  padding: 8px; */
-/*  border: 1px solid var(--cd-reliefweb-brand-grey--light); */
-/* } */
-/* form table.file-list thead { */
-/*  display: none; */
-/* } */
-/* form table.file-list td:first-child { */
-/*  min-width: 400px; */
-/*  padding: 0; */
-/* } */
-/* form table.file-list td:last-child { */
-/*  width: 200px; */
-/*  min-width: 200px; */
-/* } */
-/* form table.file-list td:last-child .description { */
-/*  display: block; */
-/*  margin-top: 12px; */
-/* } */
-/* form table.file-list td:last-child button { */
-/*  display: block; */
-/*  margin: 0 auto; */
-/* } */
-/* form table.file-list .file-widget .fieldset-wrapper { */
-/*  display: table; */
-/*  width: 100%; */
-/*  border-collapse: collapse; */
-/*  border-top-style: hidden; */
-/*  border-right-style: hidden; */
-/*  border-bottom-style: hidden; */
-/* } */
-/* form table.file-list .file-widget .fieldset-wrapper > div { */
-/*  display: table-cell; */
-/*  width: 50%; */
-/*  padding: 8px 16px; */
-/*  border-left: 1px solid var(--cd-reliefweb-brand-grey--light); */
-/* } */
-/* form table.file-list .file-widget .fieldset-wrapper > div.file-details a[download] { */
-/*  display: block; */
-/*  margin-bottom: 12px; */
-/* } */
-/* form table.file-list .file-widget .fieldset-wrapper .file-preview > div + div { */
-/*  margin-top: 0; */
-/* } */
-/* form table.file-list .file-widget .fieldset-wrapper .preview-image { */
-/*  float: left; */
-/*  width: 100px; */
-/*  height: 100px; */
-/*  margin: 12px 12px 0 0; */
-/*  text-align: center; */
-/* } */
-/* form table.file-list .file-widget .fieldset-wrapper .preview-image a { */
-/*  !* Fallback if flex is not available. *! */
-/*  display: block; */
-/*  display: flex; */
-/*  align-items: center; */
-/*  justify-content: center; */
-/*  width: 102px; */
-/*  height: 102px; */
-/*  text-align: center; */
-/*  border: 1px solid var(--cd-reliefweb-brand-grey--light); */
-/* } */
-/* form table.file-list .file-widget .fieldset-wrapper .preview-image a img { */
-/*  max-width: 100%; */
-/*  max-height: 100%; */
-/* } */
-/* form table.file-list .file-widget .fieldset-wrapper .preview-image + div { */
-/*  margin-top: 0; */
-/*  padding-top: 12px; */
-/* } */
-/* form .table-wrapper + .form-type-managed-file { */
-/*  margin-top: 12px; */
-/* } */
-/* !* No need to display the extra field label as the fieldset legend is enough. *! */
-/* form .field-type-image fieldset .form-type-managed-file > label { */
-/*  display: none; */
-/* } */
-/* form table.file-list .image-widget { */
-/*   border: none; */
-/*   border-left: 1px solid var(--cd-reliefweb-brand-grey--light); */
-/* } */
-
 /* Media widget */
 form .js-media-library-widget .fieldset-wrapper {
-  position: relative;
-  padding: 8px;
   border: 1px solid var(--cd-reliefweb-brand-grey--light);
 }
 form .image-widget {
-  display: flex;
-  flex-direction: column;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  /* border: 1px solid var(--cd-reliefweb-brand-grey--light); */
-  padding: 0 16px 16px;
+  padding: 0 0 16px;
 }
 
 @media (min-width: 576px) {
   form .image-widget {
-    flex-direction: row;
-    align-items: center;
     justify-content: center;
   }
-}
-form .image-widget article {
-  display: flex;
-  flex: 1 0 auto;
-  flex-direction: column;
-  order: 1;
 }
 
 @media (min-width: 576px) {
@@ -126,111 +19,22 @@ form .image-widget article {
 }
 /* File name */
 form .image-widget article > div {
-  margin-bottom: 16px;
   font-size: 14px;
 }
 
 @media (min-width: 576px) {
   form .image-widget article > div {
-    margin-bottom: 0;
     font-size: 14px;
   }
 }
 form .image-widget .js-media-library-item-preview {
   max-width: 220px;
   max-height: 147px;
-  margin: 0 0 16px;
 }
 .node-announcement-form .image-widget .js-media-library-item-preview,
 .node-announcement-edit-form .image-widget .js-media-library-item-preview {
   max-width: 600px;
   max-height: 200px;
-}
-form .image-widget .js-media-library-item-preview img {
-  width: auto;
-  max-width: 100%;
-  height: auto;
-  max-height: 100%;
-  margin: 0 auto;
-}
-form .image-widget .form-submit {
-  order: 2;
-}
-/* Show/Hide media item weight button */
-.js-media-library-widget-toggle-weight {
-  position: absolute;
-  right: 8px;
-  padding: 8px;
-  font-size: 14px;
-}
-/* Media item weight */
-form .image-widget .form-type-number {
-  flex: 0 1 auto;
-  order: 3;
-}
-form .image-widget .form-type-number input {
-  width: 100%;
-}
-
-@media (min-width: 576px) {
-  form .image-widget .form-type-number {
-    flex: 0 1 100px;
-    margin-top: 0;
-    padding: 0 0 0 16px;
-  }
-}
-/* Media library dialog */
-ul.js-media-library-add-form-added-media {
-  margin: 0;
-  padding: 0;
-  list-style-type: none;
-}
-ul.js-media-library-add-form-added-media li {
-  margin: 0;
-  padding: 0;
-}
-.js-media-library-add-form-added-media .form-submit {
-  margin-top: 16px;
-}
-.ui-dialog .ui-dialog-buttonpane button {
-  margin: 0;
-  border-width: 2px;
-  border-color: inherit;
-}
-
-.view-media-library .cd-form--inline,
-.view-media-library .cd-form--inline .cd-form__item {
-  display: block;
-}
-/* File name */
-.view-media-library .field-content article > div {
-  word-wrap: break-word;
-}
-/* Pagination */
-.view-media-library .js-pager__items {
-  margin: 16px 0 0;
-  padding: 0;
-  list-style-type: none;
-}
-.view-media-library .js-pager__items li {
-  display: inline-block;
-  padding: 0 8px 0 0;
-}
-
-/* CD form overrides */
-@media (min-width: 768px) {
-  .view-media-library .cd-form--inline {
-    display: flex;
-    align-items: flex-end;
-    margin-bottom: 1rem;
-  }
-  .view-media-library .cd-form--inline > div {
-    margin-right: 1rem;
-  }
-  .view-media-library .cd-form--inline .cd-form__item {
-    display: flex;
-    flex-direction: column;
-  }
 }
 
 /* Prevent empty divs from taking up space */
@@ -240,4 +44,30 @@ form .js-media-library-widget .js-media-library-selection.form-wrapper,
 }
 .js-media-library-add-form .image-widget {
   padding: 0;
+}
+
+/* Media UI buttons styled the same as other UI buttons */
+.ui-dialog .ui-dialog-buttonpane .cd-button,
+.view-media-library .cd-button,
+.js-media-library-add-form-added-media .cd-button {
+  padding: 14px;
+  transition: none;
+  color: white;
+  border: none;
+  border-radius: 0;
+  background: var(--cd-reliefweb-brand-blue--dark);
+  font-size: 15px;
+  font-weight: bold;
+}
+.ui-dialog .ui-dialog-buttonpane .cd-button:hover,
+.ui-dialog .ui-dialog-buttonpane .cd-button:focus,
+.ui-dialog .ui-dialog-buttonpane .cd-button:active,
+.view-media-library .cd-button:hover,
+.view-media-library .cd-button:focus,
+.view-media-library .cd-button:active,
+.js-media-library-add-form-added-media .cd-button:hover,
+.js-media-library-add-form-added-media .cd-button:focus,
+.js-media-library-add-form-added-media .cd-button:active {
+  text-decoration: underline;
+  background: var(--cd-reliefweb-brand-red--dark);
 }
