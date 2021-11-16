@@ -269,14 +269,12 @@ class UserPostsService extends ModerationServiceBase {
     $table_training = $this->getFieldTableName('node', 'field_registration_deadline');
     $field_name_training = $this->getFieldColumnName('node', 'field_registration_deadline', 'value');
 
-    // Add deadline field.
-    $query->addExpression("COALESCE({$table_job}.{$field_name_job}, {$table_training}.{$field_name_training})", 'deadline');
-
     // Add joins.
-    $query->leftJoin($table_job, NULL, "{$table_job}.entity_id = {$entity_base_table}.{$entity_id_field}");
-    $query->leftJoin($table_training, NULL, "{$table_training}.entity_id = {$entity_base_table}.{$entity_id_field}");
-
-    return "COALESCE({$table_job}.{$field_name_job}, {$table_training}.{$field_name_training})";
+    $table_alias_job = $query->leftJoin($table_job, $table_job, "%alias.entity_id = {$entity_base_table}.{$entity_id_field}");
+    $table_alias_training = $query->leftJoin($table_training, $table_training, "%alias.entity_id = {$entity_base_table}.{$entity_id_field}");
+    
+    // Add deadline field.
+    return $query->addExpression("COALESCE({$table_alias_job}.{$field_name_job}, {$table_alias_training}.{$field_name_training})", 'deadline');
   }
 
   /**
