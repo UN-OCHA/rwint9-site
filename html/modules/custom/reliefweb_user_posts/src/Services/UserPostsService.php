@@ -272,9 +272,10 @@ class UserPostsService extends ModerationServiceBase {
     // Add joins.
     $table_alias_job = $query->leftJoin($table_job, $table_job, "%alias.entity_id = {$entity_base_table}.{$entity_id_field}");
     $table_alias_training = $query->leftJoin($table_training, $table_training, "%alias.entity_id = {$entity_base_table}.{$entity_id_field}");
-    
+
     // Add deadline field.
-    return $query->addExpression("COALESCE({$table_alias_job}.{$field_name_job}, {$table_alias_training}.{$field_name_training})", 'deadline');
+    $query->addExpression("COALESCE({$table_alias_job}.{$field_name_job}, {$table_alias_training}.{$field_name_training})", 'deadline');
+    return "COALESCE({$table_alias_job}.{$field_name_job}, {$table_alias_training}.{$field_name_training})";
   }
 
   /**
