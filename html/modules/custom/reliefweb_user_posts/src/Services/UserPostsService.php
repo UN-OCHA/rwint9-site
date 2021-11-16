@@ -94,11 +94,9 @@ class UserPostsService extends ModerationServiceBase {
       ],
       'deadline' => [
         'label' => $this->t('Deadline'),
-        'type' => '',
+        'type' => 'custom',
         'specifier' => 'deadline',
         'sortable' => TRUE,
-        'join_callback' => 'joinDeadline',
-        'condition_callback' => 'conditionDeadline',
       ],
     ];
   }
@@ -283,6 +281,57 @@ class UserPostsService extends ModerationServiceBase {
    */
   protected function conditionDeadline($definition, $base, $fields, $value, $operator) {
     $base->where("UNIX_TIMESTAMP({$fields}) {$operator} {$value[0]} AND {$value[1]}");
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function wrapQuery(Select $query, $limit = 30) {
+    // Get the order information.
+    $info = $this->getOrderInformation();
+    $sort_direction = $info['sort'] ?? 'desc';
+
+    // Special handling of the headline sorting.
+    $deadline_alias = '';
+    if (isset($info['order']) && $info['order'] === 'deadline') {
+      // Check if the join for the headline field was already performed.
+      foreach ($query->getExpressions() as $expression) {
+        if (strpos($expression['alias'], 'headline') === 0) {
+          $deadline_alias = $expression['alias'];
+          break;
+        }
+      }
+
+      // If not, join the tables.
+      if (empty($deadline_alias)) {
+        // Entity information.
+        $entity_type_id = $this->getEntityTypeId();
+        $entity_base_table = $this->getEntityTypeDataTable($entity_type_id);
+        $entity_id_field = $this->getEntityTypeIdField($entity_type_id);
+
+        // Filter definition.
+        $definition = $this->getFilterDefinitions()['deadline'];
+
+        // Join the deadline tables.
+        $deadline_alias = $this->joinDeadline($query, $definition, $entity_type_id, $entity_base_table, $entity_id_field);
+      }
+    }
+
+    // Let the parent wrap the query.
+    $wrapper = parent::wrapQuery($query, $limit);
+
+    // Add the sort property to the wrapper query.
+    if (!empty($deadline_alias)) {
+      // Clear existing order.
+      $existing_order = &$wrapper->getOrderBy();
+      $existing_order = [];
+
+      // Add field and order.
+      $wrapper->addField('subquery', 'deadline');
+      $wrapper->orderBy("subquery.deadline", $sort_direction);
+    }
+
+    return $wrapper;
   }
 
 }
