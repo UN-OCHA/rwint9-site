@@ -49,6 +49,18 @@ class UserPostsPageFilterForm extends ModerationPageFilterForm {
       $form['filters']['omnibox']['input']['#attributes']['data-bundle'] = 'user_posts';
     }
 
+    // Add the filter labels to the properties.
+    $definitions = $service->getFilterDefinitions();
+    foreach ($definitions as $name => $filter) {
+      if (isset($form['filters']['other'][$name], $filter['label'])) {
+        $form['filters']['other'][$name]['#title'] = $filter['label'];
+      }
+    }
+    // Hide the properties label.
+    if (isset($form['filters']['other'])) {
+      $form['filters']['other']['#title_display'] = 'invisible';
+    }
+
     return $form;
   }
 
