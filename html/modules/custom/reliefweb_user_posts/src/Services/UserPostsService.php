@@ -131,7 +131,12 @@ class UserPostsService extends ModerationServiceBase {
 
       $cells['deadline'] = '';
       if ($entity->field_registration_deadline) {
-        $cells['deadline'] = $this->formatDate($entity->field_registration_deadline->value);
+        if ($entity->field_registration_deadline->value == 'Array') {
+          $cells['deadline'] = $this->t('Ongoing');
+        }
+        else {
+          $cells['deadline'] = $this->formatDate($entity->field_registration_deadline->value);
+        }
       }
       elseif ($entity->field_job_closing_date) {
         $cells['deadline'] = $this->formatDate($entity->field_job_closing_date->value);
