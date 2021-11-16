@@ -1,0 +1,20 @@
+{#
+
+/**
+ * @file
+ * Template for the content moderation pages.
+ */
+
+#}
+
+{{ attach_library('reliefweb_moderation/moderation') }}
+
+<section{{ filters_attributes.addClass('rw-moderation-filters') }}>
+  <h2 class="visually-hidden">{{ 'Filters'|t }}</h2>
+  {{ filters }}
+</section>
+
+<section{{ list_attributes.addClass('rw-moderation-list') }}>
+  <h2 class="visually-hidden">{{ 'List'|t }}</h2>
+  {{ list }}
+</section>

@@ -17,7 +17,7 @@ class UserPostsPageFilterForm extends ModerationPageFilterForm {
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'reliefweb_moderation_page_filter_form';
+    return 'reliefweb_user_posts_page_filter_form';
   }
 
   /**
@@ -60,6 +60,9 @@ class UserPostsPageFilterForm extends ModerationPageFilterForm {
     if (isset($form['filters']['other'])) {
       $form['filters']['other']['#title_display'] = 'invisible';
     }
+
+    // Make js work.
+    $form['#attributes']['id'] = 'reliefweb-moderation-page-filter-form';
 
     return $form;
   }

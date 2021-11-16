@@ -1,0 +1,28 @@
+<?php
+
+/**
+ * @file
+ * Theme declaration etc. for the reliefweb_user_posts module.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function reliefweb_user_posts_theme() {
+  $themes = [
+    'reliefweb_user_posts_page' => [
+      'variables' => [
+        // Entity list filters.
+        'filters' => NULL,
+        // Attributes for the filters.
+        'filters_attributes' => NULL,
+        // List of entities. @see reliefweb_moderation_table below.
+        'list' => NULL,
+        // Attributes for the list.
+        'list_attributes' => NULL,
+      ],
+    ],
+  ];
+
+  return $themes;
+}
