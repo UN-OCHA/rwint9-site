@@ -18,8 +18,8 @@ form .image-widget .js-media-library-item-preview {
 }
 form .image-widget .js-media-library-item-preview img {
   width: auto;
-  height: auto;
   max-width: 100%;
+  height: auto;
   max-height: 100%;
 }
 
@@ -27,6 +27,7 @@ form .image-widget .js-media-library-item-preview img {
 form .image-widget article > div {
   font-size: 14px;
 }
+
 @media (min-width: 576px) {
   form .image-widget article > div {
     font-size: 14px;
