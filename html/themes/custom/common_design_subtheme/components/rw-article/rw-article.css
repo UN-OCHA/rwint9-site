@@ -154,3 +154,7 @@
   padding-bottom: 8px;
   border-bottom: none;
 }
+
+.node--announcement--full .rw-article__header {
+  margin-bottom: 24px;
+}
