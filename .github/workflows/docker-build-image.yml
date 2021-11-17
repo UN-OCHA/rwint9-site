@@ -13,55 +13,94 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      id: checkout
-      uses: actions/checkout@v1
-
-    - name: Determine environment type
-      id: env
-      uses: docker://unocha/actions:determine-environment-main
-
     - name: Configure AWS Credentials
       id: aws
       uses: aws-actions/configure-aws-credentials@v1
       with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-access-key-id: ${{ secrets.ECR_AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
 
-    - name: Build docker image
-      id: build
+    - name: Checkout code
+      id: checkout
+      uses: actions/checkout@v1
+      with:
+        fetch-depth: 0
+
+    - name: Determine environment type
+      id: env
+      uses: docker://ghcr.io/un-ocha/actions:determine-environment-main
+
+    - name: Image Metadata
+      id: meta
       run: |
         export DOCKER_TAG="${GITHUB_REF#refs/*/}"
         export DOCKER_TAG=${DOCKER_TAG//[^[:alnum:].-]/-}
-        aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/unocha || exit 1
-        docker build \
-            --build-arg BRANCH_ENVIRONMENT=${BRANCH_ENVIRONMENT} \
-            --build-arg VCS_REF=`git rev-parse --short HEAD` \
-            --build-arg VCS_URL=`git config --get remote.origin.url | sed 's#git@github.com:#https://github.com/#'` \
-            --build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
-            --build-arg GITHUB_ACTOR=${GITHUB_ACTOR} \
-            --build-arg GITHUB_REPOSITORY=${GITHUB_REPOSITORY} \
-            --build-arg GITHUB_SHA=${GITHUB_SHA} \
-            --build-arg GITHUB_REF=${GITHUB_REF} \
-         . --file docker/Dockerfile --tag public.ecr.aws/unocha/rwint9-site:${DOCKER_TAG} || exit 1
-        docker push public.ecr.aws/unocha/rwint9-site:${DOCKER_TAG} || exit 1
-      continue-on-error: true
+        echo ::set-output name=DOCKER_TAG::${DOCKER_TAG}
+        export VCS_REF=`git rev-parse --short HEAD`
+        echo ::set-output name=VCS_REF::${VCS_REF}
+        export VCS_URL=`git config --get remote.origin.url | sed 's#git@github.com:#https://github.com/#'`
+        echo ::set-output name=VCS_URL::${VCS_URL}
+        export BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"`
+        echo ::set-output name=BUILD_DATE::${BUILD_DATE}
+
+    - name: Login to Public ECR
+      id: login
+      uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+      with:
+        registry: public.ecr.aws
+        username: ${{ secrets.ECR_AWS_ACCESS_KEY_ID }}
+        password: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }}
+      env:
+        AWS_REGION: us-east-1
+
+    - name: Build docker image
+      id: build
+      uses: docker/build-push-action@v2
+      with:
+        build-args: |
+          BRANCH_ENVIRONMENT=${BRANCH_ENVIRONMENT}
+          VCS_REF=${{ steps.meta.outputs.VCS_REF }}
+          VCS_URL=${{ steps.meta.outputs.VCS_URL }}
+          BUILD_DATE=${{ steps.meta.outputs.BUILD_DATE }}
+          GITHUB_ACTOR=${{ github.actor }}
+          GITHUB_REPOSITORY=${{ github.repository }}
+          GITHUB_SHA=${{ github.sha }}
+          GITHUB_REF=${{ github.ref }}
+        labels: |
+          info.humanitarianresponse.build.date=${{ steps.meta.outputs.BUILD_DATE }}
+          info.humanitarianresponse.build.person=${{ github.actor }}
+          info.humanitarianresponse.build.vcs-url=${{ steps.meta.outputs.VCS_URL }}
+          info.humanitarianresponse.build.vcs-ref=${{ steps.meta.outputs.VCS_REF }}
+        file: docker/Dockerfile
+        push: true
+        tags: public.ecr.aws/unocha/rwint9-site:${{ steps.meta.outputs.DOCKER_TAG }}
+        secrets: |
+          "github_token=${{ secrets.ECR_GITHUB_TOKEN }}"
+
+    - name: Webhook
+      id: jenkins
+      if: success()
+      env:
+        DOCKER_TAG: ${{ steps.meta.outputs.DOCKER_TAG }}
+        JENKINS_TOKEN: ${{ secrets.JENKINS_ECR_TOKEN }}
+      run: |
+        curl -H "Token: ${JENKINS_TOKEN}" -X POST "https://jenkins.aws.ahconu.org/generic-webhook-trigger/invoke?DOCKER_IMAGE=rwint9-site&DOCKER_TAG=${DOCKER_TAG}"
 
     - name: Flowdock Failure
       id: failure
-      if: steps.build.outputs.exitcode == 1
-      uses: docker://unocha/actions:flowdock-notify-main
+      if: failure()
+      uses: docker://ghcr.io/un-ocha/actions:flowdock-notify-main
       env:
         FLOWDOCK_TOKEN: ${{ secrets.FLOWDOCK_TOKEN }}
-        FLOWDOCK_ICON: 'warning'
+        FLOWDOCK_ICON: '-1'
         FLOWDOCK_MESSAGE: 'Failed to build a new `unocha/rwint9-site` image from ${{ github.ref }} , please go check [GitHub](https://github.com/UN-OCHA/rwint9-site/actions/workflows/docker-build-image.yml).'
         FLOWDOCK_TAGS: 'build,docker,${{ github.actor }}'
 
     - name: Flowdock Success
       id: success
-      if: steps.build.outputs.exitcode == 0
-      uses: docker://unocha/actions:flowdock-notify-main
+      if: success()
+      uses: docker://ghcr.io/un-ocha/actions:flowdock-notify-main
       env:
         FLOWDOCK_TOKEN: ${{ secrets.FLOWDOCK_TOKEN }}
         FLOWDOCK_ICON: 'package'
