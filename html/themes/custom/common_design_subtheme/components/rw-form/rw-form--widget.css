@@ -12,11 +12,17 @@ form .image-widget {
   }
 }
 
-@media (min-width: 576px) {
-  form .image-widget article {
-    flex: 1 0 220px;
-  }
+form .image-widget .js-media-library-item-preview {
+  width: 220px;
+  height: auto;
 }
+form .image-widget .js-media-library-item-preview img {
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 100%;
+}
+
 /* File name */
 form .image-widget article > div {
   font-size: 14px;
@@ -27,13 +33,11 @@ form .image-widget article > div {
     font-size: 14px;
   }
 }
-form .image-widget .js-media-library-item-preview {
-  max-width: 220px;
-  max-height: 147px;
-}
-.node-announcement-form .image-widget .js-media-library-item-preview,
+
 .node-announcement-edit-form .image-widget .js-media-library-item-preview {
+  width: auto;
   max-width: 600px;
+  height: auto;
   max-height: 200px;
 }
 
@@ -46,6 +50,9 @@ form .js-media-library-widget .js-media-library-selection.form-wrapper,
   padding: 0;
 }
 
+form .views-field-media-library-select-form .form-type-checkbox:only-of-type {
+  margin-right: 24px;
+}
 /* Media UI buttons styled the same as other UI buttons */
 .ui-dialog .ui-dialog-buttonpane .cd-button,
 .view-media-library .cd-button,

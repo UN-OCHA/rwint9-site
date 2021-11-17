@@ -1,6 +1,7 @@
 .rw-revisions-history {
   display: flex;
   flex-direction: column;
+  margin-top: 32px;
   word-break: break-word;
 }
 .rw-revisions-history__title {
