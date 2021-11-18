@@ -1,4 +1,4 @@
 services:
   reliefweb_moderation.user_posts.moderation:
     class: Drupal\reliefweb_user_posts\Services\UserPostsService
-    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation']
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@current_route_match']

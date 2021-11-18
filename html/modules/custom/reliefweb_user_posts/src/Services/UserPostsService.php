@@ -3,14 +3,81 @@
 namespace Drupal\reliefweb_user_posts\Services;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\Select;
+use Drupal\Core\Datetime\DateFormatterInterface;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Pager\PagerManagerInterface;
+use Drupal\Core\Pager\PagerParametersInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Moderation service for the report nodes.
  */
 class UserPostsService extends ModerationServiceBase {
+
+  /**
+   * The route match service.
+   *
+   * @var \Drupal\Core\Routing\RouteMatchInterface
+   */
+  protected $routeMatch;
+
+  /**
+   * Constructor.
+   *
+   * @param \Drupal\Core\Session\AccountProxyInterface $current_user
+   *   The current user.
+   * @param \Drupal\Core\Database\Connection $database
+   *   The database connection.
+   * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
+   *   The date formatter service.
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
+   *   The entity field manager service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager service.
+   * @param \Drupal\Core\Pager\PagerManagerInterface $pager_manager
+   *   The pager manager service.
+   * @param \Drupal\Core\Pager\PagerParametersInterface $pager_parameters
+   *   The pager parameter service.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   *   The request stack.
+   * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
+   *   The translation manager service.
+   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+   *   The route match service.
+   */
+  public function __construct(
+    AccountProxyInterface $current_user,
+    Connection $database,
+    DateFormatterInterface $date_formatter,
+    EntityFieldManagerInterface $entity_field_manager,
+    EntityTypeManagerInterface $entity_type_manager,
+    PagerManagerInterface $pager_manager,
+    PagerParametersInterface $pager_parameters,
+    RequestStack $request_stack,
+    TranslationInterface $string_translation,
+    RouteMatchInterface $route_match
+  ) {
+    parent::__construct(
+      $current_user,
+      $database,
+      $date_formatter,
+      $entity_field_manager,
+      $entity_type_manager,
+      $pager_manager,
+      $pager_parameters,
+      $request_stack,
+      $string_translation
+    );
+    $this->routeMatch = $route_match;
+  }
 
   /**
    * {@inheritdoc}
@@ -109,6 +176,10 @@ class UserPostsService extends ModerationServiceBase {
       return [];
     }
 
+    // Retrieve the user for this page.
+    $user = $this->routeMatch->getParameter('user');
+    $user_id = !empty($user) ? $user->id() : NULL;
+
     /** @var \Drupal\reliefweb_moderation\EntityModeratedInterface[] $entities */
     $entities = $results['entities'];
 
@@ -117,28 +188,48 @@ class UserPostsService extends ModerationServiceBase {
     foreach ($entities as $entity) {
       $cells = [];
 
-      // Edit link + status cell.
       $cells['id'] = $entity->id();
       $cells['type'] = $entity->bundle();
       $cells['status'] = new FormattableMarkup('<div class="rw-moderation-status" data-moderation-status="@status">@label</div>', [
         '@status' => $entity->getModerationStatus(),
         '@label' => $entity->getModerationStatusLabel(),
       ]);
-      $cells['poster'] = $this->currentUser->id() == $entity->getOwner()->id() ? $this->t('me') : $this->t('other');
-      $cells['source'] = '';
-      $cells['title'] = $entity->toLink()->toString();
-      $cells['date'] = $this->getEntityCreationDate($entity);
 
-      $cells['deadline'] = '';
-      if ($entity->field_registration_deadline) {
-        if ($entity->field_registration_deadline->value == 'Array') {
+      // Me if the entity author is the user for this My Posts page.
+      $cells['poster'] = $user_id == $entity->getOwnerId() ? $this->t('me') : $this->t('other');
+
+      // Jobs can have 1 source, training can have several.
+      $sources = [];
+      foreach ($entity->field_source->referencedEntities() as $source) {
+        $source_label = $source->field_shortname->value ?? $source->label();
+        $sources[] = $source->toLink($source_label)->toString();
+      }
+      if (count($sources) > 1) {
+        $cells['source'] = [
+          '#theme' => 'item_list',
+          '#items' => $sources,
+        ];
+      }
+      else {
+        $cells['source'] = reset($sources);
+      }
+
+      $cells['title'] = $entity->toLink()->toString();
+
+      // The `reliefweb-moderation-table.hml.twig` template expects an array or
+      // object with a date property for the "date" cells.
+      $cells['date']['date'] = $this->getEntityCreationDate($entity);
+
+      // Registration deadline for training or closing date for jobs.
+      if ($entity->bundle() === 'training') {
+        if ($entity->field_registration_deadline->isEmpty()) {
           $cells['deadline'] = $this->t('Ongoing');
         }
         else {
           $cells['deadline'] = $this->formatDate($entity->field_registration_deadline->value);
         }
       }
-      elseif ($entity->field_job_closing_date) {
+      else {
         $cells['deadline'] = $this->formatDate($entity->field_job_closing_date->value);
       }
 
