@@ -289,18 +289,19 @@ class UserPostsService extends ModerationServiceBase {
       'operator' => 'AND',
     ];
 
-    $definitions['author2'] = [
+    $definitions['poster'] = [
       'type' => 'property',
       'field' => 'uid',
       'label' => $this->t('Posted by'),
       'shortcut' => 'a',
       'form' => 'other',
-      'join_callback' => 'joinPoster',
-      'operator' => 'OR',
+      'operator' => 'AND',
       'values' => [
         'me' => $this->t('Me'),
         'other' => $this->t('Other'),
       ],
+      'join_callback' => '',
+      'condition_callback' => 'conditionPoster',
     ];
 
     return $definitions;
@@ -352,6 +353,48 @@ class UserPostsService extends ModerationServiceBase {
   }
 
   /**
+   * Poster join.
+   */
+  protected function joinPoster(Select $query) {
+    // Join to current user.
+    $conditions = $query->orConditionGroup();
+    $conditions->condition('node_field_data.uid', $this->currentUser->id());
+
+    // Join sources.
+    $rights = UserPostingRightsHelper::getUserPostingRights($this->currentUser, []);
+
+    $allowed_sources = [];
+    foreach ($rights as $right) {
+      if (isset($right['job']) && $right['job'] > 1) {
+        $allowed_sources[$right['tid']] = $right;
+      }
+      elseif (isset($right['training']) && $right['training'] > 1) {
+        $allowed_sources[$right['tid']] = $right;
+      }
+    }
+
+    // Join the source field table.
+    $join_table = $this->getFieldTableName('node', 'field_source');
+    $query->leftJoin($join_table, 'user_sources', "user_sources.entity_id = node_field_data.nid");
+
+    $conditions->condition('user_sources.field_source_target_id', array_keys($allowed_sources), 'IN');
+
+    $query->condition($conditions);
+  }
+
+  /**
+   * Poster condition.
+   */
+  protected function conditionPoster($definition, $base, $fields, $value, $operator) {
+    if ($value === 'me') {
+      $base->where("node_field_data.uid = {$this->currentUser->id()}");
+    }
+    elseif ($value === 'other') {
+      $base->where("node_field_data.uid <> {$this->currentUser->id()}");
+    }
+  }
+
+  /**
    * Deadline join callback.
    *
    * @see ::joinField()
@@ -383,6 +426,9 @@ class UserPostsService extends ModerationServiceBase {
    * {@inheritdoc}
    */
   protected function wrapQuery(Select $query, $limit = 30) {
+    // Join poster.
+    $this->joinPoster($query);
+
     // Get the order information.
     $info = $this->getOrderInformation();
     $sort_direction = $info['sort'] ?? 'desc';

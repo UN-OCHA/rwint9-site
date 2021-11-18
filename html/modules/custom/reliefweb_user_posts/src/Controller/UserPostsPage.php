@@ -98,9 +98,6 @@ class UserPostsPage extends ModerationPage {
       // Status + Other filters.
       $filters = $values['filters'] ?? [];
 
-      // Filter by current user.
-      $filters['author'] = $user->id();
-
       // Omnibox selections.
       if (!empty($input['selection'])) {
         foreach ($input['selection'] as $filter => $items) {
