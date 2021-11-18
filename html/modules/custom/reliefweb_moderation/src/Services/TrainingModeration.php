@@ -115,7 +115,7 @@ class TrainingModeration extends ModerationServiceBase {
       $details = [];
       // Registration deadline.
       $registration_deadline = $entity->field_registration_deadline->value;
-      if (!empty($registration_deadline) && $registration_deadline != 'Array') {
+      if (!empty($registration_deadline)) {
         $details['registration-deadline'] = $this->t('Registration deadline: %date', [
           '%date' => $this->formatDate($registration_deadline),
         ]);
@@ -123,7 +123,7 @@ class TrainingModeration extends ModerationServiceBase {
       // Training dates (start and end).
       $training_date_start = $entity->field_training_date->value;
       $training_date_end = $entity->field_training_date->end_value;
-      if (!empty($training_date_start) && $training_date_start != 'Array') {
+      if (!empty($training_date_start)) {
         if ($training_date_start === $training_date_end) {
           $training_date = $this->formatDate($training_date_start);
         }
