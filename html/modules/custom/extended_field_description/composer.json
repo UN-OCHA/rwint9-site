@@ -1,0 +1,13 @@
+{
+    "name": "drupal/extended_field_description",
+    "type": "drupal-module",
+    "description": "My Awesome Module",
+    "keywords": [
+    ],
+    "homepage": "https://www.drupal.org/project/extended_field_description",
+    "minimum-stability": "dev",
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/extended_field_description",
+        "source": "http://cgit.drupalcode.org/extended_field_description",
+    }
+}

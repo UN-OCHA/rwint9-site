@@ -1,0 +1,5 @@
+name: 'extended_field_description'
+type: module
+description: 'My Awesome Module'
+core_version_requirement: ^9
+package: 'Custom'

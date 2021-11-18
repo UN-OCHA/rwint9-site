@@ -1,0 +1,31 @@
+add description entity entities:
+  title: 'Create new Description entity entities'
+
+administer description entity entities:
+  title: 'Administer Description entity entities'
+  description: 'Allow to access the administration form to configure Description entity entities.'
+  restrict access: true
+
+delete description entity entities:
+  title: 'Delete Description entity entities'
+
+edit description entity entities:
+  title: 'Edit Description entity entities'
+
+view published description entity entities:
+  title: 'View published Description entity entities'
+
+view unpublished description entity entities:
+  title: 'View unpublished Description entity entities'
+
+view all description entity revisions:
+  title: 'View all Description entity revisions'
+
+revert all description entity revisions:
+  title: 'Revert all Description entity revisions'
+  description: 'Role requires permission <em>view Description entity revisions</em> and <em>edit rights</em> for description entity entities in question or <em>administer description entity entities</em>.'
+
+delete all description entity revisions:
+  title: 'Delete all revisions'
+  description: 'Role requires permission to <em>view Description entity revisions</em> and <em>delete rights</em> for description entity entities in question or <em>administer description entity entities</em>.'
+

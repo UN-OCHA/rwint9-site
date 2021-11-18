@@ -1,0 +1,5 @@
+entity.description_entity.add_form:
+  route_name: entity.description_entity.add_form
+  title: 'Add Description entity'
+  appears_on:
+    - entity.description_entity.collection
