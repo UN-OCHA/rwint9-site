@@ -17,3 +17,16 @@ reliefweb_docstore.settings:
     preview_directory:
       type: string
       label: 'Name of the directory for the local file previews.'
+
+field.field_settings.reliefweb_file:
+  type: mapping
+  mapping:
+    local:
+      type: boolean
+      label: 'Flag to store the files locally instead of remotely'
+    file_extensions:
+      type: string
+      label: 'Allowed file extensions'
+    max_filesize:
+      type: string
+      label: 'Maximum upload size'

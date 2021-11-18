@@ -30,7 +30,7 @@ class ReliefWebFile extends FormatterBase {
       $url = 'https://docstore.test/files/' . $item->get('uuid')->getValue();
 
       $links[] = [
-        'title' => $item->get('filename')->getValue(),
+        'title' => $item->get('file_name')->getValue(),
         'url' => Url::fromUri($url),
       ];
     }

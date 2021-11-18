@@ -54,20 +54,18 @@ class DocstoreClient {
   }
 
   /**
-   * Create a file in the docstore.
+   * Get a file in the docstore.
    *
-   * @param array $payload
-   *   API request payload (with fields, filters, sort etc.)
+   * @param string $uuid
+   *   The file resource UUID.
    * @param int $timeout
    *   Request timeout.
    *
    * @return array|null
    *   The data from the API response or NULL in case of error.
    */
-  public function createFile(array $payload, $timeout = 5) {
-    $response = $this->request('POST', '/api/v1/files/' . $uuid . '/content', [
-      'json' => $payload,
-    ], $timeout);
+  public function getFile($uuid, $timeout = 5) {
+    $response = $this->request('GET', '/api/v1/files/' . $uuid, [], $timeout);
 
     if ($response !== NULL) {
       $body = $response->getBody();
@@ -80,6 +78,30 @@ class DocstoreClient {
   /**
    * Create a file in the docstore.
    *
+   * @param array $payload
+   *   API request payload (with fields, filters, sort etc.)
+   * @param int $timeout
+   *   Request timeout.
+   *
+   * @return array|null
+   *   The data from the API response or NULL in case of error.
+   */
+  public function createFile(array $payload, $timeout = 5) {
+    $response = $this->request('POST', '/api/v1/files', [
+      'json' => $payload,
+    ], $timeout);
+
+    if ($response !== NULL) {
+      $body = $response->getBody();
+      return !empty($body) ? json_decode($body, TRUE) : NULL;
+    }
+
+    return NULL;
+  }
+
+  /**
+   * Update a file's content in the docstore.
+   *
    * @param string $uuid
    *   Docstore file resource UUID.
    * @param string $path
@@ -90,7 +112,7 @@ class DocstoreClient {
    * @return array|null
    *   The data from the API response or NULL in case of error.
    */
-  public function createFileContentFromFilePath($uuid, $path, $timeout = 300) {
+  public function updateFileContentFromFilePath($uuid, $path, $timeout = 300) {
     try {
       $resource = Utils::TryFopen($path, 'r');
     }
@@ -145,7 +167,7 @@ class DocstoreClient {
     // @todo this doesn't take into account the fact that the file may be
     // hidden for the provider in that case we need to use the API endpoint.
     if (empty($revision_id)) {
-      $endpoint = '/files/' . $uuid;
+      $endpoint = '/files/' . $uuid . '/' . basename($path);
     }
     else {
       $endpoint = '/api/v1/files/' . $uuid . '/revisions/' . $revision_id . '/content';
@@ -156,6 +178,34 @@ class DocstoreClient {
     ], $timeout);
 
     return !empty($response) && $response->isSuccessful();
+  }
+
+  /**
+   * Update a file status in the docstore.
+   *
+   * @param string $uuid
+   *   The file resource UUID.
+   * @param bool $private
+   *   TRUE if the file should be made private.
+   * @param int $timeout
+   *   Request timeout.
+   *
+   * @return array|null
+   *   The data from the API response or NULL in case of error.
+   */
+  public function updateFileStatus($uuid, $private, $timeout = 5) {
+    $response = $this->request('PATCH', '/api/v1/files/' . $uuid, [
+      'json' => [
+        'private' => $private,
+      ],
+    ], $timeout);
+
+    if ($response !== NULL) {
+      $body = $response->getBody();
+      return !empty($body) ? json_decode($body, TRUE) : NULL;
+    }
+
+    return NULL;
   }
 
   /**
@@ -173,7 +223,7 @@ class DocstoreClient {
    * @return \Psr\Http\Message\ResponseInterface|null
    *   Response.
    */
-  protected function request($method, $endpoint, array $options, $timeout = 5) {
+  public function request($method, $endpoint, array $options, $timeout = 5) {
     try {
       $url = $this->createDocstoreUrl($entpoint);
 
@@ -227,7 +277,6 @@ class DocstoreClient {
    */
   protected function getHeaders() {
     return [
-      'Accept' => 'application/json',
       'API-KEY' => $this->config->get('api_key'),
     ];
   }

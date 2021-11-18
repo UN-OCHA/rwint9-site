@@ -14,6 +14,7 @@ use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\reliefweb_docstore\Plugin\Field\FieldType\ReliefWebFile as ReliefWebFileType;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -47,6 +48,13 @@ class ReliefWebFile extends WidgetBase {
   protected $logger;
 
   /**
+   * The renderer service.
+   *
+   * @var \Drupal\Core\Render\RendererInterface
+   */
+  protected $renderer;
+
+  /**
    * The request stack.
    *
    * @var \Symfony\Component\HttpFoundation\RequestStack
@@ -71,6 +79,7 @@ class ReliefWebFile extends WidgetBase {
     array $third_party_settings,
     FileSystemInterface $file_system,
     LoggerChannelFactoryInterface $logger_factory,
+    RendererInterface $renderer,
     RequestStack $request_stack
   ) {
     parent::__construct(
@@ -81,8 +90,9 @@ class ReliefWebFile extends WidgetBase {
       $third_party_settings
     );
     $this->fileSystem = $file_system;
-    $this->requestStack = $request_stack;
     $this->logger = $logger_factory->get('reliefweb_file_widget');
+    $this->renderer = $renderer;
+    $this->requestStack = $request_stack;
   }
 
   /**
@@ -102,6 +112,7 @@ class ReliefWebFile extends WidgetBase {
       $configuration['third_party_settings'],
       $container->get('file_system'),
       $container->get('logger.factory'),
+      $container->get('renderer'),
       $container->get('request_stack')
     );
   }
@@ -141,7 +152,7 @@ class ReliefWebFile extends WidgetBase {
           $field_state['original_values'][$item->get('uuid')->getValue()] = $item->getValue();
         }
       }
-      static::setWidgetState($parents, $field_name, $form_state);
+      static::setWidgetState($parents, $field_name, $form_state, $field_state);
     }
 
     // Container.
@@ -166,28 +177,45 @@ class ReliefWebFile extends WidgetBase {
     // Add one more empty row for new uploads except when this is a programmed
     // multiple form as it is not necessary.
     if (!$form_state->isProgrammed()) {
+      // Dummy item to get the default upload description and allowed
+      // file extensions.
+      $dummy_item = $this->createFieldItem();
+
+      // Wrapper to add more files.
       $elements['add_more'] = [
         '#type' => 'fieldset',
         '#title' => $this->t('Add file(s)'),
-        'files' => [
-          '#type' => 'file',
-          '#name' => implode('-', array_merge($field_parents, ['files'])),
-          '#multiple' => TRUE,
-        ],
-        'upload' => [
-          '#type' => 'submit',
-          '#value' => $this->t('Upload file(s)'),
-          '#name' => implode('-', array_merge($field_parents, ['upload'])),
-          '#submit' => [[static::class, 'submit']],
-          // Limit the validation to the uploaded files.
-          '#limit_validation_errors' => [
-            array_merge($field_parents, ['add_more', 'files']),
-          ],
-          '#ajax' => $this->getAjaxSettings($this->t('Uploading file(s)...'), $field_parents),
-          // Store information to identify the button in ::extractFormValues().
-          '#field_parents' => $field_parents,
-        ],
+        // @todo review if that's the correct place to add the required.
         '#required' => $required && $delta == 0,
+      ];
+
+      // File upload widget.
+      $elements['add_more']['files'] = [
+        '#type' => 'file',
+        '#name' => implode('-', array_merge($field_parents, ['files'])),
+        '#multiple' => TRUE,
+        '#description' => $dummy_item->getUploadDescription(),
+      ];
+
+      // Limit the type of files that can be uplaoded.
+      $extensions = $dummy_item->getAllowedFileExtensions();
+      if (!empty($extensions)) {
+        $element['add_more']['files']['#attributes']['accept'] = '.' . implode(',.', $extensions);
+      }
+
+      // Upload button.
+      $elements['add_more']['upload'] = [
+        '#type' => 'submit',
+        '#value' => $this->t('Upload file(s)'),
+        '#name' => implode('-', array_merge($field_parents, ['upload'])),
+        '#submit' => [[static::class, 'submit']],
+        // Limit the validation to the uploaded files.
+        '#limit_validation_errors' => [
+          array_merge($field_parents, ['add_more', 'files']),
+        ],
+        '#ajax' => $this->getAjaxSettings($this->t('Uploading file(s)...'), $field_parents),
+        // Store information to identify the button in ::extractFormValues().
+        '#field_parents' => $field_parents,
       ];
     }
 
@@ -266,6 +294,7 @@ class ReliefWebFile extends WidgetBase {
       'uuid',
       'revision_id',
       'private',
+      'file_uuid',
       'file_name',
       'file_mime',
       'file_size',
@@ -279,25 +308,12 @@ class ReliefWebFile extends WidgetBase {
       ];
     }
 
-    // Store the original UUID of the item.
-    //
-    // This allows us to distinguish between the 3 cases:
-    // - if the original UUID is empty then it's a new file
-    // - if the current UUID is the same as the original UUID then the
-    //   underlying file is unchanged
-    // - if the current UUID is different from the original UUID then its a
-    //   replaced file.
-    $element['_original_uuid'] = [
-      '#type' => 'hidden',
-      '#value' => isset($item->_original_uuid) ? $item->_original_uuid : $item->get('uuid')->getValue(),
-    ];
-
     // Link to the file.
     $file_name = $item->get('file_name')->getValue();
     $file_size = $item->get('file_size')->getValue();
     $file_extension = ReliefWebFileType::getFileExtension($file_name);
     $file_label = $file_name . ' (' . mb_strtoupper($file_extension) . ' | ' . format_size($file_size) . ')';
-    $file_url = $item->getFileUrl();
+    $file_url = $item->getFileUrl(TRUE);
     if (!empty($file_url)) {
       $element['link'] = [
         '#type' => 'link',
@@ -437,7 +453,14 @@ class ReliefWebFile extends WidgetBase {
       // Store information to identify the button in ::extractFormValues().
       '#delta' => $delta,
       '#field_parents' => $field_parents,
+      '#description' => $item->getUploadDescription(),
     ];
+
+    // Limit the type of files that can be uplaoded.
+    $extensions = $item->getAllowedFileExtensions();
+    if (!empty($extensions)) {
+      $element['operations']['replace']['#attributes']['accept'] = '.' . implode(',.', $extensions);
+    }
 
     // Add the input field for the delta (drag-n-drop reordering).
     $element['_weight'] = [
@@ -542,6 +565,10 @@ class ReliefWebFile extends WidgetBase {
       }
     }
 
+    // Store the original items so we can process deleted and replaced files
+    // when saving the field's data.
+    $items->_original_values = $field_state['original_values'] ?? [];
+
     // Update the field state items with the new data.
     $field_state['items'] = $items->getValue();
     static::setWidgetState($parents, $field_name, $form_state, $field_state);
@@ -563,6 +590,23 @@ class ReliefWebFile extends WidgetBase {
   }
 
   /**
+   * Create a ReliefWebFile field item.
+   *
+   * @param array|null $values
+   *   Optional values to initialize the field item with.
+   *
+   * @return \Drupal\reliefweb_docstore\Plugin\Field\FieldType\ReliefWebFile
+   *   Field item.
+   */
+  protected function createFieldItem(?array $values = NULL) {
+    $item = ReliefWebFileType::createInstance($this->fieldDefinition->getItemDefinition());
+    if (!is_null($values)) {
+      $item->setValue($values);
+    }
+    return $item;
+  }
+
+  /**
    * Delete a field item.
    *
    * @param array $element
@@ -578,13 +622,9 @@ class ReliefWebFile extends WidgetBase {
   protected function deleteFieldItem(array $element, FormStateInterface $form_state, array $values) {
     try {
       // If the file was new or replaced, remove its associated managed files.
-      if ($values['uuid'] !== $values['_original_uuid']) {
-        if (!empty($values['uuid'])) {
-          ReliefWebFileType::deleteFileFromUuid($values['uuid']);
-        }
-        if (!empty($values['preview_uuid'])) {
-          ReliefWebFileType::deleteFileFromUuid($values['preview_uuid'], TRUE);
-        }
+      if (empty($values['revision_id'])) {
+        ReliefWebFileType::deleteFileFromUuid($values['file_uuid']);
+        ReliefWebFileType::deleteFileFromUuid($values['preview_uuid'], TRUE);
       }
     }
     catch (\Exception $exception) {
@@ -607,16 +647,20 @@ class ReliefWebFile extends WidgetBase {
    *   The new field item values.
    */
   protected function replaceFieldItem(array $element, FormStateInterface $form_state, array $values) {
+    // Retrieve the upload validators for the original item. This will
+    // ensure the replacement is of the same type.
+    $validators = $this->createFieldItem($values)->getUploadValidators();
+
     // Create a new field item with associated managed files and replace the
     // original values with its values.
     $name = $element['operations']['file']['#name'];
-    $items = $this->processUploadedFiles($element, $form_state, $name);
+    $items = $this->processUploadedFiles($element, $form_state, $name, $validators);
     if (!empty($items)) {
       $item = reset($items);
       // Copy some properties from the original file.
+      $item['uuid'] = $values['uuid'];
       $item['description'] = $values['description'];
       $item['language'] = $values['language'];
-      $item['_original_uuid'] = $values['_original_uuid'];
       return $item;
     }
     // If we couldn't replace the file, keep the original values.
@@ -632,11 +676,13 @@ class ReliefWebFile extends WidgetBase {
    *   The form state to add the errors.
    * @param string $name
    *   Name of the request property that contain the upload files.
+   * @param array $validators
+   *   Upload validators as expected by file_validate().
    *
    * @return array
    *   List of field item data.
    */
-  protected function processUploadedFiles(array $element, FormStateInterface $form_state, $name) {
+  protected function processUploadedFiles(array $element, FormStateInterface $form_state, $name, array $validators = []) {
     /** @var \Symfony\Component\HttpFoundation\FileBag $file_bag */
     $file_bag = $this->requestStack->getCurrentRequest()->files;
 
@@ -651,15 +697,23 @@ class ReliefWebFile extends WidgetBase {
     }
 
     $items = [];
+    $errors = [];
     foreach ($files as $file) {
       if (!empty($file)) {
         try {
-          $items[] = $this->createFieldItem($file);
+          $items[] = $this->processUploadedFile($file, $validators)->getValue();
         }
         catch (\Exception $exception) {
-          $form_state->setError($element, $exception->getMessage());
+          $errors[] = $exception->getMessage();
+
+          // Try to delete the uploaded file.
+          $this->deleteUploadedFile($file->getRealPath());
         }
       }
+    }
+
+    if (!empty($errors)) {
+      $form_state->setError($element, $this->generateErrorList($errors));
     }
 
     // Remove the files so that they are not processed again.
@@ -668,10 +722,12 @@ class ReliefWebFile extends WidgetBase {
   }
 
   /**
-   * Create a new file field item with the given file info.
+   * Process an uploaded file and create a field item from it.
    *
    * @param \SplFileInfo $file_info
    *   The uploaded file info.
+   * @param array $validators
+   *   Upload validators as expected by file_validate().
    *
    * @return \Drupal\reliefweb_docstore\Plugin\Field\FieldType\ReliefWebFile
    *   New field item created with the file information.
@@ -687,83 +743,183 @@ class ReliefWebFile extends WidgetBase {
    * we create a temporary managed file that can be garbage collected if the
    * the submission doesn't finish.
    */
-  protected function createFieldItem(\SplFileInfo $file_info) {
+  protected function processUploadedFile(\SplFileInfo $file_info, array $validators = []) {
     $file_name = $file_info->getClientOriginalName();
 
     // @todo throw a more relevant information.
     if (!$this->validateUploadedFile($file_info)) {
-      throw new \Exception(strtr('Invalid file @name.', [
-        '@name' => $file_name,
+      $this->throwError($this->t('Invalid file %name.', [
+        '%name' => $file_name,
       ]));
     }
+
+    // Create a field item that we can validate.
+    $item = $this->createFieldItem();
+
+    // Get the real path of the uploaded file.
+    $path = $file_info->getRealPath();
 
     // We generate a UUID before creating the file entity so that we can use
     // it for the file uri.
-    $uuid = ReliefWebFileType::generateUuid();
+    $file_uuid = ReliefWebFileType::generateUuid();
 
     // Generate the file uri.
     $extension = ReliefWebFileType::getFileExtension($file_name);
-    $uri = ReliefWebFileType::getFileUriFromUuid($uuid, $extension, TRUE, FALSE);
-    $path = $file_info->getRealPath();
-
-    // Create the private temp directory to store the file.
-    if (!ReliefWebFileType::prepareDirectory($uri)) {
-      throw new \Exception(strtr('Unable to create the destination directory for the uploaded file @name.', [
-        '@name' => $file_name,
-      ]));
-    }
-
-    // Move the uploaded file.
-    if (!$this->fileSystem->moveUploadedFile($path, $uri)) {
-      throw new \Exception(strtr('Unable to copy the uploaded file @name.', [
-        '@name' => $file_name,
-      ]));
-    }
+    $uri = ReliefWebFileType::getFileUriFromUuid($file_uuid, $extension, TRUE);
 
     // Try to guess the real mime type of the uploaded file.
     $file_mime = ReliefWebFileType::getFileMimeType($uri);
 
     // Create a temporary managed file associated with the uploaded file.
-    $file = ReliefWebFileType::createFileFromUuid($uuid, $uri, $file_name, $file_mime);
+    $file = ReliefWebFileType::createFileFromUuid($file_uuid, $uri, $file_name, $file_mime);
 
-    // Save the file. This will notably populate its file size.
-    $file->save();
+    // Set the file size.
+    $file->setSize(@filesize($path) ?? 0);
 
-    // Create a field item that we can validate.
-    $item = ReliefWebFileType::createInstance($this->fieldDefinition->getItemDefinition());
+    // Validate the file.
+    $errors = file_validate($file, $validators + $item->getUploadValidators());
+
+    // Bail out if the uploaded file is invalid.
+    if (!empty($errors)) {
+      $this->throwError($this->t('Unable to upload the file %name. @errors', [
+        '%name' => $file_name,
+        '@errors' => $this->generateErrorList($errors),
+      ]));
+    }
+
+    // Create the private temp directory to store the file.
+    if (!ReliefWebFileType::prepareDirectory($uri)) {
+      $this->throwError($this->t('Unable to create the destination directory for the uploaded file %name.', [
+        '%name' => $file_name,
+      ]));
+    }
+
+    // Move the uploaded file.
+    if (!$this->fileSystem->moveUploadedFile($path, $uri)) {
+      $this->throwError($this->t('Unable to copy the uploaded file %name.', [
+        '%name' => $file_name,
+      ]));
+    }
+
+    // Update the file.
+    $file->setMimeType(ReliefWebFileType::getFileMimeType($uri));
+    $file->setSize(@filesize($uri) ?? 0);
+
+    // Populate and return the field item.
+    return $this->populateFieldItemFromFile($item, $file);
+  }
+
+  /**
+   * Populate a field item with the data from a file entity.
+   *
+   * @param \Drupal\reliefweb_docstore\Plugin\Field\FieldType\ReliefWebFile $item
+   *   Field item.
+   * @param \Drupal\file\Entity\File $file
+   *   File entity.
+   *
+   * @return \Drupal\reliefweb_docstore\Plugin\Field\FieldType\ReliefWebFile
+   *   The updated field item.
+   *
+   * @throws \Exception
+   *   Throws an exception if the field item data is invalid.
+   */
+  protected function populateFieldItemFromFile(ReliefWebFileType $item, File $file) {
     $item->setValue([
-      'uuid' => $uuid,
+      'uuid' => ReliefWebFileType::generateUuid(),
       // A revision of 0 is an easy way to determine new files.
-      // This will be populated after a successful upload to the
-      // docstore.
+      // This will be populated after a successful upload for remote files or
+      // when saving the local file as permanent.
       'revision_id' => 0,
       // We mark the item as private initially. It may be changed to public
       // depending on the status of the entity the field is attached to etc.
       'private' => TRUE,
-      'file_name' => $file_name,
-      'file_mime' => $file_mime,
+      'file_uuid' => $file->uuid(),
+      'file_name' => $file->getFilename(),
+      'file_mime' => $file->getMimeType(),
       'file_size' => $file->getSize(),
       'page_count' => ReliefWebFileType::getFilePageCount($file),
-      // Mark the item as new by setting the original UUID to false.
-      '_original_uuid' => '',
     ]);
 
     // Validate the field item.
     $violations = $item->validate();
     if ($violations->count() > 0) {
+      $file_name = $file->getFilename();
+
       foreach ($violations as $violation) {
-        $this->logger->error('Field item violation at @property_path for file @name : @message', [
-          '@property_path' => $violation->getPropertyPath(),
-          '@name' => $file_name,
+        $this->logger->error('Field item violation at %property_path for file %name : @message', [
+          '%property_path' => $violation->getPropertyPath(),
+          '%name' => $file_name,
           '@message' => $violation->getMessage(),
         ]);
       }
-      throw new \Exception(strtr('Invalid field item data for the uploaded file @name.', [
-        '@name' => $file_name,
+
+      $this->deleteUploadedFile($file->getFileUri());
+
+      $this->throwError($this->t('Invalid field item data for the uploaded file %name.', [
+        '%name' => $file_name,
       ]));
     }
 
-    return $item->getValue();
+    // Save the file.
+    $file->setTemporary();
+    $file->save();
+
+    return $item;
+  }
+
+  /**
+   * Throw an error message to display as a form error.
+   *
+   * @param \Drupal\Component\Render\MarkupInterface|string $message
+   *   The error message.
+   *
+   * @throws \Exception
+   *   The error message wrapped in an exception.
+   */
+  protected function throwError($message) {
+    throw new \Exception($message);
+  }
+
+  /**
+   * Group several errors to disply by FormStateInterface::setErrorByName().
+   *
+   * The Form API doesn't allow to set several errors on an element so we need
+   * to group and pre-render them.
+   *
+   * @param array $errors
+   *   List of error messages.
+   *
+   * @return \Drupal\Component\Render\MarkupInterface|string
+   *   The grouped errors.
+   */
+  protected function generateErrorList(array $errors) {
+    if (empty($errors)) {
+      return '';
+    }
+    foreach ($errors as &$error) {
+      $error = Markup::create($error);
+    }
+    if (count($errors) > 1) {
+      $message = [
+        '#theme' => 'item_list',
+        '#items' => $errors,
+      ];
+      return $this->renderer->renderRoot($message);
+    }
+    return reset($errors);
+  }
+
+  /**
+   * Delete an uploaded file.
+   *
+   * @param string $uri
+   *   File URI.
+   *
+   * @return bool
+   *   TRUE if the file was deleted.
+   */
+  protected function deleteUploadedFile($uri) {
+    return $this->fileSystem->unlink($uri);
   }
 
   /**
@@ -815,9 +971,6 @@ class ReliefWebFile extends WidgetBase {
    *   The ajax response of the ajax upload.
    */
   public static function rebuildWidgetForm(array &$form, FormStateInterface &$form_state, Request $request) {
-    /** @var \Drupal\Core\Render\RendererInterface $renderer */
-    $renderer = \Drupal::service('renderer');
-
     // Retrieve the updated widget.
     $parents = explode('/', $request->query->get('field_parents'));
     $field_name = array_pop($parents);
@@ -825,15 +978,6 @@ class ReliefWebFile extends WidgetBase {
 
     // The array parents are populaed in the WidgetBase::afterBuild().
     $widget = NestedArray::getValue($form, $field_state['array_parents']);
-
-    // Display the status messages at the top of the widget. This is notably
-    // useful to indicate to the user that the form needs to be saved if the
-    // files were re-ordered for example.
-    $status_messages = ['#type' => 'status_messages'];
-    $widget['#prefix'] = Markup::create(implode('', [
-      $widget['#prefix'] ?? '',
-      $renderer->renderRoot($status_messages),
-    ]));
 
     // Create the response and ensure the widget attachments will be loaded.
     $response = new AjaxResponse();

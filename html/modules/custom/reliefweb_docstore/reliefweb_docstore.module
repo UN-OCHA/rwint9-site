@@ -5,6 +5,8 @@
  * ReliefWeb Docstore module file.
  */
 
+use Drupal\file\Entity\File;
+
 /**
  * Implements hook_theme().
  */
@@ -99,4 +101,30 @@ function reliefweb_docstore_get_languages() {
   }
 
   return $languages;
+}
+
+/**
+ * Validate the mime type of file.
+ *
+ * @param \Drupal\file\Entity\File $file
+ *   File entity to validate.
+ * @param string $mime_type
+ *   Mime type to compare with.
+ *
+ * @return bool
+ *   An empty array if the file mime type is a match or an array containing an
+ *   error message if it's not.
+ *
+ * @see file_validate()
+ */
+function reliefweb_docostore_file_validate_mime_type(File $file, $mime_type) {
+  $errors = [];
+
+  if ($file->getMimeType() !== $mime_type) {
+    $errors[] = t('The file mime type is not %mime_type.', [
+      '%mime_type' => $mime_type,
+    ]);
+  }
+
+  return $errors;
 }

@@ -4,11 +4,14 @@ namespace Drupal\reliefweb_docstore\Controller;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
+use Drupal\reliefweb_docstore\Services\DocstoreClient;
 use Drupal\system\FileDownloadController as OriginalFileDownloadController;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -33,11 +36,25 @@ class FileDownloadController extends OriginalFileDownloadController {
   protected $currentUser;
 
   /**
+   * The OCHA docstore client service.
+   *
+   * @var \Drupal\reliefweb_docstore\Services\DocstoreClient
+   */
+  protected $docstoreClient;
+
+  /**
    * The entity type manager service.
    *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
+
+  /**
+   * The logger service.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
 
   /**
    * FileDownloadController constructor.
@@ -46,22 +63,30 @@ class FileDownloadController extends OriginalFileDownloadController {
    *   The config factory service.
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
    *   The current user.
+   * @param \Drupal\reliefweb_docstore\Services\DocstoreClient $docstore_client
+   *   The OCHA docstore client service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager service.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
+   *   The logger factory service.
    * @param \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface $stream_wrapper_manager
    *   The stream wrapper manager.
    */
   public function __construct(
     ConfigFactoryInterface $config_factory,
     AccountProxyInterface $current_user,
+    DocstoreClient $docstore_client,
     EntityTypeManagerInterface $entity_type_manager,
+    LoggerChannelFactoryInterface $logger_factory,
     StreamWrapperManagerInterface $stream_wrapper_manager
   ) {
     parent::__construct($stream_wrapper_manager);
 
     $this->config = $config_factory->get('reliefweb_docstore.settings');
     $this->currentUser = $current_user;
+    $this->docstoreClient = $docstore_client;
     $this->entityTypeManager = $entity_type_manager;
+    $this->logger = $logger_factory->get('reliefweb_docstore');
   }
 
   /**
@@ -71,7 +96,9 @@ class FileDownloadController extends OriginalFileDownloadController {
     return new static(
       $container->get('config.factory'),
       $container->get('current_user'),
+      $container->get('docstore_client'),
       $container->get('entity_type.manager'),
+      $container->get('logger.factory'),
       $container->get('stream_wrapper_manager')
     );
   }
@@ -112,6 +139,175 @@ class FileDownloadController extends OriginalFileDownloadController {
     // replacements.
     $headers = file_get_content_headers($file);
     return new BinaryFileResponse($uri, 200, $headers, FALSE);
+  }
+
+  /**
+   * Download a public attachment.
+   *
+   * @param string $uuid
+   *   File resource UUID.
+   * @param string $filename
+   *   File name.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   Response to download the file.
+   *
+   * @throws \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException
+   *   403 if the user is not authorized to download the file.
+   * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+   *   404 if the file was not found.
+   */
+  public function downloadPublicAttachment($uuid, $filename) {
+    return $this->downloadAttachment($uuid, $filename);
+  }
+
+  /**
+   * Download a private attachment.
+   *
+   * @param string $uuid
+   *   File resource UUID.
+   * @param string $filename
+   *   File name.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   Response to download the file.
+   *
+   * @throws \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException
+   *   403 if the user is not authorized to download the file.
+   * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+   *   404 if the file was not found.
+   */
+  public function downloadPrivateAttachment($uuid, $filename) {
+    return $this->downloadAttachment($uuid, $filename, TRUE);
+  }
+
+  /**
+   * Download a file attachment.
+   *
+   * Note: this tries to download the public file if exists first, then if
+   * private is set and the user has access to the private files attempt to
+   * download it.
+   *
+   * @param string $uuid
+   *   File resource UUID.
+   * @param string $filename
+   *   File name.
+   * @param bool $private
+   *   TRUE to check private files.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   Response to download the file.
+   *
+   * @throws \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException
+   *   403 if the user is not authorized to download the file.
+   * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+   *   404 if the file was not found.
+   */
+  protected function downloadAttachment($uuid, $filename, $private = FALSE) {
+    try {
+      // Try to download the public file matching the given UUID.
+      $response = $this->downloadLocalFile($uuid, $filename);
+      if (empty($response)) {
+        $response = $this->downloadRemoteFile($uuid, $filename);
+      }
+
+      // Try to download the private file matching the given UUID.
+      if (empty($response) && $private) {
+        // No need to try to fetch the files if the user doesn't have access.
+        if (!$this->currentUser->hasPermission('access reliefweb private files')) {
+          throw new AccessDeniedHttpException();
+        }
+        if (empty($response)) {
+          $response = $this->downloadLocalFile($uuid, $filename, TRUE);
+        }
+        if (empty($response)) {
+          $response = $this->downloadRemoteFile($uuid, $filename, TRUE);
+        }
+      }
+
+      // If the file was found, send its content.
+      if (!empty($response)) {
+        return $response;
+      }
+    }
+    catch (AccessDeniedHttpException $exception) {
+      throw $exception;
+    }
+    catch (NotFoundHttpException $exception) {
+      throw $exception;
+    }
+    catch (\Exception $exception) {
+      // @todo log error.
+    }
+    throw new NotFoundHttpException('Not Found');
+  }
+
+  /**
+   * Download a local file.
+   *
+   * @param string $uuid
+   *   File resource UUID.
+   * @param string $filename
+   *   File name.
+   *
+   * @return \Symfony\Component\HttpFoundation\BinaryFileResponse|null
+   *   Response to download the file or NULL if the file was not found. We
+   *   don't throw a 404 in that case so that the caller function can perform
+   *   additional requests if necessary.
+   *
+   * @see ::downloadAttachment()
+   */
+  protected function downloadLocalFile($uuid, $filename) {
+    $extension = ReliefWebFile::getFileExtension($filename);
+    $uri = ReliefWebFile::getFileUriFromUuid($uuid, $extension, $private);
+    $headers = ['Cache-Control' => 'private, must-revalidate'];
+
+    if (file_exists($uri)) {
+      return new BinaryFileResponse($uri, 200, $headers, $private, 'attachment', TRUE);
+    }
+    return NULL;
+  }
+
+  /**
+   * Download a remote file.
+   *
+   * @param string $uuid
+   *   File resource UUID.
+   * @param string $filename
+   *   File name.
+   *
+   * @return \Symfony\Component\HttpFoundation\StreamedResponse|null
+   *   Response to download the file or NULL if the file was not found. We
+   *   don't throw a 404 in that case so that the caller function can perform
+   *   additional requests if necessary.
+   *
+   * @see ::downloadAttachment()
+   *
+   * @throws \Exception
+   *   Exception if something was wrong with the request.
+   */
+  protected function downloadRemoteFile($uuid, $filename) {
+    $response = $this->docstoreClient->request('GET', '/files/' . $uuid . '/' . $filename, [
+      'stream' => TRUE,
+    ], 1200);
+
+    // Skip if something went wrong with the request. The error is already
+    // logged in DocstoreClient::request().
+    if (empty($response)) {
+      throw new \Exception();
+    }
+
+    // Stream the response content.
+    if ($response->isSuccessful()) {
+      return new StreamedResponse([$response->getBody(), 'getContents'], 200, $response->getHeaders());
+    }
+    // If the response was not successful nor a 404, throw an exception with the
+    // status code and reason so we can log it.
+    elseif ($response->getStatusCode() !== 404) {
+      throw new \Exception($response->getStatusCode(), $response->getReasonPhrase());
+    }
+
+    return NULL;
   }
 
   /**
