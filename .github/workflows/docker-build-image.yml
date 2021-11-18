@@ -28,3 +28,4 @@ jobs:
         ecr_github_token: ${{ secrets.ECR_GITHUB_TOKEN }}
         ecr_jenkins_token: ${{ secrets.JENKINS_ECR_TOKEN }}
         flowdock_token: ${{ secrets.FLOWDOCK_TOKEN }}
+        flowdock_icon_failure: 'warning'
