@@ -1,0 +1,30 @@
+uuid: 730513ad-378a-4f3f-a08c-adc68b11dedd
+langcode: en
+status: true
+dependencies:
+  module:
+    - extended_field_description
+    - file
+    - image
+id: description_entity.field_images
+field_name: field_images
+entity_type: description_entity
+type: image
+settings:
+  uri_scheme: public
+  default_image:
+    uuid: ''
+    alt: ''
+    title: ''
+    width: null
+    height: null
+  target_type: file
+  display_field: false
+  display_default: false
+module: image
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

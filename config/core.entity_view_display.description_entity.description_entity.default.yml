@@ -1,0 +1,52 @@
+uuid: 92c05009-9be6-4ead-91f6-d86be83b7a33
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.description_entity.description_entity.field_description
+    - field.field.description_entity.description_entity.field_field
+    - field.field.description_entity.description_entity.field_images
+    - field.field.description_entity.description_entity.field_title
+    - image.style.media_library
+  module:
+    - extended_field_description
+    - svg_image
+    - text
+id: description_entity.description_entity.default
+targetEntityType: description_entity
+bundle: description_entity
+mode: default
+content:
+  field_description:
+    weight: 1
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    type: text_default
+    region: content
+  field_images:
+    weight: 2
+    label: hidden
+    settings:
+      image_style: media_library
+      image_link: ''
+      svg_render_as_image: true
+      svg_attributes:
+        width: null
+        height: null
+    third_party_settings: {  }
+    type: image
+    region: content
+  field_title:
+    weight: 0
+    label: hidden
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+hidden:
+  field_field: true
+  langcode: true
+  name: true
+  user_id: true

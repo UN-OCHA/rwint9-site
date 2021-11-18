@@ -1,0 +1,21 @@
+uuid: f4328262-1cb7-43dc-ab65-700bcf88d6dd
+langcode: en
+status: true
+dependencies:
+  module:
+    - extended_field_description
+id: description_entity.field_title
+field_name: field_title
+entity_type: description_entity
+type: string
+settings:
+  max_length: 255
+  is_ascii: false
+  case_sensitive: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

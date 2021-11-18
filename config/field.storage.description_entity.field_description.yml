@@ -1,0 +1,19 @@
+uuid: 3b828c8b-7de3-42a2-9c8f-01e19b60cf63
+langcode: en
+status: true
+dependencies:
+  module:
+    - extended_field_description
+    - text
+id: description_entity.field_description
+field_name: field_description
+entity_type: description_entity
+type: text_long
+settings: {  }
+module: text
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
