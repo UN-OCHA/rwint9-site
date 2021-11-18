@@ -74,7 +74,6 @@
   text-align: left;
 }
 
-/* Media queries. */
 @media screen and (min-width: 768px) {
   .rw-dsr {
     display: flex;
@@ -95,7 +94,7 @@
      * @todo currently the top margin of the highlights (ul) comes from the
      * browser user agent styling (ex: margin-block-start: 1em;). Setting it
      * to 0 here means the spacing between the title section and the highlights
-     * differs when there is an illustation or not which is not consistent.
+     * differs when there is an illustration or not which is not consistent.
      * So it would be better to have a fixed margin (0 or something else)
      * regardless of the presence of the illustration. This margin should be
      * consistent with the other sections on the page the DSR one is displayed

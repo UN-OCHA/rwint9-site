@@ -51,6 +51,30 @@
     flex: 1 0 20%;
   }
 }
+/* Node and Term edit page rules so the TOC acts the same as on the full
+   View pages.
+   The parent selectors `user-logged-in.path-[entity]` are also present on
+   Term and Node full node view pages, but the rules below are not applied
+   due to the additional markup present in only `page--[entity]--edit.html.twig`
+   template overrides
+*/
+@media screen and (min-width: 768px) {
+  .user-logged-in.path-taxonomy .rw-page--sectioned .region-content,
+  .user-logged-in.path-node .rw-page--sectioned .region-content {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .user-logged-in.path-taxonomy .rw-page--sectioned .region-content > header,
+  .user-logged-in.path-node .rw-page--sectioned .region-content > header,
+  .user-logged-in.path-taxonomy .rw-page--sectioned .region-content .rw-moderation-information,
+  .user-logged-in.path-node .rw-page--sectioned .region-content .rw-moderation-information,
+  .user-logged-in.path-taxonomy .rw-page--sectioned .region-content .block-local-tasks-block,
+  .user-logged-in.path-node .rw-page--sectioned .region-content .block-local-tasks-block,
+  .user-logged-in.path-taxonomy .rw-page--sectioned .region-content .rw-page-title,
+  .user-logged-in.path-node .rw-page--sectioned .region-content .rw-page-title {
+    width: 100%;
+  }
+}
 .rw-sectioned-content > section,
 .rw-sectioned-content > form > fieldset,
 .rw-sectioned-content > form > .form-wrapper,
@@ -96,10 +120,6 @@
     padding: 32px 16px 0 0;
     border-bottom: none;
   }
-  /* .rw-sectioned-content .rw-toc ~ section { */
-  /*  padding-top: 32px; */
-  /*  padding-bottom: 32px; */
-  /* } */
   .rw-toc ~ section,
   .rw-toc ~ article,
   .rw-toc ~ fieldset,
@@ -115,11 +135,6 @@
     padding: 0;
   }
 }
-
-/* Hide the table of content toggler by default. */
-/* .js .rw-toc-toggler { */
-/*  display: none; */
-/* } */
 
 /**
  * Table of contents - javascript enabled.
@@ -147,20 +162,6 @@
   [dir="rtl"] .rw-toc__btn[aria-expanded] .cd-icon--arrow-down {
     margin-right: 0.5rem;
   }
-  /* .js .rw-toc__btn:after { */
-  /*  content: ""; */
-  /*  display: inline-block; */
-  /*  vertical-align: middle; */
-  /*  width: 9px; */
-  /*  height: 9px; */
-  /*  margin-left: 8px; */
-  /*  overflow: hidden; */
-  /*  background: url(../../img/rw-icons-sprite.png) -150px 0 no-repeat; */
-  /*  background: rgba(0,0,0,0) url(../../img/rw-icons-sprite.svg) -150px 0 no-repeat; */
-  /* } */
-  /* .js .rw-toc-toggler[aria-expanded="true"]:after { */
-  /*  background-position-y: -9px; */
-  /* } */
   .js .rw-toc {
     /* display: none; */
     position: absolute;
@@ -179,9 +180,6 @@
     -webkit-box-shadow: 0 0 6px 2px var(--cd-reliefweb-brand-grey--light);
     box-shadow: 0 0 6px 2px var(--cd-reliefweb-brand-grey--light);
   }
-  /* .js .rw-toc[data-hidden="false"] { */
-  /*  display: block; */
-  /* } */
   .js .rw-toc + section,
   .js .rw-toc + article,
   .js .rw-toc + fieldset,

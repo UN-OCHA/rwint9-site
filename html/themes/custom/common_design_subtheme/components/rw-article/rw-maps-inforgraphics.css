@@ -47,13 +47,12 @@
       display: none;
     }
   }
-  /* Media queries. */
+
   @media screen and (min-width: 480px) {
     .rw-river--maps-infographics .rw-river__articles {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       grid-column-gap: 24px;
-      /* padding-top: 24px; */
     }
     .rw-river--maps-infographics article {
       justify-content: flex-end;

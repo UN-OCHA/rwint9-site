@@ -13,6 +13,7 @@ form[data-with-guidelines] button[data-guideline] {
 }
 form[data-with-guidelines] button[data-guideline]:hover {
   background: var(--rw-icons--common--help--12--dark-red);
+  background-color: var(--cd-reliefweb-brand-grey--light);
 }
 form[data-with-guidelines] .rw-guideline:before {
   position: fixed;
@@ -57,13 +58,13 @@ form[data-with-guidelines] .rw-guideline > button[value="close"]:after {
   width: 12px;
   height: 12px;
   content: "";
-  background: var(--rw-icons--common--close--18--dark-grey);
+  background: var(--rw-icons--common--close--12--dark-blue);
 }
 form[data-with-guidelines] .rw-guideline > button[value="close"]:hover {
   border-color: var(--cd-reliefweb-brand-red--dark);
 }
 form[data-with-guidelines] .rw-guideline > button[value="close"]:hover:after {
-  background: var(--rw-icons--common--close--18--dark-red);
+  background: var(--rw-icons--common--close--12--dark-red);
 }
 form[data-with-guidelines] .rw-guideline > div {
   position: relative;

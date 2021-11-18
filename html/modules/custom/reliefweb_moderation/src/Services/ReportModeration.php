@@ -130,7 +130,7 @@ class ReportModeration extends ModerationServiceBase {
       // Details.
       $details = [];
       // Content format.
-      $datails['format'] = [];
+      $details['format'] = [];
       foreach ($entity->field_content_format as $item) {
         if (!empty($item->entity)) {
           $item_title = $item->entity->label();

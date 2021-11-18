@@ -15,3 +15,8 @@
 .field--type-reliefweb-section-links tr[data-dragged] td {
   background-color: var(--cd-reliefweb-brand-grey--light);
 }
+
+/* Related Content Reports search table */
+.rw-section-links table a {
+  word-break: break-word;
+}

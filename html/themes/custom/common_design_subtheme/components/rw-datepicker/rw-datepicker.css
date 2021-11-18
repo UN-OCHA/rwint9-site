@@ -56,7 +56,6 @@
   color: var(--cd-reliefweb-brand-blue--dark);
   border: none;
   background: none;
-  /* @todo review if we can use a CD variable. */
   font-size: 16px;
   line-height: 16px;
   /* Disable text selection of the buttons in the calendar to avoid interfering

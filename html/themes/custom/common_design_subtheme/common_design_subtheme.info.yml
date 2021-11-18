@@ -49,6 +49,10 @@ libraries-extend:
   reliefweb_form/widget.datepicker:
     - common_design_subtheme/rw-datepicker
 
+  # Guidelines.
+  reliefweb_form/form.guidelines:
+    - common_design_subtheme/rw-guidelines
+
 
 # Custom namespace
 # https://www.drupal.org/docs/contributed-modules/components/understanding-twig-namespaces
