@@ -63,8 +63,7 @@
 /* List of autocomplete suggestions. */
 .rw-autocomplete-selector {
   position: absolute;
-  /* Ensures the popup is above the content.
-   * @todo Review the value. */
+  /* Ensures the popup is above the content. */
   z-index: 120;
   top: 100%;
   left: 0;
@@ -86,7 +85,6 @@
   /* Suggestions are clickable. */
   cursor: pointer;
   white-space: pre-wrap;
-  /* @todo review in regards to the standard cd-font sizes. */
   font-size: 16px;
   /* Better readability. */
   line-height: 1.5;

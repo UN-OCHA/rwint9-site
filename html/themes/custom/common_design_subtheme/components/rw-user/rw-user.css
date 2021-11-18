@@ -35,7 +35,6 @@
 }
 .rw-user-dashboard li > * {
   display: inline-block;
-  /* width: 100%; */
 }
 .rw-user-dashboard li + li {
   margin-top: 32px;

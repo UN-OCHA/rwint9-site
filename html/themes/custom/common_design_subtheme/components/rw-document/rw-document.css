@@ -16,6 +16,9 @@
   width: 100%;
   content: "";
 }
+.rw-document .rw-article__header {
+  width: 100%;
+}
 .rw-document figure {
   margin: 0 0 16px 0;
 }
@@ -40,11 +43,6 @@
 .rw-document .rw-article__content section {
   padding-top: 24px;
 }
-/* .rw-document .rw-article__content section > h3 { */
-/*  padding: 0 0 0 8px; */
-/*  border-left: 8px solid var(--cd-reliefweb-brand-blue); */
-/* } */
-
 .rw-document > footer {
   width: 100%;
   margin: 0;

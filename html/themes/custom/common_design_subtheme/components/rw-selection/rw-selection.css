@@ -35,6 +35,9 @@
   line-height: 24px;
 }
 .rw-selection [data-value] .label {
+  display: inline;
+  margin-left: 0.25rem;
+  color: var(--cd-reliefweb-brand-grey--dark);
   font-weight: bold;
 }
 .rw-selection [data-value] button {
@@ -123,7 +126,6 @@
   padding: 4px 8px;
   word-wrap: break-word;
   background: white;
-  /* @todo review in regards to the standard cd-font sizes. */
   font-size: 15px;
 }
 #main-content [data-selection-messages] .rw-selection [data-value] .message .title {

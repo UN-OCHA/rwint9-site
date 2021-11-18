@@ -62,7 +62,7 @@
           {# Details like content format, language and creator. #}
           <div class="rw-moderation-table__cell__details">
           {% for id, item in cell.details %}
-            <span class="rw-moderation-table__cell__datails__{{ id|clean_class }}">{{ item is iterable ? item|join(', ')|raw : item }}</span>
+            <span class="rw-moderation-table__cell__details__{{ id|clean_class }}">{{ item is iterable ? item|join(', ')|raw : item }}</span>
             {{- loop.last ? '' : ' - ' -}}
           {% endfor %}
           </div>
