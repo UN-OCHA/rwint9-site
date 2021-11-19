@@ -160,53 +160,11 @@
 
     <div class="rw-report__content">
 
-{#      Report#}
-{#      <section id="attachments" class="rw-attachment rw-attachment--report">#}
-{#        <h3 class="visually-hidden">Attachments</h3>#}
-{#        <ul>#}
-{#          <li>#}
-{#            <a href="#" download="Asia-Pacific COVID-19 update 9 November 2021.pdf">#}
-{#              <img src="https://reliefweb.int/sites/reliefweb.int/files/styles/report-small/public/resources-pdf-previews/1589432-Asia-Pacific%20COVID-19%20update%209%20November%202021.png?itok=IYA05TKD" alt="">#}
-{#              <strong>Download document</strong>#}
-{#              <span>(PDF | 439.83 KB)</span>#}
-{#            </a>#}
-{#          </li>#}
-{#        </ul>#}
-{#      </section>#}
+      {{ node.getAttachments() }}
 
-{#      Interactive#}
-{#      <section id="interactive" class="rw-attachment rw-attachment--interactive">#}
-{#        <h3>Screenshot(s) of the interactive content as of 30 Apr 2021</h3>#}
-{#        <div class="rw-attachment__content">#}
-{#          <figure>#}
-{#            <a href="#" target="_blank" rel="noopener">#}
-{#              <img src="https://reliefweb.int/sites/reliefweb.int/files/styles/report-large/public/resources-pdf-previews/1575720-SOMALIA%20%20%20UNHCR%205W%20%20Who%20is%20doing%20What%20Where%20When%20for%20Whom%20.png?itok=4fIvGZts" alt="Screenshot 1">#}
-{#            </a>#}
-{#            <figcaption aria-hidden="true">Screenshot 1</figcaption>#}
-{#          </figure>#}
-{#        </div>#}
-{#        <footer class="rw-attachment__footer">#}
-{#          <a href="#" target="_blank" rel="noopener">View the interactive content page</a>#}
-{#        </footer>#}
-{#      </section>#}
+      {{ content.body.0|render|sanitize_html(false, 2) }}
 
-{#      Map or Infographic#}
-{#      <section id="attachments" class="rw-attachment rw-attachment--map">#}
-{#        <h3 class="visually-hidden">Attachments</h3>#}
-{#        <ul>#}
-{#          <li>#}
-{#            <a href="#" download="partner_presence.pdf">#}
-{#              <img src="https://reliefweb.int/sites/reliefweb.int/files/styles/report-large/public/resources-pdf-previews/1575739-partner_presence.png?itok=6nzWdeYx" alt="">#}
-{#              <strong>Download Map</strong>#}
-{#              <span>(PDF | 236.67 KB)</span>#}
-{#            </a>#}
-{#          </li>#}
-{#        </ul>#}
-{#      </section>#}
-
-    {{ content.body.0|render|sanitize_html(false, 2) }}
-
-    {{ node.getSourceDisclaimers() }}
+      {{ node.getSourceDisclaimers() }}
 
     </div>
   </div>
