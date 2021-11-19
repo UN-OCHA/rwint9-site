@@ -4,7 +4,6 @@ namespace Drupal\reliefweb_docstore\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
-use Drupal\Core\Url;
 
 /**
  * Plugin implementation of the 'reliefweb_file' formatter.
@@ -23,22 +22,32 @@ class ReliefWebFile extends FormatterBase {
    * {@inheritdoc}
    */
   public function viewElements(FieldItemListInterface $items, $langcode) {
-    // Simple link for active elements.
-    $links = [];
+    $list = [];
     foreach ($items as $item) {
-      // DEBUG.
-      $url = 'https://docstore.test/files/' . $item->get('uuid')->getValue();
-
-      $links[] = [
-        'title' => $item->get('file_name')->getValue(),
-        'url' => Url::fromUri($url),
-      ];
+      $url = $item->getFileUrl();
+      if (!empty($url)) {
+        $list[] = [
+          'item' => $item,
+          'url' => $url->toString(),
+          'name' => $item->getFileName(),
+          'preview' => $item->renderPreview('small'),
+          'label' => $item->getFileName(),
+          'description' => '(' . implode(' | ', array_filter([
+            mb_strtoupper($item->getFileExtension()),
+            format_size($item->getFileSize()),
+            implode(' - ', array_filter([
+              $item->getFileDescription(),
+              $item->getFileLanguage(),
+            ])),
+          ])) . ')',
+        ];
+      }
     }
 
     // Reverse the links to have the most recent a the beginning.
-    return [
-      '#theme' => 'links',
-      '#links' => array_reverse($links),
+    return empty($list) ? [] : [
+      '#theme' => 'reliefweb_file_list',
+      '#list' => $list,
     ];
   }
 

@@ -54,7 +54,7 @@ class DocstoreClient {
   }
 
   /**
-   * Get a file in the docstore.
+   * Get a file resource in the docstore.
    *
    * @param string $uuid
    *   The file resource UUID.
@@ -67,12 +67,7 @@ class DocstoreClient {
   public function getFile($uuid, $timeout = 5) {
     $response = $this->request('GET', '/api/v1/files/' . $uuid, [], $timeout);
 
-    if ($response !== NULL) {
-      $body = $response->getBody();
-      return !empty($body) ? json_decode($body, TRUE) : NULL;
-    }
-
-    return NULL;
+    return $this->decodeResponseBody($response);
   }
 
   /**
@@ -91,12 +86,7 @@ class DocstoreClient {
       'json' => $payload,
     ], $timeout);
 
-    if ($response !== NULL) {
-      $body = $response->getBody();
-      return !empty($body) ? json_decode($body, TRUE) : NULL;
-    }
-
-    return NULL;
+    return $this->decodeResponseBody($response);
   }
 
   /**
@@ -127,12 +117,7 @@ class DocstoreClient {
       'body' => $resource,
     ], $timeout);
 
-    if ($response !== NULL) {
-      $body = $response->getBody();
-      return !empty($body) ? json_decode($body, TRUE) : NULL;
-    }
-
-    return NULL;
+    return $this->decodeResponseBody($response);
   }
 
   /**
@@ -200,12 +185,28 @@ class DocstoreClient {
       ],
     ], $timeout);
 
-    if ($response !== NULL) {
-      $body = $response->getBody();
-      return !empty($body) ? json_decode($body, TRUE) : NULL;
-    }
+    return $this->decodeResponseBody($response);
+  }
 
-    return NULL;
+  /**
+   * Select the file version to make active for us.
+   *
+   * @param string $uuid
+   *   The file resource UUID.
+   * @param int $revision_id
+   *   The file revision id.
+   *
+   * @return bool
+   *   TRUE on success.
+   */
+  public function selectFileVersion($uuid, $revision_id) {
+    $response = $this->request('PUT', '/api/v1/files/' . $uuid . '/select', [
+      'json' => [
+        'target' => $revision_id,
+      ],
+    ], $timeout);
+
+    return !empty($response) && $resposne->isSuccessful();
   }
 
   /**
@@ -247,6 +248,26 @@ class DocstoreClient {
       ]);
       return NULL;
     }
+  }
+
+  /**
+   * Decode the response body.
+   *
+   * Note: this assumes the body is JSON encoded data.
+   *
+   * @param \Psr\Http\Message\ResponseInterface|null $response
+   *   The request's response.
+   *
+   * @return mixed
+   *   NULL if the response body couldn't be decoded otherwise whatever the
+   *   was in the body.
+   */
+  public function decodeResponseBody(?ResponseInterface $response) {
+    if ($response !== NULL) {
+      $body = $response->getBody();
+      return !empty($body) ? json_decode($body, TRUE) : NULL;
+    }
+    return NULL;
   }
 
   /**

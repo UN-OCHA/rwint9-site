@@ -15,6 +15,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\file\Entity\File;
 use Drupal\reliefweb_docstore\Plugin\Field\FieldType\ReliefWebFile as ReliefWebFileType;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -149,7 +150,7 @@ class ReliefWebFile extends WidgetBase {
     elseif ($items->count() > 0) {
       foreach ($items as $item) {
         if (!$item->isEmpty()) {
-          $field_state['original_values'][$item->get('uuid')->getValue()] = $item->getValue();
+          $field_state['original_values'][$item->getUuid()] = $item->getValue();
         }
       }
       static::setWidgetState($parents, $field_name, $form_state, $field_state);
@@ -293,7 +294,6 @@ class ReliefWebFile extends WidgetBase {
     $defaults = [
       'uuid',
       'revision_id',
-      'private',
       'file_uuid',
       'file_name',
       'file_mime',
@@ -309,11 +309,11 @@ class ReliefWebFile extends WidgetBase {
     }
 
     // Link to the file.
-    $file_name = $item->get('file_name')->getValue();
-    $file_size = $item->get('file_size')->getValue();
-    $file_extension = ReliefWebFileType::getFileExtension($file_name);
+    $file_name = $item->getFileName();
+    $file_size = $item->getFileSize();
+    $file_extension = $item->getFileExtension();
     $file_label = $file_name . ' (' . mb_strtoupper($file_extension) . ' | ' . format_size($file_size) . ')';
-    $file_url = $item->getFileUrl(TRUE);
+    $file_url = $item->getFileUrl();
     if (!empty($file_url)) {
       $element['link'] = [
         '#type' => 'link',
@@ -334,20 +334,26 @@ class ReliefWebFile extends WidgetBase {
       '#type' => 'textfield',
       '#title' => $this->t('Description'),
       '#maxlength' => 255,
-      '#default_value' => $item->get('description')->getValue() ?? '',
+      '#default_value' => $item->getFileDescription() ?? '',
     ];
     $element['language'] = [
       '#type' => 'select',
       '#title' => $this->t('Language version'),
-      '#options' => reliefweb_docstore_get_languages(),
-      '#default_value' => $item->get('language')->getValue() ?? NULL,
+      // @todo add the empty option.
+      '#options' => array_merge(
+        ['' => ' - select - '],
+        reliefweb_docstore_get_languages()
+      ),
+      '#default_value' => $item->getFileLanguage() ?? NULL,
     ];
 
     // Display the preview and the page and rotation selection.
     if ($item->canHavePreview()) {
-      $preview_page = $item->get('preview_page')->getValue() ?? 1;
-      $preview_rotation = $item->get('preview_rotation')->getValue() ?? 0;
+      $preview_uuid = $item->getPreviewUuid();
+      $preview_page = $item->getPreviewPage() ?? 1;
+      $preview_rotation = $item->getPreviewRotation() ?? 0;
 
+      $original_preview_uuid = $item->_original_preview_uuid ?: $preview_uuid;
       $original_preview_page = $item->_original_preview_page ?: $preview_page;
       $original_preview_rotation = $item->_original_preview_rotation ?: $preview_rotation;
 
@@ -355,8 +361,13 @@ class ReliefWebFile extends WidgetBase {
         // Only regenerated the preview if the page or rotation changed.
         $regenerate = $original_preview_page != $preview_page || $original_preview_rotation != $preview_rotation;
 
+        // For the createion of new file if there is already one to prevent
+        // changing the existing preview that is displayed to the end users
+        // while the form is being edited.
+        $new_preview_file = $regenerate && $original_preview_uuid === $preview_uuid;
+
         // Ensure the preview is generated.
-        if ($item->generatePreview($preview_page, $preview_rotation, $regenerate) !== NULL) {
+        if ($item->generatePreview($preview_page, $preview_rotation, $regenerate, $new_preview_file) !== NULL) {
           $element['preview'] = $item->renderPreview('thumbnail');
 
           // Add state to hide the preview if "no preview" is selected.
@@ -395,8 +406,13 @@ class ReliefWebFile extends WidgetBase {
         '#ajax' => $this->getAjaxSettings($this->t('Regenerating preview...'), $field_parents),
       ];
 
-      // Store the original preview page and rotation so that we can compare
-      // with the new values and determine if the preview should be regenerated.
+      // Store the original preview uuid, page and rotation so that we can
+      // compare with the new values and determine if the preview should be
+      // regenerated.
+      $element['_original_preview_uuid'] = [
+        '#type' => 'hidden',
+        '#value' => $preview_uuid,
+      ];
       $element['_original_preview_page'] = [
         '#type' => 'hidden',
         '#value' => $preview_page,
@@ -623,8 +639,9 @@ class ReliefWebFile extends WidgetBase {
     try {
       // If the file was new or replaced, remove its associated managed files.
       if (empty($values['revision_id'])) {
-        ReliefWebFileType::deleteFileFromUuid($values['file_uuid']);
-        ReliefWebFileType::deleteFileFromUuid($values['preview_uuid'], TRUE);
+        $item = $this->createFieldItem($values);
+        $item->deleteFile();
+        $item->deletePreview();
       }
     }
     catch (\Exception $exception) {
@@ -647,9 +664,11 @@ class ReliefWebFile extends WidgetBase {
    *   The new field item values.
    */
   protected function replaceFieldItem(array $element, FormStateInterface $form_state, array $values) {
+    $previous_item = $this->createFieldItem($values);
+
     // Retrieve the upload validators for the original item. This will
     // ensure the replacement is of the same type.
-    $validators = $this->createFieldItem($values)->getUploadValidators();
+    $validators = $previous_item->getUploadValidators();
 
     // Create a new field item with associated managed files and replace the
     // original values with its values.
@@ -657,10 +676,15 @@ class ReliefWebFile extends WidgetBase {
     $items = $this->processUploadedFiles($element, $form_state, $name, $validators);
     if (!empty($items)) {
       $item = reset($items);
-      // Copy some properties from the original file.
-      $item['uuid'] = $values['uuid'];
-      $item['description'] = $values['description'];
-      $item['language'] = $values['language'];
+      // Copy some properties from the original field item.
+      $item['uuid'] = $previous_item->getUuid();
+      $item['file_name'] = $previous_item->getFileName();
+      $item['description'] = $previous_item->getFileDescription();
+      $item['language'] = $previous_item->getFileLanguage();
+
+      // Delete the previous item if it was a replacement, to reduce leftovers.
+      $this->deleteFieldItem($element, $form_state, $values);
+
       return $item;
     }
     // If we couldn't replace the file, keep the original values.
@@ -763,12 +787,12 @@ class ReliefWebFile extends WidgetBase {
     // it for the file uri.
     $file_uuid = ReliefWebFileType::generateUuid();
 
-    // Generate the file uri.
-    $extension = ReliefWebFileType::getFileExtension($file_name);
+    // Generate the file uri (private).
+    $extension = ReliefWebFileType::extractFileExtension($file_name);
     $uri = ReliefWebFileType::getFileUriFromUuid($file_uuid, $extension, TRUE);
 
     // Try to guess the real mime type of the uploaded file.
-    $file_mime = ReliefWebFileType::getFileMimeType($uri);
+    $file_mime = ReliefWebFileType::guessFileMimeType($uri);
 
     // Create a temporary managed file associated with the uploaded file.
     $file = ReliefWebFileType::createFileFromUuid($file_uuid, $uri, $file_name, $file_mime);
@@ -802,7 +826,7 @@ class ReliefWebFile extends WidgetBase {
     }
 
     // Update the file.
-    $file->setMimeType(ReliefWebFileType::getFileMimeType($uri));
+    $file->setMimeType(ReliefWebFileType::guessFileMimeType($uri));
     $file->setSize(@filesize($uri) ?? 0);
 
     // Populate and return the field item.
@@ -830,9 +854,6 @@ class ReliefWebFile extends WidgetBase {
       // This will be populated after a successful upload for remote files or
       // when saving the local file as permanent.
       'revision_id' => 0,
-      // We mark the item as private initially. It may be changed to public
-      // depending on the status of the entity the field is attached to etc.
-      'private' => TRUE,
       'file_uuid' => $file->uuid(),
       'file_name' => $file->getFilename(),
       'file_mime' => $file->getMimeType(),
@@ -853,6 +874,8 @@ class ReliefWebFile extends WidgetBase {
         ]);
       }
 
+      // Remove the uploaded file. There is no need to remove the file entity
+      // as it hasn't been saved to the database yet.
       $this->deleteUploadedFile($file->getFileUri());
 
       $this->throwError($this->t('Invalid field item data for the uploaded file %name.', [

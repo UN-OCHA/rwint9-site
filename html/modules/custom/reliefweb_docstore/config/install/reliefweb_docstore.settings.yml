@@ -4,6 +4,8 @@ docstore_url: ''
 api_key: ''
 # The prefix used when creating new content (ex: reliefweb_reports).
 prefix: 'reliefweb_'
+# Wether to store the files locally or remotely in the docstore.
+local: true
 # Name of the directory for the local file attachments.
 file_directory: 'attachments'
 # Name of the directory for the local file previews.

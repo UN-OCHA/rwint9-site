@@ -12,11 +12,39 @@ use Drupal\file\Entity\File;
  */
 function reliefweb_docstore_theme() {
   return [
+    // Theme for a file list form widget.
     'reliefweb_file_widget' => [
       'render element' => 'element',
     ],
+    // Theme for a file item form widget.
     'reliefweb_file_widget_item' => [
       'render element' => 'element',
+    ],
+    // Theme for a list of files.
+    'reliefweb_file_list' => [
+      'variables' => [
+        // Section heading level.
+        'level' => 2,
+        // Section attributes.
+        'attributes' => NULL,
+        // Section title.
+        'title' => t('Attachments'),
+        // Section title attributes.
+        'title_attributes' => NULL,
+        // List of files. Each item has the following properties:
+        // - item: field item
+        // - url: link to the file
+        // - name: file name
+        // - label: file name or 'Download' etc.
+        // - description: file description (extension, size, language etc.)
+        'list' => [],
+        // List attributes.
+        'list_attributes' => NULL,
+        // Section footer.
+        'footer' => NULL,
+        // Section footer attributes.
+        'footer_attributes' => NULL,
+      ],
     ],
   ];
 }
@@ -67,7 +95,7 @@ function reliefweb_docstore_preprocess_reliefweb_file_widget_item(&$variables) {
  */
 function reliefweb_docstore_preprocess_image_style(&$variables) {
   // Workaround to prevent the browser from caching the derivative when
-  // renderd in the form for example, so that it always get the fresh one
+  // rendered in the form for example, so that it always get the fresh one
   // when the image is regenerated.
   if (isset($variables['image']['#attributes']['data-no-cache'])) {
     $uri = $variables['image']['#uri'];
@@ -111,13 +139,13 @@ function reliefweb_docstore_get_languages() {
  * @param string $mime_type
  *   Mime type to compare with.
  *
- * @return bool
+ * @return array
  *   An empty array if the file mime type is a match or an array containing an
  *   error message if it's not.
  *
  * @see file_validate()
  */
-function reliefweb_docostore_file_validate_mime_type(File $file, $mime_type) {
+function reliefweb_docstore_file_validate_mime_type(File $file, $mime_type) {
   $errors = [];
 
   if ($file->getMimeType() !== $mime_type) {
@@ -127,4 +155,24 @@ function reliefweb_docostore_file_validate_mime_type(File $file, $mime_type) {
   }
 
   return $errors;
+}
+
+/**
+ * Implements hook_reliefweb_utility_file_update_alter().
+ */
+function reliefweb_docstore_reliefweb_utility_file_update_alter(File $file, &$apply) {
+  $settings = \Drupal::config('reliefweb_docstore.settings');
+
+  // Get the ttachment and preview directories.
+  $file_directory = $settings->get('file_directory') ?? 'attachments';
+  $preview_directory = $settings->get('preview_directory') ?? 'previews';
+  $directories = [preg_quote($file_directory), preg_quote($preview_directory)];
+
+  // Pattern for the preview files.
+  $pattern = '#^(?:private|public)://(?:' .
+             implode('|', $directories) .
+             ')/([a-z0-9]{2})/([a-z0-9]{2})/\1\2[a-z0-9-]{32}\.#';
+
+  // Do not apply the file URI transformation for files managed by this module.
+  $apply = $apply && preg_match($pattern, $file->getFileUri()) !== 1;
 }

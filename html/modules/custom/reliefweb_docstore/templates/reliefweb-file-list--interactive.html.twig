@@ -1,0 +1,22 @@
+{#
+
+/**
+ * @file
+ * Template for a list of files.
+ */
+
+#}
+{% if list is not empty %}
+<section{{ attributes.addClass(['rw-file-list', 'rw-file-list--interactive']) }}>
+  <h{{ level }}{{ title_attributes }}>{{ title }}</h{{ level }}>
+  <div{{ list_attributes }}>
+    {% for item in list %}
+    <figure>
+      <a href="{{ item.url }}" target="_blank" rel="noopener">{{ item.preview }}</a>
+      <figcaption>{{ item.label }}</figcaption>
+    </figure>
+    {% endfor %}
+  </div>
+  {{ footer }}
+</section>
+{% endif %}

@@ -11,6 +11,9 @@ reliefweb_docstore.settings:
     prefix:
       type: string
       label: 'The prefix used when creating new content (ex: reliefweb_reports).'
+    local:
+      type: boolean
+      label: 'Flag to store the files locally instead of remotely'
     file_directory:
       type: string
       label: 'Name of the directory for the local file attachments.'
@@ -21,9 +24,6 @@ reliefweb_docstore.settings:
 field.field_settings.reliefweb_file:
   type: mapping
   mapping:
-    local:
-      type: boolean
-      label: 'Flag to store the files locally instead of remotely'
     file_extensions:
       type: string
       label: 'Allowed file extensions'

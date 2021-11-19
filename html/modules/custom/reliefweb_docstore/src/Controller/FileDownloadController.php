@@ -96,7 +96,7 @@ class FileDownloadController extends OriginalFileDownloadController {
     return new static(
       $container->get('config.factory'),
       $container->get('current_user'),
-      $container->get('docstore_client'),
+      $container->get('reliefweb_docstore.client'),
       $container->get('entity_type.manager'),
       $container->get('logger.factory'),
       $container->get('stream_wrapper_manager')
@@ -258,7 +258,7 @@ class FileDownloadController extends OriginalFileDownloadController {
    * @see ::downloadAttachment()
    */
   protected function downloadLocalFile($uuid, $filename) {
-    $extension = ReliefWebFile::getFileExtension($filename);
+    $extension = ReliefWebFile::extractFileExtension($filename);
     $uri = ReliefWebFile::getFileUriFromUuid($uuid, $extension, $private);
     $headers = ['Cache-Control' => 'private, must-revalidate'];
 

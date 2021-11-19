@@ -1,0 +1,25 @@
+{#
+
+/**
+ * @file
+ * Template for a list of files.
+ */
+
+#}
+{% if list is not empty %}
+<section{{ attributes.addClass('rw-file-list') }}>
+  <h{{ level }}{{ title_attributes.addClass('visually-hidden') }}>{{ title }}</h{{ level }}>
+  <ul{{ list_attributes }}>
+    {% for item in list %}
+    <li>
+      <a href="{{ item.url }}" download="{{ item.name }}">
+        {{ item.preview }}
+        <strong class="rw-file__label">{{ item.label }}</strong>
+        <span class="rw-file__description">{{ item.description }}</span>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+

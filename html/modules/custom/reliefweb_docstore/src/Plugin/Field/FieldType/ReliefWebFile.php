@@ -10,6 +10,7 @@ use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\File\Exception\FileException;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StreamWrapper\StreamWrapperManager;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -34,6 +35,27 @@ use Drupal\file\Entity\File;
 class ReliefWebFile extends FieldItemBase {
 
   /**
+   * The current user.
+   *
+   * @var \Drupal\Core\Session\AccountProxyInterface
+   */
+  protected $currentUser;
+
+  /**
+   * The docstore client service.
+   *
+   * @var \Drupal\reliefweb_docstore\Services\DocstoreClient
+   */
+  protected $docstoreClient;
+
+  /**
+   * The docstore config.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
+  protected $docstoreConfig;
+
+  /**
    * The entity repository service.
    *
    * @var \Drupal\Core\Entity\EntityRepositoryInterface
@@ -55,18 +77,10 @@ class ReliefWebFile extends FieldItemBase {
   protected $fileSystem;
 
   /**
-   * The docstore client service.
-   *
-   * @var \Drupal\reliefweb_docstore\Services\DocstoreClient
-   */
-  protected $docstoreClient;
-
-  /**
    * {@inheritdoc}
    */
   public static function defaultFieldSettings() {
     return [
-      'local' => TRUE,
       'file_extensions' => '',
       'max_filesize' => NULL,
     ] + parent::defaultFieldSettings();
@@ -78,13 +92,6 @@ class ReliefWebFile extends FieldItemBase {
   public function fieldSettingsForm(array $form, FormStateInterface $form_state) {
     $element = parent::fieldSettingsForm($form, $form_state);
     $settings = $this->getSettings();
-
-    $element['local'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Store files locally'),
-      '#description' => $this->t('Check if the files should be stored locally instead of remotely.'),
-      '#default_value' => $this->getSetting('local'),
-    ];
 
     // Make the extension list a little more human-friendly by comma-separation.
     $extensions = str_replace(' ', ', ', $settings['file_extensions']);
@@ -201,9 +208,9 @@ class ReliefWebFile extends FieldItemBase {
 
     // Validate the file mime as well if defined, to  ensure a file can be
     // replaced only by a file of the same type.
-    $file_mime = $this->get('file_mime')->getValue();
+    $file_mime = $this->getFileMime();
     if (!empty($file_mime)) {
-      $validators['reliefweb_docostore_file_validate_mime_type'] = [$file_mime];
+      $validators['reliefweb_docstore_file_validate_mime_type'] = [$file_mime];
     }
 
     // There is always a file size limit due to the PHP server limit.
@@ -241,9 +248,9 @@ class ReliefWebFile extends FieldItemBase {
   public function getAllowedFileExtensions() {
     $settings = $this->getSettings();
 
-    $file_name = $this->get('file_name')->getValue();
-    if (!empty($file_name)) {
-      return [static::getFileExtension($file_name)];
+    $extension = $this->getFileExtension();
+    if (!empty($extension)) {
+      return [$extension];
     }
     elseif (!empty($settings['file_extensions'])) {
       return explode(' ', $settings['file_extensions']);
@@ -377,9 +384,9 @@ class ReliefWebFile extends FieldItemBase {
           'size' => 'medium',
           'not null' => TRUE,
         ],
-        'private' => [
-          'type' => 'int',
-          'size' => 'tiny',
+        'file_uuid' => [
+          'type' => 'varchar_ascii',
+          'length' => 36,
           'not null' => TRUE,
         ],
         'file_name' => [
@@ -479,8 +486,18 @@ class ReliefWebFile extends FieldItemBase {
    * {@inheritdoc}
    */
   public function isEmpty() {
-    $uuid = $this->get('uuid')->getValue();
+    $uuid = $this->getUuid();
     return empty($uuid);
+  }
+
+  /**
+   * Check if we are storing the files locally or remotely.
+   *
+   * @return bool
+   *   TRUE if the files are stored locally.
+   */
+  public function storeLocally() {
+    return $this->getDocstoreConfig()->get('local') === TRUE;
   }
 
   /**
@@ -514,7 +531,7 @@ class ReliefWebFile extends FieldItemBase {
       '#style_name' => $style,
       '#uri' => $uri,
       '#alt' => $this->t('Preview of @file_name', [
-        '@file_name' => $this->get('file_name')->getValue(),
+        '@file_name' => $this->getFileName(),
       ]),
       '#attributes' => [
         'class' => ['rw-file-preview'],
@@ -537,11 +554,11 @@ class ReliefWebFile extends FieldItemBase {
   public function getPreview($generate = FALSE) {
     $file = $this->loadPreviewFile();
     if (empty($file) && $generate && $this->canHavePreview()) {
-      $page = $this->get('preview_page')->getValue();
-      $rotation = $this->get('preview_rotation')->getValue();
+      $page = $this->getPreviewPage();
+      $rotation = $this->getPreviewRotation();
       return $this->generatePreview($page, $rotation);
     }
-    return NULL;
+    return $file;
   }
 
   /**
@@ -553,11 +570,13 @@ class ReliefWebFile extends FieldItemBase {
    *   The rotation of the preview page (0, 90 or -90).
    * @param bool $regenerate
    *   TRUE to force the regeneration of the preview.
+   * @param bool $new
+   *   TRUE to force the creation of a new preview file.
    *
    * @return \Drupal\file\Entity\File|null
    *   The preview file entity or NULL if the preview was not generated.
    */
-  public function generatePreview($page = 0, $rotation = 0, $regenerate = FALSE) {
+  public function generatePreview($page = 0, $rotation = 0, $regenerate = FALSE, $new = FALSE) {
     if ($page < 1 || $this->isEmpty() || !$this->canHavePreview() || $this->getPageCount() === 0) {
       return NULL;
     }
@@ -568,13 +587,13 @@ class ReliefWebFile extends FieldItemBase {
     // Ensure the rotation is a valid value.
     $rotation = in_array($rotation, [0, 90, -90]) ? $rotation : 0;
 
-    $preview_uuid = $this->get('preview_uuid')->getValue();
-    $current_page = $this->get('preview_page')->getValue();
-    $current_rotation = $this->get('preview_rotation')->getValue();
+    $preview_uuid = $this->getPreviewUuid();
+    $current_page = $this->getPreviewPage();
+    $current_rotation = $this->getPreviewRotation();
 
     // Skip if the preview already exists for the given page and rotation.
     if (!$regenerate && !empty($preview_uuid) && $page == $current_page && $rotation == $current_rotation) {
-      return $this->loadFileByUuid($preview_uuid);
+      return $this->loadPreviewFile();
     }
 
     // Load or create a file associated with the field item.
@@ -582,7 +601,7 @@ class ReliefWebFile extends FieldItemBase {
     if (empty($file) || !file_exists($file->getFileUri())) {
       // For local files, we cannot generate the preview if there is no file
       // associated with the field item.
-      if ($this->getSetting('local') === TRUE) {
+      if ($this->storeLocally()) {
         return NULL;
       }
       // For remote files, we try to retrieve the file content and create a
@@ -596,7 +615,7 @@ class ReliefWebFile extends FieldItemBase {
     }
 
     // Retrieve or create the preview file.
-    $preview_file = $this->loadPreviewFile();
+    $preview_file = $new ? NULL : $this->loadPreviewFile();
     if (empty($preview_file)) {
       $preview_file = $this->createPreviewFile();
     }
@@ -606,8 +625,10 @@ class ReliefWebFile extends FieldItemBase {
       return NULL;
     }
 
-    // Save the preview. We don't mark it yet as permanent so that it can be
-    // garbage collected if the form, for example, is not submitted.
+    // Save the preview. We mark it as temporary so that it can be garbage
+    // collected if the form, for example, is not submitted. It will be saved
+    // as permanent in ::preSave() when the form is submitted.
+    $preview_file->setTemporary();
     $preview_file->save();
 
     // Update the field item preview uuid as it may be a new file.
@@ -617,7 +638,7 @@ class ReliefWebFile extends FieldItemBase {
 
     // Delete the preview derivatives to ensure they correspond to the updated
     // preview image.
-    image_path_flush($preview_file->getFileUri());
+    $this->deletePreviewDerivatives($preview_file->getFileUri());
 
     return $preview_file;
   }
@@ -678,8 +699,8 @@ class ReliefWebFile extends FieldItemBase {
    *   TRUE if the preview generation was successful.
    */
   public function regeneratePrevew() {
-    $page = $this->get('preview_page')->getValue();
-    $rotation = $this->get('preview_rotation')->getValue();
+    $page = $this->getPreviewPage();
+    $rotation = $this->getPreviewRotation();
     return $this->generatePreview($page, $rotation, TRUE);
   }
 
@@ -690,32 +711,44 @@ class ReliefWebFile extends FieldItemBase {
    *   TRUE if a preview can be generated.
    */
   public function canHavePreview() {
-    return $this->get('file_mime')->getValue() === 'application/pdf';
+    return $this->getFileMime() === 'application/pdf';
+  }
+
+  /**
+   * Delete the field item file.
+   *
+   * Note: this doesn't remove the remote file.
+   */
+  public function deleteFile() {
+    $file = $this->loadFile();
+    if (!empty($file)) {
+      $uri = $file->getFileUri();
+      $this->deleteFileOnDisk($uri);
+      $file->delete();
+    }
   }
 
   /**
    * Delete the preview file and its derivative images.
    */
-  protected function deletePreview() {
+  public function deletePreview() {
     $file = $this->loadPreviewFile();
     if (!empty($file)) {
       $uri = $file->getFileUri();
+      $this->deleteFileOnDisk($uri);
+      $this->deletePreviewDerivatives($uri);
       $file->delete();
-      image_path_flush($uri);
     }
   }
 
   /**
-   * Get the number of pages for this field item file.
+   * Delete the derivative images that might have been created for the preview.
    *
-   * @return int
-   *   Number of pages. Returns 0 if the number of pages is irrelevant.
+   * @param string $uri
+   *   Preview image URI.
    */
-  public function getPageCount() {
-    if ($this->canHavePreview()) {
-      return $this->get('page_count')->getValue() ?? 1;
-    }
-    return 0;
+  protected function deletePreviewDerivatives($uri) {
+    image_path_flush($uri);
   }
 
   /**
@@ -725,7 +758,7 @@ class ReliefWebFile extends FieldItemBase {
    *   File entity or NULL if it couldn't be loaded.
    */
   public function loadFile() {
-    return $this->loadFileByUuid($this->get('file_uuid')->getValue());
+    return $this->loadFileByUuid($this->getFileUuid());
   }
 
   /**
@@ -735,34 +768,50 @@ class ReliefWebFile extends FieldItemBase {
    *   File entity or NULL if it couldn't be loaded.
    */
   public function loadPreviewFile() {
-    return $this->loadFileByUuid($this->get('preview_uuid')->getValue());
+    return $this->loadFileByUuid($this->getPreviewUuid());
   }
 
   /**
    * Get the file URL.
    *
-   * @return \Drupal\Core\Url
-   *   URL object.
+   * @return \Drupal\Core\Url|null
+   *   URL object or NULL if we couldn't generate the URL or the current user
+   *   doesn't have access to it.
    */
-  public function getFileUrl($private = FALSE) {
-    $uuid = $this->get('uuid')->getValue();
-    $file_name = $this->get('file_name')->getValue();
-    $extension = static::getFileExtension($file_name);
-    $revision_id = $this->get('revision_id')->getValue();
+  public function getFileUrl() {
+    $file = $this->loadFile();
+    if (empty($file)) {
+      return NULL;
+    }
 
-    // If the revision ID is not set, then it's a new file and there should be
-    // an associated managed file and we return its URL.
-    if (empty($revision_id)) {
-      $url = file_create_url(static::getFileUriFromUuid($file_uuid, $extension));
+    $uri = $file->getFileUri();
+
+    // Retrieve the file URI scheme so we can generate the appropriate URL.
+    $scheme = StreamWrapperManager::getScheme($uri);
+    $private = $scheme === 'private';
+
+    if ($scheme === FALSE) {
+      return NULL;
     }
-    // Otherwise use a "direct" link to the file.
-    elseif ($private) {
-      $url = 'internal:/private/attachments/' . $uuid . '/' . $file_name;
+    // Only people with access to the private files can have a link to the file.
+    elseif ($private && !$this->getCurrentUser()->hasPermission('access reliefweb private files')) {
+      return NULL;
     }
-    else {
-      $url = 'internal:/attachments/' . $uuid . '/' . $file_name;
+    // New or replaced files have an empty revision id and there should be a
+    // file on disk for them.
+    elseif (empty($this->getRevisionId())) {
+      return Url::fromUri(file_create_url($uri));
     }
-    return !empty($url) ? Url::fromUri($url) : '';
+    // For existing files, they should be accessible via the permanent URL.
+    elseif ($uri === $this->getPermanentUri($private)) {
+      $url = 'internal:/';
+      $url .= $private ? 'private/' : '';
+      $url .= static::getFileDirectory() . '/';
+      $url .= $this->getUuid() . '/' . $this->getFileName();
+      return Url::fromUri($url);
+    }
+
+    return NULL;
   }
 
   /**
@@ -776,11 +825,9 @@ class ReliefWebFile extends FieldItemBase {
       return NULL;
     }
 
-    $uuid = $this->get('uuid')->getValue();
-
     // The preview is PNG image.
     $extension = 'png';
-    $file_name = $uuid . '.' . $extension;
+    $file_name = $this->getUuid() . '.' . $extension;
     $file_mime = 'image/' . $extension;
 
     // Generate a UUID for the preview. We'll store it in this field item only
@@ -806,17 +853,17 @@ class ReliefWebFile extends FieldItemBase {
       return NULL;
     }
 
-    $file_uuid = $this->get('file_uuid')->getValue();
-    $file_name = $this->get('file_name')->getValue();
-    $file_mime = $this->get('file_mime')->getValue();
+    $file_uuid = $this->getFileUuid();
+    $file_name = $this->getFileName();
+    $file_mime = $this->getFileMime();
 
     if (empty($file_uuid)) {
       $file_uuid = static::generateUuid();
-      $this->setValue('file_uuid', $file_uuid);
+      $this->get('file_uuid')->setValue($file_uuid);
     }
 
     // Generate the file uri.
-    $extension = static::getFileExtension($file_name);
+    $extension = static::extractFileExtension($file_name);
     $uri = static::getFileUriFromUuid($file_uuid, $extension, TRUE);
 
     // Create a temporary managed file with the System user.
@@ -833,8 +880,8 @@ class ReliefWebFile extends FieldItemBase {
    *   TRUE on success.
    */
   protected function updateFileFromRemote(File $file) {
-    $uuid = $this->get('uuid')->getValue();
-    $revision_id = $this->get('revision_id')->getValue();
+    $uuid = $this->getUuid();
+    $revision_id = $this->getRevisionId();
     $uri = $file->getFileUri();
 
     // Create the private temp directory to store the file.
@@ -852,7 +899,7 @@ class ReliefWebFile extends FieldItemBase {
       // Update the file entity and save it so that we don't have to
       // re-download the file to generate the preview. Its status being
       // temporary it will be garbage collected as some point by the system.
-      $file->setMimeType($this->getFileMimeType($uri));
+      $file->setMimeType(static::guessFileMimeType($uri));
       $file->setTemporary();
       $file->save();
     }
@@ -878,69 +925,37 @@ class ReliefWebFile extends FieldItemBase {
   /**
    * Get the permanent file URI for the field item.
    *
+   * @param bool $private
+   *   Whether to use the private URI or the public one.
    * @param bool $preview
    *   Whether the URI is for the preview file or the local file.
    *
    * @return string
    *   URI.
    */
-  public function getPermanentUri($preview = TRUE) {
-    $uuid = $this->get('uuid')->getValue();
-    $private = $this->get('private')->getValue();
-    $extension = self::getFileExtension($file->getFileName());
-    return static::getFileUriFromUuid($uuid, $extension, !empty($private), $preview);
+  public function getPermanentUri($private = FALSE, $preview = FALSE) {
+    $uuid = $this->getUuid();
+    $extension = $preview ? 'png' : $this->getFileExtension();
+    return static::getFileUriFromUuid($uuid, $extension, $private, $preview);
   }
 
   /**
-   * Get the entity repository service.
+   * Get the file directory from the module settings.
    *
-   * @return \Drupal\Core\Entity\EntityRepositoryInterface
-   *   The entity repository service.
-   */
-  protected function getEntityRepository() {
-    if (!isset($this->entityRepository)) {
-      $this->entityRepository = \Drupal::service('entity.repository');
-    }
-    return $this->entityRepository;
-  }
-
-  /**
-   * Get the entity type manager service.
+   * @param bool $preview
+   *   Whether the directory is for a preview or an attachment.
    *
-   * @return \Drupal\Core\Entity\EntityTypeManagerInterface
-   *   The entity type manager service.
+   * @return string
+   *   The directory.
    */
-  protected function getEntityTypeManager() {
-    if (!isset($this->entityTypeManager)) {
-      $this->entityTypeManager = \Drupal::service('entity_type.manager');
+  public static function getFileDirectory($preview = FALSE) {
+    $settings = \Drupal::service('config.factory')->get('reliefweb_docstore.settings');
+    if ($preview) {
+      return $settings->get('preview_directory') ?? 'previews';
     }
-    return $this->entityTypeManager;
-  }
-
-  /**
-   * Get the file system serice.
-   *
-   * @return \Drupal\Core\File\FileSystemInterface
-   *   The file system service.
-   */
-  protected function getFileSystem() {
-    if (!isset($this->fileSystem)) {
-      $this->fileSystem = \Drupal::service('file_system');
+    else {
+      return $settings->get('file_directory') ?? 'attachments';
     }
-    return $this->fileSystem;
-  }
-
-  /**
-   * Get the docstore client service.
-   *
-   * @return \Drupal\reliefweb_docstore\Services\DocstoreClient
-   *   The docstore client service.
-   */
-  protected function getDocstoreClient() {
-    if (!isset($this->docstoreClient)) {
-      $this->docstoreClient = \Drupal::service('reliefweb_docstore.client');
-    }
-    return $this->docstoreClient;
   }
 
   /**
@@ -957,15 +972,8 @@ class ReliefWebFile extends FieldItemBase {
    *   The directory URI.
    */
   public static function getFileDirectoryUriFromUuid($uuid, $private = TRUE, $preview = FALSE) {
-    $settings = \Drupal::service('config.factory')->get('reliefweb_docstore.settings');
-
     $directory = $private ? 'private://' : 'public://';
-    if ($preview) {
-      $directory .= $settings->get('preview_directory') ?? 'previews';
-    }
-    else {
-      $directory .= $settings->get('file_directory') ?? 'attachments';
-    }
+    $directory .= static::getFileDirectory($preview);
     $directory .= '/' . substr($uuid, 0, 2);
     $directory .= '/' . substr($uuid, 2, 2);
     return $directory;
@@ -1043,6 +1051,9 @@ class ReliefWebFile extends FieldItemBase {
    * @param string $destination
    *   Destination URI.
    *
+   * @return string
+   *   The destination URI.
+   *
    * @throws \Drupal\Core\File\Exception\FileException
    *   Exception if the file couldn't be moved.
    */
@@ -1054,35 +1065,11 @@ class ReliefWebFile extends FieldItemBase {
     }
 
     $file_system = \Drupal::service('file_system');
-    $file_system->move($source, $destination, $file_system::EXISTS_REPLACE);
+    return $file_system->move($source, $destination, $file_system::EXISTS_REPLACE);
   }
 
   /**
-   * Delete a managed file with the given UUID.
-   *
-   * @param string $uuid
-   *   File UUID.
-   * @param bool $preview
-   *   Whether the file is a preview or not.
-   */
-  public static function deleteFileFromUuid($uuid, $preview = FALSE) {
-    if (!empty($uuid)) {
-      $file = \Drupal::service('entity.repository')
-        ->loadEntityByUuid('file', $uuid);
-
-      if (!empty($file)) {
-        // Remove the derivative images.
-        if ($preview) {
-          image_path_flush($file->getFileUri());
-        }
-
-        $file->delete();
-      }
-    }
-  }
-
-  /**
-   * Get the extension of the file.
+   * Extract the extension of the file.
    *
    * @param string $file_name
    *   File name.
@@ -1090,7 +1077,10 @@ class ReliefWebFile extends FieldItemBase {
    * @return string
    *   File extension in lower case.
    */
-  public static function getFileExtension($file_name) {
+  public static function extractFileExtension($file_name) {
+    if (empty($file_name)) {
+      return '';
+    }
     return mb_strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
   }
 
@@ -1103,21 +1093,11 @@ class ReliefWebFile extends FieldItemBase {
    * @return string
    *   File mime type.
    */
-  public static function getFileMimeType($uri) {
+  public static function guessFileMimeType($uri) {
+    if (empty($uri)) {
+      return '';
+    }
     return \Drupal::service('file.mime_type.guesser')->guessMimeType($uri);
-  }
-
-  /**
-   * Check if a file URI is private.
-   *
-   * @param string $uri
-   *   File uri.
-   *
-   * @return bool
-   *   TRUE if the file uri is private.
-   */
-  public static function isFilePrivate($uri) {
-    return StreamWrapperManager::getScheme($uri) === 'private';
   }
 
   /**
@@ -1133,13 +1113,16 @@ class ReliefWebFile extends FieldItemBase {
   /**
    * Check if the file can have a preview.
    *
-   * @param \Drupal\file\Entity\File $file
+   * @param \Drupal\file\Entity\File|null $file
    *   Managed File.
    *
    * @return bool
    *   TRUE if the file preview can be generated.
    */
-  protected static function fileCanHavePreview(File $file) {
+  public static function fileCanHavePreview(?File $file) {
+    if (empty($file)) {
+      return FALSE;
+    }
     return $file->getMimeType() === 'application/pdf';
   }
 
@@ -1191,31 +1174,194 @@ class ReliefWebFile extends FieldItemBase {
    *   URI.
    */
   public static function getFileUuidUri(File $file, $private = TRUE) {
-    $extension = self::getFileExtension($file->getFileName());
+    $extension = static::extractFileExtension($file->getFileName());
     return static::getFileUriFromUuid($file->uuid(), $extension, $private);
+  }
+
+  /**
+   * Get the permanent UUID.
+   *
+   * @return string
+   *   Permanent UUID.
+   */
+  public function getUuid() {
+    return $this->get('uuid')->getValue();
+  }
+
+  /**
+   * Get the revision ID.
+   *
+   * @return int
+   *   Revision ID.
+   */
+  public function getRevisionId() {
+    return $this->get('revision_id')->getValue();
+  }
+
+  /**
+   * Get the file UUID.
+   *
+   * @return string
+   *   File UUID.
+   */
+  public function getFileUuid() {
+    return $this->get('file_uuid')->getValue();
+  }
+
+  /**
+   * Get the file name.
+   *
+   * @return string
+   *   File name.
+   */
+  public function getFileName() {
+    return $this->get('file_name')->getValue();
+  }
+
+  /**
+   * Get the file extension.
+   *
+   * @return string
+   *   File extension.
+   */
+  public function getFileExtension() {
+    return static::extractFileExtension($this->getFileName());
+  }
+
+  /**
+   * Get the file mime type.
+   *
+   * @return string
+   *   File mime type.
+   */
+  public function getFileMime() {
+    return $this->get('file_mime')->getValue();
+  }
+
+  /**
+   * Get the file size.
+   *
+   * @return int
+   *   File size in bytes.
+   */
+  public function getFileSize() {
+    return $this->get('file_size')->getValue();
+  }
+
+  /**
+   * Get the file language.
+   *
+   * @return string
+   *   File language.
+   */
+  public function getFileLanguage() {
+    return $this->get('language')->getValue();
+  }
+
+  /**
+   * Get the description.
+   *
+   * @return string
+   *   File description.
+   */
+  public function getFileDescription() {
+    return trim($this->get('description')->getValue() ?? '');
+  }
+
+  /**
+   * Get the preview file UUID.
+   *
+   * @return string
+   *   Preview file UUID.
+   */
+  public function getPreviewUuid() {
+    return $this->get('preview_uuid')->getValue();
+  }
+
+  /**
+   * Get the preview page.
+   *
+   * @return int
+   *   Preview page.
+   */
+  public function getPreviewPage() {
+    return $this->get('preview_page')->getValue();
+  }
+
+  /**
+   * Get the preview rotation.
+   *
+   * @return int
+   *   Preview rotation.
+   */
+  public function getPreviewRotation() {
+    return $this->get('preview_rotation')->getValue();
+  }
+
+  /**
+   * Get the number of pages for this field item file.
+   *
+   * @return int
+   *   Number of pages. Returns 0 if the number of pages is irrelevant.
+   */
+  public function getPageCount() {
+    if ($this->canHavePreview()) {
+      return $this->get('page_count')->getValue() ?? 1;
+    }
+    return 0;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function preSave() {
-    $original_item = $this->_original_item ?? NULL;
+  public function delete() {
+    // @todo check if this is called for each revision being deleted
+    // and delete file and preview.
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function deleteRevision() {
+    // @todo check if this is called for each revision being deleted
+    // and delete file and preview.
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function preSave(?ReliefWebFile $original_item = NULL) {
+    $update_file = empty($original_item) ||
+      $original_item->getFileUuid() !== $this->getFileUuid();
+
+    $update_preview = empty($original_item) ||
+      $original_item->getPreviewUuid() !== $this->getPreviewUuid();
 
     try {
-      if ($this->getSetting('local') === TRUE) {
-        if (isset($original_item)) {
-          $this->replaceLocalFile($this->_original_item);
+      if ($update_file) {
+        // Move the old file.
+        if (!empty($original_item)) {
+          $original_item->moveFileToUuidUri();
+        }
+
+        // Update the field item file.
+        if ($this->storeLocally()) {
+          $this->updateLocalFile();
         }
         else {
-          $this->createLocalFile();
+          $this->updateRemoteFile();
         }
       }
-      else {
-        $this->updateRemoteFile();
-      }
 
-      // Update the preview if any.
-      $this->updatePreviewFile($original_item);
+      if ($update_preview) {
+        // Delete the old preview.
+        if (!empty($original_item)) {
+          $original_item->deletePreview();
+        }
+
+        // Update the preview if any.
+        $this->updatePreviewFile();
+      }
     }
     // @todo log the error and see what to tell the user.
     catch (\Exception $exception) {
@@ -1231,73 +1377,34 @@ class ReliefWebFile extends FieldItemBase {
     if ($entity instanceof EntityPublishedInterface) {
       // Mark the file as public if the entity the file belongs to is published
       // make it private otherwise.
-      $item->updateFileStatus($entity->isPublished());
+      $this->updateFileStatus(!$entity->isPublished());
     }
+
+    // Mark the file revision as active for us.
+    if (!$this->storeLocally()) {
+      $this->getDocstoreClient()->selectFileRevision($this->getUuid(), $this->getRevisionId());
+    }
+
     return parent::postSave($updated);
-  }
-
-  /**
-   * Create a local file.
-   *
-   * @throws \Exception
-   *   Exception if the file couldn't be created.
-   */
-  protected function createLocalFile() {
-    $file = $this->loadFile();
-
-    // @todo better error message.
-    if (empty($file)) {
-      throw new \Exception('Unable to load the local file');
-    }
-
-    // Move the file to its the permanent URI (private initially).
-    $uri = $this->getPermanentUri();
-    static::moveFile($file->getFileUri(), $uri);
-
-    // Save the file as permanent.
-    $new_file->setFileUri($uri);
-    $new_file->setPermanent();
-    $new_file->save();
-
-    // Update the revision id with the file ID to distinguish from new items.
-    $this->setValue('revision_id', $file->id());
   }
 
   /**
    * Replace a local file.
    *
-   * @param \Drupal\reliefweb_docstore\Plugin\Field\FieldType\ReliefWebFile $old_item
-   *   The old field item.
-   *
    * @throws \Exception
    *   Exception if the file couldn't be replaced.
    */
-  protected function replaceLocalFile(ReliefWebFile $old_item) {
-    $new_file = $this->loadFile();
-    $old_file = $old_item->loadFile();
-
-    // @todo better error messages.
-    if (empty($new_file)) {
-      throw new \Exception('Unable to load the new file');
+  protected function updateLocalFile() {
+    // Move the new file to the permanent URI.
+    $file = $this->loadFile();
+    // @todo better error message.
+    if (empty($file)) {
+      throw new \Exception('Unable to load the new local file');
     }
-    if (empty($old_file)) {
-      throw new \Exception('Unable to load the old file');
-    }
+    $this->changeFileLocation($file, $this->getPermanentUri(TRUE, FALSE));
 
-    $new_uri = $old_file->getFileUri();
-    $old_uri = $old_item->getFileUuidUri($old_file);
-
-    // Move the old file to its new location based on its UUID.
-    static::moveFile($old_file->getFileUri(), $old_uri);
-    $old_file->setFileUri($old_uri);
-    $old_file->setPermanent();
-    $old_file->save();
-
-    // Move the new file to the permanent URI (old URI).
-    static::moveFile($new_file->getFileUri(), $new_uri);
-    $new_file->setFileUri($new_uri);
-    $new_file->setPermanent();
-    $new_file->save();
+    // Update the revision id with the file ID to distinguish from new items.
+    $this->get('revision_id')->setValue($file->id());
   }
 
   /**
@@ -1308,14 +1415,13 @@ class ReliefWebFile extends FieldItemBase {
    */
   protected function updateRemoteFile() {
     $file = $this->loadFile();
-
     // @todo better error message.
     if (empty($file)) {
       throw \Exception('Unable to load the local file.');
     }
 
     $client = $this->getDocstoreClient();
-    $uuid = $this->get('uuid')->getValue();
+    $uuid = $this->getUuid();
 
     // Check if the remote file exists.
     $result = $client->getFile($uuid);
@@ -1323,8 +1429,8 @@ class ReliefWebFile extends FieldItemBase {
       // Create the file resource in the docstore.
       $result = $client->createFile([
         'uuid' => $uuid,
-        'filename' => $this->get('file_name')->getValue(),
-        'mimetype' => $this->get('file_mime')->getValue(),
+        'filename' => $this->getFileName(),
+        'mimetype' => $this->getFileMime(),
         // Mark the new file as private initially. We'll change it that after
         // the entity the field is attached to is properly saved.
         'private' => TRUE,
@@ -1344,29 +1450,24 @@ class ReliefWebFile extends FieldItemBase {
     }
 
     // Store the new revision returned by the docstore.
-    $this->setValue('revision_id', $result['revision_id']);
+    $this->get('revision_id')->setValue($result['revision_id']);
 
     // Delete the local file.
-    $file->delete();
+    $this->deleteFileOnDisk($file->getFileUri());
+
+    // Change the URI of the field item file to ther permanent URI.
+    $this->changeFileLocation($file, $this->getPermanentUri(TRUE, FALSE));
   }
 
   /**
    * Update the preview file.
    *
-   * @param \Drupal\reliefweb_docstore\Plugin\Field\FieldType\ReliefWebFile|null $old_item
-   *   The old field item if any.
-   *
    * @throws \Exception
-   *   Exception if the file's content couldn't be updated.
+   *   Exception if the preview file couldn't be updated.
    */
-  protected function updatePreviewFile(?ReliefWebFile $old_item) {
-    // Delete the old preview if any.
-    if (isset($old_item)) {
-      $old_item->deletePreview();
-    }
-
+  protected function updatePreviewFile() {
     // If "no preview" was selected, delete the preview.
-    $preview_page = $this->get('preview_page')->getValue();
+    $preview_page = $this->getPreviewPage();
     if (empty($preview_page) || !$this->canHavePreview()) {
       $this->deletePreview();
     }
@@ -1378,68 +1479,194 @@ class ReliefWebFile extends FieldItemBase {
     }
 
     // Move the preview to its permanent location.
-    $uri = $this->getPermanentUri(TRUE);
-    $this->moveFile($file->getFileUri(), $uri);
-
-    // Mark the filed as permanent.
-    $file->setFileUri($uri);
-    $file->setPermanent();
-    $file->save();
+    $this->changeFileLocation($file, $this->getPermanentUri(TRUE, TRUE));
   }
 
   /**
    * Update the status of the file associated with this field item.
    *
-   * @param bool $published
-   *   TRUE if the file should be made public.
+   * @param bool $private
+   *   TRUE if the file should be made private.
    */
-  protected function updateFileStatus($published) {
-    // For local files, move to the private or public location if the status
-    // is different.
-    if ($this->getSetting('local') === TRUE) {
-      $file = $this->loadFile();
-      if (!empty($file)) {
-        $private = $this->isFilePrivate($file->getFileUri());
-        if ($private === $published) {
-          $this->swapFileLocation($file);
-        }
-      }
-    }
+  public function updateFileStatus($private) {
+    // Swap the file location from private to public or vice versa.
+    $this->swapFileLocation($this->loadFile(), $private);
+
     // For remote files, mark the file resource as private or public.
-    else {
-      $uuid = $this->get('uuid')->getValue();
-      $this->getDocstoreClient()->updateFileStatus($uuid, !$published);
+    if (!$this->storeLocally()) {
+      // @todo log any error.
+      $this->getDocstoreClient()->updateFileStatus($this->getUuid(), $private);
     }
 
     // Update the preview file as well.
-    $preview_file = $this->loadPreviewFile();
-    if (!empty($file)) {
-      $private = $this->isFilePrivate($preview_file->getFileUri());
-      if ($private === $published) {
-        $this->swapFileLocation($preview_file);
-      }
+    $this->swapFileLocation($this->loadPreviewFile(), $private);
+  }
+
+  /**
+   * Move the field item file to the file UUID uri.
+   *
+   * @throws \Exception
+   *   Exception if the file couldn't me moved.
+   */
+  protected function moveFileToUuidUri() {
+    $file = $this->loadFile();
+    // @todo better error message.
+    if (empty($file)) {
+      throw new \Exception('Unable to load old file');
     }
+    $this->changeFileLocation($file, $this->getFileUuidUri($file));
   }
 
   /**
    * Swap the location of a local file.
    *
-   * @param \Drupal\file\Entity\File $file
+   * @param \Drupal\file\Entity\File|null $file
    *   File entity.
+   * @param bool $private
+   *   Wether to make the file private or not.
    *
    * @throws \Drupal\Core\File\Exception\FileException
    *   Exception if the file couldn't be moved.
    *
    * @todo do something about the exception.
    */
-  protected function swapFileLocation(File $file) {
-    $uri = $file->getFileUri();
-    $scheme = StreamWrapperManager::getScheme($uri);
-    $target = StreamWrapperManager::getTarget($uri);
-    if ($scheme !== FALSE && $target !== FALSE) {
-      $scheme = $scheme === 'private' ? 'public' : 'private';
-      $this->moveFile($uri, $scheme . '://' . $target);
+  protected function swapFileLocation(?File $file, $private) {
+    if (empty($file)) {
+      return;
     }
+
+    $source = $file->getFileUri();
+    $target = StreamWrapperManager::getTarget($source);
+    if ($target === FALSE) {
+      return;
+    }
+
+    // Move the file if the URI has changed.
+    $destination = ($private ? 'private' : 'public') . '://' . $target;
+    if ($source !== $destination) {
+      $this->changeFileLocation($file, $destination);
+    }
+  }
+
+  /**
+   * Change the location of a file.
+   *
+   * Note: the file doesn't need to exists on disk.
+   *
+   * @param \Drupal\file\Entity\File|null $file
+   *   File entity.
+   * @param string $destination
+   *   The destination URI.
+   *
+   * @throws \Drupal\Core\File\Exception\FileException
+   *   Exception if the file couldn't be moved.
+   *
+   * @todo do something about the exception.
+   */
+  protected function changeFileLocation(?File $file, $destination) {
+    if (empty($file)) {
+      return;
+    }
+
+    $source = $file->getFileUri();
+    if ($source !== $destination && file_exists($source)) {
+      static::moveFile($source, $destination);
+    }
+
+    $file->setFileUri($destination);
+    $file->setPermanent();
+    $file->save();
+  }
+
+  /**
+   * Delete a file on disk.
+   *
+   * @param string $uri
+   *   URI of the file on disk.
+   *
+   * @return bool
+   *   TRUE if the file could be deleted.
+   */
+  protected function deleteFileOnDisk($uri) {
+    return $this->getFileSystem()->unlink($uri);
+  }
+
+  /**
+   * Get the current user.
+   *
+   * @return \Drupal\Core\Session\AccountProxyInterface
+   *   Current user.
+   */
+  protected function getCurrentUser() {
+    if (!isset($this->currentUser)) {
+      $this->currentUser = \Drupal::currentUser();
+    }
+    return $this->currentUser;
+  }
+
+  /**
+   * Get the docstore client service.
+   *
+   * @return \Drupal\reliefweb_docstore\Services\DocstoreClient
+   *   The docstore client service.
+   */
+  protected function getDocstoreClient() {
+    if (!isset($this->docstoreClient)) {
+      $this->docstoreClient = \Drupal::service('reliefweb_docstore.client');
+    }
+    return $this->docstoreClient;
+  }
+
+  /**
+   * Get the reliefweb docstore config.
+   *
+   * @return \Drupal\Core\Config\ImmutableConfig
+   *   Docstore config.
+   */
+  protected function getDocstoreConfig() {
+    if (!isset($this->docstoreConfig)) {
+      $this->docstoreConfig = \Drupal::config('reliefweb_docstore.settings');
+    }
+    return $this->docstoreConfig;
+  }
+
+  /**
+   * Get the entity repository service.
+   *
+   * @return \Drupal\Core\Entity\EntityRepositoryInterface
+   *   The entity repository service.
+   */
+  protected function getEntityRepository() {
+    if (!isset($this->entityRepository)) {
+      $this->entityRepository = \Drupal::service('entity.repository');
+    }
+    return $this->entityRepository;
+  }
+
+  /**
+   * Get the entity type manager service.
+   *
+   * @return \Drupal\Core\Entity\EntityTypeManagerInterface
+   *   The entity type manager service.
+   */
+  protected function getEntityTypeManager() {
+    if (!isset($this->entityTypeManager)) {
+      $this->entityTypeManager = \Drupal::service('entity_type.manager');
+    }
+    return $this->entityTypeManager;
+  }
+
+  /**
+   * Get the file system serice.
+   *
+   * @return \Drupal\Core\File\FileSystemInterface
+   *   The file system service.
+   */
+  protected function getFileSystem() {
+    if (!isset($this->fileSystem)) {
+      $this->fileSystem = \Drupal::service('file_system');
+    }
+    return $this->fileSystem;
   }
 
 }
