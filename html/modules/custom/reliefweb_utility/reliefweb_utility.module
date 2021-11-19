@@ -35,9 +35,14 @@ function reliefweb_utility_file_update(FileInterface $file) {
   $uuid = $file->uuid();
   $uri = $file->getFileUri();
 
+  // Let other modules decide if this should apply.
+  $apply = TRUE;
+  $clone = clone $file;
+  \Drupal::moduleHandler()->alter('reliefweb_utility_file_update', $clone, $apply);
+
   // Only process files with a valid uuid and uri and if not already processed
   // which can be determined by looking for the file uuid in its uri.
-  if (!empty($uuid) && !empty($uri) && preg_match('#/' . $uuid . '#', $uri) !== 1) {
+  if ($apply && !empty($uuid) && !empty($uri) && preg_match('#/' . $uuid . '#', $uri) !== 1) {
     $file_system = \Drupal::service('file_system');
     $logger = \Drupal::logger('reliefweb_utility');
 
