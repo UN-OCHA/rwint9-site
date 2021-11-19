@@ -1,0 +1,10 @@
+entity.guideline.add_form:
+  route_name: entity.guideline.add_page
+  title: 'Add Guideline'
+  appears_on:
+    - entity.guideline.collection
+entity.guideline_type.add_form:
+  route_name: entity.guideline_type.add_form
+  title: 'Add Guideline type'
+  appears_on:
+    - entity.guideline_type.collection

@@ -1,0 +1,17 @@
+
+# Guideline menu items definition
+entity.guideline.collection:
+  title: 'Guideline list'
+  route_name: entity.guideline.collection
+  description: 'List Guideline entities'
+  parent: system.admin_structure
+  weight: 100
+
+
+# Guideline type menu items definition
+entity.guideline_type.collection:
+  title: 'Guideline type'
+  route_name: entity.guideline_type.collection
+  description: 'List Guideline type (bundles)'
+  parent: system.admin_structure
+  weight: 99

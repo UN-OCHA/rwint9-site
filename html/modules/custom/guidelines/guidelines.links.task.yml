@@ -1,0 +1,22 @@
+# Guideline routing definition
+
+entity.guideline.canonical:
+  route_name: entity.guideline.canonical
+  base_route: entity.guideline.canonical
+  title: 'View'
+
+entity.guideline.edit_form:
+  route_name: entity.guideline.edit_form
+  base_route: entity.guideline.canonical
+  title: 'Edit'
+
+entity.guideline.version_history:
+  route_name: entity.guideline.version_history
+  base_route: entity.guideline.canonical
+  title: 'Revisions'
+
+entity.guideline.delete_form:
+  route_name:  entity.guideline.delete_form
+  base_route:  entity.guideline.canonical
+  title: Delete
+  weight: 10

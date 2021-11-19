@@ -13,13 +13,13 @@ module:
   datetime: 0
   datetime_range: 0
   dynamic_page_cache: 0
-  extended_field_description: 0
   field: 0
   field_ui: 0
   file: 0
   filter: 0
   geofield: 0
   google_tag: 0
+  guidelines: 0
   image: 0
   imageapi_optimize: 0
   imageapi_optimize_binaries: 0
