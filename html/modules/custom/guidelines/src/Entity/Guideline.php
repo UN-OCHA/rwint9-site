@@ -54,6 +54,7 @@ use Drupal\user\UserInterface;
  *     "uid" = "user_id",
  *     "langcode" = "langcode",
  *     "published" = "status",
+ *     "weight" = "weight",
  *   },
  *   revision_metadata_keys = {
  *     "revision_user" = "revision_user",

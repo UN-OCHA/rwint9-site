@@ -3,25 +3,37 @@
 namespace Drupal\guidelines;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Link;
+use Drupal\entity\DraggableListBuilder;
 
 /**
  * Defines a class to build a listing of Guideline entities.
  *
  * @ingroup guidelines
  */
-class GuidelineListBuilder extends EntityListBuilder {
+class GuidelineListBuilder extends DraggableListBuilder {
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $limit = FALSE;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFormId() {
+    return 'guidelines_list';
+  }
 
   /**
    * {@inheritdoc}
    */
   public function buildHeader() {
-    $header['id'] = $this->t('Guideline ID');
-    $header['name'] = $this->t('Name');
-    $header['weight'] = $this->t('Weight');
+    $header['label'] = $this->t('Name');
     $header['parent'] = $this->t('Parent(s)');
-    return $header + parent::buildHeader();
+    $header = $header + parent::buildHeader();
+
+    return $header;
   }
 
   /**
@@ -29,13 +41,11 @@ class GuidelineListBuilder extends EntityListBuilder {
    */
   public function buildRow(EntityInterface $entity) {
     /** @var \Drupal\guidelines\Entity\Guideline $entity */
-    $row['id'] = $entity->id();
-    $row['name'] = Link::createFromRoute(
+    $row['label'] = Link::createFromRoute(
       $entity->label(),
       'entity.guideline.canonical',
       ['guideline' => $entity->id()]
-    );
-    $row['weight'] = !empty($entity->getWeight()) ? $entity->getWeight() : '';
+    )->toString();
 
     $parents = [];
     $parent_entities = $entity->getParents();

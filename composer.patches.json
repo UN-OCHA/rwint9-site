@@ -2,7 +2,11 @@
     "patches": {
         "drupal/core" : {
             "https://www.drupal.org/project/drupal/issues/2570593": "patches/core--drupal--2570593-bundle-entity-class.patch",
-            "https://www.drupal.org/project/drupal/issues/3047110": "patches/core--drupal--3047110-taxonomy-term-moderation-class.patch"
+            "https://www.drupal.org/project/drupal/issues/3047110": "patches/core--drupal--3047110-taxonomy-term-moderation-class.patch",
+            "https://www.drupal.org/node/2989889": "https://www.drupal.org/files/issues/2021-06-29/2989889-17.patch"
+        },
+        "drupal/entity": {
+          "https://www.drupal.org/project/entity/issues/2990784": "https://www.drupal.org/files/issues/2020-02-26/2990784-11-draggable-list-builder.patch"
         }
     }
 }

@@ -58,6 +58,7 @@
         "drupal/core-composer-scaffold": "^9.2.4",
         "drupal/core-dev": "^9.2.4",
         "drupal/core-recommended": "^9.2.4",
+        "drupal/entity": "1.x-dev@dev",
         "drupal/geofield": "^1.22",
         "drupal/google_tag": "^1.4",
         "drupal/imageapi_optimize_binaries": "^1.0-alpha2",
