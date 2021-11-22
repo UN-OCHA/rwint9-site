@@ -193,6 +193,41 @@ class Guideline extends EditorialContentEntityBase implements GuidelineInterface
   /**
    * {@inheritdoc}
    */
+  public function getWeight() {
+    return $this->get('weight')->value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setWeight($weight) {
+    $this->set('weight', $weight);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getParents() {
+    $ids = [];
+    foreach ($this->get('parent')->referencedEntities() as $parent) {
+      $ids[] = $parent->id();
+    }
+
+    return $ids;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setParents($parent) {
+    $this->set('parent', $parent);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
     $fields = parent::baseFieldDefinitions($entity_type);
 
@@ -266,6 +301,17 @@ class Guideline extends EditorialContentEntityBase implements GuidelineInterface
       ->setReadOnly(TRUE)
       ->setRevisionable(TRUE)
       ->setTranslatable(TRUE);
+
+    $fields['weight'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Weight'))
+      ->setDescription(t('The weight of this guideline in relation to other guidelines.'))
+      ->setDefaultValue(0);
+
+    $fields['parent'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Guideline parents'))
+      ->setDescription(t('The parents of this term.'))
+      ->setSetting('target_type', 'guideline')
+      ->setCardinality(BaseFieldDefinition::CARDINALITY_UNLIMITED);
 
     return $fields;
   }
