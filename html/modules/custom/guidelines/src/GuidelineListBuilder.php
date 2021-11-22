@@ -19,6 +19,8 @@ class GuidelineListBuilder extends EntityListBuilder {
   public function buildHeader() {
     $header['id'] = $this->t('Guideline ID');
     $header['name'] = $this->t('Name');
+    $header['weight'] = $this->t('Weight');
+    $header['parent'] = $this->t('Parent(s)');
     return $header + parent::buildHeader();
   }
 
@@ -26,13 +28,31 @@ class GuidelineListBuilder extends EntityListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity) {
-    /* @var \Drupal\guidelines\Entity\Guideline $entity */
+    /** @var \Drupal\guidelines\Entity\Guideline $entity */
     $row['id'] = $entity->id();
     $row['name'] = Link::createFromRoute(
       $entity->label(),
-      'entity.guideline.edit_form',
+      'entity.guideline.canonical',
       ['guideline' => $entity->id()]
     );
+    $row['weight'] = !empty($entity->getWeight()) ? $entity->getWeight() : '';
+
+    $parents = [];
+    $parent_entities = $entity->getParents();
+    foreach ($parent_entities as $parent_entity) {
+      $parents[] = Link::createFromRoute(
+        $parent_entity->label(),
+        'entity.guideline.canonical',
+        ['guideline' => $parent_entity->id()]
+      )->toString();
+    }
+
+    $row['parent'] = [
+      'data' => [
+        '#markup' => implode(', ', $parents),
+      ],
+    ];
+
     return $row + parent::buildRow($entity);
   }
 

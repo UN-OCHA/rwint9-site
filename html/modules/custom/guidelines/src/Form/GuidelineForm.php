@@ -69,7 +69,7 @@ class GuidelineForm extends ContentEntityForm {
       '#type' => 'select',
       '#title' => $this->t('Parent guideline(s)'),
       '#options' => $guideline_options,
-      '#default_value' => $this->entity->getParents(),
+      '#default_value' => $this->entity->getParentIds(),
       '#multiple' => TRUE,
     ];
 

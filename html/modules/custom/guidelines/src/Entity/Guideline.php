@@ -209,6 +209,13 @@ class Guideline extends EditorialContentEntityBase implements GuidelineInterface
    * {@inheritdoc}
    */
   public function getParents() {
+    return $this->get('parent')->referencedEntities();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getParentIds() {
     $ids = [];
     foreach ($this->get('parent')->referencedEntities() as $parent) {
       $ids[] = $parent->id();
