@@ -3,15 +3,15 @@
 namespace Drupal\guidelines;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Link;
-use Drupal\entity\DraggableListBuilder;
 
 /**
  * Defines a class to build a listing of Guideline entities.
  *
  * @ingroup guidelines
  */
-class GuidelineListBuilder extends DraggableListBuilder {
+class GuidelineListBuilder extends EntityListBuilder {
 
   /**
    * {@inheritdoc}

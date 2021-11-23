@@ -95,4 +95,34 @@ interface GuidelineInterface extends ContentEntityInterface, RevisionLogInterfac
    */
   public function setRevisionUserId($uid);
 
+  /**
+   * Get weight.
+   */
+  public function getWeight();
+
+  /**
+   * Set weight.
+   */
+  public function setWeight($weight);
+
+  /**
+   * Get parents.
+   */
+  public function getParents();
+
+  /**
+   * Get parent Ids.
+   */
+  public function getParentIds();
+
+  /**
+   * Set parents.
+   */
+  public function setParents($parent);
+
+  /**
+   * Get children.
+   */
+  public function getChildren();
+
 }

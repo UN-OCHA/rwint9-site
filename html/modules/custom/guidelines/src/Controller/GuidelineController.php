@@ -92,7 +92,12 @@ class GuidelineController extends ControllerBase implements ContainerInjectionIn
     $langname = $guideline->language()->getName();
     $languages = $guideline->getTranslationLanguages();
     $has_translations = (count($languages) > 1);
-    $build['#title'] = $has_translations ? $this->t('@langname revisions for %title', ['@langname' => $langname, '%title' => $guideline->label()]) : $this->t('Revisions for %title', ['%title' => $guideline->label()]);
+    $build['#title'] = $has_translations ? $this->t('@langname revisions for %title', [
+      '@langname' => $langname,
+      '%title' => $guideline->label(),
+    ]) : $this->t('Revisions for %title', [
+      '%title' => $guideline->label(),
+    ]);
 
     $header = [$this->t('Revision'), $this->t('Operations')];
     $revert_permission = (($account->hasPermission("revert all guideline revisions") || $account->hasPermission('administer guideline entities')));
@@ -124,7 +129,7 @@ class GuidelineController extends ControllerBase implements ContainerInjectionIn
           ]));
         }
         else {
-          $link = $guideline->link($date);
+          $link = $guideline->toLink($date)->toString();
         }
 
         $row = [];

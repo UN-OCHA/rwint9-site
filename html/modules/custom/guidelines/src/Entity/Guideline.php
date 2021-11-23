@@ -32,6 +32,7 @@ use Drupal\user\UserInterface;
  *       "add" = "Drupal\guidelines\Form\GuidelineForm",
  *       "edit" = "Drupal\guidelines\Form\GuidelineForm",
  *       "delete" = "Drupal\guidelines\Form\GuidelineDeleteForm",
+ *       "sort" = "Drupal\guidelines\Form\GuidelineSortForm",
  *     },
  *     "route_provider" = {
  *       "html" = "Drupal\guidelines\GuidelineHtmlRouteProvider",
@@ -66,6 +67,7 @@ use Drupal\user\UserInterface;
  *     "add-page" = "/admin/structure/guideline/add",
  *     "add-form" = "/admin/structure/guideline/add/{guideline_type}",
  *     "edit-form" = "/admin/structure/guideline/{guideline}/edit",
+ *     "sort-form" = "/admin/structure/guideline/{guideline}/sort",
  *     "delete-form" = "/admin/structure/guideline/{guideline}/delete",
  *     "version-history" = "/admin/structure/guideline/{guideline}/revisions",
  *     "revision" = "/admin/structure/guideline/{guideline}/revisions/{guideline_revision}/view",
@@ -231,6 +233,22 @@ class Guideline extends EditorialContentEntityBase implements GuidelineInterface
   public function setParents($parent) {
     $this->set('parent', $parent);
     return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getChildren() {
+    $entity_type_repository = \Drupal::service('entity_type.repository');
+    $entity_type_manager = \Drupal::entityTypeManager();
+    $storage = $entity_type_manager->getStorage($entity_type_repository->getEntityTypeFromClass(static::class));
+
+    $query = $storage->getQuery();
+    $query->condition('parent', $this->id());
+    $query->sort('weight');
+
+    $result = $query->execute();
+    return $result ? $storage->loadMultiple($result) : [];
   }
 
   /**

@@ -21,6 +21,9 @@ view unpublished guideline entities:
 view all guideline revisions:
   title: 'View all Guideline revisions'
 
+sort all guideline:
+  title: 'Sort all guideline'
+
 revert all guideline revisions:
   title: 'Revert all Guideline revisions'
   description: 'Role requires permission <em>view Guideline revisions</em> and <em>edit rights</em> for guideline entities in question or <em>administer guideline entities</em>.'

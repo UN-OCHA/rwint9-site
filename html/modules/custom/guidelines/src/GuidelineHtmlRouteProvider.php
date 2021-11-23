@@ -46,7 +46,44 @@ class GuidelineHtmlRouteProvider extends AdminHtmlRouteProvider {
       $collection->add("$entity_type_id.settings", $settings_form_route);
     }
 
+    if ($sort_route = $this->getSortRoute($entity_type)) {
+      $collection->add("entity.{$entity_type_id}.sort", $sort_route);
+    }
+
     return $collection;
+  }
+
+  /**
+   * Gets the sort route.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
+   *   The entity type.
+   *
+   * @return \Symfony\Component\Routing\Route|null
+   *   The generated route, if available.
+   */
+  protected function getSortRoute(EntityTypeInterface $entity_type) {
+    if ($entity_type->hasLinkTemplate('sort-form')) {
+      $entity_type_id = $entity_type->id();
+      $route = new Route($entity_type->getLinkTemplate('sort-form'));
+      $route
+        ->setDefaults([
+          '_entity_form' => "{$entity_type_id}.sort",
+          '_title' => "Sort {$entity_type->getLabel()} children",
+        ])
+        ->setRequirement('_permission', 'sort guideline')
+        ->setOption('_admin_route', TRUE)
+        ->setRequirement('_entity_access', "{$entity_type_id}.update")
+        ->setOption('parameters', [
+          $entity_type_id => ['type' => 'entity:' . $entity_type_id],
+        ]);
+
+      if ($this->getEntityTypeIdKeyType($entity_type) === 'integer') {
+        $route->setRequirement($entity_type_id, '\d+');
+      }
+
+      return $route;
+    }
   }
 
   /**

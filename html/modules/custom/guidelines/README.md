@@ -3,5 +3,5 @@
 ## Todo
 
 - [ ] Add moderation
-- [ ] Add overview per guideline type
-- [ ] Add drag and drop, https://www.drupal.org/project/drupal/issues/2989889
+- [ ] Add tab for child pages
+- [x] Add drag and drop, https://www.drupal.org/project/drupal/issues/2989889
