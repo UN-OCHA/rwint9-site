@@ -272,7 +272,7 @@ class Guideline extends EditorialContentEntityBase implements GuidelineInterface
       ->setDescription(t('The name of the Guideline entity.'))
       ->setRevisionable(TRUE)
       ->setSettings([
-        'max_length' => 50,
+        'max_length' => 250,
         'text_processing' => 0,
       ])
       ->setDefaultValue('')

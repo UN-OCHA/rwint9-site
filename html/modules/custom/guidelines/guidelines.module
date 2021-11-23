@@ -117,3 +117,64 @@ function guidelines_attach_to_widget(&$element, FormStateInterface &$form_state,
     }
   }
 }
+
+function reliefweb_guidelines_migrate() {
+  $config = \Drupal::config('reliefweb_trello.settings');
+  $key = $config->get('key');
+  $token = $config->get('token');
+
+  $trello = new \Drupal\guidelines\GuidelinesFromTrello($key, $token, \Drupal::service('config.factory'), \Drupal::service('http_client'), \Drupal::service('logger.factory'));
+
+  $lists = $trello->getLists('554c519c9b98caa2495ea5db');
+  foreach ($lists as $weight_list => $list) {
+    // Create guideline.
+    $values = [
+      'type' => 'guideline_list',
+      'name' => $list['name'],
+      'parent' => [],
+      'weight' => $weight_list,
+      'field_title' => $list['name'],
+    ];
+
+    $guideline_list = Guideline::create($values);
+    $guideline_list->save();
+
+    // Get cards.
+    $cards = $trello->getCards($list['id']);
+    foreach ($cards as $weight_card => $card) {
+      // Create guideline, check labels.
+      $values = [
+        'type' => 'field_guideline',
+        'name' => $card['name'],
+        'parent' => [],
+        'weight' => $weight_card,
+        'field_title' => $card['name'],
+        'field_description' => [
+          'value' => $card['desc'],
+          'format' => 'guideline',
+        ],
+      ];
+
+      // Check labels.
+      foreach ($card['labels'] as $label) {
+        if (strpos($label['name'], 'form-') === 0) {
+          $field_name = substr($label['name'], 5);
+          $bundle = $guideline_list->label();
+        }
+      }
+
+      $guideline = Guideline::create($values);
+      $guideline->setParents([$guideline_list]);
+      $guideline->save();
+
+      // Get attachments.
+      if ($card['badges']['attachments'] > 0) {
+        $attachments = $trello->getCardAttachments($card['id']);
+        foreach($attachments as $attachment) {
+          dpm($attachment);
+        }
+      }
+    }
+  }
+
+}
