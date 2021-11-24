@@ -6,10 +6,12 @@ dependencies:
     - field.field.guideline.field_guideline.field_description
     - field.field.guideline.field_guideline.field_field
     - field.field.guideline.field_guideline.field_images
+    - field.field.guideline.field_guideline.field_links
     - field.field.guideline.field_guideline.field_short_link
     - field.field.guideline.field_guideline.field_title
     - guidelines.guideline_type.field_guideline
   module:
+    - link
     - text
 id: guideline.field_guideline.default
 targetEntityType: guideline
@@ -22,6 +24,18 @@ content:
     settings: {  }
     third_party_settings: {  }
     type: text_default
+    region: content
+  field_links:
+    weight: 1
+    label: above
+    settings:
+      trim_length: 80
+      url_only: false
+      url_plain: false
+      rel: ''
+      target: ''
+    third_party_settings: {  }
+    type: link
     region: content
 hidden:
   field_field: true
