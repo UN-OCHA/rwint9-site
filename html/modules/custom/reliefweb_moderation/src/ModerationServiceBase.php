@@ -16,6 +16,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
@@ -248,8 +249,15 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     }
 
     // Mark as published if the status is viewable by everybody.
+    // @todo check if the status is properly set by the content_moderation
+    // module in which case that may be unnecessary.
     if ($entity instanceof EntityPublishedInterface) {
-      $entity->setPublished($this->isViewableStatus($status));
+      if ($this->isViewableStatus($status, new AnonymousUserSession())) {
+        $entity->setPublished();
+      }
+      else {
+        $entity->setUnpublished();
+      }
     }
   }
 
