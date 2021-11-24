@@ -1,0 +1,261 @@
+<?php
+
+/**
+ * @file
+ * Contains integration for guidelines.
+ */
+
+use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\Render\Element;
+use Drupal\guidelines\Entity\Guideline;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\guidelines\Entity\GuidelineType;
+
+/**
+ * Implements hook_theme().
+ */
+function reliefweb_guidelines_theme() {
+  return [
+    'reliefweb_guidelines_list' => [
+      'variables' => [
+        'title' => t('ReliefWeb guidelines'),
+        'title_attributes' => NULL,
+        'guidelines' => [],
+      ],
+    ],
+    'reliefweb_guidelines_item' => [
+      'variables' => [
+        'id' => '',
+        'title' => '',
+        'description' => '',
+        'children' => [],
+      ],
+    ],
+  ];
+}
+
+/**
+ * Migrate datas from Trello.
+ */
+function reliefweb_guidelines_migrate_from_trello() {
+  $config = \Drupal::config('reliefweb_trello.settings');
+  $key = $config->get('key');
+  $token = $config->get('token');
+
+  $trello = new \Drupal\guidelines\GuidelinesFromTrello($key, $token, \Drupal::service('config.factory'), \Drupal::service('http_client'), \Drupal::service('logger.factory'));
+
+  $lists = $trello->getLists('554c519c9b98caa2495ea5db');
+  foreach ($lists as $weight_list => $list) {
+    // Create guideline.
+    $values = [
+      'type' => 'guideline_list',
+      'name' => $list['name'],
+      'parent' => [],
+      'weight' => $weight_list,
+      'field_title' => $list['name'],
+    ];
+
+    $guideline_list = Guideline::create($values);
+    $guideline_list->save();
+
+    // Get cards.
+    $cards = $trello->getCards($list['id']);
+    foreach ($cards as $weight_card => $card) {
+      // Extract and fetch images.
+      $files = guidelines_extract_images($card['desc']);
+
+      // Create guideline, check labels.
+      $values = [
+        'type' => 'field_guideline',
+        'name' => $card['name'],
+        'parent' => [],
+        'weight' => $weight_card,
+        'field_title' => $card['name'],
+        'field_short_link' => $card['shortLink'],
+        'field_description' => [
+          'value' => $card['desc'],
+          'format' => 'guideline',
+        ],
+      ];
+
+      // Add files.
+      if (!empty($files)) {
+        $values['field_images'] = $values['field_images'] ?? [];
+        foreach ($files as $file) {
+          $values['field_images'][] = [
+            'target_id' => $file->id(),
+          ];
+        }
+      }
+
+      // Check labels.
+      $list_name = $guideline_list->label();
+      if (strpos($list_name, 'Posting step-by-step') !== FALSE) {
+        foreach ($card['labels'] as $label) {
+          if (strpos($label['name'], 'form-') === 0) {
+            $bundle = strtolower(explode(' - ', $list_name)[0]);
+            $base_field_name = str_replace('-', '_', substr($label['name'], 5));
+
+            // Fix bundle machine names.
+            switch ($bundle) {
+              case 'jobs':
+                $bundle = 'job';
+                break;
+
+              case 'reports':
+                $bundle = 'report';
+                break;
+
+              case 'topics':
+                $bundle = 'topic';
+                break;
+
+            }
+
+            // Title is a base field, so no config.
+            if ($base_field_name === 'title') {
+              $key = 'node.' . $bundle . '.' . $base_field_name;
+              $values['field_field'] = $values['field_field'] ?? [];
+              $values['field_field'][] = [
+                'value' => $key,
+              ];
+            }
+            else {
+              $found = FALSE;
+              $field_names = guidelines_get_possible_field_names($bundle, $base_field_name);
+              foreach ($field_names as $field_name) {
+                if (FieldStorageConfig::loadByName('node', $field_name)) {
+                  $found = TRUE;
+                  $key = 'node.' . $bundle . '.' . $field_name;
+                  $values['field_field'] = $values['field_field'] ?? [];
+                  $values['field_field'][] = [
+                    'value' => $key,
+                  ];
+                }
+              }
+
+              // Log fields not found.
+              if (!$found) {
+                \Drupal::logger('guilines_trello')->notice($base_field_name . ' NOT FOUND');
+              }
+            }
+          }
+        }
+      }
+
+      // Get attachments.
+      if ($card['badges']['attachments'] > 0) {
+        $attachments = $trello->getCardAttachments($card['id']);
+        foreach($attachments as $attachment) {
+          // Add external links, skip images.
+          if (empty($attachment['isUpload'])) {
+            $values['field_links'] = $values['field_links'] ?? [];
+            $values['field_links'][] = [
+              'uri' => $attachment['url'],
+              'title' => $attachment['name'],
+            ];
+          }
+        }
+      }
+
+      $guideline = Guideline::create($values);
+      $guideline->setParents([$guideline_list]);
+      $guideline->save();
+    }
+  }
+}
+
+/**
+ * Get possible field names.
+ */
+function guidelines_get_possible_field_names($bundle, $field_name) {
+  $candidates = [
+    $field_name,
+    'field_' . $field_name,
+    'field_' . $bundle . '_' . $field_name,
+  ];
+
+  switch ($field_name) {
+    case 'job_description':
+      $candidates[] = 'body';
+      break;
+
+    case 'job_years_of_experience':
+      $candidates[] = 'field_job_experience';
+      break;
+
+    case 'location':
+    case 'job_location':
+      $candidates[] = 'field_country';
+      break;
+
+    case 'organization':
+      $candidates[] = 'field_source';
+      break;
+  }
+
+  return $candidates;
+}
+
+/**
+ * Extract and fetch images.
+ */
+function guidelines_extract_images(&$description) {
+  $files = [];
+  $pattern = '|(\!\[(.*?)\])(\((http.*?)\))|';
+  $description = preg_replace_callback($pattern, function($matches) use ($files) {
+    $matches[4] = guidelines_fetch_image($matches[4], $files);
+
+    // Remove non-existing images.
+    if (!$matches[4]) {
+      return '';
+    }
+
+    return $matches[1] . '(' . $matches[4] . ')';
+  }, $description);
+
+  return $files;
+}
+
+/**
+ * Fetch external image and
+ */
+function guidelines_fetch_image($url, &$files) {
+  $destination = 'public://guidelines/trello';
+  \Drupal::service('file_system')->prepareDirectory($destination, FileSystemInterface::CREATE_DIRECTORY);
+
+  try {
+    /** @var \Drupal\file\FileInterface $file */
+    $file = system_retrieve_file($url, $destination, TRUE, FileSystemInterface::EXISTS_REPLACE);
+    if (!$file) {
+      \Drupal::logger('guilines_trello')->error($url . ' not fetched');
+      return FALSE;
+    }
+  }
+  catch (\Exception $exception) {
+    \Drupal::logger('guilines_trello')->error($url . ' not accessible');
+    return FALSE;
+  }
+
+  // Add file to collection.
+  $files[] = $file;
+
+  // Return relative url.
+  return $file->createFileUrl();
+}
+
+/**
+ * Delete all guidelines.
+ */
+function _reliefweb_guidelines_delete_all() {
+  $guidelines = Guideline::loadMultiple();
+  foreach ($guidelines as $guideline) {
+    $guideline->delete();
+  }
+
+  $guideline_types = GuidelineType::loadMultiple();
+  foreach ($guideline_types as $guideline_type) {
+    $guideline_type->delete();
+  }
+
+}
