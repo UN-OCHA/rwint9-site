@@ -8,6 +8,7 @@
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\ContentEntityForm;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\guidelines\Entity\Guideline;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\guidelines\Entity\GuidelineType;
@@ -145,6 +146,9 @@ function reliefweb_guidelines_migrate() {
     // Get cards.
     $cards = $trello->getCards($list['id']);
     foreach ($cards as $weight_card => $card) {
+      // Extract and fetch images.
+      $files = guidelines_extract_images($card['desc']);
+
       // Create guideline, check labels.
       $values = [
         'type' => 'field_guideline',
@@ -154,11 +158,20 @@ function reliefweb_guidelines_migrate() {
         'field_title' => $card['name'],
         'field_short_link' => $card['shortLink'],
         'field_description' => [
-          // @todo extract images.
           'value' => $card['desc'],
           'format' => 'guideline',
         ],
       ];
+
+      // Add files.
+      if (!empty($files)) {
+        $values['field_images'] = $values['field_images'] ?? [];
+        foreach ($files as $file) {
+          $values['field_images'][] = [
+            'target_id' => $file->id(),
+          ];
+        }
+      }
 
       // Check labels.
       $list_name = $guideline_list->label();
@@ -267,6 +280,53 @@ function guidelines_get_possible_field_names($bundle, $field_name) {
   }
 
   return $candidates;
+}
+
+/**
+ * Extract and fetch images.
+ */
+function guidelines_extract_images(&$description) {
+  $files = [];
+  $pattern = '|(\!\[(.*?)\])(\((http.*?)\))|';
+  $description = preg_replace_callback($pattern, function($matches) use ($files) {
+    $matches[4] = guidelines_fetch_image($matches[4], $files);
+
+    // Remove non-existing images.
+    if (!$matches[4]) {
+      return '';
+    }
+
+    return $matches[1] . '(' . $matches[4] . ')';
+  }, $description);
+
+  return $files;
+}
+
+/**
+ * Fetch external image and
+ */
+function guidelines_fetch_image($url, &$files) {
+  $destination = 'public://guidelines/trello';
+  \Drupal::service('file_system')->prepareDirectory($destination, FileSystemInterface::CREATE_DIRECTORY);
+
+  try {
+    /** @var \Drupal\file\FileInterface $file */
+    $file = system_retrieve_file($url, $destination, TRUE, FileSystemInterface::EXISTS_REPLACE);
+    if (!$file) {
+      \Drupal::logger('guilines_trello')->error($url . ' not fetched');
+      return FALSE;
+    }
+  }
+  catch (\Exception $exception) {
+    \Drupal::logger('guilines_trello')->error($url . ' not accessible');
+    return FALSE;
+  }
+
+  // Add file to collection.
+  $files[] = $file;
+
+  // Return relative url.
+  return $file->createFileUrl();
 }
 
 /**
