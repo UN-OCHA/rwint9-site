@@ -379,6 +379,7 @@ class ReliefWebFile extends FieldItemBase {
           'length' => 36,
           'not null' => TRUE,
         ],
+        // @todo change to int(10) unsigned.
         'revision_id' => [
           'type' => 'int',
           'size' => 'medium',
@@ -591,9 +592,13 @@ class ReliefWebFile extends FieldItemBase {
     $current_page = $this->getPreviewPage();
     $current_rotation = $this->getPreviewRotation();
 
-    // Skip if the preview already exists for the given page and rotation.
+    // Skip if the preview already exists for the given page and rotation and
+    // the preview file exists.
     if (!$regenerate && !empty($preview_uuid) && $page == $current_page && $rotation == $current_rotation) {
-      return $this->loadPreviewFile();
+      $preview_file = $this->loadPreviewFile();
+      if (!empty($preview_file)) {
+        return $preview_file;
+      }
     }
 
     // Load or create a file associated with the field item.
@@ -1315,16 +1320,60 @@ class ReliefWebFile extends FieldItemBase {
    * {@inheritdoc}
    */
   public function delete() {
-    // @todo check if this is called for each revision being deleted
-    // and delete file and preview.
+    $uuid = $this->getUuid();
+
+    // Move the files to their private location so that they are not accessible
+    // anymore.
+    $this->updateFileStatus(TRUE);
+
+    // Try to delete the remote file. If it's used by another provider, then
+    // the request will fail.
+    if (!$this->storeLocally() && !empty($uuid)) {
+      $this->getDocstoreClient()->deleteFile($uuid);
+    }
+
+    // Delete the file and preview.
+    $this->deleteFile();
+    $this->deletePreview();
   }
 
   /**
    * {@inheritdoc}
    */
   public function deleteRevision() {
-    // @todo check if this is called for each revision being deleted
-    // and delete file and preview.
+    $uuid = $this->getUuid();
+    $revision_id = $this->getRevisionId();
+
+    // Try to delete the remote revision. If it's used by another provider, then
+    // the request will fail.
+    if (!$this->storeLocally() && !empty($uuid) && !empty($revision_id)) {
+      $this->getDocstoreClient()->deleteFileRevision($uuid, $revision_id);
+    }
+
+    // Delete the file and preview.
+    $this->deleteFile();
+    $this->deletePreview();
+  }
+
+  /**
+   * Update the file and preview of the item that is going to be removed.
+   */
+  public function updateRemovedItem() {
+    try {
+      // Move the field item file to its UUID URI so that it's not possible to
+      // directly access the filesanymore with the permanent URI.
+      $this->moveFileToUuidUri();
+      // Delete the preview and its derivatives as they should not be accessible
+      // anymore either.
+      $this->deletePreview();
+      // Update the file status to private to restrict further access to the
+      // file.
+      $this->updateFileStatus(TRUE);
+    }
+    // @todo log the error and see what to tell the user.
+    catch (\Exception $exception) {
+      throw $exception;
+    }
   }
 
   /**
@@ -1335,7 +1384,8 @@ class ReliefWebFile extends FieldItemBase {
       $original_item->getFileUuid() !== $this->getFileUuid();
 
     $update_preview = empty($original_item) ||
-      $original_item->getPreviewUuid() !== $this->getPreviewUuid();
+      $original_item->getPreviewUuid() !== $this->getPreviewUuid() ||
+      $original_item->getRevisionId() !== $this->getRevisionId();
 
     try {
       if ($update_file) {
@@ -1354,13 +1404,24 @@ class ReliefWebFile extends FieldItemBase {
       }
 
       if ($update_preview) {
-        // Delete the old preview.
+        // Delete the old preview. We don't need to keep the it. It
+        // we be recreated when reverting if that ever happens.
         if (!empty($original_item)) {
+          // @todo instead of deleting the old preview completely, swap the
+          // preview files and regenerate the derivatives?
           $original_item->deletePreview();
         }
 
         // Update the preview if any.
         $this->updatePreviewFile();
+      }
+
+      // Ensure there is no local file left if we are storing remotely.
+      if (!$this->storeLocally()) {
+        $file = $this->loadFile();
+        if (!empty($file)) {
+          $this->deleteFileOnDisk($file->getFileUri());
+        }
       }
     }
     // @todo log the error and see what to tell the user.
@@ -1423,39 +1484,54 @@ class ReliefWebFile extends FieldItemBase {
     $client = $this->getDocstoreClient();
     $uuid = $this->getUuid();
 
-    // Check if the remote file exists.
-    $result = $client->getFile($uuid);
-    if (empty($result)) {
-      // Create the file resource in the docstore.
-      $result = $client->createFile([
-        'uuid' => $uuid,
-        'filename' => $this->getFileName(),
-        'mimetype' => $this->getFileMime(),
-        // Mark the new file as private initially. We'll change it that after
-        // the entity the field is attached to is properly saved.
-        'private' => TRUE,
-      ]);
+    // Check if there is already a file with the revision ID in the docstore.
+    // If that's the case, then we don't have anything special to do.
+    $revision_id = $this->getRevisionId();
+    if (!empty($revision_id)) {
+      $result = $client->getFileRevision($uuid, $revision_id);
 
+      // We cannot revert if the file doesn't exist in the docstore anymore.
       if (empty($result)) {
-        throw \Exception('Unable to create remote file resource');
+        throw \Exception('The remote file revision doesn\'t exist anymore.');
       }
     }
+    // Check if the remote file exists and create one if it doesn't then
+    // update its content.
+    else {
+      // Check if the remote file exists.
+      $result = $client->getFile($uuid);
+      if (empty($result)) {
+        // Create the file resource in the docstore.
+        $result = $client->createFile([
+          'uuid' => $uuid,
+          'filename' => $this->getFileName(),
+          'mimetype' => $this->getFileMime(),
+          // Mark the new file as private initially. We'll change it that after
+          // the entity the field is attached to is properly saved.
+          'private' => TRUE,
+        ]);
 
-    // Upload the file content.
-    $result = $client->updateFileContentFromFilePath($uuid, $file->getFileUri());
+        if (empty($result)) {
+          throw \Exception('Unable to create remote file resource');
+        }
+      }
 
-    // @todo better error message.
-    if (!isset($result['revision_id'])) {
-      throw new \Exception('Unable to update remote file content');
+      // Upload the file content.
+      $result = $client->updateFileContentFromFilePath($uuid, $file->getFileUri());
+
+      // @todo better error message.
+      if (!isset($result['revision_id'])) {
+        throw new \Exception('Unable to update remote file content');
+      }
+
+      // Store the new revision returned by the docstore.
+      $this->get('revision_id')->setValue($result['revision_id']);
     }
 
-    // Store the new revision returned by the docstore.
-    $this->get('revision_id')->setValue($result['revision_id']);
-
-    // Delete the local file.
+    // Delete the local file if any.
     $this->deleteFileOnDisk($file->getFileUri());
 
-    // Change the URI of the field item file to ther permanent URI.
+    // Change the URI of the field item file to its permanent URI.
     $this->changeFileLocation($file, $this->getPermanentUri(TRUE, FALSE));
   }
 
@@ -1503,16 +1579,19 @@ class ReliefWebFile extends FieldItemBase {
   }
 
   /**
-   * Move the field item file to the file UUID uri.
+   * Move the field item or preview file to the file UUID uri.
+   *
+   * @param bool $preview
+   *   Whether to move the field item file or the preview file.
    *
    * @throws \Exception
    *   Exception if the file couldn't me moved.
    */
-  protected function moveFileToUuidUri() {
-    $file = $this->loadFile();
+  protected function moveFileToUuidUri($preview = FALSE) {
+    $file = $preview ? $this->loadPreviewFile() : $this->loadFile();
     // @todo better error message.
     if (empty($file)) {
-      throw new \Exception('Unable to load old file');
+      throw new \Exception('Unable to load file to move to UUID URI');
     }
     $this->changeFileLocation($file, $this->getFileUuidUri($file));
   }
@@ -1588,7 +1667,10 @@ class ReliefWebFile extends FieldItemBase {
    *   TRUE if the file could be deleted.
    */
   protected function deleteFileOnDisk($uri) {
-    return $this->getFileSystem()->unlink($uri);
+    if (!empty($uri) && file_exists($uri)) {
+      return $this->getFileSystem()->unlink($uri);
+    }
+    return FALSE;
   }
 
   /**
