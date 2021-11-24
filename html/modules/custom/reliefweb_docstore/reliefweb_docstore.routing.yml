@@ -3,8 +3,12 @@ reliefweb_docstore.attachment.public:
   defaults:
     _controller: '\Drupal\reliefweb_docstore\Controller\FileDownloadController::downloadPublicAttachment'
     _title: 'Download a public attachment'
+  requirements:
+    _permission: 'access content'
 reliefweb_docstore.attachment.private:
   path: '/private/attachments/{uuid}/{filename}'
   defaults:
     _controller: '\Drupal\reliefweb_docstore\Controller\FileDownloadController::downloadPrivateAttachment'
     _title: 'Download a private attachment'
+  requirements:
+    _permission: 'access content'
