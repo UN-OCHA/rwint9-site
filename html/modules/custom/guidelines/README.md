@@ -6,7 +6,7 @@
 - [x] Add tab for child pages
 - [x] Add drag and drop, https://www.drupal.org/project/drupal/issues/2989889
 - [ ] Extract images from description
-- [ ] Add attachment links
+- [x] Add attachment links
 
 ## Fields left to map
 
@@ -15,13 +15,13 @@
 - [ ] disasters
 - [ ] new_comment
 - [ ] information
-- [ ] job_location
-- [ ] organization
+- [x] job_location
+- [x] organization
 - [ ] new_comment
 - [ ] information
 - [ ] dates
 - [ ] event_url
-- [ ] organization
+- [x] organization
 - [ ] advertisement_language
 - [ ] course_event_language
 - [ ] training_description

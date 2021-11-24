@@ -215,17 +215,24 @@ function reliefweb_guidelines_migrate() {
         }
       }
 
-      $guideline = Guideline::create($values);
-      $guideline->setParents([$guideline_list]);
-      $guideline->save();
-
       // Get attachments.
       if ($card['badges']['attachments'] > 0) {
         $attachments = $trello->getCardAttachments($card['id']);
         foreach($attachments as $attachment) {
-          // @todo Add external links, skip images.
+          // Add external links, skip images.
+          if (empty($attachment['isUpload'])) {
+            $values['field_links'] = $values['field_links'] ?? [];
+            $values['field_links'][] = [
+              'uri' => $attachment['url'],
+              'title' => $attachment['name'],
+            ];
+          }
         }
       }
+
+      $guideline = Guideline::create($values);
+      $guideline->setParents([$guideline_list]);
+      $guideline->save();
     }
   }
 }
@@ -250,9 +257,13 @@ function guidelines_get_possible_field_names($bundle, $field_name) {
       break;
 
     case 'location':
+    case 'job_location':
       $candidates[] = 'field_country';
       break;
 
+    case 'organization':
+      $candidates[] = 'field_source';
+      break;
   }
 
   return $candidates;
