@@ -2,13 +2,16 @@
 
 namespace Drupal\reliefweb_docstore\Controller;
 
+use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
+use Drupal\reliefweb_docstore\Plugin\Field\FieldType\ReliefWebFile;
 use Drupal\reliefweb_docstore\Services\DocstoreClient;
 use Drupal\system\FileDownloadController as OriginalFileDownloadController;
+use GuzzleHttp\Psr7\StreamWrapper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -205,24 +208,16 @@ class FileDownloadController extends OriginalFileDownloadController {
    */
   protected function downloadAttachment($uuid, $filename, $private = FALSE) {
     try {
-      // Try to download the public file matching the given UUID.
-      $response = $this->downloadLocalFile($uuid, $filename);
-      if (empty($response)) {
-        $response = $this->downloadRemoteFile($uuid, $filename);
+      // No need to try to fetch the file if the user doesn't have access.
+      if ($private && !$this->currentUser->hasPermission('access reliefweb private files')) {
+        throw new AccessDeniedHttpException();
       }
 
-      // Try to download the private file matching the given UUID.
-      if (empty($response) && $private) {
-        // No need to try to fetch the files if the user doesn't have access.
-        if (!$this->currentUser->hasPermission('access reliefweb private files')) {
-          throw new AccessDeniedHttpException();
-        }
-        if (empty($response)) {
-          $response = $this->downloadLocalFile($uuid, $filename, TRUE);
-        }
-        if (empty($response)) {
-          $response = $this->downloadRemoteFile($uuid, $filename, TRUE);
-        }
+      // Try to download the local file matching the given UUID.
+      $response = $this->downloadLocalFile($uuid, $filename, $private);
+      // Try to download the remote file matching the given UUID.
+      if (empty($response)) {
+        $response = $this->downloadRemoteFile($uuid, $filename);
       }
 
       // If the file was found, send its content.
@@ -249,6 +244,8 @@ class FileDownloadController extends OriginalFileDownloadController {
    *   File resource UUID.
    * @param string $filename
    *   File name.
+   * @param bool $private
+   *   TRUE if the file is private.
    *
    * @return \Symfony\Component\HttpFoundation\BinaryFileResponse|null
    *   Response to download the file or NULL if the file was not found. We
@@ -257,10 +254,15 @@ class FileDownloadController extends OriginalFileDownloadController {
    *
    * @see ::downloadAttachment()
    */
-  protected function downloadLocalFile($uuid, $filename) {
+  protected function downloadLocalFile($uuid, $filename, $private = FALSE) {
     $extension = ReliefWebFile::extractFileExtension($filename);
     $uri = ReliefWebFile::getFileUriFromUuid($uuid, $extension, $private);
-    $headers = ['Cache-Control' => 'private, must-revalidate'];
+
+    // Ensure the latest version of the attachment is always returned.
+    $headers = [
+      'Cache-Control' => 'private, must-revalidate',
+      'Content-Disposition' => 'attachment; filename="' . Unicode::mimeHeaderEncode($filename) . '"',
+    ];
 
     if (file_exists($uri)) {
       return new BinaryFileResponse($uri, 200, $headers, $private, 'attachment', TRUE);
@@ -287,7 +289,20 @@ class FileDownloadController extends OriginalFileDownloadController {
    *   Exception if something was wrong with the request.
    */
   protected function downloadRemoteFile($uuid, $filename) {
-    $response = $this->docstoreClient->request('GET', '/files/' . $uuid . '/' . $filename, [
+    $client = $this->docstoreClient;
+    $extension = ReliefWebFile::extractFileExtension($filename);
+
+    // Ensure the latest version of the attachment is always returned.
+    $headers = [
+      'Cache-Control' => 'private, must-revalidate',
+      'Content-Disposition' => 'attachment; filename="' . Unicode::mimeHeaderEncode($filename) . '"',
+    ];
+
+    // Download the remote file.
+    // We're not using the filename to have better compatibility and handle
+    // files with encoded space characters for example. The docstore doesn't
+    // care about the filename and we send a header with the proper filename.
+    $response = $client->request('GET', '/files/' . $uuid . '/' . $uuid . '.' . $extension, [
       'stream' => TRUE,
     ], 1200);
 
@@ -298,8 +313,12 @@ class FileDownloadController extends OriginalFileDownloadController {
     }
 
     // Stream the response content.
-    if ($response->isSuccessful()) {
-      return new StreamedResponse([$response->getBody(), 'getContents'], 200, $response->getHeaders());
+    if ($client->isResponseSuccessful($response)) {
+      return new StreamedResponse(function () use ($response) {
+        $input = StreamWrapper::getResource($response->getBody());
+        $output = fopen('php://output', 'wb');
+        stream_copy_to_stream($input, $output);
+      }, 200, $headers + $response->getHeaders());
     }
     // If the response was not successful nor a 404, throw an exception with the
     // status code and reason so we can log it.
