@@ -208,3 +208,27 @@
   padding-top: 0;
   border-top: none;
 }
+
+/* User posts type column */
+.rw-moderation-list--user-posts .rw-moderation-table tr td:nth-child(2) {
+  width: auto;
+  word-break: unset;
+}
+/* User posts posted and deadline date columns */
+.rw-moderation-list--user-posts .rw-moderation-table .rw-moderation-table__cell__date,
+.rw-moderation-list--user-posts .rw-moderation-table tr td:last-child {
+  text-align: center;
+  white-space: unset;
+  font-size: 15px;
+}
+/* Prevent the Sortable icon from break to a new line */
+.rw-moderation-list--user-posts .rw-moderation-table .rw-moderation-table__header--date {
+  white-space: nowrap;
+}
+
+@media screen and (min-width: 768px) {
+  .rw-moderation-list--user-posts .rw-moderation-table .rw-moderation-table__cell__date,
+  .rw-moderation-list--user-posts .rw-moderation-table tr td:last-child {
+    white-space: nowrap;
+  }
+}
