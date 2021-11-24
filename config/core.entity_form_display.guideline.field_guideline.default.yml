@@ -6,6 +6,7 @@ dependencies:
     - field.field.guideline.field_guideline.field_description
     - field.field.guideline.field_guideline.field_field
     - field.field.guideline.field_guideline.field_images
+    - field.field.guideline.field_guideline.field_short_link
     - field.field.guideline.field_guideline.field_title
     - guidelines.guideline_type.field_guideline
     - image.style.thumbnail
@@ -48,6 +49,14 @@ content:
       preview_image_style: thumbnail
     third_party_settings: {  }
     type: image_image
+    region: content
+  field_short_link:
+    weight: 26
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: string_textfield
     region: content
   field_title:
     weight: 2
