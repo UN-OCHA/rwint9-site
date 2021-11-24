@@ -1,5 +1,7 @@
 # The URL of the OCHA docstore.
 docstore_url: ''
+# The UUID of the provider in the OCHA docstore.
+provider_uuid: ''
 # The API key for the OCHA docstore provider.
 api_key: ''
 # The prefix used when creating new content (ex: reliefweb_reports).

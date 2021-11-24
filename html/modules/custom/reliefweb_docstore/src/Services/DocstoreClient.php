@@ -6,6 +6,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Utils;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * ReliefWeb API client service class.
@@ -66,6 +67,25 @@ class DocstoreClient {
    */
   public function getFile($uuid, $timeout = 5) {
     $response = $this->request('GET', '/api/v1/files/' . $uuid, [], $timeout);
+
+    return $this->decodeResponseBody($response);
+  }
+
+  /**
+   * Get a revision of a file resource in the docstore.
+   *
+   * @param string $uuid
+   *   The file resource UUID.
+   * @param int $revision_id
+   *   The ID of the file revision.
+   * @param int $timeout
+   *   Request timeout.
+   *
+   * @return array|null
+   *   The data from the API response or NULL in case of error.
+   */
+  public function getFileRevision($uuid, $revision_id, $timeout = 5) {
+    $response = $this->request('GET', '/api/v1/files/' . $uuid . '/revisions/' . $revision_id, [], $timeout);
 
     return $this->decodeResponseBody($response);
   }
@@ -162,7 +182,7 @@ class DocstoreClient {
       'sink' => $resource,
     ], $timeout);
 
-    return !empty($response) && $response->isSuccessful();
+    return $this->isResponseSuccessful($response);
   }
 
   /**
@@ -189,24 +209,62 @@ class DocstoreClient {
   }
 
   /**
-   * Select the file version to make active for us.
+   * Select the file revision to make active for us.
    *
    * @param string $uuid
    *   The file resource UUID.
    * @param int $revision_id
    *   The file revision id.
+   * @param int $timeout
+   *   Request timeout.
    *
    * @return bool
    *   TRUE on success.
    */
-  public function selectFileVersion($uuid, $revision_id) {
+  public function selectFileRevision($uuid, $revision_id, $timeout = 5) {
     $response = $this->request('PUT', '/api/v1/files/' . $uuid . '/select', [
       'json' => [
         'target' => $revision_id,
       ],
     ], $timeout);
 
-    return !empty($response) && $resposne->isSuccessful();
+    return $this->isResponseSuccessful($response);
+  }
+
+  /**
+   * Delete a file.
+   *
+   * @param string $uuid
+   *   The file resource UUID.
+   * @param int $timeout
+   *   Request timeout.
+   *
+   * @return bool
+   *   TRUE on success.
+   */
+  public function deleteFile($uuid, $timeout = 30) {
+    $response = $this->request('DELETE', '/api/v1/files/' . $uuid, [], $timeout);
+
+    return $this->isResponseSuccessful($response);
+  }
+
+  /**
+   * Delete a file revision.
+   *
+   * @param string $uuid
+   *   The file resource UUID.
+   * @param int $revision_id
+   *   The file revision id.
+   * @param int $timeout
+   *   Request timeout.
+   *
+   * @return bool
+   *   TRUE on success.
+   */
+  public function deleteFileRevision($uuid, $revision_id, $timeout = 10) {
+    $response = $this->request('DELETE', '/api/v1/files/' . $uuid . '/revisions/' . $revision_id, [], $timeout);
+
+    return $this->isResponseSuccessful($response);
   }
 
   /**
@@ -226,7 +284,7 @@ class DocstoreClient {
    */
   public function request($method, $endpoint, array $options, $timeout = 5) {
     try {
-      $url = $this->createDocstoreUrl($entpoint);
+      $url = $this->createDocstoreUrl($endpoint);
 
       $headers = $this->getHeaders();
       if (isset($options['headers'])) {
@@ -271,6 +329,23 @@ class DocstoreClient {
   }
 
   /**
+   * Check if a response is sucessful.
+   *
+   * @param \Psr\Http\Message\ResponseInterface|null $response
+   *   The request's response.
+   *
+   * @return bool
+   *   TRUE if the response is successful.
+   */
+  public function isResponseSuccessful(?ResponseInterface $response) {
+    if ($response !== NULL) {
+      $code = $response->getStatusCode();
+      return $code >= 200 && $code < 300;
+    }
+    return FALSE;
+  }
+
+  /**
    * Create a URL to the docstore for the given endpoint.
    *
    * @param string $endpoint
@@ -299,6 +374,7 @@ class DocstoreClient {
   protected function getHeaders() {
     return [
       'API-KEY' => $this->config->get('api_key'),
+      'X-Docstore-Provider-Uuid' => $this->config->get('provider_uuid'),
     ];
   }
 

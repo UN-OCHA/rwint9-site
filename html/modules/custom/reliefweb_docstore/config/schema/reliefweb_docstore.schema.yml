@@ -5,6 +5,9 @@ reliefweb_docstore.settings:
     docstore_url:
       type: string
       label: 'The URL of the OCHA docstore.'
+    provider_uuid:
+      type: string
+      label: 'The UUID of the provider in the OCHA docstore.'
     api_key:
       type: string
       label: 'The API key for the OCHA docstore provider.'
