@@ -1,0 +1,30 @@
+/**
+ * Token help.
+ *
+ * Information about tokens usable in a text input or textarea.
+ */
+.token-help {
+  margin-top: 1rem;
+  font-size: 14px;
+}
+.token-help .token-iframe {
+  padding: 8px;
+  border: 1px solid #e6ecef;
+  border-bottom: 0;
+  line-height: 1.5;
+}
+.token-help summary {
+  padding: 8px;
+  border: 1px solid #e6ecef;
+  border-top: 0;
+  line-height: 1.5;
+}
+.token-help summary strong {
+  font-size: 16px;
+}
+.token-help summary p {
+  margin: 0;
+}
+.token-help table th {
+  text-align: left;
+}

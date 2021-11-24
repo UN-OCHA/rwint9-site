@@ -332,6 +332,11 @@ rw-toc:
   dependencies:
     - common_design/cd-dropdown
 
+rw-token:
+  css:
+    theme:
+      components/rw-token/rw-token.css: {}
+
 rw-topics:
   css:
     theme:
