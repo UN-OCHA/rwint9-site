@@ -17,10 +17,6 @@ class JobFormAlter extends EntityFormAlterServiceBase {
    * {@inheritdoc}
    */
   protected function addBundleFormAlterations(array &$form, FormStateInterface $form_state) {
-    // Add a guide on how to populate the field as description to the title
-    // field.
-    $form['title']['widget'][0]['value']['#description'] = $this->t('The best job titles are brief and specific. Please refrain from indicating location, salary and other details in the title, if possible.');
-
     // Force shorter titles.
     $form['title']['widget'][0]['value']['#maxlength'] = 150;
 
