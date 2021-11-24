@@ -290,24 +290,6 @@ class ReliefWebFile extends WidgetBase {
     $element['#type'] = 'form_element';
     $element['#theme'] = 'reliefweb_file_widget_item';
 
-    // Non editable defaults.
-    $defaults = [
-      'uuid',
-      'revision_id',
-      'file_uuid',
-      'file_name',
-      'file_mime',
-      'file_size',
-      'page_count',
-      'preview_uuid',
-    ];
-    foreach ($defaults as $default) {
-      $element[$default] = [
-        '#type' => 'hidden',
-        '#value' => $item->get($default)->getValue(),
-      ];
-    }
-
     // Link to the file.
     $file_name = $item->getFileName();
     $file_size = $item->getFileSize();
@@ -491,6 +473,25 @@ class ReliefWebFile extends WidgetBase {
       '#default_value' => $item->_weight ?: $delta,
       '#weight' => 100,
     ];
+
+    // Save the non editable field item values. This needs to happen at the end
+    // so that we can save the preview UUID notably.
+    $defaults = [
+      'uuid',
+      'revision_id',
+      'file_uuid',
+      'file_name',
+      'file_mime',
+      'file_size',
+      'page_count',
+      'preview_uuid',
+    ];
+    foreach ($defaults as $default) {
+      $element[$default] = [
+        '#type' => 'hidden',
+        '#value' => $item->get($default)->getValue(),
+      ];
+    }
 
     return $element;
   }
