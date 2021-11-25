@@ -182,7 +182,7 @@
 
 .rw-guidelines-list article {
   background-color: white;
-  /* debug display: none; */
+  display: none;
   padding: 10px 20px;
   position: relative;
   z-index: 2;
@@ -241,6 +241,9 @@
   padding-bottom: 5px;
 }
 
+.rw-guidelines-list #search {
+  color: #333;
+}
 .rw-guidelines-list #search a {
   display: block;
 }

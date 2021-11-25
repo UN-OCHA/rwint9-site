@@ -13,6 +13,9 @@
 
 <div{{ attributes.addClass('rw-guidelines-list') }}>
   <aside>
+    <form action="#search">
+      <input id="search" type="text" placeholder="Search">
+    </form>
     <nav class="scroll">
       {% for guideline in guidelines %}
         <label for="{{ guideline['#id'] }}">{{ guideline['#title'] }}</label>
@@ -21,8 +24,7 @@
         {% if guideline['#children'] %}
           <nav>
           {% for child in guideline['#children'] %}
-            <label for="{{ child['#id'] }}">{{ child['#title'] }}</label>
-            <input id="{{ child['#id'] }}" type="checkbox" name="lists">
+            <a href="#{{ child['#id'] }}" tabindex="7" class="">{{ child['#title'] }}</a>
           {% endfor %}
           </nav>
         {% endif %}
