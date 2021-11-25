@@ -3,45 +3,44 @@
  *
  * Information about tokens usable in a text input or textarea.
  */
-.token-help {
-  margin-top: 1rem;
+.rw-token-help {
   font-size: 14px;
 }
-.token-help .token-iframe {
-  padding: 8px;
-  border: 1px solid #e6ecef;
-  border-bottom: 0;
-  line-height: 1.5;
+.rw-token-help.form-wrapper {
+  margin-top: 8px;
 }
-.token-help summary {
+.rw-token-help summary {
   padding: 8px;
   list-style-type: none;
   cursor: pointer;
   border: 1px solid #e6ecef;
-  border-top: 0;
   line-height: 1.5;
 }
-.token-help summary::-webkit-details-marker {
+.rw-token-help[open] summary {
+  border-bottom: 0;
+}
+/* Use custom icon */
+.rw-token-help summary::-webkit-details-marker {
   display: none;
 }
-/* Custom icon */
-.token-help details summary::before {
+.rw-token-help summary::before {
   display: inline-block;
   overflow: hidden;
   width: 12px;
   height: 12px;
+  margin-right: 4px;
   content: "";
   background: var(--rw-icons--toggle--down--12--dark-blue);
 }
-.token-help details[open] > summary::before {
+.rw-token-help[open] > summary::before {
   background: var(--rw-icons--toggle--up--12--dark-blue);
 }
-.token-help summary strong {
+.rw-token-help summary strong {
   font-size: 16px;
 }
-.token-help summary p {
+.rw-token-help summary p {
   margin: 0;
 }
-.token-help table th {
+.rw-token-help table th {
   text-align: left;
 }
