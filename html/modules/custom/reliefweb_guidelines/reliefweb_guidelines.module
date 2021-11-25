@@ -6,10 +6,10 @@
  */
 
 use Drupal\Core\File\FileSystemInterface;
-use Drupal\Core\Render\Element;
-use Drupal\guidelines\Entity\Guideline;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\guidelines\Entity\Guideline;
 use Drupal\guidelines\Entity\GuidelineType;
+use Drupal\reliefweb_guidelines\GuidelinesFromTrello;
 
 /**
  * Implements hook_theme().
@@ -42,7 +42,7 @@ function reliefweb_guidelines_migrate_from_trello() {
   $key = $config->get('key');
   $token = $config->get('token');
 
-  $trello = new \Drupal\guidelines\GuidelinesFromTrello($key, $token, \Drupal::service('config.factory'), \Drupal::service('http_client'), \Drupal::service('logger.factory'));
+  $trello = new GuidelinesFromTrello($key, $token, \Drupal::service('config.factory'), \Drupal::service('http_client'), \Drupal::service('logger.factory'));
 
   $lists = $trello->getLists('554c519c9b98caa2495ea5db');
   foreach ($lists as $weight_list => $list) {
@@ -146,7 +146,7 @@ function reliefweb_guidelines_migrate_from_trello() {
       // Get attachments.
       if ($card['badges']['attachments'] > 0) {
         $attachments = $trello->getCardAttachments($card['id']);
-        foreach($attachments as $attachment) {
+        foreach ($attachments as $attachment) {
           // Add external links, skip images.
           if (empty($attachment['isUpload'])) {
             $values['field_links'] = $values['field_links'] ?? [];
@@ -203,7 +203,7 @@ function guidelines_get_possible_field_names($bundle, $field_name) {
 function guidelines_extract_images(&$description) {
   $files = [];
   $pattern = '|(\!\[(.*?)\])(\((http.*?)\))|';
-  $description = preg_replace_callback($pattern, function($matches) use ($files) {
+  $description = preg_replace_callback($pattern, function ($matches) use ($files) {
     $matches[4] = guidelines_fetch_image($matches[4], $files);
 
     // Remove non-existing images.
@@ -218,7 +218,7 @@ function guidelines_extract_images(&$description) {
 }
 
 /**
- * Fetch external image and
+ * Fetch external image and save locally.
  */
 function guidelines_fetch_image($url, &$files) {
   $destination = 'public://guidelines/trello';

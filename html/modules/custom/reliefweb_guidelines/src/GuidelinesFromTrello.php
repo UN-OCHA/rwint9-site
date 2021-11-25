@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\guidelines;
+namespace Drupal\reliefweb_guidelines;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
