@@ -56,7 +56,7 @@
   width: 100%;
 }
 .rw-guidelines-list aside h1:before {
-  background-image: url(/assets/images/logo.svg);
+  background-image: url(./assets/logo.svg);
   background-repeat: no-repeat;
   content: "";
   display: block;
@@ -165,7 +165,7 @@
 }
 .rw-guidelines-list main > div:before {
   content: '';
-  background-image: url(/assets/images/logo.svg);
+  background-image: url(./assets/logo.svg);
   background-repeat: no-repeat;
   width: 400px;
   height: 400px;
