@@ -36,8 +36,9 @@ class ModerationPageFilterForm extends FormBase {
     $form['filters'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Filters'),
+      '#title_display' => 'invisible',
       '#attributes' => [
-        'class' => ['rw-moderation-filters'],
+        'class' => ['rw-moderation-filters__content'],
       ],
       '#tree' => TRUE,
     ];
@@ -85,6 +86,11 @@ class ModerationPageFilterForm extends FormBase {
                 '#parents' => ['omnibox'],
                 '#weight' => 2,
                 '#optional' => FALSE,
+                '#attributes' => [
+                  'class' => [
+                    'rw-moderation-filter-omnibox',
+                  ],
+                ],
               ];
               $form['filters']['omnibox']['select'] = [
                 '#type' => 'select',
@@ -96,7 +102,7 @@ class ModerationPageFilterForm extends FormBase {
                 '#type' => 'textfield',
                 '#attributes' => [
                   'autocomplete' => 'off',
-                  'data-bundle' => $service->getBundle(),
+                  'data-autocomplete-url' => $this->getAutocompleteUrl($form_state, $service),
                 ],
                 // @todo review if that shouldn't be added by the autocomplete
                 // instead or even if that's necessary at all.
@@ -279,6 +285,25 @@ class ModerationPageFilterForm extends FormBase {
   public function resetForm(array $form, FormStateInterface $form_state) {
     $form_state->setProgrammed(FALSE);
     $form_state->setRedirect('<current>');
+  }
+
+  /**
+   * Get the autocomplete URL for the omnibox.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   * @param \Drupal\reliefweb_moderation\ModerationServiceInterface $service
+   *   The moderation service associated with this form.
+   *
+   * @return string
+   *   Autocomplete URL.
+   */
+  protected function getAutocompleteUrl(FormStateInterface $form_state, ModerationServiceInterface $service) {
+    $bundle = $service->getBundle();
+    if (is_array($bundle)) {
+      $bundle = reset($bundle);
+    }
+    return '/moderation/content/' . $bundle . '/autocomplete/';
   }
 
 }
