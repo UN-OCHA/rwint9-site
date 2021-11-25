@@ -3,8 +3,10 @@
 namespace Drupal\reliefweb_user_posts\Controller;
 
 use Drupal\reliefweb_moderation\Controller\ModerationPage;
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormState;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\reliefweb_moderation\ModerationServiceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -75,7 +77,7 @@ class UserPostsPage extends ModerationPage {
     // We want the editors to be able to bookmark a moderation page with
     // a selection of filters so we set the method as GET.
     $form_state = new FormState();
-    $form_state->addBuildInfo('args', [$service]);
+    $form_state->addBuildInfo('args', [$service, $user]);
     $form_state->setMethod('GET');
     $form_state->setProgrammed(TRUE);
     $form_state->setProcessInput(TRUE);
@@ -134,13 +136,33 @@ class UserPostsPage extends ModerationPage {
    *   Moderation service.
    * @param string $filter
    *   Filter name.
+   * @param \Drupal\user\UserInterface|null $user
+   *   User account for the user posts page.
    *
    * @return \Symfony\Component\HttpFoundation\JsonResponse
    *   JSON response with the list of suggestions if any.
    */
-  public function autocomplete(ModerationServiceInterface $service, $filter) {
+  public function autocomplete(ModerationServiceInterface $service, $filter, UserInterface $user = NULL) {
     $suggestions = $service->getAutocompleteSuggestions($filter);
     return new JsonResponse($suggestions);
+  }
+
+  /**
+   * Check the access to the page.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   User account to check access for.
+   * @param \Drupal\user\UserInterface $user
+   *   User account for the user posts page.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   The access result.
+   */
+  public function checkAccess(AccountInterface $account, UserInterface $user) {
+    if ($account->id() == $user->id()) {
+      return AccessResult::allowedIf($account->hasPermission('view own posts'));
+    }
+    return AccessResult::allowedIf($account->hasPermission('view other user posts'));
   }
 
 }
