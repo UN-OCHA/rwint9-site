@@ -7,24 +7,11 @@
 .rw-moderation-content-filters {
   padding: 24px 0 0 0;
 }
-/* Hide visually the filters title to reduce scrolling. */
-.rw-moderation-filters > legend {
-  position: absolute;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  white-space: nowrap;
-  border: none;
-  clip-path: inset(100%);
-}
-.rw-moderation-filters #edit-filters {
+.rw-moderation-filters .rw-moderation-filters__content {
   padding-bottom: 0;
   border-bottom: none;
 }
-.rw-moderation-filters #edit-filters-status [class*="form-item-filters-status-"] {
+.rw-moderation-filters .rw-moderation-filter-status [class*="form-item-filters-status-"] {
   width: 100%;
   margin-bottom: 12px;
   padding: 2px 8px;
@@ -32,42 +19,44 @@
   text-transform: none;
   border-left-width: 8px;
   border-left-style: solid;
-  background: none;
   font-size: 16px;
   line-height: 16px;
 }
-.rw-moderation-filters #edit-filters-status.form-checkboxes {
+.rw-moderation-filters:not(.rw-moderation-filters--user-posts) .rw-moderation-filter-status [class*="form-item-filters-status-"] {
+  background: none;
+}
+.rw-moderation-filters .rw-moderation-filter-status .form-checkboxes {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   grid-gap: 0 24px;
   margin-bottom: -12px;
 }
-.path-moderation-content-disaster .rw-moderation-filters #edit-filters-status .form-checkboxes {
+.path-moderation-content-disaster .rw-moderation-filters .rw-moderation-filter-status .form-checkboxes {
   grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
 }
-.rw-moderation-filters #edit-filters-other .fieldset-wrapper > * {
+.rw-moderation-filters .rw-moderation-filter-other .fieldset-wrapper > * {
   display: inline-block;
   margin-top: 0;
   vertical-align: middle;
 }
-.rw-moderation-filters #edit-omnibox .fieldset-wrapper {
+.rw-moderation-filters .rw-moderation-filter-omnibox .fieldset-wrapper {
   display: table;
 }
-.rw-moderation-filters #edit-omnibox .fieldset-wrapper > * {
+.rw-moderation-filters .rw-moderation-filter-omnibox .fieldset-wrapper > * {
   display: table-cell;
   height: 32px;
   margin: 0;
   padding: 0;
   vertical-align: middle;
 }
-.rw-moderation-filters #edit-omnibox .fieldset-wrapper > :first-child {
+.rw-moderation-filters .rw-moderation-filter-omnibox .fieldset-wrapper > :first-child {
   padding-right: 8px;
 }
-.rw-moderation-filters #edit-omnibox .fieldset-wrapper select {
+.rw-moderation-filters .rw-moderation-filter-omnibox .fieldset-wrapper select {
   width: auto;
   /* height: 100%; */
 }
-.rw-moderation-filters #edit-omnibox div[data-autocomplete] > input {
+.rw-moderation-filters .rw-moderation-filter-omnibox div[data-autocomplete] > input {
   border-right: 2px solid var(--cd-reliefweb-brand-grey--light);
 }
 .rw-moderation-filters [data-selection] > span span + span {
@@ -209,10 +198,31 @@
   border-top: none;
 }
 
+.rw-moderation-filters--user-posts .rw-moderation-intro {
+  padding-bottom: 24px;
+  text-align: center;
+  border-bottom: 1px solid var(--cd-reliefweb-brand-grey--light);
+}
+
+/* Display "other" filters on separate lines. */
+.rw-moderation-filters--user-posts .rw-moderation-filter-other .fieldset-wrapper > fieldset + fieldset {
+  display: block;
+  margin-top: 24px;
+}
 /* User posts type column */
 .rw-moderation-list--user-posts .rw-moderation-table tr td:nth-child(2) {
   width: auto;
   word-break: unset;
+}
+/* User posts source list */
+.rw-moderation-list--user-posts .rw-moderation-table ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* User posts status column */
+.rw-moderation-list--user-posts td .rw-moderation-status[data-moderation-status] {
+  margin: 0;
 }
 /* User posts posted and deadline date columns */
 .rw-moderation-list--user-posts .rw-moderation-table .rw-moderation-table__cell__date,
