@@ -26,4 +26,5 @@ permissions:
   - 'use training transition pending'
   - 'use training transition published'
   - 'view media'
+  - 'view own posts'
   - 'view own unpublished content'
