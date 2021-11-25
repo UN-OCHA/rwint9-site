@@ -7,6 +7,7 @@ use Drupal\reliefweb_moderation\Form\ModerationPageFilterForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_moderation\ModerationServiceInterface;
+use Drupal\user\UserInterface;
 
 /**
  * Content moderation page filter form handler.
@@ -23,7 +24,7 @@ class UserPostsPageFilterForm extends ModerationPageFilterForm {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, ModerationServiceInterface $service = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ModerationServiceInterface $service = NULL, UserInterface $user = NULL) {
     $form = parent::buildForm($form, $form_state, $service);
 
     // Link to create a new entity.
@@ -44,11 +45,6 @@ class UserPostsPageFilterForm extends ModerationPageFilterForm {
       '#markup' => new FormattableMarkup('<div class="rw-moderation-intro">' . $links . '</div>', []),
     ];
 
-    // Fix data bundle.
-    if (isset($form['filters']['omnibox']['input']['#attributes']['data-bundle'])) {
-      $form['filters']['omnibox']['input']['#attributes']['data-bundle'] = 'user_posts';
-    }
-
     // Add the filter labels to the properties.
     $definitions = $service->getFilterDefinitions();
     foreach ($definitions as $name => $filter) {
@@ -56,15 +52,32 @@ class UserPostsPageFilterForm extends ModerationPageFilterForm {
         $form['filters']['other'][$name]['#title'] = $filter['label'];
       }
     }
-    // Hide the properties label.
+    // Hide the properties label and move the other filter to the top.
     if (isset($form['filters']['other'])) {
       $form['filters']['other']['#title_display'] = 'invisible';
+      $form['filters']['other']['#weight'] = -1;
+    }
+
+    // Change the omnibox label.
+    if (isset($form['filters']['omnibox'])) {
+      $form['filters']['omnibox']['#title'] = $this->t('Filter');
     }
 
     // Make js work.
     $form['#attributes']['id'] = 'reliefweb-moderation-page-filter-form';
 
     return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getAutocompleteUrl(FormStateInterface $form_state, ModerationServiceInterface $service) {
+    $build_info = $form_state->getBuildInfo();
+    if (isset($build_info['args'][1]) && $build_info['args'][1] instanceof UserInterface) {
+      return '/user/' . $build_info['args'][1]->id() . '/posts/autocomplete/';
+    }
+    return '/moderation/content/user_posts/autocomplete/';
   }
 
 }
