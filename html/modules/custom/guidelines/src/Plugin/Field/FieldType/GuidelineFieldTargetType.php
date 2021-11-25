@@ -78,15 +78,15 @@ class GuidelineFieldTargetType extends FieldItemBase {
 
     $elements['enabled_entities'] = [
       '#type' => 'checkboxes',
-      '#title' => t('Allowed entities'),
+      '#title' => $this->t('Allowed entities'),
       '#default_value' => $this->getSetting('enabled_entities'),
       '#required' => FALSE,
-      '#description' => t('The entities that are allowed.'),
+      '#description' => $this->t('The entities that are allowed.'),
       '#disabled' => $has_data,
       '#options' => [
-        'node' => t('Node'),
-        'terms' => t('Terms'),
-      ]
+        'node' => $this->t('Node'),
+        'terms' => $this->t('Terms'),
+      ],
     ];
 
     return $elements;

@@ -6,7 +6,7 @@ use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Class GuidelineTypeForm.
+ * Guideline type form.
  */
 class GuidelineTypeForm extends EntityForm {
 

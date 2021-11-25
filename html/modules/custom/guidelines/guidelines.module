@@ -26,15 +26,6 @@ function guidelines_help($route_name, RouteMatchInterface $route_match) {
   }
 }
 
-/*
-- old id from trello
-- grouping
-  - terms
-  - book
-- moderation
-- use nodes
-*/
-
 /**
  * Implements hook_theme().
  */

@@ -8,8 +8,22 @@ use Drupal\Core\Url;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\ClientException;
 
+/**
+ * Import trello as guidelines.
+ */
 class GuidelinesFromTrello {
+  /**
+   * API Key.
+   *
+   * @var string
+   */
   protected $key = '';
+
+  /**
+   * API Token.
+   *
+   * @var string
+   */
   protected $token = '';
 
   /**
@@ -24,7 +38,7 @@ class GuidelinesFromTrello {
    *
    * @param string $key
    *   Trello key.
-   * @param string $key
+   * @param string $token
    *   Trello token.
    * @param Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory service.
@@ -41,6 +55,9 @@ class GuidelinesFromTrello {
     $this->logger = $logger_factory->get('reliefweb_guidelines');
   }
 
+  /**
+   * Get all boards.
+   */
   public function getBoards() {
     $url = 'https://api.trello.com/1/members/me/boards';
     $parmeters = [
@@ -50,6 +67,9 @@ class GuidelinesFromTrello {
     return $this->fetchData($url, $parmeters);
   }
 
+  /**
+   * Get all lists of a board.
+   */
   public function getLists($board_id, $status = 'open') {
     $url = strtr('https://api.trello.com/1/boards/@id/lists/@status', [
       '@id' => $board_id,
@@ -62,6 +82,9 @@ class GuidelinesFromTrello {
     return $this->fetchData($url, $parmeters);
   }
 
+  /**
+   * Get all cards from a list.
+   */
   public function getCards($list_id) {
     $url = strtr('https://api.trello.com/1/lists/@id/cards', [
       '@id' => $list_id,
@@ -73,6 +96,9 @@ class GuidelinesFromTrello {
     return $this->fetchData($url, $parmeters);
   }
 
+  /**
+   * Get a card.
+   */
   public function getCard($card_id) {
     $url = strtr('https://api.trello.com/1/cards/@id', [
       '@id' => $card_id,
@@ -84,6 +110,9 @@ class GuidelinesFromTrello {
     return $this->fetchData($url, $parmeters);
   }
 
+  /**
+   * Get attachments of a card.
+   */
   public function getCardAttachments($card_id) {
     $url = strtr('https://api.trello.com/1/cards/@id/attachments', [
       '@id' => $card_id,
@@ -95,6 +124,9 @@ class GuidelinesFromTrello {
     return $this->fetchData($url, $parmeters);
   }
 
+  /**
+   * Fetch data from API.
+   */
   protected function fetchData($url, $parameters = []) {
     $parameters += [
       'key' => $this->key,
@@ -104,7 +136,7 @@ class GuidelinesFromTrello {
     $url = Url::fromUri($url, [
       'query' => $parameters,
     ])->toUriString();
-dpm($url);
+
     try {
       $response = $this->httpClient->request('GET', $url);
     }

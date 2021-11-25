@@ -55,7 +55,7 @@ class GuidelineFieldTargetWidget extends OptionsButtonsWidget {
 
     $elements['enabled_entities'] = [
       '#type' => 'select',
-      '#title' => t('Enabled entities'),
+      '#title' => $this->t('Enabled entities'),
       '#default_value' => $this->getSetting('enabled_entities'),
       '#required' => FALSE,
       '#multiple' => TRUE,
@@ -71,7 +71,7 @@ class GuidelineFieldTargetWidget extends OptionsButtonsWidget {
   public function settingsSummary() {
     $summary = [];
 
-    $summary[] = t('Enabled entities: @enabled_entities', [
+    $summary[] = $this->t('Enabled entities: @enabled_entities', [
       '@enabled_entities' => implode(', ', array_filter($this->getSetting('enabled_entities'))),
     ]);
 
@@ -135,4 +135,5 @@ class GuidelineFieldTargetWidget extends OptionsButtonsWidget {
 
     return $this->options;
   }
+
 }

@@ -20,9 +20,6 @@ use Drupal\Core\Render\Element;
  *   - attributes: HTML attributes for the containing element.
  */
 function template_preprocess_guideline(array &$variables) {
-  // Fetch Guideline Entity Object.
-  $guideline = $variables['elements']['#guideline'];
-
   // Helpful $content variable for templates.
   foreach (Element::children($variables['elements']) as $key) {
     $variables['content'][$key] = $variables['elements'][$key];
