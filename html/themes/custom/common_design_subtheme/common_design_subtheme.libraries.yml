@@ -336,6 +336,8 @@ rw-token:
   css:
     theme:
       components/rw-token/rw-token.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
 
 rw-topics:
   css:
