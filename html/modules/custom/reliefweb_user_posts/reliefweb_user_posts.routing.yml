@@ -1,0 +1,36 @@
+reliefweb_user_posts.content:
+  path: '/user/{user}/posts'
+  defaults:
+    _controller: '\Drupal\reliefweb_user_posts\Controller\UserPostsPage::getContent'
+    _title_callback: '\Drupal\reliefweb_user_posts\Controller\UserPostsPage::getTitle'
+    service: 'user_posts'
+  options:
+    _admin_route: TRUE
+    parameters:
+      user:
+        type: entity:user
+      service:
+        type: reliefweb_moderation_service
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _custom_access: '\Drupal\reliefweb_user_posts\Controller\UserPostsPage::checkAccess'
+    user: \d+
+
+reliefweb_user_posts.autocomplete:
+  path: '/user/{user}/posts/autocomplete/{filter}'
+  defaults:
+    _controller: '\Drupal\reliefweb_user_posts\Controller\UserPostsPage::autocomplete'
+    _title_callback: '\Drupal\reliefweb_user_posts\Controller\UserPostsPage::getPageTitle'
+    service: 'user_posts'
+  options:
+    _admin_route: TRUE
+    parameters:
+      user:
+        type: entity:user
+      service:
+        type: reliefweb_moderation_service
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _custom_access: '\Drupal\reliefweb_user_posts\Controller\UserPostsPage::checkAccess'
+    user: \d+
+    filter: "[a-z0-9_]+"

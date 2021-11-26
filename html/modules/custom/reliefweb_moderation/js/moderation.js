@@ -276,7 +276,7 @@
        * Create the autocomplete widget.
        */
       function createAutocompletWidget(omnibox, select, selection) {
-        var url = '/moderation/content/' + omnibox.getAttribute('data-bundle') + '/autocomplete/';
+        var url = omnibox.getAttribute('data-autocomplete-url');
         var removeDiacritics = SimpleAutocomplete.removeDiacritics;
 
         var parent = omnibox.parentNode;

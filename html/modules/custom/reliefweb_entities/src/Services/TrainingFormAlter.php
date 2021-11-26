@@ -262,9 +262,8 @@ class TrainingFormAlter extends EntityFormAlterServiceBase {
     }
     // Otherwise empty the date fields.
     else {
-      $form_state->setValue(['field_training_date', 0, 'value'], []);
-      $form_state->setValue(['field_training_date', 0, 'end_value'], []);
-      $form_state->setValue(['field_registration_deadline', 0, 'value'], []);
+      $form_state->setValue(['field_training_date'], []);
+      $form_state->setValue(['field_registration_deadline'], []);
     }
   }
 
