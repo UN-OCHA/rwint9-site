@@ -6,7 +6,7 @@ dependencies:
     - guidelines
     - text
 _core:
-  default_config_hash: z1oaNAyU3Y_eNTHnd-B9A4axfADTVcLsIJVqWqoYzQo
+  default_config_hash: iMlQKG6EJKUKjUFeoIRGJlo2JgV3Z3gba0tHkrMmAvc
 id: guideline.field_description
 field_name: field_description
 entity_type: guideline

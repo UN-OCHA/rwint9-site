@@ -3,6 +3,6 @@ langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: gkK7dqqndcFEd0aPHuYH7Fcq8kt9YOSsP102UhiDYmM
+  default_config_hash: MHSuQUF_j_Rd0mpCRXV7VOAjzmkLtOgoahXLYPoK15A
 id: guideline_list
 label: 'Guideline list'

@@ -13,7 +13,7 @@ dependencies:
     - image
     - text
 _core:
-  default_config_hash: JBK1yTRF_13cr3EO-TqKmATMudfSZ0rseazvXXvFwXE
+  default_config_hash: z8Ooy8lqwORX8fFn5ruQGyemnJ34dCvhTM1IsH0yBX0
 id: guideline.field_guideline.default
 targetEntityType: guideline
 bundle: field_guideline

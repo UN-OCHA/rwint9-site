@@ -73,6 +73,7 @@ function guidelines_form_node_form_alter(array &$form, FormStateInterface $form_
       $bundle = $form_object->getEntity()->bundle();
     }
 
+    $form['#attributes']['data-with-guidelines'] = $entity_type;
     $form['#attributes']['data-guidelines-entity-type'] = $entity_type;
     $form['#attributes']['data-guidelines-entity-bundle'] = $bundle;
     $form['#attached']['library'][] = 'guidelines/guidelines-json';

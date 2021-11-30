@@ -5,7 +5,7 @@ dependencies:
   module:
     - guidelines
 _core:
-  default_config_hash: jXJwBrtuJBH5XA9ali94dBdN3dcCfQnzasBqYlR2XEo
+  default_config_hash: HySCsfFydHzl8n5Y-TWktQujS7iuuTYvOq2VE1PGlvY
 id: guideline.field_title
 field_name: field_title
 entity_type: guideline

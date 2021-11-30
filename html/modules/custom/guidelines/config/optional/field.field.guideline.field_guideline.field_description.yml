@@ -8,7 +8,7 @@ dependencies:
   module:
     - text
 _core:
-  default_config_hash: BPCv5oHSMuhnU1679DNYNiksCq19tzBWM5Iy0UDck3o
+  default_config_hash: xRG7EyzEYPUsfPwbPUvSSnTyqvhncuO7Cu1HZa2v0L8
 id: guideline.field_guideline.field_description
 field_name: field_description
 entity_type: guideline

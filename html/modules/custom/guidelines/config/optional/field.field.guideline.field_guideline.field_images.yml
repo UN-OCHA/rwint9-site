@@ -8,7 +8,7 @@ dependencies:
   module:
     - image
 _core:
-  default_config_hash: cc_Jy64zAs-J8RvisXtUAJLKRORM6CF7_mcDyygEKEM
+  default_config_hash: 0i3UZEOfLqHYUULM5Bgmug8PhP1LAUA9z-JL-zpVIgM
 id: guideline.field_guideline.field_images
 field_name: field_images
 entity_type: guideline

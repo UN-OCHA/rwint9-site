@@ -14,7 +14,7 @@ dependencies:
     - image
     - text
 _core:
-  default_config_hash: XXlsTcAlLRRtvJj174jQGx2nmslAFjmjE_0E9kaoer4
+  default_config_hash: Ab3vpnYyoRCDZyMztb7uQVb3QEDHedeavdQyjSnH9o0
 id: guideline.field_guideline.default
 targetEntityType: guideline
 bundle: field_guideline
@@ -33,7 +33,9 @@ content:
     weight: 1
     region: content
     settings:
-      enabled_entities: {  }
+      enabled_entities:
+        - node.article
+        - node.page
     third_party_settings: {  }
   field_images:
     type: image_image

@@ -3,7 +3,7 @@ langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: HEdSZipodL-YVJ73x_Z3m3asKdPOP4K1iZsbz1MiM3E
+  default_config_hash: uIYuiQq2lP6-hInQhAMut9cHLLNhUs7bp4DAY7aWbYo
 name: guideline_thumbnail
 label: 'Guideline thumbnail'
 effects:
@@ -12,6 +12,6 @@ effects:
     id: image_scale
     weight: 1
     data:
-      width: null
+      width: 200
       height: 200
       upscale: false

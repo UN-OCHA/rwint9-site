@@ -5,6 +5,8 @@ dependencies:
   config:
     - field.field.guideline.guideline_list.field_title
     - guidelines.guideline_type.guideline_list
+_core:
+  default_config_hash: l7evZXfALoTXsWTb55YC72niCmLTIgBcZpLUYZ1Mha0
 id: guideline.guideline_list.default
 targetEntityType: guideline
 bundle: guideline_list
