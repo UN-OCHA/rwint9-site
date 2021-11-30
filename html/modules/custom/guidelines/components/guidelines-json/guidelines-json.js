@@ -43,7 +43,7 @@
           }
 
           var fieldName = element.querySelector('[name]').name;
-          if (fieldName.indexOf('[')) {
+          if (fieldName.indexOf('[') > 0) {
             fieldName = fieldName.substring(0, fieldName.indexOf('['));
           }
 
@@ -131,7 +131,6 @@
 
       // Prepare the guidelines card.
       function prepareGuidelines(data) {
-        console.log('prepareGuidelines');
         var guidelines = {};
 
         // Parse the guideline cards.
@@ -151,7 +150,6 @@
 
       // Add the guidelines to the page with a question mark icon to trigger the display.
       function setGuidelines(form, guidelines) {
-        console.log('setGuidelines');
         // Remove the existing guidelines from the page if any.
         cleanGuidelines(form);
 
