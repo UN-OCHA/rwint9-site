@@ -11,3 +11,10 @@ guidelines.form.json:
         type: string
   requirements:
     _permission: 'access content'
+guidelines.settings:
+  path: '/admin/structure/guideline_type/settings'
+  defaults:
+    _form: '\Drupal\guidelines\Form\GuidelineGlobalSettingsForm'
+    _title: 'Global guideline settings'
+  requirements:
+    _permission: 'administer site configuration'

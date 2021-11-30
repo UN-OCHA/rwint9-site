@@ -2,11 +2,9 @@ guidelines.guideline_type.*:
   type: config_entity
   label: 'Guideline type config'
   mapping:
-    id:
-      type: string
+    overwrite_description:
+      type: boolean
       label: 'ID'
-    label:
-      type: label
-      label: 'Label'
-    uuid:
-      type: string
+    use_json_loading:
+      type: boolean
+      label: 'ID'
