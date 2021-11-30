@@ -1,0 +1,21 @@
+uuid: dd89ed7c-df45-45d7-aa35-8f9793c28755
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.guideline.field_title
+    - guidelines.guideline_type.guideline_list
+_core:
+  default_config_hash: uAdEVEW9C6BUJdvGJoYS1ScnGh1nIkJOjVLthE8_VhY
+id: guideline.guideline_list.field_title
+field_name: field_title
+entity_type: guideline
+bundle: guideline_list
+label: Title
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

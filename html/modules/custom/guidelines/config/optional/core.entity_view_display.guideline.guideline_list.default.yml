@@ -1,0 +1,23 @@
+uuid: 0f37fbb4-2654-420c-8388-353ed6924d10
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.guideline.guideline_list.field_title
+    - guidelines.guideline_type.guideline_list
+id: guideline.guideline_list.default
+targetEntityType: guideline
+bundle: guideline_list
+mode: default
+content:
+  field_title:
+    type: string
+    weight: 0
+    region: content
+    label: hidden
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+hidden:
+  name: true
+  user_id: true

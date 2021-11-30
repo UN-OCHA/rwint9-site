@@ -1,0 +1,23 @@
+uuid: bd31610f-d04b-4819-b2e8-182079b7c500
+langcode: en
+status: true
+dependencies:
+  module:
+    - guidelines
+_core:
+  default_config_hash: QpchgOdA3NjTwwHuwZVG8c_nHPlPLNXtKM3JkLLxmqY
+id: guideline.field_field
+field_name: field_field
+entity_type: guideline
+type: guideline_field_target_type
+settings:
+  enabled_entities:
+    node: node
+    terms: 0
+module: guidelines
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

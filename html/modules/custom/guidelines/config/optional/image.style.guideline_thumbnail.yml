@@ -1,0 +1,17 @@
+uuid: 3153f7d4-05a0-4a0f-964c-e1ccc3a8bfdd
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: HEdSZipodL-YVJ73x_Z3m3asKdPOP4K1iZsbz1MiM3E
+name: guideline_thumbnail
+label: 'Guideline thumbnail'
+effects:
+  9788b5f9-ff16-47a9-92a0-1c66b68753cb:
+    uuid: 9788b5f9-ff16-47a9-92a0-1c66b68753cb
+    id: image_scale
+    weight: 1
+    data:
+      width: null
+      height: 200
+      upscale: false

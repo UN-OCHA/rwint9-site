@@ -1,0 +1,39 @@
+uuid: 411a138e-0931-4ea2-ae71-1ac2e6088677
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.guideline.guideline_list.field_title
+    - guidelines.guideline_type.guideline_list
+id: guideline.guideline_list.default
+targetEntityType: guideline
+bundle: guideline_list
+mode: default
+content:
+  field_title:
+    type: string_textfield
+    weight: 1
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  name:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  user_id:
+    type: entity_reference_autocomplete
+    weight: 2
+    settings:
+      match_operator: CONTAINS
+      size: 60
+      placeholder: ''
+      match_limit: 10
+    region: content
+    third_party_settings: {  }
+hidden: {  }

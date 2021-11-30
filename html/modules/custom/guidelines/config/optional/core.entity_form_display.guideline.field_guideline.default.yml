@@ -1,0 +1,72 @@
+uuid: db8b3fae-ba53-44db-b43f-a6ae4d615c19
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.guideline.field_guideline.field_description
+    - field.field.guideline.field_guideline.field_field
+    - field.field.guideline.field_guideline.field_images
+    - field.field.guideline.field_guideline.field_title
+    - guidelines.guideline_type.field_guideline
+    - image.style.thumbnail
+  module:
+    - guidelines
+    - image
+    - text
+_core:
+  default_config_hash: XXlsTcAlLRRtvJj174jQGx2nmslAFjmjE_0E9kaoer4
+id: guideline.field_guideline.default
+targetEntityType: guideline
+bundle: field_guideline
+mode: default
+content:
+  field_description:
+    weight: 3
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+    type: text_textarea
+    region: content
+  field_field:
+    type: guideline_field_target_widget
+    weight: 1
+    region: content
+    settings:
+      enabled_entities: {  }
+    third_party_settings: {  }
+  field_images:
+    type: image_image
+    weight: 4
+    region: content
+    settings:
+      progress_indicator: throbber
+      preview_image_style: thumbnail
+    third_party_settings: {  }
+  field_title:
+    type: string_textfield
+    weight: 2
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  name:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  user_id:
+    type: entity_reference_autocomplete
+    weight: 5
+    settings:
+      match_operator: CONTAINS
+      size: 60
+      placeholder: ''
+      match_limit: 10
+    region: content
+    third_party_settings: {  }
+hidden: {  }

@@ -1,0 +1,10 @@
+uuid: f94d05b1-32d4-4a37-a31f-113224793bf4
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: ZDQxGl6Vm9OSrSNM35su0ET2Vw7Jiih-ebEsHStrO9A
+name: Guideline
+format: guideline
+weight: 0
+filters: {  }
