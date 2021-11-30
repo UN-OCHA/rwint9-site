@@ -1,8 +1,5 @@
-uuid: a5377093-5dee-404b-ad55-e416b117c166
 langcode: en
 status: true
 dependencies: {  }
-_core:
-  default_config_hash: MHSuQUF_j_Rd0mpCRXV7VOAjzmkLtOgoahXLYPoK15A
 id: guideline_list
 label: 'Guideline list'

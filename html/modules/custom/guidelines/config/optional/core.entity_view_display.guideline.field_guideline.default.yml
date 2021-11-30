@@ -1,4 +1,3 @@
-uuid: 0b647595-f800-436c-886b-86b9cdddddf3
 langcode: en
 status: true
 dependencies:
@@ -12,8 +11,6 @@ dependencies:
   module:
     - image
     - text
-_core:
-  default_config_hash: z8Ooy8lqwORX8fFn5ruQGyemnJ34dCvhTM1IsH0yBX0
 id: guideline.field_guideline.default
 targetEntityType: guideline
 bundle: field_guideline

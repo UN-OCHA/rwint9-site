@@ -1,12 +1,9 @@
-uuid: 411a138e-0931-4ea2-ae71-1ac2e6088677
 langcode: en
 status: true
 dependencies:
   config:
     - field.field.guideline.guideline_list.field_title
     - guidelines.guideline_type.guideline_list
-_core:
-  default_config_hash: cOLkuh7YgdD87onZdwnChMrJfJZHPB0xUcPEBg69kIg
 id: guideline.guideline_list.default
 targetEntityType: guideline
 bundle: guideline_list

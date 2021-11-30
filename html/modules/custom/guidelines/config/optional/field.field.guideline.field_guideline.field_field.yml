@@ -1,4 +1,3 @@
-uuid: 6f2c048f-a870-4564-bcd0-bbb99bdb2230
 langcode: en
 status: true
 dependencies:
@@ -7,8 +6,6 @@ dependencies:
     - guidelines.guideline_type.field_guideline
   module:
     - guidelines
-_core:
-  default_config_hash: xDe-me9dIKGdeZ2uvP3eFdmLa-uF3kxPV_KrPAxp_p0
 id: guideline.field_guideline.field_field
 field_name: field_field
 entity_type: guideline

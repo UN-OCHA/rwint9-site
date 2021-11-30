@@ -1,9 +1,6 @@
-uuid: f94d05b1-32d4-4a37-a31f-113224793bf4
 langcode: en
 status: true
 dependencies: {  }
-_core:
-  default_config_hash: AMomRKjCCWxw0wg5sH5AlA2QSlMHxASrQKF9bCZ6Dco
 name: Guideline
 format: guideline
 weight: 0

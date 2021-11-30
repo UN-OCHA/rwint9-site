@@ -1,9 +1,6 @@
-uuid: 3153f7d4-05a0-4a0f-964c-e1ccc3a8bfdd
 langcode: en
 status: true
 dependencies: {  }
-_core:
-  default_config_hash: uIYuiQq2lP6-hInQhAMut9cHLLNhUs7bp4DAY7aWbYo
 name: guideline_thumbnail
 label: 'Guideline thumbnail'
 effects:

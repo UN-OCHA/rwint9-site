@@ -1,12 +1,9 @@
-uuid: 940acb12-d9cd-4884-a950-ca03f6fedcba
 langcode: en
 status: true
 dependencies:
   config:
     - field.storage.guideline.field_title
     - guidelines.guideline_type.field_guideline
-_core:
-  default_config_hash: 3n2TNCY9_hvLT5RM_J2obSPOlkfsBPfXfxuzIUwEoDc
 id: guideline.field_guideline.field_title
 field_name: field_title
 entity_type: guideline

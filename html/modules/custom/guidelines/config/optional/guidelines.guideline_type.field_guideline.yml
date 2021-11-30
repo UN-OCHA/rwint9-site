@@ -1,8 +1,5 @@
-uuid: 33cf67f7-6536-4f60-99be-13b52a3a7124
 langcode: en
 status: true
 dependencies: {  }
-_core:
-  default_config_hash: VVuZUFGpR3L9jO6wuOYE5djohQ6t6mF_nz15-d9Nn0s
 id: field_guideline
 label: 'Field guideline'

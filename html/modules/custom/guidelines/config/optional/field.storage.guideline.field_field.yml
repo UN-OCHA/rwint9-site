@@ -1,11 +1,8 @@
-uuid: bd31610f-d04b-4819-b2e8-182079b7c500
 langcode: en
 status: true
 dependencies:
   module:
     - guidelines
-_core:
-  default_config_hash: hQaVczFbTCv4rS6s7basyYMTBR1NRvtaLtOzLw6h1BE
 id: guideline.field_field
 field_name: field_field
 entity_type: guideline
