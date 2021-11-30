@@ -410,20 +410,6 @@ form > #actions legend + .form-type-checkbox.form-item-notifications-content-dis
   margin: 0;
 }
 
-/* Field with text that is not wrapped in description div */
-.field--name-body .text-full,
-.field--name-field-how-to-apply .text-full,
-.field--type-text-long .text-full, /* Generic selector? */
-.field--name-field-how-to-register .text-full {
-  font-size: 15px;
-  font-style: italic;
-  line-height: 24px;
-}
-.field--name-body .text-full,
-.field--type-text-long .text-full {
-  padding-top: 6px;
-}
-
 /* Text format wrapper */
 .form-type-textarea + .filter-wrapper.form-wrapper {
   margin-top: 0;
