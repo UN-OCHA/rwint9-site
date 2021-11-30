@@ -1,0 +1,6 @@
+guidelines-json:
+  css:
+    component:
+      components/guidelines-json/guidelines-json.css: {}
+  js:
+    components/guidelines-json/guidelines-json.js: {}

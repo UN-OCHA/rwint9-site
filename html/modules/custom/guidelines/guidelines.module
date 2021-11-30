@@ -61,10 +61,30 @@ function guidelines_theme_suggestions_guideline(array $variables) {
 }
 
 /**
+ * Implements hook_form_HOOK_alter().
+ */
+function guidelines_form_node_form_alter(array &$form, FormStateInterface $form_state) {
+  $bundle = '';
+  $form_object = $form_state->getFormObject();
+  $entity_type = $form_object->getEntity()->getEntityType()->id();
+  if ($form_object instanceof ContentEntityForm) {
+    $bundle = $form_object->getEntity()->bundle();
+  }
+
+  $form['#attributes']['data-guidelines-entity-type'] = $entity_type;
+  $form['#attributes']['data-guidelines-entity-bundle'] = $bundle;
+  $form['#attached']['library'][] = 'guidelines/guidelines-json';
+}
+
+/**
  * Implements hook_field_widget_form_alter().
  */
 function guidelines_field_widget_form_alter(&$element, FormStateInterface &$form_state, $context) {
-  guidelines_attach_to_widget($element, $form_state, $context);
+  // @todo add setting.
+  $display_inline = FALSE;
+  if ($display_inline) {
+    guidelines_attach_to_widget($element, $form_state, $context);
+  }
 }
 
 /**

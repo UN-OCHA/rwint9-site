@@ -1,0 +1,13 @@
+guidelines.form.json:
+  path: '/guidelines/json/{entity_type}/{bundle}'
+  defaults:
+    _title: 'Guidelines'
+    _controller: '\Drupal\guidelines\Controller\GuidelineJsonController::getFormGuidelines'
+  options:
+    parameters:
+      entity_type:
+        type: string
+      bundle:
+        type: string
+  requirements:
+    _permission: 'access content'
