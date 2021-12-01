@@ -15,8 +15,6 @@
  * @ingroup themeable
  */
 #}
-<div{{ attributes.addClass('guideline') }}>
-  {% if content %}
-    {{- content -}}
-  {% endif %}
-</div>
+{% if content %}
+  {{- content -}}
+{% endif %}
