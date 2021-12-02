@@ -171,12 +171,18 @@
               showGuideline(form, guidelines[event.target.getAttribute('data-guideline')]);
             });
 
-            if (element.nodeName === 'LABEL') {
-              element.parentNode.insertBefore(button, element.nextSibling);
-            }
-            else {
-              element.appendChild(button);
-            }
+            /* Drupal fields with either Legend or Label element ancestors */
+            const labels = element.querySelectorAll('.form-wrapper .form-item > label');
+            labels.forEach(item => item.parentNode.insertBefore(button, item.nextSibling));
+            const legends = element.querySelectorAll('[data-drupal-selector] > legend > span');
+            legends.forEach(item =>  item.appendChild(button));
+
+            // if (element.nodeName === 'LABEL') {
+            //   element.parentNode.insertBefore(button, element.nextSibling);
+            // }
+            // else {
+            //   element.appendChild(button);
+            // }
           }
         }
       }
