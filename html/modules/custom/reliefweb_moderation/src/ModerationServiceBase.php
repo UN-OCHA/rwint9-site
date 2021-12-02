@@ -1133,7 +1133,14 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     $entity_table_alias = $query->innerJoin($entity_table, $entity_table, "%alias.{$entity_id_field} = cms.content_entity_id");
 
     // Filter for the service entity bundle.
-    $query->condition($entity_table_alias . '.' . $entity_bundle_field, $bundle, '=');
+    if (!empty($bundle)) {
+      if (is_array($bundle)) {
+        $query->condition($entity_table_alias . '.' . $entity_bundle_field, $bundle, 'IN');
+      }
+      else {
+        $query->condition($entity_table_alias . '.' . $entity_bundle_field, $bundle, '=');
+      }
+    }
 
     // Filter the query with the form filters.
     $this->filterQuery($query, $filters);
@@ -1557,7 +1564,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     }
 
     if (!empty($definition['condition_callback']) && method_exists($this, $definition['condition_callback'])) {
-      $this->{$definition['condition_callback']}($definition, $base, $field, $value, $operator);
+      $this->{$definition['condition_callback']}($definition, $base, $fields, $value, $operator);
     }
     else {
       if (is_array($fields)) {
@@ -1757,6 +1764,11 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
    */
   protected function joinPostingRights(Select $query, array $definition, $entity_type_id, $entity_base_table, $entity_id_field, $or = FALSE, $values = []) {
     $bundle = $this->getBundle();
+
+    // Skip for empty bundle.
+    if ($bundle === '' || is_array($bundle)) {
+      return '';
+    }
 
     // This is only valid for jobs and training. Skip it otherwise.
     if ($bundle !== 'job' && $bundle !== 'training') {
