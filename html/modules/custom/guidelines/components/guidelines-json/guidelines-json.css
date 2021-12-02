@@ -5,9 +5,9 @@ form[data-with-guidelines] > * .form-wrapper {
 form[data-with-guidelines] button[data-guideline] {
   display: inline-block;
   vertical-align: middle;
-  position: absolute;
-  top: 0;
-  right: 0;
+  /*position: absolute;*/
+  /*top: 0;*/
+  /*right: 0;*/
   padding: 4px 10px;
   margin-top: 0;
 }
