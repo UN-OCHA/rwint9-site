@@ -1,4 +1,4 @@
-uuid: 689ecb45-ba0e-4c6d-b167-215de04dddec
+uuid: eff5127e-e198-4808-911a-6f294ad84846
 langcode: en
 status: true
 dependencies:
@@ -8,17 +8,17 @@ dependencies:
 id: node.field_origin
 field_name: field_origin
 entity_type: node
-type: list_string
+type: list_integer
 settings:
   allowed_values:
     -
-      value: '0'
+      value: 0
       label: URL
     -
-      value: '1'
+      value: 1
       label: 'Submit mailbox'
     -
-      value: '2'
+      value: 2
       label: 'Reliefweb product'
   allowed_values_function: ''
 module: options
