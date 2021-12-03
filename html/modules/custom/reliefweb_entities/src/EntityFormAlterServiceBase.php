@@ -580,10 +580,9 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
    *   Form state.
    */
   public function handlePotentialNewSourceSubmission(array $form, FormStateInterface $form_state) {
-    $entity_type = $form_state
-      ?->getFormObject()
-      ?->getEntity()
-      ?->getEntityType();
+    $entity = $form_state?->getFormObject()?->getEntity();
+    $entity_type = $entity?->getEntityType();
+    $bundle = $entity?->bundle();
 
     if (!empty($entity_type) && $entity_type instanceof ContentEntityTypeInterface) {
       $revision_log_field = $entity_type->getRevisionMetadataKey('revision_log_message');
@@ -604,7 +603,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
 
         // If the status is "published" or "pending", change as appropriate.
         if ($status === 'published' || $status === 'pending') {
-          $status = $this->state->get('reliefweb_no_source_status', 'pending');
+          $status = $this->state->get('reliefweb_no_source_status_' . $bundle, 'pending');
           $form_state->setValue(['moderation_state', 0, 'value'], $status);
         }
       }

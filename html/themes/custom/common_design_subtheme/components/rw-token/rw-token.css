@@ -1,0 +1,43 @@
+/**
+ * Token help.
+ *
+ * Information about tokens usable in a text input or textarea.
+ */
+.rw-token-help {
+  font-size: 14px;
+}
+.rw-token-help.form-wrapper {
+  margin-top: 8px;
+}
+.rw-token-help summary {
+  padding: 8px;
+  list-style-type: none;
+  cursor: pointer;
+  border: 1px solid #e6ecef;
+  line-height: 1.5;
+}
+.rw-token-help[open] summary {
+  border-bottom: 0;
+}
+/* Use custom icon */
+.rw-token-help summary::-webkit-details-marker {
+  display: none;
+}
+.rw-token-help summary::before {
+  display: inline-block;
+  overflow: hidden;
+  width: 12px;
+  height: 12px;
+  margin-right: 4px;
+  content: "";
+  background: var(--rw-icons--toggle--down--12--dark-blue);
+}
+.rw-token-help[open] > summary::before {
+  background: var(--rw-icons--toggle--up--12--dark-blue);
+}
+.rw-token-help summary strong {
+  font-size: 16px;
+}
+.rw-token-help summary p {
+  margin: 0;
+}

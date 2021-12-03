@@ -216,9 +216,9 @@ class SourceModeration extends ModerationServiceBase {
       // Update the posting rights field, setting everything as blocked.
       if (!$entity->get('field_user_posting_rights')->isEmpty()) {
         foreach ($entity->get('field_user_posting_rights') as $item) {
-          if ($item->job->getValue() != 1 || $item->training->getValue() != 1) {
-            $item->job->setValue(1);
-            $item->training->setValue(1);
+          if ($item->get('job')->getValue() != 1 || $item->get('training')->getValue() != 1) {
+            $item->get('job')->setValue(1);
+            $item->get('training')->setValue(1);
             $changed = TRUE;
           }
         }
