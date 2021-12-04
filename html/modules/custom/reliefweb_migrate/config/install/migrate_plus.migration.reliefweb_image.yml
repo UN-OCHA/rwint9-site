@@ -36,3 +36,7 @@ process:
   changed: timestamp
   # Store the original URI.
   old_uri: old_uri
+  # Flag the entity as being migrated.
+  _is_migrating:
+    plugin: default_value
+    default_value: 1

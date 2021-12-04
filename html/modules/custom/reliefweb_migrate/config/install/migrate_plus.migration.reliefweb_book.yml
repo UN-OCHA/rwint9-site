@@ -19,6 +19,10 @@ process:
     -
       plugin: migration_lookup
       migration: reliefweb_book
+  # Flag the entity as being migrated.
+  _is_migrating:
+    plugin: default_value
+    default_value: 1
 migration_dependencies:
   required:
     - reliefweb_node__book

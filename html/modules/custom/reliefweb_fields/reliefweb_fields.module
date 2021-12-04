@@ -21,6 +21,10 @@ function reliefweb_fields_entity_type_build(array &$entity_types) {
  * Implements hook_ENTITY_TYPE_update() for nodes.
  */
 function reliefweb_fields_node_update(EntityInterface $entity) {
+  // @todo remove when removing `reliefweb_migrate`.
+  if (!empty($entity->_is_migrating)) {
+    return;
+  }
   ReliefWebLinks::updateFields('update', $entity);
 }
 
@@ -28,6 +32,10 @@ function reliefweb_fields_node_update(EntityInterface $entity) {
  * Implements hook_ENTITY_TYPE_delete() for nodes.
  */
 function reliefweb_fields_node_delete(EntityInterface $entity) {
+  // @todo remove when removing `reliefweb_migrate`.
+  if (!empty($entity->_is_migrating)) {
+    return;
+  }
   ReliefWebLinks::updateFields('delete', $entity);
 }
 
@@ -35,6 +43,10 @@ function reliefweb_fields_node_delete(EntityInterface $entity) {
  * Implements hook_ENTITY_TYPE_update() for users.
  */
 function reliefweb_fields_user_update(EntityInterface $entity) {
+  // @todo remove when removing `reliefweb_migrate`.
+  if (!empty($entity->_is_migrating)) {
+    return;
+  }
   ReliefWebUserPostingRights::updateFields('update', $entity);
 }
 
@@ -42,5 +54,9 @@ function reliefweb_fields_user_update(EntityInterface $entity) {
  * Implements hook_ENTITY_TYPE_delete() for nodes.
  */
 function reliefweb_fields_user_delete(EntityInterface $entity) {
+  // @todo remove when removing `reliefweb_migrate`.
+  if (!empty($entity->_is_migrating)) {
+    return;
+  }
   ReliefWebUserPostingRights::updateFields('delete', $entity);
 }
