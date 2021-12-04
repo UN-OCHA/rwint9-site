@@ -5,7 +5,9 @@
  * ReliefWeb Docstore module file.
  */
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\file\Entity\File;
+use Drupal\reliefweb_docstore\Plugin\Field\FieldType\ReliefWebFileList;
 
 /**
  * Implements hook_theme().
@@ -175,4 +177,29 @@ function reliefweb_docstore_reliefweb_utility_file_update_alter(File $file, &$ap
 
   // Do not apply the file URI transformation for files managed by this module.
   $apply = $apply && preg_match($pattern, $file->getFileUri()) !== 1;
+}
+
+/**
+ * Implements hook_entity_revision_delete().
+ */
+function reliefweb_docstore_entity_revision_delete(EntityInterface $entity) {
+  // @todo remove when removing `reliefweb_migrate`.
+  if (!empty($entity->_is_migrating)) {
+    return;
+  }
+  // Drupal doesn't invoke any postRevisionDelete on the field items so this is
+  // the only way to perform post revision deletion tasks.
+  //
+  // Check if the entity has any reliefweb_file field, in which case we
+  // invoke ::updateRemoteDocumentFileReferences() to update remote file
+  // references in the remote document resource associated with the resource.
+  foreach ($entity as $field) {
+    if ($field instanceof ReliefWebFileList) {
+      $field->updateRemoteDocumentFileReferences();
+      // No need to continue as calling the above method on one of the
+      // reliefweb_file field of the entity is enough to update the remote
+      // file references.
+      break;
+    }
+  }
 }

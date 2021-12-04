@@ -313,7 +313,7 @@ class FileDownloadController extends OriginalFileDownloadController {
     }
 
     // Stream the response content.
-    if ($client->isResponseSuccessful($response)) {
+    if ($response->isSuccessful()) {
       return new StreamedResponse(function () use ($response) {
         $input = StreamWrapper::getResource($response->getBody());
         $output = fopen('php://output', 'wb');
@@ -322,7 +322,7 @@ class FileDownloadController extends OriginalFileDownloadController {
     }
     // If the response was not successful nor a 404, throw an exception with the
     // status code and reason so we can log it.
-    elseif ($response->getStatusCode() !== 404) {
+    elseif (!$response->isNotFound()) {
       throw new \Exception($response->getStatusCode(), $response->getReasonPhrase());
     }
 

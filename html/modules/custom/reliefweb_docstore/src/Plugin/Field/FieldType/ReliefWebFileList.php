@@ -37,6 +37,40 @@ class ReliefWebFileList extends FieldItemList {
    * {@inheritdoc}
    */
   public function preSave() {
+    // Files migration is handled separately.
+    // @todo remove when removing `reliefweb_migrate`.
+    if (!empty($entity->_is_migrating)) {
+      // Create the field item and preview files with the permanent public URIs.
+      foreach ($this->list as $item) {
+        $file = $item->createFile();
+        if (empty($file)) {
+          continue;
+        }
+        $file->setFileUri($item->getPermanentUri(FALSE, FALSE));
+        $file->setPermanent();
+        $file->save();
+        $item->get('file_uuid')->setValue($file->uuid());
+
+        if (!$item->canHavePreview() || empty($this->getPreviewPage())) {
+          continue;
+        }
+        $preview_file = $this->createPreviewFile(FALSE);
+        if (emtpy($preview_file)) {
+          continue;
+        }
+        $preview_file->setFileUri($item->getPermanentUri(FALSE, TRUE));
+        $preview_file->setPermanent();
+        $preview_file->save();
+        $item->get('preview_uuid')->setValue($preview_file->uuid());
+      }
+      return;
+    }
+
+    // Remove references to any files from the remote document associated with
+    // the entity this field is attached to so that we can perform update and
+    // deletion of the remote file resources.
+    $this->deleteRemoteDocumentFileReferences();
+
     // Filter out empty items.
     $this->filterEmptyItems();
 
@@ -87,22 +121,55 @@ class ReliefWebFileList extends FieldItemList {
   /**
    * {@inheritdoc}
    */
+  public function postSave($updated) {
+    // Files migration is handled separately.
+    // @todo remove when removing `reliefweb_migrate`.
+    if (!empty($entity->_is_migrating)) {
+      return;
+    }
+    parent::postSave($updated);
+
+    // Update the references to the remote file resources in the remote document
+    // associated with the entity this field is attached.
+    $this->updateRemoteDocumentFileReferences();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function delete() {
     $entity = $this->getEntity();
+
+    // Remove references to any files from the remote document associated with
+    // the entity this field is attached to so that we can perform update and
+    // deletion of the remote file resources.
+    //
+    // If we are deleting a translation, we'll update the document with the
+    // references to the files from the other translations.
+    //
+    // Otherwise, we delete the document directly.
+    if (!$entity->isDefaultTranslation()) {
+      $this->deleteRemoteDocumentFileReferences();
+    }
+    else {
+      $this->getDocstoreClient()->deleteDocument($entity->uuid());
+    }
+
     $entity_type_id = $entity->getEntityTypeId();
     $field_name = $this->definition->getName();
 
     $table = $this->getFieldRevisionTableName($entity_type_id, $field_name);
-    $fields = [
-      $this->getFieldColumnName($entity_type_id, $field_name, 'uuid') => 'uuid',
-      $this->getFieldColumnName($entity_type_id, $field_name, 'file_uuid') => 'file_uid',
-      $this->getFieldColumnName($entity_type_id, $field_name, 'preview_uuid') => 'preview_uuid',
-    ];
 
+    // Query the field revision table to retrieve all the file entity UUIds
+    // (file and preview) and the file resource UUIDs.
     $query = $this->getDatabase()
       ->select($table, $table)
-      ->fields($table, $fields)
       ->condition($table . '.entity_id', $entity->id(), '=');
+
+    foreach (['uuid', 'file_uuid', 'preview_uuid'] as $field) {
+      $column = $this->getFieldColumnName($entity_type_id, $field_name, $field);
+      $query->addField($table, $column, $field);
+    }
 
     // If we are deleting a translation, limit to the translation language.
     if (!$entity->isDefaultTranslation()) {
@@ -112,6 +179,9 @@ class ReliefWebFileList extends FieldItemList {
     // Retrieve the item and file UUIDs from the field revisions.
     $records = $query->distinct()->execute();
 
+    // Store the resource UUIDs and the file UUIDs so we can first
+    // delete the remote resource (if stored remotelly) then delete the
+    // file entities.
     $uuids = [];
     $file_uuids = [];
     if (!empty($records)) {
@@ -128,18 +198,20 @@ class ReliefWebFileList extends FieldItemList {
       }
     }
 
-    // Delete the remote files.
-    if ($this->getDocstoreConfig()->get('local') === TRUE && !empty($uuids)) {
+    // Delete all the remote files.
+    if (!$this->storeLocally() && !empty($uuids)) {
+      $client = $this->getDocstoreClient();
       foreach ($uuids as $uuid) {
-        $this->getDocstoreClient()->deleteFile($uuid);
+        $client->deleteFile($uuid);
       }
     }
 
-    // Load the field item and preview files.
-    $files = $this->getEntityTypeStorage($entity_type_id)
+    // We load the file entities for the field item and preview files.
+    /** @var \Drupal\file\Entity\File[] $files */
+    $files = $this->getEntityTypeStorage('file')
       ->loadByProperties(['uuid' => $file_uuids]);
 
-    // Delete the files.
+    // Delete the file entities and the file on disk if any.
     foreach ($files as $file) {
       $uri = $file->getFileUri();
       if (!empty($uri) && file_exists($uri)) {
@@ -147,12 +219,88 @@ class ReliefWebFileList extends FieldItemList {
       }
       $file->delete();
     }
+
+    // If we just deleted a translation, we need to update the file references
+    // for the remaining translations.
+    if (!$entity->isDefaultTranslation()) {
+      $this->updateRemoteDocumentFileReferences();
+    }
   }
 
   /**
    * {@inheritdoc}
    */
   public function deleteRevision() {
+    // Remove references to any files from the remote document associated with
+    // the entity this field is attached to so that we can perform update and
+    // deletion of the remote file resources.
+    //
+    // The references will be updated after all the calls to ::deleteRevision(),
+    // in reliefweb_docstore_entity_revision_delete().
+    $this->deleteRemoteDocumentFileReferences();
+
+    // First remove all the files that are not used anymore, then remove
+    // the revision of the files thare are still referenced.
+    $this->deleteUnusedFiles();
+    $this->deleteUnusedFileRevisions();
+  }
+
+  /**
+   * Delete the files associated with the revision to be deleted.
+   *
+   * This will completely delete field item files that are not referenced in
+   * other revisions.
+   */
+  protected function deleteUnusedFiles() {
+    $entity = $this->getEntity();
+    $entity_type_id = $entity->getEntityTypeId();
+    $revision_id = $entity->getRevisionId();
+    $field_name = $this->definition->getName();
+
+    // Map of the field items keyed by file resource UUID.
+    $items = [];
+    foreach ($this->list as $item) {
+      $uuid = $item->getUuid();
+      if (!empty($uuid)) {
+        $items[$uuid] = $item;
+      }
+    }
+
+    $table = $this->getFieldRevisionTableName($entity_type_id, $field_name);
+    $field = $this->getFieldColumnName($entity_type_id, $field_name, 'uuid');
+
+    // Get the other revision records that have the same UUIDs than the
+    // current revision to be deleted.
+    $records = $this->getDatabase()
+      ->select($table, $table)
+      ->fields($table, [$field])
+      ->condition($table . '.entity_id', $entity->id(), '=')
+      ->condition($table . '.revision_id', $revision_id, '<>')
+      ->condition($table . '.' . $field, array_keys($items), 'IN')
+      ->execute();
+
+    // Filter the items for which there are other revisions using the same UUID.
+    if (!empty($records)) {
+      foreach ($records as $record) {
+        unset($items[$record->{$field}]);
+      }
+    }
+
+    // Delete the items.
+    foreach ($items as $item) {
+      $item->delete();
+      // Flag to indicate the field item and its files are already deleted.
+      $item->_deleted = TRUE;
+    }
+  }
+
+  /**
+   * Delete the file revisions associated with the revision to be deleted.
+   *
+   * This will delete the file revisions that are not referenced by other
+   * entity revisions.
+   */
+  protected function deleteUnusedFileRevisions() {
     $entity = $this->getEntity();
     $entity_type_id = $entity->getEntityTypeId();
     $revision_id = $entity->getRevisionId();
@@ -162,7 +310,9 @@ class ReliefWebFileList extends FieldItemList {
     $items = [];
     foreach ($this->list as $item) {
       $file_uuid = $item->getFileUuid();
-      if (!empty($file_uuid)) {
+      // Skip invalid field items or items that were already processed in
+      // ::deleteUnusedFiles().
+      if (!empty($file_uuid) && empty($item->_deleted)) {
         $items[$file_uuid] = $item;
       }
     }
@@ -192,6 +342,121 @@ class ReliefWebFileList extends FieldItemList {
     foreach ($items as $item) {
       $item->deleteRevision();
     }
+  }
+
+  /**
+   * Get all the field resource UUIDs for the field.
+   *
+   * @param string $field_name
+   *   Field name.
+   *
+   * @return array
+   *   List of file resource UUIDs.
+   */
+  protected function getFileResourceUuidsFromField($field_name) {
+    $entity = $this->getEntity();
+    if (empty($entity->id())) {
+      return [];
+    }
+
+    $entity_type_id = $entity->getEntityTypeId();
+    $table = $this->getFieldRevisionTableName($entity_type_id, $field_name);
+    $field = $this->getFieldColumnName($entity_type_id, $field_name, 'uuid');
+
+    return $this->getDatabase()
+      ->select($table, $table)
+      ->fields($table, [$field])
+      ->condition($table . '.entity_id', $entity->id(), '=')
+      ->distinct()
+      ->execute()
+      ?->fetchCol() ?? [];
+  }
+
+  /**
+   * Delete all the file references from a remote document.
+   *
+   * Drupal doesn't provide a "preDeleteRevision" hook for revisionable entities
+   * so we do that here and flag the entity so that if the the entity has
+   * several reliefweb_file fields, then we don't run that again.
+   *
+   * This is needed because the remote document has a single "files" field
+   * with references to all the files from the reliefweb_file fields on the
+   * entity.
+   */
+  protected function deleteRemoteDocumentFileReferences() {
+    if ($this->storeLocally()) {
+      return;
+    }
+
+    $entity = $this->getEntity();
+
+    // Skip if the entity has already been processed.
+    if (!empty($entity->_references_deleted) || empty($entity->uuid())) {
+      return;
+    }
+    $entity->_references_deleted = TRUE;
+
+    // Note: it doesn't matter if the document exists or not.
+    $this->getDocstoreClient()->updateDocument($entity->uuid(), [
+      'files' => [],
+    ]);
+  }
+
+  /**
+   * Update the document resource with all the references remote files.
+   */
+  protected function updateRemoteDocumentFileReferences() {
+    if ($this->storeLocally()) {
+      return;
+    }
+
+    $entity = $this->getEntity();
+    $entity_uuid = $entity->uuid();
+    $client = $this->getDocstoreClient();
+
+    // Skip if the entity has already been processed.
+    if (!empty($entity->_references_updated) || empty($entity->uuid())) {
+      return;
+    }
+    $entity->_references_updated = TRUE;
+
+    // Get all the file resource UUIDs referenced by the entity.
+    $uuids = [];
+    /** @var \Drupal\Core\Field\FieldItemListInterface $field_item_list */
+    foreach ($entity as $field_name => $field_item_list) {
+      if ($field_item_list instanceof ReliefWebFileList) {
+        $uuids = array_merge($uuids, $this->getFileResourceUuidsFromField($field_name));
+      }
+    }
+
+    // Retrieve the document.
+    $response = $client->getDocument($entity_uuid);
+
+    // Update the document.
+    if ($response->isSuccessful()) {
+      $this->getDocstoreClient()->updateDocument($entity->uuid(), [
+        'files' => $uuids,
+      ]);
+    }
+    // Try to create it if it doesn't exist and there are files.
+    elseif ($response->isNotFound() && !empty($uuids)) {
+      $response = $client->createDocument([
+        'uuid' => $entity_uuid,
+        'title' => $entity->label(),
+        'private' => TRUE,
+        'files' => $uuids,
+      ]);
+    }
+  }
+
+  /**
+   * Check if we are storing the files locally or remotely.
+   *
+   * @return bool
+   *   TRUE if the files are stored locally.
+   */
+  public function storeLocally() {
+    return $this->getDocstoreConfig()->get('local') === TRUE;
   }
 
   /**

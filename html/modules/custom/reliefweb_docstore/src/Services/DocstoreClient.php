@@ -5,8 +5,9 @@ namespace Drupal\reliefweb_docstore\Services;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Utils;
-use Psr\Http\Message\ResponseInterface;
+use Drupal\reliefweb_utility\Response\JsonResponse;
 
 /**
  * ReliefWeb API client service class.
@@ -62,13 +63,11 @@ class DocstoreClient {
    * @param int $timeout
    *   Request timeout.
    *
-   * @return array|null
-   *   The data from the API response or NULL in case of error.
+   * @return \Drupal\reliefweb_utility\Response\JsonResponse
+   *   Response.
    */
   public function getFile($uuid, $timeout = 5) {
-    $response = $this->request('GET', '/api/v1/files/' . $uuid, [], $timeout);
-
-    return $this->decodeResponseBody($response);
+    return $this->request('GET', '/api/v1/files/' . $uuid, [], $timeout);
   }
 
   /**
@@ -81,13 +80,11 @@ class DocstoreClient {
    * @param int $timeout
    *   Request timeout.
    *
-   * @return array|null
-   *   The data from the API response or NULL in case of error.
+   * @return Drupal\reliefweb_utility\Response\JsonResponse
+   *   Response.
    */
   public function getFileRevision($uuid, $revision_id, $timeout = 5) {
-    $response = $this->request('GET', '/api/v1/files/' . $uuid . '/revisions/' . $revision_id, [], $timeout);
-
-    return $this->decodeResponseBody($response);
+    return $this->request('GET', '/api/v1/files/' . $uuid . '/revisions/' . $revision_id, [], $timeout);
   }
 
   /**
@@ -98,15 +95,13 @@ class DocstoreClient {
    * @param int $timeout
    *   Request timeout.
    *
-   * @return array|null
-   *   The data from the API response or NULL in case of error.
+   * @return \Drupal\reliefweb_utility\Response\JsonResponse
+   *   Response.
    */
   public function createFile(array $payload, $timeout = 5) {
-    $response = $this->request('POST', '/api/v1/files', [
+    return $this->request('POST', '/api/v1/files', [
       'json' => $payload,
     ], $timeout);
-
-    return $this->decodeResponseBody($response);
   }
 
   /**
@@ -119,25 +114,23 @@ class DocstoreClient {
    * @param int $timeout
    *   Request timeout.
    *
-   * @return array|null
-   *   The data from the API response or NULL in case of error.
+   * @return \Drupal\reliefweb_utility\Response\JsonResponse
+   *   Response.
    */
   public function updateFileContentFromFilePath($uuid, $path, $timeout = 300) {
     try {
       $resource = Utils::TryFopen($path, 'r');
     }
-    catch (\RuntimeExecption $exception) {
+    catch (\RuntimeException $exception) {
       $this->logger->error('Unable to read file @path', [
         '@path' => $path,
       ]);
-      return NULL;
+      return new JsonResponse();
     }
 
-    $response = $this->request('POST', '/api/v1/files/' . $uuid . '/content', [
+    return $this->request('POST', '/api/v1/files/' . $uuid . '/content', [
       'body' => $resource,
     ], $timeout);
-
-    return $this->decodeResponseBody($response);
   }
 
   /**
@@ -159,11 +152,11 @@ class DocstoreClient {
     try {
       $resource = Utils::TryFopen($path, 'w');
     }
-    catch (\RuntimeExecption $exception) {
+    catch (\RuntimeException $exception) {
       $this->logger->error('Unable to open file @path for writing', [
         '@path' => $path,
       ]);
-      return NULL;
+      return FALSE;
     }
 
     // Assume we want to get the latest revision in which case we can do
@@ -182,7 +175,7 @@ class DocstoreClient {
       'sink' => $resource,
     ], $timeout);
 
-    return $this->isResponseSuccessful($response);
+    return $response->isSuccessful();
   }
 
   /**
@@ -195,17 +188,15 @@ class DocstoreClient {
    * @param int $timeout
    *   Request timeout.
    *
-   * @return array|null
-   *   The data from the API response or NULL in case of error.
+   * @return \Drupal\reliefweb_utility\Response\JsonResponse
+   *   Response.
    */
   public function updateFileStatus($uuid, $private, $timeout = 5) {
-    $response = $this->request('PATCH', '/api/v1/files/' . $uuid, [
+    return $this->request('PATCH', '/api/v1/files/' . $uuid, [
       'json' => [
         'private' => $private,
       ],
     ], $timeout);
-
-    return $this->decodeResponseBody($response);
   }
 
   /**
@@ -228,7 +219,7 @@ class DocstoreClient {
       ],
     ], $timeout);
 
-    return $this->isResponseSuccessful($response);
+    return $response->isSuccessful();
   }
 
   /**
@@ -245,7 +236,7 @@ class DocstoreClient {
   public function deleteFile($uuid, $timeout = 30) {
     $response = $this->request('DELETE', '/api/v1/files/' . $uuid, [], $timeout);
 
-    return $this->isResponseSuccessful($response);
+    return $response->isSuccessful();
   }
 
   /**
@@ -264,7 +255,131 @@ class DocstoreClient {
   public function deleteFileRevision($uuid, $revision_id, $timeout = 10) {
     $response = $this->request('DELETE', '/api/v1/files/' . $uuid . '/revisions/' . $revision_id, [], $timeout);
 
-    return $this->isResponseSuccessful($response);
+    return $response->isSuccessful();
+  }
+
+  /**
+   * Get a document resource in the docstore.
+   *
+   * @param string $uuid
+   *   The document resource UUID.
+   * @param int $timeout
+   *   Request timeout.
+   *
+   * @return \Drupal\reliefweb_utility\Response\JsonResponse
+   *   Response.
+   */
+  public function getDocument($uuid, $timeout = 5) {
+    return $this->request('GET', $this->getDocumentEndpoint($uuid), [], $timeout);
+  }
+
+  /**
+   * Create a document in the docstore.
+   *
+   * @param array $payload
+   *   API request payload (with fields, filters, sort etc.)
+   * @param int $timeout
+   *   Request timeout.
+   *
+   * @return \Drupal\reliefweb_utility\Response\JsonResponse
+   *   Response.
+   */
+  public function createDocument(array $payload, $timeout = 5) {
+    // Check if the document type exists.
+    $response = $this->getDocumentType();
+    // Or try to create it.
+    if ($response->isNotFound()) {
+      $response = $this->createDocumentType();
+      if (!$response->isSuccessful()) {
+        return $response;
+      }
+    }
+
+    // Create the document.
+    return $this->request('POST', $this->getDocumentEndpoint(), [
+      'json' => $payload + [
+        'author' => 'reliefweb',
+      ],
+    ], $timeout);
+  }
+
+  /**
+   * Update a document in the docstore.
+   *
+   * @param string $uuid
+   *   The document resource UUID.
+   * @param array $payload
+   *   API request payload (with fields, filters, sort etc.)
+   * @param int $timeout
+   *   Request timeout.
+   *
+   * @return \Drupal\reliefweb_utility\Response\JsonResponse
+   *   Response.
+   */
+  public function updateDocument($uuid, array $payload, $timeout = 5) {
+    return $this->request('PATCH', $this->getDocumentEndpoint($uuid), [
+      'json' => $payload,
+    ], $timeout);
+  }
+
+  /**
+   * Delete a document.
+   *
+   * @param string $uuid
+   *   The document resource UUID.
+   * @param int $timeout
+   *   Request timeout.
+   *
+   * @return bool
+   *   TRUE on success.
+   */
+  public function deleteDocument($uuid, $timeout = 30) {
+    $response = $this->request('DELETE', $this->getDocumentEndpoint($uuid), [], $timeout);
+
+    return $response->isSuccessful();
+  }
+
+  /**
+   * Create the ReliefWeb document type in the docstore.
+   *
+   * @param int $timeout
+   *   Request timeout.
+   *
+   * @return \Drupal\reliefweb_utility\Response\JsonResponse
+   *   Response.
+   */
+  public function getDocumentType($timeout = 5) {
+    $endpoint = '/api/v1/types/' . $this->getDocstoreDocumentType();
+    return $this->request('GET', $endpoint, [], $timeout);
+  }
+
+  /**
+   * Create the ReliefWeb document type in the docstore.
+   *
+   * @param int $timeout
+   *   Request timeout.
+   *
+   * @return \Drupal\reliefweb_utility\Response\JsonResponse
+   *   Response.
+   */
+  public function createDocumentType($timeout = 5) {
+    $document_type = $this->getDocstoreDocumentType();
+
+    $payload = [
+      'machine_name' => $document_type,
+      'endpoint' => $this->getDocstoreDocumentTypeEndpoint(),
+      'label' => $document_type,
+      'shared' => FALSE,
+      'content_allowed' => FALSE,
+      'fields_allowed' => FALSE,
+      'author' => 'reliefweb',
+      'allow_duplicates' => TRUE,
+      'use_revisions' => FALSE,
+    ];
+
+    return $this->request('POST', '/api/v1/types', [
+      'json' => $payload,
+    ], $timeout);
   }
 
   /**
@@ -279,7 +394,7 @@ class DocstoreClient {
    * @param int $timeout
    *   Request timeout.
    *
-   * @return \Psr\Http\Message\ResponseInterface|null
+   * @return \Symfony\Component\HttpFoundation\Response
    *   Response.
    */
   public function request($method, $endpoint, array $options, $timeout = 5) {
@@ -292,57 +407,33 @@ class DocstoreClient {
         unset($options['headers']);
       }
 
-      return $this->httpClient->request($method, $url, [
+      $response = $this->httpClient->request($method, $url, [
         'timeout' => $timeout,
         'headers' => $headers,
       ] + $options);
+      return new JsonResponse($response);
     }
     catch (\Exception $exception) {
-      $this->logger->error('Unable to perform the @method request to the @endpoint endpoint with the options: @options: @error', [
-        '@method' => $method,
-        '@endpoint' => $endpoint,
-        '@options' => print_r($options, TRUE),
-        '@error' => $exception->getMessage(),
-      ]);
-      return NULL;
+      if ($exception->getCode() == 404) {
+        $this->logger->notice('@endpoint not found', [
+          '@endpoint' => $endpoint,
+        ]);
+      }
+      else {
+        $this->logger->error('Unable to perform the @method request to the @endpoint endpoint with the options: @options: @error', [
+          '@method' => $method,
+          '@endpoint' => $endpoint,
+          '@options' => print_r($options, TRUE),
+          '@code' => $exception->getCode(),
+          '@error' => $exception->getMessage(),
+        ]);
+      }
+      $response = NULL;
+      if ($exception instanceof RequestException) {
+        $response = $exception->getResponse();
+      }
+      return new JsonResponse($response);
     }
-  }
-
-  /**
-   * Decode the response body.
-   *
-   * Note: this assumes the body is JSON encoded data.
-   *
-   * @param \Psr\Http\Message\ResponseInterface|null $response
-   *   The request's response.
-   *
-   * @return mixed
-   *   NULL if the response body couldn't be decoded otherwise whatever the
-   *   was in the body.
-   */
-  public function decodeResponseBody(?ResponseInterface $response) {
-    if ($response !== NULL) {
-      $body = $response->getBody();
-      return !empty($body) ? json_decode($body, TRUE) : NULL;
-    }
-    return NULL;
-  }
-
-  /**
-   * Check if a response is sucessful.
-   *
-   * @param \Psr\Http\Message\ResponseInterface|null $response
-   *   The request's response.
-   *
-   * @return bool
-   *   TRUE if the response is successful.
-   */
-  public function isResponseSuccessful(?ResponseInterface $response) {
-    if ($response !== NULL) {
-      $code = $response->getStatusCode();
-      return $code >= 200 && $code < 300;
-    }
-    return FALSE;
   }
 
   /**
@@ -357,12 +448,46 @@ class DocstoreClient {
   protected function createDocstoreUrl($endpoint = '') {
     $docstore_url = $this->config->get('docstore_url');
     if (empty($docstore_url)) {
-      throw  new \Execption('The docstore URL is not defined');
+      throw  new \Exception('The docstore URL is not defined');
     }
     if (!empty($endpoint)) {
       return rtrim($docstore_url, '/') . '/' . ltrim($endpoint, '/');
     }
     return $docstore_url;
+  }
+
+  /**
+   * Get the docstore document type of the reliefweb document resources.
+   *
+   * @return string
+   *   Document type.
+   */
+  protected function getDocstoreDocumentType() {
+    return $this->config->get('docstore_document_type') ?? 'reliefweb_document';
+  }
+
+  /**
+   * Get the docstore document type endpoint.
+   *
+   * @return string
+   *   Document type endpoint.
+   */
+  protected function getDocstoreDocumentTypeEndpoint() {
+    return str_replace('_', '-', $this->getDocstoreDocumentType());
+  }
+
+  /**
+   * Get the document endpoint.
+   *
+   * @param string $uuid
+   *   Optional document UUID.
+   *
+   * @return string
+   *   Document endpoint.
+   */
+  protected function getDocumentEndpoint($uuid = '') {
+    $base = '/api/v1/documents/' . $this->getDocstoreDocumentTypeEndpoint();
+    return !empty($uuid) ? $base . '/' . $uuid : $base;
   }
 
   /**

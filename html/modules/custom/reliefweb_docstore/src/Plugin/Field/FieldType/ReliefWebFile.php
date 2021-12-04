@@ -382,7 +382,8 @@ class ReliefWebFile extends FieldItemBase {
         // @todo change to int(10) unsigned.
         'revision_id' => [
           'type' => 'int',
-          'size' => 'medium',
+          'size' => '10',
+          'unsigned' => TRUE,
           'not null' => TRUE,
         ],
         'file_uuid' => [
@@ -822,10 +823,13 @@ class ReliefWebFile extends FieldItemBase {
   /**
    * Create a managed file for the preview.
    *
+   * @param string $new_uuid
+   *   Whether to create a new UUID or re-use the existing one if any.
+   *
    * @return \Drupal\file\Entity\File
    *   Managed file.
    */
-  protected function createPreviewFile() {
+  protected function createPreviewFile($new_uuid = TRUE) {
     if ($this->isEmpty()) {
       return NULL;
     }
@@ -837,7 +841,10 @@ class ReliefWebFile extends FieldItemBase {
 
     // Generate a UUID for the preview. We'll store it in this field item only
     // if the preview generation worked.
-    $preview_uuid = $this->generateUuid();
+    $preview_uuid = $this->getPreviewUuid();
+    if ($new_uuid || empty($preview_uuid)) {
+      $preview_uuid = $this->generateUuid();
+    }
 
     // Generate the preview URI as private initially. We'll move it to public
     // if the docstore file is made public.
@@ -1327,7 +1334,7 @@ class ReliefWebFile extends FieldItemBase {
     $this->updateFileStatus(TRUE);
 
     // Try to delete the remote file. If it's used by another provider, then
-    // the request will fail.
+    // the request will fail but that's the expected behavior.
     if (!$this->storeLocally() && !empty($uuid)) {
       $this->getDocstoreClient()->deleteFile($uuid);
     }
@@ -1345,7 +1352,7 @@ class ReliefWebFile extends FieldItemBase {
     $revision_id = $this->getRevisionId();
 
     // Try to delete the remote revision. If it's used by another provider, then
-    // the request will fail.
+    // the request will fail but that's the expected behavior.
     if (!$this->storeLocally() && !empty($uuid) && !empty($revision_id)) {
       $this->getDocstoreClient()->deleteFileRevision($uuid, $revision_id);
     }
@@ -1426,6 +1433,7 @@ class ReliefWebFile extends FieldItemBase {
     }
     // @todo log the error and see what to tell the user.
     catch (\Exception $exception) {
+      // @todo inject the messenger service to display the message.
       throw $exception;
     }
   }
@@ -1442,6 +1450,7 @@ class ReliefWebFile extends FieldItemBase {
     }
 
     // Mark the file revision as active for us.
+    // @todo do something if that fails?
     if (!$this->storeLocally()) {
       $this->getDocstoreClient()->selectFileRevision($this->getUuid(), $this->getRevisionId());
     }
@@ -1478,7 +1487,7 @@ class ReliefWebFile extends FieldItemBase {
     $file = $this->loadFile();
     // @todo better error message.
     if (empty($file)) {
-      throw \Exception('Unable to load the local file.');
+      throw new \Exception('Unable to load the local file.');
     }
 
     $client = $this->getDocstoreClient();
@@ -1488,21 +1497,24 @@ class ReliefWebFile extends FieldItemBase {
     // If that's the case, then we don't have anything special to do.
     $revision_id = $this->getRevisionId();
     if (!empty($revision_id)) {
-      $result = $client->getFileRevision($uuid, $revision_id);
+      $response = $client->getFileRevision($uuid, $revision_id);
 
-      // We cannot revert if the file doesn't exist in the docstore anymore.
-      if (empty($result)) {
-        throw \Exception('The remote file revision doesn\'t exist anymore.');
+      // We cannot revert if the file doesn't exist in the docstore anymore or
+      // something went wrong like denied access.
+      if (!$response->isSuccessful()) {
+        throw new \Exception('The remote file revision doesn\'t exist anymore.');
       }
     }
     // Check if the remote file exists and create one if it doesn't then
     // update its content.
     else {
       // Check if the remote file exists.
-      $result = $client->getFile($uuid);
-      if (empty($result)) {
+      $response = $client->getFile($uuid);
+
+      // Create it if necessary.
+      if ($response->isNotFound()) {
         // Create the file resource in the docstore.
-        $result = $client->createFile([
+        $response = $client->createFile([
           'uuid' => $uuid,
           'filename' => $this->getFileName(),
           'mimetype' => $this->getFileMime(),
@@ -1511,21 +1523,29 @@ class ReliefWebFile extends FieldItemBase {
           'private' => TRUE,
         ]);
 
-        if (empty($result)) {
-          throw \Exception('Unable to create remote file resource');
+        if (!$response->isSuccessful()) {
+          throw new \Exception('Unable to create remote file resource');
         }
+      }
+      // Abort if the file couldn't be retrieved as we cannot update it.
+      elseif (!$response->isSuccessful()) {
+        throw new \Exception('Unable to retrieve remote file resource');
       }
 
       // Upload the file content.
-      $result = $client->updateFileContentFromFilePath($uuid, $file->getFileUri());
-
-      // @todo better error message.
-      if (!isset($result['revision_id'])) {
+      $response = $client->updateFileContentFromFilePath($uuid, $file->getFileUri());
+      if (!$response->isSuccessful()) {
         throw new \Exception('Unable to update remote file content');
       }
 
+      // Get the new file revision id.
+      $content = $response->getContent();
+      if (empty($content) || !isset($content['revision_id'])) {
+        throw new \Exception('Invalid revison id after updating file content');
+      }
+
       // Store the new revision returned by the docstore.
-      $this->get('revision_id')->setValue($result['revision_id']);
+      $this->get('revision_id')->setValue($content['revision_id']);
     }
 
     // Delete the local file if any.
