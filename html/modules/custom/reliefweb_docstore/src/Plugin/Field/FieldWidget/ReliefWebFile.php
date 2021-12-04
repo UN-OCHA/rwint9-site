@@ -410,7 +410,7 @@ class ReliefWebFile extends WidgetBase {
     // interactions.
     $element['operations'] = [
       '#type' => 'details',
-      '#title' => $this->t('Edit'),
+      '#title' => $this->t('Actions'),
     ];
 
     // Add a button to delete the file.

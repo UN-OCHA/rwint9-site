@@ -22,7 +22,11 @@
   ]
 %}
 <tr{{ attributes.addClass(['rw-file-widget-item', 'draggable']) }}>
-  <td class="rw-file-widget-item__information">
+  {% if element.preview_page is empty %}
+  <td class="rw-file-widget-item__information" colspan="2">
+  {% else %}
+  <td class="rw-file-widget-item__information" colspan="2">
+  {% endif %}
     {{ element.link }}
     {{ element.description }}
     {{ element.language }}
@@ -31,11 +35,13 @@
       {{ child }}
     {% endfor %}
   </td>
+  {% if element.preview_page is not empty %}
   <td class="rw-file-widget-item__preview">
     {{ element.preview }}
     {{ element.preview_page }}
     {{ element.preview_rotation }}
   </td>
+  {% endif %}
   <td class="rw-file-widget-item__operations">
     {{ element.operations }}
   </td>
