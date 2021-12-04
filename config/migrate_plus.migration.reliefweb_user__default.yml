@@ -1,9 +1,9 @@
-uuid: 2e5cee67-215e-40d6-9c67-8afd0f63a23d
+uuid: 03005d77-0e66-4896-a5a9-255101da3cd1
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: aFtgeNR343G7qeSNlMn5h_xZ3eh0amZ0CpK9e5VwK4g
+  default_config_hash: pZ7qJ6cbQfCCSZP7EOGTse1bg6aRM2UU0dYmWH3TOgY
 id: reliefweb_user__default
 class: null
 field_plugin_method: null
@@ -68,6 +68,9 @@ process:
     -
       plugin: skip_on_empty
       method: process
+  _is_migrating:
+    plugin: default_value
+    default_value: 1
 destination:
   plugin: 'entity:user'
 migration_dependencies:
