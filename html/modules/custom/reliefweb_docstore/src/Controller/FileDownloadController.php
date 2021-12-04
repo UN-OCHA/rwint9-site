@@ -306,12 +306,6 @@ class FileDownloadController extends OriginalFileDownloadController {
       'stream' => TRUE,
     ], 1200);
 
-    // Skip if something went wrong with the request. The error is already
-    // logged in DocstoreClient::request().
-    if (empty($response)) {
-      throw new \Exception();
-    }
-
     // Stream the response content.
     if ($response->isSuccessful()) {
       return new StreamedResponse(function () use ($response) {
@@ -320,12 +314,8 @@ class FileDownloadController extends OriginalFileDownloadController {
         stream_copy_to_stream($input, $output);
       }, 200, $headers + $response->getHeaders());
     }
-    // If the response was not successful nor a 404, throw an exception with the
-    // status code and reason so we can log it.
-    elseif (!$response->isNotFound()) {
-      throw new \Exception($response->getStatusCode(), $response->getReasonPhrase());
-    }
 
+    // The error is already logged by the docstore client.
     return NULL;
   }
 
