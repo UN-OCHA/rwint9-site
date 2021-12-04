@@ -158,7 +158,7 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
     // The report is a map or an infographic.
     elseif (isset($formats[12]) || isset($formats[12570])) {
       $label = isset($formats[12]) ? $this->t('Download Map') : $this->t('Download Infographic');
-      $build['#attributes']['class'][] = 'rw-file-list--map';
+      $build['#attributes']['class'][] = 'rw-attachment--map';
       foreach ($build['#list'] as &$item) {
         if (isset($item['preview'])) {
           $item['preview']['#style_name'] = 'large';
@@ -168,7 +168,7 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
     }
     else {
       $label = $this->t('Download Report');
-      $build['#attributes']['class'][] = 'rw-file-list--report';
+      $build['#attributes']['class'][] = 'rw-attachment--report';
       foreach ($build['#list'] as &$item) {
         $item['label'] = $label;
       }
