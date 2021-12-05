@@ -415,8 +415,9 @@ class DocstoreClient {
     }
     catch (\Exception $exception) {
       if ($exception->getCode() == 404) {
-        $this->logger->notice('@endpoint not found', [
+        $this->logger->notice('@endpoint not found: @message', [
           '@endpoint' => $endpoint,
+          '@message' => $exception->getMessage(),
         ]);
       }
       else {
