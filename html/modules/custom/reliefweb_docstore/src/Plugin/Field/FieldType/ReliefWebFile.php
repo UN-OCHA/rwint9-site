@@ -439,6 +439,7 @@ class ReliefWebFile extends FieldItemBase {
       ],
       'indexes' => [
         'uuid' => ['uuid'],
+        'file_uuid' => ['file_uuid'],
       ],
     ];
   }
