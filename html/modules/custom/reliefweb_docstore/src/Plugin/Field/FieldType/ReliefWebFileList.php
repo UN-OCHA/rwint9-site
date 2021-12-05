@@ -254,7 +254,6 @@ class ReliefWebFileList extends FieldItemList {
   protected function deleteUnusedFiles() {
     $entity = $this->getEntity();
     $entity_type_id = $entity->getEntityTypeId();
-    $revision_id = $entity->getRevisionId();
     $field_name = $this->definition->getName();
 
     // Map of the field items keyed by file resource UUID.
@@ -266,6 +265,10 @@ class ReliefWebFileList extends FieldItemList {
       }
     }
 
+    if (empty($items)) {
+      return;
+    }
+
     $table = $this->getFieldRevisionTableName($entity_type_id, $field_name);
     $field = $this->getFieldColumnName($entity_type_id, $field_name, 'uuid');
 
@@ -275,18 +278,19 @@ class ReliefWebFileList extends FieldItemList {
       ->select($table, $table)
       ->fields($table, [$field])
       ->condition($table . '.entity_id', $entity->id(), '=')
-      ->condition($table . '.revision_id', $revision_id, '<>')
+      ->condition($table . '.revision_id', $entity->getRevisionId(), '<>')
       ->condition($table . '.' . $field, array_keys($items), 'IN')
+      ->distinct()
       ->execute();
 
-    // Filter the items for which there are other revisions using the same UUID.
+    // Remove the items for which there are other revisions using the same UUID.
     if (!empty($records)) {
       foreach ($records as $record) {
         unset($items[$record->{$field}]);
       }
     }
 
-    // Delete the items.
+    // Delete the items that are not referenced anywhere else.
     foreach ($items as $item) {
       $item->delete();
       // Flag to indicate the field item and its files are already deleted.
@@ -303,7 +307,6 @@ class ReliefWebFileList extends FieldItemList {
   protected function deleteUnusedFileRevisions() {
     $entity = $this->getEntity();
     $entity_type_id = $entity->getEntityTypeId();
-    $revision_id = $entity->getRevisionId();
     $field_name = $this->definition->getName();
 
     // Map of the field items keyed by file UUID.
@@ -317,6 +320,10 @@ class ReliefWebFileList extends FieldItemList {
       }
     }
 
+    if (empty($items)) {
+      return;
+    }
+
     $table = $this->getFieldRevisionTableName($entity_type_id, $field_name);
     $field = $this->getFieldColumnName($entity_type_id, $field_name, 'file_uuid');
 
@@ -326,11 +333,12 @@ class ReliefWebFileList extends FieldItemList {
       ->select($table, $table)
       ->fields($table, [$field])
       ->condition($table . '.entity_id', $entity->id(), '=')
-      ->condition($table . '.revision_id', $revision_id, '<>')
+      ->condition($table . '.revision_id', $entity->getRevisionId(), '<>')
       ->condition($table . '.' . $field, array_keys($items), 'IN')
+      ->distinct()
       ->execute();
 
-    // Filter the items for which there are other revisions using the same
+    // Remove the items for which there are other revisions using the same
     // file UUID.
     if (!empty($records)) {
       foreach ($records as $record) {
@@ -338,7 +346,8 @@ class ReliefWebFileList extends FieldItemList {
       }
     }
 
-    // Delete the items.
+    // Delete the revision of the file if it's not referenced by other
+    // revisions.
     foreach ($items as $item) {
       $item->deleteRevision();
     }
@@ -403,9 +412,9 @@ class ReliefWebFileList extends FieldItemList {
   }
 
   /**
-   * Update the document resource with all the references remote files.
+   * Update the document resource with all the referenced remote files.
    */
-  protected function updateRemoteDocumentFileReferences() {
+  public function updateRemoteDocumentFileReferences() {
     if ($this->storeLocally()) {
       return;
     }
