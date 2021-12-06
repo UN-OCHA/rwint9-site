@@ -37,11 +37,17 @@ class ReliefWebFileList extends FieldItemList {
    * {@inheritdoc}
    */
   public function preSave() {
+    $entity = $this->getEntity();
+
     // Files migration is handled separately.
     // @todo remove when removing `reliefweb_migrate`.
     if (!empty($entity->_is_migrating)) {
       // Create the field item and preview files with the permanent public URIs.
       foreach ($this->list as $item) {
+        if ($item->isEmpty()) {
+          continue;
+        }
+
         $file = $item->createFile();
         if (empty($file)) {
           continue;
@@ -51,11 +57,11 @@ class ReliefWebFileList extends FieldItemList {
         $file->save();
         $item->get('file_uuid')->setValue($file->uuid());
 
-        if (!$item->canHavePreview() || empty($this->getPreviewPage())) {
+        if (!$item->canHavePreview() || empty($item->getPreviewPage())) {
           continue;
         }
-        $preview_file = $this->createPreviewFile(FALSE);
-        if (emtpy($preview_file)) {
+        $preview_file = $item->createPreviewFile(FALSE);
+        if (empty($preview_file)) {
           continue;
         }
         $preview_file->setFileUri($item->getPermanentUri(FALSE, TRUE));
@@ -77,7 +83,7 @@ class ReliefWebFileList extends FieldItemList {
     // Extract the original items so that we can process replaced files,
     // create revisions for old ones etc.
     $original_items = [];
-    $original = $this->getEntity()->original;
+    $original = $entity->original;
     if (isset($original)) {
       foreach ($original->get($this->definition->getName()) as $item) {
         if (!$item->isEmpty()) {
@@ -122,6 +128,8 @@ class ReliefWebFileList extends FieldItemList {
    * {@inheritdoc}
    */
   public function postSave($updated) {
+    $entity = $this->getEntity();
+
     // Files migration is handled separately.
     // @todo remove when removing `reliefweb_migrate`.
     if (!empty($entity->_is_migrating)) {
@@ -207,17 +215,19 @@ class ReliefWebFileList extends FieldItemList {
     }
 
     // We load the file entities for the field item and preview files.
-    /** @var \Drupal\file\Entity\File[] $files */
-    $files = $this->getEntityTypeStorage('file')
-      ->loadByProperties(['uuid' => $file_uuids]);
+    if (!empty($file_uuids)) {
+      /** @var \Drupal\file\Entity\File[] $files */
+      $files = $this->getEntityTypeStorage('file')
+        ->loadByProperties(['uuid' => $file_uuids]);
 
-    // Delete the file entities and the file on disk if any.
-    foreach ($files as $file) {
-      $uri = $file->getFileUri();
-      if (!empty($uri) && file_exists($uri)) {
-        $this->getFileSystem()->unlink($uri);
+      // Delete the file entities and the file on disk if any.
+      foreach ($files as $file) {
+        $uri = $file->getFileUri();
+        if (!empty($uri) && file_exists($uri)) {
+          $this->getFileSystem()->unlink($uri);
+        }
+        $file->delete();
       }
-      $file->delete();
     }
 
     // If we just deleted a translation, we need to update the file references
