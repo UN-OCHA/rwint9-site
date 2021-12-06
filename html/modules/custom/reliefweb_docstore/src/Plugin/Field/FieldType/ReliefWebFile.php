@@ -5,6 +5,7 @@ namespace Drupal\reliefweb_docstore\Plugin\Field\FieldType;
 use Drupal\Component\Utility\Bytes;
 use Drupal\Component\Utility\Environment;
 use Drupal\Component\Utility\Random;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemBase;
@@ -17,6 +18,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;
+use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
 
 /**
  * Plugin implementation of the 'reliefweb_file' field type.
@@ -33,6 +35,8 @@ use Drupal\file\Entity\File;
  * )
  */
 class ReliefWebFile extends FieldItemBase {
+
+  use EntityDatabaseInfoTrait;
 
   /**
    * The current user.
@@ -555,10 +559,27 @@ class ReliefWebFile extends FieldItemBase {
    *   be generated.
    */
   public function getPreview($generate = FALSE) {
+    if (!$this->canHavePreview()) {
+      return NULL;
+    }
+
+    $page = $this->getPreviewPage();
+    $rotation = $this->getPreviewRotation();
+
+    // Skip if the file is not supposed to have a preview.
+    if ($page < 1) {
+      return NULL;
+    }
+
+    // Migrated content don't have a page count initially. We can use that to
+    // detect if the preview should be regenerated.
+    if (!$this->hasPageCount()) {
+      return $this->generatePreview($page, $rotation, TRUE);
+    }
+
+    // Load the existing preview file or generate it if instructed so.
     $file = $this->loadPreviewFile();
-    if (empty($file) && $generate && $this->canHavePreview()) {
-      $page = $this->getPreviewPage();
-      $rotation = $this->getPreviewRotation();
+    if (empty($file) && $generate) {
       return $this->generatePreview($page, $rotation);
     }
     return $file;
@@ -584,15 +605,14 @@ class ReliefWebFile extends FieldItemBase {
       return NULL;
     }
 
-    // Ensure the page is a valid value.
-    $page = $page > $this->getPageCount() ? 1 : $page;
-
-    // Ensure the rotation is a valid value.
-    $rotation = in_array($rotation, [0, 90, -90]) ? $rotation : 0;
-
     $preview_uuid = $this->getPreviewUuid();
     $current_page = $this->getPreviewPage();
     $current_rotation = $this->getPreviewRotation();
+
+    // Migrated content don't have a page count. We can use that to detect if
+    // we should regenerate the preview.
+    $no_page_count = !$this->hasPageCount();
+    $regenerate = $regenerate || $no_page_count;
 
     // Skip if the preview already exists for the given page and rotation and
     // the preview file exists.
@@ -605,6 +625,7 @@ class ReliefWebFile extends FieldItemBase {
 
     // Load or create a file associated with the field item.
     $file = $this->loadFile();
+    $downloaded = FALSE;
     if (empty($file) || !file_exists($file->getFileUri())) {
       // For local files, we cannot generate the preview if there is no file
       // associated with the field item.
@@ -618,7 +639,13 @@ class ReliefWebFile extends FieldItemBase {
         if (!$this->updateFileFromRemote($file)) {
           return NULL;
         }
+        $downloaded = TRUE;
       }
+    }
+
+    // Update the page count if it's not set (i.e. for migrated content).
+    if ($no_page_count) {
+      $this->updatePageCount($file);
     }
 
     // Retrieve or create the preview file.
@@ -627,27 +654,39 @@ class ReliefWebFile extends FieldItemBase {
       $preview_file = $this->createPreviewFile();
     }
 
+    // Ensure the page is a valid value.
+    $page = $page > $this->getPageCount() ? 1 : $page;
+
+    // Ensure the rotation is a valid value.
+    $rotation = in_array($rotation, [0, 90, -90]) ? $rotation : 0;
+
     // Create the preview.
-    if (!$this->extractPreview($file->getFileUri(), $preview_file->getFileUri(), $page, $rotation)) {
-      return NULL;
+    $success = $this->extractPreview($file->getFileUri(), $preview_file->getFileUri(), $page, $rotation);
+    if ($success) {
+      // Save the preview. We mark it as temporary so that it can be garbage
+      // collected if the form, for example, is not submitted. It will be saved
+      // as permanent in ::preSave() when the form is submitted.
+      if ($preview_file->isNew()) {
+        $preview_file->setTemporary();
+        $preview_file->save();
+      }
+
+      // Update the field item preview uuid as it may be a new file.
+      $this->get('preview_uuid')->setValue($preview_file->uuid());
+      $this->get('preview_page')->setValue($page);
+      $this->get('preview_rotation')->setValue($rotation);
+
+      // Delete the preview derivatives to ensure they correspond to the updated
+      // preview image.
+      $this->deletePreviewDerivatives($preview_file->getFileUri());
     }
 
-    // Save the preview. We mark it as temporary so that it can be garbage
-    // collected if the form, for example, is not submitted. It will be saved
-    // as permanent in ::preSave() when the form is submitted.
-    $preview_file->setTemporary();
-    $preview_file->save();
+    // Make sure we don't leave a local file if stored remotely.
+    if ($downloaded) {
+      $this->deleteFileOnDisk($file->getFileUri());
+    }
 
-    // Update the field item preview uuid as it may be a new file.
-    $this->get('preview_uuid')->setValue($preview_file->uuid());
-    $this->get('preview_page')->setValue($page);
-    $this->get('preview_rotation')->setValue($rotation);
-
-    // Delete the preview derivatives to ensure they correspond to the updated
-    // preview image.
-    $this->deletePreviewDerivatives($preview_file->getFileUri());
-
-    return $preview_file;
+    return $success ? $preview_file : NULL;
   }
 
   /**
@@ -805,8 +844,9 @@ class ReliefWebFile extends FieldItemBase {
       return NULL;
     }
     // New or replaced files have an empty revision id and there should be a
-    // file on disk for them.
-    elseif (empty($this->getRevisionId())) {
+    // file on disk for them. However we need to check for the page count to
+    // distinguish between those and initially migrated content.
+    elseif (empty($this->getRevisionId()) && $this->hasPageCount()) {
       return Url::fromUri(file_create_url($uri));
     }
     // For existing files, they should be accessible via the permanent URL.
@@ -830,7 +870,7 @@ class ReliefWebFile extends FieldItemBase {
    * @return \Drupal\file\Entity\File
    *   Managed file.
    */
-  protected function createPreviewFile($new_uuid = TRUE) {
+  public function createPreviewFile($new_uuid = TRUE) {
     if ($this->isEmpty()) {
       return NULL;
     }
@@ -861,7 +901,7 @@ class ReliefWebFile extends FieldItemBase {
    * @return \Drupal\file\Entity\File
    *   Managed file.
    */
-  protected function createFile() {
+  public function createFile() {
     if ($this->isEmpty()) {
       return NULL;
     }
@@ -904,19 +944,8 @@ class ReliefWebFile extends FieldItemBase {
     }
 
     // Save the docstore file content.
-    $success = $this->getDocstoreClient()
+    return $this->getDocstoreClient()
       ->downloadFileContentToFilePath($uuid, $uri, $revision_id);
-
-    // Update the file entity.
-    if ($success) {
-      // Update the file entity and save it so that we don't have to
-      // re-download the file to generate the preview. Its status being
-      // temporary it will be garbage collected as some point by the system.
-      $file->setMimeType(static::guessFileMimeType($uri));
-      $file->setTemporary();
-      $file->save();
-    }
-    return $success;
   }
 
   /**
@@ -1150,7 +1179,7 @@ class ReliefWebFile extends FieldItemBase {
    */
   public static function getFilePageCount(File $file) {
     if (!static::fileCanHavePreview($file)) {
-      return 1;
+      return 0;
     }
 
     $uri = $file->getFileUri();
@@ -1325,6 +1354,82 @@ class ReliefWebFile extends FieldItemBase {
   }
 
   /**
+   * Check if there is a page count for the field item.
+   *
+   * Note: during the initial migration of the content, the page count is set
+   * to NULL. This allow us to distinguish them from items created via the
+   * form that should have a page count of 0.
+   *
+   * @return bool
+   *   TRUE if the field item has a page count.
+   */
+  public function hasPageCount() {
+    return !is_null($this->get('page_count')->getValue());
+  }
+
+  /**
+   * Update the page count for the field item.
+   *
+   * Note: this is normally only called once to update migrated file records
+   * with the page count when the preview (if any) is regenerated.
+   *
+   * @param \Drupal\file\Entity\File $file
+   *   File.
+   */
+  protected function updatePageCount(File $file) {
+    if ($this->hasPageCount()) {
+      return;
+    }
+    $page_count = static::getFilePageCount($file);
+    $this->get('page_count')->setValue($page_count);
+
+    $entity = $this->getEntity();
+    $entity_id = $entity->id();
+    $revision_id = $entity->getRevisionId();
+    $entity_type_id = $entity->getEntityTypeId();
+    $uuid = $this->getUuid();
+    $file_uuid = $this->getFileUuid();
+
+    if (empty($entity_id) || empty($revision_id) || empty($uuid) || empty($file_uuid)) {
+      return;
+    }
+
+    $field_name = $this->getFieldDefinition()->getName();
+    $table = $this->getFieldTableName($entity_type_id, $field_name);
+    $revision_table = $this->getFieldRevisionTableName($entity_type_id, $field_name);
+    $uuid_field = $this->getFieldColumnName($entity_type_id, $field_name, 'uuid');
+    $file_uuid_field = $this->getFieldColumnName($entity_type_id, $field_name, 'file_uuid');
+    $page_count_field = $this->getFieldColumnName($entity_type_id, $field_name, 'page_count');
+
+    // Try to update the DB records.
+    try {
+      $this->getDatabase()
+        ->update($table)
+        ->fields([$page_count_field => $page_count])
+        ->condition('entity_id', $entity_id, '=')
+        ->condition('revision_id', $revision_id, '=')
+        ->condition($uuid_field, $uuid, '=')
+        ->condition($file_uuid_field, $file_uuid, '=')
+        ->execute();
+
+      $this->getDatabase()
+        ->update($revision_table)
+        ->fields([$page_count_field => $page_count])
+        ->condition('entity_id', $entity_id, '=')
+        ->condition('revision_id', $revision_id, '=')
+        ->condition($uuid_field, $uuid, '=')
+        ->condition($file_uuid_field, $file_uuid, '=')
+        ->execute();
+
+      // We need to clear the cache so that the page count change is reflected.
+      Cache::invalidateTags($entity->getCacheTagsToInvalidate());
+      $this->getEntityTypeStorage($entity_type_id)->resetCache([$entity_id]);
+    }
+    catch (\Exception $exception) {
+    }
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function delete() {
@@ -1424,13 +1529,8 @@ class ReliefWebFile extends FieldItemBase {
         $this->updatePreviewFile();
       }
 
-      // Ensure there is no local file left if we are storing remotely.
-      if (!$this->storeLocally()) {
-        $file = $this->loadFile();
-        if (!empty($file)) {
-          $this->deleteFileOnDisk($file->getFileUri());
-        }
-      }
+      // Ensure that the file is saved as permanent.
+      $this->ensureFilesArePermanent();
     }
     // @todo log the error and see what to tell the user.
     catch (\Exception $exception) {
@@ -1577,6 +1677,32 @@ class ReliefWebFile extends FieldItemBase {
 
     // Move the preview to its permanent location.
     $this->changeFileLocation($file, $this->getPermanentUri(TRUE, TRUE));
+  }
+
+  /**
+   * Make sure the files are permanent.
+   */
+  protected function ensureFilesArePermanent() {
+    $file = $this->loadFile();
+    if (!empty($file)) {
+      if ($file->isTemporary()) {
+        $file->setPermanent();
+        $file->save();
+      }
+
+      // Ensure there is no local file left if we are storing remotely.
+      if (!$this->storeLocally()) {
+        $this->deleteFileOnDisk($file->getFileUri());
+      }
+    }
+
+    $preview_file = $this->loadPreviewFile();
+    if (!empty($preview_file)) {
+      if ($preview_file->isTemporary()) {
+        $preview_file->setPermanent();
+        $preview_file->save();
+      }
+    }
   }
 
   /**
