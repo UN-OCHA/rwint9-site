@@ -10,7 +10,7 @@ form[data-with-guidelines] button[data-guideline] {
   overflow: hidden;
   width: 20px;
   height: 20px;
-  margin: -0.5rem 0 0 0.5rem;
+  margin: -0.75rem 0 0 0.5rem;
   padding: 0 0 0 12px;
   vertical-align: middle;
   border: 4px solid var(--cd-reliefweb-brand-grey--light);
@@ -20,7 +20,7 @@ form[data-with-guidelines] button[data-guideline] {
 }
 /* Legend with child button */
 form[data-with-guidelines] legend button[data-guideline] {
-  margin: -0.5rem 0 0 0.5rem;
+  margin: -0.75rem 0 0 0.5rem;
 }
 form[data-with-guidelines] .form-required button[data-guideline] {
   margin: 0 0 0 0.5rem;
@@ -29,11 +29,15 @@ form[data-with-guidelines] legend .form-required button[data-guideline] {
   order: 1;
 }
 /* Label followed by button */
+form[data-with-guidelines] label + button[data-guideline],
 form[data-with-guidelines] .form-required + button[data-guideline] {
+  margin: -0.75rem 0 0;
+}
+form[data-with-guidelines] label.option + button[data-guideline] {
   margin: -0.5rem 0 0;
 }
 form[data-with-guidelines] .visually-hidden + button[data-guideline] {
-  margin: -0.5rem 0 0 0.5rem;
+  margin: -0.75rem 0 0 0.5rem;
 }
 form[data-with-guidelines] button[data-guideline]:hover {
   background: var(--rw-icons--common--help--12--dark-red);
