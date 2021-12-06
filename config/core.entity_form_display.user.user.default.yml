@@ -16,6 +16,11 @@ content:
     settings: {  }
     third_party_settings: {  }
     region: content
+  contact:
+    weight: 5
+    settings: {  }
+    third_party_settings: {  }
+    region: content
   field_notes:
     weight: 7
     settings:

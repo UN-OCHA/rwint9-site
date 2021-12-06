@@ -11,6 +11,7 @@ dependencies:
     - field.field.node.report.field_disaster_type
     - field.field.node.report.field_embargo_date
     - field.field.node.report.field_feature
+    - field.field.node.report.field_file
     - field.field.node.report.field_headline
     - field.field.node.report.field_headline_image
     - field.field.node.report.field_headline_summary
@@ -33,6 +34,7 @@ dependencies:
     - datetime
     - media_library
     - path
+    - reliefweb_docstore
     - reliefweb_fields
     - text
 id: node.report.default
@@ -161,6 +163,12 @@ content:
     settings: {  }
     third_party_settings: {  }
     type: options_buttons
+    region: content
+  field_file:
+    weight: 101
+    settings: {  }
+    third_party_settings: {  }
+    type: reliefweb_file
     region: content
   field_headline:
     weight: 17

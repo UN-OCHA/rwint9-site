@@ -11,6 +11,7 @@ dependencies:
     - field.field.node.report.field_disaster_type
     - field.field.node.report.field_embargo_date
     - field.field.node.report.field_feature
+    - field.field.node.report.field_file
     - field.field.node.report.field_headline
     - field.field.node.report.field_headline_image
     - field.field.node.report.field_headline_summary
@@ -29,6 +30,7 @@ dependencies:
     - node.type.report
   module:
     - datetime
+    - reliefweb_docstore
     - text
     - user
 id: node.report.default
@@ -79,6 +81,13 @@ content:
       link: true
     third_party_settings: {  }
     type: entity_reference_label
+    region: content
+  field_file:
+    weight: 13
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: reliefweb_file
     region: content
   field_image:
     weight: 6

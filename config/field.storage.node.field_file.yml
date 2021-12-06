@@ -1,0 +1,19 @@
+uuid: ffdd3293-cb29-471d-9a31-3d12e3eb32f2
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - reliefweb_docstore
+id: node.field_file
+field_name: field_file
+entity_type: node
+type: reliefweb_file
+settings: {  }
+module: reliefweb_docstore
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
