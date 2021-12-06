@@ -74,13 +74,15 @@ class LegacyHelper {
    *
    * @param string $uri
    *   File URI.
+   * @param string $base_url
+   *   The base url of the legacy URL in the form http(s)://example.test.
    *
    * @return string
    *   File URL.
    */
-  public static function getFileLegacyUrl($uri) {
+  public static function getFileLegacyUrl($uri, $base_url = 'https://reliefweb.int') {
     $filename = UrlHelper::encodePath(basename($uri));
-    return 'https://reliefweb.int/sites/reliefweb.int/files/resources/' . $filename;
+    return $base_url . '/sites/reliefweb.int/files/resources/' . $filename;
   }
 
   /**
