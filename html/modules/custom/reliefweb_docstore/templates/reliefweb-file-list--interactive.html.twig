@@ -12,7 +12,11 @@
   <div{{ list_attributes }}>
     {% for item in list %}
     <figure>
+      {% if item.url is not empty %}
       <a href="{{ item.url }}" target="_blank" rel="noopener">{{ item.preview }}</a>
+      {% else %}
+      {{ item.preview }}
+      {% endif %}
       <figcaption>{{ item.label }}</figcaption>
     </figure>
     {% endfor %}
