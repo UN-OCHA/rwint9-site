@@ -14,5 +14,13 @@ message='Linting subtheme CSS/SCSS files...'
 # We need to change to the linter's directory to load its dependencies.
 changedir=1
 
+# Docksal compatibility.
+# @todo remove and use the changedir and options below as defaults after
+# upgrading stylelint to ^14.1.x.
+if [ -x "$(command -v fin)" ]; then
+  changedir=0
+  options="--config-basedir html/themes/custom/common_design_subtheme/ --config html/themes/custom/common_design_subtheme/.stylelintrc.json"
+fi
+
 # Load and execute the linting code.
 . "$(dirname "$0")/lint-common"
