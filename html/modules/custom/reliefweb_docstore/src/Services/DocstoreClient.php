@@ -7,6 +7,7 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Utils;
+use GuzzleHttp\Psr7\StreamWrapper;
 use Drupal\reliefweb_utility\Response\JsonResponse;
 
 /**
@@ -149,33 +150,33 @@ class DocstoreClient {
    *   TRUE if the request was successful.
    */
   public function downloadFileContentToFilePath($uuid, $path, $revision_id = 0, $timeout = 300) {
-    try {
-      $resource = Utils::TryFopen($path, 'w');
-    }
-    catch (\RuntimeException $exception) {
-      $this->logger->error('Unable to open file @path for writing', [
-        '@path' => $path,
-      ]);
-      return FALSE;
-    }
-
-    // Assume we want to get the latest revision in which case we can do
-    // a direct call the https://docstore/files/uuid endpoint which is much
-    // faster if the file is public.
-    // @todo this doesn't take into account the fact that the file may be
-    // hidden for the provider in that case we need to use the API endpoint.
+    // Assume we want to get the latest revision if revision id is empty.
     if (empty($revision_id)) {
-      $endpoint = '/files/' . $uuid . '/' . basename($path);
+      $endpoint = '/api/v1/files/' . $uuid . '/content';
     }
     else {
       $endpoint = '/api/v1/files/' . $uuid . '/revisions/' . $revision_id . '/content';
     }
 
     $response = $this->request('GET', $endpoint, [
-      'sink' => $resource,
+      'stream' => TRUE,
     ], $timeout);
 
-    return $response->isSuccessful();
+    if ($response->isSuccessful()) {
+      try {
+        $output = Utils::TryFopen($path, 'w');
+      }
+      catch (\RuntimeException $exception) {
+        $this->logger->error('Unable to open file @path for writing', [
+          '@path' => $path,
+        ]);
+        return FALSE;
+      }
+
+      $input = StreamWrapper::getResource($response->getBody());
+      return stream_copy_to_stream($input, $output) !== FALSE;
+    }
+    return FALSE;
   }
 
   /**
