@@ -50,7 +50,11 @@ libraries-extend:
     - common_design_subtheme/rw-datepicker
 
   # Guidelines.
-  reliefweb_form/form.guidelines:
+#  reliefweb_form/form.guidelines:
+#    - common_design_subtheme/rw-guidelines
+  guidelines/guidelines-json:
+    - common_design_subtheme/rw-guidelines
+  reliefweb-guidelines/reliefweb-guidelines:
     - common_design_subtheme/rw-guidelines
 
 
