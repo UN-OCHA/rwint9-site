@@ -64,6 +64,7 @@
       // Remove guidelines elements from the form.
       function cleanGuidelines(form, popupOnly) {
         var selector = '.rw-guideline';
+
         if (!popupOnly) {
           selector += ', [data-guideline]';
         }
@@ -131,7 +132,6 @@
 
       // Prepare the guidelines card.
       function prepareGuidelines(data) {
-
         var guidelines = {};
 
         // Parse the guideline cards.
