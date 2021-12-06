@@ -160,7 +160,7 @@
 
     <div class="rw-report__content">
 
-      {{ node.getAttachments() }}
+      {{ node.getAttachments(content.field_file) }}
 
       {{ content.body.0|render|sanitize_html(false, 2) }}
 

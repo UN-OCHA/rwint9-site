@@ -26,18 +26,20 @@ class ReliefWebFile extends FormatterBase {
     foreach ($items as $item) {
       $url = $item->getFileUrl();
       if (!empty($url)) {
+        $languages = reliefweb_docstore_get_languages();
+
         $list[] = [
           'item' => $item,
           'url' => $url->toString(),
           'name' => $item->getFileName(),
-          'preview' => $item->renderPreview('small'),
+          'preview' => $item->renderPreview('small', TRUE),
           'label' => $item->getFileName(),
           'description' => '(' . implode(' | ', array_filter([
             mb_strtoupper($item->getFileExtension()),
             format_size($item->getFileSize()),
             implode(' - ', array_filter([
               $item->getFileDescription(),
-              $item->getFileLanguage(),
+              $languages[$item->getFileLanguage()] ?? '',
             ])),
           ])) . ')',
         ];

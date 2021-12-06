@@ -343,7 +343,7 @@ class ReliefWebFile extends WidgetBase {
         // Only regenerated the preview if the page or rotation changed.
         $regenerate = $original_preview_page != $preview_page || $original_preview_rotation != $preview_rotation;
 
-        // For the createion of new file if there is already one to prevent
+        // For the creation of new file if there is already one to prevent
         // changing the existing preview that is displayed to the end users
         // while the form is being edited.
         $new_preview_file = $regenerate && $original_preview_uuid === $preview_uuid;

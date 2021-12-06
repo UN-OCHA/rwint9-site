@@ -100,15 +100,13 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
   /**
    * Get the report attachments.
    *
+   * @param array|null $build
+   *   The render array for the attachment field.
+   *
    * @return array
    *   Render array with the list of attachments.
    */
-  public function getAttachments() {
-    if (!$this->hasField('field_file') || $this->field_file->isEmpty()) {
-      return [];
-    }
-
-    $build = $this->field_file->view();
+  public function getAttachments(?array $build = NULL) {
     if (empty($build)) {
       return [];
     }
@@ -126,15 +124,22 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
         '@date' => DateHelper::format($this->getCreatedTime(), 'custom', 'j m Y'),
       ]);
 
-      $build['#footer'] = Link::fromTextAndUrl(
-        $this->t('View the interactive content page'),
-        Url::fromUri($this->origin_notes->value, [
+      $url = NULL;
+      if (!$this->get('field_origin_notes')->isEmpty()) {
+        $url = Url::fromUri($this->field_origin_notes->value, [
           'attributes' => [
             'target' => '_blank',
             'rel' => 'noopener',
           ],
-        ])
-      );
+        ]);
+      }
+
+      if (!empty($url)) {
+        $build['#footer'] = Link::fromTextAndUrl(
+          $this->t('View the interactive content page'),
+          $url
+        );
+      }
 
       foreach ($build['#list'] as $index => &$item) {
         $description = $item['item']->getFileDescription();
@@ -152,6 +157,14 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
         if (isset($item['preview'])) {
           $item['preview']['#style_name'] = 'large';
           $item['preview']['#alt'] = $item['label'];
+        }
+
+        // Have the screenshots link to the original content.
+        if (!empty($url)) {
+          $item['url'] = $url->toString();
+        }
+        else {
+          unset($item['url']);
         }
       }
     }
