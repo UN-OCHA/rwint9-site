@@ -117,7 +117,7 @@ class GuidelineSinglePageController extends ControllerBase {
           '#theme' => 'reliefweb_guidelines_item',
           '#id' => $guideline->hasField('field_short_link') ? Html::getUniqueId($guideline->field_short_link->value) : Html::getUniqueId($guideline->field_title->value),
           '#title' => $guidelines[$parents[0]]->field_title->value . ' > ' . $guideline->field_title->value,
-          '#description' => $guideline->hasField('field_description') ? check_markup($guideline->field_description->value, $guideline->field_description->format) : '',
+          '#description' => $this->cleanAtags($guideline->hasField('field_description') ? check_markup($guideline->field_description->value, $guideline->field_description->format) : ''),
         ];
       }
       else {
@@ -125,7 +125,7 @@ class GuidelineSinglePageController extends ControllerBase {
           '#theme' => 'reliefweb_guidelines_item',
           '#id' => $guideline->hasField('field_short_link') ? Html::getUniqueId($guideline->field_short_link->value) : Html::getUniqueId($guideline->field_title->value),
           '#title' => $guideline->field_title->value,
-          '#description' => $guideline->hasField('field_description') ? check_markup($guideline->field_description->value, $guideline->field_description->format) : '',
+          '#description' => $this->cleanAtags($guideline->hasField('field_description') ? check_markup($guideline->field_description->value, $guideline->field_description->format) : ''),
           '#children' => [],
         ];
       }
@@ -143,6 +143,27 @@ class GuidelineSinglePageController extends ControllerBase {
     $build['#attached']['library'][] = 'reliefweb_guidelines/reliefweb-guidelines';
 
     return $build;
+  }
+
+  /**
+   * Clean A-tags.
+   */
+  protected function cleanAtags($text) {
+    if (empty($text)) {
+      return $text;
+    }
+
+    $pattern = '/\<a.+href="https:\/\/trello.com\/c\/([0-9A-Z]+)"/i';
+    $text = preg_replace_callback($pattern, function ($matches) {
+      return '<a class="xyzzy1" href="#' . strtolower($matches[1]) . '"';
+    }, $text);
+
+    $pattern = '/\<a.+href="https:\/\/guidelines.rwdev.org\/#([0-9A-Z]+)"/i';
+    $text = preg_replace_callback($pattern, function ($matches) {
+      return '<a class="xyzzy2" href="#' . strtolower($matches[1]) . '"';
+    }, $text);
+
+    return $text;
   }
 
 }

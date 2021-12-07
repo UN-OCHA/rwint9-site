@@ -132,6 +132,14 @@ function reliefweb_guidelines_migrate_from_trello() {
                     'value' => $key,
                   ];
                 }
+                elseif (FieldStorageConfig::loadByName('taxonomy_term', $field_name)) {
+                  $found = TRUE;
+                  $key = 'taxonomy_term.' . $bundle . '.' . $field_name;
+                  $values['field_field'] = $values['field_field'] ?? [];
+                  $values['field_field'][] = [
+                    'value' => $key,
+                  ];
+                }
               }
 
               // Log fields not found.
