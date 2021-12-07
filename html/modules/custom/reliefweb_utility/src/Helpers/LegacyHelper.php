@@ -10,7 +10,38 @@ use Symfony\Component\Uid\Uuid;
 class LegacyHelper {
 
   /**
-   * Generate an attachment's UUID from it's old URI on reliefwen.int.
+   * Generate a file's UUID from it's old URI on reliefweb.int.
+   *
+   * @param string $uri
+   *   File URI (ex: public://directory/filename.ext).
+   *
+   * @return string
+   *   The file UUID.
+   */
+  public static function generateFileUuid($uri) {
+    // Replace the public scheme with the actual reliefweb.int base public file
+    // URI so that it's unique.
+    $uuid_uri = str_replace('public://', 'https://reliefweb.int/sites/reliefweb.int/files/', $uri);
+
+    // Generate the UUID based on the URI.
+    return Uuid::v3(Uuid::fromString(Uuid::NAMESPACE_URL), $uuid_uri)->toRfc4122();
+  }
+
+  /**
+   * Generate an image's UUID from it's old URI on reliefweb.int.
+   *
+   * @param string $uri
+   *   File URI (ex: public://image-dir/my.jpg).
+   *
+   * @return string
+   *   The image UUID.
+   */
+  public static function generateImageUuid($uri) {
+    return static::generateFileUuid($uri);
+  }
+
+  /**
+   * Generate an attachment's UUID from it's old URI on reliefweb.int.
    *
    * @param string $uri
    *   File URI (ex: public://resources/my.pdf).
@@ -19,12 +50,8 @@ class LegacyHelper {
    *   The attachment UUID.
    */
   public static function generateAttachmentUuid($uri) {
-    // Replace the public scheme with the actual reliefweb.int base public file
-    // URI so that it's unique.
-    $uuid_uri = str_replace('public://', 'https://reliefweb.int/sites/reliefweb.int/files/', $uri);
-
-    // Generate the UUID based on the URI.
-    return Uuid::v3(Uuid::fromString(Uuid::NAMESPACE_URL), $uuid_uri)->toRfc4122();
+    // We strips the '%' characters for compatibility with the preview URLS.
+    return static::generateFileUuid(str_replace('%', '', $uri));
   }
 
   /**
