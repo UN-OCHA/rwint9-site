@@ -120,12 +120,12 @@ class GuidelineFieldTargetWidget extends OptionsButtonsWidget {
 
             /** @var \Drupal\Core\Field\BaseFieldDefinition $field_definition */
             $key = $entity_type . '.' . $bundle . '.' . $field_name;
-            $options[$key] = $bundle . ' > ' . $field_definition->getLabel() . ' (' . $field_name . ')';
+            $options[$key] = $this->getBundleLabel($entity_type, $bundle) . ' > ' . $field_definition->getLabel() . ' (' . $field_name . ')';
           }
           elseif ($field_definition instanceof FieldConfig) {
             /** @var \Drupal\field\Entity\FieldConfig $field_definition */
             $key = $entity_type . '.' . $bundle . '.' . $field_name;
-            $options[$key] = $bundle . ' > ' . $field_definition->getLabel() . ' (' . $field_name . ')';
+            $options[$key] = $this->getBundleLabel($entity_type, $bundle) . ' > ' . $field_definition->getLabel() . ' (' . $field_name . ')';
           }
         }
       }
@@ -134,6 +134,22 @@ class GuidelineFieldTargetWidget extends OptionsButtonsWidget {
     }
 
     return $this->options;
+  }
+
+  /**
+   * Get bundle label.
+   */
+  protected function getBundleLabel($entity_type_id, $bundle) {
+    $entity_type_manager = \Drupal::entityTypeManager();
+    $entity_type = $entity_type_manager
+      ->getStorage($entity_type_id)
+      ->getEntityType();
+    $bundle_label = $entity_type_manager
+      ->getStorage($entity_type->getBundleEntityType())
+      ->load($bundle)
+      ->label();
+
+    return $entity_type->getLabel() . ' > ' . $bundle_label;
   }
 
 }
