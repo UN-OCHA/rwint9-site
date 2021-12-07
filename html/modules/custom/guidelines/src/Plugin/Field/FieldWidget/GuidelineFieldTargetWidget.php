@@ -112,7 +112,13 @@ class GuidelineFieldTargetWidget extends OptionsButtonsWidget {
       foreach ($enabled_entities as $enabled_entity) {
         list($entity_type, $bundle) = explode('.', $enabled_entity);
         $field_definitions = $entity_field_manager->getFieldDefinitions($entity_type, $bundle);
+
         foreach ($field_definitions as $field_name => $field_definition) {
+          // Skip computed, internal and read-only fields.
+          if ($field_definition->isComputed() || $field_definition->isInternal() || $field_definition->isReadOnly()) {
+            continue;
+          }
+
           if ($field_definition instanceof BaseFieldDefinition) {
             if (in_array($field_name, $hidden_base_fields)) {
               continue;
