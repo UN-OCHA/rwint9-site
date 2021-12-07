@@ -96,9 +96,6 @@ form[data-with-guidelines] .rw-guideline > button[value="close"]:hover {
 form[data-with-guidelines] .rw-guideline > button[value="close"]:hover:after {
   background: var(--rw-icons--common--close--12--dark-red);
 }
-form[data-with-guidelines] .rw-guideline > div > .rw-guideline__content img {
-  border: 4px solid var(--cd-reliefweb-brand-grey--light);
-}
 form[data-with-guidelines] .rw-guideline > div {
   position: relative;
   z-index: 10001;
@@ -115,6 +112,6 @@ form[data-with-guidelines] .rw-guideline > div > h3 {
 form[data-with-guidelines] .rw-guideline > div > .content {
   padding-top: 0;
 }
-form[data-with-guidelines] .rw-guideline > div > .content img {
-  border: 4px solid #e6ecef;
+form[data-with-guidelines] .rw-guideline > div > .rw-guideline__content img {
+  border: 4px solid var(--cd-reliefweb-brand-grey--light);
 }
