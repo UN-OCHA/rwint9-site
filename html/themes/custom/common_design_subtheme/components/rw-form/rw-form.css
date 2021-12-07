@@ -85,8 +85,8 @@ form label,
 form fieldset fieldset legend {
   display: inline-block;
   margin: 0 0 6px 0;
-  font-weight: bold;
   font-size: 16px;
+  font-weight: bold;
 }
 form label:first-letter {
   /* Try to have some consistency. */
