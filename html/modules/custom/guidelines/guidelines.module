@@ -73,10 +73,12 @@ function guidelines_form_node_form_alter(array &$form, FormStateInterface $form_
       $bundle = $form_object->getEntity()->bundle();
     }
 
-    $form['#attributes']['data-with-guidelines'] = '';
-    $form['#attributes']['data-guidelines-entity-type'] = $entity_type;
-    $form['#attributes']['data-guidelines-entity-bundle'] = $bundle;
-    $form['#attached']['library'][] = 'guidelines/guidelines-json';
+    if (Guideline::entityBundleHasGuidelines($entity_type, $bundle)) {
+      $form['#attributes']['data-with-guidelines'] = '';
+      $form['#attributes']['data-guidelines-entity-type'] = $entity_type;
+      $form['#attributes']['data-guidelines-entity-bundle'] = $bundle;
+      $form['#attached']['library'][] = 'guidelines/guidelines-json';
+    }
   }
 }
 
@@ -93,10 +95,12 @@ function guidelines_form_taxonomy_term_form_alter(array &$form, FormStateInterfa
       $bundle = $form_object->getEntity()->bundle();
     }
 
-    $form['#attributes']['data-with-guidelines'] = '';
-    $form['#attributes']['data-guidelines-entity-type'] = $entity_type;
-    $form['#attributes']['data-guidelines-entity-bundle'] = $bundle;
-    $form['#attached']['library'][] = 'guidelines/guidelines-json';
+    if (Guideline::entityBundleHasGuidelines($entity_type, $bundle)) {
+      $form['#attributes']['data-with-guidelines'] = '';
+      $form['#attributes']['data-guidelines-entity-type'] = $entity_type;
+      $form['#attributes']['data-guidelines-entity-bundle'] = $bundle;
+      $form['#attached']['library'][] = 'guidelines/guidelines-json';
+    }
   }
 }
 

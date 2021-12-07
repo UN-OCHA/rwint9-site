@@ -357,4 +357,24 @@ class Guideline extends EditorialContentEntityBase implements GuidelineInterface
     return $result ? $storage->loadMultiple($result) : [];
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public static function entityBundleHasGuidelines($entity, $bundle) {
+    $entity_type_repository = \Drupal::service('entity_type.repository');
+    $entity_type_manager = \Drupal::entityTypeManager();
+    $storage = $entity_type_manager->getStorage($entity_type_repository->getEntityTypeFromClass(static::class));
+
+    $query = $storage->getQuery();
+    if (empty($bundle)) {
+      $query->condition('field_field', $entity . '.', 'STARTS_WITH');
+    }
+    else {
+      $query->condition('field_field', $entity . '.' . $bundle . '.', 'STARTS_WITH');
+    }
+
+    $count = $query->count()->execute();
+    return $count > 0;
+  }
+
 }
