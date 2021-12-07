@@ -119,12 +119,12 @@ class GuidelineFieldTargetWidget extends OptionsButtonsWidget {
             }
 
             /** @var \Drupal\Core\Field\BaseFieldDefinition $field_definition */
-            $key = 'node.' . $bundle . '.' . $field_name;
+            $key = $entity_type . '.' . $bundle . '.' . $field_name;
             $options[$key] = $bundle . ' > ' . $field_definition->getLabel() . ' (' . $field_name . ')';
           }
           elseif ($field_definition instanceof FieldConfig) {
             /** @var \Drupal\field\Entity\FieldConfig $field_definition */
-            $key = 'node.' . $bundle . '.' . $field_name;
+            $key = $entity_type . '.' . $bundle . '.' . $field_name;
             $options[$key] = $bundle . ' > ' . $field_definition->getLabel() . ' (' . $field_name . ')';
           }
         }

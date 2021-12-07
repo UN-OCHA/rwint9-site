@@ -26,8 +26,11 @@ class GuidelineJsonController extends ControllerBase {
    *   An array suitable for drupal_render().
    */
   public function getFormGuidelines($entity_type, $bundle) {
+    $descriptions = [];
+
     /** @var Drupal\guidelines\Entity\Guideline[] $guidelines */
     $guidelines = Guideline::loadByEntity($entity_type);
+
     foreach ($guidelines as $guideline) {
       foreach ($guideline->field_field as $field) {
         list($e, $b, $f) = explode('.', $field->value);
