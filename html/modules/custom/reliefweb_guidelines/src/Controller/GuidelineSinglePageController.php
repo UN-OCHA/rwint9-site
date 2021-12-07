@@ -116,7 +116,7 @@ class GuidelineSinglePageController extends ControllerBase {
         $items[$parents[0]]['#children'][] = [
           '#theme' => 'reliefweb_guidelines_item',
           '#id' => $guideline->hasField('field_short_link') ? Html::getUniqueId($guideline->field_short_link->value) : Html::getUniqueId($guideline->field_title->value),
-          '#title' => $guideline->field_title->value,
+          '#title' => $guidelines[$parents[0]]->field_title->value . ' > ' . $guideline->field_title->value,
           '#description' => $guideline->hasField('field_description') ? check_markup($guideline->field_description->value, $guideline->field_description->format) : '',
         ];
       }
