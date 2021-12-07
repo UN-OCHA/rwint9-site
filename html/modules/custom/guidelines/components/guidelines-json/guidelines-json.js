@@ -63,8 +63,7 @@
 
       // Remove guidelines elements from the form.
       function cleanGuidelines(form, popupOnly) {
-        var selector = '.rw-guideline';
-
+        var selector = '.guideline';
         if (!popupOnly) {
           selector += ', [data-guideline]';
         }
@@ -107,7 +106,7 @@
         heading.appendChild(link);
 
         var content = document.createElement('div');
-        content.className = 'rw-guideline__content';
+        content.className = 'content';
         content.innerHTML = card.content;
 
         var container = document.createElement('div');
@@ -115,7 +114,7 @@
         container.appendChild(content);
 
         var popup = document.createElement('div');
-        popup.className = 'rw-guideline';
+        popup.className = 'guideline';
         popup.appendChild(close);
         popup.appendChild(container);
 
@@ -139,7 +138,7 @@
           var cards = data;
           for (var i = 0, l = cards.length; i < l; i++) {
             var card = cards[i];
-            // Remove blank image used for lazy loading.
+            // Remove blank image used for lazy laoding.
             card.content = card.content.replace(/src="\/assets\/images\/blank\.gif"/g, '');
             // Add the card as guideline for each of the target fields.
             guidelines[card.label] = card;
@@ -171,18 +170,12 @@
               showGuideline(form, guidelines[event.target.getAttribute('data-guideline')]);
             });
 
-            /* Drupal fields with either Legend or Label element ancestors */
-            const labels = element.querySelectorAll('.form-wrapper .form-item > label');
-            labels.forEach(item => item.parentNode.insertBefore(button, item.nextSibling));
-            const legends = element.querySelectorAll('[data-drupal-selector] > legend > span');
-            legends.forEach(item =>  item.appendChild(button));
-
-            // if (element.nodeName === 'LABEL') {
-            //   element.parentNode.insertBefore(button, element.nextSibling);
-            // }
-            // else {
-            //   element.appendChild(button);
-            // }
+            if (element.nodeName === 'LABEL') {
+              element.parentNode.insertBefore(button, element.nextSibling);
+            }
+            else {
+              element.appendChild(button);
+            }
           }
         }
       }
