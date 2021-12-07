@@ -54,7 +54,11 @@ class GuidelineController extends ControllerBase implements ContainerInjectionIn
       ->loadRevision($guideline_revision);
     $view_builder = $this->entityTypeManager()->getViewBuilder('guideline');
 
-    return $view_builder->view($guideline);
+    if ($guideline) {
+      return $view_builder->view($guideline);
+    }
+
+    return [];
   }
 
   /**
@@ -69,10 +73,15 @@ class GuidelineController extends ControllerBase implements ContainerInjectionIn
   public function revisionPageTitle($guideline_revision) {
     $guideline = $this->entityTypeManager()->getStorage('guideline')
       ->loadRevision($guideline_revision);
-    return $this->t('Revision of %title from %date', [
-      '%title' => $guideline->label(),
-      '%date' => $this->dateFormatter->format($guideline->getRevisionCreationTime()),
-    ]);
+
+    if ($guideline) {
+      return $this->t('Revision of %title from %date', [
+        '%title' => $guideline->label(),
+        '%date' => $this->dateFormatter->format($guideline->getRevisionCreationTime()),
+      ]);
+    }
+
+    return $this->t('Non existing revision');
   }
 
   /**
