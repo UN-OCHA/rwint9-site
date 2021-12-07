@@ -240,16 +240,16 @@ class ReliefWebDocstoreCommands extends DrushCommands {
       ]);
 
       if (!$response->isSuccessful()) {
-        $this->logger()->info(dt('Unable to create remote file for @url.', [
-          '@url' => $file['url'],
+        $this->logger()->info(dt('Unable to create remote file for @uri.', [
+          '@uri' => $file['uri'],
         ]));
         return FALSE;
       }
     }
     // Abort if something went wrong.
     elseif (!$response->isSuccessful()) {
-      $this->logger()->info(dt('Unable to retrieve the remote file for @url.', [
-        '@url' => $file['url'],
+      $this->logger()->info(dt('Unable to retrieve the remote file for @uri.', [
+        '@uri' => $file['uri'],
       ]));
       return FALSE;
     }
@@ -262,8 +262,8 @@ class ReliefWebDocstoreCommands extends DrushCommands {
       $response = $this->docstoreClient->updateFileContentFromFilePath($uuid, $url);
 
       if (!$response->isSuccessful()) {
-        $this->logger()->info(dt('Unable to update remote file for @url.', [
-          '@url' => $file['url'],
+        $this->logger()->info(dt('Unable to update remote file for @uri.', [
+          '@uri' => $file['uri'],
         ]));
         return FALSE;
       }
@@ -273,8 +273,8 @@ class ReliefWebDocstoreCommands extends DrushCommands {
 
     // Get the revision ID.
     if (empty($content['revision_id'])) {
-      $this->logger()->info(dt('Missing file revision id for @url.', [
-        '@url' => $file['url'],
+      $this->logger()->info(dt('Missing file revision id for @uri.', [
+        '@uri' => $file['uri'],
       ]));
       return FALSE;
     }
