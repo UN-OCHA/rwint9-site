@@ -84,9 +84,6 @@ class Node extends FieldableEntityBase {
       $query->orderBy('n.nid', 'DESC');
     }
 
-    $query->range(0, 1);
-    $query->orderBy('n.nid', 'DESC');
-
     return $query;
   }
 
