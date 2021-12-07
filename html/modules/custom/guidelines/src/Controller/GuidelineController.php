@@ -100,8 +100,8 @@ class GuidelineController extends ControllerBase implements ContainerInjectionIn
     ]);
 
     $header = [$this->t('Revision'), $this->t('Operations')];
-    $revert_permission = (($account->hasPermission("revert all guideline revisions") || $account->hasPermission('administer guideline entities')));
-    $delete_permission = (($account->hasPermission("delete all guideline revisions") || $account->hasPermission('administer guideline entities')));
+    $revert_permission = $account->hasPermission("revert all guideline revisions") || $account->hasPermission('administer guideline entities');
+    $delete_permission = $account->hasPermission("delete all guideline revisions") || $account->hasPermission('administer guideline entities');
 
     $rows = [];
 
