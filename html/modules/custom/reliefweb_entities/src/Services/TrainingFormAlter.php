@@ -19,6 +19,10 @@ class TrainingFormAlter extends EntityFormAlterServiceBase {
    * {@inheritdoc}
    */
   protected function addBundleFormAlterations(array &$form, FormStateInterface $form_state) {
+    // Add a guide on how to populate the field as description to the title
+    // field.
+    $form['title']['widget'][0]['value']['#description'] = $this->t('Should contain only the title of the training. Other information such as location, date and Organization should not be included in this field.');
+
     // Force shorter titles.
     $form['title']['widget'][0]['value']['#maxlength'] = 150;
 
