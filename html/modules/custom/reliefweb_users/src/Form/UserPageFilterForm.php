@@ -83,7 +83,6 @@ class UserPageFilterForm extends FormBase {
       '#title' => $this->t('Role'),
       '#options' => $roles,
       '#default_value' => isset($filters['role']) ? $filters['role'] : '',
-      '#optional' => FALSE,
     ];
 
     $form['filters']['status'] = [
@@ -91,7 +90,6 @@ class UserPageFilterForm extends FormBase {
       '#title' => $this->t('Status'),
       '#options' => ['any' => 'Any'] + $statuses,
       '#default_value' => isset($filters['status']) ? $filters['status'] : 'any',
-      '#optional' => FALSE,
     ];
 
     $form['filters']['posted'] = [
@@ -99,7 +97,6 @@ class UserPageFilterForm extends FormBase {
       '#type' => 'checkboxes',
       '#options' => $content_types,
       '#default_value' => isset($filters['posted']) ? $filters['posted'] : '',
-      '#optional' => FALSE,
     ];
 
     $form['filters']['job_rights'] = [
@@ -107,7 +104,6 @@ class UserPageFilterForm extends FormBase {
       '#title' => $this->t('Job posting rights'),
       '#options' => ['any' => 'Any'] + $rights,
       '#default_value' => isset($filters['job_rights']) ? $filters['job_rights'] : 'any',
-      '#optional' => FALSE,
     ];
 
     $form['filters']['training_rights'] = [
@@ -115,7 +111,6 @@ class UserPageFilterForm extends FormBase {
       '#title' => $this->t('Training posting rights'),
       '#options' => ['any' => 'Any'] + $rights,
       '#default_value' => isset($filters['training_rights']) ? $filters['training_rights'] : 'any',
-      '#optional' => FALSE,
     ];
 
     $form['filters']['name'] = [
@@ -123,7 +118,6 @@ class UserPageFilterForm extends FormBase {
       '#title' => $this->t('Name'),
       '#maxlength' => 2048,
       '#default_value' => isset($filters['name']) ? $filters['name'] : '',
-      '#optional' => FALSE,
     ];
 
     $form['filters']['mail'] = [
@@ -131,7 +125,6 @@ class UserPageFilterForm extends FormBase {
       '#title' => $this->t('Mail'),
       '#maxlength' => 2048,
       '#default_value' => isset($filters['mail']) ? $filters['mail'] : '',
-      '#optional' => FALSE,
     ];
 
     $form['filters']['submit'] = [

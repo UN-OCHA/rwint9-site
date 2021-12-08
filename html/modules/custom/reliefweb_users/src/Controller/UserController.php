@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_users\Controller;
 
 use Drupal\Core\Link;
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Url;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormState;
@@ -82,8 +83,6 @@ class UserController extends ControllerBase {
    * Build the user table for the user admin page.
    */
   protected function usersAdminList($storage) {
-    global $pager_total_items;
-
     $build = [];
 
     // Get filter values and options.
@@ -108,7 +107,7 @@ class UserController extends ControllerBase {
     $fields = ['uid', 'name', 'mail', 'status', 'created', 'access'];
 
     // Get the list of users with pagination.
-    $query = $this->database->select('users_field_data', 'u')->range(0, 30);
+    $query = $this->database->select('users_field_data', 'u');
     $query->extend('Drupal\Core\Database\Query\PagerSelectExtender');
 
     // Header sorting.
@@ -135,9 +134,9 @@ class UserController extends ControllerBase {
       $query->condition('u.mail', '%' . $filters['mail'] . '%', 'LIKE');
     }
     if (!empty($filters['posted'])) {
-      $subquery = $this->database->select('node', 'n')
+      $subquery = $this->database->select('node_field_data', 'n')
         ->fields('n', ['uid'])
-        ->condition('n.type', $filters['posted'])
+        ->condition('n.type', $filters['posted'], 'IN')
         ->distinct();
       $query->innerJoin($subquery, NULL, '%alias.uid = u.uid');
     }
@@ -150,9 +149,20 @@ class UserController extends ControllerBase {
         $query->condition('fpr.field_user_posting_rights_training', array_search($filters['training_rights'], array_keys($rights)));
       }
     }
-    // $query->groupBy('u.uid');
+
+    // Set group by.
+    $group_by = &$query->getGroupBy();
+    $group_by = $fields;
+
+    // Get the number of users for the query.
+    $count_query = $query->countQuery();
+
     // Get the users.
+    $query->range(0, 30);
     $users = $query->execute()->fetchAllAssoc('uid', \PDO::FETCH_OBJ);
+
+    // Get the number of users for the query.
+    $count = $count_query->execute()->fetchField();
 
     // Prepare the table rows.
     $rows = [];
@@ -180,8 +190,8 @@ class UserController extends ControllerBase {
           'name' => Link::fromTextAndUrl($user->name, URL::fromUserInput('/user/' . $user->uid)),
           'mail' => Link::fromTextAndUrl($user->mail, URL::fromUserInput('/user/' . $user->uid)),
           'status' => $statuses[empty($user->status) ? 'blocked' : 'active'],
-          'role' => !empty($user_roles) ? '<ol><li>' . implode('</li><li>', $user_roles) . '</li></ol>' : '',
-          'sources' => $user->sources ?? '',
+          'role' => !empty($user_roles) ? new FormattableMarkup('<ol><li>' . implode('</li><li>', $user_roles) . '</li></ol>', []) : '',
+          'sources' => isset($user->sources) ? new FormattableMarkup($user->sources, []) : '',
           'created' => $date_formatter->formatInterval(time() - $user->created),
           'access' => !empty($user->access) ? $this->t('@time ago', [
             '@time' => $date_formatter->formatInterval(time() - $user->access),
@@ -190,9 +200,6 @@ class UserController extends ControllerBase {
         ];
       }
     }
-
-    // Get the number of users for the query.
-    $count = !empty($pager_total_items[0]) ? $pager_total_items[0] : 0;
 
     // List of users.
     $build['table'] = [
@@ -240,8 +247,8 @@ class UserController extends ControllerBase {
     foreach ($query->execute() as $record) {
       $job = $record->job;
       $training = $record->training;
-      $link = Link::fromTextAndUrl($record->name, URL::fromUserInput('taxonomy/term/' . $record->tid . '/posting-rights'));
-      $row = '<li data-job="' . $job . '" data-training="' . $training . '">' . $link . '</li>';
+      $link = Link::fromTextAndUrl($record->name, URL::fromUserInput('/taxonomy/term/' . $record->tid . '/posting-rights'));
+      $row = '<li data-job="' . $job . '" data-training="' . $training . '">' . $link->toString() . '</li>';
       $sources[$record->uid][$record->tid] = $row;
     }
 
