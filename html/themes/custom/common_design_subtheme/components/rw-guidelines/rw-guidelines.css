@@ -2,7 +2,8 @@ form[data-with-guidelines] .form-item label,
 form[data-with-guidelines] .form-wrapper label {
   float: left;
 }
-form[data-with-guidelines] .fieldset-wrapper label {
+form[data-with-guidelines] .fieldset-wrapper label,
+form[data-with-guidelines] label.option {
   float: none;
 }
 form[data-with-guidelines] button[data-guideline] {
