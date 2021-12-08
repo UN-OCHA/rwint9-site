@@ -1,8 +1,8 @@
-#main-content form[data-with-guidelines] > * .form-wrapper {
+form[data-with-guidelines] > * .form-wrapper {
   position: relative;
 }
 
-#main-content form[data-with-guidelines] button[data-guideline] {
+form[data-with-guidelines] button[data-guideline] {
   display: inline-block;
   vertical-align: middle;
   position: absolute;
@@ -11,10 +11,10 @@
   padding: 4px 10px;
   margin-top: 0;
 }
-#main-content form[data-with-guidelines] button[data-guideline]:hover {
+form[data-with-guidelines] button[data-guideline]:hover {
   background-position-x: -96px;
 }
-#main-content form[data-with-guidelines] .guideline:before {
+form[data-with-guidelines] .guideline:before {
   content: "";
   position: fixed;
   top: 0;
@@ -26,7 +26,7 @@
   background: rgba(1, 1, 1, 0.3);
   z-index: 10000;
 }
-#main-content form[data-with-guidelines] .guideline {
+form[data-with-guidelines] .guideline {
   position: fixed;
   top: 10vh;
   left: 25vw;
@@ -36,7 +36,7 @@
   border: 10px solid rgba(0, 0, 0, 0.1);
   z-index: 1;
 }
-#main-content form[data-with-guidelines] .guideline > button[value="close"] {
+form[data-with-guidelines] .guideline > button[value="close"] {
   position: absolute;
   top: -50px;
   left: -50px;
@@ -44,13 +44,13 @@
   padding: 4px 10px;
   z-index: 10002;
 }
-#main-content form[data-with-guidelines] .guideline > button[value="close"]:hover {
+form[data-with-guidelines] .guideline > button[value="close"]:hover {
   border-color: #eb1405;
 }
-#main-content form[data-with-guidelines] .guideline > button[value="close"]:hover:after {
+form[data-with-guidelines] .guideline > button[value="close"]:hover:after {
   background-position-x: -96px;
 }
-#main-content form[data-with-guidelines] .guideline > div {
+form[data-with-guidelines] .guideline > div {
   position: relative;
   width: 100%;
   height: 100%;
@@ -60,12 +60,12 @@
   overflow-x: hidden;
   z-index: 10001;
 }
-#main-content form[data-with-guidelines] .guideline > div > h3 {
+form[data-with-guidelines] .guideline > div > h3 {
   text-align: center;
 }
-#main-content form[data-with-guidelines] .guideline > div > .content {
+form[data-with-guidelines] .guideline > div > .content {
   padding-top: 0;
 }
-#main-content form[data-with-guidelines] .guideline > div > .content img {
+form[data-with-guidelines] .guideline > div > .content img {
   border: 4px solid #e6ecef;
 }

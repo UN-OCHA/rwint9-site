@@ -1,15 +1,45 @@
+form[data-with-guidelines] .form-item label,
+form[data-with-guidelines] .form-wrapper label {
+  float: left;
+}
+form[data-with-guidelines] .fieldset-wrapper label,
+form[data-with-guidelines] label.option {
+  float: none;
+}
 form[data-with-guidelines] button[data-guideline] {
+  position: relative;
   display: inline-block;
   overflow: hidden;
   width: 20px;
   height: 20px;
-  margin: -3px 0 0 8px;
+  margin: -0.75rem 0 0 0.5rem;
   padding: 0 0 0 12px;
   vertical-align: middle;
   border: 4px solid var(--cd-reliefweb-brand-grey--light);
   border-radius: 50%;
   background: var(--rw-icons--common--help--12--dark-blue);
   background-color: var(--cd-reliefweb-brand-grey--light);
+}
+/* Legend with child button */
+form[data-with-guidelines] legend button[data-guideline] {
+  margin: -0.75rem 0 0 0.5rem;
+}
+form[data-with-guidelines] .form-required button[data-guideline] {
+  margin: 0 0 0 0.5rem;
+}
+form[data-with-guidelines] legend .form-required button[data-guideline] {
+  order: 1;
+}
+/* Label followed by button */
+form[data-with-guidelines] label + button[data-guideline],
+form[data-with-guidelines] .form-required + button[data-guideline] {
+  margin: -0.75rem 0 0;
+}
+form[data-with-guidelines] label.option + button[data-guideline] {
+  margin: -0.5rem 0 0;
+}
+form[data-with-guidelines] .visually-hidden + button[data-guideline] {
+  margin: -0.75rem 0 0 0.5rem;
 }
 form[data-with-guidelines] button[data-guideline]:hover {
   background: var(--rw-icons--common--help--12--dark-red);
@@ -37,6 +67,7 @@ form[data-with-guidelines] .rw-guideline {
   border: 10px solid black;
   border: 10px solid rgba(0, 0, 0, 0.1);
 }
+
 form[data-with-guidelines] .rw-guideline > button[value="close"] {
   position: absolute;
   z-index: 10002;
@@ -46,7 +77,7 @@ form[data-with-guidelines] .rw-guideline > button[value="close"] {
   width: 28px;
   height: 28px;
   padding: 0 0 0 22px;
-  border: 2px solid var(--cd-reliefweb-brand-grey--dark);
+  border: 2px solid var(--cd-reliefweb-brand-blue--dark);
   border-radius: 50%;
   background: white;
 }
@@ -79,7 +110,7 @@ form[data-with-guidelines] .rw-guideline > div {
 form[data-with-guidelines] .rw-guideline > div > h3 {
   text-align: center;
 }
-form[data-with-guidelines] .rw-guideline > div > .rw-guideline__content {
+form[data-with-guidelines] .rw-guideline > div > .content {
   padding-top: 0;
 }
 form[data-with-guidelines] .rw-guideline > div > .rw-guideline__content img {
