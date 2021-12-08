@@ -9,6 +9,7 @@ use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Link;
+use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -40,12 +41,20 @@ class UserController extends ControllerBase {
   protected $dateFormatter;
 
   /**
+   * The pager manager.
+   *
+   * @var \Drupal\Core\Pager\PagerManagerInterface
+   */
+  protected $pagerManager;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(Connection $database, FormBuilderInterface $form_builder, DateFormatterInterface $date_formatter) {
+  public function __construct(Connection $database, FormBuilderInterface $form_builder, DateFormatterInterface $date_formatter, PagerManagerInterface $pager_manager) {
     $this->database = $database;
     $this->formBuilder = $form_builder;
     $this->dateFormatter = $date_formatter;
+    $this->pagerManager = $pager_manager;
   }
 
   /**
@@ -55,7 +64,8 @@ class UserController extends ControllerBase {
     return new static(
       $container->get('database'),
       $container->get('form_builder'),
-      $container->get('date.formatter')
+      $container->get('date.formatter'),
+      $container->get('pager.manager')
     );
   }
 
@@ -78,22 +88,26 @@ class UserController extends ControllerBase {
     $form = $this->formBuilder
       ->buildForm('\Drupal\reliefweb_users\Form\UserPageFilterForm', $form_state);
 
+    // Remove unneeded parts.
+    unset($form['op']);
+    unset($form['form_build_id']);
+    unset($form['form_id']);
+
     // Filters.
     $build['filters'] = $form;
 
-    $storage = $form_state->getStorage();
-
     // List of users.
+    $storage = $form_state->getStorage();
     $build['list'] = $this->usersAdminList($storage, $request->query->all());
 
     return $build;
-
   }
 
   /**
    * Build the user table for the user admin page.
    */
   protected function usersAdminList($storage, $query_parameters) {
+    $items_per_page = 30;
     $build = [];
 
     // Get filter values and options.
@@ -168,12 +182,13 @@ class UserController extends ControllerBase {
     // Get the number of users for the query.
     $count_query = $query->countQuery();
 
-    // Get the users.
-    $query->range(0, 30);
-    $users = $query->execute()->fetchAllAssoc('uid', \PDO::FETCH_OBJ);
-
     // Get the number of users for the query.
     $count = $count_query->execute()->fetchField();
+
+    $currentPage = $this->pagerManager->createPager($count, $items_per_page)->getCurrentPage();
+    // Get the users.
+    $query->range($currentPage * $items_per_page, $items_per_page);
+    $users = $query->execute()->fetchAllAssoc('uid', \PDO::FETCH_OBJ);
 
     // Prepare the table rows.
     $rows = [];
@@ -224,7 +239,11 @@ class UserController extends ControllerBase {
     // Pager for the list of users.
     $build['pager'] = [
       '#theme' => 'pager',
+      '#element' => 0,
       '#parameters' => $query_parameters,
+      '#route_name' => 'entity.user.collection',
+      '#tags' => [],
+      '#quantity' => 5,
     ];
 
     return $build;

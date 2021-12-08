@@ -81,7 +81,7 @@ class UserPageFilterForm extends FormBase {
       '#type' => 'checkboxes',
       '#title' => $this->t('Role'),
       '#options' => $roles,
-      '#default_value' => isset($filters['role']) ? $filters['role'] : '',
+      '#default_value' => isset($filters['role']) ? $filters['role'] : [],
     ];
 
     $form['filters']['status'] = [
@@ -95,7 +95,7 @@ class UserPageFilterForm extends FormBase {
       '#title' => $this->t('Posted'),
       '#type' => 'checkboxes',
       '#options' => $content_types,
-      '#default_value' => isset($filters['posted']) ? $filters['posted'] : '',
+      '#default_value' => isset($filters['posted']) ? $filters['posted'] : [],
     ];
 
     $form['filters']['job_rights'] = [
