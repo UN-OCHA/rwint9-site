@@ -11,6 +11,7 @@ permissions:
   - 'access content moderation features'
   - 'access media overview'
   - 'access reliefweb links field validation'
+  - 'access reliefweb private files'
   - 'access reliefweb user posting rights field validation'
   - 'access user contact forms'
   - 'access user profiles'
