@@ -386,7 +386,7 @@ class ReliefWebFile extends FieldItemBase {
         // @todo change to int(10) unsigned.
         'revision_id' => [
           'type' => 'int',
-          'size' => '10',
+          'size' => 'normal',
           'unsigned' => TRUE,
           'not null' => TRUE,
         ],
