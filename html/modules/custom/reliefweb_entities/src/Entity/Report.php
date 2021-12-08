@@ -107,7 +107,7 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
    *   Render array with the list of attachments.
    */
   public function getAttachments(?array $build = NULL) {
-    if (empty($build)) {
+    if (empty($build) || empty($build['#list'])) {
       return [];
     }
 
