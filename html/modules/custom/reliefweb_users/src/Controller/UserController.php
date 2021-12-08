@@ -2,14 +2,16 @@
 
 namespace Drupal\reliefweb_users\Controller;
 
-use Drupal\Core\Link;
 use Drupal\Component\Render\FormattableMarkup;
-use Drupal\Core\Url;
-use Drupal\Core\Form\FormBuilderInterface;
-use Drupal\Core\Form\FormState;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Datetime\DateFormatterInterface;
+use Drupal\Core\Form\FormBuilderInterface;
+use Drupal\Core\Form\FormState;
+use Drupal\Core\Link;
+use Drupal\Core\Url;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * User posts controller.
@@ -31,11 +33,19 @@ class UserController extends ControllerBase {
   protected $formBuilder;
 
   /**
+   * Date formatter.
+   *
+   * @var \Drupal\Core\Datetime\DateFormatterInterface
+   */
+  protected $dateFormatter;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(Connection $database, FormBuilderInterface $form_builder) {
+  public function __construct(Connection $database, FormBuilderInterface $form_builder, DateFormatterInterface $date_formatter) {
     $this->database = $database;
     $this->formBuilder = $form_builder;
+    $this->dateFormatter = $date_formatter;
   }
 
   /**
@@ -44,7 +54,8 @@ class UserController extends ControllerBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('database'),
-      $container->get('form_builder')
+      $container->get('form_builder'),
+      $container->get('date.formatter')
     );
   }
 
@@ -54,7 +65,7 @@ class UserController extends ControllerBase {
    * @return array
    *   Render array.
    */
-  public function getContent() {
+  public function getContent(Request $request) {
     // We want the editors to be able to bookmark a moderation page with
     // a selection of filters so we set the method as GET.
     $form_state = new FormState();
@@ -73,7 +84,7 @@ class UserController extends ControllerBase {
     $storage = $form_state->getStorage();
 
     // List of users.
-    $build['list'] = $this->usersAdminList($storage);
+    $build['list'] = $this->usersAdminList($storage, $request->query->all());
 
     return $build;
 
@@ -82,7 +93,7 @@ class UserController extends ControllerBase {
   /**
    * Build the user table for the user admin page.
    */
-  protected function usersAdminList($storage) {
+  protected function usersAdminList($storage, $query_parameters) {
     $build = [];
 
     // Get filter values and options.
@@ -176,9 +187,6 @@ class UserController extends ControllerBase {
       // Get the sources and posting rights.
       $this->getUserSources($users);
 
-      /** @var \Drupal\Core\Datetime\DateFormatterInterface $formatter */
-      $date_formatter = \Drupal::service('date.formatter');
-
       foreach ($users as $user) {
         $user_roles = [];
         if (!empty($users_roles[$user->uid])) {
@@ -192,9 +200,9 @@ class UserController extends ControllerBase {
           'status' => $statuses[empty($user->status) ? 'blocked' : 'active'],
           'role' => !empty($user_roles) ? new FormattableMarkup('<ol><li>' . implode('</li><li>', $user_roles) . '</li></ol>', []) : '',
           'sources' => isset($user->sources) ? new FormattableMarkup($user->sources, []) : '',
-          'created' => $date_formatter->formatInterval(time() - $user->created),
+          'created' => $this->dateFormatter->formatInterval(time() - $user->created),
           'access' => !empty($user->access) ? $this->t('@time ago', [
-            '@time' => $date_formatter->formatInterval(time() - $user->access),
+            '@time' => $this->dateFormatter->formatInterval(time() - $user->access),
           ]) : $this->t('never'),
           'edit' => Link::fromTextAndUrl($this->t('edit'), URL::fromUserInput('/user/' . $user->uid . '/edit')),
         ];
@@ -216,7 +224,7 @@ class UserController extends ControllerBase {
     // Pager for the list of users.
     $build['pager'] = [
       '#theme' => 'pager',
-      '#parameters' => \Drupal::request()->query->all(),
+      '#parameters' => $query_parameters,
     ];
 
     return $build;

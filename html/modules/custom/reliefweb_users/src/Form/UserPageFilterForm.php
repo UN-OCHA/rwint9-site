@@ -2,13 +2,12 @@
 
 namespace Drupal\reliefweb_users\Form;
 
-use Drupal\Core\State\State;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\user\Entity\Role;
 
 /**
  * Manage subscription for user.
@@ -23,18 +22,18 @@ class UserPageFilterForm extends FormBase {
   protected $database;
 
   /**
-   * The state store.
+   * The entity type manager.
    *
-   * @var Drupal\Core\State\State
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $state;
+  protected $entityTypeManager;
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(Connection $database, State $state) {
+  public function __construct(Connection $database, EntityTypeManagerInterface $entity_type_manager) {
     $this->database = $database;
-    $this->state = $state;
+    $this->entityTypeManager = $entity_type_manager;
   }
 
   /**
@@ -43,7 +42,7 @@ class UserPageFilterForm extends FormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('database'),
-      $container->get('state'),
+      $container->get('entity_type.manager'),
     );
   }
 
@@ -178,10 +177,9 @@ class UserPageFilterForm extends FormBase {
     static $roles;
 
     if (!isset($roles)) {
-      $role_objects = Role::loadMultiple();
+      $role_objects = $this->entityTypeManager->getStorage('user_role')->loadMultiple();
       $roles = array_combine(array_keys($role_objects), array_map(function ($a) {
         return $a->label();
-
       }, $role_objects));
     }
 
