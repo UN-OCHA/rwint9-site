@@ -3,14 +3,17 @@
 namespace Drupal\reliefweb_docstore\Commands;
 
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\reliefweb_docstore\Plugin\Field\FieldType\ReliefWebFile;
 use Drupal\reliefweb_docstore\Services\DocstoreClient;
 use Drupal\reliefweb_utility\Helpers\LegacyHelper;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
 use Drush\Commands\DrushCommands;
+use GuzzleHttp\Psr7\Utils;
 
 /**
  * ReliefWeb migration Drush commandfile.
@@ -50,18 +53,27 @@ class ReliefWebDocstoreCommands extends DrushCommands {
   protected $docstoreClient;
 
   /**
+   * ReliefWeb API config.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
+  protected $docstoreConfig;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(
+    ConfigFactoryInterface $config_factory,
     Connection $database,
     EntityFieldManagerInterface $entity_field_manager,
     EntityTypeManagerInterface $entity_type_manager,
-    DocstoreClient $docstore_client
+    DocstoreClient $docstore_client,
   ) {
     $this->database = $database;
     $this->entityFieldManager = $entity_field_manager;
     $this->entityTypeManager = $entity_type_manager;
     $this->docstoreClient = $docstore_client;
+    $this->docstoreConfig = $config_factory->get('reliefweb_docstore.settings');
   }
 
   /**
@@ -128,6 +140,8 @@ class ReliefWebDocstoreCommands extends DrushCommands {
     $count_ids = 0;
     $count_files = 0;
 
+    $local = $this->docstoreConfig->get('local') === TRUE;
+
     while ($last !== NULL) {
       $ids = $this->getDatabase()
         ->select($table, $table)
@@ -144,7 +158,7 @@ class ReliefWebDocstoreCommands extends DrushCommands {
       if (!empty($ids)) {
         $last = min($ids);
         $count_ids += count($ids);
-        $count_files += $this->migrateFiles($ids, $base_url);
+        $count_files += $this->migrateFiles($ids, $base_url, $local);
 
         static::clearEntityCache('node', $ids);
       }
@@ -172,11 +186,13 @@ class ReliefWebDocstoreCommands extends DrushCommands {
    *   Entity ids.
    * @param string $base_url
    *   The base url of the site from which to retrieve the files.
+   * @param bool $local
+   *   Whether to store the files locally or in the docstore.
    *
    * @return int
    *   The number of migrated files.
    */
-  protected function migrateFiles(array $ids, $base_url) {
+  protected function migrateFiles(array $ids, $base_url, $local = FALSE) {
     $query = Database::getConnection('default', 'rwint7')
       ->select('field_data_field_file', 'f')
       ->fields('f', ['entity_id'])
@@ -191,17 +207,104 @@ class ReliefWebDocstoreCommands extends DrushCommands {
     // Group the files per entity.
     $entities = [];
     foreach ($records as $record) {
-      $entities[$record['entity_id']][] = $record;
+      $file = $this->prepareFileData($record, $base_url);
+      if (!empty($file)) {
+        $entities[$record['entity_id']][] = $file;
+      }
     }
 
-    // Migrate the files and create/update the remote document resources.
+    if (empty($entities)) {
+      return 0;
+    }
+
+    // Migrate the files.
     // @todo we need to find a way to identify if the file has been replaced.
     // Maybe we can generate the file_uuid based on the file ID.
+    if ($local) {
+      return $this->migrateLocalFiles($entities, $base_url);
+    }
+    else {
+      return $this->migrateRemoteFiles($entities, $base_url);
+    }
+  }
+
+  /**
+   * Prepare the D9 file data from the D7 database record.
+   *
+   * @param array $record
+   *   D7 file record.
+   * @param string $base_url
+   *   The base url of the site from which to retrieve the files.
+   *
+   * @return array
+   *   D9 file data.
+   */
+  protected function prepareFileData(array $record, $base_url) {
+    $uuid = LegacyHelper::generateAttachmentUuid($record['uri']);
+    $file_uuid = LegacyHelper::generateAttachmentFileUuid($uuid, $record['fid']);
+    $url = LegacyHelper::getFileLegacyUrl($record['uri'], $base_url);
+
+    $file = $this->getDatabase()
+      ->select('file_managed', 'fm')
+      ->fields('fm', ['fid', 'uri'])
+      ->condition('fm.uuid', $file_uuid, '=')
+      ->execute()
+      ?->fetch(\PDO::FETCH_ASSOC);
+
+    if (!empty($file)) {
+      $file['filename'] = $record['filename'];
+      $file['filemime'] = $record['filemime'];
+      $file['uuid'] = $uuid;
+      $file['file_uuid'] = $file_uuid;
+      $file['url'] = $url;
+      $file['private'] = strpos($file['uri'], 'private://') === 0;
+    }
+    else {
+      $this->logger()->error(dt('No database entry found for file @uri.', [
+        '@uri' => $record['uri'],
+      ]));
+    }
+    return $file;
+  }
+
+  /**
+   * Migrate files to their local storage.
+   *
+   * @param array $entities
+   *   List of entities that have attachments, keyed by entity id and with the
+   *   list of files as values.
+   *
+   * @return int
+   *   The number of migrated files.
+   */
+  protected function migrateLocalFiles(array $entities) {
+    $count = 0;
+    foreach ($entities as $files) {
+      foreach ($files as $file) {
+        if ($this->downloadLocalFile($file)) {
+          $count++;
+        }
+      }
+    }
+    return $count;
+  }
+
+  /**
+   * Migrate files to their remote storage.
+   *
+   * @param array $entities
+   *   List of entities that have attachments, keyed by entity id and with the
+   *   list of files as values.
+   *
+   * @return int
+   *   The number of migrated files.
+   */
+  protected function migrateRemoteFiles(array $entities) {
     $count = 0;
     foreach ($entities as $entity_id => $files) {
       $uuids = [];
       foreach ($files as $file) {
-        $uuid = $this->createOrUpdateRemoteFile($file, $base_url);
+        $uuid = $this->createOrUpdateRemoteFile($file);
         if ($uuid !== FALSE) {
           $uuids[] = $uuid;
         }
@@ -213,18 +316,73 @@ class ReliefWebDocstoreCommands extends DrushCommands {
   }
 
   /**
+   * Download a file to its local location.
+   *
+   * @param array $file
+   *   Legacy file data.
+   *
+   * @return bool
+   *   TRUE if the file could be downloaded.
+   */
+  protected function downloadLocalFile(array $file) {
+    $uuid = $file['uuid'];
+    $uri = $file['uri'];
+    $url = $file['url'];
+
+    // Update the file record using the file id as revision id.
+    $this->updateFileFieldRecord($uuid, $file['fid']);
+
+    // Try to download the file.
+    $success = FALSE;
+    if (ReliefWebFile::prepareDirectory($uri)) {
+      try {
+        $input = Utils::TryFopen($url, 'r');
+        $output = Utils::TryFopen($uri, 'w');
+        $success = stream_copy_to_stream($input, $output);
+      }
+      catch (\Exception $exception) {
+        $this->logger()->error(dt('Unable to download file @url to @uri: @message.', [
+          '@url' => $url,
+          '@uri' => $uri,
+          '@message' => $exception->getMessage(),
+        ]));
+        return FALSE;
+      }
+    }
+    else {
+      $this->logger()->error(dt('Unable to create directory for @uri.', [
+        '@uri' => $uri,
+      ]));
+      return FALSE;
+    }
+
+    if (empty($success)) {
+      $this->logger()->error(dt('Unable to download file @url to @uri.', [
+        '@url' => $url,
+        '@uri' => $uri,
+      ]));
+    }
+    else {
+      $this->logger()->info(dt('Successfully downloaded file @url to @uri.', [
+        '@url' => $url,
+        '@uri' => $uri,
+      ]));
+    }
+    return $success;
+  }
+
+  /**
    * Create or update a remote file with the database file data.
    *
    * @param array $file
    *   Legacy file data.
-   * @param string $base_url
-   *   The base url of the site from which to retrieve the files.
    *
    * @return string|false
    *   The UUID of the file resource on success or FALSE.
    */
-  protected function createOrUpdateRemoteFile(array $file, $base_url) {
-    $uuid = LegacyHelper::generateAttachmentUuid($file['uri']);
+  protected function createOrUpdateRemoteFile(array $file) {
+    $uuid = $file['uuid'];
+    $url = $file['url'];
 
     // First, try to get the file resource.
     $response = $this->docstoreClient->getFile($uuid);
@@ -235,21 +393,22 @@ class ReliefWebDocstoreCommands extends DrushCommands {
         'uuid' => $uuid,
         'filename' => $file['filename'],
         'mimetype' => $file['filemime'],
+        'private' => $file['private'],
         // The docstore will fetch the file content from this URL.
-        'uri' => LegacyHelper::getFileLegacyUrl($file['uri'], $base_url),
-      ]);
+        'uri' => $url,
+      ], 300);
 
       if (!$response->isSuccessful()) {
-        $this->logger()->info(dt('Unable to create remote file for @uri.', [
-          '@uri' => $file['uri'],
+        $this->logger()->info(dt('Unable to create remote file for @url.', [
+          '@url' => $url,
         ]));
         return FALSE;
       }
     }
     // Abort if something went wrong.
     elseif (!$response->isSuccessful()) {
-      $this->logger()->info(dt('Unable to retrieve the remote file for @uri.', [
-        '@uri' => $file['uri'],
+      $this->logger()->info(dt('Unable to retrieve the remote file for @url.', [
+        '@url' => $url,
       ]));
       return FALSE;
     }
@@ -258,23 +417,27 @@ class ReliefWebDocstoreCommands extends DrushCommands {
 
     // If there is no revision id then it means no content was uploaded, try.
     if (empty($content['revision_id'])) {
-      $url = LegacyHelper::getFileLegacyUrl($file['uri']);
       $response = $this->docstoreClient->updateFileContentFromFilePath($uuid, $url);
 
       if (!$response->isSuccessful()) {
-        $this->logger()->info(dt('Unable to update remote file for @uri.', [
-          '@uri' => $file['uri'],
+        $this->logger()->info(dt('Unable to update remote file for @url.', [
+          '@url' => $url,
         ]));
         return FALSE;
       }
 
       $content = $response->getContent();
+
+      // Update the status of the file, if different.
+      if (empty($content['private']) !== empty($file['private'])) {
+        $this->docstoreClient->updateFileStatus($uuid, $file['private']);
+      }
     }
 
     // Get the revision ID.
     if (empty($content['revision_id'])) {
-      $this->logger()->info(dt('Missing file revision id for @uri.', [
-        '@uri' => $file['uri'],
+      $this->logger()->info(dt('Missing file revision id for @url.', [
+        '@url' => $url,
       ]));
       return FALSE;
     }

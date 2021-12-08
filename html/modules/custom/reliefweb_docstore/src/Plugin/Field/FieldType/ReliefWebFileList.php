@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_docstore\Plugin\Field\FieldType;
 
+use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\Core\Field\FieldItemList;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
 
@@ -42,7 +43,13 @@ class ReliefWebFileList extends FieldItemList {
     // Files migration is handled separately.
     // @todo remove when removing `reliefweb_migrate`.
     if (!empty($entity->_is_migrating)) {
-      // Create the field item and preview files with the permanent public URIs.
+      // If the entity is not published, we'll mark the files are private.
+      $private = TRUE;
+      if ($entity instanceof EntityPublishedInterface) {
+        $private = !$entity->isPublished();
+      }
+
+      // Create the field item and preview files with the permanent URIs.
       foreach ($this->list as $item) {
         if ($item->isEmpty()) {
           continue;
@@ -52,7 +59,7 @@ class ReliefWebFileList extends FieldItemList {
         if (empty($file)) {
           continue;
         }
-        $file->setFileUri($item->getPermanentUri(FALSE, FALSE));
+        $file->setFileUri($item->getPermanentUri($private, FALSE));
         $file->setPermanent();
         $file->save();
         $item->get('file_uuid')->setValue($file->uuid());
@@ -64,7 +71,7 @@ class ReliefWebFileList extends FieldItemList {
         if (empty($preview_file)) {
           continue;
         }
-        $preview_file->setFileUri($item->getPermanentUri(FALSE, TRUE));
+        $preview_file->setFileUri($item->getPermanentUri($private, TRUE));
         $preview_file->setPermanent();
         $preview_file->save();
         $item->get('preview_uuid')->setValue($preview_file->uuid());
