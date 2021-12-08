@@ -335,9 +335,9 @@ class ReliefWebFile extends WidgetBase {
       $preview_page = $item->getPreviewPage() ?? 1;
       $preview_rotation = $item->getPreviewRotation() ?? 0;
 
-      $original_preview_uuid = $item->_original_preview_uuid ?: $preview_uuid;
-      $original_preview_page = $item->_original_preview_page ?: $preview_page;
-      $original_preview_rotation = $item->_original_preview_rotation ?: $preview_rotation;
+      $original_preview_uuid = $item->_original_preview_uuid ?? $preview_uuid;
+      $original_preview_page = $item->_original_preview_page ?? $preview_page;
+      $original_preview_rotation = $item->_original_preview_rotation ?? $preview_rotation;
 
       if (!empty($preview_page)) {
         // Only regenerated the preview if the page or rotation changed.
@@ -470,7 +470,7 @@ class ReliefWebFile extends WidgetBase {
       // Note: this 'delta' is the FAPI #type 'weight' element's property not
       // the delta of the current element.
       '#delta' => $items->count(),
-      '#default_value' => $item->_weight ?: $delta,
+      '#default_value' => $item->_weight ?? $delta,
       '#weight' => 100,
     ];
 
@@ -575,7 +575,7 @@ class ReliefWebFile extends WidgetBase {
 
       // Put delta mapping in $form_state, so that flagErrors() can use it.
       foreach ($items as $delta => $item) {
-        $field_state['original_deltas'][$delta] = $item->_original_delta ?: $delta;
+        $field_state['original_deltas'][$delta] = $item->_original_delta ?? $delta;
 
         // We'll let the widget repopulate the weight with the new deltas.
         unset($item->_original_delta, $item->_weight);
@@ -674,7 +674,7 @@ class ReliefWebFile extends WidgetBase {
     // Create a new field item with associated managed files and replace the
     // original values with its values.
     $name = $element['operations']['file']['#name'];
-    $items = $this->processUploadedFiles($element, $form_state, $name, $validators);
+    $items = $this->processUploadedFiles($element['operations']['file'], $form_state, $name, $validators);
     if (!empty($items)) {
       $item = reset($items);
       // Copy some properties from the original field item.
