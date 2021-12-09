@@ -1,7 +1,0 @@
-langcode: en
-status: true
-dependencies: {  }
-name: Guideline
-format: guideline
-weight: 0
-filters: {  }

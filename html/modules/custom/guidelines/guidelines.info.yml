@@ -1,6 +1,0 @@
-name: 'Guidelines'
-type: module
-description: 'Add guidelines to entities and fields'
-core_version_requirement: ^9
-package: 'Custom'
-configure: guidelines.settings

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8db2f3649b52fc7fb83aabb714b29d48",
+    "content-hash": "9c34fdab81b6f0a54029d70ac71a3096",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -3023,6 +3023,51 @@
             "homepage": "https://www.drupal.org/project/google_tag",
             "support": {
                 "source": "https://git.drupalcode.org/project/google_tag"
+            }
+        },
+        {
+            "name": "drupal/guidelines",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupalcode.org/project/guidelines.git",
+                "reference": "1.0.0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/guidelines-1.0.0.zip",
+                "reference": "1.0.0",
+                "shasum": "2ccc48898982e03c993b46b00e06daff8900e34c"
+            },
+            "require": {
+                "drupal/core": "^9"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "drupal": {
+                    "version": "1.0.0",
+                    "datestamp": "1639049991",
+                    "security-coverage": {
+                        "status": "not-covered",
+                        "message": "Project has not opted into security advisory coverage!"
+                    }
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "attiks",
+                    "homepage": "https://www.drupal.org/user/105002"
+                }
+            ],
+            "description": "Add guidelines to entities and fields",
+            "homepage": "https://www.drupal.org/project/guidelines",
+            "support": {
+                "source": "http://cgit.drupalcode.org/guidelines",
+                "issues": "https://www.drupal.org/project/issues/guidelines"
             }
         },
         {
