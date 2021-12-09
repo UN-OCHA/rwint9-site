@@ -157,12 +157,12 @@ class GuidelineSinglePageController extends ControllerBase {
 
     $pattern = '/\<a.+href="https:\/\/trello.com\/c\/([0-9A-Z]+)".+>/i';
     $text = preg_replace_callback($pattern, function ($matches) {
-      return '<a class="xyzzy1" href="#' . $matches[1] . '">';
+      return '<a href="#' . $matches[1] . '">';
     }, $text);
 
     $pattern = '/\<a.+href="https:\/\/guidelines.rwdev.org\/#([0-9A-Z]+).+>"/i';
     $text = preg_replace_callback($pattern, function ($matches) {
-      return '<a class="xyzzy2" href="#' . $matches[1] . '">';
+      return '<a href="#' . $matches[1] . '">';
     }, $text);
 
     return $text;
