@@ -39,11 +39,24 @@ class GuidelineJsonController extends ControllerBase {
           $pre_render = $view_builder->view($guideline, 'default');
           $render_output = render($pre_render);
 
-          $descriptions[] = [
+          $description = [
             'label' => $f,
+            'title' => $guideline->field_title->value,
             'content' => $render_output,
             'link' => $guideline->toUrl()->toString(),
           ];
+
+          // Allow other modules to add extra fields.
+          $module_handler = \Drupal::moduleHandler();
+          $context = [
+            'entity_type' => $entity_type,
+            'bundle' => $bundle,
+          ];
+          $module_handler->alter('guideline_json_fields', $description, $guideline, $context);
+
+          if (isset($description['label']) && !empty($description['label'])) {
+            $descriptions[] = $description;
+          }
         }
       }
     }
