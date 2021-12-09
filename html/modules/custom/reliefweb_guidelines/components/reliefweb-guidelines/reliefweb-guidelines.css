@@ -79,6 +79,7 @@
   flex: 0 0 auto;
 }
 .rw-guidelines-list aside form input {
+  color: #333;
   border: none;
   border-bottom: 1px solid #333;
   box-shadow: inset 0px 1px 5px 0px rgba(0,0,0,0.5);
