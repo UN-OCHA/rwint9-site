@@ -78,6 +78,8 @@ class ReliefWebImportInfo extends FieldItemBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @codeCoverageIgnore
    */
   public static function generateSampleValue(FieldDefinitionInterface $field_definition) {
     $values = [

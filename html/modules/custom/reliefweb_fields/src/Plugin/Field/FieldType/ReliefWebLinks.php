@@ -21,6 +21,7 @@ use Drupal\Core\TypedData\DataDefinition;
  *   default_widget = "reliefweb_links",
  *   default_formatter = "reliefweb_links",
  *   cardinality = -1,
+ *   constraints = {"ReliefWebLink" = {}}
  * )
  */
 class ReliefWebLinks extends FieldItemBase {
@@ -150,8 +151,7 @@ class ReliefWebLinks extends FieldItemBase {
       'url' => [
         'Length' => [
           'max' => 2048,
-          'maxMessage' => $this->t('%name: the URL may not be longer than @max characters.', [
-            '%name' => $this->getFieldDefinition()->getLabel(),
+          'maxMessage' => $this->t('The URL may not be longer than @max characters.', [
             '@max' => 2048,
           ]),
         ],
@@ -161,7 +161,7 @@ class ReliefWebLinks extends FieldItemBase {
       'title' => [
         'Length' => [
           'max' => 1024,
-          'maxMessage' => $this->t('%name: the Title may not be longer than @max characters.', [
+          'maxMessage' => $this->t('The title may not be longer than @max characters.', [
             '%name' => $this->getFieldDefinition()->getLabel(),
             '@max' => 1024,
           ]),
@@ -172,20 +172,8 @@ class ReliefWebLinks extends FieldItemBase {
       'image' => [
         'Length' => [
           'max' => 2048,
-          'maxMessage' => $this->t('%name: the Image may not be longer than @max characters.', [
-            '%name' => $this->getFieldDefinition()->getLabel(),
+          'maxMessage' => $this->t('The image may not be longer than @max characters.', [
             '@max' => 2048,
-          ]),
-        ],
-      ],
-    ]);
-    $constraints[] = $constraint_manager->create('ComplexData', [
-      'active' => [
-        'AllowedValues' => [
-          'choices' => [0, 1],
-          'strict' => TRUE,
-          'message' => $this->t('%name: the Active state must be either 0 or 1.', [
-            '%name' => $this->getFieldDefinition()->getLabel(),
           ]),
         ],
       ],
@@ -196,6 +184,8 @@ class ReliefWebLinks extends FieldItemBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @codeCoverageIgnore
    */
   public static function generateSampleValue(FieldDefinitionInterface $field_definition) {
     $random = new Random();

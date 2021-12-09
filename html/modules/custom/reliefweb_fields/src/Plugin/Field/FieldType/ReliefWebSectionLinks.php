@@ -135,19 +135,18 @@ class ReliefWebSectionLinks extends FieldItemBase {
       'url' => [
         'Length' => [
           'max' => 2048,
-          'maxMessage' => $this->t('%name: the URL may not be longer than @max characters.', [
-            '%name' => $this->getFieldDefinition()->getLabel(),
+          'maxMessage' => $this->t('The URL may not be longer than @max characters.', [
             '@max' => 2048,
           ]),
         ],
+        'Url' => [],
       ],
     ]);
     $constraints[] = $constraint_manager->create('ComplexData', [
       'title' => [
         'Length' => [
           'max' => 1024,
-          'maxMessage' => $this->t('%name: the Title may not be longer than @max characters.', [
-            '%name' => $this->getFieldDefinition()->getLabel(),
+          'maxMessage' => $this->t('The title may not be longer than @max characters.', [
             '@max' => 1024,
           ]),
         ],
@@ -159,6 +158,8 @@ class ReliefWebSectionLinks extends FieldItemBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @codeCoverageIgnore
    */
   public static function generateSampleValue(FieldDefinitionInterface $field_definition) {
     $random = new Random();
