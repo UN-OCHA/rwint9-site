@@ -101,7 +101,7 @@
 
         var link = document.createElement('a');
         link.setAttribute('href', card.link);
-        link.appendChild(document.createTextNode(card.name));
+        link.appendChild(document.createTextNode(card.title));
 
         var heading = document.createElement('h3');
         heading.appendChild(link);
