@@ -1,0 +1,55 @@
+uuid: a195e3eb-d921-4cd0-a9f7-2681c6a24ba5
+langcode: en
+status: true
+dependencies:
+  config:
+    - filter.format.markdown_editor
+  module:
+    - ckeditor
+format: markdown_editor
+editor: ckeditor
+settings:
+  toolbar:
+    rows:
+      -
+        -
+          name: Formatting
+          items:
+            - Bold
+            - Italic
+            - Format
+        -
+          name: Links
+          items:
+            - DrupalLink
+            - DrupalUnlink
+        -
+          name: Lists
+          items:
+            - BulletedList
+            - NumberedList
+        -
+          name: Tools
+          items:
+            - Undo
+            - Redo
+            - RemoveFormat
+        -
+          name: Paste
+          items:
+            - Paste
+            - PasteFromWord
+            - PasteText
+  plugins:
+    stylescombo:
+      styles: ''
+    language:
+      language_list: un
+image_upload:
+  status: false
+  scheme: public
+  directory: inline-images
+  max_size: ''
+  max_dimensions:
+    width: null
+    height: null

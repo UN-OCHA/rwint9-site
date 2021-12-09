@@ -21,6 +21,7 @@ permissions:
   - 'use job transition pending'
   - 'use job transition published'
   - 'use text format markdown'
+  - 'use text format markdown_editor'
   - 'use text format token_markdown'
   - 'use training transition draft'
   - 'use training transition pending'

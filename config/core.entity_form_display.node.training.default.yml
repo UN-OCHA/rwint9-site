@@ -27,7 +27,6 @@ dependencies:
     - link
     - path
     - reliefweb_fields
-    - text
 id: node.training.default
 targetEntityType: node
 bundle: training
@@ -38,13 +37,11 @@ content:
     settings:
       rows: 20
       placeholder: ''
-      summary_rows: 3
-      show_summary: false
     third_party_settings:
       allowed_formats:
         hide_help: '1'
         hide_guidelines: '1'
-    type: text_textarea_with_summary
+    type: reliefweb_formatted_text
     region: content
   field_career_categories:
     weight: 11
@@ -119,7 +116,7 @@ content:
       allowed_formats:
         hide_help: '1'
         hide_guidelines: '1'
-    type: text_textarea
+    type: reliefweb_formatted_text
     region: content
   field_language:
     weight: 13

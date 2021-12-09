@@ -21,7 +21,6 @@ dependencies:
     - content_moderation
     - path
     - reliefweb_fields
-    - text
 id: node.job.default
 targetEntityType: node
 bundle: job
@@ -32,13 +31,11 @@ content:
     settings:
       rows: 20
       placeholder: ''
-      summary_rows: 3
-      show_summary: false
     third_party_settings:
       allowed_formats:
         hide_help: '1'
         hide_guidelines: '1'
-    type: text_textarea_with_summary
+    type: reliefweb_formatted_text
     region: content
   field_career_categories:
     weight: 7
@@ -99,7 +96,7 @@ content:
       allowed_formats:
         hide_help: '1'
         hide_guidelines: '1'
-    type: text_textarea
+    type: reliefweb_formatted_text
     region: content
   field_job_closing_date:
     weight: 4

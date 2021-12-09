@@ -1,0 +1,48 @@
+uuid: e96f932d-fec7-4791-a862-4d99186ed41e
+langcode: en
+status: true
+dependencies:
+  module:
+    - media
+    - reliefweb_utility
+name: 'Markdown with Editor'
+format: markdown_editor
+weight: 0
+filters:
+  filter_html:
+    id: filter_html
+    provider: filter
+    status: true
+    weight: -10
+    settings:
+      allowed_html: '<p> <a href hreflang target rel> <em> <strong> <ul type> <ol start type> <li> <h2> <h3> <h4> <h5> <h6>'
+      filter_html_help: false
+      filter_html_nofollow: true
+  filter_htmlcorrector:
+    id: filter_htmlcorrector
+    provider: filter
+    status: true
+    weight: 10
+    settings: {  }
+  media_embed:
+    id: media_embed
+    provider: media
+    status: false
+    weight: 100
+    settings:
+      default_view_mode: default
+      allowed_media_types: {  }
+      allowed_view_modes: {  }
+  filter_markdown:
+    id: filter_markdown
+    provider: reliefweb_utility
+    status: true
+    weight: -20
+    settings: {  }
+  reliefweb_token_filter:
+    id: reliefweb_token_filter
+    provider: reliefweb_utility
+    status: false
+    weight: 0
+    settings:
+      replace_empty: '0'
