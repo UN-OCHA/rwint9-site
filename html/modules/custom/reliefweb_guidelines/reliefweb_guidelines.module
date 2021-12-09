@@ -27,6 +27,7 @@ function reliefweb_guidelines_theme() {
       'variables' => [
         'id' => '',
         'title' => '',
+        'title_prefix' => '',
         'description' => '',
         'children' => [],
       ],
@@ -266,4 +267,33 @@ function _reliefweb_guidelines_delete_all() {
     $guideline_type->delete();
   }
 
+}
+
+/**
+ * Implements hook_page_attachments_alter().
+ */
+function reliefweb_guidelines_page_attachments_alter(array &$attachments) {
+  if (\Drupal::routeMatch()->getRouteName() === 'reliefweb_guidelines.guidelines') {
+    if (in_array('core/drupal.active-link', $attachments['#attached']['library'])) {
+      $index = array_search('core/drupal.active-link', $attachments['#attached']['library']);
+      unset($attachments['#attached']['library'][$index]);
+    }
+  }
+}
+
+/**
+ * Implements hook_page_top().
+ */
+function reliefweb_guidelines_page_top(array &$page_top) {
+  $page_top['toolbar']['#access'] = FALSE;
+}
+
+/**
+ * Implements hook_guideline_json_fields_alter().
+ */
+function reliefweb_guidelines_guideline_json_fields_alter(&$description, $guideline, $context) {
+  /** @var Drupal\guidelines\Entity\Guideline $guideline */
+  if ($guideline->hasField('field_short_link')) {
+    $description['link'] = '/guidelines#' . $guideline->field_short_link->value;
+  }
 }

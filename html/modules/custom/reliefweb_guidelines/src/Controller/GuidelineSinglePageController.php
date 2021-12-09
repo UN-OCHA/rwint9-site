@@ -115,16 +115,18 @@ class GuidelineSinglePageController extends ControllerBase {
       if ($parents = $guideline->getParentIds()) {
         $items[$parents[0]]['#children'][] = [
           '#theme' => 'reliefweb_guidelines_item',
-          '#id' => $guideline->hasField('field_short_link') ? Html::getUniqueId($guideline->field_short_link->value) : Html::getUniqueId($guideline->field_title->value),
-          '#title' => $guidelines[$parents[0]]->field_title->value . ' > ' . $guideline->field_title->value,
+          '#id' => $guideline->hasField('field_short_link') ? $guideline->field_short_link->value : Html::getUniqueId($guideline->field_title->value),
+          '#title' => $guideline->field_title->value,
+          '#title_prefix' => $guidelines[$parents[0]]->field_title->value . ' > ',
           '#description' => $this->cleanAtags($guideline->hasField('field_description') ? check_markup($guideline->field_description->value, $guideline->field_description->format) : ''),
         ];
       }
       else {
         $items[$guideline->id()] = [
           '#theme' => 'reliefweb_guidelines_item',
-          '#id' => $guideline->hasField('field_short_link') ? Html::getUniqueId($guideline->field_short_link->value) : Html::getUniqueId($guideline->field_title->value),
+          '#id' => $guideline->hasField('field_short_link') ? $guideline->field_short_link->value : Html::getUniqueId($guideline->field_title->value),
           '#title' => $guideline->field_title->value,
+          '#title_prefix' => '',
           '#description' => $this->cleanAtags($guideline->hasField('field_description') ? check_markup($guideline->field_description->value, $guideline->field_description->format) : ''),
           '#children' => [],
         ];
@@ -155,12 +157,12 @@ class GuidelineSinglePageController extends ControllerBase {
 
     $pattern = '/\<a.+href="https:\/\/trello.com\/c\/([0-9A-Z]+)"/i';
     $text = preg_replace_callback($pattern, function ($matches) {
-      return '<a class="xyzzy1" href="#' . strtolower($matches[1]) . '"';
+      return '<a class="xyzzy1" href="#' . $matches[1] . '"';
     }, $text);
 
     $pattern = '/\<a.+href="https:\/\/guidelines.rwdev.org\/#([0-9A-Z]+)"/i';
     $text = preg_replace_callback($pattern, function ($matches) {
-      return '<a class="xyzzy2" href="#' . strtolower($matches[1]) . '"';
+      return '<a class="xyzzy2" href="#' . $matches[1] . '"';
     }, $text);
 
     return $text;

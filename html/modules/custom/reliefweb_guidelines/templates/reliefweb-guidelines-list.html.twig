@@ -15,7 +15,7 @@
   <aside>
     <h1>Guidelines</h1>
     <form action="#search">
-      <input id="search" type="text" placeholder="Search">
+      <input id="" type="text" placeholder="Search">
     </form>
     <nav class="scroll">
       {% for guideline in guidelines %}
@@ -39,6 +39,7 @@
         <a name="{{ guideline['#id'] }}"></a>
         {{ guideline['#children'] }}
       {% endfor %}
+      <article id="search"></article>
     </div>
   </main>
 </div>
