@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_entities\Plugin\Validation\Constraint;
 
+use Drupal\Core\Field\FieldItemListInterface;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 
@@ -14,21 +15,16 @@ class TextLengthWithinRangeConstraintValidator extends ConstraintValidator {
    * {@inheritdoc}
    */
   public function validate($item, Constraint $constraint) {
-    $field_definition = $item->getFieldDefinition();
-
-    /** @var \Drupal\Core\Entity\FieldableEntityInterface $entity */
-    $entity = $this->context->getRoot()->getValue();
-    $field_name = $field_definition->getName();
-
-    if ($entity->hasField($field_name) && isset($constraint->min, $constraint->max)) {
+    if ($item instanceof FieldItemListInterface && isset($constraint->min, $constraint->max)) {
       $min = (int) $constraint->min;
       $max = (int) $constraint->max;
       $skip_if_empty = !empty($constraint->skipIfEmpty);
-      $label = $field_definition->getLabel();
+      $label = $item->getFieldDefinition()->getLabel();
 
-      foreach ($entity->get($field_name)->getValue() as $delta => $item) {
-        if (array_key_exists('value', $item)) {
-          $length = mb_strlen($item['value']);
+      foreach ($item as $delta => $field_item) {
+        $value = $field_item->value;
+        if (is_string($value)) {
+          $length = mb_strlen($value);
 
           // Skip the validation.
           if ($length === 0 && $skip_if_empty) {

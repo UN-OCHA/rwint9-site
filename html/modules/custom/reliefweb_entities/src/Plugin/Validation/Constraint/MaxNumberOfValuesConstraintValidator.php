@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_entities\Plugin\Validation\Constraint;
 
+use Drupal\Core\Field\FieldItemListInterface;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 
@@ -14,18 +15,11 @@ class MaxNumberOfValuesConstraintValidator extends ConstraintValidator {
    * {@inheritdoc}
    */
   public function validate($item, Constraint $constraint) {
-    $field_definition = $item->getFieldDefinition();
-
-    /** @var \Drupal\Core\Entity\FieldableEntityInterface $entity */
-    $entity = $this->context->getRoot()->getValue();
-    $field_name = $field_definition->getName();
-
-    if ($entity->hasField($field_name) && isset($constraint->max)) {
+    if ($item instanceof FieldItemListInterface && isset($constraint->max)) {
       $max = (int) $constraint->max;
-      $label = $field_definition->getLabel();
+      $label = $item->getFieldDefinition()->getLabel();
 
-      $values = $entity->get($field_name)->getValue();
-      if (count($values) > $max) {
+      if ($item->count() > $max) {
         $this->context
           ->buildViolation($constraint->mustHaveLess)
           ->setParameter('%field', $label)

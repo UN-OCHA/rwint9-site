@@ -4,6 +4,7 @@ namespace Drupal\reliefweb_entities\Plugin\Validation\Constraint;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -45,24 +46,19 @@ class DateNotInPastConstraintValidator extends ConstraintValidator implements Co
    * {@inheritdoc}
    */
   public function validate($item, Constraint $constraint) {
-    $field_definition = $item->getFieldDefinition();
-
-    /** @var \Drupal\reliefweb_moderation\EntityModeratedInterface $entity */
-    $entity = $this->context->getRoot()->getValue();
-    $field_name = $field_definition->getName();
-
-    if ($entity->hasField($field_name) && $entity instanceof EntityModeratedInterface) {
+    if ($item instanceof FieldItemListInterface && $item->getEntity() instanceof EntityModeratedInterface) {
       // Conditions to perform the validation.
       $check = TRUE;
       if (!empty($constraint->permission)) {
         $check = $check && !$this->currentUser->hasPermission($constraint->permission);
       }
       if (!empty($constraint->statuses)) {
-        $check = $check && in_array($entity->getModerationStatus(), $constraint->statuses);
+        $check = $check && in_array($item->getEntity()->getModerationStatus(), $constraint->statuses);
       }
 
       // Check that the date properties are in the future.
       if ($check) {
+        $field_definition = $item->getFieldDefinition();
         $label = $field_definition->getLabel();
         $storage_definition = $field_definition->getFieldStorageDefinition();
 
@@ -71,9 +67,9 @@ class DateNotInPastConstraintValidator extends ConstraintValidator implements Co
           $message = $constraint->mustNotBeInPastProperty;
         }
 
-        foreach ($entity->get($field_name)->getValue() as $delta => $item) {
+        foreach ($item->getValue() as $delta => $field_item) {
           foreach (['value', 'end_value'] as $property) {
-            if (array_key_exists($property, $item) && $this->dateIsInPast($item[$property])) {
+            if (array_key_exists($property, $field_item) && $this->dateIsInPast($field_item[$property])) {
               $property_label = $storage_definition
                 ->getPropertyDefinition($property)
                 ->getLabel();
