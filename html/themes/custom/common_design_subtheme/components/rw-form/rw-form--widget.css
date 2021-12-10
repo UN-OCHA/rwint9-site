@@ -2,7 +2,6 @@
 form .js-media-library-widget .fieldset-wrapper {
   border: 1px solid var(--cd-reliefweb-brand-grey--light);
 }
-
 form .image-widget {
   padding: 0 0 16px;
 }
@@ -93,9 +92,11 @@ form .field--type-reliefweb-file {
 .rw-file-widget table {
   margin-bottom: 1rem;
 }
+/* Replace file button */
 .rw-file-widget input[data-drupal-selector*="operations-replace"] {
   margin-top: 0.5rem;
 }
+/* Delete file button */
 .rw-file-widget input[data-drupal-selector*="operations-delete"] {
   /* --cd-highlight-red: hsl(4, 90%, 64%) */
   --cd-primary-color-h: 4;
