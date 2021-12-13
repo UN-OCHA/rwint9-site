@@ -105,4 +105,31 @@ form .field--type-reliefweb-file {
   --cd-primary-color: hsl(var(--cd-primary-color-h), var(--cd-primary-color-s), var(--cd-primary-color-l));
   /* lighten */
   --cd-primary-color--light: hsl(var(--cd-primary-color-h), var(--cd-primary-color-s), calc(var(--cd-primary-color-l) + 10%));
+
+  margin-top: 0.5rem;
+}
+/* Actions details element */
+.rw-file-widget summary {
+  display: flex;
+  align-items: baseline;
+  cursor: pointer;
+}
+.rw-file-widget summary > span {
+  display: inline-block;
+}
+/* Use custom icon */
+.rw-file-widget summary::-webkit-details-marker {
+  display: none;
+}
+.rw-file-widget summary::before {
+  display: inline-block;
+  overflow: hidden;
+  width: 12px;
+  height: 12px;
+  margin-right: 4px;
+  content: "";
+  background: var(--rw-icons--toggle--down--12--dark-blue);
+}
+.rw-file-widget details[open] > summary::before {
+  background: var(--rw-icons--toggle--up--12--dark-blue);
 }
