@@ -447,7 +447,9 @@ form [data-lengthchecker-status="ok"] {
 .taxonomy-term-disaster-profile-form,
 .taxonomy-term-source-user-posting-rights-form,
 .taxonomy-term-confirm-form,
-.node-confirm-form {
+.node-confirm-form,
+.node-revision-revert-confirm,
+.node-revision-delete-confirm {
   padding-top: 24px;
 }
 
