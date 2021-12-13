@@ -492,4 +492,5 @@ form button[value="edit"] {
 .form-item--error-message,
 .cd-form__error-message {
   background-color: var(--cd-reliefweb-pink);
+  font-size: 15px;
 }
