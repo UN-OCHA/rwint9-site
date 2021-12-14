@@ -5,7 +5,9 @@
  * Contains integration for guidelines.
  */
 
+use Drupal\Component\Utility\Random;
 use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\guidelines\Entity\Guideline;
 use Drupal\guidelines\Entity\GuidelineType;
@@ -179,6 +181,45 @@ function reliefweb_guidelines_migrate_from_trello() {
       $guideline->save();
 
       $shortlink['guideline_id'] = $guideline->id();
+      $shortlinks[$shortlink['short_link']] = $shortlink;
+    }
+  }
+
+  // Fix shortlinks.
+  foreach ($shortlinks as $shortlink) {
+    if (empty($shortlink['links_found'])) {
+      continue;
+    }
+
+    $guideline = Guideline::load($shortlink['guideline_id']);
+    $text = $guideline->get('field_description')->value;
+    $replaced = FALSE;
+
+    print_r($shortlink);
+    foreach ($shortlink['links_found'] as $link_found) {
+      // Skip if short link is unknown.
+      if (!isset($shortlinks[$link_found['short']])) {
+        continue;
+      }
+
+      // Build new link.
+      $new = implode('', [
+        '[',
+        $link_found['title'] ?? '/admin/structure/guideline/' . $shortlinks[$link_found['short']]['guideline_id'],
+        ']',
+        '(',
+        '/admin/structure/guideline/' . $shortlinks[$link_found['short']]['guideline_id'],
+        ')',
+      ]);
+
+      // Replace it.
+      $text = str_replace($link_found['string'], $new, $text);
+      $replaced = TRUE;
+    }
+
+    if ($replaced) {
+      $guideline->field_description->value = $text;
+      $guideline->save();
     }
   }
 }
@@ -273,11 +314,12 @@ function reliefweb_guidelines_extract_links($text) {
   $shortlinks = [];
   $matches = [];
 
+  // Skip images.
   $pattern = '/[^!]?\[([^\]]+)\]\((https:\/\/guidelines\.rwdev\.org.*?)\)/i';
   preg_match_all($pattern, $text, $matches);
   foreach ($matches[0] as $key => $match) {
     $shortlinks[] = [
-      'string' => $match,
+      'string' => substr($match, 1),
       'title' => $matches[1][$key],
       'url' => $matches[2][$key],
       'short' => reliefweb_guidelines_extract_shortlink($matches[2][$key]),
@@ -288,7 +330,7 @@ function reliefweb_guidelines_extract_links($text) {
   preg_match_all($pattern, $text, $matches);
   foreach ($matches[0] as $key => $match) {
     $shortlinks[] = [
-      'string' => $match,
+      'string' => substr($match, 1),
       'title' => $matches[1][$key],
       'url' => $matches[2][$key],
       'short' => reliefweb_guidelines_extract_shortlink($matches[2][$key]),
@@ -361,4 +403,26 @@ function reliefweb_guidelines_guideline_json_fields_alter(&$description, $guidel
   if ($guideline->hasField('field_short_link')) {
     $description['link'] = '/guidelines#' . $guideline->field_short_link->value;
   }
+}
+
+/**
+ * Implements hook_form_FROM_ID_alter().
+ */
+function reliefweb_guidelines_form_guideline_field_guideline_add_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  if (isset($form['field_short_link'])) {
+    if (empty($form['field_short_link']['widget'][0]['value']['#default_value'])) {
+      $random = new Random();
+      $form['field_short_link']['widget'][0]['value']['#default_value'] = $random->name();
+    }
+    else {
+      $form['field_short_link']['#access'] = FALSE;
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FROM_ID_alter().
+ */
+function reliefweb_guidelines_form_guideline_field_guideline_edit_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  reliefweb_guidelines_form_guideline_field_guideline_add_form_alter($form, $form_state, $form_id);
 }
