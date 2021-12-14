@@ -39,6 +39,7 @@ function reliefweb_guidelines_theme() {
  * Migrate datas from Trello.
  */
 function reliefweb_guidelines_migrate_from_trello() {
+  $shortlinks = [];
   $config = \Drupal::config('reliefweb_trello.settings');
   $key = $config->get('key');
   $token = $config->get('token');
@@ -62,6 +63,12 @@ function reliefweb_guidelines_migrate_from_trello() {
     // Get cards.
     $cards = $trello->getCards($list['id']);
     foreach ($cards as $weight_card => $card) {
+      $shortlink = [
+        'short_link' => $card['shortLink'],
+        'guideline_id' => 0,
+        'links_found' => reliefweb_guidelines_extract_links($card['desc']),
+      ];
+
       // Extract and fetch images.
       $files = guidelines_extract_images($card['desc']);
 
@@ -170,6 +177,8 @@ function reliefweb_guidelines_migrate_from_trello() {
       $guideline = Guideline::create($values);
       $guideline->setParents([$guideline_list]);
       $guideline->save();
+
+      $shortlink['guideline_id'] = $guideline->id();
     }
   }
 }
@@ -254,6 +263,63 @@ function guidelines_fetch_image($url, &$files) {
 }
 
 /**
+ * Extract possible shortlinks.
+ */
+function reliefweb_guidelines_extract_links($text) {
+  if (empty($text)) {
+    return [];
+  }
+
+  $shortlinks = [];
+  $matches = [];
+
+  $pattern = '/[^!]?\[([^\]]+)\]\((https:\/\/guidelines\.rwdev\.org.*?)\)/i';
+  preg_match_all($pattern, $text, $matches);
+  foreach ($matches[0] as $key => $match) {
+    $shortlinks[] = [
+      'string' => $match,
+      'title' => $matches[1][$key],
+      'url' => $matches[2][$key],
+      'short' => reliefweb_guidelines_extract_shortlink($matches[2][$key]),
+    ];
+  }
+
+  $pattern = '/[^!]?\[([^\]]+)\]\((https:\/\/trello\.com.*?)\)/i';
+  preg_match_all($pattern, $text, $matches);
+  foreach ($matches[0] as $key => $match) {
+    $shortlinks[] = [
+      'string' => $match,
+      'title' => $matches[1][$key],
+      'url' => $matches[2][$key],
+      'short' => reliefweb_guidelines_extract_shortlink($matches[2][$key]),
+    ];
+  }
+
+  return $shortlinks;
+}
+
+/**
+ * Extract shortlink.
+ */
+function reliefweb_guidelines_extract_shortlink($text) {
+  $matches = [];
+
+  $pattern = '/\/#([0-9A-Z]+)/i';
+  preg_match($pattern, $text, $matches);
+  if ($matches) {
+    return $matches[1];
+  }
+
+  $pattern = '/\/c\/([0-9A-Z]+)/i';
+  preg_match($pattern, $text, $matches);
+  if ($matches) {
+    return $matches[1];
+  }
+
+  return 'not found';
+}
+
+/**
  * Delete all guidelines.
  */
 function _reliefweb_guidelines_delete_all() {
@@ -266,7 +332,6 @@ function _reliefweb_guidelines_delete_all() {
   foreach ($guideline_types as $guideline_type) {
     $guideline_type->delete();
   }
-
 }
 
 /**
