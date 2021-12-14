@@ -1,0 +1,45 @@
+{#
+
+/**
+ * @file
+ * Template for the ReliefWeb Homepage.
+ *
+ * Available variables:
+ * - attributes: wrapper attributes
+ * - guidelines: list of guidelines for the page. Each section is a render array.
+ */
+
+#}
+
+<div{{ attributes.addClass('rw-guidelines-list') }}>
+  <aside>
+    <h1>Guidelines</h1>
+    <form action="#search">
+      <input id="" type="text" placeholder="Search">
+    </form>
+    <nav class="scroll">
+      {% for guideline in guidelines %}
+        <label for="{{ guideline['#id'] }}">{{ guideline['#title'] }}</label>
+        <input id="{{ guideline['#id'] }}" type="checkbox" name="lists">
+
+        {% if guideline['#children'] %}
+          <nav>
+          {% for child in guideline['#children'] %}
+            <a href="#{{ child['#id'] }}" tabindex="7" class="">{{ child['#title'] }}</a>
+          {% endfor %}
+          </nav>
+        {% endif %}
+      {% endfor %}
+    </nav>
+  </aside>
+
+  <main>
+    <div class="scroll">
+      {% for guideline in guidelines %}
+        <a name="{{ guideline['#id'] }}"></a>
+        {{ guideline['#children'] }}
+      {% endfor %}
+      <article id="search"></article>
+    </div>
+  </main>
+</div>

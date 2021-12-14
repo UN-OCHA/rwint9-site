@@ -19,6 +19,7 @@ module:
   filter: 0
   geofield: 0
   google_tag: 0
+  guidelines: 0
   image: 0
   imageapi_optimize: 0
   imageapi_optimize_binaries: 0
@@ -52,6 +53,7 @@ module:
   reliefweb_entities: 0
   reliefweb_fields: 0
   reliefweb_form: 0
+  reliefweb_guidelines: 0
   reliefweb_homepage: 0
   reliefweb_import: 0
   reliefweb_key_figures: 0

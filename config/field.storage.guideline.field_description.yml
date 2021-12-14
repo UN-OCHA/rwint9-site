@@ -1,0 +1,19 @@
+uuid: 63011e49-3133-4297-abc7-3fb47eab242f
+langcode: en
+status: true
+dependencies:
+  module:
+    - guidelines
+    - text
+id: guideline.field_description
+field_name: field_description
+entity_type: guideline
+type: text_long
+settings: {  }
+module: text
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
