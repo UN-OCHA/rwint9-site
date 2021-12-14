@@ -176,6 +176,9 @@
     "drupal/google_tag": {
         "version": "1.4.0"
     },
+    "drupal/guidelines": {
+        "version": "1.0.0"
+    },
     "drupal/imageapi_optimize": {
         "version": "4.0.0-beta1"
     },

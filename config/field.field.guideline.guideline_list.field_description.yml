@@ -1,0 +1,29 @@
+uuid: 564dfe43-cc34-48dd-b80a-a87f2ec0a0f7
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.guideline.field_description
+    - guidelines.guideline_type.guideline_list
+  module:
+    - allowed_formats
+    - text
+third_party_settings:
+  allowed_formats:
+    guideline: guideline
+    markdown: '0'
+    plain_text: '0'
+    html: '0'
+    token_markdown: '0'
+id: guideline.guideline_list.field_description
+field_name: field_description
+entity_type: guideline
+bundle: guideline_list
+label: Description
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: text_long

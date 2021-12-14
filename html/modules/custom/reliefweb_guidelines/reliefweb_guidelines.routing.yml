@@ -1,0 +1,7 @@
+reliefweb_guidelines.guidelines:
+  path: '/guidelines'
+  defaults:
+    _title: 'ReliefWeb guidelines'
+    _controller: '\Drupal\reliefweb_guidelines\Controller\GuidelineSinglePageController::getPageContent'
+  requirements:
+    _permission: 'access content'
