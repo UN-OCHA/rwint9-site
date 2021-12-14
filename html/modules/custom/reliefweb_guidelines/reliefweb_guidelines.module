@@ -320,7 +320,7 @@ function reliefweb_guidelines_extract_links($text) {
   foreach ($matches[0] as $key => $match) {
     $shortlinks[] = [
       'string' => substr($match, 1),
-      'title' => $matches[1][$key],
+      'title' => !empty($matches[1][$key]) ? $matches[1][$key] : $matches[2][$key],
       'url' => $matches[2][$key],
       'short' => reliefweb_guidelines_extract_shortlink($matches[2][$key]),
     ];
@@ -331,7 +331,7 @@ function reliefweb_guidelines_extract_links($text) {
   foreach ($matches[0] as $key => $match) {
     $shortlinks[] = [
       'string' => substr($match, 1),
-      'title' => $matches[1][$key],
+      'title' => !empty($matches[1][$key]) ? $matches[1][$key] : $matches[2][$key],
       'url' => $matches[2][$key],
       'short' => reliefweb_guidelines_extract_shortlink($matches[2][$key]),
     ];
