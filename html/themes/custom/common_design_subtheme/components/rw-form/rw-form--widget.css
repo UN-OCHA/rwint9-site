@@ -92,6 +92,9 @@ form .field--type-reliefweb-file {
 .rw-file-widget table {
   margin-bottom: 1rem;
 }
+.rw-file-widget .rw-file-widget-item__preview > div:first-child {
+  text-align: center;
+}
 /* Replace file button */
 .rw-file-widget input[data-drupal-selector*="operations-replace"] {
   margin-top: 0.5rem;
