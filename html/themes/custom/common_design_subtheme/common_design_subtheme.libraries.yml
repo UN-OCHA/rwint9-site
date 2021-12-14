@@ -132,8 +132,6 @@ rw-form:
     theme:
       components/rw-form/rw-form.css: {}
       components/rw-form/rw-form--widget.css: {}
-  dependencies:
-    - common_design/cd-form
 
 rw-guidelines:
   css:
