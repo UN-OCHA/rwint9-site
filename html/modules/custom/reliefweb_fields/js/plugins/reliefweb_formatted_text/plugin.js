@@ -52,6 +52,11 @@
         // Update the list of available text styles.
         editor.config.format_tags = formatTags.join(';'); // eslint-disable-line camelcase
       }
+
+      // This will enable the editor.parseFilter across browsers and allow
+      // to add the heading transformations. By default it's only enabled in
+      // webkit and blink browsers.
+      editor.config.pasteFilter = 'semantic-content';
     },
 
     // Add heading transformations.
