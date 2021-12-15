@@ -29,8 +29,10 @@ content:
   body:
     weight: 9
     settings:
-      rows: 20
+      rows: '20'
       placeholder: ''
+      max_heading_level: 2
+      strip_embedded_content: true
     third_party_settings:
       allowed_formats:
         hide_help: '1'
@@ -90,8 +92,10 @@ content:
   field_how_to_apply:
     weight: 10
     settings:
-      rows: 10
+      rows: '10'
       placeholder: ''
+      max_heading_level: 3
+      strip_embedded_content: true
     third_party_settings:
       allowed_formats:
         hide_help: '1'
