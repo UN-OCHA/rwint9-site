@@ -1,0 +1,38 @@
+uuid: 009da1be-68e9-4c4b-af3b-b7f16a914aad
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.guideline.field_images
+    - guidelines.guideline_type.field_guideline
+  module:
+    - image
+id: guideline.field_guideline.field_images
+field_name: field_images
+entity_type: guideline
+bundle: field_guideline
+label: Images
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  file_directory: 'guidelines/[date:custom:Y]-[date:custom:m]'
+  file_extensions: 'png gif jpg jpeg'
+  max_filesize: ''
+  max_resolution: ''
+  min_resolution: ''
+  alt_field: true
+  alt_field_required: false
+  title_field: false
+  title_field_required: false
+  default_image:
+    uuid: ''
+    alt: ''
+    title: ''
+    width: null
+    height: null
+  handler: 'default:file'
+  handler_settings: {  }
+field_type: image

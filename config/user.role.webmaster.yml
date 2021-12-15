@@ -65,5 +65,6 @@ permissions:
   - 'edit terms in vulnerable_group'
   - 'revert term revision'
   - 'use report transition archived'
+  - 'use text format guideline'
   - 'view term revision data'
   - 'view term revision list'

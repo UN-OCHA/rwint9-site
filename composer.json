@@ -60,6 +60,7 @@
         "drupal/core-recommended": "^9.2.4",
         "drupal/geofield": "^1.22",
         "drupal/google_tag": "^1.4",
+        "drupal/guidelines": "^1.0",
         "drupal/imageapi_optimize_binaries": "^1.0-alpha2",
         "drupal/mailsystem": "^4.3",
         "drupal/maintenance200": "^1.1",

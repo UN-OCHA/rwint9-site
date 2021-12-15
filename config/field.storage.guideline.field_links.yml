@@ -1,0 +1,19 @@
+uuid: 7ab220ff-6984-48f3-a45e-fcfc3c2472ab
+langcode: en
+status: true
+dependencies:
+  module:
+    - guidelines
+    - link
+id: guideline.field_links
+field_name: field_links
+entity_type: guideline
+type: link
+settings: {  }
+module: link
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
