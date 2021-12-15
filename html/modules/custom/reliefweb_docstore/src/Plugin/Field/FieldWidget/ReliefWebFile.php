@@ -370,7 +370,7 @@ class ReliefWebFile extends WidgetBase {
         '#type' => 'select',
         '#title' => $this->t('Preview page'),
         '#options' => array_merge(
-          [0 => $this->t('No preview')],
+          [0 => $this->t('none')],
           range(1, $item->getPageCount())
         ),
         '#default_value' => $preview_page,
