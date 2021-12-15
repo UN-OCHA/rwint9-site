@@ -92,9 +92,28 @@ form .field--type-reliefweb-file {
 .rw-file-widget table {
   margin-bottom: 1rem;
 }
-.rw-file-widget .rw-file-widget-item__preview > div:first-child {
-  text-align: center;
+.rw-file-widget .rw-file-widget-item__preview {
+  width: 15rem;
 }
+.rw-file-widget .rw-file-widget-item__preview > div:first-child {
+  display: flex;
+  float: left;
+  align-items: center;
+  justify-content: center;
+  width: 102px;
+  height: 102px;
+  margin: 12px 12px 12px 0;
+  text-align: center;
+  border: 1px solid #e6ecef;
+}
+.rw-file-widget .rw-file-widget-item__preview .rw-file-preview {
+  width: 100%;
+  height: 100%;
+}
+.form-item-field-file-0-preview-page select {
+  width: 6rem;
+}
+
 /* Replace file button */
 .rw-file-widget input[data-drupal-selector*="operations-replace"] {
   margin-top: 0.5rem;
