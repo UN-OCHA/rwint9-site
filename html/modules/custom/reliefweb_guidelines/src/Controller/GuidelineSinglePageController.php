@@ -93,6 +93,27 @@ class GuidelineSinglePageController extends ControllerBase {
   }
 
   /**
+   * Redirect based on guideline Id.
+   */
+  public function redirectToPage($guideline_id) {
+    $storage = $this->entityTypeManager->getStorage('guideline');
+    /** @var \Drupal\guidelines\Entity\Guideline $guideline */
+    $guideline = $storage->load($guideline_id);
+
+    if (!$guideline) {
+      return $this->redirect('reliefweb_guidelines.guidelines');
+    }
+
+    if ($guideline->hasField('field_short_link')) {
+      return $this->redirect('reliefweb_guidelines.guidelines', [], [
+        'fragment' => $guideline->field_short_link->value,
+      ]);
+    }
+
+    return $this->redirect('reliefweb_guidelines.guidelines');
+  }
+
+  /**
    * Get the page content.
    *
    * @return array
