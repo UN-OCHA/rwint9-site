@@ -5,6 +5,9 @@ source:
   bundle: job
 process:
   # Fields.
+  body/format:
+    plugin: default_value
+    default_value: "markdown_editor"
   field_career_categories/value:
     plugin: sub_process
     source: field_career_categories
@@ -23,7 +26,9 @@ process:
     plugin: skip_on_empty
     method: process
     source: field_how_to_apply/0/value
-  field_how_to_apply/format: constants/format
+  field_how_to_apply/format:
+    plugin: default_value
+    default_value: "markdown_editor"
   field_job_closing_date:
     -
       plugin: skip_on_empty
