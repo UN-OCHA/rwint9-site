@@ -1,0 +1,35 @@
+<?php
+
+/**
+ * @file
+ * Module file for reliefweb_users.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function reliefweb_users_theme() {
+  $themes = [
+    'reliefweb_users_page' => [
+      'variables' => [
+        // Filters form.
+        'filters' => NULL,
+        // Attributes for the filters.
+        'filters_attributes' => NULL,
+        // List of users.
+        'list' => NULL,
+        // Attributes for the list.
+        'list_attributes' => NULL,
+      ],
+    ],
+  ];
+  return $themes;
+}
+
+/**
+ * Implements hook_menu_local_actions_alter().
+ */
+function reliefweb_users_menu_local_actions_alter(&$local_actions) {
+  // Remove the create user action on the "people" page.
+  unset($local_actions['user_admin_create']);
+}

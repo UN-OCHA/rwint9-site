@@ -24,49 +24,49 @@ bundle: disaster
 mode: default
 content:
   field_appeals_response_plans:
-    weight: 3
+    type: reliefweb_links
     label: above
     settings: {  }
     third_party_settings: {  }
-    type: reliefweb_links
+    weight: 3
     region: content
   field_country:
-    weight: 2
+    type: entity_reference_label
     label: inline
     settings:
       link: true
     third_party_settings: {  }
-    type: entity_reference_label
+    weight: 2
     region: content
   field_disaster_type:
-    weight: 1
+    type: entity_reference_label
     label: inline
     settings:
       link: true
     third_party_settings: {  }
-    type: entity_reference_label
+    weight: 1
     region: content
   field_glide:
-    weight: 0
+    type: string
     label: inline
     settings:
       link_to_entity: false
     third_party_settings: {  }
-    type: string
+    weight: 0
     region: content
   field_key_content:
-    weight: 4
+    type: reliefweb_links
     label: above
     settings: {  }
     third_party_settings: {  }
-    type: reliefweb_links
+    weight: 4
     region: content
   field_useful_links:
-    weight: 5
+    type: reliefweb_links
     label: above
     settings: {  }
     third_party_settings: {  }
-    type: reliefweb_links
+    weight: 5
     region: content
 hidden:
   content_moderation_control: true

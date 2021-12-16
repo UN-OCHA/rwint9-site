@@ -12,12 +12,12 @@ pattern: 'organization/[term:field_shortname]'
 selection_criteria:
   6ee5ca55-8fcc-4e01-a4b6-2b2f520e020a:
     id: 'entity_bundle:taxonomy_term'
-    bundles:
-      source: source
     negate: false
+    uuid: 6ee5ca55-8fcc-4e01-a4b6-2b2f520e020a
     context_mapping:
       taxonomy_term: taxonomy_term
-    uuid: 6ee5ca55-8fcc-4e01-a4b6-2b2f520e020a
+    bundles:
+      source: source
 selection_logic: and
 weight: -2
 relationships: {  }

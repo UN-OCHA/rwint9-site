@@ -12,50 +12,50 @@ type: content_moderation
 type_settings:
   states:
     alert:
-      published: true
-      default_revision: true
       label: Alert
       weight: 2
-    alert_archive:
-      published: false
+      published: true
       default_revision: true
+    alert_archive:
       label: 'Alert Archive'
       weight: 6
+      published: false
+      default_revision: true
     draft:
       label: Draft
-      published: false
-      default_revision: true
       weight: 0
-    draft_archive:
       published: false
       default_revision: true
+    draft_archive:
       label: 'Draft Archive'
       weight: 5
-    external:
-      published: true
-      default_revision: true
-      label: External
-      weight: 7
-    external_archive:
       published: false
       default_revision: true
+    external:
+      label: External
+      weight: 7
+      published: true
+      default_revision: true
+    external_archive:
       label: 'External Archive'
       weight: 8
-    ongoing:
-      published: true
+      published: false
       default_revision: true
+    ongoing:
       label: Ongoing
       weight: 3
-    past:
       published: true
       default_revision: true
+    past:
       label: 'Past Disaster'
       weight: 4
-    published:
-      label: Published
       published: true
       default_revision: true
+    published:
+      label: Published
       weight: 1
+      published: true
+      default_revision: true
   transitions:
     alert:
       label: 'Save as Alert'

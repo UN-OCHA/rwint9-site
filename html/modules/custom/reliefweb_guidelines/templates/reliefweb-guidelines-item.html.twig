@@ -1,0 +1,17 @@
+{#
+
+/**
+ * @file
+ * Template for the ReliefWeb Homepage.
+ *
+ * Available variables:
+ * - attributes: wrapper attributes
+ * - item: item.
+ */
+
+#}
+
+<article{{ attributes.setAttribute('id', id).addClass('rw-guidelines-item') }}>
+  <h2>{{ title_prefix }}{{ title }}</h2>
+  <div>{{ description }}</div>
+</article>

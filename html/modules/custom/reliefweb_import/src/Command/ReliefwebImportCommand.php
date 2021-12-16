@@ -563,7 +563,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    */
   protected function validateHowToApply($data) {
     // Clean the field.
-    $field_how_to_apply = $this->sanitizeText('field_how_to_apply', $data, 'markdown');
+    $field_how_to_apply = $this->sanitizeText('field_how_to_apply', $data, 'markdown', 3);
 
     // Ensure the field size is reasonable.
     $length = mb_strlen($field_how_to_apply);
@@ -637,11 +637,13 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    *   Field text content.
    * @param string $format
    *   Format to which conver the text if not already HTML.
+   * @param int $max_heading_level
+   *   Maximum heading level.
    *
    * @return string
    *   Sanitized content.
    */
-  protected function sanitizeText($field, $text, $format = 'plain_text') {
+  protected function sanitizeText($field, $text, $format = 'plain_text', $max_heading_level = 2) {
     if (!is_string($text)) {
       return '';
     }
@@ -681,8 +683,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     }
 
     // We then sanitize the HTML string.
-    $sanitizer = new HtmlSanitizer();
-    $text = $sanitizer->sanitizeHtml($text);
+    $text = HtmlSanitizer::sanitize($text, FALSE, $max_heading_level - 1);
 
     // Remove embedded content.
     $text = TextHelper::stripEmbeddedContent($text);

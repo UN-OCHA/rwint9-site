@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_entities\Plugin\Validation\Constraint;
 
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
@@ -15,19 +16,13 @@ class DateEndAfterStartConstraintValidator extends ConstraintValidator {
    * {@inheritdoc}
    */
   public function validate($item, Constraint $constraint) {
-    $field_definition = $item->getFieldDefinition();
+    if ($item instanceof FieldItemListInterface) {
+      $label = $item->getFieldDefinition()->getLabel();
 
-    /** @var \Drupal\Core\Entity\FieldableEntityInterface $entity */
-    $entity = $this->context->getRoot()->getValue();
-    $field_name = $field_definition->getName();
-
-    if ($entity->hasField($field_name)) {
-      $label = $field_definition->getLabel();
-
-      foreach ($entity->get($field_name)->getValue() as $delta => $item) {
-        if (array_key_exists('value', $item) && array_key_exists('end_value', $item)) {
-          $start = DateHelper::getDateTimeStamp($item['value']);
-          $end = DateHelper::getDateTimeStamp($item['end_value']);
+      foreach ($item->getValue() as $delta => $field_item) {
+        if (array_key_exists('value', $field_item) && array_key_exists('end_value', $field_item)) {
+          $start = DateHelper::getDateTimeStamp($field_item['value']);
+          $end = DateHelper::getDateTimeStamp($field_item['end_value']);
 
           if (!empty($start) && !empty($end) && $end < $start) {
             $this->context

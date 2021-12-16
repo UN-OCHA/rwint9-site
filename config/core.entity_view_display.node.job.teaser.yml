@@ -24,27 +24,27 @@ bundle: job
 mode: teaser
 content:
   content_moderation_control:
-    weight: -20
     settings: {  }
     third_party_settings: {  }
+    weight: -20
     region: content
   field_job_closing_date:
     type: datetime_default
-    weight: 1
-    region: content
     label: inline
     settings:
       timezone_override: UTC
       format_type: date_short
     third_party_settings: {  }
+    weight: 1
+    region: content
   field_source:
     type: entity_reference_label
-    weight: 0
-    region: content
     label: inline
     settings:
       link: true
     third_party_settings: {  }
+    weight: 0
+    region: content
 hidden:
   body: true
   field_career_categories: true
