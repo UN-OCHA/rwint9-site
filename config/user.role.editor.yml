@@ -1,7 +1,53 @@
 uuid: e57c47d0-5c11-4ce8-91bc-d8a565b5e3f6
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  config:
+    - filter.format.html
+    - filter.format.markdown
+    - media.type.image_announcement
+    - media.type.image_blog_post
+    - media.type.image_book
+    - media.type.image_report
+    - media.type.image_topic
+    - node.type.announcement
+    - node.type.blog_post
+    - node.type.book
+    - node.type.job
+    - node.type.report
+    - node.type.topic
+    - node.type.training
+    - taxonomy.vocabulary.country
+    - taxonomy.vocabulary.disaster
+    - taxonomy.vocabulary.source
+    - taxonomy.vocabulary.tag
+    - workflows.workflow.announcement
+    - workflows.workflow.blog_post
+    - workflows.workflow.book
+    - workflows.workflow.country
+    - workflows.workflow.disaster
+    - workflows.workflow.job
+    - workflows.workflow.report
+    - workflows.workflow.source
+    - workflows.workflow.topic
+    - workflows.workflow.training
+  module:
+    - book
+    - contact
+    - content_moderation
+    - filter
+    - media
+    - node
+    - path
+    - reliefweb_fields
+    - reliefweb_form
+    - reliefweb_homepage
+    - reliefweb_moderation
+    - reliefweb_revisions
+    - reliefweb_topics
+    - reliefweb_user_posts
+    - taxonomy
+    - taxonomy_term_revision
 id: editor
 label: Editor
 weight: 2

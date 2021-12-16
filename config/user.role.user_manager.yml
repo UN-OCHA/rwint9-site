@@ -1,7 +1,9 @@
 uuid: 8468181e-6cde-42fa-a8a0-e67d5dd01960
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  module:
+    - reliefweb_subscriptions
 id: user_manager
 label: 'User manager'
 weight: 3

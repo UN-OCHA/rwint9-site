@@ -32,39 +32,39 @@ mode: teaser
 content:
   field_country:
     type: entity_reference_label
-    weight: 0
-    region: content
     label: visually_hidden
     settings:
       link: true
     third_party_settings: {  }
+    weight: 0
+    region: content
   field_registration_deadline:
     type: datetime_default
-    weight: 3
-    region: content
     label: inline
     settings:
-      format_type: medium
       timezone_override: ''
+      format_type: medium
     third_party_settings: {  }
+    weight: 3
+    region: content
   field_source:
     type: entity_reference_label
-    weight: 1
-    region: content
     label: inline
     settings:
       link: true
     third_party_settings: {  }
+    weight: 1
+    region: content
   field_training_date:
     type: daterange_default
-    weight: 2
-    region: content
     label: inline
     settings:
-      separator: '-'
-      format_type: medium
       timezone_override: ''
+      format_type: medium
+      separator: '-'
     third_party_settings: {  }
+    weight: 2
+    region: content
 hidden:
   body: true
   field_career_categories: true
