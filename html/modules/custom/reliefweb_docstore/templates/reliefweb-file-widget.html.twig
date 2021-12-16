@@ -11,19 +11,28 @@
 #}
 {% set files = element|without(['add_more'])|filter((v, k) => k|first != '#') %}
 {% set add_more = element['add_more'] %}
+{% set attributes = create_attribute(element['#attributes'] ?? {}) %}
 
-<div{{ attributes.addClass('rw-file-widget') }}>
-  {% if files is not empty %}
-  <table id="{{ attributes.id ~ '-table' }}">
-    <thead class="visually-hidden">
-      <tr><th>Information</th><th>Preview</th><th>Operations</th><th>Weight</th></tr>
-    </thead>
-    <tbody>
-      {{ files }}
-    </tbody>
-  </table>
-  </table>
-  {% endif %}
+<fieldset{{ attributes.addClass('rw-file-widget', 'form-wrapper') }}>
+  <legend{{ legend_attributes }}>
+    <span class="fieldset-legend">{{ element['#title'] }}</span>
+  </legend>
 
-  {{ add_more }}
-</div>
+  <div class="fieldset-wrapper">
+    {% if files is not empty %}
+    <table{{ create_attribute().setAttribute('id', element['#id'] ~ '-table').addClass('rw-file-widget__table') }}>
+      <thead class="visually-hidden">
+        <tr><th>Information</th><th>Preview</th><th>Operations</th><th>Weight</th></tr>
+      </thead>
+      <tbody>
+        {{ files }}
+      </tbody>
+    </table>
+    {% endif %}
+
+
+    {{ add_more ? add_more|merge({
+      '#attributes': create_attribute(add_more['#attributes'] ?? {}).addClass('rw-file-widget__add-more'),
+    }) }}
+  </div>
+</fieldset>

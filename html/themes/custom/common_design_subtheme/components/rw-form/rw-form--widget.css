@@ -78,3 +78,124 @@ form .views-field-media-library-select-form .form-type-checkbox:only-of-type {
   text-decoration: underline;
   background: var(--cd-reliefweb-brand-red--dark);
 }
+
+/* RW docstore */
+.rw-file-widget .tabledrag-toggle-weight-wrapper {
+  display: none;
+}
+.rw-file-widget__add-more {
+  padding: 16px;
+  border: 1px solid var(--cd-reliefweb-brand-grey--light);
+}
+.rw-file-widget__table {
+  margin-bottom: 1rem;
+}
+.rw-file-widget__table td {
+  padding: 16px;
+}
+.rw-file-widget__table td.rw-file-widget-item__weight {
+  padding: 0;
+  text-align: center;
+}
+.rw-file-widget-item__weight .tabledrag-handle + .form-item {
+  display: none;
+}
+.rw-file-widget-item__weight a.tabledrag-handle {
+  display: flex;
+  float: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 32px;
+  margin-left: 0;
+}
+.rw-file-widget-item__weight a.tabledrag-handle .handle {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+.rw-file-widget .description {
+  margin-bottom: 1rem;
+}
+.rw-file-widget .rw-file-widget-item__preview {
+  width: 15rem;
+}
+.rw-file-widget .rw-file-widget-item__preview__content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.rw-file-widget .rw-file-widget-item__preview__thumbnail > div {
+  display: flex;
+  float: left;
+  align-items: center;
+  justify-content: center;
+  width: 102px;
+  height: 102px;
+  margin: 12px 12px 12px 0;
+  text-align: center;
+  border: 1px solid #e6ecef;
+}
+.rw-file-widget .rw-file-widget-item__preview__thumbnail .rw-file-preview {
+  overflow: hidden;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  font-size: 14px;
+}
+.rw-file-widget .rw-file-widget-item__preview__options {
+  width: 7rem;
+}
+
+/* Replace file button */
+.rw-file-widget input[data-drupal-selector*="operations-replace"] {
+  margin-top: 0.5rem;
+}
+/* Delete file button */
+.rw-file-widget input[data-drupal-selector*="operations-delete"] {
+  /* --cd-highlight-red: hsl(4, 90%, 64%) */
+  --cd-primary-color-h: 4;
+  --cd-primary-color-s: 90%;
+  --cd-primary-color-l: 64%;
+  --cd-primary-color: hsl(var(--cd-primary-color-h), var(--cd-primary-color-s), var(--cd-primary-color-l));
+  /* lighten */
+  --cd-primary-color--light: hsl(var(--cd-primary-color-h), var(--cd-primary-color-s), calc(var(--cd-primary-color-l) + 10%));
+
+  margin-top: 0.5rem;
+}
+/* Actions details element */
+.rw-file-widget summary {
+  display: flex;
+  align-items: baseline;
+  cursor: pointer;
+}
+.rw-file-widget summary > span {
+  display: inline-block;
+}
+/* Use custom icon */
+.rw-file-widget summary::-webkit-details-marker {
+  display: none;
+}
+.rw-file-widget summary::before {
+  display: inline-block;
+  overflow: hidden;
+  width: 12px;
+  height: 12px;
+  margin-right: 6px;
+  content: "";
+  background: var(--rw-icons--toggle--down--12--dark-blue);
+}
+.rw-file-widget details[open] > summary {
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--cd-reliefweb-brand-grey--light);
+}
+.rw-file-widget details[open] > summary::before {
+  background: var(--rw-icons--toggle--up--12--dark-blue);
+}
+
+/* Warning when re-ordered. */
+.rw-file-widget .warning.tabledrag-changed {
+  color: red;
+}
