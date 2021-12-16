@@ -516,6 +516,13 @@ class HtmlOutliner {
     foreach ($heading->attributes as $attribute => $dummy) {
       $node->setAttribute($attribute, $heading->getAttribute($attribute));
     }
+    // Wrap the strong element into a `<p>` element so that it's not displayed
+    // inline.
+    if ($tag === 'strong') {
+      $wrapper = $heading->ownerDocument->createElement('p');
+      $wrapper->appendChild($node);
+      $node = $wrapper;
+    }
     // Replace the heading node with the new one.
     $heading->parentNode->replaceChild($node, $heading);
     return $node;

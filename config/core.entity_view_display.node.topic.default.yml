@@ -25,89 +25,89 @@ bundle: topic
 mode: default
 content:
   body:
-    weight: 1
+    type: text_default
     label: above
     settings: {  }
     third_party_settings: {  }
-    type: text_default
+    weight: 1
     region: content
   field_bury:
-    weight: 10
+    type: boolean
     label: above
     settings:
       format: default
       format_custom_false: ''
       format_custom_true: ''
     third_party_settings: {  }
-    type: boolean
+    weight: 10
     region: content
   field_disasters_search:
-    weight: 8
+    type: reliefweb_section_links
     label: above
     settings: {  }
     third_party_settings: {  }
-    type: reliefweb_section_links
+    weight: 8
     region: content
   field_featured:
-    weight: 9
+    type: boolean
     label: above
     settings:
       format: default
       format_custom_false: ''
       format_custom_true: ''
     third_party_settings: {  }
-    type: boolean
+    weight: 9
     region: content
   field_icon:
     type: entity_reference_entity_view
-    weight: 0
     label: hidden
     settings:
       view_mode: default
       link: false
     third_party_settings: {  }
+    weight: 0
     region: content
   field_jobs_search:
-    weight: 6
+    type: reliefweb_section_links
     label: above
     settings: {  }
     third_party_settings: {  }
-    type: reliefweb_section_links
+    weight: 6
     region: content
   field_overview:
-    weight: 2
+    type: text_default
     label: above
     settings: {  }
     third_party_settings: {  }
-    type: text_default
+    weight: 2
     region: content
   field_reports_search:
-    weight: 4
+    type: reliefweb_section_links
     label: above
     settings: {  }
     third_party_settings: {  }
-    type: reliefweb_section_links
+    weight: 4
     region: content
   field_resources:
-    weight: 5
+    type: text_default
     label: above
     settings: {  }
     third_party_settings: {  }
-    type: text_default
+    weight: 5
     region: content
   field_sections:
-    weight: 3
+    type: reliefweb_section_links
     label: above
     settings: {  }
     third_party_settings: {  }
-    type: reliefweb_section_links
+    weight: 3
     region: content
   field_training_search:
-    weight: 7
+    type: reliefweb_section_links
     label: above
     settings: {  }
     third_party_settings: {  }
-    type: reliefweb_section_links
+    weight: 7
     region: content
 hidden:
   content_moderation_control: true

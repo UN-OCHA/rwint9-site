@@ -11,3 +11,14 @@ field.widget.settings.reliefweb_entity_reference_select:
       sequence:
         - type: string
           label: 'Extra data'
+
+field.widget.settings.reliefweb_formatted_text:
+  type: mapping
+  label: 'ReliefWeb Formatted Text widget settings'
+  mapping:
+    max_heading_level:
+      type: integer
+      label: 'Maximum heading level'
+    strip_embedded_content:
+      type: boolean
+      label: 'Strip embedded content'

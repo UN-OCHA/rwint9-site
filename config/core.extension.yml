@@ -1,9 +1,12 @@
+_core:
+  default_config_hash: R4IF-ClDHXxblLcG0L7MgsLvfBIMAvi_skumNFQwkDc
 module:
   admin_denied: 0
   allowed_formats: 0
   block: 0
   book: 0
   breakpoint: 0
+  ckeditor: 0
   components: 0
   config: 0
   config_split: 0
@@ -13,6 +16,7 @@ module:
   datetime: 0
   datetime_range: 0
   dynamic_page_cache: 0
+  editor: 0
   field: 0
   field_ui: 0
   file: 0
@@ -64,6 +68,7 @@ module:
   reliefweb_subscriptions: 0
   reliefweb_topics: 0
   reliefweb_user_posts: 0
+  reliefweb_users: 0
   reliefweb_utility: 0
   reliefweb_xmlsitemap: 0
   responsive_image: 0
@@ -96,5 +101,3 @@ theme:
   common_design_subtheme: 0
   seven: 0
 profile: minimal
-_core:
-  default_config_hash: R4IF-ClDHXxblLcG0L7MgsLvfBIMAvi_skumNFQwkDc

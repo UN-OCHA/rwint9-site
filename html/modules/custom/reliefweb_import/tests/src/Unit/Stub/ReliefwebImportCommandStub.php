@@ -28,7 +28,7 @@ class ReliefwebImportCommandStub extends ReliefwebImportCommand {
   /**
    * {@inheritdoc}
    */
-  public function sanitizeText($field, $text, $format = 'plain_text') {
+  public function sanitizeText($field, $text, $format = 'plain_text', $max_heading_level = 2) {
     return parent::sanitizeText($field, $text, $format);
   }
 

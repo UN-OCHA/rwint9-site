@@ -56,6 +56,10 @@ libraries-extend:
   reliefweb-guidelines/reliefweb-guidelines:
     - common_design_subtheme/rw-guidelines
 
+# Use the common_design_subtheme styles inside the editor.
+ckeditor_stylesheets:
+  - css/styles.css
+
 libraries-override:
   guidelines/guidelines-json:
     js:
