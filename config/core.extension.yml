@@ -68,6 +68,7 @@ module:
   reliefweb_subscriptions: 0
   reliefweb_topics: 0
   reliefweb_user_posts: 0
+  reliefweb_users: 0
   reliefweb_utility: 0
   reliefweb_xmlsitemap: 0
   responsive_image: 0

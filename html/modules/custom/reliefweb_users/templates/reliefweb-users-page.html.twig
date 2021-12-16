@@ -1,0 +1,21 @@
+{#
+
+/**
+ * @file
+ * Template file for the people page's content.
+ *
+ * Available variables:
+ * - filters: form filters.
+ * - list: table with the list of users.
+ */
+
+#}
+<section{{ filters_attributes.addClass('rw-users-filters') }}>
+  <h2 class="visually-hidden">{{ 'Filters'|t }}</h2>
+  {{ filters }}
+</section>
+
+<section{{ list_attributes.addClass('rw-users-list') }}>
+  <h2 class="visually-hidden">{{ 'List'|t }}</h2>
+  {{ list }}
+</section>
