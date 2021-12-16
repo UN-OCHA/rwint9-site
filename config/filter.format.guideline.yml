@@ -1,0 +1,31 @@
+uuid: 3be53895-5be9-45d3-8886-9fdb66c4e93e
+langcode: en
+status: true
+dependencies:
+  module:
+    - media
+    - reliefweb_utility
+name: Guideline
+format: guideline
+weight: 0
+filters:
+  reliefweb_token_filter:
+    id: reliefweb_token_filter
+    provider: reliefweb_utility
+    status: false
+    weight: 0
+    settings:
+      replace_empty: '0'
+  filter_markdown:
+    id: filter_markdown
+    provider: reliefweb_utility
+    status: true
+    weight: -20
+    settings: {  }
+  filter_url:
+    id: filter_url
+    provider: filter
+    status: true
+    weight: 0
+    settings:
+      filter_url_length: 72

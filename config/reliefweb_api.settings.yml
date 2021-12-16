@@ -1,8 +1,8 @@
+_core:
+  default_config_hash: qlrFo79lCY4kxobmocSAnQRsAcqu3ikDmbm108-Brtw
 api_url: 'https://api.reliefweb.int/v1'
 api_url_external: 'https://api.reliefweb.int/v1'
 appname: reliefweb.int
 cache_enabled: true
 verify_ssl: true
 elasticsearch: 'http://elasticsearch:7200'
-_core:
-  default_config_hash: qlrFo79lCY4kxobmocSAnQRsAcqu3ikDmbm108-Brtw

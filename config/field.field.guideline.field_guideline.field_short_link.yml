@@ -1,0 +1,19 @@
+uuid: 527338d6-8ce9-489d-961a-6fbaa4a95f29
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.guideline.field_short_link
+    - guidelines.guideline_type.field_guideline
+id: guideline.field_guideline.field_short_link
+field_name: field_short_link
+entity_type: guideline
+bundle: field_guideline
+label: 'Short link'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

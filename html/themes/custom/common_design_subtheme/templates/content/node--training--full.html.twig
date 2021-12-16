@@ -146,7 +146,7 @@
   </header>
 
   <div class="rw-article__content">
-    {{ content.body.0|render|sanitize_html(false, 2) }}
+    {{ content.body.0|render|sanitize_html(false, 1) }}
 
     {% if not node.field_fee_information.isEmpty() %}
     <section class="rw-fee-information">

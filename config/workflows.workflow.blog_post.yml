@@ -13,14 +13,14 @@ type_settings:
   states:
     draft:
       label: Draft
+      weight: 0
       published: false
       default_revision: true
-      weight: 0
     published:
       label: Published
+      weight: 1
       published: true
       default_revision: true
-      weight: 1
   transitions:
     draft:
       label: 'Save as Draft'
