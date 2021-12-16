@@ -246,6 +246,8 @@ rw-people:
   css:
     theme:
       components/rw-people/rw-people.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
 
 rw-preview:
   css:
