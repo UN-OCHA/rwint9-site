@@ -1,0 +1,7 @@
+name: 'Reliefweb users'
+type: module
+description: 'Reliefweb users'
+package: reliefweb
+core_version_requirement: ^9
+dependencies:
+  - drupal:user

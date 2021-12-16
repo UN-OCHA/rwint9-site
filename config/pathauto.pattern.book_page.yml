@@ -11,12 +11,12 @@ pattern: '[node:title]'
 selection_criteria:
   3db763c8-2879-4d9f-8bc8-35cbb0c2a8c2:
     id: node_type
-    bundles:
-      book: book
     negate: false
+    uuid: 3db763c8-2879-4d9f-8bc8-35cbb0c2a8c2
     context_mapping:
       node: node
-    uuid: 3db763c8-2879-4d9f-8bc8-35cbb0c2a8c2
+    bundles:
+      book: book
 selection_logic: and
 weight: -9
 relationships: {  }

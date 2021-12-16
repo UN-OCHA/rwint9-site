@@ -12,12 +12,12 @@ pattern: 'disaster/[term:field_glide]'
 selection_criteria:
   3366e40d-d392-435b-aea7-6cfdeae0811b:
     id: 'entity_bundle:taxonomy_term'
-    bundles:
-      disaster: disaster
     negate: false
+    uuid: 3366e40d-d392-435b-aea7-6cfdeae0811b
     context_mapping:
       taxonomy_term: taxonomy_term
-    uuid: 3366e40d-d392-435b-aea7-6cfdeae0811b
+    bundles:
+      disaster: disaster
 selection_logic: and
 weight: -3
 relationships: {  }
