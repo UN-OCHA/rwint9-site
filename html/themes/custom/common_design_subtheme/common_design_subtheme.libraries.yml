@@ -242,6 +242,11 @@ rw-pager:
     theme:
       components/rw-pager/rw-pager.css: {}
 
+rw-people:
+  css:
+    theme:
+      components/rw-people/rw-people.css: {}
+
 rw-preview:
   css:
     theme:
