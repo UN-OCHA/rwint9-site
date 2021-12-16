@@ -181,6 +181,14 @@ class UserPageFilterForm extends FormBase {
       $roles = array_combine(array_keys($role_objects), array_map(function ($a) {
         return $a->label();
       }, $role_objects));
+      // Remove the anonymous and authenticated user roles as they are not
+      // useful to filter the list of user accounts.
+      unset($roles['anonymous']);
+      unset($roles['authenticated']);
+      // Remove the job importer role as it's an internal role used by the
+      // job importer.
+      // @todo remove if we remove the job importer role.
+      unset($roles['job_importer']);
     }
 
     return $roles;
