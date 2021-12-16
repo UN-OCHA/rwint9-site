@@ -1,7 +1,13 @@
 uuid: b927268a-c7ab-43e4-a806-dbd949f7aaf6
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  config:
+    - node.type.job
+    - workflows.workflow.job
+  module:
+    - content_moderation
+    - node
 id: job_importer
 label: 'Job importer'
 weight: 8

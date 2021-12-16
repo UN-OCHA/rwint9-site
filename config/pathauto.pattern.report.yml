@@ -11,12 +11,12 @@ pattern: '[node:reliefweb-content-type]/[node:field_primary_country:entity:name]
 selection_criteria:
   cac24841-112a-498c-92d9-845c71da29f6:
     id: node_type
-    bundles:
-      report: report
     negate: false
+    uuid: cac24841-112a-498c-92d9-845c71da29f6
     context_mapping:
       node: node
-    uuid: cac24841-112a-498c-92d9-845c71da29f6
+    bundles:
+      report: report
 selection_logic: and
 weight: -7
 relationships: {  }
