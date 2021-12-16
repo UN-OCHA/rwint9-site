@@ -52,47 +52,6 @@ function reliefweb_docstore_theme() {
 }
 
 /**
- * Implemenents hook_preprocess_HOOK() for "reliefweb_file_widget".
- */
-function reliefweb_docstore_preprocess_reliefweb_file_widget(&$variables) {
-  $element = &$variables['element'];
-
-  if (!isset($element['#attributes'])) {
-    $element['#attributes'] = [];
-  }
-
-  if (!isset($element['#attributes']['id']) && isset($element['#id'])) {
-    $element['#attributes']['id'] = $element['#id'];
-  }
-
-  if (isset($element['#attributes']['id'])) {
-    drupal_attach_tabledrag($element, [
-      'table_id' => $element['#attributes']['id'] . '-table',
-      'action' => 'order',
-      'relationship' => 'sibling',
-      'group' => 'draggable-weight',
-    ]);
-  }
-
-  $variables['attributes'] = $element['#attributes'];
-}
-
-/**
- * Implemenents hook_preprocess_HOOK() for "reliefweb_file_widget_item".
- */
-function reliefweb_docstore_preprocess_reliefweb_file_widget_item(&$variables) {
-  $element = &$variables['element'];
-
-  if (!isset($element['#attributes'])) {
-    $element['#attributes'] = [];
-  }
-
-  if (isset($element['weight'])) {
-    $element['weight']['#attributes']['class'][] = 'draggable-weight';
-  }
-}
-
-/**
  * Implemenents hook_preprocess_HOOK() for "image_style".
  */
 function reliefweb_docstore_preprocess_image_style(&$variables) {

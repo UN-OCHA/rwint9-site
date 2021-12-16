@@ -21,7 +21,11 @@
     '_weight',
   ]
 %}
+{% set attributes = create_attribute(element['#attributes'] ?? {}) %}
 <tr{{ attributes.addClass(['rw-file-widget-item', 'draggable']) }}>
+  <td class="rw-file-widget-item__weight">
+    {{ element._weight }}
+  </td>
   {% if element.preview_page is empty %}
   <td class="rw-file-widget-item__information" colspan="2">
   {% else %}
@@ -37,15 +41,20 @@
   </td>
   {% if element.preview_page is not empty %}
   <td class="rw-file-widget-item__preview">
-    {{ element.preview }}
-    {{ element.preview_page }}
-    {{ element.preview_rotation }}
+    <div class="rw-file-widget-item__preview__content">
+      {% if element.preview %}
+      <div class="rw-file-widget-item__preview__thumbnail">
+        {{ element.preview }}
+      </div>
+      {% endif %}
+      <div class="rw-file-widget-item__preview__options">
+        {{ element.preview_page }}
+        {{ element.preview_rotation }}
+      </div>
+    </div>
   </td>
   {% endif %}
   <td class="rw-file-widget-item__operations">
     {{ element.operations }}
-  </td>
-  <td class="rw-file-widget-item__weight">
-    {{ element._weight }}
   </td>
 </tr>

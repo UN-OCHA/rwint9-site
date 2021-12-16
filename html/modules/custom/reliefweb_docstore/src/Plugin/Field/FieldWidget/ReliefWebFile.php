@@ -227,7 +227,6 @@ class ReliefWebFile extends WidgetBase {
     // Populate the 'array_parents' information in $form_state->get('field')
     // after the form is built, so that we catch changes in the form structure
     // performed in alter() hooks.
-    $elements['#after_build'][] = [static::class, 'afterBuild'];
     $elements['#field_name'] = $field_name;
     $elements['#field_parents'] = $parents;
 
@@ -378,11 +377,11 @@ class ReliefWebFile extends WidgetBase {
       ];
       $element['preview_rotation'] = [
         '#type' => 'select',
-        '#title' => $this->t('Preview page rotation'),
+        '#title' => $this->t('Page rotation'),
         '#options' => [
           0 => $this->t('none'),
-          90 => $this->t('clockwise'),
-          -90 => $this->t('counterclockwise'),
+          90 => $this->t('right'),
+          -90 => $this->t('left'),
         ],
         '#default_value' => $preview_rotation,
         '#ajax' => $this->getAjaxSettings($this->t('Regenerating preview...'), $field_parents),
@@ -471,7 +470,10 @@ class ReliefWebFile extends WidgetBase {
       // the delta of the current element.
       '#delta' => $items->count(),
       '#default_value' => $item->_weight ?? $delta,
-      '#weight' => 100,
+      '#weight' => -100,
+      '#attributes' => [
+        'class' => ['draggable-weight'],
+      ],
     ];
 
     // Save the non editable field item values. This needs to happen at the end
@@ -1009,6 +1011,23 @@ class ReliefWebFile extends WidgetBase {
 
     // This will replace the widget with the new one in the form.
     return $response->addCommand(new ReplaceCommand(NULL, $widget));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function afterBuild(array $element, FormStateInterface $form_state) {
+    $element = parent::afterBuild($element, $form_state);
+
+    drupal_attach_tabledrag($element, [
+      'table_id' => $element['#id'] . '-table',
+      'group' => 'draggable-weight',
+      'action' => 'order',
+      'relationship' => 'sibling',
+      'hidden' => FALSE,
+    ]);
+
+    return $element;
   }
 
 }
