@@ -93,12 +93,16 @@ class UserController extends ControllerBase {
     unset($form['form_build_id']);
     unset($form['form_id']);
 
+    $build = [
+      '#theme' => 'reliefweb_users_page',
+    ];
+
     // Filters.
-    $build['filters'] = $form;
+    $build['#filters'] = $form;
 
     // List of users.
     $storage = $form_state->getStorage();
-    $build['list'] = $this->usersAdminList($storage, $request->query->all());
+    $build['#list'] = $this->usersAdminList($storage, $request->query->all());
 
     return $build;
   }
@@ -114,7 +118,7 @@ class UserController extends ControllerBase {
     $filters = $storage['filters'] ?? [];
     $roles = $storage['roles'];
     $statuses = $storage['statuses'];
-    $rights = $storage['rights'];
+    $rights = array_flip(array_keys($storage['rights']));
 
     // Table headers.
     $header = [
@@ -147,37 +151,40 @@ class UserController extends ControllerBase {
     // Filter the query.
     if (isset($filters['role'])) {
       $query->innerJoin('user__roles', 'ur', 'ur.entity_id = u.uid');
-      $query->condition('ur.roles_target_id', array_keys($filters['role']));
+      $query->condition('ur.roles_target_id', array_keys($filters['role']), 'IN');
     }
     if (isset($filters['status'])) {
-      $query->condition('u.status', $filters['status'] === 'active' ? 1 : 0);
+      $query->condition('u.status', $filters['status'] === 'active' ? 1 : 0, '=');
     }
     if (!empty($filters['name'])) {
-      $query->condition('u.name', '%' . $filters['name'] . '%', 'LIKE');
+      $query->condition('u.name', '%' . $this->database->escapeLike($filters['name']) . '%', 'LIKE');
     }
     if (!empty($filters['mail'])) {
-      $query->condition('u.mail', '%' . $filters['mail'] . '%', 'LIKE');
+      $query->condition('u.mail', '%' . $this->database->escapeLike($filters['mail']) . '%', 'LIKE');
     }
+
+    // Content posted filter.
     if (!empty($filters['posted'])) {
-      $subquery = $this->database->select('node_field_data', 'n')
-        ->fields('n', ['uid'])
-        ->condition('n.type', $filters['posted'], 'IN')
-        ->distinct();
-      $query->innerJoin($subquery, NULL, '%alias.uid = u.uid');
+      $query->innerJoin('node_field_data', 'n', '%alias.uid = u.uid');
+      $query->condition('n.type', array_keys($filters['posted']), 'IN');
     }
+
+    // Posting rights filter.
     if (isset($filters['job_rights']) || isset($filters['training_rights'])) {
       $query->innerJoin('taxonomy_term__field_user_posting_rights', 'fpr', '%alias.field_user_posting_rights_id = u.uid');
       if (isset($filters['job_rights'])) {
-        $query->condition('fpr.field_user_posting_rights_job', array_search($filters['job_rights'], array_keys($rights)));
+        $query->condition('fpr.field_user_posting_rights_job', $rights[$filters['job_rights']], '=');
       }
       if (isset($filters['training_rights'])) {
-        $query->condition('fpr.field_user_posting_rights_training', array_search($filters['training_rights'], array_keys($rights)));
+        $query->condition('fpr.field_user_posting_rights_training', $rights[$filters['training_rights']], '=');
       }
     }
 
     // Set group by.
     $group_by = &$query->getGroupBy();
-    $group_by = $fields;
+    $group_by = array_map(function ($field) {
+      return 'u.' . $field;
+    }, $fields);
 
     // Get the number of users for the query.
     $count_query = $query->countQuery();
@@ -185,8 +192,8 @@ class UserController extends ControllerBase {
     // Get the number of users for the query.
     $count = $count_query->execute()->fetchField();
 
-    $currentPage = $this->pagerManager->createPager($count, $items_per_page)->getCurrentPage();
     // Get the users.
+    $currentPage = $this->pagerManager->createPager($count, $items_per_page)->getCurrentPage();
     $query->range($currentPage * $items_per_page, $items_per_page);
     $users = $query->execute()->fetchAllAssoc('uid', \PDO::FETCH_OBJ);
 
@@ -274,7 +281,9 @@ class UserController extends ControllerBase {
     foreach ($query->execute() as $record) {
       $job = $record->job;
       $training = $record->training;
-      $link = Link::fromTextAndUrl($record->name, URL::fromUserInput('/taxonomy/term/' . $record->tid . '/posting-rights'));
+      $link = Link::fromTextAndUrl($record->name, URL::fromUserInput('/taxonomy/term/' . $record->tid . '/user-posting-rights', [
+        'attributes' => ['target' => '_blank'],
+      ]));
       $row = '<li data-job="' . $job . '" data-training="' . $training . '">' . $link->toString() . '</li>';
       $sources[$record->uid][$record->tid] = $row;
     }
