@@ -13,24 +13,24 @@ type_settings:
   states:
     draft:
       label: Draft
+      weight: 0
       published: false
       default_revision: true
-      weight: 0
     normal:
-      published: true
-      default_revision: true
       label: Normal
       weight: 2
-    ongoing:
       published: true
       default_revision: true
+    ongoing:
       label: Ongoing
       weight: 3
-    published:
-      label: Published
       published: true
       default_revision: true
+    published:
+      label: Published
       weight: 1
+      published: true
+      default_revision: true
   transitions:
     draft:
       label: 'Save as Draft'

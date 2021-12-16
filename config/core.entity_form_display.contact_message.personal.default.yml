@@ -11,18 +11,18 @@ bundle: personal
 mode: default
 content:
   field_sender:
+    type: options_select
     weight: 0
+    region: content
     settings: {  }
     third_party_settings: {  }
-    type: options_select
-    region: content
   message:
     type: string_textarea
     weight: 2
+    region: content
     settings:
       rows: 12
       placeholder: ''
-    region: content
     third_party_settings: {  }
   subject:
     type: string_textfield

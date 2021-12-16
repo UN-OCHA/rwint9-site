@@ -12,6 +12,9 @@ admin_theme: common_design_subtheme
 visibility:
   'entity_bundle:node':
     id: 'entity_bundle:node'
+    negate: false
+    context_mapping:
+      node: '@node.node_route_context:node'
     bundles:
       announcement: announcement
       blog_post: blog_post
@@ -20,6 +23,3 @@ visibility:
       report: report
       topic: topic
       training: training
-    negate: false
-    context_mapping:
-      node: '@node.node_route_context:node'

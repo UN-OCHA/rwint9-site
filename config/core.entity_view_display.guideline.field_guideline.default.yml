@@ -19,14 +19,14 @@ bundle: field_guideline
 mode: default
 content:
   field_description:
-    weight: 0
+    type: text_default
     label: hidden
     settings: {  }
     third_party_settings: {  }
-    type: text_default
+    weight: 0
     region: content
   field_links:
-    weight: 1
+    type: link
     label: above
     settings:
       trim_length: 80
@@ -35,7 +35,7 @@ content:
       rel: ''
       target: ''
     third_party_settings: {  }
-    type: link
+    weight: 1
     region: content
 hidden:
   field_field: true
