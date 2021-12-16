@@ -39,6 +39,9 @@
   margin-top: 0;
   vertical-align: middle;
 }
+.rw-moderation-filters .rw-moderation-filter-other .fieldset-wrapper > .form-type-checkbox + .form-type-checkbox {
+  margin-top: 0;
+}
 .rw-moderation-filters .rw-moderation-filter-omnibox .fieldset-wrapper {
   display: table;
 }
