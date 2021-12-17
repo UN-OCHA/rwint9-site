@@ -1,13 +1,13 @@
 (function () {
   'use strict';
 
-  window.Searcher = function() {
+  window.Searcher = function () {
     var matchRegexps = [];
     var highlightRegexp = null;
     var matchedColors = {};
     var colors = ['yellow', 'red', 'green', 'blue', 'purple'];
     var colorIndex = 0;
-
+    /* eslint-disable */
     var diacriticsMap = {
       '\u00E0': 'a',  // à => a
       '\u00E1': 'a',  // á => a
@@ -44,16 +44,17 @@
       '\u00FD': 'y',  // ý => y
       '\u00FF': 'y'   // ÿ => y
     };
-    function removeDiacritics(text) {
+    function removeDiacritics (text) {
       return text.replace(/[^\u0000-\u007E]/g, function(a) {
         return diacriticsMap[a] || a;
       });
     }
+    /* eslint-enable */
     function removeQuotes(text) {
       return text.replace(/([a-z])([^a-z \t\r\n_-])([a-z])/g, '$1-$3');
     }
     function escapeRegexp(text) {
-      return text.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      return text.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
     }
     function cleanText(text) {
       return removeQuotes(removeDiacritics(text.toLowerCase()));
@@ -106,7 +107,7 @@
     }
 
     // Search for the keywords.
-    this.search = function(node) {
+    this.search = function (node) {
       var text = cleanText(node.textContent || node.innerText);
 
       // Skip if there is no text.
@@ -128,7 +129,7 @@
     };
 
     // Remove higlighted text.
-    this.remove = function() {
+    this.remove = function () {
       var tags = document.getElementsByClassName('highlight');
       for (var i = tags.length - 1; i >= 0; i--) {
         var tag = tags[i];
@@ -140,7 +141,7 @@
     };
 
     // Set the the search keywords.
-    this.apply = function(input) {
+    this.apply = function (input) {
       input = cleanInput(input);
 
       // Remove the previous highlighs.
