@@ -1,0 +1,22 @@
+uuid: 3ae7e220-5128-4910-a7f3-178cce44bf76
+langcode: en
+status: true
+dependencies:
+  module:
+    - guidelines
+id: guideline
+label: Guideline
+type: 'canonical_entities:guideline'
+pattern: 'guideline/[guideline:field_short_link]'
+selection_criteria:
+  39fb1a82-1fd7-4bd8-9356-e0faf35560c3:
+    id: 'entity_bundle:guideline'
+    negate: false
+    uuid: 39fb1a82-1fd7-4bd8-9356-e0faf35560c3
+    context_mapping:
+      guideline: guideline
+    bundles:
+      field_guideline: field_guideline
+selection_logic: and
+weight: -5
+relationships: {  }

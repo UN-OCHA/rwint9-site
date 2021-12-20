@@ -1,0 +1,5 @@
+services:
+  reliefweb_users.route_subscriber:
+    class: Drupal\reliefweb_users\Routing\RouteSubscriber
+    tags:
+      - { name: event_subscriber }

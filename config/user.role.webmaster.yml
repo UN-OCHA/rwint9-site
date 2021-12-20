@@ -1,7 +1,32 @@
 uuid: cc2c5bae-b15b-41c7-ae45-8afb7153c18c
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  config:
+    - taxonomy.vocabulary.career_category
+    - taxonomy.vocabulary.content_format
+    - taxonomy.vocabulary.country
+    - taxonomy.vocabulary.disaster
+    - taxonomy.vocabulary.disaster_type
+    - taxonomy.vocabulary.feature
+    - taxonomy.vocabulary.job_experience
+    - taxonomy.vocabulary.job_type
+    - taxonomy.vocabulary.language
+    - taxonomy.vocabulary.ocha_product
+    - taxonomy.vocabulary.organization_type
+    - taxonomy.vocabulary.source
+    - taxonomy.vocabulary.tag
+    - taxonomy.vocabulary.theme
+    - taxonomy.vocabulary.training_format
+    - taxonomy.vocabulary.training_type
+    - taxonomy.vocabulary.vulnerable_group
+    - workflows.workflow.report
+  module:
+    - book
+    - content_moderation
+    - google_tag
+    - taxonomy
+    - taxonomy_term_revision
 id: webmaster
 label: Webmaster
 weight: 4
@@ -65,5 +90,6 @@ permissions:
   - 'edit terms in vulnerable_group'
   - 'revert term revision'
   - 'use report transition archived'
+  - 'use text format guideline'
   - 'view term revision data'
   - 'view term revision list'

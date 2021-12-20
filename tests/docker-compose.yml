@@ -38,6 +38,8 @@ services:
       - mysql
     volumes:
       - "./settings:/srv/www/shared/settings:ro"
+      # Mount the attachment redirections to pass the requests to Drupal.
+      - "./etc/nginx/custom/01_attachment_redirections.conf:/etc/nginx/custom/01_attachment_redirections.conf:ro"
       # Mount volumes for the private and public files.
       - "rwint9-test-site-public:/srv/www/html/sites/default/files:rw"
       - "rwint9-test-site-private:/srv/www/html/sites/default/private:rw"
@@ -45,6 +47,9 @@ services:
       - "../phpcs.xml:/srv/www/phpcs.xml:ro"
       - "../phpunit.xml:/srv/www/phpunit.xml:ro"
       - "../.coveralls.yml:/srv/www/.coveralls.yml:ro"
+      # Mount local custom code.
+      - "../html/modules/custom:/srv/www/html/modules/custom:ro"
+      - "../html/themes/custom:/srv/www/html/themes/custom:ro"
     environment:
       - TERM=xterm
       - ENVIRONMENT=dev

@@ -10,9 +10,11 @@ dependencies:
     - text
 third_party_settings:
   allowed_formats:
-    markdown: markdown
-    html: '0'
+    markdown_editor: markdown_editor
+    markdown: '0'
     plain_text: '0'
+    html: '0'
+    token_markdown: '0'
 id: node.training.field_how_to_register
 field_name: field_how_to_register
 entity_type: node

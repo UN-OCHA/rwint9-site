@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Implements hook_preprocess_taxonomy_term().
@@ -118,4 +119,44 @@ function common_design_subtheme_theme_suggestions_page_title_alter(array &$sugge
   if (strpos($route_name, 'entity.') !== 0) {
     $suggestions[] = 'page_title__wrapped';
   }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Add a process callback to ensure that the editor link dialog "save"submit
+ * button is not moved to the modal dialog's button area.
+ *
+ * Note: this the same workaround as used for the media library dialog.
+ *
+ * @see html/core/modules/media_library/media_library.module
+ *
+ * @todo move to the base theme or use the approach describe in
+ * https://gist.github.com/opi/b855eb28cbeb4d01abe125e8c978d978
+ */
+function common_design_subtheme_form_editor_link_dialog_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  $form['#after_build'][] = 'common_design_subtheme_editor_link_dialog_form_after_build';
+}
+
+/**
+ * Form #after_build callback for editor_link_dialog form.
+ */
+function common_design_subtheme_editor_link_dialog_form_after_build(array $form, FormStateInterface $form_state) {
+  // Remove .form-actions from the edit link dialog form. This prevents
+  // the "Save" submit button from being moved into the dialog's button area and
+  // breaking accessibility (tab to focus element) and causing a redirection
+  // to the form page instead of adding the link to the editable area.
+  //
+  // @see \Drupal\Core\Render\Element\Actions::processActions
+  // @see Drupal.behaviors.dialog.prepareDialogButtons
+  //
+  // @todo Remove this when https://www.drupal.org/project/drupal/issues/3089751
+  // is fixed.
+  if (isset($form['actions']['#attributes']['class'])) {
+    $key = array_search('form-actions', $form['actions']['#attributes']['class']);
+    if ($key !== FALSE) {
+      unset($form['actions']['#attributes']['class'][$key]);
+    }
+  }
+  return $form;
 }

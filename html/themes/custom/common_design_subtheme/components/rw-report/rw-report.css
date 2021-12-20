@@ -59,7 +59,7 @@
   padding-top: 0;
   text-align: center;
 }
-.node--report--full .rw-attachment--interactive h3 {
+.node--report--full .rw-attachment--interactive .rw-attachment__title {
   margin: 0;
   padding: 0 0 20px 0;
   border: none;

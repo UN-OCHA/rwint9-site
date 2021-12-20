@@ -12,6 +12,9 @@ admin_theme: common_design_subtheme
 visibility:
   'entity_bundle:taxonomy_term':
     id: 'entity_bundle:taxonomy_term'
+    negate: false
+    context_mapping:
+      taxonomy_term: '@taxonomy_term.taxonomy_term_route_context:taxonomy_term'
     bundles:
       career_category: career_category
       content_format: content_format
@@ -30,6 +33,3 @@ visibility:
       training_format: training_format
       training_type: training_type
       vulnerable_group: vulnerable_group
-    negate: false
-    context_mapping:
-      taxonomy_term: '@taxonomy_term.taxonomy_term_route_context:taxonomy_term'

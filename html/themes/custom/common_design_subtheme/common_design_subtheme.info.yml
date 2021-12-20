@@ -50,12 +50,17 @@ libraries-extend:
     - common_design_subtheme/rw-datepicker
 
   # Guidelines.
-  reliefweb_form/form.guidelines:
+  guidelines/guidelines-json:
     - common_design_subtheme/rw-guidelines
 
+  reliefweb-guidelines/reliefweb-guidelines:
+    - common_design_subtheme/rw-guidelines
 
-# Custom namespace
-# https://www.drupal.org/docs/contributed-modules/components/understanding-twig-namespaces
-# Requires Components module
-# components:
-#   namespaces:
+# Use the common_design_subtheme styles inside the editor.
+ckeditor_stylesheets:
+  - css/styles.css
+
+libraries-override:
+  guidelines/guidelines-json:
+    js:
+      components/guidelines-json/guidelines-json.js: components/rw-guidelines/guidelines-json.js

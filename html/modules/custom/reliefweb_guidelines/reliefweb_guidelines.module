@@ -1,0 +1,98 @@
+<?php
+
+/**
+ * @file
+ * Contains integration for guidelines.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\reliefweb_guidelines\Controller\GuidelineSinglePageController;
+use Drupal\reliefweb_guidelines\Entity\Guideline;
+use Drupal\reliefweb_revisions\Services\EntityHistory;
+
+/**
+ * Implements hook_theme().
+ */
+function reliefweb_guidelines_theme() {
+  return [
+    'reliefweb_guidelines_list' => [
+      'variables' => [
+        // Wrapper attributes.
+        'attributes' => NULL,
+        // Page title.
+        'title' => t('Guidelines'),
+        // List of guidelines grouped by "parent" with a title and a children
+        // property. The children is an associative array keyed by the guideline
+        // short ID and with a title and description as properties.
+        'guidelines' => [],
+      ],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_entity_bundle_info_alter().
+ *
+ * Add bundle classes to guideline entities to handle business logic.
+ */
+function reliefweb_guidelines_entity_bundle_info_alter(&$bundles) {
+  $bundles['guideline']['field_guideline']['class'] = '\Drupal\reliefweb_guidelines\Entity\Guideline';
+  $bundles['guideline']['field_guideline']['label'] = 'Guideline';
+  $bundles['guideline']['guideline_list']['class'] = '\Drupal\reliefweb_guidelines\Entity\GuidelineList';
+  $bundles['guideline']['guideline_list']['label'] = 'Guideline List';
+}
+
+/**
+ * Implements hook_page_attachments_alter().
+ */
+function reliefweb_guidelines_page_attachments_alter(array &$attachments) {
+  // Remove all the attached Drupal libraries for the /guidelines page as it
+  // has its own distinct styling and behaviour.
+  if (\Drupal::routeMatch()->getRouteName() === 'reliefweb_guidelines.guidelines') {
+    $attachments['#attached']['library'] = [];
+  }
+}
+
+/**
+ * Implements hook_page_top().
+ */
+function reliefweb_guidelines_page_top(array &$page_top) {
+  $page_top['toolbar']['#cache']['contexts'][] = 'route.name';
+  if (\Drupal::routeMatch()->getRouteName() === 'reliefweb_guidelines.guidelines') {
+    $page_top['toolbar']['#access'] = FALSE;
+  }
+}
+
+/**
+ * Implements hook_guideline_json_fields_alter().
+ */
+function reliefweb_guidelines_guideline_json_fields_alter(&$description, $guideline, $context) {
+  // Replace the guideline link to the internal link on the guidelines page.
+  if ($guideline instanceof Guideline) {
+    $description['link'] = '/guidelines#' . $guideline->getShortId();
+  }
+
+  // Replace links to the guidelines.
+  if (!empty($description['content'])) {
+    $description['content'] = GuidelineSinglePageController::replaceLinks($description['content']);
+  }
+}
+
+/**
+ * Implements hook_pathauto_alias_alter().
+ */
+function reliefweb_guidelines_pathauto_alias_alter(&$alias, array &$context) {
+  // Use the row shortid instead of the lowercased one.
+  if ($context['module'] === 'guidelines' && isset($context['data']['guideline'])) {
+    if ($context['data']['guideline'] instanceof Guideline) {
+      $alias = '/guideline/' . $context['data']['guideline']->getShortId();
+    }
+  }
+}
+
+/**
+ * Implements hook_form_HOOK_alter() for "guideline_form".
+ */
+function reliefweb_guidelines_form_guideline_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  EntityHistory::addHistoryToForm($form, $form_state);
+}

@@ -137,6 +137,8 @@ rw-guidelines:
   css:
     theme:
       components/rw-guidelines/rw-guidelines.css: {}
+  js:
+    components/rw-guidelines/guidelines-json.js: {}
   dependencies:
     - common_design_subtheme/rw-icons
 
@@ -239,6 +241,13 @@ rw-pager:
   css:
     theme:
       components/rw-pager/rw-pager.css: {}
+
+rw-people:
+  css:
+    theme:
+      components/rw-people/rw-people.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
 
 rw-preview:
   css:

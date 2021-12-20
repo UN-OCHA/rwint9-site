@@ -65,6 +65,10 @@ process:
     -
       plugin: skip_on_empty
       method: process
+  # Flag the entity as being migrated.
+  _is_migrating:
+    plugin: default_value
+    default_value: 1
 migration_dependencies:
   optional:
     - language

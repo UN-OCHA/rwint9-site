@@ -1,7 +1,25 @@
 uuid: 0b3bdcc6-3347-42ad-9731-5f3149dd596b
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  config:
+    - filter.format.markdown
+    - filter.format.markdown_editor
+    - filter.format.token_markdown
+    - node.type.job
+    - node.type.training
+    - workflows.workflow.job
+    - workflows.workflow.training
+  module:
+    - content_moderation
+    - filter
+    - media
+    - node
+    - reliefweb_bookmarks
+    - reliefweb_form
+    - reliefweb_subscriptions
+    - reliefweb_user_posts
+    - system
 _core:
   default_config_hash: dJ0L2DNSj5q6XVZAGsuVDpJTh5UeYkIPwKrUOOpr8YI
 id: authenticated
@@ -21,6 +39,7 @@ permissions:
   - 'use job transition pending'
   - 'use job transition published'
   - 'use text format markdown'
+  - 'use text format markdown_editor'
   - 'use text format token_markdown'
   - 'use training transition draft'
   - 'use training transition pending'

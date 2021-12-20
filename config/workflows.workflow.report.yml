@@ -12,45 +12,45 @@ type: content_moderation
 type_settings:
   states:
     archive:
-      published: false
-      default_revision: true
       label: Archived
       weight: 6
+      published: false
+      default_revision: true
     draft:
       label: Draft
-      published: false
-      default_revision: true
       weight: 0
-    duplicate:
       published: false
       default_revision: true
+    duplicate:
       label: Duplicate
       weight: 4
-    embargoed:
       published: false
       default_revision: true
+    embargoed:
       label: Embargoed
       weight: 5
-    on_hold:
       published: false
       default_revision: true
+    on_hold:
       label: On-hold
       weight: 2
-    published:
-      label: Published
-      published: true
-      default_revision: true
-      weight: 1
-    reference:
       published: false
       default_revision: true
-      label: Reference
-      weight: 7
-    to_review:
+    published:
+      label: Published
+      weight: 1
       published: true
       default_revision: true
+    reference:
+      label: Reference
+      weight: 7
+      published: false
+      default_revision: true
+    to_review:
       label: 'To review'
       weight: 3
+      published: true
+      default_revision: true
   transitions:
     archived:
       label: Archive

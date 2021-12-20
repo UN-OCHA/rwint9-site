@@ -1,0 +1,7 @@
+reliefweb-guidelines:
+  css:
+    component:
+      components/reliefweb-guidelines/reliefweb-guidelines.css: {}
+  js:
+    components/reliefweb-guidelines/reliefweb-guidelines-search.js: {}
+    components/reliefweb-guidelines/reliefweb-guidelines.js: {}

@@ -1,0 +1,21 @@
+uuid: 6f2c048f-a870-4564-bcd0-bbb99bdb2230
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.guideline.field_field
+    - guidelines.guideline_type.field_guideline
+  module:
+    - guidelines
+id: guideline.field_guideline.field_field
+field_name: field_field
+entity_type: guideline
+bundle: field_guideline
+label: Field
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: guideline_field_target_type

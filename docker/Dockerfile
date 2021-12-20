@@ -21,7 +21,7 @@ RUN rm -rf ./vendor && \
 # to running `composer sass` but without hitting the PHP timeout from composer.
 RUN cd html/themes/custom/common_design_subtheme && \
     rm -rf ./node_modules && \
-    npm install && \
+    npm install --omit=dev -f && \
     ./node_modules/.bin/sass sass:build && \
     rm -rf ./node_modules
 
@@ -54,6 +54,13 @@ LABEL info.humanitarianresponse.build.date=$BUILD_DATE \
       info.humanitarianresponse.build.vcs-url=$VCS_URL \
       info.humanitarianresponse.build.vcs-ref=$VCS_REF
 
+RUN mkdir -p /etc/nginx/custom && \
+    # Install lua resty library to generate UUIDs.
+    cd /tmp && \
+    git clone --branch=0.0.7 https://github.com/thibaultcha/lua-resty-jit-uuid.git && \
+    cp lua-resty-jit-uuid/lib/resty/jit-uuid.lua /usr/share/lua/common/resty/ && \
+    rm -rf /tmp/lua-resty-jit-uuid
+
 COPY --from=builder /srv/www/config /srv/www/config/
 COPY --from=builder /srv/www/html /srv/www/html/
 COPY --from=builder /srv/www/vendor /srv/www/vendor/
@@ -63,5 +70,8 @@ COPY --from=builder /srv/www/composer.lock /srv/www/composer.lock
 COPY --from=builder /srv/www/symfony.lock /srv/www/symfony.lock
 COPY --from=builder /srv/www/patches /srv/www/patches
 COPY --from=builder /srv/www/scripts /srv/www/scripts
+COPY --from=builder /srv/www/docker/etc/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY --from=builder /srv/www/docker/etc/nginx/apps/drupal/fastcgi_drupal.conf /etc/nginx/apps/drupal/fastcgi_drupal.conf
 COPY --from=builder /srv/www/docker/etc/nginx/apps/drupal/drupal.conf /etc/nginx/apps/drupal/drupal.conf
+COPY --from=builder /srv/www/docker/etc/nginx/custom /etc/nginx/custom/
+COPY --from=builder /srv/www/docker/etc/nginx/sites-enabled/01_uuid.conf /etc/nginx/sites-enabled/01_uuid.conf

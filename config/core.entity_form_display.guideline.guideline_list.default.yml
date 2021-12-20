@@ -1,0 +1,22 @@
+uuid: fa478884-5372-490a-bc41-defb49fc5a8d
+langcode: en
+status: true
+dependencies:
+  config:
+    - guidelines.guideline_type.guideline_list
+id: guideline.guideline_list.default
+targetEntityType: guideline
+bundle: guideline_list
+mode: default
+content:
+  name:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden:
+  langcode: true
+  user_id: true

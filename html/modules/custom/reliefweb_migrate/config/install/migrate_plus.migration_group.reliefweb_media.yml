@@ -40,6 +40,10 @@ shared_configuration:
     field_media_image/target_id: fid
     field_media_image/width: width
     field_media_image/height: height
+    # Flag the entity as being migrated.
+    _is_migrating:
+      plugin: default_value
+      default_value: 1
   migration_dependencies:
     required:
       - reliefweb_image

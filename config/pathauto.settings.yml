@@ -1,4 +1,7 @@
-enabled_entity_types: {  }
+_core:
+  default_config_hash: SwvLp8snyPEExF41CaJJYdPUVomofLqtXvwciHc4cPg
+enabled_entity_types:
+  - guideline
 punctuation:
   double_quotes: 0
   quotes: 0
@@ -48,5 +51,3 @@ safe_tokens:
   - login-url
   - url
   - url-brief
-_core:
-  default_config_hash: SwvLp8snyPEExF41CaJJYdPUVomofLqtXvwciHc4cPg

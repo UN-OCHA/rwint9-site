@@ -4,7 +4,7 @@ namespace Drupal\reliefweb_migrate\Plugin\migrate\source;
 
 use Drupal\migrate\Plugin\migrate\source\SqlBase;
 use Drupal\migrate\Row;
-use Symfony\Component\Uid\Uuid;
+use Drupal\reliefweb_utility\Helpers\LegacyHelper;
 
 /**
  * Retrieve images from the Drupal 7 database.
@@ -115,12 +115,8 @@ class Image extends SqlBase {
     // Ex: public://report-images/example.png.
     $uri = $row->getSourceProperty('uri');
 
-    // Replace the public scheme with the actual reliefweb.int base public file
-    // uri so that it's unique.
-    $uuid_uri = str_replace('public://', 'https://reliefweb.int/sites/reliefweb.int/files/', $uri);
-
     // Generate the UUID based on the URI.
-    $uuid = Uuid::v3(Uuid::fromString(Uuid::NAMESPACE_URL), $uuid_uri)->toRfc4122();
+    $uuid = LegacyHelper::generateImageUuid($uri);
 
     // Note: the locale is assumed to be UTF-8.
     $info = pathinfo($uri);

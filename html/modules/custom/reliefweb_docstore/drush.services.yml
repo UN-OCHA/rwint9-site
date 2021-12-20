@@ -1,0 +1,6 @@
+services:
+  reliefweb_docstore.commands:
+    class: \Drupal\reliefweb_docstore\Commands\ReliefWebDocstoreCommands
+    arguments: ['@config.factory', '@database', '@entity_field.manager', '@entity_type.manager', '@reliefweb_docstore.client']
+    tags:
+      - { name: drush.command }
