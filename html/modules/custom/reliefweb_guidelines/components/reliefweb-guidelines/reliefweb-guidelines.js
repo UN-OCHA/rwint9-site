@@ -2,7 +2,7 @@
   'use strict';
 
   // Update the mnenu.
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     var sidebar = document.getElementsByTagName('aside')[0];
     var main = document.getElementsByTagName('main')[0];
     var menuLinks = sidebar.querySelectorAll('nav a');
@@ -29,7 +29,7 @@
         var images = article.getElementsByTagName('IMG');
         for (var i = 0, l = images.length; i < l; i++) {
           var image = images[i];
-          if (image.src.indexOf("blank.gif") !== -1) {
+          if (image.src.indexOf('blank.gif') !== -1) {
             image.src = image.getAttribute('data-src');
           }
         }
@@ -45,7 +45,7 @@
 
     // Article, card link clicks.
     main.addEventListener('mousedown', function (event) {
-      if (event.target.tagName === 'A' && event.target.getAttribute('href').indexOf('#') === 0) {
+      if (event.target.tagName === 'A' && event.target.getAttribute('href').indexOf('/guidelines#') === 0) {
         setActiveLink(event.target.href);
       }
     });

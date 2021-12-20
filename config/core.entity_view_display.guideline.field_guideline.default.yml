@@ -38,6 +38,7 @@ content:
     weight: 1
     region: content
 hidden:
+  content_moderation_control: true
   field_field: true
   field_images: true
   field_short_link: true

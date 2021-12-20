@@ -1,50 +1,10 @@
-# Guidelines
+# ReliefWeb Guidelines
 
-## Todo
+This handles both the import from the Guidelines Trello board and the display
+of the guidelines in a compatible way with the previous guidelines site.
 
-- [x] Extract images from description
-- [x] Add attachment links
-- [ ] Parse and rewrite trello links like `https://trello.com/c/XlpG8tHh/17-country-coverage`
-      Can only be done after importing all lists and cards.
-
-## Fields left to map
-
-- [ ] attachments
-- [ ] original_published_date
-- [ ] disasters
-- [ ] new_comment
-- [ ] information
-- [x] job_location
-- [x] organization
-- [ ] new_comment
-- [ ] information
-- [ ] dates
-- [ ] event_url
-- [x] organization
-- [ ] advertisement_language
-- [ ] course_event_language
-- [ ] training_description
-- [ ] attachments
-- [ ] new_comment
-- [ ] training_categories
-- [ ] category
-- [ ] professional_function
-
-## Testing snippets
-
-### Rest and import
+## Import
 
 ```bash
-drush eval "_reliefweb_guidelines_delete_all()" && drush cim -y && drush eval "reliefweb_guidelines_migrate_from_trello()"
-```
-
-### One list only
-
-```php
-  $lists = [
-    [
-      'name' => 'test',
-      'id' => '5c740dfe91f2b20a384d3c2c',
-    ]
-  ];
+drush rw-guidelines:delete && drush rw-guidelines:migrate
 ```

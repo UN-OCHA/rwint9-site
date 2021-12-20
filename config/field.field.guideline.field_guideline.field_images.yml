@@ -20,7 +20,7 @@ default_value_callback: ''
 settings:
   handler: 'default:file'
   handler_settings: {  }
-  file_directory: 'guidelines/[date:custom:Y]-[date:custom:m]'
+  file_directory: images/guidelines
   file_extensions: 'png gif jpg jpeg'
   max_filesize: ''
   max_resolution: ''
