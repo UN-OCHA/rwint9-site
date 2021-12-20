@@ -1,9 +1,9 @@
-uuid: 9d4630ca-6cce-4b4a-8c57-ea3f7095a471
+uuid: 1646cd3e-f46d-43bd-b774-7f40e1e23964
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: j5sxLfym_LtC-n8qqM66M_8S1tbpepCLVN1Qial8FY8
+  default_config_hash: 7G6aoPHopmiA75w1-6a7F-CF5QTtZtf-gU2V6XHhND8
 id: reliefweb_book
 class: null
 field_plugin_method: null
@@ -26,6 +26,9 @@ process:
     -
       plugin: migration_lookup
       migration: reliefweb_book
+  _is_migrating:
+    plugin: default_value
+    default_value: 1
 destination:
   plugin: reliefweb_book
 migration_dependencies:

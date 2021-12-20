@@ -199,7 +199,7 @@ form .description {
   padding: 6px 0 0 0;
   font-size: 15px;
   font-style: italic;
-  line-height: 24px;
+  line-height: 1.5;
 }
 form .description a {
   text-decoration: underline;
@@ -429,7 +429,7 @@ form > #actions legend + .form-type-checkbox.form-item-notifications-content-dis
 
 form [data-lengthchecker-status] {
   margin-top: -2px;
-  padding: 8px 8px;
+  padding: 8px;
   background-color: var(--cd-reliefweb-pink);
   font-size: 15px;
   line-height: 1.2;
@@ -447,7 +447,9 @@ form [data-lengthchecker-status="ok"] {
 .taxonomy-term-disaster-profile-form,
 .taxonomy-term-source-user-posting-rights-form,
 .taxonomy-term-confirm-form,
-.node-confirm-form {
+.node-confirm-form,
+.node-revision-revert-confirm,
+.node-revision-delete-confirm {
   padding-top: 24px;
 }
 
@@ -486,4 +488,11 @@ form button[value="clear"],
 form button[value="edit"] {
   padding: 8px;
   font-size: 14px;
+}
+
+/* Inline error messages. */
+.form-item--error-message,
+.cd-form__error-message {
+  background-color: var(--cd-reliefweb-pink);
+  font-size: 15px;
 }

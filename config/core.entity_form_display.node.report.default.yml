@@ -34,6 +34,7 @@ dependencies:
     - datetime
     - media_library
     - path
+    - reliefweb_docstore
     - reliefweb_fields
     - text
 id: node.report.default
@@ -164,11 +165,10 @@ content:
     settings: {  }
     third_party_settings: {  }
   field_file:
-    type: media_library_widget
-    weight: 3
+    type: reliefweb_file
+    weight: 101
     region: content
-    settings:
-      media_types: {  }
+    settings: {  }
     third_party_settings: {  }
   field_headline:
     type: boolean_checkbox

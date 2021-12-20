@@ -30,6 +30,7 @@ dependencies:
     - node.type.report
   module:
     - datetime
+    - reliefweb_docstore
     - text
     - user
 id: node.report.default
@@ -82,13 +83,11 @@ content:
     weight: 11
     region: content
   field_file:
-    type: entity_reference_entity_view
-    label: visually_hidden
-    settings:
-      view_mode: default
-      link: false
+    type: reliefweb_file
+    label: above
+    settings: {  }
     third_party_settings: {  }
-    weight: 8
+    weight: 13
     region: content
   field_image:
     type: entity_reference_entity_view

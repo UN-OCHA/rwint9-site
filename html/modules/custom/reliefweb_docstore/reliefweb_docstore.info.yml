@@ -1,0 +1,5 @@
+type: module
+name: ReliefWeb Docstore
+description: 'Provides integration with the OCHA Document Store.'
+package: reliefweb
+core_version_requirement: ^9

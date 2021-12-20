@@ -1,0 +1,9 @@
+docstore_url: ''
+provider_uuid: ''
+api_key: ''
+prefix: reliefweb_
+local: true
+file_directory: attachments
+preview_directory: previews
+_core:
+  default_config_hash: p51VTBEaJE9L5iY3Imqr82p6ym3rNeOGMoKQ3VsimvA
