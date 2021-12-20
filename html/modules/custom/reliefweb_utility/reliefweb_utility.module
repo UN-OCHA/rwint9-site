@@ -27,11 +27,11 @@ function reliefweb_utility_preprocess(array &$variables, $hook) {
 }
 
 /**
- * Implements hook_ENTITY_TYPE_update() for files.
+ * Implements hook_ENTITY_TYPE_presave() for files.
  *
  * Change the URI of files to use their UUID.
  */
-function reliefweb_utility_file_update(FileInterface $file) {
+function reliefweb_utility_file_presave(FileInterface $file) {
   $uuid = $file->uuid();
   $uri = $file->getFileUri();
 
@@ -53,7 +53,7 @@ function reliefweb_utility_file_update(FileInterface $file) {
 
     // We use the UUID as filename, preserving only the extension so that
     // the URI is short and predictable.
-    $new_uri = $directory . '/' . $uuid . '.' . $info['extension'];
+    $new_uri = $directory . '/' . $uuid . '.' . strtolower($info['extension']);
 
     // Prepare the destination directory.
     if (!$file_system->prepareDirectory($directory, $file_system::CREATE_DIRECTORY)) {
@@ -71,11 +71,6 @@ function reliefweb_utility_file_update(FileInterface $file) {
     // Update the URI and save the file if the file could be moved.
     else {
       $file->setFileUri($new_uri);
-      // @todo maybe better to only update the relevant table rather than
-      // calling save to avoid hook_file_update() etc. from being called twice.
-      // @todo an alternative could be to move and change the URI before the
-      // original "save" is called.
-      $file->save();
     }
   }
 }
