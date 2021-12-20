@@ -338,7 +338,7 @@ aside nav a.active + a {
 }
 
 .rw-guidelines-list article hr {
-  display: table;
+  display: block;
   overflow: hidden;
   box-sizing: content-box;
   height: 4px;
@@ -843,4 +843,17 @@ aside nav a.active + a {
   position: relative;
   z-index: 1;
   border-color: #4183c4;
+}
+
+/* External links. Display an icon after the link. */
+.rw-guidelines-list article a[target="_blank"][rel~="noopener"]:after {
+  display: inline-block;
+  overflow: hidden;
+  width: 12px;
+  height: 12px;
+  /* The top margin is to have a better vertical alignment. */
+  margin: -2px 0 0 6px;
+  content: "";
+  vertical-align: middle;
+  background: url(./assets/external-link.svg) 0 0 no-repeat;
 }

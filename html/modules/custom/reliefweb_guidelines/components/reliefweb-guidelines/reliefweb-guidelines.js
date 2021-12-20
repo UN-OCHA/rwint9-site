@@ -45,7 +45,7 @@
 
     // Article, card link clicks.
     main.addEventListener('mousedown', function (event) {
-      if (event.target.tagName === 'A' && event.target.getAttribute('href').indexOf('#') === 0) {
+      if (event.target.tagName === 'A' && event.target.getAttribute('href').indexOf('/guidelines#') === 0) {
         setActiveLink(event.target.href);
       }
     });
