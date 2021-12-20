@@ -5,13 +5,10 @@
  * Contains integration for guidelines.
  */
 
-use Drupal\Component\Utility\Random;
-use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\guidelines\Entity\Guideline;
-use Drupal\guidelines\Entity\GuidelineType;
-use Drupal\reliefweb_guidelines\GuidelinesFromTrello;
+use Drupal\reliefweb_guidelines\Controller\GuidelineSinglePageController;
+use Drupal\reliefweb_guidelines\Entity\Guideline;
+use Drupal\reliefweb_revisions\Services\EntityHistory;
 
 /**
  * Implements hook_theme().
@@ -20,371 +17,39 @@ function reliefweb_guidelines_theme() {
   return [
     'reliefweb_guidelines_list' => [
       'variables' => [
-        'title' => t('ReliefWeb guidelines'),
-        'title_attributes' => NULL,
+        // Wrapper attributes.
+        'attributes' => NULL,
+        // Page title.
+        'title' => t('Guidelines'),
+        // List of guidelines grouped by "parent" with a title and a children
+        // property. The children is an associative array keyed by the guideline
+        // short ID and with a title and description as properties.
         'guidelines' => [],
       ],
     ],
-    'reliefweb_guidelines_item' => [
-      'variables' => [
-        'id' => '',
-        'title' => '',
-        'title_prefix' => '',
-        'description' => '',
-        'children' => [],
-      ],
-    ],
   ];
 }
 
 /**
- * Migrate datas from Trello.
+ * Implements hook_entity_bundle_info_alter().
+ *
+ * Add bundle classes to guideline entities to handle business logic.
  */
-function reliefweb_guidelines_migrate_from_trello() {
-  $shortlinks = [];
-  $config = \Drupal::config('reliefweb_trello.settings');
-  $key = $config->get('key');
-  $token = $config->get('token');
-
-  $trello = new GuidelinesFromTrello($key, $token, \Drupal::service('config.factory'), \Drupal::service('http_client'), \Drupal::service('logger.factory'));
-
-  $lists = $trello->getLists('554c519c9b98caa2495ea5db');
-  foreach ($lists as $weight_list => $list) {
-    // Create guideline.
-    $values = [
-      'type' => 'guideline_list',
-      'name' => $list['name'],
-      'parent' => [],
-      'weight' => $weight_list,
-      'field_title' => $list['name'],
-    ];
-
-    $guideline_list = Guideline::create($values);
-    $guideline_list->save();
-
-    // Get cards.
-    $cards = $trello->getCards($list['id']);
-    foreach ($cards as $weight_card => $card) {
-      $shortlink = [
-        'short_link' => $card['shortLink'],
-        'guideline_id' => 0,
-        'links_found' => reliefweb_guidelines_extract_links($card['desc']),
-      ];
-
-      // Extract and fetch images.
-      $files = guidelines_extract_images($card['desc']);
-
-      // Create guideline, check labels.
-      $values = [
-        'type' => 'field_guideline',
-        'name' => $card['name'],
-        'parent' => [],
-        'weight' => $weight_card,
-        'field_title' => $card['name'],
-        'field_short_link' => $card['shortLink'],
-        'field_description' => [
-          'value' => $card['desc'],
-          'format' => 'guideline',
-        ],
-      ];
-
-      // Add files.
-      if (!empty($files)) {
-        $values['field_images'] = $values['field_images'] ?? [];
-        foreach ($files as $file) {
-          $values['field_images'][] = [
-            'target_id' => $file->id(),
-          ];
-        }
-      }
-
-      // Check labels.
-      $list_name = $guideline_list->label();
-      if (strpos($list_name, 'Posting step-by-step') !== FALSE) {
-        foreach ($card['labels'] as $label) {
-          if (strpos($label['name'], 'form-') === 0) {
-            $bundle = strtolower(explode(' - ', $list_name)[0]);
-            $base_field_name = str_replace('-', '_', substr($label['name'], 5));
-
-            // Fix bundle machine names.
-            switch ($bundle) {
-              case 'jobs':
-                $bundle = 'job';
-                break;
-
-              case 'reports':
-                $bundle = 'report';
-                break;
-
-              case 'topics':
-                $bundle = 'topic';
-                break;
-
-            }
-
-            // Title is a base field, so no config.
-            if ($base_field_name === 'title') {
-              $key = 'node.' . $bundle . '.' . $base_field_name;
-              $values['field_field'] = $values['field_field'] ?? [];
-              $values['field_field'][] = [
-                'value' => $key,
-              ];
-            }
-            else {
-              $found = FALSE;
-              $field_names = guidelines_get_possible_field_names($bundle, $base_field_name);
-              foreach ($field_names as $field_name) {
-                if (FieldStorageConfig::loadByName('node', $field_name)) {
-                  $found = TRUE;
-                  $key = 'node.' . $bundle . '.' . $field_name;
-                  $values['field_field'] = $values['field_field'] ?? [];
-                  $values['field_field'][] = [
-                    'value' => $key,
-                  ];
-                }
-                elseif (FieldStorageConfig::loadByName('taxonomy_term', $field_name)) {
-                  $found = TRUE;
-                  $key = 'taxonomy_term.' . $bundle . '.' . $field_name;
-                  $values['field_field'] = $values['field_field'] ?? [];
-                  $values['field_field'][] = [
-                    'value' => $key,
-                  ];
-                }
-              }
-
-              // Log fields not found.
-              if (!$found) {
-                \Drupal::logger('guilines_trello')->notice($base_field_name . ' NOT FOUND');
-              }
-            }
-          }
-        }
-      }
-
-      // Get attachments.
-      if ($card['badges']['attachments'] > 0) {
-        $attachments = $trello->getCardAttachments($card['id']);
-        foreach ($attachments as $attachment) {
-          // Add external links, skip images.
-          if (empty($attachment['isUpload'])) {
-            $values['field_links'] = $values['field_links'] ?? [];
-            $values['field_links'][] = [
-              'uri' => $attachment['url'],
-              'title' => $attachment['name'],
-            ];
-          }
-        }
-      }
-
-      $guideline = Guideline::create($values);
-      $guideline->setParents([$guideline_list]);
-      $guideline->save();
-
-      $shortlink['guideline_id'] = $guideline->id();
-      $shortlinks[$shortlink['short_link']] = $shortlink;
-    }
-  }
-
-  // Fix shortlinks.
-  foreach ($shortlinks as $shortlink) {
-    if (empty($shortlink['links_found'])) {
-      continue;
-    }
-
-    $guideline = Guideline::load($shortlink['guideline_id']);
-    $text = $guideline->get('field_description')->value;
-    $replaced = FALSE;
-
-    print_r($shortlink);
-    foreach ($shortlink['links_found'] as $link_found) {
-      // Skip if short link is unknown.
-      if (!isset($shortlinks[$link_found['short']])) {
-        continue;
-      }
-
-      // Build new link.
-      $new = implode('', [
-        '[',
-        $link_found['title'] ?? '/admin/structure/guideline/' . $shortlinks[$link_found['short']]['guideline_id'],
-        ']',
-        '(',
-        '/admin/structure/guideline/' . $shortlinks[$link_found['short']]['guideline_id'],
-        ')',
-      ]);
-
-      // Replace it.
-      $text = str_replace($link_found['string'], $new, $text);
-      $replaced = TRUE;
-    }
-
-    if ($replaced) {
-      $guideline->field_description->value = $text;
-      $guideline->save();
-    }
-  }
-}
-
-/**
- * Get possible field names.
- */
-function guidelines_get_possible_field_names($bundle, $field_name) {
-  $candidates = [
-    $field_name,
-    'field_' . $field_name,
-    'field_' . $bundle . '_' . $field_name,
-  ];
-
-  switch ($field_name) {
-    case 'job_description':
-      $candidates[] = 'body';
-      break;
-
-    case 'job_years_of_experience':
-      $candidates[] = 'field_job_experience';
-      break;
-
-    case 'location':
-    case 'job_location':
-      $candidates[] = 'field_country';
-      break;
-
-    case 'organization':
-      $candidates[] = 'field_source';
-      break;
-  }
-
-  return $candidates;
-}
-
-/**
- * Extract and fetch images.
- */
-function guidelines_extract_images(&$description) {
-  $files = [];
-  $pattern = '|(\!\[(.*?)\])(\((http.*?)\))|';
-  $description = preg_replace_callback($pattern, function ($matches) use ($files) {
-    $matches[4] = guidelines_fetch_image($matches[4], $files);
-
-    // Remove non-existing images.
-    if (!$matches[4]) {
-      return '';
-    }
-
-    return $matches[1] . '(' . $matches[4] . ')';
-  }, $description);
-
-  return $files;
-}
-
-/**
- * Fetch external image and save locally.
- */
-function guidelines_fetch_image($url, &$files) {
-  $destination = 'public://guidelines/trello';
-  \Drupal::service('file_system')->prepareDirectory($destination, FileSystemInterface::CREATE_DIRECTORY);
-
-  try {
-    /** @var \Drupal\file\FileInterface $file */
-    $file = system_retrieve_file($url, $destination, TRUE, FileSystemInterface::EXISTS_REPLACE);
-    if (!$file) {
-      \Drupal::logger('guilines_trello')->error($url . ' not fetched');
-      return FALSE;
-    }
-  }
-  catch (\Exception $exception) {
-    \Drupal::logger('guilines_trello')->error($url . ' not accessible');
-    return FALSE;
-  }
-
-  // Add file to collection.
-  $files[] = $file;
-
-  // Return relative url.
-  return $file->createFileUrl();
-}
-
-/**
- * Extract possible shortlinks.
- */
-function reliefweb_guidelines_extract_links($text) {
-  if (empty($text)) {
-    return [];
-  }
-
-  $shortlinks = [];
-  $matches = [];
-
-  // Skip images.
-  $pattern = '/[^!]?\[([^\]]+)\]\((https:\/\/guidelines\.rwdev\.org.*?)\)/i';
-  preg_match_all($pattern, $text, $matches);
-  foreach ($matches[0] as $key => $match) {
-    $shortlinks[] = [
-      'string' => substr($match, 1),
-      'title' => !empty($matches[1][$key]) ? $matches[1][$key] : $matches[2][$key],
-      'url' => $matches[2][$key],
-      'short' => reliefweb_guidelines_extract_shortlink($matches[2][$key]),
-    ];
-  }
-
-  $pattern = '/[^!]?\[([^\]]+)\]\((https:\/\/trello\.com.*?)\)/i';
-  preg_match_all($pattern, $text, $matches);
-  foreach ($matches[0] as $key => $match) {
-    $shortlinks[] = [
-      'string' => substr($match, 1),
-      'title' => !empty($matches[1][$key]) ? $matches[1][$key] : $matches[2][$key],
-      'url' => $matches[2][$key],
-      'short' => reliefweb_guidelines_extract_shortlink($matches[2][$key]),
-    ];
-  }
-
-  return $shortlinks;
-}
-
-/**
- * Extract shortlink.
- */
-function reliefweb_guidelines_extract_shortlink($text) {
-  $matches = [];
-
-  $pattern = '/\/#([0-9A-Z]+)/i';
-  preg_match($pattern, $text, $matches);
-  if ($matches) {
-    return $matches[1];
-  }
-
-  $pattern = '/\/c\/([0-9A-Z]+)/i';
-  preg_match($pattern, $text, $matches);
-  if ($matches) {
-    return $matches[1];
-  }
-
-  return 'not found';
-}
-
-/**
- * Delete all guidelines.
- */
-function _reliefweb_guidelines_delete_all() {
-  $guidelines = Guideline::loadMultiple();
-  foreach ($guidelines as $guideline) {
-    $guideline->delete();
-  }
-
-  $guideline_types = GuidelineType::loadMultiple();
-  foreach ($guideline_types as $guideline_type) {
-    $guideline_type->delete();
-  }
+function reliefweb_guidelines_entity_bundle_info_alter(&$bundles) {
+  $bundles['guideline']['field_guideline']['class'] = '\Drupal\reliefweb_guidelines\Entity\Guideline';
+  $bundles['guideline']['field_guideline']['label'] = 'Guideline';
+  $bundles['guideline']['guideline_list']['class'] = '\Drupal\reliefweb_guidelines\Entity\GuidelineList';
+  $bundles['guideline']['guideline_list']['label'] = 'Guideline List';
 }
 
 /**
  * Implements hook_page_attachments_alter().
  */
 function reliefweb_guidelines_page_attachments_alter(array &$attachments) {
+  // Remove all the attached Drupal libraries for the /guidelines page as it
+  // has its own distinct styling and behaviour.
   if (\Drupal::routeMatch()->getRouteName() === 'reliefweb_guidelines.guidelines') {
-    if (in_array('core/drupal.active-link', $attachments['#attached']['library'])) {
-      $index = array_search('core/drupal.active-link', $attachments['#attached']['library']);
-      unset($attachments['#attached']['library'][$index]);
-    }
+    $attachments['#attached']['library'] = [];
   }
 }
 
@@ -392,40 +57,42 @@ function reliefweb_guidelines_page_attachments_alter(array &$attachments) {
  * Implements hook_page_top().
  */
 function reliefweb_guidelines_page_top(array &$page_top) {
-  $page_top['toolbar']['#access'] = FALSE;
+  $page_top['toolbar']['#cache']['contexts'][] = 'route.name';
+  if (\Drupal::routeMatch()->getRouteName() === 'reliefweb_guidelines.guidelines') {
+    $page_top['toolbar']['#access'] = FALSE;
+  }
 }
 
 /**
  * Implements hook_guideline_json_fields_alter().
  */
 function reliefweb_guidelines_guideline_json_fields_alter(&$description, $guideline, $context) {
-  /** @var Drupal\guidelines\Entity\Guideline $guideline */
-  if ($guideline->hasField('field_short_link')) {
-    $description['link'] = '/guidelines#' . $guideline->field_short_link->value;
+  // Replace the guideline link to the internal link on the guidelines page.
+  if ($guideline instanceof Guideline) {
+    $description['link'] = '/guidelines#' . $guideline->getShortId();
   }
 
-  // Replace links to guidelines.
-  $description['content'] = str_replace('/admin/structure/guideline/', '/guidelines/', $description['content']);
-}
-
-/**
- * Implements hook_form_FROM_ID_alter().
- */
-function reliefweb_guidelines_form_guideline_field_guideline_add_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
-  if (isset($form['field_short_link'])) {
-    if (empty($form['field_short_link']['widget'][0]['value']['#default_value'])) {
-      $random = new Random();
-      $form['field_short_link']['widget'][0]['value']['#default_value'] = $random->name();
-    }
-    else {
-      $form['field_short_link']['#access'] = FALSE;
-    }
+  // Replace links to the guidelines.
+  if (!empty($description['content'])) {
+    $description['content'] = GuidelineSinglePageController::replaceLinks($description['content']);
   }
 }
 
 /**
- * Implements hook_form_FROM_ID_alter().
+ * Implements hook_pathauto_alias_alter().
  */
-function reliefweb_guidelines_form_guideline_field_guideline_edit_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
-  reliefweb_guidelines_form_guideline_field_guideline_add_form_alter($form, $form_state, $form_id);
+function reliefweb_guidelines_pathauto_alias_alter(&$alias, array &$context) {
+  // Use the row shortid instead of the lowercased one.
+  if ($context['module'] === 'guidelines' && isset($context['data']['guideline'])) {
+    if ($context['data']['guideline'] instanceof Guideline) {
+      $alias = '/guideline/' . $context['data']['guideline']->getShortId();
+    }
+  }
+}
+
+/**
+ * Implements hook_form_HOOK_alter() for "guideline_form".
+ */
+function reliefweb_guidelines_form_guideline_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  EntityHistory::addHistoryToForm($form, $form_state);
 }

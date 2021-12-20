@@ -5,3 +5,6 @@ package: reliefweb
 core_version_requirement: ^9
 dependencies:
   - drupal:guidelines
+  - drupal:reliefweb_moderation
+  - drupal:reliefweb_revision
+  - drupal:reliefweb_utility

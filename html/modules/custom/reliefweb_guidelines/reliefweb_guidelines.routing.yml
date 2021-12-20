@@ -1,15 +1,7 @@
 reliefweb_guidelines.guidelines:
   path: '/guidelines'
   defaults:
-    _title: 'ReliefWeb guidelines'
+    _title: 'Guidelines'
     _controller: '\Drupal\reliefweb_guidelines\Controller\GuidelineSinglePageController::getPageContent'
   requirements:
     _permission: 'access content'
-reliefweb_guidelines.guidelines_redirect:
-  path: '/guidelines/{guideline_id}'
-  defaults:
-    _title: 'ReliefWeb guidelines'
-    _controller: '\Drupal\reliefweb_guidelines\Controller\GuidelineSinglePageController::redirectToPage'
-  requirements:
-    _permission: 'access content'
-    guideline_id: \d+
