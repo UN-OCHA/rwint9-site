@@ -1,0 +1,59 @@
+uuid: 410548c2-3480-485d-863e-7a3e0214c9b8
+langcode: en
+status: true
+dependencies:
+  config:
+    - guidelines.guideline_type.field_guideline
+    - guidelines.guideline_type.guideline_list
+  module:
+    - content_moderation
+id: guideline
+label: Guideline
+type: content_moderation
+type_settings:
+  states:
+    archive:
+      label: Archived
+      weight: 2
+      published: false
+      default_revision: true
+    draft:
+      label: Draft
+      weight: 0
+      published: false
+      default_revision: true
+    published:
+      label: Published
+      weight: 1
+      published: true
+      default_revision: true
+  transitions:
+    archive:
+      label: Archive
+      from:
+        - archive
+        - draft
+        - published
+      to: archive
+      weight: 2
+    create_new_draft:
+      label: 'Save as Draft'
+      from:
+        - archive
+        - draft
+        - published
+      to: draft
+      weight: 0
+    publish:
+      label: Publish
+      from:
+        - archive
+        - draft
+        - published
+      to: published
+      weight: 1
+  entity_types:
+    guideline:
+      - field_guideline
+      - guideline_list
+  default_moderation_state: draft
