@@ -839,7 +839,7 @@ class ReliefWebFile extends WidgetBase {
   /**
    * Populate a field item with the data from a file entity.
    *
-   * @param \Drupal\reliefweb_docstore\Plugin\Field\FieldType\ReliefWebFile $item
+   * @param \Drupal\reliefweb_docstore\Plugin\Field\FieldType\ReliefWebFileType $item
    *   Field item.
    * @param \Drupal\file\Entity\File $file
    *   File entity.

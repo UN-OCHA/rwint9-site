@@ -389,21 +389,23 @@ class Homepage extends ControllerBase {
       if ($node->hasField('field_image') && !$node->field_image->isEmpty()) {
         $image = MediaHelper::getImage($node->field_image);
 
-        return [
-          '#theme' => 'reliefweb_homepage_announcement',
-          '#id' => 'announcement',
-          '#url' => $node->field_link->uri,
-          '#image' => [
-            'url' => $image['uri'],
-            'title' => $node->label(),
-            'alt' => $node->body->value ?? $node->label(),
-            'width' => $image['width'],
-            'height' => $image['height'],
-          ],
-          '#cache' => [
-            'tags' => ['node_list:announcement'],
-          ],
-        ];
+        if (!empty($image)) {
+          return [
+            '#theme' => 'reliefweb_homepage_announcement',
+            '#id' => 'announcement',
+            '#url' => $node->field_link->uri,
+            '#image' => [
+              'url' => $image['uri'],
+              'title' => $node->label(),
+              'alt' => $node->body->value ?? $node->label(),
+              'width' => $image['width'],
+              'height' => $image['height'],
+            ],
+            '#cache' => [
+              'tags' => ['node_list:announcement'],
+            ],
+          ];
+        }
       }
     }
     return [];
