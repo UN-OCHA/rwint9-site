@@ -23,5 +23,6 @@ process:
     plugin: skip_on_empty
     method: process
     source: field_link/0/url
-destination: null
+destination:
+  plugin: entity:node
 migration_dependencies: null

@@ -79,7 +79,8 @@ process:
     plugin: default_value
     default_value: 0
     source: field_timezone/0/value
-destination: null
+destination:
+  plugin: 'entity:taxonomy_term'
 migration_dependencies:
   required:
     - reliefweb_taxonomy_term

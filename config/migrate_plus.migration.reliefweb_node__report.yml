@@ -133,5 +133,6 @@ process:
     source: field_vulnerable_groups
     process:
       target_id: tid
-destination: null
+destination:
+  plugin: entity:node
 migration_dependencies: null

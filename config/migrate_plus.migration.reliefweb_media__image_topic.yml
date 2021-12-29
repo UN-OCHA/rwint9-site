@@ -18,7 +18,11 @@ source:
   field: field_term_image
   entity_type: node
   bundle: topics
-process: null
+process:
+  field_media_image/target_id:
+    plugin: skip_on_empty
+    method: process
+    source: fid
 destination:
   default_bundle: image_topic
 migration_dependencies:

@@ -42,5 +42,6 @@ process:
     plugin: skip_on_empty
     method: process
     source: field_language_code/0/value
-destination: null
+destination:
+  plugin: 'entity:taxonomy_term'
 migration_dependencies: null

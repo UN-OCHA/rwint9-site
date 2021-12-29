@@ -68,5 +68,6 @@ process:
     source: field_theme
     process:
       target_id: tid
-destination: null
+destination:
+  plugin: entity:node
 migration_dependencies: null

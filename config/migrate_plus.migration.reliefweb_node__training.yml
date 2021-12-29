@@ -112,5 +112,6 @@ process:
     source: field_training_type
     process:
       target_id: tid
-destination: null
+destination:
+  plugin: entity:node
 migration_dependencies: null

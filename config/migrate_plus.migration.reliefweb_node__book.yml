@@ -13,6 +13,12 @@ migration_group: reliefweb_node
 label: 'Migrate ReliefWeb book pages.'
 source:
   bundle: book
-process: null
-destination: null
+process:
+  field_attached_images:
+    plugin: sub_process
+    source: field_attached_images
+    process:
+      target_id: fid
+destination:
+  plugin: entity:node
 migration_dependencies: null

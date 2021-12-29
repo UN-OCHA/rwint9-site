@@ -57,7 +57,8 @@ process:
     plugin: skip_on_empty
     method: process
     source: field_timezone/0/value
-destination: null
+destination:
+  plugin: 'entity:taxonomy_term'
 migration_dependencies:
   required:
     - reliefweb_taxonomy_term

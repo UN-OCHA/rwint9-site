@@ -108,5 +108,6 @@ process:
           source: attributes
           index:
             - title
-destination: null
+destination:
+  plugin: entity:node
 migration_dependencies: null
