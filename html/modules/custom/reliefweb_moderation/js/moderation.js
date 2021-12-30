@@ -408,8 +408,6 @@
         return active;
       }
 
-      console.log('here I am');
-
       /**
        * Logic.
        */

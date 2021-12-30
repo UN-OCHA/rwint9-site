@@ -263,4 +263,11 @@
   .rw-toc[data-cd-hidden="true"] {
     display: block;
   }
+
+  /* Flexbox layout fix */
+  .user-logged-in.path-taxonomy .rw-page--sectioned .region-content,
+  .user-logged-in.path-node .rw-page--sectioned .region-content,
+  .rw-page--sectioned {
+    display: block;
+  }
 }

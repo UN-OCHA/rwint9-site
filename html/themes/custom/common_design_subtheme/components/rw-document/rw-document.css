@@ -108,3 +108,6 @@
 .rw-article__content li:first-child {
   margin: 0;
 }
+.rw-article__content ul + h2 {
+  margin-top: 24px;
+}
