@@ -105,7 +105,7 @@ class JsonResponse {
   }
 
   /**
-   * Get the status code.
+   * Get the reason phrase.
    *
    * @return string
    *   The reason phrase accompanying the response status code.

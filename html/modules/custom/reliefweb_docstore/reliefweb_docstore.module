@@ -124,7 +124,7 @@ function reliefweb_docstore_file_validate_mime_type(File $file, $mime_type) {
 function reliefweb_docstore_reliefweb_utility_file_update_alter(File $file, &$apply) {
   $settings = \Drupal::config('reliefweb_docstore.settings');
 
-  // Get the ttachment and preview directories.
+  // Get the attachment and preview directories.
   $file_directory = $settings->get('file_directory') ?? 'attachments';
   $preview_directory = $settings->get('preview_directory') ?? 'previews';
   $directories = [preg_quote($file_directory), preg_quote($preview_directory)];
