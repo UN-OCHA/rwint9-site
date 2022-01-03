@@ -2,6 +2,9 @@
     "patches": {
         "drupal/core" : {
             "https://www.drupal.org/project/drupal/issues/3047110": "patches/core--drupal--3047110-taxonomy-term-moderation-class.patch"
+        },
+        "drupal/migrate_tools" : {
+            "Invalid placeholder: https://www.drupal.org/project/migrate_tools/issues/3256236": "https://www.drupal.org/files/issues/2021-12-28/invalid_placeholder-3256236-3.patch"
         }
     }
 }
