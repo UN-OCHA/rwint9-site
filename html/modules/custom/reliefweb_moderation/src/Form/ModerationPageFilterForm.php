@@ -5,7 +5,6 @@ namespace Drupal\reliefweb_moderation\Form;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Url;
 use Drupal\reliefweb_moderation\ModerationServiceInterface;
 
 /**
@@ -238,22 +237,12 @@ class ModerationPageFilterForm extends FormBase {
     $bundle = $service->getBundle();
 
     if (!empty($bundle) && is_string($bundle)) {
-      $url_options = ['attributes' => ['target' => '_blank']];
-      if ($service->getEntityTypeId() === 'taxonomy_term') {
-        $create_url = Url::fromRoute('entity.taxonomy_term.add_form', [
-          'taxonomy_vocabulary' => $bundle,
-        ], $url_options);
-      }
-      else {
-        $create_url = Url::fromRoute('node.add', [
-          'node_type' => $bundle,
-        ], $url_options);
-      }
-
       $form['actions']['create'] = [
         '#type' => 'link',
-        '#url' => $create_url,
-        '#title' => $this->t('Create @bundle', ['@bundle' => $bundle]),
+        '#url' => $service->getBundleCreationUrl($bundle),
+        '#title' => $this->t('Create @bundle', [
+          '@bundle' => static::getBundleLabel($service->getEntityTypeId(), $bundle),
+        ]),
       ];
     }
 
@@ -304,6 +293,22 @@ class ModerationPageFilterForm extends FormBase {
       $bundle = reset($bundle);
     }
     return '/moderation/content/' . $bundle . '/autocomplete/';
+  }
+
+  /**
+   * Get a bundle's label.
+   *
+   * @param string $entity_type_id
+   *   Entity type ID.
+   * @param string $bundle
+   *   Entity bundle.
+   *
+   * @return string
+   *   Bundle label.
+   */
+  public static function getBundleLabel($entity_type_id, $bundle) {
+    $bundle_info = \Drupal::service('entity_type.bundle.info')->getBundleInfo($entity_type_id);
+    return $bundle_info[$bundle]['label'] ?? $bundle;
   }
 
 }

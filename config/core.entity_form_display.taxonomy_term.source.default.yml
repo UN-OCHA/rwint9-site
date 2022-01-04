@@ -23,10 +23,8 @@ dependencies:
     - field.field.taxonomy_term.source.field_user_posting_rights
     - image.style.thumbnail
     - taxonomy.vocabulary.source
-    - workflows.workflow.source
   module:
     - allowed_formats
-    - content_moderation
     - link
     - path
     - reliefweb_fields
@@ -111,7 +109,7 @@ content:
         'country:default_langcode': '0'
         'country:revision_default': '0'
         'country:revision_translation_affected': '0'
-        'country:moderation_state': '0'
+        'country:moderation_status': '0'
         'country:field_aliases': '0'
         'country:field_appeals_response_plans': '0'
         'country:field_iso3': '0'
@@ -197,12 +195,6 @@ content:
     settings:
       size: 60
       placeholder: ''
-    third_party_settings: {  }
-  moderation_state:
-    type: moderation_state_default
-    weight: 20
-    region: content
-    settings: {  }
     third_party_settings: {  }
   name:
     type: string_textfield

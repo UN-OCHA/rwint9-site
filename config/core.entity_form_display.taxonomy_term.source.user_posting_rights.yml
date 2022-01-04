@@ -55,7 +55,6 @@ hidden:
   field_shortname: true
   field_spanish_name: true
   langcode: true
-  moderation_state: true
   name: true
   path: true
   status: true

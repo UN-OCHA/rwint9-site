@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - filter.format.guideline
     - taxonomy.vocabulary.career_category
     - taxonomy.vocabulary.content_format
     - taxonomy.vocabulary.country
@@ -20,10 +21,9 @@ dependencies:
     - taxonomy.vocabulary.training_format
     - taxonomy.vocabulary.training_type
     - taxonomy.vocabulary.vulnerable_group
-    - workflows.workflow.report
   module:
     - book
-    - content_moderation
+    - filter
     - google_tag
     - taxonomy
     - taxonomy_term_revision
@@ -89,7 +89,6 @@ permissions:
   - 'edit terms in training_type'
   - 'edit terms in vulnerable_group'
   - 'revert term revision'
-  - 'use report transition archived'
   - 'use text format guideline'
   - 'view term revision data'
   - 'view term revision list'

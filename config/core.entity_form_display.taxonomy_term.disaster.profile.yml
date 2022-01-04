@@ -72,7 +72,6 @@ hidden:
   field_primary_disaster_type: true
   field_timezone: true
   langcode: true
-  moderation_state: true
   name: true
   path: true
   status: true

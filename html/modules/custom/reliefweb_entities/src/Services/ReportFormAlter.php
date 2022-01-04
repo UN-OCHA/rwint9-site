@@ -334,21 +334,14 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
       $id_field = $taxonomy_term_entity_type->getKey('id');
       $label_field = $taxonomy_term_entity_type->getKey('label');
 
-      $query = $this->getDatabase()->select($table, $table);
-      $query->fields($table, [$label_field]);
-      $query->condition($table . '.' . $id_field, $ids, 'IN');
-
-      // Join the moderation status table to check the status.
-      $status_table = $entity_type_manager
-        ->getStorage('content_moderation_state')
-        ->getEntityType()
-        ->getDataTable();
-
-      $status_alias = $query->innerJoin($status_table, $status_table, "%alias.content_entity_id = {$table}.{$id_field}");
-      $query->condition($status_alias . '.content_entity_type_id', 'taxonomy_term', '=');
-      $query->condition($status_alias . '.moderation_state', 'blocked', '=');
-
-      $sources = $query->execute()?->fetchCol() ?? [];
+      // Retrieve the labels of the selected blocked sources if any.
+      $sources = $this->getDatabase()
+        ->select($table, $table)
+        ->fields($table, [$label_field])
+        ->condition($table . '.' . $id_field, $ids, 'IN')
+        ->condition($table . '.moderation_status', 'blocked', '=')
+        ->execute()
+        ?->fetchCol() ?? [];
 
       if (!empty($sources)) {
         $form_state->setErrorByName('field_source', $this->t('Publications from "@sources" are not allowed.', [

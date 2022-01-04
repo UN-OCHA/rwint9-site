@@ -32,6 +32,22 @@ interface EntityModeratedInterface {
   public function getModerationStatusLabel();
 
   /**
+   * Get the list of allowed statuses for the enitity.
+   *
+   * @return array
+   *   List of moderation statuses keyed by status and with labels as values.
+   */
+  public function getAllowedModerationStatuses();
+
+  /**
+   * Get the moderation service for the entity.
+   *
+   * @return \Drupal\reliefweb_moderation\Services\ModerationServiceInterface|null
+   *   The moderation service for the entity.
+   */
+  public function getModerationService();
+
+  /**
    * Get the original revision log message.
    *
    * We need this function to be able to extract the revision log message

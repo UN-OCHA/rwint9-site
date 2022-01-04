@@ -20,10 +20,8 @@ dependencies:
     - field.field.node.training.field_training_language
     - field.field.node.training.field_training_type
     - node.type.training
-    - workflows.workflow.training
   module:
     - allowed_formats
-    - content_moderation
     - link
     - path
     - reliefweb_fields
@@ -90,7 +88,7 @@ content:
         'country:default_langcode': '0'
         'country:revision_default': '0'
         'country:revision_translation_affected': '0'
-        'country:moderation_state': '0'
+        'country:moderation_status': '0'
         'country:field_aliases': '0'
         'country:field_appeals_response_plans': '0'
         'country:field_iso3': '0'
@@ -149,7 +147,7 @@ content:
     settings:
       sort: label
       extra_data:
-        'source:moderation_state': 'source:moderation_state'
+        'source:moderation_status': 'source:moderation_status'
         'source:field_shortname': 'source:field_shortname'
         'source:tid': 0
         'source:uuid': 0
@@ -213,12 +211,6 @@ content:
   field_training_type:
     type: options_buttons
     weight: 9
-    region: content
-    settings: {  }
-    third_party_settings: {  }
-  moderation_state:
-    type: moderation_state_default
-    weight: 18
     region: content
     settings: {  }
     third_party_settings: {  }

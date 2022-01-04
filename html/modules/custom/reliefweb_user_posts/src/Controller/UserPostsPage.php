@@ -158,7 +158,7 @@ class UserPostsPage extends ModerationPage {
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  public function checkAccess(AccountInterface $account, UserInterface $user) {
+  public function checkUserPostsPageAccess(AccountInterface $account, UserInterface $user) {
     if ($account->id() == $user->id()) {
       return AccessResult::allowedIf($account->hasPermission('view own posts'));
     }
