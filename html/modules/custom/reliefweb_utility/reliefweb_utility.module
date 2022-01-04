@@ -35,6 +35,11 @@ function reliefweb_utility_file_presave(FileInterface $file) {
   $uuid = $file->uuid();
   $uri = $file->getFileUri();
 
+  // Skip the media icons.
+  if (strpos($uri, 'public://media-icons/') === 0) {
+    return;
+  }
+
   // Let other modules decide if this should apply.
   $apply = TRUE;
   $clone = clone $file;
