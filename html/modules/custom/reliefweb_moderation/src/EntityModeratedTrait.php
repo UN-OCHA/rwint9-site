@@ -77,6 +77,15 @@ trait EntityModeratedTrait {
   }
 
   /**
+   * Get the default moderation status.
+   *
+   * @see \Drupal\reliefweb_moderation\EntityModeratedInterface::getDefaultModerationStatus()
+   */
+  public function getDefaultModerationStatus() {
+    return 'draft';
+  }
+
+  /**
    * Get the moderation service for the entity.
    *
    * @see \Drupal\reliefweb_moderation\EntityModeratedInterface::getModerationService()

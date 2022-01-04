@@ -52,7 +52,7 @@ function reliefweb_guidelines_entity_bundle_info_alter(&$bundles) {
 function reliefweb_guidelines_entity_base_field_info(EntityTypeInterface $entity_type) {
   $fields = [];
   if ($entity_type->id() === 'guideline') {
-    $fields['moderation_status'] = reliefweb_moderation_get_moderation_status_field_definition();
+    $fields['moderation_status'] = reliefweb_moderation_get_moderation_status_field_definition('published');
   }
   return $fields;
 }

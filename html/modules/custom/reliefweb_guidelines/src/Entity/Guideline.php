@@ -90,4 +90,11 @@ class Guideline extends GuidelineBase implements EntityModeratedInterface, Entit
     return $shortid;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultModerationStatus() {
+    return 'published';
+  }
+
 }

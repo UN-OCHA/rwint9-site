@@ -15,8 +15,8 @@ use Drupal\reliefweb_moderation\ModeratedTermStorageSchema;
  * @see https://www.drupal.org/project/drupal/issues/2258347
  */
 function reliefweb_moderation_install() {
-  reliefweb_moderation_add_moderation_status('node', ModeratedNodeStorageSchema::class);
-  reliefweb_moderation_add_moderation_status('taxonomy_term', ModeratedTermStorageSchema::class);
+  reliefweb_moderation_add_moderation_status('node', ModeratedNodeStorageSchema::class, 'draft');
+  reliefweb_moderation_add_moderation_status('taxonomy_term', ModeratedTermStorageSchema::class, 'published');
 }
 
 /**
@@ -26,8 +26,10 @@ function reliefweb_moderation_install() {
  *   Entity type ID.
  * @param string $storage_schema_class
  *   Class to use for the entity type storage schema.
+ * @param string $default_status
+ *   The default moderation status value.
  */
-function reliefweb_moderation_add_moderation_status($entity_type_id, $storage_schema_class) {
+function reliefweb_moderation_add_moderation_status($entity_type_id, $storage_schema_class, $default_status = 'draft') {
   $logger = \Drupal::logger('reliefweb_moderation');
   $manager = \Drupal::entityDefinitionUpdateManager();
   $entity_type = $manager->getEntityType($entity_type_id);
@@ -83,7 +85,7 @@ function reliefweb_moderation_add_moderation_status($entity_type_id, $storage_sc
   // Add the moderation status base field.
   $definition = $manager->getFieldStorageDefinition('moderation_status', $entity_type_id);
   if (empty($definition)) {
-    $definition = reliefweb_moderation_get_moderation_status_field_definition();
+    $definition = reliefweb_moderation_get_moderation_status_field_definition($default_status);
 
     // Add the moderation status field, this should trigger an update on the
     // entity type and add the indexes.

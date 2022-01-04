@@ -9,6 +9,7 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
@@ -87,9 +88,17 @@ function reliefweb_moderation_theme() {
  */
 function reliefweb_moderation_entity_base_field_info(EntityTypeInterface $entity_type) {
   $fields = [];
-  if ($entity_type->id() === 'node' || $entity_type->id() === 'taxonomy_term') {
-    $fields['moderation_status'] = reliefweb_moderation_get_moderation_status_field_definition();
+
+  switch ($entity_type->id()) {
+    case 'node':
+      $fields['moderation_status'] = reliefweb_moderation_get_moderation_status_field_definition('draft');
+      break;
+
+    case 'taxonomy_term':
+      $fields['moderation_status'] = reliefweb_moderation_get_moderation_status_field_definition('published');
+      break;
   }
+
   return $fields;
 }
 
@@ -108,16 +117,38 @@ function reliefweb_moderation_entity_type_alter(array &$entity_types) {
 /**
  * Get the moderation status field definition.
  *
+ * @param string $default_status
+ *   The default moderation status value.
+ *
  * @return \Drupal\Core\Field\BaseFieldDefinition
  *   Field definition.
  */
-function reliefweb_moderation_get_moderation_status_field_definition() {
+function reliefweb_moderation_get_moderation_status_field_definition($default_status = 'draft') {
   return BaseFieldDefinition::create('string')
     ->setLabel(t('Moderation Status'))
     ->setSetting('max_length', 32)
     ->setRevisionable(TRUE)
     ->setTranslatable(TRUE)
-    ->setDefaultValue('');
+    ->setDefaultValue($default_status)
+    ->setDefaultValueCallback('reliefweb_moderation_moderation_status_value_callback');
+}
+
+/**
+ * Moderation status default value callback.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   The entity.
+ * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
+ *   The moderation status field definition for the entity.
+ *
+ * @return string|null
+ *   The moderation status if applicable for the
+ */
+function reliefweb_moderation_moderation_status_value_callback(EntityInterface $entity, FieldDefinitionInterface $field_definition) {
+  if ($entity instanceof EntityModeratedInterface) {
+    return $entity->getDefaultModerationStatus();
+  }
+  return $field_definition->getDefaultValueLiteral();
 }
 
 /**

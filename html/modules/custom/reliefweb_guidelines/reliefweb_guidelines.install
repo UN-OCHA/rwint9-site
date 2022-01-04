@@ -13,5 +13,5 @@ use Drupal\reliefweb_guidelines\ModeratedGuidelineStorageSchema;
  * @see reliefweb_moderation_install()
  */
 function reliefweb_guidelines_install() {
-  reliefweb_moderation_add_moderation_status('guideline', ModeratedGuidelineStorageSchema::class);
+  reliefweb_moderation_add_moderation_status('guideline', ModeratedGuidelineStorageSchema::class, 'published');
 }

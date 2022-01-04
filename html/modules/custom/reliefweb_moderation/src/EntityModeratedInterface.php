@@ -40,6 +40,14 @@ interface EntityModeratedInterface {
   public function getAllowedModerationStatuses();
 
   /**
+   * Get the default moderation status.
+   *
+   * @return string
+   *   The default moderation status.
+   */
+  public function getDefaultModerationStatus();
+
+  /**
    * Get the moderation service for the entity.
    *
    * @return \Drupal\reliefweb_moderation\Services\ModerationServiceInterface|null

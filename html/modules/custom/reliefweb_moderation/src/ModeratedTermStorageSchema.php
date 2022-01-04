@@ -50,7 +50,6 @@ class ModeratedTermStorageSchema extends TermStorageSchema {
       case 'moderation_status':
         $schema['fields']['moderation_status']['type'] = 'varchar_ascii';
         $schema['fields']['moderation_status']['not null'] = 'TRUE';
-        $schema['fields']['moderation_status']['default'] = '';
         $this->addSharedTableFieldIndex($storage_definition, $schema, TRUE);
         break;
     }

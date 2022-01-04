@@ -237,4 +237,11 @@ class Source extends Term implements BundleEntityInterface, EntityModeratedInter
     return [];
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultModerationStatus() {
+    return 'active';
+  }
+
 }
