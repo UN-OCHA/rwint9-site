@@ -1,9 +1,9 @@
-uuid: 1b93fdfe-478a-494a-8104-9d9578dfad20
+uuid: 18024c82-18f1-4b83-a744-533298c40905
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: BVGj3jE1igU5o-CdyPFDYaS99ZWd59pn47hNx6uWWr4
+  default_config_hash: 2LT8u5LEmF3VMoguNvTbJ_m9zokBpf-2oVXcNB_0qCs
 id: reliefweb_subscriptions
 class: null
 field_plugin_method: null
@@ -19,6 +19,7 @@ source:
       type: string
     uid:
       type: integer
+  batch_size: 1000
 process:
   sid: sid
   uid: uid
