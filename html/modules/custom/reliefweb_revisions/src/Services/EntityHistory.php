@@ -686,7 +686,12 @@ class EntityHistory {
     }
 
     $categories = [
-      'added' => array_diff_key($current, $previous),
+      // Filter the links to only show the added active links as there is not
+      // much interest in showing the list of archived links in the revisions
+      // and it can be really heavy for some entities.
+      'added' => array_filter(array_diff_key($current, $previous), function ($item) {
+        return $item['active'] == 1;
+      }),
       'removed' => array_diff_key($previous, $current),
       'modified-title' => [],
       'modified-image' => [],
