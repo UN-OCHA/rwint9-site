@@ -1,0 +1,59 @@
+{#
+/**
+ * @file
+ * Theme override for a guideline edit form.
+ *
+ * This template will be used when a guideline edit form specifies
+ * 'guideline_edit_form' as its #theme callback.  Otherwise, by default,
+ * guideline add/edit forms will be themed by form.html.twig.
+ *
+ * Available variables:
+ * - form: The guideline add/edit form.
+ *
+ * @todo review revision section.
+ */
+#}
+{{ attach_library('common_design_subtheme/rw-form') }}
+
+{# Table of contents. #}
+{{
+  render_var({
+    '#theme': 'reliefweb_entities_table_of_contents',
+    '#sections': {
+      'fields': {
+        'title': 'Fields'|t,
+        'sections': {
+          'description': 'Description'|t,
+        },
+      },
+      'submission': {
+        'title': 'Submission'|t,
+        'sections': {
+          'actions': 'Save'|t,
+          'edit-revision-information': 'Revisions'|t,
+        },
+      },
+    },
+  })
+}}
+
+{# Form content. #}
+<fieldset id="description">
+  <legend>{% trans %}Description{% endtrans %}</legend>
+  {{ form.name }}
+</fieldset>
+
+<fieldset id="actions">
+  <legend class="visually-hidden">{% trans %}Form submission and other actions{% endtrans %}</legend>
+  {{ form.actions }}
+</fieldset>
+
+{{ form.revision_information}}
+
+{{
+  form|without([
+    'name',
+    'revision_information',
+    'actions',
+  ])
+}}

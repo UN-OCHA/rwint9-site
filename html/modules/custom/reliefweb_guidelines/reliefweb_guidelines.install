@@ -1,0 +1,17 @@
+<?php
+
+/**
+ * @file
+ * Install file for reliefweb_guidelines.
+ */
+
+use Drupal\reliefweb_guidelines\ModeratedGuidelineStorageSchema;
+
+/**
+ * Implements hook_install().
+ *
+ * @see reliefweb_moderation_install()
+ */
+function reliefweb_guidelines_install() {
+  reliefweb_moderation_add_moderation_status('guideline', ModeratedGuidelineStorageSchema::class);
+}

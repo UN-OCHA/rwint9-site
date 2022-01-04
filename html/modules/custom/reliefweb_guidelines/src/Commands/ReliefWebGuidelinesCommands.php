@@ -124,6 +124,8 @@ class ReliefWebGuidelinesCommands extends DrushCommands {
         'parent' => [],
         'weight' => $weight_list,
         'field_title' => $list['name'],
+        'moderation_status' => 'published',
+        '_is_migrating' => TRUE,
       ];
 
       $guideline_list = Guideline::create($values);
@@ -154,6 +156,8 @@ class ReliefWebGuidelinesCommands extends DrushCommands {
             'format' => 'guideline',
           ],
           'field_images' => $images,
+          'moderation_status' => 'published',
+          '_is_migrating' => TRUE,
         ];
 
         // Check if the card has labels associated to form fields.
