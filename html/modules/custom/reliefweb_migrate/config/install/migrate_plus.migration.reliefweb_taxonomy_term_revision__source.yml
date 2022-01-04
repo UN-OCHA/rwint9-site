@@ -5,7 +5,7 @@ source:
   bundle: source
 process:
   # Moderation status.
-  moderation_state:
+  moderation_status:
     default_value: active
   # Fields.
   field_aliases/value:

@@ -7,9 +7,6 @@ dependencies:
       - reliefweb_migrate
 source:
   plugin: reliefweb_image
-destination:
-  plugin: reliefweb_image
-
 process:
   uuid: uuid
   fid: fid

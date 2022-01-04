@@ -13,6 +13,13 @@
 function reliefweb_migrate_schema() {
   $schema['reliefweb_migrate_uri_mapping'] = [
     'fields' => [
+      'id' => [
+        'description' => 'ID (ex: file ID).',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
       'new_uri' => [
         'description' => 'New URI',
         'type' => 'varchar',
@@ -29,6 +36,9 @@ function reliefweb_migrate_schema() {
       ],
     ],
     'primary key' => ['new_uri'],
+    'indexes' => [
+      'id' => ['id'],
+    ],
   ];
 
   return $schema;
@@ -55,6 +65,14 @@ function reliefweb_migrate_update_9001() {
  * Uninstall the migration configuration.
  */
 function reliefweb_migrate_uninstall() {
+  $table = 'reliefweb_migrate_uri_mapping';
+  $schema = reliefweb_migrate_schema();
+  $database = \Drupal::database();
+
+  if (isset($schema[$table]) && !$database->schema()->tableExists($table)) {
+    $database->schema()->dropTable($table);
+  }
+
   \Drupal::service('config.manager')->uninstall('module', 'reliefweb_migrate');
 
   drupal_flush_all_caches();

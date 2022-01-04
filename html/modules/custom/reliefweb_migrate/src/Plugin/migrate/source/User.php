@@ -2,7 +2,6 @@
 
 namespace Drupal\reliefweb_migrate\Plugin\migrate\source;
 
-use Drupal\migrate\Plugin\migrate\source\SqlBase;
 use Drupal\migrate\Row;
 
 /**
@@ -12,7 +11,12 @@ use Drupal\migrate\Row;
  *   id = "reliefweb_user"
  * )
  */
-class User extends SqlBase {
+class User extends EntityBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $idField = 'uid';
 
   /**
    * {@inheritdoc}
@@ -66,8 +70,7 @@ class User extends SqlBase {
 
     $query->innerJoin($subquery, 'subquery', 'subquery.uid = u.uid');
 
-    return $query
-      ->orderBy('uid');
+    return $query->orderBy('u.uid', 'ASC');
   }
 
   /**

@@ -36,6 +36,11 @@ class TaxonomyTerm extends FieldableEntityBase {
   /**
    * {@inheritdoc}
    */
+  protected $revisionIdField = 'revision_id';
+
+  /**
+   * {@inheritdoc}
+   */
   protected $useRevisionId = FALSE;
 
   /**
@@ -59,10 +64,20 @@ class TaxonomyTerm extends FieldableEntityBase {
 
     // Base fields.
     $query->addField('td', 'tid', 'tid');
-    $query->addField('td', 'name', 'name');
-    $query->addField('td', 'description', 'description');
-    $query->addField('td', 'format', 'format');
-    $query->addField('td', 'weight', 'weight');
+
+    if (!$this->useRevisionId) {
+      $query->addField('td', 'name', 'name');
+      $query->addField('td', 'description', 'description');
+      $query->addField('td', 'format', 'format');
+      $query->addField('td', 'weight', 'weight');
+
+    }
+    else {
+      $query->addField('tdr', 'name', 'name');
+      $query->addField('tdr', 'description', 'description');
+      $query->addField('tdr', 'format', 'format');
+      $query->addField('tdr', 'weight', 'weight');
+    }
 
     // Use the vocabulary machine name for the `vid` as expected by D9.
     $query->addField('tv', 'machine_name', 'vid');
@@ -79,6 +94,7 @@ class TaxonomyTerm extends FieldableEntityBase {
       $query->condition('tv.machine_name', (array) $this->configuration['bundle'], 'IN');
     }
 
+    $query->orderBy('tdr.revision_id', 'ASC');
     return $query;
   }
 
@@ -100,6 +116,7 @@ class TaxonomyTerm extends FieldableEntityBase {
       'revision_user' => $this->t('The term revision user id.'),
       'revision_created' => $this->t('The term revision creation timestamp.'),
       'revision_default' => $this->t('The term revision default status.'),
+      'moderation_status' => $this->t('The moderation status'),
     ];
     return $fields;
   }

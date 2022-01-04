@@ -3,13 +3,16 @@ label: Migrate ReliefWeb URL aliases
 migration_group: reliefweb_extra
 source:
   plugin: reliefweb_url_alias
+  batch_size: 1000
+  high_water_property:
+    name: pid
+    alias: ua
   constants:
     # Use the user 2 (System user) as default user for the redirects.
     uid: 2
     code: 301
-    prefix: 'internal:/'
 destination:
-  plugin: entity:redirect
+  plugin: reliefweb_entity:redirect
 process:
   # Use the url alias ID as redirect ID, this makes the migration process more
   # predictable.
@@ -17,11 +20,7 @@ process:
   uid: constants/uid
   status_code: constants/code
   redirect_source/path: alias
-  redirect_source/uri:
-    plugin: concat
-    source:
-      - constants/prefix
-      - source
+  redirect_redirect/uri: source
   # Skip the langcode, it will be set to the default language for the entity
   # and bundle, which is "en" in our case.
   #language:

@@ -28,7 +28,8 @@ class Unserialize extends ProcessPluginBase {
     if (!is_string($value)) {
       throw new MigrateException(sprintf("Input should be a string, instead it was of type '%s'", gettype($value)));
     }
-    $new_value = NestedArray::getValue(unserialize($value), $this->configuration['index'], $key_exists);
+    $data = unserialize($value);
+    $new_value = NestedArray::getValue($data, $this->configuration['index'], $key_exists);
 
     if (!$key_exists) {
       if (array_key_exists('default', $this->configuration)) {
