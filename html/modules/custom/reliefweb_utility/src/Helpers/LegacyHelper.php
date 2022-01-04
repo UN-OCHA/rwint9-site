@@ -50,7 +50,7 @@ class LegacyHelper {
    *   The attachment UUID.
    */
   public static function generateAttachmentUuid($uri) {
-    // We strips the '%' characters for compatibility with the preview URLS.
+    // Strip the '%' characters for compatibility with the preview URLs.
     return static::generateFileUuid(str_replace('%', '', $uri));
   }
 

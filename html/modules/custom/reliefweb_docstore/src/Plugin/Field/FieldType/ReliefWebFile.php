@@ -476,12 +476,12 @@ class ReliefWebFile extends FieldItemBase {
     $values['uuid'] = static::generateUuid();
     $values['revision_id'] = mt_rand(1111, 9999);
     $values['file_uuid'] = static::generateUuid();
-    $valyes['file_name'] = $random->string(mt_rand(1, 250)) . '.' . $random->string(mt_rand(1, 4));
-    $valyes['file_mime'] = $random->string(mt_rand(32, 128));
-    $valyes['file_size'] = mt_rand(1111, 99999);
+    $values['file_name'] = $random->string(mt_rand(1, 250)) . '.' . $random->string(mt_rand(1, 4));
+    $values['file_mime'] = $random->string(mt_rand(32, 128));
+    $values['file_size'] = mt_rand(1111, 99999);
     $values['language'] = ['en', 'fr', 'sp'][mt_rand(0, 2)];
     $values['description'] = $random->sentences(mt_rand(1, 5));
-    $valyes['page_count'] = mt_rand(1, 100);
+    $values['page_count'] = mt_rand(1, 100);
     $values['preview_uuid'] = static::generateUuid();
     $values['preview_page'] = mt_rand(1, 100);
     $values['preview_rotation'] = mt_rand(0, 2);
