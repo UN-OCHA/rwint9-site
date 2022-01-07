@@ -133,6 +133,16 @@ abstract class EntityBase extends SqlBase implements ImportAwareInterface, Rollb
   /**
    * {@inheritdoc}
    */
+  protected function getHighWater() {
+    if (isset($this->storedHighWater)) {
+      return $this->storedHighWater;
+    }
+    return parent::getHighWater();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected function saveHighWater($high_water) {
     // To avoid excessive database usage, we store the the high water and we'll
     // save it only after the import.
