@@ -27,3 +27,7 @@ process:
   #  plugin: default_value
   #  source: language
   #  default_value: 'en'
+  # Flag the entity as being migrated.
+  _is_migrating:
+    plugin: default_value
+    default_value: 1
