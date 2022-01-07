@@ -4,9 +4,7 @@ status: true
 dependencies:
   config:
     - node.type.job
-    - workflows.workflow.job
   module:
-    - content_moderation
     - node
 id: job_importer
 label: 'Job importer'
@@ -15,10 +13,3 @@ is_admin: null
 permissions:
   - 'create job content'
   - 'edit own job content'
-  - 'use job transition draft'
-  - 'use job transition duplicate'
-  - 'use job transition expired'
-  - 'use job transition on_hold'
-  - 'use job transition pending'
-  - 'use job transition published'
-  - 'use job transition refused'

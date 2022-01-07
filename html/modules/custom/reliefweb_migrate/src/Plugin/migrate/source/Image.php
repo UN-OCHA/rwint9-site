@@ -2,7 +2,6 @@
 
 namespace Drupal\reliefweb_migrate\Plugin\migrate\source;
 
-use Drupal\migrate\Plugin\migrate\source\SqlBase;
 use Drupal\migrate\Row;
 use Drupal\reliefweb_utility\Helpers\LegacyHelper;
 
@@ -13,7 +12,12 @@ use Drupal\reliefweb_utility\Helpers\LegacyHelper;
  *   id = "reliefweb_image"
  * )
  */
-class Image extends SqlBase {
+class Image extends EntityBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $idField = 'fid';
 
   /**
    * Directory replacements.
@@ -105,6 +109,7 @@ class Image extends SqlBase {
     $query->innerJoin('file_usage', 'fu', 'fu.fid = fm.fid');
     $query->condition('fu.count', 0, '>');
 
+    $query->orderBy('fm.fid', 'ASC');
     return $query->distinct();
   }
 

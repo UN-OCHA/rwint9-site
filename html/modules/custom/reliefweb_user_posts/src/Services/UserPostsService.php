@@ -112,7 +112,7 @@ class UserPostsService extends ModerationServiceBase {
       'draft' => $this->t('draft'),
       'pending' => $this->t('pending'),
       'published' => $this->t('published'),
-      'on_hold' => $this->t('on-hold'),
+      'on-hold' => $this->t('on-hold'),
       'refused' => $this->t('refused'),
       'expired' => $this->t('expired'),
       'duplicate' => $this->t('duplicate'),

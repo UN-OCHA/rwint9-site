@@ -1,9 +1,9 @@
-uuid: 03005d77-0e66-4896-a5a9-255101da3cd1
+uuid: d0154e6a-eba8-47ca-aedc-28742f86e1db
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: pZ7qJ6cbQfCCSZP7EOGTse1bg6aRM2UU0dYmWH3TOgY
+  default_config_hash: GzwU2vMPN3ymyhwifiPNhnJAGCLyvssCnisf-3WtrIg
 id: reliefweb_user__default
 class: null
 field_plugin_method: null
@@ -61,13 +61,6 @@ process:
   path/pathauto:
     plugin: default_value
     default_value: 0
-  path/alias:
-    -
-      plugin: default_value
-      default_value: ''
-    -
-      plugin: skip_on_empty
-      method: process
   _is_migrating:
     plugin: default_value
     default_value: 1

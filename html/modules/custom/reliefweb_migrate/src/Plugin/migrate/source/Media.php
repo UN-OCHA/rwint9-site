@@ -2,7 +2,7 @@
 
 namespace Drupal\reliefweb_migrate\Plugin\migrate\source;
 
-use Drupal\migrate\Plugin\migrate\source\SqlBase;
+use Drupal\migrate\Event\MigrateImportEvent;
 
 /**
  * Retrieve image medias from the Drupal 7 database.
@@ -14,7 +14,12 @@ use Drupal\migrate\Plugin\migrate\source\SqlBase;
  *   id = "reliefweb_media"
  * )
  */
-class Media extends SqlBase {
+class Media extends EntityBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $idField = 'fid';
 
   /**
    * {@inheritdoc}
@@ -51,6 +56,7 @@ class Media extends SqlBase {
     $query->addField('f', $field . '_width', 'width');
     $query->addField('f', $field . '_height', 'height');
 
+    $query->orderBy('fm.fid', 'ASC');
     return $query->distinct();
   }
 
@@ -78,6 +84,21 @@ class Media extends SqlBase {
     $ids['fid']['type'] = 'integer';
     $ids['fid']['alias'] = 'fm';
     return $ids;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function postImport(MigrateImportEvent $event) {
+    parent::postImport($event);
+
+    // Update the no-thumbnail media icon to prevent file ID clash with
+    // attachments.
+    $this->database
+      ->update('file_managed')
+      ->fields(['fid' => 1, 'uid' => 2])
+      ->condition('uri', 'public://media-icons/generic/no-thumbnail.png', '=')
+      ->execute();
   }
 
 }

@@ -7,9 +7,14 @@
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
+use Drupal\reliefweb_moderation\ModeratedNodeStorageSchema;
+use Drupal\reliefweb_moderation\ModeratedTermStorageSchema;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 
 /**
@@ -79,12 +84,82 @@ function reliefweb_moderation_theme() {
 }
 
 /**
+ * Implements hook_entity_base_field_info().
+ */
+function reliefweb_moderation_entity_base_field_info(EntityTypeInterface $entity_type) {
+  $fields = [];
+
+  switch ($entity_type->id()) {
+    case 'node':
+      $fields['moderation_status'] = reliefweb_moderation_get_moderation_status_field_definition('draft');
+      break;
+
+    case 'taxonomy_term':
+      $fields['moderation_status'] = reliefweb_moderation_get_moderation_status_field_definition('published');
+      break;
+  }
+
+  return $fields;
+}
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function reliefweb_moderation_entity_type_alter(array &$entity_types) {
+  if (isset($entity_types['node'])) {
+    $entity_types['node']->setHandlerClass('storage_schema', ModeratedNodeStorageSchema::class);
+  }
+  if (isset($entity_types['taxonomy_term'])) {
+    $entity_types['taxonomy_term']->setHandlerClass('storage_schema', ModeratedTermStorageSchema::class);
+  }
+}
+
+/**
+ * Get the moderation status field definition.
+ *
+ * @param string $default_status
+ *   The default moderation status value.
+ *
+ * @return \Drupal\Core\Field\BaseFieldDefinition
+ *   Field definition.
+ */
+function reliefweb_moderation_get_moderation_status_field_definition($default_status = 'draft') {
+  return BaseFieldDefinition::create('string')
+    ->setLabel(t('Moderation Status'))
+    ->setSetting('max_length', 32)
+    ->setRevisionable(TRUE)
+    ->setTranslatable(TRUE)
+    ->setDefaultValue($default_status)
+    ->setDefaultValueCallback('reliefweb_moderation_moderation_status_value_callback');
+}
+
+/**
+ * Moderation status default value callback.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   The entity.
+ * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
+ *   The moderation status field definition for the entity.
+ *
+ * @return string|null
+ *   The moderation status if applicable for the
+ */
+function reliefweb_moderation_moderation_status_value_callback(EntityInterface $entity, FieldDefinitionInterface $field_definition) {
+  if ($entity instanceof EntityModeratedInterface) {
+    return $entity->getDefaultModerationStatus();
+  }
+  return $field_definition->getDefaultValueLiteral();
+}
+
+/**
  * Implements hook_entity_access().
  */
 function reliefweb_moderation_entity_access(EntityInterface $entity, $operation, AccountInterface $account) {
-  $service = ModerationServiceBase::getModerationService($entity->bundle());
-  if (!empty($service)) {
-    return $service->entityAccess($entity, $operation, $account);
+  if ($entity instanceof EntityModeratedInterface) {
+    $service = ModerationServiceBase::getModerationService($entity->bundle());
+    if (!empty($service)) {
+      return $service->entityAccess($entity, $operation, $account);
+    }
   }
   // No opinion.
   return AccessResult::neutral();
@@ -94,9 +169,11 @@ function reliefweb_moderation_entity_access(EntityInterface $entity, $operation,
  * Implements hook_entity_presave().
  */
 function reliefweb_moderation_entity_presave(EntityInterface $entity) {
-  $service = ModerationServiceBase::getModerationService($entity->bundle());
-  if (!empty($service)) {
-    $service->entityPresave($entity);
+  if ($entity instanceof EntityModeratedInterface) {
+    $service = ModerationServiceBase::getModerationService($entity->bundle());
+    if (!empty($service)) {
+      $service->entityPresave($entity);
+    }
   }
 }
 

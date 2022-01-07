@@ -21,12 +21,12 @@ class NodeRevision extends Node {
   /**
    * {@inheritdoc}
    */
-  protected $join = 'n.nid = nr.nid AND n.vid <> nr.vid';
+  protected $useRevisionId = TRUE;
 
   /**
    * {@inheritdoc}
    */
-  protected $useRevisionId = TRUE;
+  protected $join = 'n.nid = nr.nid AND n.vid <> nr.vid';
 
   /**
    * {@inheritdoc}

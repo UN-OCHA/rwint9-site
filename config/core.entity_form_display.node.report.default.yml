@@ -28,9 +28,7 @@ dependencies:
     - field.field.node.report.field_theme
     - field.field.node.report.field_vulnerable_groups
     - node.type.report
-    - workflows.workflow.report
   module:
-    - content_moderation
     - datetime
     - media_library
     - path
@@ -74,7 +72,7 @@ content:
     settings:
       sort: label
       extra_data:
-        'country:moderation_state': 'country:moderation_state'
+        'country:moderation_status': 'country:moderation_status'
         'country:field_shortname': 'country:field_shortname'
         'country:tid': '0'
         'country:uuid': '0'
@@ -110,7 +108,7 @@ content:
     settings:
       sort: id
       extra_data:
-        'disaster:moderation_state': 'disaster:moderation_state'
+        'disaster:moderation_status': 'disaster:moderation_status'
         'disaster:field_country': 'disaster:field_country'
         'disaster:field_disaster_type': 'disaster:field_disaster_type'
         'disaster:field_glide': 'disaster:field_glide'
@@ -254,7 +252,7 @@ content:
     settings:
       sort: label
       extra_data:
-        'country:moderation_state': 'country:moderation_state'
+        'country:moderation_status': 'country:moderation_status'
         'country:field_shortname': 'country:field_shortname'
         'country:tid': '0'
         'country:uuid': '0'
@@ -290,7 +288,7 @@ content:
     settings:
       sort: label
       extra_data:
-        'source:moderation_state': 'source:moderation_state'
+        'source:moderation_status': 'source:moderation_status'
         'source:field_shortname': 'source:field_shortname'
         'source:tid': 0
         'source:uuid': 0
@@ -334,12 +332,6 @@ content:
     settings:
       sort: label
       extra_data: {  }
-    third_party_settings: {  }
-  moderation_state:
-    type: moderation_state_default
-    weight: 100
-    region: content
-    settings: {  }
     third_party_settings: {  }
   path:
     type: path

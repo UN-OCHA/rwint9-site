@@ -56,7 +56,7 @@ class Training extends Node implements BundleEntityInterface, EntityModeratedInt
    */
   public function getEntityMeta() {
     // Event URL.
-    $event_url = $this->field_link->value;
+    $event_url = $this->field_link->uri;
     if (!UrlHelper::isValid($event_url, TRUE)) {
       $event_url = '';
     }

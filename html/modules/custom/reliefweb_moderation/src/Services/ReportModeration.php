@@ -199,8 +199,8 @@ class ReportModeration extends ModerationServiceBase {
   public function getStatuses() {
     return [
       'draft' => $this->t('Draft'),
-      'on_hold' => $this->t('On-hold'),
-      'to_review' => $this->t('To review'),
+      'on-hold' => $this->t('On-hold'),
+      'to-review' => $this->t('To review'),
       'published' => $this->t('Published'),
       'embargoed' => $this->t('Embargoed'),
       'archive' => $this->t('Archived'),
@@ -216,13 +216,13 @@ class ReportModeration extends ModerationServiceBase {
       'draft' => [
         '#value' => $this->t('Save as draft'),
       ],
-      'to_review' => [
+      'to-review' => [
         '#value' => $this->t('To review'),
       ],
       'published' => [
         '#value' => $this->t('Publish'),
       ],
-      'on_hold' => [
+      'on-hold' => [
         '#value' => $this->t('On-hold'),
       ],
       'reference' => [
@@ -244,7 +244,7 @@ class ReportModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function isViewableStatus($status, $account = NULL) {
-    return in_array($status, ['to_review', 'published']);
+    return in_array($status, ['to-review', 'published']);
   }
 
   /**

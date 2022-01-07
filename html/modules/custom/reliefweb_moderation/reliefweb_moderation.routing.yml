@@ -11,7 +11,7 @@ reliefweb_moderation.content:
         type: reliefweb_moderation_service
   requirements:
     _user_is_logged_in: 'TRUE'
-    _permission: access content moderation backend
+    _custom_access: '\Drupal\reliefweb_moderation\Controller\ModerationPage::checkAccess'
     service: "[a-z0-9_]+"
 
 reliefweb_moderation.content.autocomplete:
@@ -27,6 +27,6 @@ reliefweb_moderation.content.autocomplete:
         type: reliefweb_moderation_service
   requirements:
     _user_is_logged_in: 'TRUE'
-    _permission: access content moderation backend
+    _custom_access: '\Drupal\reliefweb_moderation\Controller\ModerationPage::checkAccess'
     service: "[a-z0-9_]+"
     filter: "[a-z0-9_]+"

@@ -68,7 +68,6 @@ hidden:
   field_shortname: true
   field_timezone: true
   langcode: true
-  moderation_state: true
   name: true
   path: true
   status: true

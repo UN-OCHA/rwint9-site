@@ -74,4 +74,5 @@ hidden:
   field_short_link: true
   field_title: true
   langcode: true
+  path: true
   user_id: true

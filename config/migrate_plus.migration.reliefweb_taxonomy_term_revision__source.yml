@@ -1,9 +1,9 @@
-uuid: 6490d4b1-0b1f-4454-81e6-73be2cf07c09
+uuid: b93a4bf5-51fc-4153-9908-3059502fdb51
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: R4SXF45VNLJ90348a0j4CKMFpiN7gMK0oD4vs-MHO1k
+  default_config_hash: o1xB-M9-1wTw0Nti_A7qxkdCHidV95AEaWCmaoViT-c
 id: reliefweb_taxonomy_term_revision__source
 class: null
 field_plugin_method: null
@@ -14,7 +14,7 @@ label: 'Migrate ReliefWeb source taxonomy term revisions.'
 source:
   bundle: source
 process:
-  moderation_state:
+  moderation_status:
     default_value: active
   field_aliases/value:
     plugin: skip_on_empty

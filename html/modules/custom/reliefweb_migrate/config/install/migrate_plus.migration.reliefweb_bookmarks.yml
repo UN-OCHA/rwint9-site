@@ -11,6 +11,7 @@ source:
       type: integer
     uid:
       type: integer
+  batch_size: 1000
 destination:
   plugin: table
   table_name: reliefweb_bookmarks

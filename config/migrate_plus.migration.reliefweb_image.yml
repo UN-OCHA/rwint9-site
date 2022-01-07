@@ -1,4 +1,4 @@
-uuid: 3d7f4bff-488f-46fb-b8b4-bf9bc79e8d7c
+uuid: f79acdb6-6866-4f98-9756-467bdb2182b7
 langcode: en
 status: true
 dependencies:
@@ -6,7 +6,7 @@ dependencies:
     module:
       - reliefweb_migrate
 _core:
-  default_config_hash: twvBZjEDiO5BANdmbjQ6BxoLL5VFbllmhVgdCCg1-jQ
+  default_config_hash: 99T4XTqmYnnSefOAYJXhB3d6CIUBW6ixnFAZ-vhEARY
 id: reliefweb_image
 class: null
 field_plugin_method: null
@@ -37,6 +37,5 @@ process:
   _is_migrating:
     plugin: default_value
     default_value: 1
-destination:
-  plugin: reliefweb_image
+destination: null
 migration_dependencies: null

@@ -5,6 +5,7 @@ namespace Drupal\reliefweb_moderation\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormState;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\reliefweb_moderation\ModerationServiceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -130,6 +131,21 @@ class ModerationPage extends ControllerBase {
   public function autocomplete(ModerationServiceInterface $service, $filter) {
     $suggestions = $service->getAutocompleteSuggestions($filter);
     return new JsonResponse($suggestions);
+  }
+
+  /**
+   * Check the access to the page.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   User account to check access for.
+   * @param \Drupal\reliefweb_moderation\ModerationServiceInterface $service
+   *   Moderation service.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   The access result.
+   */
+  public function checkAccess(AccountInterface $account, ModerationServiceInterface $service) {
+    return $service->checkModerationPageAccess($account);
   }
 
 }

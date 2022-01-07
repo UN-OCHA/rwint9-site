@@ -5,24 +5,45 @@ migration_tags:
   - book
 source:
   plugin: reliefweb_book
+  batch_size: 1000
 destination:
-  plugin: reliefweb_book
+  plugin: table
+  table_name: book
+  id_fields:
+    nid:
+      type: integer
+  fields:
+    nid: nid
+    bid: bid
+    pid: pid
+    has_children: has_children
+    weight: weight
+    depth: depth
+    p1: p1
+    p2: p2
+    p3: p3
+    p4: p4
+    p5: p5
+    p6: p6
+    p7: p7
+    p8: p8
+    p9: p9
 process:
   nid: nid
-  'book/bid': bid
-  'book/weight': weight
-  'book/pid':
-    -
-      plugin: skip_on_empty
-      method: process
-      source: plid
-    -
-      plugin: migration_lookup
-      migration: reliefweb_book
-  # Flag the entity as being migrated.
-  _is_migrating:
-    plugin: default_value
-    default_value: 1
+  bid: bid
+  pid: pid
+  has_children: has_children
+  weight: weight
+  depth: depth
+  p1: p1
+  p2: p2
+  p3: p3
+  p4: p4
+  p5: p5
+  p6: p6
+  p7: p7
+  p8: p8
+  p9: p9
 migration_dependencies:
   required:
     - reliefweb_node__book

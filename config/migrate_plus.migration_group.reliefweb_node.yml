@@ -1,4 +1,4 @@
-uuid: 349a350e-3b52-4bae-9017-ae0457963267
+uuid: c152fd81-e585-47e7-ad71-9859c9a547bf
 langcode: en
 status: true
 dependencies:
@@ -6,7 +6,7 @@ dependencies:
     module:
       - reliefweb_migrate
 _core:
-  default_config_hash: t-QfEMMoEpg5sxIwXCODzkJWRIdu_QEhE2KSMAFgcWM
+  default_config_hash: Zubd0GT9xBrCL5X0C6M0BgFqDCARbZwcZGToILm0lG4
 id: reliefweb_node
 label: 'ReliefWeb Migration - Nodes'
 description: 'Migrate ReliefWeb nodes from Drupal 7 to Drupal 9.'
@@ -24,8 +24,12 @@ shared_configuration:
     plugin: reliefweb_node
     constants:
       format: markdown
+    batch_size: 1000
+    high_water_property:
+      name: vid
+      alias: nr
   destination:
-    plugin: 'entity:node'
+    plugin: 'reliefweb_entity:node'
   process:
     nid: nid
     uid:
@@ -58,7 +62,7 @@ shared_configuration:
       map:
         published: 1
         to-review: 1
-    moderation_state:
+    moderation_status:
       plugin: static_map
       source: field_status/0/value
       default_value: draft
@@ -68,13 +72,13 @@ shared_configuration:
         duplicate: duplicate
         expired: expired
         embargoed: embargoed
-        on-hold: on_hold
+        on-hold: on-hold
         pending: pending
         published: published
         reference: reference
         refused: refused
-        to-review: to_review
-    vid: revision_id
+        to-review: to-review
+    vid: vid
     revision_uid:
       plugin: static_map
       bypass: true
@@ -98,6 +102,13 @@ shared_configuration:
         markdown: markdown
         plain_text: markdown
         token_markdown: token_markdown
+    url_lias:
+      plugin: skip_on_empty
+      method: process
+      source: url_alias
+    path/pathauto:
+      plugin: default_value
+      default_value: 0
     notifications_content_disable:
       plugin: default_value
       default_value: 1

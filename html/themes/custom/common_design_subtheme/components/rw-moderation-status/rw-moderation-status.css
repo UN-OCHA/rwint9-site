@@ -2,13 +2,13 @@
   border-color: var(--cd-reliefweb-grey--light);
   background-color: var(--cd-reliefweb-grey--light--bg);
 }
-[data-moderation-status="on_hold"],
+[data-moderation-status="on-hold"],
 [data-moderation-status="alert"],
 [data-moderation-status="inactive"] {
   border-color: var(--cd-reliefweb-orange);
   background-color: var(--cd-reliefweb-orange--bg);
 }
-[data-moderation-status="to_review"],
+[data-moderation-status="to-review"],
 [data-moderation-status="external"] {
   border-color: var(--cd-reliefweb-blue);
   background-color: var(--cd-reliefweb-blue--bg);
@@ -29,16 +29,16 @@
 }
 [data-moderation-status="expired"],
 [data-moderation-status="archive"],
-[data-moderation-status="alert_archive"] {
+[data-moderation-status="alert-archive"] {
   border-color: var(--cd-reliefweb-purple);
   background-color: var(--cd-reliefweb-purple--bg);
 }
-[data-moderation-status="draft_archive"] {
+[data-moderation-status="draft-archive"] {
   border-color: var(--cd-reliefweb-grey);
   background-color: var(--cd-reliefweb-grey--bg);
 }
 [data-moderation-status="duplicate"],
-[data-moderation-status="monitoring_archive"] {
+[data-moderation-status="monitoring-archive"] {
   border-color: var(--cd-reliefweb-brown);
   background-color: var(--cd-reliefweb-brown--bg);
 }
@@ -49,7 +49,7 @@
 }
 [data-moderation-status="pending"],
 [data-moderation-status="embargoed"],
-[data-moderation-status="external_archive"] {
+[data-moderation-status="external-archive"] {
   border-color: var(--cd-reliefweb-cyan);
   background-color: var(--cd-reliefweb-cyan--bg);
 }

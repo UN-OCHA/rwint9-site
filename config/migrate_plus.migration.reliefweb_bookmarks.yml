@@ -1,9 +1,9 @@
-uuid: 4094dbbe-bb82-4fff-b801-e1335ddc84a2
+uuid: e53c95ee-879e-422c-9c8f-b4619eb2e579
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: t2o1jqXhMnHbfpAWuBnDcw61QVdsmL9qKHR9HHYb4pk
+  default_config_hash: nZevgegYdmXQrztFpHIgSg9dDILj1n-DuwhuotVxLOo
 id: reliefweb_bookmarks
 class: null
 field_plugin_method: null
@@ -21,6 +21,7 @@ source:
       type: integer
     uid:
       type: integer
+  batch_size: 1000
 process:
   entity_type: entity_type
   entity_id: entity_id
