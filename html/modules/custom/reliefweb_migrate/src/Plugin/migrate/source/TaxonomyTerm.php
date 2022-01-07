@@ -2,6 +2,10 @@
 
 namespace Drupal\reliefweb_migrate\Plugin\migrate\source;
 
+use Drupal\migrate\Row;
+use Drupal\reliefweb_docstore\Plugin\Field\FieldType\ReliefWebFile;
+use Drupal\reliefweb_utility\Helpers\LegacyHelper;
+
 /**
  * Retrieve taxonomy terms from the Drupal 7 database.
  *
@@ -96,6 +100,93 @@ class TaxonomyTerm extends FieldableEntityBase {
 
     $query->orderBy('tdr.revision_id', 'ASC');
     return $query;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function initializeIterator() {
+    $iterator = parent::initializeIterator();
+    $this->convertProfileFieldImageUrls();
+    return $iterator;
+  }
+
+  /**
+   * Convert the profile field image URLS to the new UUID-based pattern.
+   */
+  protected function convertProfileFieldImageUrls() {
+    if (!isset($this->configuration['bundle']) || !is_string($this->configuration['bundle'])) {
+      return;
+    }
+    $bundle = $this->configuration['bundle'];
+
+    $field_names = [
+      'field_key_content',
+      'field_appeals_response_plans',
+    ];
+
+    $nids = [];
+    foreach ($field_names as $field_name) {
+      if (empty($this->preloadedFieldValues[$bundle][$field_name])) {
+        continue;
+      }
+
+      foreach ($this->preloadedFieldValues[$bundle][$field_name] as $entity_id => $items) {
+        foreach ($items as $delta => $item) {
+          $nid = str_replace('/node/', '', $item['url']);
+          $nids[$nid] = $nid;
+        }
+      }
+    }
+
+    $image_uris = [];
+    if (!empty($nids)) {
+      $query = $this->select('file_managed', 'fm');
+      $query->innerJoin('field_data_field_file', 'f', '%alias.field_file_fid = fm.fid');
+      $query->addField('f', 'entity_id', 'nid');
+      $query->addField('fm', 'uri', 'uri');
+      $query->condition('f.delta', 0, '=');
+      $query->condition('f.entity_type', 'node', '=');
+      $query->condition('f.entity_id', $nids, 'IN');
+      foreach ($query->execute() ?? [] as $record) {
+        $uuid = LegacyHelper::generateAttachmentUuid($record['uri']);
+        $image_uris['/node/' . $record['nid']] = ReliefWebFile::getFileUriFromUuid($uuid, 'png', FALSE, TRUE);
+      }
+    }
+
+    if (!empty($image_uris)) {
+      foreach ($field_names as $field_name) {
+        if (empty($this->preloadedFieldValues[$bundle][$field_name])) {
+          continue;
+        }
+
+        foreach ($this->preloadedFieldValues[$bundle][$field_name] as $entity_id => $items) {
+          foreach ($items as $delta => $item) {
+            $item['image'] = $image_uris[$item['url']] ?? '';
+            $items[$delta] = $item;
+          }
+          $this->preloadedFieldValues[$bundle][$field_name][$entity_id] = $items;
+        }
+      }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function prepareRow(Row $row) {
+    if (parent::prepareRow($row) === FALSE) {
+      return FALSE;
+    }
+
+    // Basic Glide fix.
+    if ($row->hasSourceProperty('field_glide')) {
+      $glide = $row->getSourceProperty('field_glide');
+      foreach ($glide as $delta => $item) {
+        $glide[$delta]['value'] = preg_replace('#(Glide Number|GLIDE|\s)#i', '', $item['value']);
+      }
+      $row->setSourceProperty('field_glide', $glide);
+    }
   }
 
   /**

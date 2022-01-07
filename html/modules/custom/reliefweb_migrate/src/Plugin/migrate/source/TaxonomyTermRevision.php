@@ -51,10 +51,6 @@ class TaxonomyTermRevision extends TaxonomyTerm {
     $iterator->rewind();
 
     if ($iterator->count() > 0) {
-      // Clear the previously preloaded values and aliases.
-      $this->preloadedFieldValues = [];
-      $this->preloadedUrlAliases = [];
-
       $use_revision_id = $this->useRevisionId && !empty($this->revisionIdField);
 
       // Extract the entity ids or revision ids.
@@ -82,9 +78,6 @@ class TaxonomyTermRevision extends TaxonomyTerm {
           $this->preloadedFieldValues[$bundle][$field_name] = $this->getAllFieldValues($this->entityType, $field_name, $ids, $use_revision_id);
         }
       }
-
-      // Preload the URL aliases.
-      $this->preloadUrlAliases($bundles);
     }
   }
 
