@@ -61,7 +61,7 @@ trait AccumulatedSqlContentEntityStorageTrait {
       $this->doPostSaveAccumulated($entity, !$is_new);
 
       // Flush the accumulated data.
-      if ($this->accumulationCounter++ > $max) {
+      if ($this->accumulationCounter++ >= $max) {
         $this->flushAccumulated();
       }
     }

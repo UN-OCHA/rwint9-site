@@ -160,7 +160,7 @@ class AccumulatedSql extends Sql {
     $this->accumulatedIdMapping[$keys[$this::SOURCE_IDS_HASH]] = $fields;
 
     // Save the mapping.
-    if (count($this->accumulatedIdMapping) > 1000) {
+    if (count($this->accumulatedIdMapping) >= 1000) {
       $this->flushAccumulatedIdMapping();
     }
   }
