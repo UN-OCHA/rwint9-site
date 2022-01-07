@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_migrate\Plugin\migrate\source;
 
+use Drupal\Core\Database\Database;
 use Drupal\migrate\Event\MigrateImportEvent;
 
 /**
@@ -94,7 +95,7 @@ class Media extends EntityBase {
 
     // Update the no-thumbnail media icon to prevent file ID clash with
     // attachments.
-    $this->database
+    Database::getConnection('default', 'default')
       ->update('file_managed')
       ->fields(['fid' => 1, 'uid' => 2])
       ->condition('uri', 'public://media-icons/generic/no-thumbnail.png', '=')
