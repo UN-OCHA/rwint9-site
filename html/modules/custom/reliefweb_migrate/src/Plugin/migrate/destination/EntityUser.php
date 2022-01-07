@@ -67,6 +67,18 @@ class EntityUser extends EntityUserBase implements ImportAwareInterface {
    * individual loads.
    */
   protected function getEntity(Row $row, array $old_destination_id_values) {
+    $entity_id = reset($old_destination_id_values) ?: $this->getEntityId($row);
+
+    // Delete the existing entity so we can insert the new one without having
+    // to worry about changes, unwanted new revisions etc.
+    if ($this->migration->getSourcePlugin()->entityExists($entity_id)) {
+      $entity = $this->storage->load($entity_id);
+      if (!empty($entity)) {
+        $entity->_is_migrating = TRUE;
+        $entity->delete();
+      }
+    }
+
     // Attempt to ensure we always have a bundle.
     if ($bundle = $this->getBundle($row)) {
       $row->setDestinationProperty($this->getKey('bundle'), $bundle);

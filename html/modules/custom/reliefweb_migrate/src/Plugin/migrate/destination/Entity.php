@@ -123,6 +123,7 @@ class Entity extends EntityContentBase implements ImportAwareInterface {
     if ($this->migration->getSourcePlugin()->entityExists($entity_id)) {
       $entity = $this->storage->load($entity_id);
       if (!empty($entity)) {
+        $entity->_is_migrating = TRUE;
         $entity->delete();
       }
     }
