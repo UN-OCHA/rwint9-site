@@ -57,10 +57,6 @@ abstract class FieldableEntityBase extends EntityBase {
     $iterator->rewind();
 
     if ($iterator->count() > 0) {
-      // Clear the previously preloaded values and aliases.
-      $this->preloadedFieldValues = [];
-      $this->preloadedUrlAliases = [];
-
       $use_revision_id = $this->useRevisionId && !empty($this->revisionIdField);
 
       // Extract the entity ids or revision ids.
@@ -223,16 +219,9 @@ abstract class FieldableEntityBase extends EntityBase {
         $id = $row->getSourceProperty($this->idField);
       }
 
-      foreach ($this->getFields($this->entityType, $bundle) as $field_name => $field) {
-        if (isset($this->preloadedFieldValues[$bundle][$field_name][$id])) {
-          $row->setSourceProperty($field_name, $this->preloadedFieldValues[$bundle][$field_name][$id]);
-          unset($this->preloadedFieldValues[$bundle][$field_name][$id]);
-        }
-      }
+      $this->setRowSourceFields($id, $bundle, $row);
 
-      if (!empty($this->preloadedUrlAliases[$id])) {
-        $row->setDestinationProperty('url_alias', $this->preloadedUrlAliases[$id]);
-      }
+      $this->setRowDestinationUrlAlias($id, $row);
     }
     else {
       $id = $row->getSourceProperty($this->idField);
@@ -253,6 +242,40 @@ abstract class FieldableEntityBase extends EntityBase {
     }
 
     return parent::prepareRow($row);
+  }
+
+  /**
+   * Set the row source field properties based on the preloaded field data.
+   *
+   * @param int $id
+   *   Entity ID or revision ID.
+   * @param string $bundle
+   *   Entity bundle.
+   * @param \Drupal\migrate\Row $row
+   *   Migration row.
+   */
+  protected function setRowSourceFields($id, $bundle, Row $row) {
+    foreach ($this->getFields($this->entityType, $bundle) as $field_name => $field) {
+      if (isset($this->preloadedFieldValues[$bundle][$field_name][$id])) {
+        $row->setSourceProperty($field_name, $this->preloadedFieldValues[$bundle][$field_name][$id]);
+        unset($this->preloadedFieldValues[$bundle][$field_name][$id]);
+      }
+    }
+  }
+
+  /**
+   * Set the row destination url alias from the preloaded URL aliases.
+   *
+   * @param int $id
+   *   Entity ID or revision ID.
+   * @param \Drupal\migrate\Row $row
+   *   Migration row.
+   */
+  protected function setRowDestinationUrlAlias($id, Row $row) {
+    if (!empty($this->preloadedUrlAliases[$id])) {
+      $row->setDestinationProperty('url_alias', $this->preloadedUrlAliases[$id]);
+      unset($this->preloadedUrlAliases[$id]);
+    }
   }
 
   /**

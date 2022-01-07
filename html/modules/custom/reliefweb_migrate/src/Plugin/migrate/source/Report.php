@@ -29,6 +29,13 @@ class Report extends Node {
   protected $duplicateReports;
 
   /**
+   * Preloaded attachment data.
+   *
+   * @var array
+   */
+  protected $preloadedAttachments = [];
+
+  /**
    * {@inheritdoc}
    */
   public function query() {
@@ -66,65 +73,70 @@ class Report extends Node {
    */
   protected function initializeIterator() {
     $iterator = parent::initializeIterator();
+    $this->convertFileFieldData();
+    return $iterator;
+  }
 
-    if (!empty($this->preloadedFieldValues['report']['field_file'])) {
-      // Extract information from the D7 field_file description field.
-      $items = [];
-      foreach ($this->preloadedFieldValues['report']['field_file'] as $entity_id => $field_items) {
-        foreach ($field_items as $delta => $item) {
-          if (isset($item['fid'])) {
-            $data = $this->parseAttachmentDescription($item['description'] ?? '');
-            $data['entity_id'] = $entity_id;
-            $data['delta'] = $delta;
-            $items[$item['fid']] = $data;
-          }
-        }
-      }
-
-      $attachments = [];
-      if (!empty($items)) {
-        // Load the data from the file_managed table.
-        $records = $this->select('file_managed', 'fm')
-          ->fields('fm')
-          ->condition('fm.status', 1, '=')
-          ->condition('fm.fid', array_keys($items), 'IN')
-          ->execute()
-          ?->fetchAll(\PDO::FETCH_OBJ) ?? [];
-
-        // Prepare the D9 field_file data.
-        $attachments = [];
-        foreach ($records as $record) {
-          if (empty($record->uri)) {
-            continue;
-          }
-          if (strtolower(pathinfo($record->filename, PATHINFO_EXTENSION)) === 'pdf') {
-            $record->filemime = 'application/pdf';
-          }
-          $item = $items[$record->fid];
-          $item['uuid'] = LegacyHelper::generateAttachmentUuid($record->uri);
-          $item['file_uuid'] = LegacyHelper::generateAttachmentFileUuid($item['uuid'], $record->fid);
-          if (!empty($item['preview_page'])) {
-            $item['preview_uuid'] = LegacyHelper::generateAttachmentPreviewUuid($item['uuid'], $item['file_uuid']);
-          }
-          $item['file_name'] = $record->filename;
-          $item['file_mime'] = $record->filemime;
-          $item['file_size'] = $record->filesize;
-          // The revision ID will be updated when running the file migration
-          // script.
-          $item['revision_id'] = 0;
-          $item['timestamp'] = $record->timestamp;
-
-          $delta = $item['delta'];
-          $entity_id = $item['entity_id'];
-          unset($item['delta'], $item['entity_id']);
-
-          $attachments[$entity_id][$delta] = $item;
-        }
-      }
-      $this->preloadedFieldValues['report']['field_file'] = $attachments;
+  /**
+   * Convert the field file data.
+   */
+  protected function convertFileFieldData() {
+    // Skip if empty.
+    if (empty($this->preloadedFieldValues['report']['field_file'])) {
+      return;
     }
 
-    return $iterator;
+    // Extract information from the D7 field_file description field.
+    $items = [];
+    foreach ($this->preloadedFieldValues['report']['field_file'] as $entity_id => $field_items) {
+      foreach ($field_items as $delta => $item) {
+        if (isset($item['fid'])) {
+          $data = $this->parseAttachmentDescription($item['description'] ?? '');
+          $data['entity_id'] = $entity_id;
+          $data['delta'] = $delta;
+          $items[$item['fid']] = $data;
+        }
+      }
+    }
+
+    if (!empty($items)) {
+      // Load the data from the file_managed table.
+      $records = $this->select('file_managed', 'fm')
+        ->fields('fm')
+        ->condition('fm.status', 1, '=')
+        ->condition('fm.fid', array_keys($items), 'IN')
+        ->execute()
+        ?->fetchAll(\PDO::FETCH_OBJ) ?? [];
+
+      // Prepare the D9 field_file data.
+      foreach ($records as $record) {
+        if (empty($record->uri)) {
+          continue;
+        }
+        if (strtolower(pathinfo($record->filename, PATHINFO_EXTENSION)) === 'pdf') {
+          $record->filemime = 'application/pdf';
+        }
+        $item = $items[$record->fid];
+        $item['uuid'] = LegacyHelper::generateAttachmentUuid($record->uri);
+        $item['file_uuid'] = LegacyHelper::generateAttachmentFileUuid($item['uuid'], $record->fid);
+        if (!empty($item['preview_page'])) {
+          $item['preview_uuid'] = LegacyHelper::generateAttachmentPreviewUuid($item['uuid'], $item['file_uuid']);
+        }
+        $item['file_name'] = $record->filename;
+        $item['file_mime'] = $record->filemime;
+        $item['file_size'] = $record->filesize;
+        // The revision ID will be updated when running the file migration
+        // script.
+        $item['revision_id'] = 0;
+        $item['timestamp'] = $record->timestamp;
+
+        $delta = $item['delta'];
+        $entity_id = $item['entity_id'];
+        unset($item['delta'], $item['entity_id']);
+
+        $this->preloadedAttachments[$entity_id][$delta] = $item;
+      }
+    }
   }
 
   /**
@@ -144,9 +156,10 @@ class Report extends Node {
     $row->setDestinationProperty('uuid', $uuid);
 
     // Set the attachments.
-    $field_file = $row->getSourceProperty('field_file');
-    if (!empty($field_file)) {
-      $row->setDestinationProperty('field_file', array_values($field_file));
+    // @todo handle cases where the batch_size is empty?
+    if (!empty($this->preloadedAttachments[$nid])) {
+      $row->setDestinationProperty('field_file', array_values($this->preloadedAttachments[$nid]));
+      unset($this->preloadedAttachments[$nid]);
     }
   }
 
