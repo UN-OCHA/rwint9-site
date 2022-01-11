@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Messenger\MessengerInterface;
 
 /**
  * Manage subscription for user.
@@ -147,6 +148,9 @@ class SubscriptionForm extends FormBase {
         $this->subscribe($form_state->getValue('uid'), $sid);
       }
     }
+
+    // Show the user a message.
+    $this->messenger()->addMessage('You have successfully updated your subscriptions', MessengerInterface::TYPE_STATUS);
   }
 
   /**
