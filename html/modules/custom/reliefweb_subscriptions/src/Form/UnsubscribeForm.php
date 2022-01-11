@@ -176,6 +176,9 @@ class UnsubscribeForm extends SubscriptionForm {
       }
     }
 
+    // Show the user a message.
+    $this->messenger()->addMessage($this->t('You have successfully updated your subscriptions'), MessengerInterface::TYPE_STATUS);
+
     $form_state->setRedirect('<front>');
   }
 
