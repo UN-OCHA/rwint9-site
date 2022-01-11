@@ -150,7 +150,7 @@ class SubscriptionForm extends FormBase {
     }
 
     // Show the user a message.
-    $this->messenger()->addMessage('You have successfully updated your subscriptions', MessengerInterface::TYPE_STATUS);
+    $this->messenger()->addMessage($this->t('You have successfully updated your subscriptions'), MessengerInterface::TYPE_STATUS);
   }
 
   /**
