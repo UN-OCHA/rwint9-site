@@ -1,3 +1,6 @@
 bookmark content:
   title: 'Bookmark content'
   description: 'Allow users to bookmark content.'
+see other bookmarks:
+  title: 'See bookmarks from others'
+  description: 'Allow user to see other bookmarks.'

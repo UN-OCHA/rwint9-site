@@ -7,6 +7,7 @@ namespace Drupal\reliefweb_bookmarks\Controller;
  * Contains \Drupal\reliefweb_bookmarks\Controller\UserBookmarksController.
  */
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;
@@ -30,7 +31,6 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
    * @var \Drupal\Core\Session\AccountInterface
    */
   protected $account;
-
 
   /**
    * Config factory..
@@ -398,6 +398,24 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
     }
 
     return $query->countQuery()->execute()->fetchField();
+  }
+
+  /**
+   * Check the access to the page.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   User account to check access for.
+   * @param \Drupal\user\UserInterface $user
+   *   User account for the user posts page.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   The access result.
+   */
+  public function checkUserAccess(AccountInterface $account, UserInterface $user) {
+    if ($account->id() == $user->id()) {
+      return AccessResult::allowedIf($account->hasPermission('bookmark content'));
+    }
+    return AccessResult::allowedIf($account->hasPermission('see other bookmarks'));
   }
 
 }

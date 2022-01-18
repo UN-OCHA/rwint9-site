@@ -9,7 +9,7 @@ reliefweb_subscriptions.subscription_form:
         type: 'entity:user'
   requirements:
     _user_is_logged_in: 'TRUE'
-    _permission: manage own subscriptions
+    _custom_access: '\Drupal\reliefweb_subscriptions\Controller\UnsubscribeController::checkUserAccess'
     user: \d+
 reliefweb_subscriptions.unsubscribe:
   path: '/notifications/unsubscribe/user/{user}'
