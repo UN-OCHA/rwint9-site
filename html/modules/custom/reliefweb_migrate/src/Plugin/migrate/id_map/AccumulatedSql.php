@@ -59,7 +59,6 @@ class AccumulatedSql extends Sql {
         ->execute()
         ?->fetchAllAssoc($this::SOURCE_IDS_HASH, \PDO::FETCH_ASSOC) ?? [];
 
-      $this->preloadedIdMapping = [];
       foreach ($ids as $id) {
         $this->preloadedIdMapping[$id] = $data[$id] ?? NULL;
       }
@@ -86,6 +85,7 @@ class AccumulatedSql extends Sql {
       foreach ($this->destinationIdFields() as $field) {
         $result[] = isset($data[$field]) ? [$data[$field]] : [];
       }
+      unset($this->preloadedIdMapping[$hash]);
       return $result;
     }
     else {
@@ -201,13 +201,9 @@ class AccumulatedSql extends Sql {
       }
     }
 
-    $count_fields = NULL;
     if (!empty($insertions)) {
       $query = $database->insert($table);
       foreach ($insertions as $values) {
-        if (!isset($count_fields)) {
-          $count_fields = count(array_keys($values));
-        }
         $query->fields(array_keys($values));
         $query->values(array_values($values));
       }
@@ -215,6 +211,48 @@ class AccumulatedSql extends Sql {
     }
 
     $this->accumulatedIdMapping = [];
+  }
+
+  /**
+   * Delete the item from the id mapping with the given source ids.
+   *
+   * Note: this is specific to the RW migrations where we use a single ID
+   * as source migration ids and the source and destination ids are the same.
+   *
+   * @param array $ids
+   *   List of imported ids.
+   */
+  public function deleteFromSourceIds(array $ids) {
+    if (empty($ids)) {
+      return;
+    }
+
+    $hashes = $this->getDatabase()
+      ->select($this->mapTableName(), 'map')
+      ->fields('map', [$this::SOURCE_IDS_HASH])
+      ->condition('sourceid1', $ids, 'IN')
+      ->execute()
+      ?->fetchCol() ?? [];
+
+    if (!empty($hashes)) {
+      $this->getDatabase()
+        ->delete($this->mapTableName())
+        ->condition($this::SOURCE_IDS_HASH, $hashes, 'IN')
+        ->execute();
+
+      $this->getDatabase()
+        ->delete($this->messageTableName())
+        ->condition($this::SOURCE_IDS_HASH, $hashes, 'IN')
+        ->execute();
+    }
+  }
+
+  /**
+   * Truncate the id mapping tables.
+   */
+  public function deleteIdMapping() {
+    $this->getDatabase()->truncate($this->mapTableName())->execute();
+    $this->getDatabase()->truncate($this->messageTableName())->execute();
   }
 
 }
