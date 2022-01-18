@@ -2,7 +2,7 @@ id: reliefweb_bookmarks
 label: Migrate ReliefWeb bookmarks.
 migration_group: reliefweb_extra
 source:
-  plugin: table
+  plugin: reliefweb_table
   table_name: reliefweb_bookmarks_favorites
   id_fields:
     entity_type:
@@ -13,7 +13,7 @@ source:
       type: integer
   batch_size: 1000
 destination:
-  plugin: table
+  plugin: reliefweb_table
   table_name: reliefweb_bookmarks
   id_fields:
     entity_type:

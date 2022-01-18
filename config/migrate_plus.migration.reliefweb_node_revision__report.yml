@@ -1,9 +1,9 @@
-uuid: 8ee3eb82-99ca-4497-9cb3-df0f42950c93
+uuid: 67465dc7-629b-4b31-b310-4d38afe8e397
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: JsMSGIm78KUI-PJACDl-2zaDqZ00m-b3vYJb7CXt34U
+  default_config_hash: kRoIg6lXYMvd9WGRAY1xtIR2nrwkkqjIr9BsjMW6WXM
 id: reliefweb_node_revision__report
 class: null
 field_plugin_method: null
@@ -12,6 +12,7 @@ migration_tags: null
 migration_group: reliefweb_node_revision
 label: 'Migrate ReliefWeb report revisions.'
 source:
+  plugin: reliefweb_report_revision
   bundle: report
 process:
   field_bury/value:

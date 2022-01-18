@@ -369,6 +369,12 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     $entity = $form_state->getFormObject()->getEntity();
     $status = $entity->getModerationStatus();
 
+    // Hide the status field as it's controlled by the selection of a moderation
+    // status.
+    if (isset($form['status'])) {
+      $form['status']['#access'] = FALSE;
+    }
+
     // Disable the moderation status widget and the default submit buttons.
     $form['actions']['submit']['#access'] = FALSE;
 

@@ -166,6 +166,48 @@ class Image extends EntityBase {
   /**
    * {@inheritdoc}
    */
+  protected function doPreloadExisting(array $ids) {
+    if (!empty($ids)) {
+      return $this->getDatabaseConnection()
+        ->select('file_managed', 'fm')
+        ->fields('fm', ['fid'])
+        ->condition('fm.fid', $ids, 'IN')
+        ->execute()
+        ?->fetchCol() ?? [];
+    }
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDestinationEntityIds() {
+    return $this->getDatabaseConnection()
+      ->select('file_managed', 'fm')
+      ->fields('fm', ['fid'])
+      ->condition('fm.uri', 'public://images/%', 'LIKE')
+      ->orderBy('fm.fid', 'ASC')
+      ->execute()
+      ?->fetchAllKeyed(0, 0) ?? [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDestinationEntityIdsToDelete(array $ids) {
+    if (!empty($ids)) {
+      return array_diff($ids, $this->select('file_managed', 'fm')
+        ->fields('fm', ['fid'])
+        ->condition('fm.fid', $ids, 'IN')
+        ->execute()
+        ?->fetchCol() ?? []);
+    }
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function fields() {
     return [
       'uuid' => $this->t('File UUID based on its URI'),

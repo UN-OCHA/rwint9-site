@@ -4,6 +4,7 @@ namespace Drupal\reliefweb_migrate\Plugin\migrate\destination;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Field\FieldTypePluginManagerInterface;
 use Drupal\Core\Session\AccountSwitcherInterface;
@@ -130,6 +131,12 @@ class EntityNode extends Entity {
         $private = !$entity->isPublished();
       }
 
+      // Delete any previous files before adding the new ones to ensure we have
+      // the latest version.
+      if (!empty($entity->original) && !$entity->original->get('field_file')->isEmpty()) {
+        $entity->original->get('field_file')->delete();
+      }
+
       // Create the field item and preview files with the permanent URIs.
       foreach ($entity->get('field_file') as $item) {
         if ($item->isEmpty()) {
@@ -149,6 +156,7 @@ class EntityNode extends Entity {
         $item->get('file_uuid')->setValue($file->uuid());
 
         if (!$item->canHavePreview() || empty($item->getPreviewPage())) {
+          $item->get('preview_uuid')->setValue(NULL);
           continue;
         }
         $preview_file = $item->createPreviewFile(FALSE);

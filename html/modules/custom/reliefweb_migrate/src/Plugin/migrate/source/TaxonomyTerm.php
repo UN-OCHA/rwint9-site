@@ -105,6 +105,70 @@ class TaxonomyTerm extends FieldableEntityBase {
   /**
    * {@inheritdoc}
    */
+  protected function doPreloadExisting(array $ids) {
+    if (!empty($ids)) {
+      return $this->getDatabaseConnection()
+        ->select('taxonomy_term_data', 'td')
+        ->fields('td', ['tid'])
+        ->condition('td.tid', $ids, 'IN')
+        ->execute()
+        ?->fetchCol() ?? [];
+    }
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDestinationEntityIds() {
+    $vocabularies = [
+      'career_categories' => 'career_category',
+      'content_format' => 'content_format',
+      'country' => 'country',
+      'disaster' => 'disaster',
+      'disaster_type' => 'disaster_type',
+      'feature' => 'feature',
+      'job_experience' => 'job_experience',
+      'job_type' => 'job_type',
+      'language' => 'language',
+      'ocha_product' => 'ocha_product',
+      'organization_type' => 'organization_type',
+      'source' => 'source',
+      'tags' => 'tag',
+      'theme' => 'theme',
+      'training_format' => 'training_format',
+      'training_type' => 'training_type',
+      'vulnerable_groups' => 'vulnerable_group',
+    ];
+
+    $bundles = array_intersect_key($vocabularies, array_flip((array) $this->configuration['bundle']));
+
+    return $this->getDatabaseConnection()
+      ->select('taxonomy_term_data', 'td')
+      ->fields('td', ['revision_id', 'tid'])
+      ->condition('td.vid', $bundles, 'IN')
+      ->orderBy('td.tid', 'ASC')
+      ->execute()
+      ?->fetchAllKeyed(0, 1) ?? [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDestinationEntityIdsToDelete(array $ids) {
+    if (!empty($ids)) {
+      return array_diff($ids, $this->select('taxonomy_term_data', 'td')
+        ->fields('td', ['tid'])
+        ->condition('td.tid', $ids, 'IN')
+        ->execute()
+        ?->fetchCol() ?? []);
+    }
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected function initializeIterator() {
     $iterator = parent::initializeIterator();
     $this->convertProfileFieldImageUrls();

@@ -4,8 +4,12 @@ migration_group: reliefweb_base
 source:
   plugin: reliefweb_user
   batch_size: 1000
+  high_water_property:
+    name: uid
+    alias: u
 destination:
   plugin: reliefweb_entity:user
+  delete_before_import: true
 process:
   uid: uid
   name: name

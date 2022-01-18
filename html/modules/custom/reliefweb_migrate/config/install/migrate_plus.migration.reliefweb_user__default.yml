@@ -19,7 +19,7 @@ source:
     uid:
       type: integer
 destination:
-  plugin: entity:user
+  plugin: reliefweb_entity:user
 process:
   uid: uid
   name: name

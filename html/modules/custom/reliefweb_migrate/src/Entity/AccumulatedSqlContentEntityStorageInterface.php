@@ -21,4 +21,9 @@ interface AccumulatedSqlContentEntityStorageInterface {
    */
   public function flushAccumulated();
 
+  /**
+   * Truncate the base, revision and data tables for the entity type.
+   */
+  public function deleteAll();
+
 }

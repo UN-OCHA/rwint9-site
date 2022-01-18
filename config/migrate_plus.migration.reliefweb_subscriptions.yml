@@ -1,9 +1,9 @@
-uuid: 18024c82-18f1-4b83-a744-533298c40905
+uuid: 2e8b6c7f-2609-4bc8-b1e5-7b3329d05af5
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: 2LT8u5LEmF3VMoguNvTbJ_m9zokBpf-2oVXcNB_0qCs
+  default_config_hash: M5sG73MLs0vPeFKwmI6t9lDVg5F_rSeZLpa3h3h3v_s
 id: reliefweb_subscriptions
 class: null
 field_plugin_method: null
@@ -12,7 +12,7 @@ migration_tags: null
 migration_group: reliefweb_extra
 label: 'Migrate ReliefWeb Subscriptions.'
 source:
-  plugin: table
+  plugin: reliefweb_table
   table_name: reliefweb_subscriptions_subscriptions
   id_fields:
     sid:
@@ -24,7 +24,7 @@ process:
   sid: sid
   uid: uid
 destination:
-  plugin: table
+  plugin: reliefweb_table
   table_name: reliefweb_subscriptions_subscriptions
   id_fields:
     sid:

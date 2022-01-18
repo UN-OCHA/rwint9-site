@@ -33,6 +33,82 @@ class TaxonomyTermRevision extends TaxonomyTerm {
   /**
    * {@inheritdoc}
    */
+  public function query() {
+    $query = parent::query();
+    $query->condition('tdr.log', 'Automatic update of%', 'NOT LIKE');
+    return $query;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function doPreloadExisting(array $ids) {
+    if (!empty($ids)) {
+      return $this->getDatabaseConnection()
+        ->select('taxonomy_term_revision', 'tdr')
+        ->fields('tdr', ['revision_id'])
+        ->condition('tdr.revision_id', $ids, 'IN')
+        ->execute()
+        ?->fetchCol() ?? [];
+    }
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDestinationEntityIds() {
+    $vocabularies = [
+      'career_categories' => 'career_category',
+      'content_format' => 'content_format',
+      'country' => 'country',
+      'disaster' => 'disaster',
+      'disaster_type' => 'disaster_type',
+      'feature' => 'feature',
+      'job_experience' => 'job_experience',
+      'job_type' => 'job_type',
+      'language' => 'language',
+      'ocha_product' => 'ocha_product',
+      'organization_type' => 'organization_type',
+      'source' => 'source',
+      'tags' => 'tag',
+      'theme' => 'theme',
+      'training_format' => 'training_format',
+      'training_type' => 'training_type',
+      'vulnerable_groups' => 'vulnerable_group',
+    ];
+
+    $bundles = array_intersect_key($vocabularies, array_flip((array) $this->configuration['bundle']));
+
+    $query = $this->getDatabaseConnection()
+      ->select('taxonomy_term_revision', 'tdr')
+      ->fields('tdr', ['revision_id'])
+      ->orderBy('tdr.revision_id', 'ASC');
+
+    $query->innerJoin('taxonomy_term_data', 'td', 'td.tid = tdr.tid AND td.revision_id <> tdr.revision_id');
+    $query->condition('td.vid', $bundles, 'IN');
+
+    return $query->execute()
+      ?->fetchAllKeyed(0, 0) ?? [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDestinationEntityIdsToDelete(array $ids) {
+    if (!empty($ids)) {
+      return array_diff($ids, $this->select('taxonomy_term_data_revision', 'tdr')
+        ->fields('tdr', ['revision_id'])
+        ->condition('tdr.revision_id', $ids, 'IN')
+        ->execute()
+        ?->fetchCol() ?? []);
+    }
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function prepareRow(Row $row) {
     $log = $row->getSourceProperty('revision_log_message');
     if (strpos($log, 'Automatic update of') === 0) {

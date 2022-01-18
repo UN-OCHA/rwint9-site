@@ -23,6 +23,13 @@ trait AccumulatedSqlContentEntityStorageTrait {
   protected $accumulator = [];
 
   /**
+   * Store the IDs of the accumulated entities that needs to be updated.
+   *
+   * @var array
+   */
+  protected $accumulatedEntityIds = [];
+
+  /**
    * Counter to determine when to flush the accumulated insert queries.
    *
    * @var int
@@ -48,6 +55,9 @@ trait AccumulatedSqlContentEntityStorageTrait {
    */
   public function saveAccumulated(EntityInterface $entity, $max = 1000) {
     try {
+      // Store the ID (and revision ID in case of a non default revision).
+      $this->accumulateEntityId($entity);
+
       // Track if this entity is new.
       $is_new = $entity->isNew();
 
@@ -61,7 +71,8 @@ trait AccumulatedSqlContentEntityStorageTrait {
       $this->doPostSaveAccumulated($entity, !$is_new);
 
       // Flush the accumulated data.
-      if ($this->accumulationCounter++ >= $max) {
+      $this->accumulationCounter++;
+      if ($this->accumulationCounter >= $max) {
         $this->flushAccumulated();
       }
     }
@@ -72,6 +83,33 @@ trait AccumulatedSqlContentEntityStorageTrait {
     }
 
     return $return;
+  }
+
+  /**
+   * Store the IDs of existing entities.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   Existing entity.
+   */
+  protected function accumulateEntityId(EntityInterface $entity) {
+    // Store the ID (and revision ID in case of a non default revision) if the
+    // entity already exists so we can delete the data before inserting
+    // the new one.
+    if (!empty($entity->_exists)) {
+      if ($this->entityType->isRevisionable()) {
+        if ($entity->isDefaultRevision()) {
+          // We'll retrieve the revision IDs in a single query when flushing
+          // the accumulated content.
+          $this->accumulatedEntityIds[$entity->id()] = NULL;
+        }
+        else {
+          $this->accumulatedEntityIds[$entity->getRevisionId()] = $entity->getRevisionId();
+        }
+      }
+      else {
+        $this->accumulatedEntityIds[$entity->id()] = $entity->id();
+      }
+    }
   }
 
   /**
@@ -133,6 +171,9 @@ trait AccumulatedSqlContentEntityStorageTrait {
     // Reset the accumulator.
     $this->accumulator = [];
 
+    // Reset the entity id accumulator.
+    $this->accumulatedEntityIds = [];
+
     // Reset the accumulation counter.
     $this->accumulationCounter = 0;
   }
@@ -143,11 +184,16 @@ trait AccumulatedSqlContentEntityStorageTrait {
   public function doFlushAccumulated() {
     $transaction = $this->database->startTransaction();
     try {
+      // First delete the existing content.
+      $this->deleteExistingEntities();
+
+      // Then insert the new content.
       foreach ($this->accumulator as $table => $entries) {
         $query = $this->database->insert($table);
         foreach ($entries as $rows) {
           foreach ($rows as $row) {
             $row = (array) $row;
+            $this->processRowBeforeInsertion($table, $row);
             $query->fields(array_keys($row));
             $query->values(array_values($row));
           }
@@ -163,6 +209,18 @@ trait AccumulatedSqlContentEntityStorageTrait {
       watchdog_exception($this->entityTypeId, $exception);
       throw new EntityStorageException($exception->getMessage(), $exception->getCode(), $exception);
     }
+  }
+
+  /**
+   * Provide a last way to modify data being inserted before it's inserted.
+   *
+   * @param string $table
+   *   Name of the table.
+   * @param array $row
+   *   Row to be inserted.
+   */
+  protected function processRowBeforeInsertion($table, array &$row) {
+    // Nothing to do.
   }
 
   /**
@@ -337,6 +395,182 @@ trait AccumulatedSqlContentEntityStorageTrait {
       }
     }
     return $return;
+  }
+
+  /**
+   * Get the field and list of ids to use as condition to delete existing data.
+   *
+   * @return array
+   *   Array with the base table field, field table field, list of entity ids
+   *   and whether to only update the revision tables or all the tables.
+   */
+  protected function getExistingEntitiesDeletionCondition() {
+    $revisionable = $this->entityType->isRevisionable();
+    $revision_only = FALSE;
+
+    // Get the entity IDs or revision IDs to delete.
+    if ($revisionable) {
+      $ids = [];
+      $base_table_field = $this->revisionKey;
+      $field_table_field = 'revision_id';
+
+      $revision_ids_to_load = [];
+      foreach ($this->accumulatedEntityIds as $id => $revision_id) {
+        if (isset($revision_id)) {
+          $ids[$revision_id] = $revision_id;
+        }
+        else {
+          $revision_ids_to_load[$id] = $id;
+        }
+      }
+
+      // Retrieve the latest revision IDs of the default revisions.
+      if (!empty($revision_ids_to_load)) {
+        $records = $this->database
+          ->select($this->baseTable, 't')
+          ->fields('t', [$this->revisionKey])
+          ->condition('t.' . $this->idKey, $revision_ids_to_load, 'IN')
+          ->execute() ?? [];
+        foreach ($records as $record) {
+          $ids[$record->{$this->revisionKey}] = $record->{$this->revisionKey};
+        }
+      }
+      else {
+        $revision_only = TRUE;
+      }
+    }
+    else {
+      $ids = $this->accumulatedEntityIds;
+      $base_table_field = $this->idKey;
+      $field_table_field = 'entity_id';
+    }
+
+    return [
+      'base_table_field' => $base_table_field,
+      'field_table_field' => $field_table_field,
+      'revision_only' => $revision_only,
+      'ids' => $ids,
+    ];
+  }
+
+  /**
+   * Delete all data from the database for the entities to insert.
+   */
+  protected function deleteExistingEntities() {
+    if (empty($this->accumulatedEntityIds)) {
+      return;
+    }
+
+    $revisionable = $this->entityType->isRevisionable();
+
+    // Get the base table field, field table field, ids and revision_only flag.
+    extract($this->getExistingEntitiesDeletionCondition());
+
+    // Nothing to do.
+    if (empty($ids)) {
+      return;
+    }
+
+    // Delete the data from the base tables.
+    if (!$revision_only) {
+      $this->database
+        ->delete($this->baseTable)
+        ->condition($base_table_field, $ids, 'IN')
+        ->execute();
+    }
+
+    if ($revisionable && $this->revisionTable) {
+      $this->database
+        ->delete($this->revisionTable)
+        ->condition($base_table_field, $ids, 'IN')
+        ->execute();
+    }
+
+    if (!$revision_only && $this->dataTable) {
+      $this->database
+        ->delete($this->dataTable)
+        ->condition($base_table_field, $ids, 'IN')
+        ->execute();
+    }
+
+    if ($revisionable && $this->revisionDataTable) {
+      $this->database
+        ->delete($this->revisionDataTable)
+        ->condition($base_table_field, $ids, 'IN')
+        ->execute();
+    }
+
+    // Delete the field data.
+    if (!empty($field_table_field)) {
+      $table_mapping = $this->getTableMapping();
+      foreach ($this->fieldStorageDefinitions as $storage_definition) {
+        if (!$table_mapping->requiresDedicatedTableStorage($storage_definition)) {
+          continue;
+        }
+        $table_name = $table_mapping->getDedicatedDataTableName($storage_definition);
+        $revision_name = $table_mapping->getDedicatedRevisionTableName($storage_definition);
+
+        if (!$revision_only) {
+          $this->database
+            ->delete($table_name)
+            ->condition($field_table_field, $ids, 'IN')
+            ->execute();
+        }
+
+        if ($this->entityType->isRevisionable()) {
+          $this->database
+            ->delete($revision_name)
+            ->condition($field_table_field, $ids, 'IN')
+            ->execute();
+        }
+      }
+    }
+  }
+
+  /**
+   * Truncate the base, revision and data tables for the entity type.
+   */
+  public function deleteAll() {
+    $transaction = $this->database->startTransaction();
+    try {
+      $this->database->truncate($this->baseTable)->execute();
+      if ($this->revisionTable) {
+        $this->database->truncate($this->revisionTable)->execute();
+      }
+      if ($this->dataTable) {
+        $this->database->truncate($this->dataTable)->execute();
+      }
+      if ($this->revisionDataTable) {
+        $this->database->truncate($this->revisionDataTable)->execute();
+      }
+      $this->deleteAllFromDedicatedTables();
+    }
+    catch (\Exception $exception) {
+      $transaction->rollBack();
+      watchdog_exception($this->entityTypeId, $exception);
+      throw new EntityStorageException($exception->getMessage(), $exception->getCode(), $exception);
+    }
+  }
+
+  /**
+   * Truncate the field tables for the entity type.
+   */
+  protected function deleteAllFromDedicatedTables() {
+    $table_mapping = $this->getTableMapping();
+
+    foreach ($this->fieldStorageDefinitions as $storage_definition) {
+      if (!$table_mapping->requiresDedicatedTableStorage($storage_definition)) {
+        continue;
+      }
+
+      $table_name = $table_mapping->getDedicatedDataTableName($storage_definition);
+      $revision_name = $table_mapping->getDedicatedRevisionTableName($storage_definition);
+
+      $this->database->truncate($table_name)->execute();
+      if ($this->entityType->isRevisionable()) {
+        $this->database->truncate($revision_name)->execute();
+      }
+    }
   }
 
 }

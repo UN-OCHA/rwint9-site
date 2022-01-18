@@ -32,8 +32,57 @@ class UrlAlias extends EntityBase {
     $query->fields('ua', ['pid', 'source', 'alias']);
     $query->innerJoin($subquery, 'sq', 'ua.source  = %alias.source AND ua.pid <> %alias.pid');
     $query->orderBy('ua.pid', 'ASC');
+    $query->groupBy('ua.alias');
 
     return $query;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function doPreloadExisting(array $ids) {
+    if (!empty($ids)) {
+      return $this->getDatabaseConnection()
+        ->select('redirect', 'r')
+        ->fields('r', ['rid'])
+        ->condition('r.rid', $ids, 'IN')
+        ->execute()
+        ?->fetchCol() ?? [];
+    }
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDestinationEntityIds() {
+    return $this->getDatabaseConnection()
+      ->select('redirect', 'r')
+      ->fields('r', ['rid'])
+      ->orderBy('r.rid', 'ASC')
+      ->execute()
+      ?->fetchAllKeyed(0, 0) ?? [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDestinationEntityIdsToDelete(array $ids) {
+    if (!empty($ids)) {
+      return array_diff($ids, $this->select('url_alias', 'ua')
+        ->fields('ua', ['pid'])
+        ->condition('ua.pid', $ids, 'IN')
+        ->execute()
+        ?->fetchCol() ?? []);
+    }
+    return [];
+  }
+
+  /**
+   * Remove the entities from the D9 site that don't exist in the D7 site.
+   */
+  protected function removeDeletedEntities() {
+    // Skip because, we do a full re-import when running this migration.
   }
 
   /**
