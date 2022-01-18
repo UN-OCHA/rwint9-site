@@ -29,6 +29,9 @@ class AccumulatedRedirectStorage extends SqlContentEntityStorage implements Accu
     // Reset the accumulator.
     $this->accumulator = [];
 
+    // Reset the entity id accumulator.
+    $this->accumulatedEntityIds = [];
+
     // Reset the accumulation counter.
     $this->accumulationCounter = 0;
   }
