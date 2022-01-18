@@ -22,7 +22,7 @@ fin drush reliefweb_subscriptions:send --verbose
 fin drush reliefweb_subscriptions:queue training --verbose
 fin drush reliefweb_subscriptions:send --verbose
 
-fin drush reliefweb_subscriptions:queue disaster --verbose --entity_type=disaster --entity_id=42169
+fin drush reliefweb_subscriptions:queue disaster --verbose --entity_type=taxonomy_term --entity_id=42169
 fin drush reliefweb_subscriptions:send --verbose
 
 fin drush reliefweb_subscriptions:queue ocha_sitrep --verbose
