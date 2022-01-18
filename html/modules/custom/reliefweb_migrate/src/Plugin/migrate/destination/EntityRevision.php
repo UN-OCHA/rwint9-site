@@ -59,13 +59,12 @@ class EntityRevision extends EntityRevisionBase implements ImportAwareInterface 
    * {@inheritdoc}
    */
   protected function getEntity(Row $row, array $old_destination_id_values) {
-    $revision_id = reset($old_destination_id_values) ?: $this->getEntityRevisionId($row);
-
-    // Delete the existing revision so we can insert the new one without having
-    // to worry about changes, unwanted new revisions etc.
-    if ($this->migration->getSourcePlugin()->entityExists($revision_id)) {
-      $this->storage->deleteRevision($revision_id);
+    if (!($this->storage instanceof AccumulatedSqlContentEntityStorageInterface)) {
+      return parent::getEntity($row, $old_destination_id_values);
     }
+
+    $revision_id = reset($old_destination_id_values) ?: $this->getEntityRevisionId($row);
+    $exists = $this->migration->getSourcePlugin()->entityExists($revision_id);
 
     // Attempt to ensure we always have a bundle.
     if ($bundle = $this->getBundle($row)) {
@@ -81,6 +80,7 @@ class EntityRevision extends EntityRevisionBase implements ImportAwareInterface 
     $entity->enforceIsNew(FALSE);
     $entity->isDefaultRevision(FALSE);
     $entity->setNewRevision(TRUE);
+    $entity->_exists = $exists;
     return $entity;
   }
 

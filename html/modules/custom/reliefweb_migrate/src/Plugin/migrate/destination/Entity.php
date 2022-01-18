@@ -14,7 +14,10 @@ use Drupal\migrate\Plugin\migrate\destination\EntityContentBase;
 use Drupal\migrate\Row;
 use Drupal\reliefweb_migrate\Entity\AccumulatedPathAliasStorage;
 use Drupal\reliefweb_migrate\Entity\AccumulatedSqlContentEntityStorageInterface;
+use Drupal\reliefweb_migrate\Plugin\migrate\id_map\AccumulatedSql;
+use Drupal\reliefweb_migrate\Plugin\migrate\source\EntityBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * Entity migration destination.
@@ -39,6 +42,13 @@ class Entity extends EntityContentBase implements ImportAwareInterface {
    * @var \Drupal\reliefweb_migrate\Entity\AccumulatedPathAliasStorage
    */
   protected $pathAliasStorage;
+
+  /**
+   * Batch size.
+   *
+   * @var int
+   */
+  protected $batchSize;
 
   /**
    * Constructs a content entity.
@@ -118,14 +128,15 @@ class Entity extends EntityContentBase implements ImportAwareInterface {
   protected function getEntity(Row $row, array $old_destination_id_values) {
     $entity_id = reset($old_destination_id_values) ?: $this->getEntityId($row);
 
-    // Delete the existing entity so we can insert the new one without having
-    // to worry about changes, unwanted new revisions etc.
-    if ($this->migration->getSourcePlugin()->entityExists($entity_id)) {
-      $entity = $this->storage->load($entity_id);
-      if (!empty($entity)) {
-        $entity->_is_migrating = TRUE;
-        $entity->delete();
-      }
+    $source_plugin = $this->migration->getSourcePlugin();
+    if ($source_plugin instanceof EntityBase) {
+      $exists = $this->migration->getSourcePlugin()->entityExists($entity_id);
+    }
+    elseif ($original = $this->storage->load($entity_id)) {
+      $exists = TRUE;
+    }
+    else {
+      $exists = FALSE;
     }
 
     // Attempt to ensure we always have a bundle.
@@ -133,35 +144,123 @@ class Entity extends EntityContentBase implements ImportAwareInterface {
       $row->setDestinationProperty($this->getKey('bundle'), $bundle);
     }
 
+    // When the entity already exists, we still create a new entity with the new
+    // data rather than trying to update the revious data to make sure
+    // everything is properly overridden.
     $entity = $this->storage->create($row->getDestination());
-    $entity->enforceIsNew();
     $entity->isDefaultRevision(TRUE);
     if ($entity->getEntityType()->isRevisionable()) {
       $entity->setNewRevision(TRUE);
     }
+
+    if ($exists) {
+      $entity->enforceIsNew(FALSE);
+      $entity->original = $this->storage->load($entity_id);
+      $entity->original->_is_migrating = TRUE;
+      $entity->_exists = TRUE;
+    }
+    else {
+      $entity->enforceIsNew(TRUE);
+    }
     return $entity;
+  }
+
+  /**
+   * Get the destination entity bundle if any.
+   *
+   * @return string|null
+   *   Destination entity bundle.
+   */
+  public function getDestinationBundle() {
+    return $this->configuration['default_bundle'] ?? NULL;
+  }
+
+  /**
+   * Delete all the previously imported content.
+   */
+  public function deleteImported() {
+    // Truncate all the database tables.
+    if ($this->storage instanceof AccumulatedSqlContentEntityStorageInterface) {
+      $this->storage->deleteAll();
+    }
+    // Remove the migration mapping.
+    $id_map = $this->migration->getIdMap();
+    if ($id_map instanceof AccumulatedSql) {
+      $id_map->deleteIdMapping();
+    }
+    // Remove the high water if any.
+    $source_plugin = $this->migration->getSourcePlugin();
+    if ($source_plugin instanceof EntityBase) {
+      $source_plugin->resetHighWater();
+    }
   }
 
   /**
    * {@inheritdoc}
    */
   protected function save(ContentEntityInterface $entity, array $old_destination_id_values = []) {
-    if (isset($entity->url_alias)) {
-      $path_alias = $this->pathAliasStorage->create([
-        'path' => '/' . strtr($entity->getEntityTypeId(), '_', '/') . '/' . $entity->id(),
-        'alias' => '/' . trim($entity->url_alias, " \n\r\t\v\0\\/"),
-        'langcode' => $entity->language()->getId(),
-      ]);
-      $this->pathAliasStorage->save($path_alias);
-      unset($entity->url_alias);
-    }
+    $this->saveUrlAlias($entity);
 
     if ($this->storage instanceof AccumulatedSqlContentEntityStorageInterface) {
-      $this->storage->saveAccumulated($entity, $this->migration->getSourcePlugin()->getBatchSize());
+      $this->storage->saveAccumulated($entity, $this->getBatchSize());
       return [$entity->id()];
     }
     else {
       return parent::save($entity, $old_destination_id_values);
+    }
+  }
+
+  /**
+   * Get the migration batch size.
+   *
+   * @return int
+   *   The migration batch size.
+   */
+  protected function getBatchSize() {
+    if (!isset($this->batchSize)) {
+      $source_plugin = $this->migration->getSourcePlugin();
+      if ($source_plugin instanceof EntityBase) {
+        $this->batchSize = $this->migration->getSourcePlugin()->getBatchSize();
+      }
+      else {
+        $this->batchSize = 1000;
+      }
+    }
+    return $this->batchSize;
+  }
+
+  /**
+   * Save the url alias for the entity.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   Entity.
+   */
+  protected function saveUrlAlias(ContentEntityInterface $entity) {
+    if (isset($entity->url_alias) && isset($this->pathAliasStorage)) {
+      $path = '/' . strtr($entity->getEntityTypeId(), '_', '/') . '/' . $entity->id();
+      $alias = '/' . trim($entity->url_alias['alias'], " \n\r\t\v\0\\/");
+      $uuid = Uuid::v3(Uuid::fromString(Uuid::NAMESPACE_URL), 'https://reliefweb.int' . $path)->toRfc4122();
+      $path_alias = $this->pathAliasStorage->create([
+        'id' => $entity->url_alias['id'],
+        'uuid' => $uuid,
+        'path' => $path,
+        'alias' => $alias,
+        'langcode' => $entity->language()->getId(),
+      ]);
+      $this->pathAliasStorage->saveAccumulated($path_alias);
+      unset($entity->url_alias);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function rollback(array $destination_identifier) {
+    // Delete the specified entity from Drupal if it exists.
+    $entity = $this->storage->load(reset($destination_identifier));
+    if ($entity) {
+      $entity->_is_migrating = TRUE;
+      $entity->delete();
     }
   }
 

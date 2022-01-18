@@ -21,12 +21,7 @@ use Drupal\reliefweb_utility\Helpers\LegacyHelper;
  */
 class Report extends Node {
 
-  /**
-   * Store the list of duplicate reports.
-   *
-   * @var array
-   */
-  protected $duplicateReports;
+  use SourceReportTrait;
 
   /**
    * Preloaded attachment data.
@@ -40,31 +35,7 @@ class Report extends Node {
    */
   public function query() {
     $query = parent::query();
-
-    // Retrieve duplicate reports. We cannot easily identify all the duplicates
-    // but those with attachments are easy enough to find and are the
-    // problematic ones.
-    if (!isset($this->duplicateReports)) {
-      $duplicate_query = $this->select('field_data_field_file', 'f');
-      $duplicate_query->addField('f', 'field_file_fid', 'fid');
-      $duplicate_query->addExpression('COUNT(f.field_file_fid)', 'total');
-      $duplicate_query->addExpression('GROUP_CONCAT(f.entity_id ORDER BY f.entity_id)', 'ids');
-      $duplicate_query->groupBy('f.field_file_fid');
-      $duplicate_query->having('total > 1');
-
-      $this->duplicateReports = [];
-      foreach ($duplicate_query->execute() ?? [] as $record) {
-        $ids = explode(',', $record['ids']);
-        if (min($ids) !== max($ids)) {
-          $this->duplicateReports = array_merge($this->duplicateReports, array_slice($ids, 0, -1));
-        }
-      }
-    }
-
-    if (!empty($this->duplicateReports)) {
-      $query->condition('n.nid', $this->duplicateReports, 'NOT IN');
-    }
-
+    $this->removeDuplicateReports($query);
     return $query;
   }
 
@@ -119,8 +90,12 @@ class Report extends Node {
         $item = $items[$record->fid];
         $item['uuid'] = LegacyHelper::generateAttachmentUuid($record->uri);
         $item['file_uuid'] = LegacyHelper::generateAttachmentFileUuid($item['uuid'], $record->fid);
-        if (!empty($item['preview_page'])) {
+        if (!empty($item['preview_page']) && $record->filemime = 'application/pdf') {
           $item['preview_uuid'] = LegacyHelper::generateAttachmentPreviewUuid($item['uuid'], $item['file_uuid']);
+        }
+        else {
+          unset($item['preview_page']);
+          unset($item['preview_rotation']);
         }
         $item['file_name'] = $record->filename;
         $item['file_mime'] = $record->filemime;

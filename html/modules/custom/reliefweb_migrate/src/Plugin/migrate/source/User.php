@@ -76,6 +76,49 @@ class User extends EntityBase {
   /**
    * {@inheritdoc}
    */
+  protected function doPreloadExisting(array $ids) {
+    if (!empty($ids)) {
+      return $this->getDatabaseConnection()
+        ->select('users', 'u')
+        ->fields('u', ['uid'])
+        ->condition('u.uid', $ids, 'IN')
+        ->execute()
+        ?->fetchCol() ?? [];
+    }
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDestinationEntityIds() {
+    return $this->getDatabaseConnection()
+      ->select('users', 'u')
+      ->fields('u', ['uid'])
+      // Skip the anonymous, admin and system users.
+      ->condition('u.uid', 2, '>')
+      ->orderBy('u.uid', 'ASC')
+      ->execute()
+      ?->fetchAllKeyed(0, 0) ?? [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDestinationEntityIdsToDelete(array $ids) {
+    if (!empty($ids)) {
+      return array_diff($ids, $this->select('users', 'u')
+        ->fields('u', ['uid'])
+        ->condition('u.uid', $ids, 'IN')
+        ->execute()
+        ?->fetchCol() ?? []);
+    }
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function fields() {
     return [
       // Base `users` table fields.

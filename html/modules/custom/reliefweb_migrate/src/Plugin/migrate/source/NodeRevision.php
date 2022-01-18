@@ -31,6 +31,56 @@ class NodeRevision extends Node {
   /**
    * {@inheritdoc}
    */
+  protected function doPreloadExisting(array $ids) {
+    if (!empty($ids)) {
+      return $this->getDatabaseConnection()
+        ->select('node_revision', 'nr')
+        ->fields('nr', ['vid'])
+        ->condition('nr.vid', $ids, 'IN')
+        ->execute()
+        ?->fetchCol() ?? [];
+    }
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDestinationEntityIds() {
+    $bundle = $this->configuration['bundle'];
+    if ($bundle === 'topics') {
+      $bundle = 'topic';
+    }
+
+    $query = $this->getDatabaseConnection()
+      ->select('node_revision', 'nr')
+      ->fields('nr', ['vid'])
+      ->orderBy('nr.vid', 'ASC');
+
+    $query->innerJoin('node', 'n', 'n.nid = nr.nid AND n.vid <> nr.vid');
+    $query->condition('n.type', $bundle, '=');
+
+    return $query->execute()
+      ?->fetchAllKeyed(0, 0) ?? [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDestinationEntityIdsToDelete(array $ids) {
+    if (!empty($ids)) {
+      return array_diff($ids, $this->select('node_revision', 'nr')
+        ->fields('nr', ['vid'])
+        ->condition('nr.vid', $ids, 'IN')
+        ->execute()
+        ?->fetchCol() ?? []);
+    }
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getIds() {
     $ids['vid']['type'] = 'integer';
     $ids['vid']['alias'] = 'nr';

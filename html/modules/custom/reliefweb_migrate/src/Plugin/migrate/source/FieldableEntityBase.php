@@ -119,12 +119,15 @@ abstract class FieldableEntityBase extends EntityBase {
 
     $aliases = [];
     foreach ($records as $record) {
-      $aliases[$record['source']] = $record['alias'];
+      $aliases[$record['source']] = [
+        'id' => $record['pid'],
+        'alias' => $record['alias'],
+      ];
     }
 
     foreach ($sources as $id => $source) {
       if (isset($aliases[$source])) {
-        $this->preloadedUrlAliases[$id] = '/' . $aliases[$source];
+        $this->preloadedUrlAliases[$id] = $aliases[$source];
       }
     }
   }
@@ -147,7 +150,10 @@ abstract class FieldableEntityBase extends EntityBase {
 
     $aliases = [];
     foreach ($records as $record) {
-      $aliases[$record['source']] = $record['alias'];
+      $aliases[$record['source']] = [
+        'id' => $record['pid'],
+        'alias' => $record['alias'],
+      ];
     }
 
     return $aliases[$source] ?? NULL;

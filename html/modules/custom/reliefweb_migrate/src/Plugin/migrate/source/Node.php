@@ -103,6 +103,53 @@ class Node extends FieldableEntityBase {
   /**
    * {@inheritdoc}
    */
+  protected function doPreloadExisting(array $ids) {
+    if (!empty($ids)) {
+      return $this->getDatabaseConnection()
+        ->select('node', 'n')
+        ->fields('n', ['nid'])
+        ->condition('n.nid', $ids, 'IN')
+        ->execute()
+        ?->fetchCol() ?? [];
+    }
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDestinationEntityIds() {
+    $bundle = $this->configuration['bundle'];
+    if ($bundle === 'topics') {
+      $bundle = 'topic';
+    }
+
+    return $this->getDatabaseConnection()
+      ->select('node', 'n')
+      ->fields('n', ['vid', 'nid'])
+      ->condition('n.type', $bundle, '=')
+      ->orderBy('n.nid', 'ASC')
+      ->execute()
+      ?->fetchAllKeyed(0, 1) ?? [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDestinationEntityIdsToDelete(array $ids) {
+    if (!empty($ids)) {
+      return array_diff($ids, $this->select('node', 'n')
+        ->fields('n', ['nid'])
+        ->condition('n.nid', $ids, 'IN')
+        ->execute()
+        ?->fetchCol() ?? []);
+    }
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function fields() {
     // The language, promote and sticky fields are not migrated as they
     // were not used in ReliefWeb Drupal 7.

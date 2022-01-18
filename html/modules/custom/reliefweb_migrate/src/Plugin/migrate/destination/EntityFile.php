@@ -136,7 +136,7 @@ class EntityFile extends Entity {
       ];
     }
 
-    if (count($this->accumulatedImageUris) > 1000) {
+    if (count($this->accumulatedImageUris) >= 1000) {
       $this->flushAccumulatedImageUris();
     }
 
@@ -149,7 +149,7 @@ class EntityFile extends Entity {
   public function rollback(array $destination_identifier) {
     if (!empty($destination_identifier)) {
       // Delete the URI mapping.
-      \Drupal::database()
+      $this->database
         ->delete('reliefweb_migrate_uri_mapping')
         ->condition('id', reset($destination_identifier))
         ->execute();
@@ -170,7 +170,7 @@ class EntityFile extends Entity {
    */
   protected function flushAccumulatedImageUris() {
     if (!empty($this->accumulatedImageUris)) {
-      $query = \Drupal::database()
+      $query = $this->database
         ->insert('reliefweb_migrate_uri_mapping')
         ->fields(['id', 'new_uri', 'old_uri']);
 
