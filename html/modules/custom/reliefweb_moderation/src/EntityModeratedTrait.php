@@ -43,7 +43,7 @@ trait EntityModeratedTrait {
    * @see \Drupal\reliefweb_moderation\EntityModeratedInterface::getModerationStatus()
    */
   public function getModerationStatus() {
-    return $this->moderation_status->value ?? '';
+    return $this->moderation_status->value ?? $this->getDefaultModerationStatus();
   }
 
   /**
