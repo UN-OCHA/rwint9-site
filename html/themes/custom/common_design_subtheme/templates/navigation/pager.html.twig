@@ -33,7 +33,7 @@
 {{ attach_library('common_design_subtheme/rw-pager') }}
 {% if items %}
   <nav class="pager" role="navigation" aria-labelledby="{{ heading_id }}">
-    <h3 id="{{ heading_id }}" class="visually-hidden">{{ 'Pagination'|t }}</h3>
+    <h2 id="{{ heading_id }}" class="visually-hidden">{{ 'Pagination'|t }}</h2>
     <ul class="cd-pager__items js-pager__items">
       {# Print first item if we are not on the first page. #}
       {% if items.first %}
