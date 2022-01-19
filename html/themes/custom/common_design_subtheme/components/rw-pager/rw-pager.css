@@ -54,17 +54,3 @@
 .pager li.cd-pager__item--ellipsis:after {
   margin-left: 16px;
 }
-/* So the pager nav element expands the entire width of the cd-layout-content area. */
-@media screen and (min-width: 768px) {
-  .rw-river-page--with-advanced-search .pager {
-    width: calc(100% + 340px);
-    margin-left: -340px;
-  }
-}
-
-@media screen and (min-width: 1024px) {
-  .rw-river-page--with-advanced-search .pager {
-    width: calc(100% + 360px);
-    margin-left: -360px;
-  }
-}
