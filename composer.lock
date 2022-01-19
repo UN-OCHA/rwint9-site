@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "467886a9d48d0f0fa17f498a73a6cdc3",
+    "content-hash": "46c9ae95d6aa86693968221fc7b01df7",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -7552,6 +7552,62 @@
                 "source": "https://github.com/reactphp/promise/tree/v2.8.0"
             },
             "time": "2020-05-12T15:16:56+00:00"
+        },
+        {
+            "name": "reliefweb/api-indexer",
+            "version": "v2.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/UN-OCHA/rwint-api-indexer.git",
+                "reference": "fac34f94354d255bdcd0db03b8dec75c3ae87b37"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/UN-OCHA/rwint-api-indexer/zipball/fac34f94354d255bdcd0db03b8dec75c3ae87b37",
+                "reference": "fac34f94354d255bdcd0db03b8dec75c3ae87b37",
+                "shasum": ""
+            },
+            "require": {
+                "league/commonmark": "^1.6",
+                "php": ">=8.0"
+            },
+            "require-dev": {
+                "drupal/coder": "^8.3",
+                "phpunit/phpunit": "^9.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "RWAPIIndexer\\": "src/RWAPIIndexer"
+                }
+            },
+            "scripts": {
+                "post-install-cmd": [
+                    "@phpcs-install",
+                    "@git-hooks"
+                ],
+                "post-update-cmd": [
+                    "@phpcs-install",
+                    "@git-hooks"
+                ],
+                "phpcs-install": [
+                    "./composer-phpcs-install.sh || exit 0"
+                ],
+                "git-hooks": [
+                    "test -d .git && git config core.hooksPath git-hooks || exit 0"
+                ]
+            },
+            "description": "Standalone library to index the RW database into the API elasticsearch indexes.",
+            "keywords": [
+                "api",
+                "elasticsearch",
+                "reliefweb"
+            ],
+            "support": {
+                "source": "https://github.com/UN-OCHA/rwint-api-indexer/tree/v2.0.0",
+                "issues": "https://github.com/UN-OCHA/rwint-api-indexer/issues"
+            },
+            "time": "2022-01-19T06:31:35+00:00"
         },
         {
             "name": "reliefweb/simple-autocomplete",

@@ -42,6 +42,10 @@
         },
         {
             "type": "vcs",
+            "url": "https://github.com/UN-OCHA/rwint-api-indexer.git"
+        },
+        {
+            "type": "vcs",
             "url": "https://github.com/UN-OCHA/common_design.git"
         }
     ],
@@ -81,6 +85,7 @@
         "league/commonmark": "^1.6",
         "league/html-to-markdown": "^5.0",
         "pelago/emogrifier": "^6.0",
+        "reliefweb/api-indexer": "^v2.0.0",
         "reliefweb/simple-autocomplete": "^v1.3.0",
         "reliefweb/simple-datepicker": "^v1.3.1",
         "symfony/flex": "^2.0",
