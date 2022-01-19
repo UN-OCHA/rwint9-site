@@ -1,0 +1,13 @@
+diff --git a/src/Drush.php b/src/Drush.php
+index 111116952..e9a7fb69b 100644
+--- a/src/Drush.php
++++ b/src/Drush.php
+@@ -68,7 +68,7 @@ class Drush
+      *
+      * @var int
+      */
+-    protected const TIMEOUT = 14400;
++    protected const TIMEOUT = 28800;
+ 
+     public static function getTimeout(): int
+     {
