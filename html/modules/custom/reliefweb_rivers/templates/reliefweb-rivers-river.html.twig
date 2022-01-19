@@ -63,7 +63,8 @@
     <footer class="rw-river__view-more view-more">
       <a href="{{ more.url }}">{{ more.label ?? ('View more'|t) }}</a>
     </footer>
-  {% elseif entities is not empty and pager is not empty %}
-    {{ pager }}
   {% endif %}
 </section>
+{% if entities is not empty and pager is not empty %}
+  {{ pager }}
+{% endif %}
