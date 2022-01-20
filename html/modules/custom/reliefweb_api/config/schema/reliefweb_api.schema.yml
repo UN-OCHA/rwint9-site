@@ -19,4 +19,7 @@ reliefweb_api.settings:
       label: 'Verify the SSL certificate of the API query performing requests.'
     elasticsearch:
       type: string
-      label: 'URL of the elaticsearch instance for indexing.'
+      label: 'URL of the elasticsearch instance for indexing.'
+    index_base_name:
+      type: string
+      label: 'Index base name in elasticsearch.'

@@ -193,6 +193,15 @@ abstract class RiverServiceBase implements RiverServiceInterface {
       '#advanced_search' => $this->getRiverAdvancedSearch(),
       '#content' => $this->getRiverContent(),
       '#links' => $this->getRiverLinks(),
+      '#cache' => [
+        'contexts' => [
+          'url.query_args',
+        ],
+        'tags' => [
+          $this->getEntityTypeId() . '_list:' . $this->getBundle(),
+          'taxonomy_term_list',
+        ],
+      ],
     ];
   }
 
@@ -285,6 +294,9 @@ abstract class RiverServiceBase implements RiverServiceInterface {
     return [
       '#theme' => 'reliefweb_rivers_views',
       '#views' => $views,
+      '#cache' => [
+        'max-age' => 0,
+      ],
     ];
   }
 
@@ -315,6 +327,9 @@ abstract class RiverServiceBase implements RiverServiceInterface {
         '@river' => $this->getRiver(),
       ]),
       '#query' => $search,
+      '#cache' => [
+        'max-age' => 0,
+      ],
     ];
   }
 
@@ -337,6 +352,9 @@ abstract class RiverServiceBase implements RiverServiceInterface {
       '#selection' => $advanced_search->getSelection(),
       '#remove' => $advanced_search->getClearUrl(),
       '#settings' => $advanced_search->getSettings(),
+      '#cache' => [
+        'max-age' => 0,
+      ],
     ];
   }
 
@@ -355,6 +373,9 @@ abstract class RiverServiceBase implements RiverServiceInterface {
       '#entities' => $entities,
       '#pager' => $this->getRiverPager(),
       '#empty' => $this->t('No results found. Please modify your search or filter selection.'),
+      '#cache' => [
+        'max-age' => 0,
+      ],
     ];
   }
 
@@ -383,6 +404,9 @@ abstract class RiverServiceBase implements RiverServiceInterface {
       '#total' => $total,
       '#start' => $start,
       '#end' => $end,
+      '#cache' => [
+        'max-age' => 0,
+      ],
     ];
   }
 
@@ -392,6 +416,9 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   public function getRiverPager() {
     return [
       '#type' => 'pager',
+      '#cache' => [
+        'max-age' => 0,
+      ],
     ];
   }
 
@@ -402,6 +429,9 @@ abstract class RiverServiceBase implements RiverServiceInterface {
     return [
       '#theme' => 'reliefweb_rivers_links',
       '#links' => [],
+      '#cache' => [
+        'max-age' => 0,
+      ],
     ];
   }
 

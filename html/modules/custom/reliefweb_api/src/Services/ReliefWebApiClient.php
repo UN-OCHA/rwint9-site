@@ -54,7 +54,7 @@ class ReliefWebApiClient {
    *
    * @var array
    */
-  protected $cacheTags = [
+  protected static $cacheTags = [
     'reports' => ['node_list:report'],
     'jobs' => ['node_list:job'],
     'training' => ['node_list:training'],
@@ -136,7 +136,7 @@ class ReliefWebApiClient {
     $results = [];
     $api_url = $this->config->get('api_url');
     $appname = $this->config->get('appname') ?: 'reliefweb.int';
-    $cache_enabled = $cache_enabled && ($this->config->get('cache_enabled') ?: TRUE);
+    $cache_enabled = $cache_enabled && ($this->config->get('cache_enabled') ?? TRUE);
     $verify_ssl = $this->config->get('verify_ssl');
 
     // Initialize the result array and retrieve the data for the cached queries.
@@ -236,8 +236,8 @@ class ReliefWebApiClient {
 
       // Cache the data unless cache is disabled or there was an issue with the
       // request in which case $data is NULL.
-      if (isset($cache, $cache_ids[$index])) {
-        $tags = static::getCacheTags($query['resource']);
+      if (isset($cache, $cache_ids[$index], $queries[$index]['resource'])) {
+        $tags = static::getCacheTags($queries[$index]['resource']);
         $this->cache->set($cache_ids[$index], $data, $this->cache::CACHE_PERMANENT, $tags);
       }
 
