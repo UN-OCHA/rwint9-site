@@ -64,8 +64,13 @@ class ReliefWebApiCommands extends DrushCommands {
    * @command reliefweb-api:index
    *
    * @option elasticsearch Elasticsearch URL (http://host:port), defaults to
-   *   reliefweb_api_elasticsearch variable.
-   * @option base-index-name Base index name, deaults to database name.
+   *   the 'reliefweb_api.settings:elasticsearch' setting or
+   *   'http://elasticsearch:9200'.
+   * @option base-index-name Base index name, deaults to the
+   *   'reliefweb_api.settings:base_index_name' setting or the database name.
+   * @option website Site scheme and hostname to use as base for the URLs,
+   *   defaults to the 'reliefweb_api.settings:website' setting or
+   *   'https://reliefweb.int'.
    * @option limit Maximum number of entities to index, defaults to 0 (all).
    * @option offset ID of the entity from which to start the indexing, defaults
    *   to the most recent one.
@@ -84,6 +89,7 @@ class ReliefWebApiCommands extends DrushCommands {
    *   if id is provided.
    * @option replace Replace the old index if tag is provided and different than
    *   the current one, ignored if id is provided.
+   * @option memory_limit PHP memory limit, defaults to 512M.
    *
    * @default $options []
    *
@@ -107,6 +113,7 @@ class ReliefWebApiCommands extends DrushCommands {
   public function index($bundle = '', array $options = [
     'elasticsearch' => '',
     'base-index-name' => '',
+    'website' => '',
     'limit' => 0,
     'offset' => 0,
     'filter' => '',
@@ -118,6 +125,7 @@ class ReliefWebApiCommands extends DrushCommands {
     'alias' => FALSE,
     'alias-only' => FALSE,
     'log' => 'echo',
+    'memory_limit' => '512M',
   ]) {
     // Index all the references at once when the special 'references' bundle
     // is passed to the command.
@@ -132,24 +140,12 @@ class ReliefWebApiCommands extends DrushCommands {
     $tag = $this->state->get('reliefweb_api_index_tag_' . $bundle, '');
     $replace = !empty($options['replace']);
 
-    // Retrieve the index base name from the config and default to the database
-    // name if not set.
-    $index_base_name = $this->apiConfig->get('index_base_name') ?? '';
-    if (empty($index_base_name)) {
-      $connection_info = Database::getConnectionInfo('default');
-      if (isset($connection_info['default']['database'])) {
-        $index_base_name = $connection_info['default']['database'];
-      }
-    }
-
-    // Retrieve the elasticsearch URL.
-    $elasticsearch = $this->apiConfig->get('elasticsearch') ?? '';
-
     // Index indexing options.
     $indexing_options = reliefweb_api_get_indexer_base_options();
     $indexing_options['bundle'] = $bundle;
-    $indexing_options['elasticsearch'] = $options['elasticsearch'] ?: $elasticsearch;
-    $indexing_options['base-index-name'] = $options['base-index-name'] ?: $index_base_name;
+    $indexing_options['elasticsearch'] = $options['elasticsearch'] ?: $indexing_options['elasticsearch'];
+    $indexing_options['base-index-name'] = $options['base-index-name'] ?: $indexing_options['base-index-name'];
+    $indexing_options['website'] = $options['website'] ?: $indexing_options['website'];
     $indexing_options['limit'] = (int) ($options['limit'] ?: 0);
     $indexing_options['offset'] = (int) ($options['offset'] ?: 0);
     $indexing_options['filter'] = $options['filter'] ?: '';
@@ -162,7 +158,7 @@ class ReliefWebApiCommands extends DrushCommands {
     $indexing_options['log'] = 'echo';
 
     // Make sure there is enough memory.
-    ini_set('memory_limit', '512M');
+    ini_set('memory_limit', $options['memory_limit'] ?: '512MB');
 
     // Launch the indexing or index removal.
     try {
@@ -180,7 +176,7 @@ class ReliefWebApiCommands extends DrushCommands {
 
       // Replace the old index by the new one.
       if (empty($indexing_options['id']) && !empty($replace)) {
-        $this->replace($bundle, $indexing_options['tag'], $tag);
+        $this->replace($bundle, $indexing_options['tag'], $tag, $options);
       }
     }
     catch (\Exception $exception) {
@@ -201,6 +197,14 @@ class ReliefWebApiCommands extends DrushCommands {
    * @param string|null $oldtag
    *   Old index tag, defaults to the reliefweb_api_index_tag variable for the
    *   bundle.
+   * @param array $options
+   *   Additional options for the command.
+   *
+   * @option elasticsearch Elasticsearch URL (http://host:port), defaults to
+   *   the 'reliefweb_api.settings:elasticsearch' setting or
+   *   'http://elasticsearch:9200'.
+   * @option base-index-name Base index name, deaults to the
+   *   'reliefweb_api.settings:base_index_name' setting or the database name.
    *
    * @command reliefweb-api:replace
    *
@@ -211,7 +215,10 @@ class ReliefWebApiCommands extends DrushCommands {
    *
    * @aliases rw-api:replace, rw-api:r, rwapi-r
    */
-  public function replace($bundle, $newtag, $oldtag = NULL) {
+  public function replace($bundle, $newtag, $oldtag = NULL, array $options = [
+    'elasticsearch' => '',
+    'base-index-name' => '',
+  ]) {
     if (!isset($oldtag)) {
       $oldtag = $this->state->get('reliefweb_api_index_tag_' . $bundle, '');
     }
@@ -221,14 +228,16 @@ class ReliefWebApiCommands extends DrushCommands {
     }
     else {
       $base_options = reliefweb_api_get_indexer_base_options();
+      $base_options['bundle'] = $bundle;
+      $base_options['elasticsearch'] = $options['elasticsearch'] ?: $base_options['elasticsearch'];
+      $base_options['base-index-name'] = $options['base-index-name'] ?: $base_options['base-index-name'];
 
       try {
         // Set the alias for the new index.
-        $indexing_options = $base_options + [
-          'bundle' => $bundle,
+        $indexing_options = array_merge($base_options, [
           'tag' => $newtag,
           'alias-only' => TRUE,
-        ];
+        ]);
         $manager = new Manager($indexing_options);
         $manager->execute();
       }
@@ -239,11 +248,10 @@ class ReliefWebApiCommands extends DrushCommands {
 
       try {
         // Remove the old index.
-        $indexing_options = $base_options + [
-          'bundle' => $bundle,
+        $indexing_options = array_merge($base_options, [
           'tag' => $oldtag,
           'remove' => TRUE,
-        ];
+        ]);
         $manager = new Manager($indexing_options);
         $manager->execute();
       }
