@@ -1,4 +1,4 @@
-uuid: 6c99bc54-fbd5-48f4-a760-b4513c6dfae6
+uuid: a4eb8c3c-faa0-4887-9612-d9f43a91d49a
 langcode: en
 status: true
 dependencies:
@@ -6,7 +6,7 @@ dependencies:
     module:
       - reliefweb_migrate
 _core:
-  default_config_hash: wZ1IaGKvr9y87bD8zGnu6Tr2fvpHu7VF2IDZnp7BJA8
+  default_config_hash: h8KWWXno6IxOKxWqxJ3Em-Vn-kxb4cwPS2Wqn6AUjlo
 id: reliefweb_term
 label: 'ReliefWeb Migration - Terms'
 description: 'Migrate ReliefWeb terms from Drupal 7 to Drupal 9.'
@@ -24,8 +24,12 @@ shared_configuration:
     plugin: reliefweb_taxonomy_term
     constants:
       format: markdown
+    batch_size: 1000
+    high_water_property:
+      name: revision_id
+      alias: tdr
   destination:
-    plugin: 'entity:taxonomy_term'
+    plugin: 'reliefweb_entity:taxonomy_term'
   process:
     tid: tid
     vid:
@@ -66,21 +70,21 @@ shared_configuration:
         normal: 1
         ongoing: 1
         past: 1
-    moderation_state:
+    moderation_status:
       plugin: static_map
       source: field_status/0/value
       map:
         active: active
         alert: alert
-        alert-archive: alert_archive
+        alert-archive: alert-archive
         archive: archive
         blocked: blocked
         draft: draft
-        draft-archive: draft_archive
+        draft-archive: draft-archive
         duplicate: duplicate
         current: ongoing
         external: external
-        external-archive: external_archive
+        external-archive: external-archive
         inactive: inactive
         normal: normal
         ongoing: ongoing
@@ -96,6 +100,13 @@ shared_configuration:
     revision_log_message: revision_log_message
     revision_created: revision_created
     revision_default: revision_default
+    url_lias:
+      plugin: skip_on_empty
+      method: process
+      source: url_alias
+    path/pathauto:
+      plugin: default_value
+      default_value: 0
     notifications_content_disable:
       plugin: default_value
       default_value: 1

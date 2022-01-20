@@ -19,7 +19,7 @@ source:
     uid:
       type: integer
 destination:
-  plugin: entity:user
+  plugin: reliefweb_entity:user
 process:
   uid: uid
   name: name
@@ -54,17 +54,10 @@ process:
   field_notes/value:
     plugin: default_value
     default_value: 'System account used for automated tasks/changes'
-  # Disable path alias generation as aliases are already imported.
+  # Disable path alias generation.
   path/pathauto:
     plugin: default_value
     default_value: 0
-  path/alias:
-    -
-      plugin: default_value
-      default_value: ''
-    -
-      plugin: skip_on_empty
-      method: process
   # Flag the entity as being migrated.
   _is_migrating:
     plugin: default_value

@@ -1,9 +1,9 @@
-uuid: de2982fa-3ab6-4b7e-82f1-657457ae3a77
+uuid: 55d65fa9-909b-4c34-a307-05087549eb1b
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: _GCe7Mu0jNiOJst3TKuIrod_nvHxh7MUZg13XUip6Ug
+  default_config_hash: hqlEXveIRd7Ce5p3pbrAQjHGjn5Amgy8xMvbxdIfM3Y
 id: reliefweb_url_alias
 class: null
 field_plugin_method: null
@@ -13,20 +13,22 @@ migration_group: reliefweb_extra
 label: 'Migrate ReliefWeb URL aliases'
 source:
   plugin: reliefweb_url_alias
+  batch_size: 1000
+  high_water_property:
+    name: pid
+    alias: ua
   constants:
     uid: 2
     code: 301
-    prefix: 'internal:/'
 process:
   rid: pid
   uid: constants/uid
   status_code: constants/code
   redirect_source/path: alias
-  redirect_source/uri:
-    plugin: concat
-    source:
-      - constants/prefix
-      - source
+  redirect_redirect/uri: source
+  _is_migrating:
+    plugin: default_value
+    default_value: 1
 destination:
-  plugin: 'entity:redirect'
+  plugin: 'reliefweb_entity:redirect'
 migration_dependencies: null

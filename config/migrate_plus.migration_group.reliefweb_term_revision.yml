@@ -1,4 +1,4 @@
-uuid: a0fe1416-f8b8-4a80-901a-c05e98db44d0
+uuid: 5a562e56-04f9-48f3-9f78-75fd43bbaf38
 langcode: en
 status: true
 dependencies:
@@ -6,7 +6,7 @@ dependencies:
     module:
       - reliefweb_migrate
 _core:
-  default_config_hash: U0W5uKe8dAmeukdwCwGA-8GQN-Ki4rbq6tRGEAWHqeI
+  default_config_hash: tS_31Bhvno2adarJKEFtU7i1eLpEST0eBF3f5-B_pt8
 id: reliefweb_term_revision
 label: 'ReliefWeb Migration - Term revisions'
 description: 'Migrate ReliefWeb term revisions from Drupal 7 to Drupal 9.'
@@ -25,8 +25,12 @@ shared_configuration:
     plugin: reliefweb_taxonomy_term_revision
     constants:
       format: markdown
+    batch_size: 1000
+    high_water_property:
+      name: revision_id
+      alias: tdr
   destination:
-    plugin: 'entity_revision:taxonomy_term'
+    plugin: 'reliefweb_entity_revision:taxonomy_term'
   process:
     tid: tid
     vid:
@@ -67,21 +71,21 @@ shared_configuration:
         normal: 1
         ongoing: 1
         past: 1
-    moderation_state:
+    moderation_status:
       plugin: static_map
       source: field_status/0/value
       map:
         active: active
         alert: alert
-        alert-archive: alert_archive
+        alert-archive: alert-archive
         archive: archive
         blocked: blocked
         draft: draft
-        draft-archive: draft_archive
+        draft-archive: draft-archive
         duplicate: duplicate
         current: ongoing
         external: external
-        external-archive: external_archive
+        external-archive: external-archive
         inactive: inactive
         normal: normal
         ongoing: ongoing
@@ -95,8 +99,16 @@ shared_configuration:
         - 2
         - 2
     revision_log_message: revision_log_message
-    revision_created: revision_created
+    revision_created:
+      plugin: static_map
+      bypass: true
+      source: revision_created
+      map:
+        - 844128000
     revision_default: revision_default
+    path/pathauto:
+      plugin: default_value
+      default_value: 0
     notifications_content_disable:
       plugin: default_value
       default_value: 1

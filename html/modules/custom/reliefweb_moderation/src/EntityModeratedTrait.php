@@ -11,14 +11,30 @@ use Drupal\user\EntityOwnerInterface;
 trait EntityModeratedTrait {
 
   /**
+   * Allowed moderation statuses.
+   *
+   * @var array
+   */
+  protected $allowedModerationStatuses;
+
+  /**
+   * The moderation service for the entity.
+   *
+   * @var \Drupal\reliefweb_moderation\Services\ModerationService\Interface
+   */
+  protected $moderationService;
+
+  /**
    * Set the moderation status.
    *
    * @see \Drupal\reliefweb_moderation\EntityModeratedInterface::setModerationStatus()
    */
   public function setModerationStatus($status) {
-    if ($this->hasField('moderation_state')) {
-      $this->set('moderation_state', $status, FALSE);
+    $statuses = $this->getAllowedModerationStatuses();
+    if (!isset($statuses[$status])) {
+      throw new \InvalidArgumentException('Status ' . $status . 'is not allowed.');
     }
+    $this->moderation_status->value = $status;
   }
 
   /**
@@ -27,37 +43,58 @@ trait EntityModeratedTrait {
    * @see \Drupal\reliefweb_moderation\EntityModeratedInterface::getModerationStatus()
    */
   public function getModerationStatus() {
-    if ($this->hasField('moderation_state')) {
-      return $this->get('moderation_state')->getString();
-    }
-    return $this->isPublished() ? 'published' : 'unpublished';
+    return $this->moderation_status->value ?? $this->getDefaultModerationStatus();
   }
 
   /**
    * Get the moderation status label.
    *
    * @see \Drupal\reliefweb_moderation\EntityModeratedInterface::getModerationStatusLabel()
-   *
-   * @todo review that because this doesn't allow for translation of the status.
    */
   public function getModerationStatusLabel() {
-    if ($this->hasField('moderation_state')) {
-      $status = $this->get('moderation_state')->getString();
+    return $this->getAllowedModerationStatuses()[$this->getModerationStatus()];
+  }
 
-      // The status label is part of the workflow configuration.
-      $config = \Drupal::config('workflows.workflow.' . $this->bundle());
-      if (!empty($config)) {
-        $label = $config->get('type_settings.states.' . $status . '.label');
+  /**
+   * Get the list of allowed statuses for the enitity.
+   *
+   * @see \Drupal\reliefweb_moderation\EntityModeratedInterface::getAllowedModerationStatuses()
+   */
+  public function getAllowedModerationStatuses() {
+    if (!isset($this->allowedModerationStatuses)) {
+      $service = $this->getModerationService();
+      if (isset($service)) {
+        $this->allowedModerationStatuses = $service->getStatuses();
       }
-
-      // If we couldn't find the label, use the moderation status itself.
-      if (empty($label)) {
-        $label = ucfirst(str_replace('_', ' ', $status));
+      else {
+        $this->allowedModerationStatuses = [
+          'draft' => $this->t('Draft'),
+          'published' => $this->t('Published'),
+        ];
       }
-
-      return $label;
     }
-    return '';
+    return $this->allowedModerationStatuses;
+  }
+
+  /**
+   * Get the default moderation status.
+   *
+   * @see \Drupal\reliefweb_moderation\EntityModeratedInterface::getDefaultModerationStatus()
+   */
+  public function getDefaultModerationStatus() {
+    return 'draft';
+  }
+
+  /**
+   * Get the moderation service for the entity.
+   *
+   * @see \Drupal\reliefweb_moderation\EntityModeratedInterface::getModerationService()
+   */
+  public function getModerationService() {
+    if (!isset($this->moderationService)) {
+      $this->moderationService = ModerationServiceBase::getModerationService($this->bundle());
+    }
+    return $this->moderationService;
   }
 
   /**

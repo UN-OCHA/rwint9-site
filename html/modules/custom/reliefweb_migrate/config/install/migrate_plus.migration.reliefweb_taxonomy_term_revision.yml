@@ -19,7 +19,7 @@ source:
     - vulnerable_groups
 process:
   # Moderation status.
-  moderation_state:
+  moderation_status:
     plugin: skip_on_empty
     method: process
     source: field_status/0/value

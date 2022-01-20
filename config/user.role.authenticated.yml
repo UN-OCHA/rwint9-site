@@ -8,10 +8,7 @@ dependencies:
     - filter.format.token_markdown
     - node.type.job
     - node.type.training
-    - workflows.workflow.job
-    - workflows.workflow.training
   module:
-    - content_moderation
     - filter
     - media
     - node
@@ -35,15 +32,9 @@ permissions:
   - 'delete own training content'
   - 'manage own subscriptions'
   - 'use enhanced input forms'
-  - 'use job transition draft'
-  - 'use job transition pending'
-  - 'use job transition published'
   - 'use text format markdown'
   - 'use text format markdown_editor'
   - 'use text format token_markdown'
-  - 'use training transition draft'
-  - 'use training transition pending'
-  - 'use training transition published'
   - 'view media'
   - 'view own posts'
   - 'view own unpublished content'

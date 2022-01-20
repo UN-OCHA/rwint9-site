@@ -13,7 +13,7 @@ reliefweb_user_posts.content:
         type: reliefweb_moderation_service
   requirements:
     _user_is_logged_in: 'TRUE'
-    _custom_access: '\Drupal\reliefweb_user_posts\Controller\UserPostsPage::checkAccess'
+    _custom_access: '\Drupal\reliefweb_user_posts\Controller\UserPostsPage::checkUserPostsPageAccess'
     user: \d+
 
 reliefweb_user_posts.autocomplete:
@@ -31,6 +31,6 @@ reliefweb_user_posts.autocomplete:
         type: reliefweb_moderation_service
   requirements:
     _user_is_logged_in: 'TRUE'
-    _custom_access: '\Drupal\reliefweb_user_posts\Controller\UserPostsPage::checkAccess'
+    _custom_access: '\Drupal\reliefweb_user_posts\Controller\UserPostsPage::checkUserPostsPageAccess'
     user: \d+
     filter: "[a-z0-9_]+"

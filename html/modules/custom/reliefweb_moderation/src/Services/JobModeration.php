@@ -146,7 +146,7 @@ class JobModeration extends ModerationServiceBase {
       'draft' => $this->t('Draft'),
       'pending' => $this->t('Pending'),
       'published' => $this->t('Published'),
-      'on_hold' => $this->t('On-hold'),
+      'on-hold' => $this->t('On-hold'),
       'refused' => $this->t('Refused'),
       'duplicate' => $this->t('Duplicate'),
       'expired' => $this->t('Expired'),
@@ -160,7 +160,7 @@ class JobModeration extends ModerationServiceBase {
     return in_array($status, [
       'draft',
       'pending',
-      'on_hold',
+      'on-hold',
       'published',
       'expired',
     ]);
@@ -198,7 +198,7 @@ class JobModeration extends ModerationServiceBase {
     // Allow deletion of draft, pending and on-hold only or of any documents
     // for editors.
     if ($operation === 'delete') {
-      $statuses = ['draft', 'pending', 'on_hold'];
+      $statuses = ['draft', 'pending', 'on-hold'];
       $access = $account->hasPermission('bypass node access') ||
                 $account->hasPermission('administer nodes') ||
                 ($access && in_array($entity->getModerationStatus(), $statuses));
@@ -215,7 +215,7 @@ class JobModeration extends ModerationServiceBase {
     $new = empty($status) || $status === 'draft' || $entity->isNew();
 
     // Only show save as draft for non-published but editable documents.
-    if ($new || in_array($status, ['draft', 'pending', 'on_hold'])) {
+    if ($new || in_array($status, ['draft', 'pending', 'on-hold'])) {
       $buttons['draft'] = [
         '#value' => $this->t('Save as draft'),
       ];
@@ -227,7 +227,7 @@ class JobModeration extends ModerationServiceBase {
       $buttons['published'] = [
         '#value' => $this->t('Publish'),
       ];
-      $buttons['on_hold'] = [
+      $buttons['on-hold'] = [
         '#value' => $this->t('On hold'),
       ];
       $buttons['duplicate'] = [

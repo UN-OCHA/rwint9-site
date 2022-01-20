@@ -249,8 +249,6 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     }
 
     // Mark as published if the status is viewable by everybody.
-    // @todo check if the status is properly set by the content_moderation
-    // module in which case that may be unnecessary.
     if ($entity instanceof EntityPublishedInterface) {
       if ($this->isViewableStatus($status, new AnonymousUserSession())) {
         $entity->setPublished();
@@ -371,8 +369,13 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     $entity = $form_state->getFormObject()->getEntity();
     $status = $entity->getModerationStatus();
 
+    // Hide the status field as it's controlled by the selection of a moderation
+    // status.
+    if (isset($form['status'])) {
+      $form['status']['#access'] = FALSE;
+    }
+
     // Disable the moderation status widget and the default submit buttons.
-    $form['moderation_state']['#access'] = FALSE;
     $form['actions']['submit']['#access'] = FALSE;
 
     // Move the preview button at the beginning if it exists.
@@ -415,7 +418,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   public function validateEntityStatus(array $element, FormStateInterface $form_state) {
     $triggering_element = $form_state->getTriggeringElement();
     if (isset($triggering_element['#entity_status']) && $triggering_element['#entity_status'] === $element['#entity_status']) {
-      $form_state->setValue(['moderation_state', 0, 'value'], $element['#entity_status']);
+      $form_state->setValue(['moderation_status', 0, 'value'], $element['#entity_status']);
     }
   }
 
@@ -425,9 +428,9 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   public function handleEntitySubmission(array $form, FormStateInterface $form_state) {
     // Alter the status based on the rest of the submitted form.
     // @todo review if that should not be done in the entity presave instead.
-    $status = $form_state->getValue(['moderation_state', 0, 'value']);
+    $status = $form_state->getValue(['moderation_status', 0, 'value']);
     $status = $this->alterSubmittedEntityStatus($status, $form_state);
-    $form_state->setValue(['moderation_state', 0, 'value'], $status);
+    $form_state->setValue(['moderation_status', 0, 'value'], $status);
   }
 
   /**
@@ -1102,14 +1105,10 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     $entity_id_field = $this->getEntityTypeIdField($entity_type_id);
     $entity_bundle_field = $this->getEntityTypeBundleField($entity_type_id);
 
-    // Base table. We use the content moderation state data table so we
-    // can easily give hints on the status to improve performances.
-    $base_table = $this->getEntityTypeDataTable('content_moderation_state');
-
     // Main query.
-    $query = $this->getDatabase()->select($base_table, 'cms')
-      ->fields('cms', ['moderation_state', 'content_entity_id'])
-      ->condition('cms.content_entity_type_id', $entity_type_id, '=');
+    $query = $this->getDatabase()
+      ->select($entity_table, $entity_table)
+      ->fields($entity_table, ['moderation_status', $entity_id_field]);
 
     // We use MySQL variables to store the count of entities per status.
     // This is much faster than executing several count queries with the same
@@ -1117,7 +1116,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     $variables = [];
     foreach (array_keys($this->getStatuses()) as $status) {
       // Statuses are machine names so it's safe to use them directly.
-      $variables['@' . $status] = $status;
+      $variables['@' . strtr($status, '-', '_')] = $status;
     }
 
     // Prepare the case expression to increment the variables.
@@ -1127,18 +1126,15 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     }
 
     // Add the expression to increment the counters.
-    $query->addExpression("CASE cms.moderation_state {$cases} END");
-
-    // Join the entity data table.
-    $entity_table_alias = $query->innerJoin($entity_table, $entity_table, "%alias.{$entity_id_field} = cms.content_entity_id");
+    $query->addExpression("CASE {$entity_table}.moderation_status {$cases} END");
 
     // Filter for the service entity bundle.
     if (!empty($bundle)) {
       if (is_array($bundle)) {
-        $query->condition($entity_table_alias . '.' . $entity_bundle_field, $bundle, 'IN');
+        $query->condition($entity_table . '.' . $entity_bundle_field, $bundle, 'IN');
       }
       else {
-        $query->condition($entity_table_alias . '.' . $entity_bundle_field, $bundle, '=');
+        $query->condition($entity_table . '.' . $entity_bundle_field, $bundle, '=');
       }
     }
 
@@ -1296,8 +1292,9 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
    */
   protected function wrapQuery(Select $query, $limit = 30) {
     $order = $this->getQueryOrderInformation();
-    $base_table_alias = $this->getQueryBaseTableAlias($query);
     $entity_type_id = $this->getEntityTypeId();
+    $entity_table = $this->getEntityTypeDataTable($entity_type_id);
+    $entity_id_field = $this->getEntityTypeIdField($entity_type_id);
 
     // Join the sort field/property table if necessary.
     if (isset($order['type'], $order['table'], $order['field'])) {
@@ -1308,12 +1305,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
       // Check the order type to determine the join condition.
       switch ($order['type']) {
         case 'field':
-          $join_condition = "%alias.entity_id = {$base_table_alias}.content_entity_id";
-          break;
-
-        case 'property':
-          $entity_id_field = $this->getEntityTypeIdField($entity_type_id);
-          $join_condition = "%alias.{$entity_id_field} = {$base_table_alias}.content_entity_id";
+          $join_condition = "%alias.entity_id = {$entity_table}.{$entity_id_field}";
           break;
       }
 
@@ -1333,14 +1325,14 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
         }
       }
       else {
-        $sort_table_alias = $base_table_alias;
+        $sort_table_alias = $entity_table;
       }
     }
     // Otherwise sort on the entity id.
     else {
-      $sort_field = 'content_entity_id';
+      $sort_field = $entity_id_field;
       $sort_direction = 'desc';
-      $sort_table_alias = $base_table_alias;
+      $sort_table_alias = $entity_table;
     }
 
     // Check the field/property to sort on is already present.
@@ -1359,7 +1351,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
 
     // Wrap the query.
     $wrapper = $this->getDatabase()->select($query, 'subquery');
-    $wrapper->addField('subquery', 'content_entity_id', 'entity_id');
+    $wrapper->addField('subquery', $entity_id_field, 'entity_id');
     $wrapper->addField('subquery', $sort_field_alias, 'sort');
 
     // Keep track of the subquery.
@@ -1380,8 +1372,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
    * Add the filters to the query.
    *
    * @param \Drupal\Core\Database\Query\Select $query
-   *   Main database query. It's a select query against the
-   *   `content_moderation_state` table.
+   *   Main database query. It's a select query against the entity data table.
    * @param array $filters
    *   Filters from which to add conditions to the query.
    */
@@ -1400,9 +1391,6 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     $entity_type_id = $this->getEntityTypeId();
     $entity_base_table = $this->getEntityTypeDataTable($entity_type_id);
     $entity_id_field = $this->getEntityTypeIdField($entity_type_id);
-
-    // The base table alias for the query is the content moderation table.
-    $base_table_alias = $this->getQueryBaseTableAlias($query);
 
     // Available widgets for the filter form.
     $widgets = [
@@ -1432,7 +1420,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
         if (count($values) > 0) {
           // Special case for the status filter which is against the base table.
           if ($name === 'status') {
-            $query->condition($base_table_alias . '.moderation_state', $values, 'IN');
+            $query->condition($entity_base_table . '.moderation_status', $values, 'IN');
             continue;
           }
           // Other filters.
@@ -2039,7 +2027,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     $revision_user_field = $this->getEntityTypeRevisionUserField($entity_type_id);
     $revision_alias = $query->innerJoin($revision_table, $revision_table, "%alias.{$revision_user_field} = {$alias}.{$id_field}");
 
-    $entity_table = $this->getEntityTypeBaseTable($entity_type_id);
+    $entity_table = $this->getEntityTypeDataTable($entity_type_id);
     $entity_bundle_field = $this->getEntityTypeBundleField($entity_type_id);
     $entity_alias = $query->innerJoin($entity_table, $entity_table, "%alias.{$revision_id_field} = {$revision_alias}.{$revision_id_field}");
     $query->condition($entity_alias . '.' . $entity_bundle_field, $bundle, '=');
@@ -2113,7 +2101,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   public function getGlideAutocompleteSuggestions($filter, $term, $conditions, array $replacements) {
     $bundle = $this->getBundle();
     $entity_type_id = $this->getEntityTypeId();
-    $entity_table = $this->getEntityTypeBaseTable('taxonomy_term');
+    $entity_table = $this->getEntityTypeDataTable('taxonomy_term');
     $entity_id_field = $this->getEntityTypeIdField('taxonomy_term');
     $entity_bundle_field = $this->getEntityTypeBundleField('taxonomy_term');
     $join_condition = "%alias.entity_id = {$entity_table}.{$entity_id_field}";
@@ -2460,6 +2448,41 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
    */
   protected function getCurrentRequest() {
     return $this->requestStack->getCurrentRequest();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function checkModerationPageAccess(AccountInterface $account) {
+    return AccessResult::allowedIfHasPermission($account, 'access content moderation backend');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBundleCreationUrl($bundle) {
+    $url_options = ['attributes' => ['target' => '_blank']];
+
+    // Nodes are special case not respecting the classic pattern.
+    if ($this->getEntityTypeId() === 'node') {
+      return Url::fromRoute('node.add', [
+        'node_type' => $bundle,
+      ], $url_options);
+    }
+    else {
+      $entity_type_id = $this->getEntityTypeId();
+
+      $bundle_entity_type_id = $this->entityTypeManager
+        ->getDefinition($entity_type_id)
+        ->getBundleEntityType();
+
+      if (!empty($bundle_entity_type_id)) {
+        return Url::fromRoute('entity.' . $entity_type_id . '.add_form', [
+          $bundle_entity_type_id => $bundle,
+        ], $url_options);
+      }
+    }
+    return NULL;
   }
 
 }

@@ -7,6 +7,17 @@ shared_configuration:
     - image
   source:
     key: rwint7
+    batch_size: 1000
+    high_water_property:
+      name: fid
+      alias: fm
+  destination:
+    plugin: reliefweb_entity:file
+  process:
+    # Disable path alias generation.
+    path/pathauto:
+      plugin: default_value
+      default_value: 0
   migration_dependencies:
     required:
       - reliefweb_user

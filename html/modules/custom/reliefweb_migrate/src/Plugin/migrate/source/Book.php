@@ -21,8 +21,9 @@ class Book extends SqlBase {
       ->fields('b', ['nid', 'bid']);
 
     $query->join('menu_links', 'ml', 'b.mlid = ml.mlid');
+    $query->addField('ml', 'plid', 'pid');
 
-    $ml_fields = ['mlid', 'plid', 'weight', 'has_children', 'depth'];
+    $ml_fields = ['weight', 'has_children', 'depth'];
     foreach (range(1, 9) as $i) {
       $field = "p$i";
       $ml_fields[] = $field;
@@ -37,8 +38,8 @@ class Book extends SqlBase {
    * {@inheritdoc}
    */
   public function getIds() {
-    $ids['mlid']['type'] = 'integer';
-    $ids['mlid']['alias'] = 'ml';
+    $ids['nid']['type'] = 'integer';
+    $ids['nid']['alias'] = 'b';
     return $ids;
   }
 
@@ -49,8 +50,7 @@ class Book extends SqlBase {
     return [
       'nid' => $this->t('Node ID'),
       'bid' => $this->t('Book ID'),
-      'mlid' => $this->t('Menu link ID'),
-      'plid' => $this->t('Parent link ID'),
+      'pid' => $this->t('Parent link ID'),
       'weight' => $this->t('Weight'),
       'p1' => $this->t('The first mlid in the materialized path. If N = depth, then pN must equal the mlid. If depth > 1 then p(N-1) must equal the parent link mlid. All pX where X > depth must equal zero. The columns p1 .. p9 are also called the parents.'),
       'p2' => $this->t('The second mlid in the materialized path. See p1.'),

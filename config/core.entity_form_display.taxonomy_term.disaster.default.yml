@@ -16,10 +16,8 @@ dependencies:
     - field.field.taxonomy_term.disaster.field_timezone
     - field.field.taxonomy_term.disaster.field_useful_links
     - taxonomy.vocabulary.disaster
-    - workflows.workflow.disaster
   module:
     - allowed_formats
-    - content_moderation
     - datetime
     - path
     - reliefweb_fields
@@ -47,7 +45,7 @@ content:
     settings:
       sort: label
       extra_data:
-        'country:moderation_state': 'country:moderation_state'
+        'country:moderation_status': 'country:moderation_status'
         'country:field_shortname': 'country:field_shortname'
         'country:tid': '0'
         'country:uuid': '0'
@@ -113,7 +111,7 @@ content:
     settings:
       sort: label
       extra_data:
-        'country:moderation_state': 'country:moderation_state'
+        'country:moderation_status': 'country:moderation_status'
         'country:field_shortname': 'country:field_shortname'
         'country:tid': '0'
         'country:uuid': '0'
@@ -160,12 +158,6 @@ content:
   field_timezone:
     type: options_select
     weight: 10
-    region: content
-    settings: {  }
-    third_party_settings: {  }
-  moderation_state:
-    type: moderation_state_default
-    weight: 12
     region: content
     settings: {  }
     third_party_settings: {  }

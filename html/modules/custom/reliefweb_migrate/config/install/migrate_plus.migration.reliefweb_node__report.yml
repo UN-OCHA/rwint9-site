@@ -2,6 +2,7 @@ id: reliefweb_node__report
 label: Migrate ReliefWeb reports.
 migration_group: reliefweb_node
 source:
+  plugin: reliefweb_report
   bundle: report
 process:
   # Fields.

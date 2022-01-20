@@ -1,9 +1,9 @@
-uuid: 59f8539a-ba85-4636-bec6-72b86c2124de
+uuid: a0071ecb-dbb5-4bf9-89f7-c5e0c36cc93e
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: sFolnH-YiMmaAMMfspP6IJkwOKKJlIcvdV7FLHsXkM0
+  default_config_hash: 9pCOPc64dPvM1-4TaBORImZPn2JSJ3cBlY5bCVL_uUA
 id: reliefweb_taxonomy_term__country
 class: null
 field_plugin_method: null
@@ -14,7 +14,7 @@ label: 'Migrate ReliefWeb country taxonomy terms.'
 source:
   bundle: country
 process:
-  moderation_state:
+  moderation_status:
     default_value: normal
   field_aliases/value:
     plugin: skip_on_empty

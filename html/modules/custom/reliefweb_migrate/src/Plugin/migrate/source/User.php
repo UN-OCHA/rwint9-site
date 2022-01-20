@@ -2,7 +2,6 @@
 
 namespace Drupal\reliefweb_migrate\Plugin\migrate\source;
 
-use Drupal\migrate\Plugin\migrate\source\SqlBase;
 use Drupal\migrate\Row;
 
 /**
@@ -12,7 +11,12 @@ use Drupal\migrate\Row;
  *   id = "reliefweb_user"
  * )
  */
-class User extends SqlBase {
+class User extends EntityBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $idField = 'uid';
 
   /**
    * {@inheritdoc}
@@ -66,8 +70,50 @@ class User extends SqlBase {
 
     $query->innerJoin($subquery, 'subquery', 'subquery.uid = u.uid');
 
-    return $query
-      ->orderBy('uid');
+    return $query->orderBy('u.uid', 'ASC');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function doPreloadExisting(array $ids) {
+    if (!empty($ids)) {
+      return $this->getDatabaseConnection()
+        ->select('users', 'u')
+        ->fields('u', ['uid'])
+        ->condition('u.uid', $ids, 'IN')
+        ->execute()
+        ?->fetchCol() ?? [];
+    }
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDestinationEntityIds() {
+    return $this->getDatabaseConnection()
+      ->select('users', 'u')
+      ->fields('u', ['uid'])
+      // Skip the anonymous, admin and system users.
+      ->condition('u.uid', 2, '>')
+      ->orderBy('u.uid', 'ASC')
+      ->execute()
+      ?->fetchAllKeyed(0, 0) ?? [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDestinationEntityIdsToDelete(array $ids) {
+    if (!empty($ids)) {
+      return array_diff($ids, $this->select('users', 'u')
+        ->fields('u', ['uid'])
+        ->condition('u.uid', $ids, 'IN')
+        ->execute()
+        ?->fetchCol() ?? []);
+    }
+    return [];
   }
 
   /**

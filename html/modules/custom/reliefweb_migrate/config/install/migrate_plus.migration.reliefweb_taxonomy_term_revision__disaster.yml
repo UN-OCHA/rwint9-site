@@ -5,7 +5,7 @@ source:
   bundle: disaster
 process:
   # Moderation status.
-  moderation_state:
+  moderation_status:
     default_value: draft
   # Fields.
   field_country:

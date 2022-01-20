@@ -19,10 +19,9 @@ source:
     - vulnerable_groups
 process:
   # Moderation status.
-  moderation_state:
-    plugin: skip_on_empty
-    method: process
-    source: field_status/0/value
+  moderation_status:
+    plugin: default_value
+    default_value: published
   status:
     default_value: 1
   # Fields.

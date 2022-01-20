@@ -131,10 +131,10 @@ class DisasterModeration extends ModerationServiceBase {
       'alert' => $this->t('Alert'),
       'ongoing' => $this->t('Ongoing'),
       'past' => $this->t('Past Disaster'),
-      'draft_archive' => $this->t('Draft Archive'),
-      'alert_archive' => $this->t('Alert Archive'),
+      'draft-archive' => $this->t('Draft Archive'),
+      'alert-archive' => $this->t('Alert Archive'),
       'external' => $this->t('External'),
-      'external_archive' => $this->t('External Archive'),
+      'external-archive' => $this->t('External Archive'),
     ];
   }
 
@@ -146,7 +146,7 @@ class DisasterModeration extends ModerationServiceBase {
     // @todo replace with permission.
     if (!UserHelper::userHasRoles(['external_disaster_manager'])) {
       unset($statuses['external']);
-      unset($statuses['external_archive']);
+      unset($statuses['external-archive']);
     }
     return $statuses;
   }
@@ -209,18 +209,18 @@ class DisasterModeration extends ModerationServiceBase {
 
       switch ($current_status) {
         case 'draft':
-        case 'draft_archive':
-          $status = 'draft_archive';
+        case 'draft-archive':
+          $status = 'draft-archive';
           break;
 
         case 'alert':
-        case 'alert_archive':
-          $status = 'alert_archive';
+        case 'alert-archive':
+          $status = 'alert-archive';
           break;
 
         case 'external':
-        case 'external_archive':
-          $status = 'external_archive';
+        case 'external-archive':
+          $status = 'external-archive';
           break;
 
         case 'current':
@@ -231,7 +231,7 @@ class DisasterModeration extends ModerationServiceBase {
 
         // Compatibility with previous archive status.
         default:
-          $status = 'alert_archive';
+          $status = 'alert-archive';
       }
     }
     return $status;
@@ -243,7 +243,7 @@ class DisasterModeration extends ModerationServiceBase {
   public function isViewableStatus($status, ?AccountInterface $account = NULL) {
     $account = $account ?: $this->currentUser;
     // External disasters are only viewable by "External disaster managers".
-    if ($status === 'external' || $status === 'external_archive') {
+    if ($status === 'external' || $status === 'external-archive') {
       return UserHelper::userHasRoles(['external_disaster_manager'], $account);
     }
     // Editors can view any disaster.
@@ -266,7 +266,7 @@ class DisasterModeration extends ModerationServiceBase {
       return FALSE;
     }
     // External disasters are only editable by "External disaster managers".
-    if ($status === 'external' || $status === 'external_archive') {
+    if ($status === 'external' || $status === 'external-archive') {
       return UserHelper::userHasRoles(['external_disaster_manager'], $account);
     }
     // Only Editors are allowed to edit disasters.

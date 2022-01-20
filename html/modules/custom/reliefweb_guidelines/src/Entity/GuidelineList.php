@@ -16,4 +16,11 @@ class GuidelineList extends GuidelineBase implements EntityModeratedInterface, E
   use EntityModeratedTrait;
   use EntityRevisionedTrait;
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultModerationStatus() {
+    return 'published';
+  }
+
 }

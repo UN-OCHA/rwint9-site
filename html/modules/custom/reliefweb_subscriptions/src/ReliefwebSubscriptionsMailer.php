@@ -2109,7 +2109,7 @@ class ReliefwebSubscriptionsMailer {
 
     // For a newly created entity, check the current status.
     if ($report->isNew()) {
-      return in_array($status, ['published', 'to_review']);
+      return in_array($status, ['published', 'to-review']);
     }
     // Otherwise compare with the status of the previous revision.
     else {
@@ -2120,15 +2120,15 @@ class ReliefwebSubscriptionsMailer {
 
       // If there is no previous revision, check the current status.
       if ($previous === $report) {
-        return in_array($status, ['published', 'to_review']);
+        return in_array($status, ['published', 'to-review']);
       }
 
       // Queue only if the document was not previously already published to
       // avoid sending multiple times notifications for the document.
       $previous_status = $previous->getModerationStatus();
       return $status !== $previous_status &&
-        in_array($status, ['published', 'to_review']) &&
-        !in_array($previous_status, ['published', 'to_review']);
+        in_array($status, ['published', 'to-review']) &&
+        !in_array($previous_status, ['published', 'to-review']);
     }
 
     return FALSE;

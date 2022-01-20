@@ -14,8 +14,12 @@ shared_configuration:
     plugin: reliefweb_taxonomy_term
     constants:
       format: markdown
+    batch_size: 1000
+    high_water_property:
+      name: revision_id
+      alias: tdr
   destination:
-    plugin: entity:taxonomy_term
+    plugin: reliefweb_entity:taxonomy_term
   process:
     tid: tid
     vid:
@@ -58,21 +62,21 @@ shared_configuration:
         ongoing: 1
         past: 1
     # Moderation status.
-    moderation_state:
+    moderation_status:
       plugin: static_map
       source: field_status/0/value
       map:
         active: active
         alert: alert
-        alert-archive: alert_archive
+        alert-archive: alert-archive
         archive: archive
         blocked: blocked
         draft: draft
-        draft-archive: draft_archive
+        draft-archive: draft-archive
         duplicate: duplicate
         current: ongoing
         external: external
-        external-archive: external_archive
+        external-archive: external-archive
         inactive: inactive
         normal: normal
         ongoing: ongoing
@@ -90,6 +94,15 @@ shared_configuration:
     revision_log_message: revision_log_message
     revision_created: revision_created
     revision_default: revision_default
+    # Url alias.
+    url_lias:
+      plugin: skip_on_empty
+      method: process
+      source: url_alias
+    # Disable path alias generation.
+    path/pathauto:
+      plugin: default_value
+      default_value: 0
     # Disable notifications.
     notifications_content_disable:
       plugin: default_value

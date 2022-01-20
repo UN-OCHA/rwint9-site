@@ -1,9 +1,9 @@
-uuid: 1d92446b-fd19-43d5-8cbd-a19851d9bd06
+uuid: 63704fd9-e6c5-451d-973c-e2cc95b16fa0
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: 1IPKr_4_rPu3U5vC5daMAfl2BDkKnRCcLRD971fWOXM
+  default_config_hash: IWA-TYJmq7W_mFwnCmi8gQ6STI-seT8Oc2ntc00_jBI
 id: reliefweb_node__report
 class: null
 field_plugin_method: null
@@ -12,6 +12,7 @@ migration_tags: null
 migration_group: reliefweb_node
 label: 'Migrate ReliefWeb reports.'
 source:
+  plugin: reliefweb_report
   bundle: report
 process:
   field_bury/value:

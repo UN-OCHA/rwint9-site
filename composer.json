@@ -71,7 +71,7 @@
         "drupal/pathauto": "^1.8",
         "drupal/redirect": "^1.7",
         "drupal/redis": "^1.5",
-        "drupal/social_auth_hid": "^2.7",
+        "drupal/social_auth_hid": "^3.0",
         "drupal/svg_image": "^1.15",
         "drupal/taxonomy_term_revision": "1.x-dev",
         "drupal/theme_switcher": "^1.2",

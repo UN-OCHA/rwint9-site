@@ -1,6 +1,9 @@
 administer subscriptions:
   title: 'Administer subscriptions'
-  description: 'Administer subscriptions any user.'
+  description: 'Administer subscriptions settings.'
 manage own subscriptions:
   title: 'Manage own subscriptions'
   description: 'Create, delete or edit own subscriptions.'
+manage other subscriptions:
+  title: 'Manage other subscriptions'
+  description: 'Create, delete or edit subscriptions from others.'

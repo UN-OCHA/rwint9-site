@@ -160,3 +160,23 @@ function common_design_subtheme_editor_link_dialog_form_after_build(array $form,
   }
   return $form;
 }
+
+/**
+ * Implements hook_theme().
+ *
+ * Add themes for the guideline edit forms.
+ */
+function common_design_subtheme_theme(array $existing, $type, $theme, $path) {
+  $hooks = [
+    'guideline_edit_form',
+  ];
+
+  return common_design_get_entity_edit_form_themes($hooks, $existing, $theme, $path);
+}
+
+/**
+ * Implements hook_form_node_HOOK_alter().
+ */
+function common_design_subtheme_form_guideline_form_alter(&$form, FormStateInterface $form_state) {
+  common_design_add_entity_edit_form_theme($form, $form_state);
+}

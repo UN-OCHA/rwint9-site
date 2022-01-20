@@ -13,7 +13,7 @@ reliefweb_bookmarks.user:
     _title: 'My bookmarks'
   requirements:
     _user_is_logged_in: 'TRUE'
-    _permission: 'bookmark content'
+    _custom_access: '\Drupal\reliefweb_bookmarks\Controller\UserBookmarksController::checkUserAccess'
     user: \d+
 
 reliefweb_bookmarks.user.type:
@@ -23,7 +23,7 @@ reliefweb_bookmarks.user.type:
     _title: 'My bookmarks'
   requirements:
     _user_is_logged_in: 'TRUE'
-    _permission: 'bookmark content'
+    _custom_access: '\Drupal\reliefweb_bookmarks\Controller\UserBookmarksController::checkUserAccess'
     user: \d+
 
 reliefweb_bookmarks.add_node:

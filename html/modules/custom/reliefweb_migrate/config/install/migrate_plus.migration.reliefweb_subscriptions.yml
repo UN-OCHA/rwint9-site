@@ -2,15 +2,16 @@ id: reliefweb_subscriptions
 label: Migrate ReliefWeb Subscriptions.
 migration_group: reliefweb_extra
 source:
-  plugin: table
+  plugin: reliefweb_table
   table_name: reliefweb_subscriptions_subscriptions
   id_fields:
     sid:
       type: string
     uid:
       type: integer
+  batch_size: 1000
 destination:
-  plugin: table
+  plugin: reliefweb_table
   table_name: reliefweb_subscriptions_subscriptions
   id_fields:
     sid:
