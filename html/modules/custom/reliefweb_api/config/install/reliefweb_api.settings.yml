@@ -9,6 +9,6 @@ cache_enabled: true
 # Verify the SSL certificate of the API query performing requests.
 verify_ssl: true
 # URL of the elasticsearch instance for indexing.
-elasticsearch: http://elasticsearch:7200
+elasticsearch: http://elasticsearch:9200
 # Index base name in elasticsearch.
 index_base_name: reliefweb
