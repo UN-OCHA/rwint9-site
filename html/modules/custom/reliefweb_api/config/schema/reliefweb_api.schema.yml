@@ -20,6 +20,9 @@ reliefweb_api.settings:
     elasticsearch:
       type: string
       label: 'URL of the elasticsearch instance for indexing.'
-    index_base_name:
+    base_index_name:
       type: string
-      label: 'Index base name in elasticsearch.'
+      label: 'Base index name in elasticsearch.'
+    website:
+      type: string
+      label: 'Scheme and host to use as base for the URLs in the indexed content.'

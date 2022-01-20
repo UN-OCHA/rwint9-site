@@ -11,4 +11,6 @@ verify_ssl: true
 # URL of the elasticsearch instance for indexing.
 elasticsearch: http://elasticsearch:9200
 # Index base name in elasticsearch.
-index_base_name: reliefweb
+base_index_name: reliefweb
+# Scheme and host to use as base for the URLs in the indexed content.
+website: https://reliefweb.int

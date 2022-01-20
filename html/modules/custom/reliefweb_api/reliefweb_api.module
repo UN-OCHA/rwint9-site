@@ -104,20 +104,21 @@ function reliefweb_api_get_indexer_base_options() {
   // Drupal database.
   $database = $connection_info['default'];
 
-  // State.
-  $state = \Drupal::state();
+  // Config.
+  $config = \Drupal::config('reliefweb_api.settings');
 
   // Indexing options to index all reports.
   $options = [
-    'elasticsearch' => $state->get('reliefweb_api_elasticsearch', 'http://elasticsearch:9200'),
+    'elasticsearch' => $config->get('elasticsearch') ?? 'http://elasticsearch:9200',
     'mysql-host' => $database['host'],
     'mysql-port' => !empty($database['port']) ? $database['port'] : 3306,
     'mysql-user' => $database['username'],
     'mysql-pass' => $database['password'],
     'database' => $database['database'],
-    'base-index-name' => $database['database'],
-    'website' => $state->get('reliefweb_api_website', 'https://reliefweb.int'),
+    'base-index-name' => $config->get('base_index_name') ?? $database['database'],
+    'website' => $config->get('website') ?? 'https://' . \Drupal::request()->getHost(),
   ];
+
   return $options;
 }
 
