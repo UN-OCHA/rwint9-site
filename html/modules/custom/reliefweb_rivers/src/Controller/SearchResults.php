@@ -129,6 +129,17 @@ class SearchResults extends ControllerBase {
       '#search' => $this->getSearch(),
       '#totals' => $totals,
       '#sections' => $sections,
+      '#cache' => [
+        'contexts' => [
+          'url.query_args',
+        ],
+        'tags' => [
+          'node_list:job',
+          'node_list:report',
+          'node_list:training',
+          'taxonomy_term_list',
+        ],
+      ],
     ];
   }
 
@@ -190,6 +201,9 @@ class SearchResults extends ControllerBase {
       '#path' => '/search/results',
       '#label' => $this->t('Search ReliefWeb'),
       '#query' => $this->getSearchQuery(),
+      '#cache' => [
+        'max-age' => 0,
+      ],
     ];
   }
 
