@@ -14,3 +14,5 @@ elasticsearch: http://elasticsearch:9200
 base_index_name: reliefweb
 # Scheme and host to use as base for the URLs in the indexed content.
 website: https://reliefweb.int
+# Whether to disable the index replica or not.
+no_replica: false

@@ -117,6 +117,7 @@ function reliefweb_api_get_indexer_base_options() {
     'database' => $database['database'],
     'base-index-name' => $config->get('base_index_name') ?? $database['database'],
     'website' => $config->get('website') ?? 'https://' . \Drupal::request()->getHost(),
+    'no-replica' => $config->get('no_replica') ?? FALSE,
   ];
 
   return $options;
