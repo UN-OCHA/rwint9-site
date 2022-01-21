@@ -78,7 +78,7 @@ class ReliefWebGuidelinesCommands extends DrushCommands {
     $this->entityTypeManager = $entity_type_manager;
     $this->fileSystem = $file_system;
     $this->httpClient = $http_client;
-    $this->trelloConfig = $config_factory->get('reliefweb_trello.settings');
+    $this->trelloConfig = $config_factory->get('reliefweb_guidelines.settings');
   }
 
   /**
@@ -94,9 +94,9 @@ class ReliefWebGuidelinesCommands extends DrushCommands {
    * @validate-module-enabled reliefweb_guidelines,reliefweb_utility
    */
   public function migrateFromTrello() {
-    $key = $this->trelloConfig->get('key');
-    $token = $this->trelloConfig->get('token');
-    $board_id = $this->trelloConfig->get('board_id');
+    $key = $this->trelloConfig->get('trello_key');
+    $token = $this->trelloConfig->get('trello_token');
+    $board_id = $this->trelloConfig->get('trello_board_id');
 
     if (empty($key) || empty($token) || empty($board_id)) {
       $this->logger->error('Missing Trello key, token or board id.');
@@ -470,8 +470,8 @@ class ReliefWebGuidelinesCommands extends DrushCommands {
    */
   protected function fetchData($url, array $parameters = []) {
     $parameters += [
-      'key' => $this->trelloConfig->get('key'),
-      'token' => $this->trelloConfig->get('token'),
+      'key' => $this->trelloConfig->get('trello_key'),
+      'token' => $this->trelloConfig->get('trello_token'),
     ];
 
     $url = Url::fromUri($url, [
