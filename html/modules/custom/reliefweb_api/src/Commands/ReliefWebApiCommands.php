@@ -89,6 +89,8 @@ class ReliefWebApiCommands extends DrushCommands {
    *   if id is provided.
    * @option replace Replace the old index if tag is provided and different than
    *   the current one, ignored if id is provided.
+   * @option count-only Get the number of indexable entities for the
+   *   options, defaults to FALSE.
    * @option memory_limit PHP memory limit, defaults to 512M.
    *
    * @default $options []
@@ -125,7 +127,8 @@ class ReliefWebApiCommands extends DrushCommands {
     'alias' => FALSE,
     'alias-only' => FALSE,
     'log' => 'echo',
-    'memory_limit' => '512M',
+    'count-only' => FALSE,
+    'memory-limit' => '512M',
   ]) {
     // Index all the references at once when the special 'references' bundle
     // is passed to the command.
@@ -155,10 +158,13 @@ class ReliefWebApiCommands extends DrushCommands {
     $indexing_options['remove'] = !empty($options['remove']);
     $indexing_options['alias'] = !empty($options['alias']);
     $indexing_options['alias-only'] = !empty($options['alias-only']);
+    // It looks like "simulate" is a reserved drush option so we need another
+    // name for the option, thus "count-only"...
+    $indexing_options['simulate'] = !empty($options['count-only']);
     $indexing_options['log'] = 'echo';
 
     // Make sure there is enough memory.
-    ini_set('memory_limit', $options['memory_limit'] ?: '512MB');
+    ini_set('memory_limit', $options['memory-limit'] ?: '512MB');
 
     // Launch the indexing or index removal.
     try {
@@ -175,7 +181,7 @@ class ReliefWebApiCommands extends DrushCommands {
       Database::getConnection('default', 'default');
 
       // Replace the old index by the new one.
-      if (empty($indexing_options['id']) && !empty($replace)) {
+      if (empty($indexing_options['id']) && !empty($replace) && empty($indexing_options['simulate'])) {
         $this->replace($bundle, $indexing_options['tag'], $tag, $options);
       }
     }
