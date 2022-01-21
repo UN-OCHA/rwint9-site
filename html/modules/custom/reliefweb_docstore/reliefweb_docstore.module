@@ -151,7 +151,7 @@ function reliefweb_docstore_entity_revision_delete(EntityInterface $entity) {
   //
   // Check if the entity has any reliefweb_file field, in which case we
   // invoke ::updateRemoteDocumentFileReferences() to update remote file
-  // references in the remote document resource associated with the resource.
+  // references in the remote document resource associated with the entity.
   foreach ($entity as $field) {
     if ($field instanceof ReliefWebFileList) {
       $field->updateRemoteDocumentFileReferences();

@@ -11,6 +11,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\reliefweb_docstore\Plugin\Field\FieldType\ReliefWebFile;
 use Drupal\reliefweb_docstore\Services\DocstoreClient;
 use Drupal\reliefweb_utility\Helpers\LegacyHelper;
+use Drupal\reliefweb_utility\Helpers\UrlHelper;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
 use Drush\Commands\DrushCommands;
 use GuzzleHttp\Psr7\Utils;
@@ -195,7 +196,7 @@ class ReliefWebDocstoreCommands extends DrushCommands {
   protected function migrateFiles(array $ids, $base_url, $local = FALSE) {
     $query = Database::getConnection('default', 'rwint7')
       ->select('field_data_field_file', 'f')
-      ->fields('f', ['entity_id'])
+      ->fields('f', ['entity_id', 'field_file_description'])
       ->condition('f.entity_type', 'node', '=')
       ->condition('f.entity_id', $ids, 'IN');
 
@@ -258,6 +259,7 @@ class ReliefWebDocstoreCommands extends DrushCommands {
       $file['file_uuid'] = $file_uuid;
       $file['url'] = $url;
       $file['private'] = strpos($file['uri'], 'private://') === 0;
+      $file['preview_url'] = $this->getPreviewUrl($record, $base_url);
     }
     else {
       $this->logger()->error(dt('No database entry found for file @uri.', [
@@ -265,6 +267,27 @@ class ReliefWebDocstoreCommands extends DrushCommands {
       ]));
     }
     return $file;
+  }
+
+  /**
+   * Get the preview URL for the file record.
+   *
+   * @param array $record
+   *   D7 file record.
+   * @param string $base_url
+   *   The base url of the site from which to retrieve the files.
+   *
+   * @return string
+   *   D7 preview URL.
+   */
+  protected function getPreviewUrl(array $record, $base_url) {
+    if (preg_match('/\|\d+\|(0|90|-90)$/', $record['field_file_description']) === 1) {
+      $filename = basename(urldecode($record['filename']), '.pdf');
+      $filename = str_replace('%', '', $filename);
+      $filename = UrlHelper::encodePath($record['fid'] . '-' . $filename . '.png');
+      return $base_url . '/sites/reliefweb.int/files/resources-pdf-previews/' . $filename;
+    }
+    return '';
   }
 
   /**
@@ -283,6 +306,8 @@ class ReliefWebDocstoreCommands extends DrushCommands {
       foreach ($files as $file) {
         if ($this->downloadLocalFile($file)) {
           $count++;
+          // Try to download the file preview.
+          $this->downloadFilePreview($file);
         }
       }
     }
@@ -307,6 +332,8 @@ class ReliefWebDocstoreCommands extends DrushCommands {
         $uuid = $this->createOrUpdateRemoteFile($file);
         if ($uuid !== FALSE) {
           $uuids[] = $uuid;
+          // Try to download the file preview.
+          $this->downloadFilePreview($file);
         }
       }
       $this->updateOrCreateRemoteDocument($entity_id, $uuids);
@@ -369,6 +396,55 @@ class ReliefWebDocstoreCommands extends DrushCommands {
       ]));
     }
     return $success;
+  }
+
+  /**
+   * Download an attachment's preview file to its local location.
+   *
+   * @param array $file
+   *   Legacy file data.
+   */
+  protected function downloadFilePreview(array $file) {
+    if (!empty($file['preview_url'])) {
+      $uri = str_replace('/attachments/', '/previews/', $file['uri']);
+      $uri = preg_replace('#\.pdf$#i', '.png', $uri);
+      $url = $file['preview_url'];
+
+      if (ReliefWebFile::prepareDirectory($uri)) {
+        try {
+          $input = Utils::TryFopen($url, 'r');
+          $output = Utils::TryFopen($uri, 'w');
+          $success = stream_copy_to_stream($input, $output);
+        }
+        catch (\Exception $exception) {
+          $this->logger()->error(dt('Unable to download preview file @url to @uri: @message.', [
+            '@url' => $url,
+            '@uri' => $uri,
+            '@message' => $exception->getMessage(),
+          ]));
+          return FALSE;
+        }
+      }
+      else {
+        $this->logger()->error(dt('Unable to create preview directory for @uri.', [
+          '@uri' => $uri,
+        ]));
+        return FALSE;
+      }
+
+      if (empty($success)) {
+        $this->logger()->error(dt('Unable to download preview file @url to @uri.', [
+          '@url' => $url,
+          '@uri' => $uri,
+        ]));
+      }
+      else {
+        $this->logger()->info(dt('Successfully downloaded preview file @url to @uri.', [
+          '@url' => $url,
+          '@uri' => $uri,
+        ]));
+      }
+    }
   }
 
   /**
