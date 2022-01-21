@@ -133,7 +133,7 @@ class UrlHelper extends DrupalUrlHelper {
       }
 
       // Return the URI with the public scheme.
-      return str_replace('/sites/default/files/', 'public://', $path);
+      return preg_replace('#/sites/[^/]+/files/#', 'public://', $path);
     }
 
     // Extract the style if any.
