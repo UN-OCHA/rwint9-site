@@ -80,6 +80,7 @@
 .rw-sectioned-content > form > .form-wrapper,
 .rw-sectioned-content > form > .form-item,
 .node-form > fieldset,
+.guideline-form > fieldset,
 .taxonomy-term-form > fieldset,
 .taxonomy-term-form > .form-wrapper {
   position: relative;
@@ -92,6 +93,7 @@
 .rw-sectioned-content > form > .form-wrapper:first-child,
 .rw-sectioned-content > form > .form-item:first-child,
 .node-form > fieldset:first-child,
+.guideline-form > fieldset:first-child,
 .taxonomy-term-form > .form-wrapper:first-child {
   padding-top: 0;
 }
@@ -100,6 +102,7 @@
 .rw-sectioned-content > form > .form-wrapper:last-child,
 .rw-sectioned-content > form > .form-item:last-child,
 .node-form > fieldset:last-child,
+.guideline-form > fieldset:last-child,
 .taxonomy-term-form > fieldset:last-child {
   padding-bottom: 0;
   border-bottom: none;
@@ -237,6 +240,7 @@
 
 /* Reset flow on TOC elements so there is no gap between them */
 .node-form fieldset,
+.guideline-form fieldset,
 .taxonomy-term-form fieldset,
 .taxonomy-term-form .field--name-field-job-import-feed.form-wrapper {
   margin-top: 0;
