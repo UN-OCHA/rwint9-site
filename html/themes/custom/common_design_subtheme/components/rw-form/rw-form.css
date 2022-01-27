@@ -404,6 +404,7 @@ form #edit-organization #edit-field-source-allowed .form-item:last-child {
   margin: 0;
 }
 
+/* stylelint-disable */
 /* Source Origin field Safari hack
 This is needed because the preceding field: field--name-field-ocha-product
 is hidden and in Safari the margin collapses unless its display is inline-block */
@@ -412,6 +413,7 @@ is hidden and in Safari the margin collapses unless its display is inline-block 
     display: inline-block
   }
 }}
+/* stylelint-enable */
 
 /* Term form Disable Notifications checkbox is inside #actions fieldset */
 form > #actions legend + .form-type-checkbox.form-item-notifications-content-disable,
