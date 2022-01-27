@@ -2972,17 +2972,17 @@
         },
         {
             "name": "drupal/guidelines",
-            "version": "1.0.0",
+            "version": "1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/guidelines.git",
-                "reference": "1.0.0"
+                "reference": "1.0.2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/guidelines-1.0.0.zip",
-                "reference": "1.0.0",
-                "shasum": "2ccc48898982e03c993b46b00e06daff8900e34c"
+                "url": "https://ftp.drupal.org/files/projects/guidelines-1.0.2.zip",
+                "reference": "1.0.2",
+                "shasum": "686ad25f09f144d774df014f0565c4ccfd61e93c"
             },
             "require": {
                 "drupal/core": "^9"
@@ -2990,8 +2990,8 @@
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "1.0.0",
-                    "datestamp": "1639049991",
+                    "version": "1.0.2",
+                    "datestamp": "1643270618",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
