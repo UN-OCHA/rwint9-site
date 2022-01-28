@@ -59,7 +59,9 @@ RUN mkdir -p /etc/nginx/custom && \
     cd /tmp && \
     git clone --branch=0.0.7 https://github.com/thibaultcha/lua-resty-jit-uuid.git && \
     cp lua-resty-jit-uuid/lib/resty/jit-uuid.lua /usr/share/lua/common/resty/ && \
-    rm -rf /tmp/lua-resty-jit-uuid
+    rm -rf /tmp/lua-resty-jit-uuid && \
+    # Permit nginx access to the X_DOCSTORE_PROVIDER_UUID env variable.
+    sed -i 's/env NGINX_OVERRIDE_PROTOCOL;/env NGINX_OVERRIDE_PROTOCOL;\n\n## Allow retrieval of a particular file version from the docstore.\nenv X_DOCSTORE_PROVIDER_UUID;/' /etc/nginx/nginx.conf
 
 COPY --from=builder /srv/www/config /srv/www/config/
 COPY --from=builder /srv/www/html /srv/www/html/
@@ -70,7 +72,6 @@ COPY --from=builder /srv/www/composer.lock /srv/www/composer.lock
 COPY --from=builder /srv/www/symfony.lock /srv/www/symfony.lock
 COPY --from=builder /srv/www/patches /srv/www/patches
 COPY --from=builder /srv/www/scripts /srv/www/scripts
-COPY --from=builder /srv/www/docker/etc/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY --from=builder /srv/www/docker/etc/nginx/apps/drupal/fastcgi_drupal.conf /etc/nginx/apps/drupal/fastcgi_drupal.conf
 COPY --from=builder /srv/www/docker/etc/nginx/apps/drupal/drupal.conf /etc/nginx/apps/drupal/drupal.conf
 COPY --from=builder /srv/www/docker/etc/nginx/custom /etc/nginx/custom/
