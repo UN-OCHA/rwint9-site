@@ -1,0 +1,5 @@
+type: module
+name: Content Entity Clone
+description: 'Provides content entity cloning.'
+package: reliefweb
+core_version_requirement: ^9

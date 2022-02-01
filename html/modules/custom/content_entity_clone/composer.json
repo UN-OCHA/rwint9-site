@@ -1,0 +1,17 @@
+{
+  "name": "drupal/content_entity_clone",
+  "description": "Provides cloning of content entity types.",
+  "type": "drupal-module",
+  "homepage": "https://www.drupal.org/project/content_entity_clone",
+  "authors": [
+    {
+      "name": "orakili",
+      "homepage": "https://www.drupal.org/u/orakili"
+    }
+  ],
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/content_entity_clone",
+    "source": "https://git.drupal.org/project/content_entity_clone.git"
+  },
+  "license": "GPL-2.0+"
+}

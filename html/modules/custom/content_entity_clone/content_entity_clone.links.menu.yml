@@ -1,0 +1,5 @@
+content_entity_clone.overview:
+  title: 'Entity cloning'
+  parent: system.admin_config_content
+  description: 'Configure which content entity type and bundle can be cloned.'
+  route_name: content_entity_clone.overview

@@ -1,0 +1,7 @@
+administer entity cloning:
+  title: 'Administer entity cloning'
+  description: 'Allow users to administer which content entity type can be cloned.'
+
+clone content entities:
+  title: 'Clone content entities'
+  description: 'Allow users to clone content entities.'

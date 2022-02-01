@@ -1,0 +1,38 @@
+content_entity_clone.bundle.settings.*.*:
+  type: config_object
+  label: 'Content entity clone field settings for the bundle.'
+  mapping:
+    enabled:
+      type: boolean
+      label: 'Enable cloning for this bundle.'
+    local_task_label:
+      type: string
+      translatable: true
+      label: 'Text of the local task link label.'
+    fields:
+      type: sequence
+      label: 'List of fields and their processor.'
+      sequence:
+        type: mapping
+        label: 'Field settings.'
+        mapping:
+          processor:
+            type: mapping
+            label: 'Field processor ID and settings.'
+            mapping:
+              id:
+                type: string
+                label: 'Field processor plugin ID.'
+              settings:
+                type: content_entity_clone.field_processor.settings.[%parent.id]
+                label: 'Plugin settings.'
+
+
+# Example of a plugin settings.
+content_entity_clone.field_processor.settings.add_suffix:
+  type: mapping
+  label: 'Add suffix settings.'
+  mapping:
+    suffix:
+      type: string
+      label: 'Suffix.'

@@ -1,0 +1,9 @@
+services:
+  content_entity_clone.service.param_converter:
+    class: Drupal\content_entity_clone\ParamConverter\EntityTypeConverter
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: paramconverter }
+  plugin.manager.content_entity_clone.field_processor:
+    class: Drupal\content_entity_clone\Plugin\FieldProcessorPluginManager
+    parent: default_plugin_manager
