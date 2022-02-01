@@ -418,6 +418,9 @@
     "react/promise": {
         "version": "v2.8.0"
     },
+    "reliefweb/api-indexer": {
+        "version": "v2.0.2"
+    },
     "reliefweb/simple-autocomplete": {
         "version": "v1.3.0"
     },
