@@ -13,7 +13,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
- * Cotent entity clone - bundle settings form handler.
+ * Content entity clone - bundle settings form handler.
  */
 class BundleSettingsForm extends FormBase {
 

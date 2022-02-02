@@ -7,7 +7,7 @@ use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\content_entity_clone\Plugin\FieldProcessorPluginBase;
 
 /**
- * Field processor that adds a ' [CLONE]' suffix to a the entity label field.
+ * Field processor that adds a ' [CLONE]' suffix to the entity label field.
  *
  * @ContentEntityCloneFieldProcessor(
  *   id = "entity_label_clone_suffix",

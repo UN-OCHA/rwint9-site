@@ -68,7 +68,7 @@ function content_entity_clone_entity_prepare_form(EntityInterface $entity, $oper
   // Get the field processor plugin manager.
   $plugin_manager = \Drupal::service('plugin.manager.content_entity_clone.field_processor');
 
-  /** @var \Drupal\Core\Field\FieldItemListInterfac $field */
+  /** @var \Drupal\Core\Field\FieldItemListInterface $field */
   foreach ($original as $field_name => $field) {
     if (!empty($fields[$field_name]['id'])) {
       // We clone the field to avoid changing the original entity.

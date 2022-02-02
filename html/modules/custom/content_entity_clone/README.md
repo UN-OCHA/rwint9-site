@@ -21,7 +21,7 @@ has been enabled.
 Field processing
 ----------------
 
-A simple field processor plugin system is provided that allow to tranform
+A simple field processor plugin system is provided that allows tranforming
 a field's values before it is copied to the new entity to be created.
 
 See `\Drupal\content_entity_clone\Plugin\FieldProcessorInterface`.
