@@ -146,6 +146,9 @@
     "drupal/console-extend-plugin": {
         "version": "0.9.5"
     },
+    "drupal/content_entity_clone": {
+        "version": "1.0.0"
+    },
     "drupal/core": {
         "version": "9.3.0"
     },
