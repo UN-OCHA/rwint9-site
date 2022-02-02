@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "89fc98596f8aead5736ff6b779ba4b3b",
+    "content-hash": "7d91941868b1e41ee72d8dd17a57a2e0",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -3952,6 +3952,51 @@
             "support": {
                 "source": "http://cgit.drupalcode.org/svg_image",
                 "issues": "http://drupal.org/project/svg_image"
+            }
+        },
+        {
+            "name": "drupal/taxonomy_term_preview",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupalcode.org/project/taxonomy_term_preview.git",
+                "reference": "1.0.0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/taxonomy_term_preview-1.0.0.zip",
+                "reference": "1.0.0",
+                "shasum": "746b553054452cd50bc8bd21635540ce65e84637"
+            },
+            "require": {
+                "drupal/core": "^9"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "drupal": {
+                    "version": "1.0.0",
+                    "datestamp": "1643767522",
+                    "security-coverage": {
+                        "status": "not-covered",
+                        "message": "Project has not opted into security advisory coverage!"
+                    }
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0+"
+            ],
+            "authors": [
+                {
+                    "name": "orakili",
+                    "homepage": "https://www.drupal.org/u/orakili"
+                }
+            ],
+            "description": "Provides preview of taxonomy terms.",
+            "homepage": "https://www.drupal.org/project/taxonomy_term_preview",
+            "support": {
+                "source": "https://git.drupal.org/project/taxonomy_term_preview.git",
+                "issues": "https://www.drupal.org/project/issues/taxonomy_term_preview"
             }
         },
         {
