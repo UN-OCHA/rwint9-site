@@ -57,8 +57,10 @@
 }
 .rw-moderation-filters .rw-moderation-filter-omnibox .fieldset-wrapper select {
   width: auto;
-  /* height: 100%; */
+  min-width: 180px;
+  height: 46px;
 }
+
 .rw-moderation-filters .rw-moderation-filter-omnibox div[data-autocomplete] > input {
   border-right: 2px solid var(--cd-reliefweb-brand-grey--light);
 }
