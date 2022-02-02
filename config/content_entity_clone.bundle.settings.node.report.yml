@@ -1,0 +1,25 @@
+enabled: true
+local_task_label: 'Clone report'
+fields:
+  title:
+    id: entity_label_clone_suffix
+  field_content_format:
+    id: copy_values
+  field_country:
+    id: copy_values
+  field_disaster:
+    id: copy_values
+  field_disaster_type:
+    id: copy_values
+  field_language:
+    id: copy_values
+  field_ocha_product:
+    id: copy_values
+  field_primary_country:
+    id: copy_values
+  field_source:
+    id: copy_values
+  field_theme:
+    id: copy_values
+  field_vulnerable_groups:
+    id: copy_values

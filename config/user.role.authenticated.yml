@@ -9,6 +9,7 @@ dependencies:
     - node.type.job
     - node.type.training
   module:
+    - content_entity_clone
     - filter
     - media
     - node
@@ -26,10 +27,13 @@ is_admin: false
 permissions:
   - 'access content'
   - 'bookmark content'
+  - 'clone content entities'
   - 'create job content'
   - 'create training content'
   - 'delete own job content'
   - 'delete own training content'
+  - 'edit own job content'
+  - 'edit own training content'
   - 'manage own subscriptions'
   - 'use enhanced input forms'
   - 'use text format markdown'
