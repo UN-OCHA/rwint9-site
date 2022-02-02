@@ -17,9 +17,9 @@ form button,
   with some exceptions (Notably "Save" buttons) */
 form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button {
   margin: 0 12px 0 0;
-  padding: 14px;
+  padding: 12px;
   color: white;
-  border: none;
+  border: 2px solid transparent;
   background: var(--cd-reliefweb-brand-blue--dark);
   font-size: 15px;
   font-weight: bold;
@@ -32,6 +32,11 @@ form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button:f
 form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button:active {
   text-decoration: underline;
   background: var(--cd-reliefweb-brand-red--dark);
+}
+form button:focus,
+form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button:focus {
+  text-decoration: underline;
+  border: 2px solid var(--cd-reliefweb-brand-grey--dark);
 }
 form:not('.subscription-form'):not('community-topics-form') .form-item .cd-button {
   transition: none;
