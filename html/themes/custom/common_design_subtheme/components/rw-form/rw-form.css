@@ -18,9 +18,9 @@ form button,
 form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button {
   margin: 0 12px 0 0;
   padding: 12px;
-  outline: none;
   color: white;
   border: 2px solid transparent;
+  outline: none;
   background: var(--cd-reliefweb-brand-blue--dark);
   font-size: 15px;
   font-weight: bold;
