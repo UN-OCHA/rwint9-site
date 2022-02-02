@@ -321,6 +321,7 @@ form .form-radios .form-type-radio {
  * are often lots of choices and this improves readability. On large screens
  * we display them in 2 or 3 columns.
  */
+form .fieldset-wrapper .form-radios .form-item,
 form fieldset.details .form-checkboxes .form-item,
 form fieldset.details .form-radios .form-item {
   display: block;
@@ -329,10 +330,13 @@ form fieldset.details .form-radios .form-item {
 }
 
 @media screen and (min-width: 768px) {
+  form .fieldset-wrapper .form-radios,
   form fieldset.details .form-checkboxes,
   form fieldset.details .form-radios {
     column-count: 2;
   }
+
+  form .fieldset-wrapper .form-radios .form-item,
   form fieldset.details .form-checkboxes .form-item,
   form fieldset.details .form-radios .form-item {
     display: inline-block;
@@ -341,6 +345,7 @@ form fieldset.details .form-radios .form-item {
 }
 
 @media screen and (min-width: 1024px) {
+  form .fieldset-wrapper .form-radios,
   form fieldset.details .form-checkboxes,
   form fieldset.details .form-radios {
     column-count: 3;
