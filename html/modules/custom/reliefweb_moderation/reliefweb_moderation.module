@@ -5,7 +5,6 @@
  * Theme declaration etc. for the reliefweb_moderation module.
  */
 
-use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
@@ -153,16 +152,30 @@ function reliefweb_moderation_moderation_status_value_callback(EntityInterface $
 
 /**
  * Implements hook_entity_access().
+ *
+ * Drupal's AccessResultNeutral is actually not neutral depending on
+ * the context: route access check ("andIf" -> Neutral = Deny) versus
+ * entity only access check ("orIf" -> Neutral = Neutral). So to
+ * prevent showing a 403 due to us returning an AccessResultNeutral, we
+ * return NULL instead which will make ModuleHandler::invokeAll() ignore
+ * the result.
+ *
+ * @see https://www.drupal.org/project/drupal/issues/2991698
+ * @see \Drupal\Core\Entity\EntityAccessControlHandler::processAccessHookResults()
+ * @see \Drupal\Core\Access\AccessManager\check()
+ * @see \Drupal\Core\Extension\ModuleHandler::invokeAll()
  */
 function reliefweb_moderation_entity_access(EntityInterface $entity, $operation, AccountInterface $account) {
   if ($entity instanceof EntityModeratedInterface) {
     $service = ModerationServiceBase::getModerationService($entity->bundle());
     if (!empty($service)) {
-      return $service->entityAccess($entity, $operation, $account);
+      $access_result = $service->entityAccess($entity, $operation, $account);
+      if (!$access_result->isNeutral()) {
+        return $access_result;
+      }
     }
   }
-  // No opinion.
-  return AccessResult::neutral();
+  return NULL;
 }
 
 /**

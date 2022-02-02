@@ -272,15 +272,17 @@ class ReportModeration extends ModerationServiceBase {
    */
   public function entityAccess(EntityModeratedInterface $entity, $operation = 'view', ?AccountInterface $account = NULL) {
     $access_result = parent::entityAccess($entity, $operation, $account);
-    $access = $access_result->isAllowed();
 
     if ($operation !== 'view') {
       // Normally editors can edit any kind of reports
       // but there are some exceptions like archived reports.
-      $access = $access && $this->isEditableStatus($entity->getModerationStatus(), $account);
+      $access = !$access_result->isForbidden() &&
+        $this->isEditableStatus($entity->getModerationStatus(), $account);
+
+      $access_result = $access ? $access_result : AccessResult::forbidden();
     }
 
-    return $access ? AccessResult::allowed() : AccessResult::forbidden();
+    return $access_result;
   }
 
   /**

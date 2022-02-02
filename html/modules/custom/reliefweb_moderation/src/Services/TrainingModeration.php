@@ -218,18 +218,18 @@ class TrainingModeration extends ModerationServiceBase {
     $account = $account ?: $this->currentUser;
 
     $access_result = parent::entityAccess($entity, $operation, $account);
-    $access = $access_result->isAllowed();
 
-    // Allow deletion of draft, pending and on-hold only or of any documents
-    // for editors.
+    // Allow deletion of draft, pending and on-hold only if not an editor.
     if ($operation === 'delete') {
       $statuses = ['draft', 'pending', 'on-hold'];
       $access = $account->hasPermission('bypass node access') ||
                 $account->hasPermission('administer nodes') ||
-                ($access && in_array($entity->getModerationStatus(), $statuses));
+                $account->hasPermission('delete any ' . $entity->bundle() . ' content') ||
+                ($access_result->isAllowed() && in_array($entity->getModerationStatus(), $statuses));
+      $access_result = $access ? AccessResult::allowed() : AccessResult::forbidden();
     }
 
-    return $access ? AccessResult::allowed() : AccessResult::forbidden();
+    return $access_result;
   }
 
   /**
