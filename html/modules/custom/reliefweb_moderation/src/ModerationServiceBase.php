@@ -325,6 +325,9 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
                 $access = UserPostingRightsHelper::userHasPostingRights($account, $entity, $status);
               }
               break;
+
+            default:
+              return AccessResult::neutral();
           }
         }
 
@@ -353,10 +356,16 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
             case 'delete':
               $access = $account->hasPermission('delete terms in ' . $bundle);
               break;
+
+            default:
+              return AccessResult::neutral();
           }
         }
 
         break;
+
+      default:
+        return AccessResult::neutral();
     }
 
     return $access ? AccessResult::allowed() : AccessResult::forbidden();
@@ -492,7 +501,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
    */
   public function getFilterDefinition($name) {
     $filters = $this->getFilterDefinitions();
-    return isset($filters[$name]) ? $filters[$name] : NULL;
+    return $filters[$name] ?? NULL;
   }
 
   /**
@@ -1448,7 +1457,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
                   }
                 }
                 elseif ($widget === 'datepicker') {
-                  list($start, $end) = array_pad(explode('-', $value, 2), 2, NULL);
+                  [$start, $end] = array_pad(explode('-', $value, 2), 2, NULL);
                   $start = intval($start);
                   $end = intval($end);
                   // Should not happen.
@@ -1506,9 +1515,9 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
               }
               elseif ($widget === 'datepicker') {
                 foreach ($values as $value) {
-                  list($start, $end) = array_pad(explode('-', $value, 2), 2, NULL);
+                  [$start, $end] = array_pad(explode('-', $value, 2), 2, NULL);
                   $start = intval($start);
-                  $end = intval(isset($end) ? $end : $start + 86399);
+                  $end = intval($end ?? $start + 86399);
                   $this->addFilterCondition($definition, $condition, $field, [
                     $start,
                     $end,
