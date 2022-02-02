@@ -117,7 +117,10 @@ form[data-with-guidelines] .rw-guideline > div > .rw-guideline__content img {
   border: 4px solid var(--cd-reliefweb-brand-grey--light);
 }
 
-/* Clear the float on preceding label to prevent extra height on the div */
-form[data-with-guidelines] .rw-autocomplete--with-show-all {
+/* Clear the float on preceding label
+/* to prevent extra height on the autocomplete div */
+form[data-with-guidelines] .rw-autocomplete--with-show-all,
+/* to ensure the WYSIWYG clears float */
+form[data-with-guidelines] button[data-guideline] + div {
   clear: both;
 }
