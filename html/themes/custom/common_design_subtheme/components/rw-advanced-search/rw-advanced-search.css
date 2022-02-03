@@ -223,7 +223,7 @@
 .rw-advanced-search__actions button {
   height: 36px;
   padding: 0 14px;
-  line-height: 36px;
+  line-height: 32px;
 }
 .rw-advanced-search__actions button[data-clear] {
   color: var(--cd-reliefweb-brand-blue--dark);
@@ -354,7 +354,7 @@
   height: 36px;
   margin: 4px 0 0 0;
   font-size: 15px;
-  line-height: 36px;
+  line-height: 32px;
 }
 .rw-advanced-search__filter-selector input {
   padding: 8px;
@@ -386,7 +386,8 @@
 .rw-advanced-search__filter-selector [data-autocomplete] {
   padding: 0;
 }
-.rw-advanced-search__filter-selector [data-autocomplete] > input {
+.rw-advanced-search__filter-selector [data-autocomplete] > input,
+.rw-advanced-search__filter-selector [data-datepicker] > input {
   box-sizing: border-box;
   height: 36px;
   padding: 8px;
