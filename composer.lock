@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "89fc98596f8aead5736ff6b779ba4b3b",
+    "content-hash": "fd277ae3d403b2ae8c0322bb5d32670f",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -3955,6 +3955,51 @@
             }
         },
         {
+            "name": "drupal/taxonomy_term_preview",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupalcode.org/project/taxonomy_term_preview.git",
+                "reference": "1.0.0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/taxonomy_term_preview-1.0.0.zip",
+                "reference": "1.0.0",
+                "shasum": "746b553054452cd50bc8bd21635540ce65e84637"
+            },
+            "require": {
+                "drupal/core": "^9"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "drupal": {
+                    "version": "1.0.0",
+                    "datestamp": "1643767522",
+                    "security-coverage": {
+                        "status": "not-covered",
+                        "message": "Project has not opted into security advisory coverage!"
+                    }
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0+"
+            ],
+            "authors": [
+                {
+                    "name": "orakili",
+                    "homepage": "https://www.drupal.org/u/orakili"
+                }
+            ],
+            "description": "Provides preview of taxonomy terms.",
+            "homepage": "https://www.drupal.org/project/taxonomy_term_preview",
+            "support": {
+                "source": "https://git.drupal.org/project/taxonomy_term_preview.git",
+                "issues": "https://www.drupal.org/project/issues/taxonomy_term_preview"
+            }
+        },
+        {
             "name": "drupal/taxonomy_term_revision",
             "version": "dev-1.x",
             "source": {
@@ -7584,16 +7629,16 @@
         },
         {
             "name": "reliefweb/api-indexer",
-            "version": "v2.0.2",
+            "version": "v2.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/rwint-api-indexer.git",
-                "reference": "4af6ed40f253dc5f5a0f67ce41666f505da2cc0b"
+                "reference": "62fd059e7c65257ec9e4f44f60492e9f7d3c7f21"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/rwint-api-indexer/zipball/4af6ed40f253dc5f5a0f67ce41666f505da2cc0b",
-                "reference": "4af6ed40f253dc5f5a0f67ce41666f505da2cc0b",
+                "url": "https://api.github.com/repos/UN-OCHA/rwint-api-indexer/zipball/62fd059e7c65257ec9e4f44f60492e9f7d3c7f21",
+                "reference": "62fd059e7c65257ec9e4f44f60492e9f7d3c7f21",
                 "shasum": ""
             },
             "require": {
@@ -7633,10 +7678,10 @@
                 "reliefweb"
             ],
             "support": {
-                "source": "https://github.com/UN-OCHA/rwint-api-indexer/tree/v2.0.2",
+                "source": "https://github.com/UN-OCHA/rwint-api-indexer/tree/v2.1.0",
                 "issues": "https://github.com/UN-OCHA/rwint-api-indexer/issues"
             },
-            "time": "2022-01-21T03:15:17+00:00"
+            "time": "2022-02-03T00:46:56+00:00"
         },
         {
             "name": "reliefweb/simple-autocomplete",

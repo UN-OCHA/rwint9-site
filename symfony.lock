@@ -224,6 +224,9 @@
     "drupal/svg_image": {
         "version": "1.15.0"
     },
+    "drupal/taxonomy_term_preview": {
+        "version": "1.0.0"
+    },
     "drupal/taxonomy_term_revision": {
         "version": "1.x-dev"
     },
@@ -422,7 +425,7 @@
         "version": "v2.8.0"
     },
     "reliefweb/api-indexer": {
-        "version": "v2.0.2"
+        "version": "v2.1.0"
     },
     "reliefweb/simple-autocomplete": {
         "version": "v1.3.0"

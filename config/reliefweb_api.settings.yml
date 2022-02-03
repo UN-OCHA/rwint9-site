@@ -8,4 +8,5 @@ verify_ssl: true
 elasticsearch: 'http://elasticsearch:9200'
 base_index_name: reliefweb
 website: 'https://reliefweb.int'
-no_replica: false
+replicas: 0
+shards: 1

@@ -92,6 +92,12 @@ class ReliefWebApiCommands extends DrushCommands {
    * @option count-only Get the number of indexable entities for the
    *   options, defaults to FALSE.
    * @option memory_limit PHP memory limit, defaults to 512M.
+   * @option replicas Number of Elasticsearch replicas for the index,
+   *   defaults to NULL which means use the reliefweb_api.settings.replicas
+   *   default config value.
+   * @option replicas Number of Elasticsearch shards for the index,
+   *   defaults to NULL which means use the reliefweb_api.settings.shards
+   *   default config value.
    *
    * @default $options []
    *
@@ -129,6 +135,8 @@ class ReliefWebApiCommands extends DrushCommands {
     'log' => 'echo',
     'count-only' => FALSE,
     'memory-limit' => '512M',
+    'replicas' => NULL,
+    'shards' => NULL,
   ]) {
     // Index all the references at once when the special 'references' bundle
     // is passed to the command.
@@ -160,11 +168,13 @@ class ReliefWebApiCommands extends DrushCommands {
     $indexing_options['alias-only'] = !empty($options['alias-only']);
     // It looks like "simulate" is a reserved drush option so we need another
     // name for the option, thus "count-only"...
+    $indexing_options['replicas'] = $options['replicas'] ?? $indexing_options['replicas'];
+    $indexing_options['shards'] = $options['shards'] ?? $indexing_options['shards'];
     $indexing_options['simulate'] = !empty($options['count-only']);
     $indexing_options['log'] = 'echo';
 
     // Make sure there is enough memory.
-    ini_set('memory_limit', $options['memory-limit'] ?: '512MB');
+    ini_set('memory_limit', $options['memory-limit'] ?: '512M');
 
     // Launch the indexing or index removal.
     try {
