@@ -489,14 +489,17 @@
           target.parentNode.parentNode.removeChild(target.parentNode);
         }
       });
-
       // Prevent form submission when pressing 'enter'.
       form.addEventListener('keydown', function (event) {
         var key = event.witch || event.keyCode;
         var target = event.target;
-        if (key === 13 && target && target.nodeName !== 'BUTTON') {
-          event.preventDefault();
-          return false;
+
+        if (key === 13 && target) {
+          // Except when Filter or Reset inputs or Create Node link is target.
+          if (target.type !== 'submit' && target.nodeName !== 'BUTTON' && target.id !== 'edit-create') {
+            event.preventDefault();
+            return false;
+          }
         }
       });
 

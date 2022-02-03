@@ -17,9 +17,10 @@ form button,
   with some exceptions (Notably "Save" buttons) */
 form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button {
   margin: 0 12px 0 0;
-  padding: 14px;
+  padding: 12px;
   color: white;
-  border: none;
+  border: 2px solid transparent;
+  outline: none;
   background: var(--cd-reliefweb-brand-blue--dark);
   font-size: 15px;
   font-weight: bold;
@@ -32,6 +33,11 @@ form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button:f
 form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button:active {
   text-decoration: underline;
   background: var(--cd-reliefweb-brand-red--dark);
+}
+form button:focus,
+form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button:focus {
+  text-decoration: underline;
+  border: 2px solid var(--cd-reliefweb-brand-grey--dark);
 }
 form:not('.subscription-form'):not('community-topics-form') .form-item .cd-button {
   transition: none;
@@ -321,6 +327,7 @@ form .form-radios .form-type-radio {
  * are often lots of choices and this improves readability. On large screens
  * we display them in 2 or 3 columns.
  */
+form .fieldset-wrapper .form-radios .form-item,
 form fieldset.details .form-checkboxes .form-item,
 form fieldset.details .form-radios .form-item {
   display: block;
@@ -329,10 +336,13 @@ form fieldset.details .form-radios .form-item {
 }
 
 @media screen and (min-width: 768px) {
+  form .fieldset-wrapper .form-radios,
   form fieldset.details .form-checkboxes,
   form fieldset.details .form-radios {
     column-count: 2;
   }
+
+  form .fieldset-wrapper .form-radios .form-item,
   form fieldset.details .form-checkboxes .form-item,
   form fieldset.details .form-radios .form-item {
     display: inline-block;
@@ -341,6 +351,7 @@ form fieldset.details .form-radios .form-item {
 }
 
 @media screen and (min-width: 1024px) {
+  form .fieldset-wrapper .form-radios,
   form fieldset.details .form-checkboxes,
   form fieldset.details .form-radios {
     column-count: 3;
@@ -495,4 +506,16 @@ form button[value="edit"] {
 .cd-form__error-message {
   background-color: var(--cd-reliefweb-pink);
   font-size: 15px;
+}
+
+/* Preview button */
+input[data-drupal-selector=edit-preview] {
+  background-color: var(--cd-grey--dark);
+}
+input[data-drupal-selector=edit-preview]:hover,
+input[data-drupal-selector=edit-preview]:focus {
+  background-color: var(--cd-grey--mid);
+}
+input[data-drupal-selector=edit-preview]:focus {
+  border: 2px solid var(--cd-black);
 }

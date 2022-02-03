@@ -283,7 +283,7 @@
       // Display the error message and highlight the faulty element.
       if (typeof error === 'string' && error !== '') {
         var message = document.createElement('div');
-        message.setAttribute('class', 'messages error');
+        message.setAttribute('class', 'messages error cd-form__error-message');
         message.setAttribute('data-error-message', '');
         message.appendChild(document.createTextNode(error));
 

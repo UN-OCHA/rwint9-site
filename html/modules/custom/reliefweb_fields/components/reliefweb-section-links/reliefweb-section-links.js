@@ -351,7 +351,7 @@
       if (typeof error === 'string' && error !== '') {
         var message = document.createElement('div');
         message.setAttribute('data-error-message', '');
-        message.setAttribute('class', 'messages error');
+        message.setAttribute('class', 'messages error cd-form__error-message');
         message.appendChild(document.createTextNode(error));
 
         // Add the message at the top of the fieldset.
