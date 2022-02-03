@@ -164,7 +164,7 @@ class ReliefWebApiCommands extends DrushCommands {
     $indexing_options['log'] = 'echo';
 
     // Make sure there is enough memory.
-    ini_set('memory_limit', $options['memory-limit'] ?: '512MB');
+    ini_set('memory_limit', $options['memory-limit'] ?: '512M');
 
     // Launch the indexing or index removal.
     try {

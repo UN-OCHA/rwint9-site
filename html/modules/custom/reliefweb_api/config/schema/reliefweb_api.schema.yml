@@ -26,6 +26,9 @@ reliefweb_api.settings:
     website:
       type: string
       label: 'Scheme and host to use as base for the URLs in the indexed content.'
-    no_replica:
-      type: boolean
-      label: 'Whether to disable the index replica or not.'
+    replicas:
+      type: integer
+      label: 'Number of elasticsearch index replicas'
+    shards:
+      type: integer
+      label: 'Number of elasticsearch index shards'
