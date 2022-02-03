@@ -224,6 +224,9 @@
     "drupal/svg_image": {
         "version": "1.15.0"
     },
+    "drupal/taxonomy_term_preview": {
+        "version": "1.0.0"
+    },
     "drupal/taxonomy_term_revision": {
         "version": "1.x-dev"
     },

@@ -78,6 +78,7 @@
         "drupal/redis": "^1.5",
         "drupal/social_auth_hid": "^3.0",
         "drupal/svg_image": "^1.15",
+        "drupal/taxonomy_term_preview": "^1.0.0",
         "drupal/taxonomy_term_revision": "1.x-dev",
         "drupal/theme_switcher": "^1.2",
         "drupal/token": "^1.10",
