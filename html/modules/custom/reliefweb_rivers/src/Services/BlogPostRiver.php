@@ -156,4 +156,96 @@ class BlogPostRiver extends RiverServiceBase {
     return $entities;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiPayloadForRss($view = '') {
+    $payload = $this->getApiPayload($view);
+    $payload['fields']['include'][] = 'image';
+    return $payload;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function parseApiDataForRss(array $data, $view = '') {
+    // Retrieve the API data (with backward compatibility).
+    $items = $data['items'] ?? $data['data'] ?? [];
+
+    // Parse the entities retrieved from the API.
+    $entities = [];
+    foreach ($items as $item) {
+      $fields = $item['fields'];
+
+      // Base article data.
+      $data = [
+        'id' => $item['id'],
+        'bundle' => $this->bundle,
+      ];
+
+      // Title.
+      $data['title'] = $fields['title'];
+
+      // Url to the article.
+      if (isset($fields['url_alias'])) {
+        $data['url'] = UrlHelper::stripDangerousProtocols($fields['url_alias']);
+      }
+      else {
+        $data['url'] = UrlHelper::getAliasFromPath('/node/' . $item['id']);
+      }
+
+      // Dates.
+      $data['date'] = static::createDate($fields['date']['created']);
+
+      // Author.
+      $data['author'] = $fields['author'] ?? 'ReliefWeb';
+
+      // Body.
+      $data['body'] = $fields['body-html'] ?? '';
+
+      // Categories.
+      $categories = [
+        'tags' => [$this->t('Tag'), $this->t('Tags')],
+      ];
+      foreach ($categories as $category => $labels) {
+        if (!empty($fields[$category])) {
+          $data['categories'][$category] = [
+            'label' => $labels[count($fields[$category]) > 1 ? 1 : 0],
+            'values' => array_map(function ($term) {
+              return $term['name'];
+            }, $fields[$category]),
+          ];
+        }
+      }
+
+      // Media: image.
+      if (isset($fields['image']['url'])) {
+        $image = $fields['image'];
+        $copyright = trim($image['copyright'] ?? '');
+        if (!empty($copyright) && mb_strpos($copyright, '©') === FALSE) {
+          $copyright = '© ' . $copyright;
+        }
+        $data['media'][] = [
+          'url' => $image['url'],
+          'filesize' => $image['filesize'] ?? 0,
+          'type' => $image['mimetype'] ?? '',
+          'medium' => 'image',
+          'expression' => 'full',
+          'height' => $image['height'] ?? 0,
+          'width' => $image['width'] ?? 0,
+          'thumbnail' => $image['url-thumb'] ?? '',
+          'title' => $image['caption'] ?? '',
+          'copyright' => $copyright,
+        ];
+      }
+
+      // Compute the language code for the resource's data.
+      $data['langcode'] = static::getLanguageCode($data);
+
+      $entities[$item['id']] = $data;
+    }
+
+    return $entities;
+  }
+
 }

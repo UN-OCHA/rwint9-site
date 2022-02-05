@@ -417,4 +417,119 @@ class TrainingRiver extends RiverServiceBase {
     return $entities;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiPayloadForRss($view = '') {
+    $payload = $this->getApiPayload($view);
+    $payload['fields']['include'][] = 'career_categories.name';
+    $payload['fields']['include'][] = 'type.name';
+    $payload['fields']['include'][] = 'theme.name';
+    $payload['fields']['include'][] = 'format.name';
+    $payload['fields']['include'][] = 'how_to_register-html';
+    return $payload;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function parseApiDataForRss(array $data, $view = '') {
+    $items = $data['items'] ?? $data['data'] ?? [];
+
+    // Parse the entities retrieved from the API.
+    $entities = [];
+    foreach ($items as $item) {
+      $fields = $item['fields'];
+
+      // Base article data.
+      $data = [
+        'id' => $item['id'],
+        'bundle' => $this->bundle,
+      ];
+
+      // Title.
+      $data['title'] = $fields['title'];
+
+      // Url to the article.
+      if (isset($fields['url_alias'])) {
+        $data['url'] = UrlHelper::stripDangerousProtocols($fields['url_alias']);
+      }
+      else {
+        $data['url'] = UrlHelper::getAliasFromPath('/node/' . $item['id']);
+      }
+
+      // Dates.
+      $data['date'] = static::createDate($fields['date']['created']);
+
+      // Body and how to apply.
+      $data['body'] = $fields['body-html'] ?? '';
+
+      if (!empty($fields['how_to_register-html'])) {
+        $data['body'] .= '<h3>' . $this->t('How to register') . '</h3>' . $fields['how_to_register-html'];
+      }
+
+      // Categories.
+      $categories = [
+        'country' => [
+          $this->t('Country'),
+          $this->t('Countries'),
+        ],
+        'source' => [
+          $this->t('Organization'),
+          $this->t('Organizations'),
+        ],
+        'career_categories' => [
+          $this->t('Career category'),
+          $this->t('Career categories'),
+        ],
+        'type' => [
+          $this->t('Job type'),
+          $this->t('Job types'),
+        ],
+        'theme' => [
+          $this->t('Theme'),
+          $this->t('Themes'),
+        ],
+        'format' => [
+          $this->t('Training format'),
+          $this->t('Training formats'),
+        ],
+      ];
+      $inline = ['country' => TRUE, 'source' => TRUE];
+      foreach ($categories as $category => $labels) {
+        if (!empty($fields[$category])) {
+          $data['categories'][$category] = [
+            'label' => $labels[count($fields[$category]) > 1 ? 1 : 0],
+            'values' => array_map(function ($term) {
+              return $term['name'];
+            }, $fields[$category]),
+            'inline' => isset($inline[$category]),
+          ];
+        }
+      }
+
+      // Dates (description header).
+      $dates = [
+        'start' => $this->t('Start date'),
+        'end' => $this->t('End date'),
+        'registration' => $this->t('Registration deadline'),
+      ];
+      foreach ($dates as $date => $label) {
+        if (!empty($fields['date'][$date])) {
+          $data['dates'][$date] = [
+            'label' => $label,
+            'value' => $fields['date'][$date],
+          ];
+        }
+      }
+
+      // Compute the language code for the resource's data.
+      $data['langcode'] = static::getLanguageCode($data);
+
+      $entities[$item['id']] = $data;
+    }
+
+    return $entities;
+  }
+
 }

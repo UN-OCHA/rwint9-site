@@ -237,6 +237,22 @@ function reliefweb_rivers_theme() {
         'sections' => [],
       ],
     ],
+    'reliefweb_rivers_rss' => [
+      'variables' => [
+        // The site URL.
+        'site_url' => '',
+        // The river RSS feed title.
+        'title' => '',
+        // The river RSS feed URL.
+        'feed_url' => '',
+        // The river RSS feed language.
+        'language' => '',
+        // The date of the most recent document matching the query parameters.
+        'date' => NULL,
+        // The articles.
+        'items' => [],
+      ],
+    ],
   ];
 
   // Add themes for the main river articles.

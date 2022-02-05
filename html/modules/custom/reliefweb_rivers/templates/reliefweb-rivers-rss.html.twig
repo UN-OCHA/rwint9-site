@@ -1,0 +1,124 @@
+{#
+
+/**
+ * @file
+ * Template for the river RSS feeds.
+ *
+ * Available variables:
+ * - site_url: the site URL
+ * - title: the RSS feed title
+ * - feed_url: the RSS feed URL
+ * - items: list of "article" items with the following properties:
+ *   - title: node title or term name
+ *   - url: canonical URL to the entity
+ *   - dates: list of dates like the publication date
+ *   - tags: list of
+ *   - categories: list of categories containing a list of terms the article
+ *     is tagged with
+ *   - author: article author (only relevant for blog posts)
+ *   - media: list of images with a url, filesize, type, medium,
+ *     expression, height, width, title and copyright.
+ *     RSS properties
+ *   - enclosure: attachment with the url, length and type.
+ */
+
+#}
+<?xml version="1.0" encoding="utf-8" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">
+  <channel>
+    <title>ReliefWeb - {{ title }}</title>
+    <description>ReliefWeb - {{ title }}</description>
+    <link>{{ site_url }}</link>
+    <atom:link rel="self" href="{{ feed_url }}" />
+    {# RSS logo. #}
+    <image>
+      <url>{{ site_url }}/themes/custom/common_design_subtheme/img/logos/ReliefWeb_RSS_logo.png</url>
+      <title>ReliefWeb - {{ title }}</title>
+      <link>{{ site_url }}</link>
+      <width>256</width>
+      <height>256</height>
+    </image>
+    <language>{{ language }}</language>
+    <copyright>{{ 'You should respect the intellectual property rights of the original source. Please contact the source directly if you want to re-use their content.'|t }}</copyright>
+    <pubDate>{{ date|date('r') }}</pubDate>
+    <lastBuildDate>{{ date|date('r') }}</lastBuildDate>
+    {# List of articles. #}
+    {% for item in items %}
+    <item>
+      <title>{{ item.title }}</title>
+      <link>{{ item.url }}</link>
+      <guid isPermaLink="true">{{ item.url }}</guid>
+      <pubDate>{{ item.date|date('r') }}</pubDate>
+      <source url="{{ feed_url }}">ReliefWeb - {{ title }}</source>
+      <description>{{ '<![CDATA['|raw }}
+        {% for key, category in item.categories if category.inline %}
+        <div class="tag {{ key }}">{{ '@label: @values'|t({
+          '@label': category.label,
+          '@values': category.values|join(', '),
+        }) }}</div>
+        {% endfor %}
+        {% for key, date in item.dates %}
+        <div class="date {{ key }}">{{ '@label: @date'|t({
+          '@label': date.label,
+          '@date': date.value|date('j M Y'),
+        }) }}</div>
+        {% endfor %}
+        {% if item.preview is not empty %}
+        <p><img src="{{ item.preview }}" alt=""></p>
+        {% endif %}
+        {% if item.summary is not empty %}
+        <p>{{ item.summary }}</p>
+        {% endif %}
+        {% if item.body is not empty %}
+        {{ item.body|sanitize_html(false, 1) }}
+        {% endif %}
+      {{ ']]>'|raw }}
+      </description>
+
+      {# Taxonomy terms. #}
+      {% for category in item.categories %}
+      {% for value in category.values %}
+      <category>{{ value }}</category>
+      {% endfor %}
+      {% endfor %}
+      {# Authour/sources of the article #}
+      {% if item.author is not empty %}
+      <author>{{ item.author }}</author>
+      {% endif %}
+      {% for source in item.categories.source.values %}
+      <author>{{ source }}</author>
+      {% endfor %}
+      {# Images. #}
+      {% for media in item.media %}
+      <media:content
+        url="{{ media.url }}"
+        filesize="{{ media.filesize }}"
+        type="{{ media.type }}"
+        medium="{{ media.medium }}"
+        expression="{{ media.expression }}"
+        height="{{ media.height }}"
+        width="{{ media.width }}"
+      >
+        {% if media.thumbnail %}
+        <media:thumbnail url="{{ media.thumbnail }}" />
+        {% endif %}
+        {% if media.title is not empty %}
+        <media:title>{{ media.title }}</media:title>
+        {% endif %}
+        {% if media.copyright is not empty %}
+        <media:copyright>{{ media.copyright }}</media:copyright>
+      {% endif %}
+      </media:content>
+      {% endfor %}
+      {# Attachments. #}
+      {% if item.enclosure %}
+      <enclosure
+        url="{{ item.enclosure.url }}"
+        length="{{ item.enclosure.length }}"
+        type="{{ item.enclosure.type }}"
+      />
+      {% endif %}
+    </item>
+    {% endfor %}
+  </channel>
+</rss>
