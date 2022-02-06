@@ -211,6 +211,15 @@ class ReportModeration extends ModerationServiceBase {
   /**
    * {@inheritdoc}
    */
+  public function getFilterDefaultStatuses() {
+    $statuses = $this->getFilterStatuses();
+    unset($statuses['archive']);
+    return array_keys($statuses);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getEntityFormSubmitButtons($status, EntityModeratedInterface $entity) {
     $buttons = [
       'draft' => [
