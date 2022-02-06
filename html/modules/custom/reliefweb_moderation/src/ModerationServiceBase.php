@@ -386,6 +386,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
 
     // Disable the moderation status widget and the default submit buttons.
     $form['actions']['submit']['#access'] = FALSE;
+    $form['actions']['overview']['#access'] = FALSE;
 
     // Move the preview button at the beginning if it exists.
     if (isset($form['actions']['preview'])) {
