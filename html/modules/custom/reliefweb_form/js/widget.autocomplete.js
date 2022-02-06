@@ -286,8 +286,8 @@
           var options = disasterElement.getElementsByTagName('option');
           for (var i = 0, l = options.length; i < l; i++) {
             var option = options[i];
-            if (option.selected && option !== exclude && option.hasAttribute('data-disaster_type')) {
-              var types = option.getAttribute('data-disaster_type').split(',');
+            if (option.selected && option !== exclude && option.hasAttribute('data-disaster-type')) {
+              var types = option.getAttribute('data-disaster-type').split(',');
               for (var j = 0, m = types.length; j < m; j++) {
                 newTypes[types[j]] = true;
               }
@@ -323,9 +323,9 @@
         disasterSelection.addEventListener('click', function (event) {
           if (event.target && event.target.nodeName === 'BUTTON') {
             var option = findOption(disasterElement, event.target.parentNode.getAttribute('data-value'));
-            if (option !== false && option.hasAttribute('data-disaster_type')) {
+            if (option !== false && option.hasAttribute('data-disaster-type')) {
               var oldTypes = {};
-              var types = option.getAttribute('data-disaster_type').split(',');
+              var types = option.getAttribute('data-disaster-type').split(',');
               for (var i = 0, l = types.length; i < l; i++) {
                 oldTypes[types[i]] = true;
               }
@@ -356,7 +356,7 @@
         // Function to handle the changes to the country field.
         var changeHandler = function () {
           // Retrieve the selected disaster types.
-          var disasterTypes = getSelectedOptionAttributeValues(disasterElement, 'data-disaster_type');
+          var disasterTypes = getSelectedOptionAttributeValues(disasterElement, 'data-disaster-type');
 
           // Get the selected options from the country field.
           var available = getSelectedOptions(countryElement);
