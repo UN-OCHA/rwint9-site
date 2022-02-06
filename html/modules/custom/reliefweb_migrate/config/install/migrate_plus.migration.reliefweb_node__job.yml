@@ -8,7 +8,7 @@ process:
   body/format:
     plugin: default_value
     default_value: "markdown_editor"
-  field_career_categories/value:
+  field_career_categories:
     plugin: sub_process
     source: field_career_categories
     process:
