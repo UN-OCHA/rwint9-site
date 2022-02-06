@@ -102,7 +102,6 @@ class CountryModeration extends ModerationServiceBase {
    */
   public function getStatuses() {
     return [
-      'draft' => $this->t('Draft'),
       'ongoing' => $this->t('Ongoing'),
       'normal' => $this->t('Normal'),
     ];
@@ -113,9 +112,6 @@ class CountryModeration extends ModerationServiceBase {
    */
   public function getEntityFormSubmitButtons($status, EntityModeratedInterface $entity) {
     return [
-      'draft' => [
-        '#value' => $this->t('Save as draft'),
-      ],
       'ongoing' => [
         '#value' => $this->t('Ongoing situation'),
       ],
