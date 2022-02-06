@@ -12,6 +12,7 @@ use Drupal\guidelines\Entity\Guideline;
 use Drush\Commands\DrushCommands;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\ClientException;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * ReliefWeb migration Drush commandfile.
@@ -112,6 +113,10 @@ class ReliefWebGuidelinesCommands extends DrushCommands {
     $shortlinks = [];
     $field_pattern = '/^field--(?<entity_type_id>[^.]+)\.(?<bundle>[^.]+)\.(?<field_name>[^.]+)$/';
 
+    // Storage for the path aliases.
+    $path_alias_storage = $this->entityTypeManager->getStorage('path_alias');
+    $path_alias_id = 10000000;
+
     // Retrieve the data from the Guidelines Trello board.
     $lists = $this->getLists($board_id);
     foreach ($lists as $weight_list => $list) {
@@ -158,6 +163,11 @@ class ReliefWebGuidelinesCommands extends DrushCommands {
           'field_images' => $images,
           'moderation_status' => 'published',
           '_is_migrating' => TRUE,
+          // Disable the automatic creation of the URL alias. We will create
+          // it manually to avoid ID conflicts with the other migrated content.
+          'path' => [
+            'pathauto' => 0,
+          ],
         ];
 
         // Check if the card has labels associated to form fields.
@@ -208,6 +218,19 @@ class ReliefWebGuidelinesCommands extends DrushCommands {
         $shortlink['guideline'] = $guideline;
         $shortlink['guideline_link'] = '/guideline/' . $shortlink['short_link'];
         $shortlinks[$shortlink['short_link']] = $shortlink;
+
+        // Create the path alias.
+        $path_alias_alias = '/guideline/' . $shortlink['short_link'];
+        $path_alias_url = 'https://reliefweb.int' . $path_alias_alias;
+        $path_alias_uuid = Uuid::v3(Uuid::fromString(Uuid::NAMESPACE_URL), $path_alias_url)->toRfc4122();
+
+        $path_alias_storage->create([
+          'id' => $path_alias_id++,
+          'uuid' => $path_alias_uuid,
+          'path' => '/admin/structure/guideline/' . $guideline->id(),
+          'alias' => $path_alias_alias,
+          'langcode' => $guideline->language()->getId(),
+        ])->save();
       }
     }
 
