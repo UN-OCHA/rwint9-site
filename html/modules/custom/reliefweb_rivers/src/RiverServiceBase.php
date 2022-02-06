@@ -3,13 +3,17 @@
 namespace Drupal\reliefweb_rivers;
 
 use Drupal\Component\Utility\Html;
-use Drupal\Core\Url;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\Core\StringTranslation\TranslationInterface;
-use Drupal\reliefweb_api\Services\ReliefWebApiClient;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Pager\PagerParametersInterface;
+use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\Core\Url;
+use Drupal\reliefweb_api\Services\ReliefWebApiClient;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 /**
@@ -18,6 +22,13 @@ use Symfony\Component\Routing\Exception\RouteNotFoundException;
 abstract class RiverServiceBase implements RiverServiceInterface {
 
   use StringTranslationTrait;
+
+  /**
+   * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected $languageManager;
 
   /**
    * The pager manager servie.
@@ -39,6 +50,20 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * @var \Drupal\reliefweb_api\Services\ReliefWebApiClient
    */
   protected $apiClient;
+
+  /**
+   * The request stack.
+   *
+   * @var \Symfony\Component\HttpFoundation\RequestStack
+   */
+  protected $requestStack;
+
+  /**
+   * The renderer service.
+   *
+   * @var \Drupal\Core\Render\RendererInterface
+   */
+  protected $renderer;
 
   /**
    * The river name.
@@ -100,19 +125,36 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   /**
    * Constructor.
    *
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   The language manager.
    * @param \Drupal\Core\Pager\PagerManagerInterface $pager_manager
    *   The pager manager service.
    * @param \Drupal\Core\Pager\PagerParametersInterface $pager_parameters
    *   The pager parameter service.
    * @param \Drupal\reliefweb_api\Services\ReliefWebApiClient $api_client
    *   The ReliefWeb API Client service.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   *   The request stack.
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   *   The renderer service.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The translation manager service.
    */
-  public function __construct(PagerManagerInterface $pager_manager, PagerParametersInterface $pager_parameters, ReliefWebApiClient $api_client, TranslationInterface $string_translation) {
+  public function __construct(
+    LanguageManagerInterface $language_manager,
+    PagerManagerInterface $pager_manager,
+    PagerParametersInterface $pager_parameters,
+    ReliefWebApiClient $api_client,
+    RequestStack $request_stack,
+    RendererInterface $renderer,
+    TranslationInterface $string_translation
+  ) {
+    $this->languageManager = $language_manager;
     $this->pagerManager = $pager_manager;
     $this->pagerParameters = $pager_parameters;
     $this->apiClient = $api_client;
+    $this->requestStack = $request_stack;
+    $this->renderer = $renderer;
     $this->stringTranslation = $string_translation;
     $this->url = static::getRiverUrl($this->getBundle());
   }
@@ -502,6 +544,106 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    */
   public function requestApi(array $payload) {
     return $this->apiClient->request($this->resource, $payload);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRssContent() {
+    $river = Html::getId($this->getRiver());
+    $request = $this->requestStack->getCurrentRequest();
+    $items = $this->getApiDataForRss();
+    $first = reset($items);
+    $date = $first['date'] ?? static::createDate(time());
+
+    $content = [
+      '#theme' => 'reliefweb_rivers_rss__' . $river,
+      '#site_url' => $request->getSchemeAndHttpHost(),
+      '#title' => $this->getPageTitle(),
+      '#feed_url' => $request->getUri(),
+      '#language' => $this->languageManager->getCurrentLanguage()->getId(),
+      '#date' => $date,
+      '#items' => $items,
+      '#cache' => [
+        'contexts' => [
+          'url.query_args',
+        ],
+        'tags' => [
+          $this->getEntityTypeId() . '_list:' . $this->getBundle(),
+          'taxonomy_term_list',
+        ],
+      ],
+    ];
+
+    $headers = [
+      'Content-Type' => 'application/rss+xml; charset=utf-8',
+      'Cache-Control' => 'private',
+    ];
+
+    return new Response($this->renderer->render($content), 200, $headers);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiDataForRss($limit = 20) {
+    $view = $this->getSelectedView();
+
+    $payload = $this->getApiPayloadForRss($view);
+    $payload['limit'] = $limit;
+
+    // Full text search.
+    // @todo add the filtering from the advanced search.
+    $search = $this->getSearch();
+    if (!empty($search)) {
+      $payload['query']['value'] = $search;
+    }
+    else {
+      unset($payload['query']);
+    }
+
+    // Generate the API filter with the facet and advanced search filters.
+    $filter = $this->getAdvancedSearch()->getApiFilter();
+    if (!empty($filter)) {
+      // Update the payload filter.
+      if (!empty($payload['filter'])) {
+        $payload['filter'] = [
+          'conditions' => [
+            $payload['filter'],
+            $filter,
+          ],
+          'operator' => 'AND',
+        ];
+      }
+      else {
+        $payload['filter'] = $filter;
+      }
+    }
+
+    // Retrieve the API data.
+    $data = $this->requestApi($payload);
+
+    // Skip if there is no data.
+    if (empty($data)) {
+      return [];
+    }
+
+    // Parse the API data and return the entities.
+    return $this->parseApiDataForRss($data, $view);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiPayloadForRss($view = '') {
+    return $this->getApiPayload($view);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function parseApiDataForRss(array $data, $view = '') {
+    return [];
   }
 
   /**

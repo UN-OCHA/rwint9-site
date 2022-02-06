@@ -3,12 +3,15 @@
 namespace Drupal\reliefweb_rivers\Services;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Pager\PagerParametersInterface;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\reliefweb_api\Services\ReliefWebApiClient;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Service class to retrieve job resource for the job rivers.
@@ -73,23 +76,42 @@ class TopicRiver extends RiverServiceBase {
   /**
    * Constructor.
    *
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   The language manager.
    * @param \Drupal\Core\Pager\PagerManagerInterface $pager_manager
    *   The pager manager service.
    * @param \Drupal\Core\Pager\PagerParametersInterface $pager_parameters
    *   The pager parameter service.
    * @param \Drupal\reliefweb_api\Services\ReliefWebApiClient $api_client
    *   The ReliefWeb API Client service.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   *   The request stack.
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   *   The renderer service.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The translation manager service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager service.
    */
-  public function __construct(PagerManagerInterface $pager_manager, PagerParametersInterface $pager_parameters, ReliefWebApiClient $api_client, TranslationInterface $string_translation, EntityTypeManagerInterface $entity_type_manager) {
-    $this->pagerManager = $pager_manager;
-    $this->pagerParameters = $pager_parameters;
-    $this->apiClient = $api_client;
-    $this->stringTranslation = $string_translation;
-    $this->url = static::getRiverUrl($this->bundle);
+  public function __construct(
+    LanguageManagerInterface $language_manager,
+    PagerManagerInterface $pager_manager,
+    PagerParametersInterface $pager_parameters,
+    ReliefWebApiClient $api_client,
+    RequestStack $request_stack,
+    RendererInterface $renderer,
+    TranslationInterface $string_translation,
+    EntityTypeManagerInterface $entity_type_manager
+  ) {
+    parent::__construct(
+      $language_manager,
+      $pager_manager,
+      $pager_parameters,
+      $api_client,
+      $request_stack,
+      $renderer,
+      $string_translation
+    );
     $this->entityTypeManager = $entity_type_manager;
   }
 

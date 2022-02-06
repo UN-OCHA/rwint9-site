@@ -1,25 +1,25 @@
 services:
   reliefweb_rivers.blog_post.river:
     class: Drupal\reliefweb_rivers\Services\BlogPostRiver
-    arguments: ['@pager.manager', '@pager.parameters', '@reliefweb_api.client', '@string_translation']
+    arguments: ['@language_manager', '@pager.manager', '@pager.parameters', '@reliefweb_api.client', '@request_stack', '@renderer', '@string_translation']
   reliefweb_rivers.country.river:
     class: Drupal\reliefweb_rivers\Services\CountryRiver
-    arguments: ['@pager.manager', '@pager.parameters', '@reliefweb_api.client', '@string_translation']
+    arguments: ['@language_manager', '@pager.manager', '@pager.parameters', '@reliefweb_api.client', '@request_stack', '@renderer', '@string_translation']
   reliefweb_rivers.disaster.river:
     class: Drupal\reliefweb_rivers\Services\DisasterRiver
-    arguments: ['@pager.manager', '@pager.parameters', '@reliefweb_api.client', '@string_translation']
+    arguments: ['@language_manager', '@pager.manager', '@pager.parameters', '@reliefweb_api.client', '@request_stack', '@renderer', '@string_translation']
   reliefweb_rivers.job.river:
     class: Drupal\reliefweb_rivers\Services\JobRiver
-    arguments: ['@pager.manager', '@pager.parameters', '@reliefweb_api.client', '@string_translation']
+    arguments: ['@language_manager', '@pager.manager', '@pager.parameters', '@reliefweb_api.client', '@request_stack', '@renderer', '@string_translation']
   reliefweb_rivers.topic.river:
     class: Drupal\reliefweb_rivers\Services\TopicRiver
-    arguments: ['@pager.manager', '@pager.parameters', '@reliefweb_api.client', '@string_translation', '@entity_type.manager']
+    arguments: ['@language_manager', '@pager.manager', '@pager.parameters', '@reliefweb_api.client', '@request_stack', '@renderer', '@string_translation', '@entity_type.manager']
   reliefweb_rivers.report.river:
     class: Drupal\reliefweb_rivers\Services\ReportRiver
-    arguments: ['@pager.manager', '@pager.parameters', '@reliefweb_api.client', '@string_translation']
+    arguments: ['@language_manager', '@pager.manager', '@pager.parameters', '@reliefweb_api.client', '@request_stack', '@renderer', '@string_translation']
   reliefweb_rivers.source.river:
     class: Drupal\reliefweb_rivers\Services\SourceRiver
-    arguments: ['@pager.manager', '@pager.parameters', '@reliefweb_api.client', '@string_translation']
+    arguments: ['@language_manager', '@pager.manager', '@pager.parameters', '@reliefweb_api.client', '@request_stack', '@renderer', '@string_translation']
   reliefweb_rivers.training.river:
     class: Drupal\reliefweb_rivers\Services\TrainingRiver
-    arguments: ['@pager.manager', '@pager.parameters', '@reliefweb_api.client', '@string_translation']
+    arguments: ['@language_manager', '@pager.manager', '@pager.parameters', '@reliefweb_api.client', '@request_stack', '@renderer', '@string_translation']
