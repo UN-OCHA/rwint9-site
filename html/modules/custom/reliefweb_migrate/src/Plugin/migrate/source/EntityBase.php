@@ -14,7 +14,7 @@ use Drupal\reliefweb_migrate\Plugin\migrate\id_map\AccumulatedSql;
 /**
  * Base entity source plugin for reliefweb migrations.
  */
-abstract class EntityBase extends SqlBase implements ImportAwareInterface, RollbackAwareInterface, SourceMigrationStatusInterface {
+abstract class EntityBase extends SqlBase implements ImportAwareInterface, RollbackAwareInterface, SourceMigrationHighWaterInterface, SourceMigrationStatusInterface {
 
   /**
    * Entity type.
@@ -324,6 +324,23 @@ abstract class EntityBase extends SqlBase implements ImportAwareInterface, Rollb
    */
   public function resetHighWater() {
     $this->getHighWaterStorage()->set($this->migration->id(), NULL);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setHighWaterToLatestNonImported() {
+    $destination_ids = $this->getDestinationEntityIds();
+    $source_ids = $this->getSourceEntityIds();
+    $imported_ids = array_intersect($destination_ids, $source_ids);
+    $updated_ids = array_diff_assoc($imported_ids, $source_ids);
+    $new_ids = array_diff($source_ids, $imported_ids);
+    $ids = array_keys($new_ids + $updated_ids);
+
+    if (!empty($ids)) {
+      $this->getHighWaterStorage()->set($this->migration->id(), min($ids) - 1);
+    }
+    return $this->getHighWater();
   }
 
   /**
