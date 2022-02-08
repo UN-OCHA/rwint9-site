@@ -138,8 +138,8 @@ class UserPostsService extends ModerationServiceBase {
       ],
       'status' => [
         'label' => $this->t('Status'),
-        'type' => '',
-        'specifier' => 'moderation_state',
+        'type' => 'property',
+        'specifier' => 'moderation_status',
         'sortable' => TRUE,
       ],
       'poster' => [

@@ -150,4 +150,11 @@ class Country extends Term implements BundleEntityInterface, EntityModeratedInte
     return $client->getKeyFiguresBuild($iso3, $this->label());
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultModerationStatus() {
+    return 'normal';
+  }
+
 }

@@ -229,8 +229,14 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     $condition = [
       'select[name="field_source[]"]' => ['value' => ['1503']],
     ];
-    $widget['#states']['visible'] = $condition;
+    // We put the visibility state on the container to avoid styling issues with
+    // the surrounding elements but we need to to put the required state on the
+    // widget element for it to work properly.
+    $form['field_ocha_product']['#states']['visible'] = $condition;
     $widget['#states']['required'] = $condition;
+
+    // Remove the empty option.
+    unset($widget['#options']['_none']);
 
     // For the above to work we need the drupal states extension.
     // @todo remove if the equivalent is added to core.
@@ -272,7 +278,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     }
     // Remove the ocha product otherwise.
     elseif (!$selected && !empty($ocha_product)) {
-      $form_state->getValue(['field_ocha_product', 0, 'target_id'], NULL);
+      $form_state->setValue(['field_ocha_product', 0, 'target_id'], NULL);
     }
   }
 

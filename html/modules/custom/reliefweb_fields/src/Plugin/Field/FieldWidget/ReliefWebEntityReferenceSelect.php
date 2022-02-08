@@ -355,7 +355,7 @@ class ReliefWebEntityReferenceSelect extends OptionsSelectWidget {
     ];
     foreach ($this->getSetting('extra_data') as $field => $selected) {
       if (!empty($selected) && strpos($field, ':') !== FALSE) {
-        list($bundle, $field_name) = explode(':', $field);
+        [$bundle, $field_name] = explode(':', $field);
 
         $definitions = $this->getEntityFieldManager()
           ->getFieldDefinitions($entity_type_id, $bundle);
@@ -364,16 +364,8 @@ class ReliefWebEntityReferenceSelect extends OptionsSelectWidget {
           $definition = $definitions[$field_name];
           $type = $definition->getFieldStorageDefinition()->isBaseField() ? 'base' : 'bundle';
 
-          // The moderation is a special case. It's a base field but its not
-          // using the entity type's table. We add it to the list of bundle
-          // fields and execute the appropriate query in `getExtraData`.
-          if ($field_name === 'moderation_state') {
-            $attribute = 'data-moderation-status';
-            $type = 'bundle';
-          }
-          else {
-            $attribute = 'data-' . preg_replace('#^field_#', '', $field_name);
-          }
+          $attribute = 'data-' . preg_replace('#^field_#', '', $field_name);
+          $attribute = strtr($attribute, '_', '-');
 
           $fields[$type][$field] = [
             'attribute' => $attribute,
