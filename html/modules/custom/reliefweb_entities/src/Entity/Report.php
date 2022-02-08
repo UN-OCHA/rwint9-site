@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_entities\Entity;
 
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -188,6 +189,27 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
     }
 
     return $build;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function preSave(EntityStorageInterface $storage) {
+    parent::preSave($storage);
+
+    // Change the publication date if bury is selected to the original
+    // publication date.
+    if (!empty($this->field_bury->value) && !$this->field_original_publication_date->isEmpty()) {
+      $date = $this->field_original_publication_date->value;
+      $timestamp = DateHelper::getDateTimeStamp($date);
+      if (!empty($timestamp)) {
+        $this->_original_created = $this->getCreatedTime();
+        $this->setCreatedTime($timestamp);
+      }
+    }
+    elseif (isset($this->_original_created)) {
+      $this->setCreatedTime($this->_original_created);
+    }
   }
 
 }
