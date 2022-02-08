@@ -89,9 +89,14 @@ process:
     process:
       target_id: tid
   field_origin:
-    plugin: skip_on_empty
-    method: process
-    source: field_origin/0/value
+    -
+      plugin: skip_on_empty
+      method: process
+      source: field_origin
+    -
+      plugin: sub_process
+      process:
+        value: value
   field_origin_notes:
     plugin: skip_on_empty
     method: process
