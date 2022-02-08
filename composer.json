@@ -87,7 +87,7 @@
         "league/commonmark": "^1.6",
         "league/html-to-markdown": "^5.0",
         "pelago/emogrifier": "^6.0",
-        "reliefweb/api-indexer": "^v2.1.0",
+        "reliefweb/api-indexer": "^v2.1.1",
         "reliefweb/simple-autocomplete": "^v1.3.0",
         "reliefweb/simple-datepicker": "^v1.3.1",
         "symfony/flex": "^2.0",
