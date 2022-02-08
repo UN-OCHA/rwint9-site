@@ -220,16 +220,19 @@ class ReliefWebGuidelinesCommands extends DrushCommands {
         $shortlinks[$shortlink['short_link']] = $shortlink;
 
         // Create the path alias.
+        $path_alias_id++;
         $path_alias_alias = '/guideline/' . $shortlink['short_link'];
         $path_alias_url = 'https://reliefweb.int' . $path_alias_alias;
         $path_alias_uuid = Uuid::v3(Uuid::fromString(Uuid::NAMESPACE_URL), $path_alias_url)->toRfc4122();
 
         $path_alias_storage->create([
-          'id' => $path_alias_id++,
+          'id' => $path_alias_id,
+          'revision_id' => $path_alias_id,
           'uuid' => $path_alias_uuid,
           'path' => '/admin/structure/guideline/' . $guideline->id(),
           'alias' => $path_alias_alias,
           'langcode' => $guideline->language()->getId(),
+          'status' => 1,
         ])->save();
       }
     }

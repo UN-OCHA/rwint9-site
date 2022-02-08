@@ -242,10 +242,12 @@ class Entity extends EntityContentBase implements ImportAwareInterface {
       $uuid = Uuid::v3(Uuid::fromString(Uuid::NAMESPACE_URL), 'https://reliefweb.int' . $path)->toRfc4122();
       $path_alias = $this->pathAliasStorage->create([
         'id' => $entity->url_alias['id'],
+        'revision_id' => $entity->url_alias['id'],
         'uuid' => $uuid,
         'path' => $path,
         'alias' => $alias,
         'langcode' => $entity->language()->getId(),
+        'status' => 1,
       ]);
       $this->pathAliasStorage->saveAccumulated($path_alias);
       unset($entity->url_alias);
