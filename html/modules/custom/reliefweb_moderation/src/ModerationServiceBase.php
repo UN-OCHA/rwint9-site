@@ -326,6 +326,17 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
               }
               break;
 
+            case 'view_moderation_information':
+              if ($account->hasPermission('view moderation information')) {
+                if ($account->hasPermission('edit any ' . $bundle . ' content')) {
+                  $access = TRUE;
+                }
+                elseif ($account->hasPermission('edit own ' . $bundle . ' content')) {
+                  $access = UserPostingRightsHelper::userHasPostingRights($account, $entity, $status);
+                }
+              }
+              break;
+
             default:
               return AccessResult::neutral();
           }
@@ -355,6 +366,12 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
 
             case 'delete':
               $access = $account->hasPermission('delete terms in ' . $bundle);
+              break;
+
+            case 'view_moderation_information':
+              if ($account->hasPermission('view moderation information')) {
+                $access = $account->hasPermission('edit terms in ' . $bundle);
+              }
               break;
 
             default:

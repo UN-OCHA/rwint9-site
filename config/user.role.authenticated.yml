@@ -15,6 +15,7 @@ dependencies:
     - node
     - reliefweb_bookmarks
     - reliefweb_form
+    - reliefweb_moderation
     - reliefweb_subscriptions
     - reliefweb_user_posts
     - system
@@ -40,5 +41,8 @@ permissions:
   - 'use text format markdown_editor'
   - 'use text format token_markdown'
   - 'view media'
+  - 'view moderation information'
+  - 'view moderation information revision message'
+  - 'view moderation information status'
   - 'view own posts'
   - 'view own unpublished content'

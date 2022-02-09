@@ -15,6 +15,7 @@ use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModeratedNodeStorageSchema;
 use Drupal\reliefweb_moderation\ModeratedTermStorageSchema;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
+use Drupal\reliefweb_utility\Helpers\EntityHelper;
 
 /**
  * Implements hook_theme().
@@ -196,50 +197,60 @@ function reliefweb_moderation_entity_presave(EntityInterface $entity) {
  * Add the moderation information block to entity pages and forms.
  */
 function reliefweb_moderation_preprocess_page(&$variables) {
-  if (!\Drupal::currentUser()->hasPermission('access content moderation features')) {
-    return;
-  }
-
-  $route_match = \Drupal::routeMatch();
-  $entity = $route_match->getParameter('node') ?? $route_match->getParameter('taxonomy_term');
+  $user = \Drupal::currentUser();
 
   // For existing revisionable and moderated entities, add the moderation
   // information at the top of the entity page/form.
-  if (
-      !empty($entity) &&
-      $entity instanceof EntityModeratedInterface &&
-      !$entity->isNew()
-  ) {
-    // Note: when comming back from the preview, the original revision log will
-    // not be available...
+  $entity = EntityHelper::getEntityFromRoute();
+  if (empty($entity) || $entity->isNew() || !($entity instanceof EntityModeratedInterface)) {
+    return;
+  }
+
+  $element = [
+    '#theme' => 'reliefweb_moderation_information',
+    // Display the moderation information before the page title and local
+    // tasks.
+    '#weight' => -100,
+    '#cache' => [
+      '#contexts' => [
+        'user.permissions',
+      ],
+      '#tags' => [
+        $entity->getEntityTypeId() . ':' . $entity->id(),
+      ],
+    ],
+    '#access' => $entity->access('view_moderation_information'),
+  ];
+
+  // Get the moderation status.
+  if ($user->hasPermission('view moderation information status')) {
+    $element['#status'] = [
+      'value' => $entity->getModerationStatus(),
+      'label' => $entity->getModerationStatusLabel(),
+    ];
+  }
+
+  // Get the moderation revision message.
+  //
+  // Note: when comming back from the preview, the original revision log will
+  // not be available...
+  if ($user->hasPermission('view moderation information revision message')) {
     $message = $entity->getOriginalRevisionLogMessage();
     if (!empty($message)) {
-      // Convert the message to markdown to generated links notably.
+      // Convert the message to markdown to generate the links notably.
       // Wrap in a Markup so that the HTML is not escaped when rendered.
       $message = Markup::create(strip_tags(check_markup($message, 'markdown'), '<a><em><strong><br>'));
-    }
 
-    $element = [
-      '#theme' => 'reliefweb_moderation_information',
-      '#status' => [
-        'value' => $entity->getModerationStatus(),
-        'label' => $entity->getModerationStatusLabel(),
-      ],
-      '#message' => [
+      $element['#message'] = [
         'type' => $entity->getOriginalRevisionLogMessageType(),
         'content' => $message,
-        'author' => $entity->getOriginalRevisionUser(),
-      ],
-      // Display the moderation information before the page title and local
-      // tasks.
-      '#weight' => -100,
-      '#cache' => [
-        '#tags' => [
-          $entity->getEntityTypeId() . ':' . $entity->id(),
-        ],
-      ],
-    ];
+      ];
 
-    $variables['page']['content']['moderation-information'] = $element;
+      if ($user->hasPermission('view moderation information revision message author')) {
+        $element['#message']['author'] = $entity->getOriginalRevisionUser();
+      }
+    }
   }
+
+  $variables['page']['content']['moderation-information'] = $element;
 }

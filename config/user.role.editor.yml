@@ -157,6 +157,7 @@ permissions:
   - 'view book revisions'
   - 'view entity history'
   - 'view job revisions'
+  - 'view moderation information revision message author'
   - 'view other user posts'
   - 'view own unpublished content'
   - 'view own unpublished media'
