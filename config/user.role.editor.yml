@@ -52,7 +52,6 @@ permissions:
   - 'access user contact forms'
   - 'access user profiles'
   - 'add content to books'
-  - 'administer book outlines'
   - 'administer community topics'
   - 'administer url aliases'
   - 'archive content'

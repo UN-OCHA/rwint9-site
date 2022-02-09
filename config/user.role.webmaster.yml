@@ -33,7 +33,6 @@ weight: 4
 is_admin: null
 permissions:
   - 'add content to books'
-  - 'administer book outlines'
   - 'administer google tag manager'
   - 'create new books'
   - 'create terms in career_category'
