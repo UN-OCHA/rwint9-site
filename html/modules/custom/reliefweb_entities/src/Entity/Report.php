@@ -210,6 +210,21 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
     elseif (isset($this->_original_created)) {
       $this->setCreatedTime($this->_original_created);
     }
+
+    // #KYPCnkXd - No OCHA Product if the source is not OCHA (id: 1503).
+    if (!$this->field_source->isEmpty()) {
+      $from_ocha = FALSE;
+      foreach ($this->field_source as $item) {
+        // We don't use a strict equality as tid may be a numeric string...
+        if (!$item->isEmpty() && $item->getValue('target_id') == 1503) {
+          $from_ocha = TRUE;
+          break;
+        }
+      }
+      if ($from_ocha === FALSE) {
+        $this->field_ocha_product->setValue([]);
+      }
+    }
   }
 
 }
