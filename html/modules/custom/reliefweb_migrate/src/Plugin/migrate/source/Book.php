@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_migrate\Plugin\migrate\source;
 
+use Drupal\migrate\Row;
 use Drupal\migrate\Plugin\migrate\source\SqlBase;
 
 /**
@@ -12,6 +13,13 @@ use Drupal\migrate\Plugin\migrate\source\SqlBase;
  * )
  */
 class Book extends SqlBase {
+
+  /**
+   * Mapping D7 mlid => nid.
+   *
+   * @var array
+   */
+  protected $menuIdMapping;
 
   /**
    * {@inheritdoc}
@@ -32,6 +40,35 @@ class Book extends SqlBase {
     $query->fields('ml', $ml_fields);
 
     return $query;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function prepareRow(Row $row) {
+    if (parent::prepareRow($row) === FALSE) {
+      return FALSE;
+    }
+
+    if (!isset($this->menuIdMapping)) {
+      $this->menuIdMapping = $this->select('book', 'b')
+        ->fields('b', ['mlid', 'nid'])
+        ->execute()
+        ?->fetchAllKeyed(0, 1) ?? [];
+    }
+
+    // Convert the menu link ids to their corresponding node ids.
+    $fields = ['pid'];
+    for ($i = 1; $i < 10; $i++) {
+      $fields[] = 'p' . $i;
+    }
+    foreach ($fields as $field) {
+      $id = $row->getSourceProperty($field);
+      if (isset($this->menuIdMapping[$id])) {
+        $row->setDestinationProperty($field, $this->menuIdMapping[$id]);
+        $row->setSourceProperty($field, $this->menuIdMapping[$id]);
+      }
+    }
   }
 
   /**

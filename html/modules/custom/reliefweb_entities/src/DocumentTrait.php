@@ -6,6 +6,7 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Field\EntityReferenceFieldItemList;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
+use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
 use Drupal\reliefweb_utility\Helpers\MediaHelper;
@@ -283,6 +284,9 @@ trait DocumentTrait {
 
     $items = [];
     foreach ($this->{$field}->referencedEntities() as $entity) {
+      if ($entity instanceof EntityModeratedInterface && !$entity->access('view')) {
+        continue;
+      }
       $item = [
         'name' => $entity->label(),
         'url' => RiverServiceBase::getRiverUrl($this->bundle(), [

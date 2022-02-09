@@ -18,6 +18,7 @@ use Drupal\Core\KeyValueStore\KeyValueFactoryInterface;
 use Drupal\migrate\Exception\RequirementsException;
 use Drupal\migrate\Plugin\MigrationPluginManager;
 use Drupal\migrate\Plugin\RequirementsInterface;
+use Drupal\reliefweb_migrate\Plugin\migrate\source\SourceMigrationHighWaterInterface;
 use Drupal\reliefweb_migrate\Plugin\migrate\source\SourceMigrationStatusInterface;
 use Drupal\reliefweb_utility\Helpers\LegacyHelper;
 use Drush\Commands\DrushCommands;
@@ -516,6 +517,51 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
       ]));
     }
     return $success;
+  }
+
+  /**
+   * Reset the hight water mark.
+   *
+   * @command rw-migrate:reset-high-water
+   *
+   * @option group A comma-separated list of migration groups to list
+   * @option tag Name of the migration tag to list
+   *
+   * @default $options []
+   *
+   * @usage rw-migrate:reset-high-water
+   *   Reset the stored high water for all migrations.
+   * @usage rw-migrate:reset-high-water beer_term,beer_node
+   *   Reset the stored high water for specific migrations.
+   * @usage rw-migrate:reset-high-water --group=beer
+   *   Reset the stored high water for all migrations in a given group.
+   * @usage migrate:reset-high-water --tag=user
+   *   Reset the stored high water for all migrations with a given tag.
+   *
+   * @validate-module-enabled reliefweb_migrate
+   *
+   * @aliases rw-mrhw
+   */
+  public function resetHighWater($migration_names = '', array $options = [
+    'group' => '',
+    'tag' => '',
+  ]) {
+    $migrations = $this->migrationsList($migration_names, $options);
+
+    // Take it one group at a time, listing the migrations within each group.
+    foreach ($migrations as $migration_list) {
+      foreach ($migration_list as $migration_id => $migration) {
+        $source_plugin = $migration->getSourcePlugin();
+
+        if ($source_plugin instanceof SourceMigrationHighWaterInterface) {
+          $id = $source_plugin->setHighWaterToLatestNonImported();
+          $this->logger->info(strtr('Set high water to @id for @migration.', [
+            '@id' => $id,
+            '@migration' => $migration_id,
+          ]));
+        }
+      }
+    }
   }
 
   /**
