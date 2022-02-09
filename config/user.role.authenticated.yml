@@ -44,5 +44,6 @@ permissions:
   - 'view moderation information'
   - 'view moderation information revision message'
   - 'view moderation information status'
+  - 'view moderation status'
   - 'view own posts'
   - 'view own unpublished content'

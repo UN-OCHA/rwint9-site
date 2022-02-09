@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - filter.format.guideline
     - filter.format.html
     - filter.format.markdown
     - media.type.image_announcement
@@ -25,6 +26,7 @@ dependencies:
     - book
     - contact
     - filter
+    - guidelines
     - media
     - node
     - path
@@ -52,6 +54,7 @@ permissions:
   - 'access user contact forms'
   - 'access user profiles'
   - 'add content to books'
+  - 'add guideline entities'
   - 'administer community topics'
   - 'administer url aliases'
   - 'archive content'
@@ -118,6 +121,7 @@ permissions:
   - 'edit any report content'
   - 'edit any topic content'
   - 'edit any training content'
+  - 'edit guideline entities'
   - 'edit homepage headlines'
   - 'edit own announcement content'
   - 'edit own blog_post content'
@@ -137,6 +141,18 @@ permissions:
   - 'edit terms in source'
   - 'edit terms in tag'
   - 'edit user posting rights'
+  - 'field_guideline create entities'
+  - 'field_guideline delete any entities'
+  - 'field_guideline delete own entities'
+  - 'field_guideline edit any entities'
+  - 'field_guideline edit own entities'
+  - 'field_guideline view revisions'
+  - 'guideline_list create entities'
+  - 'guideline_list delete any entities'
+  - 'guideline_list delete own entities'
+  - 'guideline_list edit any entities'
+  - 'guideline_list edit own entities'
+  - 'guideline_list view revisions'
   - 'revert announcement revisions'
   - 'revert blog_post revisions'
   - 'revert book revisions'
@@ -145,11 +161,14 @@ permissions:
   - 'revert term revision'
   - 'revert topic revisions'
   - 'revert training revisions'
+  - 'sort all guideline'
   - 'update any media'
   - 'update media'
   - 'use enhanced input forms'
+  - 'use text format guideline'
   - 'use text format html'
   - 'use text format markdown'
+  - 'view all guideline revisions'
   - 'view all media revisions'
   - 'view announcement revisions'
   - 'view any content'
@@ -161,9 +180,11 @@ permissions:
   - 'view other user posts'
   - 'view own unpublished content'
   - 'view own unpublished media'
+  - 'view published guideline entities'
   - 'view report revisions'
   - 'view term revision data'
   - 'view term revision list'
   - 'view topic revisions'
   - 'view training revisions'
+  - 'view unpublished guideline entities'
   - 'view user email addresses'
