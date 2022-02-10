@@ -484,7 +484,7 @@ form button[data-formatter="pdf"] {
   /* Display the format PDf button in the top right corner above the textarea.
    * The editorial team is used to this position. */
   position: absolute;
-  top: -11px;
+  top: -8px;
   right: 0;
 }
 /* Show/Hide row weight button */

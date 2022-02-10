@@ -83,6 +83,9 @@ class TrainingFormAlter extends EntityFormAlterServiceBase {
 
     // Add a validation callback to handle the altered fields above.
     $form['#validate'][] = [$this, 'validateTrainingEventUrl'];
+
+    // Prevent saving from a blocked source.
+    $form['#validate'][] = [$this, 'validateBlockedSource'];
   }
 
   /**

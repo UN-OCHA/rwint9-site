@@ -13,3 +13,19 @@ archive content:
 view any content:
   title: 'View any content'
   description: 'Allow users to view any content.'
+
+view moderation information:
+  title: 'View moderation information'
+  description: 'Allow users to view the moderation status and revision message.'
+
+view moderation information status:
+  title: 'View moderation information status'
+  description: 'Allow users to view the moderation status.'
+
+view moderation information revision message:
+  title: 'View moderation information revision message'
+  description: 'Allow users to view the moderation revision message.'
+
+view moderation information revision message author:
+  title: 'View moderation information revision message author'
+  description: 'Allow users to view the moderation revision message author.'

@@ -15,69 +15,33 @@
       var t = Drupal.t;
 
       /**
-       * Helpers.
-       */
-
-      // Trim a string.
-      function trim(string) {
-        if (typeof string.trim === 'function') {
-          return string.trim();
-        }
-        return string.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, '');
-      }
-
-      /**
        * Main logic.
        */
 
-      // Get the list of label/legend elements.
-      function getLabelElements(form) {
-        var labels = {};
-
-        // Search for field labels to which attach the guideline toggler.
-        var elements = form.querySelectorAll('fieldset[data-drupal-selector], div[data-drupal-selector]');
-        for (var i = 0, l = elements.length; i < l; i++) {
-          var element = elements[i];
-          if (!element.querySelector('[name]')) {
-            continue;
-          }
-
-          var fieldName = element.querySelector('[name]').name;
-          if (fieldName.indexOf('[') > 0) {
-            fieldName = fieldName.substring(0, fieldName.indexOf('['));
-          }
-
-          var label = '';
-          var labelElement = element.querySelector('label, legend');
-          if (labelElement) {
-            label = trim(labelElement.textContent || labelElement.innerText);
-          }
-
-          labels[fieldName] = {
-            element: element,
-            label: label
-          };
-        }
-        return labels;
-      }
-
       // Remove guidelines elements from the form.
-      function cleanGuidelines(form, popupOnly) {
+      function cleanGuidelines(form, removeButtons, removeLabelClasses) {
         var selector = '.rw-guideline';
 
-        if (!popupOnly) {
-          selector += ', [data-guideline]';
+        if (removeButtons) {
+          selector += ', .rw-guideline__open-button';
         }
         var elements = form.querySelectorAll(selector);
         for (var i = elements.length - 1; i >= 0; i--) {
           var element = elements[i];
           element.parentNode.removeChild(element);
         }
+
+        if (removeLabelClasses) {
+          var elements = form.querySelectorAll('.rw-guideline__label');
+          for (var i = elements.length - 1; i >= 0; i--) {
+            elements[i].classList.remove('.rw-guideline__label');
+          }
+        }
       }
 
       // Hide the guideline popup.
       function hideGuideline(form) {
-        cleanGuidelines(form, true);
+        cleanGuidelines(form, false, false);
       }
 
       // Show the guideline popup.
@@ -87,6 +51,7 @@
         var close = document.createElement('button');
         close.setAttribute('type', 'button');
         close.setAttribute('value', 'close');
+        close.classList.add('rw-guideline__close-button');
         close.appendChild(document.createTextNode(t('Close')));
         close.addEventListener('click', function (event) {
           hideGuideline(form);
@@ -104,18 +69,20 @@
         link.appendChild(document.createTextNode(card.title));
 
         var heading = document.createElement('h3');
+        heading.classList.add('rw-guideline__heading');
         heading.appendChild(link);
 
         var content = document.createElement('div');
-        content.className = 'rw-guideline__content';
+        content.classList.add('rw-guideline__content');
         content.innerHTML = card.content;
 
         var container = document.createElement('div');
+        container.classList.add('rw-guideline__container');
         container.appendChild(heading);
         container.appendChild(content);
 
         var popup = document.createElement('div');
-        popup.className = 'rw-guideline';
+        popup.classList.add('rw-guideline');
         popup.appendChild(close);
         popup.appendChild(container);
 
@@ -152,36 +119,82 @@
       // Add the guidelines to the page with a question mark icon to trigger the display.
       function setGuidelines(form, guidelines) {
         // Remove the existing guidelines from the page if any.
-        cleanGuidelines(form);
+        cleanGuidelines(form, true, true);
 
-        // Add a guideline toggler to each label element.
-        var list = getLabelElements(form);
-        for (var field in list) {
-          if (list.hasOwnProperty(field) && guidelines.hasOwnProperty(field)) {
-            var item = list[field];
-            var element = item.element;
-            var label = item.label;
+        for (var fieldName in guidelines) {
+          if (guidelines.hasOwnProperty(fieldName)) {
+            var selector = 'edit-' + fieldName.replaceAll('_', '-');
 
-            var button = document.createElement('button');
-            button.setAttribute('type', 'button');
-            button.setAttribute('data-guideline', field);
-            button.appendChild(document.createTextNode(t('View guidelines for ' + label)));
-
-            button.addEventListener('click', function (event) {
-              showGuideline(form, guidelines[event.target.getAttribute('data-guideline')]);
-            });
-
-            // Drupal fields with either Legend or Label element ancestors.
-            const labels = element.querySelectorAll('.form-wrapper .form-item > label');
-            for (let i = 0; i < labels.length; i++) {
-              labels[i].parentNode.insertBefore(button, labels[i].nextSibling);
+            var field = document.querySelector('[data-drupal-selector="' + selector + '"], [name^="' + fieldName + '["]');
+            if (!field) {
+              continue;
             }
-            const legends = element.querySelectorAll('[data-drupal-selector] > legend > span');
-            for (let j = 0; j < legends.length; j++) {
-              legends[j].appendChild(button);
+
+            // Try to get the classic label associated with the field.
+            var label = null;
+            if (field.nodeName === 'FIELDSET') {
+              label = field.querySelector('.fieldset-legend');
+            }
+            else if (field.hasAttribute('id')) {
+              label = document.querySelector('label[for="' + field.getAttribute('id') + '"]');
+            }
+
+            // If the label is visually hidden, we need to find another one.
+            if (label && label.classList.contains('visually-hidden')) {
+              label = null;
+
+              // Try to find a suitable label or legend among the field's
+              // parents.
+              var parent = field.parentNode;
+              while (parent && parent !== form) {
+                var candidate = null;
+                if (parent.hasAttribute('data-drupal-selector') && parent.getAttribute('data-drupal-selector') === selector + '-wrapper') {
+                  candidate = parent.querySelector('.fieldset-legend, label');
+                }
+                else if (parent.nodeName === 'FIELDSET') {
+                  candidate = parent.querySelector('.fieldset-legend, legend');
+                }
+                if (candidate && !candidate.classList.contains('visually-hidden')) {
+                  label = candidate;
+                  break;
+                }
+                parent = parent.parentNode;
+              }
+            }
+
+            if (label) {
+              addGuidelineOpenButton(fieldName, label, form, guidelines[fieldName]);
             }
           }
         }
+      }
+
+      // Add the button to open the guideline popup next to a field's label.
+      function addGuidelineOpenButton(fieldName, label, form, guideline) {
+        var labelText = label.textContent.trim();
+
+        var button = document.createElement('button');
+        button.setAttribute('type', 'button');
+        button.setAttribute('data-guideline', fieldName);
+        button.classList.add('rw-guideline__open-button');
+        button.appendChild(document.createTextNode(t('View guidelines for ' + labelText)));
+
+        button.addEventListener('click', function (event) {
+          showGuideline(form, guideline);
+        });
+
+        // Wrap the legend into a span so we can have consistent behavior.
+        if (label.nodeName === 'LEGEND') {
+          var container = document.createElement('span');
+          while (label.firstChild) {
+            container.appendChild(label.firstChild);
+          }
+          label.appendChild(container);
+          label = container;
+        }
+
+        label.classList.add('rw-guideline__label');
+        label.parentNode.insertBefore(button, label.nextSibling);
       }
 
       // Either load the guidelines from the guidelines site or use the cache.

@@ -8,6 +8,8 @@ use Drupal\node\Entity\Node;
 use Drupal\reliefweb_entities\BundleEntityInterface;
 use Drupal\reliefweb_entities\DocumentInterface;
 use Drupal\reliefweb_entities\DocumentTrait;
+use Drupal\reliefweb_entities\OpportunityDocumentInterface;
+use Drupal\reliefweb_entities\OpportunityDocumentTrait;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\EntityModeratedTrait;
 use Drupal\reliefweb_revisions\EntityRevisionedInterface;
@@ -16,11 +18,12 @@ use Drupal\reliefweb_revisions\EntityRevisionedTrait;
 /**
  * Bundle class for job nodes.
  */
-class Job extends Node implements BundleEntityInterface, EntityModeratedInterface, EntityRevisionedInterface, DocumentInterface {
+class Job extends Node implements BundleEntityInterface, EntityModeratedInterface, EntityRevisionedInterface, DocumentInterface, OpportunityDocumentInterface {
 
   use DocumentTrait;
   use EntityModeratedTrait;
   use EntityRevisionedTrait;
+  use OpportunityDocumentTrait;
   use StringTranslationTrait;
 
   /**
@@ -127,6 +130,9 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
       }
       $this->set('field_theme', $themes);
     }
+
+    // Update the entity status based on the user posting rights.
+    $this->updateModerationStatusFromPostingRights();
 
     parent::preSave($storage);
   }

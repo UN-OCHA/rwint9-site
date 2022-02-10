@@ -14,7 +14,7 @@ use Drupal\reliefweb_utility\Helpers\MediaHelper;
 /**
  * Trait implementing most methods of the DocumentInterface.
  *
- * @see Drupal\reliefweb_entities\DocuemntInterface
+ * @see Drupal\reliefweb_entities\DocumentInterface
  */
 trait DocumentTrait {
 

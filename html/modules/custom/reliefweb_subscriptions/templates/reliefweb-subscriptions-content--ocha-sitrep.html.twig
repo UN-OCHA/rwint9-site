@@ -13,19 +13,19 @@
  */
 
 #}
-{% embed '@reliefweb_subscriptions/reliefweb-subscriptions-content.html.twig' %}
+{%- embed '@reliefweb_subscriptions/reliefweb-subscriptions-content.html.twig' -%}
 
-{% block content %}
-  <h1 class="email-title">New OCHA Situation Report - {{ title }}</h1>
+{%- block content -%}
+<h1 class="email-title">New OCHA Situation Report - {{ title }}</h1>
 
-  <div class="email-resource">
-    <div class="email-resource-info">{{ info|raw }}</div>
+<div class="email-resource">
+<div class="email-resource-info">{{ info|raw }}</div>
 
-    <div class="email-resource-teaser">
-      {{ summary|raw }}
-      <a class="email-resource-read-more" href="{{ url }}">Read more</a>
-    </div>
-  </div>
-{% endblock %}
+<div class="email-resource-teaser">
+{{- summary|raw }}
+<a class="email-resource-read-more" href="{{ url }}">Read more</a>
+</div>
+</div>
+{%- endblock -%}
 
-{% endembed %}
+{%- endembed -%}

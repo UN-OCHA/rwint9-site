@@ -3,13 +3,11 @@
 namespace Drupal\reliefweb_moderation\Services;
 
 use Drupal\Core\Access\AccessResult;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
-use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
 
 /**
@@ -268,73 +266,6 @@ class JobModeration extends ModerationServiceBase {
     }
 
     return $buttons;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function alterSubmittedEntityStatus($status, FormStateInterface $form_state) {
-    // For non editors, we determine the real status based on the user
-    // posting rights for the selected sources.
-    if (!UserHelper::userHasRoles(['editor']) && $status === 'pending') {
-      // Retrieve the list of sources and check the user rights.
-      if (!$form_state->isValueEmpty('field_source')) {
-        // Extract source ids.
-        $sources = array_filter(array_map(function ($source) {
-          return $source['target_id'];
-        }, $form_state->getValue('field_source')));
-
-        // Get the user's posting right for the document.
-        $right = UserPostingRightsHelper::getUserConsolidatedPostingRight($user, 'job', $sources);
-
-        // Update the status based on the user's right.
-        // Note: we don't use `t()` because those are log messages for editors.
-        switch ($right['name']) {
-          // Unverified for some sources => pending + flag.
-          case 'unverified':
-            $status = 'pending';
-            $message = strtr('Unverified user for @sources.', [
-              '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($right['sources'])),
-            ]);
-            break;
-
-          // Blocked for some sources => refused + flag.
-          case 'blocked':
-            $status = 'refused';
-            $message = strtr('Blocked user for @sources.', [
-              '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($right['sources'])),
-            ]);
-            break;
-
-          // Allowed for all sources => pending.
-          case 'allowed':
-            $status = 'pending';
-            break;
-
-          // Trusted for all the sources => published.
-          case 'trusted':
-            $status = 'published';
-            break;
-        }
-
-        // Update the log message.
-        if (!empty($message)) {
-          $revision_log_field = $form_state
-            ?->getFormObject()
-            ?->getEntity()
-            ?->getEntityType()
-            ?->getRevisionMetadataKey('revision_log_message');
-
-          if (!empty($revision_log_field)) {
-            $log = $form_state->getValue([$revision_log_field, 0, 'value'], '');
-            $log = $message . (!empty($log) ? ' ' . $log : '');
-            $form_state->setValue([$revision_log_field, 0, 'value'], $log);
-          }
-        }
-      }
-    }
-
-    return $status;
   }
 
   /**

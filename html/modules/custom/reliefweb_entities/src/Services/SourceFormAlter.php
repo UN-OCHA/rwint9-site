@@ -32,9 +32,6 @@ class SourceFormAlter extends EntityFormAlterServiceBase {
 
     // Validate social media links.
     $form['#validate'][] = [$this, 'validateSourceSocialMediaLinks'];
-
-    // Redirect to term page.
-    $form['#submit'][] = [$this, 'redirectToEntityPage'];
   }
 
   /**

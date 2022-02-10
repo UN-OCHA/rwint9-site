@@ -210,6 +210,115 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
     elseif (isset($this->_original_created)) {
       $this->setCreatedTime($this->_original_created);
     }
+
+    // #KYPCnkXd - No OCHA Product if the source is not OCHA (id: 1503).
+    if (!$this->field_source->isEmpty()) {
+      $from_ocha = FALSE;
+      foreach ($this->field_source as $item) {
+        // We don't use a strict equality as tid may be a numeric string...
+        if (!$item->isEmpty() && $item->target_id == 1503) {
+          $from_ocha = TRUE;
+          break;
+        }
+      }
+      if ($from_ocha === FALSE) {
+        $this->field_ocha_product->setValue([]);
+      }
+    }
+
+    // Prepare notifications.
+    $this->preparePublicationNotification();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function postSave(EntityStorageInterface $storage, $update = TRUE) {
+    parent::postSave($storage, $update);
+
+    $this->sendPublicationNotification();
+  }
+
+  /**
+   * Prepare the list of recipients to notify of the publication.
+   */
+  protected function preparePublicationNotification() {
+    // Only send the notifications when the report is published.
+    $status = $this->getModerationStatus();
+    if ($status !== 'to-review' && $status !== 'published') {
+      return;
+    }
+
+    // Extract the emails.
+    $emails = $this->field_notify->value ?? '';
+    $emails = preg_split('/([,;]|\s)+/', trim($emails));
+    $emails = array_filter(filter_var_array($emails, FILTER_VALIDATE_EMAIL));
+    $emails = array_unique($emails);
+
+    // Empty the field.
+    $this->field_notify->setValue([]);
+
+    // Skip if there is no recipients.
+    if (empty($emails)) {
+      return;
+    }
+
+    // Store the emails to notify after the node is saved.
+    $this->_publication_notification_emails = $emails;
+
+    // Update the log message with the list of emails to notify.
+    $log_field = $this->getEntityType()
+      ->getRevisionMetadataKey('revision_log_message');
+
+    // Not using `t()` because this is an internal editorial message.
+    $log = strtr('Publication notification sent to @to', [
+      '@to' => implode(', ', $emails),
+    ]);
+    if (!empty($this->{$log_field}->value)) {
+      $this->{$log_field}->value .= ' - ' . $log;
+    }
+    else {
+      $this->{$log_field}->value = $log;
+    }
+  }
+
+  /**
+   * Notify of the publication.
+   */
+  protected function sendPublicationNotification() {
+    if (empty($this->_publication_notification_emails)) {
+      return;
+    }
+    $emails = $this->_publication_notification_emails;
+    unset($this->_publication_notification_emails);
+
+    // Recipients and sender.
+    $to = implode(', ', $emails);
+    $from = \Drupal::state()->get('reliefweb_submit_email');
+    if (empty($from)) {
+      return;
+    }
+
+    // Subject and content.
+    $parameters = [];
+    $parameters['subject'] = 'ReliefWeb: Your submission has been published';
+    $parameters['content'] = strtr(implode("\n\n", [
+      "Thank you for your submission to ReliefWeb.",
+      "Your submission \"@title\" has been published with the following URL:",
+      "@url",
+      "Please respond to this email in case you have questions or corrections to your submission.",
+      "Best regards,",
+      "ReliefWeb team",
+    ]), [
+      '@title' => $this->label(),
+      '@url' => $this->toUrl('canonical', ['absolute' => TRUE])->toString(FALSE),
+    ]);
+
+    $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
+
+    // Send the email.
+    \Drupal::service('plugin.manager.mail')
+      ->mail('reliefweb_entities', 'report_publication_notification', $to, $langcode, $parameters, $from, TRUE);
   }
 
 }

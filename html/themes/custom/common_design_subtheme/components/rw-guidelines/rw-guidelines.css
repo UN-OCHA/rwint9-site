@@ -1,18 +1,17 @@
-form[data-with-guidelines] .form-item label,
-form[data-with-guidelines] .form-wrapper label {
-  float: left;
+form[data-with-guidelines] .rw-guideline__label {
+  display: inline-flex;
+  margin-right: 12px;
 }
-form[data-with-guidelines] .fieldset-wrapper label,
-form[data-with-guidelines] label.option {
-  float: none;
+form[data-with-guidelines] .rw-guideline__label.form-required {
+  margin-right: 8px;
 }
-form[data-with-guidelines] button[data-guideline] {
+form[data-with-guidelines] .rw-guideline__open-button {
   position: relative;
   display: inline-block;
   overflow: hidden;
   width: 20px;
   height: 20px;
-  margin: -0.75rem 0 0 0.5rem;
+  margin: -4px 0 0 0;
   padding: 0 0 0 12px;
   vertical-align: middle;
   border: 4px solid var(--cd-reliefweb-brand-grey--light);
@@ -20,28 +19,7 @@ form[data-with-guidelines] button[data-guideline] {
   background: var(--rw-icons--common--help--12--dark-blue);
   background-color: var(--cd-reliefweb-brand-grey--light);
 }
-/* Legend with child button */
-form[data-with-guidelines] legend button[data-guideline] {
-  margin: -0.75rem 0 0 0.5rem;
-}
-form[data-with-guidelines] .form-required button[data-guideline] {
-  margin: 0 0 0 0.5rem;
-}
-form[data-with-guidelines] legend .form-required button[data-guideline] {
-  order: 1;
-}
-/* Label followed by button */
-form[data-with-guidelines] label + button[data-guideline],
-form[data-with-guidelines] .form-required + button[data-guideline] {
-  margin: -0.75rem 0 0;
-}
-form[data-with-guidelines] label.option + button[data-guideline] {
-  margin: -0.5rem 0 0;
-}
-form[data-with-guidelines] .visually-hidden + button[data-guideline] {
-  margin: -0.75rem 0 0 0.5rem;
-}
-form[data-with-guidelines] button[data-guideline]:hover {
+form[data-with-guidelines] .rw-guideline__open-button:hover {
   background: var(--rw-icons--common--help--12--dark-red);
   background-color: var(--cd-reliefweb-brand-grey--light);
 }
@@ -59,7 +37,7 @@ form[data-with-guidelines] .rw-guideline:before {
 }
 form[data-with-guidelines] .rw-guideline {
   position: fixed;
-  z-index: 1;
+  z-index: 10000;
   top: 10vh;
   left: 25vw;
   width: 50vw;
@@ -68,7 +46,7 @@ form[data-with-guidelines] .rw-guideline {
   border: 10px solid rgba(0, 0, 0, 0.1);
 }
 
-form[data-with-guidelines] .rw-guideline > button[value="close"] {
+form[data-with-guidelines] .rw-guideline .rw-guideline__close-button {
   position: absolute;
   z-index: 10002;
   top: -16px;
@@ -81,7 +59,7 @@ form[data-with-guidelines] .rw-guideline > button[value="close"] {
   border-radius: 50%;
   background: white;
 }
-form[data-with-guidelines] .rw-guideline > button[value="close"]:after {
+form[data-with-guidelines] .rw-guideline .rw-guideline__close-button:after {
   position: absolute;
   top: 6px;
   left: 6px;
@@ -91,13 +69,13 @@ form[data-with-guidelines] .rw-guideline > button[value="close"]:after {
   content: "";
   background: var(--rw-icons--common--close--12--dark-blue);
 }
-form[data-with-guidelines] .rw-guideline > button[value="close"]:hover {
+form[data-with-guidelines] .rw-guideline .rw-guideline__close-button:hover {
   border-color: var(--cd-reliefweb-brand-red--dark);
 }
-form[data-with-guidelines] .rw-guideline > button[value="close"]:hover:after {
+form[data-with-guidelines] .rw-guideline .rw-guideline__close-button:hover:after {
   background: var(--rw-icons--common--close--12--dark-red);
 }
-form[data-with-guidelines] .rw-guideline > div {
+form[data-with-guidelines] .rw-guideline__container {
   position: relative;
   z-index: 10001;
   overflow-x: hidden;
@@ -107,20 +85,12 @@ form[data-with-guidelines] .rw-guideline > div {
   padding: 16px;
   background-color: white;
 }
-form[data-with-guidelines] .rw-guideline > div > h3 {
+form[data-with-guidelines] .rw-guideline__heading {
   text-align: center;
 }
-form[data-with-guidelines] .rw-guideline > div > .content {
+form[data-with-guidelines] .rw-guideline__content {
   padding-top: 0;
 }
-form[data-with-guidelines] .rw-guideline > div > .rw-guideline__content img {
+form[data-with-guidelines] .rw-guideline__content img {
   border: 4px solid var(--cd-reliefweb-brand-grey--light);
-}
-
-/* Clear the float on preceding label
-/* to prevent extra height on the autocomplete div */
-form[data-with-guidelines] .rw-autocomplete--with-show-all,
-/* to ensure the WYSIWYG clears float */
-form[data-with-guidelines] button[data-guideline] + div {
-  clear: both;
 }

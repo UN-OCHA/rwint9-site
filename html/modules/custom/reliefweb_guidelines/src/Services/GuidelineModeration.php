@@ -164,6 +164,12 @@ class GuidelineModeration extends ModerationServiceBase {
         $access = $account->hasPermission('delete guideline entities');
         break;
 
+      case 'view_moderation_information':
+        if ($account->hasPermission('view moderation information')) {
+          $access = $account->hasPermission('edit guideline entities');
+        }
+        break;
+
       default:
         return AccessResult::neutral();
     }

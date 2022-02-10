@@ -78,10 +78,12 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     // Remove Complex Emergency (41764) option for disaster type field.
     FormHelper::removeOptions($form, 'field_disaster_type', [41764]);
 
-    // Add validation callbacks for the file, source and embargo date fields.
+    // Add validation callbacks for the file and embargo date fields.
     $form['#validate'][] = [$this, 'validateAttachment'];
-    $form['#validate'][] = [$this, 'validateSource'];
     $form['#validate'][] = [$this, 'validateEmbargoDate'];
+
+    // Prevent saving from a blocked source.
+    $form['#validate'][] = [$this, 'validateBlockedSource'];
   }
 
   /**
@@ -310,55 +312,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
   }
 
   /**
-   * Validate the file field.
-   *
-   * Prevent saving a document from a blocked source.
-   *
-   * @param array $form
-   *   Form to alter.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   Form state.
-   *
-   * @todo Extends that to jobs and training.
-   */
-  public function validateSource(array $form, FormStateInterface &$form_state) {
-    $ids = [];
-    foreach ($form_state->getValue('field_source', []) as $item) {
-      if (!empty($item['target_id'])) {
-        $ids[] = $item['target_id'];
-      }
-    }
-
-    if (!empty($ids)) {
-      $entity_type_manager = $this->getEntityTypeManager();
-
-      $taxonomy_term_entity_type = $entity_type_manager
-        ->getStorage('taxonomy_term')
-        ->getEntityType();
-
-      $table = $taxonomy_term_entity_type->getDataTable();
-      $id_field = $taxonomy_term_entity_type->getKey('id');
-      $label_field = $taxonomy_term_entity_type->getKey('label');
-
-      // Retrieve the labels of the selected blocked sources if any.
-      $sources = $this->getDatabase()
-        ->select($table, $table)
-        ->fields($table, [$label_field])
-        ->condition($table . '.' . $id_field, $ids, 'IN')
-        ->condition($table . '.moderation_status', 'blocked', '=')
-        ->execute()
-        ?->fetchCol() ?? [];
-
-      if (!empty($sources)) {
-        $form_state->setErrorByName('field_source', $this->t('Publications from "@sources" are not allowed.', [
-          '@sources' => implode('", "', $sources),
-        ]));
-      }
-    }
-  }
-
-  /**
-   * Validate the source field.
+   * Validate the embargo date field.
    *
    * Embargo date cannot be in the past as that would not make sense.
    *

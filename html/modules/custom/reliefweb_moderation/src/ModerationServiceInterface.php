@@ -183,16 +183,6 @@ interface ModerationServiceInterface {
   public function validateEntityStatus(array $element, FormStateInterface $form_state);
 
   /**
-   * Submit handler to alter the moderation status.
-   *
-   * @param array $form
-   *   Entity form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   Form state.
-   */
-  public function handleEntitySubmission(array $form, FormStateInterface $form_state);
-
-  /**
    * Get the final entity status based on the rest of the form.
    *
    * @param string $status

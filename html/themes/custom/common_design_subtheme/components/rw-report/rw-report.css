@@ -106,3 +106,14 @@
 .node--report--full li {
   margin: 8px 0 0;
 }
+
+/* Special rules for The Conversation counter images... */
+.node--report--full img[src*="counter.theconversation.com"] {
+  position: absolute;
+  visibility: hidden;
+  width: 1px;
+  height: 1px;
+}
+.node--report--full img[src*="counter.theconversation.com"] + p {
+  margin-top: 0;
+}

@@ -131,6 +131,9 @@ class SubscriptionForm extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $subscriptions = $form_state->getValue('global');
     foreach ($subscriptions as $sid => $value) {
+      if ($sid === '_none') {
+        continue;
+      }
       if (!$value) {
         $this->unsubscribe($form_state->getValue('uid'), $sid);
       }
@@ -141,6 +144,9 @@ class SubscriptionForm extends FormBase {
 
     $subscriptions = $form_state->getValue('country_updates');
     foreach ($subscriptions as $sid => $value) {
+      if ($sid === '_none') {
+        continue;
+      }
       if (!$value) {
         $this->unsubscribe($form_state->getValue('uid'), $sid);
       }

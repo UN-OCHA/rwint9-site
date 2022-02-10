@@ -72,6 +72,9 @@ class JobFormAlter extends EntityFormAlterServiceBase {
 
     // Add the terms and conditions block.
     $this->addTermsAndConditions($form, $form_state);
+
+    // Prevent saving from a blocked source.
+    $form['#validate'][] = [$this, 'validateBlockedSource'];
   }
 
   /**

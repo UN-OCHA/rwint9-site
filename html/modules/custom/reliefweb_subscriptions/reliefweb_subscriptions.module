@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\reliefweb_utility\Helpers\MailHelper;
 
 /**
  * Get the list of subscriptions.
@@ -349,6 +350,7 @@ function reliefweb_subscriptions_mail($key, &$message, $params) {
 
   $message['subject'] = $params['subject'];
   $message['body'] = $params['body'];
+  $message['params']['plaintext'] = MailHelper::getPlainText($message['body']);
 }
 
 /**

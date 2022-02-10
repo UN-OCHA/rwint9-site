@@ -4,6 +4,10 @@
  * @file
  * Template for the disaster notifications.
  *
+ * Important note: the formmatting of this template and the use of the twig
+ * spaceless indicator `-` are on purpose to ensure a clean conversion to
+ * plain text without excessive line breaks and indentation.
+ *
  * Available variables are:
  * - preheader: string for preheader.
  * - title: disaster name.
@@ -15,18 +19,19 @@
 ?>
 
 #}
-{% embed '@reliefweb_subscriptions/reliefweb-subscriptions-content.html.twig' %}
+{%- embed '@reliefweb_subscriptions/reliefweb-subscriptions-content.html.twig' -%}
 
-{% block content %}
-  <h1 class="email-title">New Disaster - {{ title }} / <span class="email-title-date">{{ date }}</span></h1>
+{%- block content -%}
+<h1 class="email-title">New Disaster - {{ title }} / <span class="email-title-date">{{ date }}</span></h1>
 
-  <div class="email-resource">
-    <h2>Overview</h2>
-    <div class="email-resource-teaser">
-      {{ overview|raw }}
-      <a class="email-resource-read-more" href="{{ url }}">View on ReliefWeb</a>
-    </div>
-  </div>
-{% endblock %}
+<div class="email-resource">
+<h2>Overview</h2>
 
-{% endembed %}
+<div class="email-resource-teaser">
+{{- overview|raw }}
+<a class="email-resource-read-more" href="{{ url }}">View on ReliefWeb</a>
+</div>
+</div>
+{%- endblock -%}
+
+{%- endembed -%}

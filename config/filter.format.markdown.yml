@@ -15,7 +15,7 @@ filters:
     status: true
     weight: -49
     settings:
-      allowed_html: '<a href hreflang target> <em> <strong> <cite> <blockquote cite> <code> <ul type> <ol start type=''1 A I''> <li> <dl> <dt> <dd> <h1 id> <h2 id> <h3 id> <h4 id> <h5 id> <h6 id> <table> <caption> <thead> <th> <td> <div> <span> <p> <br> <strike> <ul> <img src> <sup> <sub>'
+      allowed_html: '<a href hreflang target> <em> <strong> <cite> <blockquote cite> <code> <ul type> <ol start type=''1 A I''> <li> <dl> <dt> <dd> <h1 id> <h2 id> <h3 id> <h4 id> <h5 id> <h6 id> <table> <caption> <thead> <tbody> <tfoot> <tr> <th colspan rowspan> <td colspan rowspan> <div> <span> <p> <br> <strike> <ul> <img src alt> <sup> <sub>'
       filter_html_help: false
       filter_html_nofollow: false
   filter_htmlcorrector:

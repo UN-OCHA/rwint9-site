@@ -243,7 +243,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
       $this->disableNotifications($entity, $status);
 
       // Disable notifications for buried entities.
-      if ($entity->hasField('field_bury') && !$entity->field_bury->isEmpty()) {
+      if ($entity->hasField('field_bury') && !empty($entity->field_bury->value)) {
         $entity->notifications_content_disable = TRUE;
       }
     }
@@ -326,6 +326,17 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
               }
               break;
 
+            case 'view_moderation_information':
+              if ($account->hasPermission('view moderation information')) {
+                if ($account->hasPermission('edit any ' . $bundle . ' content')) {
+                  $access = TRUE;
+                }
+                elseif ($account->hasPermission('edit own ' . $bundle . ' content')) {
+                  $access = UserPostingRightsHelper::userHasPostingRights($account, $entity, $status);
+                }
+              }
+              break;
+
             default:
               return AccessResult::neutral();
           }
@@ -357,6 +368,12 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
               $access = $account->hasPermission('delete terms in ' . $bundle);
               break;
 
+            case 'view_moderation_information':
+              if ($account->hasPermission('view moderation information')) {
+                $access = $account->hasPermission('edit terms in ' . $bundle);
+              }
+              break;
+
             default:
               return AccessResult::neutral();
           }
@@ -386,7 +403,6 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
 
     // Disable the moderation status widget and the default submit buttons.
     $form['actions']['submit']['#access'] = FALSE;
-    $form['actions']['overview']['#access'] = FALSE;
 
     // Move the preview button at the beginning if it exists.
     if (isset($form['actions']['preview'])) {
@@ -402,9 +418,8 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
       $submit_handlers = array_merge($submit_handlers, $form['actions']['submit']['#submit']);
     }
 
-    // Add submit handler at the end to finalize the selection of the status
-    // based on the rest of the submitted data.
-    $submit_handlers[] = [$this, 'handleEntitySubmission'];
+    // Try to redirect to the entity page after submitting the form.
+    $submit_handlers[] = [$this, 'redirectToEntityPage'];
 
     // Add the buttons.
     foreach ($this->getEntityFormSubmitButtons($status, $entity) as $status => $info) {
@@ -428,19 +443,12 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   public function validateEntityStatus(array $element, FormStateInterface $form_state) {
     $triggering_element = $form_state->getTriggeringElement();
     if (isset($triggering_element['#entity_status']) && $triggering_element['#entity_status'] === $element['#entity_status']) {
-      $form_state->setValue(['moderation_status', 0, 'value'], $element['#entity_status']);
+      // Alter the status from the button. This is useful notably for disasters
+      // because we use a single 'archive' button and the status is derived
+      // from the previous status of the disaster.
+      $status = $this->alterSubmittedEntityStatus($element['#entity_status'], $form_state);
+      $form_state->setValue(['moderation_status', 0, 'value'], $status);
     }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function handleEntitySubmission(array $form, FormStateInterface $form_state) {
-    // Alter the status based on the rest of the submitted form.
-    // @todo review if that should not be done in the entity presave instead.
-    $status = $form_state->getValue(['moderation_status', 0, 'value']);
-    $status = $this->alterSubmittedEntityStatus($status, $form_state);
-    $form_state->setValue(['moderation_status', 0, 'value'], $status);
   }
 
   /**
@@ -448,6 +456,21 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
    */
   public function alterSubmittedEntityStatus($status, FormStateInterface $form_state) {
     return $status;
+  }
+
+  /**
+   * Redirect to the entity page.
+   *
+   * @param array $form
+   *   Form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  public function redirectToEntityPage(array $form, FormStateInterface $form_state) {
+    $entity = $form_state->getFormObject()?->getEntity();
+    if (!empty($entity) && empty($entity->in_preview) && $entity->id() !== NULL) {
+      $form_state->setRedirectUrl($entity->toUrl());
+    }
   }
 
   /**

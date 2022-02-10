@@ -284,8 +284,10 @@ class DisasterModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function disableNotifications(EntityModeratedInterface $entity, $status) {
-    $allowed_statuses = ['alert', 'current', 'ongoing'];
-    $entity->notifications_content_disable = !in_array($status, $allowed_statuses);
+    if (empty($entity->notifications_content_disable)) {
+      $allowed_statuses = ['alert', 'current', 'ongoing'];
+      $entity->notifications_content_disable = !in_array($status, $allowed_statuses);
+    }
   }
 
   /**
