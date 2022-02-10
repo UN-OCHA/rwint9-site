@@ -4,19 +4,22 @@
  * @file
  * Footer template for the notifications.
  *
+ * Important note: the formmatting of this template and the use of the twig
+ * spaceless indicator `-` are on purpose to ensure a clean conversion to
+ * plain text without excessive line breaks and indentation.
+ *
  * Available variables are:
  * - prefooter: string for prefooter.
  */
 
 #}
-{% if prefooter %}
+{% if prefooter -%}
 <div class="prefooter">
-  {{ prefooter|raw }}
+  {{- prefooter|raw -}}
 </div>
 {% endif %}
-
 <div class="footer">
-  <a class="footer-link" href="{{ url('<front>') }}contact">Feedback</a> | <a class="footer-link" href="@unsubscribe">Unsubscribe</a>
+<a class="footer-link" href="{{ url('<front>') }}contact">Feedback</a> | <a class="footer-link" href="@unsubscribe">Unsubscribe</a>
 
-  <div class="footer-copyright">&copy; {{ 'now'|date('Y') }} ReliefWeb</div>
+<div class="footer-copyright">&copy; {{ 'now'|date('Y') }} ReliefWeb</div>
 </div>
