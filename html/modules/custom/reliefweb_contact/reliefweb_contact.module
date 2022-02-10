@@ -5,6 +5,8 @@
  * Reliefweb contact module.
  */
 
+use Drupal\reliefweb_utility\Helpers\MailHelper;
+
 /**
  * Implements hook_mail_alter().
  */
@@ -31,10 +33,12 @@ function reliefweb_contact_mail_alter(&$message) {
     '@subject' => $contact_message->subject->value,
   ]);
 
-  // Clean body.
-  unset($message['body'][1]);
-  unset($message['body'][2]);
-  $message['body'][3] = check_markup($contact_message->message->value, 'plain_text');
+  // Replace the body from contact_mail() with the entered message content.
+  $message['body'] = [check_markup($contact_message->message->value, 'plain_text')];
+
+  // Plain text only.
+  $message['params']['plaintext'] = MailHelper::getPlainText($message['body']);
+  $message['params']['plain'] = TRUE;
 
   // Set sender headers.
   $message['from'] = $sender;
