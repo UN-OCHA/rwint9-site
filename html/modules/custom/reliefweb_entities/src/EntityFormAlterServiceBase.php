@@ -114,6 +114,11 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
     // Mark the form for enhancement by the reliefweb_form module.
     $form['#attributes']['data-enhanced'] = '';
 
+    // Remove the "save and go to list" submit button on term pages.
+    if (isset($form['actions']['overview'])) {
+      $form['actions']['overview']['#access'] = FALSE;
+    }
+
     // Get what entity form is being used.
     $operation = $form_state->getFormObject()?->getOperation() ?? 'default';
 
@@ -827,6 +832,69 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
   }
 
   /**
+   * Prevent saving a document from a blocked source.
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  public function validateBlockedSource(array $form, FormStateInterface &$form_state) {
+    $ids = [];
+    foreach ($form_state->getValue('field_source', []) as $item) {
+      if (!empty($item['target_id'])) {
+        $ids[] = $item['target_id'];
+      }
+    }
+
+    if (!empty($ids)) {
+      $entity_type_manager = $this->getEntityTypeManager();
+
+      $taxonomy_term_entity_type = $entity_type_manager
+        ->getStorage('taxonomy_term')
+        ->getEntityType();
+
+      $table = $taxonomy_term_entity_type->getDataTable();
+      $id_field = $taxonomy_term_entity_type->getKey('id');
+      $label_field = $taxonomy_term_entity_type->getKey('label');
+
+      // Retrieve the labels of the selected blocked sources if any.
+      $sources = $this->getDatabase()
+        ->select($table, $table)
+        ->fields($table, [$label_field])
+        ->condition($table . '.' . $id_field, $ids, 'IN')
+        ->condition($table . '.moderation_status', 'blocked', '=')
+        ->execute()
+        ?->fetchCol() ?? [];
+
+      if (!empty($sources)) {
+        $form_state->setErrorByName('field_source', $this->t('Publications from "@sources" are not allowed.', [
+          '@sources' => implode('", "', $sources),
+        ]));
+      }
+    }
+  }
+
+  /**
+   * Add a checkbox to disable notifications.
+   *
+   * @param array $form
+   *   The entity form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  protected function addDisableNotifications(array &$form, FormStateInterface $form_state) {
+    // Add a checkbox to disable the notifications.
+    $status = $form_state->getFormObject()?->getEntity()?->getModerationStatus();
+    $form['notifications_content_disable'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Disable notifications'),
+      '#default_value' => !empty($status) && $status !== 'draft',
+    ];
+    $form['#submit'][] = [$this, 'setDisabledNotifications'];
+  }
+
+  /**
    * Check if the form action is to show the preview.
    *
    * @param \Drupal\Core\Form\FormStateInterface $form_state
@@ -869,17 +937,19 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
   }
 
   /**
-   * Redirect to the entity page.
+   * Disable the notifications if instructed so.
    *
    * @param array $form
    *   Form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   Form state.
    */
-  public function redirectToEntityPage(array $form, FormStateInterface $form_state) {
-    $entity = $form_state->getFormObject()?->getEntity();
-    if (!empty($entity) && empty($entity->in_preview) && $entity->id() !== NULL) {
-      $form_state->setRedirectUrl($entity->toUrl());
+  public function setDisabledNotifications(array $form, FormStateInterface $form_state) {
+    if (!empty($form_state->getValue('notifications_content_disable'))) {
+      $entity = $form_state->getFormObject()?->getEntity();
+      if (is_object($entity)) {
+        $entity->notifications_content_disable = TRUE;
+      }
     }
   }
 

@@ -16,9 +16,6 @@ class CountryFormAlter extends EntityFormAlterServiceBase {
   protected function addBundleFormAlterations(array &$form, FormStateInterface $form_state) {
     // Hide term relations as they are not used.
     $form['relations']['#access'] = FALSE;
-
-    // Redirect to term page.
-    $form['#submit'][] = [$this, 'redirectToEntityPage'];
   }
 
 }

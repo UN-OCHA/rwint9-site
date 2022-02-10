@@ -19,8 +19,6 @@ class DisasterFormAlter extends EntityFormAlterServiceBase {
    * {@inheritdoc}
    */
   protected function addBundleFormAlterations(array &$form, FormStateInterface $form_state) {
-    $entity = $form_state->getFormObject()->getEntity();
-
     // Hide term relations as they are not used.
     $form['relations']['#access'] = FALSE;
 
@@ -42,12 +40,7 @@ class DisasterFormAlter extends EntityFormAlterServiceBase {
     $form['field_primary_disaster_type']['#attributes']['data-with-autocomplete'] = 'primary';
 
     // Add a checkbox to disable the notifications.
-    $status = $entity->getModerationStatus();
-    $form['notifications_content_disable'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Disable notifications'),
-      '#default_value' => !empty($status) && $status !== 'draft',
-    ];
+    $this->addDisableNotifications($form, $form_state);
 
     // Limit form for External disaster managers who are not Editors.
     if (UserHelper::userHasRoles(['external_disaster_manager'])) {
@@ -64,9 +57,6 @@ class DisasterFormAlter extends EntityFormAlterServiceBase {
     // Validate the disaster GLIDE number and check for duplicates.
     $form['#validate'][] = [$this, 'validateGlidePattern'];
     $form['#validate'][] = [$this, 'validateGlideUniqueness'];
-
-    // Redirect to term page.
-    $form['#submit'][] = [$this, 'redirectToEntityPage'];
   }
 
   /**
