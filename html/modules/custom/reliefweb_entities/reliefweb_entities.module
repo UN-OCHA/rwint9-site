@@ -11,6 +11,7 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
+use Drupal\reliefweb_utility\Helpers\MailHelper;
 use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\taxonomy\TermInterface;
@@ -429,6 +430,28 @@ function reliefweb_entities_entity_presave(EntityInterface $entity) {
           }
         }
       }
+    }
+  }
+}
+
+/**
+ * Implements hook_mail().
+ *
+ * Populate the subject and body of the message sent after publishing a report.
+ */
+function reliefweb_entities_mail($key, array &$message, array $parameters) {
+  if ($key === 'report_publication_notification') {
+    $message['subject'] = $parameters['subject'];
+    $message['body'][] = $parameters['content'];
+    // Plain text only.
+    $message['params']['plaintext'] = MailHelper::getPlainText($message['body']);
+    $message['params']['plain'] = TRUE;
+    // Use the submit mailbox as sender and add it also as CC to track the
+    // notifications.
+    $submit = \Drupal::state()->get('reliefweb_submit_email');
+    if (!empty($submit)) {
+      $message['headers']['From'] = $submit;
+      $message['headers']['CC'] = $submit;
     }
   }
 }
