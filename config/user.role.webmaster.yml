@@ -26,6 +26,7 @@ dependencies:
     - filter
     - google_tag
     - guidelines
+    - reliefweb_users
     - taxonomy
     - taxonomy_term_revision
 id: webmaster
@@ -114,6 +115,7 @@ permissions:
   - 'use text format guideline'
   - 'view all guideline revisions'
   - 'view published guideline entities'
+  - 'view reliefweb admin menu'
   - 'view term revision data'
   - 'view term revision list'
   - 'view unpublished guideline entities'
