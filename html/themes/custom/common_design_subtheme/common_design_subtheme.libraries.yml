@@ -138,7 +138,7 @@ rw-guidelines:
     theme:
       components/rw-guidelines/rw-guidelines.css: {}
   js:
-    components/rw-guidelines/guidelines-json.js: {}
+    components/rw-guidelines/rw-guidelines.js: {}
   dependencies:
     - common_design_subtheme/rw-icons
 

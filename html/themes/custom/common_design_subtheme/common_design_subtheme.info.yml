@@ -63,4 +63,7 @@ ckeditor_stylesheets:
 libraries-override:
   guidelines/guidelines-json:
     js:
-      components/guidelines-json/guidelines-json.js: components/rw-guidelines/guidelines-json.js
+      components/guidelines-json/guidelines-json.js: false
+    css:
+      component:
+        components/guidelines-json/guidelines-json.css: false
