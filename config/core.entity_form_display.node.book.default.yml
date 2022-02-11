@@ -23,13 +23,13 @@ content:
     weight: 1
     region: content
     settings:
-      rows: 9
+      rows: 20
       summary_rows: 3
       placeholder: ''
       show_summary: false
     third_party_settings:
       allowed_formats:
-        hide_help: '1'
+        hide_help: '0'
         hide_guidelines: '1'
   field_attached_images:
     type: media_library_widget
