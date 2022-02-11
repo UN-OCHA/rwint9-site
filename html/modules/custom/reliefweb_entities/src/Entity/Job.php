@@ -137,6 +137,10 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
     // Update the entity statys based on the source(s) moderation status.
     $this->updateModerationStatusFromSourceStatus();
 
+    // Update the creation date when published for the first time so that
+    // the opportunity can appear at the top of the opportunity river.
+    $this->updateDateWhenPublished();
+
     parent::preSave($storage);
   }
 
