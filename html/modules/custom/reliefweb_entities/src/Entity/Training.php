@@ -107,4 +107,14 @@ class Training extends Node implements BundleEntityInterface, EntityModeratedInt
     parent::preSave($storage);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function postSave(EntityStorageInterface $storage, $update = TRUE) {
+    parent::postSave($storage, $update);
+
+    // Make the sources active.
+    $this->updateSourceModerationStatus();
+  }
+
 }

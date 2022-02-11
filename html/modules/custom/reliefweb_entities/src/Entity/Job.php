@@ -138,6 +138,16 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function postSave(EntityStorageInterface $storage, $update = TRUE) {
+    parent::postSave($storage, $update);
+
+    // Make the sources active.
+    $this->updateSourceModerationStatus();
+  }
+
+  /**
    * Get the list of job categories for which themes are irrelevant.
    *
    * @return array
