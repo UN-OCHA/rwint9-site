@@ -104,6 +104,9 @@ class Training extends Node implements BundleEntityInterface, EntityModeratedInt
     // Update the entity status based on the user posting rights.
     $this->updateModerationStatusFromPostingRights();
 
+    // Update the entity statys based on the source(s) moderation status.
+    $this->updateModerationStatusFromSourceStatus();
+
     parent::preSave($storage);
   }
 
