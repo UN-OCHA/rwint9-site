@@ -444,7 +444,7 @@ form > #actions legend + .form-type-checkbox.form-item-notifications-content-dis
 .filter-wrapper .filter-help a:after {
   top: 2px;
 }
-.filter-wrapper select[disabled] {
+.filter-wrapper select {
   padding: 0 4px;
 }
 .filter-wrapper ul {
