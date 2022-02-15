@@ -302,12 +302,42 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
       '38974' => 'Interactive',
     ];
 
-    $content_format = $form_state
-      ->getValue(['field_content_format', 0, 'target_id']);
+    $formats = $form_state->getValue(['field_content_format']);
+    if (empty($formats)) {
+      return;
+    }
 
-    // File and its preview are mandatory for visual content when publishing.
-    if (isset($visual_formats[$content_format])) {
-      // @todo add file check - RW-138.
+    // Normally there is only 1 content format allowed.
+    foreach ($formats as $item) {
+      $format = $visual_formats[$item['target_id']] ?? NULL;
+      // File and its preview are mandatory for visual content when publishing.
+      if (isset($format)) {
+        $file = $form_state->getValue(['field_file', 0, 'uuid']);
+        // #4L7i0wbW - File is mandatory.
+        if (empty($file)) {
+          $status = $this->getEntityModerationStatus($form_state);
+          if (in_array($status, ['to-review', 'published'])) {
+            $form_state->setErrorByName('field_file][add_more', $this->t('The content format is %format. You must attach a file.', [
+              '%format' => $format,
+            ]));
+          }
+        }
+        // Preview is also mandatory.
+        else {
+          $preview_file = $form_state->getValue([
+            'field_file', 0, 'preview_uuid',
+          ]);
+          $preview_page = $form_state->getValue([
+            'field_file', 0, 'preview_page',
+          ]);
+          if (empty($preview_file) || empty($preview_page)) {
+            $form_state->setErrorByName('field_file][0][preview_page', $this->t('The content format is %format. You must enable the "preview" for the attachment.', [
+              '%format' => $format,
+            ]));
+          }
+        }
+      }
+      break;
     }
   }
 
