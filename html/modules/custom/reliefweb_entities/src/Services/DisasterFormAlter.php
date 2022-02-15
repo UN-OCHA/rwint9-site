@@ -18,10 +18,22 @@ class DisasterFormAlter extends EntityFormAlterServiceBase {
   /**
    * {@inheritdoc}
    */
-  protected function addBundleFormAlterations(array &$form, FormStateInterface $form_state) {
+  public function alterForm(array &$form, FormStateInterface $form_state) {
+    parent::alterForm($form, $form_state);
+
+    // Restrict the description to the markdown format.
+    $form['description']['widget'][0]['#allowed_formats'] = [
+      'markdown' => 'markdown',
+    ];
+
     // Hide term relations as they are not used.
     $form['relations']['#access'] = FALSE;
+  }
 
+  /**
+   * {@inheritdoc}
+   */
+  protected function addBundleFormAlterations(array &$form, FormStateInterface $form_state) {
     // Alter the primary country field, ensuring it's using a value among
     // the selected country values.
     $this->alterPrimaryField('field_primary_country', $form, $form_state);

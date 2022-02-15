@@ -4,6 +4,7 @@ status: true
 dependencies:
   module:
     - reliefweb_subscriptions
+    - reliefweb_users
 id: user_manager
 label: 'User manager'
 weight: 3
@@ -13,4 +14,5 @@ permissions:
   - 'administer subscriptions'
   - 'administer users'
   - 'change own username'
+  - 'view reliefweb admin menu'
   - 'view user email addresses'

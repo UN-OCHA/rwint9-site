@@ -2,6 +2,9 @@
 
 namespace Drupal\reliefweb_entities;
 
+use Drupal\Core\Entity\EntityPublishedInterface;
+use Drupal\Core\Entity\RevisionLogInterface;
+use Drupal\reliefweb_entities\Entity\Source;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
@@ -79,6 +82,102 @@ trait OpportunityDocumentTrait {
             $this->{$revision_log_field}->value = $log;
           }
         }
+      }
+    }
+  }
+
+  /**
+   * Update the status to refused if any of the sources is blocked.
+   */
+  protected function updateModerationStatusFromSourceStatus() {
+    if (!$this->hasField('field_source') || $this->field_source->isEmpty()) {
+      return;
+    }
+
+    $blocked = [];
+    foreach ($this->field_source as $item) {
+      $source = $item->entity;
+      if (empty($source) || !($source instanceof Source)) {
+        continue;
+      }
+
+      if ($source->getModerationStatus() === 'blocked') {
+        $blocked[] = $source->label();
+      }
+    }
+
+    if (!empty($blocked)) {
+      $this->setModerationStatus('refused');
+
+      // Add a message to the revision log.
+      if ($this instanceof RevisionLogInterface) {
+        $message = 'Submissions from "' . implode('", "', $blocked) . '" are no longer allowed.';
+
+        $log = $this->getRevisionLogMessage();
+        if (empty($log)) {
+          $this->setRevisionLogMessage($message);
+        }
+        else {
+          $this->setRevisionLogMessage($message . ' ' . $log);
+        }
+      }
+    }
+  }
+
+  /**
+   * Update creation date when the opportunity is published for the first time.
+   */
+  protected function updateDateWhenPublished() {
+    if ($this->id() === NULL || $this->getModerationStatus() !== 'published') {
+      return;
+    }
+
+    $entity_type = $this->getEntityType();
+    $table = $entity_type->getRevisionDataTable();
+    $id_field = $entity_type->getKey('id');
+
+    $previously_published = \Drupal::database()
+      ->select($table, $table)
+      ->fields($table, [$entity_type->getKey('revision')])
+      ->condition($table . '.' . $id_field, $this->id(), '=')
+      ->condition($table . '.moderation_status', 'published', '=')
+      ->range(0, 1)
+      ->execute()
+      ?->fetchField();
+
+    // Update publication date if published for the first time.
+    if (empty($previously_published)) {
+      $this->setCreatedTime($this->getChangedTime());
+    }
+  }
+
+  /**
+   * Update the status of the sources when publishing an opportunity.
+   */
+  protected function updateSourceModerationStatus() {
+    if (!$this->hasField('field_source') || $this->field_source->isEmpty()) {
+      return;
+    }
+
+    if (!($this instanceof EntityPublishedInterface) || !$this->isPublished()) {
+      return;
+    }
+
+    // Make the inactive or archive sources active when an apportunity is
+    // published.
+    foreach ($this->field_source as $item) {
+      $source = $item->entity;
+      if (empty($source) || !($source instanceof Source)) {
+        continue;
+      }
+
+      if (in_array($source->getModerationStatus(), ['inactive', 'archive'])) {
+        $entity->notifications_content_disable = TRUE;
+        $source->setModerationStatus('active');
+        $source->setNewRevision(TRUE);
+        $source->setRevisionLogMessage('Automatic status update');
+        $source->setRevisionUserId(2);
+        $source->save();
       }
     }
   }

@@ -29,6 +29,7 @@ dependencies:
     - field.field.node.report.field_vulnerable_groups
     - node.type.report
   module:
+    - allowed_formats
     - datetime
     - media_library
     - path
@@ -45,11 +46,14 @@ content:
     weight: 2
     region: content
     settings:
-      rows: 9
+      rows: 20
       summary_rows: 3
       placeholder: ''
       show_summary: false
-    third_party_settings: {  }
+    third_party_settings:
+      allowed_formats:
+        hide_help: '0'
+        hide_guidelines: '1'
   field_bury:
     type: boolean_checkbox
     weight: 22

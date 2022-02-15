@@ -14,7 +14,7 @@ class AnnouncementFormAlter extends EntityFormAlterServiceBase {
    * {@inheritdoc}
    */
   protected function addBundleFormAlterations(array &$form, FormStateInterface $form_state) {
-    // No customizations.
+    $form['title']['widget'][0]['value']['#description'] = $this->t('Title will show up in tooltip when you hover over the banner.');
   }
 
 }

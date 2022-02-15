@@ -38,6 +38,7 @@ dependencies:
     - reliefweb_revisions
     - reliefweb_topics
     - reliefweb_user_posts
+    - reliefweb_users
     - taxonomy
     - taxonomy_term_revision
 id: editor
@@ -181,6 +182,7 @@ permissions:
   - 'view own unpublished content'
   - 'view own unpublished media'
   - 'view published guideline entities'
+  - 'view reliefweb admin menu'
   - 'view report revisions'
   - 'view term revision data'
   - 'view term revision list'

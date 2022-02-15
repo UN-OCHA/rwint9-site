@@ -141,6 +141,9 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
     // Add the revision form alterations.
     $this->addRevisionFormAlterations($form, $form_state);
 
+    // Add the cloning form alterations.
+    $this->addCloneFormAlterations($form, $form_state);
+
     // Force separate display of the URL alias fields.
     if (isset($form['path']['widget'][0])) {
       unset($form['path']['widget'][0]['#group']);
@@ -220,6 +223,48 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
     if (isset($form[$revision_field]['widget'][0]['value'])) {
       $form[$revision_field]['widget'][0]['value']['#title'] = $this->t('New comment');
       $form[$revision_field]['#group'] = 'revision_information';
+    }
+  }
+
+  /**
+   * Add form alterations related to clone entities.
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  protected function addCloneFormAlterations(array &$form, FormStateInterface $form_state) {
+    $label_field = $form_state->getFormObject()
+      ?->getEntity()
+      ?->getEntityType()
+      ?->getKey('label');
+
+    if (!empty($label_field) && isset($form[$label_field]['widget'][0]['value'])) {
+      $form[$label_field]['widget']['#element_validate'][] = [
+        $this, 'validateClonedEntityLabel',
+      ];
+    }
+  }
+
+  /**
+   * Validate that the label field of a cloned entity.
+   *
+   * @param array $element
+   *   Form element to validate.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   * @param array $form
+   *   The complete form.
+   *
+   * @see \Drupal\content_entity_clone\Plugin\content_entity_clone\FieldProcessor\EntityLabelCloneSuffix;
+   */
+  public function validateClonedEntityLabel(array &$element, FormStateInterface $form_state, array &$form) {
+    $field = $element['#field_name'];
+    $value = $form_state->getValue([$field, 0, 'value']);
+
+    if (!empty($value) && preg_match('/\[CLONE\]$/', $value) === 1) {
+      $form_state->setError($element[0]['value'], $this->t('Please check the title and remove "[CLONE]".'));
     }
   }
 

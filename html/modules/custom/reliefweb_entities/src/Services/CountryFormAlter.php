@@ -13,9 +13,23 @@ class CountryFormAlter extends EntityFormAlterServiceBase {
   /**
    * {@inheritdoc}
    */
-  protected function addBundleFormAlterations(array &$form, FormStateInterface $form_state) {
+  public function alterForm(array &$form, FormStateInterface $form_state) {
+    parent::alterForm($form, $form_state);
+
+    // Restrict the description to the markdown format.
+    $form['description']['widget'][0]['#allowed_formats'] = [
+      'markdown' => 'markdown',
+    ];
+
     // Hide term relations as they are not used.
     $form['relations']['#access'] = FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function addBundleFormAlterations(array &$form, FormStateInterface $form_state) {
+    // No customizations.
   }
 
 }

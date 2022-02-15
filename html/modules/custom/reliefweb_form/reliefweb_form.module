@@ -273,3 +273,52 @@ function reliefweb_form_module_implements_alter(&$implementations, $hook) {
     $implementations['reliefweb_form'] = $group;
   }
 }
+
+/**
+ * Implements hook_field_widget_form_alter().
+ */
+function reliefweb_form_field_widget_form_alter(&$element, FormStateInterface $form_state, $context) {
+  if (!empty($element['#after_build'])) {
+    foreach ($element['#after_build'] as $key => $callback) {
+      if ($callback === '_allowed_formats_remove_textarea_help') {
+        $element['#after_build'][$key] = 'reliefweb_form_hide_format_help';
+      }
+    }
+  }
+}
+
+/**
+ * After build callback to hide the text format help.
+ */
+function reliefweb_form_hide_format_help($form_element, FormStateInterface $form_state) {
+  if (isset($form_element['format'])) {
+    $hide_help = !empty($form_element['#allowed_format_hide_settings']['hide_help']);
+    $hide_guidelines = !empty($form_element['#allowed_format_hide_settings']['hide_guidelines']);
+
+    if ($hide_help) {
+      $form_element['format']['help']['#access'] = FALSE;
+    }
+    if ($hide_guidelines) {
+      $form_element['format']['guidelines']['#access'] = FALSE;
+    }
+
+    // Ensure the format is displayed even it's only one, except for plain text.
+    if (isset($form_element['#allowed_formats']) && count($form_element['#allowed_formats']) === 1) {
+      if (($hide_help && $hide_guidelines) || $form_element['format']['format']['#default_value'] === 'plain_text') {
+        // We need to keep the format (we cannot use #access = FALSE) otherwise
+        // the editor for the text format, if any, will not be displayed...
+        // @see \Drupal\editor\Element::preRenderTextFormat()
+        unset($form_element['format']['#type']);
+        unset($form_element['format']['#theme_wrappers']);
+      }
+      else {
+        // We need to set the #access to TRUE otherwiwse it's hidden...
+        // @see \Drupal\editor\Element::preRenderTextFormat()
+        $form_element['format']['format']['#access'] = TRUE;
+        $form_element['format']['format']['#attributes']['disabled'] = TRUE;
+      }
+    }
+  }
+
+  return $form_element;
+}

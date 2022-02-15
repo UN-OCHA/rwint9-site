@@ -238,8 +238,7 @@ form .form-disabled [data-irrelevant] > div {
   display: none;
 }
 form input[disabled],
-form textarea[disabled],
-form select[disabled] {
+form textarea[disabled] {
   background: var(--cd-reliefweb-brand-grey--light);
   background: var(--cd-reliefweb-grey--disable);
 }
@@ -426,12 +425,30 @@ form > #actions legend + .form-type-checkbox.form-item-notifications-content-dis
   margin-top: 0;
 }
 .filter-wrapper {
-  border: 1px solid var(--cd-reliefweb-brand-grey--light);
+  display: flex;
+  align-items: center;
+  border: 2px solid var(--cd-reliefweb-brand-grey--light);
+  border-top: none;
+  background: var(--cd-reliefweb-brand-grey--light);
 }
-.filter-wrapper .filter-help {
+.filter-wrapper * {
   font-size: 14px;
 }
+.filter-wrapper .filter-help {
+  display: flex;
+  float: none;
+  flex-grow: 1;
+  justify-content: flex-end;
+  order: 1;
+}
+.filter-wrapper .filter-help a:after {
+  top: 2px;
+}
+.filter-wrapper select {
+  padding: 0 4px;
+}
 .filter-wrapper ul {
+  width: 100%;
   margin: 0;
   padding: 0;
   list-style-type: none;

@@ -36,7 +36,7 @@ content:
       placeholder: ''
     third_party_settings:
       allowed_formats:
-        hide_help: '1'
+        hide_help: '0'
         hide_guidelines: '1'
   field_country:
     type: reliefweb_entity_reference_select

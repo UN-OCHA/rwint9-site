@@ -372,6 +372,13 @@ function reliefweb_entities_form_node_form_alter(array &$form, FormStateInterfac
  */
 function reliefweb_entities_form_taxonomy_term_form_alter(array &$form, FormStateInterface $form_state) {
   EntityFormAlterServiceBase::alterEntityForm($form, $form_state);
+
+  // Empty the revision log message as we always create new revisions.
+  //
+  // @see reliefweb_entities_set_taxonomy_term_revision()
+  if (!empty($form['revision_log_message']['widget'][0]['value']['#default_value'])) {
+    $form['revision_log_message']['widget'][0]['value']['#default_value'] = '';
+  }
 }
 
 /**
@@ -392,11 +399,63 @@ function reliefweb_entities_form_alter(array &$form, FormStateInterface $form_st
 }
 
 /**
+ * Implements hook_module_implements_alter().
+ */
+function reliefweb_entities_module_implements_alter(&$implementation, $hook) {
+  // Remove the hook_entity_presave() implementation from the
+  // taxonomy_term_revision module because it doesn't allow us to speify the
+  // revision user or timestamp. This is replaced by
+  // reliefweb_entities_set_taxonomy_term_revision().
+  //
+  // @see taxonomy_term_revision_entity_presave()
+  // @see reliefweb_entities_set_taxonomy_term_revision()
+  if ($hook === 'entity_presave') {
+    unset($implementation['taxonomy_term_revision']);
+  }
+}
+
+/**
  * Implements hook_entity_presave().
- *
- * Remove control characters from text fields.
  */
 function reliefweb_entities_entity_presave(EntityInterface $entity) {
+  // Remove control characters from an entity's text fields.
+  reliefweb_entities_clean_text_fields($entity);
+
+  // Set the taxonomy term revision.
+  reliefweb_entities_set_taxonomy_term_revision($entity);
+}
+
+/**
+ * Set a taxonomy term's revision information.
+ *
+ * Note: this replaces the taxonomy_term_revision_entity_presave() which
+ * is not flexible and forces the revision user ID and creation time.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   Entity.
+ *
+ * @see taxonomy_term_revision_entity_presave()
+ */
+function reliefweb_entities_set_taxonomy_term_revision(EntityInterface $entity) {
+  // Saving new revision of term on each save.
+  if ($entity instanceof TermInterface) {
+    $entity->setNewRevision(TRUE);
+    if (is_null($entity->getRevisionUserId())) {
+      $entity->setRevisionUserId(\Drupal::currentUser()->id());
+    }
+    if (empty($entity->getRevisionCreationTime())) {
+      $entity->setRevisionCreationTime(\Drupal::time()->getRequestTime());
+    }
+  }
+}
+
+/**
+ * Remove control characters from an entity's text fields.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   Entity.
+ */
+function reliefweb_entities_clean_text_fields(EntityInterface $entity) {
   $entity_type_id = $entity->getEntityTypeId();
   if ($entity_type_id === 'node' || $entity_type_id === 'taxonomy_term') {
     $field_definitions = \Drupal::service('entity_field.manager')

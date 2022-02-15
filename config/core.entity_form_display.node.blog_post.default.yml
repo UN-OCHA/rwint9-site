@@ -10,6 +10,7 @@ dependencies:
     - field.field.node.blog_post.field_tags
     - node.type.blog_post
   module:
+    - allowed_formats
     - media_library
     - path
     - text
@@ -23,11 +24,14 @@ content:
     weight: 4
     region: content
     settings:
-      rows: 9
+      rows: 20
       summary_rows: 3
       placeholder: ''
       show_summary: false
-    third_party_settings: {  }
+    third_party_settings:
+      allowed_formats:
+        hide_help: '0'
+        hide_guidelines: '1'
   field_attached_images:
     type: media_library_widget
     weight: 6
