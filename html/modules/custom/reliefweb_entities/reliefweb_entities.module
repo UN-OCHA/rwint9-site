@@ -521,22 +521,25 @@ function reliefweb_entities_mail($key, array &$message, array $parameters) {
  *
  * This performs the following tasks:
  * - Publish embargoed documents.
+ * - Expire jobs and training.
  *
  * At max 20 nodes of each type is processed at once to avoid clogging the cron
  * process and using excessive resources.
  */
 function reliefweb_moderation_cron() {
   $storage = \Drupal::entityTypeManager()->getStorage('node');
+  $cron_settings = \Drupal::config('reliefweb_entities.settings')->get('cron') ?? [];
 
   // Publish embargoed reports.
-  $ids = $storage
+  $embargoed_ids = $storage
     ->getQuery()
     ->condition('type', 'report', '=')
     ->condition('field_embargo_date.value', gmdate("Y-m-d\TH:i:s"), '<')
+    ->range(0, $cron_settings['embargoed_reports_limit'] ?? 20)
     ->execute();
 
-  if (!empty($ids)) {
-    $reports = $storage->loadMultiple($ids) ?? [];
+  if (!empty($embargoed_ids)) {
+    $reports = $storage->loadMultiple($embargoed_ids) ?? [];
     foreach ($reports as $report) {
       $timestamp = DateHelper::getDateTimeStamp($report->field_embargo_date->value);
       $report->setCreatedTime($timestamp);
@@ -544,10 +547,45 @@ function reliefweb_moderation_cron() {
       $report->field_embargo_date->setValue([]);
       $report->setNewRevision(TRUE);
       $report->setRevisionUserId(2);
-      $report->setRevisionLogMessage(strtr('Embargoed automatically document published on @date.', [
+      $report->setRevisionLogMessage(strtr('Embargoed document automatically published on @date.', [
         '@date' => DateHelper::format($timestamp, 'custom', 'd M Y H:i e'),
       ]));
       $report->save();
+    }
+  }
+
+  // Change status of expired jobs and training.
+  $expired_ids = [];
+  $time = gmmktime(0, 0, 0);
+  $date = gmdate("Y-m-d", $time);
+
+  $expired_ids += $storage
+    ->getQuery()
+    ->condition('type', 'job', '=')
+    ->condition('moderation_status', 'published', '=')
+    ->condition('field_job_closing_date.value', $date, '<')
+    ->range(0, $cron_settings['expired_jobs_limit'] ?? 20)
+    ->execute();
+
+  $expired_ids += $storage
+    ->getQuery()
+    ->condition('type', 'training', '=')
+    ->condition('moderation_status', 'published', '=')
+    ->condition('field_registration_deadline.value', $date, '<')
+    ->range(0, $cron_settings['expired_training_limit'] ?? 20)
+    ->execute();
+
+  if (!empty($expired_ids)) {
+    $nodes = $storage->loadMultiple($expired_ids) ?? [];
+    foreach ($nodes as $node) {
+      $node->setModerationStatus('expired');
+      $node->setNewRevision(TRUE);
+      $node->setRevisionUserId(2);
+      $node->setRevisionLogMessage(strtr('@type automatically expired on @date.', [
+        '@type' => ucfirst($node->bundle()),
+        '@date' => DateHelper::format($time, 'custom', 'd M Y H:i e'),
+      ]));
+      $node->save();
     }
   }
 }

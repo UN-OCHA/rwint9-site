@@ -1,3 +1,4 @@
+# Allowed social media links.
 allowed_social_media_links:
   facebook: 'Facebook'
   instagram: 'Instagram'
@@ -5,3 +6,8 @@ allowed_social_media_links:
   linkedin: 'LinkedIn'
   twitter: 'Twitter'
   youtube: 'YouTube'
+# Entity related cron task settings.
+cron:
+  embargoed_reports_limit: 20
+  expired_jobs_limit: 20
+  expired_training_limit: 20

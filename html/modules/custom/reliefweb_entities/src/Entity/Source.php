@@ -210,7 +210,7 @@ class Source extends Term implements BundleEntityInterface, EntityModeratedInter
     if (!$this->field_links->isEmpty()) {
       // Get the list of allowed social media.
       $allowed = \Drupal::config('reliefweb_entities.settings')
-        ->get('allowed_social_media_links', []);
+        ->get('allowed_social_media_links') ?? [];
 
       // Prepare the links.
       foreach ($this->field_links as $link) {
