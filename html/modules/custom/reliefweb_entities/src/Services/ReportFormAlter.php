@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_entities\Services;
 
+use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
@@ -55,6 +56,9 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     // the selected country values.
     $this->alterPrimaryField('field_primary_country', $form, $form_state);
 
+    // Alter the embargo field.
+    $this->alterEmbargoDateField($form, $form_state);
+
     // Alter the headline fields.
     $this->alterHeadlineFields($form, $form_state);
 
@@ -78,12 +82,33 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     // Remove Complex Emergency (41764) option for disaster type field.
     FormHelper::removeOptions($form, 'field_disaster_type', [41764]);
 
-    // Add validation callbacks for the file and embargo date fields.
+    // Validate the attachments.
     $form['#validate'][] = [$this, 'validateAttachment'];
+
+    // Validate the embargo date.
     $form['#validate'][] = [$this, 'validateEmbargoDate'];
 
     // Prevent saving from a blocked source.
     $form['#validate'][] = [$this, 'validateBlockedSource'];
+  }
+
+  /**
+   * Modify the embargo date field.
+   *
+   * Set a proper range for the year widget (current year up to 1 year after).
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   *
+   * @see https://www.drupal.org/project/drupal/issues/2836054
+   */
+  protected function alterEmbargoDateField(array &$form, FormStateInterface $form_state) {
+    $min_year = gmdate('Y');
+    $max_year = $min_year + 1;
+
+    $form['field_embargo_date']['widget'][0]['value']['#date_year_range'] = $min_year . ':' . $max_year;
   }
 
   /**
@@ -353,7 +378,9 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
    */
   public function validateEmbargoDate(array $form, FormStateInterface &$form_state) {
     $embargo_date = $form_state->getValue(['field_embargo_date', 0, 'value']);
-    if (!empty($embargo_date) && $embargo_date->getTimestamp() < time()) {
+    // If there is a valid date (with year, month etc.), then $embargo_date
+    // is a \Drupal\Core\Datetime\DrupalDateTime instance...
+    if (!empty($embargo_date) && $embargo_date instanceof DrupalDateTime && $embargo_date->getTimestamp() < time()) {
       $form_state->setErrorByName('field_embargo_date][0][value', $this->t('The embargo date cannot be in the past.'));
     }
   }
