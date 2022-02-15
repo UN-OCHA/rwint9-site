@@ -197,7 +197,7 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
   public function preSave(EntityStorageInterface $storage) {
     parent::preSave($storage);
 
-    // Change the publication date if bury is selected to the original
+    // Change the publication date if bury is selected, to the original
     // publication date.
     if (!empty($this->field_bury->value) && !$this->field_original_publication_date->isEmpty()) {
       $date = $this->field_original_publication_date->value;
@@ -224,6 +224,19 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
       if ($from_ocha === FALSE) {
         $this->field_ocha_product->setValue([]);
       }
+    }
+
+    // Change the status to `embargoed` if there is an embargo date.
+    if (!empty($this->field_embargo_date->value) && $this->getModerationStatus() !== 'draft') {
+      $this->setModerationStatus('embargoed');
+
+      $message = strtr('Embargoed (to be automatically published on @date).', [
+        '@date' => DateHelper::format($this->field_embargo_date->value, 'custom', 'd M Y H:i e'),
+      ]);
+
+      $log = trim($this->getRevisionLogMessage());
+      $log = $message . (!empty($log) ? "\n" . $log : '');
+      $this->setRevisionLogMessage($log);
     }
 
     // Prepare notifications.
