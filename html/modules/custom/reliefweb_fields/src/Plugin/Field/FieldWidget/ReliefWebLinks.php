@@ -235,7 +235,7 @@ class ReliefWebLinks extends WidgetBase implements ContainerFactoryPluginInterfa
 
       // Only nodes are supported as internal links.
       if (empty($path)) {
-        $invalid = t('Invalid internal URL.');
+        $invalid = t('Invalid internal URL: it must be in the form "/node/123456" or "/reports/xxx" (it can start with https://reliefweb.int).');
       }
       elseif (strpos($path, '/node/') === 0 && strlen($path) > 6) {
         $nid = intval(substr($path, 6), 10);
@@ -341,7 +341,8 @@ class ReliefWebLinks extends WidgetBase implements ContainerFactoryPluginInterfa
       }
     }
     // Resolve aliases to their corresponding internal path.
-    $path = UrlHelper::getPathFromAlias(urldecode($parts['path']));
+    $path = '/' . ltrim($parts['path'], '/');
+    $path = UrlHelper::getPathFromAlias(urldecode($path));
 
     // Only accept links resolved to a node internal path.
     return preg_match('#^/node/[0-9]+$#', $path) === 1 ? $path : '';

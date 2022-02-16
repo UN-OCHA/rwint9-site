@@ -37,18 +37,6 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
    * {@inheritdoc}
    */
   public static function addFieldConstraints(&$fields) {
-    // Restrict body length.
-    $fields['body']->addConstraint('TextLengthWithinRange', [
-      'min' => 400,
-      'max' => 50000,
-    ]);
-
-    // Restrict how to apply length.
-    $fields['field_how_to_apply']->addConstraint('TextLengthWithinRange', [
-      'min' => 100,
-      'max' => 10000,
-    ]);
-
     // The city field cannot have a value if the country field is empty.
     $fields['field_city']->addConstraint('EmptyIfOtherFieldEmpty', [
       'otherFieldName' => 'field_country',
@@ -80,8 +68,8 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
     return [
       'posted' => $this->createDate($this->getCreatedTime()),
       'closing' => $this->createDate($this->field_job_closing_date->value),
-      'country' => $this->getEntityMetaFromField('country', 'C'),
-      'source' => $this->getEntityMetaFromField('source', 'S'),
+      'country' => $this->getEntityMetaFromField('country'),
+      'source' => $this->getEntityMetaFromField('source'),
       'city' => $this->field_city->value ?? '',
       'type' => $this->getEntityMetaFromField('job_type', 'TY'),
       'career_category' => $this->getEntityMetaFromField('career_categories', 'CC'),

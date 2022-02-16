@@ -45,6 +45,10 @@ class DateHelper {
   /**
    * Format a date.
    *
+   * Wrapper around DateFormatter::format() that accepts various types for the
+   * date parameter and convert it to a timestamp and also using UTC as default
+   * timezone.
+   *
    * @param mixed $date
    *   Date field value.
    * @param string $type
@@ -72,7 +76,7 @@ class DateHelper {
    *   contain user input, this value should be escaped when output.
    *   An empty string is returned if the date couldn't be formatted.
    */
-  public static function format($date, $type = 'medium', $format = '', $timezone = NULL, $langcode = NULL) {
+  public static function format($date, $type = 'medium', $format = '', $timezone = 'UTC', $langcode = NULL) {
     $timestamp = static::getDateTimeStamp($date);
     if (empty($timestamp)) {
       return '';

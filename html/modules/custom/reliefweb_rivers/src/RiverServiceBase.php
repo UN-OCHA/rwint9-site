@@ -3,10 +3,12 @@
 namespace Drupal\reliefweb_rivers;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Pager\PagerParametersInterface;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
@@ -22,6 +24,20 @@ use Symfony\Component\Routing\Exception\RouteNotFoundException;
 abstract class RiverServiceBase implements RiverServiceInterface {
 
   use StringTranslationTrait;
+
+  /**
+   * The config factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
+
+  /**
+   * The current user.
+   *
+   * @var \Drupal\Core\Session\AccountProxyInterface
+   */
+  protected $currentUser;
 
   /**
    * The language manager.
@@ -125,6 +141,10 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   /**
    * Constructor.
    *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory.
+   * @param \Drupal\Core\Session\AccountProxyInterface $current_user
+   *   The current user.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   The language manager.
    * @param \Drupal\Core\Pager\PagerManagerInterface $pager_manager
@@ -141,6 +161,8 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    *   The translation manager service.
    */
   public function __construct(
+    ConfigFactoryInterface $config_factory,
+    AccountProxyInterface $current_user,
     LanguageManagerInterface $language_manager,
     PagerManagerInterface $pager_manager,
     PagerParametersInterface $pager_parameters,
@@ -149,6 +171,8 @@ abstract class RiverServiceBase implements RiverServiceInterface {
     RendererInterface $renderer,
     TranslationInterface $string_translation
   ) {
+    $this->configFactory = $config_factory;
+    $this->currentUser = $current_user;
     $this->languageManager = $language_manager;
     $this->pagerManager = $pager_manager;
     $this->pagerParameters = $pager_parameters;
@@ -470,11 +494,52 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   public function getRiverLinks() {
     return [
       '#theme' => 'reliefweb_rivers_links',
-      '#links' => [],
+      '#links' => array_filter([
+        'rss' => $this->getRssLink(),
+        'api' => $this->getApiLink(),
+      ]),
       '#cache' => [
         'max-age' => 0,
       ],
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRssLink() {
+    try {
+      return Url::fromRoute('reliefweb_rivers.' . $this->getBundle() . '.rss', [], [
+        'query' => $this->getParameters()->get(),
+        'absolute' => TRUE,
+      ])->toString();
+    }
+    catch (RouteNotFoundException $exception) {
+      return '';
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiLink() {
+    $url = $this->configFactory
+      ->get('reliefweb_rivers.settings')
+      ->get('search_converter_url');
+
+    if (empty($url)) {
+      return '';
+    }
+
+    $parameters = $this->getParameters()->get();
+    $search_url = static::getRiverUrl($this->getBundle(), $parameters, TRUE);
+
+    return Url::fromUri($url, [
+      'query' => [
+        'appname' => 'rwint-user-' . $this->currentUser->id(),
+        'search-url' => $search_url,
+      ],
+    ]);
   }
 
   /**
@@ -682,10 +747,11 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getRiverUrl($bundle, array $parameters = []) {
+  public static function getRiverUrl($bundle, array $parameters = [], $absolute = FALSE) {
     try {
       return Url::fromRoute('reliefweb_rivers.' . $bundle . '.river', [], [
         'query' => $parameters,
+        'absolute' => $absolute,
       ])->toString();
     }
     catch (RouteNotFoundException $exception) {

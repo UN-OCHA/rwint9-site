@@ -1,0 +1,24 @@
+/**
+ * River links.
+ *
+ * RSS and API links for the river.
+ */
+.rw-river-links {
+  clear: both;
+  width: 100%;
+  margin-top: 32px;
+  padding-top: 32px;
+  text-align: center;
+  border-top: 1px solid var(--cd-reliefweb-brand-grey--light);
+}
+.rw-river-links__list {
+  display: inline;
+  /* Compensate for the margin of the <li> */
+  margin: -32px;
+  padding: 0;
+  list-style: none;
+}
+.rw-river-links__list__item {
+  display: inline;
+  margin: 32px;
+}

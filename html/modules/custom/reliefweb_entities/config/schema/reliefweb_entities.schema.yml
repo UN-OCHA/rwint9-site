@@ -1,0 +1,22 @@
+reliefweb_entities.settings:
+  type: config_object
+  label: 'Reliefweb Entities settings'
+  mapping:
+    allowed_social_media_links:
+      type: sequence
+      label: 'Allowed social media links'
+      sequence:
+        type: string
+    cron:
+      type: mapping
+      label: 'Entity related cron task settings'
+      mapping:
+        embargoed_reports_limit:
+          type: integer
+          label: 'Maximum number of embargoed reports to publish at once'
+        expired_jobs_limit:
+          type: integer
+          label: 'Maximum number of published jobs to expire at once'
+        expired_training_limit:
+          type: integer
+          label: 'Maximum number of published training to expire at once'

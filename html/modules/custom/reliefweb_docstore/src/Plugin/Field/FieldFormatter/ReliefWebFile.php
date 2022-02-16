@@ -28,6 +28,13 @@ class ReliefWebFile extends FormatterBase {
       if (!empty($url)) {
         $languages = reliefweb_docstore_get_languages();
 
+        $version = '';
+        if (isset($languages[$item->getFileLanguage()])) {
+          $version = $this->t('@language version', [
+            '@language' => $languages[$item->getFileLanguage()],
+          ]);
+        }
+
         $list[] = [
           'item' => $item,
           'url' => $url->toString(),
@@ -39,7 +46,7 @@ class ReliefWebFile extends FormatterBase {
             format_size($item->getFileSize()),
             implode(' - ', array_filter([
               $item->getFileDescription(),
-              $languages[$item->getFileLanguage()] ?? '',
+              $version,
             ])),
           ])) . ')',
         ];

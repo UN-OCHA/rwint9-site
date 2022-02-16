@@ -12,20 +12,11 @@ use RWAPIIndexer\Bundles;
 use RWAPIIndexer\Manager;
 
 /**
- * Implements hook_entity_insert().
+ * Implements hook_entity_after_save().
+ *
+ * @see \Drupal\reliefweb_entities\BundleEntityStorageInterface
  */
-function reliefweb_api_entity_insert(EntityInterface $entity) {
-  // @todo remove when removing `reliefweb_migrate`.
-  if (!empty($entity->_is_migrating)) {
-    return;
-  }
-  reliefweb_api_handle_entity($entity);
-}
-
-/**
- * Implements hook_entity_update().
- */
-function reliefweb_api_entity_update(EntityInterface $entity) {
+function reliefweb_api_entity_after_save(EntityInterface $entity) {
   // @todo remove when removing `reliefweb_migrate`.
   if (!empty($entity->_is_migrating)) {
     return;
@@ -85,8 +76,8 @@ function reliefweb_api_handle_entity(EntityInterface $entity, $delete = FALSE) {
     'tag' => \Drupal::state()->get('reliefweb_api_index_tag_' . $bundle, ''),
   ];
 
-  // Register the actual indexing or deletion to run on script shutdown.
-  drupal_register_shutdown_function('reliefweb_api_execute', $options, $entity_type_id);
+  // Index/delete the entity.
+  reliefweb_api_execute($options, $entity_type_id);
 }
 
 /**
@@ -181,9 +172,17 @@ function reliefweb_api_reliefweb_api_post_indexing($entity_type_id, $bundle, $en
  *   TRUE if the indexer is available.
  */
 function reliefweb_api_indexer_available() {
-  if (!class_exists('\RWAPIIndexer\Manager')) {
-    \Drupal::logger('reliefweb_api')->warning('ReliefWeb API Indexer class missing.');
-    return FALSE;
+  static $available;
+
+  if (!isset($available)) {
+    if (!class_exists('\RWAPIIndexer\Manager')) {
+      \Drupal::logger('reliefweb_api')->warning('ReliefWeb API Indexer class missing.');
+      $available = FALSE;
+    }
+    else {
+      $available = TRUE;
+    }
   }
-  return TRUE;
+
+  return $available;
 }
