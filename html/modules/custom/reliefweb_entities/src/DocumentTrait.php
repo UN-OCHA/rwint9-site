@@ -268,7 +268,7 @@ trait DocumentTrait {
    *
    * @see Drupal\reliefweb_entities\DocumentInterface::getEntityMetaFromField()
    */
-  public function getEntityMetaFromField($field, $code, array $extra_fields = ['shortname' => 'shortname']) {
+  public function getEntityMetaFromField($field, $code = NULL, array $extra_fields = ['shortname' => 'shortname']) {
     $field = 'field_' . $field;
 
     if (!$this->hasField($field) || !$this->{$field} instanceof EntityReferenceFieldItemList) {
@@ -287,11 +287,19 @@ trait DocumentTrait {
       if ($entity instanceof EntityModeratedInterface && !$entity->access('view')) {
         continue;
       }
+
+      if ($code !== NULL) {
+        $url = RiverServiceBase::getRiverUrl($this->bundle(), [
+          'advanced-search' => '(' . $code . $entity->id() . ')',
+        ]);
+      }
+      else {
+        $url = $entity->toUrl();
+      }
+
       $item = [
         'name' => $entity->label(),
-        'url' => RiverServiceBase::getRiverUrl($this->bundle(), [
-          'advanced-search' => '(' . $code . $entity->id() . ')',
-        ]),
+        'url' => $url,
       ];
 
       if (!empty($main_id) && $entity->id() === $main_id) {

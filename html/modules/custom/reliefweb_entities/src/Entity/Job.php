@@ -80,8 +80,8 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
     return [
       'posted' => $this->createDate($this->getCreatedTime()),
       'closing' => $this->createDate($this->field_job_closing_date->value),
-      'country' => $this->getEntityMetaFromField('country', 'C'),
-      'source' => $this->getEntityMetaFromField('source', 'S'),
+      'country' => $this->getEntityMetaFromField('country'),
+      'source' => $this->getEntityMetaFromField('source'),
       'city' => $this->field_city->value ?? '',
       'type' => $this->getEntityMetaFromField('job_type', 'TY'),
       'career_category' => $this->getEntityMetaFromField('career_categories', 'CC'),
