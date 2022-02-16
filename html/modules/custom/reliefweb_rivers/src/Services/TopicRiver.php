@@ -2,11 +2,13 @@
 
 namespace Drupal\reliefweb_rivers\Services;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Pager\PagerParametersInterface;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\reliefweb_api\Services\ReliefWebApiClient;
 use Drupal\reliefweb_rivers\RiverServiceBase;
@@ -76,6 +78,10 @@ class TopicRiver extends RiverServiceBase {
   /**
    * Constructor.
    *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory.
+   * @param \Drupal\Core\Session\AccountProxyInterface $current_user
+   *   The current user.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   The language manager.
    * @param \Drupal\Core\Pager\PagerManagerInterface $pager_manager
@@ -94,6 +100,8 @@ class TopicRiver extends RiverServiceBase {
    *   The entity type manager service.
    */
   public function __construct(
+    ConfigFactoryInterface $config_factory,
+    AccountProxyInterface $current_user,
     LanguageManagerInterface $language_manager,
     PagerManagerInterface $pager_manager,
     PagerParametersInterface $pager_parameters,
@@ -104,6 +112,8 @@ class TopicRiver extends RiverServiceBase {
     EntityTypeManagerInterface $entity_type_manager
   ) {
     parent::__construct(
+      $config_factory,
+      $current_user,
       $language_manager,
       $pager_manager,
       $pager_parameters,

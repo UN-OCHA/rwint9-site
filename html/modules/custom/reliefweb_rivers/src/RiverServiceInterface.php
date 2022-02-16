@@ -192,6 +192,22 @@ interface RiverServiceInterface {
   public function getRiverLinks();
 
   /**
+   * Get the link to the RSS feed for the river.
+   *
+   * @return string
+   *   Link to the RSS feed for the river.
+   */
+  public function getRssLink();
+
+  /**
+   * Get the link to the API search converter.
+   *
+   * @return string
+   *   Link to the search converter.
+   */
+  public function getApiLink();
+
+  /**
    * Get the ReliefWeb API payload for the given river and view.
    *
    * @return array
@@ -308,11 +324,13 @@ interface RiverServiceInterface {
    *   Entity bundle associated with the river.
    * @param array $parameters
    *   Query parameters.
+   * @param bool $absolute
+   *   If TRUE, return an absolute URL.
    *
    * @return string
    *   River URL.
    */
-  public static function getRiverUrl($bundle, array $parameters = []);
+  public static function getRiverUrl($bundle, array $parameters = [], $absolute = FALSE);
 
   /**
    * Get the data of the river for given bundle and API data.
