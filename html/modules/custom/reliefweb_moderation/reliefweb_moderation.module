@@ -254,3 +254,25 @@ function reliefweb_moderation_preprocess_page(&$variables) {
 
   $variables['page']['content']['moderation-information'] = $element;
 }
+
+/**
+ * Get the moderation status label for the given entity bundle and status.
+ *
+ * @param string $bundle
+ *   Entity bundle.
+ * @param string $status
+ *   Entity moderation status.
+ *
+ * @return string
+ *   The moderation status label.
+ */
+function reliefweb_moderation_get_moderation_status_label($bundle, $status) {
+  $service = ModerationServiceBase::getModerationService($bundle);
+  if (!empty($service)) {
+    $statuses = $service->getStatuses();
+    if (isset($statuses[$status])) {
+      return $statuses[$status];
+    }
+  }
+  return ucfirst($status);
+}

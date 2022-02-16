@@ -62,7 +62,7 @@
         'status': {
           'type': 'simple',
           'label': 'Status'|t,
-          'value': entity.status,
+          'value': entity.status_label ?? entity.status,
           'value_attributes': create_attribute()
             .addClass('rw-entity-meta__tag-value--status--' ~ entity.status|clean_class),
         },

@@ -198,6 +198,7 @@ class DisasterRiver extends RiverServiceBase {
 
       // Status.
       $status = $fields['status'] === 'current' ? 'ongoing' : $fields['status'];
+      $status_label = reliefweb_moderation_get_moderation_status_label('disaster', $status);
 
       // Tags (countries, sources etc.).
       $tags = [];
@@ -237,6 +238,7 @@ class DisasterRiver extends RiverServiceBase {
         'type' => $fields['primary_type']['code'] ?? '',
         'title' => $title,
         'status' => $status,
+        'status_label' => $status_label,
         'tags' => $tags,
       ];
 
