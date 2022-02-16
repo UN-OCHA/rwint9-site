@@ -1,9 +1,9 @@
-uuid: 67465dc7-629b-4b31-b310-4d38afe8e397
+uuid: 9bb981d1-3b56-41fa-90e8-cd25391e2018
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: kRoIg6lXYMvd9WGRAY1xtIR2nrwkkqjIr9BsjMW6WXM
+  default_config_hash: BaM8nk4iaaqO34hmUPKL1Bb4dn_-gIT8BFx4froPTYY
 id: reliefweb_node_revision__report
 class: null
 field_plugin_method: null

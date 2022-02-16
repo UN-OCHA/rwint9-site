@@ -1,4 +1,4 @@
-uuid: 24243ef1-e11a-411c-a2a7-c9384135d8cc
+uuid: 390e1a43-9f4f-4c12-8cac-0964f2a8ac70
 langcode: en
 status: true
 dependencies:
@@ -6,7 +6,7 @@ dependencies:
     module:
       - reliefweb_migrate
 _core:
-  default_config_hash: ubo19RVHa1E89UT1XMl_VqjGR_QfEmE34t05IHYE_mU
+  default_config_hash: 4s4hzqmRLH2SqQh3TQJGkuqJEKdoeHcMErXGTXV-je0
 id: reliefweb_menu_link__footer
 class: null
 field_plugin_method: null
@@ -23,7 +23,7 @@ source:
       id: 8
       title: Blog
       description: Blog
-      link_uri: 'internal:/blog'
+      link_uri: 'base:/blog'
       external: 0
       weight: 0
     -
@@ -35,23 +35,23 @@ source:
       weight: 1
     -
       id: 10
-      title: About
-      description: About
-      link_uri: 'internal:/about'
+      title: 'About Us'
+      description: 'About Us'
+      link_uri: 'base:/about'
       external: 0
       weight: 2
     -
       id: 11
       title: Terms
       description: Terms
-      link_uri: 'internal:/terms-conditions'
+      link_uri: 'base:/terms-conditions'
       external: 0
       weight: 3
     -
       id: 12
       title: Contact
       description: Contact
-      link_uri: 'internal:/contact'
+      link_uri: 'base:/contact'
       external: 0
       weight: 4
   ids:

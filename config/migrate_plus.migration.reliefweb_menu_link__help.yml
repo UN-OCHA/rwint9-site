@@ -1,0 +1,55 @@
+uuid: d1a1a842-2f6d-48f6-b49f-9be1ecf61061
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - reliefweb_migrate
+_core:
+  default_config_hash: oMGwjRYiH0smHUBnxss8xQ1S_QnyNsZRCpVunpTxj8M
+id: reliefweb_menu_link__help
+class: null
+field_plugin_method: null
+cck_plugin_method: null
+migration_tags:
+  - 'Drupal 7'
+  - Content
+migration_group: reliefweb_base
+label: 'Migrate ReliefWeb help menu links.'
+source:
+  plugin: embedded_data
+  data_rows:
+    -
+      id: 13
+      title: Help
+      description: Help
+      link_uri: 'base:/help'
+      external: 0
+      weight: 0
+  ids:
+    id:
+      type: integer
+  constants:
+    bundle: menu_link_content
+    menu_name: help
+    enabled: 1
+    expanded: 0
+    parent: null
+process:
+  id: id
+  bundle: constants/bundle
+  title: title
+  description: description
+  menu_name: constants/menu_name
+  link/uri: link_uri
+  external: external
+  weight: weight
+  expanded: constants/expanded
+  enabled: constants/enabled
+  parent: constants/parent
+destination:
+  plugin: 'entity:menu_link_content'
+  no_stub: true
+migration_dependencies:
+  required:
+    - rw_menu_link__main
