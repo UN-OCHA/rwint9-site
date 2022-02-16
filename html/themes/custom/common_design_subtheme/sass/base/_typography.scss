@@ -36,9 +36,11 @@ h2 {
 }
 
 @media screen and (min-width: 480px) {
-  h1,
-  h2 {
+  h1 {
     font-size: var(--cd-font-size--2xbase);
+  }
+  h2 {
+    font-size: var(--cd-font-size--medium);
   }
 }
 h3 {
