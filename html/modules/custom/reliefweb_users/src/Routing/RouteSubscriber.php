@@ -20,6 +20,13 @@ class RouteSubscriber extends RouteSubscriberBase {
         '_title' => 'People',
       ]);
     }
+
+    // Define custom access for the user routes.
+    foreach ($collection->getIterator() as $route) {
+      if (strpos($route->getPath(), '/user/{user}') === 0) {
+        $route->setRequirement('_reliefweb_user_access_check', 'Drupal\reliefweb_users\Access\SystemUserAccessCheck::access');
+      }
+    }
   }
 
 }

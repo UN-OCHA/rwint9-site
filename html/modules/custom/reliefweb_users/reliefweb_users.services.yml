@@ -3,3 +3,7 @@ services:
     class: Drupal\reliefweb_users\Routing\RouteSubscriber
     tags:
       - { name: event_subscriber }
+  reliefweb_users.access_checker:
+    class: Drupal\reliefweb_users\Access\SystemUserAccessCheck
+    tags:
+      - { name: access_check, applies_to: _reliefweb_user_access_check }
