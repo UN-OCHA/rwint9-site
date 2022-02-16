@@ -10,7 +10,10 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\reliefweb_entities\BundleEntityInterface;
+use Drupal\reliefweb_entities\BundleEntityStorageInterface;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
+use Drupal\reliefweb_utility\Helpers\ClassHelper;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\MailHelper;
 use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
@@ -18,68 +21,16 @@ use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\taxonomy\TermInterface;
 
 /**
- * Get the list of entity bundle classes.
- *
- * @return array
- *   List of entity bundle classes, keyed by entity type id then bundle. Each
- *   item has a class and label attributes.
- */
-function reliefweb_entities_get_entity_bundle_classes() {
-  return [
-    'node' => [
-      'announcement' => [
-        'class' => '\Drupal\reliefweb_entities\Entity\Announcement',
-        'label' => 'Announcement',
-      ],
-      'blog_post' => [
-        'class' => '\Drupal\reliefweb_entities\Entity\BlogPost',
-        'label' => 'Blog Post',
-      ],
-      'book' => [
-        'class' => '\Drupal\reliefweb_entities\Entity\Book',
-        'label' => 'Book',
-      ],
-      'job' => [
-        'class' => '\Drupal\reliefweb_entities\Entity\Job',
-        'label' => 'Job',
-      ],
-      'report' => [
-        'class' => '\Drupal\reliefweb_entities\Entity\Report',
-        'label' => 'Report',
-      ],
-      'topic' => [
-        'class' => '\Drupal\reliefweb_entities\Entity\Topic',
-        'label' => 'Topic',
-      ],
-      'training' => [
-        'class' => '\Drupal\reliefweb_entities\Entity\Training',
-        'label' => 'Training',
-      ],
-    ],
-    'taxonomy_term' => [
-      'country' => [
-        'class' => '\Drupal\reliefweb_entities\Entity\Country',
-        'label' => 'Country',
-      ],
-      'disaster' => [
-        'class' => '\Drupal\reliefweb_entities\Entity\Disaster',
-        'label' => 'Disaster',
-      ],
-      'source' => [
-        'class' => '\Drupal\reliefweb_entities\Entity\Source',
-        'label' => 'Source',
-      ],
-    ],
-  ];
-}
-
-/**
  * Implements hook_entity_bundle_field_info_alter().
  */
 function reliefweb_entities_entity_bundle_field_info_alter(array &$fields, EntityTypeInterface $entity_type, $bundle) {
-  $entity_bundle_classes = reliefweb_entities_get_entity_bundle_classes();
-  if (isset($entity_bundle_classes[$entity_type->id()][$bundle]['class'])) {
-    $class = $entity_bundle_classes[$entity_type->id()][$bundle]['class'];
+  $namespace = '\Drupal\reliefweb_entities\Entity';
+
+  $class = ClassHelper::classExists($namespace, $bundle);
+  if ($class === FALSE) {
+    $class = ClassHelper::classExists($namespace, $entity_type->id() . 'Base');
+  }
+  if ($class !== FALSE && is_subclass_of($class, BundleEntityInterface::class)) {
     $class::addFieldConstraints($fields);
   }
 }
@@ -90,11 +41,42 @@ function reliefweb_entities_entity_bundle_field_info_alter(array &$fields, Entit
  * Add bundle classes to nodes and terms to handle business logic.
  */
 function reliefweb_entities_entity_bundle_info_alter(&$bundles) {
-  foreach (reliefweb_entities_get_entity_bundle_classes() as $entity_type_id => $items) {
+  $namespace = '\Drupal\reliefweb_entities\Entity';
+
+  foreach ($bundles as $entity_type_id => $items) {
     foreach ($items as $bundle => $info) {
-      foreach ($info as $property => $value) {
-        $bundles[$entity_type_id][$bundle][$property] = $value;
+      $class = ClassHelper::classExists($namespace, $bundle);
+      if ($class === FALSE) {
+        $class = ClassHelper::classExists($namespace, $entity_type_id . 'Base');
       }
+      if ($class !== FALSE && is_subclass_of($class, BundleEntityInterface::class)) {
+        $label = ucwords(str_replace(['_', '-'], ' ', $bundle));
+        $bundles[$entity_type_id][$bundle]['class'] = $class;
+        $bundles[$entity_type_id][$bundle]['label'] = $label;
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_type_alter().
+ *
+ * Override content entity storages so we can add post transaction hooks.
+ */
+function reliefweb_entities_entity_type_alter(array &$entity_types) {
+  $namespace = '\Drupal\reliefweb_entities';
+
+  /** @var \Drupal\Core\Entity\EntityTypeInterface $entity_type */
+  foreach ($entity_types as $entity_type_id => $entity_type) {
+    $storage_class = $entity_type->getStorageClass();
+    if (empty($storage_class)) {
+      break;
+    }
+
+    $classname = ClassHelper::toCamelCase($entity_type_id);
+    $class = ClassHelper::classExists($namespace, 'Bundle' . $classname . 'Storage');
+    if ($class !== FALSE && is_subclass_of($class, $storage_class) && is_subclass_of($class, BundleEntityStorageInterface::class)) {
+      $entity_type->setStorageClass($class);
     }
   }
 }
