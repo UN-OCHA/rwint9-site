@@ -81,6 +81,10 @@
   border-radius: 8px;
   line-height: 20px;
 }
+.rw-moderation-filters .form-actions a:focus {
+  border: 2px solid var(--cd-reliefweb-brand-grey--dark);
+  outline: none;
+}
 /**
  * Result list.
  *
