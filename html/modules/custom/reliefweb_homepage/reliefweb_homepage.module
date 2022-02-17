@@ -5,6 +5,8 @@
  * Module file for the ReliefWeb Homepage module.
  */
 
+use Drupal\Core\Entity\EntityInterface;
+
 /**
  * Implements hook_theme().
  */
@@ -66,4 +68,27 @@ function reliefweb_homepage_theme() {
       ],
     ],
   ];
+}
+
+/**
+ * Implements hook_entity_update().
+ *
+ * Remove reports from the headlines selection when unpublished or when
+ * the headline flag is deselected.
+ */
+function reliefweb_homepage_entity_update(EntityInterface $entity) {
+  if ($entity->getEntityTypeId() === 'node' && $entity->bundle() === 'report') {
+    if (empty($entity->field_headline->value) || !$entity->isPublished()) {
+      $state = \Drupal::state();
+      $selected = $state->get('reliefweb_headline_selection', []);
+      foreach ($selected as $index => $id) {
+        // Ids are numeric strings or integers so not using strict equality.
+        if ($id == $entity->id()) {
+          unset($selected[$index]);
+          $state->set('reliefweb_headline_selection', array_values($selected));
+          break;
+        }
+      }
+    }
+  }
 }
