@@ -1,5 +1,5 @@
-id: reliefweb_menu_link__footer
-label: Migrate ReliefWeb footer menu links.
+id: reliefweb_menu_link__help
+label: Migrate ReliefWeb help menu links.
 migration_group: reliefweb_base
 dependencies:
   enforced:
@@ -13,46 +13,18 @@ source:
   plugin: embedded_data
   data_rows:
     -
-      id: 8
-      title: Blog
-      description: Blog
-      link_uri: base:/blog
+      id: 13
+      title: Help
+      description: Help
+      link_uri: base:/help
       external: 0
       weight: 0
-    -
-      id: 9
-      title: Labs
-      description: Labs
-      link_uri: https://labs.reliefweb.int/
-      external: 1
-      weight: 1
-    -
-      id: 10
-      title: About Us
-      description: About Us
-      link_uri: base:/about
-      external: 0
-      weight: 2
-    -
-      id: 11
-      title: Terms
-      description: Terms
-      link_uri: base:/terms-conditions
-      external: 0
-      weight: 3
-    -
-      id: 12
-      title: Contact
-      description: Contact
-      link_uri: base:/contact
-      external: 0
-      weight: 4
   ids:
     id:
       type: integer
   constants:
     bundle: menu_link_content
-    menu_name: footer
+    menu_name: help
     enabled: 1
     expanded: 0
     parent: null

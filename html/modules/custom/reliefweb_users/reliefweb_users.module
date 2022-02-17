@@ -5,6 +5,9 @@
  * Module file for reliefweb_users.
  */
 
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\user\RoleInterface;
+
 /**
  * Implements hook_theme().
  */
@@ -32,4 +35,47 @@ function reliefweb_users_theme() {
 function reliefweb_users_menu_local_actions_alter(&$local_actions) {
   // Remove the create user action on the "people" page.
   unset($local_actions['user_admin_create']);
+}
+
+/**
+ * Implements hook_form_user_form_alter().
+ */
+function reliefweb_users_form_user_form_alter(array &$form, FormStateInterface $form_state) {
+  $user = \Drupal::currentUser();
+
+  // Unncessary fields.
+  $form['contact']['#access'] = FALSE;
+  $form['details']['#access'] = FALSE;
+  $form['footer']['#access'] = FALSE;
+  $form['language']['#access'] = FALSE;
+  $form['timezone']['#access'] = FALSE;
+
+  // Only people who can administrate other accounts can add notes.
+  $form['field_notes']['#access'] = $user->hasPermission('administer users');
+
+  // Check if hte user is allowed to assign roles.
+  if ($user->hasPermission('manage user roles') && !empty($form['account']['roles']['#options'])) {
+    $form['account']['roles']['#access'] = TRUE;
+
+    $default_roles = $form['account']['roles']['#default_value'] ?? [];
+
+    foreach ($form['account']['roles']['#options'] as $role => $label) {
+      if ($role === RoleInterface::ANONYMOUS_ID) {
+        continue;
+      }
+      // No need to display the authenticated role.
+      elseif ($role === RoleInterface::AUTHENTICATED_ID) {
+        $form['account']['roles'][$role]['#access'] = FALSE;
+      }
+      // Only display the roles that can be assigned by the current user.
+      elseif (!$user->hasPermission('assign ' . $role . ' role')) {
+        $form['account']['roles'][$role]['#access'] = FALSE;
+        $form['account']['roles'][$role]['#disabled'] = TRUE;
+        $form['account']['roles'][$role]['#default_value'] = in_array($role, $default_roles);
+      }
+    }
+  }
+  else {
+    $form['account']['roles']['#access'] = FALSE;
+  }
 }

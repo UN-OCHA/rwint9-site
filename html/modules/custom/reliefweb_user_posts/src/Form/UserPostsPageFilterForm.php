@@ -65,6 +65,9 @@ class UserPostsPageFilterForm extends ModerationPageFilterForm {
 
     // Make js work.
     $form['#attributes']['id'] = 'reliefweb-moderation-page-filter-form';
+    if (isset($form['filters']['other']['poster']) && !isset($form['filters']['other']['poster']['#default_value'])) {
+      $form['filters']['other']['poster']['#default_value'] = ['me'];
+    }
 
     return $form;
   }
