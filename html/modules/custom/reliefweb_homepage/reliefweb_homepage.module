@@ -96,3 +96,27 @@ function reliefweb_homepage_entity_update(EntityInterface $entity) {
     }
   }
 }
+
+/**
+ * Implements hook_entity_delete().
+ *
+ * Remove reports from the headlines selection when deleted.
+ */
+function reliefweb_homepage_entity_delete(EntityInterface $entity) {
+  // @todo remove when removing `reliefweb_migrate`.
+  if (!empty($entity->_is_migrating)) {
+    return;
+  }
+  if ($entity->getEntityTypeId() === 'node' && $entity->bundle() === 'report') {
+    $state = \Drupal::state();
+    $selected = $state->get('reliefweb_headline_selection', []);
+    foreach ($selected as $index => $id) {
+      // Ids are numeric strings or integers so not using strict equality.
+      if ($id == $entity->id()) {
+        unset($selected[$index]);
+        $state->set('reliefweb_headline_selection', array_values($selected));
+        break;
+      }
+    }
+  }
+}
