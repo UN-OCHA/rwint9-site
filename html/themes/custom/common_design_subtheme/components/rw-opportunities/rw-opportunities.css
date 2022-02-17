@@ -4,7 +4,7 @@
  * Open jobs and training.
  */
 .rw-homepage-opportunties h2 {
-  font-size: 24px;
+  font-size: var(--cd-font-size--large);
 }
 .rw-homepage-opportunties ul {
   margin: 24px 0 0 0;

@@ -4,7 +4,7 @@
  * Latest blog post.
  */
 .path-frontpage .rw-river--blog h2 {
-  font-size: 24px;
+  font-size: var(--cd-font-size--large);
 }
 .path-frontpage .rw-river--blog article {
   padding: 0;
