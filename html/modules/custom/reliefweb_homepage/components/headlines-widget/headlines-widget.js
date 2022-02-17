@@ -195,38 +195,42 @@
     var replaced = null;
     var replacement = null;
 
-    // Find the hovered article if any.
-    function findHovered() {
+    // Update the article even handlers.
+    function updateArticleEventHandlers(remove) {
       var articles = container.getElementsByTagName('article');
       for (var i = articles.length - 1; i >= 0; i--) {
         var article = articles[i];
         // Not an article from the headline selection, skip.
-        if (article.parentNode === container && article.matches(':hover')) {
-          return article;
+        if (article.parentNode === container) {
+          if (remove === true) {
+            article.removeEventListener('mouseenter', swapArticle);
+            article.removeEventListener('mousleave', restoreArticle);
+          }
+          else {
+            article.addEventListener('mouseenter', swapArticle);
+            article.addEventListener('mousleave', restoreArticle);
+          }
         }
       }
-      return null;
     }
 
-    // Swap the dragged element with a sibling.
-    function swap(event) {
+    // Restore an article when the mouse leaves it.
+    function restoreArticle(event) {
+      // Swap back the previously replaced article.
+      if (replaced !== null && replacement !== null) {
+        container.replaceChild(replaced, replacement);
+      }
+    }
+
+    // Swap the hovered article with the dragged one.
+    function swapArticle(event) {
       if (!draggable) {
         return;
       }
 
-      event.preventDefault();
-      event.stopPropagation();
+      var article = event.currentTarget;
 
       var id = draggable.getAttribute('data-id');
-
-      // Update the position of the dragged element.
-      updatePosition(event.pageX, event.pageY);
-
-      // Find the hovered article.
-      var article = findHovered();
-      if (!article) {
-        return;
-      }
 
       // Skip if the hovered article has the same id as the draggable.
       if (article.getAttribute('data-id') === id) {
@@ -244,55 +248,33 @@
       replacement.removeAttribute('style');
       replaced = container.replaceChild(replacement, article);
 
+      updateArticleEventHandlers();
       checkDuplicates();
       updateSelected();
     }
 
-    // Stop the drag handling, swapping the rows and untracking events.
-    function stop(event) {
-      // Ensure we are up to date.
-      swap(event);
+    // Update the position of the draggable element.
+    function updateDraggablePosition(event) {
+      if (!draggable) {
+        return;
+      }
 
+      event.preventDefault();
+      event.stopPropagation();
+
+      var x = event.pageX + 5;
+      var y = event.pageY;
+      draggable.setAttribute('style', 'left:' + x + 'px;top:' + y + 'px');
+    }
+
+    // Stop the drag handling, swapping the rows and untracking events.
+    function disableDragDrop(event) {
       // Clean up.
       clean();
     }
 
-    // Clean the elements.
-    function clean() {
-      // Clear the drag elements.
-      if (draggable) {
-        draggable.parentNode.removeChild(draggable);
-      }
-      draggable = null;
-      replaced = null;
-      replacement = null;
-
-      // Clean the document.
-      document.body.removeAttribute('data-headlines-widget-drag-on');
-      document.removeEventListener('mousemove', swap);
-      document.removeEventListener('mouseup', stop);
-    }
-
-    // Update the position of the draggable element.
-    function updatePosition(x, y) {
-      if (draggable) {
-        draggable.setAttribute('style', 'left:' + x + 'px;top:' + y + 'px');
-      }
-    }
-
-    // Find the article parent element.
-    function findArticle(element) {
-      while (element && element !== container) {
-        if (element.tagName === 'ARTICLE') {
-          return element;
-        }
-        element = element.parentNode;
-      }
-      return null;
-    }
-
     // Handle mousedown on article elements to start drag/drop.
-    function handleMousedown(event) {
+    function enableDragDrop(event) {
       if (manager.open === false) {
         return;
       }
@@ -313,18 +295,51 @@
         draggable = target.cloneNode(true);
         draggable.removeAttribute('data-headlines-widget-selected');
         draggable.setAttribute('data-headlines-widget-dragged', '');
-        updatePosition(event.pageX, event.pageY);
+        updateDraggablePosition(event);
         document.body.appendChild(draggable);
 
         // We need to track mouse events on the whole page.
-        document.addEventListener('mousemove', swap);
-        document.addEventListener('mouseup', stop);
+        document.addEventListener('mousemove', updateDraggablePosition);
+        document.addEventListener('mouseup', disableDragDrop);
+
+        // Add event listeners to the articles.
+        updateArticleEventHandlers();
       }
+    }
+
+    // Clean the elements.
+    function clean() {
+      // Clear the drag elements.
+      if (draggable) {
+        draggable.parentNode.removeChild(draggable);
+      }
+      draggable = null;
+      replaced = null;
+      replacement = null;
+
+      // Remove the event listeners on the articles.
+      updateArticleEventHandlers(true);
+
+      // Clean the document.
+      document.body.removeAttribute('data-headlines-widget-drag-on');
+      document.removeEventListener('mousemove', updateDraggablePosition);
+      document.removeEventListener('mouseup', disableDragDrop);
+    }
+
+    // Find the article parent element.
+    function findArticle(element) {
+      while (element && element !== container) {
+        if (element.tagName === 'ARTICLE') {
+          return element;
+        }
+        element = element.parentNode;
+      }
+      return null;
     }
 
     // Start the drag and drop handling when there is a mousedown event
     // on an article
-    document.body.addEventListener('mousedown', handleMousedown);
+    document.body.addEventListener('mousedown', enableDragDrop);
   }
 
   /**
