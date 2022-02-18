@@ -12,6 +12,7 @@
 {%
   set rendered = [
     'link',
+    'replaced_file',
     'description',
     'language',
     'preview',
@@ -32,6 +33,11 @@
   <td class="rw-file-widget-item__information">
   {% endif %}
     {{ element.link }}
+    {% if element.replaced_file %}
+    <div class="rw-file-widget-item__information__replaced"><small>
+      {{- 'Replaced: %file'|t({'%file': element.replaced_file|render}) -}}
+    </small></div>
+    {% endif %}
     {{ element.description }}
     {{ element.language }}
     {# Make sure all the element children are rendered. #}

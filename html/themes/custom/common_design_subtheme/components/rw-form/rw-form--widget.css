@@ -93,7 +93,8 @@ form .views-field-media-library-select-form .form-type-checkbox:only-of-type {
 .rw-file-widget__table td {
   padding: 16px;
 }
-.rw-file-widget__table a {
+.rw-file-widget__table a,
+.rw-file-widget-item__information__replaced {
   word-break: break-all;
 }
 .rw-file-widget__table td.rw-file-widget-item__weight {

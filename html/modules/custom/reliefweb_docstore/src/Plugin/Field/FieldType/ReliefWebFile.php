@@ -18,6 +18,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;
+use Drupal\reliefweb_utility\Helpers\UrlHelper;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
 
 /**
@@ -289,7 +290,7 @@ class ReliefWebFile extends FieldItemBase {
   public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
     // The UUID of the file resource used notably to generate the permanent URL.
     $properties['uuid'] = DataDefinition::create('string')
-      ->setLabel(new TranslatableMarkup('File UUID'))
+      ->setLabel(new TranslatableMarkup('UUID'))
       ->setDescription(new TranslatableMarkup('The UUID of the file resource.'))
       ->setRequired(TRUE);
 
@@ -300,7 +301,7 @@ class ReliefWebFile extends FieldItemBase {
     // local file.
     // It's set to 0 for content being created.
     $properties['revision_id'] = DataDefinition::create('integer')
-      ->setLabel(new TranslatableMarkup('File revision ID'))
+      ->setLabel(new TranslatableMarkup('Revision ID'))
       ->setDescription(new TranslatableMarkup('The ID of the file revision.'))
       ->setRequired(TRUE);
 
@@ -310,8 +311,8 @@ class ReliefWebFile extends FieldItemBase {
     // When "local" is selected in the settings, this is the UUID of the
     // permanent file associated with the field item.
     $properties['file_uuid'] = DataDefinition::create('string')
-      ->setLabel(new TranslatableMarkup('Preview UUID'))
-      ->setDescription(new TranslatableMarkup('The UUID of the preview file.'))
+      ->setLabel(new TranslatableMarkup('File UUID'))
+      ->setDescription(new TranslatableMarkup('The UUID of the attachment file.'))
       ->setRequired(TRUE);
 
     // The name of the file as uploaded.
@@ -847,7 +848,8 @@ class ReliefWebFile extends FieldItemBase {
     // file on disk for them. However we need to check for the page count to
     // distinguish between those and initially migrated content.
     elseif (empty($this->getRevisionId()) && $this->hasPageCount()) {
-      return Url::fromUri(file_create_url($uri));
+      $url = UrlHelper::getAbsoluteFileUri($uri);
+      return empty($url) ? NULL : Url::fromUri($url);
     }
     // For existing files, they should be accessible via the permanent URL.
     elseif ($uri === $this->getPermanentUri($private)) {
@@ -1258,6 +1260,17 @@ class ReliefWebFile extends FieldItemBase {
    */
   public function getFileName() {
     return $this->get('file_name')->getValue();
+  }
+
+  /**
+   * Get the file name as uploaded.
+   *
+   * @return string
+   *   File name.
+   */
+  public function getUploadedFileName() {
+    $file = $this->loadFile();
+    return !empty($file) ? $file->getFileName() : '';
   }
 
   /**
