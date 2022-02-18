@@ -40,6 +40,11 @@ function reliefweb_utility_file_presave(FileInterface $file) {
     return;
   }
 
+  // Skip temporary files.
+  if (strpos($uri, 'temporary://') === 0) {
+    return;
+  }
+
   // Let other modules decide if this should apply.
   $apply = TRUE;
   $clone = clone $file;

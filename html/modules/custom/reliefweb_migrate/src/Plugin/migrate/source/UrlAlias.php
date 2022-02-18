@@ -94,8 +94,12 @@ class UrlAlias extends EntityBase {
     }
 
     $source = $row->getSourceProperty('source');
-    if (strpos($source, 'node/') === 0 || strpos($source, 'taxonomy/term/') === 0) {
-      $row->setSourceProperty('source', 'entity:/' . $source);
+    if (strpos($source, 'node/') === 0) {
+      $row->setSourceProperty('source', 'entity:' . $source);
+    }
+    elseif (strpos($source, 'taxonomy/term/') === 0) {
+      $source = str_replace('taxonomy/term', 'taxonomy_term', $source);
+      $row->setSourceProperty('source', 'entity:' . $source);
     }
     else {
       $row->setSourceProperty('source', 'internal:/' . $source);
