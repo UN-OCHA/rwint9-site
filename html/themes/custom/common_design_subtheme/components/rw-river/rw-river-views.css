@@ -41,6 +41,6 @@
     font-size: 20px;
   }
   .rw-river-page .rw-river-views .rw-river-views__list__item--selected a {
-    font-size: 24px;
+    font-size: var(--cd-font-size--large);
   }
 }
