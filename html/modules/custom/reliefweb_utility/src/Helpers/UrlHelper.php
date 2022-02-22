@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_utility\Helpers;
 
 use Drupal\Component\Utility\UrlHelper as DrupalUrlHelper;
+use Drupal\Core\File\Exception\InvalidStreamWrapperException;
 use Drupal\Core\Url;
 use Symfony\Component\Uid\Uuid;
 
@@ -185,6 +186,27 @@ class UrlHelper extends DrupalUrlHelper {
     }
     else {
       return $directory . '/' . $uuid;
+    }
+  }
+
+  /**
+   * Get an absolute file URI.
+   *
+   * @param string $uri
+   *   File URI.
+   *
+   * @return string
+   *   Absolute URI for the file or empty if an error occured.
+   */
+  public static function getAbsoluteFileUri($uri) {
+    if (empty($uri)) {
+      return '';
+    }
+    try {
+      return \Drupal::service('file_url_generator')->generateAbsoluteString($uri);
+    }
+    catch (InvalidStreamWrapperException $exception) {
+      return '';
     }
   }
 

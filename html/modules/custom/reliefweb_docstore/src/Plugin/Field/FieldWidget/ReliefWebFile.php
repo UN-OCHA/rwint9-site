@@ -290,10 +290,7 @@ class ReliefWebFile extends WidgetBase {
     $element['#theme'] = 'reliefweb_file_widget_item';
 
     // Link to the file.
-    $file_name = $item->getFileName();
-    $file_size = $item->getFileSize();
-    $file_extension = $item->getFileExtension();
-    $file_label = $file_name . ' (' . mb_strtoupper($file_extension) . ' | ' . format_size($file_size) . ')';
+    $file_label = $this->formatFileItemInformation($item);
     $file_url = $item->getFileUrl();
     if (!empty($file_url)) {
       $element['link'] = [
@@ -307,6 +304,18 @@ class ReliefWebFile extends WidgetBase {
     else {
       $element['link'] = [
         '#markup' => $file_label,
+      ];
+    }
+
+    // Check if the attachment was replaced.
+    $original_item = $this->getOriginalFileItem($item);
+    if (isset($original_item) && $original_item->getFileUuid() !== $item->getFileUuid()) {
+      $element['replaced_file'] = [
+        '#type' => 'link',
+        '#title' => $this->formatFileItemInformation($original_item),
+        // We add a timestamp to prevent caching by the browser so that
+        // it can display replaced files.
+        '#url' => $original_item->getFileUrl()->setOption('query', ['time' => microtime(TRUE)]),
       ];
     }
 
@@ -547,7 +556,7 @@ class ReliefWebFile extends WidgetBase {
           }
           if (!empty($value)) {
             $value['_original_delta'] = $delta;
-            $value['_weight'] = isset($value['_weight']) ? $value['_weight'] : $delta;
+            $value['_weight'] = $value['_weight'] ?? $delta;
             $files[] = $value;
           }
         }
@@ -967,6 +976,42 @@ class ReliefWebFile extends WidgetBase {
            // Max allowed length of a managed file name.
            // @see file_validate_name_length()
            mb_strlen($file_info->getClientOriginalName()) <= 240;
+  }
+
+  /**
+   * Get the original file type item.
+   *
+   * @param \Drupal\reliefweb_docstore\Plugin\Field\FieldType\ReliefWebFile $item
+   *   The current field type item.
+   *
+   * @return \Drupal\reliefweb_docstore\Plugin\Field\FieldType\ReliefWebFile
+   *   The original file type item.
+   */
+  protected function getOriginalFileItem(ReliefWebFileType $item) {
+    if (isset($item->_original_values[$item->getUuid()])) {
+      return $this->createFieldItem($item->_original_values[$item->getUuid()]);
+    }
+  }
+
+  /**
+   * Format the file information.
+   *
+   * @param \Drupal\reliefweb_docstore\Plugin\Field\FieldType\ReliefWebFile $item
+   *   Field type item.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup
+   *   Formatted file information.
+   */
+  protected function formatFileItemInformation(ReliefWebFileType $item) {
+    $file_name = $item->getUploadedFileName() ?: $item->getFileName();
+    $file_size = $item->getFileSize();
+    $file_extension = $item->getFileExtension();
+
+    return $this->t('@file_name (@file_extension | @file_size)', [
+      '@file_name' => $file_name,
+      '@file_extension' => mb_strtoupper($file_extension),
+      '@file_size' => format_size($file_size),
+    ]);
   }
 
   /**

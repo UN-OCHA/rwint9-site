@@ -23,6 +23,7 @@ use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\MediaHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
+use Drupal\reliefweb_utility\Helpers\UrlHelper;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
 use Drupal\user\EntityOwnerInterface;
 
@@ -351,6 +352,9 @@ class EntityHistory {
 
       case 'reliefweb_user_posting_rights':
         return $this->formatReliefWebUserPostingRightsFieldDiff($field_definition, $diff);
+
+      case 'reliefweb_file':
+        return $this->formatReliefWebFileFieldDiff($field_definition, $diff);
 
       default:
         return $this->formatFieldDiffDefault($field_definition, $diff);
@@ -944,6 +948,213 @@ class EntityHistory {
     }
 
     return empty($output) ? NULL : [
+      '#theme' => 'reliefweb_revisions_diff_categories',
+      '#change_count' => $change_count,
+    ] + $output;
+  }
+
+  /**
+   * Format reliefweb file field differences.
+   *
+   * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
+   *   Field definition.
+   * @param array $diff
+   *   Field value differences.
+   *
+   * @return array|null
+   *   The render array for the difference or NULL if there is no difference.
+   */
+  protected function formatReliefWebFileFieldDiff(FieldDefinitionInterface $field_definition, array $diff) {
+    if (empty($diff['added']) && empty($diff['removed'])) {
+      return NULL;
+    }
+
+    // Keep track of the file UUIDs so we can load their file names and URIs.
+    $file_uuids = [];
+
+    // Previous files.
+    $previous = [];
+    foreach ($diff['previous'] as $item) {
+      $previous[$item['uuid']] = $item;
+      if (!empty($item['file_uuid'])) {
+        $file_uuids[$item['file_uuid']] = $item['file_uuid'];
+      }
+    }
+
+    // Current files.
+    $current = [];
+    foreach ($diff['current'] as $item) {
+      $current[$item['uuid']] = $item;
+      if (!empty($item['file_uuid'])) {
+        $file_uuids[$item['file_uuid']] = $item['file_uuid'];
+      }
+    }
+
+    // Revision categories.
+    $categories = [
+      'added' => array_diff_key($current, $previous),
+      'removed' => array_diff_key($previous, $current),
+      'modified' => [],
+      'replaced' => [],
+    ];
+
+    $labels = [
+      'added' => $this->t('Added'),
+      'removed' => $this->t('Removed'),
+      'modified' => $this->t('Modified'),
+      'replaced' => $this->t('Replaced'),
+    ];
+
+    // Load the file information.
+    if (!empty($file_uuids)) {
+      $files = $this->getDatabase()->select('file_managed', 'fm')
+        ->fields('fm', ['uuid', 'uri', 'filename', 'filesize'])
+        ->condition('uuid', $file_uuids, 'IN')
+        ->execute()
+        ?->fetchAllAssoc('uuid', \PDO::FETCH_ASSOC) ?? [];
+    }
+
+    // Properties to display in the revisions.
+    $properties = [
+      'description' => 'description',
+      'language' => 'version',
+      'preview_page' => 'preview page',
+      'preview_rotation' => 'preview rotation',
+    ];
+    $property_values = [
+      'language' => reliefweb_docstore_get_languages(),
+      'preview_rotation' => ['90' => 'right', '-90' => 'left'],
+    ];
+
+    // Check if the file description changed.
+    foreach (array_intersect_key($current, $previous) as $key => $item) {
+      $previous_item = $previous[$key];
+      $current_item = $current[$key];
+      $modified = FALSE;
+
+      // Replaced file.
+      if ($previous_item['file_uuid'] !== $current_item['file_uuid']) {
+        $item['replaced'] = $previous_item;
+        $categories['replaced'][$item['uuid']] = $item;
+      }
+      // Modified properties.
+      else {
+        $details = [];
+        foreach ($properties as $property => $property_label) {
+          if ($current_item[$property] !== $previous_item[$property]) {
+            if (isset($property_values[$property][$previous_item[$property]])) {
+              $previous_item[$property] = $property_values[$property][$previous_item[$property]];
+            }
+            if (isset($property_values[$property][$current_item[$property]])) {
+              $current_item[$property] = $property_values[$property][$current_item[$property]];
+            }
+
+            $details[$property] = new FormattableMarkup('@label: @before => @after', [
+              '@label' => $property_label,
+              '@before' => $previous_item[$property] ?: Markup::create('<em>none</em>'),
+              '@after' => $current_item[$property] ?: Markup::create('<em>none</em>'),
+            ]);
+            $modified = TRUE;
+          }
+        }
+
+        if ($modified) {
+          $item['details'] = $details;
+          $categories['modified'][$item['uuid']] = $item;
+        }
+      }
+    }
+
+    $change_count = 0;
+    $output = [];
+    foreach ($categories as $category => $items) {
+      $changes = [];
+      foreach ($items as $item) {
+        if (isset($files[$item['file_uuid']])) {
+          $file = $files[$item['file_uuid']];
+          $label = new FormattableMarkup('@file_name (@file_size)', [
+            '@file_name' => $file['filename'],
+            '@file_size' => format_size($file['filesize']),
+          ]);
+
+          $uri = UrlHelper::getAbsoluteFileUri($file['uri']);
+          if (!empty($uri)) {
+            $label = Link::fromTextAndUrl($label, Url::fromUri($uri))->toString();
+          }
+        }
+        else {
+          $label = Markup::create($item['file_name']);
+        }
+
+        if ($category !== 'removed') {
+          // For new or replaced files, extract the properties.
+          if ($category !== 'modified') {
+            foreach ($properties as $property => $property_label) {
+              $item['details'][$property] = new FormattableMarkup('@label: @change', [
+                '@label' => $property_label,
+                '@change' => $item[$property] ?: Markup::create('<em>none</em>'),
+              ]);
+            }
+          }
+
+          // Add the property details.
+          if (!empty($item['details'])) {
+            $label = new FormattableMarkup('@label (@details)', [
+              '@label' => $label,
+              '@details' => Markup::create(implode(', ', $item['details'])),
+            ]);
+          }
+
+          // Add a link to the previous file for replaced files.
+          if ($category === 'replaced' && isset($item['replaced'])) {
+            $original_item = $item['replaced'];
+
+            if (isset($files[$original_item['file_uuid']])) {
+              $original_file = $files[$original_item['file_uuid']];
+              $original_label = new FormattableMarkup('@file_name (@file_size)', [
+                '@file_name' => $original_file['filename'],
+                '@file_size' => format_size($original_file['filesize']),
+              ]);
+
+              $original_uri = UrlHelper::getAbsoluteFileUri($original_file['uri']);
+              if (!empty($original_uri)) {
+                $original_label = Link::fromTextAndUrl($original_label, Url::fromUri($original_uri))->toString();
+              }
+            }
+            else {
+              $original_label = Markup::create($original_item['file_name']);
+            }
+
+            $label = new FormattableMarkup('@current &mdash; replaced: @previous', [
+              '@previous' => $original_label,
+              '@current' => $label,
+            ]);
+          }
+        }
+        $changes[] = $label;
+        $change_count++;
+      }
+
+      if (!empty($changes)) {
+        $output['#categories'][$category] = [
+          'label' => $labels[$category],
+          'changes' => $changes,
+        ];
+      }
+    }
+
+    // If no other changes, check if the active links have been reordered.
+    if (empty($output)) {
+      if (!empty($diff['re-ordered'])) {
+        return [
+          '#theme' => 'reliefweb_revisions_diff_reordered',
+          '#message' => $this->t('Files re-ordered'),
+        ];
+      }
+      return NULL;
+    }
+
+    return [
       '#theme' => 'reliefweb_revisions_diff_categories',
       '#change_count' => $change_count,
     ] + $output;

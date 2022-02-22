@@ -118,6 +118,9 @@ class ReportRiver extends RiverServiceBase {
           'type' => 'autocomplete',
           'label' => $this->t('Search for a disaster'),
           'resource' => 'disasters',
+          'parameters' => [
+            'sort' => 'date:desc',
+          ],
         ],
         'operator' => 'OR',
       ],

@@ -45,7 +45,7 @@ class ReliefWebLinks extends WidgetBase implements ContainerFactoryPluginInterfa
     $parents = $form['#parents'];
 
     // Base of the internal image URLs.
-    $base_image_url = file_create_url('public://styles/thumbnail/public/');
+    $base_image_url = UrlHelper::getAbsoluteFileUri('public://styles/thumbnail/public/');
 
     // Url of the link validation route for the field.
     $validate_url = Url::fromRoute('reliefweb_fields.validate.reliefweb_links', [
