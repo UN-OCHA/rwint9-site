@@ -304,15 +304,29 @@ function reliefweb_form_hide_format_help($form_element, FormStateInterface $form
 
     // Ensure the format is displayed even it's only one, except for plain text.
     if (isset($form_element['#allowed_formats']) && count($form_element['#allowed_formats']) === 1) {
-      if (($hide_help && $hide_guidelines) || $form_element['format']['format']['#default_value'] === 'plain_text') {
-        // We need to keep the format (we cannot use #access = FALSE) otherwise
-        // the editor for the text format, if any, will not be displayed...
-        // @see \Drupal\editor\Element::preRenderTextFormat()
-        unset($form_element['format']['#type']);
-        unset($form_element['format']['#theme_wrappers']);
+      $allowed_format = key($form_element['#allowed_formats']);
+
+      // Select a default format if not already.
+      if (empty($form_element['format']['format']['#default_value'])) {
+        $form_element['format']['format']['#default_value'] = $allowed_format;
+      }
+
+      if ($hide_help && $hide_guidelines) {
+        if ($allowed_format === 'markdown_editor') {
+          // We need to keep the format (we cannot use #access = FALSE)
+          // otherwise the text editor for the text format, if any, will not be
+          // displayed...
+          // @see \Drupal\editor\Element::preRenderTextFormat()
+          unset($form_element['format']['#type']);
+          unset($form_element['format']['#theme_wrappers']);
+        }
+        else {
+          $form_element['format']['#access'] = FALSE;
+        }
       }
       else {
-        // We need to set the #access to TRUE otherwiwse it's hidden...
+        // We need to set the #access to TRUE otherwiwse it's hidden... but we
+        // want to show what type of format is allowed.
         // @see \Drupal\editor\Element::preRenderTextFormat()
         $form_element['format']['format']['#access'] = TRUE;
         $form_element['format']['format']['#attributes']['disabled'] = TRUE;
