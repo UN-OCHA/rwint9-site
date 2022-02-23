@@ -401,7 +401,16 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
       $form['status']['#access'] = FALSE;
     }
 
-    // Disable the moderation status widget and the default submit buttons.
+    // Use the default submit button as base.
+    $submit = [];
+    if (isset($form['actions']['submit'])) {
+      $submit = $form['actions']['submit'];
+      unset($submit['#name']);
+      unset($submit['#value']);
+      unset($submit['#description']);
+    }
+
+    // Disable the default submit buttons.
     $form['actions']['submit']['#access'] = FALSE;
 
     // Move the preview button at the beginning if it exists.
@@ -411,29 +420,31 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
 
     // Ensure we call all the submit handlers.
     $submit_handlers = [];
+    if (!empty($submit['#submit'])) {
+      $submit_handlers = array_merge($submit_handlers, $submit['#submit']);
+    }
     if (!empty($form['#submit'])) {
       $submit_handlers = array_merge($submit_handlers, $form['#submit']);
-    }
-    if (!empty($form['actions']['submit']['#submit'])) {
-      $submit_handlers = array_merge($submit_handlers, $form['actions']['submit']['#submit']);
     }
 
     // Try to redirect to the entity page after submitting the form.
     $submit_handlers[] = [$this, 'redirectToEntityPage'];
 
+    // Ensure we don't call the same submit callback several times.
+    $submit['#submit'] = array_unique($submit_handlers, \SORT_REGULAR);
+
     // Add the buttons.
     foreach ($this->getEntityFormSubmitButtons($status, $entity) as $status => $info) {
-      $form['actions'][$status] = array_merge_recursive([
-        '#type' => 'submit',
-        '#name' => $status,
-        '#submit' => $submit_handlers,
-        '#entity_status' => $status,
-        // Add validation callback to update the moderation status based on the
-        // clicked status button. This needs to be added as element_validate
-        // so that it runs before any other validation which may rely on the
-        // entity status.
-        '#element_validate' => [[$this, 'validateEntityStatus']],
-      ], $info);
+      $button = $submit;
+      $button['#name'] = $status;
+      $button['#entity_status'] = $status;
+      // Add validation callback to update the moderation status based on the
+      // clicked status button. This needs to be added as element_validate
+      // so that it runs before any other validation which may rely on the
+      // entity status.
+      $button['#element_validate'][] = [$this, 'validateEntityStatus'];
+
+      $form['actions'][$status] = array_merge_recursive($button, $info);
     }
   }
 
