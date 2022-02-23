@@ -4,10 +4,10 @@ status: true
 dependencies:
   config:
     - field.field.media.image_announcement.field_media_image
-    - image.style.thumbnail
+    - image.style.media_library
     - media.type.image_announcement
   module:
-    - image
+    - svg_image
 id: media.image_announcement.default
 targetEntityType: media
 bundle: image_announcement
@@ -15,29 +15,16 @@ mode: default
 content:
   field_media_image:
     type: image_image
-    weight: 1
-    region: content
-    settings:
-      progress_indicator: throbber
-      preview_image_style: thumbnail
-    third_party_settings: {  }
-  name:
-    type: string_textfield
     weight: 0
     region: content
     settings:
-      size: 60
-      placeholder: ''
-    third_party_settings: {  }
-  status:
-    type: boolean_checkbox
-    weight: 2
-    region: content
-    settings:
-      display_label: true
+      progress_indicator: throbber
+      preview_image_style: media_library
     third_party_settings: {  }
 hidden:
   created: true
   langcode: true
+  name: true
   path: true
+  status: true
   uid: true

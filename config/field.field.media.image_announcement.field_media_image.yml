@@ -30,8 +30,8 @@ settings:
   file_directory: images/announcements
   file_extensions: 'png gif jpg jpeg'
   max_filesize: ''
-  max_resolution: 1400x400
-  min_resolution: 1400x400
+  max_resolution: 1200x400
+  min_resolution: 1200x400
   alt_field: false
   alt_field_required: true
   title_field: false
