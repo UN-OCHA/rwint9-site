@@ -41,18 +41,79 @@ form .image-widget article > div {
   max-height: 200px;
 }
 
+/* Media library widget. */
 /* Prevent empty divs from taking up space */
 form .js-media-library-widget .js-media-library-selection.form-wrapper,
 .js-media-library-add-form .field--type-image {
   margin-top: 0;
 }
+form .js-media-library-item.image-widget {
+  padding: 0;
+}
+form .js-media-library-widget .field-suffix .button:not(.visually-hidden) {
+  margin-bottom: 1rem;
+}
+form .js-media-library-widget .field-suffix + .description {
+  margin-top: 0;
+}
 .js-media-library-add-form .image-widget {
   padding: 0;
+}
+.js-media-library-views-form table tbody td {
+  font-size: 16px;
+}
+.js-media-library-views-form table tbody td.views-field-changed {
+  word-break: keep-all;
+}
+.js-media-library-views-form table tbody td a {
+  color: var(--cd-reliefweb-brand-blue--dark);
 }
 
 form .views-field-media-library-select-form .form-type-checkbox:only-of-type {
   margin-right: 24px;
 }
+
+/* Media styling in media_library view mode. */
+form article.media-library-item__preview-wrapper {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+}
+form .media-library-item__preview-wrapper .media-library-item__preview {
+  margin-right: 12px;
+}
+form .media-library-item__preview-wrapper .media-library-item__preview .image-style-thumbnail {
+  display: block;
+  max-width: none;
+}
+form .media-library-item__preview-wrapper .media-library-item__attributes {
+  flex: 1 1 0;
+  min-width: 120px;
+}
+form .media-library-item__preview-wrapper .media-library-item__name {
+  word-break: break-all;
+  font-size: 16px;
+}
+
+/* Inline enity form styling. */
+form .ief-entity-table .ief-entity-operations {
+  display: flex;
+  flex-direction: column;
+}
+form .ief-entity-table .ief-entity-operations .button.cd-button {
+  margin: 0;
+}
+form .ief-entity-table .ief-entity-operations .button + .button {
+  margin-top: 12px;
+}
+form .ief-entity-table .image-widget {
+  flex-wrap: nowrap;
+}
+form .ief-form .fieldset-wrapper {
+  padding: 12px;
+  border: 1px solid var(--cd-reliefweb-brand-grey--light);
+}
+
 /* Media UI buttons styled the same as other UI buttons */
 .ui-dialog .ui-dialog-buttonpane .cd-button,
 .view-media-library .cd-button,
