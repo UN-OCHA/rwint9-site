@@ -536,3 +536,9 @@ input[data-drupal-selector="edit-preview"]:focus {
 input[data-drupal-selector="edit-preview"]:focus {
   border: 2px solid var(--cd-black);
 }
+
+/* legends with the required class need some extra rules. */
+legend.form-required::after {
+  display: inline-block;
+  vertical-align: top;
+}
