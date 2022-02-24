@@ -66,7 +66,7 @@ class CommunityTopicsForm extends FormBase {
       'placeholders' => [
         'url' => $this->t('External URL (must start with http or https)'),
         'title' => $this->t('Link title'),
-        'description' => $this->t('Description'),
+        'description' => $this->t('Short description of topic page (optional)'),
       ],
       'links' => $links,
       'settings' => [],

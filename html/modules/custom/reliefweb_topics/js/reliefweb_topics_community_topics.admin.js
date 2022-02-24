@@ -75,11 +75,7 @@
        * Create a input/textarea form compoment for the given property.
        */
       function createLinkFormComponent(name, value, textarea) {
-        var placeholders = {
-          url: t('River URL'),
-          title: t('Link title (mandatory)'),
-          override: t('Node Id to promote to beginning of list')
-        };
+        var placeholders = topicsSettings.placeholders || {};
 
         var element;
 
