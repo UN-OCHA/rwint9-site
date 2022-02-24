@@ -182,6 +182,9 @@
     "drupal/imageapi_optimize_binaries": {
         "version": "1.0.0-alpha2"
     },
+    "drupal/inline_entity_form": {
+        "version": "1.0.0-rc9"
+    },
     "drupal/mailsystem": {
         "version": "4.3.0"
     },

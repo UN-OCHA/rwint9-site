@@ -45,7 +45,7 @@
 {# Form content. #}
 <fieldset id="description">
   <legend>{% trans %}Description{% endtrans %}</legend>
-  {{ form.name }}
+  {{ form.name|hide_nested_label(['widget', 0]) }}
   {{ form.field_shortname }}
   {{ form.field_longname }}
   {{ form.field_aliases }}
@@ -55,7 +55,7 @@
 <fieldset id="details" class="details">
   <legend>{% trans %}Details{% endtrans %}</legend>
   {{ form.field_iso3 }}
-  {{ form.field_location }}
+  {{ form.field_location|hide_nested_label(['widget', 0, 'value']) }}
 </fieldset>
 
 <fieldset id="editorial-flags">

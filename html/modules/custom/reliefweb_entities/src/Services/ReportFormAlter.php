@@ -265,11 +265,6 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     // Remove the empty option.
     unset($widget['#options']['_none']);
 
-    // For the above to work we need the drupal states extension.
-    // @todo remove if the equivalent is added to core.
-    // @see https://www.drupal.org/project/drupal/issues/1149078
-    $form['#attached']['library'][] = 'reliefweb_form/drupal.states';
-
     // Add a validation callback to ensure that an OCHA product is selected
     // when OCHA is selected as source.
     $form['#validate'][] = [$this, 'validateOchaProductField'];

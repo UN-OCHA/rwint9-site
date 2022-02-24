@@ -66,6 +66,7 @@ class TopicFormAlter extends EntityFormAlterServiceBase {
           'rw-token-help',
         ],
       ],
+      '#not_required' => TRUE,
       'table' => $table,
     ];
   }

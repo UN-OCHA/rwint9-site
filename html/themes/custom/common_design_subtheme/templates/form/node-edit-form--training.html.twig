@@ -87,12 +87,12 @@
 
 <fieldset id="organization">
   <legend>{% trans %}Organization{% endtrans %}</legend>
-  {{ form.field_source }}
+  {{ form.field_source|hide_nested_label(['field_source_new']) }}
 </fieldset>
 
 <fieldset id="location">
   <legend>{% trans %}Location{% endtrans %}</legend>
-  {{ form.field_training_format }}
+  {{ form.field_training_format|hide_nested_label(['widget']) }}
   {{ form.field_country }}
   {{ form.field_city }}
 </fieldset>
@@ -106,7 +106,7 @@
 
 <fieldset id="event-url">
   <legend>{% trans %}Event URL{% endtrans %}</legend>
-  {{ form.field_link }}
+  {{ form.field_link|hide_nested_label(['widget', 0, 'uri']) }}
 </fieldset>
 
 <fieldset id="fee">

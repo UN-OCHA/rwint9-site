@@ -223,10 +223,15 @@ form .description ul {
   margin: 0;
   padding: 0 0 0 16px;
 }
-form .form-optional {
+/* "Enhanced" forms flags optional fields instead of required fields. */
+form[data-enhanced] .form-optional {
+  font-family: sans-serif;
   font-size: 16px;
   font-weight: 300;
   font-style: italic;
+}
+form[data-enhanced] .form-required::after {
+  content: none;
 }
 form .form-disabled [data-irrelevant]:after {
   display: block;
@@ -417,7 +422,7 @@ form #edit-organization #edit-field-source-allowed .form-item:last-child {
 /* Term form Disable Notifications checkbox is inside #actions fieldset */
 form > #actions legend + .form-type-checkbox.form-item-notifications-content-disable,
 .form-item-notifications-content-disable + .form-actions {
-  margin: 0;
+  margin: 8px 0 0 0;
 }
 
 /* Text format wrapper */
@@ -535,4 +540,10 @@ input[data-drupal-selector="edit-preview"]:focus {
 }
 input[data-drupal-selector="edit-preview"]:focus {
   border: 2px solid var(--cd-black);
+}
+
+/* legends with the required class need some extra rules. */
+legend.form-required::after {
+  display: inline-block;
+  vertical-align: top;
 }

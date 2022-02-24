@@ -382,6 +382,7 @@ class ReliefWebFile extends WidgetBase {
           range(1, $item->getPageCount())
         ),
         '#default_value' => $preview_page,
+        '#required' => TRUE,
         '#ajax' => $this->getAjaxSettings($this->t('Regenerating preview...'), $field_parents),
       ];
       $element['preview_rotation'] = [
@@ -393,6 +394,7 @@ class ReliefWebFile extends WidgetBase {
           -90 => $this->t('left'),
         ],
         '#default_value' => $preview_rotation,
+        '#required' => TRUE,
         '#ajax' => $this->getAjaxSettings($this->t('Regenerating preview...'), $field_parents),
       ];
 
@@ -419,6 +421,7 @@ class ReliefWebFile extends WidgetBase {
     $element['operations'] = [
       '#type' => 'details',
       '#title' => $this->t('Actions'),
+      '#not_required' => TRUE,
     ];
 
     // Add a button to delete the file.
@@ -1047,15 +1050,20 @@ class ReliefWebFile extends WidgetBase {
     $field_name = array_pop($parents);
     $field_state = static::getWidgetState($parents, $field_name, $form_state);
 
-    // The array parents are populaed in the WidgetBase::afterBuild().
-    $widget = NestedArray::getValue($form, $field_state['array_parents']);
-
-    // Create the response and ensure the widget attachments will be loaded.
     $response = new AjaxResponse();
-    $response->setAttachments($widget['#attached'] ?? []);
 
-    // This will replace the widget with the new one in the form.
-    return $response->addCommand(new ReplaceCommand(NULL, $widget));
+    if (!empty($field_state['array_parents'])) {
+      // The array parents are populated in the WidgetBase::afterBuild().
+      $widget = NestedArray::getValue($form, $field_state['array_parents']);
+
+      // Create the response and ensure the widget attachments will be loaded.
+      $response->setAttachments($widget['#attached'] ?? []);
+
+      // This will replace the widget with the new one in the form.
+      $response->addCommand(new ReplaceCommand(NULL, $widget));
+    }
+
+    return $response;
   }
 
   /**

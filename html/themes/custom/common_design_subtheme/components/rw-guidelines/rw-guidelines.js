@@ -140,7 +140,7 @@
             }
 
             // If the label is visually hidden, we need to find another one.
-            if (label && label.classList.contains('visually-hidden')) {
+            if (label && isLabelHidden(label)) {
               label = null;
 
               // Try to find a suitable label or legend among the field's
@@ -154,7 +154,7 @@
                 else if (parent.nodeName === 'FIELDSET') {
                   candidate = parent.querySelector('.fieldset-legend, legend');
                 }
-                if (candidate && !candidate.classList.contains('visually-hidden')) {
+                if (candidate && !isLabelHidden(candidate)) {
                   label = candidate;
                   break;
                 }
@@ -167,6 +167,19 @@
             }
           }
         }
+      }
+
+      // Check if a label/legend element is visually hidden.
+      function isLabelHidden(label) {
+        if (label) {
+          if (label.classList.contains('visually-hidden')) {
+            return true;
+          }
+          else if (label.classList.contains('fieldset-legend')) {
+            return label.parentNode.classList.contains('visually-hidden');
+          }
+        }
+        return false;
       }
 
       // Add the button to open the guideline popup next to a field's label.
@@ -186,6 +199,12 @@
         // Wrap the legend into a span so we can have consistent behavior.
         if (label.nodeName === 'LEGEND') {
           var container = document.createElement('span');
+          // We also need to move the form-required class to the span so that
+          // the mark appears before the guidelines button.
+          if (label.classList.contains('form-required')) {
+            container.classList.add('form-required');
+            label.classList.remove('form-required');
+          }
           while (label.firstChild) {
             container.appendChild(label.firstChild);
           }

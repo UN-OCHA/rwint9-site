@@ -384,7 +384,7 @@ function reliefweb_entities_form_alter(array &$form, FormStateInterface $form_st
 /**
  * Implements hook_module_implements_alter().
  */
-function reliefweb_entities_module_implements_alter(&$implementation, $hook) {
+function reliefweb_entities_module_implements_alter(array &$implementation, $hook) {
   // Remove the hook_entity_presave() implementation from the
   // taxonomy_term_revision module because it doesn't allow us to speify the
   // revision user or timestamp. This is replaced by
@@ -394,6 +394,57 @@ function reliefweb_entities_module_implements_alter(&$implementation, $hook) {
   // @see reliefweb_entities_set_taxonomy_term_revision()
   if ($hook === 'entity_presave') {
     unset($implementation['taxonomy_term_revision']);
+  }
+}
+
+/**
+ * Implements hook_theme_registry_alter().
+ */
+function reliefweb_entities_theme_registry_alter(array &$theme_registry) {
+  // Remove the hook_preprocess_media() implementation from the media_library
+  // because it's not compatible with the inline entity form as it tries to
+  // create a link to the media while it may not yet have an ID (temporary
+  // media entity when creating a new content). This is replaced by
+  // reliefweb_entities_preprocess_media().
+  //
+  // @see media_library_preprocess_media()
+  // @see reliefweb_entities_preprocess_media()
+  foreach ($theme_registry as $theme => $info) {
+    if (isset($info['preprocess functions'])) {
+      foreach ($info['preprocess functions'] as $key => $value) {
+        if ($value === 'media_library_preprocess_media') {
+          unset($theme_registry[$theme]['preprocess functions'][$key]);
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_media().
+ *
+ * Replacement of media_library_preprocess_media() that is compatible with
+ * inline_entity_form which can create temporary media which don't yet have
+ * an ID and so cannot have a URL.
+ *
+ * @see media_library_preprocess_media()
+ */
+function reliefweb_entities_preprocess_media(array &$variables) {
+  if ($variables['view_mode'] === 'media_library') {
+    /** @var \Drupal\media\MediaInterface $media */
+    $media = $variables['media'];
+    $variables['#cache']['contexts'][] = 'user.permissions';
+    if ($media->id() !== NULL) {
+      $rel = $media->access('edit') ? 'edit-form' : 'canonical';
+      $variables['url'] = $media->toUrl($rel, [
+        'language' => $media->language(),
+      ]);
+    }
+    $variables += [
+      'preview_attributes' => new Attribute(),
+      'metadata_attributes' => new Attribute(),
+    ];
+    $variables['status'] = $media->isPublished();
   }
 }
 

@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - core.entity_form_mode.media.media_library
     - field.field.node.report.body
     - field.field.node.report.field_bury
     - field.field.node.report.field_content_format
@@ -31,7 +32,7 @@ dependencies:
   module:
     - allowed_formats
     - datetime
-    - media_library
+    - inline_entity_form
     - path
     - reliefweb_docstore
     - reliefweb_fields
@@ -180,11 +181,21 @@ content:
       display_label: true
     third_party_settings: {  }
   field_headline_image:
-    type: media_library_widget
+    type: inline_entity_form_complex
     weight: 19
     region: content
     settings:
-      media_types: {  }
+      form_mode: media_library
+      override_labels: true
+      label_singular: image
+      label_plural: ''
+      allow_new: true
+      allow_existing: false
+      match_operator: CONTAINS
+      allow_duplicate: false
+      collapsible: false
+      collapsed: false
+      revision: false
     third_party_settings: {  }
   field_headline_summary:
     type: string_textarea
@@ -203,11 +214,21 @@ content:
       placeholder: ''
     third_party_settings: {  }
   field_image:
-    type: media_library_widget
+    type: inline_entity_form_complex
     weight: 4
     region: content
     settings:
-      media_types: {  }
+      form_mode: media_library
+      override_labels: true
+      label_singular: image
+      label_plural: ''
+      allow_new: true
+      allow_existing: false
+      match_operator: CONTAINS
+      allow_duplicate: false
+      collapsible: false
+      collapsed: true
+      revision: false
     third_party_settings: {  }
   field_language:
     type: options_buttons

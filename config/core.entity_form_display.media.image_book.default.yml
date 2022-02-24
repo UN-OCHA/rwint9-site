@@ -6,10 +6,10 @@ dependencies:
     - field.field.media.image_book.field_copyright
     - field.field.media.image_book.field_description
     - field.field.media.image_book.field_media_image
-    - image.style.thumbnail
+    - image.style.media_library
     - media.type.image_book
   module:
-    - image
+    - svg_image
 id: media.image_book.default
 targetEntityType: media
 bundle: image_book
@@ -33,15 +33,15 @@ content:
     third_party_settings: {  }
   field_media_image:
     type: image_image
-    weight: 1
+    weight: 0
     region: content
     settings:
       progress_indicator: throbber
-      preview_image_style: thumbnail
+      preview_image_style: media_library
     third_party_settings: {  }
   name:
     type: string_textfield
-    weight: 0
+    weight: 1
     region: content
     settings:
       size: 60
