@@ -132,6 +132,11 @@ rw-form:
     theme:
       components/rw-form/rw-form.css: {}
       components/rw-form/rw-form--widget.css: {}
+  # Some widgets like the inline entity forms show drupal messages added via
+  # javascript in which case the cd-alert component may not be loaded so we
+  # add it as a dependency of the rw-form library which is added globally.
+  dependencies:
+    - common_design/cd-alert
 
 rw-guidelines:
   css:
