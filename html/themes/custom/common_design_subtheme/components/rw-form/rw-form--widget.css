@@ -82,9 +82,8 @@ form article.media-library-item__preview-wrapper {
 form .media-library-item__preview-wrapper .media-library-item__preview {
   margin-right: 12px;
 }
-form .media-library-item__preview-wrapper .media-library-item__preview .image-style-thumbnail {
-  display: block;
-  max-width: none;
+form .media-library-item__preview-wrapper .media-library-item__preview img {
+  display: flex;
 }
 form .media-library-item__preview-wrapper .media-library-item__attributes {
   flex: 1 1 0;
@@ -106,7 +105,8 @@ form .ief-entity-table .ief-entity-operations .button.cd-button {
 form .ief-entity-table .ief-entity-operations .button + .button {
   margin-top: 12px;
 }
-form .ief-entity-table .image-widget {
+form .ief-entity-table .image-widget,
+form .ief-form .image-widget {
   flex-wrap: nowrap;
 }
 form .ief-form .fieldset-wrapper {
