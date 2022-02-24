@@ -32,17 +32,16 @@
  * @see media_library_preprocess_media()
  */
 #}
+{% set preview_attributes = preview_attributes ? create_attribute() %}
+{% set metadata_attributes = metadata_attributes ? create_attribute() %}
 <article{{ attributes.addClass('media-library-item__preview-wrapper') }}>
   {% if content %}
     <div{{ preview_attributes.addClass('media-library-item__preview js-media-library-item-preview') }}>
       {{ content|without('name') }}
     </div>
-    {% if not status %}
-      <div class="media-library-item__status">{{ "unpublished" | t }}</div>
-    {% endif %}
     <div{{ metadata_attributes.addClass('media-library-item__attributes') }}>
       <div class="media-library-item__name">
-        {{ content.name }}
+        {{ name }}
       </div>
     </div>
   {% endif %}
