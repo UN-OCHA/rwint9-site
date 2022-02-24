@@ -2,6 +2,9 @@ form[data-with-guidelines] .rw-guideline__label {
   display: inline-flex;
   margin-right: 12px;
 }
+form[data-with-guidelines] .rw-guideline__label .form-optional {
+  white-space: pre;
+}
 form[data-with-guidelines] .rw-guideline__label.form-required {
   margin-right: 8px;
 }

@@ -223,10 +223,15 @@ form .description ul {
   margin: 0;
   padding: 0 0 0 16px;
 }
-form .form-optional {
+/* "Enhanced" forms flags optional fields instead of required fields. */
+form[data-enhanced] .form-optional {
+  font-family: sans-serif;
   font-size: 16px;
   font-weight: 300;
   font-style: italic;
+}
+form[data-enhanced] .form-required::after {
+  content: none;
 }
 form .form-disabled [data-irrelevant]:after {
   display: block;

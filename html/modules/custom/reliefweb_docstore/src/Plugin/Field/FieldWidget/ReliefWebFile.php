@@ -382,6 +382,7 @@ class ReliefWebFile extends WidgetBase {
           range(1, $item->getPageCount())
         ),
         '#default_value' => $preview_page,
+        '#required' => TRUE,
         '#ajax' => $this->getAjaxSettings($this->t('Regenerating preview...'), $field_parents),
       ];
       $element['preview_rotation'] = [
@@ -393,6 +394,7 @@ class ReliefWebFile extends WidgetBase {
           -90 => $this->t('left'),
         ],
         '#default_value' => $preview_rotation,
+        '#required' => TRUE,
         '#ajax' => $this->getAjaxSettings($this->t('Regenerating preview...'), $field_parents),
       ];
 
@@ -419,6 +421,7 @@ class ReliefWebFile extends WidgetBase {
     $element['operations'] = [
       '#type' => 'details',
       '#title' => $this->t('Actions'),
+      '#not_required' => TRUE,
     ];
 
     // Add a button to delete the file.

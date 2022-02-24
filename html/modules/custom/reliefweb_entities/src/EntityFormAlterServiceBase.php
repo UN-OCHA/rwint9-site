@@ -390,7 +390,6 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
       '#type' => 'checkbox',
       '#title' => $this->t('I can NOT find my organization in the list above.'),
       '#wrapper_attributes' => ['class' => ['form-wrapper']],
-      '#optional' => FALSE,
       '#default_value' => !empty($new_source['name']) && $is_editor ? 1 : 0,
     ];
     $element['field_source_new'] = [
@@ -401,16 +400,17 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
         '#type' => 'textfield',
         '#title' => $this->t('Organization Name'),
         '#default_value' => $new_source['name'] ?? '',
-        '#optional' => FALSE,
       ],
       'url' => [
         '#type' => 'textfield',
         '#title' => $this->t('Homepage URL'),
         '#default_value' => $new_source['url'] ?? '',
-        '#optional' => FALSE,
       ],
       '#states' => [
         'visible' => [
+          ':input[name="field_source_none"]' => ['checked' => TRUE],
+        ],
+        'required' => [
           ':input[name="field_source_none"]' => ['checked' => TRUE],
         ],
       ],
@@ -491,7 +491,6 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
             '#options' => $allowed,
             '#default_value' => $allowed_defaults,
             '#empty_value' => 'other',
-            '#optional' => FALSE,
             '#weight' => -1,
           ];
 

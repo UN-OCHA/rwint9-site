@@ -105,15 +105,11 @@ class JobFormAlter extends EntityFormAlterServiceBase {
       '#wrapper_attributes' => ['class' => ['form-wrapper']],
     ];
 
-    // Make the country field non optional.
-    // @todo review.
-    $form['field_country']['widget']['#optional'] = FALSE;
-
     // Flag the country field as mandatory when "unspecified" is not checked.
     $condition = [
       ':input[name="unspecified_location"]' => ['checked' => FALSE],
     ];
-    $form['field_country']['widget']['#states']['required'] = $condition;
+    $form['field_country']['#states']['required'] = $condition;
 
     // Hide the country and city field when "unspecified" is selected.
     $condition = [

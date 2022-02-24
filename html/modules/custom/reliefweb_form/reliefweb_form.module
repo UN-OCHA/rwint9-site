@@ -29,6 +29,10 @@ function reliefweb_form_element_info_alter(array &$info) {
   $info['checkboxes']['#process'][] = 'reliefweb_form_checkboxes_element_process';
   $info['radios']['#process'][] = 'reliefweb_form_radios_element_process';
   $info['date']['#process'][] = 'reliefweb_form_date_element_process';
+
+  foreach ($info as $key => $item) {
+    $info[$key]['#process'][] = 'reliefweb_form_mark_optional';
+  }
 }
 
 /**
@@ -109,6 +113,33 @@ function reliefweb_form_date_element_process(array $element, FormStateInterface 
 }
 
 /**
+ * Mark non required elements as optional.
+ *
+ * @param array $element
+ *   The form element.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The form interface.
+ * @param array $form
+ *   The complete form.
+ *
+ * @return array
+ *   The modified form element.
+ */
+function reliefweb_form_mark_optional(array $element, FormStateInterface $form_state, array $form) {
+  $context = [
+    'form_state' => $form_state,
+    'form' => $form,
+  ];
+  // Let the active theme handle marking the element as optional to ensure
+  // it's conistent with the way the theme handles the styling of the
+  // required elements.
+  if (reliefweb_form_enhancements_enabled($form)) {
+    \Drupal::service('theme.manager')->alter('reliefweb_form_mark_optional', $element, $context);
+  }
+  return $element;
+}
+
+/**
  * Implements hook_theme_suggestions_HOOK_alter() for `select`.
  *
  * Add a theme suggestion to use our select template that supports option
@@ -144,7 +175,7 @@ function reliefweb_form_preprocess_select(&$variables) {
  */
 function reliefweb_form_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
   // Enhance the form.
-  if (isset($form['#attributes']['data-enhanced']) && \Drupal::currentUser()->hasPermission('use enhanced input forms')) {
+  if (reliefweb_form_enhancements_enabled($form)) {
     // Attach the widget libraries if there are fields using them.
     reliefweb_form_attach_autocomplete($form);
     reliefweb_form_attach_datepicker($form);
@@ -155,9 +186,20 @@ function reliefweb_form_form_alter(array &$form, FormStateInterface $form_state,
     // Attach the guidelines.
     reliefweb_form_attach_guidelines($form);
 
+    // Attach the drupal states extensions.
+    $form['#attached']['library'][] = 'reliefweb_form/drupal.states';
+
     // Attach the main enhanced form library.
     $form['#attached']['library'][] = 'reliefweb_form/form.main';
   }
+}
+
+/**
+ * Check if we should use the form enhancements.
+ */
+function reliefweb_form_enhancements_enabled(array $form) {
+  return isset($form['#attributes']['data-enhanced']) &&
+    \Drupal::currentUser()->hasPermission('use enhanced input forms');
 }
 
 /**
