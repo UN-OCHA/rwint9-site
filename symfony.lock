@@ -23,6 +23,9 @@
     "composer/composer": {
         "version": "2.1.14"
     },
+    "composer/installers": {
+        "version": "v1.12.0"
+    },
     "composer/metadata-minifier": {
         "version": "1.0.0"
     },
@@ -65,8 +68,14 @@
     "consolidation/site-process": {
         "version": "4.1.0"
     },
+    "cweagans/composer-patches": {
+        "version": "1.7.2"
+    },
     "d4h/finediff": {
         "version": "1.0.1"
+    },
+    "dealerdirect/phpcodesniffer-composer-installer": {
+        "version": "v0.7.2"
     },
     "dflydev/dot-access-configuration": {
         "version": "v1.0.3"
@@ -116,6 +125,9 @@
     "doctrine/reflection": {
         "version": "1.2.2"
     },
+    "drupal-composer/preserve-paths": {
+        "version": "0.1.6"
+    },
     "drupal/admin_denied": {
         "version": "1.1.0"
     },
@@ -151,6 +163,9 @@
     },
     "drupal/core": {
         "version": "9.3.0"
+    },
+    "drupal/core-composer-scaffold": {
+        "version": "9.3.6"
     },
     "drupal/core-dev": {
         "version": "9.3.0"
@@ -374,6 +389,9 @@
     "phpspec/prophecy-phpunit": {
         "version": "v2.0.1"
     },
+    "phpstan/phpdoc-parser": {
+        "version": "1.2.0"
+    },
     "phpunit/php-code-coverage": {
         "version": "9.2.10"
     },
@@ -495,6 +513,9 @@
     },
     "sirbrillig/phpcs-variable-analysis": {
         "version": "v2.11.2"
+    },
+    "slevomat/coding-standard": {
+        "version": "7.0.18"
     },
     "squizlabs/php_codesniffer": {
         "version": "3.6",
