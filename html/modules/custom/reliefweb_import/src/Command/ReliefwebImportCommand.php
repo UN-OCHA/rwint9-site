@@ -9,6 +9,7 @@ use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\State\State;
 use Drupal\reliefweb_entities\Entity\Job;
 use Drupal\reliefweb_import\Exception\ReliefwebImportException;
@@ -139,13 +140,13 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
 
       if (!empty($this->errors)) {
         foreach ($this->errors as $error) {
-          $this->logger()->error($error);
+          $this->getLogger()->error($error);
         }
       }
 
       if (!empty($this->warnings)) {
         foreach ($this->warnings as $warning) {
-          $this->logger()->warning($warning);
+          $this->getLogger()->warning($warning);
         }
       }
     }
@@ -168,7 +169,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     $uid = $term->field_job_import_feed->first()->uid ?? FALSE;
     $this->url = $term->field_job_import_feed->first()->feed_url;
 
-    $this->logger()->info('Processing @name, fetching jobs from @url.', [
+    $this->getLogger()->info('Processing @name, fetching jobs from @url.', [
       '@name' => $label,
       '@url' => $this->url,
     ]);
@@ -249,13 +250,13 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
 
         // Check if job already exist.
         if ($this->jobExists((string) $item->link)) {
-          $this->logger()->notice(strtr('Update job for @link', [
+          $this->getLogger()->notice(strtr('Update job for @link', [
             '@link' => $item->link,
           ]));
           $this->updateJob($this->loadJobById((string) $item->link), $item);
         }
         else {
-          $this->logger()->notice(strtr('Create new job for @link', [
+          $this->getLogger()->notice(strtr('Create new job for @link', [
             '@link' => $item->link,
           ]));
           $this->createJob($item, $uid);
@@ -434,7 +435,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
   /**
    * Our logger.
    */
-  protected function logger() {
+  protected function getLogger(): LoggerChannelInterface {
     return $this->loggerFactory->get('reliefweb_import');
   }
 
