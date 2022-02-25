@@ -10,10 +10,8 @@ dependencies:
     - text
 third_party_settings:
   allowed_formats:
-    token_markdown: token_markdown
-    markdown: '0'
-    plain_text: '0'
-    html: '0'
+    allowed_formats:
+      - token_markdown
 id: node.topic.field_overview
 field_name: field_overview
 entity_type: node
