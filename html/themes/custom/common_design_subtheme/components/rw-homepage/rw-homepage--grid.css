@@ -46,7 +46,9 @@
 
   @media screen and (min-width: 768px) {
     .path-frontpage .rw-homepage-sections {
-      grid-template-areas: "messages messages" "headlines announcement" "headlines disasters" "headlines disasters" "headlines blog" "headlines blog" "headlines opportunities" "headlines updates" "headlines updates";
+      grid-template-areas:
+        "messages messages" "headlines announcement" "headlines disasters" "headlines disasters" "headlines blog"
+        "headlines blog" "headlines opportunities" "headlines updates" "headlines updates";
       grid-template-rows: repeat(8, min-content) 1fr;
       grid-template-columns: 65% 35%;
     }
