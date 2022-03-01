@@ -115,7 +115,7 @@
   color: var(--cd-primary-color);
   border-color: var(--cd-primary-color);
   background-color: var(--cd-white);
-  fill: currentColor;
+  fill: currentcolor;
 }
 
 /* For IE11 */
@@ -151,7 +151,7 @@
 
 .cd-button--light:hover svg,
 .cd-button--light:focus svg {
-  fill: currentColor;
+  fill: currentcolor;
 }
 
 /* For IE11 */

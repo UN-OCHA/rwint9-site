@@ -34,8 +34,8 @@
   margin-top: -11px;
   content: "";
   /* The logo has a white background and will be display above the text. */
-  background: url(../../img/logos/ocha-logo-sprite.png) 0 -57px no-repeat;
-  background: rgba(0, 0, 0, 0) url(../../img/logos/ocha-logo-sprite.svg) 0 -57px no-repeat;
+  background: url("../../img/logos/ocha-logo-sprite.png") 0 -57px no-repeat;
+  background: rgba(0, 0, 0, 0) url("../../img/logos/ocha-logo-sprite.svg") 0 -57px no-repeat;
 }
 .rw-dsr ul {
   padding-left: 18px;

@@ -180,7 +180,7 @@ class ModerationPageFilterForm extends FormBase {
               $label = $item;
             }
             else {
-              list($value, $label) = explode(':', $item, 2);
+              [$value, $label] = explode(':', $item, 2);
             }
             $selection .= new FormattableMarkup(implode('', [
               '<div data-value="@value">',

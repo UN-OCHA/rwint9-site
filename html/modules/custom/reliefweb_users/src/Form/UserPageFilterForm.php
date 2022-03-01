@@ -82,49 +82,49 @@ class UserPageFilterForm extends FormBase {
       '#type' => 'checkboxes',
       '#title' => $this->t('Role'),
       '#options' => $roles,
-      '#default_value' => isset($filters['role']) ? $filters['role'] : [],
+      '#default_value' => $filters['role'] ?? [],
     ];
 
     $form['filters']['status'] = [
       '#type' => 'radios',
       '#title' => $this->t('Status'),
       '#options' => ['any' => 'Any'] + $statuses,
-      '#default_value' => isset($filters['status']) ? $filters['status'] : 'any',
+      '#default_value' => $filters['status'] ?? 'any',
     ];
 
     $form['filters']['posted'] = [
       '#title' => $this->t('Posted'),
       '#type' => 'checkboxes',
       '#options' => $content_types,
-      '#default_value' => isset($filters['posted']) ? $filters['posted'] : [],
+      '#default_value' => $filters['posted'] ?? [],
     ];
 
     $form['filters']['job_rights'] = [
       '#type' => 'radios',
       '#title' => $this->t('Job posting rights'),
       '#options' => ['any' => 'Any'] + $rights,
-      '#default_value' => isset($filters['job_rights']) ? $filters['job_rights'] : 'any',
+      '#default_value' => $filters['job_rights'] ?? 'any',
     ];
 
     $form['filters']['training_rights'] = [
       '#type' => 'radios',
       '#title' => $this->t('Training posting rights'),
       '#options' => ['any' => 'Any'] + $rights,
-      '#default_value' => isset($filters['training_rights']) ? $filters['training_rights'] : 'any',
+      '#default_value' => $filters['training_rights'] ?? 'any',
     ];
 
     $form['filters']['name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
       '#maxlength' => 2048,
-      '#default_value' => isset($filters['name']) ? $filters['name'] : '',
+      '#default_value' => $filters['name'] ?? '',
     ];
 
     $form['filters']['mail'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Mail'),
       '#maxlength' => 2048,
-      '#default_value' => isset($filters['mail']) ? $filters['mail'] : '',
+      '#default_value' => $filters['mail'] ?? '',
     ];
 
     $form['actions'] = [

@@ -61,8 +61,8 @@
   width: 81px;
   height: 20px;
   content: "";
-  background: url(../../img/logos/ocha-logo-sprite.png) 0 -37px no-repeat;
-  background: rgba(0, 0, 0, 0) url(../../img/logos/ocha-logo-sprite.svg) 0 -37px no-repeat;
+  background: url("../../img/logos/ocha-logo-sprite.png") 0 -37px no-repeat;
+  background: rgba(0, 0, 0, 0) url("../../img/logos/ocha-logo-sprite.svg") 0 -37px no-repeat;
 }
 /* Reduce the size so that it looks better when the lines wrap. */
 @media all and (max-width: 767px) {

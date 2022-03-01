@@ -296,7 +296,7 @@ abstract class FieldableEntityBase extends EntityBase {
    *   The field instances, keyed by field name.
    */
   protected function getFields($entity_type, $bundle = NULL) {
-    $bundle = isset($bundle) ? $bundle : $entity_type;
+    $bundle = $bundle ?? $entity_type;
 
     if (!isset($this->fieldInstances[$entity_type][$bundle])) {
       $query = $this->select('field_config_instance', 'fci')
