@@ -346,7 +346,7 @@ function reliefweb_form_hide_format_help($form_element, FormStateInterface $form
 
     // Ensure the format is displayed even it's only one, except for plain text.
     if (isset($form_element['#allowed_formats']) && count($form_element['#allowed_formats']) === 1) {
-      $allowed_format = key($form_element['#allowed_formats']);
+      $allowed_format = reset($form_element['#allowed_formats']);
 
       // Select a default format if not already.
       if (empty($form_element['format']['format']['#default_value'])) {
