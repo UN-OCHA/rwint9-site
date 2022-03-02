@@ -266,15 +266,12 @@ class ReliefwebSubscriptionsMailer {
    * @usage reliefweb_subscriptions:queue
    *   Queue emails.
    * @validate-module-enabled reliefweb_subscriptions
-   * @option entity_type
-   *   Entity type.
    * @option entity_id
    *   Entity Id.
    * @option last
    *   Timestamp to use as the last time notifications were sent.
    */
   public function queue($sid, array $options = [
-    'entity_type' => '',
     'entity_id' => 0,
     'last' => 0,
   ]) {
@@ -292,20 +289,27 @@ class ReliefwebSubscriptionsMailer {
 
     // Attempt to queue triggered notification.
     if ($subscription['type'] === 'triggered') {
-      $entity_type = $options['entity_type'];
       $entity_id = $options['entity_id'];
 
-      if (empty($entity_type) || empty($entity_id)) {
-        $this->logger->error('Invalid entity type or id');
+      if (empty($entity_id)) {
+        $this->logger->error('Missing entity id');
+        return;
+      }
+      if (!is_numeric($entity_id)) {
+        $this->logger->error('Invalid entity id');
         return;
       }
 
       // Check if the entity exists.
       $entity = $this->entityTypeManager
-        ->getStorage($entity_type)
+        ->getStorage($subscription['entity_type_id'])
         ?->load($entity_id);
       if (empty($entity)) {
         $this->logger->warning('Entity not found, skipping');
+        return;
+      }
+      elseif ($entity->bundle() !== $subscription['bundle']) {
+        $this->logger->error('Entity bundle mismatch');
         return;
       }
 
