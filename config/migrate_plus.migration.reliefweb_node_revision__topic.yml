@@ -108,6 +108,16 @@ process:
           source: attributes
           index:
             - title
+  field_disaster_type:
+    plugin: sub_process
+    source: field_disaster_type
+    process:
+      target_id: tid
+  field_theme:
+    plugin: sub_process
+    source: field_theme
+    process:
+      target_id: tid
 destination: null
 migration_dependencies:
   required:
