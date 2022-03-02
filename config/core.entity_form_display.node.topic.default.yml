@@ -5,6 +5,7 @@ dependencies:
   config:
     - field.field.node.topic.body
     - field.field.node.topic.field_bury
+    - field.field.node.topic.field_disaster_type
     - field.field.node.topic.field_disasters_search
     - field.field.node.topic.field_featured
     - field.field.node.topic.field_icon
@@ -13,6 +14,7 @@ dependencies:
     - field.field.node.topic.field_reports_search
     - field.field.node.topic.field_resources
     - field.field.node.topic.field_sections
+    - field.field.node.topic.field_theme
     - field.field.node.topic.field_training_search
     - node.type.topic
   module:
@@ -45,6 +47,14 @@ content:
     region: content
     settings:
       display_label: true
+    third_party_settings: {  }
+  field_disaster_type:
+    type: reliefweb_entity_reference_select
+    weight: 26
+    region: content
+    settings:
+      sort: label
+      extra_data: {  }
     third_party_settings: {  }
   field_disasters_search:
     type: reliefweb_section_links
@@ -105,6 +115,14 @@ content:
     weight: 5
     region: content
     settings: {  }
+    third_party_settings: {  }
+  field_theme:
+    type: reliefweb_entity_reference_select
+    weight: 27
+    region: content
+    settings:
+      sort: label
+      extra_data: {  }
     third_party_settings: {  }
   field_training_search:
     type: reliefweb_section_links
