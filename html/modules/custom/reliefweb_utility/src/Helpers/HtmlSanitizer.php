@@ -83,12 +83,14 @@ class HtmlSanitizer {
    *   Offset for the conversion of the headings to perserve the hierarchy.
    * @param array $allowed_attributes
    *   List of attributes that should be preserved (ex: data-disaster-map).
+   * @param array $internal_hosts
+   *   List of internal hosts to determine if a link is external or not.
    *
    * @return string
    *   Sanitized HTML string.
    */
-  public static function sanitizeFromMarkdown($text, $iframe = FALSE, $heading_offset = 2, array $allowed_attributes = []) {
-    $html = MarkdownHelper::convertToHtml($text);
+  public static function sanitizeFromMarkdown($text, $iframe = FALSE, $heading_offset = 2, array $allowed_attributes = [], array $internal_hosts = ['reliefweb.int']) {
+    $html = MarkdownHelper::convertToHtml($text, $internal_hosts);
 
     return static::sanitize($html, $iframe, $heading_offset, $allowed_attributes);
   }
