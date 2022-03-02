@@ -7,12 +7,7 @@ use Drupal\Core\Url;
 use Drupal\Core\Render\Markup;
 use Drupal\filter\FilterProcessResult;
 use Drupal\filter\Plugin\FilterBase;
-use League\CommonMark\Environment;
-use League\CommonMark\Extension\Attributes\AttributesExtension;
-use League\CommonMark\Extension\Autolink\AutolinkExtension;
-use League\CommonMark\Extension\ExternalLink\ExternalLinkExtension;
-use League\CommonMark\Extension\Table\TableExtension;
-use League\CommonMark\MarkdownConverter;
+use Drupal\reliefweb_utility\Helpers\MarkdownHelper;
 
 /**
  * Provides a filter to display any HTML as plain text.
@@ -24,51 +19,16 @@ use League\CommonMark\MarkdownConverter;
  *   weight = -20
  * )
  */
-class Markdown extends FilterBase {
+class MarkdownFilter extends FilterBase {
 
   /**
    * {@inheritdoc}
    */
   public function process($text, $langcode) {
-    // Add a space before the heading '#' which is fine as ReliefWeb doesn't use
-    // hash tags.
-    // @see https://talk.commonmark.org/t/heading-not-working/819/42
-    $text = preg_replace('/^(#+)([^# ])/m', '$1 $2', $text);
-
-    // Obtain a pre-configured Environment with all the CommonMark
-    // parsers/renderers ready-to-go.
-    $environment = Environment::createCommonMarkEnvironment();
-
-    // Configuration to add attributes to external links.
-    $external_link_config = [
-      'external_link' => [
-        'internal_hosts' => [
-          \Drupal::request()->getHost(),
-          'reliefweb.int',
-        ],
-        'open_in_new_window' => TRUE,
-      ],
-    ];
-    $environment->mergeConfig($external_link_config);
-
-    // Add the extension to convert external links.
-    $environment->addExtension(new ExternalLinkExtension());
-
-    // Add the extension to convert ID attributes.
-    $environment->addExtension(new AttributesExtension());
-
-    // Add the extension to convert links.
-    $environment->addExtension(new AutolinkExtension());
-
-    // Add the extension to convert the tables.
-    $environment->addExtension(new TableExtension());
-
-    // Create the converter with the extension(s).
-    $converter = new MarkdownConverter($environment);
-
-    // Convert to HTML.
-    $html = $converter->convertToHtml($text);
-
+    $html = MarkdownHelper::convertToHtml($text, [
+      \Drupal::request()->getHost(),
+      'reliefweb.int',
+    ]);
     return new FilterProcessResult($html);
   }
 

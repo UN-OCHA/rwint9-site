@@ -4,22 +4,22 @@
 
 namespace Drupal\Tests\reliefweb_utility\Unit;
 
-use Drupal\reliefweb_utility\Plugin\Filter\Markdown;
+use Drupal\reliefweb_utility\Plugin\Filter\MarkdownFilter;
 use Drupal\Tests\UnitTestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * Tests date helper.
+ * Tests markdown filter.
  *
- * @covers \Drupal\reliefweb_utility\Plugin\Filter\Markdown
- * @coversDefaultClass \Drupal\reliefweb_utility\Plugin\Filter\Markdown
+ * @covers \Drupal\reliefweb_utility\Plugin\Filter\MarkdownFilter
+ * @coversDefaultClass \Drupal\reliefweb_utility\Plugin\Filter\MarkdownFilter
  */
-class MarkdownTest extends UnitTestCase {
+class MarkdownFilterTest extends UnitTestCase {
 
   /**
-   * @var \Drupal\reliefweb_utility\Plugin\Filter\Markdown
+   * @var \Drupal\reliefweb_utility\Plugin\Filter\MarkdownFilter
    */
   protected $filter;
 
@@ -41,7 +41,7 @@ class MarkdownTest extends UnitTestCase {
     $container->set('request_stack', $request_stack->reveal());
 
     $configuration['settings'] = [];
-    $this->filter = new Markdown($configuration, 'filter_markdown', [
+    $this->filter = new MarkdownFilter($configuration, 'filter_markdown', [
       'provider' => 'test',
     ]);
 
@@ -55,15 +55,15 @@ class MarkdownTest extends UnitTestCase {
    *
    * @dataProvider providerMarkdown
    *
-   * @param string $html
-   *   Input HTML.
+   * @param string $text
+   *   Markdown text.
    * @param array $expected
    *   The expected output string.
    */
-  public function testMarkdown($html, $expected) {
+  public function testMarkdown($text, $expected) {
     $this
       ->assertSame($expected, $this->filter
-      ->process($html, 'en')->__toString());
+      ->process($text, 'en')->__toString());
   }
 
   /**

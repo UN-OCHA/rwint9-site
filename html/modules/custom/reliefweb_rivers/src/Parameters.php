@@ -291,7 +291,7 @@ class Parameters {
           continue;
         }
         elseif (preg_match('/^[a-z0-9_]+-[0-9:]+$/', $parameter) === 1) {
-          list($field, $values) = explode('-', $parameter, 2);
+          [$field, $values] = explode('-', $parameter, 2);
           if (isset($mapping[$field])) {
             $field = $mapping[$field];
             $values = explode(':', $values);
@@ -326,7 +326,7 @@ class Parameters {
       $fields = ['term' => [], 'date' => []];
       foreach ($parameters as $parameter) {
         if (is_string($parameter) && strpos($parameter, ':') > 0) {
-          list($field, $value) = explode(':', $parameter, 2);
+          [$field, $value] = explode(':', $parameter, 2);
           $field = urldecode($field);
 
           if (isset($mapping[$field])) {
@@ -445,7 +445,7 @@ class Parameters {
 
             foreach ($items as $key => $item) {
               if (is_array($item) && count($item) === 2 && is_string($item[0]) && is_string($item[1])) {
-                list(, $operator) = explode('|', strtoupper($item[0]), 2);
+                [, $operator] = explode('|', strtoupper($item[0]), 2);
                 $operator = $key === 0 ? '|' : $operator;
 
                 // Skip if unrecognized operator.

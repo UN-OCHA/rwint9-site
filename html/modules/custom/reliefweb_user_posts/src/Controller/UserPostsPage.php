@@ -110,7 +110,7 @@ class UserPostsPage extends ModerationPage {
                 $value = $item;
               }
               else {
-                list($value,) = explode(':', $item, 2);
+                [$value] = explode(':', $item, 2);
               }
               // For compatibility with the other type of filters we set the
               // selected value as key with 1 value to flag it as selected.

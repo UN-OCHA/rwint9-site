@@ -77,7 +77,7 @@ function extract_css_variables(array $settings) {
 
   if (preg_match_all($pattern, $style, $matches)) {
     foreach ($matches['variable'] as $variable) {
-      list($name, $value) = explode(':', $variable, 2);
+      [$name, $value] = explode(':', $variable, 2);
       $variables[trim($name)] = trim($value);
     }
   }
@@ -257,7 +257,7 @@ function generate_css(array $settings, array $icons) {
   $categories = [];
 
   // Generate the CSS file.
-  $base = 'url(' . $path . '/img/rw-icons-sprite.svg) @x @y no-repeat;';
+  $base = 'url("' . $path . '/img/rw-icons-sprite.svg") @x @y no-repeat;';
   $x = 0;
   foreach ($icons as $category => $ids) {
     $sizes = $settings['icons'][$category]['sizes'];

@@ -426,7 +426,7 @@ class CronExpressionParser {
       'weekday' => [0, 6],
     ];
 
-    list($min, $max) = $minmax[$type];
+    [$min, $max] = $minmax[$type];
 
     switch ($type) {
       case 'month':
@@ -540,7 +540,7 @@ class CronExpressionParser {
       if (substr_count($value, '/') > 1) {
         throw new Exception();
       }
-      list($value, $step) = explode('/', $value);
+      [$value, $step] = explode('/', $value);
       $step = static::checkInt($step, 1, $max);
     }
 
@@ -554,7 +554,7 @@ class CronExpressionParser {
       if (substr_count($value, '-') > 1) {
         throw new Exception();
       }
-      list($start, $end) = explode('-', $value);
+      [$start, $end] = explode('-', $value);
       $start = self::checkInt($start, 0, $max);
       $end = self::checkInt($end, 1, $max);
       if ($start >= $end) {
