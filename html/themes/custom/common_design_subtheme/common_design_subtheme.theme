@@ -283,19 +283,6 @@ function common_design_subtheme_preprocess_inline_entity_form_entity_table(array
 }
 
 /**
- * Implements hook_preprocess_datetime_wrapper().
- *
- * Ensure the title is not displayed when instructed to be hidden.
- *
- * @todo remove when https://humanitarian.atlassian.net/browse/CD-356 is merged.
- */
-function common_design_subtheme_preprocess_datetime_wrapper(&$variables) {
-  if (isset($variables['element']['#title_display']) && $variables['element']['#title_display'] === 'invisible') {
-    $variables['title_attributes']['class'][] = 'visually-hidden';
-  }
-}
-
-/**
  * Implements hook_reliefweb_form_mark_optional_alter().
  *
  * Mark form elements as optional.
