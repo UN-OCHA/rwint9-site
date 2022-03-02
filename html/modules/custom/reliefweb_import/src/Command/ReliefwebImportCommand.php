@@ -543,7 +543,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    */
   protected function validateBody($data) {
     // Clean the body field.
-    $body = $this->sanitizeText('body', $data, 'markdown');
+    $body = $this->sanitizeText('body', $data);
 
     // Ensure the body field size is reasonable.
     $length = mb_strlen($body);
@@ -564,7 +564,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    */
   protected function validateHowToApply($data) {
     // Clean the field.
-    $field_how_to_apply = $this->sanitizeText('field_how_to_apply', $data, 'markdown', 3);
+    $field_how_to_apply = $this->sanitizeText('field_how_to_apply', $data, 3);
 
     // Ensure the field size is reasonable.
     $length = mb_strlen($field_how_to_apply);
@@ -636,15 +636,13 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    *   Field name.
    * @param string $text
    *   Field text content.
-   * @param string $format
-   *   Format to which conver the text if not already HTML.
    * @param int $max_heading_level
    *   Maximum heading level.
    *
    * @return string
    *   Sanitized content.
    */
-  protected function sanitizeText($field, $text, $format = 'plain_text', $max_heading_level = 2) {
+  protected function sanitizeText($field, $text, $max_heading_level = 2) {
     if (!is_string($text)) {
       return '';
     }
@@ -670,6 +668,10 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       $end = mb_strpos($text, ']]>');
       $text = mb_substr($text, 9, $end !== FALSE ? $end - 9 : NULL);
     }
+    elseif (mb_stripos($text, '&lt;![CDATA[') === 0) {
+      $end = mb_strpos($text, ']]&gt;');
+      $text = mb_substr($text, 12, $end !== FALSE ? $end - 12 : NULL);
+    }
 
     // Check if the content contains some non encoded html tags, in which case
     // we will assume that the text is non encoded html/markdown. For that we
@@ -678,25 +680,24 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       $text = html_entity_decode($text, ENT_QUOTES, 'UTF-8');
     }
 
-    // Convert the text to HTML, source might be markdown.
-    if (function_exists('check_markup')) {
-      $text = check_markup($text, $format)->__toString();
-    }
-
-    // We then sanitize the HTML string.
-    $text = HtmlSanitizer::sanitize($text, FALSE, $max_heading_level - 1);
+    // We assume the input is in markdow as recommended in the specificiations.
+    // We convert it to HTML and sanitize the output to remove any unsupported
+    // HTML markup.
+    $html = HtmlSanitizer::sanitizeFromMarkdown($text, FALSE, $max_heading_level - 1);
 
     // Remove embedded content.
-    $text = TextHelper::stripEmbeddedContent($text);
+    $html = TextHelper::stripEmbeddedContent($html);
 
-    // Finally we convert it to markdown.
+    // Finally we convert the HTML to markdown which is our storage format.
     $converter = new HtmlConverter();
     $converter->getConfig()->setOption('strip_tags', TRUE);
     $converter->getConfig()->setOption('use_autolinks', FALSE);
     $converter->getConfig()->setOption('header_style', 'atx');
     $converter->getConfig()->setOption('strip_placeholder_links', TRUE);
+    $converter->getConfig()->setOption('italic_style', '*');
+    $converter->getConfig()->setOption('bold_style', '**');
 
-    $text = trim($converter->convert($text));
+    $text = trim($converter->convert($html));
 
     return $text;
   }
