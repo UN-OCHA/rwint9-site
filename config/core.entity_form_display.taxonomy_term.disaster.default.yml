@@ -171,19 +171,13 @@ content:
     third_party_settings: {  }
   path:
     type: path
-    weight: 13
-    region: content
-    settings: {  }
-    third_party_settings: {  }
-  status:
-    type: boolean_checkbox
     weight: 11
     region: content
-    settings:
-      display_label: true
+    settings: {  }
     third_party_settings: {  }
 hidden:
   field_appeals_response_plans: true
   field_key_content: true
   field_useful_links: true
   langcode: true
+  status: true

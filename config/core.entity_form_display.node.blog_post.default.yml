@@ -21,7 +21,7 @@ mode: default
 content:
   body:
     type: text_textarea_with_summary
-    weight: 4
+    weight: 3
     region: content
     settings:
       rows: 20
@@ -34,7 +34,7 @@ content:
         hide_guidelines: '1'
   field_attached_images:
     type: media_library_widget
-    weight: 6
+    weight: 5
     region: content
     settings:
       media_types: {  }
@@ -49,7 +49,7 @@ content:
     third_party_settings: {  }
   field_image:
     type: media_library_widget
-    weight: 5
+    weight: 4
     region: content
     settings:
       media_types: {  }
@@ -66,16 +66,9 @@ content:
     third_party_settings: {  }
   path:
     type: path
-    weight: 9
+    weight: 6
     region: content
     settings: {  }
-    third_party_settings: {  }
-  status:
-    type: boolean_checkbox
-    weight: 7
-    region: content
-    settings:
-      display_label: true
     third_party_settings: {  }
   title:
     type: string_textfield
@@ -89,6 +82,7 @@ hidden:
   created: true
   langcode: true
   promote: true
+  status: true
   sticky: true
   uid: true
   url_redirects: true
