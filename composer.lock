@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "bdedf210a51f49a00d037de2afd0cf1e",
+    "content-hash": "7be541e270ba736de977d0537280b27c",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -13453,16 +13453,16 @@
         },
         {
             "name": "unocha/common_design",
-            "version": "v5.1.0",
+            "version": "dev-main",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/common_design.git",
-                "reference": "5a8af3f99af48d37818ae812db4135f0119bf563"
+                "reference": "99d344e1b84bab55dfeb7b40ea7a20576d8f56c5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/common_design/zipball/5a8af3f99af48d37818ae812db4135f0119bf563",
-                "reference": "5a8af3f99af48d37818ae812db4135f0119bf563",
+                "url": "https://api.github.com/repos/UN-OCHA/common_design/zipball/99d344e1b84bab55dfeb7b40ea7a20576d8f56c5",
+                "reference": "99d344e1b84bab55dfeb7b40ea7a20576d8f56c5",
                 "shasum": ""
             },
             "require": {
@@ -13474,10 +13474,10 @@
             ],
             "description": "OCHA Common Design base theme for Drupal 8",
             "support": {
-                "source": "https://github.com/UN-OCHA/common_design/tree/v5.1.0",
+                "source": "https://github.com/UN-OCHA/common_design/tree/main",
                 "issues": "https://github.com/UN-OCHA/common_design/issues"
             },
-            "time": "2021-11-18T19:47:47+00:00"
+            "time": "2022-03-02T15:22:05+00:00"
         },
         {
             "name": "webflo/drupal-finder",
@@ -15138,7 +15138,8 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "drupal/inline_entity_form": 5,
-        "drupal/taxonomy_term_revision": 20
+        "drupal/taxonomy_term_revision": 20,
+        "unocha/common_design": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
