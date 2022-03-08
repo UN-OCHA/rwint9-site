@@ -126,6 +126,10 @@ function reliefweb_form_date_element_process(array $element, FormStateInterface 
  *   The modified form element.
  */
 function reliefweb_form_mark_optional(array $element, FormStateInterface $form_state, array $form) {
+  if ($element === $form) {
+    return $element;
+  }
+
   $context = [
     'form_state' => $form_state,
     'form' => $form,
