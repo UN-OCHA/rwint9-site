@@ -754,7 +754,7 @@
         "version": "v1.0.2"
     },
     "unocha/common_design": {
-        "version": "dev-main#99d344e1b84bab55dfeb7b40ea7a20576d8f56c5"
+        "version": "v5.1.0"
     },
     "webflo/drupal-finder": {
         "version": "1.2.2"
