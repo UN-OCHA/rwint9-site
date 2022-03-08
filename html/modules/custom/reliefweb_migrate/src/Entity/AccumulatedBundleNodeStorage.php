@@ -2,12 +2,12 @@
 
 namespace Drupal\reliefweb_migrate\Entity;
 
-use Drupal\node\NodeStorage;
+use Drupal\reliefweb_entities\BundleNodeStorage;
 
 /**
  * Node SQL storage for the migrations that regroup queries.
  */
-class AccumulatedNodeStorage extends NodeStorage implements AccumulatedSqlContentEntityStorageInterface {
+class AccumulatedBundleNodeStorage extends BundleNodeStorage implements AccumulatedSqlContentEntityStorageInterface {
 
   use AccumulatedSqlContentEntityStorageTrait;
 

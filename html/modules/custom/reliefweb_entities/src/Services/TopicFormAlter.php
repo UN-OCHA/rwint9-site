@@ -17,6 +17,10 @@ class TopicFormAlter extends EntityFormAlterServiceBase {
   protected function addBundleFormAlterations(array &$form, FormStateInterface $form_state) {
     // Add the disaster map token help to the overview field.
     $form['field_overview']['token-help'] = static::getDisasterMapTokenHelp();
+
+    // Add an autocomplete widget to the tags.
+    $form['field_disaster_type']['#attributes']['data-with-autocomplete'] = '';
+    $form['field_theme']['#attributes']['data-with-autocomplete'] = '';
   }
 
   /**

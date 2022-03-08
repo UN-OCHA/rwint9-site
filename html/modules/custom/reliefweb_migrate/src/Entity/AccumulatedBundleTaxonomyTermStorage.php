@@ -3,12 +3,12 @@
 namespace Drupal\reliefweb_migrate\Entity;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\taxonomy\TermStorage;
+use Drupal\reliefweb_entities\BundleTaxonomyTermStorage;
 
 /**
  * Term SQL storage for the migrations that regroup queries.
  */
-class AccumulatedTermStorage extends TermStorage implements AccumulatedSqlContentEntityStorageInterface {
+class AccumulatedBundleTaxonomyTermStorage extends BundleTaxonomyTermStorage implements AccumulatedSqlContentEntityStorageInterface {
 
   use AccumulatedSqlContentEntityStorageTrait;
 
