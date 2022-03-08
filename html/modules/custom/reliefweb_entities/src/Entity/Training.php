@@ -15,6 +15,7 @@ use Drupal\reliefweb_moderation\EntityModeratedTrait;
 use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_revisions\EntityRevisionedTrait;
 use Drupal\reliefweb_rivers\RiverServiceBase;
+use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
@@ -101,11 +102,20 @@ class Training extends Node implements BundleEntityInterface, EntityModeratedInt
    * {@inheritdoc}
    */
   public function preSave(EntityStorageInterface $storage) {
+    // @todo remove when removing `reliefweb_migrate`.
+    if (!empty($this->_is_migrating)) {
+      parent::preSave($storage);
+      return;
+    }
+
     // Update the entity status based on the user posting rights.
     $this->updateModerationStatusFromPostingRights();
 
-    // Update the entity statys based on the source(s) moderation status.
+    // Update the entity status based on the source(s) moderation status.
     $this->updateModerationStatusFromSourceStatus();
+
+    // Update the entity status based on the expiration date.
+    $this->updateModerationStatusFromExpirationDate();
 
     // Update the creation date when published for the first time so that
     // the opportunity can appear at the top of the opportunity river.
@@ -120,8 +130,21 @@ class Training extends Node implements BundleEntityInterface, EntityModeratedInt
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     parent::postSave($storage, $update);
 
+    // @todo remove when removing `reliefweb_migrate`.
+    if (!empty($this->_is_migrating)) {
+      return;
+    }
+
     // Make the sources active.
     $this->updateSourceModerationStatus();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasExpired() {
+    $timestamp = DateHelper::getDateTimeStamp($this->field_registration_deadline->value);
+    return empty($timestamp) || ($timestamp < gmmktime(0, 0, 0));
   }
 
 }

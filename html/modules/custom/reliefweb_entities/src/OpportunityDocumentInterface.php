@@ -7,4 +7,12 @@ namespace Drupal\reliefweb_entities;
  */
 interface OpportunityDocumentInterface {
 
+  /**
+   * Check if the opportunity has expired.
+   *
+   * @return bool
+   *   TRUE if the opportunity has expired.
+   */
+  public function hasExpired();
+
 }
