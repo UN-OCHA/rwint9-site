@@ -32,6 +32,9 @@ libraries-extend:
   common_design/cd-button:
     - common_design_subtheme/cd-button
 
+  common_design/cd-form--preview:
+    - common_design_subtheme/rw-preview
+
   reliefweb_fields/reliefweb-links:
     - common_design_subtheme/rw-links
 
