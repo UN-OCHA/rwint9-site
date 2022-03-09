@@ -33,6 +33,7 @@ dependencies:
     - reliefweb_docstore
     - reliefweb_fields
     - reliefweb_form
+    - reliefweb_guidelines
     - reliefweb_homepage
     - reliefweb_moderation
     - reliefweb_revisions
@@ -48,6 +49,7 @@ is_admin: null
 permissions:
   - 'access content moderation backend'
   - 'access content moderation features'
+  - 'access editorial guidelines'
   - 'access media overview'
   - 'access reliefweb links field validation'
   - 'access reliefweb private files'

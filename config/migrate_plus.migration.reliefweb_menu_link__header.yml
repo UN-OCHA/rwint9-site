@@ -1,14 +1,21 @@
-id: reliefweb_menu_link__help
-label: Migrate ReliefWeb help menu links.
-migration_group: reliefweb_base
+uuid: 1988fe46-36e3-4c14-88af-0cbb86413b56
+langcode: en
+status: true
 dependencies:
   enforced:
     module:
       - reliefweb_migrate
-audit: true
+_core:
+  default_config_hash: pi8p-ZwjH0M6dxQ1YNfCO4hlMVjQpYFgDDIFZWR2b88
+id: reliefweb_menu_link__header
+class: null
+field_plugin_method: null
+cck_plugin_method: null
 migration_tags:
-  - Drupal 7
+  - 'Drupal 7'
   - Content
+migration_group: reliefweb_base
+label: 'Migrate ReliefWeb header menu links.'
 source:
   plugin: embedded_data
   data_rows:
@@ -16,9 +23,16 @@ source:
       id: 13
       title: Help
       description: Help
-      link_uri: base:/help
+      link_uri: 'base:/help'
       external: 0
       weight: 0
+    -
+      id: 14
+      title: Guidelines
+      description: Guidelines
+      link_uri: 'internal:/guidelines'
+      external: 0
+      weight: -1
   ids:
     id:
       type: integer
@@ -28,9 +42,6 @@ source:
     enabled: 1
     expanded: 0
     parent: null
-destination:
-  plugin: entity:menu_link_content
-  no_stub: true
 process:
   id: id
   bundle: constants/bundle
@@ -43,6 +54,9 @@ process:
   expanded: constants/expanded
   enabled: constants/enabled
   parent: constants/parent
+destination:
+  plugin: 'entity:menu_link_content'
+  no_stub: true
 migration_dependencies:
   required:
-    - rw_menu_link__main
+    - rw_menu_link__footer
