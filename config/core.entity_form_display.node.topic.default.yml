@@ -50,7 +50,7 @@ content:
     third_party_settings: {  }
   field_disaster_type:
     type: reliefweb_entity_reference_select
-    weight: 26
+    weight: 13
     region: content
     settings:
       sort: label
@@ -118,7 +118,7 @@ content:
     third_party_settings: {  }
   field_theme:
     type: reliefweb_entity_reference_select
-    weight: 27
+    weight: 14
     region: content
     settings:
       sort: label
@@ -132,16 +132,9 @@ content:
     third_party_settings: {  }
   path:
     type: path
-    weight: 14
-    region: content
-    settings: {  }
-    third_party_settings: {  }
-  status:
-    type: boolean_checkbox
     weight: 12
     region: content
-    settings:
-      display_label: true
+    settings: {  }
     third_party_settings: {  }
   title:
     type: string_textfield
@@ -155,6 +148,7 @@ hidden:
   created: true
   langcode: true
   promote: true
+  status: true
   sticky: true
   uid: true
   url_redirects: true

@@ -26,6 +26,7 @@ dependencies:
     - filter
     - google_tag
     - guidelines
+    - reliefweb_guidelines
     - reliefweb_users
     - taxonomy
     - taxonomy_term_revision
@@ -34,6 +35,7 @@ label: Webmaster
 weight: 4
 is_admin: null
 permissions:
+  - 'access editorial guidelines'
   - 'add content to books'
   - 'add guideline entities'
   - 'administer google tag manager'

@@ -57,14 +57,14 @@ content:
         hide_guidelines: '1'
   field_bury:
     type: boolean_checkbox
-    weight: 22
+    weight: 21
     region: content
     settings:
       display_label: true
     third_party_settings: {  }
   field_content_format:
     type: reliefweb_entity_reference_select
-    weight: 15
+    weight: 14
     region: content
     settings:
       sort: label
@@ -72,7 +72,7 @@ content:
     third_party_settings: {  }
   field_country:
     type: reliefweb_entity_reference_select
-    weight: 11
+    weight: 10
     region: content
     settings:
       sort: label
@@ -108,7 +108,7 @@ content:
     third_party_settings: {  }
   field_disaster:
     type: reliefweb_disaster
-    weight: 13
+    weight: 12
     region: content
     settings:
       sort: id
@@ -146,7 +146,7 @@ content:
     third_party_settings: {  }
   field_disaster_type:
     type: reliefweb_entity_reference_select
-    weight: 14
+    weight: 13
     region: content
     settings:
       sort: label
@@ -154,7 +154,7 @@ content:
     third_party_settings: {  }
   field_embargo_date:
     type: datetime_datelist
-    weight: 6
+    weight: 5
     region: content
     settings:
       increment: 1
@@ -163,26 +163,26 @@ content:
     third_party_settings: {  }
   field_feature:
     type: options_buttons
-    weight: 21
+    weight: 20
     region: content
     settings: {  }
     third_party_settings: {  }
   field_file:
     type: reliefweb_file
-    weight: 101
+    weight: 24
     region: content
     settings: {  }
     third_party_settings: {  }
   field_headline:
     type: boolean_checkbox
-    weight: 17
+    weight: 16
     region: content
     settings:
       display_label: true
     third_party_settings: {  }
   field_headline_image:
     type: inline_entity_form_complex
-    weight: 19
+    weight: 18
     region: content
     settings:
       form_mode: media_library
@@ -199,7 +199,7 @@ content:
     third_party_settings: {  }
   field_headline_summary:
     type: string_textarea
-    weight: 20
+    weight: 19
     region: content
     settings:
       rows: 5
@@ -207,7 +207,7 @@ content:
     third_party_settings: {  }
   field_headline_title:
     type: string_textfield
-    weight: 18
+    weight: 17
     region: content
     settings:
       size: 60
@@ -215,7 +215,7 @@ content:
     third_party_settings: {  }
   field_image:
     type: inline_entity_form_complex
-    weight: 4
+    weight: 3
     region: content
     settings:
       form_mode: media_library
@@ -238,7 +238,7 @@ content:
     third_party_settings: {  }
   field_notify:
     type: string_textarea
-    weight: 23
+    weight: 22
     region: content
     settings:
       rows: 3
@@ -246,19 +246,19 @@ content:
     third_party_settings: {  }
   field_ocha_product:
     type: options_buttons
-    weight: 8
+    weight: 7
     region: content
     settings: {  }
     third_party_settings: {  }
   field_origin:
     type: options_buttons
-    weight: 9
+    weight: 8
     region: content
     settings: {  }
     third_party_settings: {  }
   field_origin_notes:
     type: string_textfield
-    weight: 10
+    weight: 9
     region: content
     settings:
       size: 60
@@ -266,13 +266,13 @@ content:
     third_party_settings: {  }
   field_original_publication_date:
     type: reliefweb_datetime
-    weight: 5
+    weight: 4
     region: content
     settings: {  }
     third_party_settings: {  }
   field_primary_country:
     type: reliefweb_entity_reference_select
-    weight: 12
+    weight: 11
     region: content
     settings:
       sort: label
@@ -308,7 +308,7 @@ content:
     third_party_settings: {  }
   field_source:
     type: reliefweb_source
-    weight: 7
+    weight: 6
     region: content
     settings:
       sort: label
@@ -352,7 +352,7 @@ content:
     third_party_settings: {  }
   field_theme:
     type: reliefweb_entity_reference_select
-    weight: 16
+    weight: 15
     region: content
     settings:
       sort: label
@@ -360,16 +360,9 @@ content:
     third_party_settings: {  }
   path:
     type: path
-    weight: 25
+    weight: 23
     region: content
     settings: {  }
-    third_party_settings: {  }
-  status:
-    type: boolean_checkbox
-    weight: 24
-    region: content
-    settings:
-      display_label: true
     third_party_settings: {  }
   title:
     type: string_textfield
@@ -384,6 +377,7 @@ hidden:
   field_vulnerable_groups: true
   langcode: true
   promote: true
+  status: true
   sticky: true
   uid: true
   url_redirects: true

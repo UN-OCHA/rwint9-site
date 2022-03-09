@@ -4,4 +4,4 @@ reliefweb_guidelines.guidelines:
     _title: 'Guidelines'
     _controller: '\Drupal\reliefweb_guidelines\Controller\GuidelineSinglePageController::getPageContent'
   requirements:
-    _permission: 'access content'
+    _permission: 'access editorial guidelines'

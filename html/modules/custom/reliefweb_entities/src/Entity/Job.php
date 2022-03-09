@@ -14,6 +14,7 @@ use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\EntityModeratedTrait;
 use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_revisions\EntityRevisionedTrait;
+use Drupal\reliefweb_utility\Helpers\DateHelper;
 
 /**
  * Bundle class for job nodes.
@@ -50,6 +51,8 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
     ]);
 
     // Closing date cannot be in the past.
+    // @todo remove this constraint and add it to the form only as we want to
+    // be able to save expired jobs for example when importing.
     $fields['field_job_closing_date']->addConstraint('DateNotInPast', [
       'statuses' => ['pending', 'published'],
       'permission' => 'edit any job content',
@@ -119,11 +122,20 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
       $this->set('field_theme', $themes);
     }
 
+    // @todo remove when removing `reliefweb_migrate`.
+    if (!empty($this->_is_migrating)) {
+      parent::preSave($storage);
+      return;
+    }
+
     // Update the entity status based on the user posting rights.
     $this->updateModerationStatusFromPostingRights();
 
-    // Update the entity statys based on the source(s) moderation status.
+    // Update the entity status based on the source(s) moderation status.
     $this->updateModerationStatusFromSourceStatus();
+
+    // Update the entity status based on the expiration date.
+    $this->updateModerationStatusFromExpirationDate();
 
     // Update the creation date when published for the first time so that
     // the opportunity can appear at the top of the opportunity river.
@@ -138,8 +150,21 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     parent::postSave($storage, $update);
 
+    // @todo remove when removing `reliefweb_migrate`.
+    if (!empty($this->_is_migrating)) {
+      return;
+    }
+
     // Make the sources active.
     $this->updateSourceModerationStatus();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasExpired() {
+    $timestamp = DateHelper::getDateTimeStamp($this->field_job_closing_date->value);
+    return empty($timestamp) || ($timestamp < gmmktime(0, 0, 0));
   }
 
   /**

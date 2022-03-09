@@ -9,3 +9,8 @@
 .rw-404 .rw-page-title {
   margin-bottom: 24px;
 }
+
+/* Avoid having a h1.rw-page-title attached to the page content. */
+.rw-page-title + .rw-page-content {
+  margin-top: 24px;
+}

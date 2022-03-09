@@ -195,6 +195,12 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
    * {@inheritdoc}
    */
   public function preSave(EntityStorageInterface $storage) {
+    // @todo remove when removing `reliefweb_migrate`.
+    if (!empty($this->_is_migrating)) {
+      parent::preSave($storage);
+      return;
+    }
+
     parent::preSave($storage);
 
     // Change the publication date if bury is selected, to the original
@@ -248,6 +254,11 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
    */
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     parent::postSave($storage, $update);
+
+    // @todo remove when removing `reliefweb_migrate`.
+    if (!empty($this->_is_migrating)) {
+      return;
+    }
 
     $this->sendPublicationNotification();
   }

@@ -20,12 +20,20 @@ trait OpportunityDocumentTrait {
    * Update the status for the entity based on the user posting rights.
    */
   protected function updateModerationStatusFromPostingRights() {
+    // In theory the revision user here, is the current user saving the entity.
     $user = $this->getRevisionUser();
     $status = $this->getModerationStatus();
 
+    // Skip if there is no revision user. That should normally not happen with
+    // new content but some old revisions may reference users that don't exist
+    // anymore (which should not happen either but...).
+    if (empty($user)) {
+      return;
+    }
+
     // For non editors, we determine the real status based on the user
     // posting rights for the selected sources.
-    if (!UserHelper::userHasRoles(['editor']) && $status === 'pending') {
+    if (!UserHelper::userHasRoles(['editor'], $user) && $status === 'pending') {
       // Retrieve the list of sources and check the user rights.
       if (!$this->field_source->isEmpty()) {
         // Extract source ids.
@@ -83,6 +91,15 @@ trait OpportunityDocumentTrait {
           }
         }
       }
+    }
+  }
+
+  /**
+   * Update the status for the entity based on the expiration date.
+   */
+  protected function updateModerationStatusFromExpirationDate() {
+    if ($this->getModerationStatus() === 'published' && $this->hasExpired()) {
+      $this->setModerationStatus('expired');
     }
   }
 

@@ -40,16 +40,9 @@ content:
     third_party_settings: {  }
   path:
     type: path
-    weight: 5
+    weight: 3
     region: content
     settings: {  }
-    third_party_settings: {  }
-  status:
-    type: boolean_checkbox
-    weight: 4
-    region: content
-    settings:
-      display_label: true
     third_party_settings: {  }
   title:
     type: string_textfield
@@ -63,6 +56,7 @@ hidden:
   created: true
   langcode: true
   promote: true
+  status: true
   sticky: true
   uid: true
   url_redirects: true

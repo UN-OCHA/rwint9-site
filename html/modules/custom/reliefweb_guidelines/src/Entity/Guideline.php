@@ -97,4 +97,15 @@ class Guideline extends GuidelineBase implements EntityModeratedInterface, Entit
     return 'published';
   }
 
+  /**
+   * Get the list, this guideline belongs to.
+   *
+   * @return \Drupal\reliefweb_guidelines\Entity\GuidelineList|null
+   *   Guideline List.
+   */
+  public function getGuidelineList() {
+    $parents = $this->getParents();
+    return !empty($parents) ? reset($parents) : NULL;
+  }
+
 }
