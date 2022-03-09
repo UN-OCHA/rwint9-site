@@ -6,6 +6,7 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Link;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
+use Drupal\reliefweb_guidelines\Plugin\Field\FieldWidget\GuidelineFieldTargetSelectWidget;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 
@@ -250,6 +251,30 @@ class GuidelineModeration extends ModerationServiceBase {
       'form' => 'omnibox',
       'widget' => 'datepicker',
     ];
+    $definitions['list'] = [
+      'type' => 'field',
+      'field' => 'parent',
+      'column' => 'target_id',
+      'label' => $this->t('Guideline List'),
+      'shortcut' => 'gl',
+      'form' => 'omnibox',
+      'widget' => 'autocomplete',
+      'autocomplete_callback' => 'getGuidelineListAutocompleteSuggestions',
+      'operator' => 'OR',
+      'allow_no_value' => TRUE,
+    ];
+    $definitions['field'] = [
+      'type' => 'field',
+      'field' => 'field_field',
+      'column' => 'value',
+      'label' => $this->t('Form field'),
+      'shortcut' => 'ff',
+      'form' => 'omnibox',
+      'widget' => 'autocomplete',
+      'autocomplete_callback' => 'getGuidelineTargetFieldAutocompleteSuggestions',
+      'operator' => 'OR',
+      'allow_no_value' => TRUE,
+    ];
     return $definitions;
   }
 
@@ -259,6 +284,121 @@ class GuidelineModeration extends ModerationServiceBase {
   public function checkModerationPageAccess(AccountInterface $account) {
     return parent::checkModerationPageAccess($account)
       ->andIf(AccessResult::allowedIfHasPermission($account, 'edit guideline entities'));
+  }
+
+  /**
+   * Get guideline list suggestions for the given term.
+   *
+   * @param string $filter
+   *   Filter name.
+   * @param string $term
+   *   Autocomplete search term.
+   * @param string $conditions
+   *   Stringified database conditions in the form:
+   *   "(@field = 'bar' AND @field = 'bar')".
+   *   This conditions will be duplicated for each passed field and combined
+   *   into a OR condition.
+   * @param array $replacements
+   *   Value replacements for the search condition.
+   *
+   * @return array
+   *   List of suggestions. Each suggestion is an object with a value, label
+   *   and optional abbreviation (abbr).
+   */
+  protected function getGuidelineListAutocompleteSuggestions($filter, $term, $conditions, array $replacements) {
+    $entity_type_id = $this->getEntityTypeId();
+
+    $table = $this->getEntityTypeDataTable($entity_type_id);
+    $alias = $table;
+    $id_field = $this->getEntityTypeIdField($entity_type_id);
+    $label_field = $this->getEntityTypeLabelField($entity_type_id);
+    $bundle_field = $this->getEntityTypeBundleField($entity_type_id);
+
+    // List of fields used for the condition replacements.
+    $fields = [$alias . '.' . $label_field];
+
+    // Base query.
+    $query = $this->getDatabase()->select($table, $alias);
+    $query->addField($alias, $id_field, 'value');
+    $query->addField($alias, $label_field, 'label');
+    $query->condition($alias . '.' . $bundle_field, 'guideline_list', '=');
+    $query->range(0, 10);
+    $query->distinct();
+
+    // Add conditions.
+    $conditions = $this->buildFilterConditions($conditions, $fields);
+    $query->where($conditions, $replacements);
+
+    // Sort by name.
+    $query->orderBy($alias . '.name', 'ASC');
+
+    return $query->execute()?->fetchAll() ?? [];
+  }
+
+  /**
+   * Get guideline target field suggestions for the given term.
+   *
+   * @param string $filter
+   *   Filter name.
+   * @param string $term
+   *   Autocomplete search term.
+   * @param string $conditions
+   *   Stringified database conditions in the form:
+   *   "(@field = 'bar' AND @field = 'bar')".
+   *   This conditions will be duplicated for each passed field and combined
+   *   into a OR condition.
+   * @param array $replacements
+   *   Value replacements for the search condition.
+   *
+   * @return array
+   *   List of suggestions. Each suggestion is an object with a value, label
+   *   and optional abbreviation (abbr).
+   */
+  protected function getGuidelineTargetFieldAutocompleteSuggestions($filter, $term, $conditions, array $replacements) {
+    $form_fields = static::getAvailableTargetFormFields();
+    if (empty($form_fields)) {
+      return [];
+    }
+
+    $parts = explode(' ', $term);
+
+    $suggestions = [];
+    foreach ($form_fields as $value => $label) {
+      foreach ($parts as $part) {
+        if (mb_strpos($label, $part) === FALSE && mb_strpos($value, $part) === FALSE) {
+          continue 2;
+        }
+      }
+      $suggestions[] = (object) [
+        'value' => $value,
+        'label' => $label,
+      ];
+    }
+
+    return $suggestions;
+  }
+
+  /**
+   * Get the list of available target form fields.
+   *
+   * @return array
+   *   Associative array of available form fields with keys in the form
+   *   `entity_type_id.bundle.field_name` and with labels as values.
+   */
+  protected static function getAvailableTargetFormFields() {
+    static $fields;
+
+    if (!isset($fields)) {
+      $component = \Drupal::service('entity_display.repository')
+        ->getFormDisplay('guideline', 'field_guideline', 'default')
+        ?->getComponent('field_field') ?? [];
+
+      $enabled_entities = $component['settings']['enabled_entities'] ?? [];
+
+      $fields = GuidelineFieldTargetSelectWidget::getAvailableFormFields($enabled_entities);
+    }
+
+    return $fields;
   }
 
 }
