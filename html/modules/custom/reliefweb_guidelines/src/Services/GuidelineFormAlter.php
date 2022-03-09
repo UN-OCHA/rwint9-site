@@ -31,9 +31,8 @@ class GuidelineFormAlter extends EntityFormAlterServiceBase {
     $form['field_images']['widget']['#theme_wrappers'] = ['fieldset'];
 
     // Transform the field selector into a select with autocomplete.
-    $form['field_field']['widget']['#type'] = 'select';
     $form['field_field']['widget']['#attributes']['data-with-autocomplete'] = '';
-    $form['field_field']['widget']['#description'] = $this->t('Select the node or term field this guideline is for.');
+    $form['field_field']['widget']['#description'] = $this->t('Select the node or term field(s) this guideline is for.');
 
     // Url to create a new guideline list.
     $new_list_url = Url::fromRoute('entity.guideline.add_form', [

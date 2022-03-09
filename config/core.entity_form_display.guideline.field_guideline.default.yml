@@ -12,8 +12,9 @@ dependencies:
     - guidelines.guideline_type.field_guideline
     - image.style.thumbnail
   module:
-    - guidelines
+    - allowed_formats
     - link
+    - reliefweb_guidelines
     - svg_image
     - text
 id: guideline.field_guideline.default
@@ -26,11 +27,14 @@ content:
     weight: 1
     region: content
     settings:
-      rows: 5
+      rows: 20
       placeholder: ''
-    third_party_settings: {  }
+    third_party_settings:
+      allowed_formats:
+        hide_help: '0'
+        hide_guidelines: '1'
   field_field:
-    type: guideline_field_target_widget
+    type: guideline_field_target_select_widget
     weight: 4
     region: content
     settings:
