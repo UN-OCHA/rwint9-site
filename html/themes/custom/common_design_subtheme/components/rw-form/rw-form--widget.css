@@ -264,3 +264,39 @@ form .ief-form .fieldset-wrapper {
 .rw-file-widget .warning.tabledrag-changed {
   color: red;
 }
+
+/* Table drag. */
+.tabledrag-toggle-weight-wrapper {
+  margin-bottom: 0;
+}
+.messages.tabledrag-changed-warning {
+  color: red;
+}
+.draggable a.tabledrag-handle {
+  display: inline-flex;
+  float: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 32px;
+  margin-left: 0;
+}
+.draggable a.tabledrag-handle .handle {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+.draggable .warning.tabledrag-changed {
+  margin-left: 4px;
+  color: red;
+}
+
+.cd-flow > .tabledrag-toggle-weight-wrapper {
+  margin-top: var(--cd-flow-space, 1rem);
+}
+.cd-flow > .tabledrag-toggle-weight-wrapper ~ table,
+.cd-flow > .tabledrag-toggle-weight-wrapper ~ .tableresponsive-toggle-columns,
+.cd-flow > .tabledrag-toggle-weight-wrapper ~ .tabledrag-changed-warning {
+  margin-top: 0;
+}

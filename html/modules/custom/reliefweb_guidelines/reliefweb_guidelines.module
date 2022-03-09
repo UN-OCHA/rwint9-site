@@ -11,6 +11,7 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
 use Drupal\reliefweb_guidelines\Controller\GuidelineSinglePageController;
 use Drupal\reliefweb_guidelines\Entity\Guideline;
+use Drupal\reliefweb_guidelines\Form\GuidelineSortForm;
 use Drupal\reliefweb_guidelines\ModeratedGuidelineStorageSchema;
 use Drupal\reliefweb_revisions\Services\EntityHistory;
 
@@ -63,6 +64,9 @@ function reliefweb_guidelines_entity_base_field_info(EntityTypeInterface $entity
 function reliefweb_guidelines_entity_type_alter(array &$entity_types) {
   if (isset($entity_types['guideline'])) {
     $entity_types['guideline']->setHandlerClass('storage_schema', ModeratedGuidelineStorageSchema::class);
+
+    // Replace the sort form handler.
+    $entity_types['guideline']->setFormClass('sort', GuidelineSortForm::class);
   }
 }
 
