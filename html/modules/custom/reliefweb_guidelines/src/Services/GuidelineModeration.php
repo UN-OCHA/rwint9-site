@@ -3,7 +3,9 @@
 namespace Drupal\reliefweb_guidelines\Services;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Link;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 
@@ -79,12 +81,34 @@ class GuidelineModeration extends ModerationServiceBase {
       $data = [];
 
       // Title.
-      $data['title'] = $entity->toLink()->toString();
+      $data['title'] = Link::fromTextAndUrl($entity->label(), Url::fromUserInput('/guidelines', [
+        'fragment' => $entity->getShortId(),
+      ]));
 
       // Information.
       $info = [];
-      // @todo add parent guideline list.
+      $list = $entity->getGuidelineList();
+      if (!empty($list)) {
+        $info['list'] = $list->toLink()->toString();
+      }
       $data['info'] = array_filter($info);
+
+      $details = [];
+      if (!$entity->field_field->isEmpty()) {
+        $fields = [];
+        foreach ($entity->field_field as $item) {
+          $field_label = static::getTargetFieldName($item->value);
+          if (!empty($field_label)) {
+            $fields[] = $field_label;
+          }
+        }
+        if (!empty($fields)) {
+          $details['fields'] = $this->formatPlural(count($fields), '<strong>Field:</strong> @fields', '<strong>Fields:</strong> @fields', [
+            '@fields' => implode(', ', $fields),
+          ]);
+        }
+      }
+      $data['details'] = array_filter($details);
 
       // Revision information.
       $data['revision'] = $this->getEntityRevisionData($entity);
@@ -101,6 +125,38 @@ class GuidelineModeration extends ModerationServiceBase {
     }
 
     return $rows;
+  }
+
+  /**
+   * Get the label of a guideline target field.
+   *
+   * @param string $value
+   *   Target field in the form `entity_type.bunde.field_name`.
+   *
+   * @return string
+   *   The field label.
+   */
+  protected static function getTargetFieldName($value) {
+    if (empty($value)) {
+      return '';
+    }
+    [$entity_type_id, $bundle, $field_name] = explode('.', $value);
+
+    $bundle_info = \Drupal::service('entity_type.bundle.info')
+      ->getBundleInfo($entity_type_id);
+
+    $field_definitions = \Drupal::service('entity_field.manager')
+      ->getFieldDefinitions($entity_type_id, $bundle);
+
+    $field_label = $field_name;
+    if (isset($field_definitions[$field_name])) {
+      $field_label = $field_definitions[$field_name]->getLabel();
+    }
+
+    return implode(' > ', [
+      $bundle_info[$bundle]['label'] ?? $bundle,
+      $field_label,
+    ]);
   }
 
   /**

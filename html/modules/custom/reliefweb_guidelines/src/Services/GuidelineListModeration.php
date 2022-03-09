@@ -3,7 +3,9 @@
 namespace Drupal\reliefweb_guidelines\Services;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Link;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 
@@ -77,6 +79,20 @@ class GuidelineListModeration extends ModerationServiceBase {
 
       // Entity data cell.
       $data = [];
+
+      // Add link to the sort form.
+      $children = $entity->getChildren();
+      if (!empty($children)) {
+        $label = $this->formatPlural(count($children), '1 child guideline', '@count child guidelines');
+        // Sigh... we cannot use `$entity->toLink($label, 'sort-form')` because
+        // that would make Drupal look for a `entity.guideline.sort_form` route
+        // which doesn't exist because the route for the sort form is
+        // defined as `entity.{entity_type_id}.sort`...
+        $url = Url::fromRoute('entity.' . $entity->getEntityTypeId() . '.sort', [
+          'guideline' => $entity->id(),
+        ]);
+        $data['info']['sort'] = Link::fromTextAndUrl($label, $url);
+      }
 
       // Title.
       $data['title'] = $entity->toLink()->toString();
