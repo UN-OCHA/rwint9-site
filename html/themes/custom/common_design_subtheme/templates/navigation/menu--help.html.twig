@@ -67,6 +67,11 @@
               <use xlink:href="#cd-icon--help"></use>
             </svg>
           {% endif %}
+          {% if menu_level == 0 and item.url|render == '/guidelines' %}
+            <svg class="cd-icon cd-icon--education" aria-hidden="true" focusable="false" width="16" height="16">
+              <use xlink:href="#cd-icon--education"></use>
+            </svg>
+          {% endif %}
           <span>{{ title }}</span>
         </a>
         {% endspaceless %}
