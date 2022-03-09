@@ -7,7 +7,6 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
-use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
 
 /**
@@ -187,26 +186,6 @@ class TrainingModeration extends ModerationServiceBase {
       'on-hold',
       'published',
     ]);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function entityPresave(EntityModeratedInterface $entity) {
-    // Set the status of the entity as expired if past the deadline.
-    $status = $entity->getModerationStatus();
-
-    if ($status === 'published') {
-      $time = gmmktime(0, 0, 0);
-      $date = DateHelper::getDateTimeStamp($entity->field_registration_deadline->value);
-
-      // Set status to expired if the current date is past the deadline.
-      if (!empty($date) && $date < $time) {
-        $entity->setModerationStatus('expired');
-      }
-    }
-
-    parent::entityPresave($entity);
   }
 
   /**
