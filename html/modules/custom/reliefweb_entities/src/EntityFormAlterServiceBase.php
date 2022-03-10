@@ -127,6 +127,8 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
       return;
     }
 
+    $form['#attributes']['class'][] = 'rw-entity-form-altered';
+
     // Add the form alterations specific to the bundle.
     $this->addBundleFormAlterations($form, $form_state);
 

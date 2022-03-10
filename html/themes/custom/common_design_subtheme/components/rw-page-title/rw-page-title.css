@@ -14,3 +14,13 @@
 .rw-page-title + .rw-page-content {
   margin-top: 24px;
 }
+
+/* Spacing between page title and content on generic forms. */
+.rw-page-title + form:not(.rw-entity-form-altered) {
+  margin-top: 24px;
+}
+
+/* Spacing between page title and table (ex: revisions). */
+.rw-page-title + table {
+  margin-top: 24px;
+}
