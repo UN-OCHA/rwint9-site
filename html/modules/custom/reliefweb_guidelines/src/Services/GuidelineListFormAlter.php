@@ -14,17 +14,7 @@ class GuidelineListFormAlter extends EntityFormAlterServiceBase {
    * {@inheritdoc}
    */
   protected function addBundleFormAlterations(array &$form, FormStateInterface $form_state) {
-    // Hide the status field.
-    $form['status']['#access'] = FALSE;
-
-    // Force the new revision.
-    $form['new_revision']['#default_value'] = TRUE;
-    $form['new_revision']['#access'] = FALSE;
-
-    // Disallow selecting parents for guideline lists.
-    $form['relations']['#access'] = FALSE;
-
-    // Hide the url alias.
+    // Hide the url alias as it's not used for guideline lists.
     $form['path']['#access'] = FALSE;
   }
 
