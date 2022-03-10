@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_guidelines\Entity;
 
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\guidelines\Entity\Guideline as GuidelineBase;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\EntityModeratedTrait;
@@ -21,6 +22,33 @@ class GuidelineList extends GuidelineBase implements EntityModeratedInterface, E
    */
   public function getDefaultModerationStatus() {
     return 'published';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function postDelete(EntityStorageInterface $storage, array $entities) {
+    // Remove reference to the guideline list from guidelines that have it as
+    // parent.
+    if (!empty($entities)) {
+      $ids = [];
+      foreach ($entities as $entity) {
+        $ids[$entity->id()] = $entity->id();
+      }
+
+      $guidelines = $storage->loadByProperties([
+        'parent' => $ids,
+      ]);
+
+      foreach ($guidelines as $guideline) {
+        $guideline->parent->filter(function ($item) use ($ids) {
+          return !isset($ids[$item->target_id]);
+        });
+        $guideline->save();
+      }
+    }
+
+    parent::postDelete($storage, $entities);
   }
 
 }
