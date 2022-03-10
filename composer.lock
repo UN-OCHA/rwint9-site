@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7be541e270ba736de977d0537280b27c",
+    "content-hash": "b33c52f95904d69a6d064a667c727d0c",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -13453,31 +13453,32 @@
         },
         {
             "name": "unocha/common_design",
-            "version": "dev-main",
+            "version": "v6.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/common_design.git",
-                "reference": "99d344e1b84bab55dfeb7b40ea7a20576d8f56c5"
+                "reference": "6d8222a5d87bfb6effbd22f41676512a021a6c53"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/common_design/zipball/99d344e1b84bab55dfeb7b40ea7a20576d8f56c5",
-                "reference": "99d344e1b84bab55dfeb7b40ea7a20576d8f56c5",
+                "url": "https://api.github.com/repos/UN-OCHA/common_design/zipball/6d8222a5d87bfb6effbd22f41676512a021a6c53",
+                "reference": "6d8222a5d87bfb6effbd22f41676512a021a6c53",
                 "shasum": ""
             },
             "require": {
                 "composer/installers": "^1.2"
             },
             "type": "drupal-theme",
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "GPL-2.0-only"
             ],
             "description": "OCHA Common Design base theme for Drupal 8",
             "support": {
-                "source": "https://github.com/UN-OCHA/common_design/tree/main",
-                "issues": "https://github.com/UN-OCHA/common_design/issues"
+                "issues": "https://github.com/UN-OCHA/common_design/issues",
+                "source": "https://github.com/UN-OCHA/common_design/tree/v6.0.0"
             },
-            "time": "2022-03-02T15:22:05+00:00"
+            "time": "2022-03-09T10:50:04+00:00"
         },
         {
             "name": "webflo/drupal-finder",
@@ -15138,8 +15139,7 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "drupal/inline_entity_form": 5,
-        "drupal/taxonomy_term_revision": 20,
-        "unocha/common_design": 20
+        "drupal/taxonomy_term_revision": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
@@ -15147,5 +15147,5 @@
         "php": ">=8.0"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.1.0"
 }
