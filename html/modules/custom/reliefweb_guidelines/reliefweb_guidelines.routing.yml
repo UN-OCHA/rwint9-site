@@ -5,3 +5,11 @@ reliefweb_guidelines.guidelines:
     _controller: '\Drupal\reliefweb_guidelines\Controller\GuidelineSinglePageController::getPageContent'
   requirements:
     _permission: 'access editorial guidelines'
+
+reliefweb_guidelines.guideline_list.sort:
+  path: '/admin/structure/guideline_list/sort'
+  defaults:
+    _title: 'Sort guideline lists'
+    _form: '\Drupal\reliefweb_guidelines\Form\GuidelineListSortForm'
+  requirements:
+    _permission: 'sort editorial guidelines'

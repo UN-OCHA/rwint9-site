@@ -13,4 +13,4 @@ visibility:
   request_path:
     id: request_path
     negate: false
-    pages: "/moderation/content/*\r\n/user/*/edit\r\n/user/*/notifications\r\n/user/*/bookmarks\r\n/user/*/posts\r\n/user/*/contact\r\n/admin/community-topics\r\n/admin/reliefweb_revisions/history/*/*\r\n/admin/people\r\n/admin/structure/guideline/*"
+    pages: "/moderation/content/*\r\n/user/*/edit\r\n/user/*/notifications\r\n/user/*/bookmarks\r\n/user/*/posts\r\n/user/*/contact\r\n/admin/community-topics\r\n/admin/reliefweb_revisions/history/*/*\r\n/admin/people\r\n/admin/structure/guideline/*\r\n/admin/structure/guideline_list/*"

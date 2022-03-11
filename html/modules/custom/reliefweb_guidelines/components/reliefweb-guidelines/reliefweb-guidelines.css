@@ -836,3 +836,11 @@ aside nav a.active + a {
   vertical-align: middle;
   background: url("./assets/external-link.svg") 0 0 no-repeat;
 }
+
+.rw-guidelines-exit-link {
+  position: absolute;
+  top: 18px;
+  left: 220px;
+  color: white;
+  font-size: 12px;
+}

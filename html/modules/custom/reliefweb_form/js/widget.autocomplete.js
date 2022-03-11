@@ -604,6 +604,11 @@
         }
 
         var multiple = element.hasAttribute('multiple');
+        var id = element.id;
+
+        // Remove the id from the element, we'll add it to the input so that
+        // error links for example or clicking on the label for focus work.
+        element.removeAttribute('id');
 
         // Mark the select as being processed for autocomplete.
         element.classList.add('rw-autocomplete-select');
@@ -621,6 +626,7 @@
         input.setAttribute('type', 'search');
         input.setAttribute('autocomplete', 'off');
         input.setAttribute('placeholder', t('type and select...'));
+        input.setAttribute('id', id);
         input.classList.add('rw-autocomplete-input');
 
         // Toggler button to display all the options.
@@ -633,7 +639,7 @@
         // Prepare the selection container.
         var selection = document.createElement('div');
         selection.setAttribute('data-selection', '');
-        selection.setAttribute('id', element.id + '--selection');
+        selection.setAttribute('id', id + '--selection');
         selection.classList.add('rw-selection');
 
         // Wrapper for the autocomplete components.

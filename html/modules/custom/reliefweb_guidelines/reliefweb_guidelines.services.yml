@@ -1,4 +1,8 @@
 services:
+  reliefweb_guidelines.route_subscriber:
+    class: 'Drupal\reliefweb_guidelines\Routing\RouteSubscriber'
+    tags:
+      - { name: event_subscriber }
   reliefweb_moderation.field_guideline.moderation:
     class: Drupal\reliefweb_guidelines\Services\GuidelineModeration
     arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation']

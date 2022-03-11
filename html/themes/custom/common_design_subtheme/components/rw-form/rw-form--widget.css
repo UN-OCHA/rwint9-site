@@ -233,6 +233,7 @@ form .ief-form .fieldset-wrapper {
 .rw-file-widget summary {
   display: flex;
   align-items: baseline;
+  list-style-type: none;
   cursor: pointer;
 }
 .rw-file-widget summary > span {
@@ -249,7 +250,7 @@ form .ief-form .fieldset-wrapper {
   height: 12px;
   margin-right: 6px;
   content: "";
-  background: var(--rw-icons--toggle--down--12--dark-blue);
+  background: var(--rw-icons--common--arrow-right--12--dark-blue);
 }
 .rw-file-widget details[open] > summary {
   margin-bottom: 8px;
@@ -257,7 +258,7 @@ form .ief-form .fieldset-wrapper {
   border-bottom: 1px solid var(--cd-reliefweb-brand-grey--light);
 }
 .rw-file-widget details[open] > summary::before {
-  background: var(--rw-icons--toggle--up--12--dark-blue);
+  background: var(--rw-icons--toggle--down--12--dark-blue);
 }
 
 /* Warning when re-ordered. */

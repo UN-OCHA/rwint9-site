@@ -2,10 +2,14 @@
 
 namespace Drupal\reliefweb_guidelines\Form;
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\guidelines\Entity\GuidelineInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -52,7 +56,10 @@ class GuidelineSortForm extends ContentEntityForm {
 
     $children = $guideline->getChildren();
     if (empty($children)) {
-      return;
+      $form['empty'] = [
+        '#markup' => $this->t('No guideline children'),
+      ];
+      return $form;
     }
 
     // Build table.
@@ -103,7 +110,17 @@ class GuidelineSortForm extends ContentEntityForm {
       ];
     }
 
-    $form['actions']['#type'] = 'actions';
+    $form['actions'] = [
+      '#type' => 'actions',
+      '#theme_wrappers' => [
+        'fieldset' => [
+          '#id' => 'actions',
+          '#title' => $this->t('Form actions'),
+          '#title_display' => 'invisible',
+        ],
+      ],
+      '#weight' => 99,
+    ];
     $form['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Save'),
@@ -146,10 +163,31 @@ class GuidelineSortForm extends ContentEntityForm {
       if (isset($new_weights[$child->id()])) {
         if ($child->getWeight() !== $new_weights[$child->id()]['weight']) {
           $child->setWeight($new_weights[$child->id()]['weight']);
+          $child->setNewRevision(FALSE);
+          // @todo see if we can preserve the previous revision user
+          // and timestamp.
           $child->save();
         }
       }
     }
+
+    // Show the user a message.
+    $this->messenger()->addMessage($this->t('Guidelines successfully re-ordered.'), MessengerInterface::TYPE_STATUS);
+  }
+
+  /**
+   * Check if the form can be accessed.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   Run access checks for this account.
+   * @param \Drupal\guidelines\Entity\GuidelineInterface $guideline
+   *   The guideline entity the form is for.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   The access result.
+   */
+  public static function checkAccess(AccountInterface $account, GuidelineInterface $guideline) {
+    return AccessResult::allowedIf($guideline->bundle() === 'guideline_list');
   }
 
 }

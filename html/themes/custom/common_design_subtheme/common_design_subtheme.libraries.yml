@@ -127,6 +127,13 @@ rw-external-links:
   dependencies:
     - common_design_subtheme/rw-icons
 
+rw-filter-tips:
+  css:
+    theme:
+      components/rw-filter-tips/rw-filter-tips.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+
 rw-form:
   css:
     theme:
@@ -282,6 +289,7 @@ rw-revisions:
       components/rw-revisions/rw-revisions.css: {}
   dependencies:
    - common_design_subtheme/rw-icons
+   - common_design_subtheme/rw-moderation-status
    - common_design_subtheme/rw-loading
    - common_design_subtheme/rw-user-posting-right
 

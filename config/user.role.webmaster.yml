@@ -114,6 +114,7 @@ permissions:
   - 'revert all guideline revisions'
   - 'revert term revision'
   - 'sort all guideline'
+  - 'sort editorial guidelines'
   - 'use text format guideline'
   - 'view all guideline revisions'
   - 'view published guideline entities'
