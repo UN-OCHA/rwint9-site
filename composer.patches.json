@@ -3,6 +3,9 @@
         "drupal/core" : {
             "https://www.drupal.org/project/drupal/issues/3047110": "patches/core--drupal--3047110-taxonomy-term-moderation-class.patch"
         },
+        "drupal/guidelines": {
+            "https://www.drupal.org/project/guidelines/issues/3268995": "https://git.drupalcode.org/project/guidelines/-/merge_requests/2.diff"
+        },
         "drupal/inline_entity_form": {
             "https://www.drupal.org/project/inline_entity_form/issues/3226253": "https://git.drupalcode.org/project/inline_entity_form/-/merge_requests/33.diff"
         },

@@ -1363,6 +1363,7 @@ class EntityHistory {
     $allowed = [
       $this->getEntityTypeLabelField($revision->getEntityTypeId()) => TRUE,
       'description' => TRUE,
+      'parent' => TRUE,
     ];
 
     $diff = [];
