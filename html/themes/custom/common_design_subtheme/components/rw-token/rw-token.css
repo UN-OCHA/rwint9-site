@@ -30,10 +30,10 @@
   height: 12px;
   margin-right: 4px;
   content: "";
-  background: var(--rw-icons--toggle--down--12--dark-blue);
+  background: var(--rw-icons--common--arrow-right--12--dark-blue);
 }
 .rw-token-help[open] > summary::before {
-  background: var(--rw-icons--toggle--up--12--dark-blue);
+  background: var(--rw-icons--toggle--down--12--dark-blue);
 }
 .rw-token-help summary strong {
   font-size: 16px;

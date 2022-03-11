@@ -1,0 +1,28 @@
+:root {
+  --cd-flow-space: 12px;
+}
+
+.rw-filter-tips__category > summary {
+  list-style-type: none;
+  cursor: pointer;
+}
+.rw-filter-tips__category > summary * {
+  display: inline;
+}
+
+/* Use custom icon */
+.rw-filter-tips__category > summary::-webkit-details-marker {
+  display: none;
+}
+.rw-filter-tips__category > summary::before {
+  display: inline-block;
+  overflow: hidden;
+  width: 12px;
+  height: 12px;
+  margin-right: 8px;
+  content: "";
+  background: var(--rw-icons--common--arrow-right--12--dark-blue);
+}
+.rw-filter-tips__category[open] > summary::before {
+  background: var(--rw-icons--toggle--down--12--dark-blue);
+}
