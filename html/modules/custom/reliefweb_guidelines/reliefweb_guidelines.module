@@ -8,6 +8,7 @@
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Url;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
 use Drupal\reliefweb_guidelines\Controller\GuidelineSinglePageController;
 use Drupal\reliefweb_guidelines\Entity\Guideline;
@@ -15,6 +16,7 @@ use Drupal\reliefweb_guidelines\Form\GuidelineDeleteForm;
 use Drupal\reliefweb_guidelines\Form\GuidelineForm;
 use Drupal\reliefweb_guidelines\Form\GuidelineSortForm;
 use Drupal\reliefweb_guidelines\ModeratedGuidelineStorageSchema;
+use Drupal\reliefweb_guidelines\Services\GuidelineListModeration;
 use Drupal\reliefweb_revisions\Services\EntityHistory;
 
 /**
@@ -58,6 +60,18 @@ function reliefweb_guidelines_entity_base_field_info(EntityTypeInterface $entity
     $fields['moderation_status'] = reliefweb_moderation_get_moderation_status_field_definition('published');
   }
   return $fields;
+}
+
+/**
+ * Implements hook_entity_base_field_info_alter().
+ */
+function reliefweb_guidelines_entity_base_field_info_alter(array &$fields, EntityTypeInterface $entity_type) {
+  if ($entity_type->id() === 'guideline' && isset($fields['parent'])) {
+    // Using "Guideline list" as label is a bit specific but it's ok in our case
+    // because only "normal" guidelines can have a parent and the parent is a
+    // guidele list entity.
+    $fields['parent']->setLabel('Guideline list');
+  }
 }
 
 /**
@@ -137,6 +151,20 @@ function reliefweb_guidelines_form_guideline_form_alter(array &$form, FormStateI
 
   // Add the revisions to the bottom of the form.
   EntityHistory::addHistoryToForm($form, $form_state);
+}
+
+/**
+ * Implements hook_form_HOOK_alter() for "reliefweb_moderation_page_filter_form".
+ */
+function reliefweb_guidelines_form_reliefweb_moderation_page_filter_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  if (isset($form['#service']) && $form['#service'] instanceof GuidelineListModeration) {
+    $form['actions']['create']['#title'] = t('Create list');
+    $form['actions']['sort'] = [
+      '#type' => 'link',
+      '#url' => Url::fromRoute('reliefweb_guidelines.guideline_list.sort'),
+      '#title' => t('Sort lists'),
+    ];
+  }
 }
 
 /**
