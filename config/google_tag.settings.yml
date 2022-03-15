@@ -25,13 +25,12 @@ _default_container:
   path_list: |-
     /admin*
     /batch*
-    /node/add*
-    /node/*/edit
-    /node/*/delete
     /user/*/edit*
     /user/*/cancel*
+    moderation/*
   role_toggle: 'exclude listed'
-  role_list: {  }
+  role_list:
+    administrator: administrator
   status_toggle: 'exclude listed'
   status_list: |-
     403
