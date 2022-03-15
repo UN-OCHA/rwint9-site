@@ -5,13 +5,19 @@ namespace Drupal\reliefweb_guidelines\Commands;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\File\Exception\FileException;
+use Drupal\Core\File\Exception\InvalidStreamWrapperException;
 use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Session\AccountSwitcherInterface;
+use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
 use Drupal\Core\Url;
+use Drupal\file\FileRepositoryInterface;
 use Drupal\guidelines\Entity\Guideline;
 use Drush\Commands\DrushCommands;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\TransferException;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -29,6 +35,13 @@ class ReliefWebGuidelinesCommands extends DrushCommands {
   protected $accountSwitcher;
 
   /**
+   * The config factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
+
+  /**
    * The entity field manager service.
    *
    * @var \Drupal\Core\Entity\EntityFieldManagerInterface
@@ -41,6 +54,13 @@ class ReliefWebGuidelinesCommands extends DrushCommands {
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
+
+  /**
+   * The file repository.
+   *
+   * @var \Drupal\file\FileRepositoryInterface
+   */
+  protected $fileRepository;
 
   /**
    * The file system service.
@@ -57,11 +77,18 @@ class ReliefWebGuidelinesCommands extends DrushCommands {
   protected $httpClient;
 
   /**
-   * ReliefWeb trello config.
+   * The messenger service.
    *
-   * @var \Drupal\Core\Config\ImmutableConfig
+   * @var \Drupal\Core\Messenger\MessengerInterface
    */
-  protected $trelloConfig;
+  protected $messenger;
+
+  /**
+   * The stream wrapper manager.
+   *
+   * @var \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface
+   */
+  protected $streamWrapperManager;
 
   /**
    * {@inheritdoc}
@@ -71,15 +98,57 @@ class ReliefWebGuidelinesCommands extends DrushCommands {
     ConfigFactoryInterface $config_factory,
     EntityFieldManagerInterface $entity_field_manager,
     EntityTypeManagerInterface $entity_type_manager,
+    FileRepositoryInterface $file_repository,
     FileSystemInterface $file_system,
-    ClientInterface $http_client
+    ClientInterface $http_client,
+    MessengerInterface $messenger,
+    StreamWrapperManagerInterface $stream_wrapper_manager,
   ) {
     $this->accountSwitcher = $account_switcher;
+    $this->configFactory = $config_factory;
     $this->entityFieldManager = $entity_field_manager;
     $this->entityTypeManager = $entity_type_manager;
+    $this->fileRepository = $file_repository;
     $this->fileSystem = $file_system;
     $this->httpClient = $http_client;
-    $this->trelloConfig = $config_factory->get('reliefweb_guidelines.settings');
+    $this->messenger = $messenger;
+    $this->streamWrapperManager = $stream_wrapper_manager;
+  }
+
+  /**
+   * Get the trello board ID.
+   *
+   * @return string
+   *   Trello key.
+   */
+  public function getTrelloBoardId() {
+    return $this->configFactory
+      ->get('reliefweb_guidelines.settings')
+      ->get('trello_board_id');
+  }
+
+  /**
+   * Get the trello key.
+   *
+   * @return string
+   *   Trello key.
+   */
+  public function getTrelloKey() {
+    return $this->configFactory
+      ->get('reliefweb_guidelines.settings')
+      ->get('trello_key');
+  }
+
+  /**
+   * Get the trello token.
+   *
+   * @return string
+   *   Trello key.
+   */
+  public function getTrelloToken() {
+    return $this->configFactory
+      ->get('reliefweb_guidelines.settings')
+      ->get('trello_token');
   }
 
   /**
@@ -95,9 +164,9 @@ class ReliefWebGuidelinesCommands extends DrushCommands {
    * @validate-module-enabled reliefweb_guidelines,reliefweb_utility
    */
   public function migrateFromTrello() {
-    $key = $this->trelloConfig->get('trello_key');
-    $token = $this->trelloConfig->get('trello_token');
-    $board_id = $this->trelloConfig->get('trello_board_id');
+    $key = $this->getTrelloKey();
+    $token = $this->getTrelloToken();
+    $board_id = $this->getTrelloBoardId();
 
     if (empty($key) || empty($token) || empty($board_id)) {
       $this->logger->error('Missing Trello key, token or board id.');
@@ -343,8 +412,15 @@ class ReliefWebGuidelinesCommands extends DrushCommands {
     $this->fileSystem->prepareDirectory($destination, FileSystemInterface::CREATE_DIRECTORY);
 
     try {
+      $options = [];
+      if (strpos($url, 'https://trello.com') === 0) {
+        $key = $this->getTrelloKey();
+        $token = $this->getTrelloToken();
+        $options['headers']['Authorization'] = "OAuth oauth_consumer_key=\"{$key}\", oauth_token=\"{$token}\"";
+      }
+
       /** @var \Drupal\file\FileInterface $file */
-      $file = system_retrieve_file($url, $destination, TRUE, FileSystemInterface::EXISTS_REPLACE);
+      $file = $this->retrieveFile($url, $destination, TRUE, FileSystemInterface::EXISTS_REPLACE, $options);
       if (!$file) {
         $this->logger->error($url . ' not fetched');
         return NULL;
@@ -356,6 +432,103 @@ class ReliefWebGuidelinesCommands extends DrushCommands {
     }
 
     return $file;
+  }
+
+  /**
+   * Attempts to get a file using Guzzle HTTP client and to store it locally.
+   *
+   * This replaces `system_retrieve_file()`, adding an Authorization header
+   * for Trello images.
+   *
+   * @param string $url
+   *   The URL of the file to grab.
+   * @param string $destination
+   *   Stream wrapper URI specifying where the file should be placed. If a
+   *   directory path is provided, the file is saved into that directory under
+   *   its original name. If the path contains a filename as well, that one will
+   *   be used instead.
+   *   If this value is omitted, the site's default files scheme will be used,
+   *   usually "public://".
+   * @param bool $managed
+   *   If this is set to TRUE, the file API hooks will be invoked and the file
+   *   is registered in the database.
+   * @param int $replace
+   *   Replace behavior when the destination file already exists:
+   *   - FileSystemInterface::EXISTS_REPLACE: Replace the existing file.
+   *   - FileSystemInterface::EXISTS_RENAME: Append _{incrementing number} until
+   *     the filename is unique.
+   *   - FileSystemInterface::EXISTS_ERROR: Do nothing and return FALSE.
+   * @param array $options
+   *   Request ptions to pass to the HTTP client.
+   *
+   * @return mixed
+   *   One of these possibilities:
+   *   - If it succeeds and $managed is FALSE, the location where the file was
+   *     saved.
+   *   - If it succeeds and $managed is TRUE, a \Drupal\file\FileInterface
+   *     object which describes the file.
+   *   - If it fails, FALSE.
+   *
+   * @see system_retrieve_file()
+   */
+  protected function retrieveFile($url, $destination, $managed = FALSE, $replace = FileSystemInterface::EXISTS_RENAME, array $options = []) {
+    $replace = FileSystemInterface::EXISTS_REPLACE;
+
+    $parsed_url = parse_url($url);
+
+    if (!isset($parsed_url['path'])) {
+      return FALSE;
+    }
+
+    if (!isset($destination)) {
+      $path = $this->fileSystem
+        ->basename($parsed_url['path']);
+      $path = $this->configFactory
+        ->get('system.file')
+        ->get('default_scheme') . '://' . $path;
+      $path = $this->streamWrapperManager
+        ->normalizeUri($path);
+    }
+    elseif (is_dir($this->fileSystem->realpath($destination))) {
+      // Prevent URIs with triple slashes when glueing parts together.
+      $path = str_replace('///', '//', "{$destination}/") .
+        $this->fileSystem->basename($parsed_url['path']);
+    }
+    else {
+      $path = $destination;
+    }
+
+    try {
+      $data = (string) $this->httpClient
+        ->get($url, $options)
+        ->getBody();
+
+      if ($managed) {
+        $local = $this->fileRepository->writeData($data, $path, $replace);
+      }
+      else {
+        $local = $this->fileSystem->saveData($data, $path, $replace);
+      }
+    }
+    catch (TransferException $exception) {
+      $this->messenger->addError(strtr('Failed to fetch file due to error "%error"', [
+        '%error' => $exception->getMessage(),
+      ]));
+      return FALSE;
+    }
+    catch (FileException | InvalidStreamWrapperException $exception) {
+      $this->messenger->addError(strtr('Failed to save file due to error "%error"', [
+        '%error' => $exception->getMessage(),
+      ]));
+      return FALSE;
+    }
+    if (!$local) {
+      $this->messenger->addError(strtr('@remote could not be saved to @path.', [
+        '@remote' => $url,
+        '@path' => $path,
+      ]));
+    }
+    return $local;
   }
 
   /**
@@ -496,8 +669,8 @@ class ReliefWebGuidelinesCommands extends DrushCommands {
    */
   protected function fetchData($url, array $parameters = []) {
     $parameters += [
-      'key' => $this->trelloConfig->get('trello_key'),
-      'token' => $this->trelloConfig->get('trello_token'),
+      'key' => $this->getTrelloKey(),
+      'token' => $this->getTrelloToken(),
     ];
 
     $url = Url::fromUri($url, [
