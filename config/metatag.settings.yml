@@ -1,0 +1,69 @@
+entity_type_groups:
+  node:
+    blog_post:
+      basic: basic
+      advanced: advanced
+      open_graph: open_graph
+      facebook: facebook
+      twitter_cards: twitter_cards
+    book:
+      basic: basic
+      advanced: advanced
+      open_graph: open_graph
+      facebook: facebook
+      twitter_cards: twitter_cards
+    job:
+      basic: basic
+      advanced: advanced
+      open_graph: open_graph
+      facebook: facebook
+      twitter_cards: twitter_cards
+    report:
+      basic: basic
+      advanced: advanced
+      open_graph: open_graph
+      facebook: facebook
+      twitter_cards: twitter_cards
+    topic:
+      basic: basic
+      advanced: advanced
+      open_graph: open_graph
+      facebook: facebook
+      twitter_cards: twitter_cards
+    training:
+      basic: basic
+      advanced: advanced
+      open_graph: open_graph
+      facebook: facebook
+      twitter_cards: twitter_cards
+  taxonomy_term:
+    country:
+      basic: basic
+      advanced: advanced
+      open_graph: open_graph
+      facebook: facebook
+      twitter_cards: twitter_cards
+    disaster:
+      basic: basic
+      advanced: advanced
+      open_graph: open_graph
+      facebook: facebook
+      twitter_cards: twitter_cards
+    source:
+      basic: basic
+      advanced: advanced
+      open_graph: open_graph
+      facebook: facebook
+      twitter_cards: twitter_cards
+tag_trim_method: beforeValue
+tag_trim_maxlength:
+  metatag_maxlength_title: null
+  metatag_maxlength_description: null
+  metatag_maxlength_abstract: null
+  metatag_maxlength_og_description: null
+  metatag_maxlength_og_site_name: null
+  metatag_maxlength_og_title: null
+  metatag_maxlength_twitter_cards_label2: null
+  metatag_maxlength_twitter_cards_label1: null
+  metatag_maxlength_twitter_cards_description: null
+  metatag_maxlength_twitter_cards_title: null
