@@ -21,14 +21,13 @@ dependencies:
     - field.field.taxonomy_term.source.field_shortname
     - field.field.taxonomy_term.source.field_spanish_name
     - field.field.taxonomy_term.source.field_user_posting_rights
-    - image.style.thumbnail
     - taxonomy.vocabulary.source
   module:
     - allowed_formats
     - link
+    - media_library
     - path
     - reliefweb_fields
-    - svg_image
     - text
 id: taxonomy_term.source.default
 targetEntityType: taxonomy_term
@@ -138,7 +137,7 @@ content:
     third_party_settings: {  }
   field_homepage:
     type: link_default
-    weight: 9
+    weight: 8
     region: content
     settings:
       placeholder_url: ''
@@ -159,12 +158,11 @@ content:
       placeholder_title: ''
     third_party_settings: {  }
   field_logo:
-    type: image_image
-    weight: 8
+    type: media_library_widget
+    weight: 9
     region: content
     settings:
-      progress_indicator: throbber
-      preview_image_style: thumbnail
+      media_types: {  }
     third_party_settings: {  }
   field_longname:
     type: string_textfield
