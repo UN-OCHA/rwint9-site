@@ -43,6 +43,7 @@ class Image extends EntityBase {
     'blog_post' => 'images/blog-posts',
     'report' => 'images/reports',
     'topics' => 'images/topics',
+    'source' => 'images/sources',
   ];
 
   /**
@@ -76,6 +77,9 @@ class Image extends EntityBase {
       'field_term_image' => [
         'node' => [
           'topics',
+        ],
+        'taxonomy_term' => [
+          'source',
         ],
       ],
     ];

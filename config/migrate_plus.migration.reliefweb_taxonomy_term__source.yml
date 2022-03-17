@@ -1,9 +1,9 @@
-uuid: e8ebad49-7b78-415d-be50-5831fbde57c6
+uuid: 16843a36-faa0-4277-9576-6da5f02c5ea2
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: hzBiWDw0PdtLdr8LLeKgeSsoTj3jkSA2FAqHEKmo_do
+  default_config_hash: sg4cJgEIiEdl--ULZX9f-ftMGxDM_jqjUpk8d_Jq6nU
 id: reliefweb_taxonomy_term__source
 class: null
 field_plugin_method: null
@@ -67,6 +67,11 @@ process:
       plugin: sub_process
       process:
         uri: value
+  field_logo:
+    plugin: sub_process
+    source: field_term_image
+    process:
+      target_id: fid
   field_longname/value:
     plugin: skip_on_empty
     method: process

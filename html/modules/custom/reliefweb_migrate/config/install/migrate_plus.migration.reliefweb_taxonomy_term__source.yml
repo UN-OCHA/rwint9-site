@@ -64,16 +64,11 @@ process:
       plugin: sub_process
       process:
         uri: value
-  # @todo review after figuring out the file directory.
-  # field_logo:
-  #   plugin: sub_process
-  #   source: field_term_image
-  #   process:
-  #     target_id: fid
-  #     alt: alt
-  #     title: title
-  #     width: width
-  #     height: height
+  field_logo:
+    plugin: sub_process
+    source: field_term_image
+    process:
+      target_id: fid
   field_longname/value:
     plugin: skip_on_empty
     method: process
