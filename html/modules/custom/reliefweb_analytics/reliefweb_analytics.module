@@ -73,6 +73,8 @@ function reliefweb_analytics_page_attachments(array &$attachments) {
  *   Dimensions for the entity.
  */
 function reliefweb_analytics_get_entity_dimensions() {
+  $dimensions = [];
+
   // Get the entity for the current request if any.
   $entity = EntityHelper::getEntityFromRoute();
   if (!isset($entity)) {
@@ -153,7 +155,7 @@ function reliefweb_analytics_get_entity_dimensions() {
       ];
       break;
 
-    case 'topics':
+    case 'topic':
       $dimensions = [
         'dimension1' => 'Topic',
         'dimension20' => (string) $entity->getModerationStatusLabel(),
