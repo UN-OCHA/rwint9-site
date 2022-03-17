@@ -864,6 +864,22 @@ class ReliefWebFile extends FieldItemBase {
   }
 
   /**
+   * Check if the file is private.
+   *
+   * @return bool
+   *   TRUE if teh file is private.
+   */
+  public function isPrivate() {
+    $file = $this->loadFile();
+    if (empty($file)) {
+      return TRUE;
+    }
+
+    $scheme = StreamWrapperManager::getScheme($file->getFileUri());
+    return $scheme === FALSE || $scheme === 'private';
+  }
+
+  /**
    * Create a managed file for the preview.
    *
    * @param string $new_uuid

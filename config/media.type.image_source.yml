@@ -1,10 +1,10 @@
-uuid: 37842627-fc65-45af-9b16-963e38f7ae17
+uuid: 4e99e742-5fca-4b0f-9d89-d542545655aa
 langcode: en
 status: true
 dependencies: {  }
-id: image_topic
-label: 'Image - Topic'
-description: 'Icon images for topics.'
+id: image_source
+label: 'Image - Source'
+description: 'Logo images for sources.'
 source: image
 queue_thumbnail_downloads: false
 new_revision: true
