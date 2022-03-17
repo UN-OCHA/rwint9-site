@@ -41,6 +41,9 @@ module:
   menu_link_content: 0
   menu_ui: 0
   metatag: 0
+  metatag_facebook: 0
+  metatag_open_graph: 0
+  metatag_twitter_cards: 0
   migrate: 0
   migrate_plus: 0
   migrate_tools: 0
@@ -66,6 +69,7 @@ module:
   reliefweb_homepage: 0
   reliefweb_import: 0
   reliefweb_key_figures: 0
+  reliefweb_meta: 0
   reliefweb_migrate: 0
   reliefweb_moderation: 0
   reliefweb_revisions: 0
