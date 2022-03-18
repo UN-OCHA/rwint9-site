@@ -5,6 +5,7 @@ namespace Drupal\reliefweb_entities\Services;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
+use Drupal\reliefweb_entities\Entity\Training;
 use Drupal\reliefweb_form\Helpers\FormHelper;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
@@ -57,11 +58,9 @@ class TrainingFormAlter extends EntityFormAlterServiceBase {
     // - Remove Logistics and Telecommunications (Trello #G3YgNUF6).
     // - Remove Russian (10906) and Arabic (6876) (Collab #4452001).
     // - Remove Other (31996) language option.
-    FormHelper::removeOptions($form, 'field_theme', $this->state->get('reliefweb_remove_themes_training', []));
-    FormHelper::removeOptions($form, 'field_language', [
-      6876, 10906, 31996,
-    ]);
-    FormHelper::removeOptions($form, 'field_training_language', [31996]);
+    FormHelper::removeOptions($form, 'field_theme', Training::getTrainingIrrelevantThemes());
+    FormHelper::removeOptions($form, 'field_language', Training::getTrainingIrrelevantLanguages());
+    FormHelper::removeOptions($form, 'field_training_language', Training::getTrainingIrrelevantTrainingLanguages());
 
     // Re-order the course/event language. Ordering by tid does the trick.
     FormHelper::orderOptionsByValue($form, 'field_training_language');

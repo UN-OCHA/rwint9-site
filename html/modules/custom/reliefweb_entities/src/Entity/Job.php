@@ -168,7 +168,7 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
   }
 
   /**
-   * Get the list of job categories for which themes are irrelevant.
+   * Get the list of countries that are irrelevant for jobs.
    *
    * @return array
    *   List of theme term ids.
@@ -181,13 +181,13 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
   }
 
   /**
-   * Get the list of job categories for which themes are irrelevant.
+   * Get the list of themes that are irrelevant for jobs.
    *
    * @return array
    *   List of theme term ids.
    */
   public static function getJobIrrelevantThemes() {
-    // Irrelevant career categories (Trello #RfWgIdwA):
+    // Irrelevant themes (Trello #RfWgIdwA):
     // - Contributions (4589) (Collab #2327).
     // - Humanitarian Financing (4597) (Trello #OnXq5cCC).
     // - Logistics and Telecommunications (4598) (Trello #G3YgNUF6).
