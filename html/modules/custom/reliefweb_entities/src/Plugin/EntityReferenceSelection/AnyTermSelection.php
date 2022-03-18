@@ -137,7 +137,9 @@ class AnyTermSelection extends DefaultSelection {
    * {@inheritdoc}
    */
   public function getReferenceableEntities($match = NULL, $match_operator = 'CONTAINS', $limit = 0) {
-    $entity_type_id = $this->getConfiguration()['target_type'];
+    $configuration = $this->getConfiguration();
+    $entity_type_id = $configuration['target_type'];
+    $sort = $configuration['sort'];
 
     $query = $this->buildEntityQuery($match, $match_operator);
     if ($limit > 0) {
@@ -173,6 +175,12 @@ class AnyTermSelection extends DefaultSelection {
     $query->addField($table, $bundle_field, 'bundle');
     $query->condition($table . '.' . $id_field, $ids, 'IN');
     $query->condition($table . '.' . $langcode_field, $langcodes, 'IN');
+
+    // Add the sort option.
+    $sortable_fields = [$id_field => TRUE, $label_field => TRUE];
+    if (isset($sortable_fields[$sort['field']])) {
+      $query->orderBy($sort['field'], $sort['direction']);
+    }
 
     $options = [];
     foreach ($query->execute() ?? [] as $record) {

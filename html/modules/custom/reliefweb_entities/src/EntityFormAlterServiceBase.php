@@ -523,6 +523,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
       $form['field_source_reminder'] = [
         '#title' => Markup::create($new_source_reminder),
         '#type' => 'checkbox',
+        '#not_required' => FALSE,
         '#states' => [
           'visible' => [
             ':input[name="field_source_none"]' => ['checked' => TRUE],

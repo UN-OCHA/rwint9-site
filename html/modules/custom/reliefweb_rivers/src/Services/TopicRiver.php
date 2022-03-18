@@ -172,6 +172,7 @@ class TopicRiver extends RiverServiceBase {
     // Get the community topics.
     $community_topics = [];
     foreach (reliefweb_topics_get_all_community_topics() as $data) {
+      $data = is_array($data) ? (object) $data : $data;
       if (!empty($data->title) && !empty($data->url)) {
         $community_topics[] = [
           'title' => $data->title,

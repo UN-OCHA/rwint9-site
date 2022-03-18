@@ -50,11 +50,22 @@ process:
     plugin: skip_on_empty
     method: process
     source: field_homepage/0/url
-  # @todo review once the custom field has been added for import URL.
-  # field_job_import_feed_url/uri
-  #   plugin: skip_on_empty
-  #   method: process
-  #   source: field_link/0/url
+  field_job_import_feed:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: field_link
+    -
+      plugin: sub_process
+      process:
+        feed_url: url
+        uid: title
+        base_url:
+          -
+            plugin: unserialize
+            source: attributes
+            index:
+              - title
   field_links:
     -
       plugin: skip_on_empty
