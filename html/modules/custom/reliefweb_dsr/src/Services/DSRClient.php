@@ -10,7 +10,7 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\GuzzleException;
 
 /**
  * Digital Situation Report client service class.
@@ -194,7 +194,7 @@ class DSRClient {
         'query' => $query,
       ]);
     }
-    catch (ClientException $exception) {
+    catch (GuzzleException $exception) {
       return [];
     }
 
