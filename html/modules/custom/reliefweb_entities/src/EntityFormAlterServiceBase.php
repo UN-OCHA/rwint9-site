@@ -736,7 +736,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
     if (!empty($author) && !$author->isAnonymous()) {
       $build['#author'] = [
         'name' => $author->getDisplayName(),
-        'mail' => $author->getEmail(),
+        'mail' => reliefweb_users_get_email($author),
         'url' => $author->toUrl()->toString(),
       ];
 
