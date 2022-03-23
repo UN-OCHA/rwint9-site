@@ -2076,6 +2076,18 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     $entity_alias = $query->innerJoin($entity_table, $entity_table, "%alias.{$revision_id_field} = {$revision_alias}.{$revision_id_field}");
     $query->condition($entity_alias . '.' . $entity_bundle_field, $bundle, '=');
 
+    // Join the email field table for the job or training moderation backend as
+    // it can be relevant there. For other backends, the user is most likely
+    // a ReliefWeb editor so we can speed up the lookup by excluding this
+    // field.
+    if ($bundle === 'job' || $bundle === 'training') {
+      $email_table = $this->getFieldTableName('user', 'field_email');
+      $email_field = $this->getFieldColumnName('user', 'field_email', 'value');
+      $email_alias = $query->leftJoin($email_table, $email_table, "%alias.entity_id = {$alias}.{$id_field}");
+      $query->addField($email_alias, $email_field, 'email');
+      $fields[] = $email_table . '.' . $email_field;
+    }
+
     // Add conditions.
     $conditions = $this->buildFilterConditions($conditions, $fields);
     $query->where($conditions, $replacements);
@@ -2083,7 +2095,13 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     // Sort by name.
     $query->orderBy($alias . '.name', 'ASC');
 
-    return $query->execute()?->fetchAll() ?? [];
+    $results = $query->execute()?->fetchAll() ?? [];
+    foreach ($results as $result) {
+      if (!empty($result->email) && $result->email !== $result->abbr) {
+        $result->abbr .= ', ' . $result->email;
+      }
+    }
+    return $results;
   }
 
   /**
