@@ -361,6 +361,16 @@ function reliefweb_meta_get_node_metatags(NodeInterface $node) {
  *   Term metatags.
  */
 function reliefweb_meta_get_term_metatags(TermInterface $term) {
+  $cache = \Drupal::cache();
+  $cache_id = 'reliefweb_meta:entity:' . $term->uuid();
+  $cache_metadata = CacheableMetadata::createFromObject($term);
+
+  // Try to get the data from the cache.
+  $cache_object = $cache->get($cache_id);
+  if (!empty($cache_object->data)) {
+    return $cache_object->data;
+  }
+
   // Defaults.
   $type = 'article';
   $title = $term->label();
