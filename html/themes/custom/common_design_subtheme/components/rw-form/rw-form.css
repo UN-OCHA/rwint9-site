@@ -537,3 +537,8 @@ legend.form-required::after {
   display: inline-block;
   vertical-align: top;
 }
+
+/* Actions on classic forms without a sidebar. */
+form:not(.rw-entity-form-altered) .form-actions.form-item {
+  margin-top: var(--cd-flow-space, 2.5rem);
+}
