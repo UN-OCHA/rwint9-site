@@ -15,6 +15,10 @@ function reliefweb_contact_mail_alter(&$message) {
     return;
   }
 
+  // Use the email field if defined and confirmed, other we try with the default
+  // user email address.
+  $message['to'] = reliefweb_users_get_email($message['params']['recipient']);
+
   /** @var Drupal\contact\Entity\Message $contact_message */
   $contact_message = $message['params']['contact_message'];
   $sender = $contact_message->field_sender->value;
