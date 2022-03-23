@@ -1,0 +1,2 @@
+# Validity duration of an email confirmation link (in seconds).
+email_confirmation_timeout: 604800
