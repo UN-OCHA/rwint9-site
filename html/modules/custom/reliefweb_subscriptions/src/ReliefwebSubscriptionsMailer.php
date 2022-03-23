@@ -1384,7 +1384,12 @@ class ReliefwebSubscriptionsMailer {
     $query->fields('s', ['uid']);
     $query->condition('s.sid', $sid, '=');
     $query->innerJoin('users_field_data', 'u', 'u.uid = s.uid');
-    $query->fields('u', ['name', 'mail']);
+    $query->fields('u', ['name']);
+    $query->innerJoin('user__field_email', 'fe', 'fe.entity_id = s.uid');
+    $query->addField('fe', 'field_email_value', 'mail');
+    $query->condition('fe.field_email_value', NULL, 'IS NOT NULL');
+    $query->innerJoin('user__field_email_confirmed', 'fec', 'fec.entity_id = s.uid');
+    $query->condition('fec.field_email_confirmed_value', 1, '=');
     $result = $query->execute();
     return !empty($result) ? $result->fetchAllAssoc('uid') : [];
   }
