@@ -398,7 +398,10 @@
   // Update the datepicker date based on the input value.
   function updateDatepicker(datepicker, value) {
     // Set the selected date from the value in the input field if valid.
-    if (value && value.match(/\d{4}[/-]\d{2}[/-]\d{2}/)) {
+    if (value && value.match(/^\d{4}([/-]\d{2}){0,2}$/)) {
+      value = value.length === 4 ? value + '-01-01' : value;
+      value = value.length === 7 ? value + '-01' : value;
+      value = value.replaceAll('-', '/');
       var date = datepicker.createDate(value + ' UTC');
       if (!date.invalid()) {
         var calendar = datepicker.calendars[0];
@@ -456,6 +459,12 @@
         element.focus();
       }
       else {
+        datepicker.show();
+      }
+    });
+    addEventListener(element, 'keyup', function (event) {
+      var key = event.which || event.keyCode;
+      if (key !== KeyCodes.ESC) {
         updateDatepicker(datepicker, element.value);
       }
     });
