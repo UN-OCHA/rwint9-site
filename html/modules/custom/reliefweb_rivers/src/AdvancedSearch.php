@@ -231,6 +231,7 @@ class AdvancedSearch {
       'settings' => [
         'labels' => [
           'add' => $this->t('Add'),
+          'select' => $this->t('Select'),
           'apply' => $this->t('Apply filters'),
           'cancel' => $this->t('Cancel'),
           'clear' => $this->t('Clear all'),

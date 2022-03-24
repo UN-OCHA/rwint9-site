@@ -427,6 +427,35 @@
     // Fix the position of the datepicker so that it's just after the input.
     parent.insertBefore(datepicker.container, element.nextSibling);
 
+    // Button to cancel or select the date.
+    var cancel = createButton({'data-cancel': ''}, advancedSearch.labels.cancel);
+    var select = createButton({'data-select': ''}, advancedSearch.labels.select);
+    var buttonContainer = createElement('div', {'class': advancedSearch.widgetClassPrefix + 'datepicker-button-container'});
+    buttonContainer.appendChild(cancel);
+    buttonContainer.appendChild(select);
+    datepicker.calendars[0].calendar.appendChild(buttonContainer);
+
+    // Cancel the filter addition, clear the widget and close the dialog.
+    addEventListener(cancel, 'click', function (event) {
+      datepicker.hide().clear();
+      element.focus();
+    });
+
+    // Add a filter, clear the widget and close the dialog.
+    addEventListener(select, 'click', function (event) {
+      var selection = datepicker.getSelection();
+      if (selection.length) {
+        var date = selection[0];
+        element.value = date.format('YYYY/MM/DD');
+        element.setAttribute('data-value', date.format('YYYYMMDD'));
+        element.focus();
+      }
+      else {
+        element.value = '';
+      }
+      datepicker.hide();
+    });
+
     // Update the date of the datepicker based on the value from the input.
     datepicker.on('opened', function (event) {
       updateDatepicker(datepicker, element.value);
