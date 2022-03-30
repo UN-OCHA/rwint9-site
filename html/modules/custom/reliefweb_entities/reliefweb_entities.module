@@ -8,6 +8,7 @@
 use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\reliefweb_entities\BundleEntityInterface;
@@ -361,6 +362,45 @@ function reliefweb_entities_form_taxonomy_term_form_alter(array &$form, FormStat
   // @see reliefweb_entities_set_taxonomy_term_revision()
   if (!empty($form['revision_log_message']['widget'][0]['value']['#default_value'])) {
     $form['revision_log_message']['widget'][0]['value']['#default_value'] = '';
+  }
+
+  // Force revisions.
+  if (!isset($form['revision'])) {
+    $form['revision'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Create new revision'),
+      '#access' => FALSE,
+    ];
+  }
+  $form['revision']['#default_value'] = TRUE;
+
+  // Add an entity builder callback that will ensure the proper revisio
+  // user id and timestamp are set.
+  $form['#entity_builders'][] = 'reliefweb_entities_term_form_entity_builder';
+}
+
+/**
+ * Form entity builder callback.
+ *
+ * We emulate the logic to set the revision user and timestamp from
+ * \Drupal\Core\Entity\ContentEntityForm::buildEntity() for taxonomy terms
+ * because there is no easy way to have the taxonomy term entity type
+ * `showRevisionUi()` method return TRUE...
+ *
+ * @param string $entity_type_id
+ *   Entity type ID.
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   Term entity.
+ * @param array $form
+ *   The term form.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The form state.
+ */
+function reliefweb_entities_term_form_entity_builder($entity_type_id, EntityInterface $entity, array &$form, FormStateInterface $form_state) {
+  if ($entity instanceof RevisionLogInterface && !$form_state->isValueEmpty('revision')) {
+    // Set the current user as the revision user if a new revision is requested.
+    $entity->setRevisionUserId(\Drupal::currentUser()->id());
+    $entity->setRevisionCreationTime(\Drupal::time()->getRequestTime());
   }
 }
 
