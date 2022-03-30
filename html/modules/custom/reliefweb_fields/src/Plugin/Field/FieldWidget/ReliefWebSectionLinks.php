@@ -124,7 +124,7 @@ class ReliefWebSectionLinks extends WidgetBase {
     $use_override = !empty($settings['use_override']);
     $field_state = static::getWidgetState($parents, $field_name, $form_state);
 
-    // Generate the links of links and store the JSON serialized version which
+    // Generate the list of links and store the JSON serialized version which
     // for use by the JS script.
     $links = [];
     if (!empty($items)) {
