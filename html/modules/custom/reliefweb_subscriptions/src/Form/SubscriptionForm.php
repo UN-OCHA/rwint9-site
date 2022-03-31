@@ -86,17 +86,8 @@ class SubscriptionForm extends FormBase {
       '#not_required' => TRUE,
     ];
 
-    $email = $user->field_email?->value ?? '';
-    if (empty($email)) {
-      $form['information']['email'] = [
-        '#type' => 'inline_template',
-        '#template' => "<p>{% trans %}Please set up an email address to receive the notifications, in your account settings: {{ link }}.{% endtrans %}</p>",
-        '#context' => [
-          'link' => $user->toLink('here', 'edit-form')->toString(),
-        ],
-      ];
-    }
-    elseif (empty($user->field_email_confirmed->value)) {
+    $email = $user->getEmail();
+    if (empty($user->field_email_confirmed->value)) {
       $form['information']['email'] = [
         '#type' => 'inline_template',
         '#template' => "<p>{% trans %}Your email address <em>{{ email }}</em> <strong>has not been verified</strong> so notifications will not be sent.</p><p>Please go to your account settings: {{ link }} and save to receive a new email verification link.{% endtrans %}</p>",

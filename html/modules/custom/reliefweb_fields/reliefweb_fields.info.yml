@@ -5,7 +5,6 @@ package: reliefweb
 core_version_requirement: ^9
 dependencies:
   - drupal:reliefweb_form
-  - drupal:reliefweb_users
   - drupal:taxonomy
   - drupal:taxonomy_term_revision
   - drupal:taxonomy_term_preview

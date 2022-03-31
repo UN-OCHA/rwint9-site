@@ -131,18 +131,12 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
 
     // Retrieve the user data.
     if (!empty($ids)) {
-      $query = \Drupal::database()
+      $users = \Drupal::database()
         ->select('users_field_data', 'u')
         ->fields('u', ['uid', 'name', 'mail', 'status'])
-        ->condition('u.uid', $ids, 'IN');
-      $query->leftJoin('user__field_email', 'fe', 'fe.entity_id = u.uid');
-      $query->fields('fe', ['field_email_value']);
-      $query->leftJoin('user__field_email_confirmed', 'fec', 'fec.entity_id = u.uid');
-      $query->fields('fec', ['field_email_confirmed_value']);
-
-      $users = $query
-        ?->execute()
-        ?->fetchAllAssoc('uid', \PDO::FETCH_ASSOC);
+        ->condition('u.uid', $ids, 'IN')
+        ->execute()
+        ?->fetchAllAssoc('uid', \PDO::FETCH_ASSOC) ?? [];
 
       foreach ($items as $item) {
         if (isset($users[$item['id']])) {
@@ -209,13 +203,7 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
     $data['notes'] = isset($data['notes']) ? trim($data['notes']) : '';
 
     $data['name'] = trim($data['name']);
-
-    if (!empty($data['field_email_confirmed_value']) && !empty($data['field_email_value'])) {
-      $data['mail'] = trim($data['field_email_value']);
-    }
-    else {
-      $data['mail'] = trim($data['mail']);
-    }
+    $data['mail'] = trim($data['mail']);
 
     $data['status'] = intval($data['status'], 10);
     // Blocked users are not allowed to post.
@@ -352,7 +340,7 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
 
     $uid = $user->id();
     $blocked = $user->isBlocked();
-    $email_changed = isset($user->original) && reliefweb_users_get_email($user) !== reliefweb_users_get_email($user->original);
+    $email_changed = isset($user->original) && $user->getEmail() !== $user->original->getEmail();
     $message = '';
     $date = date_format(date_create(), 'Y-m-d');
 

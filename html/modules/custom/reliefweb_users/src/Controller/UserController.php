@@ -160,12 +160,7 @@ class UserController extends ControllerBase {
       $query->condition('u.name', '%' . $this->database->escapeLike($filters['name']) . '%', 'LIKE');
     }
     if (!empty($filters['mail'])) {
-      $query->leftJoin('user__field_email', 'fe', 'fe.entity_id = u.uid');
-      $query->fields('fe', ['field_email_value']);
-      $or_group = $query->orConditionGroup();
-      $or_group->condition('u.mail', '%' . $this->database->escapeLike($filters['mail']) . '%', 'LIKE');
-      $or_group->condition('fe.field_email_value', '%' . $this->database->escapeLike($filters['mail']) . '%', 'LIKE');
-      $query->condition($or_group);
+      $query->condition('u.mail', '%' . $this->database->escapeLike($filters['mail']) . '%', 'LIKE');
     }
 
     // Content posted filter.
@@ -220,18 +215,10 @@ class UserController extends ControllerBase {
           $user_roles = array_intersect_key($roles, array_flip($users_roles[$user->uid]));
         }
 
-        $mail = Link::fromTextAndUrl($user->mail, URL::fromUserInput('/user/' . $user->uid));
-        if (!empty($user->field_email_value) && $user->field_email_value !== $user->mail) {
-          $mail = new FormattableMarkup('@mail<br>%other_mail', [
-            '@mail' => Link::fromTextAndUrl($user->field_email_value, URL::fromUserInput('/user/' . $user->uid))->toString(),
-            '%other_mail' => $mail->toString(),
-          ]);
-        }
-
         $rows[$user->uid] = [
           'uid' => $user->uid,
           'name' => Link::fromTextAndUrl($user->name, URL::fromUserInput('/user/' . $user->uid)),
-          'mail' => $mail,
+          'mail' => Link::fromTextAndUrl($user->mail, URL::fromUserInput('/user/' . $user->uid)),
           'status' => $statuses[empty($user->status) ? 'blocked' : 'active'],
           'role' => !empty($user_roles) ? new FormattableMarkup('<ol><li>' . implode('</li><li>', $user_roles) . '</li></ol>', []) : '',
           'sources' => isset($user->sources) ? new FormattableMarkup($user->sources, []) : '',

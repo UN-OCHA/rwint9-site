@@ -58,15 +58,16 @@ function reliefweb_users_form_user_form_alter(array &$form, FormStateInterface $
   // Only people who can administrate other accounts can add notes.
   $form['field_notes']['#access'] = $user->hasPermission('administer users');
 
+  $form['account']['mail']['#title'] = t('Email');
+  $form['account']['mail']['#description'] = t('Email address used for notifications and contact.');
+
   // Only people who can administrate other accounts can confirm an email.
   if ($user->hasPermission('administer users')) {
-    $form['account']['mail']['#title'] = t('Original account email');
     // Add a flag to bypass sending an email confirmation message when
     // confirmed is checked.
     $form_state->getFormObject()->getEntity()->_bypass_email_confirmation = TRUE;
   }
   else {
-    $form['account']['mail']['#access'] = FALSE;
     $form['field_email_confirmed']['#access'] = FALSE;
 
     if (isset($form['actions']['submit']['#submit'])) {
@@ -77,18 +78,18 @@ function reliefweb_users_form_user_form_alter(array &$form, FormStateInterface $
     }
 
     if (empty($form_state->getFormObject()?->getEntity()?->field_email_confirmed?->value)) {
-      $form['field_email']['widget'][0]['value']['#title'] = t('@title <em>(not confirmed)</em>', [
-        '@title' => $form['field_email']['widget'][0]['value']['#title'],
+      $form['account']['mail']['#title'] = t('@title <em>(not confirmed)</em>', [
+        '@title' => $form['account']['mail']['#title'],
       ]);
-      $form['field_email']['widget'][0]['value']['#description'] = t('@description<br>A message with a link to confirm your email address will be sent when saving your account settings.', [
-        '@description' => $form['field_email']['widget'][0]['value']['#description'] ?? '',
+      $form['account']['mail']['#description'] = t('@description<br>A message with a link to confirm your email address will be sent when saving your account settings.', [
+        '@description' => $form['account']['mail']['#description'] ?? '',
       ]);
     }
   }
 
   // Add a validation callback to the email field to ensure it's already used
   // by another account.
-  $form['field_email']['widget'][0]['value']['#element_validate'][] = 'reliefweb_users_validate_email';
+  $form['account']['mail']['#element_validate'][] = 'reliefweb_users_validate_email';
 
   // Check if hte user is allowed to assign roles.
   if ($user->hasPermission('manage user roles') && !empty($form['account']['roles']['#options'])) {
@@ -142,10 +143,10 @@ function reliefweb_users_validate_email(array &$element, FormStateInterface $for
     $user_id = $form_state->getFormObject()?->getEntity()?->id();
 
     $exists = \Drupal::database()
-      ->select('user__field_email', 't')
-      ->fields('t', ['field_email_value'])
-      ->condition('t.field_email_value', $email, '=')
-      ->condition('t.entity_id', $user_id, '<>')
+      ->select('users_field_data', 'u')
+      ->fields('u', ['mail'])
+      ->condition('u.mail', $email, '=')
+      ->condition('u.uid', $user_id, '<>')
       ->range(0, 1)
       ->execute()
       ?->fetchField();
@@ -162,20 +163,19 @@ function reliefweb_users_validate_email(array &$element, FormStateInterface $for
 function reliefweb_users_user_presave(EntityInterface $entity) {
   // @todo remove when removing `reliefweb_migrate`.
   if (!empty($entity->_is_migrating)) {
-    $entity->field_email->value = $entity->mail->value;
+    // Mark migrated accounts as having their email address confirmed already.
     $entity->field_email_confirmed->value = 1;
     return;
   }
 
   // Populate the email field for new accounts.
   if ($entity->isNew()) {
-    $entity->field_email->value = $entity->mail->value;
     $entity->field_email_confirmed->value = 1;
   }
   // Add a flag to send an email confirmation message.
   elseif (empty($entity->_bypass_email_confirmation)) {
-    $previous_email = $entity->original?->field_email?->value ?? '';
-    $current_email = $entity->field_email?->value ?? '';
+    $previous_email = $entity->original?->getEmail() ?? '';
+    $current_email = $entity?->getEmail() ?? '';
     $confirmed = !empty($entity->field_email_confirmed?->value);
 
     if (!empty($current_email)) {
@@ -200,7 +200,7 @@ function reliefweb_users_user_update(EntityInterface $entity) {
   }
   if (!empty($entity->_send_email_confirmation)) {
     $langcode = \Drupal::languageManager()->getDefaultLanguage()->getId();
-    $email = $entity->field_email?->value ?? '';
+    $email = $entity->getEmail();
 
     // Send an email to ask for confirmation of the email address.
     if (!empty($email)) {
@@ -271,25 +271,8 @@ function reliefweb_users_get_email_confirmation_url(UserInterface $user) {
  *   Email confirmation hash
  */
 function reliefweb_user_get_email_confirmation_hash(UserInterface $user, $timestamp) {
-  $email = $user->field_email->value;
+  $email = $user->getEmail();
   $confirmed = !empty($user->field_email_confirmed->value) ? '1' : '0';
   $data = implode('/', [$user->id(), $timestamp, $email, $confirmed]);
   return Crypt::hmacBase64($data, Settings::getHashSalt() . $email);
-}
-
-/**
- * Get a user's email.
- *
- * @param \Drupal\user\UserInterface $user
- *   User.
- *
- * @return string
- *   The user's email.
- */
-function reliefweb_users_get_email(UserInterface $user) {
-  if (!empty($user->field_email_confirmed->value)) {
-    $email = trim($user->field_email?->value ?? '');
-    return $email ?: $user->getEmail();
-  }
-  return $user->getEmail();
 }

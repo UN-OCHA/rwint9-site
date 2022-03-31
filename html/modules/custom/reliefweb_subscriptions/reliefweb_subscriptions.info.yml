@@ -6,5 +6,4 @@ core_version_requirement: ^9
 dependencies:
   - drupal:reliefweb_api
   - drupal:reliefweb_form
-  - drupal:reliefweb_users
   - drupal:reliefweb_utility

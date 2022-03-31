@@ -7,5 +7,4 @@ dependencies:
   - drupal:reliefweb_moderation
   - drupal:reliefweb_revisions
   - drupal:reliefweb_form
-  - drupal:reliefweb_users
   - drupal:reliefweb_utility

@@ -3,7 +3,6 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.field.user.user.field_email
     - field.field.user.user.field_email_confirmed
     - field.field.user.user.field_notes
   module:
@@ -22,14 +21,6 @@ content:
     weight: 4
     region: content
     settings: {  }
-    third_party_settings: {  }
-  field_email:
-    type: email_default
-    weight: 1
-    region: content
-    settings:
-      placeholder: ''
-      size: 60
     third_party_settings: {  }
   field_email_confirmed:
     type: boolean_checkbox
