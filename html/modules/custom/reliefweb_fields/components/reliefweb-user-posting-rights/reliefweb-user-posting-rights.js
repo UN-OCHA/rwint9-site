@@ -224,33 +224,37 @@
       var list = this.getFieldData();
       var settings = this.getFieldSettings();
 
-      var container = document.createElement('fieldset');
+      var container = document.createElement('div');
       container.setAttribute('data-field', settings.field);
       container.setAttribute('data-label', settings.label);
       container.setAttribute('data-settings-validate-url', settings.validateUrl);
 
-      // Link to the save button.
+      // Link to the save button after the legend.
       var link = document.createElement('a');
       link.setAttribute('href', '#actions');
       link.appendChild(document.createTextNode(t('jump to save button')));
 
-      var legend = document.createElement('legend');
-      legend.appendChild(document.createTextNode(settings.label));
+      var legend = this.field.querySelector('legend');
+      if (legend) {
+        legend.parentNode.insertBefore(link, legend.nextElementSibling);
+      }
+      else {
+        container.appendChild(link);
+      }
 
-      container.appendChild(legend);
-      container.appendChild(link);
+      // Creater the form content.
       container.appendChild(this.createFilters());
       container.appendChild(this.createNewEntryForm());
       container.appendChild(this.createList(list));
 
       // Add the form to the field.
-      this.field.appendChild(container);
+      this.data.parentNode.insertBefore(container, this.data.nextElementSibling);
 
       // Handle click events on the different buttons in the form.
-      this.field.addEventListener('click', this.handleClick.bind(this));
+      container.addEventListener('click', this.handleClick.bind(this));
 
       // Handle change events on the different select elements in the form.
-      this.field.addEventListener('change', this.handleChange.bind(this));
+      container.addEventListener('change', this.handleChange.bind(this));
 
       // Save the container.
       return container;
