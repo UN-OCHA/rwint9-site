@@ -452,7 +452,7 @@
         "version": "v2.9.0"
     },
     "reliefweb/api-indexer": {
-        "version": "v2.2.0"
+        "version": "v2.2.2"
     },
     "reliefweb/simple-autocomplete": {
         "version": "v1.3.0"

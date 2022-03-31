@@ -274,7 +274,6 @@ form fieldset > legend + a[href="#edit-actions"],
 form fieldset > legend + a[href="#actions"] {
   position: absolute;
   right: 0;
-  margin-top: 4px;
   text-transform: lowercase;
   font-weight: bold;
   font-variant: small-caps;

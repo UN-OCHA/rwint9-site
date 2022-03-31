@@ -287,19 +287,23 @@
       var links = this.getFieldData();
       var settings = this.getFieldSettings();
 
-      var container = document.createElement('fieldset');
+      var container = document.createElement('div');
       container.setAttribute('data-internal', settings.internal);
 
-      // Link to the save button.
+      // Link to the save button after the legend.
       var link = document.createElement('a');
       link.setAttribute('href', '#edit-actions');
       link.appendChild(document.createTextNode(t('Jump to save button')));
 
-      var legend = document.createElement('legend');
-      legend.appendChild(document.createTextNode(settings.label));
+      var legend = this.field.querySelector('legend');
+      if (legend) {
+        legend.parentNode.insertBefore(link, legend.nextElementSibling);
+      }
+      else {
+        container.appendChild(link);
+      }
 
-      container.appendChild(legend);
-      container.appendChild(link);
+      // Creater the form content.
       container.appendChild(this.createNewLinkForm(settings));
       container.appendChild(this.createActiveList(links.active, settings));
 
@@ -308,10 +312,10 @@
       }
 
       // Add the form to the field.
-      this.field.appendChild(container);
+      this.data.parentNode.insertBefore(container, this.data.nextElementSibling);
 
       // Handle click events on the different buttons in the form.
-      this.field.addEventListener('click', this.handleEvents.bind(this));
+      container.addEventListener('click', this.handleEvents.bind(this));
 
       return container;
     },
