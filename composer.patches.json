@@ -3,11 +3,8 @@
         "drupal/core" : {
             "https://www.drupal.org/project/drupal/issues/3047110": "patches/core--drupal--3047110-taxonomy-term-moderation-class.patch"
         },
-        "drupal/inline_entity_form": {
-            "https://www.drupal.org/project/inline_entity_form/issues/3226253": "https://git.drupalcode.org/project/inline_entity_form/-/merge_requests/33.diff"
-        },
         "drupal/migrate_tools" : {
-            "Invalid placeholder: https://www.drupal.org/project/migrate_tools/issues/3256236": "https://www.drupal.org/files/issues/2021-12-28/invalid_placeholder-3256236-3.patch"
+            "https://www.drupal.org/project/migrate_tools/issues/3256236": "https://www.drupal.org/files/issues/2021-12-28/invalid_placeholder-3256236-3.patch"
         },
         "drush/drush": {
             "https://humanitarian.atlassian.net/browse/OPS-8026": "patches/drush--timeout-override.patch"
