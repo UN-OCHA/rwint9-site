@@ -606,9 +606,10 @@
         var multiple = element.hasAttribute('multiple');
         var id = element.id;
 
-        // Remove the id from the element, we'll add it to the input so that
-        // error links for example or clicking on the label for focus work.
-        element.removeAttribute('id');
+        // We will add the id to the input so that error links or clicking the
+        // label will focus the input element. We change the id on the element
+        // so we can still target it easily.
+        element.setAttribute('id', id + '--element');
 
         // Mark the select as being processed for autocomplete.
         element.classList.add('rw-autocomplete-select');
