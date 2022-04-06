@@ -9,13 +9,29 @@
 }
 
 /**
- * Unsubscribe form.
+ * Subscription form.
  *
  * This doesn't really belong here but is related to the notifications.
  */
 .subscription-form .form-type-checkbox {
   display: block;
   margin-top: 8px;
+}
+.subscription-form [data-drupal-selector="edit-information"] p {
+  font-size: 16px;
+}
+.subscription-form [data-drupal-selector="edit-information"] .fieldset-wrapper em {
+  font-weight: bold;
+}
+.subscription-form .form-item-country-updates label {
+  margin: 0 0 24px 0;
+  letter-spacing: 0.5px;
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 1.3;
+}
+.subscription-form .form-actions.form-item {
+  margin-top: 24px;
 }
 
 /**
@@ -59,26 +75,17 @@
   --cd-flow-space: 2rem;
 }
 
-.subscription-form fieldset:first-of-type,
-.user-form fieldset:first-of-type,
-.community-topics-form fieldset:first-of-type,
-.contact-message-form {
-  padding-top: 24px;
-}
 /* Nested fieldset */
 .user-form fieldset fieldset:first-of-type {
   padding-top: 0;
 }
 
-/* Personal contact form */
-.contact-message-form > .form-wrapper:not(.form-actions) {
-  position: relative;
-  width: 100%;
-  padding: 16px 0 32px;
-  border-bottom: 1px solid var(--cd-reliefweb-brand-grey--light);
-}
-
-/* Community topics actions */
-.community-topics-form .form-actions.form-item {
-  margin-top: 32px;
+.user-form.cd-form--user .cd-form__item.form-item-current-pass,
+.user-form.cd-form--user .cd-form__item.form-type-textfield,
+.user-form.cd-form--user .cd-form__item.form-type-email,
+.user-form.cd-form--user .cd-form__item.form-type-managed-file,
+.user-form.cd-form--user #password-policy-status,
+.user-form.cd-form--user details {
+  padding-bottom: 0;
+  border-bottom: none;
 }

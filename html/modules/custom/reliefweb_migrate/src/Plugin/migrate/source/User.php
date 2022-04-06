@@ -157,6 +157,11 @@ class User extends EntityBase {
       ->condition('ur.uid', $uid);
     $row->setSourceProperty('roles', $query->execute()->fetchCol());
 
+    // Set the initial email address if not set.
+    if (empty($row->getSourceProperty('init'))) {
+      $row->setSourceProperty('init', $row->getSourceProperty('mail'));
+    }
+
     return parent::prepareRow($row);
   }
 

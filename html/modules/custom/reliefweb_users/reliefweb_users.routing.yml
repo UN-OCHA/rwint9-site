@@ -1,0 +1,24 @@
+user.email.confirmation:
+  path: '/user/email/confirmation/{uid}/{timestamp}/{hash}'
+  defaults:
+    _controller: '\Drupal\reliefweb_users\Controller\UserEmailConfirmationController::redirectConfirmation'
+    _title: 'Redirect to confirm user email'
+  requirements:
+    _access: 'TRUE'
+    user: \d+
+  options:
+    _maintenance_access: FALSE
+    no_cache: TRUE
+
+user.email.confirmation.process:
+  path: '/user/email/confirmation/{uid}'
+  defaults:
+    _controller: '\Drupal\reliefweb_users\Controller\UserEmailConfirmationController::processConfirmation'
+    _title: 'Confirm user email'
+  requirements:
+    _access: 'TRUE'
+    user: \d+
+  options:
+    _maintenance_access: FALSE
+    no_cache: TRUE
+

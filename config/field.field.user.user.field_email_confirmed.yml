@@ -1,0 +1,24 @@
+uuid: 148b9928-cbc2-4ccf-8f82-775c0f5d0dbc
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.user.field_email_confirmed
+  module:
+    - user
+id: user.user.field_email_confirmed
+field_name: field_email_confirmed
+entity_type: user
+bundle: user
+label: 'Email confirmed'
+description: 'Indicates wether or not the notification email address has been confirmed.'
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'Yes'
+  off_label: 'No'
+field_type: boolean

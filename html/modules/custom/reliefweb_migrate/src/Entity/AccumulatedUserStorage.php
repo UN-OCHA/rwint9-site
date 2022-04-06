@@ -51,6 +51,13 @@ class AccumulatedUserStorage extends UserStorage implements AccumulatedSqlConten
           ->condition($this->idKey, 2, '>')
           ->execute();
       }
+      if ($this->database->schema()->tableExists('users_data')) {
+        $this->database
+          ->delete('users_data')
+          ->condition($this->idKey, 2, '>')
+          ->execute();
+      }
+
       $this->deleteAllFromDedicatedTables();
     }
     catch (\Exception $exception) {

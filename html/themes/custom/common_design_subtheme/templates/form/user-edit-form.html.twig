@@ -21,11 +21,12 @@
 <fieldset id="account">
   <legend>{% trans %}Account information{% endtrans %}</legend>
   {{ form.account.name }}
-  {{ form.account.current_pass }}
+  {{ form.display_name }}
   {{ form.account.mail }}
+  {{ form.field_email_confirmed }}
+  {{ form.account.current_pass }}
   {{ form.account.pass }}
   {{ form.account.reset_pass }}
-  {{ form.display_name }}
 </fieldset>
 
 {% if form.account.status['#access'] != false %}
@@ -59,6 +60,7 @@
     'account',
     'field_notes',
     'actions',
-    'display_name'
+    'display_name',
+    'field_email_confirmed',
   ])
 }}

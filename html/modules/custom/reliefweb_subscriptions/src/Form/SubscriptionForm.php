@@ -7,7 +7,6 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Messenger\MessengerInterface;
 
 /**
  * Manage subscription for user.
@@ -80,6 +79,34 @@ class SubscriptionForm extends FormBase {
       '#type' => 'value',
       '#value' => $user->id(),
     ];
+
+    $form['information'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Email information'),
+      '#not_required' => TRUE,
+    ];
+
+    $email = $user->getEmail();
+    if (empty($user->field_email_confirmed->value)) {
+      $form['information']['email'] = [
+        '#type' => 'inline_template',
+        '#template' => "<p>{% trans %}Your email address <em>{{ email }}</em> <strong>has not been verified</strong> so notifications will not be sent.</p><p>Please go to your account settings: {{ link }} and save to receive a new email verification link.{% endtrans %}</p>",
+        '#context' => [
+          'email' => $email,
+          'link' => $user->toLink('here', 'edit-form')->toString(),
+        ],
+      ];
+    }
+    else {
+      $form['information']['email'] = [
+        '#type' => 'inline_template',
+        '#template' => "<p>{% trans %}Notifications will be send to <em>{{ email }}</em>. You can change it in your account settings: {{ link }}.{% endtrans %}</p>",
+        '#context' => [
+          'email' => $email,
+          'link' => $user->toLink('here', 'edit-form')->toString(),
+        ],
+      ];
+    }
 
     $form['global'] = [
       '#type' => 'checkboxes',
@@ -156,7 +183,7 @@ class SubscriptionForm extends FormBase {
     }
 
     // Show the user a message.
-    $this->messenger()->addMessage($this->t('You have successfully updated your subscriptions'), MessengerInterface::TYPE_STATUS);
+    $this->messenger()->addStatus($this->t('Subscriptions successfully updated.'));
   }
 
   /**

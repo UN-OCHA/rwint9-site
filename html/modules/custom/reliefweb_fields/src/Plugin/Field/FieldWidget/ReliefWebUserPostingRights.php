@@ -135,8 +135,8 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
         ->select('users_field_data', 'u')
         ->fields('u', ['uid', 'name', 'mail', 'status'])
         ->condition('u.uid', $ids, 'IN')
-        ?->execute()
-        ?->fetchAllAssoc('uid', \PDO::FETCH_ASSOC);
+        ->execute()
+        ?->fetchAllAssoc('uid', \PDO::FETCH_ASSOC) ?? [];
 
       foreach ($items as $item) {
         if (isset($users[$item['id']])) {
@@ -204,6 +204,7 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
 
     $data['name'] = trim($data['name']);
     $data['mail'] = trim($data['mail']);
+
     $data['status'] = intval($data['status'], 10);
     // Blocked users are not allowed to post.
     if ($data['status'] === 0) {
