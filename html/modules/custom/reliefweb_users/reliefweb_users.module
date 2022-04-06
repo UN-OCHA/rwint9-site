@@ -48,6 +48,9 @@ function reliefweb_users_menu_local_actions_alter(&$local_actions) {
 function reliefweb_users_form_user_form_alter(array &$form, FormStateInterface $form_state) {
   $user = \Drupal::currentUser();
 
+  // This will prevent asking for the password when changing the email address.
+  $form_state->set('user_pass_reset', TRUE);
+
   // Unncessary fields.
   $form['contact']['#access'] = FALSE;
   $form['details']['#access'] = FALSE;
@@ -78,7 +81,7 @@ function reliefweb_users_form_user_form_alter(array &$form, FormStateInterface $
     }
 
     if (empty($form_state->getFormObject()?->getEntity()?->field_email_confirmed?->value)) {
-      $form['account']['mail']['#title'] = t('@title <em>(not confirmed)</em>', [
+      $form['account']['mail']['#title'] = t('@title (not confirmed)', [
         '@title' => $form['account']['mail']['#title'],
       ]);
       $form['account']['mail']['#description'] = t('@description<br>A message with a link to confirm your email address will be sent when saving your account settings.', [
@@ -175,7 +178,7 @@ function reliefweb_users_user_presave(EntityInterface $entity) {
   // Add a flag to send an email confirmation message.
   elseif (empty($entity->_bypass_email_confirmation)) {
     $previous_email = $entity->original?->getEmail() ?? '';
-    $current_email = $entity?->getEmail() ?? '';
+    $current_email = $entity->getEmail() ?? '';
     $confirmed = !empty($entity->field_email_confirmed?->value);
 
     if (!empty($current_email)) {
