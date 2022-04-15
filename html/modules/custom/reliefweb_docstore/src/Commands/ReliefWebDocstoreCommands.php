@@ -86,11 +86,13 @@ class ReliefWebDocstoreCommands extends DrushCommands {
    * @option batch_size Number of reports with attachments to process at once.
    * @option limit Maximum number of reports with non migrated files to process,
    * 0 means process everything.
+   * @option preview_only Only download the attachment previews.
    *
    * @default options [
    *   'base_url' => 'https://reliefweb.int',
    *   'batch_size' => 1000,
    *   'limit' => 0,
+   *   'preview_only' => 0,
    * ]
    *
    * @aliases rw-dma,rw-docstore-migrate-attachments
@@ -104,10 +106,12 @@ class ReliefWebDocstoreCommands extends DrushCommands {
     'base_url' => 'https://reliefweb.int',
     'batch_size' => 1000,
     'limit' => 0,
+    'preview_only' => 0,
   ]) {
     $base_url = $options['base_url'];
     $batch_size = (int) $options['batch_size'];
     $limit = (int) $options['limit'];
+    $preview_only = !empty($options['preview_only']);
 
     if (preg_match('#^https?://[^/]+$#', $base_url) !== 1) {
       $this->logger()->error(dt('The base url must be in the form http(s)://example.test.'));
@@ -159,7 +163,7 @@ class ReliefWebDocstoreCommands extends DrushCommands {
       if (!empty($ids)) {
         $last = min($ids);
         $count_ids += count($ids);
-        $count_files += $this->migrateFiles($ids, $base_url, $local);
+        $count_files += $this->migrateFiles($ids, $base_url, $local, $preview_only);
 
         static::clearEntityCache('node', $ids);
       }
@@ -189,11 +193,13 @@ class ReliefWebDocstoreCommands extends DrushCommands {
    *   The base url of the site from which to retrieve the files.
    * @param bool $local
    *   Whether to store the files locally or in the docstore.
+   * @param bool $preview_only
+   *   If TRUE, then only retrieve the previews.
    *
    * @return int
    *   The number of migrated files.
    */
-  protected function migrateFiles(array $ids, $base_url, $local = FALSE) {
+  protected function migrateFiles(array $ids, $base_url, $local = FALSE, $preview_only = FALSE) {
     $query = Database::getConnection('default', 'rwint7')
       ->select('field_data_field_file', 'f')
       ->fields('f', ['entity_id', 'field_file_description'])
@@ -219,13 +225,14 @@ class ReliefWebDocstoreCommands extends DrushCommands {
     }
 
     // Migrate the files.
-    // @todo we need to find a way to identify if the file has been replaced.
-    // Maybe we can generate the file_uuid based on the file ID.
-    if ($local) {
-      return $this->migrateLocalFiles($entities, $base_url);
+    if ($preview_only) {
+      return $this->migratePreviewFiles($entities);
+    }
+    elseif ($local) {
+      return $this->migrateLocalFiles($entities);
     }
     else {
-      return $this->migrateRemoteFiles($entities, $base_url);
+      return $this->migrateRemoteFiles($entities);
     }
   }
 
@@ -338,6 +345,29 @@ class ReliefWebDocstoreCommands extends DrushCommands {
       }
       $this->updateOrCreateRemoteDocument($entity_id, $uuids);
       $count += count($uuids);
+    }
+    return $count;
+  }
+
+  /**
+   * Migrate preview files to their local storage.
+   *
+   * @param array $entities
+   *   List of entities that have attachments, keyed by entity id and with the
+   *   list of files as values.
+   *
+   * @return int
+   *   The number of migrated files.
+   */
+  protected function migratePreviewFiles(array $entities) {
+    $count = 0;
+    foreach ($entities as $files) {
+      foreach ($files as $file) {
+        // Try to download the file preview.
+        if ($this->downloadFilePreview($file)) {
+          $count++;
+        }
+      }
     }
     return $count;
   }
