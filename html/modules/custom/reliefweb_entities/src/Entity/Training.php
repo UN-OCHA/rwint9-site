@@ -143,8 +143,21 @@ class Training extends Node implements BundleEntityInterface, EntityModeratedInt
    * {@inheritdoc}
    */
   public function hasExpired() {
+    if ($this->isOngoing()) {
+      return FALSE;
+    }
     $timestamp = DateHelper::getDateTimeStamp($this->field_registration_deadline->value);
     return empty($timestamp) || ($timestamp < gmmktime(0, 0, 0));
+  }
+
+  /**
+   * Check if the training is an ongoing training (no dates).
+   *
+   * @return bool
+   *   TRUE if the training is ongoing.
+   */
+  public function isOngoing() {
+    return empty($this->field_registration_deadline->value) && empty($this->field_training_date->value);
   }
 
   /**
