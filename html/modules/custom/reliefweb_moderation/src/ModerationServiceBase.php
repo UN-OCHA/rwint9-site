@@ -420,11 +420,11 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
 
     // Ensure we call all the submit handlers.
     $submit_handlers = [];
-    if (!empty($submit['#submit'])) {
-      $submit_handlers = array_merge($submit_handlers, $submit['#submit']);
-    }
     if (!empty($form['#submit'])) {
       $submit_handlers = array_merge($submit_handlers, $form['#submit']);
+    }
+    if (!empty($submit['#submit'])) {
+      $submit_handlers = array_merge($submit_handlers, $submit['#submit']);
     }
 
     // Try to redirect to the entity page after submitting the form.

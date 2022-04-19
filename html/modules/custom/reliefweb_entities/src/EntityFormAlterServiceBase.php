@@ -540,7 +540,10 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
 
     // Add a submit handler to update the entity revision log message with the
     // new source information.
-    $form['#submit'][] = [$this, 'handlePotentialNewSourceSubmission'];
+    $this->addSubmitCallback($form, [
+      $this,
+      'handlePotentialNewSourceSubmission',
+    ]);
   }
 
   /**
@@ -938,7 +941,10 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
       '#title' => $this->t('Disable notifications'),
       '#default_value' => !empty($status) && $status !== 'draft',
     ];
-    $form['#submit'][] = [$this, 'setDisabledNotifications'];
+    $this->addSubmitCallback($form, [
+      $this,
+      'setDisabledNotifications',
+    ]);
   }
 
   /**
@@ -997,6 +1003,28 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
       if (is_object($entity)) {
         $entity->notifications_content_disable = TRUE;
       }
+    }
+  }
+
+  /**
+   * Add a form submit callback.
+   *
+   * @param array $form
+   *   Form.
+   * @param mixed $callback
+   *   Submit callback.
+   */
+  protected function addSubmitCallback(array &$form, $callback) {
+    // Add the callback.
+    $form['#submit'][] = $callback;
+
+    // Ensure the default form submission callback is run last as it's the one
+    // building the entity from the form_state.
+    $key = array_search('::submitForm', $form['#submit']);
+    if ($key !== FALSE) {
+      unset($form['#submit'][$key]);
+      $form['#submit'][] = '::submitForm';
+      $form['#submit'] = array_values($form['#submit']);
     }
   }
 
