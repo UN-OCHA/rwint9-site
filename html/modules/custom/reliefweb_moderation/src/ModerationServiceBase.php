@@ -2460,6 +2460,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     switch ($entity_type_id) {
       case 'node':
         $date = $entity->getCreatedTime();
+        break;
 
       case 'taxonomy_term':
         // Consider the timestamp of the first revision as the creation date.
@@ -2479,6 +2480,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
         $query->range(0, 1);
 
         $date = $query->execute()?->fetchField();
+        break;
     }
 
     return empty($date) ? '1996-04-01T00:00:00+0000' : $date;
