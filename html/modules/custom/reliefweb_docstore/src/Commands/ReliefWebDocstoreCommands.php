@@ -14,7 +14,6 @@ use Drupal\reliefweb_utility\Helpers\LegacyHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
 use Drush\Commands\DrushCommands;
-use GuzzleHttp\Psr7\Utils;
 
 /**
  * ReliefWeb migration Drush commandfile.
@@ -87,12 +86,15 @@ class ReliefWebDocstoreCommands extends DrushCommands {
    * @option limit Maximum number of reports with non migrated files to process,
    * 0 means process everything.
    * @option preview_only Only download the attachment previews.
+   * @option source_directory Local source directory with the ReliefWeb files.
+   * If empty, fetch the files remotely using the base URL.
    *
    * @default options [
    *   'base_url' => 'https://reliefweb.int',
    *   'batch_size' => 1000,
    *   'limit' => 0,
    *   'preview_only' => 0,
+   *   'source_directory' => '',
    * ]
    *
    * @aliases rw-dma,rw-docstore-migrate-attachments
@@ -107,11 +109,13 @@ class ReliefWebDocstoreCommands extends DrushCommands {
     'batch_size' => 1000,
     'limit' => 0,
     'preview_only' => 0,
+    'source_directory' => '',
   ]) {
     $base_url = $options['base_url'];
     $batch_size = (int) $options['batch_size'];
     $limit = (int) $options['limit'];
     $preview_only = !empty($options['preview_only']);
+    $source_directory = rtrim($options['source_directory'], '/');
 
     if (preg_match('#^https?://[^/]+$#', $base_url) !== 1) {
       $this->logger()->error(dt('The base url must be in the form http(s)://example.test.'));
@@ -123,6 +127,18 @@ class ReliefWebDocstoreCommands extends DrushCommands {
     }
     if ($limit < 0) {
       $this->logger()->error(dt('The limit must be equal or superior to 0.'));
+      return FALSE;
+    }
+    if (!empty($source_directory) && !file_exists($source_directory)) {
+      $this->logger()->error(strtr('The source directory does not exist.'));
+      return FALSE;
+    }
+
+    // Get the storage mode: local or docstore.
+    $local = $this->docstoreConfig->get('local') === TRUE;
+
+    if (!empty($source_directory) && $local === FALSE) {
+      $this->logger()->error(strtr('The source directory option is only valid in local mode.'));
       return FALSE;
     }
 
@@ -145,8 +161,6 @@ class ReliefWebDocstoreCommands extends DrushCommands {
     $count_ids = 0;
     $count_files = 0;
 
-    $local = $this->docstoreConfig->get('local') === TRUE;
-
     while ($last !== NULL) {
       $ids = $this->getDatabase()
         ->select($table, $table)
@@ -163,7 +177,7 @@ class ReliefWebDocstoreCommands extends DrushCommands {
       if (!empty($ids)) {
         $last = min($ids);
         $count_ids += count($ids);
-        $count_files += $this->migrateFiles($ids, $base_url, $local, $preview_only);
+        $count_files += $this->migrateFiles($ids, $base_url, $local, $preview_only, $source_directory);
 
         static::clearEntityCache('node', $ids);
       }
@@ -195,11 +209,13 @@ class ReliefWebDocstoreCommands extends DrushCommands {
    *   Whether to store the files locally or in the docstore.
    * @param bool $preview_only
    *   If TRUE, then only retrieve the previews.
+   * @param string $source_directory
+   *   The source directory with the ReliefWeb files.
    *
    * @return int
    *   The number of migrated files.
    */
-  protected function migrateFiles(array $ids, $base_url, $local = FALSE, $preview_only = FALSE) {
+  protected function migrateFiles(array $ids, $base_url, $local = FALSE, $preview_only = FALSE, $source_directory = '') {
     $query = Database::getConnection('default', 'rwint7')
       ->select('field_data_field_file', 'f')
       ->fields('f', ['entity_id', 'field_file_description'])
@@ -214,7 +230,7 @@ class ReliefWebDocstoreCommands extends DrushCommands {
     // Group the files per entity.
     $entities = [];
     foreach ($records as $record) {
-      $file = $this->prepareFileData($record, $base_url);
+      $file = $this->prepareFileData($record, $base_url, $source_directory);
       if (!empty($file)) {
         $entities[$record['entity_id']][] = $file;
       }
@@ -243,14 +259,22 @@ class ReliefWebDocstoreCommands extends DrushCommands {
    *   D7 file record.
    * @param string $base_url
    *   The base url of the site from which to retrieve the files.
+   * @param string $source_directory
+   *   The source directory with the ReliefWeb files.
    *
    * @return array
    *   D9 file data.
    */
-  protected function prepareFileData(array $record, $base_url) {
+  protected function prepareFileData(array $record, $base_url, $source_directory) {
     $uuid = LegacyHelper::generateAttachmentUuid($record['uri']);
     $file_uuid = LegacyHelper::generateAttachmentFileUuid($uuid, $record['fid']);
-    $url = LegacyHelper::getFileLegacyUrl($record['uri'], $base_url);
+
+    if (empty($source_directory)) {
+      $url = LegacyHelper::getFileLegacyUrl($record['uri'], $base_url);
+    }
+    else {
+      $url = $source_directory . '/resources/' . basename($record['uri']);
+    }
 
     $file = $this->getDatabase()
       ->select('file_managed', 'fm')
@@ -266,7 +290,8 @@ class ReliefWebDocstoreCommands extends DrushCommands {
       $file['file_uuid'] = $file_uuid;
       $file['url'] = $url;
       $file['private'] = strpos($file['uri'], 'private://') === 0;
-      $file['preview_url'] = $this->getPreviewUrl($record, $base_url);
+      $file['preview_url'] = $this->getPreviewUrl($record, $base_url, $source_directory);
+      $file['legacy_uri'] = $record['uri'];
     }
     else {
       $this->logger()->error(dt('No database entry found for file @uri.', [
@@ -283,16 +308,24 @@ class ReliefWebDocstoreCommands extends DrushCommands {
    *   D7 file record.
    * @param string $base_url
    *   The base url of the site from which to retrieve the files.
+   * @param string $source_directory
+   *   The source directory with the ReliefWeb files.
    *
    * @return string
    *   D7 preview URL.
    */
-  protected function getPreviewUrl(array $record, $base_url) {
+  protected function getPreviewUrl(array $record, $base_url, $source_directory) {
     if (preg_match('/\|\d+\|(0|90|-90)$/', $record['field_file_description']) === 1) {
       $filename = basename(urldecode($record['filename']), '.pdf');
       $filename = str_replace('%', '', $filename);
-      $filename = UrlHelper::encodePath($record['fid'] . '-' . $filename . '.png');
-      return $base_url . '/sites/reliefweb.int/files/resources-pdf-previews/' . $filename;
+      $filename = $record['fid'] . '-' . $filename . '.png';
+      if (empty($source_directory)) {
+        $filename = UrlHelper::encodePath($filename);
+        return $base_url . '/sites/reliefweb.int/files/resources-pdf-previews/' . $filename;
+      }
+      else {
+        return $source_directory . '/resources-pdf-previews/' . $filename;
+      }
     }
     return '';
   }
@@ -392,39 +425,26 @@ class ReliefWebDocstoreCommands extends DrushCommands {
     // Try to download the file.
     $success = FALSE;
     if (ReliefWebFile::prepareDirectory($uri)) {
-      try {
-        $input = Utils::TryFopen($url, 'r');
-        $output = Utils::TryFopen($uri, 'w');
-        $success = stream_copy_to_stream($input, $output);
-      }
-      catch (\Exception $exception) {
-        $this->logger()->error(dt('Unable to download file @url to @uri: @message.', [
+      if (!copy($url, $uri)) {
+        $this->logger()->error(dt('Unable to download file @url to @uri.', [
           '@url' => $url,
           '@uri' => $uri,
-          '@message' => $exception->getMessage(),
         ]));
-        return FALSE;
+      }
+      else {
+        $this->logger()->info(dt('Successfully downloaded file @url to @uri.', [
+          '@url' => $url,
+          '@uri' => $uri,
+        ]));
+        $success = TRUE;
       }
     }
     else {
       $this->logger()->error(dt('Unable to create directory for @uri.', [
         '@uri' => $uri,
       ]));
-      return FALSE;
     }
 
-    if (empty($success)) {
-      $this->logger()->error(dt('Unable to download file @url to @uri.', [
-        '@url' => $url,
-        '@uri' => $uri,
-      ]));
-    }
-    else {
-      $this->logger()->info(dt('Successfully downloaded file @url to @uri.', [
-        '@url' => $url,
-        '@uri' => $uri,
-      ]));
-    }
     return $success;
   }
 
@@ -433,6 +453,9 @@ class ReliefWebDocstoreCommands extends DrushCommands {
    *
    * @param array $file
    *   Legacy file data.
+   *
+   * @return bool
+   *   TRUE if the file could be downloaded.
    */
   protected function downloadFilePreview(array $file) {
     if (!empty($file['preview_url'])) {
@@ -440,41 +463,31 @@ class ReliefWebDocstoreCommands extends DrushCommands {
       $uri = preg_replace('#\.pdf$#i', '.png', $uri);
       $url = $file['preview_url'];
 
+      // Try to download the preview file.
+      $success = FALSE;
       if (ReliefWebFile::prepareDirectory($uri)) {
-        try {
-          $input = Utils::TryFopen($url, 'r');
-          $output = Utils::TryFopen($uri, 'w');
-          $success = stream_copy_to_stream($input, $output);
-        }
-        catch (\Exception $exception) {
-          $this->logger()->error(dt('Unable to download preview file @url to @uri: @message.', [
+        if (!copy($url, $uri)) {
+          $this->logger()->error(dt('Unable to download preview file @url to @uri.', [
             '@url' => $url,
             '@uri' => $uri,
-            '@message' => $exception->getMessage(),
           ]));
-          return FALSE;
+        }
+        else {
+          $this->logger()->info(dt('Successfully downloaded preview file @url to @uri.', [
+            '@url' => $url,
+            '@uri' => $uri,
+          ]));
+          $success = TRUE;
         }
       }
       else {
         $this->logger()->error(dt('Unable to create preview directory for @uri.', [
           '@uri' => $uri,
         ]));
-        return FALSE;
-      }
-
-      if (empty($success)) {
-        $this->logger()->error(dt('Unable to download preview file @url to @uri.', [
-          '@url' => $url,
-          '@uri' => $uri,
-        ]));
-      }
-      else {
-        $this->logger()->info(dt('Successfully downloaded preview file @url to @uri.', [
-          '@url' => $url,
-          '@uri' => $uri,
-        ]));
       }
     }
+
+    return $success;
   }
 
   /**
