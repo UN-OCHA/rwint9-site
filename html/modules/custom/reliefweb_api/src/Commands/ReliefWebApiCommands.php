@@ -141,9 +141,11 @@ class ReliefWebApiCommands extends DrushCommands {
     // Index all the references at once when the special 'references' bundle
     // is passed to the command.
     if ($bundle === 'references') {
-      $references = explode(',', $this->state->get('reliefweb_api_references', ''));
-      foreach ($references as $reference) {
-        $this->index($reference, $options);
+      $excluded_bundles = ['country', 'disaster', 'source'];
+      foreach (Bundles::$bundles as $bundle => $info) {
+        if ($info['type'] === 'taxonomy_term' && !in_array($bundle, $excluded_bundles)) {
+          $this->index($bundle, $options);
+        }
       }
       return;
     }
