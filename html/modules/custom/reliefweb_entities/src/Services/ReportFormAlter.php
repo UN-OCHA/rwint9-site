@@ -82,6 +82,17 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     // Remove Complex Emergency (41764) option for disaster type field.
     FormHelper::removeOptions($form, 'field_disaster_type', [41764]);
 
+    // Change the description of the file field to indicate that only PDF files
+    // are accepted in terms of editorial guidance.
+    if (isset($form['field_file']['widget']['add_more']['files']['#description'])) {
+      $description = $form['field_file']['widget']['add_more']['files']['#description'];
+      $form['field_file']['widget']['add_more']['files']['#description'] = $this->t(
+        'PDF only. Max file size: %max_filesize.',
+        $description->getArguments(),
+        $description->getOptions()
+      );
+    }
+
     // Validate the attachments.
     $form['#validate'][] = [$this, 'validateAttachment'];
 
