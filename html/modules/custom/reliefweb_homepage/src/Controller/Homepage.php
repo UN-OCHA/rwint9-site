@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_homepage\Controller;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Render\RendererInterface;
@@ -122,10 +123,15 @@ class Homepage extends ControllerBase {
     // Parse the API results, building the page sections data.
     foreach ($results as $index => $result) {
       $query = $queries[$index];
+      $cache_tags = [
+        $query['entity_type'] . '_list:' . $query['bundle'],
+        'taxonomy_term_list',
+      ];
 
       // Generate the section.
       switch ($index) {
         case 'headlines':
+          $cache_tags[] = 'reliefweb:headlines';
         case 'disasters':
         case 'most_read':
         case 'blog':
@@ -149,6 +155,9 @@ class Homepage extends ControllerBase {
             '#resource' => $query['resource'],
             '#entities' => $entities,
             '#more' => $query['more'] ?? NULL,
+            '#cache' => [
+              'tags' => $cache_tags,
+            ],
           ];
           break;
 
@@ -161,6 +170,9 @@ class Homepage extends ControllerBase {
             $sections['opportunities'] = [
               '#theme' => 'reliefweb_homepage_opportunities',
               '#id' => 'opportunities',
+              '#cache' => [
+                'tags' => ['taxonomy_term_list'],
+              ],
             ];
           }
           $sections['opportunities']['#opportunities'][] = [
@@ -169,6 +181,7 @@ class Homepage extends ControllerBase {
             'title' => $query['title'],
             'url' => $query['url'],
           ];
+          $sections['opportunities']['#cache']['tags'][] = 'node_list:' . $query['bundle'];
           break;
       }
     }
@@ -225,6 +238,7 @@ class Homepage extends ControllerBase {
     return [
       'resource' => 'reports',
       'bundle' => 'report',
+      'entity_type' => 'node',
       'payload' => $payload,
       'exclude' => ['posted', 'published', 'format'],
       'title' => $this->t('Latest Headlines'),
@@ -261,6 +275,7 @@ class Homepage extends ControllerBase {
     return [
       'resource' => 'reports',
       'bundle' => 'report',
+      'entity_type' => 'node',
       'payload' => $payload,
       'title' => $this->t('Latest Updates'),
       'callback' => [$this, 'parseMostReadApiData'],
@@ -292,6 +307,7 @@ class Homepage extends ControllerBase {
     return [
       'resource' => 'disasters',
       'bundle' => 'disaster',
+      'entity_type' => 'taxonomy_term',
       'payload' => $payload,
       'title' => $this->t('Recent Disasters'),
       'callback' => [$this, 'parseDisastersApiData'],
@@ -316,6 +332,7 @@ class Homepage extends ControllerBase {
     return [
       'resource' => 'blog',
       'bundle' => 'blog_post',
+      'entity_type' => 'node',
       'payload' => $payload,
       'title' => $this->t('Latest Blog'),
       'callback' => [$this, 'parseBlogPostApiData'],
@@ -354,6 +371,7 @@ class Homepage extends ControllerBase {
     return [
       'resource' => $resource,
       'bundle' => $bundle,
+      'entity_type' => 'node',
       'payload' => $payload,
       'title' => $title,
       // Link to the job/training river for the entity.
@@ -444,6 +462,9 @@ class Homepage extends ControllerBase {
           '#title' => $query['title'],
           '#resource' => $query['resource'],
           '#entities' => $entities,
+          '#cache' => [
+            'max-age' => 0,
+          ],
         ];
       }
     }
@@ -464,6 +485,7 @@ class Homepage extends ControllerBase {
     if (!empty($data) && is_array($data)) {
       $selection = array_slice(array_filter($data, 'is_int'), 0, 8);
       $this->state->set('reliefweb_headline_selection', $selection);
+      Cache::invalidateTags(['reliefweb:headlines']);
       $success = TRUE;
     }
     return new Response('', $success ? 200 : 500);

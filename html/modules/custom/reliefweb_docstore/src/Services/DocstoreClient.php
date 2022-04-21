@@ -129,9 +129,13 @@ class DocstoreClient {
       return new JsonResponse();
     }
 
-    return $this->request('POST', '/api/v1/files/' . $uuid . '/content', [
+    $response = $this->request('POST', '/api/v1/files/' . $uuid . '/content', [
       'body' => $resource,
     ], $timeout);
+
+    @fclose($resource);
+
+    return $response;
   }
 
   /**
@@ -174,7 +178,12 @@ class DocstoreClient {
       }
 
       $input = StreamWrapper::getResource($response->getBody());
-      return stream_copy_to_stream($input, $output) !== FALSE;
+      $result = stream_copy_to_stream($input, $output) !== FALSE;
+
+      @fclose($input);
+      @fclose($output);
+
+      return $result;
     }
     return FALSE;
   }

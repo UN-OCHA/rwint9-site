@@ -166,6 +166,7 @@
 }
 .rw-moderation-list .rw-moderation-table__cell__bury {
   margin-top: 12px;
+  text-align: center;
   font-size: 15px;
 }
 .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__details,

@@ -5,6 +5,7 @@
  * Entity management for ReliefWeb.
  */
 
+use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
@@ -660,5 +661,15 @@ function reliefweb_moderation_cron() {
       ]));
       $node->save();
     }
+  }
+}
+
+/**
+ * Implements hook_menu_local_tasks_alter().
+ */
+function reliefweb_entities_menu_local_tasks_alter(&$data, $route_name, RefinableCacheableDependencyInterface &$cacheability) {
+  // Open the clone entity form in a new tab.
+  if (isset($data['tabs'][0]['content_entity_clone.clone']['#link'])) {
+    $data['tabs'][0]['content_entity_clone.clone']['#link']['localized_options']['attributes']['target'] = '_blank';
   }
 }

@@ -95,7 +95,7 @@ class ReliefWebApiCommands extends DrushCommands {
    * @option replicas Number of Elasticsearch replicas for the index,
    *   defaults to NULL which means use the reliefweb_api.settings.replicas
    *   default config value.
-   * @option replicas Number of Elasticsearch shards for the index,
+   * @option shards Number of Elasticsearch shards for the index,
    *   defaults to NULL which means use the reliefweb_api.settings.shards
    *   default config value.
    *
@@ -141,9 +141,11 @@ class ReliefWebApiCommands extends DrushCommands {
     // Index all the references at once when the special 'references' bundle
     // is passed to the command.
     if ($bundle === 'references') {
-      $references = explode(',', $this->state->get('reliefweb_api_references', ''));
-      foreach ($references as $reference) {
-        $this->index($reference, $options);
+      $excluded_bundles = ['country', 'disaster', 'source'];
+      foreach (Bundles::$bundles as $bundle => $info) {
+        if ($info['type'] === 'taxonomy_term' && !in_array($bundle, $excluded_bundles)) {
+          $this->index($bundle, $options);
+        }
       }
       return;
     }
@@ -168,8 +170,9 @@ class ReliefWebApiCommands extends DrushCommands {
     $indexing_options['alias-only'] = !empty($options['alias-only']);
     // It looks like "simulate" is a reserved drush option so we need another
     // name for the option, thus "count-only"...
-    $indexing_options['replicas'] = $options['replicas'] ?? $indexing_options['replicas'];
-    $indexing_options['shards'] = $options['shards'] ?? $indexing_options['shards'];
+    $indexing_options['simulate'] = !empty($options['count-only']);
+    $indexing_options['replicas'] = (int) ($options['replicas'] ?? $indexing_options['replicas']);
+    $indexing_options['shards'] = (int) ($options['shards'] ?? $indexing_options['shards']);
     $indexing_options['simulate'] = !empty($options['count-only']);
     $indexing_options['log'] = 'echo';
 

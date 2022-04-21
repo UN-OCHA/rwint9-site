@@ -5,13 +5,12 @@
  * Preprocess functions for the Common Design subtheme.
  */
 
-use Drupal\Component\Render\FormattableMarkup;
-use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Template\Attribute;
 use Drupal\Core\Url;
+use Drupal\common_design_subtheme\FormElementOptional;
 use Drupal\media\MediaInterface;
 
 /**
@@ -293,136 +292,5 @@ function common_design_subtheme_preprocess_inline_entity_form_entity_table(array
  * we use '#not_required' to flag optional elements.
  */
 function common_design_subtheme_reliefweb_form_mark_optional_alter(array &$element, array &$context) {
-  $types_to_skip = [
-    'button',
-    'hidden',
-    'link',
-    'submit',
-    'text_format',
-    'token',
-    'vertical_tabs',
-    'weight',
-  ];
-
-  $container_types = [
-    'container',
-    'details',
-    'fieldset',
-    'checkboxes',
-    'radios',
-  ];
-
-  // Skip if the field is not of a type we want to mark as optional.
-  if (!isset($element['#type']) || in_array($element['#type'], $types_to_skip)) {
-    return;
-  }
-
-  // Skip if the field is required.
-  if (!empty($element['#required']) || !empty($elment['widget']['#required'])) {
-    return;
-  }
-
-  // Skipped if already processed.
-  if (isset($element['#not_required'])) {
-    return;
-  }
-
-  // Process container elements.
-  if (in_array($element['#type'], $container_types)) {
-    common_design_subtheme_mark_children_as_optional($element);
-  }
-  // Process other elements.
-  else {
-    // Flag the element as optional.
-    $element['#not_required'] = TRUE;
-
-    $form = $context['form'];
-    $type = $element['#type'];
-
-    // Special handling of checkbox and radio elements. We need to check if
-    // they are part of a group of checkboxes or radios in which case we'll
-    // mark the grouping element as optional when processed by
-    // common_design_subtheme_mark_children_as_optional().
-    if ($type === 'checkbox' || $type === 'radio') {
-      if (isset($element['#array_parents'])) {
-        $parents = array_slice($element['#array_parents'], 0, -1);
-
-        while (!empty($parents)) {
-          $parent = NestedArray::getValue($form, $parents);
-
-          switch ($parent['#type'] ?? NULL) {
-            case 'checkboxes':
-            case 'radios':
-              return;
-          }
-
-          array_pop($parents);
-        }
-      }
-    }
-
-    if (isset($element['#title'])) {
-      $element['#title'] = common_design_subtheme_add_optional_mark_to_title($element['#title']);
-    }
-  }
-}
-
-/**
- * Mark an element and its children as optional.
- *
- * @param mixed $element
- *   Form element.
- */
-function common_design_subtheme_mark_children_as_optional(&$element) {
-  $types_to_skip = [
-    // Grouped checkboxes and radios.
-    'checkbox',
-    'radio',
-    // Same list as common_design_subtheme_reliefweb_form_mark_optional_alter().
-    'button',
-    'hidden',
-    'link',
-    'submit',
-    'text_format',
-    'token',
-    'vertical_tabs',
-    'weight',
-  ];
-
-  // Skip if the element is invalid or already processed or required.
-  if (!is_array($element) || isset($element['#not_required']) || !empty($element['#required'])) {
-    return;
-  }
-
-  // Skip if the field is not of a type we want to mark as optional.
-  if (isset($element['#type']) && in_array($element['#type'], $types_to_skip)) {
-    return;
-  }
-
-  $element['#not_required'] = TRUE;
-  if (!empty($element['#title'])) {
-    $element['#title'] = common_design_subtheme_add_optional_mark_to_title($element['#title']);
-  }
-  if (!empty($element['#field_title'])) {
-    $element['#field_title'] = common_design_subtheme_add_optional_mark_to_title($element['#field_title']);
-  }
-
-  foreach (Element::children($element) as $key) {
-    common_design_subtheme_mark_children_as_optional($element[$key]);
-  }
-}
-
-/**
- * Add the optional mark to a form element title.
- *
- * @param string|\Drupal\Component\Render\MarkupInterface $title
- *   Form element title.
- *
- * @return \Drupal\Component\Render\MarkupInterface
- *   Title with "optional" appended.
- */
-function common_design_subtheme_add_optional_mark_to_title($title) {
-  return new FormattableMarkup('@title <span class="form-optional"> - optional</span>', [
-    '@title' => $title,
-  ]);
+  FormElementOptional::markAsOptional($element, $context['form']);
 }

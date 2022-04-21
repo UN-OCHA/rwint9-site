@@ -253,13 +253,10 @@
       // This updates the options of the disaster type select field to match
       // the disaster types from the the selected disasters.
       function handleDisasterTypes(disasterSelection, disasterElement) {
-        // Retrieve the disaster type field.
-        var id = disasterElement.id.replace('disaster', 'disaster-type');
-        var disasterTypeElement = document.getElementById(id);
-
-        // Place holder to keep track of the disaster type selection container
-        // which is created later when the disaster type field is transformed
-        // into an autocomplete.
+        // Placeholders to keep track of the disaster type element and selection
+        // container which are updated/created later when the disaster type
+        // field is transformed into an autocomplete.
+        var disasterTypeElement = null;
         var disasterTypeSelection = null;
 
         // Update the disaster types.
@@ -276,6 +273,10 @@
         // selecting a disaster of type Flood, then unselecting it will result
         // in the removal of the Flood disaster type).
         var updateDisasterTypes = function (oldTypes, exclude) {
+          if (disasterTypeElement === null) {
+            disasterTypeElement = document.getElementById(disasterElement.id.replace('disaster', 'disaster-type'));
+          }
+
           // Nothing to do if we couldn't find the disaster type field.
           if (disasterTypeElement === null) {
             return;
@@ -307,7 +308,7 @@
           }
 
           if (disasterTypeSelection === null) {
-            disasterTypeSelection = document.getElementById(disasterTypeElement.id + '--selection');
+            disasterTypeSelection = document.getElementById(disasterTypeElement.id.replace('--element', '--selection'));
           }
           updateSelection(disasterTypeSelection, disasterTypeElement);
         };
@@ -350,7 +351,7 @@
           return null;
         }
 
-        // Set disater type handling.
+        // Set disaster type handling.
         var updateDisasterTypes = handleDisasterTypes(disasterSelection, disasterElement);
 
         // Function to handle the changes to the country field.
