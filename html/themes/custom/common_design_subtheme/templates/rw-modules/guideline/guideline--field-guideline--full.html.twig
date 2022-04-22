@@ -17,10 +17,12 @@
 #}
 <div class="rw-page-content">
 {% if content %}
+  {{- elements['#guideline'].getLinkToGuidelines() -}}
   {% set parent_link = elements['#guideline'].getGuidelineListLink() %}
   {% if parent_link %}
   <p>{% trans %}<strong>Guideline list:</strong> {{ parent_link }}{% endtrans %}</p>
   {% endif %}
+  <hr>
   {{- content.field_description.0|render|sanitize_html(false, 1) -}}
   {{- content|without(['field_description']) -}}
 {% endif %}
