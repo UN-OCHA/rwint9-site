@@ -108,4 +108,14 @@ class Guideline extends GuidelineBase implements EntityModeratedInterface, Entit
     return !empty($parents) ? reset($parents) : NULL;
   }
 
+  /**
+   * Get the list, this guideline belongs to.
+   *
+   * @return \Drupal\Core\GeneratedLink|null
+   *   Link to the guideline list.
+   */
+  public function getGuidelineListLink() {
+    return $this->getGuidelineList()?->toLink()?->toString();
+  }
+
 }
