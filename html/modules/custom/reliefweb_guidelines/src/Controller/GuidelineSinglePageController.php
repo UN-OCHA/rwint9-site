@@ -98,6 +98,7 @@ class GuidelineSinglePageController extends ControllerBase {
         return !empty($item['title']) && !empty($item['children']);
       }),
       '#cache' => [
+        'tags' => ['guideline_list'],
         'contexts' => ['user.permissions'],
       ],
       '#attached' => [
