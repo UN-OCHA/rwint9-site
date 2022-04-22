@@ -266,7 +266,12 @@ class ReliefWebLinks extends WidgetBase implements ContainerFactoryPluginInterfa
 
       // Only nodes are supported as internal links.
       if (empty($path)) {
-        $invalid = t('Invalid internal URL: it must be in the form "/node/123456" or "/reports/xxx" (it can start with https://reliefweb.int).');
+        if (preg_match('#^(https?://[^/]+)?/(node/\d+|report/[^/]+)#', $item['url']) === 1) {
+          $invalid = t('Invalid internal URL: the document was not found.');
+        }
+        else {
+          $invalid = t('Invalid internal URL: it must be in the form "/node/123456" or "/reports/xxx" (it can start with https://reliefweb.int).');
+        }
       }
       elseif (strpos($path, '/node/') === 0 && strlen($path) > 6) {
         $nid = intval(substr($path, 6), 10);

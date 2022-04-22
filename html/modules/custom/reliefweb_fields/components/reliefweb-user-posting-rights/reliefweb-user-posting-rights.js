@@ -267,7 +267,8 @@
       // Remove existing error messages in this container.
       var messages = field.querySelectorAll('[data-error-message]');
       for (var i = 0, l = messages.length; i < l; i++) {
-        field.removeChild(messages[i]);
+        var message = messages[i];
+        message.parentNode.removeChild(message);
       }
 
       // Remove existing highligted errors.
@@ -293,7 +294,9 @@
 
         // Add the message at the top of the fieldset.
         var sibling = field.querySelector('div[data-new-form]');
-        field.insertBefore(message, sibling);
+        if (sibling) {
+          sibling.parentNode.insertBefore(message, sibling);
+        }
 
         // Mark the element as erroneous.
         element.setAttribute('data-error', '');
