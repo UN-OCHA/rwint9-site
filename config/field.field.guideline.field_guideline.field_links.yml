@@ -11,7 +11,7 @@ id: guideline.field_guideline.field_links
 field_name: field_links
 entity_type: guideline
 bundle: field_guideline
-label: Links
+label: References
 description: ''
 required: false
 translatable: false
