@@ -311,8 +311,10 @@ aside nav a.active + a {
 }
 
 .rw-guidelines-list article img {
+  display: block;
   box-sizing: border-box;
-  max-width: 100%;
+  max-width: 1000px;
+  margin: 10px 0;
   padding: 10px;
   border: 0;
   background-color: #fff;
