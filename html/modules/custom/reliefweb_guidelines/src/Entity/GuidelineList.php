@@ -51,4 +51,31 @@ class GuidelineList extends GuidelineBase implements EntityModeratedInterface, E
     parent::postDelete($storage, $entities);
   }
 
+  /**
+   * Get the list of guidelines under this list.
+   *
+   * @return array
+   *   Render array.
+   */
+  public function getGuidelineLinks() {
+    $children = $this->getChildren();
+    if (!empty($children)) {
+      $links = [];
+      foreach ($children as $child) {
+        $links[] = [
+          'title' => $child->label(),
+          'url' => $child->toUrl(),
+        ];
+      }
+      return [
+        '#theme' => 'links',
+        '#links' => $links,
+        '#cache' => [
+          'tags' => ['guideline_list'],
+        ],
+      ];
+    }
+    return [];
+  }
+
 }
