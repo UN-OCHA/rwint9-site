@@ -60,20 +60,23 @@
           be replaced with a button to show the child menu.
         #}
         {% spaceless %}
-        <a href="{{ item.url }}" id="{{ id }}">
-          {# Add the user icon for the first menu item of the root element. #}
-          {% if menu_level == 0 and item.url|render == '/help' %}
+        {% if menu_level == 0 and item.url|render == '/help' %}
+          <a href="{{ item.url }}" id="{{ id }}">
             <svg class="cd-icon cd-icon--help" aria-hidden="true" focusable="false" width="16" height="16">
               <use xlink:href="#cd-icon--help"></use>
             </svg>
-          {% endif %}
-          {% if menu_level == 0 and item.url|render == '/guidelines' %}
+            <span>{{ title }}</span>
+          </a>
+        {% elseif menu_level == 0 and item.url|render == '/guidelines' %}
+          <a href="{{ item.url }}" id="{{ id }}" target="_blank">
             <svg class="cd-icon cd-icon--education" aria-hidden="true" focusable="false" width="16" height="16">
               <use xlink:href="#cd-icon--education"></use>
             </svg>
-          {% endif %}
-          <span>{{ title }}</span>
-        </a>
+            <span>{{ title }}</span>
+          </a>
+        {% else %}
+          <a href="{{ item.url }}" id="{{ id }}"><span>{{ title }}</span></a>
+        {% endif %}
         {% endspaceless %}
 
         {# If the menu item has children then we mark it as toggable and we'll

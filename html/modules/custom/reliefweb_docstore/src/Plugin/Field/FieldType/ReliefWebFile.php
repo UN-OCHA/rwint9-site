@@ -529,7 +529,7 @@ class ReliefWebFile extends FieldItemBase {
 
     // @todo store the dimensions or use something faster to get
     // the width and height?
-    $info = getimagesize($uri);
+    $info = @getimagesize($uri);
     if ($info === FALSE) {
       return [];
     }

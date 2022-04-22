@@ -3,9 +3,7 @@
 namespace Drupal\reliefweb_guidelines\Services;
 
 use Drupal\Core\Access\AccessResult;
-use Drupal\Core\Link;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\Url;
 use Drupal\reliefweb_guidelines\Plugin\Field\FieldWidget\GuidelineFieldTargetSelectWidget;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
@@ -82,9 +80,7 @@ class GuidelineModeration extends ModerationServiceBase {
       $data = [];
 
       // Title.
-      $data['title'] = Link::fromTextAndUrl($entity->label(), Url::fromUserInput('/guidelines', [
-        'fragment' => $entity->getShortId(),
-      ]));
+      $data['title'] = $entity->toLink()?->toString();
 
       // Information.
       $info = [];
@@ -92,6 +88,7 @@ class GuidelineModeration extends ModerationServiceBase {
       if (!empty($list)) {
         $info['list'] = $list->toLink()->toString();
       }
+      $info['link'] = $entity->getLinkToGuidelines($this->t('<em>guidelines</em>'));
       $data['info'] = array_filter($info);
 
       $details = [];

@@ -221,9 +221,11 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
       $form['revision']['#access'] = FALSE;
     }
 
-    // Update the title of the revision log message field.
+    // Update the title of the revision log message field and make sure it's not
+    // populated with the previous message.
     if (isset($form[$revision_field]['widget'][0]['value'])) {
       $form[$revision_field]['widget'][0]['value']['#title'] = $this->t('New comment');
+      $form[$revision_field]['widget'][0]['value']['#default_value'] = '';
       $form[$revision_field]['#group'] = 'revision_information';
     }
   }
