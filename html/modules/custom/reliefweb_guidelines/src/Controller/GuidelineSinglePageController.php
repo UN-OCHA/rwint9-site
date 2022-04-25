@@ -67,7 +67,22 @@ class GuidelineSinglePageController extends ControllerBase {
       elseif (!empty($guideline->getParentIds())) {
         $parent = $guideline->getParentIds()[0];
         $id = $guideline->field_short_link->value;
-        $description = check_markup($guideline->field_description->value, $guideline->field_description->format);
+        $description = $guideline->field_description->value;
+
+        // Add the references if any at the bottom of the description. This
+        // will be converted to an HTML list when rendering the description.
+        // This notably enables replacing internal reference links.
+        $references = [];
+        foreach ($guideline->field_links as $link) {
+          if (!empty($link->uri)) {
+            $references[] = $link->uri;
+          }
+        }
+        if (!empty($references)) {
+          $description .= "\n## References\n" . implode("\n- ", $references);
+        }
+
+        $description = check_markup($description, $guideline->field_description->format);
 
         $list[$parent]['children'][$id] = [
           'title' => $guideline->label(),
@@ -83,6 +98,7 @@ class GuidelineSinglePageController extends ControllerBase {
         return !empty($item['title']) && !empty($item['children']);
       }),
       '#cache' => [
+        'tags' => ['guideline_list'],
         'contexts' => ['user.permissions'],
       ],
       '#attached' => [

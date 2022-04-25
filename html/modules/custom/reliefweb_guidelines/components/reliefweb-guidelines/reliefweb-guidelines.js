@@ -53,6 +53,12 @@
     // Set the active link when the page is loaded.
     setActiveLink(window.location.href);
 
+    // Change the exit link to go to the referrer.
+    var exitLink = document.querySelector('.rw-guidelines-exit-link');
+    if (exitLink && document.referrer) {
+      exitLink.setAttribute('href', document.referrer);
+    }
+
     // Ensure external links open in a new tab/window.
     var links = main.getElementsByTagName('a');
     for (var i = 0, l = links.length; i < l; i++) {

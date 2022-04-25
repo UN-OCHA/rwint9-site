@@ -356,7 +356,9 @@
 
         // Add the message at the top of the fieldset.
         var sibling = this.form.querySelector('div[data-link-form]');
-        this.form.insertBefore(message, sibling);
+        if (sibling) {
+          this.form.insertBefore(message, sibling);
+        }
 
         // Mark the element as erroneous.
         element.setAttribute('data-error', '');

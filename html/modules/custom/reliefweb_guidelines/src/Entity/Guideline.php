@@ -3,6 +3,9 @@
 namespace Drupal\reliefweb_guidelines\Entity;
 
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Link;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Url;
 use Drupal\guidelines\Entity\Guideline as GuidelineBase;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\EntityModeratedTrait;
@@ -45,6 +48,26 @@ class Guideline extends GuidelineBase implements EntityModeratedInterface, Entit
       return $this->field_short_link->value;
     }
     return $this->id();
+  }
+
+  /**
+   * Get the link to the guidelines page.
+   *
+   * @param \Drupal\Core\StringTranslation\TranslatableMarkup|string $title
+   *   Link title.
+   *
+   * @return \Drupal\Core\GeneratedLink|null
+   *   Link to the guidelines page.
+   */
+  public function getLinkToGuidelines($title = '') {
+    $title = $title ?: new TranslatableMarkup('View on guidelines page');
+    return Link::fromTextAndUrl($title, Url::fromUserInput('/guidelines', [
+      'fragment' => $this->getShortId(),
+      'attributes' => [
+        'target' => '_blank',
+        'rel' => 'noopener',
+      ],
+    ]))?->toString();
   }
 
   /**
@@ -106,6 +129,16 @@ class Guideline extends GuidelineBase implements EntityModeratedInterface, Entit
   public function getGuidelineList() {
     $parents = $this->getParents();
     return !empty($parents) ? reset($parents) : NULL;
+  }
+
+  /**
+   * Get the list, this guideline belongs to.
+   *
+   * @return \Drupal\Core\GeneratedLink|null
+   *   Link to the guideline list.
+   */
+  public function getGuidelineListLink() {
+    return $this->getGuidelineList()?->toLink()?->toString();
   }
 
 }
