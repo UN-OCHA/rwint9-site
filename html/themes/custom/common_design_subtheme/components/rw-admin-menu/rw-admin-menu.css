@@ -81,7 +81,7 @@
 .admin-menu h3 {
   margin: 0;
   padding: 0;
-  color: #cef0fd;
+  color: var(--brand-grey);
   font-size: 12px;
   font-weight: lighter;
 }
