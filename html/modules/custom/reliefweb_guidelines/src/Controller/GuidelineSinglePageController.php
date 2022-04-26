@@ -6,12 +6,20 @@ use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\Session\AccountProxyInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Controller for the guidelines.
  */
 class GuidelineSinglePageController extends ControllerBase {
+
+  /**
+   * The current user.
+   *
+   * @var \Drupal\Core\Session\AccountProxyInterface
+   */
+  protected $currentUser;
 
   /**
    * The entity type manager.
@@ -23,10 +31,16 @@ class GuidelineSinglePageController extends ControllerBase {
   /**
    * Constructor.
    *
+   * @param \Drupal\Core\Session\AccountProxyInterface $current_user
+   *   The current user.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(
+    AccountProxyInterface $current_user,
+    EntityTypeManagerInterface $entity_type_manager
+  ) {
+    $this->currentUser = $current_user;
     $this->entityTypeManager = $entity_type_manager;
   }
 
@@ -35,6 +49,7 @@ class GuidelineSinglePageController extends ControllerBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
+      $container->get('current_user'),
       $container->get('entity_type.manager')
     );
   }
@@ -88,6 +103,10 @@ class GuidelineSinglePageController extends ControllerBase {
           'title' => $guideline->label(),
           'description' => static::replaceLinks($description, 'blank-image'),
         ];
+
+        if ($this->currentUser->hasPermission('edit guideline entities')) {
+          $list[$parent]['children'][$id]['edit'] = $guideline->toUrl('edit-form')->toString();
+        }
       }
     }
 

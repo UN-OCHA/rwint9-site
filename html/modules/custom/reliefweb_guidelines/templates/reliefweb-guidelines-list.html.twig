@@ -40,7 +40,10 @@
         {% for shortid, child in guideline.children %}
           <article id="{{ shortid }}" class="rw-guidelines-item">
             <h2><span>{{ guideline.title }}</span> {{ child.title }}</h2>
-            <div>{{ child.description }}</div>
+            <div>{{ child.description|render|sanitize_html(false, 2, ['data-src']) }}</div>
+            {% if child.edit is not empty %}
+            <footer><a href="{{ child.edit }}">edit</a></footer>
+            {% endif %}
           </article>
         {% endfor %}
       {% endfor %}

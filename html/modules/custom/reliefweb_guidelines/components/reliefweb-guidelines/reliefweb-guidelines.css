@@ -839,6 +839,12 @@ aside nav a.active + a {
   background: url("./assets/external-link.svg") 0 0 no-repeat;
 }
 
+/* Footer with the link to edit the guideline. */
+.rw-guidelines-list article footer {
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
 .rw-guidelines-exit-link {
   position: absolute;
   top: 18px;
