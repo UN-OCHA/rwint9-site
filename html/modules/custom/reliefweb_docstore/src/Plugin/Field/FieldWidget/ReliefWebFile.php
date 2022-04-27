@@ -310,13 +310,16 @@ class ReliefWebFile extends WidgetBase {
     // Check if the attachment was replaced.
     $original_item = $this->getOriginalFileItem($item);
     if (isset($original_item) && $original_item->getFileUuid() !== $item->getFileUuid()) {
-      $element['replaced_file'] = [
-        '#type' => 'link',
-        '#title' => $this->formatFileItemInformation($original_item),
-        // We add a timestamp to prevent caching by the browser so that
-        // it can display replaced files.
-        '#url' => $original_item->getFileUrl()->setOption('query', ['time' => microtime(TRUE)]),
-      ];
+      $replaced_file_url = $original_item->getFileUrl();
+      if (!empty($replaced_file_url)) {
+        $element['replaced_file'] = [
+          '#type' => 'link',
+          '#title' => $this->formatFileItemInformation($original_item),
+          // We add a timestamp to prevent caching by the browser so that
+          // it can display replaced files.
+          '#url' => $replaced_file_url->setOption('query', ['time' => microtime(TRUE)]),
+        ];
+      }
     }
 
     // Information fields.
