@@ -535,7 +535,7 @@ class ReliefWebFile extends FieldItemBase {
     }
 
     return [
-      '#theme' => 'image_style',
+      '#theme' => 'image_style__preview',
       '#style_name' => $style,
       '#uri' => $uri,
       '#alt' => $this->t('Preview of @file_name', [
@@ -543,6 +543,13 @@ class ReliefWebFile extends FieldItemBase {
       ]),
       '#attributes' => [
         'class' => ['rw-file-preview'],
+        'data-version' => implode('-', [
+          // Once the file is saved it will have a revision ID, until then to
+          // ensure the preview image is not cached, we use its file ID.
+          $this->getRevisionId() ?: $preview->id(),
+          $this->getPreviewPage(),
+          $this->getPreviewRotation(),
+        ]),
       ],
       '#width' => $info[0],
       '#height' => $info[1],
