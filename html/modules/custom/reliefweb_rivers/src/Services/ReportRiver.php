@@ -415,10 +415,9 @@ class ReportRiver extends RiverServiceBase {
         $preview = $fields['file'][0]['preview'];
         $url = $preview['url-thumb'] ?? $preview['url-small'] ?? '';
         if (!empty($url)) {
+          $version = $preview['version'] ?? $fields['file'][0]['id'] ?? 0;
           $data['preview'] = [
-            // @todo once the report attachments have been added back,
-            // generate the appropriate preview URL based on the file name.
-            'url' => UrlHelper::stripDangerousProtocols($url),
+            'url' => UrlHelper::stripDangerousProtocols($url) . '?' . $version,
             // We don't have any good label/description for the file
             // previews so we use an empty alt to mark them as decorative
             // so that assistive technologies will ignore them.

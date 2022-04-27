@@ -366,9 +366,6 @@ class ReliefWebFile extends WidgetBase {
           // Add state to hide the preview if "no preview" is selected.
           if (!empty($element['preview'])) {
             $element['preview']['#type'] = 'item';
-            // Prevent the caching of the derivative image.
-            // @see reliefweb_docstore_preprocess_image_style()
-            $element['preview']['#attributes']['data-no-cache'] = TRUE;
             $element['preview']['#states']['invisible'] = [
               ':input[name="' . $field_name . '[' . $delta . '][preview_page]"]' => ['value' => 0],
             ];

@@ -54,15 +54,15 @@ function reliefweb_docstore_theme() {
 /**
  * Implemenents hook_preprocess_HOOK() for "image_style".
  */
-function reliefweb_docstore_preprocess_image_style(&$variables) {
-  // Workaround to prevent the browser from caching the derivative when
-  // rendered in the form for example, so that it always get the fresh one
-  // when the image is regenerated.
-  if (isset($variables['image']['#attributes']['data-no-cache'])) {
+function reliefweb_docstore_preprocess_image_style__preview(&$variables) {
+  // We add a parameter to the image derivative URL to ensure the correct
+  // version is served.
+  if (isset($variables['image']['#attributes']['data-version'])) {
+    $version = $variables['image']['#attributes']['data-version'];
     $uri = $variables['image']['#uri'];
-    $uri .= (strpos($uri, '?') !== FALSE ? '&' : '?') . 'time=' . microtime(TRUE);
+    $uri .= (strpos($uri, '?') !== FALSE ? '&' : '?') . $version;
     $variables['image']['#uri'] = $uri;
-    unset($variables['image']['#attributes']['data-no-cache']);
+    unset($variables['image']['#attributes']['data-version']);
   }
 }
 
