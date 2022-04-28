@@ -384,7 +384,6 @@ class ReliefWebFile extends FieldItemBase {
           'length' => 36,
           'not null' => TRUE,
         ],
-        // @todo change to int(10) unsigned.
         'revision_id' => [
           'type' => 'int',
           'size' => 'normal',
@@ -1529,8 +1528,13 @@ class ReliefWebFile extends FieldItemBase {
    * {@inheritdoc}
    */
   public function preSave(?ReliefWebFile $original_item = NULL) {
+    // Try to update the file if it's new, has been replaced (different file
+    // UUID or its revision is empty and we are in remote mode. The latter could
+    // occur if creating the remote file didn't work or when switching from
+    // local to remote mode after resetting the revision IDs.
     $update_file = empty($original_item) ||
-      $original_item->getFileUuid() !== $this->getFileUuid();
+      $original_item->getFileUuid() !== $this->getFileUuid() ||
+      (empty($this->getRevisionId()) && !$this->storeLocally());
 
     $update_preview = empty($original_item) ||
       $original_item->getPreviewUuid() !== $this->getPreviewUuid() ||
@@ -1553,11 +1557,9 @@ class ReliefWebFile extends FieldItemBase {
       }
 
       if ($update_preview) {
-        // Delete the old preview. We don't need to keep the it. It
-        // we be recreated when reverting if that ever happens.
+        // Delete the old preview. We don't need to keep it. It will be
+        // recreated when reverting if that ever happens.
         if (!empty($original_item)) {
-          // @todo instead of deleting the old preview completely, swap the
-          // preview files and regenerate the derivatives?
           $original_item->deletePreview();
         }
 
@@ -1726,8 +1728,10 @@ class ReliefWebFile extends FieldItemBase {
         $file->save();
       }
 
-      // Ensure there is no local file left if we are storing remotely.
-      if (!$this->storeLocally()) {
+      // Ensure there is no local file left if we are storing remotely unless
+      // the revision ID is empty which would indicate something went wrong
+      // when trying to create or update the remote file.
+      if (!$this->storeLocally() && !empty($this->getRevisionId())) {
         $this->deleteFileOnDisk($file->getFileUri());
       }
     }
