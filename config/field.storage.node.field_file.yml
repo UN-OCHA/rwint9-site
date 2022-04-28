@@ -4,13 +4,13 @@ status: true
 dependencies:
   module:
     - node
-    - reliefweb_docstore
+    - reliefweb_files
 id: node.field_file
 field_name: field_file
 entity_type: node
 type: reliefweb_file
 settings: {  }
-module: reliefweb_docstore
+module: reliefweb_files
 locked: false
 cardinality: 1
 translatable: true

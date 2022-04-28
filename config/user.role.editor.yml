@@ -30,7 +30,7 @@ dependencies:
     - media
     - node
     - path
-    - reliefweb_docstore
+    - reliefweb_files
     - reliefweb_fields
     - reliefweb_form
     - reliefweb_guidelines

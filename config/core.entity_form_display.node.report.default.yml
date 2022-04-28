@@ -34,7 +34,7 @@ dependencies:
     - datetime
     - inline_entity_form
     - path
-    - reliefweb_docstore
+    - reliefweb_files
     - reliefweb_fields
     - text
 id: node.report.default

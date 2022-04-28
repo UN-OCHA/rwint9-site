@@ -26,7 +26,7 @@ use GuzzleHttp\Exception\RequestException;
 use League\HTMLToMarkdown\HtmlConverter;
 
 /**
- * Docstore Drush commandfile.
+ * ReliefWeb Import Drush commandfile.
  */
 class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAwareInterface {
 

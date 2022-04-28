@@ -30,7 +30,7 @@ dependencies:
     - node.type.report
   module:
     - datetime
-    - reliefweb_docstore
+    - reliefweb_files
     - text
     - user
 id: node.report.default

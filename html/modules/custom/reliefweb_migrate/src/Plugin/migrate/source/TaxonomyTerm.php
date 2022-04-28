@@ -3,7 +3,7 @@
 namespace Drupal\reliefweb_migrate\Plugin\migrate\source;
 
 use Drupal\migrate\Row;
-use Drupal\reliefweb_docstore\Plugin\Field\FieldType\ReliefWebFile;
+use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile;
 use Drupal\reliefweb_utility\Helpers\LegacyHelper;
 
 /**

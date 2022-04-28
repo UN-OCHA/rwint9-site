@@ -10,7 +10,7 @@ use Drupal\reliefweb_subscriptions\ReliefwebSubscriptionsMailer;
 use Drush\Commands\DrushCommands;
 
 /**
- * Docstore Drush commandfile.
+ * ReliefWeb Subscriptions Drush commandfile.
  */
 class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAliasManagerAwareInterface {
 

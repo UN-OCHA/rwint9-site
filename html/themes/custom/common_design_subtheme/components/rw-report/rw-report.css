@@ -86,6 +86,9 @@
 .node--report--full .rw-attachment--interactive footer {
   padding-top: 4px;
 }
+.node--report--full .rw-attachment + p {
+  margin-top: 0;
+}
 
 .node--report--full .rw-entity-source-disclaimers {
   margin: 24px 0 0 0;
