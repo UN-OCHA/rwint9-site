@@ -133,7 +133,9 @@ class DocstoreClient {
       'body' => $resource,
     ], $timeout);
 
-    @fclose($resource);
+    if (is_resource($resource)) {
+      @fclose($resource);
+    }
 
     return $response;
   }
@@ -180,8 +182,12 @@ class DocstoreClient {
       $input = StreamWrapper::getResource($response->getBody());
       $result = stream_copy_to_stream($input, $output) !== FALSE;
 
-      @fclose($input);
-      @fclose($output);
+      if (is_resource($input)) {
+        @fclose($input);
+      }
+      if (is_resource($output)) {
+        @fclose($output);
+      }
 
       return $result;
     }

@@ -285,7 +285,9 @@ trait SectionedContentTrait {
     }
 
     // Close the file.
-    fclose($handle);
+    if (is_resource($handle)) {
+      @fclose($handle);
+    }
 
     // Generate the query with the most read report ids.
     if (!empty($ids)) {

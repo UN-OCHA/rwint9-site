@@ -312,8 +312,12 @@ class FileDownloadController extends OriginalFileDownloadController {
         $input = StreamWrapper::getResource($response->getBody());
         $output = fopen('php://output', 'wb');
         stream_copy_to_stream($input, $output);
-        @fclose($input);
-        @fclose($output);
+        if (is_resource($input)) {
+          @fclose($input);
+        }
+        if (is_resource($output)) {
+          @fclose($output);
+        }
       }, 200, $headers + $response->getHeaders());
     }
 
