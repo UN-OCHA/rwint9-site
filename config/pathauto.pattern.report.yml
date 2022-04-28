@@ -10,7 +10,7 @@ type: 'canonical_entities:node'
 pattern: '[node:reliefweb-content-type]/[node:field_primary_country:entity:name]/[node:title]'
 selection_criteria:
   cac24841-112a-498c-92d9-845c71da29f6:
-    id: node_type
+    id: 'entity_bundle:node'
     negate: false
     uuid: cac24841-112a-498c-92d9-845c71da29f6
     context_mapping:
