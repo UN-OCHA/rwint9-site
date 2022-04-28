@@ -1,0 +1,14 @@
+# The URL of the OCHA docstore.
+docstore_url: ''
+# The UUID of the provider in the OCHA docstore.
+docstore_provider_uuid: ''
+# The API key for the OCHA docstore provider.
+docstore_api_key: ''
+# The prefix used when creating new content (ex: reliefweb_reports).
+docstore_prefix: 'reliefweb_'
+# Wether to store the files locally or remotely in the docstore.
+local: true
+# Name of the directory for the local file attachments.
+file_directory: 'attachments'
+# Name of the directory for the local file previews.
+preview_directory: 'previews'

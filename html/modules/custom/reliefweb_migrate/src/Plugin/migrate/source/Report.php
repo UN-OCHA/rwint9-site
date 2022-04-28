@@ -166,7 +166,7 @@ class Report extends Node {
 
     // Extract the language from the description.
     if (!empty($description)) {
-      $languages = reliefweb_docstore_get_languages();
+      $languages = reliefweb_files_get_languages();
       $versions = [];
       $version_pattern = [];
       foreach ($languages as $code => $label) {

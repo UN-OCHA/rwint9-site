@@ -1,8 +1,0 @@
-services:
-  reliefweb_docstore.client:
-    class: Drupal\reliefweb_docstore\Services\DocstoreClient
-    arguments: ['@config.factory', '@http_client', '@logger.factory']
-  reliefweb_docstore.route_subscriber:
-    class: Drupal\reliefweb_docstore\Routing\RouteSubscriber
-    tags:
-      - { name: event_subscriber }

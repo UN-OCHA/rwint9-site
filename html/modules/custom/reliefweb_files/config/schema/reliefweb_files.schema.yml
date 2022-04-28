@@ -1,0 +1,35 @@
+reliefweb_files.settings:
+  type: config_object
+  label: 'ReliefWeb Docstore settings'
+  mapping:
+    docstore_url:
+      type: string
+      label: 'The URL of the OCHA docstore.'
+    docstore_provider_uuid:
+      type: string
+      label: 'The UUID of the provider in the OCHA docstore.'
+    docstore_api_key:
+      type: string
+      label: 'The API key for the OCHA docstore provider.'
+    docstore_prefix:
+      type: string
+      label: 'The prefix used when creating new content (ex: reliefweb_reports).'
+    local:
+      type: boolean
+      label: 'Flag to store the files locally instead of remotely'
+    file_directory:
+      type: string
+      label: 'Name of the directory for the local file attachments.'
+    preview_directory:
+      type: string
+      label: 'Name of the directory for the local file previews.'
+
+field.field_settings.reliefweb_file:
+  type: mapping
+  mapping:
+    file_extensions:
+      type: string
+      label: 'Allowed file extensions'
+    max_filesize:
+      type: string
+      label: 'Maximum upload size'

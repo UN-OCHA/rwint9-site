@@ -1,0 +1,6 @@
+services:
+  reliefweb_files.commands:
+    class: \Drupal\reliefweb_files\Commands\ReliefWebFilesCommands
+    arguments: ['@config.factory', '@database', '@entity_field.manager', '@entity_type.manager', '@reliefweb_files.client']
+    tags:
+      - { name: drush.command }

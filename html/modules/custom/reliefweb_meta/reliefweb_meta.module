@@ -841,7 +841,7 @@ function reliefweb_meta_get_country_location_map_url($iso3) {
   krsort($nodes);
   $node = reset($nodes);
 
-  /** @var \Drupal\reliefweb_docstore\Plugin\Field\FieldType\ReliefWebFile $item */
+  /** @var \Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile $item */
   foreach ($node->field_file as $item) {
     if ($item->getFileName() === $filename && !$item->isPrivate()) {
       $url = $item->getFileUrl();

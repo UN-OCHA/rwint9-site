@@ -1022,7 +1022,7 @@ class EntityHistory {
       'preview_rotation' => 'preview rotation',
     ];
     $property_values = [
-      'language' => reliefweb_docstore_get_languages(),
+      'language' => reliefweb_files_get_languages(),
       'preview_rotation' => ['90' => 'right', '-90' => 'left'],
     ];
 
