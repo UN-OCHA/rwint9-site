@@ -70,6 +70,8 @@ class CountryRiver extends RiverServiceBase {
       '#letters' => $letters,
     ];
 
+    $content['#cache_properties'][] = '#letter_navigation';
+
     return $content;
   }
 

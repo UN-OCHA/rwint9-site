@@ -172,6 +172,7 @@ class Disaster extends Term implements BundleEntityInterface, EntityModeratedInt
     return [
       'resource' => 'countries',
       'bundle' => 'country',
+      'entity_type' => 'taxonomy_term',
       'payload' => $payload,
     ];
   }
@@ -221,6 +222,7 @@ class Disaster extends Term implements BundleEntityInterface, EntityModeratedInt
     return [
       'resource' => 'disasters',
       'bundle' => 'disaster',
+      'entity_type' => 'taxonomy_term',
       'payload' => $payload,
     ];
   }

@@ -260,13 +260,22 @@ abstract class RiverServiceBase implements RiverServiceInterface {
       '#content' => $this->getRiverContent(),
       '#links' => $this->getRiverLinks(),
       '#cache' => [
-        'contexts' => [
-          'url.query_args',
+        'keys' => [
+          'reliefweb',
+          'rivers',
+          'page',
+          $river,
         ],
-        'tags' => [
-          $this->getEntityTypeId() . '_list:' . $this->getBundle(),
-          'taxonomy_term_list',
-        ],
+      ],
+      '#cache_properties' => [
+        '#river',
+        '#title',
+        '#view',
+        '#views',
+        '#search',
+        '#advanced_search',
+        '#content',
+        '#links',
       ],
     ];
   }
@@ -361,7 +370,9 @@ abstract class RiverServiceBase implements RiverServiceInterface {
       '#theme' => 'reliefweb_rivers_views',
       '#views' => $views,
       '#cache' => [
-        'max-age' => 0,
+        '#contexts' => [
+          'url.query_args:view',
+        ],
       ],
     ];
   }
@@ -394,7 +405,9 @@ abstract class RiverServiceBase implements RiverServiceInterface {
       ]),
       '#query' => $search,
       '#cache' => [
-        'max-age' => 0,
+        '#contexts' => [
+          'url.query_args:search',
+        ],
       ],
     ];
   }
@@ -419,7 +432,14 @@ abstract class RiverServiceBase implements RiverServiceInterface {
       '#remove' => $advanced_search->getClearUrl(),
       '#settings' => $advanced_search->getSettings(),
       '#cache' => [
-        'max-age' => 0,
+        '#contexts' => [
+          'url.query_args:advanced-search',
+        ],
+        // The advanced search filters use terms so we need to make sure the
+        // cache is properly invalidated when they change.
+        '#tags' => [
+          'taxonomy_term_list',
+        ],
       ],
     ];
   }
@@ -440,7 +460,10 @@ abstract class RiverServiceBase implements RiverServiceInterface {
       '#pager' => $this->getRiverPager(),
       '#empty' => $this->t('No results found. Please modify your search or filter selection.'),
       '#cache' => [
-        'max-age' => 0,
+        'tags' => [
+          $this->getEntityTypeId() . '_list:' . $this->getBundle(),
+          'taxonomy_term_list',
+        ],
       ],
     ];
   }
@@ -470,9 +493,6 @@ abstract class RiverServiceBase implements RiverServiceInterface {
       '#total' => $total,
       '#start' => $start,
       '#end' => $end,
-      '#cache' => [
-        'max-age' => 0,
-      ],
     ];
   }
 
@@ -480,11 +500,10 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * {@inheritdoc}
    */
   public function getRiverPager() {
+    // The renderer will automatically populate the render array for the pager
+    // and notably add the cache elements including 'url.query_args.pagers:0'.
     return [
       '#type' => 'pager',
-      '#cache' => [
-        'max-age' => 0,
-      ],
     ];
   }
 
@@ -499,7 +518,12 @@ abstract class RiverServiceBase implements RiverServiceInterface {
         'api' => $this->getApiLink(),
       ]),
       '#cache' => [
-        'max-age' => 0,
+        '#contexts' => [
+          'url.query_args:advanced-search',
+          'url.query_args:search',
+          'url.query_args:view',
+          'url.query_args.pagers:0',
+        ],
       ],
     ];
   }
@@ -630,13 +654,30 @@ abstract class RiverServiceBase implements RiverServiceInterface {
       '#date' => $date,
       '#items' => $items,
       '#cache' => [
+        'keys' => [
+          'reliefweb',
+          'rivers',
+          'rss',
+          $river,
+        ],
         'contexts' => [
-          'url.query_args',
+          'url.query_args:advanced-search',
+          'url.query_args:search',
+          'url.query_args:view',
+          'url.query_args.pagers:0',
         ],
         'tags' => [
           $this->getEntityTypeId() . '_list:' . $this->getBundle(),
           'taxonomy_term_list',
         ],
+      ],
+      '#cache_properties' => [
+        '#site_url',
+        '#title',
+        '#feed_url',
+        '#language',
+        '#date',
+        '#items',
       ],
     ];
 

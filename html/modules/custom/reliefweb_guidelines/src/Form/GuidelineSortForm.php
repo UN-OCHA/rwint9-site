@@ -90,9 +90,9 @@ class GuidelineSortForm extends ContentEntityForm {
       $form['items'][$id]['#weight'] = $child->getWeight();
 
       // Label.
-      $form['items'][$id]['label'] = [
-        '#markup' => $child->toLink($child->label(), 'edit-form')->toString(),
-      ];
+      $form['items'][$id]['label'] = $child
+        ?->toLink($child->label(), 'edit-form')
+        ?->toRenderable();
 
       // Weight.
       $form['items'][$id]['weight'] = [

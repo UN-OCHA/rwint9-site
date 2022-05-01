@@ -72,9 +72,9 @@ class Book extends Node implements BundleEntityInterface, EntityModeratedInterfa
       '#title' => $this->t('More about ReliefWeb'),
       '#links' => $links,
       '#cache' => [
-        // @todo maybe we need some extra cache info that we could extract
-        // from the trees above.
-        '#tags' => ['node_list:book'],
+        '#tags' => [
+          'node_list:book',
+        ],
       ],
     ];
 

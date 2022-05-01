@@ -226,7 +226,7 @@ function reliefweb_analytics_get_user_dimensions() {
   $user = \Drupal::currentUser();
 
   $cache = \Drupal::cache();
-  $cache_id = 'reliefweb_analytics:user' . $user->id();
+  $cache_id = 'reliefweb_analytics:user:' . $user->id();
 
   // Try to load the computed dimensions from the cache.
   $cache_object = \Drupal::cache()->get($cache_id);

@@ -105,6 +105,11 @@ class BlogPost extends Node implements BundleEntityInterface, EntityModeratedInt
         'url' => RiverServiceBase::getRiverUrl('blog_post'),
         'label' => $this->t('View all blog posts'),
       ],
+      '#cache' => [
+        'tags' => [
+          'node_list:blog_post',
+        ],
+      ],
     ];
   }
 

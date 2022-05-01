@@ -134,7 +134,7 @@ function reliefweb_disaster_map_get_disaster_map_token_replacement($token, Bubbl
 
   if (!empty($title)) {
     return \Drupal::service('reliefweb_disaster_map.service')
-      ->getDisasterMap($id, $title, $options, 'render');
+      ->getDisasterMap($id, $title, $options, TRUE);
   }
   return '';
 }

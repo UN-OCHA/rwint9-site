@@ -117,8 +117,16 @@ class GuidelineSinglePageController extends ControllerBase {
         return !empty($item['title']) && !empty($item['children']);
       }),
       '#cache' => [
+        'keys' => [
+          'reliefweb',
+          'guidelines',
+        ],
         'tags' => ['guideline_list'],
         'contexts' => ['user.permissions'],
+      ],
+      '#cache_properties' => [
+        '#title',
+        '#guidelines',
       ],
       '#attached' => [
         'library' => ['reliefweb_guidelines/reliefweb-guidelines'],

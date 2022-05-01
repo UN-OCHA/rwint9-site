@@ -338,6 +338,7 @@ class Topic extends Node implements BundleEntityInterface, EntityModeratedInterf
     return [
       'resource' => $resource,
       'bundle' => $bundle,
+      'entity_type' => $service->getEntityTypeId(),
       'river' => $river,
       'title' => $title,
       'view' => $view,

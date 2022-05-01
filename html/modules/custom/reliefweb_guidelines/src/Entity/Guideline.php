@@ -134,11 +134,11 @@ class Guideline extends GuidelineBase implements EntityModeratedInterface, Entit
   /**
    * Get the list, this guideline belongs to.
    *
-   * @return \Drupal\Core\GeneratedLink|null
+   * @return array|null
    *   Link to the guideline list.
    */
   public function getGuidelineListLink() {
-    return $this->getGuidelineList()?->toLink()?->toString();
+    return $this->getGuidelineList()?->toLink()?->toRenderable();
   }
 
 }

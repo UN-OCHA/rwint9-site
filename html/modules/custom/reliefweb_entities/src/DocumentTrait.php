@@ -212,6 +212,13 @@ trait DocumentTrait {
       '#title' => $title,
       '#resource' => 'reports',
       '#entities' => $entities,
+      '#cache' => [
+        'tags' => [
+          'node_list:report',
+          'taxonomy_term_list:country',
+          'taxonomy_term_list:source',
+        ],
+      ],
     ];
   }
 

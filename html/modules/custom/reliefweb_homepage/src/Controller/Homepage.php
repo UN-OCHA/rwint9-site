@@ -171,7 +171,11 @@ class Homepage extends ControllerBase {
               '#theme' => 'reliefweb_homepage_opportunities',
               '#id' => 'opportunities',
               '#cache' => [
-                'tags' => ['taxonomy_term_list'],
+                'tags' => [
+                  'node_list:job',
+                  'node_list:training',
+                  'taxonomy_term_list',
+                ],
               ],
             ];
           }
@@ -181,7 +185,6 @@ class Homepage extends ControllerBase {
             'title' => $query['title'],
             'url' => $query['url'],
           ];
-          $sections['opportunities']['#cache']['tags'][] = 'node_list:' . $query['bundle'];
           break;
       }
     }
@@ -190,10 +193,18 @@ class Homepage extends ControllerBase {
       '#theme' => 'reliefweb_homepage',
       '#title' => $this->t('ReliefWeb'),
       '#sections' => $sections,
-      // Necessary because the headlines widget is added depending on the user
-      // pemissions.
       '#cache' => [
+        'keys' => [
+          'reliefweb',
+          'homepage',
+        ],
+        // Necessary because the headlines widget is added depending on the user
+        // pemissions.
         'contexts' => ['user.permissions'],
+      ],
+      '#cache_properties' => [
+        '#title',
+        '#sections',
       ],
     ];
 
