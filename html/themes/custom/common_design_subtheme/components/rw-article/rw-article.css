@@ -155,6 +155,6 @@
   border-bottom: none;
 }
 
-.node--announcement--full .rw-article__header {
-  margin-bottom: 24px;
+.rw-article__content--simple {
+  margin-top: 24px;
 }
