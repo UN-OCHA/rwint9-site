@@ -189,10 +189,10 @@ trait OpportunityDocumentTrait {
       }
 
       if (in_array($source->getModerationStatus(), ['inactive', 'archive'])) {
-        $entity->notifications_content_disable = TRUE;
+        $source->notifications_content_disable = TRUE;
         $source->setModerationStatus('active');
         $source->setNewRevision(TRUE);
-        $source->setRevisionLogMessage('Automatic status update');
+        $source->setRevisionLogMessage('Automatic status update due to publication of node ' . $this->id());
         $source->setRevisionUserId(2);
         $source->save();
       }
