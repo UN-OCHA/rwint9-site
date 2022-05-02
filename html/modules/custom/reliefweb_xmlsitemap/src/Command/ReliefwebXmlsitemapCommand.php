@@ -10,7 +10,7 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\Core\State\State;
+use Drupal\Core\State\StateInterface;
 use Drush\Commands\DrushCommands;
 use GuzzleHttp\ClientInterface;
 
@@ -75,7 +75,7 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
   /**
    * The state store.
    *
-   * @var Drupal\Core\State\State
+   * @var Drupal\Core\State\StateInterface
    */
   protected $state;
 
@@ -87,7 +87,7 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
     FileSystemInterface $file_system,
     ClientInterface $http_client,
     LoggerChannelFactoryInterface $logger_factory,
-    State $state
+    StateInterface $state
   ) {
     $this->database = $database;
     $this->fileSystem = $file_system;

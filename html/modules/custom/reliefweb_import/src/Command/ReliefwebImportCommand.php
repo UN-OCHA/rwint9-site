@@ -10,7 +10,7 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
-use Drupal\Core\State\State;
+use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_entities\Entity\Job;
 use Drupal\reliefweb_import\Exception\ReliefwebImportException;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionSoftViolation;
@@ -72,7 +72,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
   /**
    * The state store.
    *
-   * @var Drupal\Core\State\State
+   * @var Drupal\Core\State\StateInterface
    */
   protected $state;
 
@@ -106,7 +106,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     $account_switcher,
     ClientInterface $http_client,
     LoggerChannelFactoryInterface $logger_factory,
-    State $state
+    StateInterface $state
   ) {
     $this->database = $database;
     $this->entityTypeManager = $entity_type_manager;
