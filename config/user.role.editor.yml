@@ -30,8 +30,9 @@ dependencies:
     - media
     - node
     - path
-    - reliefweb_files
+    - reliefweb_bookmarks
     - reliefweb_fields
+    - reliefweb_files
     - reliefweb_form
     - reliefweb_guidelines
     - reliefweb_homepage
@@ -150,6 +151,7 @@ permissions:
   - 'revert term revision'
   - 'revert topic revisions'
   - 'revert training revisions'
+  - 'see other bookmarks'
   - 'update any media'
   - 'update media'
   - 'use enhanced input forms'

@@ -4,6 +4,7 @@ namespace Drupal\reliefweb_revisions\Services;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
@@ -35,6 +36,14 @@ class EntityHistory {
   use DependencySerializationTrait;
   use EntityDatabaseInfoTrait;
   use StringTranslationTrait;
+
+
+  /**
+   * The default cache backend.
+   *
+   * @var \Drupal\Core\Cache\CacheBackendInterface
+   */
+  protected $cache;
 
   /**
    * ReliefWeb API config.
@@ -74,6 +83,8 @@ class EntityHistory {
   /**
    * Constructor.
    *
+   * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
+   *   The default cache backend.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory service.
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
@@ -88,6 +99,7 @@ class EntityHistory {
    *   The translation manager service.
    */
   public function __construct(
+    CacheBackendInterface $cache_backend,
     ConfigFactoryInterface $config_factory,
     AccountProxyInterface $current_user,
     Connection $database,
@@ -95,6 +107,7 @@ class EntityHistory {
     EntityTypeManagerInterface $entity_type_manager,
     TranslationInterface $string_translation
   ) {
+    $this->cache = $cache_backend;
     $this->config = $config_factory->get('reliefweb_revisions.settings');
     $this->currentUser = $current_user;
     $this->database = $database;
@@ -153,80 +166,107 @@ class EntityHistory {
       return [];
     }
 
-    $entity_type_id = $entity->getEntityTypeId();
-    $revision_user_field = $this->getEntityTypeRevisionUserField($entity_type_id);
-    $revision_created_field = $this->getEntityTypeRevisionCreatedField($entity_type_id);
+    $cache_id = 'reliefweb_revisions:history:entity:' . $entity->getEntityTypeId() . ':' . $entity->id();
+    $cache_tags = $entity->getCacheTags();
+    $cache_tags[] = 'taxonomy_term_list';
 
-    // Get the list of revisions for the entity.
-    $revision_ids = $this->getRevisionIds($entity);
-    $total_revision_ids = count($revision_ids);
+    // Try to load the history from the cache.
+    $cache = $this->cache->get($cache_id);
+    if (!empty($cache->data)) {
+      $data = $cache->data;
+    }
+    else {
+      $entity_type_id = $entity->getEntityTypeId();
+      $revision_user_field = $this->getEntityTypeRevisionUserField($entity_type_id);
+      $revision_created_field = $this->getEntityTypeRevisionCreatedField($entity_type_id);
 
-    // Retrieve the author of the entity.
-    $author = $this->getEntityAuthor($entity);
+      // Get the list of revisions for the entity.
+      $revision_ids = $this->getRevisionIds($entity);
+      $total_revision_ids = count($revision_ids);
 
-    // Keep track of the previous revision.
-    $previous_revision = NULL;
-
-    // Extract the first revision.
-    $first_revision = array_pop($revision_ids);
-
-    // Limit the number of revisions to the most recent and add back the first
-    // revision.
-    $revision_ids = array_slice($revision_ids, 0, $this->config->get('limit') ?? 10);
-    $revision_ids[] = $first_revision;
-
-    // Oldest first so we can compute the proper differences.
-    $revision_ids = array_reverse($revision_ids);
-
-    // Compute the history.
-    $history = [];
-    foreach ($revision_ids as $revision_id) {
-      $revision = $this->loadRevision($entity_type_id, $revision_id);
-
-      // Get the changes between the revisions.
-      // @todo skip some fields.
-      $diff = $this->getRevisionDiff($revision, $previous_revision);
-
-      // Format the differences.
-      $content = $this->formatRevisionDiff($revision, $diff);
-
-      // Skip if nothing of value changed.
-      $skip = empty($content) &&
-        !empty($previous_revision) &&
-        $revision->getRevisionLogMessage() === $previous_revision->getRevisionLogMessage() &&
-        $revision->getModerationStatus() === $previous_revision->getModerationStatus();
-
-      if (!$skip) {
-        $user = $revision->get($revision_user_field)->entity;
-        $date = $revision->get($revision_created_field)->value;
-        $message = trim($revision->getRevisionLogMessage());
-
-        $history[] = [
-          'date' => DateHelper::getDateTimeStamp($date),
-          'user' => $user,
-          'status' => [
-            'value' => $revision->getModerationStatus(),
-            'label' => $revision->getModerationStatusLabel(),
-          ],
-          'message' => [
-            'type' => isset($user, $author) && $user->id() === $author->id() ? 'instruction' : 'feedback',
-            'content' => !empty($message) ? check_markup($message, 'markdown') : '',
-          ],
-          'content' => $content,
-        ];
-      }
+      // Retrieve the author of the entity.
+      $author = $this->getEntityAuthor($entity);
 
       // Keep track of the previous revision.
-      $previous_revision = $revision;
+      $previous_revision = NULL;
+
+      // Extract the first revision.
+      $first_revision = array_pop($revision_ids);
+
+      // Limit the number of revisions to the most recent and add back the first
+      // revision.
+      $revision_ids = array_slice($revision_ids, 0, $this->config->get('limit') ?? 10);
+      $revision_ids[] = $first_revision;
+
+      // Oldest first so we can compute the proper differences.
+      $revision_ids = array_reverse($revision_ids);
+
+      // Compute the history.
+      $history = [];
+      foreach ($revision_ids as $revision_id) {
+        $revision = $this->loadRevision($entity_type_id, $revision_id);
+
+        // Get the changes between the revisions.
+        // @todo skip some fields.
+        $diff = $this->getRevisionDiff($revision, $previous_revision);
+
+        // Format the differences.
+        $content = $this->formatRevisionDiff($revision, $diff);
+
+        // Skip if nothing of value changed.
+        $skip = empty($content) &&
+          !empty($previous_revision) &&
+          $revision->getRevisionLogMessage() === $previous_revision->getRevisionLogMessage() &&
+          $revision->getModerationStatus() === $previous_revision->getModerationStatus();
+
+        if (!$skip) {
+          $user = $revision->get($revision_user_field)->entity;
+          $date = $revision->get($revision_created_field)->value;
+          $message = trim($revision->getRevisionLogMessage());
+
+          $history[] = [
+            'date' => DateHelper::getDateTimeStamp($date),
+            'user' => $user,
+            'status' => [
+              'value' => $revision->getModerationStatus(),
+              'label' => $revision->getModerationStatusLabel(),
+            ],
+            'message' => [
+              'type' => isset($user, $author) && $user->id() === $author->id() ? 'instruction' : 'feedback',
+              'content' => !empty($message) ? check_markup($message, 'markdown') : '',
+            ],
+            'content' => $content,
+          ];
+        }
+
+        // Keep track of the previous revision.
+        $previous_revision = $revision;
+      }
+
+      // Show the most recent history first.
+      $data = [
+        'history' => array_reverse($history),
+        'ignored' => $total_revision_ids - count($revision_ids),
+      ];
+
+      $this->cache->set($cache_id, $content, $this->cache::CACHE_PERMANENT, $cache_tags);
     }
 
     return [
       '#theme' => 'reliefweb_revisions_history_content',
       // Show the most recent history first.
-      '#history' => array_reverse($history),
+      '#history' => $data['history'] ?? [],
       // Number of ignored revisions.
-      '#ignored' => $total_revision_ids - count($revision_ids),
+      '#ignored' => $data['ignored'] ?? 0,
       '#cache' => [
+        'keys' => [
+          'reliefweb',
+          'revisions',
+          'history',
+          'content',
+          $entity->getEntityTypeId(),
+          $entity->id(),
+        ],
         'contexts' => ['user.permissions'],
         'tags' => $entity->getCacheTags(),
       ],

@@ -157,8 +157,15 @@ class ProxySubscriber implements EventSubscriberInterface {
       ]);
     }
 
-    // Save the original file.
-    if (file_put_contents($uri, fopen($url, 'r')) === FALSE) {
+    $destination = @fopen($url, 'r');
+    if (!is_resource($destination)) {
+      $this->logger->warning('Unable to open @url', [
+        '@uri' => $uri,
+        '@url' => $url,
+      ]);
+    }
+    // Try to save the original file.
+    elseif (file_put_contents($uri, $destination) === FALSE) {
       $this->logger->warning('Unable to save the file @uri from @url', [
         '@uri' => $uri,
         '@url' => $url,

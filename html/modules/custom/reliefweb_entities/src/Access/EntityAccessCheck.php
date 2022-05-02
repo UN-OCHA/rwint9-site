@@ -6,12 +6,31 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Routing\Access\AccessInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\taxonomy\TermInterface;
 
 /**
  * Check access to an entity page.
  */
 class EntityAccessCheck implements AccessInterface {
+
+  /**
+   * The current user.
+   *
+   * @var \Drupal\Core\Session\AccountProxyInterface
+   */
+  protected $currentUser;
+
+  /**
+   * Constructor.
+   *
+   * @param \Drupal\Core\Session\AccountProxyInterface $current_user
+   *   The current user.
+   */
+  public function __construct(AccountProxyInterface $current_user) {
+    $this->currentUser = $current_user;
+  }
 
   /**
    * Check access to the entity page.
@@ -27,14 +46,12 @@ class EntityAccessCheck implements AccessInterface {
       $entity = $this->getEntityFromRouteMatch($route_match, 'taxonomy_term');
 
       if (!empty($entity) && $entity instanceof TermInterface) {
-        // @todo check the bundle class.
-        $accessible = ['country', 'disaster', 'source'];
-        if (!in_array($entity->bundle(), $accessible)) {
+        if (!($entity instanceof EntityModeratedInterface) && !$this->currentUser->hasPermission('edit terms in ' . $entity->bundle())) {
           return AccessResult::forbidden();
         }
       }
     }
-    // Allow access.
+    // Let other modules decide.
     return AccessResult::allowed();
   }
 

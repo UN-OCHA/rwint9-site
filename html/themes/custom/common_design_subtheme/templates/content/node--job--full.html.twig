@@ -96,6 +96,11 @@
       '#theme': 'reliefweb_entities_entity_country_slug',
       '#countries': meta.country,
       '#attributes': create_attribute().addClass('rw-entity-country-slug--above'),
+      '#cache': {
+        'tags': [
+          'taxonomy_term_list:country',
+        ],
+      },
     }) }}
 
     {{ title|merge({'#title_attributes': title_attributes.addClass('rw-article__title')}) }}
@@ -120,7 +125,12 @@
           'label': 'Closing date'|t,
           'value': meta.closing,
         },
-      }
+      },
+      '#cache': {
+        'tags': [
+          'taxonomy_term_list:source',
+        ],
+      },
     }) }}
   </header>
 
@@ -185,7 +195,17 @@
           'count': null,
           'sort': 'name',
         },
-      }
+      },
+      '#cache': {
+        'tags': [
+          'taxonomy_term_list:career_category',
+          'taxonomy_term_list:country',
+          'taxonomy_term_list:job_experience',
+          'taxonomy_term_list:job_type',
+          'taxonomy_term_list:source',
+          'taxonomy_term_list:theme',
+        ],
+      },
     }) }}
 
     {{ node.getShareLinks() }}

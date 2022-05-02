@@ -56,6 +56,8 @@ class DisasterRiver extends RiverServiceBase {
       $content['#pre_content'] = DisasterMapService::getAlertAndOngoingDisasterMap();
     }
 
+    $content['#cache_properties'][] = '#pre_content';
+
     return $content;
   }
 

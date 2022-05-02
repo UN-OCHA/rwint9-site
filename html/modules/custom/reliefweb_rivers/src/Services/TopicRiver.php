@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_rivers\Services;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
@@ -58,11 +59,26 @@ class TopicRiver extends RiverServiceBase {
    * {@inheritdoc}
    */
   public function getPageContent() {
+    $river = Html::getId($this->getRiver());
+
     return [
-      '#theme' => 'reliefweb_rivers_page__topics',
-      '#river' => $this->river,
+      '#theme' => 'reliefweb_rivers_page__' . $river,
+      '#river' => $river,
       '#title' => $this->getPageTitle(),
       '#content' => $this->getRiverContent(),
+      '#cache' => [
+        'keys' => [
+          'reliefweb',
+          'rivers',
+          'page',
+          $river,
+        ],
+      ],
+      '#cache_properties' => [
+        '#river',
+        '#title',
+        '#content',
+      ],
     ];
   }
 

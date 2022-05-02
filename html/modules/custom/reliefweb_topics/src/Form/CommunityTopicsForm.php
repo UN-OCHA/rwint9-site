@@ -3,7 +3,7 @@
 namespace Drupal\reliefweb_topics\Form;
 
 use Drupal\Core\Cache\Cache;
-use Drupal\Core\State\State;
+use Drupal\Core\State\StateInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -26,14 +26,14 @@ class CommunityTopicsForm extends FormBase {
   /**
    * The state store.
    *
-   * @var Drupal\Core\State\State
+   * @var Drupal\Core\State\StateInterface
    */
   protected $state;
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(Connection $database, State $state) {
+  public function __construct(Connection $database, StateInterface $state) {
     $this->database = $database;
     $this->state = $state;
   }

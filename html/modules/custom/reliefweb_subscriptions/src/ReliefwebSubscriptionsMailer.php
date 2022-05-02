@@ -18,13 +18,13 @@ use Drupal\Core\Extension\ThemeHandlerInterface;
 use Drupal\Core\Language\LanguageDefault;
 use Drupal\Core\Link;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\Core\Mail\MailManager;
+use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\PrivateKey;
-use Drupal\Core\Render\Renderer;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Site\Settings;
-use Drupal\Core\State\State;
+use Drupal\Core\State\StateInterface;
 use Drupal\Core\Theme\ThemeInitialization;
-use Drupal\Core\Theme\ThemeManager;
+use Drupal\Core\Theme\ThemeManagerInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_api\Services\ReliefWebApiClient;
 
@@ -71,7 +71,7 @@ class ReliefwebSubscriptionsMailer {
   /**
    * The state store.
    *
-   * @var \Drupal\Core\State\State
+   * @var \Drupal\Core\State\StateInterface
    */
   protected $state;
 
@@ -99,14 +99,14 @@ class ReliefwebSubscriptionsMailer {
   /**
    * Renderer.
    *
-   * @var \Drupal\Core\Render\Renderer
+   * @var \Drupal\Core\Render\RendererInterface
    */
   protected $renderer;
 
   /**
    * Mail manager.
    *
-   * @var \Drupal\Core\Mail\MailManager
+   * @var \Drupal\Core\Mail\MailManagerInterface
    */
   protected $mailManager;
 
@@ -134,7 +134,7 @@ class ReliefwebSubscriptionsMailer {
   /**
    * Theme manager.
    *
-   * @var \Drupal\Core\Theme\ThemeManager
+   * @var \Drupal\Core\Theme\ThemeManagerInterface
    */
   protected $themeManager;
 
@@ -154,16 +154,16 @@ class ReliefwebSubscriptionsMailer {
       EntityFieldManagerInterface $entity_field_manager,
       EntityRepositoryInterface $entity_repository,
       EntityTypeManagerInterface $entity_type_manager,
-      State $state,
+      StateInterface $state,
       TimeInterface $time,
       ReliefWebApiClient $reliefwebApiClient,
       PrivateKey $privateKey,
-      Renderer $renderer,
-      MailManager $mailManager,
+      RendererInterface $renderer,
+      MailManagerInterface $mailManager,
       LanguageDefault $languageDefault,
       LoggerChannelFactoryInterface $loggerFactory,
       ThemeInitialization $themeInitialization,
-      ThemeManager $themeManager,
+      ThemeManagerInterface $themeManager,
       ThemeHandlerInterface $themeHandler
     ) {
     $this->configFactory = $config_factory;

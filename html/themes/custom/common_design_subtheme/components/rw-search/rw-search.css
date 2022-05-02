@@ -56,10 +56,11 @@
   right: 0;
   width: 100px;
   height: 100%;
+  padding: 0;
 }
 .rw-river-search .rw-river-search__form button:before {
   position: absolute;
-  top: 16px;
+  top: 14px;
   left: -8px;
   content: "";
   border-width: 8px 8px 8px 0;

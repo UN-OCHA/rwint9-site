@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_entities\Entity;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
@@ -78,6 +79,8 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
       return [];
     }
 
+    $cache = new CacheableMetadata();
+
     $disclaimers = [];
     foreach ($this->field_source->referencedEntities() as $entity) {
       if (!$entity->field_disclaimer->isEmpty()) {
@@ -85,6 +88,7 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
           'name' => $entity->label(),
           'disclaimer' => $entity->field_disclaimer->value,
         ];
+        $cache->addCacheTags($entity->getCacheTags());
       }
     }
 
@@ -95,6 +99,9 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
     return [
       '#theme' => 'reliefweb_entities_entity_source_disclaimers',
       '#disclaimers' => $disclaimers,
+      '#cache' => [
+        'tags' => $cache->getCacheTags(),
+      ],
     ];
   }
 

@@ -26,6 +26,7 @@ dependencies:
     - filter
     - google_tag
     - guidelines
+    - reliefweb_bookmarks
     - reliefweb_guidelines
     - reliefweb_users
     - taxonomy
@@ -113,6 +114,7 @@ permissions:
   - 'guideline_list view revisions'
   - 'revert all guideline revisions'
   - 'revert term revision'
+  - 'see other bookmarks'
   - 'sort all guideline'
   - 'sort editorial guidelines'
   - 'use text format guideline'
