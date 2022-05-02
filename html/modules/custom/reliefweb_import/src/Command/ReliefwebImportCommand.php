@@ -126,6 +126,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    * @usage reliefweb_import:jobs
    *   Send emails.
    * @validate-module-enabled reliefweb_import
+   * @aliases reliefweb-import-jobs
    */
   public function jobs($limit = 50) {
     // Load terms having a job URL.

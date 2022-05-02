@@ -97,7 +97,7 @@ class ReliefWebFilesCommands extends DrushCommands {
    *   'source_directory' => '',
    * ]
    *
-   * @aliases rw-dma,rw-files-migrate-attachments
+   * @aliases rw-fma,rw-files-migrate-attachments
    *
    * @usage rw-files:migrate-attachments
    *   Migrate the attachments.
@@ -130,7 +130,7 @@ class ReliefWebFilesCommands extends DrushCommands {
       return FALSE;
     }
     if (!empty($source_directory) && !file_exists($source_directory)) {
-      $this->logger()->error(strtr('The source directory does not exist.'));
+      $this->logger()->error(dt('The source directory does not exist.'));
       return FALSE;
     }
 
@@ -138,7 +138,7 @@ class ReliefWebFilesCommands extends DrushCommands {
     $local = $this->configFactory->get('reliefweb_files.settings')->get('local') === TRUE;
 
     if (!empty($source_directory) && $local === FALSE) {
-      $this->logger()->error(strtr('The source directory option is only valid in local mode.'));
+      $this->logger()->error(dt('The source directory option is only valid in local mode.'));
       return FALSE;
     }
 

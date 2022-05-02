@@ -130,6 +130,7 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
    * @usage reliefweb_xmlsitemap:generate
    *   Generate the ReliefWeb xmlsitemap.
    * @validate-module-enabled reliefweb_xmlsitemap
+   * @aliases reliefweb-xmlsitemap-generate
    */
   public function generate() {
     // Prepare and empty the xmlsitemap directory.
@@ -328,6 +329,7 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
    * @usage reliefweb_xmlsitemap:submit
    *   Submit the sitemap to the search engines.
    * @validate-module-enabled reliefweb_xmlsitemap
+   * @aliases reliefweb-xmlsitemap-submit
    */
   public function submit() {
     // Check that the xmlsitemap actually exists before trying to submit it.

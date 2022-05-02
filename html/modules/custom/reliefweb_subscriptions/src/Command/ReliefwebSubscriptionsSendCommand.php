@@ -53,6 +53,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    * @usage reliefweb_subscriptions:send
    *   Send emails.
    * @validate-module-enabled reliefweb_subscriptions
+   * @aliases reliefweb-subscriptions-send
    */
   public function send($limit = 50) {
     // Get queued notifications, older first.
@@ -94,6 +95,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    *   Entity Id.
    * @option last
    *   Timestamp to use as the last time notifications were sent.
+   * @aliases reliefweb-subscriptions-queue
    */
   public function queue($sid, array $options = [
     'entity_type' => '',
