@@ -134,7 +134,7 @@ class ReliefWebFileList extends FieldItemList {
     if (!$entity->isDefaultTranslation()) {
       $this->deleteRemoteDocumentFileReferences();
     }
-    else {
+    elseif (!$this->storeLocally()) {
       $this->getDocstoreClient()->deleteDocument($entity->uuid());
     }
 
