@@ -56,6 +56,12 @@ class TaxonomyTermProfile extends TermForm {
       '@bundle' => $this->getBundleLabel(),
     ]));
     parent::submitForm($form, $form_state);
+
+    // Redirect to the entity page after submission.
+    $entity = $form_state->getFormObject()?->getEntity();
+    if (!empty($entity) && empty($entity->in_preview) && $entity->id() !== NULL) {
+      $form_state->setRedirectUrl($entity->toUrl());
+    }
   }
 
   /**
