@@ -700,4 +700,114 @@ class ReliefWebFilesCommands extends DrushCommands {
     }
   }
 
+  /**
+   * Fix migration of the report attachments.
+   *
+   * This creates the entries in the file_managed for some attachments for which
+   * the entries were not created for some reason during the report migration.
+   *
+   * @command rw-files:fix-migration
+   *
+   * @usage rw-files:fix-migration
+   *   Migrate the attachments.
+   *
+   * @validate-module-enabled reliefweb_files
+   */
+  public function fixMigration() {
+    $query = $this->getDatabase()
+      ->select('node__field_file', 'nf')
+      ->fields('nf', ['entity_id']);
+
+    $query->leftJoin('file_managed', 'fm', 'fm.uuid = nf.field_file_file_uuid');
+    $query->isNull('fm.fid');
+
+    $ids = $query->execute()?->fetchCol();
+    if (empty($ids)) {
+      $this->logger()->info(dt('No files to fix'));
+    }
+    else {
+      sort($ids);
+      $nodes = $this->entityTypeManager->getStorage('node')->loadMultiple($ids);
+
+      $processed = 0;
+      foreach ($nodes as $node) {
+        $this->logger()->info(dt('Fixing files for node @nid', [
+          '@nid' => $node->id(),
+        ]));
+
+        foreach ($node->field_file as $item) {
+          $private = !$node->isPublished();
+          $created = $node->getCreatedTime();
+
+          // Create file if it doesn't exist.
+          $file = $item->loadFile();
+          if (empty($file)) {
+            $file = $item->createFile();
+            if (empty($file)) {
+              $this->logger()->error(dt('Unable to create file with uuid @uuid for node @nid', [
+                '@uuid' => $item->getUuid(),
+                '@nid' => $node->id(),
+              ]));
+            }
+            else {
+              $file->setFileUri($item->getPermanentUri($private, FALSE));
+              $file->setSize($item->getFileSize());
+              $file->setPermanent();
+              $file->changed->value = $created;
+              $file->created->value = $created;
+              $file->save();
+              $processed++;
+
+              $this->logger()->info(dt('Created file with uuid @uuid for node @nid', [
+                '@uuid' => $item->getFileUuid(),
+                '@nid' => $node->id(),
+              ]));
+            }
+          }
+          else {
+            $this->logger()->info(dt('File with uuid @uuid for node @nid already exists', [
+              '@uuid' => $file->uuid(),
+              '@nid' => $node->id(),
+            ]));
+          }
+
+          // Create preview file if doesn't exist.
+          $preview_file = $item->loadPreviewFile();
+          if (empty($preview_file)) {
+            $preview_file = $item->createPreviewFile();
+            if (empty($preview_file)) {
+              $this->logger()->error(dt('Unable to create preview file with uuid @uuid for node @nid', [
+                '@uuid' => $item->getUuid(),
+                '@nid' => $node->id(),
+              ]));
+            }
+            else {
+              $preview_file->setFileUri($item->getPermanentUri($private, TRUE));
+              $preview_file->setPermanent();
+              $preview_file->changed->value = $created;
+              $preview_file->created->value = $created;
+              $preview_file->save();
+
+              $this->logger()->info(dt('Created preview file with uuid @uuid for node @nid', [
+                '@uuid' => $item->getPreviewUuid(),
+                '@nid' => $node->id(),
+              ]));
+            }
+          }
+          else {
+            $this->logger()->info(dt('Preview file with uuid @uuid for node @nid already exists', [
+              '@uuid' => $preview_file->uuid(),
+              '@nid' => $node->id(),
+            ]));
+          }
+        }
+      }
+
+      $this->logger()->info(dt('Fixed @files for @nodes', [
+        '@files' => $processed,
+        '@nodes' => count($nodes),
+      ]));
+    }
+  }
+
 }
