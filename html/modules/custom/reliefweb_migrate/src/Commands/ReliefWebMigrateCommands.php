@@ -638,4 +638,62 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
     ]);
   }
 
+  /**
+   * Check if the attachment files are migrated properly.
+   *
+   * DEBUG.
+   *
+   * @command rw-mcfe
+   *
+   * @option info If set, show the info of the missing files.
+   * @option limit If set, check only the given number of files.
+   *
+   * @default options [
+   *   'info' => FALSE,
+   *   'limit' => 0,
+   * ]
+   *
+   * @usage rw-mcfe
+   *   Count the number of missing files.
+   * @usage rw-mcfe --info --limit=10
+   *   Check 10 files and show the details of the missing files.
+   *
+   * @validate-module-enabled reliefweb_migrate
+   */
+  public function checkFileExistence($options = [
+    'info' => FALSE,
+    'limit' => 0,
+  ]) {
+    $query = Database::getConnection('default', 'default')
+      ->select('file_managed', 'fm')
+      ->fields('fm', ['fid', 'uuid', 'uri'])
+      ->orderBy('fm.fid', 'ASC');
+    if (!empty($options['limit']) && (int) $options['limit'] > 1) {
+      $query->range(0, (int) $options['limit']);
+    }
+
+    $files = $query->execute()?->fetchAllAssoc('fid', \PDO::FETCH_ASSOC) ?? [];
+    $total = count($files);
+    $count = 0;
+
+    $missing = [];
+    foreach (array_chunk($files, 1000, TRUE) as $chunk) {
+      foreach ($chunk as $fid => $file) {
+        $count++;
+        if (!file_exists($file['uri'])) {
+          $missing[$fid] = $file;
+        }
+      }
+      $this->logger()->info(dt('Checked @count / @total files: @missing missing.', [
+        '@count' => $count,
+        '@total' => $total,
+        '@missing' => count($missing),
+      ]));
+    }
+
+    if (!empty($options['info'])) {
+      print_r($missing);
+    }
+  }
+
 }
