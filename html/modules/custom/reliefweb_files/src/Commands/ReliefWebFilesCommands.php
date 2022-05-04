@@ -782,7 +782,7 @@ class ReliefWebFilesCommands extends DrushCommands {
           // Create preview file if doesn't exist.
           $preview_file = $item->loadPreviewFile();
           if (empty($preview_file)) {
-            $preview_file = $item->createPreviewFile();
+            $preview_file = $item->createPreviewFile(FALSE);
             if (empty($preview_file)) {
               $this->logger()->error(dt('Unable to create preview file with uuid @uuid for node @nid', [
                 '@uuid' => $item->getUuid(),
