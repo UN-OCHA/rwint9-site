@@ -714,14 +714,22 @@ class ReliefWebFilesCommands extends DrushCommands {
    * @validate-module-enabled reliefweb_files
    */
   public function fixMigration() {
-    $query = $this->getDatabase()
-      ->select('node__field_file', 'nf')
-      ->fields('nf', ['entity_id']);
+    $ids = [];
 
-    $query->leftJoin('file_managed', 'fm', 'fm.uuid = nf.field_file_file_uuid');
+    $query = $this->getDatabase()->select('node__field_file', 'nf');
+    $query->fields('nf', ['entity_id']);
+    $query->condition(' nf.field_file_file_uuid', NULL, 'IS NOT NULL');
+    $query->leftJoin('file_managed', 'fm', 'fm.uuid  = nf.field_file_file_uuid');
     $query->isNull('fm.fid');
+    $ids += $query->execute()?->fetchAllKeyed(0, 0) ?? [];
 
-    $ids = $query->execute()?->fetchCol();
+    $query = $this->getDatabase()->select('node__field_file', 'nf');
+    $query->fields('nf', ['entity_id']);
+    $query->condition(' nf.field_file_preview_uuid', NULL, 'IS NOT NULL');
+    $query->leftJoin('file_managed', 'fm', 'fm.uuid  = nf.field_file_preview_uuid');
+    $query->isNull('fm.fid');
+    $ids += $query->execute()?->fetchAllKeyed(0, 0) ?? [];
+
     if (empty($ids)) {
       $this->logger()->info(dt('No files to fix'));
     }
@@ -803,7 +811,7 @@ class ReliefWebFilesCommands extends DrushCommands {
         }
       }
 
-      $this->logger()->info(dt('Fixed @files for @nodes', [
+      $this->logger()->info(dt('Fixed @files files for @nodes nodes', [
         '@files' => $processed,
         '@nodes' => count($nodes),
       ]));
