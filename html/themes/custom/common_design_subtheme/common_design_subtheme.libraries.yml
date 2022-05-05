@@ -1,7 +1,7 @@
 global-styling:
   css:
     theme:
-      css/styles.css: {}
+      css/brand.css: {}
   dependencies:
     - common_design_subtheme/rw-external-links
     - common_design_subtheme/rw-form
