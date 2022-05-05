@@ -329,13 +329,17 @@ abstract class EntityBase extends SqlBase implements ImportAwareInterface, Rollb
   /**
    * {@inheritdoc}
    */
-  public function setHighWaterToLatestNonImported() {
+  public function setHighWaterToLatestNonImported($check_only = FALSE) {
     $destination_ids = $this->getDestinationEntityIds();
     $source_ids = $this->getSourceEntityIds();
     $imported_ids = array_intersect($destination_ids, $source_ids);
     $updated_ids = array_diff_assoc($imported_ids, $source_ids);
     $new_ids = array_diff($source_ids, $imported_ids);
     $ids = array_keys($new_ids + $updated_ids);
+
+    if ($check_only) {
+      return empty($ids) ? 0 : min($ids);
+    }
 
     if (!empty($ids)) {
       $this->getHighWaterStorage()->set($this->migration->id(), min($ids) - 1);

@@ -13,9 +13,12 @@ interface SourceMigrationHighWaterInterface {
    * Note: this mostly useful during development to be able to re-import
    * deleted or modified old content.
    *
+   * @param bool $check_only
+   *   If TRUE, do not update the high water.
+   *
    * @return int
    *   The latest imported ID for the migration.
    */
-  public function setHighWaterToLatestNonImported();
+  public function setHighWaterToLatestNonImported($check_only = FALSE);
 
 }
