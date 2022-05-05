@@ -1,0 +1,3 @@
+.cd-site-logo:focus {
+  outline: 3px solid var(--cd-reliefweb-brand-blue);
+}

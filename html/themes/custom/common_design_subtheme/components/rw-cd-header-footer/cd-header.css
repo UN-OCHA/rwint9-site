@@ -1,0 +1,3 @@
+.cd-header button:focus {
+  outline: 3px solid var(--cd-reliefweb-brand-blue);
+}
