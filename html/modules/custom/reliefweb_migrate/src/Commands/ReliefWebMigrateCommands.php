@@ -696,4 +696,321 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
     }
   }
 
+  /**
+   * Fix migrated files with wrong PDF mimetype.
+   *
+   * DEBUG.
+   *
+   * @command rw-mffm
+   *
+   * @usage rw-mffm
+   *   Fix migrated files with wrong PDF mimetype.
+   *
+   * @validate-module-enabled reliefweb_migrate
+   */
+  public function fixFileMimetype() {
+    $transaction = $this->database->startTransaction();
+    try {
+      $arguments = [
+        ':mimetype' => 'application/pdf',
+        ':extension' => 'pdf',
+      ];
+      $options = [
+        'return' => Database::RETURN_AFFECTED,
+      ];
+
+      $results['@deleted_files'] = $this->database->query("
+        DELETE fm.* FROM {file_managed} AS fm
+        INNER JOIN {node__field_file} AS nf
+        ON nf.field_file_preview_uuid = fm.uuid
+        WHERE nf.field_file_file_mime = :mimetype
+        AND LOWER(RIGHT(nf.field_file_file_name,3)) <> :extension
+      ", $arguments, $options) ?? 0;
+
+      $results['@deleted_files'] += $this->database->query("
+        DELETE fm.* FROM {file_managed} AS fm
+        INNER JOIN {node_revision__field_file} AS nf
+        ON nf.field_file_preview_uuid = fm.uuid
+        WHERE nf.field_file_file_mime = :mimetype
+        AND LOWER(RIGHT(nf.field_file_file_name,3)) <> :extension
+      ", $arguments, $options) ?? 0;
+
+      $results['@updated_fields'] = $this->database->query("
+        UPDATE {node__field_file} SET
+        field_file_file_mime = CASE LOWER(RIGHT(field_file_file_name,3))
+          WHEN 'bmp' THEN 'image/bmp'
+          WHEN 'gif' THEN 'image/gif'
+          WHEN 'jpg' THEN 'image/jpeg'
+          WHEN 'kml' THEN 'application/vnd.google-earth.kml+xml'
+          WHEN 'png' THEN 'image/png'
+          WHEN 'ppt' THEN 'application/vnd.ms-powerpoint'
+        END,
+        field_file_page_count = NULL,
+        field_file_preview_uuid = NULL,
+        field_file_preview_page = NULL,
+        field_file_preview_rotation = NULL
+        WHERE field_file_file_mime = :mimetype
+        AND LOWER(RIGHT(field_file_file_name,3)) <> :extension
+      ", $arguments, $options) ?? 0;
+
+      $results['@updated_revision_fields'] = $this->database->query("
+        UPDATE {node_revision__field_file} SET
+        field_file_file_mime = CASE LOWER(RIGHT(field_file_file_name,3))
+          WHEN 'bmp' THEN 'image/bmp'
+          WHEN 'gif' THEN 'image/gif'
+          WHEN 'jpg' THEN 'image/jpeg'
+          WHEN 'kml' THEN 'application/vnd.google-earth.kml+xml'
+          WHEN 'png' THEN 'image/png'
+          WHEN 'ppt' THEN 'application/vnd.ms-powerpoint'
+        END,
+        field_file_page_count = NULL,
+        field_file_preview_uuid = NULL,
+        field_file_preview_page = NULL,
+        field_file_preview_rotation = NULL
+        WHERE field_file_file_mime = :mimetype
+        AND LOWER(RIGHT(field_file_file_name,3)) <> :extension
+      ", $arguments, $options) ?? 0;
+
+      $this->logger()->info(dt('Deleted files: @deleted_files. Updated fields: @updated_fields. Updated revision fields: @updated_revision_fields.', $results));
+
+      // Ignore replica server temporarily.
+      // phpcs:ignore
+      \Drupal::service('database.replica_kill_switch')->trigger();
+    }
+    catch (\Exception $exception) {
+      $transaction->rollBack();
+      $this->logger()->error($exception->getMessage());
+    }
+  }
+
+  /**
+   * Check migrated content.
+   *
+   * @command rw-migrate:check-content
+   *
+   * @usage rw-migrate:check-content
+   *   Check migrated content.
+   *
+   * @validate-module-enabled reliefweb_migrate
+   *
+   * @aliases rw-mcc
+   *
+   * @field-labels
+   *   name: Name
+   *   rw9: RW9
+   *   rw7: RW7
+   *   diff: Diff
+   * @default-fields name,rw9,rw7,diff
+   *
+   * @return \Consolidation\OutputFormatters\StructuredData\RowsOfFields
+   *   Formatted table.
+   */
+  public function checkMigratedContent() {
+    $d7_database = Database::getConnection('default', 'rwint7');
+
+    $duplicate_query = $d7_database->select('field_data_field_file', 'f');
+    $duplicate_query->addField('f', 'field_file_fid', 'fid');
+    $duplicate_query->addExpression('COUNT(f.field_file_fid)', 'total');
+    $duplicate_query->addExpression('GROUP_CONCAT(f.entity_id ORDER BY f.entity_id)', 'ids');
+    $duplicate_query->groupBy('f.field_file_fid');
+    $duplicate_query->having('total > 1');
+
+    $duplicate_reports = [];
+    foreach ($duplicate_query->execute() ?? [] as $record) {
+      $ids = explode(',', $record->ids);
+      if (min($ids) !== max($ids)) {
+        $duplicate_reports = array_merge($duplicate_reports, array_slice($ids, 0, -1));
+      }
+    }
+
+    $d9_data = $this->database->query("
+        SELECT CONCAT('node - ', type) AS name, COUNT(*) AS total
+        FROM node
+        GROUP BY type
+      UNION
+        SELECT CONCAT('node - ', 'total') AS name, COUNT(*) AS total
+        FROM node
+      UNION
+        SELECT CONCAT('term - ', vid) AS name, COUNT(*) AS total
+        FROM taxonomy_term_data
+        GROUP BY vid
+      UNION
+        SELECT CONCAT('term - ', 'total') AS name, COUNT(*) AS total
+        FROM taxonomy_term_data
+      UNION
+        SELECT CONCAT('media - ', bundle) AS name, COUNT(*) AS total
+        FROM media
+        GROUP BY bundle
+      UNION
+        SELECT CONCAT('media - ', 'total') AS name, COUNT(*) AS total
+        FROM media
+      UNION
+        SELECT CONCAT('image - ', m.bundle) AS name, COUNT(m.mid) AS total
+        FROM media AS m
+        INNER JOIN media__field_media_image AS fmi
+          ON fmi.entity_id = m.mid
+        INNER JOIN file_managed AS fm
+          ON fm.fid = fmi.field_media_image_target_id
+        GROUP BY m.bundle
+      UNION
+        SELECT CONCAT('image - ', 'total') AS name, COUNT(m.mid) AS total
+        FROM media AS m
+        INNER JOIN media__field_media_image AS fmi
+          ON fmi.entity_id = m.mid
+        INNER JOIN file_managed AS fm
+          ON fm.fid = fmi.field_media_image_target_id
+      UNION
+        SELECT 'attachment' AS name, COUNT(field_file_file_uuid)
+        FROM node__field_file
+      UNION
+        SELECT 'preview' AS name, COUNT(field_file_preview_uuid)
+        FROM node__field_file
+        WHERE field_file_preview_uuid IS NOT NULL
+      UNION
+        SELECT 'attachment file' AS name, COUNT(fm.fid)
+        FROM file_managed AS fm
+        INNER JOIN node__field_file AS nf ON nf.field_file_file_uuid = fm.uuid
+      UNION
+        SELECT 'preview file' AS name, COUNT(fm.fid)
+        FROM file_managed AS fm
+        INNER JOIN node__field_file AS nf
+          ON nf.field_file_preview_uuid = fm.uuid
+    ")?->fetchAllKeyed(0, 1) ?? [];
+
+    $d7_data = $d7_database->query("
+        SELECT CONCAT('node - ',
+          CASE type
+            WHEN 'topics' THEN 'topic'
+            ELSE type
+          END) AS name, COUNT(*) AS total
+        FROM node
+        WHERE type NOT IN ('faq')
+          AND nid NOT IN (:duplicate_reports[])
+        GROUP BY type
+      UNION
+        SELECT CONCAT('node - ', 'total') AS name, COUNT(*) AS total
+        FROM node
+        WHERE type NOT IN ('faq')
+          AND nid NOT IN (:duplicate_reports[])
+      UNION
+        SELECT CONCAT('term - ',
+          CASE tv.machine_name
+            WHEN 'career_categories' THEN 'career_category'
+            WHEN 'tags' THEN 'tag'
+            WHEN 'vulnerable_groups' THEN 'vulnerable_group'
+            ELSE tv.machine_name
+          END) AS name, COUNT(td.tid) AS total
+        FROM taxonomy_term_data AS td
+        INNER JOIN taxonomy_vocabulary AS tv
+          ON tv.vid = td.vid
+        WHERE tv.machine_name NOT IN ('city', 'faq_category', 'region')
+        GROUP BY tv.vid
+      UNION
+        SELECT CONCAT('term - ', 'total') AS name, COUNT(td.tid) AS total
+        FROM taxonomy_term_data AS td
+        INNER JOIN taxonomy_vocabulary AS tv
+          ON tv.vid = td.vid
+        WHERE tv.machine_name NOT IN ('city', 'faq_category', 'region')
+      UNION
+        SELECT CONCAT('media - ', 'image_announcement') AS name, COUNT(DISTINCT fm.fid)
+        FROM file_managed AS fm
+        INNER JOIN field_data_field_image AS fi
+          ON fi.field_image_fid = fm.fid
+          AND fi.bundle = 'announcement'
+      UNION
+        SELECT CONCAT('media - ', 'image_blog_post') AS name, COUNT(DISTINCT fm.fid)
+        FROM file_managed AS fm
+        LEFT JOIN field_data_field_image AS fi
+          ON fi.field_image_fid = fm.fid
+          AND fi.bundle = 'blog_post'
+        LEFT JOIN field_data_field_attached_images AS fai
+          ON fai.field_attached_images_fid = fm.fid
+          AND fai.bundle = 'blog_post'
+        WHERE fi.entity_id IS NOT NULL OR fai.entity_id IS NOT NULL
+      UNION
+        SELECT CONCAT('media - ', 'image_report') AS name, COUNT(DISTINCT fm.fid)
+        FROM file_managed AS fm
+        LEFT JOIN field_data_field_image AS fi
+          ON fi.field_image_fid = fm.fid
+          AND fi.bundle = 'report'
+        LEFT JOIN field_data_field_headline_image AS fhi
+          ON fhi.field_headline_image_fid = fm.fid
+          AND fhi.bundle = 'report'
+        WHERE fi.entity_id IS NOT NULL OR fhi.entity_id IS NOT NULL
+      UNION
+        SELECT CONCAT('media - ', 'image_source') AS name, COUNT(DISTINCT fm.fid)
+        FROM file_managed AS fm
+        INNER JOIN field_data_field_term_image AS fti
+          ON fti.field_term_image_fid = fm.fid
+          AND fti.bundle = 'source'
+      UNION
+        SELECT CONCAT('media - ', 'image_topic') AS name, COUNT(DISTINCT fm.fid)
+        FROM file_managed AS fm
+        INNER JOIN field_data_field_term_image AS fi
+          ON fi.field_term_image_fid = fm.fid
+          AND fi.bundle = 'topics'
+      UNION
+        SELECT CONCAT('media - ', 'total') AS name, COUNT(DISTINCT fm.fid)
+        FROM file_managed AS fm
+        LEFT JOIN field_data_field_image AS fi
+          ON fi.field_image_fid = fm.fid
+          AND fi.bundle IN ('announcement', 'blog_post', 'report')
+        LEFT JOIN field_data_field_attached_images AS fai
+          ON fai.field_attached_images_fid = fm.fid
+          AND fai.bundle = 'blog_post'
+        LEFT JOIN field_data_field_headline_image AS fhi
+          ON fhi.field_headline_image_fid = fm.fid
+          AND fhi.bundle = 'report'
+        LEFT JOIN field_data_field_term_image AS fti
+          ON fti.field_term_image_fid = fm.fid
+          AND fti.bundle IN ('source', 'topics')
+        WHERE fi.entity_id IS NOT NULL
+          OR fai.entity_id IS NOT NULL
+          OR fhi.entity_id IS NOT NULL
+          OR fti.entity_id IS NOT NULL
+      UNION
+        SELECT 'attachment' AS name, COUNT(DISTINCT f.field_file_fid)
+        FROM field_data_field_file AS f
+        INNER JOIN file_managed AS fm
+          ON fm.fid = f.field_file_fid
+        WHERE f.bundle = 'report'
+      UNION
+        SELECT 'preview' AS name, COUNT(DISTINCT f.field_file_fid)
+        FROM field_data_field_file AS f
+        INNER JOIN file_managed AS fm
+          ON fm.fid = f.field_file_fid
+        WHERE f.bundle = 'report'
+          AND f.field_file_description REGEXP :preview_description
+          AND (fm.filemime = 'application/pdf' OR LOWER(RIGHT(fm.uri,3)) = 'pdf')
+    ", [
+      ':duplicate_reports[]' => $duplicate_reports,
+      ':preview_description' => '[|][1-9][0-9]*[|](0|90|-90)$',
+    ])?->fetchAllKeyed(0, 1) ?? [];
+
+    $table = [];
+    foreach ($d9_data as $key => $value) {
+      if ($key === 'attachment file') {
+        $d7_value = $d7_data['attachment'];
+      }
+      elseif ($key === 'preview file') {
+        $d7_value = $d7_data['preview'];
+      }
+      elseif (strpos($key, 'image - ') === 0) {
+        $d7_value = $d7_data[str_replace('image - ', 'media - ', $key)];
+      }
+      else {
+        $d7_value = $d7_data[$key];
+      }
+
+      $table[] = [
+        'name' => $key,
+        'rw9' => $value,
+        'rw7' => $d7_value,
+        'diff' => $value - $d7_value,
+      ];
+    }
+
+    return new RowsOfFields($table);
+  }
+
 }
