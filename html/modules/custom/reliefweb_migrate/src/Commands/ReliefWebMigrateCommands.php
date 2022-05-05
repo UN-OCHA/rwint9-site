@@ -788,8 +788,16 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
    *
    * @command rw-migrate:check-content
    *
+   * @option migrated-only Limit results from the D7 database to migrated ids.
+   *
+   * @default options [
+   *   'migrated-only' => FALSE,
+   * ]
+   *
    * @usage rw-migrate:check-content
    *   Check migrated content.
+   * @usage rw-migrate:check-content --migrated-only
+   *   Check migrated content, limiting to the latest migrated IDs.
    *
    * @validate-module-enabled reliefweb_migrate
    *
@@ -805,7 +813,9 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
    * @return \Consolidation\OutputFormatters\StructuredData\RowsOfFields
    *   Formatted table.
    */
-  public function checkMigratedContent() {
+  public function checkMigratedContent($options = [
+    'migrated-only' => FALSE,
+  ]) {
     $d7_database = Database::getConnection('default', 'rwint7');
 
     $duplicate_query = $d7_database->select('field_data_field_file', 'f');
@@ -821,6 +831,56 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
       if (min($ids) !== max($ids)) {
         $duplicate_reports = array_merge($duplicate_reports, array_slice($ids, 0, -1));
       }
+    }
+
+    if (empty($options['migrated-only'])) {
+      $node_max_id = $d7_database->query("
+        SELECT MAX(vid) FROM node
+      ")?->fetchField() ?? 0;
+      $term_max_id = $d7_database->query("
+        SELECT MAX(revision_id) FROM taxonomy_term_data
+      ")?->fetchField() ?? 0;
+      $media_max_id = $d7_database->query("
+        SELECT MAX(fm.fid)
+        FROM file_managed AS fm
+        LEFT JOIN field_data_field_image AS fi
+          ON fi.field_image_fid = fm.fid
+          AND fi.bundle IN ('announcement', 'blog_post', 'report')
+        LEFT JOIN field_data_field_attached_images AS fai
+          ON fai.field_attached_images_fid = fm.fid
+          AND fai.bundle = 'blog_post'
+        LEFT JOIN field_data_field_headline_image AS fhi
+          ON fhi.field_headline_image_fid = fm.fid
+          AND fhi.bundle = 'report'
+        LEFT JOIN field_data_field_term_image AS fti
+          ON fti.field_term_image_fid = fm.fid
+          AND fti.bundle IN ('source', 'topics')
+        WHERE fi.entity_id IS NOT NULL
+          OR fai.entity_id IS NOT NULL
+          OR fhi.entity_id IS NOT NULL
+          OR fti.entity_id IS NOT NULL
+      ")?->fetchField() ?? 0;
+      $file_max_id = $d7_database->query("
+        SELECT MAX(fm.fid) FROM file_managed AS fm
+        INNER JOIN field_data_field_file AS f
+        ON f.field_file_fid = fm.fid
+      ")?->fetchField() ?? 0;
+    }
+    else {
+      $node_max_id = $this->database->query("
+        SELECT MAX(vid) FROM node
+      ")?->fetchField() ?? 0;
+      $term_max_id = $this->database->query("
+        SELECT MAX(revision_id) FROM taxonomy_term_data
+      ")?->fetchField() ?? 0;
+      $media_max_id = $this->database->query("
+        SELECT MAX(mid) FROM media
+      ")?->fetchField() ?? 0;
+      $file_max_id = $this->database->query("
+        SELECT MAX(fm.fid) FROM file_managed AS fm
+        INNER JOIN node__field_file AS f
+        ON f.field_file_file_uuid = fm.uuid
+      ")?->fetchField() ?? 0;
     }
 
     $d9_data = $this->database->query("
@@ -886,12 +946,14 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
         FROM node
         WHERE type NOT IN ('faq')
           AND nid NOT IN (:duplicate_reports[])
+          AND nid <= :node_max_id
         GROUP BY type
       UNION
         SELECT CONCAT('node - ', 'total') AS name, COUNT(*) AS total
         FROM node
         WHERE type NOT IN ('faq')
           AND nid NOT IN (:duplicate_reports[])
+          AND nid <= :node_max_id
       UNION
         SELECT CONCAT('term - ',
           CASE tv.machine_name
@@ -904,6 +966,7 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
         INNER JOIN taxonomy_vocabulary AS tv
           ON tv.vid = td.vid
         WHERE tv.machine_name NOT IN ('city', 'faq_category', 'region')
+          AND td.tid <= :term_max_id
         GROUP BY tv.vid
       UNION
         SELECT CONCAT('term - ', 'total') AS name, COUNT(td.tid) AS total
@@ -911,12 +974,14 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
         INNER JOIN taxonomy_vocabulary AS tv
           ON tv.vid = td.vid
         WHERE tv.machine_name NOT IN ('city', 'faq_category', 'region')
+          AND td.tid <= :term_max_id
       UNION
         SELECT CONCAT('media - ', 'image_announcement') AS name, COUNT(DISTINCT fm.fid)
         FROM file_managed AS fm
         INNER JOIN field_data_field_image AS fi
           ON fi.field_image_fid = fm.fid
           AND fi.bundle = 'announcement'
+        WHERE fm.fid <= :media_max_id
       UNION
         SELECT CONCAT('media - ', 'image_blog_post') AS name, COUNT(DISTINCT fm.fid)
         FROM file_managed AS fm
@@ -926,7 +991,8 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
         LEFT JOIN field_data_field_attached_images AS fai
           ON fai.field_attached_images_fid = fm.fid
           AND fai.bundle = 'blog_post'
-        WHERE fi.entity_id IS NOT NULL OR fai.entity_id IS NOT NULL
+        WHERE (fi.entity_id IS NOT NULL OR fai.entity_id IS NOT NULL)
+          AND fm.fid <= :media_max_id
       UNION
         SELECT CONCAT('media - ', 'image_report') AS name, COUNT(DISTINCT fm.fid)
         FROM file_managed AS fm
@@ -936,19 +1002,22 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
         LEFT JOIN field_data_field_headline_image AS fhi
           ON fhi.field_headline_image_fid = fm.fid
           AND fhi.bundle = 'report'
-        WHERE fi.entity_id IS NOT NULL OR fhi.entity_id IS NOT NULL
+        WHERE (fi.entity_id IS NOT NULL OR fhi.entity_id IS NOT NULL)
+          AND fm.fid <= :media_max_id
       UNION
         SELECT CONCAT('media - ', 'image_source') AS name, COUNT(DISTINCT fm.fid)
         FROM file_managed AS fm
         INNER JOIN field_data_field_term_image AS fti
           ON fti.field_term_image_fid = fm.fid
           AND fti.bundle = 'source'
+        WHERE fm.fid <= :media_max_id
       UNION
         SELECT CONCAT('media - ', 'image_topic') AS name, COUNT(DISTINCT fm.fid)
         FROM file_managed AS fm
         INNER JOIN field_data_field_term_image AS fi
           ON fi.field_term_image_fid = fm.fid
           AND fi.bundle = 'topics'
+        WHERE fm.fid <= :media_max_id
       UNION
         SELECT CONCAT('media - ', 'total') AS name, COUNT(DISTINCT fm.fid)
         FROM file_managed AS fm
@@ -964,16 +1033,18 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
         LEFT JOIN field_data_field_term_image AS fti
           ON fti.field_term_image_fid = fm.fid
           AND fti.bundle IN ('source', 'topics')
-        WHERE fi.entity_id IS NOT NULL
+        WHERE (fi.entity_id IS NOT NULL
           OR fai.entity_id IS NOT NULL
           OR fhi.entity_id IS NOT NULL
-          OR fti.entity_id IS NOT NULL
+          OR fti.entity_id IS NOT NULL)
+          AND fm.fid <= :media_max_id
       UNION
         SELECT 'attachment' AS name, COUNT(DISTINCT f.field_file_fid)
         FROM field_data_field_file AS f
         INNER JOIN file_managed AS fm
           ON fm.fid = f.field_file_fid
         WHERE f.bundle = 'report'
+          AND fm.fid <= :file_max_id
       UNION
         SELECT 'preview' AS name, COUNT(DISTINCT f.field_file_fid)
         FROM field_data_field_file AS f
@@ -982,9 +1053,14 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
         WHERE f.bundle = 'report'
           AND f.field_file_description REGEXP :preview_description
           AND (fm.filemime = 'application/pdf' OR LOWER(RIGHT(fm.uri,3)) = 'pdf')
+          AND fm.fid <= :file_max_id
     ", [
       ':duplicate_reports[]' => $duplicate_reports,
       ':preview_description' => '[|][1-9][0-9]*[|](0|90|-90)$',
+      ':node_max_id' => $node_max_id,
+      ':term_max_id' => $term_max_id,
+      ':media_max_id' => $media_max_id,
+      ':file_max_id' => $file_max_id,
     ])?->fetchAllKeyed(0, 1) ?? [];
 
     $table = [];
