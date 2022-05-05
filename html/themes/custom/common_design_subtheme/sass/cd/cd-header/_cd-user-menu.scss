@@ -4,53 +4,24 @@
 // Includes user-centered settings and/or actions.
 //
 //——————————————————————————————————————————————————————————————————————————————
-.cd-user-menu {
-  &--no-language-switcher {
-    li:last-child a,
-    li:last-child button {
-      padding-right: 0;
-
-      &::after {
-        content: none;
-      }
-    }
-  }
-}
-
-.cd-user-menu__item {
-  &:focus {
-    outline: 3px solid $implementation-secondary;
-  }
-}
-
-//——————————————————————————————————————————————————————————————————————————————
-// Drupal selectors
-//——————————————————————————————————————————————————————————————————————————————
-
-.cd-global-header .menu > li a,
-.cd-global-header .menu > li button {
-  @extend .cd-user-menu__item;
-}
-
-.cd-global-header .menu {
-  @extend .cd-user-menu;
-
-  // If there's no language switcher in the Global Header, uncomment this line
-  // to apply special treatment to the last link in the list.
-  //@extend .cd-user-menu--no-language-switcher;
+// .cd-global-header .menu li:last-child a {
+//   padding-right: 0;
+// }
+// .cd-global-header .menu li:last-child a::after {
+//   content: none;
+// }
+.cd-user-menu__item:focus {
+  outline: 3px solid var(--cd-reliefweb-brand-blue);
 }
 
 // If there's a second menu in the Global Header and no language switcher,
 // uncomment this rule to apply special treatment to the last link in the list.
-.cd-global-header__user-menu + .cd-global-header__user-menu {
-  li:last-child a,
-  li:last-child button {
-    padding-right: 0;
+.cd-global-header__user-menu + .cd-global-header__user-menu li:last-child a {
+  padding-right: 0;
+}
 
-    &::after {
-      content: none;
-    }
-  }
+.cd-global-header__user-menu + .cd-global-header__user-menu li:last-child a::after {
+  content: none;
 }
 
 .cd-global-header__user-menu a svg + span {
@@ -59,22 +30,18 @@
   }
 }
 
-.admin-menu__btn {
-  svg + span {
-    [dir="ltr"] & {
-      margin-left: 10px;
-    }
+[dir="ltr"] .admin-menu__btn svg + span {
+  margin-left: 10px;
+}
 
-    [dir="rtl"] & {
-      margin-right: 10px;
-    }
-  }
+[dir="rtl"] .admin-menu__btn svg + span {
+  margin-right: 10px;
+}
 
-  .cd-icon:not(.cd-icon--arrow-down) {
-    display: inline-block;
-    width: 14px;
-    height: 14px;
-    vertical-align: middle;
-    fill: $cd-white;
-  }
+.admin-menu__btn .cd-icon:not(.cd-icon--arrow-down) {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  vertical-align: middle;
+  fill: $cd-white;
 }
