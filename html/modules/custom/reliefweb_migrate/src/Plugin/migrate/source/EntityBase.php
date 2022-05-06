@@ -106,7 +106,9 @@ abstract class EntityBase extends SqlBase implements ImportAwareInterface, Rollb
     }
 
     // If a batch has run the query is already setup.
-    if ($this->batch == 0) {
+    // We also need to have a clean query if we use IDs to migrate because,
+    // otherwise, the ID condition will be merged with the previous one...
+    if ($this->batch == 0 || isset($this->idsToMigrate)) {
       $this->prepareQuery();
     }
 
