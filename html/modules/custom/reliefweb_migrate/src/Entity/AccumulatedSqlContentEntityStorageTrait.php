@@ -189,16 +189,22 @@ trait AccumulatedSqlContentEntityStorageTrait {
 
       // Then insert the new content.
       foreach ($this->accumulator as $table => $entries) {
+        $execute = FALSE;
         $query = $this->database->insert($table);
         foreach ($entries as $rows) {
           foreach ($rows as $row) {
             $row = (array) $row;
-            $this->processRowBeforeInsertion($table, $row);
-            $query->fields(array_keys($row));
-            $query->values(array_values($row));
+            if (!empty($row)) {
+              $this->processRowBeforeInsertion($table, $row);
+              $query->fields(array_keys($row));
+              $query->values(array_values($row));
+              $execute = TRUE;
+            }
           }
         }
-        $query->execute();
+        if ($execute) {
+          $query->execute();
+        }
       }
 
       // Ignore replica server temporarily.

@@ -106,7 +106,9 @@ abstract class EntityBase extends SqlBase implements ImportAwareInterface, Rollb
     }
 
     // If a batch has run the query is already setup.
-    if ($this->batch == 0) {
+    // We also need to have a clean query if we use IDs to migrate because,
+    // otherwise, the ID condition will be merged with the previous one...
+    if ($this->batch == 0 || isset($this->idsToMigrate)) {
       $this->prepareQuery();
     }
 
@@ -381,20 +383,36 @@ abstract class EntityBase extends SqlBase implements ImportAwareInterface, Rollb
   /**
    * {@inheritdoc}
    */
-  public function setHighWaterToLatestNonImported($check_only = FALSE) {
+  public function setHighWaterToLatestNonImported($check_only = FALSE, $set_to_max = FALSE) {
     $destination_ids = $this->getDestinationEntityIds();
-    $source_ids = $this->getSourceEntityIds();
-    $imported_ids = array_intersect($destination_ids, $source_ids);
-    $updated_ids = array_diff_assoc($imported_ids, $source_ids);
-    $new_ids = array_diff($source_ids, $imported_ids);
-    $ids = array_keys($new_ids + $updated_ids);
 
-    if ($check_only) {
-      return empty($ids) ? 0 : min($ids);
+    if ($set_to_max) {
+      $ids = array_keys($destination_ids);
+    }
+    else {
+      $source_ids = $this->getSourceEntityIds();
+      $imported_ids = array_intersect($destination_ids, $source_ids);
+      $updated_ids = array_diff_assoc($imported_ids, $source_ids);
+      $new_ids = array_diff($source_ids, $imported_ids);
+      $ids = array_keys($new_ids + $updated_ids);
     }
 
+    $id = NULL;
     if (!empty($ids)) {
-      $this->getHighWaterStorage()->set($this->migration->id(), min($ids) - 1);
+      $id = $set_to_max ? max($ids) : min($ids) - 1;
+    }
+
+    if ($check_only) {
+      print_r([
+        $this->migration->id() => [
+          'old' => $this->getHighWater(),
+          'new' => $id,
+        ],
+      ]);
+      return $id;
+    }
+    elseif (isset($id)) {
+      $this->getHighWaterStorage()->set($this->migration->id(), $id);
     }
     return $this->getHighWater();
   }
@@ -410,15 +428,21 @@ abstract class EntityBase extends SqlBase implements ImportAwareInterface, Rollb
       return;
     }
 
+    $count = 0;
     foreach (array_chunk($ids_list, 1000) as $ids) {
       $ids_to_delete = $this->getDestinationEntityIdsToDelete($ids);
       if (!empty($ids_to_delete)) {
+        $count += count($ids_to_delete);
         foreach ($ids_to_delete as $id) {
           $destination_plugin->rollback([$id]);
         }
         $this->idMap->deleteFromSourceIds($ids_to_delete);
       }
     }
+
+    \Drupal::logger('migrate')->info(strtr('IDs deleted: @ids', [
+      '@ids' => $count,
+    ]));
   }
 
   /**
