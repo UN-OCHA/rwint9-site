@@ -90,7 +90,7 @@ class User extends EntityBase {
     $updated_ids = array_diff_assoc($imported_ids, $source_ids);
     $new_ids = array_diff($source_ids, $imported_ids);
     // We need the user ID not the UID + changed combination.
-    $ids = array_values($new_ids + $updated_ids);
+    $ids = array_unique($new_ids + $updated_ids);
     sort($ids);
     return $ids;
   }
