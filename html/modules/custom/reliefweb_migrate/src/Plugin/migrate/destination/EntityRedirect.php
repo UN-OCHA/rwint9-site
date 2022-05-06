@@ -2,7 +2,6 @@
 
 namespace Drupal\reliefweb_migrate\Plugin\migrate\destination;
 
-use Drupal\migrate\Event\MigrateImportEvent;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\reliefweb_migrate\Entity\AccumulatedPathAliasStorage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -41,15 +40,6 @@ class EntityRedirect extends Entity {
       $container->get('account_switcher'),
       AccumulatedPathAliasStorage::createInstance($container, $entity_type_manager->getDefinition('path_alias'))
     );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function preImport(MigrateImportEvent $event) {
-    // Safer to reimport all the redirects as deleting nodes and terms during
-    // their migration may remove some redirects.
-    $this->deleteImported();
   }
 
 }

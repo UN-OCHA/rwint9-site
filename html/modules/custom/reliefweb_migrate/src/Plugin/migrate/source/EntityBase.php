@@ -412,15 +412,21 @@ abstract class EntityBase extends SqlBase implements ImportAwareInterface, Rollb
       return;
     }
 
+    $count = 0;
     foreach (array_chunk($ids_list, 1000) as $ids) {
       $ids_to_delete = $this->getDestinationEntityIdsToDelete($ids);
       if (!empty($ids_to_delete)) {
+        $count += count($ids_to_delete);
         foreach ($ids_to_delete as $id) {
           $destination_plugin->rollback([$id]);
         }
         $this->idMap->deleteFromSourceIds($ids_to_delete);
       }
     }
+
+    \Drupal::logger('migrate')->info(strtr('IDs deleted: @ids', [
+      '@ids' => $count,
+    ]));
   }
 
   /**
