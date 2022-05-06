@@ -528,11 +528,14 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
    * @option tag Name of the migration tag to list
    * @option check-only Calculate the ID to use for the high water but don't
    * change it yet.
+   * @option set-to-max Set the high water to the max ID of the imported
+   * content.
    *
    * @default $options [
    *   'group' => '',
    *   'tag' => '',
    *   'check-only' => FALSE,
+   *   'set-to-max' => FALSE,
    * ]
    *
    * @usage rw-migrate:reset-high-water
@@ -552,9 +555,11 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
     'group' => '',
     'tag' => '',
     'check-only' => FALSE,
+    'set-to-max' => FALSE,
   ]) {
     $migrations = $this->migrationsList($migration_names, $options);
     $check_only = !empty($options['check-only']);
+    $set_to_max = !empty($options['set-to-max']);
 
     // Take it one group at a time, listing the migrations within each group.
     foreach ($migrations as $migration_list) {
@@ -562,7 +567,7 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
         $source_plugin = $migration->getSourcePlugin();
 
         if ($source_plugin instanceof SourceMigrationHighWaterInterface) {
-          $id = $source_plugin->setHighWaterToLatestNonImported($check_only);
+          $id = $source_plugin->setHighWaterToLatestNonImported($check_only, $set_to_max);
           $this->logger->info(strtr('Set high water to @id for @migration.', [
             '@id' => $id,
             '@migration' => $migration_id,

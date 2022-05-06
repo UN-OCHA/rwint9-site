@@ -251,6 +251,43 @@ class User extends EntityBase {
   /**
    * {@inheritdoc}
    */
+  public function setHighWaterToLatestNonImported($check_only = FALSE, $set_to_max = FALSE) {
+    $destination_ids = $this->getDestinationEntityIds();
+
+    if ($set_to_max) {
+      $ids = array_values($destination_ids);
+    }
+    else {
+      $source_ids = $this->getSourceEntityIds();
+      $imported_ids = array_intersect($destination_ids, $source_ids);
+      $updated_ids = array_diff_assoc($imported_ids, $source_ids);
+      $new_ids = array_diff($source_ids, $imported_ids);
+      $ids = array_values($new_ids + $updated_ids);
+    }
+
+    $id = NULL;
+    if (!empty($ids)) {
+      $id = $set_to_max ? max($ids) : min($ids) - 1;
+    }
+
+    if ($check_only) {
+      print_r([
+        $this->migration->id() => [
+          'old' => $this->getHighWater(),
+          'new' => $id,
+        ],
+      ]);
+      return $id;
+    }
+    elseif (isset($id)) {
+      $this->getHighWaterStorage()->set($this->migration->id(), $id);
+    }
+    return $this->getHighWater();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function fields() {
     return [
       // Base `users` table fields.

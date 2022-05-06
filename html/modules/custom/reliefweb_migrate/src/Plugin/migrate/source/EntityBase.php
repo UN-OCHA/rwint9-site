@@ -383,20 +383,36 @@ abstract class EntityBase extends SqlBase implements ImportAwareInterface, Rollb
   /**
    * {@inheritdoc}
    */
-  public function setHighWaterToLatestNonImported($check_only = FALSE) {
+  public function setHighWaterToLatestNonImported($check_only = FALSE, $set_to_max = FALSE) {
     $destination_ids = $this->getDestinationEntityIds();
-    $source_ids = $this->getSourceEntityIds();
-    $imported_ids = array_intersect($destination_ids, $source_ids);
-    $updated_ids = array_diff_assoc($imported_ids, $source_ids);
-    $new_ids = array_diff($source_ids, $imported_ids);
-    $ids = array_keys($new_ids + $updated_ids);
 
-    if ($check_only) {
-      return empty($ids) ? 0 : min($ids);
+    if ($set_to_max) {
+      $ids = array_keys($destination_ids);
+    }
+    else {
+      $source_ids = $this->getSourceEntityIds();
+      $imported_ids = array_intersect($destination_ids, $source_ids);
+      $updated_ids = array_diff_assoc($imported_ids, $source_ids);
+      $new_ids = array_diff($source_ids, $imported_ids);
+      $ids = array_keys($new_ids + $updated_ids);
     }
 
+    $id = NULL;
     if (!empty($ids)) {
-      $this->getHighWaterStorage()->set($this->migration->id(), min($ids) - 1);
+      $id = $set_to_max ? max($ids) : min($ids) - 1;
+    }
+
+    if ($check_only) {
+      print_r([
+        $this->migration->id() => [
+          'old' => $this->getHighWater(),
+          'new' => $id,
+        ],
+      ]);
+      return $id;
+    }
+    elseif (isset($id)) {
+      $this->getHighWaterStorage()->set($this->migration->id(), $id);
     }
     return $this->getHighWater();
   }
