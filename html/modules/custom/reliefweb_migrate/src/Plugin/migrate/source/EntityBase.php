@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_migrate\Plugin\migrate\source;
 
 use Drupal\Core\Database\Database;
+use Drupal\Core\Database\Query\Select;
 use Drupal\migrate\Event\ImportAwareInterface;
 use Drupal\migrate\Event\MigrateImportEvent;
 use Drupal\migrate\Event\MigrateRollbackEvent;
@@ -131,7 +132,15 @@ abstract class EntityBase extends SqlBase implements ImportAwareInterface, Rollb
         $ids = array_splice($this->idsToMigrate, 0, $this->batchSize);
         $this->idsToProcess = array_flip($ids);
 
-        $this->query->condition($high_water_field, $ids, 'IN');
+        $table_alias = $this->getQueryBaseTableAlias($this->query);
+
+        // @see ::getSourceEntityIds()
+        if (!empty($this->revisionIdField) && !empty($this->useRevisionId)) {
+          $this->query->condition($table_alias . '.' . $this->revisionIdField, $ids, 'IN');
+        }
+        else {
+          $this->query->condition($table_alias . '.' . $this->idField, $ids, 'IN');
+        }
       }
       // Otherwise we check against the high water, which allows for example to
       // re-import existing content (for tests etc.) by changing the high water
@@ -166,6 +175,28 @@ abstract class EntityBase extends SqlBase implements ImportAwareInterface, Rollb
     $iterator->rewind();
 
     return $iterator;
+  }
+
+  /**
+   * Get the base table name for a select query.
+   *
+   * The first table without a join type is the base table.
+   *
+   * @param \Drupal\Core\Database\Query\Select $query
+   *   Query.
+   *
+   * @return string
+   *   Base table alias.
+   *
+   * @see \Drupal\Core\Database\Query\Select::__construct()
+   */
+  protected function getQueryBaseTableAlias(Select $query) {
+    foreach ($query->getTables() as $alias => $info) {
+      if (!isset($info['join type'])) {
+        return $alias;
+      }
+    }
+    return '';
   }
 
   /**
@@ -222,11 +253,16 @@ abstract class EntityBase extends SqlBase implements ImportAwareInterface, Rollb
    * {@inheritdoc}
    */
   protected function rowChanged(Row $row) {
-    if (!empty($this->highWaterProperty['name'])) {
-      $id = $row->getSourceProperty($this->highWaterProperty['name']);
-      if (isset($this->idsToProcess[$id])) {
-        return TRUE;
-      }
+    // @see ::getSourceEntityIds()
+    if (!empty($this->revisionIdField) && !empty($this->useRevisionId)) {
+      $id = $row->getSourceProperty($this->revisionIdField);
+    }
+    else {
+      $id = $row->getSourceProperty($this->idField);
+    }
+
+    if (isset($this->idsToProcess[$id])) {
+      return TRUE;
     }
     return parent::rowChanged($row);
   }
@@ -482,7 +518,15 @@ abstract class EntityBase extends SqlBase implements ImportAwareInterface, Rollb
     $imported_ids = array_intersect($destination_ids, $source_ids);
     $updated_ids = array_diff_assoc($imported_ids, $source_ids);
     $new_ids = array_diff($source_ids, $imported_ids);
-    $ids = array_keys($new_ids + $updated_ids);
+
+    // @see ::getSourceEntityIds().
+    if (!empty($this->revisionIdField) && !empty($this->useRevisionId)) {
+      $ids = array_keys($new_ids + $updated_ids);
+    }
+    else {
+      $ids = array_unique($new_ids + $updated_ids);
+    }
+
     sort($ids);
     return $ids;
   }
