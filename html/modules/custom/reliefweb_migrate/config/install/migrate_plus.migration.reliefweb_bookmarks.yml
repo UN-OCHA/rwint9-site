@@ -22,6 +22,7 @@ destination:
       type: integer
     uid:
       type: integer
+  batch_size: 1000
 process:
   entity_type: entity_type
   entity_id: entity_id
