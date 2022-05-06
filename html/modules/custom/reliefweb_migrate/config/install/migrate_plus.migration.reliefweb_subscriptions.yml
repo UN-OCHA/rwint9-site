@@ -18,6 +18,7 @@ destination:
       type: string
     uid:
       type: integer
+  batch_size: 1000
 process:
   sid: sid
   uid: uid
