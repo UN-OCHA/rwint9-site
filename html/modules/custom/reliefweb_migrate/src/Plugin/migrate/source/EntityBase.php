@@ -68,6 +68,20 @@ abstract class EntityBase extends SqlBase implements ImportAwareInterface, Rollb
   protected $migratedEntities = [];
 
   /**
+   * IDs of the entities to migrate.
+   *
+   * @var array
+   */
+  protected $idsToMigrate;
+
+  /**
+   * Store the list IDs being processed during the current iteration.
+   *
+   * @var array
+   */
+  protected $idsToProcess = [];
+
+  /**
    * Initialize the batch size.
    */
   protected function initializeBatchSize() {
@@ -96,19 +110,42 @@ abstract class EntityBase extends SqlBase implements ImportAwareInterface, Rollb
       $this->prepareQuery();
     }
 
-    if ($this->getHighWaterProperty()) {
+    if (!empty($this->getHighWaterProperty())) {
       $high_water_field = $this->getHighWaterField();
       $high_water = $this->getHighWater();
-      // We check against NULL because 0 is an acceptable value for the high
-      // water mark.
-      if ($high_water !== NULL) {
-        $this->query->condition($high_water_field, $high_water, '>');
+      $this->idsToProcess = [];
+
+      // Initialize the list of IDs to migrate.
+      if (!isset($this->idsToMigrate)) {
+        $this->idsToMigrate = $this->getIdsToMigrate();
+
+        \Drupal::logger('migrate')->info(strtr('IDs to migrate: @ids', [
+          '@ids' => count($this->idsToMigrate),
+        ]));
+      }
+
+      // If there are IDs to migrate, then we go through the list.
+      if (!empty($this->idsToMigrate)) {
+        $ids = array_splice($this->idsToMigrate, 0, $this->batchSize);
+        $this->idsToProcess = array_flip($ids);
+
+        $this->query->condition($high_water_field, $ids, 'IN');
+      }
+      // Otherwise we check against the high water, which allows for example to
+      // re-import existing content (for tests etc.) by changing the high water
+      // mark manually.
+      else {
+        // We check against NULL because 0 is an acceptable value for the high
+        // water mark.
+        if ($high_water !== NULL) {
+          $this->query->condition($high_water_field, $high_water, '>');
+        }
       }
       // Always sort by the high water field, to ensure that the first run
       // (before we have a high water value) also has the results in a
       // consistent order.
       $this->query->orderBy($high_water_field);
-      $this->query->range(0, 1000);
+      $this->query->range(0, $this->batchSize);
     }
     else {
       $this->query->range($this->batch * $this->batchSize, $this->batchSize);
@@ -170,13 +207,26 @@ abstract class EntityBase extends SqlBase implements ImportAwareInterface, Rollb
         }
 
         // @todo This should probably be updated even when skipping the row.
-        if ($this->getHighWaterProperty()) {
+        if (!empty($this->getHighWaterProperty())) {
           $this->saveHighWater($row->getSourceProperty($this->highWaterProperty['name']));
         }
       }
 
       $this->fetchNextRow();
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function rowChanged(Row $row) {
+    if (!empty($this->highWaterProperty['name'])) {
+      $id = $row->getSourceProperty($this->highWaterProperty['name']);
+      if (isset($this->idsToProcess[$id])) {
+        return TRUE;
+      }
+    }
+    return parent::rowChanged($row);
   }
 
   /**
@@ -294,19 +344,21 @@ abstract class EntityBase extends SqlBase implements ImportAwareInterface, Rollb
    * {@inheritdoc}
    */
   protected function getHighWater() {
-    if (isset($this->storedHighWater)) {
-      return $this->storedHighWater;
+    if (!isset($this->storedHighWater)) {
+      $this->storedHighWater = parent::getHighWater();
     }
-    return parent::getHighWater();
+    return $this->storedHighWater;
   }
 
   /**
    * {@inheritdoc}
    */
   protected function saveHighWater($high_water) {
-    // To avoid excessive database usage, we store the the high water and we'll
+    // To avoid excessive database usage, we store the high water and we'll
     // save it only after the import.
-    $this->storedHighWater = $high_water;
+    if (!isset($this->storedHighWater) || $high_water > $this->storedHighWater) {
+      $this->storedHighWater = $high_water;
+    }
   }
 
   /**
@@ -395,7 +447,24 @@ abstract class EntityBase extends SqlBase implements ImportAwareInterface, Rollb
   }
 
   /**
-   * Get the list if source ids that can be imported.
+   * Get the list of entity IDs to migrate.
+   *
+   * @return array
+   *   List of IDs (ex: revision IDs).
+   */
+  protected function getIdsToMigrate() {
+    $destination_ids = $this->getDestinationEntityIds();
+    $source_ids = $this->getSourceEntityIds();
+    $imported_ids = array_intersect($destination_ids, $source_ids);
+    $updated_ids = array_diff_assoc($imported_ids, $source_ids);
+    $new_ids = array_diff($source_ids, $imported_ids);
+    $ids = array_keys($new_ids + $updated_ids);
+    sort($ids);
+    return $ids;
+  }
+
+  /**
+   * Get the list of source ids that can be imported.
    *
    * @return array
    *   Associative array keyed by revision ids if available, otherwise keyed by
