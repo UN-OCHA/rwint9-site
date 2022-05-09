@@ -4,7 +4,7 @@ local attachment_file = ngx.var.attachment_file
 -- in \Drupal\reliefeb_utility\Helpers\LegacyHelper::getAttachmentUuid().
 
 -- Strip the % characters.
-attachment_file = string.gsub(attachment_file, "%%", "")
+attachment_file = string.gsub(attachment_file, "%%", '')
 
 -- Consolidate the URL.
 local legacy_url = 'https://reliefweb.int/sites/reliefweb.int/files/resources/' .. attachment_file
