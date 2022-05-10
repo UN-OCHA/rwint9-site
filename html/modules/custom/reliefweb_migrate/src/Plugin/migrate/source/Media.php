@@ -32,16 +32,18 @@ class Media extends EntityBase {
     $field = $this->configuration['field'];
     $table = 'field_data_' . $field;
 
-    // Query the image field table for the given entity type and bundle.
-    $query = $this->select($table, 'f');
+    // Use the file_managed table as base table.
+    $query = $this->select('file_managed', 'fm');
+    $query->condition('fm.filemime', 'image/%', 'LIKE');
+    $query->condition('fm.status', 1, '=');
+
+    // Join the image field table for the given entity type and bundle.
+    $query->innerJoin($table, 'f', 'f.' . $field . '_fid = fm.fid');
     $query->condition('f.entity_type', $entity_type, '=');
     $query->condition('f.bundle', $bundle, '=');
 
-    // Join the file_managed and file usage tables to restrict to used images.
-    $query->innerJoin('file_managed', 'fm', 'fm.fid = f.' . $field . '_fid');
+    // Join the file usage tables to restrict to used images.
     $query->innerJoin('file_usage', 'fu', 'fu.fid = fm.fid');
-    $query->condition('fm.filemime', 'image/%', 'LIKE');
-    $query->condition('fm.status', 1, '=');
     $query->condition('fu.count', 0, '>');
 
     // Get the base file fields.
