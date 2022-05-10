@@ -23,6 +23,7 @@ source:
     reliefweb_topics_community_topics_links: reliefweb_topics_community_topics
     reliefweb_headline_selection: reliefweb_headline_selection
     facebook_app_id: facebook_app_id
+    ocha_elk_mail: ocha_elk_mail
     reliefweb_submit_email: reliefweb_submit_email
     reliefweb_taxonomy_valid_glide_exceptions: reliefweb_valid_glide_exceptions
     reliefweb_subscriptions_mail_batch_size: reliefweb_subscriptions_mail_batch_size
