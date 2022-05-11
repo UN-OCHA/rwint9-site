@@ -321,7 +321,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     // Delete all the subscriptions for those email addresses.
     if (empty($options['dry-run'])) {
       $this->database->delete('reliefweb_subscriptions_subscriptions')
-        ->condition('uid', $ids)
+        ->condition('uid', $ids, 'IN')
         ->execute();
     }
 
