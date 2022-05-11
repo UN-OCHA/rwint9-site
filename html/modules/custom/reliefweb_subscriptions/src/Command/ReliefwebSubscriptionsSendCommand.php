@@ -307,12 +307,16 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
     }
 
     // Get the list of user ids.
-    $ids = $this->database->select('users_field_data', 'u')
+    $query = $this->database
+      ->select('users_field_data', 'u')
       ->fields('u', ['uid'])
       ->distinct()
-      ->condition('u.mail', $emails, 'IN')
-      ->execute()
-      ?->fetchCol();
+      ->condition('u.mail', $emails, 'IN');
+
+    // No need to process users without subscriptions.
+    $query->innerJoin('reliefweb_subscriptions_subscriptions', 's', 's.uid = u.uid');
+
+    $ids = $query->execute()?->fetchCol();
     if (empty($ids)) {
       $this->logger()->info(dt('No matching accounts to unsubscribe'));
       return TRUE;
