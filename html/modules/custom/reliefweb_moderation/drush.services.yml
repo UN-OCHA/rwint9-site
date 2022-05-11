@@ -1,0 +1,6 @@
+services:
+  reliefweb_moderation.send_command:
+    class: \Drupal\reliefweb_moderation\Commands\ReliefWebModerationCommands
+    arguments: ['@database', '@entity_type.manager', '@state']
+    tags:
+      - { name: drush.command }
