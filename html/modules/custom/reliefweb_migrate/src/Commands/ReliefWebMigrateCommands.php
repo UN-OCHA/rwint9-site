@@ -1102,4 +1102,271 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
     return new RowsOfFields($table);
   }
 
+  /**
+   * Check migrated content status.
+   *
+   * @command rw-migrate:check-content-status
+   *
+   * @option fix Fix the changed and status inconsistencies.
+   * @option batch_size Number of items to retrieve from the database at once.
+   *
+   * @default options [
+   *   'fix' => FALSE,
+   *   'batch_size' => 10000,
+   * ]
+   *
+   * @usage rw-migrate:check-content-status
+   *   Check migrated content.
+   *
+   * @validate-module-enabled reliefweb_migrate
+   *
+   * @aliases rw-mccs
+   *
+   * @field-labels
+   *   type: Type
+   *   bundle: Bundle
+   *   id: Id
+   *   rw9_revision_id: RW9 Revision ID
+   *   rw7_revision_id: RW7 Revision ID
+   *   rw9_created: RW9 Created
+   *   rw7_created: RW7 Created
+   *   rw9_changed: RW9 Changed
+   *   rw7_changed: RW7 Changed
+   *   rw9_status: RW9 Status
+   *   rw7_status: RW7 Status
+   * @default-fields type,bundle,id,rw9_revision_id,rw7_revision_id,rw9_created,rw7_created,rw9_changed,rw7_changed,rw9_status,rw7_status
+   *
+   * @return \Consolidation\OutputFormatters\StructuredData\RowsOfFields
+   *   Formatted table.
+   */
+  public function checkMigratedContentStatus(array $options = [
+    'fix' => FALSE,
+    'batch_size' => 1000,
+  ]) {
+    $d7_database = Database::getConnection('default', 'rwint7');
+
+    $table = [];
+    $batch_size = $options['batch_size'] ?? 1000;
+
+    // Terms.
+    $last_id = 0;
+    while (TRUE) {
+      $d9_data = $this->database->queryRange("
+        SELECT
+          td.vid AS bundle,
+          td.tid AS id,
+          td.revision_id AS revision_id,
+          td.changed AS changed,
+          td.moderation_status AS status
+        FROM taxonomy_term_field_data AS td
+        WHERE td.vid IN ('country', 'disaster', 'source')
+          AND td.tid > :last_id
+        ORDER BY td.tid ASC
+      ", 0, $batch_size, [
+        ':last_id' => $last_id,
+      ])?->fetchAllAssoc('id', \PDO::FETCH_ASSOC) ?? [];
+
+      if (empty($d9_data)) {
+        break;
+      }
+      else {
+        $last_id = array_key_last($d9_data);
+      }
+
+      $d7_data = $d7_database->query("
+        SELECT
+          td.tid AS id,
+          td.revision_id AS revision_id,
+          tr.timestamp  AS changed,
+          fs.field_status_value AS status
+        FROM taxonomy_term_data AS td
+        INNER JOIN taxonomy_vocabulary AS tv
+          ON tv.vid = td.vid
+        INNER JOIN taxonomy_term_data_revision AS tr
+          ON tr.tid = td.tid AND tr.revision_id = td.revision_id
+        LEFT JOIN field_data_field_status AS fs
+          ON fs.entity_id = td.tid
+          AND fs.entity_type = 'taxonomy_term'
+        WHERE tv.machine_name IN ('country', 'disaster', 'source')
+          AND td.tid IN (:tids[])
+      ", [
+        ':tids[]' => array_keys($d9_data),
+      ])?->fetchAllAssoc('id', \PDO::FETCH_ASSOC) ?? [];
+
+      foreach ($d9_data as $id => $d9_record) {
+        $id = $d9_record['id'];
+        $d9_revision_id = $d9_record['revision_id'] ?? '-';
+        $d9_changed = $d9_record['changed'] ?? '-';
+        $d9_status = $d9_record['status'] ?? '-';
+
+        $d7_record = $d7_data[$id] ?? [];
+        $d7_revision_id = $d7_record['revision_id'] ?? '-';
+        $d7_changed = $d7_record['changed'] ?? '-';
+        $d7_status = $d7_record['status'] ?? '-';
+        if ($d7_status == 'current') {
+          $d7_status = 'ongoing';
+        }
+
+        if ($d9_revision_id == $d7_revision_id && $d9_changed == $d7_changed && $d9_status == $d7_status) {
+          continue;
+        }
+
+        $table[] = [
+          'type' => 'term',
+          'bundle' => $d9_record['bundle'],
+          'id' => $id,
+          'rw9_revision_id' => $d9_revision_id,
+          'rw7_revision_id' => $d7_revision_id,
+          'rw9_created' => '-',
+          'rw7_created' => '-',
+          'rw9_changed' => $d9_changed,
+          'rw7_changed' => $d7_changed,
+          'rw9_status' => $d9_status,
+          'rw7_status' => $d7_status,
+        ];
+      }
+    }
+
+    // Nodes.
+    $last_id = 0;
+    while (TRUE) {
+      $d9_data = $this->database->queryRange("
+        SELECT
+          n.type AS bundle,
+          n.nid AS id,
+          n.vid AS revision_id,
+          n.created AS created,
+          n.changed AS changed,
+          n.moderation_status AS status
+        FROM node_field_data AS n
+        WHERE n.nid > :last_id
+        ORDER BY n.nid ASC
+      ", 0, $batch_size, [
+        ':last_id' => $last_id,
+      ])?->fetchAllAssoc('id', \PDO::FETCH_ASSOC) ?? [];
+
+      if (empty($d9_data)) {
+        break;
+      }
+      else {
+        $last_id = array_key_last($d9_data);
+      }
+
+      $d7_data = $d7_database->query("
+        SELECT
+          n.nid AS id,
+          n.vid AS revision_id,
+          n.created AS created,
+          n.changed  AS changed,
+          fs.field_status_value AS status
+        FROM node AS n
+        LEFT JOIN field_data_field_status AS fs
+          ON fs.entity_id = n.nid
+          AND fs.entity_type = 'node'
+        WHERE n.type NOT IN ('faq')
+          AND n.nid IN (:nids[])
+      ", [
+        ':nids[]' => array_keys($d9_data),
+      ])?->fetchAllAssoc('id', \PDO::FETCH_ASSOC) ?? [];
+
+      foreach ($d9_data as $d9_record) {
+        $id = $d9_record['id'];
+        $d9_revision_id = $d9_record['revision_id'] ?? '-';
+        $d9_created = $d9_record['created'] ?? '-';
+        $d9_changed = $d9_record['changed'] ?? '-';
+        $d9_status = $d9_record['status'] ?? '-';
+
+        $d7_record = $d7_data[$id] ?? [];
+        $d7_revision_id = $d7_record['revision_id'] ?? '-';
+        $d7_created = $d7_record['created'] ?? '-';
+        $d7_changed = $d7_record['changed'] ?? '-';
+        $d7_status = $d7_record['status'] ?? '-';
+
+        if ($d9_revision_id == $d7_revision_id && $d9_created == $d7_created && $d9_changed == $d7_changed && $d9_status == $d7_status) {
+          continue;
+        }
+
+        $table[] = [
+          'type' => 'node',
+          'bundle' => $d9_record['bundle'],
+          'id' => $id,
+          'rw9_revision_id' => $d9_revision_id,
+          'rw7_revision_id' => $d7_revision_id,
+          'rw9_created' => $d9_created,
+          'rw7_created' => $d7_created,
+          'rw9_changed' => $d9_changed,
+          'rw7_changed' => $d7_changed,
+          'rw9_status' => $d9_status,
+          'rw7_status' => $d7_status,
+        ];
+      }
+    }
+
+    $this->logger()->info(dt('Found @count entries', [
+      '@count' => count($table),
+    ]));
+
+    if (!empty($table) && !empty($options['fix'])) {
+      $this->logger()->info(dt('Fixing @count entries', [
+        '@count' => count($table),
+      ]));
+
+      foreach ($table as $item) {
+        // Skip if the revision are not the same. That should be picked up by
+        // the migration process.
+        if ($item['rw9_revision_id'] != $item['rw7_revision_id']) {
+          continue;
+        }
+
+        switch ($item['type']) {
+          case 'term':
+            $this->database
+              ->update('taxonomy_term_field_data')
+              ->fields([
+                'changed' => $item['rw7_changed'],
+                'moderation_status' => $item['rw7_status'],
+              ])
+              ->condition('tid', $item['id'], '=')
+              ->execute();
+
+            $this->database
+              ->update('taxonomy_term_field_revision')
+              ->fields([
+                'changed' => $item['rw7_changed'],
+                'moderation_status' => $item['rw7_status'],
+              ])
+              ->condition('tid', $item['id'], '=')
+              ->condition('revision_id', $item['rw9_revision_id'], '=')
+              ->execute();
+            break;
+
+          case 'node':
+            $this->database
+              ->update('node_field_data')
+              ->fields([
+                'created' => $item['rw7_created'],
+                'changed' => $item['rw7_changed'],
+                'moderation_status' => $item['rw7_status'],
+              ])
+              ->condition('nid', $item['id'], '=')
+              ->execute();
+
+            $this->database
+              ->update('node_field_revision')
+              ->fields([
+                'created' => $item['rw7_created'],
+                'changed' => $item['rw7_changed'],
+                'moderation_status' => $item['rw7_status'],
+              ])
+              ->condition('nid', $item['id'], '=')
+              ->condition('vid', $item['rw9_revision_id'], '=')
+              ->execute();
+            break;
+        }
+      }
+    }
+
+    return new RowsOfFields($table);
+  }
+
 }
