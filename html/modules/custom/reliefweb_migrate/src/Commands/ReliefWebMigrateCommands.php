@@ -831,20 +831,7 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
   ]) {
     $d7_database = Database::getConnection('default', 'rwint7');
 
-    $duplicate_query = $d7_database->select('field_data_field_file', 'f');
-    $duplicate_query->addField('f', 'field_file_fid', 'fid');
-    $duplicate_query->addExpression('COUNT(f.field_file_fid)', 'total');
-    $duplicate_query->addExpression('GROUP_CONCAT(f.entity_id ORDER BY f.entity_id)', 'ids');
-    $duplicate_query->groupBy('f.field_file_fid');
-    $duplicate_query->having('total > 1');
-
-    $duplicate_reports = [];
-    foreach ($duplicate_query->execute() ?? [] as $record) {
-      $ids = explode(',', $record->ids);
-      if (min($ids) !== max($ids)) {
-        $duplicate_reports = array_merge($duplicate_reports, array_slice($ids, 0, -1));
-      }
-    }
+    $duplicate_reports = $this->getDuplicateReports();
 
     if (empty($options['migrated-only'])) {
       $node_max_id = $d7_database->query("
@@ -1367,6 +1354,219 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
     }
 
     return new RowsOfFields($table);
+  }
+
+  /**
+   * Fix attachment deltas.
+   *
+   * @command rw-migrate:fix-attachment-deltas
+   *
+   * @option dry-run Just check the number of files to handle.
+   * @option batch_size Number of items to retrieve from the database at once.
+   *
+   * @default options [
+   *   'dry-run' => FALSE,
+   *   'batch_size' => 10000,
+   * ]
+   *
+   * @usage rw-migrate:fix-attachment-deltas
+   *   Fix attachment deltas.
+   *
+   * @validate-module-enabled reliefweb_migrate
+   */
+  public function fixAttachmentDeltas(array $options = [
+    'dry-run' => FALSE,
+    'batch_size' => 1000,
+  ]) {
+    $d7_database = Database::getConnection('default', 'rwint7');
+
+    $ids = $this->database
+      ->select('node__field_file', 'f')
+      ->fields('f', ['revision_id'])
+      ->condition('f.delta', '0', '>')
+      ->distinct()
+      ->execute()
+      ?->fetchCol() ?? [];
+
+    if (empty($ids)) {
+      $this->logger()->info(dt('Nothing to update'));
+      return TRUE;
+    }
+
+    $results = $this->database
+      ->select('node__field_file', 'f')
+      ->fields('f')
+      ->condition('f.revision_id', $ids, 'IN')
+      ->orderBy('f.revision_id', 'ASC')
+      ->execute()
+      ?->fetchAll(\PDO::FETCH_ASSOC) ?? [];
+
+    $records = [];
+    foreach ($results as $item) {
+      $records[$item['revision_id']][$item['field_file_file_uuid']] = $item;
+    }
+
+    $d7_data = $d7_database->query("
+      SELECT
+        f.delta AS delta,
+        f.revision_id AS revision_id,
+        fm.fid AS fid,
+        fm.uri AS uri
+      FROM field_data_field_file AS f
+      INNER JOIN file_managed AS fm
+        ON fm.fid = f.field_file_fid
+      WHERE f.revision_id IN (:ids[])
+      ORDER BY f.revision_id ASC, f.delta ASC
+    ", [
+      ':ids[]' => $ids,
+    ])?->fetchAll(\PDO::FETCH_ASSOC) ?? [];
+
+    $delta = 0;
+    $deltas = [];
+    foreach ($d7_data as $item) {
+      $revision_id = $item['revision_id'];
+      $uuid = LegacyHelper::generateAttachmentUuid($item['uri']);
+      $file_uuid = LegacyHelper::generateAttachmentFileUuid($uuid, $item['fid']);
+
+      // Initialize the delta for the entity.
+      if (!isset($deltas[$revision_id])) {
+        $delta = 0;
+      }
+
+      // Add the delta for the file if not already set. This makes sure that the
+      // few entries referencing twice the same file, have the correct delta.
+      if (!isset($deltas[$revision_id][$file_uuid])) {
+        $deltas[$revision_id][$file_uuid] = $delta;
+        $delta++;
+      }
+    }
+
+    $count_records = 0;
+    $records_to_update = [];
+    foreach ($records as $revision_id => $items) {
+      if (!isset($deltas[$revision_id])) {
+        continue;
+      }
+      $revision_deltas = $deltas[$revision_id];
+      $max_delta = count($items) - 1;
+      $process = FALSE;
+
+      // Check if the file record for the entity with the revision id, should
+      // be re-ordered.
+      foreach ($items as $uuid => $record) {
+        if (isset($revision_deltas[$uuid]) && ($record['delta'] != $revision_deltas[$uuid] || $record['delta'] > $max_delta)) {
+          $process = TRUE;
+          break;
+        }
+      }
+
+      if ($process) {
+        // Update the record deltas.
+        foreach ($deltas[$revision_id] as $uuid => $delta) {
+          if (isset($items[$uuid])) {
+            $items[$uuid]['delta'] = $delta;
+          }
+        }
+        // Sort the records by delta.
+        usort($items, function ($a, $b) {
+          return $a['delta'] <=> $b['delta'];
+        });
+        // Ensure there is no gap by resetting the deltas.
+        $delta = 0;
+        foreach ($items as $key => $item) {
+          $items[$key]['delta'] = $delta;
+          $delta++;
+        }
+        $records_to_update[$revision_id] = $items;
+        $count_records += count($items);
+      }
+    }
+
+    if (empty($records_to_update)) {
+      $this->logger()->info(dt('No records to update'));
+      return TRUE;
+    }
+    else {
+      $this->logger()->info(dt('@count records to update for @count_entities entities', [
+        '@count' => $count_records,
+        '@count_entities' => count($records_to_update),
+      ]));
+    }
+
+    if (!empty($options['dry-run'])) {
+      return TRUE;
+    }
+
+    $options = [
+      'return' => Database::RETURN_AFFECTED,
+    ];
+
+    $transaction = $this->database->startTransaction();
+    try {
+      $tables = ['node__field_file', 'node_revision__field_file'];
+      foreach ($tables as $table) {
+        $deleted = $this->database
+          ->delete($table, $options)
+          ->condition('revision_id', array_keys($records_to_update), 'IN')
+          ->execute();
+
+        $query = $this->database
+          ->insert($table, $options);
+        $fields_set = FALSE;
+        foreach ($records_to_update as $records) {
+          foreach ($records as $record) {
+            if (!$fields_set) {
+              $query->fields(array_keys($record));
+              $fields_set = TRUE;
+            }
+            $query->values($record);
+          }
+        }
+        $inserted = $query->execute();
+
+        $this->logger()->info(dt('@table: @deleted deleted, @inserted inserted', [
+          '@table' => $table,
+          '@deleted' => $deleted,
+          '@inserted' => $inserted,
+        ]));
+      }
+
+      return TRUE;
+    }
+    catch (\Exception $exception) {
+      $transaction->rollback();
+      $this->logger()->error(dt('Error while trying to update the database: @error', [
+        '@error' => $exception->getMessage(),
+      ]));
+      return FALSE;
+    }
+  }
+
+  /**
+   * Get the IDs of duplicate reports.
+   *
+   * @return array
+   *   Duplicate report IDs.
+   */
+  protected function getDuplicateReports() {
+    $d7_database = Database::getConnection('default', 'rwint7');
+
+    $duplicate_query = $d7_database->select('field_data_field_file', 'f');
+    $duplicate_query->addField('f', 'field_file_fid', 'fid');
+    $duplicate_query->addExpression('COUNT(f.field_file_fid)', 'total');
+    $duplicate_query->addExpression('GROUP_CONCAT(f.entity_id ORDER BY f.entity_id)', 'ids');
+    $duplicate_query->groupBy('f.field_file_fid');
+    $duplicate_query->having('total > 1');
+
+    $duplicate_reports = [];
+    foreach ($duplicate_query->execute() ?? [] as $record) {
+      $ids = explode(',', $record->ids);
+      if (min($ids) !== max($ids)) {
+        $duplicate_reports = array_merge($duplicate_reports, array_slice($ids, 0, -1));
+      }
+    }
+
+    return $duplicate_reports;
   }
 
 }

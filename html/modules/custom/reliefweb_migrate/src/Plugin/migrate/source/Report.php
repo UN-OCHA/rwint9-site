@@ -111,6 +111,10 @@ class Report extends Node {
 
         $this->preloadedAttachments[$entity_id][$delta] = $item;
       }
+      // Sort by delta (key).
+      if (!empty($this->preloadedAttachments[$entity_id])) {
+        ksort($this->preloadedAttachments[$entity_id]);
+      }
     }
   }
 
