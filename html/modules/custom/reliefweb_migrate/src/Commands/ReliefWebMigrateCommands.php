@@ -833,6 +833,10 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
 
     $duplicate_reports = $this->getDuplicateReports();
 
+    $on_hold_reports = $this->getOnHoldReports();
+
+    $exclude_reports = array_unique(array_merge($duplicate_reports, $on_hold_reports));
+
     if (empty($options['migrated-only'])) {
       $node_max_id = $d7_database->query("
         SELECT MAX(vid) FROM node
@@ -945,14 +949,14 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
           END) AS name, COUNT(*) AS total
         FROM node
         WHERE type NOT IN ('faq')
-          AND nid NOT IN (:duplicate_reports[])
+          AND nid NOT IN (:exclude_reports[])
           AND nid <= :node_max_id
         GROUP BY type
       UNION
         SELECT CONCAT('node - ', 'total') AS name, COUNT(*) AS total
         FROM node
         WHERE type NOT IN ('faq')
-          AND nid NOT IN (:duplicate_reports[])
+          AND nid NOT IN (:exclude_reports[])
           AND nid <= :node_max_id
       UNION
         SELECT CONCAT('term - ',
@@ -1055,7 +1059,7 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
           AND (fm.filemime = 'application/pdf' OR LOWER(RIGHT(fm.uri,3)) = 'pdf')
           AND fm.fid <= :file_max_id
     ", [
-      ':duplicate_reports[]' => $duplicate_reports,
+      ':exclude_reports[]' => $exclude_reports,
       ':preview_description' => '[|][1-9][0-9]*[|](0|90|-90)$',
       ':node_max_id' => $node_max_id,
       ':term_max_id' => $term_max_id,
@@ -1567,6 +1571,23 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
     }
 
     return $duplicate_reports;
+  }
+
+  /**
+   * Get the IDs of on-hold reports.
+   *
+   * @return array
+   *   On-hold report IDs.
+   */
+  protected function getOnHoldReports() {
+    return Database::getConnection('default', 'rwint7')
+      ->select('field_data_field_status', 'fs')
+      ->fields('fs', ['entity_id'])
+      ->condition('fs.bundle', 'report', '=')
+      ->condition('fs.field_status_value', 'on-hold', '=')
+      ->distinct()
+      ->execute()
+      ?->fetchCol() ?? [];
   }
 
 }
