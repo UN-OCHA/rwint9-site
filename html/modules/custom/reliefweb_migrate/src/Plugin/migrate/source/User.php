@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_migrate\Plugin\migrate\source;
 
 use Drupal\migrate\Row;
+use Drupal\reliefweb_migrate\Plugin\migrate\id_map\AccumulatedSql;
 
 /**
  * Retrieve users from the Drupal 7 database.
@@ -246,6 +247,35 @@ class User extends EntityBase {
         ?->fetchCol() ?? []);
     }
     return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function removeDeletedEntities() {
+    $source_ids = $this->getSourceEntityIds();
+    $destination_ids = $this->getDestinationEntityIds();
+
+    $deleted_ids = array_diff($destination_ids, $source_ids);
+    if (empty($deleted_ids)) {
+      return;
+    }
+
+    $destination_plugin = $this->migration->getDestinationPlugin();
+    $delete_from_id_map = $this->idMap instanceof AccumulatedSql;
+
+    foreach (array_chunk($deleted_ids, 1000) as $ids) {
+      foreach ($ids as $id) {
+        $destination_plugin->rollback([$id]);
+      }
+      if ($delete_from_id_map) {
+        $this->idMap->deleteFromSourceIds($ids);
+      }
+    }
+
+    \Drupal::logger('migrate')->info(strtr('IDs deleted: @ids', [
+      '@ids' => count($deleted_ids),
+    ]));
   }
 
   /**
