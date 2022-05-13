@@ -1,0 +1,35 @@
+<?xml version="1.0" standalone="yes"?>
+<channel>
+  <item>
+    <link>https://test.test/job-allowed</link>
+    <title>Head of Supply Chain - test allowed</title>
+    <field_job_closing_date>2022-10-05</field_job_closing_date>
+    <field_country>AFG</field_country>
+    <field_city>Kabul</field_city>
+    <field_source>51165</field_source>
+    <body>Laborum pariatur culpa pariatur irure amet elit sit minim Lorem aliqua est aute cupidatat fugiat veniam occaecat elit quis excepteur elit quis velit sit culpa velit fugiat esse amet ipsum amet pariatur dolor ut Lorem labore ex amet qui cupidatat anim duis officia ipsum consequat incididunt cupidatat incididunt sit officia pariatur aliquip ut mollit officia Lorem anim duis sit commodo sit ullamco do tempor officia exercitation deserunt laborum deserunt aliquip nostrud reprehenderit sit sunt Lorem ad adipisicing in commodo minim pariatur id do mollit id quis do excepteur nostrud est magna ut excepteur enim ullamco laborum deserunt tempor nulla nulla.</body>
+    <field_how_to_apply>Please follow this link to apply: https://www.aplitrak.com?adid=ZmsuMjEwMDcuMTIxODVAc2F2ZXRoZWNoaWxkcmVuYW8uYXBsaXRyYWsuY29t</field_how_to_apply>
+    <field_job_type>263</field_job_type>
+    <field_career_categories>36601</field_career_categories>
+    <field_job_experience>260</field_job_experience>
+    <field_job_experience>262</field_job_experience>
+    <field_theme>4597</field_theme>
+    <field_theme>4597</field_theme>
+  </item>
+  <item>
+    <link>https://test.test/job-allowed-past</link>
+    <title>Head of Supply Chain - test allowed past</title>
+    <field_job_closing_date>2021-10-05</field_job_closing_date>
+    <field_country>AFG</field_country>
+    <field_city>Kabul</field_city>
+    <field_source>51165</field_source>
+    <body>Laborum pariatur culpa pariatur irure amet elit sit minim Lorem aliqua est aute cupidatat fugiat veniam occaecat elit quis excepteur elit quis velit sit culpa velit fugiat esse amet ipsum amet pariatur dolor ut Lorem labore ex amet qui cupidatat anim duis officia ipsum consequat incididunt cupidatat incididunt sit officia pariatur aliquip ut mollit officia Lorem anim duis sit commodo sit ullamco do tempor officia exercitation deserunt laborum deserunt aliquip nostrud reprehenderit sit sunt Lorem ad adipisicing in commodo minim pariatur id do mollit id quis do excepteur nostrud est magna ut excepteur enim ullamco laborum deserunt tempor nulla nulla.</body>
+    <field_how_to_apply>Please follow this link to apply: https://www.aplitrak.com?adid=ZmsuMjEwMDcuMTIxODVAc2F2ZXRoZWNoaWxkcmVuYW8uYXBsaXRyYWsuY29t</field_how_to_apply>
+    <field_job_type>263</field_job_type>
+    <field_career_categories>36601</field_career_categories>
+    <field_job_experience>260</field_job_experience>
+    <field_job_experience>262</field_job_experience>
+    <field_theme>4587</field_theme>
+    <field_theme>4597</field_theme>
+  </item>
+</channel>

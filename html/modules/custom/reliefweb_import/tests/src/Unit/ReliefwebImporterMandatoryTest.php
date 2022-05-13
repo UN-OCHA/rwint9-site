@@ -162,7 +162,7 @@ class ReliefwebImporterMandatoryTest extends ReliefwebImporterTestBase {
     $source = 666;
     $source_id = 2865;
 
-    $this->expectExceptionMessage(strtr('Invalid source expected @source_id, got @source.', [
+    $this->expectExceptionMessage(strtr('Invalid job source: expected @source_id, got @source.', [
       '@source_id' => $source_id,
       '@source' => $source,
     ]));
