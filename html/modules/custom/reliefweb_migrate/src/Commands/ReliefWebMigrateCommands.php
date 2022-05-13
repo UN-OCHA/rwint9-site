@@ -1049,7 +1049,7 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
           ON fm.fid = f.field_file_fid
         WHERE f.bundle = 'report'
           AND fm.fid <= :file_max_id
-          AND f.entity_id NOT IN (:on_hold_reports[])
+          AND f.entity_id NOT IN (:exclude_reports[])
       UNION
         SELECT 'preview' AS name, COUNT(DISTINCT f.field_file_fid)
         FROM field_data_field_file AS f
@@ -1059,7 +1059,7 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
           AND f.field_file_description REGEXP :preview_description
           AND (fm.filemime = 'application/pdf' OR LOWER(RIGHT(fm.uri,3)) = 'pdf')
           AND fm.fid <= :file_max_id
-          AND f.entity_id NOT IN (:on_hold_reports[])
+          AND f.entity_id NOT IN (:exclude_reports[])
     ", [
       ':exclude_reports[]' => $exclude_reports,
       ':preview_description' => '[|][1-9][0-9]*[|](0|90|-90)$',
@@ -1067,7 +1067,6 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
       ':term_max_id' => $term_max_id,
       ':media_max_id' => $media_max_id,
       ':file_max_id' => $file_max_id,
-      ':on_hold_reports[]' => $on_hold_reports,
     ])?->fetchAllKeyed(0, 1) ?? [];
 
     $table = [];
