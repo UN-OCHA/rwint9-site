@@ -12,6 +12,7 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_entities\Entity\Job;
+use Drupal\reliefweb_entities\Plugin\Validation\Constraint\DateNotInPastConstraint;
 use Drupal\reliefweb_import\Exception\ReliefwebImportException;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionSoftViolation;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionViolation;
@@ -84,18 +85,11 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
   protected $url;
 
   /**
-   * The errors.
+   * Loaded term IDs.
    *
    * @var array
    */
-  protected $errors;
-
-  /**
-   * The wanings.
-   *
-   * @var array
-   */
-  protected $warnings;
+  protected $loadedTermIds = [];
 
   /**
    * {@inheritdoc}
@@ -132,24 +126,11 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     // Load terms having a job URL.
     $query = $this->entityTypeManager->getStorage('taxonomy_term')->getQuery();
     $query->condition('vid', 'source');
-    $query->condition('field_job_import_feed', NULL, 'IS NOT NULL');
-
+    $query->condition('field_job_import_feed.feed_url', NULL, 'IS NOT NULL');
     $tids = $query->execute();
     $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadMultiple($tids);
     foreach ($terms as $term) {
       $this->fetchJobs($term);
-
-      if (!empty($this->errors)) {
-        foreach ($this->errors as $error) {
-          $this->getLogger()->error($error);
-        }
-      }
-
-      if (!empty($this->warnings)) {
-        foreach ($this->warnings as $warning) {
-          $this->getLogger()->warning($warning);
-        }
-      }
     }
   }
 
@@ -175,57 +156,74 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       '@url' => $this->url,
     ]);
 
-    $this->validateUser($uid);
-    $this->validateBaseUrl($base_url);
-
     try {
-      // Fetch the XML.
+      $this->validateUser($uid);
+      $this->validateBaseUrl($base_url);
+    }
+    catch (ReliefwebImportException $exception) {
+      $this->getLogger()->error(strtr('Unable to process @name, invalid feed information: @message.', [
+        '@name' => $label,
+        '@message' => $exception->getMessage(),
+      ]));
+      return;
+    }
+
+    // Fetch the XML.
+    try {
       $data = $this->fetchXml($this->url);
-
-      // Switch to proper user and import XML.
-      /** @var \Drupal\user\UserInterface $account */
-      $account = $this->entityTypeManager->getStorage('user')->load($uid);
-      $account->addRole('job_importer');
-      $this->accountSwitcher->switchTo($account);
-
-      $this->processXml($data, $uid, $base_url, $source_id);
-
-      // Restore user account.
-      $this->accountSwitcher->switchBack();
     }
     catch (ClientException $exception) {
-      $this->errors[] = strtr('Unable to process @name, got http error @code: @message.', [
+      $this->getLogger()->error(strtr('Unable to process @name, http error @code: @message.', [
         '@name' => $label,
         '@code' => $exception->getCode(),
         '@message' => $exception->getMessage(),
-      ]);
+      ]));
+      return;
     }
     catch (RequestException $exception) {
-      $this->errors[] = strtr('Unable to process @name, general error @code: @message.', [
+      $this->getLogger()->error(strtr('Unable to process @name, general error @code: @message.', [
         '@name' => $label,
         '@code' => $exception->getCode(),
         '@message' => $exception->getMessage(),
-      ]);
+      ]));
+      return;
     }
     catch (\Exception $exception) {
-      $this->errors[] = strtr('Unable to process @name, got @code: @message.', [
+      $this->getLogger()->error(strtr('Unable to process @name: @message.', [
         '@name' => $label,
-        '@code' => $exception->getCode(),
         '@message' => $exception->getMessage(),
-      ]);
+      ]));
+      return;
     }
+
+    // Switch to proper user and import XML.
+    /** @var \Drupal\user\UserInterface $account */
+    $account = $this->entityTypeManager->getStorage('user')->load($uid);
+    // @todo review if that's needed.
+    $account->addRole('job_importer');
+    $this->accountSwitcher->switchTo($account);
+
+    // Process the feed items.
+    $this->processXml($label, $data, $uid, $base_url, $source_id);
+
+    // Restore user account.
+    $this->accountSwitcher->switchBack();
   }
 
   /**
    * Fetch XML data.
+   *
+   * @param string $url
+   *   URL of the job feed to import.
+   *
+   * @return string
+   *   Feed's content.
    */
   protected function fetchXml($url) {
     $response = $this->httpClient->request('GET', $url);
     // Check status code.
     if ($response->getStatusCode() !== 200) {
-      throw new ReliefwebImportExceptionXml(strtr('HTTP error, got @statuscode.', [
-        '@statuscode' => $response->getStatusCode(),
-      ]));
+      throw new ClientException($response->getReasonPhrase(), $response->getStatusCode());
     }
 
     // Get body.
@@ -241,196 +239,473 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
 
   /**
    * Process XML data.
+   *
+   * @param string $name
+   *   Source name.
+   * @param string $body
+   *   XML content.
+   * @param int $uid
+   *   ID of the user entity to use as owner of the job.
+   * @param string $base_url
+   *   Feed's base URL.
+   * @param int $source_id
+   *   ID of the source term the feed belongs to.
    */
-  protected function processXml($body, $uid, $base_url, $source_id) {
-    $index = 0;
+  protected function processXml($name, $body, $uid, $base_url, $source_id) {
     $xml = new \SimpleXMLElement($body);
+
+    if ($xml->count() === 0) {
+      $this->getLogger()->info(strtr('No feed items to import for @name', [
+        '@name' => $name,
+      ]));
+      return;
+    }
+
+    $errors = [];
+    $warnings = [];
     foreach ($xml as $item) {
       try {
         $this->checkMandatoryFields($item, $base_url, $source_id);
 
+        $link = (string) $item->link;
+
         // Check if job already exist.
-        if ($this->jobExists((string) $item->link)) {
-          $this->getLogger()->notice(strtr('Update job for @link', [
-            '@link' => $item->link,
+        if ($this->jobExists($link)) {
+          $this->getLogger()->notice(strtr('Updating job @link', [
+            '@link' => $link,
           ]));
-          $this->updateJob($this->loadJobById((string) $item->link), $item);
+          $job = $this->loadJobById($link);
+          if (empty($job)) {
+            throw new ReliefwebImportExceptionViolation(strtr('Unable to load job @link', [
+              '@id' => $link,
+            ]));
+          }
+          $this->updateJob($job, $item);
         }
         else {
-          $this->getLogger()->notice(strtr('Create new job for @link', [
-            '@link' => $item->link,
+          $this->getLogger()->notice(strtr('Creating new job @link', [
+            '@link' => $link,
           ]));
-          $this->createJob($item, $uid);
+          $this->createJob($item, $uid, $source_id);
         }
       }
       catch (ReliefwebImportExceptionViolation $exception) {
-        $this->errors[$index] = $exception->getMessage();
+        $errors[] = $exception->getMessage();
       }
       catch (ReliefwebImportExceptionSoftViolation $exception) {
-        $this->warnings[$index] = $exception->getMessage();
+        $warnings[] = $exception->getMessage();
       }
-
-      $index++;
     }
-  }
 
-  /**
-   * Get errors.
-   */
-  public function getErrors() {
-    return $this->errors;
-  }
-
-  /**
-   * Get warnings.
-   */
-  public function getWarnings() {
-    return $this->warnings;
+    if (!empty($errors)) {
+      $this->getLogger()->error(strtr('Errors while processing @name: @errors', [
+        '@name' => $name,
+        '@errors' => "\n- " . implode("\n- ", $errors),
+      ]));
+    }
+    if (!empty($warnings)) {
+      $this->getLogger()->warning(strtr('Warnings while processing @name: @warnings', [
+        '@name' => $name,
+        '@warnings' => "\n- " . implode("\n- ", $warnings),
+      ]));
+    }
   }
 
   /**
    * Check mandatory fields.
+   *
+   * @param \SimpleXMLElement $data
+   *   XML data for the job.
+   * @param string $base_url
+   *   Feed's base URL.
+   * @param int $source_id
+   *   ID of the source term the feed belongs to.
+   *
+   * @throws \Drupal\reliefweb_import\Exception\ReliefwebImportExceptionViolation
+   *   Import expection.
    */
-  protected function checkMandatoryFields($data, $base_url, $source_id) {
-    $this->validateLink($data->link[0], $base_url);
-    $this->validateTitle($data->title[0]);
-    $this->validateSource((string) $data->field_source[0], $source_id);
+  protected function checkMandatoryFields(\SimpleXMLElement $data, $base_url, $source_id) {
+    try {
+      $this->validateLink($data->link[0], $base_url);
+      $this->validateTitle($data->title[0]);
+      $this->validateSource((string) $data->field_source[0], $source_id);
+    }
+    catch (\Exception $exception) {
+      throw new ReliefwebImportExceptionViolation($exception->getMessage());
+    }
   }
 
   /**
    * Check if job exists.
+   *
+   * @param string $id
+   *   Job feed ID.
+   *
+   * @return bool
+   *   TRUE if the job was already imported.
    */
   protected function jobExists($id) {
-    $sql = "SELECT COUNT(entity_id)
-      FROM {node__field_job_id}
-      WHERE bundle = 'job'
-      AND field_job_id_value = :id";
-
-    $count = $this->database->query($sql, [
-      ':id' => $id,
-    ])->fetchField();
-
-    return $count != 0;
+    $ids = $this->entityTypeManager
+      ->getStorage('node')
+      ->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('field_job_id', $id, '=')
+      ->execute();
+    return !empty($ids);
   }
 
   /**
    * Load job by Id.
+   *
+   * @param string $id
+   *   Job feed ID.
+   *
+   * @return \Drupal\reliefweb_entities\Entity\Job|null
+   *   The job entity if it exists.
    */
   protected function loadJobById($id) {
-    $sql = "SELECT entity_id
-      FROM {node__field_job_id}
-      WHERE bundle = 'job'
-      AND field_job_id_value = :id";
-
-    $nid = $this->database->query($sql, [
-      ':id' => $id,
-    ])->fetchField();
-
-    return Job::load($nid);
+    $entities = $this->entityTypeManager
+      ->getStorage('node')
+      ->loadByProperties([
+        'field_job_id' => $id,
+      ]);
+    return !empty($entities) ? reset($entities) : NULL;
   }
 
   /**
    * Create a new job.
+   *
+   * @param \SimpleXMLElement $data
+   *   XML data for the job.
+   * @param int $uid
+   *   ID of the job owner.
+   * @param int $source_id
+   *   Source ID.
    */
-  protected function createJob($data, $uid) {
+  protected function createJob(\SimpleXMLElement $data, $uid, $source_id) {
     $values = [
       'type' => 'job',
       'uid' => $uid,
       'field_job_id' => (string) $data->link,
-      'title' => $this->validateTitle((string) $data->title),
-      'field_career_categories' => $data->field_career_categories[0] ? (array) $data->field_career_categories : [],
-      'field_city' => $this->validateCity((string) $data->field_city),
-      'field_job_closing_date' => $this->validateJobClosingDate((string) $data->field_job_closing_date),
-      'field_country' => $this->mapCountries((array) $data->field_country),
-      'field_how_to_apply' => $this->validateHowToApply((string) $data->field_how_to_apply),
-      'body' => [
-        'value' => $this->validateBody((string) $data->body),
-        'format' => 'markdown',
-      ],
-      'field_job_type' => $data->field_job_type[0] ? (array) $data->field_job_type : [],
-      'field_job_experience' => $data->field_job_experience[0] ? $this->validateJobExperience((array) $data->field_job_experience) : [],
-      'field_source' => $data->field_source[0] ? (array) $data->field_source : [],
-      'field_theme' => $data->field_theme[0] ? (array) $data->field_theme : [],
+      'field_source' => $source_id,
     ];
-
     $job = Job::create($values);
-    $this->validateAndSaveJob($job);
+    $this->updateJob($job, $data);
   }
 
   /**
    * Create a new job.
+   *
+   * @param \Drupal\reliefweb_entities\Entity\Job $job
+   *   Job to update.
+   * @param \SimpleXMLElement $data
+   *   XML data for the job.
    */
-  protected function updateJob(Job $job, $data) {
-    $job->title = $this->validateTitle((string) $data->title);
-    $job->field_career_categories = $data->field_career_categories[0] ? (array) $data->field_career_categories : [];
-    $job->field_city = $this->validateCity((string) $data->field_city);
-    $job->field_job_closing_date = $this->validateJobClosingDate((string) $data->field_job_closing_date);
-    $job->field_country = $this->mapCountries((array) $data->field_country);
-    $job->field_how_to_apply = $this->validateHowToApply((string) $data->field_how_to_apply);
-    $job->body = [
-      'value' => $this->validateBody((string) $data->body),
-      'format' => 'markdown',
+  protected function updateJob(Job $job, \SimpleXMLElement $data) {
+    $fields = [
+      'title' => [
+        'callback' => 'setJobTitle',
+        'property' => 'title',
+      ],
+      'body' => [
+        'callback' => 'setJobBody',
+        'property' => 'body',
+      ],
+      'field_how_to_apply' => [
+        'callback' => 'setJobHowToApply',
+        'property' => 'field_how_to_apply',
+      ],
+      'field_job_closing_date' => [
+        'callback' => 'setJobClosingDate',
+        'property' => 'field_job_closing_date',
+      ],
+      'field_job_type' => [
+        'callback' => 'setJobType',
+        'property' => 'field_job_type',
+      ],
+      'field_job_experience' => [
+        'callback' => 'setJobExperience',
+        'property' => 'field_job_experience',
+      ],
+      'field_career_categories' => [
+        'callback' => 'setJobCareerCategories',
+        'property' => 'field_career_categories',
+      ],
+      'field_theme' => [
+        'callback' => 'setJobThemes',
+        'property' => 'field_theme',
+      ],
+      'field_country' => [
+        'callback' => 'setJobCountry',
+        'property' => 'field_country',
+      ],
+      'field_city' => [
+        'callback' => 'setJobCity',
+        'property' => 'field_city',
+      ],
     ];
-    $job->field_job_type = $data->field_job_type[0] ? (array) $data->field_job_type : [];
-    $job->field_job_experience = $data->field_job_experience[0] ? $this->validateJobExperience((array) $data->field_job_experience) : [];
-    $job->field_source = $data->field_source[0] ? (array) $data->field_source : [];
-    $job->field_theme = $data->field_theme[0] ? (array) $data->field_theme : [];
+
+    foreach ($fields as $field => $info) {
+      try {
+        if (isset($data->{$info['property']})) {
+          $this->{$info['callback']}($job, $data->{$info['property']});
+        }
+      }
+      catch (ReliefwebImportException $exception) {
+        // Empty the field if invalid and store the error.
+        $job->{$field} = [];
+        $job->_import_errors[$field] = $exception->getMessage();
+      }
+    }
 
     $this->validateAndSaveJob($job);
   }
 
   /**
+   * Set the job title.
+   *
+   * @param \Drupal\reliefweb_entities\Entity\Job $job
+   *   Job to update.
+   * @param \SimpleXMLElement $data
+   *   Data from the XML feed.
+   */
+  protected function setJobTitle(Job $job, \SimpleXMLElement $data) {
+    $job->title = $this->validateTitle((string) $data);
+  }
+
+  /**
+   * Set the job body.
+   *
+   * @param \Drupal\reliefweb_entities\Entity\Job $job
+   *   Job to update.
+   * @param \SimpleXMLElement $data
+   *   Data from the XML feed.
+   */
+  protected function setJobBody(Job $job, \SimpleXMLElement $data) {
+    $job->body = [
+      'value' => $this->validateBody((string) $data),
+      'format' => 'markdown_editor',
+    ];
+  }
+
+  /**
+   * Set the job how to apply.
+   *
+   * @param \Drupal\reliefweb_entities\Entity\Job $job
+   *   Job to update.
+   * @param \SimpleXMLElement $data
+   *   Data from the XML feed.
+   */
+  protected function setJobHowToApply(Job $job, \SimpleXMLElement $data) {
+    $job->field_how_to_apply = [
+      'value' => $this->validateHowToApply((string) $data),
+      'format' => 'markdown_editor',
+    ];
+  }
+
+  /**
+   * Set the job closing date.
+   *
+   * @param \Drupal\reliefweb_entities\Entity\Job $job
+   *   Job to update.
+   * @param \SimpleXMLElement $data
+   *   Data from the XML feed.
+   */
+  protected function setJobClosingDate(Job $job, \SimpleXMLElement $data) {
+    $job->field_job_closing_date = $this->validateJobClosingDate((string) $data);
+  }
+
+  /**
+   * Set the job type.
+   *
+   * @param \Drupal\reliefweb_entities\Entity\Job $job
+   *   Job to update.
+   * @param \SimpleXMLElement $data
+   *   Data from the XML feed.
+   */
+  protected function setJobType(Job $job, \SimpleXMLElement $data) {
+    $ids = $this->getTermIds('job_type');
+    // Silently skip invalid term ids and limit to 1 term.
+    $job->field_job_type = array_slice(array_intersect((array) $data, $ids), 0, 1);
+  }
+
+  /**
+   * Set the job type.
+   *
+   * @param \Drupal\reliefweb_entities\Entity\Job $job
+   *   Job to update.
+   * @param \SimpleXMLElement $data
+   *   Data from the XML feed.
+   */
+  protected function setJobExperience(Job $job, \SimpleXMLElement $data) {
+    $ids = $this->getTermIds('job_experience');
+    // Silently skip invalid term ids.
+    $job->field_job_experience = $this->validateJobExperience(array_intersect((array) $data, $ids));
+  }
+
+  /**
+   * Set the job career categories.
+   *
+   * @param \Drupal\reliefweb_entities\Entity\Job $job
+   *   Job to update.
+   * @param \SimpleXMLElement $data
+   *   Data from the XML feed.
+   */
+  protected function setJobCareerCategories(Job $job, \SimpleXMLElement $data) {
+    $ids = $this->getTermIds('career_category');
+    // Silently skip invalid term ids.
+    $job->field_career_categories = array_intersect((array) $data, $ids);
+  }
+
+  /**
+   * Set the job themes.
+   *
+   * @param \Drupal\reliefweb_entities\Entity\Job $job
+   *   Job to update.
+   * @param \SimpleXMLElement $data
+   *   Data from the XML feed.
+   */
+  protected function setJobThemes(Job $job, \SimpleXMLElement $data) {
+    $ids = $this->getTermIds('theme');
+    // Silently skip invalid term ids and limit to 3 themes.
+    $job->field_theme = array_slice(array_intersect((array) $data, $ids), 0, 3);
+  }
+
+  /**
+   * Set the job country.
+   *
+   * @param \Drupal\reliefweb_entities\Entity\Job $job
+   *   Job to update.
+   * @param \SimpleXMLElement $data
+   *   Data from the XML feed.
+   */
+  protected function setJobCountry(Job $job, \SimpleXMLElement $data) {
+    $job->field_country = $this->mapCountries((array) $data);
+  }
+
+  /**
+   * Set the job city.
+   *
+   * @param \Drupal\reliefweb_entities\Entity\Job $job
+   *   Job to update.
+   * @param \SimpleXMLElement $data
+   *   Data from the XML feed.
+   */
+  protected function setJobCity(Job $job, \SimpleXMLElement $data) {
+    if (!$job->field_country->isEmpty()) {
+      $this->field_city = $this->validateCity((string) $data);
+    }
+  }
+
+  /**
+   * Get the taxonomy term ids for the given vocabulary.
+   *
+   * @param string $vocabulary
+   *   Taxonomy vocabulary.
+   *
+   * @return array
+   *   List of term IDs.
+   */
+  protected function getTermIds($vocabulary) {
+    if (!isset($this->loadedTermIds[$vocabulary])) {
+      $ids = $this->entityTypeManager
+        ->getStorage('taxonomy_term')
+        ->getQuery()
+        ->accessCheck(FALSE)
+        ->condition('vid', $vocabulary, '=')
+        ->execute();
+      $this->loadedTermIds[$vocabulary] = $ids;
+    }
+    return $this->loadedTermIds[$vocabulary];
+  }
+
+  /**
    * Validate and save job.
+   *
+   * @param \Drupal\reliefweb_entities\Entity\Job $job
+   *   Job to update.
+   *
+   * @throws \Drupal\reliefweb_import\Exception\ReliefwebImportExceptionSoftViolation
+   *   Exception if there were validation errors so they can be logged.
    */
   protected function validateAndSaveJob(Job $job) {
     // Revision user is always 'System'.
-    $job->setRevisionUserId(2);
+    $job->setRevisionUserId($job->getOwnerId());
     $job->setNewRevision(TRUE);
+
+    // Revision message.
     if ($job->isNew()) {
-      $job->setRevisionLogMessage(strtr('Job @guid imported from @url', [
+      $log = strtr('Job @guid imported from @url.', [
         '@guid' => $job->field_job_id->value,
         '@url' => $this->url,
-      ]));
+      ]);
     }
     else {
-      $job->setRevisionLogMessage(strtr('Job @guid updated from @url', [
+      $log = strtr('Job @guid updated from @url.', [
         '@guid' => $job->field_job_id->value,
         '@url' => $this->url,
-      ]));
-    }
-
-    // Validate job.
-    $violations = $job->validate();
-
-    if (count($violations) === 0) {
-      // Save as published.
-      $job->setUnpublished();
-      $job->setModerationStatus('pending');
-
-      // Re validate.
-      $violations = $job->validate();
-      if (count($violations) === 0) {
-        $job->save();
-        return;
-      }
-    }
-
-    // Save as draft.
-    $job->setUnpublished();
-    $job->setModerationStatus('draft');
-    $job->save();
-
-    $errors = [];
-    /** @var \Symfony\Component\Validator\ConstraintViolation $violation */
-    foreach ($violations as $violation) {
-      $errors[] = strtr('Validation failed in @path with message: @message for job @guid', [
-        '@path' => $violation->getPropertyPath(),
-        '@message' => $violation->getMessage()->__toString(),
-        '@guid' => $job->field_job_id->value,
       ]);
     }
 
-    throw new ReliefwebImportExceptionSoftViolation(implode("\n", $errors));
+    // Set the default status as pending as if it were a submission by an
+    // unverified user. The appropriate status will be set when saving the job.
+    $job->setModerationStatus('pending');
+
+    // Validate the job.
+    /** @var \Symfony\Component\Validator\ConstraintViolation $violation */
+    foreach ($job->validate() as $violation) {
+      $constraint = $violation->getConstraint();
+      // Ignore the constraint on the closing date so that the feed publisher
+      // can close a job by changing the closing date which will mark the job
+      // as expired.
+      if ($constraint instanceof DateNotInPastConstraint) {
+        continue;
+      }
+      $field = preg_replace('#^([a-z0-9_-]+).*#', '$1', $violation->getPropertyPath());
+      // No need to add another validation message if there was already one for
+      // the field.
+      if (!isset($job->_import_errors[$field])) {
+        $job->_import_errors[$field] = $violation->getMessage()->__toString();
+      }
+    }
+
+    // Update the revision log message with the list of validation errors to
+    // help identify what was wrong.
+    if (!empty($job->_import_errors)) {
+      $job->setRevisionLogMessage(implode("\n", array_merge([$log], $job->_import_errors)));
+    }
+    else {
+      $job->setRevisionLogMessage($log);
+    }
+
+    // Flag the job as being imported so that the status can be updated
+    // in reliefweb_import_node_presave() based on the validation errors.
+    $job->_is_importing = TRUE;
+
+    // Ensure notifications are disabled.
+    $job->notifications_content_disable = TRUE;
+
+    // Save the job.
+    $job->save();
+
+    // Log the message about the creation or update.
+    $this->getLogger()->info($log);
+
+    // If there were validation errors, throw a soft violation exception with
+    // the cancatenated error messages.
+    if (!empty($job->_import_errors)) {
+      $message = '';
+      foreach ($job->_import_errors as $field => $error) {
+        $field_label = $job->{$field}->getFieldDefinition()->getLabel();
+        $message .= "\n--- {$field_label}: {$error}";
+      }
+
+      throw new ReliefwebImportExceptionSoftViolation(strtr('Validation errors for job @guid imported from @url: @errors', [
+        '@guid' => $job->field_job_id->value,
+        '@url' => $this->url,
+        '@errors' => $message,
+      ]));
+    }
   }
 
   /**
@@ -445,15 +720,15 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    */
   protected function validateUser($uid) {
     if (empty(trim($uid))) {
-      throw new ReliefwebImportExceptionViolation('User Id is not defined.');
+      throw new ReliefwebImportException('User Id is not defined.');
     }
 
     if (!is_numeric($uid)) {
-      throw new ReliefwebImportExceptionViolation('User Id is not numeric.');
+      throw new ReliefwebImportException('User Id is not numeric.');
     }
 
     if ($uid <= 2) {
-      throw new ReliefwebImportExceptionViolation('User Id is an admin.');
+      throw new ReliefwebImportException('User Id is an admin.');
     }
   }
 
@@ -462,11 +737,11 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    */
   protected function validateBaseUrl($base_url) {
     if (empty(trim($base_url))) {
-      throw new ReliefwebImportExceptionViolation('Base URL is empty.');
+      throw new ReliefwebImportException('Base URL is empty.');
     }
 
     if (!UrlHelper::isValid($base_url, TRUE)) {
-      throw new ReliefwebImportExceptionViolation('Base URL is not a valid link.');
+      throw new ReliefwebImportException('Base URL is not a valid link.');
     }
   }
 
@@ -475,15 +750,15 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    */
   protected function validateLink($link, $base_url) {
     if (empty(trim($link))) {
-      throw new ReliefwebImportExceptionViolation('Feed item found without a link.');
+      throw new ReliefwebImportException('Feed item found without a link.');
     }
 
     if (!UrlHelper::isValid($link, TRUE)) {
-      throw new ReliefwebImportExceptionViolation('Invalid feed item link.');
+      throw new ReliefwebImportException('Invalid feed item link.');
     }
 
     if (strpos($link, $base_url) !== 0) {
-      throw new ReliefwebImportExceptionViolation('Invalid feed item link base.');
+      throw new ReliefwebImportException('Invalid feed item link base.');
     }
   }
 
@@ -492,7 +767,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    */
   protected function validateTitle($title) {
     if (empty(trim($title))) {
-      throw new ReliefwebImportExceptionViolation('Job found with empty title.');
+      throw new ReliefwebImportException('Job found with empty title.');
     }
 
     // Clean the title.
@@ -508,7 +783,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     // the job form.
     $length = mb_strlen($title);
     if ($length < 10 || $length > 150) {
-      throw new ReliefwebImportExceptionViolation('Invalid title length.');
+      throw new ReliefwebImportException('Invalid title length.');
     }
 
     return $title;
@@ -519,15 +794,15 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    */
   protected function validateSource($source, $source_id) {
     if (empty(trim($source))) {
-      throw new ReliefwebImportExceptionViolation('Job found with empty source.');
+      throw new ReliefwebImportException('Job found with empty source.');
     }
 
     if (!is_numeric($source)) {
-      throw new ReliefwebImportExceptionViolation('Job found with non numeric source.');
+      throw new ReliefwebImportException('Job found with non numeric source.');
     }
 
     if ($source !== $source_id) {
-      throw new ReliefwebImportExceptionViolation(strtr('Invalid source expected @source_id, got @source.', [
+      throw new ReliefwebImportException(strtr('Invalid job source: expected @source_id, got @source.', [
         '@source_id' => $source_id,
         '@source' => $source,
       ]));
@@ -549,7 +824,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     // Ensure the body field size is reasonable.
     $length = mb_strlen($body);
     if ($length < 400 || $length > 50000) {
-      throw new ReliefwebImportException(strtr('Invalid field size for body, @length characters found, has to be between 400 and 50000', [
+      throw new ReliefwebImportException(strtr('Invalid field size for body, @length characters found, has to be between 400 and 50000.', [
         '@length' => $length,
       ]));
     }
@@ -570,36 +845,12 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     // Ensure the field size is reasonable.
     $length = mb_strlen($field_how_to_apply);
     if ($length < 100 || $length > 10000) {
-      throw new ReliefwebImportExceptionSoftViolation(strtr('Invalid field size for field_how_to_apply, @length characters found, has to be between 100 and 10000', [
+      throw new ReliefwebImportException(strtr('Invalid field size for field_how_to_apply, @length characters found, has to be between 100 and 10000.', [
         '@length' => $length,
       ]));
     }
 
     return $field_how_to_apply;
-  }
-
-  /**
-   * Validate city field.
-   *
-   * @param string $data
-   *   Raw data from XML.
-   */
-  protected function validateCity($data) {
-    // Clean the field.
-    $field_city = TextHelper::cleanText(strip_tags($data), [
-      'line_breaks' => TRUE,
-      'consecutive' => TRUE,
-    ]);
-
-    // Ensure the field size is reasonable.
-    $length = mb_strlen($field_city);
-    if ($length < 3 || $length > 255) {
-      throw new ReliefwebImportExceptionSoftViolation(strtr('Invalid field size for field_city, @length characters found, has to be between 3 and 255', [
-        '@length' => $length,
-      ]));
-    }
-
-    return $field_city;
   }
 
   /**
@@ -615,19 +866,62 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     // Ensure the field size is reasonable.
     $length = mb_strlen($field_job_closing_date);
     if ($length !== 0 && $length !== 10) {
-      throw new ReliefwebImportExceptionSoftViolation(strtr('Invalid data for field_job_closing_date, @length characters found, format has to be yyyy-mm-dd', [
+      throw new ReliefwebImportException(strtr('Invalid data for field_job_closing_date, @length characters found, format has to be yyyy-mm-dd.', [
         '@length' => $length,
       ]));
     }
 
     // Make sure field can be converted to a date.
     if ($length === 10 && !date_create_from_format('Y-m-d', $field_job_closing_date)) {
-      throw new ReliefwebImportExceptionSoftViolation(strtr('Invalid data for field_job_closing_date, @data has to be in format yyyy-mm-dd', [
+      throw new ReliefwebImportException(strtr('Invalid data for field_job_closing_date, @data has to be in format yyyy-mm-dd.', [
         '@data' => $field_job_closing_date,
       ]));
     }
 
     return $field_job_closing_date;
+  }
+
+  /**
+   * Validate the job_experience field for the feed item.
+   */
+  protected function validateJobExperience(array $values) {
+    // Map "N/A" to "0-3 years" to accomodate changes to the specifications.
+    foreach ($values as &$value) {
+      if ($value == 262) {
+        $value = 258;
+      }
+    }
+
+    return $values;
+  }
+
+  /**
+   * Validate city field.
+   *
+   * @param string $data
+   *   Raw data from XML.
+   */
+  protected function validateCity($data) {
+    // Clean the field.
+    $field_city = TextHelper::cleanText(strip_tags($data), [
+      'line_breaks' => TRUE,
+      'consecutive' => TRUE,
+    ]);
+
+    // Skip if the city is empty.
+    if (empty($field_city)) {
+      return [];
+    }
+
+    // Ensure the field size is reasonable.
+    $length = mb_strlen($field_city);
+    if ($length < 3 || $length > 255) {
+      throw new ReliefwebImportException(strtr('Invalid field size for field_city, @length characters found, has to be between 3 and 255.', [
+        '@length' => $length,
+      ]));
+    }
+
+    return $field_city;
   }
 
   /**
@@ -734,20 +1028,6 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     }
 
     return $terms;
-  }
-
-  /**
-   * Validate the job_experience field for the feed item.
-   */
-  protected function validateJobExperience(array $values) {
-    // Map "N/A" to "0-3 years" to accomodate changes to the specifications.
-    foreach ($values as &$value) {
-      if ($value == 262) {
-        $value = 258;
-      }
-    }
-
-    return $values;
   }
 
 }

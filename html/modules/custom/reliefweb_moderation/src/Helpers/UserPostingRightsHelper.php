@@ -75,7 +75,7 @@ class UserPostingRightsHelper {
     elseif ($rights['unverified'] > 0) {
       return 'unverified';
     }
-    elseif ($rights['trusted'] === count($source_entities)) {
+    elseif (count($source_entities) > 0 && $rights['trusted'] === count($source_entities)) {
       return 'trusted';
     }
     elseif ($rights['allowed'] > 0) {
