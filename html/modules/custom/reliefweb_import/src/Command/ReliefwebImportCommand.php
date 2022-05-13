@@ -223,7 +223,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     $response = $this->httpClient->request('GET', $url);
     // Check status code.
     if ($response->getStatusCode() !== 200) {
-      throw new ClientException($response->getReasonPhrase(), $response->getStatusCode());
+      throw new ReliefwebImportExceptionXml($response->getReasonPhrase());
     }
 
     // Get body.
