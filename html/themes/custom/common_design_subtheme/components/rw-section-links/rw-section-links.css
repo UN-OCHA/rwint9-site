@@ -1,0 +1,22 @@
+/**
+ * Country/disaster profile forms.
+ *
+ * This is the form to manage the country and disaster profiles (overview, key
+ * content, appeals and response plans and useful links).
+ *
+ * Scope: .field--type-reliefweb-section-links
+ */
+.field--type-reliefweb-section-links table[data-list-archives][data-visible] tbody {
+  background: var(--cd-reliefweb-grey--light--bg);
+}
+.field--type-reliefweb-section-links [data-link-form] {
+  border: 1px solid var(--cd-reliefweb-brand-grey--light);
+}
+.field--type-reliefweb-section-links tr[data-dragged] td {
+  background-color: var(--cd-reliefweb-brand-grey--light);
+}
+
+/* Related Content Reports search table */
+.rw-section-links table a {
+  word-break: break-word;
+}

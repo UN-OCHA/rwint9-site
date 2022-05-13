@@ -1,0 +1,13 @@
+reliefweb_moderation.content.field_guideline:
+  route_name: reliefweb_moderation.content
+  base_route: reliefweb_moderation.content
+  route_parameters:
+    service: field_guideline
+  title: Guidelines
+
+reliefweb_moderation.content.guideline_list:
+  route_name: reliefweb_moderation.content
+  base_route: reliefweb_moderation.content
+  route_parameters:
+    service: guideline_list
+  title: Guideline Lists

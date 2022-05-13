@@ -96,6 +96,11 @@
       '#theme': 'reliefweb_entities_entity_country_slug',
       '#countries': meta.country,
       '#attributes': create_attribute().addClass('rw-entity-country-slug--above'),
+      '#cache': {
+        'tags': [
+          'taxonomy_term_list:country',
+        ],
+      },
     }) }}
 
     {{ title|merge({'#title_attributes': title_attributes.addClass('rw-article__title')}) }}
@@ -105,7 +110,7 @@
       '#meta': {
         'source': {
           'type': 'taglist',
-          'label': meta.source|length > 1 ? 'Sources'|t : 'Source'|t,
+          'label': meta.source|length > 1 ? 'Organizations'|t : 'Organization'|t,
           'value': meta.source,
           'count': 1,
           'sort': 'shortname',
@@ -135,18 +140,24 @@
         },
         'event-url': {
           'type': 'link',
-          'value': {
+          'label': 'Event URL'|t,
+          'value': meta.event_url ? {
             'url': meta.event_url,
             'title': 'View event page'|t,
             'external': true,
           },
         },
       },
+      '#cache': {
+        'tags': [
+          'taxonomy_term_list:source',
+        ],
+      },
     }) }}
   </header>
 
   <div class="rw-article__content">
-    {{ content.body.0|render|sanitize_html(false, 2) }}
+    {{ content.body.0|render|sanitize_html(false, 1) }}
 
     {% if not node.field_fee_information.isEmpty() %}
     <section class="rw-fee-information">
@@ -188,14 +199,14 @@
         },
         'source': {
           'type': 'taglist',
-          'label': meta.source|length > 1 ? 'Sources'|t : 'Source'|t,
+          'label': meta.source|length > 1 ? 'Organizations'|t : 'Organization'|t,
           'value': meta.source,
           'count': null,
           'sort': 'name',
         },
         'category': {
           'type': 'taglist',
-          'label': meta.category|length > 1 ? 'Types'|t : 'Type'|t,
+          'label': meta.category|length > 1 ? 'Categories'|t : 'Category'|t,
           'value': meta.category,
           'count': null,
           'sort': 'name',
@@ -221,13 +232,24 @@
           'count': null,
           'sort': 'name',
         },
-        'category': {
+        'cost': {
           'type': 'taglist',
           'label': 'Cost'|t,
           'value': meta.cost,
           'count': 1,
           'sort': 'name',
         },
+      },
+      '#cache': {
+        'tags': [
+          'taxonomy_term_list:career_category',
+          'taxonomy_term_list:country',
+          'taxonomy_term_list:language',
+          'taxonomy_term_list:source',
+          'taxonomy_term_list:theme',
+          'taxonomy_term_list:training_format',
+          'taxonomy_term_list:training_type',
+        ],
       },
     }) }}
 

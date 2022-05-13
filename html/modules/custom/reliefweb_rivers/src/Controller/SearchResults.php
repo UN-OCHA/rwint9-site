@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_rivers\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Render\Markup;
 use Drupal\reliefweb_api\Services\ReliefWebApiClient;
 use Drupal\reliefweb_rivers\Parameters;
 use Drupal\reliefweb_rivers\RiverServiceBase;
@@ -107,13 +108,19 @@ class SearchResults extends ControllerBase {
           '#results' => [
             // @todo create helper that properly format plural AND format the
             // number.
-            '#markup' => '<p>' . $this->formatPlural($total, '1 entry found', '@total entries found', [
+            '#markup' => Markup::create('<p>' . $this->formatPlural($total, '1 entry found', '@total entries found', [
               '@total' => number_format($total),
-            ]) . '</p>',
+            ]) . '</p>'),
           ],
           '#resource' => $query['resource'],
           '#entities' => $entities,
           '#more' => $query['more'] ?? NULL,
+          '#cache' => [
+            'tags' => [
+              $query['entity_type'] . '_list:' . $query['bundle'],
+              'taxonomy_term_list',
+            ],
+          ],
         ];
 
         $totals[$index] = [
@@ -129,6 +136,20 @@ class SearchResults extends ControllerBase {
       '#search' => $this->getSearch(),
       '#totals' => $totals,
       '#sections' => $sections,
+      '#cache' => [
+        'keys' => [
+          'reliefweb',
+          'rivers',
+          'search',
+          'results',
+        ],
+      ],
+      '#cache_properties' => [
+        '#title',
+        '#search',
+        '#totals',
+        '#sections',
+      ],
     ];
   }
 
@@ -175,6 +196,7 @@ class SearchResults extends ControllerBase {
     return [
       'resource' => $resource,
       'bundle' => $bundle,
+      'entity_type' => $service->getEntityTypeId(),
       'payload' => $payload,
       'title' => $title,
       'more' => $more,
@@ -190,6 +212,11 @@ class SearchResults extends ControllerBase {
       '#path' => '/search/results',
       '#label' => $this->t('Search ReliefWeb'),
       '#query' => $this->getSearchQuery(),
+      '#cache' => [
+        'contexts' => [
+          'url.query_args:search',
+        ],
+      ],
     ];
   }
 

@@ -1,0 +1,865 @@
+<?php
+
+/**
+ * @file
+ * ReliefWeb Meta module file.
+ */
+
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Url;
+use Drupal\image\Entity\ImageStyle;
+use Drupal\node\NodeInterface;
+use Drupal\taxonomy\TermInterface;
+use Drupal\reliefweb_utility\Helpers\DateHelper;
+use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
+use Drupal\reliefweb_utility\Helpers\MediaHelper;
+
+/**
+ * Implements hook_metatag_route_entity().
+ */
+function reliefweb_meta_metatag_route_entity(RouteMatchInterface $route_match) {
+  switch ($route_match->getRouteName()) {
+    case 'entity.node.canonical':
+      return $route_match->getParameter('node');
+
+    case 'entity.taxonomy_term.canonical':
+      return $route_match->getParameter('taxonomy_term');
+  }
+  return NULL;
+}
+
+/**
+ * Implements hook_metatags_alter().
+ */
+function reliefweb_meta_metatags_alter(array &$metatags, array &$context) {
+  $data = [
+    'type' => 'article',
+    'shortlink' => Url::fromUserInput(\Drupal::request()->getRequestUri(), [
+      'absolute' => TRUE,
+      'path_processing' => FALSE,
+    ])->toString(),
+    'image' => reliefweb_meta_get_image_url(),
+  ];
+
+  switch (\Drupal::routeMatch()->getRouteName()) {
+    case 'entity.node.canonical':
+      $data = reliefweb_meta_get_node_metatags($context['entity']);
+      break;
+
+    case 'entity.taxonomy_term.canonical':
+      $data = reliefweb_meta_get_term_metatags($context['entity']);
+      break;
+
+    case 'reliefweb_homepage.homepage.page':
+      $data['type'] = 'website';
+      $data['description'] = \Drupal::config('system.site')->get('slogan') ?? '';
+      // Change the metatags's title directly to avoid adding the "| Reliefweb"
+      // suffix in reliefweb_meta_update_metatags().
+      $metatags['title'] = t('@site_name - Informing humanitarians worldwide', [
+        '@site_name' => \Drupal::config('system.site')->get('name') ?? 'ReliefWeb',
+      ]);
+
+      break;
+
+    case 'reliefweb_rivers.blog_post.river':
+      $data['title'] = t('Blog');
+      $data['description'] = t("A look at the ideas and projects we're working on as we strive to grow and improve ReliefWeb.");
+      break;
+
+    case 'reliefweb_rivers.country.river':
+      $data['title'] = t('Countries');
+      $data['description'] = t('ReliefWeb country pages provide a comprehensive overview of the humanitarian situation and feature situation reports, news and press releases, assessments, evaluations, infographics, maps and more.');
+      break;
+
+    case 'reliefweb_rivers.disaster.river':
+      $data['title'] = t('Disasters');
+      $data['description'] = t('ReliefWeb disaster pages provide an overview of the situation and situation reports, news and press releases, assessments, evaluations, infographics and maps. Browse our list of natural disasters with humanitarian impact from 1981 until today.');
+      break;
+
+    case 'reliefweb_rivers.job.river':
+      $data['title'] = t('Jobs');
+      $data['description'] = t('Your gateway for humanitarian and development jobs. Search and/or drill down with filters to narrow down the listings.');
+      break;
+
+    case 'reliefweb_rivers.report.river':
+      $metatags['title'] = t('Updates');
+      $data['description'] = t('Your gateway to all content to date. Search and/or drill down with filters to narrow down the content.');
+      break;
+
+    case 'reliefweb_rivers.source.river':
+      $data['title'] = t('Organizations');
+      $data['description'] = t('A list of organizations that are actively providing ReliefWeb with content (reports, jobs and training).');
+      break;
+
+    case 'reliefweb_rivers.topic.river':
+      $data['title'] = t('Topics');
+      $data['description'] = t('Curated pages dedicated to humanitarian themes and specific humanitarian crises.');
+      break;
+
+    case 'reliefweb_rivers.training.river':
+      $data['title'] = t('Training');
+      $data['description'] = t('Your gateway for humanitarian training opportunities. Search and/or drill down with filters to narrow down the listings.');
+      break;
+
+    default:
+      // Not so great to re-use the same description but normally all the
+      // main and meaningful pages are covered above or are nodes or terms.
+      $data['description'] = \Drupal::config('system.site')->get('slogan') ?? '';
+  }
+
+  reliefweb_meta_update_metatags($metatags, $data);
+}
+
+/**
+ * Get the metatags for node.
+ *
+ * @param \Drupal\node\NodeInterface $node
+ *   Node.
+ *
+ * @return array
+ *   Node metatags.
+ */
+function reliefweb_meta_get_node_metatags(NodeInterface $node) {
+  $cache = \Drupal::cache();
+  $cache_id = 'reliefweb_meta:entity:' . $node->uuid();
+  $cache_metadata = CacheableMetadata::createFromObject($node);
+
+  // Try to get the data from the cache.
+  $cache_object = $cache->get($cache_id);
+  if (!empty($cache_object->data)) {
+    return $cache_object->data;
+  }
+
+  // Defaults.
+  $type = 'article';
+  $title = $node->label();
+  $shortlink = reliefweb_meta_get_entity_shortlink($node);
+  $image = reliefweb_meta_get_image_url();
+  $origin = '';
+  $description = '';
+
+  // Get the taxonomy terms associated with the node.
+  $terms = reliefweb_meta_get_entity_terms($node, $cache_metadata);
+
+  // Get the metatags based on the node bundle.
+  switch ($node->bundle()) {
+    case 'blog_post':
+      $type = 'blog';
+      $image = reliefweb_meta_get_entity_image_url($node, 'field_attached_images');
+      $description = t('Blog post by @author', [
+        '@author' => $node->field_author->value ?? $node->getOwner()->label(),
+      ]);
+      break;
+
+    case 'book':
+      // Some special node book pages.
+      switch (\Drupal::request()->getRequestUri()) {
+        case 'about':
+          $description = t("Learn about ReliefWeb's history and mandate.");
+          break;
+
+        case 'help':
+          $description = t('Links to help you with your request.');
+          break;
+
+        case 'help/api':
+          $description = t('How to use ReliefWeb content in external sites and apps.');
+          break;
+
+        case 'location-maps':
+          $description = t('A list of maps produced by OCHA/ReliefWeb and free for use by the humanitarian community.');
+          break;
+
+        case 'rss':
+          $description = t('ReliefWeb RSS feeds you can subscribe to.');
+          break;
+
+        case 'share':
+          $description = t('Share your information on ReliefWeb.');
+          break;
+
+        case 'terms-conditions':
+          $description = t('ReliefWeb terms of service.');
+          break;
+
+        default:
+          // We assume the other book pages belong to the Help section.
+          $description = t('Help - @title', ['@title' => $node->label()]);
+      }
+      break;
+
+    case 'job':
+      // Description in the form:
+      //
+      // "Category Type in Country about Theme, requiring Years of experience,
+      // from Source; closing on Date"
+      //
+      // Category.
+      $description = reliefweb_meta_description_term($node, $terms, 'career_categories');
+      // Job type.
+      $description .= reliefweb_meta_description_term($node, $terms, 'job_type', ' ');
+      // Country.
+      $description .= reliefweb_meta_description_term_list($node, $terms, ['country' => 1], 'in');
+      // Theme.
+      $description .= reliefweb_meta_description_term_list($node, $terms, ['theme' => 3], 'about');
+      // Experience.
+      $description .= reliefweb_meta_description_term($node, $terms, 'job_experience', ', requiring ', ' of experience,');
+      // Source.
+      $description .= reliefweb_meta_description_term_list($node, $terms, ['source' => 1], 'from');
+      // Closing date.
+      $description .= reliefweb_meta_description_date($node, 'job_closing_date', '; closing on ');
+      break;
+
+    case 'report':
+      // Add the primary country to the title.
+      $title .= reliefweb_meta_description_term($node, $terms, 'primary_country', ' - ');
+
+      // Description in the form:
+      //
+      // "Language Type on Country about Tags; published on Date by Sources"
+      //
+      // Note: for countries we don't use 'reliefweb_meta_description_term_list'
+      // to ensure the primary country is the first in the list.
+      //
+      // Language.
+      $description = reliefweb_meta_description_term($node, $terms, 'language');
+      // Content format.
+      $description .= reliefweb_meta_description_term($node, $terms, 'content_format', ' ');
+      // Countries.
+      if (!$node->field_primary_country->isEmpty()) {
+        $description .= reliefweb_meta_description_term($node, $terms, 'primary_country', ' on ');
+        $countries = count($node->field_country->filterEmptyItems());
+        if ($countries === 2) {
+          $description .= ' and 1 other country';
+        }
+        elseif ($countries > 3) {
+          $description .= strtr(' and @count other countries', [
+            '@count' => $countries - 1,
+          ]);
+        }
+      }
+      else {
+        reliefweb_meta_description_term_list($node, $terms, ['country' => 1], 'on', '1 other country', '@count other countries');
+      }
+      // Tags.
+      $tags = [
+        'theme' => 2,
+        // Disable vulnerable group field (#kUklB1e4).
+        /*'vulnerable_groups' => 2,*/
+        'disaster_type' => 2,
+      ];
+      $description .= reliefweb_meta_description_term_list($node, $terms, $tags, 'about', 'more');
+      // Date.
+      $description .= reliefweb_meta_description_date($node, 'original_publication_date', '; published on ');
+      // Sources.
+      $description .= reliefweb_meta_description_term_list($node, $terms, ['source' => 2], 'by', '1 other organization', '@count other organizations');
+
+      // Origin.
+      $origin_notes = $node->field_origin_notes->value;
+      if (!empty($origin_notes) && filter_var($origin_notes, FILTER_VALIDATE_URL)) {
+        $origin = $origin_notes;
+      }
+
+      // Image.
+      $image = reliefweb_meta_report_image($node);
+      break;
+
+    // @todo we could use the topic icon but the quality is not always good.
+    case 'topic':
+      $title .= ' | Topics';
+      $description = t('Find humanitarian analysis, evaluations and guidelines on @title', [
+        '@title' => $node->label(),
+      ]);
+      break;
+
+    case 'training':
+      $start = $node->field_training_date->value;
+      $end = $node->field_training_date->end_value;
+      $ongoing = empty($start);
+      $online = $node->field_training_format->value === 'online';
+
+      // Description with different forms (3 examples):
+      //
+      // - "Type from Source in Category about Theme held in Country; from Start
+      // to End; registration until Date"
+      // - "Online Type from Source in Category about Theme; on Date;
+      // registration until Date"
+      // - "Ongoing online Type from Source in Category about Theme; ongoing
+      // course"
+      //
+      // Ongoing.
+      if ($ongoing) {
+        $description = 'Ongoing ';
+      }
+      // Format.
+      if ($online) {
+        $description .= $ongoing ? 'online ' : 'Online ';
+      }
+      // Type.
+      $description .= reliefweb_meta_description_term($node, $terms, 'training_type');
+      // Source.
+      $description .= reliefweb_meta_description_term_list($node, $terms, ['source' => 1], 'from');
+      // Category.
+      $description .= reliefweb_meta_description_term_list($node, $terms, ['career_categories' => 1], 'in');
+      // Theme.
+      $description .= reliefweb_meta_description_term_list($node, $terms, ['theme' => 3], 'about');
+      // Country.
+      if (!$online) {
+        $description .= reliefweb_meta_description_term_list($node, $terms, ['country' => 1], 'held in');
+      }
+      // Date.
+      if (!$ongoing) {
+        $start = DateHelper::format($start, 'custom', 'j M Y');
+        $end = DateHelper::format($end, 'custom', 'j M Y');
+        if (!empty($start)) {
+          if (!empty($end)) {
+            $description .= '; from ' . $start;
+            $description .= ' to ' . $end;
+          }
+          else {
+            $description .= '; on ' . $start;
+          }
+        }
+      }
+      else {
+        $description .= '; ongoing course';
+      }
+      // Registration date.
+      $description .= reliefweb_meta_description_date($node, 'registration_deadline', '; registration until ');
+      break;
+
+  }
+
+  $metatags = array_filter([
+    'type' => $type,
+    'shortlink' => $shortlink,
+    'title' => $title,
+    'description' => $description,
+    'image' => $image,
+    'origin' => $origin,
+  ]);
+
+  // Cache the metatags permanently until the entity or its dependencies are
+  // changed.
+  $cache->set($cache_id, $metatags, Cache::PERMANENT, $cache_metadata->getCacheTags());
+
+  return $metatags;
+}
+
+/**
+ * Get the metatags for term.
+ *
+ * @param \Drupal\taxonomy_term\TermInterface $term
+ *   Term.
+ *
+ * @return array
+ *   Term metatags.
+ */
+function reliefweb_meta_get_term_metatags(TermInterface $term) {
+  $cache = \Drupal::cache();
+  $cache_id = 'reliefweb_meta:entity:' . $term->uuid();
+  $cache_metadata = CacheableMetadata::createFromObject($term);
+
+  // Try to get the data from the cache.
+  $cache_object = $cache->get($cache_id);
+  if (!empty($cache_object->data)) {
+    return $cache_object->data;
+  }
+
+  // Defaults.
+  $type = 'article';
+  $title = $term->label();
+  $shortlink = reliefweb_meta_get_entity_shortlink($term);
+  $image = reliefweb_meta_get_image_url();
+  $origin = '';
+  $description = '';
+
+  // Get the metatags based on the term bundle.
+  switch ($term->bundle()) {
+    case 'country':
+      $description = t('Humanitarian situation reports, response plans, news, analyses, evaluations, assessments, maps, infographics and more on @name', [
+        '@name' => $term->label(),
+      ]);
+
+      // Image.
+      if (!empty($term->field_iso3->value)) {
+        $image = reliefweb_meta_get_country_location_map_url($term->field_iso3->value);
+      }
+      break;
+
+    case 'disaster':
+      $description = t('Humanitarian situation reports, response plans, news, analyses, evaluations, assessments, maps, infographics and more on @name', [
+        '@name' => $term->label(),
+      ]);
+      break;
+
+    case 'source':
+      $description = t('Humanitarian content from @name', [
+        '@name' => $term->label(),
+      ]);
+
+      // Image.
+      $image = reliefweb_meta_get_entity_image_url($term, 'field_logo', '');
+      break;
+  }
+
+  $metatags = array_filter([
+    'type' => $type,
+    'shortlink' => $shortlink,
+    'title' => $title,
+    'description' => $description,
+    'image' => $image,
+    'origin' => $origin,
+  ]);
+
+  // Cache the metatags permanently until the entity or its dependencies are
+  // changed.
+  $cache->set($cache_id, $metatags, Cache::PERMANENT, $cache_metadata->getCacheTags());
+
+  return $metatags;
+}
+
+/**
+ * Update metatags for the current route with the given data.
+ *
+ * @param array $metatags
+ *   Metatags.
+ * @param array $data
+ *   Associative array with the base metatags (as strings):
+ *   - type: content type, either website (front page), article or blog
+ *   - title: page title
+ *   - description: short text describing the content
+ *   - canonical: canonical url
+ *   - shortlink: short url (ex: non-aliased node url)
+ *   - image: image url (ex: report's front cover)
+ *   - origin: url of the origin of the content (ex: report's origin).
+ */
+function reliefweb_meta_update_metatags(array &$metatags, array $data) {
+  $state = \Drupal::state();
+  $site_name = reliefweb_meta_get_site_name();
+  $canonical_url = $data['canonical'] ?? $metatags['canonical_url'] ?? '';
+
+  // Consolidated metatags list.
+  $twitter_card = 'summary';
+  // Use large images for twitter cards if the image uses the large style.
+  if (!empty($data['image']) && strpos($data['image'], '/large/') > 0) {
+    $twitter_card = 'summary_large_image';
+  }
+
+  $list = [
+    // Base metatags.
+    'title' => !empty($data['title']) ? t('@title | @site_name', [
+      '@title' => $data['title'],
+      '@site_name' => $site_name,
+    ]) : $metatags['title'] ?? '',
+    'description' => $data['description'] ?? '',
+    'canonical_url' => $canonical_url,
+    'shortlink' => $data['shortlink'] ?? '',
+    // Google news.
+    'image_src' => $data['image'] ?? '',
+    'original_source' => $data['origin'] ?? '',
+    // Facebook.
+    'fb_app_id' => $state->get('facebook_app_id', ''),
+    'og_description' => $data['description'] ?? '',
+    'og_image' => $data['image'] ?? '',
+    'og_site_name' => $site_name,
+    'og_title' => $data['title'] ?? $metatags['title'] ?? '',
+    'og_type' => $data['type'] ?? 'article',
+    'og_url' => $canonical_url,
+    // Twitter.
+    'twitter_cards_type' => $twitter_card,
+    'twitter_cards_site' => '@reliefweb',
+  ];
+
+  foreach ($list as $key => $value) {
+    if (!empty($value)) {
+      $metatags[$key] = $value;
+    }
+  }
+}
+
+/**
+ * Get the taxonomy terms for the entity.
+ *
+ * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
+ *   Entity.
+ * @param \Drupal\Core\Cache\CacheableMetadata $cache_metadata
+ *   Cache metadata.
+ *
+ * @return array
+ *   Associative array with the term ids as keys and the names and shortnames
+ *   as values.
+ */
+function reliefweb_meta_get_entity_terms(FieldableEntityInterface $entity, CacheableMetadata $cache_metadata) {
+  $terms = [];
+  foreach ($entity as $field) {
+    if ($field instanceof EntityReferenceFieldItemListInterface && $field->getSetting('target_type') === 'taxonomy_term') {
+      foreach ($field->referencedEntities() as $term) {
+        $shortname = $term->label();
+        if ($term->hasField('field_shortname')) {
+          $shortname = $term->field_shortname->value ?? $shortname;
+        }
+
+        $terms[$term->id()] = [
+          'id' => $term->id(),
+          'name' => $term->label(),
+          'shortname' => $shortname,
+        ];
+
+        $cache_metadata->addCacheTags($term->getCacheTags());
+      }
+    }
+  }
+
+  return $terms;
+}
+
+/**
+ * Get the absolute URL of an image from a field of the given entity.
+ *
+ * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
+ *   Entity.
+ * @param string $field
+ *   Media field of the entity.
+ * @param string $style
+ *   Image style to use for the image URL.
+ *
+ * @return string
+ *   Image URL.
+ */
+function reliefweb_meta_get_entity_image_url(FieldableEntityInterface $entity, $field, $style = 'large') {
+  if (!$entity->hasField($field) || $entity->get($field)->isEmpty()) {
+    return '';
+  }
+
+  $image = MediaHelper::getImage($entity->get($field));
+  if (empty($image['uri'])) {
+    return '';
+  }
+
+  return reliefweb_meta_get_styled_image_url($image['uri'], $style);
+}
+
+/**
+ * Get the styled image URL for the given image URI.
+ *
+ * @param string $uri
+ *   Image URI.
+ * @param string $style
+ *   Image style.
+ *
+ * @return string
+ *   Image URL.
+ */
+function reliefweb_meta_get_styled_image_url($uri, $style = 'large') {
+  if (empty($uri)) {
+    return '';
+  }
+
+  if (!empty($style)) {
+    $image_style = ImageStyle::load('large');
+    if (!empty($image_style)) {
+      return $image_style->buildUrl($uri);
+    }
+  }
+
+  try {
+    return \Drupal::service('file_url_generator')
+      ->generateAbsoluteString($uri);
+  }
+  catch (\Exception $exception) {
+    return '';
+  }
+}
+
+/**
+ * Get the description component for the given term field.
+ *
+ * Return the name of the first term in the field.
+ *
+ * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
+ *   Entity.
+ * @param array $terms
+ *   Entity's terms.
+ * @param string $field
+ *   Term field.
+ * @param string $prefix
+ *   Prefix to prepend to the term name.
+ * @param string $suffix
+ *   Suffix to append to the term name.
+ * @param bool $shortname
+ *   Whether to use the term shortname or the term name.
+ *
+ * @return string
+ *   Term name (with prefix if provided).
+ */
+function reliefweb_meta_description_term(FieldableEntityInterface $entity, array $terms, $field, $prefix = '', $suffix = '', $shortname = FALSE) {
+  $field = 'field_' . $field;
+  if (!$entity->hasField($field) || $entity->get($field)->isEmpty()) {
+    return '';
+  }
+
+  $id = $entity->get($field)->target_id;
+  if (empty($id) || !isset($terms[$id])) {
+    return '';
+  }
+
+  $term = $terms[$id];
+  $name = $term[$shortname ? 'shortname' : 'name'] ?? $term['name'];
+  return !empty($name) ? $prefix . $name . $suffix : '';
+}
+
+/**
+ * Get the description component for the given term fields.
+ *
+ * Return a formatted list of terms like "about term1, term2, term3 and more".
+ *
+ * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
+ *   Entity.
+ * @param array $terms
+ *   Entity's terms.
+ * @param array $fields
+ *   Array with term field as key and number of terms to use as value.
+ * @param string $prefix
+ *   Prefix to the formatted list of terms.
+ * @param string $singular
+ *   More text in case of a single extra term.
+ * @param string $plural
+ *   More text in case of multiple extra terms.
+ *
+ * @return string
+ *   Formatted list of terms.
+ */
+function reliefweb_meta_description_term_list(FieldableEntityInterface $entity, array $terms, array $fields, $prefix = '', $singular = '', $plural = '') {
+  $list = [];
+  $more = 0;
+
+  // Retrieve and sort the terms for each field.
+  foreach ($fields as $field => $count) {
+    $field = 'field_' . $field;
+    if (!$entity->hasField($field) || $entity->get($field)->isEmpty()) {
+      continue;
+    }
+
+    // Retrieve and sort the terms.
+    $names = [];
+    foreach ($entity->get($field) as $item) {
+      if (isset($item->target_id) && !empty($terms[$item->target_id])) {
+        $term = $terms[$item->target_id];
+        // We use the shortname to keep the description short.
+        $names[$term['id']] = $term['shortname'] ?? $term['name'];
+      }
+    }
+    LocalizationHelper::collatedSort($names);
+
+    // Extract the subset of terms to use in the lis.
+    foreach (array_slice($names, 0, $count) as $name) {
+      $list[] = $name;
+    }
+    // Keep track of the number of items non used in the list.
+    $more += count($names) > 2 ? count($names) - 1 : 0;
+  }
+
+  if (!empty($list)) {
+    if ($more > 0 && !empty($singular)) {
+      if (!empty($plural) && $more > 1) {
+        $list[] = strtr($plural, '@count', $more);
+      }
+      else {
+        $list[] = strtr($singular, '@count', $more);
+      }
+    }
+
+    // Format the list of terms in the form "term1, term2, term3 and more".
+    $last = array_pop($list);
+    $text = !empty($list) ? implode(', ', $list) . ' and ' . $last : $last;
+
+    return !empty($prefix) ? ' ' . $prefix . ' ' . $text : ' ' . $text;
+  }
+  return '';
+}
+
+/**
+ * Get the description component for the given date field.
+ *
+ * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
+ *   Entity.
+ * @param string $field
+ *   Date field.
+ * @param string $prefix
+ *   Prefix to prepend to the date.
+ * @param string $suffix
+ *   Suffix to append to the date.
+ *
+ * @return string
+ *   Formatted date (with prefix if provided).
+ */
+function reliefweb_meta_description_date(FieldableEntityInterface $entity, $field, $prefix = '', $suffix = '') {
+  $field = 'field_' . $field;
+  if (!$entity->hasField($field) || $entity->get($field)->isEmpty()) {
+    return '';
+  }
+
+  $date = DateHelper::format($entity->get($field)->value, 'custom', 'j M Y');
+  return !empty($date) ? $prefix . $date . $suffix : '';
+}
+
+/**
+ * Get metadata image for report pages.
+ *
+ * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
+ *   Entity.
+ *
+ * @return string
+ *   Url of the report image.
+ */
+function reliefweb_meta_report_image(FieldableEntityInterface $entity) {
+  // Headline image.
+  $image = reliefweb_meta_get_entity_image_url($entity, 'field_headline_image');
+
+  // Report image.
+  if (empty($image)) {
+    $image = reliefweb_meta_get_entity_image_url($entity, 'field_image');
+  }
+
+  // PDF attachment cover.
+  if (empty($image)) {
+    $preview = $entity->field_file?->first()?->getPreview(FALSE);
+    if (!empty($preview)) {
+      $image = reliefweb_meta_get_styled_image_url($preview->getFileUri());
+    }
+  }
+
+  // Disaster icon.
+  if (empty($image)) {
+    $code = $entity->field_disaster_type?->entity?->field_disaster_type_code?->value;
+    if (!empty($code)) {
+      $image = reliefweb_meta_get_image_url('/disaster-type/' . $code . '.png');
+    }
+  }
+
+  // Default to RW logo for social media.
+  return $image ?: reliefweb_meta_get_image_url();
+}
+
+/**
+ * Get the site name.
+ *
+ * @return string
+ *   Site name.
+ */
+function reliefweb_meta_get_site_name() {
+  return \Drupal::config('system.site')->get('name') ?? 'ReliefWeb';
+}
+
+/**
+ * Get an entity shortlink.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   Entity.
+ *
+ * @return string
+ *   Entity shortlink.
+ */
+function reliefweb_meta_get_entity_shortlink(EntityInterface $entity) {
+  return $entity->toUrl('canonical', [
+    'absolute' => TRUE,
+    'path_processing' => FALSE,
+  ])->toString();
+}
+
+/**
+ * Get the URL of an image.
+ *
+ * @param string $uri
+ *   Image URI. Leave empty to use the default metatag image.
+ * @param bool $relative
+ *   TRUE if the image URI is relative to the reliefweb_meta module.
+ *
+ * @return string
+ *   Default image URL.
+ */
+function reliefweb_meta_get_image_url($uri = '', $relative = TRUE) {
+  if ($relative) {
+    $module_path = \Drupal::service('extension.path.resolver')
+      ->getPath('module', 'reliefweb_meta');
+
+    if (empty($uri)) {
+      $uri = $module_path . '/images/default.png';
+    }
+    else {
+      $uri = $module_path . '/images/' . ltrim($uri, '/');
+    }
+  }
+
+  $path = \Drupal::service('file_system')
+    ->realpath($uri);
+
+  if ($path && file_exists($path)) {
+    return Url::fromUserInput('/' . $uri, [
+      'absolute' => TRUE,
+      'path_processing' => FALSE,
+    ])->toString();
+  }
+
+  return '';
+}
+
+/**
+ * Get the URL of the location map image for the given country ISO3 code.
+ *
+ * @param string $iso3
+ *   Country ISO3 code.
+ *
+ * @return string
+ *   URL of the map image.
+ */
+function reliefweb_meta_get_country_location_map_url($iso3) {
+  $filename = strtolower($iso3) . '_ocha_1000px.png';
+
+  // Get the location map nodes with the file for the country.
+  $nodes = \Drupal::entityTypeManager()
+    ->getStorage('node')
+    ->loadByProperties([
+      'type' => 'report',
+      // Location map.
+      'field_feature.target_id' => 10635,
+      'field_file.file_name' => $filename,
+    ]);
+
+  if (empty($nodes)) {
+    return '';
+  }
+
+  // Get the most recent node. That should be the one with the most recent
+  // location map for the country.
+  krsort($nodes);
+  $node = reset($nodes);
+
+  /** @var \Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile $item */
+  foreach ($node->field_file as $item) {
+    if ($item->getFileName() === $filename && !$item->isPrivate()) {
+      $url = $item->getFileUrl();
+      return !empty($url) ? $url->setOption('absolute', TRUE)->toString() : '';
+    }
+  }
+
+  return '';
+}
+
+/**
+ * Implements hook_page_attachments_alter().
+ */
+function reliefweb_meta_page_attachments_alter(array &$attachments) {
+  foreach ($attachments['#attached']['html_head'] ?? [] as $key => $attachment) {
+    // Remove Drupal generator meta tag.
+    if ($attachment[1] == 'system_meta_generator') {
+      unset($attachments['#attached']['html_head'][$key]);
+    }
+  }
+}

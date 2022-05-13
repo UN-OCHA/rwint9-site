@@ -1,0 +1,6 @@
+services:
+  reliefweb_guidelines.commands:
+    class: \Drupal\reliefweb_guidelines\Commands\ReliefWebGuidelinesCommands
+    arguments: ['@account_switcher', '@config.factory', '@entity_field.manager', '@entity_type.manager', '@file.repository', '@file_system', '@http_client', '@messenger', '@stream_wrapper_manager']
+    tags:
+      - { name: drush.command }

@@ -97,6 +97,11 @@
       '#theme': 'reliefweb_entities_entity_country_slug',
       '#countries': meta.country,
       '#attributes': create_attribute().addClass('rw-entity-country-slug--above'),
+      '#cache': {
+        'tags': [
+          'taxonomy_term_list:country',
+        ],
+      },
     }) }}
 
     {{ title|merge({'#title_attributes': title_attributes.addClass('rw-article__title')}) }}
@@ -134,13 +139,18 @@
         'origin': {
           'type': 'link',
           'label': 'Origin'|t,
-          'value': {
+          'value': meta.origin ? {
             'url': meta.origin,
             'title': 'View original'|t,
             'external': true,
           },
         },
-      }
+      },
+      '#cache': {
+        'tags': [
+          'taxonomy_term_list:source'
+        ],
+      },
     }) }}
   </header>
 
@@ -158,12 +168,15 @@
       }) }}
     {% endif %}
 
-    {# @todo add attachments. #}
+    <div class="rw-report__content">
 
-    {{ content.body.0|render|sanitize_html(false, 2) }}
+      {{ node.getAttachments(content.field_file) }}
 
-    {{ node.getSourceDisclaimers() }}
+      {{ content.body.0|render|sanitize_html(false, 1) }}
 
+      {{ node.getSourceDisclaimers() }}
+
+    </div>
   </div>
 
   <footer class="rw-article__footer">
@@ -233,7 +246,18 @@
           'count': null,
           'sort': 'name',
         },
-      }
+      },
+      '#cache': {
+        'tags': [
+          'taxonomy_term_list:content_format',
+          'taxonomy_term_list:country',
+          'taxonomy_term_list:disaster',
+          'taxonomy_term_list:disaster_type',
+          'taxonomy_term_list:language',
+          'taxonomy_term_list:source',
+          'taxonomy_term_list:theme',
+        ],
+      },
     }) }}
 
     {{ node.getShareLinks() }}

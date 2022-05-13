@@ -85,7 +85,7 @@
 
 <fieldset id="organization">
   <legend>{% trans %}Organization{% endtrans %}</legend>
-  {{ form.field_source }}
+  {{ form.field_source|hide_nested_label(['field_source_new']) }}
 </fieldset>
 
 <fieldset id="location">

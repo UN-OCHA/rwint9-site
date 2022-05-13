@@ -18,13 +18,13 @@ use Drupal\Core\Extension\ThemeHandlerInterface;
 use Drupal\Core\Language\LanguageDefault;
 use Drupal\Core\Link;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\Core\Mail\MailManager;
+use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\PrivateKey;
-use Drupal\Core\Render\Renderer;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Site\Settings;
-use Drupal\Core\State\State;
+use Drupal\Core\State\StateInterface;
 use Drupal\Core\Theme\ThemeInitialization;
-use Drupal\Core\Theme\ThemeManager;
+use Drupal\Core\Theme\ThemeManagerInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_api\Services\ReliefWebApiClient;
 
@@ -71,7 +71,7 @@ class ReliefwebSubscriptionsMailer {
   /**
    * The state store.
    *
-   * @var \Drupal\Core\State\State
+   * @var \Drupal\Core\State\StateInterface
    */
   protected $state;
 
@@ -99,14 +99,14 @@ class ReliefwebSubscriptionsMailer {
   /**
    * Renderer.
    *
-   * @var \Drupal\Core\Render\Renderer
+   * @var \Drupal\Core\Render\RendererInterface
    */
   protected $renderer;
 
   /**
    * Mail manager.
    *
-   * @var \Drupal\Core\Mail\MailManager
+   * @var \Drupal\Core\Mail\MailManagerInterface
    */
   protected $mailManager;
 
@@ -134,7 +134,7 @@ class ReliefwebSubscriptionsMailer {
   /**
    * Theme manager.
    *
-   * @var \Drupal\Core\Theme\ThemeManager
+   * @var \Drupal\Core\Theme\ThemeManagerInterface
    */
   protected $themeManager;
 
@@ -154,16 +154,16 @@ class ReliefwebSubscriptionsMailer {
       EntityFieldManagerInterface $entity_field_manager,
       EntityRepositoryInterface $entity_repository,
       EntityTypeManagerInterface $entity_type_manager,
-      State $state,
+      StateInterface $state,
       TimeInterface $time,
       ReliefWebApiClient $reliefwebApiClient,
       PrivateKey $privateKey,
-      Renderer $renderer,
-      MailManager $mailManager,
+      RendererInterface $renderer,
+      MailManagerInterface $mailManager,
       LanguageDefault $languageDefault,
       LoggerChannelFactoryInterface $loggerFactory,
       ThemeInitialization $themeInitialization,
-      ThemeManager $themeManager,
+      ThemeManagerInterface $themeManager,
       ThemeHandlerInterface $themeHandler
     ) {
     $this->configFactory = $config_factory;
@@ -266,15 +266,12 @@ class ReliefwebSubscriptionsMailer {
    * @usage reliefweb_subscriptions:queue
    *   Queue emails.
    * @validate-module-enabled reliefweb_subscriptions
-   * @option entity_type
-   *   Entity type.
    * @option entity_id
    *   Entity Id.
    * @option last
    *   Timestamp to use as the last time notifications were sent.
    */
   public function queue($sid, array $options = [
-    'entity_type' => '',
     'entity_id' => 0,
     'last' => 0,
   ]) {
@@ -292,20 +289,27 @@ class ReliefwebSubscriptionsMailer {
 
     // Attempt to queue triggered notification.
     if ($subscription['type'] === 'triggered') {
-      $entity_type = $options['entity_type'];
       $entity_id = $options['entity_id'];
 
-      if (empty($entity_type) || empty($entity_id)) {
-        $this->logger->error('Invalid entity type or id');
+      if (empty($entity_id)) {
+        $this->logger->error('Missing entity id');
+        return;
+      }
+      if (!is_numeric($entity_id)) {
+        $this->logger->error('Invalid entity id');
         return;
       }
 
       // Check if the entity exists.
       $entity = $this->entityTypeManager
-        ->getStorage($entity_type)
+        ->getStorage($subscription['entity_type_id'])
         ?->load($entity_id);
       if (empty($entity)) {
         $this->logger->warning('Entity not found, skipping');
+        return;
+      }
+      elseif ($entity->bundle() !== $subscription['bundle']) {
+        $this->logger->error('Entity bundle mismatch');
         return;
       }
 
@@ -1381,6 +1385,8 @@ class ReliefwebSubscriptionsMailer {
     $query->condition('s.sid', $sid, '=');
     $query->innerJoin('users_field_data', 'u', 'u.uid = s.uid');
     $query->fields('u', ['name', 'mail']);
+    $query->innerJoin('user__field_email_confirmed', 'fec', 'fec.entity_id = s.uid');
+    $query->condition('fec.field_email_confirmed_value', 1, '=');
     $result = $query->execute();
     return !empty($result) ? $result->fetchAllAssoc('uid') : [];
   }
@@ -2109,7 +2115,7 @@ class ReliefwebSubscriptionsMailer {
 
     // For a newly created entity, check the current status.
     if ($report->isNew()) {
-      return in_array($status, ['published', 'to_review']);
+      return in_array($status, ['published', 'to-review']);
     }
     // Otherwise compare with the status of the previous revision.
     else {
@@ -2120,15 +2126,15 @@ class ReliefwebSubscriptionsMailer {
 
       // If there is no previous revision, check the current status.
       if ($previous === $report) {
-        return in_array($status, ['published', 'to_review']);
+        return in_array($status, ['published', 'to-review']);
       }
 
       // Queue only if the document was not previously already published to
       // avoid sending multiple times notifications for the document.
       $previous_status = $previous->getModerationStatus();
       return $status !== $previous_status &&
-        in_array($status, ['published', 'to_review']) &&
-        !in_array($previous_status, ['published', 'to_review']);
+        in_array($status, ['published', 'to-review']) &&
+        !in_array($previous_status, ['published', 'to-review']);
     }
 
     return FALSE;

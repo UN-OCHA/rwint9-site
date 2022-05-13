@@ -1,0 +1,23 @@
+uuid: 88c9dd4f-7421-428d-bf5c-c561dc66f0dc
+langcode: en
+status: true
+dependencies:
+  config:
+    - guidelines.guideline_type.guideline_list
+id: guideline.guideline_list.default
+targetEntityType: guideline
+bundle: guideline_list
+mode: default
+content:
+  name:
+    type: string
+    label: hidden
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  content_moderation_control: true
+  langcode: true
+  user_id: true

@@ -14,13 +14,13 @@ bundle: image_announcement
 mode: default
 content:
   field_media_image:
-    label: visually_hidden
-    weight: 0
-    settings:
-      image_style: announcement
-      image_link: ''
-    third_party_settings: {  }
     type: image
+    label: visually_hidden
+    settings:
+      image_link: ''
+      image_style: announcement
+    third_party_settings: {  }
+    weight: 0
     region: content
 hidden:
   created: true

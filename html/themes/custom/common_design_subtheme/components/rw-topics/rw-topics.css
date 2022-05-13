@@ -39,3 +39,17 @@
   min-width: 150px;
   max-width: 320px;
 }
+
+/**
+ * Community topics form.
+ *
+ * This the form to manage the community topic links.
+ *
+ * Scope: .community-topics-form
+ */
+.community-topics-form [data-link-form] {
+  border: 1px solid var(--cd-reliefweb-brand-grey--light);
+}
+.community-topics-form tr[data-dragged] td {
+  background-color: var(--cd-reliefweb-brand-grey--light);
+}

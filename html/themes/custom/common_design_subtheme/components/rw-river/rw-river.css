@@ -1,7 +1,6 @@
 /**
  * Spacing between the sections on a river page.
  *
- * @todo replace with `cd-flow` on the `rw-river-page` parent section?
  */
 .rw-river-page .rw-river-search,
 .rw-river-page .rw-river-letter-navigation-wrapper,
@@ -20,10 +19,12 @@
   .rw-river-page--with-advanced-search .rw-advanced-search {
     float: left;
     width: 300px;
+    margin-bottom: 32px;
   }
   .rw-river-page--with-advanced-search .rw-river--river-list {
     float: right;
     width: calc(100% - 340px);
+    margin-bottom: 32px;
   }
   /* Clear the floating above. */
   .rw-river-page--with-advanced-search #list:after {

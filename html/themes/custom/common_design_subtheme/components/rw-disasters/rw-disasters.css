@@ -269,13 +269,13 @@
   background-color: #b6c8d0;
 }
 .taxonomy-term--disaster--full[data-disaster-status="alert"] .rw-article__header:before {
-  border-color: #eb8705;
-  background-color: #eb8705;
+  border-color: var(--cd-reliefweb-orange--alert);
+  background-color: var(--cd-reliefweb-orange--alert);
 }
 .taxonomy-term--disaster--full[data-disaster-status="current"] .rw-article__header:before,
 .taxonomy-term--disaster--full[data-disaster-status="ongoing"] .rw-article__header:before {
-  border-color: #f65c51;
-  background-color: #f65c51;
+  border-color: var(--cd-reliefweb-brand-red);
+  background-color: var(--cd-reliefweb-brand-red);
 }
 
 /* Reset styles for Disaster Affected Countries Section */

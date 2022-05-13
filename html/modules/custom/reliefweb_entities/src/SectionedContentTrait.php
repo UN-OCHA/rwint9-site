@@ -17,7 +17,7 @@ trait SectionedContentTrait {
   /**
    * Get the section data for the given ReliefWeb API queries.
    *
-   * @see \Drupal\reliefweb_entities\SectionedContentInterfacegetSectionsFromReliefWebApiQueries()
+   * @see \Drupal\reliefweb_entities\SectionedContentInterface::getSectionsFromReliefWebApiQueries()
    */
   public function getSectionsFromReliefWebApiQueries(array $queries) {
     $results = \Drupal::service('reliefweb_api.client')
@@ -45,6 +45,12 @@ trait SectionedContentTrait {
           '#more' => $query['more'] ?? NULL,
           '#title' => $query['title'] ?? NULL,
           '#total' => $result['totalCount'] ?? NULL,
+          '#cache' => [
+            'tags' => [
+              $query['entity_type'] . '_list:' . $query['bundle'],
+              'taxonomy_term_list',
+            ],
+          ],
         ];
       }
     }
@@ -54,7 +60,7 @@ trait SectionedContentTrait {
   /**
    * Consolidate content sections.
    *
-   * @see \Drupal\reliefweb_entities\SectionedContentInterfaceconsolidateSections()
+   * @see \Drupal\reliefweb_entities\SectionedContentInterface::consolidateSections()
    */
   public function consolidateSections(array $contents, array $sections, array $labels = []) {
     $consolidated = [];
@@ -154,7 +160,7 @@ trait SectionedContentTrait {
   /**
    * Get payload for the key content reports.
    *
-   * @see \Drupal\reliefweb_entities\SectionedContentInterfacegetKeyContentApiQuery()
+   * @see \Drupal\reliefweb_entities\SectionedContentInterface::getKeyContentApiQuery()
    */
   public function getKeyContentApiQuery($code = 'PC', $limit = 3) {
     $links = $this->getProfileFieldLinks('field_key_content');
@@ -192,6 +198,7 @@ trait SectionedContentTrait {
     return [
       'resource' => 'reports',
       'bundle' => 'report',
+      'entity_type' => 'node',
       'payload' => $payload,
       // Link to the updates river for the entity.
       'more' => [
@@ -208,7 +215,7 @@ trait SectionedContentTrait {
   /**
    * Get payload for the appeals and response plans.
    *
-   * @see \Drupal\reliefweb_entities\SectionedContentInterfacegetAppealsResponsePlansApiQuery()
+   * @see \Drupal\reliefweb_entities\SectionedContentInterface::getAppealsResponsePlansApiQuery()
    */
   public function getAppealsResponsePlansApiQuery($code = 'PC', $limit = 50) {
     $links = $this->getProfileFieldLinks('field_appeals_response_plans');
@@ -246,6 +253,7 @@ trait SectionedContentTrait {
     return [
       'resource' => 'reports',
       'bundle' => 'report',
+      'entity_type' => 'node',
       'payload' => $payload,
       'exclude' => ['summary', 'format'],
       // Link to the updates river for the entity.
@@ -263,7 +271,7 @@ trait SectionedContentTrait {
   /**
    * Get payload for the most read documents.
    *
-   * @see \Drupal\reliefweb_entities\SectionedContentInterfacegetMostReadApiQuery()
+   * @see \Drupal\reliefweb_entities\SectionedContentInterface::getMostReadApiQuery()
    */
   public function getMostReadApiQuery($code = 'PC', $limit = 5) {
     $entity_id = $this->id();
@@ -285,7 +293,9 @@ trait SectionedContentTrait {
     }
 
     // Close the file.
-    fclose($handle);
+    if (is_resource($handle)) {
+      @fclose($handle);
+    }
 
     // Generate the query with the most read report ids.
     if (!empty($ids)) {
@@ -304,6 +314,7 @@ trait SectionedContentTrait {
       return [
         'resource' => 'reports',
         'bundle' => 'report',
+        'entity_type' => 'node',
         'payload' => $payload,
         // Link to the updates river for the entity.
         'more' => [
@@ -322,7 +333,7 @@ trait SectionedContentTrait {
   /**
    * Get payload for latest updates.
    *
-   * @see \Drupal\reliefweb_entities\SectionedContentInterfacegetLatestUpdatesApiQuery()
+   * @see \Drupal\reliefweb_entities\SectionedContentInterface::getLatestUpdatesApiQuery()
    */
   public function getLatestUpdatesApiQuery($code = 'PC', $limit = 3) {
     $bundle = $this->bundle();
@@ -341,6 +352,7 @@ trait SectionedContentTrait {
     return [
       'resource' => 'reports',
       'bundle' => 'report',
+      'entity_type' => 'node',
       'payload' => $payload,
       // Link to the updates river for the entity.
       'more' => [
@@ -357,7 +369,7 @@ trait SectionedContentTrait {
   /**
    * Get payload for maps and infographics.
    *
-   * @see \Drupal\reliefweb_entities\SectionedContentInterfacegetLatestMapsInfographicsApiQuery()
+   * @see \Drupal\reliefweb_entities\SectionedContentInterface::getLatestMapsInfographicsApiQuery()
    */
   public function getLatestMapsInfographicsApiQuery($code = 'PC', $limit = 3) {
     $bundle = $this->bundle();
@@ -387,6 +399,7 @@ trait SectionedContentTrait {
     return [
       'resource' => 'reports',
       'bundle' => 'report',
+      'entity_type' => 'node',
       'payload' => $payload,
       'exclude' => ['summary', 'format'],
       // Link to the updates river with the maps/infographics for the entity.
@@ -404,7 +417,7 @@ trait SectionedContentTrait {
   /**
    * Get payload for latest jobs.
    *
-   * @see \Drupal\reliefweb_entities\SectionedContentInterfacegetLatestJobsApiQuery()
+   * @see \Drupal\reliefweb_entities\SectionedContentInterface::getLatestJobsApiQuery()
    */
   public function getLatestJobsApiQuery($code = 'C', $limit = 3) {
     $bundle = $this->bundle();
@@ -420,6 +433,7 @@ trait SectionedContentTrait {
     return [
       'resource' => 'jobs',
       'bundle' => 'job',
+      'entity_type' => 'node',
       'payload' => $payload,
       // Link to the jobs river for the entity.
       'more' => [
@@ -436,7 +450,7 @@ trait SectionedContentTrait {
   /**
    * Get payload for latest training.
    *
-   * @see \Drupal\reliefweb_entities\SectionedContentInterfacegetLatestTrainingApiQuery()
+   * @see \Drupal\reliefweb_entities\SectionedContentInterface::getLatestTrainingApiQuery()
    */
   public function getLatestTrainingApiQuery($code = 'C', $limit = 3) {
     $bundle = $this->bundle();
@@ -452,6 +466,7 @@ trait SectionedContentTrait {
     return [
       'resource' => 'training',
       'bundle' => 'training',
+      'entity_type' => 'node',
       'payload' => $payload,
       // Link to the training river for the entity.
       'more' => [
@@ -468,7 +483,7 @@ trait SectionedContentTrait {
   /**
    * Get payload for latest alert and ongoing disasters.
    *
-   * @see \Drupal\reliefweb_entities\SectionedContentInterfacegetLatestDisastersApiQuery()
+   * @see \Drupal\reliefweb_entities\SectionedContentInterface::getLatestDisastersApiQuery()
    */
   public function getLatestDisastersApiQuery($code = 'C', $limit = 100) {
     $bundle = $this->bundle();
@@ -495,6 +510,7 @@ trait SectionedContentTrait {
     return [
       'resource' => 'disasters',
       'bundle' => 'disaster',
+      'entity_type' => 'taxonomy_term',
       'payload' => $payload,
       // Link to the disasters river for the country.
       'more' => [
@@ -511,7 +527,7 @@ trait SectionedContentTrait {
   /**
    * Get the section with the useful links for the entity (country/disaster).
    *
-   * @see \Drupal\reliefweb_entities\SectionedContentInterfacegetUsefulLinksSection()
+   * @see \Drupal\reliefweb_entities\SectionedContentInterface::getUsefulLinksSection()
    */
   public function getUsefulLinksSection() {
     $links = $this->getProfileFieldLinks('field_useful_links');

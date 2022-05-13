@@ -36,6 +36,11 @@ class Node extends FieldableEntityBase {
   /**
    * {@inheritdoc}
    */
+  protected $revisionIdField = 'vid';
+
+  /**
+   * {@inheritdoc}
+   */
   protected $useRevisionId = FALSE;
 
   /**
@@ -57,14 +62,22 @@ class Node extends FieldableEntityBase {
     // Base fields.
     $query->addField('n', 'nid', 'nid');
     $query->addField('n', 'type', 'type');
-    $query->addField('n', 'title', 'title');
     $query->addField('n', 'uid', 'uid');
     $query->addField('n', 'created', 'created');
     $query->addField('n', 'changed', 'changed');
-    $query->addField('n', 'status', 'status');
 
-    // Revision fields.
-    $query->addField('nr', 'vid', 'revision_id');
+    if (!$this->useRevisionId) {
+      $query->addField('n', 'title', 'title');
+      $query->addField('n', 'status', 'status');
+    }
+    else {
+      $query->addField('nr', 'title', 'title');
+      $query->addField('nr', 'status', 'status');
+    }
+
+    // Revision fields. We need to keep the "vid" name instead of "revision_id"
+    // for the revision ID so that we can use the high water mark property.
+    $query->addField('nr', 'vid', 'vid');
     $query->addField('nr', 'log', 'revision_log_message');
     $query->addField('nr', 'uid', 'revision_user');
     $query->addField('nr', 'timestamp', 'revision_created');
@@ -80,8 +93,58 @@ class Node extends FieldableEntityBase {
       $query->range(0, 1000);
       $query->orderBy('n.nid', 'DESC');
     }
+    else {
+      $query->orderBy('nr.vid', 'ASC');
+    }
 
     return $query;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function doPreloadExisting(array $ids) {
+    if (!empty($ids)) {
+      return $this->getDatabaseConnection()
+        ->select('node', 'n')
+        ->fields('n', ['nid'])
+        ->condition('n.nid', $ids, 'IN')
+        ->execute()
+        ?->fetchCol() ?? [];
+    }
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDestinationEntityIds() {
+    $bundle = $this->configuration['bundle'];
+    if ($bundle === 'topics') {
+      $bundle = 'topic';
+    }
+
+    return $this->getDatabaseConnection()
+      ->select('node', 'n')
+      ->fields('n', ['vid', 'nid'])
+      ->condition('n.type', $bundle, '=')
+      ->orderBy('n.nid', 'ASC')
+      ->execute()
+      ?->fetchAllKeyed(0, 1) ?? [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDestinationEntityIdsToDelete(array $ids) {
+    if (!empty($ids)) {
+      return array_diff($ids, $this->select('node', 'n')
+        ->fields('n', ['nid'])
+        ->condition('n.nid', $ids, 'IN')
+        ->execute()
+        ?->fetchCol() ?? []);
+    }
+    return [];
   }
 
   /**
@@ -98,11 +161,12 @@ class Node extends FieldableEntityBase {
       'created' => $this->t('Created timestamp'),
       'changed' => $this->t('Modified timestamp'),
       'status' => $this->t('Publication status'),
-      'revision_id' => $this->t('The node revision ID.'),
+      'vid' => $this->t('The node revision ID.'),
       'revision_log_message' => $this->t('The node revision log message.'),
       'revision_user' => $this->t('The node revision user id.'),
       'revision_created' => $this->t('The node revision creation timestamp.'),
       'revision_default' => $this->t('The node revision default status.'),
+      'moderation_status' => $this->t('The moderation status'),
     ];
     return $fields;
   }

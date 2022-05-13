@@ -16,7 +16,7 @@ source:
       id: 8
       title: Blog
       description: Blog
-      link_uri: internal:/blog
+      link_uri: base:/blog
       external: 0
       weight: 0
     -
@@ -28,23 +28,23 @@ source:
       weight: 1
     -
       id: 10
-      title: About
-      description: About
-      link_uri: internal:/about
+      title: About Us
+      description: About Us
+      link_uri: base:/about
       external: 0
       weight: 2
     -
       id: 11
       title: Terms
       description: Terms
-      link_uri: internal:/terms-conditions
+      link_uri: base:/terms-conditions
       external: 0
       weight: 3
     -
       id: 12
       title: Contact
       description: Contact
-      link_uri: internal:/contact
+      link_uri: base:/contact
       external: 0
       weight: 4
   ids:

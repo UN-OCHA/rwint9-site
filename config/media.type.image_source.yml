@@ -1,0 +1,13 @@
+uuid: 4e99e742-5fca-4b0f-9d89-d542545655aa
+langcode: en
+status: true
+dependencies: {  }
+id: image_source
+label: 'Image - Source'
+description: 'Logo images for sources.'
+source: image
+queue_thumbnail_downloads: false
+new_revision: true
+source_configuration:
+  source_field: field_media_image
+field_map: {  }

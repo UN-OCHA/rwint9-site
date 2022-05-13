@@ -3,10 +3,6 @@
  *
  * This provides basic styling for form elements in the main-content content area.
  */
-/* Todo: remove? */
-form + * {
-  margin-top: 16px;
-}
 form input,
 form label,
 form button,
@@ -16,20 +12,36 @@ form textarea {
   font-size: 16px;
   font-weight: normal;
 }
-form button {
+form button,
+/* Apply styles to field UI buttons
+  with some exceptions (Notably "Save" buttons) */
+form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button {
   margin: 0 12px 0 0;
-  padding: 14px;
+  padding: 12px;
   color: white;
-  border: none;
-  background: #055372;
+  border: 2px solid transparent;
+  outline: none;
+  background: var(--cd-reliefweb-brand-blue--dark);
   font-size: 15px;
   font-weight: bold;
 }
 form button:hover,
 form button:focus,
-form button:active {
+form button:active,
+form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button:hover,
+form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button:focus,
+form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button:active {
   text-decoration: underline;
-  background: #eb1405;
+  background: var(--cd-reliefweb-brand-red--dark);
+}
+form button:focus,
+form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button:focus {
+  text-decoration: underline;
+  border: 2px solid var(--cd-reliefweb-brand-grey--dark);
+}
+form:not('.subscription-form'):not('community-topics-form') .form-item .cd-button {
+  transition: none;
+  border-radius: 0;
 }
 form input[type="text"],
 form input[type="search"],
@@ -40,7 +52,7 @@ form input[type="url"] {
   height: 46px;
   margin: 0;
   padding: 12px;
-  border: 2px solid #e6ecef;
+  border: 2px solid var(--cd-reliefweb-brand-grey--light);
   background: white;
 }
 input[type="text"],
@@ -61,9 +73,9 @@ form textarea {
   margin: 0;
   padding: 12px;
   resize: vertical;
-  border: 2px solid #e6ecef;
+  border: 2px solid var(--cd-reliefweb-brand-grey--light);
   background: white;
-  /* Better readibility similar to paragraphs. */
+  /* Better readability similar to paragraphs. */
   line-height: 1.5;
 }
 form select {
@@ -79,6 +91,7 @@ form label,
 form fieldset fieldset legend {
   display: inline-block;
   margin: 0 0 6px 0;
+  font-size: 16px;
   font-weight: bold;
 }
 form label:first-letter {
@@ -95,14 +108,6 @@ form fieldset legend {
   margin: 0;
   padding: 0;
 }
-/* First level form sections. */
-/* form > div > fieldset,
-form > div.form-item,
-form > fieldset,
-form > section {
-  border-top: 1px solid #e6ecef;
-  padding: 32px 0;
-} */
 form > div > fieldset > legend,
 form > fieldset > legend,
 form > section > h3 {
@@ -177,12 +182,11 @@ form > * .form-wrapper,
 form > * .form-item {
   margin-top: 24px;
 }
-form > * .form-wrapper.form-item:first-child .fieldset-wrapper > h4:first-child,
+form > * .form-wrapper.form-item:first-child .fieldset-wrapper > label:first-child,
 fieldset > legend + .form-wrapper > h4 {
   margin: 0 0 6px;
 }
-form > * .form-wrapper > h4,
-form > * .form-wrapper.form-item:first-child .fieldset-wrapper > h4 {
+form > * .form-wrapper.form-item:first-child .fieldset-wrapper > label {
   margin: 24px 0 6px;
 }
 form .form-actions.form-item {
@@ -201,7 +205,7 @@ form .description {
   padding: 6px 0 0 0;
   font-size: 15px;
   font-style: italic;
-  line-height: 24px;
+  line-height: 1.5;
 }
 form .description a {
   text-decoration: underline;
@@ -210,7 +214,7 @@ form .description a:hover,
 form .description a:active,
 form .description a:focus {
   text-decoration: underline;
-  background: #e6ecef;
+  background: var(--cd-reliefweb-brand-grey--light);
 }
 form .description + div {
   margin-top: 8px;
@@ -219,10 +223,15 @@ form .description ul {
   margin: 0;
   padding: 0 0 0 16px;
 }
-form .form-optional {
+/* "Enhanced" forms flags optional fields instead of required fields. */
+form[data-enhanced] .form-optional {
+  font-family: sans-serif;
   font-size: 16px;
   font-weight: 300;
   font-style: italic;
+}
+form[data-enhanced] .form-required::after {
+  content: none;
 }
 form .form-disabled [data-irrelevant]:after {
   display: block;
@@ -234,17 +243,16 @@ form .form-disabled [data-irrelevant] > div {
   display: none;
 }
 form input[disabled],
-form textarea[disabled],
-form select[disabled] {
-  background: #e6ecef;
-  background: rgba(230, 236, 239, 0.5);
+form textarea[disabled] {
+  background: var(--cd-reliefweb-brand-grey--light);
+  background: var(--cd-reliefweb-grey--disable);
 }
 form input[disabled] + label {
   opacity: 0.6;
 }
 form .notice {
   padding: 32px;
-  background: #e6ecef;
+  background: var(--cd-reliefweb-brand-grey--light);
 }
 form .notice :first-child {
   margin-top: 0;
@@ -254,7 +262,7 @@ form input.error,
 form textarea.error,
 form select.error,
 form fieldset.error > .fieldset-content {
-  outline: 2px solid #f65c51;
+  outline: 2px solid var(--cd-reliefweb-brand-red);
   outline-offset: -2px;
 }
 form fieldset.error .form-radio.error,
@@ -266,26 +274,20 @@ form fieldset > legend + a[href="#edit-actions"],
 form fieldset > legend + a[href="#actions"] {
   position: absolute;
   right: 0;
-  margin-top: 4px;
   text-transform: lowercase;
   font-weight: bold;
   font-variant: small-caps;
 }
 form #actions {
-  /* width: auto; */
-  /* min-width: 100%; */
   padding: 0 12px 12px;
   text-align: center;
-  border: 1px solid #e6ecef;
-  background: #e6ecef;
+  border: 1px solid var(--cd-reliefweb-brand-grey--light);
+  background: var(--cd-reliefweb-brand-grey--light);
   background: rgba(230, 236, 239, 0.4);
 }
 form #actions .cd-button {
   margin-top: 12px;
 }
-/* form fieldset + #actions { */
-/*  border-top: none; */
-/* } */
 form #actions + * {
   border-top: none;
 }
@@ -295,16 +297,7 @@ form button:last-child {
 form div.form-actions {
   width: auto;
   min-width: 100%;
-  /* The negative margins are to compensate the button margins. */
-  /* margin: 8px -8px -8px -8px; */
-  /* margin: 0 -8px; */
 }
-/* form #actions div.form-actions { */
-/*  margin-top: -8px; */
-/* } */
-/* form div.form-actions button { */
-/*  margin: 8px; */
-/* } */
 form .form-item + button,
 form button.form-actions {
   margin-top: 16px;
@@ -337,6 +330,7 @@ form .form-radios .form-type-radio {
  * are often lots of choices and this improves readability. On large screens
  * we display them in 2 or 3 columns.
  */
+form .fieldset-wrapper .form-radios .form-item,
 form fieldset.details .form-checkboxes .form-item,
 form fieldset.details .form-radios .form-item {
   display: block;
@@ -345,10 +339,13 @@ form fieldset.details .form-radios .form-item {
 }
 
 @media screen and (min-width: 768px) {
+  form .fieldset-wrapper .form-radios,
   form fieldset.details .form-checkboxes,
   form fieldset.details .form-radios {
     column-count: 2;
   }
+
+  form .fieldset-wrapper .form-radios .form-item,
   form fieldset.details .form-checkboxes .form-item,
   form fieldset.details .form-radios .form-item {
     display: inline-block;
@@ -357,6 +354,7 @@ form fieldset.details .form-radios .form-item {
 }
 
 @media screen and (min-width: 1024px) {
+  form .fieldset-wrapper .form-radios,
   form fieldset.details .form-checkboxes,
   form fieldset.details .form-radios {
     column-count: 3;
@@ -411,7 +409,7 @@ form #edit-organization .form-type-radio {
 form #edit-organization #edit-field-source-allowed .form-item:last-child {
   margin-top: 8px;
   padding-top: 8px;
-  border-top: 2px dotted #e6ecef;
+  border-top: 2px dotted var(--cd-reliefweb-brand-grey--light);
 }
 
 /* Embargo Date .field--name-field-embargo-date */
@@ -420,18 +418,10 @@ form #edit-organization #edit-field-source-allowed .form-item:last-child {
   margin: 0;
 }
 
-/* Field with text that is not wrapped in description div */
-.field--name-body .text-full,
-.field--name-field-how-to-apply .text-full,
-.field--type-text-long .text-full, /* Generic selector? */
-.field--name-field-how-to-register .text-full {
-  font-size: 15px;
-  font-style: italic;
-  line-height: 24px;
-}
-.field--name-body .text-full,
-.field--type-text-long .text-full {
-  padding-top: 6px;
+/* Term form Disable Notifications checkbox is inside #actions fieldset */
+form > #actions legend + .form-type-checkbox.form-item-notifications-content-disable,
+.form-item-notifications-content-disable + .form-actions {
+  margin: 8px 0 0 0;
 }
 
 /* Text format wrapper */
@@ -439,12 +429,30 @@ form #edit-organization #edit-field-source-allowed .form-item:last-child {
   margin-top: 0;
 }
 .filter-wrapper {
-  border: 1px solid #e6ecef;
+  display: flex;
+  align-items: center;
+  border: 2px solid var(--cd-reliefweb-brand-grey--light);
+  border-top: none;
+  background: var(--cd-reliefweb-brand-grey--light);
 }
-.filter-wrapper .filter-help {
+.filter-wrapper * {
   font-size: 14px;
 }
+.filter-wrapper .filter-help {
+  display: flex;
+  float: none;
+  flex-grow: 1;
+  justify-content: flex-end;
+  order: 1;
+}
+.filter-wrapper .filter-help a:after {
+  top: 2px;
+}
+.filter-wrapper select {
+  padding: 0 4px;
+}
 .filter-wrapper ul {
+  width: 100%;
   margin: 0;
   padding: 0;
   list-style-type: none;
@@ -453,24 +461,18 @@ form #edit-organization #edit-field-source-allowed .form-item:last-child {
 
 form [data-lengthchecker-status] {
   margin-top: -2px;
-  padding: 8px 8px;
-  background-color: rgba(246, 92, 81, 0.2);
+  padding: 8px;
+  background-color: var(--cd-reliefweb-pink);
   font-size: 15px;
   line-height: 1.2;
 }
 form [data-lengthchecker-status="ok"] {
-  background-color: rgba(136, 187, 9, 0.2);
+  background-color: var(--cd-reliefweb-green--bg);
 }
 
 /* New Organisation field for Jobs */
 .node-form fieldset.field-new-source-wrapper {
   margin-top: 24px;
-}
-/* Term forms */
-.taxonomy-term-country-profile-form,
-.taxonomy-term-disaster-profile-form,
-.taxonomy-term-source-user-posting-rights-form {
-  padding-top: 24px;
 }
 
 /**
@@ -493,14 +495,8 @@ form button[data-formatter="pdf"] {
   /* Display the format PDf button in the top right corner above the textarea.
    * The editorial team is used to this position. */
   position: absolute;
-  top: -7px;
+  top: -8px;
   right: 0;
-}
-
-/* Table drag */
-a.tabledrag-handle .handle {
-  width: auto;
-  height: auto;
 }
 /* Show/Hide row weight button */
 .tabledrag-toggle-weight {
@@ -516,6 +512,32 @@ form button[value="edit"] {
   font-size: 14px;
 }
 
-/* details > summary + .cd-form__item { */
-/*  margin-top: 1.5rem; */
-/* } */
+/* Inline error messages. */
+.form-item--error-message,
+.cd-form__error-message {
+  background-color: var(--cd-reliefweb-pink);
+  font-size: 15px;
+}
+
+/* Preview button */
+input[data-drupal-selector="edit-preview"] {
+  background-color: var(--cd-grey--dark);
+}
+input[data-drupal-selector="edit-preview"]:hover,
+input[data-drupal-selector="edit-preview"]:focus {
+  background-color: var(--cd-grey--mid);
+}
+input[data-drupal-selector="edit-preview"]:focus {
+  border: 2px solid var(--cd-black);
+}
+
+/* legends with the required class need some extra rules. */
+legend.form-required::after {
+  display: inline-block;
+  vertical-align: top;
+}
+
+/* Actions on classic forms without a sidebar. */
+form:not(.rw-entity-form-altered) .form-actions.form-item {
+  margin-top: var(--cd-flow-space, 2.5rem);
+}

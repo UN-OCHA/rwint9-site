@@ -2,9 +2,8 @@
 
 namespace Drupal\reliefweb_migrate\Plugin\migrate\source;
 
-use Drupal\migrate\Plugin\migrate\source\SqlBase;
 use Drupal\migrate\Row;
-use Symfony\Component\Uid\Uuid;
+use Drupal\reliefweb_utility\Helpers\LegacyHelper;
 
 /**
  * Retrieve images from the Drupal 7 database.
@@ -13,7 +12,12 @@ use Symfony\Component\Uid\Uuid;
  *   id = "reliefweb_image"
  * )
  */
-class Image extends SqlBase {
+class Image extends EntityBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $idField = 'fid';
 
   /**
    * Directory replacements.
@@ -39,6 +43,7 @@ class Image extends SqlBase {
     'blog_post' => 'images/blog-posts',
     'report' => 'images/reports',
     'topics' => 'images/topics',
+    'source' => 'images/sources',
   ];
 
   /**
@@ -73,6 +78,9 @@ class Image extends SqlBase {
         'node' => [
           'topics',
         ],
+        'taxonomy_term' => [
+          'source',
+        ],
       ],
     ];
 
@@ -105,6 +113,7 @@ class Image extends SqlBase {
     $query->innerJoin('file_usage', 'fu', 'fu.fid = fm.fid');
     $query->condition('fu.count', 0, '>');
 
+    $query->orderBy('fm.fid', 'ASC');
     return $query->distinct();
   }
 
@@ -115,12 +124,8 @@ class Image extends SqlBase {
     // Ex: public://report-images/example.png.
     $uri = $row->getSourceProperty('uri');
 
-    // Replace the public scheme with the actual reliefweb.int base public file
-    // uri so that it's unique.
-    $uuid_uri = str_replace('public://', 'https://reliefweb.int/sites/reliefweb.int/files/', $uri);
-
     // Generate the UUID based on the URI.
-    $uuid = Uuid::v3(Uuid::fromString(Uuid::NAMESPACE_URL), $uuid_uri)->toRfc4122();
+    $uuid = LegacyHelper::generateImageUuid($uri);
 
     // Note: the locale is assumed to be UTF-8.
     $info = pathinfo($uri);
@@ -160,6 +165,48 @@ class Image extends SqlBase {
     $row->setSourceProperty('old_uri', $uri);
 
     return parent::prepareRow($row);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function doPreloadExisting(array $ids) {
+    if (!empty($ids)) {
+      return $this->getDatabaseConnection()
+        ->select('file_managed', 'fm')
+        ->fields('fm', ['fid'])
+        ->condition('fm.fid', $ids, 'IN')
+        ->execute()
+        ?->fetchCol() ?? [];
+    }
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDestinationEntityIds() {
+    return $this->getDatabaseConnection()
+      ->select('file_managed', 'fm')
+      ->fields('fm', ['fid'])
+      ->condition('fm.uri', 'public://images/%', 'LIKE')
+      ->orderBy('fm.fid', 'ASC')
+      ->execute()
+      ?->fetchAllKeyed(0, 0) ?? [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDestinationEntityIdsToDelete(array $ids) {
+    if (!empty($ids)) {
+      return array_diff($ids, $this->select('file_managed', 'fm')
+        ->fields('fm', ['fid'])
+        ->condition('fm.fid', $ids, 'IN')
+        ->execute()
+        ?->fetchCol() ?? []);
+    }
+    return [];
   }
 
   /**

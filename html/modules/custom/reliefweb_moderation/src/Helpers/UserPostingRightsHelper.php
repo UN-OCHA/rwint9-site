@@ -75,7 +75,7 @@ class UserPostingRightsHelper {
     elseif ($rights['unverified'] > 0) {
       return 'unverified';
     }
-    elseif ($rights['trusted'] === count($source_entities)) {
+    elseif (count($source_entities) > 0 && $rights['trusted'] === count($source_entities)) {
       return 'trusted';
     }
     elseif ($rights['allowed'] > 0) {
@@ -110,7 +110,7 @@ class UserPostingRightsHelper {
     }
 
     // Skip the query for the anonymous user.
-    if (!empty($account->uid)) {
+    if (!empty($account->id())) {
       $table = $helper->getFieldTableName('taxonomy_term', 'field_user_posting_rights');
       $id_field = $helper->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'id');
       $job_field = $helper->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'job');

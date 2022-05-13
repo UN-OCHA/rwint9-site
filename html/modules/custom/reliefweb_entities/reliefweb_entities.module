@@ -5,79 +5,34 @@
  * Entity management for ReliefWeb.
  */
 
+use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\reliefweb_entities\BundleEntityInterface;
+use Drupal\reliefweb_entities\BundleEntityStorageInterface;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
+use Drupal\reliefweb_utility\Helpers\ClassHelper;
+use Drupal\reliefweb_utility\Helpers\DateHelper;
+use Drupal\reliefweb_utility\Helpers\MailHelper;
 use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\taxonomy\TermInterface;
 
 /**
- * Get the list of entity bundle classes.
- *
- * @return array
- *   List of entity bundle classes, keyed by entity type id then bundle. Each
- *   item has a class and label attributes.
- */
-function reliefweb_entities_get_entity_bundle_classes() {
-  return [
-    'node' => [
-      'announcement' => [
-        'class' => '\Drupal\reliefweb_entities\Entity\Announcement',
-        'label' => 'Announcement',
-      ],
-      'blog_post' => [
-        'class' => '\Drupal\reliefweb_entities\Entity\BlogPost',
-        'label' => 'Blog Post',
-      ],
-      'book' => [
-        'class' => '\Drupal\reliefweb_entities\Entity\Book',
-        'label' => 'Book',
-      ],
-      'job' => [
-        'class' => '\Drupal\reliefweb_entities\Entity\Job',
-        'label' => 'Job',
-      ],
-      'report' => [
-        'class' => '\Drupal\reliefweb_entities\Entity\Report',
-        'label' => 'Report',
-      ],
-      'topic' => [
-        'class' => '\Drupal\reliefweb_entities\Entity\Topic',
-        'label' => 'Topic',
-      ],
-      'training' => [
-        'class' => '\Drupal\reliefweb_entities\Entity\Training',
-        'label' => 'Training',
-      ],
-    ],
-    'taxonomy_term' => [
-      'country' => [
-        'class' => '\Drupal\reliefweb_entities\Entity\Country',
-        'label' => 'Country',
-      ],
-      'disaster' => [
-        'class' => '\Drupal\reliefweb_entities\Entity\Disaster',
-        'label' => 'Disaster',
-      ],
-      'source' => [
-        'class' => '\Drupal\reliefweb_entities\Entity\Source',
-        'label' => 'Source',
-      ],
-    ],
-  ];
-}
-
-/**
  * Implements hook_entity_bundle_field_info_alter().
  */
 function reliefweb_entities_entity_bundle_field_info_alter(array &$fields, EntityTypeInterface $entity_type, $bundle) {
-  $entity_bundle_classes = reliefweb_entities_get_entity_bundle_classes();
-  if (isset($entity_bundle_classes[$entity_type->id()][$bundle]['class'])) {
-    $class = $entity_bundle_classes[$entity_type->id()][$bundle]['class'];
+  $namespace = '\Drupal\reliefweb_entities\Entity';
+
+  $class = ClassHelper::classExists($namespace, $bundle);
+  if ($class === FALSE) {
+    $class = ClassHelper::classExists($namespace, $entity_type->id() . 'Base');
+  }
+  if ($class !== FALSE && is_subclass_of($class, BundleEntityInterface::class)) {
     $class::addFieldConstraints($fields);
   }
 }
@@ -88,11 +43,42 @@ function reliefweb_entities_entity_bundle_field_info_alter(array &$fields, Entit
  * Add bundle classes to nodes and terms to handle business logic.
  */
 function reliefweb_entities_entity_bundle_info_alter(&$bundles) {
-  foreach (reliefweb_entities_get_entity_bundle_classes() as $entity_type_id => $items) {
+  $namespace = '\Drupal\reliefweb_entities\Entity';
+
+  foreach ($bundles as $entity_type_id => $items) {
     foreach ($items as $bundle => $info) {
-      foreach ($info as $property => $value) {
-        $bundles[$entity_type_id][$bundle][$property] = $value;
+      $class = ClassHelper::classExists($namespace, $bundle);
+      if ($class === FALSE) {
+        $class = ClassHelper::classExists($namespace, $entity_type_id . 'Base');
       }
+      if ($class !== FALSE && is_subclass_of($class, BundleEntityInterface::class)) {
+        $label = ucwords(str_replace(['_', '-'], ' ', $bundle));
+        $bundles[$entity_type_id][$bundle]['class'] = $class;
+        $bundles[$entity_type_id][$bundle]['label'] = $label;
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_type_alter().
+ *
+ * Override content entity storages so we can add post transaction hooks.
+ */
+function reliefweb_entities_entity_type_alter(array &$entity_types) {
+  $namespace = '\Drupal\reliefweb_entities';
+
+  /** @var \Drupal\Core\Entity\EntityTypeInterface $entity_type */
+  foreach ($entity_types as $entity_type_id => $entity_type) {
+    $storage_class = $entity_type->getStorageClass();
+    if (empty($storage_class)) {
+      break;
+    }
+
+    $classname = ClassHelper::toCamelCase($entity_type_id);
+    $class = ClassHelper::classExists($namespace, 'Bundle' . $classname . 'Storage');
+    if ($class !== FALSE && is_subclass_of($class, $storage_class) && is_subclass_of($class, BundleEntityStorageInterface::class)) {
+      $entity_type->setStorageClass($class);
     }
   }
 }
@@ -371,6 +357,52 @@ function reliefweb_entities_form_node_form_alter(array &$form, FormStateInterfac
  */
 function reliefweb_entities_form_taxonomy_term_form_alter(array &$form, FormStateInterface $form_state) {
   EntityFormAlterServiceBase::alterEntityForm($form, $form_state);
+
+  // Empty the revision log message as we always create new revisions.
+  //
+  // @see reliefweb_entities_set_taxonomy_term_revision()
+  if (!empty($form['revision_log_message']['widget'][0]['value']['#default_value'])) {
+    $form['revision_log_message']['widget'][0]['value']['#default_value'] = '';
+  }
+
+  // Force revisions.
+  if (!isset($form['revision'])) {
+    $form['revision'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Create new revision'),
+      '#access' => FALSE,
+    ];
+  }
+  $form['revision']['#default_value'] = TRUE;
+
+  // Add an entity builder callback that will ensure the proper revisio
+  // user id and timestamp are set.
+  $form['#entity_builders'][] = 'reliefweb_entities_term_form_entity_builder';
+}
+
+/**
+ * Form entity builder callback.
+ *
+ * We emulate the logic to set the revision user and timestamp from
+ * \Drupal\Core\Entity\ContentEntityForm::buildEntity() for taxonomy terms
+ * because there is no easy way to have the taxonomy term entity type
+ * `showRevisionUi()` method return TRUE...
+ *
+ * @param string $entity_type_id
+ *   Entity type ID.
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   Term entity.
+ * @param array $form
+ *   The term form.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The form state.
+ */
+function reliefweb_entities_term_form_entity_builder($entity_type_id, EntityInterface $entity, array &$form, FormStateInterface $form_state) {
+  if ($entity instanceof RevisionLogInterface && !$form_state->isValueEmpty('revision')) {
+    // Set the current user as the revision user if a new revision is requested.
+    $entity->setRevisionUserId(\Drupal::currentUser()->id());
+    $entity->setRevisionCreationTime(\Drupal::time()->getRequestTime());
+  }
 }
 
 /**
@@ -391,11 +423,114 @@ function reliefweb_entities_form_alter(array &$form, FormStateInterface $form_st
 }
 
 /**
- * Implements hook_entity_presave().
+ * Implements hook_module_implements_alter().
+ */
+function reliefweb_entities_module_implements_alter(array &$implementation, $hook) {
+  // Remove the hook_entity_presave() implementation from the
+  // taxonomy_term_revision module because it doesn't allow us to speify the
+  // revision user or timestamp. This is replaced by
+  // reliefweb_entities_set_taxonomy_term_revision().
+  //
+  // @see taxonomy_term_revision_entity_presave()
+  // @see reliefweb_entities_set_taxonomy_term_revision()
+  if ($hook === 'entity_presave') {
+    unset($implementation['taxonomy_term_revision']);
+  }
+}
+
+/**
+ * Implements hook_theme_registry_alter().
+ */
+function reliefweb_entities_theme_registry_alter(array &$theme_registry) {
+  // Remove the hook_preprocess_media() implementation from the media_library
+  // because it's not compatible with the inline entity form as it tries to
+  // create a link to the media while it may not yet have an ID (temporary
+  // media entity when creating a new content). This is replaced by
+  // reliefweb_entities_preprocess_media().
+  //
+  // @see media_library_preprocess_media()
+  // @see reliefweb_entities_preprocess_media()
+  foreach ($theme_registry as $theme => $info) {
+    if (isset($info['preprocess functions'])) {
+      foreach ($info['preprocess functions'] as $key => $value) {
+        if ($value === 'media_library_preprocess_media') {
+          unset($theme_registry[$theme]['preprocess functions'][$key]);
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_media().
  *
- * Remove control characters from text fields.
+ * Replacement of media_library_preprocess_media() that is compatible with
+ * inline_entity_form which can create temporary media which don't yet have
+ * an ID and so cannot have a URL.
+ *
+ * @see media_library_preprocess_media()
+ */
+function reliefweb_entities_preprocess_media(array &$variables) {
+  if ($variables['view_mode'] === 'media_library') {
+    /** @var \Drupal\media\MediaInterface $media */
+    $media = $variables['media'];
+    $variables['#cache']['contexts'][] = 'user.permissions';
+    if ($media->id() !== NULL) {
+      $rel = $media->access('edit') ? 'edit-form' : 'canonical';
+      $variables['url'] = $media->toUrl($rel, [
+        'language' => $media->language(),
+      ]);
+    }
+    $variables += [
+      'preview_attributes' => new Attribute(),
+      'metadata_attributes' => new Attribute(),
+    ];
+    $variables['status'] = $media->isPublished();
+  }
+}
+
+/**
+ * Implements hook_entity_presave().
  */
 function reliefweb_entities_entity_presave(EntityInterface $entity) {
+  // Remove control characters from an entity's text fields.
+  reliefweb_entities_clean_text_fields($entity);
+
+  // Set the taxonomy term revision.
+  reliefweb_entities_set_taxonomy_term_revision($entity);
+}
+
+/**
+ * Set a taxonomy term's revision information.
+ *
+ * Note: this replaces the taxonomy_term_revision_entity_presave() which
+ * is not flexible and forces the revision user ID and creation time.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   Entity.
+ *
+ * @see taxonomy_term_revision_entity_presave()
+ */
+function reliefweb_entities_set_taxonomy_term_revision(EntityInterface $entity) {
+  // Saving new revision of term on each save.
+  if ($entity instanceof TermInterface) {
+    $entity->setNewRevision(TRUE);
+    if (is_null($entity->getRevisionUserId())) {
+      $entity->setRevisionUserId(\Drupal::currentUser()->id());
+    }
+    if (empty($entity->getRevisionCreationTime())) {
+      $entity->setRevisionCreationTime(\Drupal::time()->getRequestTime());
+    }
+  }
+}
+
+/**
+ * Remove control characters from an entity's text fields.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   Entity.
+ */
+function reliefweb_entities_clean_text_fields(EntityInterface $entity) {
   $entity_type_id = $entity->getEntityTypeId();
   if ($entity_type_id === 'node' || $entity_type_id === 'taxonomy_term') {
     $field_definitions = \Drupal::service('entity_field.manager')
@@ -430,5 +565,111 @@ function reliefweb_entities_entity_presave(EntityInterface $entity) {
         }
       }
     }
+  }
+}
+
+/**
+ * Implements hook_mail().
+ *
+ * Populate the subject and body of the message sent after publishing a report.
+ */
+function reliefweb_entities_mail($key, array &$message, array $parameters) {
+  if ($key === 'report_publication_notification') {
+    $message['subject'] = $parameters['subject'];
+    $message['body'][] = $parameters['content'];
+    // Plain text only.
+    $message['params']['plaintext'] = MailHelper::getPlainText($message['body']);
+    $message['params']['plain'] = TRUE;
+    // Use the submit mailbox as sender and add it also as CC to track the
+    // notifications.
+    $submit = \Drupal::state()->get('reliefweb_submit_email');
+    if (!empty($submit)) {
+      $message['headers']['From'] = $submit;
+      $message['headers']['CC'] = $submit;
+    }
+  }
+}
+
+/**
+ * Implements hook_cron().
+ *
+ * This performs the following tasks:
+ * - Publish embargoed documents.
+ * - Expire jobs and training.
+ *
+ * At max 20 nodes of each type is processed at once to avoid clogging the cron
+ * process and using excessive resources.
+ */
+function reliefweb_moderation_cron() {
+  $storage = \Drupal::entityTypeManager()->getStorage('node');
+  $cron_settings = \Drupal::config('reliefweb_entities.settings')->get('cron') ?? [];
+
+  // Publish embargoed reports.
+  $embargoed_ids = $storage
+    ->getQuery()
+    ->condition('type', 'report', '=')
+    ->condition('field_embargo_date.value', gmdate("Y-m-d\TH:i:s"), '<')
+    ->range(0, $cron_settings['embargoed_reports_limit'] ?? 20)
+    ->execute();
+
+  if (!empty($embargoed_ids)) {
+    $reports = $storage->loadMultiple($embargoed_ids) ?? [];
+    foreach ($reports as $report) {
+      $timestamp = DateHelper::getDateTimeStamp($report->field_embargo_date->value);
+      $report->setCreatedTime($timestamp);
+      $report->setModerationStatus('published');
+      $report->field_embargo_date->setValue([]);
+      $report->setNewRevision(TRUE);
+      $report->setRevisionUserId(2);
+      $report->setRevisionLogMessage(strtr('Embargoed document automatically published on @date.', [
+        '@date' => DateHelper::format($timestamp, 'custom', 'd M Y H:i e'),
+      ]));
+      $report->save();
+    }
+  }
+
+  // Change status of expired jobs and training.
+  $expired_ids = [];
+  $time = gmmktime(0, 0, 0);
+  $date = gmdate("Y-m-d", $time);
+
+  $expired_ids += $storage
+    ->getQuery()
+    ->condition('type', 'job', '=')
+    ->condition('moderation_status', 'published', '=')
+    ->condition('field_job_closing_date.value', $date, '<')
+    ->range(0, $cron_settings['expired_jobs_limit'] ?? 20)
+    ->execute();
+
+  $expired_ids += $storage
+    ->getQuery()
+    ->condition('type', 'training', '=')
+    ->condition('moderation_status', 'published', '=')
+    ->condition('field_registration_deadline.value', $date, '<')
+    ->range(0, $cron_settings['expired_training_limit'] ?? 20)
+    ->execute();
+
+  if (!empty($expired_ids)) {
+    $nodes = $storage->loadMultiple($expired_ids) ?? [];
+    foreach ($nodes as $node) {
+      $node->setModerationStatus('expired');
+      $node->setNewRevision(TRUE);
+      $node->setRevisionUserId(2);
+      $node->setRevisionLogMessage(strtr('@type automatically expired on @date.', [
+        '@type' => ucfirst($node->bundle()),
+        '@date' => DateHelper::format($time, 'custom', 'd M Y H:i e'),
+      ]));
+      $node->save();
+    }
+  }
+}
+
+/**
+ * Implements hook_menu_local_tasks_alter().
+ */
+function reliefweb_entities_menu_local_tasks_alter(&$data, $route_name, RefinableCacheableDependencyInterface &$cacheability) {
+  // Open the clone entity form in a new tab.
+  if (isset($data['tabs'][0]['content_entity_clone.clone']['#link'])) {
+    $data['tabs'][0]['content_entity_clone.clone']['#link']['localized_options']['attributes']['target'] = '_blank';
   }
 }

@@ -398,7 +398,10 @@
   // Update the datepicker date based on the input value.
   function updateDatepicker(datepicker, value) {
     // Set the selected date from the value in the input field if valid.
-    if (value && value.match(/\d{4}[/-]\d{2}[/-]\d{2}/)) {
+    if (value && value.match(/^\d{4}([/-]\d{2}){0,2}$/)) {
+      value = value.length === 4 ? value + '-01-01' : value;
+      value = value.length === 7 ? value + '-01' : value;
+      value = value.replaceAll('-', '/');
       var date = datepicker.createDate(value + ' UTC');
       if (!date.invalid()) {
         var calendar = datepicker.calendars[0];
@@ -423,6 +426,35 @@
 
     // Fix the position of the datepicker so that it's just after the input.
     parent.insertBefore(datepicker.container, element.nextSibling);
+
+    // Button to cancel or select the date.
+    var cancel = createButton({'data-cancel': ''}, advancedSearch.labels.cancel);
+    var select = createButton({'data-select': ''}, advancedSearch.labels.select);
+    var buttonContainer = createElement('div', {'class': advancedSearch.widgetClassPrefix + 'datepicker-button-container'});
+    buttonContainer.appendChild(cancel);
+    buttonContainer.appendChild(select);
+    datepicker.calendars[0].calendar.appendChild(buttonContainer);
+
+    // Cancel the filter addition, clear the widget and close the dialog.
+    addEventListener(cancel, 'click', function (event) {
+      datepicker.hide().clear();
+      element.focus();
+    });
+
+    // Add a filter, clear the widget and close the dialog.
+    addEventListener(select, 'click', function (event) {
+      var selection = datepicker.getSelection();
+      if (selection.length) {
+        var date = selection[0];
+        element.value = date.format('YYYY/MM/DD');
+        element.setAttribute('data-value', date.format('YYYYMMDD'));
+        element.focus();
+      }
+      else {
+        element.value = '';
+      }
+      datepicker.hide();
+    });
 
     // Update the date of the datepicker based on the value from the input.
     datepicker.on('opened', function (event) {
@@ -456,6 +488,12 @@
         element.focus();
       }
       else {
+        datepicker.show();
+      }
+    });
+    addEventListener(element, 'keyup', function (event) {
+      var key = event.which || event.keyCode;
+      if (key !== KeyCodes.ESC) {
         updateDatepicker(datepicker, element.value);
       }
     });

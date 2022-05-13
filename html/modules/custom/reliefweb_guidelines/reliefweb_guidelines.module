@@ -1,0 +1,190 @@
+<?php
+
+/**
+ * @file
+ * Contains integration for guidelines.
+ */
+
+use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Url;
+use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
+use Drupal\reliefweb_guidelines\Controller\GuidelineSinglePageController;
+use Drupal\reliefweb_guidelines\Entity\Guideline;
+use Drupal\reliefweb_guidelines\Form\GuidelineDeleteForm;
+use Drupal\reliefweb_guidelines\Form\GuidelineForm;
+use Drupal\reliefweb_guidelines\Form\GuidelineSortForm;
+use Drupal\reliefweb_guidelines\ModeratedGuidelineStorageSchema;
+use Drupal\reliefweb_guidelines\Services\GuidelineListModeration;
+use Drupal\reliefweb_revisions\Services\EntityHistory;
+
+/**
+ * Implements hook_theme().
+ */
+function reliefweb_guidelines_theme() {
+  return [
+    'reliefweb_guidelines_list' => [
+      'variables' => [
+        // Wrapper attributes.
+        'attributes' => NULL,
+        // Page title.
+        'title' => t('Guidelines'),
+        // List of guidelines grouped by "parent" with a title and a children
+        // property. The children is an associative array keyed by the guideline
+        // short ID and with a title and description as properties.
+        'guidelines' => [],
+      ],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_entity_bundle_info_alter().
+ *
+ * Add bundle classes to guideline entities to handle business logic.
+ */
+function reliefweb_guidelines_entity_bundle_info_alter(&$bundles) {
+  $bundles['guideline']['field_guideline']['class'] = '\Drupal\reliefweb_guidelines\Entity\Guideline';
+  $bundles['guideline']['field_guideline']['label'] = 'Guideline';
+  $bundles['guideline']['guideline_list']['class'] = '\Drupal\reliefweb_guidelines\Entity\GuidelineList';
+  $bundles['guideline']['guideline_list']['label'] = 'Guideline List';
+}
+
+/**
+ * Implements hook_entity_base_field_info().
+ */
+function reliefweb_guidelines_entity_base_field_info(EntityTypeInterface $entity_type) {
+  $fields = [];
+  if ($entity_type->id() === 'guideline') {
+    $fields['moderation_status'] = reliefweb_moderation_get_moderation_status_field_definition('published');
+  }
+  return $fields;
+}
+
+/**
+ * Implements hook_entity_base_field_info_alter().
+ */
+function reliefweb_guidelines_entity_base_field_info_alter(array &$fields, EntityTypeInterface $entity_type) {
+  if ($entity_type->id() === 'guideline' && isset($fields['parent'])) {
+    // Using "Guideline list" as label is a bit specific but it's ok in our case
+    // because only "normal" guidelines can have a parent and the parent is a
+    // guidele list entity.
+    $fields['parent']->setLabel('Guideline list');
+  }
+}
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function reliefweb_guidelines_entity_type_alter(array &$entity_types) {
+  if (isset($entity_types['guideline'])) {
+    $entity_types['guideline']->setHandlerClass('storage_schema', ModeratedGuidelineStorageSchema::class);
+
+    // Replace the guideline edit/create form handler.
+    $entity_types['guideline']->setFormClass('default', GuidelineForm::class);
+    $entity_types['guideline']->setFormClass('add', GuidelineForm::class);
+    $entity_types['guideline']->setFormClass('edit', GuidelineForm::class);
+
+    // Replace the delete form handler.
+    $entity_types['guideline']->setFormClass('delete', GuidelineDeleteForm::class);
+
+    // Replace the sort form handler.
+    $entity_types['guideline']->setFormClass('sort', GuidelineSortForm::class);
+  }
+}
+
+/**
+ * Implements hook_page_attachments_alter().
+ */
+function reliefweb_guidelines_page_attachments_alter(array &$attachments) {
+  // Remove all the attached Drupal libraries for the /guidelines page as it
+  // has its own distinct styling and behaviour.
+  if (\Drupal::routeMatch()->getRouteName() === 'reliefweb_guidelines.guidelines') {
+    $attachments['#attached']['library'] = [];
+  }
+}
+
+/**
+ * Implements hook_page_top().
+ */
+function reliefweb_guidelines_page_top(array &$page_top) {
+  $page_top['toolbar']['#cache']['contexts'][] = 'route.name';
+  if (\Drupal::routeMatch()->getRouteName() === 'reliefweb_guidelines.guidelines') {
+    $page_top['toolbar']['#access'] = FALSE;
+  }
+}
+
+/**
+ * Implements hook_guideline_json_fields_alter().
+ */
+function reliefweb_guidelines_guideline_json_fields_alter(&$description, $guideline, $context) {
+  // Replace the guideline link to the internal link on the guidelines page.
+  if ($guideline instanceof Guideline) {
+    $description['link'] = '/guidelines#' . $guideline->getShortId();
+  }
+
+  // Replace links to the guidelines.
+  if (!empty($description['content'])) {
+    $description['content'] = GuidelineSinglePageController::replaceLinks($description['content']);
+  }
+}
+
+/**
+ * Implements hook_pathauto_alias_alter().
+ */
+function reliefweb_guidelines_pathauto_alias_alter(&$alias, array &$context) {
+  // Use the row shortid instead of the lowercased one.
+  if ($context['module'] === 'guidelines' && isset($context['data']['guideline'])) {
+    if ($context['data']['guideline'] instanceof Guideline) {
+      $alias = '/guideline/' . $context['data']['guideline']->getShortId();
+    }
+  }
+}
+
+/**
+ * Implements hook_form_HOOK_alter() for "guideline_form".
+ */
+function reliefweb_guidelines_form_guideline_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  // Add the form alterations.
+  EntityFormAlterServiceBase::alterEntityForm($form, $form_state);
+
+  // Add the revisions to the bottom of the form.
+  EntityHistory::addHistoryToForm($form, $form_state);
+}
+
+/**
+ * Implements hook_form_HOOK_alter() for "reliefweb_moderation_page_filter_form".
+ */
+function reliefweb_guidelines_form_reliefweb_moderation_page_filter_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  if (isset($form['#service']) && $form['#service'] instanceof GuidelineListModeration) {
+    $form['actions']['create']['#title'] = t('Create list');
+    $form['actions']['sort'] = [
+      '#type' => 'link',
+      '#url' => Url::fromRoute('reliefweb_guidelines.guideline_list.sort'),
+      '#title' => t('Sort lists'),
+    ];
+  }
+}
+
+/**
+ * Implements hook_menu_local_tasks_alter().
+ */
+function reliefweb_guidelines_menu_local_tasks_alter(&$data, $route_name, RefinableCacheableDependencyInterface &$cacheability) {
+  if ($route_name === 'reliefweb_moderation.content' && isset($data['tabs'][0])) {
+    $tasks = [
+      'reliefweb_moderation.content.field_guideline' => TRUE,
+      'reliefweb_moderation.content.guideline_list' => TRUE,
+    ];
+
+    // Only show the guideline local tasks when on the guideline moderation
+    // pages and remove them on other moderation pages.
+    $service = \Drupal::routeMatch()->getRawParameter('service');
+    if (in_array($service, ['field_guideline', 'guideline_list'])) {
+      $data['tabs'][0] = array_intersect_key($data['tabs'][0], $tasks);
+    }
+    else {
+      $data['tabs'][0] = array_diff_key($data['tabs'][0], $tasks);
+    }
+  }
+}

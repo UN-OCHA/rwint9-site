@@ -4,6 +4,7 @@ namespace Drupal\reliefweb_disaster_map;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Render\Renderer;
 use Drupal\Core\Template\Attribute;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -75,11 +76,13 @@ class DisasterMapService {
    *   - types (array): list of disaster type codes (ex: EP for epidemic)
    *   - ids (array): list of disaster ids
    *   - from (int): to retrieve disasters creatrd after the timestamp.
+   * @param bool $render
+   *   Whether to render the map or return the render array.
    *
-   * @return \Drupal\Component\Render\MarkupInterface|string
-   *   The disaster map rendered HTML.
+   * @return \Drupal\Component\Render\MarkupInterface|string|array
+   *   The disaster map rendered HTML or the render array if $render is FALSE.
    */
-  public function getDisasterMap($id, $title, array $options = []) {
+  public function getDisasterMap($id, $title, array $options = [], $render = TRUE) {
     $id = Html::getUniqueId($id);
 
     $legend = [
@@ -237,28 +240,37 @@ class DisasterMapService {
         ],
       ],
       '#cache' => [
-        'tag' => [
+        'keys' => [
+          'reliefweb',
+          'diaster-map',
+          hash('md5', serialize([$id, $title, $options])),
+        ],
+        'tags' => [
           'taxonomy_term_list:disaster',
         ],
       ],
+      '#cache_properties' => [
+        '#title',
+        '#entities',
+      ],
     ];
 
-    return $this->renderer->render($render_array);
+    // We wrap the rendered map in a Markup to mark it as safe and prevent
+    // double escaping when its retrieved from the cache.
+    return $render ? Markup::create($this->renderer->render($render_array)) : $render_array;
   }
 
   /**
    * Get the map of the latest alert and ongoing diasters.
    *
-   * @return \Drupal\Component\Render\MarkupInterface|string
-   *   The disaster map rendered HTML.
+   * @return array
+   *   The disaster map render array.
    */
   public static function getAlertAndOngoingDisasterMap() {
-    return [
-      '#markup' => \Drupal::service('reliefweb_disaster_map.service')
-        ->getDisasterMap('disaster-map', t('Alert and Ongoing Disasters'), [
-          'statuses' => ['alert', 'ongoing'],
-        ]),
-    ];
+    return \Drupal::service('reliefweb_disaster_map.service')
+      ->getDisasterMap('disaster-map', t('Alert and Ongoing Disasters'), [
+        'statuses' => ['alert', 'ongoing'],
+      ], FALSE);
   }
 
 }

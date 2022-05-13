@@ -55,7 +55,7 @@ class Book extends Node implements BundleEntityInterface, EntityModeratedInterfa
     // Extract the book menu links from the books.
     $links = [];
     foreach ($books as $book) {
-      $data = $book_manager->bookTreeAllData($book['bid'], $book);
+      $data = $book_manager->bookTreeAllData($book['bid']);
       $menu = $book_manager->bookTreeOutput($data);
       $links += $menu['#items'];
     }
@@ -72,9 +72,9 @@ class Book extends Node implements BundleEntityInterface, EntityModeratedInterfa
       '#title' => $this->t('More about ReliefWeb'),
       '#links' => $links,
       '#cache' => [
-        // @todo maybe we need some extra cache info that we could extract
-        // from the trees above.
-        '#tags' => ['node_list:book'],
+        '#tags' => [
+          'node_list:book',
+        ],
       ],
     ];
 

@@ -1,0 +1,10 @@
+type: module
+name: ReliefWeb user posts
+description: 'Provides user posts handling.'
+package: reliefweb
+core_version_requirement: ^9
+dependencies:
+  - drupal:user
+  - drupal:reliefweb_form
+  - drupal:reliefweb_moderation
+  - drupal:reliefweb_utility

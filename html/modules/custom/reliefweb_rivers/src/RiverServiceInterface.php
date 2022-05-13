@@ -192,6 +192,22 @@ interface RiverServiceInterface {
   public function getRiverLinks();
 
   /**
+   * Get the link to the RSS feed for the river.
+   *
+   * @return string
+   *   Link to the RSS feed for the river.
+   */
+  public function getRssLink();
+
+  /**
+   * Get the link to the API search converter.
+   *
+   * @return string
+   *   Link to the search converter.
+   */
+  public function getApiLink();
+
+  /**
    * Get the ReliefWeb API payload for the given river and view.
    *
    * @return array
@@ -200,7 +216,7 @@ interface RiverServiceInterface {
   public function getApiPayload($view = '');
 
   /**
-   * Get the data from the ReliefWeb API for the given payload.
+   * Get the data from the ReliefWeb API.
    *
    * @param int $limit
    *   Number of resources to return.
@@ -238,6 +254,46 @@ interface RiverServiceInterface {
   public function requestApi(array $payload);
 
   /**
+   * Get the RSS content for the river.
+   *
+   * @return array
+   *   Render array.
+   */
+  public function getRssContent();
+
+  /**
+   * Get the data for the RSS feeds from the ReliefWeb API.
+   *
+   * @param int $limit
+   *   Number of resources to return.
+   *
+   * @return array
+   *   List of resource data as returned by ::parseApiDataForRss().
+   */
+  public function getApiDataForRss($limit = 20);
+
+  /**
+   * Get the ReliefWeb API payload for the given river RSS feed and view.
+   *
+   * @return array
+   *   API payload.
+   */
+  public function getApiPayloadForRss($view = '');
+
+  /**
+   * Parse the data from the ReliefWeb API to use in river RSS feeds.
+   *
+   * @param array $data
+   *   Data returned by the ReliefWeb API.
+   * @param string $view
+   *   Current river view.
+   *
+   * @return array
+   *   Parsed data, ready to use in river RSS templates.
+   */
+  public function parseApiDataForRss(array $data, $view = '');
+
+  /**
    * Get the ISO 639-1 language code for the entity.
    *
    * Defaults to English if not defined.
@@ -268,11 +324,13 @@ interface RiverServiceInterface {
    *   Entity bundle associated with the river.
    * @param array $parameters
    *   Query parameters.
+   * @param bool $absolute
+   *   If TRUE, return an absolute URL.
    *
    * @return string
    *   River URL.
    */
-  public static function getRiverUrl($bundle, array $parameters = []);
+  public static function getRiverUrl($bundle, array $parameters = [], $absolute = FALSE);
 
   /**
    * Get the data of the river for given bundle and API data.

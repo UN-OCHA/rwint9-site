@@ -5,6 +5,7 @@ services:
       - { name: event_subscriber }
   reliefweb_entities.entity_access_check:
     class: 'Drupal\reliefweb_entities\Access\EntityAccessCheck'
+    arguments: ['@current_user']
     tags:
       - { name: access_check, applies_to: _reliefweb_entities_entity_access_check }
   # Form alteration services.

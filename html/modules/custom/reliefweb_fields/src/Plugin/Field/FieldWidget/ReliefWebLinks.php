@@ -31,7 +31,8 @@ class ReliefWebLinks extends WidgetBase implements ContainerFactoryPluginInterfa
    * {@inheritdoc}
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
-    return $this->formMultipleElements($items, $form, $form_state);
+    $element['#type'] = 'fieldset';
+    return $element + $this->formMultipleElements($items, $form, $form_state);
   }
 
   /**
@@ -45,7 +46,7 @@ class ReliefWebLinks extends WidgetBase implements ContainerFactoryPluginInterfa
     $parents = $form['#parents'];
 
     // Base of the internal image URLs.
-    $base_image_url = file_create_url('public://styles/thumbnail/public/');
+    $base_image_url = UrlHelper::getAbsoluteFileUri('public://styles/thumbnail/public/');
 
     // Url of the link validation route for the field.
     $validate_url = Url::fromRoute('reliefweb_fields.validate.reliefweb_links', [
@@ -97,50 +98,72 @@ class ReliefWebLinks extends WidgetBase implements ContainerFactoryPluginInterfa
    *   Field state.
    */
   public static function getFieldState(array $parents, $field_name, FormStateInterface &$form_state, array $items = [], array $settings = []) {
-    $initialize = FALSE;
     $field_state = static::getWidgetState($parents, $field_name, $form_state);
 
     if (!isset($field_state['data'])) {
-      $internal = !empty($settings['internal']);
-      $keep_archives = !empty($settings['keep_archives']);
-      $use_cover = !empty($settings['use_cover']);
+      $field_state = static::setFieldState($parents, $field_name, $form_state, $items, $settings);
+    }
 
-      $links = [
-        'active' => [],
-        'archives' => [],
-      ];
+    return $field_state;
+  }
 
-      if (!empty($items)) {
-        // We reverse the links as they are displayed by newer first in the
-        // form while they are stored by oldest first so that the deltas
-        // seldom changes for existing links.
-        foreach (array_reverse($items) as $link) {
-          $active = !empty($link['active']);
-          // Ignore archive links if keep_archives is FALSE. This way changes to
-          // the settings are properly reflected.
-          if (!$active && !$keep_archives) {
-            continue;
-          }
+  /**
+   * Set the field state.
+   *
+   * @param array $parents
+   *   Form element parents.
+   * @param string $field_name
+   *   Field name.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   * @param array $items
+   *   Existing items to initialize the state with.
+   * @param array $settings
+   *   Field instance settings.
+   *
+   * @return array
+   *   Field state.
+   */
+  public static function setFieldState(array $parents, $field_name, FormStateInterface &$form_state, array $items = [], array $settings = []) {
+    $internal = !empty($settings['internal']);
+    $keep_archives = !empty($settings['keep_archives']);
+    $use_cover = !empty($settings['use_cover']);
+    $field_state = static::getWidgetState($parents, $field_name, $form_state);
 
-          $links[$active ? 'active' : 'archives'][] = [
-            'url' => $link['url'],
-            'title' => $link['title'],
-            // Ensure the image is available only when the current settings are:
-            // non internal or use cover is selected. This way changes to the
-            // settings are properly reflected.
-            'image' => (!$internal || $use_cover) && !empty($link['image']) ? $link['image'] : '',
-            'active' => $active ? 1 : 0,
-          ];
+    // Generate the list of links and store the JSON serialized version which
+    // for use by the JS script.
+    $links = [
+      'active' => [],
+      'archives' => [],
+    ];
+
+    if (!empty($items)) {
+      // We reverse the links as they are displayed by newer first in the
+      // form while they are stored by oldest first so that the deltas
+      // seldom change for existing links.
+      foreach (array_reverse($items) as $link) {
+        $active = !empty($link['active']);
+        // Ignore archive links if keep_archives is FALSE. This way changes to
+        // the settings are properly reflected.
+        if (!$active && !$keep_archives) {
+          continue;
         }
+
+        $links[$active ? 'active' : 'archives'][] = [
+          'url' => $link['url'],
+          'title' => $link['title'],
+          // Ensure the image is available only when the current settings are:
+          // non internal or use cover is selected. This way changes to the
+          // settings are properly reflected.
+          'image' => (!$internal || $use_cover) && !empty($link['image']) ? $link['image'] : '',
+          'active' => $active ? 1 : 0,
+        ];
       }
-
-      $field_state['data'] = json_encode($links);
-      $initialize = TRUE;
     }
 
-    if ($initialize) {
-      static::setWidgetState($parents, $field_name, $form_state, $field_state);
-    }
+    $field_state['data'] = json_encode($links);
+
+    static::setWidgetState($parents, $field_name, $form_state, $field_state);
 
     return $field_state;
   }
@@ -149,8 +172,10 @@ class ReliefWebLinks extends WidgetBase implements ContainerFactoryPluginInterfa
    * {@inheritdoc}
    */
   public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
+    $settings = $this->fieldDefinition->getSettings();
+    $parents = $form['#parents'];
     $field_name = $this->fieldDefinition->getName();
-    $field_path = array_merge($form['#parents'], [$field_name, 'data']);
+    $field_path = array_merge($parents, [$field_name, 'data']);
 
     // Get the raw JSON data from the widget.
     $data = NestedArray::getValue($form_state->getUserInput(), $field_path);
@@ -160,7 +185,13 @@ class ReliefWebLinks extends WidgetBase implements ContainerFactoryPluginInterfa
     $links = array_merge($links['active'] ?? [], $links['archives'] ?? []);
 
     // Reverse the links so that the most recent have a higher delta.
-    return array_reverse($links);
+    $links = array_reverse($links);
+
+    // Update the field state so that we modified values are the ones used when
+    // going back from the preview for example.
+    static::setFieldState($parents, $field_name, $form_state, $links, $settings);
+
+    return $links;
   }
 
   /**
@@ -235,7 +266,12 @@ class ReliefWebLinks extends WidgetBase implements ContainerFactoryPluginInterfa
 
       // Only nodes are supported as internal links.
       if (empty($path)) {
-        $invalid = t('Invalid internal URL.');
+        if (preg_match('#^(https?://[^/]+)?/(node/\d+|report/[^/]+)#', $item['url']) === 1) {
+          $invalid = t('Invalid internal URL: the document was not found.');
+        }
+        else {
+          $invalid = t('Invalid internal URL: it must be in the form "/node/123456" or "/reports/xxx" (it can start with https://reliefweb.int).');
+        }
       }
       elseif (strpos($path, '/node/') === 0 && strlen($path) > 6) {
         $nid = intval(substr($path, 6), 10);
@@ -341,7 +377,8 @@ class ReliefWebLinks extends WidgetBase implements ContainerFactoryPluginInterfa
       }
     }
     // Resolve aliases to their corresponding internal path.
-    $path = UrlHelper::getPathFromAlias(urldecode($parts['path']));
+    $path = '/' . ltrim($parts['path'], '/');
+    $path = UrlHelper::getPathFromAlias(urldecode($path));
 
     // Only accept links resolved to a node internal path.
     return preg_match('#^/node/[0-9]+$#', $path) === 1 ? $path : '';
@@ -375,29 +412,15 @@ class ReliefWebLinks extends WidgetBase implements ContainerFactoryPluginInterfa
    *
    * @return string
    *   Source shortname.
-   *
-   * @todo change logic once attachments are migrated.
    */
   public static function getReportPreviewPath($nid) {
-    $payload = [
-      'fields' => [
-        'include' => [
-          'file.preview.url',
-        ],
-      ],
-      'filter' => [
-        'field' => 'id',
-        'value' => (int) $nid,
-      ],
-      'limit' => 1,
-    ];
+    $query = \Drupal::database()->select('node__field_file', 'nf');
+    $query->innerJoin('file_managed', 'fm', 'fm.uuid = nf.field_file_preview_uuid');
+    $query->fields('fm', ['uri']);
+    $query->condition('nf.entity_id', $nid, '=');
+    $query->condition('nf.delta', 0, '=');
 
-    $data = \Drupal::service('reliefweb_api.client')
-      ->request('reports', $payload);
-
-    $url = $data['data']['file'][0]['preview']['url'] ?? '';
-
-    return preg_replace('#https?://[^/]+/sites/[^/]+/files/#', 'public://', $url);
+    return $query->execute()?->fetchField();
   }
 
   /**

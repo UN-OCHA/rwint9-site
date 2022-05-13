@@ -1,0 +1,60 @@
+<?php
+
+namespace Drupal\reliefweb_moderation;
+
+use Drupal\Core\Entity\ContentEntityTypeInterface;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\node\NodeStorageSchema;
+
+/**
+ * Defines the node schema handler.
+ */
+class ModeratedNodeStorageSchema extends NodeStorageSchema {
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getEntitySchema(ContentEntityTypeInterface $entity_type, $reset = FALSE) {
+    $schema = parent::getEntitySchema($entity_type, $reset);
+
+    $tables = [
+      $this->storage->getDataTable(),
+      $this->storage->getRevisionTable(),
+    ];
+
+    foreach ($tables as $table) {
+      if (!empty($table)) {
+        $fields = $schema[$table]['fields'] ?? [];
+        if (isset($fields['type'], $fields['moderation_status'])) {
+          $schema[$table]['indexes'] += [
+            'node__bundle_moderation_status' => [
+              'type',
+              'moderation_status',
+            ],
+          ];
+        }
+      }
+    }
+
+    return $schema;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getSharedTableFieldSchema(FieldStorageDefinitionInterface $storage_definition, $table_name, array $column_mapping) {
+    $schema = parent::getSharedTableFieldSchema($storage_definition, $table_name, $column_mapping);
+    $field_name = $storage_definition->getName();
+
+    switch ($field_name) {
+      case 'moderation_status':
+        $schema['fields']['moderation_status']['type'] = 'varchar_ascii';
+        $schema['fields']['moderation_status']['not null'] = 'TRUE';
+        $this->addSharedTableFieldIndex($storage_definition, $schema, TRUE);
+        break;
+    }
+
+    return $schema;
+  }
+
+}

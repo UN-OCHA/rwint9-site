@@ -56,6 +56,8 @@ class DisasterRiver extends RiverServiceBase {
       $content['#pre_content'] = DisasterMapService::getAlertAndOngoingDisasterMap();
     }
 
+    $content['#cache_properties'][] = '#pre_content';
+
     return $content;
   }
 
@@ -198,6 +200,7 @@ class DisasterRiver extends RiverServiceBase {
 
       // Status.
       $status = $fields['status'] === 'current' ? 'ongoing' : $fields['status'];
+      $status_label = reliefweb_moderation_get_moderation_status_label('disaster', $status);
 
       // Tags (countries, sources etc.).
       $tags = [];
@@ -237,6 +240,7 @@ class DisasterRiver extends RiverServiceBase {
         'type' => $fields['primary_type']['code'] ?? '',
         'title' => $title,
         'status' => $status,
+        'status_label' => $status_label,
         'tags' => $tags,
       ];
 
@@ -257,6 +261,90 @@ class DisasterRiver extends RiverServiceBase {
       // Disaster location (= centroid coordinates of the primary country).
       if (!empty($fields['primary_country']['location'])) {
         $data['location'] = $fields['primary_country']['location'];
+      }
+
+      // Compute the language code for the resource's data.
+      $data['langcode'] = static::getLanguageCode($data);
+
+      $entities[$item['id']] = $data;
+    }
+
+    return $entities;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiPayloadForRss($view = '') {
+    $payload = $this->getApiPayload($view);
+    $payload['fields']['include'][] = 'glide';
+    $payload['fields']['include'][] = 'profile.overview-html';
+    return $payload;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function parseApiDataForRss(array $data, $view = '') {
+    $items = $data['items'] ?? $data['data'] ?? [];
+
+    // Parse the entities retrieved from the API.
+    $entities = [];
+    foreach ($items as $item) {
+      $fields = $item['fields'];
+
+      // Base article data.
+      $data = [
+        'id' => $item['id'],
+        'bundle' => $this->bundle,
+      ];
+
+      // Title.
+      $data['title'] = $fields['name'];
+
+      // Url to the article.
+      if (isset($fields['url_alias'])) {
+        $data['url'] = UrlHelper::stripDangerousProtocols($fields['url_alias']);
+      }
+      else {
+        $data['url'] = UrlHelper::getAliasFromPath('/taxonomy/term/' . $item['id']);
+      }
+
+      // Dates.
+      $data['date'] = static::createDate($fields['date']['created']);
+
+      // Body and how to apply.
+      $data['body'] = $fields['profile']['overview-html'] ?? '';
+
+      // Categories.
+      $categories = [
+        'country' => [
+          $this->t('Affected country'),
+          $this->t('Affected countries'),
+        ],
+        'disaster_type' => [
+          $this->t('Disaster type'),
+          $this->t('Disaster types'),
+        ],
+      ];
+      $inline = ['country' => TRUE];
+      foreach ($categories as $category => $labels) {
+        if (!empty($fields[$category])) {
+          $data['categories'][$category] = [
+            'label' => $labels[count($fields[$category]) > 1 ? 1 : 0],
+            'values' => array_map(function ($term) {
+              return $term['name'];
+            }, $fields[$category]),
+            'inline' => isset($inline[$category]),
+          ];
+        }
+      }
+      if (!empty($fields['glide'])) {
+        $data['categories']['glide'] = [
+          'label' => $this->t('Glide'),
+          'values' => [$fields['glide']],
+          'inline' => TRUE,
+        ];
       }
 
       // Compute the language code for the resource's data.

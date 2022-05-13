@@ -1,0 +1,66 @@
+{#
+
+/**
+ * @file
+ * Template for the reliefweb_file form widget file item.
+ *
+ * Available variables:
+ * - element: the form element.
+ */
+
+#}
+{%
+  set rendered = [
+    'link',
+    'replaced_file',
+    'description',
+    'language',
+    'preview',
+    'preview_page',
+    'preview_rotation',
+    'operations',
+    '_weight',
+  ]
+%}
+{% set attributes = create_attribute(element['#attributes'] ?? {}) %}
+<tr{{ attributes.addClass(['rw-file-widget-item', 'draggable']) }}>
+  <td class="rw-file-widget-item__weight">
+    {{ element._weight }}
+  </td>
+  {% if element.preview_page is empty %}
+  <td class="rw-file-widget-item__information" colspan="2">
+  {% else %}
+  <td class="rw-file-widget-item__information">
+  {% endif %}
+    {{ element.link }}
+    {% if element.replaced_file %}
+    <div class="rw-file-widget-item__information__replaced"><small>
+      {{- 'Replaced: %file'|t({'%file': element.replaced_file|render}) -}}
+    </small></div>
+    {% endif %}
+    {{ element.description }}
+    {{ element.language }}
+    {# Make sure all the element children are rendered. #}
+    {% for key, child in element|without(rendered) if key|first != '#' %}
+      {{ child }}
+    {% endfor %}
+  </td>
+  {% if element.preview_page is not empty %}
+  <td class="rw-file-widget-item__preview">
+    <div class="rw-file-widget-item__preview__content">
+      {% if element.preview %}
+      <div class="rw-file-widget-item__preview__thumbnail">
+        {{ element.preview }}
+      </div>
+      {% endif %}
+      <div class="rw-file-widget-item__preview__options">
+        {{ element.preview_page }}
+        {{ element.preview_rotation }}
+      </div>
+    </div>
+  </td>
+  {% endif %}
+  <td class="rw-file-widget-item__operations">
+    {{ element.operations }}
+  </td>
+</tr>

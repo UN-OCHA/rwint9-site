@@ -1,14 +1,44 @@
 uuid: cc2c5bae-b15b-41c7-ae45-8afb7153c18c
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  config:
+    - filter.format.guideline
+    - taxonomy.vocabulary.career_category
+    - taxonomy.vocabulary.content_format
+    - taxonomy.vocabulary.country
+    - taxonomy.vocabulary.disaster
+    - taxonomy.vocabulary.disaster_type
+    - taxonomy.vocabulary.feature
+    - taxonomy.vocabulary.job_experience
+    - taxonomy.vocabulary.job_type
+    - taxonomy.vocabulary.language
+    - taxonomy.vocabulary.ocha_product
+    - taxonomy.vocabulary.organization_type
+    - taxonomy.vocabulary.source
+    - taxonomy.vocabulary.tag
+    - taxonomy.vocabulary.theme
+    - taxonomy.vocabulary.training_format
+    - taxonomy.vocabulary.training_type
+    - taxonomy.vocabulary.vulnerable_group
+  module:
+    - book
+    - filter
+    - google_tag
+    - guidelines
+    - reliefweb_bookmarks
+    - reliefweb_guidelines
+    - reliefweb_users
+    - taxonomy
+    - taxonomy_term_revision
 id: webmaster
 label: Webmaster
 weight: 4
 is_admin: null
 permissions:
+  - 'access editorial guidelines'
   - 'add content to books'
-  - 'administer book outlines'
+  - 'add guideline entities'
   - 'administer google tag manager'
   - 'create new books'
   - 'create terms in career_category'
@@ -28,6 +58,8 @@ permissions:
   - 'create terms in training_format'
   - 'create terms in training_type'
   - 'create terms in vulnerable_group'
+  - 'delete all guideline revisions'
+  - 'delete guideline entities'
   - 'delete term revision'
   - 'delete terms in career_category'
   - 'delete terms in content_format'
@@ -46,6 +78,7 @@ permissions:
   - 'delete terms in training_format'
   - 'delete terms in training_type'
   - 'delete terms in vulnerable_group'
+  - 'edit guideline entities'
   - 'edit terms in career_category'
   - 'edit terms in content_format'
   - 'edit terms in country'
@@ -63,7 +96,31 @@ permissions:
   - 'edit terms in training_format'
   - 'edit terms in training_type'
   - 'edit terms in vulnerable_group'
+  - 'field_guideline create entities'
+  - 'field_guideline delete any entities'
+  - 'field_guideline delete own entities'
+  - 'field_guideline delete revisions'
+  - 'field_guideline edit any entities'
+  - 'field_guideline edit own entities'
+  - 'field_guideline revert revisions'
+  - 'field_guideline view revisions'
+  - 'guideline_list create entities'
+  - 'guideline_list delete any entities'
+  - 'guideline_list delete own entities'
+  - 'guideline_list delete revisions'
+  - 'guideline_list edit any entities'
+  - 'guideline_list edit own entities'
+  - 'guideline_list revert revisions'
+  - 'guideline_list view revisions'
+  - 'revert all guideline revisions'
   - 'revert term revision'
-  - 'use report transition archived'
+  - 'see other bookmarks'
+  - 'sort all guideline'
+  - 'sort editorial guidelines'
+  - 'use text format guideline'
+  - 'view all guideline revisions'
+  - 'view published guideline entities'
+  - 'view reliefweb admin menu'
   - 'view term revision data'
   - 'view term revision list'
+  - 'view unpublished guideline entities'

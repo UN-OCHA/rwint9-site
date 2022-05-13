@@ -1,0 +1,37 @@
+enabled: true
+local_task_label: 'Make a copy of this advertisement'
+fields:
+  title:
+    id: copy_values
+  body:
+    id: copy_values
+  field_career_categories:
+    id: copy_values
+  field_city:
+    id: copy_values
+  field_cost:
+    id: copy_values
+  field_country:
+    id: copy_values
+  field_fee_information:
+    id: copy_values
+  field_how_to_register:
+    id: copy_values
+  field_language:
+    id: copy_values
+  field_link:
+    id: copy_values
+  field_registration_deadline:
+    id: copy_values
+  field_source:
+    id: copy_values
+  field_theme:
+    id: copy_values
+  field_training_date:
+    id: copy_values
+  field_training_format:
+    id: copy_values
+  field_training_language:
+    id: copy_values
+  field_training_type:
+    id: copy_values

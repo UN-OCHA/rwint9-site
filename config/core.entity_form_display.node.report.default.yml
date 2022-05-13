@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - core.entity_form_mode.media.media_library
     - field.field.node.report.body
     - field.field.node.report.field_bury
     - field.field.node.report.field_content_format
@@ -28,12 +29,12 @@ dependencies:
     - field.field.node.report.field_theme
     - field.field.node.report.field_vulnerable_groups
     - node.type.report
-    - workflows.workflow.report
   module:
-    - content_moderation
+    - allowed_formats
     - datetime
-    - media_library
+    - inline_entity_form
     - path
+    - reliefweb_files
     - reliefweb_fields
     - text
 id: node.report.default
@@ -42,36 +43,41 @@ bundle: report
 mode: default
 content:
   body:
+    type: text_textarea_with_summary
     weight: 2
+    region: content
     settings:
-      rows: 9
+      rows: 20
       summary_rows: 3
       placeholder: ''
       show_summary: false
-    third_party_settings: {  }
-    type: text_textarea_with_summary
-    region: content
+    third_party_settings:
+      allowed_formats:
+        hide_help: '0'
+        hide_guidelines: '1'
   field_bury:
-    weight: 22
+    type: boolean_checkbox
+    weight: 21
+    region: content
     settings:
       display_label: true
     third_party_settings: {  }
-    type: boolean_checkbox
-    region: content
   field_content_format:
-    weight: 15
-    settings:
-      extra_data: {  }
-      sort: label
-    third_party_settings: {  }
     type: reliefweb_entity_reference_select
+    weight: 14
     region: content
+    settings:
+      sort: label
+      extra_data: {  }
+    third_party_settings: {  }
   field_country:
-    weight: 11
+    type: reliefweb_entity_reference_select
+    weight: 10
+    region: content
     settings:
       sort: label
       extra_data:
-        'country:moderation_state': 'country:moderation_state'
+        'country:moderation_status': 'country:moderation_status'
         'country:field_shortname': 'country:field_shortname'
         'country:tid': '0'
         'country:uuid': '0'
@@ -100,14 +106,14 @@ content:
         'country:field_timezone': '0'
         'country:field_useful_links': '0'
     third_party_settings: {  }
-    type: reliefweb_entity_reference_select
-    region: content
   field_disaster:
-    weight: 13
+    type: reliefweb_disaster
+    weight: 12
+    region: content
     settings:
       sort: id
       extra_data:
-        'disaster:moderation_state': 'disaster:moderation_state'
+        'disaster:moderation_status': 'disaster:moderation_status'
         'disaster:field_country': 'disaster:field_country'
         'disaster:field_disaster_type': 'disaster:field_disaster_type'
         'disaster:field_glide': 'disaster:field_glide'
@@ -138,121 +144,140 @@ content:
         'disaster:field_timezone': 0
         'disaster:field_useful_links': 0
     third_party_settings: {  }
-    type: reliefweb_disaster
-    region: content
   field_disaster_type:
-    weight: 14
-    settings:
-      extra_data: {  }
-      sort: label
-    third_party_settings: {  }
     type: reliefweb_entity_reference_select
+    weight: 13
     region: content
-  field_embargo_date:
-    weight: 6
     settings:
+      sort: label
+      extra_data: {  }
+    third_party_settings: {  }
+  field_embargo_date:
+    type: datetime_datelist
+    weight: 5
+    region: content
+    settings:
+      increment: 1
       date_order: YMD
       time_type: '24'
-      increment: 1
     third_party_settings: {  }
-    type: datetime_datelist
-    region: content
   field_feature:
-    weight: 21
+    type: options_buttons
+    weight: 20
+    region: content
     settings: {  }
     third_party_settings: {  }
-    type: options_buttons
-    region: content
   field_file:
-    type: media_library_widget
-    weight: 3
-    settings:
-      media_types: {  }
-    third_party_settings: {  }
+    type: reliefweb_file
+    weight: 24
     region: content
+    settings: {  }
+    third_party_settings: {  }
   field_headline:
-    weight: 17
+    type: boolean_checkbox
+    weight: 16
+    region: content
     settings:
       display_label: true
     third_party_settings: {  }
-    type: boolean_checkbox
-    region: content
   field_headline_image:
-    type: media_library_widget
-    weight: 19
-    settings:
-      media_types: {  }
-    third_party_settings: {  }
+    type: inline_entity_form_complex
+    weight: 18
     region: content
+    settings:
+      form_mode: media_library
+      override_labels: true
+      label_singular: image
+      label_plural: ''
+      allow_new: true
+      allow_existing: false
+      match_operator: CONTAINS
+      allow_duplicate: false
+      collapsible: false
+      collapsed: false
+      revision: false
+    third_party_settings: {  }
   field_headline_summary:
-    weight: 20
+    type: string_textarea
+    weight: 19
+    region: content
     settings:
       rows: 5
       placeholder: ''
     third_party_settings: {  }
-    type: string_textarea
-    region: content
   field_headline_title:
-    weight: 18
+    type: string_textfield
+    weight: 17
+    region: content
     settings:
       size: 60
       placeholder: ''
     third_party_settings: {  }
-    type: string_textfield
-    region: content
   field_image:
-    weight: 4
-    settings:
-      media_types: {  }
-    third_party_settings: {  }
-    type: media_library_widget
+    type: inline_entity_form_complex
+    weight: 3
     region: content
+    settings:
+      form_mode: media_library
+      override_labels: true
+      label_singular: image
+      label_plural: ''
+      allow_new: true
+      allow_existing: false
+      match_operator: CONTAINS
+      allow_duplicate: false
+      collapsible: false
+      collapsed: true
+      revision: false
+    third_party_settings: {  }
   field_language:
+    type: options_buttons
     weight: 0
+    region: content
     settings: {  }
     third_party_settings: {  }
-    type: options_buttons
-    region: content
   field_notify:
-    weight: 23
+    type: string_textarea
+    weight: 22
+    region: content
     settings:
       rows: 3
       placeholder: ''
     third_party_settings: {  }
-    type: string_textarea
-    region: content
   field_ocha_product:
-    weight: 8
+    type: options_buttons
+    weight: 7
+    region: content
     settings: {  }
     third_party_settings: {  }
-    type: options_buttons
-    region: content
   field_origin:
-    weight: 9
+    type: options_buttons
+    weight: 8
+    region: content
     settings: {  }
     third_party_settings: {  }
-    type: options_buttons
-    region: content
   field_origin_notes:
-    weight: 10
+    type: string_textfield
+    weight: 9
+    region: content
     settings:
       size: 60
       placeholder: ''
     third_party_settings: {  }
-    type: string_textfield
-    region: content
   field_original_publication_date:
-    weight: 5
+    type: reliefweb_datetime
+    weight: 4
+    region: content
     settings: {  }
     third_party_settings: {  }
-    type: reliefweb_datetime
-    region: content
   field_primary_country:
-    weight: 12
+    type: reliefweb_entity_reference_select
+    weight: 11
+    region: content
     settings:
       sort: label
       extra_data:
-        'country:moderation_state': 'country:moderation_state'
+        'country:moderation_status': 'country:moderation_status'
         'country:field_shortname': 'country:field_shortname'
         'country:tid': '0'
         'country:uuid': '0'
@@ -281,14 +306,14 @@ content:
         'country:field_timezone': '0'
         'country:field_useful_links': '0'
     third_party_settings: {  }
-    type: reliefweb_entity_reference_select
-    region: content
   field_source:
-    weight: 7
+    type: reliefweb_source
+    weight: 6
+    region: content
     settings:
       sort: label
       extra_data:
-        'source:moderation_state': 'source:moderation_state'
+        'source:moderation_status': 'source:moderation_status'
         'source:field_shortname': 'source:field_shortname'
         'source:tid': 0
         'source:uuid': 0
@@ -325,34 +350,19 @@ content:
         'source:field_spanish_name': 0
         'source:field_user_posting_rights': 0
     third_party_settings: {  }
-    type: reliefweb_source
-    region: content
   field_theme:
-    weight: 16
-    settings:
-      extra_data: {  }
-      sort: label
-    third_party_settings: {  }
     type: reliefweb_entity_reference_select
+    weight: 15
     region: content
-  moderation_state:
-    type: moderation_state_default
-    weight: 100
-    settings: {  }
-    region: content
+    settings:
+      sort: label
+      extra_data: {  }
     third_party_settings: {  }
   path:
     type: path
-    weight: 25
+    weight: 23
     region: content
     settings: {  }
-    third_party_settings: {  }
-  status:
-    type: boolean_checkbox
-    settings:
-      display_label: true
-    weight: 24
-    region: content
     third_party_settings: {  }
   title:
     type: string_textfield
@@ -367,6 +377,7 @@ hidden:
   field_vulnerable_groups: true
   langcode: true
   promote: true
+  status: true
   sticky: true
   uid: true
   url_redirects: true

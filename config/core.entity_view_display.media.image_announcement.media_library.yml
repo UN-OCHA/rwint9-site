@@ -5,27 +5,31 @@ dependencies:
   config:
     - core.entity_view_mode.media.media_library
     - field.field.media.image_announcement.field_media_image
-    - image.style.medium
+    - image.style.announcement
     - media.type.image_announcement
   module:
-    - image
+    - svg_image
 id: media.image_announcement.media_library
 targetEntityType: media
 bundle: image_announcement
 mode: media_library
 content:
-  thumbnail:
+  field_media_image:
     type: image
     label: hidden
     settings:
-      image_style: medium
       image_link: ''
-    weight: 0
+      image_style: announcement
+      svg_attributes:
+        width: null
+        height: null
+      svg_render_as_image: true
     third_party_settings: {  }
+    weight: 0
     region: content
 hidden:
   created: true
-  field_media_image: true
   langcode: true
   name: true
+  thumbnail: true
   uid: true

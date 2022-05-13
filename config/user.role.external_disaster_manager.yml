@@ -1,7 +1,11 @@
 uuid: 5f99a06f-6144-41f4-a5de-b59a801f17d2
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  config:
+    - taxonomy.vocabulary.disaster
+  module:
+    - taxonomy
 id: external_disaster_manager
 label: 'External disaster manager'
 weight: 6
@@ -10,6 +14,3 @@ permissions:
   - 'create terms in disaster'
   - 'delete terms in disaster'
   - 'edit terms in disaster'
-  - 'use disaster transition archive_external'
-  - 'use disaster transition draft'
-  - 'use disaster transition external'

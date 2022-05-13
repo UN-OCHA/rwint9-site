@@ -1,0 +1,6 @@
+# Trello API key.
+trello_key:
+# Trello API token.
+trello_token:
+# Trello Guidelines board id.
+trello_board_id:

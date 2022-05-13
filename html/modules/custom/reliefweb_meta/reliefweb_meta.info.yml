@@ -1,0 +1,5 @@
+type: module
+name: ReliefWeb Meta
+description: 'Handles meta data.'
+package: reliefweb
+core_version_requirement: ^9

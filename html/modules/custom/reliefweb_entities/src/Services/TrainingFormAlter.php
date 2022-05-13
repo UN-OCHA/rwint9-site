@@ -5,6 +5,7 @@ namespace Drupal\reliefweb_entities\Services;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
+use Drupal\reliefweb_entities\Entity\Training;
 use Drupal\reliefweb_form\Helpers\FormHelper;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
@@ -57,11 +58,9 @@ class TrainingFormAlter extends EntityFormAlterServiceBase {
     // - Remove Logistics and Telecommunications (Trello #G3YgNUF6).
     // - Remove Russian (10906) and Arabic (6876) (Collab #4452001).
     // - Remove Other (31996) language option.
-    FormHelper::removeOptions($form, 'field_theme', $this->state->get('reliefweb_remove_themes_training', []));
-    FormHelper::removeOptions($form, 'field_language', [
-      6876, 10906, 31996,
-    ]);
-    FormHelper::removeOptions($form, 'field_training_language', [31996]);
+    FormHelper::removeOptions($form, 'field_theme', Training::getTrainingIrrelevantThemes());
+    FormHelper::removeOptions($form, 'field_language', Training::getTrainingIrrelevantLanguages());
+    FormHelper::removeOptions($form, 'field_training_language', Training::getTrainingIrrelevantTrainingLanguages());
 
     // Re-order the course/event language. Ordering by tid does the trick.
     FormHelper::orderOptionsByValue($form, 'field_training_language');
@@ -83,6 +82,9 @@ class TrainingFormAlter extends EntityFormAlterServiceBase {
 
     // Add a validation callback to handle the altered fields above.
     $form['#validate'][] = [$this, 'validateTrainingEventUrl'];
+
+    // Prevent saving from a blocked source.
+    $form['#validate'][] = [$this, 'validateBlockedSource'];
   }
 
   /**
@@ -109,7 +111,7 @@ class TrainingFormAlter extends EntityFormAlterServiceBase {
     $condition = [
       ':input[name="field_training_format[4606]"]' => ['checked' => TRUE],
     ];
-    $form['field_country']['widget']['#states']['required'] = $condition;
+    $form['field_country']['#states']['required'] = $condition;
 
     // Add a validation callback to add 'World' as country if 'online' is
     // selected and remove other countries and empty the city field if 'on-site'
@@ -182,16 +184,14 @@ class TrainingFormAlter extends EntityFormAlterServiceBase {
       '#attributes' => ['class' => ['form-wrapper']],
     ];
 
-    // Do not mark the date fields as optional.
-    $form['field_training_date']['widget']['#optional'] = FALSE;
-    $form['field_registration_deadline']['widget']['#optional'] = FALSE;
-
-    // Hide the date fields when ongoing is selected.
+    // Hide the date fields and mark them as optional when ongoing is selected.
     $condition = [
       ':input[name="ongoing"]' => ['value' => 'ongoing'],
     ];
     $form['field_registration_deadline']['#states']['invisible'] = $condition;
     $form['field_training_date']['#states']['invisible'] = $condition;
+    $form['field_registration_deadline']['#states']['optional'] = $condition;
+    $form['field_training_date']['#states']['optional'] = $condition;
 
     // Add a validation callback to empty the dates.
     $form['#validate'][] = [$this, 'validateTrainingDateFields'];
@@ -262,9 +262,8 @@ class TrainingFormAlter extends EntityFormAlterServiceBase {
     }
     // Otherwise empty the date fields.
     else {
-      $form_state->setValue(['field_training_date', 0, 'value'], []);
-      $form_state->setValue(['field_training_date', 0, 'end_value'], []);
-      $form_state->setValue(['field_registration_deadline', 0, 'value'], []);
+      $form_state->setValue(['field_training_date'], []);
+      $form_state->setValue(['field_registration_deadline'], []);
     }
   }
 
@@ -277,9 +276,6 @@ class TrainingFormAlter extends EntityFormAlterServiceBase {
    *   Form state.
    */
   protected function alterTrainingFeeInformationField(array &$form, FormStateInterface $form_state) {
-    // Make the fee information mandatory by default.
-    $form['field_fee_information']['widget'][0]['value']['#optional'] = FALSE;
-
     // Hide the fee information if 'free' is selected.
     $condition = [
       ':input[name="field_cost"]' => ['value' => 'fee-based'],

@@ -1,4 +1,4 @@
-uuid: 29b16107-d8cb-422e-981b-99937cf95836
+uuid: 7c2d32a9-1df1-491e-b7ff-66972530dfc2
 langcode: en
 status: true
 dependencies: {  }
@@ -108,6 +108,16 @@ process:
           source: attributes
           index:
             - title
+  field_disaster_type:
+    plugin: sub_process
+    source: field_disaster_type
+    process:
+      target_id: tid
+  field_theme:
+    plugin: sub_process
+    source: field_theme
+    process:
+      target_id: tid
 destination: null
 migration_dependencies:
   required:

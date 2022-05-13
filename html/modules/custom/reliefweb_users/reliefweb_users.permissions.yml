@@ -1,0 +1,10 @@
+view reliefweb admin menu:
+  title: 'View reliefweb admin menu'
+  description: 'Allow users to view the reliefwebadmin menu.'
+
+manage user roles:
+  title: 'Manage user roles'
+  description: 'Allow users to manager user roles on other accounts.'
+
+permission_callbacks:
+  - Drupal\reliefweb_users\UserPermissions::permissions

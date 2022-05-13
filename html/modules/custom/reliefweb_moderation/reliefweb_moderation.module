@@ -5,12 +5,17 @@
  * Theme declaration etc. for the reliefweb_moderation module.
  */
 
-use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
+use Drupal\reliefweb_moderation\ModeratedNodeStorageSchema;
+use Drupal\reliefweb_moderation\ModeratedTermStorageSchema;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
+use Drupal\reliefweb_utility\Helpers\EntityHelper;
 
 /**
  * Implements hook_theme().
@@ -79,24 +84,110 @@ function reliefweb_moderation_theme() {
 }
 
 /**
+ * Implements hook_entity_base_field_info().
+ */
+function reliefweb_moderation_entity_base_field_info(EntityTypeInterface $entity_type) {
+  $fields = [];
+
+  switch ($entity_type->id()) {
+    case 'node':
+      $fields['moderation_status'] = reliefweb_moderation_get_moderation_status_field_definition('draft');
+      break;
+
+    case 'taxonomy_term':
+      $fields['moderation_status'] = reliefweb_moderation_get_moderation_status_field_definition('published');
+      break;
+  }
+
+  return $fields;
+}
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function reliefweb_moderation_entity_type_alter(array &$entity_types) {
+  if (isset($entity_types['node'])) {
+    $entity_types['node']->setHandlerClass('storage_schema', ModeratedNodeStorageSchema::class);
+  }
+  if (isset($entity_types['taxonomy_term'])) {
+    $entity_types['taxonomy_term']->setHandlerClass('storage_schema', ModeratedTermStorageSchema::class);
+  }
+}
+
+/**
+ * Get the moderation status field definition.
+ *
+ * @param string $default_status
+ *   The default moderation status value.
+ *
+ * @return \Drupal\Core\Field\BaseFieldDefinition
+ *   Field definition.
+ */
+function reliefweb_moderation_get_moderation_status_field_definition($default_status = 'draft') {
+  return BaseFieldDefinition::create('string')
+    ->setLabel(t('Moderation Status'))
+    ->setSetting('max_length', 32)
+    ->setRevisionable(TRUE)
+    ->setTranslatable(TRUE)
+    ->setDefaultValue($default_status)
+    ->setDefaultValueCallback('reliefweb_moderation_moderation_status_value_callback');
+}
+
+/**
+ * Moderation status default value callback.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   The entity.
+ * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
+ *   The moderation status field definition for the entity.
+ *
+ * @return string|null
+ *   The moderation status if applicable for the
+ */
+function reliefweb_moderation_moderation_status_value_callback(EntityInterface $entity, FieldDefinitionInterface $field_definition) {
+  if ($entity instanceof EntityModeratedInterface) {
+    return $entity->getDefaultModerationStatus();
+  }
+  return $field_definition->getDefaultValueLiteral();
+}
+
+/**
  * Implements hook_entity_access().
+ *
+ * Drupal's AccessResultNeutral is actually not neutral depending on
+ * the context: route access check ("andIf" -> Neutral = Deny) versus
+ * entity only access check ("orIf" -> Neutral = Neutral). So to
+ * prevent showing a 403 due to us returning an AccessResultNeutral, we
+ * return NULL instead which will make ModuleHandler::invokeAll() ignore
+ * the result.
+ *
+ * @see https://www.drupal.org/project/drupal/issues/2991698
+ * @see \Drupal\Core\Entity\EntityAccessControlHandler::processAccessHookResults()
+ * @see \Drupal\Core\Access\AccessManager\check()
+ * @see \Drupal\Core\Extension\ModuleHandler::invokeAll()
  */
 function reliefweb_moderation_entity_access(EntityInterface $entity, $operation, AccountInterface $account) {
-  $service = ModerationServiceBase::getModerationService($entity->bundle());
-  if (!empty($service)) {
-    return $service->entityAccess($entity, $operation, $account);
+  if ($entity instanceof EntityModeratedInterface) {
+    $service = ModerationServiceBase::getModerationService($entity->bundle());
+    if (!empty($service)) {
+      $access_result = $service->entityAccess($entity, $operation, $account);
+      if (!$access_result->isNeutral()) {
+        return $access_result;
+      }
+    }
   }
-  // No opinion.
-  return AccessResult::neutral();
+  return NULL;
 }
 
 /**
  * Implements hook_entity_presave().
  */
 function reliefweb_moderation_entity_presave(EntityInterface $entity) {
-  $service = ModerationServiceBase::getModerationService($entity->bundle());
-  if (!empty($service)) {
-    $service->entityPresave($entity);
+  if ($entity instanceof EntityModeratedInterface) {
+    $service = ModerationServiceBase::getModerationService($entity->bundle());
+    if (!empty($service)) {
+      $service->entityPresave($entity);
+    }
   }
 }
 
@@ -106,50 +197,82 @@ function reliefweb_moderation_entity_presave(EntityInterface $entity) {
  * Add the moderation information block to entity pages and forms.
  */
 function reliefweb_moderation_preprocess_page(&$variables) {
-  if (!\Drupal::currentUser()->hasPermission('access content moderation features')) {
-    return;
-  }
-
-  $route_match = \Drupal::routeMatch();
-  $entity = $route_match->getParameter('node') ?? $route_match->getParameter('taxonomy_term');
+  $user = \Drupal::currentUser();
 
   // For existing revisionable and moderated entities, add the moderation
   // information at the top of the entity page/form.
-  if (
-      !empty($entity) &&
-      $entity instanceof EntityModeratedInterface &&
-      !$entity->isNew()
-  ) {
-    // Note: when comming back from the preview, the original revision log will
-    // not be available...
+  $entity = EntityHelper::getEntityFromRoute();
+  if (empty($entity) || $entity->isNew() || !($entity instanceof EntityModeratedInterface)) {
+    return;
+  }
+
+  $element = [
+    '#theme' => 'reliefweb_moderation_information',
+    // Display the moderation information before the page title and local
+    // tasks.
+    '#weight' => -100,
+    '#cache' => [
+      '#contexts' => [
+        'user.permissions',
+      ],
+      '#tags' => [
+        $entity->getEntityTypeId() . ':' . $entity->id(),
+      ],
+    ],
+    '#access' => $entity->access('view_moderation_information'),
+  ];
+
+  // Get the moderation status.
+  if ($user->hasPermission('view moderation information status')) {
+    $element['#status'] = [
+      'value' => $entity->getModerationStatus(),
+      'label' => $entity->getModerationStatusLabel(),
+    ];
+  }
+
+  // Get the moderation revision message.
+  //
+  // Note: when comming back from the preview, the original revision log will
+  // not be available...
+  if ($user->hasPermission('view moderation information revision message')) {
     $message = $entity->getOriginalRevisionLogMessage();
     if (!empty($message)) {
-      // Convert the message to markdown to generated links notably.
+      // Convert the message to markdown to generate the links notably.
       // Wrap in a Markup so that the HTML is not escaped when rendered.
       $message = Markup::create(strip_tags(check_markup($message, 'markdown'), '<a><em><strong><br>'));
-    }
 
-    $element = [
-      '#theme' => 'reliefweb_moderation_information',
-      '#status' => [
-        'value' => $entity->getModerationStatus(),
-        'label' => $entity->getModerationStatusLabel(),
-      ],
-      '#message' => [
+      $element['#message'] = [
         'type' => $entity->getOriginalRevisionLogMessageType(),
         'content' => $message,
-        'author' => $entity->getOriginalRevisionUser(),
-      ],
-      // Display the moderation information before the page title and local
-      // tasks.
-      '#weight' => -100,
-      '#cache' => [
-        '#tags' => [
-          $entity->getEntityTypeId() . ':' . $entity->id(),
-        ],
-      ],
-    ];
+      ];
 
-    $variables['page']['content']['moderation-information'] = $element;
+      if ($user->hasPermission('view moderation information revision message author')) {
+        $element['#message']['author'] = $entity->getOriginalRevisionUser();
+      }
+    }
   }
+
+  $variables['page']['content']['moderation-information'] = $element;
+}
+
+/**
+ * Get the moderation status label for the given entity bundle and status.
+ *
+ * @param string $bundle
+ *   Entity bundle.
+ * @param string $status
+ *   Entity moderation status.
+ *
+ * @return string
+ *   The moderation status label.
+ */
+function reliefweb_moderation_get_moderation_status_label($bundle, $status) {
+  $service = ModerationServiceBase::getModerationService($bundle);
+  if (!empty($service)) {
+    $statuses = $service->getStatuses();
+    if (isset($statuses[$status])) {
+      return $statuses[$status];
+    }
+  }
+  return ucfirst($status);
 }

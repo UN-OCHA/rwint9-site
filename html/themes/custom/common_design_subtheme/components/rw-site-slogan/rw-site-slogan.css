@@ -6,22 +6,17 @@
   margin: 0;
   padding: 0;
   /* #2e3436 with 0.7 opacity on white. */
-  color: #6d7172;
-  color: white; /* TEMPORARY - COVID-19 */
+  color: rgba(var(--cd-rgb-reliefweb-brand-grey--dark), 0.7);
   /* #e6ecef with 0.4 opacity on white. */
-  background: #f5f7f9;
-  background: #2e3436; /* TEMPORARY - COVID-19 */
+  background: rgba(var(--cd-rgb-reliefweb-brand-grey--light), 0.4);
   font-size: 16px;
-}
-.cd-header #site-slogan a {
-  color: white; /* TEMPORARY - COVID-19 */
 }
 .cd-header #site-slogan .cd-container {
   display: table;
   text-align: center;
 }
 .cd-header #site-slogan .cd-container > span {
-  /* This is to center vertically the text while staying whithin the defined
+  /* This is to center vertically the text while staying within the defined
    * 50px height. */
   display: table-cell;
   height: 50px;
@@ -60,8 +55,8 @@
   width: 81px;
   height: 20px;
   content: "";
-  background: url(../../img/logos/ocha-logo-sprite.png) 0 -37px no-repeat;
-  background: rgba(0, 0, 0, 0) url(../../img/logos/ocha-logo-sprite.svg) 0 -37px no-repeat;
+  background: url("../../img/logos/ocha-logo-sprite.png") 0 -37px no-repeat;
+  background: rgba(0, 0, 0, 0) url("../../img/logos/ocha-logo-sprite.svg") 0 -37px no-repeat;
 }
 /* Reduce the size so that it looks better when the lines wrap. */
 @media all and (max-width: 767px) {

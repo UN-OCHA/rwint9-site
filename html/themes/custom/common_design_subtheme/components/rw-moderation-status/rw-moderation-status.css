@@ -1,57 +1,57 @@
 [data-moderation-status="draft"] {
-  border-color: #d9d9d9;
-  background-color: rgba(217, 217, 217, 0.2);
+  border-color: var(--cd-reliefweb-grey--light);
+  background-color: var(--cd-reliefweb-grey--light--bg);
 }
-[data-moderation-status="on_hold"],
+[data-moderation-status="on-hold"],
 [data-moderation-status="alert"],
 [data-moderation-status="inactive"] {
-  border-color: #f49e2c;
-  background-color: rgba(244, 158, 44, 0.2);
+  border-color: var(--cd-reliefweb-orange);
+  background-color: var(--cd-reliefweb-orange--bg);
 }
-[data-moderation-status="to_review"],
+[data-moderation-status="to-review"],
 [data-moderation-status="external"] {
-  border-color: #076d96;
-  background-color: rgba(7, 109, 150, 0.2);
+  border-color: var(--cd-reliefweb-blue);
+  background-color: var(--cd-reliefweb-blue--bg);
 }
 [data-moderation-status="published"],
 [data-moderation-status="past"],
 [data-moderation-status="active"],
 [data-moderation-status="normal"] {
-  border-color: #88bb09;
-  background-color: rgba(136, 187, 9, 0.2);
+  border-color: var(--cd-reliefweb-green);
+  background-color: var(--cd-reliefweb-green--bg);
 }
 [data-moderation-status="refused"],
 [data-moderation-status="blocked"],
 [data-moderation-status="current"],
 [data-moderation-status="ongoing"] {
-  border-color: #da190b;
-  background-color: rgba(218, 25, 11, 0.2);
+  border-color: var(--cd-reliefweb-red);
+  background-color: var(--cd-reliefweb-red--bg);
 }
 [data-moderation-status="expired"],
 [data-moderation-status="archive"],
-[data-moderation-status="alert_archive"] {
-  border-color: #9509bb;
-  background-color: rgba(149, 9, 187, 0.2);
+[data-moderation-status="alert-archive"] {
+  border-color: var(--cd-reliefweb-purple);
+  background-color: var(--cd-reliefweb-purple--bg);
 }
-[data-moderation-status="draft_archive"], {
-  border-color: #4b4b4b;
-  background-color: rgba(75, 75, 75, 0.2);
+[data-moderation-status="draft-archive"] {
+  border-color: var(--cd-reliefweb-grey);
+  background-color: var(--cd-reliefweb-grey--bg);
 }
 [data-moderation-status="duplicate"],
-[data-moderation-status="monitoring_archive"] {
-  border-color: #8f5507;
-  background-color: rgba(143, 85, 7, 0.2);
+[data-moderation-status="monitoring-archive"] {
+  border-color: var(--cd-reliefweb-brown);
+  background-color: var(--cd-reliefweb-brown--bg);
 }
 [data-moderation-status="monitoring"],
 [data-moderation-status="reference"] {
-  border-color: #f5cb2f;
-  background: rgba(245, 203, 47, 0.2);
+  border-color: var(--cd-reliefweb-yellow);
+  background: var(--cd-reliefweb-yellow--bg);
 }
 [data-moderation-status="pending"],
 [data-moderation-status="embargoed"],
-[data-moderation-status="external_archive"] {
-  border-color: #56c9f7;
-  background-color: rgba(86, 201, 247, 0.2);
+[data-moderation-status="external-archive"] {
+  border-color: var(--cd-reliefweb-cyan);
+  background-color: var(--cd-reliefweb-cyan--bg);
 }
 
 .rw-moderation-status[data-moderation-status] {

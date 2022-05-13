@@ -1,6 +1,6 @@
 services:
   reliefweb_subscriptions.send_command:
     class: \Drupal\reliefweb_subscriptions\Command\ReliefwebSubscriptionsSendCommand
-    arguments: ['@database', '@reliefweb_subscriptions.mailer']
+    arguments: ['@database', '@http_client', '@reliefweb_subscriptions.mailer', '@state']
     tags:
       - { name: drush.command }

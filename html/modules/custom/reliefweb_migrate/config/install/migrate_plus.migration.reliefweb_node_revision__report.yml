@@ -2,6 +2,7 @@ id: reliefweb_node_revision__report
 label: Migrate ReliefWeb report revisions.
 migration_group: reliefweb_node_revision
 source:
+  plugin: reliefweb_report_revision
   bundle: report
 process:
   # Fields.
@@ -88,9 +89,14 @@ process:
     process:
       target_id: tid
   field_origin:
-    plugin: skip_on_empty
-    method: process
-    source: field_origin/0/value
+    -
+      plugin: skip_on_empty
+      method: process
+      source: field_origin
+    -
+      plugin: sub_process
+      process:
+        value: value
   field_origin_notes:
     plugin: skip_on_empty
     method: process

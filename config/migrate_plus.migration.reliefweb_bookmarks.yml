@@ -1,9 +1,9 @@
-uuid: faa96efa-d630-47e5-9776-211de8246e0d
+uuid: 35b44ea8-7120-4692-b474-d97f97145d03
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: t2o1jqXhMnHbfpAWuBnDcw61QVdsmL9qKHR9HHYb4pk
+  default_config_hash: m6p-WwqWv0PWN96g_PKm8jOAktBTE6vWutUGwmvkKyc
 id: reliefweb_bookmarks
 class: null
 field_plugin_method: null
@@ -12,7 +12,7 @@ migration_tags: null
 migration_group: reliefweb_extra
 label: 'Migrate ReliefWeb bookmarks.'
 source:
-  plugin: table
+  plugin: reliefweb_table
   table_name: reliefweb_bookmarks_favorites
   id_fields:
     entity_type:
@@ -21,12 +21,13 @@ source:
       type: integer
     uid:
       type: integer
+  batch_size: 1000
 process:
   entity_type: entity_type
   entity_id: entity_id
   uid: uid
 destination:
-  plugin: table
+  plugin: reliefweb_table
   table_name: reliefweb_bookmarks
   id_fields:
     entity_type:
@@ -35,4 +36,5 @@ destination:
       type: integer
     uid:
       type: integer
+  batch_size: 1000
 migration_dependencies: null

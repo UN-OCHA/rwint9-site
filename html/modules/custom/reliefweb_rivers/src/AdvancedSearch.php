@@ -231,6 +231,7 @@ class AdvancedSearch {
       'settings' => [
         'labels' => [
           'add' => $this->t('Add'),
+          'select' => $this->t('Select'),
           'apply' => $this->t('Apply filters'),
           'cancel' => $this->t('Cancel'),
           'clear' => $this->t('Clear all'),
@@ -535,7 +536,7 @@ class AdvancedSearch {
 
     // Check if the path is using the alias form and, if so, find the term path.
     if (preg_match('#(country|disaster)/([a-z0-9-]+)#', $path, $matches) === 1) {
-      $path = UrlHelper::getPathFromAlias($path);
+      $path = UrlHelper::getPathFromAlias('/' . $path);
     }
 
     // Validate and extract the id from the path.

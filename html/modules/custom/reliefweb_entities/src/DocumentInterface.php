@@ -47,8 +47,9 @@ interface DocumentInterface {
    *
    * @param string $field
    *   Field name without the `field_` prefix.
-   * @param string $code
-   *   Advanced search code for the field.
+   * @param string|null $code
+   *   Advanced search code for the field. If defined the reference term will
+   *   link to the filtered river otherwise it will link to the term page.
    * @param array $extra_fields
    *   List of additional properties to add to the items. By default, the
    *   shortname if defined is added.
@@ -57,7 +58,7 @@ interface DocumentInterface {
    *   List of meta items for the field with name, url and some additional
    *   properties like shortname.
    */
-  public function getEntityMetaFromField($field, $code, array $extra_fields = ['shortname' => 'shortname']);
+  public function getEntityMetaFromField($field, $code = NULL, array $extra_fields = ['shortname' => 'shortname']);
 
   /**
    * Get the entity ids from a entity reference field.

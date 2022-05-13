@@ -2,33 +2,25 @@
 .rw-page-title {
   margin: 0;
   padding-bottom: 12px;
-  border-bottom: 1px solid #eb1405;
-}
-
-/* @todo move that to the rw-article component? Or change class name? */
-.rw-article__header {
-  width: 100%;
-}
-.rw-article__header--with-icon {
-  position: relative;
-  padding-bottom: 12px;
-  padding-left: 64px;
-  border-bottom: 1px solid #eb1405;
-}
-.rw-article__header--with-icon .rw-page-title {
-  padding-bottom: 0;
-  border-bottom: none;
-}
-.rw-article__header--with-meta {
-  padding-bottom: 12px;
-  border-bottom: 1px solid #eb1405;
-}
-.rw-article__header--with-meta .rw-page-title {
-  padding-bottom: 8px;
-  border-bottom: none;
+  border-bottom: 1px solid var(--cd-reliefweb-brand-red--dark);
 }
 
 .rw-403 .rw-page-title,
 .rw-404 .rw-page-title {
   margin-bottom: 24px;
+}
+
+/* Avoid having a h1.rw-page-title attached to the page content. */
+.rw-page-title + .rw-page-content {
+  margin-top: 24px;
+}
+
+/* Spacing between page title and content on generic forms. */
+.rw-page-title + form:not(.rw-entity-form-altered) {
+  margin-top: 24px;
+}
+
+/* Spacing between page title and table (ex: revisions). */
+.rw-page-title + table {
+  margin-top: 24px;
 }

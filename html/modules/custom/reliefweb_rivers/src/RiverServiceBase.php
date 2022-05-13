@@ -3,13 +3,19 @@
 namespace Drupal\reliefweb_rivers;
 
 use Drupal\Component\Utility\Html;
-use Drupal\Core\Url;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\Core\StringTranslation\TranslationInterface;
-use Drupal\reliefweb_api\Services\ReliefWebApiClient;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Pager\PagerParametersInterface;
+use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\Core\Url;
+use Drupal\reliefweb_api\Services\ReliefWebApiClient;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 /**
@@ -18,6 +24,27 @@ use Symfony\Component\Routing\Exception\RouteNotFoundException;
 abstract class RiverServiceBase implements RiverServiceInterface {
 
   use StringTranslationTrait;
+
+  /**
+   * The config factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
+
+  /**
+   * The current user.
+   *
+   * @var \Drupal\Core\Session\AccountProxyInterface
+   */
+  protected $currentUser;
+
+  /**
+   * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected $languageManager;
 
   /**
    * The pager manager servie.
@@ -39,6 +66,20 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * @var \Drupal\reliefweb_api\Services\ReliefWebApiClient
    */
   protected $apiClient;
+
+  /**
+   * The request stack.
+   *
+   * @var \Symfony\Component\HttpFoundation\RequestStack
+   */
+  protected $requestStack;
+
+  /**
+   * The renderer service.
+   *
+   * @var \Drupal\Core\Render\RendererInterface
+   */
+  protected $renderer;
 
   /**
    * The river name.
@@ -100,19 +141,44 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   /**
    * Constructor.
    *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory.
+   * @param \Drupal\Core\Session\AccountProxyInterface $current_user
+   *   The current user.
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   The language manager.
    * @param \Drupal\Core\Pager\PagerManagerInterface $pager_manager
    *   The pager manager service.
    * @param \Drupal\Core\Pager\PagerParametersInterface $pager_parameters
    *   The pager parameter service.
    * @param \Drupal\reliefweb_api\Services\ReliefWebApiClient $api_client
    *   The ReliefWeb API Client service.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   *   The request stack.
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   *   The renderer service.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The translation manager service.
    */
-  public function __construct(PagerManagerInterface $pager_manager, PagerParametersInterface $pager_parameters, ReliefWebApiClient $api_client, TranslationInterface $string_translation) {
+  public function __construct(
+    ConfigFactoryInterface $config_factory,
+    AccountProxyInterface $current_user,
+    LanguageManagerInterface $language_manager,
+    PagerManagerInterface $pager_manager,
+    PagerParametersInterface $pager_parameters,
+    ReliefWebApiClient $api_client,
+    RequestStack $request_stack,
+    RendererInterface $renderer,
+    TranslationInterface $string_translation
+  ) {
+    $this->configFactory = $config_factory;
+    $this->currentUser = $current_user;
+    $this->languageManager = $language_manager;
     $this->pagerManager = $pager_manager;
     $this->pagerParameters = $pager_parameters;
     $this->apiClient = $api_client;
+    $this->requestStack = $request_stack;
+    $this->renderer = $renderer;
     $this->stringTranslation = $string_translation;
     $this->url = static::getRiverUrl($this->getBundle());
   }
@@ -193,6 +259,24 @@ abstract class RiverServiceBase implements RiverServiceInterface {
       '#advanced_search' => $this->getRiverAdvancedSearch(),
       '#content' => $this->getRiverContent(),
       '#links' => $this->getRiverLinks(),
+      '#cache' => [
+        'keys' => [
+          'reliefweb',
+          'rivers',
+          'page',
+          $river,
+        ],
+      ],
+      '#cache_properties' => [
+        '#river',
+        '#title',
+        '#view',
+        '#views',
+        '#search',
+        '#advanced_search',
+        '#content',
+        '#links',
+      ],
     ];
   }
 
@@ -285,6 +369,11 @@ abstract class RiverServiceBase implements RiverServiceInterface {
     return [
       '#theme' => 'reliefweb_rivers_views',
       '#views' => $views,
+      '#cache' => [
+        '#contexts' => [
+          'url.query_args:view',
+        ],
+      ],
     ];
   }
 
@@ -315,6 +404,11 @@ abstract class RiverServiceBase implements RiverServiceInterface {
         '@river' => $this->getRiver(),
       ]),
       '#query' => $search,
+      '#cache' => [
+        '#contexts' => [
+          'url.query_args:search',
+        ],
+      ],
     ];
   }
 
@@ -337,6 +431,16 @@ abstract class RiverServiceBase implements RiverServiceInterface {
       '#selection' => $advanced_search->getSelection(),
       '#remove' => $advanced_search->getClearUrl(),
       '#settings' => $advanced_search->getSettings(),
+      '#cache' => [
+        '#contexts' => [
+          'url.query_args:advanced-search',
+        ],
+        // The advanced search filters use terms so we need to make sure the
+        // cache is properly invalidated when they change.
+        '#tags' => [
+          'taxonomy_term_list',
+        ],
+      ],
     ];
   }
 
@@ -355,6 +459,12 @@ abstract class RiverServiceBase implements RiverServiceInterface {
       '#entities' => $entities,
       '#pager' => $this->getRiverPager(),
       '#empty' => $this->t('No results found. Please modify your search or filter selection.'),
+      '#cache' => [
+        'tags' => [
+          $this->getEntityTypeId() . '_list:' . $this->getBundle(),
+          'taxonomy_term_list',
+        ],
+      ],
     ];
   }
 
@@ -390,6 +500,8 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * {@inheritdoc}
    */
   public function getRiverPager() {
+    // The renderer will automatically populate the render array for the pager
+    // and notably add the cache elements including 'url.query_args.pagers:0'.
     return [
       '#type' => 'pager',
     ];
@@ -401,8 +513,57 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   public function getRiverLinks() {
     return [
       '#theme' => 'reliefweb_rivers_links',
-      '#links' => [],
+      '#links' => array_filter([
+        'rss' => $this->getRssLink(),
+        'api' => $this->getApiLink(),
+      ]),
+      '#cache' => [
+        '#contexts' => [
+          'url.query_args:advanced-search',
+          'url.query_args:search',
+          'url.query_args:view',
+          'url.query_args.pagers:0',
+        ],
+      ],
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRssLink() {
+    try {
+      return Url::fromRoute('reliefweb_rivers.' . $this->getBundle() . '.rss', [], [
+        'query' => $this->getParameters()->get(),
+        'absolute' => TRUE,
+      ])->toString();
+    }
+    catch (RouteNotFoundException $exception) {
+      return '';
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiLink() {
+    $url = $this->configFactory
+      ->get('reliefweb_rivers.settings')
+      ->get('search_converter_url');
+
+    if (empty($url)) {
+      return '';
+    }
+
+    $parameters = $this->getParameters()->get();
+    $search_url = static::getRiverUrl($this->getBundle(), $parameters, TRUE);
+
+    return Url::fromUri($url, [
+      'query' => [
+        'appname' => 'rwint-user-' . $this->currentUser->id(),
+        'search-url' => $search_url,
+      ],
+    ]);
   }
 
   /**
@@ -477,6 +638,123 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getRssContent() {
+    $river = Html::getId($this->getRiver());
+    $request = $this->requestStack->getCurrentRequest();
+    $items = $this->getApiDataForRss();
+    $first = reset($items);
+    $date = $first['date'] ?? static::createDate(time());
+
+    $content = [
+      '#theme' => 'reliefweb_rivers_rss__' . $river,
+      '#site_url' => $request->getSchemeAndHttpHost(),
+      '#title' => $this->getPageTitle(),
+      '#feed_url' => $request->getUri(),
+      '#language' => $this->languageManager->getCurrentLanguage()->getId(),
+      '#date' => $date,
+      '#items' => $items,
+      '#cache' => [
+        'keys' => [
+          'reliefweb',
+          'rivers',
+          'rss',
+          $river,
+        ],
+        'contexts' => [
+          'url.query_args:advanced-search',
+          'url.query_args:search',
+          'url.query_args:view',
+          'url.query_args.pagers:0',
+        ],
+        'tags' => [
+          $this->getEntityTypeId() . '_list:' . $this->getBundle(),
+          'taxonomy_term_list',
+        ],
+      ],
+      '#cache_properties' => [
+        '#site_url',
+        '#title',
+        '#feed_url',
+        '#language',
+        '#date',
+        '#items',
+      ],
+    ];
+
+    $headers = [
+      'Content-Type' => 'application/rss+xml; charset=utf-8',
+      'Cache-Control' => 'private',
+    ];
+
+    return new Response($this->renderer->render($content), 200, $headers);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiDataForRss($limit = 20) {
+    $view = $this->getSelectedView();
+
+    $payload = $this->getApiPayloadForRss($view);
+    $payload['limit'] = $limit;
+
+    // Full text search.
+    // @todo add the filtering from the advanced search.
+    $search = $this->getSearch();
+    if (!empty($search)) {
+      $payload['query']['value'] = $search;
+    }
+    else {
+      unset($payload['query']);
+    }
+
+    // Generate the API filter with the facet and advanced search filters.
+    $filter = $this->getAdvancedSearch()->getApiFilter();
+    if (!empty($filter)) {
+      // Update the payload filter.
+      if (!empty($payload['filter'])) {
+        $payload['filter'] = [
+          'conditions' => [
+            $payload['filter'],
+            $filter,
+          ],
+          'operator' => 'AND',
+        ];
+      }
+      else {
+        $payload['filter'] = $filter;
+      }
+    }
+
+    // Retrieve the API data.
+    $data = $this->requestApi($payload);
+
+    // Skip if there is no data.
+    if (empty($data)) {
+      return [];
+    }
+
+    // Parse the API data and return the entities.
+    return $this->parseApiDataForRss($data, $view);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiPayloadForRss($view = '') {
+    return $this->getApiPayload($view);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function parseApiDataForRss(array $data, $view = '') {
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function getLanguageCode(array &$data = NULL) {
     if (isset($data['langcode'])) {
       $langcode = $data['langcode'];
@@ -510,10 +788,11 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getRiverUrl($bundle, array $parameters = []) {
+  public static function getRiverUrl($bundle, array $parameters = [], $absolute = FALSE) {
     try {
       return Url::fromRoute('reliefweb_rivers.' . $bundle . '.river', [], [
         'query' => $parameters,
+        'absolute' => $absolute,
       ])->toString();
     }
     catch (RouteNotFoundException $exception) {

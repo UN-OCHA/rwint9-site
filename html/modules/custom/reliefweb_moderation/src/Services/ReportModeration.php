@@ -130,7 +130,7 @@ class ReportModeration extends ModerationServiceBase {
       // Details.
       $details = [];
       // Content format.
-      $datails['format'] = [];
+      $details['format'] = [];
       foreach ($entity->field_content_format as $item) {
         if (!empty($item->entity)) {
           $item_title = $item->entity->label();
@@ -199,8 +199,8 @@ class ReportModeration extends ModerationServiceBase {
   public function getStatuses() {
     return [
       'draft' => $this->t('Draft'),
-      'on_hold' => $this->t('On-hold'),
-      'to_review' => $this->t('To review'),
+      'on-hold' => $this->t('On-hold'),
+      'to-review' => $this->t('To review'),
       'published' => $this->t('Published'),
       'embargoed' => $this->t('Embargoed'),
       'archive' => $this->t('Archived'),
@@ -211,18 +211,27 @@ class ReportModeration extends ModerationServiceBase {
   /**
    * {@inheritdoc}
    */
+  public function getFilterDefaultStatuses() {
+    $statuses = $this->getFilterStatuses();
+    unset($statuses['archive']);
+    return array_keys($statuses);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getEntityFormSubmitButtons($status, EntityModeratedInterface $entity) {
     $buttons = [
       'draft' => [
         '#value' => $this->t('Save as draft'),
       ],
-      'to_review' => [
+      'to-review' => [
         '#value' => $this->t('To review'),
       ],
       'published' => [
         '#value' => $this->t('Publish'),
       ],
-      'on_hold' => [
+      'on-hold' => [
         '#value' => $this->t('On-hold'),
       ],
       'reference' => [
@@ -244,7 +253,7 @@ class ReportModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function isViewableStatus($status, $account = NULL) {
-    return in_array($status, ['to_review', 'published']);
+    return in_array($status, ['to-review', 'published']);
   }
 
   /**
@@ -272,15 +281,17 @@ class ReportModeration extends ModerationServiceBase {
    */
   public function entityAccess(EntityModeratedInterface $entity, $operation = 'view', ?AccountInterface $account = NULL) {
     $access_result = parent::entityAccess($entity, $operation, $account);
-    $access = $access_result->isAllowed();
 
     if ($operation !== 'view') {
       // Normally editors can edit any kind of reports
       // but there are some exceptions like archived reports.
-      $access = $access && $this->isEditableStatus($entity->getModerationStatus(), $account);
+      $access = !$access_result->isForbidden() &&
+        $this->isEditableStatus($entity->getModerationStatus(), $account);
+
+      $access_result = $access ? $access_result : AccessResult::forbidden();
     }
 
-    return $access ? AccessResult::allowed() : AccessResult::forbidden();
+    return $access_result;
   }
 
   /**

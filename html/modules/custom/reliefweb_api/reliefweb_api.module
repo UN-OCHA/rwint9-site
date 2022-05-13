@@ -1,0 +1,188 @@
+<?php
+
+/**
+ * @file
+ * Module file for reliefweb_api.
+ */
+
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Database\Database;
+use Drupal\Core\Entity\EntityInterface;
+use RWAPIIndexer\Bundles;
+use RWAPIIndexer\Manager;
+
+/**
+ * Implements hook_entity_after_save().
+ *
+ * @see \Drupal\reliefweb_entities\BundleEntityStorageInterface
+ */
+function reliefweb_api_entity_after_save(EntityInterface $entity) {
+  // @todo remove when removing `reliefweb_migrate`.
+  if (!empty($entity->_is_migrating)) {
+    return;
+  }
+  reliefweb_api_handle_entity($entity);
+}
+
+/**
+ * Implements hook_entity_delete().
+ */
+function reliefweb_api_entity_delete(EntityInterface $entity) {
+  // @todo remove when removing `reliefweb_migrate`.
+  if (!empty($entity->_is_migrating)) {
+    return;
+  }
+  reliefweb_api_handle_entity($entity, TRUE);
+}
+
+/**
+ * Handle entity indexing or deletion.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   Entity to index or delete.
+ * @param bool $delete
+ *   Whether to delete the entity from the index or not.
+ */
+function reliefweb_api_handle_entity(EntityInterface $entity, $delete = FALSE) {
+  // Extract the entity information.
+  $entity_id = $entity->id();
+  $bundle = $entity->bundle();
+  $entity_type_id = $entity->getEntityTypeId();
+
+  // We only index nodes and terms.
+  if ($entity_type_id !== 'node' && $entity_type_id !== 'taxonomy_term') {
+    return;
+  }
+
+  // Check if the Indexer if available.
+  if (!reliefweb_api_indexer_available()) {
+    return;
+  }
+
+  // Skip unsupported entity bundles.
+  if (!Bundles::has($bundle)) {
+    return;
+  }
+
+  // Indexing options.
+  $options = reliefweb_api_get_indexer_base_options();
+  $options += [
+    'bundle' => $bundle,
+    'limit' => 1,
+    'offset' => 0,
+    'chunk-size' => 1,
+    'id' => $entity_id,
+    'remove' => $delete,
+    'tag' => \Drupal::state()->get('reliefweb_api_index_tag_' . $bundle, ''),
+  ];
+
+  // Index/delete the entity.
+  reliefweb_api_execute($options, $entity_type_id);
+}
+
+/**
+ * Get the base options to pass to the indexer.
+ *
+ * @return array
+ *   Indexer options.
+ */
+function reliefweb_api_get_indexer_base_options() {
+  $connection_info = Database::getConnectionInfo('default');
+  if (!isset($connection_info['default'])) {
+    throw new \Exception('ReliefWeb API: Unable to retrieve database information');
+  }
+
+  // Drupal database.
+  $database = $connection_info['default'];
+
+  // Config.
+  $config = \Drupal::config('reliefweb_api.settings');
+
+  // Indexing options to index all reports.
+  $options = [
+    'elasticsearch' => $config->get('elasticsearch') ?? 'http://elasticsearch:9200',
+    'mysql-host' => $database['host'],
+    'mysql-port' => !empty($database['port']) ? $database['port'] : 3306,
+    'mysql-user' => $database['username'],
+    'mysql-pass' => $database['password'],
+    'database' => $database['database'],
+    'base-index-name' => $config->get('base_index_name') ?? $database['database'],
+    'website' => $config->get('website') ?? 'https://' . \Drupal::request()->getHost(),
+    'replicas' => $config->get('replicas') ?? 0,
+    'shards' => $config->get('shards') ?? 1,
+  ];
+
+  return $options;
+}
+
+/**
+ * Shutdown callback that performs the actual indexing or deletion.
+ *
+ * This ensures that the entity has been saved or removed from the database.
+ *
+ * @param array $options
+ *   Indexing options.
+ * @param string $entity_type_id
+ *   Entity type ID.
+ */
+function reliefweb_api_execute(array $options, $entity_type_id) {
+  try {
+    // Create the indexing manager.
+    $manager = new Manager($options);
+
+    // Index or delete based on the provided options.
+    $manager->execute();
+
+    // Allow other modules to perform actions after the indexing.
+    // Note that the database connection has been closed though.
+    \Drupal::moduleHandler()->invokeAll('reliefweb_api_post_indexing', [
+      $entity_type_id,
+      $options['bundle'],
+      $options['id'],
+    ]);
+  }
+  catch (\Exception $exception) {
+  }
+}
+
+/**
+ * Implements hook_reliefweb_api_post_indexing().
+ *
+ * Clear the API queries cache entries.
+ *
+ * Note: we are assuming that the cache backend is not the database
+ * because it may not available anymore at this point.
+ */
+function reliefweb_api_reliefweb_api_post_indexing($entity_type_id, $bundle, $entity_id = NULL) {
+  // For taxonomy terms we clear all the cached API queries because
+  // many different entities may reference the updated term.
+  if ($entity_type_id === 'taxonomy_term') {
+    Cache::invalidateTags(['taxonomy_term_list']);
+  }
+  // Otherwise we clear the cache for this node type only.
+  elseif ($entity_type_id === 'node') {
+    Cache::invalidateTags(['node_list:' . $bundle]);
+  }
+}
+
+/**
+ * Check if the ReliefWeb API Indexer is available.
+ *
+ * @return bool
+ *   TRUE if the indexer is available.
+ */
+function reliefweb_api_indexer_available() {
+  static $available;
+
+  if (!isset($available)) {
+    if (!class_exists('\RWAPIIndexer\Manager')) {
+      \Drupal::logger('reliefweb_api')->warning('ReliefWeb API Indexer class missing.');
+      $available = FALSE;
+    }
+    else {
+      $available = TRUE;
+    }
+  }
+
+  return $available;
+}

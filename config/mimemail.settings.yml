@@ -1,13 +1,13 @@
-format: html
+_core:
+  default_config_hash: rLKGzzC9TqjbEZiBoiyMpOSyZgldADa5SzvbA2gQDxE
 name: ReliefWeb
-mail: admin@reliefweb.int
-linkonly: false
-textonly: false
-sitestyle: true
+mail: donotreply@reliefweb.int
 simple_address: false
+sitestyle: true
+textonly: false
+linkonly: false
+format: html
 preserve_class: false
 advanced:
   incoming: false
   key: CFDxUu_9yazjn2xMq4S7MgFHeDGnZ6WahqWlpa5YQJI
-_core:
-  default_config_hash: rLKGzzC9TqjbEZiBoiyMpOSyZgldADa5SzvbA2gQDxE

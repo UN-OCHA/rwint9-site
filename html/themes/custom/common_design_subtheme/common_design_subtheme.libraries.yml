@@ -127,16 +127,30 @@ rw-external-links:
   dependencies:
     - common_design_subtheme/rw-icons
 
+rw-filter-tips:
+  css:
+    theme:
+      components/rw-filter-tips/rw-filter-tips.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+
 rw-form:
   css:
     theme:
       components/rw-form/rw-form.css: {}
       components/rw-form/rw-form--widget.css: {}
+  # Some widgets like the inline entity forms show drupal messages added via
+  # javascript in which case the cd-alert component may not be loaded so we
+  # add it as a dependency of the rw-form library which is added globally.
+  dependencies:
+    - common_design/cd-alert
 
 rw-guidelines:
   css:
     theme:
       components/rw-guidelines/rw-guidelines.css: {}
+  js:
+    components/rw-guidelines/rw-guidelines.js: {}
   dependencies:
     - common_design_subtheme/rw-icons
 
@@ -172,6 +186,11 @@ rw-key-figures:
     theme:
       components/rw-key-figures/rw-key-figures.css: {}
 
+rw-links:
+  css:
+    theme:
+      components/rw-links/rw-links.css: {}
+
 rw-local-tasks:
   css:
     theme:
@@ -193,6 +212,7 @@ rw-moderation:
     - common_design_subtheme/rw-datepicker
     - common_design_subtheme/rw-icons
     - common_design_subtheme/rw-selection
+    - common_design_subtheme/rw-user-posting-right
 
 rw-moderation-information:
   css:
@@ -234,6 +254,13 @@ rw-pager:
     theme:
       components/rw-pager/rw-pager.css: {}
 
+rw-people:
+  css:
+    theme:
+      components/rw-people/rw-people.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+
 rw-preview:
   css:
     theme:
@@ -262,12 +289,15 @@ rw-revisions:
       components/rw-revisions/rw-revisions.css: {}
   dependencies:
    - common_design_subtheme/rw-icons
+   - common_design_subtheme/rw-moderation-status
    - common_design_subtheme/rw-loading
+   - common_design_subtheme/rw-user-posting-right
 
 rw-river:
   css:
     theme:
       components/rw-river/rw-river.css: {}
+      components/rw-river/rw-river-links.css: {}
       components/rw-river/rw-river-results.css: {}
       components/rw-river/rw-river-views.css: {}
 
@@ -284,6 +314,11 @@ rw-search:
   css:
     theme:
       components/rw-search/rw-search.css: {}
+
+rw-section-links:
+  css:
+    theme:
+      components/rw-section-links/rw-section-links.css: {}
 
 rw-site-slogan:
   css:
@@ -320,6 +355,13 @@ rw-toc:
   dependencies:
     - common_design/cd-dropdown
 
+rw-token:
+  css:
+    theme:
+      components/rw-token/rw-token.css: {}
+  dependencies:
+    - common_design_subtheme/rw-icons
+
 rw-topics:
   css:
     theme:
@@ -341,7 +383,12 @@ rw-user-information:
     theme:
       components/rw-user-information/rw-user-information.css: {}
   dependencies:
-   - common_design_subtheme/rw-user-posting-rights
+    - common_design_subtheme/rw-user-posting-right
+
+rw-user-posting-right:
+  css:
+    theme:
+      components/rw-user-posting-right/rw-user-posting-right.css: {}
 
 rw-user-posting-rights:
   css:

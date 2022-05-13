@@ -18,7 +18,7 @@
       {% include '@common_design_subtheme/cd/cd-footer/cd-copyright.html.twig' %}
     {% endblock %}
 
-    {% if ('editor' in user.getroles) or ('webmaster' in user.getroles) or ('administrator' in user.getroles) or (user.id == '1')%}
+    {% if user.hasPermission('view reliefweb admin menu') %}
       {% include '@common_design_subtheme/user/admin-menu.html.twig' %}
     {% endif %}
 

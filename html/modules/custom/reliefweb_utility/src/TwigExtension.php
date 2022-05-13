@@ -30,6 +30,7 @@ class TwigExtension extends AbstractExtension {
       ]),
       new TwigFilter('dpm', 'dpm'),
       new TwigFilter('values', 'array_values'),
+      new TwigFilter('hide_nested_label', [$this, 'hideNestedLabel']),
     ];
   }
 
@@ -185,6 +186,33 @@ class TwigExtension extends AbstractExtension {
    */
   public static function getEntityLink(EntityInterface $entity, $text = NULL, $rel = 'canonical', array $options = []) {
     return $entity->toLink($text, $rel, $options)->toString();
+  }
+
+  /**
+   * Hide a label in a nested render array.
+   *
+   * @param array $element
+   *   Form element.
+   * @param array $children
+   *   List of nested children of the form element.
+   */
+  public static function hideNestedLabel(array $element, array $children) {
+    $parent = &$element;
+    $last = count($children) - 1;
+    foreach ($children as $index => $child) {
+      if (isset($parent[$child])) {
+        if ($index === $last) {
+          $parent[$child]['#title_display'] = 'invisible';
+        }
+        else {
+          $parent = &$parent[$child];
+        }
+      }
+      else {
+        break;
+      }
+    }
+    return $element;
   }
 
 }

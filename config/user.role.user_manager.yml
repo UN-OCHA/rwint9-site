@@ -1,7 +1,10 @@
 uuid: 8468181e-6cde-42fa-a8a0-e67d5dd01960
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  module:
+    - reliefweb_subscriptions
+    - reliefweb_users
 id: user_manager
 label: 'User manager'
 weight: 3
@@ -10,5 +13,13 @@ permissions:
   - 'access user profiles'
   - 'administer subscriptions'
   - 'administer users'
+  - 'assign beta role'
+  - 'assign editor role'
+  - 'assign external_disaster_manager role'
+  - 'assign job_importer role'
+  - 'assign user_manager role'
+  - 'assign webmaster role'
   - 'change own username'
+  - 'manage user roles'
+  - 'view reliefweb admin menu'
   - 'view user email addresses'

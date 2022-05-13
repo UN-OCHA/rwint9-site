@@ -1,7 +1,48 @@
 uuid: e57c47d0-5c11-4ce8-91bc-d8a565b5e3f6
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  config:
+    - filter.format.guideline
+    - filter.format.html
+    - filter.format.markdown
+    - media.type.image_announcement
+    - media.type.image_blog_post
+    - media.type.image_book
+    - media.type.image_report
+    - media.type.image_topic
+    - node.type.announcement
+    - node.type.blog_post
+    - node.type.book
+    - node.type.job
+    - node.type.report
+    - node.type.topic
+    - node.type.training
+    - taxonomy.vocabulary.country
+    - taxonomy.vocabulary.disaster
+    - taxonomy.vocabulary.source
+    - taxonomy.vocabulary.tag
+  module:
+    - book
+    - contact
+    - filter
+    - guidelines
+    - media
+    - node
+    - path
+    - reliefweb_bookmarks
+    - reliefweb_fields
+    - reliefweb_files
+    - reliefweb_form
+    - reliefweb_guidelines
+    - reliefweb_homepage
+    - reliefweb_moderation
+    - reliefweb_revisions
+    - reliefweb_topics
+    - reliefweb_user_posts
+    - reliefweb_users
+    - taxonomy
+    - taxonomy_term_revision
 id: editor
 label: Editor
 weight: 2
@@ -9,13 +50,14 @@ is_admin: null
 permissions:
   - 'access content moderation backend'
   - 'access content moderation features'
+  - 'access editorial guidelines'
   - 'access media overview'
   - 'access reliefweb links field validation'
+  - 'access reliefweb private files'
   - 'access reliefweb user posting rights field validation'
   - 'access user contact forms'
   - 'access user profiles'
   - 'add content to books'
-  - 'administer book outlines'
   - 'administer community topics'
   - 'administer url aliases'
   - 'archive content'
@@ -109,64 +151,26 @@ permissions:
   - 'revert term revision'
   - 'revert topic revisions'
   - 'revert training revisions'
+  - 'see other bookmarks'
   - 'update any media'
   - 'update media'
-  - 'use announcement transition archive'
-  - 'use announcement transition draft'
-  - 'use announcement transition published'
-  - 'use blog_post transition draft'
-  - 'use blog_post transition published'
-  - 'use book transition draft'
-  - 'use book transition published'
-  - 'use country transition draft'
-  - 'use country transition normal'
-  - 'use country transition ongoing'
-  - 'use disaster transition alert'
-  - 'use disaster transition archive_alert'
-  - 'use disaster transition archive_draft'
-  - 'use disaster transition archive_ongoing'
-  - 'use disaster transition draft'
-  - 'use disaster transition ongoing'
   - 'use enhanced input forms'
-  - 'use job transition draft'
-  - 'use job transition duplicate'
-  - 'use job transition expired'
-  - 'use job transition on_hold'
-  - 'use job transition pending'
-  - 'use job transition published'
-  - 'use job transition refused'
-  - 'use report transition draft'
-  - 'use report transition duplicate'
-  - 'use report transition embargoed'
-  - 'use report transition on_hold'
-  - 'use report transition published'
-  - 'use report transition reference'
-  - 'use report transition to_review'
-  - 'use source transition active'
-  - 'use source transition archive'
-  - 'use source transition blocked'
-  - 'use source transition draft'
-  - 'use source transition duplicate'
-  - 'use source transition inactive'
+  - 'use text format guideline'
   - 'use text format html'
   - 'use text format markdown'
-  - 'use topic transition draft'
-  - 'use topic transition published'
-  - 'use training transition duplicate'
-  - 'use training transition expired'
-  - 'use training transition on_hold'
-  - 'use training transition refused'
   - 'view all media revisions'
   - 'view announcement revisions'
   - 'view any content'
-  - 'view any unpublished content'
   - 'view blog_post revisions'
   - 'view book revisions'
   - 'view entity history'
   - 'view job revisions'
-  - 'view latest version'
+  - 'view moderation information revision message author'
+  - 'view other user posts'
   - 'view own unpublished content'
   - 'view own unpublished media'
+  - 'view published guideline entities'
+  - 'view reliefweb admin menu'
   - 'view report revisions'
   - 'view term revision data'
   - 'view term revision list'

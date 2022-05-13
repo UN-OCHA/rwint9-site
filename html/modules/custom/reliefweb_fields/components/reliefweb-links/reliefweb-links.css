@@ -1,7 +1,7 @@
 /**
  * Country/disaster profile forms.
  *
- * This the form to manage the country and disaster profiles (overview, key
+ * This is the form to manage the country and disaster profiles (overview, key
  * content, appeals and response plans and useful links).
  *
  * Scope: .field--type-reliefweb-links
@@ -34,7 +34,7 @@
   width: 100%;
   margin-top: 4px;
 }
-.field--type-reliefweb-links fieldset[data-internal="true"] td img {
+.field--type-reliefweb-links fieldset [data-internal="true"] td img {
   display: inline-block;
   overflow: hidden;
   max-width: 35px;

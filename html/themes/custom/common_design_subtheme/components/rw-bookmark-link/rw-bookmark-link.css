@@ -12,7 +12,7 @@
   padding: 10px;
   vertical-align: middle;
   text-decoration: none;
-  background: #e6ecef;
+  background: var(--cd-reliefweb-brand-grey--light);
   font-size: 15px;
 }
 .rw-bookmark-link:hover,

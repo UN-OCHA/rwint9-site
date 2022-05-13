@@ -1,3 +1,4 @@
+# River pages.
 reliefweb_rivers.blog_post.river:
   path: '/blog'
   defaults:
@@ -54,10 +55,49 @@ reliefweb_rivers.training.river:
     _controller: 'reliefweb_rivers.training.river:getPageContent'
   requirements:
     _permission: 'access content'
+
+# Gloval Search Results.
 reliefweb_rivers.search.results:
   path: '/search/results'
   defaults:
     _title: 'Search results'
     _controller: '\Drupal\reliefweb_rivers\Controller\SearchResults::getPageContent'
+  requirements:
+    _permission: 'access content'
+
+# RSS.
+reliefweb_rivers.blog_post.rss:
+  path: '/blog/rss.xml'
+  defaults:
+    _title: 'Blog'
+    _controller: 'reliefweb_rivers.blog_post.river:getRssContent'
+  requirements:
+    _permission: 'access content'
+reliefweb_rivers.disaster.rss:
+  path: '/disasters/rss.xml'
+  defaults:
+    _title: 'Disasters'
+    _controller: 'reliefweb_rivers.disaster.river:getRssContent'
+  requirements:
+    _permission: 'access content'
+reliefweb_rivers.job.rss:
+  path: '/jobs/rss.xml'
+  defaults:
+    _title: 'Jobs'
+    _controller: 'reliefweb_rivers.job.river:getRssContent'
+  requirements:
+    _permission: 'access content'
+reliefweb_rivers.report.rss:
+  path: '/updates/rss.xml'
+  defaults:
+    _title: 'Updates'
+    _controller: 'reliefweb_rivers.report.river:getRssContent'
+  requirements:
+    _permission: 'access content'
+reliefweb_rivers.training.rss:
+  path: '/training/rss.xml'
+  defaults:
+    _title: 'Training'
+    _controller: 'reliefweb_rivers.training.river:getRssContent'
   requirements:
     _permission: 'access content'

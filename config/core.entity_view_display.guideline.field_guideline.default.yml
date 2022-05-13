@@ -1,0 +1,48 @@
+uuid: 5dd6495f-dd1a-4df1-b0b2-a01aa1964e04
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.guideline.field_guideline.field_description
+    - field.field.guideline.field_guideline.field_field
+    - field.field.guideline.field_guideline.field_images
+    - field.field.guideline.field_guideline.field_links
+    - field.field.guideline.field_guideline.field_short_link
+    - field.field.guideline.field_guideline.field_title
+    - guidelines.guideline_type.field_guideline
+  module:
+    - link
+    - text
+id: guideline.field_guideline.default
+targetEntityType: guideline
+bundle: field_guideline
+mode: default
+content:
+  field_description:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field_links:
+    type: link
+    label: above
+    settings:
+      trim_length: 80
+      url_only: false
+      url_plain: false
+      rel: ''
+      target: ''
+    third_party_settings: {  }
+    weight: 1
+    region: content
+hidden:
+  content_moderation_control: true
+  field_field: true
+  field_images: true
+  field_short_link: true
+  field_title: true
+  langcode: true
+  name: true
+  user_id: true

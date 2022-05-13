@@ -12,10 +12,15 @@ shared_configuration:
   source:
     key: rwint7
     plugin: reliefweb_media
+    batch_size: 1000
+    high_water_property:
+      name: fid
+      alias: fm
   destination:
-    plugin: entity:media
+    plugin: reliefweb_entity:media
   process:
     mid: fid
+    vid: fid
     uid:
       plugin: static_map
       bypass: true
@@ -40,6 +45,14 @@ shared_configuration:
     field_media_image/target_id: fid
     field_media_image/width: width
     field_media_image/height: height
+    # Disable path alias generation.
+    path/pathauto:
+      plugin: default_value
+      default_value: 0
+    # Flag the entity as being migrated.
+    _is_migrating:
+      plugin: default_value
+      default_value: 1
   migration_dependencies:
     required:
       - reliefweb_image

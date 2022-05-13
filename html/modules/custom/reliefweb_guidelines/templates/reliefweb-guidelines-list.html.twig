@@ -1,0 +1,53 @@
+{#
+
+/**
+ * @file
+ * Template for the ReliefWeb guideline list.
+ *
+ * Available variables:
+ * - attributes: wrapper attributes
+ * - title: page title
+ * - guidelines: list of guidelines for the page. Each section is a render array.
+ */
+
+#}
+{% set tabindex_counter = 0 %}
+<div{{ attributes.addClass('rw-guidelines-list') }}>
+  <aside>
+    <h1>{{ title }}</h1>
+    <a href="/" class="rw-guidelines-exit-link">exit</a>
+    <form action="#search">
+      <input type="text" placeholder="Search">
+    </form>
+    <nav class="scroll">
+      {% for id, guideline in guidelines %}
+        <label for="guideline-list-{{ id }}">{{ guideline.title }}</label>
+        <input id="guideline-list-{{ id }}" type="checkbox" name="lists">
+
+        <nav>
+        {% for shortid, child in guideline.children %}
+          <a href="#{{ shortid }}" tabindex="{{ tabindex_counter }}">{{ child.title }}</a>
+          {% set tabindex_counter = tabindex_counter + 1 %}
+        {% endfor %}
+        </nav>
+      {% endfor %}
+    </nav>
+  </aside>
+
+  <main>
+    <div class="scroll">
+      {% for guideline in guidelines %}
+        {% for shortid, child in guideline.children %}
+          <article id="{{ shortid }}" class="rw-guidelines-item">
+            <h2><span>{{ guideline.title }}</span> {{ child.title }}</h2>
+            <div>{{ child.description|render|sanitize_html(false, 2, ['data-src']) }}</div>
+            {% if child.edit is not empty %}
+            <footer><a href="{{ child.edit }}">edit</a></footer>
+            {% endif %}
+          </article>
+        {% endfor %}
+      {% endfor %}
+      <article id="search"></article>
+    </div>
+  </main>
+</div>

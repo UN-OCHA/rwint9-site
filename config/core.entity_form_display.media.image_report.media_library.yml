@@ -10,7 +10,7 @@ dependencies:
     - image.style.thumbnail
     - media.type.image_report
   module:
-    - image
+    - svg_image
 id: media.image_report.media_library
 targetEntityType: media
 bundle: image_report
@@ -18,7 +18,7 @@ mode: media_library
 content:
   field_copyright:
     type: string_textfield
-    weight: 2
+    weight: 1
     region: content
     settings:
       size: 60
@@ -26,31 +26,24 @@ content:
     third_party_settings: {  }
   field_description:
     type: string_textfield
-    weight: 3
+    weight: 2
     region: content
     settings:
       size: 60
       placeholder: ''
     third_party_settings: {  }
   field_media_image:
-    weight: 1
+    type: image_image
+    weight: 0
+    region: content
     settings:
       progress_indicator: throbber
       preview_image_style: thumbnail
     third_party_settings: {  }
-    type: image_image
-    region: content
-  name:
-    type: string_textfield
-    settings:
-      size: 60
-      placeholder: ''
-    weight: 0
-    third_party_settings: {  }
-    region: content
 hidden:
   created: true
   langcode: true
+  name: true
   path: true
   status: true
   uid: true

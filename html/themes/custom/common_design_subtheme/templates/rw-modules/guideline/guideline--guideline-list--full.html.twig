@@ -1,0 +1,23 @@
+{#
+/**
+ * @file guideline.html.twig
+ * Default theme implementation to present Guideline data.
+ *
+ * This template is used when viewing Guideline pages.
+ *
+ *
+ * Available variables:
+ * - content: A list of content items. Use 'content' to print all content, or
+ * - attributes: HTML attributes for the container element.
+ *
+ * @see template_preprocess_guideline()
+ *
+ * @ingroup themeable
+ */
+#}
+<div class="rw-page-content">
+{% if content %}
+  {{- content -}}
+  {{- elements['#guideline'].getGuidelineLinks() -}}
+{% endif %}
+</div>

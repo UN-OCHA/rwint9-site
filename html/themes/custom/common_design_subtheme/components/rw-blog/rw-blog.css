@@ -4,7 +4,7 @@
  * Latest blog post.
  */
 .path-frontpage .rw-river--blog h2 {
-  font-size: 24px;
+  font-size: var(--cd-font-size--large);
 }
 .path-frontpage .rw-river--blog article {
   padding: 0;
@@ -17,7 +17,7 @@
 /* Latest blog posts */
 .rw-river--latest-blog-posts h2 {
   padding-left: 8px;
-  border-left: 8px solid #0988bb;
+  border-left: 8px solid var(--cd-reliefweb-brand-blue);
 }
 .rw-river--latest-blog-posts .rw-river-article--blog-post {
   --cd-flow-space: 12px;
@@ -32,7 +32,7 @@
 .rw-river--latest-blog-posts .rw-river-article--blog-post:last-child {
   padding-bottom: 0;
 }
-.rw-river--latest-blog-posts .rw-river-article--blog-post header + footer {
+.rw-river--latest-blog-posts .rw-river-article--blog-post .rw-river-article__header + .rw-river-article__footer {
   padding-top: 0;
 }
 

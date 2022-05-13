@@ -14,8 +14,12 @@ shared_configuration:
     plugin: reliefweb_node
     constants:
       format: markdown
+    batch_size: 1000
+    high_water_property:
+      name: vid
+      alias: nr
   destination:
-    plugin: entity:node
+    plugin: reliefweb_entity:node
   process:
     # Base properties.
     nid: nid
@@ -58,7 +62,7 @@ shared_configuration:
         published: 1
         to-review: 1
     # Moderation status.
-    moderation_state:
+    moderation_status:
       plugin: static_map
       source: field_status/0/value
       default_value: draft
@@ -68,14 +72,14 @@ shared_configuration:
         duplicate: duplicate
         expired: expired
         embargoed: embargoed
-        on-hold: on_hold
+        on-hold: on-hold
         pending: pending
         published: published
         reference: reference
         refused: refused
-        to-review: to_review
+        to-review: to-review
     # Revision information.
-    vid: revision_id
+    vid: vid
     revision_uid:
       plugin: static_map
       bypass: true
@@ -101,8 +105,21 @@ shared_configuration:
         markdown: markdown
         plain_text: markdown
         token_markdown: token_markdown
+    # Url alias.
+    url_lias:
+      plugin: skip_on_empty
+      method: process
+      source: url_alias
+    # Disable path alias generation.
+    path/pathauto:
+      plugin: default_value
+      default_value: 0
     # Disable notifications.
     notifications_content_disable:
+      plugin: default_value
+      default_value: 1
+    # Flag the entity as being migrated.
+    _is_migrating:
       plugin: default_value
       default_value: 1
   migration_dependencies:

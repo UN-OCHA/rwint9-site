@@ -118,6 +118,9 @@ class ReportRiver extends RiverServiceBase {
           'type' => 'autocomplete',
           'label' => $this->t('Search for a disaster'),
           'resource' => 'disasters',
+          'parameters' => [
+            'sort' => 'date:desc',
+          ],
         ],
         'operator' => 'OR',
       ],
@@ -412,10 +415,9 @@ class ReportRiver extends RiverServiceBase {
         $preview = $fields['file'][0]['preview'];
         $url = $preview['url-thumb'] ?? $preview['url-small'] ?? '';
         if (!empty($url)) {
+          $version = $preview['version'] ?? $fields['file'][0]['id'] ?? 0;
           $data['preview'] = [
-            // @todo once the report attachments have been added back,
-            // generate the appropriate preview URL based on the file name.
-            'url' => UrlHelper::stripDangerousProtocols($url),
+            'url' => UrlHelper::stripDangerousProtocols($url) . '?' . $version,
             // We don't have any good label/description for the file
             // previews so we use an empty alt to mark them as decorative
             // so that assistive technologies will ignore them.
@@ -478,6 +480,183 @@ class ReportRiver extends RiverServiceBase {
     }
 
     return '';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiPayloadForRss($view = '') {
+    $payload = $this->getApiPayload($view);
+    $payload['fields']['include'][] = 'date.created';
+    $payload['fields']['include'][] = 'theme.name';
+    $payload['fields']['include'][] = 'disaster_type.name';
+    if ($view === 'headlines') {
+      $payload['fields']['include'][] = 'headline.image';
+    }
+    return $payload;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function parseApiDataForRss(array $data, $view = '') {
+    $headlines = $view === 'headlines';
+    $query = $this->requestStack->getCurrentRequest()->query;
+    $country_slug = !$query->has('country_slug') || $query->getInt('country_slug') !== 0;
+
+    $items = $data['items'] ?? $data['data'] ?? [];
+
+    // Parse the entities retrieved from the API.
+    $entities = [];
+    foreach ($items as $item) {
+      $fields = $item['fields'];
+
+      // Base article data.
+      $data = [
+        'id' => $item['id'],
+        'bundle' => $this->bundle,
+      ];
+
+      // Determine document type.
+      $format = 'Report';
+      if (!empty($fields['format'])) {
+        if (isset($fields['format']['name'])) {
+          $format = $fields['format']['name'];
+        }
+        elseif (isset($fields['format'][0]['name'])) {
+          $format = $fields['format'][0]['name'];
+        }
+      }
+      $data['format'] = $format;
+
+      // Title.
+      if ($headlines && !empty($fields['headline']['title'])) {
+        $title = $fields['headline']['title'];
+      }
+      else {
+        $title = $fields['title'];
+      }
+      // Add the primary country as prefix to the title, unless instructed
+      // otherwise.
+      if ($country_slug && !empty($fields['country'])) {
+        foreach ($fields['country'] as $value) {
+          // Ideally, we'd check the language and search for variations of the
+          // the country name inside the title but as of February 2022, country
+          // names in the API are only in English and alternate names are not
+          // indexed and not exposed.
+          if (!empty($value['primary'])) {
+            // Prepend the country shortname if it exists and the shortname
+            // and name are not in the title.
+            if (!empty($value['shortname'])) {
+              if (mb_stripos($title, $value['shortname']) === FALSE && mb_stripos($title, $value['name']) === FALSE) {
+                $title = $value['shortname'] . ': ' . $title;
+              }
+            }
+            // Prepend the country name if not in the title.
+            elseif (mb_stripos($title, $value['name']) === FALSE) {
+              $title = $value['name'] . ': ' . $title;
+            }
+            break;
+          }
+        }
+      }
+      $data['title'] = $title;
+
+      // Url to the article.
+      if (isset($fields['url_alias'])) {
+        $data['url'] = UrlHelper::stripDangerousProtocols($fields['url_alias']);
+      }
+      else {
+        $data['url'] = UrlHelper::getAliasFromPath('/node/' . $item['id']);
+      }
+
+      // Dates.
+      $data['date'] = static::createDate($fields['date']['created']);
+
+      // Body and Summary.
+      //
+      // The summary is just plain text, so we differenciate it from the body.
+      if ($headlines && !empty($fields['headline']['summary'])) {
+        $data['summary'] = $fields['headline']['summary'];
+      }
+      elseif (!empty($fields['body-html'])) {
+        $data['body'] = $fields['body-html'];
+      }
+
+      // Set the summary if it's empty but there are attachments.
+      if (empty($data['summary']) && !empty($fields['file'])) {
+        $data['summary'] = $this->getSummaryFromFormat($format, $fields['file']);
+      }
+
+      // Media: headline image.
+      if ($headlines && isset($fields['headline']['image']['url'])) {
+        $image = $fields['headline']['image'];
+        $copyright = trim($image['copyright'] ?? '');
+        if (!empty($copyright) && mb_strpos($copyright, '©') === FALSE) {
+          $copyright = '© ' . $copyright;
+        }
+        $data['media'][] = [
+          'url' => $image['url'],
+          'filesize' => $image['filesize'] ?? 0,
+          'type' => $image['mimetype'] ?? '',
+          'medium' => 'image',
+          'expression' => 'full',
+          'height' => $image['height'] ?? 0,
+          'width' => $image['width'] ?? 0,
+          'thumbnail' => $image['url-thumb'] ?? '',
+          'title' => $image['caption'] ?? '',
+          'copyright' => $copyright,
+        ];
+      }
+
+      // Enclosure.
+      // Only 1 as per rssboard.org/rss-profile#element-channel-item-enclosure.
+      if (!empty($fields['file'][0])) {
+        $file = $fields['file'][0];
+        if (!empty($file['preview']['url-thumb'])) {
+          $data['preview'] = $file['preview']['url-thumb'];
+        }
+        if (isset($file['filesize'], $file['mimetype'], $file['url'])) {
+          $data['enclosure'] = [
+            'length' => $file['filesize'],
+            'type' => $file['mimetype'],
+            'url' => $file['url'],
+          ];
+        }
+      }
+
+      // Categories.
+      $categories = [
+        'country' => [$this->t('Country'), $this->t('Countries')],
+        'source' => [$this->t('Source'), $this->t('Sources')],
+        'disaster' => [$this->t('Disaster'), $this->t('Disasters')],
+        'theme' => [$this->t('Theme'), $this->t('Themes')],
+        'format' => [$this->t('Format'), $this->t('Formats')],
+        'disaster_type' => [
+          $this->t('Disaster type'),
+          $this->t('Disaster types'),
+        ],
+      ];
+      $inline = ['country' => TRUE, 'source' => TRUE];
+      foreach ($categories as $category => $labels) {
+        if (!empty($fields[$category])) {
+          $data['categories'][$category] = [
+            'label' => $labels[count($fields[$category]) > 1 ? 1 : 0],
+            'values' => array_map(function ($term) {
+              return $term['name'];
+            }, $fields[$category]),
+            'inline' => isset($inline[$category]),
+          ];
+        }
+      }
+
+      // Compute the language code for the resource's data.
+      $data['langcode'] = static::getLanguageCode($data);
+
+      $entities[$item['id']] = $data;
+    }
+
+    return $entities;
   }
 
 }

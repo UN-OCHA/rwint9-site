@@ -1,7 +1,7 @@
 /* Table of contents */
 .rw-toc {
   padding: 32px 0 0 0;
-  border-bottom: 1px solid #e6ecef;
+  border-bottom: 1px solid var(--cd-reliefweb-brand-grey--light);
   font-size: 15px;
 }
 .rw-toc ul,
@@ -27,44 +27,73 @@
 }
 .rw-toc ul ul li a[data-active] {
   padding-left: 10px;
-  border-left: 6px solid #0988bb;
+  border-left: 6px solid var(--cd-reliefweb-brand-blue);
   font-weight: bold;
 }
 
-.rw-page--sectioned {
-  display: flex;
-  flex-wrap: wrap;
+@media screen and (min-width: 768px) {
+  .rw-page--sectioned {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .rw-page--sectioned > header {
+    width: 100%;
+    margin: 0;
+  }
+  /* To facilitate the sticky TOC */
+  .region-content,
+  .rw-sectioned-content,
+  .node-form,
+  .taxonomy-term-form {
+    height: 100%;
+  }
+  .rw-sectioned-content {
+    flex: 1 0 20%;
+  }
 }
-.rw-page--sectioned > header {
-  width: 100%;
-  margin: 0;
+/* Node and Term edit page rules so the TOC acts the same as on the full
+   View pages.
+   The parent selectors `user-logged-in.path-[entity]` are also present on
+   Term and Node full node view pages, but the rules below are not applied
+   due to the additional markup present in only `page--[entity]--edit.html.twig`
+   template overrides
+*/
+@media screen and (min-width: 768px) {
+  .user-logged-in.path-taxonomy .rw-page--sectioned .region-content,
+  .user-logged-in.path-node .rw-page--sectioned .region-content {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .user-logged-in.path-taxonomy .rw-page--sectioned .region-content > header,
+  .user-logged-in.path-node .rw-page--sectioned .region-content > header,
+  .user-logged-in.path-taxonomy .rw-page--sectioned .region-content .rw-moderation-information,
+  .user-logged-in.path-node .rw-page--sectioned .region-content .rw-moderation-information,
+  .user-logged-in.path-taxonomy .rw-page--sectioned .region-content .block-local-tasks-block,
+  .user-logged-in.path-node .rw-page--sectioned .region-content .block-local-tasks-block,
+  .user-logged-in.path-taxonomy .rw-page--sectioned .region-content .rw-page-title,
+  .user-logged-in.path-node .rw-page--sectioned .region-content .rw-page-title {
+    width: 100%;
+  }
 }
-
-/* To facilitate the sticky TOC */
-.region-content,
-.rw-sectioned-content,
-.node-form,
-.taxonomy-term-form {
-  height: 100%;
-}
-
 .rw-sectioned-content > section,
 .rw-sectioned-content > form > fieldset,
 .rw-sectioned-content > form > .form-wrapper,
 .rw-sectioned-content > form > .form-item,
 .node-form > fieldset,
+.guideline-form > fieldset,
 .taxonomy-term-form > fieldset,
 .taxonomy-term-form > .form-wrapper {
   position: relative;
   width: 100%;
   padding: 32px 0;
-  border-bottom: 1px solid #e6ecef;
+  border-bottom: 1px solid var(--cd-reliefweb-brand-grey--light);
 }
 .rw-sectioned-content > section:first-child,
 .rw-sectioned-content > form > fieldset:first-child,
 .rw-sectioned-content > form > .form-wrapper:first-child,
 .rw-sectioned-content > form > .form-item:first-child,
 .node-form > fieldset:first-child,
+.guideline-form > fieldset:first-child,
 .taxonomy-term-form > .form-wrapper:first-child {
   padding-top: 0;
 }
@@ -73,6 +102,7 @@
 .rw-sectioned-content > form > .form-wrapper:last-child,
 .rw-sectioned-content > form > .form-item:last-child,
 .node-form > fieldset:last-child,
+.guideline-form > fieldset:last-child,
 .taxonomy-term-form > fieldset:last-child {
   padding-bottom: 0;
   border-bottom: none;
@@ -93,10 +123,6 @@
     padding: 32px 16px 0 0;
     border-bottom: none;
   }
-  /* .rw-sectioned-content .rw-toc ~ section { */
-  /*  padding-top: 32px; */
-  /*  padding-bottom: 32px; */
-  /* } */
   .rw-toc ~ section,
   .rw-toc ~ article,
   .rw-toc ~ fieldset,
@@ -106,17 +132,12 @@
     width: 80%;
     min-width: auto;
     padding-left: 32px;
-    border-left: 1px solid #e6ecef;
+    border-left: 1px solid var(--cd-reliefweb-brand-grey--light);
   }
   .page-form #main-content > section.default > form.rw-sectioned-content {
     padding: 0;
   }
 }
-
-/* Hide the table of content toggler by default. */
-/* .js .rw-toc-toggler { */
-/*  display: none; */
-/* } */
 
 /**
  * Table of contents - javascript enabled.
@@ -129,14 +150,14 @@
     height: 40px;
     margin: 24px auto;
     padding: 0 8px;
-    color: #2e3436;
-    border: 1px solid #e6ecef;
+    color: var(--cd-reliefweb-brand-grey--dark);
+    border: 1px solid var(--cd-reliefweb-brand-grey--light);
     background: white;
     font-size: 16px;
     font-weight: normal;
   }
   .rw-toc__btn[aria-expanded] .cd-icon--arrow-down {
-    fill: #2e3436;
+    fill: var(--cd-reliefweb-brand-grey--dark);
   }
   [dir="ltr"] .rw-toc__btn[aria-expanded] .cd-icon--arrow-down {
     margin-left: 0.5rem;
@@ -144,20 +165,6 @@
   [dir="rtl"] .rw-toc__btn[aria-expanded] .cd-icon--arrow-down {
     margin-right: 0.5rem;
   }
-  /* .js .rw-toc__btn:after { */
-  /*  content: ""; */
-  /*  display: inline-block; */
-  /*  vertical-align: middle; */
-  /*  width: 9px; */
-  /*  height: 9px; */
-  /*  margin-left: 8px; */
-  /*  overflow: hidden; */
-  /*  background: url(../../img/rw-icons-sprite.png) -150px 0 no-repeat; */
-  /*  background: rgba(0,0,0,0) url(../../img/rw-icons-sprite.svg) -150px 0 no-repeat; */
-  /* } */
-  /* .js .rw-toc-toggler[aria-expanded="true"]:after { */
-  /*  background-position-y: -9px; */
-  /* } */
   .js .rw-toc {
     /* display: none; */
     position: absolute;
@@ -171,20 +178,17 @@
      * the table of contents horizontally. */
     margin: -24px 0 0 -150px;
     padding: 16px 16px 0 16px;
-    border: 1px solid #e6ecef;
+    border: 1px solid var(--cd-reliefweb-brand-grey--light);
     background: white;
-    -webkit-box-shadow: 0 0 6px 2px #e6ecef;
-    box-shadow: 0 0 6px 2px #e6ecef;
+    -webkit-box-shadow: 0 0 6px 2px var(--cd-reliefweb-brand-grey--light);
+    box-shadow: 0 0 6px 2px var(--cd-reliefweb-brand-grey--light);
   }
-  /* .js .rw-toc[data-hidden="false"] { */
-  /*  display: block; */
-  /* } */
   .js .rw-toc + section,
   .js .rw-toc + article,
   .js .rw-toc + fieldset,
   .js .rw-toc + .form-wrapper,
   .js .rw-toc + .form-item {
-    border-top: 1px solid #e6ecef;
+    border-top: 1px solid var(--cd-reliefweb-brand-grey--light);
   }
   .js .rw-toc ~ section,
   .js .rw-toc ~ article,
@@ -208,7 +212,7 @@
   .js .rw-toc ~ .form-item > fieldset[data-active] > legend {
     margin-left: -16px;
     padding-left: 8px;
-    border-left: 8px solid #0988bb;
+    border-left: 8px solid var(--cd-reliefweb-brand-blue);
   }
 }
 
@@ -236,7 +240,38 @@
 
 /* Reset flow on TOC elements so there is no gap between them */
 .node-form fieldset,
+.guideline-form fieldset,
 .taxonomy-term-form fieldset,
 .taxonomy-term-form .field--name-field-job-import-feed.form-wrapper {
   margin-top: 0;
+}
+
+@media all and (min-width: 768px) and (-ms-high-contrast: none) {
+  /* This is needed for IE11
+  No support for CSS custom properties means
+  --dropdown: false; property on nav container is not recognised
+  so the cd-dropdown.js creates a toggler button on desktop
+  This hides it when that happens.
+  */
+  .rw-toc__btn {
+    display: none;
+  }
+
+  /* This is needed for IE11
+  No support for CSS custom properties means
+  --dropdown: false; property on nav container is not recognised
+  so the cd-dropdown.js does not run the updateToggler function
+  which toggles the data-cd-hidden attribute.
+  This displays the nav regardless of that attribute value.
+  */
+  .rw-toc[data-cd-hidden="true"] {
+    display: block;
+  }
+
+  /* Flexbox layout fix */
+  .user-logged-in.path-taxonomy .rw-page--sectioned .region-content,
+  .user-logged-in.path-node .rw-page--sectioned .region-content,
+  .rw-page--sectioned {
+    display: block;
+  }
 }

@@ -75,11 +75,7 @@
        * Create a input/textarea form compoment for the given property.
        */
       function createLinkFormComponent(name, value, textarea) {
-        var placeholders = {
-          url: t('River URL'),
-          title: t('Link title (mandatory)'),
-          override: t('Node Id to promote to beginning of list')
-        };
+        var placeholders = topicsSettings.placeholders || {};
 
         var element;
 
@@ -274,6 +270,7 @@
         if (typeof error === 'string' && error !== '') {
           var message = document.createElement('div');
           message.setAttribute('data-error-message', '');
+          message.setAttribute('class', 'messages error cd-form__error-message');
           message.appendChild(document.createTextNode(error));
 
           // Add the message at the top of the fieldset.

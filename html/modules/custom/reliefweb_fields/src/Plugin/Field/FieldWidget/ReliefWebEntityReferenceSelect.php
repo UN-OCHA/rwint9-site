@@ -8,6 +8,7 @@ use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\Plugin\Field\FieldWidget\OptionsSelectWidget;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Form\OptGroup;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
 
@@ -190,7 +191,7 @@ class ReliefWebEntityReferenceSelect extends OptionsSelectWidget {
         foreach ($field_definitions as $field_name => $field_definition) {
           // The moderation state field is a particular case. We can retrieve it
           // easily so we allow it.
-          if (isset($field_storage_definitions[$field_name]) || $field_name === 'moderation_state') {
+          if (isset($field_storage_definitions[$field_name])) {
             $fields[$bundle . ':' . $field_name] = $this->t('@bundle > @field', [
               '@bundle' => $bundle_label,
               '@field' => $field_definition->getLabel(),
@@ -355,7 +356,7 @@ class ReliefWebEntityReferenceSelect extends OptionsSelectWidget {
     ];
     foreach ($this->getSetting('extra_data') as $field => $selected) {
       if (!empty($selected) && strpos($field, ':') !== FALSE) {
-        list($bundle, $field_name) = explode(':', $field);
+        [$bundle, $field_name] = explode(':', $field);
 
         $definitions = $this->getEntityFieldManager()
           ->getFieldDefinitions($entity_type_id, $bundle);
@@ -364,16 +365,8 @@ class ReliefWebEntityReferenceSelect extends OptionsSelectWidget {
           $definition = $definitions[$field_name];
           $type = $definition->getFieldStorageDefinition()->isBaseField() ? 'base' : 'bundle';
 
-          // The moderation is a special case. It's a base field but its not
-          // using the entity type's table. We add it to the list of bundle
-          // fields and execute the appropriate query in `getExtraData`.
-          if ($field_name === 'moderation_state') {
-            $attribute = 'data-moderation-status';
-            $type = 'bundle';
-          }
-          else {
-            $attribute = 'data-' . preg_replace('#^field_#', '', $field_name);
-          }
+          $attribute = 'data-' . preg_replace('#^field_#', '', $field_name);
+          $attribute = strtr($attribute, '_', '-');
 
           $fields[$type][$field] = [
             'attribute' => $attribute,
@@ -387,7 +380,7 @@ class ReliefWebEntityReferenceSelect extends OptionsSelectWidget {
   }
 
   /**
-   * Get the extra data to add as optiona attributes.
+   * Get the extra data to add as optional attributes.
    *
    * @param array $extra_data_fields
    *   Entity fields.
@@ -415,33 +408,18 @@ class ReliefWebEntityReferenceSelect extends OptionsSelectWidget {
         continue;
       }
 
-      // Special handling of the moderation status as it's not an entity field.
-      if ($field_name === 'moderation_state') {
-        $table = $this->getEntityTypeDataTable('content_moderation_state');
+      $column = $definition->getFieldStorageDefinition()->getMainPropertyName();
+      $table = $this->getFieldTableName($entity_type_id, $field_name);
+      $field = $this->getFieldColumnName($entity_type_id, $field_name, $column);
 
-        $query = $this->getDatabase()
-          ->select($table, $table)
-          ->condition($table . '.content_entity_type_id', $entity_type_id, '=')
-          ->condition($table . '.content_entity_id', $ids[$bundle], 'IN')
-          ->condition($table . '.langcode', $langcodes, 'IN');
-        $query->addField($table, 'content_entity_id', 'id');
-        $query->addField($table, 'langcode', 'langcode');
-        $query->addField($table, 'moderation_state', 'value');
-      }
-      else {
-        $column = $definition->getFieldStorageDefinition()->getMainPropertyName();
-        $table = $this->getFieldTableName($entity_type_id, $field_name);
-        $field = $this->getFieldColumnName($entity_type_id, $field_name, $column);
-
-        $query = $this->getDatabase()
-          ->select($table, $table)
-          ->condition($table . '.entity_id', $ids[$bundle], 'IN')
-          ->condition($table . '.langcode', $langcodes, 'IN')
-          ->isNotNull($table . '.' . $field);
-        $query->addField($table, 'entity_id', 'id');
-        $query->addField($table, 'langcode', 'langcode');
-        $query->addField($table, $field, 'value');
-      }
+      $query = $this->getDatabase()
+        ->select($table, $table)
+        ->condition($table . '.entity_id', $ids[$bundle], 'IN')
+        ->condition($table . '.langcode', $langcodes, 'IN')
+        ->isNotNull($table . '.' . $field);
+      $query->addField($table, 'entity_id', 'id');
+      $query->addField($table, 'langcode', 'langcode');
+      $query->addField($table, $field, 'value');
 
       foreach ($query->execute() ?? [] as $record) {
         $data[$bundle][$field_name][$record->langcode][$record->id][] = $record->value;

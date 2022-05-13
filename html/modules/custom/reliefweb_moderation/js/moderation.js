@@ -276,7 +276,7 @@
        * Create the autocomplete widget.
        */
       function createAutocompletWidget(omnibox, select, selection) {
-        var url = '/moderation/content/' + omnibox.getAttribute('data-bundle') + '/autocomplete/';
+        var url = omnibox.getAttribute('data-autocomplete-url');
         var removeDiacritics = SimpleAutocomplete.removeDiacritics;
 
         var parent = omnibox.parentNode;
@@ -408,8 +408,6 @@
         return active;
       }
 
-      console.log('here I am');
-
       /**
        * Logic.
        */
@@ -491,14 +489,17 @@
           target.parentNode.parentNode.removeChild(target.parentNode);
         }
       });
-
       // Prevent form submission when pressing 'enter'.
       form.addEventListener('keydown', function (event) {
         var key = event.witch || event.keyCode;
         var target = event.target;
-        if (key === 13 && target && target.nodeName !== 'BUTTON') {
-          event.preventDefault();
-          return false;
+
+        if (key === 13 && target) {
+          // Except when Filter or Reset inputs or Create Node link is target.
+          if (target.type !== 'submit' && target.nodeName !== 'BUTTON' && target.id !== 'edit-create') {
+            event.preventDefault();
+            return false;
+          }
         }
       });
 

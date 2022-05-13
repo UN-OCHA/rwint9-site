@@ -1,9 +1,9 @@
-uuid: ffb046dd-1934-4d1c-8ee4-2599e4fd8ea7
+uuid: 4fc60d06-43b2-417f-a2d3-52d8ed6c3d66
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: 28hKbSSm2NXGzfz6wF5A1u0yv_mDqf6Jf_jijb8scms
+  default_config_hash: gZG9cXwinvrvvcDM-RylXOVTHnUloZQjwPsmKlBbMA0
 id: reliefweb_taxonomy_term_revision__disaster
 class: null
 field_plugin_method: null
@@ -14,7 +14,7 @@ label: 'Migrate ReliefWeb disaster taxonomy term revisions.'
 source:
   bundle: disaster
 process:
-  moderation_state:
+  moderation_status:
     default_value: draft
   field_country:
     plugin: sub_process

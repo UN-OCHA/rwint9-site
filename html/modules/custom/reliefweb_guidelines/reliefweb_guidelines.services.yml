@@ -1,0 +1,17 @@
+services:
+  reliefweb_guidelines.route_subscriber:
+    class: 'Drupal\reliefweb_guidelines\Routing\RouteSubscriber'
+    tags:
+      - { name: event_subscriber }
+  reliefweb_moderation.field_guideline.moderation:
+    class: Drupal\reliefweb_guidelines\Services\GuidelineModeration
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation']
+  reliefweb_moderation.guideline_list.moderation:
+    class: Drupal\reliefweb_guidelines\Services\GuidelineListModeration
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation']
+  reliefweb_entities.field_guideline.form_alter:
+    class: Drupal\reliefweb_guidelines\Services\GuidelineFormAlter
+    arguments: ['@database', '@current_user', '@entity_field.manager', '@entity_type.manager', '@state', '@string_translation']
+  reliefweb_entities.guideline_list.form_alter:
+    class: Drupal\reliefweb_guidelines\Services\GuidelineListFormAlter
+    arguments: ['@database', '@current_user', '@entity_field.manager', '@entity_type.manager', '@state', '@string_translation']

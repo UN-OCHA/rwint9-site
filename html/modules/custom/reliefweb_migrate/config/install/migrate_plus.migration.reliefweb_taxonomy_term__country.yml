@@ -5,7 +5,7 @@ source:
   bundle: country
 process:
   # Moderation status.
-  moderation_state:
+  moderation_status:
     default_value: normal
   # Fields.
   field_aliases/value:

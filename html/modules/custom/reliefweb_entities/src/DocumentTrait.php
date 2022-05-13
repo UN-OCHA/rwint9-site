@@ -6,6 +6,7 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Field\EntityReferenceFieldItemList;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
+use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
 use Drupal\reliefweb_utility\Helpers\MediaHelper;
@@ -13,7 +14,7 @@ use Drupal\reliefweb_utility\Helpers\MediaHelper;
 /**
  * Trait implementing most methods of the DocumentInterface.
  *
- * @see Drupal\reliefweb_entities\DocuemntInterface
+ * @see Drupal\reliefweb_entities\DocumentInterface
  */
 trait DocumentTrait {
 
@@ -211,6 +212,13 @@ trait DocumentTrait {
       '#title' => $title,
       '#resource' => 'reports',
       '#entities' => $entities,
+      '#cache' => [
+        'tags' => [
+          'node_list:report',
+          'taxonomy_term_list:country',
+          'taxonomy_term_list:source',
+        ],
+      ],
     ];
   }
 
@@ -267,7 +275,7 @@ trait DocumentTrait {
    *
    * @see Drupal\reliefweb_entities\DocumentInterface::getEntityMetaFromField()
    */
-  public function getEntityMetaFromField($field, $code, array $extra_fields = ['shortname' => 'shortname']) {
+  public function getEntityMetaFromField($field, $code = NULL, array $extra_fields = ['shortname' => 'shortname']) {
     $field = 'field_' . $field;
 
     if (!$this->hasField($field) || !$this->{$field} instanceof EntityReferenceFieldItemList) {
@@ -283,11 +291,22 @@ trait DocumentTrait {
 
     $items = [];
     foreach ($this->{$field}->referencedEntities() as $entity) {
+      if ($entity instanceof EntityModeratedInterface && !$entity->access('view')) {
+        continue;
+      }
+
+      if ($code !== NULL) {
+        $url = RiverServiceBase::getRiverUrl($this->bundle(), [
+          'advanced-search' => '(' . $code . $entity->id() . ')',
+        ]);
+      }
+      else {
+        $url = $entity->toUrl();
+      }
+
       $item = [
         'name' => $entity->label(),
-        'url' => RiverServiceBase::getRiverUrl($this->bundle(), [
-          'advanced-search' => '(' . $code . $entity->id() . ')',
-        ]),
+        'url' => $url,
       ];
 
       if (!empty($main_id) && $entity->id() === $main_id) {

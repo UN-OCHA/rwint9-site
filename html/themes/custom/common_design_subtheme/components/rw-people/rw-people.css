@@ -1,0 +1,134 @@
+/**
+ * User administration form.
+ *
+ * Style the Drupal forms to manage users and permissions.
+ */
+.reliefweb-users-form {
+  padding-top: 24px;
+}
+
+.reliefweb-users-form .form-item-job-rights label:after,
+.reliefweb-users-form .form-item-training-rights label:after {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-left: 5px;
+  content: "";
+  vertical-align: middle;
+  border-radius: 4px;
+}
+.reliefweb-users-form .form-item-job-rights input[value="unverified"] + label:after,
+.reliefweb-users-form .form-item-training-rights input[value="unverified"] + label:after {
+  background: #f49e2c;
+}
+.reliefweb-users-form .form-item-job-rights input[value="blocked"] + label:after,
+.reliefweb-users-form .form-item-training-rights input[value="blocked"] + label:after {
+  background: #da190b;
+}
+.reliefweb-users-form .form-item-job-rights input[value="allowed"] + label:after,
+.reliefweb-users-form .form-item-training-rights input[value="allowed"] + label:after {
+  background: #076d96;
+}
+.reliefweb-users-form .form-item-job-rights input[value="trusted"] + label:after,
+.reliefweb-users-form .form-item-training-rights input[value="trusted"] + label:after {
+  background: #88bb09;
+}
+.reliefweb-users-form .form-actions.form-item {
+  margin-top: 16px;
+}
+.reliefweb-users-form .form-actions a {
+  display: inline-block;
+  margin-top: 12px;
+  margin-inline-start: 0.5rem;
+  padding: 4px 8px;
+  text-transform: lowercase;
+  border: 2px solid var(--cd-reliefweb-brand-blue--dark);
+  border-radius: 8px;
+  line-height: 20px;
+}
+
+/* Users table */
+.users-list {
+  margin: 1rem 0 0;
+}
+.users-list th {
+  color: var(--cd-grey--dark);
+  border-bottom: 1px solid var(--cd-reliefweb-brand-grey--light);
+  background: var(--cd-reliefweb-brand-grey--light);
+}
+.users-list th a {
+  word-break: unset;
+}
+.users-list td:nth-child(7),
+.users-list td:nth-child(8) {
+  font-size: 15px;
+}
+.users-list th.is-active {
+  white-space: nowrap;
+}
+.users-list caption {
+  padding: 0;
+  caption-side: top;
+  text-align: center;
+  background: transparent;
+}
+
+.users-list .tablesort {
+  display: inline-block;
+  overflow: hidden;
+  width: 12px;
+  height: 12px;
+  margin-top: -4px;
+  margin-left: 4px;
+  content: "";
+  vertical-align: middle;
+  background: var(--rw-icons--toggle--down--12--dark-blue);
+}
+.users-list .tablesort--desc {
+  background: var(--rw-icons--toggle--up--12--dark-blue);
+}
+
+/* List of users */
+.users-list ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.users-list li {
+  margin-bottom: 0;
+}
+.users-list li a {
+  margin-right: 4px;
+}
+.users-list li + li {
+  border-top: 1px dotted var(--cd-reliefweb-brand-grey--light);
+}
+.users-list li[data-job]:before {
+  display: inline-block;
+  float: right;
+  width: 12px;
+  height: 12px;
+  margin: 4px 16px 0 0;
+  content: "";
+  border-radius: 4px;
+  background: var(--cd-reliefweb-orange);
+  box-shadow: 16px 0 var(--cd-reliefweb-orange);
+}
+.users-list li[data-job="1"]:before {
+  background: var(--cd-reliefweb-red);
+}
+.users-list li[data-job="2"]:before {
+  background: var(--cd-reliefweb-blue);
+}
+.users-list li[data-job="3"]:before {
+  background: var(--cd-reliefweb-green);
+}
+.users-list li[data-training="1"]:before {
+  box-shadow: 16px 0 var(--cd-reliefweb-red);
+}
+.users-list li[data-training="2"]:before {
+  box-shadow: 16px 0 var(--cd-reliefweb-blue);
+}
+.users-list li[data-training="3"]:before {
+  box-shadow: 16px 0 var(--cd-reliefweb-green);
+}

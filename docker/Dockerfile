@@ -21,7 +21,7 @@ RUN rm -rf ./vendor && \
 # to running `composer sass` but without hitting the PHP timeout from composer.
 RUN cd html/themes/custom/common_design_subtheme && \
     rm -rf ./node_modules && \
-    npm install && \
+    npm install --omit=dev -f && \
     ./node_modules/.bin/sass sass:build && \
     rm -rf ./node_modules
 
@@ -54,9 +54,14 @@ LABEL info.humanitarianresponse.build.date=$BUILD_DATE \
       info.humanitarianresponse.build.vcs-url=$VCS_URL \
       info.humanitarianresponse.build.vcs-ref=$VCS_REF
 
-# Add the AWS RDS global certificate bundle into the image, so PDO can use it.
-RUN  curl -s -o /etc/ssl/global-bundle.pem https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem && \
-     chmod 644 /etc/ssl/global-bundle.pem
+RUN mkdir -p /etc/nginx/custom && \
+    # Install lua resty library to generate UUIDs.
+    cd /tmp && \
+    git clone --branch=0.0.7 https://github.com/thibaultcha/lua-resty-jit-uuid.git && \
+    cp lua-resty-jit-uuid/lib/resty/jit-uuid.lua /usr/share/lua/common/resty/ && \
+    rm -rf /tmp/lua-resty-jit-uuid && \
+    # Permit nginx access to the X_DOCSTORE_PROVIDER_UUID env variable.
+    sed -i 's/env NGINX_OVERRIDE_PROTOCOL;/env NGINX_OVERRIDE_PROTOCOL;\n\n## Allow retrieval of a particular file version from the docstore.\nenv X_DOCSTORE_PROVIDER_UUID;/' /etc/nginx/nginx.conf
 
 COPY --from=builder /srv/www/config /srv/www/config/
 COPY --from=builder /srv/www/html /srv/www/html/
@@ -69,3 +74,5 @@ COPY --from=builder /srv/www/patches /srv/www/patches
 COPY --from=builder /srv/www/scripts /srv/www/scripts
 COPY --from=builder /srv/www/docker/etc/nginx/apps/drupal/fastcgi_drupal.conf /etc/nginx/apps/drupal/fastcgi_drupal.conf
 COPY --from=builder /srv/www/docker/etc/nginx/apps/drupal/drupal.conf /etc/nginx/apps/drupal/drupal.conf
+COPY --from=builder /srv/www/docker/etc/nginx/custom /etc/nginx/custom/
+COPY --from=builder /srv/www/docker/etc/nginx/sites-enabled/01_uuid.conf /etc/nginx/sites-enabled/01_uuid.conf

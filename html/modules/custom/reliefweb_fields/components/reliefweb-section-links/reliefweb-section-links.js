@@ -351,12 +351,14 @@
       if (typeof error === 'string' && error !== '') {
         var message = document.createElement('div');
         message.setAttribute('data-error-message', '');
-        message.setAttribute('class', 'messages error');
+        message.setAttribute('class', 'messages error cd-form__error-message');
         message.appendChild(document.createTextNode(error));
 
         // Add the message at the top of the fieldset.
         var sibling = this.form.querySelector('div[data-link-form]');
-        this.form.insertBefore(message, sibling);
+        if (sibling) {
+          this.form.insertBefore(message, sibling);
+        }
 
         // Mark the element as erroneous.
         element.setAttribute('data-error', '');

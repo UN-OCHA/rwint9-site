@@ -2,13 +2,19 @@
 
 namespace Drupal\reliefweb_rivers\Services;
 
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Pager\PagerParametersInterface;
+use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\reliefweb_api\Services\ReliefWebApiClient;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Service class to retrieve job resource for the job rivers.
@@ -53,11 +59,26 @@ class TopicRiver extends RiverServiceBase {
    * {@inheritdoc}
    */
   public function getPageContent() {
+    $river = Html::getId($this->getRiver());
+
     return [
-      '#theme' => 'reliefweb_rivers_page__topics',
-      '#river' => $this->river,
+      '#theme' => 'reliefweb_rivers_page__' . $river,
+      '#river' => $river,
       '#title' => $this->getPageTitle(),
       '#content' => $this->getRiverContent(),
+      '#cache' => [
+        'keys' => [
+          'reliefweb',
+          'rivers',
+          'page',
+          $river,
+        ],
+      ],
+      '#cache_properties' => [
+        '#river',
+        '#title',
+        '#content',
+      ],
     ];
   }
 
@@ -73,23 +94,50 @@ class TopicRiver extends RiverServiceBase {
   /**
    * Constructor.
    *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory.
+   * @param \Drupal\Core\Session\AccountProxyInterface $current_user
+   *   The current user.
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   The language manager.
    * @param \Drupal\Core\Pager\PagerManagerInterface $pager_manager
    *   The pager manager service.
    * @param \Drupal\Core\Pager\PagerParametersInterface $pager_parameters
    *   The pager parameter service.
    * @param \Drupal\reliefweb_api\Services\ReliefWebApiClient $api_client
    *   The ReliefWeb API Client service.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   *   The request stack.
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   *   The renderer service.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The translation manager service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager service.
    */
-  public function __construct(PagerManagerInterface $pager_manager, PagerParametersInterface $pager_parameters, ReliefWebApiClient $api_client, TranslationInterface $string_translation, EntityTypeManagerInterface $entity_type_manager) {
-    $this->pagerManager = $pager_manager;
-    $this->pagerParameters = $pager_parameters;
-    $this->apiClient = $api_client;
-    $this->stringTranslation = $string_translation;
-    $this->url = static::getRiverUrl($this->bundle);
+  public function __construct(
+    ConfigFactoryInterface $config_factory,
+    AccountProxyInterface $current_user,
+    LanguageManagerInterface $language_manager,
+    PagerManagerInterface $pager_manager,
+    PagerParametersInterface $pager_parameters,
+    ReliefWebApiClient $api_client,
+    RequestStack $request_stack,
+    RendererInterface $renderer,
+    TranslationInterface $string_translation,
+    EntityTypeManagerInterface $entity_type_manager
+  ) {
+    parent::__construct(
+      $config_factory,
+      $current_user,
+      $language_manager,
+      $pager_manager,
+      $pager_parameters,
+      $api_client,
+      $request_stack,
+      $renderer,
+      $string_translation
+    );
     $this->entityTypeManager = $entity_type_manager;
   }
 
@@ -140,6 +188,7 @@ class TopicRiver extends RiverServiceBase {
     // Get the community topics.
     $community_topics = [];
     foreach (reliefweb_topics_get_all_community_topics() as $data) {
+      $data = is_array($data) ? (object) $data : $data;
       if (!empty($data->title) && !empty($data->url)) {
         $community_topics[] = [
           'title' => $data->title,

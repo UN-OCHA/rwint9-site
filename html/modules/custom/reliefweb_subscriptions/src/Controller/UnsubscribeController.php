@@ -2,13 +2,10 @@
 
 namespace Drupal\reliefweb_subscriptions\Controller;
 
-/**
- * @file
- * Unsubscribe controller.
- */
-
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -17,6 +14,7 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
  * Unsubscribe controller.
  */
 class UnsubscribeController extends ControllerBase {
+
   /**
    * Account.
    *
@@ -68,6 +66,24 @@ class UnsubscribeController extends ControllerBase {
     }
 
     throw new AccessDeniedHttpException();
+  }
+
+  /**
+   * Check the access to the page.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   User account to check access for.
+   * @param \Drupal\user\UserInterface $user
+   *   User account for the user posts page.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   The access result.
+   */
+  public function checkUserAccess(AccountInterface $account, UserInterface $user) {
+    if ($account->id() == $user->id()) {
+      return AccessResult::allowedIf($account->hasPermission('manage own subscriptions'));
+    }
+    return AccessResult::allowedIf($account->hasPermission('manage other subscriptions') || $account->hasPermission('administer subscriptions'));
   }
 
 }

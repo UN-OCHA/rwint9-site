@@ -8,19 +8,23 @@ use Drupal\node\Entity\Node;
 use Drupal\reliefweb_entities\BundleEntityInterface;
 use Drupal\reliefweb_entities\DocumentInterface;
 use Drupal\reliefweb_entities\DocumentTrait;
+use Drupal\reliefweb_entities\OpportunityDocumentInterface;
+use Drupal\reliefweb_entities\OpportunityDocumentTrait;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\EntityModeratedTrait;
 use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_revisions\EntityRevisionedTrait;
+use Drupal\reliefweb_utility\Helpers\DateHelper;
 
 /**
  * Bundle class for job nodes.
  */
-class Job extends Node implements BundleEntityInterface, EntityModeratedInterface, EntityRevisionedInterface, DocumentInterface {
+class Job extends Node implements BundleEntityInterface, EntityModeratedInterface, EntityRevisionedInterface, DocumentInterface, OpportunityDocumentInterface {
 
   use DocumentTrait;
   use EntityModeratedTrait;
   use EntityRevisionedTrait;
+  use OpportunityDocumentTrait;
   use StringTranslationTrait;
 
   /**
@@ -34,18 +38,6 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
    * {@inheritdoc}
    */
   public static function addFieldConstraints(&$fields) {
-    // Restrict body length.
-    $fields['body']->addConstraint('TextLengthWithinRange', [
-      'min' => 400,
-      'max' => 50000,
-    ]);
-
-    // Restrict how to apply length.
-    $fields['field_how_to_apply']->addConstraint('TextLengthWithinRange', [
-      'min' => 100,
-      'max' => 10000,
-    ]);
-
     // The city field cannot have a value if the country field is empty.
     $fields['field_city']->addConstraint('EmptyIfOtherFieldEmpty', [
       'otherFieldName' => 'field_country',
@@ -59,6 +51,8 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
     ]);
 
     // Closing date cannot be in the past.
+    // @todo remove this constraint and add it to the form only as we want to
+    // be able to save expired jobs for example when importing.
     $fields['field_job_closing_date']->addConstraint('DateNotInPast', [
       'statuses' => ['pending', 'published'],
       'permission' => 'edit any job content',
@@ -77,8 +71,8 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
     return [
       'posted' => $this->createDate($this->getCreatedTime()),
       'closing' => $this->createDate($this->field_job_closing_date->value),
-      'country' => $this->getEntityMetaFromField('country', 'C'),
-      'source' => $this->getEntityMetaFromField('source', 'S'),
+      'country' => $this->getEntityMetaFromField('country'),
+      'source' => $this->getEntityMetaFromField('source'),
       'city' => $this->field_city->value ?? '',
       'type' => $this->getEntityMetaFromField('job_type', 'TY'),
       'career_category' => $this->getEntityMetaFromField('career_categories', 'CC'),
@@ -128,11 +122,53 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
       $this->set('field_theme', $themes);
     }
 
+    // @todo remove when removing `reliefweb_migrate`.
+    if (!empty($this->_is_migrating)) {
+      parent::preSave($storage);
+      return;
+    }
+
+    // Update the entity status based on the user posting rights.
+    $this->updateModerationStatusFromPostingRights();
+
+    // Update the entity status based on the source(s) moderation status.
+    $this->updateModerationStatusFromSourceStatus();
+
+    // Update the entity status based on the expiration date.
+    $this->updateModerationStatusFromExpirationDate();
+
+    // Update the creation date when published for the first time so that
+    // the opportunity can appear at the top of the opportunity river.
+    $this->updateDateWhenPublished();
+
     parent::preSave($storage);
   }
 
   /**
-   * Get the list of job categories for which themes are irrelevant.
+   * {@inheritdoc}
+   */
+  public function postSave(EntityStorageInterface $storage, $update = TRUE) {
+    parent::postSave($storage, $update);
+
+    // @todo remove when removing `reliefweb_migrate`.
+    if (!empty($this->_is_migrating)) {
+      return;
+    }
+
+    // Make the sources active.
+    $this->updateSourceModerationStatus();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasExpired() {
+    $timestamp = DateHelper::getDateTimeStamp($this->field_job_closing_date->value);
+    return empty($timestamp) || ($timestamp < gmmktime(0, 0, 0));
+  }
+
+  /**
+   * Get the list of countries that are irrelevant for jobs.
    *
    * @return array
    *   List of theme term ids.
@@ -145,13 +181,13 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
   }
 
   /**
-   * Get the list of job categories for which themes are irrelevant.
+   * Get the list of themes that are irrelevant for jobs.
    *
    * @return array
    *   List of theme term ids.
    */
   public static function getJobIrrelevantThemes() {
-    // Irrelevant career categories (Trello #RfWgIdwA):
+    // Irrelevant themes (Trello #RfWgIdwA):
     // - Contributions (4589) (Collab #2327).
     // - Humanitarian Financing (4597) (Trello #OnXq5cCC).
     // - Logistics and Telecommunications (4598) (Trello #G3YgNUF6).

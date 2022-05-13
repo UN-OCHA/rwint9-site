@@ -20,7 +20,7 @@
   display: inline-block;
   padding-bottom: 3px;
   text-decoration: none;
-  color: #2e3436;
+  color: var(--cd-reliefweb-brand-grey--dark);
   border-bottom: 3px solid transparent;
   font-size: 18px;
 }
@@ -28,10 +28,10 @@
 .rw-river-page .rw-river-views a:focus,
 .rw-river-page .rw-river-views a:active {
   text-decoration: none;
-  border-color: #e6ecef;
+  border-color: var(--cd-reliefweb-brand-grey--light);
 }
 .rw-river-page .rw-river-views .rw-river-views__list__item--selected a {
-  border-color: #eb1405;
+  border-color: var(--cd-reliefweb-brand-red--dark);
   font-size: 22px;
   font-weight: bold;
 }
@@ -41,6 +41,6 @@
     font-size: 20px;
   }
   .rw-river-page .rw-river-views .rw-river-views__list__item--selected a {
-    font-size: 24px;
+    font-size: var(--cd-font-size--large);
   }
 }

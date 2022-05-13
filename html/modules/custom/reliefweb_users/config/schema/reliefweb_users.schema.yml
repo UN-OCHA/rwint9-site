@@ -1,0 +1,7 @@
+reliefweb_users.settings:
+  type: config_object
+  label: 'Reliefweb Users settings'
+  mapping:
+    email_confirmation_timeout:
+      type: integer
+      label: 'Validity duration of an email confirmation link (in seconds)'

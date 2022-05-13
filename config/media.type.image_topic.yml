@@ -3,7 +3,7 @@ langcode: en
 status: true
 dependencies: {  }
 id: image_topic
-label: 'Image - Topics'
+label: 'Image - Topic'
 description: 'Icon images for topics.'
 source: image
 queue_thumbnail_downloads: false

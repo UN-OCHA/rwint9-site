@@ -35,7 +35,7 @@ content:
       placeholder: ''
     third_party_settings:
       allowed_formats:
-        hide_help: '1'
+        hide_help: '0'
         hide_guidelines: '1'
   field_appeals_response_plans:
     type: reliefweb_links
@@ -72,7 +72,6 @@ hidden:
   field_primary_disaster_type: true
   field_timezone: true
   langcode: true
-  moderation_state: true
   name: true
   path: true
   status: true

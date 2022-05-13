@@ -183,16 +183,6 @@ interface ModerationServiceInterface {
   public function validateEntityStatus(array $element, FormStateInterface $form_state);
 
   /**
-   * Submit handler to alter the moderation status.
-   *
-   * @param array $form
-   *   Entity form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   Form state.
-   */
-  public function handleEntitySubmission(array $form, FormStateInterface $form_state);
-
-  /**
    * Get the final entity status based on the rest of the form.
    *
    * @param string $status
@@ -270,5 +260,27 @@ interface ModerationServiceInterface {
    *   The moderation service or NULL if not found.
    */
   public static function getModerationService($bundle);
+
+  /**
+   * Check access to the moderation pages.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The user accessing the page.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   Access result.
+   */
+  public function checkModerationPageAccess(AccountInterface $account);
+
+  /**
+   * Get the entity creation URL for the bundle.
+   *
+   * @param string $bundle
+   *   The entity bundle for which to get the creation URL.
+   *
+   * @return \Drupal\Core\Url|null
+   *   URL to create an entity of the service's bundle.
+   */
+  public function getBundleCreationUrl($bundle);
 
 }

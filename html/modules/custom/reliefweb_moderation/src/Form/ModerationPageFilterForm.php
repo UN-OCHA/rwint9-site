@@ -5,7 +5,6 @@ namespace Drupal\reliefweb_moderation\Form;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Url;
 use Drupal\reliefweb_moderation\ModerationServiceInterface;
 
 /**
@@ -36,8 +35,9 @@ class ModerationPageFilterForm extends FormBase {
     $form['filters'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Filters'),
+      '#title_display' => 'invisible',
       '#attributes' => [
-        'class' => ['rw-moderation-filters'],
+        'class' => ['rw-moderation-filters__content'],
       ],
       '#tree' => TRUE,
     ];
@@ -85,6 +85,11 @@ class ModerationPageFilterForm extends FormBase {
                 '#parents' => ['omnibox'],
                 '#weight' => 2,
                 '#optional' => FALSE,
+                '#attributes' => [
+                  'class' => [
+                    'rw-moderation-filter-omnibox',
+                  ],
+                ],
               ];
               $form['filters']['omnibox']['select'] = [
                 '#type' => 'select',
@@ -96,7 +101,7 @@ class ModerationPageFilterForm extends FormBase {
                 '#type' => 'textfield',
                 '#attributes' => [
                   'autocomplete' => 'off',
-                  'data-bundle' => $service->getBundle(),
+                  'data-autocomplete-url' => $this->getAutocompleteUrl($form_state, $service),
                 ],
                 // @todo review if that shouldn't be added by the autocomplete
                 // instead or even if that's necessary at all.
@@ -175,7 +180,7 @@ class ModerationPageFilterForm extends FormBase {
               $label = $item;
             }
             else {
-              list($value, $label) = explode(':', $item, 2);
+              [$value, $label] = explode(':', $item, 2);
             }
             $selection .= new FormattableMarkup(implode('', [
               '<div data-value="@value">',
@@ -204,20 +209,6 @@ class ModerationPageFilterForm extends FormBase {
       '#weight' => 4,
     ];
 
-    // Link to create a new entity.
-    $bundle = $service->getBundle();
-    $url_options = ['attributes' => ['target' => '_blank']];
-    if ($service->getEntityTypeId() === 'taxonomy_term') {
-      $create_url = Url::fromRoute('entity.taxonomy_term.add_form', [
-        'taxonomy_vocabulary' => $bundle,
-      ], $url_options);
-    }
-    else {
-      $create_url = Url::fromRoute('node.add', [
-        'node_type' => $bundle,
-      ], $url_options);
-    }
-
     // Add the filter and reset buttons.
     $form['actions'] = [
       '#type' => 'actions',
@@ -241,11 +232,19 @@ class ModerationPageFilterForm extends FormBase {
       '#value' => $this->t('Reset'),
       '#submit' => ['::resetForm'],
     ];
-    $form['actions']['create'] = [
-      '#type' => 'link',
-      '#url' => $create_url,
-      '#title' => $this->t('Create @bundle', ['@bundle' => $bundle]),
-    ];
+
+    // Link to create a new entity.
+    $bundle = $service->getBundle();
+
+    if (!empty($bundle) && is_string($bundle)) {
+      $form['actions']['create'] = [
+        '#type' => 'link',
+        '#url' => $service->getBundleCreationUrl($bundle),
+        '#title' => $this->t('Create @bundle', [
+          '@bundle' => static::getBundleLabel($service->getEntityTypeId(), $bundle),
+        ]),
+      ];
+    }
 
     // Add the data to be passed to the js scripts (shortcuts etc.).
     $form['content']['#attached'] = [
@@ -275,6 +274,41 @@ class ModerationPageFilterForm extends FormBase {
   public function resetForm(array $form, FormStateInterface $form_state) {
     $form_state->setProgrammed(FALSE);
     $form_state->setRedirect('<current>');
+  }
+
+  /**
+   * Get the autocomplete URL for the omnibox.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   * @param \Drupal\reliefweb_moderation\ModerationServiceInterface $service
+   *   The moderation service associated with this form.
+   *
+   * @return string
+   *   Autocomplete URL.
+   */
+  protected function getAutocompleteUrl(FormStateInterface $form_state, ModerationServiceInterface $service) {
+    $bundle = $service->getBundle();
+    if (is_array($bundle)) {
+      $bundle = reset($bundle);
+    }
+    return '/moderation/content/' . $bundle . '/autocomplete/';
+  }
+
+  /**
+   * Get a bundle's label.
+   *
+   * @param string $entity_type_id
+   *   Entity type ID.
+   * @param string $bundle
+   *   Entity bundle.
+   *
+   * @return string
+   *   Bundle label.
+   */
+  public static function getBundleLabel($entity_type_id, $bundle) {
+    $bundle_info = \Drupal::service('entity_type.bundle.info')->getBundleInfo($entity_type_id);
+    return $bundle_info[$bundle]['label'] ?? $bundle;
   }
 
 }

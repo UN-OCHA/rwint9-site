@@ -4,86 +4,90 @@
  * Individual report pages. Those are made of the main content body with
  * eventual attachments.
  */
-/* Lists in content */
-.node--report--full li {
-  margin: 8px 0 0;
-}
+
 /* Attachments. */
-.node--report--full #attachments {
+.node--report--full .rw-report__content section {
+  padding-top: 0;
+}
+.node--report--full .rw-attachment {
   margin: 0 auto 24px auto;
   padding-top: 0;
 }
-.node--report--full #attachments.report {
+.node--report--full .rw-attachment.rw-attachment--report {
   max-width: 220px;
 }
 
 @media screen and (min-width: 480px) {
-  .node--report--full #attachments.report {
+  .node--report--full .rw-attachment.rw-attachment--report {
     float: right;
     margin-left: 24px;
   }
 }
-.node--report--full #attachments ul {
+.node--report--full .rw-attachment ul {
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.node--report--full #attachments li {
+.node--report--full .rw-attachment li {
   margin: 0;
   padding: 16px 0;
   text-align: center;
-  border: 1px solid #e6ecef;
+  border: 1px solid var(--cd-reliefweb-brand-grey--light);
 }
-.node--report--full #attachments li + li {
+.node--report--full .rw-attachment li + li {
   margin-top: 24px;
 }
-.node--report--full #attachments img {
+.node--report--full .rw-attachment img {
   width: 100%;
   margin: -16px 0 8px 0;
-  border-bottom: 1px solid #e6ecef;
+  border-bottom: 1px solid var(--cd-reliefweb-brand-grey--light);
 }
-.node--report--full #attachments strong {
+.node--report--full .rw-attachment strong {
   display: block;
   padding: 0 16px;
 }
-.node--report--full #attachments strong:first-letter {
+.node--report--full .rw-attachment strong:first-letter {
   text-transform: capitalize;
 }
-.node--report--full #attachments span {
+.node--report--full .rw-attachment span {
   display: block;
   padding: 4px 16px 0 16px;
   font-size: 14px;
 }
 /* Interactive tool screenshots. */
-.node--report--full #interactive {
+.node--report--full .rw-attachment--interactive {
   padding-top: 0;
   text-align: center;
 }
-.node--report--full #interactive h3 {
+.node--report--full .rw-attachment--interactive .rw-attachment__title {
   margin: 0;
   padding: 0 0 20px 0;
   border: none;
   font-size: 16px;
   font-weight: normal;
 }
-.node--report--full #interactive figure a:after {
+.node--report--full .rw-attachment--interactive figure a[target="_blank"][rel~="noopener"]::after {
   display: none;
 }
-.node--report--full #interactive figure figcaption {
+.node--report--full .rw-attachment--interactive figure figcaption {
   padding: 4px;
-  background: #e6ecef;
+  background: var(--cd-reliefweb-brand-grey--light);
 }
-.node--report--full #interactive figure img {
+.node--report--full .rw-attachment--interactive figure img {
   width: 100%;
-  border: 1px solid #e6ecef;
+  margin: 0;
+  border: 1px solid var(--cd-reliefweb-brand-grey--light);
 }
-.node--report--full #interactive figure a:hover img,
-.node--report--full #interactive figure a:active img,
-.node--report--full #interactive figure a:focus img {
-  border-color: #055372;
+.node--report--full .rw-attachment--interactive figure a:hover img,
+.node--report--full .rw-attachment--interactive figure a:active img,
+.node--report--full .rw-attachment--interactive figure a:focus img {
+  border-color: var(--cd-reliefweb-brand-blue--dark);
 }
-.node--report--full #interactive footer {
+.node--report--full .rw-attachment--interactive footer {
   padding-top: 4px;
+}
+.node--report--full .rw-attachment + p {
+  margin-top: 0;
 }
 
 .node--report--full .rw-entity-source-disclaimers {
@@ -99,4 +103,20 @@
 .node--report--full .rw-entity-source-disclaimers dd {
   margin: 4px 0 0 0;
   padding: 0;
+}
+
+/* Lists in content */
+.node--report--full li {
+  margin: 8px 0 0;
+}
+
+/* Special rules for The Conversation counter images... */
+.node--report--full img[src*="counter.theconversation.com"] {
+  position: absolute;
+  visibility: hidden;
+  width: 1px;
+  height: 1px;
+}
+.node--report--full img[src*="counter.theconversation.com"] + p {
+  margin-top: 0;
 }

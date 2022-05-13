@@ -1,11 +1,12 @@
-uuid: 958a5dcb-a157-4810-8879-b2631a0f175f
+uuid: 6bd4bf62-1601-4f2d-b309-a598924cca2b
 langcode: en
 status: true
 dependencies:
   config:
     - field.storage.node.field_file
-    - media.type.file_report
     - node.type.report
+  module:
+    - reliefweb_files
 id: node.report.field_file
 field_name: field_file
 entity_type: node
@@ -14,16 +15,11 @@ label: Attachments
 description: ''
 required: false
 translatable: false
-default_value: {  }
+default_value:
+  -
+    _original_values: {  }
 default_value_callback: ''
 settings:
-  handler: 'default:media'
-  handler_settings:
-    target_bundles:
-      file_report: file_report
-    sort:
-      field: mid
-      direction: DESC
-    auto_create: false
-    auto_create_bundle: ''
-field_type: entity_reference
+  file_extensions: 'csv doc docx jpg jpeg odp ods odt pdf png pps ppt pptx svg xls xlsx zip'
+  max_filesize: ''
+field_type: reliefweb_file

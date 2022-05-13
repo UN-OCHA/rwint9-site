@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\reliefweb_import\Unit;
 
+use Drupal\Component\Utility\Html;
+
 /**
  * Tests reliefweb importer.
  *
@@ -83,11 +85,95 @@ class ReliefwebImporterStringTest extends ReliefwebImporterTestBase {
   }
 
   /**
-   * Tests for sanize text.
+   * Tests for sanize text wrapped in CDATA.
    */
   public function testsanitizeTextCdata() {
     $test_string = $this->random->sentences(300);
     $this->assertEquals($test_string, $this->reliefwebImporter->sanitizeText('body', '<![CDATA[' . $test_string . ']]>'));
+  }
+
+  /**
+   * Tests for sanize markdown text.
+   */
+  public function testsanitizeMarkdown() {
+    $test_string = "This is a test.\n\nWith a bith of __bold__ text and a [link](https://example.test)";
+    $expected = "This is a test.\n\nWith a bith of **bold** text and a [link](https://example.test)";
+    $this->assertEquals($expected, $this->reliefwebImporter->sanitizeText('body', $test_string));
+  }
+
+  /**
+   * Tests for sanize markdown text wrapped in CDATA.
+   */
+  public function testsanitizeMarkdownWithCdata() {
+    $test_string = "This is a test.\n\nWith a bith of __bold__ text and a [link](https://example.test)";
+    $expected = "This is a test.\n\nWith a bith of **bold** text and a [link](https://example.test)";
+    $this->assertEquals($expected, $this->reliefwebImporter->sanitizeText('body', '<![CDATA[' . $test_string . ']]>'));
+  }
+
+  /**
+   * Tests for sanize markdown text wrapped in encoded CDATA.
+   */
+  public function testsanitizeMarkdownWithEncodedCdata() {
+    $test_string = "This is a test.\n\nWith a bith of __bold__ text and a [link](https://example.test)";
+    $expected = "This is a test.\n\nWith a bith of **bold** text and a [link](https://example.test)";
+    $this->assertEquals($expected, $this->reliefwebImporter->sanitizeText('body', '&lt;![CDATA[' . $test_string . ']]&gt;'));
+  }
+
+  /**
+   * Tests for sanize text with raw HTML.
+   */
+  public function testsanitizeHtml() {
+    $test_string = '<p>This is a test.</p><p style="font-size: 16px;">With a bith of <strong>bold</strong> text and a <a unrecognized="attribute" href="https://example.test">link</a></p>';
+    $expected = "This is a test.\n\nWith a bith of **bold** text and a [link](https://example.test)";
+    $this->assertEquals($expected, $this->reliefwebImporter->sanitizeText('body', $test_string));
+  }
+
+  /**
+   * Tests for sanize text with raw HTML wrapped in CDATA.
+   */
+  public function testsanitizeHtmlWithCdata() {
+    $test_string = '<p>This is a test.</p><p style="font-size: 16px;">With a bith of <strong>bold</strong> text and a <a unrecognized="attribute" href="https://example.test">link</a></p>';
+    $expected = "This is a test.\n\nWith a bith of **bold** text and a [link](https://example.test)";
+    $this->assertEquals($expected, $this->reliefwebImporter->sanitizeText('body', '<![CDATA[' . $test_string . ']]>'));
+  }
+
+  /**
+   * Tests for sanize text with raw HTML wrapped in CDATA.
+   */
+  public function testsanitizeHtmlWithEncodedCdata() {
+    $test_string = '<p>This is a test.</p><p style="font-size: 16px;">With a bith of <strong>bold</strong> text and a <a unrecognized="attribute" href="https://example.test">link</a></p>';
+    $expected = "This is a test.\n\nWith a bith of **bold** text and a [link](https://example.test)";
+    $this->assertEquals($expected, $this->reliefwebImporter->sanitizeText('body', '&lt;![CDATA[' . $test_string . ']]&gt;'));
+  }
+
+  /**
+   * Tests for sanize text with encoded HTML.
+   */
+  public function testsanitizeEncodedHtml() {
+    $test_string = '<p>This is a test.</p><p style="font-size: 16px;">With a bith of <strong>bold</strong> text and a <a unrecognized="attribute" href="https://example.test">link</a></p>';
+    $test_string = Html::escape($test_string);
+    $expected = "This is a test.\n\nWith a bith of **bold** text and a [link](https://example.test)";
+    $this->assertEquals($expected, $this->reliefwebImporter->sanitizeText('body', $test_string));
+  }
+
+  /**
+   * Tests for sanize text with encoded HTML wrapped in encoded CDATA.
+   */
+  public function testsanitizeEncodedHtmlWithCdata() {
+    $test_string = '<p>This is a test.</p><p style="font-size: 16px;">With a bith of <strong>bold</strong> text and a <a unrecognized="attribute" href="https://example.test">link</a></p>';
+    $test_string = Html::escape($test_string);
+    $expected = "This is a test.\n\nWith a bith of **bold** text and a [link](https://example.test)";
+    $this->assertEquals($expected, $this->reliefwebImporter->sanitizeText('body', '<![CDATA[' . $test_string . ']]>'));
+  }
+
+  /**
+   * Tests for sanize text with encoded HTML wrapped in encoded CDATA.
+   */
+  public function testsanitizeEncodedHtmlWithEncodedCdata() {
+    $test_string = '<p>This is a test.</p><p style="font-size: 16px;">With a bith of <strong>bold</strong> text and a <a unrecognized="attribute" href="https://example.test">link</a></p>';
+    $test_string = Html::escape($test_string);
+    $expected = "This is a test.\n\nWith a bith of **bold** text and a [link](https://example.test)";
+    $this->assertEquals($expected, $this->reliefwebImporter->sanitizeText('body', '&lt;![CDATA[' . $test_string . ']]&gt;'));
   }
 
   /**
@@ -120,7 +206,7 @@ class ReliefwebImporterStringTest extends ReliefwebImporterTestBase {
       $this->assertEquals($expected, $this->reliefwebImporter->validateCity($test_string));
     }
 
-    $test_string = '';
+    $test_string = 'a';
     $this->expectExceptionMessage(strtr('Invalid field size for field_city, @length characters found, has to be between 3 and 255', [
       '@length' => mb_strlen($test_string),
     ]));

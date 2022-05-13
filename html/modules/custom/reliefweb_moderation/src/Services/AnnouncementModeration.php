@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_moderation\Services;
 
+use Drupal\Core\Session\AccountInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 
@@ -124,6 +125,14 @@ class AnnouncementModeration extends ModerationServiceBase {
         '#value' => $this->t('Archive'),
       ],
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isViewableStatus($status, ?AccountInterface $account = NULL) {
+    $account = $account ?: $this->currentUser;
+    return !empty($account) && $account->hasPermission('edit any announcement content');
   }
 
   /**

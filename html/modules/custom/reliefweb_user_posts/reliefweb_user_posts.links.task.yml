@@ -1,0 +1,5 @@
+reliefweb_user_posts.user:
+  route_name: reliefweb_user_posts.content
+  base_route: entity.user.canonical
+  title: 'My posts'
+  weight: 100

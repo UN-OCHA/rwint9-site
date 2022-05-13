@@ -87,6 +87,33 @@ trait EntityDatabaseInfoTrait {
   }
 
   /**
+   * Get the revision table name for a field.
+   *
+   * @param string $entity_type_id
+   *   Entity type id.
+   * @param string $field_name
+   *   Field name.
+   *
+   * @return string
+   *   Field table name.
+   *
+   * @throws \Drupal\Core\Entity\Sql\SqlContentEntityStorageException
+   *   Exception of the field name table couldn't be retrieved.
+   */
+  protected function getFieldRevisionTableName($entity_type_id, $field_name) {
+    $field_storage_definitions = $this->getEntityFieldManager()
+      ->getFieldStorageDefinitions($entity_type_id);
+
+    if (!isset($field_storage_definitions[$field_name])) {
+      throw new SqlContentEntityStorageException("The {$entity_type_id} doesn't have the {$field_name} field");
+    }
+
+    return $this->getEntityTypeStorage($entity_type_id)
+      ->getTableMapping()
+      ->getDedicatedRevisionTableName($field_storage_definitions[$field_name]);
+  }
+
+  /**
    * Generates a column name for a field property.
    *
    * @param string $entity_type_id

@@ -59,6 +59,14 @@
     parameter.value = value;
   }
 
+  // Remove a form parameter.
+  function deleteFormParameter(form, name) {
+    var parameter = form.querySelector('input[name="' + name + '"]');
+    if (parameter) {
+      parameter.parentNode.removeChild(parameter);
+    }
+  }
+
   // Update and submit the form.
   function submitForm(form) {
     // Disable empty parameters so that they are not submitted and the url
@@ -91,9 +99,14 @@
   if (viewsList) {
     addEventListener(viewsList, 'click', function (event) {
       var target = event.target;
-      if (target && target.nodeName === 'A') {
+      if (target && target.nodeName === 'A' && target.hasAttribute('data-view')) {
         preventDefault(event);
-        setFormParameter(form, 'view', target.getAttribute('data-view'));
+        if (target.hasAttribute('data-default')) {
+          deleteFormParameter(form, 'view');
+        }
+        else {
+          setFormParameter(form, 'view', target.getAttribute('data-view'));
+        }
         submitForm(form);
       }
     });

@@ -114,6 +114,11 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
     // Mark the form for enhancement by the reliefweb_form module.
     $form['#attributes']['data-enhanced'] = '';
 
+    // Remove the "save and go to list" submit button on term pages.
+    if (isset($form['actions']['overview'])) {
+      $form['actions']['overview']['#access'] = FALSE;
+    }
+
     // Get what entity form is being used.
     $operation = $form_state->getFormObject()?->getOperation() ?? 'default';
 
@@ -121,6 +126,8 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
     if (!in_array($operation, $this->getAllowedForms())) {
       return;
     }
+
+    $form['#attributes']['class'][] = 'rw-entity-form-altered';
 
     // Add the form alterations specific to the bundle.
     $this->addBundleFormAlterations($form, $form_state);
@@ -135,6 +142,9 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
 
     // Add the revision form alterations.
     $this->addRevisionFormAlterations($form, $form_state);
+
+    // Add the cloning form alterations.
+    $this->addCloneFormAlterations($form, $form_state);
 
     // Force separate display of the URL alias fields.
     if (isset($form['path']['widget'][0])) {
@@ -211,10 +221,54 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
       $form['revision']['#access'] = FALSE;
     }
 
-    // Update the title of the revision log message field.
+    // Update the title of the revision log message field and make sure it's not
+    // populated with the previous message.
     if (isset($form[$revision_field]['widget'][0]['value'])) {
       $form[$revision_field]['widget'][0]['value']['#title'] = $this->t('New comment');
+      $form[$revision_field]['widget'][0]['value']['#default_value'] = '';
       $form[$revision_field]['#group'] = 'revision_information';
+    }
+  }
+
+  /**
+   * Add form alterations related to clone entities.
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  protected function addCloneFormAlterations(array &$form, FormStateInterface $form_state) {
+    $label_field = $form_state->getFormObject()
+      ?->getEntity()
+      ?->getEntityType()
+      ?->getKey('label');
+
+    if (!empty($label_field) && isset($form[$label_field]['widget'][0]['value'])) {
+      $form[$label_field]['widget']['#element_validate'][] = [
+        $this, 'validateClonedEntityLabel',
+      ];
+    }
+  }
+
+  /**
+   * Validate that the label field of a cloned entity.
+   *
+   * @param array $element
+   *   Form element to validate.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   * @param array $form
+   *   The complete form.
+   *
+   * @see \Drupal\content_entity_clone\Plugin\content_entity_clone\FieldProcessor\EntityLabelCloneSuffix;
+   */
+  public function validateClonedEntityLabel(array &$element, FormStateInterface $form_state, array &$form) {
+    $field = $element['#field_name'];
+    $value = $form_state->getValue([$field, 0, 'value']);
+
+    if (!empty($value) && preg_match('/\[CLONE\]$/', $value) === 1) {
+      $form_state->setError($element[0]['value'], $this->t('Please check the title and remove "[CLONE]".'));
     }
   }
 
@@ -340,7 +394,6 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
       '#type' => 'checkbox',
       '#title' => $this->t('I can NOT find my organization in the list above.'),
       '#wrapper_attributes' => ['class' => ['form-wrapper']],
-      '#optional' => FALSE,
       '#default_value' => !empty($new_source['name']) && $is_editor ? 1 : 0,
     ];
     $element['field_source_new'] = [
@@ -351,16 +404,17 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
         '#type' => 'textfield',
         '#title' => $this->t('Organization Name'),
         '#default_value' => $new_source['name'] ?? '',
-        '#optional' => FALSE,
       ],
       'url' => [
         '#type' => 'textfield',
         '#title' => $this->t('Homepage URL'),
         '#default_value' => $new_source['url'] ?? '',
-        '#optional' => FALSE,
       ],
       '#states' => [
         'visible' => [
+          ':input[name="field_source_none"]' => ['checked' => TRUE],
+        ],
+        'required' => [
           ':input[name="field_source_none"]' => ['checked' => TRUE],
         ],
       ],
@@ -441,7 +495,6 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
             '#options' => $allowed,
             '#default_value' => $allowed_defaults,
             '#empty_value' => 'other',
-            '#optional' => FALSE,
             '#weight' => -1,
           ];
 
@@ -472,6 +525,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
       $form['field_source_reminder'] = [
         '#title' => Markup::create($new_source_reminder),
         '#type' => 'checkbox',
+        '#not_required' => FALSE,
         '#states' => [
           'visible' => [
             ':input[name="field_source_none"]' => ['checked' => TRUE],
@@ -488,7 +542,10 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
 
     // Add a submit handler to update the entity revision log message with the
     // new source information.
-    $form['#submit'][] = [$this, 'handlePotentialNewSourceSubmission'];
+    $this->addSubmitCallback($form, [
+      $this,
+      'handlePotentialNewSourceSubmission',
+    ]);
   }
 
   /**
@@ -580,16 +637,15 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
    *   Form state.
    */
   public function handlePotentialNewSourceSubmission(array $form, FormStateInterface $form_state) {
-    $entity_type = $form_state
-      ?->getFormObject()
-      ?->getEntity()
-      ?->getEntityType();
+    $entity = $form_state?->getFormObject()?->getEntity();
+    $entity_type = $entity?->getEntityType();
+    $bundle = $entity?->bundle();
 
     if (!empty($entity_type) && $entity_type instanceof ContentEntityTypeInterface) {
       $revision_log_field = $entity_type->getRevisionMetadataKey('revision_log_message');
 
       $log = $form_state->getValue([$revision_log_field, 0, 'value'], '');
-      $status = $form_state->getValue(['moderation_state', 0, 'value']);
+      $status = $this->getEntityModerationStatus($form_state);
 
       // Add the information about potential new source and update the status.
       if (!$form_state->isValueEmpty('field_source_none') &&
@@ -604,8 +660,8 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
 
         // If the status is "published" or "pending", change as appropriate.
         if ($status === 'published' || $status === 'pending') {
-          $status = $this->state->get('reliefweb_no_source_status', 'pending');
-          $form_state->setValue(['moderation_state', 0, 'value'], $status);
+          $status = $this->state->get('reliefweb_no_source_status_' . $bundle, 'pending');
+          $this->setEntityModerationStatus($status, $form_state);
         }
       }
     }
@@ -828,6 +884,72 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
   }
 
   /**
+   * Prevent saving a document from a blocked source.
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  public function validateBlockedSource(array $form, FormStateInterface &$form_state) {
+    $ids = [];
+    foreach ($form_state->getValue('field_source', []) as $item) {
+      if (!empty($item['target_id'])) {
+        $ids[] = $item['target_id'];
+      }
+    }
+
+    if (!empty($ids)) {
+      $entity_type_manager = $this->getEntityTypeManager();
+
+      $taxonomy_term_entity_type = $entity_type_manager
+        ->getStorage('taxonomy_term')
+        ->getEntityType();
+
+      $table = $taxonomy_term_entity_type->getDataTable();
+      $id_field = $taxonomy_term_entity_type->getKey('id');
+      $label_field = $taxonomy_term_entity_type->getKey('label');
+
+      // Retrieve the labels of the selected blocked sources if any.
+      $sources = $this->getDatabase()
+        ->select($table, $table)
+        ->fields($table, [$label_field])
+        ->condition($table . '.' . $id_field, $ids, 'IN')
+        ->condition($table . '.moderation_status', 'blocked', '=')
+        ->execute()
+        ?->fetchCol() ?? [];
+
+      if (!empty($sources)) {
+        $form_state->setErrorByName('field_source', $this->t('Publications from "@sources" are not allowed.', [
+          '@sources' => implode('", "', $sources),
+        ]));
+      }
+    }
+  }
+
+  /**
+   * Add a checkbox to disable notifications.
+   *
+   * @param array $form
+   *   The entity form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  protected function addDisableNotifications(array &$form, FormStateInterface $form_state) {
+    // Add a checkbox to disable the notifications.
+    $status = $form_state->getFormObject()?->getEntity()?->getModerationStatus();
+    $form['notifications_content_disable'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Disable notifications'),
+      '#default_value' => !empty($status) && $status !== 'draft',
+    ];
+    $this->addSubmitCallback($form, [
+      $this,
+      'setDisabledNotifications',
+    ]);
+  }
+
+  /**
    * Check if the form action is to show the preview.
    *
    * @param \Drupal\Core\Form\FormStateInterface $form_state
@@ -851,7 +973,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
    *   Moderation status.
    */
   protected function getEntityModerationStatus(FormStateInterface $form_state) {
-    return $form_state->getValue(['moderation_state', 0, 'value']);
+    return $form_state->getValue(['moderation_status', 0, 'value']);
   }
 
   /**
@@ -866,21 +988,45 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
    *   Moderation status.
    */
   protected function setEntityModerationStatus($status, FormStateInterface $form_state) {
-    return $form_state->setValue(['moderation_state', 0, 'value'], $status);
+    return $form_state->setValue(['moderation_status', 0, 'value'], $status);
   }
 
   /**
-   * Redirect to the entity page.
+   * Disable the notifications if instructed so.
    *
    * @param array $form
    *   Form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   Form state.
    */
-  public function redirectToEntityPage(array $form, FormStateInterface $form_state) {
-    $entity = $form_state->getFormObject()?->getEntity();
-    if (!empty($entity) && empty($entity->in_preview) && $entity->id() !== NULL) {
-      $form_state->setRedirectUrl($entity->toUrl());
+  public function setDisabledNotifications(array $form, FormStateInterface $form_state) {
+    if (!empty($form_state->getValue('notifications_content_disable'))) {
+      $entity = $form_state->getFormObject()?->getEntity();
+      if (is_object($entity)) {
+        $entity->notifications_content_disable = TRUE;
+      }
+    }
+  }
+
+  /**
+   * Add a form submit callback.
+   *
+   * @param array $form
+   *   Form.
+   * @param mixed $callback
+   *   Submit callback.
+   */
+  protected function addSubmitCallback(array &$form, $callback) {
+    // Add the callback.
+    $form['#submit'][] = $callback;
+
+    // Ensure the default form submission callback is run last as it's the one
+    // building the entity from the form_state.
+    $key = array_search('::submitForm', $form['#submit']);
+    if ($key !== FALSE) {
+      unset($form['#submit'][$key]);
+      $form['#submit'][] = '::submitForm';
+      $form['#submit'] = array_values($form['#submit']);
     }
   }
 

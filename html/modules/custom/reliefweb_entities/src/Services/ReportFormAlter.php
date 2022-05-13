@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_entities\Services;
 
+use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
@@ -55,6 +56,9 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     // the selected country values.
     $this->alterPrimaryField('field_primary_country', $form, $form_state);
 
+    // Alter the embargo field.
+    $this->alterEmbargoDateField($form, $form_state);
+
     // Alter the headline fields.
     $this->alterHeadlineFields($form, $form_state);
 
@@ -78,10 +82,44 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     // Remove Complex Emergency (41764) option for disaster type field.
     FormHelper::removeOptions($form, 'field_disaster_type', [41764]);
 
-    // Add validation callbacks for the file, source and embargo date fields.
+    // Change the description of the file field to indicate that only PDF files
+    // are accepted in terms of editorial guidance.
+    if (isset($form['field_file']['widget']['add_more']['files']['#description'])) {
+      $description = $form['field_file']['widget']['add_more']['files']['#description'];
+      $form['field_file']['widget']['add_more']['files']['#description'] = $this->t(
+        'PDF only. Max file size: %max_filesize.',
+        $description->getArguments(),
+        $description->getOptions()
+      );
+    }
+
+    // Validate the attachments.
     $form['#validate'][] = [$this, 'validateAttachment'];
-    $form['#validate'][] = [$this, 'validateSource'];
+
+    // Validate the embargo date.
     $form['#validate'][] = [$this, 'validateEmbargoDate'];
+
+    // Prevent saving from a blocked source.
+    $form['#validate'][] = [$this, 'validateBlockedSource'];
+  }
+
+  /**
+   * Modify the embargo date field.
+   *
+   * Set a proper range for the year widget (current year up to 1 year after).
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   *
+   * @see https://www.drupal.org/project/drupal/issues/2836054
+   */
+  protected function alterEmbargoDateField(array &$form, FormStateInterface $form_state) {
+    $min_year = gmdate('Y');
+    $max_year = $min_year + 1;
+
+    $form['field_embargo_date']['widget'][0]['value']['#date_year_range'] = $min_year . ':' . $max_year;
   }
 
   /**
@@ -229,13 +267,14 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     $condition = [
       'select[name="field_source[]"]' => ['value' => ['1503']],
     ];
-    $widget['#states']['visible'] = $condition;
+    // We put the visibility state on the container to avoid styling issues with
+    // the surrounding elements but we need to to put the required state on the
+    // widget element for it to work properly.
+    $form['field_ocha_product']['#states']['visible'] = $condition;
     $widget['#states']['required'] = $condition;
 
-    // For the above to work we need the drupal states extension.
-    // @todo remove if the equivalent is added to core.
-    // @see https://www.drupal.org/project/drupal/issues/1149078
-    $form['#attached']['library'][] = 'reliefweb_form/drupal.states';
+    // Remove the empty option.
+    unset($widget['#options']['_none']);
 
     // Add a validation callback to ensure that an OCHA product is selected
     // when OCHA is selected as source.
@@ -272,7 +311,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     }
     // Remove the ocha product otherwise.
     elseif (!$selected && !empty($ocha_product)) {
-      $form_state->getValue(['field_ocha_product', 0, 'target_id'], NULL);
+      $form_state->setValue(['field_ocha_product', 0, 'target_id'], NULL);
     }
   }
 
@@ -294,72 +333,47 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
       '38974' => 'Interactive',
     ];
 
-    $content_format = $form_state
-      ->getValue(['field_content_format', 0, 'target_id']);
+    $formats = $form_state->getValue(['field_content_format']);
+    if (empty($formats)) {
+      return;
+    }
 
-    // File and its preview are mandatory for visual content when publishing.
-    if (isset($visual_formats[$content_format])) {
-      // @todo add file check - RW-138.
+    // Normally there is only 1 content format allowed.
+    foreach ($formats as $item) {
+      $format = $visual_formats[$item['target_id']] ?? NULL;
+      // File and its preview are mandatory for visual content when publishing.
+      if (isset($format)) {
+        $file = $form_state->getValue(['field_file', 0, 'uuid']);
+        // #4L7i0wbW - File is mandatory.
+        if (empty($file)) {
+          $status = $this->getEntityModerationStatus($form_state);
+          if (in_array($status, ['to-review', 'published'])) {
+            $form_state->setErrorByName('field_file][add_more', $this->t('The content format is %format. You must attach a file.', [
+              '%format' => $format,
+            ]));
+          }
+        }
+        // Preview is also mandatory.
+        else {
+          $preview_file = $form_state->getValue([
+            'field_file', 0, 'preview_uuid',
+          ]);
+          $preview_page = $form_state->getValue([
+            'field_file', 0, 'preview_page',
+          ]);
+          if (empty($preview_file) || empty($preview_page)) {
+            $form_state->setErrorByName('field_file][0][preview_page', $this->t('The content format is %format. You must enable the "preview" for the attachment.', [
+              '%format' => $format,
+            ]));
+          }
+        }
+      }
+      break;
     }
   }
 
   /**
-   * Validate the file field.
-   *
-   * Prevent saving a document from a blocked source.
-   *
-   * @param array $form
-   *   Form to alter.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   Form state.
-   *
-   * @todo Extends that to jobs and training.
-   */
-  public function validateSource(array $form, FormStateInterface &$form_state) {
-    $ids = [];
-    foreach ($form_state->getValue('field_source', []) as $item) {
-      if (!empty($item['target_id'])) {
-        $ids[] = $item['target_id'];
-      }
-    }
-
-    if (!empty($ids)) {
-      $entity_type_manager = $this->getEntityTypeManager();
-
-      $taxonomy_term_entity_type = $entity_type_manager
-        ->getStorage('taxonomy_term')
-        ->getEntityType();
-
-      $table = $taxonomy_term_entity_type->getDataTable();
-      $id_field = $taxonomy_term_entity_type->getKey('id');
-      $label_field = $taxonomy_term_entity_type->getKey('label');
-
-      $query = $this->getDatabase()->select($table, $table);
-      $query->fields($table, [$label_field]);
-      $query->condition($table . '.' . $id_field, $ids, 'IN');
-
-      // Join the moderation status table to check the status.
-      $status_table = $entity_type_manager
-        ->getStorage('content_moderation_state')
-        ->getEntityType()
-        ->getDataTable();
-
-      $status_alias = $query->innerJoin($status_table, $status_table, "%alias.content_entity_id = {$table}.{$id_field}");
-      $query->condition($status_alias . '.content_entity_type_id', 'taxonomy_term', '=');
-      $query->condition($status_alias . '.moderation_state', 'blocked', '=');
-
-      $sources = $query->execute()?->fetchCol() ?? [];
-
-      if (!empty($sources)) {
-        $form_state->setErrorByName('field_source', $this->t('Publications from "@sources" are not allowed.', [
-          '@sources' => implode('", "', $sources),
-        ]));
-      }
-    }
-  }
-
-  /**
-   * Validate the source field.
+   * Validate the embargo date field.
    *
    * Embargo date cannot be in the past as that would not make sense.
    *
@@ -370,7 +384,9 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
    */
   public function validateEmbargoDate(array $form, FormStateInterface &$form_state) {
     $embargo_date = $form_state->getValue(['field_embargo_date', 0, 'value']);
-    if (!empty($embargo_date) && $embargo_date->getTimestamp() < time()) {
+    // If there is a valid date (with year, month etc.), then $embargo_date
+    // is a \Drupal\Core\Datetime\DrupalDateTime instance...
+    if (!empty($embargo_date) && $embargo_date instanceof DrupalDateTime && $embargo_date->getTimestamp() < time()) {
       $form_state->setErrorByName('field_embargo_date][0][value', $this->t('The embargo date cannot be in the past.'));
     }
   }

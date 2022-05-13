@@ -8,8 +8,9 @@ use Consolidation\SiteProcess\ProcessManagerAwareTrait;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\Core\State\State;
+use Drupal\Core\State\StateInterface;
 use Drush\Commands\DrushCommands;
 use GuzzleHttp\ClientInterface;
 
@@ -74,7 +75,7 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
   /**
    * The state store.
    *
-   * @var Drupal\Core\State\State
+   * @var Drupal\Core\State\StateInterface
    */
   protected $state;
 
@@ -86,7 +87,7 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
     FileSystemInterface $file_system,
     ClientInterface $http_client,
     LoggerChannelFactoryInterface $logger_factory,
-    State $state
+    StateInterface $state
   ) {
     $this->database = $database;
     $this->fileSystem = $file_system;
@@ -101,9 +102,9 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
    * Ensure messages are logged into all the logging facilities (ex: syslog)
    * and use the classic Drupal placeholder replacement.
    *
-   * By default DrushCommands::logger() returns a \Drush\Log\Logger that only
-   * logs to the console and uses a different placeholder replacement:
-   * {placeholder} rather than @placeholder.
+   * We cannot rely on DrushCommands::logger() because, by default, it returns a
+   * \Drush\Log\Logger that only logs to the console and uses a different
+   * placeholder replacement: {placeholder} rather than @placeholder.
    *
    * However this drush command file being provided by a module, the boostrap
    * level is full by default, so we have access to the normal log stack and
@@ -118,7 +119,7 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
    * is called and all the loggers haven't been added to the logger channel
    * yet at that time.
    */
-  protected function logger() {
+  protected function getLogger(): LoggerChannelInterface {
     return $this->loggerFactory->get('reliefweb_xmlsitemap');
   }
 
@@ -129,6 +130,7 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
    * @usage reliefweb_xmlsitemap:generate
    *   Generate the ReliefWeb xmlsitemap.
    * @validate-module-enabled reliefweb_xmlsitemap
+   * @aliases reliefweb-xmlsitemap-generate
    */
   public function generate() {
     // Prepare and empty the xmlsitemap directory.
@@ -212,7 +214,7 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
     $this->writeIndex($page_count);
 
     // Log the result.
-    $this->logger()->info('Successfully created @page_count sitemap page file(s) for a total of @processed links.', [
+    $this->getLogger()->info('Successfully created @page_count sitemap page file(s) for a total of @processed links.', [
       '@page_count' => $page_count,
       '@processed' => $processed,
     ]);
@@ -234,7 +236,7 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
 
     $result = $this->fileSystem->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
     if (!$result) {
-      $this->logger()->error('The directory %directory does not exist or is not writable.', [
+      $this->getLogger()->error('The directory %directory does not exist or is not writable.', [
         '%directory' => $directory,
       ]);
     }
@@ -269,7 +271,7 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
         // If the path couldn't be deleted, stop the process and log the error.
         if (!$this->fileSystem->deleteRecursive($path)) {
           $dir->close();
-          $this->logger()->error('Enable to delete %path', [
+          $this->getLogger()->error('Enable to delete %path', [
             '%path' => $path,
           ]);
 
@@ -310,7 +312,7 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
 
         // Copy the file.
         if (!$this->fileSystem->copy($source, $destination, TRUE)) {
-          $this->logger()->error('Unable to copy file @file', [
+          $this->getLogger()->error('Unable to copy file @file', [
             '@file' => $destination,
           ]);
         }
@@ -327,12 +329,13 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
    * @usage reliefweb_xmlsitemap:submit
    *   Submit the sitemap to the search engines.
    * @validate-module-enabled reliefweb_xmlsitemap
+   * @aliases reliefweb-xmlsitemap-submit
    */
   public function submit() {
     // Check that the xmlsitemap actually exists before trying to submit it.
     $directory = $this->getDirectory();
     if (!file_exists($directory . '/sitemap.xml')) {
-      $this->logger()->error('Sitemap missing. Unable to submit it to search engines.');
+      $this->getLogger()->error('Sitemap missing. Unable to submit it to search engines.');
       return;
     }
 
@@ -344,13 +347,13 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
       $ping_url = str_replace('[sitemap]', $sitemap, $engine['url']);
       $response = $this->httpClient->request('GET', $ping_url);
       if (!empty($response->error)) {
-        $this->logger()->error('Failed to submit sitemap to @engine with error: @error.', [
+        $this->getLogger()->error('Failed to submit sitemap to @engine with error: @error.', [
           '@engine' => $engine['name'],
           '@error' => $response->error,
         ]);
       }
       else {
-        $this->logger()->info('Sitemap successfully submitted to @engine.', [
+        $this->getLogger()->info('Sitemap successfully submitted to @engine.', [
           '@engine' => $engine['name'],
         ]);
       }

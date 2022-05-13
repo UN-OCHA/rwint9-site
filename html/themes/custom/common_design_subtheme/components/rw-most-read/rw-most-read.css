@@ -5,7 +5,7 @@
  */
 /* "Last 24h hours" text. */
 .path-frontpage .rw-river--most-read h2 {
-  font-size: 24px;
+  font-size: var(--cd-font-size--large);
 }
 .path-frontpage .rw-river--most-read h2 span {
   display: inline-block;
@@ -20,7 +20,7 @@
 }
 .path-frontpage .rw-river--most-read article + article {
   padding-top: 24px;
-  border-top: 1px solid #e6ecef;
+  border-top: 1px solid var(--cd-reliefweb-brand-grey--light);
 }
 .path-frontpage .rw-river--most-read .view-more {
   margin-top: 8px;

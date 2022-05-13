@@ -16,10 +16,8 @@ dependencies:
     - field.field.taxonomy_term.disaster.field_timezone
     - field.field.taxonomy_term.disaster.field_useful_links
     - taxonomy.vocabulary.disaster
-    - workflows.workflow.disaster
   module:
     - allowed_formats
-    - content_moderation
     - datetime
     - path
     - reliefweb_fields
@@ -38,14 +36,16 @@ content:
       placeholder: ''
     third_party_settings:
       allowed_formats:
-        hide_help: '1'
+        hide_help: '0'
         hide_guidelines: '1'
   field_country:
+    type: reliefweb_entity_reference_select
     weight: 2
+    region: content
     settings:
       sort: label
       extra_data:
-        'country:moderation_state': 'country:moderation_state'
+        'country:moderation_status': 'country:moderation_status'
         'country:field_shortname': 'country:field_shortname'
         'country:tid': '0'
         'country:uuid': '0'
@@ -74,44 +74,44 @@ content:
         'country:field_timezone': '0'
         'country:field_useful_links': '0'
     third_party_settings: {  }
-    type: reliefweb_entity_reference_select
-    region: content
   field_disaster_date:
+    type: datetime_default
     weight: 5
+    region: content
     settings: {  }
     third_party_settings: {  }
-    type: datetime_default
-    region: content
   field_disaster_type:
-    weight: 4
-    settings:
-      extra_data: {  }
-      sort: label
-    third_party_settings: {  }
     type: reliefweb_entity_reference_select
+    weight: 4
     region: content
+    settings:
+      sort: label
+      extra_data: {  }
+    third_party_settings: {  }
   field_glide:
+    type: string_textfield
     weight: 7
+    region: content
     settings:
       size: 60
       placeholder: ''
     third_party_settings: {  }
-    type: string_textfield
-    region: content
   field_glide_related:
+    type: string_textarea
     weight: 8
+    region: content
     settings:
       rows: 5
       placeholder: ''
     third_party_settings: {  }
-    type: string_textarea
-    region: content
   field_primary_country:
+    type: reliefweb_entity_reference_select
     weight: 1
+    region: content
     settings:
       sort: label
       extra_data:
-        'country:moderation_state': 'country:moderation_state'
+        'country:moderation_status': 'country:moderation_status'
         'country:field_shortname': 'country:field_shortname'
         'country:tid': '0'
         'country:uuid': '0'
@@ -140,34 +140,26 @@ content:
         'country:field_timezone': '0'
         'country:field_useful_links': '0'
     third_party_settings: {  }
-    type: reliefweb_entity_reference_select
-    region: content
   field_primary_disaster_type:
-    weight: 3
-    settings:
-      extra_data: {  }
-      sort: label
-    third_party_settings: {  }
     type: reliefweb_entity_reference_select
+    weight: 3
     region: content
+    settings:
+      sort: label
+      extra_data: {  }
+    third_party_settings: {  }
   field_profile:
+    type: boolean_checkbox
     weight: 9
+    region: content
     settings:
       display_label: true
     third_party_settings: {  }
-    type: boolean_checkbox
-    region: content
   field_timezone:
-    weight: 10
-    settings: {  }
-    third_party_settings: {  }
     type: options_select
+    weight: 10
     region: content
-  moderation_state:
-    type: moderation_state_default
-    weight: 12
     settings: {  }
-    region: content
     third_party_settings: {  }
   name:
     type: string_textfield
@@ -179,19 +171,13 @@ content:
     third_party_settings: {  }
   path:
     type: path
-    weight: 13
-    region: content
-    settings: {  }
-    third_party_settings: {  }
-  status:
-    type: boolean_checkbox
-    settings:
-      display_label: true
     weight: 11
     region: content
+    settings: {  }
     third_party_settings: {  }
 hidden:
   field_appeals_response_plans: true
   field_key_content: true
   field_useful_links: true
   langcode: true
+  status: true

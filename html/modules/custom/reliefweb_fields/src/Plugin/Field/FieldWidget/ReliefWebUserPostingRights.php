@@ -30,7 +30,8 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
    * {@inheritdoc}
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
-    return $this->formMultipleElements($items, $form, $form_state);
+    $element['#type'] = 'fieldset';
+    return $element + $this->formMultipleElements($items, $form, $form_state);
   }
 
   /**
@@ -40,6 +41,7 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
    */
   protected function formMultipleElements(FieldItemListInterface $items, array &$form, FormStateInterface $form_state) {
     $field_name = $this->fieldDefinition->getName();
+    $settings = $this->fieldDefinition->getSettings();
     $parents = $form['#parents'];
 
     // Url of the link validation route for the field.
@@ -51,7 +53,7 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
 
     // Retrieve (and initialize if needed) the field widget state with the
     // the json encoded field data.
-    $field_state = static::getFieldState($parents, $field_name, $form_state, $items->getValue());
+    $field_state = static::getFieldState($parents, $field_name, $form_state, $items->getValue(), $settings);
 
     // Store a json encoded version of the fields data.
     $elements['data'] = [
@@ -81,47 +83,71 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
    *   Form state.
    * @param array $items
    *   Existing items to initialize the state with.
+   * @param array $settings
+   *   Field instance settings.
    *
    * @return array
    *   Field state.
    */
-  public static function getFieldState(array $parents, $field_name, FormStateInterface &$form_state, array $items = []) {
-    $initialize = FALSE;
+  public static function getFieldState(array $parents, $field_name, FormStateInterface &$form_state, array $items = [], array $settings = []) {
     $field_state = static::getWidgetState($parents, $field_name, $form_state);
 
     if (!isset($field_state['data'])) {
-      $data = [];
-      $items = array_filter($items);
+      $field_state = static::setFieldState($parents, $field_name, $form_state, $items, $settings);
+    }
 
-      // Extract the user ids.
-      $ids = [];
-      foreach ($items as $item) {
+    return $field_state;
+  }
+
+  /**
+   * Set the field state.
+   *
+   * @param array $parents
+   *   Form element parents.
+   * @param string $field_name
+   *   Field name.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   * @param array $items
+   *   Existing items to initialize the state with.
+   * @param array $settings
+   *   Field instance settings.
+   *
+   * @return array
+   *   Field state.
+   */
+  public static function setFieldState(array $parents, $field_name, FormStateInterface &$form_state, array $items = [], array $settings = []) {
+    $field_state = static::getWidgetState($parents, $field_name, $form_state);
+
+    $data = [];
+
+    // Extract the user ids.
+    $ids = [];
+    foreach ($items as $item) {
+      if (!empty($item)) {
         $ids[] = $item['id'];
       }
+    }
 
-      // Retrieve the user data.
-      if (!empty($ids)) {
-        $users = \Drupal::database()
-          ->select('users_field_data', 'u')
-          ->fields('u', ['uid', 'name', 'mail', 'status'])
-          ->condition('u.uid', $ids, 'IN')
-          ?->execute()
-          ?->fetchAllAssoc('uid', \PDO::FETCH_ASSOC);
+    // Retrieve the user data.
+    if (!empty($ids)) {
+      $users = \Drupal::database()
+        ->select('users_field_data', 'u')
+        ->fields('u', ['uid', 'name', 'mail', 'status'])
+        ->condition('u.uid', $ids, 'IN')
+        ->execute()
+        ?->fetchAllAssoc('uid', \PDO::FETCH_ASSOC) ?? [];
 
-        foreach ($items as $item) {
-          if (isset($users[$item['id']])) {
-            $data[] = static::normalizeData($item + $users[$item['id']]);
-          }
+      foreach ($items as $item) {
+        if (isset($users[$item['id']])) {
+          $data[] = static::normalizeData($item + $users[$item['id']]);
         }
       }
-
-      $field_state['data'] = json_encode($data);
-      $initialize = TRUE;
     }
 
-    if ($initialize) {
-      static::setWidgetState($parents, $field_name, $form_state, $field_state);
-    }
+    $field_state['data'] = json_encode($data);
+
+    static::setWidgetState($parents, $field_name, $form_state, $field_state);
 
     return $field_state;
   }
@@ -130,8 +156,10 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
    * {@inheritdoc}
    */
   public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
+    $settings = $this->fieldDefinition->getSettings();
+    $parents = $form['#parents'];
     $field_name = $this->fieldDefinition->getName();
-    $field_path = array_merge($form['#parents'], [$field_name, 'data']);
+    $field_path = array_merge($parents, [$field_name, 'data']);
 
     // Get the raw JSON data from the widget.
     $data = NestedArray::getValue($form_state->getUserInput(), $field_path);
@@ -149,6 +177,10 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
         'notes' => $item['notes'],
       ];
     }
+
+    // Update the field state so that we modified values are the ones used when
+    // going back from the preview for example.
+    static::setFieldState($parents, $field_name, $form_state, $values, $settings);
 
     return $values;
   }
@@ -172,6 +204,7 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
 
     $data['name'] = trim($data['name']);
     $data['mail'] = trim($data['mail']);
+
     $data['status'] = intval($data['status'], 10);
     // Blocked users are not allowed to post.
     if ($data['status'] === 0) {

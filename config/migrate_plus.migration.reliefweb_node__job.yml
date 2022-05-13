@@ -1,9 +1,9 @@
-uuid: f6cd1c3e-b264-4389-80a1-9e9b1725b1ad
+uuid: cc0fc885-36d7-4809-9244-7a6dc94adb2b
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: 2K5i6FmC8Lgq4-t0_fbwD3_VA48FcdhjFeKPQccXAas
+  default_config_hash: 4Yt-4gxWTXQ5yxo4xq2broAhY1KmtktEU7EiYTxhtts
 id: reliefweb_node__job
 class: null
 field_plugin_method: null
@@ -14,7 +14,10 @@ label: 'Migrate ReliefWeb jobs.'
 source:
   bundle: job
 process:
-  field_career_categories/value:
+  body/format:
+    plugin: default_value
+    default_value: markdown_editor
+  field_career_categories:
     plugin: sub_process
     source: field_career_categories
     process:
@@ -32,7 +35,9 @@ process:
     plugin: skip_on_empty
     method: process
     source: field_how_to_apply/0/value
-  field_how_to_apply/format: constants/format
+  field_how_to_apply/format:
+    plugin: default_value
+    default_value: markdown_editor
   field_job_closing_date:
     -
       plugin: skip_on_empty

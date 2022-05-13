@@ -10,7 +10,8 @@ dependencies:
     - text
 third_party_settings:
   allowed_formats:
-    plain_text: plain_text
+    allowed_formats:
+      - plain_text
 id: node.announcement.body
 field_name: body
 entity_type: node

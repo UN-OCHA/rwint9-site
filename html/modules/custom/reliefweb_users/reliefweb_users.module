@@ -1,0 +1,281 @@
+<?php
+
+/**
+ * @file
+ * Module file for reliefweb_users.
+ */
+
+use Drupal\Component\Utility\Crypt;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Site\Settings;
+use Drupal\Core\Url;
+use Drupal\user\RoleInterface;
+use Drupal\user\UserInterface;
+
+/**
+ * Implements hook_theme().
+ */
+function reliefweb_users_theme() {
+  $themes = [
+    'reliefweb_users_page' => [
+      'variables' => [
+        // Filters form.
+        'filters' => NULL,
+        // Attributes for the filters.
+        'filters_attributes' => NULL,
+        // List of users.
+        'list' => NULL,
+        // Attributes for the list.
+        'list_attributes' => NULL,
+      ],
+    ],
+  ];
+  return $themes;
+}
+
+/**
+ * Implements hook_menu_local_actions_alter().
+ */
+function reliefweb_users_menu_local_actions_alter(&$local_actions) {
+  // Remove the create user action on the "people" page.
+  unset($local_actions['user_admin_create']);
+}
+
+/**
+ * Implements hook_form_user_form_alter().
+ */
+function reliefweb_users_form_user_form_alter(array &$form, FormStateInterface $form_state) {
+  $user = \Drupal::currentUser();
+
+  // This will prevent asking for the password when changing the email address.
+  $form_state->set('user_pass_reset', TRUE);
+
+  // Unncessary fields.
+  $form['contact']['#access'] = FALSE;
+  $form['details']['#access'] = FALSE;
+  $form['footer']['#access'] = FALSE;
+  $form['language']['#access'] = FALSE;
+  $form['timezone']['#access'] = FALSE;
+
+  // Only people who can administrate other accounts can add notes.
+  $form['field_notes']['#access'] = $user->hasPermission('administer users');
+
+  $form['account']['mail']['#title'] = t('Email');
+  $form['account']['mail']['#description'] = t('Email address used for notifications and contact.');
+
+  // Only people who can administrate other accounts can confirm an email.
+  if ($user->hasPermission('administer users')) {
+    // Add a flag to bypass sending an email confirmation message when
+    // confirmed is checked.
+    $form_state->getFormObject()->getEntity()->_bypass_email_confirmation = TRUE;
+  }
+  else {
+    $form['field_email_confirmed']['#access'] = FALSE;
+
+    if (isset($form['actions']['submit']['#submit'])) {
+      $form['actions']['submit']['#submit'][] = 'reliefweb_users_user_form_submit';
+    }
+    else {
+      $form['#submit'][] = 'reliefweb_users_user_form_submit';
+    }
+
+    if (empty($form_state->getFormObject()?->getEntity()?->field_email_confirmed?->value)) {
+      $form['account']['mail']['#title'] = t('@title (not confirmed)', [
+        '@title' => $form['account']['mail']['#title'],
+      ]);
+      $form['account']['mail']['#description'] = t('@description<br>A message with a link to confirm your email address will be sent when saving your account settings.', [
+        '@description' => $form['account']['mail']['#description'] ?? '',
+      ]);
+    }
+  }
+
+  // Add a validation callback to the email field to ensure it's already used
+  // by another account.
+  $form['account']['mail']['#element_validate'][] = 'reliefweb_users_validate_email';
+
+  // Check if hte user is allowed to assign roles.
+  if ($user->hasPermission('manage user roles') && !empty($form['account']['roles']['#options'])) {
+    $form['account']['roles']['#access'] = TRUE;
+
+    $default_roles = $form['account']['roles']['#default_value'] ?? [];
+
+    foreach ($form['account']['roles']['#options'] as $role => $label) {
+      if ($role === RoleInterface::ANONYMOUS_ID) {
+        continue;
+      }
+      // No need to display the authenticated role.
+      elseif ($role === RoleInterface::AUTHENTICATED_ID) {
+        $form['account']['roles'][$role]['#access'] = FALSE;
+      }
+      // Only display the roles that can be assigned by the current user.
+      elseif (!$user->hasPermission('assign ' . $role . ' role')) {
+        $form['account']['roles'][$role]['#access'] = FALSE;
+        $form['account']['roles'][$role]['#disabled'] = TRUE;
+        $form['account']['roles'][$role]['#default_value'] = in_array($role, $default_roles);
+      }
+    }
+  }
+  else {
+    $form['account']['roles']['#access'] = FALSE;
+  }
+}
+
+/**
+ * User form submit callback.
+ *
+ * @param array $form
+ *   Form.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   Form state.
+ */
+function reliefweb_users_user_form_submit(array $form, FormStateInterface $form_state) {
+  if (!empty($form_state->getFormObject()?->getEntity()?->_send_email_confirmation)) {
+    \Drupal::messenger()->addStatus(t('A message to confirm your email address has been sent.'));
+  }
+}
+
+/**
+ * Implements hook_form_user_form_alter().
+ */
+function reliefweb_users_validate_email(array &$element, FormStateInterface $form_state, array $form) {
+  $email = trim($form_state->getValue($element['#parents'], ''));
+
+  // Check if the email is already used by another account.
+  if (!empty($email)) {
+    $user_id = $form_state->getFormObject()?->getEntity()?->id();
+
+    $exists = \Drupal::database()
+      ->select('users_field_data', 'u')
+      ->fields('u', ['mail'])
+      ->condition('u.mail', $email, '=')
+      ->condition('u.uid', $user_id, '<>')
+      ->range(0, 1)
+      ->execute()
+      ?->fetchField();
+
+    if (!empty($exists)) {
+      $form_state->setError($element, t('Email address already used by another account'));
+    }
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave() for 'user'.
+ */
+function reliefweb_users_user_presave(EntityInterface $entity) {
+  // @todo remove when removing `reliefweb_migrate`.
+  if (!empty($entity->_is_migrating)) {
+    // Mark migrated accounts as having their email address confirmed already.
+    $entity->field_email_confirmed->value = 1;
+    return;
+  }
+
+  // Populate the email field for new accounts.
+  if ($entity->isNew()) {
+    $entity->field_email_confirmed->value = 1;
+  }
+  // Add a flag to send an email confirmation message.
+  elseif (empty($entity->_bypass_email_confirmation)) {
+    $previous_email = $entity->original?->getEmail() ?? '';
+    $current_email = $entity->getEmail() ?? '';
+    $confirmed = !empty($entity->field_email_confirmed?->value);
+
+    if (!empty($current_email)) {
+      if (($current_email !== $previous_email) || !$confirmed) {
+        $entity->field_email_confirmed->value = 0;
+        $entity->_send_email_confirmation = TRUE;
+      }
+    }
+    else {
+      $entity->field_email_confirmed->value = 0;
+    }
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update() for 'user'.
+ */
+function reliefweb_users_user_update(EntityInterface $entity) {
+  // @todo remove when removing `reliefweb_migrate`.
+  if (!empty($entity->_is_migrating)) {
+    return;
+  }
+  if (!empty($entity->_send_email_confirmation)) {
+    $langcode = \Drupal::languageManager()->getDefaultLanguage()->getId();
+    $email = $entity->getEmail();
+
+    // Send an email to ask for confirmation of the email address.
+    if (!empty($email)) {
+      \Drupal::service('plugin.manager.mail')->mail('reliefweb_users', 'email_confirmation', $email, $langcode, [
+        'user' => $entity,
+      ]);
+    }
+  }
+}
+
+/**
+ * Implements hook_mail().
+ */
+function reliefweb_users_mail($key, array &$message, array $params) {
+  if ($key === 'email_confirmation' && !empty($params['user'])) {
+    $user = $params['user'];
+
+    $link = reliefweb_users_get_email_confirmation_url($user);
+
+    $body = \Drupal::state()->get('reliefweb_users_email_confirmation_message', implode("\n\n", [
+      'Dear @user',
+      'You just added this email address to your profile on https://reliefweb.int.',
+      'Please confirm it by clicking or copying and pasting the following link into your browser:',
+      '@link',
+      'Kinds regards,',
+      'The ReliefWeb Team',
+    ]));
+
+    $message['subject'] = 'ReliefWeb - Email address confirmation';
+    $message['body'][] = strtr($body, [
+      '@user' => $user->label(),
+      '@link' => $link,
+    ]);
+  }
+}
+
+/**
+ * Generate an email confirmation URL for the given user.
+ *
+ * @param \Drupal\user\UserInterface $user
+ *   User entity.
+ *
+ * @return string
+ *   Email confirmation URL.
+ */
+function reliefweb_users_get_email_confirmation_url(UserInterface $user) {
+  $timestamp = \Drupal::time()->getRequestTime();
+  $hash = reliefweb_user_get_email_confirmation_hash($user, $timestamp);
+
+  return Url::fromRoute('user.email.confirmation', [
+    'uid' => $user->id(),
+    'timestamp' => $timestamp,
+    'hash' => $hash,
+  ], [
+    'absolute' => TRUE,
+  ])->toString();
+}
+
+/**
+ * Generate the hash for the email confirmation URL for the given user.
+ *
+ * @param \Drupal\user\UserInterface $user
+ *   User entity.
+ * @param int $timestamp
+ *   Timestamp.
+ *
+ * @return string
+ *   Email confirmation hash
+ */
+function reliefweb_user_get_email_confirmation_hash(UserInterface $user, $timestamp) {
+  $email = $user->getEmail();
+  $confirmed = !empty($user->field_email_confirmed->value) ? '1' : '0';
+  $data = implode('/', [$user->id(), $timestamp, $email, $confirmed]);
+  return Crypt::hmacBase64($data, Settings::getHashSalt() . $email);
+}

@@ -19,4 +19,16 @@ reliefweb_api.settings:
       label: 'Verify the SSL certificate of the API query performing requests.'
     elasticsearch:
       type: string
-      label: 'URL of the elaticsearch instance for indexing.'
+      label: 'URL of the elasticsearch instance for indexing.'
+    base_index_name:
+      type: string
+      label: 'Base index name in elasticsearch.'
+    website:
+      type: string
+      label: 'Scheme and host to use as base for the URLs in the indexed content.'
+    replicas:
+      type: integer
+      label: 'Number of elasticsearch index replicas'
+    shards:
+      type: integer
+      label: 'Number of elasticsearch index shards'

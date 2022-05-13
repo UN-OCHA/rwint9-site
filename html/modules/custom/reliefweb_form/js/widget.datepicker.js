@@ -35,7 +35,10 @@
       // Update the datepicker date based on the input value.
       function updateDatepicker(datepicker, value) {
         // Set the selected date from the value in the input field if valid.
-        if (value) {
+        if (value && value.match(/^\d{4}([/-]\d{2}){0,2}$/)) {
+          value = value.length === 4 ? value + '-01-01' : value;
+          value = value.length === 7 ? value + '-01' : value;
+          value = value.replaceAll('-', '/');
           var date = datepicker.createDate(value + ' UTC');
           if (!date.invalid()) {
             var calendar = datepicker.calendars[0];
@@ -105,17 +108,14 @@
             }
           }
         })
-        .on('opened', function (event) {
-          // Set the selected date from the value in the input field if valid.
-          if (element.value) {
-            var date = datepicker.createDate(element.value + ' UTC');
-            if (!date.invalid()) {
-              var calendar = datepicker.calendars[0];
-              datepicker.setSelection([date], false).updateCalendar(calendar, date);
-            }
-          }
-        })
-        .on('select', function (event) {
+        .hide();
+
+        datepicker.on('opened', function (event) {
+          focusedElement = element;
+          updateDatepicker(datepicker, element.value);
+        });
+
+        datepicker.on('select', function (event) {
           if (event.data && event.data.length) {
             element.value = event.data[0].format(localizedFormat);
           }
@@ -124,8 +124,8 @@
           }
           datepicker.hide();
           triggerEvent(element, 'change');
-        })
-        .hide();
+        });
+
 
         // Ensure the datepicker is the next sibling of the input element.
         element.parentNode.insertBefore(datepicker.container, element.nextSibling);
@@ -144,10 +144,6 @@
             datepicker.hide().clear();
           }
           else {
-            // @todo use a timeout to let the user enter a proper date
-            // and maybe enforce a "neutral" format like YYYY/MM/DD so that
-            // it is less error prone for example to avoid issues with
-            // localized months etc.
             updateDatepicker(datepicker, element.value);
           }
         });
@@ -225,6 +221,10 @@
         // Store references to the datepickers.
         var datepickers = [];
 
+        // Store the reference to the element that was focused when the
+        // datepicker opened.
+        var focusedElement = null;
+
         // Handle click outside of datepickers to close them.
         body.addEventListener('click', function (event) {
           var target = event.target;
@@ -245,6 +245,16 @@
                 target = target.parentNode;
               }
               collapseAll(datepickers);
+            }
+          }
+        });
+
+        body.addEventListener('keyup', function (event) {
+          if (event.key === 'Esc' || event.key === 'Escape') {
+            collapseAll(datepickers);
+            if (focusedElement) {
+              focusedElement.focus();
+              focusedElement = null;
             }
           }
         });

@@ -253,13 +253,10 @@
       // This updates the options of the disaster type select field to match
       // the disaster types from the the selected disasters.
       function handleDisasterTypes(disasterSelection, disasterElement) {
-        // Retrieve the disaster type field.
-        var id = disasterElement.id.replace('disaster', 'disaster-type');
-        var disasterTypeElement = document.getElementById(id);
-
-        // Place holder to keep track of the disaster type selection container
-        // which is created later when the disaster type field is transformed
-        // into an autocomplete.
+        // Placeholders to keep track of the disaster type element and selection
+        // container which are updated/created later when the disaster type
+        // field is transformed into an autocomplete.
+        var disasterTypeElement = null;
         var disasterTypeSelection = null;
 
         // Update the disaster types.
@@ -276,6 +273,10 @@
         // selecting a disaster of type Flood, then unselecting it will result
         // in the removal of the Flood disaster type).
         var updateDisasterTypes = function (oldTypes, exclude) {
+          if (disasterTypeElement === null) {
+            disasterTypeElement = document.getElementById(disasterElement.id.replace('disaster', 'disaster-type'));
+          }
+
           // Nothing to do if we couldn't find the disaster type field.
           if (disasterTypeElement === null) {
             return;
@@ -286,8 +287,8 @@
           var options = disasterElement.getElementsByTagName('option');
           for (var i = 0, l = options.length; i < l; i++) {
             var option = options[i];
-            if (option.selected && option !== exclude && option.hasAttribute('data-disaster_type')) {
-              var types = option.getAttribute('data-disaster_type').split(',');
+            if (option.selected && option !== exclude && option.hasAttribute('data-disaster-type')) {
+              var types = option.getAttribute('data-disaster-type').split(',');
               for (var j = 0, m = types.length; j < m; j++) {
                 newTypes[types[j]] = true;
               }
@@ -307,7 +308,7 @@
           }
 
           if (disasterTypeSelection === null) {
-            disasterTypeSelection = document.getElementById(disasterTypeElement.id + '--selection');
+            disasterTypeSelection = document.getElementById(disasterTypeElement.id.replace('--element', '--selection'));
           }
           updateSelection(disasterTypeSelection, disasterTypeElement);
         };
@@ -323,9 +324,9 @@
         disasterSelection.addEventListener('click', function (event) {
           if (event.target && event.target.nodeName === 'BUTTON') {
             var option = findOption(disasterElement, event.target.parentNode.getAttribute('data-value'));
-            if (option !== false && option.hasAttribute('data-disaster_type')) {
+            if (option !== false && option.hasAttribute('data-disaster-type')) {
               var oldTypes = {};
-              var types = option.getAttribute('data-disaster_type').split(',');
+              var types = option.getAttribute('data-disaster-type').split(',');
               for (var i = 0, l = types.length; i < l; i++) {
                 oldTypes[types[i]] = true;
               }
@@ -350,13 +351,13 @@
           return null;
         }
 
-        // Set disater type handling.
+        // Set disaster type handling.
         var updateDisasterTypes = handleDisasterTypes(disasterSelection, disasterElement);
 
         // Function to handle the changes to the country field.
         var changeHandler = function () {
           // Retrieve the selected disaster types.
-          var disasterTypes = getSelectedOptionAttributeValues(disasterElement, 'data-disaster_type');
+          var disasterTypes = getSelectedOptionAttributeValues(disasterElement, 'data-disaster-type');
 
           // Get the selected options from the country field.
           var available = getSelectedOptions(countryElement);
@@ -604,6 +605,12 @@
         }
 
         var multiple = element.hasAttribute('multiple');
+        var id = element.id;
+
+        // We will add the id to the input so that error links or clicking the
+        // label will focus the input element. We change the id on the element
+        // so we can still target it easily.
+        element.setAttribute('id', id + '--element');
 
         // Mark the select as being processed for autocomplete.
         element.classList.add('rw-autocomplete-select');
@@ -621,6 +628,7 @@
         input.setAttribute('type', 'search');
         input.setAttribute('autocomplete', 'off');
         input.setAttribute('placeholder', t('type and select...'));
+        input.setAttribute('id', id);
         input.classList.add('rw-autocomplete-input');
 
         // Toggler button to display all the options.
@@ -633,7 +641,7 @@
         // Prepare the selection container.
         var selection = document.createElement('div');
         selection.setAttribute('data-selection', '');
-        selection.setAttribute('id', element.id + '--selection');
+        selection.setAttribute('id', id + '--selection');
         selection.classList.add('rw-selection');
 
         // Wrapper for the autocomplete components.

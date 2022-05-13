@@ -5,7 +5,10 @@ source:
   bundle: training
 process:
   # Fields.
-  field_career_categories/value:
+  body/format:
+    plugin: default_value
+    default_value: "markdown_editor"
+  field_career_categories:
     plugin: sub_process
     source: field_career_categories
     process:
@@ -31,7 +34,9 @@ process:
     plugin: skip_on_empty
     method: process
     source: field_how_to_apply/0/value
-  field_how_to_register/format: constants/format
+  field_how_to_register/format:
+    plugin: default_value
+    default_value: "markdown_editor"
   field_language:
     plugin: sub_process
     source: field_language

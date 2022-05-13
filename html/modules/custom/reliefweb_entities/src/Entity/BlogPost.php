@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_entities\Entity;
 
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\node\Entity\Node;
 use Drupal\reliefweb_entities\BundleEntityInterface;
@@ -104,7 +105,32 @@ class BlogPost extends Node implements BundleEntityInterface, EntityModeratedInt
         'url' => RiverServiceBase::getRiverUrl('blog_post'),
         'label' => $this->t('View all blog posts'),
       ],
+      '#cache' => [
+        'tags' => [
+          'node_list:blog_post',
+        ],
+      ],
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function preSave(EntityStorageInterface $storage) {
+    // @todo remove when removing `reliefweb_migrate`.
+    if (!empty($this->_is_migrating)) {
+      parent::preSave($storage);
+      return;
+    }
+
+    // Set the creation date to the changed date when publishing the blog
+    // post from an unpublished state.
+    if (isset($this->original) &&
+      $this->getModerationStatus() === 'published' &&
+      $this->original->getModerationStatus() !== 'published'
+    ) {
+      $this->setCreatedTime($this->getChangedTime());
+    }
   }
 
 }

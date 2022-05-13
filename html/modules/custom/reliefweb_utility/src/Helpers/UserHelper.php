@@ -31,7 +31,9 @@ class UserHelper {
     }
     // Check the roles.
     elseif (!empty($roles)) {
-      $intersection = count(array_intersect($roles, $account->getRoles()));
+      $roles = array_map('strtolower', $roles);
+      $account_roles = array_map('strtolower', $account->getRoles());
+      $intersection = count(array_intersect($roles, $account_roles));
       return $all ? count($roles) === $intersection : $intersection > 0;
     }
     return FALSE;

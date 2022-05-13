@@ -26,13 +26,13 @@
   bottom: 12px;
   left: 0;
   content: "";
-  border: 4px solid #e6ecef;
+  border: 4px solid var(--cd-reliefweb-brand-grey--light);
 }
 .rw-river-page--countries > ul .rw-river-country-list__group__title {
   margin: 8px 0 24px 0;
   padding: 0 0 16px 0;
-  border-bottom: 1px solid #2e3436;
-  font-size: 24px;
+  border-bottom: 1px solid var(--cd-reliefweb-brand-grey--dark);
+  font-size: var(--cd-font-size--large);
   font-weight: bold;
 }
 .rw-river-page--countries > ul li li {

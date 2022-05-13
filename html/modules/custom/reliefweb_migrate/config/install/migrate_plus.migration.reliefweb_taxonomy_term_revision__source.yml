@@ -5,7 +5,7 @@ source:
   bundle: source
 process:
   # Moderation status.
-  moderation_state:
+  moderation_status:
     default_value: active
   # Fields.
   field_aliases/value:
@@ -50,11 +50,22 @@ process:
     plugin: skip_on_empty
     method: process
     source: field_homepage/0/url
-  # @todo review once the custom field has been added for import URL.
-  # field_job_import_feed_url/uri
-  #   plugin: skip_on_empty
-  #   method: process
-  #   source: field_link/0/url
+  field_job_import_feed:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: field_link
+    -
+      plugin: sub_process
+      process:
+        feed_url: url
+        uid: title
+        base_url:
+          -
+            plugin: unserialize
+            source: attributes
+            index:
+              - title
   field_links:
     -
       plugin: skip_on_empty
@@ -64,16 +75,11 @@ process:
       plugin: sub_process
       process:
         uri: value
-  # @todo review after figuring out the file directory.
-  # field_logo:
-  #   plugin: sub_process
-  #   source: field_term_image
-  #   process:
-  #     target_id: fid
-  #     alt: alt
-  #     title: title
-  #     width: width
-  #     height: height
+  field_logo:
+    plugin: sub_process
+    source: field_term_image
+    process:
+      target_id: fid
   field_longname/value:
     plugin: skip_on_empty
     method: process

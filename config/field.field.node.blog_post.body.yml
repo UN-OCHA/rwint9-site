@@ -10,10 +10,9 @@ dependencies:
     - text
 third_party_settings:
   allowed_formats:
-    markdown: markdown
-    html: html
-    plain_text: '0'
-    token_markdown: '0'
+    allowed_formats:
+      - markdown
+      - html
 id: node.blog_post.body
 field_name: body
 entity_type: node

@@ -1,0 +1,6 @@
+view own posts:
+  title: 'View own posts'
+  description: 'View own posts.'
+view other user posts:
+  title: 'View other user posts'
+  description: 'View other user posts.'

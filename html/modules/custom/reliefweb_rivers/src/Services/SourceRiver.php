@@ -67,7 +67,14 @@ class SourceRiver extends RiverServiceBase {
       '#theme' => 'reliefweb_rivers_letter_navigation',
       '#title' => $this->t('Filter by first letter'),
       '#letters' => $letters,
+      '#cache' => [
+        '#contexts' => [
+          'url.query_args:group',
+        ],
+      ],
     ];
+
+    $content['#cache_properties'][] = '#letter_navigation';
 
     return $content;
   }
@@ -340,9 +347,15 @@ class SourceRiver extends RiverServiceBase {
       'vocabulary' => 'source',
     ]);
 
+    $transliterator = \Transliterator::create('Any-Latin; Latin-ASCII;');
+
     $letters = [];
     foreach ($terms as $term) {
       $letter = mb_strtoupper(mb_substr($term['name'], 0, 1));
+      $letter = $transliterator->transliterate($letter);
+      if (is_numeric($letter)) {
+        $letter = '#';
+      }
 
       if (!isset($letters[$letter])) {
         $letters[$letter] = [

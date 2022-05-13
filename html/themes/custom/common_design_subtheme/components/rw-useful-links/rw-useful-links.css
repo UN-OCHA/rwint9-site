@@ -27,7 +27,7 @@
 .rw-entity-text--resources ul li {
   margin: 0;
   padding: 12px 0;
-  border-bottom: 1px solid #e6ecef;
+  border-bottom: 1px solid var(--cd-reliefweb-brand-grey--light);
   line-height: 24px;
 }
 .rw-entity-useful-links > ul li:first-child,
@@ -43,10 +43,7 @@
 .rw-entity-text--resources ul + * {
   margin-top: 24px;
 }
-/* @todo Needed? */
-.rw-entity-useful-links > ul ul + .view-more {
-  margin-top: 24px;
-}
+
 /* Useful links on 403/404 page */
 .rw-404 .rw-entity-useful-links > ul,
 .rw-403 .rw-entity-useful-links > ul {

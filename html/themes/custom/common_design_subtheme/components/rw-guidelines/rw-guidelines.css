@@ -1,18 +1,30 @@
-form[data-with-guidelines] button[data-guideline] {
+form[data-with-guidelines] .rw-guideline__label {
+  display: inline-flex;
+  margin-right: 12px;
+}
+form[data-with-guidelines] .rw-guideline__label .form-optional {
+  white-space: pre;
+}
+form[data-with-guidelines] .rw-guideline__label.form-required {
+  margin-right: 8px;
+}
+form[data-with-guidelines] .rw-guideline__open-button {
+  position: relative;
   display: inline-block;
   overflow: hidden;
   width: 20px;
   height: 20px;
-  margin: -3px 0 0 8px;
+  margin: -4px 0 0 0;
   padding: 0 0 0 12px;
   vertical-align: middle;
-  border: 4px solid #e6ecef;
+  border: 4px solid var(--cd-reliefweb-brand-grey--light);
   border-radius: 50%;
   background: var(--rw-icons--common--help--12--dark-blue);
-  background-color: #e6ecef;
+  background-color: var(--cd-reliefweb-brand-grey--light);
 }
-form[data-with-guidelines] button[data-guideline]:hover {
+form[data-with-guidelines] .rw-guideline__open-button:hover {
   background: var(--rw-icons--common--help--12--dark-red);
+  background-color: var(--cd-reliefweb-brand-grey--light);
 }
 form[data-with-guidelines] .rw-guideline:before {
   position: fixed;
@@ -28,7 +40,7 @@ form[data-with-guidelines] .rw-guideline:before {
 }
 form[data-with-guidelines] .rw-guideline {
   position: fixed;
-  z-index: 1;
+  z-index: 10000;
   top: 10vh;
   left: 25vw;
   width: 50vw;
@@ -36,7 +48,8 @@ form[data-with-guidelines] .rw-guideline {
   border: 10px solid black;
   border: 10px solid rgba(0, 0, 0, 0.1);
 }
-form[data-with-guidelines] .rw-guideline > button[value="close"] {
+
+form[data-with-guidelines] .rw-guideline .rw-guideline__close-button {
   position: absolute;
   z-index: 10002;
   top: -16px;
@@ -45,11 +58,11 @@ form[data-with-guidelines] .rw-guideline > button[value="close"] {
   width: 28px;
   height: 28px;
   padding: 0 0 0 22px;
-  border: 2px solid #2e3436;
+  border: 2px solid var(--cd-reliefweb-brand-blue--dark);
   border-radius: 50%;
   background: white;
 }
-form[data-with-guidelines] .rw-guideline > button[value="close"]:after {
+form[data-with-guidelines] .rw-guideline .rw-guideline__close-button:after {
   position: absolute;
   top: 6px;
   left: 6px;
@@ -57,15 +70,15 @@ form[data-with-guidelines] .rw-guideline > button[value="close"]:after {
   width: 12px;
   height: 12px;
   content: "";
-  background: var(--rw-icons--common--close--18--dark-grey);
+  background: var(--rw-icons--common--close--12--dark-blue);
 }
-form[data-with-guidelines] .rw-guideline > button[value="close"]:hover {
-  border-color: #eb1405;
+form[data-with-guidelines] .rw-guideline .rw-guideline__close-button:hover {
+  border-color: var(--cd-reliefweb-brand-red--dark);
 }
-form[data-with-guidelines] .rw-guideline > button[value="close"]:hover:after {
-  background: var(--rw-icons--common--close--18--dark-red);
+form[data-with-guidelines] .rw-guideline .rw-guideline__close-button:hover:after {
+  background: var(--rw-icons--common--close--12--dark-red);
 }
-form[data-with-guidelines] .rw-guideline > div {
+form[data-with-guidelines] .rw-guideline__container {
   position: relative;
   z-index: 10001;
   overflow-x: hidden;
@@ -75,12 +88,12 @@ form[data-with-guidelines] .rw-guideline > div {
   padding: 16px;
   background-color: white;
 }
-form[data-with-guidelines] .rw-guideline > div > h3 {
+form[data-with-guidelines] .rw-guideline__heading {
   text-align: center;
 }
-form[data-with-guidelines] .rw-guideline > div > .rw-guideline__content {
+form[data-with-guidelines] .rw-guideline__content {
   padding-top: 0;
 }
-form[data-with-guidelines] .rw-guideline > div > .rw-guideline__content img {
-  border: 4px solid #e6ecef;
+form[data-with-guidelines] .rw-guideline__content img {
+  border: 4px solid var(--cd-reliefweb-brand-grey--light);
 }

@@ -80,6 +80,34 @@ class SubscriptionForm extends FormBase {
       '#value' => $user->id(),
     ];
 
+    $form['information'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Email information'),
+      '#not_required' => TRUE,
+    ];
+
+    $email = $user->getEmail();
+    if (empty($user->field_email_confirmed->value)) {
+      $form['information']['email'] = [
+        '#type' => 'inline_template',
+        '#template' => "<p>{% trans %}Your email address <em>{{ email }}</em> <strong>has not been verified</strong> so notifications will not be sent.</p><p>Please go to your account settings: {{ link }} and save to receive a new email verification link.{% endtrans %}</p>",
+        '#context' => [
+          'email' => $email,
+          'link' => $user->toLink('here', 'edit-form')->toString(),
+        ],
+      ];
+    }
+    else {
+      $form['information']['email'] = [
+        '#type' => 'inline_template',
+        '#template' => "<p>{% trans %}Notifications will be send to <em>{{ email }}</em>. You can change it in your account settings: {{ link }}.{% endtrans %}</p>",
+        '#context' => [
+          'email' => $email,
+          'link' => $user->toLink('here', 'edit-form')->toString(),
+        ],
+      ];
+    }
+
     $form['global'] = [
       '#type' => 'checkboxes',
       '#title' => $this->t('Global notifications'),
@@ -130,6 +158,9 @@ class SubscriptionForm extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $subscriptions = $form_state->getValue('global');
     foreach ($subscriptions as $sid => $value) {
+      if ($sid === '_none') {
+        continue;
+      }
       if (!$value) {
         $this->unsubscribe($form_state->getValue('uid'), $sid);
       }
@@ -140,6 +171,9 @@ class SubscriptionForm extends FormBase {
 
     $subscriptions = $form_state->getValue('country_updates');
     foreach ($subscriptions as $sid => $value) {
+      if ($sid === '_none') {
+        continue;
+      }
       if (!$value) {
         $this->unsubscribe($form_state->getValue('uid'), $sid);
       }
@@ -147,6 +181,9 @@ class SubscriptionForm extends FormBase {
         $this->subscribe($form_state->getValue('uid'), $sid);
       }
     }
+
+    // Show the user a message.
+    $this->messenger()->addStatus($this->t('Subscriptions successfully updated.'));
   }
 
   /**

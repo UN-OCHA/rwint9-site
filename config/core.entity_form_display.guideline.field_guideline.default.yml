@@ -1,0 +1,82 @@
+uuid: d8b74fea-a0fb-4a3a-a0e3-4a973234e563
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.guideline.field_guideline.field_description
+    - field.field.guideline.field_guideline.field_field
+    - field.field.guideline.field_guideline.field_images
+    - field.field.guideline.field_guideline.field_links
+    - field.field.guideline.field_guideline.field_short_link
+    - field.field.guideline.field_guideline.field_title
+    - guidelines.guideline_type.field_guideline
+    - image.style.thumbnail
+  module:
+    - allowed_formats
+    - link
+    - reliefweb_guidelines
+    - svg_image
+    - text
+id: guideline.field_guideline.default
+targetEntityType: guideline
+bundle: field_guideline
+mode: default
+content:
+  field_description:
+    type: text_textarea
+    weight: 1
+    region: content
+    settings:
+      rows: 20
+      placeholder: ''
+    third_party_settings:
+      allowed_formats:
+        hide_help: '0'
+        hide_guidelines: '1'
+  field_field:
+    type: guideline_field_target_select_widget
+    weight: 4
+    region: content
+    settings:
+      enabled_entities:
+        - node.announcement
+        - node.blog_post
+        - node.book
+        - node.job
+        - node.report
+        - node.topic
+        - node.training
+        - taxonomy_term.country
+        - taxonomy_term.disaster
+        - taxonomy_term.source
+    third_party_settings: {  }
+  field_images:
+    type: image_image
+    weight: 2
+    region: content
+    settings:
+      progress_indicator: throbber
+      preview_image_style: thumbnail
+    third_party_settings: {  }
+  field_links:
+    type: link_default
+    weight: 3
+    region: content
+    settings:
+      placeholder_url: ''
+      placeholder_title: ''
+    third_party_settings: {  }
+  name:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden:
+  field_short_link: true
+  field_title: true
+  langcode: true
+  path: true
+  user_id: true

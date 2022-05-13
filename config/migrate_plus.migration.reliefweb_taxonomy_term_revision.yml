@@ -1,9 +1,9 @@
-uuid: c24092f2-c024-4e88-9198-f18c4751012f
+uuid: b2e45a56-05cb-49e9-8c85-2d4304617709
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: pUAXb-jawtDLreM83zTBkIp68pW4-eAGUNijLc3LfMU
+  default_config_hash: 7YSNhGfqh-wclm6nhEzkgJiL5Id-KKqA_d6FzRvyiXI
 id: reliefweb_taxonomy_term_revision
 class: null
 field_plugin_method: null
@@ -28,7 +28,7 @@ source:
     - training_type
     - vulnerable_groups
 process:
-  moderation_state:
+  moderation_status:
     plugin: skip_on_empty
     method: process
     source: field_status/0/value

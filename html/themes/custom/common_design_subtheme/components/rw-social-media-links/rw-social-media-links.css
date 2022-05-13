@@ -9,7 +9,6 @@
   list-style: none;
 }
 .rw-entity-social-media-links li {
-  /* To avoid borders on the next column. */
   display: inline-block;
   margin: 0 0 16px;
   padding: 12px;
@@ -17,7 +16,7 @@
 
 .rw-entity-social-media-links--tiles li {
   width: 100%;
-  border: 1px solid #e6ecef;
+  border: 1px solid var(--cd-reliefweb-brand-grey--light);
 }
 
 @media screen and (min-width: 768px) {
@@ -30,19 +29,6 @@
   .rw-entity-social-media-links--tiles ul {
     column-count: 3;
   }
-}
-
-/* External links. Display an icon after the link. */
-.rw-entity-social-media-links--tiles a[target="_blank"][rel~="noopener"]:after {
-  display: inline-block;
-  overflow: hidden;
-  width: 12px;
-  height: 12px;
-  /* The top margin is to have a better vertical alignment. */
-  margin: -2px 0 0 6px;
-  content: "";
-  vertical-align: middle;
-  background: var(--rw-icons--common--external-link--12--dark-blue);
 }
 
 /**
@@ -108,6 +94,6 @@
   margin: 24px 0 0 0;
   padding: 24px 0;
   text-align: center;
-  border-top: 1px solid #e6ecef;
+  border-top: 1px solid var(--cd-reliefweb-brand-grey--light);
   line-height: 1;
 }

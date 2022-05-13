@@ -11,7 +11,7 @@ field_name: field_image
 entity_type: node
 bundle: announcement
 label: Banner
-description: 'Announcement''s banner image. It should be exactly 1200x400 pixels.'
+description: ''
 required: true
 translatable: false
 default_value: {  }
@@ -24,6 +24,6 @@ settings:
     sort:
       field: mid
       direction: DESC
-    auto_create: false
+    auto_create: true
     auto_create_bundle: ''
 field_type: entity_reference

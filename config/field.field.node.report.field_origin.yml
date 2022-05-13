@@ -1,4 +1,4 @@
-uuid: 2e14cbe1-5a85-4274-9405-7b2c5434e240
+uuid: 8eda6012-82e5-4b7b-8522-cc6d46e035f0
 langcode: en
 status: true
 dependencies:
@@ -15,7 +15,9 @@ label: Origin
 description: ''
 required: true
 translatable: false
-default_value: {  }
+default_value:
+  -
+    value: 0
 default_value_callback: ''
 settings: {  }
-field_type: list_string
+field_type: list_integer

@@ -63,8 +63,7 @@
 /* List of autocomplete suggestions. */
 .rw-autocomplete-selector {
   position: absolute;
-  /* Ensures the popup is above the content.
-   * @todo Review the value. */
+  /* Ensures the popup is above the content. */
   z-index: 120;
   top: 100%;
   left: 0;
@@ -76,9 +75,9 @@
   margin: 0;
   padding: 4px;
   list-style: none;
-  border: 1px solid var(--cd-reliefweb-dark-grey);
+  border: 1px solid var(--cd-reliefweb-brand-grey--dark);
   background: white;
-  box-shadow: 0 1px 4px 1px rgba(var(--cd-rgb-reliefweb-dark-grey), 0.3);
+  box-shadow: 0 1px 4px 1px rgba(var(--cd-rgb-reliefweb-brand-grey--dark), 0.3);
 }
 .rw-autocomplete-suggestion {
   margin: 0;
@@ -86,14 +85,13 @@
   /* Suggestions are clickable. */
   cursor: pointer;
   white-space: pre-wrap;
-  /* @todo review in regards to the standard cd-font sizes. */
   font-size: 16px;
   /* Better readability. */
   line-height: 1.5;
 }
 /* Currently selected suggestion. */
 .rw-autocomplete-suggestion[aria-selected] {
-  background: var(--cd-reliefweb-light-grey);
+  background: var(--cd-reliefweb-brand-grey--light);
 }
 /* Highlight the parts of the suggestions that match the query. */
 .rw-autocomplete-suggestion span {
