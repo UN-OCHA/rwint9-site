@@ -299,11 +299,11 @@ class Parameters {
             // Only keep last date.
             if (strpos($field, 'date') === 0) {
               $field = str_replace('date.', '', $field);
-              $date = RWRiversDateHandler::createDate('now')->setTimestamp(end($values));
-              $value = RWRiversDateHandler::formatDateInterval('month', $date);
+              $date = static::createDate('now')->setTimestamp(end($values));
+              $value = static::formatDateInterval('month', $date);
             }
             else {
-              $value = RWRiversFacetsHandler::implodeValues($values);
+              $value = implode('.', $values);
             }
             $this->parameters[$field] = $value;
           }
@@ -340,10 +340,10 @@ class Parameters {
                 $fields['date'][$field]['_'] = '_';
               }
               else {
-                $dates = RWRiversDateHandler::parseDateInterval(substr($value, 1, -1), ' TO ', 'Y-m-d\T00:00:00\Z');
+                $dates = static::parseDateInterval(substr($value, 1, -1), ' TO ', 'Y-m-d\T00:00:00\Z');
                 if (!empty($dates)) {
-                  $interval = RWRiversDateHandler::getDateInterval($dates);
-                  $value = RWRiversDateHandler::formatDateInterval($interval, $dates[0]);
+                  $interval = static::getDateInterval($dates);
+                  $value = static::formatDateInterval($interval, $dates[0]);
                   $fields['date'][$field][$interval] = $value;
                 }
               }
@@ -356,7 +356,7 @@ class Parameters {
       }
 
       foreach ($fields['term'] as $field => $values) {
-        $this->parameters[$field] = RWRiversFacetsHandler::implodeValues($values);
+        $this->parameters[$field] = implode('.', $values);
       }
 
       foreach ($fields['date'] as $field => $values) {
@@ -384,7 +384,7 @@ class Parameters {
         }
       }
       if (!empty($values)) {
-        $this->set('region', RWRiversFacetsHandler::implodeValues(array_keys($values)));
+        $this->set('region', implode('.', array_keys($values)));
       }
     }
   }
@@ -465,7 +465,7 @@ class Parameters {
 
                 // Check and prepare value.
                 if (strpos($value, '|') > 0) {
-                  $dates = RWRiversDateHandler::parseDateInterval($value, '|', 'U');
+                  $dates = static::parseDateInterval($value, '|', 'U');
                   if (!empty($dates)) {
                     $value = $dates[0]->format('Ymd') . '-' . $dates[1]->modify('-1 day +1 second')->format('Ymd');
                     $result .= $operator . $field . $value;
@@ -540,6 +540,126 @@ class Parameters {
         static::arrayToHidden($output, $subvalue, $subkey);
       }
     }
+  }
+
+  /**
+   * Create a DateTime object from the given date.
+   *
+   * @param string $string
+   *   Date string.
+   *
+   * @return \DateTimeImmutable
+   *   DateTime object with timezone set to UTC.
+   */
+  public static function createDate($string) {
+    return new \DateTimeImmutable($string, new \DateTimeZone('UTC'));
+  }
+
+  /**
+   * Validate a date with a specific format.
+   *
+   * @param string $string
+   *   Date string.
+   * @param string $format
+   *   Date format.
+   *
+   * @return \DateTimeImmutable|null
+   *   DateTime object if valid or NULL otherwise.
+   */
+  public static function validateDate($string, $format = 'Ymd') {
+    if (empty($string)) {
+      return NULL;
+    }
+    else {
+      $date = \DateTimeImmutable::createFromFormat('!' . $format, $string, new \DateTimeZone('UTC'));
+      return $date && $date->format($format) === $string ? $date : NULL;
+    }
+  }
+
+  /**
+   * Parse a date interval string and return DateTime objects if valid.
+   *
+   * @param string $value
+   *   Date interval string.
+   * @param string $separator
+   *   Date separator.
+   * @param string $format
+   *   Format of the dates.
+   * @param bool $validateBoth
+   *   Indicate if both dates should be valid.
+   *
+   * @return array
+   *   Array of \DateTime objects.
+   */
+  public static function parseDateInterval($value, $separator = '-', $format = 'Ymd', $validateBoth = TRUE) {
+    if (!empty($value) && strpos($value, $separator) >= 0) {
+      $dates = explode($separator, $value, 2);
+      $dates[0] = static::validateDate($dates[0], $format);
+      if (isset($dates[1])) {
+        $dates[1] = static::validateDate($dates[1], $format);
+      }
+      if ($validateBoth) {
+        return !empty($dates[0]) && !empty($dates[1]) ? $dates : [];
+      }
+      return $dates;
+    }
+    return [];
+  }
+
+  /**
+   * Calculate interval type between 2 dates.
+   *
+   * @param array $dates
+   *   Array of 2 DateTime objects.
+   * @param bool $next
+   *   Indicates whether to return the current interval or the next one.
+   *
+   * @return string
+   *   Date interval (year, month or day).
+   */
+  public static function getDateInterval(array $dates, $next = FALSE) {
+    if (!empty($dates)) {
+      $diff = $dates[1]->diff($dates[0]);
+      if ($diff->y >= 1) {
+        return $next ? 'month' : 'year';
+      }
+      elseif ($diff->m >= 1) {
+        return $next ? 'day' : 'month';
+      }
+      return 'day';
+    }
+    return 'year';
+  }
+
+  /**
+   * Format a date interval.
+   *
+   * @param string $interval
+   *   Interval (year, month or day).
+   * @param \DateTimeInterface $date
+   *   DateTime object.
+   * @param string $separator
+   *   Date separator.
+   * @param string $format
+   *   Format of the dates.
+   *
+   * @return string
+   *   Date interval.
+   */
+  public static function formatDateInterval($interval, \DateTimeInterface $date, $separator = '-', $format = 'Ymd') {
+    if (!empty($date)) {
+      switch ($interval) {
+        case 'year':
+          $date = $date->setDate($date->format('Y'), 1, 1);
+          break;
+
+        case 'month':
+          $date = $date->setDate($date->format('Y'), $date->format('n'), 1);
+          break;
+      }
+      return $date->format($format) . $separator . $date->modify('+1 ' . $interval)->format($format);
+    }
+    return '';
   }
 
 }
