@@ -216,7 +216,7 @@ class GuidelineSinglePageController extends ControllerBase {
         }
       }
       // Alias.
-      if (preg_match('#^/?guideline/([0-9a-zA-Z]{8})$#', $path, $match) === 1) {
+      if (preg_match('#^/?guideline/([0-9a-zA-Z]{8})(\S+)?$#', $path, $match) === 1) {
         if (isset($mapping[$match[1]])) {
           $link->setAttribute('href', '/guidelines#' . $mapping[$match[1]]->shortlink);
         }

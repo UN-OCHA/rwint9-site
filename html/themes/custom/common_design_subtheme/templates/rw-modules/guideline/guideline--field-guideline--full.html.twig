@@ -18,7 +18,7 @@
 <div class="rw-page-content">
 {% if content %}
   {{- elements['#guideline'].getLinkToGuidelines() -}}
-  {% set parent_link = elements['#guideline'].getGuidelineListLink() %}
+  {% set parent_link = elements['#guideline'].getGuidelineListLink()|render %}
   {% if parent_link %}
   <p>{% trans %}<strong>Guideline list:</strong> {{ parent_link }}{% endtrans %}</p>
   {% endif %}
