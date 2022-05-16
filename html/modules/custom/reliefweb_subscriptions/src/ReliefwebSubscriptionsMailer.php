@@ -245,7 +245,7 @@ class ReliefwebSubscriptionsMailer {
       ];
     }
 
-    $this->logger->info('Sent emails {sent} of {queued} queued notifications.', [
+    $this->logger->info('Sent emails for {sent} of {queued} queued notifications.', [
       'sent' => $total_sent,
       'queued' => count($notifications),
     ]);
@@ -1641,14 +1641,14 @@ class ReliefwebSubscriptionsMailer {
     // Skip if there are no subscribers for the subscription.
     $sids = $this->getSubscriptionsWithSubscribers($sids);
     if (empty($sids)) {
-      $this->logger->warning('No subscribers, skipping');
+      $this->logger->warning('No subscribers for scheduled notifications, skipping');
       return;
     }
 
     // Skip if the subscriptipon is already queued.
     $sids = $this->getSubscriptionsNotYetQueued($sids);
     if (empty($sids)) {
-      $this->logger->warning('Already queued, skipping');
+      $this->logger->warning('No scheduled notifications to queue, skipping');
       return;
     }
 

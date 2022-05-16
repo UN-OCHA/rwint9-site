@@ -375,6 +375,10 @@ class AdvancedSearch {
           'operator' => 'OR',
           'shortcut' => 'C',
         ],
+        'region' => [
+          'operator' => 'OR',
+          'shortcut' => 'C',
+        ],
         'source' => [
           'operator' => 'OR',
           'shortcut' => 'S',
@@ -411,8 +415,12 @@ class AdvancedSearch {
           'shortcut' => 'T',
         ],
         'country' => [
+          'operator' => 'OR',
           'shortcut' => 'C',
-          'widget' => 'autocomplete',
+        ],
+        'region' => [
+          'operator' => 'OR',
+          'shortcut' => 'C',
         ],
         'source' => [
           'operator' => 'OR',
