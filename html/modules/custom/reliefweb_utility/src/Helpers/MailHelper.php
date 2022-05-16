@@ -97,6 +97,11 @@ class MailHelper {
 
       // Convert any HTML to plain-text.
       $body_text = MailFormatHelper::htmlToText($body, self::$allowedTags);
+
+      // Decode HTML entities in links.
+      $body_text = preg_replace_callback('#^\[\d+\] https?://\S+#m', function ($match) {
+        return html_entity_decode($match[0], ENT_QUOTES, 'UTF-8');
+      }, $body_text);
     }
 
     // Remove unnecessary consecutive line breaks.

@@ -643,7 +643,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
     $request = $this->requestStack->getCurrentRequest();
     $items = $this->getApiDataForRss();
     $first = reset($items);
-    $date = $first['date'] ?? static::createDate(time());
+    $date = $first['date'] ?? static::createDate('now');
 
     $content = [
       '#theme' => 'reliefweb_rivers_rss__' . $river,

@@ -48,14 +48,20 @@ class UnsubscribeController extends ControllerBase {
   }
 
   /**
-   * Add or remove node from bookmarks.
+   * Unsubscribe a user.
    */
   public function unsubscribe(AccountInterface $user) {
     if ($this->account->isAnonymous()) {
+      $timestamp = $this->request->get('timestamp');
+      $signature = $this->request->get('signature');
+      if (empty($timestamp) || empty($signature)) {
+        throw new AccessDeniedHttpException();
+      }
+
       return $this->redirect('reliefweb_subscriptions.unsubscription_form', [
         'user' => $user->id(),
-        'timestamp' => $this->request->get('timestamp'),
-        'signature' => $this->request->get('signature'),
+        'timestamp' => $timestamp,
+        'signature' => $signature,
       ]);
     }
 
