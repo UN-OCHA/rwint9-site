@@ -859,10 +859,11 @@ class ReliefWebFile extends FieldItemBase {
     }
     // For existing files, they should be accessible via the permanent URL.
     elseif ($uri === $this->getPermanentUri($private)) {
-      $url = 'internal:/';
+      $url = 'base:/';
       $url .= $private ? 'private/' : '';
       $url .= static::getFileDirectory() . '/';
-      $url .= $this->getUuid() . '/' . $this->getFileName();
+      $url .= $this->getUuid() . '/' . rawurldecode($this->getFileName());
+
       return Url::fromUri($url);
     }
 
