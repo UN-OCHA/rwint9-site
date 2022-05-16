@@ -10,7 +10,7 @@ field_name: field_origin_notes
 entity_type: node
 bundle: report
 label: 'Origin notes'
-description: 'Origin URL of the document starting with http:// or https://; or list of email addresses to notify when origin "submit" is selected.'
+description: 'Origin URL of the document starting with http:// or https://.'
 required: false
 translatable: false
 default_value: {  }
