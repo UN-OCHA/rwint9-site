@@ -782,6 +782,10 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * {@inheritdoc}
    */
   public static function createDate($date) {
+    // The DateTime constructor wants an @ prefix for unix timestamps.
+    if (is_numeric($date)) {
+      $date = '@' . $date;
+    }
     return new \DateTime($date, new \DateTimeZone('UTC'));
   }
 
