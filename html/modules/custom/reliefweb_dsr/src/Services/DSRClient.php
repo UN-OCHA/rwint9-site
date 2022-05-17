@@ -10,7 +10,6 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\GuzzleException;
 
 /**
  * Digital Situation Report client service class.
@@ -194,7 +193,11 @@ class DSRClient {
         'query' => $query,
       ]);
     }
-    catch (GuzzleException $exception) {
+    catch (\Exception $exception) {
+      $this->logger->notice('Unable to get DSR data for country @iso3: @exception', [
+        '@iso3' => $iso3,
+        '@exception' => $exception->getMessage(),
+      ]);
       return [];
     }
 
