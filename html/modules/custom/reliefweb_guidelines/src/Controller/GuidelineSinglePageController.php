@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_guidelines\Controller;
 
+use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -13,6 +14,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Controller for the guidelines.
  */
 class GuidelineSinglePageController extends ControllerBase {
+
+  /**
+   * The default cache backend.
+   *
+   * @var \Drupal\Core\Cache\CacheBackendInterface
+   */
+  protected $cache;
 
   /**
    * The current user.
@@ -31,15 +39,19 @@ class GuidelineSinglePageController extends ControllerBase {
   /**
    * Constructor.
    *
+   * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
+   *   The cache backend.
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
    *   The current user.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager service.
    */
   public function __construct(
+    CacheBackendInterface $cache_backend,
     AccountProxyInterface $current_user,
     EntityTypeManagerInterface $entity_type_manager
   ) {
+    $this->cache = $cache_backend;
     $this->currentUser = $current_user;
     $this->entityTypeManager = $entity_type_manager;
   }
@@ -49,6 +61,7 @@ class GuidelineSinglePageController extends ControllerBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
+      $container->get('cache.default'),
       $container->get('current_user'),
       $container->get('entity_type.manager')
     );
@@ -61,6 +74,42 @@ class GuidelineSinglePageController extends ControllerBase {
    *   Render array for the homepage.
    */
   public function getPageContent() {
+    $list = $this->getGuidelineList();
+
+    $build = [
+      '#theme' => 'reliefweb_guidelines_list',
+      '#title' => $this->t('Guidelines'),
+      '#guidelines' => array_filter($list, function ($item) {
+        return !empty($item['title']) && !empty($item['children']);
+      }),
+      '#cache' => [
+        'tags' => ['guideline_list'],
+        'contexts' => ['user.permissions'],
+      ],
+      '#attached' => [
+        'library' => ['reliefweb_guidelines/reliefweb-guidelines'],
+      ],
+    ];
+
+    return $build;
+  }
+
+  /**
+   * Get the list of guidelines.
+   *
+   * @return array
+   *   The list of guidelines to render.
+   */
+  protected function getGuidelineList() {
+    // Cache information.
+    $cache_id = 'reliefweb_guidelines:single-page';
+
+    // Attempt to get the data from the cache.
+    $cache = $this->cache->get($cache_id);
+    if (isset($cache->data)) {
+      return $cache->data;
+    }
+
     $list = [];
     $storage = $this->entityTypeManager->getStorage('guideline');
 
@@ -110,30 +159,10 @@ class GuidelineSinglePageController extends ControllerBase {
       }
     }
 
-    $build = [
-      '#theme' => 'reliefweb_guidelines_list',
-      '#title' => $this->t('Guidelines'),
-      '#guidelines' => array_filter($list, function ($item) {
-        return !empty($item['title']) && !empty($item['children']);
-      }),
-      '#cache' => [
-        'keys' => [
-          'reliefweb',
-          'guidelines',
-        ],
-        'tags' => ['guideline_list'],
-        'contexts' => ['user.permissions'],
-      ],
-      '#cache_properties' => [
-        '#title',
-        '#guidelines',
-      ],
-      '#attached' => [
-        'library' => ['reliefweb_guidelines/reliefweb-guidelines'],
-      ],
-    ];
-
-    return $build;
+    // Cache the list of letters permanently. It will be rebuilt when a source
+    // is modified.
+    $this->cache->set($cache_id, $list, CacheBackendInterface::CACHE_PERMANENT, ['guideline_list']);
+    return $list;
   }
 
   /**

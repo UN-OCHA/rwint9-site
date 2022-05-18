@@ -66,19 +66,6 @@ class TopicRiver extends RiverServiceBase {
       '#river' => $river,
       '#title' => $this->getPageTitle(),
       '#content' => $this->getRiverContent(),
-      '#cache' => [
-        'keys' => [
-          'reliefweb',
-          'rivers',
-          'page',
-          $river,
-        ],
-      ],
-      '#cache_properties' => [
-        '#river',
-        '#title',
-        '#content',
-      ],
     ];
   }
 
@@ -206,7 +193,7 @@ class TopicRiver extends RiverServiceBase {
         '#entities' => $reliefweb_topics,
         '#cache' => [
           'tags' => [
-            'node_list:topic',
+            $this->getEntityTypeId() . '_list:' . $this->getBundle(),
           ],
         ],
       ],

@@ -1,4 +1,10 @@
 services:
+  cache.reliefweb_api:
+    class: Drupal\Core\Cache\CacheBackendInterface
+    tags:
+      - { name: cache.bin }
+    factory: cache_factory:get
+    arguments: [reliefweb_api]
   reliefweb_api.client:
     class: Drupal\reliefweb_api\Services\ReliefWebApiClient
-    arguments: ['@cache.default', '@config.factory', '@datetime.time', '@http_client', '@logger.factory']
+    arguments: ['@cache.reliefweb_api', '@config.factory', '@datetime.time', '@http_client', '@logger.factory']

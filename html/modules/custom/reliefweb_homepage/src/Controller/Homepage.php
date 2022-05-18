@@ -194,17 +194,9 @@ class Homepage extends ControllerBase {
       '#title' => $this->t('ReliefWeb'),
       '#sections' => $sections,
       '#cache' => [
-        'keys' => [
-          'reliefweb',
-          'homepage',
-        ],
         // Necessary because the headlines widget is added depending on the user
         // pemissions.
         'contexts' => ['user.permissions'],
-      ],
-      '#cache_properties' => [
-        '#title',
-        '#sections',
       ],
     ];
 

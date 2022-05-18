@@ -240,18 +240,9 @@ class DisasterMapService {
         ],
       ],
       '#cache' => [
-        'keys' => [
-          'reliefweb',
-          'diaster-map',
-          hash('md5', serialize([$id, $title, $options])),
-        ],
         'tags' => [
           'taxonomy_term_list:disaster',
         ],
-      ],
-      '#cache_properties' => [
-        '#title',
-        '#entities',
       ],
     ];
 
