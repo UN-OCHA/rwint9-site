@@ -53,6 +53,9 @@ class HtmlSummarizer {
       return '';
     }
 
+    // Convert break lines to spaces.
+    $html = preg_replace('#<br[ /]*>#', ' ', $html);
+
     // Extract the paragraphs from the html string.
     $paragraphs = [];
     $text_length = 0;
@@ -123,7 +126,9 @@ class HtmlSummarizer {
       }
     }
 
-    return $prefix . implode($separator, $paragraphs) . $suffix;
+    $result = $prefix . implode($separator, $paragraphs) . $suffix;
+    $result = preg_replace('#\s{2,}#', ' ', $result);
+    return trim($result);
   }
 
 }

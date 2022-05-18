@@ -103,7 +103,7 @@ class HtmlSummarizerTest extends UnitTestCase {
     $this->assertEquals(HtmlSummarizer::summarize($html), $expected);
 
     $html = '<body><p>Text</p><p></p></body>';
-    $expected = 'Text ';
+    $expected = 'Text';
     $this->assertEquals(HtmlSummarizer::summarize($html), $expected);
 
     $string = $this->random->sentences(15);

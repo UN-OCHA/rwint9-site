@@ -259,24 +259,6 @@ abstract class RiverServiceBase implements RiverServiceInterface {
       '#advanced_search' => $this->getRiverAdvancedSearch(),
       '#content' => $this->getRiverContent(),
       '#links' => $this->getRiverLinks(),
-      '#cache' => [
-        'keys' => [
-          'reliefweb',
-          'rivers',
-          'page',
-          $river,
-        ],
-      ],
-      '#cache_properties' => [
-        '#river',
-        '#title',
-        '#view',
-        '#views',
-        '#search',
-        '#advanced_search',
-        '#content',
-        '#links',
-      ],
     ];
   }
 
@@ -460,10 +442,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
       '#pager' => $this->getRiverPager(),
       '#empty' => $this->t('No results found. Please modify your search or filter selection.'),
       '#cache' => [
-        'tags' => [
-          $this->getEntityTypeId() . '_list:' . $this->getBundle(),
-          'taxonomy_term_list',
-        ],
+        'tags' => $this->getRiverCacheTags(),
       ],
     ];
   }
@@ -654,30 +633,13 @@ abstract class RiverServiceBase implements RiverServiceInterface {
       '#date' => $date,
       '#items' => $items,
       '#cache' => [
-        'keys' => [
-          'reliefweb',
-          'rivers',
-          'rss',
-          $river,
-        ],
         'contexts' => [
           'url.query_args:advanced-search',
           'url.query_args:search',
           'url.query_args:view',
           'url.query_args.pagers:0',
         ],
-        'tags' => [
-          $this->getEntityTypeId() . '_list:' . $this->getBundle(),
-          'taxonomy_term_list',
-        ],
-      ],
-      '#cache_properties' => [
-        '#site_url',
-        '#title',
-        '#feed_url',
-        '#language',
-        '#date',
-        '#items',
+        'tags' => $this->getRiverCacheTags(),
       ],
     ];
 
@@ -926,6 +888,16 @@ abstract class RiverServiceBase implements RiverServiceInterface {
       }
     }
     return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRiverCacheTags() {
+    return [
+      $this->getEntityTypeId() . '_list:' . $this->getBundle(),
+      'taxonomy_term_list',
+    ];
   }
 
 }

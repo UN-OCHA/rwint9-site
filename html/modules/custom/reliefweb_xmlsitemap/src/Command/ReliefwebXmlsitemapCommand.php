@@ -345,7 +345,16 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
     // Submit to all the search engines.
     foreach ($this->getSearchEngines() as $engine) {
       $ping_url = str_replace('[sitemap]', $sitemap, $engine['url']);
-      $response = $this->httpClient->request('GET', $ping_url);
+      try {
+        $response = $this->httpClient->request('GET', $ping_url);
+      }
+      catch (\Exception $exception) {
+        $this->getLogger()->error('Failed to submit sitemap to @engine with error: @error.', [
+          '@engine' => $engine['name'],
+          '@error' => $exception->getMessage(),
+        ]);
+        return;
+      }
       if (!empty($response->error)) {
         $this->getLogger()->error('Failed to submit sitemap to @engine with error: @error.', [
           '@engine' => $engine['name'],

@@ -55,6 +55,7 @@ class ReliefWebApiClient {
    * @var array
    */
   protected static $cacheTags = [
+    'blog' => ['node_list:blog_post'],
     'reports' => ['node_list:report'],
     'jobs' => ['node_list:job'],
     'training' => ['node_list:training'],
@@ -64,7 +65,7 @@ class ReliefWebApiClient {
    * Constructor.
    *
    * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
-   *   The default cache backend.
+   *   The cache backend.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory service.
    * @param \Drupal\Component\Datetime\TimeInterface $time
@@ -192,13 +193,21 @@ class ReliefWebApiClient {
         }
       }
 
-      $promises[$index] = $this->httpClient->postAsync($url, [
-        'headers' => ['Content-Type: application/json'],
-        'body' => $payload,
-        'timeout' => $timeout,
-        'connect_timeout' => $timeout,
-        'verify' => $verify_ssl,
-      ]);
+      try {
+        $promises[$index] = $this->httpClient->postAsync($url, [
+          'headers' => ['Content-Type: application/json'],
+          'body' => $payload,
+          'timeout' => $timeout,
+          'connect_timeout' => $timeout,
+          'verify' => $verify_ssl,
+        ]);
+      }
+      catch (\Exception $exception) {
+        $this->logger->error('Exception while querying @url: @exception', [
+          '@url' => $api_url . '/' . $query['resource'],
+          '@exception' => $exception->getMessage(),
+        ]);
+      }
     }
 
     // Execute the requests in parallel and retrieve and cache the response's
@@ -395,7 +404,7 @@ class ReliefWebApiClient {
    *   Cache id.
    */
   public static function getCacheId($resource, $payload) {
-    $hash = hash('md5', serialize($payload ?? ''));
+    $hash = hash('sha256', serialize($payload ?? ''));
     return 'reliefweb_api:queries:' . $resource . ':' . $hash;
   }
 

@@ -248,4 +248,14 @@ class BlogPostRiver extends RiverServiceBase {
     return $entities;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getRiverCacheTags() {
+    return [
+      $this->getEntityTypeId() . '_list:' . $this->getBundle(),
+      'taxonomy_term_list:tag',
+    ];
+  }
+
 }

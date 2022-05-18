@@ -56,8 +56,6 @@ class DisasterRiver extends RiverServiceBase {
       $content['#pre_content'] = DisasterMapService::getAlertAndOngoingDisasterMap();
     }
 
-    $content['#cache_properties'][] = '#pre_content';
-
     return $content;
   }
 
@@ -367,6 +365,17 @@ class DisasterRiver extends RiverServiceBase {
     }
 
     return parent::requestApi($payload);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRiverCacheTags() {
+    return [
+      $this->getEntityTypeId() . '_list:' . $this->getBundle(),
+      'taxonomy_term_list:country',
+      'taxonomy_term_list:disaster_type',
+    ];
   }
 
 }
