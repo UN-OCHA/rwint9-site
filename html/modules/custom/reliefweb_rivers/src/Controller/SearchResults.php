@@ -136,20 +136,6 @@ class SearchResults extends ControllerBase {
       '#search' => $this->getSearch(),
       '#totals' => $totals,
       '#sections' => $sections,
-      '#cache' => [
-        'keys' => [
-          'reliefweb',
-          'rivers',
-          'search',
-          'results',
-        ],
-      ],
-      '#cache_properties' => [
-        '#title',
-        '#search',
-        '#totals',
-        '#sections',
-      ],
     ];
   }
 

@@ -74,8 +74,6 @@ class SourceRiver extends RiverServiceBase {
       ],
     ];
 
-    $content['#cache_properties'][] = '#letter_navigation';
-
     return $content;
   }
 
@@ -334,7 +332,7 @@ class SourceRiver extends RiverServiceBase {
     // Cache information.
     $cache_id = 'reliefweb_river:source:letters:' . $langcode;
 
-    // Attempt to get the sitrep from the cache.
+    // Attempt to get the data from the cache.
     $cache = $cache_backend->get($cache_id);
     if (isset($cache->data)) {
       return $cache->data;
@@ -380,6 +378,20 @@ class SourceRiver extends RiverServiceBase {
     // is modified.
     $cache_backend->set($cache_id, $letters, CacheBackendInterface::CACHE_PERMANENT, ['taxonomy_term_list:source']);
     return $letters;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRiverCacheTags() {
+    return [
+      $this->getEntityTypeId() . '_list:' . $this->getBundle(),
+      'taxonomy_term_list:country',
+      'taxonomy_term_list:organization_type',
+      'node_list:report',
+      'node_list:job',
+      'node_list:training',
+    ];
   }
 
 }
