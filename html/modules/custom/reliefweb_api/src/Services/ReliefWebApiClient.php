@@ -55,6 +55,7 @@ class ReliefWebApiClient {
    * @var array
    */
   protected static $cacheTags = [
+    'blog' => ['node_list:blog_post'],
     'reports' => ['node_list:report'],
     'jobs' => ['node_list:job'],
     'training' => ['node_list:training'],
@@ -64,7 +65,7 @@ class ReliefWebApiClient {
    * Constructor.
    *
    * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
-   *   The default cache backend.
+   *   The cache backend.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory service.
    * @param \Drupal\Component\Datetime\TimeInterface $time
@@ -403,7 +404,7 @@ class ReliefWebApiClient {
    *   Cache id.
    */
   public static function getCacheId($resource, $payload) {
-    $hash = hash('md5', serialize($payload ?? ''));
+    $hash = hash('sha256', serialize($payload ?? ''));
     return 'reliefweb_api:queries:' . $resource . ':' . $hash;
   }
 
