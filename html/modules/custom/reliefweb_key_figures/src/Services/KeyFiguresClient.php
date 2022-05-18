@@ -11,7 +11,6 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
 use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\ClientException;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -214,7 +213,7 @@ class KeyFiguresClient {
         'timeout' => 2,
       ]);
     }
-    catch (ClientException $exception) {
+    catch (\Exception $exception) {
       return NULL;
     }
 

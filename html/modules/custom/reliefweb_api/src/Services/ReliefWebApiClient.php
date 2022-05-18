@@ -192,13 +192,21 @@ class ReliefWebApiClient {
         }
       }
 
-      $promises[$index] = $this->httpClient->postAsync($url, [
-        'headers' => ['Content-Type: application/json'],
-        'body' => $payload,
-        'timeout' => $timeout,
-        'connect_timeout' => $timeout,
-        'verify' => $verify_ssl,
-      ]);
+      try {
+        $promises[$index] = $this->httpClient->postAsync($url, [
+          'headers' => ['Content-Type: application/json'],
+          'body' => $payload,
+          'timeout' => $timeout,
+          'connect_timeout' => $timeout,
+          'verify' => $verify_ssl,
+        ]);
+      }
+      catch (\Exception $exception) {
+        $this->logger->error('Exception while querying @url: @exception', [
+          '@url' => $api_url . '/' . $query['resource'],
+          '@exception' => $exception->getMessage(),
+        ]);
+      }
     }
 
     // Execute the requests in parallel and retrieve and cache the response's
