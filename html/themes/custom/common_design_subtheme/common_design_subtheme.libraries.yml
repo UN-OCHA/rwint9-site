@@ -409,11 +409,14 @@ rw-view-more:
 rw-cd-header-footer:
   css:
     theme:
+      components/rw-cd-header-footer/cd-dropdown.css: {}
       components/rw-cd-header-footer/cd-footer.css: {}
       components/rw-cd-header-footer/cd-header.css: {}
       components/rw-cd-header-footer/cd-language-switcher.css: {}
+      components/rw-cd-header-footer/cd-layout.css: {}
       components/rw-cd-header-footer/cd-logo.css: {}
       components/rw-cd-header-footer/cd-ocha.css: {}
+      components/rw-cd-header-footer/cd-user-menu.css: {}
 
 cd-block-title:
   css:

@@ -1,3 +1,10 @@
+/* Logo for mobile. */
+@media all and (max-width: 767px) {
+  .cd-site-logo {
+    background: url("../../img/logos/rw-logo-mobile.svg") center no-repeat;
+  }
+}
+
 .cd-site-logo:focus {
   outline: 3px solid var(--cd-reliefweb-brand-blue);
 }
