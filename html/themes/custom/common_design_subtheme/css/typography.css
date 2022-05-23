@@ -1,7 +1,3 @@
-//——————————————————————————————————————————————————————————————————————————————
-// Typography
-//——————————————————————————————————————————————————————————————————————————————
-
 a {
   color: var(--brand-primary);
 }
@@ -10,16 +6,6 @@ a:hover,
 a:focus {
   color: var(--brand-primary);
 }
-
-/**
- * Headings.
- *
- * Base heading styles in the main content. They start at h2 because h1 is the
- * the ReliefWeb logo in the header. h2 are always used for the main section(s)
- * or article of the page (main content heading). h3 are for sub-sections
- * or articles. Their style differs whether they are section headings or article
- * headings.
- */
 
 h1,
 h2 {

@@ -8,7 +8,7 @@
    */
   --brand-primary: var(--cd-reliefweb-brand-blue--dark);
   --brand-primary--light: var(--cd-blue--bright);
-  --brand-primary--dark: #04415a;;
+  --brand-primary--dark: #04415a;
   --brand-highlight: var(--cd-reliefweb-brand-red--dark);
   --brand-grey: var(--cd-reliefweb-brand-grey--light);
   --brand-logo-width: 140px;
