@@ -17,12 +17,8 @@ RUN rm -rf ./vendor && \
     composer selfupdate && \
     composer install --no-interaction
 
-# Clean up previous npm installation and run new one. Those commands correspond
-# to running `composer sass` but without hitting the PHP timeout from composer.
+# Clean up previous npm installation.
 RUN cd html/themes/custom/common_design_subtheme && \
-    rm -rf ./node_modules && \
-    npm install --omit=dev -f && \
-    ./node_modules/.bin/sass sass:build && \
     rm -rf ./node_modules
 
 # Copy settings to default site location.
