@@ -32,4 +32,7 @@
  --cd-rgb-reliefweb-brand-red--dark: 235, 20, 5;
  --cd-rgb-reliefweb-brand-grey--dark: 46, 52, 54;
  --cd-rgb-reliefweb-brand-grey--light: 230, 236, 239;
+
+  /* Fonts sizes in REMs */
+  --cd-font-size--large: 1.5rem;  /* 24px */
 }
