@@ -136,7 +136,9 @@
               label = field.querySelector('.fieldset-legend');
             }
             else if (field.hasAttribute('id')) {
-              label = document.querySelector('label[for="' + field.getAttribute('id') + '"]');
+              // Compatibility with the reliefweb_form scripts.
+              var id = field.getAttribute('id').replace(/--element$/, '');
+              label = document.querySelector('label[for="' + id + '"]');
             }
 
             // If the label is visually hidden, we need to find another one.
