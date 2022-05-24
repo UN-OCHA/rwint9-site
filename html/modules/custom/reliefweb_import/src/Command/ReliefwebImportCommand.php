@@ -267,26 +267,26 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       try {
         $this->checkMandatoryFields($item, $base_url, $source_id);
 
-        $link = (string) $item->link;
+        $guid = trim((string) $item->link);
 
         // Check if job already exist.
-        if ($this->jobExists($link)) {
-          $this->getLogger()->notice(strtr('Updating job @link', [
-            '@link' => $link,
+        if ($this->jobExists($guid)) {
+          $this->getLogger()->notice(strtr('Updating job @guid', [
+            '@guid' => $guid,
           ]));
-          $job = $this->loadJobById($link);
+          $job = $this->loadJobByGuid($guid);
           if (empty($job)) {
-            throw new ReliefwebImportExceptionViolation(strtr('Unable to load job @link', [
-              '@id' => $link,
+            throw new ReliefwebImportExceptionViolation(strtr('Unable to load job @guid', [
+              '@guid' => $guid,
             ]));
           }
           $this->updateJob($job, $item);
         }
         else {
-          $this->getLogger()->notice(strtr('Creating new job @link', [
-            '@link' => $link,
+          $this->getLogger()->notice(strtr('Creating new job @guid', [
+            '@guid' => $guid,
           ]));
-          $this->createJob($item, $uid, $source_id);
+          $this->createJob($guid, $item, $uid, $source_id);
         }
       }
       catch (ReliefwebImportExceptionViolation $exception) {
@@ -338,36 +338,36 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
   /**
    * Check if job exists.
    *
-   * @param string $id
-   *   Job feed ID.
+   * @param string $guid
+   *   Job feed unique ID.
    *
    * @return bool
    *   TRUE if the job was already imported.
    */
-  protected function jobExists($id) {
+  protected function jobExists($guid) {
     $ids = $this->entityTypeManager
       ->getStorage('node')
       ->getQuery()
       ->accessCheck(FALSE)
-      ->condition('field_job_id', $id, '=')
+      ->condition('field_import_guid', $guid, '=')
       ->execute();
     return !empty($ids);
   }
 
   /**
-   * Load job by Id.
+   * Load job by its import unique ID.
    *
-   * @param string $id
-   *   Job feed ID.
+   * @param string $guid
+   *   Job feed unique ID.
    *
    * @return \Drupal\reliefweb_entities\Entity\Job|null
    *   The job entity if it exists.
    */
-  protected function loadJobById($id) {
+  protected function loadJobByGuid($guid) {
     $entities = $this->entityTypeManager
       ->getStorage('node')
       ->loadByProperties([
-        'field_job_id' => $id,
+        'field_import_guid' => $guid,
       ]);
     return !empty($entities) ? reset($entities) : NULL;
   }
@@ -375,6 +375,8 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
   /**
    * Create a new job.
    *
+   * @param string $guid
+   *   Feed item unique ID.
    * @param \SimpleXMLElement $data
    *   XML data for the job.
    * @param int $uid
@@ -382,12 +384,12 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    * @param int $source_id
    *   Source ID.
    */
-  protected function createJob(\SimpleXMLElement $data, $uid, $source_id) {
+  protected function createJob($guid, \SimpleXMLElement $data, $uid, $source_id) {
     $values = [
       'type' => 'job',
       'uid' => $uid,
-      'field_job_id' => (string) $data->link,
       'field_source' => $source_id,
+      'field_import_guid' => $guid,
     ];
     $job = Job::create($values);
     $this->updateJob($job, $data);
@@ -445,6 +447,10 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       ],
     ];
 
+    $data_for_hash = [
+      'field_source' => $job->field_source->getValue(),
+      'field_import_guid' => $job->field_import_guid->getValue(),
+    ];
     foreach ($fields as $field => $info) {
       try {
         if (isset($data->{$info['property']})) {
@@ -456,9 +462,19 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
         $job->{$field} = [];
         $job->_import_errors[$field] = $exception->getMessage();
       }
+      $data_for_hash[$field] = $job->{$field}->getValue();
     }
 
-    $this->validateAndSaveJob($job);
+    $hash = hash('sha256', serialize($data_for_hash));
+    if ($job->field_import_hash->value === $hash) {
+      $this->getLogger()->notice(strtr('No changes detected for job @guid, skipping.', [
+        '@guid' => $job->field_import_guid->value,
+      ]));
+    }
+    else {
+      $job->field_import_hash->value = $hash;
+      $this->validateAndSaveJob($job);
+    }
   }
 
   /**
@@ -483,7 +499,8 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    */
   protected function setJobBody(Job $job, \SimpleXMLElement $data) {
     $job->body = [
-      'value' => $this->validateBody((string) $data),
+      'value' => $this->validateBody($data->asXML() ?: ''),
+      'summary' => NULL,
       'format' => 'markdown_editor',
     ];
   }
@@ -498,7 +515,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    */
   protected function setJobHowToApply(Job $job, \SimpleXMLElement $data) {
     $job->field_how_to_apply = [
-      'value' => $this->validateHowToApply((string) $data),
+      'value' => $this->validateHowToApply($data->asXML() ?: ''),
       'format' => 'markdown_editor',
     ];
   }
@@ -636,13 +653,13 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     // Revision message.
     if ($job->isNew()) {
       $log = strtr('Job @guid imported from @url.', [
-        '@guid' => $job->field_job_id->value,
+        '@guid' => $job->field_import_guid->value,
         '@url' => $this->url,
       ]);
     }
     else {
       $log = strtr('Job @guid updated from @url.', [
-        '@guid' => $job->field_job_id->value,
+        '@guid' => $job->field_import_guid->value,
         '@url' => $this->url,
       ]);
     }
@@ -701,7 +718,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       }
 
       throw new ReliefwebImportExceptionSoftViolation(strtr('Validation errors for job @guid imported from @url: @errors', [
-        '@guid' => $job->field_job_id->value,
+        '@guid' => $job->field_import_guid->value,
         '@url' => $this->url,
         '@errors' => $message,
       ]));
@@ -948,11 +965,12 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       return '';
     }
 
-    // Sometimes the parser bugs and leaves the closing field tag at the end
-    // of the text. We remove it before proceeding.
-    $position = mb_strpos($text, '</' . $field . '>');
-    if ($position !== FALSE) {
-      $text = mb_substr($text, 0, $position);
+    // Remove the field starting and closing tags.
+    if (str_starts_with($text, '<' . $field . '>')) {
+      $text = substr($text, strlen('<' . $field . '>'));
+    }
+    if (str_ends_with($text, '</' . $field . '>')) {
+      $text = substr($text, 0, -strlen('</' . $field . '>'));
     }
 
     // Clean the text, removing notably control characters.
@@ -971,7 +989,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     // Check if the content contains some non encoded html tags, in which case
     // we will assume that the text is non encoded html/markdown. For that we
     // simply search for a closing tag '</...>'. Otherwise we decode the text.
-    if (preg_match('#</[^>]+>#', $text) !== 1) {
+    if (preg_match('#(?:</[^>]+>)|(?:<[^>]+/>)#', $text) !== 1) {
       $text = html_entity_decode($text, ENT_QUOTES, 'UTF-8');
     }
 

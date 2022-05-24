@@ -1,0 +1,19 @@
+uuid: 2706b976-43dc-455c-950d-faeecac1ee64
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_import_hash
+    - node.type.job
+id: node.job.field_import_hash
+field_name: field_import_hash
+entity_type: node
+bundle: job
+label: 'Import HASH'
+description: 'Hash of the job''s imported content used to determined potential changes.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

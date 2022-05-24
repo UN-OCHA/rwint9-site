@@ -1,0 +1,19 @@
+uuid: ae8db2b6-6611-41a2-b8c7-8338ae848681
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_import_guid
+    - node.type.job
+id: node.job.field_import_guid
+field_name: field_import_guid
+entity_type: node
+bundle: job
+label: 'Import GUID'
+description: 'Unique ID for an imported job.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string
