@@ -74,7 +74,6 @@
         "drupal/mimemail": "^1.0-alpha4",
         "drupal/pathauto": "^1.10",
         "drupal/redirect": "^1.7",
-        "drupal/redis": "^1.5",
         "drupal/social_auth_hid": "^3.0",
         "drupal/svg_image": "^1.15",
         "drupal/taxonomy_term_preview": "^1.0.0",

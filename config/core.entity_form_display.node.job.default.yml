@@ -8,9 +8,10 @@ dependencies:
     - field.field.node.job.field_city
     - field.field.node.job.field_country
     - field.field.node.job.field_how_to_apply
+    - field.field.node.job.field_import_guid
+    - field.field.node.job.field_import_hash
     - field.field.node.job.field_job_closing_date
     - field.field.node.job.field_job_experience
-    - field.field.node.job.field_job_id
     - field.field.node.job.field_job_type
     - field.field.node.job.field_source
     - field.field.node.job.field_theme
@@ -184,7 +185,8 @@ content:
     third_party_settings: {  }
 hidden:
   created: true
-  field_job_id: true
+  field_import_guid: true
+  field_import_hash: true
   langcode: true
   promote: true
   status: true
