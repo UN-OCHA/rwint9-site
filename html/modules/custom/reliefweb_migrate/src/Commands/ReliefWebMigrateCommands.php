@@ -7,6 +7,8 @@ use Consolidation\SiteAlias\SiteAliasManagerAwareInterface;
 use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Cache\MemoryCache\MemoryCacheInterface;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Config\ConfigInstallerInterface;
 use Drupal\Core\Config\ConfigManager;
 use Drupal\Core\Database\Connection;
@@ -81,6 +83,13 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
   protected $keyValue;
 
   /**
+   * The memory cache backend.
+   *
+   * @var Drupal\Core\Cache\MemoryCache\MemoryCacheInterface
+   */
+  protected $memoryCache;
+
+  /**
    * Migration plugin manager service.
    *
    * @var \Drupal\migrate\Plugin\MigrationPluginManager
@@ -98,6 +107,7 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
     EntityTypeManagerInterface $entity_type_manager,
     FileSystemInterface $file_system,
     KeyValueFactoryInterface $key_value,
+    MemoryCacheInterface $memory_cache,
     MigrationPluginManager $migration_plugin_manager
   ) {
     parent::__construct();
@@ -108,6 +118,7 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
     $this->entityTypeManager = $entity_type_manager;
     $this->fileSystem = $file_system;
     $this->keyValue = $key_value;
+    $this->memoryCache = $memory_cache;
     $this->migrationPluginManager = $migration_plugin_manager;
   }
 
@@ -1590,6 +1601,116 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
       ->distinct()
       ->execute()
       ?->fetchCol() ?? [];
+  }
+
+  /**
+   * Migrated import job Ids.
+   *
+   * @command rw-migrate:migrate-imported-job-ids
+   *
+   * @usage rw-migrate:migrate-imported-job-ids
+   *   Migrated import job Ids.
+   *
+   * @validate-module-enabled reliefweb_migrate
+   */
+  public function migrateImportJobIds() {
+    $nids = Database::getConnection('default', 'rwint7')
+      ->select('feeds_item', 'fi')
+      ->fields('fi', ['entity_id', 'guid'])
+      ->condition('fi.id', 'jobs_importer', '=')
+      ->execute()
+      ?->fetchAllKeyed(0, 1);
+
+    $total = count($nids);
+
+    $this->logger()->info(dt('@total jobs to update', [
+      '@total' => $total,
+    ]));
+
+    $entity_count = 0;
+    $revision_count = 0;
+    $row_affected_count = 0;
+
+    $fields = [
+      'bundle',
+      'deleted',
+      'entity_id',
+      'revision_id',
+      'langcode',
+      'delta',
+      'field_import_guid_value',
+    ];
+
+    $query_options = [
+      'return' => Database::RETURN_AFFECTED,
+    ];
+
+    foreach (array_chunk($nids, 1000, TRUE) as $chunk) {
+      $ids = [];
+      $ids['node__field_import_guid'] = $this->database
+        ->select('node', 'n')
+        ->fields('n', ['vid', 'nid'])
+        ->condition('n.nid', array_keys($chunk), 'IN')
+        ->execute()
+        ?->fetchAllKeyed(0, 1) ?? [];
+      if (empty($ids['node__field_import_guid'])) {
+        continue;
+      }
+      $entity_count += count($ids['node__field_import_guid']);
+
+      $ids['node_revision__field_import_guid'] = $this->database
+        ->select('node_revision', 'nr')
+        ->fields('nr', ['vid', 'nid'])
+        ->condition('nr.nid', $ids['node__field_import_guid'], 'IN')
+        ->execute()
+        ?->fetchAllKeyed(0, 1) ?? [];
+      $revision_count += count($ids['node_revision__field_import_guid']);
+
+      try {
+        $transaction = $this->database->startTransaction();
+
+        foreach ($ids as $field => $items) {
+          $query = $this->database
+            ->insert($field, $query_options)
+            ->fields($fields);
+          foreach ($items as $revision_id => $entity_id) {
+            $query->values([
+              'bundle' => 'job',
+              'deleted' => 0,
+              'entity_id' => $entity_id,
+              'revision_id' => $revision_id,
+              'langcode' => 'en',
+              'delta' => 0,
+              'field_import_guid_value' => $chunk[$entity_id],
+            ]);
+          }
+          $row_affected_count += $query->execute();
+        }
+      }
+      catch (\Exception $exception) {
+        $transaction->rollback();
+        $this->logger()->error(dt('Error while trying to update the database: @error', [
+          '@error' => $exception->getMessage(),
+        ]));
+        return FALSE;
+      }
+
+      $this->memoryCache->deleteAll();
+      Cache::invalidateTags(array_map(function ($id) {
+        return 'node:' . $id;
+      }, $ids['node__field_import_guid']));
+
+      $this->logger()->info(dt('Processed @count / @total jobs', [
+        '@count' => $entity_count,
+        '@total' => $total,
+      ]));
+    }
+
+    $this->logger()->info(dt('Updated @entity_count jobs (@revision_count revisions, @row_affected_count rows inserted)', [
+      '@entity_count' => $entity_count,
+      '@revision_count' => $revision_count,
+      '@row_affected_count' => $row_affected_count,
+    ]));
   }
 
 }
