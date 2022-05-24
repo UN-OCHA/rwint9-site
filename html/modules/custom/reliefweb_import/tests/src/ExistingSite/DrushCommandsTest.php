@@ -190,7 +190,7 @@ class DrushCommandsTest extends ExistingSiteBase {
 
     $query = $this->entityTypeManager->getStorage('node')->getQuery();
     $query->condition('type', 'job');
-    $query->condition('field_job_id', 'https://www.aplitrak.com?adid=1');
+    $query->condition('field_import_guid', 'https://www.aplitrak.com?adid=1');
     $nids = $query->execute();
     $jobs = $this->entityTypeManager->getStorage('node')->loadMultiple($nids);
 
