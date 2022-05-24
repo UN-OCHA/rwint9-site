@@ -1,6 +1,6 @@
 services:
   reliefweb_migrate.commands:
     class: \Drupal\reliefweb_migrate\Commands\ReliefWebMigrateCommands
-    arguments: ['@config.installer', '@config.manager', '@database', '@date.formatter', '@entity_type.manager', '@file_system', '@keyvalue', '@plugin.manager.migration']
+    arguments: ['@config.installer', '@config.manager', '@database', '@date.formatter', '@entity_type.manager', '@file_system', '@keyvalue', '@entity.memory_cache', '@plugin.manager.migration']
     tags:
       - { name: drush.command }
