@@ -70,8 +70,6 @@ class CountryRiver extends RiverServiceBase {
       '#letters' => $letters,
     ];
 
-    $content['#cache_properties'][] = '#letter_navigation';
-
     return $content;
   }
 
@@ -101,6 +99,9 @@ class CountryRiver extends RiverServiceBase {
     return [
       '#theme' => 'reliefweb_rivers_country_list',
       '#groups' => $groups,
+      '#cache' => [
+        'tags' => $this->getRiverCacheTags(),
+      ],
     ];
   }
 
@@ -195,6 +196,15 @@ class CountryRiver extends RiverServiceBase {
     }
 
     return $entities;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRiverCacheTags() {
+    return [
+      $this->getEntityTypeId() . '_list:' . $this->getBundle(),
+    ];
   }
 
 }

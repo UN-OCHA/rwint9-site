@@ -7,15 +7,9 @@
   padding: 0;
   /* #2e3436 with 0.7 opacity on white. */
   color: rgba(var(--cd-rgb-reliefweb-brand-grey--dark), 0.7);
-  color: white; /* TEMPORARY - COVID-19 */
   /* #e6ecef with 0.4 opacity on white. */
   background: rgba(var(--cd-rgb-reliefweb-brand-grey--light), 0.4);
-  background: var(--cd-reliefweb-brand-grey--dark); /* TEMPORARY - COVID-19 */
   font-size: 16px;
-}
-.cd-header #site-slogan a {
-  color: rgba(var(--cd-rgb-reliefweb-brand-grey--dark), 0.7);
-  color: white; /* TEMPORARY - COVID-19 */
 }
 .cd-header #site-slogan .cd-container {
   display: table;

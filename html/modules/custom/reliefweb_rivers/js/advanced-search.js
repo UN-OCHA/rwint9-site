@@ -1083,6 +1083,12 @@
       if (element.hasAttribute && element.hasAttribute('data-field')) {
         var operator = element.querySelector('[data-operator]').getAttribute('data-operator');
         var field = element.getAttribute('data-field');
+
+        // Same fields separated by a group starting operator.
+        if (field === previous && operator.indexOf('with') !== -1) {
+          return true;
+        }
+
         switch (operator) {
           // Those operators are only available in advanced mode.
           case 'or-with':
@@ -1598,8 +1604,6 @@
 
     addEventListener(checkbox, 'click', function (event) {
       var enabled = checkbox.checked;
-      advancedSearch.container.setAttribute('data-advanced-mode', enabled);
-      advancedSearch.advancedMode = enabled;
 
       // Clear the selection when switching to simplified mode as it's not
       // compatible with the complex queries of the advanced mode.
@@ -1607,9 +1611,14 @@
         if (!advancedSearch.container.hasAttribute('data-empty') && window.confirm(advancedSearch.labels.changeMode)) {
           triggerEvent(advancedSearch.clear, 'click');
         }
+        else {
+          event.preventDefault();
+        }
       }
       // Update the operator selectors when switching to advanced mode.
       else {
+        advancedSearch.container.setAttribute('data-advanced-mode', enabled);
+        advancedSearch.advancedMode = enabled;
         createOperatorSwitchers(advancedSearch);
       }
     });

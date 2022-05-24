@@ -4,10 +4,11 @@
 
 namespace Drupal\Tests\reliefweb_import\ExistingSite;
 
-use Drupal\reliefweb_import\Command\ReliefwebImportCommand;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
 use Drupal\Tests\reliefweb_import\Traits\XmlTestDataTrait;
+use Drupal\Tests\reliefweb_import\Unit\ExistingSite\LoggerStub;
+use Drupal\Tests\reliefweb_import\Unit\ExistingSite\ReliefwebImportCommandWrapper;
 use Drupal\user\Entity\User;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
@@ -91,8 +92,10 @@ class DrushCommandsTest extends ExistingSiteBase {
     ]);
 
     $handlerStack = HandlerStack::create($mock);
+    //$logger = new LoggerStub();
     $this->httpClient = new Client(['handler' => $handlerStack]);
-    $this->reliefwebImporter = new ReliefwebImportCommand($this->database, $this->entityTypeManager, $this->accountSwitcher, $this->httpClient, $this->loggerFactory, $this->state);
+    $this->reliefwebImporter = new ReliefwebImportCommandWrapper($this->database, $this->entityTypeManager, $this->accountSwitcher, $this->httpClient, $this->loggerFactory, $this->state);
+    $this->reliefwebImporter->setLogger(new LoggerStub());
   }
 
   /**
@@ -187,106 +190,74 @@ class DrushCommandsTest extends ExistingSiteBase {
 
     $query = $this->entityTypeManager->getStorage('node')->getQuery();
     $query->condition('type', 'job');
-    $query->condition('field_job_id', 'https://www.aplitrak.com?adid=1');
+    $query->condition('field_import_guid', 'https://www.aplitrak.com?adid=1');
     $nids = $query->execute();
     $jobs = $this->entityTypeManager->getStorage('node')->loadMultiple($nids);
 
     /** @var Drupal\reliefweb_entities\Entity\Job $job */
     $job = reset($jobs);
 
-    $warnings = $this->reliefwebImporter->getWarnings();
-    $errors = $this->reliefwebImporter->getErrors();
-
-    $this->assertSame($warnings[0], 'Validation failed in field_job_experience with message: <em class="placeholder">Job years of experience</em>: this field cannot hold more than 1 values. for job https://www.aplitrak.com?adid=1');
-    $this->assertCount(0, $errors);
+    $this->assertStringContainsStringIgnoringCase('imported from', $job->getRevisionLogMessage());
     $this->assertSame($job->title->value, 'Head of Supply Chain');
 
     $year = date('Y') + 1;
     $this->assertSame($job->field_job_closing_date->value, $year . '-10-05');
 
     // Import jobs again, triggering updates.
+    $this->reliefwebImporter->getLogger()->resetMessages();
     $this->reliefwebImporter->fetchJobs($source);
-
-    $warnings = $this->reliefwebImporter->getWarnings();
-    $errors = $this->reliefwebImporter->getErrors();
-
-    $this->assertArrayNotHasKey(0, $warnings);
-    $this->assertCount(0, $errors);
+    $this->assertStringContainsStringIgnoringCase('updated from', $job->getRevisionLogMessage());
     $this->assertSame($job->title->value, 'The head of Supply Chain');
 
     // Import job without title.
+    $this->reliefwebImporter->getLogger()->resetMessages();
     $this->reliefwebImporter->fetchJobs($source);
+    $this->assertStringContainsStringIgnoringCase('Job found with empty title.', $this->reliefwebImporter->getLogger()->getMessages('error'));
 
-    $warnings = $this->reliefwebImporter->getWarnings();
-    $errors = $this->reliefwebImporter->getErrors();
-
-    $this->assertArrayNotHasKey(0, $warnings);
-    $this->assertCount(1, $errors);
+    // Import job in the past: allowed, no errors or warnings.
+    $this->reliefwebImporter->getLogger()->resetMessages();
+    $this->reliefwebImporter->fetchJobs($source);
+    $this->assertFalse($this->reliefwebImporter->getLogger()->hasMessages('error'));
+    $this->assertFalse($this->reliefwebImporter->getLogger()->hasMessages('warning'));
 
     // Import job in the past.
+    // @todo check another type of error.
+    $this->reliefwebImporter->getLogger()->resetMessages();
     $this->reliefwebImporter->fetchJobs($source);
+    $this->assertFalse($this->reliefwebImporter->getLogger()->hasMessages('error'));
+    $this->assertFalse($this->reliefwebImporter->getLogger()->hasMessages('warning'));
 
-    $warnings = $this->reliefwebImporter->getWarnings();
-    $errors = $this->reliefwebImporter->getErrors();
-
-    $this->assertArrayNotHasKey(0, $errors);
-
-    // Import job in the past.
+    // Import job with city, no country: city should be empty.
+    $this->reliefwebImporter->getLogger()->resetMessages();
     $this->reliefwebImporter->fetchJobs($source);
-
-    $warnings = $this->reliefwebImporter->getWarnings();
-    $errors = $this->reliefwebImporter->getErrors();
-
-    $this->assertArrayNotHasKey(1, $warnings);
-    $this->assertArrayNotHasKey(0, $errors);
-    $this->assertSame($warnings[0], 'Validation failed in field_job_closing_date.0.value with message: The <em class="placeholder">Closing date</em> cannot be in the past for job https://www.aplitrak.com?adid=30');
-
-    // Import job with city, no country.
-    $this->reliefwebImporter->fetchJobs($source);
-
-    $warnings = $this->reliefwebImporter->getWarnings();
-    $errors = $this->reliefwebImporter->getErrors();
-
-    $this->assertArrayNotHasKey(1, $warnings);
-    $this->assertArrayNotHasKey(0, $errors);
-    $this->assertSame($warnings[0], 'Validation failed in field_city with message: The <em class="placeholder">City</em> cannot have a value when <em class="placeholder">Country</em> has no value for job https://www.aplitrak.com?adid=21');
+    $this->assertFalse($this->reliefwebImporter->getLogger()->hasMessages('error'));
+    $this->assertFalse($this->reliefwebImporter->getLogger()->hasMessages('warning'));
+    $this->assertTrue($job->field_city->isEmpty());
 
     // Import job with too short how to apply.
+    $this->reliefwebImporter->getLogger()->resetMessages();
     $this->reliefwebImporter->fetchJobs($source);
+    $this->assertFalse($this->reliefwebImporter->getLogger()->hasMessages('error'));
+    $this->assertTrue($this->reliefwebImporter->getLogger()->hasMessages('warning'));
+    $this->assertStringContainsStringIgnoringCase('Invalid field size for field_how_to_apply, 13 characters found, has to be between 100 and 10000', $this->reliefwebImporter->getLogger()->getMessages('warning'));
 
-    $warnings = $this->reliefwebImporter->getWarnings();
-    $errors = $this->reliefwebImporter->getErrors();
-
-    $this->assertArrayNotHasKey(1, $warnings);
-    $this->assertArrayNotHasKey(0, $errors);
-    $this->assertSame($warnings[0], 'Invalid field size for field_how_to_apply, 13 characters found, has to be between 100 and 10000');
-
-    // Exception log messages.
+    // Client exception.
+    $this->reliefwebImporter->getLogger()->resetMessages();
     $this->reliefwebImporter->jobs();
+    $this->assertTrue($this->reliefwebImporter->getLogger()->hasMessages('error'));
+    $this->assertStringContainsStringIgnoringCase('Client Exception', $this->reliefwebImporter->getLogger()->getMessages('error'));
 
-    $warnings = $this->reliefwebImporter->getWarnings();
-    $errors = $this->reliefwebImporter->getErrors();
-
-    $this->assertArrayNotHasKey(0, $warnings);
-    $this->assertCount(1, $errors);
-
-    // Exception log messages.
+    // Request exception.
+    $this->reliefwebImporter->getLogger()->resetMessages();
     $this->reliefwebImporter->jobs();
+    $this->assertTrue($this->reliefwebImporter->getLogger()->hasMessages('error'));
+    $this->assertStringContainsStringIgnoringCase('Request Exception', $this->reliefwebImporter->getLogger()->getMessages('error'));
 
-    $warnings = $this->reliefwebImporter->getWarnings();
-    $errors = $this->reliefwebImporter->getErrors();
-
-    $this->assertArrayNotHasKey(0, $warnings);
-    $this->assertCount(1, $errors);
-
-    // Exception log messages.
+    // General exception.
+    $this->reliefwebImporter->getLogger()->resetMessages();
     $this->reliefwebImporter->jobs();
-
-    $warnings = $this->reliefwebImporter->getWarnings();
-    $errors = $this->reliefwebImporter->getErrors();
-
-    $this->assertArrayNotHasKey(0, $warnings);
-    $this->assertCount(1, $errors);
+    $this->assertTrue($this->reliefwebImporter->getLogger()->hasMessages('error'));
+    $this->assertStringContainsStringIgnoringCase('General Exception', $this->reliefwebImporter->getLogger()->getMessages('error'));
   }
 
 }

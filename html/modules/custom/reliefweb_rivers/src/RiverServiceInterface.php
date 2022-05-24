@@ -375,4 +375,12 @@ interface RiverServiceInterface {
    */
   public static function getRiverService($bundle);
 
+  /**
+   * Get the cache tags for the river.
+   *
+   * @return array
+   *   Cache tags.
+   */
+  public function getRiverCacheTags();
+
 }

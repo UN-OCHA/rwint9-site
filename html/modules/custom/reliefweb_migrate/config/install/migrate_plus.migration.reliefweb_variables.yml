@@ -19,6 +19,7 @@ source:
     reliefweb_submit_email: reliefweb_submit_email
     reliefweb_taxonomy_valid_glide_exceptions: reliefweb_valid_glide_exceptions
     reliefweb_subscriptions_mail_batch_size: reliefweb_subscriptions_mail_batch_size
+    ocha_elk_mail: ocha_elk_mail
     # API.
     reliefweb_api_references: reliefweb_api_references
     reliefweb_api_index_tag_blog_post: reliefweb_api_index_tag_blog_post

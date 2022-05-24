@@ -206,7 +206,7 @@ class ReliefwebImporterStringTest extends ReliefwebImporterTestBase {
       $this->assertEquals($expected, $this->reliefwebImporter->validateCity($test_string));
     }
 
-    $test_string = '';
+    $test_string = 'a';
     $this->expectExceptionMessage(strtr('Invalid field size for field_city, @length characters found, has to be between 3 and 255', [
       '@length' => mb_strlen($test_string),
     ]));

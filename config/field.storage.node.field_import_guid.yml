@@ -1,11 +1,11 @@
-uuid: 944aa2a9-abb5-47d6-98cd-f9475c1fc5a2
+uuid: 0a489377-a408-43ac-96a3-99e3c0ddda1a
 langcode: en
 status: true
 dependencies:
   module:
     - node
-id: node.field_job_id
-field_name: field_job_id
+id: node.field_import_guid
+field_name: field_import_guid
 entity_type: node
 type: string
 settings:

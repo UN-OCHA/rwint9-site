@@ -818,4 +818,82 @@ class ReliefWebFilesCommands extends DrushCommands {
     }
   }
 
+  /**
+   * Fix migration of the report attachments.
+   *
+   * This generates symlinks to handle files where the filename differs from
+   * the URI basename. For those files, the nginx redirection logic for the
+   * previews cannot work. So we generate symlinks with the filename resulting
+   * from the nginx logic to the acutal preview file.
+   *
+   * Ex: public://file1.pdf with filename file1_compressed.pdf.
+   *
+   * @command rw-files:generate-redirection-symlinks
+   *
+   * @usage rw-files:generate-redirection-symlinks
+   *   Generate the symlinks
+   *
+   * @validate-module-enabled reliefweb_files
+   */
+  public function generateRedirectionSymlinks() {
+    $d7_database = Database::getConnection('default', 'rwint7');
+    $query = $d7_database->select('file_managed', 'fm');
+    $query->fields('fm', ['fid', 'uri']);
+    $query->innerJoin('field_data_field_file', 'f', 'f.field_file_fid = fm.fid');
+    $query->where("f.field_file_description REGEXP :regexp", [
+      ':regexp' => '[|][1-9][0-9]*[|](0|90|-90)$',
+    ]);
+    $query->where("(fm.filemime = 'application/pdf' OR LOWER(RIGHT(fm.uri,3)) = 'pdf')");
+    $query->where("fm.uri <> CONCAT('public://resources/', fm.filename)");
+    $query->groupBy('fm.fid');
+    $records = $query->execute()?->fetchAll() ?? [];
+
+    if (empty($records)) {
+      $this->logger()->info(dt('No symlinks to create'));
+      return;
+    }
+
+    // phpcs:ignore
+    $file_system = \Drupal::service('file_system');
+    $base_path = rtrim($file_system->realpath('public://'), '/') . '/legacy-previews';
+
+    // Create the legacy preview directory.
+    if (!$file_system->prepareDirectory($base_path, $file_system::CREATE_DIRECTORY)) {
+      $this->logger()->error(dt('Unable to create @directory', [
+        '@directory' => $base_path,
+      ]));
+      return;
+    }
+
+    // Create symlinks for the previews and their derivatives.
+    $count_new = 0;
+    $count_existing = 0;
+    foreach ($records as $record) {
+      $uuid = LegacyHelper::generateAttachmentUuid($record->uri);
+      $target = '../previews/' . substr($uuid, 0, 2) . '/' . substr($uuid, 2, 2) . '/' . $uuid . '.png';
+      $link = $base_path . '/' . $record->fid . '.png';
+
+      if (!is_link($link)) {
+        if (!@symlink($target, $link)) {
+          $this->logger()->error(dt('Unable to create symlink: @link => @target', [
+            '@link' => $link,
+            '@target' => $target,
+          ]));
+        }
+        else {
+          $count_new++;
+        }
+      }
+      else {
+        $count_existing++;
+      }
+    }
+
+    $this->logger()->info(dt('Successfully created new @new symlinks (@existing already exsting) for @total files', [
+      '@new' => $count_new,
+      '@existing' => $count_existing,
+      '@total' => count($records),
+    ]));
+  }
+
 }

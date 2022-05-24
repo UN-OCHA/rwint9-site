@@ -38,6 +38,7 @@ module:
   maintenance200: 0
   media: 0
   media_library: 0
+  memcache: 0
   menu_link_content: 0
   menu_ui: 0
   metatag: 0
@@ -54,7 +55,6 @@ module:
   path: 0
   path_alias: 0
   redirect: 0
-  redis: 0
   reliefweb_analytics: 0
   reliefweb_api: 0
   reliefweb_bookmarks: 0

@@ -15,10 +15,12 @@ interface SourceMigrationHighWaterInterface {
    *
    * @param bool $check_only
    *   If TRUE, do not update the high water.
+   * @param bool $set_to_max
+   *   Set the high water to the max ID of the imported content.
    *
    * @return int
    *   The latest imported ID for the migration.
    */
-  public function setHighWaterToLatestNonImported($check_only = FALSE);
+  public function setHighWaterToLatestNonImported($check_only = FALSE, $set_to_max = FALSE);
 
 }

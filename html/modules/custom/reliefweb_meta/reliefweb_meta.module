@@ -37,16 +37,22 @@ function reliefweb_meta_metatag_route_entity(RouteMatchInterface $route_match) {
  * Implements hook_metatags_alter().
  */
 function reliefweb_meta_metatags_alter(array &$metatags, array &$context) {
+  $route_name = \Drupal::routeMatch()->getRouteName();
+
+  // Skip if the page is not found or accessible.
+  if ($route_name === 'system.403' || $route_name === 'system.404') {
+    return;
+  }
+
+  $request = \Drupal::request();
+
   $data = [
     'type' => 'article',
-    'shortlink' => Url::fromUserInput(\Drupal::request()->getRequestUri(), [
-      'absolute' => TRUE,
-      'path_processing' => FALSE,
-    ])->toString(),
+    'shortlink' => $request->getSchemeAndHttpHost() . $request->getBaseUrl() . $request->getPathInfo(),
     'image' => reliefweb_meta_get_image_url(),
   ];
 
-  switch (\Drupal::routeMatch()->getRouteName()) {
+  switch ($route_name) {
     case 'entity.node.canonical':
       $data = reliefweb_meta_get_node_metatags($context['entity']);
       break;

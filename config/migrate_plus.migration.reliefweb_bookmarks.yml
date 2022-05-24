@@ -36,4 +36,5 @@ destination:
       type: integer
     uid:
       type: integer
+  batch_size: 1000
 migration_dependencies: null

@@ -63,11 +63,14 @@ class UrlHelper extends DrupalUrlHelper {
       return '';
     }
 
-    if (preg_match('#^(?:(?:https?://)|/)#', $url) !== 1) {
+    if (preg_match('#^(?:(?:[^?]*://)|/)#', $url) !== 1) {
       $url = '/' . $url;
     }
     if (strpos($url, '/') === 0) {
       $url = 'internal:' . $url;
+    }
+    elseif (strpos($url, '://') === 0) {
+      $url = 'http' . $url;
     }
 
     $parts = static::parse($url);

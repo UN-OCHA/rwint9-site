@@ -114,6 +114,330 @@ class Parameters {
   ];
 
   /**
+   * Legacy regions => countries mapping.
+   *
+   * @var array
+   */
+  protected $regions = [
+    12479 => [
+      13,
+      31,
+      38,
+      119,
+      148,
+      168,
+      182,
+      219,
+    ],
+    12481 => [
+      14,
+      15,
+      18,
+      26,
+      33,
+      34,
+      40,
+      45,
+      56,
+      70,
+      72,
+      73,
+      76,
+      86,
+      89,
+      91,
+      92,
+      101,
+      103,
+      104,
+      115,
+      117,
+      118,
+      123,
+      124,
+      126,
+      136,
+      141,
+      142,
+      143,
+      145,
+      150,
+      158,
+      159,
+      161,
+      169,
+      179,
+      190,
+      191,
+      196,
+      197,
+      205,
+      209,
+      213,
+      214,
+      218,
+      222,
+      224,
+      225,
+      229,
+      236,
+      241,
+      243,
+    ],
+    12469 => [
+      16,
+      28,
+      51,
+      82,
+      140,
+      163,
+      235,
+      253,
+    ],
+    12482 => [
+      17,
+      25,
+      62,
+      63,
+      67,
+      80,
+      90,
+      94,
+      108,
+      114,
+      132,
+      151,
+      157,
+      167,
+      171,
+      172,
+      176,
+      177,
+      178,
+      183,
+      185,
+      189,
+      204,
+      215,
+      232,
+      233,
+      239,
+      249,
+      252,
+    ],
+    12467 => [
+      19,
+      47,
+      49,
+      54,
+      55,
+      66,
+      75,
+      84,
+      96,
+      198,
+      206,
+      244,
+    ],
+    12470 => [
+      19,
+      41,
+      65,
+      138,
+      144,
+      146,
+      154,
+      164,
+      166,
+      210,
+      217,
+      223,
+      244,
+      256,
+      257,
+    ],
+    12473 => [
+      20,
+      21,
+      24,
+      29,
+      32,
+      35,
+      37,
+      43,
+      53,
+      71,
+      78,
+      79,
+      93,
+      106,
+      107,
+      112,
+      113,
+      127,
+      152,
+      162,
+      170,
+      192,
+      200,
+      201,
+      203,
+      221,
+      234,
+      238,
+      246,
+    ],
+    12475 => [
+      22,
+      39,
+      42,
+      57,
+      64,
+      81,
+      88,
+      93,
+      97,
+      112,
+      186,
+      187,
+      221,
+      247,
+      250,
+    ],
+    12476 => [
+      23,
+      27,
+      100,
+      130,
+      134,
+      227,
+      237,
+      248,
+    ],
+    12483 => [
+      30,
+      72,
+      121,
+      122,
+      125,
+      129,
+      133,
+      137,
+      180,
+      181,
+      193,
+      207,
+      226,
+      236,
+      242,
+      255,
+    ],
+    12477 => [
+      31,
+      48,
+      58,
+      59,
+      60,
+      61,
+      74,
+      120,
+      128,
+      135,
+      147,
+      160,
+      165,
+      185,
+      194,
+      228,
+      230,
+      251,
+    ],
+    12478 => [
+      31,
+      44,
+      48,
+      120,
+      135,
+      147,
+      165,
+      188,
+      212,
+      228,
+      230,
+      251,
+    ],
+    12474 => [
+      35,
+      68,
+      83,
+      109,
+      116,
+      156,
+      173,
+      184,
+    ],
+    12471 => [
+      36,
+      46,
+      49,
+      52,
+      54,
+      55,
+      66,
+      69,
+      75,
+      84,
+      96,
+      98,
+      102,
+      110,
+      111,
+      139,
+      149,
+      153,
+      174,
+      175,
+      199,
+      206,
+      208,
+      211,
+      231,
+    ],
+    12472 => [
+      37,
+      50,
+      105,
+      192,
+      202,
+      245,
+    ],
+    12468 => [
+      47,
+      55,
+      65,
+      77,
+      85,
+      87,
+      131,
+      144,
+      146,
+      154,
+      155,
+      164,
+      195,
+      198,
+      210,
+      216,
+      220,
+      240,
+      244,
+      256,
+      257,
+      8657,
+    ],
+  ];
+
+  /**
    * Query parameters.
    *
    * @var array
@@ -299,11 +623,11 @@ class Parameters {
             // Only keep last date.
             if (strpos($field, 'date') === 0) {
               $field = str_replace('date.', '', $field);
-              $date = RWRiversDateHandler::createDate('now')->setTimestamp(end($values));
-              $value = RWRiversDateHandler::formatDateInterval('month', $date);
+              $date = static::createDate('now')->setTimestamp(end($values));
+              $value = static::formatDateInterval('month', $date);
             }
             else {
-              $value = RWRiversFacetsHandler::implodeValues($values);
+              $value = implode('.', $values);
             }
             $this->parameters[$field] = $value;
           }
@@ -340,10 +664,10 @@ class Parameters {
                 $fields['date'][$field]['_'] = '_';
               }
               else {
-                $dates = RWRiversDateHandler::parseDateInterval(substr($value, 1, -1), ' TO ', 'Y-m-d\T00:00:00\Z');
+                $dates = static::parseDateInterval(substr($value, 1, -1), ' TO ', 'Y-m-d\T00:00:00\Z');
                 if (!empty($dates)) {
-                  $interval = RWRiversDateHandler::getDateInterval($dates);
-                  $value = RWRiversDateHandler::formatDateInterval($interval, $dates[0]);
+                  $interval = static::getDateInterval($dates);
+                  $value = static::formatDateInterval($interval, $dates[0]);
                   $fields['date'][$field][$interval] = $value;
                 }
               }
@@ -356,7 +680,7 @@ class Parameters {
       }
 
       foreach ($fields['term'] as $field => $values) {
-        $this->parameters[$field] = RWRiversFacetsHandler::implodeValues($values);
+        $this->parameters[$field] = implode('.', $values);
       }
 
       foreach ($fields['date'] as $field => $values) {
@@ -375,16 +699,14 @@ class Parameters {
     $this->remove('regions');
 
     if (!empty($parameters) && is_array($parameters)) {
-      module_load_include('inc', 'reliefweb_taxonomy', 'includes/regions');
-      $countries_by_regions = reliefweb_taxonomy_regions_get_countries_by_regions();
       $values = [];
       foreach ($parameters as $id) {
-        if (isset($countries_by_regions[$id])) {
-          $values += $countries_by_regions[$id];
+        if (isset($this->regions[$id])) {
+          $values = array_merge($values, $this->regions[$id]);
         }
       }
       if (!empty($values)) {
-        $this->set('region', RWRiversFacetsHandler::implodeValues(array_keys($values)));
+        $this->set('region', implode('.', array_unique($values)));
       }
     }
   }
@@ -465,7 +787,7 @@ class Parameters {
 
                 // Check and prepare value.
                 if (strpos($value, '|') > 0) {
-                  $dates = RWRiversDateHandler::parseDateInterval($value, '|', 'U');
+                  $dates = static::parseDateInterval($value, '|', 'U');
                   if (!empty($dates)) {
                     $value = $dates[0]->format('Ymd') . '-' . $dates[1]->modify('-1 day +1 second')->format('Ymd');
                     $result .= $operator . $field . $value;
@@ -540,6 +862,126 @@ class Parameters {
         static::arrayToHidden($output, $subvalue, $subkey);
       }
     }
+  }
+
+  /**
+   * Create a DateTime object from the given date.
+   *
+   * @param string $string
+   *   Date string.
+   *
+   * @return \DateTimeImmutable
+   *   DateTime object with timezone set to UTC.
+   */
+  public static function createDate($string) {
+    return new \DateTimeImmutable($string, new \DateTimeZone('UTC'));
+  }
+
+  /**
+   * Validate a date with a specific format.
+   *
+   * @param string $string
+   *   Date string.
+   * @param string $format
+   *   Date format.
+   *
+   * @return \DateTimeImmutable|null
+   *   DateTime object if valid or NULL otherwise.
+   */
+  public static function validateDate($string, $format = 'Ymd') {
+    if (empty($string)) {
+      return NULL;
+    }
+    else {
+      $date = \DateTimeImmutable::createFromFormat('!' . $format, $string, new \DateTimeZone('UTC'));
+      return $date && $date->format($format) === $string ? $date : NULL;
+    }
+  }
+
+  /**
+   * Parse a date interval string and return DateTime objects if valid.
+   *
+   * @param string $value
+   *   Date interval string.
+   * @param string $separator
+   *   Date separator.
+   * @param string $format
+   *   Format of the dates.
+   * @param bool $validateBoth
+   *   Indicate if both dates should be valid.
+   *
+   * @return array
+   *   Array of \DateTime objects.
+   */
+  public static function parseDateInterval($value, $separator = '-', $format = 'Ymd', $validateBoth = TRUE) {
+    if (!empty($value) && strpos($value, $separator) >= 0) {
+      $dates = explode($separator, $value, 2);
+      $dates[0] = static::validateDate($dates[0], $format);
+      if (isset($dates[1])) {
+        $dates[1] = static::validateDate($dates[1], $format);
+      }
+      if ($validateBoth) {
+        return !empty($dates[0]) && !empty($dates[1]) ? $dates : [];
+      }
+      return $dates;
+    }
+    return [];
+  }
+
+  /**
+   * Calculate interval type between 2 dates.
+   *
+   * @param array $dates
+   *   Array of 2 DateTime objects.
+   * @param bool $next
+   *   Indicates whether to return the current interval or the next one.
+   *
+   * @return string
+   *   Date interval (year, month or day).
+   */
+  public static function getDateInterval(array $dates, $next = FALSE) {
+    if (!empty($dates)) {
+      $diff = $dates[1]->diff($dates[0]);
+      if ($diff->y >= 1) {
+        return $next ? 'month' : 'year';
+      }
+      elseif ($diff->m >= 1) {
+        return $next ? 'day' : 'month';
+      }
+      return 'day';
+    }
+    return 'year';
+  }
+
+  /**
+   * Format a date interval.
+   *
+   * @param string $interval
+   *   Interval (year, month or day).
+   * @param \DateTimeInterface $date
+   *   DateTime object.
+   * @param string $separator
+   *   Date separator.
+   * @param string $format
+   *   Format of the dates.
+   *
+   * @return string
+   *   Date interval.
+   */
+  public static function formatDateInterval($interval, \DateTimeInterface $date, $separator = '-', $format = 'Ymd') {
+    if (!empty($date)) {
+      switch ($interval) {
+        case 'year':
+          $date = $date->setDate($date->format('Y'), 1, 1);
+          break;
+
+        case 'month':
+          $date = $date->setDate($date->format('Y'), $date->format('n'), 1);
+          break;
+      }
+      return $date->format($format) . $separator . $date->modify('+1 ' . $interval)->format($format);
+    }
+    return '';
   }
 
 }
