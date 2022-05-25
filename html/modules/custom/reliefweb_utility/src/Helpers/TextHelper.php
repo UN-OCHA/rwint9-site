@@ -2,8 +2,7 @@
 
 namespace Drupal\reliefweb_utility\Helpers;
 
-use FineDiff\Diff;
-use FineDiff\Render\Html as DiffHtmlRenderer;
+use cogpowered\FineDiff\Diff;
 
 /**
  * Helper to manipulate texts.
@@ -90,9 +89,7 @@ class TextHelper {
    */
   public static function getTextDiff($from_text, $to_text) {
     $diff = new Diff();
-    $opcodes = $diff->getOperationCodes($from_text, $to_text);
-    $renderer = new DiffHtmlRenderer();
-    return $renderer->process($from_text, $opcodes);
+    return $diff->render($from_text, $to_text);
   }
 
 }
