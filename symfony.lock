@@ -68,9 +68,6 @@
     "cweagans/composer-patches": {
         "version": "1.7.2"
     },
-    "d4h/finediff": {
-        "version": "1.0.1"
-    },
     "dealerdirect/phpcodesniffer-composer-installer": {
         "version": "v0.7.2"
     },
@@ -316,6 +313,9 @@
     },
     "league/oauth2-client": {
         "version": "2.6.1"
+    },
+    "lolli42/finediff": {
+        "version": "1.0.2"
     },
     "lsolesen/pel": {
         "version": "0.9.12"

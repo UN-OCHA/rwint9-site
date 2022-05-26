@@ -413,11 +413,6 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
         'url' => 'https://www.google.com/ping?sitemap=[sitemap]',
         'reference' => 'https://support.google.com/webmasters/answer/183669?hl=en',
       ],
-      'bing' => [
-        'name' => 'Bing',
-        'url' => 'https://www.bing.com/ping?sitemap=[sitemap]',
-        'reference' => 'https://www.bing.com/webmaster/help/how-to-submit-sitemaps-82a15bd4',
-      ],
     ];
   }
 

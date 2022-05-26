@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "42b3fc264e316ef71d3b842fcaa42915",
+    "content-hash": "1f475e8f1616c1ffa952bab33ae1fec9",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -1543,67 +1543,6 @@
                 "source": "https://github.com/cweagans/composer-patches/tree/1.7.2"
             },
             "time": "2022-01-25T19:21:20+00:00"
-        },
-        {
-            "name": "d4h/finediff",
-            "version": "1.0.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/D4H/php-finediff.git",
-                "reference": "a324fc42c1d68f238f7ba84135ddc054dade2902"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/D4H/php-finediff/zipball/a324fc42c1d68f238f7ba84135ddc054dade2902",
-                "reference": "a324fc42c1d68f238f7ba84135ddc054dade2902",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.2.0"
-            },
-            "require-dev": {
-                "mockery/mockery": "^1.3",
-                "phpunit/phpunit": "^8.5 || ^9.2"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "FineDiff\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Raymond Hill"
-                },
-                {
-                    "name": "Rob Crowe"
-                },
-                {
-                    "name": "Hannes Van De Vreken",
-                    "email": "vandevreken.hannes@gmail.com"
-                },
-                {
-                    "name": "Igor Finagin",
-                    "email": "igor@finag.in"
-                }
-            ],
-            "description": "PHP implementation of a Fine granularity Diff engine",
-            "keywords": [
-                "diff",
-                "finediff",
-                "opcode",
-                "string",
-                "text"
-            ],
-            "support": {
-                "issues": "https://github.com/D4H/php-finediff/issues",
-                "source": "https://github.com/D4H/php-finediff/tree/1.x"
-            },
-            "time": "2020-08-05T20:41:25+00:00"
         },
         {
             "name": "dealerdirect/phpcodesniffer-composer-installer",
@@ -6281,6 +6220,71 @@
                 "source": "https://github.com/thephpleague/oauth2-client/tree/2.6.1"
             },
             "time": "2021-12-22T16:42:49+00:00"
+        },
+        {
+            "name": "lolli42/finediff",
+            "version": "1.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/lolli42/FineDiff.git",
+                "reference": "f72cd968b663fc09bc73ef0ab5a3288583d0d59d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/lolli42/FineDiff/zipball/f72cd968b663fc09bc73ef0ab5a3288583d0d59d",
+                "reference": "f72cd968b663fc09bc73ef0ab5a3288583d0d59d",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.2.0",
+                "symfony/polyfill-mbstring": "^1.23"
+            },
+            "replace": {
+                "cogpowered/finediff": "*"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.4",
+                "phpstan/phpstan": "^1.6",
+                "phpunit/phpunit": "^8 || ^9"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "cogpowered\\FineDiff\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Raymond Hill"
+                },
+                {
+                    "name": "Rob Crowe",
+                    "email": "rob@cogpowered.com"
+                },
+                {
+                    "name": "Christian Kuhn",
+                    "email": "lolli@schwarzbu.ch",
+                    "role": "maintainer"
+                }
+            ],
+            "description": "PHP implementation of a Fine granularity Diff engine",
+            "homepage": "https://github.com/lolli42/FineDiff",
+            "keywords": [
+                "diff",
+                "finediff",
+                "opcode",
+                "string",
+                "text"
+            ],
+            "support": {
+                "issues": "https://github.com/lolli42/FineDiff/issues",
+                "source": "https://github.com/lolli42/FineDiff/tree/1.0.2"
+            },
+            "time": "2022-05-23T07:44:28+00:00"
         },
         {
             "name": "lsolesen/pel",

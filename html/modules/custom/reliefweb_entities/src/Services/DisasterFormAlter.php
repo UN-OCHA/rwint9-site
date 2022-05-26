@@ -99,12 +99,26 @@ class DisasterFormAlter extends EntityFormAlterServiceBase {
   public function validateGlidePattern(array $form, FormStateInterface $form_state) {
     $glide = $form_state->getValue(['field_glide', 0, 'value'], '');
 
-    // Let the rest of the form validation throw an error message if
-    // the glide field is empty and is mandatory.
+    // Check the disaster status to determine if the GLIDE number field is
+    // mandatory or not.
     if (empty($glide)) {
       $triggering_element = $form_state->getTriggeringElement();
-      if (!empty($triggering_element['#entity_status']) && $triggering_element['#entity_status'] !== 'draft') {
-        $form_state->setErrorByName('field_glide][0][value', $this->t('The GLIDE number is mandatory.'));
+      if (!empty($triggering_element['#entity_status'])) {
+        $trigger_status = $triggering_element['#entity_status'];
+        $current_status = $form_state
+          ?->getFormObject()
+          ?->getEntity()
+          ?->getModerationStatus();
+
+        // Glide is not mandatory for Draft and Draft archived disasters.
+        $glide_is_optional = $trigger_status === 'draft' ||
+          $trigger_status === 'draft-archive' ||
+          // @see \Drupal\reliefweb_moderation\Services\DisasterModeration::alterSubmittedEntityStatus()
+          ($trigger_status === 'archive' && $current_status === 'draft');
+
+        if (!$glide_is_optional) {
+          $form_state->setErrorByName('field_glide][0][value', $this->t('The GLIDE number is mandatory.'));
+        }
       }
       return;
     }

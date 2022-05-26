@@ -94,7 +94,7 @@ class DisasterModeration extends ModerationServiceBase {
       }
       // Country.
       $countries = [];
-      foreach ($entity->field_country as $item) {
+      foreach ($this->sortTaxonomyTermFieldItems($entity->field_country) as $item) {
         $country_link = $this->getTaxonomyTermLink($item);
         if (!empty($country_link)) {
           $countries[] = $country_link;
