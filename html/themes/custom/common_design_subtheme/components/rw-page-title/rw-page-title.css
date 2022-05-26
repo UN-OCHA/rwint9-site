@@ -21,6 +21,7 @@
 }
 
 /* Spacing between page title and table (ex: revisions). */
-.rw-page-title + table {
+.rw-page-title + table,
+.rw-page-title + .tableresponsive-toggle-columns {
   margin-top: 24px;
 }

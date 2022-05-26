@@ -172,7 +172,7 @@ class EntityHistory {
 
     // Try to load the history from the cache.
     $cache = $this->cache->get($cache_id);
-    if (!empty($cache->data)) {
+    if (!empty($cache->data) && isset($cache->data['revision_id']) && $cache->data['revision_id'] == $entity->getRevisionId()) {
       $data = $cache->data;
     }
     else {
@@ -247,9 +247,10 @@ class EntityHistory {
       $data = [
         'history' => array_reverse($history),
         'ignored' => $total_revision_ids - count($revision_ids),
+        'revision_id' => $entity->getRevisionId(),
       ];
 
-      $this->cache->set($cache_id, $content, $this->cache::CACHE_PERMANENT, $cache_tags);
+      $this->cache->set($cache_id, $data, $this->cache::CACHE_PERMANENT, $cache_tags);
     }
 
     return [
@@ -259,14 +260,6 @@ class EntityHistory {
       // Number of ignored revisions.
       '#ignored' => $data['ignored'] ?? 0,
       '#cache' => [
-        'keys' => [
-          'reliefweb',
-          'revisions',
-          'history',
-          'content',
-          $entity->getEntityTypeId(),
-          $entity->id(),
-        ],
         'contexts' => ['user.permissions'],
         'tags' => $entity->getCacheTags(),
       ],
