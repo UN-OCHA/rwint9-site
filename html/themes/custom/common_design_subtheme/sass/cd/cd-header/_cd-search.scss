@@ -39,3 +39,8 @@
     background-color: $implementation-highlight;
   }
 }
+
+// This can be removed once it is added to the base theme, see CD-397.
+.no-js .cd-search__form form {
+  min-width: unset;
+}
