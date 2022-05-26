@@ -116,7 +116,7 @@ class ReportModeration extends ModerationServiceBase {
       }
       // Source.
       $sources = [];
-      foreach ($entity->field_source as $item) {
+      foreach ($this->sortTaxonomyTermFieldItems($entity->field_source) as $item) {
         $source_link = $this->getTaxonomyTermLink($item);
         if (!empty($source_link)) {
           $sources[] = $source_link;
@@ -131,7 +131,7 @@ class ReportModeration extends ModerationServiceBase {
       $details = [];
       // Content format.
       $details['format'] = [];
-      foreach ($entity->field_content_format as $item) {
+      foreach ($this->sortTaxonomyTermFieldItems($entity->field_content_format) as $item) {
         if (!empty($item->entity)) {
           $item_title = $item->entity->label();
           $item_parameter = 'selection[content_format][]';
@@ -141,7 +141,7 @@ class ReportModeration extends ModerationServiceBase {
       }
       // Language.
       $details['language'] = [];
-      foreach ($entity->field_language as $item) {
+      foreach ($this->sortTaxonomyTermFieldItems($entity->field_language) as $item) {
         if (!empty($item->entity)) {
           $item_title = $item->entity->label();
           $item_parameter = 'selection[language][]';

@@ -88,7 +88,7 @@ class JobModeration extends ModerationServiceBase {
       $info['author'] = $this->getEntityAuthorData($entity);
       // Source.
       $sources = [];
-      foreach ($entity->field_source as $item) {
+      foreach ($this->sortTaxonomyTermFieldItems($entity->field_source) as $item) {
         $source_link = $this->getTaxonomyTermLink($item);
         if (!empty($source_link)) {
           $sources[] = $source_link;

@@ -12,6 +12,7 @@ use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldItemInterface;
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Session\AccountInterface;
@@ -23,6 +24,7 @@ use Drupal\Core\Url;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Pager\PagerParametersInterface;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
+use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
 use Drupal\user\EntityOwnerInterface;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
@@ -2306,6 +2308,43 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     }
 
     return $entity->toLink($title)->toString();
+  }
+
+  /**
+   * Sort a taxonomy term field item list alphabetically by label.
+   *
+   * @param \Drupal\Core\Field\FieldItemListInterface $list
+   *   Field item list.
+   *
+   * @return array
+   *   Sorted list of items.
+   */
+  protected function sortTaxonomyTermFieldItems(FieldItemListInterface $list) {
+    $items = [];
+    foreach ($list as $item) {
+      $entity = $item->entity;
+      if (empty($entity)) {
+        continue;
+      }
+
+      if ($entity->hasField('field_shortname') && !$entity->field_shortname->isEmpty()) {
+        $label = $entity->field_shortname->value;
+      }
+      else {
+        $label = $entity->label();
+      }
+
+      $items[] = [
+        'label' => $label,
+        'item' => $item,
+      ];
+    }
+
+    LocalizationHelper::collatedSort($items, 'label');
+    foreach ($items as $key => $item) {
+      $items[$key] = $item['item'];
+    }
+    return $items;
   }
 
   /**
