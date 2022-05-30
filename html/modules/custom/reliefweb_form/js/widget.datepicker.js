@@ -33,16 +33,36 @@
       }
 
       // Update the datepicker date based on the input value.
-      function updateDatepicker(datepicker, value) {
+      function updateDatepicker(datepicker, value, trigger) {
         // Set the selected date from the value in the input field if valid.
-        if (value && value.match(/^\d{4}([/-]\d{2}){0,2}$/)) {
-          value = value.length === 4 ? value + '-01-01' : value;
-          value = value.length === 7 ? value + '-01' : value;
-          value = value.replaceAll('-', '/');
+        if (value) {
+          value = value.trim();
+          // YYYY, YYYY-MM and YYYY-MM-DD formats.
+          if (value.match(/^\d{4}([/-]\d{2}){0,2}$/)) {
+            value = value.length === 4 ? value + '-01-01' : value;
+            value = value.length === 7 ? value + '-01' : value;
+            value = value.replaceAll('-', '/');
+          }
+          // D format.
+          else if (value.match(/^\d{1,2} ?$/)) {
+            value = value.trim() + datepicker.createDate(null, true).format(' MMM YYYY');
+          }
+          // D MMM format.
+          else if (value.match(/^\d{1,2} \D{3} ?$/)) {
+            value = value.trim() + datepicker.createDate(null, true).format(' YYYY');
+          }
+          // D MMM YYYY format.
+          else if (!value.match(/^\d{1,2} \D{3} \d{4}$/)) {
+            return;
+          }
+
           var date = datepicker.createDate(value + ' UTC');
           if (!date.invalid()) {
             var calendar = datepicker.calendars[0];
-            datepicker.setSelection([date], false).updateCalendar(calendar, date);
+            datepicker.setSelection([date], trigger === true).updateCalendar(calendar, date);
+          }
+          else if (trigger) {
+            datepicker.hide();
           }
         }
       }
@@ -57,6 +77,15 @@
             datepickers[i].toggle();
           }
         }
+      }
+
+      // Find the form parent of an element.
+      function findFormParent(element) {
+        var parent = element.parentNode;
+        while (parent && parent.nodeName !== 'FORM') {
+          parent = parent.parentNode;
+        }
+        return parent;
       }
 
       /**
@@ -82,7 +111,7 @@
         element.setAttribute('placeholder', t('Click to select a date...'));
 
         // Localized date format.
-        var localizedFormat = t('YYYY-MM-DD');
+        var localizedFormat = t('D MMM YYYY');
 
         // Add the datepicker widget.
         var datepicker = new DatePicker({
@@ -140,13 +169,61 @@
 
         // @todo hide widget when the widget or input loses focus.
         element.addEventListener('keyup', function (event) {
-          if (event.key === 'Esc' || event.key === 'Escape' || event.key === 'Enter') {
+          if (event.key === 'Esc' || event.key === 'Escape') {
             datepicker.hide().clear();
           }
+          else if (event.key === 'Enter') {
+            // Update the datepicker selection, trigger the select event and
+            // close the datepicker.
+            updateDatepicker(datepicker, element.value, true);
+          }
           else {
+            // Ensure the date picker is visible and update its selection.
+            datepicker.show();
             updateDatepicker(datepicker, element.value);
           }
         });
+
+        // Current day.
+        var now = datepicker.createDate(null, true).format(localizedFormat);
+
+        // Replace the element description.
+        var descriptionElement = document.getElementById(element.id + '--description');
+        if (descriptionElement) {
+          descriptionElement.textContent = t('Format: @format (e.g., @date)', {
+            '@format': localizedFormat,
+            '@date': now
+          });
+        }
+
+        // Change the format in the error message if present.
+        var errorElement = document.querySelector('#' + element.id.replace(/-date$/, '') + ' + .form-item--error-message');
+        if (errorElement) {
+          errorElement.innerHTML = errorElement.innerHTML.replace(/\d{4}[/-]\d{2}[/-]\d{2}/, now);
+        }
+
+        // Convert the element value to the localized format if it's the ISO
+        // format expected by Drupal. It will be converted back on submission.
+        var value = element.value.trim();
+        if (value.match(/^\d{4}[/-]\d{2}[/-]\d{2}$/)) {
+          value = value.replaceAll('-', '/');
+          var date = datepicker.createDate(value + ' UTC');
+          element.value = !date.invalid() ? date.format(localizedFormat) : value;
+        }
+
+        // Convert the date into the format required by Drupal.
+        var form = findFormParent(element);
+        if (form) {
+          form.addEventListener('submit', function (event) {
+            if (element.value) {
+              var value = element.value.trim();
+              if (value.match(/^\d{1,2} \D{3} \d{4}$/)) {
+                var date = datepicker.createDate(value + ' UTC');
+                element.value = !date.invalid() ? date.format('YYYY-MM-DD') : value;
+              }
+            }
+          });
+        }
       }
 
       var body = document.querySelector('body');

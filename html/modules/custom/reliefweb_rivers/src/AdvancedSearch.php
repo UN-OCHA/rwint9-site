@@ -937,17 +937,10 @@ class AdvancedSearch {
     if (!empty($values['from'])) {
       $filter['from'] = $values['from']->format('c');
     }
+    // The `to` date is inclusive, so we add 1 day minus 1 second to the
+    // `to` date so that we cover the entire day.
     if (!empty($values['to'])) {
-      // Same day for both from and to dates, we add 1 day to the to date
-      // so that we cover the entire day.
-      // We are not using a strict equality because they can be 2 different
-      // DateTimeImmutable objects representing the same date.
-      if (!empty($values['from']) && $values['to'] == $values['from']) {
-        $filter['to'] = $values['to']->modify('+1 day')->format('c');
-      }
-      else {
-        $filter['to'] = $values['to']->format('c');
-      }
+      $filter['to'] = $values['to']->modify('+1 day -1 second')->format('c');
     }
     return $filter;
   }
