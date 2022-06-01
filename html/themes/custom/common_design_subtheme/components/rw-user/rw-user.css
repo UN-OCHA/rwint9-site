@@ -4,7 +4,8 @@
  * Style the form in the page where users can subscribe to ReliefWeb
  * notifications.
  */
-.subscription-form .form-checkboxes .form-type-checkbox {
+.subscription-form .form-checkboxes .form-type-checkbox,
+.unsubscribe-form .form-checkboxes .form-type-checkbox {
   display: block;
 }
 
@@ -33,13 +34,15 @@
 .subscription-form .form-actions.form-item {
   margin-top: 24px;
 }
+/* Cancel button on unsubscribe form */
+.unsubscribe-form > .button + a {
+  margin-left: 1rem;
+}
 
 /**
  * User dashboard.
  *
  * Style of the user account landing page (dashboard).
- *
- * Scope: .page-user #main
  */
 .rw-user-dashboard ul {
   margin: 0;
