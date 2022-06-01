@@ -42,6 +42,7 @@ function reliefweb_contact_mail_alter(&$message) {
 
   // Set sender headers.
   $message['from'] = $sender;
-  $message['headers']['From'] = $sender_name . ' <' . $message['from'] . '>';
-  $message['headers']['Reply-to'] = $message['from'];
+  $message['headers']['Bcc'] = $sender;
+  $message['headers']['From'] = $sender_name . ' <' . $sender . '>';
+  $message['headers']['Reply-to'] = $sender;
 }
