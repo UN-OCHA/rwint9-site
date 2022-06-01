@@ -23,7 +23,6 @@ use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
-use Drupal\user\EntityOwnerInterface;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 
 /**
@@ -427,98 +426,6 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
       $element['field_source_new']['#description'] = Markup::create($new_source_help);
     }
 
-    // Create a checkbox field with the sources the user is allowed to post for
-    // for faster access and to reduce wrong source selection issues.
-    $bundle = $entity->bundle();
-    $account = $entity instanceof EntityOwnerInterface ? $entity->getOwner() : NULL;
-    if (isset($account)) {
-      $rights = UserPostingRightsHelper::getUserPostingRights($account);
-
-      if (!empty($rights)) {
-        $allowed = [];
-        $options = $element['widget']['#options'];
-
-        $allowed_defaults = [];
-        $options_defaults = $element['widget']['#default_value'] ?? [];
-        $options_defaults = array_combine($options_defaults, $options_defaults);
-
-        // Move sources the users is allowed to post for to the allowed list.
-        foreach ($options as $tid => $name) {
-          // Extract from the options if the user is allowed to post.
-          if (isset($rights[$tid][$bundle]) && $rights[$tid][$bundle] > 1) {
-            $allowed[$tid] = $name;
-            unset($options[$tid]);
-
-            // Extract from the default values as well.
-            if (isset($options_defaults[$tid])) {
-              $allowed_defaults[] = $tid;
-              unset($options_defaults[$tid]);
-            }
-          }
-        }
-
-        // Add the allowed source field.
-        if (!empty($allowed)) {
-          // If the field only accept 1 value, then make sure only 1 is
-          // selected.
-          if (!$multiple) {
-            // Keep the first 'other' source.
-            if (empty($allowed_defaults)) {
-              $options_defaults = array_slice($options_defaults, 0, 1);
-              $allowed_defaults = 'other';
-            }
-            // Else keep the first 'allowed' source.
-            else {
-              $options_defaults = [];
-              $allowed_defaults = $allowed_defaults[0];
-            }
-          }
-          // Otherwise make sure 'other' is selected if there are 'other'
-          // sources.
-          elseif (!empty($options_defaults)) {
-            $options_defaults = array_values($options_defaults);
-            $allowed_defaults[] = 'other';
-          }
-
-          // Update the source field.
-          $element['widget']['#options'] = $options;
-          $element['widget']['#default_value'] = $options_defaults;
-
-          // Add "other" to the list of sources to toggle the display of the
-          // other source fields.
-          $allowed['other'] = $multiple ? $this->t('Other organization(s)') : $this->t('Other organization');
-
-          // Create the field.
-          $element['field_source_allowed'] = [
-            '#type' => $multiple ? 'checkboxes' : 'radios',
-            '#title' => $this->t('Your organizations'),
-            '#options' => $allowed,
-            '#default_value' => $allowed_defaults,
-            '#empty_value' => 'other',
-            '#weight' => -1,
-          ];
-
-          // Show the other source fields only if 'other' is selected.
-          if ($multiple) {
-            $condition = [
-              ':input[name="field_source_allowed[other]"]' => ['checked' => TRUE],
-            ];
-          }
-          else {
-            $condition = [
-              ':input[name="field_source_allowed"]' => ['value' => 'other'],
-            ];
-          }
-          $element['widget']['#states']['visible'] = $condition;
-          $element['field_source_none']['#states']['visible'] = $condition;
-
-          // For the new source field, we need to combine the condition
-          // on the no source field and the selection of 'other'.
-          $element['field_source_new']['#states']['visible'] += $condition;
-        }
-      }
-    }
-
     // Add a reminder to fill in the potential new source.
     $new_source_reminder = $this->state->get('reliefweb_form_new_source_reminder_' . $bundle, '');
     if (!empty($new_source_reminder)) {
@@ -559,59 +466,20 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
   public function validatePotentialNewSourceFields(array $form, FormStateInterface $form_state) {
     $multiple = !empty($form['field_source']['#multiple']);
 
-    // We need to populate the values for the source field here to be able
-    // to validate it and pass the correct data to the later functions like
-    // submit, presave etc.
-    //
-    // Combine the sources selected fron the allowed sources field with
-    // the normal source field.
-    $allowed = $form_state->getValue('field_source_allowed', []);
-    if (!empty($allowed)) {
-      // Convert to array if necessary.
-      $allowed = is_array($allowed) ? $allowed : [$allowed];
-      // Extract valid and selected sources (exclude 'other' and value = 0).
-      $allowed = array_values(array_filter($allowed, function ($source) {
-        return $source != 0 && is_numeric($source);
-      }));
-      if (!empty($allowed)) {
-        // If multiple values are permitted, merge the allowed and normal
-        // sources.
-        if ($multiple) {
-          // Get the sources from the normal source field.
-          $sources = array_filter(array_map(function ($source) {
-            return $source['target_id'];
-          }, $form_state->getValue('field_source', [])));
-          // Combine the sources.
-          $sources = array_unique(array_merge($allowed, $sources));
-        }
-        // Otherwise only keep the first allowed source.
-        else {
-          $sources = array_slice($allowed, 0, 1);
-        }
-        // Update the source field.
-        $form_state->setValue('field_source', array_map(function ($source) {
-          return ['target_id' => $source];
-        }, $sources));
-      }
-    }
-
-    $message = $this->t('Organization field is required. If your organization is NOT in the list, please select "I can NOT find my organization in the list above" and provide the name and URL. If you see your organization in the list, please select it while making sure the box "I can NOT find my organization..." is unchecked.');
-
     // Error if there is no source and "no source found" is not checked.
     if ($form_state->isValueEmpty('field_source_none')) {
       if ($form_state->isValueEmpty('field_source')) {
-        $form_state->setErrorByName('field_source', $message);
+        $form_state->setErrorByName('field_source', $this->t('The organization is required. Search for your organization in the list above. If you <strong>cannot</strong> find it, please check "I can NOT find my organization in the list" below and enter the name and URL of your organization.'));
       }
     }
     // Error if "no source found" is selected but there is a source selected.
     // Only applies to entities that can have only 1 source.
     elseif (!$multiple && !$form_state->isValueEmpty('field_source')) {
-      $form_state->setErrorByName('field_source', $message);
+      $form_state->setErrorByName('field_source_none', $this->t('Please uncheck "I can NOT find my organization in the list" or remove the selected organization above.'));
     }
     // Error if "no source found" is selected but no source was entered.
     elseif ($form_state->isValueEmpty(['field_source_new', 'name'])) {
-      $form_state->setErrorByName('field_source_new][name', $message);
-      $form_state->setErrorByName('field_source_new][url', '');
+      $form_state->setErrorByName('field_source_new][name', $this->t('Please enter the name of your organization.'));
     }
 
     // Ensure the new source URL if defined is a valid external URL.
