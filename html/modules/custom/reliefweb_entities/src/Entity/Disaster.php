@@ -80,8 +80,8 @@ class Disaster extends Term implements BundleEntityInterface, EntityModeratedInt
       $sections['useful-links'] = $this->getUsefulLinksSection();
 
       // Retrieve the Key Content and Appeals and Response Plans.
-      $queries['key-content'] = $this->getKeyContentApiQuery();
-      $queries['appeals-response-plans'] = $this->getAppealsResponsePlansApiQuery();
+      $queries['key-content'] = $this->getKeyContentApiQuery('D');
+      $queries['appeals-response-plans'] = $this->getAppealsResponsePlansApiQuery('D');
     }
 
     // Get data from the API.
