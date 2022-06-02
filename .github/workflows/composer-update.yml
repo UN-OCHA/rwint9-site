@@ -1,0 +1,102 @@
+name: Composer Update
+
+on:
+  schedule:
+    - cron: '30 6 * * 4'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: public.ecr.aws/unocha/php:8.0-stable
+    steps:
+
+      - name: Workaround Git Issue
+        id: workaround
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Checkout code
+        id: checkout
+        uses: actions/checkout@v3
+        with:
+          ref: 'develop'
+
+      - name: Composer Install
+        id: install
+        run: composer install
+
+      - name: Composer Outdated
+        id: outdated
+        uses: mathiasvr/command-output@v1
+        with:
+          run: composer outdated drupal/*
+        continue-on-error: true
+
+      - name: Composer Update
+        id: update
+        uses: mathiasvr/command-output@v1
+        with:
+          run: composer update --with-dependencies drupal/*
+        continue-on-error: true
+
+      - name: Create Pull Request
+        id: pull
+        uses: peter-evans/create-pull-request@v4
+        with:
+          token: ${{ secrets.PAT }}
+          commit-message: "[UPDATES] Periodic pull request after updating all outdated drupal packages."
+          title: "[UPDATES] Periodic Updates"
+          body: |
+            - Automatic pull request after trying to run composer update drupal/* on all the Drupal packages.
+          committer: "unocha-jenkins <ops+github@reliefweb.int>"
+          author: "unocha-jenkins <ops+github@reliefweb.int>"
+          branch: update/patch
+          branch-suffix: short-commit-hash
+          base: develop
+          assignees: ${{ secrets.DRUPAL_MAINTAINERS }}
+          team-reviewers: digital-services-drupal-maintainers
+
+      - name: Post Comment
+        uses: actions/github-script@0.9.0
+        env:
+          OUTDATED: "composer outdated\n${{ steps.outdated.outputs.stdout }}"
+          UPDATES: "composer update\n${{ steps.update.outputs.stdout }}"
+          ERRORS: "composer errors\n${{ steps.update.outputs.stderr }}"
+        with:
+          github-token: ${{ secrets.PAT }}
+          script: |
+            const output = `#### Composer Update \`${{ steps.update.outcome }}\`
+            #### Running \`composer update -W drupal/*\` to update all Drupal core and contrib packages
+            
+            <details><summary>Composer Outdated</summary>
+            
+            \`\`\`${process.env.OUTDATED}\`\`\`
+            
+            </details>
+            <details><summary>Composer Update Status</summary>
+
+            \`\`\`${process.env.UPDATES}\`\`\`
+            
+            </details>
+            <details><summary>Composer Update Messages</summary>
+            
+            \`\`\`${process.env.ERRORS}\`\`\`
+            
+            </details>
+            
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Workflow: \`${{ github.workflow }}\`*`;
+              
+            github.issues.createComment({
+              issue_number: ${{ steps.pull.outputs.pull-request-number }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+      - name: Flowdock Notify
+        id: flowdock
+        uses: docker://unocha/actions:flowdock-notify-main
+        env:
+          FLOWDOCK_TOKEN: ${{ secrets.FLOWDOCK_TOKEN }}
+          FLOWDOCK_ICON: 'jeans'
+          FLOWDOCK_MESSAGE: 'Created an up to date pull request for [${{ github.repository }}](${{ steps.pull.outputs.pull-request-url }}) from ${{ github.ref }}.'
+          LOWDOCK_TAGS: 'pull,${{ github.actor }}'
