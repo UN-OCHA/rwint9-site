@@ -7,7 +7,7 @@ use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
 use Consolidation\SiteProcess\ProcessManagerAwareTrait;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Database\Connection;
-use Drupal\Core\State\StateInterface;
+use Drupal\Core\Site\Settings;
 use Drupal\reliefweb_subscriptions\ReliefwebSubscriptionsMailer;
 use Drush\Commands\DrushCommands;
 use GuzzleHttp\ClientInterface;
@@ -43,25 +43,16 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
   protected $mailer;
 
   /**
-   * The state manager.
-   *
-   * @var \Drupal\Core\State\StateInterface
-   */
-  protected $state;
-
-  /**
    * {@inheritdoc}
    */
   public function __construct(
     Connection $database,
     ClientInterface $http_client,
     ReliefwebSubscriptionsMailer $mailer,
-    StateInterface $state
   ) {
     $this->database = $database;
     $this->httpClient = $http_client;
     $this->mailer = $mailer;
-    $this->state = $state;
   }
 
   /**
@@ -165,7 +156,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
   public function unsubscribe($frequency = '1w', array $options = [
     'dry-run' => FALSE,
   ]) {
-    $settings = $this->state->get('ocha_elk_mail', []);
+    $settings = Settings::get('ocha_elk_mail', []);
     if (empty($settings['url'])) {
       $this->logger()->error(dt('ELK url missing'));
       return FALSE;
