@@ -203,7 +203,7 @@ trait SectionedContentTrait {
       // Link to the updates river for the entity.
       'more' => [
         'url' => RiverServiceBase::getRiverUrl('report', [
-          'advanced-search' => '(' . $code . $this->id() . ')',
+          'advanced-search' => '(' . $code . $this->id() . ')_(F10)',
         ]),
         'label' => $this->t('View all @label Situation Reports', [
           '@label' => $this->label(),
@@ -259,7 +259,7 @@ trait SectionedContentTrait {
       // Link to the updates river for the entity.
       'more' => [
         'url' => RiverServiceBase::getRiverUrl('report', [
-          'advanced-search' => '(' . $code . $this->id() . ')',
+          'advanced-search' => '(' . $code . $this->id() . ')_(F4)',
         ]),
         'label' => $this->t('View all @label Appeals and Response Plans', [
           '@label' => $this->label(),
