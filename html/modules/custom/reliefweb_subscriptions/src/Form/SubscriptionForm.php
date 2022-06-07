@@ -169,6 +169,7 @@ class SubscriptionForm extends FormBase {
       }
     }
 
+    $active_subscriptions = [];
     $subscriptions = $form_state->getValue('country_updates');
     foreach ($subscriptions as $sid => $value) {
       if ($sid === '_none') {
@@ -179,7 +180,12 @@ class SubscriptionForm extends FormBase {
       }
       else {
         $this->subscribe($form_state->getValue('uid'), $sid);
+        $active_subscriptions[] = $sid;
       }
+    }
+
+    if (!empty($active_subscriptions)) {
+      $this->unsubscribeOtherCountries($form_state->getValue('uid'), $active_subscriptions);
     }
 
     // Show the user a message.
@@ -231,6 +237,22 @@ class SubscriptionForm extends FormBase {
   public function unsubscribe($uid, $sid) {
     $this->database->delete('reliefweb_subscriptions_subscriptions')
       ->condition('sid', $sid)
+      ->condition('uid', $uid)
+      ->execute();
+  }
+
+  /**
+   * Remove a user subscription.
+   *
+   * @param int $uid
+   *   User id.
+   * @param array $sids
+   *   Subscription id.
+   */
+  public function unsubscribeOtherCountries($uid, array $sids) {
+    $this->database->delete('reliefweb_subscriptions_subscriptions')
+      ->condition('sid', 'country_updates_%', 'LIKE')
+      ->condition('sid', $sids, 'NOT IN')
       ->condition('uid', $uid)
       ->execute();
   }
