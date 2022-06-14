@@ -1054,6 +1054,15 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
           'widget' => 'none',
           'join_callback' => 'joinKeyContent',
         ],
+        'comments' => [
+          'type' => 'property',
+          'field' => 'revision_log_message',
+          'label' => $this->t('Comments'),
+          'shortcut' => 'cm',
+          'form' => 'omnibox',
+          'widget' => 'search',
+          'join_callback' => 'joinReview',
+        ],
       ];
     }
 

@@ -267,6 +267,7 @@ class JobModeration extends ModerationServiceBase {
       'posting_rights',
       'reviewer',
       'reviewed',
+      'comments',
       'title',
       'body',
       'how_to_apply',
