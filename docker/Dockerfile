@@ -31,7 +31,7 @@ RUN cp -a docker/settings.php docker/services.yml docker/memcache.services.yml h
 ################################################################################
 
 # Generate the image.
-FROM public.ecr.aws/unocha/php-k8s:8.0.19-r1-NR-202206-01
+FROM public.ecr.aws/unocha/php-k8s:8.0-NR-stable
 
 ARG VCS_REF
 ARG VCS_URL
@@ -54,7 +54,8 @@ LABEL info.humanitarianresponse.build.date=$BUILD_DATE \
       info.humanitarianresponse.build.vcs-url=$VCS_URL \
       info.humanitarianresponse.build.vcs-ref=$VCS_REF
 
-RUN mkdir -p /etc/nginx/custom && \
+RUN apk add -U icu-data-full && \
+    mkdir -p /etc/nginx/custom && \
     # Install lua resty library to generate UUIDs.
     cd /tmp && \
     git clone --branch=0.0.7 https://github.com/thibaultcha/lua-resty-jit-uuid.git && \
