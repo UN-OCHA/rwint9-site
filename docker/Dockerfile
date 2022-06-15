@@ -54,8 +54,7 @@ LABEL info.humanitarianresponse.build.date=$BUILD_DATE \
       info.humanitarianresponse.build.vcs-url=$VCS_URL \
       info.humanitarianresponse.build.vcs-ref=$VCS_REF
 
-RUN apk add -U icu-data-full && \
-    mkdir -p /etc/nginx/custom && \
+RUN mkdir -p /etc/nginx/custom && \
     # Install lua resty library to generate UUIDs.
     cd /tmp && \
     git clone --branch=0.0.7 https://github.com/thibaultcha/lua-resty-jit-uuid.git && \
