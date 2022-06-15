@@ -317,6 +317,7 @@ class ReportModeration extends ModerationServiceBase {
       'user_role',
       'reviewer',
       'reviewed',
+      'comments',
       'title',
       'body',
       'headline_title',

@@ -293,6 +293,7 @@ class TrainingModeration extends ModerationServiceBase {
       'posting_rights',
       'reviewer',
       'reviewed',
+      'comments',
       'title',
       'body',
       'ongoing',
