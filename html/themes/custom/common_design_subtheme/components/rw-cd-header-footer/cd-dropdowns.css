@@ -1,6 +1,6 @@
 /* Hide label on mobile */
 @media all and (max-width: 767px) {
-  .cd-global-header button[aria-expanded] span [class*="__btn-label"] {
+  .cd-global-header button[aria-expanded] span[class*="__btn-label"] {
     position: absolute !important;
     overflow: hidden;
     clip: rect(1px, 1px, 1px, 1px);

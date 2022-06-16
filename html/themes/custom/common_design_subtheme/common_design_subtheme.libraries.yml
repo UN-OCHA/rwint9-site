@@ -408,7 +408,7 @@ rw-view-more:
 rw-cd-header-footer:
   css:
     theme:
-      components/rw-cd-header-footer/cd-dropdown.css: {}
+      components/rw-cd-header-footer/cd-dropdowns.css: {}
       components/rw-cd-header-footer/cd-footer.css: {}
       components/rw-cd-header-footer/cd-header.css: {}
       components/rw-cd-header-footer/cd-language-switcher.css: {}
