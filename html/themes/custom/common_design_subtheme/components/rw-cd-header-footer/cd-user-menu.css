@@ -34,5 +34,5 @@
   width: 14px;
   height: 14px;
   vertical-align: middle;
-  fill: $cd-white;
+  fill: var(--cd-white);
 }
