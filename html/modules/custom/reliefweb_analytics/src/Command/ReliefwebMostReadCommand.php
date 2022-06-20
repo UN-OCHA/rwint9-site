@@ -136,7 +136,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
     $disasters = $this->entityTypeManager->getStorage('taxonomy_term')->loadMultiple($tids);
     foreach ($disasters as $disater) {
       $this->logger()->notice('Processing ' . $disater->label());
-      $parameters = $this->getDisaterPayload($disater->label());
+      $parameters = $this->getDisasterPayload($disater->label());
       $data = $this->fetchGa4Data($parameters);
       if (!empty($data)) {
         $results[$disater->id()] = [
@@ -204,16 +204,26 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
    *
    * @param array $parameters
    *   Payload.
+   *
+   * @see https://developers.google.com/analytics/devguides/reporting/core/v4/limits-quotas#analytics_reporting_api_v4
    */
   public function fetchGa4Data(array $parameters) {
     $results = [];
 
     try {
+      $start = microtime(TRUE);
       $response = $this->getGa4Client()->runReport($parameters);
+
+      // Make sure it takes at least a second.
+      $end = microtime(TRUE);
+      if ($end - $start < 1) {
+        usleep($end - $start);
+      }
     }
     catch (ApiException $exception) {
       if ($exception->getStatus() == 'RESOURCE_EXHAUSTED') {
         $this->logger()->warning('Rate limit hit.');
+        $this->logger()->error('Google exception: ' . $exception->getMessage());
       }
       else {
         $this->logger()->error('Google exception: ' . $exception->getMessage());
@@ -224,6 +234,15 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
       $this->logger()->error('Exception: ' . $exception->getMessage());
       exit();
     }
+
+    // Log quota.
+    $quota = $response->getReturnPropertyQuota();
+    $this->logger()->notice(strtr('Day: @d, hour: @h, errors/hour: @e, threshold: @t', [
+      '@d' => $quota->getTokensPerDay(),
+      '@h' => $quota->getTokensPerHour(),
+      '@e' => $quota->getServerErrorsPerProjectPerHour(),
+      '@t' => $quota->getPotentiallyThresholdedRequestsPerHour(),
+    ]));
 
     foreach ($response->getRows() as $row) {
       $results[] = $row->getDimensionValues()[0]->getValue();
@@ -270,6 +289,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
     return [
       'property' => 'properties/291027553',
       'limit' => 5,
+      'returnPropertyQuota' => TRUE,
       'dateRanges' => [
         new DateRange([
           'start_date' => '30daysAgo',
