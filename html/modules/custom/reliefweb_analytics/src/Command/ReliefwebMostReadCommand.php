@@ -236,12 +236,12 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
     }
 
     // Log quota.
-    $quota = $response->getReturnPropertyQuota();
+    $quota = $response->getPropertyQuota();
     $this->logger()->notice(strtr('Day: @d, hour: @h, errors/hour: @e, threshold: @t', [
-      '@d' => $quota->getTokensPerDay(),
-      '@h' => $quota->getTokensPerHour(),
-      '@e' => $quota->getServerErrorsPerProjectPerHour(),
-      '@t' => $quota->getPotentiallyThresholdedRequestsPerHour(),
+      '@d' => $quota->getTokensPerDay()->getConsumed() . '/' . $quota->getTokensPerDay()->getRemaining(),
+      '@h' => $quota->getTokensPerHour()->getConsumed() . '/' . $quota->getTokensPerHour()->getRemaining(),
+      '@e' => $quota->getServerErrorsPerProjectPerHour()->getConsumed() . '/' . $quota->getServerErrorsPerProjectPerHour()->getRemaining(),
+      '@t' => $quota->getPotentiallyThresholdedRequestsPerHour()->getConsumed() . '/' . $quota->getPotentiallyThresholdedRequestsPerHour()->getRemaining(),
     ]));
 
     foreach ($response->getRows() as $row) {
