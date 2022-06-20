@@ -134,13 +134,41 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
     $query->condition('vid', 'disaster');
     $tids = $query->execute();
     $disasters = $this->entityTypeManager->getStorage('taxonomy_term')->loadMultiple($tids);
-    foreach ($disasters as $disater) {
-      $this->logger()->notice('Processing ' . $disater->label());
-      $parameters = $this->getDisasterPayload($disater->label());
+    foreach ($disasters as $disaster) {
+      $this->logger()->notice('Processing ' . $disaster->label());
+      $parameters = $this->getDisasterPayload($disaster->label());
       $data = $this->fetchGa4Data($parameters);
       if (!empty($data)) {
-        $results[$disater->id()] = [
-          $disater->id(),
+        $results[$disaster->id()] = [
+          $disaster->id(),
+          implode(',', $data),
+        ];
+      }
+    }
+
+    if (!empty($results)) {
+      $this->updateCsv($results);
+    }
+  }
+
+  /**
+   * Most read for disasters.
+   *
+   * @command reliefweb_analytics:disasters-all
+   * @usage reliefweb_analytics:disasters-all
+   *   Send emails.
+   * @validate-module-enabled reliefweb_analytics
+   * @aliases reliefweb-mostread-disasters-all
+   */
+  public function disastersAll() {
+    $results = [];
+    $parameters = $this->getAllDisastersPayload();
+    $combined = $this->fetchGa4DataCombined($parameters);
+
+    if (!empty($combined)) {
+      foreach ($combined as $disaster => $data) {
+        $results[$disaster] = [
+          $disaster,
           implode(',', $data),
         ];
       }
@@ -223,7 +251,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
     catch (ApiException $exception) {
       if ($exception->getStatus() == 'RESOURCE_EXHAUSTED') {
         $this->logger()->warning('Rate limit hit.');
-        $this->logger()->error('Google exception: ' . $exception->getMessage());
+        $this->logger()->warning('Google exception: ' . $exception->getMessage());
       }
       else {
         $this->logger()->error('Google exception: ' . $exception->getMessage());
@@ -246,6 +274,65 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
 
     foreach ($response->getRows() as $row) {
       $results[] = $row->getDimensionValues()[0]->getValue();
+    }
+
+    return $results;
+  }
+
+  /**
+   * Fetch and process GA4 data.
+   *
+   * @param array $parameters
+   *   Payload.
+   *
+   * @see https://developers.google.com/analytics/devguides/reporting/core/v4/limits-quotas#analytics_reporting_api_v4
+   */
+  public function fetchGa4DataCombined(array $parameters) {
+    $results = [];
+
+    try {
+      $start = microtime(TRUE);
+      $response = $this->getGa4Client()->runReport($parameters);
+
+      // Make sure it takes at least a second.
+      $end = microtime(TRUE);
+      if ($end - $start < 1) {
+        usleep($end - $start);
+      }
+    }
+    catch (ApiException $exception) {
+      if ($exception->getStatus() == 'RESOURCE_EXHAUSTED') {
+        $this->logger()->warning('Rate limit hit.');
+        $this->logger()->warning('Google exception: ' . $exception->getMessage());
+      }
+      else {
+        $this->logger()->error('Google exception: ' . $exception->getMessage());
+      }
+      exit();
+    }
+    catch (\Exception $exception) {
+      $this->logger()->error('Exception: ' . $exception->getMessage());
+      exit();
+    }
+
+    // Log quota.
+    $quota = $response->getPropertyQuota();
+    $this->logger()->notice(strtr('Day: @d, hour: @h, errors/hour: @e, threshold: @t', [
+      '@d' => $quota->getTokensPerDay()->getConsumed() . '/' . $quota->getTokensPerDay()->getRemaining(),
+      '@h' => $quota->getTokensPerHour()->getConsumed() . '/' . $quota->getTokensPerHour()->getRemaining(),
+      '@e' => $quota->getServerErrorsPerProjectPerHour()->getConsumed() . '/' . $quota->getServerErrorsPerProjectPerHour()->getRemaining(),
+      '@t' => $quota->getPotentiallyThresholdedRequestsPerHour()->getConsumed() . '/' . $quota->getPotentiallyThresholdedRequestsPerHour()->getRemaining(),
+    ]));
+
+    foreach ($response->getRows() as $row) {
+      if (isset($row->getDimensionValues()[1]) && !empty($row->getDimensionValues()[1]->getValue()) && $row->getDimensionValues()[1]->getValue() !== '(not set)') {
+        if (!isset($results[$row->getDimensionValues()[1]->getValue()])) {
+          $results[$row->getDimensionValues()[1]->getValue()] = [];
+        }
+        if (count($results[$row->getDimensionValues()[1]->getValue()]) < 5) {
+          $results[$row->getDimensionValues()[1]->getValue()][] = $row->getDimensionValues()[0]->getValue();
+        }
+      }
     }
 
     return $results;
@@ -350,6 +437,30 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
       ]),
     ]);
     $payload = $this->buildPayload($filter);
+
+    return $payload;
+  }
+
+  /**
+   * Get all disasters payload.
+   */
+  protected function getAllDisastersPayload() {
+    $filter = new FilterExpression([
+      'filter' => new Filter([
+        'field_name' => 'customEvent:content_report_disaster',
+        'string_filter' => new StringFilter([
+          'value' => '.',
+          'match_type' => MatchType::PARTIAL_REGEXP,
+        ]),
+      ]),
+    ]);
+    $payload = $this->buildPayload($filter);
+
+    // Add dimension for disaster.
+    $payload['dimensions'][] = new Dimension(['name' => 'customEvent:content_report_disaster']);
+
+    // Raise limit.
+    $payload['limit'] = 100000;
 
     return $payload;
   }

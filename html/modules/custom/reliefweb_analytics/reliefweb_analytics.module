@@ -123,6 +123,8 @@ function reliefweb_analytics_get_entity_dimensions() {
         'dimension20' => (string) $entity->getModerationStatusLabel(),
         'dimension21' => $entity->id(),
         'dimension22' => $entity->uuid(),
+        'dimension23' => reliefweb_analytics_get_terms_id($entity, 'field_country', $cache_metadata),
+        'dimension24' => reliefweb_analytics_get_terms_id($entity, 'field_disaster', $cache_metadata),
       ];
       break;
 
@@ -297,6 +299,30 @@ function reliefweb_analytics_get_terms(FieldableEntityInterface $entity, $field,
   if ($entity->hasField($field) && !$entity->get($field)->isEmpty()) {
     foreach ($entity->get($field)->referencedEntities() as $term) {
       $terms[] = (string) $term->getUntranslated()->label();
+      $cache_metadata->addCacheTags($term->getCacheTags());
+    }
+  }
+  return implode(', ', $terms);
+}
+
+/**
+ * Get the term labels from an entity reference field.
+ *
+ * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
+ *   Entity.
+ * @param string $field
+ *   Field.
+ * @param \Drupal\Core\Cache\CacheableMetadata $cache_metadata
+ *   The accumulated cache metadata.
+ *
+ * @return string
+ *   Comma separated list of term names.
+ */
+function reliefweb_analytics_get_terms_id(FieldableEntityInterface $entity, $field, CacheableMetadata $cache_metadata) {
+  $terms = [];
+  if ($entity->hasField($field) && !$entity->get($field)->isEmpty()) {
+    foreach ($entity->get($field)->referencedEntities() as $term) {
+      $terms[] = (string) $term->id();
       $cache_metadata->addCacheTags($term->getCacheTags());
     }
   }
