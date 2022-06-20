@@ -1054,6 +1054,15 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
           'widget' => 'none',
           'join_callback' => 'joinKeyContent',
         ],
+        'comments' => [
+          'type' => 'property',
+          'field' => 'revision_log_message',
+          'label' => $this->t('Comments'),
+          'shortcut' => 'cm',
+          'form' => 'omnibox',
+          'widget' => 'search',
+          'join_callback' => 'joinReview',
+        ],
       ];
     }
 
@@ -2037,9 +2046,6 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
    *   and optional abbreviation (abbr).
    */
   protected function getUserAutocompleteSuggestions($filter, $term, $conditions, array $replacements) {
-    $bundle = $this->getBundle();
-    $entity_type_id = $this->getEntityTypeId();
-
     $table = $this->getEntityTypeDataTable('user');
     $alias = $table;
     $id_field = $this->getEntityTypeIdField('user');
@@ -2067,20 +2073,13 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     $query->range(0, 10);
     $query->distinct();
 
-    // Limit to users who actually have posted entities of this bundle.
-    $revision_table = $this->getEntityTypeRevisionTable($entity_type_id);
-    $revision_id_field = $this->getEntityTypeRevisionIdField($entity_type_id);
-    $revision_user_field = $this->getEntityTypeRevisionUserField($entity_type_id);
-    $revision_alias = $query->innerJoin($revision_table, $revision_table, "%alias.{$revision_user_field} = {$alias}.{$id_field}");
-
-    $entity_table = $this->getEntityTypeDataTable($entity_type_id);
-    $entity_bundle_field = $this->getEntityTypeBundleField($entity_type_id);
-    $entity_alias = $query->innerJoin($entity_table, $entity_table, "%alias.{$revision_id_field} = {$revision_alias}.{$revision_id_field}");
-    $query->condition($entity_alias . '.' . $entity_bundle_field, $bundle, '=');
-
     // Add conditions.
     $conditions = $this->buildFilterConditions($conditions, $fields);
     $query->where($conditions, $replacements);
+
+    // Boost editor accounts.
+    $query->addExpression("IF({$alias}.mail LIKE '%reliefweb.int', 1, 0)", 'score');
+    $query->orderBy('score', 'DESC');
 
     // Sort by name.
     $query->orderBy($alias . '.name', 'ASC');

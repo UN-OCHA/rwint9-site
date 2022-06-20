@@ -15,34 +15,8 @@
             "url": "https://packages.drupal.org/8"
         },
         {
-            "type": "package",
-            "package": {
-                "name": "reliefweb/simple-autocomplete",
-                "version": "v1.3.0",
-                "type":"drupal-library",
-                "source": {
-                    "url": "https://github.com/UN-OCHA/rwint-simple-autocomplete.git",
-                    "type": "git",
-                    "reference": "v1.3.0"
-                }
-            }
-        },
-        {
-            "type": "package",
-            "package": {
-                "name": "reliefweb/simple-datepicker",
-                "version": "v1.3.1",
-                "type":"drupal-library",
-                "source": {
-                    "url": "https://github.com/UN-OCHA/rwint-simple-datepicker.git",
-                    "type": "git",
-                    "reference": "v1.3.1"
-                }
-            }
-        },
-        {
-            "type": "vcs",
-            "url": "https://github.com/UN-OCHA/rwint-api-indexer.git"
+            "type": "composer",
+            "url": "https://asset-packagist.org"
         }
     ],
     "require": {
@@ -86,8 +60,8 @@
         "lolli42/finediff": "^1.0",
         "pelago/emogrifier": "^6.0",
         "reliefweb/api-indexer": "^v2.2",
-        "reliefweb/simple-autocomplete": "^v1.3.0",
-        "reliefweb/simple-datepicker": "^v1.3.1",
+        "reliefweb/simple-autocomplete": "^v1.3",
+        "reliefweb/simple-datepicker": "^v1.3",
         "symfony/flex": "^2.0",
         "symfony/uid": "^6.0",
         "unocha/common_design": "^7.0.0",

@@ -52,6 +52,11 @@ class JobFormAlter extends EntityFormAlterServiceBase {
     // value (Trello #Bsh2rhuv). This is done in the `addSelectionLimit` when
     // the limit is 1.
     $this->addSelectionLimit($form, 'field_career_categories', 1);
+    // Prevent Drupal from returning "An illegal choice was selected" error
+    // message instead of indicating the field is mandatory.
+    if (empty($form['field_career_categories']['widget']['#default_value'])) {
+      $form['field_career_categories']['widget']['#default_value'] = NULL;
+    }
 
     // Disable themes for some career categories and limit selection.
     $this->alterJobThemeField($form, $form_state);

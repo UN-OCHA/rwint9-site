@@ -6,6 +6,7 @@ use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
+use Drupal\reliefweb_utility\HtmlToMarkdown\Converters\TextConverter;
 use Drupal\text\Plugin\Field\FieldWidget\TextareaWidget;
 use League\HTMLToMarkdown\HtmlConverter;
 
@@ -102,6 +103,9 @@ class ReliefWebFormattedText extends TextareaWidget {
         $converter->getConfig()->setOption('use_autolinks', FALSE);
         $converter->getConfig()->setOption('header_style', 'atx');
         $converter->getConfig()->setOption('strip_placeholder_links', TRUE);
+
+        // Use our own text converter to avoid unwanted character escaping.
+        $converter->getEnvironment()->addConverter(new TextConverter());
 
         $value['value'] = trim($converter->convert($html));
         $value['_converted'] = TRUE;

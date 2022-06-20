@@ -541,3 +541,17 @@ legend.form-required::after {
 form:not(.rw-entity-form-altered) .form-actions.form-item {
   margin-top: var(--cd-flow-space, 2.5rem);
 }
+
+/**
+ * Unsubscribe form.
+ *
+ * These rules are place here because this CSS is loaded globally.
+ */
+.unsubscribe-form .form-checkboxes .form-type-checkbox {
+  display: block;
+}
+
+/* Cancel button on unsubscribe form */
+.unsubscribe-form > .button + a {
+  margin-left: 1rem;
+}
