@@ -263,11 +263,35 @@
     "fileeye/mimemap": {
         "version": "1.2.1"
     },
+    "firebase/php-jwt": {
+        "version": "v6.2.0"
+    },
     "friends-of-behat/mink-browserkit-driver": {
         "version": "v1.6.1"
     },
+    "google/analytics-data": {
+        "version": "v0.8.4"
+    },
+    "google/auth": {
+        "version": "v1.21.1"
+    },
+    "google/common-protos": {
+        "version": "2.1.0"
+    },
+    "google/gax": {
+        "version": "v1.12.2"
+    },
+    "google/grpc-gcp": {
+        "version": "v0.2.0"
+    },
+    "google/protobuf": {
+        "version": "v3.21.1"
+    },
     "grasmash/expander": {
         "version": "2.0.2"
+    },
+    "grpc/grpc": {
+        "version": "1.42.0"
     },
     "guzzlehttp/guzzle": {
         "version": "6.5.5"
