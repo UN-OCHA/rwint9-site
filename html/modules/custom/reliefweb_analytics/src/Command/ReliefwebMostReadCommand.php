@@ -8,6 +8,7 @@ use Consolidation\SiteProcess\ProcessManagerAwareTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
+use Drupal\Core\State\StateInterface;
 use Drush\Commands\DrushCommands;
 use Google\Analytics\Data\V1beta\BetaAnalyticsDataClient;
 use Google\Analytics\Data\V1beta\DateRange;
@@ -45,14 +46,23 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
   protected $loggerFactory;
 
   /**
+   * The state store.
+   *
+   * @var Drupal\Core\State\StateInterface
+   */
+  protected $state;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
     LoggerChannelFactoryInterface $logger_factory,
+    StateInterface $state,
   ) {
     $this->entityTypeManager = $entity_type_manager;
     $this->loggerFactory = $logger_factory;
+    $this->state = $state;
   }
 
   /**
@@ -71,7 +81,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
     $this->logger()->notice('Processing home page');
     $parameters = $this->getHomePagePayload();
     $data = $this->fetchGa4Data($parameters);
-    if (!empty($data)) {
+    if (!empty($data) && is_array(($data))) {
       $results['front'] = [
         'front',
         implode(',', $data),
@@ -98,7 +108,16 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
     // Load all terms.
     $query = $this->entityTypeManager->getStorage('taxonomy_term')->getQuery();
     $query->condition('vid', 'country');
+    $query->condition('tid', $this->state->get('reliefweb_analytics_countries_last_tid', 0), '>');
+    $query->sort('tid');
     $tids = $query->execute();
+
+    // Reset last tid when empty.
+    if (empty($tids)) {
+      $this->state->set('reliefweb_analytics_countries_last_tid', 0);
+      return $this->countries();
+    }
+
     $countries = $this->entityTypeManager->getStorage('taxonomy_term')->loadMultiple($tids);
 
     // Fetch data from GA4.
@@ -106,7 +125,14 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
       $this->logger()->notice('Processing ' . $country->label());
       $parameters = $this->getCountryPayload($country->label());
       $data = $this->fetchGa4Data($parameters);
-      if (!empty($data)) {
+
+      // Check for rate_limit.
+      if ($data == 'rate_limit') {
+        break;
+      }
+
+      if (!empty($data) && is_array($data)) {
+        $this->state->set('reliefweb_analytics_countries_last_tid', $country->id());
         $results[$country->id()] = [
           $country->id(),
           implode(',', $data),
@@ -157,16 +183,46 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
    * @aliases reliefweb-mostread-disasters
    */
   public function disasters() {
-    // Load terms having a job URL.
+    $ids_to_remove = [];
+    $active_disaster_states = $this->state->get('reliefweb_analytics_active_disaster_states', [
+      'alert',
+      'disaster',
+      'past',
+    ]);
+
+    // Load all terms.
     $query = $this->entityTypeManager->getStorage('taxonomy_term')->getQuery();
     $query->condition('vid', 'disaster');
+    $query->condition('tid', $this->state->get('reliefweb_analytics_disasters_last_tid', 0), '>');
+    $query->sort('tid');
     $tids = $query->execute();
+
+    // Reset last tid when empty.
+    if (empty($tids)) {
+      $this->state->set('reliefweb_analytics_disasters_last_tid', 0);
+      return $this->countries();
+    }
+
     $disasters = $this->entityTypeManager->getStorage('taxonomy_term')->loadMultiple($tids);
     foreach ($disasters as $disaster) {
+      // Check moderation_status.
+      $moderation_status = $disaster->moderation_status->value ?? 'not set';
+      if (!in_array($moderation_status, $active_disaster_states)) {
+        $ids_to_remove[] = $disaster->id();
+        continue;
+      }
+
       $this->logger()->notice('Processing ' . $disaster->label());
       $parameters = $this->getDisasterPayload($disaster->label());
       $data = $this->fetchGa4Data($parameters);
-      if (!empty($data)) {
+
+      // Check for rate_limit.
+      if ($data == 'rate_limit') {
+        break;
+      }
+
+      if (!empty($data) && is_array($data)) {
+        $this->state->set('reliefweb_analytics_disasters_last_tid', $disaster->id());
         $results[$disaster->id()] = [
           $disaster->id(),
           implode(',', $data),
@@ -175,7 +231,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
     }
 
     if (!empty($results)) {
-      $this->updateCsv($results);
+      $this->updateCsv($results, $ids_to_remove);
     }
   }
 
@@ -210,7 +266,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
   /**
    * Update csv file.
    */
-  protected function updateCsv($results) {
+  protected function updateCsv($results, $ids_to_remove = []) {
     // Load original csv.
     $csv = [];
     $handle = @fopen('public://most-read/most-read.csv', 'r');
@@ -226,6 +282,9 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
 
     // Merge new data.
     $csv = array_replace($csv, $results);
+
+    // Remove old ids.
+    array_diff_key($csv, $ids_to_remove);
 
     // Write new file.
     @mkdir('public://most-read');
@@ -280,6 +339,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
       if ($exception->getStatus() == 'RESOURCE_EXHAUSTED') {
         $this->logger()->warning('Rate limit hit.');
         $this->logger()->warning('Google exception: ' . $exception->getMessage());
+        return 'rate_limit';
       }
       else {
         $this->logger()->error('Google exception: ' . $exception->getMessage());
@@ -354,11 +414,16 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
 
     foreach ($response->getRows() as $row) {
       if (isset($row->getDimensionValues()[1]) && !empty($row->getDimensionValues()[1]->getValue()) && $row->getDimensionValues()[1]->getValue() !== '(not set)') {
-        if (!isset($results[$row->getDimensionValues()[1]->getValue()])) {
-          $results[$row->getDimensionValues()[1]->getValue()] = [];
-        }
-        if (count($results[$row->getDimensionValues()[1]->getValue()]) < 5) {
-          $results[$row->getDimensionValues()[1]->getValue()][] = $row->getDimensionValues()[0]->getValue();
+        // Expand $row->getDimensionValues()[1].
+        $parts = explode(',', $row->getDimensionValues()[1]->getValue());
+        foreach ($parts as $part) {
+          $part = trim($part);
+          if (!isset($results[$part])) {
+            $results[$part] = [];
+          }
+          if (count($results[$part]) < 5) {
+            $results[$part][] = $row->getDimensionValues()[0]->getValue();
+          }
         }
       }
     }
@@ -402,12 +467,12 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
     }
 
     return [
-      'property' => 'properties/291027553',
-      'limit' => 5,
+      'property' => 'properties/' . $this->state->get('reliefweb_analytics_property_id', '291027553'),
+      'limit' => $this->state->get('reliefweb_analytics_limit', 5),
       'returnPropertyQuota' => TRUE,
       'dateRanges' => [
         new DateRange([
-          'start_date' => '30daysAgo',
+          'start_date' => $this->state->get('reliefweb_analytics_start_date', '30daysAgo'),
           'end_date' => 'today',
         ]),
       ],
@@ -432,7 +497,16 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
    * Homepage payload.
    */
   protected function getHomePagePayload() {
-    return $this->buildPayload();
+    $payload = $this->buildPayload();
+
+    $payload['dateRanges'] = [
+      new DateRange([
+        'start_date' => $this->state->get('reliefweb_analytics_homepage_start_date', 'yesterday'),
+        'end_date' => 'today',
+      ]),
+    ];
+
+    return $payload;
   }
 
   /**
@@ -477,7 +551,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
       'filter' => new Filter([
         'field_name' => 'customEvent:content_report_primary_country',
         'string_filter' => new StringFilter([
-          'value' => '.',
+          'value' => '...',
           'match_type' => MatchType::PARTIAL_REGEXP,
         ]),
       ]),
@@ -501,7 +575,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
       'filter' => new Filter([
         'field_name' => 'customEvent:content_report_disaster',
         'string_filter' => new StringFilter([
-          'value' => '.',
+          'value' => '...',
           'match_type' => MatchType::PARTIAL_REGEXP,
         ]),
       ]),
