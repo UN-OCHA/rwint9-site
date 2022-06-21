@@ -1,30 +1,11 @@
-//——————————————————————————————————————————————————————————————————————————————
-// Typography
-//——————————————————————————————————————————————————————————————————————————————
-
-//body {
-//  /* Default font size for the main content. */
-//  font-size: 16px;
-//}
-
 a {
-  color: $implementation-primary;
-
-  &:hover,
-  &:focus {
-    color: $implementation-primary;
-  }
+  color: var(--brand-primary);
 }
 
-/**
- * Headings.
- *
- * Base heading styles in the main content. They start at h2 because h1 is the
- * the ReliefWeb logo in the header. h2 are always used for the main section(s)
- * or article of the page (main content heading). h3 are for sub-sections
- * or articles. Their style differs whether they are section headings or article
- * headings.
- */
+a:hover,
+a:focus {
+  color: var(--brand-primary);
+}
 
 h1,
 h2 {
@@ -156,11 +137,11 @@ table caption {
 table th,
 table td {
   padding: 8px;
-  border: 1px solid $cd-reliefweb-brand-grey--light;
+  border: 1px solid var(--cd-reliefweb-brand-grey--light);
 }
 table th {
   border-left-color: white;
-  background: $cd-reliefweb-brand-grey--light;
+  background: var(--cd-reliefweb-brand-grey--light);
 }
 table thead th {
   border-left-color: white;
@@ -169,17 +150,17 @@ th.field-label > h4.label {
   margin: 0;
 }
 table thead th:first-child {
-  border-left-color: $cd-reliefweb-brand-grey--light;
+  border-left-color: var(--cd-reliefweb-brand-grey--light);
 }
 table tbody th {
   border-top-color: white;
 }
 table tbody th:first-child {
-  border-top-color: $cd-reliefweb-brand-grey--light;
+  border-top-color: var(--cd-reliefweb-brand-grey--light);
 }
 
 code {
   padding: 2px;
-  background: $cd-reliefweb-brand-grey--light;
+  background: var(--cd-reliefweb-brand-grey--light);
   font-family: monospace;
 }

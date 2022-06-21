@@ -1,0 +1,8 @@
+.cd-header button:focus {
+  outline: 3px solid var(--cd-reliefweb-brand-blue);
+}
+
+/* This can be removed once it is added to the base theme, see CD-397. */
+.no-js .cd-search__form form {
+  min-width: unset;
+}
