@@ -88,7 +88,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
    *
    * @command reliefweb_analytics:countries
    * @usage reliefweb_analytics:countries
-   *   Send emails.
+   *   Retrieve the most read reports for each country.
    * @validate-module-enabled reliefweb_analytics
    * @aliases reliefweb-mostread-countries
    */
