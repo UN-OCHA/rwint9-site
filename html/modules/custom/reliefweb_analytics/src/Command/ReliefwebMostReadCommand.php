@@ -368,7 +368,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
   }
 
   /**
-   * Fetch and process GA4 data.
+   * Fetch top 100.000 page views and calculate top 5.
    *
    * @param array $parameters
    *   Payload.
