@@ -124,7 +124,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
    *
    * @command reliefweb_analytics:disasters
    * @usage reliefweb_analytics:disasters
-   *   Send emails.
+   *   Retrieve the most read reports for each disaster.
    * @validate-module-enabled reliefweb_analytics
    * @aliases reliefweb-mostread-disasters
    */
