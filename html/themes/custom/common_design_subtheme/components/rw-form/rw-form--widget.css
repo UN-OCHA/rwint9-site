@@ -68,6 +68,10 @@ form .js-media-library-widget .field-suffix + .description {
 .js-media-library-views-form table tbody td a {
   color: var(--cd-reliefweb-brand-blue--dark);
 }
+.js-media-library-views-form .views-field-field-media-image img {
+  max-width: 220px;
+  max-height: 140px;
+}
 
 form .views-field-media-library-select-form .form-type-checkbox:only-of-type {
   margin-right: 24px;
@@ -92,6 +96,10 @@ form .media-library-item__preview-wrapper .media-library-item__attributes {
 form .media-library-item__preview-wrapper .media-library-item__name {
   word-break: break-all;
   font-size: 16px;
+}
+form .media-library-item__preview-wrapper .media-library-item__preview img.image-style-icon {
+  width: 64px;
+  height: 64px;
 }
 
 /* Inline enity form styling. */
