@@ -11,7 +11,7 @@ field_name: field_icon
 entity_type: node
 bundle: topic
 label: Icon
-description: 'Use relevant icons from <a href="/report/world/humanitarian-and-country-icons-2018">OCHA''s Humanitarian and Country Icons 2018</a> with modifications in size (600x600) and color (ReliefWeb blue: #0988bb).'
+description: ''
 required: true
 translatable: false
 default_value: {  }
