@@ -316,7 +316,7 @@ function reliefweb_analytics_get_terms(FieldableEntityInterface $entity, $field,
  *   The accumulated cache metadata.
  *
  * @return string
- *   Comma separated list of term names.
+ *   Comma separated list of term Ids.
  */
 function reliefweb_analytics_get_terms_id(FieldableEntityInterface $entity, $field, CacheableMetadata $cache_metadata) {
   $terms = [];
