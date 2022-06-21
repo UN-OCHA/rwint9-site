@@ -60,7 +60,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
    *
    * @command reliefweb_analytics:homepage
    * @usage reliefweb_analytics:homepage
-   *   Send emails.
+   *   Retrieve the most read reports for the homepage.
    * @validate-module-enabled reliefweb_analytics
    * @aliases reliefweb-mostread-homepage
    */
