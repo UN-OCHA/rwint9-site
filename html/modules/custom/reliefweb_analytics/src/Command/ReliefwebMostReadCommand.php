@@ -152,7 +152,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
   }
 
   /**
-   * Most read for disasters.
+   * Most read for disasters using a single request.
    *
    * @command reliefweb_analytics:disasters-all
    * @usage reliefweb_analytics:disasters-all
