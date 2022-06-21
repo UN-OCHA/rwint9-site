@@ -306,7 +306,7 @@ function reliefweb_analytics_get_terms(FieldableEntityInterface $entity, $field,
 }
 
 /**
- * Get the term labels from an entity reference field.
+ * Get the term IDs from an entity reference field.
  *
  * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
  *   Entity.
