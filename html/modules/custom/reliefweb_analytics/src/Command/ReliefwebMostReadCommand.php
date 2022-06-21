@@ -120,6 +120,34 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
   }
 
   /**
+   * Most read for countries.
+   *
+   * @command reliefweb_analytics:countries-all
+   * @usage reliefweb_analytics:countries-all
+   *   Send emails.
+   * @validate-module-enabled reliefweb_analytics
+   * @aliases reliefweb-mostread-countries-all
+   */
+  public function countriesAll() {
+    $results = [];
+    $parameters = $this->getAllCountriesPayload();
+    $combined = $this->fetchGa4DataCombined($parameters);
+
+    if (!empty($combined)) {
+      foreach ($combined as $country => $data) {
+        $results[$country] = [
+          $country,
+          implode(',', $data),
+        ];
+      }
+    }
+
+    if (!empty($results)) {
+      $this->updateCsv($results);
+    }
+  }
+
+  /**
    * Most read for disasters.
    *
    * @command reliefweb_analytics:disasters
@@ -437,6 +465,30 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
       ]),
     ]);
     $payload = $this->buildPayload($filter);
+
+    return $payload;
+  }
+
+  /**
+   * Get all countries payload.
+   */
+  protected function getAllCountriesPayload() {
+    $filter = new FilterExpression([
+      'filter' => new Filter([
+        'field_name' => 'customEvent:content_report_primary_country',
+        'string_filter' => new StringFilter([
+          'value' => '.',
+          'match_type' => MatchType::PARTIAL_REGEXP,
+        ]),
+      ]),
+    ]);
+    $payload = $this->buildPayload($filter);
+
+    // Add dimension for disaster.
+    $payload['dimensions'][] = new Dimension(['name' => 'customEvent:content_report_primary_country']);
+
+    // Raise limit.
+    $payload['limit'] = 100000;
 
     return $payload;
   }
