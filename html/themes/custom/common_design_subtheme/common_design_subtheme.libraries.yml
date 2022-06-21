@@ -415,6 +415,7 @@ rw-cd-header-footer:
       components/rw-cd-header-footer/cd-layout.css: {}
       components/rw-cd-header-footer/cd-logo.css: {}
       components/rw-cd-header-footer/cd-ocha.css: {}
+      components/rw-cd-header-footer/cd-soft-footer.css: {}
       components/rw-cd-header-footer/cd-user-menu.css: {}
 
 cd-block-title:

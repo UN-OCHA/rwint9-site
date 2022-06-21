@@ -1,0 +1,20 @@
+uuid: f56298fa-014b-462a-a177-b767582d60c1
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+  theme:
+    - common_design_subtheme
+id: soft_footer
+theme: common_design_subtheme
+region: footer_soft
+weight: 0
+provider: null
+plugin: system_powered_by_block
+settings:
+  id: system_powered_by_block
+  label: 'Soft Footer'
+  label_display: '0'
+  provider: system
+visibility: {  }
