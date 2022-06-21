@@ -22,7 +22,7 @@ use Google\Analytics\Data\V1beta\OrderBy\MetricOrderBy;
 use Google\ApiCore\ApiException;
 
 /**
- * ReliefWeb Import Drush commandfile.
+ * ReliefWeb Most Read Drush commandfile.
  */
 class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManagerAwareInterface {
 
