@@ -232,10 +232,10 @@ function reliefweb_meta_get_node_metatags(NodeInterface $node) {
       // Note: for countries we don't use 'reliefweb_meta_description_term_list'
       // to ensure the primary country is the first in the list.
       //
-      // Language.
-      $description = reliefweb_meta_description_term($node, $terms, 'language');
       // Content format.
-      $description .= reliefweb_meta_description_term($node, $terms, 'content_format', ' ');
+      $description = reliefweb_meta_description_term($node, $terms, 'content_format', ' ');
+      // Language.
+      $description .= reliefweb_meta_description_term($node, $terms, 'language', ' in ');
       // Countries.
       if (!$node->field_primary_country->isEmpty()) {
         $description .= reliefweb_meta_description_term($node, $terms, 'primary_country', ' on ');
