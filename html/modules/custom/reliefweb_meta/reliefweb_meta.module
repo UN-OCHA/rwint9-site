@@ -205,6 +205,8 @@ function reliefweb_meta_get_node_metatags(NodeInterface $node) {
       // "Category Type in Country about Theme, requiring Years of experience,
       // from Source; closing on Date"
       //
+      // Add the country to the title.
+      $title .= reliefweb_meta_description_term($node, $terms, 'country', ' - ');
       // Category.
       $description = reliefweb_meta_description_term($node, $terms, 'career_categories');
       // Job type.
