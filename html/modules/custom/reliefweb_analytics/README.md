@@ -2,6 +2,10 @@
 
 This module provides analytics customizations.
 
+## Path alias
+
+For the moment this module does path lookups, once dimension 21 is deployed, it can be removed.
+
 ## Jobs
 
 ### Every hour on even hours

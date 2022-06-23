@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_analytics\Command;
 
+use Drupal\path_alias\AliasRepositoryInterface;
 use Consolidation\SiteAlias\SiteAliasManagerAwareInterface;
 use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
 use Consolidation\SiteProcess\ProcessManagerAwareTrait;
@@ -39,6 +40,13 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
   protected $entityTypeManager;
 
   /**
+   * Path alias manager.
+   *
+   * @var \Drupal\path_alias\AliasRepositoryInterface
+   */
+  protected $pathAliasRepository;
+
+  /**
    * The logger factory.
    *
    * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface
@@ -57,12 +65,14 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
    */
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
+    AliasRepositoryInterface $path_alias_repository,
     LoggerChannelFactoryInterface $logger_factory,
     StateInterface $state,
   ) {
     $this->entityTypeManager = $entity_type_manager;
     $this->loggerFactory = $logger_factory;
     $this->state = $state;
+    $this->pathAliasRepository = $path_alias_repository;
   }
 
   /**
@@ -361,7 +371,9 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
     ]));
 
     foreach ($response->getRows() as $row) {
-      $results[] = $row->getDimensionValues()[0]->getValue();
+      if ($lookup = $this->pathAliasRepository->lookupByAlias($row->getDimensionValues()[0]->getValue(), 'en')) {
+        $results[] = $lookup['id'];
+      }
     }
 
     return $results;
@@ -422,7 +434,9 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
             $results[$part] = [];
           }
           if (count($results[$part]) < 5) {
-            $results[$part][] = $row->getDimensionValues()[0]->getValue();
+            if ($lookup = $this->pathAliasRepository->lookupByAlias($row->getDimensionValues()[0]->getValue(), 'en')) {
+              $results[$part][] = $lookup['id'];
+            }
           }
         }
       }
