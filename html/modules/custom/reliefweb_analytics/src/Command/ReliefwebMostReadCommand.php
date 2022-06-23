@@ -465,15 +465,6 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
           ]),
         ]),
       ]),
-      new FilterExpression([
-        'filter' => new Filter([
-          'field_name' => 'pagePath',
-          'string_filter' => new StringFilter([
-            'match_type' => MatchType::BEGINS_WITH,
-            'value' => '/report',
-          ]),
-        ]),
-      ]),
     ];
 
     if ($filter) {
