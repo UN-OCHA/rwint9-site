@@ -43,7 +43,7 @@
   height: calc(35px / 3);
   content: "";
   transform: translateY(-50%);
-  background: var(--cd-blue--light);
+  background: var(--brand-grey);
 }
 
 .admin-menu-dropdown__inner {

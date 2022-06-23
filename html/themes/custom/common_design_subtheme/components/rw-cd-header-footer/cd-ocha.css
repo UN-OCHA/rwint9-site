@@ -1,0 +1,3 @@
+.cd-ocha-dropdown__link a:focus {
+  outline: 3px solid var(--cd-reliefweb-brand-blue);
+}

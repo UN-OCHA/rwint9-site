@@ -3,8 +3,10 @@ global-styling:
     js/login_destination.js: {}
   css:
     theme:
-      css/styles.css: {}
+      css/brand.css: {}
+      css/typography.css: {}
   dependencies:
+    - common_design_subtheme/rw-cd-header-footer
     - common_design_subtheme/rw-external-links
     - common_design_subtheme/rw-form
     - common_design_subtheme/rw-site-slogan
@@ -405,6 +407,19 @@ rw-view-more:
     - common_design_subtheme/rw-icons
 
 # CD components extended
+rw-cd-header-footer:
+  css:
+    theme:
+      components/rw-cd-header-footer/cd-dropdowns.css: {}
+      components/rw-cd-header-footer/cd-footer.css: {}
+      components/rw-cd-header-footer/cd-header.css: {}
+      components/rw-cd-header-footer/cd-language-switcher.css: {}
+      components/rw-cd-header-footer/cd-layout.css: {}
+      components/rw-cd-header-footer/cd-logo.css: {}
+      components/rw-cd-header-footer/cd-ocha.css: {}
+      components/rw-cd-header-footer/cd-soft-footer.css: {}
+      components/rw-cd-header-footer/cd-user-menu.css: {}
+
 cd-block-title:
   css:
     theme:
@@ -414,4 +429,3 @@ cd-button:
   css:
     theme:
       components/cd-button/cd-button.css: {}
-
