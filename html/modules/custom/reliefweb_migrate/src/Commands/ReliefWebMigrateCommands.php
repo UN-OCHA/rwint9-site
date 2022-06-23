@@ -20,11 +20,13 @@ use Drupal\Core\KeyValueStore\KeyValueFactoryInterface;
 use Drupal\migrate\Exception\RequirementsException;
 use Drupal\migrate\Plugin\MigrationPluginManager;
 use Drupal\migrate\Plugin\RequirementsInterface;
+use Drupal\reliefweb_migrate\Entity\AccumulatedRedirectStorage;
 use Drupal\reliefweb_migrate\Plugin\migrate\source\SourceMigrationHighWaterInterface;
 use Drupal\reliefweb_migrate\Plugin\migrate\source\SourceMigrationStatusInterface;
 use Drupal\reliefweb_utility\Helpers\LegacyHelper;
 use Drush\Commands\DrushCommands;
 use GuzzleHttp\Psr7\Utils;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * ReliefWeb migration Drush commandfile.
@@ -1835,6 +1837,162 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
 
     if ($count === 0) {
       $this->logger()->info(dt('Nothing to insert'));
+    }
+  }
+
+  /**
+   * Migrate the legacy redirections.
+   *
+   * @command rw-migrate:migrate-legacy-redirections
+   *
+   * @usage rw-migrate:migrate-legacy-redirections
+   *   Migrate legacy redirections.
+   *
+   * @validate-module-enabled reliefweb_migrate
+   */
+  public function migrateLegacyRedirections() {
+    $storage = AccumulatedRedirectStorage::createInstance(
+      // phpcs:ignore
+      \Drupal::getContainer(),
+      $this->entityTypeManager->getDefinition('redirect')
+    );
+    $database = Database::getConnection('default', 'rwint7');
+
+    $bundles = [
+      'country',
+      'disaster',
+      'job',
+      'report',
+      'source',
+      'training',
+    ];
+
+    // List of legacy paths to exclude because they already exist as a path
+    // alias or redirect, in order to avoid redirection loops.
+    // This only concern country and disaster legacy URLs because they get
+    // rewritten by nginx to the path alias patterns.
+    $exclude = [];
+
+    // Get the path aliases for disasters and countries.
+    $alias_records = $this->database
+      ->select('path_alias', 'pa')
+      ->fields('pa', ['alias'])
+      ->condition('alias', '^/(disaster|country)/', 'REGEXP')
+      ->execute() ?? [];
+    foreach ($alias_records as $record) {
+      $exclude[mb_strtolower($record->alias)] = TRUE;
+    }
+
+    // Get the redirects for disasters and countries.
+    $redirect_records = $this->database
+      ->select('redirect', 'r')
+      ->fields('r', ['redirect_source__path'])
+      ->condition('r.redirect_source__path', '^(disaster|country)/', 'REGEXP')
+      ->execute() ?? [];
+    foreach ($redirect_records as $record) {
+      $exclude['/' . mb_strtolower($record->redirect_source__path)] = TRUE;
+    }
+
+    // Get the list of already migrated redirects. They can be identified by
+    // their creation date (see below).
+    $migrated = $this->database
+      ->select('redirect', 'r')
+      ->fields('r', ['uuid', 'uid'])
+      ->condition('r.created', 844128000, '=')
+      ->execute()
+      ?->fetchAllKeyed(0, 1) ?? [];
+
+    $this->logger()->info(dt('@already_migrated legacy URLs already migrated', [
+      '@already_migrated' => count($migrated),
+    ]));
+
+    // Retrieve the legacy redirects.
+    $records = $database
+      ->select('feeds_item', 'fi')
+      ->fields('fi', ['entity_type', 'entity_id', 'url', 'id'])
+      ->condition('fi.id', $bundles, 'IN')
+      ->condition('fi.url', '', '<>')
+      ->execute() ?? [];
+
+    // Transform and store the legacy redirects to migrate.
+    $legacy_paths = [];
+    foreach ($records as $record) {
+      if (empty($record->url) || empty($record->entity_type) || empty($record->entity_id)) {
+        continue;
+      }
+
+      $url = 'https://reliefweb.int/rw/' . str_replace('http://www.reliefweb.int/rw/', '', $record->url);
+      $uuid = Uuid::v3(Uuid::fromString(Uuid::NAMESPACE_URL), $url)->toRfc4122();
+      $url_parts = UrlHelper::parse($url);
+      $path = parse_url($url_parts['path'], \PHP_URL_PATH);
+      $query = $url_parts['query'] ?? [];
+      $target = 'entity:' . $record->entity_type . '/' . $record->entity_id;
+
+      switch ($record->id) {
+        case 'country':
+          if (empty($query['cc'])) {
+            continue;
+          }
+          $path = '/country/' . $query['cc'];
+          break;
+
+        case 'disaster':
+          if (empty($query['emid'])) {
+            continue;
+          }
+          $path = '/disaster/' . $query['emid'];
+          break;
+
+        default:
+          $path = str_replace('?OpenDocument', '', $path);
+      }
+
+      $path = mb_strtolower($path);
+      if (!isset($exclude[$path]) && !isset($migrated[$uuid])) {
+        $legacy_paths[$path] = [
+          'uuid' => $uuid,
+          'target' => $target,
+        ];
+      }
+    }
+
+    $total = count($legacy_paths);
+    if ($total === 0) {
+      $this->logger()->info(dt('Nothing new to migrate'));
+    }
+    else {
+      $this->logger()->info(dt('@total legacy URLs to migrate', [
+        '@total' => $total,
+      ]));
+
+      // Create the redirects for the legacy URLs.
+      $count = 0;
+      foreach (array_chunk($legacy_paths, 1000, TRUE) as $chunk) {
+        foreach ($chunk as $path => $info) {
+          $entity = $storage->create([
+            'uuid' => $info['uuid'],
+            'uid' => 2,
+            'status_code' => 301,
+            // We use the ReliefWeb creation date so that we can identify
+            // migrated content: 1996-10-01T00:00:00+00:00.
+            'created' => 844128000,
+          ]);
+          $entity->setSource($path);
+          // Not using `setRedirect` so it doesn't prefix the target URI with
+          // `internal:/`...
+          $entity->redirect_redirect->set(0, ['uri' => $info['target']]);
+
+          $storage->saveAccumulated($entity);
+          $count++;
+        }
+
+        $storage->flushAccumulated();
+
+        $this->logger()->info(dt('Migrated @count/@total legacy URLs', [
+          '@count' => $count,
+          '@total' => $total,
+        ]));
+      }
     }
   }
 
