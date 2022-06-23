@@ -270,18 +270,49 @@ class Homepage extends ControllerBase {
    * Refactor after add back redording of most read content.
    */
   public function getMostReadApiPayload($limit = 2) {
+    // Load the most-read data. This file is generated via a drush command,
+    // usually every day as the query to get the 5 most read reports is very
+    // heavy.
+    $handle = @fopen('public://most-read/most-read.csv', 'r');
+    if ($handle === FALSE) {
+      return [];
+    }
+
+    // Find the line corresponding to the entity id.
+    while (($row = fgetcsv($handle, 100)) !== FALSE) {
+      if (count($row) === 2 && $row[0] == 'front') {
+        $ids = explode(',', $row[1]);
+        break;
+      }
+    }
+
+    // Close the file.
+    if (is_resource($handle)) {
+      @fclose($handle);
+    }
+
+    // Generate the query with the most read report ids.
+    if (empty($ids)) {
+      return [];
+    }
+
+    // We reverse the ids to add the boost (higher boost = higher view count).
+    foreach (array_reverse($ids) as $index => $id) {
+      $ids[] = $id . '^' . ($index * 10);
+    }
+
     $payload = RiverServiceBase::getRiverApiPayload('report');
     $payload['fields']['exclude'][] = 'file';
     $payload['fields']['exclude'][] = 'body-html';
+    $payload['query']['value'] = 'id:' . implode(' OR id:', $ids);
     $payload['limit'] = $limit;
+    $payload['sort'] = ['score:desc', 'date.created:desc'];
 
     return [
       'resource' => 'reports',
       'bundle' => 'report',
       'entity_type' => 'node',
       'payload' => $payload,
-      'title' => $this->t('Latest Updates'),
-      'callback' => [$this, 'parseMostReadApiData'],
       // Link to the updates river for the entity.
       'more' => [
         'url' => RiverServiceBase::getRiverUrl('report'),
