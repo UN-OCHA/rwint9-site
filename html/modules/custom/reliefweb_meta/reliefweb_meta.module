@@ -200,6 +200,9 @@ function reliefweb_meta_get_node_metatags(NodeInterface $node) {
       break;
 
     case 'job':
+      // Add the country to the title.
+      $title .= reliefweb_meta_description_term($node, $terms, 'country', ' - ');
+
       // Description in the form:
       //
       // "Category Type in Country about Theme, requiring Years of experience,
@@ -227,15 +230,15 @@ function reliefweb_meta_get_node_metatags(NodeInterface $node) {
 
       // Description in the form:
       //
-      // "Language Type on Country about Tags; published on Date by Sources"
+      // "Type in Language on Country about Tags; published on Date by Sources"
       //
       // Note: for countries we don't use 'reliefweb_meta_description_term_list'
       // to ensure the primary country is the first in the list.
       //
-      // Language.
-      $description = reliefweb_meta_description_term($node, $terms, 'language');
       // Content format.
-      $description .= reliefweb_meta_description_term($node, $terms, 'content_format', ' ');
+      $description = reliefweb_meta_description_term($node, $terms, 'content_format');
+      // Language.
+      $description .= reliefweb_meta_description_term($node, $terms, 'language', ' in ');
       // Countries.
       if (!$node->field_primary_country->isEmpty()) {
         $description .= reliefweb_meta_description_term($node, $terms, 'primary_country', ' on ');

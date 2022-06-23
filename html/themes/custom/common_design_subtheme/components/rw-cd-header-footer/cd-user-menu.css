@@ -1,0 +1,38 @@
+.cd-user-menu__item:focus {
+  outline: 3px solid var(--cd-reliefweb-brand-blue);
+}
+
+.cd-global-header__user-menu + .cd-global-header__user-menu li:last-child a {
+  padding-right: 0;
+}
+
+.cd-global-header__user-menu + .cd-global-header__user-menu li:last-child a::after {
+  content: none;
+}
+
+@media all and (max-width: 767px) {
+  .cd-global-header__user-menu a svg + span {
+    position: absolute !important;
+    overflow: hidden;
+    clip: rect(1px, 1px, 1px, 1px);
+    width: 1px;
+    height: 1px;
+    word-wrap: normal;
+  }
+}
+
+[dir="ltr"] .admin-menu__btn svg + span {
+  margin-left: 10px;
+}
+
+[dir="rtl"] .admin-menu__btn svg + span {
+  margin-right: 10px;
+}
+
+.admin-menu__btn .cd-icon:not(.cd-icon--arrow-down) {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  vertical-align: middle;
+  fill: var(--cd-white);
+}
