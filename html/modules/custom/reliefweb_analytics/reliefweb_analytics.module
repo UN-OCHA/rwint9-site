@@ -122,9 +122,8 @@ function reliefweb_analytics_get_entity_dimensions() {
         'dimension13' => reliefweb_analytics_format_date($entity, 'created'),
         'dimension20' => (string) $entity->getModerationStatusLabel(),
         'dimension21' => $entity->id(),
-        'dimension22' => $entity->uuid(),
-        'dimension23' => reliefweb_analytics_get_terms_id($entity, 'field_country', $cache_metadata),
-        'dimension24' => reliefweb_analytics_get_terms_id($entity, 'field_disaster', $cache_metadata),
+        'dimension22' => reliefweb_analytics_get_terms_id($entity, 'field_primary_country', $cache_metadata),
+        'dimension23' => reliefweb_analytics_get_terms_id($entity, 'field_disaster', $cache_metadata),
       ];
       break;
 
@@ -141,7 +140,6 @@ function reliefweb_analytics_get_entity_dimensions() {
         'dimension17' => reliefweb_analytics_get_terms($entity, 'field_career_categories', $cache_metadata),
         'dimension20' => (string) $entity->getModerationStatusLabel(),
         'dimension21' => $entity->id(),
-        'dimension22' => $entity->uuid(),
       ];
       break;
 
@@ -159,7 +157,6 @@ function reliefweb_analytics_get_entity_dimensions() {
         'dimension19' => reliefweb_analytics_get_terms($entity, 'field_training_format', $cache_metadata),
         'dimension20' => (string) $entity->getModerationStatusLabel(),
         'dimension21' => $entity->id(),
-        'dimension22' => $entity->uuid(),
       ];
       break;
 
@@ -168,7 +165,6 @@ function reliefweb_analytics_get_entity_dimensions() {
         'dimension1' => 'Topic',
         'dimension20' => (string) $entity->getModerationStatusLabel(),
         'dimension21' => $entity->id(),
-        'dimension22' => $entity->uuid(),
       ];
       break;
 
@@ -177,7 +173,6 @@ function reliefweb_analytics_get_entity_dimensions() {
         'dimension1' => 'Blog post',
         'dimension20' => (string) $entity->getModerationStatusLabel(),
         'dimension21' => $entity->id(),
-        'dimension22' => $entity->uuid(),
       ];
       break;
 
@@ -186,7 +181,6 @@ function reliefweb_analytics_get_entity_dimensions() {
         'dimension1' => 'Book page',
         'dimension20' => (string) $entity->getModerationStatusLabel(),
         'dimension21' => $entity->id(),
-        'dimension22' => $entity->uuid(),
       ];
       break;
 
@@ -197,7 +191,6 @@ function reliefweb_analytics_get_entity_dimensions() {
         'dimension6' => (string) $entity->label(),
         'dimension20' => (string) $entity->getModerationStatusLabel(),
         'dimension21' => $entity->id(),
-        'dimension22' => $entity->uuid(),
       ];
       break;
 
@@ -211,7 +204,6 @@ function reliefweb_analytics_get_entity_dimensions() {
         'dimension13' => reliefweb_analytics_format_date($entity, 'field_disaster_date'),
         'dimension20' => (string) $entity->getModerationStatusLabel(),
         'dimension21' => $entity->id(),
-        'dimension22' => $entity->uuid(),
       ];
       break;
 
@@ -222,7 +214,6 @@ function reliefweb_analytics_get_entity_dimensions() {
         'dimension7' => (string) $entity->label(),
         'dimension20' => (string) $entity->getModerationStatusLabel(),
         'dimension21' => $entity->id(),
-        'dimension22' => $entity->uuid(),
       ];
       break;
   }
