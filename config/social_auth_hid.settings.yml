@@ -3,7 +3,7 @@ _core:
 client_id: CLIENT_ID
 client_secret: SECRET
 base_url: 'https://auth.humanitarian.id'
-auto_redirect: true
+auto_redirect: false
 disable_default: true
 disable_password_fields: true
 disable_email_field: false

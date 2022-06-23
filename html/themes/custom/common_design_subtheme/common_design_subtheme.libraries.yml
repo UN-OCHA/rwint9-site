@@ -1,4 +1,8 @@
 global-styling:
+  # RW-599: disabled as there is no consensus yet on whether that should be
+  # enabled or not.
+  # js:
+  #   js/login_destination.js: {}
   css:
     theme:
       css/brand.css: {}
