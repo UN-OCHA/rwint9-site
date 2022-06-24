@@ -281,7 +281,7 @@ class Homepage extends ControllerBase {
     // Find the line corresponding to the entity id.
     while (($row = fgetcsv($handle, 100)) !== FALSE) {
       if (count($row) === 2 && $row[0] == 'front') {
-        $ids = explode(',', $row[1]);
+        $ids = array_slice(explode(',', $row[1]), 0, $limit);
         break;
       }
     }
