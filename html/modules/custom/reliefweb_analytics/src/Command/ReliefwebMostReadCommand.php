@@ -318,7 +318,9 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
   protected function getGa4Client() {
     static $client = NULL;
     if (!$client) {
-      $client = new BetaAnalyticsDataClient(['credentials' => '/var/www/credentials.json']);
+      $client = new BetaAnalyticsDataClient([
+        'credentials' => $this->state->get('reliefweb_analytics_credentials', '/var/www/credentials.json'),
+      ]);
     }
 
     return $client;
