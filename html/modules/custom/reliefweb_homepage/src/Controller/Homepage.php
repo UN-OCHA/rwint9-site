@@ -298,7 +298,7 @@ class Homepage extends ControllerBase {
 
     // We reverse the ids to add the boost (higher boost = higher view count).
     foreach (array_reverse($ids) as $index => $id) {
-      $ids[] = $id . '^' . ($index * 10);
+      $ids[$index] = $id . '^' . ($index * 10);
     }
 
     $payload = RiverServiceBase::getRiverApiPayload('report');
