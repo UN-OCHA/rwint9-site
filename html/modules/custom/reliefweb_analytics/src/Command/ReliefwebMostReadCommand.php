@@ -513,6 +513,9 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
       ]),
     ];
 
+    // Lower limit.
+    $payload['limit'] = 2;
+
     return $payload;
   }
 
