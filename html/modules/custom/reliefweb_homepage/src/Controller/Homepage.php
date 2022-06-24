@@ -293,7 +293,24 @@ class Homepage extends ControllerBase {
 
     // Generate the query with the most read report ids.
     if (empty($ids)) {
-      return [];
+      $payload = RiverServiceBase::getRiverApiPayload('report');
+      $payload['fields']['exclude'][] = 'file';
+      $payload['fields']['exclude'][] = 'body-html';
+      $payload['limit'] = $limit;
+
+      return [
+        'resource' => 'reports',
+        'bundle' => 'report',
+        'entity_type' => 'node',
+        'payload' => $payload,
+        'title' => $this->t('Latest Updates'),
+        'callback' => [$this, 'parseMostReadApiData'],
+        // Link to the updates river for the entity.
+        'more' => [
+          'url' => RiverServiceBase::getRiverUrl('report'),
+          'label' => $this->t('View all updates'),
+        ],
+      ];
     }
 
     // We reverse the ids to add the boost (higher boost = higher view count).
@@ -316,7 +333,7 @@ class Homepage extends ControllerBase {
       // Link to the updates river for the entity.
       'more' => [
         'url' => RiverServiceBase::getRiverUrl('report'),
-        'label' => $this->t('View all updates'),
+        'label' => $this->t('Most Read <span>(last 24 hours)</span>'),
       ],
     ];
   }
