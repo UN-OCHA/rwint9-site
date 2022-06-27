@@ -152,6 +152,9 @@
     "drupal/ctools": {
         "version": "3.7.0"
     },
+    "drupal/dev_mode": {
+        "version": "2.3.0"
+    },
     "drupal/devel": {
         "version": "4.1.3"
     },
@@ -160,6 +163,9 @@
     },
     "drupal/file_mdm": {
         "version": "2.4.0"
+    },
+    "drupal/form_options_attributes": {
+        "version": "1.2.0"
     },
     "drupal/geofield": {
         "version": "1.36.0"
