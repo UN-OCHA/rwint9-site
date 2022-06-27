@@ -17,6 +17,8 @@ services:
       - "11211"
     networks:
       - default
+    environment:
+      MEMCACHE_MAX_MEMORY: 64
 
   mysql:
     image: unocha/alpine-mysql:10.4.13-r0-202006-01
