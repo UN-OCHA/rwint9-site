@@ -22,6 +22,7 @@ module:
   file: 0
   file_mdm: 0
   filter: 0
+  form_options_attributes: 0
   geofield: 0
   google_tag: 0
   guidelines: 0
