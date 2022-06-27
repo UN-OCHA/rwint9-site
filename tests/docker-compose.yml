@@ -8,13 +8,13 @@ volumes:
   rwint9-test-site-private:
 
 services:
-  redis:
+  memcache:
     restart: always
-    image: unocha/alpine-redis:5
-    hostname: rwint9-test-redis
-    container_name: rwint9-test-redis
+    image: public.ecr.aws/unocha/memcache:1.6
+    hostname: rwint9-test-memcache
+    container_name: rwint9-test-memcache
     ports:
-      - "6379"
+      - "11211"
     networks:
       - default
 
@@ -34,7 +34,7 @@ services:
     hostname: rwint9-test-site
     container_name: rwint9-test-site
     depends_on:
-      - redis
+      - memcache
       - mysql
     volumes:
       - "./settings:/srv/www/shared/settings:ro"
