@@ -132,7 +132,12 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
     $this->addBundleFormAlterations($form, $form_state);
 
     // Add the guidelines.
-    $this->addGuidelineFormAlterations($form, $form_state);
+    if ($this->currentUser->hasPermission('access editorial guidelines')) {
+      $this->addGuidelineFormAlterations($form, $form_state);
+    }
+    else {
+      $this->removeGuidelineFormAlterations($form, $form_state);
+    }
 
     // Add the moderation form alterations to handle the moderation status.
     // This needs to be added last so that the buttons to save the entity
@@ -174,6 +179,20 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
    */
   protected function addGuidelineFormAlterations(array &$form, FormStateInterface $form_state) {
     $form['#attributes']['data-with-guidelines'] = '';
+  }
+
+  /**
+   * Remove the guidelines form alterations.
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  protected function removeGuidelineFormAlterations(array &$form, FormStateInterface $form_state) {
+    if (isset($form['#attributes']['data-with-guidelines'])) {
+      unset($form['#attributes']['data-with-guidelines']);
+    }
   }
 
   /**

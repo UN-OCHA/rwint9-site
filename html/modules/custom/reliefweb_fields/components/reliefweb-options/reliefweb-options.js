@@ -195,7 +195,19 @@
         }
       }
 
-      setTermDescriptions(document.getElementById('node-training-form'));
+      let forms = document.querySelectorAll('form');
+      for (var i = 0, li = forms.length; i < li; i++) {
+        let form = forms[i];
+
+        // Skip when guidelines are active.
+        if (form.hasAttribute('data-with-guidelines')) {
+          continue;
+        }
+
+        if (form.querySelectorAll('[data-term-description]').length > 0) {
+          setTermDescriptions(form);
+        }
+      }
     }
   };
 })(jQuery);
