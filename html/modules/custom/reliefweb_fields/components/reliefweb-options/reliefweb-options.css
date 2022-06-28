@@ -38,8 +38,9 @@ form[data-with-term-description] .with-term-description {
 }
 form[data-with-term-description] .with-term-description > button[value="close"] {
   position: absolute;
-  top: -50px;
-  left: -50px;
+  top: 0;
+  right: 0;
+  margin: 0;
   border: 2px solid #2e3436;
   padding: 4px 10px;
   z-index: 10002;
