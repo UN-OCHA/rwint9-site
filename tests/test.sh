@@ -4,16 +4,16 @@
 echo "Build local image."
 make
 
-# Create the site, redis and mysql containers.
-echo "Create the site, redis and mysql containers."
+# Create the site, memcache and mysql containers.
+echo "Create the site, memcache and mysql containers."
 docker-compose -p rwint9-test -f tests/docker-compose.yml up -d
 
 # Dump some information about the created containers.
 echo "Dump some information about the created containers."
 docker ps -a
 
-# Wait a bit for redis and mysql to be ready.
-echo "Wait a bit for redis and mysql to be ready."
+# Wait a bit for memcache and mysql to be ready.
+echo "Wait a bit for memcache and mysql to be ready."
 sleep 10
 
 # Install the dev dependencies.

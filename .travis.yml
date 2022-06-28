@@ -49,7 +49,7 @@ script:
   - docker exec -it -u root -w /srv/www -e BROWSERTEST_OUTPUT_DIRECTORY=/srv/www/html/sites/default/files/browser_output rwint9-test-site ./vendor/bin/phpunit --testsuite Unit --debug
 
   # Install the site with the existing config.
-  - docker exec -it rwint9-test-site drush -y si --existing-config
+  - docker exec -it rwint9-test-site drush -y si --existing-config minimal install_configure_form.enable_update_status_emails=NULL
   - docker exec -it rwint9-test-site drush -y en dblog
 
   # Ensure the file directories are writable.
