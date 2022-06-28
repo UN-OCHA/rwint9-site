@@ -90,6 +90,8 @@ class ReliefWebOptions extends OptionsButtonsWidget {
       ];
     }
 
+    $element['#attached']['library'][] = 'reliefweb_fields/reliefweb-options';
+
     return $element;
   }
 

@@ -1,0 +1,71 @@
+form[data-with-term-description] > * .form-wrapper {
+  position: relative;
+}
+
+form[data-with-term-description] button[data-guideline] {
+  display: inline-block;
+  vertical-align: middle;
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 4px 10px;
+  margin-top: 0;
+}
+form[data-with-term-description] button[data-guideline]:hover {
+  background-position-x: -96px;
+}
+form[data-with-term-description] .with-term-description:before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 0;
+  background: rgba(1, 1, 1, 0.3);
+  z-index: 10000;
+}
+form[data-with-term-description] .with-term-description {
+  position: fixed;
+  top: 10vh;
+  left: 25vw;
+  width: 50vw;
+  height: 80vh;
+  border: 10px solid black;
+  border: 10px solid rgba(0, 0, 0, 0.1);
+  z-index: 1;
+}
+form[data-with-term-description] .with-term-description > button[value="close"] {
+  position: absolute;
+  top: -50px;
+  left: -50px;
+  border: 2px solid #2e3436;
+  padding: 4px 10px;
+  z-index: 10002;
+}
+form[data-with-term-description] .with-term-description > button[value="close"]:hover {
+  border-color: #eb1405;
+}
+form[data-with-term-description] .with-term-description > button[value="close"]:hover:after {
+  background-position-x: -96px;
+}
+form[data-with-term-description] .with-term-description > div {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 16px;
+  background-color: white;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 10001;
+}
+form[data-with-term-description] .with-term-description > div > h3 {
+  text-align: center;
+}
+form[data-with-term-description] .with-term-description > div > .content {
+  padding-top: 0;
+}
+form[data-with-term-description] .with-term-description > div > .content img {
+  border: 4px solid #e6ecef;
+}
