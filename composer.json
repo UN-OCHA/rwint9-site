@@ -32,7 +32,6 @@
         "drupal/core-composer-scaffold": "^9.3",
         "drupal/core-dev": "^9.3",
         "drupal/core-recommended": "^9.3",
-        "drupal/form_options_attributes": "^1.2",
         "drupal/geofield": "^1.39",
         "drupal/google_tag": "^1.4",
         "drupal/guidelines": "^1.0",

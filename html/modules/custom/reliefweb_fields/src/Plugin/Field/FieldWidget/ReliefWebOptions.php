@@ -57,10 +57,10 @@ class ReliefWebOptions extends OptionsButtonsWidget {
       }
     }
 
-    $options_attributes = [];
+    $option_attributes = [];
     foreach ($options as $key => $option) {
       if (isset($entities[$key]->description) && !empty($entities[$key]->description->value)) {
-        $options_attributes[$key]['data-term-description'] = $entities[$key]->description->value;
+        $option_attributes[$key]['data-term-description'] = $entities[$key]->description->value;
       }
     }
 
@@ -75,7 +75,7 @@ class ReliefWebOptions extends OptionsButtonsWidget {
         '#type' => 'checkboxes',
         '#default_value' => $selected,
         '#options' => $options,
-        '#options_attributes' => $options_attributes,
+        '#option_attributes' => $option_attributes,
       ];
     }
     else {
@@ -86,7 +86,7 @@ class ReliefWebOptions extends OptionsButtonsWidget {
         // not having a default value.
         '#default_value' => $selected ? reset($selected) : NULL,
         '#options' => $options,
-        '#options_attributes' => $options_attributes,
+        '#option_attributes' => $option_attributes,
       ];
     }
 
