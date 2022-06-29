@@ -17,10 +17,6 @@ use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
  *   label = @Translation("ReliefWeb Options with description"),
  *   multiple_values = true,
  *   field_types = {
- *     "list_integer",
- *     "list_string",
- *     "list_float",
- *     "boolean",
  *     "entity_reference",
  *   }
  * )
@@ -33,29 +29,23 @@ class ReliefWebOptions extends OptionsButtonsWidget {
    * {@inheritdoc}
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
-    $element = OptionsWidgetBase::formElement($items, $delta, $element, $form, $form_state);
+    // ONly works for taxonomy terms.
+    $entity_type_id = $this->getReferencedEntityTypeId();
+    if ($entity_type_id !== 'taxonomy_term') {
+      return parent::formElement($items, $delta, $element, $form, $form_state);
+    }
 
+    $element = OptionsWidgetBase::formElement($items, $delta, $element, $form, $form_state);
     $options = $this->getOptions($items->getEntity());
     $selected = $this->getSelectedOptions($items);
 
     // Load all terms, add description.
-    $entity_type_id = $this->getReferencedEntityTypeId();
     $bundles = $this->getReferencedBundles();
     $entity_type_manager = $this->getEntityTypeManager();
 
-    $entities = [];
-    foreach ($bundles as $bundle) {
-      if ($entity_type_id === 'taxonomy_term') {
-        $entities += $entity_type_manager->getStorage($entity_type_id)->loadByProperties([
-          'vid' => $bundle,
-        ]);
-      }
-      else {
-        $entities += $entity_type_manager->getStorage($entity_type_id)->loadByProperties([
-          'bundle' => $bundle,
-        ]);
-      }
-    }
+    $entities = $entity_type_manager->getStorage($entity_type_id)->loadByProperties([
+      $this->getEntityTypeBundleField($entity_type_id) => $bundles,
+    ]);
 
     $option_attributes = [];
     foreach ($options as $key => $option) {
