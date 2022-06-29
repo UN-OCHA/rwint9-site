@@ -267,25 +267,25 @@ class Homepage extends ControllerBase {
    *   API Payload.
    */
   public function getMostReadApiPayload($limit = 2) {
+    $ids = [];
+
     // Load the most-read data. This file is generated via a drush command,
     // usually every day as the query to get the 5 most read reports is very
     // heavy.
     $handle = @fopen('public://most-read/most-read.csv', 'r');
-    if ($handle === FALSE) {
-      return [];
-    }
-
-    // Find the line corresponding to the entity id.
-    while (($row = fgetcsv($handle, 100)) !== FALSE) {
-      if (count($row) === 2 && $row[0] == 'front') {
-        $ids = array_slice(explode(',', $row[1]), 0, $limit);
-        break;
+    if ($handle !== FALSE) {
+      // Find the line corresponding to the entity id.
+      while (($row = fgetcsv($handle, 100)) !== FALSE) {
+        if (count($row) === 2 && $row[0] == 'front') {
+          $ids = array_slice(explode(',', $row[1]), 0, $limit);
+          break;
+        }
       }
-    }
 
-    // Close the file.
-    if (is_resource($handle)) {
-      @fclose($handle);
+      // Close the file.
+      if (is_resource($handle)) {
+        @fclose($handle);
+      }
     }
 
     $payload = RiverServiceBase::getRiverApiPayload('report');
