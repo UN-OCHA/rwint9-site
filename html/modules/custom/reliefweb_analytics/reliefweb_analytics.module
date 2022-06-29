@@ -298,7 +298,7 @@ function reliefweb_analytics_get_terms(FieldableEntityInterface $entity, $field,
  * @return string
  *   Comma separated list of term Ids.
  */
-function reliefweb_analytics_get_terms_id(FieldableEntityInterface $entity, $field, CacheableMetadata $cache_metadata) {
+function reliefweb_analytics_get_term_ids(FieldableEntityInterface $entity, $field, CacheableMetadata $cache_metadata) {
   $terms = [];
   if ($entity->hasField($field) && !$entity->get($field)->isEmpty()) {
     foreach ($entity->get($field)->referencedEntities() as $term) {

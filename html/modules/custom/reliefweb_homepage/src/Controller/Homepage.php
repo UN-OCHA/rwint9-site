@@ -265,75 +265,60 @@ class Homepage extends ControllerBase {
    *
    * @return array
    *   API Payload.
-   *
-   * @todo This currently returns the latest updates, not the most read.
-   * Refactor after add back redording of most read content.
    */
   public function getMostReadApiPayload($limit = 2) {
+    $ids = [];
+
     // Load the most-read data. This file is generated via a drush command,
     // usually every day as the query to get the 5 most read reports is very
     // heavy.
     $handle = @fopen('public://most-read/most-read.csv', 'r');
-    if ($handle === FALSE) {
-      return [];
-    }
-
-    // Find the line corresponding to the entity id.
-    while (($row = fgetcsv($handle, 100)) !== FALSE) {
-      if (count($row) === 2 && $row[0] == 'front') {
-        $ids = array_slice(explode(',', $row[1]), 0, $limit);
-        break;
+    if ($handle !== FALSE) {
+      // Find the line corresponding to the entity id.
+      while (($row = fgetcsv($handle, 100)) !== FALSE) {
+        if (count($row) === 2 && $row[0] == 'front') {
+          $ids = array_slice(explode(',', $row[1]), 0, $limit);
+          break;
+        }
       }
-    }
 
-    // Close the file.
-    if (is_resource($handle)) {
-      @fclose($handle);
-    }
-
-    // Generate the query with the most read report ids.
-    if (empty($ids)) {
-      $payload = RiverServiceBase::getRiverApiPayload('report');
-      $payload['fields']['exclude'][] = 'file';
-      $payload['fields']['exclude'][] = 'body-html';
-      $payload['limit'] = $limit;
-
-      return [
-        'resource' => 'reports',
-        'bundle' => 'report',
-        'entity_type' => 'node',
-        'payload' => $payload,
-        'title' => $this->t('Latest Updates'),
-        'callback' => [$this, 'parseMostReadApiData'],
-        // Link to the updates river for the entity.
-        'more' => [
-          'url' => RiverServiceBase::getRiverUrl('report'),
-          'label' => $this->t('View all updates'),
-        ],
-      ];
-    }
-
-    // We reverse the ids to add the boost (higher boost = higher view count).
-    foreach (array_reverse($ids) as $index => $id) {
-      $ids[$index] = $id . '^' . ($index * 10);
+      // Close the file.
+      if (is_resource($handle)) {
+        @fclose($handle);
+      }
     }
 
     $payload = RiverServiceBase::getRiverApiPayload('report');
     $payload['fields']['exclude'][] = 'file';
     $payload['fields']['exclude'][] = 'body-html';
-    $payload['query']['value'] = 'id:' . implode(' OR id:', $ids);
     $payload['limit'] = $limit;
-    $payload['sort'] = ['score:desc', 'date.created:desc'];
+
+    if (!empty($ids)) {
+      // We reverse the ids to add the boost (higher boost = higher view count).
+      foreach (array_reverse($ids) as $index => $id) {
+        if (is_numeric($id)) {
+          $ids[$index] = 'id:' . $id . '^' . ($index * 10);
+        }
+        else {
+          $ids[$index] = 'url_alias:"' . $id . '"^' . ($index * 10);
+        }
+      }
+      $payload['query']['value'] = implode(' OR ', $ids);
+      $payload['sort'] = ['score:desc', 'date.created:desc'];
+
+      $title = $this->t('Most Read <span>(last 24 hours)</span>');
+    }
 
     return [
       'resource' => 'reports',
       'bundle' => 'report',
       'entity_type' => 'node',
       'payload' => $payload,
+      'title' => $title ?? $this->t('Latest Updates'),
       // Link to the updates river for the entity.
       'more' => [
         'url' => RiverServiceBase::getRiverUrl('report'),
-        'label' => $this->t('Most Read <span>(last 24 hours)</span>'),
+        'label' => $this->t('View all updates'),
       ],
     ];
   }
