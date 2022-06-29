@@ -1,0 +1,6 @@
+services:
+  reliefweb_analytics.commands:
+    class: \Drupal\reliefweb_analytics\Command\ReliefwebMostReadCommand
+    arguments: ['@entity_type.manager', '@path_alias.repository', '@logger.factory', '@state']
+    tags:
+      - { name: drush.command }
