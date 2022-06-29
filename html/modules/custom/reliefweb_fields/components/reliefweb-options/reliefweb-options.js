@@ -35,7 +35,7 @@
         var wrappers = {};
 
         // Search for wrappers containing data-term-description.
-        var elements = form.querySelectorAll('fieldset');
+        var elements = form.querySelectorAll('fieldset[data-drupal-selector]');
         for (var i = 0, li = elements.length; i < li; i++) {
           var element = elements[i];
           if (element.querySelectorAll('[data-term-description]').length == 0) {
