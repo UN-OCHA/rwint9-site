@@ -29,7 +29,7 @@ class ReliefWebOptions extends OptionsButtonsWidget {
    * {@inheritdoc}
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
-    // ONly works for taxonomy terms.
+    // Only works for taxonomy terms.
     $entity_type_id = $this->getReferencedEntityTypeId();
     if ($entity_type_id !== 'taxonomy_term') {
       return parent::formElement($items, $delta, $element, $form, $form_state);

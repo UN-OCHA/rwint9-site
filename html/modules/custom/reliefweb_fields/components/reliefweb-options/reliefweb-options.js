@@ -128,11 +128,26 @@
         for (var i = 0, l = data.terms.length; i < l; i++) {
           var term = data.terms[i];
 
+          var source = document.getElementById(term.for);
+          var checkbox = document.createElement('input');
+          checkbox.setAttribute('type', source.getAttribute('type'));
+          if (source.checked) {
+            checkbox.setAttribute('checked', 'checked');
+          }
+          checkbox.setAttribute('name', 'shadow-' + source.getAttribute('name'));
+          checkbox.setAttribute('id', 'shadow-' + term.for);
+          checkbox.setAttribute('data-for', term.for);
+          checkbox.addEventListener('change', function (e) {
+            let real = document.getElementById(this.getAttribute('data-for'));
+            real.checked = this.checked;
+          });
+
           var label = document.createElement('label');
-          label.setAttribute('for', term.for);
+          label.setAttribute('for', 'shadow-' + term.for);
           label.innerText = term.label;
 
           var dt = document.createElement('dt');
+          dt.appendChild(checkbox);
           dt.appendChild(label);
           dl.appendChild(dt);
 
