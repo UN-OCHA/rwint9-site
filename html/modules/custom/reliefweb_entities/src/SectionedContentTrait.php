@@ -301,13 +301,18 @@ trait SectionedContentTrait {
     if (!empty($ids)) {
       // We reverse the ids to add the boost (higher boost = higher view count).
       foreach (array_reverse($ids) as $index => $id) {
-        $ids[] = $id . '^' . ($index * 10);
+        if (is_numeric($id)) {
+          $ids[$index] = 'id:' . $id . '^' . ($index * 10);
+        }
+        else {
+          $ids[$index] = 'url_alias:"' . $id . '"^' . ($index * 10);
+        }
       }
 
       $payload = RiverServiceBase::getRiverApiPayload('report');
       $payload['fields']['exclude'][] = 'file';
       $payload['fields']['exclude'][] = 'body-html';
-      $payload['query']['value'] = 'id:' . implode(' OR id:', $ids);
+      $payload['query']['value'] = implode(' OR ', $ids);
       $payload['limit'] = $limit;
       $payload['sort'] = ['score:desc', 'date.created:desc'];
 

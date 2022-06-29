@@ -55,6 +55,8 @@
         "drupal/token": "^1.10",
         "drupal/user_display_name": "^1.0",
         "drush/drush": "^11.0",
+        "google/analytics-data": "^0.8.4",
+        "google/auth": "^1.21",
         "league/commonmark": "^2.2",
         "league/html-to-markdown": "^5.0",
         "lolli42/finediff": "^1.0",

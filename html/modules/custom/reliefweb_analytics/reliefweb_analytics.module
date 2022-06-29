@@ -286,6 +286,30 @@ function reliefweb_analytics_get_terms(FieldableEntityInterface $entity, $field,
 }
 
 /**
+ * Get the term IDs from an entity reference field.
+ *
+ * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
+ *   Entity.
+ * @param string $field
+ *   Field.
+ * @param \Drupal\Core\Cache\CacheableMetadata $cache_metadata
+ *   The accumulated cache metadata.
+ *
+ * @return string
+ *   Comma separated list of term Ids.
+ */
+function reliefweb_analytics_get_term_ids(FieldableEntityInterface $entity, $field, CacheableMetadata $cache_metadata) {
+  $terms = [];
+  if ($entity->hasField($field) && !$entity->get($field)->isEmpty()) {
+    foreach ($entity->get($field)->referencedEntities() as $term) {
+      $terms[] = (string) $term->id();
+      $cache_metadata->addCacheTags($term->getCacheTags());
+    }
+  }
+  return implode(', ', $terms);
+}
+
+/**
  * Format a date field to use as custom dimension.
  *
  * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
