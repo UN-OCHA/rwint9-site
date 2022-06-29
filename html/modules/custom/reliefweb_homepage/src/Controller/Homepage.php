@@ -265,9 +265,6 @@ class Homepage extends ControllerBase {
    *
    * @return array
    *   API Payload.
-   *
-   * @todo This currently returns the latest updates, not the most read.
-   * Refactor after add back redording of most read content.
    */
   public function getMostReadApiPayload($limit = 2) {
     // Load the most-read data. This file is generated via a drush command,
@@ -291,49 +288,37 @@ class Homepage extends ControllerBase {
       @fclose($handle);
     }
 
-    // Generate the query with the most read report ids.
-    if (empty($ids)) {
-      $payload = RiverServiceBase::getRiverApiPayload('report');
-      $payload['fields']['exclude'][] = 'file';
-      $payload['fields']['exclude'][] = 'body-html';
-      $payload['limit'] = $limit;
-
-      return [
-        'resource' => 'reports',
-        'bundle' => 'report',
-        'entity_type' => 'node',
-        'payload' => $payload,
-        'title' => $this->t('Latest Updates'),
-        'callback' => [$this, 'parseMostReadApiData'],
-        // Link to the updates river for the entity.
-        'more' => [
-          'url' => RiverServiceBase::getRiverUrl('report'),
-          'label' => $this->t('View all updates'),
-        ],
-      ];
-    }
-
-    // We reverse the ids to add the boost (higher boost = higher view count).
-    foreach (array_reverse($ids) as $index => $id) {
-      $ids[$index] = $id . '^' . ($index * 10);
-    }
-
     $payload = RiverServiceBase::getRiverApiPayload('report');
     $payload['fields']['exclude'][] = 'file';
     $payload['fields']['exclude'][] = 'body-html';
-    $payload['query']['value'] = 'id:' . implode(' OR id:', $ids);
     $payload['limit'] = $limit;
-    $payload['sort'] = ['score:desc', 'date.created:desc'];
+
+    if (!empty($ids)) {
+      // We reverse the ids to add the boost (higher boost = higher view count).
+      foreach (array_reverse($ids) as $index => $id) {
+        if (is_numeric($id)) {
+          $ids[$index] = 'id:' . $id . '^' . ($index * 10);
+        }
+        else {
+          $ids[$index] = 'url_alias:"' . $id . '"^' . ($index * 10);
+        }
+      }
+      $payload['query']['value'] = implode(' OR ', $ids);
+      $payload['sort'] = ['score:desc', 'date.created:desc'];
+
+      $title = $this->t('Most Read <span>(last 24 hours)</span>');
+    }
 
     return [
       'resource' => 'reports',
       'bundle' => 'report',
       'entity_type' => 'node',
       'payload' => $payload,
+      'title' => $title ?? $this->t('Latest Updates'),
       // Link to the updates river for the entity.
       'more' => [
         'url' => RiverServiceBase::getRiverUrl('report'),
-        'label' => $this->t('Most Read <span>(last 24 hours)</span>'),
+        'label' => $this->t('View all updates'),
       ],
     ];
   }
