@@ -80,6 +80,7 @@ class ReliefWebOptions extends OptionsButtonsWidget {
       ];
     }
 
+    $element['#attributes']['class'][] = 'data-with-term-descriptions';
     $element['#attached']['library'][] = 'reliefweb_fields/reliefweb-options';
 
     return $element;

@@ -1,7 +1,7 @@
 /**
  * Term description tooltip handling.
  */
- (function ($) {
+ (function (Drupal) {
 
   'use strict';
 
@@ -35,9 +35,10 @@
         var wrappers = {};
 
         // Search for wrappers containing data-term-description.
-        var elements = form.querySelectorAll('fieldset[data-drupal-selector]');
+        var elements = form.querySelectorAll('fieldset.data-with-term-descriptions');
         for (var i = 0, li = elements.length; i < li; i++) {
           var element = elements[i];
+
           if (element.querySelectorAll('[data-term-description]').length == 0) {
             continue;
           }
@@ -72,10 +73,20 @@
             })
           }
 
+          // Attributes to keep.
+          let attributes = [];
+          if (element.hasAttribute('data-with-selection-limit')) {
+            attributes.push({
+              name: 'data-with-selection-limit',
+              value: element.getAttribute('data-with-selection-limit')
+            });
+          }
+
           wrappers[fieldName] = {
             element: element,
             label: label,
-            terms: terms
+            terms: terms,
+            attributes: attributes
           };
         }
         return wrappers;
@@ -167,7 +178,16 @@
         popup.appendChild(close);
         popup.appendChild(container);
 
+        // Add attributes.
+        if (data.attributes.length > 0) {
+          for (var d = 0, ld = data.attributes.length; d < ld; d++) {
+            let attrib = data.attributes[d];
+            popup.setAttribute(attrib.name, attrib.value);
+          }
+        }
+
         form.appendChild(popup);
+        Drupal.attachBehaviors(popup);
 
         // Update the links in the popup to open in new pages/tabs.
         var links = popup.querySelectorAll('a');
@@ -210,7 +230,7 @@
         }
       }
 
-      let forms = document.querySelectorAll('form');
+      let forms = context.querySelectorAll('form');
       for (var i = 0, li = forms.length; i < li; i++) {
         let form = forms[i];
 
@@ -225,4 +245,4 @@
       }
     }
   };
-})(jQuery);
+})(Drupal);
