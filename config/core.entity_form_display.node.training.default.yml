@@ -197,7 +197,7 @@ content:
     settings: {  }
     third_party_settings: {  }
   field_training_format:
-    type: reliefweb_options
+    type: options_buttons
     weight: 1
     region: content
     settings: {  }
