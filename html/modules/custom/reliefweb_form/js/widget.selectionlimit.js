@@ -22,6 +22,7 @@
             checked++;
           }
         }
+
         // Disable all the other checkboxes if we reached the limit.
         var disabled = checked >= limit;
         for (var i = 0, l = inputs.length; i < l; i++) {
@@ -42,7 +43,7 @@
         // Get the limit and set the handler.
         var limit = parseInt(element.getAttribute('data-with-selection-limit'), 10);
         if (limit > 1) {
-          element.addEventListener('click', function (event) {
+          element.addEventListener('change', function (event) {
             var target = event.target;
             if (target && target.getAttribute('type') === 'checkbox') {
               checkSelectionLimit(element, limit);
@@ -54,7 +55,7 @@
       }
 
       // Enable selection limit on relevant checkboxes fields.
-      var elements = document.querySelectorAll('[data-with-selection-limit]:not([data-with-selection-limit-processed])');
+      var elements = document.querySelectorAll('fieldset[data-with-selection-limit]:not([data-with-selection-limit-processed])');
       for (var i = 0, l = elements.length; i < l; i++) {
         var element = elements[i];
         element.setAttribute('data-with-selection-limit-processed', '');
