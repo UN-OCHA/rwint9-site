@@ -151,6 +151,9 @@
           checkbox.addEventListener('change', function (e) {
             let real = document.getElementById(this.getAttribute('data-for'));
             real.checked = this.checked;
+            real.dispatchEvent(new Event('change', {
+              bubbles: true
+            }));
           });
 
           var label = document.createElement('label');
@@ -173,7 +176,7 @@
         container.appendChild(heading);
         container.appendChild(content);
 
-        var popup = document.createElement('div');
+        var popup = document.createElement('fieldset');
         popup.className = 'with-term-description';
         popup.appendChild(close);
         popup.appendChild(container);
