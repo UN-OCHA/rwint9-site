@@ -592,10 +592,13 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
         new Dimension(['name' => 'pagePath']),
       ],
       'metrics' => [
+        new Metric(['name' => 'active28DayUsers']),
+        new Metric(['name' => 'active7DayUsers']),
+        new Metric(['name' => 'active1DayUsers']),
         new Metric(['name' => 'activeUsers']),
       ],
       'order_bys' => [
-        new MetricOrderBy(['metric_name' => 'activeUsers']),
+        new MetricOrderBy(['metric_name' => 'active28DayUsers']),
       ],
       'dimensionFilter' => new FilterExpression([
         'and_group' => new FilterExpressionList([
