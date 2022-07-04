@@ -1931,14 +1931,14 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
       switch ($record->id) {
         case 'country':
           if (empty($query['cc'])) {
-            continue;
+            continue 2;
           }
           $path = '/country/' . $query['cc'];
           break;
 
         case 'disaster':
           if (empty($query['emid'])) {
-            continue;
+            continue 2;
           }
           $path = '/disaster/' . $query['emid'];
           break;
