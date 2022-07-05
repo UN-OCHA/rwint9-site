@@ -473,10 +473,13 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
       '@t' => $quota->getPotentiallyThresholdedRequestsPerHour()->getConsumed() . '/' . $quota->getPotentiallyThresholdedRequestsPerHour()->getRemaining(),
     ]));
 
+    $now = strtotime('now');
     foreach ($response->getRows() as $row) {
+      $age = $now - strtotime($row->getDimensionValues()[1]->getValue());
       $weight = $row->getMetricValues()[0]->getValue();
       $weight += 4 * $row->getMetricValues()[1]->getValue();
       $weight += 28 * $row->getMetricValues()[2]->getValue();
+      $weight /= log($age);
 
       $results[] = [
         'weight' => $weight,
@@ -536,6 +539,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
       '@t' => $quota->getPotentiallyThresholdedRequestsPerHour()->getConsumed() . '/' . $quota->getPotentiallyThresholdedRequestsPerHour()->getRemaining(),
     ]));
 
+    $now = date('now');
     foreach ($response->getRows() as $row) {
       if (isset($row->getDimensionValues()[1]) && !empty($row->getDimensionValues()[1]->getValue()) && $row->getDimensionValues()[1]->getValue() !== '(not set)') {
         // Expand $row->getDimensionValues()[1] which can be a list of term
@@ -548,9 +552,11 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
             $results[$part] = [];
           }
 
+          $age = $now - strtotime($row->getDimensionValues()[1]->getValue());
           $weight = $row->getMetricValues()[0]->getValue();
           $weight += 4 * $row->getMetricValues()[1]->getValue();
           $weight += 28 * $row->getMetricValues()[2]->getValue();
+          $weight /= log($age);
 
           $results[$part][] = [
             'weight' => $weight,
@@ -646,6 +652,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
       ],
       'dimensions' => [
         new Dimension(['name' => 'pagePath']),
+        new Dimension(['name' => 'customEvent:content_creation_date']),
       ],
       'metrics' => [
         new Metric(['name' => 'active28DayUsers']),
