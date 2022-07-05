@@ -71,7 +71,7 @@
       }
 
       // Enable selection limit on relevant checkboxes fields.
-      var elements = context.querySelectorAll('fieldset[data-with-selection-limit]:not([data-with-selection-limit-processed])');
+      var elements = context.querySelectorAll('[data-with-selection-limit]:not([data-with-selection-limit-processed])');
       for (var i = 0, l = elements.length; i < l; i++) {
         var element = elements[i];
         element.setAttribute('data-with-selection-limit-processed', '');

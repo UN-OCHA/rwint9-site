@@ -1,7 +1,7 @@
 /**
  * Term description tooltip handling.
  */
- (function (Drupal) {
+(function (Drupal) {
 
   'use strict';
 
@@ -70,7 +70,7 @@
               label: trim(labelElement.textContent || labelElement.innerText),
               description: item.getAttribute('data-term-description'),
               for: labelElement.getAttribute('for')
-            })
+            });
           }
 
           // Attributes to keep.
@@ -122,9 +122,9 @@
           hideTermDescriptions(form);
         });
 
-        form.addEventListener('keydown', function(event) {
+        form.addEventListener('keydown', function (event) {
           const key = event.key;
-          if (key === "Escape") {
+          if (key === 'Escape') {
             hideTermDescriptions(form);
           }
         });
@@ -176,7 +176,7 @@
         container.appendChild(heading);
         container.appendChild(content);
 
-        var popup = document.createElement('fieldset');
+        var popup = document.createElement('div');
         popup.className = 'with-term-description';
         popup.appendChild(close);
         popup.appendChild(container);
@@ -185,7 +185,7 @@
         if (data.attributes.length > 0) {
           for (var d = 0, ld = data.attributes.length; d < ld; d++) {
             let attrib = data.attributes[d];
-            popup.setAttribute(attrib.name, attrib.value);
+            container.setAttribute(attrib.name, attrib.value);
           }
         }
 
