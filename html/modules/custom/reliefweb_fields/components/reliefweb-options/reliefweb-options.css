@@ -1,11 +1,32 @@
-form[data-with-term-description] > * .form-wrapper {
-  position: relative;
+form[data-with-term-description] .fieldset-legend {
+  display: inline-flex;
+  margin-right: 12px;
+}
+form[data-with-term-description] .fieldset-legend.form-optional {
+  white-space: pre;
+}
+form[data-with-term-description] .fieldset-legend.form-required {
+  margin-right: 8px;
 }
 
-form[data-with-term-description] button[data-with-term-description] {
-  margin: 1rem 0;
-  padding: 8px;
-  font-size: 14px;
+form[data-with-term-description] .rw-options__open-button {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  width: 20px;
+  height: 20px;
+  margin: -4px 0 0 0;
+  padding: 0 0 0 12px;
+  vertical-align: middle;
+  border: 4px solid var(--cd-reliefweb-brand-grey--light);
+  border-radius: 50%;
+  background: var(--rw-icons--common--help--12--dark-blue);
+  background-color: var(--cd-reliefweb-brand-grey--light);
+}
+
+form[data-with-term-description] .rw-options__open-button:hover {
+  background: var(--rw-icons--common--help--12--dark-red);
+  background-color: var(--cd-reliefweb-brand-grey--light);
 }
 form[data-with-term-description] .with-term-description:before {
   position: fixed;
@@ -78,5 +99,5 @@ form[data-with-term-description] .with-term-description > div > .content img {
   border: 4px solid #e6ecef;
 }
 form[data-with-term-description] .with-term-description dd {
-  margin-bottom: 1rem;
+  margin: 0 0 1rem 22px;
 }
