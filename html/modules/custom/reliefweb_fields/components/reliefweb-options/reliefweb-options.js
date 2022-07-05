@@ -117,6 +117,7 @@
         var close = document.createElement('button');
         close.setAttribute('type', 'button');
         close.setAttribute('value', 'close');
+        close.classList.add('rw-options__close-button');
         close.appendChild(document.createTextNode(t('Close')));
         close.addEventListener('click', function (event) {
           hideTermDescriptions(form);
@@ -161,6 +162,7 @@
           label.innerText = term.label;
 
           var dt = document.createElement('dt');
+          dt.classList.add('form-type-radio');
           dt.appendChild(checkbox);
           dt.appendChild(label);
           dl.appendChild(dt);
