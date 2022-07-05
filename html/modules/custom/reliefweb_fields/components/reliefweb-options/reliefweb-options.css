@@ -1,0 +1,103 @@
+form[data-with-term-description] .fieldset-legend {
+  display: inline-flex;
+  margin-right: 12px;
+}
+form[data-with-term-description] .fieldset-legend.form-optional {
+  white-space: pre;
+}
+form[data-with-term-description] .fieldset-legend.form-required {
+  margin-right: 8px;
+}
+
+form[data-with-term-description] .rw-options__open-button {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  width: 20px;
+  height: 20px;
+  margin: -4px 0 0 0;
+  padding: 0 0 0 12px;
+  vertical-align: middle;
+  border: 4px solid var(--cd-reliefweb-brand-grey--light);
+  border-radius: 50%;
+  background: var(--rw-icons--common--help--12--dark-blue);
+  background-color: var(--cd-reliefweb-brand-grey--light);
+}
+
+form[data-with-term-description] .rw-options__open-button:hover {
+  background: var(--rw-icons--common--help--12--dark-red);
+  background-color: var(--cd-reliefweb-brand-grey--light);
+}
+form[data-with-term-description] .with-term-description:before {
+  position: fixed;
+  z-index: 10000;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: 0;
+  padding: 0;
+  content: "";
+  background: rgba(1, 1, 1, 0.3);
+}
+form[data-with-term-description] .with-term-description {
+  position: fixed;
+  z-index: 10000;
+  top: 10vh;
+  left: 25vw;
+  width: 50vw;
+  height: 80vh;
+  border: 10px solid black;
+  border: 10px solid rgba(0, 0, 0, 0.1);
+}
+form[data-with-term-description] .with-term-description .rw-options__close-button {
+  position: absolute;
+  z-index: 10002;
+  top: -16px;
+  left: -16px;
+  overflow: hidden;
+  width: 28px;
+  height: 28px;
+  padding: 0 0 0 22px;
+  border: 2px solid var(--cd-reliefweb-brand-blue--dark);
+  border-radius: 50%;
+  background: white;
+}
+form[data-with-term-description] .with-term-description .rw-options__close-button:after {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  overflow: hidden;
+  width: 12px;
+  height: 12px;
+  content: "";
+  background: var(--rw-icons--common--close--12--dark-blue);
+}
+form[data-with-term-description] .with-term-description .rw-options__close-button:hover {
+  border-color: var(--cd-reliefweb-brand-red--dark);
+}
+form[data-with-term-description] .with-term-description .rw-options__close-button:hover:after {
+  background: var(--rw-icons--common--close--12--dark-red);
+}
+form[data-with-term-description] .with-term-description > div {
+  position: relative;
+  z-index: 10001;
+  overflow-x: hidden;
+  overflow-y: auto;
+  width: 100%;
+  height: 100%;
+  padding: 16px;
+  background-color: white;
+}
+form[data-with-term-description] .with-term-description > div > h3 {
+  text-align: center;
+}
+form[data-with-term-description] .with-term-description > div > .content {
+  padding-top: 0;
+}
+form[data-with-term-description] .with-term-description > div > .content img {
+  border: 4px solid #e6ecef;
+}
+form[data-with-term-description] .with-term-description dd {
+  margin: 0 0 1rem 22px;
+}

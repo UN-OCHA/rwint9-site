@@ -152,6 +152,9 @@
     "drupal/ctools": {
         "version": "3.7.0"
     },
+    "drupal/dev_mode": {
+        "version": "2.3.0"
+    },
     "drupal/devel": {
         "version": "4.1.3"
     },
