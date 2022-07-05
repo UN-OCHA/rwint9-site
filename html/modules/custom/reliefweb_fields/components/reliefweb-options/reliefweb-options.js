@@ -162,7 +162,15 @@
           label.innerText = term.label;
 
           var dt = document.createElement('dt');
-          dt.classList.add('form-type-radio');
+
+          // Add classes based on input type so rw-form styles are used.
+          if (checkbox.type === 'radio') {
+            dt.classList.add('form-type-radio', 'form-item');
+          }
+          else {
+            dt.classList.add('form-type-checkbox', 'form-item');
+          }
+
           dt.appendChild(checkbox);
           dt.appendChild(label);
           dl.appendChild(dt);
@@ -219,17 +227,15 @@
             let button = document.createElement('button');
             button.setAttribute('type', 'button');
             button.setAttribute('data-with-term-description', field);
+            button.classList.add('rw-options__open-button');
             button.appendChild(document.createTextNode(t('View descriptions for ' + label)));
 
             button.addEventListener('click', function (event) {
               showTermDescriptions(form, item);
             });
 
-            if (element.nodeName === 'LABEL') {
-              element.parentNode.insertBefore(button, element.nextSibling);
-            }
-            else {
-              element.appendChild(button);
+            if (element.nodeName === 'FIELDSET') {
+              element.querySelector('legend').appendChild(button, element.nextSibling);
             }
           }
         }
