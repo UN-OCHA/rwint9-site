@@ -7,6 +7,7 @@ use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
 use Consolidation\SiteProcess\ProcessManagerAwareTrait;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
@@ -52,6 +53,13 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
   protected $database;
 
   /**
+   * The extension path resolver.
+   *
+   * @var \Drupal\Core\Extension\ExtensionPathResolver
+   */
+  protected $extensionPathResolver;
+
+  /**
    * The file system service.
    *
    * @var \Drupal\Core\File\FileSystemInterface
@@ -84,12 +92,14 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
    */
   public function __construct(
     Connection $database,
+    ExtensionPathResolver $extension_path_resolver,
     FileSystemInterface $file_system,
     ClientInterface $http_client,
     LoggerChannelFactoryInterface $logger_factory,
     StateInterface $state
   ) {
     $this->database = $database;
+    $this->extensionPathResolver = $extension_path_resolver;
     $this->fileSystem = $file_system;
     $this->httpClient = $http_client;
     $this->loggerFactory = $logger_factory;
@@ -302,7 +312,7 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
   public function copyXslStylesheet() {
     if ($this->prepareDirectory()) {
       // Source.
-      $module_path = drupal_get_path('module', 'reliefweb_xmlsitemap');
+      $module_path = $this->extensionPathResolver->getPath('module', 'reliefweb_xmlsitemap');
       $source = $this->fileSystem->realpath($module_path) . '/includes/sitemap.xsl';
 
       if (file_exists($source)) {
@@ -379,7 +389,7 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
     static $directory;
 
     if (!isset($directory)) {
-      $directory = file_build_uri(self::RELIEFWEB_XMLSITEMAP_DIRECTORY);
+      $directory = 'public://' . self::RELIEFWEB_XMLSITEMAP_DIRECTORY;
     }
 
     return $directory;

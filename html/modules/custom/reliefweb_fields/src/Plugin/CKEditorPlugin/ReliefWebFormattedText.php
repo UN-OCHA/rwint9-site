@@ -17,6 +17,13 @@ use Drupal\editor\Entity\Editor;
 class ReliefWebFormattedText extends CKEditorPluginBase implements CKEditorPluginContextualInterface {
 
   /**
+   * The extension path resolver.
+   *
+   * @var \Drupal\Core\Extension\ExtensionPathResolver
+   */
+  protected $extensionPathResolver;
+
+  /**
    * {@inheritdoc}
    */
   public function isInternal() {
@@ -47,7 +54,7 @@ class ReliefWebFormattedText extends CKEditorPluginBase implements CKEditorPlugi
    * {@inheritdoc}
    */
   public function getFile() {
-    return drupal_get_path('module', 'reliefweb_fields') . '/js/plugins/reliefweb_formatted_text/plugin.js';
+    return $this->getExtensionPathResolver()->getPath('module', 'reliefweb_fields') . '/js/plugins/reliefweb_formatted_text/plugin.js';
   }
 
   /**
@@ -55,6 +62,19 @@ class ReliefWebFormattedText extends CKEditorPluginBase implements CKEditorPlugi
    */
   public function getConfig(Editor $editor) {
     return [];
+  }
+
+  /**
+   * Get the extension path resolver.
+   *
+   * @return \Drupal\Core\Extension\ExtensionPathResolver
+   *   The extension path resolver.
+   */
+  protected function getExtensionPathResolver() {
+    if (!isset($this->extensionPathResolver)) {
+      $this->extensionPathResolver = \Drupal::service('extension.path.resolver');
+    }
+    return $this->extensionPathResolver;
   }
 
 }
