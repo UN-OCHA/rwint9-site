@@ -54,8 +54,8 @@
           checkSelectionLimit(element, limit);
 
           // Listen for disabled changes.
-          var observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
+          var observer = new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
               if (mutation.attributeName === 'disabled') {
                 checkSelectionLimit(element, limit);
               }
@@ -63,7 +63,7 @@
           });
 
           // Only listen to attribute changes.
-          var config = { attributes: true };
+          var config = {attributes: true};
 
           // Start observing.
           observer.observe(element, config);
