@@ -11,9 +11,7 @@ use RWAPIIndexer\Manager;
 use RWAPIIndexer\Bundles;
 
 /**
- * ReliefWeb migration Drush commandfile.
- *
- * @todo remove after the migration from D7 to D9.
+ * ReliefWeb API Drush commandfile.
  */
 class ReliefWebApiCommands extends DrushCommands {
 
@@ -298,6 +296,70 @@ class ReliefWebApiCommands extends DrushCommands {
 
       $this->logger->info('Performed post indexing tasks.');
     }
+  }
+
+  /**
+   * Re-index queued content.
+   *
+   * @command reliefweb-api:reindexqueue
+   *
+   * @usage reliefweb-api:reindexqueue
+   *   Re-index the queue of terms to update.
+   *
+   * @validate-module-enabled reliefweb_api
+   *
+   * @aliases rw-api:reindexqueue
+   */
+  public function reIndexQueue() {
+
+    $reindex_queue = json_decode($this->state->get('reliefweb_api.reindex_queue'));
+
+    if (empty($reindex_queue)) {
+      return;
+    }
+
+    // Use default values from $this->index().
+    $options = [
+      'elasticsearch' => '',
+      'base-index-name' => '',
+      'website' => '',
+      'limit' => 0,
+      'offset' => 0,
+      'filter' => '',
+      'chunk-size' => 500,
+      'tag' => '',
+      'id' => 0,
+      'remove' => FALSE,
+      'replace' => FALSE,
+      'alias' => FALSE,
+      'alias-only' => FALSE,
+      'log' => 'echo',
+      'count-only' => FALSE,
+      'memory-limit' => '512M',
+      'replicas' => NULL,
+      'shards' => NULL,
+    ];
+    foreach (array_keys($reindex_queue) as $bundle) {
+      if (empty($reindex_queue[$bundle])) {
+        continue;
+      }
+      // Launch the re-indexing.
+      try {
+        $options['filter'] = $bundle . ':' . implode(',', $reindex_queue[$bundle]);
+        if ($bundle == 'country' || $bundle == 'source') {
+          $this->index('training', $options);
+          $this->index('job', $options);
+        }
+        $this->index('report', $options);
+      }
+      catch (\Exception $exception) {
+        $this->logger->error('(' . $exception->getCode() . ') ' . $exception->getMessage());
+      }
+      $reindex_queue[$bundle] = [];
+    }
+
+    $this->state->set('reliefweb_api.reindex_queue', json_encode($reindex_queue));
+
   }
 
 }

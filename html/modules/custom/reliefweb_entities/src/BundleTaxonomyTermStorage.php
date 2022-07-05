@@ -14,6 +14,9 @@ class BundleTaxonomyTermStorage extends TermStorage implements BundleEntityStora
    * {@inheritdoc}
    */
   public function save(EntityInterface $entity) {
+
+    $this->invokeHook('before_save', $entity);
+
     parent::save($entity);
 
     $this->invokeHook('after_save', $entity);

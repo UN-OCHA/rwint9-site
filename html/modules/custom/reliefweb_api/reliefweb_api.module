@@ -12,6 +12,23 @@ use RWAPIIndexer\Bundles;
 use RWAPIIndexer\Manager;
 
 /**
+ * Implements hook_entity_before_save().
+ *
+ * @see \Drupal\reliefweb_entities\BundleEntityStorageInterface
+ */
+function reliefweb_api_entity_before_save(EntityInterface $entity) {
+  // Check if we need re-indexing.
+  if (!$entity->isNew() && $entity->getEntityTypeId() == 'taxonomy_term') {
+    $bundle = $entity->bundle();
+    // Only these types get checked for automatic re-indexing.
+    $taxonomy_types = ['country', 'disaster', 'source'];
+    if (in_array($bundle, $taxonomy_types)) {
+      reliefweb_api_check_reindexing($entity, $bundle);
+    }
+  }
+}
+
+/**
  * Implements hook_entity_after_save().
  *
  * @see \Drupal\reliefweb_entities\BundleEntityStorageInterface
@@ -21,6 +38,7 @@ function reliefweb_api_entity_after_save(EntityInterface $entity) {
   if (!empty($entity->_is_migrating)) {
     return;
   }
+
   reliefweb_api_handle_entity($entity);
 }
 
@@ -142,6 +160,70 @@ function reliefweb_api_execute(array $options, $entity_type_id) {
     ]);
   }
   catch (\Exception $exception) {
+  }
+}
+
+/**
+ * Check if taxonomy terms require re-indexing of tagged content.
+ *
+ * Store terms for re-indexing so we can process them later in batches.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   Entity that might require re-indexing.
+ * @param string $bundle
+ *   Taxonomy type of entity.
+ */
+function reliefweb_api_check_reindexing(EntityInterface $entity, $bundle) {
+  $needs_reindex = FALSE;
+  // Get unchanged entity for comparison.
+  // Tried loadUnchanged() via hooks _entity_update() and _entity_after_save()
+  // but neither gave the original values.
+  $unchanged_entity = \Drupal::entityTypeManager()
+    ->getStorage($entity->getEntityTypeId())
+    ->loadUnchanged($entity->id());
+
+  switch ($bundle) {
+    case 'disaster':
+      $fields = [
+        'name',
+        'field_glide',
+        'field_disaster_type',
+        'moderation_status',
+      ];
+      break;
+
+    case 'country':
+      $fields = [
+        'name',
+        'field_shortname',
+        'field_iso3',
+      ];
+      break;
+
+    case 'source':
+      $fields = [
+        'name',
+        'field_shortname',
+        'field_longname',
+        'field_spanish_name',
+        'field_homepage',
+        'field_disclaimer',
+        'field_organization_type',
+      ];
+      break;
+  }
+
+  foreach ($fields as $field) {
+    if ($entity->get($field)->getValue() != $unchanged_entity->get($field)->getValue()) {
+      $needs_reindex = TRUE;
+      break;
+    }
+  }
+
+  if ($needs_reindex) {
+    $reindex_queue = json_decode(\Drupal::state()->get('reliefweb_api.reindex_queue'));
+    $reindex_queue[$bundle][] = $entity->id();
+    \Drupal::state()->set('reliefweb_api.reindex_queue', json_encode($reindex_queue));
   }
 }
 
