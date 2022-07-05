@@ -2,64 +2,71 @@ form[data-with-term-description] > * .form-wrapper {
   position: relative;
 }
 
-form[data-with-term-description] button[data-guideline] {
-  display: inline-block;
-  vertical-align: middle;
-  position: absolute;
-  top: 0;
-  right: 0;
-  padding: 4px 10px;
-  margin-top: 0;
-}
-form[data-with-term-description] button[data-guideline]:hover {
-  background-position-x: -96px;
+form[data-with-term-description] button[data-with-term-description] {
+  margin: 1rem 0;
+  padding: 8px;
+  font-size: 14px;
 }
 form[data-with-term-description] .with-term-description:before {
-  content: "";
   position: fixed;
+  z-index: 10000;
   top: 0;
-  left: 0;
   right: 0;
   bottom: 0;
+  left: 0;
   margin: 0;
   padding: 0;
+  content: "";
   background: rgba(1, 1, 1, 0.3);
-  z-index: 10000;
 }
 form[data-with-term-description] .with-term-description {
   position: fixed;
+  z-index: 10000;
   top: 10vh;
   left: 25vw;
   width: 50vw;
   height: 80vh;
   border: 10px solid black;
   border: 10px solid rgba(0, 0, 0, 0.1);
-  z-index: 1;
 }
-form[data-with-term-description] .with-term-description > button[value="close"] {
+form[data-with-term-description] .with-term-description .rw-options__close-button {
   position: absolute;
-  top: 0;
-  right: 0;
-  margin: 0;
-  border: 2px solid #2e3436;
-  padding: 4px 10px;
   z-index: 10002;
+  top: -16px;
+  left: -16px;
+  overflow: hidden;
+  width: 28px;
+  height: 28px;
+  padding: 0 0 0 22px;
+  border: 2px solid var(--cd-reliefweb-brand-blue--dark);
+  border-radius: 50%;
+  background: white;
 }
-form[data-with-term-description] .with-term-description > button[value="close"]:hover {
-  border-color: #eb1405;
+form[data-with-term-description] .with-term-description .rw-options__close-button:after {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  overflow: hidden;
+  width: 12px;
+  height: 12px;
+  content: "";
+  background: var(--rw-icons--common--close--12--dark-blue);
 }
-form[data-with-term-description] .with-term-description > button[value="close"]:hover:after {
-  background-position-x: -96px;
+form[data-with-term-description] .with-term-description .rw-options__close-button:hover {
+  border-color: var(--cd-reliefweb-brand-red--dark);
+}
+form[data-with-term-description] .with-term-description .rw-options__close-button:hover:after {
+  background: var(--rw-icons--common--close--12--dark-red);
 }
 form[data-with-term-description] .with-term-description > div {
   position: relative;
+  z-index: 10001;
+  overflow-x: hidden;
+  overflow-y: auto;
   width: 100%;
   height: 100%;
   padding: 16px;
   background-color: white;
-  overflow-y: auto;
-  overflow-x: hidden;
-  z-index: 10001;
 }
 form[data-with-term-description] .with-term-description > div > h3 {
   text-align: center;
@@ -69,4 +76,7 @@ form[data-with-term-description] .with-term-description > div > .content {
 }
 form[data-with-term-description] .with-term-description > div > .content img {
   border: 4px solid #e6ecef;
+}
+form[data-with-term-description] .with-term-description dd {
+  margin-bottom: 1rem;
 }
