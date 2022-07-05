@@ -600,7 +600,7 @@ function reliefweb_entities_mail($key, array &$message, array $parameters) {
  * At max 20 nodes of each type is processed at once to avoid clogging the cron
  * process and using excessive resources.
  */
-function reliefweb_moderation_cron() {
+function reliefweb_entities_cron() {
   $storage = \Drupal::entityTypeManager()->getStorage('node');
   $cron_settings = \Drupal::config('reliefweb_entities.settings')->get('cron') ?? [];
 
