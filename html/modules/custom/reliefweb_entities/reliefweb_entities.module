@@ -673,20 +673,3 @@ function reliefweb_entities_menu_local_tasks_alter(&$data, $route_name, Refinabl
     $data['tabs'][0]['content_entity_clone.clone']['#link']['localized_options']['attributes']['target'] = '_blank';
   }
 }
-
-/**
- * Implements template_preprocess_input().
- *
- * @see html/core/lib/Drupal/Core/Render/Element/Checkboxes.php:95
- */
-function reliefweb_entities_preprocess_input(&$variables) {
-  $element = $variables['element'];
-  if ($element['#type'] !== 'checkbox') {
-    return;
-  }
-
-  // Remove attributes from input.
-  if (isset($variables['attributes']['data-with-selection-limit'])) {
-    unset($variables['attributes']['data-with-selection-limit']);
-  }
-}

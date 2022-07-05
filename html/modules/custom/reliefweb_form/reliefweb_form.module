@@ -173,6 +173,23 @@ function reliefweb_form_preprocess_select(&$variables) {
 }
 
 /**
+ * Implements template_preprocess_input().
+ *
+ * @see html/core/lib/Drupal/Core/Render/Element/Checkboxes.php:95
+ */
+function reliefweb_form_preprocess_input(&$variables) {
+  $element = $variables['element'];
+  if ($element['#type'] !== 'checkbox') {
+    return;
+  }
+
+  // Remove attributes from input.
+  if (isset($variables['attributes']['data-with-selection-limit'])) {
+    unset($variables['attributes']['data-with-selection-limit']);
+  }
+}
+
+/**
  * Implements hook_form_alter().
  *
  * Add form enhancements.
