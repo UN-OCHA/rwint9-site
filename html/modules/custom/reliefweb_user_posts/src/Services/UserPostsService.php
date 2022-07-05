@@ -569,7 +569,7 @@ class UserPostsService extends ModerationServiceBase {
         if (!empty($blocked[$type])) {
           $condition = $query->andConditionGroup()
             ->condition($source_table_alias . '.bundle', $type, '=')
-            ->condition($source_table_alias . '.' . $source_field, array_keys($allowed[$type]), 'IN');
+            ->condition($source_table_alias . '.' . $source_field, array_keys($blocked[$type]), 'IN');
           $query->condition($query->conditionGroupFactory('AND NOT')->condition($condition));
         }
       }
