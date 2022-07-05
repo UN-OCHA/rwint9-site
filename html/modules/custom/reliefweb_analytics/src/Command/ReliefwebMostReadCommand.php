@@ -202,7 +202,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
     $limit = $this->state->get('reliefweb_analytics_most_read_limit', 5);
     $results = [];
     $parameters = $this->getAllCountriesPayload();
-    $combined = $this->fetchGa4DataCombined($parameters, $limit);
+    $combined = $this->fetchGa4DataCombined($parameters);
 
     // Limit fetching data to countries with the following statuses.
     $statuses = array_flip($this->state->get('reliefweb_analytics_most_read_country_statuses', [
@@ -330,7 +330,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
 
     // Fetch the combined data for all the disasters.
     $parameters = $this->getAllDisastersPayload();
-    $combined = $this->fetchGa4DataCombined($parameters, $limit);
+    $combined = $this->fetchGa4DataCombined($parameters);
 
     // Limit fetching data to countries with the following statuses.
     $statuses = array_flip($this->state->get('reliefweb_analytics_most_read_disaster_statuses', [
@@ -496,12 +496,10 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
    *
    * @param array $parameters
    *   Payload.
-   * @param int $limit
-   *   Maximum number of reports to count for each term.
    *
    * @see https://developers.google.com/analytics/devguides/reporting/core/v4/limits-quotas#analytics_reporting_api_v4
    */
-  public function fetchGa4DataCombined(array $parameters, $limit) {
+  public function fetchGa4DataCombined(array $parameters) {
     $results = [];
 
     try {
@@ -549,20 +547,19 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
           if (!isset($results[$part])) {
             $results[$part] = [];
           }
-          if (count($results[$part]) < 2 * $limit) {
-            $weight = $row->getMetricValues()[0]->getValue();
-            $weight += 4 * $row->getMetricValues()[1]->getValue();
-            $weight += 28 * $row->getMetricValues()[2]->getValue();
 
-            $results[$part][] = [
-              'weight' => $weight,
-              'document' => $this->prepareDocumentIdDimension($row->getDimensionValues()[0]->getValue()),
-            ];
+          $weight = $row->getMetricValues()[0]->getValue();
+          $weight += 4 * $row->getMetricValues()[1]->getValue();
+          $weight += 28 * $row->getMetricValues()[2]->getValue();
 
-            usort($results[$part], function ($a, $b) {
-              return SortArray::sortByKeyInt($a, $b, 'weight');
-            });
-          }
+          $results[$part][] = [
+            'weight' => $weight,
+            'document' => $this->prepareDocumentIdDimension($row->getDimensionValues()[0]->getValue()),
+          ];
+
+          usort($results[$part], function ($a, $b) {
+            return SortArray::sortByKeyInt($a, $b, 'weight');
+          });
         }
       }
     }
