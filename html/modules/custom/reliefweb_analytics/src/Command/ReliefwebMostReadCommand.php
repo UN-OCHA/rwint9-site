@@ -482,11 +482,11 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
         'weight' => $weight,
         'document' => $this->prepareDocumentIdDimension($row->getDimensionValues()[0]->getValue()),
       ];
-
-      usort($results, function ($a, $b) {
-        return SortArray::sortByKeyInt($a, $b, 'weight');
-      });
     }
+
+    usort($results, function ($a, $b) {
+      return SortArray::sortByKeyInt($a, $b, 'weight');
+    });
 
     return $results;
   }
