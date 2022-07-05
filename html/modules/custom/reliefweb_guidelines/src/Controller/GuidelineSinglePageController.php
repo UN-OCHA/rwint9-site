@@ -54,6 +54,7 @@ class GuidelineSinglePageController extends ControllerBase {
     $this->cache = $cache_backend;
     $this->currentUser = $current_user;
     $this->entityTypeManager = $entity_type_manager;
+    $this->extensionPathResolver = $extension_path_resolver;
   }
 
   /**
@@ -310,7 +311,8 @@ class GuidelineSinglePageController extends ControllerBase {
   protected static function getBlankGifUrl() {
     static $blank_gif_url;
     if (!isset($blank_gif_url)) {
-      $blank_gif_url = '/' . drupal_get_path('module', 'reliefweb_guidelines') . '/components/reliefweb-guidelines/assets/blank.gif';
+      $blank_gif_url = '/' . \Drupal::service('extension.path.resolver')
+        ->getPath('module', 'reliefweb_guidelines') . '/components/reliefweb-guidelines/assets/blank.gif';
     }
     return $blank_gif_url;
   }

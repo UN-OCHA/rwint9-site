@@ -1,7 +1,7 @@
 services:
   reliefweb_xmlsitemap.xmlsitemap:
     class: \Drupal\reliefweb_xmlsitemap\Command\ReliefwebXmlsitemapCommand
-    arguments: ['@database', '@file_system', '@http_client', '@logger.factory', '@state']
+    arguments: ['@database', '@extension.path.resolver', '@file_system', '@http_client', '@logger.factory', '@state']
     tags:
       - { name: drush.command }
 
