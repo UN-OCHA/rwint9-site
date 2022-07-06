@@ -38,7 +38,7 @@
       }
 
       // Enhance the forms.
-      var forms = document.querySelectorAll('form[data-enhanced]:not([data-enhanced-processed])');
+      var forms = context.querySelectorAll('form[data-enhanced]:not([data-enhanced-processed])');
       for (var i = 0, l = forms.length; i < l; i++) {
         var form = forms[i];
         form.setAttribute('data-enhanced-processed', '');

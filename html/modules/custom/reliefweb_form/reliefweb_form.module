@@ -204,9 +204,6 @@ function reliefweb_form_form_alter(array &$form, FormStateInterface $form_state,
     reliefweb_form_attach_lengthchecker($form);
     reliefweb_form_attach_selection_limit($form);
 
-    // Attach the guidelines.
-    reliefweb_form_attach_guidelines($form);
-
     // Attach the drupal states extensions.
     $form['#attached']['library'][] = 'reliefweb_form/drupal.states';
 
@@ -256,18 +253,6 @@ function reliefweb_form_attach_datepicker(array &$form) {
 function reliefweb_form_attach_formatting(array &$form) {
   if (reliefweb_form_uses_widget($form, 'formatting')) {
     $form['#attached']['library'][] = 'reliefweb_form/widget.formatting';
-  }
-}
-
-/**
- * Attach the guidelines js scripts to the given form.
- *
- * @param array $form
- *   Form to which attach the js files.
- */
-function reliefweb_form_attach_guidelines(array &$form) {
-  if (isset($form['#attributes']['data-with-guidelines'])) {
-    // @todo add logic once guidelines have been migrated.
   }
 }
 
