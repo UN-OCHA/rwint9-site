@@ -175,7 +175,7 @@
       }
 
       // Enable formatting on relevant textarea fields.
-      var elements = document.querySelectorAll('[data-with-formatting]:not([data-with-formatting-processed])');
+      var elements = context.querySelectorAll('[data-with-formatting]:not([data-with-formatting-processed])');
       for (var i = 0, l = elements.length; i < l; i++) {
         var element = elements[i];
         element.setAttribute('data-with-formatting-processed', '');

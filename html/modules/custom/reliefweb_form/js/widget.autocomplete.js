@@ -861,7 +861,7 @@
       }
 
       // Add an autocomplete widget to the select elements.
-      var elements = document.querySelectorAll('[data-with-autocomplete]:not([data-with-autocomplete-processed])');
+      var elements = context.querySelectorAll('[data-with-autocomplete]:not([data-with-autocomplete-processed])');
       for (var i = 0, l = elements.length; i < l; i++) {
         var element = elements[i];
         element.setAttribute('data-with-autocomplete-processed', '');
