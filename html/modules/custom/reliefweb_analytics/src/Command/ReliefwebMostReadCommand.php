@@ -6,7 +6,6 @@ use Drupal\path_alias\AliasRepositoryInterface;
 use Consolidation\SiteAlias\SiteAliasManagerAwareInterface;
 use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
 use Consolidation\SiteProcess\ProcessManagerAwareTrait;
-use Drupal\Component\Utility\SortArray;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
@@ -92,19 +91,13 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
 
     // Fetch data from GA4.
     $this->logger()->notice('Processing home page');
-    $parameters = $this->getHomePagePayload($limit);
+    $parameters = $this->getHomePagePayload();
     $data = $this->fetchGa4Data($parameters);
 
     if (!empty($data) && is_array(($data))) {
-      $documents = [];
-      foreach ($data as $row) {
-        $documents[] = $row['document'];
-      }
-      $documents = array_slice($documents, 0, $limit);
-
       $results['front'] = [
         'front',
-        implode(',', $documents),
+        $this->parseApiData($data, $limit),
       ];
     }
     else {
@@ -155,7 +148,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
       // Only process active (published) countries.
       if (isset($statuses[$country->moderation_status->value])) {
         $this->logger()->notice('Processing ' . $country->label());
-        $parameters = $this->getDisasterPayload($country->label(), $limit);
+        $parameters = $this->getCountryPayload($country->label());
         $data = $this->fetchGa4Data($parameters);
 
         // Check for rate_limit.
@@ -166,15 +159,9 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
 
       // Add to the result if there is data otherwise mark it as to be removed.
       if (!empty($data) && is_array($data)) {
-        $documents = [];
-        foreach ($data as $row) {
-          $documents[] = $row['document'];
-        }
-        $documents = array_slice($documents, 0, $limit);
-
         $results[$country->id()] = [
           $country->id(),
-          implode(',', $documents),
+          $this->parseApiData($data, $limit),
         ];
       }
       else {
@@ -225,15 +212,10 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
       // was used to get the data).
       $data = $combined[$term->id()] ?? $combined[$term->label()] ?? NULL;
       if (!empty($data) && is_array($data)) {
-        $documents = [];
-        foreach ($data as $row) {
-          $documents[] = $row['document'];
-        }
-        $documents = array_slice($documents, 0, $limit);
-
+        $this->logger()->notice('Processing ' . $term->label());
         $results[$term->id()] = [
           $term->id(),
-          implode(',', $documents),
+          $this->parseApiData($data, $limit),
         ];
       }
     }
@@ -281,7 +263,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
       // Only process active (published) disasters.
       if (isset($statuses[$disaster->moderation_status->value])) {
         $this->logger()->notice('Processing ' . $disaster->label());
-        $parameters = $this->getDisasterPayload($disaster->label(), $limit);
+        $parameters = $this->getDisasterPayload($disaster->label());
         $data = $this->fetchGa4Data($parameters);
 
         // Check for rate_limit.
@@ -292,15 +274,9 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
 
       // Add to the result if there is data otherwise mark it as to be removed.
       if (!empty($data) && is_array($data)) {
-        $documents = [];
-        foreach ($data as $row) {
-          $documents[] = $row['document'];
-        }
-        $documents = array_slice($documents, 0, $limit);
-
         $results[$disaster->id()] = [
           $disaster->id(),
-          implode(',', $documents),
+          $this->parseApiData($data, $limit),
         ];
       }
       else {
@@ -354,15 +330,10 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
       // was used to get the data).
       $data = $combined[$term->id()] ?? $combined[trim($term->label())] ?? NULL;
       if (!empty($data) && is_array($data)) {
-        $documents = [];
-        foreach ($data as $row) {
-          $documents[] = $row['document'];
-        }
-        $documents = array_slice($documents, 0, $limit);
-
+        $this->logger()->notice('Processing ' . $term->label());
         $results[$term->id()] = [
           $term->id(),
-          implode(',', $documents),
+          $this->parseApiData($data, $limit),
         ];
       }
     }
@@ -473,23 +444,41 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
       '@t' => $quota->getPotentiallyThresholdedRequestsPerHour()->getConsumed() . '/' . $quota->getPotentiallyThresholdedRequestsPerHour()->getRemaining(),
     ]));
 
-    $now = strtotime('now');
+    // Dimension 0 is the report path.
+    // Dimension 1 is the creation date in the form Y-m-d.
+    // Dimension 2 is the name of the date range.
+    // Metric 0 is the number of users active during the date range.
     foreach ($response->getRows() as $row) {
-      $age = $now - strtotime($row->getDimensionValues()[1]->getValue());
-      $weight = $row->getMetricValues()[0]->getValue();
-      $weight += 4 * $row->getMetricValues()[1]->getValue();
-      $weight += 28 * $row->getMetricValues()[2]->getValue();
-      $weight /= log($age);
+      $dimensions = $row->getDimensionValues();
+      $metrics = $row->getMetricValues();
 
-      $results[] = [
-        'weight' => $weight,
-        'document' => $this->prepareDocumentIdDimension($row->getDimensionValues()[0]->getValue()),
-      ];
+      $score = $metrics[0]->getValue();
+      if ($score <= 0) {
+        continue;
+      }
+
+      $document = $this->prepareDocumentIdDimension($dimensions[0]->getValue());
+      $age_boost = $this->getAgeBoost($dimensions[1]->getValue());
+
+      $weight = 0;
+      if (isset($results[$document])) {
+        $weight = $results[$document];
+      }
+
+      // If there are several date ranges the latest dimension is the name
+      // of the date range (ex: daterange_3).
+      // Date ranges are ordered by older first so we can boost more recent
+      // views from the digit in the name of the date range.
+      $date_boost = 1;
+      if (isset($dimensions[2]) && !empty($dimensions[2]->getValue()) && strpos($dimensions[2]->getValue(), 'daterange_') === 0) {
+        $date_boost = intval(substr($dimensions[2]->getValue(), 10), 10);
+      }
+
+      $weight += $score * $date_boost * $age_boost;
+
+      // We store the report by path with the weight as value for ordering.
+      $results[$document] = $weight;
     }
-
-    usort($results, function ($a, $b) {
-      return SortArray::sortByKeyInt($a, $b, 'weight');
-    });
 
     return $results;
   }
@@ -539,33 +528,53 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
       '@t' => $quota->getPotentiallyThresholdedRequestsPerHour()->getConsumed() . '/' . $quota->getPotentiallyThresholdedRequestsPerHour()->getRemaining(),
     ]));
 
-    $now = date('now');
+    // Dimension 0 is the report path.
+    // Dimension 1 is the creation date in the form Y-m-d.
+    // Dimension 2 is the term dimension (ex: primary country or disasters).
+    // Dimension 3 is the name of the date range.
+    // Metric 0 is the number of users active during the date range.
     foreach ($response->getRows() as $row) {
-      if (isset($row->getDimensionValues()[1]) && !empty($row->getDimensionValues()[1]->getValue()) && $row->getDimensionValues()[1]->getValue() !== '(not set)') {
-        // Expand $row->getDimensionValues()[1] which can be a list of term
+      $dimensions = $row->getDimensionValues();
+      $metrics = $row->getMetricValues();
+
+      // Check if the country/disaster dimension is available and valid.
+      if (isset($dimensions[2]) && !empty($dimensions[2]->getValue()) && $dimensions[2]->getValue() !== '(not set)') {
+        $score = $metrics[0]->getValue();
+        if ($score <= 0) {
+          continue;
+        }
+
+        $document = $this->prepareDocumentIdDimension($dimensions[0]->getValue());
+        $age_boost = $this->getAgeBoost($dimensions[1]->getValue());
+
+        // Expandthe term dimension which can be a list of term
         // names or IDs separated by ", " depending on the requested dimension.
         // @see reliefweb_analytics_get_terms().
-        $parts = explode(', ', $row->getDimensionValues()[1]->getValue());
+        $parts = explode(', ', $dimensions[2]->getValue());
         foreach ($parts as $part) {
           $part = trim($part);
           if (!isset($results[$part])) {
             $results[$part] = [];
           }
 
-          $age = $now - strtotime($row->getDimensionValues()[1]->getValue());
-          $weight = $row->getMetricValues()[0]->getValue();
-          $weight += 4 * $row->getMetricValues()[1]->getValue();
-          $weight += 28 * $row->getMetricValues()[2]->getValue();
-          $weight /= log($age);
+          $weight = 0;
+          if (isset($results[$part][$document])) {
+            $weight = $results[$part][$document];
+          }
 
-          $results[$part][] = [
-            'weight' => $weight,
-            'document' => $this->prepareDocumentIdDimension($row->getDimensionValues()[0]->getValue()),
-          ];
+          // If there are several date ranges the latest dimension is the name
+          // of the date range (ex: daterange_3).
+          // Date ranges are ordered by older first so we can boost more recent
+          // views from the digit in the name of the date range.
+          $date_boost = 1;
+          if (isset($dimensions[3]) && !empty($dimensions[3]->getValue()) && strpos($dimensions[3]->getValue(), 'daterange_') === 0) {
+            $date_boost = intval(substr($dimensions[3]->getValue(), 10), 10);
+          }
 
-          usort($results[$part], function ($a, $b) {
-            return SortArray::sortByKeyInt($a, $b, 'weight');
-          });
+          $weight += $score * $date_boost * $age_boost;
+
+          // We store the report by path with the weight as value for ordering.
+          $results[$part][$document] = $weight;
         }
       }
     }
@@ -612,6 +621,57 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
   }
 
   /**
+   * Get the score boost based on the age of a report.
+   *
+   * @param string $date
+   *   Creation date in the form 'Y-m-d'.
+   *
+   * @return float
+   *   Score boost.
+   */
+  protected function getAgeBoost($date) {
+    static $now;
+    static $exponent;
+
+    if (!isset($now)) {
+      $now = time();
+    }
+
+    if (!isset($exponent)) {
+      $exponent = $this->state->get('reliefweb_analytics_most_read_age_weight_exponent', 1.5);
+    }
+
+    $time = strtotime($date);
+    if ($time === FALSE || ($now - $time) <= 0) {
+      return 1;
+    }
+
+    return 1 / pow(($now - $time) / 86400, $exponent);
+  }
+
+  /**
+   * Sort, slice and join the data from the google API fetch call.
+   *
+   * @param array $data
+   *   Data from the google API fetch call keyed by document ID (or path) and
+   *   with their weight as value.
+   * @param int $limit
+   *   Maximum number of reports to preserve.
+   *
+   * @return array
+   *   Sorted, sliced and joined results.
+   */
+  protected function parseApiData(array $data, $limit) {
+    // Sort by weight descendant.
+    arsort($data);
+
+    // Keep at max "limit" documents.
+    $documents = array_keys(array_slice($data, 0, $limit));
+
+    return implode(',', $documents);
+  }
+
+  /**
    * Common payload.
    *
    * @param \Google\Analytics\Data\V1beta\FilterExpression $filter
@@ -642,12 +702,29 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
 
     return [
       'property' => 'properties/' . Settings::get('reliefweb_analytics_property_id', ''),
-      'limit' => 2 * $limit,
+      'limit' => $limit,
       'returnPropertyQuota' => TRUE,
       'dateRanges' => [
+        // Using "daterange_" as prefix because "date_range_" is reserved.
         new DateRange([
-          'start_date' => $this->state->get('reliefweb_analytics_most_read_start_date', '30daysAgo'),
+          'start_date' => '28daysAgo',
+          'end_date' => '21daysAgo',
+          'name' => 'daterange_1',
+        ]),
+        new DateRange([
+          'start_date' => '20daysAgo',
+          'end_date' => '14daysAgo',
+          'name' => 'daterange_2',
+        ]),
+        new DateRange([
+          'start_date' => '13daysAgo',
+          'end_date' => '7daysAgo',
+          'name' => 'daterange_3',
+        ]),
+        new DateRange([
+          'start_date' => '6daysAgo',
           'end_date' => 'today',
+          'name' => 'daterange_4',
         ]),
       ],
       'dimensions' => [
@@ -655,13 +732,10 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
         new Dimension(['name' => 'customEvent:content_creation_date']),
       ],
       'metrics' => [
-        new Metric(['name' => 'active28DayUsers']),
-        new Metric(['name' => 'active7DayUsers']),
-        new Metric(['name' => 'active1DayUsers']),
         new Metric(['name' => 'activeUsers']),
       ],
       'order_bys' => [
-        new MetricOrderBy(['metric_name' => 'active28DayUsers']),
+        new MetricOrderBy(['metric_name' => 'activeUsers']),
       ],
       'dimensionFilter' => new FilterExpression([
         'and_group' => new FilterExpressionList([
@@ -673,12 +747,9 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
 
   /**
    * Homepage payload.
-   *
-   * @param int $limit
-   *   Maximum number of reports to count for each term.
    */
-  protected function getHomePagePayload($limit) {
-    $payload = $this->buildPayload(NULL, $limit);
+  protected function getHomePagePayload() {
+    $payload = $this->buildPayload(NULL, $this->state->get('reliefweb_analytics_most_read_single_limit', 1000));
 
     $payload['dateRanges'] = [
       new DateRange([
@@ -686,9 +757,6 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
         'end_date' => 'today',
       ]),
     ];
-
-    // Lower limit.
-    $payload['limit'] = $limit;
 
     return $payload;
   }
@@ -698,10 +766,8 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
    *
    * @param string $country_name
    *   Country name.
-   * @param int $limit
-   *   Maximum number of reports to count for each term.
    */
-  protected function getCountryPayload($country_name, $limit) {
+  protected function getCountryPayload($country_name) {
     $filter = new FilterExpression([
       'filter' => new Filter([
         'field_name' => 'customEvent:content_report_primary_country',
@@ -711,7 +777,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
         ]),
       ]),
     ]);
-    $payload = $this->buildPayload($filter, $limit);
+    $payload = $this->buildPayload($filter, $this->state->get('reliefweb_analytics_most_read_single_limit', 1000));
 
     return $payload;
   }
@@ -721,10 +787,8 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
    *
    * @param string $disaster_name
    *   Disaster name.
-   * @param int $limit
-   *   Maximum number of reports to count for each term.
    */
-  protected function getDisasterPayload($disaster_name, $limit) {
+  protected function getDisasterPayload($disaster_name) {
     $filter = new FilterExpression([
       'filter' => new Filter([
         'field_name' => 'customEvent:content_report_disaster',
@@ -734,7 +798,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
         ]),
       ]),
     ]);
-    $payload = $this->buildPayload($filter, $limit);
+    $payload = $this->buildPayload($filter, $this->state->get('reliefweb_analytics_most_read_single_limit', 1000));
 
     return $payload;
   }
