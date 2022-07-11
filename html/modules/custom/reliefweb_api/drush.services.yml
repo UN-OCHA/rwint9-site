@@ -1,6 +1,6 @@
 services:
   reliefweb_api.commands:
     class: \Drupal\reliefweb_api\Commands\ReliefWebApiCommands
-    arguments: ['@config.factory', '@module_handler', '@state']
+    arguments: ['@config.factory', '@entity_field.manager', '@entity_type.manager', '@module_handler', '@state']
     tags:
       - { name: drush.command }
