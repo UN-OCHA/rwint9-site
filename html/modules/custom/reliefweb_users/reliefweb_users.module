@@ -6,6 +6,7 @@
  */
 
 use Drupal\Component\Utility\Crypt;
+use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Site\Settings;
@@ -32,6 +33,15 @@ function reliefweb_users_theme() {
     ],
   ];
   return $themes;
+}
+
+/**
+ * Implements hook_menu_local_tasks_alter().
+ */
+function reliefweb_users_menu_local_tasks_alter(array &$data, $route_name, RefinableCacheableDependencyInterface &$cacheability) {
+  if (isset($data['tabs'][0]['entity.user.canonical'])) {
+    $data['tabs'][0]['entity.user.canonical']['#link']['title'] = t('Dashboard');
+  }
 }
 
 /**
