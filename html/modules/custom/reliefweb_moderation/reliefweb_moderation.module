@@ -9,7 +9,6 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldDefinitionInterface;
-use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModeratedNodeStorageSchema;
@@ -237,13 +236,9 @@ function reliefweb_moderation_preprocess_page(&$variables) {
   if ($user->hasPermission('view moderation information revision message')) {
     $message = $entity->getOriginalRevisionLogMessage();
     if (!empty($message)) {
-      // Convert the message to markdown to generate the links notably.
-      // Wrap in a Markup so that the HTML is not escaped when rendered.
-      $message = Markup::create(strip_tags(check_markup($message, 'markdown'), '<a><em><strong><br>'));
-
       $element['#message'] = [
         'type' => $entity->getOriginalRevisionLogMessageType(),
-        'content' => $message,
+        'content' => EntityHelper::formatRevisionLogMessage($message),
       ];
 
       if ($user->hasPermission('view moderation information revision message author')) {
