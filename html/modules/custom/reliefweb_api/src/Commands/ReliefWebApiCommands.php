@@ -4,8 +4,8 @@ namespace Drupal\reliefweb_api\Commands;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Database;
-use Drupal\Core\Entity\EntityFieldManager;
-use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\State\StateInterface;
 use Drush\Commands\DrushCommands;
@@ -27,14 +27,14 @@ class ReliefWebApiCommands extends DrushCommands {
   /**
    * Entity Field manager.
    *
-   * @var \Drupal\Core\Entity\EntityFieldManager
+   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
    */
   protected $entityFieldManager;
 
   /**
    * Entity Type manager.
    *
-   * @var \Drupal\Core\Entity\EntityTypeManager
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
 
@@ -57,8 +57,8 @@ class ReliefWebApiCommands extends DrushCommands {
    */
   public function __construct(
     ConfigFactoryInterface $config_factory,
-    EntityFieldManager $entity_field_manager,
-    EntityTypeManager $entity_type_manager,
+    EntityFieldManagerInterface $entity_field_manager,
+    EntityTypeManagerInterface $entity_type_manager,
     ModuleHandlerInterface $module_handler,
     StateInterface $state
   ) {
