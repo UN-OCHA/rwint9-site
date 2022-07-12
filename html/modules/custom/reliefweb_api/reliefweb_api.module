@@ -230,7 +230,7 @@ function reliefweb_api_check_reindexing(EntityInterface $entity) {
   }
 
   foreach ($fields as $field) {
-    if ($entity->get($field)->getValue() != $original_entity->get($field)->getValue()) {
+    if (!$entity->get($field)->equals($original_entity->get($field))) {
       $entity->needs_reindex = TRUE;
       break;
     }
