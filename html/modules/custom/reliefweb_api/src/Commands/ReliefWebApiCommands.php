@@ -217,7 +217,12 @@ class ReliefWebApiCommands extends DrushCommands {
       }
     }
     catch (\Exception $exception) {
-      $this->logger->error('(' . $exception->getCode() . ') ' . $exception->getMessage());
+      if ($exception->getMessage() !== 'No entity to index.') {
+        $this->logger->error('(' . $exception->getCode() . ') ' . $exception->getMessage());
+      }
+      else {
+        $this->logger->notice($exception->getMessage());
+      }
     }
   }
 
