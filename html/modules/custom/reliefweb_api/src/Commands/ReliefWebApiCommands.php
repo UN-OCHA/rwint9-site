@@ -342,6 +342,7 @@ class ReliefWebApiCommands extends DrushCommands {
     $this->state->set('reliefweb_api.reindex_queue', []);
 
     if (empty($reindex_queue)) {
+      $this->logger->info('No terms queued for re-indexing');
       return;
     }
 
@@ -369,6 +370,7 @@ class ReliefWebApiCommands extends DrushCommands {
 
       $options['filter'] = $bundle . ':' . implode(',', array_unique($ids));
       foreach ($bundles_to_reindex as $bundle_to_reindex) {
+        $this->logger->info('Re-indexing ' . $bundle_to_reindex . ' resources');
         $this->index($bundle_to_reindex, $options);
       }
     }
