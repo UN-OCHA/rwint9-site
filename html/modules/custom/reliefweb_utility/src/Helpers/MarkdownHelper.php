@@ -187,7 +187,8 @@ class MarkdownHelper {
       ],
     ];
 
-    // Create an Environment with all the CommonMark parsers and renderers.
+    // Create an Environment with all the CommonMark parsers and renderers for
+    // inline elements.
     $environment = new Environment($config);
     $environment->addExtension(new InlinesOnlyExtension());
 

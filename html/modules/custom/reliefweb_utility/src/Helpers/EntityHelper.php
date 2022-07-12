@@ -52,7 +52,7 @@ class EntityHelper {
    *   Revision log message.
    *
    * @return \Drupal\Component\Render\MarkupInterface
-   *   Formatted revision log message wrapped in a MarkupInterface so it's so
+   *   Formatted revision log message wrapped in a MarkupInterface so it's not
    *   escaped a second time when rendered in a template.
    */
   public static function formatRevisionLogMessage($message) {
