@@ -24,6 +24,7 @@ use Drupal\Core\Url;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Pager\PagerParametersInterface;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
+use Drupal\reliefweb_utility\Helpers\EntityHelper;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
 use Drupal\user\EntityOwnerInterface;
@@ -2504,6 +2505,8 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     if (empty($revision_message)) {
       return [];
     }
+
+    $revision_message = EntityHelper::formatRevisionLogMessage($revision_message);
 
     $revision_user = $entity->getRevisionUser();
     if (!$revision_user->isAnonymous()) {
