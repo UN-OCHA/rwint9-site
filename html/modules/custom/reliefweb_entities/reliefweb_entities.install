@@ -1,0 +1,18 @@
+<?php
+
+/**
+ * @file
+ * Install file for reliefweb_entities.
+ */
+
+/**
+ * Implements hook_update_N().
+ *
+ * Add the created field to the taxonomy terms.
+ */
+function reliefweb_entities_update_9001() {
+  $definition = reliefweb_entities_get_taxonomy_term_created_field_definition();
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('created', 'taxonomy_term', 'taxonomy', $definition);
+}
