@@ -12,6 +12,16 @@ use RWAPIIndexer\Bundles;
 use RWAPIIndexer\Manager;
 
 /**
+ * Implements hook_ENTITY_TYPE_update().
+ */
+function reliefweb_api_taxonomy_term_update(EntityInterface $entity) {
+  // Check if term needs re-indexing.
+  if (!$entity->isNew()) {
+    reliefweb_api_check_reindexing($entity);
+  }
+}
+
+/**
  * Implements hook_entity_after_save().
  *
  * @see \Drupal\reliefweb_entities\BundleEntityStorageInterface
@@ -21,6 +31,14 @@ function reliefweb_api_entity_after_save(EntityInterface $entity) {
   if (!empty($entity->_is_migrating)) {
     return;
   }
+
+  if (!empty($entity->needs_reindex)) {
+    $reindex_queue = \Drupal::state()->get('reliefweb_api.reindex_queue');
+    $reindex_queue[$entity->bundle()][$entity->id()] = $entity->id();
+    \Drupal::state()->set('reliefweb_api.reindex_queue', $reindex_queue);
+    unset($entity->needs_reindex);
+  }
+
   reliefweb_api_handle_entity($entity);
 }
 
@@ -143,6 +161,81 @@ function reliefweb_api_execute(array $options, $entity_type_id) {
   }
   catch (\Exception $exception) {
   }
+}
+
+/**
+ * Check if taxonomy terms require re-indexing of tagged content.
+ *
+ * Store terms for re-indexing so we can process them later in batches.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   Entity that might require re-indexing.
+ */
+function reliefweb_api_check_reindexing(EntityInterface $entity) {
+
+  if (!isset($entity->original)) {
+    return;
+  }
+  $original_entity = $entity->original;
+
+  switch ($entity->bundle()) {
+    case 'country':
+      $fields = [
+        'name',
+        'field_shortname',
+        'field_iso3',
+        'field_location',
+      ];
+      break;
+
+    case 'disaster':
+      $fields = [
+        'name',
+        'field_glide',
+        'field_disaster_type',
+        'moderation_status',
+      ];
+      break;
+
+    case 'disaster_type':
+      $fields = [
+        'name',
+        'field_disaster_type_code',
+      ];
+      break;
+
+    case 'language':
+      $fields = [
+        'name',
+        'field_language_code',
+      ];
+      break;
+
+    case 'source':
+      $fields = [
+        'name',
+        'field_shortname',
+        'field_longname',
+        'field_spanish_name',
+        'field_homepage',
+        'field_disclaimer',
+        'field_organization_type',
+      ];
+      break;
+
+    default:
+      $fields = [
+        'name',
+      ];
+  }
+
+  foreach ($fields as $field) {
+    if (!$entity->get($field)->equals($original_entity->get($field))) {
+      $entity->needs_reindex = TRUE;
+      break;
+    }
+  }
+
 }
 
 /**

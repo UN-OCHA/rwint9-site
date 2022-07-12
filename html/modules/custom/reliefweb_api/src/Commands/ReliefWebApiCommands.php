@@ -4,6 +4,8 @@ namespace Drupal\reliefweb_api\Commands;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Database;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\State\StateInterface;
 use Drush\Commands\DrushCommands;
@@ -11,9 +13,7 @@ use RWAPIIndexer\Manager;
 use RWAPIIndexer\Bundles;
 
 /**
- * ReliefWeb migration Drush commandfile.
- *
- * @todo remove after the migration from D7 to D9.
+ * ReliefWeb API Drush commandfile.
  */
 class ReliefWebApiCommands extends DrushCommands {
 
@@ -23,6 +23,20 @@ class ReliefWebApiCommands extends DrushCommands {
    * @var \Drupal\Core\Config\ImmutableConfig
    */
   protected $apiConfig;
+
+  /**
+   * Entity Field manager.
+   *
+   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
+   */
+  protected $entityFieldManager;
+
+  /**
+   * Entity Type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
 
   /**
    * Module handler.
@@ -43,10 +57,14 @@ class ReliefWebApiCommands extends DrushCommands {
    */
   public function __construct(
     ConfigFactoryInterface $config_factory,
+    EntityFieldManagerInterface $entity_field_manager,
+    EntityTypeManagerInterface $entity_type_manager,
     ModuleHandlerInterface $module_handler,
     StateInterface $state
   ) {
     $this->apiConfig = $config_factory->get('reliefweb_api.settings');
+    $this->entityFieldManager = $entity_field_manager;
+    $this->entityTypeManager = $entity_type_manager;
     $this->moduleHandler = $module_handler;
     $this->state = $state;
   }
@@ -199,7 +217,12 @@ class ReliefWebApiCommands extends DrushCommands {
       }
     }
     catch (\Exception $exception) {
-      $this->logger->error('(' . $exception->getCode() . ') ' . $exception->getMessage());
+      if ($exception->getMessage() !== 'No entity to index.') {
+        $this->logger->error('(' . $exception->getCode() . ') ' . $exception->getMessage());
+      }
+      else {
+        $this->logger->notice($exception->getMessage());
+      }
     }
   }
 
@@ -298,6 +321,107 @@ class ReliefWebApiCommands extends DrushCommands {
 
       $this->logger->info('Performed post indexing tasks.');
     }
+  }
+
+  /**
+   * Re-index queued content.
+   *
+   * @command reliefweb-api:reindexqueue
+   *
+   * @usage reliefweb-api:reindexqueue
+   *   Re-index the queue of terms to update.
+   *
+   * @validate-module-enabled reliefweb_api
+   *
+   * @aliases rw-api:reindexqueue
+   */
+  public function reIndexQueue() {
+
+    $reindex_queue = $this->state->get('reliefweb_api.reindex_queue');
+    // Empty the queue now so it can be repopulated during re-indexing.
+    $this->state->set('reliefweb_api.reindex_queue', []);
+
+    if (empty($reindex_queue)) {
+      $this->logger->info('No terms queued for re-indexing');
+      return;
+    }
+
+    // Get default options for indexing.
+    $reflection = new \ReflectionMethod(get_called_class(), 'index');
+    foreach ($reflection->getParameters() as $parameter) {
+      if ($parameter->getName() === 'options') {
+        $options = $parameter->getDefaultValue();
+        break;
+      }
+    }
+    if (!isset($options)) {
+      return;
+    }
+
+    foreach ($reindex_queue as $bundle => $ids) {
+      if (empty($ids)) {
+        continue;
+      }
+
+      $bundles_to_reindex = $this->getBundlesToReindex($bundle);
+      if (empty($bundles_to_reindex)) {
+        continue;
+      }
+
+      $options['filter'] = $bundle . ':' . implode(',', array_unique($ids));
+      foreach ($bundles_to_reindex as $bundle_to_reindex) {
+        $this->logger->info('Re-indexing ' . $bundle_to_reindex . ' resources');
+        $this->index($bundle_to_reindex, $options);
+      }
+    }
+  }
+
+  /**
+   * Get list of bundles to re-index for given taxonomy vocabulary.
+   *
+   * @param string $vocabulary
+   *   Vocabulary.
+   *
+   * @return array
+   *   List of bundles to re-index.
+   */
+  protected function getBundlesToReindex($vocabulary) {
+    // Gather a list of entity reference fields.
+    $entity_reference_fields = $this->entityFieldManager
+      ->getFieldMapByFieldType('entity_reference');
+
+    // Generate list of field config ids for the reference fields.
+    $ids = [];
+    foreach ($entity_reference_fields as $entity_type_id => $fields) {
+      foreach ($fields as $field_name => $info) {
+        foreach ($info['bundles'] as $entity_bundle) {
+          $ids[] = "$entity_type_id.$entity_bundle.$field_name";
+        }
+      }
+    }
+
+    // Load the configuration of the entity reference fields.
+    $field_configs = $this->entityTypeManager
+      ->getStorage('field_config')
+      ->loadMultiple($ids);
+
+    // Check if the fields reference the vocabulary. If so, get list of bundles
+    // that use those fields.
+    $bundles = [];
+    foreach ($field_configs as $field_config) {
+      $field_name = $field_config->getName();
+      $entity_type_id = $field_config->getTargetEntityTypeId();
+
+      if ($field_config->getSetting('target_type') === 'taxonomy_term') {
+        $handler_settings = $field_config->getSetting('handler_settings');
+        if (isset($handler_settings['target_bundles'][$vocabulary])) {
+          $bundles += $entity_reference_fields[$entity_type_id][$field_name]['bundles'];
+        }
+      }
+    }
+
+    // Exclude bundles that are not indexed in the API.
+    return array_keys(array_intersect_key(Bundles::$bundles, $bundles));
   }
 
 }
