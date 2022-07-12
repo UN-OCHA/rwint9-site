@@ -251,7 +251,7 @@ function reliefweb_users_mail($key, array &$message, array $params) {
  */
 function reliefweb_users_get_email_confirmation_url(UserInterface $user) {
   $timestamp = \Drupal::time()->getRequestTime();
-  $hash = reliefweb_user_get_email_confirmation_hash($user, $timestamp);
+  $hash = reliefweb_users_get_email_confirmation_hash($user, $timestamp);
 
   return Url::fromRoute('user.email.confirmation', [
     'uid' => $user->id(),
@@ -273,7 +273,7 @@ function reliefweb_users_get_email_confirmation_url(UserInterface $user) {
  * @return string
  *   Email confirmation hash
  */
-function reliefweb_user_get_email_confirmation_hash(UserInterface $user, $timestamp) {
+function reliefweb_users_get_email_confirmation_hash(UserInterface $user, $timestamp) {
   $email = $user->getEmail();
   $confirmed = !empty($user->field_email_confirmed->value) ? '1' : '0';
   $data = implode('/', [$user->id(), $timestamp, $email, $confirmed]);

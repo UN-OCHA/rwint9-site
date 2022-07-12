@@ -134,7 +134,7 @@ class UserEmailConfirmationController extends ControllerBase {
       ->get('reliefweb_user.settings')
       ->get('email_confirmation_timeout');
 
-    if (reliefweb_user_get_email_confirmation_hash($user, $timestamp) !== $hash) {
+    if (reliefweb_users_get_email_confirmation_hash($user, $timestamp) !== $hash) {
       $this->messenger()->addError($this->t('Invalid email confirmation link.'));
     }
     elseif (!empty($timeout) && $current - $timestamp > $timeout) {
