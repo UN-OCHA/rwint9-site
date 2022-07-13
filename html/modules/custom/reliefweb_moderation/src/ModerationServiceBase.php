@@ -24,6 +24,7 @@ use Drupal\Core\Url;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Pager\PagerParametersInterface;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
+use Drupal\reliefweb_utility\Helpers\EntityHelper;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
 use Drupal\user\EntityOwnerInterface;
@@ -852,6 +853,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
           'shortcut' => 'cd',
           'form' => 'omnibox',
           'widget' => 'datepicker',
+          'condition_callback' => 'addDateFilterCondition',
         ],
         'registration_deadline' => [
           'type' => 'field',
@@ -861,6 +863,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
           'shortcut' => 'rd',
           'form' => 'omnibox',
           'widget' => 'datepicker',
+          'condition_callback' => 'addDateFilterCondition',
         ],
         'disaster_date' => [
           'type' => 'field',
@@ -870,6 +873,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
           'shortcut' => 'cd',
           'form' => 'omnibox',
           'widget' => 'datepicker',
+          'condition_callback' => 'addDateFilterCondition',
         ],
         'author' => [
           'type' => 'property',
@@ -1625,6 +1629,49 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
       else {
         $base->condition($fields, $value, $operator);
       }
+    }
+  }
+
+  /**
+   * Add a date filter condition with the given values to the base condition.
+   *
+   * The date fields store the date in `Y-m-d` format so we need to convert
+   * them to timestamp for comparison with the start and/or end dates which are
+   * timestamps.
+   *
+   * @param array $definition
+   *   Field definition.
+   * @param \Drupal\Core\Database\Query\Condition $base
+   *   Base condition to add the field conditions to.
+   * @param string|array $fields
+   *   Field(s) on which to add the condtion.
+   * @param mixed $value
+   *   Value for the condition.
+   * @param string|null $operator
+   *   Operator for the condition.
+   */
+  protected function addDateFilterCondition(array $definition, Condition $base, $fields, $value, $operator = NULL) {
+    // Skip.
+    if (empty($fields)) {
+      return;
+    }
+
+    if (is_array($fields)) {
+      if (count($fields) > 1) {
+        $condition = new Condition('OR');
+        foreach ($fields as $field) {
+          $condition->where("UNIX_TIMESTAMP(${field}) ${operator} ${value}");
+        }
+        $base->condition($condition);
+      }
+      else {
+        $field = reset($field);
+        $base->where("UNIX_TIMESTAMP(${field}) ${operator} ${value}");
+      }
+    }
+    else {
+      $field = $fields;
+      $base->where("UNIX_TIMESTAMP(${field}) ${operator} ${value}");
     }
   }
 
@@ -2458,6 +2505,8 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     if (empty($revision_message)) {
       return [];
     }
+
+    $revision_message = EntityHelper::formatRevisionLogMessage($revision_message);
 
     $revision_user = $entity->getRevisionUser();
     if (!$revision_user->isAnonymous()) {

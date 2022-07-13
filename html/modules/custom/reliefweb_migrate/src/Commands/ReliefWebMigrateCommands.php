@@ -742,6 +742,9 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
         ':extension' => 'pdf',
       ];
       $options = [
+        // Note: this is deprecated in Drupal 9.4 and will be removed in Drupal
+        // 11 and there is no replacement. We don't really care because the
+        // reliefweb_migrate will be removed way before that.
         'return' => Database::RETURN_AFFECTED,
       ];
 
@@ -1517,6 +1520,9 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
     }
 
     $options = [
+      // Note: this is deprecated in Drupal 9.4 and will be removed in Drupal
+      // 11 and there is no replacement. We don't really care because the
+      // reliefweb_migrate will be removed way before that.
       'return' => Database::RETURN_AFFECTED,
     ];
 
@@ -1650,6 +1656,9 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
     ];
 
     $query_options = [
+      // Note: this is deprecated in Drupal 9.4 and will be removed in Drupal
+      // 11 and there is no replacement. We don't really care because the
+      // reliefweb_migrate will be removed way before that.
       'return' => Database::RETURN_AFFECTED,
     ];
 
@@ -1746,6 +1755,9 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
       'field_content_format_target_id',
     ];
     $query_options = [
+      // Note: this is deprecated in Drupal 9.4 and will be removed in Drupal
+      // 11 and there is no replacement. We don't really care because the
+      // reliefweb_migrate will be removed way before that.
       'return' => Database::RETURN_AFFECTED,
     ];
     $dry_run = !empty($options['dry-run']);
@@ -1931,14 +1943,14 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
       switch ($record->id) {
         case 'country':
           if (empty($query['cc'])) {
-            continue;
+            continue 2;
           }
           $path = '/country/' . $query['cc'];
           break;
 
         case 'disaster':
           if (empty($query['emid'])) {
-            continue;
+            continue 2;
           }
           $path = '/disaster/' . $query['emid'];
           break;

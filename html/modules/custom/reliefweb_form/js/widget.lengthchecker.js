@@ -108,7 +108,7 @@
       }
 
       // Enable length checker on relevant textarea fields.
-      var elements = document.querySelectorAll('[data-with-lengthchecker]:not([data-with-lengthchecker-processed])');
+      var elements = context.querySelectorAll('[data-with-lengthchecker]:not([data-with-lengthchecker-processed])');
       for (var i = 0, l = elements.length; i < l; i++) {
         var element = elements[i];
         element.setAttribute('data-with-lengthchecker-processed', '');

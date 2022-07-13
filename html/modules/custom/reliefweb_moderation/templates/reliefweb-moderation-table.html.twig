@@ -77,7 +77,7 @@
         {% elseif id == 'date' %}
           <div class="rw-moderation-table__cell__date">{{ cell.date|date('j M Y') }}</div>
           {% if cell.bury is not empty %}
-             <div class="rw-moderation-table__cell__bury">{{ 'Burried'|t }}</div>
+             <div class="rw-moderation-table__cell__bury">{{ 'Buried'|t }}</div>
           {% endif %}
         {# In case there are additional cells, we assume the content is r
            enderable. #}

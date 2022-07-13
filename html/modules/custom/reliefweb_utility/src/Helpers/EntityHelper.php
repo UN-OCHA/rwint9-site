@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_utility\Helpers;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Render\Markup;
 
 /**
  * Helper to information about entities.
@@ -42,6 +43,27 @@ class EntityHelper {
         }
       }
     }
+  }
+
+  /**
+   * Format a revision log message.
+   *
+   * @param string $message
+   *   Revision log message.
+   *
+   * @return \Drupal\Component\Render\MarkupInterface
+   *   Formatted revision log message wrapped in a MarkupInterface so it's not
+   *   escaped a second time when rendered in a template.
+   */
+  public static function formatRevisionLogMessage($message) {
+    if (!empty($message)) {
+      $message = MarkdownHelper::convertInlinesOnly($message);
+      $message = HtmlSanitizer::sanitize($message);
+    }
+    else {
+      $message = '';
+    }
+    return Markup::create($message);
   }
 
 }

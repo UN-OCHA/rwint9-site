@@ -2,7 +2,6 @@
 
 namespace Drupal\reliefweb_files\Controller;
 
-use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
@@ -18,6 +17,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Mime\Header\UnstructuredHeader;
 
 /**
  * System file controller.
@@ -261,7 +261,7 @@ class FileDownloadController extends OriginalFileDownloadController {
     // Ensure the latest version of the attachment is always returned.
     $headers = [
       'Cache-Control' => 'private, must-revalidate',
-      'Content-Disposition' => 'attachment; filename="' . Unicode::mimeHeaderEncode($filename) . '"',
+      'Content-Disposition' => 'attachment; filename="' . $this->encodeFileName($filename) . '"',
     ];
 
     if (file_exists($uri)) {
@@ -295,7 +295,7 @@ class FileDownloadController extends OriginalFileDownloadController {
     // Ensure the latest version of the attachment is always returned.
     $headers = [
       'Cache-Control' => 'private, must-revalidate',
-      'Content-Disposition' => 'attachment; filename="' . Unicode::mimeHeaderEncode($filename) . '"',
+      'Content-Disposition' => 'attachment; filename="' . $this->encodeFileName($filename) . '"',
     ];
 
     // Download the remote file.
@@ -350,6 +350,20 @@ class FileDownloadController extends OriginalFileDownloadController {
     }
 
     return NULL;
+  }
+
+  /**
+   * Encode a filename to use in a response header.
+   *
+   * @param string $filename
+   *   File name to encode.
+   *
+   * @return string
+   *   Encode file name.
+   */
+  protected function encodeFileName($filename) {
+    $header = new UnstructuredHeader('filename', $filename);
+    return $header->getBodyAsString();
   }
 
 }

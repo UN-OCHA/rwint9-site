@@ -10,6 +10,7 @@ use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\RevisionLogInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\reliefweb_entities\BundleEntityInterface;
@@ -21,6 +22,39 @@ use Drupal\reliefweb_utility\Helpers\MailHelper;
 use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\taxonomy\TermInterface;
+
+/**
+ * Implements hook_entity_base_field_info().
+ *
+ * Add a created field to taxonomy terms as Drupal Core is not yet doing that.
+ *
+ * @see https://www.drupal.org/project/drupal/issues/2869432
+ */
+function reliefweb_entities_entity_base_field_info(EntityTypeInterface $entity_type) {
+  $fields = [];
+
+  switch ($entity_type->id()) {
+    case 'taxonomy_term':
+      $fields['created'] = reliefweb_entities_get_taxonomy_term_created_field_definition();
+      break;
+  }
+
+  return $fields;
+}
+
+/**
+ * Get the taxonomy term "created" field definition.
+ *
+ * @return \Drupal\Core\Field\BaseFieldDefinition
+ *   Field definition.
+ */
+function reliefweb_entities_get_taxonomy_term_created_field_definition() {
+  return BaseFieldDefinition::create('created')
+    ->setLabel(t('Created'))
+    ->setDescription(t('The time that the term was created.'))
+    ->setReadOnly(TRUE)
+    ->setTranslatable(TRUE);
+}
 
 /**
  * Implements hook_entity_bundle_field_info_alter().
@@ -600,7 +634,7 @@ function reliefweb_entities_mail($key, array &$message, array $parameters) {
  * At max 20 nodes of each type is processed at once to avoid clogging the cron
  * process and using excessive resources.
  */
-function reliefweb_moderation_cron() {
+function reliefweb_entities_cron() {
   $storage = \Drupal::entityTypeManager()->getStorage('node');
   $cron_settings = \Drupal::config('reliefweb_entities.settings')->get('cron') ?? [];
 

@@ -8,8 +8,9 @@ use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\ClientException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
+use GuzzleHttp\Psr7\MimeType;
 
 /**
  * Proxy subscriber to retrieve images from the ReliefWeb Drupal 7 site.
@@ -66,10 +67,10 @@ class ProxySubscriber implements EventSubscriberInterface {
   /**
    * Fetch the file from it's origin.
    *
-   * @param \Symfony\Component\HttpKernel\Event\GetResponseEvent $event
+   * @param \Symfony\Component\HttpKernel\Event\RequestEvent $event
    *   The event to process.
    */
-  public function checkFileOrigin(GetResponseEvent $event) {
+  public function checkFileOrigin(RequestEvent $event) {
     $request = $event->getRequest();
 
     // Get the file path.
@@ -84,7 +85,7 @@ class ProxySubscriber implements EventSubscriberInterface {
 
     // Check if the request is for an image.
     // @todo we may want to allow report attachments as well at some point.
-    if (strpos(\GuzzleHttp\Psr7\mimetype_from_filename($path), 'image/') !== 0) {
+    if (strpos(MimeType::fromFilename($path), 'image/') !== 0) {
       return;
     }
 

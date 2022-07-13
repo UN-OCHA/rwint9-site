@@ -5,8 +5,11 @@ namespace Drupal\reliefweb_utility\Helpers;
 use League\CommonMark\Environment\Environment;
 use League\CommonMark\Extension\Attributes\AttributesExtension;
 use League\CommonMark\Extension\Autolink\AutolinkExtension;
+use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
 use League\CommonMark\Extension\ExternalLink\ExternalLinkExtension;
+use League\CommonMark\Extension\InlinesOnly\InlinesOnlyExtension;
 use League\CommonMark\Extension\Table\TableExtension;
+use League\CommonMark\Extension\Strikethrough\StrikethroughExtension;
 use League\CommonMark\MarkdownConverter;
 
 /**
@@ -131,18 +134,18 @@ class MarkdownHelper {
     // No need for extra blanks.
     $text = trim($text);
 
-    // Obtain a pre-configured Environment with all the CommonMark
-    // parsers/renderers ready-to-go.
-    $environment = Environment::createCommonMarkEnvironment();
-
-    // Configuration to add attributes to external links.
-    $external_link_config = [
+    // Environment configuration.
+    $config = [
+       // Settings to add attributes to external links.
       'external_link' => [
         'internal_hosts' => $internal_hosts,
         'open_in_new_window' => TRUE,
       ],
     ];
-    $environment->mergeConfig($external_link_config);
+
+    // Create an Environment with all the CommonMark parsers and renderers.
+    $environment = new Environment($config);
+    $environment->addExtension(new CommonMarkCoreExtension());
 
     // Add the extension to convert external links.
     $environment->addExtension(new ExternalLinkExtension());
@@ -160,7 +163,49 @@ class MarkdownHelper {
     $converter = new MarkdownConverter($environment);
 
     // Convert to HTML.
-    return (string) $converter->convertToHtml($text);
+    return (string) $converter->convert($text);
+  }
+
+  /**
+   * Convert a markdown text to HTML (only inline elements).
+   *
+   * @param string $text
+   *   Markdown text to convert.
+   * @param array $internal_hosts
+   *   List of internal hosts to determine if a link is external or not.
+   *
+   * @return string
+   *   HTML.
+   */
+  public static function convertInlinesOnly($text, array $internal_hosts = ['reliefweb.int']) {
+    // Environment configuration.
+    $config = [
+       // Settings to add attributes to external links.
+      'external_link' => [
+        'internal_hosts' => $internal_hosts,
+        'open_in_new_window' => TRUE,
+      ],
+    ];
+
+    // Create an Environment with all the CommonMark parsers and renderers for
+    // inline elements.
+    $environment = new Environment($config);
+    $environment->addExtension(new InlinesOnlyExtension());
+
+    // Add the extension to convert external links.
+    $environment->addExtension(new ExternalLinkExtension());
+
+    // Add the extension to convert links.
+    $environment->addExtension(new AutolinkExtension());
+
+    // Add the extension to convert strikethrough.
+    $environment->addExtension(new StrikethroughExtension());
+
+    // Create the converter with the extension(s).
+    $converter = new MarkdownConverter($environment);
+
+    // Convert to HTML.
+    return (string) $converter->convert($text);
   }
 
 }

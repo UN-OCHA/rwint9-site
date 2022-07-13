@@ -43,9 +43,16 @@
     // Extend the behavior for the required state to remove any optional marker.
     $(document).on('state:required', function (event) {
       if (event.trigger) {
+        var target = event.target;
+        var type = target.nodeName;
+        if ((type === 'BUTTON' || type === 'INPUT' || type === 'SELECT' || type === 'TEXTAREA') && target.id) {
+          target = document.querySelector('label[for="' + target.id + '"]');
+        }
+
         if (!event.value) {
+          var $elements = target.hasAttribute('data-optional') ? $(target) : $(target).find('[data-optional]');
           // Add the optional mark if not already there.
-          $(event.target).find('[data-optional]').each(function () {
+          $elements.each(function () {
             var $label = $(this);
             if (!$label.find('.form-optional').length) {
               $label.append('<span class="form-optional">' + $label.attr('data-optional') + '</span>');
@@ -55,7 +62,7 @@
         else {
           // Store the text of the optional marker to preseve the translated
           // string so that it can be re-used if the marker is added back.
-          $(event.target).find('.form-optional').each(function () {
+          $(target).find('.form-optional').each(function () {
             var $element = $(this);
             $element.parent().attr('data-optional', $element.text());
             $element.remove();

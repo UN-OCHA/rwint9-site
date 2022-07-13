@@ -18,3 +18,10 @@ reliefweb-section-links:
       components/reliefweb-section-links/reliefweb-section-links.css: {}
   js:
     components/reliefweb-section-links/reliefweb-section-links.js: {}
+
+reliefweb-options:
+  css:
+    component:
+      components/reliefweb-options/reliefweb-options.css: {}
+  js:
+    components/reliefweb-options/reliefweb-options.js: {}

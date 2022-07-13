@@ -386,7 +386,7 @@ trait AccumulatedSqlContentEntityStorageTrait {
    */
   protected function doInvokeHook($hook, EntityInterface $entity, array $blacklist = []) {
     $return = [];
-    $implementations = $this->moduleHandler()->getImplementations($hook);
+    $implementations = array_keys($this->moduleHandler()->getImplementationInfo($hook));
     foreach ($implementations as $module) {
       $function = $module . '_' . $hook;
       if (isset($blacklist[$function])) {
