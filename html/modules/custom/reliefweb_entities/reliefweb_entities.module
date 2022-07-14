@@ -13,6 +13,7 @@ use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\Core\Render\Element;
 use Drupal\reliefweb_entities\BundleEntityInterface;
 use Drupal\reliefweb_entities\BundleEntityStorageInterface;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
@@ -412,6 +413,37 @@ function reliefweb_entities_form_taxonomy_term_form_alter(array &$form, FormStat
   // Add an entity builder callback that will ensure the proper revisio
   // user id and timestamp are set.
   $form['#entity_builders'][] = 'reliefweb_entities_term_form_entity_builder';
+}
+
+/**
+ * Implements hook_form_HOOK_alter() for "taxonomy_overview_vocabularies".
+ */
+function reliefweb_entities_form_taxonomy_overview_vocabularies_alter(array &$form, FormStateInterface $form_state) {
+  // Prevent re-ordering the vocabularies without the appropriate permission.
+  if (!\Drupal::currentUser()->hasPermission('administer taxonomy')) {
+    $form['actions']['#access'] = FALSE;
+    unset($form['vocabularies']['#tabledrag']);
+    unset($form['vocabularies']['#header']['weight']);
+    foreach (Element::children($form['vocabularies']) as $key) {
+      unset($form['vocabularies'][$key]['weight']);
+    }
+  }
+}
+
+/**
+ * Implements hook_form_HOOK_alter() for "taxonomy_overview_terms".
+ */
+function reliefweb_entities_form_taxonomy_overview_terms_alter(array &$form, FormStateInterface $form_state) {
+  // Prevent re-ordering the terms without the appropriate permission.
+  if (!\Drupal::currentUser()->hasPermission('administer taxonomy')) {
+    $form['actions']['#access'] = FALSE;
+    $form['help']['#access'] = FALSE;
+    unset($form['terms']['#tabledrag']);
+    unset($form['terms']['#header']['weight']);
+    foreach (Element::children($form['terms']) as $key) {
+      unset($form['terms'][$key]['weight']);
+    }
+  }
 }
 
 /**
