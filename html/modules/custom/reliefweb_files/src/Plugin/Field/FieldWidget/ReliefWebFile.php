@@ -273,6 +273,7 @@ class ReliefWebFile extends WidgetBase {
         'type' => 'throbber',
         'message' => $message,
       ],
+      'disable-refocus' => TRUE,
     ];
   }
 
