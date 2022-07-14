@@ -39,3 +39,6 @@ services:
   reliefweb_entities.training.form_alter:
     class: Drupal\reliefweb_entities\Services\TrainingFormAlter
     arguments: ['@database', '@current_user', '@entity_field.manager', '@entity_type.manager', '@state', '@string_translation']
+  reliefweb_entities.taxonomy_term.form_alter:
+    class: Drupal\reliefweb_entities\Services\TaxonomyTermFormAlter
+    arguments: ['@database', '@current_user', '@entity_field.manager', '@entity_type.manager', '@state', '@string_translation']
