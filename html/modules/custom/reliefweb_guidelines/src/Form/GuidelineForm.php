@@ -93,7 +93,7 @@ class GuidelineForm extends ContentEntityForm {
 
     // Attempt to load from preview when the uuid is present unless we are
     // rebuilding the form.
-    $request_uuid = $this->requestStack->getCurrentRequest()->query->get('uuid');
+    $request_uuid = $this->getRequest()->query->get('uuid');
     if (!$form_state->isRebuilding() && $request_uuid && $preview = $store->get($request_uuid)) {
       /** @var \Drupal\Core\Form\FormStateInterface $preview */
 
@@ -227,7 +227,7 @@ class GuidelineForm extends ContentEntityForm {
    *
    * @param array $form
    *   An associative array containing the structure of the form.
-   * @param Drupal\Core\Form\FormStateInterface $form_state
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
    */
   public function preview(array $form, FormStateInterface $form_state) {
