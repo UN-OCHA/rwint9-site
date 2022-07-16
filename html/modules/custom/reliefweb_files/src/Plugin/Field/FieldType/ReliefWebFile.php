@@ -88,6 +88,8 @@ class ReliefWebFile extends FieldItemBase {
     return [
       'file_extensions' => '',
       'max_filesize' => NULL,
+      'preview_max_filesize' => NULL,
+      'preview_min_dimensions' => '',
     ] + parent::defaultFieldSettings();
   }
 
@@ -121,6 +123,26 @@ class ReliefWebFile extends FieldItemBase {
       ]),
       '#size' => 10,
       '#element_validate' => [[static::class, 'validateMaxFilesize']],
+    ];
+
+    $element['preview_max_filesize'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Preview maximum upload size'),
+      '#default_value' => $settings['preview_max_filesize'],
+      '#description' => $this->t('Enter a value like "512" (bytes), "80 KB" (kilobytes) or "50 MB" (megabytes) in order to restrict the allowed file size. If left empty the file sizes will be limited only by PHP\'s maximum post and file upload sizes (current limit <strong>%limit</strong>).', [
+        '%limit' => format_size(Environment::getUploadMaxSize()),
+      ]),
+      '#size' => 10,
+      '#element_validate' => [[static::class, 'validatePreviewMaxFilesize']],
+    ];
+
+    $element['preview_min_dimensions'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Preview minimum dimensions'),
+      '#default_value' => $settings['preview_min_dimensions'],
+      '#description' => $this->t('Enter a value in the form WIDHTxHEIGHT (pixels), ex: 700x100.'),
+      '#size' => 10,
+      '#element_validate' => [[static::class, 'validatePreviewMinDimensions']],
     ];
 
     return $element;
@@ -195,6 +217,53 @@ class ReliefWebFile extends FieldItemBase {
   }
 
   /**
+   * Form API callback.
+   *
+   * Ensures that a size has been entered and that it can be parsed by
+   * \Drupal\Component\Utility\Bytes::toNumber().
+   *
+   * This function is assigned as an #element_validate callback in
+   * fieldSettingsForm().
+   *
+   * @param array $element
+   *   Form element to validate.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  public static function validatePreviewMaxFilesize(array $element, FormStateInterface $form_state) {
+    $element['#value'] = trim($element['#value']);
+    $form_state->setValue(['settings', 'preview_max_filesize'], $element['#value']);
+    if (!empty($element['#value']) && !Bytes::validate($element['#value'])) {
+      $form_state->setError($element, $this->t('The "@name" option must contain a valid value. You may either leave the text field empty or enter a string like "512" (bytes), "80 KB" (kilobytes) or "50 MB" (megabytes).', [
+        '@name' => $element['#title'],
+      ]));
+    }
+  }
+
+  /**
+   * Form API callback.
+   *
+   * Validate the format of the preview minimum dimensions (WIDTHxHEIGHT).
+   *
+   * This function is assigned as an #element_validate callback in
+   * fieldSettingsForm().
+   *
+   * @param array $element
+   *   Form element to validate.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  public static function validatePreviewMinDimensions(array $element, FormStateInterface $form_state) {
+    $element['#value'] = trim($element['#value']);
+    $form_state->setValue(['settings', 'preview_min_dimensions'], $element['#value']);
+    if (isset($element['#value']) && preg_match('/^(\d+x\d*)?$/', $element['#value']) !== 1) {
+      $form_state->setError($element, $this->t('The "@name" option must contain a valid value. You may either leave the text field empty or enter a value in the form WIDHTxHEIGHT (ex: 700x100).', [
+        '@name' => $element['#title'],
+      ]));
+    }
+  }
+
+  /**
    * Retrieves the upload validators for a file field.
    *
    * @return array
@@ -228,6 +297,27 @@ class ReliefWebFile extends FieldItemBase {
   }
 
   /**
+   * Retrieves the upload validators for a preview file.
+   *
+   * @return array
+   *   An array suitable for passing to file_save_upload() or the file field
+   *   element's '#upload_validators' property.
+   */
+  public function getPreviewUploadValidators() {
+    // We only PNG to be consistent with the automatically generated previews.
+    $validators = [
+      'file_validate_extensions' => ['png'],
+      'reliefweb_files_file_validate_mime_type' => ['image/png'],
+      'file_validate_name_length' => [],
+      'file_validate_is_image' => [],
+      'file_validate_size' => [$this->getPreviewMaxFileSize()],
+      'file_validate_image_resolution' => ['', $this->getPreviewMinDimensions()],
+    ];
+
+    return $validators;
+  }
+
+  /**
    * Get the upload max file size.
    *
    * @return int
@@ -242,6 +332,34 @@ class ReliefWebFile extends FieldItemBase {
     }
 
     return $max_filesize;
+  }
+
+  /**
+   * Get the preview upload max file size.
+   *
+   * @return int
+   *   The max file size in bytes.
+   */
+  public function getPreviewMaxFileSize() {
+    $settings = $this->getSettings();
+
+    $max_filesize = Bytes::toNumber(Environment::getUploadMaxSize());
+    if (!empty($settings['preview_max_filesize'])) {
+      $max_filesize = min($max_filesize, Bytes::toNumber($settings['preview_max_filesize']));
+    }
+
+    return $max_filesize;
+  }
+
+  /**
+   * Get the preview minimum dimensions.
+   *
+   * @return string
+   *   Minimum dimensions in the form WIDTHxHEIGHT.
+   */
+  public function getPreviewMinDimensions() {
+    $settings = $this->getSettings();
+    return $settings['preview_min_dimensions'] ?? '';
   }
 
   /**
@@ -274,6 +392,20 @@ class ReliefWebFile extends FieldItemBase {
     return $this->t('Allowed extensions: %extensions. Max file size: %max_filesize.', [
       '%extensions' => !empty($extensions) ? implode(', ', $extensions) : $this->t('any'),
       '%max_filesize' => format_size($this->getMaxFileSize()),
+    ]);
+  }
+
+  /**
+   * Get the description with the allowed extensions and file size.
+   *
+   * @return \Drupal\Component\Render\MarkupInterface
+   *   The upload description.
+   */
+  public function getPreviewUploadDescription() {
+    return $this->t('PNG only. Max file size: %max_filesize. Minimum dimensions: %dimensions', [
+      '%extension' => 'png',
+      '%max_filesize' => format_size($this->getPreviewMaxFileSize()),
+      '%dimensions' => $this->getPreviewMinDimensions() ?: $this->t('none'),
     ]);
   }
 
@@ -566,8 +698,10 @@ class ReliefWebFile extends FieldItemBase {
    *   be generated.
    */
   public function getPreview($generate = FALSE) {
-    if (!$this->canHavePreview()) {
-      return NULL;
+    // For file that cannot have a preview automatically generated, try
+    // to return the attached preview if any.
+    if (!$this->canHaveGeneratedPreview()) {
+      return $this->loadPreviewFile();
     }
 
     $page = $this->getPreviewPage();
@@ -608,7 +742,7 @@ class ReliefWebFile extends FieldItemBase {
    *   The preview file entity or NULL if the preview was not generated.
    */
   public function generatePreview($page = 0, $rotation = 0, $regenerate = FALSE, $new = FALSE) {
-    if ($page < 1 || $this->isEmpty() || !$this->canHavePreview() || $this->getPageCount() === 0) {
+    if ($page < 1 || $this->isEmpty() || !$this->canHaveGeneratedPreview() || $this->getPageCount() === 0) {
       return NULL;
     }
 
@@ -758,12 +892,12 @@ class ReliefWebFile extends FieldItemBase {
   }
 
   /**
-   * Check if a preview can be generated for this field item.
+   * Check if a preview can be automatically generated for this field item.
    *
    * @return bool
    *   TRUE if a preview can be generated.
    */
-  public function canHavePreview() {
+  public function canHaveGeneratedPreview() {
     return $this->getFileMime() === 'application/pdf';
   }
 
@@ -800,7 +934,7 @@ class ReliefWebFile extends FieldItemBase {
    * @param string $uri
    *   Preview image URI.
    */
-  protected function deletePreviewDerivatives($uri) {
+  public function deletePreviewDerivatives($uri) {
     image_path_flush($uri);
   }
 
@@ -1178,7 +1312,7 @@ class ReliefWebFile extends FieldItemBase {
   }
 
   /**
-   * Check if the file can have a preview.
+   * Check if the file can have an automatically generated preview.
    *
    * @param \Drupal\file\Entity\File|null $file
    *   Managed File.
@@ -1186,7 +1320,7 @@ class ReliefWebFile extends FieldItemBase {
    * @return bool
    *   TRUE if the file preview can be generated.
    */
-  public static function fileCanHavePreview(?File $file) {
+  public static function fileCanHaveGeneratedPreview(?File $file) {
     if (empty($file)) {
       return FALSE;
     }
@@ -1203,7 +1337,7 @@ class ReliefWebFile extends FieldItemBase {
    *   Number of pages.
    */
   public static function getFilePageCount(File $file) {
-    if (!static::fileCanHavePreview($file)) {
+    if (!static::fileCanHaveGeneratedPreview($file)) {
       return 0;
     }
 
@@ -1383,7 +1517,7 @@ class ReliefWebFile extends FieldItemBase {
    *   Number of pages. Returns 0 if the number of pages is irrelevant.
    */
   public function getPageCount() {
-    if ($this->canHavePreview()) {
+    if ($this->canHaveGeneratedPreview()) {
       return $this->get('page_count')->getValue() ?? 1;
     }
     return 0;
@@ -1510,7 +1644,7 @@ class ReliefWebFile extends FieldItemBase {
   public function updateRemovedItem() {
     try {
       // Move the field item file to its UUID URI so that it's not possible to
-      // directly access the filesanymore with the permanent URI.
+      // directly access the file anymore with the permanent URI.
       $this->moveFileToUuidUri();
       // Delete the preview and its derivatives as they should not be accessible
       // anymore either.
@@ -1543,9 +1677,9 @@ class ReliefWebFile extends FieldItemBase {
 
     try {
       if ($update_file) {
-        // Move the old file.
+        // Archive the old file.
         if (!empty($original_item)) {
-          $original_item->moveFileToUuidUri();
+          $original_item->archiveFile();
         }
 
         // Update the field item file.
@@ -1558,10 +1692,9 @@ class ReliefWebFile extends FieldItemBase {
       }
 
       if ($update_preview) {
-        // Delete the old preview. We don't need to keep it. It will be
-        // recreated when reverting if that ever happens.
+        // Archive the old preview file.
         if (!empty($original_item)) {
-          $original_item->deletePreview();
+          $original_item->archivePreviewFile();
         }
 
         // Update the preview if any.
@@ -1704,7 +1837,7 @@ class ReliefWebFile extends FieldItemBase {
   protected function updatePreviewFile() {
     // If "no preview" was selected, delete the preview.
     $preview_page = $this->getPreviewPage();
-    if (empty($preview_page) || !$this->canHavePreview()) {
+    if (empty($preview_page)) {
       $this->deletePreview();
     }
 
@@ -1782,6 +1915,45 @@ class ReliefWebFile extends FieldItemBase {
       throw new \Exception('Unable to load file to move to UUID URI');
     }
     $this->changeFileLocation($file, $this->getFileUuidUri($file));
+  }
+
+  /**
+   * Move the file to its file UUID URI.
+   *
+   * @throws \Exception
+   *   Exception if the file couldn't me moved.
+   */
+  protected function archiveFile() {
+    $file = $this->loadFile();
+    if (!empty($file)) {
+      $this->moveFileToUuidUri();
+      // Make the file private as well.
+      $this->swapFileLocation($file, TRUE);
+    }
+  }
+
+  /**
+   * Move the preview file to its file UUID URI and remove derivatives.
+   *
+   * @throws \Exception
+   *   Exception if the file couldn't me moved.
+   */
+  protected function archivePreviewFile() {
+    // Delete the old preview if it's generated. We don't need to keep it.
+    // It will be recreated when reverting if that ever happens.
+    if ($this->canHaveGeneratedPreview()) {
+      $this->deletePreview();
+    }
+    // Otherwise attempt to move the preview file to its UUID URI.
+    else {
+      $file = $this->loadPreviewFile();
+      if (!empty($file)) {
+        $this->deletePreviewDerivatives($file->getFileUri());
+        $this->moveFileToUuidUri(TRUE);
+        // Make the file private as well.
+        $this->swapFileLocation($file, TRUE);
+      }
+    }
   }
 
   /**
