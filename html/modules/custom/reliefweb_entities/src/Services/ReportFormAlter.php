@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_entities\Services;
 
+use Drupal\Component\Utility\SortArray;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
@@ -343,9 +344,9 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
       $format = $visual_formats[$item['target_id']] ?? NULL;
       // File and its preview are mandatory for visual content when publishing.
       if (isset($format)) {
-        $file = $form_state->getValue(['field_file', 0, 'uuid']);
+        $files = $form_state->getValue(['field_file']);
         // #4L7i0wbW - File is mandatory.
-        if (empty($file)) {
+        if (empty($files[0]['uuid'])) {
           $status = $this->getEntityModerationStatus($form_state);
           if (in_array($status, ['to-review', 'published'])) {
             $form_state->setErrorByName('field_file][add_more', $this->t('The content format is %format. You must attach a file.', [
@@ -355,14 +356,13 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
         }
         // Preview is also mandatory.
         else {
-          $preview_file = $form_state->getValue([
-            'field_file', 0, 'preview_uuid',
-          ]);
-          $preview_page = $form_state->getValue([
-            'field_file', 0, 'preview_page',
-          ]);
-          if (empty($preview_file) || empty($preview_page)) {
-            $form_state->setErrorByName('field_file][0][preview_page', $this->t('The content format is %format. You must enable the "preview" for the attachment.', [
+          // Sort by weight.
+          usort($files, function ($a, $b) {
+            return SortArray::sortByKeyInt($a, $b, '_weight');
+          });
+
+          if (empty($files[0]['preview_uuid']) || empty($files[0]['preview_page'])) {
+            $form_state->setErrorByName('field_file][0][preview_page', $this->t('The content format is %format. You first attachment must have a "preview".', [
               '%format' => $format,
             ]));
           }
