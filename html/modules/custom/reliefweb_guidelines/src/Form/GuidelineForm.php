@@ -2,15 +2,9 @@
 
 namespace Drupal\reliefweb_guidelines\Form;
 
-use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Entity\ContentEntityForm;
-use Drupal\Core\Entity\EntityRepositoryInterface;
-use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Http\RequestStack;
 use Drupal\Core\Link;
-use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -22,98 +16,26 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class GuidelineForm extends ContentEntityForm {
 
   /**
-   * The tempstore factory.
-   *
-   * @var \Drupal\Core\TempStore\PrivateTempStoreFactory
-   */
-  protected $tempStoreFactory;
-
-  /**
-   * The Current User object.
+   * The current user account.
    *
    * @var \Drupal\Core\Session\AccountProxyInterface
    */
-  protected $currentUser;
-
-  /**
-   * The request stack.
-   *
-   * @var \Drupal\Core\Http\RequestStack
-   */
-  protected $requestStack;
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct(
-    EntityRepositoryInterface $entity_repository,
-    EntityTypeBundleInfoInterface $entity_type_bundle_info,
-    TimeInterface $time,
-    PrivateTempStoreFactory $temp_store_factory,
-    AccountProxyInterface $current_user,
-    RequestStack $request_stack,
-  ) {
-    parent::__construct($entity_repository, $entity_type_bundle_info, $time);
-    $this->tempStoreFactory = $temp_store_factory;
-    $this->currentUser = $current_user;
-    $this->requestStack = $request_stack;
-  }
+  protected $account;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('entity.repository'),
-      $container->get('entity_type.bundle.info'),
-      $container->get('datetime.time'),
-      $container->get('tempstore.private'),
-      $container->get('current_user'),
-      $container->get('request_stack'),
-    );
-  }
-
-  /**
-   * Get the current user.
-   *
-   * @return \Drupal\Core\Session\AccountProxyInterface
-   *   The current user.
-   */
-  protected function currentUser() {
-    return $this->currentUser;
+    // Instantiates this form class.
+    $instance = parent::create($container);
+    $instance->account = $container->get('current_user');
+    return $instance;
   }
 
   /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    // Try to restore from temp store, this must be done before calling
-    // parent::form().
-    $store = $this->tempStoreFactory->get('guideline_preview');
-
-    // Attempt to load from preview when the uuid is present unless we are
-    // rebuilding the form.
-    $request_uuid = $this->getRequest()->query->get('uuid');
-    if (!$form_state->isRebuilding() && $request_uuid && $preview = $store->get($request_uuid)) {
-      /** @var \Drupal\Core\Form\FormStateInterface $preview */
-
-      $form_state->setStorage($preview->getStorage());
-      $form_state->setUserInput($preview->getUserInput());
-
-      // Rebuild the form.
-      $form_state->setRebuild();
-
-      // The combination of having user input and rebuilding the form means
-      // that it will attempt to cache the form state which will fail if it is
-      // a GET request.
-      $form_state->setRequestMethod('POST');
-
-      $this->entity = $preview->getFormObject()->getEntity();
-      $this->entity->in_preview = NULL;
-
-      $form_state->set('has_been_previewed', TRUE);
-    }
-
     /** @var \Drupal\guidelines\Entity\Guideline $this->entity */
     $form = parent::buildForm($form, $form_state);
 
@@ -200,65 +122,13 @@ class GuidelineForm extends ContentEntityForm {
   /**
    * {@inheritdoc}
    */
-  protected function actions(array $form, FormStateInterface $form_state) {
-    $element = parent::actions($form, $form_state);
-    $guideline = $this->entity;
-    $preview_mode = $guideline->type->entity->getPreviewMode();
-
-    $element['submit']['#access'] = $preview_mode != DRUPAL_REQUIRED || $form_state->get('has_been_previewed');
-
-    $element['preview'] = [
-      '#type' => 'submit',
-      '#access' => $preview_mode != DRUPAL_DISABLED && ($guideline->access('create') || $guideline->access('update')),
-      '#value' => $this->t('Preview'),
-      '#weight' => 20,
-      '#submit' => ['::submitForm', '::preview'],
-    ];
-
-    if (array_key_exists('delete', $element)) {
-      $element['delete']['#weight'] = 100;
-    }
-
-    return $element;
-  }
-
-  /**
-   * Form submission handler for the 'preview' action.
-   *
-   * @param array $form
-   *   An associative array containing the structure of the form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current state of the form.
-   */
-  public function preview(array $form, FormStateInterface $form_state) {
-    $store = $this->tempStoreFactory->get('guideline_preview');
-    $this->entity->in_preview = TRUE;
-    $store->set($this->entity->uuid(), $form_state);
-
-    $route_parameters = [
-      'guideline_preview' => $this->entity->uuid(),
-      'view_mode_id' => 'full',
-    ];
-
-    $options = [];
-    $query = $this->getRequest()->query;
-    if ($query->has('destination')) {
-      $options['query']['destination'] = $query->get('destination');
-      $query->remove('destination');
-    }
-    $form_state->setRedirect('entity.guideline.preview', $route_parameters, $options);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function save(array $form, FormStateInterface $form_state) {
     $entity = $this->entity;
 
     // Always create a new revision.
     $entity->setNewRevision(TRUE);
     $entity->setRevisionCreationTime($this->time->getRequestTime());
-    $entity->setRevisionUserId($this->currentUser()->id());
+    $entity->setRevisionUserId($this->account->id());
 
     $status = parent::save($form, $form_state);
 
@@ -276,10 +146,6 @@ class GuidelineForm extends ContentEntityForm {
     }
 
     $form_state->setRedirect('entity.guideline.canonical', ['guideline' => $entity->id()]);
-
-    // Remove the preview entry from the temp store, if any.
-    $store = $this->tempStoreFactory->get('guideline_preview');
-    $store->delete($entity->uuid());
   }
 
 }
