@@ -54,7 +54,6 @@ class GuidelineSinglePageController extends ControllerBase {
     $this->cache = $cache_backend;
     $this->currentUser = $current_user;
     $this->entityTypeManager = $entity_type_manager;
-    $this->extensionPathResolver = $extension_path_resolver;
   }
 
   /**
