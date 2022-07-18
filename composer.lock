@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "687ff3598a1528e7325a51c23477da0a",
+    "content-hash": "1e82696744ff579e5a3d9cf303eca2f4",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -3072,17 +3072,17 @@
         },
         {
             "name": "drupal/guidelines",
-            "version": "1.0.4",
+            "version": "1.0.3",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/guidelines.git",
-                "reference": "1.0.4"
+                "reference": "1.0.3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/guidelines-1.0.4.zip",
-                "reference": "1.0.4",
-                "shasum": "8d20ef379a1f69d481e05d343129d33e01ec9f4a"
+                "url": "https://ftp.drupal.org/files/projects/guidelines-1.0.3.zip",
+                "reference": "1.0.3",
+                "shasum": "04ac058c7d3b7a3b7cbab376354801599f048880"
             },
             "require": {
                 "drupal/core": "^9"
@@ -3090,8 +3090,8 @@
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "1.0.4",
-                    "datestamp": "1658140577",
+                    "version": "1.0.3",
+                    "datestamp": "1646999982",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
