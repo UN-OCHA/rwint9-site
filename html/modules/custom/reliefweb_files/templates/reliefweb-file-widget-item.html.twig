@@ -27,11 +27,7 @@
   <td class="rw-file-widget-item__weight">
     {{ element._weight }}
   </td>
-  {% if element.preview_page is empty %}
-  <td class="rw-file-widget-item__information" colspan="2">
-  {% else %}
   <td class="rw-file-widget-item__information">
-  {% endif %}
     {{ element.link }}
     {% if element.replaced_file %}
     <div class="rw-file-widget-item__information__replaced"><small>
@@ -45,21 +41,21 @@
       {{ child }}
     {% endfor %}
   </td>
-  {% if element.preview_page is not empty %}
-  <td class="rw-file-widget-item__preview">
+  {% set preview_attributes = create_attribute(element.preview['#attributes'] ?? {}) %}
+  <td{{ preview_attributes.addClass(['rw-file-widget-item__preview']) }}>
     <div class="rw-file-widget-item__preview__content">
-      {% if element.preview %}
+      {% if element.preview.thumbnail is not empty %}
       <div class="rw-file-widget-item__preview__thumbnail">
-        {{ element.preview }}
+        {{ element.preview.thumbnail }}
       </div>
       {% endif %}
       <div class="rw-file-widget-item__preview__options">
         {{ element.preview_page }}
         {{ element.preview_rotation }}
+        {{ element.preview|without('thumbnail') }}
       </div>
     </div>
   </td>
-  {% endif %}
   <td class="rw-file-widget-item__operations">
     {{ element.operations }}
   </td>

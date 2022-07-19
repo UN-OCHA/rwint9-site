@@ -22,4 +22,6 @@ default_value_callback: ''
 settings:
   file_extensions: 'csv doc docx jpg jpeg odp ods odt pdf png pps ppt pptx svg xls xlsx zip'
   max_filesize: ''
+  preview_max_filesize: 5MB
+  preview_min_dimensions: 700x100
 field_type: reliefweb_file

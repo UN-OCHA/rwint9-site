@@ -13,12 +13,16 @@
 {% set add_more = element['add_more'] %}
 {% set attributes = create_attribute(element['#attributes'] ?? {}) %}
 
-<fieldset{{ attributes.addClass('rw-file-widget', 'form-wrapper') }}>
+<fieldset{{ attributes.addClass('rw-file-widget', 'form-wrapper').setAttribute('id', element['#id']) }}>
   <legend{{ legend_attributes }}>
     <span class="fieldset-legend">{{ element['#title'] }}</span>
   </legend>
 
   <div class="fieldset-wrapper">
+    {% if element['#errors'] is not empty %}
+    <div class="form-item--error-message">{{ element['#errors'] }}</div>
+    {% endif %}
+
     {% if files is not empty %}
     <table{{ create_attribute().setAttribute('id', element['#id'] ~ '-table').addClass('rw-file-widget__table') }}>
       <thead class="visually-hidden">
@@ -29,7 +33,6 @@
       </tbody>
     </table>
     {% endif %}
-
 
     {{ add_more ? add_more|merge({
       '#attributes': create_attribute(add_more['#attributes'] ?? {}).addClass('rw-file-widget__add-more'),
