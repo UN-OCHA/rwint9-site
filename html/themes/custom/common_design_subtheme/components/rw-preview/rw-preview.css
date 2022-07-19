@@ -1,12 +1,15 @@
+.guideline-preview-container header,
 .node-preview-container header,
 .term-preview-container header {
   background: var(--cd-reliefweb-brand-red--dark);
 }
+.guideline-preview-form-select .node-preview-backlink:hover,
 .node-preview-form-select .node-preview-backlink:hover,
 .term-preview-form-select .term-preview-backlink:hover {
   background: var(--cd-reliefweb-brand-blue);
 }
 /* Hide View mode select element */
+.guideline-preview-form-select .form-item-view-mode,
 .node-preview-form-select .form-item-view-mode,
 .term-preview-form-select .form-item-view-mode {
   display: none;
