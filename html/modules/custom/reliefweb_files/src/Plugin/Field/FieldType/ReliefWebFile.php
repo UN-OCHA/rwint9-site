@@ -304,7 +304,8 @@ class ReliefWebFile extends FieldItemBase {
    *   element's '#upload_validators' property.
    */
   public function getPreviewUploadValidators() {
-    // We only PNG to be consistent with the automatically generated previews.
+    // We only allow PNG images to be consistent with the automatically
+    // generated previews.
     $validators = [
       'file_validate_extensions' => ['png'],
       'reliefweb_files_file_validate_mime_type' => ['image/png'],
@@ -1936,7 +1937,7 @@ class ReliefWebFile extends FieldItemBase {
    * Move the preview file to its file UUID URI and remove derivatives.
    *
    * @throws \Exception
-   *   Exception if the file couldn't me moved.
+   *   Exception if the file couldn't be moved.
    */
   protected function archivePreviewFile() {
     // Delete the old preview if it's generated. We don't need to keep it.
