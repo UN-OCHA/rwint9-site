@@ -349,7 +349,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
         if (empty($files[0]['uuid'])) {
           $status = $this->getEntityModerationStatus($form_state);
           if (in_array($status, ['to-review', 'published'])) {
-            $form_state->setErrorByName('field_file][add_more', $this->t('The content format is %format. You must attach a file.', [
+            $form_state->setErrorByName('field_file', $this->t('The content format is %format. You must attach a file.', [
               '%format' => $format,
             ]));
           }
@@ -362,7 +362,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
           });
 
           if (empty($files[0]['preview_uuid']) || empty($files[0]['preview_page'])) {
-            $form_state->setErrorByName('field_file][0][preview_page', $this->t('The content format is %format. The first attachment must have a "preview".', [
+            $form_state->setErrorByName('field_file', $this->t('The content format is %format. The first attachment must have a "preview".', [
               '%format' => $format,
             ]));
           }

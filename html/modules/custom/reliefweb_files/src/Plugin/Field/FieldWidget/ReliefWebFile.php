@@ -159,7 +159,7 @@ class ReliefWebFile extends WidgetBase {
 
     // Container.
     $elements = [
-      '#theme' => 'reliefweb_file_widget',
+      '#type' => 'reliefweb_file',
       '#title' => $this->fieldDefinition->getLabel(),
       '#description' => $this->getFilteredDescription(),
       '#tree' => TRUE,
