@@ -1371,13 +1371,15 @@ class ReliefWebFile extends FieldItemBase {
    *   File.
    * @param bool $private
    *   Whether to return a private URI or a public one.
+   * @param bool $preview
+   *   Whether to move the field item file or the preview file.
    *
    * @return string
    *   URI.
    */
-  public static function getFileUuidUri(File $file, $private = TRUE) {
+  public static function getFileUuidUri(File $file, $private = TRUE, $preview = FALSE) {
     $extension = static::extractFileExtension($file->getFileName());
-    return static::getFileUriFromUuid($file->uuid(), $extension, $private);
+    return static::getFileUriFromUuid($file->uuid(), $extension, $private, $preview);
   }
 
   /**
@@ -1897,11 +1899,15 @@ class ReliefWebFile extends FieldItemBase {
     }
 
     // Update the preview file as well.
-    $this->swapFileLocation($this->loadPreviewFile(), $private);
+    $preview_file = $this->loadPreviewFile();
+    if (!empty($preview_file)) {
+      $this->deletePreviewDerivatives($preview_file->getFileUri());
+      $this->swapFileLocation($preview_file, $private);
+    }
   }
 
   /**
-   * Move the field item or preview file to the file UUID uri.
+   * Move the field item or preview file to its private file UUID URI.
    *
    * @param bool $preview
    *   Whether to move the field item file or the preview file.
@@ -1915,7 +1921,7 @@ class ReliefWebFile extends FieldItemBase {
     if (empty($file)) {
       throw new \Exception('Unable to load file to move to UUID URI');
     }
-    $this->changeFileLocation($file, $this->getFileUuidUri($file));
+    $this->changeFileLocation($file, static::getFileUuidUri($file, TRUE, $preview));
   }
 
   /**
