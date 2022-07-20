@@ -237,6 +237,20 @@ function reliefweb_rivers_theme() {
         'sections' => [],
       ],
     ],
+    'reliefweb_rivers_search_converter' => [
+      'variables' => [
+        // Wrapper attributes.
+        'attributes' => NULL,
+        // Page title.
+        'title' => t('Search Results'),
+        // Title attributes.
+        'title_attributes' => NULL,
+        // Form with the appname and search URL.
+        'form' => NULL,
+        // Associative array with the query string, API URL and payload.
+        'results' => [],
+      ],
+    ],
     'reliefweb_rivers_rss' => [
       'variables' => [
         // The site URL.

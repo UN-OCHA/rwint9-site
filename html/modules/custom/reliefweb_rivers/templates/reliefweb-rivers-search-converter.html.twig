@@ -1,0 +1,46 @@
+{#
+
+/**
+ * @file
+ * Template for the search converter page.
+ *
+ * Available variables:
+ * - attributes: wrapper attributes
+ * - title: page title
+ * - title_attributes: title attributes
+ * - form: the form with the appname and search URL
+ * - results: Associative array with the query string, API URL and payload.
+ */
+
+#}
+<section{{ attributes.addClass('rw-search-converter') }}>
+  <header class="rw-search-converter__header">
+    <h1{{ title_attributes.addClass('rw-search-converter__title') }}>{{ title }}</h1>
+  </header>
+
+  <p class="rw-search-converter__description">
+  {%- trans -%}Convert a search query on <a href="https://reliefweb.int">reliefweb.int</a> to an API query (see <a href="https://apidoc.rwlabs.org/" rel="noopener" target="_blank">API documentation</a>).{%- endtrans -%}
+  </p>
+
+  <section class="rw-search-converter__form">
+    <h2>{{ 'Search Information'|t }}</h2>
+    {{ form }}
+  </section>
+
+  <section class="rw-search-converter__results">
+    <h2>{{ 'Results'|t }}</h2>
+
+    {% if results is empty %}
+    <p>{{ 'Please enter a search URL to convert, above, to see the results.'|t }}</p>
+    {% else %}
+    <h3>{{ 'Query String'|t }}</h3>
+    <pre>{{ results.query }}</pre>
+
+    <h3>{{ 'API URL'|t }}</h3>
+    <pre>{{ results.url }}</pre>
+
+    <h3>{{ 'JSON payload'|t }}</h3>
+    <pre>{{ results.payload }}</pre>
+    {% endif %}
+  </section>
+</section>
