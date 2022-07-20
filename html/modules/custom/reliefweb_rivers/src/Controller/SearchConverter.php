@@ -138,15 +138,7 @@ class SearchConverter extends ControllerBase {
    */
   protected function getAppname() {
     $appname = $this->requestStack->getCurrentRequest()->query->get('appname', '');
-    if (empty($appname)) {
-      if ($this->currentUser->isAnonymous()) {
-        $appname = 'rw-user-0';
-      }
-      else {
-        $appname = 'rw-user-' . $this->currentUser->id();
-      }
-    }
-    return $appname;
+    return $appname ?: 'rw-user-' . $this->currentUser->id();
   }
 
   /**
@@ -315,6 +307,9 @@ class SearchConverter extends ControllerBase {
    *   JSON encoded payload.
    */
   protected function getJsonPayload(array $payload) {
+    if (empty($payload)) {
+      return '';
+    }
     $json = json_encode($payload, \JSON_PRETTY_PRINT);
     return $json === FALSE ? '' : preg_replace('/ {4}/', '  ', $json);
   }
