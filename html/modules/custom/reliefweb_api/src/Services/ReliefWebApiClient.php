@@ -286,29 +286,54 @@ class ReliefWebApiClient {
   /**
    * Build an API URL.
    *
+   * This is mostly used to build a suggestion API URL.
+   *
    * @param string $resource
    *   API resource.
    * @param array $parameters
    *   Query parameters.
+   * @param bool $suggest_url
+   *   TRUE to create a suggestion URL (for example to use in the UI filters).
    *
    * @return string
    *   API URL.
    */
-  public function buildApiUrl($resource, array $parameters = []) {
+  public function buildApiUrl($resource, array $parameters = [], $suggest_url = TRUE) {
     // We use a potentially different api url for the facets because it's
     // called from javascript. This is notably useful for dev/stage as the
     // reliefweb_api_url points to an interal url that cannot be used
     // client-side.
     $api_url = $this->config->get('api_url_external') ?: $this->config->get('api_url');
-    $appname = $this->config->get('appname') ?: 'reliefweb.int';
 
-    // '%QUERY' is added after the http_build_query so that it's not encoded.
-    $api_query = '?' . http_build_query($parameters + [
-      'appname' => $appname,
-      'preset' => 'suggest',
-      'profile' => 'suggest',
-      'query[value]' => '',
-    ]) . '%QUERY';
+    // Defaults.
+    if (empty($parameters['appname'])) {
+      $parameters['appname'] = $this->config->get('appname') ?: 'reliefweb.int';
+    }
+    if (empty($parameters['preset'])) {
+      $parameters['preset'] = $suggest_url ? 'suggest' : 'latest';
+    }
+    if (empty($parameters['profile'])) {
+      $parameters['profile'] = $suggest_url ? 'suggest' : 'list';
+    }
+
+    // Remove the search query. We will add it back with `%QUERY` as value
+    // later so that is can be replaced with the appropriate query string
+    // in the river filter UI for example.
+    if ($suggest_url) {
+      unset($parameters['query']['value']);
+    }
+
+    // No need to return extra data.
+    $parameters['slim'] = 1;
+
+    // Generate the API URL parameters.
+    $api_query = '?' . http_build_query($parameters);
+
+    // '%QUERY' is added after the http_build_query so that it's not encoded
+    // and appears as the query string value.
+    if ($suggest_url) {
+      $api_query .= '&' . rawurlencode('query[value]') . '=%QUERY';
+    }
 
     return $api_url . '/' . $resource . $api_query;
   }
@@ -318,18 +343,20 @@ class ReliefWebApiClient {
    *
    * @param array $payload
    *   API query payload.
+   * @param bool $combine
+   *   TRUE to optimize the filters by combining their values when possible.
    *
    * @return array
    *   Sanitized payload.
    */
-  public static function sanitizePayload(array $payload) {
+  public static function sanitizePayload(array $payload, $combine = FALSE) {
     // Remove search value and fields if the value is empty.
     if (empty($payload['query']['value'])) {
       unset($payload['query']);
     }
     // Optimize the filter if any.
     if (isset($payload['filter'])) {
-      $filter = static::optimizeFilter($payload['filter']);
+      $filter = static::optimizeFilter($payload['filter'], $combine);
       if (!empty($filter)) {
         $payload['filter'] = $filter;
       }
@@ -341,7 +368,7 @@ class ReliefWebApiClient {
     if (isset($payload['facets'])) {
       foreach ($payload['facets'] as $key => $facet) {
         if (isset($facet['filter'])) {
-          $filter = static::optimizeFilter($facet['filter']);
+          $filter = static::optimizeFilter($facet['filter'], $combine);
           if (!empty($filter)) {
             $payload['facets'][$key]['filter'] = $filter;
           }
@@ -359,14 +386,20 @@ class ReliefWebApiClient {
    *
    * @param array $filter
    *   Filter following the API syntax.
+   * @param bool $combine
+   *   TRUE to optimize even more the filter by combining values when possible.
    *
    * @return array
    *   Optimized filter.
    */
-  public static function optimizeFilter(array $filter) {
+  public static function optimizeFilter(array $filter, $combine = FALSE) {
     if (isset($filter['conditions'])) {
+      if (isset($filter['operator'])) {
+        $filter['operator'] = strtoupper($filter['operator']);
+      }
+
       foreach ($filter['conditions'] as $key => $condition) {
-        $condition = static::optimizeFilter($condition);
+        $condition = static::optimizeFilter($condition, $combine);
         if (isset($condition)) {
           $filter['conditions'][$key] = $condition;
         }
@@ -377,6 +410,9 @@ class ReliefWebApiClient {
       // @todo eventually check if it's worthy to optimize by combining
       // filters with same field and same negation inside a conditional filter.
       if (!empty($filter['conditions'])) {
+        if ($combine) {
+          $filter['conditions'] = static::combineConditions($filter['conditions'], $filter['operator'] ?? NULL);
+        }
         if (count($filter['conditions']) === 1) {
           $condition = reset($filter['conditions']);
           if (!empty($filter['negate'])) {
@@ -390,6 +426,72 @@ class ReliefWebApiClient {
       }
     }
     return !empty($filter) ? $filter : NULL;
+  }
+
+  /**
+   * Combine simple filter conditions to shorten the filters.
+   *
+   * @param array $conditions
+   *   Filter conditions.
+   * @param string $operator
+   *   Operator to join the conditions.
+   *
+   * @return array
+   *   Combined and simplied filter conditions.
+   */
+  public static function combineConditions(array $conditions, $operator = 'AND') {
+    $operator = $operator ?? 'AND';
+    $filters = [];
+    $result = [];
+
+    foreach ($conditions as $condition) {
+      $field = $condition['field'];
+      $value = $condition['value'] ?? NULL;
+      $condition_operator = $condition['operator'] ?? NULL;
+
+      // Nested conditions - flatten the condition's conditions.
+      if (!empty($condition['conditions'])) {
+        $condition['conditions'] = static::combineConditions($condition_operator, $condition['conditions']);
+        $result[] = $condition;
+      }
+      // Existence filter - keep as is.
+      elseif (is_null($value)) {
+        $result[] = $condition;
+      }
+      // Range filter - keep as is.
+      elseif (is_array($value) && (isset($value['to']) || isset($value['to']))) {
+        $result[] = $condition;
+      }
+      // Different operator or negated condition -  keep as is.
+      elseif ((isset($condition_operator) && $condition_operator !== $operator) || !empty($condition['negate'])) {
+        $result[] = $condition;
+      }
+      elseif (is_array($value)) {
+        foreach ($value as $item) {
+          $filters[$field][] = $item;
+        }
+      }
+      else {
+        $filters[$field][] = $value;
+      }
+    }
+
+    foreach ($filters as $field => $values) {
+      $filter = [
+        'field' => $field,
+      ];
+
+      $value = array_unique($values);
+      if (count($value) === 1) {
+        $filter['value'] = reset($value);
+      }
+      else {
+        $filter['value'] = $value;
+        $filter['operator'] = $operator;
+      }
+      $result[] = $filter;
+    }
+    return $result;
   }
 
   /**
