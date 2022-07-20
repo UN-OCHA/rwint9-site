@@ -86,6 +86,12 @@ function common_design_subtheme_preprocess_page(&$variables) {
       'page_title_block',
     ]);
   }
+  // Remove the page title block from the search converter page.
+  elseif ($route_name === 'reliefweb_rivers.search.converter') {
+    common_design_hide_rendered_blocks_from_page($variables, [
+      'page_title_block',
+    ]);
+  }
   // Remove the page title block on river pages.
   elseif (preg_match('#^reliefweb_rivers\.[^\.]+\.river$#', $route_name) === 1) {
     common_design_hide_rendered_blocks_from_page($variables, [
