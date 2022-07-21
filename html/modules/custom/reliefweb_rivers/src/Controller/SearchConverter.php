@@ -135,6 +135,13 @@ class SearchConverter extends ControllerBase {
       '#title' => $this->t('Search to API query converter'),
       '#form' => $form,
       '#results' => $results ?? [],
+      '#cache' => [
+        'contexts' => [
+          'user',
+          'url.query_args:appname',
+          'url.query_args:search_url',
+        ],
+      ],
     ];
   }
 
