@@ -8,11 +8,13 @@ use Drupal\Core\Form\FormState;
 use Drupal\Core\Http\RequestStack;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\Url;
 use Drupal\reliefweb_api\Services\ReliefWebApiClient;
 use Drupal\reliefweb_rivers\AdvancedSearch;
 use Drupal\reliefweb_rivers\Parameters;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
  * Controller for the reliefweb_rivers.search.converter route.
@@ -119,6 +121,12 @@ class SearchConverter extends ControllerBase {
         'query' => Markup::create($query),
         'url' => Markup::create($this->getApiUrl($data['resource'], $query, $appname)),
         'payload' => Markup::create($this->getJsonPayload($data['payload'])),
+        'json_url' => Url::fromRoute('reliefweb_rivers.search.converter.json', [], [
+          'query' => [
+            'appname' => $appname,
+            'search-url' => $search_url,
+          ],
+        ]),
       ];
     }
 
@@ -128,6 +136,44 @@ class SearchConverter extends ControllerBase {
       '#form' => $form,
       '#results' => $results ?? [],
     ];
+  }
+
+  /**
+   * Get the result of the conversion as JSON.
+   *
+   * @return \Symfony\Component\HttpFoundation\JsonResponse
+   *   JSON response.
+   */
+  public function getJsonResult() {
+    $search_url = $this->getSearchUrl();
+    $appname = $this->getAppname();
+    $result = [
+      'input' => [
+        'appname' => $appname,
+        'search_url' => $search_url,
+      ],
+    ];
+
+    // Parse the search URL to retrieve the API resource and payload.
+    $data = $this->parseSearchUrl($search_url);
+    if (!empty($data)) {
+      $query = $this->getQueryString($data['payload']);
+
+      $result['output'] = [
+        'query' => $query,
+        'requests' => [
+          'get' => [
+            'url' => $this->getApiUrl($data['resource'], $query, $appname),
+          ],
+          'post' => [
+            'url' => $this->getApiUrl($data['resource'], '', $appname),
+            'payload' => $data['payload'],
+          ],
+        ],
+      ];
+    }
+
+    return new JsonResponse($result);
   }
 
   /**
@@ -232,6 +278,10 @@ class SearchConverter extends ControllerBase {
 
     // Sanitize the payload.
     $payload = $this->reliefWebApiClient->sanitizePayload($payload, TRUE);
+
+    // Add the preset and profile.
+    $payload['preset'] = 'latest';
+    $payload['profile'] = 'list';
 
     return [
       'resource' => $service->getResource(),

@@ -247,7 +247,8 @@ function reliefweb_rivers_theme() {
         'title_attributes' => NULL,
         // Form with the appname and search URL.
         'form' => NULL,
-        // Associative array with the query string, API URL and payload.
+        // Associative array with the query string, API URL, payload and URL
+        // to the JSON result.
         'results' => [],
       ],
     ],
