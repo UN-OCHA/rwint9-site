@@ -33,6 +33,7 @@ class SearchConverterForm extends FormBase {
       '#title' => $this->t('Search URL'),
       '#default_value' => $form_state->getValue('search-url') ?? '',
       '#not_required' => TRUE,
+      '#maxlength' => NULL,
     ];
 
     $form['actions'] = [
