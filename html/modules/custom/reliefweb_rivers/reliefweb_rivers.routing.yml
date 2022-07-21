@@ -65,6 +65,22 @@ reliefweb_rivers.search.results:
   requirements:
     _permission: 'access content'
 
+# Search converter.
+reliefweb_rivers.search.converter:
+  path: '/search/converter'
+  defaults:
+    _title: 'Search to API query converter'
+    _controller: '\Drupal\reliefweb_rivers\Controller\SearchConverter::getPageContent'
+  requirements:
+     _permission: 'access content'
+reliefweb_rivers.search.converter.json:
+  path: '/search/converter/json'
+  defaults:
+    _title: 'Search to API query converter'
+    _controller: '\Drupal\reliefweb_rivers\Controller\SearchConverter::getJsonResult'
+  requirements:
+     _permission: 'access content'
+
 # RSS.
 reliefweb_rivers.blog_post.rss:
   path: '/blog/rss.xml'

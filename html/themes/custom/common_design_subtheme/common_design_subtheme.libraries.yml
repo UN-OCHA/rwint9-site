@@ -326,6 +326,12 @@ rw-search:
     theme:
       components/rw-search/rw-search.css: {}
 
+rw-search-converter:
+  css:
+    theme:
+      components/rw-search-converter/rw-search-converter.css: {}
+
+
 rw-section-links:
   css:
     theme:
