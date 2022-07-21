@@ -357,6 +357,7 @@ class ReliefWebApiClient {
     // Optimize the filter if any.
     if (isset($payload['filter'])) {
       $filter = static::optimizeFilter($payload['filter'], $combine);
+
       if (!empty($filter)) {
         $payload['filter'] = $filter;
       }
@@ -445,13 +446,13 @@ class ReliefWebApiClient {
     $result = [];
 
     foreach ($conditions as $condition) {
-      $field = $condition['field'];
+      $field = $condition['field'] ?? NULL;
       $value = $condition['value'] ?? NULL;
       $condition_operator = $condition['operator'] ?? NULL;
 
       // Nested conditions - flatten the condition's conditions.
       if (!empty($condition['conditions'])) {
-        $condition['conditions'] = static::combineConditions($condition_operator, $condition['conditions']);
+        $condition['conditions'] = static::combineConditions($condition['conditions'], $condition_operator);
         $result[] = $condition;
       }
       // Existence filter - keep as is.
