@@ -13,6 +13,7 @@ use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\file\Entity\File;
@@ -158,7 +159,7 @@ class ReliefWebFile extends WidgetBase {
 
     // Container.
     $elements = [
-      '#theme' => 'reliefweb_file_widget',
+      '#type' => 'reliefweb_file',
       '#title' => $this->fieldDefinition->getLabel(),
       '#description' => $this->getFilteredDescription(),
       '#tree' => TRUE,
@@ -201,7 +202,7 @@ class ReliefWebFile extends WidgetBase {
       // Limit the type of files that can be uplaoded.
       $extensions = $dummy_item->getAllowedFileExtensions();
       if (!empty($extensions)) {
-        $element['add_more']['files']['#attributes']['accept'] = '.' . implode(',.', $extensions);
+        $elements['add_more']['files']['#attributes']['accept'] = '.' . implode(',.', $extensions);
       }
 
       // Upload button.
@@ -217,6 +218,7 @@ class ReliefWebFile extends WidgetBase {
         '#ajax' => $this->getAjaxSettings($this->t('Uploading file(s)...'), $field_parents),
         // Store information to identify the button in ::extractFormValues().
         '#field_parents' => $field_parents,
+        '#action' => 'upload',
       ];
     }
 
@@ -273,6 +275,7 @@ class ReliefWebFile extends WidgetBase {
         'type' => 'throbber',
         'message' => $message,
       ],
+      'disable-refocus' => TRUE,
     ];
   }
 
@@ -340,8 +343,132 @@ class ReliefWebFile extends WidgetBase {
       '#default_value' => $item->getFileLanguage() ?? NULL,
     ];
 
-    // Display the preview and the page and rotation selection.
-    if ($item->canHavePreview()) {
+    // Add the preview sub element.
+    $this->addPreviewElement($element, $field_parents, $delta, $item);
+
+    // Wrapper for the delete and replace operations on the file.
+    // We "hide" them inside an initially closed <details> to limit wrong
+    // interactions.
+    $element['operations'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Actions'),
+      '#not_required' => TRUE,
+    ];
+
+    // Add a button to delete the file.
+    $element['operations']['delete'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Delete'),
+      '#name' => implode('-', array_merge($element_parents, ['delete'])),
+      '#submit' => [[static::class, 'submit']],
+      // Limit the validation to the button to prevent trying to validate
+      // the element being removed.
+      '#limit_validation_errors' => [
+        array_merge($element_parents, ['operations', 'delete']),
+      ],
+      '#ajax' => $this->getAjaxSettings($this->t('Removing file...'), $field_parents),
+      // Store information to identify the button in ::extractFormValues().
+      '#delta' => $delta,
+      '#field_parents' => $field_parents,
+      '#action' => 'delete',
+    ];
+
+    // Add a file widget to upload a replacement.
+    $element['operations']['file'] = [
+      '#type' => 'file',
+      '#name' => implode('-', array_merge($element_parents, ['file'])),
+      '#multiple' => FALSE,
+    ];
+
+    // Add a button to replace the file.
+    $element['operations']['replace'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Upload replacement'),
+      '#name' => implode('-', array_merge($element_parents, ['replace'])),
+      '#submit' => [[static::class, 'submit']],
+      // Limit the validation to the element.
+      '#limit_validation_errors' => [
+        $element_parents,
+      ],
+      '#ajax' => $this->getAjaxSettings($this->t('Uploading file...'), $field_parents),
+      // Store information to identify the button in ::extractFormValues().
+      '#delta' => $delta,
+      '#field_parents' => $field_parents,
+      '#action' => 'replace',
+      '#description' => $item->getUploadDescription(),
+    ];
+
+    // Limit the type of files that can be uplaoded.
+    $extensions = $item->getAllowedFileExtensions();
+    if (!empty($extensions)) {
+      $element['operations']['file']['#attributes']['accept'] = '.' . implode(',.', $extensions);
+    }
+
+    // Add the input field for the delta (drag-n-drop reordering).
+    $element['_weight'] = [
+      '#type' => 'weight',
+      '#title' => $this->t('Weight for row @number', [
+        '@number' => $delta + 1,
+      ]),
+      '#title_display' => 'invisible',
+      // Note: this 'delta' is the FAPI #type 'weight' element's property not
+      // the delta of the current element.
+      '#delta' => $items->count(),
+      '#default_value' => $item->_weight ?? $delta,
+      '#weight' => -100,
+      '#attributes' => [
+        'class' => ['draggable-weight'],
+      ],
+    ];
+
+    // Save the non editable field item values. This needs to happen at the end
+    // so that we can save the preview UUID notably.
+    $defaults = [
+      'uuid',
+      'revision_id',
+      'file_uuid',
+      'file_name',
+      'file_mime',
+      'file_size',
+      'page_count',
+      'preview_uuid',
+    ];
+    foreach ($defaults as $default) {
+      $element[$default] = [
+        '#type' => 'hidden',
+        '#value' => $item->get($default)->getValue(),
+      ];
+    }
+
+    return $element;
+  }
+
+  /**
+   * Add the preview sub element.
+   *
+   * @param array $element
+   *   Form element.
+   * @param array $field_parents
+   *   Field parents.
+   * @param int $delta
+   *   Delta.
+   * @param \Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile $item
+   *   File item.
+   */
+  protected function addPreviewElement(array &$element, array $field_parents, $delta, ReliefWebFileType $item) {
+    $field_name = $this->fieldDefinition->getName();
+    $element_parents = array_merge($field_parents, [$delta]);
+    $preview_parents = array_merge($element_parents, ['preview']);
+
+    $element['preview'] = [
+      '#type' => 'container',
+      '#title' => $this->t('Preview'),
+      '#not_required' => TRUE,
+    ];
+
+    // Display the preview and the page and rotation selection for files that
+    // can have an automatically generated preview.
+    if ($item->canHaveGeneratedPreview()) {
       $preview_uuid = $item->getPreviewUuid();
       $preview_page = $item->getPreviewPage() ?? 1;
       $preview_rotation = $item->getPreviewRotation() ?? 0;
@@ -361,12 +488,12 @@ class ReliefWebFile extends WidgetBase {
 
         // Ensure the preview is generated.
         if ($item->generatePreview($preview_page, $preview_rotation, $regenerate, $new_preview_file) !== NULL) {
-          $element['preview'] = $item->renderPreview('thumbnail');
+          $element['preview']['thumbnail'] = $item->renderPreview('thumbnail');
 
           // Add state to hide the preview if "no preview" is selected.
-          if (!empty($element['preview'])) {
-            $element['preview']['#type'] = 'item';
-            $element['preview']['#states']['invisible'] = [
+          if (!empty($element['preview']['thumbnail'])) {
+            $element['preview']['thumbnail']['#type'] = 'item';
+            $element['preview']['thumbnail']['#states']['invisible'] = [
               ':input[name="' . $field_name . '[' . $delta . '][preview_page]"]' => ['value' => 0],
             ];
           }
@@ -413,101 +540,77 @@ class ReliefWebFile extends WidgetBase {
         '#type' => 'hidden',
         '#value' => $preview_rotation,
       ];
+
+      // Add an attribute to indicate is a generated preview.
+      $element['#attributes']['data-preview-type'] = 'generated';
     }
+    // Otherwise show the option to upload a preview image.
+    else {
+      $preview = $item->renderPreview('thumbnail');
+      if (!empty($preview)) {
+        $element['preview']['thumbnail'] = $preview;
+        $element['preview']['thumbnail']['#type'] = 'item';
 
-    // Wrapper for the delete and replace operations on the file.
-    // We "hide" them inside an initially closed <details> to limit wrong
-    // interactions.
-    $element['operations'] = [
-      '#type' => 'details',
-      '#title' => $this->t('Actions'),
-      '#not_required' => TRUE,
-    ];
+        $element['preview']['delete'] = [
+          '#type' => 'submit',
+          '#value' => $this->t('Remove preview'),
+          '#name' => implode('-', array_merge($preview_parents, ['delete'])),
+          '#submit' => [[static::class, 'submit']],
+          // Limit the validation to the button to prevent trying to validate
+          // the element being removed.
+          '#limit_validation_errors' => [
+            array_merge($element_parents, ['delete']),
+          ],
+          '#ajax' => $this->getAjaxSettings($this->t('Removing preview...'), $field_parents),
+          // Store information to identify the button in ::extractFormValues().
+          '#delta' => $delta,
+          '#field_parents' => $field_parents,
+          '#action' => 'preview_delete',
+        ];
 
-    // Add a button to delete the file.
-    $element['operations']['delete'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Delete'),
-      '#name' => implode('-', array_merge($element_parents, ['delete'])),
-      '#submit' => [[static::class, 'submit']],
-      // Limit the validation to the button to prevent trying to validate
-      // the element being removed.
-      '#limit_validation_errors' => [
-        array_merge($element_parents, ['operations', 'delete']),
-      ],
-      '#ajax' => $this->getAjaxSettings($this->t('Removing file...'), $field_parents),
-      // Store information to identify the button in ::extractFormValues().
-      '#delta' => $delta,
-      '#field_parents' => $field_parents,
-    ];
+        // Store the page and rotation.
+        $element['preview_page'] = [
+          '#type' => 'hidden',
+          '#value' => 1,
+        ];
+        $element['preview_rotation'] = [
+          '#type' => 'hidden',
+          '#value' => 0,
+        ];
+      }
+      else {
+        // Add a file widget to upload a preview.
+        $element['preview']['file'] = [
+          '#type' => 'file',
+          '#name' => implode('-', array_merge($preview_parents, ['file'])),
+          '#multiple' => FALSE,
+          '#description' => $item->getPreviewUploadDescription(),
+          '#attributes' => [
+            'accept' => '.png',
+          ],
+        ];
 
-    // Add a file widget to upload a replacement.
-    $element['operations']['file'] = [
-      '#type' => 'file',
-      '#name' => implode('-', array_merge($element_parents, ['file'])),
-      '#multiple' => FALSE,
-    ];
+        // Add a button to upload the preview.
+        $element['preview']['upload'] = [
+          '#type' => 'submit',
+          '#value' => $this->t('Upload preview'),
+          '#name' => implode('-', array_merge($preview_parents, ['upload'])),
+          '#submit' => [[static::class, 'submit']],
+          // Limit the validation to the preview element.
+          '#limit_validation_errors' => [
+            $preview_parents,
+          ],
+          '#ajax' => $this->getAjaxSettings($this->t('Uploading preview...'), $field_parents),
+          // Store information to identify the button in ::extractFormValues().
+          '#delta' => $delta,
+          '#field_parents' => $field_parents,
+          '#action' => 'preview_upload',
+        ];
+      }
 
-    // Add a button to replace the file.
-    $element['operations']['replace'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Upload replacement'),
-      '#name' => implode('-', array_merge($element_parents, ['replace'])),
-      '#submit' => [[static::class, 'submit']],
-      // Limit the validation to the element.
-      '#limit_validation_errors' => [
-        $element_parents,
-      ],
-      '#ajax' => $this->getAjaxSettings($this->t('Uploading file...'), $field_parents),
-      // Store information to identify the button in ::extractFormValues().
-      '#delta' => $delta,
-      '#field_parents' => $field_parents,
-      '#description' => $item->getUploadDescription(),
-    ];
-
-    // Limit the type of files that can be uplaoded.
-    $extensions = $item->getAllowedFileExtensions();
-    if (!empty($extensions)) {
-      $element['operations']['replace']['#attributes']['accept'] = '.' . implode(',.', $extensions);
+      // Add an attribute to indicate is an uploaded preview.
+      $element['preview']['#attributes']['data-preview-type'] = 'uploaded';
     }
-
-    // Add the input field for the delta (drag-n-drop reordering).
-    $element['_weight'] = [
-      '#type' => 'weight',
-      '#title' => $this->t('Weight for row @number', [
-        '@number' => $delta + 1,
-      ]),
-      '#title_display' => 'invisible',
-      // Note: this 'delta' is the FAPI #type 'weight' element's property not
-      // the delta of the current element.
-      '#delta' => $items->count(),
-      '#default_value' => $item->_weight ?? $delta,
-      '#weight' => -100,
-      '#attributes' => [
-        'class' => ['draggable-weight'],
-      ],
-    ];
-
-    // Save the non editable field item values. This needs to happen at the end
-    // so that we can save the preview UUID notably.
-    $defaults = [
-      'uuid',
-      'revision_id',
-      'file_uuid',
-      'file_name',
-      'file_mime',
-      'file_size',
-      'page_count',
-      'preview_uuid',
-    ];
-    foreach ($defaults as $default) {
-      $element[$default] = [
-        '#type' => 'hidden',
-        '#value' => $item->get($default)->getValue(),
-      ];
-    }
-
-    return $element;
   }
 
   /**
@@ -535,8 +638,16 @@ class ReliefWebFile extends WidgetBase {
     $action = '';
     $button = $form_state->getTriggeringElement();
     if (isset($button['#field_parents']) && $button['#field_parents'] === $field_parents) {
-      $action = end($button['#array_parents']);
+      $action = $button['#action'];
     }
+
+    // Remove the triggering element name from the input to prevent the form
+    // state triggering element to be changed to another element when
+    // re-ordering due to the delta change.
+    //
+    // @see \Drupal\Core\Form\FormBuilder::handleInputElement()
+    // @see \Drupal\Core\Form\FormBuilder::elementTriggeredScriptedSubmission()
+    NestedArray::unsetValue($form_state->getUserInput(), ['_triggering_element_name']);
 
     // Extract the values from $form_state->getValues().
     $key_exists = FALSE;
@@ -550,12 +661,17 @@ class ReliefWebFile extends WidgetBase {
         if (is_numeric($delta) && !empty($value)) {
           $element = NestedArray::getValue($widget, [$delta]);
 
-          // Delete the value.
           if ($action === 'delete' && $button['#delta'] === $delta) {
             $value = $this->deleteFieldItem($element, $form_state, $value);
           }
           elseif ($action === 'replace' && $button['#delta'] === $delta) {
             $value = $this->replaceFieldItem($element, $form_state, $value);
+          }
+          elseif ($action === 'preview_upload' && $button['#delta'] === $delta) {
+            $value = $this->uploadFieldItemPreview($element, $form_state, $value);
+          }
+          elseif ($action === 'preview_delete' && $button['#delta'] === $delta) {
+            $value = $this->deleteFieldItemPreview($element, $form_state, $value);
           }
           if (!empty($value)) {
             $value['_original_delta'] = $delta;
@@ -703,6 +819,166 @@ class ReliefWebFile extends WidgetBase {
       return $item;
     }
     // If we couldn't replace the file, keep the original values.
+    return $values;
+  }
+
+  /**
+   * Upload a preview file.
+   *
+   * @param array $element
+   *   Form element to which attach the errors if any.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state to add the errors.
+   * @param array $values
+   *   The original field item values.
+   *
+   * @return array
+   *   The new field item values.
+   */
+  protected function uploadFieldItemPreview(array $element, FormStateInterface $form_state, array $values) {
+    $name = $element['preview']['file']['#name'];
+    return $this->processUploadedPreviewFile($element['preview']['file'], $form_state, $name, $values);
+  }
+
+  /**
+   * Delete a preview file.
+   *
+   * @param array $element
+   *   Form element to which attach the errors if any.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state to add the errors.
+   * @param array $values
+   *   The original field item values.
+   *
+   * @return array
+   *   The new field item values.
+   */
+  protected function deleteFieldItemPreview(array $element, FormStateInterface $form_state, array $values) {
+    try {
+      // If the file was new or replaced, remove its associated managed files.
+      if (empty($values['revision_id'])) {
+        $item = $this->createFieldItem($values);
+        $item->deletePreview();
+      }
+    }
+    catch (\Exception $exception) {
+      $form_state->setError($element, $exception->getMessage());
+    }
+
+    unset($values['preview_uuid']);
+    unset($values['preview_page']);
+    unset($values['preview_rotation']);
+
+    return $values;
+  }
+
+  /**
+   * Create field items from upload files.
+   *
+   * @param array $element
+   *   Form element to which attach the errors if any.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state to add the errors.
+   * @param string $name
+   *   Name of the request property that contain the upload files.
+   * @param array $values
+   *   Field item values.
+   *
+   * @return array
+   *   The field item values with the new preview information.
+   */
+  protected function processUploadedPreviewFile(array $element, FormStateInterface $form_state, $name, array $values) {
+    /** @var \Symfony\Component\HttpFoundation\FileBag $file_bag */
+    $file_bag = $this->requestStack->getCurrentRequest()->files;
+
+    // Retrieve the preview file info.
+    $file_info = $file_bag->get($name, NULL);
+
+    // Create a field item so we can create the preview file.
+    $item = $this->createFieldItem($values);
+
+    // File validators.
+    $validators = $item->getPreviewUploadValidators();
+
+    $errors = [];
+    if (!empty($file_info)) {
+      try {
+        // Preview file information.
+        $file_name = $file_info->getClientOriginalName();
+        $path = $file_info->getRealPath();
+
+        // Try to guess the real mime type of the uploaded file.
+        $file_mime = ReliefWebFileType::guessFileMimeType($file_name);
+
+        // Create a dummy file entity that can be used to validate the file.
+        $dummy_file = File::create([
+          'uri' => $path,
+          'filename' => $file_name,
+          'filemime' => $file_mime,
+        ]);
+
+        // Validate the uploaded file.
+        $validation_errors = file_validate($dummy_file, $validators);
+
+        // Bail out if the uploaded file is invalid.
+        if (!empty($validation_errors)) {
+          $this->throwError($this->t('Unable to upload the preview file %name. @errors', [
+            '%name' => $file_name,
+            '@errors' => $this->generateErrorList($validation_errors),
+          ]));
+        }
+
+        // Create the preview file.
+        $preview_file = $item->createPreviewFile();
+        $preview_file->setTemporary();
+
+        // Get the preview URI.
+        $uri = $preview_file->getFileUri();
+
+        // Create the private temp directory to store the file.
+        if (!ReliefWebFileType::prepareDirectory($uri)) {
+          $this->throwError($this->t('Unable to create the destination directory for the uploaded preview file %name.', [
+            '%name' => $file_name,
+          ]));
+        }
+
+        // Move the uploaded file.
+        if (!$this->fileSystem->moveUploadedFile($path, $uri)) {
+          $this->throwError($this->t('Unable to copy the uploaded preview file %name.', [
+            '%name' => $file_name,
+          ]));
+        }
+
+        // Update the file.
+        $preview_file->setMimeType(ReliefWebFileType::guessFileMimeType($uri));
+        $preview_file->setSize(@filesize($uri) ?? 0);
+
+        // Save the file.
+        $preview_file->save();
+
+        // Delete the preview derivatives to ensure they correspond to the
+        // updated preview image.
+        image_path_flush($preview_file->getFileUri());
+
+        // Updat the field item values.
+        $values['preview_uuid'] = $preview_file->uuid();
+        $values['preview_page'] = 1;
+        $values['preview_rotation'] = 0;
+      }
+      catch (\Exception $exception) {
+        $errors[] = $exception->getMessage();
+
+        // Try to delete the uploaded file.
+        $this->deleteUploadedFile($file_info->getRealPath());
+      }
+    }
+
+    if (!empty($errors)) {
+      $form_state->setError($element, $this->generateErrorList($errors));
+    }
+
+    // Remove the files so that they are not processed again.
+    $file_bag->remove($name);
     return $values;
   }
 
@@ -1079,6 +1355,14 @@ class ReliefWebFile extends WidgetBase {
       'relationship' => 'sibling',
       'hidden' => FALSE,
     ]);
+
+    // Workaround to fix the file weight which is set to a wrong value somewhere
+    // by Drupal...
+    foreach (Element::children($element) as $key) {
+      if (isset($element[$key]['_weight'])) {
+        $element[$key]['_weight']['#value'] = $element[$key]['_weight']['#default_value'];
+      }
+    }
 
     return $element;
   }

@@ -199,6 +199,9 @@ form .ief-form .fieldset-wrapper {
   align-items: center;
   justify-content: center;
 }
+.rw-file-widget [data-preview-type="uploaded"] .rw-file-widget-item__preview__content {
+  flex-direction: column;
+}
 .rw-file-widget .rw-file-widget-item__preview__thumbnail > div {
   display: flex;
   float: left;
@@ -210,6 +213,9 @@ form .ief-form .fieldset-wrapper {
   text-align: center;
   border: 1px solid #e6ecef;
 }
+.rw-file-widget [data-preview-type="uploaded"] .rw-file-widget-item__preview__thumbnail > div {
+  margin: 0;
+}
 .rw-file-widget .rw-file-widget-item__preview__thumbnail .rw-file-preview {
   overflow: hidden;
   max-width: 100%;
@@ -217,7 +223,7 @@ form .ief-form .fieldset-wrapper {
   object-fit: contain;
   font-size: 14px;
 }
-.rw-file-widget .rw-file-widget-item__preview__options {
+.rw-file-widget [data-preview-type="generated"] .rw-file-widget-item__preview__options {
   width: 7rem;
 }
 

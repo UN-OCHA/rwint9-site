@@ -59,6 +59,10 @@ libraries-extend:
   reliefweb-guidelines/reliefweb-guidelines:
     - common_design_subtheme/rw-guidelines
 
+  # Core ajax.
+  core/drupal.ajax:
+    - common_design_subtheme/cd-ajax-disable-submit-buttons
+
 # Use the common_design_subtheme styles inside the editor.
 ckeditor_stylesheets:
   - css/styles.css
@@ -70,3 +74,7 @@ libraries-override:
     css:
       component:
         components/guidelines-json/guidelines-json.css: false
+  guidelines/guideline.preview:
+    css:
+      component:
+        components/preview/guidelines.preview.css: components/rw-guidelines/rw-guidelines--preview.css

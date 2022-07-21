@@ -920,9 +920,9 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
   /**
    * {@inheritdoc}
    */
-  public static function getFormAlterService($bundle) {
+  public static function getFormAlterService($name) {
     try {
-      return \Drupal::service('reliefweb_entities.' . $bundle . '.form_alter');
+      return \Drupal::service('reliefweb_entities.' . $name . '.form_alter');
     }
     catch (ServiceNotFoundException $exception) {
       return NULL;
@@ -936,6 +936,9 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
     $form_object = $form_state->getFormObject();
     if (isset($form_object) && $form_object instanceof ContentEntityForm) {
       $service = static::getFormAlterService($form_object->getEntity()->bundle());
+      if (empty($service)) {
+        $service = static::getFormAlterService($form_object->getEntity()->getEntityTypeId());
+      }
       if (!empty($service)) {
         $service->alterForm($form, $form_state);
       }

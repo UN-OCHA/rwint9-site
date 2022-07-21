@@ -37,6 +37,7 @@ weight: 4
 is_admin: null
 permissions:
   - 'access editorial guidelines'
+  - 'access taxonomy overview'
   - 'add content to books'
   - 'add guideline entities'
   - 'administer google tag manager'

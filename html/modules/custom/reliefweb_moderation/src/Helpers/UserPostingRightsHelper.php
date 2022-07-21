@@ -59,13 +59,15 @@ class UserPostingRightsHelper {
         continue;
       }
 
+      // Default to unverified if the owner has no right defined for the source.
+      $right = 'unverified';
       foreach ($source_entity->get('field_user_posting_rights') as $item) {
         if ($item->get('id')->getValue() != $uid) {
           continue;
         }
-        $right = $item->get($bundle)->getValue();
-        $rights[$rights_keys[$right] ?? 'unverified']++;
+        $right = $rights_keys[$item->get($bundle)->getValue()] ?? 'unverified';
       }
+      $rights[$right]++;
     }
 
     // Compute the consolidated right for the user.

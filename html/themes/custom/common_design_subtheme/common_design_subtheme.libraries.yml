@@ -14,6 +14,11 @@ global-styling:
     - common_design_subtheme/rw-site-slogan
     - common_design_subtheme/rw-page-title
 
+# Disable submit buttons during ajax requests.
+cd-ajax-disable-submit-buttons:
+  js:
+    js/cd-ajax-disable-submit-buttons.js: {}
+
 # RW custom components
 rw-admin-menu:
   css:

@@ -1884,8 +1884,8 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
 
     // Join the user posting rights table.
     $user_rights_table = $this->getFieldTableName('taxonomy_term', 'field_user_posting_rights');
-    $user_rights_id_field = $this->getFieldTableName('taxonomy_term', 'field_user_posting_rights', 'id');
-    $user_rights_bundle_field = $this->getFieldTableName('taxonomy_term', 'field_user_posting_rights', $bundle);
+    $user_rights_id_field = $this->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'id');
+    $user_rights_bundle_field = $this->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', $bundle);
     $user_rights_alias = $subquery->leftJoin($user_rights_table, $user_rights_table, "%alias.entity_id = {$source_alias}.{$source_field} AND %alias.{$user_rights_id_field} = {$users_alias}.uid");
 
     // Count the number of sources for a node for which the user has the

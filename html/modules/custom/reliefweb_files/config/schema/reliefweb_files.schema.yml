@@ -33,3 +33,9 @@ field.field_settings.reliefweb_file:
     max_filesize:
       type: string
       label: 'Maximum upload size'
+    preview_max_filesize:
+      type: string
+      label: 'Preview maximum upload size'
+    preview_min_dimensions:
+      type: string
+      label: 'Preview minimum dimensions in the form WIDTHxHEIGHT'

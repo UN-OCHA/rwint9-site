@@ -19,6 +19,9 @@
             <header>
               <h1 class="rw-page-title">{{ '403 - Access denied'|t }}</h1>
             </header>
+            {% if page.content.message is not empty %}
+            <p><strong>{{ page.content.message }}</strong></p>
+            {% endif %}
             <p>{{ 'Sorry for any inconvenience.'|t }}</p>
             <p>{{ 'Here are some useful pages to help you get back on track:'|t }}</p>
             <div class="rw-entity-useful-links">

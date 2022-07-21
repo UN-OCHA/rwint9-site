@@ -2008,4 +2008,156 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
     }
   }
 
+  /**
+   * Migrated report file revisions.
+   *
+   * During the initial migration, only the current revision record was migrated
+   * for files to ensure we only had the latest data. The side effect is that
+   * it looks like the files were attached by the last person who created a
+   * revision. This migrates the other file field revisions for existing files
+   * so that the history shows properly when they were attached.
+   *
+   * @command rw-migrate:migrate-file-revisions
+   *
+   * @usage rw-migrate:migrate-file-revisions
+   *   Migrated report file revisions
+   *
+   * @validate-module-enabled reliefweb_migrate
+   */
+  public function migrateFileRevisions($options = [
+    'dry-run' => FALSE,
+  ]) {
+    $query_options = [
+      // Note: this is deprecated in Drupal 9.4 and will be removed in Drupal
+      // 11 and there is no replacement. We don't really care because the
+      // reliefweb_migrate will be removed way before that.
+      'return' => Database::RETURN_AFFECTED,
+    ];
+    $dry_run = !empty($options['dry-run']);
+
+    // Retrieve the revision info from the RW7 database.
+    $query = Database::getConnection('default', 'rwint7')->select('field_revision_field_file', 'fr');
+    $query->fields('fr', ['revision_id', 'entity_id', 'delta']);
+    $query->condition('fr.bundle', 'report', '=');
+    $query->orderBy('fr.revision_id', 'ASC');
+    // Only keep records for exiting files that are currently attached.
+    $query->innerJoin('field_data_field_file', 'f', 'f.entity_id = fr.entity_id AND f.field_file_fid = fr.field_file_fid');
+    $query->innerJoin('file_managed', 'fm', 'fm.fid = fr.field_file_fid AND fm.status = 1');
+    $query->addExpression('IF(f.revision_id = fr.revision_id, 1, 0)', 'current');
+    $query->fields('fm', ['uri']);
+
+    $current_records = [];
+    $older_records = [];
+    $count = 0;
+    foreach ($query->execute() ?? [] as $record) {
+      if (!empty($record->current)) {
+        $current_records[$record->revision_id] = $record->revision_id;
+      }
+      else {
+        $older_records[$record->entity_id][$record->revision_id][$record->delta] = LegacyHelper::generateAttachmentUuid($record->uri);
+        $count++;
+      }
+    }
+
+    $this->logger()->info(dt('@count records to insert for @count_entities entities', [
+      '@count' => $count,
+      '@count_entities' => count($current_records),
+    ]));
+
+    // Retrieve the list of existing field file revisions so we can skip
+    // already migrated ones.
+    $existing_revisions = $this->database
+      ->select('node_revision__field_file', 'f')
+      ->fields('f', ['revision_id'])
+      ->execute()
+      ?->fetchAllKeyed(0, 0) ?? [];
+
+    $count = 0;
+    foreach (array_chunk($current_records, 500) as $chunk) {
+      // Retrieve the existing RW9 revision records. We'll use that as base for
+      // the other revisions. Note: those are the revisions that were migrated
+      // and correspond to the current revision in RW7.
+      $query = $this->database
+        ->select('node_revision__field_file', 'f')
+        ->fields('f')
+        ->condition('f.revision_id', $chunk, 'IN');
+
+      // Group the existing records by entity ID.
+      $existing_records = [];
+      foreach ($query->execute() ?? [] as $record) {
+        $existing_records[$record->entity_id][$record->field_file_uuid] = (array) $record;
+      }
+
+      // Prepate the revision records to insert.
+      $records_to_insert = [];
+      foreach ($existing_records as $entity_id => $existing_items) {
+        $revisions = $older_records[$entity_id] ?? NULL;
+        if (empty($revisions)) {
+          continue;
+        }
+
+        foreach ($revisions as $revision_id => $items) {
+          if (isset($existing_revisions[$revision_id])) {
+            continue;
+          }
+
+          // Sort the items by delta.
+          ksort($items);
+
+          // Note: we are using the current version of the file metatadata
+          // (preview page, description...) because it's much simpler and after
+          // confirmation with some editors, tracking the old version of those
+          // metadata is not important.
+          $delta = 0;
+          foreach ($items as $uuid) {
+            if (isset($existing_items[$uuid])) {
+              $records_to_insert[] = [
+                'revision_id' => $revision_id,
+                'delta' => $delta,
+              ] + $existing_items[$uuid];
+              $delta++;
+            }
+          }
+        }
+      }
+
+      if (!empty($records_to_insert)) {
+        try {
+          $transaction = $this->database->startTransaction();
+
+          $fields = array_keys(reset($records_to_insert));
+
+          $query = $this->database
+            ->insert('node_revision__field_file', $query_options)
+            ->fields($fields);
+          foreach ($records_to_insert as $record) {
+            $query->values($record);
+          }
+          $query->execute();
+
+          if ($dry_run) {
+            $transaction->rollback();
+          }
+        }
+        catch (\Exception $exception) {
+          $transaction->rollback();
+          $this->logger()->error(dt('Error while trying to update the database: @error', [
+            '@error' => $exception->getMessage(),
+          ]));
+          return FALSE;
+        }
+
+        $count += count($records_to_insert);
+
+        $this->logger()->info(dt('Inserted @count records', [
+          '@count' => $count,
+        ]));
+      }
+    }
+
+    if ($count === 0) {
+      $this->logger()->info(dt('Nothing to insert'));
+    }
+  }
+
 }
