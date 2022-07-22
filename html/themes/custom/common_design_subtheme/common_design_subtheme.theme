@@ -36,8 +36,43 @@ function common_design_subtheme_preprocess_taxonomy_term(&$variables) {
       common_design_set_page_title($variables, $term->label(), TRUE);
     }
     elseif ($route_name === 'entity.taxonomy_term.preview') {
-      common_design_set_page_title($variables, $term->label(), TRUE);
+      common_design_set_page_title($variables, $term->label(), FALSE);
     }
+    elseif ($route_name === 'taxonomy_term_revision.view') {
+      $label = t('Revision of %title from %date', [
+        '%title' => $term->label(),
+        '%date' => \Drupal::service('date.formatter')->format($term->getRevisionCreationTime()),
+      ]);
+      common_design_set_page_title($variables, $label, FALSE);
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_node().
+ *
+ * Use the page title block for the node title if the view mode was selected
+ * in the theme settings.
+ *
+ * Important: this assumes there is a template for the view mode that uses
+ * the `title` (and `local_tasks`) variables added by
+ * common_design_use_node_page_title(). See `node--full.html.twig`.
+ *
+ * @see common_design_preprocess_page()
+ * @see common_design_set_page_title()
+ */
+function common_design_subtheme_preprocess_node(&$variables) {
+  $route_name = \Drupal::routeMatch()->getRouteName();
+
+  $node = $variables['node'] ?? NULL;
+  $view_mode = $variables['view_mode'] ?? '';
+
+  // If the node view mode was selected to use the page title block for the
+  // node title in the template, then we add the page title to the template
+  // variables. We only do that if we are on the canonical node page or on
+  // the node preview page.
+  if (isset($node) && $route_name === 'entity.node.revision' && common_design_use_node_page_title($view_mode)) {
+    common_design_set_page_title($variables, $node->label(), TRUE);
   }
 }
 
@@ -76,6 +111,18 @@ function common_design_subtheme_preprocess_page(&$variables) {
   }
   // Hide the page title block on the taxonomy term preview page.
   elseif ($route_name === 'entity.taxonomy_term.preview') {
+    common_design_hide_rendered_blocks_from_page($variables, [
+      'page_title_block',
+    ]);
+  }
+  // Hide the page title block on a taxonomy term revision page.
+  elseif ($route_name === 'taxonomy_term_revision.view') {
+    common_design_hide_rendered_blocks_from_page($variables, [
+      'page_title_block',
+    ]);
+  }
+  // Hide the page title block on a node revision page.
+  elseif ($route_name === 'entity.node.revision') {
     common_design_hide_rendered_blocks_from_page($variables, [
       'page_title_block',
     ]);
