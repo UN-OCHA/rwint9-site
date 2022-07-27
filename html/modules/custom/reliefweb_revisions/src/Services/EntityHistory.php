@@ -170,6 +170,7 @@ class EntityHistory {
     $cache_id = 'reliefweb_revisions:history:entity:' . $entity->getEntityTypeId() . ':' . $entity->id();
     $cache_tags = $entity->getCacheTags();
     $cache_tags[] = 'taxonomy_term_list';
+    $cache_tags[] = 'media_list';
 
     // Try to load the history from the cache.
     $cache = $this->cache->get($cache_id);
