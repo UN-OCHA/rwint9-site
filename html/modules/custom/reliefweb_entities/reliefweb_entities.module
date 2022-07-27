@@ -15,6 +15,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Url;
+use Drupal\media\MediaInterface;
 use Drupal\reliefweb_entities\BundleEntityInterface;
 use Drupal\reliefweb_entities\BundleEntityStorageInterface;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
@@ -22,6 +23,7 @@ use Drupal\reliefweb_utility\Helpers\ClassHelper;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\EntityHelper;
 use Drupal\reliefweb_utility\Helpers\MailHelper;
+use Drupal\reliefweb_utility\Helpers\MediaHelper;
 use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\taxonomy\TermInterface;
@@ -785,4 +787,62 @@ function reliefweb_entities_preprocess_page__403(array &$variables) {
   // and this preprocess hook implementation will not be called when visiting
   // an inaccessible node page afterwards.
   $variables['#cache']['contexts'][] = 'url.path';
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_delete() for 'media'.
+ *
+ * Remove the source file when deleting a media.
+ */
+function reliefweb_entities_media_delete(MediaInterface $media) {
+  $file = MediaHelper::getMediaSourceFile($media);
+  // Delete the source file if not used anywhere else.
+  if (!empty($file) && empty(\Drupal::service('file.usage')->listUsage($file))) {
+    $file->setTemporary();
+    $file->save();
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_predelete() for 'node'.
+ *
+ * Retrieve the list of referenced media Ids across all revisions before
+ * deleting the entity.
+ */
+function reliefweb_entities_node_predelete(EntityInterface $entity) {
+  // Only the image field for announcements and reports do not allow re-using
+  // existing media.
+  if (in_array($entity->bundle(), ['announcement', 'report'])) {
+    // Get the list of referenced media Ids. We need to do that before the
+    // entity is actually deleted.
+    $entity->_referencedMediaIds = \Drupal::database()
+      ->select('node_revision__field_image', 'f')
+      ->fields('f', ['field_image_target_id'])
+      ->condition('f.entity_id', $entity->id(), '=')
+      ->distinct()
+      ->execute()
+      ?->fetchCol() ?? [];
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_revision_delete().
+ *
+ * Remove referenced media that are not used anymore.
+ */
+function reliefweb_entities_node_delete(EntityInterface $entity) {
+  // Only the image field for announcements and reports do not allow re-using
+  // existing media.
+  if (in_array($entity->bundle(), ['announcement', 'report'])) {
+    // Delete referenced media entities.
+    if (!empty($entity->_referencedMediaIds)) {
+      $media_entities = \Drupal::entityTypeManager()
+        ->getStorage('media')
+        ->loadMultiple($entity->_referencedMediaIds);
+
+      foreach ($media_entities as $media) {
+        $media->delete();
+      }
+    }
+  }
 }
