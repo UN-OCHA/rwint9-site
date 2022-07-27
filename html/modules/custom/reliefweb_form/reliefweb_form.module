@@ -210,6 +210,15 @@ function reliefweb_form_form_alter(array &$form, FormStateInterface $form_state,
     // Attach the main enhanced form library.
     $form['#attached']['library'][] = 'reliefweb_form/form.main';
   }
+
+  // If the form can be previewed, we add a submit callback before the actual
+  // preview submit callback to prepare the entity with the values from the
+  // inline entity forms.
+  if (isset($form['actions']['preview']['#submit'])) {
+    // This flag will allow the processing of the inline entity form values.
+    // @see \Drupal\inline_entity_form\Plugin\Field\FieldWidget\InlineEntityFormComple::extractFormValues()
+    $form['actions']['preview']['#ief_submit_trigger'] = TRUE;
+  }
 }
 
 /**
