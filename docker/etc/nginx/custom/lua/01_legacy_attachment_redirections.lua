@@ -25,10 +25,10 @@ if target == nil or target == '' then
   local jit_uuid = require 'resty.jit-uuid'
   local uuid = jit_uuid.generate_v3('6ba7b811-9dad-11d1-80b4-00c04fd430c8', legacy_url)
 
-  target = uuid .. '/' .. attachment_file
+  target = uuid .. '/' .. ngx.escape_uri(attachment_file)
 else
   local uuid = string.gsub(target, '../attachments/[^/]+/[^/]+/([^.]+).+', '%1')
-  target = uuid .. '/' .. attachment_file
+  target = uuid .. '/' .. ngx.escape_uri(attachment_file)
 end
 
 -- Redirect to the new URL.
