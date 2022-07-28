@@ -6,6 +6,16 @@ This is the drupal 9 codebase for the [ReliefWeb](https://reliefweb.int) site.
 in 1996, the portal now hosts more than 850,000 humanitarian situation reports,
 press releases, evaluations, guidelines, assessments, maps and infographics.
 
+## Images
+
+All the images should be stored under `SCHEME://images/xxx/`.
+
+Attachment previews are stored under `SCHEME://previews/`.
+
+When adding or changing the image styles, update the nginx configuration file
+for [image derivatives](/docker/etc/nginx/custom/03_derivative_images.conf)
+accordingly.
+
 ## Docksal
 
 - `git clone --branch develop git@github.com:UN-OCHA/rwint9-site.git`
