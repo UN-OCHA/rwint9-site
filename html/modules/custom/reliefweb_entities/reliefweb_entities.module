@@ -750,34 +750,41 @@ function reliefweb_entities_menu_local_tasks_alter(&$data, $route_name, Refinabl
  * probably true in most cases).
  */
 function reliefweb_entities_preprocess_page__403(array &$variables) {
-  $route_info = \Drupal::service('router.no_access_checks')
-    ->matchRequest(\Drupal::request());
+  // The router may return a ResourceNotFoundException or
+  // MethodNotAllowedException so we skip the preprocessing in that case.
+  try {
+    $route_info = \Drupal::service('router.no_access_checks')
+      ->matchRequest(\Drupal::request());
 
-  if (isset($route_info['node']) && $route_info['node'] instanceof BundleEntityInterface) {
-    $type = mb_strtolower(EntityHelper::getBundleLabelFromEntity($route_info['node']));
-    $title = $route_info['node']->label();
-    $anonymous = \Drupal::currentUser()->isAnonymous();
+    if (isset($route_info['node']) && $route_info['node'] instanceof BundleEntityInterface) {
+      $type = mb_strtolower(EntityHelper::getBundleLabelFromEntity($route_info['node']));
+      $title = $route_info['node']->label();
+      $anonymous = \Drupal::currentUser()->isAnonymous();
 
-    if ($anonymous && in_array($type, ['job', 'training'])) {
-      $message = t('The @type %title is no longer available.<br>If you posted this @type, please <a href="@url">log in</a> to get access.', [
-        '@type' => $type,
-        '%title' => $title,
-        '@url' => Url::fromUserInput('/user/login', [
-          'query' => \Drupal::destination()->getAsArray(),
-        ])->toString(),
-      ]);
+      if ($anonymous && in_array($type, ['job', 'training'])) {
+        $message = t('The @type %title is no longer available.<br>If you posted this @type, please <a href="@url">log in</a> to get access.', [
+          '@type' => $type,
+          '%title' => $title,
+          '@url' => Url::fromUserInput('/user/login', [
+            'query' => \Drupal::destination()->getAsArray(),
+          ])->toString(),
+        ]);
+      }
+      else {
+        $message = t('The @type %title is no longer available.', [
+          '@type' => $type,
+          '%title' => $title,
+        ]);
+      }
+
+      $variables['page']['content']['message'] = [
+        '#type' => 'markup',
+        '#markup' => $message,
+      ];
     }
-    else {
-      $message = t('The @type %title is no longer available.', [
-        '@type' => $type,
-        '%title' => $title,
-      ]);
-    }
-
-    $variables['page']['content']['message'] = [
-      '#type' => 'markup',
-      '#markup' => $message,
-    ];
+  }
+  catch (\Exception $exception) {
+    // Nothing to do.
   }
 
   // We need to vary the cache whether or not we are on a node page
