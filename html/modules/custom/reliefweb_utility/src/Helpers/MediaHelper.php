@@ -116,4 +116,30 @@ class MediaHelper {
     return $image;
   }
 
+  /**
+   * Get the source file from a media entity.
+   *
+   * @param \Drupal\media\MediaInterface $media
+   *   Media entity.
+   *
+   * @return \Drupal\file\FileInterface
+   *   Source file if defined.
+   */
+  public static function getMediaSourceFile(MediaInterface $media) {
+    $field_name = $media
+      ->getSource()
+      ?->getSourceFieldDefinition($media->bundle->entity)
+      ?->getName();
+
+    if (!empty($field_name)) {
+      return $media
+        ?->get($field_name)
+        ?->first()
+        ?->get('entity')
+        ?->getTarget()
+        ?->getValue();
+    }
+    return NULL;
+  }
+
 }
