@@ -347,3 +347,64 @@ function common_design_subtheme_preprocess_inline_entity_form_entity_table(array
 function common_design_subtheme_reliefweb_form_mark_optional_alter(array &$element, array &$context) {
   FormElementOptional::markAsOptional($element, $context['form']);
 }
+
+/**
+ * Implements hook_page_attachments_alter().
+ *
+ * Add resource preloading to reduce time to first paint.
+ */
+function common_design_subtheme_page_attachments_alter(array &$attachments) {
+  // Main SVG sprites and logos used across the site.
+  $svg_sprites = [
+    '/themes/custom/common_design_subtheme/img/logos/rw-logo-desktop.svg',
+    '/themes/custom/common_design_subtheme/img/logos/ocha-logo-sprite.svg',
+    '/themes/custom/common_design_subtheme/components/rw-icons/img/rw-icons-sprite.svg',
+    '/themes/contrib/common_design/img/logos/ocha-lockup.svg',
+    '/themes/custom/common_design_subtheme/img/logos/rw-logo-sprite.svg',
+  ];
+  foreach ($svg_sprites as $index => $path) {
+    $attachments['#attached']['html_head'][] = [
+      [
+        '#type' => 'html_tag',
+        '#tag' => 'link',
+        '#attributes' => [
+          'rel' => 'preload',
+          'as' => 'image',
+          'href' => Url::fromUserInput($path, ['absolute' => TRUE])->toString(),
+        ],
+        '#weight' => ($index + 1) / 10,
+      ],
+      $path,
+    ];
+  }
+
+  // Google fonts.
+  // @todo Remove once there is the same thing in the base theme.
+  $attachments['#attached']['html_head'][] = [
+    [
+      '#type' => 'html_tag',
+      '#tag' => 'link',
+      '#attributes' => [
+        'rel' => 'preconnect',
+        'href' => 'https://fonts.gstatic.com/',
+        'crossorigin' => '',
+      ],
+      '#weight' => -2,
+    ],
+    'google_fonts_static',
+  ];
+  $attachments['#attached']['html_head'][] = [
+    [
+      '#type' => 'html_tag',
+      '#tag' => 'link',
+      '#attributes' => [
+        'rel' => 'preload',
+        'as' => 'style',
+        // Note: this needs to be kept in sync with the base theme fonts.
+        'href' => 'https://fonts.googleapis.com/css?family=Roboto:ital,wght@0,300%3B0,400%3B0,500%3B0,700%3B0,900%3B1,400%3B1,700&display=swap',
+      ],
+      '#weight' => -1,
+    ],
+    'google_fonts_roboto',
+  ];
+}
