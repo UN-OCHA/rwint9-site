@@ -102,7 +102,12 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
   }
 
   /**
-   * {@inheritdoc}
+   * Add the form alterations specific to the bundle.
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
    */
   abstract protected function addBundleFormAlterations(array &$form, FormStateInterface $form_state);
 

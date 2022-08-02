@@ -36,8 +36,43 @@ function common_design_subtheme_preprocess_taxonomy_term(&$variables) {
       common_design_set_page_title($variables, $term->label(), TRUE);
     }
     elseif ($route_name === 'entity.taxonomy_term.preview') {
-      common_design_set_page_title($variables, $term->label(), TRUE);
+      common_design_set_page_title($variables, $term->label(), FALSE);
     }
+    elseif ($route_name === 'taxonomy_term_revision.view') {
+      $label = t('Revision of %title from %date', [
+        '%title' => $term->label(),
+        '%date' => \Drupal::service('date.formatter')->format($term->getRevisionCreationTime()),
+      ]);
+      common_design_set_page_title($variables, $label, FALSE);
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_node().
+ *
+ * Use the page title block for the node title if the view mode was selected
+ * in the theme settings.
+ *
+ * Important: this assumes there is a template for the view mode that uses
+ * the `title` (and `local_tasks`) variables added by
+ * common_design_use_node_page_title(). See `node--full.html.twig`.
+ *
+ * @see common_design_preprocess_page()
+ * @see common_design_set_page_title()
+ */
+function common_design_subtheme_preprocess_node(&$variables) {
+  $route_name = \Drupal::routeMatch()->getRouteName();
+
+  $node = $variables['node'] ?? NULL;
+  $view_mode = $variables['view_mode'] ?? '';
+
+  // If the node view mode was selected to use the page title block for the
+  // node title in the template, then we add the page title to the template
+  // variables. We only do that if we are on the canonical node page or on
+  // the node preview page.
+  if (isset($node) && $route_name === 'entity.node.revision' && common_design_use_node_page_title($view_mode)) {
+    common_design_set_page_title($variables, $node->label(), TRUE);
   }
 }
 
@@ -80,8 +115,26 @@ function common_design_subtheme_preprocess_page(&$variables) {
       'page_title_block',
     ]);
   }
+  // Hide the page title block on a taxonomy term revision page.
+  elseif ($route_name === 'taxonomy_term_revision.view') {
+    common_design_hide_rendered_blocks_from_page($variables, [
+      'page_title_block',
+    ]);
+  }
+  // Hide the page title block on a node revision page.
+  elseif ($route_name === 'entity.node.revision') {
+    common_design_hide_rendered_blocks_from_page($variables, [
+      'page_title_block',
+    ]);
+  }
   // Remove the page title block from the search results page.
   elseif ($route_name === 'reliefweb_rivers.search.results') {
+    common_design_hide_rendered_blocks_from_page($variables, [
+      'page_title_block',
+    ]);
+  }
+  // Remove the page title block from the search converter page.
+  elseif ($route_name === 'reliefweb_rivers.search.converter') {
     common_design_hide_rendered_blocks_from_page($variables, [
       'page_title_block',
     ]);
@@ -293,4 +346,65 @@ function common_design_subtheme_preprocess_inline_entity_form_entity_table(array
  */
 function common_design_subtheme_reliefweb_form_mark_optional_alter(array &$element, array &$context) {
   FormElementOptional::markAsOptional($element, $context['form']);
+}
+
+/**
+ * Implements hook_page_attachments_alter().
+ *
+ * Add resource preloading to reduce time to first paint.
+ */
+function common_design_subtheme_page_attachments_alter(array &$attachments) {
+  // Main SVG sprites and logos used across the site.
+  $svg_sprites = [
+    '/themes/custom/common_design_subtheme/img/logos/rw-logo-desktop.svg',
+    '/themes/custom/common_design_subtheme/img/logos/ocha-logo-sprite.svg',
+    '/themes/custom/common_design_subtheme/components/rw-icons/img/rw-icons-sprite.svg',
+    '/themes/contrib/common_design/img/logos/ocha-lockup.svg',
+    '/themes/custom/common_design_subtheme/img/logos/rw-logo-sprite.svg',
+  ];
+  foreach ($svg_sprites as $index => $path) {
+    $attachments['#attached']['html_head'][] = [
+      [
+        '#type' => 'html_tag',
+        '#tag' => 'link',
+        '#attributes' => [
+          'rel' => 'preload',
+          'as' => 'image',
+          'href' => Url::fromUserInput($path, ['absolute' => TRUE])->toString(),
+        ],
+        '#weight' => ($index + 1) / 10,
+      ],
+      $path,
+    ];
+  }
+
+  // Google fonts.
+  // @todo Remove once there is the same thing in the base theme.
+  $attachments['#attached']['html_head'][] = [
+    [
+      '#type' => 'html_tag',
+      '#tag' => 'link',
+      '#attributes' => [
+        'rel' => 'preconnect',
+        'href' => 'https://fonts.gstatic.com/',
+        'crossorigin' => '',
+      ],
+      '#weight' => -2,
+    ],
+    'google_fonts_static',
+  ];
+  $attachments['#attached']['html_head'][] = [
+    [
+      '#type' => 'html_tag',
+      '#tag' => 'link',
+      '#attributes' => [
+        'rel' => 'preload',
+        'as' => 'style',
+        // Note: this needs to be kept in sync with the base theme fonts.
+        'href' => 'https://fonts.googleapis.com/css?family=Roboto:ital,wght@0,300%3B0,400%3B0,500%3B0,700%3B0,900%3B1,400%3B1,700&display=swap',
+      ],
+      '#weight' => -1,
+    ],
+    'google_fonts_roboto',
+  ];
 }

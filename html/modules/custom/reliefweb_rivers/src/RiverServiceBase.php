@@ -526,23 +526,26 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * {@inheritdoc}
    */
   public function getApiLink() {
-    $url = $this->configFactory
-      ->get('reliefweb_rivers.settings')
-      ->get('search_converter_url');
-
-    if (empty($url)) {
-      return '';
-    }
-
     $parameters = $this->getParameters()->get();
     $search_url = static::getRiverUrl($this->getBundle(), $parameters, TRUE);
-
-    return Url::fromUri($url, [
+    $options = [
       'query' => [
         'appname' => 'rwint-user-' . $this->currentUser->id(),
         'search-url' => $search_url,
       ],
-    ]);
+    ];
+
+    // Use the URL from the config if defined.
+    $url = $this->configFactory
+      ->get('reliefweb_rivers.settings')
+      ->get('search_converter_url');
+
+    if (!empty($url)) {
+      return Url::fromUri($url, $options);
+    }
+
+    // Otherwise use the search converter route.
+    return Url::fromRoute('reliefweb_rivers.search.converter', [], $options);
   }
 
   /**
