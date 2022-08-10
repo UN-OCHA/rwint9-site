@@ -58,7 +58,7 @@
         "drupal/theme_switcher": "^1.2",
         "drupal/token": "^1.10",
         "drupal/user_display_name": "^1.0",
-        "drupal/user_revision": "dev-3197068-entity-update-api#51f387ec2a22a136d20843cf0054499c3ca1dbce",
+        "drupal/user_revision": "dev-3197068-entity-update-api#cc6d88bc8d7a261bfb0608c07e350fecfd7141df",
         "drush/drush": "^11.0",
         "google/analytics-data": "^0.8.4",
         "google/auth": "^1.21",
