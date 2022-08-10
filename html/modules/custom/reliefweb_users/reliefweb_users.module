@@ -8,9 +8,11 @@
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
+use Drupal\reliefweb_revisions\Services\EntityHistory;
 use Drupal\user\RoleInterface;
 use Drupal\user\UserInterface;
 
@@ -33,6 +35,13 @@ function reliefweb_users_theme() {
     ],
   ];
   return $themes;
+}
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function reliefweb_users_entity_type_alter(array &$entity_types) {
+  $entity_types['user']->setClass('\Drupal\reliefweb_users\Entity\User');
 }
 
 /**
@@ -129,6 +138,48 @@ function reliefweb_users_form_user_form_alter(array &$form, FormStateInterface $
   else {
     $form['account']['roles']['#access'] = FALSE;
   }
+
+  // Display the revision history.
+  EntityHistory::addHistoryToForm($form, $form_state);
+
+  // We need to alter the revision fields later as the user_revision form
+  // alter hook has not yet been called.
+  $form['#process'][] = 'reliefweb_users_user_form_process';
+}
+
+/**
+ * Form process callback to alter the revision fields.
+ *
+ * @param array $form
+ *   Form.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   Form state.
+ *
+ * @return array
+ *   The form.
+ */
+function reliefweb_users_user_form_process(array $form, FormStateInterface $form_state) {
+  // Update the revision information to be consistent with the other forms.
+  $revision_log_message_field = $form_state
+    ->getFormObject()
+    ->getEntity()
+    ->getEntityType()
+    ->getRevisionMetadataKey('revision_log_message');
+
+  if (isset($revision_log_message_field)) {
+    if (isset($form['revision_information'])) {
+      $form['revision_information']['#type'] = 'fieldset';
+      $form['revision_information']['#title'] = t('Revisions');
+    }
+
+    // Update the title of the revision log message field and make sure it's not
+    // populated with the previous message.
+    if (isset($form[$revision_log_message_field]['widget'][0]['value'])) {
+      $form[$revision_log_message_field]['widget'][0]['value']['#title'] = t('New comment');
+      $form[$revision_log_message_field]['widget'][0]['value']['#default_value'] = '';
+    }
+  }
+  return $form;
 }
 
 /**
@@ -146,7 +197,7 @@ function reliefweb_users_user_form_submit(array $form, FormStateInterface $form_
 }
 
 /**
- * Implements hook_form_user_form_alter().
+ * Validation callback for the email field.
  */
 function reliefweb_users_validate_email(array &$element, FormStateInterface $form_state, array $form) {
   $email = trim($form_state->getValue($element['#parents'], ''));
@@ -288,4 +339,56 @@ function reliefweb_users_get_email_confirmation_hash(UserInterface $user, $times
   $confirmed = !empty($user->field_email_confirmed->value) ? '1' : '0';
   $data = implode('/', [$user->id(), $timestamp, $email, $confirmed]);
   return Crypt::hmacBase64($data, Settings::getHashSalt() . $email);
+}
+
+/**
+ * Implements hook_reliefweb_revisions_allowed_base_fields_alter().
+ */
+function reliefweb_users_reliefweb_revisions_allowed_base_fields_alter(array &$allowed, $entity_type_id, $bundle) {
+  $allowed['name'] = TRUE;
+  $allowed['mail'] = TRUE;
+  $allowed['display_name'] = TRUE;
+  $allowed['roles'] = TRUE;
+  $allowed['status'] = TRUE;
+}
+
+/**
+ * Implements hook_reliefweb_revisions_get_formatting_callback().
+ */
+function reliefweb_users_reliefweb_revisions_get_formatting_callback(FieldDefinitionInterface $field_definition) {
+  if ($field_definition->getTargetEntityTypeId() === 'user' && $field_definition->getName() === 'status') {
+    return 'reliefweb_users_format_user_status_revision_differences';
+  }
+  return NULL;
+}
+
+/**
+ * Format the user status field differences.
+ *
+ * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
+ *   Field definition.
+ * @param array $diff
+ *   Field value differences.
+ *
+ * @return array|null
+ *   The render array for the difference or NULL if there is no difference.
+ */
+function reliefweb_users_format_user_status_revision_differences(FieldDefinitionInterface $field_definition, array $diff) {
+  $allowed_values = [
+    '1' => 'active',
+    '0' => 'blocked',
+  ];
+
+  $output = [];
+  foreach (['added', 'removed'] as $key) {
+    foreach ($diff[$key] ?? [] as $value) {
+      if (isset($allowed_values[$value['value']])) {
+        $output['#' . $key][] = $allowed_values[$value['value']];
+      }
+    }
+  }
+
+  return empty($output) ? NULL : [
+    '#theme' => 'reliefweb_revisions_diff_list',
+  ] + $output;
 }
