@@ -1,0 +1,7 @@
+_core:
+  default_config_hash: 5L2VrNBkdV0ykQRYkkaWegnhWVy33dKILcYT2vTlLDE
+revision_mode: required
+revision_default_enabled: false
+revision_user_log_enabled: false
+revision_keep_passwords: false
+revision_information_open: true
