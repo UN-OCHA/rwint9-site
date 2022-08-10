@@ -11,6 +11,10 @@
     ],
     "repositories": [
         {
+            "type": "vcs",
+            "url": "https://git.drupalcode.org/issue/user_revision-3197068.git"
+        },
+        {
             "type": "composer",
             "url": "https://packages.drupal.org/8"
         },
@@ -54,6 +58,7 @@
         "drupal/theme_switcher": "^1.2",
         "drupal/token": "^1.10",
         "drupal/user_display_name": "^1.0",
+        "drupal/user_revision": "dev-3197068-entity-update-api#51f387ec2a22a136d20843cf0054499c3ca1dbce",
         "drush/drush": "^11.0",
         "google/analytics-data": "^0.8.4",
         "google/auth": "^1.21",

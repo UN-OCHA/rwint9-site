@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "687ff3598a1528e7325a51c23477da0a",
+    "content-hash": "0a36c3ebcf88afb601a7bf2ca4a1381b",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -4505,6 +4505,29 @@
                 "source": "https://git.drupal.org/project/user_display_name.git",
                 "issues": "https://www.drupal.org/project/issues/user_display_name"
             }
+        },
+        {
+            "name": "drupal/user_revision",
+            "version": "dev-3197068-entity-update-api",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupalcode.org/issue/user_revision-3197068.git",
+                "reference": "51f387ec2a22a136d20843cf0054499c3ca1dbce"
+            },
+            "require": {
+                "drupal/core": "^9 || ^10"
+            },
+            "type": "drupal-module",
+            "license": [
+                "GPL-2.0+"
+            ],
+            "description": "Adds revision support to user entities.",
+            "homepage": "https://www.drupal.org/project/user_revision",
+            "support": {
+                "issues": "https://www.drupal.org/project/issues/user_revision",
+                "source": "https://git.drupal.org/project/user_revision.git"
+            },
+            "time": "2022-08-10T00:52:58+00:00"
         },
         {
             "name": "drush/drush",
@@ -15678,7 +15701,8 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "drupal/inline_entity_form": 5,
-        "drupal/taxonomy_term_revision": 20
+        "drupal/taxonomy_term_revision": 20,
+        "drupal/user_revision": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
