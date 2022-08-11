@@ -99,7 +99,7 @@ class HtmlSummarizer {
     // Truncate the text to the given length if longer.
     if ($length > 0 && $text_length > $length) {
       foreach ($paragraphs as $index => $paragraph) {
-        $parts = preg_split('/([\s\n\r]+)/u', $paragraph, NULL, PREG_SPLIT_DELIM_CAPTURE);
+        $parts = preg_split('/([\s\n\r]+)/u', $paragraph, -1, PREG_SPLIT_DELIM_CAPTURE);
         $parts_count = count($parts);
 
         for ($i = 0; $i < $parts_count; ++$i) {
