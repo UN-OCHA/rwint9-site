@@ -104,6 +104,34 @@ class TopicModeration extends ModerationServiceBase {
   /**
    * {@inheritdoc}
    */
+  public function getStatuses() {
+    return [
+      'draft' => $this->t('Draft'),
+      'published' => $this->t('Published'),
+      'archive' => $this->t('Archived'),
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEntityFormSubmitButtons($status, EntityModeratedInterface $entity) {
+    return [
+      'draft' => [
+        '#value' => $this->t('Save as draft'),
+      ],
+      'published' => [
+        '#value' => $this->t('Publish'),
+      ],
+      'archive' => [
+        '#value' => $this->t('Archive'),
+      ],
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function entityAccess(EntityModeratedInterface $entity, $operation = 'view', ?AccountInterface $account = NULL) {
     // Trello #y0B0wxLi: allow beta tested to view unpublished topics.
     if ($operation === 'view' && UserHelper::userHasRoles(['beta_tester'], $account)) {
