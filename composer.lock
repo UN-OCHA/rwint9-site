@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "687ff3598a1528e7325a51c23477da0a",
+    "content-hash": "f1502e99b6706e57af89681f0a8d9619",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -2328,29 +2328,29 @@
         },
         {
             "name": "drupal/content_entity_clone",
-            "version": "1.0.0",
+            "version": "1.0.1",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/content_entity_clone.git",
-                "reference": "1.0.0"
+                "reference": "1.0.1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/content_entity_clone-1.0.0.zip",
-                "reference": "1.0.0",
-                "shasum": "7c8f919d0fd86f3effa753c6d061e8990d1cb8e3"
+                "url": "https://ftp.drupal.org/files/projects/content_entity_clone-1.0.1.zip",
+                "reference": "1.0.1",
+                "shasum": "fbcd5e594a2e9f09985b1ac5a2be7781279c0d7d"
             },
             "require": {
-                "drupal/core": "^9"
+                "drupal/core": "^9 || ^10"
             },
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "1.0.0",
-                    "datestamp": "1643765349",
+                    "version": "1.0.1",
+                    "datestamp": "1659682087",
                     "security-coverage": {
-                        "status": "not-covered",
-                        "message": "Project has not opted into security advisory coverage!"
+                        "status": "covered",
+                        "message": "Covered by Drupal's security advisory policy"
                     }
                 }
             },
@@ -3417,26 +3417,26 @@
         },
         {
             "name": "drupal/memcache",
-            "version": "2.3.0",
+            "version": "2.4.0",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/memcache.git",
-                "reference": "8.x-2.3"
+                "reference": "8.x-2.4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/memcache-8.x-2.3.zip",
-                "reference": "8.x-2.3",
-                "shasum": "b2f9715612be74f9ce55daaf838f6f17a9eb2f5a"
+                "url": "https://ftp.drupal.org/files/projects/memcache-8.x-2.4.zip",
+                "reference": "8.x-2.4",
+                "shasum": "200c3a95d535549459091f061203d22f8b47d44a"
             },
             "require": {
-                "drupal/core": "^8.9 || ^9"
+                "drupal/core": "^9.1 || ^10"
             },
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "8.x-2.3",
-                    "datestamp": "1614802365",
+                    "version": "8.x-2.4",
+                    "datestamp": "1659633918",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
@@ -3765,7 +3765,7 @@
             "extra": {
                 "drupal": {
                     "version": "8.x-1.11",
-                    "datestamp": "1659472597",
+                    "datestamp": "1660129564",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
@@ -3861,33 +3861,32 @@
         },
         {
             "name": "drupal/social_api",
-            "version": "3.0.3",
+            "version": "3.1.0",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/social_api.git",
-                "reference": "3.0.3"
+                "reference": "3.1.0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/social_api-3.0.3.zip",
-                "reference": "3.0.3",
-                "shasum": "33db9b3e33c04d53220fd2f218802bf66178a4c5"
+                "url": "https://ftp.drupal.org/files/projects/social_api-3.1.0.zip",
+                "reference": "3.1.0",
+                "shasum": "ceb8b35f718657a8f3d67d2e9a8384d4b35687ea"
             },
             "require": {
-                "drupal/core": "^8.8 || ^9.0",
+                "drupal/core": "^9.1 || ^10",
                 "ext-openssl": "*",
                 "league/oauth2-client": "^2.0"
             },
             "require-dev": {
                 "drupal/coder": "^8.3",
-                "drupal/social_auth": "^3.0@dev",
                 "phpcompatibility/php-compatibility": "^9.3"
             },
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "3.0.3",
-                    "datestamp": "1646578799",
+                    "version": "3.1.0",
+                    "datestamp": "1660188487",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
@@ -4166,29 +4165,29 @@
         },
         {
             "name": "drupal/taxonomy_term_preview",
-            "version": "1.0.0",
+            "version": "1.0.1",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/taxonomy_term_preview.git",
-                "reference": "1.0.0"
+                "reference": "1.0.1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/taxonomy_term_preview-1.0.0.zip",
-                "reference": "1.0.0",
-                "shasum": "746b553054452cd50bc8bd21635540ce65e84637"
+                "url": "https://ftp.drupal.org/files/projects/taxonomy_term_preview-1.0.1.zip",
+                "reference": "1.0.1",
+                "shasum": "bc57201009fac07939e64cdeea9d60fda8a31056"
             },
             "require": {
-                "drupal/core": "^9"
+                "drupal/core": "^9 || ^10"
             },
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "1.0.0",
-                    "datestamp": "1643767522",
+                    "version": "1.0.1",
+                    "datestamp": "1659682326",
                     "security-coverage": {
-                        "status": "not-covered",
-                        "message": "Project has not opted into security advisory coverage!"
+                        "status": "covered",
+                        "message": "Covered by Drupal's security advisory policy"
                     }
                 }
             },
@@ -4372,29 +4371,29 @@
         },
         {
             "name": "drupal/user_display_name",
-            "version": "1.0.1",
+            "version": "1.1.1",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/user_display_name.git",
-                "reference": "1.0.1"
+                "reference": "1.1.1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/user_display_name-1.0.1.zip",
-                "reference": "1.0.1",
-                "shasum": "91311275109bd6b15229744263227e13b8d072a8"
+                "url": "https://ftp.drupal.org/files/projects/user_display_name-1.1.1.zip",
+                "reference": "1.1.1",
+                "shasum": "a41a8fab1009e8b6bd8221e78d0b553185a9c410"
             },
             "require": {
-                "drupal/core": "^9"
+                "drupal/core": "^9 || ^10"
             },
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "1.0.1",
-                    "datestamp": "1633666017",
+                    "version": "1.1.1",
+                    "datestamp": "1660115484",
                     "security-coverage": {
-                        "status": "not-covered",
-                        "message": "Project has not opted into security advisory coverage!"
+                        "status": "covered",
+                        "message": "Covered by Drupal's security advisory policy"
                     }
                 }
             },
@@ -7859,16 +7858,16 @@
         },
         {
             "name": "phpstan/phpdoc-parser",
-            "version": "1.6.4",
+            "version": "1.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpdoc-parser.git",
-                "reference": "135607f9ccc297d6923d49c2bcf309f509413215"
+                "reference": "367a8d9d5f7da2a0136422d27ce8840583926955"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/135607f9ccc297d6923d49c2bcf309f509413215",
-                "reference": "135607f9ccc297d6923d49c2bcf309f509413215",
+                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/367a8d9d5f7da2a0136422d27ce8840583926955",
+                "reference": "367a8d9d5f7da2a0136422d27ce8840583926955",
                 "shasum": ""
             },
             "require": {
@@ -7898,9 +7897,9 @@
             "description": "PHPDoc parser with support for nullable, intersection and generic types",
             "support": {
                 "issues": "https://github.com/phpstan/phpdoc-parser/issues",
-                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.6.4"
+                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.7.0"
             },
-            "time": "2022-06-26T13:09:08+00:00"
+            "time": "2022-08-09T12:23:23+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
