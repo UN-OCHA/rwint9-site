@@ -11,6 +11,12 @@
   word-wrap: normal;
 }
 
+/* Set colour despite being visually hidden so it passes WCAG AA */
+.cd-soft-footer h2.visually-hidden,
+.cd-soft-footer label.visually-hidden {
+  color: var(--brand-primary);
+}
+
 .cd-soft-footer .mc-field-group {
   display: flex;
   flex-direction: column;
