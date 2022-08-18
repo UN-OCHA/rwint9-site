@@ -132,7 +132,7 @@ class Entity extends EntityContentBase implements ImportAwareInterface {
     if ($source_plugin instanceof EntityBase) {
       $exists = $this->migration->getSourcePlugin()->entityExists($entity_id);
     }
-    elseif ($original = $this->storage->load($entity_id)) {
+    elseif ($this->storage->load($entity_id)) {
       $exists = TRUE;
     }
     else {
