@@ -6,7 +6,7 @@ local attachment_file = ngx.var.attachment_file
 -- the URL, URI in DB and file on disk in D7.
 -- This can also be used to handle aliases for some specific files.
 local symlink = ngx.var.document_root .. '/sites/default/files/legacy-attachments/' .. attachment_file;
-local escaped = symlink:gsub('"', ''):gsub("'", ""):gsub('`', ''):gsub('%$', '')
+local escaped = symlink:gsub('"', ''):gsub("'", ""):gsub('`', ''):gsub('%$', ''):gsub('%!', '')
 local handle = io.popen('readlink "' .. escaped .. '"')
 local target = handle:read()
 handle:close()
