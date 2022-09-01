@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f1502e99b6706e57af89681f0a8d9619",
+    "content-hash": "a4f03471cdd9d43a16488220e8d1550c",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -4210,26 +4210,37 @@
         },
         {
             "name": "drupal/taxonomy_term_revision",
-            "version": "dev-1.x",
+            "version": "1.1.0",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/taxonomy_term_revision.git",
-                "reference": "7225c691f88b40a215740f5f9a903612e0cc940c"
+                "reference": "8.x-1.1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/taxonomy_term_revision-8.x-1.1.zip",
+                "reference": "8.x-1.1",
+                "shasum": "72a3c67ff7fff4a8247f59a2ba95c25c914f5359"
             },
             "require": {
-                "drupal/core": "^8 || ^9"
+                "drupal/core": "^8 || ^9 || ^10"
             },
             "type": "drupal-module",
             "extra": {
-                "branch-alias": {
-                    "dev-1.x": "1.x-dev"
-                },
                 "drupal": {
-                    "version": "8.x-1.0+2-dev",
-                    "datestamp": "1660896239",
+                    "version": "8.x-1.1",
+                    "datestamp": "1660910720",
                     "security-coverage": {
                         "status": "not-covered",
                         "message": "Project has not opted into security advisory coverage!"
+                    }
+                },
+                "branch-alias": {
+                    "dev-8.x-2.x": "2.x-dev"
+                },
+                "drush": {
+                    "services": {
+                        "drush.services.yml": ">=9"
                     }
                 }
             },
@@ -4243,7 +4254,7 @@
                     "homepage": "https://www.drupal.org/user/3591861"
                 }
             ],
-            "description": "Taxonomy Revision module for Drupal 8.7 onwards",
+            "description": "Allows user to revert or delete taxonomy term revisions.",
             "homepage": "https://www.drupal.org/project/taxonomy_term_revision",
             "support": {
                 "source": "https://git.drupalcode.org/project/taxonomy_term_revision"
@@ -15626,8 +15637,7 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "drupal/inline_entity_form": 5,
-        "drupal/taxonomy_term_revision": 20
+        "drupal/inline_entity_form": 5
     },
     "prefer-stable": true,
     "prefer-lowest": false,
