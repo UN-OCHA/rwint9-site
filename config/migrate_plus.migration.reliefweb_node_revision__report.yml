@@ -19,7 +19,7 @@ process:
     plugin: skip_on_empty
     method: process
     source: field_bury/0/value
-  field_content_format/value:
+  field_content_format:
     plugin: sub_process
     source: field_content_format
     process:
