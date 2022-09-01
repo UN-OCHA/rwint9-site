@@ -30,7 +30,8 @@ end
 -- Some legacy preview file names cannot be derived from the PDF file name, in
 -- that case there should be a symlink pointing to the new preview.
 local symlink = ngx.var.document_root .. '/sites/default/files/legacy-previews/' .. ngx.var.file_id .. '.' .. image_ext;
-local handle = io.popen('readlink "' .. symlink .. '"')
+local escaped = symlink:gsub('"', ''):gsub("'", ""):gsub('`', ''):gsub('%$', '')
+local handle = io.popen('readlink "' .. escaped .. '"')
 local target = handle:read()
 handle:close()
 
