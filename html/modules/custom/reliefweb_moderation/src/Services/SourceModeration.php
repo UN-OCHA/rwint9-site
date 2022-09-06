@@ -208,6 +208,8 @@ class SourceModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function entityPresave(EntityModeratedInterface $entity) {
+    parent::entityPresave($entity);
+
     // Ensure all posting rights are 'blocked' if the status is 'blocked'.
     $status = $entity->getModerationStatus();
     if ($status === 'blocked') {
@@ -233,8 +235,6 @@ class SourceModeration extends ModerationServiceBase {
         ])));
       }
     }
-
-    return $status;
   }
 
   /**

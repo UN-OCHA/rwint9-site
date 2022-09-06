@@ -2160,4 +2160,126 @@ class ReliefWebMigrateCommands extends DrushCommands implements SiteAliasManager
     }
   }
 
+  /**
+   * Migrated job/training career categories revisions.
+   *
+   * @command rw-migrate:migrate-career-categories-revisions
+   *
+   * @usage rw-migrate:migrate-career-categories-revisions
+   *   Migrated career categories revisions
+   *
+   * @validate-module-enabled reliefweb_migrate
+   */
+  public function migrateCareerCategoriesRevisions(array $options = [
+    'dry-run' => FALSE,
+  ]) {
+    $last_id = 0;
+    $count = 0;
+    $fields = [
+      'bundle',
+      'deleted',
+      'entity_id',
+      'revision_id',
+      'langcode',
+      'delta',
+      'field_career_categories_target_id',
+    ];
+    $query_options = [
+      // Note: this is deprecated in Drupal 9.4 and will be removed in Drupal
+      // 11 and there is no replacement. We don't really care because the
+      // reliefweb_migrate will be removed way before that.
+      'return' => Database::RETURN_AFFECTED,
+    ];
+    $dry_run = !empty($options['dry-run']);
+
+    while (TRUE) {
+      $rw7_records = Database::getConnection('default', 'rwint7')
+        ->select('field_revision_field_career_categories', 'f')
+        ->fields('f')
+        ->condition('f.bundle', ['job', 'training'], 'IN')
+        ->condition('f.revision_id', $last_id, '>')
+        ->orderBy('f.revision_id', 'ASC')
+        ->range(0, 1000)
+        ->execute()
+        ?->fetchAll() ?? [];
+
+      if (empty($rw7_records)) {
+        break;
+      }
+
+      // Extract the revision IDs.
+      $revision_ids = [];
+      foreach ($rw7_records as $record) {
+        $revision_ids[$record->revision_id] = $record->revision_id;
+      }
+      $last_id = max($revision_ids);
+
+      // Get the existing revision IDs.
+      $existing_revision_ids = [];
+      $query = $this->database->select('node_revision', 'nr');
+      $query->fields('nr', ['vid']);
+      $query->leftJoin('node_revision__field_career_categories', 'f', 'f.revision_id = nr.vid');
+      $query->fields('f', ['field_career_categories_target_id']);
+      $query->condition('nr.vid', $revision_ids, 'IN');
+      foreach ($query->execute() ?? [] as $record) {
+        if (empty($existing_revision_ids[$record->vid])) {
+          $existing_revision_ids[$record->vid] = !empty($record->field_career_categories_target_id);
+        }
+      }
+
+      // Generate the list of records to insert.
+      $nids = [];
+      $rw9_records = [];
+      foreach ($rw7_records as $record) {
+        if (isset($existing_revision_ids[$record->revision_id]) && $existing_revision_ids[$record->revision_id] === FALSE) {
+          $rw9_records[] = [
+            'bundle' => $record->bundle,
+            'deleted' => $record->deleted,
+            'entity_id' => $record->entity_id,
+            'revision_id' => $record->revision_id,
+            'langcode' => 'en',
+            'delta' => $record->delta,
+            'field_career_categories_target_id' => $record->field_career_categories_tid,
+          ];
+          $nids[$record->entity_id] = $record->entity_id;
+        }
+      }
+
+      if (!empty($rw9_records)) {
+        try {
+          $transaction = $this->database->startTransaction();
+
+          $query = $this->database
+            ->insert('node_revision__field_career_categories', $query_options)
+            ->fields($fields);
+          foreach ($rw9_records as $record) {
+            $query->values($record);
+          }
+          $query->execute();
+
+          if ($dry_run) {
+            $transaction->rollback();
+          }
+        }
+        catch (\Exception $exception) {
+          $transaction->rollback();
+          $this->logger()->error(dt('Error while trying to update the database: @error', [
+            '@error' => $exception->getMessage(),
+          ]));
+          return FALSE;
+        }
+
+        $count += count($rw9_records);
+
+        $this->logger()->info(dt('Inserted @count records', [
+          '@count' => $count,
+        ]));
+      }
+    }
+
+    if ($count === 0) {
+      $this->logger()->info(dt('Nothing to insert'));
+    }
+  }
+
 }

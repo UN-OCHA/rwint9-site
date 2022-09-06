@@ -50,7 +50,7 @@
         "drupal/social_auth_hid": "^3.0",
         "drupal/svg_image": "^1.15",
         "drupal/taxonomy_term_preview": "^1.0.0",
-        "drupal/taxonomy_term_revision": "1.x-dev",
+        "drupal/taxonomy_term_revision": "^1.1",
         "drupal/theme_switcher": "^1.2",
         "drupal/token": "^1.10",
         "drupal/user_display_name": "^1.0",
