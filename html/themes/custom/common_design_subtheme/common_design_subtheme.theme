@@ -357,6 +357,7 @@ function common_design_subtheme_page_attachments_alter(array &$attachments) {
   // Main SVG sprites and logos used across the site.
   $svg_sprites = [
     '/themes/custom/common_design_subtheme/img/logos/rw-logo-desktop.svg',
+    '/themes/custom/common_design_subtheme/img/logos/rw-logo-mobile.svg',
     '/themes/custom/common_design_subtheme/img/logos/ocha-logo-sprite.svg',
     '/themes/custom/common_design_subtheme/components/rw-icons/img/rw-icons-sprite.svg',
     '/themes/contrib/common_design/img/logos/ocha-lockup.svg',
