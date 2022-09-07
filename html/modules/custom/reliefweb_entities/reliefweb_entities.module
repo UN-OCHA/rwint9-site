@@ -297,10 +297,13 @@ function reliefweb_entities_theme() {
         'attributes' => NULL,
         // Image style.
         'style' => NULL,
-        // Image information with uri, width, height, alt and copyright.
+        // Image information with uri, width, height, alt and copyright
+        // and optionally the loading mode.
         'image' => [],
         // Flag to indicate whether to show the caption or not.
         'caption' => TRUE,
+        // Flag to indicate the default loading mode: lazy or eager.
+        'loading' => 'lazy',
       ],
     ],
     'reliefweb_entities_book_menu' => [
