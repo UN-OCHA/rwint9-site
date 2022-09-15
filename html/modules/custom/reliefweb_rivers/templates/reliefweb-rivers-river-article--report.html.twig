@@ -63,7 +63,7 @@
   {% if entity.summary is not empty or entity.preview is not empty %}
   <div class="rw-river-article__content" lang="{{ entity.langcode }}">
     {% if entity.preview is not empty %}
-    <img src="{{ entity.preview.url }}" alt="{{ entity.preview.alt ?? '' }}">
+    <img src="{{ entity.preview.url }}" alt="{{ entity.preview.alt ?? '' }}" loading="lazy">
     {% endif %}
     {% if entity.summary is not empty %}
     <p>{{ entity.summary }}</p>

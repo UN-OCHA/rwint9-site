@@ -356,26 +356,29 @@ function common_design_subtheme_reliefweb_form_mark_optional_alter(array &$eleme
 function common_design_subtheme_page_attachments_alter(array &$attachments) {
   // Main SVG sprites and logos used across the site.
   $svg_sprites = [
-    '/themes/custom/common_design_subtheme/img/logos/rw-logo-desktop.svg',
-    '/themes/custom/common_design_subtheme/img/logos/ocha-logo-sprite.svg',
-    '/themes/custom/common_design_subtheme/components/rw-icons/img/rw-icons-sprite.svg',
-    '/themes/contrib/common_design/img/logos/ocha-lockup.svg',
-    '/themes/custom/common_design_subtheme/img/logos/rw-logo-sprite.svg',
+    '/themes/custom/common_design_subtheme/img/logos/rw-logo-desktop.svg' => NULL,
+    '/themes/custom/common_design_subtheme/img/logos/rw-logo-mobile.svg' => '(max-width: 768px)',
+    '/themes/custom/common_design_subtheme/img/logos/ocha-logo-sprite.svg' => NULL,
+    '/themes/custom/common_design_subtheme/components/rw-icons/img/rw-icons-sprite.svg' => NULL,
+    '/themes/custom/common_design_subtheme/img/logos/rw-logo-sprite.svg' => NULL,
   ];
-  foreach ($svg_sprites as $index => $path) {
-    $attachments['#attached']['html_head'][] = [
-      [
-        '#type' => 'html_tag',
-        '#tag' => 'link',
-        '#attributes' => [
-          'rel' => 'preload',
-          'as' => 'image',
-          'href' => Url::fromUserInput($path, ['absolute' => TRUE])->toString(),
-        ],
-        '#weight' => ($index + 1) / 10,
+  $index = 0;
+  foreach ($svg_sprites as $path => $media) {
+    $data = [
+      '#type' => 'html_tag',
+      '#tag' => 'link',
+      '#attributes' => [
+        'rel' => 'preload',
+        'as' => 'image',
+        'href' => Url::fromUserInput($path, ['absolute' => TRUE])->toString(),
       ],
-      $path,
+      '#weight' => ($index + 1) / 10,
     ];
+    if (!empty($media)) {
+      $data['#attributes']['media'] = $media;
+    }
+    $attachments['#attached']['html_head'][] = [$data, $path];
+    $index++;
   }
 
   // Google fonts.

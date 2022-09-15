@@ -12,6 +12,18 @@
   <div{{ list_attributes }}>
     {% for item in list %}
     <figure>
+      {% if item.preview is not empty and loop.index == 1 and not lazy_load_first_preview %}
+        {%
+          set item = item|merge({
+            'preview': item.preview|merge({
+              '#attributes': item.preview['#attributes']|merge({
+                'loading': 'eager'
+              })
+            })
+          })
+        %}
+      {% endif %}
+
       {% if item.url is not empty %}
       <a href="{{ item.url }}" target="_blank" rel="noopener">{{ item.preview }}</a>
       {% else %}
