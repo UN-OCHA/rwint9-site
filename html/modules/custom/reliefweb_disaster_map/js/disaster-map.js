@@ -240,6 +240,13 @@
           }
         });
 
+        // Unset the active marker when pressing escape.
+        container.addEventListener('keydown', function (event) {
+          if (event.keyCode === 27) {
+            active = unsetActiveMarker(active);
+          }
+        });
+
         // Set a marker as the active one when focusing its disaster article.
         container.addEventListener('focusin', function (event) {
           var article = findParentArticle(container, event.target);
