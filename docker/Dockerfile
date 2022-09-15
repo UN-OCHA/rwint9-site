@@ -55,6 +55,7 @@ RUN mkdir -p /etc/nginx/custom && \
     # Permit nginx access to the X_DOCSTORE_PROVIDER_UUID env variable.
     sed -i 's/env NGINX_OVERRIDE_PROTOCOL;/env NGINX_OVERRIDE_PROTOCOL;\n\n## Allow retrieval of a particular file version from the docstore.\nenv X_DOCSTORE_PROVIDER_UUID;/' /etc/nginx/nginx.conf
 
+COPY --from=builder /srv/www/assets /srv/www/assets/
 COPY --from=builder /srv/www/config /srv/www/config/
 COPY --from=builder /srv/www/html /srv/www/html/
 COPY --from=builder /srv/www/vendor /srv/www/vendor/
