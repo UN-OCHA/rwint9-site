@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   module:
+    - guidelines
     - node
     - taxonomy
 id: default
@@ -33,7 +34,23 @@ role_toggle: 'exclude listed'
 role_list:
   administrator: administrator
 status_toggle: 'exclude listed'
-status_list: |-
-  403
-  404
-conditions: {  }
+status_list: ''
+conditions:
+  'entity_bundle:guideline':
+    id: 'entity_bundle:guideline'
+    negate: false
+    context_mapping:
+      guideline: '@guidelines.guidelines_route_context:guideline'
+    bundles: {  }
+  'entity_bundle:node':
+    id: 'entity_bundle:node'
+    negate: false
+    context_mapping:
+      node: '@node.node_route_context:node'
+    bundles: {  }
+  'entity_bundle:taxonomy_term':
+    id: 'entity_bundle:taxonomy_term'
+    negate: false
+    context_mapping:
+      taxonomy_term: '@taxonomy_term.taxonomy_term_route_context:taxonomy_term'
+    bundles: {  }
