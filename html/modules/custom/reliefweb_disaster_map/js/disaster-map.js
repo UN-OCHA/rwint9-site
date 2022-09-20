@@ -5,7 +5,6 @@
 
   Drupal.behaviors.reliefwebDisasterMap = {
     attach: function (context, settings) {
-      console.log(settings);
       // Requirements.
       if (!reliefweb || !reliefweb.mapbox || !settings || !settings.reliefwebDisasterMap) {
         return;
@@ -74,6 +73,8 @@
         element.setAttribute('data-disaster-status', node.getAttribute('data-disaster-status'));
         element.setAttribute('data-disaster-type', node.getAttribute('data-disaster-type'));
 
+        node.setAttribute('data-marker-id', id);
+
         var marker = new mapboxgl.Marker({
           element: element,
           anchor: 'bottom'
@@ -89,7 +90,19 @@
         });
         marker.id = id;
         marker.disaster = node;
+        marker.disasterLink = node.querySelector('a');
         return marker;
+      }
+
+      // Find a parent disaster article from a child element.
+      function findParentArticle(container, element) {
+        while (element && element !== container) {
+          if (element.hasAttribute('data-marker-id')) {
+            return element;
+          }
+          element = element.parentNode;
+        }
+        return null;
       }
 
       // Create the map legend.
@@ -220,7 +233,25 @@
         container.addEventListener('click', function (event) {
           var target = event.target;
           if (target.hasAttribute && target.hasAttribute('data-id')) {
-            active = setActiveMarker(map, markers[target.getAttribute('data-id')], active, true);
+            markers[target.getAttribute('data-id')].disasterLink.focus();
+          }
+          else {
+            active = unsetActiveMarker(active);
+          }
+        });
+
+        // Unset the active marker when pressing escape.
+        container.addEventListener('keydown', function (event) {
+          if (event.keyCode === 27) {
+            active = unsetActiveMarker(active);
+          }
+        });
+
+        // Set a marker as the active one when focusing its disaster article.
+        container.addEventListener('focusin', function (event) {
+          var article = findParentArticle(container, event.target);
+          if (article && article.hasAttribute && article.hasAttribute('data-marker-id')) {
+            active = setActiveMarker(map, markers[article.getAttribute('data-marker-id')], active, false);
           }
           else {
             active = unsetActiveMarker(active);

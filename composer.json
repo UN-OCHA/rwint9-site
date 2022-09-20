@@ -163,7 +163,10 @@
                     "mode": "replace",
                     "path": "html/core/assets/scaffold/files/default.settings.php",
                     "overwrite": false
-                }
+                },
+                "[web-root]/robots.txt": {
+                    "append": "assets/robots.txt.append"
+               }
             },
             "locations": {
                 "web-root": "html/"

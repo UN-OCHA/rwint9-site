@@ -42,9 +42,12 @@ class TrainingFormAlter extends EntityFormAlterServiceBase {
     $form['field_country']['#attributes']['data-with-autocomplete'] = '';
     $form['field_source']['#attributes']['data-with-autocomplete'] = 'sources';
     $form['field_source']['#attributes']['data-selection-messages'] = '';
-    $form['field_source']['#attributes']['data-autocomplete-path'] = Url::fromRoute('reliefweb_form.node_form.source_attention_messages', [
-      'bundle' => 'job',
-    ])->toString();
+    // Fetch source attention message only if editor.
+    if ($this->currentUser->hasPermission('edit any training content')) {
+      $form['field_source']['#attributes']['data-autocomplete-path'] = Url::fromRoute('reliefweb_form.node_form.source_attention_messages', [
+        'bundle' => 'training',
+      ])->toString();
+    }
 
     // Add the fields to a potential new source.
     $this->addPotentialNewSourceFields($form, $form_state);

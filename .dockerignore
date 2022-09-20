@@ -1,5 +1,6 @@
 # Ignore everything except for the files necessary to build the codebase.
 *
+!assets
 !config
 !docker
 !html/modules/custom
