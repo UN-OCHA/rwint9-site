@@ -115,9 +115,7 @@ class SourceRiver extends RiverServiceBase {
         'field' => 'status',
         'value' => 'active',
       ],
-      // @todo just a reminder to try to find a way for the API to sort in
-      // language aware way.
-      'sort' => ['name:asc'],
+      'sort' => ['name.collation_en:asc'],
     ];
 
     // Add a filter on the selected letter.

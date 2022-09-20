@@ -61,7 +61,7 @@
         "league/html-to-markdown": "^5.0",
         "lolli42/finediff": "^1.0",
         "pelago/emogrifier": "^6.0",
-        "reliefweb/api-indexer": "^v2.3",
+        "reliefweb/api-indexer": "^v2.5.0",
         "reliefweb/simple-autocomplete": "^v1.3",
         "reliefweb/simple-datepicker": "^v1.3",
         "symfony/flex": "^2.0",
@@ -163,7 +163,10 @@
                     "mode": "replace",
                     "path": "html/core/assets/scaffold/files/default.settings.php",
                     "overwrite": false
-                }
+                },
+                "[web-root]/robots.txt": {
+                    "append": "assets/robots.txt.append"
+               }
             },
             "locations": {
                 "web-root": "html/"

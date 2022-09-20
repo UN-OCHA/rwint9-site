@@ -2,6 +2,11 @@
   outline: 3px solid var(--cd-reliefweb-brand-blue);
 }
 
+/* Use the OCHA logo sprite so that we have one less file to load. */
+.cd-footer .cd-mandate__logo {
+  background: url("../../img/logos/ocha-logo-sprite.svg") 0 -95px no-repeat;
+}
+
 /**
  * Copyright.
  *

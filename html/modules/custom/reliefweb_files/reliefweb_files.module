@@ -46,6 +46,9 @@ function reliefweb_files_theme() {
         'footer' => NULL,
         // Section footer attributes.
         'footer_attributes' => NULL,
+        // Flag to indicate if the first attachment's preview should be lazy
+        // loaded or not.
+        'lazy_load_first_preview' => TRUE,
       ],
     ],
   ];

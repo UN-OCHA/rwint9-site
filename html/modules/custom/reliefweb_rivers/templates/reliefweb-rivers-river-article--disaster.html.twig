@@ -88,7 +88,7 @@
     {% if entity.related_disasters %}
       <section class="rw-river-article--disaster__related-disasters">
         <h{{ level + 1 }} class="rw-river-article--disaster__related-disasters__title">{{ 'Related disasters'|t }}</h{{ level + 1 }}>
-        <ul class="rw-river-article--disaster__related-disasters__list">
+        <ul class="rw-river-article--disaster__related-disasters__list" aria-label="{{ 'Disasters related to @label'|t({'@label': entity.title}) }}">
           {% for related_disaster in entity.related_disasters %}
           <li{{ create_attribute()
             .addClass('rw-river-article--disaster__related-disasters__list__item')

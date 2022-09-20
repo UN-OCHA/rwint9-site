@@ -165,12 +165,14 @@
         '#theme': 'reliefweb_entities_entity_image',
         '#style': 'large',
         '#image': image,
+        '#loading': 'eager',
       }) }}
     {% endif %}
 
     <div class="rw-report__content">
+      {% set attachments = node.getAttachments(content.field_file) %}
 
-      {{ node.getAttachments(content.field_file) }}
+      {{ attachments ? attachments|merge({'#lazy_load_first_preview': image is not empty}) }}
 
       {{ content.body.0|render|sanitize_html(false, 1) }}
 
