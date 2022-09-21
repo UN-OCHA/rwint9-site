@@ -175,7 +175,7 @@ class HtmlSummarizerTest extends UnitTestCase {
   }
 
   /**
-   * Test whitespace sanitation.
+   * Test paragraph summaries.
    *
    * @covers \Drupal\reliefweb_utility\Helpers\HtmlSummarizer::summarizeParagraphs
    */

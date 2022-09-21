@@ -150,7 +150,7 @@ class HtmlSummarizer {
    * @param int $length
    *   Maximum length of the summary.
    * @param int $separator_length
-   *   Length of the separator used to combined the paragraphs in the summary.
+   *   Length of the separator used to combine the paragraphs in the summary.
    *
    * @return array
    *   Summarized paragraphs.
