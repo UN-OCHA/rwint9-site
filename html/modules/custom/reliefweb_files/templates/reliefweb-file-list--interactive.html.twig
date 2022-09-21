@@ -16,7 +16,7 @@
         {%
           set item = item|merge({
             'preview': item.preview|merge({
-              '#attributes': item.preview['#attributes']|merge({
+              '#attributes': (item.preview['#attributes'] ?? {})|merge({
                 'loading': 'eager'
               })
             })
