@@ -150,4 +150,77 @@ class HtmlSummarizerTest extends UnitTestCase {
     $this->assertNotEquals(HtmlSummarizer::summarize($html, 50, FALSE), $expected);
   }
 
+  /**
+   * Test whitespace sanitation.
+   *
+   * @covers \Drupal\reliefweb_utility\Helpers\HtmlSummarizer::sanitizeText
+   */
+  public function testSanitizeText() {
+    $input = '';
+    $expected = '';
+    $this->assertEquals(HtmlSummarizer::sanitizeText($input), $expected);
+
+    $input = ' test ';
+    $expected = 'test';
+    $this->assertEquals(HtmlSummarizer::sanitizeText($input), $expected);
+
+    $input = 'test   test';
+    $expected = 'test test';
+    $this->assertEquals(HtmlSummarizer::sanitizeText($input), $expected);
+
+    $input = ' test  test
+    test ';
+    $expected = 'test test test';
+    $this->assertEquals(HtmlSummarizer::sanitizeText($input), $expected);
+  }
+
+  /**
+   * Test whitespace sanitation.
+   *
+   * @covers \Drupal\reliefweb_utility\Helpers\HtmlSummarizer::summarizeParagraphs
+   */
+  public function testSummarizeParagraphs() {
+    $input = [];
+    $length = 0;
+    $separator_length = 0;
+    $expected = [];
+    $this->assertEquals($expected, HtmlSummarizer::summarizeParagraphs($input, $length, $separator_length));
+
+    $input = ['test1', 'test2', 'test3'];
+    $length = 20;
+    $separator_length = 1;
+    $expected = ['test1', 'test2', 'test3'];
+    $this->assertEquals($expected, HtmlSummarizer::summarizeParagraphs($input, $length, $separator_length));
+
+    $input = ['test1', 'test2', 'test3! test4'];
+    $length = 19;
+    $separator_length = 1;
+    $expected = ['test1', 'test2', 'test3...'];
+    $this->assertEquals($expected, HtmlSummarizer::summarizeParagraphs($input, $length, $separator_length));
+
+    $input = ['test1', 'test2', 'test3'];
+    $length = 14;
+    $separator_length = 1;
+    $expected = ['test1', 'test2', '...'];
+    $this->assertEquals($expected, HtmlSummarizer::summarizeParagraphs($input, $length, $separator_length));
+
+    $input = ['test1', 'test2', 'test3'];
+    $length = 14;
+    $separator_length = 3;
+    $expected = ['test1', 'test2', '...'];
+    $this->assertEquals($expected, HtmlSummarizer::summarizeParagraphs($input, $length, $separator_length));
+
+    $input = ['test1', 'test2', 'test3'];
+    $length = 14;
+    $separator_length = 4;
+    $expected = ['test1', '...'];
+    $this->assertEquals($expected, HtmlSummarizer::summarizeParagraphs($input, $length, $separator_length));
+
+    $input = ['test1', 'test2', 'test3'];
+    $length = 14;
+    $separator_length = 6;
+    $expected = ['test1', '...'];
+    $this->assertEquals($expected, HtmlSummarizer::summarizeParagraphs($input, $length, $separator_length));
+  }
+
 }
