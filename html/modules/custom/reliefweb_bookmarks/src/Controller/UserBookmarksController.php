@@ -202,7 +202,7 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
    */
   public function bookmarksByType(UserInterface $user, $entity_type, $bundle) {
     $config = $this->configFactory->get('reliefweb_bookmarks.settings');
-    $uid = $this->account->id();
+    $uid = $user->id();
 
     // Number of items per page.
     $limit = 10;
