@@ -2,6 +2,17 @@
 .rw-bookmarks {
   padding-top: 24px;
 }
+.rw-bookmarks .rw-river-views {
+  margin-bottom: 2rem;
+}
+.rw-bookmarks .rw-river__title {
+  padding-left: 8px;
+  border-left: 8px solid var(--cd-reliefweb-brand-blue);
+}
+.rw-bookmarks .rw-river-results {
+  padding: 0;
+  border: none;
+}
 .rw-bookmarks article {
   position: relative;
   margin: 0 0 20px 0;

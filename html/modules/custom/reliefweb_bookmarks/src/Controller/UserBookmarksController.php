@@ -14,6 +14,7 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
 use Drupal\reliefweb_api\Services\ReliefWebApiClient;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\user\UserInterface;
@@ -143,6 +144,7 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
         // Add the API request to the list.
         $queries[$bundle] = [
           'resource' => $service->getResource(),
+          'title' => $service->getPageTitle(),
           'payload' => $payload,
           'entity_type' => $entity_type,
         ];
@@ -167,7 +169,7 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
         $sections[$bundle] = [
           '#theme' => 'reliefweb_rivers_river',
           '#id' => $bundle,
-          '#title' => ucfirst(strtr($query['resource'], '_', ' ')),
+          '#title' => $query['title'],
           '#resource' => $query['resource'],
           '#entities' => $entities,
           '#more' => [
@@ -193,6 +195,7 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
 
     return [
       '#theme' => 'reliefweb_bookmarks',
+      '#tabs' => $this->getNavigationTabs($user),
       '#sections' => $sections,
     ];
   }
@@ -276,7 +279,7 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
     $section = [
       '#theme' => 'reliefweb_rivers_river',
       '#id' => $bundle,
-      '#title' => ucfirst(strtr($service->getResource(), '_', ' ')),
+      '#title' => $service->getPageTitle(),
       '#resource' => $service->getResource(),
       '#entities' => $entities,
       '#results' => [
@@ -305,11 +308,71 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
 
     return [
       '#theme' => 'reliefweb_bookmarks',
+      '#tabs' => $this->getNavigationTabs($user, $bundle),
       '#sections' => [$bundle => $section],
       '#link' => [
         'url' => '/user/' . $uid . '/bookmarks',
         'label' => $this->t('All bookmarks'),
       ],
+    ];
+  }
+
+  /**
+   * Get the navigation tabs for the bookmarks.
+   *
+   * @param \Drupal\user\UserInterface $user
+   *   User.
+   * @param string|null $selected_bundle
+   *   Currently selected bookmark type.
+   *
+   * @return array
+   *   Render array for the bookmark navigation tabs.
+   */
+  protected function getNavigationTabs(UserInterface $user, $selected_bundle = NULL) {
+    $config = $this->configFactory->get('reliefweb_bookmarks.settings');
+    $tabs = [];
+
+    $tabs['overview'] = [
+      'url' => Url::fromRoute('reliefweb_bookmarks.user', [
+        'user' => $user->id(),
+      ])->toString(),
+      'title' => $this->t('Overview'),
+      'selected' => empty($selected_bundle),
+    ];
+
+    $entity_types = [
+      'node' => $config->get('node') ?? [],
+      'taxonomy_term' => $config->get('taxonomy_term') ?? [],
+    ];
+
+    foreach ($entity_types as $entity_type => $bundles) {
+      foreach ($bundles as $bundle => $enabled) {
+        if (empty($enabled)) {
+          continue;
+        }
+
+        // Get the river service for the bundle.
+        $service = RiverServiceBase::getRiverService($bundle);
+        if (empty($service)) {
+          continue;
+        }
+
+        $tabs[$service->getRiver()] = [
+          'url' => Url::fromRoute('reliefweb_bookmarks.user.type', [
+            'user' => $user->id(),
+            'entity_type' => $entity_type,
+            'bundle' => $bundle,
+          ])->toString(),
+          'title' => $service->getPageTitle(),
+          'selected' => $bundle === $selected_bundle,
+        ];
+      }
+    }
+
+    return [
+      '#theme' => 'reliefweb_rivers_views',
+      '#title' => $this->t('Bookmark types'),
+      '#views' => $tabs,
     ];
   }
 
