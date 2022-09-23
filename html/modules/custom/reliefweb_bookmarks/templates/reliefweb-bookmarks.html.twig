@@ -6,11 +6,13 @@
    *
    * Available variables:
    * - attributes: wrapper attributes.
+   * - tabs: navigation tabs with the overview and bookmark types.
    * - sections: list of rivers fo content.
    */
 
 #}
 <div{{ attributes.addClass('rw-bookmarks') }}>
+  {{ tabs }}
   {% if sections is not empty %}
     {{ sections }}
   {% else %}
@@ -18,6 +20,8 @@
   {% endif %}
 
   {% if link %}
-    <a class="rw-bookmarks__link" href="{{ link.url }}">{{ link.label }}</a>
+    <footer class="rw-bookmarks__footer">
+      <a class="rw-bookmarks__link" href="{{ link.url }}">{{ link.label }}</a>
+    </footer>
   {% endif %}
 </div>

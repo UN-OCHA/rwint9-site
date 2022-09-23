@@ -264,6 +264,8 @@ function reliefweb_bookmarks_theme() {
       'variables' => [
         // Wrapper attributes.
         'attributes' => NULL,
+        // Navigation tabs with the overview and bookmark types.
+        'tabs' => [],
         // List of river sections for each bookmarked content type/vocabulary.
         'sections' => [],
         // Link to go back to the bookmark list for example.
