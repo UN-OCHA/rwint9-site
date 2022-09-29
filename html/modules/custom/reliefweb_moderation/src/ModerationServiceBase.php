@@ -17,7 +17,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
@@ -209,7 +208,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
    * {@inheritdoc}
    */
   public function isViewableStatus($status, ?AccountInterface $account = NULL) {
-    return $status === 'published';
+    return $this->isPublishedStatus($status);
   }
 
   /**
@@ -217,6 +216,13 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
    */
   public function isEditableStatus($status, ?AccountInterface $account = NULL) {
     return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isPublishedStatus($status) {
+    return $status === 'published';
   }
 
   /**
@@ -251,9 +257,11 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
       }
     }
 
-    // Mark as published if the status is viewable by everybody.
+    // Set the entity as published (drupal status field) if the moderation
+    // status corresponds to a published state. This ensures the moderation
+    // status and the drupal publication status are in sync.
     if ($entity instanceof EntityPublishedInterface) {
-      if ($this->isViewableStatus($status, new AnonymousUserSession())) {
+      if ($this->isPublishedStatus($status)) {
         $entity->setPublished();
       }
       else {

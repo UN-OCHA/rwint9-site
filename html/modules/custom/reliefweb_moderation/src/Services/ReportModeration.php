@@ -252,14 +252,14 @@ class ReportModeration extends ModerationServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function isViewableStatus($status, $account = NULL) {
-    return in_array($status, ['to-review', 'published']);
+  public function isPublishedStatus($status) {
+    return $status === 'to-review' || $status === 'published';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function isEditableStatus($status, $account = NULL) {
+  public function isEditableStatus($status, ?AccountInterface $account = NULL) {
     if ($status === 'archive') {
       return UserHelper::userHasRoles(['administrator', 'webmaster'], $account);
     }
