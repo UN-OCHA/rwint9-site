@@ -201,7 +201,14 @@ class SourceModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function isViewableStatus($status, ?AccountInterface $account = NULL) {
-    return $status === 'active' || $status === 'inactive' || UserHelper::userHasRoles(['editor'], $account);
+    return parent::isViewableStatus($status, $account) || UserHelper::userHasRoles(['editor'], $account);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isPublishedStatus($status, ?AccountInterface $account = NULL) {
+    return $status === 'active' || $status === 'inactive';
   }
 
   /**

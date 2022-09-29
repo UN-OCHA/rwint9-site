@@ -250,11 +250,14 @@ class DisasterModeration extends ModerationServiceBase {
     elseif (UserHelper::userHasRoles(['editor'], $account)) {
       return TRUE;
     }
-    // Hide draft and archive disasters.
-    else {
-      return in_array($status, ['alert', 'current', 'ongoing', 'past']);
-    }
-    return FALSE;
+    return parent::isViewableStatus($status, $account);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isPublishedStatus($status) {
+    return in_array($status, ['alert', 'current', 'ongoing', 'past']);
   }
 
   /**

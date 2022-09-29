@@ -2,7 +2,6 @@
 
 namespace Drupal\reliefweb_moderation\Services;
 
-use Drupal\Core\Session\AccountInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 
@@ -124,8 +123,8 @@ class CountryModeration extends ModerationServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function isViewableStatus($status, ?AccountInterface $account = NULL) {
-    return TRUE;
+  public function isPublishedStatus($status) {
+    return $status === 'normal' || $status === 'ongoing';
   }
 
   /**
