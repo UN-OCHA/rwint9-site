@@ -119,6 +119,19 @@ interface ModerationServiceInterface {
   public function isEditableStatus($status, ?AccountInterface $account = NULL);
 
   /**
+   * Check if an entity with the given status is considered published.
+   *
+   * Note: published doesn't mean that the entity is accessible to everybody.
+   *
+   * @param string $status
+   *   Entity moderation status.
+   *
+   * @return bool
+   *   TRUE if the entity is considered published.
+   */
+  public function isPublishedStatus($status);
+
+  /**
    * Check if the entity has the given status.
    *
    * @param string $status

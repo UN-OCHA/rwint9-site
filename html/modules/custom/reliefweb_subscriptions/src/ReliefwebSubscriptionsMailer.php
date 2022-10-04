@@ -2,8 +2,6 @@
 
 namespace Drupal\reliefweb_subscriptions;
 
-use Drupal\reliefweb_entities\Entity\Report;
-use Drupal\reliefweb_entities\Entity\Disaster;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Crypt;
@@ -27,6 +25,9 @@ use Drupal\Core\Theme\ThemeInitialization;
 use Drupal\Core\Theme\ThemeManagerInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_api\Services\ReliefWebApiClient;
+use Drupal\reliefweb_entities\Entity\Report;
+use Drupal\reliefweb_entities\Entity\Disaster;
+use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
 
 /**
  * Subscription mailer.
@@ -622,41 +623,19 @@ class ReliefwebSubscriptionsMailer {
   protected function getPreheaderTitles(array $items) {
     $titles = [];
     $length = 100;
-    $text_length = 0;
-    $end_marks = ";.!?。؟ \t\n\r\0\x0B";
     $separator = ' / ';
-    $delta = 3;
+    $separator_length = 3;
 
+    // Extract the titles.
     foreach ($items as $item) {
       $title = $item['title'] ?? $item['headline']['title'] ?? '';
       if (!empty($title)) {
-        $text_length += strlen($title);
-        $titles[] = $title;
+        $titles[] = HtmlSummarizer::sanitizeText($title);
       }
     }
 
     // Ensure the preheader is no longer than 100 characters (+ ellipsis).
-    if ($text_length > $length) {
-      foreach ($titles as $index => $title) {
-        $parts = preg_split('/([\s\n\r]+)/u', $title, -1, PREG_SPLIT_DELIM_CAPTURE);
-        $parts_count = count($parts);
-
-        for ($i = 0; $i < $parts_count; ++$i) {
-          if (($length -= mb_strlen($parts[$i])) <= 0) {
-            // Truncate the title and add an ellipsis.
-            $titles[$index] = trim(implode(array_slice($parts, 0, $i)), $end_marks) . '...';
-            // Truncate the list of titles.
-            $titles = array_slice($titles, 0, $index + 1);
-            // Break from both loops.
-            break 2;
-          }
-        }
-
-        // Adjust the length to reflect the added space separator when
-        // returning the text as plain text.
-        $length -= $delta;
-      }
-    }
+    $titles = HtmlSummarizer::summarizeParagraphs($titles, $length, $separator_length);
 
     return implode($separator, $titles);
   }
@@ -810,7 +789,7 @@ class ReliefwebSubscriptionsMailer {
 
       // Summary.
       $body = !empty($fields['body']) ? check_markup($fields['body'], 'markdown') : '';
-      $item['summary'] = $this->summarize($body, 400, FALSE);
+      $item['summary'] = HtmlSummarizer::summarize($body, 400, FALSE);
       $items[] = $item;
     }
     $variables['#items'] = $items;
@@ -1027,7 +1006,7 @@ class ReliefwebSubscriptionsMailer {
     }
 
     // Preheader with a maximum of 100 characters.
-    $preheader = $this->summarize($variables['#overview'], 100, TRUE);
+    $preheader = HtmlSummarizer::summarize($variables['#overview'], 100, TRUE);
     $variables['#preheader'] = $preheader;
 
     // Prefooter.
@@ -1084,10 +1063,10 @@ class ReliefwebSubscriptionsMailer {
 
     // Summary.
     $body = !empty($data['body']) ? check_markup($data['body'], 'markdown') : '';
-    $variables['#summary'] = $this->summarize($body, 400, FALSE);
+    $variables['#summary'] = HtmlSummarizer::summarize($body, 400, FALSE);
 
     // Preheader with a maximum of 100 characters.
-    $preheader = $this->summarize($body, 100, TRUE);
+    $preheader = HtmlSummarizer::summarize($body, 100, TRUE);
     $variables['#preheader'] = $preheader;
 
     $country_name = $data['primary_country']['name'];
@@ -1176,7 +1155,7 @@ class ReliefwebSubscriptionsMailer {
 
       // Summary.
       $body = !empty($fields['body']) ? check_markup($fields['body'], 'markdown') : '';
-      $item['summary'] = $this->summarize($body, 400, FALSE);
+      $item['summary'] = HtmlSummarizer::summarize($body, 400, FALSE);
 
       // Image.
       if (!empty($fields['file'][0]['preview']['url-thumb'])) {
@@ -1901,90 +1880,6 @@ class ReliefwebSubscriptionsMailer {
       'absolute' => TRUE,
     ];
     return rtrim(Url::fromRoute('<front>', [], $url_options)->toString(), '/');
-  }
-
-  /**
-   * Summarize and truncate a HTML text to a given length.
-   *
-   * @param string $html
-   *   HTML to summarize.
-   * @param int $length
-   *   Maximum length of the text.
-   * @param bool $plain_text
-   *   Return the truncated text as plain text when set to TRUE or as
-   *   HTML paragraphs when FALSE.
-   *
-   * @return string
-   *   Truncated text.
-   *
-   * @todo this is ported from the responsive site and can be removed later
-   * to use the RWPageDataWrapper version instead.
-   */
-  protected function summarize($html, $length = 600, $plain_text = TRUE) {
-    static $flags = LIBXML_NONET | LIBXML_NOBLANKS | LIBXML_NOERROR | LIBXML_NOWARNING;
-    static $pattern = ['/^\s+|\s+$/u', '/\s{2,}/u'];
-    static $replacement = ['', ' '];
-    static $end_marks = ";.!?。؟ \t\n\r\0\x0B";
-
-    if (empty($html)) {
-      return '';
-    }
-
-    // Extract the paragraphs from the html string.
-    $paragraphs = [];
-    $text_length = 0;
-    $meta = '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">';
-    $dom = new \DomDocument();
-    $dom->loadHTML($meta . $html, $flags);
-    foreach ($dom->getElementsByTagName('p') as $node) {
-      // Sanitize multiple consecutive white spaces and trim the paragraph.
-      $paragraph = preg_replace($pattern, $replacement, $node->textContent);
-      $paragraphs[] = $paragraph;
-      $text_length += mb_strlen($paragraph);
-    }
-
-    // Nothing to return if we couldn't extract paragraphs.
-    if (empty($paragraphs)) {
-      return '';
-    }
-
-    if ($plain_text) {
-      $prefix = '';
-      $suffix = '';
-      $separator = ' ';
-      $delta = 1;
-    }
-    else {
-      $prefix = '<p>';
-      $suffix = '</p>';
-      $separator = '</p><p>';
-      $delta = 0;
-    }
-
-    // Truncate the text to the given length if longer.
-    if ($text_length > $length) {
-      foreach ($paragraphs as $index => $paragraph) {
-        $parts = preg_split('/([\s\n\r]+)/u', $paragraph, -1, PREG_SPLIT_DELIM_CAPTURE);
-        $parts_count = count($parts);
-
-        for ($i = 0; $i < $parts_count; ++$i) {
-          if (($length -= mb_strlen($parts[$i])) <= 0) {
-            // Truncate the paragraph and add an ellipsis.
-            $paragraphs[$index] = trim(implode(array_slice($parts, 0, $i)), $end_marks) . '...';
-            // Truncate the list of paragraphs.
-            $paragraphs = array_slice($paragraphs, 0, $index + 1);
-            // Break from both loops.
-            break 2;
-          }
-        }
-
-        // Adjust the length to reflect the added space separator when
-        // returning the text as plain text.
-        $length -= $delta;
-      }
-    }
-
-    return $prefix . implode($separator, $paragraphs) . $suffix;
   }
 
   /**

@@ -2,6 +2,17 @@
 .rw-bookmarks {
   padding-top: 24px;
 }
+.rw-bookmarks .rw-river-views {
+  margin-bottom: 2rem;
+}
+.rw-bookmarks .rw-river__title {
+  padding-left: 8px;
+  border-left: 8px solid var(--cd-reliefweb-brand-blue);
+}
+.rw-bookmarks .rw-river-results {
+  padding: 0;
+  border: none;
+}
 .rw-bookmarks article {
   position: relative;
   margin: 0 0 20px 0;
@@ -32,8 +43,8 @@
   background: var(--rw-icons--content--report--24--grey);
 }
 .rw-bookmarks article.rw-river-article--job:before {
-  background-position-y: 0;
+  background: var(--rw-icons--content--job--24--grey);
 }
 .rw-bookmarks article.rw-river-article--training:before {
-  background-position-y: -24px;
+  background: var(--rw-icons--content--training--24--grey);
 }
