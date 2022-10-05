@@ -26,6 +26,7 @@ function reliefweb_subscriptions_subscriptions() {
     'id' => 'headlines',
     'name' => t('ReliefWeb Headlines'),
     'description' => t('ReliefWeb Headlines (daily)'),
+    'aws_ses_template_name' => 'reliefweb_subscriptions_headlines',
     // Sengrid category.
     'category' => 'Headlines',
     'type' => 'scheduled',
@@ -66,6 +67,7 @@ function reliefweb_subscriptions_subscriptions() {
     'id' => 'appeals',
     'name' => t('All Appeals'),
     'description' => t('Latest Appeals (weekly)'),
+    'aws_ses_template_name' => 'reliefweb_subscriptions_appeals',
     // Sengrid cateogry.
     'category' => 'Appeals',
     'type' => 'scheduled',
@@ -104,6 +106,7 @@ function reliefweb_subscriptions_subscriptions() {
     'id' => 'jobs',
     'name' => t('All Jobs'),
     'description' => t('All Jobs (bi-weekly: Monday, Thursday)'),
+    'aws_ses_template_name' => 'reliefweb_subscriptions_jobs',
     'group' => 'global',
     // Sengrid cateogry.
     'category' => 'Jobs digest',
@@ -138,6 +141,7 @@ function reliefweb_subscriptions_subscriptions() {
     'id' => 'training',
     'name' => t('All Training Programs'),
     'description' => t('All Training Programs (weekly: Wednesday)'),
+    'aws_ses_template_name' => 'reliefweb_subscriptions_training',
     'group' => 'global',
     // Sengrid cateogry.
     'category' => 'Training programs digest',
@@ -174,6 +178,7 @@ function reliefweb_subscriptions_subscriptions() {
     'id' => 'disaster',
     'name' => t('New alert or ongoing disaster'),
     'description' => t('New alert or ongoing disaster (when published)'),
+    'aws_ses_template_name' => 'reliefweb_subscriptions_disasters',
     'group' => 'global',
     // Sengrid cateogry.
     'category' => 'New Disasters',
@@ -208,6 +213,7 @@ function reliefweb_subscriptions_subscriptions() {
     'id' => 'ocha_sitrep',
     'name' => t('New OCHA situation report'),
     'description' => t('New OCHA situation report'),
+    'aws_ses_template_name' => 'reliefweb_subscriptions_ocha_sitrep',
     'group' => 'global',
     // Sengrid cateogry.
     'category' => 'OCHA Sitreps',
@@ -262,6 +268,7 @@ function reliefweb_subscriptions_subscriptions() {
       'id' => $sid,
       'name' => t('Updates on @country', ['@country' => $name]),
       'description' => t('Updates on @country (daily)', ['@country' => $name]),
+      'aws_ses_template_name' => 'reliefweb_subscriptions_' . $sid,
       'group' => 'country_updates',
       // This is just for convenience for the `My subscriptions` page and the
       // template preprocess function.
