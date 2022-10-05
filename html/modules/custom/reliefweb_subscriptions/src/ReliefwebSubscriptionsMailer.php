@@ -27,7 +27,9 @@ use Drupal\Core\Url;
 use Drupal\reliefweb_api\Services\ReliefWebApiClient;
 use Drupal\reliefweb_entities\Entity\Report;
 use Drupal\reliefweb_entities\Entity\Disaster;
+use Drupal\reliefweb_subscriptions\Services\AwsSesClient;
 use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
+use Drupal\reliefweb_utility\Helpers\MailHelper;
 
 /**
  * Subscription mailer.
@@ -91,6 +93,13 @@ class ReliefwebSubscriptionsMailer {
   protected $reliefwebApiClient;
 
   /**
+   * AWS SES Client.
+   *
+   * @var \Drupal\reliefweb_subscriptions\Services\AwsSesClient
+   */
+  protected $awsSesClient;
+
+  /**
    * Private key.
    *
    * @var \Drupal\Core\PrivateKey
@@ -147,6 +156,27 @@ class ReliefwebSubscriptionsMailer {
   protected $themeHandler;
 
   /**
+   * From address for the emails.
+   *
+   * @var string
+   */
+  protected $fromAddress;
+
+  /**
+   * Number of emails that can be sent per seconds.
+   *
+   * @var int
+   */
+  protected $sendRate;
+
+  /**
+   * Number of emails that can be sent in a bulk email.
+   *
+   * @var int
+   */
+  protected $batchSize;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(
@@ -157,15 +187,16 @@ class ReliefwebSubscriptionsMailer {
       EntityTypeManagerInterface $entity_type_manager,
       StateInterface $state,
       TimeInterface $time,
-      ReliefWebApiClient $reliefwebApiClient,
-      PrivateKey $privateKey,
+      ReliefWebApiClient $reliefweb_api_client,
+      PrivateKey $private_key,
       RendererInterface $renderer,
-      MailManagerInterface $mailManager,
-      LanguageDefault $languageDefault,
-      LoggerChannelFactoryInterface $loggerFactory,
-      ThemeInitialization $themeInitialization,
-      ThemeManagerInterface $themeManager,
-      ThemeHandlerInterface $themeHandler
+      MailManagerInterface $mail_manager,
+      LanguageDefault $language_default,
+      LoggerChannelFactoryInterface $logger_factory,
+      ThemeInitialization $theme_initialization,
+      ThemeManagerInterface $theme_manager,
+      ThemeHandlerInterface $theme_handler,
+      awsSesClient $aws_ses_client,
     ) {
     $this->configFactory = $config_factory;
     $this->database = $database;
@@ -174,15 +205,16 @@ class ReliefwebSubscriptionsMailer {
     $this->entityTypeManager = $entity_type_manager;
     $this->state = $state;
     $this->time = $time;
-    $this->reliefwebApiClient = $reliefwebApiClient;
-    $this->privateKey = $privateKey;
+    $this->reliefwebApiClient = $reliefweb_api_client;
+    $this->privateKey = $private_key;
     $this->renderer = $renderer;
-    $this->mailManager = $mailManager;
-    $this->languageDefault = $languageDefault;
-    $this->logger = $loggerFactory->get('reliefweb_subscriptions');
-    $this->themeInitialization = $themeInitialization;
-    $this->themeManager = $themeManager;
-    $this->themeHandler = $themeHandler;
+    $this->mailManager = $mail_manager;
+    $this->languageDefault = $language_default;
+    $this->logger = $logger_factory->get('reliefweb_subscriptions');
+    $this->themeInitialization = $theme_initialization;
+    $this->themeManager = $theme_manager;
+    $this->themeHandler = $theme_handler;
+    $this->awsSesClient = $aws_ses_client;
   }
 
   /**
@@ -417,6 +449,28 @@ class ReliefwebSubscriptionsMailer {
   }
 
   /**
+   * Get the from address.
+   *
+   * @return string
+   *   From address.
+   */
+  protected function getFromAddress() {
+    // Retrieve the From email address.
+    if (!isset($this->fromAddress)) {
+      $from = $this->config('system.site')->get('mail') ?? ini_get('sendmail_from');
+      // Format the from to include ReliefWeb if not already.
+      if (strpos($from, '<') === FALSE) {
+        $from = $this->formatString('@sitename <@sitemail>', [
+          '@sitename' => $this->config('system.site')->get('name') ?? 'ReliefWeb',
+          '@sitemail' => $from,
+        ]);
+      }
+      $this->fromAddress = $from;
+    }
+    return $this->fromAddress;
+  }
+
+  /**
    * Generate the notification email content (subject, body, headers).
    *
    * @param array $subscription
@@ -431,57 +485,113 @@ class ReliefwebSubscriptionsMailer {
    * drupal_html_to_text(). That would mean changing the ExtendedMailSystem.
    */
   protected function generateEmail(array $subscription, array $data) {
-    static $from;
-    static $language;
-    static $batch_size;
-
-    if (!isset($from)) {
-      $from = $this->config('system.site')->get('mail') ?? ini_get('sendmail_from');
-      // Format the from to include ReliefWeb if not already.
-      if (strpos($from, '<') === FALSE) {
-        $from = $this->formatString('@sitename <@sitemail>', [
-          '@sitename' => $this->config('system.site')->get('name') ?? 'ReliefWeb',
-          '@sitemail' => $from,
-        ]);
-      }
-      $language = $this->languageDefault->get()->getId();
-      // Number of emails to send by second.
-      $batch_size = $this->state->get('reliefweb_subscriptions_mail_batch_size', 40);
-    }
-
     $sid = $subscription['id'];
-
-    // Get the mail subject.
-    $subject = $this->generateEmailSubject($subscription, $data);
-    if (empty($subject)) {
-      $this->logger->error('Unable to generate subject for {name} subscription.', [
-        'name' => $subscription['name'],
-      ]);
-      return FALSE;
-    }
-
-    // Generate the HTML and text content.
-    $body = $this->generateEmailContent($subscription, $data);
-    if (empty($body)) {
-      $this->logger->error('Unable to generate body for {name} subscription.', [
-        'name' => $subscription['name'],
-      ]);
-      return FALSE;
-    }
+    $subscription_name = $subscription['name'];
 
     // Get the subscribers.
     $subscribers = $this->getSubscribers($sid);
     if (empty($subscribers)) {
       $this->logger->info('No subscribers found for {name} subscription.', [
-        'name' => $subscription['name'],
+        'name' => $subscription_name,
       ]);
       return FALSE;
     }
 
-    $this->logger->info('Sending {subject} notification to {subscribers} subscribers.', [
-      'subject' => $subject,
-      'subscribers' => count($subscribers),
-    ]);
+    // Get the mail subject.
+    $subject = $this->generateEmailSubject($subscription, $data);
+    if (empty($subject)) {
+      $this->logger->error('Unable to generate subject for {name} subscription.', [
+        'name' => $subscription_name,
+      ]);
+      return FALSE;
+    }
+
+    // Generate the HTML and text content.
+    $html = $this->generateEmailContent($subscription, $data);
+    if (empty($html)) {
+      $this->logger->error('Unable to generate HTML body for {name} subscription.', [
+        'name' => $subscription_name,
+      ]);
+      return FALSE;
+    }
+
+    switch ($this->config('reliefweb_subscriptions.settings')->get('method')) {
+      case 'smtp':
+        return $this->sendViaSmtp($subscription, $subject, $html, $subscribers);
+
+      case 'aws_ses_api_bulk':
+        return $this->sendViaAwsSesApiBulk($subscription, $subject, $html, $subscribers);
+
+      default:
+        $this->logger->error('Invalid send mode.');
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * Optimize bulk email template.
+   *
+   * This tries to use placeholders for elements that repeated many times in
+   * order to reduce the size of the email template as there is a limit of
+   * 500 KB and ~ 250KB for replacements.
+   *
+   * @param string $html
+   *   HTML version of the body of the email.
+   * @param array $replacements
+   *   Key/value array of placeholder replacements.
+   *
+   * @return string
+   *   The transformed HTML content.
+   */
+  protected function optimizeEmailTemplate($html, array &$replacements) {
+    // Extract the styles. We'll use variable replacements for those so we can
+    // reduce a lot the size of the email content.
+    $html = preg_replace_callback('/styles="[^"]+"/', function ($match) use ($replacements) {
+      $style = $match[0];
+      if (!isset($replacements[$style])) {
+        $replacement = 'r' . count($replacements);
+        $replacements[$style] = $replacement;
+      }
+      else {
+        $replacement = $replacements[$style];
+      }
+      return '{{' . $replacement . '}}';
+    }, $html);
+
+    // Replace the `https://reliefweb.int` start from the URLs with a
+    // placeholder to further reduce the email size.
+    $html = str_replace('https://reliefweb.int/', '{{rw}}', $html);
+    $replacements['rw'] = 'https://reliefweb.int/';
+
+    // Replace the unsubscribe link with a placeholder.
+    $html = str_replace('@unsubscribe', '{{unsubscribe}}', $html);
+
+    return $html;
+  }
+
+  /**
+   * Send the emails via SMTP.
+   *
+   * @param array $subscription
+   *   Subscription.
+   * @param string $subject
+   *   Email subject.
+   * @param string|\Drupal\Component\Render\FormattableMarkup $html
+   *   Email content.
+   * @param array $subscribers
+   *   Subscribers.
+   *
+   * @return bool
+   *   False if the sending failed.
+   */
+  protected function sendViaSmtp(array $subscription, $subject, $html, array $subscribers) {
+    $sid = $subscription['id'];
+    $from = $this->getFromAddress();
+    $language = $this->languageDefault->get()->getId();
+
+    // Number of emails to send by second.
+    $batch_size = $this->state->get('reliefweb_subscriptions_mail_batch_size', 40);
 
     // Probably only used to categorise emails on SendGrid admin.
     $category = $subscription['category'];
@@ -502,8 +612,8 @@ class ReliefwebSubscriptionsMailer {
         // Generate the individual unsubscribe link.
         $unsubscribe = $this->generateUnsubscribeLink($subscriber->uid, $sid);
 
-        // Update the body with the unique ubsubscribe link.
-        $mail_body = new FormattableMarkup($body, [
+        // Update the HTML body with the unique unsubscribe link.
+        $mail_body = new FormattableMarkup($html, [
           '@unsubscribe' => $unsubscribe,
         ]);
 
@@ -517,6 +627,137 @@ class ReliefwebSubscriptionsMailer {
           'subject' => $subject,
           'body' => [$mail_body],
         ], $from);
+      }
+
+      // If fewer than 1000 milliseconds have elapsed, throttle sending by
+      // sleeping for whatever part of a second remains after completing the
+      // batch. Probably not strictly necessary, but if we *do* go fast this
+      // can help clear a back-log of 38,000 mails just a bit faster.
+      $timer_elapsed = microtime(TRUE) - $timer_start;
+      if ($timer_elapsed < 1) {
+        usleep((1 - $timer_elapsed) * 1e+6);
+      }
+    }
+
+    return TRUE;
+  }
+
+  /**
+   * Send the emails via the AWS SES API.
+   *
+   * @param array $subscription
+   *   Subscription.
+   * @param string $subject
+   *   Email subject.
+   * @param string|\Drupal\Component\Render\FormattableMarkup $html
+   *   Email content.
+   * @param array $subscribers
+   *   Subscribers.
+   *
+   * @return bool
+   *   False if the sending failed.
+   */
+  protected function sendViaAwsSesApiBulk(array $subscription, $subject, $html, array $subscribers) {
+    $subscription_name = $subscription['name'];
+    $template_name = $subscription['aws_ses_template_name'];
+    $from = $this->getFromAddress();
+
+    // Retrieve the send rate.
+    try {
+      $send_rate = $this->awsSesClient->getSendRate();
+    }
+    catch (\Exception $exception) {
+      $this->logger->error('Unable to retrieve the max send rate.');
+      return FALSE;
+    }
+
+    // Retrieve the number of emails to send for each bulk request.
+    $bulk_batch_size = $this->config('reliefweb_subscriptions.settings')->get('aws_ses_api_bulk_batch_size') ?? 1;
+    $bulk_batch_size = min($send_rate, $bulk_batch_size);
+
+    // Optimize the HTML body of the email.
+    $replacements = [];
+    $html = $this->optimizeEmailTemplate($html, $replacements);
+
+    // Generate the text version of the email.
+    $text = MailHelper::getPlainText($html);
+
+    // Create the template.
+    try {
+      $this->awsSesClient->createTemplate(
+        $template_name,
+        $subject,
+        $html,
+        $text
+      );
+    }
+    catch (\Exception $exception) {
+      $this->logger->error('Error create template for {name} subscription: {error}', [
+        'name' => $subscription_name,
+        'error' => $exception->getMessage(),
+      ]);
+      return FALSE;
+    }
+
+    $this->logger->info('Sending {subject} notification to {subscribers} subscribers.', [
+      'subject' => $subject,
+      'subscribers' => count($subscribers),
+    ]);
+
+    // Batch the subscribe list, so we can throttle if it looks like
+    // we will go over our allowed rate limit.
+    foreach (array_chunk($subscribers, $send_rate) as $batch) {
+      // Record the start of the batch sending so we can throttle if we go
+      // too fast for our AWS rate limit.
+      $timer_start = microtime(TRUE);
+
+      // Split by the maximum number of recipients per bulk email.
+      foreach (array_chunk($batch, $bulk_batch_size) as $bulk_batch) {
+        $destinations = [];
+        foreach ($bulk_batch as $subscriber) {
+          $destinations[] = [
+            'recipient' => $subscriber->mail,
+            'replacements' => [
+              'unsubscribe' => $this->generateUnsubscribeLink($subscriber->uid, $sid),
+            ],
+          ];
+        }
+
+        // AWS SES doesn't allow to customize headers when using the bulk
+        // endpoint so we cannot set the List-Id, List-Unsubscribe and
+        // X-RW-Category headers.
+        try {
+          $results = $this->awsSesClient->sendBulkEmail(
+            $from,
+            $template_name,
+            $destinations,
+            $replacements
+          );
+          foreach ($destinations as $index => $destination) {
+            if (!isset($results[$index])) {
+              $error = 'email not processed';
+            }
+            elseif (!empty($results[$index]['error'])) {
+              $error = $results[$index]['error'];
+            }
+            else {
+              $error = '';
+            }
+            if (!empty($error)) {
+              $this->logger->error('Unable to send {name} subscription email to {recipient}: {error}', [
+                'name' => $subscription_name,
+                'recipient' => $destination['recipient'],
+                'error' => $error,
+              ]);
+            }
+          }
+        }
+        catch (\Exception $exception) {
+          $this->logger->error('Unable to send {name} subscription emails: {error}', [
+            'name' => $subscription_name,
+            'error' => $exception->getMessage(),
+          ]);
+        }
       }
 
       // If fewer than 1000 milliseconds have elapsed, throttle sending by
