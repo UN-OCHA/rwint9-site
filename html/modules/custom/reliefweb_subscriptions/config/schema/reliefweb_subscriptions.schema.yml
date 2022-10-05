@@ -1,0 +1,31 @@
+reliefweb_subscriptions.settings:
+  type: config_object
+  label: 'Reliefweb Subscriptions settings'
+  mapping:
+    method:
+      type: string
+      label: 'How to send the emails: smtp or AWS SES API (aws_ses_api_bulk)'
+    aws_ses_api_version:
+      type: string
+      label: 'Version of the AWS SES API'
+    aws_ses_api_region:
+      type: string
+      label: 'Region to use for the AWS SES API'
+    aws_ses_api_endpoint:
+      type: string
+      label: 'Endpoint of the AWS SES API, leave empty to use the default endpoint'
+    aws_ses_api_schema:
+      type: string
+      label: 'Scheme of the AWS SES API endpoint, leave empty to use the default scheme'
+    aws_ses_api_bulk_batch_size:
+      type: integer
+      label: 'Maximum number of recipients when using the bulk endpoint'
+    aws_ses_api_key:
+      type: string
+      label: 'AWS SES API key'
+    aws_ses_api_secret:
+      type: string
+      label: 'AWS SES API secret'
+    aws_ses_api_token:
+      type: string
+      label: 'AWS SES API token'

@@ -1,0 +1,9 @@
+method: smtp
+aws_ses_api_version: latest
+aws_ses_api_region: null
+aws_ses_api_endpoint: null
+aws_ses_api_bulk_batch_size: 50
+aws_ses_api_key: null
+aws_ses_api_secret: null
+aws_ses_api_token: null
+aws_ses_api_scheme: null
