@@ -48,7 +48,7 @@ class LocalizationHelperZeroErrorTest extends UnitTestCase {
     $this->assertEquals($items, $sorted);
 
     $items = ['c', 'b', 'a', 'é', 'ê', 'è', 'â'];
-    $sorted = ['a', 'b', 'c', 'â', 'è', 'é', 'ê'];
+    $sorted = ['a', 'â', 'b', 'c', 'è', 'é', 'ê'];
     $isSorted = LocalizationHelperStubZeroError::collatedSort($items, NULL, 'zero');
     $this->assertTrue($isSorted);
     $this->assertEquals($items, $sorted);
