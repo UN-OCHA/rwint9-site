@@ -213,4 +213,14 @@ class UrlHelper extends DrupalUrlHelper {
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public static function isValid($url, $absolute = FALSE) {
+    if (empty($url)) {
+      return FALSE;
+    }
+    return parent::isValid($url, $absolute);
+  }
+
 }
