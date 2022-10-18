@@ -3,3 +3,5 @@ name: ReliefWeb XMLSitemap
 description: 'XML Sitemap generation handling.'
 package: reliefweb
 core_version_requirement: ^9
+dependencies:
+  - drupal:reliefweb_utility

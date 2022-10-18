@@ -75,6 +75,9 @@ class ProxySubscriber implements EventSubscriberInterface {
 
     // Get the file path.
     $path = $request->getPathInfo();
+    if (empty($path)) {
+      return;
+    }
 
     // Hotlink to the production site.
     // @todo remove when attachments are added.
@@ -83,9 +86,14 @@ class ProxySubscriber implements EventSubscriberInterface {
       exit;
     }
 
+    $mimetype = MimeType::fromFilename($path);
+    if (empty($mimetype)) {
+      return;
+    }
+
     // Check if the request is for an image.
     // @todo we may want to allow report attachments as well at some point.
-    if (strpos(MimeType::fromFilename($path), 'image/') !== 0) {
+    if (strpos($mimetype, 'image/') !== 0) {
       return;
     }
 
