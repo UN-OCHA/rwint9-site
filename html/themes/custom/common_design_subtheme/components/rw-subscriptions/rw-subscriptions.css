@@ -40,7 +40,7 @@
 }
 .prefooter-link {
   text-decoration: underline;
-  color: #18b;
+  color: #055372;
 }
 .footer {
   padding: 15px 0 0;
@@ -48,7 +48,7 @@
 }
 .footer-link {
   text-decoration: underline;
-  color: #999;
+  color: #055372;
 }
 
 .email-title {
@@ -76,8 +76,8 @@
   line-height: 24px;
 }
 .email-resource-title-link {
-  text-decoration: none;
-  color: #333;
+  text-decoration: underline;
+  color: #055372;
 }
 .email-resource-info {
   padding: 8px 0 8px;
@@ -92,6 +92,7 @@
 }
 .email-resource-read-more {
   text-decoration: underline;
-  color: #18b;
+  color: #055372;
+  font-size: 15px;
   font-weight: bold;
 }
