@@ -1660,12 +1660,12 @@ class ReliefwebSubscriptionsMailer {
   protected function generateUnsubscribeLink($uid, $sid) {
     $path = $this->getSchemeAndHttpHost() . '/notifications/unsubscribe/user/' . $uid;
     $timestamp = $this->time->getRequestTime();
-    $url = Url::fromUri($path, [
+    $url = Url::fromRoute('reliefweb_subscriptions.unsubscribe', [
+      'user' => $uid,
+      'timestamp' => $timestamp,
+      'signature' => $this->getSignature($path, $timestamp),
+    ], [
       'absolute' => TRUE,
-      'query' => [
-        'timestamp' => $timestamp,
-        'signature' => $this->getSignature($path, $timestamp),
-      ],
     ]);
     return $url->toString();
   }
