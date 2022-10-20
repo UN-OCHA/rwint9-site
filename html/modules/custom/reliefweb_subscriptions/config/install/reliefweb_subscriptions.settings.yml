@@ -1,9 +1,18 @@
+# How to send the emails: smtp or AWS SES API (aws_ses_api_bulk).
 method: smtp
+# Version of the AWS SES API.
 aws_ses_api_version: latest
+# Region to use for the AWS SES API.
 aws_ses_api_region:
+# Endpoint of the AWS SES API, leave empty to use the default endpoint.
 aws_ses_api_endpoint:
+# Scheme of the AWS SES API endpoint, leave empty to use the default scheme.
 aws_ses_api_scheme:
+# Maximum number of recipients when using the bulk endpoint.
 aws_ses_api_bulk_batch_size: 50
+# AWS SES API key.
 aws_ses_api_key:
+# AWS SES API secret.
 aws_ses_api_secret:
+# AWS SES API token.
 aws_ses_api_token:
