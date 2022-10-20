@@ -538,36 +538,35 @@ class ReliefwebSubscriptionsMailer {
    *
    * @param string $html
    *   HTML version of the body of the email.
-   * @param array $replacements
-   *   Key/value array of placeholder replacements.
    *
-   * @return string
-   *   The transformed HTML content.
+   * @return array
+   *   The transformed HTML content and the Key/value array of placeholder
+   *   replacements..
    */
-  protected function optimizeEmailTemplate($html, array &$replacements) {
-    // Extract the styles. We'll use variable replacements for those so we can
-    // reduce a lot the size of the email content.
-    $html = preg_replace_callback('/styles="[^"]+"/', function ($match) use ($replacements) {
-      $style = $match[0];
-      if (!isset($replacements[$style])) {
+  protected function optimizeEmailTemplate($html) {
+    $replacements = [];
+
+    // Replace commonly repeating content with placeholders to reduce the size
+    // of the email content.
+    $html = preg_replace_callback('#(style="[^"]+"|https?://[^/]+/)#', function ($match) use (&$replacements) {
+      $key = $match[0];
+      if (!isset($replacements[$key])) {
         $replacement = 'r' . count($replacements);
-        $replacements[$style] = $replacement;
+        $replacements[$key] = $replacement;
       }
       else {
-        $replacement = $replacements[$style];
+        $replacement = $replacements[$key];
       }
       return '{{' . $replacement . '}}';
     }, $html);
 
-    // Replace the `https://reliefweb.int` start from the URLs with a
-    // placeholder to further reduce the email size.
-    $html = str_replace('https://reliefweb.int/', '{{rw}}', $html);
-    $replacements['rw'] = 'https://reliefweb.int/';
+    // Set the placeholders as keys.
+    $replacements = array_flip($replacements);
 
     // Replace the unsubscribe link with a placeholder.
     $html = str_replace('@unsubscribe', '{{unsubscribe}}', $html);
 
-    return $html;
+    return [$html, $replacements];
   }
 
   /**
@@ -598,6 +597,11 @@ class ReliefwebSubscriptionsMailer {
 
     // Generate a List-Id base on the subscription id (ex: jobs).
     $list_id = $this->generateListId($sid);
+
+    $this->logger->info('Sending {subject} notification to {subscribers} subscribers.', [
+      'subject' => $subject,
+      'subscribers' => count($subscribers),
+    ]);
 
     // Batch the subscribe list, so we can throttle if it looks like
     // we will go over our allowed rate limit.
@@ -658,6 +662,7 @@ class ReliefwebSubscriptionsMailer {
    *   False if the sending failed.
    */
   protected function sendViaAwsSesApiBulk(array $subscription, $subject, $html, array $subscribers) {
+    $sid = $subscription['id'];
     $subscription_name = $subscription['name'];
     $template_name = $subscription['aws_ses_template_name'];
     $from = $this->getFromAddress();
@@ -675,9 +680,18 @@ class ReliefwebSubscriptionsMailer {
     $bulk_batch_size = $this->config('reliefweb_subscriptions.settings')->get('aws_ses_api_bulk_batch_size') ?? 1;
     $bulk_batch_size = min($send_rate, $bulk_batch_size);
 
+    // Get the full HTML body.
+    $build = [
+      '#theme' => 'mimemail_message',
+      '#module' => 'reliefweb_subscriptions',
+      '#key' => 'notifications',
+      '#subject' => $subject,
+      '#body' => $html,
+    ];
+    $html = $this->renderer->renderPlain($build);
+
     // Optimize the HTML body of the email.
-    $replacements = [];
-    $html = $this->optimizeEmailTemplate($html, $replacements);
+    [$html, $replacements] = $this->optimizeEmailTemplate($html);
 
     // Generate the text version of the email.
     $text = MailHelper::getPlainText($html);
