@@ -4,6 +4,7 @@ namespace Drupal\reliefweb_subscriptions\Services;
 
 use Aws\Credentials\Credentials;
 use Aws\Exception\AwsException;
+use Aws\SesV2\SesV2Client;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 
@@ -75,7 +76,7 @@ class AwsSesClient {
         $settings['endpoint'] = $this->config->get('aws_ses_api_endpoint');
       }
 
-      $this->awsSesClient = new SesClient($settings);
+      $this->awsSesClient = new SesV2Client($settings);
     }
     return $this->awsSesClient;
   }
@@ -96,26 +97,37 @@ class AwsSesClient {
    *   Exception if the request to AWS SES failed.
    */
   public function createTemplate($name, $subject, $html, $text) {
-    $template = [
-      'Template' => [
+    // Delete the template if it already exists.
+    try {
+      $this->getAwsSesClient()->deleteEmailTemplate([
+        'TemplateName' => $name,
+      ]);
+    }
+    catch (AwsException $exception) {
+      if ($exception->getStatusCode() != 404) {
+        $this->logger->error('AWS SES - Unable to delete template @name: @error', [
+          '@name' => $name,
+          '@error' => $exception->getMessage(),
+        ]);
+        // @todo extract the error message.
+        throw $exception;
+      }
+    }
+
+    // Create the template.
+    try {
+      $this->getAwsSesClient()->createEmailTemplate([
         'TemplateName' => $name,
         'TemplateContent' => [
           'Subject' => $subject,
           'Text' => $text,
           'Html' => $html,
         ],
-      ],
-    ];
-
-    try {
-      // Delete the template if it already exists.
-      $this->getAwsSesClient()->deleteEmailTemplate($name);
-
-      // Create the template.
-      $this->getAwsSesClient()->createEmailTemplate($template);
+      ]);
     }
     catch (AwsException $exception) {
-      $this->logger->error('AWS SES - Unable to create template: @error', [
+      $this->logger->error('AWS SES - Unable to create template @name: @error', [
+        '@name' => $name,
         '@error' => $exception->getMessage(),
       ]);
       // @todo extract the error message.
@@ -146,32 +158,34 @@ class AwsSesClient {
     $results = [];
 
     try {
-      /** @var \Aws\Result $result */
-      $result = $this->getAwsSesClient()->SendBulkEmail([
+      $email = [
         'FromEmailAddress' => $from,
         'DefaultContent' => [
           'Template' => [
             'TemplateName' => $template,
-            'TemplateData' => json_encode($replacements),
+            'TemplateData' => $this->convertReplacements($replacements),
           ],
         ],
         'BulkEmailEntries' => array_map(function ($destination) {
           return [
             'Destination' => [
-              'ToAddresses' => $destination['recipient'],
+              'ToAddresses' => [$destination['recipient']],
             ],
             'ReplacementEmailContent' => [
               'ReplacementTemplate' => [
-                'ReplacementTemplateData' => json_encode($destination['replacement']),
+                'ReplacementTemplateData' => $this->convertReplacements($destination['replacements'] ?? []),
               ],
             ],
           ];
         }, $destinations),
-      ]);
+      ];
+
+      /** @var \Aws\Result $result */
+      $result = $this->getAwsSesClient()->SendBulkEmail($email);
 
       // Build the result array with the success or error for each recipient.
-      foreach ($result->get('Status') as $item) {
-        if ($item['Status'] !== 'Success') {
+      foreach ($result->get('BulkEmailEntryResults') as $item) {
+        if (strtolower($item['Status']) !== 'success') {
           $results[] = [
             'success' => FALSE,
             'error' => '[' . $item['Status'] . '] ' . $item['Error'],
@@ -253,6 +267,26 @@ class AwsSesClient {
       // @todo extract the error message.
       throw $exception;
     }
+  }
+
+  /**
+   * Convert key value replacements into the structure expected by SES.
+   *
+   * @param array $replacements
+   *   Key value array of replacements.
+   *
+   * @return string
+   *   JSON encoded array of items with Name (key) and Value (value) properties.
+   */
+  protected function convertReplacements(array $replacements = []) {
+    $pairs = [];
+    foreach ($replacements as $key => $value) {
+      $pairs[] = [
+        'Name' => $key,
+        'Value' => $value,
+      ];
+    }
+    return json_encode($pairs);
   }
 
 }
