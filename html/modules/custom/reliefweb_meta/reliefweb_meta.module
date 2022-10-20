@@ -93,7 +93,7 @@ function reliefweb_meta_metatags_alter(array &$metatags, array &$context) {
       break;
 
     case 'reliefweb_rivers.report.river':
-      $metatags['title'] = t('Updates');
+      $data['title'] = t('Updates');
       $data['description'] = t('Your gateway to all content to date. Search and/or drill down with filters to narrow down the content.');
       break;
 
