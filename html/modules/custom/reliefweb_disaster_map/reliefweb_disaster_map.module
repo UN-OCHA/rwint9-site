@@ -140,3 +140,29 @@ function reliefweb_disaster_map_get_disaster_map_token_replacement($token, Bubbl
   }
   return '';
 }
+
+/**
+ * Implements hook_metatags_alter().
+ */
+function reliefweb_disaster_map_metatags_alter(array &$metatags, array &$context) {
+  $route_name = \Drupal::routeMatch()->getRouteName();
+
+  if (strpos($route_name, 'reliefweb_disaster_map.map.embeddable') === 0) {
+    $metatags = [
+      'title' => t('Disaster map'),
+    ];
+  }
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ *
+ * Run our metatags_alter hook implementation last.
+ */
+function reliefweb_disaster_map_module_implements_alter(array &$implementations, $hook) {
+  if ($hook === 'metatags_alter') {
+    $group = $implementations['reliefweb_disaster_map'];
+    unset($implementations['reliefweb_disaster_map']);
+    $implementations['reliefweb_disaster_map'] = $group;
+  }
+}
