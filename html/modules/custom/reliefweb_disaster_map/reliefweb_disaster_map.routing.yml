@@ -1,0 +1,15 @@
+reliefweb_disaster_map.map.embeddable.type:
+  path: '/disaster-map/{type}'
+  defaults:
+    _title: 'ReliefWeb'
+    _controller: '\Drupal\reliefweb_disaster_map\Controller\DisasterMap::getEmbeddableMap'
+  requirements:
+    _permission: 'access content'
+    type: ([A-Z]{2}|\d+)(-([A-Z]{2}|\d+))*
+reliefweb_disaster_map.map.embeddable:
+  path: '/disaster-map'
+  defaults:
+    _title: 'ReliefWeb'
+    _controller: '\Drupal\reliefweb_disaster_map\Controller\DisasterMap::getEmbeddableMap'
+  requirements:
+    _permission: 'access content'

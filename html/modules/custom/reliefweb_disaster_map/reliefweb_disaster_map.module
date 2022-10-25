@@ -90,13 +90,15 @@ function reliefweb_disaster_map_get_disaster_type_tokens() {
  *
  * @param string $token
  *   Token to replace.
- * @param \Drupal\Core\Render\BubbleableMetadata $bubbleable_metadata
+ * @param \Drupal\Core\Render\BubbleableMetadata|null $bubbleable_metadata
  *   Metadata to bubble to the renderer.
+ * @param bool $render
+ *   Whether to render the map or return the render array.
  *
  * @return \Drupal\Component\Render\MarkupInterface|string
  *   The rendered disaster map HTML content to use as token replacement.
  */
-function reliefweb_disaster_map_get_disaster_map_token_replacement($token, BubbleableMetadata $bubbleable_metadata) {
+function reliefweb_disaster_map_get_disaster_map_token_replacement($token, BubbleableMetadata $bubbleable_metadata = NULL, $render = TRUE) {
   $tokens = reliefweb_disaster_map_get_disaster_type_tokens();
   $values = explode('-', $token);
   $options = [];
@@ -134,7 +136,7 @@ function reliefweb_disaster_map_get_disaster_map_token_replacement($token, Bubbl
 
   if (!empty($title)) {
     return \Drupal::service('reliefweb_disaster_map.service')
-      ->getDisasterMap($id, $title, $options, TRUE);
+      ->getDisasterMap($id, $title, $options, $render);
   }
   return '';
 }
