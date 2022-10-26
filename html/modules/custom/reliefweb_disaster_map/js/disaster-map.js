@@ -173,7 +173,7 @@
 
         // Map options.
         var options = {
-          accessToken: reliefweb.mapbox.token,
+          accessToken: 'token',
           style: 'mapbox://styles/reliefweb/' + reliefweb.mapbox.key + '?optimize=true',
           container: mapContainer,
           center: [10, 10],
@@ -198,6 +198,9 @@
           options.minZoom = 0;
         }
 
+        // Replace the mapbox base API with the proxied version.
+        mapboxgl.baseApiUrl = window.location.origin + '/mapbox';
+
         // Create a map.
         var map = new mapboxgl.Map(options)
         // Add the zoom control buttons, bottom left to limit overlap with the
@@ -219,7 +222,9 @@
         // Restore visibility of the list if the map couldn't be loaded.
         .on('error', function (event) {
           element.removeAttribute('data-map-enabled');
-          element.removeChild(figure);
+          if (figure && figure.parentNode) {
+            figure.parentNode.removeChild(figure);
+          }
         })
         // Unset the active marker when clicking on the map.
         .on('click', function (event) {

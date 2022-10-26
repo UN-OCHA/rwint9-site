@@ -232,7 +232,8 @@ class DisasterMapService {
         'drupalSettings' => [
           'reliefwebDisasterMap' => [
             'mapboxKey' => $this->config->get('mapbox_key') ?? '',
-            'mapboxToken' => $this->config->get('mapbox_token') ?? '',
+            // It's replaced server side.
+            'mapboxToken' => 'token',
             'maps' => [
               $id => $settings,
             ],
