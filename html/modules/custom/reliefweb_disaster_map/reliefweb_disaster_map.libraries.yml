@@ -1,9 +1,9 @@
 mapbox:
   css:
     component:
-      mapbox/mapbox-gl-js/v1.7.0/mapbox-gl.css: { type: external, minified: true }
+      /mapbox/mapbox-gl-js/v1.7.0/mapbox-gl.css: { type: external, minified: true }
   js:
-    mapbox/mapbox-gl-js/v1.7.0/mapbox-gl.js: { type: external, minified: true, weight: -50 }
+    /mapbox/mapbox-gl-js/v1.7.0/mapbox-gl.js: { type: external, minified: true, weight: -50 }
     js/mapbox.js: { weight: -20 }
 
 map:
