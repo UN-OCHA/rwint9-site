@@ -78,7 +78,8 @@ function reliefweb_disaster_map_get_disaster_type_tokens() {
     $disaster_type_tokens = [];
     foreach ($terms as $term) {
       if (!$term->field_disaster_type_code->isEmpty()) {
-        $disaster_type_tokens[$term->field_disaster_type_code->value] = $term;
+        $code = strtoupper($term->field_disaster_type_code->value);
+        $disaster_type_tokens[$code] = $term;
       }
     }
   }
@@ -100,7 +101,7 @@ function reliefweb_disaster_map_get_disaster_type_tokens() {
  */
 function reliefweb_disaster_map_get_disaster_map_token_replacement($token, BubbleableMetadata $bubbleable_metadata = NULL, $render = TRUE) {
   $tokens = reliefweb_disaster_map_get_disaster_type_tokens();
-  $values = explode('-', $token);
+  $values = explode('-', strtoupper($token));
   $options = [];
   $id = strtolower('disaster-map-' . $token);
 
