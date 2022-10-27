@@ -7,7 +7,7 @@ a:focus {
   color: var(--brand-primary);
 }
 
-h1,
+/* h1,
 h2 {
   margin: 0 0 24px 0;
   letter-spacing: 0.5px;
@@ -50,7 +50,7 @@ h6 {
   letter-spacing: 0.5px;
   font-size: 16px;
   font-weight: bold;
-}
+} */
 /* Headings in content following something. */
 .rw-article__content * + h3,
 .rw-article__content * + h4,
