@@ -8883,16 +8883,16 @@
         },
         {
             "name": "reliefweb/simple-autocomplete",
-            "version": "v1.3.1",
+            "version": "v1.3.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/rwint-simple-autocomplete.git",
-                "reference": "c8f3896715d428d7011d7de13804daf95f381b19"
+                "reference": "5d7b6236b3c680946a501da0c1aff1803853046f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/rwint-simple-autocomplete/zipball/c8f3896715d428d7011d7de13804daf95f381b19",
-                "reference": "c8f3896715d428d7011d7de13804daf95f381b19",
+                "url": "https://api.github.com/repos/UN-OCHA/rwint-simple-autocomplete/zipball/5d7b6236b3c680946a501da0c1aff1803853046f",
+                "reference": "5d7b6236b3c680946a501da0c1aff1803853046f",
                 "shasum": ""
             },
             "require": {
@@ -8911,9 +8911,9 @@
                 "reliefweb"
             ],
             "support": {
-                "source": "https://github.com/UN-OCHA/rwint-simple-autocomplete/tree/v1.3.1"
+                "source": "https://github.com/UN-OCHA/rwint-simple-autocomplete/tree/v1.3.2"
             },
-            "time": "2022-06-14T03:33:16+00:00"
+            "time": "2022-10-25T05:01:03+00:00"
         },
         {
             "name": "reliefweb/simple-datepicker",
