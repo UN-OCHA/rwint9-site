@@ -8842,16 +8842,16 @@
         },
         {
             "name": "reliefweb/api-indexer",
-            "version": "v2.5.0",
+            "version": "v2.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/rwint-api-indexer.git",
-                "reference": "eac207e5abd4003ac1cbe9c9eba6b0ac04f3a8c0"
+                "reference": "1882b0ba311487cab21c98dc0c73cc9b6e6aa18a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/rwint-api-indexer/zipball/eac207e5abd4003ac1cbe9c9eba6b0ac04f3a8c0",
-                "reference": "eac207e5abd4003ac1cbe9c9eba6b0ac04f3a8c0",
+                "url": "https://api.github.com/repos/UN-OCHA/rwint-api-indexer/zipball/1882b0ba311487cab21c98dc0c73cc9b6e6aa18a",
+                "reference": "1882b0ba311487cab21c98dc0c73cc9b6e6aa18a",
                 "shasum": ""
             },
             "require": {
@@ -8877,9 +8877,9 @@
             ],
             "support": {
                 "issues": "https://github.com/UN-OCHA/rwint-api-indexer/issues",
-                "source": "https://github.com/UN-OCHA/rwint-api-indexer/tree/v2.5.0"
+                "source": "https://github.com/UN-OCHA/rwint-api-indexer/tree/v2.6.0"
             },
-            "time": "2022-09-06T02:31:12+00:00"
+            "time": "2022-10-28T01:17:04+00:00"
         },
         {
             "name": "reliefweb/simple-autocomplete",
