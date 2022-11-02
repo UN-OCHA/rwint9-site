@@ -10,7 +10,7 @@ class LocalizationHelperStubNoNumberFormatter extends LocalizationHelperStub {
   /**
    * {@inheritdoc}
    */
-  protected static function createNumberFormatter($language) {
+  protected static function getNumberFormatter($language = NULL) {
     return FALSE;
   }
 

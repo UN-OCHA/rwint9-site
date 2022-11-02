@@ -5,13 +5,13 @@ namespace Drupal\reliefweb_xmlsitemap\Command;
 use Consolidation\SiteAlias\SiteAliasManagerAwareInterface;
 use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
 use Consolidation\SiteProcess\ProcessManagerAwareTrait;
-use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\State\StateInterface;
+use Drupal\reliefweb_utility\Helpers\UrlHelper;
 use Drush\Commands\DrushCommands;
 use GuzzleHttp\ClientInterface;
 

@@ -20,7 +20,7 @@
       if (document.documentElement.clientWidth < 768) {
         return false;
       }
-      return this.key && this.token && mapboxgl && mapboxgl.supported({
+      return this.key && this.token && typeof mapboxgl !== 'undefined' && typeof mapboxgl.supported !== 'undefined' && mapboxgl.supported({
         failIfMajorPerformanceCaveat: strict === true
       });
     },
