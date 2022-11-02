@@ -281,17 +281,10 @@ class AwsSesClient {
    *   Key value array of replacements.
    *
    * @return string
-   *   JSON encoded array of items with Name (key) and Value (value) properties.
+   *   JSON encoded key/value pairs.
    */
   protected function convertReplacements(array $replacements = []) {
-    $pairs = [];
-    foreach ($replacements as $key => $value) {
-      $pairs[] = [
-        'Name' => $key,
-        'Value' => $value,
-      ];
-    }
-    return json_encode($pairs);
+    return json_encode($replacements, \JSON_FORCE_OBJECT);
   }
 
 }
