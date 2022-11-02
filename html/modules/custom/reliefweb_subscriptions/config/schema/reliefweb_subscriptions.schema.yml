@@ -29,3 +29,6 @@ reliefweb_subscriptions.settings:
     aws_ses_api_token:
       type: string
       label: 'AWS SES API token'
+    aws_ses_api_identity:
+      type: string
+      label: 'AWS SES API identity'

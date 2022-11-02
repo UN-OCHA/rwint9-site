@@ -7,3 +7,4 @@ aws_ses_api_key: null
 aws_ses_api_secret: null
 aws_ses_api_token: null
 aws_ses_api_scheme: null
+aws_ses_api_identity: null

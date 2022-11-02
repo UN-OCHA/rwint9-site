@@ -180,6 +180,11 @@ class AwsSesClient {
         }, $destinations),
       ];
 
+      $identity = $this->config->get('aws_ses_api_identity');
+      if (!empty($identity)) {
+        $email['FromEmailAddressIdentityArn'] = $identity;
+      }
+
       /** @var \Aws\Result $result */
       $result = $this->getAwsSesClient()->SendBulkEmail($email);
 

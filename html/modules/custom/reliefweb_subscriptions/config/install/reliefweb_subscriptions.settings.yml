@@ -16,3 +16,5 @@ aws_ses_api_key:
 aws_ses_api_secret:
 # AWS SES API token.
 aws_ses_api_token:
+# AWS SES API identity.
+aws_ses_api_identity:
