@@ -234,8 +234,13 @@ class ReliefwebSubscriptionsMailer {
 
   /**
    * Send notifications.
+   *
+   * @param array $notifications
+   *   List of notifications to send.
+   * @param string $from
+   *   From address override. If not defined, use the system email address.
    */
-  public function send($notifications) {
+  public function send(array $notifications, $from = '') {
     if (empty($notifications)) {
       $this->logger->info('No queued notifications.');
       return;
@@ -261,10 +266,10 @@ class ReliefwebSubscriptionsMailer {
       $subscription = $subscriptions[$notification->sid];
 
       if ($subscription['type'] === 'scheduled') {
-        $sent = $this->sendScheduledNotification($notification, $subscription);
+        $sent = $this->sendScheduledNotification($notification, $subscription, $from);
       }
       else {
-        $sent = $this->sendTriggeredNotification($notification, $subscription);
+        $sent = $this->sendTriggeredNotification($notification, $subscription, $from);
       }
 
       if ($sent) {
@@ -361,17 +366,19 @@ class ReliefwebSubscriptionsMailer {
    *   Notification information.
    * @param array $subscription
    *   Subscription information.
+   * @param string $from
+   *   From address override. If not defined, use the system email address.
    *
    * @return bool
    *   TRUE if emails were sent.
    */
-  public function sendScheduledNotification(object $notification, array $subscription) {
+  public function sendScheduledNotification(object $notification, array $subscription, $from = '') {
     $data = $this->getScheduledNotificationData($notification, $subscription);
     if (empty($data)) {
       return FALSE;
     }
 
-    return $this->generateEmail($subscription, $data);
+    return $this->generateEmail($subscription, $data, $from);
   }
 
   /**
@@ -381,17 +388,19 @@ class ReliefwebSubscriptionsMailer {
    *   Notification information.
    * @param array $subscription
    *   Subscription information.
+   * @param string $from
+   *   From address override. If not defined, use the system email address.
    *
    * @return bool
    *   TRUE if emails were sent.
    */
-  public function sendTriggeredNotification(object $notification, array $subscription) {
+  public function sendTriggeredNotification(object $notification, array $subscription, $from = '') {
     $data = $this->getTriggeredNotificationData($notification, $subscription);
     if (empty($data)) {
       return FALSE;
     }
 
-    return $this->generateEmail($subscription, $data);
+    return $this->generateEmail($subscription, $data, $from);
   }
 
   /**
@@ -465,7 +474,7 @@ class ReliefwebSubscriptionsMailer {
           '@sitemail' => $from,
         ]);
       }
-      $this->fromAddress = $from;
+      $this->fromAddress = (string) $from;
     }
     return $this->fromAddress;
   }
@@ -477,6 +486,8 @@ class ReliefwebSubscriptionsMailer {
    *   Subscription.
    * @param array $data
    *   API data to use in the templates.
+   * @param string $from
+   *   From address override. If not defined, use the system email address.
    *
    * @return bool
    *   TRUE if emails were sent.
@@ -484,7 +495,7 @@ class ReliefwebSubscriptionsMailer {
    * @todo use templates for the text version instead of relying on
    * drupal_html_to_text(). That would mean changing the ExtendedMailSystem.
    */
-  protected function generateEmail(array $subscription, array $data) {
+  protected function generateEmail(array $subscription, array $data, $from = '') {
     $sid = $subscription['id'];
     $subscription_name = $subscription['name'];
 
@@ -517,10 +528,10 @@ class ReliefwebSubscriptionsMailer {
 
     switch ($this->config('reliefweb_subscriptions.settings')->get('method')) {
       case 'smtp':
-        return $this->sendViaSmtp($subscription, $subject, $html, $subscribers);
+        return $this->sendViaSmtp($subscription, $subject, $html, $subscribers, $from);
 
       case 'aws_ses_api_bulk':
-        return $this->sendViaAwsSesApiBulk($subscription, $subject, $html, $subscribers);
+        return $this->sendViaAwsSesApiBulk($subscription, $subject, $html, $subscribers, $from);
 
       default:
         $this->logger->error('Invalid send mode.');
@@ -580,13 +591,15 @@ class ReliefwebSubscriptionsMailer {
    *   Email content.
    * @param array $subscribers
    *   Subscribers.
+   * @param string $from
+   *   From address override. If not defined, use the system email address.
    *
    * @return bool
    *   False if the sending failed.
    */
-  protected function sendViaSmtp(array $subscription, $subject, $html, array $subscribers) {
+  protected function sendViaSmtp(array $subscription, $subject, $html, array $subscribers, $from = '') {
     $sid = $subscription['id'];
-    $from = $this->getFromAddress();
+    $from = $from ?: $this->getFromAddress();
     $language = $this->languageDefault->get()->getId();
 
     // Number of emails to send by second.
@@ -657,15 +670,17 @@ class ReliefwebSubscriptionsMailer {
    *   Email content.
    * @param array $subscribers
    *   Subscribers.
+   * @param string $from
+   *   From address override. If not defined, use the system email address.
    *
    * @return bool
    *   False if the sending failed.
    */
-  protected function sendViaAwsSesApiBulk(array $subscription, $subject, $html, array $subscribers) {
+  protected function sendViaAwsSesApiBulk(array $subscription, $subject, $html, array $subscribers, $from = '') {
     $sid = $subscription['id'];
     $subscription_name = $subscription['name'];
     $template_name = $subscription['aws_ses_template_name'];
-    $from = $this->getFromAddress();
+    $from = $from ?: $this->getFromAddress();
 
     // Retrieve the send rate.
     try {
