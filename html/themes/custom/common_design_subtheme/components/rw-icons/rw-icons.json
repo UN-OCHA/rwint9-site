@@ -1,5 +1,6 @@
 {
-  "style": "../../css/styles.css",
+  "version": "./VERSION",
+  "style": "../../css/brand.css",
   "path": "/themes/custom/common_design_subtheme/components/rw-icons",
   "colors": {
     "dark-blue": "--cd-reliefweb-brand-blue--dark",
@@ -162,6 +163,18 @@
           "grey",
           "orange",
           "red"
+        ]
+      }
+    },
+    "datepicker": {
+      "source": "img/icons/datepicker",
+      "include": [
+        "datepicker"
+      ],
+      "sizes": {
+        "32": [
+          "dark-blue",
+          "dark-red"
         ]
       }
     }
