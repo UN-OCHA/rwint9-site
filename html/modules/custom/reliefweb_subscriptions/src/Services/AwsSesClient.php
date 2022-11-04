@@ -98,21 +98,7 @@ class AwsSesClient {
    */
   public function createTemplate($name, $subject, $html, $text) {
     // Delete the template if it already exists.
-    try {
-      $this->getAwsSesClient()->deleteEmailTemplate([
-        'TemplateName' => $name,
-      ]);
-    }
-    catch (AwsException $exception) {
-      if ($exception->getStatusCode() != 404) {
-        $this->logger->error('AWS SES - Unable to delete template @name: @error', [
-          '@name' => $name,
-          '@error' => $exception->getMessage(),
-        ]);
-        // @todo extract the error message.
-        throw $exception;
-      }
-    }
+    $this->deleteTemplate($name);
 
     // Create the template.
     try {
@@ -132,6 +118,33 @@ class AwsSesClient {
       ]);
       // @todo extract the error message.
       throw $exception;
+    }
+  }
+
+  /**
+   * Delete an email template.
+   *
+   * @param string $name
+   *   Template name.
+   *
+   * @throws \Exception
+   *   Exception if the request to AWS SES failed.
+   */
+  public function deleteTemplate($name) {
+    try {
+      $this->getAwsSesClient()->deleteEmailTemplate([
+        'TemplateName' => $name,
+      ]);
+    }
+    catch (AwsException $exception) {
+      if ($exception->getStatusCode() != 404) {
+        $this->logger->error('AWS SES - Unable to delete template @name: @error', [
+          '@name' => $name,
+          '@error' => $exception->getMessage(),
+        ]);
+        // @todo extract the error message.
+        throw $exception;
+      }
     }
   }
 

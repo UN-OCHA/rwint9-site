@@ -721,7 +721,7 @@ class ReliefwebSubscriptionsMailer {
       );
     }
     catch (\Exception $exception) {
-      $this->logger->error('Error create template for {name} subscription: {error}', [
+      $this->logger->error('Unable to create template for {name} subscription: {error}', [
         'name' => $subscription_name,
         'error' => $exception->getMessage(),
       ]);
@@ -797,6 +797,17 @@ class ReliefwebSubscriptionsMailer {
       if ($timer_elapsed < 1) {
         usleep((1 - $timer_elapsed) * 1e+6);
       }
+    }
+
+    // Delete the template.
+    try {
+      $this->awsSesClient->deleteTemplate($template_name);
+    }
+    catch (\Exception $exception) {
+      $this->logger->error('Unable to delete template for {name} subscription: {error}', [
+        'name' => $subscription_name,
+        'error' => $exception->getMessage(),
+      ]);
     }
 
     return TRUE;
