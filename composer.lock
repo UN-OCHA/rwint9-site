@@ -8917,16 +8917,16 @@
         },
         {
             "name": "reliefweb/simple-datepicker",
-            "version": "v1.3.3-beta",
+            "version": "v1.3.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/rwint-simple-datepicker.git",
-                "reference": "9f94f47c05ca30009cb4ae641cdf239f5b6fb7be"
+                "reference": "88d9fc1d8695593bb708f639a16011a97ce2fc61"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/rwint-simple-datepicker/zipball/9f94f47c05ca30009cb4ae641cdf239f5b6fb7be",
-                "reference": "9f94f47c05ca30009cb4ae641cdf239f5b6fb7be",
+                "url": "https://api.github.com/repos/UN-OCHA/rwint-simple-datepicker/zipball/88d9fc1d8695593bb708f639a16011a97ce2fc61",
+                "reference": "88d9fc1d8695593bb708f639a16011a97ce2fc61",
                 "shasum": ""
             },
             "require": {
@@ -8945,9 +8945,9 @@
                 "reliefweb"
             ],
             "support": {
-                "source": "https://github.com/UN-OCHA/rwint-simple-datepicker/tree/v1.3.3-beta"
+                "source": "https://github.com/UN-OCHA/rwint-simple-datepicker/tree/v1.3.3"
             },
-            "time": "2022-11-02T06:12:51+00:00"
+            "time": "2022-11-04T07:04:06+00:00"
         },
         {
             "name": "sabberworm/php-css-parser",
