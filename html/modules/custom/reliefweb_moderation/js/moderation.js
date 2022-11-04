@@ -72,6 +72,12 @@
           namespace: 'rw-datepicker'
         });
 
+        // Prevent closing the datepicker.
+        widget.hide = function () {
+          // Focus the current day instead of the beginning of the month.
+          return this.focusDay(this.today, false);
+        };
+
         // Input to enter the date manually.
         var input = document.createElement('input');
         input.setAttribute('type', 'text');
