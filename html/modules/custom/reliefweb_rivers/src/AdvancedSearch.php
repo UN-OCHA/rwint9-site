@@ -243,6 +243,8 @@ class AdvancedSearch {
           'dateFrom' => $this->t('From (YYYY/MM/DD)'),
           'dateTo' => $this->t('To (YYYY/MM/DD)'),
           'addFilter' => $this->t('Add filter'),
+          'chooseDate' => $this->t('Choose date'),
+          'changeDate' => $this->t('Change date, _date_'),
           // Translate the filter sample.
           'addFilterSuffix' => $this->filterSample,
           'filter' => $this->t('_filter_ filter'),

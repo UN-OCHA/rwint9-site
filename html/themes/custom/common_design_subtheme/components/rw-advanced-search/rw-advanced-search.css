@@ -533,3 +533,23 @@
   border: 1px solid var(--cd-reliefweb-brand-red--dark);
   background: var(--cd-reliefweb-brand-red--dark);
 }
+.rw-advanced-search .rw-datepicker-input {
+  display: inline-block;
+  width: calc(100% - 36px);
+  margin-right: 4px;
+}
+.rw-advanced-search .rw-datepicker-toggle {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  vertical-align: top;
+  border: none;
+  background: var(--rw-icons--datepicker--datepicker--32--dark-blue);
+}
+.rw-advanced-search .rw-datepicker-toggle:hover,
+.rw-advanced-search .rw-datepicker-toggle:active,
+.rw-advanced-search .rw-datepicker-toggle:focus {
+  background: var(--rw-icons--datepicker--datepicker--32--dark-red);
+}
