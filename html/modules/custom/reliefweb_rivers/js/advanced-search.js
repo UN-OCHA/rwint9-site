@@ -606,7 +606,7 @@
 
       case 'options':
         widget.select = element.querySelector('select');
-        // Add the filter when after selection when pressing enter.
+        // Add the filter after selection when pressing enter.
         addEventListener(widget.select, 'keyup', function (event) {
           var key = event.which || event.keyCode;
           if (key === KeyCodes.ENTER && this.value) {
@@ -1471,6 +1471,37 @@
 
       widget.clear();
       toggleDialog(advancedSearch);
+    });
+
+    // Cancel when pressing escape and wrap focus inside the dialog.
+    addEventListener(dialog, 'keydown', function (event) {
+      var key = event.which || event.keyCode;
+
+      // Close the dialog when pressing escape.
+      if (key === KeyCodes.ESC) {
+        preventDefault(event);
+        triggerEvent(cancel, 'click');
+      }
+      // Wrap the focus inside the dialog.
+      else if (key === KeyCodes.TAB) {
+        var firstInteractiveElement;
+        if (advancedSearch.advancedMode) {
+          firstInteractiveElement = dialog.querySelector('input, select');
+        }
+        else {
+          firstInteractiveElement = getActiveWidget(advancedSearch.widgets).element.querySelector('input, select');
+        }
+        if (!event.shiftKey && event.target === add) {
+          preventDefault(event);
+          stopPropagation(event);
+          firstInteractiveElement.focus();
+        }
+        else if (event.shiftKey && event.target === firstInteractiveElement) {
+          preventDefault(event);
+          stopPropagation(event);
+          add.focus();
+        }
+      }
     });
 
     return dialog;
