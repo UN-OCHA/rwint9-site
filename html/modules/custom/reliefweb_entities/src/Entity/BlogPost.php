@@ -117,12 +117,6 @@ class BlogPost extends Node implements BundleEntityInterface, EntityModeratedInt
    * {@inheritdoc}
    */
   public function preSave(EntityStorageInterface $storage) {
-    // @todo remove when removing `reliefweb_migrate`.
-    if (!empty($this->_is_migrating)) {
-      parent::preSave($storage);
-      return;
-    }
-
     // Set the creation date to the changed date when publishing the blog
     // post from an unpublished state.
     if (isset($this->original) &&
