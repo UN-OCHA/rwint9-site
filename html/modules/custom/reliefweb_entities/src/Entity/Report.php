@@ -342,7 +342,10 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
       "ReliefWeb team",
     ]), [
       '@title' => $this->label(),
-      '@url' => $this->toUrl('canonical', ['absolute' => TRUE])->toString(FALSE),
+      '@url' => $this->toUrl('canonical', [
+        'absolute' => TRUE,
+        'path_processing' => FALSE,
+      ])->toString(FALSE),
     ]);
 
     $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
