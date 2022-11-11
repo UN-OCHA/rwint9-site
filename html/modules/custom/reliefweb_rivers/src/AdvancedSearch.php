@@ -236,6 +236,7 @@ class AdvancedSearch {
           'cancel' => $this->t('Cancel'),
           'clear' => $this->t('Clear all'),
           'remove' => $this->t('Remove filter'),
+          'formActions' => $this->t('Apply or clear filters'),
           'filterSelector' => $this->t('Add filter'),
           'fieldSelector' => $this->t('Select field'),
           'operatorSelector' => $this->t('Select operator'),
@@ -281,9 +282,9 @@ class AdvancedSearch {
         ],
         'announcements' => [
           'changeFilter' => $this->t('Filter changed to _name_.'),
-          'addFilter' => $this->t('Added _field_ _label_. Your are now looking for documents _selection_. Press apply filters to update the list.'),
-          'removeFilter' => $this->t('Removed _field_ _label_. Your are now looking for documents _selection_. Press apply filters to update the list.'),
-          'removeFilterEmpty' => $this->t('Removed _field_ _label_. Your selection is now empty. Press apply filters to update the list.'),
+          'addFilter' => $this->t('Added _field_ _label_. Your are now looking for documents _selection_. Go to the "Apply or clear filters" section to apply the filters and update the list.'),
+          'removeFilter' => $this->t('Removed _field_ _label_. Your are now looking for documents _selection_. Go to the "Apply or clear filters" section to apply the filters and update the list.'),
+          'removeFilterEmpty' => $this->t('Removed _field_ _label_. Your selection is now empty. Go to the "Apply or clear filters" section to apply the filters and update the list.'),
         ],
         'operators' => [
           [
