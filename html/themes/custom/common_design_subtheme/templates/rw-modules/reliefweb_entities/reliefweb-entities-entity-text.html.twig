@@ -1,4 +1,8 @@
-{% set title_attributes = title_attributes.addClass('cd-block-title') %}
+{% set title_id = (id ~ '-title')|clean_id %}
+{% set title_attributes = title_attributes
+  .addClass('cd-block-title')
+  .setAttribute('id', title_id)
+%}
 
 {{ attach_library('common_design/cd-block-title') }}
 {{ attach_library('common_design_subtheme/rw-entity-text') }}
@@ -21,6 +25,7 @@
       // display the last 3 ones and add a toggling button to show the full
       // content.
       var content = document.getElementById('{{ content_id }}');
+      var title = document.getElementById('{{ title_id }}');
       var children = content.childNodes;
       var count = 0;
       for (var i = 0, l = children.length; i < l; i++) {
@@ -32,23 +37,38 @@
         content.setAttribute('data-cd-toggable', '{% trans %}Show full {{ content_title }}{% endtrans %}');
         content.setAttribute('data-cd-toggable-expanded', '{% trans %}Hide full {{ content_title }}{% endtrans %}');
         content.setAttribute('data-cd-toggable-keep', '');
+        content.setAttribute('data-cd-insert-after', '');
         content.setAttribute('data-cd-icon', 'arrow-down');
         content.setAttribute('data-cd-component', 'rw-entity-text');
         content.setAttribute('data-cd-replace', '{{ content_id }}-dummy');
       }
 
-      // Scroll to the top of the text content when expanding it.
+      // Scroll to the title of the section containing the text content when
+      // expanding it so that users can read the full description and use the
+      // keyboard navigation to go through the content. When hiding the text,
+      // scroll to the toggler to avoid jumping lower on the page.
       if ('MutationObserver' in window) {
         var observer = new MutationObserver(function (mutations) {
           for (var mutation of mutations) {
-            if (mutation.type === 'attributes' &&
-                mutation.attributeName === 'data-cd-hidden' &&
-                mutation.target.getAttribute('data-cd-hidden') === 'false') {
-              mutation.target.parentNode.scrollIntoView();
+            if (mutation.type === 'attributes' && mutation.attributeName === 'data-cd-hidden') {
+              if (mutation.target.getAttribute('data-cd-hidden') === 'false') {
+                if (title) {
+                  title.setAttribute('tabindex', 0);
+                  title.focus();
+                  title.scrollIntoView();
+                  title.removeAttribute('tabindex');
+                }
+              }
+              else if (mutation.oldValue === 'false') {
+                var toggler = document.getElementById('{{ content_id }}-toggler');
+                if (toggler) {
+                  toggler.scrollIntoView();
+                }
+              }
             }
           }
         });
-        observer.observe(content, {attributes: true});
+        observer.observe(content, {attributes: true, attributeOldValue: true});
       }
     })();
   </script>
