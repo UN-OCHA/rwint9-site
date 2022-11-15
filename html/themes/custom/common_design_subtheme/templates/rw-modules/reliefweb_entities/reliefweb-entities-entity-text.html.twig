@@ -59,7 +59,7 @@
                   title.removeAttribute('tabindex');
                 }
               }
-              else {
+              else if (mutation.oldValue === 'false') {
                 var toggler = document.getElementById('{{ content_id }}-toggler');
                 if (toggler) {
                   toggler.scrollIntoView();
@@ -68,7 +68,7 @@
             }
           }
         });
-        observer.observe(content, {attributes: true});
+        observer.observe(content, {attributes: true, attributeOldValue: true});
       }
     })();
   </script>
