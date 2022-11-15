@@ -11,7 +11,7 @@ field_name: field_source
 entity_type: node
 bundle: job
 label: Organization
-description: 'The name of the organization issuing the hiring contract. Please check if your organization is already on our list. New organizations will undergo a brief verification by our team.'
+description: 'The name of the organization issuing the hiring contract. Please check if your organization is already on our list. New organizations will undergo a brief verification by our team. Please use corporate email domain for your job submissions.'
 required: false
 translatable: false
 default_value: {  }
