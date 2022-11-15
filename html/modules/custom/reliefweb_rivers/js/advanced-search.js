@@ -1336,7 +1336,9 @@
     var id = 'river-advanced-search-options-widget-' + filter.code;
     var values = filter.widget.options;
 
-    var options = [createOption('', advancedSearch.labels.emptyOption)];
+    var options = [createOption('', advancedSearch.labels.emptyOption, {
+      selected: 'selected'
+    })];
     for (var i = 0, l = values.length; i < l; i++) {
       var value = values[i];
       options.push(createOption(value.id, value.name));
