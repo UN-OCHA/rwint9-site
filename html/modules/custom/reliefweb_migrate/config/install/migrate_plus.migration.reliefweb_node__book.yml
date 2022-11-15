@@ -1,5 +1,0 @@
-id: reliefweb_node__book
-label: Migrate ReliefWeb book pages.
-migration_group: reliefweb_node
-source:
-  bundle: book
