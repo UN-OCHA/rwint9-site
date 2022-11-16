@@ -180,7 +180,15 @@ class SearchConverter extends ControllerBase {
       ];
     }
 
-    return new JsonResponse($result);
+    try {
+      return new JsonResponse($result);
+    }
+    catch (\Exception $exception) {
+      $this->getLogger('reliefweb_river')->error('Unable to generate search conversion JSON result: @error', [
+        '@error' => $exception->getMessage(),
+      ]);
+      return new JsonResponse(['error' => $this->t('Invalid input')], 400);
+    }
   }
 
   /**

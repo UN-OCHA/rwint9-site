@@ -406,26 +406,39 @@
       if (!date.invalid()) {
         var calendar = datepicker.calendars[0];
         datepicker.setSelection([date], false).updateCalendar(calendar, date);
+        return date;
       }
     }
+    return null;
   }
 
   // Create a datepicker widget.
-  function createDatepicker(advancedSearch, element) {
-    var parent = element.parentNode;
+  function createDatepicker(advancedSearch, input) {
+    var parent = input.parentNode;
     parent.setAttribute('data-datepicker', '');
     parent.classList.add(advancedSearch.widgetClassPrefix + 'datepicker');
+    input.classList.add(advancedSearch.widgetClassPrefix + 'datepicker-input');
+
+    // Create the button to show the datepicker.
+    var toggleLabel = createElement('span', {
+      'class': advancedSearch.widgetClassPrefix + 'datepicker-toggle-label visually-hidden'
+    }, advancedSearch.labels.chooseDate);
+    var toggle = createButton({
+      'data-datepicker-toggle': '',
+      'class': advancedSearch.widgetClassPrefix + 'datepicker-toggle'
+    }, toggleLabel);
+    parent.insertBefore(toggle, input.nextSibling);
 
     // @todo change the simpledatepicker upstream to use some namespace like
     // the autocomplete widget rather than individual classes?
     var datepicker = SimpleDatePicker.datepicker({
       namespace: advancedSearch.widgetClassPrefix + 'datepicker',
-      element: element,
+      input: toggle,
       container: parent
     }).hide();
 
     // Fix the position of the datepicker so that it's just after the input.
-    parent.insertBefore(datepicker.container, element.nextSibling);
+    parent.insertBefore(datepicker.container, toggle.nextSibling);
 
     // Button to cancel or select the date.
     var cancel = createButton({'data-cancel': ''}, advancedSearch.labels.cancel);
@@ -435,78 +448,97 @@
     buttonContainer.appendChild(select);
     datepicker.calendars[0].calendar.appendChild(buttonContainer);
 
+    // Update the toggle label based on the selected date.
+    function updateToggleLabel(date) {
+      var label = advancedSearch.labels.chooseDate;
+      if (date) {
+        label = advancedSearch.labels.changeDate.replace('_date_', date.format('dddd D MMMM YYYY'));
+      }
+      SimpleDatePicker.setText(toggleLabel, label);
+    }
+
+    // Update the date input with the selected date.
+    function updateDateInput(date) {
+      if (date) {
+        input.value = date.format('YYYY/MM/DD');
+        input.setAttribute('data-value', date.format('YYYYMMDD'));
+      }
+      else {
+        input.value = '';
+        input.removeAttribute('date-value');
+      }
+      updateToggleLabel(date);
+      datepicker.hide();
+      toggle.focus();
+    }
+
     // Cancel the filter addition, clear the widget and close the dialog.
     addEventListener(cancel, 'click', function (event) {
       datepicker.hide().clear();
-      element.focus();
+      toggle.focus();
     });
 
     // Add a filter, clear the widget and close the dialog.
     addEventListener(select, 'click', function (event) {
-      var selection = datepicker.getSelection();
-      if (selection.length) {
-        var date = selection[0];
-        element.value = date.format('YYYY/MM/DD');
-        element.setAttribute('data-value', date.format('YYYYMMDD'));
-        element.focus();
+      var focused = datepicker.getFocusedDay();
+      if (focused) {
+        datepicker.select(focused);
       }
       else {
-        element.value = '';
+        var selection = datepicker.getSelection();
+        updateDateInput(selection.length ? selection[0] : null);
       }
-      datepicker.hide();
     });
 
     // Update the date of the datepicker based on the value from the input.
     datepicker.on('opened', function (event) {
-      updateDatepicker(datepicker, element.value);
+      updateDatepicker(datepicker, input.value);
     });
 
+    // Update the input text when selecting a date.
     datepicker.on('select', function (event) {
-      if (event.data && event.data.length) {
-        var date = event.data[0];
-        element.value = date.format('YYYY/MM/DD');
-        element.setAttribute('data-value', date.format('YYYYMMDD'));
-        element.focus();
-      }
-      else {
-        element.value = '';
-      }
-      datepicker.hide();
+      updateDateInput(event.data && event.data.length ? event.data[0] : null);
     });
 
-    addEventListener(element, 'click', function (event) {
-      datepicker.show();
+    // Show/Hide the datepicker.
+    addEventListener(toggle, 'click', function (event) {
+      datepicker.toggle();
     });
 
-    // @todo hide widget when the widget or input loses focus.
-    addEventListener(element, 'keydown', function (event) {
+    // Update the toggle label.
+    addEventListener(input, 'keyup', function (event) {
+      var date = updateDatepicker(datepicker, input.value);
+      updateToggleLabel(date);
+    });
+
+    // Logic to keep the focus inside the dialog when it's open.
+    var firstButton = datepicker.container.querySelector('button');
+    addEventListener(select, 'keydown', function (event) {
       var key = event.which || event.keyCode;
-      if (key === KeyCodes.ESC) {
+      if (key === KeyCodes.TAB && !event.shiftKey) {
         preventDefault(event);
         stopPropagation(event);
-        datepicker.hide().clear();
-        element.focus();
-      }
-      else {
-        datepicker.show();
+        firstButton.focus();
       }
     });
-    addEventListener(element, 'keyup', function (event) {
+    addEventListener(firstButton, 'keydown', function (event) {
       var key = event.which || event.keyCode;
-      if (key !== KeyCodes.ESC) {
-        updateDatepicker(datepicker, element.value);
+      if (key === KeyCodes.TAB && event.shiftKey) {
+        preventDefault(event);
+        stopPropagation(event);
+        select.focus();
       }
     });
 
     return {
       widget: datepicker,
       clear: function () {
-        element.value = '';
-        element.removeAttribute('data-value');
+        input.value = '';
+        input.removeAttribute('data-value');
         datepicker.hide().clear();
       },
       value: function () {
-        return element.getAttribute('data-value') || '';
+        return input.getAttribute('data-value') || '';
       }
     };
   }
@@ -574,7 +606,7 @@
 
       case 'options':
         widget.select = element.querySelector('select');
-        // Add the filter when after selection when pressing enter.
+        // Add the filter after selection when pressing enter.
         addEventListener(widget.select, 'keyup', function (event) {
           var key = event.which || event.keyCode;
           if (key === KeyCodes.ENTER && this.value) {
@@ -1304,7 +1336,9 @@
     var id = 'river-advanced-search-options-widget-' + filter.code;
     var values = filter.widget.options;
 
-    var options = [createOption('', advancedSearch.labels.emptyOption)];
+    var options = [createOption('', advancedSearch.labels.emptyOption, {
+      selected: 'selected'
+    })];
     for (var i = 0, l = values.length; i < l; i++) {
       var value = values[i];
       options.push(createOption(value.id, value.name));
@@ -1441,6 +1475,37 @@
       toggleDialog(advancedSearch);
     });
 
+    // Cancel when pressing escape and wrap focus inside the dialog.
+    addEventListener(dialog, 'keydown', function (event) {
+      var key = event.which || event.keyCode;
+
+      // Close the dialog when pressing escape.
+      if (key === KeyCodes.ESC) {
+        preventDefault(event);
+        triggerEvent(cancel, 'click');
+      }
+      // Wrap the focus inside the dialog.
+      else if (key === KeyCodes.TAB) {
+        var firstInteractiveElement;
+        if (advancedSearch.advancedMode) {
+          firstInteractiveElement = dialog.querySelector('input, select');
+        }
+        else {
+          firstInteractiveElement = getActiveWidget(advancedSearch.widgets).element.querySelector('input, select');
+        }
+        if (!event.shiftKey && event.target === add) {
+          preventDefault(event);
+          stopPropagation(event);
+          firstInteractiveElement.focus();
+        }
+        else if (event.shiftKey && event.target === firstInteractiveElement) {
+          preventDefault(event);
+          stopPropagation(event);
+          add.focus();
+        }
+      }
+    });
+
     return dialog;
   }
 
@@ -1549,6 +1614,9 @@
   function createActions(advancedSearch) {
     var clear = createButton({'data-clear': ''}, advancedSearch.labels.clear);
     var apply = createButton({'data-apply': ''}, advancedSearch.labels.apply);
+    var title = createElement('h' + (advancedSearch.headingLevel + 1), {
+      class: 'visually-hidden'
+    }, advancedSearch.labels.formActions);
 
     // Keep track of the action buttons so they can be hidden/shown depending
     // on the filter selection.
@@ -1569,9 +1637,9 @@
       triggerEvent(advancedSearch.submitForm, 'submit');
     });
 
-    return createElement('div', {
+    return createElement('section', {
       'class': advancedSearch.classPrefix + 'actions'
-    }, [clear, apply]);
+    }, [title, clear, apply]);
   }
 
   // Create the checkbox to active advanced search mode.
@@ -1612,7 +1680,7 @@
           triggerEvent(advancedSearch.clear, 'click');
         }
         else {
-          event.preventDefault();
+          preventDefault(event);
         }
       }
       // Update the operator selectors when switching to advanced mode.

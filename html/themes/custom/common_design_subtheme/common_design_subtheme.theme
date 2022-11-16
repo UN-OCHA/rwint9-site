@@ -354,12 +354,19 @@ function common_design_subtheme_reliefweb_form_mark_optional_alter(array &$eleme
  * Add resource preloading to reduce time to first paint.
  */
 function common_design_subtheme_page_attachments_alter(array &$attachments) {
+  // Retrieve the version of the icon sprite.
+  $theme_path = \Drupal::service('extension.path.resolver')->getPath('theme', 'common_design_subtheme');
+  $rw_icons_sprite_version = @file_get_contents($theme_path . '/components/rw-icons/VERSION');
+  if (!empty($rw_icons_sprite_version)) {
+    $rw_icons_sprite_version = '?v=' . trim($rw_icons_sprite_version);
+  }
+
   // Main SVG sprites and logos used across the site.
   $svg_sprites = [
     '/themes/custom/common_design_subtheme/img/logos/rw-logo-desktop.svg' => NULL,
     '/themes/custom/common_design_subtheme/img/logos/rw-logo-mobile.svg' => '(max-width: 768px)',
     '/themes/custom/common_design_subtheme/img/logos/ocha-logo-sprite.svg' => NULL,
-    '/themes/custom/common_design_subtheme/components/rw-icons/img/rw-icons-sprite.svg' => NULL,
+    '/themes/custom/common_design_subtheme/components/rw-icons/img/rw-icons-sprite.svg' . $rw_icons_sprite_version => NULL,
     '/themes/custom/common_design_subtheme/img/logos/rw-logo-sprite.svg' => NULL,
   ];
   $index = 0;

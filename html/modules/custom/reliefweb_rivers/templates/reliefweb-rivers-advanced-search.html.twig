@@ -53,7 +53,8 @@
     {% endif %}
 
     <div id="river-advanced-search-selection-announcement" aria-live="polite" class="visually-hidden"></div>
-    <div id="river-advanced-search-selection" class="rw-advanced-search__selection rw-selection" data-selection="{{ selection|length }}">
+    <section id="river-advanced-search-selection" class="rw-advanced-search__selection rw-selection" data-selection="{{ selection|length }}">
+      <h{{ level + 1 }} class="visually-hidden">{{ 'Selected filters'|t }}</h{{ level + 1 }}>
       {#
         Note: this is the initial selection and will be overriden by the
         advanced search javascript library. That means notably that styling
@@ -68,7 +69,7 @@
         </div>
       </div>
       {% endfor %}
-    </div>
+    </section>
 
     <noscript>
       {% if selection is not empty %}
@@ -90,7 +91,9 @@
     </script>
 
     <div id="river-advanced-search-filter-announcement" aria-live="polite" class="visually-hidden"></div>
-    <div id="river-advanced-search-form-content" class="rw-advanced-search__form__content" hidden></div>
+    <section id="river-advanced-search-form-content" class="rw-advanced-search__form__content" hidden>
+      <h{{ level + 1 }} class="visually-hidden">{{ 'Add filters'|t }}</h{{ level + 1 }}>
+    </section>
   </form>
 </section>
 {% endif %}

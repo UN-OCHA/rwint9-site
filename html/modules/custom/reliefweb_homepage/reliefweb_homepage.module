@@ -77,10 +77,6 @@ function reliefweb_homepage_theme() {
  * the headline flag is deselected.
  */
 function reliefweb_homepage_entity_update(EntityInterface $entity) {
-  // @todo remove when removing `reliefweb_migrate`.
-  if (!empty($entity->_is_migrating)) {
-    return;
-  }
   if ($entity->getEntityTypeId() === 'node' && $entity->bundle() === 'report') {
     if (empty($entity->field_headline->value) || !$entity->isPublished()) {
       $state = \Drupal::state();
@@ -103,10 +99,6 @@ function reliefweb_homepage_entity_update(EntityInterface $entity) {
  * Remove reports from the headlines selection when deleted.
  */
 function reliefweb_homepage_entity_delete(EntityInterface $entity) {
-  // @todo remove when removing `reliefweb_migrate`.
-  if (!empty($entity->_is_migrating)) {
-    return;
-  }
   if ($entity->getEntityTypeId() === 'node' && $entity->bundle() === 'report') {
     $state = \Drupal::state();
     $selected = $state->get('reliefweb_headline_selection', []);
