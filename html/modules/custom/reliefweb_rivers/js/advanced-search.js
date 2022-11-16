@@ -1614,6 +1614,9 @@
   function createActions(advancedSearch) {
     var clear = createButton({'data-clear': ''}, advancedSearch.labels.clear);
     var apply = createButton({'data-apply': ''}, advancedSearch.labels.apply);
+    var title = createElement('h' + (advancedSearch.headingLevel + 1), {
+      class: 'visually-hidden'
+    }, advancedSearch.labels.formActions);
 
     // Keep track of the action buttons so they can be hidden/shown depending
     // on the filter selection.
@@ -1634,9 +1637,9 @@
       triggerEvent(advancedSearch.submitForm, 'submit');
     });
 
-    return createElement('div', {
+    return createElement('section', {
       'class': advancedSearch.classPrefix + 'actions'
-    }, [clear, apply]);
+    }, [title, clear, apply]);
   }
 
   // Create the checkbox to active advanced search mode.
