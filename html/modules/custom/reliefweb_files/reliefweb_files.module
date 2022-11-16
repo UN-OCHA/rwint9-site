@@ -145,10 +145,6 @@ function reliefweb_files_reliefweb_utility_file_update_alter(File $file, &$apply
  * Implements hook_entity_revision_delete().
  */
 function reliefweb_files_entity_revision_delete(EntityInterface $entity) {
-  // @todo remove when removing `reliefweb_migrate`.
-  if (!empty($entity->_is_migrating)) {
-    return;
-  }
   // Drupal doesn't invoke any postRevisionDelete on the field items so this is
   // the only way to perform post revision deletion tasks.
   //

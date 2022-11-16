@@ -27,11 +27,6 @@ function reliefweb_api_taxonomy_term_update(EntityInterface $entity) {
  * @see \Drupal\reliefweb_entities\BundleEntityStorageInterface
  */
 function reliefweb_api_entity_after_save(EntityInterface $entity) {
-  // @todo remove when removing `reliefweb_migrate`.
-  if (!empty($entity->_is_migrating)) {
-    return;
-  }
-
   if (!empty($entity->needs_reindex)) {
     $reindex_queue = \Drupal::state()->get('reliefweb_api.reindex_queue');
     $reindex_queue[$entity->bundle()][$entity->id()] = $entity->id();
@@ -46,10 +41,6 @@ function reliefweb_api_entity_after_save(EntityInterface $entity) {
  * Implements hook_entity_delete().
  */
 function reliefweb_api_entity_delete(EntityInterface $entity) {
-  // @todo remove when removing `reliefweb_migrate`.
-  if (!empty($entity->_is_migrating)) {
-    return;
-  }
   reliefweb_api_handle_entity($entity, TRUE);
 }
 
