@@ -42,8 +42,6 @@
         "drupal/maintenance200": "^1.1",
         "drupal/memcache": "^2.4",
         "drupal/metatag": "^1.16",
-        "drupal/migrate_plus": "^5.3",
-        "drupal/migrate_tools": "^5.0",
         "drupal/mimemail": "^1.0-alpha4",
         "drupal/pathauto": "^1.10",
         "drupal/redirect": "^1.7",
