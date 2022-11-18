@@ -563,6 +563,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
    */
   public function getAutocompleteSuggestions($filter) {
     $query = $this->getCurrentRequest()->query->get('query', '');
+    $query = is_string($query) ? trim($query) : '';
 
     if (empty($query) || !$this->hasFilterDefinition($filter)) {
       return [];
@@ -1274,9 +1275,11 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   protected function getOrderInformation() {
     $headers = $this->getHeaders();
     $order = $this->getCurrentRequest()->query->get('order', '');
+    $order = is_string($order) ? trim($order) : '';
     // We assume the date header is present and sortable.
     $order = !empty($headers[$order]['sortable']) ? $order : 'date';
-    $sort = strtolower($this->getCurrentRequest()->query->get('sort', ''));
+    $sort = $this->getCurrentRequest()->query->get('sort', '');
+    $sort = strtolower(is_string($sort) ? trim($sort) : '');
     $sort = in_array($sort, ['asc', 'desc']) ? $sort : 'desc';
     $headers[$order]['sort'] = $sort;
 
