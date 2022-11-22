@@ -1322,7 +1322,8 @@ class ReliefWebFile extends WidgetBase {
    */
   public static function rebuildWidgetForm(array &$form, FormStateInterface &$form_state, Request $request) {
     // Retrieve the updated widget.
-    $parents = explode('/', $request->query->get('field_parents'));
+    $parameter = $request->query->get('field_parents');
+    $parents = explode('/', is_string($parameter) ? trim($parameter) : '');
     $field_name = array_pop($parents);
     $field_state = static::getWidgetState($parents, $field_name, $form_state);
 

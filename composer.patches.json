@@ -2,7 +2,8 @@
     "patches": {
         "drupal/core" : {
             "https://www.drupal.org/project/drupal/issues/3047110": "patches/core--drupal--3047110-taxonomy-term-moderation-class.patch",
-            "https://www.drupal.org/project/drupal/issues/3008292": "patches/core--drupal--3008292-image-upload-validators.patch"
+            "https://www.drupal.org/project/drupal/issues/3008292": "patches/core--drupal--3008292-image-upload-validators.patch",
+            "https://www.drupal.org/project/drupal/issues/3143617": "https://www.drupal.org/files/issues/2020-07-07/3143617-28_0.patch"
         },
         "drupal/migrate_tools" : {
             "https://www.drupal.org/project/migrate_tools/issues/3256236": "https://www.drupal.org/files/issues/2021-12-28/invalid_placeholder-3256236-3.patch"

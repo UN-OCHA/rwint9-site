@@ -199,6 +199,7 @@ class SearchConverter extends ControllerBase {
    */
   protected function getAppname() {
     $appname = $this->requestStack->getCurrentRequest()->query->get('appname', '');
+    $appname = is_string($appname) ? trim($appname) : '';
     return $appname ?: 'rw-user-' . $this->currentUser->id();
   }
 
@@ -209,7 +210,8 @@ class SearchConverter extends ControllerBase {
    *   The search URL parameter.
    */
   protected function getSearchUrl() {
-    return $this->requestStack->getCurrentRequest()->query->get('search-url', '');
+    $search_url = $this->requestStack->getCurrentRequest()->query->get('search-url', '');
+    return is_string($search_url) ? trim($search_url) : '';
   }
 
   /**
