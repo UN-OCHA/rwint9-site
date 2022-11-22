@@ -299,7 +299,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * {@inheritdoc}
    */
   public function getSelectedView() {
-    $view = $this->getParameters()->get('view');
+    $view = $this->getParameters()->getString('view');
     $views = $this->getViews();
     return isset($views[$view]) ? $view : $this->getDefaultView();
   }
@@ -308,8 +308,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * {@inheritdoc}
    */
   public function getSearch() {
-    $search = $this->getParameters()->get('search', '');
-    return trim($search);
+    return $this->getParameters()->getString('search');
   }
 
   /**
@@ -880,14 +879,16 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    *   entity bundle and view.
    */
   public static function getRiverServiceFromUrl($url) {
-    $mapping = static::getRiverMapping();
-    $path = trim(parse_url($url, PHP_URL_PATH), '/');
+    if (is_string($url)) {
+      $mapping = static::getRiverMapping();
+      $path = trim(parse_url($url, PHP_URL_PATH), '/');
 
-    if (isset($mapping[$path]['bundle'])) {
-      $data = $mapping[$path];
-      $service = static::getRiverService($data['bundle']);
-      if (isset($service)) {
-        return $data + ['service' => $service];
+      if (isset($mapping[$path]['bundle'])) {
+        $data = $mapping[$path];
+        $service = static::getRiverService($data['bundle']);
+        if (isset($service)) {
+          return $data + ['service' => $service];
+        }
       }
     }
     return [];

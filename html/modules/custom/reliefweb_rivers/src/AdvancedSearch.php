@@ -164,7 +164,7 @@ class AdvancedSearch {
     // "WITH legacy-facets AND WITH legacy-river AND with advanced-search".
     $components[] = $this->parseLegacyFacetParameters();
     $components[] = $this->parseLegacyRiverParameter();
-    $components[] = $this->parameters->get('advanced-search');
+    $components[] = $this->parameters->getString('advanced-search');
 
     // Update the advanced search parameter.
     $this->parameters->set('advanced-search', implode('_', array_filter($components)));
@@ -513,7 +513,7 @@ class AdvancedSearch {
       if (isset($info['shortcut'], $this->filters[$info['shortcut']])) {
         $code = $info['shortcut'];
         $operator = isset($info['operator']) && $info['operator'] === 'OR' ? '.' : '_';
-        $values = $this->parameters->get($field);
+        $values = $this->parameters->getString($field);
         if (!empty($values)) {
           $filters[] = '(' . $code . str_replace('.', $operator . $code, $values) . ')';
         }
@@ -542,7 +542,7 @@ class AdvancedSearch {
       return '';
     }
     // Get and remove the parameter.
-    $path = $this->parameters->get('legacy-river');
+    $path = $this->parameters->getString('legacy-river');
     $this->parameters->remove('legacy-river');
 
     // Check if the path is using the alias form and, if so, find the term path.
@@ -574,7 +574,7 @@ class AdvancedSearch {
    *   the sense that we just ignore invalid values.
    */
   public function getAdvancedSearchFilterSelection() {
-    return $this->parseAdvancedSearchParameter($this->parameters->get('advanced-search'));
+    return $this->parseAdvancedSearchParameter($this->parameters->getString('advanced-search'));
   }
 
   /**

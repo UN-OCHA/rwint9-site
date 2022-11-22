@@ -215,7 +215,7 @@ class SearchResults extends ControllerBase {
   public function getSearchQuery() {
     if (!isset($this->searchQuery)) {
       $parameters = Parameters::getParameters();
-      if (isset($parameters['search'])) {
+      if (isset($parameters['search']) && is_string($parameters['search'])) {
         $this->searchQuery = trim($parameters['search']);
       }
       else {

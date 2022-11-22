@@ -54,7 +54,7 @@ class SourceRiver extends RiverServiceBase {
 
     // Get the currently selected letter filter and mark the corresponding
     // letter as active.
-    $letter = $this->getParameters()->get('group', 'all');
+    $letter = $this->getParameters()->getString('group', 'all');
     if (isset($letters[$letter])) {
       $letters[$letter]['active'] = TRUE;
     }
@@ -120,7 +120,7 @@ class SourceRiver extends RiverServiceBase {
 
     // Add a filter on the selected letter.
     $letters = static::getFirstLetters();
-    $letter = $this->getParameters()->get('group', 'all');
+    $letter = $this->getParameters()->getString('group', 'all');
     if (!empty($letters[$letter]['ids'])) {
       $payload['filter'] = [
         'conditions' => [
