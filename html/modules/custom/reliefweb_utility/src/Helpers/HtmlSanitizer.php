@@ -170,6 +170,8 @@ class HtmlSanitizer {
       'tr' => FALSE,
       'sup' => FALSE,
       'sub' => FALSE,
+      'small' => FALSE,
+      'font' => FALSE,
       // No children.
       'img' => TRUE,
     ];
@@ -253,6 +255,10 @@ class HtmlSanitizer {
       // Process list items.
       elseif ($tag === 'li') {
         $this->handleListItem($node);
+      }
+      // Process tables.
+      elseif ($tag === 'font') {
+        $this->stripTag($node);
       }
       // Process the node, converting if necessary and removing attributes.
       else {
@@ -597,6 +603,22 @@ class HtmlSanitizer {
         $this->removeChild($parent);
       }
     }
+  }
+
+  /**
+   * Strip a tag.
+   *
+   * @param \DOMNode $node
+   *   Heading node.
+   */
+  protected function stripTag(\DOMNode $node) {
+    $parent = $node->parentNode;
+    // Move the content to the parent.
+    while ($node->firstChild !== NULL) {
+      $parent->insertBefore($node->firstChild, $node);
+    }
+    // Remove the node.
+    $this->removeChild($node);
   }
 
   /**
