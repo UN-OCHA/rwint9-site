@@ -294,6 +294,14 @@ interface RiverServiceInterface {
   public function parseApiDataForRss(array $data, $view = '');
 
   /**
+   * Get the river description based on the filters and search query.
+   *
+   * @return \Drupal\Component\Render\MarkupInterface|null
+   *   River page description or empty if there is no search or filters.
+   */
+  public function getRiverDescription();
+
+  /**
    * Get the ISO 639-1 language code for the entity.
    *
    * Defaults to English if not defined.
