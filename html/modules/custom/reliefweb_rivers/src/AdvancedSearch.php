@@ -5,12 +5,12 @@ namespace Drupal\reliefweb_rivers;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
+use Drupal\Core\Render\Markup;
 
 /**
  * Advanced search handler.
  */
 class AdvancedSearch {
-
 
   use StringTranslationTrait;
 
@@ -681,7 +681,13 @@ class AdvancedSearch {
       // Prepare filter label.
       switch ($type) {
         case 'reference':
-          $label = $values[$type][$code][$condition['value']]['name'];
+          $term = $values[$type][$code][$condition['value']];
+          if (!empty($term['shortname'])) {
+            $label = $term['name'] . ' (' . $term['shortname'] . ')';
+          }
+          else {
+            $label = $term['name'];
+          }
           break;
 
         case 'fixed':
@@ -949,6 +955,40 @@ class AdvancedSearch {
   }
 
   /**
+   * Convert the active facets to a search string.
+   *
+   * @return string|\Drupal\Component\Render\MarkupInterface
+   *   Search string.
+   */
+  public function getHumanReadableSelection() {
+    if (empty($this->data['selection'])) {
+      return '';
+    }
+
+    $operators = [
+      'with' => $this->t('with'),
+      'without' => $this->t('without'),
+      'and-with' => $this->t('and with'),
+      'and-without' => $this->t('and without'),
+      'or-with' => $this->t('or with'),
+      'or-without' => $this->t('or without'),
+      'or' => $this->t('or'),
+      'and' => $this->t('and'),
+    ];
+
+    $parts = [];
+    foreach ($this->data['selection'] as $item) {
+      $parts[] = $this->t('@operator @field: @label', [
+        '@operator' => $operators[$item['operator']],
+        '@field' => Markup::create(mb_strtolower($item['field'])),
+        '@label' => $item['label'],
+      ]);
+    }
+
+    return Markup::create(implode(' ', $parts));
+  }
+
+  /**
    * Get the vocabulary for the given term id.
    *
    * @param int $id
@@ -1038,7 +1078,7 @@ class AdvancedSearch {
           'id' => $id,
           'name' => $record->name,
         ];
-        if (!empty($record->shortname)) {
+        if (!empty($record->shortname) && $record->shortname !== $record->name) {
           $term['shortname'] = $record->shortname;
         }
         $terms[$id] = $term;
