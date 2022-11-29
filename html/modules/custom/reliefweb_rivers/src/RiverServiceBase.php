@@ -719,6 +719,48 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getRiverDescription() {
+    $title = $this->getPageTitle();
+    $search = $this->getSearch();
+    $filters = $this->getAdvancedSearch()->getHumanReadableSelection();
+
+    $view = $this->getSelectedView();
+    if ($view !== $this->getDefaultView()) {
+      $title = $this->t('@title (@view)', [
+        '@title' => $title,
+        '@view' => $this->getViews()[$view],
+      ]);
+    }
+
+    if (!empty($search) && !empty($filters)) {
+      return $this->t('@title containing @search and @filters', [
+        '@title' => $title,
+        '@search' => $search,
+        '@filters' => $filters,
+      ]);
+    }
+    elseif (!empty($search)) {
+      return $this->t('@title containing @search', [
+        '@title' => $title,
+        '@search' => $search,
+      ]);
+    }
+    elseif (!empty($filters)) {
+      return $this->t('@title @filters', [
+        '@title' => $title,
+        '@filters' => $filters,
+      ]);
+    }
+    elseif ($view !== $this->getDefaultView()) {
+      return $title;
+    }
+
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function getLanguageCode(array &$data = NULL) {
     if (isset($data['langcode'])) {
       $langcode = $data['langcode'];

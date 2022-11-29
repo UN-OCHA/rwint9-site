@@ -76,6 +76,7 @@ class DisasterRiver extends RiverServiceBase {
     return [
       'C' => [
         'name' => $this->t('Country'),
+        'shortname' => TRUE,
         'type' => 'reference',
         'vocabulary' => 'country',
         'field' => 'country.id',
