@@ -184,6 +184,16 @@ class HtmlSanitizerTest extends UnitTestCase {
     $iframe = FALSE;
     $this->assertEquals(HtmlSanitizer::sanitize($html, $iframe), $expected);
 
+    $html = '<p><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Text</font></font></p>';
+    $expected = '<p>Text</p>';
+    $iframe = FALSE;
+    $this->assertEquals(HtmlSanitizer::sanitize($html, $iframe), $expected);
+
+    $html = '<p><font style="vertical-align: inherit;"><strong>Text</strong> <small>With</small> Parts</font</p>';
+    $expected = '<p><strong>Text</strong> <small>With</small> Parts</p>';
+    $iframe = FALSE;
+    $this->assertEquals(HtmlSanitizer::sanitize($html, $iframe), $expected);
+
     $markdown = 'a **strong** word';
     $expected = '<p>a <strong>strong</strong> word</p>';
     $this->assertEquals(HtmlSanitizer::sanitizeFromMarkdown($markdown), $expected);
