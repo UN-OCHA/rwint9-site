@@ -1209,8 +1209,13 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     // Filter the query with the form filters.
     $this->filterQuery($query, $filters);
 
-    // Ensure there are no duplicates (ex: when joining revision tables).
-    $query->distinct();
+    // Ensure there are no duplicates when joining revision tables.
+    foreach ($query->getTables() as $table) {
+      if (isset($table['table']) && strpos($table['table'], 'revision') !== FALSE) {
+        $query->distinct();
+        break;
+      }
+    }
 
     // Wrap the query in a parent query to which the ordering and limiting is
     // applied.
