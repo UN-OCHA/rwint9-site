@@ -647,8 +647,16 @@ abstract class RiverServiceBase implements RiverServiceInterface {
 
     $headers = [
       'Content-Type' => 'application/rss+xml; charset=utf-8',
-      'Cache-Control' => 'private',
     ];
+
+    // Add the cache control header.
+    $cache_settings = $this->configFactory->get('system.performance')?->get('cache');
+    if (!empty($cache_settings['page']['max_age']) && $cache_settings['page']['max_age'] > 0) {
+      $headers['Cache-Control'] = 'max-age=' . $cache_settings['page']['max_age'] . ', public';
+    }
+    else {
+      $headers['Cache-Control'] = 'private';
+    }
 
     return new Response($this->renderer->render($content), 200, $headers);
   }
