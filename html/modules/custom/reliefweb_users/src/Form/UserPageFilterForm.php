@@ -96,7 +96,7 @@ class UserPageFilterForm extends FormBase {
       '#title' => $this->t('Posted'),
       '#type' => 'checkboxes',
       '#options' => $content_types,
-      '#default_value' => $filters['posted'] ?? [],
+      '#default_value' => array_keys($filters['posted']) ?? [],
     ];
 
     $form['filters']['job_rights'] = [
