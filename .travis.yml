@@ -39,8 +39,7 @@ script:
   - sleep 10
 
   # Install the dev dependencies.
-  # Remove temporarily as breaking build and unnecessary: OPS-8951.
-  # - docker exec -it -w /srv/www rwint9-test-site composer install
+  - docker exec -it -w /srv/www rwint9-test-site composer install
 
   # Check coding standards.
   - docker exec -it -u appuser -w /srv/www rwint9-test-site ./vendor/bin/phpcs -p --report=full ./html/modules/custom ./html/themes/custom
