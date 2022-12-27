@@ -16,6 +16,13 @@ reliefweb_bookmarks.user:
     _custom_access: '\Drupal\reliefweb_bookmarks\Controller\UserBookmarksController::checkUserAccess'
     user: \d+
 
+reliefweb_bookmarks.user.current_user:
+  path: '/user/bookmarks'
+  defaults:
+    _controller: '\Drupal\reliefweb_bookmarks\Controller\UserBookmarksController::currentUserBookmarksPage'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
 reliefweb_bookmarks.user.type:
   path: '/user/{user}/bookmarks/{entity_type}/{bundle}'
   defaults:

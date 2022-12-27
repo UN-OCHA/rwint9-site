@@ -481,4 +481,16 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
     return AccessResult::allowedIf($account->hasPermission('see other bookmarks'));
   }
 
+  /**
+   * Redirect the current user to the its bookmarks page.
+   *
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *   Redirection response.
+   */
+  public function currentUserBookmarksPage() {
+    return $this->redirect('reliefweb_bookmarks.user', [
+      'user' => $this->currentUser()->id(),
+    ], [], 301);
+  }
+
 }
