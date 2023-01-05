@@ -35,11 +35,11 @@ Sending (and even queueing) notifications is done via [drush commands](src/Comma
 
 ### Sending
 
-Sending notification can be pretty slow depending on the content of the emails (ex: hundred of jobs) and the number of subscribers.
+Sending notifications can be pretty slow depending on the content of the emails (ex: hundred of jobs) and the number of subscribers.
 
 ## Testing
 
-Log in, and go to the subscriptions page `/user/USER_ID/subscriptions`, then (replace `XXX` by a disaster ID):
+Log in, and go to the subscriptions page `/user/USER_ID/subscriptions`:
 
 ```bash
 drush cr

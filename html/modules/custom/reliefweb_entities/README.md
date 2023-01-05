@@ -18,7 +18,7 @@ This module provides traits for 2 main types of pages on the ReliefWeb site:
 - [Document](src/DocumentTrait.php) for document pages (ex: job page, report page)
 - [SectionedContent](src/SectionedContentTrait.php) for pages with multiple sections (ex: country page, topic page)
 
-Those traits provides logic and facilities to help build those pages and are added to the relevant entity bundle classes.
+Those traits provide logic and facilities to help build those pages and are added to the relevant entity bundle classes.
 
 ### Custom storages
 
@@ -33,7 +33,7 @@ This module provides a series of [Validation constraint plugins](src/Plugin/Vali
 
 ## Entity Reference selection
 
-This module provides a more memory efficient [entity reference selection plugin](src/Plugin/EntityReferenceSelection/AnyTermSelection.php) that also allow to select "unplished" content.
+This module provides a more memory efficient [entity reference selection plugin](src/Plugin/EntityReferenceSelection/AnyTermSelection.php) that also allow to select "unpublished" content.
 
 For, example, it allows tagging a report with a `draft` disaster.
 

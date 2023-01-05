@@ -12,8 +12,8 @@ The ReliefWeb site offers several type of content.
 
 - `Reports`: humanitarian situation reports,
 press releases, evaluations, guidelines, assessments, maps, infographics etc.
-- `Jobs`: job opportunities in humanitarin fields
-- `Training`: training opportunities in humanitarin fields
+- `Jobs`: job opportunities in humanitarian fields
+- `Training`: training opportunities in humanitarian fields
 - `Countries`: humanitarian information on countries
 - `Disasters`: humanitarian information on natural disasters (floods, epidemics etc.)
 - `Sources`: organizations (NGOs, governments etc.) that provide humanitarian information or job/training opportunies
@@ -40,7 +40,7 @@ The [html/modules/custom](html/modules/custom) folder contains custom modules. S
 
 ### Theme
 
-The `ReliefWeb` uses the [Common Design](https://github.com/UN-OCHA/common_design) theme and extends its subtheme.
+`ReliefWeb` uses the [Common Design](https://github.com/UN-OCHA/common_design) theme and extends its subtheme.
 
 The [html/themes/custom/common_design_subtheme](html/themes/custom/common_design_subtheme) folder contains various custom components and templates.
 

@@ -12,7 +12,7 @@ This module provides custom field types, widgets, formatters and related plugins
 
 ## Field widgets
 
-- [ReliefWebDateRange](src/Plugin/Field/FieldWidget/ReliefWebDateRange.php): widget extending the core date range widget to more precisely  display errors of sub fields.
+- [ReliefWebDateRange](src/Plugin/Field/FieldWidget/ReliefWebDateRange.php): widget extending the core date range widget to more precisely display errors of sub fields.
 - [ReliefWebDateTime](src/Plugin/Field/FieldWidget/ReliefWebDateTime.php): widget extending the core date time widget to more precisely display errors of sub fields.
 - [ReliefWebDisaster](src/Plugin/Field/FieldWidget/ReliefWebDisaster.php): widget extending the `ReliefWebEntityReferenceSelect` widget, that hides external disasters for non external disaster managers.
 - [ReliefWebEntityReferenceSelect](src/Plugin/Field/FieldWidget/ReliefWebEntityReferenceSelect.php): widget extending the core options select widget for entity references with much more memory efficient population of options (i.e. does not load all the terms...). It also provides options add extra information (ex: entity status) as `data` attributes on the option elements.
@@ -39,5 +39,5 @@ This module provides a [CKEditor 4 plugin](src/Plugin/CKEditorPlugin/ReliefWebFo
 
 This module provides 2 entity form controllers for the `user_posting_rights` form view mode of sources and the `profile` form view mode of countries and disasters.
 
-- [TaxonomyTermProfile](src/Form/TaxonomyTermProfile.php): used to managed a country/disaster profile's links (key content, appeals and useful links).
-- [TaxonomyTermUserPostingRights](src/Form/TaxonomyTermUserPostingRights.php): used to managed a source's user posting rights.
+- [TaxonomyTermProfile](src/Form/TaxonomyTermProfile.php): used to manage a country/disaster profile's links (key content, appeals and useful links).
+- [TaxonomyTermUserPostingRights](src/Form/TaxonomyTermUserPostingRights.php): used to manage a source's user posting rights.

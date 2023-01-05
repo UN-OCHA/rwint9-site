@@ -1,7 +1,7 @@
 ReliefWeb - Rivers module
 =========================
 
-This module provides handling of list of content (rivers).
+This module provides handling of lists of content (rivers).
 
 ## Services
 
@@ -36,4 +36,4 @@ This is notably useful for sites that want to display list of content from Relie
 
 ## Search results
 
-This module provide a route and [controller](src/Controller/SearchResults.php) for the global search result page (`/search/results`).
+This module provides a route and [controller](src/Controller/SearchResults.php) for the global search result page (`/search/results`).

@@ -13,7 +13,7 @@ This module also defines a `cache.reliefweb_api` cache bin used to store the res
 
 Cache is cleared when creating, updating or deleting a node or taxonomy term.
 
-For example, addind a new `report` will clear the cached queries against the `reports` resource in the API.
+For example, adding a new `report` will clear the cached queries against the `reports` resource in the API.
 
 Creating, updating or deleting a taxonomy term clears all the cached queries because terms are shared across content.
 
@@ -21,7 +21,7 @@ Creating, updating or deleting a taxonomy term clears all the cached queries bec
 
 This modules also provides a set of [drush commands](src/Commands/ReliefWebApiCommands.php) to allow (re-)indexing content.
 
-Ex `drush rapi-i --limit 100 reports` will re-indexed the most 100 recent reports.
+Ex `drush rapi-i --limit 100 reports` will re-index the 100 most recent reports.
 
 ## Settings
 
