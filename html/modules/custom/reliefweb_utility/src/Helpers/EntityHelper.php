@@ -4,6 +4,9 @@ namespace Drupal\reliefweb_utility\Helpers;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\Routing\RouteMatch;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Helper to information about entities.
@@ -11,16 +14,21 @@ use Drupal\Core\Render\Markup;
 class EntityHelper {
 
   /**
-   * Attempt to get the entity for the current route.
+   * Attempt to get the entity for the given route or the current one.
    *
    * Note: this only works for routes using the "standard" way to declare
    * entity parameters: `entity:entity_type_id`.
    *
+   * @param \Drupal\Core\Routing\RouteMatchInterface|null $route_match
+   *   Optional route match.
+   *
    * @return \Drupal\Core\Entity\EntityInterface|null
    *   The entity for the route or NULL if none.
    */
-  public static function getEntityFromRoute() {
-    $route_match = \Drupal::routeMatch();
+  public static function getEntityFromRoute(?RouteMatchInterface $route_match = NULL) {
+    if (!isset($route_match)) {
+      $route_match = \Drupal::routeMatch();
+    }
 
     $route = $route_match->getRouteObject();
     if (empty($route)) {
@@ -43,6 +51,25 @@ class EntityHelper {
         }
       }
     }
+
+    return NULL;
+  }
+
+  /**
+   * Attempt to get the entity for a request.
+   *
+   * Note: this only works for routes using the "standard" way to declare
+   * entity parameters: `entity:entity_type_id`.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   Request.
+   *
+   * @return \Drupal\Core\Entity\EntityInterface|null
+   *   The entity for the route or NULL if none.
+   */
+  public static function getEntityFromRequest(Request $request) {
+    $route_match = RouteMatch::createFromRequest($request);
+    return static::getEntityFromRoute($route_match);
   }
 
   /**
