@@ -1,8 +1,7 @@
 /**
- * Country/disaster profile forms.
+ * Topic forms.
  *
- * This is the form to manage the country and disaster profiles (overview, key
- * content, appeals and response plans and useful links).
+ * Styling for the "river" section field on topic forms.
  *
  * Scope: .field--type-reliefweb-section-links
  */
@@ -15,8 +14,7 @@
 .field--type-reliefweb-section-links tr[data-dragged] td {
   background-color: var(--cd-reliefweb-brand-grey--light);
 }
-
-/* Related Content Reports search table */
+/* Break link URLs in the section field table. */
 .rw-section-links table a {
   word-break: break-word;
 }

@@ -1,5 +1,5 @@
-ReliefWeb Files
-===============
+ReliefWeb - Files module
+========================
 
 This module handles report file attachments on ReliefWeb.
 
