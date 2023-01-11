@@ -13,6 +13,18 @@
     {% for item in list %}
     <li>
       <a href="{{ item.url }}">
+        {% if item.preview is not empty and loop.index == 1 and not lazy_load_first_preview %}
+          {%
+            set item = item|merge({
+              'preview': item.preview|merge({
+                '#attributes': (item.preview['#attributes'] ?? {})|merge({
+                  'loading': 'eager'
+                })
+              })
+            })
+          %}
+        {% endif %}
+
         {{ item.preview }}
         <strong class="rw-file__label">{{ item.label }}</strong>
         <span class="rw-file__description">{{ item.description }}</span>

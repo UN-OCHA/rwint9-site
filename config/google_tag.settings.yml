@@ -2,7 +2,7 @@ _core:
   default_config_hash: 65d5DfK5p2hQDpBskbvCIj2hSEqw_Odm2e_d46BH1Lk
 uri: 'public:/'
 compact_snippet: true
-include_file: true
+include_file: false
 rebuild_snippets: true
 flush_snippets: false
 debug_output: false

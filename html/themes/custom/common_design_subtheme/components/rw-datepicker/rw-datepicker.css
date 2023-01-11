@@ -133,6 +133,7 @@
   margin: 2px;
   padding: 8px;
   text-align: right;
+  border: 2px solid transparent;
   background: none;
 }
 /* Days outside of the selected month are disabled. */
@@ -150,6 +151,10 @@
 }
 /* Highlight the currently selected day(s). */
 .rw-datepicker-days button.rw-datepicker-selected-day {
+  border: 2px dashed var(--cd-reliefweb-brand-blue--dark);
+}
+/* Highlight the currently selected day(s). */
+.rw-datepicker-days button.rw-datepicker-day-in[tabindex="0"] {
   color: white;
   background: var(--cd-reliefweb-brand-blue--dark);
 }

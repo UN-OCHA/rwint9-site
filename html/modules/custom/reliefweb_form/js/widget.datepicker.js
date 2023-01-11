@@ -58,8 +58,8 @@
 
           var date = datepicker.createDate(value + ' UTC');
           if (!date.invalid()) {
-            var calendar = datepicker.calendars[0];
-            datepicker.setSelection([date], trigger === true).updateCalendar(calendar, date);
+            // Update the selected date.
+            datepicker.setSelection([date], trigger === true);
           }
           else if (trigger) {
             datepicker.hide();
@@ -114,11 +114,12 @@
         var localizedFormat = t('D MMM YYYY');
 
         // Add the datepicker widget.
-        var datepicker = new DatePicker({
+        var datepicker = SimpleDatePicker.datepicker({
           element: element,
           container: element.parentNode,
           namespace: 'rw-datepicker',
           visible: false,
+          focusDayOnOpen: false,
           dateFunction: function (date, options) {
             return new LocalizedDate(date, options);
           },
@@ -256,42 +257,6 @@
               t('Friday'),
               t('Saturday')
             ]
-          }
-        });
-
-        var DatePicker = SimpleDatePicker.DatePicker.extend({
-          show: function () {
-            if (!this.visible()) {
-              this.fire('show').fire('opened');
-              this.container.setAttribute('data-hidden', 'false');
-
-              // Focus the first selectable date in the datepicker.
-              var days = this.retrieveDaysIn();
-              if (days.length > 0) {
-                days[0].setAttribute('tabindex', '0');
-                days[0].focus();
-              }
-            }
-            return this;
-          },
-          hide: function () {
-            if (this.visible()) {
-              this.container.setAttribute('data-hidden', 'true');
-              this.fire('hide').fire('closed');
-            }
-            return this;
-          },
-          toggle: function () {
-            if (this.visible()) {
-              this.hide();
-            }
-            else {
-              this.show();
-            }
-            return this;
-          },
-          visible: function () {
-            return this.container.getAttribute('data-hidden') !== 'true';
           }
         });
 

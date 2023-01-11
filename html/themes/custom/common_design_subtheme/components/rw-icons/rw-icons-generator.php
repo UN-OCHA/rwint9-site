@@ -17,7 +17,14 @@
  *   - sizes: array of sizes in pixels
  */
 function get_settings() {
-  return json_decode(file_get_contents('rw-icons.json'), TRUE);
+  $settings = json_decode(file_get_contents('rw-icons.json'), TRUE);
+  if (isset($settings['version']) && is_file($settings['version'])) {
+    $settings['version'] = trim(file_get_contents($settings['version']));
+  }
+  else {
+    $settings['version'] = time();
+  }
+  return $settings;
 }
 
 /**
@@ -254,10 +261,11 @@ function parse_icon($category, $path, \DomElement $parent) {
  */
 function generate_css(array $settings, array $icons) {
   $path = $settings['path'] ?? '../rw-icons';
+  $version = $settings['version'] ?? time();
   $categories = [];
 
   // Generate the CSS file.
-  $base = 'url("' . $path . '/img/rw-icons-sprite.svg") @x @y no-repeat;';
+  $base = 'url("' . $path . '/img/rw-icons-sprite.svg?v=' . $version . '") @x @y no-repeat;';
   $x = 0;
   foreach ($icons as $category => $ids) {
     $sizes = $settings['icons'][$category]['sizes'];

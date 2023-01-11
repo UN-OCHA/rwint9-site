@@ -1,0 +1,6 @@
+services:
+  reliefweb_reporting.commands:
+    class: \Drupal\reliefweb_reporting\Commands\ReliefWebReportingCommands
+    arguments: ['@config.factory', '@database', '@plugin.manager.mail', '@language.default', '@logger.factory', '@state']
+    tags:
+      - { name: drush.command }

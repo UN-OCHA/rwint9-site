@@ -299,7 +299,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * {@inheritdoc}
    */
   public function getSelectedView() {
-    $view = $this->getParameters()->get('view');
+    $view = $this->getParameters()->getString('view');
     $views = $this->getViews();
     return isset($views[$view]) ? $view : $this->getDefaultView();
   }
@@ -308,8 +308,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * {@inheritdoc}
    */
   public function getSearch() {
-    $search = $this->getParameters()->get('search', '');
-    return trim($search);
+    return $this->getParameters()->getString('search');
   }
 
   /**
@@ -648,8 +647,16 @@ abstract class RiverServiceBase implements RiverServiceInterface {
 
     $headers = [
       'Content-Type' => 'application/rss+xml; charset=utf-8',
-      'Cache-Control' => 'private',
     ];
+
+    // Add the cache control header.
+    $cache_settings = $this->configFactory->get('system.performance')?->get('cache');
+    if (!empty($cache_settings['page']['max_age']) && $cache_settings['page']['max_age'] > 0) {
+      $headers['Cache-Control'] = 'max-age=' . $cache_settings['page']['max_age'] . ', public';
+    }
+    else {
+      $headers['Cache-Control'] = 'private';
+    }
 
     return new Response($this->renderer->render($content), 200, $headers);
   }
@@ -715,6 +722,48 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    */
   public function parseApiDataForRss(array $data, $view = '') {
     return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRiverDescription() {
+    $title = $this->getPageTitle();
+    $search = $this->getSearch();
+    $filters = $this->getAdvancedSearch()->getHumanReadableSelection();
+
+    $view = $this->getSelectedView();
+    if ($view !== $this->getDefaultView()) {
+      $title = $this->t('@title (@view)', [
+        '@title' => $title,
+        '@view' => $this->getViews()[$view],
+      ]);
+    }
+
+    if (!empty($search) && !empty($filters)) {
+      return $this->t('@title containing @search and @filters', [
+        '@title' => $title,
+        '@search' => $search,
+        '@filters' => $filters,
+      ]);
+    }
+    elseif (!empty($search)) {
+      return $this->t('@title containing @search', [
+        '@title' => $title,
+        '@search' => $search,
+      ]);
+    }
+    elseif (!empty($filters)) {
+      return $this->t('@title @filters', [
+        '@title' => $title,
+        '@filters' => $filters,
+      ]);
+    }
+    elseif ($view !== $this->getDefaultView()) {
+      return $title;
+    }
+
+    return NULL;
   }
 
   /**
@@ -880,14 +929,16 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    *   entity bundle and view.
    */
   public static function getRiverServiceFromUrl($url) {
-    $mapping = static::getRiverMapping();
-    $path = trim(parse_url($url, PHP_URL_PATH), '/');
+    if (is_string($url)) {
+      $mapping = static::getRiverMapping();
+      $path = trim(parse_url($url, PHP_URL_PATH), '/');
 
-    if (isset($mapping[$path]['bundle'])) {
-      $data = $mapping[$path];
-      $service = static::getRiverService($data['bundle']);
-      if (isset($service)) {
-        return $data + ['service' => $service];
+      if (isset($mapping[$path]['bundle'])) {
+        $data = $mapping[$path];
+        $service = static::getRiverService($data['bundle']);
+        if (isset($service)) {
+          return $data + ['service' => $service];
+        }
       }
     }
     return [];

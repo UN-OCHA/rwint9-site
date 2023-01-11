@@ -94,7 +94,8 @@ class GuidelineForm extends ContentEntityForm {
     // Attempt to load from preview when the uuid is present unless we are
     // rebuilding the form.
     $request_uuid = $this->getRequest()->query->get('uuid');
-    if (!$form_state->isRebuilding() && $request_uuid && $preview = $store->get($request_uuid)) {
+    $request_uuid = is_string($request_uuid) ? trim($request_uuid) : '';
+    if (!$form_state->isRebuilding() && !empty($request_uuid) && $preview = $store->get($request_uuid)) {
       /** @var \Drupal\Core\Form\FormStateInterface $preview */
 
       $form_state->setStorage($preview->getStorage());
@@ -243,7 +244,11 @@ class GuidelineForm extends ContentEntityForm {
     $options = [];
     $query = $this->getRequest()->query;
     if ($query->has('destination')) {
-      $options['query']['destination'] = $query->get('destination');
+      $destination = $query->get('destination');
+      $destination = is_string($destination) ? trim($destination) : '';
+      if (!empty($destination)) {
+        $options['query']['destination'] = $query->get('destination');
+      }
       $query->remove('destination');
     }
     $form_state->setRedirect('entity.guideline.preview', $route_parameters, $options);

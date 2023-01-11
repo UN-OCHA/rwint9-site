@@ -2,4 +2,29 @@
 {{ attach_library('common_design_subtheme/rw-headlines') }}
 {{ attach_library('common_design_subtheme/rw-loading') }}
 
+{# Load the first headline image as fast as possible as it's often the largest
+   contentful paint. #}
+{% if sections.headlines is not empty %}
+  {% set headlines = [] %}
+  {% for headline in sections.headlines['#entities'] %}
+    {% if loop.index == 1 and headline.image is not empty %}
+      {%
+        set headline = headline|merge({
+          'image': headline.image|merge({
+            'loading': 'eager'
+          })
+        })
+      %}
+    {% endif %}
+    {% set headlines = headlines|merge([headline]) %}
+  {% endfor %}
+  {%
+    set sections = sections|merge({
+      'headlines': sections.headlines|merge({
+        '#entities': headlines,
+      })
+    })
+  %}
+{% endif %}
+
 {% include '@reliefweb_homepage/reliefweb-homepage.html.twig' %}

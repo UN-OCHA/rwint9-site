@@ -8,7 +8,9 @@
  * - attributes: figure attributes
  * - style: image style
  * - image: array with uri, alt, width, height, alt and copyright
+ *   and optionally the loading mode.
  * - caption: flag to indicate whether to show the caption or not.
+ * - loading: flag to indicate the default loading mode: lazy or eager.
  *
  * @todo handle responsive image styles when/if introduced.
  */
@@ -29,6 +31,7 @@
       '#alt': image.alt,
       '#attributes': {
         'class': ['rw-entity-image__image'],
+        'loading': image.loading is not empty ? image.loading : loading,
       },
       '#width': image.width,
       '#height': image.height

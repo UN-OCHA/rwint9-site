@@ -15,7 +15,7 @@ form textarea {
 form button,
 /* Apply styles to field UI buttons
   with some exceptions (Notably "Save" buttons) */
-form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button {
+form:not(.subscription-form, .community-topics-form) .form-item .cd-button {
   margin: 0 12px 0 0;
   padding: 12px;
   color: white;
@@ -28,18 +28,18 @@ form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button {
 form button:hover,
 form button:focus,
 form button:active,
-form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button:hover,
-form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button:focus,
-form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button:active {
+form:not(.subscription-form, .community-topics-form) .form-item .cd-button:hover,
+form:not(.subscription-form, .community-topics-form) .form-item .cd-button:focus,
+form:not(.subscription-form, .community-topics-form) .form-item .cd-button:active {
   text-decoration: underline;
   background: var(--cd-reliefweb-brand-red--dark);
 }
 form button:focus,
-form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button:focus {
+form:not(.subscription-form, .community-topics-form) .form-item .cd-button:focus {
   text-decoration: underline;
   border: 2px solid var(--cd-reliefweb-brand-grey--dark);
 }
-form:not('.subscription-form'):not('community-topics-form') .form-item .cd-button {
+form:not(.subscription-form, .community-topics-form) .form-item .cd-button {
   transition: none;
   border-radius: 0;
 }
@@ -286,7 +286,8 @@ form #actions {
   background: rgba(230, 236, 239, 0.4);
 }
 form #actions .cd-button {
-  margin-top: 12px;
+  margin: 12px 2px 0 2px;
+  font-weight: normal;
 }
 form #actions + * {
   border-top: none;
@@ -520,14 +521,14 @@ form button[value="edit"] {
 }
 
 /* Preview button */
-input[data-drupal-selector="edit-preview"] {
+button[data-drupal-selector="edit-preview"] {
   background-color: var(--cd-grey--dark);
 }
-input[data-drupal-selector="edit-preview"]:hover,
-input[data-drupal-selector="edit-preview"]:focus {
+button[data-drupal-selector="edit-preview"]:hover,
+button[data-drupal-selector="edit-preview"]:focus {
   background-color: var(--cd-grey--mid);
 }
-input[data-drupal-selector="edit-preview"]:focus {
+button[data-drupal-selector="edit-preview"]:focus {
   border: 2px solid var(--cd-black);
 }
 

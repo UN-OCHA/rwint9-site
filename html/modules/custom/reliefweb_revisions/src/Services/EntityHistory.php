@@ -251,7 +251,7 @@ class EntityHistory {
         if (!$skip) {
           $user = $revision->get($revision_user_field)->entity;
           $date = $revision->get($revision_created_field)->value;
-          $message = trim($revision->getRevisionLogMessage());
+          $message = trim($revision->getRevisionLogMessage() ?? '');
 
           $history[] = [
             'date' => DateHelper::getDateTimeStamp($date),

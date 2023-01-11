@@ -543,6 +543,29 @@ class Parameters {
   }
 
   /**
+   * Get a query parameter as a string.
+   *
+   * @param string $name
+   *   Parameter name. NULL returns all parameters.
+   * @param string $default
+   *   Default value in case the parameter is not defined.
+   * @param bool $trim
+   *   Whether to trim the parameter value or not.
+   *
+   * @return string
+   *   The query parameter or an empty string.
+   */
+  public function getString($name, $default = '', $trim = TRUE) {
+    if (isset($this->parameters[$name]) && is_scalar($this->parameters[$name])) {
+      $parameter = (string) $this->parameters[$name];
+    }
+    else {
+      $parameter = $default;
+    }
+    return $trim ? trim($parameter) : $parameter;
+  }
+
+  /**
    * Set a parameter value.
    *
    * @param string $name
@@ -581,7 +604,7 @@ class Parameters {
    * Parse and convert the Sphinx search parameter.
    */
   protected function parseSphinxsearch() {
-    $parameter = $this->get('search');
+    $parameter = $this->getString('search');
 
     if (!empty($parameter)) {
       $mapping = $this->mapping['sphinxsearch'];
@@ -600,7 +623,7 @@ class Parameters {
    * Parse and convert the Searchlight parameters.
    */
   protected function parseSearchlight() {
-    $parameter = $this->get('sl');
+    $parameter = $this->getString('sl');
 
     // Remove Searchlight parameters.
     $this->remove('sl');
@@ -715,7 +738,7 @@ class Parameters {
    * Convert the extended search parameter to the new advanced search one.
    */
   protected function parseExtendedSearch() {
-    $parameter = $this->get('extended_search');
+    $parameter = $this->getString('extended_search');
 
     // Remove extended search parameter.
     $this->remove('extended_search');
@@ -723,7 +746,7 @@ class Parameters {
     if (!empty($parameter) && ($parameters = json_decode($parameter, TRUE)) !== NULL) {
       // Full text search.
       if (!empty($parameters['text'])) {
-        $search_query = [$this->get('search')];
+        $search_query = [$this->getString('search')];
         if (!empty($parameters['text']['all'])) {
           $search_query[] = '"' . implode('" AND "', $parameters['text']['all']) . '"';
         }
@@ -748,7 +771,7 @@ class Parameters {
 
       // Filters.
       if (!empty($parameters['filters'])) {
-        $filters = [$this->get('advanced-search')];
+        $filters = [$this->getString('advanced-search')];
 
         $operators = [
           '|' => '(',

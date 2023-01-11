@@ -174,13 +174,6 @@ function reliefweb_users_validate_email(array &$element, FormStateInterface $for
  * Implements hook_ENTITY_TYPE_presave() for 'user'.
  */
 function reliefweb_users_user_presave(EntityInterface $entity) {
-  // @todo remove when removing `reliefweb_migrate`.
-  if (!empty($entity->_is_migrating)) {
-    // Mark migrated accounts as having their email address confirmed already.
-    $entity->field_email_confirmed->value = 1;
-    return;
-  }
-
   // Populate the email field for new accounts.
   if ($entity->isNew()) {
     $entity->field_email_confirmed->value = 1;
@@ -207,10 +200,6 @@ function reliefweb_users_user_presave(EntityInterface $entity) {
  * Implements hook_ENTITY_TYPE_update() for 'user'.
  */
 function reliefweb_users_user_update(EntityInterface $entity) {
-  // @todo remove when removing `reliefweb_migrate`.
-  if (!empty($entity->_is_migrating)) {
-    return;
-  }
   if (!empty($entity->_send_email_confirmation)) {
     $langcode = \Drupal::languageManager()->getDefaultLanguage()->getId();
     $email = $entity->getEmail();

@@ -52,6 +52,15 @@ function reliefweb_meta_metatags_alter(array &$metatags, array &$context) {
     'image' => reliefweb_meta_get_image_url(),
   ];
 
+  if (strpos($route_name, 'reliefweb_rivers.') === 0) {
+    try {
+      $description = \Drupal::service($route_name)->getRiverDescription();
+    }
+    catch (Exception $exception) {
+      // Nothing to do.
+    }
+  }
+
   switch ($route_name) {
     case 'entity.node.canonical':
       $data = reliefweb_meta_get_node_metatags($context['entity']);
@@ -74,42 +83,42 @@ function reliefweb_meta_metatags_alter(array &$metatags, array &$context) {
 
     case 'reliefweb_rivers.blog_post.river':
       $data['title'] = t('Blog');
-      $data['description'] = t("A look at the ideas and projects we're working on as we strive to grow and improve ReliefWeb.");
+      $data['description'] = $description ?? t("A look at the ideas and projects we're working on as we strive to grow and improve ReliefWeb.");
       break;
 
     case 'reliefweb_rivers.country.river':
       $data['title'] = t('Countries');
-      $data['description'] = t('ReliefWeb country pages provide a comprehensive overview of the humanitarian situation and feature situation reports, news and press releases, assessments, evaluations, infographics, maps and more.');
+      $data['description'] = $description ?? t('ReliefWeb country pages provide a comprehensive overview of the humanitarian situation and feature situation reports, news and press releases, assessments, evaluations, infographics, maps and more.');
       break;
 
     case 'reliefweb_rivers.disaster.river':
       $data['title'] = t('Disasters');
-      $data['description'] = t('ReliefWeb disaster pages provide an overview of the situation and situation reports, news and press releases, assessments, evaluations, infographics and maps. Browse our list of natural disasters with humanitarian impact from 1981 until today.');
+      $data['description'] = $description ?? t('ReliefWeb disaster pages provide an overview of the situation and situation reports, news and press releases, assessments, evaluations, infographics and maps. Browse our list of natural disasters with humanitarian impact from 1981 until today.');
       break;
 
     case 'reliefweb_rivers.job.river':
       $data['title'] = t('Jobs');
-      $data['description'] = t('Your gateway for humanitarian and development jobs. Search and/or drill down with filters to narrow down the listings.');
+      $data['description'] = $description ?? t('Your gateway for humanitarian and development jobs. Search and/or drill down with filters to narrow down the listings.');
       break;
 
     case 'reliefweb_rivers.report.river':
-      $metatags['title'] = t('Updates');
-      $data['description'] = t('Your gateway to all content to date. Search and/or drill down with filters to narrow down the content.');
+      $data['title'] = t('Updates');
+      $data['description'] = $description ?? t('Your gateway to all content to date. Search and/or drill down with filters to narrow down the content.');
       break;
 
     case 'reliefweb_rivers.source.river':
       $data['title'] = t('Organizations');
-      $data['description'] = t('A list of organizations that are actively providing ReliefWeb with content (reports, jobs and training).');
+      $data['description'] = $description ?? t('A list of organizations that are actively providing ReliefWeb with content (reports, jobs and training).');
       break;
 
     case 'reliefweb_rivers.topic.river':
       $data['title'] = t('Topics');
-      $data['description'] = t('Curated pages dedicated to humanitarian themes and specific humanitarian crises.');
+      $data['description'] = $description ?? t('Curated pages dedicated to humanitarian themes and specific humanitarian crises.');
       break;
 
     case 'reliefweb_rivers.training.river':
       $data['title'] = t('Training');
-      $data['description'] = t('Your gateway for humanitarian training opportunities. Search and/or drill down with filters to narrow down the listings.');
+      $data['description'] = $description ?? t('Your gateway for humanitarian training opportunities. Search and/or drill down with filters to narrow down the listings.');
       break;
 
     default:

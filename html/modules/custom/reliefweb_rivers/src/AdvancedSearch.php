@@ -5,12 +5,12 @@ namespace Drupal\reliefweb_rivers;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
+use Drupal\Core\Render\Markup;
 
 /**
  * Advanced search handler.
  */
 class AdvancedSearch {
-
 
   use StringTranslationTrait;
 
@@ -164,7 +164,7 @@ class AdvancedSearch {
     // "WITH legacy-facets AND WITH legacy-river AND with advanced-search".
     $components[] = $this->parseLegacyFacetParameters();
     $components[] = $this->parseLegacyRiverParameter();
-    $components[] = $this->parameters->get('advanced-search');
+    $components[] = $this->parameters->getString('advanced-search');
 
     // Update the advanced search parameter.
     $this->parameters->set('advanced-search', implode('_', array_filter($components)));
@@ -236,6 +236,7 @@ class AdvancedSearch {
           'cancel' => $this->t('Cancel'),
           'clear' => $this->t('Clear all'),
           'remove' => $this->t('Remove filter'),
+          'formActions' => $this->t('Apply or clear filters'),
           'filterSelector' => $this->t('Add filter'),
           'fieldSelector' => $this->t('Select field'),
           'operatorSelector' => $this->t('Select operator'),
@@ -243,6 +244,8 @@ class AdvancedSearch {
           'dateFrom' => $this->t('From (YYYY/MM/DD)'),
           'dateTo' => $this->t('To (YYYY/MM/DD)'),
           'addFilter' => $this->t('Add filter'),
+          'chooseDate' => $this->t('Choose date'),
+          'changeDate' => $this->t('Change date, _date_'),
           // Translate the filter sample.
           'addFilterSuffix' => $this->filterSample,
           'filter' => $this->t('_filter_ filter'),
@@ -279,9 +282,9 @@ class AdvancedSearch {
         ],
         'announcements' => [
           'changeFilter' => $this->t('Filter changed to _name_.'),
-          'addFilter' => $this->t('Added _field_ _label_. Your are now looking for documents _selection_. Press apply filters to update the list.'),
-          'removeFilter' => $this->t('Removed _field_ _label_. Your are now looking for documents _selection_. Press apply filters to update the list.'),
-          'removeFilterEmpty' => $this->t('Removed _field_ _label_. Your selection is now empty. Press apply filters to update the list.'),
+          'addFilter' => $this->t('Added _field_ _label_. Your are now looking for documents _selection_. Go to the "Apply or clear filters" section to apply the filters and update the list.'),
+          'removeFilter' => $this->t('Removed _field_ _label_. Your are now looking for documents _selection_. Go to the "Apply or clear filters" section to apply the filters and update the list.'),
+          'removeFilterEmpty' => $this->t('Removed _field_ _label_. Your selection is now empty. Go to the "Apply or clear filters" section to apply the filters and update the list.'),
         ],
         'operators' => [
           [
@@ -510,7 +513,7 @@ class AdvancedSearch {
       if (isset($info['shortcut'], $this->filters[$info['shortcut']])) {
         $code = $info['shortcut'];
         $operator = isset($info['operator']) && $info['operator'] === 'OR' ? '.' : '_';
-        $values = $this->parameters->get($field);
+        $values = $this->parameters->getString($field);
         if (!empty($values)) {
           $filters[] = '(' . $code . str_replace('.', $operator . $code, $values) . ')';
         }
@@ -539,7 +542,7 @@ class AdvancedSearch {
       return '';
     }
     // Get and remove the parameter.
-    $path = $this->parameters->get('legacy-river');
+    $path = $this->parameters->getString('legacy-river');
     $this->parameters->remove('legacy-river');
 
     // Check if the path is using the alias form and, if so, find the term path.
@@ -571,7 +574,7 @@ class AdvancedSearch {
    *   the sense that we just ignore invalid values.
    */
   public function getAdvancedSearchFilterSelection() {
-    return $this->parseAdvancedSearchParameter($this->parameters->get('advanced-search'));
+    return $this->parseAdvancedSearchParameter($this->parameters->getString('advanced-search'));
   }
 
   /**
@@ -678,7 +681,13 @@ class AdvancedSearch {
       // Prepare filter label.
       switch ($type) {
         case 'reference':
-          $label = $values[$type][$code][$condition['value']]['name'];
+          $term = $values[$type][$code][$condition['value']];
+          if (!empty($term['shortname'])) {
+            $label = $term['name'] . ' (' . $term['shortname'] . ')';
+          }
+          else {
+            $label = $term['name'];
+          }
           break;
 
         case 'fixed':
@@ -946,6 +955,40 @@ class AdvancedSearch {
   }
 
   /**
+   * Convert the active facets to a search string.
+   *
+   * @return string|\Drupal\Component\Render\MarkupInterface
+   *   Search string.
+   */
+  public function getHumanReadableSelection() {
+    if (empty($this->data['selection'])) {
+      return '';
+    }
+
+    $operators = [
+      'with' => $this->t('with'),
+      'without' => $this->t('without'),
+      'and-with' => $this->t('and with'),
+      'and-without' => $this->t('and without'),
+      'or-with' => $this->t('or with'),
+      'or-without' => $this->t('or without'),
+      'or' => $this->t('or'),
+      'and' => $this->t('and'),
+    ];
+
+    $parts = [];
+    foreach ($this->data['selection'] as $item) {
+      $parts[] = $this->t('@operator @field: @label', [
+        '@operator' => $operators[$item['operator']],
+        '@field' => Markup::create(mb_strtolower($item['field'])),
+        '@label' => $item['label'],
+      ]);
+    }
+
+    return Markup::create(implode(' ', $parts));
+  }
+
+  /**
    * Get the vocabulary for the given term id.
    *
    * @param int $id
@@ -1035,7 +1078,7 @@ class AdvancedSearch {
           'id' => $id,
           'name' => $record->name,
         ];
-        if (!empty($record->shortname)) {
+        if (!empty($record->shortname) && $record->shortname !== $record->name) {
           $term['shortname'] = $record->shortname;
         }
         $terms[$id] = $term;

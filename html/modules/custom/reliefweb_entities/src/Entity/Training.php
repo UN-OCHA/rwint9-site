@@ -102,12 +102,6 @@ class Training extends Node implements BundleEntityInterface, EntityModeratedInt
    * {@inheritdoc}
    */
   public function preSave(EntityStorageInterface $storage) {
-    // @todo remove when removing `reliefweb_migrate`.
-    if (!empty($this->_is_migrating)) {
-      parent::preSave($storage);
-      return;
-    }
-
     // Update the entity status based on the user posting rights.
     $this->updateModerationStatusFromPostingRights();
 
@@ -129,11 +123,6 @@ class Training extends Node implements BundleEntityInterface, EntityModeratedInt
    */
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     parent::postSave($storage, $update);
-
-    // @todo remove when removing `reliefweb_migrate`.
-    if (!empty($this->_is_migrating)) {
-      return;
-    }
 
     // Make the sources active.
     $this->updateSourceModerationStatus();

@@ -264,6 +264,8 @@ function reliefweb_bookmarks_theme() {
       'variables' => [
         // Wrapper attributes.
         'attributes' => NULL,
+        // Navigation tabs with the overview and bookmark types.
+        'tabs' => [],
         // List of river sections for each bookmarked content type/vocabulary.
         'sections' => [],
         // Link to go back to the bookmark list for example.
@@ -286,10 +288,6 @@ function reliefweb_bookmarks_theme() {
  * Implements hook_entity_update().
  */
 function reliefweb_bookmarks_entity_update(EntityInterface $entity) {
-  // @todo remove when removing `reliefweb_migrate`.
-  if (!empty($entity->_is_migrating)) {
-    return;
-  }
   // Remove any bookmarks to that entity if it's not published.
   if ($entity instanceof EntityPublishedInterface && !$entity->isPublished()) {
     reliefweb_bookmarks_remove_bookmark($entity->getEntityTypeId(), $entity->id());
@@ -300,10 +298,6 @@ function reliefweb_bookmarks_entity_update(EntityInterface $entity) {
  * Implements hook_entity_delete().
  */
 function reliefweb_bookmarks_entity_delete(EntityInterface $entity) {
-  // @todo remove when removing `reliefweb_migrate`.
-  if (!empty($entity->_is_migrating)) {
-    return;
-  }
   // Remove any bookmarks to that entity.
   reliefweb_bookmarks_remove_bookmark($entity->getEntityTypeId(), $entity->id());
 }

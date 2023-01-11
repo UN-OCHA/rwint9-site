@@ -1,7 +1,3 @@
-.rw-entity-text {
-  display: flex;
-  flex-direction: column;
-}
 .rw-entity-text .rw-entity-text__content {
   padding-top: 0;
 }
@@ -27,7 +23,6 @@
 /* Javascript enabled */
 .js .rw-entity-text--collapsible button {
   display: block;
-  order: 3;
   margin: 24px auto 0 auto;
   padding: 8px 12px;
   color: var(--cd-reliefweb-brand-blue--dark);

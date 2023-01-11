@@ -147,6 +147,11 @@
   border: none;
   clip-path: inset(100%);
 }
+/* To help with accessibility and because it's not visible in the map popup,
+ * we hide the article footer. */
+.js .rw-disaster-map[data-map-enabled] .rw-disaster-map__article .rw-river-article__footer .rw-article-meta {
+  display: none;
+}
 
 /**
  * Map markers.

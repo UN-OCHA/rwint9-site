@@ -54,7 +54,7 @@ class SourceRiver extends RiverServiceBase {
 
     // Get the currently selected letter filter and mark the corresponding
     // letter as active.
-    $letter = $this->getParameters()->get('group', 'all');
+    $letter = $this->getParameters()->getString('group', 'all');
     if (isset($letters[$letter])) {
       $letters[$letter]['active'] = TRUE;
     }
@@ -115,14 +115,12 @@ class SourceRiver extends RiverServiceBase {
         'field' => 'status',
         'value' => 'active',
       ],
-      // @todo just a reminder to try to find a way for the API to sort in
-      // language aware way.
-      'sort' => ['name:asc'],
+      'sort' => ['name.collation_en:asc'],
     ];
 
     // Add a filter on the selected letter.
     $letters = static::getFirstLetters();
-    $letter = $this->getParameters()->get('group', 'all');
+    $letter = $this->getParameters()->getString('group', 'all');
     if (!empty($letters[$letter]['ids'])) {
       $payload['filter'] = [
         'conditions' => [

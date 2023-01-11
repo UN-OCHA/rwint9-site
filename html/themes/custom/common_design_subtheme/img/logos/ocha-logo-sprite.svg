@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 149 95" width="149" height="95">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 149 132" width="149" height="132">
   <style>
     .light-grey-lighter {
       fill: #f5f7f9;
@@ -71,4 +71,5 @@
   <use xlink:href="#full-dark-grey-light-grey-background" x="0" y="37" width="80.5" height="20"/>
   <use xlink:href="#full-dark-grey-white-background" x="0" y="57" width="80.5" height="20"/>
   <use xlink:href="#logo-only" x="0" y="77" width="20" height="18" class="white"/>
+  <use xlink:href="#full" x="0" y="95" width="149" height="37" class="white"/>
 </svg>

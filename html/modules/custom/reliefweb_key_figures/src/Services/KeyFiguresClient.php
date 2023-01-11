@@ -138,6 +138,7 @@ class KeyFiguresClient {
 
     // Limit the number of figures based on the "figures" query parameter.
     $figures_parameter = $this->requestStack->getCurrentRequest()->query->get('figures');
+    $figures_parameter = is_string($figures_parameter) ? trim($figures_parameter) : '';
     $count = count($data['figures']);
     $limit = $figures_parameter === 'all' ? $count : 6;
     $data['figures'] = array_slice($data['figures'], 0, $limit);

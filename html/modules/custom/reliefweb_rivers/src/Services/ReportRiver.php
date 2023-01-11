@@ -58,6 +58,7 @@ class ReportRiver extends RiverServiceBase {
     return [
       'PC' => [
         'name' => $this->t('Primary country'),
+        'shortname' => TRUE,
         'type' => 'reference',
         'vocabulary' => 'country',
         'field' => 'primary_country.id',
@@ -70,6 +71,7 @@ class ReportRiver extends RiverServiceBase {
       ],
       'C' => [
         'name' => $this->t('Country'),
+        'shortname' => TRUE,
         'type' => 'reference',
         'vocabulary' => 'country',
         'field' => 'country.id',
@@ -82,6 +84,7 @@ class ReportRiver extends RiverServiceBase {
       ],
       'S' => [
         'name' => $this->t('Organization'),
+        'shortname' => TRUE,
         'type' => 'reference',
         'vocabulary' => 'source',
         'field' => 'source.id',

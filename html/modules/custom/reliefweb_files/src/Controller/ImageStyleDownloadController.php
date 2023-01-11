@@ -103,8 +103,13 @@ class ImageStyleDownloadController extends OriginalImageStyleDownloadController 
       throw new NotFoundHttpException();
     }
 
+    $file = $request->query->get('file');
+    if (!is_string($file)) {
+      throw new NotFoundHttpException();
+    }
+
     // This is normally the URI of the source image.
-    $uri = $scheme . '://' . $request->query->get('file');
+    $uri = $scheme . '://' . trim($file);
 
     // Retrieve the base directory in which the previews are stored.
     $preview_directory = $this->config->get('preview_directory') ?? 'previews';

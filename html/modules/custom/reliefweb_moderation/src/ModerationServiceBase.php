@@ -17,7 +17,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
@@ -209,7 +208,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
    * {@inheritdoc}
    */
   public function isViewableStatus($status, ?AccountInterface $account = NULL) {
-    return $status === 'published';
+    return $this->isPublishedStatus($status);
   }
 
   /**
@@ -217,6 +216,13 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
    */
   public function isEditableStatus($status, ?AccountInterface $account = NULL) {
     return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isPublishedStatus($status) {
+    return $status === 'published';
   }
 
   /**
@@ -251,9 +257,11 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
       }
     }
 
-    // Mark as published if the status is viewable by everybody.
+    // Set the entity as published (drupal status field) if the moderation
+    // status corresponds to a published state. This ensures the moderation
+    // status and the drupal publication status are in sync.
     if ($entity instanceof EntityPublishedInterface) {
-      if ($this->isViewableStatus($status, new AnonymousUserSession())) {
+      if ($this->isPublishedStatus($status)) {
         $entity->setPublished();
       }
       else {
@@ -555,6 +563,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
    */
   public function getAutocompleteSuggestions($filter) {
     $query = $this->getCurrentRequest()->query->get('query', '');
+    $query = is_string($query) ? trim($query) : '';
 
     if (empty($query) || !$this->hasFilterDefinition($filter)) {
       return [];
@@ -1200,6 +1209,14 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     // Filter the query with the form filters.
     $this->filterQuery($query, $filters);
 
+    // Ensure there are no duplicates when joining revision tables.
+    foreach ($query->getTables() as $table) {
+      if (isset($table['table']) && strpos($table['table'], 'revision') !== FALSE) {
+        $query->distinct();
+        break;
+      }
+    }
+
     // Wrap the query in a parent query to which the ordering and limiting is
     // applied.
     //
@@ -1263,9 +1280,11 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   protected function getOrderInformation() {
     $headers = $this->getHeaders();
     $order = $this->getCurrentRequest()->query->get('order', '');
+    $order = is_string($order) ? trim($order) : '';
     // We assume the date header is present and sortable.
     $order = !empty($headers[$order]['sortable']) ? $order : 'date';
-    $sort = strtolower($this->getCurrentRequest()->query->get('sort', ''));
+    $sort = $this->getCurrentRequest()->query->get('sort', '');
+    $sort = strtolower(is_string($sort) ? trim($sort) : '');
     $sort = in_array($sort, ['asc', 'desc']) ? $sort : 'desc';
     $headers[$order]['sort'] = $sort;
 

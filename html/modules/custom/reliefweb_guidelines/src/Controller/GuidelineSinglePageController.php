@@ -131,7 +131,7 @@ class GuidelineSinglePageController extends ControllerBase {
       elseif (!empty($guideline->getParentIds())) {
         $parent = $guideline->getParentIds()[0];
         $id = $guideline->field_short_link->value;
-        $description = $guideline->field_description->value;
+        $description = $guideline->field_description->value ?? '';
 
         // Add the references if any at the bottom of the description. This
         // will be converted to an HTML list when rendering the description.

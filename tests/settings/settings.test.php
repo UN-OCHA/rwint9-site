@@ -179,6 +179,14 @@ if (file_exists('sites/default/memcache.services.yml')) {
         'class' => 'Drupal\Core\Site\Settings',
         'factory' => 'Drupal\Core\Site\Settings::getInstance',
       ],
+      'request_stack' => [
+        'class' => 'Drupal\Core\Http\RequestStack',
+        'tags' => ['name' => 'persist'],
+      ],
+      'datetime.time' => [
+        'class' => 'Drupal\Component\Datetime\Time',
+        'arguments' => ['@request_stack'],
+      ],
       'memcache.settings' => [
         'class' => 'Drupal\memcache\MemcacheSettings',
         'arguments' => ['@settings'],
@@ -211,7 +219,7 @@ if (file_exists('sites/default/memcache.services.yml')) {
       ],
       'cache.container' => [
         'class' => 'Drupal\memcache\MemcacheBackend',
-        'arguments' => ['container', '@memcache.backend.cache.container', '@cache_tags_provider.container', '@memcache.timestamp.invalidator.bin'],
+        'arguments' => ['container', '@memcache.backend.cache.container', '@cache_tags_provider.container', '@memcache.timestamp.invalidator.bin', '@datetime.time'],
       ],
     ],
   ];

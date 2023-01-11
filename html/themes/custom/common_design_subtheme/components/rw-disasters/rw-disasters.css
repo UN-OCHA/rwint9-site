@@ -186,7 +186,7 @@
 }
 .rw-river-article--disaster .rw-river-article--disaster__related-disasters__list__item[data-disaster-status="current"]:before,
 .rw-river-article--disaster .rw-river-article--disaster__related-disasters__list__item[data-disaster-status="ongoing"]:before {
-  background-position-x: var(--rw-icons--disaster-type--24--red--x);
+  background-position-x: var(--rw-icons--disaster-type--16--red--x);
 }
 
 /**

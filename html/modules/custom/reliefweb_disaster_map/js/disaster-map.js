@@ -5,7 +5,6 @@
 
   Drupal.behaviors.reliefwebDisasterMap = {
     attach: function (context, settings) {
-      console.log(settings);
       // Requirements.
       if (!reliefweb || !reliefweb.mapbox || !settings || !settings.reliefwebDisasterMap) {
         return;
@@ -74,6 +73,8 @@
         element.setAttribute('data-disaster-status', node.getAttribute('data-disaster-status'));
         element.setAttribute('data-disaster-type', node.getAttribute('data-disaster-type'));
 
+        node.setAttribute('data-marker-id', id);
+
         var marker = new mapboxgl.Marker({
           element: element,
           anchor: 'bottom'
@@ -89,7 +90,19 @@
         });
         marker.id = id;
         marker.disaster = node;
+        marker.disasterLink = node.querySelector('a');
         return marker;
+      }
+
+      // Find a parent disaster article from a child element.
+      function findParentArticle(container, element) {
+        while (element && element !== container) {
+          if (element.hasAttribute('data-marker-id')) {
+            return element;
+          }
+          element = element.parentNode;
+        }
+        return null;
       }
 
       // Create the map legend.
@@ -160,7 +173,7 @@
 
         // Map options.
         var options = {
-          accessToken: reliefweb.mapbox.token,
+          accessToken: 'token',
           style: 'mapbox://styles/reliefweb/' + reliefweb.mapbox.key + '?optimize=true',
           container: mapContainer,
           center: [10, 10],
@@ -185,6 +198,9 @@
           options.minZoom = 0;
         }
 
+        // Replace the mapbox base API with the proxied version.
+        mapboxgl.baseApiUrl = window.location.origin + '/mapbox';
+
         // Create a map.
         var map = new mapboxgl.Map(options)
         // Add the zoom control buttons, bottom left to limit overlap with the
@@ -206,7 +222,9 @@
         // Restore visibility of the list if the map couldn't be loaded.
         .on('error', function (event) {
           element.removeAttribute('data-map-enabled');
-          element.removeChild(figure);
+          if (figure && figure.parentNode) {
+            figure.parentNode.removeChild(figure);
+          }
         })
         // Unset the active marker when clicking on the map.
         .on('click', function (event) {
@@ -220,7 +238,25 @@
         container.addEventListener('click', function (event) {
           var target = event.target;
           if (target.hasAttribute && target.hasAttribute('data-id')) {
-            active = setActiveMarker(map, markers[target.getAttribute('data-id')], active, true);
+            markers[target.getAttribute('data-id')].disasterLink.focus();
+          }
+          else {
+            active = unsetActiveMarker(active);
+          }
+        });
+
+        // Unset the active marker when pressing escape.
+        container.addEventListener('keydown', function (event) {
+          if (event.keyCode === 27) {
+            active = unsetActiveMarker(active);
+          }
+        });
+
+        // Set a marker as the active one when focusing its disaster article.
+        container.addEventListener('focusin', function (event) {
+          var article = findParentArticle(container, event.target);
+          if (article && article.hasAttribute && article.hasAttribute('data-marker-id')) {
+            active = setActiveMarker(map, markers[article.getAttribute('data-marker-id')], active, false);
           }
           else {
             active = unsetActiveMarker(active);
