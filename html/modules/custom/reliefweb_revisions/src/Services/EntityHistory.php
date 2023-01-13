@@ -10,6 +10,7 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
@@ -19,6 +20,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
 use Drupal\media\MediaInterface;
+use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
@@ -82,6 +84,20 @@ class EntityHistory {
   protected $entityTypeManager;
 
   /**
+   * The module handler service.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
+   * Base fields for which to show revisions grouped by entity type and bundle.
+   *
+   * @var array
+   */
+  protected $allowedBaseFields = [];
+
+  /**
    * Constructor.
    *
    * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
@@ -96,6 +112,8 @@ class EntityHistory {
    *   The entity field manager service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager service.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler service.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The translation manager service.
    */
@@ -106,6 +124,7 @@ class EntityHistory {
     Connection $database,
     EntityFieldManagerInterface $entity_field_manager,
     EntityTypeManagerInterface $entity_type_manager,
+    ModuleHandlerInterface $module_handler,
     TranslationInterface $string_translation
   ) {
     $this->cache = $cache_backend;
@@ -114,6 +133,7 @@ class EntityHistory {
     $this->database = $database;
     $this->entityFieldManager = $entity_field_manager;
     $this->entityTypeManager = $entity_type_manager;
+    $this->moduleHandler = $module_handler;
     $this->stringTranslation = $string_translation;
   }
 
@@ -203,6 +223,9 @@ class EntityHistory {
       // Oldest first so we can compute the proper differences.
       $revision_ids = array_reverse($revision_ids);
 
+      // Check if the entity is moderated.
+      $moderated = $entity instanceof EntityModeratedInterface;
+
       // Compute the history.
       $history = [];
       foreach ($revision_ids as $revision_id) {
@@ -218,8 +241,12 @@ class EntityHistory {
         // Skip if nothing of value changed.
         $skip = empty($content) &&
           !empty($previous_revision) &&
-          $revision->getRevisionLogMessage() === $previous_revision->getRevisionLogMessage() &&
-          $revision->getModerationStatus() === $previous_revision->getModerationStatus();
+          $revision->getRevisionLogMessage() === $previous_revision->getRevisionLogMessage();
+
+        // For moderated entities, also check the status.
+        if ($moderated) {
+          $skip = $skip && $revision->getModerationStatus() === $previous_revision->getModerationStatus();
+        }
 
         if (!$skip) {
           $user = $revision->get($revision_user_field)->entity;
@@ -229,10 +256,10 @@ class EntityHistory {
           $history[] = [
             'date' => DateHelper::getDateTimeStamp($date),
             'user' => $user,
-            'status' => [
+            'status' => $moderated ? [
               'value' => $revision->getModerationStatus(),
               'label' => $revision->getModerationStatusLabel(),
-            ],
+            ] : NULL,
             'message' => [
               'type' => isset($user, $author) && $user->id() === $author->id() ? 'instruction' : 'feedback',
               'content' => !empty($message) ? EntityHelper::formatRevisionLogMessage($message) : '',
@@ -341,6 +368,14 @@ class EntityHistory {
   protected function formatFieldDiff(FieldDefinitionInterface $field_definition, array $diff) {
     if (!empty($diff['re-ordered'])) {
       return ['#theme' => 'reliefweb_revisions_diff_reordered'];
+    }
+
+    // Check if there is specific formatting callback for the field definition.
+    $callback = $this->moduleHandler->invokeAll('reliefweb_revisions_get_formatting_callback', [
+      'field_definition' => $field_definition,
+    ]);
+    if (!empty($callback) && is_callable($callback[0])) {
+      return call_user_func($callback[0], $field_definition, $diff);
     }
 
     switch ($field_definition->getType()) {
@@ -1340,15 +1375,27 @@ class EntityHistory {
       $id_field = $this->getEntityTypeIdField($entity_type_id);
       $label_field = $this->getEntityTypeLabelField($entity_type_id);
 
-      $records = $this->getDatabase()
-        ->select($table, $table)
-        ->fields($table, [$id_field, $label_field])
-        ->condition($table . '.' . $id_field, $to_load, 'IN')
-        ->execute();
+      if (empty($table) || empty($label_field)) {
+        $entities = $this->getEntityTypeManager()
+          ->getStorage($entity_type_id)
+          ->loadMultiple($to_load);
 
-      foreach ($records as $record) {
-        $cached[$record->{$id_field}] = $record->{$label_field};
-        $labels[$record->{$id_field}] = $record->{$label_field};
+        foreach ($entities as $entity) {
+          $cached[$entity->id()] = $entity->label();
+          $labels[$entity->id()] = $entity->label();
+        }
+      }
+      else {
+        $records = $this->getDatabase()
+          ->select($table, $table)
+          ->fields($table, [$id_field, $label_field])
+          ->condition($table . '.' . $id_field, $to_load, 'IN')
+          ->execute();
+
+        foreach ($records as $record) {
+          $cached[$record->{$id_field}] = $record->{$label_field};
+          $labels[$record->{$id_field}] = $record->{$label_field};
+        }
       }
     }
 
@@ -1393,14 +1440,27 @@ class EntityHistory {
   protected function getRevisionDiff(EntityRevisionedInterface $revision, ?EntityRevisionedInterface $previous_revision = NULL) {
     /** @var \Drupal\Core\Field\FieldDefintionInterface[] $field_definitions */
     $field_definitions = $revision->getFieldDefinitions();
+    $entity_type_id = $revision->getEntityTypeId();
+    $bundle = $revision->bundle();
 
     // Base fields for which diffs can be computed.
-    $allowed = [
-      $this->getEntityTypeLabelField($revision->getEntityTypeId()) => TRUE,
-      'description' => TRUE,
-      'parent' => TRUE,
-    ];
+    if (!isset($this->allowedBaseFields[$entity_type_id][$bundle])) {
+      $allowed = [
+        'description' => TRUE,
+        'parent' => TRUE,
+      ];
 
+      $label_field = $this->getEntityTypeLabelField($entity_type_id);
+      if (!empty($label_field)) {
+        $allowed[$label_field] = TRUE;
+      }
+
+      $this->moduleHandler->alter('reliefweb_revisions_allowed_base_fields', $allowed, $entity_type_id, $bundle);
+      $this->allowedBaseFields[$entity_type_id][$bundle] = $allowed;
+    }
+    $allowed = $this->allowedBaseFields[$entity_type_id][$bundle];
+
+    // Compute the revision differences.
     $diff = [];
     foreach ($field_definitions as $field_name => $field_definition) {
       $storage_definition = $field_definition->getFieldStorageDefinition();

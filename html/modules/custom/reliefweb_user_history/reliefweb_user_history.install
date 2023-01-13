@@ -1,0 +1,102 @@
+<?php
+
+/**
+ * @file
+ * Install file for the reliefweb_user_history module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function reliefweb_user_history_schema() {
+  $schema['reliefweb_user_history'] = [
+    'description' => 'Tracks user account changes',
+    'fields' => [
+      // Information about who made the change, when etc.
+      'modification_id' => [
+        'description' => 'Unique auto-incremented ID',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'size' => 'normal',
+        'not null' => TRUE,
+      ],
+      'modification_user' => [
+        'description' => 'Id of the user that made the change',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'modification_timestamp' => [
+        'description' => 'Timestamp of the change record',
+        'type' => 'int',
+        'size' => 'normal',
+        'not null' => TRUE,
+      ],
+      'modification_comment' => [
+        'description' => 'Message for the change record',
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => FALSE,
+      ],
+      // Old values for the account.
+      'uid' => [
+        'description' => 'User ID',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'name' => [
+        'description' => 'User name',
+        'type' => 'varchar',
+        'length' => 60,
+        'not null' => TRUE,
+      ],
+      'mail' => [
+        'description' => 'User mail',
+        'type' => 'varchar',
+        'length' => 254,
+        'not null' => TRUE,
+      ],
+      'status' => [
+        'description' => 'User status',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+      ],
+      'display_name' => [
+        'description' => 'User display name',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+      ],
+      'roles' => [
+        'description' => 'User display name',
+        'type' => 'text',
+        'size' => 'normal',
+        'not null' => FALSE,
+      ],
+      'email_confirmed' => [
+        'description' => 'Flag to indicate if the email address was confirmed after being changed',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'notes' => [
+        'description' => 'Notes about the user',
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => FALSE,
+      ],
+    ],
+    'primary key' => [
+      'modification_id',
+    ],
+    'indexes' => [
+      'uid' => [
+        'uid',
+      ],
+    ],
+  ];
+  return $schema;
+}

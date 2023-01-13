@@ -1,7 +1,7 @@
 services:
   reliefweb_revisions.entity.history:
     class: Drupal\reliefweb_revisions\Services\EntityHistory
-    arguments: ['@cache.default', '@config.factory', '@current_user', '@database', '@entity_field.manager', '@entity_type.manager', '@string_translation']
+    arguments: ['@cache.default', '@config.factory', '@current_user', '@database', '@entity_field.manager', '@entity_type.manager', '@module_handler', '@string_translation']
   reliefweb_revisions.entity.param_converter:
     class: Drupal\reliefweb_revisions\ParamConverter\EntityRevisionedConverter
     arguments: ['@entity_type.manager', '@entity.repository']
