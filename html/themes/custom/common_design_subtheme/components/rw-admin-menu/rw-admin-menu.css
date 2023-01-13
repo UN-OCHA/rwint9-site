@@ -21,6 +21,9 @@
   background: transparent;
   font-size: var(--cd-font-size--tiny);
 }
+.admin-menu__btn:hover {
+  text-decoration: underline;
+}
 
 @media screen and (max-width: 767px) {
   .admin-menu__btn span {
@@ -35,15 +38,19 @@
   }
 }
 
-.admin-menu__btn::after {
+.admin-menu__btn::after,
+/* Guidelines / Help separator. Not the best place to add but this avoids adding
+ * a duplicate rule somewhere else and the guidelines and admin menu are both
+ * only displayed to Editors. */
+.admin-menu + * .navigation > .menu > .menu-item:not(:last-child) > a::after {
   position: absolute;
   top: 50%;
   right: -1px;
-  width: 2px;
+  width: 1.5px;
   height: calc(35px / 3);
   content: "";
   transform: translateY(-50%);
-  background: var(--brand-grey);
+  background: var(--cd-white);
 }
 
 .admin-menu-dropdown__inner {
@@ -108,15 +115,15 @@
  */
 
 .js .admin-menu {
-  float: right;
+  /* Compensate for the `gap` property on the `.cd-global-header__inner` so
+   * that the menu is evenly spaced with the other menus in the header. */
+  margin-right: -8px;
+  margin-left: auto;
   padding: 0;
 }
 
 /* Print. */
 @media print {
-  .admin-menu-button {
-    display: none !important;
-  }
   .admin-menu {
     display: none !important;
   }

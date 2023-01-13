@@ -64,7 +64,7 @@
         "reliefweb/simple-datepicker": "^v1.3",
         "symfony/flex": "^2.0",
         "symfony/uid": "^6.0",
-        "unocha/common_design": "^7.0.0",
+        "unocha/common_design": "^7.4",
         "webflo/drupal-finder": "^1.2.2"
     },
     "require-dev": {
