@@ -74,3 +74,8 @@
   padding-left: 8px;
   border-left: 8px solid var(--cd-reliefweb-brand-blue);
 }
+
+/* Ensure long URLs in WYSIWYG wrap */
+.rw-how-to-apply a {
+  word-break: break-all;
+}
