@@ -162,10 +162,7 @@ class TrainingRiver extends RiverServiceBase {
         'name' => $this->t('Training language'),
         'type' => 'reference',
         'vocabulary' => 'language',
-        'exclude' => [
-          // Other.
-          31996,
-        ],
+        'exclude' => [],
         'field' => 'training_language.id',
         'widget' => [
           'type' => 'options',
