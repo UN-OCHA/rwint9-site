@@ -1,0 +1,9 @@
+name: ReliefWeb User History
+type: module
+description: 'Track changes to user accounts.'
+package: reliefweb
+core_version_requirement: ^9 || ^10
+dependencies:
+  - drupal:user
+  - drupal:reliefweb_revisions
+  - drupal:reliefweb_utility

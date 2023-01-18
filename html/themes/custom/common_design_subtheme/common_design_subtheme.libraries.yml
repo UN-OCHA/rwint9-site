@@ -302,6 +302,7 @@ rw-revisions:
    - common_design_subtheme/rw-icons
    - common_design_subtheme/rw-moderation-status
    - common_design_subtheme/rw-loading
+   - common_design_subtheme/rw-revision-message
    - common_design_subtheme/rw-user-posting-right
 
 rw-river:

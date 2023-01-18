@@ -74,6 +74,7 @@ module:
   reliefweb_rivers: 0
   reliefweb_subscriptions: 0
   reliefweb_topics: 0
+  reliefweb_user_history: 0
   reliefweb_user_posts: 0
   reliefweb_users: 0
   reliefweb_utility: 0
