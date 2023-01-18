@@ -56,19 +56,19 @@
   // Disable form submit buttons before sending the ajax request.
   Drupal.Ajax.prototype.beforeSend = function (xmlhttprequest, options) {
     this.disableSubmitButtons(true);
-    beforeSend.call(this, xmlhttprequest, options);
+    return beforeSend.call(this, xmlhttprequest, options);
   };
 
   // Enable form submit buttons before handling the response's success.
   Drupal.Ajax.prototype.success = function (xmlhttprequest, options) {
     this.disableSubmitButtons(false);
-    success.call(this, xmlhttprequest, options);
+    return success.call(this, xmlhttprequest, options);
   };
 
   // Enable form submit buttons before handling the response's error.
   Drupal.Ajax.prototype.error = function (xmlhttprequest, options) {
     this.disableSubmitButtons(false);
-    error.call(this, xmlhttprequest, options);
+    return error.call(this, xmlhttprequest, options);
   };
 
 })(Drupal);
