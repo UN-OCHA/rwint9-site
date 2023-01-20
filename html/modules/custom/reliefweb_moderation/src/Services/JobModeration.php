@@ -7,6 +7,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
+use Drupal\reliefweb_utility\Helpers\ReliefWebStateHelper;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
 
 /**
@@ -272,6 +273,8 @@ class JobModeration extends ModerationServiceBase {
       'body',
       'how_to_apply',
     ]);
+    $definitions['country']['exclude'] = ReliefWebStateHelper::getJobIrrelevantCountries();
+    $definitions['theme']['exclude'] = ReliefWebStateHelper::getJobIrrelevantThemes();
     return $definitions;
   }
 

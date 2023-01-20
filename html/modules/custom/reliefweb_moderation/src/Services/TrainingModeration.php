@@ -7,6 +7,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
+use Drupal\reliefweb_utility\Helpers\ReliefWebStateHelper;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
 
 /**
@@ -302,6 +303,15 @@ class TrainingModeration extends ModerationServiceBase {
     $definitions['career_categories']['label'] = $this->t('Professional function');
     $definitions['training_type']['label'] = $this->t('Category');
     $definitions['training_format']['label'] = $this->t('Format');
+    $definitions['theme']['exclude'] = ReliefWebStateHelper::getTrainingIrrelevantThemes();
+    $definitions['language']['label'] = $this->t('Advertisment language');
+    $definitions['language']['exclude'] = ReliefWebStateHelper::getTrainingIrrelevantLanguages();
+    $definitions['training_language'] = [
+      'field' => 'field_training_language',
+      'label' => $this->t('Course/Event language'),
+      'shortcut' => 'tl',
+      'exclude' => ReliefWebStateHelper::getTrainingIrrelevantTrainingLanguages(),
+    ] + $definitions['language'];
     return $definitions;
   }
 

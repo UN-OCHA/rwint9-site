@@ -23,6 +23,7 @@ use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\EntityHelper;
 use Drupal\reliefweb_utility\Helpers\MailHelper;
 use Drupal\reliefweb_utility\Helpers\MediaHelper;
+use Drupal\reliefweb_utility\Helpers\ReliefWebStateHelper;
 use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\taxonomy\TermInterface;
@@ -654,7 +655,7 @@ function reliefweb_entities_mail($key, array &$message, array $parameters) {
     $message['params']['plain'] = TRUE;
     // Use the submit mailbox as sender and add it also as CC to track the
     // notifications.
-    $submit = \Drupal::state()->get('reliefweb_submit_email');
+    $submit = ReliefWebStateHelper::getSubmitEmail();
     if (!empty($submit)) {
       $message['headers']['From'] = $submit;
       $message['headers']['CC'] = $submit;
