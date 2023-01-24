@@ -16,6 +16,7 @@ use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_revisions\EntityRevisionedTrait;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
+use Drupal\reliefweb_utility\Helpers\ReliefWebStateHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
@@ -156,12 +157,7 @@ class Training extends Node implements BundleEntityInterface, EntityModeratedInt
    *   List of term ids.
    */
   public static function getTrainingIrrelevantThemes() {
-    // Irrelevant themes (Trello #RfWgIdwA):
-    // - Contributions (4589) (Collab #2327).
-    // - Logistics and Telecommunications (4598) (Trello #G3YgNUF6).
-    // - Camp Coordination and Camp Management (49458).
-    $default = [4589, 4598, 49458];
-    return \Drupal::state()->get('reliefweb_training_irrelevant_themes', $default);
+    return ReliefWebStateHelper::getTrainingIrrelevantThemes();
   }
 
   /**
@@ -171,11 +167,7 @@ class Training extends Node implements BundleEntityInterface, EntityModeratedInt
    *   List of term ids.
    */
   public static function getTrainingIrrelevantLanguages() {
-    // Irrelevant languages (Collab #4452001), due to limited capacity.
-    // - Russian (10906) and Arabic (6876).
-    // - Other (31996).
-    $default = [6876, 10906, 31996];
-    return \Drupal::state()->get('reliefweb_training_irrelevant_languages', $default);
+    return ReliefWebStateHelper::getTrainingIrrelevantLanguages();
   }
 
   /**
@@ -185,10 +177,7 @@ class Training extends Node implements BundleEntityInterface, EntityModeratedInt
    *   List of term ids.
    */
   public static function getTrainingIrrelevantTrainingLanguages() {
-    // Irrelevant languages (Collab #4452001), due to limited capacity.
-    // - Other (31996).
-    $default = [31996];
-    return \Drupal::state()->get('reliefweb_training_irrelevant_training_languages', $default);
+    return ReliefWebStateHelper::getTrainingIrrelevantTrainingLanguages();
   }
 
 }
