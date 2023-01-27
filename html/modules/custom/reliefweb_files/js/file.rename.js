@@ -1,5 +1,5 @@
 /**
- * Add button to rename a file.
+ * Validate the change of an attachment's download file name.
  */
 (function (Drupal) {
 
@@ -21,7 +21,7 @@
         input.setCustomValidity('');
       });
 
-      // Set a custom error message when validating of the input's content.
+      // Set a custom error message when validating the input's content.
       input.addEventListener('invalid', function (event) {
         if (input.validity.valueMissing) {
           input.setCustomValidity(Drupal.t('File name cannot be empty.'));
@@ -41,11 +41,13 @@
       input.addEventListener('blur', function (event) {
         if (input.reportValidity()) {
           link.textContent = link.textContent.trim().replace(/.+(\([^)]+\)+)$/, input.value.trim() + ' $1');
-          // Remove any error message.
+          // Remove any Drupal form error message.
           input.classList.remove('error');
           input.parentNode.classList.remove('form-item--error');
           var error = input.parentNode.querySelector('.form-item--error-message');
-          error.parentNode.removeChild(error);
+          if (error) {
+            error.parentNode.removeChild(error);
+          }
         }
       });
 
