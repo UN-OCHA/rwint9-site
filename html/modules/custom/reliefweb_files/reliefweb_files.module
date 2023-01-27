@@ -7,6 +7,7 @@
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\file\Entity\File;
+use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile;
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFileList;
 
 /**
@@ -116,6 +117,31 @@ function reliefweb_files_file_validate_mime_type(File $file, $mime_type) {
     $errors[] = t('The file mime type is not %mime_type.', [
       '%mime_type' => $mime_type,
     ]);
+  }
+
+  return $errors;
+}
+
+/**
+ * Validate the name of file.
+ *
+ * @param \Drupal\file\Entity\File $file
+ *   File entity to validate.
+ * @param string $expected_extension
+ *   Expected file extension.
+ *
+ * @return array
+ *   An empty array if the file name is valid or an array containing an
+ *   error message if it's not.
+ *
+ * @see file_validate()
+ */
+function reliefweb_files_file_validate_file_name(File $file, $expected_extension = '') {
+  $errors = [];
+
+  $error = ReliefWebFile::validateFileName($file->getFileName());
+  if (!empty($error)) {
+    $errors[] = $error;
   }
 
   return $errors;
