@@ -139,7 +139,7 @@ function reliefweb_files_file_validate_mime_type(File $file, $mime_type) {
 function reliefweb_files_file_validate_file_name(File $file, $expected_extension = '') {
   $errors = [];
 
-  $error = ReliefWebFile::validateFileName($file->getFileName());
+  $error = ReliefWebFile::validateFileName($file->getFileName(), $expected_extension);
   if (!empty($error)) {
     $errors[] = $error;
   }
