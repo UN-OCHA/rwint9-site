@@ -1302,17 +1302,18 @@ class ReliefWebFile extends FieldItemBase {
    *   File name.
    * @param string $expected_extension
    *   The expected extension for the file.
+   * @param int|null $maxlength
+   *   Max file name length.
+   * @param int|null $minlength
+   *   Min file name length.
    *
    * @return string
    *   Error message if invalid, empty string otherwise.
    */
-  public static function validateFileName($file_name, $expected_extension = '') {
-    // No need to continue if the filename is empty or is too long.
+  public static function validateFileName($file_name, $expected_extension = '', $maxlength = 255, $minlength = NULL) {
+    // No need to continue if the filename is empty.
     if ($file_name === '') {
       return t('Empty file name.');
-    }
-    if (strlen($file_name) > 255) {
-      return t('File name too long. Maximum: 255 characters.');
     }
 
     // Validate the extension then the file name.
@@ -1326,8 +1327,24 @@ class ReliefWebFile extends FieldItemBase {
         '@expected_extension' => $expected_extension,
       ]);
     }
+
+    // Validate the file name length.
+    $file_name_length = strlen($file_name);
+    $maxlength = $maxlength ?: $file_name_length;
+    $minlength = $minlength ?: strlen($extension) + 2;
+    if ($file_name_length > $maxlength) {
+      return t('File name too long. Maximum: @length characters.', [
+        '@length' => $maxlength,
+      ]);
+    }
+    elseif ($file_name_length < $minlength) {
+      return t('File name too short. Maximum: @length characters.', [
+        '@length' => $minlength,
+      ]);
+    }
+
     // Check if the file name contains invalid characters.
-    elseif (preg_match('#^[^' . static::getFileNameInvalidCharacters() . ']+$#u', $file_name) !== 1) {
+    if (preg_match('#^[^' . static::getFileNameInvalidCharacters() . ']+$#u', $file_name) !== 1) {
       return t('Invalid characters in file name.');
     }
     return '';

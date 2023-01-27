@@ -23,7 +23,13 @@
 
       // Set a custom error message when validating of the input's content.
       input.addEventListener('invalid', function (event) {
-        if (input.validity.tooLong) {
+        if (input.validity.valueMissing) {
+          input.setCustomValidity(Drupal.t('File name cannot be empty.'));
+        }
+        else if (input.validity.tooShort) {
+          input.setCustomValidity(Drupal.t('File name too short.'));
+        }
+        else if (input.validity.tooLong) {
           input.setCustomValidity(Drupal.t('File name too long.'));
         }
         else if (!input.validity.valid) {

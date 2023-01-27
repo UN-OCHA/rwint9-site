@@ -339,6 +339,8 @@ class ReliefWebFile extends WidgetBase {
         'pattern' => '^[^' . ReliefWebFileType::getFileNameInvalidCharacters() . ']+\.' . $extension . '$',
         'placeholder' => 'filename.' . $extension,
         'data-file-new-name' => '',
+        'minlength' => strlen($extension) + 2,
+        'required' => '',
       ],
       '#description' => $this->t('Extension: @extension. Max length: 255. Forbidden characters: @characters.', [
         '@extension' => $extension,
