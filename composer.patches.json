@@ -1,15 +1,28 @@
 {
     "patches": {
         "drupal/core" : {
-            "https://www.drupal.org/project/drupal/issues/3047110": "patches/core--drupal--3047110-taxonomy-term-moderation-class.patch",
-            "https://www.drupal.org/project/drupal/issues/3008292": "patches/core--drupal--3008292-image-upload-validators.patch",
+            "https://www.drupal.org/project/drupal/issues/3047110": "https://www.drupal.org/files/issues/2021-07-23/3047110-32.patch",
+            "https://www.drupal.org/project/drupal/issues/3008292": "https://git.drupalcode.org/project/drupal/-/merge_requests/553.diff",
             "https://www.drupal.org/project/drupal/issues/3143617": "https://www.drupal.org/files/issues/2020-07-07/3143617-28_0.patch"
         },
-        "drupal/migrate_tools" : {
-            "https://www.drupal.org/project/migrate_tools/issues/3256236": "https://www.drupal.org/files/issues/2021-12-28/invalid_placeholder-3256236-3.patch"
+        "drupal/maintenance200": {
+            "Drupal 10 compatibility": "patches/maintenance200-drupal-10-compatibility.patch"
+        },
+        "drupal/mimemail": {
+            "https://www.drupal.org/project/mimemail/issues/3324855": "https://www.drupal.org/files/issues/2022-12-21/3324855-7.patch",
+            "https://www.drupal.org/project/mimemail/issues/3288663": "https://www.drupal.org/files/issues/2022-11-30/automated-drupal-10-compatibility-fixes-3288663-8.patch"
+        },
+        "drupal/svg_image": {
+            "https://www.drupal.org/project/svg_image/issues/3299276": "https://www.drupal.org/files/issues/2023-01-13/svg_image-D10-3299276-22.patch"
+        },
+        "drupal/theme_switcher": {
+            "https://www.drupal.org/project/theme_switcher": "https://www.drupal.org/files/issues/2022-06-16/theme_switcher.1.2.rector.patch"
         },
         "drush/drush": {
             "https://humanitarian.atlassian.net/browse/OPS-8026": "patches/drush--timeout-override.patch"
+        },
+        "unocha/common_design": {
+            "Drupal 10 compatibility": "patches/common_design-drupal-10-compatibility.patch"
         }
     }
 }
