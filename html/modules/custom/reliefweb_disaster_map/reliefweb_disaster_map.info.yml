@@ -2,7 +2,7 @@ type: module
 name: ReliefWeb Disaster Map
 description: 'Service to generate disaster maps.'
 package: reliefweb
-core_version_requirement: ^9
+core_version_requirement: ^9 || ^10
 dependencies:
   - drupal:reliefweb_rivers
   - drupal:reliefweb_utility

@@ -44,13 +44,6 @@ class ReliefWebReportingCommands extends DrushCommands {
   protected $languageDefault;
 
   /**
-   * Logger.
-   *
-   * @var \Psr\Log\LoggerInterface
-   */
-  protected $logger;
-
-  /**
    * The state manager.
    *
    * @var \Drupal\Core\State\StateInterface

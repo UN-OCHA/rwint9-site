@@ -2,4 +2,4 @@ type: module
 name: ReliefWeb Digital Situation Report
 description: 'Provides integration with the OCHA Digital Situation Reports.'
 package: reliefweb
-core_version_requirement: ^9
+core_version_requirement: ^9 || ^10

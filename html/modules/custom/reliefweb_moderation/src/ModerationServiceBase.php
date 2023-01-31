@@ -1679,18 +1679,18 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
       if (count($fields) > 1) {
         $condition = new Condition('OR');
         foreach ($fields as $field) {
-          $condition->where("UNIX_TIMESTAMP(${field}) ${operator} ${value}");
+          $condition->where("UNIX_TIMESTAMP({$field}) {$operator} {$value}");
         }
         $base->condition($condition);
       }
       else {
         $field = reset($field);
-        $base->where("UNIX_TIMESTAMP(${field}) ${operator} ${value}");
+        $base->where("UNIX_TIMESTAMP({$field}) {$operator} {$value}");
       }
     }
     else {
       $field = $fields;
-      $base->where("UNIX_TIMESTAMP(${field}) ${operator} ${value}");
+      $base->where("UNIX_TIMESTAMP({$field}) {$operator} {$value}");
     }
   }
 
