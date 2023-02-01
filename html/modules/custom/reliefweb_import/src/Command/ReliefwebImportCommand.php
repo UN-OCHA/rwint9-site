@@ -127,7 +127,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     $query = $this->entityTypeManager->getStorage('taxonomy_term')->getQuery();
     $query->condition('vid', 'source');
     $query->condition('field_job_import_feed.feed_url', NULL, 'IS NOT NULL');
-    $tids = $query->execute();
+    $tids = $query->accessCheck(TRUE)->execute();
     $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadMultiple($tids);
     foreach ($terms as $term) {
       $this->fetchJobs($term);
@@ -141,10 +141,6 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    *   Source term.
    */
   public function fetchJobs(Term $term) {
-    // Reset errors and warnings.
-    $this->errors = [];
-    $this->warnings = [];
-
     $label = $term->label();
     $source_id = $term->id();
     $base_url = $term->field_job_import_feed->first()->base_url ?? '';
@@ -610,7 +606,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    */
   protected function setJobCity(Job $job, \SimpleXMLElement $data) {
     if (!$job->field_country->isEmpty()) {
-      $this->field_city = $this->validateCity((string) $data);
+      $job->field_city = $this->validateCity((string) $data);
     }
   }
 

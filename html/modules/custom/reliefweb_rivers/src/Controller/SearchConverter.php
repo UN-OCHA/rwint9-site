@@ -264,8 +264,8 @@ class SearchConverter extends ControllerBase {
     // Parse the query from the search URL.
     parse_str(parse_url($search_url, PHP_URL_QUERY) ?? '', $query);
     $parameters = new Parameters($query);
-    if (isset($river['view'])) {
-      $parameters->set('view', $river['view']);
+    if (isset($river_data['view'])) {
+      $parameters->set('view', $river_data['view']);
     }
 
     // Retrieve the view used in the search URL to get the proper API payload.

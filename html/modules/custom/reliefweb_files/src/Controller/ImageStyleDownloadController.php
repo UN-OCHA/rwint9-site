@@ -98,7 +98,7 @@ class ImageStyleDownloadController extends OriginalImageStyleDownloadController 
   /**
    * {@inheritdoc}
    */
-  public function deliver(Request $request, $scheme, ImageStyleInterface $image_style) {
+  public function deliver(Request $request, $scheme, ImageStyleInterface $image_style = NULL) {
     if (empty($image_style)) {
       throw new NotFoundHttpException();
     }
@@ -259,7 +259,7 @@ class ImageStyleDownloadController extends OriginalImageStyleDownloadController 
     // were acquiring the lock.
     $success = file_exists($derivative_uri) || $image_style->createDerivative($uri, $derivative_uri);
 
-    if (!empty($lock_acquired)) {
+    if ($lock_acquired) {
       $this->lock->release($lock_name);
     }
 

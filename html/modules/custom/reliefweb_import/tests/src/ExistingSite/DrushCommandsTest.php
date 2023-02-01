@@ -86,7 +86,7 @@ class DrushCommandsTest extends ExistingSiteBase {
       new Response(200, [], $this->getTestXml5()),
       new Response(200, [], $this->getTestXml6()),
       new Response(200, [], $this->getTestXml7()),
-      new ClientException('Client exception', new Request('GET', '')),
+      new ClientException('Client exception', new Request('GET', ''), NULL),
       new RequestException('Request exception', new Request('GET', '')),
       new \Exception('General exception'),
     ]);

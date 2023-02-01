@@ -721,7 +721,7 @@ class AdvancedSearch {
           }
           break;
       }
-      $condition['label'] = $label;
+      $condition['label'] = $label ?? '';
 
       // Fix the operator in case some invalid filters were discarded.
       $operator = $condition['operator'];

@@ -56,7 +56,7 @@ class ReliefwebTokenFilter extends FilterBase implements ContainerFactoryPluginI
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('token'),
+      $container->get('token')
     );
   }
 

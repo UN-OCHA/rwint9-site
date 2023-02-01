@@ -145,7 +145,7 @@ class TopicRiver extends RiverServiceBase {
       ->condition('field_bury', 1, '<>');
     $query->condition($group);
 
-    $nids = $query->execute();
+    $nids = $query->accessCheck(TRUE)->execute();
 
     $topics = $storage->loadMultiple($nids);
 
@@ -237,6 +237,7 @@ class TopicRiver extends RiverServiceBase {
    */
   public function parseApiData(array $api_data, $view = '') {
     // Not used.
+    return [];
   }
 
 }

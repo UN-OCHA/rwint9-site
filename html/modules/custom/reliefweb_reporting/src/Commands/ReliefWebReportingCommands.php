@@ -277,7 +277,7 @@ class ReliefWebReportingCommands extends DrushCommands {
     ")->fetchAll(\PDO::FETCH_ASSOC);
 
     if (empty($records)) {
-      $body .= 'No reports posted this week.';
+      $body = 'No reports posted this week.';
     }
     else {
       // Convert to CSV.

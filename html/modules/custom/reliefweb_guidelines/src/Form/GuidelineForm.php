@@ -115,7 +115,6 @@ class GuidelineForm extends ContentEntityForm {
       $form_state->set('has_been_previewed', TRUE);
     }
 
-    /** @var \Drupal\guidelines\Entity\Guideline $this->entity */
     $form = parent::buildForm($form, $form_state);
 
     // Only add a field to select the parent the guideline entries.
@@ -285,6 +284,8 @@ class GuidelineForm extends ContentEntityForm {
     // Remove the preview entry from the temp store, if any.
     $store = $this->tempStoreFactory->get('guideline_preview');
     $store->delete($entity->uuid());
+
+    return $status;
   }
 
 }

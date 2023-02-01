@@ -8,6 +8,7 @@ use Drupal\Component\Utility\Random;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Session\AccountSwitcherInterface;
 use Drupal\Core\State\State;
 use Drupal\Tests\reliefweb_import\Unit\Stub\ReliefwebImportCommandStub;
 use Drupal\Tests\UnitTestCase;

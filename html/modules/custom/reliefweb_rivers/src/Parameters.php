@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_rivers;
 
+use Drupal\Component\Utility\Html;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
@@ -877,7 +878,7 @@ class Parameters {
    */
   public static function arrayToHidden(array &$output, $value, $key = '') {
     if (!is_array($value) && !empty($key)) {
-      $output[] = '<input type="hidden" name="' . check_plain($key) . '" value="' . check_plain($value) . '"/>';
+      $output[] = '<input type="hidden" name="' . Html::escape($key) . '" value="' . Html::escape($value) . '"/>';
     }
     else {
       foreach ($value as $subkey => $subvalue) {
@@ -981,7 +982,7 @@ class Parameters {
    *
    * @param string $interval
    *   Interval (year, month or day).
-   * @param \DateTimeInterface $date
+   * @param \DateTimeInterface|null $date
    *   DateTime object.
    * @param string $separator
    *   Date separator.
@@ -991,7 +992,7 @@ class Parameters {
    * @return string
    *   Date interval.
    */
-  public static function formatDateInterval($interval, \DateTimeInterface $date, $separator = '-', $format = 'Ymd') {
+  public static function formatDateInterval($interval, ?\DateTimeInterface $date, $separator = '-', $format = 'Ymd') {
     if (!empty($date)) {
       switch ($interval) {
         case 'year':
