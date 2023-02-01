@@ -758,7 +758,7 @@ function reliefweb_entities_menu_local_tasks_alter(&$data, $route_name, Refinabl
  */
 function reliefweb_entities_preprocess_page__404(array &$variables) {
   // Get the entity from the original request.
-  $entity = EntityHelper::getEntityFromRequest(\Drupal::requestStack()->getMasterRequest());
+  $entity = EntityHelper::getEntityFromRequest(\Drupal::requestStack()->getMainRequest());
   if (isset($entity) && $entity instanceof BundleEntityInterface) {
     $type = mb_strtolower(EntityHelper::getBundleLabelFromEntity($entity));
     $title = $entity->label();

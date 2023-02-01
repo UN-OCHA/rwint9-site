@@ -6,7 +6,6 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormState;
-use Drupal\Core\Http\RequestStack;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
@@ -16,6 +15,7 @@ use Drupal\reliefweb_rivers\Parameters;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Controller for the reliefweb_rivers.search.converter route.
@@ -46,7 +46,7 @@ class SearchConverter extends ControllerBase {
   /**
    * The request stack.
    *
-   * @var \Drupal\Core\Http\RequestStack
+   * @var \Symfony\Component\HttpFoundation\RequestStack
    */
   protected $requestStack;
 
@@ -66,7 +66,7 @@ class SearchConverter extends ControllerBase {
    *   The current user.
    * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
    *   The form builder.
-   * @param \Drupal\Core\Http\RequestStack $request_stack
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
    *   The request stack.
    * @param \Drupal\reliefweb_api\Services\ReliefWebApiClient $reliefweb_api_client
    *   The reliefweb api client service.
