@@ -1,0 +1,24 @@
+<?php
+
+/**
+ * @file
+ * Install file for reliefweb_users.
+ */
+
+use Drupal\Core\Database\Database;
+
+/**
+ * Rename the `beta` role to `beta_tester`.
+ *
+ * Do this in a single update query and not in a giant batch
+ * loop for 76,000 users.
+ *
+ * @see https://humanitarian.atlassian.net/browse/RW-743
+ */
+function reliefweb_users_update_9001() {
+  Database::getConnection()
+    ->update('user__roles')
+    ->fields(['roles_target_id' => 'beta_tester'])
+    ->condition('roles_target_id', 'beta')
+    ->execute();
+}
