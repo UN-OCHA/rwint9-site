@@ -13,7 +13,7 @@ permissions:
   - 'access user profiles'
   - 'administer subscriptions'
   - 'administer users'
-  - 'assign beta role'
+  - 'assign beta_tester role'
   - 'assign editor role'
   - 'assign external_disaster_manager role'
   - 'assign job_importer role'
