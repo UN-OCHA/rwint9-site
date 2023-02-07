@@ -67,10 +67,3 @@
   content: "";
   background: white;
 }
-
-/* Training and Job Headings */
-.rw-how-to-apply__title,
-.rw-fee-information__title {
-  padding-left: 8px;
-  border-left: 8px solid var(--cd-reliefweb-brand-blue);
-}

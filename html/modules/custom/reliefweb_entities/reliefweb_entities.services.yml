@@ -8,6 +8,10 @@ services:
     arguments: ['@current_user']
     tags:
       - { name: access_check, applies_to: _reliefweb_entities_entity_access_check }
+  reliefweb_entities.access_denied_to_not_found:
+    class: Drupal\reliefweb_entities\EventSubscriber\AccessDeniedToNotFound
+    tags:
+      - { name: event_subscriber }
   # Form alteration services.
   reliefweb_entities.announcement.form_alter:
     class: Drupal\reliefweb_entities\Services\AnnouncementFormAlter

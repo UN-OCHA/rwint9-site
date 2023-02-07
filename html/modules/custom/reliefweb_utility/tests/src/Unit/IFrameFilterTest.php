@@ -65,7 +65,19 @@ class IFrameFilterTest extends UnitTestCase {
         '',
       ],
       [
+        '[iframe]()',
+        '',
+      ],
+      [
+        '[iframe](  )',
+        '',
+      ],
+      [
         '[iframe](https://example.com)',
+        '<iframe width="1000" height="500" title="iframe" src="https://example.com" frameborder="0" allowfullscreen></iframe>',
+      ],
+      [
+        '[iframe](  https://example.com   )',
         '<iframe width="1000" height="500" title="iframe" src="https://example.com" frameborder="0" allowfullscreen></iframe>',
       ],
       [

@@ -1,5 +1,5 @@
-ReliefWeb Files
-===============
+ReliefWeb - Files module
+========================
 
 This module handles report file attachments on ReliefWeb.
 
@@ -95,13 +95,6 @@ If the report is published, then the files attached to the published revision ar
 In remote mode a `reliefweb_document` resource is created in the docstore for reports with attachments. This is a revision less document resource that only contains references to all the files referenced by the report entity and its revisions on RW.
 
 Their purpose is to keep track of the file usage in the docstore so that another provider cannot delete files used on RW.
-
-## Migration
-
-The migration of the files is in 2 parts:
-
-1. creation of the file field and file entities when migrating the nodes (part of the classic migration in `reliefweb_migrate`)
-2. actual file migration, with file and document resource creation/update in the docstore. This is done via a drush command: `rw-docstore:migrate-attachments` from the `reliefweb_files` module.
 
 ## Storage mode
 

@@ -120,6 +120,7 @@ class TrainingRiver extends RiverServiceBase {
       ],
       'C' => [
         'name' => $this->t('Country'),
+        'shortname' => TRUE,
         'type' => 'reference',
         'vocabulary' => 'country',
         'field' => 'country.id',
@@ -131,6 +132,7 @@ class TrainingRiver extends RiverServiceBase {
       ],
       'S' => [
         'name' => $this->t('Organization'),
+        'shortname' => TRUE,
         'type' => 'reference',
         'vocabulary' => 'source',
         'field' => 'source.id',
@@ -160,10 +162,7 @@ class TrainingRiver extends RiverServiceBase {
         'name' => $this->t('Training language'),
         'type' => 'reference',
         'vocabulary' => 'language',
-        'exclude' => [
-          // Other.
-          31996,
-        ],
+        'exclude' => [],
         'field' => 'training_language.id',
         'widget' => [
           'type' => 'options',

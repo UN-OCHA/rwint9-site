@@ -110,7 +110,13 @@ class FileDownloadController extends OriginalFileDownloadController {
    * {@inheritdoc}
    */
   public function download(Request $request, $scheme = 'private') {
-    $uri = $scheme . '://' . $request->query->get('file');
+    $file = $request->query->get('file');
+    if (!is_string($file)) {
+      throw new NotFoundHttpException();
+    }
+
+    // This is normally the URI of the source file.
+    $uri = $scheme . '://' . trim($file);
 
     // Retrieve the base directory in which the previews are stored.
     $file_directory = $this->config->get('file_directory') ?? 'attachments';

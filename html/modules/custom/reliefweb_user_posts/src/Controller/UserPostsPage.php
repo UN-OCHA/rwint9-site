@@ -165,4 +165,16 @@ class UserPostsPage extends ModerationPage {
     return AccessResult::allowedIf($account->hasPermission('view other user posts'));
   }
 
+  /**
+   * Redirect the current user to the its posts page.
+   *
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *   Redirection response.
+   */
+  public function currentUserPostsPage() {
+    return $this->redirect('reliefweb_user_posts.content', [
+      'user' => $this->currentUser()->id(),
+    ], [], 301);
+  }
+
 }

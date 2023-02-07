@@ -21,7 +21,7 @@ services:
       MEMCACHE_MAX_MEMORY: 64
 
   mysql:
-    image: unocha/alpine-mysql:10.4.13-r0-202006-01
+    image: public.ecr.aws/unocha/mysql:10.6
     hostname: rwint9-test-mysql
     container_name: rwint9-test-mysql
     environment:

@@ -563,6 +563,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
    */
   public function getAutocompleteSuggestions($filter) {
     $query = $this->getCurrentRequest()->query->get('query', '');
+    $query = is_string($query) ? trim($query) : '';
 
     if (empty($query) || !$this->hasFilterDefinition($filter)) {
       return [];
@@ -1208,6 +1209,14 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     // Filter the query with the form filters.
     $this->filterQuery($query, $filters);
 
+    // Ensure there are no duplicates when joining revision tables.
+    foreach ($query->getTables() as $table) {
+      if (isset($table['table']) && strpos($table['table'], 'revision') !== FALSE) {
+        $query->distinct();
+        break;
+      }
+    }
+
     // Wrap the query in a parent query to which the ordering and limiting is
     // applied.
     //
@@ -1271,9 +1280,11 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   protected function getOrderInformation() {
     $headers = $this->getHeaders();
     $order = $this->getCurrentRequest()->query->get('order', '');
+    $order = is_string($order) ? trim($order) : '';
     // We assume the date header is present and sortable.
     $order = !empty($headers[$order]['sortable']) ? $order : 'date';
-    $sort = strtolower($this->getCurrentRequest()->query->get('sort', ''));
+    $sort = $this->getCurrentRequest()->query->get('sort', '');
+    $sort = strtolower(is_string($sort) ? trim($sort) : '');
     $sort = in_array($sort, ['asc', 'desc']) ? $sort : 'desc';
     $headers[$order]['sort'] = $sort;
 
@@ -2074,6 +2085,11 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     // Add conditions.
     $conditions = $this->buildFilterConditions($conditions, $fields);
     $query->where($conditions, $replacements);
+
+    // Exclude some terms.
+    if (!empty($filter_definition['exclude'])) {
+      $query->condition($alias . '.' . $id_field, $filter_definition['exclude'], 'NOT IN');
+    }
 
     // Sort by name.
     $query->orderBy($alias . '.' . $label_field, 'ASC');

@@ -16,6 +16,7 @@ use Drupal\reliefweb_moderation\EntityModeratedTrait;
 use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_revisions\EntityRevisionedTrait;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
+use Drupal\reliefweb_utility\Helpers\ReliefWebStateHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
@@ -202,12 +203,6 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
    * {@inheritdoc}
    */
   public function preSave(EntityStorageInterface $storage) {
-    // @todo remove when removing `reliefweb_migrate`.
-    if (!empty($this->_is_migrating)) {
-      parent::preSave($storage);
-      return;
-    }
-
     parent::preSave($storage);
 
     // Change the publication date if bury is selected, to the original
@@ -261,11 +256,6 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
    */
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     parent::postSave($storage, $update);
-
-    // @todo remove when removing `reliefweb_migrate`.
-    if (!empty($this->_is_migrating)) {
-      return;
-    }
 
     $this->sendPublicationNotification();
   }
@@ -325,7 +315,7 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
 
     // Recipients and sender.
     $to = implode(', ', $emails);
-    $from = \Drupal::state()->get('reliefweb_submit_email');
+    $from = ReliefWebStateHelper::getSubmitEmail();
     if (empty($from)) {
       return;
     }
@@ -342,7 +332,10 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
       "ReliefWeb team",
     ]), [
       '@title' => $this->label(),
-      '@url' => $this->toUrl('canonical', ['absolute' => TRUE])->toString(FALSE),
+      '@url' => $this->toUrl('canonical', [
+        'absolute' => TRUE,
+        'path_processing' => FALSE,
+      ])->toString(FALSE),
     ]);
 
     $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();

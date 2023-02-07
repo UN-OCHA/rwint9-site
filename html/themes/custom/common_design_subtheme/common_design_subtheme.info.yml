@@ -68,6 +68,12 @@ ckeditor_stylesheets:
   - css/styles.css
 
 libraries-override:
+  common_design/cd-dropdown:
+    js:
+      js/cd-dropdown.js: js/cd-dropdown.js
+  common_design/array-from-polyfill:
+    js:
+      js/vendor/array-from-polyfill.js: false
   guidelines/guidelines-json:
     js:
       components/guidelines-json/guidelines-json.js: false

@@ -269,7 +269,7 @@ class Topic extends Node implements BundleEntityInterface, EntityModeratedInterf
     $river = $service->getRiver();
 
     // Get the river view.
-    $view = $data['view'] ?? $info['view'] ?? $parameters->get('view', '');
+    $view = $data['view'] ?? $info['view'] ?? $parameters->getString('view');
     $views = $service->getViews();
     $view = isset($views[$view]) ? $view : $service->getDefaultView();
     if ($view === $service->getDefaultView()) {
@@ -289,7 +289,7 @@ class Topic extends Node implements BundleEntityInterface, EntityModeratedInterf
     );
 
     // Get the sanitized search parameter.
-    $search = $parameters->get('search', '');
+    $search = $parameters->getString('search');
 
     // Get the API payload for the river and set the limit.
     $payload = $service->getApiPayload($view);

@@ -1,0 +1,3 @@
+file.rename:
+  js:
+    js/file.rename.js: {}

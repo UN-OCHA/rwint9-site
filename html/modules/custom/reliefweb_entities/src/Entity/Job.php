@@ -15,6 +15,7 @@ use Drupal\reliefweb_moderation\EntityModeratedTrait;
 use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_revisions\EntityRevisionedTrait;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
+use Drupal\reliefweb_utility\Helpers\ReliefWebStateHelper;
 
 /**
  * Bundle class for job nodes.
@@ -122,12 +123,6 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
       $this->set('field_theme', $themes);
     }
 
-    // @todo remove when removing `reliefweb_migrate`.
-    if (!empty($this->_is_migrating)) {
-      parent::preSave($storage);
-      return;
-    }
-
     // Update the entity status based on the user posting rights.
     $this->updateModerationStatusFromPostingRights();
 
@@ -150,11 +145,6 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     parent::postSave($storage, $update);
 
-    // @todo remove when removing `reliefweb_migrate`.
-    if (!empty($this->_is_migrating)) {
-      return;
-    }
-
     // Make the sources active.
     $this->updateSourceModerationStatus();
   }
@@ -174,10 +164,7 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
    *   List of theme term ids.
    */
   public static function getJobIrrelevantCountries() {
-    // Irrelevant countries (Trello #DI9bxljg):
-    // - World (254).
-    $default = [254];
-    return \Drupal::state()->get('reliefweb_job_irrelevant_countries', $default);
+    return ReliefWebStateHelper::getJobIrrelevantCountries();
   }
 
   /**
@@ -187,12 +174,7 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
    *   List of theme term ids.
    */
   public static function getJobIrrelevantThemes() {
-    // Irrelevant themes (Trello #RfWgIdwA):
-    // - Contributions (4589) (Collab #2327).
-    // - Humanitarian Financing (4597) (Trello #OnXq5cCC).
-    // - Logistics and Telecommunications (4598) (Trello #G3YgNUF6).
-    $default = [4589, 4597, 4598];
-    return \Drupal::state()->get('reliefweb_job_irrelevant_themes', $default);
+    return ReliefWebStateHelper::getJobIrrelevantThemes();
   }
 
   /**
@@ -202,13 +184,7 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
    *   List of theme term ids.
    */
   public static function getJobThemelessCategories() {
-    // Disable the themes for some career categories (Trello #RfWgIdwA):
-    // - Human Resources (6863).
-    // - Administration/Finance (6864).
-    // - Information and Communications Technology (6866).
-    // - Donor Relations/Grants Management (20966).
-    $default = [6863, 6864, 6866, 20966];
-    return \Drupal::state()->get('reliefweb_job_themeless_categories', $default);
+    return ReliefWebStateHelper::getJobThemelessCategories();
   }
 
 }

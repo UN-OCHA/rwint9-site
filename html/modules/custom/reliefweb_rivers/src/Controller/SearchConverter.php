@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_rivers\Controller;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormState;
@@ -20,6 +21,13 @@ use Symfony\Component\HttpFoundation\JsonResponse;
  * Controller for the reliefweb_rivers.search.converter route.
  */
 class SearchConverter extends ControllerBase {
+
+  /**
+   * The config factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
 
   /**
    * The current user.
@@ -52,6 +60,8 @@ class SearchConverter extends ControllerBase {
   /**
    * Constructor.
    *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory.
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
    *   The current user.
    * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
@@ -62,11 +72,13 @@ class SearchConverter extends ControllerBase {
    *   The reliefweb api client service.
    */
   public function __construct(
+    ConfigFactoryInterface $config_factory,
     AccountProxyInterface $current_user,
     FormBuilderInterface $form_builder,
     RequestStack $request_stack,
     ReliefWebApiClient $reliefweb_api_client
   ) {
+    $this->configFactory = $config_factory;
     $this->currentUser = $current_user;
     $this->formBuilder = $form_builder;
     $this->requestStack = $request_stack;
@@ -78,6 +90,7 @@ class SearchConverter extends ControllerBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
+      $container->get('config.factory'),
       $container->get('current_user'),
       $container->get('form_builder'),
       $container->get('request_stack'),
@@ -180,7 +193,28 @@ class SearchConverter extends ControllerBase {
       ];
     }
 
-    return new JsonResponse($result);
+    $headers = [
+      'Content-Type' => 'application/json; charset=utf-8',
+    ];
+
+    // Add the cache control header.
+    $cache_settings = $this->configFactory->get('system.performance')?->get('cache');
+    if (!empty($cache_settings['page']['max_age']) && $cache_settings['page']['max_age'] > 0) {
+      $headers['Cache-Control'] = 'max-age=' . $cache_settings['page']['max_age'] . ', public';
+    }
+    else {
+      $headers['Cache-Control'] = 'private';
+    }
+
+    try {
+      return new JsonResponse($result, 200, $headers);
+    }
+    catch (\Exception $exception) {
+      $this->getLogger('reliefweb_river')->error('Unable to generate search conversion JSON result: @error', [
+        '@error' => $exception->getMessage(),
+      ]);
+      return new JsonResponse(['error' => $this->t('Invalid input')], 400, $headers);
+    }
   }
 
   /**
@@ -191,6 +225,7 @@ class SearchConverter extends ControllerBase {
    */
   protected function getAppname() {
     $appname = $this->requestStack->getCurrentRequest()->query->get('appname', '');
+    $appname = is_string($appname) ? trim($appname) : '';
     return $appname ?: 'rw-user-' . $this->currentUser->id();
   }
 
@@ -201,7 +236,8 @@ class SearchConverter extends ControllerBase {
    *   The search URL parameter.
    */
   protected function getSearchUrl() {
-    return $this->requestStack->getCurrentRequest()->query->get('search-url', '');
+    $search_url = $this->requestStack->getCurrentRequest()->query->get('search-url', '');
+    return is_string($search_url) ? trim($search_url) : '';
   }
 
   /**

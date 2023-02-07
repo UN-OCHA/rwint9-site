@@ -426,10 +426,6 @@ function reliefweb_subscriptions_cron() {
  * Queue notifications for the entity.
  */
 function reliefweb_subscriptions_entity_insert(EntityInterface $entity) {
-  // @todo remove when removing `reliefweb_migrate`.
-  if (!empty($entity->_is_migrating)) {
-    return;
-  }
   if (in_array($entity->getEntityTypeId(), ['node', 'taxonomy_term'])) {
     \Drupal::service('reliefweb_subscriptions.mailer')->queueTriggered($entity);
   }
@@ -441,10 +437,6 @@ function reliefweb_subscriptions_entity_insert(EntityInterface $entity) {
  * Queue notifications for the entity.
  */
 function reliefweb_subscriptions_entity_update(EntityInterface $entity) {
-  // @todo remove when removing `reliefweb_migrate`.
-  if (!empty($entity->_is_migrating)) {
-    return;
-  }
   if (in_array($entity->getEntityTypeId(), ['node', 'taxonomy_term'])) {
     \Drupal::service('reliefweb_subscriptions.mailer')->queueTriggered($entity);
   }
@@ -458,10 +450,6 @@ function reliefweb_subscriptions_entity_update(EntityInterface $entity) {
  * Remove queued subscriptions for the entity.
  */
 function reliefweb_subscriptions_entity_delete(EntityInterface $entity) {
-  // @todo remove when removing `reliefweb_migrate`.
-  if (!empty($entity->_is_migrating)) {
-    return;
-  }
   if ($entity->bundle() === 'country') {
     $sid = 'country_updates_' . $entity->id();
     $database = \Drupal::database();
