@@ -304,7 +304,7 @@ class TrainingModeration extends ModerationServiceBase {
     $definitions['training_type']['label'] = $this->t('Category');
     $definitions['training_format']['label'] = $this->t('Format');
     $definitions['theme']['exclude'] = ReliefWebStateHelper::getTrainingIrrelevantThemes();
-    $definitions['language']['label'] = $this->t('Advertisment language');
+    $definitions['language']['label'] = $this->t('Advertisement language');
     $definitions['language']['exclude'] = ReliefWebStateHelper::getTrainingIrrelevantLanguages();
     $definitions['training_language'] = [
       'field' => 'field_training_language',

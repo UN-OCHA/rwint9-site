@@ -1675,16 +1675,16 @@
 
       // Clear the selection when switching to simplified mode as it's not
       // compatible with the complex queries of the advanced mode.
-      if (!enabled) {
-        if (!advancedSearch.container.hasAttribute('data-empty') && window.confirm(advancedSearch.labels.changeMode)) {
+      if (!enabled && !advancedSearch.container.hasAttribute('data-empty')) {
+        if (window.confirm(advancedSearch.labels.changeMode)) {
           triggerEvent(advancedSearch.clear, 'click');
         }
         else {
           preventDefault(event);
         }
       }
-      // Update the operator selectors when switching to advanced mode.
       else {
+        // Update the operator selectors when switching to advanced mode.
         advancedSearch.container.setAttribute('data-advanced-mode', enabled);
         advancedSearch.advancedMode = enabled;
         createOperatorSwitchers(advancedSearch);
