@@ -19,7 +19,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * @Filter(
  *   id = "filter_markdown",
  *   title = @Translation("Convert a markdown text to HTML"),
- *   type = Drupal\filter\Plugin\FilterInterface::TYPE_MARKUP_LANGUAGE,
+ *   type = Drupal\filter\Plugin\FilterInterface::TYPE_TRANSFORM_IRREVERSIBLE,
  *   weight = -20
  * )
  */
