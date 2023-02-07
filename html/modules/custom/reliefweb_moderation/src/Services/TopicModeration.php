@@ -133,7 +133,7 @@ class TopicModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function entityAccess(EntityModeratedInterface $entity, $operation = 'view', ?AccountInterface $account = NULL) {
-    // Trello #y0B0wxLi: allow beta tested to view unpublished topics.
+    // Trello #y0B0wxLi: allow beta tester to view unpublished topics.
     if ($operation === 'view' && UserHelper::userHasRoles(['beta_tester'], $account)) {
       return AccessResult::allowed();
     }

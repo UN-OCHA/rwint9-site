@@ -14,5 +14,5 @@ disabled_roles:
   webmaster: '0'
   administrator: '0'
   external_disaster_manager: '0'
-  beta: '0'
+  beta_tester: '0'
   job_importer: '0'
