@@ -63,9 +63,9 @@ libraries-extend:
   core/drupal.ajax:
     - common_design_subtheme/cd-ajax-disable-submit-buttons
 
-# Use the common_design_subtheme styles inside the editor.
-ckeditor_stylesheets:
-  - css/styles.css
+# CKEditor additional styling.
+ckeditor5-stylesheets:
+  - css/ckeditor.css
 
 libraries-override:
   common_design/cd-dropdown:
