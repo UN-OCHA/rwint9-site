@@ -5,12 +5,18 @@
             "https://www.drupal.org/project/drupal/issues/3008292": "https://git.drupalcode.org/project/drupal/-/merge_requests/553.diff",
             "https://www.drupal.org/project/drupal/issues/3143617": "https://www.drupal.org/files/issues/2020-07-07/3143617-28_0.patch"
         },
+        "drupal/guidelines": {
+            "Drupal 10 compatibility": "patches/guidelines-drupal-10-compatibility.patch"
+        },
         "drupal/maintenance200": {
             "Drupal 10 compatibility": "patches/maintenance200-drupal-10-compatibility.patch"
         },
         "drupal/mimemail": {
             "https://www.drupal.org/project/mimemail/issues/3324855": "https://www.drupal.org/files/issues/2022-12-21/3324855-7.patch",
             "https://www.drupal.org/project/mimemail/issues/3288663": "https://www.drupal.org/files/issues/2022-11-30/automated-drupal-10-compatibility-fixes-3288663-8.patch"
+        },
+        "drupal/pathauto": {
+            "PHP 8.2 compatibility": "patches/pathauto-php-82-compatibility.patch"
         },
         "drupal/svg_image": {
             "https://www.drupal.org/project/svg_image/issues/3299276": "https://www.drupal.org/files/issues/2023-01-13/svg_image-D10-3299276-22.patch"

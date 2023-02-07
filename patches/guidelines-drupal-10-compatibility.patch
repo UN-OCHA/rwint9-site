@@ -1,0 +1,214 @@
+diff --git a/guidelines.module b/guidelines.module
+index e1a148c..bfdf0dd 100644
+--- a/guidelines.module
++++ b/guidelines.module
+@@ -142,7 +142,7 @@ function guidelines_attach_to_widget(&$element, FormStateInterface &$form_state,
+   if (isset($descriptions[$entity_type][$key])) {
+     $view_builder = \Drupal::entityTypeManager()->getViewBuilder('guideline');
+     $pre_render = $view_builder->view($descriptions[$entity_type][$key], 'default');
+-    $render_output = render($pre_render);
++    $render_output = \Drupal::service('renderer')->render($pre_render);
+ 
+     if (isset($element['#description'])) {
+       $element['#description'] = $render_output;
+diff --git a/src/Controller/GuidelineJsonController.php b/src/Controller/GuidelineJsonController.php
+index afbf49f..5adca06 100644
+--- a/src/Controller/GuidelineJsonController.php
++++ b/src/Controller/GuidelineJsonController.php
+@@ -4,6 +4,7 @@ namespace Drupal\guidelines\Controller;
+ 
+ use Drupal\Core\Controller\ControllerBase;
+ use Drupal\Core\Entity\EntityTypeManager;
++use Drupal\Core\Render\RendererInterface;
+ use Drupal\guidelines\Entity\Guideline;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+ use Symfony\Component\HttpFoundation\JsonResponse;
+@@ -18,18 +19,28 @@ class GuidelineJsonController extends ControllerBase {
+   /**
+    * The Entity Type manager.
+    *
+-   * @var Drupal\Core\Entity\EntityTypeManager
++   * @var \Drupal\Core\Entity\EntityTypeManager
+    */
+   protected $entityTypeManager;
+ 
++  /**
++   * The renderer service.
++   *
++   * @var \Drupal\Core\Render\RendererInterface
++   */
++  protected $renderer;
++
+   /**
+    * Constructs a new entity.
+    *
+-   * @param Drupal\Core\Entity\EntityTypeManager $entity_type_manager
++   * @param \Drupal\Core\Entity\EntityTypeManager $entity_type_manager
+    *   This is pointing to the object of enitytype manager.
++   * @param \Drupal\Core\Render\RendererInterface $renderer
++   *   Renderer service.
+    */
+-  public function __construct(EntityTypeManager $entity_type_manager) {
++  public function __construct(EntityTypeManager $entity_type_manager, RendererInterface $renderer) {
+     $this->entityTypeManager = $entity_type_manager;
++    $this->renderer = $renderer;
+   }
+ 
+   /**
+@@ -37,7 +48,8 @@ class GuidelineJsonController extends ControllerBase {
+    */
+   public static function create(ContainerInterface $container) {
+     return new static(
+-    $container->get('entity_type.manager'),
++      $container->get('entity_type.manager'),
++      $container->get('renderer')
+     );
+   }
+ 
+@@ -64,7 +76,7 @@ class GuidelineJsonController extends ControllerBase {
+         if (!empty($bundle) && $bundle === $b) {
+           $view_builder = $this->entityTypeManager()->getViewBuilder('guideline');
+           $pre_render = $view_builder->view($guideline, 'default');
+-          $render_output = render($pre_render);
++          $render_output = $this->renderer->render($pre_render);
+ 
+           if (!empty($guideline->field_title->value)) {
+             $title = $guideline->field_title->value;
+diff --git a/src/Entity/Guideline.php b/src/Entity/Guideline.php
+index 294f2b3..23163e1 100644
+--- a/src/Entity/Guideline.php
++++ b/src/Entity/Guideline.php
+@@ -250,7 +250,7 @@ class Guideline extends EditorialContentEntityBase implements GuidelineInterface
+     $query->condition('parent', $this->id());
+     $query->sort('weight');
+ 
+-    $result = $query->execute();
++    $result = $query->accessCheck(TRUE)->execute();
+     return $result ? $storage->loadMultiple($result) : [];
+   }
+ 
+@@ -356,7 +356,7 @@ class Guideline extends EditorialContentEntityBase implements GuidelineInterface
+     $query = $storage->getQuery();
+     $query->condition('field_field', $entity . '.', 'STARTS_WITH');
+ 
+-    $result = $query->execute();
++    $result = $query->accessCheck(TRUE)->execute();
+     return $result ? $storage->loadMultiple($result) : [];
+   }
+ 
+@@ -376,7 +376,7 @@ class Guideline extends EditorialContentEntityBase implements GuidelineInterface
+       $query->condition('field_field', $entity . '.' . $bundle . '.', 'STARTS_WITH');
+     }
+ 
+-    $count = $query->count()->execute();
++    $count = $query->count()->accessCheck(TRUE)->execute();
+     return $count > 0;
+   }
+ 
+diff --git a/src/Form/GuidelineForm.php b/src/Form/GuidelineForm.php
+index c100a4c..f1093c2 100644
+--- a/src/Form/GuidelineForm.php
++++ b/src/Form/GuidelineForm.php
+@@ -75,7 +75,6 @@ class GuidelineForm extends ContentEntityForm {
+       $form_state->set('has_been_previewed', TRUE);
+     }
+ 
+-    /** @var \Drupal\guidelines\Entity\Guideline $this->entity */
+     $form = parent::buildForm($form, $form_state);
+ 
+     if (!$this->entity->isNew()) {
+@@ -130,12 +129,13 @@ class GuidelineForm extends ContentEntityForm {
+    * {@inheritdoc}
+    */
+   public function validateForm(array &$form, FormStateInterface $form_state) {
+-    parent::validateForm($form, $form_state);
++    $entity = parent::validateForm($form, $form_state);
+ 
+     // Ensure numeric values.
+     if ($form_state->hasValue('weight') && !is_numeric($form_state->getValue('weight'))) {
+       $form_state->setErrorByName('weight', $this->t('Weight value must be numeric.'));
+     }
++    return $entity;
+   }
+ 
+   /**
+@@ -257,6 +257,7 @@ class GuidelineForm extends ContentEntityForm {
+     $store = $this->tempStoreFactory->get('guideline_preview');
+     $store->delete($entity->uuid());
+ 
++    return $status;
+   }
+ 
+ }
+diff --git a/src/Form/GuidelineRevisionDeleteForm.php b/src/Form/GuidelineRevisionDeleteForm.php
+index df99ca7..7a27bde 100644
+--- a/src/Form/GuidelineRevisionDeleteForm.php
++++ b/src/Form/GuidelineRevisionDeleteForm.php
+@@ -87,7 +87,7 @@ class GuidelineRevisionDeleteForm extends ConfirmFormBase {
+    * {@inheritdoc}
+    */
+   public function buildForm(array $form, FormStateInterface $form_state, $guideline_revision = NULL) {
+-    $this->revision = $this->GuidelineStorage->loadRevision($guideline_revision);
++    $this->revision = $this->guidelineStorage->loadRevision($guideline_revision);
+     $form = parent::buildForm($form, $form_state);
+ 
+     return $form;
+@@ -97,7 +97,7 @@ class GuidelineRevisionDeleteForm extends ConfirmFormBase {
+    * {@inheritdoc}
+    */
+   public function submitForm(array &$form, FormStateInterface $form_state) {
+-    $this->GuidelineStorage->deleteRevision($this->revision->getRevisionId());
++    $this->guidelineStorage->deleteRevision($this->revision->getRevisionId());
+ 
+     $this->logger('content')->notice('Guideline: deleted %title revision %revision.', [
+       '%title' => $this->revision->label(),
+diff --git a/src/Form/GuidelineRevisionRevertForm.php b/src/Form/GuidelineRevisionRevertForm.php
+index 73bdc92..0e782f8 100644
+--- a/src/Form/GuidelineRevisionRevertForm.php
++++ b/src/Form/GuidelineRevisionRevertForm.php
+@@ -96,7 +96,7 @@ class GuidelineRevisionRevertForm extends ConfirmFormBase {
+    * {@inheritdoc}
+    */
+   public function buildForm(array $form, FormStateInterface $form_state, $guideline_revision = NULL) {
+-    $this->revision = $this->GuidelineStorage->loadRevision($guideline_revision);
++    $this->revision = $this->guidelineStorage->loadRevision($guideline_revision);
+     $form = parent::buildForm($form, $form_state);
+ 
+     return $form;
+diff --git a/src/Form/GuidelineRevisionRevertTranslationForm.php b/src/Form/GuidelineRevisionRevertTranslationForm.php
+index f97eb44..89413f4 100644
+--- a/src/Form/GuidelineRevisionRevertTranslationForm.php
++++ b/src/Form/GuidelineRevisionRevertTranslationForm.php
+@@ -85,7 +85,7 @@ class GuidelineRevisionRevertTranslationForm extends GuidelineRevisionRevertForm
+     $revert_untranslated_fields = $form_state->getValue('revert_untranslated_fields');
+ 
+     /** @var \Drupal\guidelines\Entity\GuidelineInterface $default_revision */
+-    $latest_revision = $this->GuidelineStorage->load($revision->id());
++    $latest_revision = $this->guidelineStorage->load($revision->id());
+     $latest_revision_translation = $latest_revision->getTranslation($this->langcode);
+ 
+     $revision_translation = $revision->getTranslation($this->langcode);
+diff --git a/src/Form/GuidelineSortForm.php b/src/Form/GuidelineSortForm.php
+index 19a0a67..5323b09 100644
+--- a/src/Form/GuidelineSortForm.php
++++ b/src/Form/GuidelineSortForm.php
+@@ -157,6 +157,7 @@ class GuidelineSortForm extends ContentEntityForm {
+    * {@inheritdoc}
+    */
+   public function validateForm(array &$form, FormStateInterface $form_state) {
++    return $this->entity;
+   }
+ 
+   /**
+diff --git a/src/Form/GuidelineTypeForm.php b/src/Form/GuidelineTypeForm.php
+index e6b5ee6..2dd1d6b 100644
+--- a/src/Form/GuidelineTypeForm.php
++++ b/src/Form/GuidelineTypeForm.php
+@@ -69,6 +69,7 @@ class GuidelineTypeForm extends EntityForm {
+         ]));
+     }
+     $form_state->setRedirectUrl($guideline_type->toUrl('collection'));
++    return $status;
+   }
+ 
+ }
