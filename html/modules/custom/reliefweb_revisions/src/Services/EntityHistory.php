@@ -1086,6 +1086,7 @@ class EntityHistory {
 
     // Properties to display in the revisions.
     $properties = [
+      'file_name' => 'download file name',
       'description' => 'description',
       'language' => 'version',
       'preview_page' => 'preview page',

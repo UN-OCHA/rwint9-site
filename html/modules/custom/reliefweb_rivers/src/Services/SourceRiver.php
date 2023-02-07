@@ -6,6 +6,7 @@ use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\reliefweb_rivers\AdvancedSearch;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
+use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
@@ -347,7 +348,8 @@ class SourceRiver extends RiverServiceBase {
 
     $letters = [];
     foreach ($terms as $term) {
-      $letter = mb_strtoupper(mb_substr($term['name'], 0, 1));
+      $name = TextHelper::trimText($term['name']);
+      $letter = mb_strtoupper(mb_substr($name, 0, 1));
       $letter = $transliterator->transliterate($letter);
       if (is_numeric($letter)) {
         $letter = '#';

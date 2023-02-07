@@ -293,6 +293,9 @@ class ReliefWebFile extends FieldItemBase {
     // Validate the filename length.
     $validators['file_validate_name_length'] = [];
 
+    // Validate the filename.
+    $validators['reliefweb_files_file_validate_file_name'] = [];
+
     return $validators;
   }
 
@@ -1290,6 +1293,84 @@ class ReliefWebFile extends FieldItemBase {
       return '';
     }
     return mb_strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+  }
+
+  /**
+   * Check if a file name is valid.
+   *
+   * @param string $file_name
+   *   File name.
+   * @param string $expected_extension
+   *   The expected extension for the file.
+   * @param int|null $maxlength
+   *   Max file name length.
+   * @param int|null $minlength
+   *   Min file name length.
+   *
+   * @return string
+   *   Error message if invalid, empty string otherwise.
+   */
+  public static function validateFileName($file_name, $expected_extension = '', $maxlength = 255, $minlength = NULL) {
+    // No need to continue if the filename is empty.
+    if ($file_name === '') {
+      return t('Empty file name.');
+    }
+
+    // Validate the extension then the file name.
+    $extension = static::extractFileExtension($file_name);
+    if (empty($extension)) {
+      return t('Missing file extension.');
+    }
+    // Check if the extension matches the expected one.
+    elseif (!empty($expected_extension) && $extension !== $expected_extension) {
+      return t('Wrong extension, expected: @expected_extension.', [
+        '@expected_extension' => $expected_extension,
+      ]);
+    }
+
+    // Validate the file name length.
+    $file_name_length = strlen($file_name);
+    $maxlength = $maxlength ?: $file_name_length;
+    $minlength = $minlength ?: strlen($extension) + 2;
+    if ($file_name_length > $maxlength) {
+      return t('File name too long. Maximum: @length characters.', [
+        '@length' => $maxlength,
+      ]);
+    }
+    elseif ($file_name_length < $minlength) {
+      return t('File name too short. Maximum: @length characters.', [
+        '@length' => $minlength,
+      ]);
+    }
+
+    // Check if the file name contains invalid characters.
+    if (preg_match('#^[^' . static::getFileNameInvalidCharacters() . ']+$#u', $file_name) !== 1) {
+      return t('Invalid characters in file name.');
+    }
+    return '';
+  }
+
+  /**
+   * Get the characters that are invalid in file names.
+   *
+   * @param bool $visible_only
+   *   If TRUE, return only the invalid visible characters.
+   *
+   * @return string
+   *   Invalid characters.
+   */
+  public static function getFileNameInvalidCharacters($visible_only = FALSE) {
+    // Reserved by file system: `<>:"/\|?*`.
+    // Control characters: `\x00-\x1F`.
+    // Non-printing (del, no-break space, soft hyphen): `\x7F\xA0\xAD`.
+    // @see https://en.wikipedia.org/wiki/Filename#Reserved_characters_and_words
+    // @see http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247%28v=vs.85%29.aspx
+    static $invalid_characters = [
+      'visible' => '<>:"/\\\|?*',
+      'control' => '\\x00-\\x1F',
+      'non-printing' => '\\x7F\\xA0\\xAD',
+    ];
+    return $visible_only ? $invalid_characters['visible'] : implode('', $invalid_characters);
   }
 
   /**

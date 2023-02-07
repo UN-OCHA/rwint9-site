@@ -556,3 +556,12 @@ form:not(.rw-entity-form-altered) .form-actions.form-item {
 .unsubscribe-form > .button + a {
   margin-left: 1rem;
 }
+
+/* Form item label when not a `label` element. */
+.rw-form-label {
+  display: inline-block;
+  margin: 0 0 6px 0;
+  color: var(--cd-black);
+  font-size: 16px;
+  font-weight: bold;
+}

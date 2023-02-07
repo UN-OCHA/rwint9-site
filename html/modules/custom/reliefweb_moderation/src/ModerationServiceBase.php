@@ -2097,6 +2097,11 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     $conditions = $this->buildFilterConditions($conditions, $fields);
     $query->where($conditions, $replacements);
 
+    // Exclude some terms.
+    if (!empty($filter_definition['exclude'])) {
+      $query->condition($alias . '.' . $id_field, $filter_definition['exclude'], 'NOT IN');
+    }
+
     // Sort by name.
     $query->orderBy($alias . '.' . $label_field, 'ASC');
 

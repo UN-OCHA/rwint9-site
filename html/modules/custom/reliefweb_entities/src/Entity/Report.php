@@ -16,6 +16,7 @@ use Drupal\reliefweb_moderation\EntityModeratedTrait;
 use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_revisions\EntityRevisionedTrait;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
+use Drupal\reliefweb_utility\Helpers\ReliefWebStateHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
@@ -314,7 +315,7 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
 
     // Recipients and sender.
     $to = implode(', ', $emails);
-    $from = \Drupal::state()->get('reliefweb_submit_email');
+    $from = ReliefWebStateHelper::getSubmitEmail();
     if (empty($from)) {
       return;
     }
