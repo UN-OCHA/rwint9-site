@@ -163,7 +163,7 @@ class ReliefWebFile extends WidgetBase {
       '#title' => $this->fieldDefinition->getLabel(),
       '#description' => $this->getFilteredDescription(),
       '#tree' => TRUE,
-      '#element_validate' => [[$this, 'validate']],
+      '#element_validate' => [[static::class, 'validate']],
     ];
 
     // Add an element for every existing item.
@@ -1353,7 +1353,7 @@ class ReliefWebFile extends WidgetBase {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   Form state.
    */
-  public function validate(array $element, FormStateInterface $form_state) {
+  public static function validate(array $element, FormStateInterface $form_state) {
     // Handle changes to the download file names.
     $parents = $element['#parents'];
     $values = $form_state->getValue($parents);
