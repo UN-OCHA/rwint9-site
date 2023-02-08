@@ -608,6 +608,9 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     if (!$job->field_country->isEmpty()) {
       $job->field_city = $this->validateCity((string) $data);
     }
+    else {
+      $job->field_city = [];
+    }
   }
 
   /**
