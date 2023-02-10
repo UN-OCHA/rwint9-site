@@ -251,7 +251,7 @@ class Homepage extends ControllerBase {
       'more' => [
         'url' => RiverServiceBase::getRiverUrl('report', [
           'view' => 'headlines',
-        ]),
+        ], $this->t('Updates (Headlines)')),
         'label' => $this->t('View all headlines'),
       ],
     ];

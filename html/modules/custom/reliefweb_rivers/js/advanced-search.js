@@ -1771,7 +1771,9 @@
     var parameter = advancedSearch.submitForm.querySelector('input[name="advanced-search"]');
     if (!parameter) {
       parameter = createElement('input', {type: 'hidden', name: 'advanced-search'});
-      advancedSearch.submitForm.insertBefore(parameter, advancedSearch.submitForm.firstChild);
+      // Try to preserve the order of the parameters.
+      var view = advancedSearch.submitForm.querySelector('input[name="view"]');
+      advancedSearch.submitForm.insertBefore(parameter, view ? view.nextSibling : advancedSearch.submitForm.firstChild);
     }
     advancedSearch.parameter = parameter;
 

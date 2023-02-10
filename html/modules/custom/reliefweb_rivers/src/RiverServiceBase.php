@@ -139,6 +139,13 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   protected $limit = 20;
 
   /**
+   * River URL used to construct the service.
+   *
+   * @var string|null
+   */
+  protected $originalUrl = NULL;
+
+  /**
    * Constructor.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
@@ -159,6 +166,8 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    *   The renderer service.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The translation manager service.
+   * @param string|null $url
+   *   Optional river URL with parameters from which to construct the service.
    */
   public function __construct(
     ConfigFactoryInterface $config_factory,
@@ -169,7 +178,8 @@ abstract class RiverServiceBase implements RiverServiceInterface {
     ReliefWebApiClient $api_client,
     RequestStack $request_stack,
     RendererInterface $renderer,
-    TranslationInterface $string_translation
+    TranslationInterface $string_translation,
+    $url = NULL
   ) {
     $this->configFactory = $config_factory;
     $this->currentUser = $current_user;
@@ -181,12 +191,31 @@ abstract class RiverServiceBase implements RiverServiceInterface {
     $this->renderer = $renderer;
     $this->stringTranslation = $string_translation;
     $this->url = static::getRiverUrl($this->getBundle());
+    $this->originalUrl = $url;
   }
 
   /**
    * {@inheritdoc}
    */
-  abstract public function getPageTitle();
+  public function createNewInstanceFromUrl($url = NULL) {
+    return new static(
+      $this->configFactory,
+      $this->currentUser,
+      $this->languageManager,
+      $this->pagerManager,
+      $this->pagerParameters,
+      $this->apiClient,
+      $this->requestStack,
+      $this->renderer,
+      $this->stringTranslation,
+      $url
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  abstract public function getDefaultPageTitle();
 
   /**
    * {@inheritdoc}
@@ -207,6 +236,11 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * {@inheritdoc}
    */
   abstract public function parseApiData(array $api_data, $view = '');
+
+  /**
+   * {@inheritdoc}
+   */
+  abstract public function getDefaultRiverDescription();
 
   /**
    * {@inheritdoc}
@@ -246,6 +280,151 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getPageTitle() {
+    $title = $this->getDefaultPageTitle();
+    $view = $this->getSelectedView();
+
+    if (!$this->useDefaultTitle()) {
+      $selection = $this->getAdvancedSearch()->getAdvancedSearchFilterSelection();
+
+      if (count($selection) == 2) {
+        $title = $this->t('@label1 - @label2 @title', [
+          '@label1' => $selection[0]['label'],
+          '@label2' => $selection[1]['label'],
+          '@title' => $title,
+        ]);
+      }
+      elseif (!empty($selection)) {
+        $title = $this->t('@label1 @title', [
+          '@label1' => $selection[0]['label'],
+          '@title' => $title,
+        ]);
+      }
+    }
+
+    // Add the selected view to the default title if not the default one.
+    if ($view !== $this->getDefaultView()) {
+      $title = $this->t('@title (@view)', [
+        '@title' => $title,
+        '@view' => $this->getViewLabel($view),
+      ]);
+    }
+
+    return $title;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function useDefaultTitle() {
+    $skip = TRUE;
+
+    // Skip if there is a search query as there can be infinite variations and
+    // it may change completely the meaning of the selected filters.
+    if (empty($this->getSearch())) {
+      $selection = $this->getAdvancedSearch()->getAdvancedSearchFilterSelection();
+      $view = $this->getSelectedView();
+      $allowed_types = $this->getAllowedFilterTypesForTitle();
+      $excluded_codes = $this->getExcludedFilterCodesForTitle();
+
+      // If there is a view, we only generate a title with the first selection.
+      // Otherwise we accept a second selected filter as part of the title.
+      // This is to reduce allowed combinations and to avoid weirdness like
+      // selected "fee-based" on the Training (Free courses) river.
+      $max_allowed_filters = $view !== $this->getDefaultView() ? 1 : 2;
+
+      // Check if we should avoid computing a title and use the default one.
+      $skip = empty($selection) ||
+        count($selection) > $max_allowed_filters ||
+        // Ensure the selection doesn't start with an exlusion filter (without).
+        $selection[0]['operator'] !== 'with' ||
+        !isset($allowed_types[$selection[0]['type']]) ||
+        isset($excluded_codes[$selection[0]['code']]);
+
+      if (isset($selection[1])) {
+        $skip = $skip ||
+          // We only allow combinations of different filter types, not values.
+          $selection[1]['code'] === $selection[0]['code'] ||
+          // We only allow simple "A and B" combinations.
+          $selection[1]['operator'] !== 'and-with' ||
+          !isset($allowed_types[$selection[1]['type']]) ||
+          isset($excluded_codes[$selection[1]['code']]);
+      }
+    }
+    return $skip;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getAllowedFilterTypesForTitle() {
+    // We allow term reference filters and fixed values (like "free") because
+    // they have labels that work relatively when combined and have relatively
+    // limited number of items limiting the number of combinations.
+    return ['reference' => TRUE, 'fixed' => TRUE];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getExcludedFilterCodesForTitle() {
+    // We skip the organization type filter because the terms don't
+    // associate well with the river title and also, there is no direct
+    // link to the organization type from most pages (sources use a URL
+    // with a search parameter).
+    return ['OT' => TRUE];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCanonicalUrl() {
+    $title = '';
+    $parameters = [];
+    $advanced_search_parameter = $this->getAdvancedSearch()->getParameter();
+
+    // By adding the view to the canonical URL, we can make those variants
+    // more easily discoverable.
+    $view = $this->getSelectedView();
+    if ($view !== $this->getDefaultView()) {
+      $title = $this->getPageTitle();
+      $parameters['view'] = $view;
+    }
+
+    // For some combinations of filters (ex: Afghanistan and Situation Report),
+    // we use a custom title and canonical URL so they can be indexed by search
+    // engines as their own pages.
+    // For other sets of fitlers, we ignore them and use the canonical URL of
+    // the page without filters.
+    // @see https://developers.google.com/search/blog/2014/02/faceted-navigation-best-and-5-of-worst
+    if (!$this->useDefaultTitle()) {
+      $title = $this->getPageTitle();
+      $parameters['advanced-search'] = $advanced_search_parameter;
+      $add_page = TRUE;
+    }
+    else {
+      $add_page = empty($this->getSearch()) && empty($advanced_search_parameter);
+    }
+
+    // Apparently, it is recommended to keep the `page` parameter for a
+    // paginated sequence so that they have their own canonical URL instead
+    // of pointing at the first page of the listing.
+    // @see https://developers.google.com/search/docs/specialty/ecommerce/pagination-and-incremental-page-loading#use-urls-correctly
+    if ($add_page) {
+      $page = $this->pagerManager->getPager()?->getCurrentPage();
+      if (!empty($page)) {
+        $parameters['page'] = $page;
+      }
+    }
+
+    // @todo We may want to add those URLs to the sitemap.
+    // @see https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls#sitemap-method
+    return static::getRiverUrl($this->getBundle(), $parameters, $title, FALSE, TRUE);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getPageContent() {
     $river = Html::getId($this->getRiver());
 
@@ -267,7 +446,12 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    */
   public function getParameters() {
     if (!isset($this->parameters)) {
-      $this->parameters = new Parameters();
+      if (!empty($this->originalUrl)) {
+        $this->parameters = Parameters::createFromUrl($this->originalUrl);
+      }
+      else {
+        $this->parameters = new Parameters();
+      }
     }
     return $this->parameters;
   }
@@ -300,8 +484,35 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    */
   public function getSelectedView() {
     $view = $this->getParameters()->getString('view');
+    return $this->validateView($view) ?? $this->getDefaultView();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setSelectedView($view) {
+    $view = $this->validateView($view) ?? $this->getSelectedView();
+    if ($view === $this->getDefaultView()) {
+      $this->getParameters()->remove('view');
+    }
+    else {
+      $this->getParameters()->set('view', $view);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateView($view) {
     $views = $this->getViews();
-    return isset($views[$view]) ? $view : $this->getDefaultView();
+    return isset($views[$view]) ? $view : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getViewLabel($view) {
+    return $this->getViews()[$view] ?? '';
   }
 
   /**
@@ -309,6 +520,13 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    */
   public function getSearch() {
     return $this->getParameters()->getString('search');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setSearch($search) {
+    $this->getParameters()->set('search', $search, TRUE);
   }
 
   /**
@@ -337,7 +555,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
       else {
         $item['url'] = static::getRiverUrl($this->getBundle(), [
           'view' => $id,
-        ]);
+        ], $title);
       }
 
       // Mark the current view as selected.
@@ -512,7 +730,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   public function getRssLink() {
     try {
       return Url::fromRoute('reliefweb_rivers.' . $this->getBundle() . '.rss', [], [
-        'query' => $this->getParameters()->get(),
+        'query' => $this->getParameters()->getAllSorted(['list']),
         'absolute' => TRUE,
       ])->toString();
     }
@@ -525,8 +743,8 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * {@inheritdoc}
    */
   public function getApiLink() {
-    $parameters = $this->getParameters()->get();
-    $search_url = static::getRiverUrl($this->getBundle(), $parameters, TRUE);
+    $parameters = $this->getParameters()->getAllSorted(['list']);
+    $search_url = static::getRiverUrl($this->getBundle(), $parameters, '', FALSE, TRUE);
     $options = [
       'query' => [
         'appname' => 'rwint-user-' . $this->currentUser->id(),
@@ -557,9 +775,9 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function getApiData($limit = 20) {
-    $view = $this->getSelectedView();
-    $page = $this->pagerParameters->findPage();
+  public function prepareApiRequest($limit = 20, $paginated = TRUE, $view = NULL) {
+    $view = $this->validateView($view) ?? $this->getSelectedView();
+    $page = $paginated ? $this->pagerParameters->findPage() : 0;
     $offset = $page * $limit;
 
     $payload = $this->getApiPayload($view);
@@ -593,9 +811,18 @@ abstract class RiverServiceBase implements RiverServiceInterface {
         $payload['filter'] = $filter;
       }
     }
+    return $payload;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiData($limit = 20, $paginated = TRUE, array $payload = NULL, $view = NULL) {
+    $view = $this->validateView($view) ?? $this->getSelectedView();
+    $payload = $payload ?? $this->prepareApiRequest($limit, $paginated, $view);
 
     // Retrieve the API data.
-    $data = $this->requestApi($payload);
+    $data = $this->requestApi($payload, $paginated);
 
     // Skip if there is no data.
     if (empty($data)) {
@@ -603,7 +830,9 @@ abstract class RiverServiceBase implements RiverServiceInterface {
     }
 
     // Initialize the pager.
-    $this->pagerManager->createPager($data['totalCount'] ?? 0, $limit);
+    if ($paginated) {
+      $this->pagerManager->createPager($data['totalCount'] ?? 0, $limit);
+    }
 
     // Parse the API data and return the entities.
     return $this->parseApiData($data, $view);
@@ -728,7 +957,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * {@inheritdoc}
    */
   public function getRiverDescription() {
-    $title = $this->getPageTitle();
+    $title = $this->getDefaultPageTitle();
     $search = $this->getSearch();
     $filters = $this->getAdvancedSearch()->getHumanReadableSelection();
 
@@ -736,34 +965,37 @@ abstract class RiverServiceBase implements RiverServiceInterface {
     if ($view !== $this->getDefaultView()) {
       $title = $this->t('@title (@view)', [
         '@title' => $title,
-        '@view' => $this->getViews()[$view],
+        '@view' => $this->getViewLabel($view),
       ]);
     }
 
     if (!empty($search) && !empty($filters)) {
-      return $this->t('@title containing @search and @filters', [
+      $description = $this->t('@title containing @search and @filters', [
         '@title' => $title,
         '@search' => $search,
         '@filters' => $filters,
       ]);
     }
     elseif (!empty($search)) {
-      return $this->t('@title containing @search', [
+      $description = $this->t('@title containing @search', [
         '@title' => $title,
         '@search' => $search,
       ]);
     }
     elseif (!empty($filters)) {
-      return $this->t('@title @filters', [
+      $description = $this->t('@title @filters', [
         '@title' => $title,
         '@filters' => $filters,
       ]);
     }
     elseif ($view !== $this->getDefaultView()) {
-      return $title;
+      $description = $title;
+    }
+    else {
+      $description = $this->getDefaultRiverDescription();
     }
 
-    return NULL;
+    return $description;
   }
 
   /**
@@ -802,16 +1034,57 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getRiverUrl($bundle, array $parameters = [], $absolute = FALSE) {
+  public static function getRiverUrl($bundle, array $parameters = [], $title = '', $partial_title = FALSE, $absolute = FALSE) {
     try {
-      return Url::fromRoute('reliefweb_rivers.' . $bundle . '.river', [], [
-        'query' => $parameters,
-        'absolute' => $absolute,
-      ])->toString();
+      $url = Url::fromRoute('reliefweb_rivers.' . $bundle . '.river', []);
     }
     catch (RouteNotFoundException $exception) {
       return '';
     }
+
+    $title = !empty($partial_title) ? static::getRiverUrlTitle($bundle, $title) : $title;
+    if (!empty($title)) {
+      $parameters = ['list' => $title] + $parameters;
+    }
+
+    return $url
+      ->setOption('query', $parameters)
+      ->setOption('absolute', $absolute)
+      ->toString();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getRiverUrlTitle($bundle, $prefix) {
+    if (!empty($prefix)) {
+      switch ($bundle) {
+        case 'blog_post':
+          return t('@prefix Blog Posts', ['@prefix' => $prefix]);
+
+        case 'country':
+          return t('@prefix Countries', ['@prefix' => $prefix]);
+
+        case 'disaster':
+          return t('@prefix Disasters', ['@prefix' => $prefix]);
+
+        case 'job':
+          return t('@prefix Jobs', ['@prefix' => $prefix]);
+
+        case 'source':
+          return t('@prefix Organizations', ['@prefix' => $prefix]);
+
+        case 'topic':
+          return t('@prefix Topics', ['@prefix' => $prefix]);
+
+        case 'training':
+          return t('@prefix Training Opportunities', ['@prefix' => $prefix]);
+
+        case 'report':
+          return t('@prefix Updates', ['@prefix' => $prefix]);
+      }
+    }
+    return '';
   }
 
   /**
@@ -929,17 +1202,28 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    *   entity bundle and view.
    */
   public static function getRiverServiceFromUrl($url) {
+    static $instances = [];
     if (is_string($url)) {
-      $mapping = static::getRiverMapping();
-      $path = trim(parse_url($url, PHP_URL_PATH), '/');
+      if (!isset($instances[$url])) {
+        $mapping = static::getRiverMapping();
+        $path = trim(parse_url($url, PHP_URL_PATH), '/');
 
-      if (isset($mapping[$path]['bundle'])) {
-        $data = $mapping[$path];
-        $service = static::getRiverService($data['bundle']);
-        if (isset($service)) {
-          return $data + ['service' => $service];
+        if (isset($mapping[$path]['bundle'])) {
+          $data = $mapping[$path];
+          $service = static::getRiverService($data['bundle']);
+
+          if (isset($service)) {
+            // Create a new copy of the service with the given URL.
+            $service = $service->createNewInstanceFromUrl($url);
+            // Override the view.
+            if (isset($data['view'])) {
+              $service->setSelectedView($data['view']);
+            }
+            $instances[$url] = $service;
+          }
         }
       }
+      return $instances[$url] ?? NULL;
     }
     return [];
   }

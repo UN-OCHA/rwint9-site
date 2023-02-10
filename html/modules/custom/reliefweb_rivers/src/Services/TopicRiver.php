@@ -51,8 +51,15 @@ class TopicRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function getPageTitle() {
+  public function getDefaultPageTitle() {
     return $this->t('Topics');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPageTitle() {
+    return $this->getDefaultPageTitle();
   }
 
   /**
@@ -237,6 +244,13 @@ class TopicRiver extends RiverServiceBase {
    */
   public function parseApiData(array $api_data, $view = '') {
     // Not used.
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultRiverDescription() {
+    return $this->t('Curated pages dedicated to humanitarian themes and specific humanitarian crises.');
   }
 
 }

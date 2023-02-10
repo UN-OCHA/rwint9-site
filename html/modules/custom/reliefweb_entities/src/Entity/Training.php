@@ -77,7 +77,7 @@ class Training extends Node implements BundleEntityInterface, EntityModeratedInt
         'name' => $this->field_cost->value,
         'url' => RiverServiceBase::getRiverUrl($this->bundle(), [
           'advanced-search' => '(CO' . $this->field_cost->value . ')',
-        ]),
+        ], $this->field_cost->value === 'free' ? $this->t('Free') : $this->t('Fee-based'), TRUE),
       ];
     }
 

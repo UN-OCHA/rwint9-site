@@ -298,7 +298,7 @@ trait DocumentTrait {
       if ($code !== NULL) {
         $url = RiverServiceBase::getRiverUrl($this->bundle(), [
           'advanced-search' => '(' . $code . $entity->id() . ')',
-        ]);
+        ], $entity->label(), TRUE);
       }
       else {
         $url = $entity->toUrl();
