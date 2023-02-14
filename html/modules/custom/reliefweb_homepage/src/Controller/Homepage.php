@@ -337,7 +337,6 @@ class Homepage extends ControllerBase {
     $payload['fields']['exclude'][] = 'country';
     $payload['fields']['exclude'][] = 'type';
     $payload['fields']['exclude'][] = 'date';
-    $payload['sort'] = ['date.created:desc'];
     $payload['limit'] = $limit;
 
     return [
