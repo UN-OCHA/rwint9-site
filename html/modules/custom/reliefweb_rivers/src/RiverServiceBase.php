@@ -1217,7 +1217,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
       }
       return $instances[$url] ?? NULL;
     }
-    return [];
+    return NULL;
   }
 
   /**
