@@ -12,6 +12,7 @@ use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\reliefweb_api\Services\ReliefWebApiClient;
+use Drupal\reliefweb_rivers\Parameters;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -133,6 +134,26 @@ class TopicRiver extends RiverServiceBase {
       $string_translation
     );
     $this->entityTypeManager = $entity_type_manager;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function createNewInstanceFromUrl($url = NULL) {
+    $service = new static(
+      $this->configFactory,
+      $this->currentUser,
+      $this->languageManager,
+      $this->pagerManager,
+      $this->pagerParameters,
+      $this->apiClient,
+      $this->requestStack,
+      $this->renderer,
+      $this->stringTranslation,
+      $this->entityTypeManager
+    );
+    $service->setParameters(Parameters::createFromUrl($url));
+    return $service;
   }
 
   /**

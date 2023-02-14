@@ -113,6 +113,14 @@ interface RiverServiceInterface {
   public function getParameters();
 
   /**
+   * Set the river parameter handler.
+   *
+   * @param \Drupal\reliefweb_rivers\Parameters $parameters
+   *   River parameter handler.
+   */
+  public function setParameters(Parameters $parameters);
+
+  /**
    * Get the advanced search handler.
    *
    * @return \Drupal\reliefweb_rivers\AvancedSearch

@@ -139,13 +139,6 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   protected $limit = 20;
 
   /**
-   * River URL used to construct the service.
-   *
-   * @var string|null
-   */
-  protected $originalUrl = NULL;
-
-  /**
    * Constructor.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
@@ -166,8 +159,6 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    *   The renderer service.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The translation manager service.
-   * @param string|null $url
-   *   Optional river URL with parameters from which to construct the service.
    */
   public function __construct(
     ConfigFactoryInterface $config_factory,
@@ -178,8 +169,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
     ReliefWebApiClient $api_client,
     RequestStack $request_stack,
     RendererInterface $renderer,
-    TranslationInterface $string_translation,
-    $url = NULL
+    TranslationInterface $string_translation
   ) {
     $this->configFactory = $config_factory;
     $this->currentUser = $current_user;
@@ -191,14 +181,13 @@ abstract class RiverServiceBase implements RiverServiceInterface {
     $this->renderer = $renderer;
     $this->stringTranslation = $string_translation;
     $this->url = static::getRiverUrl($this->getBundle());
-    $this->originalUrl = $url;
   }
 
   /**
    * {@inheritdoc}
    */
   public function createNewInstanceFromUrl($url = NULL) {
-    return new static(
+    $service = new static(
       $this->configFactory,
       $this->currentUser,
       $this->languageManager,
@@ -207,9 +196,10 @@ abstract class RiverServiceBase implements RiverServiceInterface {
       $this->apiClient,
       $this->requestStack,
       $this->renderer,
-      $this->stringTranslation,
-      $url
+      $this->stringTranslation
     );
+    $service->setParameters(Parameters::createFromUrl($url));
+    return $service;
   }
 
   /**
@@ -446,14 +436,16 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    */
   public function getParameters() {
     if (!isset($this->parameters)) {
-      if (!empty($this->originalUrl)) {
-        $this->parameters = Parameters::createFromUrl($this->originalUrl);
-      }
-      else {
-        $this->parameters = new Parameters();
-      }
+      $this->parameters = new Parameters();
     }
     return $this->parameters;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setParameters(Parameters $parameters) {
+    return $this->parameters = $parameters;
   }
 
   /**
@@ -822,7 +814,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
     $payload = $payload ?? $this->prepareApiRequest($limit, $paginated, $view);
 
     // Retrieve the API data.
-    $data = $this->requestApi($payload, $paginated);
+    $data = $this->requestApi($payload);
 
     // Skip if there is no data.
     if (empty($data)) {
@@ -842,7 +834,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * {@inheritdoc}
    */
   public function requestApi(array $payload) {
-    return $this->apiClient->request($this->resource, $payload);
+    return $this->apiClient->request($this->getResource(), $payload);
   }
 
   /**
