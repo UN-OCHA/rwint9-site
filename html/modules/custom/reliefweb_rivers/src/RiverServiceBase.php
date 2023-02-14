@@ -1139,15 +1139,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   }
 
   /**
-   * Get the river path to river data mapping.
-   *
-   * This notably handles the legacy river paths like "maps".
-   *
-   * @return array
-   *   Mapping with the river path as key and an array with the entity bundle
-   *   associated with the river and an optional view for legacy paths.
-   *
-   * @todo check if nginx handles the redirections correctly.
+   * {@inheritdoc}
    */
   public static function getRiverMapping() {
     return [
@@ -1184,14 +1176,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   }
 
   /**
-   * Get the river service from a river URL.
-   *
-   * @param string $url
-   *   River url.
-   *
-   * @return \Drupal\reliefweb_rivers\RiverServiceInferface|null
-   *   If there is a match, then the service for the corresponding river,
-   *   NULL otherwise.
+   * {@inheritdoc}
    */
   public static function getRiverServiceFromUrl($url) {
     static $instances = [];

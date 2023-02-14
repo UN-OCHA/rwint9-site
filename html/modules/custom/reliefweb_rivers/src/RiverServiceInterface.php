@@ -253,6 +253,20 @@ interface RiverServiceInterface {
   public function getRiverAdvancedSearch();
 
   /**
+   * Get the river content render array.
+   *
+   * @return array
+   *   Render array with the river content including:
+   *   - id
+   *   - title
+   *   - results (see ::getRiverResults())
+   *   - entities
+   *   - pager (see ::getRiverPager())
+   *   - empty message.
+   */
+  public function getRiverContent();
+
+  /**
    * Get the river results render array.
    *
    * @param int $count
@@ -467,6 +481,19 @@ interface RiverServiceInterface {
   public static function getRiverUrl($bundle, array $parameters = [], $title = '', $partial_title = FALSE, $absolute = FALSE);
 
   /**
+   * Generate a river title from the given entity bundle and title prefix.
+   *
+   * @param string $bundle
+   *   Entity bundle of the river.
+   * @param string $prefix
+   *   Title prefix.
+   *
+   * @return string
+   *   River title.
+   */
+  public static function getRiverUrlTitle($bundle, $prefix);
+
+  /**
    * Get the data of the river for given bundle and API data.
    *
    * @param string $bundle
@@ -508,6 +535,19 @@ interface RiverServiceInterface {
    *   The river service or NULL if not found.
    */
   public static function getRiverService($bundle);
+
+  /**
+   * Get the river path to river data mapping.
+   *
+   * This notably handles the legacy river paths like "maps".
+   *
+   * @return array
+   *   Mapping with the river path as key and an array with the entity bundle
+   *   associated with the river and an optional view for legacy paths.
+   *
+   * @todo check if nginx handles the redirections correctly.
+   */
+  public static function getRiverMapping();
 
   /**
    * Get the river service from a river URL.

@@ -52,15 +52,15 @@ class TopicRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function getDefaultPageTitle() {
-    return $this->t('Topics');
+  public function getPageTitle() {
+    return $this->getDefaultPageTitle();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getPageTitle() {
-    return $this->getDefaultPageTitle();
+  public function getDefaultPageTitle() {
+    return $this->t('Topics');
   }
 
   /**
