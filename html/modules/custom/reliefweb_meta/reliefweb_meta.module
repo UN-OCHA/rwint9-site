@@ -53,7 +53,7 @@ function reliefweb_meta_metatags_alter(array &$metatags, array &$context) {
   ];
 
   // River pages.
-  if (strpos($route_name, 'reliefweb_rivers.') === 0) {
+  if (preg_match('/^reliefweb_rivers\.[^.]+\.river$/', $route_name) === 1) {
     try {
       // The river services have the same name as the corresponding route name.
       $river_service = \Drupal::service($route_name);

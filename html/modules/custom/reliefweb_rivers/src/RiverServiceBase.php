@@ -1197,9 +1197,9 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * @param string $url
    *   River url.
    *
-   * @return array
-   *   If there is a match, then an array with the river service, associated
-   *   entity bundle and view.
+   * @return \Drupal\reliefweb_rivers\RiverServiceInferface|null
+   *   If there is a match, then the service for the corresponding river,
+   *   NULL otherwise.
    */
   public static function getRiverServiceFromUrl($url) {
     static $instances = [];
