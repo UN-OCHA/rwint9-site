@@ -180,7 +180,6 @@ abstract class RiverServiceBase implements RiverServiceInterface {
     $this->requestStack = $request_stack;
     $this->renderer = $renderer;
     $this->stringTranslation = $string_translation;
-    $this->url = static::getRiverUrl($this->getBundle());
   }
 
   /**
@@ -264,6 +263,9 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * {@inheritdoc}
    */
   public function getUrl() {
+    if (!isset($this->url)) {
+      $this->url = static::getRiverUrl($this->getBundle());
+    }
     return $this->url;
   }
 
@@ -1027,22 +1029,22 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * {@inheritdoc}
    */
   public static function getRiverUrl($bundle, array $parameters = [], $title = '', $partial_title = FALSE, $absolute = FALSE) {
+    $title = !empty($partial_title) ? static::getRiverUrlTitle($bundle, $title) : $title;
+    if (!empty($title)) {
+      // Set it as first parameter for consistent order of parameters and to
+      // make it more user friendly.
+      $parameters = ['list' => $title] + $parameters;
+    }
+
     try {
-      $url = Url::fromRoute('reliefweb_rivers.' . $bundle . '.river', []);
+      return Url::fromRoute('reliefweb_rivers.' . $bundle . '.river', [], [
+        'query' => $parameters,
+        'absolute' => $absolute,
+      ])->toString();
     }
     catch (RouteNotFoundException $exception) {
       return '';
     }
-
-    $title = !empty($partial_title) ? static::getRiverUrlTitle($bundle, $title) : $title;
-    if (!empty($title)) {
-      $parameters = ['list' => $title] + $parameters;
-    }
-
-    return $url
-      ->setOption('query', $parameters)
-      ->setOption('absolute', $absolute)
-      ->toString();
   }
 
   /**

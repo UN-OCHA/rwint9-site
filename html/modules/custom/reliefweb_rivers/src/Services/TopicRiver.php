@@ -265,6 +265,7 @@ class TopicRiver extends RiverServiceBase {
    */
   public function parseApiData(array $api_data, $view = '') {
     // Not used.
+    return [];
   }
 
   /**

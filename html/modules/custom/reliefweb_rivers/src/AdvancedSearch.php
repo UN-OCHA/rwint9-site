@@ -216,7 +216,7 @@ class AdvancedSearch {
     // available.
     $remove = RiverServiceBase::getRiverUrl(
       $this->bundle,
-      $this->parameters->getAll(['advanced-search'])
+      $this->parameters->getAllSorted(['advanced-search'])
     );
 
     // Sanitize the advanced search parameter for the entire selection.
