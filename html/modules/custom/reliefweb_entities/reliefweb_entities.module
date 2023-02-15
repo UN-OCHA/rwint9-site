@@ -681,6 +681,7 @@ function reliefweb_entities_cron() {
   $embargoed_ids = $storage
     ->getQuery()
     ->condition('type', 'report', '=')
+    ->condition('moderation_status', 'embargoed', '=')
     ->condition('field_embargo_date.value', gmdate("Y-m-d\TH:i:s"), '<')
     ->range(0, $cron_settings['embargoed_reports_limit'] ?? 20)
     ->execute();
