@@ -259,8 +259,8 @@ class ReliefWebSectionLinks extends WidgetBase {
       return t('Invalid configuration: no river allowed.');
     }
 
-    $info = RiverServiceBase::getRiverServiceFromUrl($item['url']);
-    if (empty($info) || !isset($allowed_rivers[$info['bundle']])) {
+    $service = RiverServiceBase::getRiverServiceFromUrl($item['url']);
+    if (!isset($service) || !isset($allowed_rivers[$service->getBundle()])) {
       $allowed_rivers = array_intersect_key(ReliefWebSectionLinksFieldType::getAllowedRivers(), $allowed_rivers);
       return t('Invalid URL: use a link to one of the following rivers: @rivers.', [
         '@rivers' => implode(', ', $allowed_rivers),
@@ -275,7 +275,7 @@ class ReliefWebSectionLinks extends WidgetBase {
       }
 
       $entity_type = \Drupal::entityTypeManager()
-        ->getStorage($info['service']->getEntityTypeId())
+        ->getStorage($service->getEntityTypeId())
         ->getEntityType();
 
       $table = $entity_type->getDataTable();
@@ -296,9 +296,9 @@ class ReliefWebSectionLinks extends WidgetBase {
         return t('Invalid override: the document was not found.');
       }
       // Check that the document's type matches the river bundle.
-      elseif ($result->{$bundle_key} !== $info['bundle']) {
+      elseif ($result->{$bundle_key} !== $service->getBundle()) {
         return t('Invalid override: the document is not a @bundle.', [
-          '@bundle' => $info['bundle'],
+          '@bundle' => $service->getBundle(),
         ]);
       }
       // Only published documents are valid.

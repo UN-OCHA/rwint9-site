@@ -52,79 +52,47 @@ function reliefweb_meta_metatags_alter(array &$metatags, array &$context) {
     'image' => reliefweb_meta_get_image_url(),
   ];
 
-  if (strpos($route_name, 'reliefweb_rivers.') === 0) {
+  // River pages.
+  if (preg_match('/^reliefweb_rivers\.[^.]+\.river$/', $route_name) === 1) {
     try {
-      $description = \Drupal::service($route_name)->getRiverDescription();
+      // The river services have the same name as the corresponding route name.
+      $river_service = \Drupal::service($route_name);
+      $data['title'] = $river_service->getPageTitle();
+      $data['description'] = $river_service->getRiverDescription();
+      $data['canonical'] = $river_service->getCanonicalUrl();
+      unset($data['shortlink']);
     }
     catch (Exception $exception) {
-      // Nothing to do.
+      // Nothing to do, that should not happen.
     }
   }
+  // Other pages.
+  else {
+    switch ($route_name) {
+      case 'entity.node.canonical':
+        $data = reliefweb_meta_get_node_metatags($context['entity']);
+        break;
 
-  switch ($route_name) {
-    case 'entity.node.canonical':
-      $data = reliefweb_meta_get_node_metatags($context['entity']);
-      break;
+      case 'entity.taxonomy_term.canonical':
+        $data = reliefweb_meta_get_term_metatags($context['entity']);
+        break;
 
-    case 'entity.taxonomy_term.canonical':
-      $data = reliefweb_meta_get_term_metatags($context['entity']);
-      break;
+      case 'reliefweb_homepage.homepage.page':
+        $data['type'] = 'website';
+        $data['description'] = \Drupal::config('system.site')->get('slogan') ?? '';
+        // Change the metatags's title directly so that the "| ReliefWeb"
+        // suffix is not added in reliefweb_meta_update_metatags().
+        $metatags['title'] = t('@site_name - Informing humanitarians worldwide', [
+          '@site_name' => \Drupal::config('system.site')->get('name') ?? 'ReliefWeb',
+        ]);
 
-    case 'reliefweb_homepage.homepage.page':
-      $data['type'] = 'website';
-      $data['description'] = \Drupal::config('system.site')->get('slogan') ?? '';
-      // Change the metatags's title directly to avoid adding the "| Reliefweb"
-      // suffix in reliefweb_meta_update_metatags().
-      $metatags['title'] = t('@site_name - Informing humanitarians worldwide', [
-        '@site_name' => \Drupal::config('system.site')->get('name') ?? 'ReliefWeb',
-      ]);
+        break;
 
-      break;
-
-    case 'reliefweb_rivers.blog_post.river':
-      $data['title'] = t('Blog');
-      $data['description'] = $description ?? t("A look at the ideas and projects we're working on as we strive to grow and improve ReliefWeb.");
-      break;
-
-    case 'reliefweb_rivers.country.river':
-      $data['title'] = t('Countries');
-      $data['description'] = $description ?? t('ReliefWeb country pages provide a comprehensive overview of the humanitarian situation and feature situation reports, news and press releases, assessments, evaluations, infographics, maps and more.');
-      break;
-
-    case 'reliefweb_rivers.disaster.river':
-      $data['title'] = t('Disasters');
-      $data['description'] = $description ?? t('ReliefWeb disaster pages provide an overview of the situation and situation reports, news and press releases, assessments, evaluations, infographics and maps. Browse our list of natural disasters with humanitarian impact from 1981 until today.');
-      break;
-
-    case 'reliefweb_rivers.job.river':
-      $data['title'] = t('Jobs');
-      $data['description'] = $description ?? t('Your gateway for humanitarian and development jobs. Search and/or drill down with filters to narrow down the listings.');
-      break;
-
-    case 'reliefweb_rivers.report.river':
-      $data['title'] = t('Updates');
-      $data['description'] = $description ?? t('Your gateway to all content to date. Search and/or drill down with filters to narrow down the content.');
-      break;
-
-    case 'reliefweb_rivers.source.river':
-      $data['title'] = t('Organizations');
-      $data['description'] = $description ?? t('A list of organizations that are actively providing ReliefWeb with content (reports, jobs and training).');
-      break;
-
-    case 'reliefweb_rivers.topic.river':
-      $data['title'] = t('Topics');
-      $data['description'] = $description ?? t('Curated pages dedicated to humanitarian themes and specific humanitarian crises.');
-      break;
-
-    case 'reliefweb_rivers.training.river':
-      $data['title'] = t('Training');
-      $data['description'] = $description ?? t('Your gateway for humanitarian training opportunities. Search and/or drill down with filters to narrow down the listings.');
-      break;
-
-    default:
-      // Not so great to re-use the same description but normally all the
-      // main and meaningful pages are covered above or are nodes or terms.
-      $data['description'] = \Drupal::config('system.site')->get('slogan') ?? '';
+      default:
+        // Not so great to re-use the same description but normally all the
+        // main and meaningful pages are covered above or are nodes or terms.
+        $data['description'] = \Drupal::config('system.site')->get('slogan') ?? '';
+    }
   }
 
   reliefweb_meta_update_metatags($metatags, $data);
@@ -876,7 +844,7 @@ function reliefweb_meta_get_country_location_map_url($iso3) {
 function reliefweb_meta_page_attachments_alter(array &$attachments) {
   foreach ($attachments['#attached']['html_head'] ?? [] as $key => $attachment) {
     // Remove Drupal generator meta tag.
-    if ($attachment[1] == 'system_meta_generator') {
+    if (isset($attachment[1]) && $attachment[1] == 'system_meta_generator') {
       unset($attachments['#attached']['html_head'][$key]);
     }
   }

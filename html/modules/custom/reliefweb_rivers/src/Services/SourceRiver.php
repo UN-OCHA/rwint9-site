@@ -42,8 +42,15 @@ class SourceRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function getPageTitle() {
+  public function getDefaultPageTitle() {
     return $this->t('Organizations');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPageTitle() {
+    return $this->getDefaultPageTitle();
   }
 
   /**
@@ -149,7 +156,8 @@ class SourceRiver extends RiverServiceBase {
     // Get the source ids.
     $ids = [];
     foreach ($items as $item) {
-      $ids[] = $item['id'];
+      // @todo Append the shortname?
+      $ids[$item['id']] = $item['fields']['name'] ?? '';
     }
 
     // Get the publications of the sources.
@@ -207,7 +215,7 @@ class SourceRiver extends RiverServiceBase {
    * @param string $field
    *   Field name (without the 'field_' prefix) used to tag the taxonomy terms.
    * @param array $ids
-   *   List of taxonomy term ids.
+   *   List of taxonomy term ids (id as key, name as value).
    *
    * @return array
    *   Associative array with the term ids as keys and the total of published
@@ -217,8 +225,6 @@ class SourceRiver extends RiverServiceBase {
     if (empty($ids)) {
       return [];
     }
-
-    $sources = array_combine($ids, $ids);
 
     // API request payload (already encoded as it's the same for all the
     // queries).
@@ -267,8 +273,9 @@ class SourceRiver extends RiverServiceBase {
       $resource = $queries[$index]['resource'];
       if (isset($data['embedded']['facets']['source']['data'])) {
         foreach ($data['embedded']['facets']['source']['data'] as $item) {
-          if (isset($sources[$item['value']]) && !empty($item['count'])) {
+          if (isset($ids[$item['value']]) && !empty($item['count'])) {
             $id = $item['value'];
+            $name = $ids[$id];
             $count = (int) $item['count'];
 
             switch ($resource) {
@@ -279,7 +286,7 @@ class SourceRiver extends RiverServiceBase {
                   ]),
                   'url' => static::getRiverUrl('report', [
                     'advanced-search' => '(S' . $id . ')',
-                  ]),
+                  ], $name, TRUE),
                 ];
                 break;
 
@@ -290,7 +297,7 @@ class SourceRiver extends RiverServiceBase {
                   ]),
                   'url' => static::getRiverUrl('job', [
                     'advanced-search' => '(S' . $id . ')',
-                  ]),
+                  ], $name, TRUE),
                 ];
                 break;
 
@@ -301,7 +308,7 @@ class SourceRiver extends RiverServiceBase {
                   ]),
                   'url' => static::getRiverUrl('training', [
                     'advanced-search' => '(S' . $id . ')',
-                  ]),
+                  ], $name, TRUE),
                 ];
                 break;
             }
@@ -378,6 +385,13 @@ class SourceRiver extends RiverServiceBase {
     // is modified.
     $cache_backend->set($cache_id, $letters, CacheBackendInterface::CACHE_PERMANENT, ['taxonomy_term_list:source']);
     return $letters;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultRiverDescription() {
+    return $this->t('A list of organizations that are actively providing ReliefWeb with content (reports, jobs and training).');
   }
 
   /**
