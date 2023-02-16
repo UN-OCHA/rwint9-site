@@ -11,8 +11,6 @@ use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_api\Services\ReliefWebApiClient;
-use Drupal\reliefweb_rivers\AdvancedSearch;
-use Drupal\reliefweb_rivers\Parameters;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -254,64 +252,13 @@ class SearchConverter extends ControllerBase {
       return [];
     }
 
-    $river_data = RiverServiceBase::getRiverServiceFromUrl($search_url);
-    if (empty($river_data)) {
+    $service = RiverServiceBase::getRiverServiceFromUrl($search_url);
+    if (empty($service)) {
       return [];
     }
 
-    $service = $river_data['service'];
-
-    // Parse the query from the search URL.
-    parse_str(parse_url($search_url, PHP_URL_QUERY) ?? '', $query);
-    $parameters = new Parameters($query);
-    if (isset($river['view'])) {
-      $parameters->set('view', $river['view']);
-    }
-
-    // Retrieve the view used in the search URL to get the proper API payload.
-    $view = $parameters->get('view');
-    $views = $service->getViews();
-    $view = isset($views[$view]) ? $view : $service->getDefaultView();
-
-    // Get the base API payload for the view.
-    $payload = $service->getApiPayload($view);
-
-    // Add the full text search query if any.
-    $search = trim($parameters->get('search', ''));
-    if (!empty($search)) {
-      $payload['query']['value'] = $search;
-    }
-    else {
-      unset($payload['query']);
-    }
-
-    // Retrieve the API filter for the advanced search.
-    $advanced_search = new AdvancedSearch(
-      $service->getBundle(),
-      $service->getRiver(),
-      $parameters,
-      $service->getFilters(),
-      $service->getFilterSample()
-    );
-
-    // Merge the advanced search API filter with any other filter present
-    // in the API payload.
-    $filter = $advanced_search->getApiFilter();
-    if (!empty($filter)) {
-      // Update the payload filter.
-      if (!empty($payload['filter'])) {
-        $payload['filter'] = [
-          'conditions' => [
-            $payload['filter'],
-            $filter,
-          ],
-          'operator' => 'AND',
-        ];
-      }
-      else {
-        $payload['filter'] = $filter;
-      }
-    }
+    // Get the payload ready for an API request.
+    $payload = $service->prepareApiRequest();
 
     // Remove the fields and sort option as we, instead, add the preset and
     // profile to the API URL.

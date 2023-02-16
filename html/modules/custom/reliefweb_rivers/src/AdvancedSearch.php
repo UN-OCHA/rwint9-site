@@ -213,10 +213,10 @@ class AdvancedSearch {
     }
 
     // Generate a link to clear the filter selection when javascript is not
-    // availble.
+    // available.
     $remove = RiverServiceBase::getRiverUrl(
       $this->bundle,
-      $this->parameters->getAll(['advanced-search'])
+      $this->parameters->getAllSorted(['advanced-search'])
     );
 
     // Sanitize the advanced search parameter for the entire selection.
@@ -1050,6 +1050,11 @@ class AdvancedSearch {
     if (!empty($filter['exclude'])) {
       $query->condition('td.tid', $filter['exclude'], 'NOT IN');
       $values = array_diff($values, $filter['exclude']);
+    }
+    // Include only some terms.
+    elseif (!empty($filter['include'])) {
+      $query->condition('td.tid', $filter['include'], 'IN');
+      $values = array_intersect($values, $filter['include']);
     }
 
     // Filter by the given values if any.

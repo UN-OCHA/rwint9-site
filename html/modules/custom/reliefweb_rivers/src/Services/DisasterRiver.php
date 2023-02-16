@@ -38,7 +38,7 @@ class DisasterRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function getPageTitle() {
+  public function getDefaultPageTitle() {
     return $this->t('Disasters');
   }
 
@@ -227,7 +227,7 @@ class DisasterRiver extends RiverServiceBase {
           'name' => $type['name'],
           'url' => static::getRiverUrl($this->bundle, [
             'advanced-search' => '(TY' . $type['id'] . ')',
-          ]),
+          ], $type['name'], TRUE),
           'main' => !empty($country['primary']),
         ];
       }
@@ -368,6 +368,13 @@ class DisasterRiver extends RiverServiceBase {
     }
 
     return parent::requestApi($payload);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultRiverDescription() {
+    return $this->t('ReliefWeb disaster pages provide an overview of the situation and situation reports, news and press releases, assessments, evaluations, infographics and maps. Browse our list of natural disasters with humanitarian impact from 1981 until today.');
   }
 
   /**

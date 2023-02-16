@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_rivers;
 
+use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
@@ -467,6 +468,25 @@ class Parameters {
   }
 
   /**
+   * Create a parameters object from the given URL.
+   *
+   * @param string $url
+   *   URL.
+   * @param array $exclude
+   *   Parameters to exclude from the returned parameters.
+   *
+   * @return \Drupal\reliefweb_rivers\Parameters
+   *   Parameters object.
+   */
+  public static function createFromUrl($url, array $exclude = ['q', 'page']) {
+    $query = [];
+    if (is_string($url)) {
+      parse_str(parse_url($url, PHP_URL_QUERY), $query);
+    }
+    return new static($query, $exclude);
+  }
+
+  /**
    * Parse the parameters from the given query or the current one.
    *
    * @param array $query
@@ -508,7 +528,7 @@ class Parameters {
 
       // Trim string parameters.
       if (is_string($value)) {
-        $value = trim($value);
+        $value = TextHelper::trimText($value);
         if ($value === '') {
           continue;
         }
@@ -518,6 +538,39 @@ class Parameters {
     }
 
     return $parameters;
+  }
+
+  /**
+   * Get all the parameters excluding the given ones, sorted.
+   *
+   * @param array $exclude
+   *   Parameters to exclude.
+   * @param array $order
+   *   Order of the parameters.
+   * @param bool $include_others
+   *   If FALSE, parameters that are not in the order list will not be included.
+   *
+   * @return array
+   *   Sorted parameters.
+   */
+  public function getAllSorted(array $exclude = [], array $order = [], $include_others = TRUE) {
+    $order = $order ?: [
+      'list',
+      'view',
+      'group',
+      'advanced-search',
+      'search',
+      'page',
+    ];
+    $unsorted = $this->getAll($exclude);
+    $sorted = [];
+    foreach ($order as $key) {
+      if (isset($unsorted[$key])) {
+        $sorted[$key] = $unsorted[$key];
+        unset($unsorted[$key]);
+      }
+    }
+    return $include_others ? $sorted + $unsorted : $sorted;
   }
 
   /**
@@ -537,7 +590,7 @@ class Parameters {
     }
     elseif (isset($this->parameters[$name])) {
       $parameter = $this->parameters[$name];
-      return is_string($parameter) ? trim($parameter) : $parameter;
+      return is_string($parameter) ? TextHelper::trimText($parameter) : $parameter;
     }
     return $default;
   }
@@ -562,7 +615,7 @@ class Parameters {
     else {
       $parameter = $default;
     }
-    return $trim ? trim($parameter) : $parameter;
+    return $trim ? TextHelper::trimText($parameter) : $parameter;
   }
 
   /**
@@ -572,8 +625,13 @@ class Parameters {
    *   Parameter name.
    * @param mixed $value
    *   Parameter value.
+   * @param bool $trim
+   *   If TRUE and $value is a string, then it will be trimmed.
    */
-  public function set($name, $value = '') {
+  public function set($name, $value = '', $trim = TRUE) {
+    if ($trim && is_string($value)) {
+      $value = TextHelper::trimText($value);
+    }
     $this->parameters[$name] = $value;
   }
 
