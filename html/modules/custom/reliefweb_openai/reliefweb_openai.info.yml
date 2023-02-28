@@ -1,0 +1,5 @@
+name: OpenAI Content Tools
+type: module
+description: Adds assistive tools for different areas of the content editing process. This module is experimental.
+package: OpenAI
+core_version_requirement: ^9

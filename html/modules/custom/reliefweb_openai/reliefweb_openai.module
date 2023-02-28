@@ -1,0 +1,116 @@
+<?php
+
+/**
+ * @file
+ * Contains hook implementations for this module.
+ */
+
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\HtmlCommand;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Component\Utility\Unicode;
+
+/**
+ * Implements hook_form_alter().
+ */
+function reliefweb_openai_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  if (preg_match('/node_(add|.*_edit)_form/', $form_id)) {
+    $entity_types = [
+      'node' => [
+        'report',
+      ],
+    ];
+    $entity = $form_state->getFormObject()->getEntity();
+
+    if (!empty($entity_types) && array_key_exists($entity->getEntityTypeId(), $entity_types)) {
+      if (in_array($entity->bundle(), $entity_types[$entity->getEntityTypeId()])) {
+        $form['openai_suggest'] = [
+          '#type' => 'details',
+          '#open' => TRUE,
+          '#title' => t('Suggest taxonomy'),
+        ];
+
+        $form['openai_suggest']['response'] = [
+          '#type' => 'markup',
+          '#markup' => t('OpenAI can attempt to suggest possible classification terms to use as taxonomy.'),
+          '#prefix' => '<div id="openai-suggest-response">',
+          '#suffix' => '</div>',
+        ];
+
+        $form['openai_suggest']['do_suggest'] = [
+          '#type' => 'button',
+          '#value' => t('Suggest humanitarian theme(s)'),
+          '#limit_validation_errors' => [],
+          '#ajax' => [
+            'callback' => 'reliefweb_openai_content_node_suggest_taxonomy',
+            'wrapper' => 'openai-suggest-response',
+          ],
+        ];
+      }
+    }
+  }
+}
+
+/**
+ * The AJAX callback for suggesting taxonomy.
+ *
+ * @param array $form
+ *   The node form.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The form state.
+ *
+ * @return \Drupal\Core\Ajax\AjaxResponse
+ *   The HTML response.
+ */
+function reliefweb_openai_content_node_suggest_taxonomy(array &$form, FormStateInterface $form_state) {
+  $body = $form_state->getValue('body')[0]['value'];
+
+  if (!empty($body)) {
+    $body = Unicode::truncate(strip_tags(trim($body)), 3900, TRUE);
+    $body = str_replace(["\r\n", "\r", "\n", "\\r", "\\n", "\\r\\n"], "", $body);
+    $body = preg_replace("/  +/", ' ', $body);
+    $body = preg_replace("/[^a-z0-9 ]/i", '', $body);
+
+    $result = reliefweb_openai_http_call(
+      [
+        'model' => 'text-davinci-003',
+        'prompt' => 'Which of the following humanitarian themes: Agriculture, Camp Coordination and Camp Management, Climate Change and Environment, Contributions, Coordination, Disaster Management, Education, Food and Nutrition, Gender, Health, HIV/AIDS, Humanitarian Financing, Logistics and Telecommunications, Mine Action, Peacekeeping and Peacebuilding, Protection and Human Rights, Recovery and Reconstruction, Safety and Security, Shelter and Non-Food Items, Water Sanitation Hygiene are the most relevant for this text:\n\n"' . $body . '"',
+        'temperature' => 0.4,
+        'max_tokens' => 1024,
+      ],
+    );
+
+    $text = trim($result["choices"][0]["text"]) ?? t('No terms could be generated from the provided input.');
+
+    $response = new AjaxResponse();
+    $response->addCommand(new HtmlCommand('#openai-suggest-response', $text));
+    return $response;
+  }
+}
+
+/**
+ * Make the call.
+ */
+function reliefweb_openai_http_call($query) {
+  $config = \Drupal::config('reliefweb_openai.settings');
+
+  $http_client = Drupal::httpClient();
+  $url = 'https://api.openai.com/v1/completions';
+
+  $headers = [
+    'Content-Type' => 'application/json',
+    'Authorization' => 'Bearer ' . $config->get('token'),
+  ];
+
+  $response = $http_client->request(
+    'POST',
+    $url,
+    [
+      'headers' => $headers,
+      'json' => $query,
+    ],
+  );
+
+  $body = $response->getBody() . '';
+  return json_decode($body, TRUE);
+}
