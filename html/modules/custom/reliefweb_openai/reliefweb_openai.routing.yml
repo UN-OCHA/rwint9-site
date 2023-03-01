@@ -1,0 +1,15 @@
+reliefweb_openai.admin_config_openai:
+  path: '/admin/config/reliefweb_openai'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+    _title: 'OpenAI Settings'
+  requirements:
+    _permission: 'administer site configuration'
+
+reliefweb_openai.api_settings:
+  path: '/admin/config/reliefweb_openai/settings'
+  defaults:
+    _title: 'OpenAI settings'
+    _form: 'Drupal\reliefweb_openai\Form\ApiSettingsForm'
+  requirements:
+    _permission: 'administer site configuration'

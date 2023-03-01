@@ -137,9 +137,6 @@
     "drupal/core-dev": {
         "version": "9.3.6"
     },
-    "drupal/core-recommended": {
-        "version": "9.3.6"
-    },
     "drupal/ctools": {
         "version": "3.7.0"
     },
@@ -187,12 +184,6 @@
     },
     "drupal/metatag": {
         "version": "1.19.0"
-    },
-    "drupal/migrate_plus": {
-        "version": "5.2.0"
-    },
-    "drupal/migrate_tools": {
-        "version": "5.1.0"
     },
     "drupal/mimemail": {
         "version": "1.0.0-alpha4"
@@ -382,9 +373,6 @@
     },
     "phar-io/version": {
         "version": "3.2.1"
-    },
-    "phayes/geophp": {
-        "version": "1.2"
     },
     "phenx/php-font-lib": {
         "version": "0.5.4"

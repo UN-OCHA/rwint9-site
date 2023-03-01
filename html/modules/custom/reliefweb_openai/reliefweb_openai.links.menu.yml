@@ -1,0 +1,11 @@
+reliefweb_openai.admin_config_openai:
+  title: 'OpenAI'
+  parent: system.admin_config
+  route_name: reliefweb_openai.admin_config_openai
+
+reliefweb_openai.api_settings:
+  title: Settings
+  description: Manage OpenAI settings, API keys, and organization ID.
+  parent: reliefweb_openai.admin_config_openai
+  route_name: reliefweb_openai.api_settings
+  weight: -100
