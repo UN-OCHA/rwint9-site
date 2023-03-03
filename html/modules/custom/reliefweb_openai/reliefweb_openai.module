@@ -71,6 +71,8 @@ function reliefweb_openai_content_node_suggest_taxonomy(array &$form, FormStateI
     $body = preg_replace("/  +/", ' ', $body);
     $body = preg_replace("/[^a-z0-9 ]/i", '', $body);
 
+    // Alternative prompt: 'Please classify a piece of text into the following categories: Agriculture, Camp Coordination and Camp Management, Climate Change and Environment, Contributions, Coordination, Disaster Management, Education, Food and Nutrition, Gender, Health, HIV/AIDS, Humanitarian Financing, Logistics and Telecommunications, Mine Action, Peacekeeping and Peacebuilding, Protection and Human Rights, Recovery and Reconstruction, Safety and Security, Shelter and Non-Food Items, Water Sanitation Hygiene \n\n"' . $body . '"',
+
     $result = reliefweb_openai_http_call(
       [
         'model' => 'text-davinci-003',
@@ -94,7 +96,7 @@ function reliefweb_openai_content_node_suggest_taxonomy(array &$form, FormStateI
 function reliefweb_openai_http_call($query) {
   $config = \Drupal::config('reliefweb_openai.settings');
 
-  $http_client = Drupal::httpClient();
+  $http_client = \Drupal::httpClient();
   $url = 'https://api.openai.com/v1/completions';
 
   $headers = [

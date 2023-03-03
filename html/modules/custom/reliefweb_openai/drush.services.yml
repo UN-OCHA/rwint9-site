@@ -1,0 +1,6 @@
+services:
+  reliefweb_openai.commands:
+    class: \Drupal\reliefweb_openai\Command\ReliefwebOpenAICommand
+    arguments: ['@database', '@entity_type.manager', '@account_switcher', '@http_client', '@logger.factory', '@state']
+    tags:
+      - { name: drush.command }
