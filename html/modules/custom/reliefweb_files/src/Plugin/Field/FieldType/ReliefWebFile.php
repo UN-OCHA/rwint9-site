@@ -1280,19 +1280,40 @@ class ReliefWebFile extends FieldItemBase {
   }
 
   /**
-   * Extract the extension of the file.
+   * Extract the basename of the file.
    *
    * @param string $file_name
    *   File name.
    *
    * @return string
-   *   File extension in lower case.
+   *   File base name.
    */
-  public static function extractFileExtension($file_name) {
+  public static function extractFileBasename($file_name) {
     if (empty($file_name)) {
       return '';
     }
-    return mb_strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+    $position = mb_strrpos($file_name, '.');
+    return $position > 0 ? mb_substr($file_name, 0, $position) : '';
+  }
+
+  /**
+   * Extract the extension of the file.
+   *
+   * @param string $file_name
+   *   File name.
+   * @param bool $normalize
+   *   If TRUE the extension will be returned lower case.
+   *
+   * @return string
+   *   File extension in lower case.
+   */
+  public static function extractFileExtension($file_name, $normalize = TRUE) {
+    if (empty($file_name)) {
+      return '';
+    }
+    $position = mb_strrpos($file_name, '.');
+    $extension = $position > 0 ? mb_substr($file_name, $position + 1) : '';
+    return $normalize ? mb_strtolower($extension) : $extension;
   }
 
   /**
@@ -1338,7 +1359,7 @@ class ReliefWebFile extends FieldItemBase {
       ]);
     }
     elseif ($file_name_length < $minlength) {
-      return t('File name too short. Maximum: @length characters.', [
+      return t('File name too short. Minimum: @length characters.', [
         '@length' => $minlength,
       ]);
     }
@@ -1518,6 +1539,16 @@ class ReliefWebFile extends FieldItemBase {
   public function getUploadedFileName() {
     $file = $this->loadFile();
     return !empty($file) ? $file->getFileName() : '';
+  }
+
+  /**
+   * Get the file basename.
+   *
+   * @return string
+   *   File extension.
+   */
+  public function getFileBasename() {
+    return static::extractFileBasename($this->getFileName());
   }
 
   /**
