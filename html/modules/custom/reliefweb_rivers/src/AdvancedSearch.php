@@ -1113,6 +1113,7 @@ class AdvancedSearch {
    *   API suggest URL.
    */
   public static function getApiSuggestUrl($resource, array $parameters = []) {
+    $parameters['sort'] = ['score:desc', 'name.collation_en:asc'];
     return \Drupal::service('reliefweb_api.client')
       ->buildApiUrl($resource, $parameters);
   }
