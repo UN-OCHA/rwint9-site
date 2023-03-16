@@ -233,7 +233,7 @@ class SourceRiver extends RiverServiceBase {
       'limit' => 0,
       'filter' => [
         'field' => $field . '.id',
-        'value' => $ids,
+        'value' => array_keys($ids),
       ],
       // We'll extract the number of documents for the sources from the
       // the facets data.
