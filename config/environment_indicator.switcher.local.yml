@@ -1,0 +1,11 @@
+uuid: 358d16b5-802e-43ea-bfd3-9b733e3ae744
+langcode: en
+status: true
+dependencies: {  }
+machine: local
+description: null
+name: Local
+weight: ''
+url: 'https://rwint.test/'
+fg_color: '#ffffff'
+bg_color: '#0d0d0d'

@@ -6,14 +6,21 @@ id: config_dev
 label: config_dev
 description: 'Dev modules and settings not suitable for production.'
 weight: 0
+stackable: false
 storage: folder
 folder: ../config_dev
 module:
   config_filter: 0
   dblog: 0
   devel: 0
+  environment_indicator: 0
   stage_file_proxy: 0
   views_ui: 0
 theme: {  }
-complete_list: {  }
+complete_list:
+  - dblog.settings
+  - devel.settings
+  - devel.toolbar.settings
+  - environment_indicator.indicator
+  - stage_file_proxy.settings
 partial_list: {  }
