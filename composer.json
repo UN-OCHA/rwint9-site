@@ -23,7 +23,6 @@
         "php": "8.0.*",
         "composer/installers": "^1.10",
         "cweagans/composer-patches": "^1.7",
-        "drupal-composer/preserve-paths": "^0.1.6",
         "drupal/admin_denied": "^2.0",
         "drupal/allowed_formats": "^2.0",
         "drupal/components": "^2.4",
@@ -96,7 +95,6 @@
             "composer/installers": true,
             "cweagans/composer-patches": true,
             "dealerdirect/phpcodesniffer-composer-installer": true,
-            "drupal-composer/preserve-paths": true,
             "drupal/core-composer-scaffold": true,
             "drupal/core-project-message": true,
             "drupal/console-extend-plugin": true,
@@ -144,12 +142,10 @@
             "html/modules/contrib/{$name}": ["type:drupal-module"],
             "html/profiles/contrib/{$name}": ["type:drupal-profile"],
             "html/themes/contrib/{$name}": ["type:drupal-theme"],
+            "html/modules/custom/{$name}": ["type:drupal-custom-module"],
+            "html/themes/custom/{$name}": ["type:drupal-custom-theme"],
             "drush/Commands/{$name}": ["type:drupal-drush"]
         },
-        "preserve-paths": [
-            "html/modules/custom",
-            "html/themes/custom"
-        ],
         "drupal-scaffold": {
             "file-mapping": {
                 "[web-root]/sites/default/services.yml": {
