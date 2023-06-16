@@ -2,9 +2,9 @@
 
 namespace Drupal\reliefweb_utility\Helpers;
 
-use Drupal\taxonomy\TermInterface;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
+use Drupal\taxonomy\TermInterface;
 
 /**
  * Helper to retrieve info about taxonomy terms.
