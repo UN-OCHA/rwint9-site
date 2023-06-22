@@ -1675,6 +1675,11 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
       return;
     }
 
+    // Handle date range.
+    if (is_array($value)) {
+      $value = $value[0] . ' AND ' . $value[1];
+    }
+
     if (is_array($fields)) {
       if (count($fields) > 1) {
         $condition = new Condition('OR');
