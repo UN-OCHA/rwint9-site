@@ -845,6 +845,14 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
           'form' => 'omnibox',
           'widget' => 'datepicker',
         ],
+        'changed' => [
+          'type' => 'property',
+          'field' => 'changed',
+          'label' => $this->t('Change date'),
+          'shortcut' => 'cgd',
+          'form' => 'omnibox',
+          'widget' => 'datepicker',
+        ],
         'reviewed' => [
           'type' => 'property',
           'field' => 'revision_created',
@@ -878,7 +886,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
           'type' => 'field',
           'field' => 'field_disaster_date',
           'column' => 'value',
-          'label' => $this->t('Creation date'),
+          'label' => $this->t('Disaster date'),
           'shortcut' => 'cd',
           'form' => 'omnibox',
           'widget' => 'datepicker',
