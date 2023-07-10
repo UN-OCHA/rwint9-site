@@ -9,6 +9,8 @@ use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\node\Entity\Node;
 
 /**
  * Implements hook_form_alter().
@@ -115,4 +117,105 @@ function reliefweb_openai_http_call($query) {
 
   $body = $response->getBody() . '';
   return json_decode($body, TRUE);
+}
+
+/**
+ * Make chat call.
+ */
+function reliefweb_openai_http_call_chat($query) {
+  $config = \Drupal::config('reliefweb_openai.settings');
+
+  $http_client = \Drupal::httpClient();
+  $url = 'https://api.openai.com/v1/chat/completions';
+
+  $headers = [
+    'Content-Type' => 'application/json',
+    'Authorization' => 'Bearer ' . $config->get('token'),
+  ];
+
+  $response = $http_client->request(
+    'POST',
+    $url,
+    [
+      'headers' => $headers,
+      'json' => $query,
+    ],
+  );
+
+  $body = $response->getBody() . '';
+  return json_decode($body, TRUE);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update().
+ *
+ * Check if job is a tender or not.
+ */
+function reliefweb_openai_node_update(EntityInterface $entity) {
+  if (!$entity->bundle() == 'job') {
+    return;
+  }
+
+  if ($entity->getModerationStatus() != 'pending') {
+    return;
+  }
+
+  if (!$entity->original) {
+    return;
+  }
+
+  if ($entity->getModerationStatus() == $entity->original->getModerationStatus()) {
+    return;
+  }
+
+  $body = $entity->body->value;
+
+  if (empty($body)) {
+    return;
+  }
+
+  $body = Unicode::truncate(strip_tags(trim($body)), 3200, TRUE);
+  $body = str_replace(["\r\n", "\r", "\n", "\\r", "\\n", "\\r\\n"], "", $body);
+  $body = preg_replace("/  +/", ' ', $body);
+  $body = preg_replace("/[^a-z0-9 ]/i", '', $body);
+
+  $result = reliefweb_openai_http_call_chat(
+    [
+      'model' => 'gpt-3.5-turbo',
+      'messages' => [
+        [
+          'role' => 'user',
+          'content' => 'Is the following job opening a tender or not, respond with yes or no:\n\n"' . $body . '"',
+        ],
+      ],
+      'temperature' => 1,
+      'max_tokens' => 3500,
+    ],
+  );
+
+  $answer = $result['choices'][0]['message']['content'] ?? 'undecided';
+
+  switch (strtolower($answer)) {
+    case 'yes':
+    case 'yes.':
+      $text = 'It looks like this is a tender.';
+      break;
+
+    case 'no':
+    case 'no.':
+      $text = 'It looks like this is NOT a tender.';
+      break;
+
+    default:
+      $text = 'Not sure if this is a tender or not.';
+      break;
+
+  }
+
+  // Reload node and set message as admin.
+  $entity = Node::load($entity->id());
+  $entity->setNewRevision();
+  $entity->setRevisionLogMessage($text);
+  $entity->setRevisionUserId(1);
+  $entity->save();
 }
