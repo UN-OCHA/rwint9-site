@@ -174,14 +174,14 @@ function reliefweb_openai_node_update(EntityInterface $entity) {
     return;
   }
 
-  $body = Unicode::truncate(strip_tags(trim($body)), 3200, TRUE);
+  $body = Unicode::truncate(strip_tags(trim($body)), 8000, TRUE);
   $body = str_replace(["\r\n", "\r", "\n", "\\r", "\\n", "\\r\\n"], "", $body);
   $body = preg_replace("/  +/", ' ', $body);
   $body = preg_replace("/[^a-z0-9 ]/i", '', $body);
 
   $result = reliefweb_openai_http_call_chat(
     [
-      'model' => 'gpt-3.5-turbo',
+      'model' => 'gpt-3.5-turbo-16k',
       'messages' => [
         [
           'role' => 'user',
@@ -189,7 +189,7 @@ function reliefweb_openai_node_update(EntityInterface $entity) {
         ],
       ],
       'temperature' => 1,
-      'max_tokens' => 3500,
+      'max_tokens' => 14500,
     ],
   );
 
