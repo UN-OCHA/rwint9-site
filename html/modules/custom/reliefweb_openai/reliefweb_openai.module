@@ -5,11 +5,12 @@
  * Contains hook implementations for this module.
  */
 
+use Aws\Comprehend\ComprehendClient;
+use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\HtmlCommand;
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\node\Entity\Node;
 
 /**
@@ -20,6 +21,7 @@ function reliefweb_openai_form_alter(array &$form, FormStateInterface $form_stat
     $entity_types = [
       'node' => [
         'report',
+        'job',
       ],
     ];
     $entity = $form_state->getFormObject()->getEntity();
@@ -48,6 +50,29 @@ function reliefweb_openai_form_alter(array &$form, FormStateInterface $form_stat
             'wrapper' => 'openai-suggest-response',
           ],
         ];
+
+        $form['aws_comprehend'] = [
+          '#type' => 'details',
+          '#open' => TRUE,
+          '#title' => t('Suggest taxonomy'),
+        ];
+
+        $form['aws_comprehend']['response'] = [
+          '#type' => 'markup',
+          '#markup' => t('AWS Comprehend can attempt to suggest possible classification terms to use as taxonomy.'),
+          '#prefix' => '<div id="aws-comprehend-suggest-response">',
+          '#suffix' => '</div>',
+        ];
+
+        $form['aws_comprehend']['do_suggest'] = [
+          '#type' => 'button',
+          '#value' => t('Suggest humanitarian theme(s) - AWS Comprehend'),
+          '#limit_validation_errors' => [],
+          '#ajax' => [
+            'callback' => 'reliefweb_openai_content_node_suggest_aws',
+            'wrapper' => 'aws-comprehend-suggest-response',
+          ],
+        ];
       }
     }
   }
@@ -73,18 +98,21 @@ function reliefweb_openai_content_node_suggest_taxonomy(array &$form, FormStateI
     $body = preg_replace("/  +/", ' ', $body);
     $body = preg_replace("/[^a-z0-9 ]/i", '', $body);
 
-    // Alternative prompt: 'Please classify a piece of text into the following categories: Agriculture, Camp Coordination and Camp Management, Climate Change and Environment, Contributions, Coordination, Disaster Management, Education, Food and Nutrition, Gender, Health, HIV/AIDS, Humanitarian Financing, Logistics and Telecommunications, Mine Action, Peacekeeping and Peacebuilding, Protection and Human Rights, Recovery and Reconstruction, Safety and Security, Shelter and Non-Food Items, Water Sanitation Hygiene \n\n"' . $body . '"',
-
-    $result = reliefweb_openai_http_call(
+    $result = reliefweb_openai_http_call_chat(
       [
-        'model' => 'text-davinci-003',
-        'prompt' => 'Which of the following humanitarian themes: Agriculture, Camp Coordination and Camp Management, Climate Change and Environment, Contributions, Coordination, Disaster Management, Education, Food and Nutrition, Gender, Health, HIV/AIDS, Humanitarian Financing, Logistics and Telecommunications, Mine Action, Peacekeeping and Peacebuilding, Protection and Human Rights, Recovery and Reconstruction, Safety and Security, Shelter and Non-Food Items, Water Sanitation Hygiene are the most relevant for this text:\n\n"' . $body . '"',
-        'temperature' => 0.4,
-        'max_tokens' => 1024,
+        'model' => 'gpt-3.5-turbo-16k',
+        'messages' => [
+          [
+            'role' => 'user',
+            'content' => 'Which of the following humanitarian themes: Agriculture, Camp Coordination and Camp Management, Climate Change and Environment, Contributions, Coordination, Disaster Management, Education, Food and Nutrition, Gender, Health, HIV/AIDS, Humanitarian Financing, Logistics and Telecommunications, Mine Action, Peacekeeping and Peacebuilding, Protection and Human Rights, Recovery and Reconstruction, Safety and Security, Shelter and Non-Food Items, Water Sanitation Hygiene are the most relevant for this text:\n\n"' . $body . '"',
+          ],
+        ],
+        'temperature' => .8,
+        'max_tokens' => 14500,
       ],
     );
 
-    $text = trim($result["choices"][0]["text"]) ?? t('No terms could be generated from the provided input.');
+    $text = $result['choices'][0]['message']['content'] ?? 'undecided';
 
     $response = new AjaxResponse();
     $response->addCommand(new HtmlCommand('#openai-suggest-response', $text));
@@ -218,4 +246,48 @@ function reliefweb_openai_node_update(EntityInterface $entity) {
   $entity->setRevisionLogMessage($text);
   $entity->setRevisionUserId(1);
   $entity->save();
+}
+
+/**
+ * Use AWS Comprehend.
+ */
+function reliefweb_openai_content_node_suggest_aws(array &$form, FormStateInterface $form_state) {
+  $body = $form_state->getValue('body')[0]['value'];
+
+  if (!empty($body)) {
+    $body = Unicode::truncate(strip_tags(trim($body)), 3900, TRUE);
+    $body = str_replace(["\r\n", "\r", "\n", "\\r", "\\n", "\\r\\n"], "", $body);
+    $body = preg_replace("/  +/", ' ', $body);
+    $body = preg_replace("/[^a-z0-9 ]/i", '', $body);
+
+    $config = \Drupal::config('reliefweb_openai.settings');
+
+    $access_key = $config->get('aws_access_key');
+    $secret_key = $config->get('aws_secret_key');
+
+    $client = new ComprehendClient([
+      'region' => 'eu-central-1',
+      'version' => 'latest',
+      'credentials' => [
+        'key' => $access_key,
+        'secret' => $secret_key,
+      ],
+    ]);
+
+    $result = $client->classifyDocument([
+      'EndpointArn' => 'arn:aws:comprehend:eu-central-1:694216630861:document-classifier-endpoint/rw20230711',
+      'Text' => $body,
+    ]);
+
+    $text = '';
+    $parts = [];
+    foreach ($result->get('Classes') as $class) {
+      $parts[] = $class['Name'] . ' (' . round(100 * $class['Score'], 1) . '%)';
+    }
+    $text = implode(', ', $parts);
+
+    $response = new AjaxResponse();
+    $response->addCommand(new HtmlCommand('#aws-comprehend-suggest-response', $text));
+    return $response;
+  }
 }
