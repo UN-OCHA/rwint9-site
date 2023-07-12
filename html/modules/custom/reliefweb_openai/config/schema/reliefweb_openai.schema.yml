@@ -8,3 +8,15 @@ reliefweb_openai.settings:
     api_org:
       type: string
       label: 'OpenAI organization ID'
+    aws_access_key:
+      type: string
+      label: 'AWS Access key'
+    aws_secret_key:
+      type: string
+      label: 'AWS Secret key'
+    aws_region:
+      type: string
+      label: 'AWS Region'
+    aws_endpoint_theme_classifier:
+      type: string
+      label: 'AWS Theme classifier endpoint'

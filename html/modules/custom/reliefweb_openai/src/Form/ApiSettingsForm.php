@@ -43,6 +43,34 @@ class ApiSettingsForm extends ConfigFormBase {
       '#description' => $this->t('The organization name or ID on your OpenAI account. This is required for some OpenAI services to work correctly.'),
     ];
 
+    $form['aws_access_key'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('AWS Access key'),
+      '#default_value' => $this->config('reliefweb_openai.settings')->get('aws_access_key'),
+      '#description' => $this->t('AWS Access key'),
+    ];
+
+    $form['aws_secret_key'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('AWS Secret key'),
+      '#default_value' => $this->config('reliefweb_openai.settings')->get('aws_secret_key'),
+      '#description' => $this->t('AWS Secret key'),
+    ];
+
+    $form['aws_region'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('AWS Region'),
+      '#default_value' => $this->config('reliefweb_openai.settings')->get('aws_region'),
+      '#description' => $this->t('AWS Region'),
+    ];
+
+    $form['aws_endpoint_theme_classifier'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('AWS Theme classifier endpoint'),
+      '#default_value' => $this->config('reliefweb_openai.settings')->get('aws_endpoint_theme_classifier'),
+      '#description' => $this->t('AWS Theme classifier endpoint'),
+    ];
+
     return parent::buildForm($form, $form_state);
   }
 
@@ -53,6 +81,10 @@ class ApiSettingsForm extends ConfigFormBase {
     $this->config('reliefweb_openai.settings')
       ->set('token', $form_state->getValue('token'))
       ->set('api_org', $form_state->getValue('api_org'))
+      ->set('aws_access_key', $form_state->getValue('aws_access_key'))
+      ->set('aws_secret_key', $form_state->getValue('aws_secret_key'))
+      ->set('aws_region', $form_state->getValue('aws_region'))
+      ->set('aws_endpoint_theme_classifier', $form_state->getValue('aws_endpoint_theme_classifier'))
       ->save();
     parent::submitForm($form, $form_state);
   }

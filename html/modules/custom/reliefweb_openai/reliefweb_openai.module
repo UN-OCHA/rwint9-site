@@ -12,6 +12,7 @@ use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\node\Entity\Node;
+use Symfony\Component\Validator\Constraints\Length;
 
 /**
  * Implements hook_form_alter().
@@ -264,18 +265,20 @@ function reliefweb_openai_content_node_suggest_aws(array &$form, FormStateInterf
 
     $access_key = $config->get('aws_access_key');
     $secret_key = $config->get('aws_secret_key');
+    $region = $config->get('aws_region');
+    $endpoint = $config->get('aws_endpoint_theme_classifier');
 
     $client = new ComprehendClient([
-      'region' => 'eu-central-1',
+      'region' => $region,
       'version' => 'latest',
       'credentials' => [
-        'key' => $access_key,
-        'secret' => $secret_key,
-      ],
+      'key' => $access_key,
+      'secret' => $secret_key,
+      ]
     ]);
 
     $result = $client->classifyDocument([
-      'EndpointArn' => 'arn:aws:comprehend:eu-central-1:694216630861:document-classifier-endpoint/rw20230711',
+      'EndpointArn' => $endpoint,
       'Text' => $body,
     ]);
 
@@ -290,4 +293,79 @@ function reliefweb_openai_content_node_suggest_aws(array &$form, FormStateInterf
     $response->addCommand(new HtmlCommand('#aws-comprehend-suggest-response', $text));
     return $response;
   }
+}
+
+function testit() {
+  $body = file_get_contents('/var/www/testpdf.txt');
+  $chunks = explode('|||', chunk_split($body, 4000, '|||'));
+
+  $results = [];
+
+  foreach ($chunks as $chunk) {
+    $results[] = reliefweb_openai_http_call([
+      'model' => 'text-davinci-003',
+      'prompt' => $chunk . "\n\nTl;dr",
+      'temperature' => 1,
+      'max_tokens' => 260,
+      'top_p' => 1.0,
+      'frequency_penalty' => 0.0,
+      'presence_penalty' => 1
+    ]);
+  }
+
+  print_r($results);
+}
+
+
+function testit2() {
+  $body = file_get_contents('/var/www/testpdf.txt');
+  $chunks = explode('|||', chunk_split($body, 9000, '|||'));
+
+  $results = [];
+
+  foreach ($chunks as $index => $chunk) {
+    print('Processing ' . $index . ' of ' . count($chunks)) . "\n";
+
+    if (strlen($chunk) < 100) {
+      continue;
+    }
+
+    $results[] = reliefweb_openai_http_call_chat(
+      [
+        'model' => 'gpt-3.5-turbo-16k',
+        'messages' => [
+          [
+            'role' => 'user',
+            'content' => "Summerize the following text:\n\n" . $chunk,
+          ],
+        ],
+        'temperature' => .8,
+        'max_tokens' => 300,
+      ],
+    );
+  }
+
+  $text = '';
+  foreach ($results as $row) {
+    $text .= $row['choices'][0]['message']['content'] ?? '';
+    $text .= "\n";
+  }
+
+  print_r($text);
+
+  $result = reliefweb_openai_http_call_chat(
+    [
+      'model' => 'gpt-3.5-turbo-16k',
+      'messages' => [
+        [
+          'role' => 'user',
+          'content' => "Summerize the following text:\n\n" . $text,
+        ],
+      ],
+      'temperature' => .8,
+      'max_tokens' => 300,
+    ],
+  );
+
+  print_r($result['choices'][0]['message']['content']);
 }

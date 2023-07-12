@@ -4,3 +4,9 @@ services:
     arguments: ['@database', '@entity_type.manager', '@account_switcher', '@http_client', '@logger.factory', '@state']
     tags:
       - { name: drush.command }
+  reliefweb_openai.aws.commands:
+    class: \Drupal\reliefweb_openai\Command\ReliefwebOpenAIAwsCommand
+    arguments: ['@database', '@entity_type.manager', '@account_switcher', '@http_client', '@logger.factory', '@state']
+    tags:
+      - { name: drush.command }
+
