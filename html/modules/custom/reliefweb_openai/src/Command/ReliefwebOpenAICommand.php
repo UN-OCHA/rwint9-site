@@ -118,18 +118,42 @@ class ReliefwebOpenAICommand extends DrushCommands implements SiteAliasManagerAw
    *   Send emails.
    * @validate-module-enabled reliefweb_openai
    */
-  public function trainJobs($field_name = '', $limit = 50) {
+  public function trainJobs($field_name = '', $limit = 1000) {
     $field = 'field_' . $field_name;
 
     // Training data
-    $content = $this->buildJson($field, 0, $limit);
-    $training = $this->uploadFile('training_' . $field, $content);
+    $content = $this->buildData($field, 0, $limit);
+    $content = $this->jobcategory();
+    $fp = fopen('/var/www/training.csv', 'w');
+    fputcsv($fp, ['excerpt', 'target_classification']);
+    foreach ($content as $fields) {
+      fputcsv($fp, $fields);
+    }
+    fclose($fp);
+return;
+    // Validation data.
+    $size = min(50, round(0.1 * $limit));
+    $content = $this->buildData($field, $limit + 1, $size);
+    $fp = fopen('/var/www/validation.csv', 'w');
+    fputcsv($fp, ['excerpt', 'target_classification']);
+    foreach ($content as $fields) {
+        fputcsv($fp, $fields);
+    }
+    fclose($fp);
 
     // Validation data.
-    $content = $this->buildJson($field, $limit + 1, 50);
-    $validation = $this->uploadFile('validation_' . $field, $content);
+    $content = $this->buildData($field, $limit + $size + 1, $size);
+    $fp = fopen('/var/www/testing.csv', 'w');
+    fputcsv($fp, ['excerpt', 'target_classification']);
+    foreach ($content as $fields) {
+        fputcsv($fp, $fields);
+    }
+    fclose($fp);
 
-    $response = $this->trainFile($field_name, $training['id'], $validation['id']);
+return;
+    // $validation = $this->uploadFile('validation_' . $field, $content);
+
+    //$response = $this->trainFile($field_name, $training['id'], $validation['id']);
     return $response['id'];
   }
 
@@ -294,6 +318,44 @@ class ReliefwebOpenAICommand extends DrushCommands implements SiteAliasManagerAw
     return $content;
   }
 
+  protected function buildData($field, $offset, $limit) : array {
+    $job_ids = $this->entityTypeManager->getStorage('node')->getQuery()
+      ->condition('type', 'job')
+      ->condition('status', 1)
+      ->exists($field)
+      ->range($offset, $limit)
+      ->sort('nid', 'DESC')
+      ->execute();
+
+    $jobs = $this->entityTypeManager->getStorage('node')->loadMultiple($job_ids);
+
+    $data = [];
+    foreach ($jobs as $job) {
+      $tags = [];
+      if (!$job->hasField($field) || $job->{$field}->isEmpty()) {
+        continue;
+      }
+
+      $prompt = $job->label() . "\n" . $this->cleanPrompt($job->body->value);
+      $tags = [];
+      foreach ($job->{$field}->referencedEntities() as $tag) {
+//        $tags[] = 'lvl1 -> lvl2 -> ' . $tag->label();
+        $tags[] = $tag->label();
+      }
+
+//      while (count($tags) < 3) {
+//        $tags[] = 'test ' . count($tags);
+//      }
+
+      $data[] = [
+        'label' => implode(' | ', $tags),
+        'text' => $prompt,
+      ];
+    }
+print_r(count($data) . "\n");
+    return $data;
+  }
+
   /**
    * Test it
    *
@@ -369,9 +431,9 @@ class ReliefwebOpenAICommand extends DrushCommands implements SiteAliasManagerAw
    */
   protected function cleanPrompt($prompt) {
     $prompt = Unicode::truncate(strip_tags(trim($prompt)), 3900, TRUE);
-    $prompt = str_replace(["\r\n", "\r", "\n", "\\r", "\\n", "\\r\\n"], "\n ", $prompt);
+    $prompt = str_replace(["\r\n", "\r", "\n", "\\r", "\\n", "\\r\\n"], " ", $prompt);
     $prompt = preg_replace("/  +/", ' ', $prompt);
-    $prompt= substr($prompt, 0, 5000);
+    // $prompt= substr($prompt, 0, 5000);
 
     return $prompt;
   }
@@ -444,6 +506,187 @@ class ReliefwebOpenAICommand extends DrushCommands implements SiteAliasManagerAw
 
     $body = $response->getBody() . '';
     return json_decode($body, TRUE);
+  }
+
+  /**
+   * Job categories from API.
+   *
+   * @command reliefweb_openai:job_categories
+   * @usage reliefweb_openai:job_categories
+   *   job_categories.
+   * @validate-module-enabled reliefweb_openai
+   */
+  public function jobcategory() {
+    $result = [];
+
+    $themes = [
+      4587 => 'Agriculture',
+      49458 => 'Camp Coordination and Camp Management',
+      4588 => 'Climate Change and Environment',
+      4590 => 'Coordination',
+      4591 => 'Disaster Management',
+      4592 => 'Education',
+      4593 => 'Food and Nutrition',
+      4594 => 'Gender',
+      4595 => 'Health',
+      4596 => 'HIV/Aids',
+      12033 => 'Mine Action',
+      4599 => 'Peacekeeping and Peacebuilding',
+      4600 => 'Protection and Human Rights',
+      4601 => 'Recovery and Reconstruction',
+      4602 => 'Safety and Security',
+      4603 => 'Shelter and Non-Food Items',
+      4604 => 'Water Sanitation Hygiene',
+    ];
+
+    foreach ($themes as $id => $name) {
+      /** @var \Drupal\reliefweb_rivers\Services\JobRiver */
+      $river = \Drupal::service('reliefweb_rivers.job.river');
+
+      $payload = $river->getApiPayload();
+      $payload['offset'] = 62;
+      $payload['limit'] = 1;
+
+      $payload['preset'] = 'latest';
+      $payload['fields']['include'] = [];
+      $payload['fields']['include'][] = 'theme.id';
+      $payload['fields']['include'][] = 'theme.name';
+      $payload['fields']['include'][] = 'body';
+      $payload['filter'] = [
+        'field' => 'theme.id',
+        'value' => $id,
+      ];
+
+      $data = $river->requestApi($payload);
+
+      foreach ($data['data'] as $row) {
+        $result[] = [
+          'label' => $name,
+          'text' => $row['fields']['body'],
+        ];
+      }
+    }
+
+    return $result;
+  }
+
+  /**
+   * Job categories from API.
+   *
+   * @command reliefweb_openai:job_categories_test
+   * @usage reliefweb_openai:job_categories_test
+   *   job_categories.
+   * @validate-module-enabled reliefweb_openai
+   */
+  public function jobcategory_test() {
+    $result = [];
+
+    $themes = [
+      4587 => 'Agriculture',
+      49458 => 'Camp Coordination and Camp Management',
+      4588 => 'Climate Change and Environment',
+      4590 => 'Coordination',
+      4591 => 'Disaster Management',
+      4592 => 'Education',
+      4593 => 'Food and Nutrition',
+      4594 => 'Gender',
+      4595 => 'Health',
+      4596 => 'HIV/Aids',
+      12033 => 'Mine Action',
+      4599 => 'Peacekeeping and Peacebuilding',
+      4600 => 'Protection and Human Rights',
+      4601 => 'Recovery and Reconstruction',
+      4602 => 'Safety and Security',
+      4603 => 'Shelter and Non-Food Items',
+      4604 => 'Water Sanitation Hygiene',
+    ];
+
+    foreach ($themes as $id => $name) {
+      /** @var \Drupal\reliefweb_rivers\Services\JobRiver */
+      $river = \Drupal::service('reliefweb_rivers.job.river');
+
+      $payload = $river->getApiPayload();
+      $payload['offset'] = 62;
+      $payload['limit'] = 1;
+
+      $payload['preset'] = 'latest';
+      $payload['fields']['include'] = [];
+      $payload['fields']['include'][] = 'theme.id';
+      $payload['fields']['include'][] = 'theme.name';
+      $payload['fields']['include'][] = 'body';
+      $payload['filter'] = [
+        'field' => 'theme.id',
+        'value' => $id,
+      ];
+
+      $data = $river->requestApi($payload);
+
+      foreach ($data['data'] as $row) {
+        $filename = '/var/www/test_file_' . $id . '.txt';
+        file_put_contents($filename, $row['fields']['body']);
+      }
+    }
+
+    return $result;
+  }
+
+  /**
+   * Summerize a PDF.
+   *
+   * @command reliefweb_openai:summarize_pdf
+   * @usage reliefweb_openai:summarize_pdf
+   *   Summerize a PDF.
+   * @validate-module-enabled reliefweb_openai
+   */
+  function summerizePdf(string $filename = '/var/www/testpdf.txt') {
+    $body = file_get_contents($filename);
+    $chunks = explode('|||', chunk_split($body, 9000, '|||'));
+
+    $results = [];
+
+    foreach ($chunks as $index => $chunk) {
+      $this->logger()->notice('Processing ' . $index . ' of ' . count($chunks));
+
+      if (strlen($chunk) < 100) {
+        continue;
+      }
+
+      $results[] = reliefweb_openai_http_call_chat(
+        [
+          'model' => 'gpt-3.5-turbo-16k',
+          'messages' => [
+            [
+              'role' => 'user',
+              'content' => "Summerize the following text:\n\n" . $chunk,
+            ],
+          ],
+          'temperature' => .8,
+          'max_tokens' => 300,
+        ],
+      );
+    }
+
+    $text = '';
+    foreach ($results as $row) {
+      $text .= $row['choices'][0]['message']['content'] ?? '';
+      $text .= "\n";
+    }
+
+    $result = reliefweb_openai_http_call_chat(
+      [
+        'model' => 'gpt-3.5-turbo-16k',
+        'messages' => [
+          [
+            'role' => 'user',
+            'content' => "Summerize the following text:\n\n" . $text,
+          ],
+        ],
+        'temperature' => .8,
+        'max_tokens' => 600,
+      ],
+    );
+
+    return $result['choices'][0]['message']['content'];
   }
 
 }
