@@ -20,3 +20,10 @@ reliefweb_openai.settings:
     aws_endpoint_theme_classifier:
       type: string
       label: 'AWS Theme classifier endpoint'
+    azure_endpoint:
+      type: string
+      label: 'Azure endpoint'
+    azure_apikey:
+      type: string
+      label: 'Azure API key'
+

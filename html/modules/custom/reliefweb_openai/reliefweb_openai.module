@@ -12,7 +12,6 @@ use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\node\Entity\Node;
-use Symfony\Component\Validator\Constraints\Length;
 
 /**
  * Implements hook_form_alter().
@@ -29,49 +28,72 @@ function reliefweb_openai_form_alter(array &$form, FormStateInterface $form_stat
 
     if (!empty($entity_types) && array_key_exists($entity->getEntityTypeId(), $entity_types)) {
       if (in_array($entity->bundle(), $entity_types[$entity->getEntityTypeId()])) {
-        $form['openai_suggest'] = [
+        $form['chatgpt_suggest'] = [
           '#type' => 'details',
           '#open' => TRUE,
-          '#title' => t('Suggest taxonomy'),
+          '#title' => t('Suggest humanitarian themes using ChatGPT'),
         ];
 
-        $form['openai_suggest']['response'] = [
+        $form['chatgpt_suggest']['chatgpt_response'] = [
           '#type' => 'markup',
-          '#markup' => t('OpenAI can attempt to suggest possible classification terms to use as taxonomy.'),
-          '#prefix' => '<div id="openai-suggest-response">',
+          '#markup' => t('chatgpt can attempt to suggest possible humanitarian themes to use.'),
+          '#prefix' => '<div id="chatgpt-suggest-response">',
           '#suffix' => '</div>',
         ];
 
-        $form['openai_suggest']['do_suggest'] = [
+        $form['chatgpt_suggest']['do_suggest'] = [
           '#type' => 'button',
-          '#value' => t('Suggest humanitarian theme(s)'),
+          '#value' => t('Suggest humanitarian theme(s) - ChatGPT'),
           '#limit_validation_errors' => [],
           '#ajax' => [
-            'callback' => 'reliefweb_openai_content_node_suggest_taxonomy',
-            'wrapper' => 'openai-suggest-response',
+            'callback' => 'reliefweb_openai_content_node_suggest_chatgpt',
+            'wrapper' => 'chatgpt-suggest-response',
           ],
         ];
 
         $form['aws_comprehend'] = [
           '#type' => 'details',
           '#open' => TRUE,
-          '#title' => t('Suggest taxonomy'),
+          '#title' => t('Suggest humanitarian themes using AWS Comprehend'),
         ];
 
-        $form['aws_comprehend']['response'] = [
+        $form['aws_comprehend']['aws_response'] = [
           '#type' => 'markup',
           '#markup' => t('AWS Comprehend can attempt to suggest possible classification terms to use as taxonomy.'),
           '#prefix' => '<div id="aws-comprehend-suggest-response">',
           '#suffix' => '</div>',
         ];
 
-        $form['aws_comprehend']['do_suggest'] = [
+        $form['aws_comprehend']['aws_do_suggest'] = [
           '#type' => 'button',
           '#value' => t('Suggest humanitarian theme(s) - AWS Comprehend'),
           '#limit_validation_errors' => [],
           '#ajax' => [
             'callback' => 'reliefweb_openai_content_node_suggest_aws',
             'wrapper' => 'aws-comprehend-suggest-response',
+          ],
+        ];
+
+        $form['azure_comprehend'] = [
+          '#type' => 'details',
+          '#open' => TRUE,
+          '#title' => t('Suggest humanitarian themes using azure Comprehend'),
+        ];
+
+        $form['azure_comprehend']['azure_response'] = [
+          '#type' => 'markup',
+          '#markup' => t('azure Comprehend can attempt to suggest possible classification terms to use as taxonomy.'),
+          '#prefix' => '<div id="azure-suggest-response">',
+          '#suffix' => '</div>',
+        ];
+
+        $form['azure_comprehend']['azure_do_suggest'] = [
+          '#type' => 'button',
+          '#value' => t('Suggest humanitarian theme(s) - azure Comprehend'),
+          '#limit_validation_errors' => [],
+          '#ajax' => [
+            'callback' => 'reliefweb_openai_content_node_suggest_azure',
+            'wrapper' => 'azure-suggest-response',
           ],
         ];
       }
@@ -90,7 +112,7 @@ function reliefweb_openai_form_alter(array &$form, FormStateInterface $form_stat
  * @return \Drupal\Core\Ajax\AjaxResponse
  *   The HTML response.
  */
-function reliefweb_openai_content_node_suggest_taxonomy(array &$form, FormStateInterface $form_state) {
+function reliefweb_openai_content_node_suggest_chatgpt(array &$form, FormStateInterface $form_state) {
   $body = $form_state->getValue('body')[0]['value'];
 
   if (!empty($body)) {
@@ -116,7 +138,53 @@ function reliefweb_openai_content_node_suggest_taxonomy(array &$form, FormStateI
     $text = $result['choices'][0]['message']['content'] ?? 'undecided';
 
     $response = new AjaxResponse();
-    $response->addCommand(new HtmlCommand('#openai-suggest-response', $text));
+    $response->addCommand(new HtmlCommand('#chatgpt-suggest-response', $text));
+    return $response;
+  }
+}
+
+/**
+ * The AJAX callback for suggesting taxonomy.
+ *
+ * @param array $form
+ *   The node form.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The form state.
+ *
+ * @return \Drupal\Core\Ajax\AjaxResponse
+ *   The HTML response.
+ */
+function reliefweb_openai_content_node_suggest_azure(array &$form, FormStateInterface $form_state) {
+  $body = $form_state->getValue('body')[0]['value'];
+
+  if (!empty($body)) {
+    $body = Unicode::truncate(strip_tags(trim($body)), 3900, TRUE);
+    $body = str_replace(["\r\n", "\r", "\n", "\\r", "\\n", "\\r\\n"], "", $body);
+    $body = preg_replace("/  +/", ' ', $body);
+    $body = preg_replace("/[^a-z0-9 ]/i", '', $body);
+
+    $prompt = 'Which of the following humanitarian themes: Agriculture, Camp Coordination and Camp Management, Climate Change and Environment, Contributions, Coordination, Disaster Management, Education, Food and Nutrition, Gender, Health, HIV/AIDS, Humanitarian Financing, Logistics and Telecommunications, Mine Action, Peacekeeping and Peacebuilding, Protection and Human Rights, Recovery and Reconstruction, Safety and Security, Shelter and Non-Food Items, Water Sanitation Hygiene are the most relevant for this text:\n\n"' . $body . '"';
+    $prompt = 'Extract the humanitarian theme (One of Agriculture, Camp Coordination and Camp Management, Climate Change and Environment, Contributions, Coordination, Disaster Management, Education, Food and Nutrition, Gender, Health, HIV/AIDS, Humanitarian Financing, Logistics and Telecommunications, Mine Action, Peacekeeping and Peacebuilding, Protection and Human Rights, Recovery and Reconstruction, Safety and Security, Shelter and Non-Food Items, Water Sanitation Hygiene) and country from the text below.' . "\n\n" . $body;
+
+    $result = reliefweb_openai_http_call_azure(
+      [
+        'messages' => [
+          [
+            'role' => 'system',
+            'content' => 'You are an AI assistant that helps people find information.',
+          ],
+          [
+            'role' => 'user',
+            'content' => $prompt,
+          ],
+        ],
+      ],
+    );
+
+    $text = $result['choices'][0]['message']['content'] ?? 'undecided';
+
+    $response = new AjaxResponse();
+    $response->addCommand(new HtmlCommand('#azure-suggest-response', $text));
     return $response;
   }
 }
@@ -272,9 +340,9 @@ function reliefweb_openai_content_node_suggest_aws(array &$form, FormStateInterf
       'region' => $region,
       'version' => 'latest',
       'credentials' => [
-      'key' => $access_key,
-      'secret' => $secret_key,
-      ]
+        'key' => $access_key,
+        'secret' => $secret_key,
+      ],
     ]);
 
     $result = $client->classifyDocument([
@@ -295,77 +363,30 @@ function reliefweb_openai_content_node_suggest_aws(array &$form, FormStateInterf
   }
 }
 
-function testit() {
-  $body = file_get_contents('/var/www/testpdf.txt');
-  $chunks = explode('|||', chunk_split($body, 4000, '|||'));
+/**
+ * Make chat call.
+ */
+function reliefweb_openai_http_call_azure($query) {
+  $config = \Drupal::config('reliefweb_openai.settings');
+  $endpoint = $config->get('azure_endpoint');
+  $key = $config->get('azure_apikey');
 
-  $results = [];
+  $http_client = \Drupal::httpClient();
 
-  foreach ($chunks as $chunk) {
-    $results[] = reliefweb_openai_http_call([
-      'model' => 'text-davinci-003',
-      'prompt' => $chunk . "\n\nTl;dr",
-      'temperature' => 1,
-      'max_tokens' => 260,
-      'top_p' => 1.0,
-      'frequency_penalty' => 0.0,
-      'presence_penalty' => 1
-    ]);
-  }
+  $headers = [
+    'Content-Type' => 'application/json',
+    'API-KEY' => $key,
+  ];
 
-  print_r($results);
-}
-
-
-function testit2() {
-  $body = file_get_contents('/var/www/testpdf.txt');
-  $chunks = explode('|||', chunk_split($body, 9000, '|||'));
-
-  $results = [];
-
-  foreach ($chunks as $index => $chunk) {
-    print('Processing ' . $index . ' of ' . count($chunks)) . "\n";
-
-    if (strlen($chunk) < 100) {
-      continue;
-    }
-
-    $results[] = reliefweb_openai_http_call_chat(
-      [
-        'model' => 'gpt-3.5-turbo-16k',
-        'messages' => [
-          [
-            'role' => 'user',
-            'content' => "Summerize the following text:\n\n" . $chunk,
-          ],
-        ],
-        'temperature' => .8,
-        'max_tokens' => 300,
-      ],
-    );
-  }
-
-  $text = '';
-  foreach ($results as $row) {
-    $text .= $row['choices'][0]['message']['content'] ?? '';
-    $text .= "\n";
-  }
-
-  print_r($text);
-
-  $result = reliefweb_openai_http_call_chat(
+  $response = $http_client->request(
+    'POST',
+    $endpoint,
     [
-      'model' => 'gpt-3.5-turbo-16k',
-      'messages' => [
-        [
-          'role' => 'user',
-          'content' => "Summerize the following text:\n\n" . $text,
-        ],
-      ],
-      'temperature' => .8,
-      'max_tokens' => 300,
+      'headers' => $headers,
+      'json' => $query,
     ],
   );
 
-  print_r($result['choices'][0]['message']['content']);
+  $body = $response->getBody() . '';
+  return json_decode($body, TRUE);
 }

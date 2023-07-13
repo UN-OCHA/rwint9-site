@@ -71,6 +71,20 @@ class ApiSettingsForm extends ConfigFormBase {
       '#description' => $this->t('AWS Theme classifier endpoint'),
     ];
 
+    $form['azure_endpoint'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Azure endpoint'),
+      '#default_value' => $this->config('reliefweb_openai.settings')->get('azure_endpoint'),
+      '#description' => $this->t('Azure endpoint'),
+    ];
+
+    $form['azure_apikey'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Azure API key'),
+      '#default_value' => $this->config('reliefweb_openai.settings')->get('azure_apikey'),
+      '#description' => $this->t('Azure API key'),
+    ];
+
     return parent::buildForm($form, $form_state);
   }
 
@@ -85,6 +99,8 @@ class ApiSettingsForm extends ConfigFormBase {
       ->set('aws_secret_key', $form_state->getValue('aws_secret_key'))
       ->set('aws_region', $form_state->getValue('aws_region'))
       ->set('aws_endpoint_theme_classifier', $form_state->getValue('aws_endpoint_theme_classifier'))
+      ->set('azure_endpoint', $form_state->getValue('azure_endpoint'))
+      ->set('azure_apikey', $form_state->getValue('azure_apikey'))
       ->save();
     parent::submitForm($form, $form_state);
   }

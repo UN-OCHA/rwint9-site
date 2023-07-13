@@ -1,19 +1,42 @@
 # POC Open AI
 
-Enabled for themes on reports.
+Various test integrations using ChatGPT and AWS Comprehend.
 
 ## Config
 
-Add `$config['reliefweb_openai.settings']['token'] = '';` to `html/sites/default/settings.local.php`
+File `html/sites/default/settings.local.php`
 
-## Usage
+```php
+$config['reliefweb_openai.settings']['token'] = '';
+$config['reliefweb_openai.settings']['aws_access_key'] = '';
+$config['reliefweb_openai.settings']['aws_secret_key'] = '';
+$config['reliefweb_openai.settings']['aws_region'] = 'eu-central-1';
+$config['reliefweb_openai.settings']['aws_endpoint_theme_classifier'] = 'arn:aws:comprehend:eu-central-1:694216630861:document-classifier-endpoint/rw-themes';
+$config['reliefweb_openai.settings']['azure_endpoint'] = 'https://tst003.openai.azure.com/openai/deployments/tst003/chat/completions?api-version=2023-03-15-preview';
+$config['reliefweb_openai.settings']['azure_apikey'] = '';
+```
 
-`drush reliefweb_openai:train_jobs career_categories 100` will submit learning and validation data
- and returns fine tune id
+## Drush commands
 
-`drush reliefweb_openai:status ft-PAEjOd62YHk2FRpUy3YQj3gD` returns status of learning
+```
+drush reliefweb_openai:train_jobs           Train jobs.
+drush reliefweb_openai:status               Jobs status.
+drush reliefweb_openai:results              Jobs status.
+drush reliefweb_openai:test_jobs            Test it
+drush reliefweb_openai:job_categories       Job categories from API.
+drush reliefweb_openai:job_categories_test  Job categories from API.
+drush reliefweb_openai:summarize_pdf        Summarize a PDF.
+drush reliefweb_openai:aws_endpoints:list   List endpoints.
+drush reliefweb_openai:aws_endpoints:create Create endpoint.
+drush reliefweb_openai:aws_endpoints:delete Delete endpoint.
+```
 
-`drush reliefweb_openai:result ft-PAEjOd62YHk2FRpUy3YQj3gD` return results file
+## Forms
 
-`drush reliefweb_openai:test_jobs ada:ft-un-ocha:rw-jobs-career-categories-2023-03-03-10-49-12 career_categories 10`
-will test model using submitted data
+Extra buttons added to jobs and reports to ask AI for a list of humanitarian themes
+based on the body text.
+
+## Jobs
+
+When a job posters marks the job is being ready for review (state pending), the job description
+is send to ChatGPT to determine if the job is a tender or not.
