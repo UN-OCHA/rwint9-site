@@ -35,8 +35,24 @@ class ReportRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function getPageTitle() {
+  public function getDefaultPageTitle() {
     return $this->t('Updates');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getExcludedFilterCodesForTitle() {
+    // We don't want to use the country (C) field for the updates river, because
+    // that leads to duplicate or weird titles with the primary country field,
+    // ex: "Afghanistan - Aghanistan Updates"...
+    // See RiverServiceBase for the explanation about the exclusion of 'OT'.
+    $codes = ['C' => TRUE, 'OT' => TRUE];
+    // It doesn't make sense to have Maps + Situation Report for example.
+    if ($this->getSelectedView() === 'maps') {
+      $codes['F'] = TRUE;
+    }
+    return $codes;
   }
 
   /**
@@ -55,7 +71,7 @@ class ReportRiver extends RiverServiceBase {
    * {@inheritdoc}
    */
   public function getFilters() {
-    return [
+    $filters = [
       'PC' => [
         'name' => $this->t('Primary country'),
         'shortname' => TRUE,
@@ -198,6 +214,20 @@ class ReportRiver extends RiverServiceBase {
         ],
       ],
     ];
+
+    // Only include map, infographic and interactive content formats when
+    // viewing maps/infographics.
+    $view = $this->getSelectedView();
+    if ($view === 'maps') {
+      $filters['F']['include'] = [12, 12570, 38974];
+    }
+    // Exclude map, infographic and interactive content formats when viewing
+    // reports only.
+    elseif ($view === 'reports') {
+      $filters['F']['exclude'] = [12, 12570, 38974];
+    }
+
+    return $filters;
   }
 
   /**
@@ -660,6 +690,13 @@ class ReportRiver extends RiverServiceBase {
     }
 
     return $entities;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultRiverDescription() {
+    return $this->t('Your gateway to all content to date. Search and/or drill down with filters to narrow down the content.');
   }
 
 }

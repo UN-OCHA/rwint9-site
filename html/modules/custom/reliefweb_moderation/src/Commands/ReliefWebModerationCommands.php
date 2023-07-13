@@ -134,6 +134,7 @@ class ReliefWebModerationCommands extends DrushCommands {
           $source->setNewRevision(TRUE);
           $source->setRevisionLogMessage('Automatic status update due to inactivity.');
           $source->setRevisionUserId(2);
+          $source->setRevisionCreationTime(time());
           $source->save();
         }
         $count++;

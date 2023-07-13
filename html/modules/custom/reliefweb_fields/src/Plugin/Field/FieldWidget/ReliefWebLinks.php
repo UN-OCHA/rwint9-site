@@ -574,6 +574,7 @@ class ReliefWebLinks extends WidgetBase implements ContainerFactoryPluginInterfa
 
         // Force a new revision.
         $entity->setNewRevision(TRUE);
+        $entity->setRevisionCreationTime(time());
 
         // Save as the System user.
         $entity->setRevisionUserId(2);

@@ -305,9 +305,6 @@
     "kint-php/kint": {
         "version": "3.3"
     },
-    "laminas/laminas-diactoros": {
-        "version": "2.8.0"
-    },
     "laminas/laminas-escaper": {
         "version": "2.9.0"
     },
@@ -334,9 +331,6 @@
     },
     "lolli42/finediff": {
         "version": "1.0.2"
-    },
-    "lsolesen/pel": {
-        "version": "0.9.12"
     },
     "masterminds/html5": {
         "version": "2.7.5"
