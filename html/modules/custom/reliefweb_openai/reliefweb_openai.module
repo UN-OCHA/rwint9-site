@@ -74,22 +74,22 @@ function reliefweb_openai_form_alter(array &$form, FormStateInterface $form_stat
           ],
         ];
 
-        $form['azure_comprehend'] = [
+        $form['azure'] = [
           '#type' => 'details',
           '#open' => TRUE,
-          '#title' => t('Suggest humanitarian themes using azure Comprehend'),
+          '#title' => t('Suggest humanitarian themes using Azure'),
         ];
 
-        $form['azure_comprehend']['azure_response'] = [
+        $form['azure']['azure_response'] = [
           '#type' => 'markup',
-          '#markup' => t('azure Comprehend can attempt to suggest possible classification terms to use as taxonomy.'),
+          '#markup' => t('Azure can attempt to suggest possible classification terms to use as taxonomy.'),
           '#prefix' => '<div id="azure-suggest-response">',
           '#suffix' => '</div>',
         ];
 
-        $form['azure_comprehend']['azure_do_suggest'] = [
+        $form['azure']['azure_do_suggest'] = [
           '#type' => 'button',
-          '#value' => t('Suggest humanitarian theme(s) - azure Comprehend'),
+          '#value' => t('Suggest humanitarian theme(s) - Azure'),
           '#limit_validation_errors' => [],
           '#ajax' => [
             'callback' => 'reliefweb_openai_content_node_suggest_azure',
@@ -158,13 +158,17 @@ function reliefweb_openai_content_node_suggest_azure(array &$form, FormStateInte
   $body = $form_state->getValue('body')[0]['value'];
 
   if (!empty($body)) {
-    $body = Unicode::truncate(strip_tags(trim($body)), 3900, TRUE);
+    $body = Unicode::truncate(strip_tags(trim($body)), 9999, TRUE);
     $body = str_replace(["\r\n", "\r", "\n", "\\r", "\\n", "\\r\\n"], "", $body);
     $body = preg_replace("/  +/", ' ', $body);
     $body = preg_replace("/[^a-z0-9 ]/i", '', $body);
 
     $prompt = 'Which of the following humanitarian themes: Agriculture, Camp Coordination and Camp Management, Climate Change and Environment, Contributions, Coordination, Disaster Management, Education, Food and Nutrition, Gender, Health, HIV/AIDS, Humanitarian Financing, Logistics and Telecommunications, Mine Action, Peacekeeping and Peacebuilding, Protection and Human Rights, Recovery and Reconstruction, Safety and Security, Shelter and Non-Food Items, Water Sanitation Hygiene are the most relevant for this text:\n\n"' . $body . '"';
     $prompt = 'Extract the humanitarian theme (One of Agriculture, Camp Coordination and Camp Management, Climate Change and Environment, Contributions, Coordination, Disaster Management, Education, Food and Nutrition, Gender, Health, HIV/AIDS, Humanitarian Financing, Logistics and Telecommunications, Mine Action, Peacekeeping and Peacebuilding, Protection and Human Rights, Recovery and Reconstruction, Safety and Security, Shelter and Non-Food Items, Water Sanitation Hygiene) and country from the text below.' . "\n\n" . $body;
+
+    if (isset($form['field_job_experience'])) {
+      $prompt = 'Extract the required years of job experience, career category, humanitarian theme (One of Agriculture, Camp Coordination and Camp Management, Climate Change and Environment, Contributions, Coordination, Disaster Management, Education, Food and Nutrition, Gender, Health, HIV/AIDS, Humanitarian Financing, Logistics and Telecommunications, Mine Action, Peacekeeping and Peacebuilding, Protection and Human Rights, Recovery and Reconstruction, Safety and Security, Shelter and Non-Food Items, Water Sanitation Hygiene) and country from the text below.' . "\n\n" . $body;
+    }
 
     $result = reliefweb_openai_http_call_azure(
       [
@@ -182,6 +186,7 @@ function reliefweb_openai_content_node_suggest_azure(array &$form, FormStateInte
     );
 
     $text = $result['choices'][0]['message']['content'] ?? 'undecided';
+    $text = str_replace("\n", '<br>', $text);
 
     $response = new AjaxResponse();
     $response->addCommand(new HtmlCommand('#azure-suggest-response', $text));
