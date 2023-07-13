@@ -2,10 +2,10 @@
 
 namespace Drupal\reliefweb_rivers;
 
+use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
-use Drupal\Core\Render\Markup;
 
 /**
  * Advanced search handler.

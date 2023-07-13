@@ -256,8 +256,10 @@ class SourceModeration extends ModerationServiceBase {
       'organization_type',
       'country',
       'content_type',
+      'created',
     ]);
     unset($definitions['organization_type']['join_callback']);
+    $definitions['created']['label'] = $this->t('Creation date');
     return $definitions;
   }
 

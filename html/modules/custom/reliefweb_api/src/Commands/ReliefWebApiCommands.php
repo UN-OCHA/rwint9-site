@@ -9,8 +9,8 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\State\StateInterface;
 use Drush\Commands\DrushCommands;
-use RWAPIIndexer\Manager;
 use RWAPIIndexer\Bundles;
+use RWAPIIndexer\Manager;
 
 /**
  * ReliefWeb API Drush commandfile.

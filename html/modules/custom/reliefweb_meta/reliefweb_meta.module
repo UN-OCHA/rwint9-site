@@ -14,10 +14,10 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
 use Drupal\image\Entity\ImageStyle;
 use Drupal\node\NodeInterface;
-use Drupal\taxonomy\TermInterface;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Drupal\reliefweb_utility\Helpers\MediaHelper;
+use Drupal\taxonomy\TermInterface;
 
 /**
  * Implements hook_metatag_route_entity().
