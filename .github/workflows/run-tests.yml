@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         id: checkout
         uses: actions/checkout@v3
 
@@ -23,7 +23,7 @@ jobs:
         if: ${{ !env.ACT }}
         with:
           php-version: ${{ steps.php.outputs.php_version }}
-          tools: composer:2.5.5
+          tools: composer
         env:
           fail-fast: true
 
@@ -97,10 +97,10 @@ jobs:
         uses: cafuego/command-output@main
         with:
           run: |
-            docker-compose -f tests/docker-compose.yml up -d
+            docker compose -f tests/docker-compose.yml up -d
             sleep 10
             docker ps -a
-            docker-compose -f tests/docker-compose.yml exec -w /srv/www -T drupal composer install
+            docker compose -f tests/docker-compose.yml exec -w /srv/www -T drupal composer install
         env:
           fail-fast: true
 
@@ -109,7 +109,7 @@ jobs:
         uses: cafuego/command-output@main
         with:
           run: |
-            docker-compose -f tests/docker-compose.yml exec -u appuser -w /srv/www -T drupal phpcs -p --report=full --standard=phpcs.xml ./html/modules/custom ./html/themes/custom
+            docker compose -f tests/docker-compose.yml exec -u appuser -w /srv/www -T drupal phpcs -p --report=full --standard=phpcs.xml ./html/modules/custom ./html/themes/custom
         env:
           fail-fast: true
 
@@ -118,7 +118,7 @@ jobs:
         uses: cafuego/command-output@main
         with:
           run: |
-            docker-compose -f tests/docker-compose.yml exec -T drupal drush -y si --existing-config
+            docker compose -f tests/docker-compose.yml exec -T drupal drush -y si --existing-config
         env:
           fail-fast: true
 
@@ -127,12 +127,12 @@ jobs:
         uses: cafuego/command-output@main
         with:
           run: |
-            docker-compose -f tests/docker-compose.yml exec -T drupal drush -y en dblog
-            docker-compose -f tests/docker-compose.yml exec -T drupal chmod -R 777 /srv/www/html/sites/default/files /srv/www/html/sites/default/private
-            docker-compose -f tests/docker-compose.yml exec -T drupal mkdir -p /srv/www/html/build/logs
-            docker-compose -f tests/docker-compose.yml exec -T drupal chmod -R 777 /srv/www/html/build/logs
-            docker-compose -f tests/docker-compose.yml exec -T -w /srv/www -e XDEBUG_MODE=coverage -e BROWSERTEST_OUTPUT_DIRECTORY=/srv/www/html/sites/default/files/browser_output -e DTT_BASE_URL=http://127.0.0.1 drupal ./vendor/bin/phpunit --coverage-clover /srv/www/html/build/logs/clover.xml --debug
-            docker cp "$(docker-compose -f tests/docker-compose.yml ps -q drupal)":/srv/www/html/build/logs/clover.xml .
+            docker compose -f tests/docker-compose.yml exec -T drupal drush -y en dblog
+            docker compose -f tests/docker-compose.yml exec -T drupal chmod -R 777 /srv/www/html/sites/default/files /srv/www/html/sites/default/private
+            docker compose -f tests/docker-compose.yml exec -T drupal mkdir -p /srv/www/html/build/logs
+            docker compose -f tests/docker-compose.yml exec -T drupal chmod -R 777 /srv/www/html/build/logs
+            docker compose -f tests/docker-compose.yml exec -T -w /srv/www -e XDEBUG_MODE=coverage -e BROWSERTEST_OUTPUT_DIRECTORY=/srv/www/html/sites/default/files/browser_output -e DTT_BASE_URL=http://127.0.0.1 drupal ./vendor/bin/phpunit --coverage-clover /srv/www/html/build/logs/clover.xml --debug
+            docker cp "$(docker compose -f tests/docker-compose.yml ps -q drupal)":/srv/www/html/build/logs/clover.xml .
         env:
           fail-fast: true
 
@@ -152,7 +152,7 @@ jobs:
         if: ${{ !env.ACT }}
         id: fc
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: 'github-actions[bot]'
           body-includes: Build output
@@ -161,7 +161,7 @@ jobs:
         uses: peter-evans/create-or-update-comment@v2
         if: ${{ !env.ACT }}
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           comment-id: ${{ steps.fc.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
@@ -174,17 +174,18 @@ jobs:
             #### PHP Code Sniffer `${{ steps.phpcs.outcome }}`
 
             <details><summary>Software Versions</summary>
-
-            ```${{ steps.versions.outputs.stdout }}```
-
+            <code>${{ steps.versions.outputs.stdout }}</code>
+            </details>
+            <details><summary>Drupal Logs</summary>
+            <code>${{ steps.dblog.outputs.stdout }}</code>
             </details>
 
-            *Pusher: @${{ github.actor }}, Action: `${{ github.event_name }}`, Workflow: `${{ github.workflow }}`*;
+            *Pusher: @${{ github.actor }}, Action: `${{ github.event_name }}`, Workflow: `${{ github.workflow }}`*
           edit-mode: replace
 
       - name: Slack Success Notification
         id: slack_success
-        if: ${{ !env.ACT && success() }}
+        if: ${{ !env.ACT && failure() }}
         uses: slackapi/slack-github-action@v1.23.0
         with:
           channel-id: '${{ vars.SLACK_CHANNEL }}'
@@ -211,7 +212,7 @@ jobs:
 
       - name: Slack Failure Notification
         id: slack_failure
-        if: ${{ !env.ACT && success() }}
+        if: ${{ !env.ACT && failure() }}
         uses: slackapi/slack-github-action@v1.23.0
         with:
           channel-id: '${{ vars.SLACK_CHANNEL }}'
@@ -242,6 +243,6 @@ jobs:
         uses: cafuego/command-output@main
         with:
           run: |
-            docker compose -f tests/docker-compose.yml down --rmi local -v
+            docker compose -f tests/docker-compose.yml down
         env:
           fail-fast: true
