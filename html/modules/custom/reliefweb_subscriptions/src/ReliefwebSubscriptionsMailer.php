@@ -25,8 +25,8 @@ use Drupal\Core\Theme\ThemeInitialization;
 use Drupal\Core\Theme\ThemeManagerInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_api\Services\ReliefWebApiClient;
-use Drupal\reliefweb_entities\Entity\Report;
 use Drupal\reliefweb_entities\Entity\Disaster;
+use Drupal\reliefweb_entities\Entity\Report;
 use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
 
 /**

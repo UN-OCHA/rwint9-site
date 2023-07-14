@@ -6,8 +6,8 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\Condition;
 use Drupal\Core\Database\Query\Select;
-use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Datetime\DateFormatterInterface;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -15,13 +15,13 @@ use Drupal\Core\Field\FieldItemInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
+use Drupal\Core\Pager\PagerManagerInterface;
+use Drupal\Core\Pager\PagerParametersInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
-use Drupal\Core\Pager\PagerManagerInterface;
-use Drupal\Core\Pager\PagerParametersInterface;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_utility\Helpers\EntityHelper;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
@@ -845,6 +845,14 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
           'form' => 'omnibox',
           'widget' => 'datepicker',
         ],
+        'changed' => [
+          'type' => 'property',
+          'field' => 'changed',
+          'label' => $this->t('Change date'),
+          'shortcut' => 'cgd',
+          'form' => 'omnibox',
+          'widget' => 'datepicker',
+        ],
         'reviewed' => [
           'type' => 'property',
           'field' => 'revision_created',
@@ -878,7 +886,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
           'type' => 'field',
           'field' => 'field_disaster_date',
           'column' => 'value',
-          'label' => $this->t('Creation date'),
+          'label' => $this->t('Disaster date'),
           'shortcut' => 'cd',
           'form' => 'omnibox',
           'widget' => 'datepicker',
@@ -1673,6 +1681,11 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     // Skip.
     if (empty($fields)) {
       return;
+    }
+
+    // Handle date range.
+    if (is_array($value)) {
+      $value = $value[0] . ' AND ' . $value[1];
     }
 
     if (is_array($fields)) {

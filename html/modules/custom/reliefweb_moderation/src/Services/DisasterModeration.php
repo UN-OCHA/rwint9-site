@@ -306,9 +306,11 @@ class DisasterModeration extends ModerationServiceBase {
       'name',
       'profile',
       'author',
+      'created',
     ]);
 
     $definitions['author']['join_callback'] = 'joinTaxonomyAuthor';
+    $definitions['created']['label'] = $this->t('Creation date');
     return $definitions;
   }
 

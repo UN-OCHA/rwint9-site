@@ -4,9 +4,9 @@ namespace Drupal\reliefweb_reporting\Commands;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
-use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\Language\LanguageDefault;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\State\StateInterface;
 use Drush\Commands\DrushCommands;
 

@@ -2,10 +2,10 @@
 
 namespace Drupal\reliefweb_rivers;
 
+use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
-use Drupal\Core\Render\Markup;
 
 /**
  * Advanced search handler.
@@ -1113,6 +1113,7 @@ class AdvancedSearch {
    *   API suggest URL.
    */
   public static function getApiSuggestUrl($resource, array $parameters = []) {
+    $parameters['sort'] = ['score:desc', 'name.collation_en:asc'];
     return \Drupal::service('reliefweb_api.client')
       ->buildApiUrl($resource, $parameters);
   }

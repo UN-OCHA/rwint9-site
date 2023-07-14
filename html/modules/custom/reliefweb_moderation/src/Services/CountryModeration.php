@@ -136,6 +136,7 @@ class CountryModeration extends ModerationServiceBase {
       'name',
       'shortname',
       'profile',
+      'changed',
     ]);
     return $definitions;
   }

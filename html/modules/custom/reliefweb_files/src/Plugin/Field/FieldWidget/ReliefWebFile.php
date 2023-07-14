@@ -328,7 +328,10 @@ class ReliefWebFile extends WidgetBase {
     }
 
     // Add a field to allow changing the file name.
+    $file_name = $item->getFileName();
     $extension = $item->getFileExtension();
+    $original_extension = ReliefWebFileType::extractFileExtension($file_name, FALSE);
+    $extension_pattern = '(' . $extension . '|' . $original_extension . ')';
     $element['_new_file_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Download file name'),
@@ -336,7 +339,7 @@ class ReliefWebFile extends WidgetBase {
       '#size' => 60,
       '#not_required' => FALSE,
       '#attributes' => [
-        'pattern' => '^[^' . ReliefWebFileType::getFileNameInvalidCharacters() . ']+\.' . $extension . '$',
+        'pattern' => '^[^' . ReliefWebFileType::getFileNameInvalidCharacters() . ']+\.' . $extension_pattern . '$',
         'placeholder' => 'filename.' . $extension,
         'data-file-new-name' => '',
         'minlength' => strlen($extension) + 2,
@@ -346,7 +349,7 @@ class ReliefWebFile extends WidgetBase {
         '@extension' => $extension,
         '@characters' => ReliefWebFileType::getFileNameInvalidCharacters(TRUE),
       ]),
-      '#default_value' => $item->_new_file_name ?: $item->getFileName(),
+      '#default_value' => $item->_new_file_name ?: $file_name,
       '#attached' => [
         'library' => ['reliefweb_files/file.rename'],
       ],

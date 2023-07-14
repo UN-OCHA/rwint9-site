@@ -56,6 +56,12 @@ Add this line to settings.local.php: `$config['config_split.config_split.config_
 
 After importing a fresh database, run `drush cim` to enable devel, database log and stage_file_proxy.
 
+## Retagging
+
+Sometimes, content on ReliefWeb needs to be retagged. For example when organizations are consolidated.
+
+Most of the time, this can be achieved via a simple script. See [retagging](scripts/retagging/README.md) for more information.
+
 ### Docksal
 
 - `git clone --branch develop git@github.com:UN-OCHA/rwint9-site.git`

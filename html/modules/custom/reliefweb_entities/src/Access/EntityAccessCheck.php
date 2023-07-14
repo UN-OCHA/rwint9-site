@@ -7,8 +7,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Routing\Access\AccessInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\reliefweb_moderation\EntityModeratedInterface;
-use Drupal\taxonomy\TermInterface;
+use Drupal\reliefweb_entities\Entity\TaxonomyTermBase;
 
 /**
  * Check access to an entity page.
@@ -45,10 +44,9 @@ class EntityAccessCheck implements AccessInterface {
     if ($route_match->getRouteName() === 'entity.taxonomy_term.canonical') {
       $entity = $this->getEntityFromRouteMatch($route_match, 'taxonomy_term');
 
-      if (!empty($entity) && $entity instanceof TermInterface) {
-        if (!($entity instanceof EntityModeratedInterface) && !$this->currentUser->hasPermission('edit terms in ' . $entity->bundle())) {
-          return AccessResult::forbidden();
-        }
+      // Deny access to basic taxonomy terms unless the user can edit them.
+      if (!empty($entity) && $entity instanceof TaxonomyTermBase && !$this->currentUser->hasPermission('edit terms in ' . $entity->bundle())) {
+        return AccessResult::forbidden();
       }
     }
     // Let other modules decide.

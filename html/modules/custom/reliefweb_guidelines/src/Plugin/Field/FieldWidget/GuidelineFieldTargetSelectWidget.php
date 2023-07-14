@@ -2,11 +2,11 @@
 
 namespace Drupal\reliefweb_guidelines\Plugin\Field\FieldWidget;
 
+use Drupal\Core\Entity\ContentEntityTypeInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\Plugin\Field\FieldWidget\OptionsSelectWidget;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\OptGroup;
-use Drupal\Core\Entity\ContentEntityTypeInterface;
-use Drupal\Core\Entity\FieldableEntityInterface;
 
 /**
  * Plugin implementation of the 'guideline_field_target_select_widget' widget.
