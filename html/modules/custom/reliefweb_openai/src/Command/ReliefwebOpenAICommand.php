@@ -130,31 +130,6 @@ class ReliefwebOpenAICommand extends DrushCommands implements SiteAliasManagerAw
       fputcsv($fp, $fields);
     }
     fclose($fp);
-return;
-    // Validation data.
-    $size = min(50, round(0.1 * $limit));
-    $content = $this->buildData($field, $limit + 1, $size);
-    $fp = fopen('/var/www/validation.csv', 'w');
-    fputcsv($fp, ['excerpt', 'target_classification']);
-    foreach ($content as $fields) {
-        fputcsv($fp, $fields);
-    }
-    fclose($fp);
-
-    // Validation data.
-    $content = $this->buildData($field, $limit + $size + 1, $size);
-    $fp = fopen('/var/www/testing.csv', 'w');
-    fputcsv($fp, ['excerpt', 'target_classification']);
-    foreach ($content as $fields) {
-        fputcsv($fp, $fields);
-    }
-    fclose($fp);
-
-return;
-    // $validation = $this->uploadFile('validation_' . $field, $content);
-
-    //$response = $this->trainFile($field_name, $training['id'], $validation['id']);
-    return $response['id'];
   }
 
   /**
@@ -339,20 +314,15 @@ return;
       $prompt = $job->label() . "\n" . $this->cleanPrompt($job->body->value);
       $tags = [];
       foreach ($job->{$field}->referencedEntities() as $tag) {
-//        $tags[] = 'lvl1 -> lvl2 -> ' . $tag->label();
         $tags[] = $tag->label();
       }
-
-//      while (count($tags) < 3) {
-//        $tags[] = 'test ' . count($tags);
-//      }
 
       $data[] = [
         'label' => implode(' | ', $tags),
         'text' => $prompt,
       ];
     }
-print_r(count($data) . "\n");
+
     return $data;
   }
 
@@ -433,7 +403,6 @@ print_r(count($data) . "\n");
     $prompt = Unicode::truncate(strip_tags(trim($prompt)), 3900, TRUE);
     $prompt = str_replace(["\r\n", "\r", "\n", "\\r", "\\n", "\\r\\n"], " ", $prompt);
     $prompt = preg_replace("/  +/", ' ', $prompt);
-    // $prompt= substr($prompt, 0, 5000);
 
     return $prompt;
   }
