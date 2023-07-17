@@ -1,6 +1,9 @@
 # POC Open AI
 
-Various test integrations using ChatGPT and AWS Comprehend.
+Various test integrations using ChatGPT, Azure and AWS Comprehend.
+
+To be able to use *AWS Comprehend* you need to start the endpoint using `drush reliefweb_openai:aws_endpoints:create`,
+keep in mind that this will cost money while running.
 
 ## Config
 
@@ -33,10 +36,36 @@ drush reliefweb_openai:aws_endpoints:delete Delete endpoint.
 
 ## Forms
 
-Extra buttons added to jobs and reports to ask AI for a list of humanitarian themes
+Extra buttons are added to job edit form to ask AI for required year of experience, career category, list of humanitarian themes and primary country
 based on the body text.
+
+Extra buttons are added report edit form to ask AI for a list of humanitarian themes and primary country
+based on the body text.
+
+![Buttons](./docs/buttons.png)
+
+### ChatGPT
+
+Model: gpt-3.5-turbo-16k
+Prompt: **Extract the required years of job experience, career category, humanitarian theme (One of Agriculture, Camp Coordination and Camp Management, Climate Change and Environment, Contributions, Coordination, Disaster Management, Education, Food and Nutrition, Gender, Health, HIV/AIDS, Humanitarian Financing, Logistics and Telecommunications, Mine Action, Peacekeeping and Peacebuilding, Protection and Human Rights, Recovery and Reconstruction, Safety and Security, Shelter and Non-Food Items, Water Sanitation Hygiene) and country from the text below.**
+
+![ChatGPT](./docs/chatgpt.png)
+
+### Azure
+
+Model: gpt-3.5-turbo-16k
+Prompt: **Extract the required years of job experience, career category, humanitarian theme (One of Agriculture, Camp Coordination and Camp Management, Climate Change and Environment, Contributions, Coordination, Disaster Management, Education, Food and Nutrition, Gender, Health, HIV/AIDS, Humanitarian Financing, Logistics and Telecommunications, Mine Action, Peacekeeping and Peacebuilding, Protection and Human Rights, Recovery and Reconstruction, Safety and Security, Shelter and Non-Food Items, Water Sanitation Hygiene) and country from the text below.**
+
+![Azure](./docs/azure.png)
+
+### AWS Comprehend
+
+Model trained on extracting humanitarian theme.
 
 ## Jobs
 
 When a job posters marks the job is being ready for review (state pending), the job description
-is send to ChatGPT to determine if the job is a tender or not.
+is send to ChatGPT to determine if the job is a tender or not. The feedback will be added as a new revision
+so editors can easily see it.
+
+![Tender](./docs/tender.png)
