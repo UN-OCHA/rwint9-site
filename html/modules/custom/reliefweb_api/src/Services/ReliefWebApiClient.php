@@ -460,10 +460,10 @@ class ReliefWebApiClient {
         $result[] = $condition;
       }
       // Range filter - keep as is.
-      elseif (is_array($value) && (isset($value['to']) || isset($value['to']))) {
+      elseif (is_array($value) && (isset($value['from']) || isset($value['to']))) {
         $result[] = $condition;
       }
-      // Different operator or negated condition -  keep as is.
+      // Different operator or negated condition - keep as is.
       elseif ((isset($condition_operator) && $condition_operator !== $operator) || !empty($condition['negate'])) {
         $result[] = $condition;
       }

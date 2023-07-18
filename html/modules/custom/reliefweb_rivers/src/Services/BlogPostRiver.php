@@ -36,6 +36,13 @@ class BlogPostRiver extends RiverServiceBase {
    * {@inheritdoc}
    */
   public function getPageTitle() {
+    return $this->getDefaultPageTitle();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultPageTitle() {
     return $this->t('Blog');
   }
 
@@ -246,6 +253,13 @@ class BlogPostRiver extends RiverServiceBase {
     }
 
     return $entities;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultRiverDescription() {
+    return $this->t("A look at the ideas and projects we're working on as we strive to grow and improve ReliefWeb.");
   }
 
   /**

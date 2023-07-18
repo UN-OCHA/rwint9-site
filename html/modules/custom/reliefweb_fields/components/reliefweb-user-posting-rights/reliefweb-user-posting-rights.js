@@ -256,6 +256,9 @@
       // Handle change events on the different select elements in the form.
       container.addEventListener('change', this.handleChange.bind(this));
 
+      // Handle focus out events from notes fields.
+      container.addEventListener('focusout', this.handleFocusOut.bind(this));
+
       // Save the container.
       return container;
     },
@@ -518,6 +521,22 @@
 
           // Set the attribute to the value of the select element.
           parent.setAttribute('data-' + name, target.value);
+          parent.setAttribute('data-modified', '');
+          this.updateData();
+        }
+      }
+    },
+
+    /**
+     * Handle focus out events from notes fields.
+     */
+    handleFocusOut: function (event) {
+      var target = event.target;
+
+      if (target && target.tagName === 'TEXTAREA') {
+        // Update the data if the notes have changed.
+        if (target.value !== target.defaultValue) {
+          var parent = this.getParentElement(target, 'LI');
           parent.setAttribute('data-modified', '');
           this.updateData();
         }

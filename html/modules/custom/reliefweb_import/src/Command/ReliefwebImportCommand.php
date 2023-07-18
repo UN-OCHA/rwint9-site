@@ -648,6 +648,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     // Revision user is always 'System'.
     $job->setRevisionUserId($job->getOwnerId());
     $job->setNewRevision(TRUE);
+    $job->setRevisionCreationTime(time());
 
     // Revision message.
     if ($job->isNew()) {

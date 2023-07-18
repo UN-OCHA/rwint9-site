@@ -195,6 +195,7 @@ trait OpportunityDocumentTrait {
         $source->setNewRevision(TRUE);
         $source->setRevisionLogMessage('Automatic status update due to publication of node ' . $this->id());
         $source->setRevisionUserId(2);
+        $source->setRevisionCreationTime(time());
         $source->save();
       }
     }

@@ -236,6 +236,7 @@ class SourceModeration extends ModerationServiceBase {
       // Add a message if something changed.
       if ($changed) {
         $entity->setNewRevision(TRUE);
+        $entity->setRevisionCreationTime(time());
         $entity->setRevisionLogMessage(trim(implode(' ', [
           'Posting rights changed to blocked due to source being blocked.',
           $entity->getRevisionLogMessage() ?? '',
@@ -255,8 +256,10 @@ class SourceModeration extends ModerationServiceBase {
       'organization_type',
       'country',
       'content_type',
+      'created',
     ]);
     unset($definitions['organization_type']['join_callback']);
+    $definitions['created']['label'] = $this->t('Creation date');
     return $definitions;
   }
 

@@ -490,6 +490,7 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
 
         // Force a new revision.
         $entity->setNewRevision(TRUE);
+        $entity->setRevisionCreationTime(time());
 
         // Save as the System user.
         $entity->setRevisionUserId(2);

@@ -2,10 +2,10 @@
 
 namespace Drupal\reliefweb_rivers;
 
+use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
-use Drupal\Core\Render\Markup;
 
 /**
  * Advanced search handler.
@@ -213,10 +213,10 @@ class AdvancedSearch {
     }
 
     // Generate a link to clear the filter selection when javascript is not
-    // availble.
+    // available.
     $remove = RiverServiceBase::getRiverUrl(
       $this->bundle,
-      $this->parameters->getAll(['advanced-search'])
+      $this->parameters->getAllSorted(['advanced-search'])
     );
 
     // Sanitize the advanced search parameter for the entire selection.
@@ -1051,6 +1051,11 @@ class AdvancedSearch {
       $query->condition('td.tid', $filter['exclude'], 'NOT IN');
       $values = array_diff($values, $filter['exclude']);
     }
+    // Include only some terms.
+    elseif (!empty($filter['include'])) {
+      $query->condition('td.tid', $filter['include'], 'IN');
+      $values = array_intersect($values, $filter['include']);
+    }
 
     // Filter by the given values if any.
     if (!empty($values)) {
@@ -1108,6 +1113,7 @@ class AdvancedSearch {
    *   API suggest URL.
    */
   public static function getApiSuggestUrl($resource, array $parameters = []) {
+    $parameters['sort'] = ['score:desc', 'name.collation_en:asc'];
     return \Drupal::service('reliefweb_api.client')
       ->buildApiUrl($resource, $parameters);
   }

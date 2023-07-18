@@ -35,7 +35,7 @@ class JobRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function getPageTitle() {
+  public function getDefaultPageTitle() {
     return $this->t('Jobs');
   }
 
@@ -54,7 +54,7 @@ class JobRiver extends RiverServiceBase {
    * {@inheritdoc}
    */
   public function getFilters() {
-    return [
+    $filters = [
       'TY' => [
         'name' => $this->t('Job type'),
         'type' => 'reference',
@@ -167,6 +167,13 @@ class JobRiver extends RiverServiceBase {
         ],
       ],
     ];
+    // It doesn't make sense to display the country filter when the view is
+    // for jobs without a location.
+    $view = $this->getSelectedView();
+    if ($view === 'unspecified-location') {
+      unset($filters['C']);
+    }
+    return $filters;
   }
 
   /**
@@ -276,7 +283,7 @@ class JobRiver extends RiverServiceBase {
           'code' => $country['iso3'] ?? '',
           'url' => static::getRiverUrl($this->bundle, [
             'advanced-search' => '(C' . $country['id'] . ')',
-          ]),
+          ], $country['name'], TRUE),
           'main' => !empty($country['primary']),
         ];
       }
@@ -290,7 +297,7 @@ class JobRiver extends RiverServiceBase {
           'shortname' => $source['shortname'] ?? $source['name'],
           'url' => static::getRiverUrl($this->bundle, [
             'advanced-search' => '(S' . $source['id'] . ')',
-          ]),
+          ], $source['name'], TRUE),
         ];
       }
       $tags['source'] = $sources;
@@ -435,6 +442,13 @@ class JobRiver extends RiverServiceBase {
     }
 
     return $entities;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultRiverDescription() {
+    return $this->t('Your gateway for humanitarian and development jobs. Search and/or drill down with filters to narrow down the listings.');
   }
 
 }

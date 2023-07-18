@@ -35,8 +35,8 @@ class TrainingRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function getPageTitle() {
-    return $this->t('Training');
+  public function getDefaultPageTitle() {
+    return $this->t('Training Opportunities');
   }
 
   /**
@@ -56,7 +56,7 @@ class TrainingRiver extends RiverServiceBase {
    * {@inheritdoc}
    */
   public function getFilters() {
-    return [
+    $filters = [
       'TY' => [
         'name' => $this->t('Category'),
         'type' => 'reference',
@@ -206,6 +206,20 @@ class TrainingRiver extends RiverServiceBase {
         ],
       ],
     ];
+    // It doesn't make sense to display the cost filter when the view is
+    // for free training.
+    $view = $this->getSelectedView();
+    if ($view === 'free') {
+      unset($filters['CO']);
+    }
+    // It doesn't make sense to display the date filters when the view is
+    // for ongoing training.
+    elseif ($view === 'ongoing') {
+      unset($filters['DS']);
+      unset($filters['DE']);
+      unset($filters['DR']);
+    }
+    return $filters;
   }
 
   /**
@@ -348,7 +362,7 @@ class TrainingRiver extends RiverServiceBase {
           'code' => $country['iso3'] ?? '',
           'url' => static::getRiverUrl($this->bundle, [
             'advanced-search' => '(C' . $country['id'] . ')',
-          ]),
+          ], $country['name'], TRUE),
           'main' => !empty($country['primary']),
         ];
       }
@@ -362,7 +376,7 @@ class TrainingRiver extends RiverServiceBase {
           'shortname' => $source['shortname'] ?? $source['name'],
           'url' => static::getRiverUrl($this->bundle, [
             'advanced-search' => '(S' . $source['id'] . ')',
-          ]),
+          ], $source['name'], TRUE),
         ];
       }
       $tags['source'] = $sources;
@@ -529,6 +543,13 @@ class TrainingRiver extends RiverServiceBase {
     }
 
     return $entities;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultRiverDescription() {
+    return $this->t('Your gateway for humanitarian training opportunities. Search and/or drill down with filters to narrow down the listings.');
   }
 
 }
