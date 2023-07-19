@@ -11,10 +11,6 @@
         "drupal/maintenance200": {
             "Drupal 10 compatibility": "patches/maintenance200-drupal-10-compatibility.patch"
         },
-        "drupal/mimemail": {
-            "https://www.drupal.org/project/mimemail/issues/3324855": "https://www.drupal.org/files/issues/2022-12-21/3324855-7.patch",
-            "https://www.drupal.org/project/mimemail/issues/3288663": "https://www.drupal.org/files/issues/2022-11-30/automated-drupal-10-compatibility-fixes-3288663-8.patch"
-        },
         "drupal/pathauto": {
             "PHP 8.2 compatibility": "patches/pathauto-php-82-compatibility.patch"
         },
