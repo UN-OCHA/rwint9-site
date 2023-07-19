@@ -81,6 +81,7 @@ class ReliefwebImporterTestBase extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
     $this->prophesizeServices();
     $this->reliefwebImporter = new ReliefwebImportCommandStub($this->database->reveal(), $this->entityTypeManager->reveal(), $this->accountSwitcher->reveal(), $this->httpClient->reveal(), $this->loggerFactory->reveal(), $this->state->reveal());
     $this->random = new Random();
