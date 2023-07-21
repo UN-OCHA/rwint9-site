@@ -122,11 +122,11 @@ class ImageStyleDownloadController extends OriginalImageStyleDownloadController 
     // Let other modules handle the file if it's not a file matching the pattern
     // used for the reliefweb files.
     if (preg_match($pattern, $uri) !== 1) {
-      return parent::download($request, $scheme);
+      return parent::deliver($request, $scheme, $image_style);
     }
 
     // Check the image token. We return a 404 as it's more likely to be cached
-    // than a 403 and the token is just of DDOS protection and chacking helps
+    // than a 403 and the token is just of DDOS protection and caching helps
     // as well with that.
     if (!$this->validateToken($request, $uri, $image_style)) {
       throw new NotFoundHttpException();
