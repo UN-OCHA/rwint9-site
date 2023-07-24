@@ -29,10 +29,10 @@ if (!empty($proceed)) {
   $now = time();
   $progress = 1;
 
-  $results = [];
   foreach (array_chunk($nids, $chunk_size) as $chunk) {
     foreach ($storage->loadMultiple($chunk) as $node) {
       $node->field_origin_notes = NULL;
+      $node->field_origin->value = 1;
 
       $node->notifications_content_disable = TRUE;
       $node->setRevisionLogMessage("Automatic removal of origin URL (Ref: RW-786).");
@@ -47,6 +47,4 @@ if (!empty($proceed)) {
       $progress++;
     }
   }
-
-  print_r($results);
 }
