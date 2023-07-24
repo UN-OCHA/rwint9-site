@@ -167,6 +167,23 @@ class ReliefWebApiCommands extends DrushCommands {
       }
       return;
     }
+    // Index all the resources.
+    elseif ($bundle === 'all') {
+      foreach (Bundles::$bundles as $bundle => $info) {
+        $this->index($bundle, $options);
+      }
+      return;
+    }
+    // Index the given bundles.
+    elseif (strpos($bundle, ',') > 0) {
+      $bundles = explode(',', $bundle);
+      foreach ($bundles as $bundle) {
+        if ($bundle === 'references' || isset(Bundles::$bundles[$bundle])) {
+          $this->index($bundle, $options);
+        }
+      }
+      return;
+    }
 
     $tag = $this->state->get('reliefweb_api_index_tag_' . $bundle, '');
     $replace = !empty($options['replace']);
