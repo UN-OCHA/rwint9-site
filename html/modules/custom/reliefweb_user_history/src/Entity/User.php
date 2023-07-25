@@ -4,8 +4,8 @@ namespace Drupal\reliefweb_user_history\Entity;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Url;
-use Drupal\user\Entity\User as UserBase;
 use Drupal\reliefweb_revisions\EntityRevisionedInterface;
+use Drupal\user\Entity\User as UserBase;
 
 /**
  * User entity class with revision helpers.
