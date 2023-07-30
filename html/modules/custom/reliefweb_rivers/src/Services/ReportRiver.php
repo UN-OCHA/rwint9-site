@@ -465,7 +465,7 @@ class ReportRiver extends RiverServiceBase {
 
         $data['image'] = [
           'uri' => UrlHelper::getImageUriFromUrl($image['url']),
-          'alt' => $image['alt'] ?? '',
+          'alt' => $image['caption'] ?? '',
           'copyright' => trim($image['copyright'] ?? '', " \n\r\t\v\0@"),
           'width' => $image['width'] ?? 0,
           'height' => $image['height'] ?? 0,
