@@ -91,7 +91,7 @@ services:
       - "../composer.json:/srv/www/composer.json:rw"
       - "../composer.patches.json:/srv/www/composer.patches.json:rw"
       - "../composer.lock:/srv/www/composer.lock:rw"
-      - "../patches:/srv/www/patches:rw"
+      - "../PATCHES:/srv/www/PATCHES:rw"
       # # Mount contrib modules and themes.
       # - "../html/modules/contrib:/srv/www/html/modules/contrib:rw"
       # - "../html/themes/contrib:/srv/www/html/themes/contrib:rw"
