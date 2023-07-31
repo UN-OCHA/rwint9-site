@@ -50,11 +50,7 @@ The [docker](docker) folder contains the docker file and customizations to build
 
 ## Local development
 
-For local development, see the stack repository.
-
-Add this line to settings.local.php: `$config['config_split.config_split.config_dev']['status'] = TRUE;` to enable `config_split` and install the development modules.
-
-After importing a fresh database, run `drush cim` to enable devel, database log and stage_file_proxy.
+For local development, see [local stack](local/README.md).
 
 ## Retagging
 
