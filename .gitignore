@@ -26,6 +26,10 @@ buildlog.txt
 /private/
 /notes/
 
+# Ignore local settings.
+/local/.env
+/local/shared/settings/settings.site.php
+
 ###> squizlabs/php_codesniffer ###
 /.phpcs-cache
 /coverage
