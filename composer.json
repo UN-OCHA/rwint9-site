@@ -28,6 +28,7 @@
         "drupal/ckeditor": "*",
         "drupal/classy": "^1.0",
         "drupal/components": "^3.0@beta",
+        "drupal/config_filter": "^2.2",
         "drupal/config_split": "^2.0.0@rc",
         "drupal/content_entity_clone": "^1.0.0",
         "drupal/core-composer-scaffold": "^10",
@@ -49,6 +50,7 @@
         "drupal/seven": "^1.0",
         "drupal/social_auth_hid": "^3.2",
         "drupal/stable": "^2.0",
+        "drupal/stage_file_proxy": "^2.1",
         "drupal/svg_image": "^3.0.1",
         "drupal/taxonomy_term_preview": "^1.0.0",
         "drupal/taxonomy_term_revision": "^1.1",
@@ -73,7 +75,6 @@
     },
     "require-dev": {
         "drupal/coder": "^8.3",
-        "drupal/config_filter": "^2.2",
         "drupal/devel": "^5.0",
         "drupal/devel_php": "^1.3",
         "kint-php/kint": "^5.0",
