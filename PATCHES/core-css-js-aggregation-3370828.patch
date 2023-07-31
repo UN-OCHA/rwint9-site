@@ -1,0 +1,160 @@
+diff --git a/core/lib/Drupal/Core/Asset/AssetGroupSetHashTrait.php b/core/lib/Drupal/Core/Asset/AssetGroupSetHashTrait.php
+index 1d805b4c32..660d1a12a9 100644
+--- a/core/lib/Drupal/Core/Asset/AssetGroupSetHashTrait.php
++++ b/core/lib/Drupal/Core/Asset/AssetGroupSetHashTrait.php
+@@ -36,6 +36,12 @@ protected function generateHash(array $group): string {
+     ];
+     foreach ($group['items'] as $key => $asset) {
+       $normalized['asset_group']['items'][$key] = array_diff_key($asset, $group_keys, $omit_keys);
++      // If the version is set to -1, this means there is no version in the
++      // library definition. To ensure unique hashes when unversioned files
++      // change, replace the version with a hash of the file contents.
++      if ($asset['version'] === -1) {
++        $normalized['asset_group']['items'][$key]['version'] = hash('xxh64', file_get_contents($asset['data']));
++      }
+     }
+     // The asset array ensures that a valid hash can only be generated via the
+     // same code base. Additionally use the hash salt to ensure that hashes are
+diff --git a/core/modules/system/tests/modules/unversioned_assets_test/unversioned_assets_test.info.yml b/core/modules/system/tests/modules/unversioned_assets_test/unversioned_assets_test.info.yml
+new file mode 100644
+index 0000000000..1c4b86ff32
+--- /dev/null
++++ b/core/modules/system/tests/modules/unversioned_assets_test/unversioned_assets_test.info.yml
+@@ -0,0 +1,5 @@
++name: 'Unversioned assets test'
++type: module
++description: 'Tests that aggregates change when unversioned assets change'
++package: Testing
++version: VERSION
+diff --git a/core/modules/system/tests/modules/unversioned_assets_test/unversioned_assets_test.module b/core/modules/system/tests/modules/unversioned_assets_test/unversioned_assets_test.module
+new file mode 100644
+index 0000000000..2a119fc796
+--- /dev/null
++++ b/core/modules/system/tests/modules/unversioned_assets_test/unversioned_assets_test.module
+@@ -0,0 +1,18 @@
++<?php
++
++/**
++ * @file
++ * Helper module for unversioned asset test.
++ */
++
++/**
++ * Implements hook_library_info_build().
++ */
++function unversioned_assets_test_library_info_alter(&$libraries, $extension) {
++  if ($extension === 'system') {
++    // Remove the version and provide an additional CSS file we can alter the
++    // contents of .
++    unset($libraries['base']['version']);
++    $libraries['base']['css']['component']['public://test.css'] = ['weight' => -10];
++  }
++}
+diff --git a/core/tests/Drupal/FunctionalTests/Asset/UnversionedAssetTest.php b/core/tests/Drupal/FunctionalTests/Asset/UnversionedAssetTest.php
+new file mode 100644
+index 0000000000..710e7ad20a
+--- /dev/null
++++ b/core/tests/Drupal/FunctionalTests/Asset/UnversionedAssetTest.php
+@@ -0,0 +1,102 @@
++<?php
++
++namespace Drupal\FunctionalTests\Asset;
++
++use Drupal\Tests\BrowserTestBase;
++
++/**
++ * Tests asset aggregation.
++ *
++ * @group asset
++ */
++class UnversionedAssetTest extends BrowserTestBase {
++
++  /**
++   * {@inheritdoc}
++   */
++  protected $defaultTheme = 'stark';
++
++  /**
++   * The file assets path settings value.
++   */
++  protected $fileAssetsPath;
++
++  /**
++   * {@inheritdoc}
++   */
++  protected static $modules = ['system', 'unversioned_assets_test'];
++
++  /**
++   * Tests that unversioned assets cause a new filename when changed.
++   */
++  public function testUnversionedAssets(): void {
++    $this->fileAssetsPath = $this->publicFilesDirectory;
++    file_put_contents('public://test.css', '.original-content{display:none;}');
++    // Test aggregation with a custom file_assets_path.
++    $this->config('system.performance')->set('css', [
++      'preprocess' => TRUE,
++      'gzip' => TRUE,
++    ])->save();
++    $this->config('system.performance')->set('js', [
++      'preprocess' => TRUE,
++      'gzip' => TRUE,
++    ])->save();
++
++    // Ensure that the library discovery cache is empty before the page is
++    // requested and that updated asset URLs are rendered.
++    \Drupal::service('cache.data')->deleteAll();
++    \Drupal::service('cache.page')->deleteAll();
++    $this->drupalGet('<front>');
++    $session = $this->getSession();
++    $page = $session->getPage();
++
++    $style_elements = $page->findAll('xpath', '//link[@rel="stylesheet"]');
++    $this->assertNotEmpty($style_elements);
++    $href = NULL;
++    foreach ($style_elements as $element) {
++      if ($element->hasAttribute('href')) {
++        $href = $element->getAttribute('href');
++        $url = $this->getAbsoluteUrl($href);
++        // Not every script or style on a page is aggregated.
++        if (!str_contains($url, $this->fileAssetsPath)) {
++          continue;
++        }
++        $session = $this->getSession();
++        $session->visit($url);
++        $this->assertSession()->statusCodeEquals(200);
++        $aggregate = $session = $session->getPage()->getContent();
++        $this->assertStringContainsString('original-content', $aggregate);
++        $this->assertStringNotContainsString('extra-stuff', $aggregate);
++      }
++    }
++    $file = file_get_contents('public://test.css') . '.extra-stuff{display:none;}';
++    file_put_contents('public://test.css', $file);
++    // Clear the library discovery and page caches again so that new URLs are
++    // generated.
++    \Drupal::service('cache.data')->deleteAll();
++    \Drupal::service('cache.page')->deleteAll();
++    $this->drupalGet('<front>');
++    $session = $this->getSession();
++    $page = $session->getPage();
++    $style_elements = $page->findAll('xpath', '//link[@rel="stylesheet"]');
++    $this->assertNotEmpty($style_elements);
++    foreach ($style_elements as $element) {
++      if ($element->hasAttribute('href')) {
++        $new_href = $element->getAttribute('href');
++        $this->assertNotSame($new_href, $href);
++        $url = $this->getAbsoluteUrl($new_href);
++        // Not every script or style on a page is aggregated.
++        if (!str_contains($url, $this->fileAssetsPath)) {
++          continue;
++        }
++        $session = $this->getSession();
++        $session->visit($url);
++        $this->assertSession()->statusCodeEquals(200);
++        $aggregate = $session = $session->getPage()->getContent();
++        $this->assertStringContainsString('original-content', $aggregate);
++        $this->assertStringContainsString('extra-stuff', $aggregate);
++      }
++    }
++  }
++
++}
