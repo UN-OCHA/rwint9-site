@@ -873,6 +873,16 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
           'widget' => 'datepicker',
           'join_callback' => 'joinReview',
         ],
+        'original_publication_date' => [
+          'type' => 'field',
+          'field' => 'field_original_publication_date',
+          'column' => 'value',
+          'label' => $this->t('Original publication date'),
+          'shortcut' => 'od',
+          'form' => 'omnibox',
+          'widget' => 'datepicker',
+          'condition_callback' => 'addDateFilterCondition',
+        ],
         'job_closing_date' => [
           'type' => 'field',
           'field' => 'field_job_closing_date',

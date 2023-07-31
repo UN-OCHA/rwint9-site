@@ -313,6 +313,7 @@ class ReportModeration extends ModerationServiceBase {
       'organization_type',
       'ocha_product',
       'created',
+      'original_publication_date',
       'author',
       'user_role',
       'reviewer',

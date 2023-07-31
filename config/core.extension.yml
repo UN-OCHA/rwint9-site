@@ -96,6 +96,7 @@ module:
   toolbar: 0
   update: 0
   user: 0
+  username_enumeration_prevention: 0
   user_display_name: 0
   workflows: 0
   pathauto: 1
