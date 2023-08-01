@@ -19,11 +19,12 @@ settings:
       - '|'
       - bulletedList
       - numberedList
+      - indent
+      - outdent
       - '|'
       - undo
       - redo
       - removeFormat
-      - sourceEditing
   plugins:
     ckeditor5_heading:
       enabled_headings:
@@ -35,8 +36,6 @@ settings:
     ckeditor5_list:
       reversed: false
       startIndex: false
-    ckeditor5_sourceEditing:
-      allowed_tags: {  }
 image_upload:
   status: false
   scheme: public
