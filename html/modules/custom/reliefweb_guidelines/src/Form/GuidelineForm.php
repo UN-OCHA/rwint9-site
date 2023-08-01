@@ -7,7 +7,6 @@ use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Http\RequestStack;
 use Drupal\Core\Link;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
@@ -36,13 +35,6 @@ class GuidelineForm extends ContentEntityForm {
   protected $currentUser;
 
   /**
-   * The request stack.
-   *
-   * @var \Drupal\Core\Http\RequestStack
-   */
-  protected $requestStack;
-
-  /**
    * {@inheritdoc}
    */
   public function __construct(
@@ -50,13 +42,11 @@ class GuidelineForm extends ContentEntityForm {
     EntityTypeBundleInfoInterface $entity_type_bundle_info,
     TimeInterface $time,
     PrivateTempStoreFactory $temp_store_factory,
-    AccountProxyInterface $current_user,
-    RequestStack $request_stack,
+    AccountProxyInterface $current_user
   ) {
     parent::__construct($entity_repository, $entity_type_bundle_info, $time);
     $this->tempStoreFactory = $temp_store_factory;
     $this->currentUser = $current_user;
-    $this->requestStack = $request_stack;
   }
 
   /**
@@ -68,8 +58,7 @@ class GuidelineForm extends ContentEntityForm {
       $container->get('entity_type.bundle.info'),
       $container->get('datetime.time'),
       $container->get('tempstore.private'),
-      $container->get('current_user'),
-      $container->get('request_stack'),
+      $container->get('current_user')
     );
   }
 
