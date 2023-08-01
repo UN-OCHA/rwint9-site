@@ -11,7 +11,7 @@ reliefweb_dsr.settings:
     ocha_dsr_url:
       type: string
       label: 'OCHA DSR site URL.'
-    ocha_dsr_url:
+    cache_lifetime:
       type: integer
       label: 'Number of seconds to cache the data for.'
     last_update_skip:
