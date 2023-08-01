@@ -14,32 +14,26 @@ volumes:
   site-private:
 
 services:
-  mailhog:
-    image: mailhog/mailhog:v1.0.1
-    hostname: $PROJECT_NAME-mailhog
-    container_name: $PROJECT_NAME-mailhog
-    user: root
-    entrypoint:
-      - MailHog
+  mailpit:
+    image: axllent/mailpit:latest
+    hostname: $PROJECT_NAME-mailpit
+    container_name: $PROJECT_NAME-mailpit
     environment:
-      ENVIRONMENT: dev
-      NGINX_SERVERNAME: mh.$SITE_DOMAIN
-      VIRTUAL_HOST: mh.$SITE_DOMAIN
+      VIRTUAL_HOST: mail.$SITE_DOMAIN
       VIRTUAL_PORT: 8025
       VIRTUAL_NETWORK: ${PROXY:-proxy}
       HTTPS_METHOD: noredirect
-      MH_SMTP_BIND_ADDR: 0.0.0.0:25
-    logging:
-      driver: none
+      MP_SMTP_BIND_ADDR: 0.0.0.0:25
     labels:
-      caddy: mh.$SITE_DOMAIN
+      caddy: mail.$SITE_DOMAIN
       caddy.reverse_proxy: "{{upstreams}}"
     expose:
-      - "25"
+       - "25"
     networks:
       default:
         aliases:
           - smtp
+      proxy:
 
   memcache:
     image: public.ecr.aws/unocha/memcache:1.6
@@ -47,7 +41,7 @@ services:
     container_name: $PROJECT_NAME-memcache
     environment:
       MEMCACHE_MAX_MEMORY: 64
-    ports:
+    expose:
       - "11211"
     networks:
       - default
