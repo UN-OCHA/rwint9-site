@@ -60,7 +60,7 @@ services:
     networks:
       - default
 
-  drupal:
+  site:
     image: public.ecr.aws/unocha/$IMAGE_NAME:$IMAGE_TAG
     hostname: $PROJECT_NAME-site
     container_name: $PROJECT_NAME-site

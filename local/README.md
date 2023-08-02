@@ -18,19 +18,19 @@ The script `./local/exec.sh` is a shortcut for `docker compose -f local/docker-c
 ## Create instance
 
 1. Run `./local/install.sh -m -c -i` to create an instance of the site (empty database) from the existing config.
-2. Run `./local/exec.sh -T -u appuser drupal drush sqlc < path-to-db-dump.sql` to restore a database dump.
+2. Run `./local/exec.sh -T -u appuser site drush sqlc < path-to-db-dump.sql` to restore a database dump.
 3. Run `./local/install.sh -d` to install the dev dependencies, import the config and update the database.
 
 ## Composer
 
-- Install all the modules (including dev) with `./local/exec.sh -w /srv/www drupal composer install`.
-- Update all the modules (including dev) with `./local/exec.sh -w /srv/www drupal composer update`.
-- Add a module with `./local/exec.sh -w /srv/www drupal composer require drupal/some-module`.
-- Remove a module with `./local/exec.sh -w /srv/www drupal composer remove drupal/some-module`.
+- Install all the modules (including dev) with `./local/exec.sh -w /srv/www site composer install`.
+- Update all the modules (including dev) with `./local/exec.sh -w /srv/www site composer update`.
+- Add a module with `./local/exec.sh -w /srv/www site composer require site/some-module`.
+- Remove a module with `./local/exec.sh -w /srv/www site composer remove site/some-module`.
 
 ## Debugging core or a contrib module/theme
 
-Enter the container with `./local/exec.sh -w /srv/www drupal sh` and edit files with `vi` for example.
+Enter the container with `./local/exec.sh -w /srv/www site sh` and edit files with `vi` for example.
 
 Alternatively clone the core or contrib module/theme somewhere and mount the relevant folder/files by editing the `local/docker-compose.yml` file.
 

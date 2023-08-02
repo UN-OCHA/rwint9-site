@@ -90,55 +90,55 @@ docker_compose ps -a
 if [ "$install_site" = "yes" ]; then
   # Ensure the file directories are writable.
   echo "Ensure the file directories are writable."
-  docker_compose exec drupal chmod -R 777 /srv/www/html/sites/default/files /srv/www/html/sites/default/private
+  docker_compose exec site chmod -R 777 /srv/www/html/sites/default/files /srv/www/html/sites/default/private
 
   # Copy the existing settings.php and ensure the settings.php file is writable.
   echo "Ensure the settings.php writable."
-  docker_compose exec drupal sh -c "cp /srv/www/html/sites/default/settings.php /srv/www/html/sites/default/settings.php.backup"
-  docker_compose exec drupal chmod 666 /srv/www/html/sites/default/settings.php
+  docker_compose exec site sh -c "cp /srv/www/html/sites/default/settings.php /srv/www/html/sites/default/settings.php.backup"
+  docker_compose exec site chmod 666 /srv/www/html/sites/default/settings.php
 
   # Install the subtheme.
   echo "Install the common design subtheme if not present already."
-  docker_compose exec -w /srv/www drupal composer run sub-theme || true
+  docker_compose exec -w /srv/www site composer run sub-theme || true
 
   # Install the site with the existing config.
   if [ "$use_existing_config" = "yes" ]; then
     echo "Install the site with the existing config."
-    docker_compose exec -u appuser drupal drush -y si --existing-config minimal install_configure_form.enable_update_status_emails=NULL
+    docker_compose exec -u appuser site drush -y si --existing-config minimal install_configure_form.enable_update_status_emails=NULL
   else
     echo "Install the site from scratch."
-    docker_compose exec -u appuser drupal drush -y si minimal install_configure_form.enable_update_status_emails=NULL
+    docker_compose exec -u appuser site drush -y si minimal install_configure_form.enable_update_status_emails=NULL
   fi
 
   # Import the configuration.
-  docker_compose exec -u appuser drupal drush -y cim
+  docker_compose exec -u appuser site drush -y cim
 
   # Restore the our copy of the settings.php.
   echo "Restore the settings.php."
-  docker_compose exec drupal sh -c "mv /srv/www/html/sites/default/settings.php.backup /srv/www/html/sites/default/settings.php"
+  docker_compose exec site sh -c "mv /srv/www/html/sites/default/settings.php.backup /srv/www/html/sites/default/settings.php"
 fi
 
 # Install the dev dependencies and re-import the configuration.
 if [ "$install_dev_dependencies" = "yes" ]; then
   # Install the dev dependencies.
   echo "Install the dev dependencies."
-  docker_compose exec -w /srv/www drupal composer install
+  docker_compose exec -w /srv/www site composer install
 
   # Import the configuration.
-  docker_compose exec -u appuser drupal drush -y cr
+  docker_compose exec -u appuser site drush -y cr
 
   # Import the configuration.
-  docker_compose exec  -u appuser drupal drush -y updatedb --no-post-updates
+  docker_compose exec  -u appuser site drush -y updatedb --no-post-updates
 
   # Import the configuration.
-  docker_compose exec  -u appuser drupal drush -y cim
+  docker_compose exec  -u appuser site drush -y cim
 
   # Import the configuration.
-  docker_compose exec  -u appuser drupal drush -y updatedb
+  docker_compose exec  -u appuser site drush -y updatedb
 
   # Enable the devel module.
-  docker_compose exec  -u appuser drupal drush -y en devel
+  docker_compose exec  -u appuser site drush -y en devel
 
   # Enable the stage file proxy module.
-  docker_compose exec  -u appuser drupal drush -y en stage_file_proxy
+  docker_compose exec  -u appuser site drush -y en stage_file_proxy
 fi
