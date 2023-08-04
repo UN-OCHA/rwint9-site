@@ -4,7 +4,6 @@
             "https://www.drupal.org/project/drupal/issues/3047110": "PATCHES/core--drupal--3047110-taxonomy-term-moderation-class.patch",
             "https://www.drupal.org/project/drupal/issues/3008292": "PATCHES/core--drupal--3008292-image-upload-validators.patch",
             "https://www.drupal.org/project/drupal/issues/3143617": "PATCHES/core--drupal--3143617-pager-parameter.patch",
-            "https://www.drupal.org/project/drupal/issues/3370828": "PATCHES/core-css-js-aggregation-3370828.patch",
             "https://www.drupal.org/project/drupal/issues/3376927": "PATCHES/core-css-js-aggregation-3376927.patch"
         },
         "drupal/guidelines": {
