@@ -20,7 +20,7 @@
         }
     ],
     "require": {
-        "php": ">=8.1",
+        "php": ">=8.2",
         "composer/installers": "^1.12",
         "cweagans/composer-patches": "^1.7",
         "drupal/admin_denied": "^2.0",
@@ -170,10 +170,6 @@
                 "type:drupal-drush"
             ]
         },
-        "preserve-paths": [
-            "html/modules/custom",
-            "html/themes/custom"
-        ],
         "drupal-scaffold": {
             "file-mapping": {
                 "[web-root]/sites/default/services.yml": {
