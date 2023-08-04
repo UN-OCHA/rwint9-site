@@ -10,7 +10,7 @@ field_name: field_profile
 entity_type: taxonomy_term
 bundle: disaster
 label: 'Show profile'
-description: 'When selected, the disaster''s profile (description, key content etc.) will be visible to visitors.'
+description: "When selected, the disaster's profile (description, key content etc.) will be visible to visitors."
 required: false
 translatable: true
 default_value:

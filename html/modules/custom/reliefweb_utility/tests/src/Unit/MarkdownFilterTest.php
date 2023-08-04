@@ -4,6 +4,7 @@
 
 namespace Drupal\Tests\reliefweb_utility\Unit;
 
+use Drupal\Core\Render\Renderer;
 use Drupal\reliefweb_utility\Plugin\Filter\MarkdownFilter;
 use Drupal\Tests\UnitTestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -26,7 +27,7 @@ class MarkdownFilterTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     //
@@ -39,9 +40,10 @@ class MarkdownFilterTest extends UnitTestCase {
     $container = new ContainerBuilder();
     \Drupal::setContainer($container);
     $container->set('request_stack', $request_stack->reveal());
+    $container->set('renderer', $this->prophesize(Renderer::class)->reveal());
 
     $configuration['settings'] = [];
-    $this->filter = new MarkdownFilter($configuration, 'filter_markdown', [
+    $this->filter = MarkdownFilter::create($container, $configuration, 'filter_markdown', [
       'provider' => 'test',
     ]);
 

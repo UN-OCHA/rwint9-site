@@ -122,7 +122,7 @@ class MediaHelper {
    * @param \Drupal\media\MediaInterface $media
    *   Media entity.
    *
-   * @return \Drupal\file\FileInterface
+   * @return \Drupal\file\FileInterface|null
    *   Source file if defined.
    */
   public static function getMediaSourceFile(MediaInterface $media) {

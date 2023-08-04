@@ -1,0 +1,7 @@
+services:
+  node_preview:
+    class: Drupal\reliefweb_form\ParamConverter\NodePreviewConverter
+    arguments: ['@tempstore.private']
+    tags:
+      - { name: paramconverter }
+    lazy: false

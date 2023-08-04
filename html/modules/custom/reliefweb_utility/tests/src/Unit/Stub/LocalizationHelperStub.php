@@ -14,6 +14,15 @@ class LocalizationHelperStub extends LocalizationHelper {
   /**
    * {@inheritdoc}
    */
+  public static function getCollator($language = NULL) {
+    // Reset the default language so that it's not inherited between tests.
+    static::$collators = [];
+    return parent::getCollator($language);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected static function createCollator($language) {
     return parent::createCollator($language);
   }
@@ -29,14 +38,9 @@ class LocalizationHelperStub extends LocalizationHelper {
    * {@inheritdoc}
    */
   public static function getLanguage($language = NULL) {
-    // As opposed to the parent method, we don't store the default language
-    // in a static variable because starting from PHP 8.1, the default would
-    // be inherited between tests so we would not be able to change it to use
-    // a different current language.
-    if (empty($language)) {
-      $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
-    }
-    return $language;
+    // Reset the default language so that it's not inherited between tests.
+    static::$defaultLanguage = null;
+    return parent::getLanguage($language);
   }
 
 }

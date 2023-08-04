@@ -10,7 +10,7 @@ field_name: field_profile
 entity_type: taxonomy_term
 bundle: country
 label: 'Show profile'
-description: 'When selected, the country''s profile (description, key content etc.) will be visible to visitors.'
+description: "When selected, the country's profile (description, key content etc.) will be visible to visitors."
 required: false
 translatable: false
 default_value:

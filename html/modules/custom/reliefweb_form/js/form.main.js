@@ -23,7 +23,7 @@
           var target = event.target;
           var disable = true;
           if (event.key === 'Enter') {
-            if (target.nodeName === 'TEXTAREA') {
+            if (target.nodeName === 'TEXTAREA' || target.getAttribute('contenteditable') === 'true') {
               disable = false;
             }
             else if (target.nodeName === 'BUTTON' && target.getAttribute('type') === 'submit') {

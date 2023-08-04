@@ -1928,6 +1928,10 @@ class ReliefwebSubscriptionsMailer {
       }
     }
 
+    if (empty($data)) {
+      return '';
+    }
+
     // Get the mail subject.
     $subject = $this->generateEmailSubject($subscription, $data);
     if (empty($subject)) {
@@ -2057,7 +2061,7 @@ class ReliefwebSubscriptionsMailer {
       // When this is called in a an hook_entity_update, then the previous
       // revision is stored as the "original" property. Otherwise, for example,
       // when queueing via drush, then we load the previous revision.
-      $previous = $report->original ?? $this->loadPreviousEntityRevision($disaster);
+      $previous = $disaster->original ?? $this->loadPreviousEntityRevision($disaster);
 
       // If there is no previous revision, check the current status.
       if ($previous === $disaster) {
