@@ -25,11 +25,11 @@
 }}>
   {% if style is not empty %}
     {{ render_var({
-      '#theme': 'image_style',
-      '#style_name': style,
+      '#theme': 'responsive_image',
+      '#responsive_image_style_id': style,
       '#uri': image.uri,
-      '#alt': image.alt,
       '#attributes': {
+        'alt': image.alt,
         'class': ['rw-entity-image__image'],
         'loading': image.loading is not empty ? image.loading : loading,
       },
