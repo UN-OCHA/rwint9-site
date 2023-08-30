@@ -9,6 +9,10 @@
         "drupal/guidelines": {
             "Drupal 10 compatibility": "PATCHES/guidelines-drupal-10-compatibility.patch"
         },
+        "drupal/imageapi_optimize_webp": {
+            "Fix derivatives for webp source images": "PATCHES/imageapi_optimize_webp-webp-source-image.patch",
+            "Support imagemagick toolkit": "PATCHES/imageapi_optimize_webp-imagemagick-toolkit.patch"
+        },
         "drupal/maintenance200": {
             "Drupal 10 compatibility": "PATCHES/maintenance200-drupal-10-compatibility.patch"
         },
