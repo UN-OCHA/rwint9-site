@@ -28,6 +28,8 @@ module:
   image: 0
   imageapi_optimize: 0
   imageapi_optimize_binaries: 0
+  imageapi_optimize_webp: 0
+  imageapi_optimize_webp_responsive: 0
   imagemagick: 0
   inline_entity_form: 0
   inline_form_errors: 0
