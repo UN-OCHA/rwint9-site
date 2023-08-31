@@ -489,6 +489,11 @@ class ReliefwebSubscriptionsMailer {
     // Generate a List-Id base on the subscription id (ex: jobs).
     $list_id = $this->generateListId($sid);
 
+    // Link to the feedback page.
+    $feedback = Url::fromUserInput('/contact', $this->addTrackingParameters($sid, [
+      'absolute' => TRUE,
+    ]))->toString();
+
     // Batch the subscribe list, so we can throttle if it looks like
     // we will go over our allowed rate limit.
     foreach (array_chunk($subscribers, $batch_size) as $batch) {
@@ -504,6 +509,7 @@ class ReliefwebSubscriptionsMailer {
 
         // Update the body with the unique ubsubscribe link.
         $mail_body = new FormattableMarkup($body, [
+          '@feedback' => $feedback,
           '@unsubscribe' => $unsubscribe,
         ]);
 
@@ -645,11 +651,14 @@ class ReliefwebSubscriptionsMailer {
    *
    * @param array $parts
    *   Array of hrefs and link text to format.
+   * @param array $subscription
+   *   Subscription ID.
    *
    * @return string
    *   Formatted links.
    */
-  protected function getPrefooterLinks(array $parts) {
+  protected function getPrefooterLinks(array $parts, array $subscription) {
+    $sid = $subscription['id'];
     $links = [];
     foreach ($parts as $part) {
       $options = [
@@ -660,6 +669,8 @@ class ReliefwebSubscriptionsMailer {
       if (!empty($part['options'])) {
         $options = $options + $part['options'];
       }
+
+      $options = $this->addTrackingParameters($sid, $options);
 
       $url = Url::fromUserInput($part['link'], $options);
       $links[] = Link::fromTextAndUrl($part['text'], $url)->toString();
@@ -680,6 +691,8 @@ class ReliefwebSubscriptionsMailer {
    *   Render array.
    */
   protected function generateEmailContentHeadlines(array $subscription, array $data) {
+    $sid = $subscription['id'];
+
     $variables = [
       '#theme' => 'reliefweb_subscriptions_content',
     ];
@@ -691,7 +704,7 @@ class ReliefwebSubscriptionsMailer {
     foreach ($data as $fields) {
       $item = [];
       $info = [];
-      $item['url'] = $fields['url_alias'];
+      $item['url'] = Url::fromUri($fields['url_alias'], $this->addTrackingParameters($sid));
 
       // Title.
       $title = $fields['headline']['title'];
@@ -729,7 +742,7 @@ class ReliefwebSubscriptionsMailer {
         'link' => '/headlines',
       ],
     ];
-    $variables['#prefooter'] = $this->getPrefooterLinks($prefooter_parts);
+    $variables['#prefooter'] = $this->getPrefooterLinks($prefooter_parts, $subscription);
 
     return $variables;
   }
@@ -746,6 +759,8 @@ class ReliefwebSubscriptionsMailer {
    *   Render array.
    */
   protected function generateEmailContentAppeals(array $subscription, array $data) {
+    $sid = $subscription['id'];
+
     $variables = [
       '#theme' => 'reliefweb_subscriptions_content',
     ];
@@ -765,7 +780,7 @@ class ReliefwebSubscriptionsMailer {
     foreach ($data as $fields) {
       $item = [];
       $info = [];
-      $item['url'] = $fields['url_alias'];
+      $item['url'] = Url::fromUri($fields['url_alias'], $this->addTrackingParameters($sid));
 
       // Title.
       $title = $fields['title'];
@@ -808,7 +823,7 @@ class ReliefwebSubscriptionsMailer {
       ],
     ];
 
-    $variables['#prefooter'] = $this->getPrefooterLinks($prefooter_parts);
+    $variables['#prefooter'] = $this->getPrefooterLinks($prefooter_parts, $subscription);
 
     return $variables;
   }
@@ -825,6 +840,8 @@ class ReliefwebSubscriptionsMailer {
    *   Render array.
    */
   protected function generateEmailContentJobs(array $subscription, array $data) {
+    $sid = $subscription['id'];
+
     $variables = [
       '#theme' => 'reliefweb_subscriptions_content',
     ];
@@ -844,7 +861,7 @@ class ReliefwebSubscriptionsMailer {
     foreach ($data as $fields) {
       $item = [];
       $info = [];
-      $item['url'] = $fields['url_alias'];
+      $item['url'] = Url::fromUri($fields['url_alias'], $this->addTrackingParameters($sid));
 
       // Title.
       $title = $fields['title'];
@@ -880,7 +897,7 @@ class ReliefwebSubscriptionsMailer {
         'link' => '/jobs',
       ],
     ];
-    $variables['#prefooter'] = $this->prepareFooterLinks($prefooter_parts);
+    $variables['#prefooter'] = $this->prepareFooterLinks($prefooter_parts, $subscription);
 
     // Label for the read more links (not translated on purpose as mails are
     // always in English).
@@ -901,6 +918,8 @@ class ReliefwebSubscriptionsMailer {
    *   Render array.
    */
   protected function generateEmailContentTraining(array $subscription, array $data) {
+    $sid = $subscription['id'];
+
     $variables = [
       '#theme' => 'reliefweb_subscriptions_content',
     ];
@@ -922,7 +941,7 @@ class ReliefwebSubscriptionsMailer {
     foreach ($data as $fields) {
       $item = [];
       $info = [];
-      $item['url'] = $fields['url_alias'];
+      $item['url'] = Url::fromUri($fields['url_alias'], $this->addTrackingParameters($sid));
 
       // Title.
       $title = $fields['title'];
@@ -966,7 +985,7 @@ class ReliefwebSubscriptionsMailer {
         'link' => '/training',
       ],
     ];
-    $variables['#prefooter'] = $this->prepareFooterLinks($prefooter_parts);
+    $variables['#prefooter'] = $this->prepareFooterLinks($prefooter_parts, $subscription);
 
     // Label for the read more links (not translated on purpose as mails are
     // always in English).
@@ -987,11 +1006,13 @@ class ReliefwebSubscriptionsMailer {
    *   Render array.
    */
   protected function generateEmailContentDisaster(array $subscription, array $data) {
+    $sid = $subscription['id'];
+
     $variables = [
       '#theme' => 'reliefweb_subscriptions_content__disaster',
     ];
 
-    $variables['#url'] = $data['url_alias'];
+    $variables['#url'] = Url::fromUri($data['url_alias'], $this->addTrackingParameters($sid));
 
     // Title.
     $variables['#title'] = $data['name'];
@@ -1020,7 +1041,7 @@ class ReliefwebSubscriptionsMailer {
         'link' => '/disasters',
       ],
     ];
-    $variables['#prefooter'] = $this->prepareFooterLinks($prefooter_parts);
+    $variables['#prefooter'] = $this->prepareFooterLinks($prefooter_parts, $subscription);
 
     return $variables;
   }
@@ -1037,13 +1058,15 @@ class ReliefwebSubscriptionsMailer {
    *   Render array.
    */
   protected function generateEmailContentOchaSitrep(array $subscription, array $data) {
+    $sid = $subscription['id'];
+
     $variables = [
       '#theme' => 'reliefweb_subscriptions_content__ocha_sitrep',
     ];
 
     $info = [];
 
-    $variables['#url'] = $data['url_alias'];
+    $variables['#url'] = Url::fromUri($data['url_alias'], $this->addTrackingParameters($sid));
 
     // Title.
     $title = $data['title'];
@@ -1108,7 +1131,7 @@ class ReliefwebSubscriptionsMailer {
         'link' => $data['origin'],
       ]);
     }
-    $variables['#prefooter'] = $this->prepareFooterLinks($prefooter_parts);
+    $variables['#prefooter'] = $this->prepareFooterLinks($prefooter_parts, $subscription);
 
     return $variables;
   }
@@ -1125,6 +1148,8 @@ class ReliefwebSubscriptionsMailer {
    *   Render array.
    */
   protected function generateEmailContentCountryUpdates(array $subscription, array $data) {
+    $sid = $subscription['id'];
+
     $variables = [
       '#theme' => 'reliefweb_subscriptions_content',
     ];
@@ -1136,7 +1161,7 @@ class ReliefwebSubscriptionsMailer {
     foreach ($data as $fields) {
       $item = [];
       $info = [];
-      $item['url'] = $fields['url_alias'];
+      $item['url'] = Url::fromUri($fields['url_alias'], $this->addTrackingParameters($sid));
 
       // Title.
       $title = $fields['title'];
@@ -1191,7 +1216,7 @@ class ReliefwebSubscriptionsMailer {
         'link' => '/updates',
       ],
     ];
-    $variables['#prefooter'] = $this->getPrefooterLinks($prefooter_parts);
+    $variables['#prefooter'] = $this->getPrefooterLinks($prefooter_parts, $subscription);
 
     return $variables;
   }
@@ -1233,28 +1258,33 @@ class ReliefwebSubscriptionsMailer {
    *
    * @param array $parts
    *   Array of hrefs and link text to format.
+   * @param array $subscription
+   *   Subscription information.
    *
    * @return string
    *   Formatted links.
    */
-  protected function prepareFooterLinks(array $parts) {
+  protected function prepareFooterLinks(array $parts, array $subscription) {
+    $sid = $subscription['id'];
     $links = [];
     foreach ($parts as $part) {
+      $options = [
+        'absolute' => TRUE,
+        'attributes' => ['class' => ['prefooter-link']],
+      ];
+      if (!empty($part['options'])) {
+        $options = $options + $part['options'];
+      }
+      $options = $this->addTrackingParameters($sid, $options);
+
       if (strpos($part['link'], 'http') === 0) {
-        $links[] = '<a class="prefooter-link" href="' . $part['link'] . '">' . $part['text'] . '</a>';
+        $url = Url::fromUri($part['link'], $options);
       }
       else {
-        $options = [
-          'absolute' => TRUE,
-          'attributes' => ['class' => ['prefooter-link']],
-        ];
-        if (!empty($part['options'])) {
-          $options = $options + $part['options'];
-        }
-
         $url = Url::fromUserInput($part['link'], $options);
-        $links[] = Link::fromTextAndUrl($part['text'], $url)->toString();
       }
+
+      $links[] = Link::fromTextAndUrl($part['text'], $url)->toString();
     }
 
     return implode(' | ', $links);
@@ -1419,13 +1449,15 @@ class ReliefwebSubscriptionsMailer {
   protected function generateUnsubscribeLink($uid, $sid) {
     $path = $this->getSchemeAndHttpHost() . '/notifications/unsubscribe/user/' . $uid;
     $timestamp = $this->time->getRequestTime();
-    $url = Url::fromUri($path, [
+    $options = [
       'absolute' => TRUE,
       'query' => [
         'timestamp' => $timestamp,
         'signature' => $this->getSignature($path, $timestamp),
       ],
-    ]);
+    ];
+    $options = $this->addTrackingParameters($sid, $options);
+    $url = Url::fromUri($path, $options);
     return $url->toString();
   }
 
@@ -1929,19 +1961,19 @@ class ReliefwebSubscriptionsMailer {
     }
 
     if (empty($data)) {
-      return '';
+      return [];
     }
 
     // Get the mail subject.
     $subject = $this->generateEmailSubject($subscription, $data);
     if (empty($subject)) {
-      return '';
+      return [];
     }
 
     // Generate the HTML and text content.
     $body = $this->generateEmailContent($subscription, $data);
     if (empty($body)) {
-      return '';
+      return [];
     }
 
     // Render the email using the default frontend theme so that template
@@ -1950,6 +1982,19 @@ class ReliefwebSubscriptionsMailer {
     $default_theme_name = $this->themeHandler->getDefault();
     $default_theme = $this->themeInitialization->getActiveThemeByName($default_theme_name);
 
+    // Link to the feedback page.
+    $feedback = Url::fromUserInput('/contact', $this->addTrackingParameters($sid, [
+      'absolute' => TRUE,
+    ]))->toString();
+    // Dummy unsubscribe link.
+    $unsubscribe = $this->generateUnsubscribeLink(0, $sid);
+
+    // Update the body with the unique ubsubscribe link.
+    $body = new FormattableMarkup($body, [
+      '@feedback' => $feedback,
+      '@unsubscribe' => $unsubscribe,
+    ]);
+
     $render_array = [
       '#theme' => 'mimemail_message',
       '#module' => 'reliefweb_subscriptions',
@@ -1957,7 +2002,6 @@ class ReliefwebSubscriptionsMailer {
       '#recipient' => '',
       '#subject' => $subject,
       '#body' => $body,
-
     ];
 
     $this->themeManager->setActiveTheme($default_theme);
@@ -2131,6 +2175,24 @@ class ReliefwebSubscriptionsMailer {
       return $storage->loadRevision($previous_revision_id);
     }
     return $entity;
+  }
+
+  /**
+   * Add the tracking parameters to the options for a URL.
+   *
+   * @param string $sid
+   *   Subscription list ID.
+   * @param array $options
+   *   URL options.
+   *
+   * @return array
+   *   URL options with the tracking parameters.
+   */
+  protected function addTrackingParameters($sid, array $options = []) {
+    $options['query']['utm_source'] = 'rw-subscriptions';
+    $options['query']['utm_medium'] = 'email';
+    $options['query']['utm_campaign'] = $sid;
+    return $options;
   }
 
 }
