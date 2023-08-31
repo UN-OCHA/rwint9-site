@@ -19,6 +19,9 @@
         "drupal/pathauto": {
             "PHP 8.2 compatibility": "PATCHES/pathauto-php-82-compatibility.patch"
         },
+        "drupal/stage_file_proxy": {
+            "Webp support fix": "PATCHES/stage_file_proxy-webp-support-fix-3171559.patch"
+        },
         "drupal/username_enumeration_prevention": {
             "Avoid leaking the path via Drupal.settings json": "PATCHES/username_enumeration_prevention-user-login-block-form-3312288.patch"
         },
