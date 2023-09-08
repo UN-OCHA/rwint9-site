@@ -21,6 +21,18 @@ The script `./local/exec.sh` is a shortcut for `docker compose -f local/docker-c
 2. Run `./local/exec.sh -T -u appuser site drush sqlc < path-to-db-dump.sql` to restore a database dump.
 3. Run `./local/install.sh -d` to install the dev dependencies, import the config and update the database.
 
+## Useful commands
+Stop
+`docker compose -f local/docker-compose.yml stop`
+
+Restart
+`docker compose -f local/docker-compose.yml start`
+
+Use latest PHP image (see Dockerfile for version), then recreate local image and
+install dev dependencies
+`docker pull public.ecr.aws/unocha/php-k8s:8.2-stable`
+`./local/install.sh -m -d`
+
 ## Composer
 
 - Install all the modules (including dev) with `./local/exec.sh -w /srv/www site composer install`.
@@ -37,3 +49,7 @@ Alternatively clone the core or contrib module/theme somewhere and mount the rel
 ## API
 
 See the similar local stack in the ReliefWeb API repository to set up an instance of the API and its Elasticsearch backend.
+
+## Local proxy
+
+Check the [setup-notes](https://github.com/UN-OCHA/local-reverse-proxy/blob/main/setup-notes.md) for first-time set-up of a local reverse proxy.
