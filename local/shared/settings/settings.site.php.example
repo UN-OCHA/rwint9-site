@@ -25,11 +25,15 @@ $config['social_auth_hid.settings']['client_secret'] = 'REPLACE_WITH_LOCAL_HID_C
 $config['social_auth_hid.settings']['base_url'] = 'REPLACE_WITH_LOCAL_HID_URL';
 
 // RW API settings.
-$config['reliefweb_api.settings']['api_url'] = 'https://REPLACE_WITH_LOCAL_API_DOMAIN/v1';
-$config['reliefweb_api.settings']['api_url_external'] = 'https://REPLACE_WITH_LOCAL_API_DOMAIN/v1';
-$config['reliefweb_api.settings']['appname'] = 'REPLACE_WITH_LOCAL_SITE_URL';
-$config['reliefweb_api.settings']['elasticsearch'] = 'http://REPLACE_WITH_LOCAL_ELASTICSEARCH_HOSTNAME:9200';
-$config['reliefweb_api.settings']['website'] = 'https://REPLACE_WITH_LOCAL_SITEURL';
+// This is using the API site container name defined in the RW API local set up.
+$config['reliefweb_api.settings']['api_url'] = 'http://rwint-api-local-site/v1';
+// This is the API site local URL.
+$config['reliefweb_api.settings']['api_url_external'] = 'https://rwint-api-local.test/v1';
+$config['reliefweb_api.settings']['appname'] = 'rwint-api-local.test';
+// This is using the API elasticsearch container name defined in the RW API local set up.
+$config['reliefweb_api.settings']['elasticsearch'] = 'http://rwint-api-local-elasticsearch:9200';
+// This is the local site URL.
+$config['reliefweb_api.settings']['website'] = 'https://rwint-local.test';
 $config['reliefweb_api.settings']['cache_enabled'] = TRUE;
 $config['reliefweb_api.settings']['no_replica'] = TRUE;
 
