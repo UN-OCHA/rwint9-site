@@ -670,13 +670,13 @@ class ReliefWebFile extends FieldItemBase {
     }
 
     return [
-      '#theme' => 'image_style__preview',
-      '#style_name' => $style,
+      '#theme' => 'responsive_image__preview',
+      '#responsive_image_style_id' => $style,
       '#uri' => $uri,
-      '#alt' => $this->t('Preview of @file_name', [
-        '@file_name' => $this->getFileName(),
-      ]),
       '#attributes' => [
+        'alt' => $this->t('Preview of @file_name', [
+          '@file_name' => $this->getFileName(),
+        ]),
         'class' => ['rw-file-preview'],
         'data-version' => implode('-', [
           // Once the file is saved it will have a revision ID, until then to
