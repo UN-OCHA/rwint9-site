@@ -1,0 +1,18 @@
+uuid: 30afe701-645d-471b-a397-2e83987cb5e2
+langcode: en
+status: true
+dependencies:
+  config:
+    - image.style.announcement
+  theme:
+    - common_design_subtheme
+id: announcement
+label: Announcement
+image_style_mappings:
+  -
+    image_mapping_type: image_style
+    image_mapping: announcement
+    breakpoint_id: common_design.small
+    multiplier: 1x
+breakpoint_group: common_design_subtheme
+fallback_image_style: announcement
