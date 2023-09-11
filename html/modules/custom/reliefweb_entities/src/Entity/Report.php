@@ -183,7 +183,7 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
       $build['#attributes']['class'][] = 'rw-attachment--map';
       foreach ($build['#list'] as &$item) {
         if (isset($item['preview'])) {
-          $item['preview']['#style_name'] = 'large';
+          $item['preview']['#responsive_image_style_id'] = 'large';
         }
         $item['label'] = $label;
       }

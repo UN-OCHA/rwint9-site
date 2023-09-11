@@ -32,11 +32,11 @@
 
   <a class="rw-homepage-announcement__link" href="{{ url }}" target="_blank" rel="noopener">
     {{ render_var({
-      '#theme': 'image_style',
-      '#style_name': 'announcement',
+      '#theme': 'responsive_image',
+      '#responsive_image_style_id': 'announcement',
       '#uri': image.url,
-      '#alt': image.alt,
       '#attributes': {
+        'alt': image.alt,
         'class': ['rw-homepage-announcement__image'],
         'loading': 'eager',
       },

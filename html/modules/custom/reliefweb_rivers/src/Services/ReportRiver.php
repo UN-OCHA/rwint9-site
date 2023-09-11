@@ -444,19 +444,21 @@ class ReportRiver extends RiverServiceBase {
       }
 
       // Attachment preview.
-      if (!empty($fields['file'][0]['preview'])) {
+      if (!empty($fields['file'][0]['preview']['url'])) {
         $preview = $fields['file'][0]['preview'];
-        $url = $preview['url-thumb'] ?? $preview['url-small'] ?? '';
-        if (!empty($url)) {
-          $version = $preview['version'] ?? $fields['file'][0]['id'] ?? 0;
-          $data['preview'] = [
-            'url' => UrlHelper::stripDangerousProtocols($url) . '?' . $version,
-            // We don't have any good label/description for the file
-            // previews so we use an empty alt to mark them as decorative
-            // so that assistive technologies will ignore them.
-            'alt' => '',
-          ];
-        }
+        $uri = UrlHelper::getImageUriFromUrl($preview['url']);
+        $version = $preview['version'] ?? $fields['file'][0]['id'] ?? 0;
+        $dimensions = @getimagesize($uri) ?? [];
+        $data['preview'] = [
+          'uri' => $uri,
+          'version' => $version,
+          // We don't have any good label/description for the file
+          // previews so we use an empty alt to mark them as decorative
+          // so that assistive technologies will ignore them.
+          'alt' => '',
+          'width' => $dimensions[0] ?? NULL,
+          'height' => $dimensions[1] ?? NULL,
+        ];
       }
 
       // Headline image.
@@ -467,8 +469,8 @@ class ReportRiver extends RiverServiceBase {
           'uri' => UrlHelper::getImageUriFromUrl($image['url']),
           'alt' => $image['caption'] ?? '',
           'copyright' => trim($image['copyright'] ?? '', " \n\r\t\v\0@"),
-          'width' => $image['width'] ?? 0,
-          'height' => $image['height'] ?? 0,
+          'width' => $image['width'] ?? NULL,
+          'height' => $image['height'] ?? NULL,
         ];
       }
 

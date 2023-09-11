@@ -25,11 +25,22 @@ $config['social_auth_hid.settings']['client_secret'] = 'REPLACE_WITH_LOCAL_HID_C
 $config['social_auth_hid.settings']['base_url'] = 'REPLACE_WITH_LOCAL_HID_URL';
 
 // RW API settings.
-$config['reliefweb_api.settings']['api_url'] = 'https://REPLACE_WITH_LOCAL_API_DOMAIN/v1';
-$config['reliefweb_api.settings']['api_url_external'] = 'https://REPLACE_WITH_LOCAL_API_DOMAIN/v1';
-$config['reliefweb_api.settings']['appname'] = 'REPLACE_WITH_LOCAL_SITE_URL';
-$config['reliefweb_api.settings']['elasticsearch'] = 'http://REPLACE_WITH_LOCAL_ELASTICSEARCH_HOSTNAME:9200';
-$config['reliefweb_api.settings']['website'] = 'https://REPLACE_WITH_LOCAL_SITEURL';
+// Use the API site container name defined in the RW API local setup to avoid
+// certificate issues.
+// This can be replaced with `https://api.reliefweb.int/v1`, for example to test
+// the subscriptions with the latest content.
+$config['reliefweb_api.settings']['api_url'] = 'http://rwint-api-local-site/v1';
+// Use the local API site local defined in the RW API local setup. This is used
+// client side (browser) so there is no certificate problem.
+$config['reliefweb_api.settings']['api_url_external'] = 'https://rwint-api-local.test/v1';
+// Use the local RW site host name to identify the origin of the API requests.
+$config['reliefweb_api.settings']['appname'] = 'rwint-local.test';
+// Use the API elasticsearch container name defined in the RW API local setup
+// to avoid certificate issues.
+$config['reliefweb_api.settings']['elasticsearch'] = 'http://rwint-api-local-elasticsearch:9200';
+// Use the local site URL to that all the links exposed in the API point at
+// the local RW site.
+$config['reliefweb_api.settings']['website'] = 'https://rwint-local.test';
 $config['reliefweb_api.settings']['cache_enabled'] = TRUE;
 $config['reliefweb_api.settings']['no_replica'] = TRUE;
 
