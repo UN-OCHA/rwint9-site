@@ -92,10 +92,6 @@ services:
       # Mount nginx custom configuration.
       # - "../docker/etc/nginx/apps/drupal/drupal.conf:/etc/nginx/apps/drupal/drupal.conf"
       # - "../docker/etc/nginx/custom:/etc/nginx/custom"
-      # - "../html/modules/contrib/image_optimize:/srv/www/html/modules/contrib/image_optimize:rw"
-      # - "../html/modules/contrib/image_optimize:/srv/www/html/modules/contrib/image_optimize_webp:rw"
-      # - "../html/modules/contrib:/srv/www/html/modules/contrib:rw"
-      #- "../html/core/modules/image:/srv/www/html/core/modules/image:rw"
     environment:
       TERM: xterm
       ENVIRONMENT: local
