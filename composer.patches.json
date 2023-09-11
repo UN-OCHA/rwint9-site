@@ -9,11 +9,18 @@
         "drupal/guidelines": {
             "Drupal 10 compatibility": "PATCHES/guidelines-drupal-10-compatibility.patch"
         },
+        "drupal/imageapi_optimize_webp": {
+            "Fix derivatives for webp source images": "PATCHES/imageapi_optimize_webp-webp-source-image.patch",
+            "Support imagemagick toolkit": "PATCHES/imageapi_optimize_webp-imagemagick-toolkit.patch"
+        },
         "drupal/maintenance200": {
             "Drupal 10 compatibility": "PATCHES/maintenance200-drupal-10-compatibility.patch"
         },
         "drupal/pathauto": {
             "PHP 8.2 compatibility": "PATCHES/pathauto-php-82-compatibility.patch"
+        },
+        "drupal/stage_file_proxy": {
+            "Webp support fix": "PATCHES/stage_file_proxy-webp-support-fix-3171559.patch"
         },
         "drupal/username_enumeration_prevention": {
             "Avoid leaking the path via Drupal.settings json": "PATCHES/username_enumeration_prevention-user-login-block-form-3312288.patch"
