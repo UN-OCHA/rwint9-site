@@ -147,6 +147,13 @@ class ReliefwebSubscriptionsMailer {
   protected $themeHandler;
 
   /**
+   * Store the link tracking state for subscriptions.
+   *
+   * @var array
+   */
+  protected $trackedSubscriptions;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(
@@ -490,7 +497,7 @@ class ReliefwebSubscriptionsMailer {
     $list_id = $this->generateListId($sid);
 
     // Link to the feedback page.
-    $feedback = Url::fromUserInput('/contact', $this->addTrackingParameters($sid, [
+    $feedback = Url::fromUserInput('/contact', $this->addLinkTrackingParameters($sid, [
       'absolute' => TRUE,
     ]))->toString();
 
@@ -670,7 +677,7 @@ class ReliefwebSubscriptionsMailer {
         $options = $options + $part['options'];
       }
 
-      $options = $this->addTrackingParameters($sid, $options);
+      $options = $this->addLinkTrackingParameters($sid, $options);
 
       $url = Url::fromUserInput($part['link'], $options);
       $links[] = Link::fromTextAndUrl($part['text'], $url)->toString();
@@ -704,7 +711,7 @@ class ReliefwebSubscriptionsMailer {
     foreach ($data as $fields) {
       $item = [];
       $info = [];
-      $item['url'] = Url::fromUri($fields['url_alias'], $this->addTrackingParameters($sid));
+      $item['url'] = Url::fromUri($fields['url_alias'], $this->addLinkTrackingParameters($sid));
 
       // Title.
       $title = $fields['headline']['title'];
@@ -780,7 +787,7 @@ class ReliefwebSubscriptionsMailer {
     foreach ($data as $fields) {
       $item = [];
       $info = [];
-      $item['url'] = Url::fromUri($fields['url_alias'], $this->addTrackingParameters($sid));
+      $item['url'] = Url::fromUri($fields['url_alias'], $this->addLinkTrackingParameters($sid));
 
       // Title.
       $title = $fields['title'];
@@ -861,7 +868,7 @@ class ReliefwebSubscriptionsMailer {
     foreach ($data as $fields) {
       $item = [];
       $info = [];
-      $item['url'] = Url::fromUri($fields['url_alias'], $this->addTrackingParameters($sid));
+      $item['url'] = Url::fromUri($fields['url_alias'], $this->addLinkTrackingParameters($sid));
 
       // Title.
       $title = $fields['title'];
@@ -941,7 +948,7 @@ class ReliefwebSubscriptionsMailer {
     foreach ($data as $fields) {
       $item = [];
       $info = [];
-      $item['url'] = Url::fromUri($fields['url_alias'], $this->addTrackingParameters($sid));
+      $item['url'] = Url::fromUri($fields['url_alias'], $this->addLinkTrackingParameters($sid));
 
       // Title.
       $title = $fields['title'];
@@ -1012,7 +1019,7 @@ class ReliefwebSubscriptionsMailer {
       '#theme' => 'reliefweb_subscriptions_content__disaster',
     ];
 
-    $variables['#url'] = Url::fromUri($data['url_alias'], $this->addTrackingParameters($sid));
+    $variables['#url'] = Url::fromUri($data['url_alias'], $this->addLinkTrackingParameters($sid));
 
     // Title.
     $variables['#title'] = $data['name'];
@@ -1066,7 +1073,7 @@ class ReliefwebSubscriptionsMailer {
 
     $info = [];
 
-    $variables['#url'] = Url::fromUri($data['url_alias'], $this->addTrackingParameters($sid));
+    $variables['#url'] = Url::fromUri($data['url_alias'], $this->addLinkTrackingParameters($sid));
 
     // Title.
     $title = $data['title'];
@@ -1161,7 +1168,7 @@ class ReliefwebSubscriptionsMailer {
     foreach ($data as $fields) {
       $item = [];
       $info = [];
-      $item['url'] = Url::fromUri($fields['url_alias'], $this->addTrackingParameters($sid));
+      $item['url'] = Url::fromUri($fields['url_alias'], $this->addLinkTrackingParameters($sid));
 
       // Title.
       $title = $fields['title'];
@@ -1275,7 +1282,7 @@ class ReliefwebSubscriptionsMailer {
       if (!empty($part['options'])) {
         $options = $options + $part['options'];
       }
-      $options = $this->addTrackingParameters($sid, $options);
+      $options = $this->addLinkTrackingParameters($sid, $options);
 
       if (strpos($part['link'], 'http') === 0) {
         $url = Url::fromUri($part['link'], $options);
@@ -1456,7 +1463,7 @@ class ReliefwebSubscriptionsMailer {
         'signature' => $this->getSignature($path, $timestamp),
       ],
     ];
-    $options = $this->addTrackingParameters($sid, $options);
+    $options = $this->addLinkTrackingParameters($sid, $options);
     $url = Url::fromUri($path, $options);
     return $url->toString();
   }
@@ -1983,7 +1990,7 @@ class ReliefwebSubscriptionsMailer {
     $default_theme = $this->themeInitialization->getActiveThemeByName($default_theme_name);
 
     // Link to the feedback page.
-    $feedback = Url::fromUserInput('/contact', $this->addTrackingParameters($sid, [
+    $feedback = Url::fromUserInput('/contact', $this->addLinkTrackingParameters($sid, [
       'absolute' => TRUE,
     ]))->toString();
     // Dummy unsubscribe link.
@@ -2178,7 +2185,7 @@ class ReliefwebSubscriptionsMailer {
   }
 
   /**
-   * Add the tracking parameters to the options for a URL.
+   * Add the link tracking parameters to the options for a URL.
    *
    * @param string $sid
    *   Subscription list ID.
@@ -2188,11 +2195,69 @@ class ReliefwebSubscriptionsMailer {
    * @return array
    *   URL options with the tracking parameters.
    */
-  protected function addTrackingParameters($sid, array $options = []) {
-    $options['query']['utm_source'] = 'rw-subscriptions';
-    $options['query']['utm_medium'] = 'email';
-    $options['query']['utm_campaign'] = $sid;
+  protected function addLinkTrackingParameters($sid, array $options = []) {
+    if ($this->isLinkTrackingEnabled($sid)) {
+      $options['query']['utm_source'] = 'rw-subscriptions';
+      $options['query']['utm_medium'] = 'email';
+      $options['query']['utm_campaign'] = $sid;
+    }
     return $options;
+  }
+
+  /**
+   * Check if link tracking is enabled for the given subscription ID.
+   *
+   * @param string $sid
+   *   Subscription ID.
+   *
+   * @return bool
+   *   TRUE if the link tracking is enabled for the subscription.
+   */
+  protected function isLinkTrackingEnabled($sid) {
+    if (!isset($this->trackedSubscriptions)) {
+      $this->trackedSubscriptions = $this->state->get('reliefweb_subscriptions_tracked_subscriptions', []);
+    }
+    return !empty($this->trackedSubscriptions[$sid]);
+  }
+
+  /**
+   * Toggle link tracking for a the given subscription(s).
+   *
+   * @param bool $enable
+   *   Whether to enable tracking or disable it.
+   * @param array $sids
+   *   List of subscription ids. Use `all` to enable or disable link tracking of
+   *   all the subscriptions. Use `countries` to enable tracking on all the
+   *   country based subscriptions otherwise use individual subscription ids.
+   */
+  public function toggleLinkTracking($enable, array $sids) {
+    $subscriptions = reliefweb_subscriptions_subscriptions();
+
+    $updated_sids = [];
+    foreach ($sids as $sid) {
+      if ($sid === 'all') {
+        foreach ($subscriptions as $subscription) {
+          $updated_sids[$subscription['id']] = $enable;
+        }
+      }
+      elseif ($sid === 'countries') {
+        foreach (array_keys(reliefweb_subscriptions_get_countries()) as $country_id) {
+          $updated_sids['country_updates_' . $country_id] = $enable;
+        }
+      }
+      elseif (isset($subscriptions[$sid])) {
+        $updated_sids[$sid] = $enable;
+      }
+    }
+
+    $tracked_sids = $this->state->get('reliefweb_subscriptions_tracked_subscriptions', []);
+    foreach ($subscriptions as $sid => $subscription) {
+      $tracked_sids[$sid] = $updated_sids[$sid] ?? $tracked_sids[$sid] ?? FALSE;
+      $this->logger->info('Link tracking for "' . $subscription['name'] . '": ' . ($tracked_sids[$sid] ? 'on' : 'off'));
+    }
+
+    $this->trackedSubscriptions = $tracked_sids;
+    $this->state->set('reliefweb_subscriptions_tracked_subscriptions', $tracked_sids);
   }
 
 }
