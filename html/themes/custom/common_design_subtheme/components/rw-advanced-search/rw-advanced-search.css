@@ -13,7 +13,7 @@
   /* var(--cd-reliefweb-brand-grey--light) with 0.2 opacity on white. */
   background: #fafbfb;
 }
-.rw-advanced-search:before {
+.rw-advanced-search::before {
   position: absolute;
   top: -1px;
   bottom: -1px;
@@ -71,7 +71,7 @@
   border-width: 0 0 1px 0;
 }
 /* Clear any floating from the selection content. */
-.rw-advanced-search__selection:after {
+.rw-advanced-search__selection::after {
   display: block;
   clear: both;
   width: 100%;
@@ -98,9 +98,9 @@
 .rw-advanced-search__selection [data-operator*="with"] {
   clear: both;
 }
-.rw-advanced-search__selection [data-operator*="with"]:before,
-.rw-advanced-search__selection [data-operator*="any"]:before,
-.rw-advanced-search__selection [data-operator*="all"]:before {
+.rw-advanced-search__selection [data-operator*="with"]::before,
+.rw-advanced-search__selection [data-operator*="any"]::before,
+.rw-advanced-search__selection [data-operator*="all"]::before {
   position: absolute;
   top: -1px;
   bottom: -1px;
@@ -119,7 +119,7 @@
   font-size: inherit;
   font-weight: inherit;
 }
-.rw-advanced-search__selection [data-operator] button[aria-expanded]:after {
+.rw-advanced-search__selection [data-operator] button[aria-expanded]::after {
   position: absolute;
   top: 50%;
   right: 8px;
@@ -130,7 +130,7 @@
   content: "";
   background: var(--rw-icons--toggle--down--9--dark-blue);
 }
-.rw-advanced-search__selection [data-operator] button[aria-expanded="true"]:after {
+.rw-advanced-search__selection [data-operator] button[aria-expanded="true"]::after {
   background: var(--rw-icons--toggle--up--9--dark-blue);
 }
 .rw-advanced-search__selection [data-operator] ul {
@@ -167,7 +167,7 @@
 .rw-advanced-search__selection [data-operator] ul li[aria-disabled] {
   display: none;
 }
-.rw-advanced-search__selection [data-operator] ul li:before {
+.rw-advanced-search__selection [data-operator] ul li::before {
   position: absolute;
   top: 50%;
   left: 8px;
@@ -180,7 +180,7 @@
   border: none;
   background: var(--rw-icons--common--selected--12--dark-blue);
 }
-.rw-advanced-search__selection [data-operator] li[aria-selected]:before {
+.rw-advanced-search__selection [data-operator] li[aria-selected]::before {
   display: block;
 }
 .rw-advanced-search__selection [data-value] {
@@ -204,7 +204,7 @@
   position: relative;
 }
 /* Clear any floating from the actions. */
-.rw-advanced-search__form:after {
+.rw-advanced-search__form::after {
   display: block;
   clear: both;
   width: 100%;
@@ -242,7 +242,7 @@
   padding-left: 40px;
   background: var(--cd-reliefweb-brand-red--dark);
 }
-.rw-advanced-search__actions button[data-apply="true"]:before {
+.rw-advanced-search__actions button[data-apply="true"]::before {
   position: absolute;
   top: 50%;
   left: 12px;
@@ -268,7 +268,7 @@
 .rw-advanced-search button[data-toggler][data-hidden="true"] {
   visibility: hidden;
 }
-.rw-advanced-search button[data-toggler]:before {
+.rw-advanced-search button[data-toggler]::before {
   position: relative;
   display: inline-block;
   overflow: hidden;
@@ -319,7 +319,7 @@
   display: none;
 }
 /* Clear the floating from the buttons. */
-.rw-advanced-search__filter-selector:after {
+.rw-advanced-search__filter-selector::after {
   display: block;
   clear: both;
   width: 100%;
@@ -532,4 +532,24 @@
   color: white;
   border: 1px solid var(--cd-reliefweb-brand-red--dark);
   background: var(--cd-reliefweb-brand-red--dark);
+}
+.rw-advanced-search .rw-datepicker-input {
+  display: inline-block;
+  width: calc(100% - 36px);
+  margin-right: 4px;
+}
+.rw-advanced-search .rw-datepicker-toggle {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  vertical-align: top;
+  border: none;
+  background: var(--rw-icons--datepicker--datepicker--32--dark-blue);
+}
+.rw-advanced-search .rw-datepicker-toggle:hover,
+.rw-advanced-search .rw-datepicker-toggle:active,
+.rw-advanced-search .rw-datepicker-toggle:focus {
+  background: var(--rw-icons--datepicker--datepicker--32--dark-red);
 }

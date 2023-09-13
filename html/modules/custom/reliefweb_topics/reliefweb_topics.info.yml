@@ -2,4 +2,4 @@ type: module
 name: ReliefWeb Topics
 description: 'Admin and display of topics pages.'
 package: reliefweb
-core_version_requirement: ^9
+core_version_requirement: ^9 || ^10

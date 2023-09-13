@@ -2,14 +2,14 @@
 
 namespace Drupal\Tests\reliefweb_import\Unit;
 
+use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionXml;
 use Drupal\Tests\reliefweb_import\Unit\Stub\ReliefwebImportCommandStub;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Request;
-use GuzzleHttp\Exception\RequestException;
-use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionXml;
+use GuzzleHttp\Psr7\Response;
 
 /**
  * Tests reliefweb importer.
@@ -22,6 +22,7 @@ class ReliefwebImporterXmlTest extends ReliefwebImporterTestBase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
     $this->prophesizeServices();
 
     $mock = new MockHandler([]);

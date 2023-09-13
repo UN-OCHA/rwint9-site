@@ -12,7 +12,7 @@ use Drupal\filter\Plugin\FilterBase;
  *   id = "filter_iframe",
  *   title = @Translation("IFrame Filter"),
  *   description = @Translation("Process iframes"),
- *   type = Drupal\filter\Plugin\FilterInterface::TYPE_MARKUP_LANGUAGE,
+ *   type = Drupal\filter\Plugin\FilterInterface::TYPE_TRANSFORM_IRREVERSIBLE,
  * )
  */
 class IFrameFilter extends FilterBase {
@@ -32,7 +32,7 @@ class IFrameFilter extends FilterBase {
    * Syntax is: [iframe:widthxheight title](link).
    */
   protected function convertIframeMarkup($text) {
-    $pattern = "/\[iframe(?:[:](?<width>\d+))?(?:[:x](?<height>\d+))?(?:[ ]+\"?(?<title>[^\"\]]+)\"?)?\](\((?<url>[^\)]+)\))?/";
+    $pattern = "/\[iframe(?:[:](?<width>\d+))?(?:[:x](?<height>\d+))?(?:[ ]+\"?(?<title>[^\"\]]+)\"?)?\](\((?<url>[^\)]*)\))?/";
     return preg_replace_callback($pattern, [
       IFrameFilter::class,
       'renderIframeToken',
@@ -43,14 +43,14 @@ class IFrameFilter extends FilterBase {
    * Generate iframe html markup.
    */
   public static function renderIframeToken($data) {
-    if (empty($data['url'])) {
+    $url = !empty($data['url']) ? trim($data['url']) : '';
+    if (empty($url)) {
       return '';
     }
 
     $width = !empty($data['width']) ? intval($data['width'], 10) : 1000;
     $height = !empty($data['height']) ? intval($data['height'], 10) : round($width / 2);
     $title = !empty($data['title']) ? $data['title'] : 'iframe';
-    $url = $data['url'];
 
     $text = '<iframe width="' . $width . '" height="' . $height . '" title="' . $title . '" src="' . $url . '" frameborder="0" allowfullscreen></iframe>';
 

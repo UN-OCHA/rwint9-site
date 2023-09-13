@@ -1,18 +1,19 @@
 version: "2.2"
+name: rwint-test
 
 networks:
   default:
 
 volumes:
-  rwint9-test-site-public:
-  rwint9-test-site-private:
+  site-public:
+  site-private:
 
 services:
   memcache:
     restart: always
     image: public.ecr.aws/unocha/memcache:1.6
-    hostname: rwint9-test-memcache
-    container_name: rwint9-test-memcache
+    hostname: rwint-test-memcache
+    container_name: rwint-test-memcache
     ports:
       - "11211"
     networks:
@@ -21,9 +22,9 @@ services:
       MEMCACHE_MAX_MEMORY: 64
 
   mysql:
-    image: unocha/alpine-mysql:10.4.13-r0-202006-01
-    hostname: rwint9-test-mysql
-    container_name: rwint9-test-mysql
+    image: public.ecr.aws/unocha/mysql:10.6
+    hostname: rwint-test-mysql
+    container_name: rwint-test-mysql
     environment:
       - MYSQL_DB=reliefweb
       - MYSQL_USER=reliefweb
@@ -32,9 +33,12 @@ services:
       - default
 
   drupal:
-    image: public.ecr.aws/unocha/rwint9-site:local
-    hostname: rwint9-test-site
-    container_name: rwint9-test-site
+    # Default to `rwint9-site` for compatibility with the github tests.
+    # @see Makefile.
+    # @see OPS-9529.
+    image: public.ecr.aws/unocha/${IMAGE_NAME:-rwint9-site}:${IMAGE_TAG:-local}
+    hostname: rwint-test-site
+    container_name: rwint-test-site
     depends_on:
       - memcache
       - mysql
@@ -43,8 +47,8 @@ services:
       # Mount the attachment redirections to pass the requests to Drupal.
       - "./etc/nginx/custom/01_attachment_redirections.conf:/etc/nginx/custom/01_attachment_redirections.conf:ro"
       # Mount volumes for the private and public files.
-      - "rwint9-test-site-public:/srv/www/html/sites/default/files:rw"
-      - "rwint9-test-site-private:/srv/www/html/sites/default/private:rw"
+      - "site-public:/srv/www/html/sites/default/files:rw"
+      - "site-private:/srv/www/html/sites/default/private:rw"
       # Mount the folders needed for the tests.
       - "../phpcs.xml:/srv/www/phpcs.xml:ro"
       - "../phpunit.xml:/srv/www/phpunit.xml:ro"
@@ -55,9 +59,9 @@ services:
     environment:
       - TERM=xterm
       - ENVIRONMENT=dev
-      - NGINX_SERVERNAME=rwint9-test-site,localhost,127.0.0.1
-      - NGINX_OVERRIDE_PROTOCOL=HTTP,rwint9-test-site,localhost,127.0.0.1
-      - DRUSH_OPTIONS_URI=http://rwint9-test-site
+      - NGINX_SERVERNAME=rwint-test-site,localhost,127.0.0.1
+      - NGINX_OVERRIDE_PROTOCOL=HTTP,rwint-test-site,localhost,127.0.0.1
+      - DRUSH_OPTIONS_URI=http://rwint-test-site
       - DRUPAL_DB_DATABASE=reliefweb
       - DRUPAL_DB_USERNAME=reliefweb
       - DRUPAL_DB_PASSWORD=reliefweb

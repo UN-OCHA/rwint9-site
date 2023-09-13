@@ -1,0 +1,14 @@
+uuid: dd96f3bb-062d-4076-99c0-f4dcf350f59a
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.beta_tester
+  module:
+    - user
+id: user_remove_role_action.beta_tester
+label: 'Remove the Beta tester role from the selected user(s)'
+type: user
+plugin: user_remove_role_action
+configuration:
+  rid: beta_tester

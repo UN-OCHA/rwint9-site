@@ -16,8 +16,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\ServiceUnavailableHttpException;
 
 /**
@@ -98,13 +98,18 @@ class ImageStyleDownloadController extends OriginalImageStyleDownloadController 
   /**
    * {@inheritdoc}
    */
-  public function deliver(Request $request, $scheme, ImageStyleInterface $image_style) {
+  public function deliver(Request $request, $scheme, ImageStyleInterface $image_style = NULL) {
     if (empty($image_style)) {
       throw new NotFoundHttpException();
     }
 
+    $file = $request->query->get('file');
+    if (!is_string($file)) {
+      throw new NotFoundHttpException();
+    }
+
     // This is normally the URI of the source image.
-    $uri = $scheme . '://' . $request->query->get('file');
+    $uri = $scheme . '://' . trim($file);
 
     // Retrieve the base directory in which the previews are stored.
     $preview_directory = $this->config->get('preview_directory') ?? 'previews';
@@ -117,11 +122,11 @@ class ImageStyleDownloadController extends OriginalImageStyleDownloadController 
     // Let other modules handle the file if it's not a file matching the pattern
     // used for the reliefweb files.
     if (preg_match($pattern, $uri) !== 1) {
-      return parent::download($request, $scheme);
+      return parent::deliver($request, $scheme, $image_style);
     }
 
     // Check the image token. We return a 404 as it's more likely to be cached
-    // than a 403 and the token is just of DDOS protection and chacking helps
+    // than a 403 and the token is just of DDOS protection and caching helps
     // as well with that.
     if (!$this->validateToken($request, $uri, $image_style)) {
       throw new NotFoundHttpException();
@@ -254,7 +259,7 @@ class ImageStyleDownloadController extends OriginalImageStyleDownloadController 
     // were acquiring the lock.
     $success = file_exists($derivative_uri) || $image_style->createDerivative($uri, $derivative_uri);
 
-    if (!empty($lock_acquired)) {
+    if ($lock_acquired) {
       $this->lock->release($lock_name);
     }
 

@@ -1,9 +1,4 @@
-Provides users with another way to access the content of the site, through
-classifications by Theme and Disaster type.
+ReliefWeb - Topics module
+=========================
 
-Caching
--------
-
-**Pages**
-
-* topics: 1 hour
+This module provides a route (`/admin/community-topics`) and [controller](src/Controller/CommunityTopicsController.php) to manage the commmunity topic links displayed at the bottom of the `/topics` page.

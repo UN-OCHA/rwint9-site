@@ -39,7 +39,9 @@
           '@date': entry.date|date('d M Y H:i:s e', 'UTC'),
           '@user': entity_link(entry.user),
         }) }}</h{{ level }}>
+        {% if entry.status is not empty %}
         <div class="rw-moderation-status" data-moderation-status="{{ entry.status.value }}">{{ entry.status.label }}</div>
+        {% endif %}
       </header>
 
       <dl class="rw-revisions-history-entry__content">

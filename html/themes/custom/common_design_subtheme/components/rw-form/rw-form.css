@@ -15,7 +15,7 @@ form textarea {
 form button,
 /* Apply styles to field UI buttons
   with some exceptions (Notably "Save" buttons) */
-form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button {
+form:not(.subscription-form, .community-topics-form) .form-item .cd-button {
   margin: 0 12px 0 0;
   padding: 12px;
   color: white;
@@ -28,18 +28,18 @@ form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button {
 form button:hover,
 form button:focus,
 form button:active,
-form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button:hover,
-form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button:focus,
-form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button:active {
+form:not(.subscription-form, .community-topics-form) .form-item .cd-button:hover,
+form:not(.subscription-form, .community-topics-form) .form-item .cd-button:focus,
+form:not(.subscription-form, .community-topics-form) .form-item .cd-button:active {
   text-decoration: underline;
   background: var(--cd-reliefweb-brand-red--dark);
 }
 form button:focus,
-form:not(.subscription-form):not(.community-topics-form) .form-item .cd-button:focus {
+form:not(.subscription-form, .community-topics-form) .form-item .cd-button:focus {
   text-decoration: underline;
   border: 2px solid var(--cd-reliefweb-brand-grey--dark);
 }
-form:not('.subscription-form'):not('community-topics-form') .form-item .cd-button {
+form:not(.subscription-form, .community-topics-form) .form-item .cd-button {
   transition: none;
   border-radius: 0;
 }
@@ -94,7 +94,7 @@ form fieldset fieldset legend {
   font-size: 16px;
   font-weight: bold;
 }
-form label:first-letter {
+form label::first-letter {
   /* Try to have some consistency. */
   text-transform: capitalize;
 }
@@ -141,8 +141,8 @@ form fieldset > legend + * + * {
  * Ensures the loading overlay (see loading overlay component) uses the entire
  * viewport.
  */
-form[data-loading]:before,
-form[data-loading]:after {
+form[data-loading]::before,
+form[data-loading]::after {
   position: fixed;
 }
 
@@ -233,7 +233,7 @@ form[data-enhanced] .form-optional {
 form[data-enhanced] .form-required::after {
   content: none;
 }
-form .form-disabled [data-irrelevant]:after {
+form .form-disabled [data-irrelevant]::after {
   display: block;
   clear: both;
   content: attr(data-irrelevant);
@@ -244,7 +244,6 @@ form .form-disabled [data-irrelevant] > div {
 }
 form input[disabled],
 form textarea[disabled] {
-  background: var(--cd-reliefweb-brand-grey--light);
   background: var(--cd-reliefweb-grey--disable);
 }
 form input[disabled] + label {
@@ -286,7 +285,8 @@ form #actions {
   background: rgba(230, 236, 239, 0.4);
 }
 form #actions .cd-button {
-  margin-top: 12px;
+  margin: 12px 2px 0 2px;
+  font-weight: normal;
 }
 form #actions + * {
   border-top: none;
@@ -445,7 +445,7 @@ form > #actions legend + .form-type-checkbox.form-item-notifications-content-dis
   justify-content: flex-end;
   order: 1;
 }
-.filter-wrapper .filter-help a:after {
+.filter-wrapper .filter-help a::after {
   top: 2px;
 }
 .filter-wrapper select {
@@ -520,14 +520,14 @@ form button[value="edit"] {
 }
 
 /* Preview button */
-input[data-drupal-selector="edit-preview"] {
+button[data-drupal-selector="edit-preview"] {
   background-color: var(--cd-grey--dark);
 }
-input[data-drupal-selector="edit-preview"]:hover,
-input[data-drupal-selector="edit-preview"]:focus {
+button[data-drupal-selector="edit-preview"]:hover,
+button[data-drupal-selector="edit-preview"]:focus {
   background-color: var(--cd-grey--mid);
 }
-input[data-drupal-selector="edit-preview"]:focus {
+button[data-drupal-selector="edit-preview"]:focus {
   border: 2px solid var(--cd-black);
 }
 
@@ -554,4 +554,13 @@ form:not(.rw-entity-form-altered) .form-actions.form-item {
 /* Cancel button on unsubscribe form */
 .unsubscribe-form > .button + a {
   margin-left: 1rem;
+}
+
+/* Form item label when not a `label` element. */
+.rw-form-label {
+  display: inline-block;
+  margin: 0 0 6px 0;
+  color: var(--cd-black);
+  font-size: 16px;
+  font-weight: bold;
 }

@@ -23,7 +23,7 @@ class IFrameFilterTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $configuration['settings'] = [];
@@ -65,7 +65,19 @@ class IFrameFilterTest extends UnitTestCase {
         '',
       ],
       [
+        '[iframe]()',
+        '',
+      ],
+      [
+        '[iframe](  )',
+        '',
+      ],
+      [
         '[iframe](https://example.com)',
+        '<iframe width="1000" height="500" title="iframe" src="https://example.com" frameborder="0" allowfullscreen></iframe>',
+      ],
+      [
+        '[iframe](  https://example.com   )',
         '<iframe width="1000" height="500" title="iframe" src="https://example.com" frameborder="0" allowfullscreen></iframe>',
       ],
       [

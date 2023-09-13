@@ -6,7 +6,7 @@ module:
   block: 0
   book: 0
   breakpoint: 0
-  ckeditor: 0
+  ckeditor5: 0
   components: 0
   config: 0
   config_split: 0
@@ -28,6 +28,8 @@ module:
   image: 0
   imageapi_optimize: 0
   imageapi_optimize_binaries: 0
+  imageapi_optimize_webp: 0
+  imageapi_optimize_webp_responsive: 0
   imagemagick: 0
   inline_entity_form: 0
   inline_form_errors: 0
@@ -45,9 +47,6 @@ module:
   metatag_facebook: 0
   metatag_open_graph: 0
   metatag_twitter_cards: 0
-  migrate: 0
-  migrate_plus: 0
-  migrate_tools: 0
   mimemail: 0
   mysql: 0
   node: 0
@@ -71,13 +70,13 @@ module:
   reliefweb_import: 0
   reliefweb_key_figures: 0
   reliefweb_meta: 0
-  reliefweb_migrate: 0
   reliefweb_moderation: 0
   reliefweb_reporting: 0
   reliefweb_revisions: 0
   reliefweb_rivers: 0
   reliefweb_subscriptions: 0
   reliefweb_topics: 0
+  reliefweb_user_history: 0
   reliefweb_user_posts: 0
   reliefweb_users: 0
   reliefweb_utility: 0
@@ -100,16 +99,16 @@ module:
   update: 0
   user: 0
   user_display_name: 0
+  username_enumeration_prevention: 0
   workflows: 0
   pathauto: 1
   content_translation: 10
   views: 10
   minimal: 1000
 theme:
-  stark: 0
   stable: 0
   classy: 0
   common_design: 0
   common_design_subtheme: 0
-  seven: 0
+  claro: 0
 profile: minimal

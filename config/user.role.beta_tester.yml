@@ -1,0 +1,9 @@
+uuid: d32877fc-1a02-4626-902d-577e71464493
+langcode: en
+status: true
+dependencies: {  }
+id: beta_tester
+label: 'Beta tester'
+weight: 7
+is_admin: null
+permissions: {  }

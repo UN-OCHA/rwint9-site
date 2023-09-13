@@ -2,7 +2,6 @@
 
 namespace Drupal\reliefweb_analytics\Command;
 
-use Drupal\path_alias\AliasRepositoryInterface;
 use Consolidation\SiteAlias\SiteAliasManagerAwareInterface;
 use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
 use Consolidation\SiteProcess\ProcessManagerAwareTrait;
@@ -11,6 +10,7 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\State\StateInterface;
+use Drupal\path_alias\AliasRepositoryInterface;
 use Drush\Commands\DrushCommands;
 use Google\Analytics\Data\V1beta\BetaAnalyticsDataClient;
 use Google\Analytics\Data\V1beta\DateRange;
@@ -131,7 +131,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
     $query->condition('vid', 'country');
     $query->condition('tid', $this->state->get('reliefweb_analytics_most_read_country_last_tid', 0), '>');
     $query->sort('tid');
-    $tids = $query->execute();
+    $tids = $query->accessCheck(FALSE)->execute();
 
     // Reset last tid when empty.
     if (empty($tids)) {
@@ -248,7 +248,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
     $query->condition('vid', 'disaster');
     $query->condition('tid', $this->state->get('reliefweb_analytics_most_read_disaster_last_tid', 0), '>');
     $query->sort('tid');
-    $tids = $query->execute();
+    $tids = $query->accessCheck(FALSE)->execute();
 
     // Reset last tid when empty.
     if (empty($tids)) {

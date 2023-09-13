@@ -21,6 +21,7 @@ trait OpportunityDocumentTrait {
    */
   protected function updateModerationStatusFromPostingRights() {
     // In theory the revision user here, is the current user saving the entity.
+    /** @var \Drupal\user\UserInterface|null $user */
     $user = $this->getRevisionUser();
     $status = $this->getModerationStatus();
 
@@ -194,6 +195,7 @@ trait OpportunityDocumentTrait {
         $source->setNewRevision(TRUE);
         $source->setRevisionLogMessage('Automatic status update due to publication of node ' . $this->id());
         $source->setRevisionUserId(2);
+        $source->setRevisionCreationTime(time());
         $source->save();
       }
     }

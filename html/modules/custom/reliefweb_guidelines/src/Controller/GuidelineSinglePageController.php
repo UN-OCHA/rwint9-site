@@ -2,8 +2,8 @@
 
 namespace Drupal\reliefweb_guidelines\Controller;
 
-use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Component\Render\MarkupInterface;
+use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Render\Markup;
@@ -118,6 +118,7 @@ class GuidelineSinglePageController extends ControllerBase {
       ->condition('status', 1)
       ->sort('type', 'DESC')
       ->sort('weight', 'ASC')
+      ->accessCheck(TRUE)
       ->execute();
 
     /** @var \Drupal\guidelines\Entity\Guideline[] $guidelines */
@@ -208,7 +209,7 @@ class GuidelineSinglePageController extends ControllerBase {
     }
 
     // Get the current host.
-    if (!isset($host)) {
+    if (!isset($hosts)) {
       $hosts = ['reliefweb.int' => TRUE];
       $host = \Drupal::request()->getHost();
       if ($host !== 'reliefweb.int') {

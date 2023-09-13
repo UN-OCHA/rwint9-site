@@ -86,7 +86,7 @@
   vertical-align: top;
 }
 /* Arrow icons for the previous/next year/month. */
-.rw-datepicker-container button.rw-datepicker-control:before {
+.rw-datepicker-container button.rw-datepicker-control::before {
   position: absolute;
   top: 50%;
   right: 50%;
@@ -98,13 +98,13 @@
   content: "";
   background: var(--rw-icons--common--arrow-right--12--dark-blue);
 }
-.rw-datepicker-container button.rw-datepicker-control.rw-datepicker-title-previous.rw-datepicker-title-month:before {
+.rw-datepicker-container button.rw-datepicker-control.rw-datepicker-title-previous.rw-datepicker-title-month::before {
   background: var(--rw-icons--common--arrow-left--12--dark-blue);
 }
-.rw-datepicker-container button.rw-datepicker-control.rw-datepicker-title-next.rw-datepicker-title-year:before {
+.rw-datepicker-container button.rw-datepicker-control.rw-datepicker-title-next.rw-datepicker-title-year::before {
   background: var(--rw-icons--common--double-arrow-right--12--dark-blue);
 }
-.rw-datepicker-container button.rw-datepicker-control.rw-datepicker-title-previous.rw-datepicker-title-year:before {
+.rw-datepicker-container button.rw-datepicker-control.rw-datepicker-title-previous.rw-datepicker-title-year::before {
   background: var(--rw-icons--common--double-arrow-left--12--dark-blue);
 }
 /* Selected month and year. */
@@ -133,6 +133,7 @@
   margin: 2px;
   padding: 8px;
   text-align: right;
+  border: 2px solid transparent;
   background: none;
 }
 /* Days outside of the selected month are disabled. */
@@ -150,6 +151,10 @@
 }
 /* Highlight the currently selected day(s). */
 .rw-datepicker-days button.rw-datepicker-selected-day {
+  border: 2px dashed var(--cd-reliefweb-brand-blue--dark);
+}
+/* Highlight the currently selected day(s). */
+.rw-datepicker-days button.rw-datepicker-day-in[tabindex="0"] {
   color: white;
   background: var(--cd-reliefweb-brand-blue--dark);
 }

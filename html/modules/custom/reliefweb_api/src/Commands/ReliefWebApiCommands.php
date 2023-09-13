@@ -9,8 +9,8 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\State\StateInterface;
 use Drush\Commands\DrushCommands;
-use RWAPIIndexer\Manager;
 use RWAPIIndexer\Bundles;
+use RWAPIIndexer\Manager;
 
 /**
  * ReliefWeb API Drush commandfile.
@@ -162,6 +162,23 @@ class ReliefWebApiCommands extends DrushCommands {
       $excluded_bundles = ['country', 'disaster', 'source'];
       foreach (Bundles::$bundles as $bundle => $info) {
         if ($info['type'] === 'taxonomy_term' && !in_array($bundle, $excluded_bundles)) {
+          $this->index($bundle, $options);
+        }
+      }
+      return;
+    }
+    // Index all the resources.
+    elseif ($bundle === 'all') {
+      foreach (Bundles::$bundles as $bundle => $info) {
+        $this->index($bundle, $options);
+      }
+      return;
+    }
+    // Index the given bundles.
+    elseif (strpos($bundle, ',') > 0) {
+      $bundles = explode(',', $bundle);
+      foreach ($bundles as $bundle) {
+        if ($bundle === 'references' || isset(Bundles::$bundles[$bundle])) {
           $this->index($bundle, $options);
         }
       }

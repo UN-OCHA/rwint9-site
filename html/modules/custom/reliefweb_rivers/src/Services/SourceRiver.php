@@ -6,6 +6,7 @@ use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\reliefweb_rivers\AdvancedSearch;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
+use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
@@ -41,8 +42,15 @@ class SourceRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function getPageTitle() {
+  public function getDefaultPageTitle() {
     return $this->t('Organizations');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPageTitle() {
+    return $this->getDefaultPageTitle();
   }
 
   /**
@@ -54,7 +62,7 @@ class SourceRiver extends RiverServiceBase {
 
     // Get the currently selected letter filter and mark the corresponding
     // letter as active.
-    $letter = $this->getParameters()->get('group', 'all');
+    $letter = $this->getParameters()->getString('group', 'all');
     if (isset($letters[$letter])) {
       $letters[$letter]['active'] = TRUE;
     }
@@ -120,7 +128,7 @@ class SourceRiver extends RiverServiceBase {
 
     // Add a filter on the selected letter.
     $letters = static::getFirstLetters();
-    $letter = $this->getParameters()->get('group', 'all');
+    $letter = $this->getParameters()->getString('group', 'all');
     if (!empty($letters[$letter]['ids'])) {
       $payload['filter'] = [
         'conditions' => [
@@ -148,7 +156,8 @@ class SourceRiver extends RiverServiceBase {
     // Get the source ids.
     $ids = [];
     foreach ($items as $item) {
-      $ids[] = $item['id'];
+      // @todo Append the shortname?
+      $ids[$item['id']] = $item['fields']['name'] ?? '';
     }
 
     // Get the publications of the sources.
@@ -206,7 +215,7 @@ class SourceRiver extends RiverServiceBase {
    * @param string $field
    *   Field name (without the 'field_' prefix) used to tag the taxonomy terms.
    * @param array $ids
-   *   List of taxonomy term ids.
+   *   List of taxonomy term ids (id as key, name as value).
    *
    * @return array
    *   Associative array with the term ids as keys and the total of published
@@ -217,8 +226,6 @@ class SourceRiver extends RiverServiceBase {
       return [];
     }
 
-    $sources = array_combine($ids, $ids);
-
     // API request payload (already encoded as it's the same for all the
     // queries).
     $payload = json_encode([
@@ -226,7 +233,7 @@ class SourceRiver extends RiverServiceBase {
       'limit' => 0,
       'filter' => [
         'field' => $field . '.id',
-        'value' => $ids,
+        'value' => array_keys($ids),
       ],
       // We'll extract the number of documents for the sources from the
       // the facets data.
@@ -266,8 +273,9 @@ class SourceRiver extends RiverServiceBase {
       $resource = $queries[$index]['resource'];
       if (isset($data['embedded']['facets']['source']['data'])) {
         foreach ($data['embedded']['facets']['source']['data'] as $item) {
-          if (isset($sources[$item['value']]) && !empty($item['count'])) {
+          if (isset($ids[$item['value']]) && !empty($item['count'])) {
             $id = $item['value'];
+            $name = $ids[$id];
             $count = (int) $item['count'];
 
             switch ($resource) {
@@ -278,7 +286,7 @@ class SourceRiver extends RiverServiceBase {
                   ]),
                   'url' => static::getRiverUrl('report', [
                     'advanced-search' => '(S' . $id . ')',
-                  ]),
+                  ], $name, TRUE),
                 ];
                 break;
 
@@ -289,7 +297,7 @@ class SourceRiver extends RiverServiceBase {
                   ]),
                   'url' => static::getRiverUrl('job', [
                     'advanced-search' => '(S' . $id . ')',
-                  ]),
+                  ], $name, TRUE),
                 ];
                 break;
 
@@ -300,7 +308,7 @@ class SourceRiver extends RiverServiceBase {
                   ]),
                   'url' => static::getRiverUrl('training', [
                     'advanced-search' => '(S' . $id . ')',
-                  ]),
+                  ], $name, TRUE),
                 ];
                 break;
             }
@@ -347,7 +355,8 @@ class SourceRiver extends RiverServiceBase {
 
     $letters = [];
     foreach ($terms as $term) {
-      $letter = mb_strtoupper(mb_substr($term['name'], 0, 1));
+      $name = TextHelper::trimText($term['name']);
+      $letter = mb_strtoupper(mb_substr($name, 0, 1));
       $letter = $transliterator->transliterate($letter);
       if (is_numeric($letter)) {
         $letter = '#';
@@ -376,6 +385,13 @@ class SourceRiver extends RiverServiceBase {
     // is modified.
     $cache_backend->set($cache_id, $letters, CacheBackendInterface::CACHE_PERMANENT, ['taxonomy_term_list:source']);
     return $letters;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultRiverDescription() {
+    return $this->t('A list of organizations that are actively providing ReliefWeb with content (reports, jobs and training).');
   }
 
   /**

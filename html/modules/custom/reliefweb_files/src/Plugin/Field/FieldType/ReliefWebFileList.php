@@ -39,14 +39,6 @@ class ReliefWebFileList extends FieldItemList {
   public function preSave() {
     $entity = $this->getEntity();
 
-    // Files migration is handled separately.
-    // @todo remove when removing `reliefweb_migrate`.
-    if (!empty($entity->_is_migrating)) {
-      // The file creation is handled by the migration destination.
-      // @see \Drupal\reliefweb_migrate\Plugin\migrate\destination\EntityNode::save()
-      return;
-    }
-
     // Remove references to any files from the remote document associated with
     // the entity this field is attached to so that we can perform update and
     // deletion of the remote file resources.
@@ -103,18 +95,13 @@ class ReliefWebFileList extends FieldItemList {
    * {@inheritdoc}
    */
   public function postSave($updated) {
-    $entity = $this->getEntity();
-
-    // Files migration is handled separately.
-    // @todo remove when removing `reliefweb_migrate`.
-    if (!empty($entity->_is_migrating)) {
-      return;
-    }
-    parent::postSave($updated);
+    $updated = parent::postSave($updated);
 
     // Update the references to the remote file resources in the remote document
     // associated with the entity this field is attached.
     $this->updateRemoteDocumentFileReferences();
+
+    return $updated;
   }
 
   /**

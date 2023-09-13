@@ -204,7 +204,9 @@ trait SectionedContentTrait {
       'more' => [
         'url' => RiverServiceBase::getRiverUrl('report', [
           'advanced-search' => '(' . $code . $this->id() . ')_(F10)',
-        ]),
+        ], $this->t('@label Situation Reports', [
+          '@label' => $this->label(),
+        ])),
         'label' => $this->t('View all @label Situation Reports', [
           '@label' => $this->label(),
         ]),
@@ -260,7 +262,9 @@ trait SectionedContentTrait {
       'more' => [
         'url' => RiverServiceBase::getRiverUrl('report', [
           'advanced-search' => '(' . $code . $this->id() . ')_(F4)',
-        ]),
+        ], $this->t('@label Appeals and Reponse Plans', [
+          '@label' => $this->label(),
+        ])),
         'label' => $this->t('View all @label Appeals and Response Plans', [
           '@label' => $this->label(),
         ]),
@@ -325,7 +329,7 @@ trait SectionedContentTrait {
         'more' => [
           'url' => RiverServiceBase::getRiverUrl('report', [
             'advanced-search' => '(' . $code . $entity_id . ')',
-          ]),
+          ], $this->label(), TRUE),
           'label' => $this->t('View all @label Updates', [
             '@label' => $this->label(),
           ]),
@@ -363,7 +367,7 @@ trait SectionedContentTrait {
       'more' => [
         'url' => RiverServiceBase::getRiverUrl('report', [
           'advanced-search' => '(' . $code . $entity_id . ')',
-        ]),
+        ], $this->label(), TRUE),
         'label' => $this->t('View all @label Updates', [
           '@label' => $this->label(),
         ]),
@@ -410,8 +414,11 @@ trait SectionedContentTrait {
       // Link to the updates river with the maps/infographics for the entity.
       'more' => [
         'url' => RiverServiceBase::getRiverUrl('report', [
-          'advanced-search' => '(' . $code . $entity_id . ')_(F12.F12570)',
-        ]),
+          'view' => 'maps',
+          'advanced-search' => '(' . $code . $entity_id . ')',
+        ], $this->t('@label Maps and Infographics', [
+          '@label' => $this->label(),
+        ])),
         'label' => $this->t('View all @label Maps and Infographics', [
           '@label' => $this->label(),
         ]),
@@ -444,7 +451,7 @@ trait SectionedContentTrait {
       'more' => [
         'url' => RiverServiceBase::getRiverUrl('job', [
           'advanced-search' => '(' . $code . $entity_id . ')',
-        ]),
+        ], $this->label(), TRUE),
         'label' => $this->t('View all @label Jobs', [
           '@label' => $this->label(),
         ]),
@@ -477,7 +484,7 @@ trait SectionedContentTrait {
       'more' => [
         'url' => RiverServiceBase::getRiverUrl('training', [
           'advanced-search' => '(' . $code . $entity_id . ')',
-        ]),
+        ], $this->label(), TRUE),
         'label' => $this->t('View all @label Training Opportunities', [
           '@label' => $this->label(),
         ]),
@@ -521,7 +528,7 @@ trait SectionedContentTrait {
       'more' => [
         'url' => RiverServiceBase::getRiverUrl('disaster', [
           'advanced-search' => '(' . $code . $entity_id . ')',
-        ]),
+        ], $this->label(), TRUE),
         'label' => $this->t('View all @label Disasters', [
           '@label' => $this->label(),
         ]),

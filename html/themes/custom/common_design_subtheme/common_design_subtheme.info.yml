@@ -1,7 +1,7 @@
 name:  OCHA Common Design sub theme
 type: theme
 description: OCHA Common Design sub theme
-core_version_requirement: ^8.8 || ^9
+core_version_requirement: ^9 || ^10
 base theme: common_design
 logo: 'img/logos/rw-logo-desktop.svg'
 
@@ -63,11 +63,17 @@ libraries-extend:
   core/drupal.ajax:
     - common_design_subtheme/cd-ajax-disable-submit-buttons
 
-# Use the common_design_subtheme styles inside the editor.
-ckeditor_stylesheets:
-  - css/styles.css
+# CKEditor additional styling.
+ckeditor5-stylesheets:
+  - css/ckeditor.css
 
 libraries-override:
+  common_design/cd-dropdown:
+    js:
+      js/cd-dropdown.js: js/cd-dropdown.js
+  common_design/array-from-polyfill:
+    js:
+      js/vendor/array-from-polyfill.js: false
   guidelines/guidelines-json:
     js:
       components/guidelines-json/guidelines-json.js: false

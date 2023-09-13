@@ -4,3 +4,4 @@ status: true
 dependencies: {  }
 id: field_guideline
 label: 'Field guideline'
+preview_mode: 1

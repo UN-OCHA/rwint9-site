@@ -12,6 +12,7 @@ use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\reliefweb_api\Services\ReliefWebApiClient;
+use Drupal\reliefweb_rivers\Parameters;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -52,6 +53,13 @@ class TopicRiver extends RiverServiceBase {
    * {@inheritdoc}
    */
   public function getPageTitle() {
+    return $this->getDefaultPageTitle();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultPageTitle() {
     return $this->t('Topics');
   }
 
@@ -131,6 +139,26 @@ class TopicRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
+  public function createNewInstanceFromUrl($url = NULL) {
+    $service = new static(
+      $this->configFactory,
+      $this->currentUser,
+      $this->languageManager,
+      $this->pagerManager,
+      $this->pagerParameters,
+      $this->apiClient,
+      $this->requestStack,
+      $this->renderer,
+      $this->stringTranslation,
+      $this->entityTypeManager
+    );
+    $service->setParameters(Parameters::createFromUrl($url));
+    return $service;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getRiverContent() {
     $storage = $this->entityTypeManager
       ->getStorage('node');
@@ -145,7 +173,7 @@ class TopicRiver extends RiverServiceBase {
       ->condition('field_bury', 1, '<>');
     $query->condition($group);
 
-    $nids = $query->execute();
+    $nids = $query->accessCheck(TRUE)->execute();
 
     $topics = $storage->loadMultiple($nids);
 
@@ -237,6 +265,14 @@ class TopicRiver extends RiverServiceBase {
    */
   public function parseApiData(array $api_data, $view = '') {
     // Not used.
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultRiverDescription() {
+    return $this->t('Curated pages dedicated to humanitarian themes and specific humanitarian crises.');
   }
 
 }

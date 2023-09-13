@@ -35,8 +35,24 @@ class ReportRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function getPageTitle() {
+  public function getDefaultPageTitle() {
     return $this->t('Updates');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getExcludedFilterCodesForTitle() {
+    // We don't want to use the country (C) field for the updates river, because
+    // that leads to duplicate or weird titles with the primary country field,
+    // ex: "Afghanistan - Aghanistan Updates"...
+    // See RiverServiceBase for the explanation about the exclusion of 'OT'.
+    $codes = ['C' => TRUE, 'OT' => TRUE];
+    // It doesn't make sense to have Maps + Situation Report for example.
+    if ($this->getSelectedView() === 'maps') {
+      $codes['F'] = TRUE;
+    }
+    return $codes;
   }
 
   /**
@@ -55,9 +71,10 @@ class ReportRiver extends RiverServiceBase {
    * {@inheritdoc}
    */
   public function getFilters() {
-    return [
+    $filters = [
       'PC' => [
         'name' => $this->t('Primary country'),
+        'shortname' => TRUE,
         'type' => 'reference',
         'vocabulary' => 'country',
         'field' => 'primary_country.id',
@@ -70,6 +87,7 @@ class ReportRiver extends RiverServiceBase {
       ],
       'C' => [
         'name' => $this->t('Country'),
+        'shortname' => TRUE,
         'type' => 'reference',
         'vocabulary' => 'country',
         'field' => 'country.id',
@@ -82,6 +100,7 @@ class ReportRiver extends RiverServiceBase {
       ],
       'S' => [
         'name' => $this->t('Organization'),
+        'shortname' => TRUE,
         'type' => 'reference',
         'vocabulary' => 'source',
         'field' => 'source.id',
@@ -195,6 +214,20 @@ class ReportRiver extends RiverServiceBase {
         ],
       ],
     ];
+
+    // Only include map, infographic and interactive content formats when
+    // viewing maps/infographics.
+    $view = $this->getSelectedView();
+    if ($view === 'maps') {
+      $filters['F']['include'] = [12, 12570, 38974];
+    }
+    // Exclude map, infographic and interactive content formats when viewing
+    // reports only.
+    elseif ($view === 'reports') {
+      $filters['F']['exclude'] = [12, 12570, 38974];
+    }
+
+    return $filters;
   }
 
   /**
@@ -411,19 +444,21 @@ class ReportRiver extends RiverServiceBase {
       }
 
       // Attachment preview.
-      if (!empty($fields['file'][0]['preview'])) {
+      if (!empty($fields['file'][0]['preview']['url'])) {
         $preview = $fields['file'][0]['preview'];
-        $url = $preview['url-thumb'] ?? $preview['url-small'] ?? '';
-        if (!empty($url)) {
-          $version = $preview['version'] ?? $fields['file'][0]['id'] ?? 0;
-          $data['preview'] = [
-            'url' => UrlHelper::stripDangerousProtocols($url) . '?' . $version,
-            // We don't have any good label/description for the file
-            // previews so we use an empty alt to mark them as decorative
-            // so that assistive technologies will ignore them.
-            'alt' => '',
-          ];
-        }
+        $uri = UrlHelper::getImageUriFromUrl($preview['url']);
+        $version = $preview['version'] ?? $fields['file'][0]['id'] ?? 0;
+        $dimensions = @getimagesize($uri) ?? [];
+        $data['preview'] = [
+          'uri' => $uri,
+          'version' => $version,
+          // We don't have any good label/description for the file
+          // previews so we use an empty alt to mark them as decorative
+          // so that assistive technologies will ignore them.
+          'alt' => '',
+          'width' => $dimensions[0] ?? NULL,
+          'height' => $dimensions[1] ?? NULL,
+        ];
       }
 
       // Headline image.
@@ -432,10 +467,10 @@ class ReportRiver extends RiverServiceBase {
 
         $data['image'] = [
           'uri' => UrlHelper::getImageUriFromUrl($image['url']),
-          'alt' => $image['alt'] ?? '',
+          'alt' => $image['caption'] ?? '',
           'copyright' => trim($image['copyright'] ?? '', " \n\r\t\v\0@"),
-          'width' => $image['width'] ?? 0,
-          'height' => $image['height'] ?? 0,
+          'width' => $image['width'] ?? NULL,
+          'height' => $image['height'] ?? NULL,
         ];
       }
 
@@ -657,6 +692,13 @@ class ReportRiver extends RiverServiceBase {
     }
 
     return $entities;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultRiverDescription() {
+    return $this->t('Your gateway to all content to date. Search and/or drill down with filters to narrow down the content.');
   }
 
 }

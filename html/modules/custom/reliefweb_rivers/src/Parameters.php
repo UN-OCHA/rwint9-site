@@ -2,6 +2,8 @@
 
 namespace Drupal\reliefweb_rivers;
 
+use Drupal\Component\Utility\Html;
+use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
@@ -467,6 +469,25 @@ class Parameters {
   }
 
   /**
+   * Create a parameters object from the given URL.
+   *
+   * @param string $url
+   *   URL.
+   * @param array $exclude
+   *   Parameters to exclude from the returned parameters.
+   *
+   * @return \Drupal\reliefweb_rivers\Parameters
+   *   Parameters object.
+   */
+  public static function createFromUrl($url, array $exclude = ['q', 'page']) {
+    $query = [];
+    if (is_string($url)) {
+      parse_str(parse_url($url, PHP_URL_QUERY), $query);
+    }
+    return new static($query, $exclude);
+  }
+
+  /**
    * Parse the parameters from the given query or the current one.
    *
    * @param array $query
@@ -508,7 +529,7 @@ class Parameters {
 
       // Trim string parameters.
       if (is_string($value)) {
-        $value = trim($value);
+        $value = TextHelper::trimText($value);
         if ($value === '') {
           continue;
         }
@@ -518,6 +539,39 @@ class Parameters {
     }
 
     return $parameters;
+  }
+
+  /**
+   * Get all the parameters excluding the given ones, sorted.
+   *
+   * @param array $exclude
+   *   Parameters to exclude.
+   * @param array $order
+   *   Order of the parameters.
+   * @param bool $include_others
+   *   If FALSE, parameters that are not in the order list will not be included.
+   *
+   * @return array
+   *   Sorted parameters.
+   */
+  public function getAllSorted(array $exclude = [], array $order = [], $include_others = TRUE) {
+    $order = $order ?: [
+      'list',
+      'view',
+      'group',
+      'advanced-search',
+      'search',
+      'page',
+    ];
+    $unsorted = $this->getAll($exclude);
+    $sorted = [];
+    foreach ($order as $key) {
+      if (isset($unsorted[$key])) {
+        $sorted[$key] = $unsorted[$key];
+        unset($unsorted[$key]);
+      }
+    }
+    return $include_others ? $sorted + $unsorted : $sorted;
   }
 
   /**
@@ -537,9 +591,32 @@ class Parameters {
     }
     elseif (isset($this->parameters[$name])) {
       $parameter = $this->parameters[$name];
-      return is_string($parameter) ? trim($parameter) : $parameter;
+      return is_string($parameter) ? TextHelper::trimText($parameter) : $parameter;
     }
     return $default;
+  }
+
+  /**
+   * Get a query parameter as a string.
+   *
+   * @param string $name
+   *   Parameter name. NULL returns all parameters.
+   * @param string $default
+   *   Default value in case the parameter is not defined.
+   * @param bool $trim
+   *   Whether to trim the parameter value or not.
+   *
+   * @return string
+   *   The query parameter or an empty string.
+   */
+  public function getString($name, $default = '', $trim = TRUE) {
+    if (isset($this->parameters[$name]) && is_scalar($this->parameters[$name])) {
+      $parameter = (string) $this->parameters[$name];
+    }
+    else {
+      $parameter = $default;
+    }
+    return $trim ? TextHelper::trimText($parameter) : $parameter;
   }
 
   /**
@@ -549,8 +626,13 @@ class Parameters {
    *   Parameter name.
    * @param mixed $value
    *   Parameter value.
+   * @param bool $trim
+   *   If TRUE and $value is a string, then it will be trimmed.
    */
-  public function set($name, $value = '') {
+  public function set($name, $value = '', $trim = TRUE) {
+    if ($trim && is_string($value)) {
+      $value = TextHelper::trimText($value);
+    }
     $this->parameters[$name] = $value;
   }
 
@@ -581,7 +663,7 @@ class Parameters {
    * Parse and convert the Sphinx search parameter.
    */
   protected function parseSphinxsearch() {
-    $parameter = $this->get('search');
+    $parameter = $this->getString('search');
 
     if (!empty($parameter)) {
       $mapping = $this->mapping['sphinxsearch'];
@@ -600,7 +682,7 @@ class Parameters {
    * Parse and convert the Searchlight parameters.
    */
   protected function parseSearchlight() {
-    $parameter = $this->get('sl');
+    $parameter = $this->getString('sl');
 
     // Remove Searchlight parameters.
     $this->remove('sl');
@@ -715,7 +797,7 @@ class Parameters {
    * Convert the extended search parameter to the new advanced search one.
    */
   protected function parseExtendedSearch() {
-    $parameter = $this->get('extended_search');
+    $parameter = $this->getString('extended_search');
 
     // Remove extended search parameter.
     $this->remove('extended_search');
@@ -723,7 +805,7 @@ class Parameters {
     if (!empty($parameter) && ($parameters = json_decode($parameter, TRUE)) !== NULL) {
       // Full text search.
       if (!empty($parameters['text'])) {
-        $search_query = [$this->get('search')];
+        $search_query = [$this->getString('search')];
         if (!empty($parameters['text']['all'])) {
           $search_query[] = '"' . implode('" AND "', $parameters['text']['all']) . '"';
         }
@@ -748,7 +830,7 @@ class Parameters {
 
       // Filters.
       if (!empty($parameters['filters'])) {
-        $filters = [$this->get('advanced-search')];
+        $filters = [$this->getString('advanced-search')];
 
         $operators = [
           '|' => '(',
@@ -854,7 +936,7 @@ class Parameters {
    */
   public static function arrayToHidden(array &$output, $value, $key = '') {
     if (!is_array($value) && !empty($key)) {
-      $output[] = '<input type="hidden" name="' . check_plain($key) . '" value="' . check_plain($value) . '"/>';
+      $output[] = '<input type="hidden" name="' . Html::escape($key) . '" value="' . Html::escape($value) . '"/>';
     }
     else {
       foreach ($value as $subkey => $subvalue) {
@@ -958,7 +1040,7 @@ class Parameters {
    *
    * @param string $interval
    *   Interval (year, month or day).
-   * @param \DateTimeInterface $date
+   * @param \DateTimeInterface|null $date
    *   DateTime object.
    * @param string $separator
    *   Date separator.
@@ -968,7 +1050,7 @@ class Parameters {
    * @return string
    *   Date interval.
    */
-  public static function formatDateInterval($interval, \DateTimeInterface $date, $separator = '-', $format = 'Ymd') {
+  public static function formatDateInterval($interval, ?\DateTimeInterface $date, $separator = '-', $format = 'Ymd') {
     if (!empty($date)) {
       switch ($interval) {
         case 'year':

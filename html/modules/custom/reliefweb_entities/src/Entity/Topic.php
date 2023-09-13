@@ -8,14 +8,12 @@ use Drupal\node\Entity\Node;
 use Drupal\reliefweb_entities\BundleEntityInterface;
 use Drupal\reliefweb_entities\DocumentInterface;
 use Drupal\reliefweb_entities\DocumentTrait;
-use Drupal\reliefweb_moderation\EntityModeratedInterface;
-use Drupal\reliefweb_moderation\EntityModeratedTrait;
 use Drupal\reliefweb_entities\SectionedContentInterface;
 use Drupal\reliefweb_entities\SectionedContentTrait;
+use Drupal\reliefweb_moderation\EntityModeratedInterface;
+use Drupal\reliefweb_moderation\EntityModeratedTrait;
 use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_revisions\EntityRevisionedTrait;
-use Drupal\reliefweb_rivers\AdvancedSearch;
-use Drupal\reliefweb_rivers\Parameters;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\MediaHelper;
 
@@ -231,7 +229,8 @@ class Topic extends Node implements BundleEntityInterface, EntityModeratedInterf
    * Convert a river URL to API payload.
    *
    * @param array $data
-   *   Array with the river URL, title and optional override.
+   *   Array with the river URL, title and optional override, limit, view
+   *   and exclude properties.
    * @param int $limit
    *   Number of resources to retrieve.
    *
@@ -250,103 +249,54 @@ class Topic extends Node implements BundleEntityInterface, EntityModeratedInterf
     $url = $data['url'];
     $title = $data['title'];
     $override = $data['override'] ?? NULL;
+    $limit = $data['limit'] ?? $limit;
 
-    $info = RiverServiceBase::getRiverServiceFromUrl($url);
-    if (empty($info)) {
+    $service = RiverServiceBase::getRiverServiceFromUrl($url);
+    if (empty($service)) {
       return [];
     }
 
-    // Extract the query part from the URL.
-    parse_str(parse_url($url, PHP_URL_QUERY), $query);
-
-    // Parse the query parameters.
-    $parameters = new Parameters($query);
-
-    // Service and river information.
-    $service = $info['service'];
-    $resource = $service->getResource();
-    $bundle = $service->getBundle();
-    $river = $service->getRiver();
-
-    // Get the river view.
-    $view = $data['view'] ?? $info['view'] ?? $parameters->get('view', '');
-    $views = $service->getViews();
-    $view = isset($views[$view]) ? $view : $service->getDefaultView();
-    if ($view === $service->getDefaultView()) {
-      $parameters->remove('view');
-    }
-    else {
-      $parameters->set('view', $view);
+    // Update the river view.
+    if (isset($data['view'])) {
+      $service->setSelectedView($data['view']);
     }
 
-    // Get the advanced search handler.
-    $advanced_search = new AdvancedSearch(
-      $bundle,
-      $river,
-      $parameters,
-      $service->getFilters(),
-      $service->getFilterSample()
-    );
-
-    // Get the sanitized search parameter.
-    $search = $parameters->get('search', '');
-
-    // Get the API payload for the river and set the limit.
-    $payload = $service->getApiPayload($view);
-    $payload['limit'] = $data['limit'] ?? $limit;
+    // Get the API payload ready for the API request.
+    $payload = $service->prepareApiRequest($limit, FALSE);
 
     // If an override is defined we add a search condition on the override ID
     // with a boost and sort by score first. This will results in the override
     // document to appear first if it exists and keep the rest of the documents
     // in the proper order.
     if (!empty($override) && is_numeric($override)) {
-      if (!empty($search)) {
-        $search = 'id:' . $override . ' OR (' . $search . ')';
+      if (!empty($payload['query']['value'])) {
+        $payload['query']['value'] = 'id:' . $override . ' OR (' . $payload['query']['value'] . ')';
       }
       else {
-        $search = 'id:' . $override . '^1000 OR id:>0';
+        $payload['query']['value'] = 'id:' . $override . '^1000 OR id:>0';
       }
       array_unshift($payload['sort'], 'score:desc');
     }
 
-    // Set the full text search query or remove it if empty.
-    if (!empty($search)) {
-      $payload['query']['value'] = $search;
-    }
-    else {
-      unset($payload['query']);
-    }
-
-    // Generate the API filter with the facet and advanced search filters.
-    $filter = $advanced_search->getApiFilter();
-    if (!empty($filter)) {
-      // Update the payload filter.
-      if (!empty($payload['filter'])) {
-        $payload['filter'] = [
-          'conditions' => [
-            $payload['filter'],
-            $filter,
-          ],
-          'operator' => 'AND',
-        ];
-      }
-      else {
-        $payload['filter'] = $filter;
-      }
-    }
-
     return [
-      'resource' => $resource,
-      'bundle' => $bundle,
+      'resource' => $service->getResource(),
+      'bundle' => $service->getBundle(),
       'entity_type' => $service->getEntityTypeId(),
-      'river' => $river,
+      'river' => $service->getRiver(),
       'title' => $title,
-      'view' => $view,
+      'view' => $service->getSelectedView(),
       'payload' => $payload,
       'exclude' => $data['exclude'] ?? [],
       // Create a sanitized version of the given URL for the view more.
       'more' => [
-        'url' => RiverServiceBase::getRiverUrl($bundle, $parameters->getAll()),
+        'url' => RiverServiceBase::getRiverUrl(
+          $service->getBundle(),
+          $service->getParameters()->getAllSorted(['list'])
+          // @todo after reviewing the impact of adding the list parameter to
+          // river URL we may want to revisit what to do with the ones used
+          // in topics. For now no title because it's too random.
+          // @see RW-700, RW-706
+        ),
         'label' => $this->t('View all @title', [
           '@title' => $title,
         ]),

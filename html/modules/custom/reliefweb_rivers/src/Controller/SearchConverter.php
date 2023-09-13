@@ -2,24 +2,30 @@
 
 namespace Drupal\reliefweb_rivers\Controller;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormState;
-use Drupal\Core\Http\RequestStack;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_api\Services\ReliefWebApiClient;
-use Drupal\reliefweb_rivers\AdvancedSearch;
-use Drupal\reliefweb_rivers\Parameters;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Controller for the reliefweb_rivers.search.converter route.
  */
 class SearchConverter extends ControllerBase {
+
+  /**
+   * The config factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
 
   /**
    * The current user.
@@ -38,7 +44,7 @@ class SearchConverter extends ControllerBase {
   /**
    * The request stack.
    *
-   * @var \Drupal\Core\Http\RequestStack
+   * @var \Symfony\Component\HttpFoundation\RequestStack
    */
   protected $requestStack;
 
@@ -52,21 +58,25 @@ class SearchConverter extends ControllerBase {
   /**
    * Constructor.
    *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory.
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
    *   The current user.
    * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
    *   The form builder.
-   * @param \Drupal\Core\Http\RequestStack $request_stack
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
    *   The request stack.
    * @param \Drupal\reliefweb_api\Services\ReliefWebApiClient $reliefweb_api_client
    *   The reliefweb api client service.
    */
   public function __construct(
+    ConfigFactoryInterface $config_factory,
     AccountProxyInterface $current_user,
     FormBuilderInterface $form_builder,
     RequestStack $request_stack,
     ReliefWebApiClient $reliefweb_api_client
   ) {
+    $this->configFactory = $config_factory;
     $this->currentUser = $current_user;
     $this->formBuilder = $form_builder;
     $this->requestStack = $request_stack;
@@ -78,6 +88,7 @@ class SearchConverter extends ControllerBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
+      $container->get('config.factory'),
       $container->get('current_user'),
       $container->get('form_builder'),
       $container->get('request_stack'),
@@ -180,7 +191,28 @@ class SearchConverter extends ControllerBase {
       ];
     }
 
-    return new JsonResponse($result);
+    $headers = [
+      'Content-Type' => 'application/json; charset=utf-8',
+    ];
+
+    // Add the cache control header.
+    $cache_settings = $this->configFactory->get('system.performance')?->get('cache');
+    if (!empty($cache_settings['page']['max_age']) && $cache_settings['page']['max_age'] > 0) {
+      $headers['Cache-Control'] = 'max-age=' . $cache_settings['page']['max_age'] . ', public';
+    }
+    else {
+      $headers['Cache-Control'] = 'private';
+    }
+
+    try {
+      return new JsonResponse($result, 200, $headers);
+    }
+    catch (\Exception $exception) {
+      $this->getLogger('reliefweb_river')->error('Unable to generate search conversion JSON result: @error', [
+        '@error' => $exception->getMessage(),
+      ]);
+      return new JsonResponse(['error' => $this->t('Invalid input')], 400, $headers);
+    }
   }
 
   /**
@@ -191,6 +223,7 @@ class SearchConverter extends ControllerBase {
    */
   protected function getAppname() {
     $appname = $this->requestStack->getCurrentRequest()->query->get('appname', '');
+    $appname = is_string($appname) ? trim($appname) : '';
     return $appname ?: 'rw-user-' . $this->currentUser->id();
   }
 
@@ -201,7 +234,8 @@ class SearchConverter extends ControllerBase {
    *   The search URL parameter.
    */
   protected function getSearchUrl() {
-    return $this->requestStack->getCurrentRequest()->query->get('search-url', '');
+    $search_url = $this->requestStack->getCurrentRequest()->query->get('search-url', '');
+    return is_string($search_url) ? trim($search_url) : '';
   }
 
   /**
@@ -218,64 +252,13 @@ class SearchConverter extends ControllerBase {
       return [];
     }
 
-    $river_data = RiverServiceBase::getRiverServiceFromUrl($search_url);
-    if (empty($river_data)) {
+    $service = RiverServiceBase::getRiverServiceFromUrl($search_url);
+    if (empty($service)) {
       return [];
     }
 
-    $service = $river_data['service'];
-
-    // Parse the query from the search URL.
-    parse_str(parse_url($search_url, PHP_URL_QUERY) ?? '', $query);
-    $parameters = new Parameters($query);
-    if (isset($river['view'])) {
-      $parameters->set('view', $river['view']);
-    }
-
-    // Retrieve the view used in the search URL to get the proper API payload.
-    $view = $parameters->get('view');
-    $views = $service->getViews();
-    $view = isset($views[$view]) ? $view : $service->getDefaultView();
-
-    // Get the base API payload for the view.
-    $payload = $service->getApiPayload($view);
-
-    // Add the full text search query if any.
-    $search = trim($parameters->get('search', ''));
-    if (!empty($search)) {
-      $payload['query']['value'] = $search;
-    }
-    else {
-      unset($payload['query']);
-    }
-
-    // Retrieve the API filter for the advanced search.
-    $advanced_search = new AdvancedSearch(
-      $service->getBundle(),
-      $service->getRiver(),
-      $parameters,
-      $service->getFilters(),
-      $service->getFilterSample()
-    );
-
-    // Merge the advanced search API filter with any other filter present
-    // in the API payload.
-    $filter = $advanced_search->getApiFilter();
-    if (!empty($filter)) {
-      // Update the payload filter.
-      if (!empty($payload['filter'])) {
-        $payload['filter'] = [
-          'conditions' => [
-            $payload['filter'],
-            $filter,
-          ],
-          'operator' => 'AND',
-        ];
-      }
-      else {
-        $payload['filter'] = $filter;
-      }
-    }
+    // Get the payload ready for an API request.
+    $payload = $service->prepareApiRequest();
 
     // Remove the fields and sort option as we, instead, add the preset and
     // profile to the API URL.

@@ -6,8 +6,8 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Render\Renderer;
-use Drupal\Core\Template\Attribute;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Template\Attribute;
 use Drupal\reliefweb_rivers\Services\DisasterRiver;
 
 /**
@@ -232,7 +232,8 @@ class DisasterMapService {
         'drupalSettings' => [
           'reliefwebDisasterMap' => [
             'mapboxKey' => $this->config->get('mapbox_key') ?? '',
-            'mapboxToken' => $this->config->get('mapbox_token') ?? '',
+            // It's replaced server side.
+            'mapboxToken' => 'token',
             'maps' => [
               $id => $settings,
             ],
@@ -254,14 +255,17 @@ class DisasterMapService {
   /**
    * Get the map of the latest alert and ongoing diasters.
    *
+   * @param bool $render
+   *   Whether to render the map or return the render array.
+   *
    * @return array
    *   The disaster map render array.
    */
-  public static function getAlertAndOngoingDisasterMap() {
+  public static function getAlertAndOngoingDisasterMap($render = FALSE) {
     return \Drupal::service('reliefweb_disaster_map.service')
       ->getDisasterMap('disaster-map', t('Alert and Ongoing Disasters'), [
         'statuses' => ['alert', 'ongoing'],
-      ], FALSE);
+      ], $render);
   }
 
 }

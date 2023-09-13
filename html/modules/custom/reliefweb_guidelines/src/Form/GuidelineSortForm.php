@@ -147,6 +147,7 @@ class GuidelineSortForm extends ContentEntityForm {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
+    return $this->entity;
   }
 
   /**

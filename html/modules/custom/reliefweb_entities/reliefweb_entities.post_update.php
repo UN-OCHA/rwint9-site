@@ -26,7 +26,7 @@ function reliefweb_entities_post_update_populate_created_value() {
     ON subquery.tid = td.tid
     SET td.created = COALESCE(subquery.timestamp, :timestamp)
   ', [
-    'timestamp' => $timestamp,
+    ':timestamp' => $timestamp,
   ]);
 
   // For disasters with an event date, override the created date with it.

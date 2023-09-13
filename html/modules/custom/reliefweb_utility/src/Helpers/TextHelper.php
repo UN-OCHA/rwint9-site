@@ -16,7 +16,7 @@ class TextHelper {
    * 2. Replace non breaking spaces with normal spaces.
    * 3. Remove control characters (except line feed).
    * 4. Optionally, replace line breaks and consecutive whitespaces.
-   * 4. Trim the text.
+   * 5. Trim the text.
    *
    * @param string $text
    *   Text to clean.
@@ -42,7 +42,20 @@ class TextHelper {
       $patterns[] = '/\s{2,}/u';
       $replacements[] = ' ';
     }
-    return trim(preg_replace($patterns, $replacements, $text));
+    return static::trimText(preg_replace($patterns, $replacements, $text));
+  }
+
+  /**
+   * Trim a text (extended version, removing Z and C unicode categories).
+   *
+   * @param string $text
+   *   Text to trim.
+   *
+   * @return string
+   *   Trimmed text.
+   */
+  public static function trimText($text) {
+    return preg_replace('/^[\pZ\pC]+|[\pZ\pC]+$/u', '', $text);
   }
 
   /**

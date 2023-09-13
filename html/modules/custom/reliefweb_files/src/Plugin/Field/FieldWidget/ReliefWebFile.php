@@ -163,6 +163,7 @@ class ReliefWebFile extends WidgetBase {
       '#title' => $this->fieldDefinition->getLabel(),
       '#description' => $this->getFilteredDescription(),
       '#tree' => TRUE,
+      '#element_validate' => [[static::class, 'validate']],
     ];
 
     // Add an element for every existing item.
@@ -302,13 +303,57 @@ class ReliefWebFile extends WidgetBase {
         // We add a timestamp to prevent caching by the browser so that
         // it can display replaced files.
         '#url' => $file_url->setOption('query', ['time' => microtime(TRUE)]),
+        '#attributes' => [
+          'target' => '_blank',
+          'data-file-link' => '',
+        ],
       ];
     }
     else {
       $element['link'] = [
+        '#type' => 'item',
         '#markup' => $file_label,
+        '#wrapper_attributes' => [
+          'data-file-link' => '',
+        ],
       ];
     }
+
+    // Display the uploaded file name.
+    $uploaded_file_name = $item->getUploadedFileName();
+    if (!empty($uploaded_file_name)) {
+      $element['uploaded_file_name'] = [
+        '#markup' => $uploaded_file_name,
+      ];
+    }
+
+    // Add a field to allow changing the file name.
+    $file_name = $item->getFileName();
+    $extension = $item->getFileExtension();
+    $original_extension = ReliefWebFileType::extractFileExtension($file_name, FALSE);
+    $extension_pattern = '(' . $extension . '|' . $original_extension . ')';
+    $element['_new_file_name'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Download file name'),
+      '#maxlength' => 255,
+      '#size' => 60,
+      '#not_required' => FALSE,
+      '#attributes' => [
+        'pattern' => '^[^' . ReliefWebFileType::getFileNameInvalidCharacters() . ']+\.' . $extension_pattern . '$',
+        'placeholder' => 'filename.' . $extension,
+        'data-file-new-name' => '',
+        'minlength' => strlen($extension) + 2,
+        'required' => '',
+      ],
+      '#description' => $this->t('Extension: @extension. Max length: 255. Forbidden characters: @characters.', [
+        '@extension' => $extension,
+        '@characters' => ReliefWebFileType::getFileNameInvalidCharacters(TRUE),
+      ]),
+      '#default_value' => $item->_new_file_name ?: $file_name,
+      '#attached' => [
+        'library' => ['reliefweb_files/file.rename'],
+      ],
+    ];
 
     // Check if the attachment was replaced.
     $original_item = $this->getOriginalFileItem($item);
@@ -317,7 +362,7 @@ class ReliefWebFile extends WidgetBase {
       if (!empty($replaced_file_url)) {
         $element['replaced_file'] = [
           '#type' => 'link',
-          '#title' => $this->formatFileItemInformation($original_item),
+          '#title' => $this->formatFileItemInformation($original_item, TRUE),
           // We add a timestamp to prevent caching by the browser so that
           // it can display replaced files.
           '#url' => $replaced_file_url->setOption('query', ['time' => microtime(TRUE)]),
@@ -812,6 +857,8 @@ class ReliefWebFile extends WidgetBase {
       $item['file_name'] = $previous_item->getFileName();
       $item['description'] = $previous_item->getFileDescription();
       $item['language'] = $previous_item->getFileLanguage();
+      // Keep track of the original item.
+      $item['_original_item'] = $previous_item->_original_item ?? $previous_item->getValue();
 
       // Delete the previous item if it was a replacement, to reduce leftovers.
       $this->deleteFieldItem($element, $form_state, $values);
@@ -1263,13 +1310,14 @@ class ReliefWebFile extends WidgetBase {
    * @param \Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile $item
    *   The current field type item.
    *
-   * @return \Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile
+   * @return \Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile|null
    *   The original file type item.
    */
   protected function getOriginalFileItem(ReliefWebFileType $item) {
-    if (isset($item->_original_values[$item->getUuid()])) {
-      return $this->createFieldItem($item->_original_values[$item->getUuid()]);
+    if (isset($item->_original_item)) {
+      return $this->createFieldItem($item->_original_item);
     }
+    return NULL;
   }
 
   /**
@@ -1277,12 +1325,20 @@ class ReliefWebFile extends WidgetBase {
    *
    * @param \Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile $item
    *   Field type item.
+   * @param bool $use_uploaded_file_name
+   *   If TRUE, use the name of the field item's file otherwise use the item's
+   *   file name (download name).
    *
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup
    *   Formatted file information.
    */
-  protected function formatFileItemInformation(ReliefWebFileType $item) {
-    $file_name = $item->getUploadedFileName() ?: $item->getFileName();
+  protected function formatFileItemInformation(ReliefWebFileType $item, $use_uploaded_file_name = FALSE) {
+    if ($use_uploaded_file_name) {
+      $file_name = $item->getUploadedFileName() ?: $item->getFileName();
+    }
+    else {
+      $file_name = $item->getFileName();
+    }
     $file_size = $item->getFileSize();
     $file_extension = $item->getFileExtension();
 
@@ -1291,6 +1347,43 @@ class ReliefWebFile extends WidgetBase {
       '@file_extension' => mb_strtoupper($file_extension),
       '@file_size' => format_size($file_size),
     ]);
+  }
+
+  /**
+   * Form element validation.
+   *
+   * @param array $element
+   *   Form element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  public static function validate(array $element, FormStateInterface $form_state) {
+    // Handle changes to the download file names.
+    $parents = $element['#parents'];
+    $values = $form_state->getValue($parents);
+    foreach ($values as $delta => $value) {
+      if (empty($value['_new_file_name'])) {
+        continue;
+      }
+      $old_name = $value['file_name'] ?? '';
+      $new_name = $value['_new_file_name'];
+      $item_parents = array_merge($parents, [$delta]);
+
+      // If there is a new file name, different from the previous one, we
+      // check the new file name and replace the old one if valid.
+      if ($new_name !== $old_name) {
+        $expected_extension = ReliefWebFileType::extractFileExtension($old_name);
+        $error = ReliefWebFileType::validateFileName($new_name, $expected_extension);
+        if (!empty($error)) {
+          // Mark the new file name field are erroneous.
+          $form_state->setErrorByName(implode('][', array_merge($item_parents, ['_new_file_name'])), $error);
+        }
+        else {
+          // Update the file name with the new value.
+          $form_state->setValue(array_merge($item_parents, ['file_name']), $new_name);
+        }
+      }
+    }
   }
 
   /**
@@ -1303,7 +1396,7 @@ class ReliefWebFile extends WidgetBase {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   Form state.
    */
-  public static function submit(array &$form, FormStateInterface &$form_state) {
+  public static function submit(array &$form, FormStateInterface $form_state) {
     $form_state->setRebuild();
   }
 
@@ -1320,9 +1413,10 @@ class ReliefWebFile extends WidgetBase {
    * @return \Drupal\Core\Ajax\AjaxResponse
    *   The ajax response of the ajax upload.
    */
-  public static function rebuildWidgetForm(array &$form, FormStateInterface &$form_state, Request $request) {
+  public static function rebuildWidgetForm(array &$form, FormStateInterface $form_state, Request $request) {
     // Retrieve the updated widget.
-    $parents = explode('/', $request->query->get('field_parents'));
+    $parameter = $request->query->get('field_parents');
+    $parents = explode('/', is_string($parameter) ? trim($parameter) : '');
     $field_name = array_pop($parents);
     $field_state = static::getWidgetState($parents, $field_name, $form_state);
 

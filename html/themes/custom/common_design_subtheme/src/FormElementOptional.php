@@ -169,7 +169,7 @@ class FormElementOptional implements TrustedCallbackInterface {
     }
 
     // Skip if the field is required.
-    if (!empty($element['#required']) || !empty($elment['widget']['#required'])) {
+    if (!empty($element['#required']) || !empty($element['widget']['#required'])) {
       return;
     }
 

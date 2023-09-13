@@ -14,7 +14,6 @@ use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Url;
 use Drupal\media\MediaInterface;
 use Drupal\reliefweb_entities\BundleEntityInterface;
 use Drupal\reliefweb_entities\BundleEntityStorageInterface;
@@ -24,6 +23,7 @@ use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\EntityHelper;
 use Drupal\reliefweb_utility\Helpers\MailHelper;
 use Drupal\reliefweb_utility\Helpers\MediaHelper;
+use Drupal\reliefweb_utility\Helpers\ReliefWebStateHelper;
 use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\taxonomy\TermInterface;
@@ -655,7 +655,7 @@ function reliefweb_entities_mail($key, array &$message, array $parameters) {
     $message['params']['plain'] = TRUE;
     // Use the submit mailbox as sender and add it also as CC to track the
     // notifications.
-    $submit = \Drupal::state()->get('reliefweb_submit_email');
+    $submit = ReliefWebStateHelper::getSubmitEmail();
     if (!empty($submit)) {
       $message['headers']['From'] = $submit;
       $message['headers']['CC'] = $submit;
@@ -681,8 +681,10 @@ function reliefweb_entities_cron() {
   $embargoed_ids = $storage
     ->getQuery()
     ->condition('type', 'report', '=')
+    ->condition('moderation_status', 'embargoed', '=')
     ->condition('field_embargo_date.value', gmdate("Y-m-d\TH:i:s"), '<')
     ->range(0, $cron_settings['embargoed_reports_limit'] ?? 20)
+    ->accessCheck(FALSE)
     ->execute();
 
   if (!empty($embargoed_ids)) {
@@ -694,6 +696,7 @@ function reliefweb_entities_cron() {
       $report->field_embargo_date->setValue([]);
       $report->setNewRevision(TRUE);
       $report->setRevisionUserId(2);
+      $report->setRevisionCreationTime(time());
       $report->setRevisionLogMessage(strtr('Embargoed document automatically published on @date.', [
         '@date' => DateHelper::format($timestamp, 'custom', 'd M Y H:i e'),
       ]));
@@ -712,6 +715,7 @@ function reliefweb_entities_cron() {
     ->condition('moderation_status', 'published', '=')
     ->condition('field_job_closing_date.value', $date, '<')
     ->range(0, $cron_settings['expired_jobs_limit'] ?? 20)
+    ->accessCheck(FALSE)
     ->execute();
 
   $expired_ids += $storage
@@ -720,6 +724,7 @@ function reliefweb_entities_cron() {
     ->condition('moderation_status', 'published', '=')
     ->condition('field_registration_deadline.value', $date, '<')
     ->range(0, $cron_settings['expired_training_limit'] ?? 20)
+    ->accessCheck(FALSE)
     ->execute();
 
   if (!empty($expired_ids)) {
@@ -728,6 +733,7 @@ function reliefweb_entities_cron() {
       $node->setModerationStatus('expired');
       $node->setNewRevision(TRUE);
       $node->setRevisionUserId(2);
+      $node->setRevisionCreationTime(time());
       $node->setRevisionLogMessage(strtr('@type automatically expired on @date.', [
         '@type' => ucfirst($node->bundle()),
         '@date' => DateHelper::format($time, 'custom', 'd M Y H:i e'),
@@ -748,54 +754,34 @@ function reliefweb_entities_menu_local_tasks_alter(&$data, $route_name, Refinabl
 }
 
 /**
- * Implements hook_preprocess_page__403().
+ * Implements hook_preprocess_page__404().
  *
- * Add a user friendly message on inaccessible node pages to indicate it's
+ * Add a user friendly message on inaccessible entity pages to indicate it's
  * no longer available (we assume the URL was previously accessible, which is
  * probably true in most cases).
  */
-function reliefweb_entities_preprocess_page__403(array &$variables) {
-  // The router may return a ResourceNotFoundException or
-  // MethodNotAllowedException so we skip the preprocessing in that case.
-  try {
-    $route_info = \Drupal::service('router.no_access_checks')
-      ->matchRequest(\Drupal::request());
+function reliefweb_entities_preprocess_page__404(array &$variables) {
+  // Get the entity from the original request.
+  $entity = EntityHelper::getEntityFromRequest(\Drupal::requestStack()->getMainRequest());
+  if (isset($entity) && $entity instanceof BundleEntityInterface) {
+    $type = mb_strtolower(EntityHelper::getBundleLabelFromEntity($entity));
+    $title = $entity->label();
 
-    if (isset($route_info['node']) && $route_info['node'] instanceof BundleEntityInterface) {
-      $type = mb_strtolower(EntityHelper::getBundleLabelFromEntity($route_info['node']));
-      $title = $route_info['node']->label();
-      $anonymous = \Drupal::currentUser()->isAnonymous();
+    $message = t('The @type %title is no longer available.', [
+      '@type' => $type,
+      '%title' => $title,
+    ]);
 
-      if ($anonymous && in_array($type, ['job', 'training'])) {
-        $message = t('The @type %title is no longer available.<br>If you posted this @type, please <a href="@url">log in</a> to get access.', [
-          '@type' => $type,
-          '%title' => $title,
-          '@url' => Url::fromUserInput('/user/login', [
-            'query' => \Drupal::destination()->getAsArray(),
-          ])->toString(),
-        ]);
-      }
-      else {
-        $message = t('The @type %title is no longer available.', [
-          '@type' => $type,
-          '%title' => $title,
-        ]);
-      }
-
-      $variables['page']['content']['message'] = [
-        '#type' => 'markup',
-        '#markup' => $message,
-      ];
-    }
-  }
-  catch (\Exception $exception) {
-    // Nothing to do.
+    $variables['page']['content']['message'] = [
+      '#type' => 'markup',
+      '#markup' => $message,
+    ];
   }
 
-  // We need to vary the cache whether or not we are on a node page
-  // otherwise visiting a non node inaccessible page will cache the result
+  // We need to vary the cache whether or not we are on an entity page
+  // otherwise visiting a non entity inaccessible page will cache the result
   // and this preprocess hook implementation will not be called when visiting
-  // an inaccessible node page afterwards.
+  // an inaccessible entity page afterwards.
   $variables['#cache']['contexts'][] = 'url.path';
 }
 

@@ -33,6 +33,7 @@ class ReliefWebImportInfo extends WidgetBase {
       '#title' => $this->t('Feed Url'),
       '#default_value' => $items[$delta]->feed_url ?? NULL,
       '#description' => $this->t('For automatic job imports. This URL is a feed url of an updated list of the job offers for the organization. It must start with "https://" or "http://".'),
+      '#maxlength' => 2048,
     ];
 
     $element['base_url'] = [
@@ -40,6 +41,7 @@ class ReliefWebImportInfo extends WidgetBase {
       '#title' => $this->t('Base Url'),
       '#default_value' => $items[$delta]->base_url ?? NULL,
       '#description' => $this->t('Job postings published by this organization must match this URL. It must start with "https://" or "http://".'),
+      '#maxlength' => 2048,
     ];
 
     $element['uid'] = [

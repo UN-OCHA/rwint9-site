@@ -12,10 +12,6 @@ use Drupal\reliefweb_entities\Entity\Job;
  * Implements hook_ENTITY_TYPE_presave() for node.
  */
 function reliefweb_import_node_presave(EntityInterface $entity) {
-  // @todo remove when removing `reliefweb_migrate`.
-  if (!empty($entity->_is_migrating)) {
-    return;
-  }
   if ($entity instanceof Job && !empty($entity->_is_importing)) {
     $status = $entity->getModerationStatus();
 

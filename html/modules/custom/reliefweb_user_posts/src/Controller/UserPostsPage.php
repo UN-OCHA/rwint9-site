@@ -2,15 +2,15 @@
 
 namespace Drupal\reliefweb_user_posts\Controller;
 
-use Drupal\reliefweb_moderation\Controller\ModerationPage;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\reliefweb_moderation\Controller\ModerationPage;
 use Drupal\reliefweb_moderation\ModerationServiceInterface;
+use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Drupal\user\UserInterface;
 
 /**
  * User posts controller.
@@ -163,6 +163,18 @@ class UserPostsPage extends ModerationPage {
       return AccessResult::allowedIf($account->hasPermission('view own posts'));
     }
     return AccessResult::allowedIf($account->hasPermission('view other user posts'));
+  }
+
+  /**
+   * Redirect the current user to the its posts page.
+   *
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *   Redirection response.
+   */
+  public function currentUserPostsPage() {
+    return $this->redirect('reliefweb_user_posts.content', [
+      'user' => $this->currentUser()->id(),
+    ], [], 301);
   }
 
 }

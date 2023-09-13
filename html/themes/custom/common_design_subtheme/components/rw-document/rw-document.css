@@ -10,7 +10,7 @@
   border-bottom: none;
 }
 /* Clear any floating from the content. */
-.rw-document:after {
+.rw-document::after {
   display: block;
   clear: both;
   width: 100%;
@@ -62,19 +62,19 @@
 .rw-document > footer dl.rw-entity-meta dd {
   clear: both;
 }
-.rw-document > footer dl.rw-entity-meta dd li:after {
+.rw-document > footer dl.rw-entity-meta dd li::after {
   margin: 0 4px;
   content: " / ";
 }
-.rw-document > footer dl.rw-entity-meta dd li:last-child:after,
-.rw-document > footer dl.rw-entity-meta dd li.rw-entity-meta__tag-value__list__item--last:after {
+.rw-document > footer dl.rw-entity-meta dd li:last-child::after,
+.rw-document > footer dl.rw-entity-meta dd li.rw-entity-meta__tag-value__list__item--last::after {
   content: "";
 }
 .rw-entity-details dl.rw-entity-meta.rw-article-meta dd::after {
   content: none;
 }
 /* Hide format icons */
-.rw-document > footer .rw-entity-meta__tag-value:before {
+.rw-document > footer .rw-entity-meta__tag-value::before {
   content: none;
 }
 
@@ -96,6 +96,11 @@
   }
 }
 
+/* Ensure long URLs in WYSIWYG wrap */
+.rw-article__content a {
+  word-break: break-all;
+}
+
 .rw-article__content ul {
   margin: 0;
   padding: 0 0 0 32px;
@@ -110,6 +115,13 @@
 }
 .rw-article__content ul + h2 {
   margin-top: 24px;
+}
+
+/* Training and Job Headings */
+.rw-how-to-apply__title,
+.rw-fee-information__title {
+  padding-left: 8px;
+  border-left: 8px solid var(--cd-reliefweb-brand-blue);
 }
 
 /* RW-599: Style direct links to log in with HID on book pages to look like

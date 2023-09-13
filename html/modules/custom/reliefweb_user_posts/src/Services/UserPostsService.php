@@ -567,10 +567,13 @@ class UserPostsService extends ModerationServiceBase {
     if (!empty($blocked) && !$this->currentUser->hasPermission('edit any job content')) {
       foreach ($types as $type) {
         if (!empty($blocked[$type])) {
-          $condition = $query->andConditionGroup()
-            ->condition($source_table_alias . '.bundle', $type, '=')
-            ->condition($source_table_alias . '.' . $source_field, array_keys($blocked[$type]), 'IN');
-          $query->condition($query->conditionGroupFactory('AND NOT')->condition($condition));
+          $type_source_alias = $source_table_alias . '_' . $type;
+          $type_source_join = "%alias.entity_id = {$node_table}.{$node_id_field} AND %alias.bundle = :type AND %alias.{$source_field} IN (:sources[])";
+          $query->leftJoin($source_table, $type_source_alias, $type_source_join, [
+            ':type' => $type,
+            ':sources[]' => array_keys($blocked[$type]),
+          ]);
+          $query->isNull($type_source_alias . '.entity_id');
         }
       }
     }

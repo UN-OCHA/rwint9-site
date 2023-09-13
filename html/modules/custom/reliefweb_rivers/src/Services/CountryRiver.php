@@ -39,7 +39,7 @@ class CountryRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function getPageTitle() {
+  public function getDefaultPageTitle() {
     return $this->t('Countries');
   }
 
@@ -196,6 +196,13 @@ class CountryRiver extends RiverServiceBase {
     }
 
     return $entities;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultRiverDescription() {
+    return $this->t('ReliefWeb country pages provide a comprehensive overview of the humanitarian situation and feature situation reports, news and press releases, assessments, evaluations, infographics, maps and more.');
   }
 
   /**

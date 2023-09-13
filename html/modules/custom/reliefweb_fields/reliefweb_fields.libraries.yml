@@ -25,3 +25,7 @@ reliefweb-options:
       components/reliefweb-options/reliefweb-options.css: {}
   js:
     components/reliefweb-options/reliefweb-options.js: {}
+
+ckeditor5.reliefweb_formatted_text:
+  js:
+    js/plugins/reliefweb_formatted_text/plugin.js: {}

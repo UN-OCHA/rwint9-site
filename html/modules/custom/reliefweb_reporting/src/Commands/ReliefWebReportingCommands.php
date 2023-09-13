@@ -4,9 +4,9 @@ namespace Drupal\reliefweb_reporting\Commands;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
-use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\Language\LanguageDefault;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\State\StateInterface;
 use Drush\Commands\DrushCommands;
 
@@ -42,13 +42,6 @@ class ReliefWebReportingCommands extends DrushCommands {
    * @var \Drupal\Core\Language\LanguageDefault
    */
   protected $languageDefault;
-
-  /**
-   * Logger.
-   *
-   * @var \Psr\Log\LoggerInterface
-   */
-  protected $logger;
 
   /**
    * The state manager.
@@ -284,7 +277,7 @@ class ReliefWebReportingCommands extends DrushCommands {
     ")->fetchAll(\PDO::FETCH_ASSOC);
 
     if (empty($records)) {
-      $body .= 'No reports posted this week.';
+      $body = 'No reports posted this week.';
     }
     else {
       // Convert to CSV.

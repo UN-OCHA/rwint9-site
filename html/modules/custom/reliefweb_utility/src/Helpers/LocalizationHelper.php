@@ -8,6 +8,27 @@ namespace Drupal\reliefweb_utility\Helpers;
 class LocalizationHelper {
 
   /**
+   * Store the instantiated collators per language.
+   *
+   * @var array
+   */
+  static protected $collators;
+
+  /**
+   * Store the instantiated formatters per language.
+   *
+   * @var array
+   */
+  static protected $formatters;
+
+  /**
+   * Store the default language.
+   *
+   * @var string
+   */
+  static protected $defaultLanguage;
+
+  /**
    * Sort an array using a collator for the given language, perserving the keys.
    *
    * @param array $items
@@ -156,11 +177,9 @@ class LocalizationHelper {
    *   Collator or FALSE if there is no collator for the language.
    */
   public static function getCollator($language = NULL) {
-    static $collators = [];
-
     $language = static::getLanguage($language);
 
-    if (!isset($collators[$language])) {
+    if (!isset(static::$collators[$language])) {
       $collator = static::createCollator($language);
 
       if ($collator) {
@@ -188,10 +207,10 @@ class LocalizationHelper {
         }
       }
 
-      $collators[$language] = $collator;
+      static::$collators[$language] = $collator;
     }
 
-    return $collators[$language];
+    return static::$collators[$language];
   }
 
   /**
@@ -205,15 +224,13 @@ class LocalizationHelper {
    *   Number formatter or FALSE if there is no formatter for the language.
    */
   protected static function getNumberFormatter($language = NULL) {
-    static $formatters = [];
-
     $language = static::getLanguage($language);
 
-    if (!isset($formatters[$language])) {
-      $formatters[$language] = static::createNumberFormatter($language);
+    if (!isset(static::$formatters[$language])) {
+      static::$formatters[$language] = static::createNumberFormatter($language);
     }
 
-    return $formatters[$language];
+    return static::$formatters[$language];
   }
 
   /**
@@ -270,12 +287,11 @@ class LocalizationHelper {
    *   ISO2 language code.
    */
   public static function getLanguage($language = NULL) {
-    static $default;
     if (empty($language)) {
-      if (!isset($default)) {
-        $default = \Drupal::languageManager()->getCurrentLanguage()->getId();
+      if (!isset(static::$defaultLanguage)) {
+        static::$defaultLanguage = \Drupal::languageManager()->getCurrentLanguage()->getId();
       }
-      $language = $default;
+      $language = static::$defaultLanguage;
     }
     return $language;
   }

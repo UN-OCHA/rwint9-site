@@ -251,7 +251,7 @@ class Homepage extends ControllerBase {
       'more' => [
         'url' => RiverServiceBase::getRiverUrl('report', [
           'view' => 'headlines',
-        ]),
+        ], $this->t('Updates (Headlines)')),
         'label' => $this->t('View all headlines'),
       ],
     ];
@@ -337,7 +337,6 @@ class Homepage extends ControllerBase {
     $payload['fields']['exclude'][] = 'country';
     $payload['fields']['exclude'][] = 'type';
     $payload['fields']['exclude'][] = 'date';
-    $payload['sort'] = ['date.created:desc'];
     $payload['limit'] = $limit;
 
     return [
@@ -433,6 +432,7 @@ class Homepage extends ControllerBase {
       ->condition('status', NodeInterface::PUBLISHED)
       ->sort('created', 'DESC')
       ->range(0, 1)
+      ->accessCheck(TRUE)
       ->execute();
 
     $nodes = $storage->loadMultiple($nids);

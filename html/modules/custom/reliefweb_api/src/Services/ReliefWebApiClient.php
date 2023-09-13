@@ -390,7 +390,7 @@ class ReliefWebApiClient {
    * @param bool $combine
    *   TRUE to optimize even more the filter by combining values when possible.
    *
-   * @return array
+   * @return array|null
    *   Optimized filter.
    */
   public static function optimizeFilter(array $filter, $combine = FALSE) {
@@ -441,7 +441,7 @@ class ReliefWebApiClient {
    *   Combined and simplied filter conditions.
    */
   public static function combineConditions(array $conditions, $operator = 'AND') {
-    $operator = $operator ?? 'AND';
+    $operator = $operator ?: 'AND';
     $filters = [];
     $result = [];
 
@@ -460,10 +460,10 @@ class ReliefWebApiClient {
         $result[] = $condition;
       }
       // Range filter - keep as is.
-      elseif (is_array($value) && (isset($value['to']) || isset($value['to']))) {
+      elseif (is_array($value) && (isset($value['from']) || isset($value['to']))) {
         $result[] = $condition;
       }
-      // Different operator or negated condition -  keep as is.
+      // Different operator or negated condition - keep as is.
       elseif ((isset($condition_operator) && $condition_operator !== $operator) || !empty($condition['negate'])) {
         $result[] = $condition;
       }
@@ -500,7 +500,7 @@ class ReliefWebApiClient {
    *
    * @param string $resource
    *   API resource.
-   * @param array|string $payload
+   * @param array|string|null $payload
    *   API payload.
    *
    * @return string

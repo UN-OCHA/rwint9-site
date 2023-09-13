@@ -13,8 +13,8 @@ use Drupal\system\FileDownloadController as OriginalFileDownloadController;
 use GuzzleHttp\Psr7\StreamWrapper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Mime\Header\UnstructuredHeader;
@@ -110,7 +110,13 @@ class FileDownloadController extends OriginalFileDownloadController {
    * {@inheritdoc}
    */
   public function download(Request $request, $scheme = 'private') {
-    $uri = $scheme . '://' . $request->query->get('file');
+    $file = $request->query->get('file');
+    if (!is_string($file)) {
+      throw new NotFoundHttpException();
+    }
+
+    // This is normally the URI of the source file.
+    $uri = $scheme . '://' . trim($file);
 
     // Retrieve the base directory in which the previews are stored.
     $file_directory = $this->config->get('file_directory') ?? 'attachments';
@@ -131,7 +137,7 @@ class FileDownloadController extends OriginalFileDownloadController {
       throw new AccessDeniedHttpException();
     }
 
-    /** @var \Drupal\file\FileInterface $file */
+    /** @var \Drupal\file\FileInterface|null $file */
     $file = $this->loadFileFromUri($uri);
     if (!isset($file)) {
       throw new NotFoundHttpException();

@@ -78,7 +78,8 @@ function reliefweb_disaster_map_get_disaster_type_tokens() {
     $disaster_type_tokens = [];
     foreach ($terms as $term) {
       if (!$term->field_disaster_type_code->isEmpty()) {
-        $disaster_type_tokens[$term->field_disaster_type_code->value] = $term;
+        $code = strtoupper($term->field_disaster_type_code->value);
+        $disaster_type_tokens[$code] = $term;
       }
     }
   }
@@ -90,15 +91,17 @@ function reliefweb_disaster_map_get_disaster_type_tokens() {
  *
  * @param string $token
  *   Token to replace.
- * @param \Drupal\Core\Render\BubbleableMetadata $bubbleable_metadata
+ * @param \Drupal\Core\Render\BubbleableMetadata|null $bubbleable_metadata
  *   Metadata to bubble to the renderer.
+ * @param bool $render
+ *   Whether to render the map or return the render array.
  *
  * @return \Drupal\Component\Render\MarkupInterface|string
  *   The rendered disaster map HTML content to use as token replacement.
  */
-function reliefweb_disaster_map_get_disaster_map_token_replacement($token, BubbleableMetadata $bubbleable_metadata) {
+function reliefweb_disaster_map_get_disaster_map_token_replacement($token, BubbleableMetadata $bubbleable_metadata = NULL, $render = TRUE) {
   $tokens = reliefweb_disaster_map_get_disaster_type_tokens();
-  $values = explode('-', $token);
+  $values = !empty($token) ? explode('-', strtoupper($token)) : [];
   $options = [];
   $id = strtolower('disaster-map-' . $token);
 
@@ -134,7 +137,33 @@ function reliefweb_disaster_map_get_disaster_map_token_replacement($token, Bubbl
 
   if (!empty($title)) {
     return \Drupal::service('reliefweb_disaster_map.service')
-      ->getDisasterMap($id, $title, $options, TRUE);
+      ->getDisasterMap($id, $title, $options, $render);
   }
   return '';
+}
+
+/**
+ * Implements hook_metatags_alter().
+ */
+function reliefweb_disaster_map_metatags_alter(array &$metatags, array &$context) {
+  $route_name = \Drupal::routeMatch()->getRouteName();
+
+  if (strpos($route_name, 'reliefweb_disaster_map.map.embeddable') === 0) {
+    $metatags = [
+      'title' => t('Disaster map'),
+    ];
+  }
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ *
+ * Run our metatags_alter hook implementation last.
+ */
+function reliefweb_disaster_map_module_implements_alter(array &$implementations, $hook) {
+  if ($hook === 'metatags_alter') {
+    $group = $implementations['reliefweb_disaster_map'];
+    unset($implementations['reliefweb_disaster_map']);
+    $implementations['reliefweb_disaster_map'] = $group;
+  }
 }

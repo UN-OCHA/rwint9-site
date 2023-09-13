@@ -7,12 +7,11 @@ namespace Drupal\reliefweb_bookmarks\Form;
  * Contains Drupal\reliefweb_bookmarks\Form\BookmarksConfigurationForm.
  */
 
-
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
 
 /**
  * Class SettingsForm.

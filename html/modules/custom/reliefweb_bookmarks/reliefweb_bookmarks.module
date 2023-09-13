@@ -45,9 +45,6 @@ function reliefweb_bookmarks_preprocess_taxonomy_term(&$variables) {
  *   Variables from the corresponding hook_preprorcess_ENTITY_TYPE().
  * @param \Drupal\Core\Entity\EntityInterface $entity
  *   Entity.
- *
- * @return array
- *   Render array for the link.
  */
 function reliefweb_bookmarks_add_link(array &$variables, EntityInterface $entity) {
   // Only published content can be bookmarked.
@@ -288,10 +285,6 @@ function reliefweb_bookmarks_theme() {
  * Implements hook_entity_update().
  */
 function reliefweb_bookmarks_entity_update(EntityInterface $entity) {
-  // @todo remove when removing `reliefweb_migrate`.
-  if (!empty($entity->_is_migrating)) {
-    return;
-  }
   // Remove any bookmarks to that entity if it's not published.
   if ($entity instanceof EntityPublishedInterface && !$entity->isPublished()) {
     reliefweb_bookmarks_remove_bookmark($entity->getEntityTypeId(), $entity->id());
@@ -302,10 +295,6 @@ function reliefweb_bookmarks_entity_update(EntityInterface $entity) {
  * Implements hook_entity_delete().
  */
 function reliefweb_bookmarks_entity_delete(EntityInterface $entity) {
-  // @todo remove when removing `reliefweb_migrate`.
-  if (!empty($entity->_is_migrating)) {
-    return;
-  }
   // Remove any bookmarks to that entity.
   reliefweb_bookmarks_remove_bookmark($entity->getEntityTypeId(), $entity->id());
 }

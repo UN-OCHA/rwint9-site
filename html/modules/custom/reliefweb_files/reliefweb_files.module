@@ -6,7 +6,9 @@
  */
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Template\Attribute;
 use Drupal\file\Entity\File;
+use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile;
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFileList;
 
 /**
@@ -55,17 +57,33 @@ function reliefweb_files_theme() {
 }
 
 /**
- * Implemenents hook_preprocess_HOOK() for "image_style".
+ * Implemenents hook_preprocess_HOOK() for "responsive_image".
  */
-function reliefweb_files_preprocess_image_style__preview(&$variables) {
-  // We add a parameter to the image derivative URL to ensure the correct
+function reliefweb_files_preprocess_responsive_image__preview(&$variables) {
+  // We add a parameter to the image derivative URLs to ensure the correct
   // version is served.
-  if (isset($variables['image']['#attributes']['data-version'])) {
-    $version = $variables['image']['#attributes']['data-version'];
-    $uri = $variables['image']['#uri'];
+  if (isset($variables['attributes']['data-version'])) {
+    $version = $variables['attributes']['data-version'];
+    if (isset($variables['sources'])) {
+      foreach ($variables['sources'] as $source) {
+        if ($source instanceof Attribute && $source->offsetExists('srcset')) {
+          $srcset = (string) $source->offsetGet('srcset');
+          $srcset = preg_replace_callback('#(?<uri>(https?://[^/]+)?/[^ ,]+)#', function ($matches) use ($version) {
+            return $matches['uri'] . (strpos($matches['uri'], '?') !== FALSE ? '&' : '?') . $version;
+          }, $srcset);
+          $source->offsetSet('srcset', $srcset);
+        }
+      }
+    }
+    unset($variables['attributes']['data-version']);
+  }
+
+  if (isset($variables['img_element']['#attributes']['data-version'])) {
+    $version = $variables['img_element']['#attributes']['data-version'];
+    $uri = $variables['img_element']['#uri'];
     $uri .= (strpos($uri, '?') !== FALSE ? '&' : '?') . $version;
-    $variables['image']['#uri'] = $uri;
-    unset($variables['image']['#attributes']['data-version']);
+    $variables['img_element']['#uri'] = $uri;
+    unset($variables['img_element']['#attributes']['data-version']);
   }
 }
 
@@ -122,6 +140,31 @@ function reliefweb_files_file_validate_mime_type(File $file, $mime_type) {
 }
 
 /**
+ * Validate the name of file.
+ *
+ * @param \Drupal\file\Entity\File $file
+ *   File entity to validate.
+ * @param string $expected_extension
+ *   Expected file extension.
+ *
+ * @return array
+ *   An empty array if the file name is valid or an array containing an
+ *   error message if it's not.
+ *
+ * @see file_validate()
+ */
+function reliefweb_files_file_validate_file_name(File $file, $expected_extension = '') {
+  $errors = [];
+
+  $error = ReliefWebFile::validateFileName($file->getFileName(), $expected_extension);
+  if (!empty($error)) {
+    $errors[] = $error;
+  }
+
+  return $errors;
+}
+
+/**
  * Implements hook_reliefweb_utility_file_update_alter().
  */
 function reliefweb_files_reliefweb_utility_file_update_alter(File $file, &$apply) {
@@ -145,10 +188,6 @@ function reliefweb_files_reliefweb_utility_file_update_alter(File $file, &$apply
  * Implements hook_entity_revision_delete().
  */
 function reliefweb_files_entity_revision_delete(EntityInterface $entity) {
-  // @todo remove when removing `reliefweb_migrate`.
-  if (!empty($entity->_is_migrating)) {
-    return;
-  }
   // Drupal doesn't invoke any postRevisionDelete on the field items so this is
   // the only way to perform post revision deletion tasks.
   //

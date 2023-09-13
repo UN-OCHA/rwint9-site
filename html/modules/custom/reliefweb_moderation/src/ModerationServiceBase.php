@@ -6,8 +6,8 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\Condition;
 use Drupal\Core\Database\Query\Select;
-use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Datetime\DateFormatterInterface;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -15,13 +15,13 @@ use Drupal\Core\Field\FieldItemInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
+use Drupal\Core\Pager\PagerManagerInterface;
+use Drupal\Core\Pager\PagerParametersInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
-use Drupal\Core\Pager\PagerManagerInterface;
-use Drupal\Core\Pager\PagerParametersInterface;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_utility\Helpers\EntityHelper;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
@@ -101,6 +101,13 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
    * @var array
    */
   protected $filterDefinitions;
+
+  /**
+   * Intialized filter definitions.
+   *
+   * @var array
+   */
+  protected $definitions;
 
   /**
    * Constructor.
@@ -563,6 +570,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
    */
   public function getAutocompleteSuggestions($filter) {
     $query = $this->getCurrentRequest()->query->get('query', '');
+    $query = is_string($query) ? trim($query) : '';
 
     if (empty($query) || !$this->hasFilterDefinition($filter)) {
       return [];
@@ -604,20 +612,22 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
       if (!empty($filter_definition['values'])) {
         $values = $filter_definition['values'];
 
-        foreach (explode('&', $query) as $index => $term) {
-          $starting = FALSE;
-          if (strpos($term, '!') === 0) {
-            $term = substr($term, 1);
-            $starting = TRUE;
-          }
-          foreach ($values as $key => $value) {
-            $pos = stripos($value, $term);
-            if ($pos !== FALSE && (!$starting || $pos === 0)) {
-              // Compatibility with the DB query results.
-              $record = new \stdClass();
-              $record->value = $key;
-              $record->label = $value;
-              $records[] = $record;
+        if (!empty($query)) {
+          foreach (explode('&', $query) as $index => $term) {
+            $starting = FALSE;
+            if (strpos($term, '!') === 0) {
+              $term = substr($term, 1);
+              $starting = TRUE;
+            }
+            foreach ($values as $key => $value) {
+              $pos = stripos($value, $term);
+              if ($pos !== FALSE && (!$starting || $pos === 0)) {
+                // Compatibility with the DB query results.
+                $record = new \stdClass();
+                $record->value = $key;
+                $record->label = $value;
+                $records[] = $record;
+              }
             }
           }
         }
@@ -627,21 +637,23 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
         $conditions = [];
         $replacements = [];
         // Build the search conditions.
-        foreach (explode('&', $query) as $index => $term) {
-          $term_prefix = '%';
-          // If the query starts with a "!" then it means a prefix search.
-          if (strpos($term, '!') === 0) {
-            $term = substr($term, 1);
-            $term_prefix = '';
+        if (!empty($query)) {
+          foreach (explode('&', $query) as $index => $term) {
+            $term_prefix = '%';
+            // If the query starts with a "!" then it means a prefix search.
+            if (strpos($term, '!') === 0) {
+              $term = substr($term, 1);
+              $term_prefix = '';
+            }
+            $terms[] = $term;
+            // We don't use a \Drupal\Core\Database\Query\Condition because
+            // we need to replace the `@field` later on.
+            $conditions[] = '@field LIKE :term' . $index;
+            $replacements[':term' . $index] = $term_prefix . $this->getDatabase()->escapeLike($term) . '%';
           }
-          $terms[] = $term;
-          // We don't use a \Drupal\Core\Database\Query\Condition because
-          // we need to replace the `@field` later on.
-          $conditions[] = '@field LIKE :term' . $index;
-          $replacements[':term' . $index] = $term_prefix . $this->getDatabase()->escapeLike($term) . '%';
         }
         // Call the filter's autocomplete callback.
-        if (!empty($conditions)) {
+        if (count($conditions) > 0) {
           $conditions = '(' . implode(' AND ', $conditions) . ')';
           $records = $this->{$method}($filter, $query, $conditions, $replacements);
         }
@@ -844,6 +856,14 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
           'form' => 'omnibox',
           'widget' => 'datepicker',
         ],
+        'changed' => [
+          'type' => 'property',
+          'field' => 'changed',
+          'label' => $this->t('Change date'),
+          'shortcut' => 'cgd',
+          'form' => 'omnibox',
+          'widget' => 'datepicker',
+        ],
         'reviewed' => [
           'type' => 'property',
           'field' => 'revision_created',
@@ -852,6 +872,16 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
           'form' => 'omnibox',
           'widget' => 'datepicker',
           'join_callback' => 'joinReview',
+        ],
+        'original_publication_date' => [
+          'type' => 'field',
+          'field' => 'field_original_publication_date',
+          'column' => 'value',
+          'label' => $this->t('Original publication date'),
+          'shortcut' => 'od',
+          'form' => 'omnibox',
+          'widget' => 'datepicker',
+          'condition_callback' => 'addDateFilterCondition',
         ],
         'job_closing_date' => [
           'type' => 'field',
@@ -877,7 +907,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
           'type' => 'field',
           'field' => 'field_disaster_date',
           'column' => 'value',
-          'label' => $this->t('Creation date'),
+          'label' => $this->t('Disaster date'),
           'shortcut' => 'cd',
           'form' => 'omnibox',
           'widget' => 'datepicker',
@@ -1208,6 +1238,14 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     // Filter the query with the form filters.
     $this->filterQuery($query, $filters);
 
+    // Ensure there are no duplicates when joining revision tables.
+    foreach ($query->getTables() as $table) {
+      if (isset($table['table']) && strpos($table['table'], 'revision') !== FALSE) {
+        $query->distinct();
+        break;
+      }
+    }
+
     // Wrap the query in a parent query to which the ordering and limiting is
     // applied.
     //
@@ -1271,9 +1309,11 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   protected function getOrderInformation() {
     $headers = $this->getHeaders();
     $order = $this->getCurrentRequest()->query->get('order', '');
+    $order = is_string($order) ? trim($order) : '';
     // We assume the date header is present and sortable.
     $order = !empty($headers[$order]['sortable']) ? $order : 'date';
-    $sort = strtolower($this->getCurrentRequest()->query->get('sort', ''));
+    $sort = $this->getCurrentRequest()->query->get('sort', '');
+    $sort = strtolower(is_string($sort) ? trim($sort) : '');
     $sort = in_array($sort, ['asc', 'desc']) ? $sort : 'desc';
     $headers[$order]['sort'] = $sort;
 
@@ -1631,7 +1671,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
           $base->condition($condition);
         }
         else {
-          $base->condition(reset($field), $value, $operator);
+          $base->condition(reset($fields), $value, $operator);
         }
       }
       else {
@@ -1664,22 +1704,27 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
       return;
     }
 
+    // Handle date range.
+    if (is_array($value)) {
+      $value = $value[0] . ' AND ' . $value[1];
+    }
+
     if (is_array($fields)) {
       if (count($fields) > 1) {
         $condition = new Condition('OR');
         foreach ($fields as $field) {
-          $condition->where("UNIX_TIMESTAMP(${field}) ${operator} ${value}");
+          $condition->where("UNIX_TIMESTAMP({$field}) {$operator} {$value}");
         }
         $base->condition($condition);
       }
       else {
-        $field = reset($field);
-        $base->where("UNIX_TIMESTAMP(${field}) ${operator} ${value}");
+        $field = reset($fields);
+        $base->where("UNIX_TIMESTAMP({$field}) {$operator} {$value}");
       }
     }
     else {
       $field = $fields;
-      $base->where("UNIX_TIMESTAMP(${field}) ${operator} ${value}");
+      $base->where("UNIX_TIMESTAMP({$field}) {$operator} {$value}");
     }
   }
 
@@ -1730,7 +1775,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
       $field = $alias . '.' . $this->getFieldColumnName($entity_type_id, $field_name, $definition['column']);
     }
 
-    return $field;
+    return $field ?? '';
   }
 
   /**
@@ -2075,6 +2120,11 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     $conditions = $this->buildFilterConditions($conditions, $fields);
     $query->where($conditions, $replacements);
 
+    // Exclude some terms.
+    if (!empty($filter_definition['exclude'])) {
+      $query->condition($alias . '.' . $id_field, $filter_definition['exclude'], 'NOT IN');
+    }
+
     // Sort by name.
     $query->orderBy($alias . '.' . $label_field, 'ASC');
 
@@ -2341,7 +2391,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
    * @param \Drupal\Core\Field\FieldItemInterface|null $item
    *   Entiry referenc field item.
    *
-   * @return \Drupal\Core\GeneratedLink
+   * @return \Drupal\Core\GeneratedLink|null
    *   Link.
    */
   protected function getTaxonomyTermLink(?FieldItemInterface $item) {
@@ -2488,6 +2538,10 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
 
       default:
         return NULL;
+    }
+
+    if (empty($author_id) || empty($author_title)) {
+      return NULL;
     }
 
     $author_parameter = 'selection[author][]';

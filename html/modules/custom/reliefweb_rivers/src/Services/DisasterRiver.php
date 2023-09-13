@@ -38,7 +38,7 @@ class DisasterRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function getPageTitle() {
+  public function getDefaultPageTitle() {
     return $this->t('Disasters');
   }
 
@@ -76,6 +76,7 @@ class DisasterRiver extends RiverServiceBase {
     return [
       'C' => [
         'name' => $this->t('Country'),
+        'shortname' => TRUE,
         'type' => 'reference',
         'vocabulary' => 'country',
         'field' => 'country.id',
@@ -115,7 +116,7 @@ class DisasterRiver extends RiverServiceBase {
       'DA' => [
         'name' => $this->t('Date'),
         'type' => 'date',
-        'field' => 'date.created',
+        'field' => 'date.event',
         'widget' => [
           'type' => 'date',
           'label' => $this->t('Select disaster date'),
@@ -162,10 +163,12 @@ class DisasterRiver extends RiverServiceBase {
           'type.code',
           'type.primary',
           'primary_type.code',
-          'date.created',
+          'date.event',
         ],
       ],
-      'sort' => ['date.created:desc'],
+      // To ensure consistent order for disaster with the same event day,
+      // we also sort those by ID to have the most recents first.
+      'sort' => ['date.event:desc', 'id:desc'],
     ];
 
     // Handle the filtered selection (view).
@@ -224,7 +227,7 @@ class DisasterRiver extends RiverServiceBase {
           'name' => $type['name'],
           'url' => static::getRiverUrl($this->bundle, [
             'advanced-search' => '(TY' . $type['id'] . ')',
-          ]),
+          ], $type['name'], TRUE),
           'main' => !empty($country['primary']),
         ];
       }
@@ -309,7 +312,7 @@ class DisasterRiver extends RiverServiceBase {
       }
 
       // Dates.
-      $data['date'] = static::createDate($fields['date']['created']);
+      $data['date'] = static::createDate($fields['date']['event']);
 
       // Body and how to apply.
       $data['body'] = $fields['profile']['overview-html'] ?? '';
@@ -365,6 +368,13 @@ class DisasterRiver extends RiverServiceBase {
     }
 
     return parent::requestApi($payload);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultRiverDescription() {
+    return $this->t('ReliefWeb disaster pages provide an overview of the situation and situation reports, news and press releases, assessments, evaluations, infographics and maps. Browse our list of natural disasters with humanitarian impact from 1981 until today.');
   }
 
   /**

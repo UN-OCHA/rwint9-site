@@ -13,6 +13,8 @@
   set rendered = [
     'link',
     'replaced_file',
+    'uploaded_file_name',
+    '_new_file_name',
     'description',
     'language',
     'preview',
@@ -23,22 +25,36 @@
   ]
 %}
 {% set attributes = create_attribute(element['#attributes'] ?? {}) %}
-<tr{{ attributes.addClass(['rw-file-widget-item', 'draggable']) }}>
+<tr{{ attributes.setAttribute('id', element['#id']).addClass(['rw-file-widget-item', 'draggable']) }}>
   <td class="rw-file-widget-item__weight">
     {{ element._weight }}
   </td>
   <td class="rw-file-widget-item__information">
+    {% if element['#errors'] is not empty %}
+      <div class="form-item--error-message">{{ element['#errors'] }}</div>
+    {% endif %}
     {{ element.link }}
     {% if element.replaced_file %}
     <div class="rw-file-widget-item__information__replaced"><small>
       {{- 'Replaced: %file'|t({'%file': element.replaced_file|render}) -}}
     </small></div>
     {% endif %}
+    <details class="form-wrapper rw-file-widget-item__file-name-details"{{ element._new_file_name['#errors'] is not empty ? ' open' }}>
+      <summary>{{ 'View file name details'|t }}</summary>
+      <div class="details-wrapper">
+        <div class="form-item rw-file-widget-item__uploaded-file-name">
+          <div class="rw-form-label">{{ 'Uploaded file name'|t }}</div>
+          <div class="rw-form-value">{{ element.uploaded_file_name }}</div>
+        </div>
+        {{ element._new_file_name }}
+      </div>
+    </details>
     {{ element.description }}
     {{ element.language }}
     {# Make sure all the element children are rendered. #}
-    {% for key, child in element|without(rendered) if key|first != '#' %}
-      {{ child }}
+    {% for key, child in element|without(rendered) %}
+      {{ key|first != '#' ? child }}
+
     {% endfor %}
   </td>
   {% set preview_attributes = create_attribute(element.preview['#attributes'] ?? {}) %}

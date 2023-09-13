@@ -1,0 +1,426 @@
+<?php
+
+/**
+ * @file
+ * Module file for the reliefweb_user_history module.
+ */
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Markup;
+use Drupal\reliefweb_revisions\EntityRevisionedInterface;
+use Drupal\reliefweb_utility\Helpers\DateHelper;
+use Drupal\reliefweb_utility\Helpers\EntityHelper;
+use Drupal\reliefweb_utility\Helpers\TextHelper;
+use Drupal\user\UserInterface;
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function reliefweb_user_history_entity_type_alter(array &$entity_types) {
+  $entity_types['user']->setClass('\Drupal\reliefweb_user_history\Entity\User');
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update().
+ */
+function reliefweb_user_history_user_update(EntityInterface $entity) {
+  // Skip system users.
+  if ($entity->id() <= 2) {
+    return;
+  }
+
+  // Save the changes to the user account if any.
+  if (isset($entity->original) && reliefweb_user_history_check_changes($entity, $entity->original)) {
+    reliefweb_user_history_record_changes($entity, $entity->original);
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_delete().
+ */
+function reliefweb_user_history_user_delete(EntityInterface $entity) {
+  // Remove the history when a user is deleted.
+  \Drupal::database()
+    ->delete('reliefweb_user_history')
+    ->condition('uid', $entity->id())
+    ->execute();
+}
+
+/**
+ * Check if a user account was effectively changed.
+ *
+ * @param \Drupal\user\UserInterface $user
+ *   Current version of the user entity.
+ * @param \Drupal\user\UserInterface $original
+ *   Original version of the user entity.
+ *
+ * @return bool
+ *   TRUE if the user entity changed.
+ */
+function reliefweb_user_history_check_changes(UserInterface $user, UserInterface $original) {
+  if ($original === $user) {
+    return FALSE;
+  }
+
+  if (!empty($user->modification_comment)) {
+    return TRUE;
+  }
+
+  $fields = [
+    'name',
+    'mail',
+    'status',
+    'display_name',
+    'field_email_confirmed',
+    'field_notes',
+  ];
+
+  foreach ($fields as $field) {
+    if (!$user->hasField($field) || !$original->hasField($field)) {
+      continue;
+    }
+    if (!$user->get($field)->equals($original->get($field))) {
+      return TRUE;
+    }
+  }
+
+  // Check changes to the roles.
+  $new_roles = $user->getRoles(TRUE);
+  $old_roles = $original->getRoles(TRUE);
+  if (!empty(array_diff($new_roles, $old_roles)) || !empty(array_diff($old_roles, $new_roles))) {
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+/**
+ * Store the changes to the user account.
+ *
+ * @param \Drupal\user\UserInterface $user
+ *   Current version of the user entity.
+ * @param \Drupal\user\UserInterface|null $original
+ *   Original version of the user entity.
+ */
+function reliefweb_user_history_record_changes(UserInterface $user, ?UserInterface $original) {
+  if (!isset($original)) {
+    return;
+  }
+
+  // Use the changed time of the current version of the user as timestamp
+  // of the change record.
+  $fields = reliefweb_user_history_user_entity_to_record($user, $original);
+
+  \Drupal::database()
+    ->insert('reliefweb_user_history')
+    ->fields($fields)
+    ->execute();
+}
+
+/**
+ * Generate the user history data for the given user entity.
+ *
+ * @param \Drupal\user\UserInterface $user
+ *   Current version of the user entity.
+ * @param \Drupal\user\UserInterface $original
+ *   Original version of the user entity.
+ * @param \Drupal\user\UserInterface|null $modification_user
+ *   User who made the change to the account. If not set, default to the
+ *   current user.
+ *
+ * @return array
+ *   Associative array of data insertable into the reliefweb_user_history table.
+ */
+function reliefweb_user_history_user_entity_to_record(UserInterface $user, UserInterface $original, ?UserInterface $modification_user = NULL) {
+  if (!isset($modification_user)) {
+    $modification_user = \Drupal::currentUser();
+  }
+  $fields = [
+    'modification_user' => $modification_user->id(),
+    'modification_timestamp' => $user->getChangedTime(),
+    'uid' => $user->id(),
+    'name' => $original->getAccountName(),
+    'mail' => $original->getEmail(),
+    'status' => $original->get('status')->value,
+    'display_name' => (string) $original->getDisplayName(),
+    'roles' => implode(',', $original->getRoles(TRUE)),
+  ];
+
+  if (isset($user->modification_comment)) {
+    $fields['modification_comment'] = $user->modification_comment;
+  }
+  if ($user->hasField('field_email_confirmed')) {
+    $fields['email_confirmed'] = $original->get('field_email_confirmed')->value;
+  }
+  if ($user->hasField('field_notes')) {
+    $fields['notes'] = $original->get('field_notes')->value;
+  }
+
+  return $fields;
+}
+
+/**
+ * Get the history for the given user account.
+ *
+ * @param \Drupal\user\UserInterface $user
+ *   User entity.
+ *
+ * @return array
+ *   Render array of the history.
+ */
+function reliefweb_user_history_get_account_history_content(UserInterface $user) {
+  // Skip if the user doesn't have permission to view the history or its an
+  // entity being created.
+  if (!\Drupal::currentUser()->hasPermission('view entity history') || $user->id() === NULL) {
+    return [];
+  }
+
+  $cache_id = 'reliefweb_user_history:' . $user->id();
+  $cache_tags = $user->getCacheTags();
+  $cache_backend = \Drupal::cache();
+
+  // Try to load the history from the cache.
+  $cache = $cache_backend->get($cache_id);
+  if (!empty($cache->data) && isset($cache->data['history'])) {
+    $data = $cache->data;
+  }
+  else {
+    $fields = [
+      'name' => t('Name'),
+      'mail' => t('Mail'),
+      'status' => t('Status'),
+      'display_name' => t('Display name'),
+      'roles' => t('Roles'),
+      'email_confirmed' => t('Email confirmed'),
+      'notes' => t('Notes'),
+    ];
+
+    // Retrieve the change history for the user.
+    $records = \Drupal::database()
+      ->select('reliefweb_user_history')
+      ->fields('reliefweb_user_history')
+      ->condition('uid', $user->id())
+      ->orderBy('modification_id', 'ASC')
+      ->execute()
+      ?->fetchAll(\PDO::FETCH_ASSOC) ?? [];
+
+    // Add the current version to the list of records.
+    $records[] = reliefweb_user_history_user_entity_to_record($user, $user, $user);
+
+    // Get the user storage to be able to load the users that made the changes.
+    $user_storage = \Drupal::entityTypeManager()->getStorage('user');
+
+    // Compute the history.
+    $previous_record = NULL;
+    $history = [];
+    foreach ($records as $record) {
+      $differences = [];
+      foreach ($fields as $field => $label) {
+        $old_value = $previous_record[$field] ?? NULL;
+        $new_value = $record[$field] ?? NULL;
+
+        // Skip if there are no changes for the field between the records.
+        if ($new_value === $old_value) {
+          continue;
+        }
+
+        $markup = NULL;
+        switch ($field) {
+          case 'status':
+            $markup = [
+              '#theme' => 'reliefweb_revisions_diff_list',
+              '#removed' => isset($old_value) ? [$old_value == 1 ? t('Active') : t('Blocked')] : [],
+              '#added' => isset($new_value) ? [$new_value == 1 ? t('Active') : t('Blocked')] : [],
+            ];
+            break;
+
+          case 'email_confirmed':
+            $markup = [
+              '#theme' => 'reliefweb_revisions_diff_boolean',
+            ];
+            if (isset($old_value)) {
+              $markup['#removed'] = $old_value;
+            }
+            if (isset($new_value)) {
+              $markup['#added'] = $new_value;
+            }
+            break;
+
+          case 'roles':
+            if (!empty($old_value) || !empty($new_value)) {
+              $old_roles = reliefweb_user_history_get_user_role_labels($old_value);
+              $new_roles = reliefweb_user_history_get_user_role_labels($new_value);
+
+              $markup = [
+                '#theme' => 'reliefweb_revisions_diff_list',
+                '#removed' => array_diff($old_roles, $new_roles),
+                '#added' => array_diff($new_roles, $old_roles),
+              ];
+            }
+            break;
+
+          case 'notes':
+            if (!empty($old_value) || !empty($new_value)) {
+              // Get the differences between the 2 texts.
+              $diff_text = TextHelper::getTextDiff($old_value ?? '', $new_value ?? '');
+
+              $markup = empty($diff_text) ? NULL : [
+                '#theme' => 'reliefweb_revisions_diff_text',
+                '#text' => Markup::create($diff_text),
+              ];
+            }
+            break;
+
+          default:
+            $markup = [
+              '#theme' => 'reliefweb_revisions_diff_list',
+              '#removed' => isset($old_value) ? [$old_value] : [],
+              '#added' => isset($new_value) ? [$new_value] : [],
+            ];
+        }
+
+        if (!empty($markup)) {
+          $differences[$field] = [
+            'label' => $label,
+            'value' => $markup,
+          ];
+        }
+      }
+
+      if (!empty($differences) || !empty($previous_record['modification_comment'])) {
+        // The history entry shows the changes between the current record
+        // and the previous one. But the modification information (who did it,
+        // when etc.) is stored in the previous record, so that's we use for
+        // the history entry.
+        if ($previous_record) {
+          $modification_user = $user_storage->load($previous_record['modification_user']);
+          $modification_timestamp = $previous_record['modification_timestamp'];
+          $modification_comment = trim($previous_record['modification_comment'] ?? '');
+          $modification_comment_type = 'feedback';
+        }
+        // This corresponds to the creation of the account. We consider the user
+        // created the record, which is mostly true now that logins are done
+        // through HID.
+        else {
+          $modification_user = $user;
+          $modification_timestamp = $user->getCreatedTime();
+          $modification_comment = t('Account creation');
+          $modification_comment_type = 'instruction';
+        }
+
+        $history[] = [
+          'date' => DateHelper::getDateTimeStamp($modification_timestamp),
+          'user' => $modification_user,
+          'status' => NULL,
+          'message' => [
+            'type' => $modification_comment_type,
+            'content' => !empty($modification_comment) ? EntityHelper::formatRevisionLogMessage($modification_comment) : '',
+          ],
+          'content' => $differences,
+        ];
+      }
+
+      $previous_record = $record;
+    }
+
+    $data = [
+      'history' => array_reverse($history),
+    ];
+
+    $cache_backend->set($cache_id, $data, $cache_backend::CACHE_PERMANENT, $cache_tags);
+  }
+
+  return [
+    '#theme' => 'reliefweb_revisions_history_content',
+    // Show the most recent history first.
+    '#history' => $data['history'] ?? [],
+    // Number of ignored revisions.
+    '#ignored' => $data['ignored'] ?? 0,
+    '#cache' => [
+      'contexts' => ['user.permissions'],
+      'tags' => $cache_tags,
+    ],
+  ];
+}
+
+/**
+ * Get a list of role labels from a comma separated list of role IDs.
+ *
+ * @param string|null $roles
+ *   Comma separated list of role IDs.
+ *
+ * @return array
+ *   List of role labels.
+ */
+function reliefweb_user_history_get_user_role_labels($roles) {
+  static $role_names;
+  if (!isset($role_names)) {
+    $role_names = user_role_names();
+  }
+  $labels = [];
+  if (!empty($roles)) {
+    foreach (explode(',', $roles) as $role) {
+      if (isset($role_names[$role])) {
+        $labels[$role] = $role_names[$role];
+      }
+    }
+  }
+  return $labels;
+}
+
+/**
+ * Implements hook_form_user_form_alter().
+ */
+function reliefweb_user_history_form_user_form_alter(array &$form, FormStateInterface $form_state) {
+  $user = $form_state->getFormObject()?->getEntity();
+  if (isset($user) && $user->id() !== NULL && $user instanceof EntityRevisionedInterface && \Drupal::currentUser()->hasPermission('view entity history')) {
+    $form['revision_information']['#type'] = 'fieldset';
+    $form['revision_information']['#title'] = t('Revisions');
+
+    $form['modification_comment']['#type'] = 'textarea';
+    $form['modification_comment']['#title'] = t('New comment');
+    $form['modification_comment']['#description'] = t('Briefly describe the changes you have made.');
+    $form['modification_comment']['#group'] = 'revision_information';
+    $form['modification_comment']['#default_value'] = NULL;
+
+    if (isset($form['actions']['submit']['#submit'])) {
+      array_unshift($form['actions']['submit']['#submit'], 'reliefweb_user_history_set_modification_comment');
+    }
+    elseif (!empty($form['#submit'])) {
+      array_unshift($form['#submit'], 'reliefweb_user_history_set_modification_comment');
+    }
+    else {
+      $form['#submit'][] = 'reliefweb_user_history_set_modification_comment';
+    }
+
+    // Get the account history.
+    $history = $user->getHistory();
+    if (!empty($history)) {
+      $form['revision_history'] = [
+        '#type' => 'container',
+        '#group' => 'revision_information',
+        '#weight' => 100,
+        'history' => $history,
+      ];
+    }
+  }
+}
+
+/**
+ * Set the modification comment on the user entity.
+ *
+ * @param array $form
+ *   Form.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   Form state.
+ */
+function reliefweb_user_history_set_modification_comment(array $form, FormStateInterface $form_state) {
+  $modification_comment = $form_state->getValue('modification_comment');
+  if (!empty($modification_comment)) {
+    $entity = $form_state->getFormObject()?->getEntity();
+    if (is_object($entity)) {
+      $entity->modification_comment = $modification_comment;
+    }
+  }
+}
