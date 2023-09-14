@@ -58,7 +58,7 @@
   font-family: Georgia, serif;
   font-size: 20px;
   font-weight: normal;
-  line-height: 20px;
+  line-height: 30px;
 }
 .email-title-date {
   color: #e55;
@@ -81,7 +81,7 @@
 }
 .email-resource-info {
   padding: 8px 0 8px;
-  color: #999;
+  color: #666;
   font-size: 13px;
   font-weight: bold;
 }
