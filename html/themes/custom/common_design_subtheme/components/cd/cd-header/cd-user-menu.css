@@ -36,3 +36,7 @@
   vertical-align: middle;
   fill: var(--cd-white);
 }
+
+.cd-user-menu__dropdown li a:focus {
+  outline: 3px solid var(--cd-reliefweb-brand-blue);
+}

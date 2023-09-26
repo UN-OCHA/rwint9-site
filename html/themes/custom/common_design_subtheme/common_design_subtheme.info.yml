@@ -1,13 +1,9 @@
 name:  OCHA Common Design sub theme
-type: theme
 description: OCHA Common Design sub theme
 core_version_requirement: ^9 || ^10
+type: theme
 base theme: common_design
 logo: 'img/logos/rw-logo-desktop.svg'
-
-# Defines libraries group in which we can add css/js.
-libraries:
-  - common_design_subtheme/global-styling
 
 # Regions
 regions:
@@ -24,13 +20,38 @@ regions:
   footer_soft: Soft footer
   footer_navigation: Footer navigation
 
-# Add implementation-specific styles to base theme components
+###
+# Define the default library for the subtheme. If you want to include other
+# libraries by default, add them as dependencies to global-styling.
+#
+# @see common_design_subtheme.libraries.yml
+#
+libraries:
+  - common_design_subtheme/global-styling
+
+###
+# Extend libraries to add site-specific styles to the base-theme components.
+# Now, wherever the CD Teaser is used, both the base-theme component and your
+# modifications will automatically apply. NOTE: the Drupal library must be
+# defined in the libraries.yml file to be used here.
+#
+# @see common_design_subtheme.libraries.yml
+#
 libraries-extend:
   common_design/cd-block-title:
     - common_design_subtheme/cd-block-title
 
   common_design/cd-button:
     - common_design_subtheme/cd-button
+
+  common_design/cd-footer:
+    - common_design_subtheme/cd-footer
+
+  common_design/cd-form:
+    - common_design_subtheme/cd-form
+
+  common_design/cd-header:
+    - common_design_subtheme/cd-header
 
   common_design/cd-form--preview:
     - common_design_subtheme/rw-preview
@@ -63,14 +84,11 @@ libraries-extend:
   core/drupal.ajax:
     - common_design_subtheme/cd-ajax-disable-submit-buttons
 
-# CKEditor additional styling.
-ckeditor5-stylesheets:
-  - css/ckeditor.css
-
+###
+# Override libraries to replace specific base-theme components. Now, when the
+# base-theme component would have been used, instead ONLY yours will apply.
+#
 libraries-override:
-  common_design/cd-dropdown:
-    js:
-      js/cd-dropdown.js: js/cd-dropdown.js
   common_design/array-from-polyfill:
     js:
       js/vendor/array-from-polyfill.js: false
@@ -84,3 +102,16 @@ libraries-override:
     css:
       component:
         components/preview/guidelines.preview.css: components/rw-guidelines/rw-guidelines--preview.css
+
+###
+# Custom namespace - requires Components module
+#
+# @see https://www.drupal.org/project/components
+# @see https://www.drupal.org/docs/contributed-modules/components/understanding-twig-namespaces
+#
+# components:
+#   namespaces:
+
+# CKEditor additional styling.
+ckeditor5-stylesheets:
+  - css/ckeditor.css

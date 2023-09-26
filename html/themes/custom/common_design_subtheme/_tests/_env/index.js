@@ -4,7 +4,7 @@
 //
 const environments = {
   'local': {
-    baseUrl: 'https://rwint9-site.test/',
+    baseUrl: 'https://commondesign.test',
     testTimeout: 10000,
   },
   'travis': {
@@ -12,7 +12,7 @@ const environments = {
     testTimeout: 120000,
   },
   'production': {
-    baseUrl: 'https://reliefweb.int/',
+    baseUrl: 'https://web.brand.unocha.org',
     testTimeout: 10000,
   },
 };
