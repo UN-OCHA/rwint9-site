@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "706c99bd199323e0e46bd92e36ec0f88",
+    "content-hash": "bdd2e1c64d529973215b097593eb8128",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -14564,32 +14564,33 @@
         },
         {
             "name": "unocha/common_design",
-            "version": "v7.4.1",
+            "version": "v9.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/common_design.git",
-                "reference": "b803f6b303bfcc2a46b5d2d531189832679d820a"
+                "reference": "b58e4f2ec8508942b5e08acaeccfe58e928a8042"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/common_design/zipball/b803f6b303bfcc2a46b5d2d531189832679d820a",
-                "reference": "b803f6b303bfcc2a46b5d2d531189832679d820a",
+                "url": "https://api.github.com/repos/UN-OCHA/common_design/zipball/b58e4f2ec8508942b5e08acaeccfe58e928a8042",
+                "reference": "b58e4f2ec8508942b5e08acaeccfe58e928a8042",
                 "shasum": ""
             },
             "require": {
-                "composer/installers": "^1.2"
+                "composer/installers": "^1.2",
+                "drupal/stable": "^2.0"
             },
             "type": "drupal-theme",
             "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "GPL-2.0-only"
             ],
-            "description": "OCHA Common Design base theme for Drupal 8",
+            "description": "OCHA Common Design base theme for Drupal 9+",
             "support": {
                 "issues": "https://github.com/UN-OCHA/common_design/issues",
-                "source": "https://github.com/UN-OCHA/common_design/tree/v7.4.1"
+                "source": "https://github.com/UN-OCHA/common_design/tree/v9.1.0"
             },
-            "time": "2023-01-10T14:13:58+00:00"
+            "time": "2023-09-13T11:46:43+00:00"
         },
         {
             "name": "webflo/drupal-finder",
@@ -15508,5 +15509,5 @@
         "php": ">=8.2"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.6.0"
 }
