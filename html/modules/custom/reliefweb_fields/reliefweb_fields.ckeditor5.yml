@@ -1,0 +1,9 @@
+reliefweb_fields_reliefwebFormattedText:
+  ckeditor5:
+    plugins: []
+  drupal:
+    label: ReliefWeb Formatted Text
+    library: reliefweb_fields/ckeditor5.reliefweb_formatted_text
+    elements: false
+    conditions:
+       filter: reliefweb_formatted_text

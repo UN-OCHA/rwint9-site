@@ -103,6 +103,13 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   protected $filterDefinitions;
 
   /**
+   * Intialized filter definitions.
+   *
+   * @var array
+   */
+  protected $definitions;
+
+  /**
    * Constructor.
    *
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
@@ -605,20 +612,22 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
       if (!empty($filter_definition['values'])) {
         $values = $filter_definition['values'];
 
-        foreach (explode('&', $query) as $index => $term) {
-          $starting = FALSE;
-          if (strpos($term, '!') === 0) {
-            $term = substr($term, 1);
-            $starting = TRUE;
-          }
-          foreach ($values as $key => $value) {
-            $pos = stripos($value, $term);
-            if ($pos !== FALSE && (!$starting || $pos === 0)) {
-              // Compatibility with the DB query results.
-              $record = new \stdClass();
-              $record->value = $key;
-              $record->label = $value;
-              $records[] = $record;
+        if (!empty($query)) {
+          foreach (explode('&', $query) as $index => $term) {
+            $starting = FALSE;
+            if (strpos($term, '!') === 0) {
+              $term = substr($term, 1);
+              $starting = TRUE;
+            }
+            foreach ($values as $key => $value) {
+              $pos = stripos($value, $term);
+              if ($pos !== FALSE && (!$starting || $pos === 0)) {
+                // Compatibility with the DB query results.
+                $record = new \stdClass();
+                $record->value = $key;
+                $record->label = $value;
+                $records[] = $record;
+              }
             }
           }
         }
@@ -628,21 +637,23 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
         $conditions = [];
         $replacements = [];
         // Build the search conditions.
-        foreach (explode('&', $query) as $index => $term) {
-          $term_prefix = '%';
-          // If the query starts with a "!" then it means a prefix search.
-          if (strpos($term, '!') === 0) {
-            $term = substr($term, 1);
-            $term_prefix = '';
+        if (!empty($query)) {
+          foreach (explode('&', $query) as $index => $term) {
+            $term_prefix = '%';
+            // If the query starts with a "!" then it means a prefix search.
+            if (strpos($term, '!') === 0) {
+              $term = substr($term, 1);
+              $term_prefix = '';
+            }
+            $terms[] = $term;
+            // We don't use a \Drupal\Core\Database\Query\Condition because
+            // we need to replace the `@field` later on.
+            $conditions[] = '@field LIKE :term' . $index;
+            $replacements[':term' . $index] = $term_prefix . $this->getDatabase()->escapeLike($term) . '%';
           }
-          $terms[] = $term;
-          // We don't use a \Drupal\Core\Database\Query\Condition because
-          // we need to replace the `@field` later on.
-          $conditions[] = '@field LIKE :term' . $index;
-          $replacements[':term' . $index] = $term_prefix . $this->getDatabase()->escapeLike($term) . '%';
         }
         // Call the filter's autocomplete callback.
-        if (!empty($conditions)) {
+        if (count($conditions) > 0) {
           $conditions = '(' . implode(' AND ', $conditions) . ')';
           $records = $this->{$method}($filter, $query, $conditions, $replacements);
         }
@@ -1660,7 +1671,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
           $base->condition($condition);
         }
         else {
-          $base->condition(reset($field), $value, $operator);
+          $base->condition(reset($fields), $value, $operator);
         }
       }
       else {
@@ -1702,18 +1713,18 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
       if (count($fields) > 1) {
         $condition = new Condition('OR');
         foreach ($fields as $field) {
-          $condition->where("UNIX_TIMESTAMP(${field}) ${operator} ${value}");
+          $condition->where("UNIX_TIMESTAMP({$field}) {$operator} {$value}");
         }
         $base->condition($condition);
       }
       else {
-        $field = reset($field);
-        $base->where("UNIX_TIMESTAMP(${field}) ${operator} ${value}");
+        $field = reset($fields);
+        $base->where("UNIX_TIMESTAMP({$field}) {$operator} {$value}");
       }
     }
     else {
       $field = $fields;
-      $base->where("UNIX_TIMESTAMP(${field}) ${operator} ${value}");
+      $base->where("UNIX_TIMESTAMP({$field}) {$operator} {$value}");
     }
   }
 
@@ -1764,7 +1775,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
       $field = $alias . '.' . $this->getFieldColumnName($entity_type_id, $field_name, $definition['column']);
     }
 
-    return $field;
+    return $field ?? '';
   }
 
   /**
@@ -2380,7 +2391,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
    * @param \Drupal\Core\Field\FieldItemInterface|null $item
    *   Entiry referenc field item.
    *
-   * @return \Drupal\Core\GeneratedLink
+   * @return \Drupal\Core\GeneratedLink|null
    *   Link.
    */
   protected function getTaxonomyTermLink(?FieldItemInterface $item) {
@@ -2527,6 +2538,10 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
 
       default:
         return NULL;
+    }
+
+    if (empty($author_id) || empty($author_title)) {
+      return NULL;
     }
 
     $author_parameter = 'selection[author][]';

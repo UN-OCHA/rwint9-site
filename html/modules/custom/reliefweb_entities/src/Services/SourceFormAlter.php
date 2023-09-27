@@ -127,7 +127,7 @@ class SourceFormAlter extends EntityFormAlterServiceBase {
       // appears at the top because it can be due to the name, longname or
       // homepage.
       $message = $this->t('Source(s) with the same name or homepage already exist: @links', [
-        '@links' => Markup::create(implode(', ', $links), []),
+        '@links' => Markup::create(implode(', ', $links)),
       ]);
       $form_state->setErrorByName('', Markup::create($message));
     }

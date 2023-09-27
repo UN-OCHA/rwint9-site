@@ -684,6 +684,7 @@ function reliefweb_entities_cron() {
     ->condition('moderation_status', 'embargoed', '=')
     ->condition('field_embargo_date.value', gmdate("Y-m-d\TH:i:s"), '<')
     ->range(0, $cron_settings['embargoed_reports_limit'] ?? 20)
+    ->accessCheck(FALSE)
     ->execute();
 
   if (!empty($embargoed_ids)) {
@@ -714,6 +715,7 @@ function reliefweb_entities_cron() {
     ->condition('moderation_status', 'published', '=')
     ->condition('field_job_closing_date.value', $date, '<')
     ->range(0, $cron_settings['expired_jobs_limit'] ?? 20)
+    ->accessCheck(FALSE)
     ->execute();
 
   $expired_ids += $storage
@@ -722,6 +724,7 @@ function reliefweb_entities_cron() {
     ->condition('moderation_status', 'published', '=')
     ->condition('field_registration_deadline.value', $date, '<')
     ->range(0, $cron_settings['expired_training_limit'] ?? 20)
+    ->accessCheck(FALSE)
     ->execute();
 
   if (!empty($expired_ids)) {
@@ -759,7 +762,7 @@ function reliefweb_entities_menu_local_tasks_alter(&$data, $route_name, Refinabl
  */
 function reliefweb_entities_preprocess_page__404(array &$variables) {
   // Get the entity from the original request.
-  $entity = EntityHelper::getEntityFromRequest(\Drupal::requestStack()->getMasterRequest());
+  $entity = EntityHelper::getEntityFromRequest(\Drupal::requestStack()->getMainRequest());
   if (isset($entity) && $entity instanceof BundleEntityInterface) {
     $type = mb_strtolower(EntityHelper::getBundleLabelFromEntity($entity));
     $title = $entity->label();

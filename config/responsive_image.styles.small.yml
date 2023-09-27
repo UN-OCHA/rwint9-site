@@ -1,0 +1,18 @@
+uuid: f3c4de78-bed4-4964-bc12-374fb64fa7c2
+langcode: en
+status: true
+dependencies:
+  config:
+    - image.style.small
+  theme:
+    - common_design_subtheme
+id: small
+label: Small
+image_style_mappings:
+  -
+    image_mapping_type: image_style
+    image_mapping: small
+    breakpoint_id: common_design.small
+    multiplier: 1x
+breakpoint_group: common_design_subtheme
+fallback_image_style: small

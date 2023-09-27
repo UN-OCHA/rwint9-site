@@ -405,7 +405,7 @@ class TrainingRiver extends RiverServiceBase {
         $data['url'] = UrlHelper::stripDangerousProtocols($fields['url_alias']);
       }
       else {
-        $data['url'] = UrlHelper::getAliasFromPath('/node/' . $item['id'], FALSE);
+        $data['url'] = UrlHelper::getAliasFromPath('/node/' . $item['id']);
       }
 
       if (isset($fields['date']['created'])) {

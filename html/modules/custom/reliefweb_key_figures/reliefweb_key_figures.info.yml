@@ -2,4 +2,4 @@ type: module
 name: ReliefWeb Key Figures
 description: 'Provides integration with the ReliefWeb Key Figures.'
 package: reliefweb
-core_version_requirement: ^9
+core_version_requirement: ^9 || ^10

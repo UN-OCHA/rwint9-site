@@ -1,5 +1,5 @@
 # Build the code.
-FROM public.ecr.aws/unocha/php-k8s:8.0-stable as builder
+FROM public.ecr.aws/unocha/php-k8s:8.2-stable as builder
 
 ARG  BRANCH_ENVIRONMENT
 
@@ -11,8 +11,7 @@ COPY . /srv/www
 WORKDIR /srv/www
 
 # Clean up previous composer installation and run new one.
-RUN rm -rf ./vendor && \
-    composer install --no-interaction
+RUN rm -rf ./vendor && composer install --no-interaction --no-dev
 
 # Copy settings to default site location.
 RUN cp -a docker/settings.php docker/services.yml docker/memcache.services.yml html/sites/default
@@ -20,7 +19,7 @@ RUN cp -a docker/settings.php docker/services.yml docker/memcache.services.yml h
 ################################################################################
 
 # Generate the image.
-FROM public.ecr.aws/unocha/php-k8s:8.0-stable
+FROM public.ecr.aws/unocha/php-k8s:8.2-stable
 
 ARG VCS_REF
 ARG VCS_URL
@@ -54,15 +53,14 @@ RUN mkdir -p /etc/nginx/custom && \
 
 COPY --from=builder /srv/www/assets /srv/www/assets/
 COPY --from=builder /srv/www/config /srv/www/config/
+COPY --from=builder /srv/www/config_dev /srv/www/config_dev
 COPY --from=builder /srv/www/html /srv/www/html/
 COPY --from=builder /srv/www/vendor /srv/www/vendor/
 COPY --from=builder /srv/www/composer.json /srv/www/composer.json
 COPY --from=builder /srv/www/composer.patches.json /srv/www/composer.patches.json
 COPY --from=builder /srv/www/composer.lock /srv/www/composer.lock
-COPY --from=builder /srv/www/symfony.lock /srv/www/symfony.lock
 COPY --from=builder /srv/www/PATCHES /srv/www/PATCHES
 COPY --from=builder /srv/www/scripts /srv/www/scripts
-COPY --from=builder /srv/www/docker/etc/nginx/apps/drupal/fastcgi_drupal.conf /etc/nginx/apps/drupal/fastcgi_drupal.conf
 COPY --from=builder /srv/www/docker/etc/nginx/apps/drupal/drupal.conf /etc/nginx/apps/drupal/drupal.conf
 COPY --from=builder /srv/www/docker/etc/nginx/custom /etc/nginx/custom/
 COPY --from=builder /srv/www/docker/etc/nginx/sites-enabled/01_uuid.conf /etc/nginx/sites-enabled/01_uuid.conf

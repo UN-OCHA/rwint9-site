@@ -1310,13 +1310,14 @@ class ReliefWebFile extends WidgetBase {
    * @param \Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile $item
    *   The current field type item.
    *
-   * @return \Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile
+   * @return \Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile|null
    *   The original file type item.
    */
   protected function getOriginalFileItem(ReliefWebFileType $item) {
     if (isset($item->_original_item)) {
       return $this->createFieldItem($item->_original_item);
     }
+    return NULL;
   }
 
   /**

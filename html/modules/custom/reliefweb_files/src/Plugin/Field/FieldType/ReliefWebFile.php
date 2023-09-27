@@ -210,7 +210,7 @@ class ReliefWebFile extends FieldItemBase {
     $element['#value'] = trim($element['#value']);
     $form_state->setValue(['settings', 'max_filesize'], $element['#value']);
     if (!empty($element['#value']) && !Bytes::validate($element['#value'])) {
-      $form_state->setError($element, $this->t('The "@name" option must contain a valid value. You may either leave the text field empty or enter a string like "512" (bytes), "80 KB" (kilobytes) or "50 MB" (megabytes).', [
+      $form_state->setError($element, t('The "@name" option must contain a valid value. You may either leave the text field empty or enter a string like "512" (bytes), "80 KB" (kilobytes) or "50 MB" (megabytes).', [
         '@name' => $element['#title'],
       ]));
     }
@@ -234,7 +234,7 @@ class ReliefWebFile extends FieldItemBase {
     $element['#value'] = trim($element['#value']);
     $form_state->setValue(['settings', 'preview_max_filesize'], $element['#value']);
     if (!empty($element['#value']) && !Bytes::validate($element['#value'])) {
-      $form_state->setError($element, $this->t('The "@name" option must contain a valid value. You may either leave the text field empty or enter a string like "512" (bytes), "80 KB" (kilobytes) or "50 MB" (megabytes).', [
+      $form_state->setError($element, t('The "@name" option must contain a valid value. You may either leave the text field empty or enter a string like "512" (bytes), "80 KB" (kilobytes) or "50 MB" (megabytes).', [
         '@name' => $element['#title'],
       ]));
     }
@@ -257,7 +257,7 @@ class ReliefWebFile extends FieldItemBase {
     $element['#value'] = trim($element['#value']);
     $form_state->setValue(['settings', 'preview_min_dimensions'], $element['#value']);
     if (isset($element['#value']) && preg_match('/^(\d+x\d*)?$/', $element['#value']) !== 1) {
-      $form_state->setError($element, $this->t('The "@name" option must contain a valid value. You may either leave the text field empty or enter a value in the form WIDHTxHEIGHT (ex: 700x100).', [
+      $form_state->setError($element, t('The "@name" option must contain a valid value. You may either leave the text field empty or enter a value in the form WIDHTxHEIGHT (ex: 700x100).', [
         '@name' => $element['#title'],
       ]));
     }
@@ -670,13 +670,13 @@ class ReliefWebFile extends FieldItemBase {
     }
 
     return [
-      '#theme' => 'image_style__preview',
-      '#style_name' => $style,
+      '#theme' => 'responsive_image__preview',
+      '#responsive_image_style_id' => $style,
       '#uri' => $uri,
-      '#alt' => $this->t('Preview of @file_name', [
-        '@file_name' => $this->getFileName(),
-      ]),
       '#attributes' => [
+        'alt' => $this->t('Preview of @file_name', [
+          '@file_name' => $this->getFileName(),
+        ]),
         'class' => ['rw-file-preview'],
         'data-version' => implode('-', [
           // Once the file is saved it will have a revision ID, until then to

@@ -23,7 +23,7 @@ class IFrameFilterTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $configuration['settings'] = [];

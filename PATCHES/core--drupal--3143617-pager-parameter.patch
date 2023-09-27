@@ -1,0 +1,121 @@
+diff --git a/core/lib/Drupal/Core/Pager/PagerParameters.php b/core/lib/Drupal/Core/Pager/PagerParameters.php
+index 9a70c74d1a..51262d1bf8 100644
+--- a/core/lib/Drupal/Core/Pager/PagerParameters.php
++++ b/core/lib/Drupal/Core/Pager/PagerParameters.php
+@@ -55,7 +55,7 @@ public function findPage($pager_id = 0) {
+    */
+   public function getPagerQuery() {
+     $query = $this->getPagerParameter();
+-    return !empty($query) ? explode(',', $query) : [];
++    return isset($query) ? array_map('intval', explode(',', $query)) : [];
+   }
+ 
+   /**
+@@ -64,7 +64,11 @@ public function getPagerQuery() {
+   public function getPagerParameter() {
+     $request = $this->requestStack->getCurrentRequest();
+     if ($request) {
+-      return $request->query->get('page', '');
++      $page = $request->query->get('page');
++      // The "page" here could easily be an array for a request like
++      // "https://example.com/path/to/something?page[offset]=12" so make sure
++      // validate the type before casting.
++      return is_scalar($page) ? (string) $page : '';
+     }
+     return '';
+   }
+diff --git a/core/tests/Drupal/Tests/Core/Pager/PagerParametersTest.php b/core/tests/Drupal/Tests/Core/Pager/PagerParametersTest.php
+new file mode 100644
+index 0000000000..4d0c69eb51
+--- /dev/null
++++ b/core/tests/Drupal/Tests/Core/Pager/PagerParametersTest.php
+@@ -0,0 +1,89 @@
++<?php
++
++namespace Drupal\Tests\Core\Pager;
++
++use Drupal\Core\Pager\PagerParameters;
++use Drupal\Tests\UnitTestCase;
++use Symfony\Component\HttpFoundation\Request;
++use Symfony\Component\HttpFoundation\RequestStack;
++
++/**
++ * @coversDefaultClass \Drupal\Core\Pager\PagerParameters
++ * @group Pager
++ */
++class PagerParametersTest extends UnitTestCase {
++
++  /**
++   * @covers ::findPage
++   * @dataProvider providePagerQueries
++   */
++  public function testFindPage($raw_query, $parameter, $query) {
++    $request_stack = new RequestStack();
++    $request_stack->push(new Request());
++    $parameters = new PagerParameters($request_stack);
++    $request_stack->getCurrentRequest()->query->set('page', $raw_query);
++    foreach ($query as $key => $value) {
++      $this->assertSame($value, $parameters->findPage($key));
++    }
++  }
++
++  /**
++   * @covers ::getPagerQuery
++   * @dataProvider providePagerQueries
++   */
++  public function testGetPagerQuery($raw_query, $parameter, $query) {
++    $request_stack = new RequestStack();
++    $request_stack->push(new Request());
++    $parameters = new PagerParameters($request_stack);
++    $request_stack->getCurrentRequest()->query->set('page', $raw_query);
++    $this->assertEquals($query, $parameters->getPagerQuery());
++  }
++
++  /**
++   * Ensure missing request is handled cleanly.
++   *
++   * @covers ::getPagerParameter
++   * @dataProvider providePagerQueries
++   */
++  public function testGetPagerParameterNoRequest($raw_query, $parameter) {
++    $request_stack = new RequestStack();
++    $parameters = new PagerParameters($request_stack);
++    $this->assertSame('', $parameters->getPagerParameter());
++  }
++
++  /**
++   * @covers ::getPagerParameter
++   * @dataProvider providePagerQueries
++   */
++  public function testGetPagerParameter($raw_query, $parameter) {
++    $request_stack = new RequestStack();
++    $request_stack->push(new Request());
++    $parameters = new PagerParameters($request_stack);
++    $request_stack->getCurrentRequest()->query->set('page', $raw_query);
++    $this->assertSame($parameter, $parameters->getPagerParameter());
++  }
++
++  public function providePagerQueries() {
++    return [
++      [NULL, '', [0]],
++      // Array values aren't supported so they default to empty.
++      [[], '', [0]],
++      [[1,2,3], '', [0]],
++      ['', '', [0]],
++      ['0', '0', [0]],
++      ['1', '1', [1]],
++      [0, '0', [0]],
++      [
++        '1,2,3,4',
++        '1,2,3,4',
++        [1, 2, 3, 4],
++      ],
++      [
++        '4,3,2,1',
++        '4,3,2,1',
++        [4, 3, 2, 1],
++      ],
++    ];
++  }
++
++}
