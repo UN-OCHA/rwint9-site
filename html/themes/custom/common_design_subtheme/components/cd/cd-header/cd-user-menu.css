@@ -2,6 +2,12 @@
   outline: 3px solid var(--cd-reliefweb-brand-blue);
 }
 
+.cd-user-menu__item:focus,
+.cd-user-menu a:focus,
+.cd-user-menu button:focus {
+  color: white;
+}
+
 .cd-global-header__user-menu + .cd-global-header__user-menu li:last-child a {
   padding-right: 0;
 }
@@ -38,5 +44,6 @@
 }
 
 .cd-user-menu__dropdown li a:focus {
+  color: white;
   outline: 3px solid var(--cd-reliefweb-brand-blue);
 }
