@@ -71,7 +71,7 @@
         "reliefweb/simple-autocomplete": "^v1.3",
         "reliefweb/simple-datepicker": "^v1.3",
         "symfony/uid": "^6.2",
-        "unocha/common_design": "^7.4",
+        "unocha/common_design": "^9.2",
         "webflo/drupal-finder": "^1.2.2"
     },
     "require-dev": {

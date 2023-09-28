@@ -1,5 +1,7 @@
-.cd-header button:focus {
+.cd-header button:focus,
+.cd-header a:focus {
   outline: 3px solid var(--cd-reliefweb-brand-blue);
+  outline-offset: -2px;
 }
 
 /* This can be removed once it is added to the base theme, see CD-397. */
