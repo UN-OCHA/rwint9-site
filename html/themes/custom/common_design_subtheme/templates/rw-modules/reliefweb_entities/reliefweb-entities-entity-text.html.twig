@@ -6,6 +6,7 @@
 
 {{ attach_library('common_design/cd-block-title') }}
 {{ attach_library('common_design_subtheme/rw-entity-text') }}
+{{ attach_library('common_design/cd-disclosure') }}
 
 {% set content_id = (id ~ '-content')|clean_id %}
 {% set content_attributes = content_attributes
@@ -34,41 +35,61 @@
         }
       }
       if (count > 3) {
-        content.setAttribute('data-cd-toggable', '{% trans %}Show full {{ content_title }}{% endtrans %}');
-        content.setAttribute('data-cd-toggable-expanded', '{% trans %}Hide full {{ content_title }}{% endtrans %}');
-        content.setAttribute('data-cd-toggable-keep', '');
-        content.setAttribute('data-cd-insert-after', '');
-        content.setAttribute('data-cd-icon', 'arrow-down');
-        content.setAttribute('data-cd-component', 'rw-entity-text');
-        content.setAttribute('data-cd-replace', '{{ content_id }}-dummy');
-      }
+        content.classList.add('cd-disclosure');
+        content.setAttribute('data-cd-disclosure', '');
+        content.setAttribute('data-cd-disclosure-label', '{% trans %}Show full {{ content_title }}{% endtrans %}');
+        content.setAttribute('data-cd-disclosure-insert', 'after');
+        content.setAttribute('data-cd-disclosure-classnames', 'cd-disclosure-toggler');
 
-      // Scroll to the title of the section containing the text content when
-      // expanding it so that users can read the full description and use the
-      // keyboard navigation to go through the content. When hiding the text,
-      // scroll to the toggler to avoid jumping lower on the page.
-      if ('MutationObserver' in window) {
-        var observer = new MutationObserver(function (mutations) {
-          for (var mutation of mutations) {
-            if (mutation.type === 'attributes' && mutation.attributeName === 'data-cd-hidden') {
-              if (mutation.target.getAttribute('data-cd-hidden') === 'false') {
-                if (title) {
-                  title.setAttribute('tabindex', 0);
-                  title.focus();
-                  title.scrollIntoView();
-                  title.removeAttribute('tabindex');
+        // Scroll to the title of the section containing the text content when
+        // expanding it so that users can read the full description and use the
+        // keyboard navigation to go through the content. When hiding the text,
+        // scroll to the toggler to avoid jumping lower on the page.
+        if ('MutationObserver' in window) {
+          var observer = new MutationObserver(function (mutations) {
+            for (var mutation of mutations) {
+              if (mutation.type === 'attributes') {
+                // This happens the first time the disclosure element is
+                // processed by the cd-disclosure.js script. The script creates
+                // the toggler button which we can now observe to detect user
+                // interaction.
+                if (mutation.attributeName === 'data-cd-processed') {
+                  observer.disconnect();
+
+                  // Repurpose the observer to observe changes to the toggler.
+                  var toggler = document.querySelector('[aria-controls="{{ content_id }}"]');
+                  console.log(toggler);
+                  if (toggler) {
+                    observer.observe(toggler, {attributes: true, attributeOldValue: true});
+                  }
+
+                  return;
                 }
-              }
-              else if (mutation.oldValue === 'false') {
-                var toggler = document.getElementById('{{ content_id }}-toggler');
-                if (toggler) {
-                  toggler.scrollIntoView();
+                // This happens when interacting with the button.
+                else if (mutation.attributeName === 'aria-expanded') {
+                  if (mutation.oldValue === 'false') {
+                    mutation.target.innerText = '{% trans %}Hide full {{ content_title }}{% endtrans %}';
+                    // Focus the title of the section, so people can read from
+                    // the top of the text now that it is revealed.
+                    if (title) {
+                      title.setAttribute('tabindex', 0);
+                      title.focus();
+                      title.scrollIntoView();
+                      title.removeAttribute('tabindex');
+                    }
+                  }
+                  else {
+                    mutation.target.innerText = '{% trans %}Show full {{ content_title }}{% endtrans %}';
+                    // Focus the button to avoid jumper lower on the page where
+                    // the toggler previously was.
+                    mutation.target.scrollIntoView();
+                  }
                 }
               }
             }
-          }
-        });
-        observer.observe(content, {attributes: true, attributeOldValue: true});
+          });
+          observer.observe(content, {attributes: true, attributeOldValue: true});
+        }
       }
     })();
   </script>
