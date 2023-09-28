@@ -86,7 +86,7 @@
   vertical-align: top;
 }
 /* Arrow icons for the previous/next year/month. */
-.rw-datepicker-container button.rw-datepicker-control:before {
+.rw-datepicker-container button.rw-datepicker-control::before {
   position: absolute;
   top: 50%;
   right: 50%;
@@ -98,13 +98,13 @@
   content: "";
   background: var(--rw-icons--common--arrow-right--12--dark-blue);
 }
-.rw-datepicker-container button.rw-datepicker-control.rw-datepicker-title-previous.rw-datepicker-title-month:before {
+.rw-datepicker-container button.rw-datepicker-control.rw-datepicker-title-previous.rw-datepicker-title-month::before {
   background: var(--rw-icons--common--arrow-left--12--dark-blue);
 }
-.rw-datepicker-container button.rw-datepicker-control.rw-datepicker-title-next.rw-datepicker-title-year:before {
+.rw-datepicker-container button.rw-datepicker-control.rw-datepicker-title-next.rw-datepicker-title-year::before {
   background: var(--rw-icons--common--double-arrow-right--12--dark-blue);
 }
-.rw-datepicker-container button.rw-datepicker-control.rw-datepicker-title-previous.rw-datepicker-title-year:before {
+.rw-datepicker-container button.rw-datepicker-control.rw-datepicker-title-previous.rw-datepicker-title-year::before {
   background: var(--rw-icons--common--double-arrow-left--12--dark-blue);
 }
 /* Selected month and year. */

@@ -50,10 +50,10 @@ class UnsubscribeController extends ControllerBase {
   /**
    * Unsubscribe a user.
    */
-  public function unsubscribe(AccountInterface $user) {
+  public function unsubscribe(AccountInterface $user, $timestamp = NULL, $signature = NULL) {
     if ($this->account->isAnonymous()) {
-      $timestamp = $this->request->get('timestamp');
-      $signature = $this->request->get('signature');
+      $timestamp = $timestamp ?? $this->request->get('timestamp');
+      $signature = $signature ?? $this->request->get('signature');
       if (empty($timestamp) || empty($signature)) {
         throw new AccessDeniedHttpException();
       }

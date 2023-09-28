@@ -43,10 +43,12 @@
 </div>
 {%- endif -%}
 
+{% if item.summary -%}
 <div class="email-resource-teaser">
 {{- item.summary|raw }}
 <a class="email-resource-read-more" href="{{ item.url }}">{{ read_more_label }}</a>
 </div>
+{%- endif -%}
 </div>
 {%- endfor -%}
 {%- endblock -%}

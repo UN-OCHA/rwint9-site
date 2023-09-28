@@ -60,8 +60,14 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    *
    * @param int $limit
    *   Max number of items to send.
+   * @param array $options
+   *   Additional options for the command.
    *
    * @command reliefweb_subscriptions:send
+   *
+   * @option from From email address.
+   *
+   * @default $options []
    *
    * @usage reliefweb_subscriptions:send
    *   Send emails.
@@ -70,7 +76,9 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    *
    * @validate-module-enabled reliefweb_subscriptions
    */
-  public function send($limit = 50) {
+  public function send($limit = 50, array $options = [
+    'from' => '',
+  ]) {
     // Get queued notifications, older first.
     // Triggered notifications have priority.
     $query = $this->database->select('reliefweb_subscriptions_queue', 'q');
@@ -82,7 +90,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
 
     // Send the notifications.
     $notifications = $query->execute()?->fetchAllAssoc('eid');
-    $this->mailer->send($notifications);
+    $this->mailer->send($notifications, $options['from'] ?? '');
 
     // Remove the processed notifications from the queue.
     if (!empty($notifications)) {

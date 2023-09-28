@@ -94,7 +94,7 @@ form fieldset fieldset legend {
   font-size: 16px;
   font-weight: bold;
 }
-form label:first-letter {
+form label::first-letter {
   /* Try to have some consistency. */
   text-transform: capitalize;
 }
@@ -141,8 +141,8 @@ form fieldset > legend + * + * {
  * Ensures the loading overlay (see loading overlay component) uses the entire
  * viewport.
  */
-form[data-loading]:before,
-form[data-loading]:after {
+form[data-loading]::before,
+form[data-loading]::after {
   position: fixed;
 }
 
@@ -233,7 +233,7 @@ form[data-enhanced] .form-optional {
 form[data-enhanced] .form-required::after {
   content: none;
 }
-form .form-disabled [data-irrelevant]:after {
+form .form-disabled [data-irrelevant]::after {
   display: block;
   clear: both;
   content: attr(data-irrelevant);
@@ -244,7 +244,6 @@ form .form-disabled [data-irrelevant] > div {
 }
 form input[disabled],
 form textarea[disabled] {
-  background: var(--cd-reliefweb-brand-grey--light);
   background: var(--cd-reliefweb-grey--disable);
 }
 form input[disabled] + label {
@@ -446,7 +445,7 @@ form > #actions legend + .form-type-checkbox.form-item-notifications-content-dis
   justify-content: flex-end;
   order: 1;
 }
-.filter-wrapper .filter-help a:after {
+.filter-wrapper .filter-help a::after {
   top: 2px;
 }
 .filter-wrapper select {

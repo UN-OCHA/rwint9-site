@@ -42,7 +42,7 @@
   font-size: 32px;
   font-weight: bold;
 }
-.rw-homepage-opportunties [data-type] a:before {
+.rw-homepage-opportunties [data-type] a::before {
   position: absolute;
   top: 50%;
   right: 22px;
@@ -54,11 +54,11 @@
   opacity: 0.5;
   background: var(--rw-icons--content--job--36--dark-blue);
 }
-.rw-homepage-opportunties [data-type="training"] a:before {
+.rw-homepage-opportunties [data-type="training"] a::before {
   background: var(--rw-icons--content--training--36--dark-blue);
 }
 /* Border to separate the logo from the text. */
-.rw-homepage-opportunties [data-type] a:after {
+.rw-homepage-opportunties [data-type] a::after {
   position: absolute;
   top: 0;
   right: 79px;
