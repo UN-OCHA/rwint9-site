@@ -51,6 +51,7 @@ cd-header:
       components/cd/cd-header/cd-header.css: {}
       components/cd/cd-header/cd-language-switcher.css: {}
       components/cd/cd-header/cd-logo.css: {}
+      components/cd/cd-header/cd-nav.css: {}
       components/cd/cd-header/cd-ocha.css: {}
       components/cd/cd-header/cd-search.css: {}
       components/cd/cd-header/cd-user-menu.css: {}
