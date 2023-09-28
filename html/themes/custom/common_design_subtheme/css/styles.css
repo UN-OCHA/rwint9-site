@@ -1,25 +1,3 @@
 /**
  * Global, project-specific styles.
  */
-@media screen and (min-width: 768px) {
-
-  /* Decrease breakpoints from base theme
-    To facilitate the sticky TOC
-  */
-  .cd-page-layout-container .cd-layout {
-    display: flex;
-    flex-wrap: wrap;
-  }
-
-  .cd-page-layout-content {
-    flex-basis: 0;
-    flex-grow: 999;
-  }
-
-  @supports (display: grid) {
-    .cd-page-layout-container {
-      /* Increase grid row height to accommodate site-slogan 50px */
-      grid-template-rows: 151px auto 1fr auto;
-    }
-  }
-}
