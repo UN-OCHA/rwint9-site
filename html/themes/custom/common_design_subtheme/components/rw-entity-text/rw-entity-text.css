@@ -21,7 +21,34 @@
 }
 
 /* Javascript enabled */
-.js .rw-entity-text--collapsible button {
+/* Overrides the default behavior when data-cd-hidden is set as the description
+ * is always displayed, only the number of paragraphs changes. */
+.js .rw-entity-text--collapsible .rw-entity-text__content.cd-disclosure--is-collapsed {
+  display: block;
+}
+.js .rw-entity-text--collapsible .rw-entity-text__content.cd-disclosure--is-collapsed > * {
+  display: none;
+}
+/* Display only the 3 last paragraphs. */
+.js .rw-entity-text--collapsible--last .rw-entity-text__content.cd-disclosure--is-collapsed > *:nth-last-child(-n+3) {
+  display: block;
+}
+.js .rw-entity-text--collapsible--last .rw-entity-text__content.cd-disclosure--is-collapsed > *:nth-last-child(3) {
+  margin-top: 0;
+}
+/* Display only the first 3 paragraphs. */
+.js .rw-entity-text--collapsible--first .rw-entity-text__content.cd-disclosure--is-collapsed > * {
+  display: none;
+}
+.js .rw-entity-text--collapsible--first .rw-entity-text__content.cd-disclosure--is-collapsed > *:nth-child(-n+3) {
+  display: block;
+}
+/* Show all the paragraphs when toggled. */
+.js .rw-entity-text--collapsible .rw-entity-text__content:not(.cd-disclosure--is-collapsed) > * {
+  display: block;
+}
+/* Style the toggler. */
+.js .rw-entity-text--collapsible .cd-disclosure-toggler {
   display: block;
   margin: 24px auto 0 auto;
   padding: 8px 12px;
@@ -29,40 +56,28 @@
   border: 1px solid var(--cd-reliefweb-brand-blue--dark);
   background: white;
   font-size: 16px;
-  fill: var(--cd-reliefweb-brand-blue--dark);
 }
-.js .rw-entity-text--collapsible button svg {
-  fill: currentcolor;
-}
-.js .rw-entity-text--collapsible button:hover,
-.js .rw-entity-text--collapsible button:active,
-.js .rw-entity-text--collapsible button:focus {
+.js .rw-entity-text--collapsible .cd-disclosure-toggler:hover,
+.js .rw-entity-text--collapsible .cd-disclosure-toggler:active,
+.js .rw-entity-text--collapsible .cd-disclosure-toggler:focus {
   color: white;
   background: var(--cd-reliefweb-brand-blue--dark);
 }
-/* Overrides the default behavior when data-cd-hidden is set as the description
- * is always displayed, only the number of paragraphs changes. */
-.js .rw-entity-text--collapsible .rw-entity-text__content[data-cd-hidden] {
-  display: block;
+.js .rw-entity-text--collapsible .cd-disclosure-toggler::after {
+  display: inline-block;
+  overflow: hidden;
+  width: 9px;
+  height: 9px;
+  margin: 0 0 0 4px;
+  content: "";
+  vertical-align: middle;
+  background: var(--rw-icons--toggle--down--9--dark-blue);
 }
-.js .rw-entity-text--collapsible .rw-entity-text__content > * {
-  display: none;
+.js .rw-entity-text--collapsible .cd-disclosure-toggler[aria-expanded="true"]::after {
+  background: var(--rw-icons--toggle--up--9--dark-blue);
 }
-/* Display only the 3 last paragraphs. */
-.js .rw-entity-text--collapsible--last .rw-entity-text__content > *:nth-last-child(-n+3) {
-  display: block;
-}
-.js .rw-entity-text--collapsible--last .rw-entity-text__content > *:nth-last-child(3) {
-  margin-top: 0;
-}
-/* Display only the first 3 paragraphs. */
-.js .rw-entity-text--collapsible--first .rw-entity-text__content > * {
-  display: none;
-}
-.js .rw-entity-text--collapsible--first .rw-entity-text__content > *:nth-child(-n+3) {
-  display: block;
-}
-/* Show all the paragraphs when toggled. */
-.js .rw-entity-text--collapsible .rw-entity-text__content[data-cd-hidden="false"] > * {
-  display: block;
+.js .rw-entity-text--collapsible .cd-disclosure-toggler:hover::after,
+.js .rw-entity-text--collapsible .cd-disclosure-toggler:active::after,
+.js .rw-entity-text--collapsible .cd-disclosure-toggler:focus::after {
+  background-position-x: var( --rw-icons--toggle--9--white--x);
 }

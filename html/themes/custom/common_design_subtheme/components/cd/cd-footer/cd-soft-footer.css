@@ -32,7 +32,6 @@
 }
 
 .cd-soft-footer label {
-  flex: 0 1 100%;
   margin: 0;
   padding: 10px 12px 10px 0;
   text-align: left;
@@ -40,6 +39,7 @@
 }
 
 .cd-soft-footer__inner input[type="email"] {
+  width: auto;
   padding: 10px 12px;
   color: var(--cd-default-text-color);
 }

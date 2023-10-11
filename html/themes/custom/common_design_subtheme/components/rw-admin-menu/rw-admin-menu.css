@@ -42,7 +42,7 @@
 /* Guidelines / Help separator. Not the best place to add but this avoids adding
  * a duplicate rule somewhere else and the guidelines and admin menu are both
  * only displayed to Editors. */
-.admin-menu + * .navigation > .menu > .menu-item:not(:last-child) > a::after {
+.admin-menu + * .navigation:not(.menu--account) > .menu > .menu-item:not(:last-child) > a::after {
   position: absolute;
   top: 50%;
   right: -1px;
@@ -117,7 +117,7 @@
 .js .admin-menu {
   /* Compensate for the `gap` property on the `.cd-global-header__inner` so
    * that the menu is evenly spaced with the other menus in the header. */
-  margin-right: -8px;
+  margin-right: -7px;
   margin-left: auto;
   padding: 0;
 }

@@ -1,0 +1,20 @@
+/**
+ * Common Design: Logo
+ *
+ * Overrides the image path. Change it for your website.
+ */
+.cd-site-logo {
+  background:
+    linear-gradient(transparent, transparent),
+    url(../../../img/logos/rw-logo-mobile.svg) center no-repeat;
+}
+
+@media (min-width: 768px) {
+  .cd-site-logo {
+    background: none;
+  }
+}
+
+.cd-site-logo:focus {
+  outline: 3px solid var(--cd-reliefweb-brand-blue);
+}

@@ -1,0 +1,3 @@
+.cd-language-switcher__btn:focus {
+  outline: 3px solid var(--cd-reliefweb-brand-blue);
+}
