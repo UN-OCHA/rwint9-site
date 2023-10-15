@@ -89,3 +89,23 @@ function reliefweb_utility_file_presave(FileInterface $file) {
     }
   }
 }
+
+/**
+ * Implements hook_entity_type_alter().
+ *
+ * Replace the image style class so we can properly delete webp versions of the
+ * derivative images because this is not done by image_optimize_webp, notably
+ * because there is no hook provided for that by the image module.
+ *
+ * Normally this runs after the imageapi_optimize_entity_type_alter() due to
+ * the alphabetical order.
+ */
+function reliefweb_utility_entity_type_alter(array &$entity_types) {
+  /** @var \Drupal\Core\Entity\EntityTypeInterface[] $entity_types */
+  if (isset($entity_types['image_style'])) {
+    $image_style = $entity_types['image_style'];
+    if ($image_style->getClass() === 'Drupal\imageapi_optimize\Entity\ImageStyleWithPipeline') {
+      $image_style->setClass('Drupal\reliefweb_utility\Entity\ImageStyleWithPipeline');
+    }
+  }
+}
