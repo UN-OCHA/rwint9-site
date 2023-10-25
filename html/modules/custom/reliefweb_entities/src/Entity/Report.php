@@ -130,7 +130,7 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
       $build['#theme'] = 'reliefweb_file_list__interactive';
 
       $build['#title'] = $this->t('Screenshot(s) of the interactive content as of @date', [
-        '@date' => DateHelper::format($this->getCreatedTime(), 'custom', 'j m Y'),
+        '@date' => DateHelper::format($this->getCreatedTime(), 'custom', 'j M Y'),
       ]);
 
       $url = NULL;
@@ -164,8 +164,8 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
           ]);
         }
         if (isset($item['preview'])) {
-          $item['preview']['#style_name'] = 'large';
-          $item['preview']['#alt'] = $item['label'];
+          $item['preview']['#responsive_image_style_id'] = 'large';
+          $item['preview']['#attributes']['alt'] = $item['label'];
         }
 
         // Have the screenshots link to the original content.
