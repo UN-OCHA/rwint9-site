@@ -80,40 +80,56 @@ class ReliefWebModerationCommands extends DrushCommands {
       return TRUE;
     }
 
+    // Retrieve sources with status to update.
     $sources = $this->database->query("
-      SELECT query.id, query.status
+      SELECT
+        query.id AS id,
+        query.current_status,
+        query.status AS status
       FROM (
-        SELECT subquery.id,
-        CASE
-          WHEN subquery.published > 0 THEN 'active'
-          WHEN subquery.recent > 0 THEN 'inactive'
-          ELSE 'archive'
-        END AS status
+        SELECT
+          subquery.id,
+          CASE
+            WHEN subquery.active > 0 THEN 'active'
+            WHEN subquery.inactive > 0 THEN 'inactive'
+            ELSE 'archive'
+          END AS status,
+          subquery.current_status AS current_status
         FROM (
-          SELECT fs.field_source_target_id AS id,
-          SUM(CASE
-            WHEN n.type = 'job' AND UNIX_TIMESTAMP(fjcd.field_job_closing_date_value) > UNIX_TIMESTAMP(NOW() - INTERVAL 1 YEAR) THEN 1
-            WHEN n.type = 'training' AND UNIX_TIMESTAMP(frd.field_registration_deadline_value) > UNIX_TIMESTAMP(NOW() - INTERVAL 1 YEAR) THEN 1
-            ELSE 0
-          END) AS recent,
-          SUM(IF(n.moderation_status = 'published', 1, 0)) AS published
-          FROM node__field_source AS fs
-          INNER JOIN node_field_data AS n
+          SELECT
+            tfd.tid AS id,
+            tfd.moderation_status AS current_status,
+            SUM(CASE
+              WHEN n.type IN ('job', 'training') AND n.status = 1 THEN 1
+              WHEN n.type = 'job' AND UNIX_TIMESTAMP(fjcd.field_job_closing_date_value) > UNIX_TIMESTAMP(NOW() - INTERVAL 2 MONTH) THEN 1
+              WHEN n.type = 'training' AND UNIX_TIMESTAMP(frd.field_registration_deadline_value) > UNIX_TIMESTAMP(NOW() - INTERVAL 2 MONTH) THEN 1
+              WHEN n.type = 'report' AND n.created > UNIX_TIMESTAMP(NOW() - INTERVAL 3 YEAR) THEN 1
+              ELSE 0
+            END) AS active,
+            SUM(CASE
+              WHEN n.type = 'job' AND UNIX_TIMESTAMP(fjcd.field_job_closing_date_value) > UNIX_TIMESTAMP(NOW() - INTERVAL 1 YEAR) THEN 1
+              WHEN n.type = 'training' AND UNIX_TIMESTAMP(frd.field_registration_deadline_value) > UNIX_TIMESTAMP(NOW() - INTERVAL 1 YEAR) THEN 1
+              WHEN n.type = 'report' AND n.status = 1 THEN 1
+              ELSE 0
+            END) AS inactive
+          FROM taxonomy_term_field_data AS tfd
+          LEFT JOIN node__field_source AS fs
+            ON fs.field_source_target_id = tfd.tid
+          LEFT JOIN node_field_data AS n
             ON n.nid = fs.entity_id
-            AND n.type IN ('job', 'training')
+            AND n.type IN ('job', 'training', 'report')
           LEFT JOIN node__field_job_closing_date AS fjcd
             ON fjcd.entity_id = fs.entity_id
           LEFT JOIN node__field_registration_deadline AS frd
             ON frd.entity_id = fs.entity_id
-          WHERE fs.field_source_target_id NOT IN (SELECT field_source_target_id FROM node__field_source WHERE bundle = 'report')
-          GROUP BY fs.field_source_target_id
+          WHERE
+            tfd.vid = 'source' AND
+            tfd.moderation_status IN ('active', 'inactive', 'archive') AND
+            tfd.created < UNIX_TIMESTAMP(NOW() - INTERVAL 2 WEEK)
+          GROUP BY tfd.tid
         ) AS subquery
       ) AS query
-      INNER JOIN taxonomy_term_field_data AS tfd
-        ON tfd.tid = query.id
-        AND tfd.vid = 'source'
-        AND tfd.moderation_status NOT IN ('duplicate', 'blocked', query.status)
-      WHERE query.status <> 'active'
+      WHERE query.status IN ('inactive', 'archive') AND query.status <> query.current_status
     ")?->fetchAllKeyed(0, 1) ?? [];
 
     if (empty($sources)) {
