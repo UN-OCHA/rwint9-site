@@ -243,9 +243,8 @@ function parse_icon($category, $path, \DomElement $parent) {
 
   // Clean the imported symbol's content.
   foreach ($symbol->childNodes as $child) {
-    if ($child->hasAttributes()) {
-      $child->removeAttributeNS('http://www.w3.org/2000/svg', 'default');
-    }
+    $child->removeAttributeNS('http://www.w3.org/2000/svg', 'default');
+    $child->removeAttributeNS('http://www.w3.org/2000/svg', '');
   }
 
   return $id;
