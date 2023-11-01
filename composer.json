@@ -25,7 +25,6 @@
         "cweagans/composer-patches": "^1.7",
         "drupal/admin_denied": "^2.0",
         "drupal/allowed_formats": "^2.0",
-        "drupal/ckeditor": "^1.0",
         "drupal/classy": "^1.0",
         "drupal/components": "^3.0@beta",
         "drupal/config_filter": "^2.2",
