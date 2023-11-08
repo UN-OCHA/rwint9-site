@@ -95,11 +95,13 @@ class ReliefWebFileList extends FieldItemList {
    * {@inheritdoc}
    */
   public function postSave($updated) {
-    parent::postSave($updated);
+    $updated = parent::postSave($updated);
 
     // Update the references to the remote file resources in the remote document
     // associated with the entity this field is attached.
     $this->updateRemoteDocumentFileReferences();
+
+    return $updated;
   }
 
   /**

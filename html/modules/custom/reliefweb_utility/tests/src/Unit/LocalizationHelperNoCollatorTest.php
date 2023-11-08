@@ -26,6 +26,7 @@ class LocalizationHelperNoCollatorTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
     $sub = $this->prophesize(LanguageInterface::class);
     $sub->getId()->willReturn('no');
     $this->language_manager = $this->prophesize(LanguageManager::class);

@@ -1,5 +1,15 @@
 :root {
   /**
+   * Site logos
+   *
+   * Specify the logo dimensions here. To change the image URL, edit this file:
+   *
+   * @see common_design_subtheme/components/cd/cd-header/cd-logo.css
+   */
+  --brand-logo-mobile-width: 52px;
+  --brand-logo-desktop-width: 140px;
+
+  /**
    * Site-specific brand colors
    *
    * Set these variables and the CD Header/Footer will re-color to your brand.
@@ -11,9 +21,6 @@
   --brand-primary--dark: #04415a;
   --brand-highlight: var(--cd-reliefweb-brand-red--dark);
   --brand-grey: var(--cd-reliefweb-brand-grey--light);
-  --brand-logo-width: 140px;
-
-  --cd-reliefweb-brand-red: #f65c51;
 
  /* Color palette */
  --cd-reliefweb-brand-blue: #0988bb;
@@ -33,6 +40,7 @@
  --cd-rgb-reliefweb-brand-grey--dark: 46, 52, 54;
  --cd-rgb-reliefweb-brand-grey--light: 230, 236, 239;
 
+  /* Light grey */
   --cd-reliefweb-grey--light: #d9d9d9;
   --cd-reliefweb-grey--light--bg: rgba(217, 217, 217, 0.2);
   /* Orange */

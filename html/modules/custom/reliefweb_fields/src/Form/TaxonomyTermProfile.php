@@ -45,7 +45,7 @@ class TaxonomyTermProfile extends TermForm {
     $this->entity->setRevisionLogMessage(strtr('!bundle profile update', [
       '!bundle' => $this->getBundleLabel(),
     ]));
-    parent::save($form, $form_state);
+    return parent::save($form, $form_state);
   }
 
   /**

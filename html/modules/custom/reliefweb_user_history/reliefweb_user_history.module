@@ -100,10 +100,10 @@ function reliefweb_user_history_check_changes(UserInterface $user, UserInterface
  *
  * @param \Drupal\user\UserInterface $user
  *   Current version of the user entity.
- * @param \Drupal\user\UserInterface $original
+ * @param \Drupal\user\UserInterface|null $original
  *   Original version of the user entity.
  */
-function reliefweb_user_history_record_changes(UserInterface $user, UserInterface $original) {
+function reliefweb_user_history_record_changes(UserInterface $user, ?UserInterface $original) {
   if (!isset($original)) {
     return;
   }
@@ -203,7 +203,7 @@ function reliefweb_user_history_get_account_history_content(UserInterface $user)
       ->condition('uid', $user->id())
       ->orderBy('modification_id', 'ASC')
       ->execute()
-      ?->fetchAll(\PDO::FETCH_ASSOC);
+      ?->fetchAll(\PDO::FETCH_ASSOC) ?? [];
 
     // Add the current version to the list of records.
     $records[] = reliefweb_user_history_user_entity_to_record($user, $user, $user);
@@ -214,7 +214,7 @@ function reliefweb_user_history_get_account_history_content(UserInterface $user)
     // Compute the history.
     $previous_record = NULL;
     $history = [];
-    foreach ($records ?? [] as $record) {
+    foreach ($records as $record) {
       $differences = [];
       foreach ($fields as $field => $label) {
         $old_value = $previous_record[$field] ?? NULL;
@@ -347,7 +347,7 @@ function reliefweb_user_history_get_account_history_content(UserInterface $user)
 /**
  * Get a list of role labels from a comma separated list of role IDs.
  *
- * @param string $roles
+ * @param string|null $roles
  *   Comma separated list of role IDs.
  *
  * @return array
@@ -359,9 +359,11 @@ function reliefweb_user_history_get_user_role_labels($roles) {
     $role_names = user_role_names();
   }
   $labels = [];
-  foreach (explode(',', $roles ?? '') as $role) {
-    if (isset($role_names[$role])) {
-      $labels[$role] = $role_names[$role];
+  if (!empty($roles)) {
+    foreach (explode(',', $roles) as $role) {
+      if (isset($role_names[$role])) {
+        $labels[$role] = $role_names[$role];
+      }
     }
   }
   return $labels;

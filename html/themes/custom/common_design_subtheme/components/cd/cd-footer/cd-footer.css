@@ -1,0 +1,48 @@
+.cd-footer a:focus {
+  outline: 3px solid var(--cd-reliefweb-brand-blue);
+}
+
+/* Use the OCHA logo sprite so that we have one less file to load. */
+.cd-footer .cd-mandate__logo {
+  background: url("../../../img/logos/ocha-logo-sprite.svg") 0 -95px no-repeat;
+}
+
+/**
+ * Copyright.
+ *
+ * RelieWeb's copyright notice.
+ */
+.cd-footer-copyright {
+  display: block;
+  margin-top: 0;
+  text-align: right;
+  color: white;
+  font-size: 12px;
+  font-weight: lighter;
+}
+.cd-footer-copyright p {
+  margin: 0;
+}
+.cd-footer-copyright a {
+  display: inline-block;
+  overflow: hidden;
+  width: 140px;
+  height: 60px;
+  margin: 0 0 -4px 0;
+  /* The padding combined with the overflow: hidden, hides the text. */
+  padding: 0 0 0 140px;
+  background: url("../../../img/logos/rw-logo-sprite.png") 0 -60px no-repeat;
+  background: rgba(0, 0, 0, 0) url("../../../img/logos/rw-logo-sprite.svg") 0 -60px no-repeat;
+}
+.cd-footer-copyright a:hover,
+.cd-footer-copyright a:active,
+.cd-footer-copyright a:focus {
+  opacity: 0.8;
+}
+
+@media all and (max-width: 1023px) {
+  .cd-footer-copyright {
+    width: 100%;
+    text-align: center;
+  }
+}

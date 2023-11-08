@@ -51,11 +51,13 @@
       <pubDate>{{ item.date|date('r') }}</pubDate>
       <source url="{{ feed_url }}">ReliefWeb - {{ title }}</source>
       <description>{{ '<![CDATA['|raw }}
-        {% for key, category in item.categories if category.inline %}
-        <div class="tag {{ key }}">{{ '@label: @values'|t({
-          '@label': category.label,
-          '@values': category.values|join(', '),
-        }) }}</div>
+        {% for key, category in item.categories %}
+          {% if category.inline %}
+          <div class="tag {{ key }}">{{ '@label: @values'|t({
+            '@label': category.label,
+            '@values': category.values|join(', '),
+          }) }}</div>
+          {% endif %}
         {% endfor %}
         {% for key, date in item.dates %}
         <div class="date {{ key }}">{{ '@label: @date'|t({

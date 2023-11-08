@@ -1,0 +1,10 @@
+reliefweb_disaster_map.settings:
+  type: config_object
+  label: 'ReliefWeb Disaster Map settings'
+  mapping:
+    mapbox_key:
+      type: string
+      label: 'Mapbox Key'
+    mapbox_token:
+      type: string
+      label: 'Mapbox Token'

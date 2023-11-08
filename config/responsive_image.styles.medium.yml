@@ -1,0 +1,24 @@
+uuid: a83c71ef-172d-43a4-b773-45ba58e7ec82
+langcode: en
+status: true
+dependencies:
+  config:
+    - image.style.medium
+    - image.style.small
+  theme:
+    - common_design_subtheme
+id: medium
+label: Medium
+image_style_mappings:
+  -
+    image_mapping_type: image_style
+    image_mapping: medium
+    breakpoint_id: common_design.medium
+    multiplier: 1x
+  -
+    image_mapping_type: image_style
+    image_mapping: small
+    breakpoint_id: common_design.small
+    multiplier: 1x
+breakpoint_group: common_design_subtheme
+fallback_image_style: small

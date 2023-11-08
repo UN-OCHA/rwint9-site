@@ -33,7 +33,7 @@ This module provides custom field types, widgets, formatters and related plugins
 
 ## CKEditor plugin
 
-This module provides a [CKEditor 4 plugin](src/Plugin/CKEditorPlugin/ReliefWebFormatterText.php) when using a `ReliefWebFormattedText` widget to limit selectable headings and handle their conversion.
+This module provides a [CKEditor 5 plugin](js/plugins/reliefweb_formatted_text/plugin.js) enabled when using a `ReliefWebFormattedText` widget to limit selectable headings and handle their conversion.
 
 ## Forms
 

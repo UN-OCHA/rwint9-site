@@ -52,8 +52,9 @@
     {{ element.description }}
     {{ element.language }}
     {# Make sure all the element children are rendered. #}
-    {% for key, child in element|without(rendered) if key|first != '#' %}
-      {{ child }}
+    {% for key, child in element|without(rendered) %}
+      {{ key|first != '#' ? child }}
+
     {% endfor %}
   </td>
   {% set preview_attributes = create_attribute(element.preview['#attributes'] ?? {}) %}

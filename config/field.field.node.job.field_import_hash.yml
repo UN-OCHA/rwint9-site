@@ -10,7 +10,7 @@ field_name: field_import_hash
 entity_type: node
 bundle: job
 label: 'Import HASH'
-description: 'Hash of the job''s imported content used to determined potential changes.'
+description: "Hash of the job's imported content used to determined potential changes."
 required: false
 translatable: false
 default_value: {  }

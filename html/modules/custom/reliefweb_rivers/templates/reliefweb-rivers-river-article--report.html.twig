@@ -63,7 +63,19 @@
   {% if entity.summary is not empty or entity.preview is not empty %}
   <div class="rw-river-article__content" lang="{{ entity.langcode }}">
     {% if entity.preview is not empty %}
-    <img src="{{ entity.preview.url }}" alt="{{ entity.preview.alt ?? '' }}" loading="lazy">
+      {{ render_var({
+        '#theme': 'responsive_image__preview',
+        '#responsive_image_style_id': attributes.hasClass('rw-river-article--card') ? 'thumbnail' : 'small',
+        '#uri': entity.preview.uri,
+        '#attributes': {
+          'alt': entity.preview.alt ?? '',
+          'class': ['rw-river-article__preview'],
+          'loading': 'lazy',
+          'data-version': entity.preview.version ?? '',
+        },
+        '#width': entity.preview.width,
+        '#height': entity.preview.height
+      }) }}
     {% endif %}
     {% if entity.summary is not empty %}
     <p>{{ entity.summary }}</p>

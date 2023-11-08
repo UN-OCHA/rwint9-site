@@ -2,7 +2,7 @@ type: module
 name: ReliefWeb Fields
 description: 'Provides custom field types, widgets and formatters.'
 package: reliefweb
-core_version_requirement: ^9
+core_version_requirement: ^9 || ^10
 dependencies:
   - drupal:reliefweb_form
   - drupal:taxonomy

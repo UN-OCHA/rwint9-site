@@ -1,2 +1,5 @@
+# River crawling control.
+Disallow: /*&page=*
+
 # Sitemap
 Sitemap: https://reliefweb.int/sitemap.xml

@@ -43,7 +43,7 @@ class TaxonomyTermUserPostingRights extends TermForm {
    */
   public function save(array $form, FormStateInterface $form_state) {
     $this->entity->setRevisionLogMessage('User posting rights update');
-    parent::save($form, $form_state);
+    return parent::save($form, $form_state);
   }
 
   /**

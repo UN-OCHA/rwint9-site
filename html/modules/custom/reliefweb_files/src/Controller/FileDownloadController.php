@@ -137,7 +137,7 @@ class FileDownloadController extends OriginalFileDownloadController {
       throw new AccessDeniedHttpException();
     }
 
-    /** @var \Drupal\file\FileInterface $file */
+    /** @var \Drupal\file\FileInterface|null $file */
     $file = $this->loadFileFromUri($uri);
     if (!isset($file)) {
       throw new NotFoundHttpException();

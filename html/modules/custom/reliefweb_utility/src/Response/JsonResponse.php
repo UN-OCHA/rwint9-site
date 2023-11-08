@@ -26,10 +26,10 @@ class JsonResponse {
   /**
    * Construct the response from the guzzle response.
    *
-   * @param ?\GuzzleHttp\Psr7\Response $response
+   * @param \GuzzleHttp\Psr7\Response|null $response
    *   Guzzle response.
    */
-  public function __construct(?Response $response) {
+  public function __construct(?Response $response = NULL) {
     $this->response = $response;
     if (!empty($response)) {
       $this->statusCode = $response->getStatusCode();

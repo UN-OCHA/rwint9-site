@@ -215,7 +215,7 @@ class DisasterFormAlter extends EntityFormAlterServiceBase {
       // We also don't pass a field to the setErrorByName so the the message
       // appears at the top.
       $message = $this->t('Disaster(s) with the same glide number already exist: @links', [
-        '@links' => Markup::create(implode(', ', $links), []),
+        '@links' => Markup::create(implode(', ', $links)),
       ]);
       $form_state->setErrorByName('', Markup::create($message));
     }

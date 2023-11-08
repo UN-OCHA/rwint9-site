@@ -1,0 +1,5 @@
+reliefweb_subscriptions.admin_subscription_form:
+  title: ReliefWeb Subscription Overview
+  description: 'Overview of the ReliefWeb subscriptions with preview'
+  route_name: reliefweb_subscriptions.admin_subscription_form
+  parent: system.admin_config_ui

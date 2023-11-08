@@ -3,12 +3,15 @@
 namespace Drupal\reliefweb_moderation;
 
 use Drupal\Core\Entity\RevisionLogInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\user\EntityOwnerInterface;
 
 /**
  * Provides a trait for moderated entities.
  */
 trait EntityModeratedTrait {
+
+  use StringTranslationTrait;
 
   /**
    * Allowed moderation statuses.

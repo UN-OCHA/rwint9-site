@@ -2,4 +2,4 @@ type: module
 name: ReliefWeb Files
 description: 'Handles file attachments and integration with the OCHA Document Store.'
 package: reliefweb
-core_version_requirement: ^9
+core_version_requirement: ^9 || ^10

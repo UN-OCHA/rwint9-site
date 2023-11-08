@@ -86,13 +86,12 @@ class DrushCommandsTest extends ExistingSiteBase {
       new Response(200, [], $this->getTestXml5()),
       new Response(200, [], $this->getTestXml6()),
       new Response(200, [], $this->getTestXml7()),
-      new ClientException('Client exception', new Request('GET', '')),
+      new ClientException('Client exception', new Request('GET', ''), new Response(400)),
       new RequestException('Request exception', new Request('GET', '')),
       new \Exception('General exception'),
     ]);
 
     $handlerStack = HandlerStack::create($mock);
-    //$logger = new LoggerStub();
     $this->httpClient = new Client(['handler' => $handlerStack]);
     $this->reliefwebImporter = new ReliefwebImportCommandWrapper($this->database, $this->entityTypeManager, $this->accountSwitcher, $this->httpClient, $this->loggerFactory, $this->state);
     $this->reliefwebImporter->setLogger(new LoggerStub());
@@ -186,41 +185,36 @@ class DrushCommandsTest extends ExistingSiteBase {
     $source = Term::load(2865);
 
     // Import jobs.
+    // Data from getTestXml1().
     $this->reliefwebImporter->jobs();
-
-    $query = $this->entityTypeManager->getStorage('node')->getQuery();
-    $query->condition('type', 'job');
-    $query->condition('field_import_guid', 'https://www.aplitrak.com?adid=1');
-    $nids = $query->execute();
-    $jobs = $this->entityTypeManager->getStorage('node')->loadMultiple($nids);
-
-    /** @var Drupal\reliefweb_entities\Entity\Job $job */
-    $job = reset($jobs);
-
+    $job = $this->getJobFromImportUrl('https://www.aplitrak.com?adid=1');
     $this->assertStringContainsStringIgnoringCase('imported from', $job->getRevisionLogMessage());
     $this->assertSame($job->title->value, 'Head of Supply Chain');
-
     $year = date('Y') + 1;
     $this->assertSame($job->field_job_closing_date->value, $year . '-10-05');
 
     // Import jobs again, triggering updates.
+    // Data from getTestXml2().
     $this->reliefwebImporter->getLogger()->resetMessages();
     $this->reliefwebImporter->fetchJobs($source);
     $this->assertStringContainsStringIgnoringCase('updated from', $job->getRevisionLogMessage());
     $this->assertSame($job->title->value, 'The head of Supply Chain');
 
     // Import job without title.
+    // Data from getTestXml3().
     $this->reliefwebImporter->getLogger()->resetMessages();
     $this->reliefwebImporter->fetchJobs($source);
     $this->assertStringContainsStringIgnoringCase('Job found with empty title.', $this->reliefwebImporter->getLogger()->getMessages('error'));
 
     // Import job in the past: allowed, no errors or warnings.
+    // Data from getTestXml4().
     $this->reliefwebImporter->getLogger()->resetMessages();
     $this->reliefwebImporter->fetchJobs($source);
     $this->assertFalse($this->reliefwebImporter->getLogger()->hasMessages('error'));
     $this->assertFalse($this->reliefwebImporter->getLogger()->hasMessages('warning'));
 
     // Import job in the past.
+    // Data from getTestXml5().
     // @todo check another type of error.
     $this->reliefwebImporter->getLogger()->resetMessages();
     $this->reliefwebImporter->fetchJobs($source);
@@ -228,13 +222,16 @@ class DrushCommandsTest extends ExistingSiteBase {
     $this->assertFalse($this->reliefwebImporter->getLogger()->hasMessages('warning'));
 
     // Import job with city, no country: city should be empty.
+    // Data from getTestXml6().
     $this->reliefwebImporter->getLogger()->resetMessages();
     $this->reliefwebImporter->fetchJobs($source);
     $this->assertFalse($this->reliefwebImporter->getLogger()->hasMessages('error'));
     $this->assertFalse($this->reliefwebImporter->getLogger()->hasMessages('warning'));
+    $job = $this->getJobFromImportUrl('https://www.aplitrak.com?adid=21');
     $this->assertTrue($job->field_city->isEmpty());
 
     // Import job with too short how to apply.
+    // Data from getTestXml7().
     $this->reliefwebImporter->getLogger()->resetMessages();
     $this->reliefwebImporter->fetchJobs($source);
     $this->assertFalse($this->reliefwebImporter->getLogger()->hasMessages('error'));
@@ -258,6 +255,24 @@ class DrushCommandsTest extends ExistingSiteBase {
     $this->reliefwebImporter->jobs();
     $this->assertTrue($this->reliefwebImporter->getLogger()->hasMessages('error'));
     $this->assertStringContainsStringIgnoringCase('General Exception', $this->reliefwebImporter->getLogger()->getMessages('error'));
+  }
+
+  /**
+   * Load a job from it's import URL.
+   *
+   * @param string $url
+   *   Import URL.
+   *
+   * @return \Drupal\reliefweb_entities\Entity\Job|null
+   *   Job entity.
+   */
+  protected function getJobFromImportUrl($url) {
+    $query = $this->entityTypeManager->getStorage('node')->getQuery();
+    $query->condition('type', 'job');
+    $query->condition('field_import_guid', $url);
+    $nids = $query->accessCheck(TRUE)->execute();
+    $jobs = $this->entityTypeManager->getStorage('node')->loadMultiple($nids);
+    return reset($jobs);
   }
 
 }

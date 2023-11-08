@@ -1,7 +1,8 @@
+/* global once */
 /**
  * Guidelines tooltip handling.
  */
-(function ($) {
+(function (Drupal, once) {
 
   'use strict';
 
@@ -243,9 +244,9 @@
       }
 
       // Load the guidelines for the form.
-      $('form[data-with-guidelines]', context).once('guidelines').each(function () {
-        loadGuidelines(this);
+      once('guidelines', 'form[data-with-guidelines]', context).forEach(function (element) {
+        loadGuidelines(element);
       });
     }
   };
-})(jQuery);
+})(Drupal, once);

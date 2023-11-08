@@ -83,6 +83,7 @@ function reliefweb_moderation_add_moderation_status($entity_type_id, $storage_sc
   }
 
   // Add the moderation status base field.
+  /** @var \Drupal\Core\Field\FieldStorageDefinitionInterface|null $definition */
   $definition = $manager->getFieldStorageDefinition('moderation_status', $entity_type_id);
   if (empty($definition)) {
     $definition = reliefweb_moderation_get_moderation_status_field_definition($default_status);

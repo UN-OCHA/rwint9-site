@@ -1,0 +1,30 @@
+uuid: 457de771-4805-442d-a5c3-ce8463405ab9
+langcode: en
+status: true
+dependencies:
+  config:
+    - image.style.large
+    - image.style.medium
+    - image.style.small
+  theme:
+    - common_design_subtheme
+id: large
+label: Large
+image_style_mappings:
+  -
+    image_mapping_type: image_style
+    image_mapping: large
+    breakpoint_id: common_design.large
+    multiplier: 1x
+  -
+    image_mapping_type: image_style
+    image_mapping: medium
+    breakpoint_id: common_design.medium
+    multiplier: 1x
+  -
+    image_mapping_type: image_style
+    image_mapping: small
+    breakpoint_id: common_design.small
+    multiplier: 1x
+breakpoint_group: common_design_subtheme
+fallback_image_style: small

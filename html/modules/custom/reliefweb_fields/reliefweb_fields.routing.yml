@@ -8,9 +8,11 @@ reliefweb_fields.taxonomy_term.profile_form:
     parameters:
       taxonomy_term:
         type: 'entity:taxonomy_term'
+        bundle:
+          - country
+          - disaster
   requirements:
     _entity_access: 'taxonomy_term.update'
-    _entity_bundles: 'taxonomy_term:country|disaster'
     _permission: 'edit taxonomy term profile'
     taxonomy_term: \d+
 
@@ -52,9 +54,10 @@ reliefweb_fields.taxonomy_term.user_posting_rights_form:
     parameters:
       taxonomy_term:
         type: 'entity:taxonomy_term'
+        bundle:
+          - source
   requirements:
     _entity_access: 'taxonomy_term.update'
-    _entity_bundles: 'taxonomy_term:source'
     _permission: 'edit user posting rights'
     taxonomy_term: \d+
 

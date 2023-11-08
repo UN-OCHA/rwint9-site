@@ -1,11 +1,16 @@
+###
+# Default global styles for the sub-theme.
+#
+# If you want some styles to be included on every page load, either add them in
+# css/styles.css or add your own files to the list under "theme"
+#
+# If you want specific components to apply to your whole site, list them as
+# dependencies to this library. An example dependency appears here as a comment.
 global-styling:
-  # RW-599: disabled as there is no consensus yet on whether that should be
-  # enabled or not.
-  # js:
-  #   js/login_destination.js: {}
   css:
     theme:
       css/brand.css: {}
+      css/styles.css: {}
       css/typography.css: {}
   dependencies:
     - common_design_subtheme/rw-cd-header-footer
@@ -13,6 +18,57 @@ global-styling:
     - common_design_subtheme/rw-form
     - common_design_subtheme/rw-site-slogan
     - common_design_subtheme/rw-page-title
+
+###
+# Define Drupal libraries for your custom components.
+#
+# These libraries can be referenced in your theme info.yml file to extend or
+# override existing base-theme or core Drupal libraries. They can also be
+# completely independent and style the custom content of your website, such as
+# a custom Paragraph type.
+#
+cd-block-title:
+  css:
+    theme:
+      components/cd-block-title/cd-block-title.css: {}
+cd-button:
+  css:
+    theme:
+      components/cd-button/cd-button.css: {}
+cd-footer:
+  css:
+    theme:
+      components/cd/cd-footer/cd-footer.css: {}
+      components/cd/cd-footer/cd-soft-footer.css: {}
+cd-form:
+  css:
+    theme:
+      components/cd-form/cd-form.css: {}
+cd-header:
+  css:
+    theme:
+      components/cd/cd-header/cd-global-header.css: {}
+      components/cd/cd-header/cd-header.css: {}
+      components/cd/cd-header/cd-language-switcher.css: {}
+      components/cd/cd-header/cd-logo.css: {}
+      components/cd/cd-header/cd-nav.css: {}
+      components/cd/cd-header/cd-ocha.css: {}
+      components/cd/cd-header/cd-search.css: {}
+      components/cd/cd-header/cd-user-menu.css: {}
+
+###
+# Define Drupal libraries for additional webfonts.
+#
+# They will appear in the sub-theme settings in the Drupal Admin UI. The `label`
+# field is a key part of identifying them in the Admin UI.
+#
+# Example: Arabic font using Dubai.
+#
+# fonts-arabic:
+#   label: Arabic
+#   css:
+#     theme:
+#       css/fonts-arabic.css: {}
 
 # Disable submit buttons during ajax requests.
 cd-ajax-disable-submit-buttons:
@@ -420,27 +476,3 @@ rw-view-more:
       components/rw-view-more/rw-view-more.css: {}
   dependencies:
     - common_design_subtheme/rw-icons
-
-# CD components extended
-rw-cd-header-footer:
-  css:
-    theme:
-      components/rw-cd-header-footer/cd-dropdowns.css: {}
-      components/rw-cd-header-footer/cd-footer.css: {}
-      components/rw-cd-header-footer/cd-header.css: {}
-      components/rw-cd-header-footer/cd-language-switcher.css: {}
-      components/rw-cd-header-footer/cd-layout.css: {}
-      components/rw-cd-header-footer/cd-logo.css: {}
-      components/rw-cd-header-footer/cd-ocha.css: {}
-      components/rw-cd-header-footer/cd-soft-footer.css: {}
-      components/rw-cd-header-footer/cd-user-menu.css: {}
-
-cd-block-title:
-  css:
-    theme:
-      components/cd-block-title/cd-block-title.css: {}
-
-cd-button:
-  css:
-    theme:
-      components/cd-button/cd-button.css: {}

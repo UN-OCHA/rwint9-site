@@ -399,6 +399,10 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
           ->getQuery()
           ->condition($field_name . '.id', $user->id());
 
+        // This is a system update so we should not limit to what the current
+        // user has access to.
+        $query->accessCheck(FALSE);
+
         // On update, only search for entities with rights for the user
         // that are different than 'blocked'. Blocked users will not have their
         // rights record automatically updated.

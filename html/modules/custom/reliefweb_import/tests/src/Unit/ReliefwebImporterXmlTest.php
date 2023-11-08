@@ -22,6 +22,7 @@ class ReliefwebImporterXmlTest extends ReliefwebImporterTestBase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
     $this->prophesizeServices();
 
     $mock = new MockHandler([]);

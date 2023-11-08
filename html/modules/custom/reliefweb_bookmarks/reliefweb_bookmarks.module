@@ -45,9 +45,6 @@ function reliefweb_bookmarks_preprocess_taxonomy_term(&$variables) {
  *   Variables from the corresponding hook_preprorcess_ENTITY_TYPE().
  * @param \Drupal\Core\Entity\EntityInterface $entity
  *   Entity.
- *
- * @return array
- *   Render array for the link.
  */
 function reliefweb_bookmarks_add_link(array &$variables, EntityInterface $entity) {
   // Only published content can be bookmarked.

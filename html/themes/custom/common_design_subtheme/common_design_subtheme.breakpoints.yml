@@ -1,0 +1,28 @@
+common_design.small:
+  label: small
+  mediaQuery: "(min-width: 0px)"
+  weight: 1
+  multipliers:
+    - 1x
+    - 2x
+common_design.medium:
+  label: medium
+  mediaQuery: "(min-width: 220px)"
+  weight: 1
+  multipliers:
+    - 1x
+    - 2x
+common_design.large:
+  label: large
+  mediaQuery: "(min-width: 450px)"
+  weight: 1
+  multipliers:
+    - 1x
+    - 2x
+common_design.extra_large:
+  label: extra large
+  mediaQuery: "(min-width: 700px)"
+  weight: 1
+  multipliers:
+    - 1x
+    - 2x

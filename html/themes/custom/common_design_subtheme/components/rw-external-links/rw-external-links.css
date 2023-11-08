@@ -1,5 +1,5 @@
 /* External links. Display an icon after the link. */
-.cd-layout-content a[target="_blank"][rel~="noopener"]:after {
+.cd-layout__content a[target="_blank"][rel~="noopener"]:after {
   display: inline-block;
   overflow: hidden;
   width: 12px;

@@ -15,6 +15,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Link;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Routing\RedirectDestinationInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\node\NodeInterface;
@@ -56,13 +57,21 @@ class BookmarksToggleController extends ControllerBase {
   protected $destination;
 
   /**
+   * The renderer service.
+   *
+   * @var \Drupal\Core\Render\RendererInterface
+   */
+  protected $renderer;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(AccountInterface $account, Connection $database, Request $request, RedirectDestinationInterface $destination) {
+  public function __construct(AccountInterface $account, Connection $database, Request $request, RedirectDestinationInterface $destination, RendererInterface $renderer) {
     $this->account = $account;
     $this->database = $database;
     $this->request = $request;
     $this->destination = $destination;
+    $this->renderer = $renderer;
   }
 
   /**
@@ -74,6 +83,7 @@ class BookmarksToggleController extends ControllerBase {
       $container->get('database'),
       $container->get('request_stack')->getCurrentRequest(),
       $container->get('redirect.destination'),
+      $container->get('renderer')
     );
   }
 
@@ -129,8 +139,17 @@ class BookmarksToggleController extends ControllerBase {
       $url->setOptions($link_options);
       $link = Link::fromTextAndUrl($link_data['title'], $url);
 
+      // To ensure consistent styling, we render the message here because that
+      // will not be done by Ajax.
+      $message_build = [
+        '#theme' => 'status_messages',
+        '#message_list' => [
+          'status' => [$message],
+        ],
+      ];
+
       $response = new AjaxResponse();
-      $response->addCommand(new MessageCommand($message));
+      $response->addCommand(new MessageCommand($this->renderer->renderRoot($message_build)));
       $response->addCommand(new ReplaceCommand('#' . $link_data['attributes']['id'], $link->toString()));
 
       return $response;

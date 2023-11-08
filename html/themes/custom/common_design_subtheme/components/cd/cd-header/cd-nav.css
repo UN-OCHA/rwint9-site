@@ -1,0 +1,7 @@
+/* Temporary fix until CD-500 is resolved */
+@media (min-width: 1024px) {
+  .cd-nav > .menu > .menu-item.menu-item--active-trail a::before,
+  .cd-nav > .menu > .menu-item.menu-item--active-trail button::before {
+    opacity: 1;
+  }
+}

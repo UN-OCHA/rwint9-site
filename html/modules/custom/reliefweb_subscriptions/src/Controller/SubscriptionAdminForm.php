@@ -141,8 +141,8 @@ class SubscriptionAdminForm extends ControllerBase {
       '#type' => 'inline_template',
       '#template' => '<h2>{{ subject }}</h2><iframe sandbox srcdoc="{{ body }}" width="100%" height="500"></iframe>',
       '#context' => [
-        'subject' => $content['subject'],
-        'body' => str_replace('"', '\'', $content['body']),
+        'subject' => $content['subject'] ?? $this->t('No content.'),
+        'body' => str_replace('"', '\'', $content['body'] ?? $this->t('No content.')),
       ],
     ];
 

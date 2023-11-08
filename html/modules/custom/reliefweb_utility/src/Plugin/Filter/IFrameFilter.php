@@ -12,7 +12,7 @@ use Drupal\filter\Plugin\FilterBase;
  *   id = "filter_iframe",
  *   title = @Translation("IFrame Filter"),
  *   description = @Translation("Process iframes"),
- *   type = Drupal\filter\Plugin\FilterInterface::TYPE_MARKUP_LANGUAGE,
+ *   type = Drupal\filter\Plugin\FilterInterface::TYPE_TRANSFORM_IRREVERSIBLE,
  * )
  */
 class IFrameFilter extends FilterBase {

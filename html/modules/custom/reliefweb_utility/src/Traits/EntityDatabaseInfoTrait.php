@@ -343,7 +343,7 @@ trait EntityDatabaseInfoTrait {
    * @see \Drupal\Core\Entity\ContentEntityInterface::getRevisionMetadataKeys()
    */
   protected function getEntityTypeRevisionKeyField($entity_type_id, $key) {
-    $keys = $this->entityTypeManager
+    $keys = $this->getEntityTypeManager()
       ->getStorage($entity_type_id)
       ->getEntityType()
       ->getRevisionMetadataKeys();

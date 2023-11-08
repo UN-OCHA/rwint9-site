@@ -3,11 +3,15 @@
 namespace Drupal\reliefweb_utility\Plugin\Filter;
 
 use Drupal\Core\Link;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Url;
 use Drupal\filter\FilterProcessResult;
 use Drupal\filter\Plugin\FilterBase;
 use Drupal\reliefweb_utility\Helpers\MarkdownHelper;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Provides a filter to display any HTML as plain text.
@@ -15,18 +19,65 @@ use Drupal\reliefweb_utility\Helpers\MarkdownHelper;
  * @Filter(
  *   id = "filter_markdown",
  *   title = @Translation("Convert a markdown text to HTML"),
- *   type = Drupal\filter\Plugin\FilterInterface::TYPE_MARKUP_LANGUAGE,
+ *   type = Drupal\filter\Plugin\FilterInterface::TYPE_TRANSFORM_IRREVERSIBLE,
  *   weight = -20
  * )
  */
-class MarkdownFilter extends FilterBase {
+class MarkdownFilter extends FilterBase implements ContainerFactoryPluginInterface {
+
+  /**
+   * Renderer service.
+   *
+   * @var \Drupal\Core\Render\RendererInterface
+   */
+  protected $renderer;
+
+  /**
+   * Current request.
+   *
+   * @var \Symfony\Component\HttpFoundation\RequestStack
+   */
+  protected $requestStack;
+
+  /**
+   * Constructs a markdown filter plugin.
+   *
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   *   The renderer service.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   *   The request stack.
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, RendererInterface $renderer, RequestStack $request_stack) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+    $this->renderer = $renderer;
+    $this->requestStack = $request_stack;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('renderer'),
+      $container->get('request_stack')
+    );
+  }
 
   /**
    * {@inheritdoc}
    */
   public function process($text, $langcode) {
     $html = MarkdownHelper::convertToHtml($text, [
-      \Drupal::request()->getHost(),
+      $this->requestStack->getCurrentRequest()->getHost(),
       'reliefweb.int',
     ]);
     return new FilterProcessResult($html);
@@ -187,7 +238,7 @@ class MarkdownFilter extends FilterBase {
       ]),
     ];
 
-    return \Drupal::service('renderer')->render($tips);
+    return $this->renderer->render($tips);
   }
 
 }

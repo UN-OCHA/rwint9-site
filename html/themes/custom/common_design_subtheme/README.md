@@ -1,7 +1,7 @@
 OCHA Common Design sub theme for the ReliefWeb site
 ===================================================
 
-See below for [generic information](#ocha-common-design-sub-theme-for-drupal-8) about the OCHA Common Design sub theme.
+See [original README](README.original.md) for generic information about the OCHA Common Design sub theme.
 
 ## Requirements
 
@@ -59,7 +59,7 @@ Some hook implementations extend the logic for the display of the page title on 
 
 A `hook_page_attachments_alter` implementation is used to add `preconnect` and `preload` links in the `<head>` for some blocking resources like the google fonts, logos and icon sprite.
 
----
+## Original Common Design sub theme README
 
 ## OCHA Common Design sub theme for Drupal 8
 

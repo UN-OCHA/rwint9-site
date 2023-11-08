@@ -2,10 +2,11 @@
 *
 !assets
 !config
+!config_dev
 !docker
 !html/modules/custom
 !html/themes/custom
-!patches
+!PATCHES
 !scripts
 !composer.json
 !composer.lock

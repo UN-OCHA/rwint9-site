@@ -1,0 +1,21 @@
+/* Hide label on mobile */
+/* @todo still needed? */
+@media all and (max-width: 767px) {
+  .cd-global-header button[aria-expanded] span[class*="__btn-label"] {
+    position: absolute !important;
+    overflow: hidden;
+    clip: rect(1px, 1px, 1px, 1px);
+    width: 1px;
+    height: 1px;
+    word-wrap: normal;
+  }
+}
+
+/* Help and guidelines menu items. */
+.cd-global-header .menu--help > .menu {
+  margin: 0;
+  padding: 0;
+}
+.cd-global-header .menu--help > .menu > .menu-item {
+  float: left;
+}

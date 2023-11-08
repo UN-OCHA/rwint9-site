@@ -101,7 +101,7 @@ function reliefweb_disaster_map_get_disaster_type_tokens() {
  */
 function reliefweb_disaster_map_get_disaster_map_token_replacement($token, BubbleableMetadata $bubbleable_metadata = NULL, $render = TRUE) {
   $tokens = reliefweb_disaster_map_get_disaster_type_tokens();
-  $values = explode('-', strtoupper($token));
+  $values = !empty($token) ? explode('-', strtoupper($token)) : [];
   $options = [];
   $id = strtolower('disaster-map-' . $token);
 

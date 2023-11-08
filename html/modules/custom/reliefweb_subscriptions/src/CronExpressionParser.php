@@ -76,7 +76,7 @@ class CronExpressionParser {
     $max_iteration = 1000;
     foreach ($iterator as $type => $format) {
       if (--$max_iteration === 0) {
-        throw new Exception();
+        throw new \Exception();
       }
 
       $value = intval($date->format($format));
@@ -220,7 +220,7 @@ class CronExpressionParser {
     $max_iteration = 1000;
     foreach ($iterator as $type => $format) {
       if (--$max_iteration === 0) {
-        throw new Exception();
+        throw new \Exception();
       }
 
       $value = intval($date->format($format));
@@ -439,8 +439,10 @@ class CronExpressionParser {
     }
 
     $values = [];
-    foreach (explode(',', $component) as $value) {
-      $values = array_merge($values, self::getAllowedValues($value, $min, $max));
+    if (!empty($component)) {
+      foreach (explode(',', $component) as $value) {
+        $values = array_merge($values, self::getAllowedValues($value, $min, $max));
+      }
     }
 
     $values = array_unique($values);
@@ -476,7 +478,6 @@ class CronExpressionParser {
       'feb' => 2,
       'mar' => 3,
       'apr' => 4,
-      'may' => 5,
       'jun' => 6,
       'jul' => 7,
       'aug' => 8,
@@ -538,7 +539,7 @@ class CronExpressionParser {
     // Step for the range.
     if (strpos($value, '/') !== FALSE) {
       if (substr_count($value, '/') > 1) {
-        throw new Exception();
+        throw new \Exception();
       }
       [$value, $step] = explode('/', $value);
       $step = static::checkInt($step, 1, $max);
@@ -552,13 +553,13 @@ class CronExpressionParser {
     // Range.
     elseif (strpos($value, '-') !== FALSE) {
       if (substr_count($value, '-') > 1) {
-        throw new Exception();
+        throw new \Exception();
       }
       [$start, $end] = explode('-', $value);
       $start = self::checkInt($start, 0, $max);
       $end = self::checkInt($end, 1, $max);
       if ($start >= $end) {
-        throw new Exception();
+        throw new \Exception();
       }
     }
     // Single value.
@@ -602,7 +603,7 @@ class CronExpressionParser {
       'max_range' => $max,
     ]);
     if ($result === FALSE) {
-      throw new Exception();
+      throw new \Exception();
     }
     return $result;
   }

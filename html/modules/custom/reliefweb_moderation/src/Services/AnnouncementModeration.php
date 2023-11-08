@@ -132,7 +132,7 @@ class AnnouncementModeration extends ModerationServiceBase {
    */
   public function isViewableStatus($status, ?AccountInterface $account = NULL) {
     $account = $account ?: $this->currentUser;
-    return !empty($account) && $account->hasPermission('edit any announcement content');
+    return $account->hasPermission('edit any announcement content');
   }
 
   /**

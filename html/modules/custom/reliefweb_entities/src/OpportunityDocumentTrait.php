@@ -21,6 +21,7 @@ trait OpportunityDocumentTrait {
    */
   protected function updateModerationStatusFromPostingRights() {
     // In theory the revision user here, is the current user saving the entity.
+    /** @var \Drupal\user\UserInterface|null $user */
     $user = $this->getRevisionUser();
     $status = $this->getModerationStatus();
 

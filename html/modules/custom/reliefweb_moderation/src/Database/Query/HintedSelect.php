@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_moderation\Database\Query;
 
+use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\Select;
 use Drupal\Core\Database\Query\SelectInterface;
 
@@ -109,7 +110,7 @@ class HintedSelect extends Select {
     // FROM - We presume all queries have a FROM, as any query that doesn't
     // won't need the query builder anyway.
     $query .= "\nFROM ";
-    foreach ($this->tables as $table) {
+    foreach ($this->tables as $alias => $table) {
       $query .= "\n";
       if (isset($table['join type'])) {
         $query .= $table['join type'] . ' JOIN ';

@@ -44,13 +44,6 @@ class ReliefWebReportingCommands extends DrushCommands {
   protected $languageDefault;
 
   /**
-   * Logger.
-   *
-   * @var \Psr\Log\LoggerInterface
-   */
-  protected $logger;
-
-  /**
    * The state manager.
    *
    * @var \Drupal\Core\State\StateInterface
@@ -284,7 +277,7 @@ class ReliefWebReportingCommands extends DrushCommands {
     ")->fetchAll(\PDO::FETCH_ASSOC);
 
     if (empty($records)) {
-      $body .= 'No reports posted this week.';
+      $body = 'No reports posted this week.';
     }
     else {
       // Convert to CSV.

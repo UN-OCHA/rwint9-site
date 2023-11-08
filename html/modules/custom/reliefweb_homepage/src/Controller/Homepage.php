@@ -432,6 +432,7 @@ class Homepage extends ControllerBase {
       ->condition('status', NodeInterface::PUBLISHED)
       ->sort('created', 'DESC')
       ->range(0, 1)
+      ->accessCheck(TRUE)
       ->execute();
 
     $nodes = $storage->loadMultiple($nids);

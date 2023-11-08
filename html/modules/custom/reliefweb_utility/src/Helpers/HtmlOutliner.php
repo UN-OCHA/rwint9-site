@@ -14,13 +14,13 @@ class HtmlOutliner {
   /**
    * Check if a node is a heading.
    *
-   * @param \DOMNode $node
+   * @param \DOMNode|null $node
    *   DOM node.
    *
    * @return bool
    *   TRUE if the node is a heading.
    */
-  public static function isHeading(\DOMNode $node) {
+  public static function isHeading(?\DOMNode $node) {
     static $tags = [
       'h1' => TRUE,
       'h2' => TRUE,
@@ -36,13 +36,13 @@ class HtmlOutliner {
   /**
    * Check if a node is a sectioning content.
    *
-   * @param \DOMNode $node
+   * @param \DOMNode|null $node
    *   DOM node.
    *
    * @return bool
    *   TRUE if the node is a sectioning content.
    */
-  public static function isSectioningContent(\DOMNode $node) {
+  public static function isSectioningContent(?\DOMNode $node) {
     static $tags = [
       'article' => TRUE,
       'aside' => TRUE,
@@ -55,13 +55,13 @@ class HtmlOutliner {
   /**
    * Check if a node is a sectioning root.
    *
-   * @param \DOMNode $node
+   * @param \DOMNode|null $node
    *   DOM node.
    *
    * @return bool
    *   TRUE if the node is a sectioning root.
    */
-  public static function isSectioningRoot(\DOMNode $node) {
+  public static function isSectioningRoot(?\DOMNode $node) {
     static $tags = [
       'blockquote' => TRUE,
       'body' => TRUE,
@@ -77,13 +77,13 @@ class HtmlOutliner {
   /**
    * Check if a node is hidden.
    *
-   * @param \DOMNode $node
+   * @param \DOMNode|null $node
    *   DOM node.
    *
    * @return bool
    *   TRUE if the node is hidden.
    */
-  public static function isHidden(\DOMNode $node) {
+  public static function isHidden(?\DOMNode $node) {
     return isset($node) && $node->hasAttributes() && $node->hasAttribute('hidden');
   }
 
@@ -109,7 +109,7 @@ class HtmlOutliner {
    * @param \DOMNode $node
    *   DOM node.
    *
-   * @return \DOMNode
+   * @return \DOMNode|null
    *   Ranking heading node.
    */
   public static function getRankingHeading(\DOMNode $node) {
@@ -232,9 +232,9 @@ class HtmlOutliner {
       else {
         $candidate = $current_section;
 
-        while ($candidate) {
+        while (!empty($candidate)) {
           // Found a candidate section as parent of the node's one.
-          if (!empty($candidate) && static::getHeadingRank($node) < static::getHeadingRank($candidate->heading)) {
+          if (static::getHeadingRank($node) < static::getHeadingRank($candidate->heading)) {
             $section = new Section($node);
 
             $candidate->sections[] = $section;
@@ -693,7 +693,7 @@ class Outline extends Node {
         $output[] = $padding . '?? untitled section';
       }
       else {
-        $heading = Outliner::getRankingHeading($section->heading) ?? $section->heading;
+        $heading = HtmlOutliner::getRankingHeading($section->heading) ?? $section->heading;
         $output[] = $padding . $heading->nodeName . ' ' . trim($heading->textContent);
       }
       if (!empty($section->sections)) {

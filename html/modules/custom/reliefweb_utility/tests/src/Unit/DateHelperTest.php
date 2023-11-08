@@ -28,6 +28,7 @@ class DateHelperTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
     $sub = $this->prophesize(LanguageInterface::class);
     $sub->getId()->willReturn('und');
     $this->language_manager = $this->prophesize(LanguageManager::class);

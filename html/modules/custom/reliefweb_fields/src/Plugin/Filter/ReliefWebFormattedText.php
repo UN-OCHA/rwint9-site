@@ -12,7 +12,7 @@ use Drupal\filter\Plugin\FilterBase;
  *   id = "reliefweb_formatted_text",
  *   title = @Translation("ReliefWeb Formatted Text"),
  *   description = @Translation("Flag to enable ReliefWeb formatted text manipulations."),
- *   type = Drupal\filter\Plugin\FilterInterface::TYPE_MARKUP_LANGUAGE
+ *   type = Drupal\filter\Plugin\FilterInterface::TYPE_TRANSFORM_IRREVERSIBLE
  * )
  */
 class ReliefWebFormattedText extends FilterBase {
