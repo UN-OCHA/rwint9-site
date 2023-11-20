@@ -1,5 +1,8 @@
 {
     "patches": {
+        "unocha/common_design": {
+            "https://humanitarian.atlassian.net/browse/CD-519": "PATCHES/common_design--default-logo-remove.patch"
+        },
         "drupal/core" : {
             "https://www.drupal.org/project/drupal/issues/3047110": "PATCHES/core--drupal--3047110-taxonomy-term-moderation-class.patch",
             "https://www.drupal.org/project/drupal/issues/3008292": "PATCHES/core--drupal--3008292-image-upload-validators.patch",
