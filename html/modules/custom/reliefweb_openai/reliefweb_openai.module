@@ -5,6 +5,7 @@
  * Contains hook implementations for this module.
  */
 
+use Aws\BedrockRuntime\BedrockRuntimeClient;
 use Aws\Comprehend\ComprehendClient;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Ajax\AjaxResponse;
@@ -71,6 +72,29 @@ function reliefweb_openai_form_alter(array &$form, FormStateInterface $form_stat
           '#ajax' => [
             'callback' => 'reliefweb_openai_content_node_suggest_aws',
             'wrapper' => 'aws-comprehend-suggest-response',
+          ],
+        ];
+
+        $form['aws_claude'] = [
+          '#type' => 'details',
+          '#open' => TRUE,
+          '#title' => t('Suggest humanitarian themes using Claude'),
+        ];
+
+        $form['aws_claude']['aws_response'] = [
+          '#type' => 'markup',
+          '#markup' => t('Claudecan attempt to suggest possible classification terms to use as taxonomy.'),
+          '#prefix' => '<div id="aws-claude-suggest-response">',
+          '#suffix' => '</div>',
+        ];
+
+        $form['aws_claude']['aws_do_suggest'] = [
+          '#type' => 'button',
+          '#value' => t('Suggest humanitarian theme(s) - AWS Comprehend'),
+          '#limit_validation_errors' => [],
+          '#ajax' => [
+            'callback' => 'reliefweb_openai_content_node_suggest_aws_claude',
+            'wrapper' => 'aws-claude-suggest-response',
           ],
         ];
 
@@ -370,6 +394,59 @@ function reliefweb_openai_content_node_suggest_aws(array &$form, FormStateInterf
 
     $response = new AjaxResponse();
     $response->addCommand(new HtmlCommand('#aws-comprehend-suggest-response', $text));
+    return $response;
+  }
+}
+
+/**
+ * Use AWS Claude.
+ */
+function reliefweb_openai_content_node_suggest_aws_claude(array &$form, FormStateInterface $form_state) {
+  $body = $form_state->getValue('body')[0]['value'];
+
+  if (!empty($body)) {
+    $body = strip_tags(trim($body));
+    $body = str_replace(["\r\n", "\r", "\n", "\\r", "\\n", "\\r\\n"], "", $body);
+    $body = preg_replace("/  +/", ' ', $body);
+    $body = preg_replace("/[^a-z0-9 ]/i", '', $body);
+
+    $config = \Drupal::config('reliefweb_openai.settings');
+
+    $access_key = $config->get('aws_access_key');
+    $secret_key = $config->get('aws_secret_key');
+    $region = $config->get('aws_region');
+    $endpoint = $config->get('aws_endpoint_theme_classifier');
+
+    $client = new BedrockRuntimeClient([
+      'region' => $region,
+      'version' => 'latest',
+      'credentials' => [
+        'key' => $access_key,
+        'secret' => $secret_key,
+      ],
+    ]);
+
+    $prompt = 'Extract the humanitarian theme (One of Agriculture, Camp Coordination and Camp Management, Climate Change and Environment, Contributions, Coordination, Disaster Management, Education, Food and Nutrition, Gender, Health, HIV/AIDS, Humanitarian Financing, Logistics and Telecommunications, Mine Action, Peacekeeping and Peacebuilding, Protection and Human Rights, Recovery and Reconstruction, Safety and Security, Shelter and Non-Food Items, Water Sanitation Hygiene) and country from the text below.' . "\n\n" . $body;
+    if (isset($form['field_job_experience'])) {
+      $prompt = 'Extract the required years of job experience, career category, humanitarian theme (One of Agriculture, Camp Coordination and Camp Management, Climate Change and Environment, Contributions, Coordination, Disaster Management, Education, Food and Nutrition, Gender, Health, HIV/AIDS, Humanitarian Financing, Logistics and Telecommunications, Mine Action, Peacekeeping and Peacebuilding, Protection and Human Rights, Recovery and Reconstruction, Safety and Security, Shelter and Non-Food Items, Water Sanitation Hygiene) and country from the text below.' . "\n\n" . $body;
+    }
+
+    $text = "\n\nHuman: $prompt\n\nAssistant:";
+
+    $result = $client->invokeModel([
+      'EndpointArn' => $endpoint,
+      'Text' => $text,
+    ]);
+
+    $text = '';
+    $parts = [];
+    foreach ($result->get('Classes') as $class) {
+      $parts[] = $class['Name'] . ' (' . round(100 * $class['Score'], 1) . '%)';
+    }
+    $text = implode(', ', $parts);
+
+    $response = new AjaxResponse();
+    $response->addCommand(new HtmlCommand('#aws-claude-suggest-response', $text));
     return $response;
   }
 }
