@@ -90,7 +90,7 @@ function reliefweb_openai_form_alter(array &$form, FormStateInterface $form_stat
 
         $form['aws_claude']['aws_do_suggest'] = [
           '#type' => 'button',
-          '#value' => t('Suggest humanitarian theme(s) - AWS Comprehend'),
+          '#value' => t('Suggest humanitarian theme(s) - Claude'),
           '#limit_validation_errors' => [],
           '#ajax' => [
             'callback' => 'reliefweb_openai_content_node_suggest_aws_claude',
@@ -414,11 +414,9 @@ function reliefweb_openai_content_node_suggest_aws_claude(array &$form, FormStat
 
     $access_key = $config->get('aws_access_key');
     $secret_key = $config->get('aws_secret_key');
-    $region = $config->get('aws_region');
-    $endpoint = $config->get('aws_endpoint_theme_classifier');
 
     $client = new BedrockRuntimeClient([
-      'region' => $region,
+      'region' => 'us-east-1',
       'version' => 'latest',
       'credentials' => [
         'key' => $access_key,
@@ -431,19 +429,22 @@ function reliefweb_openai_content_node_suggest_aws_claude(array &$form, FormStat
       $prompt = 'Extract the required years of job experience, career category, humanitarian theme (One of Agriculture, Camp Coordination and Camp Management, Climate Change and Environment, Contributions, Coordination, Disaster Management, Education, Food and Nutrition, Gender, Health, HIV/AIDS, Humanitarian Financing, Logistics and Telecommunications, Mine Action, Peacekeeping and Peacebuilding, Protection and Human Rights, Recovery and Reconstruction, Safety and Security, Shelter and Non-Food Items, Water Sanitation Hygiene) and country from the text below.' . "\n\n" . $body;
     }
 
-    $text = "\n\nHuman: $prompt\n\nAssistant:";
+    $text = [
+      'prompt' => "\n\nHuman: $prompt\n\nAssistant:",
+      'max_tokens_to_sample' => 4000,
+      'temperature' => 0.1,
+      'top_p' => 0.9,
+    ];
 
     $result = $client->invokeModel([
-      'EndpointArn' => $endpoint,
-      'Text' => $text,
+      'modelId' => 'anthropic.claude-v2',
+      'body' => json_encode($text),
     ]);
 
-    $text = '';
-    $parts = [];
-    foreach ($result->get('Classes') as $class) {
-      $parts[] = $class['Name'] . ' (' . round(100 * $class['Score'], 1) . '%)';
-    }
-    $text = implode(', ', $parts);
+    $text = $result->get('body') . '';
+    $text = json_decode($text, TRUE);
+    $text = $text['completion'];
+    $text = str_replace("\n", '<br>', $text);
 
     $response = new AjaxResponse();
     $response->addCommand(new HtmlCommand('#aws-claude-suggest-response', $text));
