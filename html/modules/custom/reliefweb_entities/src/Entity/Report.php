@@ -257,6 +257,9 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     parent::postSave($storage, $update);
 
+    // Make the sources active.
+    $this->updateSourceModerationStatus();
+
     $this->sendPublicationNotification();
   }
 

@@ -2,7 +2,6 @@
 
 namespace Drupal\reliefweb_entities;
 
-use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\reliefweb_entities\Entity\Source;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
@@ -166,38 +165,6 @@ trait OpportunityDocumentTrait {
     // Update publication date if published for the first time.
     if (empty($previously_published)) {
       $this->setCreatedTime($this->getChangedTime());
-    }
-  }
-
-  /**
-   * Update the status of the sources when publishing an opportunity.
-   */
-  protected function updateSourceModerationStatus() {
-    if (!$this->hasField('field_source') || $this->field_source->isEmpty()) {
-      return;
-    }
-
-    if (!($this instanceof EntityPublishedInterface) || !$this->isPublished()) {
-      return;
-    }
-
-    // Make the inactive or archive sources active when an apportunity is
-    // published.
-    foreach ($this->field_source as $item) {
-      $source = $item->entity;
-      if (empty($source) || !($source instanceof Source)) {
-        continue;
-      }
-
-      if (in_array($source->getModerationStatus(), ['inactive', 'archive'])) {
-        $source->notifications_content_disable = TRUE;
-        $source->setModerationStatus('active');
-        $source->setNewRevision(TRUE);
-        $source->setRevisionLogMessage('Automatic status update due to publication of node ' . $this->id());
-        $source->setRevisionUserId(2);
-        $source->setRevisionCreationTime(time());
-        $source->save();
-      }
     }
   }
 

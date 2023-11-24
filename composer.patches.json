@@ -23,6 +23,9 @@
         },
         "drush/drush": {
             "https://humanitarian.atlassian.net/browse/OPS-8026": "PATCHES/drush--timeout-override.patch"
+        },
+        "unocha/common_design": {
+            "https://humanitarian.atlassian.net/browse/CD-519": "PATCHES/common_design--default-logo-remove.patch"
         }
     }
 }
