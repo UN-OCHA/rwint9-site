@@ -32,6 +32,7 @@ function reliefweb_openai_form_alter(array &$form, FormStateInterface $form_stat
         $form['chatgpt_suggest'] = [
           '#type' => 'details',
           '#open' => TRUE,
+          '#access' => FALSE,
           '#title' => t('Suggest humanitarian themes using ChatGPT'),
         ];
 
@@ -83,7 +84,7 @@ function reliefweb_openai_form_alter(array &$form, FormStateInterface $form_stat
 
         $form['aws_claude']['aws_response'] = [
           '#type' => 'markup',
-          '#markup' => t('Claudecan attempt to suggest possible classification terms to use as taxonomy.'),
+          '#markup' => t('Claude can attempt to suggest possible classification terms to use as taxonomy.'),
           '#prefix' => '<div id="aws-claude-suggest-response">',
           '#suffix' => '</div>',
         ];
@@ -145,10 +146,10 @@ function reliefweb_openai_content_node_suggest_chatgpt(array &$form, FormStateIn
     $body = preg_replace("/  +/", ' ', $body);
     $body = preg_replace("/[^a-z0-9 ]/i", '', $body);
 
-    $prompt = 'Extract the humanitarian theme (One of Agriculture, Camp Coordination and Camp Management, Climate Change and Environment, Contributions, Coordination, Disaster Management, Education, Food and Nutrition, Gender, Health, HIV/AIDS, Humanitarian Financing, Logistics and Telecommunications, Mine Action, Peacekeeping and Peacebuilding, Protection and Human Rights, Recovery and Reconstruction, Safety and Security, Shelter and Non-Food Items, Water Sanitation Hygiene) and country from the text below.' . "\n\n" . $body;
+    $prompt = reliefweb_openai_get_prompt(FALSE) . $body;
 
     if (isset($form['field_job_experience'])) {
-      $prompt = 'Extract the required years of job experience, career category, humanitarian theme (One of Agriculture, Camp Coordination and Camp Management, Climate Change and Environment, Contributions, Coordination, Disaster Management, Education, Food and Nutrition, Gender, Health, HIV/AIDS, Humanitarian Financing, Logistics and Telecommunications, Mine Action, Peacekeeping and Peacebuilding, Protection and Human Rights, Recovery and Reconstruction, Safety and Security, Shelter and Non-Food Items, Water Sanitation Hygiene) and country from the text below.' . "\n\n" . $body;
+      $prompt = reliefweb_openai_get_prompt() . $body;
     }
 
     $result = reliefweb_openai_http_call_chat(
@@ -194,10 +195,10 @@ function reliefweb_openai_content_node_suggest_azure(array &$form, FormStateInte
     $body = preg_replace("/  +/", ' ', $body);
     $body = preg_replace("/[^a-z0-9 ]/i", '', $body);
 
-    $prompt = 'Extract the humanitarian theme (One of Agriculture, Camp Coordination and Camp Management, Climate Change and Environment, Contributions, Coordination, Disaster Management, Education, Food and Nutrition, Gender, Health, HIV/AIDS, Humanitarian Financing, Logistics and Telecommunications, Mine Action, Peacekeeping and Peacebuilding, Protection and Human Rights, Recovery and Reconstruction, Safety and Security, Shelter and Non-Food Items, Water Sanitation Hygiene) and country from the text below.' . "\n\n" . $body;
+    $prompt = reliefweb_openai_get_prompt(FALSE) . $body;
 
     if (isset($form['field_job_experience'])) {
-      $prompt = 'Extract the required years of job experience, career category, humanitarian theme (One of Agriculture, Camp Coordination and Camp Management, Climate Change and Environment, Contributions, Coordination, Disaster Management, Education, Food and Nutrition, Gender, Health, HIV/AIDS, Humanitarian Financing, Logistics and Telecommunications, Mine Action, Peacekeeping and Peacebuilding, Protection and Human Rights, Recovery and Reconstruction, Safety and Security, Shelter and Non-Food Items, Water Sanitation Hygiene) and country from the text below.' . "\n\n" . $body;
+      $prompt = reliefweb_openai_get_prompt() . $body;
     }
 
     $result = reliefweb_openai_http_call_azure(
@@ -424,9 +425,9 @@ function reliefweb_openai_content_node_suggest_aws_claude(array &$form, FormStat
       ],
     ]);
 
-    $prompt = 'Extract the humanitarian theme (One of Agriculture, Camp Coordination and Camp Management, Climate Change and Environment, Contributions, Coordination, Disaster Management, Education, Food and Nutrition, Gender, Health, HIV/AIDS, Humanitarian Financing, Logistics and Telecommunications, Mine Action, Peacekeeping and Peacebuilding, Protection and Human Rights, Recovery and Reconstruction, Safety and Security, Shelter and Non-Food Items, Water Sanitation Hygiene) and country from the text below.' . "\n\n" . $body;
+    $prompt = reliefweb_openai_get_prompt(FALSE) . $body;
     if (isset($form['field_job_experience'])) {
-      $prompt = 'Extract the required years of job experience, career category, humanitarian theme (One of Agriculture, Camp Coordination and Camp Management, Climate Change and Environment, Contributions, Coordination, Disaster Management, Education, Food and Nutrition, Gender, Health, HIV/AIDS, Humanitarian Financing, Logistics and Telecommunications, Mine Action, Peacekeeping and Peacebuilding, Protection and Human Rights, Recovery and Reconstruction, Safety and Security, Shelter and Non-Food Items, Water Sanitation Hygiene) and country from the text below.' . "\n\n" . $body;
+      $prompt = reliefweb_openai_get_prompt() . $body;
     }
 
     $text = [
@@ -478,4 +479,15 @@ function reliefweb_openai_http_call_azure($query) {
 
   $body = $response->getBody() . '';
   return json_decode($body, TRUE);
+}
+
+/**
+ * Get prompt.
+ */
+function reliefweb_openai_get_prompt($job = TRUE) {
+  if ($job) {
+    return 'Extract the required years of job experience, career category, humanitarian theme (One of Agriculture, Camp Coordination and Camp Management, Climate Change and Environment, Contributions, Coordination, Disaster Management, Education, Food and Nutrition, Gender, Health, HIV/AIDS, Humanitarian Financing, Logistics and Telecommunications, Mine Action, Peacekeeping and Peacebuilding, Protection and Human Rights, Recovery and Reconstruction, Safety and Security, Shelter and Non-Food Items, Water Sanitation Hygiene) and country from the job description below and explain why you have chosen a particular humanitarian theme.' . "\n\n";
+  }
+
+  return 'Extract the humanitarian theme (One of Agriculture, Camp Coordination and Camp Management, Climate Change and Environment, Contributions, Coordination, Disaster Management, Education, Food and Nutrition, Gender, Health, HIV/AIDS, Humanitarian Financing, Logistics and Telecommunications, Mine Action, Peacekeeping and Peacebuilding, Protection and Human Rights, Recovery and Reconstruction, Safety and Security, Shelter and Non-Food Items, Water Sanitation Hygiene) and country from the text below and explain why you have chosen a particular humanitarian theme.' . "\n\n";
 }
