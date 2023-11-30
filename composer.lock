@@ -14481,16 +14481,16 @@
         },
         {
             "name": "unocha/common_design",
-            "version": "v9.2.1",
+            "version": "v9.2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/common_design.git",
-                "reference": "c52613835d3e10baf03783d3601c030483057684"
+                "reference": "f582963b5848d92b42de871b628f52c5a9f34930"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/common_design/zipball/c52613835d3e10baf03783d3601c030483057684",
-                "reference": "c52613835d3e10baf03783d3601c030483057684",
+                "url": "https://api.github.com/repos/UN-OCHA/common_design/zipball/f582963b5848d92b42de871b628f52c5a9f34930",
+                "reference": "f582963b5848d92b42de871b628f52c5a9f34930",
                 "shasum": ""
             },
             "require": {
@@ -14505,9 +14505,9 @@
             "description": "OCHA Common Design base theme for Drupal 9+",
             "support": {
                 "issues": "https://github.com/UN-OCHA/common_design/issues",
-                "source": "https://github.com/UN-OCHA/common_design/tree/v9.2.1"
+                "source": "https://github.com/UN-OCHA/common_design/tree/v9.2.2"
             },
-            "time": "2023-10-11T12:36:16+00:00"
+            "time": "2023-10-26T10:03:06+00:00"
         },
         {
             "name": "webflo/drupal-finder",
