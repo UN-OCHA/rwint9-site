@@ -438,7 +438,7 @@ function reliefweb_openai_content_node_suggest_aws_claude(array &$form, FormStat
     ];
 
     $result = $client->invokeModel([
-      'modelId' => 'anthropic.claude-v2',
+      'modelId' => 'anthropic.claude-instant-v1',
       'body' => json_encode($text),
     ]);
 
