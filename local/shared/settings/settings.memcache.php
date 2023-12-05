@@ -14,7 +14,7 @@ if (file_exists('sites/default/memcache.services.yml')) {
   if (file_exists('modules/contrib/memcache/memcache.services.yml')) {
     $settings['container_yamls'][] = 'modules/contrib/memcache/memcache.services.yml';
   }
-  elseif (file_exists('modules/memcache/memcache.services.yml')) {
+  else if (file_exists('modules/memcache/memcache.services.yml')) {
     $settings['container_yamls'][] = 'modules/memcache/memcache.services.yml';
   }
   // Configure memcache.
