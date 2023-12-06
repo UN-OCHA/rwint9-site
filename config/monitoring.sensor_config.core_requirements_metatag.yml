@@ -1,0 +1,20 @@
+uuid: f5106b23-444d-40d3-8583-2c26b3a7a95e
+langcode: en
+status: false
+dependencies:
+  module:
+    - metatag
+id: core_requirements_metatag
+label: 'Module metatag'
+description: 'Requirements of the metatag module'
+category: Requirements
+plugin_id: core_requirements
+result_class: null
+value_label: null
+value_type: no_value
+caching_time: 3600
+settings:
+  module: metatag
+  exclude_keys: {  }
+thresholds:
+  type: none
