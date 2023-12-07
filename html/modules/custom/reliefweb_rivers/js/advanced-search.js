@@ -418,6 +418,7 @@
     parent.setAttribute('data-datepicker', '');
     parent.classList.add(advancedSearch.widgetClassPrefix + 'datepicker');
     input.classList.add(advancedSearch.widgetClassPrefix + 'datepicker-input');
+    input.setAttribute('pattern', '^\\d{4}([\\/-]\\d{2}){0,2}$');
 
     // Create the button to show the datepicker.
     var toggleLabel = createElement('span', {
@@ -506,9 +507,22 @@
     });
 
     // Update the toggle label.
-    addEventListener(input, 'keyup', function (event) {
+    addEventListener(input, 'input', function (event) {
       var date = updateDatepicker(datepicker, input.value);
       updateToggleLabel(date);
+      if (date) {
+        input.setAttribute('data-value', date.format('YYYYMMDD'));
+      }
+      else {
+        input.removeAttribute('data-value');
+      }
+      if (!date && input.value.length > 0) {
+        input.setCustomValidity(advancedSearch.labels.dates.invalid);
+      }
+      else {
+        input.setCustomValidity('');
+      }
+      input.reportValidity();
     });
 
     // Logic to keep the focus inside the dialog when it's open.
