@@ -53,26 +53,26 @@ function reliefweb_openai_form_alter(array &$form, FormStateInterface $form_stat
           ],
         ];
 
-        $form['aws_comprehend'] = [
+        $form['aws_titan'] = [
           '#type' => 'details',
           '#open' => TRUE,
-          '#title' => t('Suggest humanitarian themes using AWS Comprehend'),
+          '#title' => t('Suggest humanitarian themes using AWS Titan'),
         ];
 
-        $form['aws_comprehend']['aws_response'] = [
+        $form['aws_titan']['aws_response'] = [
           '#type' => 'markup',
-          '#markup' => t('AWS Comprehend can attempt to suggest possible classification terms to use as taxonomy.'),
-          '#prefix' => '<div id="aws-comprehend-suggest-response">',
+          '#markup' => t('AWS titan can attempt to suggest possible classification terms to use as taxonomy.'),
+          '#prefix' => '<div id="aws-titan-suggest-response">',
           '#suffix' => '</div>',
         ];
 
-        $form['aws_comprehend']['aws_do_suggest'] = [
+        $form['aws_titan']['aws_do_suggest'] = [
           '#type' => 'button',
-          '#value' => t('Suggest humanitarian theme(s) - AWS Comprehend'),
+          '#value' => t('Suggest humanitarian theme(s) - AWS titan'),
           '#limit_validation_errors' => [],
           '#ajax' => [
-            'callback' => 'reliefweb_openai_content_node_suggest_aws',
-            'wrapper' => 'aws-comprehend-suggest-response',
+            'callback' => 'reliefweb_openai_content_node_suggest_aws_titan',
+            'wrapper' => 'aws-titan-suggest-response',
           ],
         ];
 
@@ -395,6 +395,61 @@ function reliefweb_openai_content_node_suggest_aws(array &$form, FormStateInterf
 
     $response = new AjaxResponse();
     $response->addCommand(new HtmlCommand('#aws-comprehend-suggest-response', $text));
+    return $response;
+  }
+}
+
+/**
+ * Use AWS Titan.
+ */
+function reliefweb_openai_content_node_suggest_aws_titan(array &$form, FormStateInterface $form_state) {
+  $body = $form_state->getValue('body')[0]['value'];
+
+  if (!empty($body)) {
+    $body = strip_tags(trim($body));
+    $body = str_replace(["\r\n", "\r", "\n", "\\r", "\\n", "\\r\\n"], "", $body);
+    $body = preg_replace("/  +/", ' ', $body);
+    $body = preg_replace("/[^a-z0-9 ]/i", '', $body);
+
+    $config = \Drupal::config('reliefweb_openai.settings');
+
+    $access_key = $config->get('aws_access_key');
+    $secret_key = $config->get('aws_secret_key');
+
+    $client = new BedrockRuntimeClient([
+      'region' => 'us-east-1',
+      'version' => 'latest',
+      'credentials' => [
+        'key' => $access_key,
+        'secret' => $secret_key,
+      ],
+    ]);
+
+    $prompt = reliefweb_openai_get_prompt(FALSE) . $body;
+    if (isset($form['field_job_experience'])) {
+      $prompt = reliefweb_openai_get_prompt() . $body;
+    }
+
+    $text = [
+      'inputText' => "\n\nHuman: $prompt\n\nAssistant:",
+      'textGenerationConfig' => [
+        'temperature' => 0.1,
+        'topP' => 0.9,
+      ],
+    ];
+
+    $result = $client->invokeModel([
+      'modelId' => 'amazon.titan-text-express-v1',
+      'body' => json_encode($text),
+    ]);
+
+    $text = $result->get('body') . '';
+    $text = json_decode($text, TRUE);
+    $text = $text['results'][0]['outputText'] ?? '';
+    $text = str_replace("\n", '<br>', $text);
+
+    $response = new AjaxResponse();
+    $response->addCommand(new HtmlCommand('#aws-titan-suggest-response', $text));
     return $response;
   }
 }
