@@ -1,0 +1,20 @@
+uuid: 83c3ddc1-0415-4f04-8dd1-d6ba9b364a00
+langcode: en
+status: false
+dependencies: {  }
+_core:
+  default_config_hash: 3GkPJiiLwN1qhPbq87iCuLPVOr5ILoBX3bpSnrNOhAY
+id: database_disk_usage
+label: 'Database Disk Usage'
+description: ''
+category: System
+plugin_id: database_disk_usage
+result_class: null
+value_label: mb
+value_type: number
+caching_time: 86400
+settings: {  }
+thresholds:
+  type: none
+  warning: null
+  critical: null

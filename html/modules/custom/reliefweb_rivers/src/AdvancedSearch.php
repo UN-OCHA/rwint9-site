@@ -260,6 +260,7 @@ class AdvancedSearch {
             'before' => $this->t('before _end_'),
             'after' => $this->t('after _start_'),
             'range' => $this->t('_start_ to _end_'),
+            'invalid' => $this->t('Invalid date. It will not be added'),
           ],
           'operators' => [
             'all' => $this->t('ALL OF'),

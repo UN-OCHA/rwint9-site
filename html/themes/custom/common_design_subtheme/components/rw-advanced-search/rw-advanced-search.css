@@ -393,6 +393,10 @@
   padding: 8px;
   border: 1px solid var(--cd-reliefweb-brand-grey--light);
 }
+.rw-advanced-search__filter-selector [data-datepicker] > input:invalid {
+  border: 2px solid var(--cd-reliefweb-brand-red--dark);
+  background: ;
+}
 
 /**
  * Advanced search operator selector.

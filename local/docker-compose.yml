@@ -73,6 +73,8 @@ services:
       # Mount volumes for the private and public files.
       - "site-public:/srv/www/html/sites/default/files:rw"
       - "site-private:/srv/www/html/sites/default/private:rw"
+      # A place for database backups to be installed.
+      - "../database:/srv/www/database:ro"
       # Mount the folders needed for the tests.
       - "../phpcs.xml:/srv/www/phpcs.xml:ro"
       - "../phpunit.xml:/srv/www/phpunit.xml:ro"

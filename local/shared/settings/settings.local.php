@@ -177,4 +177,3 @@ if (!empty($no_cache)) {
   $settings['cache']['bins']['page'] = 'cache.backend.null';
   $settings['cache']['bins']['dynamic_page_cache'] = 'cache.backend.null';
 }
-
