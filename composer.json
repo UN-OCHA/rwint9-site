@@ -25,6 +25,7 @@
         "cweagans/composer-patches": "^1.7",
         "drupal/admin_denied": "^2.0",
         "drupal/allowed_formats": "^2.0",
+        "drupal/amazon_ses": "^3.0",
         "drupal/classy": "^1.0",
         "drupal/components": "^3.0@beta",
         "drupal/config_filter": "^2.2",
@@ -106,7 +107,8 @@
             "oomphinc/composer-installers-extender": true,
             "orakili/composer-drupal-info-file-patch-helper": true,
             "phpstan/extension-installer": true,
-            "symfony/flex": true
+            "symfony/flex": true,
+            "php-http/discovery": true
         }
     },
     "autoload": {
