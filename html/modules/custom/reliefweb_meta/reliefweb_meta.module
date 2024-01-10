@@ -747,10 +747,9 @@ function reliefweb_meta_get_image(FieldableEntityInterface $entity) {
     if ($entity->hasField('field_primary_country') && !$entity->field_primary_country->isEmpty()) {
       $iso3 = $entity->field_primary_country->entity->field_iso3->value;
     }
-    elseif ($entity->hasField('field_country') && !$entity->field_country->isEmpty()) {
-      $countries = $entity->field_country->filterEmptyItems();
-      if (!empty($countries)) {
-        $country = reset($countries);
+    elseif ($entity->hasField('field_country')) {
+      $country = $entity->field_country->first()->entity;
+      if ($country) {
         $iso3 = $country->field_iso3->value;
       }
     }
