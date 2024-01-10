@@ -729,6 +729,25 @@ function reliefweb_meta_report_image(FieldableEntityInterface $entity) {
     }
   }
 
+  // Country icon.
+  if (empty($image)) {
+    $iso3 = '';
+    if ($entity->hasField('field_primary_country') && !$entity->field_primary_country->isEmpty()) {
+      $iso3 = $entity->field_primary_country->entity->field_iso3->value;
+    }
+    elseif ($entity->hasField('field_country') && !$entity->field_country->isEmpty()) {
+      $countries = $entity->field_country->filterEmptyItems();
+      if (!empty($countries)) {
+        $country = reset($countries);
+        $iso3 = $country->field_iso3->value;
+      }
+    }
+
+    if (!empty($iso3)) {
+      $image = reliefweb_meta_get_country_icon($iso3);
+    }
+  }
+
   // Default to RW logo for social media.
   return $image ?: reliefweb_meta_get_image_url();
 }
@@ -757,6 +776,34 @@ function reliefweb_meta_get_entity_shortlink(EntityInterface $entity) {
     'absolute' => TRUE,
     'path_processing' => FALSE,
   ])->toString();
+}
+
+/**
+ * Get the icon for a given country.
+ *
+ * @param string $iso3
+ *   Country ISO3 code.
+ *
+ * @return string
+ *   Image URL of icon.
+ */
+function reliefweb_meta_get_country_icon($iso3) {
+  $module_path = \Drupal::service('extension.path.resolver')
+    ->getPath('module', 'reliefweb_meta');
+  $path = $module_path . '/images/icons';
+
+  $files = \Drupal::service('file_system')->scanDirectory($path, '/_' . $iso3 . '\.png$/i');
+  if ($files) {
+    $file = reset($files);
+    if ($path && file_exists($path)) {
+      return Url::fromUserInput('/' . $file->uri, [
+        'absolute' => TRUE,
+        'path_processing' => FALSE,
+      ])->toString();
+    }
+  }
+
+  return '';
 }
 
 /**
