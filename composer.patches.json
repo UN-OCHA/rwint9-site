@@ -2,7 +2,7 @@
     "patches": {
         "drupal/core" : {
             "https://www.drupal.org/project/drupal/issues/3047110": "PATCHES/core--drupal--3047110-taxonomy-term-moderation-class.patch",
-            "https://www.drupal.org/project/drupal/issues/3008292": "PATCHES/core--drupal--3008292-image-upload-validators.patch",
+            "https://www.drupal.org/project/drupal/issues/3008292": "PATCHES/3008292-77.patch",
             "https://www.drupal.org/project/drupal/issues/3143617": "PATCHES/core--drupal--3143617-pager-parameter.patch"
         },
         "drupal/guidelines": {
@@ -17,9 +17,6 @@
         },
         "drush/drush": {
             "https://humanitarian.atlassian.net/browse/OPS-8026": "PATCHES/drush--timeout-override.patch"
-        },
-        "unocha/common_design": {
-            "https://humanitarian.atlassian.net/browse/CD-519": "PATCHES/common_design--default-logo-remove.patch"
         }
     }
 }
