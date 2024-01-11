@@ -3437,17 +3437,17 @@
         },
         {
             "name": "drupal/imagemagick",
-            "version": "3.5.0",
+            "version": "3.6.0",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/imagemagick.git",
-                "reference": "8.x-3.5"
+                "reference": "8.x-3.6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/imagemagick-8.x-3.5.zip",
-                "reference": "8.x-3.5",
-                "shasum": "336d30caaf48565b519506f6edc0bd9496ec2f4c"
+                "url": "https://ftp.drupal.org/files/projects/imagemagick-8.x-3.6.zip",
+                "reference": "8.x-3.6",
+                "shasum": "b4efc5ff6ab5469475f0ef7242eba0c7eda1c75c"
             },
             "require": {
                 "drupal/core": "^10.1",
@@ -3457,8 +3457,8 @@
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "8.x-3.5",
-                    "datestamp": "1702375617",
+                    "version": "8.x-3.6",
+                    "datestamp": "1703241142",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
@@ -3523,17 +3523,17 @@
         },
         {
             "name": "drupal/inline_entity_form",
-            "version": "1.0.0-rc15",
+            "version": "1.0.0-rc17",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/inline_entity_form.git",
-                "reference": "8.x-1.0-rc15"
+                "reference": "8.x-1.0-rc17"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/inline_entity_form-8.x-1.0-rc15.zip",
-                "reference": "8.x-1.0-rc15",
-                "shasum": "7702801f7e599956fc3d10cff8257809f53ac3ec"
+                "url": "https://ftp.drupal.org/files/projects/inline_entity_form-8.x-1.0-rc17.zip",
+                "reference": "8.x-1.0-rc17",
+                "shasum": "626622e01cf7a2d2977fdc06ae09afd5a814e09b"
             },
             "require": {
                 "drupal/core": "^8.8 || ^9 || ^10",
@@ -3545,8 +3545,8 @@
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "8.x-1.0-rc15",
-                    "datestamp": "1678126675",
+                    "version": "8.x-1.0-rc17",
+                    "datestamp": "1703020130",
                     "security-coverage": {
                         "status": "not-covered",
                         "message": "RC releases are not covered by Drupal security advisories."
@@ -5488,16 +5488,16 @@
         },
         {
             "name": "google/auth",
-            "version": "v1.33.0",
+            "version": "v1.34.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-auth-library-php.git",
-                "reference": "682dc6c30bb509953c9e43bb0960d901582da00b"
+                "reference": "155daeadfd2f09743f611ea493b828d382519575"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/google-auth-library-php/zipball/682dc6c30bb509953c9e43bb0960d901582da00b",
-                "reference": "682dc6c30bb509953c9e43bb0960d901582da00b",
+                "url": "https://api.github.com/repos/googleapis/google-auth-library-php/zipball/155daeadfd2f09743f611ea493b828d382519575",
+                "reference": "155daeadfd2f09743f611ea493b828d382519575",
                 "shasum": ""
             },
             "require": {
@@ -5540,9 +5540,9 @@
             "support": {
                 "docs": "https://googleapis.github.io/google-auth-library-php/main/",
                 "issues": "https://github.com/googleapis/google-auth-library-php/issues",
-                "source": "https://github.com/googleapis/google-auth-library-php/tree/v1.33.0"
+                "source": "https://github.com/googleapis/google-auth-library-php/tree/v1.34.0"
             },
-            "time": "2023-11-30T15:49:27+00:00"
+            "time": "2024-01-03T20:45:15+00:00"
         },
         {
             "name": "google/common-protos",
@@ -5598,23 +5598,23 @@
         },
         {
             "name": "google/gax",
-            "version": "v1.25.0",
+            "version": "v1.26.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/gax-php.git",
-                "reference": "8f07f56f8d14e784777020cd73cfde518bd7dd33"
+                "reference": "5dc97ea229abd449fa9acb9a909579f38820badd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/gax-php/zipball/8f07f56f8d14e784777020cd73cfde518bd7dd33",
-                "reference": "8f07f56f8d14e784777020cd73cfde518bd7dd33",
+                "url": "https://api.github.com/repos/googleapis/gax-php/zipball/5dc97ea229abd449fa9acb9a909579f38820badd",
+                "reference": "5dc97ea229abd449fa9acb9a909579f38820badd",
                 "shasum": ""
             },
             "require": {
-                "google/auth": "^1.25.0",
+                "google/auth": "^1.34.0",
                 "google/common-protos": "^3.0||^4.0",
                 "google/grpc-gcp": "^0.2||^0.3",
-                "google/longrunning": "^0.2",
+                "google/longrunning": "~0.2",
                 "google/protobuf": "^3.21.4",
                 "grpc/grpc": "^1.13",
                 "guzzlehttp/promises": "^1.4||^2.0",
@@ -5647,9 +5647,9 @@
             ],
             "support": {
                 "issues": "https://github.com/googleapis/gax-php/issues",
-                "source": "https://github.com/googleapis/gax-php/tree/v1.25.0"
+                "source": "https://github.com/googleapis/gax-php/tree/v1.26.2"
             },
-            "time": "2023-11-02T22:05:32+00:00"
+            "time": "2024-01-09T19:22:20+00:00"
         },
         {
             "name": "google/grpc-gcp",
@@ -5698,20 +5698,20 @@
         },
         {
             "name": "google/longrunning",
-            "version": "v0.2.6",
+            "version": "0.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/php-longrunning.git",
-                "reference": "9689b4db54cf4cf8186118d9d59aa9ba35bb5842"
+                "reference": "c21cb8f8794f724ca672dad94bf7d406e62476b9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/php-longrunning/zipball/9689b4db54cf4cf8186118d9d59aa9ba35bb5842",
-                "reference": "9689b4db54cf4cf8186118d9d59aa9ba35bb5842",
+                "url": "https://api.github.com/repos/googleapis/php-longrunning/zipball/c21cb8f8794f724ca672dad94bf7d406e62476b9",
+                "reference": "c21cb8f8794f724ca672dad94bf7d406e62476b9",
                 "shasum": ""
             },
             "require-dev": {
-                "google/gax": "^1.13.0",
+                "google/gax": "^1.26.0",
                 "phpunit/phpunit": "^9.0"
             },
             "type": "library",
@@ -5736,9 +5736,9 @@
             ],
             "description": "Google LongRunning Client for PHP",
             "support": {
-                "source": "https://github.com/googleapis/php-longrunning/tree/v0.2.6"
+                "source": "https://github.com/googleapis/php-longrunning/tree/v0.3.0"
             },
-            "time": "2023-04-21T14:12:59+00:00"
+            "time": "2024-01-05T17:46:51+00:00"
         },
         {
             "name": "google/protobuf",
@@ -6326,16 +6326,16 @@
         },
         {
             "name": "itamair/geophp",
-            "version": "1.5",
+            "version": "1.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/itamair/geoPHP.git",
-                "reference": "645f3262ebaa7443d58910207c65f386c733f614"
+                "reference": "f210e37ab3d4706b7e8cfe3183fec2f5be8a85e6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/itamair/geoPHP/zipball/645f3262ebaa7443d58910207c65f386c733f614",
-                "reference": "645f3262ebaa7443d58910207c65f386c733f614",
+                "url": "https://api.github.com/repos/itamair/geoPHP/zipball/f210e37ab3d4706b7e8cfe3183fec2f5be8a85e6",
+                "reference": "f210e37ab3d4706b7e8cfe3183fec2f5be8a85e6",
                 "shasum": ""
             },
             "require-dev": {
@@ -6366,9 +6366,9 @@
             "description": "GeoPHP is a open-source native PHP library for doing geometry operations. It is written entirely in PHP and can therefore run on shared hosts. It can read and write a wide variety of formats: WKT (including EWKT), WKB (including EWKB), GeoJSON, KML, GPX, GeoRSS). It works with all Simple-Feature geometries (Point, LineString, Polygon, GeometryCollection etc.) and can be used to get centroids, bounding-boxes, area, and a wide variety of other useful information.",
             "homepage": "https://github.com/itamair/geoPHP",
             "support": {
-                "source": "https://github.com/itamair/geoPHP/tree/1.5"
+                "source": "https://github.com/itamair/geoPHP/tree/1.6"
             },
-            "time": "2023-04-26T23:16:44+00:00"
+            "time": "2023-12-23T23:28:59+00:00"
         },
         {
             "name": "justinrainbow/json-schema",
@@ -7052,16 +7052,16 @@
         },
         {
             "name": "mglaman/phpstan-drupal",
-            "version": "1.2.4",
+            "version": "1.2.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mglaman/phpstan-drupal.git",
-                "reference": "57b2cc67fb4416e8484db37a3d8502ac8fb3c0d6"
+                "reference": "a5a001a71b3b7ba99d552fc9490d31e0cc27422b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mglaman/phpstan-drupal/zipball/57b2cc67fb4416e8484db37a3d8502ac8fb3c0d6",
-                "reference": "57b2cc67fb4416e8484db37a3d8502ac8fb3c0d6",
+                "url": "https://api.github.com/repos/mglaman/phpstan-drupal/zipball/a5a001a71b3b7ba99d552fc9490d31e0cc27422b",
+                "reference": "a5a001a71b3b7ba99d552fc9490d31e0cc27422b",
                 "shasum": ""
             },
             "require": {
@@ -7136,7 +7136,7 @@
             "description": "Drupal extension and rules for PHPStan",
             "support": {
                 "issues": "https://github.com/mglaman/phpstan-drupal/issues",
-                "source": "https://github.com/mglaman/phpstan-drupal/tree/1.2.4"
+                "source": "https://github.com/mglaman/phpstan-drupal/tree/1.2.5"
             },
             "funding": [
                 {
@@ -7152,7 +7152,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-11-14T22:47:32+00:00"
+            "time": "2024-01-10T16:56:53+00:00"
         },
         {
             "name": "micheh/phpcs-gitlab",
@@ -7524,16 +7524,16 @@
         },
         {
             "name": "open-telemetry/api",
-            "version": "1.0.1",
+            "version": "1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/api.git",
-                "reference": "78bf7615fa0504b5b9ac632cc79bb83ffe7ebb90"
+                "reference": "401d04c6afe349afa78250ac862db2f89dbf94f6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/api/zipball/78bf7615fa0504b5b9ac632cc79bb83ffe7ebb90",
-                "reference": "78bf7615fa0504b5b9ac632cc79bb83ffe7ebb90",
+                "url": "https://api.github.com/repos/opentelemetry-php/api/zipball/401d04c6afe349afa78250ac862db2f89dbf94f6",
+                "reference": "401d04c6afe349afa78250ac862db2f89dbf94f6",
                 "shasum": ""
             },
             "require": {
@@ -7545,7 +7545,7 @@
                 "symfony/polyfill-php82": "^1.26"
             },
             "conflict": {
-                "open-telemetry/sdk": "<=1.0.1"
+                "open-telemetry/sdk": "<=1.0.4"
             },
             "type": "library",
             "extra": {
@@ -7587,20 +7587,20 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2023-12-13T02:03:10+00:00"
+            "time": "2024-01-10T13:04:59+00:00"
         },
         {
             "name": "open-telemetry/context",
-            "version": "1.0.0",
+            "version": "1.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/context.git",
-                "reference": "99f3d54fa9f9ff67421774feeef5e5b1f209ea21"
+                "reference": "40a1f8941b7e8578bf3780d61e445bca5e9fbe5a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/context/zipball/99f3d54fa9f9ff67421774feeef5e5b1f209ea21",
-                "reference": "99f3d54fa9f9ff67421774feeef5e5b1f209ea21",
+                "url": "https://api.github.com/repos/opentelemetry-php/context/zipball/40a1f8941b7e8578bf3780d61e445bca5e9fbe5a",
+                "reference": "40a1f8941b7e8578bf3780d61e445bca5e9fbe5a",
                 "shasum": ""
             },
             "require": {
@@ -7648,7 +7648,7 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2023-09-05T03:38:44+00:00"
+            "time": "2024-01-09T00:33:41+00:00"
         },
         {
             "name": "open-telemetry/exporter-otlp",
@@ -7779,16 +7779,16 @@
         },
         {
             "name": "open-telemetry/sdk",
-            "version": "1.0.4",
+            "version": "1.0.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/sdk.git",
-                "reference": "550ea6e9a14bef8b5fc522b88687b57306013fe8"
+                "reference": "57d2a1a2b4a5beb70ffed4642068686146b9d2e5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/sdk/zipball/550ea6e9a14bef8b5fc522b88687b57306013fe8",
-                "reference": "550ea6e9a14bef8b5fc522b88687b57306013fe8",
+                "url": "https://api.github.com/repos/opentelemetry-php/sdk/zipball/57d2a1a2b4a5beb70ffed4642068686146b9d2e5",
+                "reference": "57d2a1a2b4a5beb70ffed4642068686146b9d2e5",
                 "shasum": ""
             },
             "require": {
@@ -7858,7 +7858,7 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2023-12-28T22:10:34+00:00"
+            "time": "2024-01-10T13:04:59+00:00"
         },
         {
             "name": "open-telemetry/sem-conv",
@@ -8440,23 +8440,23 @@
         },
         {
             "name": "phenx/php-font-lib",
-            "version": "0.5.4",
+            "version": "0.5.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/dompdf/php-font-lib.git",
-                "reference": "dd448ad1ce34c63d09baccd05415e361300c35b4"
+                "reference": "671df0f3516252011aa94f9e8e3b3b66199339f8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dompdf/php-font-lib/zipball/dd448ad1ce34c63d09baccd05415e361300c35b4",
-                "reference": "dd448ad1ce34c63d09baccd05415e361300c35b4",
+                "url": "https://api.github.com/repos/dompdf/php-font-lib/zipball/671df0f3516252011aa94f9e8e3b3b66199339f8",
+                "reference": "671df0f3516252011aa94f9e8e3b3b66199339f8",
                 "shasum": ""
             },
             "require": {
                 "ext-mbstring": "*"
             },
             "require-dev": {
-                "symfony/phpunit-bridge": "^3 || ^4 || ^5"
+                "symfony/phpunit-bridge": "^3 || ^4 || ^5 || ^6"
             },
             "type": "library",
             "autoload": {
@@ -8466,7 +8466,7 @@
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
-                "LGPL-3.0"
+                "LGPL-2.1-or-later"
             ],
             "authors": [
                 {
@@ -8478,9 +8478,9 @@
             "homepage": "https://github.com/PhenX/php-font-lib",
             "support": {
                 "issues": "https://github.com/dompdf/php-font-lib/issues",
-                "source": "https://github.com/dompdf/php-font-lib/tree/0.5.4"
+                "source": "https://github.com/dompdf/php-font-lib/tree/0.5.5"
             },
-            "time": "2021-12-17T19:44:54+00:00"
+            "time": "2024-01-07T18:13:29+00:00"
         },
         {
             "name": "phootwork/collection",
@@ -15438,20 +15438,20 @@
         },
         {
             "name": "unocha/common_design",
-            "version": "v9.2.3",
+            "version": "v9.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/common_design.git",
-                "reference": "c2b574e0a60d58211d846c444a9bdd79570e6146"
+                "reference": "5d5bba22242b2ac19716d45f4f385b9c9b2d020d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/common_design/zipball/c2b574e0a60d58211d846c444a9bdd79570e6146",
-                "reference": "c2b574e0a60d58211d846c444a9bdd79570e6146",
+                "url": "https://api.github.com/repos/UN-OCHA/common_design/zipball/5d5bba22242b2ac19716d45f4f385b9c9b2d020d",
+                "reference": "5d5bba22242b2ac19716d45f4f385b9c9b2d020d",
                 "shasum": ""
             },
             "require": {
-                "composer/installers": "^1.2",
+                "composer/installers": "^1.2 || ^2",
                 "drupal/stable": "^2.0"
             },
             "type": "drupal-theme",
@@ -15462,22 +15462,22 @@
             "description": "OCHA Common Design base theme for Drupal 9+",
             "support": {
                 "issues": "https://github.com/UN-OCHA/common_design/issues",
-                "source": "https://github.com/UN-OCHA/common_design/tree/v9.2.3"
+                "source": "https://github.com/UN-OCHA/common_design/tree/v9.3.0"
             },
-            "time": "2024-01-02T15:49:32+00:00"
+            "time": "2024-01-04T12:36:24+00:00"
         },
         {
             "name": "unocha/ocha_monitoring",
-            "version": "1.0.0",
+            "version": "1.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_monitoring.git",
-                "reference": "62c4b8acc1f5bdf974b095c6e7dc927f9660d3cf"
+                "reference": "f2542aeb5f702ab1e39d73caf730ba5620598728"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_monitoring/zipball/62c4b8acc1f5bdf974b095c6e7dc927f9660d3cf",
-                "reference": "62c4b8acc1f5bdf974b095c6e7dc927f9660d3cf",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_monitoring/zipball/f2542aeb5f702ab1e39d73caf730ba5620598728",
+                "reference": "f2542aeb5f702ab1e39d73caf730ba5620598728",
                 "shasum": ""
             },
             "require": {
@@ -15492,9 +15492,9 @@
             "description": "UNOCHA Monitoring",
             "support": {
                 "issues": "https://github.com/UN-OCHA/ocha_monitoring/issues",
-                "source": "https://github.com/UN-OCHA/ocha_monitoring/tree/1.0.0"
+                "source": "https://github.com/UN-OCHA/ocha_monitoring/tree/1.0.3"
             },
-            "time": "2023-11-21T10:32:25+00:00"
+            "time": "2023-12-21T13:23:29+00:00"
         },
         {
             "name": "webflo/drupal-finder",
@@ -16063,16 +16063,16 @@
         },
         {
             "name": "pdepend/pdepend",
-            "version": "2.16.1",
+            "version": "2.16.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/pdepend/pdepend.git",
-                "reference": "66ceb05eaa8bf358574143c974b04463911bc700"
+                "reference": "f942b208dc2a0868454d01b29f0c75bbcfc6ed58"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/pdepend/pdepend/zipball/66ceb05eaa8bf358574143c974b04463911bc700",
-                "reference": "66ceb05eaa8bf358574143c974b04463911bc700",
+                "url": "https://api.github.com/repos/pdepend/pdepend/zipball/f942b208dc2a0868454d01b29f0c75bbcfc6ed58",
+                "reference": "f942b208dc2a0868454d01b29f0c75bbcfc6ed58",
                 "shasum": ""
             },
             "require": {
@@ -16114,7 +16114,7 @@
             ],
             "support": {
                 "issues": "https://github.com/pdepend/pdepend/issues",
-                "source": "https://github.com/pdepend/pdepend/tree/2.16.1"
+                "source": "https://github.com/pdepend/pdepend/tree/2.16.2"
             },
             "funding": [
                 {
@@ -16122,7 +16122,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-12-10T18:38:19+00:00"
+            "time": "2023-12-17T18:09:59+00:00"
         },
         {
             "name": "phpcompatibility/php-compatibility",
