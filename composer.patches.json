@@ -12,14 +12,14 @@
             "Fix derivatives for webp source images": "PATCHES/imageapi_optimize_webp-webp-source-image.patch",
             "Support imagemagick toolkit": "PATCHES/imageapi_optimize_webp-imagemagick-toolkit.patch"
         },
+        "drupal/svg_image": {
+            "Drupal 10.2 compatibility": "PATCHES/svg_image--3413668--drupal-10.2-compatibility.patch"
+        },
         "drupal/username_enumeration_prevention": {
             "Avoid leaking the path via Drupal.settings json": "PATCHES/username_enumeration_prevention-user-login-block-form-3312288.patch"
         },
         "drush/drush": {
             "https://humanitarian.atlassian.net/browse/OPS-8026": "PATCHES/drush--timeout-override.patch"
-        },
-        "unocha/common_design": {
-            "https://humanitarian.atlassian.net/browse/CD-519": "PATCHES/common_design--default-logo-remove.patch"
         }
     }
 }

@@ -1,0 +1,60 @@
+diff --git a/src/Plugin/Field/FieldWidget/SvgImageWidget.php b/src/Plugin/Field/FieldWidget/SvgImageWidget.php
+index 6a108c031b48e1a1cdd289bcab01425748a049dc..9f1fd50061deb939b166baae7ed3d565aeb3b72b 100755
+--- a/src/Plugin/Field/FieldWidget/SvgImageWidget.php
++++ b/src/Plugin/Field/FieldWidget/SvgImageWidget.php
+@@ -184,18 +184,46 @@ class SvgImageWidget extends FileWidget {
+ 
+     $fieldSettings = $this->getFieldSettings();
+ 
+-    // Add upload resolution validation.
+-    if ($fieldSettings['max_resolution'] || $fieldSettings['min_resolution']) {
+-      $element['#upload_validators']['file_validate_image_resolution'] = [$fieldSettings['max_resolution'], $fieldSettings['min_resolution']];
++    // Druapal 10.2 changes the file validation API.
++    // @see https://www.drupal.org/node/3363700
++    if (version_compare(\Drupal::VERSION, '10.2', '>=')) {
++      // Add image validation.
++      $element['#upload_validators']['FileIsImage'] = [];
++
++      // Add upload resolution validation.
++      if ($fieldSettings['max_resolution'] || $fieldSettings['min_resolution']) {
++        $element['#upload_validators']['FileImageDimensions'] = [
++          'maxDimensions' => $fieldSettings['max_resolution'],
++          'minDimensions' => $fieldSettings['min_resolution'],
++        ];
++      }
++
++      // If not using custom extension validation, ensure this is an image.
++      $supportedExtensions = $this->imageFactory->getSupportedExtensions();
++      $supportedExtensions[] = 'svg';
++      $extensions = $element['#upload_validators']['FileExtension']['extensions'] ?? implode(' ', $supportedExtensions);
++
++      $extensions = array_intersect(explode(' ', $extensions), $supportedExtensions);
++      $element['#upload_validators']['FileExtension']['extensions'] = implode(' ', $extensions);
+     }
++    // Backward compatibility with Drupal < 10.2.
++    else {
++      // Add upload resolution validation.
++      if ($fieldSettings['max_resolution'] || $fieldSettings['min_resolution']) {
++        $element['#upload_validators']['file_validate_image_resolution'] = [
++          $fieldSettings['max_resolution'],
++          $fieldSettings['min_resolution'],
++        ];
++      }
+ 
+-    // If not using custom extension validation, ensure this is an image.
+-    $supportedExtensions = $this->imageFactory->getSupportedExtensions();
+-    $supportedExtensions[] = 'svg';
+-    $extensions = $element['#upload_validators']['file_validate_extensions'][0] ?? implode(' ', $supportedExtensions);
++      // If not using custom extension validation, ensure this is an image.
++      $supportedExtensions = $this->imageFactory->getSupportedExtensions();
++      $supportedExtensions[] = 'svg';
++      $extensions = $element['#upload_validators']['file_validate_extensions'][0] ?? implode(' ', $supportedExtensions);
+ 
+-    $extensions = array_intersect(explode(' ', $extensions), $supportedExtensions);
+-    $element['#upload_validators']['file_validate_extensions'][0] = implode(' ', $extensions);
++      $extensions = array_intersect(explode(' ', $extensions), $supportedExtensions);
++      $element['#upload_validators']['file_validate_extensions'][0] = implode(' ', $extensions);
++    }
+ 
+     // Add mobile device image capture acceptance.
+     $element['#accept'] = 'image/*';
