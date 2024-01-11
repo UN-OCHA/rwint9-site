@@ -9,11 +9,23 @@ name: 'Token & Markdown'
 format: token_markdown
 weight: -7
 filters:
-  filter_htmlcorrector:
-    id: filter_htmlcorrector
+  filter_align:
+    id: filter_align
     provider: filter
     status: false
-    weight: -44
+    weight: -42
+    settings: {  }
+  filter_autop:
+    id: filter_autop
+    provider: filter
+    status: false
+    weight: -41
+    settings: {  }
+  filter_caption:
+    id: filter_caption
+    provider: filter
+    status: false
+    weight: -40
     settings: {  }
   filter_html:
     id: filter_html
@@ -24,46 +36,6 @@ filters:
       allowed_html: "<a href hreflang target> <em> <strong> <cite> <blockquote cite> <code> <ul type> <ol start type='1 A I'> <li> <dl> <dt> <dd> <h1 id> <h2 id> <h3 id> <h4 id> <h5 id> <h6 id> <table> <caption> <thead> <tbody> <tfoot> <tr> <th colspan rowspan> <td colspan rowspan> <div> <span> <p> <br> <strike> <ul> <img src alt> <sup> <sub> <iframe longdesc name scrolling src title align height frameborder width allowfullscreen>"
       filter_html_help: true
       filter_html_nofollow: false
-  media_embed:
-    id: media_embed
-    provider: media
-    status: false
-    weight: -45
-    settings:
-      default_view_mode: default
-      allowed_view_modes: {  }
-      allowed_media_types: {  }
-  filter_markdown:
-    id: filter_markdown
-    provider: reliefweb_utility
-    status: true
-    weight: -49
-    settings: {  }
-  filter_iframe:
-    id: filter_iframe
-    provider: reliefweb_utility
-    status: true
-    weight: -50
-    settings: {  }
-  filter_align:
-    id: filter_align
-    provider: filter
-    status: false
-    weight: -42
-    settings: {  }
-  filter_url:
-    id: filter_url
-    provider: filter
-    status: false
-    weight: -39
-    settings:
-      filter_url_length: 72
-  filter_caption:
-    id: filter_caption
-    provider: filter
-    status: false
-    weight: -40
-    settings: {  }
   filter_html_escape:
     id: filter_html_escape
     provider: filter
@@ -76,12 +48,40 @@ filters:
     status: false
     weight: -38
     settings: {  }
-  filter_autop:
-    id: filter_autop
+  filter_htmlcorrector:
+    id: filter_htmlcorrector
     provider: filter
     status: false
-    weight: -41
+    weight: -44
     settings: {  }
+  filter_iframe:
+    id: filter_iframe
+    provider: reliefweb_utility
+    status: true
+    weight: -50
+    settings: {  }
+  filter_markdown:
+    id: filter_markdown
+    provider: reliefweb_utility
+    status: true
+    weight: -49
+    settings: {  }
+  filter_url:
+    id: filter_url
+    provider: filter
+    status: false
+    weight: -39
+    settings:
+      filter_url_length: 72
+  media_embed:
+    id: media_embed
+    provider: media
+    status: false
+    weight: -45
+    settings:
+      default_view_mode: default
+      allowed_view_modes: {  }
+      allowed_media_types: {  }
   reliefweb_token_filter:
     id: reliefweb_token_filter
     provider: reliefweb_utility
