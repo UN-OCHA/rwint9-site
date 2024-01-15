@@ -1,0 +1,93 @@
+_core:
+  default_config_hash: sEceqho82ErW-swOq9gnnEcaTFTiX_lrtpKL2ypdmmg
+plugins:
+  completion:
+    aws_bedrock:
+      model: amazon.titan-text-express-v1
+      endpoint: ''
+      version: ''
+      region: REPLACE_WITH_REGION
+      api_key: REPLACE_WITH_KEY
+      max_tokens: 512
+      prompt_template: |-
+        {{ context }}
+
+        Based solely on the information above, please answer the following question. Please do not make things up and say you don't know if you cannot answer.
+
+        {{ question }}
+      api_secret: REPLACE_WITH_SECRET
+      role_arn: null
+    azure_openai:
+      model: gpt-3.5-turbo
+      endpoint: REPLACE_WITH_ENDPOINT
+      version: '2023-05-15'
+      region: REPLACE_WITH_REGION
+      api_key: REPLACE_WITH_KEY
+      max_tokens: 512
+      prompt_template: |-
+        Based solely on the information below, please answer the user's question. Please do not make things up and say you don't know if you cannot answer.
+
+        {{ context }}
+  embedding:
+    aws_bedrock:
+      model: amazon.titan-embed-text-v1
+      endpoint: ''
+      version: ''
+      region: REPLACE_WITH_REGION
+      api_key: REPLACE_WITH_KEY
+      batch_size: 1
+      dimensions: 1536
+      max_tokens: 8192
+      api_secret: REPLACE_WITH_SECRET
+      role_arn: null
+    azure_openai:
+      model: text-embedding-ada-002
+      endpoint: REPLACE_WITH_ENDPOINT
+      version: '2023-05-15'
+      region: REPLACE_WITH_REGION
+      api_key: REPLACE_WITH_KEY
+      batch_size: 16
+      dimensions: 1536
+      max_tokens: 4096
+  source:
+    reliefweb:
+      api_url: 'https://api.reliefweb.int/v1'
+      converter_url: 'https://reliefweb.int/search/converter/json'
+      appname: ocha-ai-chat
+      cache_enabled: true
+      cache_lifetime: 600
+  text_extractor:
+    mupdf:
+      mutool: /usr/bin/mutool
+  text_splitter:
+    token:
+      length: 384
+      overlap: 96
+    sentence:
+      length: 4
+      overlap: 2
+    page:
+      length: 1
+      overlap: 0
+  vector_store:
+    elasticsearch:
+      url: REPLACE_WITH_URL
+      indexing_batch_size: 10
+      topk: 5
+      min_similarity: 0.3
+      cutoff_coefficient: 0.5
+defaults:
+  plugins:
+    completion:
+      plugin_id: aws_bedrock
+    embedding:
+      plugin_id: aws_bedrock
+    source:
+      plugin_id: reliefweb
+    text_extractor:
+      application/pdf:
+        plugin_id: mupdf
+    text_splitter:
+      plugin_id: sentence
+    vector_store:
+      plugin_id: elasticsearch

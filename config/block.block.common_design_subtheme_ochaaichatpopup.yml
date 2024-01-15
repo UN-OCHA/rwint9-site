@@ -1,0 +1,28 @@
+uuid: b9a70ca4-c0f1-435d-9d2f-4ad6abc77a99
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - ocha_ai_chat
+  theme:
+    - common_design_subtheme
+id: common_design_subtheme_ochaaichatpopup
+theme: common_design_subtheme
+region: content
+weight: 0
+provider: null
+plugin: ocha_ai_chat_chat_popup
+settings:
+  id: ocha_ai_chat_chat_popup
+  label: 'OCHA AI Chat popup'
+  label_display: '0'
+  provider: ocha_ai_chat
+visibility:
+  'entity_bundle:node':
+    id: 'entity_bundle:node'
+    negate: false
+    context_mapping:
+      node: '@node.node_route_context:node'
+    bundles:
+      report: report
