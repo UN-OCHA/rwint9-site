@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ee395a099e7fbac60d9fa8aaf2606e48",
+    "content-hash": "e3e7c331d56f76255a981cf8727cfc5e",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -15882,16 +15882,16 @@
         },
         {
             "name": "unocha/ocha_ai_chat",
-            "version": "dev-develop",
+            "version": "v0.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_ai_chat.git",
-                "reference": "09aa7fa74313a57f9ed408a35c81b3a33edf9ec9"
+                "reference": "846d0453f8978bb519dbfdc7522dd4c0800721a9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai_chat/zipball/09aa7fa74313a57f9ed408a35c81b3a33edf9ec9",
-                "reference": "09aa7fa74313a57f9ed408a35c81b3a33edf9ec9",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai_chat/zipball/846d0453f8978bb519dbfdc7522dd4c0800721a9",
+                "reference": "846d0453f8978bb519dbfdc7522dd4c0800721a9",
                 "shasum": ""
             },
             "require": {
@@ -15909,7 +15909,6 @@
                 "drupal/coder": "^8.3",
                 "phpcompatibility/php-compatibility": "^9.3"
             },
-            "default-branch": true,
             "type": "drupal-module",
             "scripts": {
                 "phpcs": [
@@ -15933,10 +15932,10 @@
             ],
             "description": "OCHA AI Chat module",
             "support": {
-                "source": "https://github.com/UN-OCHA/ocha_ai_chat/tree/develop",
+                "source": "https://github.com/UN-OCHA/ocha_ai_chat/tree/v0.0.1",
                 "issues": "https://github.com/UN-OCHA/ocha_ai_chat/issues"
             },
-            "time": "2024-01-15T05:59:15+00:00"
+            "time": "2024-01-16T04:57:23+00:00"
         },
         {
             "name": "unocha/ocha_monitoring",
@@ -16877,8 +16876,7 @@
         "drupal/config_split": 5,
         "drupal/imageapi_optimize_binaries": 10,
         "drupal/inline_entity_form": 5,
-        "drupal/mimemail": 15,
-        "unocha/ocha_ai_chat": 20
+        "drupal/mimemail": 15
     },
     "prefer-stable": true,
     "prefer-lowest": false,
