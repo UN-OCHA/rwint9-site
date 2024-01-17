@@ -71,6 +71,7 @@ plugins:
       overlap: 0
   vector_store:
     elasticsearch:
+      base_index_name: ocha_ai_chat
       url: REPLACE_WITH_URL
       indexing_batch_size: 10
       topk: 5

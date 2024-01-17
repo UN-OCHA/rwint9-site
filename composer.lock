@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a3214695f9d19b5a70cdd03355fa57b9",
+    "content-hash": "bf73ee678ced2841545496667ead22ad",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -15882,16 +15882,16 @@
         },
         {
             "name": "unocha/ocha_ai_chat",
-            "version": "v0.0.1",
+            "version": "v0.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_ai_chat.git",
-                "reference": "846d0453f8978bb519dbfdc7522dd4c0800721a9"
+                "reference": "9413db9aa5e917a4efa9d67954c0034106b6ad19"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai_chat/zipball/846d0453f8978bb519dbfdc7522dd4c0800721a9",
-                "reference": "846d0453f8978bb519dbfdc7522dd4c0800721a9",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai_chat/zipball/9413db9aa5e917a4efa9d67954c0034106b6ad19",
+                "reference": "9413db9aa5e917a4efa9d67954c0034106b6ad19",
                 "shasum": ""
             },
             "require": {
@@ -15932,10 +15932,10 @@
             ],
             "description": "OCHA AI Chat module",
             "support": {
-                "source": "https://github.com/UN-OCHA/ocha_ai_chat/tree/v0.0.1",
+                "source": "https://github.com/UN-OCHA/ocha_ai_chat/tree/v0.0.2",
                 "issues": "https://github.com/UN-OCHA/ocha_ai_chat/issues"
             },
-            "time": "2024-01-16T04:57:23+00:00"
+            "time": "2024-01-17T02:05:47+00:00"
         },
         {
             "name": "unocha/ocha_monitoring",
