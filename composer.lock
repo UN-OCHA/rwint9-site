@@ -15882,16 +15882,16 @@
         },
         {
             "name": "unocha/ocha_ai_chat",
-            "version": "v0.0.2",
+            "version": "v0.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_ai_chat.git",
-                "reference": "9413db9aa5e917a4efa9d67954c0034106b6ad19"
+                "reference": "c147bef247e637c8c81f0b85f62891369d30ea32"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai_chat/zipball/9413db9aa5e917a4efa9d67954c0034106b6ad19",
-                "reference": "9413db9aa5e917a4efa9d67954c0034106b6ad19",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai_chat/zipball/c147bef247e637c8c81f0b85f62891369d30ea32",
+                "reference": "c147bef247e637c8c81f0b85f62891369d30ea32",
                 "shasum": ""
             },
             "require": {
@@ -15932,10 +15932,10 @@
             ],
             "description": "OCHA AI Chat module",
             "support": {
-                "source": "https://github.com/UN-OCHA/ocha_ai_chat/tree/v0.0.2",
+                "source": "https://github.com/UN-OCHA/ocha_ai_chat/tree/v0.0.3",
                 "issues": "https://github.com/UN-OCHA/ocha_ai_chat/issues"
             },
-            "time": "2024-01-17T02:05:47+00:00"
+            "time": "2024-01-18T03:25:30+00:00"
         },
         {
             "name": "unocha/ocha_monitoring",

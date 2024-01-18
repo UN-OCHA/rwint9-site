@@ -53,6 +53,7 @@ plugins:
     reliefweb:
       api_url: 'https://api.reliefweb.int/v1'
       converter_url: 'https://reliefweb.int/search/converter/json'
+      site_url: 'https://reliefweb.int'
       appname: ocha-ai-chat
       cache_enabled: true
       cache_lifetime: 600
@@ -89,6 +90,6 @@ defaults:
       application/pdf:
         plugin_id: mupdf
     text_splitter:
-      plugin_id: sentence
+      plugin_id: token
     vector_store:
       plugin_id: elasticsearch
