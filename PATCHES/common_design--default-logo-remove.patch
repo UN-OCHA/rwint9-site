@@ -1,7 +1,7 @@
-diff --git a/components/cd/cd-header/cd-logo.css b/components/cd/cd-header/cd-logo.css
+diff --git a/libraries/cd/cd-header/cd-logo.css b/libraries/cd/cd-header/cd-logo.css
 index b8e7821..c7b7d96 100644
---- a/components/cd/cd-header/cd-logo.css
-+++ b/components/cd/cd-header/cd-logo.css
+--- a/libraries/cd/cd-header/cd-logo.css
++++ b/libraries/cd/cd-header/cd-logo.css
 @@ -14,9 +14,6 @@
    float: left;
    width: var(--brand-logo-mobile-width, 52px);

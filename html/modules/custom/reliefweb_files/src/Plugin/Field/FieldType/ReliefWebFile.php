@@ -154,7 +154,7 @@ class ReliefWebFile extends FieldItemBase {
    * This doubles as a convenience clean-up function and a validation routine.
    * Commas are allowed for the end-user, but ultimately the value will be
    * stored as a space-separated list for compatibility with
-   * file_validate_extensions().
+   * the FileExtensions upload validator.
    *
    * This function is assigned as an #element_validate callback in
    * fieldSettingsForm().
@@ -277,24 +277,24 @@ class ReliefWebFile extends FieldItemBase {
     // ensure a file can be replaced only by a file of the same type.
     $extensions = $this->getAllowedFileExtensions();
     if (!empty($extensions)) {
-      $validators['file_validate_extensions'] = [implode(' ', $extensions)];
+      $validators['FileExtension'] = ['extensions' => implode(' ', $extensions)];
     }
 
     // Validate the file mime as well if defined, to  ensure a file can be
     // replaced only by a file of the same type.
     $file_mime = $this->getFileMime();
     if (!empty($file_mime)) {
-      $validators['reliefweb_files_file_validate_mime_type'] = [$file_mime];
+      $validators['ReliefWebFileMimeType'] = ['mimetype' => $file_mime];
     }
 
     // There is always a file size limit due to the PHP server limit.
-    $validators['file_validate_size'] = [$this->getMaxFileSize()];
+    $validators['FileSizeLimit'] = ['fileLimit' => $this->getMaxFileSize()];
 
     // Validate the filename length.
-    $validators['file_validate_name_length'] = [];
+    $validators['FileNameLength'] = [];
 
     // Validate the filename.
-    $validators['reliefweb_files_file_validate_file_name'] = [];
+    $validators['ReliefWebFileName'] = [];
 
     return $validators;
   }
@@ -310,12 +310,15 @@ class ReliefWebFile extends FieldItemBase {
     // We only allow PNG images to be consistent with the automatically
     // generated previews.
     $validators = [
-      'file_validate_extensions' => ['png'],
-      'reliefweb_files_file_validate_mime_type' => ['image/png'],
-      'file_validate_name_length' => [],
-      'file_validate_is_image' => [],
-      'file_validate_size' => [$this->getPreviewMaxFileSize()],
-      'file_validate_image_resolution' => ['', $this->getPreviewMinDimensions()],
+      'FileExtension' => ['extensions' => 'png'],
+      'ReliefWebFileMimeType' => ['mimetype' => 'image/png'],
+      'FileNameLength' => [],
+      'FileIsImage' => [],
+      'FileSizeLimit' => ['fileLimit' => $this->getPreviewMaxFileSize()],
+      'FileImageDimensions' => [
+        'maxDimensions' => '',
+        'minDimensions' => $this->getPreviewMinDimensions(),
+      ],
     ];
 
     return $validators;
