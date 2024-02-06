@@ -199,6 +199,10 @@ function reliefweb_meta_get_node_metatags(NodeInterface $node) {
       $description .= reliefweb_meta_description_term_list($node, $terms, ['source' => 1], 'from');
       // Closing date.
       $description .= reliefweb_meta_description_date($node, 'job_closing_date', '; closing on ');
+
+      // Image.
+      $image = reliefweb_meta_get_image($node);
+
       break;
 
     case 'report':
@@ -252,7 +256,7 @@ function reliefweb_meta_get_node_metatags(NodeInterface $node) {
       }
 
       // Image.
-      $image = reliefweb_meta_report_image($node);
+      $image = reliefweb_meta_get_image($node);
       break;
 
     // @todo we could use the topic icon but the quality is not always good.
@@ -317,6 +321,10 @@ function reliefweb_meta_get_node_metatags(NodeInterface $node) {
       }
       // Registration date.
       $description .= reliefweb_meta_description_date($node, 'registration_deadline', '; registration until ');
+
+      // Image.
+      $image = reliefweb_meta_get_image($node);
+
       break;
 
   }
@@ -382,6 +390,10 @@ function reliefweb_meta_get_term_metatags(TermInterface $term) {
       $description = t('Humanitarian situation reports, response plans, news, analyses, evaluations, assessments, maps, infographics and more on @name', [
         '@name' => $term->label(),
       ]);
+
+      // Image.
+      $image = reliefweb_meta_get_image($term);
+
       break;
 
     case 'source':
@@ -696,7 +708,7 @@ function reliefweb_meta_description_date(FieldableEntityInterface $entity, $fiel
 }
 
 /**
- * Get metadata image for report pages.
+ * Get metadata image.
  *
  * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
  *   Entity.
@@ -704,7 +716,7 @@ function reliefweb_meta_description_date(FieldableEntityInterface $entity, $fiel
  * @return string
  *   Url of the report image.
  */
-function reliefweb_meta_report_image(FieldableEntityInterface $entity) {
+function reliefweb_meta_get_image(FieldableEntityInterface $entity) {
   // Headline image.
   $image = reliefweb_meta_get_entity_image_url($entity, 'field_headline_image');
 
@@ -726,6 +738,21 @@ function reliefweb_meta_report_image(FieldableEntityInterface $entity) {
     $code = $entity->field_disaster_type?->entity?->field_disaster_type_code?->value;
     if (!empty($code)) {
       $image = reliefweb_meta_get_image_url('/disaster-type/' . $code . '.png');
+    }
+  }
+
+  // Country icon.
+  if (empty($image)) {
+    $iso3 = '';
+    if ($entity->hasField('field_primary_country') && !$entity->field_primary_country->isEmpty()) {
+      $iso3 = $entity->field_primary_country->entity?->field_iso3?->value;
+    }
+    elseif ($entity->hasField('field_country') && !$entity->field_country->isEmpty()) {
+      $iso3 = $entity->field_country->entity?->field_iso3?->value;
+    }
+
+    if (!empty($iso3)) {
+      $image = reliefweb_meta_get_country_icon($iso3);
     }
   }
 
@@ -757,6 +784,34 @@ function reliefweb_meta_get_entity_shortlink(EntityInterface $entity) {
     'absolute' => TRUE,
     'path_processing' => FALSE,
   ])->toString();
+}
+
+/**
+ * Get the icon for a given country.
+ *
+ * @param string $iso3
+ *   Country ISO3 code.
+ *
+ * @return string
+ *   Image URL of icon.
+ */
+function reliefweb_meta_get_country_icon($iso3) {
+  $module_path = \Drupal::service('extension.path.resolver')
+    ->getPath('module', 'reliefweb_meta');
+  $path = $module_path . '/images/icons';
+
+  $files = \Drupal::service('file_system')->scanDirectory($path, '/_' . $iso3 . '\.png$/i');
+  if ($files) {
+    $file = reset($files);
+    if ($path && file_exists($path)) {
+      return Url::fromUserInput('/' . $file->uri, [
+        'absolute' => TRUE,
+        'path_processing' => FALSE,
+      ])->toString();
+    }
+  }
+
+  return '';
 }
 
 /**

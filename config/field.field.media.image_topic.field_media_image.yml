@@ -28,7 +28,7 @@ settings:
   handler: 'default:file'
   handler_settings: {  }
   file_directory: images/topics
-  file_extensions: 'png gif jpg jpeg svg'
+  file_extensions: 'png gif jpg jpeg svg webp'
   max_filesize: ''
   max_resolution: ''
   min_resolution: 64x64

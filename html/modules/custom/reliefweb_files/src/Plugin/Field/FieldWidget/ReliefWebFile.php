@@ -17,6 +17,7 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\file\Entity\File;
+use Drupal\file\Validation\FileValidatorInterface;
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile as ReliefWebFileType;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -64,6 +65,13 @@ class ReliefWebFile extends WidgetBase {
   protected $requestStack;
 
   /**
+   * The file validator.
+   *
+   * @var \Drupal\file\Validation\FileValidatorInterface
+   */
+  protected $fileValidator;
+
+  /**
    * Ajax wrapper ID.
    *
    * @var string
@@ -82,7 +90,8 @@ class ReliefWebFile extends WidgetBase {
     FileSystemInterface $file_system,
     LoggerChannelFactoryInterface $logger_factory,
     RendererInterface $renderer,
-    RequestStack $request_stack
+    RequestStack $request_stack,
+    FileValidatorInterface $file_validator
   ) {
     parent::__construct(
       $plugin_id,
@@ -95,6 +104,7 @@ class ReliefWebFile extends WidgetBase {
     $this->logger = $logger_factory->get('reliefweb_file_widget');
     $this->renderer = $renderer;
     $this->requestStack = $request_stack;
+    $this->fileValidator = $file_validator;
   }
 
   /**
@@ -115,7 +125,8 @@ class ReliefWebFile extends WidgetBase {
       $container->get('file_system'),
       $container->get('logger.factory'),
       $container->get('renderer'),
-      $container->get('request_stack')
+      $container->get('request_stack'),
+      $container->get('file.validator')
     );
   }
 
@@ -965,7 +976,7 @@ class ReliefWebFile extends WidgetBase {
         ]);
 
         // Validate the uploaded file.
-        $validation_errors = file_validate($dummy_file, $validators);
+        $validation_errors = $this->validateFile($dummy_file, $validators);
 
         // Bail out if the uploaded file is invalid.
         if (!empty($validation_errors)) {
@@ -1039,7 +1050,7 @@ class ReliefWebFile extends WidgetBase {
    * @param string $name
    *   Name of the request property that contain the upload files.
    * @param array $validators
-   *   Upload validators as expected by file_validate().
+   *   Upload validators as expected by the file.validator service.
    *
    * @return array
    *   List of field item data.
@@ -1089,7 +1100,7 @@ class ReliefWebFile extends WidgetBase {
    * @param \SplFileInfo $file_info
    *   The uploaded file info.
    * @param array $validators
-   *   Upload validators as expected by file_validate().
+   *   Upload validators as expected by the file.validator service.
    *
    * @return \Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile
    *   New field item created with the file information.
@@ -1139,13 +1150,13 @@ class ReliefWebFile extends WidgetBase {
     $file->setSize(@filesize($path) ?? 0);
 
     // Validate the file.
-    $errors = file_validate($file, $validators + $item->getUploadValidators());
+    $validation_errors = $this->validateFile($file, $validators);
 
     // Bail out if the uploaded file is invalid.
-    if (!empty($errors)) {
+    if (!empty($validation_errors)) {
       $this->throwError($this->t('Unable to upload the file %name. @errors', [
         '%name' => $file_name,
-        '@errors' => $this->generateErrorList($errors),
+        '@errors' => $this->generateErrorList($validation_errors),
       ]));
     }
 
@@ -1300,7 +1311,7 @@ class ReliefWebFile extends WidgetBase {
     return $file_info->isValid() &&
            $file_info->getRealPath() !== FALSE &&
            // Max allowed length of a managed file name.
-           // @see file_validate_name_length()
+           // @see \Drupal\file\Plugin\Validation\Constraint\FileNameLengthConstraint
            mb_strlen($file_info->getClientOriginalName()) <= 240;
   }
 
@@ -1347,6 +1358,30 @@ class ReliefWebFile extends WidgetBase {
       '@file_extension' => mb_strtoupper($file_extension),
       '@file_size' => format_size($file_size),
     ]);
+  }
+
+  /**
+   * Validate a file against a list of validators.
+   *
+   * @param \Drupal\file\Entity\File $file
+   *   File to validate.
+   * @param array $validators
+   *   Associative array of upload validators with their ID as key and
+   *   expected parameters as values.
+   *
+   * @return array
+   *   List of validation error messages if any.
+   */
+  public function validateFile(File $file, array $validators = []): array {
+    /** @var \Symfony\Component\Validator\ConstraintViolationListInterface $violations */
+    $violations = $this->fileValidator->validate($file, $validators);
+
+    $errors = [];
+    foreach ($violations as $violation) {
+      $errors[] = $violation->getMessage();
+    }
+
+    return $errors;
   }
 
   /**

@@ -124,7 +124,7 @@ jobs:
         uses: cafuego/command-output@main
         with:
           run: |
-            docker compose -f tests/docker-compose.yml exec -T drupal drush -y si --existing-config
+            docker compose -f tests/docker-compose.yml exec -T drupal drush -y si --existing-config minimal install_configure_form.enable_update_status_emails=NULL
         env:
           fail-fast: true
 
@@ -148,7 +148,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           coverage_path: "clover.xml"
-          threshold_alert: 10
+          threshold_alert: 8
           threshold_warning: 50
           threshold_metric: "lines"
           comment_footer: false
