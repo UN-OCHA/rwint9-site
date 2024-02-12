@@ -3,15 +3,16 @@ FROM public.ecr.aws/unocha/php-k8s:8.2-stable as builder
 
 ARG  BRANCH_ENVIRONMENT
 
-ENV  NODE_ENV=$BRANCH_ENVIRONMENT
-
 # Copy only the files necessary to build the code (see .dockerignore in root).
 COPY . /srv/www
 
 WORKDIR /srv/www
 
 # Clean up previous composer installation and run new one.
-RUN rm -rf ./vendor && composer install --no-interaction --no-dev
+RUN rm -rf ./vendor && \
+  COMPOSER_ALLOW_SUPERUSER=1 \
+  COMPOSER_MEMORY_LIMIT=-1 \
+  composer install --no-interaction --no-dev --prefer-dist
 
 # Copy settings to default site location.
 RUN cp -a docker/settings.php docker/services.yml docker/memcache.services.yml html/sites/default
