@@ -30,6 +30,9 @@ class TextHelper {
    *   Cleaned text.
    */
   public static function cleanText($text, array $options = []) {
+    if ($text === '') {
+      return '';
+    }
     $patterns = ['/[\t]/u', '/[\xA0]+/u', '/[\x00-\x09\x0B-\x1F\x7F]/u'];
     $replacements = ['  ', ' ', ''];
     // Replace (consecutive) line breaks with a single space.
