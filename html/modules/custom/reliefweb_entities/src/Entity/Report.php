@@ -235,14 +235,15 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
     }
 
     // Change the status to `embargoed` if there is an embargo date.
-    if (!empty($this->field_embargo_date->value) && $this->getModerationStatus() !== 'draft') {
+    $embargo_statuses = ['embargoed', 'to-review', 'published'];
+    if (!empty($this->field_embargo_date->value) && in_array($this->getModerationStatus(), $embargo_statuses)) {
       $this->setModerationStatus('embargoed');
 
       $message = strtr('Embargoed (to be automatically published on @date).', [
         '@date' => DateHelper::format($this->field_embargo_date->value, 'custom', 'd M Y H:i e'),
       ]);
 
-      $log = trim($this->getRevisionLogMessage());
+      $log = trim($this->getRevisionLogMessage() ?? '');
       $log = $message . (!empty($log) ? "\n" . $log : '');
       $this->setRevisionLogMessage($log);
     }
