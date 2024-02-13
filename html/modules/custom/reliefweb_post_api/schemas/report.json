@@ -1,0 +1,245 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://reliefweb.int/post-api-schemas/report.json",
+    "title": "ReliefWeb POST API schema - report resource",
+    "type": "object",
+    "properties": {
+        "url": {
+            "description": "Unique URL to identify the document. Use the original canonical of the document if available.",
+            "type": "string",
+            "format": "uri",
+            "maxLength": 2048
+        },
+        "title": {
+            "description": "Document title.",
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 255,
+            "allOf": [
+                {
+                    "description": "Must contain letters (any language).",
+                    "pattern": "\\p{L}+"
+                },
+                {
+                    "description": "No control characters or separators except for spaces.",
+                    "pattern": "^([^\\p{Z}\\p{C}]|[ ])+$"
+                }
+            ],
+            "not": {
+                "description": "No leading, trailing or consecutive spaces.",
+                "pattern": "(?:^[ ]|[ ]$|[ ]{2,})"
+            }
+        },
+        "source": {
+            "description": "Document source(s) as a list of IDs from https://api.reliefweb.int/v1/sources.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "minItems": 1,
+            "maxItems": 30
+        },
+        "country": {
+             "description": "Document country(ies) as a list of IDs from https://api.reliefweb.int/v1/countries. The first country in the list is considered the primary country, meaning the most relevant to the content of the document.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "minItems": 1,
+            "maxItems": 300
+        },
+        "format": {
+            "description": "Document format as a single ID from https://api.reliefweb.int/v1/references/content-formats.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "minItems": 1,
+            "maxItems": 1
+        },
+        "language": {
+            "description": "Document language(s) as a list of IDs from https://api.reliefweb.int/v1/references/languages.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "minItems": 1,
+            "maxItems": 10
+        },
+        "published": {
+            "description": "Original publication date (ISO 8601) of the document.",
+            "type": "string",
+            "format": "date-time"
+        },
+        "body": {
+            "description": "Document content in markdown or html (supported tags: <h1> <h2> <h3> <h4> <h5> <h6> <br> <p> <strong> <em> <a> <ul> <ol> <li> <blockquote>).",
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 100000,
+            "allOf": [
+                {
+                    "description": "Must contain letters (any language).",
+                    "pattern": "\\p{L}+"
+                },
+                {
+                    "description": "No control characters or separators except for spaces and new lines.",
+                    "pattern": "^(?:[^\\p{Z}\\p{C}]|[ \\n])+$"
+                }
+            ],
+            "not": {
+                "description": "No leading, trailing or consecutive spaces and new lines (except at the end of a line to support markdown linebreaks).",
+                "pattern": "(?:^[ \\n]|[ \\n]$|[ ]{2,}[^ \\n])"
+            }
+        },
+        "embargoed": {
+            "description": "Embargo date until which the document should not be published on ReliefWeb.",
+            "type": "string",
+            "format": "date-time"
+        },
+        "origin": {
+            "description": "Original canonical URL of the document if available, in which case it should be the same as the 'url' property.",
+            "type": "string",
+            "format": "uri",
+            "maxLength": 2048
+        },
+        "file": {
+            "description": "List of PDF attachments with a URL from which to download them. Maximum 20MB.",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "description": "URL to a PDF file.",
+                        "type": "string",
+                        "format": "uri",
+                        "pattern": "\\.pdf$"
+                    },
+                    "checksum": {
+                        "description": "SHA-256 checksum of the file",
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                    },
+                    "description": {
+                        "description": "Optional brief description or title of the file.",
+                        "type": "string",
+                        "maxLength": 255,
+                        "allOf": [
+                            {
+                                "description": "Must contain letters (any language).",
+                                "pattern": "\\p{L}+"
+                            },
+                            {
+                                "description": "No control characters or separators except for spaces.",
+                                "pattern": "^([^\\p{Z}\\p{C}]|[ ])+$"
+                            }
+                        ],
+                        "not": {
+                            "description": "No leading, trailing or consecutive spaces.",
+                            "pattern": "(?:^[ ]|[ ]$|[ ]{2,})"
+                        }
+                    },
+                    "language": {
+                        "description": "Optional ISO2 code of UN official language. Add 'German Version', for example, to the description field above if the attachment is not in a UN official language.",
+                        "type": "string",
+                        "enum": ["ar", "en", "es", "fr", "ru"]
+                    }
+                },
+                "required": ["url", "checksum"]
+            },
+            "maxItems": 10
+        },
+        "image": {
+            "description": "Image to illustrate the document with a minimum width of 700px.",
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "format": "uri",
+                    "pattern": "\\.(jpg|png|webp)$"
+                },
+                "checksum": {
+                    "description": "SHA-256 checksum of the image",
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                },
+                "description": {
+                    "description": "Alternative text describing the content of the image.",
+                    "type": "string",
+                    "maxLength": 512,
+                    "allOf": [
+                        {
+                            "description": "Must contain letters (any language).",
+                            "pattern": "\\p{L}+"
+                        },
+                        {
+                            "description": "No control characters or separators except for spaces.",
+                            "pattern": "^([^\\p{Z}\\p{C}]|[ ])+$"
+                        }
+                    ],
+                    "not": {
+                        "description": "No leading, trailing or consecutive spaces.",
+                        "pattern": "(?:^[ ]|[ ]$|[ ]{2,})"
+                    }
+                },
+                "copyright": {
+                    "description": "Short copyright information for the image.",
+                    "type": "string",
+                    "maxLength": 512,
+                    "allOf": [
+                        {
+                            "description": "Must contain letters (any language).",
+                            "pattern": "\\p{L}+"
+                        },
+                        {
+                            "description": "No control characters or separators except for spaces.",
+                            "pattern": "^([^\\p{Z}\\p{C}]|[ ])+$"
+                        }
+                    ],
+                    "not": {
+                        "description": "No leading, trailing or consecutive spaces.",
+                        "pattern": "(?:^[ ]|[ ]$|[ ]{2,})"
+                    }
+                }
+            },
+            "required": ["url", "checksum", "description", "copyright"]
+        },
+        "disaster": {
+            "description": "Document disaster(s) as a list of IDs from https://api.reliefweb.int/v1/disasters.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "minItems": 1,
+            "maxItems": 30
+        },
+        "disaster_type": {
+            "description": "Document disaster type(s) as a list of IDs from https://api.reliefweb.int/v1/references/disaster-types.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "minItems": 1,
+            "maxItems": 30
+        },
+        "theme": {
+            "description": "Document theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "minItems": 1,
+            "maxItems": 20
+        }
+    },
+    "required": [
+        "url",
+        "title",
+        "source",
+        "country",
+        "format",
+        "language",
+        "published",
+        "body"
+    ],
+    "additionalProperties": false
+}

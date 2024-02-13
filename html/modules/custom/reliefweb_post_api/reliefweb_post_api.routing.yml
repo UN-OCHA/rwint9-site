@@ -1,0 +1,6 @@
+example:
+  path: '/post/{bundle}'
+  defaults:
+    _controller: '\Drupal\reliefweb_post_api\Controller\ReliefWebPostApi::postContent'
+  requirements:
+    _access: 'TRUE'

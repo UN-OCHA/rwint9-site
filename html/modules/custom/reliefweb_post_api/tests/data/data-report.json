@@ -1,0 +1,35 @@
+{
+  "url": "https://test.test/test/3",
+  "title": "This a test document - DOC3",
+  "source": [1503],
+  "country": [13, 14],
+  "format": [10],
+  "language": [267, 268],
+  "published": "2024-06-06T01:00:00+00:00",
+  "body": "This is the **body** text in markdown format.\n\nIt has some paragraphs  \nand a line break.\n<h1>TITLE</h1><p>paragraph 1 <strong>bold</strong></p><ul><li>item1</li><li>item2</li></ul><p>paragraph 2 <a href=\"https://link.test\">link</a></p>",
+  "embargoed": "2024-06-06T07:00:00+00:00",
+  "file": [
+    {
+      "url": "https://test.test/test1.pdf",
+      "checksum": "42fffa6c0e84ebab15f0f1ead8319efc448d0d883a0b492528997b4f17989755",
+      "description": "First attachment",
+      "language": "en"
+    },
+    {
+      "url": "https://test.test/test2.pdf",
+      "checksum": "0b071d7d2a430d5f4ecbd919995a8a6e18a248bccbad4dc910c9dd1e906a2e79",
+      "description": "Second attachment",
+      "language": "fr"
+    }
+  ],
+  "image": {
+    "url": "https://test.test/test1.png",
+    "checksum": "c24863f6aa2065dd5071a831ee78439260ea72983799dd3e88fbfb4aa08fdc18",
+    "description": "Test image",
+    "copyright": "Test NGO"
+  },
+  "disaster": [51754],
+  "disaster_type": [4628],
+  "theme": [4587, 4595, 4603],
+  "origin": "https://test.test/test/3"
+}

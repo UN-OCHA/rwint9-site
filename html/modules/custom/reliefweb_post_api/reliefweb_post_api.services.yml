@@ -1,0 +1,7 @@
+services:
+  plugin.manager.reliefweb_post_api.content_processor:
+    class: Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManager
+    parent: default_plugin_manager
+  reliefweb_post_api.provider.manager:
+    class: Drupal\reliefweb_post_api\Services\ProviderManager
+    arguments: []
