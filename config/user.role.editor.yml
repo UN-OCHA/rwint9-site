@@ -29,6 +29,7 @@ dependencies:
     - guidelines
     - media
     - node
+    - ocha_ai_job_tag
     - path
     - reliefweb_bookmarks
     - reliefweb_fields
@@ -61,6 +62,7 @@ permissions:
   - 'administer community topics'
   - 'administer url aliases'
   - 'archive content'
+  - 'bypass ocha ai job tag'
   - 'create announcement content'
   - 'create blog_post content'
   - 'create book content'

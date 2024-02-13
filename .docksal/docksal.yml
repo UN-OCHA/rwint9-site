@@ -6,3 +6,8 @@ services:
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: mail
+  elasticsearch:
+    extends:
+      file: ${HOME}/.docksal/stacks/services.yml
+      service: elasticsearch
+

@@ -26,6 +26,7 @@ dependencies:
     - filter
     - google_tag
     - guidelines
+    - ocha_ai_job_tag
     - reliefweb_bookmarks
     - reliefweb_guidelines
     - reliefweb_users
@@ -41,6 +42,7 @@ permissions:
   - 'add content to books'
   - 'add guideline entities'
   - 'administer google tag manager'
+  - 'bypass ocha ai job tag'
   - 'create new books'
   - 'create terms in career_category'
   - 'create terms in content_format'
