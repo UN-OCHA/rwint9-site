@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3855da6623ddf6d2cfe0743e06e9b59a",
+    "content-hash": "c263550e3f43641ae8261ebbcf1c1872",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -118,16 +118,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.296.1",
+            "version": "3.299.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "38e47bbd3b5f76f008dd71c8a68545f9e4e47b6b"
+                "reference": "76d1165568d949b430a87eaa42f6dbc4b6705b6f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/38e47bbd3b5f76f008dd71c8a68545f9e4e47b6b",
-                "reference": "38e47bbd3b5f76f008dd71c8a68545f9e4e47b6b",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/76d1165568d949b430a87eaa42f6dbc4b6705b6f",
+                "reference": "76d1165568d949b430a87eaa42f6dbc4b6705b6f",
                 "shasum": ""
             },
             "require": {
@@ -207,9 +207,9 @@
             "support": {
                 "forum": "https://forums.aws.amazon.com/forum.jspa?forumID=80",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.296.1"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.299.0"
             },
-            "time": "2024-01-14T05:20:33+00:00"
+            "time": "2024-02-15T19:08:34+00:00"
         },
         {
             "name": "behat/mink",
@@ -3840,7 +3840,7 @@
                 "shasum": "fc8ea60619b6b4682bade340e13fb4565d3a7e0c"
             },
             "require": {
-                "drupal/core": "^9.1 || ^10"
+                "drupal/core": "^10"
             },
             "type": "drupal-module",
             "extra": {
@@ -4039,7 +4039,7 @@
                 "shasum": "c25246747dac4372c7d5a5a5fd0f276d9e468eff"
             },
             "require": {
-                "drupal/core": "^9.3 || ^10",
+                "drupal/core": "^10",
                 "drupal/mailsystem": "^4"
             },
             "require-dev": {
@@ -4741,7 +4741,7 @@
                 "shasum": "77906ae731878b68a181f82b073617b798e5f110"
             },
             "require": {
-                "drupal/core": "^9.3 || ^10",
+                "drupal/core": "^10",
                 "enshrined/svg-sanitize": ">=0.15 <1.0"
             },
             "type": "drupal-module",
@@ -4889,7 +4889,7 @@
                 "shasum": "9ea9eee91cf75f21fcc939704baa6a7ec10d7748"
             },
             "require": {
-                "drupal/core": "^8.9 || ^9 || ^10"
+                "drupal/core": "^10"
             },
             "type": "drupal-module",
             "extra": {
@@ -15881,17 +15881,17 @@
             "time": "2024-01-17T09:30:38+00:00"
         },
         {
-            "name": "unocha/ocha_ai_chat",
-            "version": "v0.0.5",
+            "name": "unocha/ocha_ai",
+            "version": "v1.0.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/UN-OCHA/ocha_ai_chat.git",
-                "reference": "3c62161a145f61f6d7c6db4821b7110e958c7ee0"
+                "url": "https://github.com/UN-OCHA/ocha_ai.git",
+                "reference": "e87d9e7d4a9e65d831c21f3a58cb582ee6c79356"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai_chat/zipball/3c62161a145f61f6d7c6db4821b7110e958c7ee0",
-                "reference": "3c62161a145f61f6d7c6db4821b7110e958c7ee0",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/e87d9e7d4a9e65d831c21f3a58cb582ee6c79356",
+                "reference": "e87d9e7d4a9e65d831c21f3a58cb582ee6c79356",
                 "shasum": ""
             },
             "require": {
@@ -15930,12 +15930,12 @@
                     "role": ""
                 }
             ],
-            "description": "OCHA AI Chat module",
+            "description": "OCHA AI module",
             "support": {
-                "source": "https://github.com/UN-OCHA/ocha_ai_chat/tree/v0.0.5",
-                "issues": "https://github.com/UN-OCHA/ocha_ai_chat/issues"
+                "source": "https://github.com/UN-OCHA/ocha_ai/tree/v1.0.0",
+                "issues": "https://github.com/UN-OCHA/ocha_ai/issues"
             },
-            "time": "2024-01-18T07:54:22+00:00"
+            "time": "2024-02-15T08:35:26+00:00"
         },
         {
             "name": "unocha/ocha_monitoring",
