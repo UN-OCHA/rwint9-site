@@ -72,6 +72,9 @@ plugins:
     elasticsearch:
       url: REPLACE_WITH_URL
       base_index_name: ocha_ai
+      shards: 1
+      replicas: 0
+      nested_object_limit: 100000
       indexing_batch_size: 10
       topk: 5
       min_similarity: 0.3
