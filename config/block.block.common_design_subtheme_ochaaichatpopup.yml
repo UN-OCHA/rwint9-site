@@ -5,6 +5,7 @@ dependencies:
   module:
     - node
     - ocha_ai_chat
+    - system
   theme:
     - common_design_subtheme
 id: common_design_subtheme_ochaaichatpopup
@@ -26,3 +27,7 @@ visibility:
       node: '@node.node_route_context:node'
     bundles:
       report: report
+  request_path:
+    id: request_path
+    negate: true
+    pages: '/node/*/*'
