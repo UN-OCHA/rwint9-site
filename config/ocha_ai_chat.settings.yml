@@ -1,4 +1,8 @@
 defaults:
+  form:
+    instructions:
+      value: ''
+      format: markdown_editor
   plugins:
     completion:
       plugin_id: aws_bedrock

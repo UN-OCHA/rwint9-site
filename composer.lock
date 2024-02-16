@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c263550e3f43641ae8261ebbcf1c1872",
+    "content-hash": "619e13e717581ab4c7c2805ab415e53a",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -15809,16 +15809,16 @@
         },
         {
             "name": "unocha/ocha_ai",
-            "version": "v1.0.0",
+            "version": "v1.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_ai.git",
-                "reference": "e87d9e7d4a9e65d831c21f3a58cb582ee6c79356"
+                "reference": "9fc3cdf0b9a425c521bdfa20b953c10eb1a6a6be"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/e87d9e7d4a9e65d831c21f3a58cb582ee6c79356",
-                "reference": "e87d9e7d4a9e65d831c21f3a58cb582ee6c79356",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/9fc3cdf0b9a425c521bdfa20b953c10eb1a6a6be",
+                "reference": "9fc3cdf0b9a425c521bdfa20b953c10eb1a6a6be",
                 "shasum": ""
             },
             "require": {
@@ -15837,32 +15837,21 @@
                 "phpcompatibility/php-compatibility": "^9.3"
             },
             "type": "drupal-module",
-            "scripts": {
-                "phpcs": [
-                    "vendor/bin/phpcs -p ."
-                ],
-                "phpcbf": [
-                    "vendor/bin/phpcbf -p ."
-                ],
-                "test": [
-                    "@phpcs"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "GPL-2.0-or-later"
             ],
             "authors": [
                 {
-                    "name": "UNOCHA",
-                    "role": ""
+                    "name": "UNOCHA"
                 }
             ],
             "description": "OCHA AI module",
             "support": {
-                "source": "https://github.com/UN-OCHA/ocha_ai/tree/v1.0.0",
-                "issues": "https://github.com/UN-OCHA/ocha_ai/issues"
+                "issues": "https://github.com/UN-OCHA/ocha_ai/issues",
+                "source": "https://github.com/UN-OCHA/ocha_ai/tree/v1.0.1"
             },
-            "time": "2024-02-15T08:35:26+00:00"
+            "time": "2024-02-16T01:12:59+00:00"
         },
         {
             "name": "unocha/ocha_monitoring",
