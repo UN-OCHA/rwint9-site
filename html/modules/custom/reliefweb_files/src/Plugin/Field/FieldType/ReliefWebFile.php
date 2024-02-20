@@ -877,8 +877,8 @@ class ReliefWebFile extends FieldItemBase {
 
     $mutool = \Drupal::state()->get('mutool', '/usr/bin/mutool');
     if (is_executable($mutool)) {
-      // @todo add max dimensions.
-      $command = "{$mutool} draw -R {$rotation} -o {$destination} {$source} {$page}";
+      $options = \Drupal::state()->get('mutool_options', '');
+      $command = "{$mutool} draw {$options} -R {$rotation} -o {$destination} {$source} {$page}";
       exec($command, $output, $return_val);
       // @todo log error?
       return empty($return_val) && @file_exists($destination_uri);
