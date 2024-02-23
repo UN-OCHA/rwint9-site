@@ -1,0 +1,4 @@
+administer reliefweb post api providers:
+  title: 'Administer ReliefWeb POST API providers'
+  description: 'Administer ReliefWeb POST API providers.'
+  restrict access: true

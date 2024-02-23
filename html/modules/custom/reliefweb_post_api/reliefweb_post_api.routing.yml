@@ -1,6 +1,17 @@
-example:
-  path: '/post/{bundle}'
+reliefweb_post_api.post:
+  path: '/api/v2/{resource}/{uuid}'
   defaults:
     _controller: '\Drupal\reliefweb_post_api\Controller\ReliefWebPostApi::postContent'
+  # The controller validates the supported methods.
+  methods:
+    - HEAD
+    - OPTIONS
+    - GET
+    - POST
+    - PATCH
+    - PUT
+    - DELETE
   requirements:
     _access: 'TRUE'
+    resource: "[a-z]+"
+    uuid: "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"

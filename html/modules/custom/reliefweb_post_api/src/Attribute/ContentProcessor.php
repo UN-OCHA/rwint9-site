@@ -22,18 +22,21 @@ class ContentProcessor extends Plugin {
    *
    * @param string $id
    *   The plugin ID.
-   * @param \Drupal\Core\StringTranslation\TranslatableMarkup|null $label
+   * @param \Drupal\Core\StringTranslation\TranslatableMarkup $label
    *   The label of the plugin.
    * @param string $entityType
-   *   The entity type the plugin can apply to.
-   * @param string $entityBundle
-   *   The entity bundle the plugin can apply to.
+   *   The entity type the plugin handles.
+   * @param string $bundle
+   *   The entity bundle the plugin handles.
+   * @param string $resource
+   *   The API resource the plugin handles.
    */
   public function __construct(
     public readonly string $id,
-    public readonly ?TranslatableMarkup $label = NULL,
+    public readonly TranslatableMarkup $label,
     public readonly string $entityType,
-    public readonly string $entityBundle
+    public readonly string $bundle,
+    public readonly string $resource
   ) {}
 
 }

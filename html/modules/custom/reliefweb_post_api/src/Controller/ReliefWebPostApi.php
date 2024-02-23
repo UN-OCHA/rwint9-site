@@ -7,7 +7,6 @@ namespace Drupal\reliefweb_post_api\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Queue\QueueFactory;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
-use Drupal\reliefweb_post_api\Services\ProviderManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -16,6 +15,7 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * Controller for the POST API.
@@ -31,14 +31,11 @@ class ReliefWebPostApi extends ControllerBase {
    *   The queue factory.
    * @param \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface $contentProcessorPluginManager
    *   The ReliefWeb POST API content processor plugin manager.
-   * @param \Drupal\reliefweb_post_api\Services\ProviderManager $providerManager
-   *   The ReliefWeb POST API provider manager.
    */
   public function __construct(
     protected RequestStack $requestStack,
     protected QueueFactory $queueFactory,
-    protected ContentProcessorPluginManagerInterface $contentProcessorPluginManager,
-    protected ProviderManager $providerManager
+    protected ContentProcessorPluginManagerInterface $contentProcessorPluginManager
   ) {}
 
   /**
@@ -48,50 +45,62 @@ class ReliefWebPostApi extends ControllerBase {
     return new static(
       $container->get('request_stack'),
       $container->get('queue'),
-      $container->get('plugin.manager.reliefweb_post_api.content_processor'),
-      $container->get('reliefweb_post_api.provider.manager')
+      $container->get('plugin.manager.reliefweb_post_api.content_processor')
     );
   }
 
   /**
    * POST endpoint.
    *
-   * @param string $bundle
-   *   Entity bundle.
+   * @param string $resource
+   *   Content resource (ex: reports).
+   * @param string $uuid
+   *   UUID of the resource to create or update.
    *
    * @return \Symfony\Component\HttpFoundation\JsonResponse
    *   The response: 200, 4xx or 5xx
    */
-  public function postContent(string $bundle): JsonResponse {
+  public function postContent(string $resource, string $uuid): JsonResponse {
     try {
       $request = $this->requestStack->getCurrentRequest();
       $headers = $request->headers;
 
-      // Only POST requests are allowed.
-      if ($request->getMethod() !== 'POST') {
-        throw new MethodNotAllowedHttpException(['POST'], 'Unsupported method.');
+      // Only PUT requests are allowed currently.
+      // @todo handle PATCH and DELETE.
+      if ($request->getMethod() !== 'PUT') {
+        throw new MethodNotAllowedHttpException(['PUT'], 'Unsupported method.');
+      }
+
+      // Validate the endpoint syntax.
+      if (preg_match('/^[a-z_-]+$/', $resource) !== 1) {
+        throw new NotFoundHttpException('Invalid endpoint resource.');
+      }
+      if (!Uuid::isValid($uuid)) {
+        throw new NotFoundHttpException('Invalid endpoint UUID.');
+      }
+
+      // Check if the resource is supported.
+      try {
+        $plugin = $this->contentProcessorPluginManager->getPluginByResource($resource);
+        if (empty($plugin)) {
+          throw new \Exception();
+        }
+      }
+      catch (\Exception $exception) {
+        throw new NotFoundHttpException('Unknown endpoint.');
       }
 
       // Retrieve the provider.
-      $provider = $this->providerManager->getProvider($headers->get('X-RW-POST-API-PROVIDER', ''));
-      if (!isset($provider)) {
+      try {
+        $provider = $plugin->getProvider($headers->get('X-RW-POST-API-PROVIDER', ''));
+      }
+      catch (\Exception $exception) {
         throw new AccessDeniedHttpException('Invalid provider.');
       }
 
       // Check access.
       if (!$provider->validateKey($headers->get('X-RW-POST-API-KEY', ''))) {
         throw new AccessDeniedHttpException('Invalid API key.');
-      }
-
-      // Check if the bundle is supported.
-      try {
-        $plugin = $this->contentProcessorPluginManager->getPluginByBundle($bundle);
-        if (empty($plugin)) {
-          throw new \Exception();
-        }
-      }
-      catch (\Exception $exception) {
-        throw new NotFoundHttpException('Invalid endpoint.');
       }
 
       // Check if we received JSON data.
@@ -114,13 +123,16 @@ class ReliefWebPostApi extends ControllerBase {
         throw new BadRequestHttpException('Invalid JSON body.');
       }
 
+      // Add the UUID if not already in the payload.
+      $data['uuid'] = $data['uuid'] ?? $uuid;
+
       // Add the bundle to the data so we can know which plugin to use when
       // retrieve and processing it.
-      $data['bundle'] = $bundle;
+      $data['bundle'] = $plugin->getBundle();
 
       // Add the provider ID so we can perform additional checks like verifying
       // the URLs of attachments.
-      $data['provider'] = $provider->id();
+      $data['provider'] = $provider->uuid();
 
       // Validate the content against the schema for the bundle.
       try {

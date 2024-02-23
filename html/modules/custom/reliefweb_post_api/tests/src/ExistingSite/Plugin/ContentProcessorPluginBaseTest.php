@@ -12,7 +12,6 @@ use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileSystemInterface;
-use Drupal\Core\Site\Settings;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\file\Entity\File;
 use Drupal\file\FileInterface;
@@ -20,6 +19,7 @@ use Drupal\media\MediaInterface;
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile;
 use Drupal\reliefweb_post_api\Entity\ProviderInterface;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorException;
+use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginBase;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
 use GuzzleHttp\Client;
@@ -30,6 +30,7 @@ use GuzzleHttp\Psr7\Response;
 use Opis\JsonSchema\Validator;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Mime\MimeTypeGuesserInterface;
+use Symfony\Component\Uid\Uuid;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
@@ -40,6 +41,13 @@ use weitzman\DrupalTestTraits\ExistingSiteBase;
  * @group reliefweb_post_api
  */
 abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
+
+  /**
+   * Test providers.
+   *
+   * @var array
+   */
+  protected array $providers = [];
 
   /**
    * Loaded POST API data.
@@ -68,19 +76,49 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   protected function setUp(): void {
     parent::setUp();
 
-    // Add a test providers.
-    $settings = Settings::getAll();
-    $settings['reliefweb_post_api.providers']['test-provider'] = [
-      'key' => 'test-provider-key',
-      'sources' => [123],
-      'url_pattern' => '#^https://test.test/#',
-    ];
-    $settings['reliefweb_post_api.providers']['test-provider-any'] = [
-      'key' => 'test-provider-any-key',
-      'sources' => [],
-      'url_pattern' => '',
-    ];
-    new Settings($settings);
+    $provider = \Drupal::entityTypeManager()
+      ->getStorage('reliefweb_post_api_provider')
+      ->create([
+        'id' => 666,
+        'name' => 'test-provider',
+        'uuid' => $this->getTestProviderUuid('test-provider'),
+        'key' => 'test-provider-key',
+        'status' => 1,
+        'field_source' => [123],
+        'field_user' => 2,
+        'field_document_url' => ['https://test.test/'],
+        'field_file_url' => ['https://test.test/'],
+        'field_image_url' => ['https://test.test/'],
+      ]);
+    $provider->save();
+    $this->markEntityForCleanup($provider);
+    $this->providers['test-provider'] = $provider;
+
+    $provider_any = \Drupal::entityTypeManager()
+      ->getStorage('reliefweb_post_api_provider')
+      ->create([
+        'id' => 667,
+        'name' => 'test-provider-any',
+        'uuid' => $this->getTestProviderUuid('test-provider-any'),
+        'key' => 'test-provider-any-key',
+        'status' => 1,
+      ]);
+    $provider_any->save();
+    $this->markEntityForCleanup($provider_any);
+    $this->providers['test-provider-any'] = $provider_any;
+
+    $provider_blocked = \Drupal::entityTypeManager()
+      ->getStorage('reliefweb_post_api_provider')
+      ->create([
+        'id' => 668,
+        'name' => 'test-provider-blocked',
+        'uuid' => $this->getTestProviderUuid('test-provider-blocked'),
+        'key' => 'test-provider-blocked-key',
+        'status' => 0,
+      ]);
+    $provider_blocked->save();
+    $this->markEntityForCleanup($provider_blocked);
+    $this->providers['test-provider-blocked'] = $provider_blocked;
 
     $this->contentProcessorPluginManager = \Drupal::service('plugin.manager.reliefweb_post_api.content_processor');
   }
@@ -112,9 +150,9 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   abstract public function testGetEntityType(): void;
 
   /**
-   * @covers ::getEntityBundle
+   * @covers ::getBundle
    */
-  abstract public function testGetEntityBundle(): void;
+  abstract public function testGetBundle(): void;
 
   /**
    * @covers ::getLogger
@@ -154,19 +192,55 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
    * @covers ::getProvider
    */
   public function testGetProvider(): void {
+    $plugin = $this->createDummyPlugin();
+
     // Valid provider.
-    $provider = $this->plugin->getProvider('test-provider');
+    $uuid = $this->getTestProviderUuid('test-provider');
+    $provider = $plugin->getProvider($uuid);
+    $this->assertInstanceOf(ProviderInterface::class, $provider);
+
+    // Test getting provider from static cache.
+    $provider = $plugin->getProvider($uuid);
     $this->assertInstanceOf(ProviderInterface::class, $provider);
   }
 
   /**
    * @covers ::getProvider
    */
-  public function testGetProviderInvalid(): void {
-    // Invalid provider.
+  public function testGetProviderInvalidUuid(): void {
+    $plugin = $this->createDummyPlugin();
+
+    // Invalid provider UUID.
+    $uuid = 'invalid';
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('Invalid provider');
-    $this->plugin->getProvider('unknown');
+    $this->expectExceptionMessage('Invalid provider UUID.');
+    $plugin->getProvider($uuid);
+  }
+
+  /**
+   * @covers ::getProvider
+   */
+  public function testGetProviderBlocked(): void {
+    $plugin = $this->createDummyPlugin();
+
+    // Blocked provider.
+    $uuid = $this->getTestProviderUuid('test-provider-blocked');
+    $this->expectException(ContentProcessorException::class);
+    $this->expectExceptionMessage('Blocked provider.');
+    $plugin->getProvider($uuid);
+  }
+
+  /**
+   * @covers ::getProvider
+   */
+  public function testGetProviderUnknown(): void {
+    $plugin = $this->createDummyPlugin();
+
+    // Unknown provider.
+    $uuid = $this->getTestProviderUuid('test-provider-unknown');
+    $this->expectException(ContentProcessorException::class);
+    $this->expectExceptionMessage('Invalid provider.');
+    $plugin->getProvider($uuid);
   }
 
   /**
@@ -238,6 +312,69 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
+   * @covers ::validateUuid
+   */
+  public function testValidateUuid(): void {
+    $plugin = $this->createDummyPlugin();
+    $data = ['url' => 'https://test.test'];
+    $data['uuid'] = $plugin->generateUuid($data['url']);
+
+    // Valid data.
+    $plugin->validateUuid($data);
+    $this->assertTrue(TRUE);
+  }
+
+  /**
+   * @covers ::validateUuid
+   */
+  public function testValidateUuidMissingUrl(): void {
+    $plugin = $this->createDummyPlugin();
+    $data = [];
+
+    $this->expectException(ContentProcessorException::class);
+    $this->expectExceptionMessage('Missing document URL');
+    $plugin->validateUuid($data);
+  }
+
+  /**
+   * @covers ::validateUuid
+   */
+  public function testValidateUuidMissingUuid(): void {
+    $plugin = $this->createDummyPlugin();
+    $data = ['url' => 'https://test.test'];
+
+    $this->expectException(ContentProcessorException::class);
+    $this->expectExceptionMessage('Missing document UUID');
+    $plugin->validateUuid($data);
+  }
+
+  /**
+   * @covers ::validateUuid
+   */
+  public function testValidateUuidInvalidUuid(): void {
+    $plugin = $this->createDummyPlugin();
+    $data = ['url' => 'https://test.test'];
+    $data['uuid'] = 'abc';
+
+    $this->expectException(ContentProcessorException::class);
+    $this->expectExceptionMessage('Invalid document UUID');
+    $plugin->validateUuid($data);
+  }
+
+  /**
+   * @covers ::validateUuid
+   */
+  public function testValidateUuidMismatchingUuid(): void {
+    $plugin = $this->createDummyPlugin();
+    $data = ['url' => 'https://test.test'];
+    $data['uuid'] = $plugin->generateUuid('test');
+
+    $this->expectException(ContentProcessorException::class);
+    $this->expectExceptionMessage('The UUID does not match the one generated from the URL');
+    $plugin->validateUuid($data);
+  }
+
+  /**
    * @covers ::validateSources
    */
   public function testValidateSources(): void {
@@ -249,7 +386,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
 
     // Any source allowed.
     $this->plugin->validateSources([
-      'provider' => 'test-provider-any',
+      'provider' => $this->getTestProvider('test-provider-any')->uuid(),
       'source' => ['789'],
     ] + $data);
     $this->assertTrue(TRUE);
@@ -300,14 +437,20 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
     // Allowed URLs.
     $this->plugin->validateUrls($data);
     $this->assertTrue(TRUE);
+  }
+
+  /**
+   * @covers ::validateUrls
+   */
+  public function testValidateUrlsAny(): void {
+    $data = [
+      'provider' => $this->getTestProviderUuid('test-provider-any'),
+      'url' => 'https://test-any.test/anything',
+    ];
 
     // Any URL allowed.
-    $this->plugin->validateUrls([
-      'provider' => 'test-provider-any',
-      'url' => 'https://test-any.test/anything',
-    ] + $data);
+    $this->plugin->validateUrls($data);
     $this->assertTrue(TRUE);
-
   }
 
   /**
@@ -315,17 +458,19 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
    */
   public function testValidateUrlsEmptyDocumentUrl(): void {
     $data = $this->getPostApiData();
+
     // Empty URL.
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('Unallowed document URL');
+    $this->expectExceptionMessage('Missing document URL');
     $this->plugin->validateUrls(['url' => ''] + $data);
   }
 
   /**
    * @covers ::validateUrls
    */
-  public function testValidateUrlsUnallowedDocuemtnUrl(): void {
+  public function testValidateUrlsUnallowedDocumentUrl(): void {
     $data = $this->getPostApiData();
+
     // Unallowed URL.
     $this->expectException(ContentProcessorException::class);
     $this->expectExceptionMessage('Unallowed document URL');
@@ -333,29 +478,64 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::validateUrls
+   * @covers \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginBase::validateUrls
    */
-  public function testValidateUrlsUnallowedImageUrl(): void {
-    $data = $this->getPostApiData();
-    $data['image']['url'] = 'https://wrong.test/test.jpg';
+  public function testValidateUrlsBase(): void {
+    $plugin = $this->createDummyPlugin(use_plugin_class: FALSE);
+    $data = [
+      'provider' => $this->getTestProviderUuid('test-provider'),
+      'url' => 'https://test.test/anything',
+    ];
 
-    // Unallowed image URL.
-    $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('Unallowed image URL');
-    $this->plugin->validateUrls($data);
+    // Allowed URLs.
+    $plugin->validateUrls($data);
+    $this->assertTrue(TRUE);
   }
 
   /**
-   * @covers ::validateUrls
+   * @covers \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginBase::validateUrls
    */
-  public function testValidateUrlsUnallowedFileUrl(): void {
-    $data = $this->getPostApiData();
-    $data['file'][0]['url'] = 'https://wrong.test/test.pdf';
+  public function testValidateUrlsBaseAny(): void {
+    $plugin = $this->createDummyPlugin(use_plugin_class: FALSE);
+    $data = [
+      'provider' => $this->getTestProviderUuid('test-provider-any'),
+      'url' => 'https://test-any.test/anything',
+    ];
 
-    // Unallowed file URL.
+    // Allowed URLs.
+    $plugin->validateUrls($data);
+    $this->assertTrue(TRUE);
+  }
+
+  /**
+   * @covers \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginBase::validateUrls
+   */
+  public function testValidateUrlsBaseEmptyDocumentUrl(): void {
+    $plugin = $this->createDummyPlugin(use_plugin_class: FALSE);
+    $data = [
+      'provider' => $this->getTestProviderUuid('test-provider-any'),
+    ];
+
+    // Empty URL.
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('Unallowed file URL');
-    $this->plugin->validateUrls($data);
+    $this->expectExceptionMessage('Missing document URL');
+    $plugin->validateUrls($data);
+  }
+
+  /**
+   * @covers \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginBase::validateUrls
+   */
+  public function testValidateUrlsBaseUnallowedDocumentUrl(): void {
+    $plugin = $this->createDummyPlugin(use_plugin_class: FALSE);
+    $data = [
+      'provider' => $this->getTestProviderUuid('test-provider'),
+      'url' => 'https://wrong.test/',
+    ];
+
+    // Unallowed URL.
+    $this->expectException(ContentProcessorException::class);
+    $this->expectExceptionMessage('Unallowed document URL');
+    $plugin->validateUrls($data);
   }
 
   /**
@@ -1425,7 +1605,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
    */
   protected function createEntity(?string $entity_type_id = NULL, ?string $bundle = NULL): ContentEntityInterface {
     $entity_type_id = $entity_type_id ?? $this->plugin->getEntityType();
-    $bundle = $bundle ?? $this->plugin->getEntityBundle();
+    $bundle = $bundle ?? $this->plugin->getBundle();
 
     $storage = \Drupal::entityTypeManager()->getStorage($entity_type_id);
 
@@ -1444,18 +1624,22 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
    *   Plugin definition.
    * @param array $services
    *   Service overrides.
+   * @param bool $use_plugin_class
+   *   Whether to use the same class the `$this->plugin` or use an anymous
+   *   class.
    *
    * @return \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface
    *   The dummy plugin.
    */
-  protected function createDummyPlugin(array $definition = [], array $services = []): ContentProcessorPluginInterface {
+  protected function createDummyPlugin(array $definition = [], array $services = [], bool $use_plugin_class = TRUE): ContentProcessorPluginInterface {
     $container = \drupal::getContainer();
 
     $definition += [
       'id' => 'reliefweb_post_api.content_processor.dummy',
       'label' => new TranslatableMarkup('Dummy content processor'),
       'entityType' => 'dummy',
-      'entityBundle' => 'dummy',
+      'bundle' => 'dummy',
+      'resource' => 'dummies',
     ];
 
     $services = [
@@ -1469,28 +1653,88 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
       $services['file.validator'] ?? $container->get('file.validator'),
       $services['file.mime_type.guesser'] ?? $container->get('file.mime_type.guesser'),
       $services['language_manager'] ?? $container->get('language_manager'),
-      $services['reliefweb_post_api.provider.manager'] ?? $container->get('reliefweb_post_api.provider.manager'),
     ];
 
-    return new ($this->plugin::class)([], $definition['id'], $definition, ...$services);
+    if ($use_plugin_class) {
+      return new ($this->plugin::class)([], $definition['id'], $definition, ...$services);
+    }
+    else {
+      return new class([], $definition['id'], $definition, ...$services) extends ContentProcessorPluginBase {
+
+        /**
+         * {@inheritdoc}
+         */
+        public function process(array $data): ?ContentEntityInterface {
+          return NULL;
+        }
+
+      };
+    }
   }
 
   /**
    * Get some POST API test data.
    *
-   * @return array
-   *   The data.
+   * @param string $bundle
+   *   The bundle of the data.
+   * @param string $type
+   *   The type of data: raw (string) or decoded (array).
+   *
+   * @return string|array
+   *   The data as a JSON string.
    */
-  protected function getPostApiData(): array {
-    $bundle = $this->plugin->getEntityBundle();
+  protected function getPostApiData(string $bundle = 'report', string $type = 'decoded'): string|array {
     if (!isset($this->postApiData[$bundle])) {
       $file = __DIR__ . '/../../../data/data-' . $bundle . '.json';
-      $data = json_decode(file_get_contents($file), TRUE);
-      $data['provider'] = 'test-provider';
-      $data['bundle'] = $bundle;
-      $this->postApiData[$bundle] = $data;
+      $raw = file_get_contents($file);
+      $decoded = json_decode($raw, TRUE);
+      $decoded['provider'] = $this->getTestProvider()->uuid();
+      $decoded['bundle'] = $bundle;
+      $this->postApiData[$bundle] = [
+        'raw' => $raw,
+        'decoded' => $decoded,
+      ];
     }
-    return $this->postApiData[$bundle];
+    return $this->postApiData[$bundle][$type];
+  }
+
+  /**
+   * Get the UUID of test data.
+   *
+   * @param string $bundle
+   *   The bundle of the data.
+   *
+   * @return string
+   *   UUID.
+   */
+  protected function getTestUuid(string $bundle = 'report'): string {
+    return $this->getPostApiData('report', 'decoded')['uuid'];
+  }
+
+  /**
+   * Get a provider based on its name.
+   *
+   * @param string $name
+   *   The provider name.
+   *
+   * @return \Drupal\reliefweb_post_api\Entity\ProviderInterface
+   *   The provider.
+   */
+  protected function getTestProvider(string $name = 'test-provider'): ProviderInterface {
+    return $this->providers[$name];
+  }
+
+  /**
+   * Get the UUID of a provider based on its name.
+   *
+   * @param string $name
+   *   The provider name.
+   *
+   * @return string
+   *   The provider UUID.
+   */
+  protected function getTestProviderUuid(string $name): string {
+    return Uuid::v5(Uuid::fromString(Uuid::NAMESPACE_URL), $name)->toRfc4122();
   }
 
   /**

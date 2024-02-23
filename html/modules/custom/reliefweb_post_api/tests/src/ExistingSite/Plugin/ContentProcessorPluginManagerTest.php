@@ -61,6 +61,20 @@ class ContentProcessorPluginManagerTest extends ExistingSiteBase {
   }
 
   /**
+   * @covers ::getPluginFromProperty
+   */
+  public function testGetPluginFromProperty(): void {
+    $plugin = $this->contentProcessorPluginManager->getPluginFromProperty('bundle', 'report');
+    $this->assertInstanceOf(Report::class, $plugin);
+
+    $plugin = $this->contentProcessorPluginManager->getPluginFromProperty('unknown', '');
+    $this->assertNull($plugin);
+
+    $plugin = $this->contentProcessorPluginManager->getPluginFromProperty('unknown', 'unknown');
+    $this->assertNull($plugin);
+  }
+
+  /**
    * @covers ::getPluginByBundle
    */
   public function testGetPluginByBundle(): void {
@@ -71,6 +85,20 @@ class ContentProcessorPluginManagerTest extends ExistingSiteBase {
     $this->assertNull($plugin);
 
     $plugin = $this->contentProcessorPluginManager->getPluginByBundle('');
+    $this->assertNull($plugin);
+  }
+
+  /**
+   * @covers ::getPluginByResource
+   */
+  public function testGetPluginByResource(): void {
+    $plugin = $this->contentProcessorPluginManager->getPluginByResource('reports');
+    $this->assertInstanceOf(Report::class, $plugin);
+
+    $plugin = $this->contentProcessorPluginManager->getPluginByResource('unknown');
+    $this->assertNull($plugin);
+
+    $plugin = $this->contentProcessorPluginManager->getPluginByResource('');
     $this->assertNull($plugin);
   }
 

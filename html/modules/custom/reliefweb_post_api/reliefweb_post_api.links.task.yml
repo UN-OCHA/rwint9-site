@@ -1,0 +1,17 @@
+entity.reliefweb_post_api_provider.collection:
+  title: List
+  route_name: entity.reliefweb_post_api_provider.collection
+  base_route: entity.reliefweb_post_api_provider.collection
+
+entity.reliefweb_post_api_provider.canonical:
+  title: View
+  route_name: entity.reliefweb_post_api_provider.canonical
+  base_route: entity.reliefweb_post_api_provider.canonical
+entity.reliefweb_post_api_provider.edit_form:
+  title: Edit
+  route_name: entity.reliefweb_post_api_provider.edit_form
+  base_route: entity.reliefweb_post_api_provider.canonical
+entity.reliefweb_post_api_provider.delete_form:
+  title: Delete
+  route_name: entity.reliefweb_post_api_provider.delete_form
+  base_route: entity.reliefweb_post_api_provider.canonical

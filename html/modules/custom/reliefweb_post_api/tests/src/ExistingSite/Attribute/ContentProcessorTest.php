@@ -25,7 +25,8 @@ class ContentProcessorTest extends ExistingSiteBase {
       'test',
       new TranslatableMarkup('test processor'),
       'test_entity_type',
-      'test_entity_bundle',
+      'test_bundle',
+      'test_resource',
     );
     $this->assertInstanceOf(ContentProcessor::class, $attribute);
   }

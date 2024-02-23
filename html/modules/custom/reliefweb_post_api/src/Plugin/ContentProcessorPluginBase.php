@@ -24,7 +24,6 @@ use Drupal\file\Validation\FileValidatorInterface;
 use Drupal\media\MediaInterface;
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile;
 use Drupal\reliefweb_post_api\Entity\ProviderInterface;
-use Drupal\reliefweb_post_api\Services\ProviderManager;
 use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use GuzzleHttp\ClientInterface;
@@ -64,6 +63,13 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   protected string $jsonSchema;
 
   /**
+   * Static cache for the providers.
+   *
+   * @var array
+   */
+  protected array $providers = [];
+
+  /**
    * Constructs a \Drupal\Component\Plugin\PluginBase object.
    *
    * @param array $configuration
@@ -92,8 +98,6 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
    *   The file mimetype guesser.
    * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
    *   The language manager.
-   * @param \Drupal\reliefweb_post_api\Services\ProviderManager $providerManager
-   *   The ReliefWeb POST API provider manager.
    */
   public function __construct(
     array $configuration,
@@ -108,8 +112,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     protected FileSystemInterface $fileSystem,
     protected FileValidatorInterface $fileValidator,
     protected MimeTypeGuesserInterface $mimeTypeGuesser,
-    protected LanguageManagerInterface $languageManager,
-    protected ProviderManager $providerManager
+    protected LanguageManagerInterface $languageManager
   ) {
     parent::__construct(
       $configuration,
@@ -135,8 +138,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
       $container->get('file_system'),
       $container->get('file.validator'),
       $container->get('file.mime_type.guesser'),
-      $container->get('language_manager'),
-      $container->get('reliefweb_post_api.provider.manager')
+      $container->get('language_manager')
     );
   }
 
@@ -158,8 +160,15 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   /**
    * {@inheritdoc}
    */
-  public function getEntityBundle(): string {
-    return $this->getPluginDefinition()['entityBundle'];
+  public function getBundle(): string {
+    return $this->getPluginDefinition()['bundle'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getResource(): string {
+    return $this->getPluginDefinition()['resource'];
   }
 
   /**
@@ -188,7 +197,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
    */
   public function getJsonSchema(): string {
     if (!isset($this->jsonSchema)) {
-      $bundle = $this->getEntityBundle();
+      $bundle = $this->getbundle();
       $path = $this->pathResolver->getPath('module', 'reliefweb_post_api');
       $schema = @file_get_contents($path . '/schemas/' . $bundle . '.json');
       if ($schema === FALSE) {
@@ -204,10 +213,22 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   /**
    * {@inheritdoc}
    */
-  public function getProvider(string $id): ProviderInterface {
-    $provider = $this->providerManager->getProvider($id);
-    if (!isset($provider)) {
+  public function getProvider(string $uuid): ProviderInterface {
+    if (!Uuid::isValid($uuid)) {
+      throw new ContentProcessorException('Invalid provider UUID.');
+    }
+    if (array_key_exists($uuid, $this->providers)) {
+      $provider = $this->providers[$uuid];
+    }
+    else {
+      $provider = $this->entityRepository->loadEntityByUuid('reliefweb_post_api_provider', $uuid);
+      $this->providers[$uuid] = $provider;
+    }
+    if (is_null($provider)) {
       throw new ContentProcessorException('Invalid provider.');
+    }
+    elseif (empty($provider->status->value)) {
+      throw new ContentProcessorException('Blocked provider.');
     }
     return $provider;
   }
@@ -222,6 +243,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
    */
   public function validate(array $data): void {
     $this->validateSchema($data);
+    $this->validateUuid($data);
     $this->validateSources($data);
     $this->validateUrls($data);
   }
@@ -239,6 +261,24 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
       $errors = $formatter->formatKeyed($result->error());
       $message = json_encode($errors, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
       throw new ContentProcessorException($message);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateUuid(array $data): void {
+    if (empty($data['url'])) {
+      throw new ContentProcessorException('Missing document URL.');
+    }
+    elseif (empty($data['uuid'])) {
+      throw new ContentProcessorException('Missing document UUID.');
+    }
+    elseif (!Uuid::isValid($data['uuid'])) {
+      throw new ContentProcessorException('Invalid document UUID.');
+    }
+    elseif ($this->generateUuid($data['url']) !== $data['uuid']) {
+      throw new ContentProcessorException('The UUID does not match the one generated from the URL.');
     }
   }
 
@@ -264,24 +304,13 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
    */
   public function validateUrls(array $data): void {
     $provider = $this->getProvider($data['provider'] ?? '');
-    $pattern = $provider->getUrlPattern();
-    // Empty pattern means any URL is ok.
-    if (empty($pattern)) {
-      return;
-    }
 
-    if (empty($data['url']) || !$this->validateUrl($data['url'], $pattern)) {
+    $document_pattern = $provider->getUrlPattern('document');
+    if (empty($data['url'])) {
+      throw new ContentProcessorException('Missing document URL.');
+    }
+    elseif (!$this->validateUrl($data['url'], $document_pattern)) {
       throw new ContentProcessorException('Unallowed document URL: ' . $data['url']);
-    }
-
-    if (!empty($data['image']['url']) && !$this->validateUrl($data['image']['url'], $pattern)) {
-      throw new ContentProcessorException('Unallowed image URL: ' . $data['image']['url']);
-    }
-
-    foreach ($data['file'] ?? [] as $file) {
-      if (!empty($file['url']) && !$this->validateUrl($file['url'], $pattern)) {
-        throw new ContentProcessorException('Unallowed file URL: ' . $file['url']);
-      }
     }
   }
 
@@ -289,7 +318,8 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
    * {@inheritdoc}
    */
   public function validateUrl(string $url, string $pattern): bool {
-    return preg_match($pattern, $url) === 1;
+    // An empty pattern means any URL is ok.
+    return empty($pattern) || preg_match($pattern, $url) === 1;
   }
 
   /**

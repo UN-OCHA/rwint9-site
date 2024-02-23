@@ -15,11 +15,33 @@ use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginBase;
  */
 #[ContentProcessor(
   id: 'reliefweb_post_api.content_processor.report',
-  label: new TranslatableMarkup('Report content processor'),
+  label: new TranslatableMarkup('Reports'),
   entityType: 'node',
-  entityBundle: 'report'
+  bundle: 'report',
+  resource: 'reports'
 )]
 class Report extends ContentProcessorPluginBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateUrls(array $data): void {
+    parent::validateUrls($data);
+
+    $provider = $this->getProvider($data['provider'] ?? '');
+
+    $image_pattern = $provider->getUrlPattern('image');
+    if (!empty($data['image']['url']) && !$this->validateUrl($data['image']['url'], $image_pattern)) {
+      throw new ContentProcessorException('Unallowed image URL: ' . $data['image']['url']);
+    }
+
+    $file_pattern = $provider->getUrlPattern('file');
+    foreach ($data['file'] ?? [] as $file) {
+      if (!empty($file['url']) && !$this->validateUrl($file['url'], $file_pattern)) {
+        throw new ContentProcessorException('Unallowed file URL: ' . $file['url']);
+      }
+    }
+  }
 
   /**
    * {@inheritdoc}
@@ -28,7 +50,7 @@ class Report extends ContentProcessorPluginBase {
     // Ensure the data is valid.
     $this->validate($data);
 
-    $bundle = $this->getEntityBundle();
+    $bundle = $this->getbundle();
     $provider = $this->getProvider($data['provider'] ?? '');
 
     // Generate the UUID corresponding to the document URL.

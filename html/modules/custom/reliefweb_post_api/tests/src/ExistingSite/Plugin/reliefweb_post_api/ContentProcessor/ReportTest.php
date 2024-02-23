@@ -30,7 +30,7 @@ class ReportTest extends ContentProcessorPluginBaseTest {
    * @covers ::getPluginLabel
    */
   public function testGetPluginLabel(): void {
-    $this->assertEquals('Report content processor', (string) $this->plugin->getPluginLabel());
+    $this->assertEquals('Reports', (string) $this->plugin->getPluginLabel());
   }
 
   /**
@@ -41,10 +41,17 @@ class ReportTest extends ContentProcessorPluginBaseTest {
   }
 
   /**
-   * @covers ::getEntityBundle
+   * @covers ::getBundle
    */
-  public function testGetEntityBundle(): void {
-    $this->assertEquals('report', $this->plugin->getEntityBundle());
+  public function testGetBundle(): void {
+    $this->assertEquals('report', $this->plugin->getBundle());
+  }
+
+  /**
+   * @covers ::getResource
+   */
+  public function testGetResource(): void {
+    $this->assertEquals('reports', $this->plugin->getResource());
   }
 
   /**
@@ -67,6 +74,8 @@ class ReportTest extends ContentProcessorPluginBaseTest {
     unset($data['file']);
     unset($data['image']);
 
+    $provider = $this->getTestProvider();
+
     $entity = $this->createEntity('node', 'report');
     $entity->uuid = $plugin->generateUuid($data['url']);
 
@@ -74,6 +83,7 @@ class ReportTest extends ContentProcessorPluginBaseTest {
       ->method('loadEntityByUuid')
       ->willReturnMap([
         ['node', $entity->uuid(), $entity],
+        ['reliefweb_post_api_provider', $provider->uuid(), $provider],
       ]);
 
     $plugin->process($data);
@@ -93,6 +103,8 @@ class ReportTest extends ContentProcessorPluginBaseTest {
 
     $data = ['source' => [123]] + $this->getPostApiData();
 
+    $provider = $this->getTestProvider();
+
     $entity = $this->createEntity('node', 'training');
     $entity->nid = 123;
     $entity->uuid = $plugin->generateUuid($data['url']);
@@ -102,12 +114,39 @@ class ReportTest extends ContentProcessorPluginBaseTest {
       ->method('loadEntityByUuid')
       ->willReturnMap([
         ['node', $entity->uuid(), $entity],
+        ['reliefweb_post_api_provider', $provider->uuid(), $provider],
       ]);
 
     $this->expectException(ContentProcessorException::class);
     $this->expectExceptionMessage('is not a report');
 
     $plugin->process($data);
+  }
+
+  /**
+   * @covers ::validateUrls
+   */
+  public function testValidateUrlsUnallowedImageUrl(): void {
+    $data = $this->getPostApiData();
+    $data['image']['url'] = 'https://wrong.test/test.jpg';
+
+    // Unallowed image URL.
+    $this->expectException(ContentProcessorException::class);
+    $this->expectExceptionMessage('Unallowed image URL');
+    $this->plugin->validateUrls($data);
+  }
+
+  /**
+   * @covers ::validateUrls
+   */
+  public function testValidateUrlsUnallowedFileUrl(): void {
+    $data = $this->getPostApiData();
+    $data['file'][0]['url'] = 'https://wrong.test/test.pdf';
+
+    // Unallowed file URL.
+    $this->expectException(ContentProcessorException::class);
+    $this->expectExceptionMessage('Unallowed file URL');
+    $this->plugin->validateUrls($data);
   }
 
 }

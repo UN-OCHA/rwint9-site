@@ -43,12 +43,13 @@ class ContentProcessorPluginManager extends DefaultPluginManager implements Cont
   ) {
     parent::__construct(
       'Plugin/reliefweb_post_api/ContentProcessor',
-      $namespaces, $module_handler,
+      $namespaces,
+      $module_handler,
       'Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface',
       ContentProcessor::class
     );
     $this->alterInfo('reliefweb_post_api_content_processor_info');
-    $this->setCacheBackend($cache_backend, 'reliefweb_post_api_content_processor_info');
+    $this->setCacheBackend($cache_backend, 'reliefweb_post_api_content_processors');
   }
 
   /**
@@ -69,11 +70,30 @@ class ContentProcessorPluginManager extends DefaultPluginManager implements Cont
   /**
    * {@inheritdoc}
    */
-  public function getPluginByBundle(string $bundle): ?ContentProcessorPluginInterface {
-    if ($bundle === '') {
+  public function getPluginFromProperty(string $property, string $value): ?ContentProcessorPluginInterface {
+    if ($value === '') {
       return NULL;
     }
-    return $this->getPlugin('reliefweb_post_api.content_processor.' . $bundle);
+    foreach ($this->getDefinitions() as $id => $definition) {
+      if (isset($definition[$property]) && $definition[$property] === $value) {
+        return $this->getPlugin($id);
+      }
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPluginByBundle(string $bundle): ?ContentProcessorPluginInterface {
+    return $this->getPluginFromProperty('bundle', $bundle);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPluginByResource(string $resource): ?ContentProcessorPluginInterface {
+    return $this->getPluginFromProperty('resource', $resource);
   }
 
 }

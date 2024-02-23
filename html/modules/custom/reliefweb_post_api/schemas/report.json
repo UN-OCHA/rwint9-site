@@ -10,6 +10,11 @@
             "format": "uri",
             "maxLength": 2048
         },
+        "uuid": {
+            "description": "The Universally unique identifier (UUID) version 5 generated from the URL property with the predefined ns:URL namespace.",
+            "type": "string",
+            "format": "uuid"
+        },
         "title": {
             "description": "Document title.",
             "type": "string",

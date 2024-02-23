@@ -1,0 +1,110 @@
+uuid: 52e1783a-701e-44a9-aa5a-1cbdbee86d09
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_document_url
+    - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_file_url
+    - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_image_url
+    - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_notify
+    - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_source
+    - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_user
+    - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_webhook_url
+  module:
+    - link
+    - options
+    - reliefweb_post_api
+id: reliefweb_post_api_provider.reliefweb_post_api_provider.default
+targetEntityType: reliefweb_post_api_provider
+bundle: reliefweb_post_api_provider
+mode: default
+content:
+  field_document_url:
+    type: link
+    label: above
+    settings:
+      trim_length: 80
+      url_only: false
+      url_plain: false
+      rel: ''
+      target: ''
+    third_party_settings: {  }
+    weight: 4
+    region: content
+  field_file_url:
+    type: link
+    label: above
+    settings:
+      trim_length: 80
+      url_only: false
+      url_plain: false
+      rel: ''
+      target: ''
+    third_party_settings: {  }
+    weight: 6
+    region: content
+  field_image_url:
+    type: link
+    label: above
+    settings:
+      trim_length: 80
+      url_only: false
+      url_plain: false
+      rel: ''
+      target: ''
+    third_party_settings: {  }
+    weight: 5
+    region: content
+  field_notify:
+    type: basic_string
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 7
+    region: content
+  field_source:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 2
+    region: content
+  field_user:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 3
+    region: content
+  field_webhook_url:
+    type: link
+    label: above
+    settings:
+      trim_length: 80
+      url_only: false
+      url_plain: false
+      rel: ''
+      target: ''
+    third_party_settings: {  }
+    weight: 8
+    region: content
+  name:
+    type: string
+    label: hidden
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  resource:
+    type: list_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 1
+    region: content
+hidden:
+  key: true
+  status: true

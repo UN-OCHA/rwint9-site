@@ -4,26 +4,23 @@ declare(strict_types=1);
 
 namespace Drupal\reliefweb_post_api\Entity;
 
+use Drupal\Core\Entity\ContentEntityInterface;
+
 /**
  * Interface for a POST API provider.
  */
-interface ProviderInterface {
-
-  /**
-   * Get the provider ID.
-   *
-   * @return string
-   *   ID.
-   */
-  public function id(): string;
+interface ProviderInterface extends ContentEntityInterface {
 
   /**
    * Get the URL pattern for the provider.
    *
+   * @param string $type
+   *   Type of URL pattern. One of 'document', 'file' or 'image'.
+   *
    * @return string
    *   A regex pattern to match URLs against.
    */
-  public function getUrlPattern(): string;
+  public function getUrlPattern(string $type = 'document'): string;
 
   /**
    * Get the list of sources the provider is allowed to post for.

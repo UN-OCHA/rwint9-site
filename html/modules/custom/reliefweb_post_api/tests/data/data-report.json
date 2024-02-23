@@ -1,6 +1,7 @@
 {
-  "url": "https://test.test/test/3",
-  "title": "This a test document - DOC3",
+  "url": "https://test.test/test/report",
+  "uuid": "d791d10c-1bbb-5418-a719-b58ed3b3f043",
+  "title": "This a test document - report",
   "source": [1503],
   "country": [13, 14],
   "format": [10],
@@ -31,5 +32,5 @@
   "disaster": [51754],
   "disaster_type": [4628],
   "theme": [4587, 4595, 4603],
-  "origin": "https://test.test/test/3"
+  "origin": "https://test.test/test/report"
 }

@@ -42,7 +42,15 @@ interface ContentProcessorPluginInterface {
    * @return string
    *   Entity bundle.
    */
-  public function getEntityBundle(): string;
+  public function getBundle(): string;
+
+  /**
+   * Get the API resource handled by this plugin.
+   *
+   * @return string
+   *   Entity resource.
+   */
+  public function getResource(): string;
 
   /**
    * Get the plugin logger.

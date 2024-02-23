@@ -6,11 +6,12 @@ namespace Drupal\Tests\reliefweb_post_api\ExistingSite\Controller;
 
 use Drupal\Core\Queue\QueueFactory;
 use Drupal\Core\Queue\QueueInterface;
-use Drupal\Core\Site\Settings;
 use Drupal\reliefweb_post_api\Controller\ReliefWebPostApi;
+use Drupal\reliefweb_post_api\Entity\ProviderInterface;
 use Symfony\Component\HttpFoundation\HeaderBag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Uid\Uuid;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
@@ -23,28 +24,18 @@ use weitzman\DrupalTestTraits\ExistingSiteBase;
 class ReliefWebPostApiTest extends ExistingSiteBase {
 
   /**
+   * Test providers.
+   *
+   * @var array
+   */
+  protected array $providers;
+
+  /**
    * Loaded POST API data.
    *
    * @var array
    */
   protected array $postApiData = [];
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-
-    // Add a test providers.
-    $settings = Settings::getAll();
-    $settings['reliefweb_post_api.providers']['test-provider'] = [
-      'id' => 'test-provider',
-      'key' => 'test-provider-key',
-      'sources' => [1503],
-      'url_pattern' => '#^https://test.test/#',
-    ];
-    new Settings($settings);
-  }
 
   /**
    * @covers ::__construct
@@ -74,7 +65,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
       'request_stack' => $request_stack,
     ]);
 
-    $response = $controller->postContent('report');
+    $response = $controller->postContent('reports', $this->getTestUuid());
     $this->assertSame(500, $response->getStatusCode());
     $this->assertStringContainsString('test exception', $response->getContent());
   }
@@ -93,7 +84,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
       'request_stack' => $request_stack,
     ]);
 
-    $response = $controller->postContent('report');
+    $response = $controller->postContent('reports', $this->getTestUuid());
     $this->assertSame(405, $response->getStatusCode());
     $this->assertStringContainsString('Unsupported method.', $response->getContent());
   }
@@ -112,7 +103,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
       'request_stack' => $request_stack,
     ]);
 
-    $response = $controller->postContent('report');
+    $response = $controller->postContent('reports', $this->getTestUuid());
     $this->assertSame(403, $response->getStatusCode());
     $this->assertStringContainsString('Invalid provider.', $response->getContent());
   }
@@ -131,7 +122,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
       'request_stack' => $request_stack,
     ]);
 
-    $response = $controller->postContent('report');
+    $response = $controller->postContent('reports', $this->getTestUuid());
     $this->assertSame(403, $response->getStatusCode());
     $this->assertStringContainsString('Invalid API key.', $response->getContent());
   }
@@ -139,7 +130,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   /**
    * @covers ::postContent
    */
-  public function testPostContentInvalidEndpoint(): void {
+  public function testPostContentInvalidEndpointResource(): void {
     $request = $this->createMockRequest();
 
     $request_stack = $this->createMockRequestStack($request);
@@ -148,9 +139,43 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
       'request_stack' => $request_stack,
     ]);
 
-    $response = $controller->postContent('test');
+    $response = $controller->postContent('test*test', $this->getTestUuid());
     $this->assertSame(404, $response->getStatusCode());
-    $this->assertStringContainsString('Invalid endpoint.', $response->getContent());
+    $this->assertStringContainsString('Invalid endpoint resource.', $response->getContent());
+  }
+
+  /**
+   * @covers ::postContent
+   */
+  public function testPostContentInvalidEndpointUuid(): void {
+    $request = $this->createMockRequest();
+
+    $request_stack = $this->createMockRequestStack($request);
+
+    $controller = $this->createTestController([
+      'request_stack' => $request_stack,
+    ]);
+
+    $response = $controller->postContent('reports', 'test');
+    $this->assertSame(404, $response->getStatusCode());
+    $this->assertStringContainsString('Invalid endpoint UUID.', $response->getContent());
+  }
+
+  /**
+   * @covers ::postContent
+   */
+  public function testPostContentUnknownEndpoint(): void {
+    $request = $this->createMockRequest();
+
+    $request_stack = $this->createMockRequestStack($request);
+
+    $controller = $this->createTestController([
+      'request_stack' => $request_stack,
+    ]);
+
+    $response = $controller->postContent('test', $this->getTestUuid());
+    $this->assertSame(404, $response->getStatusCode());
+    $this->assertStringContainsString('Unknown endpoint.', $response->getContent());
   }
 
   /**
@@ -167,7 +192,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
       'request_stack' => $request_stack,
     ]);
 
-    $response = $controller->postContent('report');
+    $response = $controller->postContent('reports', $this->getTestUuid());
     $this->assertSame(400, $response->getStatusCode());
     $this->assertStringContainsString('Invalid content format.', $response->getContent());
   }
@@ -186,7 +211,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
       'request_stack' => $request_stack,
     ]);
 
-    $response = $controller->postContent('report');
+    $response = $controller->postContent('reports', $this->getTestUuid());
     $this->assertSame(400, $response->getStatusCode());
     $this->assertStringContainsString('Missing request body.', $response->getContent());
   }
@@ -205,7 +230,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
       'request_stack' => $request_stack,
     ]);
 
-    $response = $controller->postContent('report');
+    $response = $controller->postContent('reports', $this->getTestUuid());
     $this->assertSame(400, $response->getStatusCode());
     $this->assertStringContainsString('Invalid request body.', $response->getContent());
   }
@@ -224,7 +249,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
       'request_stack' => $request_stack,
     ]);
 
-    $response = $controller->postContent('report');
+    $response = $controller->postContent('reports', $this->getTestUuid());
     $this->assertSame(400, $response->getStatusCode());
     $this->assertStringContainsString('Invalid JSON body.', $response->getContent());
   }
@@ -243,7 +268,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
       'request_stack' => $request_stack,
     ]);
 
-    $response = $controller->postContent('report');
+    $response = $controller->postContent('reports', $this->getTestUuid());
     $this->assertSame(400, $response->getStatusCode());
     $this->assertStringContainsString('Invalid data', $response->getContent());
   }
@@ -266,7 +291,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
       'request_stack' => $request_stack,
     ]);
 
-    $response = $controller->postContent('report');
+    $response = $controller->postContent('reports', $this->getTestUuid());
     $this->assertSame(500, $response->getStatusCode());
     $this->assertStringContainsString('Internal server error.', $response->getContent());
   }
@@ -292,7 +317,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
       'request_stack' => $request_stack,
     ]);
 
-    $response = $controller->postContent('report');
+    $response = $controller->postContent('reports', $this->getTestUuid());
     $this->assertSame(200, $response->getStatusCode());
     $this->assertStringContainsString('Document queued for processing.', $response->getContent());
   }
@@ -310,7 +335,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
    */
   protected function createMockRequest(array $headers = [], array $methods = []): Request {
     $headers += [
-      'X-RW-POST-API-PROVIDER' => 'test-provider',
+      'X-RW-POST-API-PROVIDER' => $this->getTestProvider('test-provider')->uuid(),
       'X-RW-POST-API-KEY' => 'test-provider-key',
     ];
 
@@ -325,7 +350,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
       ->willReturnMap($header_map);
 
     $methods += [
-      'getMethod' => 'POST',
+      'getMethod' => 'PUT',
       'getContentTypeFormat' => 'json',
       'getContent' => $this->getPostApiData(),
     ];
@@ -367,7 +392,6 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
       $services['request_stack'] ?? $container->get('request_stack'),
       $services['queue'] ?? $container->get('queue'),
       $services['plugin.manager.reliefweb_post_api.content_processor'] ?? $container->get('plugin.manager.reliefweb_post_api.content_processor'),
-      $services['reliefweb_post_api.provider.manager'] ?? $container->get('reliefweb_post_api.provider.manager'),
     ];
 
     return new ReliefWebPostApi(...$services);
@@ -378,16 +402,68 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
    *
    * @param string $bundle
    *   The bundle of the data.
+   * @param string $type
+   *   The type of data: raw (string) or decoded (array).
    *
-   * @return string
+   * @return string|array
    *   The data as a JSON string.
    */
-  protected function getPostApiData(string $bundle = 'report'): string {
+  protected function getPostApiData(string $bundle = 'report', string $type = 'raw'): string|array {
     if (!isset($this->postApiData[$bundle])) {
       $file = __DIR__ . '/../../../data/data-' . $bundle . '.json';
-      $this->postApiData[$bundle] = file_get_contents($file);
+      $data = file_get_contents($file);
+      $this->postApiData[$bundle] = [
+        'raw' => $data,
+        'decoded' => json_decode($data, TRUE),
+      ];
     }
-    return $this->postApiData[$bundle];
+    return $this->postApiData[$bundle][$type];
+  }
+
+  /**
+   * Get the UUID of test data.
+   *
+   * @param string $bundle
+   *   The bundle of the data.
+   *
+   * @return string
+   *   UUID.
+   */
+  protected function getTestUuid(string $bundle = 'report'): string {
+    return $this->getPostApiData('report', 'decoded')['uuid'];
+  }
+
+  /**
+   * Get a test provider.
+   *
+   * @param string $name
+   *   Provider name.
+   *
+   * @return Drupal\reliefweb_post_api\Entity\ProviderInterface|null
+   *   Provider entity.
+   */
+  protected function getTestProvider(string $name = 'test-provider'): ?ProviderInterface {
+    if (!isset($this->providers)) {
+      /** @var \Drupal\reliefweb_post_api\EntityProviderInterface $provider */
+      $provider = \Drupal::entityTypeManager()
+        ->getStorage('reliefweb_post_api_provider')
+        ->create([
+          'id' => 666,
+          'name' => 'test-provider',
+          'uuid' => Uuid::v5(Uuid::fromString(Uuid::NAMESPACE_URL), 'test-provider')->toRfc4122(),
+          'key' => 'test-provider-key',
+          'status' => 1,
+          'field_source' => [1503],
+          'field_user' => 2,
+          'field_document_url' => ['https://test.test/'],
+          'field_file_url' => ['https://test.test/'],
+          'field_image_url' => ['https://test.test/'],
+        ]);
+      $provider->save();
+      $this->markEntityForCleanup($provider);
+      $this->providers['test-provider'] = $provider;
+    }
+    return $this->providers[$name] ?? NULL;
   }
 
 }
