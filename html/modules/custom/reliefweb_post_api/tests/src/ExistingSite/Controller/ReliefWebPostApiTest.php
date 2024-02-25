@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\reliefweb_post_api\ExistingSite\Controller;
 
+use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\Core\Queue\QueueFactory;
 use Drupal\Core\Queue\QueueInterface;
 use Drupal\reliefweb_post_api\Controller\ReliefWebPostApi;
@@ -323,6 +324,43 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
+   * @covers ::getJsonSchema
+   */
+  public function testGetJsonSchema(): void {
+    $controller = $this->createTestController();
+
+    $response = $controller->getJsonSchema('@fgh%');
+    $this->assertSame(400, $response->getStatusCode());
+    $this->assertStringContainsString('Invalid schema file name.', $response->getContent());
+
+    $response = $controller->getJsonSchema('test.json');
+    $this->assertSame(404, $response->getStatusCode());
+    $this->assertStringContainsString('Unknown schema file.', $response->getContent());
+
+    $response = $controller->getJsonSchema('report.json');
+    $this->assertSame(200, $response->getStatusCode());
+    $this->assertStringContainsString('uuid', $response->getContent());
+    $this->assertTrue(json_validate($response->getContent()));
+  }
+
+  /**
+   * @covers ::getJsonSchema
+   */
+  public function testGetJsonSchemaEmpty(): void {
+    $path_resolver = $this->createConfiguredMock(ExtensionPathResolver::class, [
+      'getPath' => __DIR__ . '/../../../data/',
+    ]);
+
+    $controller = $this->createTestController([
+      'extension.path.resolver' => $path_resolver,
+    ]);
+
+    $response = $controller->getJsonSchema('empty.json');
+    $this->assertSame(500, $response->getStatusCode());
+    $this->assertStringContainsString('Internal server error.', $response->getContent());
+  }
+
+  /**
    * Create a mock request.
    *
    * @param array $headers
@@ -391,6 +429,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
     $services = [
       $services['request_stack'] ?? $container->get('request_stack'),
       $services['queue'] ?? $container->get('queue'),
+      $services['extension.path.resolver'] ?? $container->get('extension.path.resolver'),
       $services['plugin.manager.reliefweb_post_api.content_processor'] ?? $container->get('plugin.manager.reliefweb_post_api.content_processor'),
     ];
 

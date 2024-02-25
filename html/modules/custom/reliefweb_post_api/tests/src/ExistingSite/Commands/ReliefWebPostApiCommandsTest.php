@@ -99,7 +99,10 @@ class ReliefWebPostApiCommandsTest extends ExistingSiteBase {
    */
   public function testProcessProcessException(): void {
     $item = new \stdClass();
-    $item->data = ['bundle' => 'report'];
+    $item->data = [
+      'bundle' => 'report',
+      'uuid' => 'ba98249e-f453-4bff-92a7-5ffa7229d62b',
+    ];
     $item->item_id = 'abc';
 
     $queue = $this->createConfiguredMock(QueueInterface::class, [
@@ -126,8 +129,8 @@ class ReliefWebPostApiCommandsTest extends ExistingSiteBase {
 
     $handler->process(['limit' => 1]);
     $this->assertSame([
-      ['info', 'Processing queued report: abc.', []],
-      ['error', 'Error processing report abc: test exception.', []],
+      ['info', 'Processing queued report abc (ba98249e-f453-4bff-92a7-5ffa7229d62b).', []],
+      ['error', 'Error processing report abc (ba98249e-f453-4bff-92a7-5ffa7229d62b): test exception.', []],
       ['info', 'Processed 1 queued submissions.', []],
     ], $this->logger->cleanLogs());
   }
@@ -137,7 +140,10 @@ class ReliefWebPostApiCommandsTest extends ExistingSiteBase {
    */
   public function testProcess(): void {
     $item = new \stdClass();
-    $item->data = ['bundle' => 'report'];
+    $item->data = [
+      'bundle' => 'report',
+      'uuid' => 'ba98249e-f453-4bff-92a7-5ffa7229d62b',
+    ];
     $item->item_id = 'abc';
 
     $queue = $this->createConfiguredMock(QueueInterface::class, [
@@ -150,6 +156,7 @@ class ReliefWebPostApiCommandsTest extends ExistingSiteBase {
 
     $entity = $this->createConfiguredMock(Node::class, [
       'id' => 123,
+      'uuid' => 'ba98249e-f453-4bff-92a7-5ffa7229d62b',
       'getRevisionLogMessage' => 'Automatic creation from POST API.',
     ]);
 
@@ -168,8 +175,8 @@ class ReliefWebPostApiCommandsTest extends ExistingSiteBase {
 
     $handler->process(['limit' => 1]);
     $this->assertSame([
-      ['info', 'Processing queued report: abc.', []],
-      ['info', 'Successfully created report entity with id 123.', []],
+      ['info', 'Processing queued report abc (ba98249e-f453-4bff-92a7-5ffa7229d62b).', []],
+      ['info', 'Successfully created  entity with ID: 123 (ba98249e-f453-4bff-92a7-5ffa7229d62b).', []],
       ['info', 'Processed 1 queued submissions.', []],
     ], $this->logger->cleanLogs());
   }

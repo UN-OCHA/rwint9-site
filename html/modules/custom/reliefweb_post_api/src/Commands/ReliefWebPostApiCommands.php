@@ -55,39 +55,42 @@ class ReliefWebPostApiCommands extends DrushCommands {
       }
 
       $data = $item->data;
-      $plugin = $this->contentProcessorPluginManager->getPluginByBundle($data['bundle'] ?? '');
+      $item_id = $item->item_id;
+      $bundle = $data['bundle'] ?? 'unknown';
+      $uuid = $data['uuid'] ?? 'missing UUID';
+      $plugin = $this->contentProcessorPluginManager->getPluginByBundle($bundle);
 
-      // @todo Add the item UUID and/or URL to the logs to help identifying
-      // the problematic document in the logs.
       if (isset($plugin)) {
-        $this->logger->info(strtr('Processing queued @bundle: @item_id.', [
-          '@bundle' => $data['bundle'],
-          '@item_id' => $item->item_id,
+        $this->logger->info(strtr('Processing queued @bundle @item_id (@uuid).', [
+          '@bundle' => $bundle,
+          '@uuid' => $uuid,
+          '@item_id' => $item_id,
         ]));
 
-        // @todo log some info about the created entity.
-        // @todo maybe return the created entity so we can do something with it.
+        // Attempt to create/update a resource based on the provided data.
         try {
           $entity = $plugin->process($data);
 
-          $this->logger->info(strtr('Successfully @action @bundle entity with id @id.', [
+          $this->logger->info(strtr('Successfully @action @bundle entity with ID: @id (@uuid).', [
             '@action' => mb_stripos($entity->getRevisionLogMessage(), 'automatic creation') !== FALSE ? 'created' : 'updated',
-            '@bundle' => $data['bundle'],
+            '@bundle' => $entity->bundle(),
             '@id' => $entity->id(),
+            '@uuid' => $entity->uuid(),
           ]));
         }
         catch (\Exception $exception) {
-          $this->logger->error(strtr('Error processing @bundle @item_id: @error.', [
-            '@bundle' => $data['bundle'],
-            '@item_id' => $item->item_id,
+          $this->logger->error(strtr('Error processing @bundle @item_id (@uuid): @error.', [
+            '@bundle' => $bundle,
+            '@item_id' => $item_id,
+            '@uuid' => $uuid,
             '@error' => $exception->getMessage(),
           ]));
         }
       }
       else {
         $this->logger->error(strtr('Unsupported bundle: @bundle, skipping item: @item_id.', [
-          '@bundle' => $data['bundle'] ?? 'unknown',
-          '@item_id' => $item->item_id,
+          '@bundle' => $bundle,
+          '@item_id' => $item_id,
         ]));
       }
 

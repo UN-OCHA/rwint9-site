@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\reliefweb_post_api\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\Core\Queue\QueueFactory;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -29,12 +30,15 @@ class ReliefWebPostApi extends ControllerBase {
    *   The request stack.
    * @param \Drupal\Core\Queue\QueueFactory $queueFactory
    *   The queue factory.
+   * @param \Drupal\Core\Extension\ExtensionPathResolver $pathResolver
+   *   The path resolver service.
    * @param \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface $contentProcessorPluginManager
    *   The ReliefWeb POST API content processor plugin manager.
    */
   public function __construct(
     protected RequestStack $requestStack,
     protected QueueFactory $queueFactory,
+    protected ExtensionPathResolver $pathResolver,
     protected ContentProcessorPluginManagerInterface $contentProcessorPluginManager
   ) {}
 
@@ -45,12 +49,13 @@ class ReliefWebPostApi extends ControllerBase {
     return new static(
       $container->get('request_stack'),
       $container->get('queue'),
+      $container->get('extension.path.resolver'),
       $container->get('plugin.manager.reliefweb_post_api.content_processor')
     );
   }
 
   /**
-   * POST endpoint.
+   * Post content endpoint.
    *
    * @param string $resource
    *   Content resource (ex: reports).
@@ -161,6 +166,34 @@ class ReliefWebPostApi extends ControllerBase {
     }
 
     return $response;
+  }
+
+  /**
+   * Get a JSON schema.
+   *
+   * @param string $schema
+   *   The name of the schema file (ex: report.json).
+   *
+   * @return \Symfony\Component\HttpFoundation\JsonResponse
+   *   The response: 200, 4xx or 5xx
+   */
+  public function getJsonSchema(string $schema): JsonResponse {
+    if (preg_match('/^[a-z][a-z_-]+[a-z]\.json$/', $schema) !== 1) {
+      return new JsonResponse('Invalid schema file name.', 400);
+    }
+
+    $path = $this->pathResolver->getPath('module', 'reliefweb_post_api');
+    $file = $path . '/schemas/' . $schema;
+    if (!file_exists($file)) {
+      return new JsonResponse('Unknown schema file.', 404);
+    }
+
+    $content = @file_get_contents($file);
+    if (empty($content)) {
+      return new JsonResponse('Internal server error.', 500);
+    }
+
+    return new JsonResponse($content, 200);
   }
 
 }
