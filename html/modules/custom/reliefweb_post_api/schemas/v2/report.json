@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://reliefweb.int/post-api-schemas/report.json",
+    "$id": "https://reliefweb.int/post-api-schemas/v2/report.json",
     "title": "ReliefWeb POST API schema - report resource",
     "type": "object",
     "properties": {

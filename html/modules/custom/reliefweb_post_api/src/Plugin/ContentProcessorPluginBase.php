@@ -199,7 +199,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     if (!isset($this->jsonSchema)) {
       $bundle = $this->getbundle();
       $path = $this->pathResolver->getPath('module', 'reliefweb_post_api');
-      $schema = @file_get_contents($path . '/schemas/' . $bundle . '.json');
+      $schema = @file_get_contents($path . '/schemas/v2/' . $bundle . '.json');
       if ($schema === FALSE) {
         throw new ContentProcessorException(strtr('Missing @bundle JSON schema.', [
           '@bundle' => $bundle,

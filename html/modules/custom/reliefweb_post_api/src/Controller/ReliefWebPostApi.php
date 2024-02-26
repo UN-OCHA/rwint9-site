@@ -183,7 +183,7 @@ class ReliefWebPostApi extends ControllerBase {
     }
 
     $path = $this->pathResolver->getPath('module', 'reliefweb_post_api');
-    $file = $path . '/schemas/' . $schema;
+    $file = $path . '/schemas/v2/' . $schema;
     if (!file_exists($file)) {
       return new JsonResponse('Unknown schema file.', 404);
     }
@@ -193,7 +193,7 @@ class ReliefWebPostApi extends ControllerBase {
       return new JsonResponse('Internal server error.', 500);
     }
 
-    return new JsonResponse($content, 200);
+    return new JsonResponse($content, 200, json: TRUE);
   }
 
 }
