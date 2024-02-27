@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Checkout Code
         id: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Extract PHP Version
         id: php
@@ -71,7 +71,7 @@ jobs:
 
       - name: Configure AWS Credentials
         id: aws
-        uses: aws-actions/configure-aws-credentials@v3
+        uses: aws-actions/configure-aws-credentials@v4
         if: ${{ !env.ACT }}
         with:
           aws-access-key-id: ${{ secrets.ECR_AWS_ACCESS_KEY_ID }}
@@ -80,7 +80,7 @@ jobs:
 
       - name: Login to Public ECR
         id: aws-login
-        uses: docker/login-action@v2.1.0
+        uses: docker/login-action@v3
         if: ${{ !env.ACT }}
         with:
           registry: public.ecr.aws
@@ -192,7 +192,7 @@ jobs:
       - name: Slack Success Notification
         id: slack_success
         if: ${{ !env.ACT && failure() }}
-        uses: slackapi/slack-github-action@v1.23.0
+        uses: slackapi/slack-github-action@v1.25.0
         with:
           channel-id: '${{ vars.SLACK_CHANNEL }}'
           payload: |
@@ -219,7 +219,7 @@ jobs:
       - name: Slack Failure Notification
         id: slack_failure
         if: ${{ !env.ACT && failure() }}
-        uses: slackapi/slack-github-action@v1.23.0
+        uses: slackapi/slack-github-action@v1.25.0
         with:
           channel-id: '${{ vars.SLACK_CHANNEL }}'
           payload: |
