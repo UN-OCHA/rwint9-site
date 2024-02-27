@@ -37,7 +37,8 @@ ENV  NGINX_SERVERNAME=reliefweb.int \
      GIT_BLAME=$GITHUB_ACTOR \
      GIT_REPO=$GITHUB_REPOSITORY \
      GIT_SHA=$GITHUB_SHA \
-     GIT_REF=$GITHUB_REF
+     GIT_REF=$GITHUB_REF \
+     PHP_OPTIONS='-d display_errors="On"'
 
 LABEL info.humanitarianresponse.build.date=$BUILD_DATE \
       info.humanitarianresponse.build.vcs-url=$VCS_URL \
@@ -52,7 +53,7 @@ RUN mkdir -p /etc/nginx/custom && \
     # Permit nginx access to the X_DOCSTORE_PROVIDER_UUID env variable.
     sed -i 's/env NGINX_OVERRIDE_PROTOCOL;/env NGINX_OVERRIDE_PROTOCOL;\n\n## Allow retrieval of a particular file version from the docstore.\nenv X_DOCSTORE_PROVIDER_UUID;\n\n## Mapbox access token.\nenv MAPBOX_TOKEN;/' /etc/nginx/nginx.conf && \
     # xdebug 3.3 makes drush DB connections error, so disable it.
-    mv -f /etc/php82/conf.d/90_xdebug.ini /etc/php82/conf.d/90_xdebug.ini.disabled
+    rm -f /etc/php82/conf.d/90_xdebug.ini
 
 COPY --from=builder /srv/www/assets /srv/www/assets/
 COPY --from=builder /srv/www/config /srv/www/config/
