@@ -3,46 +3,46 @@
  *
  * Open jobs and training.
  */
-.rw-homepage-opportunties h2 {
+.rw-homepage-opportunities h2 {
   font-size: var(--cd-font-size--large);
 }
-.rw-homepage-opportunties ul {
+.rw-homepage-opportunities ul {
   margin: 24px 0 0 0;
   padding: 0;
   list-style: none;
 }
-.rw-homepage-opportunties li {
+.rw-homepage-opportunities li {
   margin: 0;
   background: var(--cd-reliefweb-brand-grey--light);
 }
-.rw-homepage-opportunties li + li {
+.rw-homepage-opportunities li + li {
   margin-top: 16px;
 }
-.rw-homepage-opportunties li * {
+.rw-homepage-opportunities li * {
   display: inline-block;
   vertical-align: middle;
   line-height: 36px;
 }
-.rw-homepage-opportunties li a {
+.rw-homepage-opportunities li a {
   position: relative;
   width: 100%;
   padding: 20px 100px 20px 20px;
   text-decoration: none;
   font-size: 22px;
 }
-.rw-homepage-opportunties li a:hover,
-.rw-homepage-opportunties li a:active,
-.rw-homepage-opportunties li a:focus {
+.rw-homepage-opportunities li a:hover,
+.rw-homepage-opportunities li a:active,
+.rw-homepage-opportunities li a:focus {
   text-decoration: none;
   outline: 1px solid var(--cd-reliefweb-brand-blue--dark);
 }
 /* Number of open ads. */
-.rw-homepage-opportunties li data {
+.rw-homepage-opportunities li data {
   margin-right: 12px;
   font-size: 32px;
   font-weight: bold;
 }
-.rw-homepage-opportunties [data-type] a:before {
+.rw-homepage-opportunities [data-type] a:before {
   position: absolute;
   top: 50%;
   right: 22px;
@@ -54,11 +54,11 @@
   opacity: 0.5;
   background: var(--rw-icons--content--job--36--dark-blue);
 }
-.rw-homepage-opportunties [data-type="training"] a:before {
+.rw-homepage-opportunities [data-type="training"] a:before {
   background: var(--rw-icons--content--training--36--dark-blue);
 }
 /* Border to separate the logo from the text. */
-.rw-homepage-opportunties [data-type] a:after {
+.rw-homepage-opportunities [data-type] a:after {
   position: absolute;
   top: 0;
   right: 79px;

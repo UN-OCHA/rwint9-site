@@ -26,7 +26,7 @@
   .path-frontpage .rw-river--blog {
     grid-area: blog;
   }
-  .path-frontpage .rw-homepage-opportunties {
+  .path-frontpage .rw-homepage-opportunities {
     grid-area: opportunities;
   }
   .path-frontpage .rw-river--most-read {
@@ -37,7 +37,7 @@
   .rw-homepage-announcement,
   .path-frontpage .rw-river--disasters,
   .path-frontpage .rw-river--blog,
-  .path-frontpage .rw-homepage-opportunties,
+  .path-frontpage .rw-homepage-opportunities,
   .path-frontpage .rw-river--most-read {
     margin: 0;
     padding: 0 0 32px 0;
