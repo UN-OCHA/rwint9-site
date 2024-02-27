@@ -1462,7 +1462,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
    * @covers ::generateUuid
    */
   public function testGenerateUuid(): void {
-    $uuid = 'bda0e2da-4229-53aa-9206-db72dfdac519';
+    $uuid = 'c1cd5878-f50e-5b94-b8ed-029bd92ab1af';
     $this->assertSame($uuid, $this->plugin->generateUuid('https://test.test'));
   }
 

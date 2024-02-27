@@ -868,7 +868,9 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
    * {@inheritdoc}
    */
   public function generateUuid(string $string, ?string $namespace = NULL): string {
-    $namespace = $namespace ?? Uuid::NAMESPACE_URL;
+    /* The default namespace is the UUID generated with
+     * Uuid::v5(Uuid::fromString(Uuid::NAMESPACE_DNS), 'reliefweb.int')->toRfc4122(); */
+    $namespace = $namespace ?? '8e27a998-c362-5d1f-b152-d474e1d36af2';
     return Uuid::v5(Uuid::fromString($namespace), $string)->toRfc4122();
   }
 

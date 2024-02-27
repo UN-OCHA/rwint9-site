@@ -11,7 +11,7 @@
             "maxLength": 2048
         },
         "uuid": {
-            "description": "The Universally unique identifier (UUID) version 5 generated from the URL property with the predefined ns:URL namespace.",
+            "description": "The universally unique identifier (UUID) version 5 generated from the URL property above, with the namespace: '8e27a998-c362-5d1f-b152-d474e1d36af2'.",
             "type": "string",
             "format": "uuid"
         },
