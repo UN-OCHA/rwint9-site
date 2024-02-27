@@ -1,0 +1,17 @@
+_core:
+  default_config_hash: r1hk7e31MjYWgy4AuBRXxwuhornPFBp0LDrncwSG38Q
+defaults:
+  plugins:
+    completion:
+      plugin_id: aws_bedrock
+    embedding:
+      plugin_id: aws_bedrock
+    source:
+      plugin_id: reliefweb
+    text_extractor:
+      application/pdf:
+        plugin_id: mupdf
+    text_splitter:
+      plugin_id: token
+    vector_store:
+      plugin_id: elasticsearch
