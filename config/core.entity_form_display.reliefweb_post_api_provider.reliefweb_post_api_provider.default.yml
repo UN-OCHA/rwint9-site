@@ -7,6 +7,7 @@ dependencies:
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_file_url
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_image_url
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_notify
+    - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_resource_status
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_source
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_user
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_webhook_url
@@ -21,7 +22,7 @@ mode: default
 content:
   field_document_url:
     type: link_default
-    weight: 5
+    weight: 6
     region: content
     settings:
       placeholder_url: ''
@@ -29,7 +30,7 @@ content:
     third_party_settings: {  }
   field_file_url:
     type: link_default
-    weight: 7
+    weight: 8
     region: content
     settings:
       placeholder_url: ''
@@ -37,7 +38,7 @@ content:
     third_party_settings: {  }
   field_image_url:
     type: link_default
-    weight: 6
+    weight: 7
     region: content
     settings:
       placeholder_url: ''
@@ -45,15 +46,21 @@ content:
     third_party_settings: {  }
   field_notify:
     type: email_default
-    weight: 8
+    weight: 9
     region: content
     settings:
       placeholder: ''
       size: 60
     third_party_settings: {  }
+  field_resource_status:
+    type: options_select
+    weight: 2
+    region: content
+    settings: {  }
+    third_party_settings: {  }
   field_source:
     type: reliefweb_entity_reference_select
-    weight: 2
+    weight: 3
     region: content
     settings:
       sort: label
@@ -97,7 +104,7 @@ content:
     third_party_settings: {  }
   field_user:
     type: entity_reference_autocomplete
-    weight: 3
+    weight: 4
     region: content
     settings:
       match_operator: CONTAINS
@@ -107,7 +114,7 @@ content:
     third_party_settings: {  }
   field_webhook_url:
     type: link_default
-    weight: 9
+    weight: 10
     region: content
     settings:
       placeholder_url: ''
@@ -115,9 +122,11 @@ content:
     third_party_settings: {  }
   key:
     type: reliefweb_post_api_key
-    weight: 4
+    weight: 5
     region: content
-    settings: {  }
+    settings:
+      size: 60
+      placeholder: ''
     third_party_settings: {  }
   name:
     type: string_textfield
@@ -135,7 +144,7 @@ content:
     third_party_settings: {  }
   status:
     type: boolean_checkbox
-    weight: 10
+    weight: 11
     region: content
     settings:
       display_label: true

@@ -62,6 +62,108 @@ class ProviderFormTest extends ExistingSiteBase {
   }
 
   /**
+   * @covers ::validateForm()
+   */
+  public function testValidateForm(): void {
+    $provider = $this->createDummyProvider();
+
+    $form_object = \Drupal::entityTypeManager()
+      ->getFormObject('reliefweb_post_api_provider', 'default')
+      ->setEntity($provider);
+
+    $form_state = new FormState();
+
+    $form = \Drupal::service('form_builder')
+      ->buildForm($form_object, $form_state);
+
+    // Missing resource.
+    $form_state->clearErrors();
+    $form_state->unsetValue(['resource', 0, 'value']);
+    $form_object->validateForm($form, $form_state);
+    $errors = $form_state->getErrors();
+    $this->assertArrayHasKey('resource', $errors);
+    $this->assertEquals('This value should not be null.', (string) $errors['resource']);
+
+    // Invalid resource.
+    $form_state->clearErrors();
+    $form_state->setValue(['resource', 0, 'value'], 'test');
+    $form_object->validateForm($form, $form_state);
+    $errors = $form_state->getErrors();
+    $this->assertArrayHasKey('resource', $errors);
+    $this->assertEquals('The value you selected is not a valid choice.', (string) $errors['resource']);
+
+    // Missing resource status.
+    $form_state->clearErrors();
+    $form_state->setValue(['resource', 0, 'value'], 'reports');
+    $form_object->validateForm($form, $form_state);
+    $errors = $form_state->getErrors();
+    $this->assertArrayHasKey('field_resource_status', $errors);
+    $this->assertEquals('This value should not be null.', (string) $errors['field_resource_status']);
+
+    // Invalid resource status.
+    $form_state->clearErrors();
+    $form_state->setValue(['field_resource_status', 0, 'value'], 'test');
+    $form_object->validateForm($form, $form_state);
+    $errors = $form_state->getErrors();
+    $this->assertArrayHasKey('field_resource_status', $errors);
+    $this->assertEquals('The value you selected is not a valid choice.', (string) $errors['field_resource_status']);
+
+    // Valid resouce and resource status.
+    $form_state->clearErrors();
+    $form_state->setValue(['resource', 0, 'value'], 'reports');
+    $form_state->setValue(['field_resource_status', 0, 'value'], 'pending');
+    $form_object->validateForm($form, $form_state);
+    $errors = $form_state->getErrors();
+    $this->assertArrayNotHasKey('resource', $errors);
+    $this->assertArrayNotHasKey('field_resource_status', $errors);
+  }
+
+  /**
+   * @covers ::validateForm()
+   */
+  public function testValidateFormUnallowedStatus(): void {
+    $provider = $this->createDummyProvider();
+
+    $form_object = \Drupal::entityTypeManager()
+      ->getFormObject('reliefweb_post_api_provider', 'default')
+      ->setEntity($provider);
+
+    // Skip errors due to unallowed values for the resource and resource status
+    // fields so we can test unallowed statuses.
+    $form_state = new class() extends FormState {
+
+      /**
+       * {@inheritdoc}
+       */
+      public function getErrors() {
+        $errors = $this->errors;
+        foreach ($errors as $key => $error) {
+          if ($key === 'resource' || $key === 'field_resource_status') {
+            if ((string) $error === 'The value you selected is not a valid choice.') {
+              unset($errors[$key]);
+            }
+          }
+        }
+        return $errors;
+      }
+
+    };
+
+    $form = \Drupal::service('form_builder')
+      ->buildForm($form_object, $form_state);
+
+    // Test invalid choice of status.
+    $form_state->clearErrors();
+    $form_state->setValue(['resource', 0, 'value'], 'reports');
+    $form_state->setValue(['field_resource_status', 0, 'value'], 'test');
+    $form_object->validateForm($form, $form_state);
+    $errors = $form_state->getErrors();
+    $this->assertArrayNotHasKey('resource', $errors);
+    $this->assertArrayHasKey('field_resource_status', $errors);
+    $this->assertStringContainsString('is not supported for this resource, please select one of', (string) $errors['field_resource_status']);
+  }
+
+  /**
    * @covers ::save()
    */
   public function testSave(): void {

@@ -10,6 +10,7 @@ use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Password\PasswordInterface;
+use Drupal\reliefweb_moderation\ModerationServiceBase;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -66,6 +67,35 @@ class ProviderForm extends ContentEntityForm {
     $form['field_source']['#attributes']['data-with-autocomplete'] = '';
 
     return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    parent::validateForm($form, $form_state);
+
+    // No need to do further validation if there is already an error on the
+    // resource or resource status. For example if one is missing or not a valid
+    // value.
+    $errors = $form_state->getErrors();
+    if (!isset($errors['resource']) && !isset($errors['field_resource_status'])) {
+      $resource = $form_state->getValue(['resource', 0, 'value']);
+      $status = $form_state->getValue(['field_resource_status', 0, 'value']);
+
+      $plugin = $this->contentProcessorPluginManager->getPluginByResource($resource);
+      $bundle = $plugin->getBundle();
+      $service = ModerationServiceBase::getModerationService($bundle);
+      $statuses = $service->getStatuses();
+
+      if (!isset($statuses[$status])) {
+        $error = $this->t('@status is not supported for this resource, please select one of @statuses', [
+          '@status' => $form['field_resource_status']['widget']['#options'][$status] ?? $status,
+          '@statuses' => implode(', ', $statuses),
+        ]);
+        $form_state->setError($form['field_resource_status']['widget'], $error);
+      }
+    }
   }
 
   /**

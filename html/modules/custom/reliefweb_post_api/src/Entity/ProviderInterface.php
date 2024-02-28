@@ -47,6 +47,14 @@ interface ProviderInterface extends ContentEntityInterface {
   public function getUserId(): int;
 
   /**
+   * Get the default moderation status for the created/updated entities.
+   *
+   * @return string
+   *   Moeration status. Defaults to 'draft'.
+   */
+  public function getDefaultResourceStatus(): string;
+
+  /**
    * Check if a provider with the given ID exits and its API key is valid.
    *
    * @param string $key

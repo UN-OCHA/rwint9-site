@@ -110,7 +110,7 @@ class Report extends ContentProcessorPluginBase {
     $node->field_ocha_product->setValue(NULL);
 
     // Set the new status.
-    $node->moderation_status = 'pending';
+    $node->moderation_status = $provider->getDefaultResourceStatus();
 
     // Set the log message based on whether it was updated or created.
     $message = $node->isNew() ? 'Automatic creation from POST API.' : 'Automatic update from POST API.';

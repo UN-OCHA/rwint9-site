@@ -206,6 +206,21 @@ class Provider extends ContentEntityBase implements ProviderInterface {
   /**
    * {@inheritdoc}
    */
+  public function getDefaultResourceStatus(): string {
+    $field = 'field_resource_status';
+    // Draft is the only common status among all RW content entities.
+    if (!$this->hasField($field)) {
+      return 'draft';
+    }
+    if (empty($this->get($field)->value)) {
+      return 'draft';
+    }
+    return $this->get($field)->value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function validateKey(string $key): bool {
     if (empty($key) || empty($this->key->value)) {
       return FALSE;

@@ -19,6 +19,7 @@ class ProviderListBuilder extends EntityListBuilder {
     $header['name'] = $this->t('Name');
     $header['uuid'] = $this->t('UUID');
     $header['resource'] = $this->t('Resource');
+    $header['resource_status'] = $this->t('Default status');
     $header['source'] = $this->t('Sources');
     $header['status'] = $this->t('Active');
     return $header + parent::buildHeader();
@@ -38,6 +39,10 @@ class ProviderListBuilder extends EntityListBuilder {
     ]);
 
     $row['resource']['data'] = $entity->resource->view([
+      'label' => 'hidden',
+    ]);
+
+    $row['resource_status']['data'] = $entity->field_resource_status->view([
       'label' => 'hidden',
     ]);
 

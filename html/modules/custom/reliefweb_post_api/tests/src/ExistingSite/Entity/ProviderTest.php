@@ -25,12 +25,14 @@ class ProviderTest extends ExistingSiteBase {
   protected $data = [
     'name' => 'test-provider',
     'key' => 'test-provider-key',
+    'resource' => 'reports',
     'field_document_url' => ['https://test.test/', 'https://test1.test/'],
     'field_file_url' => ['https://test.test/'],
     'field_image_url' => ['https://test.test/'],
     'field_notify' => ['test@test.test'],
     'field_source' => [1503],
     'field_user' => 12,
+    'field_resource_status' => 'pending',
   ];
 
   /**
@@ -143,6 +145,30 @@ class ProviderTest extends ExistingSiteBase {
     $provider = $this->createNoFieldProvider();
     $this->assertFalse($provider->hasField('field_user'));
     $this->assertEquals(2, $provider->getUserId());
+  }
+
+  /**
+   * @covers ::getDefaultResourceStatus
+   */
+  public function testGetDefaultResourceStatus(): void {
+    $data = $this->data;
+
+    $provider = $this->createProvider($data);
+    $this->assertEquals($this->data['field_resource_status'], $provider->getDefaultResourceStatus());
+
+    $data['field_resource_status'] = [];
+    $provider = $this->createProvider($data);
+    $this->assertEquals('draft', $provider->getDefaultResourceStatus());
+
+    // The default value is "pending" when the field is initialized.
+    unset($data['field_resource_status']);
+    $provider = $this->createProvider($data);
+    $this->assertEquals('pending', $provider->getDefaultResourceStatus());
+
+    // Missing field.
+    $provider = $this->createNoFieldProvider();
+    $this->assertFalse($provider->hasField('field_resource_status'));
+    $this->assertEquals('draft', $provider->getDefaultResourceStatus());
   }
 
   /**
