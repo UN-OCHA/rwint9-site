@@ -6,3 +6,4 @@ core_version_requirement: ^9 || ^10
 dependencies:
   - drupal:ocha_ai_job_tag
   - drupal:reliefweb_moderation
+  - drupal:reliefweb_utility

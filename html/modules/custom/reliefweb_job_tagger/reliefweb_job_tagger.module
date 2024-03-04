@@ -5,11 +5,15 @@
  * OCHA AI Job tagging.
  */
 
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
+use Drupal\reliefweb_utility\Helpers\MarkdownHelper;
+use Drupal\reliefweb_utility\Helpers\UserHelper;
 
 /**
- * Implements hook_form_HOOK_alter() for "node_form".
+ * Implements hook_form_HOOK_alter().
  */
 function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
   $form_ids = [
@@ -21,8 +25,26 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
     return;
   }
 
-  // Check permissions.
   $user = \Drupal::currentUser();
+
+  if ($form_id == 'node_job_edit_form') {
+    $entity = $form_state->getFormObject()->getEntity();
+    if ($entity->hasField('reliefweb_job_tagger_info') && !$entity->reliefweb_job_tagger_info->IsEmpty()) {
+      if (UserHelper::userHasRoles(['editor'])) {
+        $message = $entity->reliefweb_job_tagger_info->value;
+        $message = MarkdownHelper::convertToHtml($message);
+
+        $form['ai_feedback'] = [
+          '#type' => 'processed_text',
+          '#text' => $message,
+          '#format' => 'html',
+          '#weight' => -90,
+        ];
+      }
+    }
+  }
+
+  // Check permissions.
   if ($user->hasPermission('bypass ocha ai job tag')) {
     return;
   }
@@ -46,9 +68,13 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
   ];
 
   $conditions = [];
+  $not_conditions = [];
   foreach ($sources as $source) {
     $conditions[] = [
       'value' => $source,
+    ];
+    $not_conditions[] = [
+      '!value' => $source,
     ];
   }
 
@@ -57,7 +83,32 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
       'visible' => [
         'select[name="field_source"]' => $conditions,
       ],
+      'required' => [
+        'select[name="field_source"]' => $conditions,
+      ],
+      'optional' => [
+        'select[name="field_source"]' => $not_conditions,
+      ],
     ];
   }
+}
 
+/**
+ * Implements hook_entity_base_field_info().
+ */
+function reliefweb_job_tagger_entity_base_field_info(EntityTypeInterface $entity_type) {
+  $fields = [];
+
+  if ($entity_type->id() == 'node') {
+    $fields['reliefweb_job_tagger_info'] = BaseFieldDefinition::create('text_long')
+      ->setLabel(t('AI info'))
+      ->setDescription(t('Info from the AI.'))
+      ->setSetting('allowed_formats', [
+        0 => 'markdown',
+      ])
+      ->setRevisionable(TRUE)
+      ->setRequired(FALSE);
+  }
+
+  return $fields;
 }

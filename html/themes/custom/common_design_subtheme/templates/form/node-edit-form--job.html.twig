@@ -43,16 +43,30 @@
 
 {# Add the user information at the beginning. It's disabled for non editors. #}
 {% if form.user_information is not empty %}
-  {%
-    set toc = {
-      'information': {
-        'title': 'Information'|t,
-        'sections': {
-          'user-information': 'User information'|t,
+  {% if form.ai_feedback is not empty %}
+    {%
+      set toc = {
+        'information': {
+          'title': 'Information'|t,
+          'sections': {
+            'user-information': 'User information'|t,
+            'ai-feedback': 'AI Feedback'|t,
+          },
         },
-      },
-    }|merge(toc)
-  %}
+      }|merge(toc)
+    %}
+  {% else %}
+    {%
+      set toc = {
+        'information': {
+          'title': 'Information'|t,
+          'sections': {
+            'user-information': 'User information'|t,
+          },
+        },
+      }|merge(toc)
+    %}
+  {% endif %}
 {% endif %}
 
 {# Add the revision information at the end. It's disabled for non editors. #}
@@ -80,6 +94,13 @@
 <fieldset id="user-information">
   <legend>{% trans %}User information{% endtrans %}</legend>
   {{ form.user_information }}
+</fieldset>
+{% endif %}
+
+{% if form.ai_feedback %}
+<fieldset id="ai-feedback" >
+  <legend>{% trans %}AI Feedback{% endtrans %}</legend>
+  {{ form.ai_feedback }}
 </fieldset>
 {% endif %}
 
@@ -135,6 +156,7 @@
 {{
   form|without([
     'user_information',
+    'ai_feedback',
     'field_source',
     'unspecified_location',
     'field_country',
