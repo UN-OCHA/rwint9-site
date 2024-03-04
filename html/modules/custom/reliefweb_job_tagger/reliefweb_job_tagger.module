@@ -1,0 +1,63 @@
+<?php
+
+/**
+ * @file
+ * OCHA AI Job tagging.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
+
+/**
+ * Implements hook_form_HOOK_alter() for "node_form".
+ */
+function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  $form_ids = [
+    'node_job_edit_form',
+    'node_job_form',
+  ];
+
+  if (!in_array($form_id, $form_ids)) {
+    return;
+  }
+
+  // Check permissions.
+  $user = \Drupal::currentUser();
+  if ($user->hasPermission('bypass ocha ai job tag')) {
+    return;
+  }
+
+  if (!$user->hasPermission('enforce ocha ai job tag')) {
+    return;
+  }
+
+  $sources = array_keys(UserPostingRightsHelper::getUserPostingRights());
+  if (empty($sources)) {
+    $form['field_job_experience']['#access'] = FALSE;
+    $form['field_career_categories']['#access'] = FALSE;
+    $form['field_theme']['#access'] = FALSE;
+    return;
+  }
+
+  $fields = [
+    'field_job_experience',
+    'field_career_categories',
+    'field_theme',
+  ];
+
+  $conditions = [];
+  foreach ($sources as $source) {
+    $conditions[] = [
+      'value' => $source,
+    ];
+  }
+
+  foreach ($fields as $field) {
+    $form[$field]['#states'] = [
+      'visible' => [
+        'select[name="field_source"]' => $conditions,
+      ],
+    ];
+  }
+
+}

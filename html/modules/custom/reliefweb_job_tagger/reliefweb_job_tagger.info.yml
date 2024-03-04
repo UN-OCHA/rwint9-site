@@ -1,0 +1,8 @@
+type: module
+name: ReliefWeb OCHA AI Job Tagger
+description: 'OCHA AI Job Tagger for reliefweb.'
+package: reliefweb
+core_version_requirement: ^9 || ^10
+dependencies:
+  - drupal:ocha_ai_job_tag
+  - drupal:reliefweb_moderation
