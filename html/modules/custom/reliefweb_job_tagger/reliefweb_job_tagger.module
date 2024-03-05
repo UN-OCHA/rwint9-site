@@ -46,21 +46,29 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
 
   // Check permissions.
   if ($user->hasPermission('bypass ocha ai job tag')) {
+    // Make fields mandatory.
+    $form['field_job_experience']['widget']['#required'] = TRUE;
+    $form['field_career_categories']['widget']['#required'] = TRUE;
     return;
   }
 
   if (!$user->hasPermission('enforce ocha ai job tag')) {
+    // Make fields mandatory.
+    $form['field_job_experience']['widget']['#required'] = TRUE;
+    $form['field_career_categories']['widget']['#required'] = TRUE;
     return;
   }
 
   $sources = array_keys(UserPostingRightsHelper::getUserPostingRights());
   if (empty($sources)) {
+    // Non-trusted poster, hide fields.
     $form['field_job_experience']['#access'] = FALSE;
     $form['field_career_categories']['#access'] = FALSE;
     $form['field_theme']['#access'] = FALSE;
     return;
   }
 
+  // Show and mark fields mandatory for trusted sources.
   $fields = [
     'field_job_experience',
     'field_career_categories',
@@ -68,13 +76,9 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
   ];
 
   $conditions = [];
-  $not_conditions = [];
   foreach ($sources as $source) {
     $conditions[] = [
       'value' => $source,
-    ];
-    $not_conditions[] = [
-      '!value' => $source,
     ];
   }
 
@@ -85,9 +89,6 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
       ],
       'required' => [
         'select[name="field_source"]' => $conditions,
-      ],
-      'optional' => [
-        'select[name="field_source"]' => $not_conditions,
       ],
     ];
   }
