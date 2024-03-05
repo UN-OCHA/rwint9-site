@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "619e13e717581ab4c7c2805ab415e53a",
+    "content-hash": "dcdf546f9f34d29b1264fd579c0725e8",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -15809,16 +15809,16 @@
         },
         {
             "name": "unocha/ocha_ai",
-            "version": "v1.0.4",
+            "version": "v1.0.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_ai.git",
-                "reference": "90b09d5bd9c116d11e53769aa304b591161f2e06"
+                "reference": "2607e0a8f4bd0ff240560445ddc4c8064ef3a46b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/90b09d5bd9c116d11e53769aa304b591161f2e06",
-                "reference": "90b09d5bd9c116d11e53769aa304b591161f2e06",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/2607e0a8f4bd0ff240560445ddc4c8064ef3a46b",
+                "reference": "2607e0a8f4bd0ff240560445ddc4c8064ef3a46b",
                 "shasum": ""
             },
             "require": {
@@ -15849,9 +15849,9 @@
             "description": "OCHA AI module",
             "support": {
                 "issues": "https://github.com/UN-OCHA/ocha_ai/issues",
-                "source": "https://github.com/UN-OCHA/ocha_ai/tree/v1.0.4"
+                "source": "https://github.com/UN-OCHA/ocha_ai/tree/v1.0.5"
             },
-            "time": "2024-02-29T15:27:27+00:00"
+            "time": "2024-03-05T10:25:03+00:00"
         },
         {
             "name": "unocha/ocha_monitoring",
@@ -16266,6 +16266,56 @@
                 }
             ],
             "time": "2023-05-17T18:32:04+00:00"
+        },
+        {
+            "name": "drupal/dev_mode",
+            "version": "2.6.0",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupalcode.org/project/dev_mode.git",
+                "reference": "8.x-2.6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/dev_mode-8.x-2.6.zip",
+                "reference": "8.x-2.6",
+                "shasum": "7dfa949130c4add242a91604c4f0fd8e75317c54"
+            },
+            "require": {
+                "drupal/core": "^8 || ^9 || ^10"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "drupal": {
+                    "version": "8.x-2.6",
+                    "datestamp": "1673374613",
+                    "security-coverage": {
+                        "status": "covered",
+                        "message": "Covered by Drupal's security advisory policy"
+                    }
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "George Anderson (geoanders)",
+                    "homepage": "https://www.drupal.org/u/geoanders",
+                    "role": "Maintainer"
+                },
+                {
+                    "name": "rduplock",
+                    "homepage": "https://www.drupal.org/user/3506644"
+                }
+            ],
+            "description": "Enable this module to activate development mode on your Drupal site.",
+            "homepage": "https://drupal.org/project/dev_mode",
+            "support": {
+                "source": "https://git.drupalcode.org/project/dev_mode",
+                "issues": "https://drupal.org/project/issues/dev_mode"
+            }
         },
         {
             "name": "drupal/devel",
