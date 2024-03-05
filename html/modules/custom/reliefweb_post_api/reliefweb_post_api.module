@@ -1,0 +1,32 @@
+<?php
+
+/**
+ * @file
+ * Module file for the reliefweb_post_api module.
+ */
+
+declare(strict_types=1);
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\reliefweb_post_api\Entity\Provider;
+
+/**
+ * Implements hook_entity_create().
+ */
+function reliefweb_post_api_entity_create(EntityInterface $entity): void {
+  Provider::notifyProvider($entity);
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function reliefweb_post_api_entity_update(EntityInterface $entity): void {
+  Provider::notifyProvider($entity);
+}
+
+/**
+ * Implements hook_entity_delete().
+ */
+function reliefweb_post_api_entity_delete(EntityInterface $entity): void {
+  Provider::notifyProvider($entity);
+}

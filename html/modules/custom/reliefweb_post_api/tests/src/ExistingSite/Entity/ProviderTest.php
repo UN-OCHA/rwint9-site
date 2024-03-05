@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\reliefweb_post_api\ExistingSite\Entity;
 
+use Drupal\Core\Logger\LoggerChannelFactory;
 use Drupal\reliefweb_post_api\Entity\Provider;
 use Drupal\reliefweb_post_api\Entity\ProviderInterface;
+use GuzzleHttp\Client;
+use Symfony\Component\ErrorHandler\BufferingLogger;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
@@ -24,6 +27,7 @@ class ProviderTest extends ExistingSiteBase {
    */
   protected $data = [
     'name' => 'test-provider',
+    'uuid' => '7603a5e4-d168-4509-8979-f3c89c16f1f0',
     'key' => 'test-provider-key',
     'resource' => 'reports',
     'field_document_url' => ['https://test.test/', 'https://test1.test/'],
@@ -33,6 +37,7 @@ class ProviderTest extends ExistingSiteBase {
     'field_source' => [1503],
     'field_user' => 12,
     'field_resource_status' => 'pending',
+    'field_webhook_url' => 'https://test.test',
   ];
 
   /**
@@ -188,6 +193,54 @@ class ProviderTest extends ExistingSiteBase {
     unset($data['key']);
     $provider = $this->createProvider($data);
     $this->assertFalse($provider->validateKey($this->data['key']));
+  }
+
+  /**
+   * @covers ::notifyProvider
+   */
+  public function testNotifyProvider(): void {
+    $data = $this->data;
+
+    $provider = $this->createProvider($data);
+
+    $entity = \Drupal::entityTypeManager()->getStorage('node')->create([
+      'type' => 'report',
+      'uuid' => '5fa67cc5-8c2a-4c05-aab2-bb61368ec3fb',
+      'field_post_api_provider' => $provider,
+    ]);
+
+    // Mock services.
+    $logger = new BufferingLogger();
+    $logger_factory = $this->createConfiguredMock(LoggerChannelFactory::class, [
+      'get' => $logger,
+    ]);
+    $client = $this->createMock(Client::class);
+
+    $container = \Drupal::getContainer();
+    $container->set('logger.factory', $logger_factory);
+    $container->set('http_client', $client);
+
+    Provider::notifyProvider($entity);
+    $message = strtr('Request sent to @url for provider @provider.', [
+      '@url' => $provider->field_webhook_url->uri . '/' . $entity->uuid(),
+      '@provider' => $provider->uuid(),
+    ]);
+    $this->assertSame([
+      ['info', $message, []],
+    ], $logger->cleanLogs());
+
+    $client->expects($this->any())
+      ->method('get')
+      ->willThrowException(new \Exception('error'));
+    Provider::notifyProvider($entity);
+    $message = strtr('Request to @url for provider @provider failed: @error', [
+      '@url' => $provider->field_webhook_url->uri . '/' . $entity->uuid(),
+      '@provider' => $provider->uuid(),
+      '@error' => 'error',
+    ]);
+    $this->assertSame([
+      ['notice', $message, []],
+    ], $logger->cleanLogs());
   }
 
   /**

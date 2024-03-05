@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Drupal\reliefweb_post_api\Entity;
 
 use Drupal\Core\Entity\ContentEntityBase;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityChangedTrait;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 
@@ -226,6 +228,44 @@ class Provider extends ContentEntityBase implements ProviderInterface {
       return FALSE;
     }
     return \Drupal::service('password')->check($key, $this->key->value);
+  }
+
+  /**
+   * Notify the provider of an entity.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   Entity that has been created, updated or deleted.
+   */
+  public static function notifyProvider(EntityInterface $entity): void {
+    if ($entity instanceof ContentEntityInterface && $entity->hasField('field_post_api_provider')) {
+      $provider = $entity->field_post_api_provider->entity;
+      if (!empty($provider)) {
+        $client = \Drupal::httpClient();
+        $timeout = \Drupal::state()->get('reliefweb_post_api.timeout', 1);
+        $logger = \Drupal::logger('reliefweb_post_api.webhook');
+
+        foreach ($provider->field_webhook_url as $item) {
+          if (!empty($item->uri)) {
+            $url = $item->uri . '/' . $entity->uuid();
+            try {
+              $client->get($url, ['timeout' => $timeout]);
+
+              $logger->info(strtr('Request sent to @url for provider @provider.', [
+                '@url' => $url,
+                '@provider' => $provider->uuid(),
+              ]));
+            }
+            catch (\Exception $exception) {
+              $logger->notice(strtr('Request to @url for provider @provider failed: @error', [
+                '@url' => $url,
+                '@provider' => $provider->uuid(),
+                '@error' => $exception->getMessage(),
+              ]));
+            }
+          }
+        }
+      }
+    }
   }
 
 }

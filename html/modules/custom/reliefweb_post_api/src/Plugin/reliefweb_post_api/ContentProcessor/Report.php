@@ -109,6 +109,9 @@ class Report extends ContentProcessorPluginBase {
     $node->field_feature->setValue(NULL);
     $node->field_ocha_product->setValue(NULL);
 
+    // Set the provider.
+    $this->setField($node, 'field_post_api_provider', $provider);
+
     // Set the new status.
     $node->moderation_status = $provider->getDefaultResourceStatus();
 
