@@ -7,6 +7,7 @@
 
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Field\FieldDefinition;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_utility\Helpers\MarkdownHelper;
@@ -95,9 +96,9 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
 }
 
 /**
- * Implements hook_entity_base_field_info().
+ * Implements hook_entity_field_storage_info().
  */
-function reliefweb_job_tagger_entity_base_field_info(EntityTypeInterface $entity_type) {
+function reliefweb_job_tagger_entity_field_storage_info(EntityTypeInterface $entity_type) {
   $fields = [];
 
   if ($entity_type->id() == 'node') {
@@ -109,6 +110,21 @@ function reliefweb_job_tagger_entity_base_field_info(EntityTypeInterface $entity
       ])
       ->setRevisionable(TRUE)
       ->setRequired(FALSE);
+  }
+
+  return $fields;
+}
+
+/**
+ * Implements hook_entity_bundle_field_info().
+ */
+function reliefweb_job_tagger_entity_bundle_field_info(EntityTypeInterface $entity_type, $bundle, array $base_field_definitions) {
+  $fields = [];
+
+  if ($entity_type->id() == 'node' && $bundle == 'job') {
+    $storage_definitions = reliefweb_job_tagger_entity_field_storage_info($entity_type);
+    $fields['reliefweb_job_tagger_info'] = FieldDefinition::createFromFieldStorageDefinition($storage_definitions['reliefweb_job_tagger_info'])
+      ->setLabel(t('AI Info'));
   }
 
   return $fields;
