@@ -90,6 +90,10 @@
 }}
 
 {# Form content. #}
+{% if form.ai_message %}
+  {{ form.ai_message }}
+{% endif %}
+
 {% if form.user_information %}
 <fieldset id="user-information">
   <legend>{% trans %}User information{% endtrans %}</legend>
@@ -157,6 +161,7 @@
   form|without([
     'user_information',
     'ai_feedback',
+    'ai_message',
     'field_source',
     'unspecified_location',
     'field_country',

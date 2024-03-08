@@ -28,10 +28,11 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
 
   $user = \Drupal::currentUser();
 
+  // Displauy AI info for editors.
   if ($form_id == 'node_job_edit_form') {
-    $entity = $form_state->getFormObject()->getEntity();
-    if ($entity->hasField('reliefweb_job_tagger_info') && !$entity->reliefweb_job_tagger_info->IsEmpty()) {
-      if (UserHelper::userHasRoles(['editor'])) {
+    if (UserHelper::userHasRoles(['editor'])) {
+      $entity = $form_state->getFormObject()->getEntity();
+      if ($entity->hasField('reliefweb_job_tagger_info') && !$entity->reliefweb_job_tagger_info->IsEmpty()) {
         $message = $entity->reliefweb_job_tagger_info->value;
         $message = MarkdownHelper::convertToHtml($message);
 
@@ -57,8 +58,23 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
     // Make fields mandatory.
     $form['field_job_experience']['widget']['#required'] = TRUE;
     $form['field_career_categories']['widget']['#required'] = TRUE;
+
     return;
   }
+
+  // Add message for job posters.
+  $form['ai_message'] = [
+    '#type' => 'fieldset',
+  ];
+  $form['ai_message']['message'] = [
+    '#type' => 'processed_text',
+    '#text' => t('Since March 2024, ReliefWeb jobs form has changed to make the submission easier. From now on, you won’t need to fill in the career category, job experience or themes anymore.'),
+    '#format' => 'html',
+    '#weight' => -90,
+    '#prefix' => '<div class="messages messages--warning cd-alert cd-alert--warning">',
+    '#suffix' => '</div>',
+    '#states' => [],
+  ];
 
   $sources = array_keys(UserPostingRightsHelper::getUserPostingRights());
   if (empty($sources)) {
@@ -66,6 +82,7 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
     $form['field_job_experience']['#access'] = FALSE;
     $form['field_career_categories']['#access'] = FALSE;
     $form['field_theme']['#access'] = FALSE;
+
     return;
   }
 
@@ -93,6 +110,12 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
       ],
     ];
   }
+
+  $form['ai_message']['#states'] = [
+    'invisible' => [
+      'select[name="field_source"]' => $conditions,
+    ],
+  ];
 }
 
 /**
