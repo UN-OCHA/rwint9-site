@@ -1,0 +1,17 @@
+.ai-message-wrapper {
+  border-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  padding-left: 32px !important;
+}
+
+@media screen and (min-width: 767px) {
+  .ai-message-wrapper {
+    padding-left: 40px !important;
+  }
+}
+
+.ai-message-wrapper legend {
+  display: none;
+  margin: 0;
+  padding: 0;
+}

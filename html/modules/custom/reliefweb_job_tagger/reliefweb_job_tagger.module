@@ -65,15 +65,25 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
   // Add message for job posters.
   $form['ai_message'] = [
     '#type' => 'fieldset',
-  ];
-  $form['ai_message']['message'] = [
-    '#type' => 'processed_text',
-    '#text' => t('Since March 2024, ReliefWeb jobs form has changed to make the submission easier. From now on, you won’t need to fill in the career category, job experience or themes anymore.'),
-    '#format' => 'html',
-    '#weight' => -90,
-    '#prefix' => '<div class="messages messages--warning cd-alert cd-alert--warning">',
-    '#suffix' => '</div>',
-    '#states' => [],
+    '#attached' => [
+      'library' => [
+        'reliefweb_job_tagger/ai-message',
+      ],
+    ],
+    '#attributes' => [
+      'class' => [
+        'ai-message-wrapper',
+      ],
+    ],
+    'message' => [
+      '#type' => 'processed_text',
+      '#text' => t('Since March 2024, ReliefWeb jobs form has changed to make the submission easier. From now on, you won’t need to fill in the career category, job experience or themes anymore.'),
+      '#format' => 'html',
+      '#weight' => -90,
+      '#prefix' => '<div class="messages messages--warning cd-alert cd-alert--warning">',
+      '#suffix' => '</div>',
+      '#states' => [],
+    ],
   ];
 
   $sources = array_keys(UserPostingRightsHelper::getUserPostingRights());
