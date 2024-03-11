@@ -70,6 +70,11 @@ class ReliefWebPostApi extends ControllerBase {
       $request = $this->requestStack->getCurrentRequest();
       $headers = $request->headers;
 
+      // Check that the appname parameter is present.
+      if (empty($request->query->get('appname'))) {
+        throw new BadRequestHttpException('Missing or invalid appname parameter.');
+      }
+
       // Only PUT requests are allowed currently.
       // @todo handle PATCH and DELETE.
       if ($request->getMethod() !== 'PUT') {

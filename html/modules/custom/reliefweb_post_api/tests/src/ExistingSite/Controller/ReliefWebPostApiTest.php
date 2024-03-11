@@ -10,6 +10,7 @@ use Drupal\Core\Queue\QueueInterface;
 use Drupal\reliefweb_post_api\Controller\ReliefWebPostApi;
 use Drupal\reliefweb_post_api\Entity\ProviderInterface;
 use Symfony\Component\HttpFoundation\HeaderBag;
+use Symfony\Component\HttpFoundation\InputBag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Uid\Uuid;
@@ -69,6 +70,26 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
     $response = $controller->postContent('reports', $this->getTestUuid());
     $this->assertSame(500, $response->getStatusCode());
     $this->assertStringContainsString('test exception', $response->getContent());
+  }
+
+  /**
+   * @covers ::postContent
+   */
+  public function testPostContentMissingAppname(): void {
+    $request = $this->createMockRequest(methods: [
+      'getMethod' => 'GET',
+    ]);
+    $request->query->remove('appname');
+
+    $request_stack = $this->createMockRequestStack($request);
+
+    $controller = $this->createTestController([
+      'request_stack' => $request_stack,
+    ]);
+
+    $response = $controller->postContent('reports', $this->getTestUuid());
+    $this->assertSame(400, $response->getStatusCode());
+    $this->assertStringContainsString('Missing or invalid appname parameter.', $response->getContent());
   }
 
   /**
@@ -377,16 +398,6 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
       'X-RW-POST-API-KEY' => 'test-provider-key',
     ];
 
-    $header_map = [];
-    foreach ($headers as $key => $value) {
-      $header_map[] = [$key, '', $value];
-    }
-
-    $header_bag = $this->createMock(HeaderBag::class);
-    $header_bag->expects($this->any())
-      ->method('get')
-      ->willReturnMap($header_map);
-
     $methods += [
       'getMethod' => 'PUT',
       'getContentTypeFormat' => 'json',
@@ -394,7 +405,8 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
     ];
 
     $request = $this->createConfiguredMock(Request::class, $methods);
-    $request->headers = $header_bag;
+    $request->headers = new HeaderBag($headers);
+    $request->query = new InputBag(['appname' => 'test']);
 
     return $request;
   }
