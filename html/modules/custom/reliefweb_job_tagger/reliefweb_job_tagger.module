@@ -1,0 +1,179 @@
+<?php
+
+/**
+ * @file
+ * OCHA AI Job tagging.
+ */
+
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Field\FieldDefinition;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
+use Drupal\reliefweb_utility\Helpers\MarkdownHelper;
+use Drupal\reliefweb_utility\Helpers\UserHelper;
+
+/**
+ * Implements hook_form_HOOK_alter().
+ */
+function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  $form_ids = [
+    'node_job_edit_form',
+    'node_job_form',
+  ];
+
+  if (!in_array($form_id, $form_ids)) {
+    return;
+  }
+
+  $user = \Drupal::currentUser();
+
+  // Display AI info for editors.
+  if ($form_id == 'node_job_edit_form') {
+    if (UserHelper::userHasRoles(['editor'])) {
+      $entity = $form_state->getFormObject()->getEntity();
+      if ($entity->hasField('reliefweb_job_tagger_info') && !$entity->reliefweb_job_tagger_info->IsEmpty()) {
+        $message = $entity->reliefweb_job_tagger_info->value;
+        $message = MarkdownHelper::convertToHtml($message);
+
+        $form['ai_feedback'] = [
+          '#type' => 'processed_text',
+          '#text' => $message,
+          '#format' => 'html',
+          '#weight' => -90,
+        ];
+      }
+    }
+  }
+
+  // Check permissions.
+  if ($user->hasPermission('bypass ocha ai job tag')) {
+    // Make fields mandatory.
+    $form['field_job_experience']['widget']['#required'] = TRUE;
+    $form['field_career_categories']['widget']['#required'] = TRUE;
+    return;
+  }
+
+  if (!$user->hasPermission('enforce ocha ai job tag')) {
+    // Make fields mandatory.
+    $form['field_job_experience']['widget']['#required'] = TRUE;
+    $form['field_career_categories']['widget']['#required'] = TRUE;
+
+    return;
+  }
+
+  // Add message for job posters.
+  $form['ai_message'] = [
+    '#type' => 'fieldset',
+    '#attached' => [
+      'library' => [
+        'reliefweb_job_tagger/ai-message',
+      ],
+    ],
+    '#attributes' => [
+      'class' => [
+        'ai-message-wrapper',
+      ],
+    ],
+    'message' => [
+      '#type' => 'processed_text',
+      '#text' => t('The process of posting jobs via ReliefWeb is now even smoother. The form now includes an automated function for the "career", "job experience" and "themes" categories; fewer fields for users to fill and higher efficiency overall.'),
+      '#format' => 'html',
+      '#weight' => -90,
+      '#prefix' => '<div class="messages messages--warning cd-alert cd-alert--warning">',
+      '#suffix' => '</div>',
+      '#states' => [],
+    ],
+  ];
+
+  $sources = reliefweb_job_tagger_get_trusted_organizations($user);
+  if (empty($sources)) {
+    // Non-trusted poster, hide fields.
+    $form['field_job_experience']['#access'] = FALSE;
+    $form['field_career_categories']['#access'] = FALSE;
+    $form['field_theme']['#access'] = FALSE;
+
+    return;
+  }
+
+  // Show and mark fields mandatory for trusted sources.
+  $fields = [
+    'field_job_experience',
+    'field_career_categories',
+    'field_theme',
+  ];
+
+  $conditions = [];
+  foreach ($sources as $source) {
+    $conditions[] = [
+      'value' => $source,
+    ];
+  }
+
+  foreach ($fields as $field) {
+    $form[$field]['#states'] = [
+      'visible' => [
+        'select[name="field_source"]' => $conditions,
+      ],
+      'required' => [
+        'select[name="field_source"]' => $conditions,
+      ],
+    ];
+  }
+
+  $form['ai_message']['#states'] = [
+    'invisible' => [
+      'select[name="field_source"]' => $conditions,
+    ],
+  ];
+}
+
+/**
+ * Implements hook_entity_field_storage_info().
+ */
+function reliefweb_job_tagger_entity_field_storage_info(EntityTypeInterface $entity_type) {
+  $fields = [];
+
+  if ($entity_type->id() == 'node') {
+    $fields['reliefweb_job_tagger_info'] = BaseFieldDefinition::create('text_long')
+      ->setLabel(t('AI info'))
+      ->setDescription(t('Info from the AI.'))
+      ->setSetting('allowed_formats', [
+        0 => 'markdown',
+      ])
+      ->setRevisionable(TRUE)
+      ->setRequired(FALSE);
+  }
+
+  return $fields;
+}
+
+/**
+ * Implements hook_entity_bundle_field_info().
+ */
+function reliefweb_job_tagger_entity_bundle_field_info(EntityTypeInterface $entity_type, $bundle, array $base_field_definitions) {
+  $fields = [];
+
+  if ($entity_type->id() == 'node' && $bundle == 'job') {
+    $storage_definitions = reliefweb_job_tagger_entity_field_storage_info($entity_type);
+    $fields['reliefweb_job_tagger_info'] = FieldDefinition::createFromFieldStorageDefinition($storage_definitions['reliefweb_job_tagger_info'])
+      ->setLabel(t('AI Info'));
+  }
+
+  return $fields;
+}
+
+/**
+ * Get a list of trusted sources for a given account.
+ */
+function reliefweb_job_tagger_get_trusted_organizations($account = NULL) {
+  $sources = UserPostingRightsHelper::getUserPostingRights($account);
+  $sources = array_filter($sources, function ($info) {
+    if (isset($info['job']) && $info['job'] == 3) {
+      return TRUE;
+    }
+  });
+  $sources = array_keys($sources);
+
+  return $sources;
+}

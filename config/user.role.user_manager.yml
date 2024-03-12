@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   module:
+    - ocha_ai_job_tag
     - reliefweb_subscriptions
     - reliefweb_users
 id: user_manager
@@ -19,6 +20,7 @@ permissions:
   - 'assign job_importer role'
   - 'assign user_manager role'
   - 'assign webmaster role'
+  - 'bypass ocha ai job tag'
   - 'change own username'
   - 'manage user roles'
   - 'view reliefweb admin menu'
