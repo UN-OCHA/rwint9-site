@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "619e13e717581ab4c7c2805ab415e53a",
+    "content-hash": "97d3ea507ad45379894412243d46d824",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -3844,7 +3844,7 @@
                 "shasum": "fc8ea60619b6b4682bade340e13fb4565d3a7e0c"
             },
             "require": {
-                "drupal/core": "^9.1 || ^10"
+                "drupal/core": "^10"
             },
             "type": "drupal-module",
             "extra": {
@@ -4043,7 +4043,7 @@
                 "shasum": "c25246747dac4372c7d5a5a5fd0f276d9e468eff"
             },
             "require": {
-                "drupal/core": "^9.3 || ^10",
+                "drupal/core": "^10",
                 "drupal/mailsystem": "^4"
             },
             "require-dev": {
@@ -4745,7 +4745,7 @@
                 "shasum": "77906ae731878b68a181f82b073617b798e5f110"
             },
             "require": {
-                "drupal/core": "^9.3 || ^10",
+                "drupal/core": "^10",
                 "enshrined/svg-sanitize": ">=0.15 <1.0"
             },
             "type": "drupal-module",
@@ -4893,7 +4893,7 @@
                 "shasum": "9ea9eee91cf75f21fcc939704baa6a7ec10d7748"
             },
             "require": {
-                "drupal/core": "^8.9 || ^9 || ^10"
+                "drupal/core": "^10"
             },
             "type": "drupal-module",
             "extra": {
@@ -10774,16 +10774,16 @@
         },
         {
             "name": "reliefweb/api-indexer",
-            "version": "v2.7.0",
+            "version": "v2.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/rwint-api-indexer.git",
-                "reference": "a0132d2d1a2490e998465b64bd13b5f0e3043b6a"
+                "reference": "5447b37afb6b1f14740e588ebc5f4c3fe4338d67"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/rwint-api-indexer/zipball/a0132d2d1a2490e998465b64bd13b5f0e3043b6a",
-                "reference": "a0132d2d1a2490e998465b64bd13b5f0e3043b6a",
+                "url": "https://api.github.com/repos/UN-OCHA/rwint-api-indexer/zipball/5447b37afb6b1f14740e588ebc5f4c3fe4338d67",
+                "reference": "5447b37afb6b1f14740e588ebc5f4c3fe4338d67",
                 "shasum": ""
             },
             "require": {
@@ -10809,9 +10809,9 @@
             ],
             "support": {
                 "issues": "https://github.com/UN-OCHA/rwint-api-indexer/issues",
-                "source": "https://github.com/UN-OCHA/rwint-api-indexer/tree/v2.7.0"
+                "source": "https://github.com/UN-OCHA/rwint-api-indexer/tree/v2.8.0"
             },
-            "time": "2023-04-11T23:41:31+00:00"
+            "time": "2024-03-12T05:34:32+00:00"
         },
         {
             "name": "reliefweb/simple-autocomplete",
