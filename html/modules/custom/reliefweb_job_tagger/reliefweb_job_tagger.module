@@ -28,7 +28,7 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
 
   $user = \Drupal::currentUser();
 
-  // Displauy AI info for editors.
+  // Display AI info for editors.
   if ($form_id == 'node_job_edit_form') {
     if (UserHelper::userHasRoles(['editor'])) {
       $entity = $form_state->getFormObject()->getEntity();
@@ -86,7 +86,7 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
     ],
   ];
 
-  $sources = array_keys(UserPostingRightsHelper::getUserPostingRights());
+  $sources = reliefweb_job_tagger_get_trusted_organizations($user);
   if (empty($sources)) {
     // Non-trusted poster, hide fields.
     $form['field_job_experience']['#access'] = FALSE;
@@ -161,4 +161,19 @@ function reliefweb_job_tagger_entity_bundle_field_info(EntityTypeInterface $enti
   }
 
   return $fields;
+}
+
+/**
+ * Get a list of trusted sources for a given account.
+ */
+function reliefweb_job_tagger_get_trusted_organizations($account = NULL) {
+  $sources = UserPostingRightsHelper::getUserPostingRights($account);
+  $sources = array_filter($sources, function ($info) {
+    if (isset($info['job']) && $info['job'] == 3) {
+      return TRUE;
+    }
+  });
+  $sources = array_keys($sources);
+
+  return $sources;
 }
