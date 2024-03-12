@@ -5,11 +5,13 @@ dependencies:
   module:
     - reliefweb_subscriptions
     - reliefweb_users
+    - system
 id: user_manager
 label: 'User manager'
 weight: 3
 is_admin: null
 permissions:
+  - 'access administration pages'
   - 'access user profiles'
   - 'administer subscriptions'
   - 'administer users'
@@ -22,4 +24,5 @@ permissions:
   - 'change own username'
   - 'manage user roles'
   - 'view reliefweb admin menu'
+  - 'view the administration theme'
   - 'view user email addresses'
