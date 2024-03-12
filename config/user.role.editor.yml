@@ -41,6 +41,7 @@ dependencies:
     - reliefweb_topics
     - reliefweb_user_posts
     - reliefweb_users
+    - system
     - taxonomy
     - taxonomy_term_revision
 id: editor
@@ -48,6 +49,7 @@ label: Editor
 weight: 2
 is_admin: null
 permissions:
+  - 'access administration pages'
   - 'access content moderation backend'
   - 'access content moderation features'
   - 'access editorial guidelines'
@@ -174,6 +176,7 @@ permissions:
   - 'view report revisions'
   - 'view term revision data'
   - 'view term revision list'
+  - 'view the administration theme'
   - 'view topic revisions'
   - 'view training revisions'
   - 'view user email addresses'
