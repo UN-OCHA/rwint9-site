@@ -73,7 +73,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
   /**
    * The state store.
    *
-   * @var Drupal\Core\State\StateInterface
+   * @var \Drupal\Core\State\StateInterface
    */
   protected $state;
 
