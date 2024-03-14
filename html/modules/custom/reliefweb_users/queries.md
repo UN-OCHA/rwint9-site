@@ -48,3 +48,9 @@ drush sqlq "SELECT \"Q7:\", COUNT(DISTINCT uid) FROM node_field_data n INNER JOI
 ```bash
 drush sqlq "SELECT distinct u.name, u.mail FROM node_field_data n inner join taxonomy_term__field_user_posting_rights p on n.uid = p.field_user_posting_rights_id inner join users_field_data u on n.uid = u.uid where n.type = \"job\" AND p.field_user_posting_rights_job in (0,2) and n.created > UNIX_TIMESTAMP(DATE_SUB(NOW(), interval 2 year)) ORDER BY u.name"
 ```
+
+## What are the email addresses for the non-trusted jobs posters from Feb 2024
+
+```bash
+drush sqlq "SELECT distinct u.name, u.mail, count(n.nid) FROM node_field_data n inner join taxonomy_term__field_user_posting_rights p on n.uid = p.field_user_posting_rights_id inner join users_field_data u on n.uid = u.uid where n.type = \"job\" AND p.field_user_posting_rights_job in (0,2) and n.created > UNIX_TIMESTAMP(\"2024-02-01\") and n.created < UNIX_TIMESTAMP(\"2024-03-01\") GROUP BY u.name, u.mail ORDER BY u.name"
+```
