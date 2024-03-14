@@ -29,7 +29,6 @@ dependencies:
     - guidelines
     - media
     - node
-    - ocha_ai_job_tag
     - path
     - reliefweb_bookmarks
     - reliefweb_fields
@@ -37,6 +36,7 @@ dependencies:
     - reliefweb_form
     - reliefweb_guidelines
     - reliefweb_homepage
+    - reliefweb_job_tagger
     - reliefweb_moderation
     - reliefweb_revisions
     - reliefweb_topics

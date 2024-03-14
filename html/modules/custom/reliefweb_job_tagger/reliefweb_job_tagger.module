@@ -5,10 +5,9 @@
  * OCHA AI Job tagging.
  */
 
-use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\Core\Field\FieldDefinition;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\node\Entity\Node;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_utility\Helpers\MarkdownHelper;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
@@ -26,8 +25,6 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
     return;
   }
 
-  $user = \Drupal::currentUser();
-
   // Display AI info for editors.
   if ($form_id == 'node_job_edit_form') {
     if (UserHelper::userHasRoles(['editor'])) {
@@ -43,10 +40,12 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
           '#weight' => -90,
         ];
       }
+
     }
   }
 
   // Check permissions.
+  $user = \Drupal::currentUser();
   if ($user->hasPermission('bypass ocha ai job tag')) {
     // Make fields mandatory.
     $form['field_job_experience']['widget']['#required'] = TRUE;
@@ -129,41 +128,6 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
 }
 
 /**
- * Implements hook_entity_field_storage_info().
- */
-function reliefweb_job_tagger_entity_field_storage_info(EntityTypeInterface $entity_type) {
-  $fields = [];
-
-  if ($entity_type->id() == 'node') {
-    $fields['reliefweb_job_tagger_info'] = BaseFieldDefinition::create('text_long')
-      ->setLabel(t('AI info'))
-      ->setDescription(t('Info from the AI.'))
-      ->setSetting('allowed_formats', [
-        0 => 'markdown',
-      ])
-      ->setRevisionable(TRUE)
-      ->setRequired(FALSE);
-  }
-
-  return $fields;
-}
-
-/**
- * Implements hook_entity_bundle_field_info().
- */
-function reliefweb_job_tagger_entity_bundle_field_info(EntityTypeInterface $entity_type, $bundle, array $base_field_definitions) {
-  $fields = [];
-
-  if ($entity_type->id() == 'node' && $bundle == 'job') {
-    $storage_definitions = reliefweb_job_tagger_entity_field_storage_info($entity_type);
-    $fields['reliefweb_job_tagger_info'] = FieldDefinition::createFromFieldStorageDefinition($storage_definitions['reliefweb_job_tagger_info'])
-      ->setLabel(t('AI Info'));
-  }
-
-  return $fields;
-}
-
-/**
  * Get a list of trusted sources for a given account.
  */
 function reliefweb_job_tagger_get_trusted_organizations($account = NULL) {
@@ -176,4 +140,122 @@ function reliefweb_job_tagger_get_trusted_organizations($account = NULL) {
   $sources = array_keys($sources);
 
   return $sources;
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function reliefweb_job_tagger_module_implements_alter(&$implementations, $hook) {
+  switch ($hook) {
+    // Move our hook_entity_type_alter() implementation to the end of the list.
+    case 'node_presave':
+    case 'node_update':
+    case 'node_insert':
+      $group = $implementations['reliefweb_job_tagger'];
+      unset($implementations['reliefweb_job_tagger']);
+      $implementations['reliefweb_job_tagger'] = $group;
+      break;
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update().
+ */
+function reliefweb_job_tagger_node_presave(EntityInterface $node) {
+  // We don't want to react to configuration imports.
+  if (\Drupal::isConfigSyncing()) {
+    return;
+  }
+
+  if (!$node instanceof Node) {
+    return;
+  }
+
+  if ($node->bundle() != 'job') {
+    return;
+  }
+
+  if ($node->moderation_status->value != 'pending') {
+    $node->set('reliefweb_job_tagger_status', '');
+    return;
+  }
+
+  // Check permissions.
+  $user = \Drupal::currentUser();
+  if ($user->hasPermission('bypass ocha ai job tag')) {
+    return;
+  }
+
+  if (!$user->hasPermission('enforce ocha ai job tag')) {
+    return;
+  }
+
+  // Only queue it when fields are empty.
+  if (!$node->field_job_experience->isEmpty()) {
+    return;
+  }
+
+  if (!$node->field_career_categories->isEmpty()) {
+    return;
+  }
+
+  if (!$node->field_theme->isEmpty()) {
+    return;
+  }
+  if ($node->reliefweb_job_tagger_status->isEmpty()) {
+    $node->setNewRevision(FALSE);
+    $node->set('reliefweb_job_tagger_status', 'queue');
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_insert().
+ */
+function reliefweb_job_tagger_node_insert(Node $node) {
+  // We don't want to react to configuration imports.
+  if (\Drupal::isConfigSyncing()) {
+    return;
+  }
+
+  if ($node->hasField('reliefweb_job_tagger_status') && $node->get('reliefweb_job_tagger_status')->value == 'queue') {
+    reliefweb_job_tagger_queue_job($node);
+
+    $node->set('reliefweb_job_tagger_status', 'queued');
+    $node->setRevisionLogMessage('Job has been queued for tagging');
+    $node->setNewRevision(FALSE);
+    $node->updateLoadedRevisionId();
+    $node->save();
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update().
+ */
+function reliefweb_job_tagger_node_update(Node $node) {
+  // We don't want to react to configuration imports.
+  if (\Drupal::isConfigSyncing()) {
+    return;
+  }
+
+  if ($node->hasField('reliefweb_job_tagger_status') && $node->get('reliefweb_job_tagger_status')->value == 'queue') {
+    reliefweb_job_tagger_queue_job($node);
+
+    $node->set('reliefweb_job_tagger_status', 'queued');
+    $node->setRevisionLogMessage('Job has been queued for tagging');
+    $node->setNewRevision(FALSE);
+    $node->updateLoadedRevisionId();
+    $node->save();
+  }
+}
+
+/**
+ * Queue the job for tagging.
+ */
+function reliefweb_job_tagger_queue_job(Node $job) : void {
+  /** @var \Drupal\Core\Queue\QueueInterface $queue */
+  $queue = \Drupal::service('queue')->get('reliefweb_job_tagger');
+
+  $item = new \stdClass();
+  $item->nid = $job->id();
+  $queue->createItem($item);
 }

@@ -13,9 +13,9 @@ dependencies:
     - filter
     - media
     - node
-    - ocha_ai_job_tag
     - reliefweb_bookmarks
     - reliefweb_form
+    - reliefweb_job_tagger
     - reliefweb_moderation
     - reliefweb_subscriptions
     - reliefweb_user_posts

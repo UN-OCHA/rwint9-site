@@ -26,9 +26,9 @@ dependencies:
     - filter
     - google_tag
     - guidelines
-    - ocha_ai_job_tag
     - reliefweb_bookmarks
     - reliefweb_guidelines
+    - reliefweb_job_tagger
     - reliefweb_users
     - taxonomy
     - taxonomy_term_revision
@@ -115,7 +115,6 @@ permissions:
   - 'guideline_list edit own entities'
   - 'guideline_list revert revisions'
   - 'guideline_list view revisions'
-  - 'manage ocha ai job tag config'
   - 'revert all guideline revisions'
   - 'revert term revision'
   - 'see other bookmarks'

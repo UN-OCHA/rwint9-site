@@ -53,7 +53,7 @@ module:
   node: 0
   ocha_ai: 0
   ocha_ai_chat: 0
-  ocha_ai_job_tag: 0
+  ocha_ai_tag: 0
   ocha_monitoring: 0
   options: 0
   page_cache: 0

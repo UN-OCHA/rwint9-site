@@ -3,7 +3,7 @@ langcode: en
 status: true
 dependencies:
   module:
-    - ocha_ai_job_tag
+    - reliefweb_job_tagger
     - reliefweb_subscriptions
     - reliefweb_users
 id: user_manager
