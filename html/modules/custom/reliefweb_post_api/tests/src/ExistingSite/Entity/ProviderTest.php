@@ -38,6 +38,8 @@ class ProviderTest extends ExistingSiteBase {
     'field_user' => 12,
     'field_resource_status' => 'pending',
     'field_webhook_url' => 'https://test.test',
+    'field_quota' => 50,
+    'field_rate_limit' => 60,
   ];
 
   /**
@@ -174,6 +176,54 @@ class ProviderTest extends ExistingSiteBase {
     $provider = $this->createNoFieldProvider();
     $this->assertFalse($provider->hasField('field_resource_status'));
     $this->assertEquals('draft', $provider->getDefaultResourceStatus());
+  }
+
+  /**
+   * @covers ::getQuota
+   */
+  public function testGetQuota(): void {
+    $data = $this->data;
+
+    $provider = $this->createProvider($data);
+    $this->assertEquals($this->data['field_quota'], $provider->getQuota());
+
+    $data['field_quota'] = [];
+    $provider = $this->createProvider($data);
+    $this->assertEquals(0, $provider->getQuota());
+
+    // Default field value (set in the UI).
+    unset($data['field_quota']);
+    $provider = $this->createProvider($data);
+    $this->assertEquals(50, $provider->getQuota());
+
+    // Missing field.
+    $provider = $this->createNoFieldProvider();
+    $this->assertFalse($provider->hasField('field_quota'));
+    $this->assertEquals(0, $provider->getQuota());
+  }
+
+  /**
+   * @covers ::getRateLimit
+   */
+  public function testRateLimit(): void {
+    $data = $this->data;
+
+    $provider = $this->createProvider($data);
+    $this->assertEquals($this->data['field_rate_limit'], $provider->getRateLimit());
+
+    $data['field_rate_limit'] = [];
+    $provider = $this->createProvider($data);
+    $this->assertEquals(0, $provider->getRateLimit());
+
+    // Default field value (set in the UI).
+    unset($data['field_rate_limit']);
+    $provider = $this->createProvider($data);
+    $this->assertEquals(60, $provider->getRateLimit());
+
+    // Missing field.
+    $provider = $this->createNoFieldProvider();
+    $this->assertFalse($provider->hasField('field_rate_limit'));
+    $this->assertEquals(0, $provider->getRateLimit());
   }
 
   /**

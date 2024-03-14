@@ -55,6 +55,22 @@ interface ProviderInterface extends ContentEntityInterface {
   public function getDefaultResourceStatus(): string;
 
   /**
+   * Get the daily request quota.
+   *
+   * @return int
+   *   Daily quota.
+   */
+  public function getQuota(): int;
+
+  /**
+   * Get the minimum amount of time between 2 requests.
+   *
+   * @return int
+   *   Rate limit.
+   */
+  public function getRateLimit(): int;
+
+  /**
    * Check if a provider with the given ID exits and its API key is valid.
    *
    * @param string $key

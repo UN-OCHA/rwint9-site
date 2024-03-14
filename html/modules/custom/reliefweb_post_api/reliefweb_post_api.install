@@ -1,0 +1,55 @@
+<?php
+
+/**
+ * @file
+ * Defines schema for the ReliefWeb POST API module tables.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function reliefweb_post_api_schema() {
+  $schema['reliefweb_post_api_rate_limit'] = [
+    'fields' => [
+      'provider_id' => [
+        'description' => 'Provider ID.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'size' => 'normal',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'request_count' => [
+        'description' => 'Number of requests since last reset (daily).',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'size' => 'normal',
+        'not null' => FALSE,
+        'default' => 0,
+      ],
+      'last_request_time' => [
+        'description' => 'Timestamp of the last request.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'size' => 'normal',
+        'not null' => FALSE,
+        'default' => 0,
+      ],
+    ],
+    'primary key' => ['provider_id'],
+  ];
+
+  return $schema;
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * Add the rate limits table.
+ */
+function reliefweb_post_api_update_10001(array &$sandbox) {
+  $schema = \Drupal::database()->schema();
+  if (!$schema->tableExists('reliefweb_post_api_rate_limit')) {
+    $schema->createTable('reliefweb_post_api_rate_limit', reliefweb_post_api_schema()['reliefweb_post_api_rate_limit']);
+  }
+}

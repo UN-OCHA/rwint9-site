@@ -1,0 +1,20 @@
+uuid: c8b15b59-ea13-41d9-9d5c-4386a94f345f
+langcode: en
+status: true
+dependencies:
+  module:
+    - reliefweb_post_api
+id: reliefweb_post_api_provider.field_quota
+field_name: field_quota
+entity_type: reliefweb_post_api_provider
+type: integer
+settings:
+  unsigned: false
+  size: normal
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

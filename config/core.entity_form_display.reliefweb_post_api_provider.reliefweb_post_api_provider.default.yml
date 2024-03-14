@@ -7,6 +7,8 @@ dependencies:
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_file_url
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_image_url
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_notify
+    - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_quota
+    - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_rate_limit
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_resource_status
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_source
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_user
@@ -46,11 +48,25 @@ content:
     third_party_settings: {  }
   field_notify:
     type: email_default
-    weight: 9
+    weight: 11
     region: content
     settings:
       placeholder: ''
       size: 60
+    third_party_settings: {  }
+  field_quota:
+    type: number
+    weight: 9
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+  field_rate_limit:
+    type: number
+    weight: 10
+    region: content
+    settings:
+      placeholder: ''
     third_party_settings: {  }
   field_resource_status:
     type: options_select
@@ -114,7 +130,7 @@ content:
     third_party_settings: {  }
   field_webhook_url:
     type: link_default
-    weight: 10
+    weight: 12
     region: content
     settings:
       placeholder_url: ''
@@ -144,7 +160,7 @@ content:
     third_party_settings: {  }
   status:
     type: boolean_checkbox
-    weight: 11
+    weight: 13
     region: content
     settings:
       display_label: true

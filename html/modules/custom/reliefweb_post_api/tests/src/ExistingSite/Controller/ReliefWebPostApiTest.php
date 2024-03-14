@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\reliefweb_post_api\ExistingSite\Controller;
 
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Query\SelectInterface;
+use Drupal\Core\Database\Query\Upsert;
+use Drupal\Core\Database\StatementInterface;
 use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\Core\Queue\QueueFactory;
 use Drupal\Core\Queue\QueueInterface;
@@ -13,6 +18,9 @@ use Symfony\Component\HttpFoundation\HeaderBag;
 use Symfony\Component\HttpFoundation\InputBag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\Uid\Uuid;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
@@ -198,6 +206,119 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
     $response = $controller->postContent('test', $this->getTestUuid());
     $this->assertSame(404, $response->getStatusCode());
     $this->assertStringContainsString('Unknown endpoint.', $response->getContent());
+  }
+
+  /**
+   * @covers ::checkRateLimits()
+   */
+  public function testCheckRateLimitsNoQuota(): void {
+    $provider = $this->createConfiguredMock(ProviderInterface::class, [
+      'id' => 123,
+      'getQuota' => 0,
+      'getRateLimit' => 0,
+    ]);
+
+    $controller = $this->createTestController();
+
+    $this->expectException(AccessDeniedHttpException::class);
+    $controller->checkRateLimits($provider);
+  }
+
+  /**
+   * @covers ::checkRateLimits()
+   */
+  public function testCheckRateLimitsInvalidTimestamp(): void {
+    $provider = $this->createConfiguredMock(ProviderInterface::class, [
+      'id' => 123,
+      'getQuota' => 1,
+      'getRateLimit' => 1,
+    ]);
+
+    $time = $this->createConfiguredMock(TimeInterface::class, [
+      'getRequestTime' => 'wrong_timestamp',
+    ]);
+
+    $controller = $this->createTestController(services: [
+      'datetime.time' => $time,
+    ]);
+
+    $this->expectException(HttpException::class);
+    $this->expectExceptionMessage('Internal server error.');
+    $controller->checkRateLimits($provider);
+  }
+
+  /**
+   * @covers ::checkRateLimits()
+   */
+  public function testCheckRateLimitsRateLimitExceeded(): void {
+    $provider = $this->createConfiguredMock(ProviderInterface::class, [
+      'id' => 123,
+      'getQuota' => 1,
+      'getRateLimit' => 60,
+    ]);
+
+    $now = strtotime('2024-02-02T02:02:02+00:00');
+
+    $rate_limit_info = [
+      'provider_id' => 123,
+      'request_count' => 0,
+      'last_request_time' => $now - 1,
+    ];
+
+    $controller = $this->createTestController(rate_limit_info: $rate_limit_info, now: $now);
+
+    $this->expectException(TooManyRequestsHttpException::class);
+    $this->expectExceptionMessage('Not enough time ellapsed since last request.');
+    $controller->checkRateLimits($provider);
+  }
+
+  /**
+   * @covers ::checkRateLimits()
+   */
+  public function testCheckRateLimitsDailyQuotaExceeded(): void {
+    $provider = $this->createConfiguredMock(ProviderInterface::class, [
+      'id' => 123,
+      'getQuota' => 1,
+      'getRateLimit' => 60,
+    ]);
+
+    $now = strtotime('2024-02-02T02:02:02+00:00');
+
+    $rate_limit_info = [
+      'provider_id' => 123,
+      'request_count' => 2,
+      'last_request_time' => $now - 120,
+    ];
+
+    $controller = $this->createTestController(rate_limit_info: $rate_limit_info, now: $now);
+
+    $this->expectException(TooManyRequestsHttpException::class);
+    $this->expectExceptionMessage('Daily quota exceeded.');
+    $controller->checkRateLimits($provider);
+  }
+
+  /**
+   * @covers ::checkRateLimits()
+   */
+  public function testCheckRateLimits(): void {
+    $provider = $this->createConfiguredMock(ProviderInterface::class, [
+      'id' => 123,
+      'getQuota' => 1,
+      'getRateLimit' => 60,
+    ]);
+
+    $now = strtotime('2024-02-02T02:02:02+00:00');
+
+    $rate_limit_info = [
+      'provider_id' => 123,
+      'request_count' => 0,
+      'last_request_time' => $now - 120,
+    ];
+
+    $controller = $this->createTestController(rate_limit_info: $rate_limit_info, now: $now);
+
+    $controller->checkRateLimits($provider);
+    $this->assertTrue(TRUE);
   }
 
   /**
@@ -431,17 +552,61 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
    *
    * @param array $services
    *   List of services.
+   * @param array $rate_limit_info
+   *   The rate limit info as returned from the database.
+   * @param int|null $now
+   *   Current unix time.
    *
    * @return \Drupal\reliefweb_post_api\Controller\ReliefWebPostApi
    *   The test controller.
    */
-  protected function createTestController(array $services = []): ReliefWebPostApi {
+  protected function createTestController(array $services = [], array $rate_limit_info = [], ?int $now = NULL): ReliefWebPostApi {
     $container = \drupal::getContainer();
+
+    $now = $now ?? time();
+
+    if (!isset($services['database'])) {
+      $rate_limit_info += [
+        'provider_id' => 123,
+        'request_count' => 0,
+        'last_request_time' => $now - 120,
+      ];
+
+      $statement = $this->createConfiguredMock(StatementInterface::class, [
+        'fetchAssoc' => $rate_limit_info,
+      ]);
+
+      $select = $this->createConfiguredMock(SelectInterface::class, [
+        'fields' => $this->returnSelf(),
+        'condition' => $this->returnSelf(),
+        'execute' => $statement,
+      ]);
+
+      $upsert = $this->createConfiguredMock(Upsert::class, [
+        'fields' => $this->returnSelf(),
+        'key' => $this->returnSelf(),
+        'values' => $this->returnSelf(),
+        'execute' => 1,
+      ]);
+
+      $services['database'] = $this->createConfiguredMock(Connection::class, [
+        'select' => $select,
+        'upsert' => $upsert,
+      ]);
+    }
+
+    if (!isset($services['datetime.time'])) {
+      $services['datetime.time'] = $this->createConfiguredMock(TimeInterface::class, [
+        'getRequestTime' => $now,
+      ]);
+    }
 
     $services = [
       $services['request_stack'] ?? $container->get('request_stack'),
       $services['queue'] ?? $container->get('queue'),
       $services['extension.path.resolver'] ?? $container->get('extension.path.resolver'),
+      $services['database'] ?? $container->get('database'),
+      $services['datetime.time'] ?? $container->get('datetime.time'),
       $services['plugin.manager.reliefweb_post_api.content_processor'] ?? $container->get('plugin.manager.reliefweb_post_api.content_processor'),
     ];
 
@@ -509,10 +674,12 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
           'field_document_url' => ['https://test.test/'],
           'field_file_url' => ['https://test.test/'],
           'field_image_url' => ['https://test.test/'],
+          'field_quota' => 2,
+          'field_rate_limit' => 2,
         ]);
       $provider->save();
       $this->markEntityForCleanup($provider);
-      $this->providers['test-provider'] = $provider;
+      $this->providers[$name] = $provider;
     }
     return $this->providers[$name] ?? NULL;
   }

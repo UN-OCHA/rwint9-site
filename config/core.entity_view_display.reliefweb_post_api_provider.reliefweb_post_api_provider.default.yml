@@ -7,6 +7,8 @@ dependencies:
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_file_url
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_image_url
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_notify
+    - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_quota
+    - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_rate_limit
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_resource_status
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_source
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_user
@@ -61,7 +63,25 @@ content:
     label: above
     settings: {  }
     third_party_settings: {  }
+    weight: 10
+    region: content
+  field_quota:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
     weight: 8
+    region: content
+  field_rate_limit:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 9
     region: content
   field_resource_status:
     type: list_default
@@ -96,7 +116,7 @@ content:
       rel: ''
       target: ''
     third_party_settings: {  }
-    weight: 9
+    weight: 11
     region: content
   name:
     type: string

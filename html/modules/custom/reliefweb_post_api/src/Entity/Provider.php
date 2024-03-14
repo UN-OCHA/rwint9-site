@@ -223,6 +223,34 @@ class Provider extends ContentEntityBase implements ProviderInterface {
   /**
    * {@inheritdoc}
    */
+  public function getQuota(): int {
+    $field = 'field_quota';
+    if (!$this->hasField($field)) {
+      return 0;
+    }
+    if (empty($this->get($field)->value)) {
+      return 0;
+    }
+    return (int) $this->get($field)->value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRateLimit(): int {
+    $field = 'field_rate_limit';
+    if (!$this->hasField($field)) {
+      return 0;
+    }
+    if (empty($this->get($field)->value)) {
+      return 0;
+    }
+    return (int) $this->get($field)->value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function validateKey(string $key): bool {
     if (empty($key) || empty($this->key->value)) {
       return FALSE;

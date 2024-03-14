@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Drupal\reliefweb_post_api\Controller;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Database\Connection;
 use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\Core\Queue\QueueFactory;
+use Drupal\reliefweb_post_api\Entity\ProviderInterface;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -16,6 +19,7 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -32,6 +36,10 @@ class ReliefWebPostApi extends ControllerBase {
    *   The queue factory.
    * @param \Drupal\Core\Extension\ExtensionPathResolver $pathResolver
    *   The path resolver service.
+   * @param \Drupal\Core\Database\Connection $database
+   *   The database connection.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The time service.
    * @param \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface $contentProcessorPluginManager
    *   The ReliefWeb POST API content processor plugin manager.
    */
@@ -39,6 +47,8 @@ class ReliefWebPostApi extends ControllerBase {
     protected RequestStack $requestStack,
     protected QueueFactory $queueFactory,
     protected ExtensionPathResolver $pathResolver,
+    protected Connection $database,
+    protected TimeInterface $time,
     protected ContentProcessorPluginManagerInterface $contentProcessorPluginManager
   ) {}
 
@@ -50,6 +60,8 @@ class ReliefWebPostApi extends ControllerBase {
       $container->get('request_stack'),
       $container->get('queue'),
       $container->get('extension.path.resolver'),
+      $container->get('database'),
+      $container->get('datetime.time'),
       $container->get('plugin.manager.reliefweb_post_api.content_processor')
     );
   }
@@ -113,6 +125,9 @@ class ReliefWebPostApi extends ControllerBase {
         throw new AccessDeniedHttpException('Invalid API key.');
       }
 
+      // Check the rate limits.
+      $this->checkRateLimits($provider);
+
       // Check if we received JSON data.
       if ($request->getContentTypeFormat() !== 'json') {
         throw new BadRequestHttpException('Invalid content format.');
@@ -171,6 +186,78 @@ class ReliefWebPostApi extends ControllerBase {
     }
 
     return $response;
+  }
+
+  /**
+   * Check the request rate limit for a provider.
+   *
+   * @param \Drupal\reliefweb_post_api\Entity\ProviderInterface $provider
+   *   Provider.
+   *
+   * @throws \Symfony\Component\HttpKernel\Exception\HttpException
+   *   An HTTP exception (ex: 500 or 429) if there is an issue like missing
+   *   field or the rate limit/quota is exceeded.
+   */
+  public function checkRateLimits(ProviderInterface $provider) {
+    $quota = $provider->getQuota();
+    $rate_limit = $provider->getRateLimit();
+
+    if (empty($quota)) {
+      throw new AccessDeniedHttpException('Not allowed to post content.');
+    }
+
+    $info = $this->database
+      ->select('reliefweb_post_api_rate_limits')
+      ->condition('provider_id', $provider->id())
+      ->execute()
+      ?->fetchAssoc() ?? [];
+
+    $request_time = $this->time->getRequestTime();
+    $last_request_time = min($info['last_request_time'] ?? $request_time, $request_time);
+
+    try {
+      $request_date = new \DateTime('@' . $request_time, new \DateTimeZone('UTC'));
+      $last_request_date = new \DateTime('@' . $last_request_time, new \DateTimeZone('UTC'));
+      $diff = $request_date->diff($last_request_date);
+    }
+    catch (\Exception $exception) {
+      throw new HttpException(500, 'Internal server error.');
+    }
+
+    $seconds_since_last_request = $diff->days * 24 * 60 * 60;
+    $seconds_since_last_request += $diff->h * 60 * 60;
+    $seconds_since_last_request += $diff->i * 60;
+    $seconds_since_last_request += $diff->s;
+
+    // Not enough time since last request.
+    if ($seconds_since_last_request < $rate_limit) {
+      throw new TooManyRequestsHttpException($rate_limit - $seconds_since_last_request, 'Not enough time ellapsed since last request.');
+    }
+
+    $same_day = $diff->d === 0;
+
+    // Already performed the maximum daily number of requests.
+    $request_count = $info['request_count'] ?? 0;
+    if ($same_day && $request_count >= $quota) {
+      // Next valid time to retry is the next day (UTC).
+      $date = $request_date
+        ->add(new \DateInterval('P1D'))
+        ->setTime(0, 0, 1)
+        ->format(\DateTimeInterface::RFC7231);
+      throw new TooManyRequestsHttpException($date, 'Daily quota exceeded.');
+    }
+
+    // If the request is valid, update the database.
+    $this->database
+      ->upsert('reliefweb_post_api_rate_limits')
+      ->fields(['request_count', 'last_request_time'])
+      ->key('provider_id')
+      ->values([
+        'provider_id' => $provider->id(),
+        'request_count' => $same_day ? $request_count + 1 : 1,
+        'last_request_time' => $request_time,
+      ])
+      ->execute();
   }
 
   /**

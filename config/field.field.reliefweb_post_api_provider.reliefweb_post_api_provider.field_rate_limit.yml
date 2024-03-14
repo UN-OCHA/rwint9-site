@@ -1,0 +1,26 @@
+uuid: 2631a8bc-7cee-45dc-a8c9-6d8739cfab41
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.reliefweb_post_api_provider.field_rate_limit
+  module:
+    - reliefweb_post_api
+id: reliefweb_post_api_provider.reliefweb_post_api_provider.field_rate_limit
+field_name: field_rate_limit
+entity_type: reliefweb_post_api_provider
+bundle: reliefweb_post_api_provider
+label: 'Request rate limit'
+description: 'Minimum duration in seconds between 2 requests.'
+required: true
+translatable: false
+default_value:
+  -
+    value: 60
+default_value_callback: ''
+settings:
+  min: 1
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer
