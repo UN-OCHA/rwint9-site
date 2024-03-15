@@ -9,7 +9,6 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
-use Drupal\Core\Url;
 use GuzzleHttp\ClientInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
