@@ -5,6 +5,7 @@ namespace Drupal\reliefweb_job_tagger\Plugin\QueueWorker;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
+use Drupal\ocha_ai_tag\Services\CalculationMethod;
 use Drupal\ocha_ai_tag\Services\OchaAiTagTagger;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -111,22 +112,21 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
       }
     }
 
+    $text = $node->getTitle() . "\n\n" . $node->get('body')->value;
     $data = $this->jobTagger
       ->setVocabularies($mapping)
-      ->tag($node->getTitle(), $node->get('body')->value);
+      ->tag($text, [OchaAiTagTagger::CALCULATION_METHOD_MEAN_WITH_CUTOFF], OchaAiTagTagger::AVERAGE_FULL_AVERAGE);
 
     if (empty($data)) {
-      \Drupal::logger('deubg')->notice('no data');
       return;
     }
 
-    if (!isset($data['average']['mean_with_cutoff'])) {
-      \Drupal::logger('deubg')->notice('no average');
+    if (!isset($data[OchaAiTagTagger::AVERAGE_FULL_AVERAGE][OchaAiTagTagger::CALCULATION_METHOD_MEAN_WITH_CUTOFF])) {
       return;
     }
 
     // Use average mean with cutoff.
-    $data = $data['average']['mean_with_cutoff'];
+    $data = $data[OchaAiTagTagger::AVERAGE_FULL_AVERAGE][OchaAiTagTagger::CALCULATION_METHOD_MEAN_WITH_CUTOFF];
     $message = [];
     $needs_save = FALSE;
 
