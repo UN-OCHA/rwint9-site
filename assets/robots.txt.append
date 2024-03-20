@@ -1,5 +1,11 @@
 # River crawling control.
 Disallow: /*&page=*
 
+# RSS feeds.
+Disallow: /*/rss.xml
+
+# API converter.
+Disallow: /search/converter
+
 # Sitemap
 Sitemap: https://reliefweb.int/sitemap.xml
