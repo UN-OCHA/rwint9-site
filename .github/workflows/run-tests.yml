@@ -84,7 +84,7 @@ jobs:
         if: ${{ !env.ACT }}
         with:
           registry: public.ecr.aws
-          username: ${{ secrets.ECR_AWS_ACCESS_KEY_I }}
+          username: ${{ secrets.ECR_AWS_ACCESS_KEY_ID }}
           password: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }}
         env:
           AWS_REGION: us-east-1
