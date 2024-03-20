@@ -98,7 +98,7 @@
 
 /* Ensure long URLs in WYSIWYG wrap */
 .rw-article__content a {
-  word-break: break-all;
+  overflow-wrap: anywhere;
 }
 
 .rw-article__content ul {
