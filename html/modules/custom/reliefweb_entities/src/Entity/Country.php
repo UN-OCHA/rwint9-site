@@ -58,7 +58,6 @@ class Country extends Term implements BundleEntityInterface, EntityModeratedInte
   public function getPageSections() {
     $sections = [];
     $sections['digital-sitrep'] = $this->getDigitalSitrepSection();
-    $sections['key-figures'] = $this->getKeyFiguresSection();
 
     $queries = [];
 
@@ -107,7 +106,6 @@ class Country extends Term implements BundleEntityInterface, EntityModeratedInte
       'overview' => [
         'title' => $this->t('Overview'),
         'sections' => [
-          'key-figures' => $this->t('Key Figures'),
           'appeals-response-plans' => $this->t('Appeals and Response Plans'),
           'disasters' => $this->t('Disasters'),
         ],
@@ -135,19 +133,6 @@ class Country extends Term implements BundleEntityInterface, EntityModeratedInte
     $ongoing = $this->getModerationStatus() === 'ongoing';
 
     return $client->getDigitalSitrepBuild($iso3, $ongoing);
-  }
-
-  /**
-   * Get the ReliefWeb key figures for the country.
-   *
-   * @return array
-   *   Render array for the Key Figures section.
-   */
-  protected function getKeyFiguresSection() {
-    $client = \Drupal::service('reliefweb_key_figures.client');
-    $iso3 = $this->field_iso3->value;
-
-    return $client->getKeyFiguresBuild($iso3, $this->label());
   }
 
   /**
