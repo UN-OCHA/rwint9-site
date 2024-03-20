@@ -21,13 +21,13 @@ use Drupal\reliefweb_entities\Entity\Report;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
 use Drupal\reliefweb_utility\Helpers\ClassHelper;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
-use Drupal\reliefweb_utility\Helpers\EntityHelper;
 use Drupal\reliefweb_utility\Helpers\MailHelper;
 use Drupal\reliefweb_utility\Helpers\MediaHelper;
 use Drupal\reliefweb_utility\Helpers\ReliefWebStateHelper;
 use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\taxonomy\TermInterface;
+use Symfony\Component\HttpKernel\Exception\GoneHttpException;
 
 /**
  * Implements hook_entity_base_field_info().
@@ -755,27 +755,19 @@ function reliefweb_entities_menu_local_tasks_alter(&$data, $route_name, Refinabl
 }
 
 /**
- * Implements hook_preprocess_page__404().
+ * Implements hook_preprocess_page__410().
  *
  * Add a user friendly message on inaccessible entity pages to indicate it's
  * no longer available (we assume the URL was previously accessible, which is
  * probably true in most cases).
  */
-function reliefweb_entities_preprocess_page__404(array &$variables) {
-  // Get the entity from the original request.
-  $entity = EntityHelper::getEntityFromRequest(\Drupal::requestStack()->getMainRequest());
-  if (isset($entity) && $entity instanceof BundleEntityInterface) {
-    $type = mb_strtolower(EntityHelper::getBundleLabelFromEntity($entity));
-    $title = $entity->label();
-
-    $message = t('The @type %title is no longer available.', [
-      '@type' => $type,
-      '%title' => $title,
-    ]);
-
+function reliefweb_entities_preprocess_page__410(array &$variables) {
+  // @see \Drupal\reliefweb_entities\EventSubscriber\AccessDeniedToNotFound::on403().
+  $exception = \Drupal::requestStack()->getCurrentRequest()->attributes->get('exception');
+  if (isset($exception) && $exception instanceof GoneHttpException) {
     $variables['page']['content']['message'] = [
       '#type' => 'markup',
-      '#markup' => $message,
+      '#markup' => $exception->getMessage(),
     ];
   }
 
@@ -784,6 +776,17 @@ function reliefweb_entities_preprocess_page__404(array &$variables) {
   // and this preprocess hook implementation will not be called when visiting
   // an inaccessible entity page afterwards.
   $variables['#cache']['contexts'][] = 'url.path';
+}
+
+/**
+ * Implements hook_preprocess_page_title().
+ */
+function reliefweb_entities_4xx_title() {
+  $exception = \Drupal::requestStack()->getCurrentRequest()->attributes->get('exception');
+  if (isset($exception) && $exception instanceof GoneHttpException) {
+    return t('Gone');
+  }
+  return 'Client error';
 }
 
 /**
