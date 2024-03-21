@@ -58,6 +58,9 @@
   /* Purple */
   --cd-reliefweb-purple: #9509bb;
   --cd-reliefweb-purple--bg: rgba(149, 9, 187, 0.2);
+  /* Light purple */
+  --cd-reliefweb-purple--light: #9FA8DA;
+  --cd-reliefweb-purple--light--bg: rgb(159, 168, 218, 0.2);
   /* Grey */
   --cd-reliefweb-grey: #4b4b4b;
   --cd-reliefweb-grey--bg: rgba(75, 75, 75, 0.2);

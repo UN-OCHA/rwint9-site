@@ -24,6 +24,7 @@ dependencies:
     - field.field.node.report.field_origin
     - field.field.node.report.field_origin_notes
     - field.field.node.report.field_original_publication_date
+    - field.field.node.report.field_post_api_provider
     - field.field.node.report.field_primary_country
     - field.field.node.report.field_source
     - field.field.node.report.field_theme
@@ -34,8 +35,8 @@ dependencies:
     - datetime
     - inline_entity_form
     - path
-    - reliefweb_files
     - reliefweb_fields
+    - reliefweb_files
     - text
 id: node.report.default
 targetEntityType: node
@@ -196,6 +197,7 @@ content:
       collapsible: false
       collapsed: false
       revision: false
+      removed_reference: optional
     third_party_settings: {  }
   field_headline_summary:
     type: string_textarea
@@ -229,6 +231,7 @@ content:
       collapsible: false
       collapsed: true
       revision: false
+      removed_reference: optional
     third_party_settings: {  }
   field_language:
     type: options_buttons
@@ -374,6 +377,7 @@ content:
     third_party_settings: {  }
 hidden:
   created: true
+  field_post_api_provider: true
   field_vulnerable_groups: true
   langcode: true
   promote: true

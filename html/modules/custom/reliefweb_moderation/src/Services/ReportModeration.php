@@ -203,8 +203,10 @@ class ReportModeration extends ModerationServiceBase {
       'to-review' => $this->t('To review'),
       'published' => $this->t('Published'),
       'embargoed' => $this->t('Embargoed'),
-      'archive' => $this->t('Archived'),
       'reference' => $this->t('Reference'),
+      'pending' => $this->t('Pending'),
+      'refused' => $this->t('Refused'),
+      'archive' => $this->t('Archived'),
     ];
   }
 
@@ -214,6 +216,7 @@ class ReportModeration extends ModerationServiceBase {
   public function getFilterDefaultStatuses() {
     $statuses = $this->getFilterStatuses();
     unset($statuses['archive']);
+    unset($statuses['refused']);
     return array_keys($statuses);
   }
 
@@ -236,6 +239,12 @@ class ReportModeration extends ModerationServiceBase {
       ],
       'reference' => [
         '#value' => $this->t('Reference'),
+      ],
+      'pending' => [
+        '#value' => $this->t('Pending'),
+      ],
+      'refused' => [
+        '#value' => $this->t('Refused'),
       ],
     ];
 

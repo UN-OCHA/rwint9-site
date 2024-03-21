@@ -1,0 +1,6 @@
+services:
+  reliefweb_post_api.commands:
+    class: \Drupal\reliefweb_post_api\Commands\ReliefWebPostApiCommands
+    arguments: ['@queue', '@plugin.manager.reliefweb_post_api.content_processor']
+    tags:
+      - { name: drush.command }

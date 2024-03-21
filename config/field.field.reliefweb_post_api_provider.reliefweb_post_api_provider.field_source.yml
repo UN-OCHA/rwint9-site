@@ -1,0 +1,30 @@
+uuid: 7ea93d46-1289-4858-8d74-3b0c8409bee5
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.reliefweb_post_api_provider.field_source
+    - taxonomy.vocabulary.source
+  module:
+    - reliefweb_post_api
+id: reliefweb_post_api_provider.reliefweb_post_api_provider.field_source
+field_name: field_source
+entity_type: reliefweb_post_api_provider
+bundle: reliefweb_post_api_provider
+label: 'Allowed source(s)'
+description: 'Sources that the provider is allowed to post for.'
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      source: source
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference
