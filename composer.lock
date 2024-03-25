@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "97d3ea507ad45379894412243d46d824",
+    "content-hash": "85005d020be78ee1677bb3b8ae2c07d8",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -15815,6 +15815,33 @@
                 "source": "https://github.com/UN-OCHA/common_design/tree/v9.3.1"
             },
             "time": "2024-01-17T09:30:38+00:00"
+        },
+        {
+            "name": "unocha/gtm_barebones",
+            "version": "1.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/UN-OCHA/gtm_barebones.git",
+                "reference": "fe2ed59384bf8e8575c83c9a30abab08e53180db"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/UN-OCHA/gtm_barebones/zipball/fe2ed59384bf8e8575c83c9a30abab08e53180db",
+                "reference": "fe2ed59384bf8e8575c83c9a30abab08e53180db",
+                "shasum": ""
+            },
+            "require": {
+                "drupal/core": "^9.5 || ^10",
+                "php": ">=8.1"
+            },
+            "type": "drupal-module",
+            "notification-url": "https://packagist.org/downloads/",
+            "description": "OCHA fork of GTM Barebones.",
+            "support": {
+                "issues": "https://github.com/UN-OCHA/gtm_barebones/issues",
+                "source": "https://github.com/UN-OCHA/gtm_barebones/tree/1.1.1"
+            },
+            "time": "2024-02-16T11:12:44+00:00"
         },
         {
             "name": "unocha/ocha_ai",
