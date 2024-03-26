@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "97d3ea507ad45379894412243d46d824",
+    "content-hash": "e1bceb8ff8254f5cdc2c5b1d870bbf62",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -15818,16 +15818,16 @@
         },
         {
             "name": "unocha/ocha_ai",
-            "version": "v1.0.7",
+            "version": "v1.0.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_ai.git",
-                "reference": "ddbf505b0ce238cbdae13c235d9365ed94cac45f"
+                "reference": "15711ef743b512fa0468dacb7d479de3bc67e925"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/ddbf505b0ce238cbdae13c235d9365ed94cac45f",
-                "reference": "ddbf505b0ce238cbdae13c235d9365ed94cac45f",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/15711ef743b512fa0468dacb7d479de3bc67e925",
+                "reference": "15711ef743b512fa0468dacb7d479de3bc67e925",
                 "shasum": ""
             },
             "require": {
@@ -15858,9 +15858,9 @@
             "description": "OCHA AI module",
             "support": {
                 "issues": "https://github.com/UN-OCHA/ocha_ai/issues",
-                "source": "https://github.com/UN-OCHA/ocha_ai/tree/v1.0.7"
+                "source": "https://github.com/UN-OCHA/ocha_ai/tree/v1.0.8"
             },
-            "time": "2024-03-14T07:56:08+00:00"
+            "time": "2024-03-26T14:05:46+00:00"
         },
         {
             "name": "unocha/ocha_monitoring",
