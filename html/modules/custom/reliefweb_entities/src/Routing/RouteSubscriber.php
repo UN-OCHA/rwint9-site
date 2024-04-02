@@ -29,6 +29,11 @@ class RouteSubscriber extends RouteSubscriberBase {
         $route->setOption('_admin_route', TRUE);
       }
     }
+
+    // Add a title callback for the 4xx errors so it's not always Client error.
+    if ($route = $collection->get('system.4xx')) {
+      $route->setDefault('_title_callback', 'reliefweb_entities_4xx_title');
+    }
   }
 
 }
