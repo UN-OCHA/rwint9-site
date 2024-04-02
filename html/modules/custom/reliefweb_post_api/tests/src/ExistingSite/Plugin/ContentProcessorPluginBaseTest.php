@@ -302,6 +302,19 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   /**
    * @covers ::validateSchema
    */
+  public function testValidateSchemaUnicode(): void {
+    $bundle = $this->plugin->getBundle();
+    $file = __DIR__ . '/../../../data/data-' . $bundle . '-unicode.json';
+    $data = json_decode(file_get_contents($file), TRUE);
+
+    // Valid data.
+    $this->plugin->validateSchema($data);
+    $this->assertTrue(TRUE);
+  }
+
+  /**
+   * @covers ::validateSchema
+   */
   public function testValidateSchemaInvalid(): void {
     $data = $this->getPostApiData();
 

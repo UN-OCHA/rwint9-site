@@ -7,7 +7,7 @@
         "url": {
             "description": "Unique URL to identify the document. Use the original canonical of the document if available.",
             "type": "string",
-            "format": "uri",
+            "format": "iri",
             "maxLength": 2048
         },
         "uuid": {
@@ -27,12 +27,12 @@
                 },
                 {
                     "description": "No control characters or separators except for spaces.",
-                    "pattern": "^([^\\p{Z}\\p{C}]|[ ])+$"
+                    "pattern": "^([^\\p{Z}\\p{C}]|[ \u3000])+$"
                 }
             ],
             "not": {
                 "description": "No leading, trailing or consecutive spaces.",
-                "pattern": "(?:^[ ]|[ ]$|[ ]{2,})"
+                "pattern": "(?:^[ \u3000]|[ \u3000]$|[ \u3000]{2,})"
             }
         },
         "source": {
@@ -88,12 +88,12 @@
                 },
                 {
                     "description": "No control characters or separators except for spaces and new lines.",
-                    "pattern": "^(?:[^\\p{Z}\\p{C}]|[ \\n])+$"
+                    "pattern": "^(?:[^\\p{Z}\\p{C}]|[ \u3000\\n])+$"
                 }
             ],
             "not": {
                 "description": "No leading, trailing or consecutive spaces and new lines (except at the end of a line to support markdown linebreaks).",
-                "pattern": "(?:^[ \\n]|[ \\n]$|[ ]{2,}[^ \\n])"
+                "pattern": "(?:^[ \u3000\\n]|[ \u3000\\n]$|[ \u3000]{2,}[^ \u3000\\n])"
             }
         },
         "embargoed": {
@@ -104,7 +104,7 @@
         "origin": {
             "description": "Original canonical URL of the document if available, in which case it should be the same as the 'url' property.",
             "type": "string",
-            "format": "uri",
+            "format": "iri",
             "maxLength": 2048
         },
         "file": {
@@ -116,7 +116,7 @@
                     "url": {
                         "description": "URL to a PDF file.",
                         "type": "string",
-                        "format": "uri",
+                        "format": "iri",
                         "pattern": "\\.pdf$"
                     },
                     "checksum": {
@@ -135,12 +135,12 @@
                             },
                             {
                                 "description": "No control characters or separators except for spaces.",
-                                "pattern": "^([^\\p{Z}\\p{C}]|[ ])+$"
+                                "pattern": "^([^\\p{Z}\\p{C}]|[ \u3000])+$"
                             }
                         ],
                         "not": {
                             "description": "No leading, trailing or consecutive spaces.",
-                            "pattern": "(?:^[ ]|[ ]$|[ ]{2,})"
+                            "pattern": "(?:^[ \u3000]|[ \u3000]$|[ \u3000]{2,})"
                         }
                     },
                     "language": {
@@ -159,7 +159,7 @@
             "properties": {
                 "url": {
                     "type": "string",
-                    "format": "uri",
+                    "format": "iri",
                     "pattern": "\\.(jpg|png|webp)$"
                 },
                 "checksum": {
@@ -178,12 +178,12 @@
                         },
                         {
                             "description": "No control characters or separators except for spaces.",
-                            "pattern": "^([^\\p{Z}\\p{C}]|[ ])+$"
+                            "pattern": "^([^\\p{Z}\\p{C}]|[ \u3000])+$"
                         }
                     ],
                     "not": {
                         "description": "No leading, trailing or consecutive spaces.",
-                        "pattern": "(?:^[ ]|[ ]$|[ ]{2,})"
+                        "pattern": "(?:^[ \u3000]|[ \u3000]$|[ \u3000]{2,})"
                     }
                 },
                 "copyright": {
@@ -197,12 +197,12 @@
                         },
                         {
                             "description": "No control characters or separators except for spaces.",
-                            "pattern": "^([^\\p{Z}\\p{C}]|[ ])+$"
+                            "pattern": "^([^\\p{Z}\\p{C}]|[ \u3000])+$"
                         }
                     ],
                     "not": {
                         "description": "No leading, trailing or consecutive spaces.",
-                        "pattern": "(?:^[ ]|[ ]$|[ ]{2,})"
+                        "pattern": "(?:^[ \u3000]|[ \u3000]$|[ \u3000]{2,})"
                     }
                 }
             },
@@ -214,7 +214,6 @@
             "items": {
                 "type": "integer"
             },
-            "minItems": 1,
             "maxItems": 30
         },
         "disaster_type": {
@@ -223,7 +222,6 @@
             "items": {
                 "type": "integer"
             },
-            "minItems": 1,
             "maxItems": 30
         },
         "theme": {
@@ -232,8 +230,16 @@
             "items": {
                 "type": "integer"
             },
-            "minItems": 1,
             "maxItems": 20
+        },
+        "notify": {
+            "description": "List of email addresses to notify when the document is published.",
+            "type": "array",
+            "items": {
+                "type": "string",
+                "format": "idn-email"
+            },
+            "maxItems": 10
         }
     },
     "required": [

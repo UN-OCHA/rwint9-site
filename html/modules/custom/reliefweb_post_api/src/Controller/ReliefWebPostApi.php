@@ -207,13 +207,14 @@ class ReliefWebPostApi extends ControllerBase {
     }
 
     $info = $this->database
-      ->select('reliefweb_post_api_rate_limits')
-      ->condition('provider_id', $provider->id())
+      ->select('reliefweb_post_api_rate_limit', 't')
+      ->fields('t', ['provider_id', 'request_count', 'last_request_time'])
+      ->condition('t.provider_id', $provider->id())
       ->execute()
       ?->fetchAssoc() ?? [];
 
     $request_time = $this->time->getRequestTime();
-    $last_request_time = min($info['last_request_time'] ?? $request_time, $request_time);
+    $last_request_time = min($info['last_request_time'] ?? $request_time - $rate_limit, $request_time);
 
     try {
       $request_date = new \DateTime('@' . $request_time, new \DateTimeZone('UTC'));
@@ -249,7 +250,7 @@ class ReliefWebPostApi extends ControllerBase {
 
     // If the request is valid, update the database.
     $this->database
-      ->upsert('reliefweb_post_api_rate_limits')
+      ->upsert('reliefweb_post_api_rate_limit')
       ->fields(['request_count', 'last_request_time'])
       ->key('provider_id')
       ->values([
