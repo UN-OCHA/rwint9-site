@@ -97,9 +97,9 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
 
   // Show and mark fields mandatory for trusted sources.
   $fields = [
-    'field_job_experience',
-    'field_career_categories',
-    'field_theme',
+    'field_job_experience' => 'required',
+    'field_career_categories' => 'required',
+    'field_theme' => 'optional',
   ];
 
   $conditions = [];
@@ -109,15 +109,24 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
     ];
   }
 
-  foreach ($fields as $field) {
-    $form[$field]['#states'] = [
-      'visible' => [
-        'select[name="field_source"]' => $conditions,
-      ],
-      'required' => [
-        'select[name="field_source"]' => $conditions,
-      ],
-    ];
+  foreach ($fields as $field => $needed) {
+    if ($needed == 'required') {
+      $form[$field]['#states'] = [
+        'visible' => [
+          'select[name="field_source"]' => $conditions,
+        ],
+        'required' => [
+          'select[name="field_source"]' => $conditions,
+        ],
+      ];
+    }
+    else {
+      $form[$field]['#states'] = [
+        'visible' => [
+          'select[name="field_source"]' => $conditions,
+        ],
+      ];
+    }
   }
 
   $form['ai_message']['#states'] = [
