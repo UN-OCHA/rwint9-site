@@ -9,7 +9,6 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\node\Entity\Node;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
-use Drupal\reliefweb_utility\Helpers\MarkdownHelper;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
 
 /**
@@ -31,7 +30,6 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
       $entity = $form_state->getFormObject()->getEntity();
       if ($entity->hasField('reliefweb_job_tagger_info') && !$entity->reliefweb_job_tagger_info->IsEmpty()) {
         $message = $entity->reliefweb_job_tagger_info->value;
-        $message = MarkdownHelper::convertToHtml($message);
 
         $form['ai_feedback'] = [
           '#type' => 'processed_text',
