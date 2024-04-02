@@ -166,7 +166,7 @@ function reliefweb_job_tagger_module_implements_alter(&$implementations, $hook) 
 }
 
 /**
- * Implements hook_ENTITY_TYPE_update().
+ * Implements hook_ENTITY_TYPE_presave().
  */
 function reliefweb_job_tagger_node_presave(EntityInterface $node) {
   // We don't want to react to configuration imports.
