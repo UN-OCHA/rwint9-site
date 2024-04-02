@@ -53,6 +53,11 @@
   background: var(--cd-white);
 }
 
+.admin-menu-dropdown {
+  width: 100%;
+  padding: 22px 0;
+}
+
 .admin-menu-dropdown__inner {
   max-width: var(--cd-max-width);
   padding: 0 var(--cd-container-padding);
