@@ -46,14 +46,13 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
   $user = \Drupal::currentUser();
   if ($user->hasPermission('bypass ocha ai job tag')) {
     // Make fields mandatory.
-    $form['field_job_experience']['widget']['#required'] = TRUE;
     $form['field_career_categories']['widget']['#required'] = TRUE;
+
     return;
   }
 
   if (!$user->hasPermission('enforce ocha ai job tag')) {
     // Make fields mandatory.
-    $form['field_job_experience']['widget']['#required'] = TRUE;
     $form['field_career_categories']['widget']['#required'] = TRUE;
 
     return;
@@ -86,7 +85,6 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
   $sources = reliefweb_job_tagger_get_trusted_organizations($user);
   if (empty($sources)) {
     // Non-trusted poster, hide fields.
-    $form['field_job_experience']['#access'] = FALSE;
     $form['field_career_categories']['#access'] = FALSE;
     $form['field_theme']['#access'] = FALSE;
 
@@ -95,7 +93,6 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
 
   // Show and mark fields mandatory for trusted sources.
   $fields = [
-    'field_job_experience' => 'required',
     'field_career_categories' => 'required',
     'field_theme' => 'optional',
   ];
@@ -198,10 +195,6 @@ function reliefweb_job_tagger_node_presave(EntityInterface $node) {
   }
 
   // Only queue it when fields are empty.
-  if (!$node->field_job_experience->isEmpty()) {
-    return;
-  }
-
   if (!$node->field_career_categories->isEmpty()) {
     return;
   }
@@ -216,43 +209,48 @@ function reliefweb_job_tagger_node_presave(EntityInterface $node) {
 }
 
 /**
- * Implements hook_ENTITY_TYPE_insert().
+ * Implements hook_entity_after_save().
+ *
+ * @see \Drupal\reliefweb_entities\BundleEntityStorageInterface
  */
-function reliefweb_job_tagger_node_insert(Node $node) {
+function reliefweb_job_tagger_entity_after_save(EntityInterface $entity) {
   // We don't want to react to configuration imports.
   if (\Drupal::isConfigSyncing()) {
     return;
   }
 
-  if ($node->hasField('reliefweb_job_tagger_status') && $node->get('reliefweb_job_tagger_status')->value == 'queue') {
-    reliefweb_job_tagger_queue_job($node);
+  $entity_type_id = $entity->getEntityTypeId();
 
-    $node->set('reliefweb_job_tagger_status', 'queued');
-    $node->setRevisionLogMessage('Job has been queued for tagging');
-    $node->setNewRevision(FALSE);
-    $node->updateLoadedRevisionId();
-    $node->save();
+  if ($entity_type_id !== 'node') {
+    return;
+  }
+
+  /** @var \Drupal\node\Entity\Node $entity */
+  if ($entity->hasField('reliefweb_job_tagger_status') && $entity->get('reliefweb_job_tagger_status')->value == 'queue') {
+    reliefweb_job_tagger_queue_job($entity);
+
+    $entity->set('reliefweb_job_tagger_status', 'queued');
+    $entity->setRevisionLogMessage('Job has been queued for tagging');
+    $entity->save();
   }
 }
 
 /**
+ * Implements hook_ENTITY_TYPE_insert().
+ *
+ * @see reliefweb_job_tagger_entity_after_save()
+ */
+function reliefweb_job_tagger_node_insert(Node $node) {
+  // Needed to avoid exceptions.
+}
+
+/**
  * Implements hook_ENTITY_TYPE_update().
+ *
+ * @see reliefweb_job_tagger_entity_after_save()
  */
 function reliefweb_job_tagger_node_update(Node $node) {
-  // We don't want to react to configuration imports.
-  if (\Drupal::isConfigSyncing()) {
-    return;
-  }
-
-  if ($node->hasField('reliefweb_job_tagger_status') && $node->get('reliefweb_job_tagger_status')->value == 'queue') {
-    reliefweb_job_tagger_queue_job($node);
-
-    $node->set('reliefweb_job_tagger_status', 'queued');
-    $node->setRevisionLogMessage('Job has been queued for tagging');
-    $node->setNewRevision(FALSE);
-    $node->updateLoadedRevisionId();
-    $node->save();
-  }
+  // Needed to avoid exceptions.
 }
 
 /**

@@ -5,7 +5,6 @@ namespace Drupal\reliefweb_job_tagger\Plugin\QueueWorker;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
-use Drupal\ocha_ai_tag\Services\CalculationMethod;
 use Drupal\ocha_ai_tag\Services\OchaAiTagTagger;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -81,10 +80,6 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
     }
 
     // Only process it when fields are empty.
-    if (!$node->field_job_experience->isEmpty()) {
-      return;
-    }
-
     if (!$node->field_career_categories->isEmpty()) {
       return;
     }
@@ -96,7 +91,6 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
     // Load vocabularies.
     $mapping = [];
     $vocabularies = [
-      'job_experience',
       'career_category',
       'theme',
     ];
@@ -129,14 +123,6 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
     $data = $data[OchaAiTagTagger::AVERAGE_FULL_AVERAGE][OchaAiTagTagger::CALCULATION_METHOD_MEAN_WITH_CUTOFF];
     $message = [];
     $needs_save = FALSE;
-
-    if (isset($data['job_experience']) && $node->field_job_experience->isEmpty()) {
-      $term = $this->getRelevantTerm('job_experience', $data['job_experience'], 1);
-      $message[] = $this->setAiFeedback('Job experience', $data['job_experience'], [$term]);
-
-      $node->set('field_job_experience', $term);
-      $needs_save = TRUE;
-    }
 
     if (isset($data['career_category']) && $node->field_career_categories->isEmpty()) {
       $term = $this->getRelevantTerm('career_category', $data['career_category'], 1);
