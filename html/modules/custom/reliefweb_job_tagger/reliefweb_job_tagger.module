@@ -153,8 +153,6 @@ function reliefweb_job_tagger_module_implements_alter(&$implementations, $hook) 
   switch ($hook) {
     // Move our hook_entity_type_alter() implementation to the end of the list.
     case 'node_presave':
-    case 'node_update':
-    case 'node_insert':
       $group = $implementations['reliefweb_job_tagger'];
       unset($implementations['reliefweb_job_tagger']);
       $implementations['reliefweb_job_tagger'] = $group;
@@ -233,24 +231,6 @@ function reliefweb_job_tagger_entity_after_save(EntityInterface $entity) {
     $entity->setRevisionLogMessage('Job has been queued for tagging');
     $entity->save();
   }
-}
-
-/**
- * Implements hook_ENTITY_TYPE_insert().
- *
- * @see reliefweb_job_tagger_entity_after_save()
- */
-function reliefweb_job_tagger_node_insert(Node $node) {
-  // Needed to avoid exceptions.
-}
-
-/**
- * Implements hook_ENTITY_TYPE_update().
- *
- * @see reliefweb_job_tagger_entity_after_save()
- */
-function reliefweb_job_tagger_node_update(Node $node) {
-  // Needed to avoid exceptions.
 }
 
 /**
