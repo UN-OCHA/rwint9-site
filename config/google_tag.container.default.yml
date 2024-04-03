@@ -10,6 +10,7 @@ id: default
 label: Default
 weight: 0
 container_id: GTM-xxxxxx
+hostname: www.googletagmanager.com
 data_layer: dataLayer
 include_classes: false
 whitelist_classes: |-
