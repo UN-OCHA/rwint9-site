@@ -73,7 +73,7 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
     ],
     'message' => [
       '#type' => 'processed_text',
-      '#text' => t('The process of posting jobs via ReliefWeb is now even smoother. The form now includes an automated function for the "career", "job experience" and "themes" categories; fewer fields for users to fill and higher efficiency overall.'),
+      '#text' => t('The process of posting jobs via ReliefWeb is now even smoother. The form now includes an automated function for the "career" and "themes" categories; fewer fields for users to fill and higher efficiency overall.'),
       '#format' => 'html',
       '#weight' => -90,
       '#prefix' => '<div class="messages messages--warning cd-alert cd-alert--warning">',
@@ -200,6 +200,8 @@ function reliefweb_job_tagger_node_presave(EntityInterface $node) {
   if (!$node->field_theme->isEmpty()) {
     return;
   }
+
+  // Queue node when status is empty.
   if ($node->reliefweb_job_tagger_status->isEmpty()) {
     $node->setNewRevision(FALSE);
     $node->set('reliefweb_job_tagger_status', 'queue');
