@@ -149,28 +149,28 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
       }
       $node->revision_log = 'Job has been updated by AI.';
       $node->set('reliefweb_job_tagger_status', 'processed');
-      $node->isNewRevision();
+      $node->setNewRevision(TRUE);
       $node->save();
     }
   }
 
   /**
-   * Get top 3 relevant themes.
+   * Get top 3 relevant terms.
    */
-  protected function getTopNumTerms($themes, $limit) {
+  protected function getTopNumTerms($terms, $limit) {
     $result = [];
 
-    $themes = array_slice($themes, 0, $limit, TRUE);
+    $terms = array_slice($terms, 0, $limit, TRUE);
 
-    foreach ($themes as $theme => $score) {
+    foreach ($terms as $term => $score) {
       // Add first one regardless of score.
       if (empty($result)) {
-        $result[] = $theme;
+        $result[] = $term;
         continue;
       }
 
       if ($score > .25) {
-        $result[] = $theme;
+        $result[] = $term;
       }
 
     }
