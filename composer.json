@@ -71,7 +71,7 @@
         "reliefweb/simple-datepicker": "^v1.3",
         "symfony/uid": "^6.2",
         "unocha/common_design": "^9.4",
-        "unocha/ocha_ai": "dev-RW-931-tagger-settings",
+        "unocha/ocha_ai": "dev-use-cache-for-embeddings",
         "unocha/ocha_monitoring": "^1.0",
         "webflo/drupal-finder": "^1.2.2"
     },
