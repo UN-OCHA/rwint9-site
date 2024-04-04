@@ -147,7 +147,7 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
           'format' => 'markdown',
         ]);
       }
-      $node->revision_log = 'Job has been updated by AI.';
+      $node->setRevisionLogMessage('Job has been updated by AI.');
       $node->set('reliefweb_job_tagger_status', 'processed');
       $node->setNewRevision(TRUE);
       $node->save();
