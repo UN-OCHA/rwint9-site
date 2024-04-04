@@ -251,7 +251,6 @@ function reliefweb_job_tagger_node_presave(EntityInterface $node) {
 
   // Queue node when status is empty.
   if ($node->reliefweb_job_tagger_status->isEmpty()) {
-    // $node->setNewRevision(FALSE);
     $node->set('reliefweb_job_tagger_status', 'queued');
 
     $log_message = $node->getRevisionLogMessage();
