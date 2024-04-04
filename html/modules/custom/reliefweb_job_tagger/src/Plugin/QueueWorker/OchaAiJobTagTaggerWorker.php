@@ -34,12 +34,20 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
   protected $jobTagger;
 
   /**
+   * The logger service.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected LoggerInterface $logger;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, OchaAiTagTagger $job_tagger) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, OchaAiTagTagger $job_tagger, LoggerChannelFactoryInterface $logger_factory) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->entityTypeManager = $entity_type_manager;
     $this->jobTagger = $job_tagger;
+    $this->logger = $logger_factory->get('reliefweb_job_tagger');
   }
 
   /**
@@ -52,6 +60,7 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
       $plugin_definition,
       $container->get('entity_type.manager'),
       $container->get('ocha_ai_tag.tagger'),
+      $container->get('logger.factory'),
     );
   }
 
@@ -62,6 +71,7 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
     $nid = $data->nid;
 
     if (empty($nid)) {
+      $this->logger->warning('No nid specified, skipping');
       return;
     }
 
@@ -69,19 +79,28 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
     $node = $this->entityTypeManager->getStorage('node')->load($nid);
 
     if (!$node || $node->bundle() !== 'job') {
+      $this->logger->warning('Unable to load job node @nid, skipping', ['@nid' => $$nid]);
+      return;
+    }
+
+    if ($node->hasField('reliefweb_job_tagger_status') && $node->reliefweb_job_tagger_status->value == 'processed') {
+      $this->logger->warning('Node @nid already processed, skipping', ['@nid' => $$nid]);
       return;
     }
 
     if ($node->body->isEmpty()) {
+      $this->logger->warning('No body text present for node @nid, skipping', ['@nid' => $$nid]);
       return;
     }
 
     // Only process it when fields are empty.
     if (!$node->field_career_categories->isEmpty()) {
+      $this->logger->warning('Category already specified for node @nid, skipping', ['@nid' => $$nid]);
       return;
     }
 
     if (!$node->field_theme->isEmpty()) {
+      $this->logger->warning('Theme(s) already specified for node @nid, skipping', ['@nid' => $$nid]);
       return;
     }
 
@@ -109,10 +128,12 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
       ->tag($text, [OchaAiTagTagger::CALCULATION_METHOD_MEAN_WITH_CUTOFF], OchaAiTagTagger::AVERAGE_FULL_AVERAGE);
 
     if (empty($data)) {
+      $this->logger->error('No data received from AI for node @nid', ['@nid' => $$nid]);
       return;
     }
 
     if (!isset($data[OchaAiTagTagger::AVERAGE_FULL_AVERAGE][OchaAiTagTagger::CALCULATION_METHOD_MEAN_WITH_CUTOFF])) {
+      $this->logger->error('Data "average mean with cutoff" missing from AI for node @nid', ['@nid' => $$nid]);
       return;
     }
 
@@ -148,6 +169,7 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
       $node->set('reliefweb_job_tagger_status', 'processed');
       $node->setNewRevision(TRUE);
       $node->save();
+      $this->logger->info('Node @nid updated with data from AI', ['@nid' => $$nid]);
     }
   }
 
