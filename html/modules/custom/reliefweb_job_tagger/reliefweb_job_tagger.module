@@ -26,11 +26,7 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
 
   // Display AI info for editors.
   if ($form_id == 'node_job_edit_form') {
-    // Bail out if post is created before deployment.
     $entity = $form_state->getFormObject()->getEntity();
-    if ($entity->created->value < strtotime('2024-04-18')) {
-      return;
-    }
 
     if (UserHelper::userHasRoles(['editor'])) {
       if ($entity->hasField('reliefweb_job_tagger_info') && !$entity->reliefweb_job_tagger_info->IsEmpty()) {
@@ -43,7 +39,6 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
           '#weight' => -90,
         ];
       }
-
     }
   }
 
