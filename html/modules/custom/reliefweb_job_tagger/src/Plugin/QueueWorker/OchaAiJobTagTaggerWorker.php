@@ -3,6 +3,8 @@
 namespace Drupal\reliefweb_job_tagger\Plugin\QueueWorker;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\ocha_ai_tag\Services\OchaAiTagTagger;
@@ -36,9 +38,9 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
   /**
    * The logger service.
    *
-   * @var \Psr\Log\LoggerInterface
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
    */
-  protected LoggerInterface $logger;
+  protected LoggerChannelInterface $logger;
 
   /**
    * {@inheritdoc}
