@@ -58,29 +58,33 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
     return;
   }
 
-  // Add message for job posters.
-  $form['ai_message'] = [
-    '#type' => 'fieldset',
-    '#attached' => [
-      'library' => [
-        'reliefweb_job_tagger/ai-message',
+  $settings = \Drupal::service('ocha_ai_tag.tagger')->getSettings();
+
+  if (!empty($settings['form']['instructions']['value'])) {
+    // Add message for job posters.
+    $form['ai_message'] = [
+      '#type' => 'fieldset',
+      '#attached' => [
+        'library' => [
+          'reliefweb_job_tagger/ai-message',
+        ],
       ],
-    ],
-    '#attributes' => [
-      'class' => [
-        'ai-message-wrapper',
+      '#attributes' => [
+        'class' => [
+          'ai-message-wrapper',
+        ],
       ],
-    ],
-    'message' => [
-      '#type' => 'processed_text',
-      '#text' => t('The process of posting jobs via ReliefWeb is now even smoother. The form now includes an automated function for the "career" and "themes" categories; fewer fields for users to fill and higher efficiency overall.'),
-      '#format' => 'html',
-      '#weight' => -90,
-      '#prefix' => '<div class="messages messages--warning cd-alert cd-alert--warning">',
-      '#suffix' => '</div>',
-      '#states' => [],
-    ],
-  ];
+      'message' => [
+        '#type' => 'processed_text',
+        '#text' => $settings['form']['instructions']['value'],
+        '#format' => $settings['form']['instructions']['format'] ?? 'html',
+        '#weight' => -90,
+        '#prefix' => '<div class="messages messages--warning cd-alert cd-alert--warning">',
+        '#suffix' => '</div>',
+        '#states' => [],
+      ],
+    ];
+  }
 
   $sources = reliefweb_job_tagger_get_trusted_organizations($user);
   if (empty($sources)) {
