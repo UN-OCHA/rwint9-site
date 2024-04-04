@@ -24,13 +24,11 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
     return;
   }
 
+  $skip = FALSE;
+
   // Display AI info for editors.
   if ($form_id == 'node_job_edit_form') {
-    // Bail out if post is created before deployment.
     $entity = $form_state->getFormObject()->getEntity();
-    if ($entity->created->value < strtotime('2024-04-18')) {
-      return;
-    }
 
     if (UserHelper::userHasRoles(['editor'])) {
       if ($entity->hasField('reliefweb_job_tagger_info') && !$entity->reliefweb_job_tagger_info->IsEmpty()) {
@@ -43,49 +41,66 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
           '#weight' => -90,
         ];
       }
-
     }
+
+    // Skip when editing a job that already has a career category that was not
+    // added via the AI.
+    // That includes all the jobs before the deployment of the AI tagging since
+    // the career category field is mandatory.
+    $skip = !$entity->get('field_career_categories')->isEmpty() &&
+            $entity->get('reliefweb_job_tagger_status')->isEmpty();
   }
 
   // Check permissions.
   $user = \Drupal::currentUser();
   if ($user->hasPermission('bypass ocha ai job tag')) {
-    // Make fields mandatory.
-    $form['field_career_categories']['widget']['#required'] = TRUE;
-
-    return;
+    $skip = TRUE;
   }
 
   if (!$user->hasPermission('enforce ocha ai job tag')) {
-    // Make fields mandatory.
+    $skip = TRUE;
+  }
+
+  if ($skip) {
+    // Ensure the field is mandatory because we cannot do that at the field
+    // definition level. It indeed needs to be optional so that it can be
+    // ignored when it is to be filled by the AI.
     $form['field_career_categories']['widget']['#required'] = TRUE;
 
     return;
   }
 
-  // Add message for job posters.
-  $form['ai_message'] = [
-    '#type' => 'fieldset',
-    '#attached' => [
-      'library' => [
-        'reliefweb_job_tagger/ai-message',
+  // Add a validation callback so we can check if the career categories field
+  // is set for trusted users who selected a source they are trusted for.
+  $form['#validate'][] = 'reliefweb_job_tagger_validate_mandatory_fields';
+
+  $settings = \Drupal::service('ocha_ai_tag.tagger')->getSettings();
+
+  if (!empty($settings['form']['instructions']['value'])) {
+    // Add message for job posters.
+    $form['ai_message'] = [
+      '#type' => 'fieldset',
+      '#attached' => [
+        'library' => [
+          'reliefweb_job_tagger/ai-message',
+        ],
       ],
-    ],
-    '#attributes' => [
-      'class' => [
-        'ai-message-wrapper',
+      '#attributes' => [
+        'class' => [
+          'ai-message-wrapper',
+        ],
       ],
-    ],
-    'message' => [
-      '#type' => 'processed_text',
-      '#text' => t('The process of posting jobs via ReliefWeb is now even smoother. The form now includes an automated function for the "career" and "themes" categories; fewer fields for users to fill and higher efficiency overall.'),
-      '#format' => 'html',
-      '#weight' => -90,
-      '#prefix' => '<div class="messages messages--warning cd-alert cd-alert--warning">',
-      '#suffix' => '</div>',
-      '#states' => [],
-    ],
-  ];
+      'message' => [
+        '#type' => 'processed_text',
+        '#text' => $settings['form']['instructions']['value'],
+        '#format' => $settings['form']['instructions']['format'] ?? 'html',
+        '#weight' => -90,
+        '#prefix' => '<div class="messages messages--warning cd-alert cd-alert--warning">',
+        '#suffix' => '</div>',
+        '#states' => [],
+      ],
+    ];
+  }
 
   $sources = reliefweb_job_tagger_get_trusted_organizations($user);
   if (empty($sources)) {
@@ -152,6 +167,27 @@ function reliefweb_job_tagger_get_trusted_organizations($account = NULL) {
 }
 
 /**
+ * Validate mandatory fields.
+ */
+function reliefweb_job_tagger_validate_mandatory_fields($form, FormStateInterface $form_state) {
+  $trusted_sources = reliefweb_job_tagger_get_trusted_organizations();
+  $source = $form_state->getValue(['field_source', 0, 'target_id']);
+
+  // If the selected source is a trusted source, then the career category field
+  // is mandatory since it will not be processed by the AI.
+  //
+  // @see reliefweb_job_tagger_form_node_form_alter().
+  if (!empty($trusted_sources) && !empty($source) && in_array($source, $trusted_sources)) {
+    // Check if a career category was selected.
+    if (!$form_state->hasValue(['field_career_categories', 0, 'target_id'])) {
+      $form_state->setError($form['field_career_categories']['widget'], t('@name field is required.', [
+        '@name' => $form['field_career_categories']['widget']['#title'],
+      ]));
+    }
+  }
+}
+
+/**
  * Implements hook_module_implements_alter().
  */
 function reliefweb_job_tagger_module_implements_alter(&$implementations, $hook) {
@@ -182,6 +218,13 @@ function reliefweb_job_tagger_node_presave(EntityInterface $node) {
     return;
   }
 
+  // Skip queued and processed nodes.
+  if ($node->hasField('reliefweb_job_tagger_status')) {
+    if ($node->reliefweb_job_tagger_status->value == 'queued' || $node->reliefweb_job_tagger_status->value == 'processed') {
+      return;
+    }
+  }
+
   if ($node->moderation_status->value != 'pending') {
     $node->set('reliefweb_job_tagger_status', '');
     return;
@@ -208,8 +251,11 @@ function reliefweb_job_tagger_node_presave(EntityInterface $node) {
 
   // Queue node when status is empty.
   if ($node->reliefweb_job_tagger_status->isEmpty()) {
-    $node->setNewRevision(FALSE);
-    $node->set('reliefweb_job_tagger_status', 'queue');
+    $node->set('reliefweb_job_tagger_status', 'queued');
+
+    $log_message = $node->getRevisionLogMessage();
+    $log_message .= (empty($log_message) ? '' : ' ') . 'Job has been queued for tagging.';
+    $node->setRevisionLogMessage($log_message);
   }
 }
 
@@ -231,12 +277,8 @@ function reliefweb_job_tagger_entity_after_save(EntityInterface $entity) {
   }
 
   /** @var \Drupal\node\Entity\Node $entity */
-  if ($entity->hasField('reliefweb_job_tagger_status') && $entity->get('reliefweb_job_tagger_status')->value == 'queue') {
+  if ($entity->hasField('reliefweb_job_tagger_status') && $entity->get('reliefweb_job_tagger_status')->value == 'queued') {
     reliefweb_job_tagger_queue_job($entity);
-
-    $entity->set('reliefweb_job_tagger_status', 'queued');
-    $entity->setRevisionLogMessage('Job has been queued for tagging');
-    $entity->save();
   }
 }
 
