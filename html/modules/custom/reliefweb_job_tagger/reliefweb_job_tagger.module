@@ -218,6 +218,13 @@ function reliefweb_job_tagger_node_presave(EntityInterface $node) {
     return;
   }
 
+  // Skip queued and processed nodes.
+  if ($node->hasField('reliefweb_job_tagger_status')) {
+    if ($node->reliefweb_job_tagger_status->value == 'queued' || $node->reliefweb_job_tagger_status->value == 'processed') {
+      return;
+    }
+  }
+
   if ($node->moderation_status->value != 'pending') {
     $node->set('reliefweb_job_tagger_status', '');
     return;
