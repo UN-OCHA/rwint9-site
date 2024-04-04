@@ -24,6 +24,8 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
     return;
   }
 
+  $skip = FALSE;
+
   // Display AI info for editors.
   if ($form_id == 'node_job_edit_form') {
     $entity = $form_state->getFormObject()->getEntity();
@@ -40,19 +42,29 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
         ];
       }
     }
+
+    // Skip when editing a job that already has a career category that was not
+    // added via the AI.
+    // That includes all the jobs before the deployment of the AI tagging since
+    // the career category field is mandatory.
+    $skip = !$entity->get('field_career_categories')->isEmpty() &&
+            $entity->get('reliefweb_job_tagger_status')->isEmpty();
   }
 
   // Check permissions.
   $user = \Drupal::currentUser();
   if ($user->hasPermission('bypass ocha ai job tag')) {
-    // Make fields mandatory.
-    $form['field_career_categories']['widget']['#required'] = TRUE;
-
-    return;
+    $skip = TRUE;
   }
 
   if (!$user->hasPermission('enforce ocha ai job tag')) {
-    // Make fields mandatory.
+    $skip = TRUE;
+  }
+
+  if ($skip) {
+    // Ensure the field is mandatory because we cannot do that at the field
+    // definition level. It indeed needs to be optional so that it can be
+    // ignored when it is to be filled by the AI.
     $form['field_career_categories']['widget']['#required'] = TRUE;
 
     return;
