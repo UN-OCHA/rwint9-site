@@ -184,28 +184,14 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
   protected function getRelevantTerm($vocabulary, $data, $limit) {
     $storage = $this->entityTypeManager->getStorage('taxonomy_term');
 
-    if ($limit == 1) {
-      $first = array_keys($data);
-      $first = reset($first);
-      $terms = $storage->loadByProperties([
-        'name' => $first,
-        'vid' => $vocabulary,
-      ]);
-      return reset($terms);
-    }
-
     $items = $this->getTopNumTerms($data, $limit);
-    $result = [];
 
-    foreach ($items as $item) {
-      $terms = $storage->loadByProperties([
-        'name' => $item,
-        'vid' => $vocabulary,
-      ]);
-      $result[] = reset($terms);
-    }
+    $terms = $storage->loadByProperties([
+      'name' => $items,
+      'vid' => $vocabulary,
+    ]);
 
-    return $result;
+    return $limit === 1 ? reset($terms) : $terms;
   }
 
   /**
