@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5cf0eed11a737ef9f6be6792f523d26a",
+    "content-hash": "1091025afc1a969b3c206fc85dbbf133",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -15810,16 +15810,16 @@
         },
         {
             "name": "unocha/ocha_ai",
-            "version": "dev-RW-931-tagger-settings",
+            "version": "dev-use-cache-for-embeddings",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_ai.git",
-                "reference": "096a40d5c4a2d9d8c4ab7d7b9531cde840a232d5"
+                "reference": "5b38a820ebb813f6367ad1fc5bee1026bb2a4544"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/096a40d5c4a2d9d8c4ab7d7b9531cde840a232d5",
-                "reference": "096a40d5c4a2d9d8c4ab7d7b9531cde840a232d5",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/5b38a820ebb813f6367ad1fc5bee1026bb2a4544",
+                "reference": "5b38a820ebb813f6367ad1fc5bee1026bb2a4544",
                 "shasum": ""
             },
             "require": {
@@ -15850,9 +15850,9 @@
             "description": "OCHA AI module",
             "support": {
                 "issues": "https://github.com/UN-OCHA/ocha_ai/issues",
-                "source": "https://github.com/UN-OCHA/ocha_ai/tree/RW-931-tagger-settings"
+                "source": "https://github.com/UN-OCHA/ocha_ai/tree/use-cache-for-embeddings"
             },
-            "time": "2024-04-04T01:58:43+00:00"
+            "time": "2024-04-04T09:58:28+00:00"
         },
         {
             "name": "unocha/ocha_monitoring",
