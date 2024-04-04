@@ -62,7 +62,7 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
     $nid = $data->nid;
 
     if (empty($nid)) {
-      \Drupal::logger('deubg')->notice('no nid');
+      \Drupal::logger('debug')->notice('no nid');
       return;
     }
 
@@ -70,12 +70,12 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
     $node = $this->entityTypeManager->getStorage('node')->load($nid);
 
     if (!$node || $node->bundle() !== 'job') {
-      \Drupal::logger('deubg')->notice('no bundle');
+      \Drupal::logger('debug')->notice('no bundle');
       return;
     }
 
     if ($node->body->isEmpty()) {
-      \Drupal::logger('deubg')->notice('no body');
+      \Drupal::logger('debug')->notice('no body');
       return;
     }
 
