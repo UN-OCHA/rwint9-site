@@ -70,6 +70,10 @@ function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterf
     return;
   }
 
+  // Add a validation callback so we can check if the career categories field
+  // is set for trusted users who selected a source they are trusted for.
+  $form['#validate'][] = 'reliefweb_job_tagger_validate_mandatory_fields';
+
   $settings = \Drupal::service('ocha_ai_tag.tagger')->getSettings();
 
   if (!empty($settings['form']['instructions']['value'])) {
@@ -160,6 +164,27 @@ function reliefweb_job_tagger_get_trusted_organizations($account = NULL) {
   $sources = array_keys($sources);
 
   return $sources;
+}
+
+/**
+ * Validate mandatory fields.
+ */
+function reliefweb_job_tagger_validate_mandatory_fields($form, FormStateInterface $form_state) {
+  $trusted_sources = reliefweb_job_tagger_get_trusted_organizations();
+  $source = $form_state->getValue(['field_source', 0, 'target_id']);
+
+  // If the selected source is a trusted source, then the career category field
+  // is mandatory since it will not be processed by the AI.
+  //
+  // @see reliefweb_job_tagger_form_node_form_alter().
+  if (!empty($trusted_sources) && !empty($source) && in_array($source, $trusted_sources)) {
+    // Check if a career category was selected.
+    if (!$form_state->hasValue(['field_career_categories', 0, 'target_id'])) {
+      $form_state->setError($form['field_career_categories']['widget'], t('@name field is required.', [
+        '@name' => $form['field_career_categories']['widget']['#title'],
+      ]));
+    }
+  }
 }
 
 /**
