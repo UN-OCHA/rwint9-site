@@ -3,6 +3,7 @@ defaults:
     instructions:
       value: ''
       format: markdown_editor
+    feedback: both
   plugins:
     completion:
       plugin_id: aws_bedrock
