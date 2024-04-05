@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c73583c1b6a85d03777ff408d4fc915e",
+    "content-hash": "df2116fb4ac9a2a987eeec5a0c0689b7",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -3838,7 +3838,7 @@
                 "shasum": "fc8ea60619b6b4682bade340e13fb4565d3a7e0c"
             },
             "require": {
-                "drupal/core": "^9.1 || ^10"
+                "drupal/core": "^10"
             },
             "type": "drupal-module",
             "extra": {
@@ -4037,7 +4037,7 @@
                 "shasum": "c25246747dac4372c7d5a5a5fd0f276d9e468eff"
             },
             "require": {
-                "drupal/core": "^9.3 || ^10",
+                "drupal/core": "^10",
                 "drupal/mailsystem": "^4"
             },
             "require-dev": {
@@ -4740,7 +4740,7 @@
                 "shasum": "77906ae731878b68a181f82b073617b798e5f110"
             },
             "require": {
-                "drupal/core": "^9.3 || ^10",
+                "drupal/core": "^10",
                 "enshrined/svg-sanitize": ">=0.15 <1.0"
             },
             "type": "drupal-module",
@@ -4888,7 +4888,7 @@
                 "shasum": "9ea9eee91cf75f21fcc939704baa6a7ec10d7748"
             },
             "require": {
-                "drupal/core": "^8.9 || ^9 || ^10"
+                "drupal/core": "^10"
             },
             "type": "drupal-module",
             "extra": {
@@ -15810,16 +15810,16 @@
         },
         {
             "name": "unocha/ocha_ai",
-            "version": "v1.0.8",
+            "version": "v1.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_ai.git",
-                "reference": "15711ef743b512fa0468dacb7d479de3bc67e925"
+                "reference": "87ed1094bf017eff46a34c2f4da45446b6f645eb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/15711ef743b512fa0468dacb7d479de3bc67e925",
-                "reference": "15711ef743b512fa0468dacb7d479de3bc67e925",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/87ed1094bf017eff46a34c2f4da45446b6f645eb",
+                "reference": "87ed1094bf017eff46a34c2f4da45446b6f645eb",
                 "shasum": ""
             },
             "require": {
@@ -15850,9 +15850,9 @@
             "description": "OCHA AI module",
             "support": {
                 "issues": "https://github.com/UN-OCHA/ocha_ai/issues",
-                "source": "https://github.com/UN-OCHA/ocha_ai/tree/v1.0.8"
+                "source": "https://github.com/UN-OCHA/ocha_ai/tree/v1.1.0"
             },
-            "time": "2024-03-26T14:05:46+00:00"
+            "time": "2024-04-04T12:19:38+00:00"
         },
         {
             "name": "unocha/ocha_monitoring",
