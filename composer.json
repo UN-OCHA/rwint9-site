@@ -21,7 +21,7 @@
     ],
     "require": {
         "php": ">=8.2",
-        "composer/installers": "^1.12",
+        "composer/installers": "^2",
         "cweagans/composer-patches": "^1.7",
         "drupal/admin_denied": "^2.0",
         "drupal/allowed_formats": "^3",
@@ -70,9 +70,9 @@
         "reliefweb/simple-autocomplete": "^v1.3",
         "reliefweb/simple-datepicker": "^v1.3",
         "symfony/uid": "^6.2",
-        "unocha/common_design": "^9",
+        "unocha/common_design": "^9.4",
         "unocha/gtm_barebones": "^1.1",
-        "unocha/ocha_ai": "^1.0",
+        "unocha/ocha_ai": "^1.0.8",
         "unocha/ocha_monitoring": "^1.0",
         "webflo/drupal-finder": "^1.2.2"
     },
