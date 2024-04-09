@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "524a144464e30ea4bbaae9715e748cc8",
+    "content-hash": "5afd17b8f5fbd8e8a5fc388ff5b478a5",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -4165,7 +4165,7 @@
             "extra": {
                 "drupal": {
                     "version": "8.x-1.12",
-                    "datestamp": "1696776683",
+                    "datestamp": "1712319355",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
@@ -10924,8 +10924,8 @@
                 "stylesheet"
             ],
             "support": {
-                "issues": "https://github.com/sabberworm/PHP-CSS-Parser/issues",
-                "source": "https://github.com/sabberworm/PHP-CSS-Parser/tree/8.4.0"
+                "issues": "https://github.com/MyIntervals/PHP-CSS-Parser/issues",
+                "source": "https://github.com/MyIntervals/PHP-CSS-Parser/tree/8.4.0"
             },
             "time": "2021-12-11T13:40:54+00:00"
         },
@@ -15809,6 +15809,33 @@
             "time": "2024-03-19T09:01:42+00:00"
         },
         {
+            "name": "unocha/gtm_barebones",
+            "version": "1.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/UN-OCHA/gtm_barebones.git",
+                "reference": "fe2ed59384bf8e8575c83c9a30abab08e53180db"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/UN-OCHA/gtm_barebones/zipball/fe2ed59384bf8e8575c83c9a30abab08e53180db",
+                "reference": "fe2ed59384bf8e8575c83c9a30abab08e53180db",
+                "shasum": ""
+            },
+            "require": {
+                "drupal/core": "^9.5 || ^10",
+                "php": ">=8.1"
+            },
+            "type": "drupal-module",
+            "notification-url": "https://packagist.org/downloads/",
+            "description": "OCHA fork of GTM Barebones.",
+            "support": {
+                "issues": "https://github.com/UN-OCHA/gtm_barebones/issues",
+                "source": "https://github.com/UN-OCHA/gtm_barebones/tree/1.1.1"
+            },
+            "time": "2024-02-16T11:12:44+00:00"
+        },
+        {
             "name": "unocha/ocha_ai",
             "version": "v1.1.1",
             "source": {
@@ -16732,12 +16759,6 @@
                 "url": "https://git.drupalcode.org/project/dtt/",
                 "reference": "9ef44f5cd5eef942c84f2d2ffd21734944d566f8"
             },
-            "dist": {
-                "type": "zip",
-                "url": "https://gitlab.com/api/v4/projects/weitzman%2Fdrupal-test-traits/repository/archive.zip?sha=9ef44f5cd5eef942c84f2d2ffd21734944d566f8",
-                "reference": "9ef44f5cd5eef942c84f2d2ffd21734944d566f8",
-                "shasum": ""
-            },
             "require": {
                 "php": ">=8.1"
             },
@@ -16793,5 +16814,5 @@
         "php": ">=8.2"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.3.0"
 }
