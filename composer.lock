@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c73583c1b6a85d03777ff408d4fc915e",
+    "content-hash": "5afd17b8f5fbd8e8a5fc388ff5b478a5",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -3838,7 +3838,7 @@
                 "shasum": "fc8ea60619b6b4682bade340e13fb4565d3a7e0c"
             },
             "require": {
-                "drupal/core": "^9.1 || ^10"
+                "drupal/core": "^10"
             },
             "type": "drupal-module",
             "extra": {
@@ -4037,7 +4037,7 @@
                 "shasum": "c25246747dac4372c7d5a5a5fd0f276d9e468eff"
             },
             "require": {
-                "drupal/core": "^9.3 || ^10",
+                "drupal/core": "^10",
                 "drupal/mailsystem": "^4"
             },
             "require-dev": {
@@ -4165,7 +4165,7 @@
             "extra": {
                 "drupal": {
                     "version": "8.x-1.12",
-                    "datestamp": "1696776683",
+                    "datestamp": "1712319355",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
@@ -4740,7 +4740,7 @@
                 "shasum": "77906ae731878b68a181f82b073617b798e5f110"
             },
             "require": {
-                "drupal/core": "^9.3 || ^10",
+                "drupal/core": "^10",
                 "enshrined/svg-sanitize": ">=0.15 <1.0"
             },
             "type": "drupal-module",
@@ -4888,7 +4888,7 @@
                 "shasum": "9ea9eee91cf75f21fcc939704baa6a7ec10d7748"
             },
             "require": {
-                "drupal/core": "^8.9 || ^9 || ^10"
+                "drupal/core": "^10"
             },
             "type": "drupal-module",
             "extra": {
@@ -10925,8 +10925,8 @@
                 "stylesheet"
             ],
             "support": {
-                "issues": "https://github.com/sabberworm/PHP-CSS-Parser/issues",
-                "source": "https://github.com/sabberworm/PHP-CSS-Parser/tree/8.4.0"
+                "issues": "https://github.com/MyIntervals/PHP-CSS-Parser/issues",
+                "source": "https://github.com/MyIntervals/PHP-CSS-Parser/tree/8.4.0"
             },
             "time": "2021-12-11T13:40:54+00:00"
         },
@@ -15810,17 +15810,44 @@
             "time": "2024-03-19T09:01:42+00:00"
         },
         {
-            "name": "unocha/ocha_ai",
-            "version": "v1.0.8",
+            "name": "unocha/gtm_barebones",
+            "version": "1.1.1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/UN-OCHA/ocha_ai.git",
-                "reference": "15711ef743b512fa0468dacb7d479de3bc67e925"
+                "url": "https://github.com/UN-OCHA/gtm_barebones.git",
+                "reference": "fe2ed59384bf8e8575c83c9a30abab08e53180db"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/15711ef743b512fa0468dacb7d479de3bc67e925",
-                "reference": "15711ef743b512fa0468dacb7d479de3bc67e925",
+                "url": "https://api.github.com/repos/UN-OCHA/gtm_barebones/zipball/fe2ed59384bf8e8575c83c9a30abab08e53180db",
+                "reference": "fe2ed59384bf8e8575c83c9a30abab08e53180db",
+                "shasum": ""
+            },
+            "require": {
+                "drupal/core": "^9.5 || ^10",
+                "php": ">=8.1"
+            },
+            "type": "drupal-module",
+            "notification-url": "https://packagist.org/downloads/",
+            "description": "OCHA fork of GTM Barebones.",
+            "support": {
+                "issues": "https://github.com/UN-OCHA/gtm_barebones/issues",
+                "source": "https://github.com/UN-OCHA/gtm_barebones/tree/1.1.1"
+            },
+            "time": "2024-02-16T11:12:44+00:00"
+        },
+        {
+            "name": "unocha/ocha_ai",
+            "version": "v1.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/UN-OCHA/ocha_ai.git",
+                "reference": "f19fc22e398a186403dd50ca38f0c0bde64e5d4e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/f19fc22e398a186403dd50ca38f0c0bde64e5d4e",
+                "reference": "f19fc22e398a186403dd50ca38f0c0bde64e5d4e",
                 "shasum": ""
             },
             "require": {
@@ -15851,9 +15878,9 @@
             "description": "OCHA AI module",
             "support": {
                 "issues": "https://github.com/UN-OCHA/ocha_ai/issues",
-                "source": "https://github.com/UN-OCHA/ocha_ai/tree/v1.0.8"
+                "source": "https://github.com/UN-OCHA/ocha_ai/tree/v1.1.1"
             },
-            "time": "2024-03-26T14:05:46+00:00"
+            "time": "2024-04-08T07:24:26+00:00"
         },
         {
             "name": "unocha/ocha_monitoring",
@@ -16733,12 +16760,6 @@
                 "url": "https://git.drupalcode.org/project/dtt/",
                 "reference": "9ef44f5cd5eef942c84f2d2ffd21734944d566f8"
             },
-            "dist": {
-                "type": "zip",
-                "url": "https://gitlab.com/api/v4/projects/weitzman%2Fdrupal-test-traits/repository/archive.zip?sha=9ef44f5cd5eef942c84f2d2ffd21734944d566f8",
-                "reference": "9ef44f5cd5eef942c84f2d2ffd21734944d566f8",
-                "shasum": ""
-            },
             "require": {
                 "php": ">=8.1"
             },
@@ -16794,5 +16815,5 @@
         "php": ">=8.2"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.3.0"
 }
