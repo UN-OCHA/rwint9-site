@@ -23,7 +23,7 @@ module:
   file_mdm: 0
   filter: 0
   geofield: 0
-  google_tag: 0
+  gtm_barebones: 0
   guidelines: 0
   image: 0
   imageapi_optimize: 0
