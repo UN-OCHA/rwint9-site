@@ -92,7 +92,10 @@ class Report extends ContentProcessorPluginBase {
     $this->setTermField($node, 'field_disaster_type', 'disaster_type', $data['disaster_type'] ?? []);
     $this->setTermField($node, 'field_theme', 'theme', $data['theme'] ?? []);
     $this->setDateField($node, 'field_embargo_date', $data['embargoed'] ?? '', FALSE);
-    $this->setField($node, 'field_notify', $provider->getEmailsToNotify() ?: NULL);
+
+    // Emails to notify when the document is published.
+    $emails = implode(',', $data['notify'] ?? $provider->getEmailsToNotify() ?? []);
+    $this->setField($node, 'field_notify', $emails ?: NULL);
 
     // Add the optional files (attachments and image).
     $this->setReliefWebFileField($node, 'field_file', $data['file'] ?? []);
