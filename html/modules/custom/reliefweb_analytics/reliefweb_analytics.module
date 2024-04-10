@@ -16,23 +16,16 @@ use Drupal\reliefweb_utility\Helpers\EntityHelper;
 /**
  * Add datalayer dimensions for google tag manager.
  *
- * Note: the google_tag module store snippets on files for caching even when
- * instructed to add the snippets inline. As a result we cannot easily add
- * custom dimensions per entity so we inject them ourselves here.
+ * Note: the google_tag module, which we used previously, stored snippets on
+ * files for caching even when instructed to add the snippets inline. As a
+ * result we could not easily add custom dimensions per entity so we injected
+ * them ourselves here.
  *
- * @todo if some dataLayer snippet is added via the UI or whatever, then this
- * may need some refactoring to avoid overriding the dataLayer.
+ * @todo Revise this approach. Note that if some dataLayer snippet is added via
+ * the UI or whatever, then this may need some refactoring to avoid overriding
+ * the dataLayer.
  */
 function reliefweb_analytics_page_attachments(array &$attachments) {
-  $container = \Drupal::entityTypeManager()
-    ?->getStorage('google_tag_container')
-    ?->load('default');
-
-  // Check if we should add the custom dimensions.
-  if (!isset($container) || !$container->insertSnippet()) {
-    return;
-  }
-
   $dimensions = [];
   $dimensions += reliefweb_analytics_get_entity_dimensions();
   $dimensions += reliefweb_analytics_get_user_dimensions();
@@ -45,13 +38,11 @@ function reliefweb_analytics_page_attachments(array &$attachments) {
     // Add the datalayer javascript.
     $datalayer_json = Json::encode($datalayer);
     if (!empty($datalayer_json)) {
-      $variable = $container->variableClean('data_layer');
-      $content = $variable . ' = [' . $datalayer_json . '];';
+      $content = 'dataLayer = [' . $datalayer_json . '];';
 
       $attachments['#attached']['html_head'][] = [
         [
           '#type' => 'html_tag',
-          // @see \Drupal\google_tag\Entity\ContainerManager::getScriptAttachments()
           // Try to insert that just before the google tag script.
           '#weight' => 8,
           '#tag' => 'script',
