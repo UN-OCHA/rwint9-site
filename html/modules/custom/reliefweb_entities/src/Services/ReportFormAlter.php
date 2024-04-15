@@ -264,15 +264,32 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
       FormHelper::removeOptions($form, 'field_ocha_product', [12351]);
     }
 
-    // Only display the OCHA product when OCHA is selected.
-    $condition = [
-      'select[name="field_source[]"]' => ['value' => ['1503']],
-    ];
-    // We put the visibility state on the container to avoid styling issues with
-    // the surrounding elements but we need to to put the required state on the
-    // widget element for it to work properly.
-    $form['field_ocha_product']['#states']['visible'] = $condition;
-    $widget['#states']['required'] = $condition;
+    /* Temporarily disabled on 2024/04/12.
+     *
+     * The changes from https://www.drupal.org/project/drupal/issues/1149078
+     * are not compatible with the way "reliefweb_form/drupal.states" compared
+     * values in the array.
+     * Drupal checks exact match between the values of the state condition and
+     * the selected values of the form element while our library was just
+     * checking that the values of the state condition were in the list of the
+     * selected values.
+     * Drupal doesn't currently have a way to handle this use case so to avoid
+     * issues we always display the OCHA product field.
+     * It's ignored when OCHA is not one of the selected sources and is
+     * mandatory if selected.
+     *
+     * @see ::validateOchaProductField()
+     *
+     * // Only display the OCHA product when OCHA is selected.
+     * $condition = [
+     *  'select[name="field_source[]"]' => ['value' => ['1503']],
+     * ];
+     * // We put the visibility state on the container to avoid styling issues
+     * // with the surrounding elements but we need to to put the required state
+     * // on the widget element for it to work properly.
+     * $form['field_ocha_product']['#states']['visible'] = $condition;
+     * $widget['#states']['required'] = $condition;
+     */
 
     // Remove the empty option.
     unset($widget['#options']['_none']);
