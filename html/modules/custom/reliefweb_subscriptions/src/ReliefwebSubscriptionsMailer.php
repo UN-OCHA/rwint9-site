@@ -538,7 +538,7 @@ class ReliefwebSubscriptionsMailer {
       // can help clear a back-log of 38,000 mails just a bit faster.
       $timer_elapsed = microtime(TRUE) - $timer_start;
       if ($timer_elapsed < 1) {
-        usleep((1 - $timer_elapsed) * 1e+6);
+        usleep((int) ((1 - $timer_elapsed) * 1e+6));
       }
     }
 
