@@ -1,0 +1,4 @@
+ai-message:
+  css:
+    theme:
+      components/ai-message/ai-message.css: {}

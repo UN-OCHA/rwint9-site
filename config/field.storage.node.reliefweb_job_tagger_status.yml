@@ -1,0 +1,32 @@
+uuid: eff4e934-a8c8-4c26-87dd-3e86f9311a78
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - options
+_core:
+  default_config_hash: bGdwPWYjAlDGCrUl508wL_rTVtBV2UWW1UJtbe5PFB8
+id: node.reliefweb_job_tagger_status
+field_name: reliefweb_job_tagger_status
+entity_type: node
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: queue
+      label: queue
+    -
+      value: queued
+      label: queued
+    -
+      value: processed
+      label: processed
+  allowed_values_function: ''
+module: options
+locked: true
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

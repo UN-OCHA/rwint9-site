@@ -15,6 +15,7 @@ dependencies:
     - node
     - reliefweb_bookmarks
     - reliefweb_form
+    - reliefweb_job_tagger
     - reliefweb_moderation
     - reliefweb_subscriptions
     - reliefweb_user_posts
@@ -35,6 +36,7 @@ permissions:
   - 'delete own training content'
   - 'edit own job content'
   - 'edit own training content'
+  - 'enforce ocha ai job tag'
   - 'manage own subscriptions'
   - 'use enhanced input forms'
   - 'use text format markdown'
