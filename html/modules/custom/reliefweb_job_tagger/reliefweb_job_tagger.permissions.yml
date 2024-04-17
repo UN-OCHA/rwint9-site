@@ -1,0 +1,7 @@
+enforce ocha ai job tag:
+  title: 'Enforce OCHA AI Job tag'
+  description: 'Enforce the use of OCHA AI Job tag.'
+
+bypass ocha ai job tag:
+  title: 'Bypass OCHA AI Job tag'
+  description: 'Allow users to ignore Access OCHA AI Chat advanced features.'
