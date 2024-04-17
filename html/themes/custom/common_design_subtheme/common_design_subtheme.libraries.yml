@@ -249,11 +249,6 @@ rw-key-content:
     theme:
       components/rw-key-content/rw-key-content.css: {}
 
-rw-key-figures:
-  css:
-    theme:
-      components/rw-key-figures/rw-key-figures.css: {}
-
 rw-links:
   css:
     theme:
