@@ -3838,7 +3838,7 @@
                 "shasum": "fc8ea60619b6b4682bade340e13fb4565d3a7e0c"
             },
             "require": {
-                "drupal/core": "^9.1 || ^10"
+                "drupal/core": "^10"
             },
             "type": "drupal-module",
             "extra": {
@@ -4037,7 +4037,7 @@
                 "shasum": "c25246747dac4372c7d5a5a5fd0f276d9e468eff"
             },
             "require": {
-                "drupal/core": "^9.3 || ^10",
+                "drupal/core": "^10",
                 "drupal/mailsystem": "^4"
             },
             "require-dev": {
@@ -4740,7 +4740,7 @@
                 "shasum": "77906ae731878b68a181f82b073617b798e5f110"
             },
             "require": {
-                "drupal/core": "^9.3 || ^10",
+                "drupal/core": "^10",
                 "enshrined/svg-sanitize": ">=0.15 <1.0"
             },
             "type": "drupal-module",
@@ -4888,7 +4888,7 @@
                 "shasum": "9ea9eee91cf75f21fcc939704baa6a7ec10d7748"
             },
             "require": {
-                "drupal/core": "^8.9 || ^9 || ^10"
+                "drupal/core": "^10"
             },
             "type": "drupal-module",
             "extra": {
@@ -15807,16 +15807,16 @@
         },
         {
             "name": "unocha/gtm_barebones",
-            "version": "1.1.1",
+            "version": "1.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/gtm_barebones.git",
-                "reference": "fe2ed59384bf8e8575c83c9a30abab08e53180db"
+                "reference": "80f58df7e9169d531bd840f0ecbcc72184d19bf6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/gtm_barebones/zipball/fe2ed59384bf8e8575c83c9a30abab08e53180db",
-                "reference": "fe2ed59384bf8e8575c83c9a30abab08e53180db",
+                "url": "https://api.github.com/repos/UN-OCHA/gtm_barebones/zipball/80f58df7e9169d531bd840f0ecbcc72184d19bf6",
+                "reference": "80f58df7e9169d531bd840f0ecbcc72184d19bf6",
                 "shasum": ""
             },
             "require": {
@@ -15828,9 +15828,9 @@
             "description": "OCHA fork of GTM Barebones.",
             "support": {
                 "issues": "https://github.com/UN-OCHA/gtm_barebones/issues",
-                "source": "https://github.com/UN-OCHA/gtm_barebones/tree/1.1.1"
+                "source": "https://github.com/UN-OCHA/gtm_barebones/tree/1.1.2"
             },
-            "time": "2024-02-16T11:12:44+00:00"
+            "time": "2024-04-12T06:49:31+00:00"
         },
         {
             "name": "unocha/ocha_ai",
