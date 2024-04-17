@@ -13,10 +13,6 @@
 .rw-river--disasters .view-more {
   margin-top: 16px;
 }
-/* Key Figures on country page */
-.rw-key-figures .view-more {
-  margin-top: 16px;
-}
 /* Clear the floating of the list items. */
 .view-more:after {
   display: block;
