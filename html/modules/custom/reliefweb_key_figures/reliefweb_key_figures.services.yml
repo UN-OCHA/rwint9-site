@@ -1,4 +1,0 @@
-services:
-  reliefweb_key_figures.client:
-    class: Drupal\reliefweb_key_figures\Services\KeyFiguresClient
-    arguments: ['@cache.default', '@config.factory', '@datetime.time', '@http_client', '@language_manager', '@logger.factory', '@request_stack', '@string_translation']
