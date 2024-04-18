@@ -441,6 +441,7 @@ class ReliefwebSubscriptionsMailer {
     static $from;
     static $language;
     static $batch_size;
+    static $throttle;
 
     if (!isset($from)) {
       $from = $this->config('system.site')->get('mail') ?? ini_get('sendmail_from');
@@ -454,6 +455,10 @@ class ReliefwebSubscriptionsMailer {
       $language = $this->languageDefault->get()->getId();
       // Number of emails to send by second.
       $batch_size = $this->state->get('reliefweb_subscriptions_mail_batch_size', 40);
+
+      // Do not throttle if using the amazon_ses module since it does that by
+      // itself.
+      $throttle = $this->config('mailsystem.settings')?->get('defaults.sender') !== 'amazon_ses_mail';
     }
 
     $sid = $subscription['id'];
@@ -537,8 +542,8 @@ class ReliefwebSubscriptionsMailer {
       // batch. Probably not strictly necessary, but if we *do* go fast this
       // can help clear a back-log of 38,000 mails just a bit faster.
       $timer_elapsed = microtime(TRUE) - $timer_start;
-      if ($timer_elapsed < 1) {
-        usleep((1 - $timer_elapsed) * 1e+6);
+      if ($throttle && $timer_elapsed < 1) {
+        usleep((int) ((1 - $timer_elapsed) * 1e+6));
       }
     }
 
