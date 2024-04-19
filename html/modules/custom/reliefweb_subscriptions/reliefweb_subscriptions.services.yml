@@ -2,8 +2,15 @@ services:
   reliefweb_subscriptions.mailer:
     class: \Drupal\reliefweb_subscriptions\ReliefwebSubscriptionsMailer
     arguments: ['@config.factory', '@database', '@entity_field.manager', '@entity.repository', '@entity_type.manager', '@state', '@datetime.time', '@reliefweb_api.client', '@private_key', '@renderer', '@plugin.manager.mail', '@language.default', '@logger.factory', '@theme.initialization', '@theme.manager',  '@theme_handler']
+
   # Override the amazon_ses message builder so we can add extra headers and
   # override the text version of the email.
   amazon_ses.message_builder:
     class: Drupal\reliefweb_subscriptions\AmazonSesMessageBuilder
     arguments: ['@logger.channel.amazon_ses', '@config.factory', '@file_system', '@file.mime_type.guesser']
+
+  # We need to override the logger channel as well so Drupal stops complaining.
+  logger.channel.amazon_ses:
+    class: Drupal\Core\Logger\LoggerChannel
+    factory: logger.factory:get
+    arguments: ['amazon_ses']
