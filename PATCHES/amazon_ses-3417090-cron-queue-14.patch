@@ -1,0 +1,18 @@
+diff --git a/src/Plugin/QueueWorker/AmazonSesMailQueue.php b/src/Plugin/QueueWorker/AmazonSesMailQueue.php
+index dc410504566451d20aec939de6953e6d1a6e9be9..fdc7af32ac6634c51283fb38f0227530a1772735 100644
+--- a/src/Plugin/QueueWorker/AmazonSesMailQueue.php
++++ b/src/Plugin/QueueWorker/AmazonSesMailQueue.php
+@@ -29,7 +29,12 @@ class AmazonSesMailQueue extends QueueWorkerBase implements ContainerFactoryPlug
+       $plugin_definition
+     );
+ 
+-    $instance->setHandler($container->get('amazon_ses.handler'));
++    // Only set the handler if queueing is enabled to avoid an error when
++    // trying to run without config.
++    $enabled = \Drupal::config('amazon_ses.settings')->get('queue');
++    if ($enabled) {
++      $instance->setHandler($container->get('amazon_ses.handler'));
++    }
+ 
+     return $instance;
+   }
