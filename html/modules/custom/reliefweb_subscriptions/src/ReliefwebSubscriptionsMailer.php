@@ -517,7 +517,7 @@ class ReliefwebSubscriptionsMailer {
       // Send current batch of emails in a simple loop.
       foreach ($batch as $subscriber) {
         // Generate the individual unsubscribe link.
-        $unsubscribe = $this->generateUnsubscribeLink($subscriber->uid, $sid);
+        $unsubscribe = $this->generateOneClickUnsubscribeLink($subscriber->uid, $sid);
 
         // Update the body with the unique ubsubscribe link.
         $mail_body = new FormattableMarkup($body, [
@@ -529,7 +529,8 @@ class ReliefwebSubscriptionsMailer {
         $this->mailManager->mail('reliefweb_subscriptions', 'notifications', $subscriber->mail, $language, [
           'headers' => [
             'List-Id'          => $list_id,
-            'List-Unsubscribe' => $unsubscribe,
+            'List-Unsubscribe-Post' => 'List-Unsubscribe=One-Click',
+            'List-Unsubscribe' => '<' . $unsubscribe . '>',
             'X-RW-Category'    => $category,
           ],
           'subject' => $subject,
@@ -1474,6 +1475,77 @@ class ReliefwebSubscriptionsMailer {
   }
 
   /**
+   * Generate a one click unsubscribe link for the given user and subscription.
+   *
+   * @param int $uid
+   *   User id.
+   * @param string $sid
+   *   Subscription id.
+   *
+   * @return string
+   *   Unsubscribe link.
+   */
+  protected function generateOneClickUnsubscribeLink($uid, $sid) {
+    $data = $uid . '-' . $sid;
+    $config = $this->config('reliefweb_subscriptions.settings');
+
+    $method = $config->get('encryption_method') ?? 'aes-128-ctr';
+    $iv_length = openssl_cipher_iv_length($method);
+    $iv = openssl_random_pseudo_bytes($iv_length);
+
+    $salt = Settings::getHashSalt();
+    $encryption_key = $config->get('encryption_key');
+    $signature_key = $this->privateKey->get();
+
+    $encrypted = openssl_encrypt($data, $method, $encryption_key . $salt, OPENSSL_RAW_DATA, $iv);
+    $signature = hash_hmac('sha256', $encrypted, $signature_key . $salt, TRUE);
+
+    $opaque = strtr(base64_encode($iv . $signature . $encrypted), '+/', '-_');
+    $uri = $this->getSchemeAndHttpHost() . '/notifications/unsubscribe/' . $opaque;
+
+    $options = [
+      'absolute' => TRUE,
+    ];
+    $options = $this->addLinkTrackingParameters($sid, $options);
+    $url = Url::fromUri($uri, $options);
+    return $url->toString();
+  }
+
+  /**
+   * Generate a one click unsubscribe link for the given user and subscription.
+   *
+   * @param string $opaque
+   *   Opaque data from the unsubscribe link.
+   *
+   * @return array|false
+   *   FALSE if the message could not be decrypted or an array with the user
+   *   ID and the subscription ID.
+   */
+  public function decryptOneClickUnsubscribeLink(string $opaque) {
+    $raw = base64_decode(strtr($opaque, '-_', '+/'));
+    $config = $this->config('reliefweb_subscriptions.settings');
+
+    $method = $config->get('encryption_method') ?? 'aes-128-ctr';
+    $iv_length = openssl_cipher_iv_length($method);
+
+    $salt = Settings::getHashSalt();
+    $encryption_key = $config->get('encryption_key');
+    $signature_key = $this->privateKey->get();
+
+    $iv = substr($raw, 0, $iv_length);
+    $signature = substr($raw, $iv_length, 32);
+    $encrypted = substr($raw, $iv_length + 32);
+
+    $hash = hash_hmac('sha256', $encrypted, $signature_key . $salt, TRUE);
+    if (!hash_equals($signature, $hash)) {
+      return FALSE;
+    }
+
+    $data = openssl_decrypt($encrypted, $method, $encryption_key . $salt, OPENSSL_RAW_DATA, $iv);
+    return $data ? explode('-', $data, 2) : FALSE;
+  }
+
+  /**
    * Get signature for the unsubscribe links.
    *
    * @param string $path
@@ -1489,7 +1561,7 @@ class ReliefwebSubscriptionsMailer {
   }
 
   /**
-   * Check unsubscribe links.
+   * Check unsubscribe link.
    *
    * @param string $uid
    *   Unsubscribe path.
@@ -1999,7 +2071,7 @@ class ReliefwebSubscriptionsMailer {
       'absolute' => TRUE,
     ]))->toString();
     // Dummy unsubscribe link.
-    $unsubscribe = $this->generateUnsubscribeLink(0, $sid);
+    $unsubscribe = $this->generateOneClickUnsubscribeLink(0, $sid);
 
     // Update the body with the unique ubsubscribe link.
     $body = new FormattableMarkup($body, [
