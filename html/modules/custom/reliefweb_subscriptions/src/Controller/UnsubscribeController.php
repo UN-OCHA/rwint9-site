@@ -200,7 +200,7 @@ class UnsubscribeController extends ControllerBase {
 
     return [
       '#type' => 'inline_template',
-      '#template' => '<p><strong>You have successfully unsubscribed.</strong></p><p>You will not longer receive <em>{{ subscription_label }}</em> notifications.</p><p>{{ message }}</p>',
+      '#template' => '<p><strong>You have successfully unsubscribed.</strong></p><p>You will no longer receive <em>{{ subscription_label }}</em> notifications.</p><p>{{ message }}</p>',
       '#context' => [
         'subscription_label' => $subscriptions[$sid]['name'],
         'message' => $message,
