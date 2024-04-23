@@ -220,6 +220,8 @@ function reliefweb_job_tagger_node_presave(EntityInterface $node) {
 
   // Skip queued and processed nodes.
   if ($node->hasField('reliefweb_job_tagger_status')) {
+    reliefweb_job_tagger_log_manual_changes_to_tagging($node);
+
     if ($node->reliefweb_job_tagger_status->value == 'queued' || $node->reliefweb_job_tagger_status->value == 'processed') {
       return;
     }
@@ -256,6 +258,51 @@ function reliefweb_job_tagger_node_presave(EntityInterface $node) {
     $log_message = $node->getRevisionLogMessage();
     $log_message .= (empty($log_message) ? '' : ' ') . 'Job has been queued for tagging.';
     $node->setRevisionLogMessage($log_message);
+  }
+}
+
+/**
+ * Check for manual changes to the AI tagging and log them.
+ *
+ * @param \Drupal\Entity\EntityInterface $entity
+ *   Changed entity.
+ */
+function reliefweb_job_tagger_log_manual_changes_to_tagging(EntityInterface $entity) {
+  if (!isset($entity->original) || !$entity->original->hasField('reliefweb_job_tagger_status')) {
+    return;
+  }
+  $original = $entity->original;
+
+  // Skip if the original was not processed by the AI.
+  if ($original->reliefweb_job_tagger_status->value !== 'processed') {
+    return;
+  }
+
+  $editor = UserHelper::userHasRoles(['editor']);
+  $logger = \Drupal::logger('reliefweb_job_tagger');
+
+  $fields = [
+    'field_theme',
+    'field_career_categories',
+  ];
+
+  foreach ($fields as $field) {
+    if ($entity->hasField($field) && !$entity->get($field)->equals($original->get($field))) {
+      $old = [];
+      $new = [];
+      foreach ($original->get($field) as $item) {
+        $old[] = $item->entity?->label() ?? $item->target_id;
+      }
+      foreach ($entity->get($field) as $item) {
+        $new[] = $item->entity?->label() ?? $item->target_id;
+      }
+      $logger->info(strtr('Manual change to the @field tagging by @user: @old --> @new', [
+        '@field' => $field,
+        '@user' => $editor ? 'editor' : 'non editor',
+        '@old' => implode(', ', $old),
+        '@new' => implode(', ', $new),
+      ]));
+    }
   }
 }
 
