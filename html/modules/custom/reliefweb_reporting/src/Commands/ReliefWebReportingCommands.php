@@ -177,7 +177,8 @@ class ReliefWebReportingCommands extends DrushCommands {
     $body .= '</body></html>';
 
     // Send the email.
-    if (mail($recipients, $subject, $body, $headers)) {
+    $message = $this->sendMail($from, $recipients, $subject, $body, $headers);
+    if (!empty($message['result'])) {
       $this->logger->info(dt('"@subject" sent to @recipients', [
         '@subject' => $subject,
         '@recipients' => $recipients,
@@ -243,7 +244,7 @@ class ReliefWebReportingCommands extends DrushCommands {
     $headers = [
       'From' => $from,
       'Reply-To' => $from,
-      'Content-Type' => 'multipart/mixed; boundary=GvXjxJ+pjyke8COw',
+      'Content-Type' => 'text/plain; charset=utf-8',
       'Content-Disposition' => 'inline',
       'MIME-Version' => '1.0',
     ];
@@ -276,6 +277,8 @@ class ReliefWebReportingCommands extends DrushCommands {
       ORDER BY n.nid DESC
     ")->fetchAll(\PDO::FETCH_ASSOC);
 
+    $attachments = [];
+
     if (empty($records)) {
       $body = 'No reports posted this week.';
     }
@@ -292,23 +295,18 @@ class ReliefWebReportingCommands extends DrushCommands {
       $csv = trim(stream_get_contents($handle));
       fclose($handle);
 
-      $body = implode("\n", [
-        '--GvXjxJ+pjyke8COw',
-        'Content-Type: text/html',
-        'Content-Disposition: inline',
-        '',
-        "Attachment: $filename",
-        '',
-        '--GvXjxJ+pjyke8COw',
-        'Content-Type: text/csv',
-        "Content-Disposition: attachment; filename=$filename",
-        '',
-        $csv,
-      ]);
+      $body = "Attachment: $filename";
+
+      $attachments[] = [
+        'filecontent' => $csv,
+        'filename' => $filename,
+        'filemime' => 'text/csv',
+      ];
     }
 
     // Send the email.
-    if (mail($recipients, $subject, $body, $headers)) {
+    $message = $this->sendMail($from, $recipients, $subject, $body, $headers, $attachments);
+    if (!empty($message['result'])) {
       $this->logger->info(dt('"@subject" sent to @recipients', [
         '@subject' => $subject,
         '@recipients' => $recipients,
@@ -322,6 +320,36 @@ class ReliefWebReportingCommands extends DrushCommands {
     }
 
     return TRUE;
+  }
+
+  /**
+   * Send an email.
+   *
+   * @param string $from
+   *   From address.
+   * @param string $recipients
+   *   Recipient addresses.
+   * @param string $subject
+   *   Email subjects.
+   * @param string $body
+   *   Email body.
+   * @param array $headers
+   *   Email headers.
+   * @param array $attachments
+   *   Optional attachments.
+   *
+   * @return array
+   *   The message array with a `result` property indicating success or failture
+   *   at the PHP level.
+   */
+  protected function sendMail(string $from, string $recipients, string $subject, string $body, array $headers, array $attachments = []) {
+    $language = $this->languageDefault->get()->getId();
+    return $this->mailManager->mail('reliefweb_reporting', 'reporting', $recipients, $language, [
+      'headers' => $headers,
+      'subject' => $subject,
+      'body' => [$body],
+      'attachments' => $attachments,
+    ], $from, TRUE);
   }
 
 }
