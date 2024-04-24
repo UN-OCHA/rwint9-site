@@ -1,0 +1,3 @@
+from_address: ops@reliefweb.int
+throttle: true
+queue: false
