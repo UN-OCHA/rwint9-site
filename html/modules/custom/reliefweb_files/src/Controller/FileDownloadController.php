@@ -81,7 +81,7 @@ class FileDownloadController extends OriginalFileDownloadController {
     DocstoreClient $docstore_client,
     EntityTypeManagerInterface $entity_type_manager,
     LoggerChannelFactoryInterface $logger_factory,
-    StreamWrapperManagerInterface $stream_wrapper_manager
+    StreamWrapperManagerInterface $stream_wrapper_manager,
   ) {
     parent::__construct($stream_wrapper_manager);
 

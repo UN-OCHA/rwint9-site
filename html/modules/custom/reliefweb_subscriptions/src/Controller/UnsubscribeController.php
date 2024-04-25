@@ -64,7 +64,7 @@ class UnsubscribeController extends ControllerBase {
     RequestStack $request_stack,
     Connection $database,
     EntityTypeManagerInterface $entity_type_manager,
-    ReliefwebSubscriptionsMailer $mailer
+    ReliefwebSubscriptionsMailer $mailer,
   ) {
     $this->account = $account;
     $this->requestStack = $request_stack;
