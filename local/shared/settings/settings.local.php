@@ -177,8 +177,3 @@ if (!empty($no_cache)) {
   $settings['cache']['bins']['page'] = 'cache.backend.null';
   $settings['cache']['bins']['dynamic_page_cache'] = 'cache.backend.null';
 }
-
-$config['reliefweb_api.settings']['api_url'] = 'http://rwint-api-local-site/v1';
-$config['reliefweb_api.settings']['api_url_external'] = 'https://rwint-api-local.test/v1';
-$config['reliefweb_api.settings']['website'] = 'https://rwint-local.test';
-$config['reliefweb_api.settings']['elasticsearch'] = 'http://rwint-api-local-elasticsearch:9200';
