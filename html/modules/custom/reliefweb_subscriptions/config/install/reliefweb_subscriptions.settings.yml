@@ -1,0 +1,4 @@
+# Encryption method for the unsubscribe links.
+encryption_method: 'aes-128-ctr'
+# Encryption key for the unsubscribe links.
+encryption_key:
