@@ -247,13 +247,17 @@ class ReportModeration extends ModerationServiceBase {
       'reference' => [
         '#value' => $this->t('Reference'),
       ],
-      'pending' => [
-        '#value' => $this->t('Pending'),
-      ],
-      'refused' => [
-        '#value' => $this->t('Refused'),
-      ],
     ];
+
+    // Add the extra buttons to manage content submitted via the API.
+    if ($entity->hasField('field_post_api_provider') && !empty($entity->field_post_api_provider?->target_id)) {
+      $buttons['pending'] = [
+        '#value' => $this->t('Pending'),
+      ];
+      $buttons['refused'] = [
+        '#value' => $this->t('Refused'),
+      ];
+    }
 
     // @todo replace with permission.
     if (UserHelper::userHasRoles(['administrator', 'webmaster'])) {
