@@ -97,4 +97,17 @@ class MarkdownHelperTest extends UnitTestCase {
     ];
   }
 
+  /**
+   * @covers \Drupal\reliefweb_utility\Helpers\MarkdownHelper::convertInlinesOnly
+   */
+  public function testConvertInlinesOnly() {
+    $text = "test [link](https://test.test)\n\nthis **not** a paragraph\n\n* list item 1\n* list item 2\n";
+    $expected = "test <a rel=\"noopener noreferrer\" target=\"_blank\" href=\"https://test.test\">link</a>\n\nthis <strong>not</strong> a paragraph\n\n* list item 1\n* list item 2\n";
+    $this->assertEquals($expected, MarkdownHelper::convertInlinesOnly($text));
+
+    $text = "[test]: /test";
+    $expected = "[test]: /test\n";
+    $this->assertEquals($expected, MarkdownHelper::convertInlinesOnly($text));
+  }
+
 }
