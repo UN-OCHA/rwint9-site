@@ -25,6 +25,17 @@ reliefweb_subscriptions.unsubscribe:
   requirements:
     _access: 'TRUE'
     user: \d+
+reliefweb_subscriptions.unsubscribe_one_click:
+  path: '/notifications/unsubscribe/{opaque}'
+  defaults:
+    _controller: '\Drupal\reliefweb_subscriptions\Controller\UnsubscribeController::unsubscribeOneClick'
+    _title: 'Unsubscribe'
+  methods: [POST, GET]
+  options:
+    no_cache: 'TRUE'
+  requirements:
+    _access: 'TRUE'
+    user: \d+
 reliefweb_subscriptions.unsubscription_form:
   path: '/user/{user}/notifications/unsubscribe/{timestamp}/{signature}'
   defaults:
