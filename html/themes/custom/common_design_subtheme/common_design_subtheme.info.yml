@@ -17,7 +17,6 @@ regions:
   sidebar_first: First sidebar
   sidebar_second: Second sidebar
   facets: Facets
-  footer_soft: Soft footer
   footer_navigation: Footer navigation
 
 ###
