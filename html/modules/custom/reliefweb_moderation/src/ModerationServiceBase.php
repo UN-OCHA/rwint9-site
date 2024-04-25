@@ -2566,6 +2566,34 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   }
 
   /**
+   * Get the entity reviewer.
+   *
+   * @param \Drupal\reliefweb_moderation\EntityModeratedInterface $entity
+   *   Entity.
+   *
+   * @return \Drupal\Core\GeneratedLink|null
+   *   Link to the page filtered by the user or NULL if the reviewer couldn't be
+   *   determined.
+   */
+  protected function getEntityReviewerData(EntityModeratedInterface $entity) {
+    $reviewer = $entity->getRevisionUser();
+    if (!isset($reviewer)) {
+      return NULL;
+    }
+
+    $reviewer_label = $reviewer->label();
+    if (empty($reviewer_label)) {
+      return NULL;
+    }
+
+    $reviewer_email = $reviewer->getEmail() ?? $this->t('email missing');
+
+    $parameter = 'selection[reviewer][]';
+    $value = $reviewer->id() . ':' . $reviewer_label . ' (' . $reviewer_email . ')';
+    return $this->getFilterLink($reviewer_label, $parameter, $value);
+  }
+
+  /**
    * Get the revision information for the entity.
    *
    * @param \Drupal\reliefweb_moderation\EntityModeratedInterface $entity

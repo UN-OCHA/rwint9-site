@@ -174,8 +174,15 @@ class ReportModeration extends ModerationServiceBase {
           '@name' => Link::fromTextAndUrl($key_content_data['name'], Url::fromUri('entity:taxonomy_term/' . $key_content_data['tid']))->toString(),
         ]);
       }
-      // Author.
-      $details['author'] = $this->getEntityAuthorData($entity);
+
+      // Author and reviewer.
+      $details['author'] = $this->t('author: @author', [
+        '@author' => $this->getEntityAuthorData($entity),
+      ]);
+      $details['reviewer'] = $this->t('reviewer: @reviewer', [
+        '@reviewer' => $this->getEntityReviewerData($entity),
+      ]);
+
       $data['details'] = array_filter($details);
 
       // Revision information.
