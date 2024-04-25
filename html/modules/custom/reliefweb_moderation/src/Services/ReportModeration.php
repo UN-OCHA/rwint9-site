@@ -47,6 +47,9 @@ class ReportModeration extends ModerationServiceBase {
       'data' => [
         'label' => $this->t('Report'),
       ],
+      'origin' => [
+        'label' => $this->t('Origin'),
+      ],
       'date' => [
         'label' => $this->t('Posted'),
         'type' => 'property',
@@ -180,6 +183,10 @@ class ReportModeration extends ModerationServiceBase {
 
       // Filter out empty data.
       $cells['data'] = array_filter($data);
+
+      // Retrieve the origin of the document.
+      $options = $entity->field_origin->first()->getPossibleOptions();
+      $cells['origin'] = $options[$entity->field_origin->value] ?? $this->t('N/A');
 
       // Date cell.
       $cells['date'] = [
@@ -335,6 +342,7 @@ class ReportModeration extends ModerationServiceBase {
       'headline',
       'bury',
       'key_content',
+      'origin',
     ]);
 
     // Values are hardcoded to avoid the use of a query.

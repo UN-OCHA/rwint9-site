@@ -40,6 +40,8 @@
     {% for id, cell in row %}
       <td{{ create_attribute()
         .addClass([
+          'rw-moderation-table__cell',
+          'rw-moderation-table__cell--' ~ id|clean_class,
         ])
       }}>
         {% if id == 'edit' %}

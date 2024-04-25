@@ -1022,6 +1022,22 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
           'form' => 'omnibox',
           'widget' => 'search',
         ],
+        'origin' => [
+          'type' => 'field',
+          'label' => $this->t('Origin'),
+          'field' => 'field_origin',
+          'column' => 'value',
+          'shortcut' => 'ori',
+          'form' => 'omnibox',
+          'widget' => 'autocomplete',
+          'operator' => 'OR',
+          'values' => [
+            0 => 'URL',
+            1 => 'Submit mailbox',
+            2 => 'ReliefWeb product',
+            3 => 'API',
+          ],
+        ],
         'headline' => [
           'type' => 'field',
           'label' => $this->t('Headline'),
