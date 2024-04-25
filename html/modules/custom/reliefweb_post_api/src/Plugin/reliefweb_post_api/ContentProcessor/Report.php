@@ -85,8 +85,10 @@ class Report extends ContentProcessorPluginBase {
     $this->setTermField($node, 'field_country', 'country', $data['country']);
     $this->setField($node, 'field_primary_country', $node->field_country?->first()?->getValue());
 
+    // Set the origin to "API".
+    $this->setField($node, 'field_origin', 3);
+
     // Set the optional fields.
-    $this->setField($node, 'field_origin', 0);
     $this->setUrlField($node, 'field_origin_notes', $data['origin'] ?? '', $provider->getUrlPattern());
     $this->setTermField($node, 'field_disaster', 'disaster', $data['disaster'] ?? []);
     $this->setTermField($node, 'field_disaster_type', 'disaster_type', $data['disaster_type'] ?? []);
