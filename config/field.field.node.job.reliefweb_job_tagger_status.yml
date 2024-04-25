@@ -1,0 +1,23 @@
+uuid: 1e084105-9ae6-435a-8c64-428e9957508e
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.reliefweb_job_tagger_status
+    - node.type.job
+  module:
+    - options
+_core:
+  default_config_hash: b39BL7pzxGe8ARXfSfgWQ56VdVlrzDeu5QPN0V6FB6U
+id: node.job.reliefweb_job_tagger_status
+field_name: reliefweb_job_tagger_status
+entity_type: node
+bundle: job
+label: 'Job tagger state'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

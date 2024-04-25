@@ -1,0 +1,342 @@
+<?php
+
+/**
+ * @file
+ * OCHA AI Job tagging.
+ */
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\node\Entity\Node;
+use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
+use Drupal\reliefweb_utility\Helpers\UserHelper;
+
+/**
+ * Implements hook_form_HOOK_alter().
+ */
+function reliefweb_job_tagger_form_node_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  $form_ids = [
+    'node_job_edit_form',
+    'node_job_form',
+  ];
+
+  if (!in_array($form_id, $form_ids)) {
+    return;
+  }
+
+  $skip = FALSE;
+
+  // Display AI info for editors.
+  if ($form_id == 'node_job_edit_form') {
+    $entity = $form_state->getFormObject()->getEntity();
+
+    if (UserHelper::userHasRoles(['editor'])) {
+      if ($entity->hasField('reliefweb_job_tagger_info') && !$entity->reliefweb_job_tagger_info->IsEmpty()) {
+        $message = $entity->reliefweb_job_tagger_info->value;
+
+        $form['ai_feedback'] = [
+          '#type' => 'processed_text',
+          '#text' => $message,
+          '#format' => 'html',
+          '#weight' => -90,
+        ];
+      }
+    }
+
+    // Skip when editing a job that already has a career category that was not
+    // added via the AI.
+    // That includes all the jobs before the deployment of the AI tagging since
+    // the career category field is mandatory.
+    $skip = !$entity->get('field_career_categories')->isEmpty() &&
+            $entity->get('reliefweb_job_tagger_status')->isEmpty();
+  }
+
+  // Check permissions.
+  $user = \Drupal::currentUser();
+  if ($user->hasPermission('bypass ocha ai job tag')) {
+    $skip = TRUE;
+  }
+
+  if (!$user->hasPermission('enforce ocha ai job tag')) {
+    $skip = TRUE;
+  }
+
+  if ($skip) {
+    // Ensure the field is mandatory because we cannot do that at the field
+    // definition level. It indeed needs to be optional so that it can be
+    // ignored when it is to be filled by the AI.
+    $form['field_career_categories']['widget']['#required'] = TRUE;
+
+    return;
+  }
+
+  // Add a validation callback so we can check if the career categories field
+  // is set for trusted users who selected a source they are trusted for.
+  $form['#validate'][] = 'reliefweb_job_tagger_validate_mandatory_fields';
+
+  $settings = \Drupal::service('ocha_ai_tag.tagger')->getSettings();
+
+  if (!empty($settings['form']['instructions']['value'])) {
+    // Add message for job posters.
+    $form['ai_message'] = [
+      '#type' => 'fieldset',
+      '#attached' => [
+        'library' => [
+          'reliefweb_job_tagger/ai-message',
+        ],
+      ],
+      '#attributes' => [
+        'class' => [
+          'ai-message-wrapper',
+        ],
+      ],
+      'message' => [
+        '#type' => 'processed_text',
+        '#text' => $settings['form']['instructions']['value'],
+        '#format' => $settings['form']['instructions']['format'] ?? 'html',
+        '#weight' => -90,
+        '#prefix' => '<div class="messages messages--warning cd-alert cd-alert--warning">',
+        '#suffix' => '</div>',
+        '#states' => [],
+      ],
+    ];
+  }
+
+  $sources = reliefweb_job_tagger_get_trusted_organizations($user);
+  if (empty($sources)) {
+    // Non-trusted poster, hide fields.
+    $form['field_career_categories']['#access'] = FALSE;
+    $form['field_theme']['#access'] = FALSE;
+
+    return;
+  }
+
+  // Show and mark fields mandatory for trusted sources.
+  $fields = [
+    'field_career_categories' => 'required',
+    'field_theme' => 'optional',
+  ];
+
+  $conditions = [];
+  foreach ($sources as $source) {
+    $conditions[] = [
+      'value' => $source,
+    ];
+  }
+
+  foreach ($fields as $field => $needed) {
+    if ($needed == 'required') {
+      $form[$field]['#states'] = [
+        'visible' => [
+          'select[name="field_source"]' => $conditions,
+        ],
+        'required' => [
+          'select[name="field_source"]' => $conditions,
+        ],
+      ];
+    }
+    else {
+      $form[$field]['#states'] = [
+        'visible' => [
+          'select[name="field_source"]' => $conditions,
+        ],
+      ];
+    }
+  }
+
+  $form['ai_message']['#states'] = [
+    'invisible' => [
+      'select[name="field_source"]' => $conditions,
+    ],
+  ];
+}
+
+/**
+ * Get a list of trusted sources for a given account.
+ */
+function reliefweb_job_tagger_get_trusted_organizations($account = NULL) {
+  $sources = UserPostingRightsHelper::getUserPostingRights($account);
+  $sources = array_filter($sources, function ($info) {
+    if (isset($info['job']) && $info['job'] == 3) {
+      return TRUE;
+    }
+  });
+  $sources = array_keys($sources);
+
+  return $sources;
+}
+
+/**
+ * Validate mandatory fields.
+ */
+function reliefweb_job_tagger_validate_mandatory_fields($form, FormStateInterface $form_state) {
+  $trusted_sources = reliefweb_job_tagger_get_trusted_organizations();
+  $source = $form_state->getValue(['field_source', 0, 'target_id']);
+
+  // If the selected source is a trusted source, then the career category field
+  // is mandatory since it will not be processed by the AI.
+  //
+  // @see reliefweb_job_tagger_form_node_form_alter().
+  if (!empty($trusted_sources) && !empty($source) && in_array($source, $trusted_sources)) {
+    // Check if a career category was selected.
+    if (!$form_state->hasValue(['field_career_categories', 0, 'target_id'])) {
+      $form_state->setError($form['field_career_categories']['widget'], t('@name field is required.', [
+        '@name' => $form['field_career_categories']['widget']['#title'],
+      ]));
+    }
+  }
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function reliefweb_job_tagger_module_implements_alter(&$implementations, $hook) {
+  switch ($hook) {
+    // Move our hook_entity_type_alter() implementation to the end of the list.
+    case 'node_presave':
+      $group = $implementations['reliefweb_job_tagger'];
+      unset($implementations['reliefweb_job_tagger']);
+      $implementations['reliefweb_job_tagger'] = $group;
+      break;
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave().
+ */
+function reliefweb_job_tagger_node_presave(EntityInterface $node) {
+  // We don't want to react to configuration imports.
+  if (\Drupal::isConfigSyncing()) {
+    return;
+  }
+
+  if (!$node instanceof Node) {
+    return;
+  }
+
+  if ($node->bundle() != 'job') {
+    return;
+  }
+
+  // Skip queued and processed nodes.
+  if ($node->hasField('reliefweb_job_tagger_status')) {
+    reliefweb_job_tagger_log_manual_changes_to_tagging($node);
+
+    if ($node->reliefweb_job_tagger_status->value == 'queued' || $node->reliefweb_job_tagger_status->value == 'processed') {
+      return;
+    }
+  }
+
+  if ($node->moderation_status->value != 'pending') {
+    $node->set('reliefweb_job_tagger_status', '');
+    return;
+  }
+
+  // Check permissions.
+  $user = \Drupal::currentUser();
+  if ($user->hasPermission('bypass ocha ai job tag')) {
+    return;
+  }
+
+  if (!$user->hasPermission('enforce ocha ai job tag')) {
+    return;
+  }
+
+  // Only queue it when fields are empty.
+  if (!$node->field_career_categories->isEmpty()) {
+    return;
+  }
+
+  if (!$node->field_theme->isEmpty()) {
+    return;
+  }
+
+  // Queue node when status is empty.
+  if ($node->reliefweb_job_tagger_status->isEmpty()) {
+    $node->set('reliefweb_job_tagger_status', 'queued');
+
+    $log_message = $node->getRevisionLogMessage();
+    $log_message .= (empty($log_message) ? '' : ' ') . 'Job has been queued for tagging.';
+    $node->setRevisionLogMessage($log_message);
+  }
+}
+
+/**
+ * Check for manual changes to the AI tagging and log them.
+ *
+ * @param \Drupal\Entity\EntityInterface $entity
+ *   Changed entity.
+ */
+function reliefweb_job_tagger_log_manual_changes_to_tagging(EntityInterface $entity) {
+  if (!isset($entity->original) || !$entity->original->hasField('reliefweb_job_tagger_status')) {
+    return;
+  }
+  $original = $entity->original;
+
+  // Skip if the original was not processed by the AI.
+  if ($original->reliefweb_job_tagger_status->value !== 'processed') {
+    return;
+  }
+
+  $editor = UserHelper::userHasRoles(['editor']);
+  $logger = \Drupal::logger('reliefweb_job_tagger');
+
+  $fields = [
+    'field_theme',
+    'field_career_categories',
+  ];
+
+  foreach ($fields as $field) {
+    if ($entity->hasField($field) && !$entity->get($field)->equals($original->get($field))) {
+      $old = [];
+      $new = [];
+      foreach ($original->get($field) as $item) {
+        $old[] = $item->entity?->label() ?? $item->target_id;
+      }
+      foreach ($entity->get($field) as $item) {
+        $new[] = $item->entity?->label() ?? $item->target_id;
+      }
+      $logger->info(strtr('Manual change to the @field tagging by @user: @old --> @new', [
+        '@field' => $field,
+        '@user' => $editor ? 'editor' : 'non editor',
+        '@old' => implode(', ', $old),
+        '@new' => implode(', ', $new),
+      ]));
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_after_save().
+ *
+ * @see \Drupal\reliefweb_entities\BundleEntityStorageInterface
+ */
+function reliefweb_job_tagger_entity_after_save(EntityInterface $entity) {
+  // We don't want to react to configuration imports.
+  if (\Drupal::isConfigSyncing()) {
+    return;
+  }
+
+  $entity_type_id = $entity->getEntityTypeId();
+
+  if ($entity_type_id !== 'node') {
+    return;
+  }
+
+  /** @var \Drupal\node\Entity\Node $entity */
+  if ($entity->hasField('reliefweb_job_tagger_status') && $entity->get('reliefweb_job_tagger_status')->value == 'queued') {
+    reliefweb_job_tagger_queue_job($entity);
+  }
+}
+
+/**
+ * Queue the job for tagging.
+ */
+function reliefweb_job_tagger_queue_job(Node $job) : void {
+  /** @var \Drupal\Core\Queue\QueueInterface $queue */
+  $queue = \Drupal::service('queue')->get('reliefweb_job_tagger');
+
+  $item = new \stdClass();
+  $item->nid = $job->id();
+  $queue->createItem($item);
+}

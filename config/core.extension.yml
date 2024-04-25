@@ -3,6 +3,8 @@ _core:
 module:
   admin_denied: 0
   allowed_formats: 0
+  amazon_ses: 0
+  aws: 0
   block: 0
   book: 0
   breakpoint: 0
@@ -53,6 +55,7 @@ module:
   node: 0
   ocha_ai: 0
   ocha_ai_chat: 0
+  ocha_ai_tag: 0
   ocha_monitoring: 0
   options: 0
   page_cache: 0
@@ -72,6 +75,7 @@ module:
   reliefweb_guidelines: 0
   reliefweb_homepage: 0
   reliefweb_import: 0
+  reliefweb_job_tagger: 0
   reliefweb_meta: 0
   reliefweb_moderation: 0
   reliefweb_post_api: 0

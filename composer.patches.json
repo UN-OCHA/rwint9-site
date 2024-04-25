@@ -1,9 +1,13 @@
 {
     "patches": {
+        "drupal/amazon_ses": {
+            "Cron fails on amazon_ses when not configured": "PATCHES/amazon_ses-3417090-cron-queue-14.patch"
+        },
         "drupal/core" : {
             "https://www.drupal.org/project/drupal/issues/3047110": "PATCHES/core--drupal--3047110-taxonomy-term-moderation-class.patch",
             "https://www.drupal.org/project/drupal/issues/3008292": "PATCHES/core--drupal--3008292-image-upload-validators.patch",
-            "https://www.drupal.org/project/drupal/issues/3143617": "PATCHES/core--drupal--3143617-pager-parameter.patch"
+            "https://www.drupal.org/project/drupal/issues/3143617": "PATCHES/core--drupal--3143617-pager-parameter.patch",
+            "https://www.drupal.org/project/drupal/issues/3418098": "PATCHES/core--drupal--3418098-php-mailer.patch"
         },
         "drupal/guidelines": {
             "Drupal 10 compatibility": "PATCHES/guidelines-drupal-10-compatibility.patch"
