@@ -96,7 +96,7 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
     FileSystemInterface $file_system,
     ClientInterface $http_client,
     LoggerChannelFactoryInterface $logger_factory,
-    StateInterface $state
+    StateInterface $state,
   ) {
     $this->database = $database;
     $this->extensionPathResolver = $extension_path_resolver;
@@ -264,9 +264,11 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
    * @option delete
    *   Delete directory as well.
    */
-  public function clearDirectory(array $options = [
-    'delete' => FALSE,
-  ]) {
+  public function clearDirectory(
+    array $options = [
+      'delete' => FALSE,
+    ],
+  ) {
     $directory = $this->getDirectory();
 
     if (is_dir($directory)) {

@@ -157,23 +157,23 @@ class ReliefwebSubscriptionsMailer {
    * {@inheritdoc}
    */
   public function __construct(
-      ConfigFactoryInterface $config_factory,
-      Connection $database,
-      EntityFieldManagerInterface $entity_field_manager,
-      EntityRepositoryInterface $entity_repository,
-      EntityTypeManagerInterface $entity_type_manager,
-      StateInterface $state,
-      TimeInterface $time,
-      ReliefWebApiClient $reliefwebApiClient,
-      PrivateKey $privateKey,
-      RendererInterface $renderer,
-      MailManagerInterface $mailManager,
-      LanguageDefault $languageDefault,
-      LoggerChannelFactoryInterface $loggerFactory,
-      ThemeInitialization $themeInitialization,
-      ThemeManagerInterface $themeManager,
-      ThemeHandlerInterface $themeHandler
-    ) {
+    ConfigFactoryInterface $config_factory,
+    Connection $database,
+    EntityFieldManagerInterface $entity_field_manager,
+    EntityRepositoryInterface $entity_repository,
+    EntityTypeManagerInterface $entity_type_manager,
+    StateInterface $state,
+    TimeInterface $time,
+    ReliefWebApiClient $reliefwebApiClient,
+    PrivateKey $privateKey,
+    RendererInterface $renderer,
+    MailManagerInterface $mailManager,
+    LanguageDefault $languageDefault,
+    LoggerChannelFactoryInterface $loggerFactory,
+    ThemeInitialization $themeInitialization,
+    ThemeManagerInterface $themeManager,
+    ThemeHandlerInterface $themeHandler,
+  ) {
     $this->configFactory = $config_factory;
     $this->database = $database;
     $this->entityFieldManager = $entity_field_manager;
@@ -279,10 +279,13 @@ class ReliefwebSubscriptionsMailer {
    * @option last
    *   Timestamp to use as the last time notifications were sent.
    */
-  public function queue($sid, array $options = [
-    'entity_id' => 0,
-    'last' => 0,
-  ]) {
+  public function queue(
+    $sid,
+    array $options = [
+      'entity_id' => 0,
+      'last' => 0,
+    ],
+  ) {
     $this->logger->notice('Processing {sid}', [
       'sid' => $sid,
     ]);

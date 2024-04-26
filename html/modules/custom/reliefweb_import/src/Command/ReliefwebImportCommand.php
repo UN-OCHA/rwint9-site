@@ -100,7 +100,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     $account_switcher,
     ClientInterface $http_client,
     LoggerChannelFactoryInterface $logger_factory,
-    StateInterface $state
+    StateInterface $state,
   ) {
     $this->database = $database;
     $this->entityTypeManager = $entity_type_manager;

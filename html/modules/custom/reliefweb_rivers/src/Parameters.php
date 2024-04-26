@@ -456,7 +456,7 @@ class Parameters {
    */
   public function __construct(
     array $query = NULL,
-    array $exclude = ['q', 'page']
+    array $exclude = ['q', 'page'],
   ) {
     $this->parameters = static::getParameters($query, $exclude);
 

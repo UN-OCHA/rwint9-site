@@ -140,7 +140,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     PagerManagerInterface $pager_manager,
     PagerParametersInterface $pager_parameters,
     RequestStack $request_stack,
-    TranslationInterface $string_translation
+    TranslationInterface $string_translation,
   ) {
     $this->currentUser = $current_user;
     $this->database = $database;

@@ -42,7 +42,7 @@ class GuidelineForm extends ContentEntityForm {
     EntityTypeBundleInfoInterface $entity_type_bundle_info,
     TimeInterface $time,
     PrivateTempStoreFactory $temp_store_factory,
-    AccountProxyInterface $current_user
+    AccountProxyInterface $current_user,
   ) {
     parent::__construct($entity_repository, $entity_type_bundle_info, $time);
     $this->tempStoreFactory = $temp_store_factory;
