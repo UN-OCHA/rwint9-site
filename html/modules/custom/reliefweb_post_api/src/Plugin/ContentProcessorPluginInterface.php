@@ -99,6 +99,20 @@ interface ContentProcessorPluginInterface {
   public function process(array $data): ?ContentEntityInterface;
 
   /**
+   * Checks of the entity with the give UUID can be processed/submitted.
+   *
+   * By default, entities marked as refused by the editorial team are not
+   * processed again and their submission are not queued anymore.
+   *
+   * @param string $uuid
+   *   Entity UUID.
+   *
+   * @return bool
+   *   TRUE if the submission can be processed.
+   */
+  public function isProcessable(string $uuid): bool;
+
+  /**
    * Validate POST API data.
    *
    * @param array $data

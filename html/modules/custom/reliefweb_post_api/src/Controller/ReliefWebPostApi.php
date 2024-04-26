@@ -20,6 +20,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -131,6 +132,11 @@ class ReliefWebPostApi extends ControllerBase {
       // Check if we received JSON data.
       if ($request->getContentTypeFormat() !== 'json') {
         throw new BadRequestHttpException('Invalid content format.');
+      }
+
+      // Check if the submission can be processed.
+      if (!$plugin->isProcessable($uuid)) {
+        throw new UnprocessableEntityHttpException('Unprocessable submission.');
       }
 
       // Retrieve and decode the body.

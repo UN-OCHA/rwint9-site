@@ -14,6 +14,8 @@ use Drupal\Core\Queue\QueueFactory;
 use Drupal\Core\Queue\QueueInterface;
 use Drupal\reliefweb_post_api\Controller\ReliefWebPostApi;
 use Drupal\reliefweb_post_api\Entity\ProviderInterface;
+use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface;
+use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
 use Symfony\Component\HttpFoundation\HeaderBag;
 use Symfony\Component\HttpFoundation\InputBag;
 use Symfony\Component\HttpFoundation\Request;
@@ -319,6 +321,33 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
 
     $controller->checkRateLimits($provider);
     $this->assertTrue(TRUE);
+  }
+
+  /**
+   * @covers ::postContent
+   */
+  public function testPostContentUnprocessable(): void {
+    $plugin = $this->createConfiguredMock(ContentProcessorPluginInterface::class, [
+      'getProvider' => $this->getTestProvider(),
+      'isProcessable' => FALSE,
+    ]);
+
+    $plugin_manager = $this->createConfiguredMock(ContentProcessorPluginManagerInterface::class, [
+      'getPluginByResource' => $plugin,
+    ]);
+
+    $request = $this->createMockRequest();
+
+    $request_stack = $this->createMockRequestStack($request);
+
+    $controller = $this->createTestController(services: [
+      'request_stack' => $request_stack,
+      'plugin.manager.reliefweb_post_api.content_processor' => $plugin_manager,
+    ]);
+
+    $response = $controller->postContent('reports', $this->getTestUuid());
+    $this->assertSame(422, $response->getStatusCode());
+    $this->assertStringContainsString('Unprocessable submission.', $response->getContent());
   }
 
   /**

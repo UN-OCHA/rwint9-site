@@ -10,7 +10,9 @@ use Drupal\Core\Database\StatementInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\file\Entity\File;
@@ -241,6 +243,43 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
     $this->expectException(ContentProcessorException::class);
     $this->expectExceptionMessage('Invalid provider.');
     $plugin->getProvider($uuid);
+  }
+
+  /**
+   * @covers ::isProcessable
+   */
+  public function testIsProcessable(): void {
+    $uuid1 = 'a07b9b6c-0374-11ef-90f5-325096b39f47';
+    $uuid2 = 'b5724a52-0374-11ef-9d42-325096b39f47';
+
+    $entity_type = $this->createConfiguredMock(EntityTypeInterface::class, [
+      'getKey' => 'uuid',
+    ]);
+
+    $query = $this->createConfiguredMock(QueryInterface::class, [
+      'accessCheck' => $this->returnSelf(),
+      'condition' => $this->returnSelf(),
+    ]);
+    $query->method('execute')->willReturnOnConsecutiveCalls(['12345'], []);
+
+    $storage = $this->createConfiguredMock(EntityStorageInterface::class, [
+      'getEntityType' => $entity_type,
+      'getQuery' => $query,
+    ]);
+
+    $entity_type_manager = $this->createConfiguredMock(EntityTypeManagerInterface::class, [
+      'getStorage' => $storage,
+    ]);
+
+    $plugin = $this->createDummyPlugin(services: [
+      'entity_type.manager' => $entity_type_manager,
+    ]);
+
+    $result = $plugin->isProcessable($uuid1);
+    $this->assertFalse($result);
+
+    $result = $plugin->isProcessable($uuid2);
+    $this->assertTrue($result);
   }
 
   /**

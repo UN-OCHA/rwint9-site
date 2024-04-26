@@ -73,6 +73,14 @@ class Report extends ContentProcessorPluginBase {
       ]));
     }
 
+    // Skip if the node was marked as refused.
+    if (!$node->isNew() && $node->getModerationStatus() === 'refused') {
+      throw new ContentProcessorException(strtr('Skipping processing: existing entity with the UUID @uuid is marked as refused.', [
+        '@uuid' => $uuid,
+        '@bundle' => $bundle,
+      ]));
+    }
+
     // Set the mandatory fields.
     $node->title = $this->sanitizeString($data['title']);
 

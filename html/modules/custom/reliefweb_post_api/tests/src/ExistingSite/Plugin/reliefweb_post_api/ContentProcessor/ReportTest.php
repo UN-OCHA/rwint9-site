@@ -124,6 +124,40 @@ class ReportTest extends ContentProcessorPluginBaseTest {
   }
 
   /**
+   * @covers ::process
+   */
+  public function testProcessRefused(): void {
+    $entity_repository = $this->createMock(EntityRepositoryInterface::class);
+
+    // Create a new instance of the current plugin with some mocked services.
+    $plugin = $this->createDummyPlugin($this->plugin->getPluginDefinition(), [
+      'entity.repository' => $entity_repository,
+    ]);
+
+    $data = ['source' => [123]] + $this->getPostApiData();
+
+    $provider = $this->getTestProvider();
+
+    $entity = $this->createEntity('node', 'report');
+    $entity->nid = 123;
+    $entity->uuid = $plugin->generateUuid($data['url']);
+    $entity->moderation_status = 'refused';
+    $entity->enforceIsNew(FALSE);
+
+    $entity_repository->expects($this->any())
+      ->method('loadEntityByUuid')
+      ->willReturnMap([
+        ['node', $entity->uuid(), $entity],
+        ['reliefweb_post_api_provider', $provider->uuid(), $provider],
+      ]);
+
+    $this->expectException(ContentProcessorException::class);
+    $this->expectExceptionMessage('is marked as refused');
+
+    $plugin->process($data);
+  }
+
+  /**
    * @covers ::validateUrls
    */
   public function testValidateUrlsUnallowedImageUrl(): void {

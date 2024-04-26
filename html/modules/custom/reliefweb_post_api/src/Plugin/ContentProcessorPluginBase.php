@@ -241,6 +241,25 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   /**
    * {@inheritdoc}
    */
+  public function isProcessable(string $uuid): bool {
+    $storage = $this->entityTypeManager->getStorage($this->getEntityType());
+    $uuid_key = $storage->getEntityType()->getKey('uuid');
+
+    // Check if the entity is marked as refused, in which case it cannot be
+    // processed.
+    $ids = $storage
+      ->getQuery()
+      ->accessCheck(FALSE)
+      ->condition($uuid_key, $uuid, '=')
+      ->condition('moderation_status', 'refused', '=')
+      ->execute();
+
+    return empty($ids);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function validate(array $data): void {
     $this->validateSchema($data);
     $this->validateUuid($data);
