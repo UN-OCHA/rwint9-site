@@ -39,7 +39,6 @@ cd-footer:
   css:
     theme:
       components/cd/cd-footer/cd-footer.css: {}
-      components/cd/cd-footer/cd-soft-footer.css: {}
 cd-form:
   css:
     theme:
