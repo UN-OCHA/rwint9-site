@@ -59,7 +59,7 @@ class ReliefWebReportingCommands extends DrushCommands {
     MailManagerInterface $mail_manager,
     LanguageDefault $language_default,
     LoggerChannelFactoryInterface $logger_factory,
-    StateInterface $state
+    StateInterface $state,
   ) {
     $this->configFactory = $config_factory;
     $this->database = $database;

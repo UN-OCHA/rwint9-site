@@ -39,7 +39,7 @@ class ReliefWebModerationCommands extends DrushCommands {
   public function __construct(
     Connection $database,
     EntityTypeManagerInterface $entity_type_manager,
-    StateInterface $state
+    StateInterface $state,
   ) {
     $this->database = $database;
     $this->entityTypeManager = $entity_type_manager;
@@ -72,9 +72,11 @@ class ReliefWebModerationCommands extends DrushCommands {
    *
    * @validate-module-enabled reliefweb_moderation
    */
-  public function updateInactiveSources(array $options = [
-    'dry-run' => FALSE,
-  ]) {
+  public function updateInactiveSources(
+    array $options = [
+      'dry-run' => FALSE,
+    ],
+  ) {
     if (!empty($this->state->get('system.maintenance_mode', 0))) {
       $this->logger()->warning(dt('Maintenance mode, aborting.'));
       return TRUE;

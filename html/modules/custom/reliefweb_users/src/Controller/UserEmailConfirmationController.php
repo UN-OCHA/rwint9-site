@@ -41,7 +41,7 @@ class UserEmailConfirmationController extends ControllerBase {
   public function __construct(
     ConfigFactoryInterface $config_factory,
     RequestStack $request_stack,
-    TimeInterface $time
+    TimeInterface $time,
   ) {
     $this->configFactory = $config_factory;
     $this->requestStack = $request_stack;

@@ -96,7 +96,7 @@ class AnyTermSelection extends DefaultSelection {
     EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL,
     EntityRepositoryInterface $entity_repository,
     Connection $database,
-    LanguageManagerInterface $language_manager
+    LanguageManagerInterface $language_manager,
   ) {
     parent::__construct(
       $configuration,

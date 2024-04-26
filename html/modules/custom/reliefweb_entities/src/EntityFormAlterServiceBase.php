@@ -91,7 +91,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
     EntityFieldManagerInterface $entity_field_manager,
     EntityTypeManagerInterface $entity_type_manager,
     StateInterface $state,
-    TranslationInterface $string_translation
+    TranslationInterface $string_translation,
   ) {
     $this->database = $database;
     $this->currentUser = $current_user;

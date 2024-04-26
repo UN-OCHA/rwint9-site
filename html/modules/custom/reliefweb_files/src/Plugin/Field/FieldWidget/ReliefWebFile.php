@@ -91,7 +91,7 @@ class ReliefWebFile extends WidgetBase {
     LoggerChannelFactoryInterface $logger_factory,
     RendererInterface $renderer,
     RequestStack $request_stack,
-    FileValidatorInterface $file_validator
+    FileValidatorInterface $file_validator,
   ) {
     parent::__construct(
       $plugin_id,
@@ -114,7 +114,7 @@ class ReliefWebFile extends WidgetBase {
     ContainerInterface $container,
     array $configuration,
     $plugin_id,
-    $plugin_definition
+    $plugin_definition,
   ) {
     return new static(
       $plugin_id,

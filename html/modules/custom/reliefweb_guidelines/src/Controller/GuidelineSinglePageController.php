@@ -49,7 +49,7 @@ class GuidelineSinglePageController extends ControllerBase {
   public function __construct(
     CacheBackendInterface $cache_backend,
     AccountProxyInterface $current_user,
-    EntityTypeManagerInterface $entity_type_manager
+    EntityTypeManagerInterface $entity_type_manager,
   ) {
     $this->cache = $cache_backend;
     $this->currentUser = $current_user;

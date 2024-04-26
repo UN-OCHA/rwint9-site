@@ -122,11 +122,14 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    *
    * @validate-module-enabled reliefweb_subscriptions
    */
-  public function queue($sid, array $options = [
-    'entity_type' => '',
-    'entity_id' => 0,
-    'last' => 0,
-  ]) {
+  public function queue(
+    $sid,
+    array $options = [
+      'entity_type' => '',
+      'entity_id' => 0,
+      'last' => 0,
+    ],
+  ) {
     $this->mailer->queue($sid, $options);
   }
 
@@ -153,9 +156,12 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    *
    * @validate-module-enabled reliefweb_subscriptions
    */
-  public function unsubscribe($frequency = '1w', array $options = [
-    'dry-run' => FALSE,
-  ]) {
+  public function unsubscribe(
+    $frequency = '1w',
+    array $options = [
+      'dry-run' => FALSE,
+    ],
+  ) {
     $settings = Settings::get('ocha_elk_mail', []);
     if (empty($settings['url'])) {
       $this->logger()->error(dt('ELK url missing'));
