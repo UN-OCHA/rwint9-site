@@ -21,6 +21,33 @@ function reliefweb_subscriptions_subscriptions() {
     return $subscriptions;
   }
 
+  // Blog posts.
+  $subscriptions['blog'] = [
+    'id' => 'blog',
+    'name' => t('New ReliefWeb blog post'),
+    'description' => t('New ReliefWeb blog post (when published)'),
+    'group' => 'global',
+    // Sengrid category.
+    'category' => 'Blog',
+    'type' => 'triggered',
+    'trigger' => 'triggerBlogNotification',
+    'template' => 'blog',
+    'subject callback' => 'blogSubject',
+    'from_label' => 'ReliefWeb Blog',
+    'bundle' => 'blog_post',
+    'entity_type_id' => 'node',
+    'resource' => 'blog',
+    'payload' => [
+      'fields' => [
+        'include' => [
+          '*',
+        ],
+      ],
+      'sort' => ['date.created:desc'],
+      'limit' => 1,
+    ],
+  ];
+
   // Headlines.
   $subscriptions['headlines'] = [
     'id' => 'headlines',
@@ -207,7 +234,7 @@ function reliefweb_subscriptions_subscriptions() {
   $subscriptions['ocha_sitrep'] = [
     'id' => 'ocha_sitrep',
     'name' => t('New OCHA situation report'),
-    'description' => t('New OCHA situation report'),
+    'description' => t('New OCHA situation report (when published)'),
     'group' => 'global',
     // Sengrid cateogry.
     'category' => 'OCHA Sitreps',
@@ -403,6 +430,17 @@ function reliefweb_subscriptions_theme() {
         'info' => '',
         'summary' => '',
         'url' => '',
+        'prefooter' => NULL,
+      ],
+    ],
+    'reliefweb_subscriptions_content__blog' => [
+      'variables' => [
+        'preheader' => NULL,
+        'url' => '',
+        'title' => '',
+        'image' => NULL,
+        'body' => '',
+        'reliefweb_address' => '',
         'prefooter' => NULL,
       ],
     ],
