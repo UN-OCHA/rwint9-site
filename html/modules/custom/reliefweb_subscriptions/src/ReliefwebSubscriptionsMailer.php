@@ -1193,20 +1193,29 @@ class ReliefwebSubscriptionsMailer {
     $title = $data['title'];
     $variables['#title'] = $title;
 
-    // Image.
-    $image = [];
-    if (!empty($data['image']['url-large'])) {
-      $image = [
-        'url' => $data['image']['url-large'],
-        'caption' => $data['image']['caption'] ?? '',
-        'copyright' => $data['image']['copyright'] ?? '',
-      ];
-    }
-    $variables['#image'] = $image;
+    // Either show the full copy of the blog post.
+    if ($this->state->get('reliefweb_subscriptions_full_blog_post_copy', FALSE) === TRUE) {
+      // Image.
+      $image = [];
+      if (!empty($data['image']['url-large'])) {
+        $image = [
+          'url' => $data['image']['url-large'],
+          'caption' => $data['image']['caption'] ?? '',
+          'copyright' => $data['image']['copyright'] ?? '',
+        ];
+      }
+      $variables['#image'] = $image;
 
-    // Body.
-    $body = !empty($data['body']) ? check_markup($data['body'], 'markdown') : '';
-    $variables['#body'] = $body;
+      // Body.
+      $body = !empty($data['body']) ? check_markup($data['body'], 'markdown') : '';
+      $variables['#body'] = $body;
+    }
+    // Or a summary.
+    else {
+      // Summary.
+      $body = !empty($data['body']) ? check_markup($data['body'], 'markdown') : '';
+      $variables['#summary'] = HtmlSummarizer::summarize($body, 600, FALSE);
+    }
 
     // Preheader with a maximum of 100 characters.
     $preheader = HtmlSummarizer::summarize($body, 100, TRUE);

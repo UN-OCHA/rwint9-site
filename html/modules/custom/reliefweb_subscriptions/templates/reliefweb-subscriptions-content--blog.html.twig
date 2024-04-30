@@ -28,6 +28,7 @@
 <h1 class="email-title-simple"><a href="{{ url }}">{{ title }}</a></h1>
 </div>
 
+{% if summary is empty %}
 {% if image is not empty %}
 <div class="email-image">
 <img class="email-image-image" src="{{ image.url }}" alt="{{ image.description }}">
@@ -35,8 +36,13 @@
 <div class="email-image-copyright">{{ image.copyright }}</div>
 </div>
 {% endif %}
-
 <div class="email-body">{{ body }}</div>
+{% else %}
+<div class="email-body">
+{{- summary|raw }}
+<p><a class="email-resource-read-more" href="{{ url }}">Read the full article on ReliefWeb</a></p>
+</div>
+{% endif %}
 
 <div class="email-social-media">
 <div>Follow ReliefWeb on social media:</div>
