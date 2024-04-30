@@ -334,6 +334,148 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
   }
 
   /**
+   * Subscribe user accounts to a mailing list.
+   *
+   * @param string $sids
+   *   Subscription IDs separated by a comma.
+   * @param string $file
+   *   File with a list of email addresses (one per line).
+   * @param array $options
+   *   Drush options.
+   *
+   * @command reliefweb_subscriptions:subscribe
+   *
+   * @option batch_size The number of emails to process at once, (defaul: 200).
+   *
+   * @default options [
+   *   'batch_size' => 500,
+   * ]
+   *
+   * @command reliefweb_subscriptions:subscribe-users
+   *
+   * @usage reliefweb_subscriptions:subscribe-users headlines,appeals /tmp/emails.txt
+   *   Subscribe the users with the emails from the emails.txt file to the
+   *   headlines and appeals mailing list.
+   *
+   * @validate-module-enabled reliefweb_subscriptions
+   */
+  public function subscribeUsers(
+    string $sids,
+    string $file,
+    array $options = [
+      'batch_size' => 200,
+    ],
+  ) {
+    if (!file_exists($file)) {
+      $this->logger()->error(strtr('Missing file: @file', [
+        '@file' => $file,
+      ]));
+    }
+
+    $sids = explode(',', $sids);
+    $subscriptions = reliefweb_subscriptions_subscriptions();
+
+    $subscribed = [];
+    foreach ($sids as $sid) {
+      if (isset($subscriptions[$sid])) {
+        $subscribed[$sid] = 0;
+      }
+      else {
+        $this->logger()->warning(strtr('Unknow @sid subscription', [
+          '@sid' => $sid,
+        ]));
+      }
+    }
+
+    if (empty($sids)) {
+      $this->logger()->error('No valid subscription IDs');
+    }
+
+    $batch_size = $options['batch_size'];
+
+    $handle = fopen($file, 'r');
+    if (is_resource($handle)) {
+      while (!feof($handle)) {
+        $email = fgets($handle);
+        $email = $email !== FALSE ? trim($email) : '';
+        if (!empty($email)) {
+          $emails[$email] = $email;
+        }
+        if (count($emails) === $batch_size) {
+          foreach ($this->doSubscribeUsers($sids, $emails) as $sid => $count) {
+            $subscribed[$sid] += $count;
+          }
+          $emails = [];
+        }
+      }
+      if (!empty($emails)) {
+        foreach ($this->doSubscribeUsers($sids, $emails) as $sid => $count) {
+          $subscribed[$sid] += $count;
+        }
+      }
+      fclose($handle);
+
+      foreach ($subscribed as $sid => $count) {
+        if ($count > 0) {
+          $this->logger()->success(strtr('Subscribed @count accounts to the @sid mailing list.', [
+            '@count' => $count,
+            '@sid' => $sid,
+          ]));
+        }
+        else {
+          $this->logger()->success(strtr('No new subscriptions to create for the @sid mailing list', [
+            '@sid' => $sid,
+          ]));
+        }
+      }
+    }
+    else {
+      $this->logger()->error(strtr('Unable to read file: @file', [
+        '@file' => $file,
+      ]));
+    }
+  }
+
+  /**
+   * Subscribe a list of email address to subscription lists.
+   *
+   * @param array<string> $sids
+   *   Subscription IDs.
+   * @param array<string> $emails
+   *   Email list.
+   *
+   * @return array<string,int>
+   *   Number of subscribed accounts per subscription ID.
+   */
+  protected function doSubscribeUsers(array $sids, array $emails): array {
+    $uids = $this->database
+      ->select('users_field_data', 'u')
+      ->fields('u', ['uid'])
+      ->condition('u.mail', $emails, 'IN')
+      ->execute()
+      ?->fetchCol() ?? [];
+
+    $subscribed = [];
+    if (!empty($uids)) {
+      foreach ($sids as $sid) {
+        $query = $this->database
+          ->upsert('reliefweb_subscriptions_subscriptions')
+          // Note: not used for MySQL but is needed to avoid an exception.
+          ->key('sid_uid')
+          ->fields(['sid', 'uid']);
+
+        foreach ($uids as $uid) {
+          $query->values(['sid' => $sid, 'uid' => $uid]);
+        }
+
+        $subscribed[$sid] = $query->execute();
+      }
+    }
+
+    return $subscribed;
+  }
+
+  /**
    * Enable link tracking for subscriptions.
    *
    * @param string $sids
