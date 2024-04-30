@@ -339,9 +339,13 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    * @param string $sids
    *   Subscription IDs separated by a comma.
    * @param string $file
-   *   File with a list of email addresses (one per line).
+   *   File with a list of email addresses (one per line). Defaults to the
+   *   standard input.
    * @param array $options
    *   Drush options.
+   *
+   * @return bool
+   *   TRUE if successful.
    *
    * @command reliefweb_subscriptions:subscribe
    *
@@ -361,15 +365,16 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    */
   public function subscribeUsers(
     string $sids,
-    string $file,
+    string $file = 'php://stdin',
     array $options = [
       'batch_size' => 200,
     ],
-  ) {
-    if (!file_exists($file)) {
+  ): bool {
+    if ($file !== 'php://stdin' && !file_exists($file)) {
       $this->logger()->error(strtr('Missing file: @file', [
         '@file' => $file,
       ]));
+      return FALSE;
     }
 
     $sids = explode(',', $sids);
@@ -389,6 +394,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
 
     if (empty($sids)) {
       $this->logger()->error('No valid subscription IDs');
+      return FALSE;
     }
 
     $batch_size = $options['batch_size'];
@@ -433,7 +439,10 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
       $this->logger()->error(strtr('Unable to read file: @file', [
         '@file' => $file,
       ]));
+      return FALSE;
     }
+
+    return TRUE;
   }
 
   /**
