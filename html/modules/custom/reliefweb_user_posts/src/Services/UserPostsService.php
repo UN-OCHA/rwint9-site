@@ -64,7 +64,7 @@ class UserPostsService extends ModerationServiceBase {
     PagerParametersInterface $pager_parameters,
     RequestStack $request_stack,
     TranslationInterface $string_translation,
-    RouteMatchInterface $route_match
+    RouteMatchInterface $route_match,
   ) {
     parent::__construct(
       $current_user,

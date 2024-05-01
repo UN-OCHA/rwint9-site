@@ -4,6 +4,7 @@ description: 'Allow users to subscribe to content changes.'
 package: reliefweb
 core_version_requirement: ^9 || ^10
 dependencies:
+  - amazon_ses:amazon_ses
   - drupal:reliefweb_api
   - drupal:reliefweb_form
   - drupal:reliefweb_utility

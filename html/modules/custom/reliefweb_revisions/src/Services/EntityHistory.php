@@ -125,7 +125,7 @@ class EntityHistory {
     EntityFieldManagerInterface $entity_field_manager,
     EntityTypeManagerInterface $entity_type_manager,
     ModuleHandlerInterface $module_handler,
-    TranslationInterface $string_translation
+    TranslationInterface $string_translation,
   ) {
     $this->cache = $cache_backend;
     $this->config = $config_factory->get('reliefweb_revisions.settings');

@@ -21,7 +21,7 @@ Creating, updating or deleting a taxonomy term clears all the cached queries bec
 
 This modules also provides a set of [drush commands](src/Commands/ReliefWebApiCommands.php) to allow (re-)indexing content.
 
-Ex `drush rapi-i --limit 100 reports` will re-index the 100 most recent reports.
+Ex `drush rapi-i --limit 100 report` will re-index the 100 most recent reports.
 
 ## Settings
 

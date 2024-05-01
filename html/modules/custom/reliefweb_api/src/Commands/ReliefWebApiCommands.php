@@ -60,7 +60,7 @@ class ReliefWebApiCommands extends DrushCommands {
     EntityFieldManagerInterface $entity_field_manager,
     EntityTypeManagerInterface $entity_type_manager,
     ModuleHandlerInterface $module_handler,
-    StateInterface $state
+    StateInterface $state,
   ) {
     $this->apiConfig = $config_factory->get('reliefweb_api.settings');
     $this->entityFieldManager = $entity_field_manager;
@@ -136,26 +136,29 @@ class ReliefWebApiCommands extends DrushCommands {
    *
    * @aliases rw-api:index, rw-api:i, rwapi-i, rapi-i
    */
-  public function index($bundle = '', array $options = [
-    'elasticsearch' => '',
-    'base-index-name' => '',
-    'website' => '',
-    'limit' => 0,
-    'offset' => 0,
-    'filter' => '',
-    'chunk-size' => 500,
-    'tag' => '',
-    'id' => 0,
-    'remove' => FALSE,
-    'replace' => FALSE,
-    'alias' => FALSE,
-    'alias-only' => FALSE,
-    'log' => 'echo',
-    'count-only' => FALSE,
-    'memory-limit' => '512M',
-    'replicas' => NULL,
-    'shards' => NULL,
-  ]) {
+  public function index(
+    $bundle = '',
+    array $options = [
+      'elasticsearch' => '',
+      'base-index-name' => '',
+      'website' => '',
+      'limit' => 0,
+      'offset' => 0,
+      'filter' => '',
+      'chunk-size' => 500,
+      'tag' => '',
+      'id' => 0,
+      'remove' => FALSE,
+      'replace' => FALSE,
+      'alias' => FALSE,
+      'alias-only' => FALSE,
+      'log' => 'echo',
+      'count-only' => FALSE,
+      'memory-limit' => '512M',
+      'replicas' => NULL,
+      'shards' => NULL,
+    ],
+  ) {
     // Index all the references at once when the special 'references' bundle
     // is passed to the command.
     if ($bundle === 'references') {
@@ -274,10 +277,15 @@ class ReliefWebApiCommands extends DrushCommands {
    *
    * @aliases rw-api:replace, rw-api:r, rwapi-r
    */
-  public function replace($bundle, $newtag, $oldtag = NULL, array $options = [
-    'elasticsearch' => '',
-    'base-index-name' => '',
-  ]) {
+  public function replace(
+    $bundle,
+    $newtag,
+    $oldtag = NULL,
+    array $options = [
+      'elasticsearch' => '',
+      'base-index-name' => '',
+    ],
+  ) {
     if (!isset($oldtag)) {
       $oldtag = $this->state->get('reliefweb_api_index_tag_' . $bundle, '');
     }

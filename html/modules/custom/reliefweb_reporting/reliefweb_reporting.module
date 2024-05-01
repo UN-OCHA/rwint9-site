@@ -1,0 +1,38 @@
+<?php
+
+/**
+ * @file
+ * ReliefWeb reporting module.
+ */
+
+/**
+ * Implements hook_mail().
+ */
+function reliefweb_reporting_mail(string $key, array &$message, array $params) {
+  if ($key !== 'reporting') {
+    return;
+  }
+
+  // Copy any extra headers (like the List-ID to identify the notification).
+  foreach ($params['headers'] as $key => $value) {
+    $message['headers'][$key] = $value;
+  }
+
+  // Ensure the Reply-To header is set and not duplicated due to different case.
+  $reply_to = $message['from'];
+  foreach (['reply-to', 'Reply-to', 'Reply-To'] as $key) {
+    if (isset($message['headers'][$key])) {
+      $reply_to = $message['headers'][$key];
+      unset($message['headers'][$key]);
+    }
+  }
+  $message['headers']['Reply-To'] = $reply_to;
+
+  // Set the attachments.
+  if (isset($params['attachments'])) {
+    $message['params']['attachments'] = $params['attachments'];
+  }
+
+  $message['subject'] = $params['subject'];
+  $message['body'] = $params['body'];
+}

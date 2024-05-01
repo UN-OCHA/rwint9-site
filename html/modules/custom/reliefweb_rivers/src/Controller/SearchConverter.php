@@ -74,7 +74,7 @@ class SearchConverter extends ControllerBase {
     AccountProxyInterface $current_user,
     FormBuilderInterface $form_builder,
     RequestStack $request_stack,
-    ReliefWebApiClient $reliefweb_api_client
+    ReliefWebApiClient $reliefweb_api_client,
   ) {
     $this->configFactory = $config_factory;
     $this->currentUser = $current_user;

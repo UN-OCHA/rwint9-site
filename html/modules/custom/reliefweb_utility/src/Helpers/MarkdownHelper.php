@@ -187,6 +187,9 @@ class MarkdownHelper {
       ],
     ];
 
+    // Prevent link references `[foo]: /url` from being parsed.
+    $text = preg_replace('#^(\s*)\[([^]]+)\]:(\s+)#', '$1\[$2\]:$3', $text);
+
     // Create an Environment with all the CommonMark parsers and renderers for
     // inline elements.
     $environment = new Environment($config);
