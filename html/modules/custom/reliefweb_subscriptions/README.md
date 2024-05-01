@@ -11,6 +11,10 @@ This module provides a route and [controller](src/Controller/SubscriptionsContro
 
 It also provides controllers to a page to unsubscribe. A link to this page is added at the bottom of the notification emails.
 
+### Permissions
+
+There are fined grained [permissions](reliefweb_subscriptions.permissions.yml) for the subscriptions displayed on the subscription page.
+
 ## Templates
 
 This module provides [templates](templates) for the different type of subscriptions (ex: jobs, disasters).
@@ -39,11 +43,11 @@ Sending notifications can be pretty slow depending on the content of the emails 
 
 ## Testing
 
-Log in, and go to the subscriptions page `/user/USER_ID/subscriptions`:
+Log in, and go to the subscriptions page `/user/notifications`:
 
 ```bash
 drush cr
-drush sqlq "truncate table reliefweb_subscriptions_logs"
+drush sqlq "TRUNCATE TABLE reliefweb_subscriptions_logs"
 
 drush reliefweb_subscriptions:queue headlines --verbose
 drush reliefweb_subscriptions:send --verbose

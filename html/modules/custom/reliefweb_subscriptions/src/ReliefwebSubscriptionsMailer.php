@@ -497,7 +497,7 @@ class ReliefwebSubscriptionsMailer {
     }
 
     // Get the subscribers.
-    $subscribers = $this->getSubscribers($sid);
+    $subscribers = $this->getSubscribers($subscription);
     if (empty($subscribers)) {
       $this->logger->info('No subscribers found for {name} subscription.', [
         'name' => $subscription['name'],
@@ -1487,13 +1487,21 @@ class ReliefwebSubscriptionsMailer {
   /**
    * Get the list of subscribers for the subscription.
    *
-   * @param string $sid
-   *   Subscription id.
+   * @param array $subscription
+   *   Subscription data.
    *
    * @return array
    *   List of users with their name and mail address.
    */
-  protected function getSubscribers($sid) {
+  protected function getSubscribers($subscription) {
+    $sid = $subscription['id'];
+
+    // Get the roles that have the permission for the subscription.
+    $roles = user_role_names(TRUE, $subscription['permission']);
+    if (empty($roles)) {
+      return [];
+    }
+
     $query = $this->database->select('reliefweb_subscriptions_subscriptions', 's');
     $query->fields('s', ['uid']);
     $query->condition('s.sid', $sid, '=');
@@ -1501,6 +1509,15 @@ class ReliefwebSubscriptionsMailer {
     $query->fields('u', ['name', 'mail']);
     $query->innerJoin('user__field_email_confirmed', 'fec', 'fec.entity_id = s.uid');
     $query->condition('fec.field_email_confirmed_value', 1, '=');
+
+    // Only filter by roles if the permission is not set for all the
+    // authenticated users.
+    if (!isset($roles['authenticated'])) {
+      $query->innerJoin('user__roles', 'ur', 'ur.entity_id = s.uid');
+      $query->condition('ur.roles_target_id', array_keys($roles), 'IN');
+    }
+
+    $query->distinct();
     $result = $query->execute();
     return !empty($result) ? $result->fetchAllAssoc('uid') : [];
   }

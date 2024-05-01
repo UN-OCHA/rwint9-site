@@ -26,6 +26,7 @@ function reliefweb_subscriptions_subscriptions() {
     'id' => 'blog',
     'name' => t('New ReliefWeb blog post'),
     'description' => t('New ReliefWeb blog post (when published)'),
+    'permission' => 'subscribe to blog posts',
     'group' => 'global',
     // Sengrid category.
     'category' => 'Blog',
@@ -53,6 +54,8 @@ function reliefweb_subscriptions_subscriptions() {
     'id' => 'headlines',
     'name' => t('ReliefWeb Headlines'),
     'description' => t('ReliefWeb Headlines (daily)'),
+    'permission' => 'subscribe to headlines',
+    'group' => 'global',
     // Sengrid category.
     'category' => 'Headlines',
     'type' => 'scheduled',
@@ -93,6 +96,8 @@ function reliefweb_subscriptions_subscriptions() {
     'id' => 'appeals',
     'name' => t('All Appeals'),
     'description' => t('Latest Appeals (weekly)'),
+    'permission' => 'subscribe to appeals',
+    'group' => 'global',
     // Sengrid cateogry.
     'category' => 'Appeals',
     'type' => 'scheduled',
@@ -131,6 +136,7 @@ function reliefweb_subscriptions_subscriptions() {
     'id' => 'jobs',
     'name' => t('All Jobs'),
     'description' => t('All Jobs (bi-weekly: Monday, Thursday)'),
+    'permission' => 'subscribe to jobs',
     'group' => 'global',
     // Sengrid cateogry.
     'category' => 'Jobs digest',
@@ -165,6 +171,7 @@ function reliefweb_subscriptions_subscriptions() {
     'id' => 'training',
     'name' => t('All Training Programs'),
     'description' => t('All Training Programs (weekly: Wednesday)'),
+    'permission' => 'subscribe to training',
     'group' => 'global',
     // Sengrid cateogry.
     'category' => 'Training programs digest',
@@ -201,6 +208,7 @@ function reliefweb_subscriptions_subscriptions() {
     'id' => 'disaster',
     'name' => t('New alert or ongoing disaster'),
     'description' => t('New alert or ongoing disaster (when published)'),
+    'permission' => 'subscribe to disasters',
     'group' => 'global',
     // Sengrid cateogry.
     'category' => 'New Disasters',
@@ -235,6 +243,7 @@ function reliefweb_subscriptions_subscriptions() {
     'id' => 'ocha_sitrep',
     'name' => t('New OCHA situation report'),
     'description' => t('New OCHA situation report (when published)'),
+    'permission' => 'subscribe to OCHA situation reports',
     'group' => 'global',
     // Sengrid cateogry.
     'category' => 'OCHA Sitreps',
@@ -289,6 +298,7 @@ function reliefweb_subscriptions_subscriptions() {
       'id' => $sid,
       'name' => t('Updates on @country', ['@country' => $name]),
       'description' => t('Updates on @country (daily)', ['@country' => $name]),
+      'permission' => 'subscribe to country updates',
       'group' => 'country_updates',
       // This is just for convenience for the `My subscriptions` page and the
       // template preprocess function.
