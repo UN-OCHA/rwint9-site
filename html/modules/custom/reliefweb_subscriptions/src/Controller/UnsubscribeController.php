@@ -181,7 +181,7 @@ class UnsubscribeController extends ControllerBase {
       ->condition('uid', $user->id())
       ->execute();
 
-    $subscription_page = '/user/' . $user->id() . '/notifications';
+    $subscription_page = '/user/notifications';
 
     if ($user->id() === $this->getCurrentUser()->id()) {
       $message = $this->t('To add new subscriptions or manage your list, please go to your <a href=":subscription_page">subscriptions</a> page.', [
