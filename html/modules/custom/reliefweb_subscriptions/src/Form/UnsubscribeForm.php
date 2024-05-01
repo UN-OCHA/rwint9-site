@@ -107,7 +107,7 @@ class UnsubscribeForm extends SubscriptionForm {
     ];
 
     $login_link = Url::fromRoute('user.login', [], [
-      'query' => ['destination' => '/user/' . $user->id() . '/notifications'],
+      'query' => ['destination' => '/user/notifications'],
     ]);
 
     $form['description'] = [
