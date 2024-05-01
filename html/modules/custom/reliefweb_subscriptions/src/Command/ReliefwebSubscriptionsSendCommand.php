@@ -386,7 +386,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
         $subscribed[$sid] = 0;
       }
       else {
-        $this->logger()->warning(strtr('Unknow @sid subscription', [
+        $this->logger()->warning(strtr('Unknown @sid subscription', [
           '@sid' => $sid,
         ]));
       }
@@ -446,7 +446,7 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
   }
 
   /**
-   * Subscribe a list of email address to subscription lists.
+   * Subscribe a list of email addresses to subscription lists.
    *
    * @param array<string> $sids
    *   Subscription IDs.
