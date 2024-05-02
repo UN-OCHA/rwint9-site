@@ -1,0 +1,11 @@
+uuid: 2c65bdd1-576e-4bcc-90e9-3e181738df0c
+langcode: en
+status: true
+dependencies: {  }
+machine: stage
+description: null
+name: Stage
+weight: ''
+url: ''
+fg_color: '#000000'
+bg_color: '#34cc32'
