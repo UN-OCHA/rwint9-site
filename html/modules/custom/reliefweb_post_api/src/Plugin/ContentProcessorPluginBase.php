@@ -112,7 +112,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     protected FileSystemInterface $fileSystem,
     protected FileValidatorInterface $fileValidator,
     protected MimeTypeGuesserInterface $mimeTypeGuesser,
-    protected LanguageManagerInterface $languageManager
+    protected LanguageManagerInterface $languageManager,
   ) {
     parent::__construct(
       $configuration,
@@ -138,7 +138,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
       $container->get('file_system'),
       $container->get('file.validator'),
       $container->get('file.mime_type.guesser'),
-      $container->get('language_manager')
+      $container->get('language_manager'),
     );
   }
 

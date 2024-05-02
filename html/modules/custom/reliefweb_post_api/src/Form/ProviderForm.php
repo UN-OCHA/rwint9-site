@@ -38,7 +38,7 @@ class ProviderForm extends ContentEntityForm {
     EntityTypeBundleInfoInterface $entity_type_bundle_info,
     TimeInterface $time,
     protected PasswordInterface $password,
-    protected ContentProcessorPluginManagerInterface $contentProcessorPluginManager
+    protected ContentProcessorPluginManagerInterface $contentProcessorPluginManager,
   ) {
     parent::__construct($entity_repository, $entity_type_bundle_info, $time);
   }
@@ -52,7 +52,7 @@ class ProviderForm extends ContentEntityForm {
       $container->get('entity_type.bundle.info'),
       $container->get('datetime.time'),
       $container->get('password'),
-      $container->get('plugin.manager.reliefweb_post_api.content_processor')
+      $container->get('plugin.manager.reliefweb_post_api.content_processor'),
     );
   }
 

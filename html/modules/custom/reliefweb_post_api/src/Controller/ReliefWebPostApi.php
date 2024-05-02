@@ -50,7 +50,7 @@ class ReliefWebPostApi extends ControllerBase {
     protected ExtensionPathResolver $pathResolver,
     protected Connection $database,
     protected TimeInterface $time,
-    protected ContentProcessorPluginManagerInterface $contentProcessorPluginManager
+    protected ContentProcessorPluginManagerInterface $contentProcessorPluginManager,
   ) {}
 
   /**
@@ -63,7 +63,7 @@ class ReliefWebPostApi extends ControllerBase {
       $container->get('extension.path.resolver'),
       $container->get('database'),
       $container->get('datetime.time'),
-      $container->get('plugin.manager.reliefweb_post_api.content_processor')
+      $container->get('plugin.manager.reliefweb_post_api.content_processor'),
     );
   }
 

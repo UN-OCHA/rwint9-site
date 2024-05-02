@@ -36,7 +36,7 @@ class ContentProcessor extends Plugin {
     public readonly TranslatableMarkup $label,
     public readonly string $entityType,
     public readonly string $bundle,
-    public readonly string $resource
+    public readonly string $resource,
   ) {}
 
 }

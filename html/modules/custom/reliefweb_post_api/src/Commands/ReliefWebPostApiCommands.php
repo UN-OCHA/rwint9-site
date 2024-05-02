@@ -18,7 +18,7 @@ class ReliefWebPostApiCommands extends DrushCommands {
    */
   public function __construct(
     protected QueueFactory $queueFactory,
-    protected ContentProcessorPluginManagerInterface $contentProcessorPluginManager
+    protected ContentProcessorPluginManagerInterface $contentProcessorPluginManager,
   ) {}
 
   /**
@@ -41,10 +41,12 @@ class ReliefWebPostApiCommands extends DrushCommands {
    *
    * @validate-module-enabled reliefweb_post_api
    */
-  public function process(array $options = [
-    'limit' => 10,
-    'bundles' => '',
-  ]): void {
+  public function process(
+    array $options = [
+      'limit' => 10,
+      'bundles' => '',
+    ],
+  ): void {
     $queue = $this->queueFactory->get('reliefweb_post_api');
 
     $count = 0;

@@ -39,14 +39,14 @@ class ContentProcessorPluginManager extends DefaultPluginManager implements Cont
   public function __construct(
     \Traversable $namespaces,
     CacheBackendInterface $cache_backend,
-    ModuleHandlerInterface $module_handler
+    ModuleHandlerInterface $module_handler,
   ) {
     parent::__construct(
       'Plugin/reliefweb_post_api/ContentProcessor',
       $namespaces,
       $module_handler,
       'Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface',
-      ContentProcessor::class
+      ContentProcessor::class,
     );
     $this->alterInfo('reliefweb_post_api_content_processor_info');
     $this->setCacheBackend($cache_backend, 'reliefweb_post_api_content_processors');
