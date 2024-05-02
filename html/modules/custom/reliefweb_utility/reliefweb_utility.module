@@ -89,3 +89,28 @@ function reliefweb_utility_file_presave(FileInterface $file) {
     }
   }
 }
+
+/**
+ * Implements hook_image_style_flush().
+ *
+ * Delete the webp version of the derivative images.
+ */
+function reliefweb_utility_image_style_flush($style, ?string $path = NULL) {
+  // Also delete the webp version of the image if it exists.
+  // @see Drupal\image\Entity\ImageStyle::flush()
+  if (isset($path)) {
+    /** @var \Drupal\Core\File\FileSystemInterface $file_system */
+    $file_system = \Drupal::service('file_system');
+    $derivative_uri = $style->buildUri($path);
+    $derivative_uri_webp = $derivative_uri . '.webp';
+
+    if (file_exists($derivative_uri_webp)) {
+      try {
+        $file_system->delete($derivative_uri_webp);
+      }
+      catch (FileException $exception) {
+        // Ignore failed deletion.
+      }
+    }
+  }
+}

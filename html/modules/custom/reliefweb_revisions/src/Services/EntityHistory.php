@@ -125,7 +125,7 @@ class EntityHistory {
     EntityFieldManagerInterface $entity_field_manager,
     EntityTypeManagerInterface $entity_type_manager,
     ModuleHandlerInterface $module_handler,
-    TranslationInterface $string_translation
+    TranslationInterface $string_translation,
   ) {
     $this->cache = $cache_backend;
     $this->config = $config_factory->get('reliefweb_revisions.settings');
@@ -298,7 +298,7 @@ class EntityHistory {
   /**
    * Get the author of the entity.
    *
-   * @return \Drupal\Core\Session\AccountInterface
+   * @return \Drupal\Core\Session\AccountInterface|null
    *   User entity.
    */
   protected function getEntityAuthor(EntityRevisionedInterface $entity) {
@@ -335,8 +335,8 @@ class EntityHistory {
    * @param array $diff
    *   The differences between the revision and the previous one.
    *
-   * @return \Drupal\Component\Render\MarkupInteface
-   *   The formatted differences.
+   * @return array
+   *   The formatted differences per field.
    */
   protected function formatRevisionDiff(EntityRevisionedInterface $revision, array $diff) {
     $fields = [];

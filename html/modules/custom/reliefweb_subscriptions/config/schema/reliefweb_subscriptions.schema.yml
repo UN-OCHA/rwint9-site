@@ -1,0 +1,10 @@
+reliefweb_subscriptions.settings:
+  type: config_object
+  label: 'Reliefweb Subscriptions settings'
+  mapping:
+    encryption_method:
+      type: string
+      label: 'Encryption method for the unsubscribe links'
+    encryption_key:
+      type: string
+      label: 'Encryption key for the unsubscribe links'

@@ -80,7 +80,7 @@ class GuidelineFieldTargetDefaultFormatter extends FormatterBase {
     array $third_party_settings,
     EntityFieldManagerInterface $entity_field_manager,
     EntityTypeBundleInfoInterface $entity_type_bundle_info,
-    EntityTypeManagerInterface $entity_type_manager
+    EntityTypeManagerInterface $entity_type_manager,
   ) {
     parent::__construct(
       $plugin_id,

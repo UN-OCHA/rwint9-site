@@ -120,7 +120,7 @@ class TopicRiver extends RiverServiceBase {
     RequestStack $request_stack,
     RendererInterface $renderer,
     TranslationInterface $string_translation,
-    EntityTypeManagerInterface $entity_type_manager
+    EntityTypeManagerInterface $entity_type_manager,
   ) {
     parent::__construct(
       $config_factory,
@@ -173,7 +173,7 @@ class TopicRiver extends RiverServiceBase {
       ->condition('field_bury', 1, '<>');
     $query->condition($group);
 
-    $nids = $query->execute();
+    $nids = $query->accessCheck(TRUE)->execute();
 
     $topics = $storage->loadMultiple($nids);
 

@@ -70,14 +70,14 @@ class TextHelperTest extends UnitTestCase {
     $text = '   trim around ';
     $expected = 'trim around';
     $options = [];
-    $this->assertEquals(TextHelper::trimText($text, $options), $expected);
+    $this->assertEquals(TextHelper::trimText($text), $expected);
 
     // This string contains `\u200b` (zero width space) characters at the start,
     // end and middle. The start and end ones should be removed.
     $text = '​自然​環境​​';
     $expected = '自然​環境';
     $options = [];
-    $this->assertEquals(TextHelper::trimText($text, $options), $expected);
+    $this->assertEquals(TextHelper::trimText($text), $expected);
   }
 
   /**

@@ -249,10 +249,21 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
    * Ensure only 1 OCHA product is selectable and that it's mandatory when OCHA
    * is selected as source or hidden otherwise.
    *
+   * Note: the OCHA product field is only displayed when OCHA is selected, in
+   * which case the field is also marked as required. This is handled by the
+   * `reliefweb_form/widget.autocomplete` library in the `handleSources()`
+   * function because Drupal form states don't provide a way to apply a state
+   * when a value is among a list of selected values. Only exact matchs are
+   * supported in Drupal 10.2.5.
+   *
    * @param array $form
    *   Form to alter.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   Form state.
+   *
+   * @see https://www.drupal.org/project/drupal/issues/1149078
+   * @see https://humanitarian.atlassian.net/browse/RW-934
+   * @see reliefweb_form/widget.autocomplete
    */
   protected function alterOchaProductField(array &$form, FormStateInterface $form_state) {
     $widget = &$form['field_ocha_product']['widget'];
@@ -263,16 +274,6 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     if (empty($widget['#default_value']) || $widget['#default_value'] == 12351) {
       FormHelper::removeOptions($form, 'field_ocha_product', [12351]);
     }
-
-    // Only display the OCHA product when OCHA is selected.
-    $condition = [
-      'select[name="field_source[]"]' => ['value' => ['1503']],
-    ];
-    // We put the visibility state on the container to avoid styling issues with
-    // the surrounding elements but we need to to put the required state on the
-    // widget element for it to work properly.
-    $form['field_ocha_product']['#states']['visible'] = $condition;
-    $widget['#states']['required'] = $condition;
 
     // Remove the empty option.
     unset($widget['#options']['_none']);

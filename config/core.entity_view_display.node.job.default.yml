@@ -15,6 +15,8 @@ dependencies:
     - field.field.node.job.field_job_type
     - field.field.node.job.field_source
     - field.field.node.job.field_theme
+    - field.field.node.job.reliefweb_job_tagger_info
+    - field.field.node.job.reliefweb_job_tagger_status
     - node.type.job
   module:
     - datetime
@@ -114,3 +116,5 @@ hidden:
   field_import_hash: true
   langcode: true
   links: true
+  reliefweb_job_tagger_info: true
+  reliefweb_job_tagger_status: true

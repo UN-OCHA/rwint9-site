@@ -3,9 +3,11 @@
 namespace Drupal\reliefweb_entities;
 
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\Core\Field\EntityReferenceFieldItemList;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
+use Drupal\reliefweb_entities\Entity\Source;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
@@ -356,6 +358,37 @@ trait DocumentTrait {
     }
     $date = is_numeric($date) ? '@' . $date : $date;
     return new \DateTime($date, new \DateTimeZone('UTC'));
+  }
+
+  /**
+   * Update the status of the sources when publishing an opportunity.
+   */
+  protected function updateSourceModerationStatus() {
+    if (!$this->hasField('field_source') || $this->field_source->isEmpty()) {
+      return;
+    }
+
+    if (!($this instanceof EntityPublishedInterface) || !$this->isPublished()) {
+      return;
+    }
+
+    // Make the inactive or archive sources active when the node is published.
+    foreach ($this->field_source as $item) {
+      $source = $item->entity;
+      if (empty($source) || !($source instanceof Source)) {
+        continue;
+      }
+
+      if (in_array($source->getModerationStatus(), ['inactive', 'archive'])) {
+        $source->notifications_content_disable = TRUE;
+        $source->setModerationStatus('active');
+        $source->setNewRevision(TRUE);
+        $source->setRevisionLogMessage('Automatic status update due to publication of node ' . $this->id());
+        $source->setRevisionUserId(2);
+        $source->setRevisionCreationTime(time());
+        $source->save();
+      }
+    }
   }
 
 }

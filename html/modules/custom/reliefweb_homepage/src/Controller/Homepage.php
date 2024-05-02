@@ -74,7 +74,7 @@ class Homepage extends ControllerBase {
     EntityTypeManagerInterface $entity_type_manager,
     ReliefWebApiClient $reliefweb_api_client,
     RendererInterface $renderer,
-    StateInterface $state
+    StateInterface $state,
   ) {
     $this->currentUser = $current_user;
     $this->entityTypeManager = $entity_type_manager;
@@ -432,6 +432,7 @@ class Homepage extends ControllerBase {
       ->condition('status', NodeInterface::PUBLISHED)
       ->sort('created', 'DESC')
       ->range(0, 1)
+      ->accessCheck(TRUE)
       ->execute();
 
     $nodes = $storage->loadMultiple($nids);

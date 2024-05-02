@@ -11,9 +11,9 @@
     {# Link to skip to the main content is in html.html.twig #}
     <main role="main" id="main-content" class="cd-container">
 
-      <div class="cd-layout-content-wrapper">
+      <div class="cd-layout">
 
-        <div class="cd-layout-content">
+        <div class="cd-layout__content">
 
           <section class="rw-404">
             <header>
@@ -50,15 +50,11 @@
             </div>
           </section>
 
-        </div>{# /.layout-content #}
+        </div>{# /.cd-layout__content #}
 
       </div>
 
     </main>
-  {% endblock %}
-
-  {% block footer_soft %}
-    {% include '@common_design_subtheme/cd/cd-footer/cd-soft-footer.html.twig' %}
   {% endblock %}
 
   {% block footer %}

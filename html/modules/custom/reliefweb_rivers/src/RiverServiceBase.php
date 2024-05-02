@@ -169,7 +169,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
     ReliefWebApiClient $api_client,
     RequestStack $request_stack,
     RendererInterface $renderer,
-    TranslationInterface $string_translation
+    TranslationInterface $string_translation,
   ) {
     $this->configFactory = $config_factory;
     $this->currentUser = $current_user;

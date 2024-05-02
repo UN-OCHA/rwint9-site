@@ -49,7 +49,7 @@ class GuidelineSinglePageController extends ControllerBase {
   public function __construct(
     CacheBackendInterface $cache_backend,
     AccountProxyInterface $current_user,
-    EntityTypeManagerInterface $entity_type_manager
+    EntityTypeManagerInterface $entity_type_manager,
   ) {
     $this->cache = $cache_backend;
     $this->currentUser = $current_user;
@@ -118,6 +118,7 @@ class GuidelineSinglePageController extends ControllerBase {
       ->condition('status', 1)
       ->sort('type', 'DESC')
       ->sort('weight', 'ASC')
+      ->accessCheck(TRUE)
       ->execute();
 
     /** @var \Drupal\guidelines\Entity\Guideline[] $guidelines */
@@ -208,7 +209,7 @@ class GuidelineSinglePageController extends ControllerBase {
     }
 
     // Get the current host.
-    if (!isset($host)) {
+    if (!isset($hosts)) {
       $hosts = ['reliefweb.int' => TRUE];
       $host = \Drupal::request()->getHost();
       if ($host !== 'reliefweb.int') {

@@ -154,7 +154,7 @@ class ReliefWebFile extends FieldItemBase {
    * This doubles as a convenience clean-up function and a validation routine.
    * Commas are allowed for the end-user, but ultimately the value will be
    * stored as a space-separated list for compatibility with
-   * file_validate_extensions().
+   * the FileExtensions upload validator.
    *
    * This function is assigned as an #element_validate callback in
    * fieldSettingsForm().
@@ -210,7 +210,7 @@ class ReliefWebFile extends FieldItemBase {
     $element['#value'] = trim($element['#value']);
     $form_state->setValue(['settings', 'max_filesize'], $element['#value']);
     if (!empty($element['#value']) && !Bytes::validate($element['#value'])) {
-      $form_state->setError($element, $this->t('The "@name" option must contain a valid value. You may either leave the text field empty or enter a string like "512" (bytes), "80 KB" (kilobytes) or "50 MB" (megabytes).', [
+      $form_state->setError($element, t('The "@name" option must contain a valid value. You may either leave the text field empty or enter a string like "512" (bytes), "80 KB" (kilobytes) or "50 MB" (megabytes).', [
         '@name' => $element['#title'],
       ]));
     }
@@ -234,7 +234,7 @@ class ReliefWebFile extends FieldItemBase {
     $element['#value'] = trim($element['#value']);
     $form_state->setValue(['settings', 'preview_max_filesize'], $element['#value']);
     if (!empty($element['#value']) && !Bytes::validate($element['#value'])) {
-      $form_state->setError($element, $this->t('The "@name" option must contain a valid value. You may either leave the text field empty or enter a string like "512" (bytes), "80 KB" (kilobytes) or "50 MB" (megabytes).', [
+      $form_state->setError($element, t('The "@name" option must contain a valid value. You may either leave the text field empty or enter a string like "512" (bytes), "80 KB" (kilobytes) or "50 MB" (megabytes).', [
         '@name' => $element['#title'],
       ]));
     }
@@ -257,7 +257,7 @@ class ReliefWebFile extends FieldItemBase {
     $element['#value'] = trim($element['#value']);
     $form_state->setValue(['settings', 'preview_min_dimensions'], $element['#value']);
     if (isset($element['#value']) && preg_match('/^(\d+x\d*)?$/', $element['#value']) !== 1) {
-      $form_state->setError($element, $this->t('The "@name" option must contain a valid value. You may either leave the text field empty or enter a value in the form WIDHTxHEIGHT (ex: 700x100).', [
+      $form_state->setError($element, t('The "@name" option must contain a valid value. You may either leave the text field empty or enter a value in the form WIDHTxHEIGHT (ex: 700x100).', [
         '@name' => $element['#title'],
       ]));
     }
@@ -277,24 +277,24 @@ class ReliefWebFile extends FieldItemBase {
     // ensure a file can be replaced only by a file of the same type.
     $extensions = $this->getAllowedFileExtensions();
     if (!empty($extensions)) {
-      $validators['file_validate_extensions'] = [implode(' ', $extensions)];
+      $validators['FileExtension'] = ['extensions' => implode(' ', $extensions)];
     }
 
     // Validate the file mime as well if defined, to  ensure a file can be
     // replaced only by a file of the same type.
     $file_mime = $this->getFileMime();
     if (!empty($file_mime)) {
-      $validators['reliefweb_files_file_validate_mime_type'] = [$file_mime];
+      $validators['ReliefWebFileMimeType'] = ['mimetype' => $file_mime];
     }
 
     // There is always a file size limit due to the PHP server limit.
-    $validators['file_validate_size'] = [$this->getMaxFileSize()];
+    $validators['FileSizeLimit'] = ['fileLimit' => $this->getMaxFileSize()];
 
     // Validate the filename length.
-    $validators['file_validate_name_length'] = [];
+    $validators['FileNameLength'] = [];
 
     // Validate the filename.
-    $validators['reliefweb_files_file_validate_file_name'] = [];
+    $validators['ReliefWebFileName'] = [];
 
     return $validators;
   }
@@ -310,12 +310,15 @@ class ReliefWebFile extends FieldItemBase {
     // We only allow PNG images to be consistent with the automatically
     // generated previews.
     $validators = [
-      'file_validate_extensions' => ['png'],
-      'reliefweb_files_file_validate_mime_type' => ['image/png'],
-      'file_validate_name_length' => [],
-      'file_validate_is_image' => [],
-      'file_validate_size' => [$this->getPreviewMaxFileSize()],
-      'file_validate_image_resolution' => ['', $this->getPreviewMinDimensions()],
+      'FileExtension' => ['extensions' => 'png'],
+      'ReliefWebFileMimeType' => ['mimetype' => 'image/png'],
+      'FileNameLength' => [],
+      'FileIsImage' => [],
+      'FileSizeLimit' => ['fileLimit' => $this->getPreviewMaxFileSize()],
+      'FileImageDimensions' => [
+        'maxDimensions' => '',
+        'minDimensions' => $this->getPreviewMinDimensions(),
+      ],
     ];
 
     return $validators;
@@ -670,13 +673,13 @@ class ReliefWebFile extends FieldItemBase {
     }
 
     return [
-      '#theme' => 'image_style__preview',
-      '#style_name' => $style,
+      '#theme' => 'responsive_image__preview',
+      '#responsive_image_style_id' => $style,
       '#uri' => $uri,
-      '#alt' => $this->t('Preview of @file_name', [
-        '@file_name' => $this->getFileName(),
-      ]),
       '#attributes' => [
+        'alt' => $this->t('Preview of @file_name', [
+          '@file_name' => $this->getFileName(),
+        ]),
         'class' => ['rw-file-preview'],
         'data-version' => implode('-', [
           // Once the file is saved it will have a revision ID, until then to
@@ -874,8 +877,8 @@ class ReliefWebFile extends FieldItemBase {
 
     $mutool = \Drupal::state()->get('mutool', '/usr/bin/mutool');
     if (is_executable($mutool)) {
-      // @todo add max dimensions.
-      $command = "{$mutool} draw -R {$rotation} -o {$destination} {$source} {$page}";
+      $options = \Drupal::state()->get('mutool_options', '');
+      $command = "{$mutool} draw {$options} -R {$rotation} -o {$destination} {$source} {$page}";
       exec($command, $output, $return_val);
       // @todo log error?
       return empty($return_val) && @file_exists($destination_uri);

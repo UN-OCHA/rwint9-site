@@ -17,16 +17,17 @@ use Drupal\Core\Render\Element;
 use Drupal\media\MediaInterface;
 use Drupal\reliefweb_entities\BundleEntityInterface;
 use Drupal\reliefweb_entities\BundleEntityStorageInterface;
+use Drupal\reliefweb_entities\Entity\Report;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
 use Drupal\reliefweb_utility\Helpers\ClassHelper;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
-use Drupal\reliefweb_utility\Helpers\EntityHelper;
 use Drupal\reliefweb_utility\Helpers\MailHelper;
 use Drupal\reliefweb_utility\Helpers\MediaHelper;
 use Drupal\reliefweb_utility\Helpers\ReliefWebStateHelper;
 use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\taxonomy\TermInterface;
+use Symfony\Component\HttpKernel\Exception\GoneHttpException;
 
 /**
  * Implements hook_entity_base_field_info().
@@ -684,6 +685,7 @@ function reliefweb_entities_cron() {
     ->condition('moderation_status', 'embargoed', '=')
     ->condition('field_embargo_date.value', gmdate("Y-m-d\TH:i:s"), '<')
     ->range(0, $cron_settings['embargoed_reports_limit'] ?? 20)
+    ->accessCheck(FALSE)
     ->execute();
 
   if (!empty($embargoed_ids)) {
@@ -714,6 +716,7 @@ function reliefweb_entities_cron() {
     ->condition('moderation_status', 'published', '=')
     ->condition('field_job_closing_date.value', $date, '<')
     ->range(0, $cron_settings['expired_jobs_limit'] ?? 20)
+    ->accessCheck(FALSE)
     ->execute();
 
   $expired_ids += $storage
@@ -722,6 +725,7 @@ function reliefweb_entities_cron() {
     ->condition('moderation_status', 'published', '=')
     ->condition('field_registration_deadline.value', $date, '<')
     ->range(0, $cron_settings['expired_training_limit'] ?? 20)
+    ->accessCheck(FALSE)
     ->execute();
 
   if (!empty($expired_ids)) {
@@ -751,27 +755,19 @@ function reliefweb_entities_menu_local_tasks_alter(&$data, $route_name, Refinabl
 }
 
 /**
- * Implements hook_preprocess_page__404().
+ * Implements hook_preprocess_page__410().
  *
  * Add a user friendly message on inaccessible entity pages to indicate it's
  * no longer available (we assume the URL was previously accessible, which is
  * probably true in most cases).
  */
-function reliefweb_entities_preprocess_page__404(array &$variables) {
-  // Get the entity from the original request.
-  $entity = EntityHelper::getEntityFromRequest(\Drupal::requestStack()->getMasterRequest());
-  if (isset($entity) && $entity instanceof BundleEntityInterface) {
-    $type = mb_strtolower(EntityHelper::getBundleLabelFromEntity($entity));
-    $title = $entity->label();
-
-    $message = t('The @type %title is no longer available.', [
-      '@type' => $type,
-      '%title' => $title,
-    ]);
-
+function reliefweb_entities_preprocess_page__410(array &$variables) {
+  // @see \Drupal\reliefweb_entities\EventSubscriber\AccessDeniedToNotFound::on403().
+  $exception = \Drupal::requestStack()->getCurrentRequest()->attributes->get('exception');
+  if (isset($exception) && $exception instanceof GoneHttpException) {
     $variables['page']['content']['message'] = [
       '#type' => 'markup',
-      '#markup' => $message,
+      '#markup' => $exception->getMessage(),
     ];
   }
 
@@ -780,6 +776,17 @@ function reliefweb_entities_preprocess_page__404(array &$variables) {
   // and this preprocess hook implementation will not be called when visiting
   // an inaccessible entity page afterwards.
   $variables['#cache']['contexts'][] = 'url.path';
+}
+
+/**
+ * Implements hook_preprocess_page_title().
+ */
+function reliefweb_entities_4xx_title() {
+  $exception = \Drupal::requestStack()->getCurrentRequest()->attributes->get('exception');
+  if (isset($exception) && $exception instanceof GoneHttpException) {
+    return t('Gone');
+  }
+  return 'Client error';
 }
 
 /**
@@ -835,6 +842,66 @@ function reliefweb_entities_node_delete(EntityInterface $entity) {
 
       foreach ($media_entities as $media) {
         $media->delete();
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for `ocha_ai_chat_chat_form`.
+ */
+function reliefweb_entities_form_ocha_ai_chat_chat_form_alter(array &$form, FormStateInterface $form_state, string $form_id) {
+  $url = \Drupal::request()?->query?->get('url');
+  if (isset($url)) {
+    $router = \Drupal::service('router.no_access_checks');
+    $parameters = $router->match($url);
+    $node = $parameters['node'] ?? NULL;
+
+    if (isset($node) && $node instanceof Report) {
+      // No need to show the source when chatting with a single report.
+      if (isset($form['source'])) {
+        $form['source']['#access'] = FALSE;
+      }
+
+      // Only English documents are supported due to LLM limitations.
+      $is_english_report = FALSE;
+      foreach ($node->field_language as $item) {
+        if ($item->target_id == 267) {
+          $is_english_report = TRUE;
+          break;
+        }
+      }
+      if (!$is_english_report) {
+        $reason = t('Sorry, only English reports are supported.');
+      }
+
+      // Non supported content formats.
+      foreach ($node->field_content_format as $item) {
+        if ($item->target_id == 12) {
+          $reason = t('Sorry, maps are not supported.');
+          break;
+        }
+        elseif ($item->target_id == 12570) {
+          $reason = t('Sorry, infographics are not supported.');
+          break;
+        }
+        elseif ($item->target_id == 38974) {
+          $reason = t('Sorry, interactive reports are not supported.');
+          break;
+        }
+      }
+
+      if (!empty($reason)) {
+        foreach (Element::children($form) as $key) {
+          $form[$key]['#access'] = FALSE;
+        }
+        $form['unsupported'] = [
+          '#type' => 'inline_template',
+          '#template' => '<p class="ocha-ai-chat-chat-form__unsupported">{{ reason }}</p>',
+          '#context' => [
+            'reason' => $reason,
+          ],
+        ];
       }
     }
   }

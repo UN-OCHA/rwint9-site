@@ -55,6 +55,7 @@
             disableCodeCoverageIgnore="true">
     <include>
       <directory suffix=".php">./html/modules/custom</directory>
+      <directory suffix=".module">./html/modules/custom</directory>
     </include>
     <exclude>
       <directory suffix="Interface.php">./html/modules/custom</directory>

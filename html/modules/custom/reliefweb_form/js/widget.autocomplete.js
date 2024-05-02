@@ -450,11 +450,36 @@
           // Retrieve the list of selected sources without an already loaded
           // attention message.
           var selected = [];
+          var ochaSelected = false;
           var options = sourceElement.getElementsByTagName('option');
           for (var i = 0, l = options.length; i < l; i++) {
             var option = options[i];
             if (option.selected && !option.hasAttribute('data-message')) {
               selected.push(option.value);
+            }
+            // Check if OCHA (id 1503) is selected.
+            if (option.selected && option.value == 1503) {
+              ochaSelected = true;
+            }
+          }
+
+          // Show/hide the OCHA product field based on whether OCHA is selected
+          // as source or not. We cannot use Drupal form states for that because
+          // they don't provide a way to apply a state when a value in among a
+          // list of selected values. Only exact matches are supported in Drupal
+          // 10.2.5.
+          // @see https://www.drupal.org/project/drupal/issues/1149078
+          // @see https://humanitarian.atlassian.net/browse/RW-934
+          var ochaProduct = document.querySelector('[data-drupal-selector="edit-field-ocha-product-wrapper"]');
+          if (ochaProduct) {
+            var ochaProductOptional = ochaProduct.querySelector('.form-optional');
+            if (ochaSelected) {
+              ochaProduct.removeAttribute('hidden');
+              ochaProductOptional.setAttribute('hidden', '');
+            }
+            else {
+              ochaProduct.setAttribute('hidden', '');
+              ochaProductOptional.removeAttribute('hidden');
             }
           }
 

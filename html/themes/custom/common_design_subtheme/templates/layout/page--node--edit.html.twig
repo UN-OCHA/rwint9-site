@@ -10,21 +10,18 @@
 
       {{ page.page_title }}
 
-      <div class="cd-layout-content-wrapper">
-        <div class="cd-layout-content">
+      <div class="cd-layout">
+        <div class="cd-layout__content">
           <div class="rw-page--sectioned">
             {{ page.content }}
           </div>
-        </div>{# /.cd-layout-content #}
+        </div>{# /.cd-layout__content #}
 
-        {% if page.sidebar_second %}<aside class="cd-layout-sidebar-second" role="complementary">{{ page.sidebar_second }}</aside>
+        {% if page.sidebar_second %}<aside class="cd-layout__sidebar--second" role="complementary">{{ page.sidebar_second }}</aside>
         {% endif %}
       </div>
 
     </main>
-  {% endblock %}
-
-  {% block footer_soft %}
   {% endblock %}
 
   {% block footer %}

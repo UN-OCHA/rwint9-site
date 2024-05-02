@@ -44,13 +44,6 @@ class ReliefWebReportingCommands extends DrushCommands {
   protected $languageDefault;
 
   /**
-   * Logger.
-   *
-   * @var \Psr\Log\LoggerInterface
-   */
-  protected $logger;
-
-  /**
    * The state manager.
    *
    * @var \Drupal\Core\State\StateInterface
@@ -66,7 +59,7 @@ class ReliefWebReportingCommands extends DrushCommands {
     MailManagerInterface $mail_manager,
     LanguageDefault $language_default,
     LoggerChannelFactoryInterface $logger_factory,
-    StateInterface $state
+    StateInterface $state,
   ) {
     $this->configFactory = $config_factory;
     $this->database = $database;
@@ -184,7 +177,8 @@ class ReliefWebReportingCommands extends DrushCommands {
     $body .= '</body></html>';
 
     // Send the email.
-    if (mail($recipients, $subject, $body, $headers)) {
+    $message = $this->sendMail($from, $recipients, $subject, $body, $headers);
+    if (!empty($message['result'])) {
       $this->logger->info(dt('"@subject" sent to @recipients', [
         '@subject' => $subject,
         '@recipients' => $recipients,
@@ -250,7 +244,7 @@ class ReliefWebReportingCommands extends DrushCommands {
     $headers = [
       'From' => $from,
       'Reply-To' => $from,
-      'Content-Type' => 'multipart/mixed; boundary=GvXjxJ+pjyke8COw',
+      'Content-Type' => 'text/plain; charset=utf-8',
       'Content-Disposition' => 'inline',
       'MIME-Version' => '1.0',
     ];
@@ -283,8 +277,10 @@ class ReliefWebReportingCommands extends DrushCommands {
       ORDER BY n.nid DESC
     ")->fetchAll(\PDO::FETCH_ASSOC);
 
+    $attachments = [];
+
     if (empty($records)) {
-      $body .= 'No reports posted this week.';
+      $body = 'No reports posted this week.';
     }
     else {
       // Convert to CSV.
@@ -299,23 +295,18 @@ class ReliefWebReportingCommands extends DrushCommands {
       $csv = trim(stream_get_contents($handle));
       fclose($handle);
 
-      $body = implode("\n", [
-        '--GvXjxJ+pjyke8COw',
-        'Content-Type: text/html',
-        'Content-Disposition: inline',
-        '',
-        "Attachment: $filename",
-        '',
-        '--GvXjxJ+pjyke8COw',
-        'Content-Type: text/csv',
-        "Content-Disposition: attachment; filename=$filename",
-        '',
-        $csv,
-      ]);
+      $body = "Attachment: $filename";
+
+      $attachments[] = [
+        'filecontent' => $csv,
+        'filename' => $filename,
+        'filemime' => 'text/csv',
+      ];
     }
 
     // Send the email.
-    if (mail($recipients, $subject, $body, $headers)) {
+    $message = $this->sendMail($from, $recipients, $subject, $body, $headers, $attachments);
+    if (!empty($message['result'])) {
       $this->logger->info(dt('"@subject" sent to @recipients', [
         '@subject' => $subject,
         '@recipients' => $recipients,
@@ -329,6 +320,190 @@ class ReliefWebReportingCommands extends DrushCommands {
     }
 
     return TRUE;
+  }
+
+  /**
+   * Send weekly statistics about the AI tagging.
+   *
+   * @param string $recipients
+   *   Comma delimited list of recipients for the report email.
+   *
+   * @command reliefweb_reporting:send-weekly-ai-tagging-stats
+   *
+   * @usage reliefweb_reporting:send-weekly-ai-tagging-stats
+   *   Send weekly statistics about the AI tagging.
+   *
+   * @validate-module-enabled reliefweb_reporting
+   */
+  public function sendWeeklyAiTaggingStats($recipients) {
+    if (!empty($this->state->get('system.maintenance_mode', 0))) {
+      $this->logger()->warning(dt('Maintenance mode, aborting.'));
+      return TRUE;
+    }
+
+    if (empty($recipients)) {
+      $this->logger()->error(dt('Missing recipients.'));
+      return FALSE;
+    }
+
+    $from = $this->configFactory->get('system.site')->get('mail') ?? ini_get('sendmail_from');
+    if (empty($from)) {
+      $this->logger()->error(dt('Missing from address.'));
+      return FALSE;
+    }
+
+    // Format the from to include ReliefWeb if not already.
+    if (strpos($from, '<') === FALSE) {
+      $from = strtr('@sitename <@sitemail>', [
+        '@sitename' => $this->configFactory->get('system.site')->get('name') ?? 'ReliefWeb',
+        '@sitemail' => $from,
+      ]);
+    }
+
+    $recipients = implode(', ', preg_split('/,\s*/', trim($recipients)));
+
+    $last_sunday = strtotime('last sunday', time());
+    $last_week_sunday = strtotime('last sunday', $last_sunday);
+    $formatted_last_sunday = gmdate('Y-m-d', $last_sunday);
+    $formatted_last_week_sunday = gmdate('Y-m-d', $last_week_sunday);
+
+    $filename = "job-ai-tagging-stats-$formatted_last_week_sunday-$formatted_last_sunday.csv";
+    $subject = "Weekly job AI tagging stats - $formatted_last_week_sunday to $formatted_last_sunday";
+    $headers = [
+      'From' => $from,
+      'Reply-To' => $from,
+      'Content-Type' => 'text/plain; charset=utf-8',
+      'Content-Disposition' => 'inline',
+      'MIME-Version' => '1.0',
+    ];
+
+    $records = $this->database->query("
+      SELECT
+        nr.nid AS nid,
+        nr.vid As vid,
+        IFNULL(GROUP_CONCAT(DISTINCT ur.roles_target_id ORDER BY ur.roles_target_id SEPARATOR ','), '') AS roles,
+        GROUP_CONCAT(DISTINCT nfcc.field_career_categories_target_id ORDER BY nfcc.field_career_categories_target_id SEPARATOR ',') AS career_categories,
+        GROUP_CONCAT(DISTINCT nft.field_theme_target_id ORDER BY nft.field_theme_target_id SEPARATOR ',') AS themes
+      FROM node_revision AS nr
+      INNER JOIN node_field_data AS n
+        ON n.nid = nr.nid
+      INNER JOIN node_revision__reliefweb_job_tagger_status AS njts
+        ON njts.entity_id = n.nid
+        AND njts.revision_id = nr.vid
+        AND njts.reliefweb_job_tagger_status_value = 'processed'
+      LEFT JOIN user__roles AS ur
+        ON ur.entity_id = nr.revision_uid
+      LEFT JOIN node_revision__field_career_categories AS nfcc
+        ON nfcc.entity_id = nr.nid
+        AND nfcc.revision_id = nr.vid
+      LEFT JOIN node_revision__field_theme AS nft
+        ON nft.entity_id = nr.nid
+        AND nft.revision_id = nr.vid
+      WHERE n.type = 'job'
+        AND n.created >= UNIX_TIMESTAMP(DATE_SUB(DATE(NOW()), INTERVAL DAYOFWEEK(NOW()) + 6 DAY))
+        AND n.created < UNIX_TIMESTAMP(DATE_SUB(DATE(NOW()), INTERVAL DAYOFWEEK(NOW()) - 1 DAY))
+      GROUP BY nr.vid
+      ORDER BY nr.vid
+    ")->fetchAll(\PDO::FETCH_ASSOC);
+
+    $attachments = [];
+
+    if (empty($records)) {
+      $body = 'No jobs tagged by AI this week.';
+    }
+    else {
+      $jobs = [];
+      $changed_career_categories = [];
+      $changed_themes = [];
+
+      foreach ($records as $record) {
+        $nid = $record['nid'];
+
+        if (isset($jobs[$nid])) {
+          $previous = $jobs[$nid];
+
+          if (strpos($record['roles'], 'editor') !== FALSE) {
+            if ($record['career_categories'] !== $previous['career_categories']) {
+              $changed_career_categories[$nid] = TRUE;
+            }
+            if ($record['themes'] !== $previous['themes']) {
+              $changed_themes[$nid] = TRUE;
+            }
+          }
+        }
+
+        $jobs[$nid] = $record;
+      }
+
+      $data = [
+        'jobs_tagged_by_ai' => count($jobs),
+        'career_categories_changed_by_editors' => count($changed_career_categories),
+        'themes_changed_by_editors' => count($changed_themes),
+      ];
+
+      // Convert to CSV.
+      $handle = fopen('php://memory', 'r+');
+      fputcsv($handle, array_keys($data), "\t");
+      fputcsv($handle, array_values($data), "\t");
+      rewind($handle);
+      $csv = trim(stream_get_contents($handle));
+      fclose($handle);
+
+      $body = "Attachment: $filename";
+
+      $attachments[] = [
+        'filecontent' => $csv,
+        'filename' => $filename,
+        'filemime' => 'text/csv',
+      ];
+    }
+
+    // Send the email.
+    $message = $this->sendMail($from, $recipients, $subject, $body, $headers, $attachments);
+    if (!empty($message['result'])) {
+      $this->logger->info(dt('"@subject" sent to @recipients', [
+        '@subject' => $subject,
+        '@recipients' => $recipients,
+      ]));
+    }
+    else {
+      $this->logger->error(dt('Unable to send "@subject" to @recipients', [
+        '@subject' => $subject,
+        '@recipients' => $recipients,
+      ]));
+    }
+
+    return TRUE;
+  }
+
+  /**
+   * Send an email.
+   *
+   * @param string $from
+   *   From address.
+   * @param string $recipients
+   *   Recipient addresses.
+   * @param string $subject
+   *   Email subjects.
+   * @param string $body
+   *   Email body.
+   * @param array $headers
+   *   Email headers.
+   * @param array $attachments
+   *   Optional attachments.
+   *
+   * @return array
+   *   The message array with a `result` property indicating success or failture
+   *   at the PHP level.
+   */
+  protected function sendMail(string $from, string $recipients, string $subject, string $body, array $headers, array $attachments = []) {
+    $language = $this->languageDefault->get()->getId();
+    return $this->mailManager->mail('reliefweb_reporting', 'reporting', $recipients, $language, [
+      'headers' => $headers,
+      'subject' => $subject,
+      'body' => [$body],
+      'attachments' => $attachments,
+    ], $from, TRUE);
   }
 
 }

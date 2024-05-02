@@ -24,11 +24,14 @@ dependencies:
   module:
     - book
     - filter
-    - google_tag
     - guidelines
+    - ocha_ai
+    - ocha_ai_chat
     - reliefweb_bookmarks
     - reliefweb_guidelines
+    - reliefweb_job_tagger
     - reliefweb_users
+    - system
     - taxonomy
     - taxonomy_term_revision
 id: webmaster
@@ -36,11 +39,13 @@ label: Webmaster
 weight: 4
 is_admin: null
 permissions:
+  - 'access administration pages'
   - 'access editorial guidelines'
+  - 'access ocha ai chat'
   - 'access taxonomy overview'
   - 'add content to books'
   - 'add guideline entities'
-  - 'administer google tag manager'
+  - 'bypass ocha ai job tag'
   - 'create new books'
   - 'create terms in career_category'
   - 'create terms in content_format'
@@ -113,6 +118,7 @@ permissions:
   - 'guideline_list edit own entities'
   - 'guideline_list revert revisions'
   - 'guideline_list view revisions'
+  - 'manage ocha ai chat config'
   - 'revert all guideline revisions'
   - 'revert term revision'
   - 'see other bookmarks'
@@ -120,8 +126,11 @@ permissions:
   - 'sort editorial guidelines'
   - 'use text format guideline'
   - 'view all guideline revisions'
+  - 'view ocha ai admin config menu'
+  - 'view ocha ai chat logs'
   - 'view published guideline entities'
   - 'view reliefweb admin menu'
   - 'view term revision data'
   - 'view term revision list'
+  - 'view the administration theme'
   - 'view unpublished guideline entities'

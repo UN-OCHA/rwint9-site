@@ -91,7 +91,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
     EntityFieldManagerInterface $entity_field_manager,
     EntityTypeManagerInterface $entity_type_manager,
     StateInterface $state,
-    TranslationInterface $string_translation
+    TranslationInterface $string_translation,
   ) {
     $this->database = $database;
     $this->currentUser = $current_user;
@@ -230,7 +230,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
     $entity_type_id = $form_state->getFormObject()->getEntity()->getEntityTypeId();
     $revision_field = $this->getEntityTypeRevisionLogMessageField($entity_type_id);
 
-    if (!isset($revision_field)) {
+    if (empty($revision_field)) {
       return;
     }
 
@@ -939,7 +939,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
    */
   public static function alterEntityForm(array &$form, FormStateInterface $form_state) {
     $form_object = $form_state->getFormObject();
-    if (isset($form_object) && $form_object instanceof ContentEntityForm) {
+    if ($form_object instanceof ContentEntityForm) {
       $service = static::getFormAlterService($form_object->getEntity()->bundle());
       if (empty($service)) {
         $service = static::getFormAlterService($form_object->getEntity()->getEntityTypeId());

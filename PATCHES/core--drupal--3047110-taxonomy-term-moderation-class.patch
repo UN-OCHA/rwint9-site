@@ -11,10 +11,10 @@ index fe8e6eb45c..cf5bd715f8 100644
        if ($entity_type->isRevisionable() && !$entity_type->isInternal() && !in_array($entity_type_id, $entity_type_to_exclude)) {
          $entity_types[$entity_type_id] = $this->addModerationToEntityType($entity_type);
 diff --git a/core/modules/content_moderation/tests/src/Kernel/ContentModerationStateTest.php b/core/modules/content_moderation/tests/src/Kernel/ContentModerationStateTest.php
-index c238eb3d44..5d20a48235 100644
+index 534a689b45..2f9bdcf82a 100644
 --- a/core/modules/content_moderation/tests/src/Kernel/ContentModerationStateTest.php
 +++ b/core/modules/content_moderation/tests/src/Kernel/ContentModerationStateTest.php
-@@ -78,6 +78,7 @@ protected function setUp(): void {
+@@ -94,6 +94,7 @@ protected function setUp(): void {
      $this->installEntitySchema('block_content');
      $this->installEntitySchema('media');
      $this->installEntitySchema('file');
@@ -22,7 +22,7 @@ index c238eb3d44..5d20a48235 100644
      $this->installEntitySchema('content_moderation_state');
      $this->installConfig('content_moderation');
      $this->installSchema('file', 'file_usage');
-@@ -157,6 +158,9 @@ public function basicModerationTestCases() {
+@@ -173,6 +174,9 @@ public function basicModerationTestCases() {
        'Nodes' => [
          'node',
        ],
@@ -32,7 +32,7 @@ index c238eb3d44..5d20a48235 100644
        'Block content' => [
          'block_content',
        ],
-@@ -278,7 +282,7 @@ public function testContentModerationStateTranslationDataRemoval($entity_type_id
+@@ -294,7 +298,7 @@ public function testContentModerationStateTranslationDataRemoval($entity_type_id
        /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
        $entity = $this->createEntity($entity_type_id, 'published');
        $langcode = 'fr';
@@ -41,7 +41,7 @@ index c238eb3d44..5d20a48235 100644
        // Make sure we add values for all of the required fields.
        if ($entity_type_id == 'block_content') {
          $translation->info = $this->randomString();
-@@ -788,14 +792,4 @@ protected function assertDefaultRevision(EntityInterface $entity, $revision_id,
+@@ -806,14 +810,4 @@ protected function assertDefaultRevision(EntityInterface $entity, int $revision_
      }
    }
  
@@ -56,9 +56,27 @@ index c238eb3d44..5d20a48235 100644
 -  }
 -
  }
+diff --git a/core/modules/taxonomy/src/TermAccessControlHandler.php b/core/modules/taxonomy/src/TermAccessControlHandler.php
+index b25dca4627..31ff834c93 100644
+--- a/core/modules/taxonomy/src/TermAccessControlHandler.php
++++ b/core/modules/taxonomy/src/TermAccessControlHandler.php
+@@ -46,6 +46,13 @@ protected function checkAccess(EntityInterface $entity, $operation, AccountInter
+ 
+         return AccessResult::neutral()->setReason("The following permissions are required: 'delete terms in {$entity->bundle()}' OR 'administer taxonomy'.");
+ 
++      case 'view all revisions':
++        if ($account->hasPermission('view all revisions')) {
++          return AccessResult::allowed()->cachePerPermissions();
++        }
++
++        return AccessResult::neutral()->setReason("The following permissions are required: 'view all revisions' OR 'administer taxonomy'.");
++
+       default:
+         // No opinion.
+         return AccessResult::neutral()->cachePerPermissions();
 diff --git a/core/modules/taxonomy/tests/src/Functional/TaxonomyTermContentModerationTest.php b/core/modules/taxonomy/tests/src/Functional/TaxonomyTermContentModerationTest.php
 new file mode 100644
-index 0000000000..d055b0c45b
+index 0000000000..a9683f6a15
 --- /dev/null
 +++ b/core/modules/taxonomy/tests/src/Functional/TaxonomyTermContentModerationTest.php
 @@ -0,0 +1,215 @@
@@ -208,7 +226,7 @@ index 0000000000..d055b0c45b
 +    // Check that parents were changed.
 +    $assert_session->pageTextNotContains($validation_message);
 +    $taxonomy_storage->resetCache();
-+    $this->assertEquals([$parent_2->id()], array_keys($taxonomy_storage->loadParents($child->id())));
++    $this->assertNotEquals([$parent_1->id()], array_keys($taxonomy_storage->loadParents($child->id())));
 +
 +    // Add a pending revision and change the weight.
 +    $this->drupalGet('taxonomy/term/' . $child->id() . '/edit');

@@ -49,7 +49,7 @@ class DocstoreClient {
   public function __construct(
     ConfigFactoryInterface $config_factory,
     ClientInterface $http_client,
-    LoggerChannelFactoryInterface $logger_factory
+    LoggerChannelFactoryInterface $logger_factory,
   ) {
     $this->config = $config_factory->get('reliefweb_files.settings');
     $this->httpClient = $http_client;

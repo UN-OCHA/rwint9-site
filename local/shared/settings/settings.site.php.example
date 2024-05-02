@@ -1,0 +1,67 @@
+<?php
+
+// @codingStandardsIgnoreFile
+
+/**
+ * @file
+ * Settings/configuration particular to this site.
+ *
+ * For example, HID credentials etc.
+ */
+
+// Allow insecure images.
+$config['image.settings']['allow_insecure_derivatives'] = TRUE;
+
+// Reduce the expiration time of deleted files so they can be deleted when
+// running cron.
+$config['system.file']['temporary_maximum_age'] = 1;
+
+// Enable local development config.
+$config['config_split.config_split.config_dev']['status'] = TRUE;
+
+// Local HID.
+$config['social_auth_hid.settings']['client_id'] = 'REPLACE_WITH_LOCAL_HID_CLIENT_ID';
+$config['social_auth_hid.settings']['client_secret'] = 'REPLACE_WITH_LOCAL_HID_CLIENT_SECRET';
+$config['social_auth_hid.settings']['base_url'] = 'REPLACE_WITH_LOCAL_HID_URL';
+
+// RW API settings.
+// Use the API site container name defined in the RW API local setup to avoid
+// certificate issues.
+// This can be replaced with `https://api.reliefweb.int/v1`, for example to test
+// the subscriptions with the latest content.
+$config['reliefweb_api.settings']['api_url'] = 'http://rwint-api-local-site/v1';
+// Use the local API site local defined in the RW API local setup. This is used
+// client side (browser) so there is no certificate problem.
+$config['reliefweb_api.settings']['api_url_external'] = 'https://rwint-api-local.test/v1';
+// Use the local RW site host name to identify the origin of the API requests.
+$config['reliefweb_api.settings']['appname'] = 'rwint-local.test';
+// Use the API elasticsearch container name defined in the RW API local setup
+// to avoid certificate issues.
+$config['reliefweb_api.settings']['elasticsearch'] = 'http://rwint-api-local-elasticsearch:9200';
+// Use the local site URL to that all the links exposed in the API point at
+// the local RW site.
+$config['reliefweb_api.settings']['website'] = 'https://rwint-local.test';
+$config['reliefweb_api.settings']['cache_enabled'] = TRUE;
+$config['reliefweb_api.settings']['no_replica'] = TRUE;
+
+// Mapbox.
+$config['reliefweb_disaster_map.settings']['mapbox_key'] = 'REPLACE_WITH_MAPBOX_KEY';
+
+// DSR settings.
+$config['reliefweb_dsr.settings']['ctf_cda_access_token'] = 'REPLACE_WITH_DSR_ACCESS_TOKEN';
+$config['reliefweb_dsr.settings']['ctf_dsr_url'] = 'REPLACE_WITH_DSR_ENTRIES_URL';
+
+// Most read.
+$settings['reliefweb_analytics_property_id'] = 'REPLACE_WITH_GOOGLE_ANALYTICS_PROPERTY_ID';
+putenv('GOOGLE_APPLICATION_CREDENTIALS=/srv/www/credentials.json');
+
+// Stage file proxy.
+$config['stage_file_proxy.settings']['hotlink'] = FALSE;
+$config['stage_file_proxy.settings']['origin'] = 'https://reliefweb.int';
+$config['stage_file_proxy.settings']['origin_dir'] = 'sites/default/files';
+$config['stage_file_proxy.settings']['use_imagecache_root'] = TRUE;
+$config['stage_file_proxy.settings']['verify'] = FALSE;
+$config['stage_file_proxy.settings']['excluded_extensions'] = 'css,gz,js';
+
+// Set the debug var dumper.
+$config['devel.settings']['devel_dumper'] = 'var_dumper';

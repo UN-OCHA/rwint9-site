@@ -1,0 +1,13 @@
+/* Reset the arbitrary width from the cd-form.css. */
+@media (min-width: 768px) {
+  form input[type="text"],
+  form input[type="number"],
+  form input[type="password"],
+  form input[type="email"],
+  form input[type="search"],
+  form input[type="tel"],
+  form input[type="url"],
+  form input[type="file"] {
+    max-width: unset;
+  }
+}

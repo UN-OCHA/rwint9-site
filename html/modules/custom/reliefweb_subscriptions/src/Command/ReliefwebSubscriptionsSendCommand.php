@@ -122,11 +122,14 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    *
    * @validate-module-enabled reliefweb_subscriptions
    */
-  public function queue($sid, array $options = [
-    'entity_type' => '',
-    'entity_id' => 0,
-    'last' => 0,
-  ]) {
+  public function queue(
+    $sid,
+    array $options = [
+      'entity_type' => '',
+      'entity_id' => 0,
+      'last' => 0,
+    ],
+  ) {
     $this->mailer->queue($sid, $options);
   }
 
@@ -153,9 +156,12 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
    *
    * @validate-module-enabled reliefweb_subscriptions
    */
-  public function unsubscribe($frequency = '1w', array $options = [
-    'dry-run' => FALSE,
-  ]) {
+  public function unsubscribe(
+    $frequency = '1w',
+    array $options = [
+      'dry-run' => FALSE,
+    ],
+  ) {
     $settings = Settings::get('ocha_elk_mail', []);
     if (empty($settings['url'])) {
       $this->logger()->error(dt('ELK url missing'));
@@ -325,6 +331,46 @@ class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAli
       '@emails' => count($emails),
     ]));
     return TRUE;
+  }
+
+  /**
+   * Enable link tracking for subscriptions.
+   *
+   * @param string $sids
+   *   Comma separated list of subscription ids to track or untrack. Use `all`
+   *   to enable link tracking of all the subscriptions. Use `countries` to
+   *   enable tracking on all the country based subscriptions. Otherwise use
+   *   individual subscription ids.
+   *
+   * @command reliefweb_subscriptions:enable-link-tracking
+   *
+   * @usage reliefweb_subscriptions:enable-link-tracking headlines,appeals
+   *   Enable link tracking for headlines and appeals.
+   *
+   * @validate-module-enabled reliefweb_subscriptions
+   */
+  public function enableLinkTracking($sids = 'all') {
+    $this->mailer->toggleLinkTracking(TRUE, explode(',', $sids));
+  }
+
+  /**
+   * Disable link tracking for subscriptions.
+   *
+   * @param string $sids
+   *   Comma separated list of subscription ids to track or untrack. Use `all`
+   *   to disable link tracking of all the subscriptions. Use `countries` to
+   *   disable tracking on all the country based subscriptions. Otherwise use
+   *   individual subscription ids.
+   *
+   * @command reliefweb_subscriptions:disable-link-tracking
+   *
+   * @usage reliefweb_subscriptions:disable-link-tracking headlines,appeals
+   *   Disable link tracking for headlines and appeals.
+   *
+   * @validate-module-enabled reliefweb_subscriptions
+   */
+  public function disableLinkTracking($sids = 'all') {
+    $this->mailer->toggleLinkTracking(FALSE, explode(',', $sids));
   }
 
 }

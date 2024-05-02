@@ -7,11 +7,11 @@
  * positioned to fill the space in the wrapper so that when the wrapper is
  * resized so is the iframe.
  */
-.cd-layout-content iframe {
+.cd-layout__content iframe {
   width: 100%;
   border: 0;
 }
-.cd-layout-content .iframe-wrapper {
+.cd-layout__content .iframe-wrapper {
   position: relative;
   overflow: hidden;
   /* Default padding for the iframes, assuming a 2/1 aspect ratio.
@@ -19,7 +19,7 @@
    * correct aspect ratio. */
   padding-top: 50%;
 }
-.cd-layout-content .iframe-wrapper iframe {
+.cd-layout__content .iframe-wrapper iframe {
   /* Those rules ensure the iframe uses all the space of the wrapper. */
   position: absolute;
   top: 0;

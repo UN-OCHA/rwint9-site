@@ -387,34 +387,4 @@ function common_design_subtheme_page_attachments_alter(array &$attachments) {
     $attachments['#attached']['html_head'][] = [$data, $path];
     $index++;
   }
-
-  // Google fonts.
-  // @todo Remove once there is the same thing in the base theme.
-  $attachments['#attached']['html_head'][] = [
-    [
-      '#type' => 'html_tag',
-      '#tag' => 'link',
-      '#attributes' => [
-        'rel' => 'preconnect',
-        'href' => 'https://fonts.gstatic.com/',
-        'crossorigin' => '',
-      ],
-      '#weight' => -2,
-    ],
-    'google_fonts_static',
-  ];
-  $attachments['#attached']['html_head'][] = [
-    [
-      '#type' => 'html_tag',
-      '#tag' => 'link',
-      '#attributes' => [
-        'rel' => 'preload',
-        'as' => 'style',
-        // Note: this needs to be kept in sync with the base theme fonts.
-        'href' => 'https://fonts.googleapis.com/css?family=Roboto:ital,wght@0,300%3B0,400%3B0,500%3B0,700%3B0,900%3B1,400%3B1,700&display=swap',
-      ],
-      '#weight' => -1,
-    ],
-    'google_fonts_roboto',
-  ];
 }
