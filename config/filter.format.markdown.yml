@@ -7,7 +7,7 @@ dependencies:
     - reliefweb_utility
 name: Markdown
 format: markdown
-weight: -10
+weight: -9
 filters:
   filter_align:
     id: filter_align

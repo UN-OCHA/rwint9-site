@@ -1,0 +1,12 @@
+uuid: 1ba50662-d847-4924-b8d2-e61456ceab6f
+langcode: en
+status: true
+dependencies:
+  config:
+    - filter.format.markdown
+  module:
+    - reliefweb_fields
+format: markdown
+editor: reliefweb_markdown_editor
+settings: {  }
+image_upload: {  }

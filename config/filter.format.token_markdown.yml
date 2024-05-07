@@ -7,7 +7,7 @@ dependencies:
     - reliefweb_utility
 name: 'Token & Markdown'
 format: token_markdown
-weight: -7
+weight: -6
 filters:
   filter_align:
     id: filter_align

@@ -5,6 +5,7 @@ dependencies:
   config:
     - field.storage.node.body
     - filter.format.markdown
+    - filter.format.markdown_editor
     - node.type.report
   module:
     - text
@@ -13,7 +14,7 @@ field_name: body
 entity_type: node
 bundle: report
 label: Body
-description: ''
+description: 'To add image tracking code (ex: <code>&lt;img src="..."&gt;</code> for The Conversation source), please use the <strong>Markdown</strong> text format.'
 required: false
 translatable: true
 default_value: {  }
@@ -22,5 +23,6 @@ settings:
   display_summary: false
   required_summary: false
   allowed_formats:
+    - markdown_editor
     - markdown
 field_type: text_with_summary
