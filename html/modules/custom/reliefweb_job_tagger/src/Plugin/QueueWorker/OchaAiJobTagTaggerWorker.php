@@ -178,6 +178,10 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
           'format' => 'markdown',
         ]);
       }
+
+      // Use the system user for the revisions so it's easier to identify them.
+      $node->setRevisionUserId(2);
+      $node->setRevisionCreationTime(time());
       $node->setRevisionLogMessage('Job has been updated by AI.');
       $node->set('reliefweb_job_tagger_status', 'processed');
       $node->setNewRevision(TRUE);
