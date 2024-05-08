@@ -1,0 +1,11 @@
+uuid: 0069b13f-ca13-4c56-850b-3632a219c630
+langcode: en
+status: true
+dependencies: {  }
+machine: demo
+description: null
+name: Demo
+weight: ''
+url: ''
+fg_color: '#000000'
+bg_color: '#34ccc1'
