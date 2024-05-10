@@ -1,0 +1,176 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://reliefweb.int/post-api-schemas/v2/job.json",
+    "title": "ReliefWeb POST API schema - job resource",
+    "type": "object",
+    "properties": {
+        "url": {
+            "description": "Unique URL to identify the document. Use the original canonical of the document if available.",
+            "type": "string",
+            "format": "iri",
+            "maxLength": 2048
+        },
+        "uuid": {
+            "description": "The universally unique identifier (UUID) version 5 generated from the URL property above, with the namespace: '8e27a998-c362-5d1f-b152-d474e1d36af2'.",
+            "type": "string",
+            "format": "uuid"
+        },
+        "title": {
+            "description": "Job title.",
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 255,
+            "allOf": [
+                {
+                    "description": "Must contain letters (any language).",
+                    "pattern": "\\p{L}+"
+                },
+                {
+                    "description": "No control characters or separators except for spaces.",
+                    "pattern": "^([^\\p{Z}\\p{C}]|[ \u3000])+$"
+                }
+            ],
+            "not": {
+                "description": "No leading, trailing or consecutive spaces.",
+                "pattern": "(?:^[ \u3000]|[ \u3000]$|[ \u3000]{2,})"
+            }
+        },
+        "career_categories": {
+            "description": "Job career categoriy as a list of IDs from https://api.reliefweb.int/v1/career_categories.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "minItems": 0,
+            "maxItems": 1
+        },
+        "city": {
+          "description": "Job title.",
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 255,
+          "allOf": [
+              {
+                  "description": "Must contain letters (any language).",
+                  "pattern": "\\p{L}+"
+              },
+              {
+                  "description": "No control characters or separators except for spaces.",
+                  "pattern": "^([^\\p{Z}\\p{C}]|[ \u3000])+$"
+              }
+          ],
+          "not": {
+              "description": "No leading, trailing or consecutive spaces.",
+              "pattern": "(?:^[ \u3000]|[ \u3000]$|[ \u3000]{2,})"
+          }
+        },
+        "closing_date": {
+          "description": "Original publication date (ISO 8601) of the document.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "country": {
+             "description": "Document country(ies) as a list of IDs from https://api.reliefweb.int/v1/countries. The first country in the list is considered the primary country, meaning the most relevant to the content of the document.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "minItems": 1,
+            "maxItems": 300
+        },
+        "how_to_apply": {
+          "description": "Document content in markdown or html (supported tags: <h1> <h2> <h3> <h4> <h5> <h6> <br> <p> <strong> <em> <a> <ul> <ol> <li> <blockquote>).",
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 100000,
+          "allOf": [
+              {
+                  "description": "Must contain letters (any language).",
+                  "pattern": "\\p{L}+"
+              },
+              {
+                  "description": "No control characters or separators except for spaces and new lines.",
+                  "pattern": "^(?:[^\\p{Z}\\p{C}]|[ \u3000\\n])+$"
+              }
+          ],
+          "not": {
+              "description": "No leading, trailing or consecutive spaces and new lines (except at the end of a line to support markdown linebreaks).",
+              "pattern": "(?:^[ \u3000\\n]|[ \u3000\\n]$|[ \u3000]{2,}[^ \u3000\\n])"
+          }
+        },
+        "body": {
+          "description": "Document content in markdown or html (supported tags: <h1> <h2> <h3> <h4> <h5> <h6> <br> <p> <strong> <em> <a> <ul> <ol> <li> <blockquote>).",
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 100000,
+          "allOf": [
+              {
+                  "description": "Must contain letters (any language).",
+                  "pattern": "\\p{L}+"
+              },
+              {
+                  "description": "No control characters or separators except for spaces and new lines.",
+                  "pattern": "^(?:[^\\p{Z}\\p{C}]|[ \u3000\\n])+$"
+              }
+          ],
+          "not": {
+              "description": "No leading, trailing or consecutive spaces and new lines (except at the end of a line to support markdown linebreaks).",
+              "pattern": "(?:^[ \u3000\\n]|[ \u3000\\n]$|[ \u3000]{2,}[^ \u3000\\n])"
+          }
+        },
+        "job_type": {
+          "description": "Document source(s) as a list of IDs from https://api.reliefweb.int/v1/job_type.",
+          "type": "array",
+          "items": {
+              "type": "integer"
+          },
+          "minItems": 1,
+          "maxItems": 1
+        },
+        "job_experience": {
+          "description": "Document source(s) as a list of IDs from https://api.reliefweb.int/v1/job_experience.",
+          "type": "array",
+          "items": {
+              "type": "integer"
+          },
+          "minItems": 1,
+          "maxItems": 1
+        },
+        "source": {
+            "description": "Document source(s) as a list of IDs from https://api.reliefweb.int/v1/sources.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "minItems": 1,
+            "maxItems": 30
+        },
+        "theme": {
+          "description": "Document theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes.",
+          "type": "array",
+          "items": {
+              "type": "integer"
+          },
+          "maxItems": 3
+        },
+        "notify": {
+            "description": "List of email addresses to notify when the document is published.",
+            "type": "array",
+            "items": {
+                "type": "string",
+                "format": "idn-email"
+            },
+            "maxItems": 10
+        }
+    },
+    "required": [
+        "url",
+        "title",
+        "source",
+        "closing_date",
+        "job_experience",
+        "body",
+        "how_to_apply"
+    ],
+    "additionalProperties": false
+}
