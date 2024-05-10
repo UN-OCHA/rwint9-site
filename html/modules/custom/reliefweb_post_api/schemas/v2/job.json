@@ -36,7 +36,7 @@
             }
         },
         "career_categories": {
-            "description": "Job career categoriy as a list of IDs from https://api.reliefweb.int/v1/career_categories.",
+            "description": "Job career categoriy as a list of IDs from https://api.reliefweb.int/v1/references/career-categories.",
             "type": "array",
             "items": {
                 "type": "integer"
@@ -65,21 +65,21 @@
           }
         },
         "closing_date": {
-          "description": "Original publication date (ISO 8601) of the document.",
+          "description": "Closing date (ISO 8601) of the job.",
           "type": "string",
           "format": "date-time"
         },
         "country": {
-             "description": "Document country(ies) as a list of IDs from https://api.reliefweb.int/v1/countries. The first country in the list is considered the primary country, meaning the most relevant to the content of the document.",
+             "description": "Job country(ies) as a list of IDs from https://api.reliefweb.int/v1/countries.",
             "type": "array",
             "items": {
                 "type": "integer"
             },
             "minItems": 1,
-            "maxItems": 300
+            "maxItems": 1
         },
         "how_to_apply": {
-          "description": "Document content in markdown or html (supported tags: <h1> <h2> <h3> <h4> <h5> <h6> <br> <p> <strong> <em> <a> <ul> <ol> <li> <blockquote>).",
+          "description": "Instructions on how to apply for the job in markdown or html (supported tags: <h1> <h2> <h3> <h4> <h5> <h6> <br> <p> <strong> <em> <a> <ul> <ol> <li> <blockquote>).",
           "type": "string",
           "minLength": 10,
           "maxLength": 100000,
@@ -99,7 +99,7 @@
           }
         },
         "body": {
-          "description": "Document content in markdown or html (supported tags: <h1> <h2> <h3> <h4> <h5> <h6> <br> <p> <strong> <em> <a> <ul> <ol> <li> <blockquote>).",
+          "description": "Job description in markdown or html (supported tags: <h1> <h2> <h3> <h4> <h5> <h6> <br> <p> <strong> <em> <a> <ul> <ol> <li> <blockquote>).",
           "type": "string",
           "minLength": 10,
           "maxLength": 100000,
@@ -119,7 +119,7 @@
           }
         },
         "job_type": {
-          "description": "Document source(s) as a list of IDs from https://api.reliefweb.int/v1/job_type.",
+          "description": "Job type as a list of IDs from https://api.reliefweb.int/v1/references/job-types.",
           "type": "array",
           "items": {
               "type": "integer"
@@ -128,7 +128,7 @@
           "maxItems": 1
         },
         "job_experience": {
-          "description": "Document source(s) as a list of IDs from https://api.reliefweb.int/v1/job_experience.",
+          "description": "Job experience as a list of IDs from https://api.reliefweb.int/v1/references/job-experience.",
           "type": "array",
           "items": {
               "type": "integer"
@@ -137,16 +137,16 @@
           "maxItems": 1
         },
         "source": {
-            "description": "Document source(s) as a list of IDs from https://api.reliefweb.int/v1/sources.",
+            "description": "Job source(s) as a list of IDs from https://api.reliefweb.int/v1/sources.",
             "type": "array",
             "items": {
                 "type": "integer"
             },
             "minItems": 1,
-            "maxItems": 30
+            "maxItems": 1
         },
         "theme": {
-          "description": "Document theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes.",
+          "description": "Job theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes.",
           "type": "array",
           "items": {
               "type": "integer"
