@@ -70,7 +70,7 @@
           "format": "date-time"
         },
         "country": {
-             "description": "Job country(ies) as a list of IDs from https://api.reliefweb.int/v1/countries.",
+             "description": "Job country(ies) as a list of IDs from https://api.reliefweb.int/v1/countries. Leave blank for remote location, roster/roving or location to be determined.",
             "type": "array",
             "items": {
                 "type": "integer"
