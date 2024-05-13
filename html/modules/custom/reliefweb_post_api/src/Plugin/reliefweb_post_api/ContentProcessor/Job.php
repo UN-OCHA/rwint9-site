@@ -25,27 +25,6 @@ class Job extends ContentProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function validateUrls(array $data): void {
-    parent::validateUrls($data);
-
-    $provider = $this->getProvider($data['provider'] ?? '');
-
-    $image_pattern = $provider->getUrlPattern('image');
-    if (!empty($data['image']['url']) && !$this->validateUrl($data['image']['url'], $image_pattern)) {
-      throw new ContentProcessorException('Unallowed image URL: ' . $data['image']['url']);
-    }
-
-    $file_pattern = $provider->getUrlPattern('file');
-    foreach ($data['file'] ?? [] as $file) {
-      if (!empty($file['url']) && !$this->validateUrl($file['url'], $file_pattern)) {
-        throw new ContentProcessorException('Unallowed file URL: ' . $file['url']);
-      }
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function process(array $data): ?ContentEntityInterface {
     // Ensure the data is valid.
     $this->validate($data);
