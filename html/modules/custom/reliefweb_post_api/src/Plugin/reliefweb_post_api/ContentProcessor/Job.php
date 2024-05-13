@@ -64,7 +64,7 @@ class Job extends ContentProcessorPluginBase {
     $node->title = $this->sanitizeString($data['title']);
 
     $this->setTermField($node, 'field_career_categories', 'career_category', $data['career_categories'] ?? []);
-    $node->set('field_city', $this->sanitizeString($data['city'] ?? ''));
+    $this->setStringField($node, 'field_city', $data['city'] ?? '');
     $this->setDateField($node, 'field_job_closing_date', $data['closing_date']);
     $this->setTermField($node, 'field_country', 'country', $data['country'] ?? []);
     $this->setTextField($node, 'field_how_to_apply', $data['how_to_apply'], format: 'markdown');
