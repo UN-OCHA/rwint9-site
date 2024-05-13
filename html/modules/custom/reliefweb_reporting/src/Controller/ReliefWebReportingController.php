@@ -44,7 +44,7 @@ class ReliefWebReportingController extends ControllerBase {
   public function weeklyAiTaggingStats(RouteMatchInterface $route_match, Request $request) {
 
     if ($this->access($this->currentUser())->isForbidden()) {
-      return new JsonResponse('{"error": "Access denied!"}', 403);
+      return new JsonResponse(['error' => 'Access denied!'], 403);
     }
 
     $data = reliefweb_reporting_get_weekly_ai_tagging_stats();
