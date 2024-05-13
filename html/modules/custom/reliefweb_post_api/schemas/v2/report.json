@@ -244,6 +244,7 @@
     },
     "required": [
         "url",
+        "uuid",
         "title",
         "source",
         "country",
