@@ -75,7 +75,6 @@
             "items": {
                 "type": "integer"
             },
-            "minItems": 1,
             "maxItems": 1
         },
         "how_to_apply": {
