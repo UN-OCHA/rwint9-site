@@ -35,105 +35,6 @@
                 "pattern": "(?:^[ \u3000]|[ \u3000]$|[ \u3000]{2,})"
             }
         },
-        "career_categories": {
-            "description": "Job career categoriy as a list of IDs from https://api.reliefweb.int/v1/references/career-categories.",
-            "type": "array",
-            "items": {
-                "type": "integer"
-            },
-            "maxItems": 1
-        },
-        "city": {
-          "description": "City. Optional and only relevant when a country is also set.",
-          "type": "string",
-          "minLength": 0,
-          "maxLength": 255,
-          "allOf": [
-              {
-                  "description": "Must contain letters (any language).",
-                  "pattern": "\\p{L}+"
-              },
-              {
-                  "description": "No control characters or separators except for spaces.",
-                  "pattern": "^([^\\p{Z}\\p{C}]|[ \u3000])+$"
-              }
-          ],
-          "not": {
-              "description": "No leading, trailing or consecutive spaces.",
-              "pattern": "(?:^[ \u3000]|[ \u3000]$|[ \u3000]{2,})"
-          }
-        },
-        "closing_date": {
-          "description": "Closing date (ISO 8601) of the job.",
-          "type": "string",
-          "format": "date-time"
-        },
-        "country": {
-             "description": "Job country(ies) as a list of IDs from https://api.reliefweb.int/v1/countries. Leave blank for remote location, roster/roving or location to be determined.",
-            "type": "array",
-            "items": {
-                "type": "integer"
-            },
-            "maxItems": 1
-        },
-        "how_to_apply": {
-          "description": "Instructions on how to apply for the job in markdown or html (supported tags: <h1> <h2> <h3> <h4> <h5> <h6> <br> <p> <strong> <em> <a> <ul> <ol> <li> <blockquote>).",
-          "type": "string",
-          "minLength": 10,
-          "maxLength": 100000,
-          "allOf": [
-              {
-                  "description": "Must contain letters (any language).",
-                  "pattern": "\\p{L}+"
-              },
-              {
-                  "description": "No control characters or separators except for spaces and new lines.",
-                  "pattern": "^(?:[^\\p{Z}\\p{C}]|[ \u3000\\n])+$"
-              }
-          ],
-          "not": {
-              "description": "No leading, trailing or consecutive spaces and new lines (except at the end of a line to support markdown linebreaks).",
-              "pattern": "(?:^[ \u3000\\n]|[ \u3000\\n]$|[ \u3000]{2,}[^ \u3000\\n])"
-          }
-        },
-        "body": {
-          "description": "Job description in markdown or html (supported tags: <h1> <h2> <h3> <h4> <h5> <h6> <br> <p> <strong> <em> <a> <ul> <ol> <li> <blockquote>).",
-          "type": "string",
-          "minLength": 10,
-          "maxLength": 100000,
-          "allOf": [
-              {
-                  "description": "Must contain letters (any language).",
-                  "pattern": "\\p{L}+"
-              },
-              {
-                  "description": "No control characters or separators except for spaces and new lines.",
-                  "pattern": "^(?:[^\\p{Z}\\p{C}]|[ \u3000\\n])+$"
-              }
-          ],
-          "not": {
-              "description": "No leading, trailing or consecutive spaces and new lines (except at the end of a line to support markdown linebreaks).",
-              "pattern": "(?:^[ \u3000\\n]|[ \u3000\\n]$|[ \u3000]{2,}[^ \u3000\\n])"
-          }
-        },
-        "job_type": {
-          "description": "Job type as a list of IDs from https://api.reliefweb.int/v1/references/job-types.",
-          "type": "array",
-          "items": {
-              "type": "integer"
-          },
-          "minItems": 1,
-          "maxItems": 1
-        },
-        "job_experience": {
-          "description": "Job experience as a list of IDs from https://api.reliefweb.int/v1/references/job-experience.",
-          "type": "array",
-          "items": {
-              "type": "integer"
-          },
-          "minItems": 1,
-          "maxItems": 1
-        },
         "source": {
             "description": "Job source(s) as a list of IDs from https://api.reliefweb.int/v1/sources.",
             "type": "array",
@@ -143,22 +44,112 @@
             "minItems": 1,
             "maxItems": 1
         },
-        "theme": {
-          "description": "Job theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes. Optionally leave blank for automatic tagging by AI based on the job's title and body.",
-          "type": "array",
-          "items": {
-              "type": "integer"
-          },
-          "maxItems": 3
+        "closing_date": {
+            "description": "Closing date (ISO 8601) of the job.",
+            "type": "string",
+            "format": "date-time"
         },
-        "notify": {
-            "description": "List of email addresses to notify when the document is published.",
+        "body": {
+            "description": "Job description in markdown or html (supported tags: <h1> <h2> <h3> <h4> <h5> <h6> <br> <p> <strong> <em> <a> <ul> <ol> <li> <blockquote>).",
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 100000,
+            "allOf": [
+                {
+                    "description": "Must contain letters (any language).",
+                    "pattern": "\\p{L}+"
+                },
+                {
+                    "description": "No control characters or separators except for spaces and new lines.",
+                    "pattern": "^(?:[^\\p{Z}\\p{C}]|[ \u3000\\n])+$"
+                }
+            ],
+            "not": {
+                "description": "No leading, trailing or consecutive spaces and new lines (except at the end of a line to support markdown linebreaks).",
+                "pattern": "(?:^[ \u3000\\n]|[ \u3000\\n]$|[ \u3000]{2,}[^ \u3000\\n])"
+            }
+        },
+        "how_to_apply": {
+            "description": "Instructions on how to apply for the job in markdown or html (supported tags: <h1> <h2> <h3> <h4> <h5> <h6> <br> <p> <strong> <em> <a> <ul> <ol> <li> <blockquote>).",
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 100000,
+            "allOf": [
+                {
+                    "description": "Must contain letters (any language).",
+                    "pattern": "\\p{L}+"
+                },
+                {
+                    "description": "No control characters or separators except for spaces and new lines.",
+                    "pattern": "^(?:[^\\p{Z}\\p{C}]|[ \u3000\\n])+$"
+                }
+            ],
+            "not": {
+                "description": "No leading, trailing or consecutive spaces and new lines (except at the end of a line to support markdown linebreaks).",
+                "pattern": "(?:^[ \u3000\\n]|[ \u3000\\n]$|[ \u3000]{2,}[^ \u3000\\n])"
+            }
+        },
+        "country": {
+            "description": "Job country(ies) as a list of IDs from https://api.reliefweb.int/v1/countries. Leave blank for remote location, roster/roving or location to be determined.",
             "type": "array",
             "items": {
-                "type": "string",
-                "format": "idn-email"
+                "type": "integer"
             },
             "maxItems": 10
+        },
+        "city": {
+            "description": "City. Optional and only relevant when a country is also set.",
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 255,
+            "allOf": [
+                {
+                    "description": "Must contain letters (any language).",
+                    "pattern": "\\p{L}+"
+                },
+                {
+                    "description": "No control characters or separators except for spaces.",
+                    "pattern": "^([^\\p{Z}\\p{C}]|[ \u3000])+$"
+                }
+            ],
+            "not": {
+                "description": "No leading, trailing or consecutive spaces.",
+                "pattern": "(?:^[ \u3000]|[ \u3000]$|[ \u3000]{2,})"
+            }
+        },
+        "job_type": {
+            "description": "Job type as a list of IDs from https://api.reliefweb.int/v1/references/job-types.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "minItems": 1,
+            "maxItems": 1
+        },
+        "job_experience": {
+            "description": "Job experience as a list of IDs from https://api.reliefweb.int/v1/references/job-experience.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "minItems": 1,
+            "maxItems": 1
+        },
+        "career_categories": {
+            "description": "Job career category as a list of IDs from https://api.reliefweb.int/v1/references/career-categories. Optionally leave blank for automatic tagging by AI based on the job's title and body.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "maxItems": 1
+        },
+        "theme": {
+            "description": "Job theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes. Optionally leave blank for automatic tagging by AI based on the job's title and body.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "maxItems": 3
         }
     },
     "required": [

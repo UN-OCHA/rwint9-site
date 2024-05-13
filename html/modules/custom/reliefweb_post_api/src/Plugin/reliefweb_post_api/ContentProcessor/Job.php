@@ -74,10 +74,6 @@ class Job extends ContentProcessorPluginBase {
     $this->setTermField($node, 'field_source', 'source', $data['source'] ?? []);
     $this->setTermField($node, 'field_theme', 'theme', $data['theme'] ?? []);
 
-    // Emails to notify when the document is published.
-    $emails = implode(',', $data['notify'] ?? $provider->getEmailsToNotify() ?? []);
-    $this->setField($node, 'field_notify', $emails ?: NULL);
-
     // Set the provider.
     $this->setField($node, 'field_post_api_provider', $provider);
 
