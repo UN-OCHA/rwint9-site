@@ -144,7 +144,7 @@
             "maxItems": 1
         },
         "theme": {
-          "description": "Job theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes.",
+          "description": "Job theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes. Optionally leave blank for automatic tagging by AI based on the job's title and body.",
           "type": "array",
           "items": {
               "type": "integer"
