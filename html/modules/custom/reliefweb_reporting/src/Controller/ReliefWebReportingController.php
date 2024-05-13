@@ -68,7 +68,7 @@ class ReliefWebReportingController extends ControllerBase {
     else {
       $access_result = AccessResult::forbidden();
       $logger = $this->getLogger('reliefweb_reporting');
-      $logger->warning('Unauthorized access to reporrs denied');
+      $logger->warning('Unauthorized access to reports');
     }
     $access_result
       ->setCacheMaxAge(0)
