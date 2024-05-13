@@ -163,6 +163,7 @@
     },
     "required": [
         "url",
+        "uuid",
         "title",
         "source",
         "closing_date",
