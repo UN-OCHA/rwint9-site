@@ -45,7 +45,7 @@
             "maxItems": 1
         },
         "city": {
-          "description": "Job title.",
+          "description": "City. Optional and only relevant when a country is also set.",
           "type": "string",
           "minLength": 0,
           "maxLength": 255,
