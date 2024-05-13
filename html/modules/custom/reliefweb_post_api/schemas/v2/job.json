@@ -166,6 +166,7 @@
         "title",
         "source",
         "closing_date",
+        "job_type",
         "job_experience",
         "body",
         "how_to_apply"
