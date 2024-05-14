@@ -377,70 +377,16 @@ class ReliefWebReportingCommands extends DrushCommands {
       'MIME-Version' => '1.0',
     ];
 
-    $records = $this->database->query("
-      SELECT
-        nr.nid AS nid,
-        nr.vid As vid,
-        IFNULL(GROUP_CONCAT(DISTINCT ur.roles_target_id ORDER BY ur.roles_target_id SEPARATOR ','), '') AS roles,
-        GROUP_CONCAT(DISTINCT nfcc.field_career_categories_target_id ORDER BY nfcc.field_career_categories_target_id SEPARATOR ',') AS career_categories,
-        GROUP_CONCAT(DISTINCT nft.field_theme_target_id ORDER BY nft.field_theme_target_id SEPARATOR ',') AS themes
-      FROM node_revision AS nr
-      INNER JOIN node_field_data AS n
-        ON n.nid = nr.nid
-      INNER JOIN node_revision__reliefweb_job_tagger_status AS njts
-        ON njts.entity_id = n.nid
-        AND njts.revision_id = nr.vid
-        AND njts.reliefweb_job_tagger_status_value = 'processed'
-      LEFT JOIN user__roles AS ur
-        ON ur.entity_id = nr.revision_uid
-      LEFT JOIN node_revision__field_career_categories AS nfcc
-        ON nfcc.entity_id = nr.nid
-        AND nfcc.revision_id = nr.vid
-      LEFT JOIN node_revision__field_theme AS nft
-        ON nft.entity_id = nr.nid
-        AND nft.revision_id = nr.vid
-      WHERE n.type = 'job'
-        AND n.created >= UNIX_TIMESTAMP(DATE_SUB(DATE(NOW()), INTERVAL DAYOFWEEK(NOW()) + 6 DAY))
-        AND n.created < UNIX_TIMESTAMP(DATE_SUB(DATE(NOW()), INTERVAL DAYOFWEEK(NOW()) - 1 DAY))
-      GROUP BY nr.vid
-      ORDER BY nr.vid
-    ")->fetchAll(\PDO::FETCH_ASSOC);
-
     $attachments = [];
 
-    if (empty($records)) {
+    // Fetch the stats.
+    $data = reliefweb_reporting_get_weekly_ai_tagging_stats();
+
+    // Turn the stats into a CSV attachment if not empty.
+    if (empty($data)) {
       $body = 'No jobs tagged by AI this week.';
     }
     else {
-      $jobs = [];
-      $changed_career_categories = [];
-      $changed_themes = [];
-
-      foreach ($records as $record) {
-        $nid = $record['nid'];
-
-        if (isset($jobs[$nid])) {
-          $previous = $jobs[$nid];
-
-          if (strpos($record['roles'], 'editor') !== FALSE) {
-            if ($record['career_categories'] !== $previous['career_categories']) {
-              $changed_career_categories[$nid] = TRUE;
-            }
-            if ($record['themes'] !== $previous['themes']) {
-              $changed_themes[$nid] = TRUE;
-            }
-          }
-        }
-
-        $jobs[$nid] = $record;
-      }
-
-      $data = [
-        'jobs_tagged_by_ai' => count($jobs),
-        'career_categories_changed_by_editors' => count($changed_career_categories),
-        'themes_changed_by_editors' => count($changed_themes),
-      ];
-
       // Convert to CSV.
       $handle = fopen('php://memory', 'r+');
       fputcsv($handle, array_keys($data), "\t");

@@ -35,6 +35,7 @@
         "drupal/core-composer-scaffold": "^10",
         "drupal/core-dev": "^10",
         "drupal/core-recommended": "^10",
+        "drupal/environment_indicator": "^4.0",
         "drupal/geofield": "^1.52",
         "drupal/google_tag": "^1.6",
         "drupal/guidelines": "^1.0",

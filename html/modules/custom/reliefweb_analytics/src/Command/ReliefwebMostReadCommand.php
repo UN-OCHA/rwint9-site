@@ -345,12 +345,21 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
    * Update csv file.
    */
   protected function updateCsv($results) {
+    // Clean the results.
+    foreach ($results as $key => $value) {
+      if (isset($value[1]) && $this->validateCsvLine($value[1])) {
+        unset($results[$key]);
+      }
+    }
+
     // Load original csv.
     $csv = [];
     $handle = @fopen('public://most-read/most-read.csv', 'r');
     if ($handle) {
       while (($row = fgetcsv($handle, 100)) !== FALSE) {
-        $csv[$row[0]] = $row;
+        if (isset($row[1]) && $this->validateCsvLine($row[1])) {
+          $csv[$row[0]] = $row;
+        }
       }
 
       if (is_resource($handle)) {
@@ -383,6 +392,20 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
     if (is_resource($handle)) {
       @fclose($handle);
     }
+  }
+
+  /**
+   * Validate a line to be inserted in the CSV.
+   *
+   * @param string $line
+   *   Normally, a comma separated list of URLs.
+   *
+   * @return bool
+   *   TRUE if valid.
+   */
+  protected function validateCsvLine(string $line): bool {
+    // No control characters and looking like a URL.
+    return preg_match('#\pC+#u', $line) === 0 && preg_match('#^https://#', $line) > 0;
   }
 
   /**
