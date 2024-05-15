@@ -63,15 +63,20 @@ class Job extends ContentProcessorPluginBase {
     // Set the mandatory fields.
     $node->title = $this->sanitizeString($data['title']);
 
-    $this->setTermField($node, 'field_career_categories', 'career_category', $data['career_categories'] ?? []);
-    $this->setStringField($node, 'field_city', $data['city'] ?? '');
+    $this->setTermField($node, 'field_source', 'source', $data['source']);
     $this->setDateField($node, 'field_job_closing_date', $data['closing_date']);
-    $this->setTermField($node, 'field_country', 'country', $data['country'] ?? []);
-    $this->setTextField($node, 'field_how_to_apply', $data['how_to_apply'], format: 'markdown');
+
+    $this->setTermField($node, 'field_job_type', 'job_type', $data['job_type']);
+    $this->setTermField($node, 'field_job_experience', 'job_experience', $data['job_experience']);
+
     $this->setTextField($node, 'body', $data['body'], format: 'markdown');
-    $this->setTermField($node, 'field_job_type', 'job_type', $data['job_type'] ?? []);
-    $this->setTermField($node, 'field_job_experience', 'job_experience', $data['job_experience'] ?? []);
-    $this->setTermField($node, 'field_source', 'source', $data['source'] ?? []);
+    $this->setTextField($node, 'field_how_to_apply', $data['how_to_apply'], format: 'markdown');
+
+    // Set the optional fields.
+    $this->setTermField($node, 'field_country', 'country', $data['country'] ?? []);
+    $this->setStringField($node, 'field_city', $data['city'] ?? '');
+
+    $this->setTermField($node, 'field_career_categories', 'career_category', $data['career_categories'] ?? []);
     $this->setTermField($node, 'field_theme', 'theme', $data['theme'] ?? []);
 
     // Set the provider.
