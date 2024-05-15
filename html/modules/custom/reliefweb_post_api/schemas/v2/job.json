@@ -36,7 +36,7 @@
             }
         },
         "source": {
-            "description": "Job source(s) as a list of IDs from https://api.reliefweb.int/v1/sources.",
+            "description": "Job source as a single ID from https://api.reliefweb.int/v1/sources.",
             "type": "array",
             "items": {
                 "type": "integer"
@@ -118,7 +118,7 @@
             }
         },
         "job_type": {
-            "description": "Job type as a list of IDs from https://api.reliefweb.int/v1/references/job-types.",
+            "description": "Job type as a single ID from https://api.reliefweb.int/v1/references/job-types.",
             "type": "array",
             "items": {
                 "type": "integer"
@@ -127,7 +127,7 @@
             "maxItems": 1
         },
         "job_experience": {
-            "description": "Job experience as a list of IDs from https://api.reliefweb.int/v1/references/job-experience.",
+            "description": "Job experience as a single ID from https://api.reliefweb.int/v1/references/job-experience.",
             "type": "array",
             "items": {
                 "type": "integer"
@@ -136,7 +136,7 @@
             "maxItems": 1
         },
         "career_categories": {
-            "description": "Job career category as a list of IDs from https://api.reliefweb.int/v1/references/career-categories. Optionally leave blank for automatic tagging by AI based on the job's title and body.",
+            "description": "Job career category as a single ID from https://api.reliefweb.int/v1/references/career-categories. Optionally leave blank for automatic tagging by AI based on the job's title and body.",
             "type": "array",
             "items": {
                 "type": "integer"
