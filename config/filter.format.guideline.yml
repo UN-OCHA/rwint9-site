@@ -10,7 +10,7 @@ dependencies:
     - reliefweb_utility
 name: Guideline
 format: guideline
-weight: 0
+weight: -5
 filters:
   editor_file_reference:
     id: editor_file_reference

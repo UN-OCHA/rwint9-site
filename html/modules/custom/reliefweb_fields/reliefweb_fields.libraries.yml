@@ -29,3 +29,11 @@ reliefweb-options:
 ckeditor5.reliefweb_formatted_text:
   js:
     js/plugins/reliefweb_formatted_text/plugin.js: {}
+
+reliefweb.editor.markdown:
+  js:
+    js/reliefweb_markdown_editor.js: {}
+  dependencies:
+    - core/once
+    - core/drupal
+    - editor/drupal.editor
