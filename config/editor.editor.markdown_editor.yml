@@ -16,6 +16,7 @@ settings:
       - heading
       - '|'
       - link
+      - blockQuote
       - '|'
       - bulletedList
       - numberedList
