@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\filter\FilterFormatInterface;
 use Drupal\reliefweb_fields\Plugin\Field\FieldWidget\ReliefWebLinks;
 use Drupal\reliefweb_fields\Plugin\Field\FieldWidget\ReliefWebUserPostingRights;
 
@@ -43,4 +44,22 @@ function reliefweb_fields_user_update(EntityInterface $entity) {
  */
 function reliefweb_fields_user_delete(EntityInterface $entity) {
   ReliefWebUserPostingRights::updateFields('delete', $entity);
+}
+
+/**
+ * Implements hook_editor_xss_filter_alter().
+ *
+ * Change the filter XSS class so that we can also convert the text from
+ * markdown to HTML or the opposite.
+ *
+ * @see editor_filter_xss()
+ * @see \Drupal\reliefweb_fields\EditorXssFilter\ReliefWebMarkdownXssFilter::filterXss()
+ */
+function reliefweb_fields_editor_xss_filter_alter(string &$editor_xss_filter_class, FilterFormatInterface $format, FilterFormatInterface $original_format = NULL) {
+  if (
+    editor_load($format->id())?->getEditor() === 'reliefweb_markdown_editor' ||
+    !empty($format->filters('reliefweb_formatted_text')?->status)
+  ) {
+    $editor_xss_filter_class = '\Drupal\reliefweb_fields\EditorXssFilter\ReliefWebMarkdownXssFilter';
+  }
 }

@@ -127,9 +127,18 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
     }
 
     $text = $node->getTitle() . "\n\n" . $node->get('body')->value;
-    $data = $this->jobTagger
-      ->setVocabularies($mapping, $term_cache_tags)
-      ->tag($text, [OchaAiTagTagger::CALCULATION_METHOD_MEAN_WITH_CUTOFF], OchaAiTagTagger::AVERAGE_FULL_AVERAGE);
+    try {
+      $data = $this->jobTagger
+        ->setVocabularies($mapping, $term_cache_tags)
+        ->tag($text, [OchaAiTagTagger::CALCULATION_METHOD_MEAN_WITH_CUTOFF], OchaAiTagTagger::AVERAGE_FULL_AVERAGE);
+    }
+    catch (\Exception $exception) {
+      $this->logger->error('Tagging exception for node @nid: @error', [
+        '@nid' => $nid,
+        '@error' => strtr($exception->getMessage(), "\n", " "),
+      ]);
+      return;
+    }
 
     if (empty($data)) {
       $this->logger->error('No data received from AI for node @nid', ['@nid' => $nid]);
@@ -169,6 +178,10 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
           'format' => 'markdown',
         ]);
       }
+
+      // Use the system user for the revisions so it's easier to identify them.
+      $node->setRevisionUserId(2);
+      $node->setRevisionCreationTime(time());
       $node->setRevisionLogMessage('Job has been updated by AI.');
       $node->set('reliefweb_job_tagger_status', 'processed');
       $node->setNewRevision(TRUE);
