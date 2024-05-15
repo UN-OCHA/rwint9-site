@@ -15,10 +15,10 @@ use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginBase;
  */
 #[ContentProcessor(
   id: 'reliefweb_post_api.content_processor.training',
-  label: new TranslatableMarkup('Trainings'),
+  label: new TranslatableMarkup('Training'),
   entityType: 'node',
   bundle: 'training',
-  resource: 'trainings'
+  resource: 'training'
 )]
 class Training extends ContentProcessorPluginBase {
 
@@ -63,25 +63,35 @@ class Training extends ContentProcessorPluginBase {
     // Set the mandatory fields.
     $node->title = $this->sanitizeString($data['title']);
 
-    $this->setTextField($node, 'body', $data['body'], format: 'markdown');
+    $this->setTermField($node, 'field_source', 'source', $data['source']);
+    $this->setTermField($node, 'field_training_format', 'training_format', $data['format'] ?? []);
+
+    $this->setUrlField($node, 'field_link', $data['event_url'], $provider->getUrlPattern());
+    $this->setStringField($node, 'field_cost', $data['cost']);
+
+    $this->setTermField($node, 'field_training_type', 'training_type', $data['category']);
+    $this->setTermField($node, 'field_training_language', 'training_language', $data['training_language']);
+
     $this->setTermField($node, 'field_language', 'language', $data['language']);
-    $this->setTermField($node, 'field_training_type', 'training_type', $data['training_type'] ?? []);
-    $this->setStringField($node, 'field_city', $data['city'] ?? '');
-    $this->setStringField($node, 'field_cost', $data['cost'] ?? 0);
+    $this->setTextField($node, 'body', $data['body'], format: 'markdown');
+    $this->setTextField($node, 'field_how_to_register', $data['how_to_register'], format: 'markdown');
+
+    // Set the optional fields.
     $this->setTermField($node, 'field_country', 'country', $data['country'] ?? []);
-    $this->setTermField($node, 'field_training_language', 'training_language', $data['training_language'] ?? []);
-    $this->setUrlField($node, 'field_link', $data['event_url'] ?? '', $provider->getUrlPattern());
+    $this->setStringField($node, 'field_city', $data['city'] ?? '');
+
+    if (!empty($data['dates'])) {
+      $this->setField($node, 'field_training_date', [
+        'start' => $data['dates']['start'],
+        'end' => $data['dates']['end'],
+      ]);
+      $this->setDateField($node, 'field_registration_deadline', $data['dates']['registration_deadline']);
+    }
+
     $this->setTextField($node, 'field_fee_information', $data['fee_information'] ?? '', format: 'plain');
-    $this->setTextField($node, 'field_how_to_register', $data['how_to_register'] ?? '', format: 'markdown');
-    $this->setTermField($node, 'field_source', 'source', $data['source'] ?? []);
-    $this->setTermField($node, 'field_career_categories', 'career_category', $data['career_categories'] ?? []);
-    $this->setDateField($node, 'field_registration_deadline', $data['registration_deadline'] ?? '');
+
+    $this->setTermField($node, 'field_career_categories', 'career_category', $data['professional_function'] ?? []);
     $this->setTermField($node, 'field_theme', 'theme', $data['theme'] ?? []);
-    $this->setField($node, 'field_training_date', [
-      'start' => $data['training_date_start'] ?? '',
-      'end' => $data['training_date_end'] ?? '',
-    ]);
-    $this->setTermField($node, 'field_training_format', 'training_format', $data['training_format'] ?? []);
 
     // Set the provider.
     $this->setField($node, 'field_post_api_provider', $provider);
