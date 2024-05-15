@@ -1,0 +1,9 @@
+reliefweb_reporting.ai_job_tagging.json:
+  path: '/admin/reports/reliefweb/ai-job-tagging/json'
+  defaults:
+    _controller: '\Drupal\reliefweb_reporting\Controller\ReliefWebReportingController::weeklyAiTaggingStats'
+  options:
+    no_cache: TRUE
+  requirements:
+    # This line exists to stop PHPCS complaining about a lack of access check.
+    _access: 'TRUE'
