@@ -35,6 +35,12 @@ This module provides custom field types, widgets, formatters and related plugins
 
 This module provides a [CKEditor 5 plugin](js/plugins/reliefweb_formatted_text/plugin.js) enabled when using a `ReliefWebFormattedText` widget to limit selectable headings and handle their conversion.
 
+## ReliefWeb Markdown Editor
+
+This module provides a [Text editor](src/Plugin/Editor/ReliefWebMarkdownEditor.php) that does nothing special but allows to hook into the behavior of the core editor module and convert markdown to or from HTML when switching text formats in the forms.
+
+There is also a XSS filtering class to help with that. See details in [comments](src/EditorXssFilter/ReliefWebMarkdownXssFilter.php).
+
 ## Forms
 
 This module provides 2 entity form controllers for the `user_posting_rights` form view mode of sources and the `profile` form view mode of countries and disasters.
