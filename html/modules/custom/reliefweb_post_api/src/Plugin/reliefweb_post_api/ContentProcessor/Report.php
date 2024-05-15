@@ -126,14 +126,14 @@ class Report extends ContentProcessorPluginBase {
     $this->setField($node, 'field_post_api_provider', $provider);
 
     // Set the new status.
-    $node->moderation_status = $provider->getDefaultResourceStatus();
+    $node->setModerationStatus($provider->getDefaultResourceStatus());
 
     // Set the log message based on whether it was updated or created.
     $message = $node->isNew() ? 'Automatic creation from POST API.' : 'Automatic update from POST API.';
 
     // Save the node.
-    $node->setOwnerId(2);
     $node->setNewRevision(TRUE);
+    $node->setRevisionCreationTime(time());
     $node->setRevisionUserId(2);
     $node->setRevisionLogMessage($message);
     $node->save();
