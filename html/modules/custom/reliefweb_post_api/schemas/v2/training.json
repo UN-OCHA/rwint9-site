@@ -234,7 +234,7 @@
             "description": "The country field is mandatory if the training format contains on-site otherwise the country field is not allowed",
             "if": {
                 "properties": {
-                    "training_format": {
+                    "format": {
                         "contains": {
                             "description": "ID for on-site",
                             "const": 4606
