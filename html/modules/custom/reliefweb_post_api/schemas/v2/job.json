@@ -152,6 +152,9 @@
             "maxItems": 3
         }
     },
+    "dependentRequired": {
+        "city": ["country"]
+    },
     "required": [
         "url",
         "uuid",
