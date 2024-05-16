@@ -1,0 +1,21 @@
+uuid: 9af1fcfd-49f4-4bfb-8c85-1808e87ed32d
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.user.field_api_key
+  module:
+    - reliefweb_post_api
+    - user
+id: user.user.field_api_key
+field_name: field_api_key
+entity_type: user
+bundle: user
+label: 'API key'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: reliefweb_post_api_key

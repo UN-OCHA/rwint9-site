@@ -1,0 +1,20 @@
+uuid: 60b3f4de-d44c-4407-b7fa-963d779687bc
+langcode: en
+status: true
+dependencies:
+  module:
+    - reliefweb_post_api
+    - user
+id: reliefweb_post_api_provider.field_trusted_users
+field_name: field_trusted_users
+entity_type: reliefweb_post_api_provider
+type: entity_reference
+settings:
+  target_type: user
+module: core
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
