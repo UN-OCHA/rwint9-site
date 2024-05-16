@@ -3,3 +3,8 @@ reliefweb_post_api_provider.add:
   title: 'Add provider'
   appears_on:
     - entity.reliefweb_post_api_provider.collection
+reliefweb_post_api.user.api_key:
+  title: 'Generate API Key'
+  route_name: reliefweb_post_api.user.api_key
+  appears_on:
+    - user.page
