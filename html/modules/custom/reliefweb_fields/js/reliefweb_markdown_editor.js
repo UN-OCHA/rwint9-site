@@ -24,7 +24,13 @@
      *   The text format for the editor.
      */
     attach(element, format) {
-      // Nothing to do.
+      // Ensure the content is considered changed so that the saved value is
+      // the markdown content.
+      // Otherwise when switching from the Rich editor to the markdown editor
+      // without any change to the content then the original value is restored
+      // upon saving. But this original value is in HTML (converted from
+      // markdown to work with CKeditor).
+      element.setAttribute('data-editor-value-is-changed', 'true');
     },
 
     /**
