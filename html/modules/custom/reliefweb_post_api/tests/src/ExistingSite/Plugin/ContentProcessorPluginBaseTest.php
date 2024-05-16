@@ -1735,7 +1735,11 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
    * @return string|array
    *   The data as a JSON string.
    */
-  protected function getPostApiData(string $bundle = 'report', string $type = 'decoded'): string|array {
+  protected function getPostApiData(string $bundle = '', string $type = 'decoded'): string|array {
+    if (empty($bundle)) {
+      $bundle = $this->plugin->getBundle();
+    }
+
     if (!isset($this->postApiData[$bundle])) {
       $file = __DIR__ . '/../../../data/data-' . $bundle . '.json';
       $raw = file_get_contents($file);
@@ -1760,7 +1764,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
    *   UUID.
    */
   protected function getTestUuid(string $bundle = 'report'): string {
-    return $this->getPostApiData('report', 'decoded')['uuid'];
+    return $this->getPostApiData($bundle, 'decoded')['uuid'];
   }
 
   /**
