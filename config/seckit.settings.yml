@@ -5,13 +5,13 @@ seckit_xss:
     checkbox: true
     vendor-prefix:
       x: true
-      webkit: true
+      webkit: false
     report-only: false
     default-src: "'self'"
     script-src: "'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com www.gstatic.com https://*.google.com https://*.googletagmanager.com cdn.jsdelivr.net *.google-analytics.com https://cdnjs.cloudflare.com"
     object-src: "'none'"
     style-src: "'self' 'unsafe-inline' fonts.googleapis.com https://cdnjs.cloudflare.com"
-    img-src: "'self' data: https://*.google-analytics.com https://*.googletagmanager.com gstatic.com ytimg.com reliefweb.int"
+    img-src: "'self' data: https://*"
     media-src: "'none'"
     frame-src: "'self' https://*.mapbox.com"
     frame-ancestors: "'self'"
