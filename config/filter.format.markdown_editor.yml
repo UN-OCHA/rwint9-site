@@ -8,9 +8,9 @@ dependencies:
     - reliefweb_fields
     - reliefweb_guidelines
     - reliefweb_utility
-name: 'Markdown with Editor'
+name: 'Rich Editor'
 format: markdown_editor
-weight: -6
+weight: -10
 filters:
   editor_file_reference:
     id: editor_file_reference
@@ -48,7 +48,7 @@ filters:
     status: true
     weight: -49
     settings:
-      allowed_html: '<br> <p> <h2> <h3> <h4> <h5> <h6> <strong> <em> <a href> <ul> <ol> <li>'
+      allowed_html: '<br> <p> <h2> <h3> <h4> <h5> <h6> <strong> <em> <blockquote> <a href> <ul> <ol> <li>'
       filter_html_help: false
       filter_html_nofollow: true
   filter_html_escape:
