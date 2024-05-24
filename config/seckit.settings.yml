@@ -17,7 +17,7 @@ seckit_xss:
     frame-ancestors: "'self'"
     child-src: "'self' blob: https:"
     font-src: "'self' data: fonts.gstatic.com"
-    connect-src: "'self' https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://*.googletagmanager.com"
+    connect-src: "'self' https://api.reliefweb.int https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://*.googletagmanager.com"
     report-uri: /report-csp-violation
     upgrade-req: true
     policy-uri: ''
