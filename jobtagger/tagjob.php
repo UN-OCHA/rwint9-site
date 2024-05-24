@@ -21,7 +21,7 @@ function processDoc(string $text) {
 
       /** @var \Drupal\taxonomy\Entity\Term $term */
       foreach ($terms as $term) {
-        $mapping[$vocabulary][$term->getName()] = $term->get($field_name)->value ?? $term->getDescription() ?? $term->getName();
+        $mapping[$vocabulary][$term->getName()] = $term->getDescription() ?? $term->getName(); // $term->get($field_name)->value ?? $term->getDescription() ?? $term->getName();
         $term_cache_tags = array_merge($term_cache_tags, $term->getCacheTags());
 
         // This doesn't work, bodies are too generic.
