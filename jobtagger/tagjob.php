@@ -2,6 +2,7 @@
 
 use Drupal\ocha_ai_tag\Services\OchaAiTagTagger;
 use Drush\Drush;
+use Symfony\Component\DomCrawler\Crawler;
 
 function processDoc(string $text) {
     // Load vocabularies.
@@ -61,7 +62,19 @@ $this->output()->writeln('Processing ' . $id);
 $filename = __DIR__ . '/' . $id . '.txt';
 if (!file_exists($filename)) {
   $this->output()->writeln('File not found at ' . $filename);
-  return;
+
+  // fetch from production.
+  $url = 'https://reliefweb.int/node/' . $id;
+  $html = file_get_contents($url);
+  $crawler = new Crawler($html);
+  $class = $crawler->filter('.rw-article__content')->first();
+  $data = [];
+  foreach ($class->children() as $child) {
+    $data[] = $child->nodeValue;
+  }
+
+  $this->output()->writeln('File written to ' . $filename);
+  file_put_contents($filename, implode("\n", $data));
 }
 
 $text = file_get_contents($filename);

@@ -29,6 +29,7 @@ drush scr jobtagger/tagjob.php -- 4057645
 | 4059377 | https://reliefweb.int/job/4059377/protection-field-officer-1 | Advocacy/Communications | Human Resources |
 | 4059774 | https://reliefweb.int/job/4059774/casework-supervisor-hsprs | Advocacy/Communications | |
 | 4060112 | https://reliefweb.int/job/4060112/program-associate | Donor Relations/Grants Management | |
+| 4065235 | https://reliefweb.int/job/4065235/regional-senior-auditor | Administration/Finance | |
 
 https://reliefweb.int/job/4059374/chet-project-manager
 
