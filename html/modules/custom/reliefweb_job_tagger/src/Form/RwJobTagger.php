@@ -57,6 +57,24 @@ class RwJobTagger extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, ?bool $popup = NULL): array {
+    $intro = [
+      'On this page you can test how the AI Job Tagger will classify jobs, based on the key phrases defined for each career category.',
+      '',
+      '## Steps',
+      '1. Select one or more URL\s',
+      '2. Adapt the key phrases',
+      '3. Analyze the jobs',
+      '4. Review you the feedback',
+      '5. Adapt the key phrases (if needed)',
+      '',
+      'Keep in mind that all changes will **NOT** be saved.',
+    ];
+    $form['intro'] = [
+      '#type' => 'processed_text',
+      '#text' => implode("\n", $intro),
+      '#format' => 'markdown',
+    ];
+
     if ($feedback = $form_state->get('feedback')) {
       $form['feedback'] = [
         '#type' => 'table',
