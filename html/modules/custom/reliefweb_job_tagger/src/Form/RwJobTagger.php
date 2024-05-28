@@ -91,6 +91,52 @@ class RwJobTagger extends FormBase {
       '#required' => TRUE,
     ];
 
+    $form['definitions'] = [
+      '#type' => 'table',
+      '#header' => [
+        $this->t('Career category'),
+        $this->t('Key phrases'),
+      ],
+    ];
+
+    $definitions = $form_state->get('definitions') ?? [];
+    if (empty($definitions)) {
+      $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadByProperties([
+        'status' => 1,
+        'vid' => 'career_category',
+      ]);
+
+      /** @var \Drupal\taxonomy\Entity\Term $term */
+      foreach ($terms as $term) {
+        $definitions[$term->id()] = [
+          'name' => $term->getName(),
+          'definition' => $term->get('field_example_job_posting')->value ?? $term->getDescription() ?? $term->getName(),
+        ];
+      }
+    }
+
+    foreach ($definitions as $id => $definition) {
+      $form['definitions'][$id]['name'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Name'),
+        '#title_display' => 'hidden',
+        '#required' => TRUE,
+        '#value' => $definition['name'],
+        '#disabled' => TRUE,
+        '#atttibutes' => [
+          'disabled' => 'disabled',
+          'readonly' => 'readonly',
+        ],
+      ];
+      $form['definitions'][$id]['definition'] = [
+        '#type' => 'textarea',
+        '#title' => $this->t('Definition'),
+        '#title_display' => 'hidden',
+        '#required' => TRUE,
+        '#value' => $definition['definition'],
+      ];
+    }
+
     $form['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Analyze jobs'),
@@ -103,6 +149,10 @@ class RwJobTagger extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
+    $definitions = $form_state->getValue('definitions', []);
+    $form_state->set('definitions', $definitions);
+    $this->setTermMapping($definitions);
+
     $results = [];
     $urls = $form_state->getValue('urls', '');
     $urls = explode("\n", $urls);
@@ -130,7 +180,7 @@ class RwJobTagger extends FormBase {
         continue;
       }
 
-      $data = $this->processDoc($node->get('body')->value);
+      $data = $this->processDoc($node->get('body')->value, $definitions);
       $categories = $node->get('field_career_categories')->referencedEntities();
       $category = '';
       if ($categories) {
@@ -155,35 +205,29 @@ class RwJobTagger extends FormBase {
   }
 
   /**
+   * Set term mapping.
+   */
+  protected function setTermMapping(array $definitions) : void {
+    $mapping = [
+      'career_category' => [],
+    ];
+
+    foreach ($definitions as $definition) {
+      $mapping['career_category'][$definition['name']] = $definition['definition'];
+    }
+
+    $term_cache_tags = [];
+
+    $this->ochaTagger
+      ->setVocabularies($mapping, $term_cache_tags)
+      ->clearCache();
+  }
+
+  /**
    * Analyze document.
    */
   protected function processDoc(string $text) : array {
-    // Load vocabularies.
-    $mapping = [];
-    $term_cache_tags = [];
-    $vocabularies = [
-      'career_category' => 'field_example_job_posting',
-    ];
-    foreach ($vocabularies as $vocabulary => $field_name) {
-      $mapping[$vocabulary] = [];
-
-      $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadByProperties([
-        'status' => 1,
-        'vid' => $vocabulary,
-      ]);
-
-      /** @var \Drupal\taxonomy\Entity\Term $term */
-      foreach ($terms as $term) {
-        $mapping[$vocabulary][$term->getName()] = $term->getDescription() ?? $term->getName();
-        if ($term->hasField($field_name) && !$term->get($field_name)->isEmpty()) {
-          $mapping[$vocabulary][$term->getName()] = $term->get($field_name)->value;
-        }
-        $term_cache_tags = array_merge($term_cache_tags, $term->getCacheTags());
-      }
-    }
-
     $data = $this->ochaTagger
-      ->setVocabularies($mapping, $term_cache_tags)
       ->tag($text, [OchaAiTagTagger::CALCULATION_METHOD_MEAN_WITH_CUTOFF], OchaAiTagTagger::AVERAGE_FULL_AVERAGE);
 
     $data = $data[OchaAiTagTagger::AVERAGE_FULL_AVERAGE][OchaAiTagTagger::CALCULATION_METHOD_MEAN_WITH_CUTOFF];
