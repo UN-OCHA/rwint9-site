@@ -5,5 +5,4 @@ reliefweb_reporting.ai_job_tagging.json:
   options:
     no_cache: TRUE
   requirements:
-    # This line exists to stop PHPCS complaining about a lack of access check.
-    _access: 'TRUE'
+    _reliefweb_reporting_ai_job_tagging_access_check: 'TRUE'
