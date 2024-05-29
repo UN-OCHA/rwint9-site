@@ -6,3 +6,4 @@ reliefweb_reporting.ai_job_tagging.json:
     no_cache: TRUE
   requirements:
     _reliefweb_reporting_ai_job_tagging_access_check: 'TRUE'
+    _format: 'json'
