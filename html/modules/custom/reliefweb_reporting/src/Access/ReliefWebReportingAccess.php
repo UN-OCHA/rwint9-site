@@ -48,7 +48,7 @@ class ReliefWebReportingAccess implements AccessInterface {
       $access_result = AccessResult::allowed();
     }
     else {
-      $access_result = AccessResult::forbidden('Invalid key');
+      $access_result = AccessResult::forbidden('Access denied');
       $logger = $this->getLogger('reliefweb_reporting');
       $logger->warning('Unauthorized access to reports');
     }
