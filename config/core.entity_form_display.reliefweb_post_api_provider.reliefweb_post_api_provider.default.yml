@@ -11,6 +11,7 @@ dependencies:
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_rate_limit
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_resource_status
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_source
+    - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_trusted_users
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_user
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_webhook_url
   module:
@@ -117,6 +118,16 @@ content:
         'source:field_organization_type': '0'
         'source:field_spanish_name': '0'
         'source:field_user_posting_rights': '0'
+    third_party_settings: {  }
+  field_trusted_users:
+    type: entity_reference_autocomplete
+    weight: 14
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
     third_party_settings: {  }
   field_user:
     type: entity_reference_autocomplete

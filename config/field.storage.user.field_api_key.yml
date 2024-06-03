@@ -1,0 +1,22 @@
+uuid: ec50e8a6-51de-4eb9-9e96-d0a38bc4fafa
+langcode: en
+status: true
+dependencies:
+  module:
+    - reliefweb_post_api
+    - user
+id: user.field_api_key
+field_name: field_api_key
+entity_type: user
+type: reliefweb_post_api_key
+settings:
+  max_length: '255'
+  is_ascii: false
+  case_sensitive: false
+module: reliefweb_post_api
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
