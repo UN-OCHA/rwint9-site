@@ -17,8 +17,8 @@
 <section{{ attributes.addClass('rw-river-links') }}>
   <h{{ level }}{{ title_attributes.addClass('visually-hidden') }}>{{ title }}</h{{ level }}>
   <ul class="rw-river-links__list">
-  {%- for key, url in links -%}
-    <li class="rw-river-links__list__item"><a href="{{ url }}">{{ key|upper }}</a></li>
+  {%- for key, link in links -%}
+    <li class="rw-river-links__list__item rw-river-links__list__item--{{ key|clean_class }}">{{ link }}</li>
   {%- endfor -%}
   </ul>
 </section>

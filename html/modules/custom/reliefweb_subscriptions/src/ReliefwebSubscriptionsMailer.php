@@ -25,6 +25,7 @@ use Drupal\Core\Theme\ThemeInitialization;
 use Drupal\Core\Theme\ThemeManagerInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_api\Services\ReliefWebApiClient;
+use Drupal\reliefweb_entities\Entity\BlogPost;
 use Drupal\reliefweb_entities\Entity\Disaster;
 use Drupal\reliefweb_entities\Entity\Report;
 use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
@@ -152,6 +153,13 @@ class ReliefwebSubscriptionsMailer {
    * @var array
    */
   protected $trackedSubscriptions;
+
+  /**
+   * Store the link tracking state for the unsubscribe links.
+   *
+   * @var bool
+   */
+  protected $trackUnsubscribeLinks;
 
   /**
    * {@inheritdoc}
@@ -441,20 +449,16 @@ class ReliefwebSubscriptionsMailer {
    * drupal_html_to_text(). That would mean changing the ExtendedMailSystem.
    */
   protected function generateEmail(array $subscription, array $data) {
-    static $from;
+    static $default_from;
+    static $default_from_label;
     static $language;
     static $batch_size;
     static $throttle;
 
     if (!isset($from)) {
-      $from = $this->config('system.site')->get('mail') ?? ini_get('sendmail_from');
-      // Format the from to include ReliefWeb if not already.
-      if (strpos($from, '<') === FALSE) {
-        $from = $this->formatString('@sitename <@sitemail>', [
-          '@sitename' => $this->config('system.site')->get('name') ?? 'ReliefWeb',
-          '@sitemail' => $from,
-        ]);
-      }
+      $default_from = $this->config('system.site')->get('mail') ?? ini_get('sendmail_from');
+      $default_from_label = $this->config('system.site')->get('name') ?? 'ReliefWeb';
+
       $language = $this->languageDefault->get()->getId();
       // Number of emails to send by second.
       $batch_size = $this->state->get('reliefweb_subscriptions_mail_batch_size', 40);
@@ -462,6 +466,14 @@ class ReliefwebSubscriptionsMailer {
       // Do not throttle if using the amazon_ses module since it does that by
       // itself.
       $throttle = $this->config('mailsystem.settings')?->get('defaults.sender') !== 'amazon_ses_mail';
+    }
+
+    $from = $subscription['from'] ?? $default_from;
+    if (strpos($from, '<') === FALSE) {
+      $from = strtr('@from_label <@from>', [
+        '@from_label' => $subscription['from_label'] ?? $default_from_label,
+        '@from' => $from,
+      ]);
     }
 
     $sid = $subscription['id'];
@@ -485,7 +497,7 @@ class ReliefwebSubscriptionsMailer {
     }
 
     // Get the subscribers.
-    $subscribers = $this->getSubscribers($sid);
+    $subscribers = $this->getSubscribers($subscription);
     if (empty($subscribers)) {
       $this->logger->info('No subscribers found for {name} subscription.', [
         'name' => $subscription['name'],
@@ -531,6 +543,7 @@ class ReliefwebSubscriptionsMailer {
         // Send the email.
         $this->mailManager->mail('reliefweb_subscriptions', 'notifications', $subscriber->mail, $language, [
           'headers' => [
+            'From' => $from,
             'List-Id'          => $list_id,
             'List-Unsubscribe-Post' => 'List-Unsubscribe=One-Click',
             'List-Unsubscribe' => '<' . $unsubscribe . '>',
@@ -611,6 +624,10 @@ class ReliefwebSubscriptionsMailer {
 
       case 'ocha_sitrep':
         $render_array = $this->generateEmailContentOchaSitrep($subscription, $data);
+        break;
+
+      case 'blog':
+        $render_array = $this->generateEmailContentBlog($subscription, $data);
         break;
 
       default:
@@ -1153,6 +1170,78 @@ class ReliefwebSubscriptionsMailer {
   }
 
   /**
+   * Generate the email content for the blog notifications.
+   *
+   * @param array $subscription
+   *   Subscription information.
+   * @param array $data
+   *   API data for the notification.
+   *
+   * @return string
+   *   Render array.
+   */
+  protected function generateEmailContentBlog(array $subscription, array $data) {
+    $sid = $subscription['id'];
+
+    $variables = [
+      '#theme' => 'reliefweb_subscriptions_content__blog',
+    ];
+
+    $variables['#url'] = Url::fromUri($data['url_alias'], $this->addLinkTrackingParameters($sid));
+
+    // Title.
+    $title = $data['title'];
+    $variables['#title'] = $title;
+
+    // Either show the full copy of the blog post.
+    if ($this->state->get('reliefweb_subscriptions_full_blog_post_copy', FALSE) === TRUE) {
+      // Image.
+      $image = [];
+      if (!empty($data['image']['url-large'])) {
+        $image = [
+          'url' => $data['image']['url-large'],
+          'caption' => $data['image']['caption'] ?? '',
+          'copyright' => $data['image']['copyright'] ?? '',
+        ];
+      }
+      $variables['#image'] = $image;
+
+      // Body.
+      $body = !empty($data['body']) ? check_markup($data['body'], 'markdown') : '';
+      $variables['#body'] = $body;
+    }
+    // Or a summary.
+    else {
+      // Summary.
+      $body = !empty($data['body']) ? check_markup($data['body'], 'markdown') : '';
+      $variables['#summary'] = HtmlSummarizer::summarize($body, 600, FALSE);
+    }
+
+    // Preheader with a maximum of 100 characters.
+    $preheader = HtmlSummarizer::summarize($body, 100, TRUE);
+    $variables['#preheader'] = $preheader;
+
+    // ReliefWeb physical address.
+    $variables['#reliefweb_address'] = $this->state->get('reliefweb_address', '');
+
+    // Prefooter.
+    $prefooter_parts = [
+      [
+        'text' => 'ReliefWeb',
+        'link' => '/',
+      ],
+      [
+        'text' => 'ReliefWeb Blog',
+        'link' => '/blog',
+      ],
+    ];
+
+    $variables['#prefooter'] = $this->prepareFooterLinks($prefooter_parts, $subscription);
+
+    return $variables;
+  }
+
+  /**
    * Generate the email content for the country updates notifications.
    *
    * @param array $subscription
@@ -1398,13 +1487,21 @@ class ReliefwebSubscriptionsMailer {
   /**
    * Get the list of subscribers for the subscription.
    *
-   * @param string $sid
-   *   Subscription id.
+   * @param array $subscription
+   *   Subscription data.
    *
    * @return array
    *   List of users with their name and mail address.
    */
-  protected function getSubscribers($sid) {
+  protected function getSubscribers($subscription) {
+    $sid = $subscription['id'];
+
+    // Get the roles that have the permission for the subscription.
+    $roles = user_role_names(TRUE, $subscription['permission']);
+    if (empty($roles)) {
+      return [];
+    }
+
     $query = $this->database->select('reliefweb_subscriptions_subscriptions', 's');
     $query->fields('s', ['uid']);
     $query->condition('s.sid', $sid, '=');
@@ -1412,6 +1509,15 @@ class ReliefwebSubscriptionsMailer {
     $query->fields('u', ['name', 'mail']);
     $query->innerJoin('user__field_email_confirmed', 'fec', 'fec.entity_id = s.uid');
     $query->condition('fec.field_email_confirmed_value', 1, '=');
+
+    // Only filter by roles if the permission is not set for all the
+    // authenticated users.
+    if (!isset($roles['authenticated'])) {
+      $query->innerJoin('user__roles', 'ur', 'ur.entity_id = s.uid');
+      $query->condition('ur.roles_target_id', array_keys($roles), 'IN');
+    }
+
+    $query->distinct();
     $result = $query->execute();
     return !empty($result) ? $result->fetchAllAssoc('uid') : [];
   }
@@ -1509,7 +1615,9 @@ class ReliefwebSubscriptionsMailer {
     $options = [
       'absolute' => TRUE,
     ];
-    $options = $this->addLinkTrackingParameters($sid, $options);
+    if ($this->isUnsubscribeLinkTrackingEnabled()) {
+      $options = $this->addLinkTrackingParameters($sid, $options);
+    }
     $url = Url::fromUri($uri, $options);
     return $url->toString();
   }
@@ -2149,7 +2257,7 @@ class ReliefwebSubscriptionsMailer {
     }
     // Otherwise compare with the status of the previous revision.
     else {
-      // When this is called in a an hook_entity_update, then the previous
+      // When this is called in a hook_entity_update, then the previous
       // revision is stored as the "original" property. Otherwise, for example,
       // when queueing via drush, then we load the previous revision.
       $previous = $report->original ?? $this->loadPreviousEntityRevision($report);
@@ -2189,7 +2297,7 @@ class ReliefwebSubscriptionsMailer {
       return in_array($status, ['alert', 'ongoing']);
     }
     else {
-      // When this is called in a an hook_entity_update, then the previous
+      // When this is called in a hook_entity_update, then the previous
       // revision is stored as the "original" property. Otherwise, for example,
       // when queueing via drush, then we load the previous revision.
       $previous = $disaster->original ?? $this->loadPreviousEntityRevision($disaster);
@@ -2212,6 +2320,49 @@ class ReliefwebSubscriptionsMailer {
   }
 
   /**
+   * Trigger for blog posts.
+   *
+   * @param \Drupal\reliefweb_entities\Entity\BlogPost $blog
+   *   Blog post.
+   *
+   * @return bool
+   *   TRUE if a notification should be queued.
+   */
+  protected function triggerBlogNotification(BlogPost $blog) {
+    if ($blog->bundle() !== 'blog_post') {
+      return FALSE;
+    }
+
+    // Get the status of the entity.
+    $status = $blog->getModerationStatus();
+
+    // For a newly created entity, check the current status.
+    if ($blog->isNew()) {
+      return in_array($status, ['published']);
+    }
+    else {
+      // When this is called in a hook_entity_update, then the previous
+      // revision is stored as the "original" property. Otherwise, for example,
+      // when queueing via drush, then we load the previous revision.
+      $previous = $blog->original ?? $this->loadPreviousEntityRevision($blog);
+
+      // If there is no previous revision, check the current status.
+      if ($previous === $blog) {
+        return in_array($status, ['published']);
+      }
+
+      // Queue only if the document was not previously already published to
+      // avoid sending multiple times notifications for the document.
+      $previous_status = $previous->getModerationStatus();
+      return $status !== $previous_status &&
+        in_array($status, ['published']) &&
+        !in_array($previous_status, ['published']);
+    }
+
+    return FALSE;
+  }
+
+  /**
    * Generate sitrep subject.
    */
   protected function ochaSitrepSubject($data) {
@@ -2227,6 +2378,22 @@ class ReliefwebSubscriptionsMailer {
   protected function disasterSubject($data) {
     if (!empty($data['name'])) {
       return 'New Alert/Disaster - ' . $data['name'];
+    }
+    return '';
+  }
+
+  /**
+   * Generate blog subject.
+   *
+   * @param array $data
+   *   Processed data from the API.
+   *
+   * @return string
+   *   Email title.
+   */
+  protected function blogSubject(array $data) {
+    if (!empty($data['title'])) {
+      return $data['title'];
     }
     return '';
   }
@@ -2298,6 +2465,19 @@ class ReliefwebSubscriptionsMailer {
       $this->trackedSubscriptions = $this->state->get('reliefweb_subscriptions_tracked_subscriptions', []);
     }
     return !empty($this->trackedSubscriptions[$sid]);
+  }
+
+  /**
+   * Check if link tracking is enabled for the unsubscribe links.
+   *
+   * @return bool
+   *   TRUE if the link tracking is enabled for the unsubscribe links.
+   */
+  protected function isUnsubscribeLinkTrackingEnabled() {
+    if (!isset($this->trackUnsubscribeLinks)) {
+      $this->trackUnsubscribeLinks = $this->state->get('reliefweb_subscriptions_track_unsubscribe_links', FALSE);
+    }
+    return !empty($this->trackUnsubscribeLinks);
   }
 
   /**

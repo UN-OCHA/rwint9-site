@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_moderation\Services;
 
+use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 
 /**
@@ -95,6 +96,16 @@ class BlogPostModeration extends ModerationServiceBase {
     }
 
     return $rows;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function disableNotifications(EntityModeratedInterface $entity, $status) {
+    $previous_status = isset($entity->original) ? $entity->original->getModerationStatus() : '';
+    // Disable if not published or previously published to avoid resending
+    // notifications when making modification to a published report.
+    $entity->notifications_content_disable = $status !== 'published' || $previous_status === 'published';
   }
 
   /**
