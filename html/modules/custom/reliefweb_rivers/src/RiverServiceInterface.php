@@ -310,6 +310,14 @@ interface RiverServiceInterface {
   public function getApiLink();
 
   /**
+   * Get the link to the user subscriptions page.
+   *
+   * @return string
+   *   Link to the subscriptions page.
+   */
+  public function getSubscribeLink();
+
+  /**
    * Get the base ReliefWeb API payload for the given river and view.
    *
    * @return array
