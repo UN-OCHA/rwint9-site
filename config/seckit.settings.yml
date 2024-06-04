@@ -8,12 +8,12 @@ seckit_xss:
       webkit: false
     report-only: false
     default-src: "'self'"
-    script-src: "'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com www.gstatic.com https://*.google.com https://*.googletagmanager.com *.google-analytics.com"
+    script-src: "'self' 'unsafe-inline' fonts.googleapis.com www.gstatic.com https://*.google.com https://*.googletagmanager.com *.google-analytics.com https://tagmanager.google.com  https://www.googleadservices.com  https://googleads.g.doubleclick.net"
     object-src: "'none'"
-    style-src: "'self' 'unsafe-inline' fonts.googleapis.com"
+    style-src: "'self' 'unsafe-inline' https://googletagmanager.com https://tagmanager.google.com fonts.googleapis.com"
     img-src: "'self' data: https://*"
     media-src: "'none'"
-    frame-src: "'self' https://*.mapbox.com https://www.youtube.com https://youtu.be"
+    frame-src: "'self' https://www.googletagmanager.com https://bid.g.doubleclick.net https://td.doubleclick.net https://*.mapbox.com https://www.youtube.com https://youtu.be"
     frame-ancestors: "'self'"
     child-src: "'self' blob: https:"
     font-src: "'self' data: fonts.gstatic.com"
