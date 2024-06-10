@@ -6,6 +6,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ocha_ai_tag\Services\OchaAiTagTagger;
+use GuzzleHttp\ClientInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -14,34 +15,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class RwJobTagger extends FormBase {
 
   /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected EntityTypeManagerInterface $entityTypeManager;
-
-  /**
-   * The OCHA AI chat service.
-   *
-   * @var \Drupal\ocha_ai_tag\Services\OchaAiTagTagger
-   */
-  protected OchaAiTagTagger $ochaTagger;
-
-  /**
-   * Constructor.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\ocha_ai_tag\Services\OchaAiTagTagger $ocha_tagger
-   *   The OCHA AI tagger service.
+   * {@inheritdoc}
    */
   public function __construct(
-    EntityTypeManagerInterface $entity_type_manager,
-    OchaAiTagTagger $ocha_tagger,
-  ) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->ochaTagger = $ocha_tagger;
-  }
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected OchaAiTagTagger $ochaTagger,
+    protected ClientInterface $httpClient,
+  ) {}
 
   /**
    * {@inheritdoc}
@@ -49,7 +29,8 @@ class RwJobTagger extends FormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('entity_type.manager'),
-      $container->get('ocha_ai_tag.tagger')
+      $container->get('ocha_ai_tag.tagger'),
+      $container->get('http_client'),
     );
   }
 
@@ -81,7 +62,9 @@ class RwJobTagger extends FormBase {
         '#header' => [
           $this->t('Url'),
           $this->t('Career category'),
-          $this->t('Feedback'),
+          $this->t('Feedback (AI)'),
+          $this->t('Feedback (ES)'),
+          $this->t('Info'),
         ],
       ];
 
@@ -97,6 +80,18 @@ class RwJobTagger extends FormBase {
         $form['feedback'][$url]['feedback'] = [
           '#type' => 'processed_text',
           '#text' => $data['feedback'],
+          '#format' => 'markdown',
+        ];
+
+        $form['feedback'][$url]['es_feedback'] = [
+          '#type' => 'processed_text',
+          '#text' => $data['es_feedback'],
+          '#format' => 'markdown',
+        ];
+
+        $form['feedback'][$url]['info'] = [
+          '#type' => 'processed_text',
+          '#text' => $data['info'],
           '#format' => 'markdown',
         ];
       }
@@ -167,6 +162,10 @@ class RwJobTagger extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
+    $api_fields = [
+      'career_categories' => 'career_category',
+    ];
+
     $definitions = $form_state->getValue('definitions', []);
     $form_state->set('definitions', $definitions);
     $this->setTermMapping($definitions);
@@ -198,16 +197,65 @@ class RwJobTagger extends FormBase {
         continue;
       }
 
-      $data = $this->processDoc($node->get('body')->value, $definitions);
+      $info = [];
+
+      // Get field data.
       $categories = $node->get('field_career_categories')->referencedEntities();
       $category = '';
       if ($categories) {
         $category = $categories[0]->label();
       }
 
+      // Get ES feedback.
+      $es = $this->getMostRelevantTermsFromEs('jobs', $node->id(), $api_fields, 50);
+      $es = $es['career_category'];
+
+      $good_enough = FALSE;
+      $es_first = '';
+      $ai_first = '';
+      if (!empty($es) && isset($es)) {
+        $es_feedback = $this->setAiFeedback($es);
+        $es_first = array_key_first($es);
+        $first = reset($es);
+        if ($first > .70) {
+          $info[] = '- High ES confidence, skip AI';
+          $good_enough = TRUE;
+        }
+        elseif ($first > .50) {
+          $info[] = '- Average ES confidence';
+          $good_enough = TRUE;
+        }
+      }
+
+      // Get AI feedback.
+      $ai = $this->processDoc($node->get('body')->value, $definitions);
+      $ai_first = array_key_first($ai);
+
+      if ($ai_first == $es_first) {
+        $info[] = '- AI and ES agree';
+        $good_enough = TRUE;
+      }
+
+      if (!$good_enough) {
+        $intersect = array_intersect_key($es, $ai);
+        if (!empty($intersect)) {
+          // Multiple confidence levels.
+          $mult = [];
+          foreach (array_keys($ai) as $key) {
+            if (array_key_exists($key, $es)) {
+              $mult[$key] = $ai[$key] * $es[$key] * 100;
+            }
+            arsort($mult);
+          }
+          $info[] = '- First in common: ' . array_key_first($mult);
+        }
+      }
+
       $results[$url] = [
         'category' => $category,
-        'feedback' => $this->setAiFeedback($data),
+        'feedback' => $this->setAiFeedback($ai, 10),
+        'es_feedback' => $es_feedback,
+        'info' => implode("\n", $info),
       ];
     }
 
@@ -267,6 +315,180 @@ class RwJobTagger extends FormBase {
     }
 
     return implode('', $message);
+  }
+
+  /**
+   * Generate a list of terms sorted by relevance to a document.
+   *
+   * We retrieve a list of the most similar documents using a "more like this"
+   * query on the Elasticsearch index, extract the terms from the documents
+   * and sort them using the "similarity" score from the "more like this" query.
+   *
+   * @param string $resource
+   *   The API resource.
+   * @param int|array $document
+   *   Either the document ID if the document is already indexed or an
+   *   associative array with the document's title and description.
+   * @param array $fields
+   *   Associative array with the vocabularies to retrieve keyed by the
+   *   corresponding Elasticsearch fields.
+   * @param int $limit
+   *   Maxium number of similar documents to retrieve. Defaults to 10.
+   * @param array $parameters
+   *   Parameters for the more like this query.
+   *
+   * @return array
+   *   Associative array keyed by vocabulary with maps of term to relevance as
+   *   values.
+   */
+  public function getMostRelevantTermsFromEs(
+    string $resource,
+    int|array $document,
+    array $fields,
+    int $limit = 10,
+    // This can be adjusted but seems to give good results.
+    array $parameters = [
+      'min_term_freq' => 3,
+      'min_word_length' => 4,
+      'min_doc_freq' => 4,
+      'max_query_terms' => 40,
+      'boost_terms' => 10,
+      'minimum_should_match' => '60%',
+    ],
+  ): array {
+    $index = 'reliefweb_' . $resource;
+    $url = $this->config('reliefweb_api.settings')->get('elasticsearch') . '/' . $index . '/_search';
+
+    // If the document is indexed, we can simply use it's ID.
+    if (is_int($document)) {
+      $entity_id = (int) $document;
+      $like = [
+        '_id' => $entity_id,
+      ];
+
+    }
+    // Otherwise we pass the title and body and let Elasticsearch analyze those
+    // as if they were to be indexed.
+    elseif (isset($document['id'], $document['title'], $document['body'])) {
+      $entity_id = (int) $document['id'];
+      $like = [
+        'doc' => [
+          'id' => $entity_id,
+          'title' => $document['title'],
+          'body' => $document['body'],
+        ],
+      ];
+    }
+    else {
+      return [];
+    }
+
+    $payload = [
+      'query' => [
+        'bool' => [
+          'must' => [
+            [
+              'more_like_this' => [
+                // Only compare the title and body. We could extend that to
+                // include the source etc. but that's more similar to the data
+                // used for the embeddings comparison.
+                'fields' => ['title', 'body'],
+                'like' => [
+                  [
+                    '_index' => $index,
+                  ] + $like,
+                ],
+                // This is important: Elasticsearch returns scores that relative
+                // to the current search query so to have some comparable we
+                // need to normalize the scores. With the following parameter,
+                // the document is included in the results (= the first item in
+                // the results with the higher score). We can then use this max
+                // score to normalize the other scores.
+                'include' => TRUE,
+              ] + $parameters,
+            ],
+          ],
+          // We can only filter on the status. The reviewer user ID is not in
+          // the API so we cannot limit to similar documents reviewed by
+          // editors. That means the list of similar documents may include
+          // documents from trusted users with possibly less correct term
+          // selection.
+          'filter' => [
+            [
+              'terms' => [
+                'status' => ['published', 'expired'],
+              ],
+            ],
+          ],
+        ],
+      ],
+      '_source' => array_merge(['id'], array_keys($fields)),
+      // The document to compare is included so we increase the limit by 1 to
+      // account for that.
+      'size' => $limit + 1,
+    ];
+
+    try {
+      $response = $this->httpClient->post($url, [
+        'json' => $payload,
+      ]);
+    }
+    catch (\Exception $exception) {
+      return [];
+    }
+
+    if ($response->getStatusCode() !== 200) {
+      return [];
+    }
+
+    $data = json_decode($response->getBody()->getContents(), TRUE);
+    if (empty($data['hits']['hits'])) {
+      return [];
+    }
+
+    // Aggregate the scores for each term of each vocabulary.
+    $max_score = 0;
+    $vocabularies = [];
+    foreach ($data['hits']['hits'] as $item) {
+      $source = $item['_source'];
+      $score = $item['_score'];
+      $id = (int) $source['id'];
+
+      if ($score > $max_score) {
+        $max_score = $score;
+      }
+
+      // Skip the original document because it's only included to normalize the
+      // similarity scores of the other documents.
+      if ($id === $entity_id) {
+        continue;
+      }
+
+      // Aggregate the scores for each term of each vocabulary.
+      foreach ($fields as $field => $vocabulary) {
+        $terms = [];
+        if (!empty($source[$field])) {
+          foreach ($source[$field] as $term) {
+            $vocabularies[$vocabulary][$term['name']][] = $score;
+          }
+        }
+      }
+    }
+
+    if (empty($vocabularies)) {
+      return [];
+    }
+
+    // Calculate the nornmalized mean of the scores for each term.
+    foreach ($vocabularies as $vocabulary => $terms) {
+      foreach ($terms as $term => $scores) {
+        $vocabularies[$vocabulary][$term] = array_sum($scores) / $max_score / count($scores);
+      }
+      // Sort the terms by relevance.
+      arsort($vocabularies[$vocabulary]);
+    }
+
+    return $vocabularies;
   }
 
 }
