@@ -223,7 +223,6 @@ class RwJobTagger extends FormBase {
         }
         elseif ($first > .50) {
           $info[] = '- Average ES confidence';
-          $good_enough = TRUE;
         }
       }
 
