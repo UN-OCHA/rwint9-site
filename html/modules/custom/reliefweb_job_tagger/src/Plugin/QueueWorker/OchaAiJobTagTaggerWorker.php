@@ -150,7 +150,7 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
       ]);
       /** @var \Drupal\taxonomy\Entity\Term $term */
       foreach ($terms as $term) {
-        if ($term->hasField('')) {
+        if ($term->hasField('field_example_job_posting')) {
           $mapping[$vocabulary][$term->getName()] = $term->get('field_example_job_posting')->value ?? $term->getDescription() ?? $term->getName();
         }
         else {
