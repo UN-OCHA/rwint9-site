@@ -365,6 +365,27 @@ class RwJobTagger extends FormBase {
         '_id' => $entity_id,
       ];
 
+      // This filter is either the given document or published or expired
+      // documents. This ensures the given document is returned so we can
+      // normalize the scores.
+      $filter = [
+        [
+          'bool' => [
+            'should' => [
+              [
+                'term' => [
+                  'id' => $document,
+                ],
+              ],
+              [
+                'terms' => [
+                  'status' => ['published', 'expired'],
+                ],
+              ],
+            ],
+          ],
+        ],
+      ];
     }
     // Otherwise we pass the title and body and let Elasticsearch analyze those
     // as if they were to be indexed.
@@ -375,6 +396,16 @@ class RwJobTagger extends FormBase {
           'id' => $entity_id,
           'title' => $document['title'],
           'body' => $document['body'],
+          'status' => 'published',
+        ],
+      ];
+
+      // Here, we can only filter on the published/expired documents.
+      $filter = [
+        [
+          'terms' => [
+            'status' => ['published', 'expired'],
+          ],
         ],
       ];
     }
@@ -412,13 +443,7 @@ class RwJobTagger extends FormBase {
           // editors. That means the list of similar documents may include
           // documents from trusted users with possibly less correct term
           // selection.
-          'filter' => [
-            [
-              'terms' => [
-                'status' => ['published', 'expired'],
-              ],
-            ],
-          ],
+          'filter' => $filter,
         ],
       ],
       '_source' => array_merge(['id'], array_keys($fields)),
