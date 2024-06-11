@@ -240,8 +240,8 @@ class RwJobTagger extends FormBase {
           if (array_key_exists($key, $es)) {
             $mult[$key] = $ai[$key] * $es[$key] * 100;
           }
-          arsort($mult);
         }
+        arsort($mult);
         $info[] = '- First in common: ' . array_key_first($mult);
       }
 
