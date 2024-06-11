@@ -214,8 +214,8 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
             if (array_key_exists($key, $es)) {
               $mult[$key] = $ai[$key] * $es[$key] * 100;
             }
-            arsort($mult);
           }
+          arsort($mult);
 
           $term = $this->getRelevantTerm('career_category', $mult, 1);
           $message[] = $this->setAiFeedback('Career category (ES)', $es, [$term]);
