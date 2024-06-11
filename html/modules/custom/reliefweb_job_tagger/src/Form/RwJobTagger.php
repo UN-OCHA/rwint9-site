@@ -210,7 +210,6 @@ class RwJobTagger extends FormBase {
       $es = $this->getMostRelevantTermsFromEs('jobs', $node->id(), $api_fields, 50);
       $es = $es['career_category'];
 
-      $good_enough = FALSE;
       $es_first = '';
       $ai_first = '';
       if (!empty($es) && isset($es)) {
@@ -219,7 +218,6 @@ class RwJobTagger extends FormBase {
         $first = reset($es);
         if ($first > .70) {
           $info[] = '- High ES confidence, skip AI';
-          $good_enough = TRUE;
         }
         elseif ($first > .50) {
           $info[] = '- Average ES confidence';
@@ -232,22 +230,19 @@ class RwJobTagger extends FormBase {
 
       if ($ai_first == $es_first) {
         $info[] = '- AI and ES agree';
-        $good_enough = TRUE;
       }
 
-      if (!$good_enough) {
-        $intersect = array_intersect_key($es, $ai);
-        if (!empty($intersect)) {
-          // Multiple confidence levels.
-          $mult = [];
-          foreach (array_keys($ai) as $key) {
-            if (array_key_exists($key, $es)) {
-              $mult[$key] = $ai[$key] * $es[$key] * 100;
-            }
-            arsort($mult);
+      $intersect = array_intersect_key($es, $ai);
+      if (!empty($intersect)) {
+        // Multiple confidence levels.
+        $mult = [];
+        foreach (array_keys($ai) as $key) {
+          if (array_key_exists($key, $es)) {
+            $mult[$key] = $ai[$key] * $es[$key] * 100;
           }
-          $info[] = '- First in common: ' . array_key_first($mult);
+          arsort($mult);
         }
+        $info[] = '- First in common: ' . array_key_first($mult);
       }
 
       $results[$url] = [
