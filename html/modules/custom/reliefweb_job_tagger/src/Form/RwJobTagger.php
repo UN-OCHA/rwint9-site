@@ -354,7 +354,7 @@ class RwJobTagger extends FormBase {
       'minimum_should_match' => '60%',
     ],
   ): array {
-    $index = 'reliefweb_' . $resource;
+    $index = $this->configFactory->get('reliefweb_api.settings')->get('base_index_name') . '_' . $resource;
     $url = $this->config('reliefweb_api.settings')->get('elasticsearch') . '/' . $index . '/_search';
 
     // If the document is indexed, we can simply use it's ID.
