@@ -42,12 +42,12 @@ plugins:
       model: amazon.titan-embed-text-v2:0
       endpoint: ''
       version: ''
-      region: REPLACE_WITH_REGION
-      api_key: REPLACE_WITH_KEY
+      region: null
+      api_key: null
       batch_size: 1
       dimensions: 1024
       max_tokens: 8192
-      api_secret: REPLACE_WITH_SECRET
+      api_secret: null
       role_arn: null
     azure_openai:
       model: text-embedding-ada-002
