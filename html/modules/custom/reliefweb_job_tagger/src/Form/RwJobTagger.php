@@ -213,6 +213,8 @@ class RwJobTagger extends FormBase {
 
       $es_first = '';
       $ai_first = '';
+      $es_feedback = '';
+
       if (!empty($es) && isset($es)) {
         $es_feedback = $this->setAiFeedback($es);
         $es_first = array_key_first($es);
