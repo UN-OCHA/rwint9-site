@@ -190,10 +190,10 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
     $needs_save = FALSE;
 
     if (isset($data['career_category']) && $node->field_career_categories->isEmpty()) {
-      $term = $this->getRelevantTerm('career_category', $data['career_category'], 1);
-      $message[] = $this->setAiFeedback('Career category (AI)', $data['career_category'], [$term]);
+      $ai_term = $this->getRelevantTerm('career_category', $data['career_category'], 1);
+      $message[] = $this->setAiFeedback('Career category (AI)', $data['career_category'], [$ai_term]);
 
-      $node->set('field_career_categories', $term);
+      $node->set('field_career_categories', $ai_term);
       $needs_save = TRUE;
 
       $use_es = $this->configFactory->get('reliefweb_job_tagger.settings')->get('use_es', FALSE);
@@ -203,10 +203,10 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
           'career_categories' => 'career_category',
         ];
         $es = $this->getMostRelevantTermsFromEs('jobs', $node->id(), $api_fields, 50);
-        $es = $es['career_category'];
+        $es = $es['career_category'] ?? [];
 
-        $term = $this->getRelevantTerm('career_category', $es, 1);
-        $message[] = $this->setAiFeedback('Career category (ES)', $es, [$term]);
+        $es_term = $this->getRelevantTerm('career_category', $es, 1);
+        $message[] = $this->setAiFeedback('Career category (ES)', $es, [$es_term]);
 
         // Combine both AI and ES. This gives, most of the time, a more accurate
         // result.
@@ -222,11 +222,17 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
           }
           arsort($mult);
 
-          $term = $this->getRelevantTerm('career_category', $mult, 1);
-          array_unshift($message, $this->setAiFeedback('Career category', $mult, [$term]));
+          $mult_term = $this->getRelevantTerm('career_category', $mult, 1);
+          array_unshift($message, $this->setAiFeedback('Career category', $mult, [$mult_term]));
 
-          $node->set('field_career_categories', $term);
+          $node->set('field_career_categories', $mult_term);
           $needs_save = TRUE;
+        }
+        // Use the results of the AI only if there are no results from ES so
+        // that there is at least consistent feedback (the 3 sections) for the
+        // editors.
+        else {
+          array_unshift($message, $this->setAiFeedback('Career category', $ai, [$ai_term]));
         }
       }
     }
@@ -284,6 +290,10 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
    * Get relevant terms.
    */
   protected function getRelevantTerm($vocabulary, $data, $limit) {
+    if (empty($data)) {
+      return $limit === 1 ? NULL : [];
+    }
+
     $storage = $this->entityTypeManager->getStorage('taxonomy_term');
 
     $items = $this->getTopNumTerms($data, $limit);
@@ -302,6 +312,11 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
   protected function setAiFeedback($title, $data, $terms, $limit = 5) {
     $message = [];
     $message[] = '**' . $title . '**:' . "\n\n";
+
+    if (empty($data)) {
+      $message[] = "*No results.*\n";
+      return implode('', $message);
+    }
 
     // Normalize the data. This will result in the most relevant term having
     // a score of 1. The scores otherwise don't mean much.
@@ -485,15 +500,26 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
       ]);
     }
     catch (\Exception $exception) {
+      $this->logger->error(strtr('ES similarity for @id. Exception: @error', [
+        '@id' => $entity_id,
+        '@error' => $exception->getMessage(),
+      ]));
       return [];
     }
 
     if ($response->getStatusCode() !== 200) {
+      $this->logger->error(strtr('ES similarity for @id. Failure: @error', [
+        '@id' => $entity_id,
+        '@error' => $response->getStatusCode() . ': ' . ($response->getBody()?->getContents() ?? ''),
+      ]));
       return [];
     }
 
     $data = json_decode($response->getBody()->getContents(), TRUE);
     if (empty($data['hits']['hits'])) {
+      $this->logger->warning(strtr('ES similarity for @id. No hits found.', [
+        '@id' => $entity_id,
+      ]));
       return [];
     }
 
@@ -527,6 +553,9 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
     }
 
     if (empty($vocabularies)) {
+      $this->logger->notice(strtr('ES similarity for @id. No similar documents found.', [
+        '@id' => $entity_id,
+      ]));
       return [];
     }
 
