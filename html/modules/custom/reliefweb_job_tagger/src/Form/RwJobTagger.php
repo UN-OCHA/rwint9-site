@@ -462,7 +462,7 @@ class RwJobTagger extends FormBase {
     }
 
     if ($response->getStatusCode() !== 200) {
-      $this->logger('reliefweb_job_tagger')->error($response->getStatusCode . ': ' . $response->getBody()->getContents());
+      $this->logger('reliefweb_job_tagger')->error($response->getStatusCode() . ': ' . ($response->getBody()?->getContents() ?? ''));
       return [];
     }
 
