@@ -188,6 +188,7 @@ class RwJobTagger extends FormBase {
       }
 
       $nid = $parts[2];
+      /** @var \Drupal\node\Entity\Node $node */
       $node = $this->entityTypeManager->getStorage('node')->load($nid);
       if (!$node) {
         $results[$url] = [
@@ -208,7 +209,7 @@ class RwJobTagger extends FormBase {
 
       // Get ES feedback.
       $es = $this->getMostRelevantTermsFromEs('jobs', $node->id(), $api_fields, 50);
-      $es = $es['career_category'];
+      $es = $es['career_category'] ?? [];
 
       $es_first = '';
       $ai_first = '';
@@ -225,7 +226,8 @@ class RwJobTagger extends FormBase {
       }
 
       // Get AI feedback.
-      $ai = $this->processDoc($node->get('body')->value, $definitions);
+      $text = $node->getTitle() . "\n\n" . $node->get('body')->value;
+      $ai = $this->processDoc($text, $definitions);
       $ai_first = array_key_first($ai);
 
       if ($ai_first == $es_first) {
