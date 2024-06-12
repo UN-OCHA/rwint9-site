@@ -205,6 +205,11 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
         $es = $this->getMostRelevantTermsFromEs('jobs', $node->id(), $api_fields, 50);
         $es = $es['career_category'];
 
+        $term = $this->getRelevantTerm('career_category', $es, 1);
+        $message[] = $this->setAiFeedback('Career category (ES)', $es, [$term]);
+
+        // Combine both AI and ES. This gives, most of the time, a more accurate
+        // result.
         $ai = $data['career_category'];
         $intersect = array_intersect_key($es, $ai);
         if (!empty($intersect)) {
@@ -212,13 +217,13 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
           $mult = [];
           foreach (array_keys($ai) as $key) {
             if (array_key_exists($key, $es)) {
-              $mult[$key] = $ai[$key] * $es[$key] * 100;
+              $mult[$key] = $ai[$key] * $es[$key];
             }
           }
           arsort($mult);
 
           $term = $this->getRelevantTerm('career_category', $mult, 1);
-          $message[] = $this->setAiFeedback('Career category (ES)', $es, [$term]);
+          array_unshift($message, $this->setAiFeedback('Career category', $mult, [$term]));
 
           $node->set('field_career_categories', $term);
           $needs_save = TRUE;
@@ -297,6 +302,23 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
   protected function setAiFeedback($title, $data, $terms, $limit = 5) {
     $message = [];
     $message[] = '**' . $title . '**:' . "\n\n";
+
+    // Normalize the data. This will result in the most relevant term having
+    // a score of 1. The scores otherwise don't mean much.
+    // For the AI, it's the similarity between the term description and the job,
+    // which will always be fairly low since the job's content contains much
+    // more info than just the term description's content. For Elasticsearch,
+    // it's not really a  similarity score, more a score for the relevance of a
+    // document to the query.
+    // So they can not be directly represented as a percentage of confidence.
+    // Maybe, instead of showing a numeric score, it would better to use
+    // descriptive labels like "best match" or tiered categories like "highly
+    // relevant".
+    $min = min($data);
+    $max = max($data);
+    foreach ($data as $key => $item) {
+      $data[$key] = ($data[$key] - $min) / ($max - $min);
+    }
 
     // Max 5 items.
     $items = array_slice($data, 0, $limit);
