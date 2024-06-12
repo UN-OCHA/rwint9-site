@@ -457,15 +457,18 @@ class RwJobTagger extends FormBase {
       ]);
     }
     catch (\Exception $exception) {
+      $this->logger('reliefweb_job_tagger')->error($exception->getMessage());
       return [];
     }
 
     if ($response->getStatusCode() !== 200) {
+      $this->logger('reliefweb_job_tagger')->error($response->getStatusCode . ': ' . $response->getBody()->getContents());
       return [];
     }
 
     $data = json_decode($response->getBody()->getContents(), TRUE);
     if (empty($data['hits']['hits'])) {
+      $this->logger('reliefweb_job_tagger')->warning('No hits found.');
       return [];
     }
 
