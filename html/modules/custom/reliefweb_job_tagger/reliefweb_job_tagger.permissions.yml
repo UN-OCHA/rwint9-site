@@ -5,3 +5,7 @@ enforce ocha ai job tag:
 bypass ocha ai job tag:
   title: 'Bypass OCHA AI Job tag'
   description: 'Allow users to ignore Access OCHA AI Chat advanced features.'
+
+test ocha ai job tag:
+  title: 'Test OCHA AI Job tag'
+  description: 'Allow users to use a form to test job tagging.'
