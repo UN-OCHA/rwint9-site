@@ -331,8 +331,10 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
     // relevant".
     $min = min($data);
     $max = max($data);
-    foreach ($data as $key => $item) {
-      $data[$key] = ($data[$key] - $min) / ($max - $min);
+    if ($max > $min) {
+      foreach ($data as $key => $item) {
+        $data[$key] = ($data[$key] - $min) / ($max - $min);
+      }
     }
 
     // Max 5 items.
