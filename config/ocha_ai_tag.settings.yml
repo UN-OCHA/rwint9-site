@@ -6,12 +6,8 @@ defaults:
       value: 'The process of posting jobs via ReliefWeb is now even smoother. The form now includes an automated function for the "career" and "themes" categories; fewer fields for users to fill and higher efficiency overall.'
       format: markdown_editor
   plugins:
-    completion:
-      plugin_id: aws_bedrock
     embedding:
-      plugin_id: aws_bedrock
-    source:
-      plugin_id: reliefweb
+      plugin_id: aws_bedrock_titan_embed_text_v2
     text_extractor:
       application/pdf:
         plugin_id: mupdf
@@ -19,3 +15,7 @@ defaults:
       plugin_id: token
     vector_store:
       plugin_id: elasticsearch
+    completion:
+      plugin_id: aws_bedrock
+    source:
+      plugin_id: reliefweb
