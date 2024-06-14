@@ -340,3 +340,140 @@ function reliefweb_job_tagger_queue_job(Node $job) : void {
   $item->nid = $job->id();
   $queue->createItem($item);
 }
+
+/**
+ * Index embedding for a job.
+ */
+function reliefweb_job_tagger_index_embedding($nid) {
+  /** @var \Drupal\ocha_ai_tag\Services\OchaAiTagTagger $jobTagger */
+  $jobTagger = \Drupal::service('ocha_ai_tag.tagger');
+  $jobTagger->embedDocument($nid);
+}
+
+/**
+ * Get similar jobs.
+ */
+function reliefweb_job_tagger_get_similar_jobs($nid) {
+  $node = Node::load($nid);
+
+  /** @var \Drupal\ocha_ai_tag\Services\OchaAiTagTagger $jobTagger */
+  $jobTagger = \Drupal::service('ocha_ai_tag.tagger');
+  $relevant = $jobTagger->getSimilarDocuments($nid, $node->get('body')->value);
+  $nodes = Node::loadMultiple($relevant);
+
+  if (isset($nodes[$nid])) {
+    unset($nodes[$nid]);
+  }
+  $categories = [];
+  foreach ($nodes as $node) {
+    if (!isset($categories[$node->get('field_career_categories')->entity->label()])) {
+      $categories[$node->get('field_career_categories')->entity->label()] = 0;
+    }
+    $categories[$node->get('field_career_categories')->entity->label()]++;
+  }
+
+  arsort($categories);
+  return $categories;
+}
+
+/**
+ * Index jobs.
+ */
+function reliefweb_job_tagger_index_jobs() {
+  // Only index jobs approved by reliefweb.int.
+  $uids = \Drupal::database()
+    ->select('users_field_data', 'u')
+    ->fields('u', ['uid'])
+    ->condition('u.mail', '%@reliefweb.int', 'LIKE')
+    ->execute()
+    ->fetchCol();
+
+  $query = \Drupal::entityTypeManager()->getStorage('node')
+    ->getQuery()
+    ->accessCheck(FALSE)
+    ->condition('type', 'job', '=')
+    ->condition('moderation_status', ['published', 'expired'], 'IN')
+    ->sort('nid', 'desc');
+
+  if (!empty($uids)) {
+    // Limit to documents that have been reviewed by an editor to augment
+    // the likeliness that the documents were tagged properly.
+    $query->condition('revision_uid', $uids, 'IN');
+  }
+
+  $job_ids = $query->execute() ?? [];
+
+  foreach ($job_ids as $id) {
+    reliefweb_job_tagger_index_embedding($id);
+  }
+}
+
+/**
+ * Accuracy.
+ */
+function reliefweb_job_tagger_test_accuracy() {
+  $stats = fopen('./stats.csv', 'w');
+  fputcsv($stats, [
+    'nid',
+    'current',
+    'first',
+    'score',
+    'correct',
+  ]);
+
+  $job_ids = \Drupal::entityTypeManager()->getStorage('node')->getQuery()
+    ->accessCheck(FALSE)
+    ->condition('status', 1)
+    ->condition('type', 'job')
+    ->sort('nid', 'ASC')
+    ->execute();
+
+  $results = [
+    'total' => 0,
+    'good' => 0,
+    'bad' => 0,
+    'empty' => 0,
+  ];
+
+  foreach ($job_ids as $id) {
+    $node = Node::load(($id));
+    $current = $node->get('field_career_categories')->entity->label() ?? 'not set';
+    $first = 'unknown';
+    $score = 0;
+    $similar = reliefweb_job_tagger_get_similar_jobs($id);
+    if (!empty($similar)) {
+      $first = array_key_first($similar);
+      $score = $similar[$first];
+    }
+    else {
+      $results['empty']++;
+    }
+
+    fputcsv($stats, [
+      $id,
+      $current,
+      $first,
+      $score,
+      $current == $first,
+    ]);
+
+    $results['total']++;
+    if ($current == $first) {
+      $results['good']++;
+    }
+    else {
+      $results['bad']++;
+    }
+
+    print "$id - $current - $first\n";
+  }
+
+  fclose($stats);
+
+  if ($results['total'] > 0) {
+    $results['good %'] = round(100 * $results['good'] / $results['total'], 2);
+    $results['bad %'] = round(100 * $results['bad'] / $results['total'], 2);
+  }
+
+  print_r($results);
+}
