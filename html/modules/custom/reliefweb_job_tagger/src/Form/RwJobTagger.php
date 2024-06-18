@@ -5,6 +5,7 @@ namespace Drupal\reliefweb_job_tagger\Form;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\node\NodeInterface;
 use Drupal\ocha_ai_tag\Services\OchaAiTagTagger;
 use GuzzleHttp\ClientInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -64,6 +65,8 @@ class RwJobTagger extends FormBase {
           $this->t('Career category'),
           $this->t('Feedback (AI)'),
           $this->t('Feedback (ES)'),
+          $this->t('Feedback (Vector)'),
+          $this->t('Product'),
           $this->t('Info'),
         ],
       ];
@@ -86,6 +89,18 @@ class RwJobTagger extends FormBase {
         $form['feedback'][$url]['es_feedback'] = [
           '#type' => 'processed_text',
           '#text' => $data['es_feedback'],
+          '#format' => 'markdown',
+        ];
+
+        $form['feedback'][$url]['vector_feedback'] = [
+          '#type' => 'processed_text',
+          '#text' => $data['vector_feedback'],
+          '#format' => 'markdown',
+        ];
+
+        $form['feedback'][$url]['product'] = [
+          '#type' => 'processed_text',
+          '#text' => $data['product'],
           '#format' => 'markdown',
         ];
 
@@ -227,6 +242,11 @@ class RwJobTagger extends FormBase {
         }
       }
 
+      // Do vector search on ES.
+      $similar_feedback = '';
+      $similar = $this->getSimilarJobs($node);
+      $similar_feedback = $this->setAiFeedback($similar);
+
       // Get AI feedback.
       $text = $node->getTitle() . "\n\n" . $node->get('body')->value;
       $ai = $this->processDoc($text, $definitions);
@@ -236,15 +256,16 @@ class RwJobTagger extends FormBase {
         $info[] = '- AI and ES agree';
       }
 
+      $mult = [];
       $intersect = array_intersect_key($es, $ai);
       if (!empty($intersect)) {
-        // Multiple confidence levels.
-        $mult = [];
+        // Multiple confidence levels, if not defined fall back to 20%.
         foreach (array_keys($ai) as $key) {
-          if (array_key_exists($key, $es)) {
-            $mult[$key] = $ai[$key] * $es[$key] * 100;
-          }
+          $mult[$key] = $ai[$key] * ($es[$key] ?? .2);
+          $mult[$key] = $ai[$key] * ($similar[$key] ?? .2);
         }
+
+        // Sort reversed and select first.
         arsort($mult);
         $info[] = '- First in common: ' . array_key_first($mult);
       }
@@ -253,6 +274,8 @@ class RwJobTagger extends FormBase {
         'category' => $category,
         'feedback' => $this->setAiFeedback($ai, 10),
         'es_feedback' => $es_feedback,
+        'vector_feedback' => $similar_feedback,
+        'product' => $this->setAiFeedback($mult),
         'info' => implode("\n", $info),
       ];
     }
@@ -515,6 +538,41 @@ class RwJobTagger extends FormBase {
     }
 
     return $vocabularies;
+  }
+
+  /**
+   * Get similar jobs.
+   */
+  protected function getSimilarJobs(NodeInterface $node) {
+    $nid = $node->id();
+    $relevant = $this->ochaTagger->getSimilarDocuments($nid, $node->get('body')->value);
+    $nodes = $this->entityTypeManager->getStorage('node')->loadMultiple($relevant);
+
+    if (isset($nodes[$nid])) {
+      unset($nodes[$nid]);
+    }
+
+    $categories = [];
+    $count = 0;
+    foreach ($nodes as $node) {
+      if (!isset($categories[$node->get('field_career_categories')->entity->label()])) {
+        $categories[$node->get('field_career_categories')->entity->label()] = 0;
+      }
+      $categories[$node->get('field_career_categories')->entity->label()]++;
+      $count++;
+    }
+
+    // Sort reversed by count.
+    arsort($categories);
+
+    // Normalize results.
+    if ($count > 0) {
+      array_walk($categories, function (&$item) use ($count) {
+        $item = $item / $count;
+      });
+    }
+
+    return $categories;
   }
 
 }

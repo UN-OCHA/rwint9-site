@@ -342,6 +342,15 @@ function reliefweb_job_tagger_queue_job(Node $job) : void {
 }
 
 /**
+ * Clear index.
+ */
+function reliefweb_job_tagger_index_clear() {
+  /** @var \Drupal\ocha_ai_tag\Services\OchaAiTagTagger $jobTagger */
+  $jobTagger = \Drupal::service('ocha_ai_tag.tagger');
+  $jobTagger->clearIndex();
+}
+
+/**
  * Index embedding for a job.
  */
 function reliefweb_job_tagger_index_embedding($nid) {
@@ -380,13 +389,12 @@ function reliefweb_job_tagger_get_similar_jobs($nid) {
  * Index jobs.
  */
 function reliefweb_job_tagger_index_jobs() {
-  // Only index jobs approved by reliefweb.int.
-  $uids = \Drupal::database()
-    ->select('users_field_data', 'u')
-    ->fields('u', ['uid'])
-    ->condition('u.mail', '%@reliefweb.int', 'LIKE')
-    ->execute()
-    ->fetchCol();
+  // Only index jobs approved by reliefweb.int editors.
+  $uids = \Drupal::entityQuery('user')
+    ->accessCheck(FALSE)
+    ->condition('status', 1)
+    ->condition('roles', 'editor')
+    ->execute();
 
   $query = \Drupal::entityTypeManager()->getStorage('node')
     ->getQuery()

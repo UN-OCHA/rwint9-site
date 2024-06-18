@@ -90,3 +90,9 @@ plugins:
       topk: 5
       min_similarity: 0.3
       cutoff_coefficient: 0.5
+    elasticsearch_job:
+      url: REPLACE_WITH_URL
+      indexing_batch_size: 10
+      topk: 10
+      min_similarity: 0.2
+      cutoff_coefficient: 0.4
