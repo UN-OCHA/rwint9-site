@@ -4,12 +4,20 @@
 
 ### Clear index
 
-drush eval "reliefweb_job_tagger_index_clear()"
+```bash
+drush rw-job:clear
+```
 
 ### Index jobs
 
-drush eval "reliefweb_job_tagger_index_jobs()"
+```bash
+drush rw-job:index
+```
 
-### Evaluate job.
+### Evaluate
 
-drush eval "reliefweb_job_tagger_get_similar_jobs(4039303)"
+```bash
+drush eval "reliefweb_job_tagger_test_accuracy()"
+```
+
+Will create a csv file `stats.csv` containing the analysis of all jobs.
