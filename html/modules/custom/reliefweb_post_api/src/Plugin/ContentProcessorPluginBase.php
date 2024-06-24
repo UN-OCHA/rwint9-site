@@ -265,6 +265,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     $this->validateUuid($data);
     $this->validateSources($data);
     $this->validateUrls($data);
+    $this->validateFiles($data);
   }
 
   /**
@@ -346,6 +347,12 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   public function validateUrl(string $url, string $pattern): bool {
     // An empty pattern means any URL is ok.
     return empty($pattern) || preg_match($pattern, $url) === 1;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateFiles(array $data): void {
   }
 
   /**

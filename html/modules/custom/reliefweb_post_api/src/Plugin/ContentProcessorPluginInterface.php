@@ -181,6 +181,17 @@ interface ContentProcessorPluginInterface {
   public function validateUuid(array $data): void;
 
   /**
+   * Validate the POST API data attachment and image files if any.
+   *
+   * @param array $data
+   *   POST API data.
+   *
+   * @throws \Drupal\reliefweb_post_api\Plugin\ContentProcessorException
+   *   An exception when a file is invalid.
+   */
+  public function validateFiles(array $data): void;
+
+  /**
    * Return a list of terms that actually exist.
    *
    * @param string $vocabulary
