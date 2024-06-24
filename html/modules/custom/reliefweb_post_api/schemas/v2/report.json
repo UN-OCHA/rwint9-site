@@ -253,5 +253,5 @@
         "published",
         "body"
     ],
-    "additionalProperties": false
+    "unevaluatedProperties": false
 }
