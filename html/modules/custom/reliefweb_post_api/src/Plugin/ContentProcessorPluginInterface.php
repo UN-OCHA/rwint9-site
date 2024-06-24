@@ -170,6 +170,17 @@ interface ContentProcessorPluginInterface {
   public function validateUrl(string $url, string $pattern): bool;
 
   /**
+   * Validate the POST API data UUID.
+   *
+   * @param array $data
+   *   POST API data.
+   *
+   * @throws \Drupal\reliefweb_post_api\Plugin\ContentProcessorException
+   *   An exception if the UUID is invalid.
+   */
+  public function validateUuid(array $data): void;
+
+  /**
    * Return a list of terms that actually exist.
    *
    * @param string $vocabulary

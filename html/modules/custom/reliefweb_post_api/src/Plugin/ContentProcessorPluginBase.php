@@ -296,6 +296,9 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     elseif (!Uuid::isValid($data['uuid'])) {
       throw new ContentProcessorException('Invalid document UUID.');
     }
+    // @todo if we want to allow providers to edit existing ReliefWeb content
+    // then we cannot do this comparison because the UUID is not generated this
+    // way and is not derived from the document URL.
     elseif ($this->generateUuid($data['url']) !== $data['uuid']) {
       throw new ContentProcessorException('The UUID does not match the one generated from the URL.');
     }
@@ -308,10 +311,14 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     $provider = $this->getProvider($data['provider'] ?? '');
     $sources = $provider->getAllowedSources() ?? [];
     // Empty allowed sources means any source is allowed.
+    // @todo review the logic here or in the UI because currently the source
+    // field is mandatory.
     if (empty($sources)) {
       return;
     }
 
+    // @todo for existing documents we may want to check that the document
+    // source is among the allowed sources.
     // Check if any of the given sources is not in the list of allowed ones.
     if (empty($data['source']) || count(array_diff($data['source'], $sources)) > 0) {
       throw new ContentProcessorException('Unallowed source(s)');
