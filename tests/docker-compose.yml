@@ -44,6 +44,8 @@ services:
       - mysql
     volumes:
       - "./settings:/srv/www/shared/settings:ro"
+      # Mount config.
+      - "../config:/srv/www/config:rw"
       # Mount the attachment redirections to pass the requests to Drupal.
       - "./etc/nginx/custom/01_attachment_redirections.conf:/etc/nginx/custom/01_attachment_redirections.conf:ro"
       # Mount volumes for the private and public files.
