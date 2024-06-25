@@ -1,0 +1,24 @@
+uuid: 987d381c-774a-4e6a-ae66-f8252c87861e
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.theme.field_example_job_posting
+    - taxonomy.vocabulary.theme
+  module:
+    - text
+id: taxonomy_term.theme.default
+targetEntityType: taxonomy_term
+bundle: theme
+mode: default
+content:
+  description:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  field_example_job_posting: true
+  langcode: true

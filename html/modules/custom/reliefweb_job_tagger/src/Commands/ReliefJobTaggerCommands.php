@@ -72,6 +72,7 @@ class ReliefJobTaggerCommands extends DrushCommands {
     $job_ids = $query->execute() ?? [];
 
     foreach ($job_ids as $id) {
+      $this->output->writeln('Processing ' . $id);
       $this->ochaTagger->embedDocument($id);
     }
   }

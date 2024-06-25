@@ -1,5 +1,10 @@
 # Reliefweb job tagger
 
+## Forms
+
+- `/admin/ai/test-job-tagger-category`
+- `/admin/ai/test-job-tagger-theme`
+
 ## Test instructions
 
 ### Clear index

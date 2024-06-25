@@ -13,7 +13,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Chat form for the Ocha AI Chat module.
  */
-class RwJobTagger extends FormBase {
+class RwJobTaggerTheme extends FormBase {
 
   /**
    * {@inheritdoc}
@@ -40,7 +40,7 @@ class RwJobTagger extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, ?bool $popup = NULL): array {
     $intro = [
-      'On this page you can test how the AI Job Tagger will classify jobs, based on the key phrases defined for each career category.',
+      'On this page you can test how the AI Job Tagger will classify jobs, based on the key phrases defined for each theme.',
       '',
       '## Steps',
       '1. Select one or more URL\s',
@@ -62,7 +62,7 @@ class RwJobTagger extends FormBase {
         '#type' => 'table',
         '#header' => [
           $this->t('Url'),
-          $this->t('Career category'),
+          $this->t('Theme'),
           $this->t('Feedback (AI)'),
           $this->t('Feedback (ES)'),
           $this->t('Feedback (Vector)'),
@@ -76,8 +76,8 @@ class RwJobTagger extends FormBase {
           '#markup' => $url,
         ];
 
-        $form['feedback'][$url]['category'] = [
-          '#markup' => $data['category'],
+        $form['feedback'][$url]['theme'] = [
+          '#markup' => $data['theme'],
         ];
 
         $form['feedback'][$url]['feedback'] = [
@@ -122,7 +122,7 @@ class RwJobTagger extends FormBase {
     $form['definitions'] = [
       '#type' => 'table',
       '#header' => [
-        $this->t('Career category'),
+        $this->t('Theme'),
         $this->t('Key phrases'),
       ],
     ];
@@ -131,7 +131,7 @@ class RwJobTagger extends FormBase {
     if (empty($definitions)) {
       $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadByProperties([
         'status' => 1,
-        'vid' => 'career_category',
+        'vid' => 'theme',
       ]);
 
       /** @var \Drupal\taxonomy\Entity\Term $term */
@@ -178,7 +178,7 @@ class RwJobTagger extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     $api_fields = [
-      'career_categories' => 'career_category',
+      'theme' => 'theme',
     ];
 
     $definitions = $form_state->getValue('definitions', []);
@@ -196,7 +196,7 @@ class RwJobTagger extends FormBase {
 
       if (!isset($parts[2]) || !is_numeric($parts[2])) {
         $results[$url] = [
-          'category' => '',
+          'theme' => '',
           'feedback' => 'Skipped, use URL like https://reliefweb.int/job/4064890/country-director-haiti',
         ];
         continue;
@@ -207,7 +207,7 @@ class RwJobTagger extends FormBase {
       $node = $this->entityTypeManager->getStorage('node')->load($nid);
       if (!$node) {
         $results[$url] = [
-          'category' => '',
+          'theme' => '',
           'feedback' => 'Skipped, unable to load',
         ];
         continue;
@@ -216,15 +216,15 @@ class RwJobTagger extends FormBase {
       $info = [];
 
       // Get field data.
-      $categories = $node->get('field_career_categories')->referencedEntities();
-      $category = '';
+      $categories = $node->get('field_theme')->referencedEntities();
+      $theme = '';
       if ($categories) {
-        $category = $categories[0]->label();
+        $theme = $categories[0]->label();
       }
 
       // Get ES feedback.
       $es = $this->getMostRelevantTermsFromEs('jobs', $node->id(), $api_fields, 50);
-      $es = $es['career_category'] ?? [];
+      $es = $es['theme'] ?? [];
 
       $es_first = '';
       $ai_first = '';
@@ -257,21 +257,18 @@ class RwJobTagger extends FormBase {
       }
 
       $mult = [];
-      $intersect = array_intersect_key($es, $ai);
-      if (!empty($intersect)) {
-        // Multiple confidence levels, if not defined fall back to 20%.
-        foreach (array_keys($ai) as $key) {
-          $mult[$key] = $ai[$key] * ($es[$key] ?? .2);
-          $mult[$key] = $ai[$key] * ($similar[$key] ?? .2);
-        }
-
-        // Sort reversed and select first.
-        arsort($mult);
-        $info[] = '- First in common: ' . array_key_first($mult);
+      // Multiple confidence levels, if not defined fall back to 20%.
+      foreach (array_keys($ai) as $key) {
+        $mult[$key] = $ai[$key] * ($es[$key] ?? .2);
+        $mult[$key] = $ai[$key] * ($similar[$key] ?? .2);
       }
 
+      // Sort reversed and select first.
+      arsort($mult);
+      $info[] = '- First in common: ' . array_key_first($mult);
+
       $results[$url] = [
-        'category' => $category,
+        'theme' => $theme,
         'feedback' => $this->setAiFeedback($ai, 10),
         'es_feedback' => $es_feedback,
         'vector_feedback' => $similar_feedback,
@@ -288,7 +285,7 @@ class RwJobTagger extends FormBase {
    * {@inheritdoc}
    */
   public function getFormId(): string {
-    return 'rw_job_tagger';
+    return 'rw_job_tagger_theme';
   }
 
   /**
@@ -296,11 +293,11 @@ class RwJobTagger extends FormBase {
    */
   protected function setTermMapping(array $definitions) : void {
     $mapping = [
-      'career_category' => [],
+      'theme' => [],
     ];
 
     foreach ($definitions as $definition) {
-      $mapping['career_category'][$definition['name']] = $definition['definition'];
+      $mapping['theme'][$definition['name']] = $definition['definition'];
     }
 
     $term_cache_tags = [];
@@ -319,7 +316,7 @@ class RwJobTagger extends FormBase {
 
     $data = $data[OchaAiTagTagger::AVERAGE_FULL_AVERAGE][OchaAiTagTagger::CALCULATION_METHOD_MEAN_WITH_CUTOFF];
 
-    return $data['career_category'] ?? [];
+    return $data['theme'] ?? [];
   }
 
   /**
@@ -546,6 +543,7 @@ class RwJobTagger extends FormBase {
   protected function getSimilarJobs(NodeInterface $node) {
     $nid = $node->id();
     $relevant = $this->ochaTagger->getSimilarDocuments($nid, $node->get('body')->value);
+    /** @var \Drupal\node\Entity\Node[] $nodes */
     $nodes = $this->entityTypeManager->getStorage('node')->loadMultiple($relevant);
 
     if (isset($nodes[$nid])) {
@@ -555,11 +553,13 @@ class RwJobTagger extends FormBase {
     $categories = [];
     $count = 0;
     foreach ($nodes as $node) {
-      if (!isset($categories[$node->get('field_career_categories')->entity->label()])) {
-        $categories[$node->get('field_career_categories')->entity->label()] = 0;
+      if ($node->hasField('field_theme') && !$node->get('field_theme')->isEmpty()) {
+        if (!isset($categories[$node->get('field_theme')->entity->label()])) {
+          $categories[$node->get('field_theme')->entity->label()] = 0;
+        }
+        $categories[$node->get('field_theme')->entity->label()]++;
+        $count++;
       }
-      $categories[$node->get('field_career_categories')->entity->label()]++;
-      $count++;
     }
 
     // Sort reversed by count.
