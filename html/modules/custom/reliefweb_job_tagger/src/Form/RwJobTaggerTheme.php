@@ -165,6 +165,12 @@ class RwJobTaggerTheme extends FormBase {
       ];
     }
 
+    $form['reset_cache'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Reset cache'),
+      '#default_value' => FALSE,
+    ];
+
     $form['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Analyze jobs'),
@@ -183,7 +189,10 @@ class RwJobTaggerTheme extends FormBase {
 
     $definitions = $form_state->getValue('definitions', []);
     $form_state->set('definitions', $definitions);
-    $this->setTermMapping($definitions);
+
+    if ($form_state->getValue('reset_cache', FALSE)) {
+      $this->setTermMapping($definitions);
+    }
 
     $results = [];
     $urls = $form_state->getValue('urls', '');
