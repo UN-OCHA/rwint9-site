@@ -13,6 +13,7 @@ reliefweb_post_api.post:
     - DELETE
   requirements:
     _access: 'TRUE'
+    _format: 'json'
     resource: '^[a-z][a-z_-]+[a-z]$'
     uuid: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
 
@@ -24,4 +25,5 @@ reliefweb_post_api.schema:
     - GET
   requirements:
     _access: 'TRUE'
+    _format: 'json'
     schema: '^[a-z][a-z_-]+[a-z]\.json$'
