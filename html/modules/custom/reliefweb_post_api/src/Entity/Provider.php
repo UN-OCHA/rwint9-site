@@ -274,8 +274,15 @@ class Provider extends ContentEntityBase implements ProviderInterface {
 
         foreach ($provider->field_webhook_url as $item) {
           if (!empty($item->uri)) {
-            $url = $item->uri . '/' . $entity->uuid();
+            $url = rtrim($item->uri, '/') . '/' . $entity->uuid();
             try {
+              // @todo maybe that should be a POST method to avoid caching
+              // isssues and we should provide some things to verify the request
+              // like the provider ID or a token?
+              //
+              // @todo Maybe we should have unique Webhook URLs per entities
+              // provided as part of the initial POST API request and stored
+              // in place of the `field_post_api_provider`.
               $client->get($url, ['timeout' => $timeout]);
 
               $logger->info(strtr('Request sent to @url for provider @provider.', [

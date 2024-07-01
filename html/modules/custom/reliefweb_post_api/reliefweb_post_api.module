@@ -7,26 +7,17 @@
 
 declare(strict_types=1);
 
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\reliefweb_post_api\Entity\Provider;
 
 /**
- * Implements hook_entity_create().
+ * Implements hook_reliefweb_api_post_indexing().
  */
-function reliefweb_post_api_entity_create(EntityInterface $entity): void {
-  Provider::notifyProvider($entity);
-}
-
-/**
- * Implements hook_entity_update().
- */
-function reliefweb_post_api_entity_update(EntityInterface $entity): void {
-  Provider::notifyProvider($entity);
-}
-
-/**
- * Implements hook_entity_delete().
- */
-function reliefweb_post_api_entity_delete(EntityInterface $entity): void {
-  Provider::notifyProvider($entity);
+function reliefweb_post_api_reliefweb_api_post_indexing(string $entity_type_id, string $bundle, string|int $id) {
+  // We notify the POST API provider, if any, after the document is indexed in
+  // the API otherwise the provider's webhook implementation will not be able to
+  // to retrieve the data from the API to confirm the status.
+  $entity = \Drupal::entityTypeManager()->getStorage($entity_type_id)->load($id);
+  if (!empty($entity)) {
+    Provider::notifyProvider($entity);
+  }
 }
