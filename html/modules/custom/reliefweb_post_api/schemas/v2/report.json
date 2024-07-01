@@ -119,6 +119,34 @@
                         "format": "iri",
                         "pattern": "\\.pdf$"
                     },
+                    "uuid": {
+                        "description": "The universally unique identifier (UUID) version 5 generated from the URL property above and the UUID of the document as namespace.",
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "filename": {
+                        "description": "File name",
+                        "type": "string",
+                        "maxLength": 255,
+                        "allOf": [
+                            {
+                                "description": "Must contain letters (any language).",
+                                "pattern": "\\p{L}+"
+                            },
+                            {
+                                "description": "No control characters or separators except for spaces.",
+                                "pattern": "^([^\\p{Z}\\p{C}]|[ \u3000])+$"
+                            },
+                            {
+                                "description": "No system character: '<>:\"/\\|?*'.",
+                                "pattern": "^[^<>:\"/\\|?*]+$"
+                            }
+                        ],
+                        "not": {
+                            "description": "No leading, trailing or consecutive spaces.",
+                            "pattern": "(?:^[ \u3000]|[ \u3000]$|[ \u3000]{2,})"
+                        }
+                    },
                     "checksum": {
                         "description": "SHA-256 checksum of the file",
                         "type": "string",
@@ -149,18 +177,23 @@
                         "enum": ["ar", "en", "es", "fr", "ru"]
                     }
                 },
-                "required": ["url", "checksum"]
+                "required": ["url", "uuid", "filename", "checksum"]
             },
             "maxItems": 10
         },
         "image": {
-            "description": "Image to illustrate the document with a minimum width of 700px.",
+            "description": "Image to illustrate the document with a minimum width of 700px and a maximum size of 5MB.",
             "type": "object",
             "properties": {
                 "url": {
                     "type": "string",
                     "format": "iri",
                     "pattern": "\\.(jpg|png|webp)$"
+                },
+                "uuid": {
+                    "description": "The universally unique identifier (UUID) version 5 generated from the URL property above and the UUID of the document as namespace.",
+                    "type": "string",
+                    "format": "uuid"
                 },
                 "checksum": {
                     "description": "SHA-256 checksum of the image",
@@ -206,7 +239,7 @@
                     }
                 }
             },
-            "required": ["url", "checksum", "description", "copyright"]
+            "required": ["url", "uuid", "checksum", "description", "copyright"]
         },
         "disaster": {
             "description": "Document disaster(s) as a list of IDs from https://api.reliefweb.int/v1/disasters.",
@@ -253,5 +286,5 @@
         "published",
         "body"
     ],
-    "additionalProperties": false
+    "unevaluatedProperties": false
 }

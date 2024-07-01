@@ -8,9 +8,9 @@ use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Extension\ExtensionPathResolver;
-use Drupal\Core\Queue\QueueFactory;
 use Drupal\reliefweb_post_api\Entity\ProviderInterface;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
+use Drupal\reliefweb_post_api\Queue\ReliefWebPostApiDatabaseQueueFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -33,8 +33,8 @@ class ReliefWebPostApi extends ControllerBase {
    *
    * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
    *   The request stack.
-   * @param \Drupal\Core\Queue\QueueFactory $queueFactory
-   *   The queue factory.
+   * @param \Drupal\reliefweb_post_api\Queue\ReliefWebPostApiDatabaseQueueFactory $queueFactory
+   *   The ReliefWeb POST API queue factory.
    * @param \Drupal\Core\Extension\ExtensionPathResolver $pathResolver
    *   The path resolver service.
    * @param \Drupal\Core\Database\Connection $database
@@ -46,7 +46,7 @@ class ReliefWebPostApi extends ControllerBase {
    */
   public function __construct(
     protected RequestStack $requestStack,
-    protected QueueFactory $queueFactory,
+    protected ReliefWebPostApiDatabaseQueueFactory $queueFactory,
     protected ExtensionPathResolver $pathResolver,
     protected Connection $database,
     protected TimeInterface $time,
@@ -59,7 +59,9 @@ class ReliefWebPostApi extends ControllerBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('request_stack'),
-      $container->get('queue'),
+      // We use our own queue that stores unique submissions based on the
+      // resource UUID.
+      $container->get('reliefweb_post_api.queue.database'),
       $container->get('extension.path.resolver'),
       $container->get('database'),
       $container->get('datetime.time'),

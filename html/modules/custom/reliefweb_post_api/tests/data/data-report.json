@@ -12,12 +12,16 @@
   "file": [
     {
       "url": "https://test.test/test1.pdf",
+      "uuid": "a08d95bd-d973-5b12-8d5b-81188cff7e37",
+      "filename": "test1.pdf",
       "checksum": "42fffa6c0e84ebab15f0f1ead8319efc448d0d883a0b492528997b4f17989755",
       "description": "First attachment",
       "language": "en"
     },
     {
       "url": "https://test.test/test2.pdf",
+      "uuid": "9b8099dd-7e7e-5779-8dd6-719508e77377",
+      "filename": "test2.pdf",
       "checksum": "0b071d7d2a430d5f4ecbd919995a8a6e18a248bccbad4dc910c9dd1e906a2e79",
       "description": "Second attachment",
       "language": "fr"
@@ -25,6 +29,7 @@
   ],
   "image": {
     "url": "https://test.test/test1.png",
+    "uuid": "8c31c0b6-8337-5a9c-9b66-bed995a42c84",
     "checksum": "c24863f6aa2065dd5071a831ee78439260ea72983799dd3e88fbfb4aa08fdc18",
     "description": "Test image",
     "copyright": "Test NGO"

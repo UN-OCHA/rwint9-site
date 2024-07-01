@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\reliefweb_post_api\ExistingSite\Commands;
 
-use Drupal\Core\Queue\QueueFactory;
-use Drupal\Core\Queue\QueueInterface;
 use Drupal\node\Entity\Node;
 use Drupal\reliefweb_post_api\Commands\ReliefWebPostApiCommands;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
+use Drupal\reliefweb_post_api\Queue\ReliefWebPostApiDatabaseQueue;
+use Drupal\reliefweb_post_api\Queue\ReliefWebPostApiDatabaseQueueFactory;
 use Symfony\Component\ErrorHandler\BufferingLogger;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
@@ -49,16 +49,16 @@ class ReliefWebPostApiCommandsTest extends ExistingSiteBase {
    * @covers ::process
    */
   public function testProcessEmptyQueue(): void {
-    $queue = $this->createConfiguredMock(QueueInterface::class, [
+    $queue = $this->createConfiguredMock(ReliefWebPostApiDatabaseQueue::class, [
       'claimItem' => FALSE,
     ]);
 
-    $queue_factory = $this->createConfiguredMock(QueueFactory::class, [
+    $queue_factory = $this->createConfiguredMock(ReliefWebPostApiDatabaseQueueFactory::class, [
       'get' => $queue,
     ]);
 
     $handler = $this->createTestCommandHandler([
-      'queue' => $queue_factory,
+      'reliefweb_post_api.queue.database' => $queue_factory,
     ]);
 
     $handler->process(['limit' => 1]);
@@ -75,16 +75,16 @@ class ReliefWebPostApiCommandsTest extends ExistingSiteBase {
     $item->data = ['bundle' => 'unsupported'];
     $item->item_id = 'abc';
 
-    $queue = $this->createConfiguredMock(QueueInterface::class, [
+    $queue = $this->createConfiguredMock(ReliefWebPostApiDatabaseQueue::class, [
       'claimItem' => $item,
     ]);
 
-    $queue_factory = $this->createConfiguredMock(QueueFactory::class, [
+    $queue_factory = $this->createConfiguredMock(ReliefWebPostApiDatabaseQueueFactory::class, [
       'get' => $queue,
     ]);
 
     $handler = $this->createTestCommandHandler([
-      'queue' => $queue_factory,
+      'reliefweb_post_api.queue.database' => $queue_factory,
     ]);
 
     $handler->process(['limit' => 1]);
@@ -105,11 +105,11 @@ class ReliefWebPostApiCommandsTest extends ExistingSiteBase {
     ];
     $item->item_id = 'abc';
 
-    $queue = $this->createConfiguredMock(QueueInterface::class, [
+    $queue = $this->createConfiguredMock(ReliefWebPostApiDatabaseQueue::class, [
       'claimItem' => $item,
     ]);
 
-    $queue_factory = $this->createConfiguredMock(QueueFactory::class, [
+    $queue_factory = $this->createConfiguredMock(ReliefWebPostApiDatabaseQueueFactory::class, [
       'get' => $queue,
     ]);
 
@@ -123,7 +123,7 @@ class ReliefWebPostApiCommandsTest extends ExistingSiteBase {
     ]);
 
     $handler = $this->createTestCommandHandler([
-      'queue' => $queue_factory,
+      'reliefweb_post_api.queue.database' => $queue_factory,
       'plugin.manager.reliefweb_post_api.content_processor' => $plugin_manager,
     ]);
 
@@ -146,11 +146,11 @@ class ReliefWebPostApiCommandsTest extends ExistingSiteBase {
     ];
     $item->item_id = 'abc';
 
-    $queue = $this->createConfiguredMock(QueueInterface::class, [
+    $queue = $this->createConfiguredMock(ReliefWebPostApiDatabaseQueue::class, [
       'claimItem' => $item,
     ]);
 
-    $queue_factory = $this->createConfiguredMock(QueueFactory::class, [
+    $queue_factory = $this->createConfiguredMock(ReliefWebPostApiDatabaseQueueFactory::class, [
       'get' => $queue,
     ]);
 
@@ -169,7 +169,7 @@ class ReliefWebPostApiCommandsTest extends ExistingSiteBase {
     ]);
 
     $handler = $this->createTestCommandHandler([
-      'queue' => $queue_factory,
+      'reliefweb_post_api.queue.database' => $queue_factory,
       'plugin.manager.reliefweb_post_api.content_processor' => $plugin_manager,
     ]);
 
@@ -194,7 +194,7 @@ class ReliefWebPostApiCommandsTest extends ExistingSiteBase {
     $container = \Drupal::getContainer();
 
     $services = [
-      $services['queue'] ?? $container->get('queue'),
+      $services['reliefweb_post_api.queue.database'] ?? $container->get('reliefweb_post_api.queue.database'),
       $services['plugin.manager.reliefweb_post_api.content_processor'] ?? $container->get('plugin.manager.reliefweb_post_api.content_processor'),
     ];
 

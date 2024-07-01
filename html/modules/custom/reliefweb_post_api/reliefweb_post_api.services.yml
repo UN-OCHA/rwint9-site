@@ -6,3 +6,7 @@ services:
     class: Drupal\reliefweb_post_api\Theme\ThemeNegotiator
     tags:
       - { name: theme_negotiator, priority: 0 }
+  reliefweb_post_api.queue.database:
+    class: Drupal\reliefweb_post_api\Queue\ReliefWebPostApiDatabaseQueueFactory
+    parent: queue.database
+    arguments: ['@datetime.time']
