@@ -10,12 +10,12 @@ use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Database\Query\Upsert;
 use Drupal\Core\Database\StatementInterface;
 use Drupal\Core\Extension\ExtensionPathResolver;
-use Drupal\Core\Queue\QueueFactory;
-use Drupal\Core\Queue\QueueInterface;
 use Drupal\reliefweb_post_api\Controller\ReliefWebPostApi;
 use Drupal\reliefweb_post_api\Entity\ProviderInterface;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
+use Drupal\reliefweb_post_api\Queue\ReliefWebPostApiDatabaseQueue;
+use Drupal\reliefweb_post_api\Queue\ReliefWebPostApiDatabaseQueueFactory;
 use Symfony\Component\HttpFoundation\HeaderBag;
 use Symfony\Component\HttpFoundation\InputBag;
 use Symfony\Component\HttpFoundation\Request;
@@ -453,13 +453,13 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
 
     $request_stack = $this->createMockRequestStack($request);
 
-    $queue_factory = $this->createMock(QueueFactory::class);
+    $queue_factory = $this->createMock(ReliefWebPostApiDatabaseQueueFactory::class);
     $queue_factory->expects($this->any())
       ->method('get')
       ->willThrowException(new \Exception());
 
     $controller = $this->createTestController([
-      'queue' => $queue_factory,
+      'reliefweb_post_api.queue.database' => $queue_factory,
       'request_stack' => $request_stack,
     ]);
 
@@ -476,16 +476,16 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
 
     $request_stack = $this->createMockRequestStack($request);
 
-    $queue = $this->createConfiguredMock(QueueInterface::class, [
+    $queue = $this->createConfiguredMock(ReliefWebPostApiDatabaseQueue::class, [
       'createItem' => TRUE,
     ]);
 
-    $queue_factory = $this->createConfiguredMock(QueueFactory::class, [
+    $queue_factory = $this->createConfiguredMock(ReliefWebPostApiDatabaseQueueFactory::class, [
       'get' => $queue,
     ]);
 
     $controller = $this->createTestController([
-      'queue' => $queue_factory,
+      'reliefweb_post_api.queue.database' => $queue_factory,
       'request_stack' => $request_stack,
     ]);
 
@@ -632,7 +632,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
 
     $services = [
       $services['request_stack'] ?? $container->get('request_stack'),
-      $services['queue'] ?? $container->get('queue'),
+      $services['reliefweb_post_api.queue.database'] ?? $container->get('reliefweb_post_api.queue.database'),
       $services['extension.path.resolver'] ?? $container->get('extension.path.resolver'),
       $services['database'] ?? $container->get('database'),
       $services['datetime.time'] ?? $container->get('datetime.time'),
