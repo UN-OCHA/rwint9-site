@@ -8,6 +8,7 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
+use Drupal\node\NodeInterface;
 use Drupal\ocha_ai_tag\Services\OchaAiTagTagger;
 use GuzzleHttp\ClientInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -189,6 +190,24 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
     $message = [];
     $needs_save = FALSE;
 
+    $use_es = $this->configFactory->get('reliefweb_job_tagger.settings')->get('use_es', FALSE);
+    $es = [];
+    $es_terms = [
+      'career_categories' => [],
+      'theme' => [],
+    ];
+    if ($use_es) {
+      // Get ES feedback.
+      $api_fields = [
+        'career_categories' => 'career_category',
+        'theme' => 'theme',
+      ];
+      $es = $this->getMostRelevantTermsFromEs('jobs', $node->id(), $api_fields, 50);
+
+      $es_terms['career_category'] = $this->getRelevantTerm('career_category', $es['career_category'] ?? [], 1);
+      $es_terms['theme'] = $this->getRelevantTerm('theme', $es['theme'] ?? [], 1);
+    }
+
     if (isset($data['career_category']) && $node->field_career_categories->isEmpty()) {
       $ai_term = $this->getRelevantTerm('career_category', $data['career_category'], 1);
       $message[] = $this->setAiFeedback('Career category (AI)', $data['career_category'], [$ai_term]);
@@ -196,44 +215,29 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
       $node->set('field_career_categories', $ai_term);
       $needs_save = TRUE;
 
-      $use_es = $this->configFactory->get('reliefweb_job_tagger.settings')->get('use_es', FALSE);
       if ($use_es) {
-        // Get ES feedback.
-        $api_fields = [
-          'career_categories' => 'career_category',
-        ];
-        $es = $this->getMostRelevantTermsFromEs('jobs', $node->id(), $api_fields, 50);
+        $ai = $data['career_category'];
         $es = $es['career_category'] ?? [];
+        $es_term = $es_terms['career_category'] ?? [];
+        $similar = $this->getSimilarJobs($node, 'field_career_categories');
 
-        $es_term = $this->getRelevantTerm('career_category', $es, 1);
         $message[] = $this->setAiFeedback('Career category (ES)', $es, [$es_term]);
 
-        // Combine both AI and ES. This gives, most of the time, a more accurate
-        // result.
-        $ai = $data['career_category'];
-        $intersect = array_intersect_key($es, $ai);
-        if (!empty($intersect)) {
-          // Multiple confidence levels.
-          $mult = [];
-          foreach (array_keys($ai) as $key) {
-            if (array_key_exists($key, $es)) {
-              $mult[$key] = $ai[$key] * $es[$key];
-            }
-          }
-          arsort($mult);
+        $mult = [];
 
-          $mult_term = $this->getRelevantTerm('career_category', $mult, 1);
-          array_unshift($message, $this->setAiFeedback('Career category', $mult, [$mult_term]));
+        // Multiple confidence levels, if not defined fall back to 20%.
+        foreach (array_keys($ai) as $key) {
+          $mult[$key] = $ai[$key] * ($es[$key] ?? .2) * ($similar[$key] ?? .2);
+        }
 
-          $node->set('field_career_categories', $mult_term);
-          $needs_save = TRUE;
-        }
-        // Use the results of the AI only if there are no results from ES so
-        // that there is at least consistent feedback (the 3 sections) for the
-        // editors.
-        else {
-          array_unshift($message, $this->setAiFeedback('Career category', $ai, [$ai_term]));
-        }
+        // Sort reversed and select first.
+        arsort($mult);
+
+        $mult_term = $this->getRelevantTerm('career_category', $mult, 1);
+        array_unshift($message, $this->setAiFeedback('Career category', $mult, [$mult_term]));
+
+        $node->set('field_career_categories', $mult_term);
+        $needs_save = TRUE;
       }
     }
 
@@ -243,6 +247,31 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
 
       $node->set('field_theme', $terms);
       $needs_save = TRUE;
+
+      if ($use_es) {
+        $ai = $data['theme'];
+        $es = $es['theme'] ?? [];
+        $es_term = $es_terms['theme'] ?? [];
+        $similar = $this->getSimilarJobs($node, 'field_theme');
+
+        $message[] = $this->setAiFeedback('Career category (ES)', $es, [$es_term]);
+
+        $mult = [];
+
+        // Multiple confidence levels, if not defined fall back to 20%.
+        foreach (array_keys($ai) as $key) {
+          $mult[$key] = $ai[$key] * ($es[$key] ?? .2) * ($similar[$key] ?? .2);
+        }
+
+        // Sort reversed and select first.
+        arsort($mult);
+
+        $mult_term = $this->getRelevantTerm('theme', $mult, 3);
+        array_unshift($message, $this->setAiFeedback('Theme(s)', $mult, [$mult_term]));
+
+        $node->set('field_theme', $mult_term);
+        $needs_save = TRUE;
+      }
     }
 
     if ($needs_save) {
@@ -571,6 +600,43 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
     }
 
     return $vocabularies;
+  }
+
+  /**
+   * Get similar jobs.
+   */
+  protected function getSimilarJobs(NodeInterface $node, string $field) {
+    $nid = $node->id();
+    $relevant = $this->jobTagger->getSimilarDocuments($nid, $node->get('body')->value);
+    if (empty($relevant)) {
+      return [];
+    }
+
+    $max = reset($relevant);
+
+    /** @var \Drupal\node\Entity\Node[] $nodes */
+    $nodes = $this->entityTypeManager->getStorage('node')->loadMultiple(array_keys($relevant));
+
+    if (isset($nodes[$nid])) {
+      unset($nodes[$nid]);
+    }
+
+    $categories = [];
+    foreach ($nodes as $node) {
+      if ($node->hasField($field) && !$node->get($field)->isEmpty()) {
+        if (!isset($categories[$node->get($field)->entity->label()])) {
+          $categories[$node->get($field)->entity->label()] = ($relevant[$node->id()] ?? .1) / $max;
+        }
+        else {
+          $categories[$node->get($field)->entity->label()] *= ($relevant[$node->id()] ?? .1) / $max;
+        }
+      }
+    }
+
+    // Sort reversed by count.
+    arsort($categories);
+
+    return $categories;
   }
 
 }
