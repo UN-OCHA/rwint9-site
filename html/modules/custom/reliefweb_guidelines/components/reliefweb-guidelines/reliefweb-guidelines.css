@@ -398,10 +398,8 @@ aside nav a.active + a {
   position: relative;
   margin-top: 15px;
   margin-top: 1em;
-  margin-bottom: 15px;
   margin-bottom: 16px;
   font-weight: bold;
-  line-height: 1.1;
   line-height: 1.4;
 }
 

@@ -1,0 +1,17 @@
+{
+  "url": "https://test.test/test/report",
+  "uuid": "22ce51c2-d7ed-59b2-b71a-23fb56685df9",
+  "title": "This a test document - report",
+  "source": [1503],
+  "country": [13, 14],
+  "body": "This テスト the **body** text in markdown format.\n\nIt has some paragraphs  \nand a line break.\n<h1>TITLE</h1><p>paragraph 1 <strong>bold</strong></p><ul><li>item1</li><li>item2</li></ul><p>paragraph 2 <a href=\"https://link.test\">link</a></p>",
+  "how_to_register": "This is simple text.\n\nIt has some paragraphs \nand a line break.",
+  "fee_information": "This is simple text.\n\nIt has some paragraphs \nand a line break.",
+  "format": [4606],
+  "training_language": [268],
+  "language": [268],
+  "event_url": "https://test.test/test/training",
+  "cost": "free",
+  "category": [4608],
+  "theme": [4587, 4595, 4603]
+}

@@ -94,6 +94,16 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
       );
     }
 
+    $entity = $form_state->getFormObject()?->getEntity();
+    // Only keep the "API" origin if the document was submitted via the API.
+    if (isset($entity) && $entity->hasField('field_post_api_provider') && !empty($entity->field_post_api_provider?->target_id)) {
+      FormHelper::removeOptions($form, 'field_origin', [0, 1, 2]);
+    }
+    // Otherwise hide it.
+    else {
+      FormHelper::removeOptions($form, 'field_origin', [3]);
+    }
+
     // Validate the attachments.
     $form['#validate'][] = [$this, 'validateAttachment'];
 

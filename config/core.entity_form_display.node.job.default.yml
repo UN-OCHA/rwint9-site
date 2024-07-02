@@ -13,6 +13,7 @@ dependencies:
     - field.field.node.job.field_job_closing_date
     - field.field.node.job.field_job_experience
     - field.field.node.job.field_job_type
+    - field.field.node.job.field_post_api_provider
     - field.field.node.job.field_source
     - field.field.node.job.field_theme
     - field.field.node.job.reliefweb_job_tagger_info
@@ -189,6 +190,7 @@ hidden:
   created: true
   field_import_guid: true
   field_import_hash: true
+  field_post_api_provider: true
   langcode: true
   promote: true
   reliefweb_job_tagger_info: true

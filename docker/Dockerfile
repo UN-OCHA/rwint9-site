@@ -62,6 +62,7 @@ COPY --from=builder /srv/www/composer.patches.json /srv/www/composer.patches.jso
 COPY --from=builder /srv/www/composer.lock /srv/www/composer.lock
 COPY --from=builder /srv/www/PATCHES /srv/www/PATCHES
 COPY --from=builder /srv/www/scripts /srv/www/scripts
+COPY --from=builder /srv/www/docker/etc/nginx/map_block_http_methods.conf /etc/nginx/map_block_http_methods.conf
 COPY --from=builder /srv/www/docker/etc/nginx/apps/drupal/drupal.conf /etc/nginx/apps/drupal/drupal.conf
 COPY --from=builder /srv/www/docker/etc/nginx/custom /etc/nginx/custom/
 COPY --from=builder /srv/www/docker/etc/nginx/sites-enabled/01_uuid.conf /etc/nginx/sites-enabled/01_uuid.conf

@@ -1,0 +1,8 @@
+services:
+  plugin.manager.reliefweb_post_api.content_processor:
+    class: Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManager
+    parent: default_plugin_manager
+  theme.negotiator.reliefweb_post_api:
+    class: Drupal\reliefweb_post_api\Theme\ThemeNegotiator
+    tags:
+      - { name: theme_negotiator, priority: 0 }

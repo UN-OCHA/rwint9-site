@@ -1,0 +1,13 @@
+{
+  "url": "https://test.test/test/report",
+  "uuid": "22ce51c2-d7ed-59b2-b71a-23fb56685df9",
+  "title": "This a テスト document - report",
+  "source": [1503],
+  "country": [13, 14],
+  "body": "This is the **body** text in markdown format.\n\nIt has some paragraphs  \nand a line break.\n<h1>TITLE</h1><p>paragraph 1 <strong>bold</strong></p><ul><li>item1</li><li>item2</li></ul><p>paragraph 2 <a href=\"https://link.test\">link</a></p>",
+  "theme": [4587, 4595, 4603],
+  "closing_date": "2029-06-06T01:00:00+00:00",
+  "job_type": [263],
+  "job_experience": [260],
+  "how_to_apply": "Send us an **email**."
+}
