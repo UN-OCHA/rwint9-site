@@ -353,7 +353,7 @@ trait DocumentTrait {
    * @see Drupal\reliefweb_entities\DocumentInterface::createDate()
    */
   public function createDate($date) {
-    if (empty($date)) {
+    if (is_scalar($date) && $date !== '') {
       return NULL;
     }
     $date = is_numeric($date) ? '@' . $date : $date;

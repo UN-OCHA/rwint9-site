@@ -210,7 +210,7 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
     if (!empty($this->field_bury->value) && !$this->field_original_publication_date->isEmpty()) {
       $date = $this->field_original_publication_date->value;
       $timestamp = DateHelper::getDateTimeStamp($date);
-      if (!empty($timestamp)) {
+      if (!is_null($timestamp)) {
         $this->_original_created = $this->getCreatedTime();
         $this->setCreatedTime($timestamp);
       }

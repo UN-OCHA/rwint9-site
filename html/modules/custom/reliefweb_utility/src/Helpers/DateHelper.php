@@ -20,6 +20,9 @@ class DateHelper {
    *   A UNIX timestamp or NULL if the type of the date couldn't be inferred.
    */
   public static function getDateTimeStamp($date) {
+    if ($date === 0 || $date === '0') {
+      return 0;
+    }
     if (!empty($date)) {
       // Date object. It can be a PHP DateTime or DrupalDateTime...
       if (is_object($date)) {
@@ -78,7 +81,7 @@ class DateHelper {
    */
   public static function format($date, $type = 'medium', $format = '', $timezone = 'UTC', $langcode = NULL) {
     $timestamp = static::getDateTimeStamp($date);
-    if (empty($timestamp)) {
+    if (is_null($timestamp)) {
       return '';
     }
     return \Drupal::service('date.formatter')
