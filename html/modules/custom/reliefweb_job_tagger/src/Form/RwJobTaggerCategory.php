@@ -555,31 +555,33 @@ class RwJobTaggerCategory extends FormBase {
   protected function getSimilarJobs(NodeInterface $node) {
     $nid = $node->id();
     $relevant = $this->ochaTagger->getSimilarDocuments($nid, $node->get('body')->value);
-    $nodes = $this->entityTypeManager->getStorage('node')->loadMultiple($relevant);
+    if (empty($relevant)) {
+      return [];
+    }
+
+    $max = reset($relevant);
+
+    /** @var \Drupal\node\Entity\Node[] $nodes */
+    $nodes = $this->entityTypeManager->getStorage('node')->loadMultiple(array_keys($relevant));
 
     if (isset($nodes[$nid])) {
       unset($nodes[$nid]);
     }
 
     $categories = [];
-    $count = 0;
     foreach ($nodes as $node) {
-      if (!isset($categories[$node->get('field_career_categories')->entity->label()])) {
-        $categories[$node->get('field_career_categories')->entity->label()] = 0;
+      if ($node->hasField('field_career_categories') && !$node->get('field_career_categories')->isEmpty()) {
+        if (!isset($categories[$node->get('field_career_categories')->entity->label()])) {
+          $categories[$node->get('field_career_categories')->entity->label()] = ($relevant[$node->id()] ?? .1) / $max;
+        }
+        else {
+          $categories[$node->get('field_career_categories')->entity->label()] *= ($relevant[$node->id()] ?? .1) / $max;
+        }
       }
-      $categories[$node->get('field_career_categories')->entity->label()]++;
-      $count++;
     }
 
     // Sort reversed by count.
     arsort($categories);
-
-    // Normalize results.
-    if ($count > 0) {
-      array_walk($categories, function (&$item) use ($count) {
-        $item = $item / $count;
-      });
-    }
 
     return $categories;
   }
