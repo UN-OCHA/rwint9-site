@@ -145,7 +145,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     $source_id = $term->id();
     $base_url = $term->field_job_import_feed->first()->base_url ?? '';
     $uid = $term->field_job_import_feed->first()->uid ?? FALSE;
-    $this->url = $term->field_job_import_feed->first()->feed_url;
+    $this->url = $term->field_job_import_feed->first()->feed_url ?? '';
 
     $this->getLogger()->info('Processing @name, fetching jobs from @url.', [
       '@name' => $label,
@@ -365,6 +365,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       ->loadByProperties([
         'field_import_guid' => $guid,
       ]);
+    /** @var \Drupal\reliefweb_entities\Entity\Job|null **/
     return !empty($entities) ? reset($entities) : NULL;
   }
 
@@ -455,8 +456,8 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       }
       catch (ReliefwebImportException $exception) {
         // Empty the field if invalid and store the error.
-        $job->{$field} = [];
-        $job->_import_errors[$field] = $exception->getMessage();
+        unset($job->{$field});
+        $job->_import_errors->set($field, $exception->getMessage());
       }
       $data_for_hash[$field] = $job->{$field}->getValue();
     }
@@ -494,11 +495,11 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    *   Data from the XML feed.
    */
   protected function setJobBody(Job $job, \SimpleXMLElement $data) {
-    $job->body = [
+    $job->set('body', [
       'value' => $this->validateBody($data->asXML() ?: ''),
       'summary' => NULL,
       'format' => 'markdown_editor',
-    ];
+    ]);
   }
 
   /**
@@ -510,10 +511,10 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    *   Data from the XML feed.
    */
   protected function setJobHowToApply(Job $job, \SimpleXMLElement $data) {
-    $job->field_how_to_apply = [
+    $job->set('field_how_to_apply', [
       'value' => $this->validateHowToApply($data->asXML() ?: ''),
       'format' => 'markdown_editor',
-    ];
+    ]);
   }
 
   /**
@@ -539,7 +540,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
   protected function setJobType(Job $job, \SimpleXMLElement $data) {
     $ids = $this->getTermIds('job_type');
     // Silently skip invalid term ids and limit to 1 term.
-    $job->field_job_type = array_slice(array_intersect((array) $data, $ids), 0, 1);
+    $job->set('field_job_type', array_slice(array_intersect((array) $data, $ids), 0, 1));
   }
 
   /**
@@ -567,7 +568,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
   protected function setJobCareerCategories(Job $job, \SimpleXMLElement $data) {
     $ids = $this->getTermIds('career_category');
     // Silently skip invalid term ids.
-    $job->field_career_categories = array_intersect((array) $data, $ids);
+    $job->set('field_career_categories', array_intersect((array) $data, $ids));
   }
 
   /**
@@ -581,7 +582,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
   protected function setJobThemes(Job $job, \SimpleXMLElement $data) {
     $ids = $this->getTermIds('theme');
     // Silently skip invalid term ids and limit to 3 themes.
-    $job->field_theme = array_slice(array_intersect((array) $data, $ids), 0, 3);
+    $job->set('field_theme', array_slice(array_intersect((array) $data, $ids), 0, 3));
   }
 
   /**
@@ -609,7 +610,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       $job->field_city = $this->validateCity((string) $data);
     }
     else {
-      $job->field_city = [];
+      $job->set('field_city', []);
     }
   }
 
@@ -682,7 +683,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       // No need to add another validation message if there was already one for
       // the field.
       if (!isset($job->_import_errors[$field])) {
-        $job->_import_errors[$field] = $violation->getMessage()->__toString();
+        $job->_import_errors->set($field, $violation->getMessage()->__toString());
       }
     }
 
@@ -697,10 +698,10 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
 
     // Flag the job as being imported so that the status can be updated
     // in reliefweb_import_node_presave() based on the validation errors.
-    $job->_is_importing = TRUE;
+    $job->set('_is_importing', TRUE);
 
     // Ensure notifications are disabled.
-    $job->notifications_content_disable = TRUE;
+    $job->set('notifications_content_disable', TRUE);
 
     // Save the job.
     $job->save();

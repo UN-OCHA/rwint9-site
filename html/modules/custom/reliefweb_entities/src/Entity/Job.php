@@ -105,7 +105,7 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
     // Convert the old "N/A" value for job experience to "0-2 years".
     if ($this->hasField('field_job_experience') && !$this->get('field_job_experience')->isEmpty()) {
       // Normally only 1 value is allowed.
-      if ($this->get('field_job_experience')->first()->target_id == 262) {
+      if (isset($this->get('field_job_experience')->first()->target_id) && $this->get('field_job_experience')->first()->target_id == 262) {
         $this->set('field_job_experience', 258);
       }
     }
