@@ -3,7 +3,8 @@ allowed_social_media_links:
   instagram: Instagram
   medium: Medium
   linkedin: LinkedIn
-  twitter: Twitter
+  twitter: X
+  x: X
   youtube: YouTube
 cron:
   embargoed_reports_limit: 20
