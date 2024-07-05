@@ -9,6 +9,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\reliefweb_post_api\Entity\ProviderInterface;
+use Drupal\reliefweb_post_api\Plugin\ContentProcessorException;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
 use Drupal\reliefweb_post_api\Queue\ReliefWebPostApiDatabaseQueueFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -175,16 +176,32 @@ class ReliefWebPostApi extends ControllerBase {
         throw new BadRequestHttpException("Invalid data:\n\n" . $exception->getMessage());
       }
 
-      // Queue the data so it can be processed later (ex: drush command).
-      try {
-        $queue = $this->queueFactory->get('reliefweb_post_api');
-        $queue->createItem($data);
-      }
-      catch (\Exception $exception) {
-        throw new HttpException(500, 'Internal server error.');
-      }
+      // Process the document directly.
+      if ($provider->skipQueue()) {
+        try {
+          $plugin->process($data);
+        }
+        catch (ContentProcessorException $exception) {
+          throw new BadRequestHttpException("Invalid data:\n\n" . $exception->getMessage());
+        }
+        catch (\Exception $exception) {
+          throw new HttpException(500, 'Internal server error.');
+        }
 
-      $response = new JsonResponse('Document queued for processing.', 200);
+        $response = new JsonResponse('Document processed.', 200);
+      }
+      // Queue the data so it can be processed later (ex: drush command).
+      else {
+        try {
+          $queue = $this->queueFactory->get('reliefweb_post_api');
+          $queue->createItem($data);
+        }
+        catch (\Exception $exception) {
+          throw new HttpException(500, 'Internal server error.');
+        }
+
+        $response = new JsonResponse('Document queued for processing.', 202);
+      }
     }
     catch (HttpException $exception) {
       $response = new JsonResponse($exception->getMessage(), $exception->getStatusCode());

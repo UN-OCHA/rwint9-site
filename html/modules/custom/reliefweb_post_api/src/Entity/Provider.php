@@ -259,6 +259,17 @@ class Provider extends ContentEntityBase implements ProviderInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function skipQueue(): bool {
+    $field = 'field_skip_queue';
+    if (!$this->hasField($field)) {
+      return FALSE;
+    }
+    return !empty($this->get($field)->value);
+  }
+
+  /**
    * Notify the provider of an entity.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
@@ -268,6 +279,11 @@ class Provider extends ContentEntityBase implements ProviderInterface {
     if ($entity instanceof ContentEntityInterface && $entity->hasField('field_post_api_provider')) {
       $provider = $entity->field_post_api_provider->entity;
       if (!empty($provider)) {
+        // Wait for 1 second to ensure the data is available in the API.
+        // Elasticsearch refreshes its indices every second.
+        // @see https://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules.html#dynamic-index-settings (index.refresh_interval).
+        sleep(1);
+
         $client = \Drupal::httpClient();
         $timeout = \Drupal::state()->get('reliefweb_post_api.timeout', 1);
         $logger = \Drupal::logger('reliefweb_post_api.webhook');

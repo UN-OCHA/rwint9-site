@@ -10,6 +10,7 @@ dependencies:
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_quota
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_rate_limit
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_resource_status
+    - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_skip_queue
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_source
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_user
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_webhook_url
@@ -73,6 +74,13 @@ content:
     weight: 2
     region: content
     settings: {  }
+    third_party_settings: {  }
+  field_skip_queue:
+    type: boolean_checkbox
+    weight: 14
+    region: content
+    settings:
+      display_label: true
     third_party_settings: {  }
   field_source:
     type: reliefweb_entity_reference_select

@@ -490,7 +490,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
     ]);
 
     $response = $controller->postContent('reports', $this->getTestUuid());
-    $this->assertSame(200, $response->getStatusCode());
+    $this->assertSame(202, $response->getStatusCode());
     $this->assertStringContainsString('Document queued for processing.', $response->getContent());
   }
 

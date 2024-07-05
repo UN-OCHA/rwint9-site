@@ -71,6 +71,14 @@ interface ProviderInterface extends ContentEntityInterface {
   public function getRateLimit(): int;
 
   /**
+   * Get whether to skip the queue and process the submissions directly.
+   *
+   * @return bool
+   *   TRUE if the submission should be processed directly.
+   */
+  public function skipQueue(): bool;
+
+  /**
    * Check if a provider with the given ID exits and its API key is valid.
    *
    * @param string $key
