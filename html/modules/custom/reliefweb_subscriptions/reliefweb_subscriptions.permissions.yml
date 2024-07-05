@@ -7,3 +7,29 @@ manage own subscriptions:
 manage other subscriptions:
   title: 'Manage other subscriptions'
   description: 'Create, delete or edit subscriptions from others.'
+
+# Fine grained permissions for the subscriptions.
+subscribe to blog posts:
+  title: 'Subscribe to blog posts'
+  description: 'Receive notifications for new blog posts.'
+subscribe to headlines:
+  title: 'Subscribe to headlines'
+  description: 'Receive notifications for new headlines.'
+subscribe to appeals:
+  title: 'Subscribe to appeals'
+  description: 'Receive notifications for new appeals.'
+subscribe to jobs:
+  title: 'Subscribe to jobs'
+  description: 'Receive notifications for new jobs.'
+subscribe to training:
+  title: 'Subscribe to training'
+  description: 'Receive notifications for new training.'
+subscribe to disasters:
+  title: 'Subscribe to disasters'
+  description: 'Receive notifications for new disasters.'
+subscribe to OCHA situation reports:
+  title: 'Subscribe to OCHA situation reports'
+  description: 'Receive notifications for new OCHA situation reports.'
+subscribe to country updates:
+  title: 'Subscribe to country updates'
+  description: 'Receive notifications for country updates.'

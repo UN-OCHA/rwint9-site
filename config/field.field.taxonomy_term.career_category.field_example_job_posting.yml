@@ -1,0 +1,19 @@
+uuid: 20621feb-6d79-438c-8400-b094d6adea7b
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_example_job_posting
+    - taxonomy.vocabulary.career_category
+id: taxonomy_term.career_category.field_example_job_posting
+field_name: field_example_job_posting
+entity_type: taxonomy_term
+bundle: career_category
+label: 'Example job posting'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

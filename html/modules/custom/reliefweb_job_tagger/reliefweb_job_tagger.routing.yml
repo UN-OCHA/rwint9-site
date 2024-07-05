@@ -1,0 +1,7 @@
+test_ocha_ai_job_tag:
+  path: '/admin/test-job-tagger'
+  defaults:
+    _form: '\Drupal\reliefweb_job_tagger\Form\RwJobTagger'
+    _title: 'Test job tagger'
+  requirements:
+    _permission: 'test ocha ai job tag'
