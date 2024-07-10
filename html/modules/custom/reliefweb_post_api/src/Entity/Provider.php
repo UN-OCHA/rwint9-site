@@ -10,6 +10,7 @@ use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\reliefweb_post_api\Helpers\UrlHelper;
 
 /**
  * Defines a provider entity.
@@ -299,7 +300,9 @@ class Provider extends ContentEntityBase implements ProviderInterface {
               // @todo Maybe we should have unique Webhook URLs per entities
               // provided as part of the initial POST API request and stored
               // in place of the `field_post_api_provider`.
-              $client->get($url, ['timeout' => $timeout]);
+              $client->get(UrlHelper::replaceBaseUrl($url), [
+                'timeout' => $timeout,
+              ]);
 
               $logger->info(strtr('Request sent to @url for provider @provider.', [
                 '@url' => $url,

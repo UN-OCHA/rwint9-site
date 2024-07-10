@@ -24,6 +24,7 @@ use Drupal\file\Validation\FileValidatorInterface;
 use Drupal\media\MediaInterface;
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile;
 use Drupal\reliefweb_post_api\Entity\ProviderInterface;
+use Drupal\reliefweb_post_api\Helpers\UrlHelper;
 use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use GuzzleHttp\ClientInterface;
@@ -822,7 +823,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     $max_size = !empty($max_size) ? Bytes::toNumber($max_size) : Environment::getUploadMaxSize();
 
     try {
-      $response = $this->httpClient->get($url, [
+      $response = $this->httpClient->get(UrlHelper::replaceBaseUrl($url), [
         'stream' => TRUE,
         // @todo retrieve that from the configuration.
         'connect_timeout' => 30,
