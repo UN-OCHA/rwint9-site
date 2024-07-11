@@ -39,6 +39,7 @@
         "drupal/geofield": "^1.52",
         "drupal/google_tag": "^1.6",
         "drupal/guidelines": "^1.0",
+        "drupal/honeypot": "^2.1",
         "drupal/imageapi_optimize_binaries": "^1.0@beta",
         "drupal/imageapi_optimize_webp": "^2.0",
         "drupal/imagemagick": "^3.4",
