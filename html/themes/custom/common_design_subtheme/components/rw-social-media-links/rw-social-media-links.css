@@ -74,7 +74,7 @@
 .rw-entity-social-media-links--icons-only a[href*="facebook"]:before {
   background: var(--rw-icons--social-media--facebook-full--48--dark-blue);
 }
-.rw-entity-social-media-links--icons-only a[href*="twitter"]:before {
+.rw-entity-social-media-links--icons-only a[href*="x.com"]:before {
   background: var(--rw-icons--social-media--twitter-full--48--dark-blue);
 }
 .rw-entity-social-media-links--icons-only a[href*="linkedin"]:before {

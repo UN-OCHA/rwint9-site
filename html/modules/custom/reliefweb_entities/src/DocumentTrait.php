@@ -91,12 +91,12 @@ trait DocumentTrait {
         ],
       ]),
     ];
-    $links['twitter'] = [
-      'title' => $this->t('Share this on Twitter'),
-      'url' => Url::fromUri('https://twitter.com/share', [
+    $links['x'] = [
+      'title' => $this->t('Share this on X'),
+      'url' => Url::fromUri('https://x.com/share', [
         'query' => [
-          'url' => $url . '&utm_source=twitter.com',
-          // Truncate the title as text for twitter to stay within the allowed
+          'url' => $url . '&utm_source=x.com',
+          // Truncate the title as text for X to stay within the allowed
           // number of characters.
           'text' => Unicode::truncate($title, 90, FALSE, TRUE),
           'via' => 'reliefweb',
@@ -353,7 +353,7 @@ trait DocumentTrait {
    * @see Drupal\reliefweb_entities\DocumentInterface::createDate()
    */
   public function createDate($date) {
-    if (empty($date)) {
+    if (is_scalar($date) && $date !== '') {
       return NULL;
     }
     $date = is_numeric($date) ? '@' . $date : $date;
