@@ -121,17 +121,20 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
     }
 
     if ($node->body->isEmpty()) {
+      $this->setJobStatus($node, 'No body text present, AI skipped');
       $this->logger->warning('No body text present for node @nid, skipping', ['@nid' => $nid]);
       return;
     }
 
     // Only process it when fields are empty.
     if (!$node->field_career_categories->isEmpty()) {
+      $this->setJobStatus($node, 'Category already specified, AI skipped');
       $this->logger->warning('Category already specified for node @nid, skipping', ['@nid' => $nid]);
       return;
     }
 
     if (!$node->field_theme->isEmpty()) {
+      $this->setJobStatus($node, 'Theme(s) already specified, AI skipped');
       $this->logger->warning('Theme(s) already specified for node @nid, skipping', ['@nid' => $nid]);
       return;
     }
@@ -168,6 +171,8 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
         ->tag($text, [OchaAiTagTagger::CALCULATION_METHOD_MEAN_WITH_CUTOFF], OchaAiTagTagger::AVERAGE_FULL_AVERAGE);
     }
     catch (\Exception $exception) {
+      $this->setJobStatus($node, 'AI tagging failed, AI skipped', FALSE);
+
       $this->logger->error('Tagging exception for node @nid: @error', [
         '@nid' => $nid,
         '@error' => strtr($exception->getMessage(), "\n", " "),
@@ -637,6 +642,24 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
     arsort($categories);
 
     return $categories;
+  }
+
+  /**
+   * Set job status and revision log.
+   */
+  protected function setJobStatus(NodeInterface &$node, string $message, bool $permanent = TRUE) {
+    $node->setRevisionCreationTime(time());
+    $node->setRevisionLogMessage($message);
+
+    if ($permanent) {
+      $node->set('reliefweb_job_tagger_status', 'processed');
+    }
+    else {
+      $node->set('reliefweb_job_tagger_status', 'skipped');
+    }
+
+    $node->setNewRevision(TRUE);
+    $node->save();
   }
 
 }

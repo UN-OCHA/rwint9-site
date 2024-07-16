@@ -5,8 +5,10 @@
  * OCHA AI Job tagging.
  */
 
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\node\Entity\Node;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
@@ -222,7 +224,33 @@ function reliefweb_job_tagger_node_presave(EntityInterface $node) {
   if ($node->hasField('reliefweb_job_tagger_status')) {
     reliefweb_job_tagger_log_manual_changes_to_tagging($node);
 
+    // Already queued, nothing left to do.
     if ($node->reliefweb_job_tagger_status->value == 'queued' || $node->reliefweb_job_tagger_status->value == 'processed') {
+      return;
+    }
+
+    // Something went wrong, retry.
+    if ($node->reliefweb_job_tagger_status->value == 'skipped') {
+      $queue_count = 1;
+      if ($node->hasField('field_job_tagger_queue_count')) {
+        $queue_count = $node->get('field_job_tagger_queue_count')->value ?? 1;
+      }
+      if ($queue_count >= 3) {
+        $node->set('reliefweb_job_tagger_status', 'processed');
+
+        $log_message = $node->getRevisionLogMessage();
+        $log_message .= (empty($log_message) ? '' : ' ') . 'Job has been queued 3 times, maximum reached.';
+        $node->setRevisionLogMessage($log_message);
+      }
+      else {
+        $node->set('reliefweb_job_tagger_status', 'queued');
+
+        $log_message = $node->getRevisionLogMessage();
+        $log_message .= (empty($log_message) ? '' : ' ') . 'Job has been re-queued for tagging.';
+        $node->setRevisionLogMessage($log_message);
+      }
+      $node->set('field_job_tagger_queue_count', $queue_count++);
+
       return;
     }
   }
@@ -259,6 +287,44 @@ function reliefweb_job_tagger_node_presave(EntityInterface $node) {
     $log_message .= (empty($log_message) ? '' : ' ') . 'Job has been queued for tagging.';
     $node->setRevisionLogMessage($log_message);
   }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_view().
+ */
+function reliefweb_job_tagger_node_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+  if ($entity->bundle() != 'job') {
+    return;
+  }
+
+  if ($view_mode != 'full') {
+    return;
+  }
+
+  if ($entity->reliefweb_job_tagger_status->value != 'skipped') {
+    return;
+  }
+
+  // Check permissions.
+  $user = \Drupal::currentUser();
+  if (!$user->hasPermission('ocha ai job tag requeue job')) {
+    return;
+  }
+
+  $build['requeue'] = [
+    '#type' => 'link',
+    '#title' => t('Re-queue for AI tagging'),
+    '#url' => Url::fromRoute('reliefweb_job_tagger.requeue', [
+      'id' => $entity->id(),
+    ]),
+    '#prefix' => '<div class="node--requeue">',
+    '#suffix' => '</div>',
+    '#attributes' => [
+      'class' => [
+        'cd-button',
+      ],
+    ],
+  ];
 }
 
 /**
@@ -339,149 +405,4 @@ function reliefweb_job_tagger_queue_job(Node $job) : void {
   $item = new \stdClass();
   $item->nid = $job->id();
   $queue->createItem($item);
-}
-
-/**
- * Clear index.
- */
-function reliefweb_job_tagger_index_clear() {
-  /** @var \Drupal\ocha_ai_tag\Services\OchaAiTagTagger $jobTagger */
-  $jobTagger = \Drupal::service('ocha_ai_tag.tagger');
-  $jobTagger->clearIndex();
-}
-
-/**
- * Index embedding for a job.
- */
-function reliefweb_job_tagger_index_embedding($nid) {
-  /** @var \Drupal\ocha_ai_tag\Services\OchaAiTagTagger $jobTagger */
-  $jobTagger = \Drupal::service('ocha_ai_tag.tagger');
-  $jobTagger->embedDocument($nid);
-}
-
-/**
- * Get similar jobs.
- */
-function reliefweb_job_tagger_get_similar_jobs($nid) {
-  $node = Node::load($nid);
-
-  /** @var \Drupal\ocha_ai_tag\Services\OchaAiTagTagger $jobTagger */
-  $jobTagger = \Drupal::service('ocha_ai_tag.tagger');
-  $relevant = $jobTagger->getSimilarDocuments($nid, $node->get('body')->value);
-  $nodes = Node::loadMultiple($relevant);
-
-  if (isset($nodes[$nid])) {
-    unset($nodes[$nid]);
-  }
-  $categories = [];
-  foreach ($nodes as $node) {
-    if (!isset($categories[$node->get('field_career_categories')->entity->label()])) {
-      $categories[$node->get('field_career_categories')->entity->label()] = 0;
-    }
-    $categories[$node->get('field_career_categories')->entity->label()]++;
-  }
-
-  arsort($categories);
-  return $categories;
-}
-
-/**
- * Index jobs.
- */
-function reliefweb_job_tagger_index_jobs() {
-  // Only index jobs approved by reliefweb.int editors.
-  $uids = \Drupal::entityQuery('user')
-    ->accessCheck(FALSE)
-    ->condition('status', 1)
-    ->condition('roles', 'editor')
-    ->execute();
-
-  $query = \Drupal::entityTypeManager()->getStorage('node')
-    ->getQuery()
-    ->accessCheck(FALSE)
-    ->condition('type', 'job', '=')
-    ->condition('moderation_status', ['published', 'expired'], 'IN')
-    ->sort('nid', 'desc');
-
-  if (!empty($uids)) {
-    // Limit to documents that have been reviewed by an editor to augment
-    // the likeliness that the documents were tagged properly.
-    $query->condition('revision_uid', $uids, 'IN');
-  }
-
-  $job_ids = $query->execute() ?? [];
-
-  foreach ($job_ids as $id) {
-    reliefweb_job_tagger_index_embedding($id);
-  }
-}
-
-/**
- * Accuracy.
- */
-function reliefweb_job_tagger_test_accuracy() {
-  $stats = fopen('./stats.csv', 'w');
-  fputcsv($stats, [
-    'nid',
-    'current',
-    'first',
-    'score',
-    'correct',
-  ]);
-
-  $job_ids = \Drupal::entityTypeManager()->getStorage('node')->getQuery()
-    ->accessCheck(FALSE)
-    ->condition('status', 1)
-    ->condition('type', 'job')
-    ->sort('nid', 'ASC')
-    ->execute();
-
-  $results = [
-    'total' => 0,
-    'good' => 0,
-    'bad' => 0,
-    'empty' => 0,
-  ];
-
-  foreach ($job_ids as $id) {
-    $node = Node::load(($id));
-    $current = $node->get('field_career_categories')->entity->label() ?? 'not set';
-    $first = 'unknown';
-    $score = 0;
-    $similar = reliefweb_job_tagger_get_similar_jobs($id);
-    if (!empty($similar)) {
-      $first = array_key_first($similar);
-      $score = $similar[$first];
-    }
-    else {
-      $results['empty']++;
-    }
-
-    fputcsv($stats, [
-      $id,
-      $current,
-      $first,
-      $score,
-      $current == $first,
-    ]);
-
-    $results['total']++;
-    if ($current == $first) {
-      $results['good']++;
-    }
-    else {
-      $results['bad']++;
-    }
-
-    print "$id - $current - $first\n";
-  }
-
-  fclose($stats);
-
-  if ($results['total'] > 0) {
-    $results['good %'] = round(100 * $results['good'] / $results['total'], 2);
-    $results['bad %'] = round(100 * $results['bad'] / $results['total'], 2);
-  }
-
-  print_r($results);
 }
