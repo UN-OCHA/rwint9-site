@@ -22,7 +22,7 @@ test_ocha_ai_job_tag_theme:
 reliefweb_job_tagger.requeue:
   path: '/node/{id}/re-queue'
   defaults:
-    _title: 'Summaries comparison'
+    _title: 'Requeue job'
     _controller: '\Drupal\reliefweb_job_tagger\Controller\RequeueController::requeueJob'
   requirements:
     _permission: 'ocha ai job tag requeue job'
