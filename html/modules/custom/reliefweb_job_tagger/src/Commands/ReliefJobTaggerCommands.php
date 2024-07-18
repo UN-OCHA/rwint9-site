@@ -47,7 +47,15 @@ class ReliefJobTaggerCommands extends DrushCommands {
    *
    * @aliases rw-job:index
    */
-  public function indexJobs() {
+  public function indexJobs(array $options = ['id' => 0]) {
+    // Index single job.
+    if (isset($options['id']) && !empty($options['id'])) {
+      $id = $options['id'];
+      $this->output->writeln('Processing ' . $id);
+      $this->ochaTagger->embedDocument($id);
+      return;
+    }
+
     // Only index jobs approved by reliefweb.int editors.
     $uids = $this->entityTypeManager->getStorage('user')
       ->getQuery()

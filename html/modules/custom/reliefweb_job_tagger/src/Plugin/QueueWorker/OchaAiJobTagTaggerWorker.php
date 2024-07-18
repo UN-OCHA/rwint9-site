@@ -626,22 +626,22 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
       unset($nodes[$nid]);
     }
 
-    $categories = [];
+    $terms = [];
     foreach ($nodes as $node) {
       if ($node->hasField($field) && !$node->get($field)->isEmpty()) {
-        if (!isset($categories[$node->get($field)->entity->label()])) {
-          $categories[$node->get($field)->entity->label()] = ($relevant[$node->id()] ?? .1) / $max;
+        if (!isset($terms[$node->get($field)->entity->label()])) {
+          $terms[$node->get($field)->entity->label()] = ($relevant[$node->id()] ?? .1) / $max;
         }
         else {
-          $categories[$node->get($field)->entity->label()] *= ($relevant[$node->id()] ?? .1) / $max;
+          $terms[$node->get($field)->entity->label()] *= ($relevant[$node->id()] ?? .1) / $max;
         }
       }
     }
 
     // Sort reversed by count.
-    arsort($categories);
+    arsort($terms);
 
-    return $categories;
+    return $terms;
   }
 
   /**
