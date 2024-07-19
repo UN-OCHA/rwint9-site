@@ -181,11 +181,13 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
     }
 
     if (empty($data)) {
+      $this->setJobStatus($node, 'AI tagging failed, AI skipped', FALSE);
       $this->logger->error('No data received from AI for node @nid', ['@nid' => $nid]);
       return;
     }
 
     if (!isset($data[OchaAiTagTagger::AVERAGE_FULL_AVERAGE][OchaAiTagTagger::CALCULATION_METHOD_MEAN_WITH_CUTOFF])) {
+      $this->setJobStatus($node, 'AI tagging failed, AI skipped', FALSE);
       $this->logger->error('Data "average mean with cutoff" missing from AI for node @nid', ['@nid' => $nid]);
       return;
     }
@@ -259,7 +261,7 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
         $es_term = $es_terms['theme'] ?? [];
         $similar = $this->getSimilarJobs($node, 'field_theme');
 
-        $message[] = $this->setAiFeedback('Career category (ES)', $es, [$es_term]);
+        $message[] = $this->setAiFeedback('Themes (ES)', $es, [$es_term]);
 
         $mult = [];
 
