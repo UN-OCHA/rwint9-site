@@ -631,11 +631,13 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
     $terms = [];
     foreach ($nodes as $node) {
       if ($node->hasField($field) && !$node->get($field)->isEmpty()) {
-        if (!isset($terms[$node->get($field)->entity->label()])) {
-          $terms[$node->get($field)->entity->label()] = ($relevant[$node->id()] ?? .1) / $max;
-        }
-        else {
-          $terms[$node->get($field)->entity->label()] *= ($relevant[$node->id()] ?? .1) / $max;
+        foreach ($node->get($field)->referencedEntities() as $term) {
+          if (!isset($terms[$term->label()])) {
+            $terms[$term->label()] = ($relevant[$node->id()] ?? .1) / $max;
+          }
+          else {
+            $terms[$term->label()] *= ($relevant[$node->id()] ?? .1) / $max;
+          }
         }
       }
     }
