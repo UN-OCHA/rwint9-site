@@ -14,11 +14,11 @@ class RequeueController extends ControllerBase {
   /**
    * Output comparison.
    */
-  public function requeueJob($id = NULL) {
+  public function requeueJob($node = NULL) {
     /** @var \Drupal\node\Entity\Node $node */
     $node = $this->entityTypeManager()
       ->getStorage('node')
-      ->load($id);
+      ->load($node);
 
     $redirect = new RedirectResponse(Url::fromRoute('entity.node.canonical', [
       'node' => $node->id(),

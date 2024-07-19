@@ -1,0 +1,5 @@
+reliefweb_job_tagger.requeue:
+  route_name: reliefweb_job_tagger.requeue
+  base_route: entity.node.canonical
+  title: Re-queue
+  weight: 50

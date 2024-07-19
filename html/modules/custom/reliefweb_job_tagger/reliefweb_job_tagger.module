@@ -5,10 +5,9 @@
  * OCHA AI Job tagging.
  */
 
-use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Url;
 use Drupal\node\Entity\Node;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
@@ -290,41 +289,37 @@ function reliefweb_job_tagger_node_presave(EntityInterface $node) {
 }
 
 /**
- * Implements hook_ENTITY_TYPE_view().
+ * Implements hook_menu_local_tasks_alter().
  */
-function reliefweb_job_tagger_node_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
-  if ($entity->bundle() != 'job') {
+function reliefweb_job_tagger_menu_local_tasks_alter(&$data, $route_name, RefinableCacheableDependencyInterface &$cacheability) {
+  if (!isset($data['tabs'][0]['reliefweb_job_tagger.requeue'])) {
     return;
   }
 
-  if ($view_mode != 'full') {
+  if ($route_name !== 'entity.node.canonical') {
+    $data['tabs'][0]['reliefweb_job_tagger.requeue']['#access'] = FALSE;
     return;
   }
 
-  if ($entity->reliefweb_job_tagger_status->value != 'skipped') {
+  /** @var \Drupal\node\Entity\Node $node */
+  $node = \Drupal::routeMatch()->getParameter('node');
+
+  if ($node->bundle() != 'job') {
+    $data['tabs'][0]['reliefweb_job_tagger.requeue']['#access'] = FALSE;
+    return;
+  }
+
+  if ($node->reliefweb_job_tagger_status->value != 'skipped') {
+    $data['tabs'][0]['reliefweb_job_tagger.requeue']['#access'] = FALSE;
     return;
   }
 
   // Check permissions.
   $user = \Drupal::currentUser();
   if (!$user->hasPermission('ocha ai job tag requeue job')) {
+    $data['tabs'][0]['reliefweb_job_tagger.requeue']['#access'] = FALSE;
     return;
   }
-
-  $build['requeue'] = [
-    '#type' => 'link',
-    '#title' => t('Re-queue for AI tagging'),
-    '#url' => Url::fromRoute('reliefweb_job_tagger.requeue', [
-      'id' => $entity->id(),
-    ]),
-    '#prefix' => '<div class="node--requeue">',
-    '#suffix' => '</div>',
-    '#attributes' => [
-      'class' => [
-        'cd-button',
-      ],
-    ],
-  ];
 }
 
 /**
