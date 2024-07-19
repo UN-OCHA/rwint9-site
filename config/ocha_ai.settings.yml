@@ -4,17 +4,22 @@ plugins:
       model: amazon.titan-text-express-v1
       endpoint: ''
       version: ''
-      region: REPLACE_WITH_REGION
-      api_key: REPLACE_WITH_KEY
+      region: us-east-1
+      api_key: ''
       max_tokens: 512
-      prompt_template: |-
-        {{ context }}
-
-        Based solely on the information above, please answer the following question. Please do not make things up and say you don't know if you cannot answer.
-
-        {{ question }}
-      api_secret: REPLACE_WITH_SECRET
-      role_arn: null
+      prompt_template: "{{ context }}\r\n\r\nBased solely on the information above, please answer the following question. Please do not make things up and say you don't know if you cannot answer.\r\n\r\n{{ question }}"
+      api_secret: ''
+      role_arn: ''
+    aws_bedrock_titan_text_premier_v1:
+      model: 'amazon.titan-text-premier-v1:0'
+      endpoint: ''
+      version: ''
+      region: us-east-1
+      api_key: ''
+      max_tokens: 512
+      prompt_template: ''
+      api_secret: ''
+      role_arn: ''
     azure_openai:
       model: gpt-3.5-turbo
       endpoint: REPLACE_WITH_ENDPOINT
@@ -22,37 +27,34 @@ plugins:
       region: REPLACE_WITH_REGION
       api_key: REPLACE_WITH_KEY
       max_tokens: 512
-      prompt_template: |-
-        Based solely on the information below, please answer the user's question. Please do not make things up and say you don't know if you cannot answer.
-
-        {{ context }}
+      prompt_template: "Based solely on the information below, please answer the user's question. Please do not make things up and say you don't know if you cannot answer.\r\n\r\n{{ context }}"
   embedding:
     aws_bedrock:
       model: amazon.titan-embed-text-v1
       endpoint: ''
       version: ''
-      region: REPLACE_WITH_REGION
-      api_key: REPLACE_WITH_KEY
+      region: us-east-1
+      api_key: ''
       batch_size: 1
       dimensions: 1536
       max_tokens: 8192
-      api_secret: REPLACE_WITH_SECRET
-      role_arn: null
+      api_secret: ''
+      role_arn: ''
     aws_bedrock_titan_embed_text_v2:
-      model: amazon.titan-embed-text-v2:0
+      model: 'amazon.titan-embed-text-v2:0'
       endpoint: ''
       version: ''
-      region: null
-      api_key: null
-      batch_size: 1
+      region: us-east-1
+      api_key:
+      batch_size: '1'
       dimensions: 1024
       max_tokens: 8192
-      api_secret: null
-      role_arn: null
+      api_secret:
+      role_arn: ''
     azure_openai:
       model: text-embedding-ada-002
       endpoint: REPLACE_WITH_ENDPOINT
-      version: '2023-05-15'
+      version: '2024-02-01'
       region: REPLACE_WITH_REGION
       api_key: REPLACE_WITH_KEY
       batch_size: 16
@@ -76,16 +78,24 @@ plugins:
     sentence:
       length: 4
       overlap: 2
-    page:
-      length: 1
-      overlap: 0
   vector_store:
     elasticsearch:
       url: REPLACE_WITH_URL
       base_index_name: ocha_ai
-      shards: 1
-      replicas: 0
-      nested_object_limit: 100000
+      indexing_batch_size: 10
+      topk: 5
+      min_similarity: 0.3
+      cutoff_coefficient: 0.5
+    elasticsearch_flattened:
+      url: REPLACE_WITH_URL
+      base_index_name: ocha_ai_flattened
+      indexing_batch_size: 10
+      topk: 5
+      min_similarity: 0.3
+      cutoff_coefficient: 0.5
+    elasticsearch_job:
+      url: REPLACE_WITH_URL
+      base_index_name: ocha_ai_job
       indexing_batch_size: 10
       topk: 5
       min_similarity: 0.3

@@ -1,0 +1,145 @@
+diff --git a/composer.json b/composer.json
+index 45beb2e1f22cab028fb3629281a65a412ee1f218..ec89a2fa9072686cd22fcce62f3721ef08d0551f 100644
+--- a/composer.json
++++ b/composer.json
+@@ -23,5 +23,12 @@
+       "role": "Developer"
+     }
+   ],
+-  "require": {}
++  "require": {
++    "elasticsearch/elasticsearch": "^8"
++  },
++  "config": {
++    "allow-plugins": {
++      "php-http/discovery": false
++    }
++  }
+ }
+diff --git a/config/install/jsonlog.settings.yml b/config/install/jsonlog.settings.yml
+index aea30b5bd0c398053fb7abc1a9073c1708705cee..a128155ad393f003f2498dbea10d61bc5a4cea63 100644
+--- a/config/install/jsonlog.settings.yml
++++ b/config/install/jsonlog.settings.yml
+@@ -8,3 +8,10 @@ jsonlog_dir: ''
+ jsonlog_stdout: false
+ jsonlog_newline_prepend: false
+ jsonlog_tags: ''
++jsonlog_elasticsearch:
++  cluster:
++    - https://127.0.0.1:9200
++    - https://127.0.0.2:9200
++  cacert: /etc/ssl/ca/elastic-ca.crt
++  apikey: ''
++  index: drupal
+diff --git a/config/schema/jsonlog.schema.yml b/config/schema/jsonlog.schema.yml
+index 5bae954c432f1e6e0a8fb297e06f0cd6f9fb9c0f..a60b042ce599012a7643f7fae82ccfa5108fe3b2 100644
+--- a/config/schema/jsonlog.schema.yml
++++ b/config/schema/jsonlog.schema.yml
+@@ -38,3 +38,22 @@ jsonlog.settings:
+     jsonlog_tags:
+       type: string
+       label: 'Tags'
++    jsonlog_elasticsearch:
++      type: config_object
++      label: Elastic Settings
++      mapping:
++        cluster:
++          type: sequence
++          label: 'List of URIs'
++          sequence:
++            type: string
++            label: 'Elastisearch URI'
++        cacert:
++          type: string
++          label: 'CA certificate path'
++        apikey:
++          type: string
++          label: 'API key'
++        index:
++          type: string
++          label: 'Index'
+diff --git a/src/Logger/JsonLog.php b/src/Logger/JsonLog.php
+index fe8d8d07030b9998d12c9f3cf9568e85d9c136a4..dfceed59dde3f9954f6042805e92070da35d8097 100644
+--- a/src/Logger/JsonLog.php
++++ b/src/Logger/JsonLog.php
+@@ -6,6 +6,8 @@ use Drupal\Core\Config\ConfigFactoryInterface;
+ use Drupal\Core\Logger\LogMessageParserInterface;
+ use Drupal\Core\Logger\RfcLoggerTrait;
+ use Drupal\Core\Extension\ModuleHandlerInterface;
++use Elastic\Elasticsearch\ClientBuilder;
++use Elastic\Elasticsearch\Exception\ClientResponseException;
+ use Symfony\Component\HttpFoundation\RequestStack;
+ use Psr\Log\LoggerInterface;
+ 
+@@ -67,6 +69,13 @@ class JsonLog implements LoggerInterface {
+    */
+   private $canonical;
+ 
++  /**
++   * Log to Elasticsarch.
++   *
++   * @var bool
++   */
++  private $elasticsearch;
++
+   /**
+    * Log to STDOUT.
+    *
+@@ -126,6 +135,12 @@ class JsonLog implements LoggerInterface {
+       return;
+     }
+ 
++    if ($this->elasticsearch) {
++      $this->logElastic($log_entry);
++      unset($log_entry);
++      return;
++    }
++
+     if ($this->stdout) {
+       if (FALSE === file_put_contents('php://stdout', $log_entry->getJson())) {
+         error_log('Drupal jsonlog, site ID[' . $this->site_id . '], failed to write to STDOUT.');
+@@ -266,5 +281,44 @@ class JsonLog implements LoggerInterface {
+     // Tags
+     $this->tags_server = ($tags = getenv('drupal_jsonlog_tags')) !== FALSE ? $tags : '';
+     $this->tags_site = $this->config->get('jsonlog_tags');
++
++    // Elastic.
++    if (!empty($this->config->get('jsonlog_elasticsearch'))) {
++      $this->elasticsearch = TRUE;
++    }
++  }
++
++  /**
++   * Log to a configured Elasticsearch host or cluster.
++   *
++   * @param \Drupal\jsonlog\Logger\JsonLogData
++   *
++   * @return bool
++   */
++  private function logElastic($log_entry) {
++    $config = $this->config->get('jsonlog_elasticsearch');
++
++    // Configure the client
++    $client = ClientBuilder::create()
++      ->setHosts($config['cluster'])
++      ->setCABundle($config['cacert'])
++      ->setApiKey($config['apikey'])
++      ->build();
++
++    // Create the request.
++    $request = [
++      'index' => $config['index'],
++      'body'  => $log_entry->getJson(),
++    ];
++
++    // Boom!
++    try {
++      $response = $client->index($request);
++    } catch (ClientResponseException $e) {
++      error_log('Drupal jsonlog, site ID[' . $this->site_id . '], failed to index to Elasticsearch:' . $e->getMessage());
++      return FALSE;
++    }
++
++    return TRUE;
+   }
+ }

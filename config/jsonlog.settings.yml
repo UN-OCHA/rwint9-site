@@ -1,0 +1,19 @@
+_core:
+  default_config_hash: xdnTZYkGKK3ZE5NyD5vRtAPFVNi2fRlhbuELcugUwUU
+jsonlog_severity_threshold: 7
+jsonlog_channels: ocha_ai_chat
+jsonlog_truncate: 64
+jsonlog_siteid: reliefweb__local
+jsonlog_canonical: reliefweb
+jsonlog_file_time: Ymd
+jsonlog_dir: /var/log/php/drupal-jsonlog
+jsonlog_stdout: false
+jsonlog_newline_prepend: false
+jsonlog_tags: ''
+jsonlog_elasticsearch:
+  cluster:
+    - 'https://127.0.0.1:9200'
+    - 'https://127.0.0.2:9200'
+  cacert: /etc/ssl/ca/elastic-ca.crt
+  apikey: ''
+  index: drupal
