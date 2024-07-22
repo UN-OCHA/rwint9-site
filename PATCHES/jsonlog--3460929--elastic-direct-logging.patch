@@ -17,10 +17,10 @@ index 45beb2e1f22cab028fb3629281a65a412ee1f218..ec89a2fa9072686cd22fcce62f3721ef
 +  }
  }
 diff --git a/config/install/jsonlog.settings.yml b/config/install/jsonlog.settings.yml
-index aea30b5bd0c398053fb7abc1a9073c1708705cee..a128155ad393f003f2498dbea10d61bc5a4cea63 100644
+index aea30b5bd0c398053fb7abc1a9073c1708705cee..f0eb0586c62cdc53cb64d925ba13235450680d93 100644
 --- a/config/install/jsonlog.settings.yml
 +++ b/config/install/jsonlog.settings.yml
-@@ -8,3 +8,10 @@ jsonlog_dir: ''
+@@ -8,3 +8,11 @@ jsonlog_dir: ''
  jsonlog_stdout: false
  jsonlog_newline_prepend: false
  jsonlog_tags: ''
@@ -31,11 +31,12 @@ index aea30b5bd0c398053fb7abc1a9073c1708705cee..a128155ad393f003f2498dbea10d61bc
 +  cacert: /etc/ssl/ca/elastic-ca.crt
 +  apikey: ''
 +  index: drupal
++  legacy: true
 diff --git a/config/schema/jsonlog.schema.yml b/config/schema/jsonlog.schema.yml
-index 5bae954c432f1e6e0a8fb297e06f0cd6f9fb9c0f..a60b042ce599012a7643f7fae82ccfa5108fe3b2 100644
+index 5bae954c432f1e6e0a8fb297e06f0cd6f9fb9c0f..175b81478e02a3155804d0f40adc7effc06df13a 100644
 --- a/config/schema/jsonlog.schema.yml
 +++ b/config/schema/jsonlog.schema.yml
-@@ -38,3 +38,22 @@ jsonlog.settings:
+@@ -38,3 +38,25 @@ jsonlog.settings:
      jsonlog_tags:
        type: string
        label: 'Tags'
@@ -58,8 +59,11 @@ index 5bae954c432f1e6e0a8fb297e06f0cd6f9fb9c0f..a60b042ce599012a7643f7fae82ccfa5
 +        index:
 +          type: string
 +          label: 'Index'
++        legacy:
++          type: boolean
++          label: 'Use legacy date based index suffixes'
 diff --git a/src/Logger/JsonLog.php b/src/Logger/JsonLog.php
-index fe8d8d07030b9998d12c9f3cf9568e85d9c136a4..dfceed59dde3f9954f6042805e92070da35d8097 100644
+index fe8d8d07030b9998d12c9f3cf9568e85d9c136a4..a7bd8aed5fa70c789bfa89819e837e399528c08d 100644
 --- a/src/Logger/JsonLog.php
 +++ b/src/Logger/JsonLog.php
 @@ -6,6 +6,8 @@ use Drupal\Core\Config\ConfigFactoryInterface;
@@ -98,7 +102,7 @@ index fe8d8d07030b9998d12c9f3cf9568e85d9c136a4..dfceed59dde3f9954f6042805e92070d
      if ($this->stdout) {
        if (FALSE === file_put_contents('php://stdout', $log_entry->getJson())) {
          error_log('Drupal jsonlog, site ID[' . $this->site_id . '], failed to write to STDOUT.');
-@@ -266,5 +281,44 @@ class JsonLog implements LoggerInterface {
+@@ -266,5 +281,51 @@ class JsonLog implements LoggerInterface {
      // Tags
      $this->tags_server = ($tags = getenv('drupal_jsonlog_tags')) !== FALSE ? $tags : '';
      $this->tags_site = $this->config->get('jsonlog_tags');
@@ -126,9 +130,16 @@ index fe8d8d07030b9998d12c9f3cf9568e85d9c136a4..dfceed59dde3f9954f6042805e92070d
 +      ->setApiKey($config['apikey'])
 +      ->build();
 +
++    // Allow date-suffixed indices, instead of data streams.
++    $index = $config['index'];
++    if ($config['legacy']) {
++      $suffix = (new \DateTime())->setTimezone(new \DateTimeZone('UTC'))->format('Y.m.d');
++      $index .= '-' . $suffix;
++    }
++
 +    // Create the request.
 +    $request = [
-+      'index' => $config['index'],
++      'index' => $index,
 +      'body'  => $log_entry->getJson(),
 +    ];
 +
