@@ -212,7 +212,7 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
       $es = $this->getMostRelevantTermsFromEs('jobs', $node->id(), $api_fields, 50);
 
       $es_terms['career_category'] = $this->getRelevantTerm('career_category', $es['career_category'] ?? [], 1);
-      $es_terms['theme'] = $this->getRelevantTerm('theme', $es['theme'] ?? [], 1);
+      $es_terms['theme'] = $this->getRelevantTerm('theme', $es['theme'] ?? [], 3);
     }
 
     if (isset($data['career_category']) && $node->field_career_categories->isEmpty()) {
