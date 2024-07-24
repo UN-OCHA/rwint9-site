@@ -209,7 +209,12 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
         'career_categories' => 'career_category',
         'theme' => 'theme',
       ];
-      $es = $this->getMostRelevantTermsFromEs('jobs', $node->id(), $api_fields, 50);
+      // Doc isn't indexed yet.
+      $es = $this->getMostRelevantTermsFromEs('jobs', [
+        'id' => $node->id(),
+        'title' => $node->getTitle(),
+        'body' => $node->body->value,
+      ], $api_fields, 50);
 
       $es_terms['career_category'] = $this->getRelevantTerm('career_category', $es['career_category'] ?? [], 1);
       $es_terms['theme'] = $this->getRelevantTerm('theme', $es['theme'] ?? [], 3);
@@ -253,7 +258,7 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
 
     if (isset($data['theme']) && $node->field_theme->isEmpty()) {
       $terms = $this->getRelevantTerm('theme', $data['theme'], 3);
-      $message[] = $this->setAiFeedback('Theme(s)', $data['theme'], $terms);
+      $message[] = $this->setAiFeedback('Themes (AI)', $data['theme'], $terms);
 
       $node->set('field_theme', $terms);
       $needs_save = TRUE;
@@ -264,7 +269,7 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
         $es_term = $es_terms['theme'] ?? [];
         $similar = $this->getSimilarJobs($node, 'field_theme');
 
-        $message[] = $this->setAiFeedback('Themes (ES)', $es, [$es_term]);
+        $message[] = $this->setAiFeedback('Themes (ES)', $es, $es_term);
 
         $mult = [];
 
@@ -280,7 +285,7 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
         if (!is_array($mult_term)) {
           $mult_term = [$mult_term];
         }
-        array_unshift($message, $this->setAiFeedback('Theme(s)', $mult, $mult_term));
+        array_unshift($message, $this->setAiFeedback('Themes', $mult, $mult_term));
 
         $node->set('field_theme', $mult_term);
         $needs_save = TRUE;

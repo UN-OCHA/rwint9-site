@@ -232,7 +232,12 @@ class RwJobTaggerTheme extends FormBase {
       }
 
       // Get ES feedback.
-      $es = $this->getMostRelevantTermsFromEs('jobs', $node->id(), $api_fields, 50);
+      // Doc isn't indexed yet.
+      $es = $this->getMostRelevantTermsFromEs('jobs', [
+        'id' => $node->id(),
+        'title' => $node->getTitle(),
+        'body' => $node->body->value,
+      ], $api_fields, 50);
       $es = $es['theme'] ?? [];
 
       $es_first = '';

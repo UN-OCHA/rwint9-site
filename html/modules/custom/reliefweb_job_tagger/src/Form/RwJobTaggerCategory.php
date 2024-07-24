@@ -232,7 +232,11 @@ class RwJobTaggerCategory extends FormBase {
       }
 
       // Get ES feedback.
-      $es = $this->getMostRelevantTermsFromEs('jobs', $node->id(), $api_fields, 50);
+      $es = $this->getMostRelevantTermsFromEs('jobs', [
+        'id' => $node->id(),
+        'title' => $node->getTitle(),
+        'body' => $node->body->value,
+      ], $api_fields, 50);
       $es = $es['career_category'] ?? [];
 
       $es_first = '';
