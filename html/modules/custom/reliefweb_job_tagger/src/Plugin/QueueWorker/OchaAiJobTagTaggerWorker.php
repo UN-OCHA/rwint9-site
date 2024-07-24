@@ -241,7 +241,10 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
         arsort($mult);
 
         $mult_term = $this->getRelevantTerm('career_category', $mult, 1);
-        array_unshift($message, $this->setAiFeedback('Career category', $mult, [$mult_term]));
+        if (!is_array($mult_term)) {
+          $mult_term = [$mult_term];
+        }
+        array_unshift($message, $this->setAiFeedback('Career category', $mult, $mult_term));
 
         $node->set('field_career_categories', $mult_term);
         $needs_save = TRUE;
@@ -274,7 +277,10 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
         arsort($mult);
 
         $mult_term = $this->getRelevantTerm('theme', $mult, 3);
-        array_unshift($message, $this->setAiFeedback('Theme(s)', $mult, [$mult_term]));
+        if (!is_array($mult_term)) {
+          $mult_term = [$mult_term];
+        }
+        array_unshift($message, $this->setAiFeedback('Theme(s)', $mult, $mult_term));
 
         $node->set('field_theme', $mult_term);
         $needs_save = TRUE;
