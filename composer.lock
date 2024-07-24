@@ -16334,16 +16334,16 @@
         },
         {
             "name": "unocha/ocha_ai",
-            "version": "v1.4.3",
+            "version": "v1.4.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_ai.git",
-                "reference": "280057553c6fc980e3e521749f17c349a194ddc2"
+                "reference": "c60b5cd940fd14b696990c55282ac5095a0950e4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/280057553c6fc980e3e521749f17c349a194ddc2",
-                "reference": "280057553c6fc980e3e521749f17c349a194ddc2",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/c60b5cd940fd14b696990c55282ac5095a0950e4",
+                "reference": "c60b5cd940fd14b696990c55282ac5095a0950e4",
                 "shasum": ""
             },
             "require": {
@@ -16375,9 +16375,9 @@
             "description": "OCHA AI module",
             "support": {
                 "issues": "https://github.com/UN-OCHA/ocha_ai/issues",
-                "source": "https://github.com/UN-OCHA/ocha_ai/tree/v1.4.3"
+                "source": "https://github.com/UN-OCHA/ocha_ai/tree/v1.4.4"
             },
-            "time": "2024-07-24T08:23:24+00:00"
+            "time": "2024-07-24T12:29:15+00:00"
         },
         {
             "name": "unocha/ocha_monitoring",
