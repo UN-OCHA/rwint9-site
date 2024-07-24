@@ -12,6 +12,7 @@ dependencies:
     - field.field.node.job.field_import_hash
     - field.field.node.job.field_job_closing_date
     - field.field.node.job.field_job_experience
+    - field.field.node.job.field_job_tagger_queue_count
     - field.field.node.job.field_job_type
     - field.field.node.job.field_source
     - field.field.node.job.field_theme
@@ -114,6 +115,7 @@ content:
 hidden:
   field_import_guid: true
   field_import_hash: true
+  field_job_tagger_queue_count: true
   langcode: true
   links: true
   reliefweb_job_tagger_info: true

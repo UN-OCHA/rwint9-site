@@ -19,6 +19,9 @@ settings:
     -
       value: processed
       label: processed
+    -
+      value: skipped
+      label: skipped
   allowed_values_function: ''
 module: options
 locked: true

@@ -14,7 +14,7 @@ defaults:
     text_splitter:
       plugin_id: token
     vector_store:
-      plugin_id: elasticsearch
+      plugin_id: elasticsearch_job
     completion:
       plugin_id: aws_bedrock
     source:
