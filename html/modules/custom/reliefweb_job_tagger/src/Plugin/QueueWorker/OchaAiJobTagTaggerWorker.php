@@ -177,20 +177,20 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
         '@error' => strtr($exception->getMessage(), "\n", " "),
       ]);
 
-      $this->setJobStatusTemporary($node, 'AI tagging failed, AI skipped', FALSE);
+      $this->setJobStatusTemporary($node, 'AI tagging failed, AI skipped');
 
       return;
     }
 
     if (empty($data)) {
       $this->logger->error('No data received from AI for node @nid', ['@nid' => $nid]);
-      $this->setJobStatusTemporary($node, 'AI tagging failed, AI skipped', FALSE);
+      $this->setJobStatusTemporary($node, 'AI tagging failed, AI skipped');
       return;
     }
 
     if (!isset($data[OchaAiTagTagger::AVERAGE_FULL_AVERAGE][OchaAiTagTagger::CALCULATION_METHOD_MEAN_WITH_CUTOFF])) {
       $this->logger->error('Data "average mean with cutoff" missing from AI for node @nid', ['@nid' => $nid]);
-      $this->setJobStatusTemporary($node, 'AI tagging failed, AI skipped', FALSE);
+      $this->setJobStatusTemporary($node, 'AI tagging failed, AI skipped');
       return;
     }
 
