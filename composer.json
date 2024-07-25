@@ -56,7 +56,7 @@
         "drupal/seven": "^1.0",
         "drupal/social_auth_hid": "^3.2",
         "drupal/stable": "^2.0",
-        "drupal/stage_file_proxy": "^2.1",
+        "drupal/stage_file_proxy": "^3",
         "drupal/svg_image": "^3.0.1",
         "drupal/taxonomy_term_preview": "^1.0.0",
         "drupal/taxonomy_term_revision": "^1.1",
