@@ -684,6 +684,10 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
     if ($node->hasField('field_job_tagger_queue_count')) {
       $queue_count = $node->get('field_job_tagger_queue_count')->value ?? 1;
     }
+    else {
+      // Field missing, force skip.
+      $queue_count = 99;
+    }
 
     if ($queue_count >= 3) {
       // Mark job as skipped, so editors can manually re-queue.
