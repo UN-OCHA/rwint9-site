@@ -98,7 +98,7 @@ class ImageStyleDownloadController extends OriginalImageStyleDownloadController 
   /**
    * {@inheritdoc}
    */
-  public function deliver(Request $request, $scheme, ImageStyleInterface $image_style = NULL) {
+  public function deliver(Request $request, $scheme, ImageStyleInterface $image_style = NULL, string $required_derivative_scheme) {
     if (empty($image_style)) {
       throw new NotFoundHttpException();
     }
@@ -122,7 +122,7 @@ class ImageStyleDownloadController extends OriginalImageStyleDownloadController 
     // Let other modules handle the file if it's not a file matching the pattern
     // used for the reliefweb files.
     if (preg_match($pattern, $uri) !== 1) {
-      return parent::deliver($request, $scheme, $image_style);
+      return parent::deliver($request, $scheme, $image_style, $required_derivative_scheme);
     }
 
     // Check the image token. We return a 404 as it's more likely to be cached
