@@ -699,6 +699,7 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
     }
 
     // Save initial log message.
+    $node->set('field_job_tagger_queue_count', $queue_count++);
     $node->setNewRevision(TRUE);
     $node->save();
 
