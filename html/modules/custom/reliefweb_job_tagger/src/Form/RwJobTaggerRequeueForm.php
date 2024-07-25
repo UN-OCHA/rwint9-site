@@ -82,8 +82,9 @@ class RwJobTaggerRequeueForm extends ConfirmFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $node = $this->node;
 
-    $node->set('reliefweb_job_tagger_status', '');
+    $node->set('reliefweb_job_tagger_status', 'queued');
     $node->set('field_job_tagger_queue_count', 1);
+    reliefweb_job_tagger_queue_job($node);
 
     $log_message = $node->getRevisionLogMessage();
     $log_message .= (empty($log_message) ? '' : ' ') . 'Job has been manually queued for tagging.';

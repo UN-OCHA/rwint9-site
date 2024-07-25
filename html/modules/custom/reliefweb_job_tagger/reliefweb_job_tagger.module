@@ -237,6 +237,13 @@ function reliefweb_job_tagger_node_presave(EntityInterface $node) {
     return;
   }
 
+  // If queue it was queued on previous save.
+  if ($node->reliefweb_job_tagger_status->value == 'queue') {
+    // Mark it as queued.
+    $node->set('reliefweb_job_tagger_status', 'queued');
+    return;
+  }
+
   if ($node->moderation_status->value != 'pending') {
     $node->set('reliefweb_job_tagger_status', '');
     return;
@@ -263,7 +270,7 @@ function reliefweb_job_tagger_node_presave(EntityInterface $node) {
 
   // Queue node when status is empty.
   if ($node->reliefweb_job_tagger_status->isEmpty()) {
-    $node->set('reliefweb_job_tagger_status', 'queued');
+    $node->set('reliefweb_job_tagger_status', 'queue');
 
     $log_message = $node->getRevisionLogMessage();
     $log_message .= (empty($log_message) ? '' : ' ') . 'Job has been queued for tagging.';
@@ -367,7 +374,7 @@ function reliefweb_job_tagger_entity_after_save(EntityInterface $entity) {
   }
 
   /** @var \Drupal\node\Entity\Node $entity */
-  if ($entity->hasField('reliefweb_job_tagger_status') && $entity->get('reliefweb_job_tagger_status')->value == 'queued') {
+  if ($entity->hasField('reliefweb_job_tagger_status') && $entity->get('reliefweb_job_tagger_status')->value == 'queue') {
     reliefweb_job_tagger_queue_job($entity);
     return;
   }
