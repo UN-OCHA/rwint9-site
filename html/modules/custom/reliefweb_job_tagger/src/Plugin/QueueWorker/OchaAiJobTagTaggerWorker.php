@@ -8,6 +8,7 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
+use Drupal\Core\Queue\SuspendQueueException;
 use Drupal\node\NodeInterface;
 use Drupal\ocha_ai_tag\Services\OchaAiTagTagger;
 use GuzzleHttp\ClientInterface;
@@ -121,20 +122,20 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
     }
 
     if ($node->body->isEmpty()) {
-      $this->setJobStatus($node, 'No body text present, AI skipped');
+      $this->setJobStatusPermanent($node, 'No body text present, AI skipped');
       $this->logger->warning('No body text present for node @nid, skipping', ['@nid' => $nid]);
       return;
     }
 
     // Only process it when fields are empty.
     if (!$node->field_career_categories->isEmpty()) {
-      $this->setJobStatus($node, 'Category already specified, AI skipped');
+      $this->setJobStatusPermanent($node, 'Category already specified, AI skipped');
       $this->logger->warning('Category already specified for node @nid, skipping', ['@nid' => $nid]);
       return;
     }
 
     if (!$node->field_theme->isEmpty()) {
-      $this->setJobStatus($node, 'Theme(s) already specified, AI skipped');
+      $this->setJobStatusPermanent($node, 'Theme(s) already specified, AI skipped');
       $this->logger->warning('Theme(s) already specified for node @nid, skipping', ['@nid' => $nid]);
       return;
     }
@@ -171,24 +172,25 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
         ->tag($text, [OchaAiTagTagger::CALCULATION_METHOD_MEAN_WITH_CUTOFF], OchaAiTagTagger::AVERAGE_FULL_AVERAGE);
     }
     catch (\Exception $exception) {
-      $this->setJobStatus($node, 'AI tagging failed, AI skipped', FALSE);
-
       $this->logger->error('Tagging exception for node @nid: @error', [
         '@nid' => $nid,
         '@error' => strtr($exception->getMessage(), "\n", " "),
       ]);
+
+      $this->setJobStatusTemporary($node, 'AI tagging failed, AI skipped', FALSE);
+
       return;
     }
 
     if (empty($data)) {
-      $this->setJobStatus($node, 'AI tagging failed, AI skipped', FALSE);
       $this->logger->error('No data received from AI for node @nid', ['@nid' => $nid]);
+      $this->setJobStatusTemporary($node, 'AI tagging failed, AI skipped', FALSE);
       return;
     }
 
     if (!isset($data[OchaAiTagTagger::AVERAGE_FULL_AVERAGE][OchaAiTagTagger::CALCULATION_METHOD_MEAN_WITH_CUTOFF])) {
-      $this->setJobStatus($node, 'AI tagging failed, AI skipped', FALSE);
       $this->logger->error('Data "average mean with cutoff" missing from AI for node @nid', ['@nid' => $nid]);
+      $this->setJobStatusTemporary($node, 'AI tagging failed, AI skipped', FALSE);
       return;
     }
 
@@ -660,21 +662,48 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
   }
 
   /**
-   * Set job status and revision log.
+   * Set job status and revision log for permanent problem.
    */
-  protected function setJobStatus(NodeInterface &$node, string $message, bool $permanent = TRUE) {
+  protected function setJobStatusPermanent(NodeInterface &$node, string $message) {
     $node->setRevisionCreationTime(time());
     $node->setRevisionLogMessage($message);
 
-    if ($permanent) {
-      $node->set('reliefweb_job_tagger_status', 'processed');
-    }
-    else {
-      $node->set('reliefweb_job_tagger_status', 'skipped');
-    }
-
+    $node->set('reliefweb_job_tagger_status', 'processed');
     $node->setNewRevision(TRUE);
     $node->save();
+  }
+
+  /**
+   * Set job status and revision log for temporary problem.
+   */
+  protected function setJobStatusTemporary(NodeInterface &$node, string $message) {
+    $node->setRevisionCreationTime(time());
+    $node->setRevisionLogMessage($message);
+
+    $queue_count = 0;
+    if ($node->hasField('field_job_tagger_queue_count')) {
+      $queue_count = $node->get('field_job_tagger_queue_count')->value ?? 1;
+    }
+
+    if ($queue_count >= 3) {
+      // Mark job as skipped, so editors can manually re-queue.
+      $node->set('reliefweb_job_tagger_status', 'skipped');
+      $log_message = $node->getRevisionLogMessage();
+      $log_message .= (empty($log_message) ? '' : ' ') . 'Job has been queued 3 times, maximum reached.';
+      $node->setRevisionLogMessage($log_message);
+      $node->setNewRevision(TRUE);
+      $node->save();
+
+      // Return so item is removed from queue.
+      return;
+    }
+
+    // Save initial log message.
+    $node->setNewRevision(TRUE);
+    $node->save();
+
+    // Leave item in the queue, but stop queue processing.
+    throw new SuspendQueueException($message);
   }
 
 }
