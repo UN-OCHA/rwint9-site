@@ -4,5 +4,6 @@ status: true
 dependencies: {  }
 name: 'Job type'
 vid: job_type
-description: ''
+description: null
 weight: 0
+new_revision: false

@@ -5,7 +5,7 @@ dependencies: {  }
 machine: dev
 description: null
 name: Dev
-weight: ''
+weight: null
 url: ''
 fg_color: '#ffffff'
 bg_color: '#db7b18'
