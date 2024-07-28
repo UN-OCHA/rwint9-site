@@ -1,1 +1,2 @@
 use_es: true
+use_vector: true
