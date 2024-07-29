@@ -1,0 +1,6 @@
+services:
+  reliefweb_semantic.commands:
+    class: \Drupal\reliefweb_semantic\Commands\ReliefWebSemanticCommands
+    arguments: ['@config.factory', '@entity_field.manager', '@entity_type.manager', '@module_handler', '@state', '@http_client']
+    tags:
+      - { name: drush.command }
