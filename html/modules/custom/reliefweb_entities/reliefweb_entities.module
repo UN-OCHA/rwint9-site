@@ -5,6 +5,8 @@
  * Entity management for ReliefWeb.
  */
 
+use Drupal\block\Entity\Block;
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Entity\EntityInterface;
@@ -14,6 +16,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\media\MediaInterface;
 use Drupal\reliefweb_entities\BundleEntityInterface;
 use Drupal\reliefweb_entities\BundleEntityStorageInterface;
@@ -905,4 +908,31 @@ function reliefweb_entities_form_ocha_ai_chat_chat_form_alter(array &$form, Form
       }
     }
   }
+}
+
+/**
+ * Implements hook_block_access().
+ */
+function reliefweb_entities_block_access(Block $block, $operation, AccountInterface $account) {
+  // Disable the AI chat on map, infographic and interactive content since they
+  // don't have much content that can be used by the AI.
+  if ($operation === 'view' && $block->getPluginId() === 'ocha_ai_chat_chat_popup') {
+    $router = \Drupal::service('router.no_access_checks');
+    try {
+      $parameters = $router->matchRequest(\Drupal::request());
+    }
+    catch (\Exception $exception) {
+      return AccessResult::forbidden();
+    }
+
+    $node = $parameters['node'] ?? NULL;
+
+    if (isset($node) && $node instanceof Report) {
+      if (in_array($node->field_content_format->target_id, [12, 12570, 38974])) {
+        return AccessResult::forbidden();
+      }
+    }
+  }
+  // No opinion.
+  return AccessResult::neutral();
 }

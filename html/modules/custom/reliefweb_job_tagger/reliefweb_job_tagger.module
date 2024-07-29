@@ -5,6 +5,7 @@
  * OCHA AI Job tagging.
  */
 
+use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\node\Entity\Node;
@@ -219,12 +220,28 @@ function reliefweb_job_tagger_node_presave(EntityInterface $node) {
   }
 
   // Skip queued and processed nodes.
-  if ($node->hasField('reliefweb_job_tagger_status')) {
-    reliefweb_job_tagger_log_manual_changes_to_tagging($node);
+  if (!$node->hasField('reliefweb_job_tagger_status')) {
+    return;
+  }
 
-    if ($node->reliefweb_job_tagger_status->value == 'queued' || $node->reliefweb_job_tagger_status->value == 'processed') {
-      return;
-    }
+  // Track changes to AI fields.
+  reliefweb_job_tagger_log_manual_changes_to_tagging($node);
+
+  // Already queued, nothing left to do.
+  if ($node->reliefweb_job_tagger_status->value == 'queued' || $node->reliefweb_job_tagger_status->value == 'processed') {
+    return;
+  }
+
+  // Skipped, nothing to do.
+  if ($node->reliefweb_job_tagger_status->value == 'skipped') {
+    return;
+  }
+
+  // If queue it was queued on previous save.
+  if ($node->reliefweb_job_tagger_status->value == 'queue') {
+    // Mark it as queued.
+    $node->set('reliefweb_job_tagger_status', 'queued');
+    return;
   }
 
   if ($node->moderation_status->value != 'pending') {
@@ -253,11 +270,45 @@ function reliefweb_job_tagger_node_presave(EntityInterface $node) {
 
   // Queue node when status is empty.
   if ($node->reliefweb_job_tagger_status->isEmpty()) {
-    $node->set('reliefweb_job_tagger_status', 'queued');
+    $node->set('reliefweb_job_tagger_status', 'queue');
 
     $log_message = $node->getRevisionLogMessage();
     $log_message .= (empty($log_message) ? '' : ' ') . 'Job has been queued for tagging.';
     $node->setRevisionLogMessage($log_message);
+  }
+}
+
+/**
+ * Implements hook_menu_local_tasks_alter().
+ */
+function reliefweb_job_tagger_menu_local_tasks_alter(&$data, $route_name, RefinableCacheableDependencyInterface &$cacheability) {
+  if (!isset($data['tabs'][0]['reliefweb_job_tagger.requeue'])) {
+    return;
+  }
+
+  if ($route_name !== 'entity.node.canonical') {
+    $data['tabs'][0]['reliefweb_job_tagger.requeue']['#access'] = FALSE;
+    return;
+  }
+
+  /** @var \Drupal\node\Entity\Node $node */
+  $node = \Drupal::routeMatch()->getParameter('node');
+
+  if ($node->bundle() != 'job') {
+    $data['tabs'][0]['reliefweb_job_tagger.requeue']['#access'] = FALSE;
+    return;
+  }
+
+  if ($node->reliefweb_job_tagger_status->value != 'skipped') {
+    $data['tabs'][0]['reliefweb_job_tagger.requeue']['#access'] = FALSE;
+    return;
+  }
+
+  // Check permissions.
+  $user = \Drupal::currentUser();
+  if (!$user->hasPermission('ocha ai job tag requeue job')) {
+    $data['tabs'][0]['reliefweb_job_tagger.requeue']['#access'] = FALSE;
+    return;
   }
 }
 
@@ -318,14 +369,19 @@ function reliefweb_job_tagger_entity_after_save(EntityInterface $entity) {
   }
 
   $entity_type_id = $entity->getEntityTypeId();
-
   if ($entity_type_id !== 'node') {
     return;
   }
 
   /** @var \Drupal\node\Entity\Node $entity */
-  if ($entity->hasField('reliefweb_job_tagger_status') && $entity->get('reliefweb_job_tagger_status')->value == 'queued') {
+  if ($entity->hasField('reliefweb_job_tagger_status') && $entity->get('reliefweb_job_tagger_status')->value == 'queue') {
     reliefweb_job_tagger_queue_job($entity);
+    return;
+  }
+
+  if ($entity->bundle() == 'job' && $entity->isPublished()) {
+    // Embed vector.
+    reliefweb_job_tagger_index_embedding($entity->id());
   }
 }
 
@@ -339,4 +395,13 @@ function reliefweb_job_tagger_queue_job(Node $job) : void {
   $item = new \stdClass();
   $item->nid = $job->id();
   $queue->createItem($item);
+}
+
+/**
+ * Index embedding for a job.
+ */
+function reliefweb_job_tagger_index_embedding($nid) {
+  /** @var \Drupal\ocha_ai_tag\Services\OchaAiTagTagger $jobTagger */
+  $jobTagger = \Drupal::service('ocha_ai_tag.tagger');
+  $jobTagger->embedDocument($nid);
 }
