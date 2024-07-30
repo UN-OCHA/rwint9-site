@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\node\Entity\Node;
@@ -381,7 +382,7 @@ function reliefweb_job_tagger_entity_after_save(EntityInterface $entity) {
 
   if ($entity->bundle() == 'job' && $entity->isPublished()) {
     // Embed vector.
-    reliefweb_job_tagger_index_embedding($entity->id());
+    reliefweb_job_tagger_index_embedding($entity);
   }
 }
 
@@ -400,8 +401,24 @@ function reliefweb_job_tagger_queue_job(Node $job) : void {
 /**
  * Index embedding for a job.
  */
-function reliefweb_job_tagger_index_embedding($nid) {
-  /** @var \Drupal\ocha_ai_tag\Services\OchaAiTagTagger $jobTagger */
+function reliefweb_job_tagger_index_embedding(ContentEntityInterface $node) {
+  $entity_type_id = $node->getEntityTypeId();
+  if ($entity_type_id !== 'node') {
+    return;
+  }
+
+  $data = [
+    'id' => $node->id(),
+    'title' => $node->get('title')->value,
+    'url' => $node->toUrl('canonical')->setAbsolute()->toString(),
+    'contents' => [
+      'body' => [
+        'type' => 'markdown',
+        'content' => $node->get('body')->value,
+      ],
+    ],
+  ];
+
   $jobTagger = \Drupal::service('ocha_ai_tag.tagger');
-  $jobTagger->embedDocument($nid);
+  $jobTagger->embedDocument($node->id(), $data);
 }
