@@ -393,7 +393,8 @@ class ReliefWebSemanticCommands extends DrushCommands {
     $payload[] = json_encode($data);
     $payload = implode("\n", $payload) . "\n";
 
-    $response = $this->request('POST', $index . '/_bulk?refresh=true', $payload, 'application/x-ndjson');
+    // Send to AWS API.
+    $response = $this->request('POST', $index, $payload, 'application/x-ndjson');
 
     if (is_null($response)) {
       return FALSE;
@@ -401,14 +402,14 @@ class ReliefWebSemanticCommands extends DrushCommands {
   }
 
   /**
-   * Perform a request against the elasticsearch cluster.
+   * Perform a request against the AWS API.
    *
    * @param string $method
    *   Request method.
    * @param string $endpoint
    *   Request endpoint.
    * @param mixed|null $payload
-   *   Optional payload (will be converted to JSON if not content type is
+   *   Optional payload (will be converted to JSON if no content type is
    *   provided).
    * @param string|null $content_type
    *   Optional content type of the payload. If not defined it is assumed to be
