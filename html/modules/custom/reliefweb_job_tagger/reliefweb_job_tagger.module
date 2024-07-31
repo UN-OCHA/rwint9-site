@@ -414,7 +414,7 @@ function reliefweb_job_tagger_index_embedding(ContentEntityInterface $node) {
     'contents' => [
       'body' => [
         'type' => 'markdown',
-        'content' => $node->get('body')->value,
+        'content' => $node->get('title')->value . "\n\n" . $node->get('body')->value,
       ],
     ],
   ];
