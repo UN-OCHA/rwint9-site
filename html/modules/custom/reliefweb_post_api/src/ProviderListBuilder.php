@@ -22,6 +22,7 @@ class ProviderListBuilder extends EntityListBuilder {
     $header['resource_status'] = $this->t('Default status');
     $header['source'] = $this->t('Sources');
     $header['status'] = $this->t('Active');
+    $header['skip_queue'] = $this->t('Skip queue');
     return $header + parent::buildHeader();
   }
 
@@ -62,6 +63,14 @@ class ProviderListBuilder extends EntityListBuilder {
     ];
 
     $row['status']['data'] = $entity->status->view([
+      'label' => 'hidden',
+      'format' => 'yes-no',
+      'settings' => [
+        'format' => 'yes-no',
+      ],
+    ]);
+
+    $row['skip_queue']['data'] = $entity->field_skip_queue->view([
       'label' => 'hidden',
       'format' => 'yes-no',
       'settings' => [

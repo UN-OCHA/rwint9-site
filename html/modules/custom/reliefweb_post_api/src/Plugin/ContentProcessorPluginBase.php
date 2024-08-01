@@ -24,6 +24,7 @@ use Drupal\file\Validation\FileValidatorInterface;
 use Drupal\media\MediaInterface;
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile;
 use Drupal\reliefweb_post_api\Entity\ProviderInterface;
+use Drupal\reliefweb_post_api\Helpers\UrlHelper;
 use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use GuzzleHttp\ClientInterface;
@@ -265,6 +266,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     $this->validateUuid($data);
     $this->validateSources($data);
     $this->validateUrls($data);
+    $this->validateFiles($data);
   }
 
   /**
@@ -296,6 +298,9 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     elseif (!Uuid::isValid($data['uuid'])) {
       throw new ContentProcessorException('Invalid document UUID.');
     }
+    // @todo if we want to allow providers to edit existing ReliefWeb content
+    // then we cannot do this comparison because the UUID is not generated this
+    // way and is not derived from the document URL.
     elseif ($this->generateUuid($data['url']) !== $data['uuid']) {
       throw new ContentProcessorException('The UUID does not match the one generated from the URL.');
     }
@@ -308,10 +313,14 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     $provider = $this->getProvider($data['provider'] ?? '');
     $sources = $provider->getAllowedSources() ?? [];
     // Empty allowed sources means any source is allowed.
+    // @todo review the logic here or in the UI because currently the source
+    // field is mandatory.
     if (empty($sources)) {
       return;
     }
 
+    // @todo for existing documents we may want to check that the document
+    // source is among the allowed sources.
     // Check if any of the given sources is not in the list of allowed ones.
     if (empty($data['source']) || count(array_diff($data['source'], $sources)) > 0) {
       throw new ContentProcessorException('Unallowed source(s)');
@@ -339,6 +348,12 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   public function validateUrl(string $url, string $pattern): bool {
     // An empty pattern means any URL is ok.
     return empty($pattern) || preg_match($pattern, $url) === 1;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateFiles(array $data): void {
   }
 
   /**
@@ -808,7 +823,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     $max_size = !empty($max_size) ? Bytes::toNumber($max_size) : Environment::getUploadMaxSize();
 
     try {
-      $response = $this->httpClient->get($url, [
+      $response = $this->httpClient->get(UrlHelper::replaceBaseUrl($url), [
         'stream' => TRUE,
         // @todo retrieve that from the configuration.
         'connect_timeout' => 30,

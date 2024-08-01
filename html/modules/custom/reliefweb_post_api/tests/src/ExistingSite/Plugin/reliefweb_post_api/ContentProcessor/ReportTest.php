@@ -158,29 +158,29 @@ class ReportTest extends ContentProcessorPluginBaseTest {
   }
 
   /**
-   * @covers ::validateUrls
+   * @covers ::validateFiles
    */
-  public function testValidateUrlsUnallowedImageUrl(): void {
+  public function testValidateFilesUnallowedImageUrl(): void {
     $data = $this->getPostApiData();
     $data['image']['url'] = 'https://wrong.test/test.jpg';
 
     // Unallowed image URL.
     $this->expectException(ContentProcessorException::class);
     $this->expectExceptionMessage('Unallowed image URL');
-    $this->plugin->validateUrls($data);
+    $this->plugin->validateFiles($data);
   }
 
   /**
-   * @covers ::validateUrls
+   * @covers ::validateFiles
    */
-  public function testValidateUrlsUnallowedFileUrl(): void {
+  public function testValidateFilesUnallowedFileUrl(): void {
     $data = $this->getPostApiData();
     $data['file'][0]['url'] = 'https://wrong.test/test.pdf';
 
     // Unallowed file URL.
     $this->expectException(ContentProcessorException::class);
     $this->expectExceptionMessage('Unallowed file URL');
-    $this->plugin->validateUrls($data);
+    $this->plugin->validateFiles($data);
   }
 
 }

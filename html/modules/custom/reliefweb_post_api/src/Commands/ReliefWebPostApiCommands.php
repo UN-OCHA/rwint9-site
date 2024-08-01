@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\reliefweb_post_api\Commands;
 
-use Drupal\Core\Queue\QueueFactory;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
+use Drupal\reliefweb_post_api\Queue\ReliefWebPostApiDatabaseQueueFactory;
 use Drush\Commands\DrushCommands;
 
 /**
@@ -14,10 +14,15 @@ use Drush\Commands\DrushCommands;
 class ReliefWebPostApiCommands extends DrushCommands {
 
   /**
-   * {@inheritdoc}
+   * Constructor.
+   *
+   * @param \Drupal\reliefweb_post_api\Queue\ReliefWebPostApiDatabaseQueueFactory $queueFactory
+   *   The ReliefWeb POST API queue factory.
+   * @param \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface $contentProcessorPluginManager
+   *   The ReliefWeb POST API content processor plugin manager.
    */
   public function __construct(
-    protected QueueFactory $queueFactory,
+    protected ReliefWebPostApiDatabaseQueueFactory $queueFactory,
     protected ContentProcessorPluginManagerInterface $contentProcessorPluginManager,
   ) {}
 
