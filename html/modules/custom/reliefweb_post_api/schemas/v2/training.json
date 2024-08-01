@@ -298,5 +298,5 @@
         "body",
         "how_to_register"
     ],
-    "additionalProperties": false
+    "unevaluatedProperties": false
 }

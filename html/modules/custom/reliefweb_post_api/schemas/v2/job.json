@@ -166,5 +166,5 @@
         "body",
         "how_to_apply"
     ],
-    "additionalProperties": false
+    "unevaluatedProperties": false
 }
