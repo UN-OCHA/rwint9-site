@@ -157,6 +157,10 @@ class ReliefWebPostApi extends ControllerBase {
         throw new BadRequestHttpException('Invalid JSON body.');
       }
 
+      if (isset($data['uuid']) && $data['uuid'] !== $uuid) {
+        throw new BadRequestHttpException('Document UUID mistmatch.');
+      }
+
       // Add the UUID if not already in the payload.
       $data['uuid'] = $data['uuid'] ?? $uuid;
 

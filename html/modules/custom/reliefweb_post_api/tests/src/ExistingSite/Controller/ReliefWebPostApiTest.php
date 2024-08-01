@@ -448,6 +448,25 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   /**
    * @covers ::postContent
    */
+  public function testPostContentDocumentUuidMismatch(): void {
+    $request = $this->createMockRequest(methods: [
+      'getContent' => '{"uuid": "78c21042-4fcd-11ef-8393-325096b39f47"}',
+    ]);
+
+    $request_stack = $this->createMockRequestStack($request);
+
+    $controller = $this->createTestController([
+      'request_stack' => $request_stack,
+    ]);
+
+    $response = $controller->postContent('reports', $this->getTestUuid());
+    $this->assertSame(400, $response->getStatusCode());
+    $this->assertStringContainsString('Document UUID mistmatch.', $response->getContent());
+  }
+
+  /**
+   * @covers ::postContent
+   */
   public function testPostContentQueueException(): void {
     $request = $this->createMockRequest();
 
