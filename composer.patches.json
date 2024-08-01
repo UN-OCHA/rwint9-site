@@ -16,6 +16,9 @@
             "Fix derivatives for webp source images": "PATCHES/imageapi_optimize_webp-webp-source-image.patch",
             "Support imagemagick toolkit": "PATCHES/imageapi_optimize_webp-imagemagick-toolkit.patch"
         },
+        "drupal/jsonlog": {
+            "Direct logging to Elastic cluster": "PATCHES/jsonlog--3460929--elastic-direct-logging.patch"
+        },
         "drupal/svg_image": {
             "Drupal 10.2 compatibility": "PATCHES/svg_image--3413668--drupal-10.2-compatibility.patch"
         },

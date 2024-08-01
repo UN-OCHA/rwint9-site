@@ -4,7 +4,8 @@ allowed_social_media_links:
   instagram: 'Instagram'
   medium: 'Medium'
   linkedin: 'LinkedIn'
-  twitter: 'Twitter'
+  twitter: 'X'
+  x: 'X'
   youtube: 'YouTube'
 # Entity related cron task settings.
 cron:

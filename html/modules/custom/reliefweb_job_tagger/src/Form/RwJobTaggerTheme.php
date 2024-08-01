@@ -5,6 +5,7 @@ namespace Drupal\reliefweb_job_tagger\Form;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\node\NodeInterface;
 use Drupal\ocha_ai_tag\Services\OchaAiTagTagger;
 use GuzzleHttp\ClientInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -12,7 +13,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Chat form for the Ocha AI Chat module.
  */
-class RwJobTagger extends FormBase {
+class RwJobTaggerTheme extends FormBase {
 
   /**
    * {@inheritdoc}
@@ -39,7 +40,7 @@ class RwJobTagger extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, ?bool $popup = NULL): array {
     $intro = [
-      'On this page you can test how the AI Job Tagger will classify jobs, based on the key phrases defined for each career category.',
+      'On this page you can test how the AI Job Tagger will classify jobs, based on the key phrases defined for each theme.',
       '',
       '## Steps',
       '1. Select one or more URL\s',
@@ -61,9 +62,11 @@ class RwJobTagger extends FormBase {
         '#type' => 'table',
         '#header' => [
           $this->t('Url'),
-          $this->t('Career category'),
+          $this->t('Theme'),
           $this->t('Feedback (AI)'),
           $this->t('Feedback (ES)'),
+          $this->t('Feedback (Vector)'),
+          $this->t('Product'),
           $this->t('Info'),
         ],
       ];
@@ -73,8 +76,8 @@ class RwJobTagger extends FormBase {
           '#markup' => $url,
         ];
 
-        $form['feedback'][$url]['category'] = [
-          '#markup' => $data['category'],
+        $form['feedback'][$url]['theme'] = [
+          '#markup' => $data['theme'],
         ];
 
         $form['feedback'][$url]['feedback'] = [
@@ -86,6 +89,18 @@ class RwJobTagger extends FormBase {
         $form['feedback'][$url]['es_feedback'] = [
           '#type' => 'processed_text',
           '#text' => $data['es_feedback'],
+          '#format' => 'markdown',
+        ];
+
+        $form['feedback'][$url]['vector_feedback'] = [
+          '#type' => 'processed_text',
+          '#text' => $data['vector_feedback'],
+          '#format' => 'markdown',
+        ];
+
+        $form['feedback'][$url]['product'] = [
+          '#type' => 'processed_text',
+          '#text' => $data['product'],
           '#format' => 'markdown',
         ];
 
@@ -107,7 +122,7 @@ class RwJobTagger extends FormBase {
     $form['definitions'] = [
       '#type' => 'table',
       '#header' => [
-        $this->t('Career category'),
+        $this->t('Theme'),
         $this->t('Key phrases'),
       ],
     ];
@@ -116,7 +131,7 @@ class RwJobTagger extends FormBase {
     if (empty($definitions)) {
       $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadByProperties([
         'status' => 1,
-        'vid' => 'career_category',
+        'vid' => 'theme',
       ]);
 
       /** @var \Drupal\taxonomy\Entity\Term $term */
@@ -150,6 +165,12 @@ class RwJobTagger extends FormBase {
       ];
     }
 
+    $form['reset_cache'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Reset cache'),
+      '#default_value' => FALSE,
+    ];
+
     $form['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Analyze jobs'),
@@ -163,12 +184,15 @@ class RwJobTagger extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     $api_fields = [
-      'career_categories' => 'career_category',
+      'theme' => 'theme',
     ];
 
     $definitions = $form_state->getValue('definitions', []);
     $form_state->set('definitions', $definitions);
-    $this->setTermMapping($definitions);
+
+    if ($form_state->getValue('reset_cache', FALSE)) {
+      $this->setTermMapping($definitions);
+    }
 
     $results = [];
     $urls = $form_state->getValue('urls', '');
@@ -181,7 +205,7 @@ class RwJobTagger extends FormBase {
 
       if (!isset($parts[2]) || !is_numeric($parts[2])) {
         $results[$url] = [
-          'category' => '',
+          'theme' => '',
           'feedback' => 'Skipped, use URL like https://reliefweb.int/job/4064890/country-director-haiti',
         ];
         continue;
@@ -192,7 +216,7 @@ class RwJobTagger extends FormBase {
       $node = $this->entityTypeManager->getStorage('node')->load($nid);
       if (!$node) {
         $results[$url] = [
-          'category' => '',
+          'theme' => '',
           'feedback' => 'Skipped, unable to load',
         ];
         continue;
@@ -201,15 +225,20 @@ class RwJobTagger extends FormBase {
       $info = [];
 
       // Get field data.
-      $categories = $node->get('field_career_categories')->referencedEntities();
-      $category = '';
+      $categories = $node->get('field_theme')->referencedEntities();
+      $theme = '';
       if ($categories) {
-        $category = $categories[0]->label();
+        $theme = $categories[0]->label();
       }
 
       // Get ES feedback.
-      $es = $this->getMostRelevantTermsFromEs('jobs', $node->id(), $api_fields, 50);
-      $es = $es['career_category'] ?? [];
+      // Doc isn't indexed yet.
+      $es = $this->getMostRelevantTermsFromEs('jobs', [
+        'id' => $node->id(),
+        'title' => $node->getTitle(),
+        'body' => $node->body->value,
+      ], $api_fields, 50);
+      $es = $es['theme'] ?? [];
 
       $es_first = '';
       $ai_first = '';
@@ -227,6 +256,11 @@ class RwJobTagger extends FormBase {
         }
       }
 
+      // Do vector search on ES.
+      $similar_feedback = '';
+      $similar = $this->getSimilarJobs($node);
+      $similar_feedback = $this->setAiFeedback($similar);
+
       // Get AI feedback.
       $text = $node->getTitle() . "\n\n" . $node->get('body')->value;
       $ai = $this->processDoc($text, $definitions);
@@ -236,23 +270,23 @@ class RwJobTagger extends FormBase {
         $info[] = '- AI and ES agree';
       }
 
-      $intersect = array_intersect_key($es, $ai);
-      if (!empty($intersect)) {
-        // Multiple confidence levels.
-        $mult = [];
-        foreach (array_keys($ai) as $key) {
-          if (array_key_exists($key, $es)) {
-            $mult[$key] = $ai[$key] * $es[$key] * 100;
-          }
-        }
-        arsort($mult);
-        $info[] = '- First in common: ' . array_key_first($mult);
+      $mult = [];
+      // Multiple confidence levels, if not defined fall back to 20%.
+      foreach (array_keys($ai) as $key) {
+        $mult[$key] = $ai[$key] * ($es[$key] ?? .2);
+        $mult[$key] = $ai[$key] * ($similar[$key] ?? .2);
       }
 
+      // Sort reversed and select first.
+      arsort($mult);
+      $info[] = '- First in common: ' . array_key_first($mult);
+
       $results[$url] = [
-        'category' => $category,
+        'theme' => $theme,
         'feedback' => $this->setAiFeedback($ai, 10),
         'es_feedback' => $es_feedback,
+        'vector_feedback' => $similar_feedback,
+        'product' => $this->setAiFeedback($mult),
         'info' => implode("\n", $info),
       ];
     }
@@ -265,7 +299,7 @@ class RwJobTagger extends FormBase {
    * {@inheritdoc}
    */
   public function getFormId(): string {
-    return 'rw_job_tagger';
+    return 'rw_job_tagger_theme';
   }
 
   /**
@@ -273,11 +307,11 @@ class RwJobTagger extends FormBase {
    */
   protected function setTermMapping(array $definitions) : void {
     $mapping = [
-      'career_category' => [],
+      'theme' => [],
     ];
 
     foreach ($definitions as $definition) {
-      $mapping['career_category'][$definition['name']] = $definition['definition'];
+      $mapping['theme'][$definition['name']] = $definition['definition'];
     }
 
     $term_cache_tags = [];
@@ -296,7 +330,7 @@ class RwJobTagger extends FormBase {
 
     $data = $data[OchaAiTagTagger::AVERAGE_FULL_AVERAGE][OchaAiTagTagger::CALCULATION_METHOD_MEAN_WITH_CUTOFF];
 
-    return $data['career_category'] ?? [];
+    return $data['theme'] ?? [];
   }
 
   /**
@@ -515,6 +549,43 @@ class RwJobTagger extends FormBase {
     }
 
     return $vocabularies;
+  }
+
+  /**
+   * Get similar jobs.
+   */
+  protected function getSimilarJobs(NodeInterface $node) {
+    $nid = $node->id();
+    $relevant = $this->ochaTagger->getSimilarDocuments($nid, $node->get('body')->value);
+    if (empty($relevant)) {
+      return [];
+    }
+
+    $max = reset($relevant);
+
+    /** @var \Drupal\node\Entity\Node[] $nodes */
+    $nodes = $this->entityTypeManager->getStorage('node')->loadMultiple(array_keys($relevant));
+
+    if (isset($nodes[$nid])) {
+      unset($nodes[$nid]);
+    }
+
+    $categories = [];
+    foreach ($nodes as $node) {
+      if ($node->hasField('field_theme') && !$node->get('field_theme')->isEmpty()) {
+        if (!isset($categories[$node->get('field_theme')->entity->label()])) {
+          $categories[$node->get('field_theme')->entity->label()] = ($relevant[$node->id()] ?? .1) / $max;
+        }
+        else {
+          $categories[$node->get('field_theme')->entity->label()] *= ($relevant[$node->id()] ?? .1) / $max;
+        }
+      }
+    }
+
+    // Sort reversed by count.
+    arsort($categories);
+
+    return $categories;
   }
 
 }

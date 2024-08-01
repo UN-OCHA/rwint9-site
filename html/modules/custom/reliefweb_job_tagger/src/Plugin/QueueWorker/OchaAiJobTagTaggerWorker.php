@@ -8,6 +8,8 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
+use Drupal\Core\Queue\SuspendQueueException;
+use Drupal\node\NodeInterface;
 use Drupal\ocha_ai_tag\Services\OchaAiTagTagger;
 use GuzzleHttp\ClientInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -114,28 +116,46 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
       return;
     }
 
-    if ($node->hasField('reliefweb_job_tagger_status') && $node->reliefweb_job_tagger_status->value == 'processed') {
+    if (!$node->hasField('reliefweb_job_tagger_status')) {
+      $this->logger->warning('Node @nid is missing a mandatory field, skipping', ['@nid' => $nid]);
+      return;
+    }
+
+    // Skip processed jobs.
+    if ($node->reliefweb_job_tagger_status->value == 'processed') {
       $this->logger->warning('Node @nid already processed, skipping', ['@nid' => $nid]);
       return;
     }
 
+    // Skip skipped jobs.
+    if ($node->reliefweb_job_tagger_status->value == 'skipped') {
+      $this->logger->warning('Node @nid is skipped, skipping', ['@nid' => $nid]);
+      return;
+    }
+
+    // On initial save item is marked as "queue", change it to "queued".
+    if ($node->reliefweb_job_tagger_status->value == 'queue') {
+      $node->set('reliefweb_job_tagger_status', 'queued');
+      $node->save();
+    }
+
     if ($node->body->isEmpty()) {
       $this->logger->warning('No body text present for node @nid, skipping', ['@nid' => $nid]);
-      return;
+      return $this->setJobStatusPermanent($node, 'No body text present, AI skipped');
     }
 
     // Only process it when fields are empty.
     if (!$node->field_career_categories->isEmpty()) {
       $this->logger->warning('Category already specified for node @nid, skipping', ['@nid' => $nid]);
-      return;
+      return $this->setJobStatusPermanent($node, 'Category already specified, AI skipped');
     }
 
     if (!$node->field_theme->isEmpty()) {
       $this->logger->warning('Theme(s) already specified for node @nid, skipping', ['@nid' => $nid]);
-      return;
+      return $this->setJobStatusPermanent($node, 'Theme(s) already specified, AI skipped');
     }
 
-    // Load vocabularies.
+    // Load vocabularies for AI.
     $mapping = [];
     $term_cache_tags = [];
     $vocabularies = [
@@ -160,9 +180,24 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
       }
     }
 
+    // Arrays to hold all data.
+    $ai_data = [
+      'career_category' => [],
+      'theme' => [],
+    ];
+    $es_data = [
+      'career_category' => [],
+      'theme' => [],
+    ];
+    $vector_data = [
+      'career_category' => [],
+      'theme' => [],
+    ];
+
+    // Ask AI for theme and career category.
     $text = $node->getTitle() . "\n\n" . $node->get('body')->value;
     try {
-      $data = $this->jobTagger
+      $ai_data = $this->jobTagger
         ->setVocabularies($mapping, $term_cache_tags)
         ->tag($text, [OchaAiTagTagger::CALCULATION_METHOD_MEAN_WITH_CUTOFF], OchaAiTagTagger::AVERAGE_FULL_AVERAGE);
     }
@@ -171,75 +206,138 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
         '@nid' => $nid,
         '@error' => strtr($exception->getMessage(), "\n", " "),
       ]);
-      return;
+
+      return $this->setJobStatusTemporary($node, 'AI tagging failed, AI skipped');
     }
 
-    if (empty($data)) {
+    if (empty($ai_data)) {
       $this->logger->error('No data received from AI for node @nid', ['@nid' => $nid]);
-      return;
+      return $this->setJobStatusTemporary($node, 'AI tagging failed, AI skipped');
     }
 
-    if (!isset($data[OchaAiTagTagger::AVERAGE_FULL_AVERAGE][OchaAiTagTagger::CALCULATION_METHOD_MEAN_WITH_CUTOFF])) {
+    if (!isset($ai_data[OchaAiTagTagger::AVERAGE_FULL_AVERAGE][OchaAiTagTagger::CALCULATION_METHOD_MEAN_WITH_CUTOFF])) {
       $this->logger->error('Data "average mean with cutoff" missing from AI for node @nid', ['@nid' => $nid]);
-      return;
+      return $this->setJobStatusTemporary($node, 'AI tagging failed, AI skipped');
     }
 
     // Use average mean with cutoff.
-    $data = $data[OchaAiTagTagger::AVERAGE_FULL_AVERAGE][OchaAiTagTagger::CALCULATION_METHOD_MEAN_WITH_CUTOFF];
+    $ai_data = $ai_data[OchaAiTagTagger::AVERAGE_FULL_AVERAGE][OchaAiTagTagger::CALCULATION_METHOD_MEAN_WITH_CUTOFF];
+
+    // Do a similarity search on Elastic.
+    $use_es = $this->configFactory->get('reliefweb_job_tagger.settings')->get('use_es', FALSE);
+    if ($use_es) {
+      // Get ES feedback.
+      $api_fields = [
+        'career_categories' => 'career_category',
+        'theme' => 'theme',
+      ];
+      // Doc isn't indexed yet.
+      $es_data = $this->getMostRelevantTermsFromEs('jobs', [
+        'id' => $node->id(),
+        'title' => $node->getTitle(),
+        'body' => $node->body->value,
+      ], $api_fields, 50);
+    }
+
+    // Do a vector search on Elastic.
+    $use_vector = $this->configFactory->get('reliefweb_job_tagger.settings')->get('use_vector', FALSE);
+    if ($use_vector) {
+      $vector_data = [
+        'career_category' => $this->getSimilarJobs($node, 'field_career_categories'),
+        'theme' => $this->getSimilarJobs($node, 'field_theme'),
+      ];
+    }
+
     $message = [];
     $needs_save = FALSE;
 
-    if (isset($data['career_category']) && $node->field_career_categories->isEmpty()) {
-      $ai_term = $this->getRelevantTerm('career_category', $data['career_category'], 1);
-      $message[] = $this->setAiFeedback('Career category (AI)', $data['career_category'], [$ai_term]);
+    if ($node->field_career_categories->isEmpty()) {
+      if (!empty($ai_data['career_category'] ?? [])) {
+        $terms = $this->getRelevantTerm('career_category', $ai_data['career_category'], 1);
+        $message[] = $this->setAiFeedback('Career category (AI)', $ai_data['career_category'], $terms);
+      }
 
-      $node->set('field_career_categories', $ai_term);
-      $needs_save = TRUE;
+      if (!empty($es_data['career_category'] ?? [])) {
+        $terms = $this->getRelevantTerm('career_category', $es_data['career_category'], 1);
+        $message[] = $this->setAiFeedback('Career category (ES)', $es_data['career_category'], $terms);
+      }
 
-      $use_es = $this->configFactory->get('reliefweb_job_tagger.settings')->get('use_es', FALSE);
-      if ($use_es) {
-        // Get ES feedback.
-        $api_fields = [
-          'career_categories' => 'career_category',
-        ];
-        $es = $this->getMostRelevantTermsFromEs('jobs', $node->id(), $api_fields, 50);
-        $es = $es['career_category'] ?? [];
+      if (!empty($vector_data['career_category'] ?? [])) {
+        $terms = $this->getRelevantTerm('career_category', $vector_data['career_category'], 1);
+        $message[] = $this->setAiFeedback('Career category (Vector)', $vector_data['career_category'], $terms);
+      }
 
-        $es_term = $this->getRelevantTerm('career_category', $es, 1);
-        $message[] = $this->setAiFeedback('Career category (ES)', $es, [$es_term]);
+      $mult = [];
 
-        // Combine both AI and ES. This gives, most of the time, a more accurate
-        // result.
-        $ai = $data['career_category'];
-        $intersect = array_intersect_key($es, $ai);
-        if (!empty($intersect)) {
-          // Multiple confidence levels.
-          $mult = [];
-          foreach (array_keys($ai) as $key) {
-            if (array_key_exists($key, $es)) {
-              $mult[$key] = $ai[$key] * $es[$key];
-            }
-          }
-          arsort($mult);
+      // Get all array keys.
+      $keys = array_merge(
+        array_keys($ai_data['career_category'] ?? []),
+        array_keys($es_data['career_category'] ?? []),
+        array_keys($vector_data['career_category'] ?? []),
+      );
 
-          $mult_term = $this->getRelevantTerm('career_category', $mult, 1);
-          array_unshift($message, $this->setAiFeedback('Career category', $mult, [$mult_term]));
-
-          $node->set('field_career_categories', $mult_term);
-          $needs_save = TRUE;
+      // Multiple confidence levels, if not defined fall back to 20%.
+      foreach ($keys as $key) {
+        $mult[$key] = ($ai_data[$key] ?? .1);
+        if ($use_es) {
+          $mult[$key] *= ($es_data[$key] ?? .2);
         }
-        // Use the results of the AI only if there are no results from ES so
-        // that there is at least consistent feedback (the 3 sections) for the
-        // editors.
-        else {
-          array_unshift($message, $this->setAiFeedback('Career category', $ai, [$ai_term]));
+        if ($use_vector) {
+          $mult[$key] *= ($vector_data[$key] ?? .2);
         }
       }
+
+      // Sort reversed and select first.
+      arsort($mult);
+
+      $terms = $this->getRelevantTerm('career_category', $mult, 1);
+      $message[] = $this->setAiFeedback('Career category', $mult, $terms);
+
+      $node->set('field_career_categories', $terms);
+      $needs_save = TRUE;
     }
 
-    if (isset($data['theme']) && $node->field_theme->isEmpty()) {
-      $terms = $this->getRelevantTerm('theme', $data['theme'], 3);
-      $message[] = $this->setAiFeedback('Theme(s)', $data['theme'], $terms);
+    if ($node->field_theme->isEmpty()) {
+      if (!empty($ai_data['theme'] ?? [])) {
+        $terms = $this->getRelevantTerm('theme', $ai_data['theme'], 3);
+        $message[] = $this->setAiFeedback('Themes (AI)', $ai_data['theme'], $terms);
+      }
+
+      if (!empty($es_data['theme'] ?? [])) {
+        $terms = $this->getRelevantTerm('theme', $es_data['theme'], 3);
+        $message[] = $this->setAiFeedback('Themes (ES)', $es_data['theme'], $terms);
+      }
+
+      if (!empty($vector_data['theme'] ?? [])) {
+        $terms = $this->getRelevantTerm('theme', $vector_data['theme'], 3);
+        $message[] = $this->setAiFeedback('Themes (Vector)', $vector_data['theme'], $terms);
+      }
+
+      $mult = [];
+
+      // Get all array keys.
+      $keys = array_merge(
+        array_keys($ai_data['theme'] ?? []),
+        array_keys($es_data['theme'] ?? []),
+        array_keys($vector_data['theme'] ?? []),
+      );
+
+      // Multiple confidence levels, if not defined fall back to 20%.
+      foreach ($keys as $key) {
+        $mult[$key] = ($ai_data[$key] ?? .1);
+        if ($use_es) {
+          $mult[$key] *= ($es_data[$key] ?? .2);
+        }
+        if ($use_vector) {
+          $mult[$key] *= ($vector_data[$key] ?? .2);
+        }
+      }
+
+      // Sort reversed and select first.
+      arsort($mult);
+
+      $terms = $this->getRelevantTerm('theme', $mult, 3);
+      $message[] = $this->setAiFeedback('Themes', $mult, $terms);
 
       $node->set('field_theme', $terms);
       $needs_save = TRUE;
@@ -265,7 +363,7 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
   /**
    * Get top 3 relevant terms.
    */
-  protected function getTopNumTerms($terms, $limit) {
+  protected function getTopNumTerms($terms, $limit) : array {
     $result = [];
 
     $terms = array_slice($terms, 0, $limit, TRUE);
@@ -289,7 +387,7 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
   /**
    * Get relevant terms.
    */
-  protected function getRelevantTerm($vocabulary, $data, $limit) {
+  protected function getRelevantTerm(string $vocabulary, array $data, int $limit = 5) : array {
     if (empty($data)) {
       return $limit === 1 ? NULL : [];
     }
@@ -303,13 +401,13 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
       'vid' => $vocabulary,
     ]);
 
-    return $limit === 1 ? reset($terms) : $terms;
+    return $terms;
   }
 
   /**
    * Construct AI feedback message.
    */
-  protected function setAiFeedback($title, $data, $terms, $limit = 5) {
+  protected function setAiFeedback(string $title, array $data, array $terms, $limit = 5) {
     $message = [];
     $message[] = '**' . $title . '**:' . "\n\n";
 
@@ -571,6 +669,101 @@ class OchaAiJobTagTaggerWorker extends QueueWorkerBase implements ContainerFacto
     }
 
     return $vocabularies;
+  }
+
+  /**
+   * Get similar jobs.
+   */
+  protected function getSimilarJobs(NodeInterface $node, string $field) {
+    $nid = $node->id();
+    $relevant = &drupal_static('reliefweb_job_tagger::' . $nid);
+    if (!isset($relevant)) {
+      $relevant = $this->jobTagger->getSimilarDocuments($nid, $node->get('body')->value);
+    }
+
+    if (empty($relevant)) {
+      return [];
+    }
+
+    $max = reset($relevant);
+
+    /** @var \Drupal\node\Entity\Node[] $nodes */
+    $nodes = $this->entityTypeManager->getStorage('node')->loadMultiple(array_keys($relevant));
+
+    if (isset($nodes[$nid])) {
+      unset($nodes[$nid]);
+    }
+
+    $terms = [];
+    foreach ($nodes as $node) {
+      if ($node->hasField($field) && !$node->get($field)->isEmpty()) {
+        foreach ($node->get($field)->referencedEntities() as $term) {
+          if (!isset($terms[$term->label()])) {
+            $terms[$term->label()] = ($relevant[$node->id()] ?? .1) / $max;
+          }
+          else {
+            $terms[$term->label()] *= ($relevant[$node->id()] ?? .1) / $max;
+          }
+        }
+      }
+    }
+
+    // Sort reversed by count.
+    arsort($terms);
+
+    return $terms;
+  }
+
+  /**
+   * Set job status and revision log for permanent problem.
+   */
+  protected function setJobStatusPermanent(NodeInterface &$node, string $message) {
+    $node->setRevisionCreationTime(time());
+    $node->setRevisionLogMessage($message);
+
+    $node->set('reliefweb_job_tagger_status', 'processed');
+    $node->setNewRevision(TRUE);
+    $node->save();
+  }
+
+  /**
+   * Set job status and revision log for temporary problem.
+   */
+  protected function setJobStatusTemporary(NodeInterface &$node, string $message) {
+    $node->setRevisionCreationTime(time());
+    $node->setRevisionLogMessage($message);
+
+    $queue_count = 0;
+    if ($node->hasField('field_job_tagger_queue_count')) {
+      $queue_count = $node->get('field_job_tagger_queue_count')->value ?? 1;
+      $queue_count++;
+    }
+    else {
+      // Field missing, force skip.
+      $queue_count = 99;
+    }
+
+    if ($queue_count >= 3) {
+      // Mark job as skipped, so editors can manually re-queue.
+      $node->set('reliefweb_job_tagger_status', 'skipped');
+      $log_message = $node->getRevisionLogMessage();
+      $log_message .= (empty($log_message) ? '' : ' ') . 'Job has been queued 3 times, maximum reached.';
+      $node->setRevisionLogMessage($log_message);
+      $node->set('field_job_tagger_queue_count', $queue_count);
+      $node->setNewRevision(TRUE);
+      $node->save();
+
+      // Return so item is removed from queue.
+      return;
+    }
+
+    // Save initial log message.
+    $node->set('field_job_tagger_queue_count', $queue_count);
+    $node->setNewRevision(TRUE);
+    $node->save();
+
+    // Leave item in the queue, but stop queue processing.
+    throw new SuspendQueueException($message);
   }
 
 }
