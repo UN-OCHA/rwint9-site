@@ -76,7 +76,7 @@ class Job extends ContentProcessorPluginBase {
     $this->setTermField($node, 'field_country', 'country', $data['country'] ?? []);
     $this->setStringField($node, 'field_city', $data['city'] ?? '');
 
-    $this->setTermField($node, 'field_career_categories', 'career_category', $data['career_categories'] ?? []);
+    $this->setTermField($node, 'field_career_categories', 'career_category', $data['career_category'] ?? []);
     $this->setTermField($node, 'field_theme', 'theme', $data['theme'] ?? []);
 
     // Set the provider.
