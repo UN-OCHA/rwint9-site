@@ -1,0 +1,5 @@
+type: module
+name: ReliefWeb Semantic
+description: 'Provides integration with the ReliefWeb Semantic API.'
+package: reliefweb
+core_version_requirement: ^9 || ^10
