@@ -329,6 +329,7 @@
             // Error message from the validation endpoint or from duplication.
             error = data.error || checkDuplicate(element, data.url);
           }
+          // eslint-disable-next-line no-unused-vars
           catch (exception) {
             error = t('Unable to parse response.');
           }
