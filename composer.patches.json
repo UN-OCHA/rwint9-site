@@ -13,7 +13,9 @@
         },
         "drupal/imageapi_optimize_webp": {
             "Fix derivatives for webp source images": "PATCHES/imageapi_optimize_webp-webp-source-image.patch",
-            "Support imagemagick toolkit": "PATCHES/imageapi_optimize_webp-imagemagick-toolkit.patch"
+            "Support imagemagick toolkit": "PATCHES/imageapi_optimize_webp-imagemagick-toolkit.patch",
+            "https://www.drupal.org/project/imageapi_optimize_webp/issues/3424324": "PATCHES/imageapi_optimize_webp--3424324-property-check.patch",
+            "https://www.drupal.org/project/imageapi_optimize_webp/issues/3453941": "PATCHES/imageapi_optimize_webp--3453941-drupal-10-3-compatibility.patch"
         },
         "drupal/jsonlog": {
             "Direct logging to Elastic cluster": "PATCHES/jsonlog--3460929--elastic-direct-logging.patch"
