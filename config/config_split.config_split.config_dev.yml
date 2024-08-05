@@ -17,5 +17,7 @@ module:
   stage_file_proxy: 0
   views_ui: 0
 theme: {  }
-complete_list: {  }
+complete_list:
+  - environment_indicator.indicator
+  - environment_indicator.switcher.local
 partial_list: {  }

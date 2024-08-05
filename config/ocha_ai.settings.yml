@@ -45,11 +45,11 @@ plugins:
       endpoint: ''
       version: ''
       region: us-east-1
-      api_key:
+      api_key: null
       batch_size: '1'
       dimensions: 1024
       max_tokens: 8192
-      api_secret:
+      api_secret: null
       role_arn: ''
     azure_openai:
       model: text-embedding-ada-002
