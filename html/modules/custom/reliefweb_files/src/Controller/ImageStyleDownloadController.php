@@ -98,7 +98,7 @@ class ImageStyleDownloadController extends OriginalImageStyleDownloadController 
   /**
    * {@inheritdoc}
    */
-  public function deliver(Request $request, $scheme, ImageStyleInterface $image_style = NULL) {
+  public function deliver(Request $request, $scheme, ImageStyleInterface $image_style, string $required_derivative_scheme) {
     if (empty($image_style)) {
       throw new NotFoundHttpException();
     }
@@ -128,7 +128,7 @@ class ImageStyleDownloadController extends OriginalImageStyleDownloadController 
     // Check the image token. We return a 404 as it's more likely to be cached
     // than a 403 and the token is just of DDOS protection and caching helps
     // as well with that.
-    if (!$this->validateToken($request, $uri, $image_style)) {
+    if (!$this->validateToken($request, $uri, $image_style, $required_derivative_scheme)) {
       throw new NotFoundHttpException();
     }
 
@@ -139,6 +139,11 @@ class ImageStyleDownloadController extends OriginalImageStyleDownloadController 
 
     // Get the deriative image URI.
     $derivative_uri = $image_style->buildUri($uri);
+    $derivative_scheme = $this->streamWrapperManager->getScheme($derivative_uri);
+
+    if ($required_derivative_scheme !== $derivative_scheme) {
+      throw new AccessDeniedHttpException("The scheme for this image doesn't match the scheme for the original image");
+    }
 
     // Generate the derivative image if doesn't exist.
     if (!file_exists($derivative_uri)) {

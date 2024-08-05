@@ -1,6 +1,6 @@
 uuid: 31fcb983-fb7e-4910-bf25-f636baaf570d
 langcode: en
-status: true
+status: false
 dependencies:
   module:
     - memcache

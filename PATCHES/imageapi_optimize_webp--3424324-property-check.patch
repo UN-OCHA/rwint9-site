@@ -1,0 +1,12 @@
+diff --git a/src/Controller/ImageStyleDownloadController.php b/src/Controller/ImageStyleDownloadController.php
+--- a/src/Controller/ImageStyleDownloadController.php	(revision c1afae65e07b47ff8abb909fdf35303b36493806)
++++ b/src/Controller/ImageStyleDownloadController.php	(date 1709116553784)
+@@ -40,7 +40,7 @@
+     }
+     $path_info = pathinfo($target);
+     // If .webp file, look for image to derive from.
+-    if ($path_info['extension'] == 'webp') {
++    if (isset($path_info['extension']) && $path_info['extension'] === 'webp') {
+       $image_uri = $scheme . '://' . $target;
+       // Continue processing if source found, else throw NotFoundHttpException.
+       if ($source_uri = $this->lookupSourceImage($image_uri)) {

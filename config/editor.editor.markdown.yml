@@ -9,4 +9,5 @@ dependencies:
 format: markdown
 editor: reliefweb_markdown_editor
 settings: {  }
-image_upload: {  }
+image_upload:
+  status: false

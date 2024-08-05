@@ -42,7 +42,7 @@
         "drupal/honeypot": "^2.1",
         "drupal/imageapi_optimize_binaries": "^1.0@beta",
         "drupal/imageapi_optimize_webp": "^2.0",
-        "drupal/imagemagick": "^3.4",
+        "drupal/imagemagick": "^4.0",
         "drupal/inline_entity_form": "^1.0@rc",
         "drupal/jsonlog": "^4.0",
         "drupal/mailsystem": "^4.4",
