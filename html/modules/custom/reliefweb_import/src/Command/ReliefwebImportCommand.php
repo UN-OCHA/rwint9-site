@@ -387,7 +387,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       'field_source' => $source_id,
       'field_import_guid' => $guid,
     ];
-    $job = Job::create($values);
+    $job = $this->entityTypeManager->getStorage('node')->create($values);
     $this->updateJob($job, $data);
   }
 
