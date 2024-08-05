@@ -12,6 +12,7 @@ dependencies:
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_resource_status
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_skip_queue
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_source
+    - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_trusted_users
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_user
     - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_webhook_url
   module:
@@ -108,6 +109,14 @@ content:
       link: true
     third_party_settings: {  }
     weight: 3
+    region: content
+  field_trusted_users:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 12
     region: content
   field_user:
     type: entity_reference_label

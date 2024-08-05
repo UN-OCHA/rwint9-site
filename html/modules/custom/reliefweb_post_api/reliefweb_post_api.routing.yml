@@ -25,3 +25,11 @@ reliefweb_post_api.schema:
   requirements:
     _access: 'TRUE'
     schema: '^[a-z][a-z_-]+[a-z]\.json$'
+
+reliefweb_post_api.user.api_key:
+  path: '/user/{user}/generate-api-key'
+  defaults:
+    _form: '\Drupal\reliefweb_post_api\Form\GenerateApiKeyForm'
+    _title: 'Generate API Key'
+  requirements:
+    _permission: 'reliefweb_post_api.user.api_key'

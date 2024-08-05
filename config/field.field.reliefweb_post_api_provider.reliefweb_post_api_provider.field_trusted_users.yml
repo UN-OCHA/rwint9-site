@@ -1,0 +1,30 @@
+uuid: 7596126b-ff0a-404d-9cc5-c4e82e267a1d
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.reliefweb_post_api_provider.field_trusted_users
+  module:
+    - reliefweb_post_api
+id: reliefweb_post_api_provider.reliefweb_post_api_provider.field_trusted_users
+field_name: field_trusted_users
+entity_type: reliefweb_post_api_provider
+bundle: reliefweb_post_api_provider
+label: 'Trusted users'
+description: 'Select users which are allowed to make API calls'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:user'
+  handler_settings:
+    target_bundles: null
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    filter:
+      type: _none
+    include_anonymous: true
+field_type: entity_reference
