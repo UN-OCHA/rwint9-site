@@ -2,16 +2,19 @@
 
 namespace Drupal\reliefweb_semantic\Commands;
 
+use Aws\S3\S3Client;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\State\StateInterface;
 use Drush\Commands\DrushCommands;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\BadResponseException;
 use Psr\Http\Message\ResponseInterface;
+use Spipu\Html2Pdf\Html2Pdf;
 
 /**
  * ReliefWeb API Drush commandfile.
@@ -61,6 +64,13 @@ class ReliefWebSemanticCommands extends DrushCommands {
   protected $httpClient;
 
   /**
+   * File system.
+   *
+   * @var \Drupal\Core\File\FileSystemInterface
+   */
+  protected $fileSystem;
+
+  /**
    * List of config for each bundle.
    *
    * @var array
@@ -69,6 +79,16 @@ class ReliefWebSemanticCommands extends DrushCommands {
     'report' => [
       'type' => 'node',
       'index' => 'reports',
+      'field-list' => [
+        'nid' => 'id',
+        'uuid' => 'uuid',
+        'created' => 'created',
+        'changed' => 'changed',
+        'title' => 'title',
+        'status' => 'status',
+        'body' => 'body',
+        'field_file' => 'files',
+      ],
     ],
     'job' => [
       'type' => 'node',
@@ -132,6 +152,7 @@ class ReliefWebSemanticCommands extends DrushCommands {
     ModuleHandlerInterface $module_handler,
     StateInterface $state,
     ClientInterface $http_client,
+    FileSystemInterface $file_system,
   ) {
     $this->config = $config_factory->get('reliefweb_semantic.settings');
     $this->entityFieldManager = $entity_field_manager;
@@ -139,6 +160,7 @@ class ReliefWebSemanticCommands extends DrushCommands {
     $this->moduleHandler = $module_handler;
     $this->state = $state;
     $this->httpClient = $http_client;
+    $this->fileSystem = $file_system;
   }
 
   /**
@@ -179,10 +201,11 @@ class ReliefWebSemanticCommands extends DrushCommands {
 
     if (!empty($options['id'])) {
       $this->processItem($bundle, $options['id']);
+      return;
     }
 
     // Index the given bundles.
-    elseif (strpos($bundle, ',') > 0) {
+    if (strpos($bundle, ',') > 0) {
       $bundles = explode(',', $bundle);
       foreach ($bundles as $bundle) {
         if (isset($this->bundles[$bundle])) {
@@ -348,16 +371,21 @@ class ReliefWebSemanticCommands extends DrushCommands {
         case 'entity_reference':
           $data[$property_name] = [];
           foreach ($entity->get($field_name)->referencedEntities() as $ref) {
-            $data[$property_name][] = [
-              'id' => $ref->id(),
-              'name' => $ref->label(),
-            ];
+            $data[$property_name][] = (string) $ref->id();
           }
           break;
 
         case 'datetime':
           $date = new \DateTime($entity->get($field_name)->value, new \DateTimeZone('UTC'));
           $item[$property_name] = $date->format(\DateTime::ATOM);
+          break;
+
+        case 'reliefweb_file':
+          $data['files'] = [];
+          /** @var \Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile $item */
+          foreach ($entity->get($field_name) as $item) {
+            $data['files'][] = $item->loadFile()->getFileUri();
+          }
           break;
 
         default:
@@ -371,7 +399,7 @@ class ReliefWebSemanticCommands extends DrushCommands {
   /**
    * Index the index.
    */
-  protected function indexItem(string $bundle, array $data) {
+  protected function indexItem(string $bundle, array $data, array $files = []) {
     $index = $this->bundles[$bundle]['index'] ?? [];
     if (empty($index)) {
       $this->logger->notice(strtr('No index found for @bundle', [
@@ -381,24 +409,65 @@ class ReliefWebSemanticCommands extends DrushCommands {
       return [];
     }
 
-    // Ensure the index exist.
-    if (!$this->createIndex($bundle, $index)) {
-      return FALSE;
+    if (empty($files) && isset($data['files'])) {
+      $files = $data['files'];
+      unset($data['files']);
     }
 
-    if (isset($data['id'])) {
-      $data['_id'] = $data['id'];
+    // Dump title and body field into a PDF.
+    // @see https://docs.aws.amazon.com/bedrock/latest/userguide/kb-chunking-parsing.html#kb-advanced-parsing
+    if (!empty($data['body'])) {
+      $content = $data['title'] . "\n\n" . $data['body'];
+      $destination = 'temporary://' . $data['id'] . '.pdf';
+
+      $html2pdf = new Html2Pdf();
+      $html2pdf->writeHTML($content);
+      $content = $html2pdf->output($data['id'] . '.pdf', 'S');
+
+      $this->fileSystem->saveData($content, $destination, FileSystemInterface::EXISTS_REPLACE);
+      $files[] = $destination;
     }
 
-    $payload[] = json_encode($data);
-    $payload = implode("\n", $payload) . "\n";
+    // Dump metadata.
+    $content = json_encode([
+      'metadataAttributes' => $data,
+    ]);
+    $metadata_file = 'temporary://' . $data['id'] . '.pdf.metadata.json';
+    $this->fileSystem->saveData($content, $metadata_file, FileSystemInterface::EXISTS_REPLACE);
 
-    // Send to AWS API.
-    $response = $this->request('POST', $index, $payload, 'application/x-ndjson');
+    foreach ($files as $file) {
+      $absolute_path = $this->fileSystem->realpath($file);
+      if (!$absolute_path) {
+        $this->logger->notice(strtr('Unable to process @file for @id', [
+          '@file' => $file,
+          '@id' => $data['id'],
+        ]));
+        continue;
+      }
 
-    if (is_null($response)) {
-      return FALSE;
+      $this->sendToS3($absolute_path);
+      $basename = basename($absolute_path);
+      $this->sendToS3($metadata_file, $basename . '.metadata.json');
     }
+  }
+
+  /**
+   * Store file and metadata on S3.
+   */
+  protected function sendToS3(string $file_name, string $save_as = '') {
+    $client_options = reliefweb_semantic_get_aws_client_options();
+    $client = new S3Client($client_options);
+
+    $bucket_name = 'rw-api-bucket-2';
+    if (empty($save_as)) {
+      $save_as = basename($file_name);
+    }
+
+    $client->putObject([
+      'Bucket' => $bucket_name,
+      'Key' => $save_as,
+      'SourceFile' => $file_name,
+    ]);
   }
 
   /**

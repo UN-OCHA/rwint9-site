@@ -76,6 +76,7 @@
         "reliefweb/api-indexer": "^v2.8",
         "reliefweb/simple-autocomplete": "^v1.3",
         "reliefweb/simple-datepicker": "^v1.3",
+        "spipu/html2pdf": "^5.2",
         "symfony/uid": "^6.2",
         "unocha/common_design": "^9.4",
         "unocha/gtm_barebones": "^1.1",
