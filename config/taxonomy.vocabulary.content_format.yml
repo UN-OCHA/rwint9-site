@@ -4,5 +4,6 @@ status: true
 dependencies: {  }
 name: 'Content format'
 vid: content_format
-description: ''
+description: null
 weight: 0
+new_revision: true

@@ -11,7 +11,7 @@ third_party_settings:
 name: 'Blog post'
 type: blog_post
 description: 'Blog entry'
-help: ''
+help: null
 new_revision: true
 preview_mode: 1
 display_submitted: false
