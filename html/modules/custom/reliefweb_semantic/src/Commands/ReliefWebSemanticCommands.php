@@ -9,6 +9,7 @@ use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\State\StateInterface;
 use Drush\Commands\DrushCommands;
 use GuzzleHttp\ClientInterface;
@@ -71,6 +72,13 @@ class ReliefWebSemanticCommands extends DrushCommands {
   protected $fileSystem;
 
   /**
+   * The render service.
+   *
+   * @var \Drupal\Core\Render\Renderer
+   */
+  protected $renderer;
+
+  /**
    * List of config for each bundle.
    *
    * @var array
@@ -88,6 +96,13 @@ class ReliefWebSemanticCommands extends DrushCommands {
         'status' => 'status',
         'body' => 'body',
         'field_file' => 'files',
+        'field_country' => 'country',
+        'field_disaster' => 'disaster',
+        'field_disaster_type' => 'disaster_type',
+        'field_feature' => 'feature',
+        'field_primary_country' => 'primary_country',
+        'field_source' => 'source',
+        'field_theme' => 'theme',
       ],
     ],
     'job' => [
@@ -153,6 +168,7 @@ class ReliefWebSemanticCommands extends DrushCommands {
     StateInterface $state,
     ClientInterface $http_client,
     FileSystemInterface $file_system,
+    RendererInterface $renderer,
   ) {
     $this->config = $config_factory->get('reliefweb_semantic.settings');
     $this->entityFieldManager = $entity_field_manager;
@@ -161,6 +177,7 @@ class ReliefWebSemanticCommands extends DrushCommands {
     $this->state = $state;
     $this->httpClient = $http_client;
     $this->fileSystem = $file_system;
+    $this->renderer = $renderer;
   }
 
   /**
@@ -360,6 +377,15 @@ class ReliefWebSemanticCommands extends DrushCommands {
 
     $date = new \DateTime('now', new \DateTimeZone('UTC'));
     $data['timestamp'] = $date->format(\DateTime::ATOM);
+    $data['bundle'] = $entity->bundle();
+    $data['nid'] = $entity->id();
+
+    /** @var \Drupal\node\NodeViewBuilder */
+    $view_builder = $this->entityTypeManager->getViewBuilder('node');
+
+    if (!isset($data['html'])) {
+      $data['html'] = '';
+    }
 
     foreach ($field_list as $field_name => $property_name) {
       if (!$entity->hasField($field_name)) {
@@ -368,10 +394,25 @@ class ReliefWebSemanticCommands extends DrushCommands {
 
       $field_type = $entity->get($field_name)->getFieldDefinition()->getFieldStorageDefinition()->getType();
       switch ($field_type) {
+        case 'text_with_summary':
+        case 'text_long':
+          $data[$property_name] = $entity->get($field_name)->value;
+
+          $build = $view_builder->viewField($entity->get($field_name), 'full');
+          $data['html'] .= $this->renderer->renderPlain($build);
+          $data['html'] .= "\n\n";
+          break;
+
         case 'entity_reference':
           $data[$property_name] = [];
+          $as_string = [];
           foreach ($entity->get($field_name)->referencedEntities() as $ref) {
             $data[$property_name][] = (string) $ref->id();
+            $as_string[] = $ref->label();
+          }
+
+          if (!empty($as_string)) {
+            $data['html'] .= '<p>' . $property_name . ': ' . implode(', ', $as_string) . '</p>';
           }
           break;
 
@@ -414,10 +455,10 @@ class ReliefWebSemanticCommands extends DrushCommands {
       unset($data['files']);
     }
 
-    // Dump title and body field into a PDF.
+    // Dump title and html field into a PDF.
     // @see https://docs.aws.amazon.com/bedrock/latest/userguide/kb-chunking-parsing.html#kb-advanced-parsing
-    if (!empty($data['body'])) {
-      $content = $data['title'] . "\n\n" . $data['body'];
+    if (!empty($data['html'])) {
+      $content = '<h1>' . $data['title'] . '</h1>' . "\n\n" . $data['html'];
       $destination = 'temporary://' . $data['id'] . '.pdf';
 
       $html2pdf = new Html2Pdf();
@@ -429,6 +470,16 @@ class ReliefWebSemanticCommands extends DrushCommands {
     }
 
     // Dump metadata.
+    if (isset($data['html'])) {
+      unset($data['html']);
+    }
+    if (isset($data['body'])) {
+      unset($data['body']);
+    }
+
+    // Remove empty fields.
+    $data = array_filter($data);
+
     $content = json_encode([
       'metadataAttributes' => $data,
     ]);
