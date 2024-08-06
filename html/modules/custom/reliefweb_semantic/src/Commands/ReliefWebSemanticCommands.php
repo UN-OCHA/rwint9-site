@@ -86,7 +86,8 @@ class ReliefWebSemanticCommands extends DrushCommands {
   protected $bundles = [
     'report' => [
       'type' => 'node',
-      'index' => 'reports',
+      'index' => 'rw-reports',
+      'bucket' => 'rw-kb-reports',
       'field-list' => [
         'nid' => 'id',
         'uuid' => 'uuid',
@@ -107,7 +108,8 @@ class ReliefWebSemanticCommands extends DrushCommands {
     ],
     'job' => [
       'type' => 'node',
-      'index' => 'jobs',
+      'index' => 'rw-jobs',
+      'bucket' => 'rw-kb-jobs',
       'field-list' => [
         'nid' => 'id',
         'uuid' => 'uuid',
@@ -120,6 +122,7 @@ class ReliefWebSemanticCommands extends DrushCommands {
         'field_city' => 'city',
         'field_job_closing_date' => 'job_closing_date',
         'field_country' => 'country',
+        'field_city' => 'city',
         'field_how_to_apply' => 'how_to_apply',
         'field_job_type' => 'job_type',
         'field_job_experience' => 'job_experience',
@@ -129,19 +132,63 @@ class ReliefWebSemanticCommands extends DrushCommands {
     ],
     'training' => [
       'type' => 'node',
-      'index' => 'training',
+      'index' => 'rw-trainings-2',
+      'bucket' => 'rw-kb-trainings',
+      'field-list' => [
+        'nid' => 'id',
+        'uuid' => 'uuid',
+        'created' => 'created',
+        'changed' => 'changed',
+        'title' => 'title',
+        'status' => 'status',
+        'body' => 'body',
+        'field_country' => 'country',
+        'field_city' => 'city',
+        'field_source' => 'source',
+        'field_theme' => 'theme',
+      ],
     ],
     'blog_post' => [
       'type' => 'node',
-      'index' => 'blog',
+      'index' => 'rw-blog-posts-2',
+      'bucket' => 'rw-kb-blog-posts',
+      'field-list' => [
+        'nid' => 'id',
+        'uuid' => 'uuid',
+        'created' => 'created',
+        'changed' => 'changed',
+        'title' => 'title',
+        'status' => 'status',
+        'body' => 'body',
+      ],
     ],
     'book' => [
       'type' => 'node',
-      'index' => 'book',
+      'index' => 'rw-books-2',
+      'bucket' => 'rw-kb-books',
+      'field-list' => [
+        'nid' => 'id',
+        'uuid' => 'uuid',
+        'created' => 'created',
+        'changed' => 'changed',
+        'title' => 'title',
+        'status' => 'status',
+        'body' => 'body',
+      ],
     ],
     'topic' => [
       'type' => 'node',
-      'index' => 'topics',
+      'index' => 'rw-topics',
+      'bucket' => 'rw-kb-topics',
+      'field-list' => [
+        'nid' => 'id',
+        'uuid' => 'uuid',
+        'created' => 'created',
+        'changed' => 'changed',
+        'title' => 'title',
+        'status' => 'status',
+        'body' => 'body',
+      ],
     ],
     'country' => [
       'type' => 'taxonomy_term',
@@ -342,6 +389,16 @@ class ReliefWebSemanticCommands extends DrushCommands {
       return;
     }
 
+    if ($entity->bundle() != $bundle) {
+      $this->logger->notice(strtr('Bundle @a found for @id instead of @b', [
+        '@a' => $entity->bundle(),
+        '@id' => $id,
+        '@b' => $bundle,
+      ]));
+
+      return;
+    }
+
     $data = $this->prepareItem($entity);
     if (empty($data)) {
       return FALSE;
@@ -450,6 +507,13 @@ class ReliefWebSemanticCommands extends DrushCommands {
       return [];
     }
 
+    $bucket = $this->bundles[$bundle]['bucket'] ?? '';
+    if (empty($bucket)) {
+      $this->logger->notice('Unknown bucket for @bundle', [
+        '@bundle' => $bundle,
+      ]);
+    }
+
     if (empty($files) && isset($data['files'])) {
       $files = $data['files'];
       unset($data['files']);
@@ -496,26 +560,25 @@ class ReliefWebSemanticCommands extends DrushCommands {
         continue;
       }
 
-      $this->sendToS3($absolute_path);
+      $this->sendToS3($bucket, $absolute_path);
       $basename = basename($absolute_path);
-      $this->sendToS3($metadata_file, $basename . '.metadata.json');
+      $this->sendToS3($bucket, $metadata_file, $basename . '.metadata.json');
     }
   }
 
   /**
    * Store file and metadata on S3.
    */
-  protected function sendToS3(string $file_name, string $save_as = '') {
+  protected function sendToS3(string $bucket, string $file_name, string $save_as = '') {
     $client_options = reliefweb_semantic_get_aws_client_options();
     $client = new S3Client($client_options);
 
-    $bucket_name = 'rw-api-bucket-2';
     if (empty($save_as)) {
       $save_as = basename($file_name);
     }
 
     $client->putObject([
-      'Bucket' => $bucket_name,
+      'Bucket' => $bucket,
       'Key' => $save_as,
       'SourceFile' => $file_name,
     ]);
