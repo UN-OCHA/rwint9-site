@@ -2,6 +2,10 @@
 
 This module provides integration with the ReliefWeb Semantic API.
 
+## To do
+
+- Add service to query API
+
 ## AWS
 
 Dashboards:
@@ -24,6 +28,16 @@ Config:
 | D2E5HCYCTQ | URINLN9HIR | blog_post | kb-data-source-rw-blog-posts | rw-kb-blog-posts | rw-blog-posts-2 | rw-knowledge-base-blog-posts |
 | NZTC9LPLJN | XETKAPIJKB | book      | kb-data-source-rw-books      | rw-kb-books      | rw-books-2      | rw-knowledge-base-books      |
 | Y5EU13DU6Q | AXCARFTXKS | topic     | kb-data-source-rw-topics     | rw-kb-topics     | rw-topics       | rw-knowledge-base-topics     |
+
+## Drush
+
+```bash
+drush reliefweb-semantic:index            Index content in the ReliefWeb API.
+drush reliefweb-semantic:list-kbs         List kbs.
+drush reliefweb-semantic:list-datasources List datasources.
+drush reliefweb-semantic:list-jobs        List ingestion jobs.
+drush reliefweb-semantic:trigger-sync     Trigger sync..
+```
 
 ## Openseach
 

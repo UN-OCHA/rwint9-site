@@ -89,7 +89,7 @@ class ReliefWebSemanticAwsCommands extends DrushCommands {
   }
 
   /**
-   * List j=ingestion jobs.
+   * List ingestion jobs.
    *
    * @param array $options
    *   Additional options for the command.
