@@ -1,0 +1,19 @@
+uuid: 06f080b2-9d92-499e-8aed-615ca77a61c8
+langcode: en
+status: true
+dependencies:
+  module:
+    - link
+    - reliefweb_post_api
+id: reliefweb_post_api_provider.field_image_url
+field_name: field_image_url
+entity_type: reliefweb_post_api_provider
+type: link
+settings: {  }
+module: link
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
