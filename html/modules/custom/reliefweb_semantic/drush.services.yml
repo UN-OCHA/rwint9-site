@@ -4,3 +4,9 @@ services:
     arguments: ['@config.factory', '@entity_field.manager', '@entity_type.manager', '@module_handler', '@state', '@http_client', '@file_system', '@renderer']
     tags:
       - { name: drush.command }
+  reliefweb_semantic.aws_commands:
+    class: \Drupal\reliefweb_semantic\Commands\ReliefWebSemanticAwsCommands
+    arguments: ['@config.factory', '@state']
+    tags:
+      - { name: drush.command }
+

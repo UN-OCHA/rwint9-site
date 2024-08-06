@@ -162,20 +162,6 @@ class ReliefWebSemanticCommands extends DrushCommands {
         'body' => 'body',
       ],
     ],
-    'book' => [
-      'type' => 'node',
-      'index' => 'rw-books-2',
-      'bucket' => 'rw-kb-books',
-      'field-list' => [
-        'nid' => 'id',
-        'uuid' => 'uuid',
-        'created' => 'created',
-        'changed' => 'changed',
-        'title' => 'title',
-        'status' => 'status',
-        'body' => 'body',
-      ],
-    ],
     'topic' => [
       'type' => 'node',
       'index' => 'rw-topics',
@@ -189,18 +175,6 @@ class ReliefWebSemanticCommands extends DrushCommands {
         'status' => 'status',
         'body' => 'body',
       ],
-    ],
-    'country' => [
-      'type' => 'taxonomy_term',
-      'index' => 'countries',
-    ],
-    'disaster' => [
-      'type' => 'taxonomy_term',
-      'index' => 'disasters',
-    ],
-    'source' => [
-      'type' => 'taxonomy_term',
-      'index' => 'sources',
     ],
   ];
 
@@ -251,7 +225,7 @@ class ReliefWebSemanticCommands extends DrushCommands {
   public function index(
     $bundle = '',
     array $options = [
-      'limit' => 500,
+      'limit' => 10,
       'id' => 0,
     ],
   ) {
@@ -280,7 +254,7 @@ class ReliefWebSemanticCommands extends DrushCommands {
     }
 
     // Index indexing options.
-    $limit = (int) ($options['limit'] ?: 500);
+    $limit = (int) ($options['limit'] ?: 10);
 
     // Launch the indexing or index removal.
     try {
@@ -291,7 +265,7 @@ class ReliefWebSemanticCommands extends DrushCommands {
         ]));
       }
       else {
-        $this->logger->notice(strtr('Indexed @num_items for @bundle', [
+        $this->logger->notice(strtr('Indexed @num_items items for @bundle', [
           '@num_items' => $num_items,
           '@bundle' => $bundle,
         ]));
@@ -310,7 +284,7 @@ class ReliefWebSemanticCommands extends DrushCommands {
   /**
    * Index items.
    */
-  protected function indexItems($bundle, $limit = 500) : int {
+  protected function indexItems($bundle, $limit = 10) : int {
     $entity_type = $this->bundles[$bundle]['type'] ?? '';
     if (empty($entity_type)) {
       $this->logger->notice(strtr('Unknown entity type for @bundle', [
@@ -422,6 +396,12 @@ class ReliefWebSemanticCommands extends DrushCommands {
    * Prepare data for the index.
    */
   protected function prepareItem(ContentEntityInterface $entity) : array {
+    $this->logger->notice(strtr('Preparing @bundle: @title (@id)', [
+      '@bundle' => $entity->bundle(),
+      '@title' => $entity->label(),
+      '@id' => $entity->id(),
+    ]));
+
     $data = [];
     $field_list = $this->bundles[$entity->bundle()]['field-list'] ?? [];
     if (empty($field_list)) {
