@@ -189,6 +189,7 @@ class ReliefWebSemanticAwsCommands extends DrushCommands {
    */
   protected function getKbs($reset = 0) : array {
     $data = $this->state->get('reliefweb_semantic_kbs', []);
+
     if (empty($data) || !empty($reset)) {
       $data = [];
       $aws_options = reliefweb_semantic_get_aws_client_options();
@@ -204,6 +205,9 @@ class ReliefWebSemanticAwsCommands extends DrushCommands {
         ];
       }
 
+      // Remove tests.
+      unset($data['FV9YWTCSHX']);
+      unset($data['2ZOGICT5IP']);
       $this->state->set('reliefweb_semantic_kbs', $data);
     }
 
