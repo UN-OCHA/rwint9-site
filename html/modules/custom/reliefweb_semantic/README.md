@@ -37,6 +37,7 @@ drush reliefweb-semantic:list-kbs         List kbs.
 drush reliefweb-semantic:list-datasources List datasources.
 drush reliefweb-semantic:list-jobs        List ingestion jobs.
 drush reliefweb-semantic:trigger-sync     Trigger sync..
+drush reliefweb-semantic:query-kb --id=WYBGQOFQLN --q="Any jobs in Europe"
 ```
 
 ## Openseach

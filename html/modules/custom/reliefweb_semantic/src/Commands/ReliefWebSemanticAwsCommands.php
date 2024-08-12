@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_semantic\Commands;
 
 use Aws\BedrockAgent\BedrockAgentClient;
+use Aws\BedrockAgentRuntime\BedrockAgentRuntimeClient;
 use Consolidation\OutputFormatters\StructuredData\RowsOfFields;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\State\StateInterface;
@@ -133,6 +134,57 @@ class ReliefWebSemanticAwsCommands extends DrushCommands {
         'numberOfDocumentsScanned' => $job['statistics']['numberOfDocumentsScanned'],
         'numberOfDocumentsFailed' => $job['statistics']['numberOfDocumentsFailed'],
         'numberOfNewDocumentsIndexed' => $job['statistics']['numberOfNewDocumentsIndexed'],
+      ];
+    }
+
+    return new RowsOfFields($data);
+  }
+
+  /**
+   * Query KB.
+   *
+   * @param array $options
+   *   Additional options for the command.
+   *
+   * @command reliefweb-semantic:query-kb
+   *
+   * @option reset.
+   *
+   * @default $options []
+   *
+   * @usage reliefweb-semantic:query-kb id
+   *   List jobs.
+   */
+  public function queryKb(
+    array $options = [
+      'id' => 0,
+      'q' => 0,
+      'format' => 'table',
+    ],
+  ) : null|RowsOfFields {
+    $aws_options = reliefweb_semantic_get_aws_client_options();
+    $bedrock = new BedrockAgentRuntimeClient($aws_options);
+
+    if (empty($options['id'])) {
+      return NULL;
+    }
+
+    $result = $bedrock->retrieve([
+      'knowledgeBaseId' => $options['id'],
+      'retrievalQuery' => [
+        'text' => $options['q'],
+      ],
+    ]);
+
+    $result = $result->toArray()['retrievalResults'] ?? [];
+    $data = [];
+
+    foreach ($result as $item) {
+      $data[$item['metadata']['nid']] = [
+        'id' => $item['metadata']['nid'],
+        'title' => $item['metadata']['title'],
+        'score' => round(100 * $item['score'], 2) . '%',
+        'file' => $item['location']['s3Location']['uri'],
       ];
     }
 
