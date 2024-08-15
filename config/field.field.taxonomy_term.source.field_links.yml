@@ -12,7 +12,7 @@ field_name: field_links
 entity_type: taxonomy_term
 bundle: source
 label: 'Social media links'
-description: 'Links to social media platforms like twitter.com, youtube.com or facebook.com.'
+description: 'Links to social media platforms like facebook.com, flickr.com, instagram.com, linkedin.com, medium.com, pinterest.com, soundcloud.com, tiktok.com, toutiao.com, twitter.com, weibo.com, x.com and youtube.com.'
 required: false
 translatable: false
 default_value: {  }
