@@ -1,8 +1,9 @@
 _core:
   default_config_hash: ttd8HXcqwSjGgp-fWA3gUA8q4TNvXB0a72pkFlnF56g
 hotlink: false
-origin: ''
+origin: 'https://reliefweb.int'
 origin_dir: ''
+proxy_headers: ''
 use_imagecache_root: true
 verify: true
 excluded_extensions: 'css,gz,js'

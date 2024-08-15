@@ -28,12 +28,12 @@ defaults:
         editable: 0
         open: 0
         display: 0
+    text_extractor:
+      application/pdf:
+        plugin_id: mupdf
     text_splitter:
       plugin_id: token
       length: 180
       overlap: 0
     vector_store:
       plugin_id: elasticsearch_flattened
-    text_extractor:
-      application/pdf:
-        plugin_id: mupdf

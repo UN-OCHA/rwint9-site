@@ -4,5 +4,6 @@ status: true
 dependencies: {  }
 name: 'Training type'
 vid: training_type
-description: ''
+description: null
 weight: 0
+new_revision: true
