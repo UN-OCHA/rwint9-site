@@ -6,7 +6,7 @@ services:
       - { name: drush.command }
   reliefweb_semantic.aws_commands:
     class: \Drupal\reliefweb_semantic\Commands\ReliefWebSemanticAwsCommands
-    arguments: ['@config.factory', '@state']
+    arguments: ['@config.factory', '@state', '@reliefweb_semantic.search_service']
     tags:
       - { name: drush.command }
 
