@@ -160,6 +160,8 @@ class ReliefWebSemanticAwsCommands extends DrushCommands {
       'id' => 0,
       'q' => 0,
       'format' => 'table',
+      'theme' => '',
+      'country' => '',
     ],
   ) : null|RowsOfFields {
     $aws_options = reliefweb_semantic_get_aws_client_options();
@@ -169,12 +171,73 @@ class ReliefWebSemanticAwsCommands extends DrushCommands {
       return NULL;
     }
 
-    $result = $bedrock->retrieve([
+    $filters = [];
+    if (!empty($options['theme'])) {
+      $filters['theme'] = str_replace(' ', '', $options['theme']);
+    }
+    if (!empty($options['country'])) {
+      $filters['country'] = str_replace(' ', '', $options['country']);
+    }
+
+    $kb_filter = [
+      'retrievalConfiguration' => [
+        'vectorSearchConfiguration' => [
+          'numberOfResults' => 10,
+        ],
+      ],
+    ];
+
+    if (!empty($filters)) {
+      if (count($filters) == 1) {
+        $key = reset(array_keys($filters));
+        $value = reset($filters);
+        $kb_filter = [
+          'retrievalConfiguration' => [
+            'vectorSearchConfiguration' => [
+              'filter' => [
+                'in' => [
+                  'key' => $key,
+                  'value' => explode(',', $value),
+                ],
+              ],
+              'numberOfResults' => 10,
+            ],
+          ],
+        ];
+      }
+      else {
+        $all_filters = [];
+        foreach ($filters as $key => $value) {
+          $all_filters[] = [
+            'in' => [
+              'key' => $key,
+              'value' => explode(',', $value),
+            ],
+          ];
+        }
+
+        $kb_filter = [
+          'retrievalConfiguration' => [
+            'vectorSearchConfiguration' => [
+              'numberOfResults' => 10,
+              'overrideSearchType' => 'HYBRID',
+              'filter' => [
+                'andAll' => $all_filters,
+              ],
+            ],
+          ],
+        ];
+      }
+    }
+
+    $br_options = [
       'knowledgeBaseId' => $options['id'],
       'retrievalQuery' => [
         'text' => $options['q'],
       ],
-    ]);
+    ] + $kb_filter;
+
+    $result = $bedrock->retrieve($br_options);
 
     $result = $result->toArray()['retrievalResults'] ?? [];
     $data = [];
@@ -185,6 +248,8 @@ class ReliefWebSemanticAwsCommands extends DrushCommands {
         'title' => $item['metadata']['title'],
         'score' => round(100 * $item['score'], 2) . '%',
         'file' => $item['location']['s3Location']['uri'],
+        'theme' => implode(', ', $item['metadata']['theme'] ?? []),
+        'country' => implode(', ', $item['metadata']['country'] ?? []),
       ];
     }
 

@@ -303,7 +303,7 @@ class ReliefWebSemanticCommands extends DrushCommands {
       ->accessCheck(FALSE)
       ->range(0, $limit)
       ->sort($key, 'DESC')
-      ->condition($key, $this->state->get('reliefweb_semantic_last_indexed_' . $bundle, 0), '>');
+      ->condition($key, $this->state->get('reliefweb_semantic_last_indexed_' . $bundle, 0), '<');
 
     if ($entity_type == 'node') {
       $query->condition('type', $bundle);
