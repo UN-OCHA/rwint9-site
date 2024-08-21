@@ -244,9 +244,7 @@ class Source extends Term implements BundleEntityInterface, EntityModeratedInter
     }
 
     if (!empty($links)) {
-      uasort($links, function ($a, $b) {
-        return strcmp($a['title'], $b['title']);
-      });
+      LocalizationHelper::collatedAsort($links, 'title');
 
       return [
         '#theme' => 'reliefweb_entities_entity_social_media_links',
