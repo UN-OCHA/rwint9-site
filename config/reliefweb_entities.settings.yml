@@ -1,11 +1,17 @@
 allowed_social_media_links:
-  facebook: Facebook
-  instagram: Instagram
-  medium: Medium
-  linkedin: LinkedIn
-  twitter: X
-  x: X
-  youtube: YouTube
+  facebook_com: Facebook
+  flickr_com: Flickr
+  instagram_com: Instagram
+  linkedin_com: LinkedIn
+  medium_com: Medium
+  pinterest_com: Pinterest
+  soundcloud_com: SoundCloud
+  tiktok_com: TikTok
+  toutiao_com: Toutiao
+  twitter_com: X
+  weibo_com: Weibo
+  x_com: X
+  youtube_com: YouTube
 cron:
   embargoed_reports_limit: 20
   expired_jobs_limit: 20
