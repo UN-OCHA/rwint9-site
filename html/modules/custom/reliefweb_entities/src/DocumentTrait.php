@@ -353,11 +353,14 @@ trait DocumentTrait {
    * @see Drupal\reliefweb_entities\DocumentInterface::createDate()
    */
   public function createDate($date) {
-    if (is_scalar($date) && $date === '') {
-      return NULL;
+    if (is_string($date) || is_int($date)) {
+      $date = is_numeric($date) ? '@' . $date : $date;
+      return new \DateTime((string) $date, new \DateTimeZone('UTC'));
     }
-    $date = is_numeric($date) ? '@' . $date : $date;
-    return new \DateTime($date, new \DateTimeZone('UTC'));
+    elseif (is_a($date, \DateTime::class)) {
+      return $date;
+    }
+    return NULL;
   }
 
   /**
