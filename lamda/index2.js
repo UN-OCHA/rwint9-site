@@ -12,7 +12,7 @@ const client = new BedrockAgentRuntimeClient({region: process.env.AWS_BEDROCK_RE
 });
 
 const input = {
-  input: { text: "Are people starving in Kenya?" },
+  input: { text: "Which African countries do need to most support from the World Food Program?" },
   retrieveAndGenerateConfiguration: {
     type: "KNOWLEDGE_BASE",
     knowledgeBaseConfiguration: {
@@ -47,9 +47,7 @@ const input = {
 const command = new RetrieveAndGenerateCommand(input);
 
 const {citations, output} = await client.send(command);
-
-console.log(output);
-
+console.log(output.text)
 for (let row of citations) {
   console.log(row.generatedResponsePart.textResponsePart.text);
   for (let ref of row.retrievedReferences) {
