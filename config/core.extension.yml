@@ -20,6 +20,7 @@ module:
   dynamic_page_cache: 0
   editor: 0
   environment_indicator: 0
+  externalauth: 0
   field: 0
   field_ui: 0
   file: 0
@@ -38,6 +39,7 @@ module:
   inline_entity_form: 0
   inline_form_errors: 0
   jsonlog: 0
+  key: 0
   language: 0
   link: 0
   locale: 0
@@ -60,6 +62,8 @@ module:
   ocha_ai_chat: 0
   ocha_ai_tag: 0
   ocha_monitoring: 0
+  openid_connect: 0
+  openid_connect_windows_aad: 0
   options: 0
   page_cache: 0
   path: 0
