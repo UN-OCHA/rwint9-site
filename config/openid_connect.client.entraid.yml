@@ -8,10 +8,10 @@ id: entraid
 label: 'Entra ID (UNITE ID)'
 plugin: windows_aad
 settings:
-  client_id: 60f61dfa-1af4-4b6a-bb62-73c95ead00d1
+  client_id: entraid_client_id
   client_secret: entraid_client_secret
-  authorization_endpoint_wa: 'https://login.microsoftonline.com/0f9e35db-544f-4f60-bdcc-5ea416e6dc70/oauth2/v2.0/authorize'
-  token_endpoint_wa: 'https://login.microsoftonline.com/0f9e35db-544f-4f60-bdcc-5ea416e6dc70/oauth2/v2.0/token'
+  authorization_endpoint_wa: ''
+  token_endpoint_wa: ''
   userinfo_endpoint_wa: ''
   map_ad_groups_to_roles: false
   group_mapping:
@@ -24,5 +24,5 @@ settings:
   hide_email_address_warning: false
   subject_key: sub
   end_session_endpoint: ''
-  iss_allowed_domains: 'https://dev.reliefweb-int.ahconu.org'
+  iss_allowed_domains: ''
   front_channel_logout_url: ''
