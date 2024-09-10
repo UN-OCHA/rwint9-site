@@ -1,0 +1,753 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "RW-api",
+    "version" : "2024-09-03T15:24:39Z"
+  },
+  "servers" : [ {
+    "url" : "https://y0crb0xdcj.execute-api.us-east-1.amazonaws.com/{basePath}",
+    "variables" : {
+      "basePath" : {
+        "default" : "rw-api-test-1"
+      }
+    }
+  } ],
+  "paths" : {
+    "/reports/answer" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "feature",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "primary_country",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "theme",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "text",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "source",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "disaster",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "disaster_type",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "country",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],        
+        "responses" : {
+          "200" : {
+            "description" : "200 response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Empty"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "rw-api-authorize-key" : [ ]
+        }, {
+          "api_key" : [ ]
+        } ],
+        "x-amazon-apigateway-integration" : {
+          "httpMethod" : "POST",
+          "uri" : "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:694216630861:function:rw-kb-answer/invocations",
+          "responses" : {
+            "default" : {
+              "statusCode" : "200"
+            }
+          },
+          "requestTemplates" : {
+            "application/json" : "#set($allParams = $input.params())\n#set($params = $allParams.get('querystring'))\n{\n  #foreach($paramName in $params.keySet())\n  #if($paramName != \"text\")\n  \"$paramName\": \"$util.escapeJavaScript($params.get($paramName))\",\n  #end\n  #end\n  \"text\": \"$util.escapeJavaScript($params.get('text'))\",\n  \"siteid\": \"reliefweb\",\n  \"bundle\": \"report\",\n  \"api-id\": \"$context.apiId\",\n  \"api-key\": \"$context.identity.apiKey\",\n  \"source-ip\": \"$context.identity.sourceIp\",\n  \"user\": \"$context.identity.user\",\n  \"user-arn\": \"$context.identity.userArn\",\n  \"request-id\": \"$context.requestId\",\n  \"resource-id\": \"$context.resourceId\",\n  \"resource-path\": \"$context.resourcePath\"\n}\n"
+          },
+          "passthroughBehavior" : "when_no_match",
+          "timeoutInMillis" : 29000,
+          "contentHandling" : "CONVERT_TO_TEXT",
+          "type" : "aws"
+        }
+      }
+    },
+    "/answer" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "theme",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "text",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "job_experience",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "job_type",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "source",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "career_categories",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "city",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "country",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],        
+        "responses" : {
+          "200" : {
+            "description" : "200 response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Empty"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "rw-api-authorize-key" : [ ]
+        }, {
+          "api_key" : [ ]
+        } ],
+        "x-amazon-apigateway-integration" : {
+          "httpMethod" : "POST",
+          "uri" : "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:694216630861:function:rw-kb-answer/invocations",
+          "responses" : {
+            "default" : {
+              "statusCode" : "200"
+            }
+          },
+          "requestTemplates" : {
+            "application/json" : "#set($allParams = $input.params())\n#set($params = $allParams.get('querystring'))\n{\n  #foreach($paramName in $params.keySet())\n  #if($paramName != \"text\")\n  \"$paramName\": \"$util.escapeJavaScript($params.get($paramName))\",\n  #end\n  #end\n  \"text\": \"$util.escapeJavaScript($params.get('text'))\",\n  \"siteid\": \"reliefweb\",\n  \"api-id\": \"$context.apiId\",\n  \"api-key\": \"$context.identity.apiKey\",\n  \"source-ip\": \"$context.identity.sourceIp\",\n  \"user\": \"$context.identity.user\",\n  \"user-arn\": \"$context.identity.userArn\",\n  \"request-id\": \"$context.requestId\",\n  \"resource-id\": \"$context.resourceId\",\n  \"resource-path\": \"$context.resourcePath\"\n}\n"
+          },
+          "passthroughBehavior" : "when_no_match",
+          "timeoutInMillis" : 29000,
+          "contentHandling" : "CONVERT_TO_TEXT",
+          "type" : "aws"
+        }
+      }
+    },
+    "/jobs/search" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "theme",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "text",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "job_experience",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "job_type",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "source",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "career_categories",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "city",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "country",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "200 response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Empty"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "rw-api-authorize-key" : [ ]
+        }, {
+          "api_key" : [ ]
+        } ],
+        "x-amazon-apigateway-request-validator" : "Validate query string parameters and headers",
+        "x-amazon-apigateway-integration" : {
+          "httpMethod" : "POST",
+          "uri" : "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:694216630861:function:rw-kb-search/invocations",
+          "responses" : {
+            "default" : {
+              "statusCode" : "200"
+            }
+          },
+          "requestTemplates" : {
+            "application/json" : "#set($allParams = $input.params())\n#set($params = $allParams.get('querystring'))\n{\n  #foreach($paramName in $params.keySet())\n  #if($paramName != \"text\")\n  \"$paramName\": \"$util.escapeJavaScript($params.get($paramName))\",\n  #end\n  #end\n  \"text\": \"$util.escapeJavaScript($params.get('text'))\",\n  \"siteid\": \"reliefweb\",\n  \"bundle\": \"job\",\n  \"api-id\": \"$context.apiId\",\n  \"api-key\": \"$context.identity.apiKey\",\n  \"source-ip\": \"$context.identity.sourceIp\",\n  \"user\": \"$context.identity.user\",\n  \"user-arn\": \"$context.identity.userArn\",\n  \"request-id\": \"$context.requestId\",\n  \"resource-id\": \"$context.resourceId\",\n  \"resource-path\": \"$context.resourcePath\"\n}"
+          },
+          "passthroughBehavior" : "when_no_match",
+          "timeoutInMillis" : 29000,
+          "contentHandling" : "CONVERT_TO_TEXT",
+          "type" : "aws"
+        }
+      }
+    },
+    "/trainings/answer" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "city",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "theme",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "text",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "source",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "country",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],        
+        "responses" : {
+          "200" : {
+            "description" : "200 response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Empty"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "rw-api-authorize-key" : [ ]
+        }, {
+          "api_key" : [ ]
+        } ],
+        "x-amazon-apigateway-integration" : {
+          "httpMethod" : "POST",
+          "uri" : "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:694216630861:function:rw-kb-answer/invocations",
+          "responses" : {
+            "default" : {
+              "statusCode" : "200"
+            }
+          },
+          "requestTemplates" : {
+            "application/json" : "#set($allParams = $input.params())\n#set($params = $allParams.get('querystring'))\n{\n  #foreach($paramName in $params.keySet())\n  #if($paramName != \"text\")\n  \"$paramName\": \"$util.escapeJavaScript($params.get($paramName))\",\n  #end\n  #end\n  \"text\": \"$util.escapeJavaScript($params.get('text'))\",\n  \"siteid\": \"reliefweb\",\n  \"bundle\": \"training\",\n  \"api-id\": \"$context.apiId\",\n  \"api-key\": \"$context.identity.apiKey\",\n  \"source-ip\": \"$context.identity.sourceIp\",\n  \"user\": \"$context.identity.user\",\n  \"user-arn\": \"$context.identity.userArn\",\n  \"request-id\": \"$context.requestId\",\n  \"resource-id\": \"$context.resourceId\",\n  \"resource-path\": \"$context.resourcePath\"\n}"
+          },
+          "passthroughBehavior" : "when_no_match",
+          "timeoutInMillis" : 29000,
+          "contentHandling" : "CONVERT_TO_TEXT",
+          "type" : "aws"
+        }
+      }
+    },
+    "/search" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "feature",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "primary_country",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "theme",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "text",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "source",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "disaster",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "disaster_type",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "country",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "city",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "200 response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Empty"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "rw-api-authorize-key" : [ ]
+        }, {
+          "api_key" : [ ]
+        } ],
+        "x-amazon-apigateway-request-validator" : "Validate query string parameters and headers",
+        "x-amazon-apigateway-integration" : {
+          "httpMethod" : "POST",
+          "uri" : "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:694216630861:function:rw-kb-search/invocations",
+          "responses" : {
+            "default" : {
+              "statusCode" : "200"
+            }
+          },
+          "requestTemplates" : {
+            "application/json" : "#set($allParams = $input.params())\n#set($params = $allParams.get('querystring'))\n{\n  #foreach($paramName in $params.keySet())\n  #if($paramName != \"text\")\n  \"$paramName\": \"$util.escapeJavaScript($params.get($paramName))\",\n  #end\n  #end\n  \"text\": \"$util.escapeJavaScript($params.get('text'))\",\n  \"siteid\": \"reliefweb\",\n  \"api-id\": \"$context.apiId\",\n  \"api-key\": \"$context.identity.apiKey\",\n  \"source-ip\": \"$context.identity.sourceIp\",\n  \"user\": \"$context.identity.user\",\n  \"user-arn\": \"$context.identity.userArn\",\n  \"request-id\": \"$context.requestId\",\n  \"resource-id\": \"$context.resourceId\",\n  \"resource-path\": \"$context.resourcePath\"\n}"
+          },
+          "passthroughBehavior" : "when_no_match",
+          "timeoutInMillis" : 29000,
+          "contentHandling" : "CONVERT_TO_TEXT",
+          "type" : "aws"
+        }
+      }
+    },
+    "/jobs/answer" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "theme",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "text",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "job_experience",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "job_type",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "source",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "career_categories",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "city",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "country",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],        
+        "responses" : {
+          "200" : {
+            "description" : "200 response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Empty"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "rw-api-authorize-key" : [ ]
+        }, {
+          "api_key" : [ ]
+        } ],
+        "x-amazon-apigateway-integration" : {
+          "httpMethod" : "POST",
+          "uri" : "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:694216630861:function:rw-kb-answer/invocations",
+          "responses" : {
+            "default" : {
+              "statusCode" : "200"
+            }
+          },
+          "requestTemplates" : {
+            "application/json" : "#set($allParams = $input.params())\n#set($params = $allParams.get('querystring'))\n{\n  #foreach($paramName in $params.keySet())\n  #if($paramName != \"text\")\n  \"$paramName\": \"$util.escapeJavaScript($params.get($paramName))\",\n  #end\n  #end\n  \"text\": \"$util.escapeJavaScript($params.get('text'))\",\n  \"siteid\": \"reliefweb\",\n  \"bundle\": \"job\",\n  \"api-id\": \"$context.apiId\",\n  \"api-key\": \"$context.identity.apiKey\",\n  \"source-ip\": \"$context.identity.sourceIp\",\n  \"user\": \"$context.identity.user\",\n  \"user-arn\": \"$context.identity.userArn\",\n  \"request-id\": \"$context.requestId\",\n  \"resource-id\": \"$context.resourceId\",\n  \"resource-path\": \"$context.resourcePath\"\n}"
+          },
+          "passthroughBehavior" : "when_no_match",
+          "timeoutInMillis" : 29000,
+          "contentHandling" : "CONVERT_TO_TEXT",
+          "type" : "aws"
+        }
+      }
+    },
+    "/trainings/search" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "city",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "theme",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "text",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "source",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "country",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "200 response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Empty"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "rw-api-authorize-key" : [ ]
+        }, {
+          "api_key" : [ ]
+        } ],
+        "x-amazon-apigateway-request-validator" : "Validate query string parameters and headers",
+        "x-amazon-apigateway-integration" : {
+          "httpMethod" : "POST",
+          "uri" : "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:694216630861:function:rw-kb-search/invocations",
+          "responses" : {
+            "default" : {
+              "statusCode" : "200"
+            }
+          },
+          "requestTemplates" : {
+            "application/json" : "#set($allParams = $input.params())\n#set($params = $allParams.get('querystring'))\n{\n  #foreach($paramName in $params.keySet())\n  #if($paramName != \"text\")\n  \"$paramName\": \"$util.escapeJavaScript($params.get($paramName))\",\n  #end\n  #end\n  \"text\": \"$util.escapeJavaScript($params.get('text'))\",\n  \"siteid\": \"reliefweb\",\n  \"bundle\": \"training\",\n  \"api-id\": \"$context.apiId\",\n  \"api-key\": \"$context.identity.apiKey\",\n  \"source-ip\": \"$context.identity.sourceIp\",\n  \"user\": \"$context.identity.user\",\n  \"user-arn\": \"$context.identity.userArn\",\n  \"request-id\": \"$context.requestId\",\n  \"resource-id\": \"$context.resourceId\",\n  \"resource-path\": \"$context.resourcePath\"\n}"
+          },
+          "passthroughBehavior" : "when_no_match",
+          "timeoutInMillis" : 29000,
+          "contentHandling" : "CONVERT_TO_TEXT",
+          "type" : "aws"
+        }
+      }
+    },
+    "/reports/search" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "feature",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "primary_country",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "theme",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "text",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "source",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "disaster",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "disaster_type",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "country",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "200 response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Empty"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "rw-api-authorize-key" : [ ]
+        }, {
+          "api_key" : [ ]
+        } ],
+        "x-amazon-apigateway-request-validator" : "Validate query string parameters and headers",
+        "x-amazon-apigateway-integration" : {
+          "httpMethod" : "POST",
+          "uri" : "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:694216630861:function:rw-kb-search/invocations",
+          "responses" : {
+            "default" : {
+              "statusCode" : "200"
+            }
+          },
+          "requestTemplates" : {
+            "application/json" : "#set($allParams = $input.params())\n#set($params = $allParams.get('querystring'))\n{\n  #foreach($paramName in $params.keySet())\n  #if($paramName != \"text\")\n  \"$paramName\": \"$util.escapeJavaScript($params.get($paramName))\",\n  #end\n  #end\n  \"text\": \"$util.escapeJavaScript($params.get('text'))\",\n  \"siteid\": \"reliefweb\",\n  \"bundle\": \"report\",\n  \"api-id\": \"$context.apiId\",\n  \"api-key\": \"$context.identity.apiKey\",\n  \"source-ip\": \"$context.identity.sourceIp\",\n  \"user\": \"$context.identity.user\",\n  \"user-arn\": \"$context.identity.userArn\",\n  \"request-id\": \"$context.requestId\",\n  \"resource-id\": \"$context.resourceId\",\n  \"resource-path\": \"$context.resourcePath\"\n}"
+          },
+          "passthroughBehavior" : "when_no_match",
+          "timeoutInMillis" : 29000,
+          "contentHandling" : "CONVERT_TO_TEXT",
+          "type" : "aws"
+        }
+      }
+    },
+    "/" : {
+      "get" : {
+        "responses" : {
+          "200" : {
+            "description" : "200 response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Empty"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "rw-api-authorize-key" : [ ]
+        }, {
+          "api_key" : [ ]
+        } ],
+        "x-amazon-apigateway-integration" : {
+          "responses" : {
+            "default" : {
+              "statusCode" : "200"
+            }
+          },
+          "requestTemplates" : {
+            "application/json" : "{\"statusCode\": 200}"
+          },
+          "passthroughBehavior" : "when_no_match",
+          "type" : "mock"
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "Empty" : {
+        "title" : "Empty Schema",
+        "type" : "object"
+      }
+    },
+    "securitySchemes" : {
+      "rw-api-authorize-key" : {
+        "type" : "apiKey",
+        "name" : "x-api-key",
+        "in" : "header",
+        "x-amazon-apigateway-authtype" : "custom",
+        "x-amazon-apigateway-authorizer" : {
+          "authorizerUri" : "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:694216630861:function:rw-api-authorizer/invocations",
+          "authorizerResultTtlInSeconds" : 60,
+          "identitySource" : "method.request.header.x-api-key",
+          "type" : "request"
+        }
+      },
+      "api_key" : {
+        "type" : "apiKey",
+        "name" : "x-api-key",
+        "in" : "header"
+      }
+    }
+  },
+  "x-amazon-apigateway-request-validators" : {
+    "Validate query string parameters and headers" : {
+      "validateRequestParameters" : true,
+      "validateRequestBody" : false
+    }
+  }
+}
