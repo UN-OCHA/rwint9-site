@@ -8,8 +8,8 @@ id: entraid
 label: 'Entra ID (UNITE ID)'
 plugin: windows_aad
 settings:
-  client_id: ansible_managed_entraid_client_id
-  client_secret: ansible_managed_entraid_client_secret
+  client_id: entraid_client_id
+  client_secret: entraid_client_secret
   authorization_endpoint_wa: ''
   token_endpoint_wa: ''
   userinfo_endpoint_wa: ''
