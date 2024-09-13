@@ -1,4 +1,9 @@
 plugins:
+  answer_validator:
+    similarity_ranker:
+      min_similarity: 0.8
+    similarity_embedding:
+      min_similarity: 0.2
   completion:
     aws_bedrock:
       model: amazon.titan-text-express-v1
@@ -45,11 +50,11 @@ plugins:
       endpoint: ''
       version: ''
       region: us-east-1
-      api_key: null
+      api_key: ''
       batch_size: '1'
       dimensions: 1024
       max_tokens: 8192
-      api_secret: null
+      api_secret: ''
       role_arn: ''
     azure_openai:
       model: text-embedding-ada-002
@@ -60,6 +65,10 @@ plugins:
       batch_size: 16
       dimensions: 1536
       max_tokens: 4096
+  ranker:
+    ocha_ai_helper_ranker:
+      limit: 5
+      endpoint: 'http://ocha-ai-helper/test/correlate/texts'
   source:
     reliefweb:
       api_url: 'https://api.reliefweb.int/v1'
@@ -72,23 +81,29 @@ plugins:
     mupdf:
       mutool: /usr/bin/mutool
   text_splitter:
-    token:
-      length: 384
-      overlap: 96
+    nlp_sentence:
+      length: null
+      overlap: null
+      endpoint: 'http://ocha-ai-helper/test/split/sentences'
     sentence:
       length: 4
       overlap: 2
+    token:
+      length: 384
+      overlap: 96
   vector_store:
-    elasticsearch:
-      url: REPLACE_WITH_URL
-      base_index_name: ocha_ai
-      indexing_batch_size: 10
-      topk: 5
-      min_similarity: 0.3
-      cutoff_coefficient: 0.5
     elasticsearch_flattened:
       url: REPLACE_WITH_URL
       base_index_name: ocha_ai_flattened
+      indexing_batch_size: 10
+      topk: 10
+      min_similarity: 0.1
+      cutoff_coefficient: 0.5
+      expand_passage_before: 0
+      expand_passage_after: 0
+    elasticsearch:
+      url: REPLACE_WITH_URL
+      base_index_name: ocha_ai
       indexing_batch_size: 10
       topk: 5
       min_similarity: 0.3
