@@ -79,6 +79,13 @@ class ReliefWebSemanticCommands extends DrushCommands {
   protected $renderer;
 
   /**
+   * S3 bucket.
+   *
+   * @var string
+   */
+  protected $bucket = 'rw-kb-reports';
+
+  /**
    * List of config for each bundle.
    *
    * @var array
@@ -219,7 +226,7 @@ class ReliefWebSemanticCommands extends DrushCommands {
    *
    * @usage reliefweb-semantic:index --id=123 report
    *   Index the report with ID 123.
-   * @usagereliefweb-semantic:index --limit=10 report
+   * @usage reliefweb-semantic:index --limit=10 report
    *   Index latest 10 reports.
    */
   public function index(
@@ -413,6 +420,7 @@ class ReliefWebSemanticCommands extends DrushCommands {
     }
 
     $date = new \DateTime('now', new \DateTimeZone('UTC'));
+    $data['site'] = 'reliefweb';
     $data['timestamp'] = $date->format(\DateTime::ATOM);
     $data['bundle'] = $entity->bundle();
     $data['nid'] = $entity->id();
@@ -487,13 +495,6 @@ class ReliefWebSemanticCommands extends DrushCommands {
       return [];
     }
 
-    $bucket = $this->bundles[$bundle]['bucket'] ?? '';
-    if (empty($bucket)) {
-      $this->logger->notice('Unknown bucket for @bundle', [
-        '@bundle' => $bundle,
-      ]);
-    }
-
     if (empty($files) && isset($data['files'])) {
       $files = $data['files'];
       unset($data['files']);
@@ -540,9 +541,9 @@ class ReliefWebSemanticCommands extends DrushCommands {
         continue;
       }
 
-      $this->sendToS3($bucket, $absolute_path);
+      $this->sendToS3($this->bucket, $absolute_path);
       $basename = basename($absolute_path);
-      $this->sendToS3($bucket, $metadata_file, $basename . '.metadata.json');
+      $this->sendToS3($this->bucket, $metadata_file, $basename . '.metadata.json');
     }
   }
 

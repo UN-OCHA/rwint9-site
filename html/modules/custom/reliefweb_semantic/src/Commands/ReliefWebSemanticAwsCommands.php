@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_semantic\Commands;
 
+use Aws\ApiGateway\ApiGatewayClient;
 use Aws\BedrockAgent\BedrockAgentClient;
 use Consolidation\OutputFormatters\StructuredData\RowsOfFields;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -299,6 +300,61 @@ class ReliefWebSemanticAwsCommands extends DrushCommands {
 
       $this->state->set('reliefweb_semantic_datasources', $data);
     }
+
+    return $data;
+  }
+
+  /**
+   * List API keys.
+   *
+   * @param array $options
+   *   Additional options for the command.
+   *
+   * @command reliefweb-semantic:list-apikeys
+   *
+   * @option reset.
+   *
+   * @default $options []
+   *
+   * @usage reliefweb-semantic:list-apikeys
+   *   List datasources.
+   */
+  public function listApikeys(
+    array $options = [
+      'reset' => 0,
+      'format' => 'table',
+    ],
+  ) : RowsOfFields {
+    $data = $this->getApikeys($options['reset']);
+    return new RowsOfFields($data);
+  }
+
+  /**
+   * Get data sources.
+   */
+  protected function getApikeys($reset = 0) {
+    $data = $this->state->get('reliefweb_semantic_apikeys', []);
+    if (empty($data) || !empty($reset)) {
+      $data = [];
+      $aws_options = reliefweb_semantic_get_aws_client_options();
+      $api = new ApiGatewayClient($aws_options);
+
+      $result = $api->getApiKeys([
+        'includeValues' => TRUE,
+      ]);
+
+      $apikeys = $result->toArray()['items'];
+      foreach ($apikeys as $apikey) {
+        $data[$apikey['id']] = [
+          'id' => $apikey['id'],
+          'name' => $apikey['name'],
+          'key' => $apikey['value'],
+          'status' => $apikey['enabled'],
+        ];
+      }
+    }
+
+    $this->state->set('reliefweb_semantic_apikeys', $data);
 
     return $data;
   }
