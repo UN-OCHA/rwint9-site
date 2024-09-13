@@ -5,7 +5,7 @@ IMAGE_TAG=test
 
 function cleanup() {
   echo "Removing test containers"
-  docker compose -f tests/docker-compose.yml down
+  docker compose -f tests/docker-compose.yml down -v
   echo "Removing test images"
   docker rmi public.ecr.aws/unocha/$IMAGE_NAME:$IMAGE_TAG || true
 }
@@ -46,7 +46,7 @@ docker compose -f tests/docker-compose.yml exec -u root -w /srv/www -e BROWSERTE
 
 # Install the site with the existing config.
 echo "Install the site with the existing config."
-docker compose -f tests/docker-compose.yml exec drupal drush -y si --existing-config
+docker compose -f tests/docker-compose.yml exec drupal drush -y si --existing-config minimal install_configure_form.enable_update_status_emails=NULL
 docker compose -f tests/docker-compose.yml exec drupal drush -y en dblog
 
 # Ensure the file directories are writable.

@@ -1,0 +1,18 @@
+uuid: null
+langcode: en
+status: true
+dependencies:
+  module:
+    - ocha_monitoring
+id: ocha_admin_paths
+label: 'UN admin paths'
+description: 'UN admin paths'
+category: OCHA
+plugin_id: ocha_admin_paths
+result_class: null
+value_label: Version
+value_type: string
+caching_time: 86400
+settings: {  }
+thresholds:
+  type: none
