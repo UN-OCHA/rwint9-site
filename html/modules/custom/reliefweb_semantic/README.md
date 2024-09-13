@@ -4,7 +4,7 @@ This module provides integration with the ReliefWeb Semantic API.
 
 ## To do
 
-- Add service to query API
+- [x] Add service to query API
 
 ## AWS
 
@@ -20,14 +20,7 @@ Config:
 - Text field name: `AMAZON_BEDROCK_TEXT_CHUNK`
 - Metadata field name: `AMAZON_BEDROCK_METADATA`
 
-| KB Id      | Data Id    | Bundle    | S3 source                    | Bucket           | Index           | KB                           |
-| ---------- | ---------- | --------- | ---------------------------- | ---------------- | --------------- | ---------------------------- |
-| VIEPSPYNSS | 6KGHOEXLGY | report    | kb-data-source-rw-reports    | rw-kb-reports    | rw-reports      | rw-knowledge-base-reports    |
-| WYBGQOFQLN | ZQW6GY0WYE | job       | kb-data-source-rw-jobs       | rw-kb-jobs       | rw-jobs         | rw-knowledge-base-jobs       |
-| VDQ6RY0K5K | XJMXTP72QA | training  | kb-data-source-rw-trainings  | rw-kb-trainings  | rw-trainings-2  | rw-knowledge-base-trainings  |
-| D2E5HCYCTQ | URINLN9HIR | blog_post | kb-data-source-rw-blog-posts | rw-kb-blog-posts | rw-blog-posts-2 | rw-knowledge-base-blog-posts |
-| NZTC9LPLJN | XETKAPIJKB | book      | kb-data-source-rw-books      | rw-kb-books      | rw-books-2      | rw-knowledge-base-books      |
-| Y5EU13DU6Q | AXCARFTXKS | topic     | kb-data-source-rw-topics     | rw-kb-topics     | rw-topics       | rw-knowledge-base-topics     |
+All content is using a single KB, current Id is `VIEPSPYNSS`
 
 ## Drush
 
@@ -38,6 +31,7 @@ drush reliefweb-semantic:list-datasources List datasources.
 drush reliefweb-semantic:list-jobs        List ingestion jobs.
 drush reliefweb-semantic:trigger-sync     Trigger sync..
 drush reliefweb-semantic:query-kb --id=WYBGQOFQLN --q="Any jobs in Europe"
+drush reliefweb-semantic:list-apikeys
 ```
 
 ## Openseach
