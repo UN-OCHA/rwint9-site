@@ -500,22 +500,6 @@ function reliefweb_entities_form_alter(array &$form, FormStateInterface $form_st
 }
 
 /**
- * Implements hook_module_implements_alter().
- */
-function reliefweb_entities_module_implements_alter(array &$implementation, $hook) {
-  // Remove the hook_entity_presave() implementation from the
-  // taxonomy_term_revision module because it doesn't allow us to speify the
-  // revision user or timestamp. This is replaced by
-  // reliefweb_entities_set_taxonomy_term_revision().
-  //
-  // @see taxonomy_term_revision_entity_presave()
-  // @see reliefweb_entities_set_taxonomy_term_revision()
-  if ($hook === 'entity_presave') {
-    unset($implementation['taxonomy_term_revision']);
-  }
-}
-
-/**
  * Implements hook_theme_registry_alter().
  */
 function reliefweb_entities_theme_registry_alter(array &$theme_registry) {
@@ -580,13 +564,8 @@ function reliefweb_entities_entity_presave(EntityInterface $entity) {
 /**
  * Set a taxonomy term's revision information.
  *
- * Note: this replaces the taxonomy_term_revision_entity_presave() which
- * is not flexible and forces the revision user ID and creation time.
- *
  * @param \Drupal\Core\Entity\EntityInterface $entity
  *   Entity.
- *
- * @see taxonomy_term_revision_entity_presave()
  */
 function reliefweb_entities_set_taxonomy_term_revision(EntityInterface $entity) {
   // Saving new revision of term on each save.
