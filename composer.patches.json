@@ -21,6 +21,12 @@
         "drupal/jsonlog": {
             "Direct logging to Elastic cluster": "PATCHES/jsonlog--3460929--elastic-direct-logging.patch"
         },
+        "drupal/openid_connect": {
+            "Handle case if user is in blocked state after SSO Authorization": "PATCHES/openid_connect-3390668-6.patch"
+        },
+        "drupal/openid_connect_windows_aad": {
+            "Failed to get authentication tokens for Windows Azure AD": "PATCHES/openid_connect_windows_aad-3346603-5.patch"
+        },
         "drupal/svg_image": {
             "Drupal 10.2 compatibility": "PATCHES/svg_image--3413668--drupal-10.2-compatibility.patch"
         },

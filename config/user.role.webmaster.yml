@@ -33,7 +33,6 @@ dependencies:
     - reliefweb_users
     - system
     - taxonomy
-    - taxonomy_term_revision
 id: webmaster
 label: Webmaster
 weight: 4
@@ -65,8 +64,8 @@ permissions:
   - 'create terms in training_type'
   - 'create terms in vulnerable_group'
   - 'delete all guideline revisions'
+  - 'delete all taxonomy revisions'
   - 'delete guideline entities'
-  - 'delete term revision'
   - 'delete terms in career_category'
   - 'delete terms in content_format'
   - 'delete terms in country'
@@ -120,17 +119,16 @@ permissions:
   - 'guideline_list view revisions'
   - 'manage ocha ai chat config'
   - 'revert all guideline revisions'
-  - 'revert term revision'
+  - 'revert all taxonomy revisions'
   - 'see other bookmarks'
   - 'sort all guideline'
   - 'sort editorial guidelines'
   - 'use text format guideline'
   - 'view all guideline revisions'
+  - 'view all taxonomy revisions'
   - 'view ocha ai admin config menu'
   - 'view ocha ai chat logs'
   - 'view published guideline entities'
   - 'view reliefweb admin menu'
-  - 'view term revision data'
-  - 'view term revision list'
   - 'view the administration theme'
   - 'view unpublished guideline entities'
