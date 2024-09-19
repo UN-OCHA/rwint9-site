@@ -117,12 +117,14 @@ class UserPostingRightsHelper {
       $id_field = $helper->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'id');
       $job_field = $helper->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'job');
       $training_field = $helper->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'training');
+      $report_field = $helper->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'report');
 
       // Get the rights associated with the user id.
       $query = $helper->getDatabase()->select($table, $table);
       $query->addField($table, 'entity_id', 'tid');
       $query->addField($table, $job_field, 'job');
       $query->addField($table, $training_field, 'training');
+      $query->addField($table, $report_field, 'report');
       $query->condition($table . '.bundle', 'source', '=');
       $query->condition($table . '.' . $id_field, $account->id(), '=');
       if (!empty($sources)) {
@@ -142,6 +144,7 @@ class UserPostingRightsHelper {
           'tid' => $tid,
           'job' => 0,
           'training' => 0,
+          'report' => 0,
         ];
       }
     }
@@ -158,7 +161,7 @@ class UserPostingRightsHelper {
    * Compute the "final" posting right for a document based on an account's
    * rights for the given sources.
    *
-   * Currently only for jobs and training.
+   * Currently only for jobs, trainings and reports.
    *
    * @param \Drupal\Core\Session\AccountInterface $account
    *   A user's account object or the current user if NULL.
@@ -173,7 +176,7 @@ class UserPostingRightsHelper {
    */
   public static function getUserConsolidatedPostingRight(AccountInterface $account, $bundle, array $sources) {
     // Not a job nor training or no sources, consider the user 'unverified'.
-    if (empty($account->uid) || ($bundle !== 'job' && $bundle !== 'training') || empty($sources)) {
+    if (empty($account->uid) || ($bundle !== 'job' && $bundle !== 'training' && $bundle !== 'report') || empty($sources)) {
       return [
         'code' => 0,
         'name' => 'unverified',
@@ -251,8 +254,8 @@ class UserPostingRightsHelper {
       $owner = $entity->getOwnerId() === $account->id() && $account->id() > 0;
     }
 
-    // Only applies to job and training.
-    if ($bundle === 'job' || $bundle === 'training') {
+    // Only applies to job, training and report.
+    if ($bundle === 'job' || $bundle === 'training' || $bundle === 'report') {
       // Check for sources for which the user is blocked, allowed or trusted.
       //
       // Note: if there is no source or the user in unverified for the sources
