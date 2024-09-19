@@ -87,6 +87,7 @@ class UserPostsService extends ModerationServiceBase {
     return [
       'job',
       'training',
+      'report',
     ];
   }
 
@@ -229,7 +230,7 @@ class UserPostsService extends ModerationServiceBase {
           $cells['deadline'] = $this->formatDate($entity->field_registration_deadline->value);
         }
       }
-      else {
+      elseif ($entity->bundle() === 'job') {
         $cells['deadline'] = $this->formatDate($entity->field_job_closing_date->value);
       }
 
@@ -271,6 +272,7 @@ class UserPostsService extends ModerationServiceBase {
       'values' => [
         'job' => $this->t('Job'),
         'training' => $this->t('Training'),
+        'report' => $this->t('Report'),
       ],
     ];
 
@@ -354,6 +356,9 @@ class UserPostsService extends ModerationServiceBase {
           $allowed_sources[] = $source;
         }
         elseif (isset($rights[$source->value]['training']) && $rights[$source->value]['training'] > $min_right) {
+          $allowed_sources[] = $source;
+        }
+        elseif (isset($rights[$source->value]['report']) && $rights[$source->value]['report'] > $min_right) {
           $allowed_sources[] = $source;
         }
       }
@@ -461,6 +466,9 @@ class UserPostsService extends ModerationServiceBase {
     }
     if (empty($filters['bundle']) || !empty($filters['bundle']['training'])) {
       $types[] = 'training';
+    }
+    if (empty($filters['bundle']) || !empty($filters['bundle']['report'])) {
+      $types[] = 'report';
     }
 
     // Get the user rights keyed by source ids and store the ones

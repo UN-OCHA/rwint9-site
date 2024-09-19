@@ -30,12 +30,15 @@ class UserPostsPageFilterForm extends ModerationPageFilterForm {
     // Link to create a new entity.
     $url_options = ['attributes' => ['target' => '_blank']];
 
-    $links = $this->t('Create a new <a href="@job_url">Job vacancy</a> or a new <a href="@training_url">Training program</a>', [
+    $links = $this->t('Create a new <a href="@job_url">Job vacancy</a>, a new <a href="@training_url">Training program</a> or a new <a href="@report_url">Report</a>', [
       '@job_url' => Url::fromRoute('node.add', [
         'node_type' => 'job',
       ], $url_options)->toString(),
       '@training_url' => Url::fromRoute('node.add', [
         'node_type' => 'training',
+      ], $url_options)->toString(),
+      '@report_url' => Url::fromRoute('node.add', [
+        'node_type' => 'report',
       ], $url_options)->toString(),
     ]);
 
