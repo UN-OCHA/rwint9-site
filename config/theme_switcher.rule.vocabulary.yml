@@ -9,6 +9,7 @@ label: Vocabulary
 weight: -9
 theme: common_design_subtheme
 admin_theme: common_design_subtheme
+conjunction: and
 visibility:
   'entity_bundle:taxonomy_term':
     id: 'entity_bundle:taxonomy_term'
