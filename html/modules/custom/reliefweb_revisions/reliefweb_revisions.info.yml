@@ -5,4 +5,3 @@ package: reliefweb
 core_version_requirement: ^9 || ^10
 dependencies:
   - drupal:reliefweb_utility
-  - taxonomy_term_revision:taxonomy_term_revision
