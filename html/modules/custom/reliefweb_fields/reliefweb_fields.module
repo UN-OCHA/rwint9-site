@@ -5,7 +5,6 @@
  * Module file for the ReliefWeb Fields module.
  */
 
-use Drupal\Core\Database\Database;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\filter\FilterFormatInterface;
 use Drupal\reliefweb_fields\Plugin\Field\FieldWidget\ReliefWebLinks;
