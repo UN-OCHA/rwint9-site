@@ -11,6 +11,7 @@ use Drupal\node\Entity\Node;
 use Drupal\reliefweb_entities\BundleEntityInterface;
 use Drupal\reliefweb_entities\DocumentInterface;
 use Drupal\reliefweb_entities\DocumentTrait;
+use Drupal\reliefweb_entities\OpportunityDocumentTrait;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\EntityModeratedTrait;
 use Drupal\reliefweb_revisions\EntityRevisionedInterface;
@@ -27,6 +28,7 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
   use DocumentTrait;
   use EntityModeratedTrait;
   use EntityRevisionedTrait;
+  use OpportunityDocumentTrait;
   use StringTranslationTrait;
 
   /**
