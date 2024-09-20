@@ -1,0 +1,52 @@
+<?php
+
+/**
+ * @file
+ * ReliefWeb semantic helpers.
+ */
+
+use Aws\Sts\StsClient;
+
+/**
+ * Helper to obtain AWS client options.
+ *
+ * An array with cedentials and a region. The credentials are either
+ * the key and secret from config, or temporary ones via a role.
+ *
+ * @return array
+ *   A keyed array containing AWS client options.
+ */
+function reliefweb_semantic_get_aws_client_options() {
+  $config = \Drupal::config('reliefweb_semantic.settings');
+  $region = $config->get('aws_bedrock_region');
+  $role_arn = $config->get('aws_bedrole_role_arn', NULL);
+
+  if (!empty($role_arn)) {
+    $stsClient = new StsClient([
+      'region' => $region,
+      'version' => 'latest',
+    ]);
+
+    $result = $stsClient->AssumeRole([
+      'RoleArn' => $role_arn,
+      'RoleSessionName' => 'aws-bedrock-ocha-ai-summarize',
+    ]);
+
+    $credentials = [
+      'key'    => $result['Credentials']['AccessKeyId'],
+      'secret' => $result['Credentials']['SecretAccessKey'],
+      'token'  => $result['Credentials']['SessionToken'],
+    ];
+  }
+  else {
+    $credentials = [
+      'key' => $config->get('bedrock_access_key'),
+      'secret' => $config->get('bedrock_secret_key'),
+    ];
+  }
+
+  return [
+    'credentials' => $credentials,
+    'region' => $region,
+  ];
+}
