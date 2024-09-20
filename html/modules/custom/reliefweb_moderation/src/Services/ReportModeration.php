@@ -224,29 +224,80 @@ class ReportModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function getEntityFormSubmitButtons($status, EntityModeratedInterface $entity) {
-    $buttons = [
-      'draft' => [
-        '#value' => $this->t('Save as draft'),
-      ],
-      'to-review' => [
-        '#value' => $this->t('To review'),
-      ],
-      'published' => [
-        '#value' => $this->t('Publish'),
-      ],
-      'on-hold' => [
-        '#value' => $this->t('On-hold'),
-      ],
-      'reference' => [
-        '#value' => $this->t('Reference'),
-      ],
-    ];
+    $buttons = [];
+    $new = empty($status) || $status === 'draft' || $entity->isNew();
 
-    // @todo replace with permission.
-    if (UserHelper::userHasRoles(['administrator', 'webmaster'])) {
-      $buttons['archive'] = [
-        '#value' => $this->t('Archive'),
+    // Only show save as draft for non-published but editable documents.
+    if ($new || in_array($status, ['draft', 'pending', 'on-hold'])) {
+      $buttons['draft'] = [
+        '#value' => $this->t('Save as draft'),
       ];
+    }
+
+    // Editors can publish, put on hold or refuse a document.
+    // @todo use permission.
+    if (UserHelper::userHasRoles(['editor'])) {
+      $buttons = [
+        'draft' => [
+          '#value' => $this->t('Save as draft'),
+        ],
+        'to-review' => [
+          '#value' => $this->t('To review'),
+        ],
+        'published' => [
+          '#value' => $this->t('Publish'),
+        ],
+        'on-hold' => [
+          '#value' => $this->t('On-hold'),
+        ],
+        'reference' => [
+          '#value' => $this->t('Reference'),
+        ],
+      ];
+    }
+    elseif (UserHelper::userHasRoles(['administrator', 'webmaster'])) {
+      $buttons = [
+        'draft' => [
+          '#value' => $this->t('Save as draft'),
+        ],
+        'to-review' => [
+          '#value' => $this->t('To review'),
+        ],
+        'published' => [
+          '#value' => $this->t('Publish'),
+        ],
+        'on-hold' => [
+          '#value' => $this->t('On-hold'),
+        ],
+        'reference' => [
+          '#value' => $this->t('Reference'),
+        ],
+        'archive' => [
+          '#value' => $this->t('Archive'),
+        ],
+      ];
+    }
+    // Other users can submit for review (or publish directly if trusted).
+    else {
+      $buttons['pending'] = [
+        '#value' => $new ? $this->t('Submit') : $this->t('Submit changes'),
+      ];
+
+      // Add confirmation when attempting to change published document.
+      if ($status === 'published' || $status === 'expired') {
+        $message = $this->t('Press OK to submit the changes for review by the ReliefWeb editors. The job may be set as pending.');
+        $buttons['pending']['#attributes']['onclick'] = 'return confirm("' . $message . '")';
+      }
+    }
+
+    // Warning message when saving as a draft.
+    if (isset($buttons['draft'])) {
+      $message = $this->t('You are saving this document as a draft. It will not be visible to visitors. If you wish to proceed with the publication kindly click on @buttons instead.', [
+        '@buttons' => implode(' or ', array_map(function ($item) {
+          return $item['#value'];
+        }, array_slice($buttons, 1))),
+      ]);
+      $buttons['draft']['#attributes']['onclick'] = 'return confirm("' . $message . '")';
     }
 
     return $buttons;

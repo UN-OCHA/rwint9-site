@@ -205,8 +205,6 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
    * {@inheritdoc}
    */
   public function preSave(EntityStorageInterface $storage) {
-    parent::preSave($storage);
-
     // Change the publication date if bury is selected, to the original
     // publication date.
     if (!empty($this->field_bury->value) && !$this->field_original_publication_date->isEmpty()) {
@@ -251,6 +249,14 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
 
     // Prepare notifications.
     $this->preparePublicationNotification();
+
+    // Update the entity status based on the user posting rights.
+    $this->updateModerationStatusFromPostingRights();
+
+    // Update the entity status based on the source(s) moderation status.
+    $this->updateModerationStatusFromSourceStatus();
+
+    parent::preSave($storage);
   }
 
   /**
