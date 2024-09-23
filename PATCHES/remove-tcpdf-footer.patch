@@ -1,0 +1,39 @@
+diff --git a/src/MyPdf.php b/src/MyPdf.php
+index 082131a..bb3cb96 100644
+--- a/src/MyPdf.php
++++ b/src/MyPdf.php
+@@ -21,6 +21,7 @@ class MyPdf extends TCPDF
+     protected $_transf      = array();
+     protected $_myLastPageGroup = null;
+     protected $_myLastPageGroupNb = 0;
++    protected $tcpdflink = false;
+ 
+     // used to make a radius with bezier : (4/3 * (sqrt(2) - 1))
+     const MY_ARC = 0.5522847498;
+@@ -267,7 +268,7 @@ class MyPdf extends TCPDF
+         $cornerBL = null,
+         $cornerBR = null
+     ) {
+-    
++
+         // init the path
+         $path = '';
+ 
+@@ -1087,7 +1088,7 @@ class MyPdf extends TCPDF
+         $drawFirst = true,
+         $trans = false
+     ) {
+-    
++
+         // if we want the no trigo direction : add 2PI to the begin angle, to invert the direction
+         if (!$direction) {
+             $angleBegin+= M_PI*2.;
+@@ -1387,7 +1388,7 @@ class MyPdf extends TCPDF
+         $page = null,
+         $fontName = 'helvetica'
+     ) {
+-    
++
+         // bookmark the Title if wanted
+         if ($bookmarkTitle) {
+             $this->Bookmark($titre, 0, -1);

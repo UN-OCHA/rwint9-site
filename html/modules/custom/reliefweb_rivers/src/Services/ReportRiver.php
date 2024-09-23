@@ -173,6 +173,10 @@ class ReportRiver extends RiverServiceBase {
         'name' => $this->t('Content format'),
         'type' => 'reference',
         'vocabulary' => 'content_format',
+        'exclude' => [
+          // Interactive (RW-1077).
+          38974,
+        ],
         'field' => 'format.id',
         'widget' => [
           'type' => 'options',
