@@ -1,0 +1,4 @@
+services:
+  reliefweb_semantic.search_service:
+    class: Drupal\reliefweb_semantic\Services\ReliefWebSemanticService
+    arguments: []
