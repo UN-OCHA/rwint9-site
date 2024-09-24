@@ -44,7 +44,6 @@ dependencies:
     - reliefweb_users
     - system
     - taxonomy
-    - taxonomy_term_revision
 id: editor
 label: Editor
 weight: 2
@@ -147,12 +146,12 @@ permissions:
   - 'edit terms in source'
   - 'edit terms in tag'
   - 'edit user posting rights'
+  - 'revert all taxonomy revisions'
   - 'revert announcement revisions'
   - 'revert blog_post revisions'
   - 'revert book revisions'
   - 'revert job revisions'
   - 'revert report revisions'
-  - 'revert term revision'
   - 'revert topic revisions'
   - 'revert training revisions'
   - 'see other bookmarks'
@@ -163,6 +162,7 @@ permissions:
   - 'use text format html'
   - 'use text format markdown'
   - 'view all media revisions'
+  - 'view all taxonomy revisions'
   - 'view announcement revisions'
   - 'view any content'
   - 'view blog_post revisions'
@@ -176,8 +176,6 @@ permissions:
   - 'view published guideline entities'
   - 'view reliefweb admin menu'
   - 'view report revisions'
-  - 'view term revision data'
-  - 'view term revision list'
   - 'view the administration theme'
   - 'view topic revisions'
   - 'view training revisions'
