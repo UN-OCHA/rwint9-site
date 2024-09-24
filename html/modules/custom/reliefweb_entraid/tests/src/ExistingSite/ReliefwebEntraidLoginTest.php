@@ -66,17 +66,18 @@ class ReliefwebEntraidLoginTest extends ExistingSiteBase {
     $this->drupalGet('/user/login/entraid');
     $this->assertSession()->statusCodeEquals(404);
 
-    // Set the endpoints. The don't exists and will, on purpose return a 503.
+    // Set the endpoints. We just point at the robots.txt as we know it exists
+    // and so, if the reponse status code in 200, then the redirection worked.
     $data = $entraid_config->get();
-    $data['settings']['authorization_endpoint_wa'] = 'http://test.test/common/oauth2/v2.0/authorize';
-    $data['settings']['token_endpoint_wa'] = 'http://test.test/common/oauth2/v2.0/token';
-    $data['settings']['iss_allowed_domains'] = 'http://test.test/{tenantid}/v2.0';
+    $data['settings']['authorization_endpoint_wa'] = 'http://localhost/robots.txt';
+    $data['settings']['token_endpoint_wa'] = 'http://localhost/robots.txt';
+    $data['settings']['iss_allowed_domains'] = 'http://localhost/robots.txt';
     $entraid_config->setData($data)->save();
 
-    // If the redirection works, a 503 will be returned because the EntraID
-    // endpoints do not exist.
+    // If the redirection works, a 200 will be returned.
     $this->drupalGet('/user/login/entraid');
-    $this->assertSession()->statusCodeEquals(503);
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertStringContainsString('Disallow:', $this->getSession()->getPage()->getContent());
   }
 
 }
