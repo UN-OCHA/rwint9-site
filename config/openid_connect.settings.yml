@@ -4,8 +4,8 @@ override_registration_settings: false
 end_session_enabled: true
 user_login_display: below
 redirect_login: ''
-redirect_logout: '/'
+redirect_logout: /
 userinfo_mappings:
   timezone: zoneinfo
   user_picture: picture
-role_mappings: { }
+role_mappings: {  }
