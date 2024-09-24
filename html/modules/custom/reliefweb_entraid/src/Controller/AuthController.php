@@ -83,7 +83,6 @@ class AuthController extends ControllerBase implements ContainerInjectionInterfa
       return $response->send();
     }
     catch (\Exception $exception) {
-      print_r([$exception->getMessage()]);
       $config = $this->config('openid_connect.client.entraid');
       $cacheable_metadata = new CacheableMetadata();
       $cacheable_metadata->addCacheableDependency($config);
