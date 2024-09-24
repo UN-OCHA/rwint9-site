@@ -106,6 +106,7 @@ function reliefweb_reporting_get_weekly_ai_tagging_stats() {
     'jobs_tagged_by_ai' => count($jobs),
     'career_categories_changed_by_editors' => count($changed_career_categories),
     'themes_changed_by_editors' => count($changed_themes),
+    'jobs_changed_by_editors' => count($changed_career_categories + $changed_themes),
   ];
 
   return $data;
