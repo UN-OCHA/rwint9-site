@@ -22,7 +22,7 @@ defaults:
     embedding:
       plugin_id: aws_bedrock_titan_embed_text_v2
     ranker:
-      plugin_id: NULL
+      plugin_id: null
       limit: 5
     source:
       plugin_id: reliefweb
