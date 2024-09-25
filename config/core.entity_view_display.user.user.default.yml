@@ -13,6 +13,7 @@ bundle: user
 mode: default
 content: {  }
 hidden:
+  display_name: true
   field_email_confirmed: true
   field_notes: true
   langcode: true

@@ -96,3 +96,25 @@ XDEBUG_MODE=coverage vendor/bin/phpunit
 # without coverage
 vendor/bin/phpunit
 ```
+
+## For dev
+
+```bash
+drush rapi-i --alias job --verbose
+drush rw-job:index --verbose
+
+cget ocha_ai.settings --include-overridden
+cget ocha_ai_tag.settings --include-overridden
+cget ocha_ai_chat.settings --include-overridden
+cget reliefweb_api.settings --include-overridden
+
+cset ocha_ai.settings plugins.source.reliefweb.api_url https://dev.api-reliefweb-int.ahconu.org/v1
+cset ocha_ai.settings plugins.source.reliefweb.converter_url https://xxx:xxx@dev.reliefweb-int.ahconu.org/search/converter/json
+cset reliefweb_api.settings api_url https://dev.api-reliefweb-int.ahconu.org/v1
+cset reliefweb_api.settings api_url_external https://dev.api-reliefweb-int.ahconu.org/v1
+cset reliefweb_api.settings website: https://dev.reliefweb-int.ahconu.org
+
+queue:list
+queue:run --verbose reliefweb_job_tagger
+
+```
