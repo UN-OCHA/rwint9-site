@@ -5,7 +5,7 @@ dependencies:
   module:
     - openid_connect_windows_aad
 id: entraid
-label: 'Entra ID (UNITE ID)'
+label: 'Unite ID'
 plugin: windows_aad
 settings:
   client_id: entraid_client_id
