@@ -1,0 +1,7 @@
+reliefweb_entraid.login:
+  path: '/user/login/entraid'
+  defaults:
+    _controller: '\Drupal\reliefweb_entraid\Controller\AuthController::redirectLogin'
+    _title: 'Login with Unite ID'
+  requirements:
+    _user_is_logged_in: 'FALSE'
