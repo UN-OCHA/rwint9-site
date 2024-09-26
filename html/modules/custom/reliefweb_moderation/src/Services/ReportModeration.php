@@ -206,6 +206,7 @@ class ReportModeration extends ModerationServiceBase {
       'to-review' => $this->t('To review'),
       'published' => $this->t('Published'),
       'embargoed' => $this->t('Embargoed'),
+      'pending' => $this->t('Pending'),
       'archive' => $this->t('Archived'),
       'reference' => $this->t('Reference'),
     ];
