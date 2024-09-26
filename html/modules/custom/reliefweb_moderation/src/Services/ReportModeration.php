@@ -206,7 +206,6 @@ class ReportModeration extends ModerationServiceBase {
       'to-review' => $this->t('To review'),
       'published' => $this->t('Published'),
       'embargoed' => $this->t('Embargoed'),
-      'pending' => $this->t('Pending'),
       'archive' => $this->t('Archived'),
       'reference' => $this->t('Reference'),
     ];
@@ -229,7 +228,7 @@ class ReportModeration extends ModerationServiceBase {
     $new = empty($status) || $status === 'draft' || $entity->isNew();
 
     // Only show save as draft for non-published but editable documents.
-    if ($new || in_array($status, ['draft', 'pending', 'on-hold'])) {
+    if ($new || in_array($status, ['draft', 'on-hold'])) {
       $buttons['draft'] = [
         '#value' => $this->t('Save as draft'),
       ];
@@ -280,14 +279,14 @@ class ReportModeration extends ModerationServiceBase {
     }
     // Other users can submit for review (or publish directly if trusted).
     else {
-      $buttons['pending'] = [
+      $buttons['to-review'] = [
         '#value' => $new ? $this->t('Submit') : $this->t('Submit changes'),
       ];
 
       // Add confirmation when attempting to change published document.
       if ($status === 'published') {
-        $message = $this->t('Press OK to submit the changes for review by the ReliefWeb editors. The report may be set as pending.');
-        $buttons['pending']['#attributes']['onclick'] = 'return confirm("' . $message . '")';
+        $message = $this->t('Press OK to submit the changes for review by the ReliefWeb editors. The report may be set as to-review.');
+        $buttons['to-review']['#attributes']['onclick'] = 'return confirm("' . $message . '")';
       }
     }
 
