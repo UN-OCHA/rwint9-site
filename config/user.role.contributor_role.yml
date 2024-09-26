@@ -1,0 +1,14 @@
+uuid: 42dacb5f-f71a-4e37-858e-d4cf46729e39
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.report
+  module:
+    - node
+id: contributor_role
+label: 'Contributor role'
+weight: 9
+is_admin: null
+permissions:
+  - 'create report content'

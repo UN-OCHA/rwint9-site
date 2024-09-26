@@ -7,7 +7,6 @@ dependencies:
     - filter.format.markdown_editor
     - filter.format.token_markdown
     - node.type.job
-    - node.type.report
     - node.type.training
   module:
     - content_entity_clone
@@ -34,7 +33,6 @@ permissions:
   - 'bookmark content'
   - 'clone content entities'
   - 'create job content'
-  - 'create report content'
   - 'create training content'
   - 'delete own job content'
   - 'delete own training content'
