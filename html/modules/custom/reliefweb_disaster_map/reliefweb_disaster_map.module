@@ -99,7 +99,7 @@ function reliefweb_disaster_map_get_disaster_type_tokens() {
  * @return \Drupal\Component\Render\MarkupInterface|string
  *   The rendered disaster map HTML content to use as token replacement.
  */
-function reliefweb_disaster_map_get_disaster_map_token_replacement($token, BubbleableMetadata $bubbleable_metadata = NULL, $render = TRUE) {
+function reliefweb_disaster_map_get_disaster_map_token_replacement($token, ?BubbleableMetadata $bubbleable_metadata = NULL, $render = TRUE) {
   $tokens = reliefweb_disaster_map_get_disaster_type_tokens();
   $values = !empty($token) ? explode('-', strtoupper($token)) : [];
   $options = [];

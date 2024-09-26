@@ -58,7 +58,7 @@ class CommunityTopicsForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, AccountInterface $user = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?AccountInterface $user = NULL) {
     $links = $this->getCommunityTopics();
 
     // Data to pass to the javascript.

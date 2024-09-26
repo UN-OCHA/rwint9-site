@@ -60,7 +60,7 @@ class UnsubscribeForm extends SubscriptionForm {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, AccountInterface $user = NULL, $timestamp = NULL, $signature = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?AccountInterface $user = NULL, $timestamp = NULL, $signature = NULL) {
     if (!$this->mailer->checkUnsubscribeLink($user->id(), $timestamp, $signature)) {
       throw new AccessDeniedHttpException();
     }
