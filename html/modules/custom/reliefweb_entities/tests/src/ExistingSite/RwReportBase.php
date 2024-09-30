@@ -42,6 +42,7 @@ class RwReportBase extends ExistingSiteBase {
     $user = User::create([
       'name' => $name,
       'id' => $id,
+      'mail' => $this->randomMachineName(32) . '@localhost.localdomain',
     ] + $extra);
     $user->save();
     return $user;
