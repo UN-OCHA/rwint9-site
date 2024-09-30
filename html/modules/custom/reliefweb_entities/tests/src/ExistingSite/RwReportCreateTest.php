@@ -4,26 +4,14 @@
 
 namespace Drupal\Tests\reliefweb_entities\ExistingSite;
 
-use Drupal\Core\Url;
-use Drupal\group\Entity\Group;
 use Drupal\node\Entity\Node;
-use Drupal\paragraphs\Entity\Paragraph;
-use Drupal\theme_switcher\Entity\ThemeSwitcherRule;
 use Drupal\user\Entity\User;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
- * Tests sidebar feed.
+ * Tests reports.
  */
-class RwReportTest extends ExistingSiteBase {
-
-  protected function renderIt($entity_type, $entity) {
-    $view_builder = \Drupal::entityTypeManager()->getViewBuilder($entity_type);
-    $build = $view_builder->view($entity);
-    $output = \Drupal::service('renderer')->renderRoot($build);
-
-    return $output->__toString();
-  }
+class RwReportCreateTest extends ExistingSiteBase {
 
   /**
    * Test report.
