@@ -24,10 +24,11 @@ class RwReportBase extends ExistingSiteBase {
 
     $term = Term::create([
       'vid' => $vocabulary,
+      'tid' => $id,
       'name' => $title,
-      'id' => $id,
     ] + $extra);
     $term->save();
+
     return $term;
   }
 
@@ -46,6 +47,7 @@ class RwReportBase extends ExistingSiteBase {
       'status' => 1,
     ] + $extra);
     $user->save();
+
     return $user;
   }
 
