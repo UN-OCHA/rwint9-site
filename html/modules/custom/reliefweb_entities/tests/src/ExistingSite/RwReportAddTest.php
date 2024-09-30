@@ -27,7 +27,11 @@ class RwReportAddTest extends ExistingSiteBase {
     $term_language = $this->createTermIfNeeded('language', 267, 'English');
     $term_country = $this->createTermIfNeeded('country', 34, 'Belgium');
     $term_format = $this->createTermIfNeeded('content_format', 267, 'UN Document');
-    $term_source = $this->createTermIfNeeded('source', 43679, 'ABC Color');
+    $term_source = $this->createTermIfNeeded('source', 43679, 'ABC Color', [
+      'field_allowed_content_types' => [
+        1,
+      ],
+    ]);
 
     // Create a node.
     $edit = [];
@@ -55,7 +59,7 @@ class RwReportAddTest extends ExistingSiteBase {
   /**
    * Create terms.
    */
-  protected function createTermIfNeeded($vocabulary, $id, $title) : Term {
+  protected function createTermIfNeeded($vocabulary, $id, $title, array $extra = []) : Term {
     if ($term = Term::load($id)) {
       return $term;
     }
@@ -64,7 +68,7 @@ class RwReportAddTest extends ExistingSiteBase {
       'vid' => $vocabulary,
       'name' => $title,
       'id' => $id,
-    ]);
+    ] + $extra);
     $term->save();
     return $term;
   }
