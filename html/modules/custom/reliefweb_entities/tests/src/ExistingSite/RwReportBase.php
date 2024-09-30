@@ -46,4 +46,5 @@ class RwReportBase extends ExistingSiteBase {
     $user->save();
     return $user;
   }
+
 }

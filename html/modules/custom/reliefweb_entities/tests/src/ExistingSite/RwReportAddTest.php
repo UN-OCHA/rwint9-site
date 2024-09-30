@@ -16,7 +16,7 @@ class RwReportAddTest extends RwReportBase {
    */
   public function testAddReportAsAdminPublished() {
     $site_name = \Drupal::config('system.site')->get('name');
-    $title = $this->randomMachineName(8);
+    $title = $this->randomMachineName(32);
 
     $admin = User::load(1);
     $this->drupalLogin($admin);
@@ -25,7 +25,7 @@ class RwReportAddTest extends RwReportBase {
     $this->drupalGet('node/add/report');
     $this->submitForm($edit, 'Publish');
 
-    // Check that the Basic page has been created.
+    // Check that the report has been created.
     $this->assertSession()->titleEquals($title . ' - Belgium | ' . $site_name);
     $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created.');
     $this->assertSession()->pageTextContains('Belgium');
@@ -33,6 +33,12 @@ class RwReportAddTest extends RwReportBase {
     $this->assertSession()->pageTextContains('UN Document');
     $this->assertSession()->pageTextContains('English');
     $this->assertSession()->elementTextEquals('css', '.rw-moderation-information__status.rw-moderation-status', 'Published');
+
+    // Check as anonymous.
+    $this->drupalGet('user/logout');
+    $node = $this->getNodeByTitle($title);
+    $this->drupalGet($node->toUrl());
+    $this->assertSession()->titleEquals($title . ' - Belgium | ' . $site_name);
   }
 
   /**
@@ -40,7 +46,7 @@ class RwReportAddTest extends RwReportBase {
    */
   public function testAddReportAsAdminDraft() {
     $site_name = \Drupal::config('system.site')->get('name');
-    $title = $this->randomMachineName(8);
+    $title = $this->randomMachineName(32);
 
     $admin = User::load(1);
     $this->drupalLogin($admin);
@@ -49,7 +55,7 @@ class RwReportAddTest extends RwReportBase {
     $this->drupalGet('node/add/report');
     $this->submitForm($edit, 'Save as draft');
 
-    // Check that the Basic page has been created.
+    // Check that the report has been created.
     $this->assertSession()->titleEquals($title . ' - Belgium | ' . $site_name);
     $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created.');
     $this->assertSession()->pageTextContains('Belgium');
@@ -57,6 +63,116 @@ class RwReportAddTest extends RwReportBase {
     $this->assertSession()->pageTextContains('UN Document');
     $this->assertSession()->pageTextContains('English');
     $this->assertSession()->elementTextEquals('css', '.rw-moderation-information__status.rw-moderation-status', 'Draft');
+
+    // Check as anonymous.
+    $this->drupalGet('user/logout');
+    $node = $this->getNodeByTitle($title);
+    $this->drupalGet($node->toUrl());
+    $this->assertSession()->statusCodeEquals(404);
+  }
+
+  /**
+   * Test adding a report as contributor, draft, allowed.
+   */
+  public function testAddReportAsContributorDraftAllowed() {
+    $site_name = \Drupal::config('system.site')->get('name');
+    $title = $this->randomMachineName(32);
+
+    $user = $this->createUserIfNeeded(2884910, 'report allowed');
+    if (!$user->hasRole('contributor_role')) {
+      $user->addRole('contributor_role');
+      $user->save();
+    }
+    $this->drupalLogin($user);
+
+    // Create term first so we can assign posting rights.
+    $term_source = $this->createTermIfNeeded('source', 43679, 'ABC Color', [
+      'field_allowed_content_types' => [
+        1,
+      ],
+    ]);
+
+    // Set posting right to
+    $term_source->set('field_user_posting_rights', [
+      [
+        'id' => $user->id(),
+        'job' => '0',
+        'training' => '0',
+        'report' => '2', // Allowed.
+        'notes' => '',
+      ],
+    ]);
+    $term_source->save();
+
+    $edit = $this->getEditFields($title);
+    $this->drupalGet('node/add/report');
+    $this->submitForm($edit, 'Save as draft');
+
+    // Check that the report has been created.
+    $this->assertSession()->titleEquals($title . ' - Belgium | ' . $site_name);
+    $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created.');
+    $this->assertSession()->pageTextContains('Belgium');
+    $this->assertSession()->pageTextContains('ABC Color');
+    $this->assertSession()->pageTextContains('UN Document');
+    $this->assertSession()->pageTextContains('English');
+
+    // Check as anonymous.
+    $this->drupalGet('user/logout');
+    $node = $this->getNodeByTitle($title);
+    $this->drupalGet($node->toUrl());
+    $this->assertSession()->statusCodeEquals(404);
+  }
+
+  /**
+   * Test adding a report as contributor, draft, trusted.
+   */
+  public function testAddReportAsContributorDraftTrusted() {
+    $site_name = \Drupal::config('system.site')->get('name');
+    $title = $this->randomMachineName(32);
+
+    $user = $this->createUserIfNeeded(2884910, 'report trusted');
+    if (!$user->hasRole('contributor_role')) {
+      $user->addRole('contributor_role');
+      $user->save();
+    }
+    $this->drupalLogin($user);
+
+    // Create term first so we can assign posting rights.
+    $term_source = $this->createTermIfNeeded('source', 43679, 'ABC Color', [
+      'field_allowed_content_types' => [
+        1,
+      ],
+    ]);
+
+    // Set posting right to
+    $term_source->set('field_user_posting_rights', [
+      [
+        'id' => $user->id(),
+        'job' => '0',
+        'training' => '0',
+        'report' => '3', // Trusted.
+        'notes' => '',
+      ],
+    ]);
+    $term_source->save();
+
+    $edit = $this->getEditFields($title);
+    $this->drupalGet('node/add/report');
+    $this->submitForm($edit, 'Submit');
+
+    // Check that the report has been created.
+    $this->assertSession()->titleEquals($title . ' - Belgium | ' . $site_name);
+    $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created.');
+    $this->assertSession()->pageTextContains('Belgium');
+    $this->assertSession()->pageTextContains('ABC Color');
+    $this->assertSession()->pageTextContains('UN Document');
+    $this->assertSession()->pageTextContains('English');
+
+    // Check as anonymous.
+    $this->drupalGet('user/logout');
+    $node = $this->getNodeByTitle($title);
+    $this->drupalGet($node->toUrl());
+    $this->assertSession()->titleEquals($title . ' - Belgium | ' . $site_name);
   }
 
   protected function getEditFields($title) {
