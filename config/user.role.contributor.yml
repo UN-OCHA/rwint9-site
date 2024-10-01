@@ -15,6 +15,9 @@ is_admin: null
 permissions:
   - 'create image_report media'
   - 'create report content'
+  - 'delete media'
   - 'delete own image_report media'
   - 'edit own image_report media'
   - 'edit own report content'
+  - 'update media'
+  - 'view own unpublished media'
