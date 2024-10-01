@@ -50,7 +50,7 @@ class RwJobTaggerRequeueForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $node = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?NodeInterface $node = NULL) {
     if ($node->bundle() != 'job') {
       $this->messenger()->addWarning($this->t('Only jobs can be re-queued.'));
       $form_state->setRedirect('entity.node.canonical', ['node' => $node->id()]);
