@@ -123,7 +123,7 @@ class RwReportAddTest extends RwReportBase {
     $this->assertSession()->statusCodeEquals(404);
 
     // Check moderation status.
-    $this->assertEquals($node->moderation_status->value, 'on-hold');
+    $this->assertEquals($node->moderation_status->value, 'draft');
   }
 
   /**
@@ -175,10 +175,10 @@ class RwReportAddTest extends RwReportBase {
     $this->drupalGet('user/logout');
     $node = $this->getNodeByTitle($title);
     $this->drupalGet($node->toUrl());
-    $this->assertSession()->statusCodeEquals(200);
+    $this->assertSession()->statusCodeEquals(404);
 
     // Check moderation status.
-    $this->assertEquals($node->moderation_status->value, 'to-review');
+    $this->assertEquals($node->moderation_status->value, 'on-hold');
   }
 
   /**
@@ -233,7 +233,7 @@ class RwReportAddTest extends RwReportBase {
     $this->assertSession()->statusCodeEquals(404);
 
     // Check moderation status.
-    $this->assertEquals($node->moderation_status->value, 'refused');
+    $this->assertEquals($node->moderation_status->value, 'draft');
   }
 
   /**
@@ -285,10 +285,10 @@ class RwReportAddTest extends RwReportBase {
     $this->drupalGet('user/logout');
     $node = $this->getNodeByTitle($title);
     $this->drupalGet($node->toUrl());
-    $this->assertSession()->statusCodeEquals(200);
+    $this->assertSession()->statusCodeEquals(404);
 
     // Check moderation status.
-    $this->assertEquals($node->moderation_status->value, 'to-review');
+    $this->assertEquals($node->moderation_status->value, 'refused');
   }
 
   /**
@@ -343,7 +343,7 @@ class RwReportAddTest extends RwReportBase {
     $this->assertSession()->statusCodeEquals(404);
 
     // Check moderation status.
-    $this->assertEquals($node->moderation_status->value, 'on-hold');
+    $this->assertEquals($node->moderation_status->value, 'draft');
   }
 
   /**

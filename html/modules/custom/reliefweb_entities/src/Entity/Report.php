@@ -377,7 +377,7 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
 
     // For non editors, we determine the real status based on the user
     // posting rights for the selected sources.
-    if (!UserHelper::userHasRoles(['editor'], $user)) {
+    if (!UserHelper::userHasRoles(['editor'], $user) && in_array($status, ['on-hold', 'to-review'])) {
       // Retrieve the list of sources and check the user rights.
       if (!$this->field_source->isEmpty()) {
         // Extract source ids.
