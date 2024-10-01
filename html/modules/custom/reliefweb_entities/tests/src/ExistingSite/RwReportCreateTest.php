@@ -294,5 +294,7 @@ class RwReportCreateTest extends RwReportBase {
       ],
     ]);
     $term_source->save();
+
+    drupal_static_reset('reliefweb_moderation_getUserPostingRights');
   }
 }
