@@ -262,6 +262,14 @@ class UserPostsService extends ModerationServiceBase {
     ];
 
     // Filter by bundle.
+    $allowed_bundles = [
+      'job' => $this->t('Job'),
+      'training' => $this->t('Training'),
+    ];
+    if ($this->currentUser->hasPermission('create report content')) {
+      $allowed_bundles['report'] = $this->t('Report');
+    }
+
     $definitions['bundle'] = [
       'type' => 'property',
       'field' => 'type',
@@ -269,11 +277,7 @@ class UserPostsService extends ModerationServiceBase {
       'shortcut' => 'ty',
       'form' => 'other',
       'operator' => 'OR',
-      'values' => [
-        'job' => $this->t('Job'),
-        'training' => $this->t('Training'),
-        'report' => $this->t('Report'),
-      ],
+      'values' => $allowed_bundles,
     ];
 
     // Limit sources.
