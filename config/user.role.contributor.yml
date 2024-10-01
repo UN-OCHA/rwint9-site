@@ -17,3 +17,4 @@ permissions:
   - 'create report content'
   - 'delete own image_report media'
   - 'edit own image_report media'
+  - 'edit own report content'
