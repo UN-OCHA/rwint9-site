@@ -22,7 +22,7 @@ class ModerationPageFilterForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, ModerationServiceInterface $service = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?ModerationServiceInterface $service = NULL) {
     if (empty($service)) {
       return [];
     }
