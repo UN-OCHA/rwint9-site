@@ -3,12 +3,17 @@ langcode: en
 status: true
 dependencies:
   config:
+    - media.type.image_report
     - node.type.report
   module:
+    - media
     - node
 id: contributor
-label: 'Contributor'
+label: Contributor
 weight: 9
 is_admin: null
 permissions:
+  - 'create image_report media'
   - 'create report content'
+  - 'delete own image_report media'
+  - 'edit own image_report media'
