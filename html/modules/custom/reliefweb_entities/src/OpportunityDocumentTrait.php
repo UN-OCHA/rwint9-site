@@ -9,7 +9,7 @@ use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
 
 /**
- * Trait for "opportunity" documents like jobs, trainings and reports.
+ * Trait for "opportunity" documents like jobs and trainings.
  *
  * @see Drupal\reliefweb_entities\DocuemntInterface
  */

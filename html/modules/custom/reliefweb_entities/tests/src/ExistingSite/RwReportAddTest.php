@@ -72,6 +72,226 @@ class RwReportAddTest extends RwReportBase {
   }
 
   /**
+   * Test adding a report as contributor, draft, unverified.
+   */
+  public function testAddReportAsContributorDraftUnverified() {
+    $site_name = \Drupal::config('system.site')->get('name');
+    $title = $this->randomMachineName(32);
+
+    $user = $this->createUserIfNeeded(2884910, 'report unverified');
+    if (!$user->hasRole('contributor')) {
+      $user->addRole('contributor');
+      $user->save();
+    }
+    $this->drupalLogin($user);
+
+    // Create term first so we can assign posting rights.
+    $term_source = $this->createTermIfNeeded('source', 43679, 'ABC Color', [
+      'field_allowed_content_types' => [
+        1,
+      ],
+    ]);
+
+    // Set posting right to
+    $term_source->set('field_user_posting_rights', [
+      [
+        'id' => $user->id(),
+        'job' => '0',
+        'training' => '0',
+        'report' => '0', // Unverified.
+        'notes' => '',
+      ],
+    ]);
+    $term_source->save();
+
+    $edit = $this->getEditFields($title);
+    $this->drupalGet('node/add/report');
+    $this->submitForm($edit, 'Save as draft');
+
+    // Check that the report has been created.
+    $this->assertSession()->titleEquals($title . ' - Belgium | ' . $site_name);
+    $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created.');
+    $this->assertSession()->pageTextContains('Belgium');
+    $this->assertSession()->pageTextContains('ABC Color');
+    $this->assertSession()->pageTextContains('UN Document');
+    $this->assertSession()->pageTextContains('English');
+
+    // Check as anonymous.
+    $this->drupalGet('user/logout');
+    $node = $this->getNodeByTitle($title);
+    $this->drupalGet($node->toUrl());
+    $this->assertSession()->statusCodeEquals(404);
+
+    // Check moderation status.
+    $this->assertEquals($node->moderation_status->value, 'on-hold');
+  }
+
+  /**
+   * Test adding a report as contributor, submit, unverified.
+   */
+  public function testAddReportAsContributorSubmitUnverified() {
+    $site_name = \Drupal::config('system.site')->get('name');
+    $title = $this->randomMachineName(32);
+
+    $user = $this->createUserIfNeeded(2884910, 'report unverified');
+    if (!$user->hasRole('contributor')) {
+      $user->addRole('contributor');
+      $user->save();
+    }
+    $this->drupalLogin($user);
+
+    // Create term first so we can assign posting rights.
+    $term_source = $this->createTermIfNeeded('source', 43679, 'ABC Color', [
+      'field_allowed_content_types' => [
+        1,
+      ],
+    ]);
+
+    // Set posting right to
+    $term_source->set('field_user_posting_rights', [
+      [
+        'id' => $user->id(),
+        'job' => '0',
+        'training' => '0',
+        'report' => '0', // Unverified.
+        'notes' => '',
+      ],
+    ]);
+    $term_source->save();
+
+    $edit = $this->getEditFields($title);
+    $this->drupalGet('node/add/report');
+    $this->submitForm($edit, 'Submit');
+
+    // Check that the report has been created.
+    $this->assertSession()->titleEquals($title . ' - Belgium | ' . $site_name);
+    $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created.');
+    $this->assertSession()->pageTextContains('Belgium');
+    $this->assertSession()->pageTextContains('ABC Color');
+    $this->assertSession()->pageTextContains('UN Document');
+    $this->assertSession()->pageTextContains('English');
+
+    // Check as anonymous.
+    $this->drupalGet('user/logout');
+    $node = $this->getNodeByTitle($title);
+    $this->drupalGet($node->toUrl());
+    $this->assertSession()->statusCodeEquals(200);
+
+    // Check moderation status.
+    $this->assertEquals($node->moderation_status->value, 'to-review');
+  }
+
+  /**
+   * Test adding a report as contributor, draft, blocked.
+   */
+  public function testAddReportAsContributorDraftBlocked() {
+    $site_name = \Drupal::config('system.site')->get('name');
+    $title = $this->randomMachineName(32);
+
+    $user = $this->createUserIfNeeded(2884910, 'report blocked');
+    if (!$user->hasRole('contributor')) {
+      $user->addRole('contributor');
+      $user->save();
+    }
+    $this->drupalLogin($user);
+
+    // Create term first so we can assign posting rights.
+    $term_source = $this->createTermIfNeeded('source', 43679, 'ABC Color', [
+      'field_allowed_content_types' => [
+        1,
+      ],
+    ]);
+
+    // Set posting right to
+    $term_source->set('field_user_posting_rights', [
+      [
+        'id' => $user->id(),
+        'job' => '0',
+        'training' => '0',
+        'report' => '1', // Blocked.
+        'notes' => '',
+      ],
+    ]);
+    $term_source->save();
+
+    $edit = $this->getEditFields($title);
+    $this->drupalGet('node/add/report');
+    $this->submitForm($edit, 'Save as draft');
+
+    // Check that the report has been created.
+    $this->assertSession()->titleEquals($title . ' - Belgium | ' . $site_name);
+    $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created.');
+    $this->assertSession()->pageTextContains('Belgium');
+    $this->assertSession()->pageTextContains('ABC Color');
+    $this->assertSession()->pageTextContains('UN Document');
+    $this->assertSession()->pageTextContains('English');
+
+    // Check as anonymous.
+    $this->drupalGet('user/logout');
+    $node = $this->getNodeByTitle($title);
+    $this->drupalGet($node->toUrl());
+    $this->assertSession()->statusCodeEquals(404);
+
+    // Check moderation status.
+    $this->assertEquals($node->moderation_status->value, 'refused');
+  }
+
+  /**
+   * Test adding a report as contributor, submit, blocked.
+   */
+  public function testAddReportAsContributorSubmitBlocked() {
+    $site_name = \Drupal::config('system.site')->get('name');
+    $title = $this->randomMachineName(32);
+
+    $user = $this->createUserIfNeeded(2884910, 'report blocked');
+    if (!$user->hasRole('contributor')) {
+      $user->addRole('contributor');
+      $user->save();
+    }
+    $this->drupalLogin($user);
+
+    // Create term first so we can assign posting rights.
+    $term_source = $this->createTermIfNeeded('source', 43679, 'ABC Color', [
+      'field_allowed_content_types' => [
+        1,
+      ],
+    ]);
+
+    // Set posting right to
+    $term_source->set('field_user_posting_rights', [
+      [
+        'id' => $user->id(),
+        'job' => '0',
+        'training' => '0',
+        'report' => '1', // Blocked.
+        'notes' => '',
+      ],
+    ]);
+    $term_source->save();
+
+    $edit = $this->getEditFields($title);
+    $this->drupalGet('node/add/report');
+    $this->submitForm($edit, 'Submit');
+
+    // Check that the report has been created.
+    $this->assertSession()->titleEquals($title . ' - Belgium | ' . $site_name);
+    $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created.');
+    $this->assertSession()->pageTextContains('Belgium');
+    $this->assertSession()->pageTextContains('ABC Color');
+    $this->assertSession()->pageTextContains('UN Document');
+    $this->assertSession()->pageTextContains('English');
+
+    // Check as anonymous.
+    $this->drupalGet('user/logout');
+    $node = $this->getNodeByTitle($title);
+    $this->drupalGet($node->toUrl());
+    $this->assertSession()->statusCodeEquals(200);
+
+    // Check moderation status.
+    $this->assertEquals($node->moderation_status->value, 'to-review');
+  }
+
+  /**
    * Test adding a report as contributor, draft, allowed.
    */
   public function testAddReportAsContributorDraftAllowed() {
@@ -123,7 +343,7 @@ class RwReportAddTest extends RwReportBase {
     $this->assertSession()->statusCodeEquals(404);
 
     // Check moderation status.
-    $this->assertEquals($node->moderation_status->value, 'draft');
+    $this->assertEquals($node->moderation_status->value, 'on-hold');
   }
 
   /**
@@ -288,7 +508,7 @@ class RwReportAddTest extends RwReportBase {
     $this->assertSession()->titleEquals($title . ' - Belgium | ' . $site_name);
 
     // Check moderation status.
-    $this->assertEquals($node->moderation_status->value, 'to-review');
+    $this->assertEquals($node->moderation_status->value, 'published');
   }
 
   protected function getEditFields($title) {

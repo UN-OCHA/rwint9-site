@@ -14,11 +14,14 @@ use Drupal\reliefweb_entities\DocumentTrait;
 use Drupal\reliefweb_entities\OpportunityDocumentTrait;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\EntityModeratedTrait;
+use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_revisions\EntityRevisionedTrait;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\ReliefWebStateHelper;
+use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
+use Drupal\reliefweb_utility\Helpers\UserHelper;
 
 /**
  * Bundle class for report nodes.
@@ -354,6 +357,85 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
     // Send the email.
     \Drupal::service('plugin.manager.mail')
       ->mail('reliefweb_entities', 'report_publication_notification', $to, $langcode, $parameters, $from, TRUE);
+  }
+
+  /**
+   * Update the status for the entity based on the user posting rights.
+   */
+  protected function updateModerationStatusFromPostingRights() {
+    // In theory the revision user here, is the current user saving the entity.
+    /** @var \Drupal\user\UserInterface|null $user */
+    $user = $this->getRevisionUser();
+    $status = $this->getModerationStatus();
+
+    // Skip if there is no revision user. That should normally not happen with
+    // new content but some old revisions may reference users that don't exist
+    // anymore (which should not happen either but...).
+    if (empty($user)) {
+      return;
+    }
+
+    // For non editors, we determine the real status based on the user
+    // posting rights for the selected sources.
+    if (!UserHelper::userHasRoles(['editor'], $user)) {
+      // Retrieve the list of sources and check the user rights.
+      if (!$this->field_source->isEmpty()) {
+        // Extract source ids.
+        $sources = [];
+        foreach ($this->field_source as $item) {
+          if (!empty($item->target_id)) {
+            $sources[] = $item->target_id;
+          }
+        }
+
+        // Get the user's posting right for the document.
+        $right = UserPostingRightsHelper::getUserConsolidatedPostingRight($user, $this->bundle(), $sources);
+
+        // Update the status based on the user's right.
+        // Note: we don't use `t()` because those are log messages for editors.
+        switch ($right['name']) {
+          // Unverified for some sources => on-hold + flag.
+          case 'unverified':
+            $status = 'on-hold';
+            $message = strtr('Unverified user for @sources.', [
+              '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($right['sources'])),
+            ]);
+            break;
+
+          // Blocked for some sources => refused + flag.
+          case 'blocked':
+            $status = 'refused';
+            $message = strtr('Blocked user for @sources.', [
+              '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($right['sources'])),
+            ]);
+            break;
+
+          // Allowed for all sources => on-hold.
+          case 'allowed':
+            $status = 'to-review';
+            break;
+
+          // Trusted for all the sources => published.
+          case 'trusted':
+            $status = 'published';
+            break;
+        }
+
+        $this->setModerationStatus($status);
+
+        // Update the log message.
+        if (!empty($message)) {
+          $revision_log_field = $this->getEntityType()
+            ->getRevisionMetadataKey('revision_log_message');
+
+          if (!empty($revision_log_field)) {
+            $log = trim($this->{$revision_log_field}->value ?? '');
+            $log = $message . (!empty($log) ? ' ' . $log : '');
+            $this->{$revision_log_field}->value = $log;
+          }
+        }
+      }
+    }
   }
 
 }

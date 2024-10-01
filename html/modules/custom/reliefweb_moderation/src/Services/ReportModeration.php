@@ -206,6 +206,7 @@ class ReportModeration extends ModerationServiceBase {
       'to-review' => $this->t('To review'),
       'published' => $this->t('Published'),
       'embargoed' => $this->t('Embargoed'),
+      'refused' => $this->t('Refused'),
       'archive' => $this->t('Archived'),
       'reference' => $this->t('Reference'),
     ];
@@ -316,7 +317,7 @@ class ReportModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function isEditableStatus($status, ?AccountInterface $account = NULL) {
-    if ($status === 'archive') {
+    if ($status === 'archive' || $status === 'refused') {
       return UserHelper::userHasRoles(['administrator', 'webmaster'], $account);
     }
     return TRUE;
