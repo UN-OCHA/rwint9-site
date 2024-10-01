@@ -6,8 +6,8 @@ dependencies:
     - node.type.report
   module:
     - node
-id: contributor_role
-label: 'Contributor role'
+id: contributor
+label: 'Contributor'
 weight: 9
 is_admin: null
 permissions:

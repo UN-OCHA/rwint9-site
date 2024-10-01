@@ -290,7 +290,7 @@ class ReportModeration extends ModerationServiceBase {
       }
     }
 
-    if (UserHelper::userHasRoles(['contributor_role'])) {
+    if (UserHelper::userHasRoles(['contributor'])) {
       // Warning message when saving as a draft.
       if (isset($buttons['draft'])) {
         $message = $this->t('You are saving this document as a draft. It will not be visible to visitors. If you wish to proceed with the publication kindly click on @buttons instead.', [

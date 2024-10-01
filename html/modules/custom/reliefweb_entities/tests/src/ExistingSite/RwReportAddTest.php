@@ -79,8 +79,8 @@ class RwReportAddTest extends RwReportBase {
     $title = $this->randomMachineName(32);
 
     $user = $this->createUserIfNeeded(2884910, 'report allowed');
-    if (!$user->hasRole('contributor_role')) {
-      $user->addRole('contributor_role');
+    if (!$user->hasRole('contributor')) {
+      $user->addRole('contributor');
       $user->save();
     }
     $this->drupalLogin($user);
@@ -134,8 +134,8 @@ class RwReportAddTest extends RwReportBase {
     $title = $this->randomMachineName(32);
 
     $user = $this->createUserIfNeeded(2884910, 'report allowed');
-    if (!$user->hasRole('contributor_role')) {
-      $user->addRole('contributor_role');
+    if (!$user->hasRole('contributor')) {
+      $user->addRole('contributor');
       $user->save();
     }
     $this->drupalLogin($user);
@@ -189,8 +189,8 @@ class RwReportAddTest extends RwReportBase {
     $title = $this->randomMachineName(32);
 
     $user = $this->createUserIfNeeded(2884910, 'report trusted');
-    if (!$user->hasRole('contributor_role')) {
-      $user->addRole('contributor_role');
+    if (!$user->hasRole('contributor')) {
+      $user->addRole('contributor');
       $user->save();
     }
     $this->drupalLogin($user);
@@ -244,8 +244,8 @@ class RwReportAddTest extends RwReportBase {
     $title = $this->randomMachineName(32);
 
     $user = $this->createUserIfNeeded(2884910, 'report trusted');
-    if (!$user->hasRole('contributor_role')) {
-      $user->addRole('contributor_role');
+    if (!$user->hasRole('contributor')) {
+      $user->addRole('contributor');
       $user->save();
     }
     $this->drupalLogin($user);
