@@ -47,7 +47,7 @@ class SubscriptionForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, AccountInterface $user = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?AccountInterface $user = NULL) {
     $sids = $this->userSubscriptions($user->id());
     $sids = array_flip($sids);
 

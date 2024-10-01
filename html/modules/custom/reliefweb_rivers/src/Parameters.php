@@ -455,7 +455,7 @@ class Parameters {
    *   Parameters to exclude from the returned parameters.
    */
   public function __construct(
-    array $query = NULL,
+    ?array $query = NULL,
     array $exclude = ['q', 'page'],
   ) {
     $this->parameters = static::getParameters($query, $exclude);
@@ -499,7 +499,7 @@ class Parameters {
    *   List of parameters (key/value pairs).
    */
   public static function getParameters(
-    array $query = NULL,
+    ?array $query = NULL,
     array $exclude = ['q', 'page'],
   ) {
     if (!isset($query)) {

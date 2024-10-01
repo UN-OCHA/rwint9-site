@@ -57,7 +57,7 @@ class UserPageFilterForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, AccountInterface $user = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?AccountInterface $user = NULL) {
     // Get filter values and options.
     $filters = $this->getFilters($form_state);
     $roles = $this->getRoles();

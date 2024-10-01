@@ -42,7 +42,7 @@ class ReliefWebMarkdownXssFilter extends Standard {
    * @see editor_filter_xss()
    * @see editor/drupal.editor
    */
-  public static function filterXss($html, FilterFormatInterface $format, FilterFormatInterface $original_format = NULL) {
+  public static function filterXss($html, FilterFormatInterface $format, ?FilterFormatInterface $original_format = NULL) {
     $destination_editor = editor_load($format->id())?->getEditor();
     $from_ui = \Drupal::request()->attributes->get('_route') === 'editor.filter_xss';
 

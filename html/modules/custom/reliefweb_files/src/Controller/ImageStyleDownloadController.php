@@ -71,7 +71,7 @@ class ImageStyleDownloadController extends OriginalImageStyleDownloadController 
     LockBackendInterface $lock,
     ImageFactory $image_factory,
     StreamWrapperManagerInterface $stream_wrapper_manager,
-    FileSystemInterface $file_system = NULL,
+    ?FileSystemInterface $file_system = NULL,
   ) {
     parent::__construct($lock, $image_factory, $stream_wrapper_manager, $file_system);
 

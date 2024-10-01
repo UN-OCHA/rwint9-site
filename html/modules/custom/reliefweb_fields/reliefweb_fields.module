@@ -55,7 +55,7 @@ function reliefweb_fields_user_delete(EntityInterface $entity) {
  * @see editor_filter_xss()
  * @see \Drupal\reliefweb_fields\EditorXssFilter\ReliefWebMarkdownXssFilter::filterXss()
  */
-function reliefweb_fields_editor_xss_filter_alter(string &$editor_xss_filter_class, FilterFormatInterface $format, FilterFormatInterface $original_format = NULL) {
+function reliefweb_fields_editor_xss_filter_alter(string &$editor_xss_filter_class, FilterFormatInterface $format, ?FilterFormatInterface $original_format = NULL) {
   if (
     editor_load($format->id())?->getEditor() === 'reliefweb_markdown_editor' ||
     !empty($format->filters('reliefweb_formatted_text')?->status)

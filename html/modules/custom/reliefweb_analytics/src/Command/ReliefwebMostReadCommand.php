@@ -707,7 +707,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
    *
    * @todo Return creation date dimension and use to boost more recent reports.
    */
-  protected function buildPayload(FilterExpression $filter = NULL, int $limit) {
+  protected function buildPayload(?FilterExpression $filter = NULL, int $limit) {
     $expressions = [
       new FilterExpression([
         'filter' => new Filter([
