@@ -96,7 +96,9 @@ function reliefweb_entities_entity_bundle_info_alter(&$bundles) {
       }
       if ($class !== FALSE && is_subclass_of($class, BundleEntityInterface::class)) {
         $label = ucwords(str_replace(['_', '-'], ' ', $bundle));
-        $bundles[$entity_type_id][$bundle]['class'] = $class;
+        // No leading \ otherwise EntityTypeRepository::getEntityTypeFromClass
+        // fails.
+        $bundles[$entity_type_id][$bundle]['class'] = substr($class, 1);
         $bundles[$entity_type_id][$bundle]['label'] = $label;
       }
     }

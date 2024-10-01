@@ -4,43 +4,295 @@
 
 namespace Drupal\Tests\reliefweb_entities\ExistingSite;
 
-use Drupal\node\Entity\Node;
+use Drupal\reliefweb_entities\Entity\Report;
+use Drupal\taxonomy\Entity\Term;
 use Drupal\user\Entity\User;
-use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
  * Tests reports.
  */
-class RwReportCreateTest extends ExistingSiteBase {
+class RwReportCreateTest extends RwReportBase {
 
   /**
    * Test report.
    */
-  public function testReport() {
+  public function testCreateReportAsAdminDraft() {
     $site_name = \Drupal::config('system.site')->get('name');
     $title = 'My report';
+    $user = User::load(1);
+    $this->drupalLogin($user);
 
-    $report = Node::create([
+    $term_language = $this->createTermIfNeeded('language', 267, 'English');
+    $term_country = $this->createTermIfNeeded('country', 34, 'Belgium');
+    $term_format = $this->createTermIfNeeded('content_format', 11, 'UN Document');
+    $term_source = $this->createTermIfNeeded('source', 43679, 'ABC Color', [
+      'field_allowed_content_types' => [
+        1,
+      ],
+    ]);
+
+    $report = Report::create([
+      'uid' => $user->id(),
       'type' => 'report',
       'title' => $title,
+      'moderation_status' => 'draft',
       'field_origin' => 0,
       'field_origin_notes' => 'https://www.example.com/my-report',
+      'field_language' => $term_language->id(),
+      'field_country' => [
+        $term_country->id(),
+      ],
+      'field_primary_country' => $term_country->id(),
+      'field_content_format' => $term_format->id(),
+      'field_source' => [
+        $term_source->id(),
+      ],
     ]);
 
     // Report will be saved as draft.
-    $report->setPublished()->save();
+    $report->save();
+
+    // OK for user.
+    $this->drupalGet($report->toUrl());
+    $this->assertSession()->titleEquals($title . ' - Belgium | ' . $site_name);
+    $this->assertSession()->elementTextEquals('css', '.rw-article__title.rw-page-title', $title);
 
     // 404 for anonymous.
+    $this->drupalGet('user/logout');
     $this->drupalGet($report->toUrl());
     $this->assertSession()->statusCodeEquals(404);
+  }
 
-    // OK for admins.
-    $admin = User::load(1);
-    $this->drupalLogin($admin);
+  /**
+   * Test report.
+   */
+  public function testCreateReportAsAdminPublished() {
+    $site_name = \Drupal::config('system.site')->get('name');
+    $title = 'My report';
+    $user = User::load(1);
+    $this->drupalLogin($user);
 
+    $term_language = $this->createTermIfNeeded('language', 267, 'English');
+    $term_country = $this->createTermIfNeeded('country', 34, 'Belgium');
+    $term_format = $this->createTermIfNeeded('content_format', 11, 'UN Document');
+    $term_source = $this->createTermIfNeeded('source', 43679, 'ABC Color', [
+      'field_allowed_content_types' => [
+        1,
+      ],
+    ]);
+
+    $report = Report::create([
+      'uid' => $user->id(),
+      'type' => 'report',
+      'title' => $title,
+      'moderation_status' => 'published',
+      'field_origin' => 0,
+      'field_origin_notes' => 'https://www.example.com/my-report',
+      'field_language' => $term_language->id(),
+      'field_country' => [
+        $term_country->id(),
+      ],
+      'field_primary_country' => $term_country->id(),
+      'field_content_format' => $term_format->id(),
+      'field_source' => [
+        $term_source->id(),
+      ],
+    ]);
+
+    // Report will be saved as published.
+    $report->save();
+
+    // OK for user.
     $this->drupalGet($report->toUrl());
-    $this->assertSession()->titleEquals($title . ' | ' . $site_name);
+    $this->assertSession()->titleEquals($title . ' - Belgium | ' . $site_name);
+    $this->assertSession()->elementTextEquals('css', '.rw-article__title.rw-page-title', $title);
+
+    // 404 for anonymous.
+    $this->drupalGet('user/logout');
+    $this->drupalGet($report->toUrl());
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertSession()->titleEquals($title . ' - Belgium | ' . $site_name);
     $this->assertSession()->elementTextEquals('css', '.rw-article__title.rw-page-title', $title);
   }
 
+  /**
+   * Test report as contributor unverified, draft.
+   */
+  public function testCreateReportAsContributorUnverifiedDraft() {
+    $title = 'My report - unverified';
+    $this->setUserPostingRights(0, 'Unverified');
+    $moderation_status = 'draft';
+    $expected_moderation_status = 'draft';
+
+    $this->runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, FALSE);
+  }
+
+  /**
+   * Test report as contributor unverified, to-review.
+   */
+  public function testCreateReportAsContributorUnverifiedToReview() {
+    $title = 'My report - unverified';
+    $this->setUserPostingRights(0, 'Unverified');
+    $moderation_status = 'to-review';
+    $expected_moderation_status = 'on-hold';
+
+    $this->runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, FALSE);
+  }
+
+  /**
+   * Test report as contributor blocked, draft.
+   */
+  public function testCreateReportAsContributorBlockedDraft() {
+    $title = 'My report - blocked';
+    $this->setUserPostingRights(1, 'blocked');
+    $moderation_status = 'draft';
+    $expected_moderation_status = 'draft';
+
+    $this->runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, FALSE);
+  }
+
+  /**
+   * Test report as contributor blocked, to-review.
+   */
+  public function testCreateReportAsContributorBlockedToReview() {
+    $title = 'My report - blocked';
+    $this->setUserPostingRights(1, 'blocked');
+    $moderation_status = 'to-review';
+    $expected_moderation_status = 'refused';
+
+    $this->runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, FALSE);
+  }
+
+  /**
+   * Test report as contributor allowed, draft.
+   */
+  public function testCreateReportAsContributorAllowedDraft() {
+    $title = 'My report - allowed';
+    $this->setUserPostingRights(2, 'allowed');
+    $moderation_status = 'draft';
+    $expected_moderation_status = 'draft';
+
+    $this->runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, FALSE);
+  }
+
+  /**
+   * Test report as contributor allowed, to-review.
+   */
+  public function testCreateReportAsContributorAllowedToReview() {
+    $title = 'My report - allowed';
+    $this->setUserPostingRights(2, 'allowed');
+    $moderation_status = 'to-review';
+    $expected_moderation_status = 'to-review';
+
+    $this->runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, TRUE);
+  }
+
+  /**
+   * Test report as contributor trusted, draft.
+   */
+  public function testCreateReportAsContributorTrustedDraft() {
+    $title = 'My report - trusted';
+    $this->setUserPostingRights(3, 'trusted');
+    $moderation_status = 'draft';
+    $expected_moderation_status = 'draft';
+
+    $this->runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, FALSE);
+  }
+
+  /**
+   * Test report as contributor trusted, to-review.
+   */
+  public function testCreateReportAsContributorTrustedToReview() {
+    $title = 'My report - trusted';
+    $this->setUserPostingRights(3, 'trusted');
+    $moderation_status = 'to-review';
+    $expected_moderation_status = 'published';
+
+    $this->runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, TRUE);
+  }
+
+  /**
+   * Test report as contributor.
+   */
+  protected function runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, $will_be_public) {
+    $site_name = \Drupal::config('system.site')->get('name');
+
+    $user = User::load(2884910);
+    $this->drupalLogin($user);
+
+    $term_language = $this->createTermIfNeeded('language', 267, 'English');
+    $term_country = $this->createTermIfNeeded('country', 34, 'Belgium');
+    $term_format = $this->createTermIfNeeded('content_format', 11, 'UN Document');
+    $term_source = Term::load(43679);
+
+    $report = Report::create([
+      'uid' => $user->id(),
+      'revision_uid' => $user->id(),
+      'type' => 'report',
+      'title' => $title,
+      'moderation_status' => $moderation_status,
+      'field_origin' => 0,
+      'field_origin_notes' => 'https://www.example.com/my-report',
+      'field_language' => $term_language->id(),
+      'field_country' => [
+        $term_country->id(),
+      ],
+      'field_primary_country' => $term_country->id(),
+      'field_content_format' => $term_format->id(),
+      'field_source' => [
+        $term_source->id(),
+      ],
+    ]);
+
+    // Report will be saved as draft.
+    $report->save();
+
+    // OK for user.
+    $this->drupalGet($report->toUrl());
+    $this->assertSession()->titleEquals($title . ' - Belgium | ' . $site_name);
+    $this->assertSession()->elementTextEquals('css', '.rw-article__title.rw-page-title', $title);
+
+    // Test for anonymous.
+    $this->drupalGet('user/logout');
+    $this->drupalGet($report->toUrl());
+    if ($will_be_public) {
+      $this->assertSession()->statusCodeEquals(200);
+    }
+    else {
+      $this->assertSession()->statusCodeEquals(404);
+    }
+
+    // Check moderation status.
+    $this->assertEquals($report->moderation_status->value, $expected_moderation_status);
+  }
+
+  /**
+   * Set user posting rights.
+   */
+  protected function setUserPostingRights($right, $label) {
+    $user = $this->createUserIfNeeded(2884910, $label);
+    if (!$user->hasRole('contributor')) {
+      $user->addRole('contributor');
+      $user->save();
+    }
+
+    // Create term first so we can assign posting rights.
+    $term_source = $this->createTermIfNeeded('source', 43679, 'ABC Color', [
+      'field_allowed_content_types' => [
+        1,
+      ],
+    ]);
+
+    // Set posting right to
+    $term_source->set('field_user_posting_rights', [
+      [
+        'id' => $user->id(),
+        'job' => '0',
+        'training' => '0',
+        'report' => $right,
+        'notes' => '',
+      ],
+    ]);
+    $term_source->save();
+  }
 }
