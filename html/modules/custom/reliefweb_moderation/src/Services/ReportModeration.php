@@ -285,7 +285,7 @@ class ReportModeration extends ModerationServiceBase {
 
       // Add confirmation when attempting to change published document.
       if ($status === 'published') {
-        $message = $this->t('Press OK to submit the changes for review by the ReliefWeb editors. The report may be set as to-review.');
+        $message = $this->t('Press OK to submit the changes for review by the ReliefWeb editors. The report may become unpublished while being reviewed.');
         $buttons['to-review']['#attributes']['onclick'] = 'return confirm("' . $message . '")';
       }
     }
