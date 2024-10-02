@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Drupal\Tests\reliefweb_post_api\ExistingSite\Plugin\reliefweb_post_api\ContentProcessor;
 
 use Drupal\Core\Entity\EntityRepositoryInterface;
-use Drupal\reliefweb_post_api\Plugin\ContentProcessorException;
 use Drupal\Tests\reliefweb_post_api\ExistingSite\Plugin\ContentProcessorPluginBaseTest;
+use Drupal\reliefweb_post_api\Plugin\ContentProcessorException;
 
 /**
  * Tests the Training content processor plugin.
