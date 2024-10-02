@@ -98,7 +98,7 @@ class UserPostingRightsHelper {
    *   Posting rights as an associative array keyed by source id.
    */
   public static function getUserPostingRights(?AccountInterface $account = NULL, array $sources = []) {
-    static $users;
+    $users = &drupal_static('reliefweb_moderation_getUserPostingRights');
 
     $helper = new UserPostingRightsHelper();
     $account = $account ?: \Drupal::currentUser();
