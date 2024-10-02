@@ -13,7 +13,7 @@ seckit_xss:
     style-src: "'self' 'unsafe-inline' https://googletagmanager.com https://tagmanager.google.com fonts.googleapis.com https://cdn.popupsmart.com"
     img-src: "'self' data: https://*"
     media-src: "'none'"
-    frame-src: "'self' https://www.googletagmanager.com https://bid.g.doubleclick.net https://td.doubleclick.net https://*.mapbox.com https://www.youtube.com https://youtu.be"
+    frame-src: "'self' https://www.googletagmanager.com https://bid.g.doubleclick.net https://td.doubleclick.net https://*.mapbox.com https://www.youtube.com https://youtu.be https://app.powerbi.com"
     frame-ancestors: "'self'"
     child-src: "'self' blob: https:"
     font-src: "'self' data: fonts.gstatic.com"

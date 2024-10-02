@@ -35,6 +35,13 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
   use StringTranslationTrait;
 
   /**
+   * Store the emails for the publication notifications.
+   *
+   * @var ?array<string>
+   */
+  protected ?array $publicationNotificationEmails = NULL;
+
+  /**
    * {@inheritdoc}
    */
   public function getApiResource() {
@@ -299,7 +306,7 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
     }
 
     // Store the emails to notify after the node is saved.
-    $this->_publication_notification_emails = $emails;
+    $this->setPublicationNotificationEmails($emails);
 
     // Update the log message with the list of emails to notify.
     $log_field = $this->getEntityType()
@@ -321,11 +328,11 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
    * Notify of the publication.
    */
   protected function sendPublicationNotification() {
-    if (empty($this->_publication_notification_emails)) {
+    if (!$this->hasPublicationNotificationEmails()) {
       return;
     }
-    $emails = $this->_publication_notification_emails;
-    unset($this->_publication_notification_emails);
+    $emails = $this->getPublicationNotificationEmails();
+    $this->resetPublicationNotificationEmails();
 
     // Recipients and sender.
     $to = implode(', ', $emails);
@@ -334,17 +341,15 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
       return;
     }
 
+    $message = ReliefWebStateHelper::getReportPublicationEmailMessage();
+    if (empty($message)) {
+      return;
+    }
+
     // Subject and content.
     $parameters = [];
     $parameters['subject'] = 'ReliefWeb: Your submission has been published';
-    $parameters['content'] = strtr(implode("\n\n", [
-      "Thank you for your submission to ReliefWeb.",
-      "Your submission \"@title\" has been published with the following URL:",
-      "@url",
-      "Please respond to this email in case you have questions or corrections to your submission.",
-      "Best regards,",
-      "ReliefWeb team",
-    ]), [
+    $parameters['content'] = strtr($message, [
       '@title' => $this->label(),
       '@url' => $this->toUrl('canonical', [
         'absolute' => TRUE,
@@ -436,6 +441,43 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
         }
       }
     }
+  }
+
+  /**
+   * Temporarily store the email address to notify after publication.
+   *
+   * @param array $emails
+   *   Emails to notify.
+   */
+  protected function setPublicationNotificationEmails(array $emails): void {
+    $this->publicationNotificationEmails = $emails;
+  }
+
+  /**
+   * Get the email address to notify after publication.
+   *
+   * @return array
+   *   Emails to notify.
+   */
+  protected function getPublicationNotificationEmails(): array {
+    return $this->publicationNotificationEmails ?? [];
+  }
+
+  /**
+   * Check if there are email address to notify after publication.
+   *
+   * @return bool
+   *   TRUE if there are emails to noify.
+   */
+  protected function hasPublicationNotificationEmails(): bool {
+    return !empty($this->publicationNotificationEmails);
+  }
+
+  /**
+   * Remove set publication notification emails.
+   */
+  protected function resetPublicationNotificationEmails(): void {
+    $this->publicationNotificationEmails = NULL;
   }
 
 }
