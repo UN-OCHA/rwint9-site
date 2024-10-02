@@ -120,7 +120,7 @@ class RwReportCreateTest extends RwReportBase {
    */
   public function testCreateReportAsContributorUnverifiedDraft() {
     $title = 'My report - unverified';
-    $this->setUserPostingRights(0, 'Unverified');
+    $this->setUserPostingRightsGetSourceTerm(0, 'Unverified');
     $moderation_status = 'draft';
     $expected_moderation_status = 'draft';
 
@@ -132,7 +132,7 @@ class RwReportCreateTest extends RwReportBase {
    */
   public function testCreateReportAsContributorUnverifiedToReview() {
     $title = 'My report - unverified';
-    $this->setUserPostingRights(0, 'Unverified');
+    $this->setUserPostingRightsGetSourceTerm(0, 'Unverified');
     $moderation_status = 'to-review';
     $expected_moderation_status = 'on-hold';
 
@@ -144,7 +144,7 @@ class RwReportCreateTest extends RwReportBase {
    */
   public function testCreateReportAsContributorBlockedDraft() {
     $title = 'My report - blocked';
-    $this->setUserPostingRights(1, 'blocked');
+    $this->setUserPostingRightsGetSourceTerm(1, 'blocked');
     $moderation_status = 'draft';
     $expected_moderation_status = 'draft';
 
@@ -156,7 +156,7 @@ class RwReportCreateTest extends RwReportBase {
    */
   public function testCreateReportAsContributorBlockedToReview() {
     $title = 'My report - blocked';
-    $this->setUserPostingRights(1, 'blocked');
+    $this->setUserPostingRightsGetSourceTerm(1, 'blocked');
     $moderation_status = 'to-review';
     $expected_moderation_status = 'refused';
 
@@ -168,7 +168,7 @@ class RwReportCreateTest extends RwReportBase {
    */
   public function testCreateReportAsContributorAllowedDraft() {
     $title = 'My report - allowed';
-    $this->setUserPostingRights(2, 'allowed');
+    $this->setUserPostingRightsGetSourceTerm(2, 'allowed');
     $moderation_status = 'draft';
     $expected_moderation_status = 'draft';
 
@@ -180,7 +180,7 @@ class RwReportCreateTest extends RwReportBase {
    */
   public function testCreateReportAsContributorAllowedToReview() {
     $title = 'My report - allowed';
-    $this->setUserPostingRights(2, 'allowed');
+    $this->setUserPostingRightsGetSourceTerm(2, 'allowed');
     $moderation_status = 'to-review';
     $expected_moderation_status = 'to-review';
 
@@ -192,7 +192,7 @@ class RwReportCreateTest extends RwReportBase {
    */
   public function testCreateReportAsContributorTrustedDraft() {
     $title = 'My report - trusted';
-    $this->setUserPostingRights(3, 'trusted');
+    $this->setUserPostingRightsGetSourceTerm(3, 'trusted');
     $moderation_status = 'draft';
     $expected_moderation_status = 'draft';
 
@@ -204,7 +204,7 @@ class RwReportCreateTest extends RwReportBase {
    */
   public function testCreateReportAsContributorTrustedToReview() {
     $title = 'My report - trusted';
-    $this->setUserPostingRights(3, 'trusted');
+    $this->setUserPostingRightsGetSourceTerm(3, 'trusted');
     $moderation_status = 'to-review';
     $expected_moderation_status = 'published';
 
@@ -212,9 +212,29 @@ class RwReportCreateTest extends RwReportBase {
   }
 
   /**
+   * Test report as contributor trusted, to-review but blocked source.
+   */
+  public function testCreateReportAsContributorTrustedToReviewBlockedSource() {
+    $title = 'My report - trusted';
+    $term_source = $this->setUserPostingRightsGetSourceTerm(3, 'trusted', 2884910, 999999, 'Blocked source');
+    $term_source
+      ->set('moderation_status', 'blocked')
+      ->save();
+
+    $moderation_status = 'to-review';
+    $expected_moderation_status = 'refused';
+
+    $this->runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, FALSE, [
+      'field_source' => [
+        $term_source->id(),
+      ],
+    ]);
+  }
+
+  /**
    * Test report as contributor.
    */
-  protected function runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, $will_be_public) {
+  protected function runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, $will_be_public, array $overrides = []) {
     $site_name = \Drupal::config('system.site')->get('name');
 
     $user = User::load(2884910);
@@ -225,7 +245,7 @@ class RwReportCreateTest extends RwReportBase {
     $term_format = $this->createTermIfNeeded('content_format', 11, 'UN Document');
     $term_source = Term::load(43679);
 
-    $report = Report::create([
+    $report = Report::create($overrides + [
       'uid' => $user->id(),
       'revision_uid' => $user->id(),
       'type' => 'report',
@@ -269,15 +289,15 @@ class RwReportCreateTest extends RwReportBase {
   /**
    * Set user posting rights.
    */
-  protected function setUserPostingRights($right, $label) {
-    $user = $this->createUserIfNeeded(2884910, $label);
+  protected function setUserPostingRightsGetSourceTerm($right, $label, $uid = 2884910, $tid = 43679, $term_label = 'ABC Color') : Term {
+    $user = $this->createUserIfNeeded($uid, $label);
     if (!$user->hasRole('contributor')) {
       $user->addRole('contributor');
       $user->save();
     }
 
     // Create term first so we can assign posting rights.
-    $term_source = $this->createTermIfNeeded('source', 43679, 'ABC Color', [
+    $term_source = $this->createTermIfNeeded('source', $tid, $term_label, [
       'field_allowed_content_types' => [
         1,
       ],
@@ -296,5 +316,7 @@ class RwReportCreateTest extends RwReportBase {
     $term_source->save();
 
     drupal_static_reset('reliefweb_moderation_getUserPostingRights');
+
+    return $term_source;
   }
 }
