@@ -142,7 +142,7 @@ class UserPostsPage extends ModerationPage {
    * @return \Symfony\Component\HttpFoundation\JsonResponse
    *   JSON response with the list of suggestions if any.
    */
-  public function autocomplete(ModerationServiceInterface $service, $filter, UserInterface $user = NULL) {
+  public function autocomplete(ModerationServiceInterface $service, $filter, ?UserInterface $user = NULL) {
     $suggestions = $service->getAutocompleteSuggestions($filter);
     return new JsonResponse($suggestions);
   }

@@ -6,6 +6,7 @@ id: amazon_ses
 name: 'Amazon SES'
 default: 1
 aws_role_arn: ''
+aws_role_session_name: null
 aws_access_key_id: ''
 aws_secret_access_key: ''
 region: us-east-1

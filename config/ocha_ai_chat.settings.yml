@@ -7,19 +7,23 @@ defaults:
       format: markdown_editor
     feedback: both
     formatting: basic
-    answer_min_similarity: 1.25
     answers:
       no_document: 'Sorry, no source documents were found.'
       no_passage: 'Sorry, I could not find information to answer the question.'
       no_answer: 'Sorry, I was unable to answer your question. Please try again in a short moment.'
       invalid_answer: "Sorry, I'm unable to answer your question. Please clarify."
-      document_embedding_error: 'Sorry, there was an error trying to retrieve the documents to the answer to your question.'
+      document_embedding_error: 'Sorry, there was an error trying to retrieve the documents to answer your question.'
       question_embedding_error: 'Sorry, there was an error trying to process the question.'
   plugins:
+    answer_validator:
+      plugin_id: similarity_embedding
     completion:
       plugin_id: aws_bedrock_titan_text_premier_v1
     embedding:
       plugin_id: aws_bedrock_titan_embed_text_v2
+    ranker:
+      plugin_id: null
+      limit: 5
     source:
       plugin_id: reliefweb
       reliefweb:

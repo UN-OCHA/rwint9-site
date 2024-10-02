@@ -127,7 +127,7 @@
 
 /* RW-599: Style direct links to log in with HID on book pages to look like
  * a button like it was on the RW7 site. */
-.rw-document.rw-article--book .rw-article__content a[href*="/user/login/hid"] {
+.rw-document.rw-article--book .rw-article__content a[href^="/user/login/"] {
   display: inline-block;
   margin: 1rem 0 0 0;
   padding: 12px 18px;
@@ -137,8 +137,8 @@
   background: var(--cd-reliefweb-brand-blue--dark);
   font-weight: bold;
 }
-.rw-document.rw-article--book .rw-article__content a[href*="/user/login/hid"]:hover,
-.rw-document.rw-article--book .rw-article__content a[href*="/user/login/hid"]:focus,
-.rw-document.rw-article--book .rw-article__content a[href*="/user/login/hid"]:active {
+.rw-document.rw-article--book .rw-article__content a[href^="/user/login/"]:hover,
+.rw-document.rw-article--book .rw-article__content a[href^="/user/login/"]:focus,
+.rw-document.rw-article--book .rw-article__content a[href^="/user/login/"]:active {
   background: var(--cd-reliefweb-brand-red--dark);
 }

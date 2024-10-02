@@ -7,9 +7,9 @@ unprotected_forms:
   - search_block_form
   - views_exposed_form
   - honeypot_settings_form
-log: false
+log: true
 element_name: url
-time_limit: 5
+time_limit: 2
 expire: 300
 form_settings:
   user_register_form: false

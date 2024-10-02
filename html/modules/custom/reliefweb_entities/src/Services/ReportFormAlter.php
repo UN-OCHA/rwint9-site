@@ -6,6 +6,7 @@ use Drupal\Component\Utility\SortArray;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\reliefweb_entities\Entity\Report;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
 use Drupal\reliefweb_form\Helpers\FormHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
@@ -73,6 +74,13 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
 
     // Remove data (9420) option for content format field (Collab #3679).
     FormHelper::removeOptions($form, 'field_content_format', [9420]);
+
+    // Remove interactive (38974) format if the report is not tagged with it.
+    // @see https://humanitarian.atlassian.net/browse/RW-1077
+    $report = $form_state?->getFormObject()?->getEntity();
+    if ($report instanceof Report && $report?->field_content_format?->target_id != 38974) {
+      FormHelper::removeOptions($form, 'field_content_format', [38974]);
+    }
 
     // Remove Key document (2) option for feature field.
     FormHelper::removeOptions($form, 'field_feature', [2]);
