@@ -1,0 +1,20 @@
+uuid: 5ecb0f1f-42e2-49c2-b45b-aceb98765cb2
+langcode: en
+status: true
+dependencies:
+  module:
+    - reliefweb_post_api
+    - user
+id: reliefweb_post_api_provider.field_user
+field_name: field_user
+entity_type: reliefweb_post_api_provider
+type: entity_reference
+settings:
+  target_type: user
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

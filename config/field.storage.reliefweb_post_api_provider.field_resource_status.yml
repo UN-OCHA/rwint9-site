@@ -1,0 +1,48 @@
+uuid: 0e49a2d5-e72b-455f-8b68-a7eb4b78eb83
+langcode: en
+status: true
+dependencies:
+  module:
+    - options
+    - reliefweb_post_api
+id: reliefweb_post_api_provider.field_resource_status
+field_name: field_resource_status
+entity_type: reliefweb_post_api_provider
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: draft
+      label: Draft
+    -
+      value: pending
+      label: Pending
+    -
+      value: on-hold
+      label: On-hold
+    -
+      value: to-review
+      label: 'To review'
+    -
+      value: published
+      label: Published
+    -
+      value: archive
+      label: Archive
+    -
+      value: reference
+      label: Reference
+    -
+      value: embargoed
+      label: Embargoed
+    -
+      value: refused
+      label: Refused
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

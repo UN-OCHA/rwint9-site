@@ -1,0 +1,23 @@
+uuid: 08651c89-5d06-4e9a-8554-20cb40cc64f6
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.reliefweb_post_api_provider.field_resource_status
+  module:
+    - options
+    - reliefweb_post_api
+id: reliefweb_post_api_provider.reliefweb_post_api_provider.field_resource_status
+field_name: field_resource_status
+entity_type: reliefweb_post_api_provider
+bundle: reliefweb_post_api_provider
+label: 'Submission status'
+description: 'Default status of the created content after processing.'
+required: true
+translatable: false
+default_value:
+  -
+    value: pending
+default_value_callback: ''
+settings: {  }
+field_type: list_string

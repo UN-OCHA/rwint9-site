@@ -1,0 +1,18 @@
+uuid: 9e96163f-f82f-467f-8711-41e94740252a
+langcode: en
+status: true
+dependencies:
+  module:
+    - reliefweb_post_api
+id: reliefweb_post_api_provider.field_notify
+field_name: field_notify
+entity_type: reliefweb_post_api_provider
+type: email
+settings: {  }
+module: core
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

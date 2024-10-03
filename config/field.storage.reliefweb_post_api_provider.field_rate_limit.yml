@@ -1,0 +1,20 @@
+uuid: 20aba504-c4b4-496e-b138-5d60cf68e14b
+langcode: en
+status: true
+dependencies:
+  module:
+    - reliefweb_post_api
+id: reliefweb_post_api_provider.field_rate_limit
+field_name: field_rate_limit
+entity_type: reliefweb_post_api_provider
+type: integer
+settings:
+  unsigned: false
+  size: normal
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
