@@ -3,6 +3,10 @@
   margin-bottom: 2rem;
 }
 
+.rw-search-converter__results__section h3 {
+  padding-top: 8px;
+}
+
 .rw-search-converter__results__section__actions {
   align-items: center;
   display: flex;
