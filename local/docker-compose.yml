@@ -107,6 +107,8 @@ services:
       DRUPAL_DB_DRIVER: mysql
       PHP_ENVIRONMENT:
       # Rate limiting.
+      NGINX_LIMIT_BOTS: 1024r/s
+      NGINX_BURST_BOTS: 1024
       NGINX_LIMIT_HUMANS: 1024r/s
       NGINX_BURST_HUMANS: 1024
       # Local proxy.
