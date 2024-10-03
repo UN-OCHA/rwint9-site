@@ -1,0 +1,12 @@
+.rw-search-converter__results__section {
+  position: relative;
+}
+
+.rw-search-converter__results__section__actions {
+  align-items: center;
+  display: flex;
+  gap: .5rem;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
