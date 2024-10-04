@@ -80,7 +80,7 @@ class AuthController extends ControllerBase implements ContainerInjectionInterfa
       $this->openIdConnectSession->saveOp('login');
       $response = $plugin->authorize($scopes);
 
-      return $response->send();
+      return $response;
     }
     catch (\Exception $exception) {
       $config = $this->config('openid_connect.client.entraid');
