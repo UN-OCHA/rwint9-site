@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  Drupal.behaviors.searchConvertor = {
+  Drupal.behaviors.searchConverter = {
     attach: function (context, settings) {
       once('rw-search-converter__results', '.rw-search-converter__results', context).forEach(element => {
         // Set up copy to clipboard buttons.
