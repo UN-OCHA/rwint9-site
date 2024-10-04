@@ -7,7 +7,6 @@ use RWAPIIndexer\Database\Query as DatabaseQuery;
 use RWAPIIndexer\Elasticsearch;
 use RWAPIIndexer\Options;
 use RWAPIIndexer\Processor;
-use RWAPIIndexer\Query;
 use RWAPIIndexer\References;
 use RWAPIIndexer\Resources\Report;
 
@@ -40,37 +39,29 @@ class ReportExtended extends Report {
     Processor $processor,
     References $references,
     Options $options,
+    bool $include_body = FALSE,
   ) {
-    $this->bundle = $bundle;
-    $this->entityType = $entity_type;
-    $this->index = $index;
-    $this->elasticsearch = $elasticsearch;
-    $this->connection = $connection;
-    $this->processor = $processor;
-    $this->references = $references;
-    $this->options = $options;
-
-    $query_options = $this->queryOptions;
-
     // Add extra fields.
-    $query_options['fields']['user'] = 'uid';
-    $query_options['field_joins']['field_origin'] = [
+    $this->queryOptions['fields']['user'] = 'uid';
+    $this->queryOptions['field_joins']['field_origin'] = [
       'origin_type' => 'value',
     ];
 
     // Remove some fields.
-    unset($query_options['field_joins']['body']);
-    unset($query_options['field_joins']['field_headline_image']);
-    unset($query_options['field_joins']['field_headline_summary']);
-    unset($query_options['references']['vulnerable_groups']);
-
-    // Only apply filter to the resource being indexed (not to references).
-    if ($this->bundle === $options->get('bundle')) {
-      $query_options['filters'] = $this->parseFilters($options->get('filter'));
+    if ($include_body !== TRUE) {
+      unset($this->queryOptions['field_joins']['body']);
     }
 
-    // Create a new Query object to get the items to index.
-    $this->query = new Query($connection, $this->entityType, $this->bundle, $query_options);
+    parent::__construct(
+      $bundle,
+      $entity_type,
+      $index,
+      $elasticsearch,
+      $connection,
+      $processor,
+      $references,
+      $options,
+    );
   }
 
   /**

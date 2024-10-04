@@ -11,10 +11,10 @@ use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_reporting\ApiIndexerResource\ReportExtended;
 use Drush\Commands\DrushCommands;
 use RWAPIIndexer\Database\DatabaseConnection;
-use RWAPIIndexer\Database\Query as DatabaseQuery;
 use RWAPIIndexer\Elasticsearch;
 use RWAPIIndexer\Options;
 use RWAPIIndexer\Processor;
+use RWAPIIndexer\Query as QueryHandler;
 use RWAPIIndexer\References;
 
 /**
@@ -460,59 +460,62 @@ class ReliefWebReportingCommands extends DrushCommands {
   }
 
   /**
-   * Export report data.
+   * Export report data to TSV format.
    *
-   * This export report data for reports created between the start and end
-   * dates to the provided tsv file.
+   * This command exports report data created between the specified start and
+   * end dates to a TSV file or standard output.
    *
    * @param string $start
-   *   Starting date for the export. It will export all the reports created
-   *   after that date to the end date.
+   *   Starting date for the export (inclusive). Reports created after this date
+   *   will be included. Defaults to "-1 month".
    * @param string $end
-   *   End date for the export. It will export all the reports created
-   *   between the start date and the end date.
+   *   End date for the export (inclusive). Reports created up to this date
+   *   will be included. Defaults to "now".
    * @param array $options
-   *   Additional options for the command.
+   *   Additional options for the command (see below).
    *
    * @command reliefweb_reporting:export-report-data
+   * @aliases rw-export-reports
    *
-   * @option output (string)
-   *   The export TSV file. Defaults to the standard output.
-   * @option batch_size (int)
-   *   The number of reports to retrieve at once.
-   * @option filter (string)
-   *   Filter documents to retrieve. Format:
+   * @option output
+   *   The export TSV file path. Defaults to standard output (php://stdout).
+   * @option batch-size
+   *   The number of reports to retrieve in each DB request. Defaults to 1000.
+   * @option limit
+   *   The maxiumum number of reports to export. Defaults to no limit.
+   * @option filter
+   *   Filter for documents to retrieve. Format:
    *   'field1:value1,value2+field2:value1,value2'.
-   * @option properties (string)
+   * @option properties
    *   JSON-encoded associative array to override default property mappings.
-   *   This parameter allows customization of the report fields to be extracted
-   *   and their corresponding labels in the output TSV.
-   *
-   *   The JSON structure should be as follows:
-   *   - Keys: Dot-notation paths representing nested fields in the ReliefWeb
-   *     API report output (e.g., 'field.subfield.subsubfield').
-   *   - Values: Custom labels to be used as column headers in the output TSV.
-   *
-   *   Example JSON:
-   *   {
-   *     "id": "Report ID",
-   *     "title": "Title",
-   *     "date.created": "Creation Date",
-   *     "country.name": "Country",
-   *     "disaster.type.name": "Disaster Type"
-   *   }
-   *
-   *   If null, the command will use a predefined set of properties.
+   *   Keys are dot-notation paths of ReliefWeb API fields, values are custom
+   *   TSV column headers. Example: '{"id":"Report ID",
+   *   "date.created":"Creation Date"}'
+   * @option extra-properties
+   *   JSON-encoded associative array with extra properties to include in the
+   *   export. See `replace-properties` option.
+   * @option exclude-properties
+   *   JSON-encoded associative array with extra properties to exclude from the
+   *   export. See `replace-properties` option.
+   * @option include-body
+   *   Include the report body in the export. Defaults to FALSE.
    *
    * @default $options [
    *   'output' => 'php://stdout',
-   *   'batch_size' => 1000,
+   *   'batch-size' => 1000,
+   *   'limit' => NULL,
    *   'filter' => NULL,
-   *   'properties' = NULL,
+   *   'properties' => NULL,
+   *   'extra-properties' => NULL,
+   *   'exclude-properties' => NULL,
+   *   'include-body' => NULL,
    * ]
    *
-   * @usage reliefweb_reporting:export-report-data "2021-01-01T00:00:01+00:00" "now" "/tmp/report-data-export.tsv"
-   *   Export the data from 2021 to now into /tmp/report-data-export.tsv.
+   * @usage reliefweb_reporting:export-report-data "2021-01-01T00:00:01+00:00" "now" --output=/tmp/report-data-export.tsv
+   *   Export data from 2021 to now into /tmp/report-data-export.tsv.
+   * @usage reliefweb_reporting:export-report-data --filter="country:syria,yemen" --include-properties=id,title,date.created
+   *   Export reports for Syria and Yemen, including only id, title, and
+   *   creation date.
    *
    * @validate-module-enabled reliefweb_reporting
    */
@@ -521,23 +524,24 @@ class ReliefWebReportingCommands extends DrushCommands {
     string $end = "now",
     array $options = [
       'output' => 'php://stdout',
-      'batch_size' => 1000,
+      'batch-size' => 1000,
+      'limit' => NULL,
       'filter' => NULL,
       'properties' => NULL,
+      'extra-properties' => NULL,
+      'exclude-properties' => NULL,
+      'include-body' => NULL,
     ],
   ): bool {
     $output = $options['output'] ?? 'php://stdout';
-    $batch_size = $options['batch_size'] ?? 1000;
+    $batch_size = (int) ($options['batch-size'] ?? 1000);
 
     $bundle = 'report';
     $entity_type = 'node';
     $index = 'reports';
 
-    $retrieval_options = reliefweb_api_get_indexer_base_options();
-    $retrieval_options['filter'] = $options['filter'] ?? NULL;
-
     // Options to retrieve the report resources.
-    $indexer_options = new Options($retrieval_options);
+    $indexer_options = new Options(reliefweb_api_get_indexer_base_options());
 
     // Create the database connection.
     $dbname = $indexer_options->get('database');
@@ -571,6 +575,7 @@ class ReliefWebReportingCommands extends DrushCommands {
       $processor,
       $references,
       $indexer_options,
+      !empty($options['include-body']),
     );
 
     // Retrieve the timestamps from the start and end dates.
@@ -580,18 +585,26 @@ class ReliefWebReportingCommands extends DrushCommands {
     $start_timestamp = $start_date->getTimestamp();
     $end_timestamp = $end_date->getTimestamp();
 
+    // We need to build a query handler to be able to apply the filter if any.
+    $query_handler = new QueryHandler($connection, $entity_type, $bundle);
+
     // Base query to get the IDs of the reports for the given date range.
-    $base_query = new DatabaseQuery('node_field_data', 'node_field_data', $connection);
-    $base_query->innerJoin('node', 'node', 'node.nid = node_field_data.nid');
-    $base_query->addField('node_field_data', 'nid', 'id');
-    $base_query->condition('node.type', 'report', '=');
+    $base_query = $query_handler->newQuery();
+    $base_query->condition('node_field_data.type', $bundle, '=');
     $base_query->condition('node_field_data.created', $start_timestamp, '>=');
-    $base_query->condition('node_field_data.created', $end_timestamp, '<');
+    $base_query->condition('node_field_data.created', $end_timestamp, '<=');
+
+    // Add the extra conditions from the provided filter.
+    if (!empty($options['filter'])) {
+      $conditions = $resource->parseFilters($options['filter']);
+      $query_handler->setFilters($base_query, $conditions);
+    }
 
     // Get the total of reports for the date range.
     $count_query = clone $base_query;
     $count_query->count();
     $total = $count_query->execute()?->fetchField() ?? 0;
+    $total = min($options['limit'] ?? $total, $total);
 
     if (empty($total)) {
       $this->logger->info('No reports found for the given date range.');
@@ -612,59 +625,82 @@ class ReliefWebReportingCommands extends DrushCommands {
       return FALSE;
     }
 
-    // Properties to include in the export.
+    // Default properties.
+    $properties = [
+      'id' => 'id',
+      'status' => 'status',
+      'title' => 'title',
+      'url' => 'url',
+      'url_alias' => 'url_alias',
+      'origin' => 'origin',
+      'origin_type' => 'origin_type',
+      'language.name' => 'language.name',
+      'language.code' => 'language.code',
+      'language.id' => 'language.id',
+      'source.name' => 'source.name',
+      'source.shortname' => 'source.shortname',
+      'source.id' => 'source.id',
+      'source.type.name' => 'source.type.name',
+      'source.type.id' => 'source.type.id',
+      'primary_country.name' => 'primary_country.name',
+      'primary_country.id' => 'primary_country.id',
+      'primary_country.iso3' => 'primary_country.iso3',
+      'country.name' => 'country.name',
+      'country.id' => 'country.id',
+      'country.iso3' => 'country.iso3',
+      'disaster.name' => 'disaster.name',
+      'disaster.id' => 'disaster.id',
+      'disaster.glide' => 'disaster.glide',
+      'disaster.type.name' => 'disaster.type.name',
+      'disaster.type.id' => 'disaster.type.id',
+      'disaster.type.code' => 'disaster.type.code',
+      'disaster_type.name' => 'disaster_type.name',
+      'disaster_type.id' => 'disaster_type.id',
+      'disaster_type.code' => 'disaster_type.code',
+      'format.name' => 'format.name',
+      'format.id' => 'format.id',
+      'theme.name' => 'theme.name',
+      'theme.id' => 'theme.id',
+      'ocha_product.name' => 'ocha_product.name',
+      'ocha_product.id' => 'ocha_product.id',
+      'file.filename' => 'file.filename',
+      'file.url' => 'file.url',
+      'file.filesize' => 'file.filesize',
+      'image.url' => 'image.url',
+      'image.copyright' => 'image.copyright',
+      'headline.title' => 'headline.title',
+      'date.created' => 'date.created',
+      'date.changed' => 'date.changed',
+      'date.original' => 'date.original',
+      'user.id' => 'user.id',
+      'user.name' => 'user.name',
+      'user.role' => 'user.role',
+    ];
+
+    // Replace the default properties.
     if (!empty($options['properties'])) {
-      $properties = json_decode($options['properties'], TRUE);
+      $properties = json_decode($options['properties'], TRUE) ?: $properties;
     }
+
+    // Add extra properties.
+    if (!empty($options['extra-properties'])) {
+      $extra_properties = json_decode($options['extra-properties'], TRUE);
+      if (!empty($extra_properties)) {
+        $properties = array_merge($properties, $extra_properties);
+      }
+    }
+
+    // Remove some properties.
+    if (!empty($options['exclude-properties'])) {
+      $exclude_properties = json_decode($options['exclude-properties'], TRUE);
+      if (!empty($exclude_properties)) {
+        $properties = array_diff_key($properties, $exclude_properties);
+      }
+    }
+
     if (empty($properties)) {
-      $properties = [
-        'id' => 'id',
-        'status' => 'status',
-        'title' => 'title',
-        'url' => 'url',
-        'url_alias' => 'url_alias',
-        'origin' => 'origin',
-        'origin_type' => 'origin_type',
-        'language.name' => 'language.name',
-        'language.code' => 'language.code',
-        'language.id' => 'language.id',
-        'source.name' => 'source.name',
-        'source.shortname' => 'source.shortname',
-        'source.id' => 'source.id',
-        'source.type.name' => 'source.type.name',
-        'source.type.id' => 'source.type.id',
-        'primary_country.name' => 'primary_country.name',
-        'primary_country.id' => 'primary_country.id',
-        'primary_country.iso3' => 'primary_country.iso3',
-        'country.name' => 'country.name',
-        'country.id' => 'country.id',
-        'country.iso3' => 'country.iso3',
-        'disaster.name' => 'disaster.name',
-        'disaster.id' => 'disaster.id',
-        'disaster.glide' => 'disaster.glide',
-        'disaster.type.name' => 'disaster.type.name',
-        'disaster.type.id' => 'disaster.type.id',
-        'disaster.type.code' => 'disaster.type.code',
-        'disaster_type.name' => 'disaster_type.name',
-        'disaster_type.id' => 'disaster_type.id',
-        'disaster_type.code' => 'disaster_type.code',
-        'format.name' => 'format.name',
-        'format.id' => 'format.id',
-        'theme.name' => 'theme.name',
-        'theme.id' => 'theme.id',
-        'ocha_product.name' => 'ocha_product.name',
-        'ocha_product.id' => 'ocha_product.id',
-        'file.filename' => 'file.filename',
-        'file.url' => 'file.url',
-        'image.url' => 'image.url',
-        'headline.title' => 'headline.title',
-        'date.created' => 'date.created',
-        'date.changed' => 'date.changed',
-        'date.original' => 'date.original',
-        'user.id' => 'user.id',
-        'user.name' => 'user.name',
-        'user.role' => 'user.role',
-      ];
+      $this->logger->error('No properties to export.');
+      return FALSE;
     }
 
     // Write the headers to the TSV file.
@@ -673,17 +709,19 @@ class ReliefWebReportingCommands extends DrushCommands {
     try {
       $count = 0;
       $last_id = NULL;
+      $batch_size = min($total, $batch_size);
 
       // Retrieve reports in batch.
       while (TRUE) {
         $query = clone $base_query;
+        $query->addField('node_field_data', 'nid', 'nid');
         if (isset($last_id)) {
           $query->condition('node_field_data.nid', $last_id, '<');
         }
         $query->orderBy('node_field_data.nid', 'DESC');
         $query->range(0, $batch_size);
-
         $ids = $query->execute()?->fetchCol();
+
         if (empty($ids)) {
           break;
         }
@@ -706,6 +744,10 @@ class ReliefWebReportingCommands extends DrushCommands {
           '@count' => $count,
           '@total' => $total,
         ]));
+
+        if ($count >= $total) {
+          break;
+        }
       }
     }
     catch (\Exception $exception) {
@@ -724,11 +766,6 @@ class ReliefWebReportingCommands extends DrushCommands {
   /**
    * Flattens an item array based on specified property paths.
    *
-   * This function takes a complex array structure and flattens it according to
-   * the provided property paths. It handles nested objects and arrays,
-   * concatenating multiple values with a pipe character. The resulting array
-   * uses property labels as keys.
-   *
    * @param array $item
    *   The item array to flatten.
    * @param array $properties
@@ -736,46 +773,87 @@ class ReliefWebReportingCommands extends DrushCommands {
    *
    * @return array
    *   A flattened array where keys are property labels and values are the
-   *   retrieved (and potentially flattened) values.
+   *   retrieved values.
    */
   protected function flattenReportData(array $item, array $properties): array {
     $result = [];
 
     foreach ($properties as $path => $label) {
-      $value = $item;
-      $parts = explode('.', $path);
-
-      foreach ($parts as $part) {
-        if (is_array($value) && isset($value[0])) {
-          // Handle array of objects.
-          $value = array_map(
-            fn($v) => $v[$part] ?? NULL,
-            $value
-          );
-        }
-        elseif (is_array($value)) {
-          // Handle object or associative array.
-          $value = $value[$part] ?? NULL;
-        }
-        else {
-          $value = NULL;
-          break;
-        }
-
-        if ($value === NULL) {
-          break;
-        }
-      }
-
-      if (is_array($value)) {
-        // Flatten array values.
-        $value = implode('|', array_filter($value, fn($v) => !is_array($v)));
-      }
-
-      $result[$label] = $value ?? '';
+      $values = $this->getNestedValues($item, explode('.', $path));
+      $result[$label] = $this->flattenValues($values);
     }
 
     return $result;
+  }
+
+  /**
+   * Flattens an array of values into a string.
+   *
+   * @param array $values
+   *   The values to flatten.
+   *
+   * @return string
+   *   The flattened values as a pipe-separated string.
+   */
+  private function flattenValues(array $values): string {
+    $flattened = array_map(function ($value) {
+      if (is_array($value)) {
+        return implode('|', array_filter($value, function ($item) {
+          return $item !== '' && $item !== NULL && !is_array($item);
+        }));
+      }
+      return $value;
+    }, $values);
+
+    return implode('|', array_filter($flattened, function ($value) {
+      return $value !== '' && $value !== NULL;
+    }));
+  }
+
+  /**
+   * Recursively retrieves nested values from data using a path.
+   *
+   * @param mixed $data
+   *   The data to search in (array or scalar).
+   * @param array $path
+   *   The path to the desired value.
+   *
+   * @return array
+   *   An array of all values found at the specified path.
+   */
+  private function getNestedValues(mixed $data, array $path): array {
+    if (empty($path)) {
+      return [$data];
+    }
+
+    $current = array_shift($path);
+
+    if (!is_array($data)) {
+      return [];
+    }
+
+    if (!isset($data[$current])) {
+      return [];
+    }
+
+    $value = $data[$current];
+
+    if (empty($path)) {
+      return [$value];
+    }
+
+    if (is_array($value) && isset($value[0])) {
+      // Handle array of arrays/objects.
+      $results = [];
+      foreach ($value as $item) {
+        $results = array_merge($results, $this->getNestedValues($item, $path));
+      }
+      return array_unique($results);
+    }
+    else {
+      // Handle single object or scalar.
+      return $this->getNestedValues($value, $path);
+    }
   }
 
 }
