@@ -36,7 +36,7 @@
         // still showing feedback in case of failure to copy.
         el.addEventListener('mousedown', function (ev) {
           var tempInput = document.createElement('input');
-          var textToCopy = document.querySelector('#' + el.getAttribute('data-to-copy')).innerHTML.replaceAll('<br>', '\n');
+          var textToCopy = document.querySelector('#' + el.getAttribute('data-to-copy')).innerText.replaceAll('<br>', '\n');
           var status = el.parentNode.querySelector('[role=status]');
           var message = Drupal.t('Copied');
 
