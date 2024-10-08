@@ -848,7 +848,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function getApiData($limit = 20, $paginated = TRUE, array $payload = NULL, $view = NULL) {
+  public function getApiData($limit = 20, $paginated = TRUE, ?array $payload = NULL, $view = NULL) {
     $view = $this->validateView($view) ?? $this->getSelectedView();
     $payload = $payload ?? $this->prepareApiRequest($limit, $paginated, $view);
 
@@ -1032,7 +1032,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getLanguageCode(array &$data = NULL) {
+  public static function getLanguageCode(?array &$data = NULL) {
     if (isset($data['langcode'])) {
       $langcode = $data['langcode'];
     }

@@ -14,6 +14,9 @@
  */
 
 #}
+
+{{ attach_library('reliefweb_rivers/search-converter') }}
+
 <section{{ attributes.addClass('rw-search-converter') }}>
   <header class="rw-search-converter__header">
     <h1{{ title_attributes.addClass('rw-search-converter__title') }}>{{ title }}</h1>
@@ -29,7 +32,7 @@
   </section>
 
   <section class="rw-search-converter__results">
-    <h2>{{ 'Results'|t }}</h2>
+    <h2>{{ 'API Query'|t }}</h2>
 
     {% if results is empty %}
     <p>{{ 'Please enter a search URL to convert, above, to see the results.'|t }}</p>
@@ -37,14 +40,37 @@
     <h3>{{ 'Query String'|t }}</h3>
     <pre>{{ results.query }}</pre>
 
-    <h3>{{ 'API URL'|t }}</h3>
-    <pre>{{ results.url }}</pre>
+    <div class="rw-search-converter__results__section">
+      <h3>{{ 'API URL (GET Request)'|t }}</h3>
+      <div class="rw-search-converter__results__section__actions">
+        <span hidden role="status" class="clipboard-feedback">{{ 'Copied'|t }}</span>
+        <div class="cd-button results-button--copy" data-to-copy="results--api-url">Copy</div>
+      </div>
+      <pre id="results--api-url">{{ results.url }}</pre>
+    </div>
 
-    <h3>{{ 'JSON payload'|t }}</h3>
-    <pre>{{ results.payload }}</pre>
+    <div class="rw-search-converter__results__section">
+      <h3>{{ 'JSON payload'|t }}</h3>
+      <div class="rw-search-converter__results__section__actions">
+        <span hidden role="status" class="clipboard-feedback">{{ 'Copied'|t }}</span>
+        <div class="cd-button results-button--copy" data-to-copy="results--api-json">Copy</div>
+      </div>
+      <pre id="results--api-json">{{ results.payload }}</pre>
+    </div>
 
-    <h3>{{ 'Results as JSON'|t }}</h3>
-    <p><a href="{{ results.json_url }}">{{ 'View as JSON'|t }}</a></p>
+    <div class="rw-search-converter__results__section">
+      <h3>{{ 'PHP payload'|t }}</h3>
+      <div class="rw-search-converter__results__section__actions">
+        <span hidden role="status" class="clipboard-feedback">{{ 'Copied'|t }}</span>
+        <div class="cd-button results-button--copy" data-to-copy="results--api-php">Copy</div>
+      </div>
+      <pre id="results--api-php">{{ results.php }}</pre>
+    </div>
+
+    <div class="rw-search-converter__results__section">
+      <h3>{{ 'Results as JSON'|t }}</h3>
+      <p><a href="{{ results.json_url }}">{{ 'View as JSON'|t }}</a></p>
+    </div>
     {% endif %}
   </section>
 </section>

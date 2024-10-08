@@ -132,6 +132,7 @@ class SearchConverter extends ControllerBase {
         'query' => Markup::create($query),
         'url' => Markup::create($this->getApiUrl($data['resource'], $query, $appname)),
         'payload' => Markup::create($this->getJsonPayload($data['payload'])),
+        'php' => Markup::create($this->getPhpPayload($data['payload'])),
         'json_url' => Url::fromRoute('reliefweb_rivers.search.converter.json', [], [
           'query' => [
             'appname' => $appname,
@@ -352,6 +353,29 @@ class SearchConverter extends ControllerBase {
     }
     $json = json_encode($payload, \JSON_PRETTY_PRINT);
     return $json === FALSE ? '' : preg_replace('/ {4}/', '  ', $json);
+  }
+
+  /**
+   * Get payload as PHP.
+   *
+   * @param array $payload
+   *   API payload.
+   *
+   * @return string
+   *   PHP payload.
+   */
+  protected function getPhpPayload(array $payload) {
+    $export = var_export($payload, TRUE);
+    $patterns = [
+      "/array \(/" => '[',
+      "/^([ ]*)\)(,?)$/m" => '$1]$2',
+      "/=>[ ]?\n[ ]+\[/" => '=> [',
+      "/([ ]*)(\'[^\']+\') => ([\[\'])/" => '$1$2 => $3',
+    ];
+
+    $export = preg_replace(array_keys($patterns), array_values($patterns), $export);
+
+    return $export;
   }
 
   /**

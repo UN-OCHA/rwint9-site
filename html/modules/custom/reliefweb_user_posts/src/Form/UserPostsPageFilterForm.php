@@ -24,7 +24,7 @@ class UserPostsPageFilterForm extends ModerationPageFilterForm {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, ModerationServiceInterface $service = NULL, UserInterface $user = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?ModerationServiceInterface $service = NULL, ?UserInterface $user = NULL) {
     $form = parent::buildForm($form, $form_state, $service);
 
     // Link to create a new entity.

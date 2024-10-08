@@ -14,7 +14,17 @@ class ReliefWebStateHelper {
    *   The submit email address.
    */
   public static function getSubmitEmail() {
-    return \Drupal::state()->get('reliefweb_submit_email');
+    return \Drupal::state()->get('reliefweb_submit_email', '');
+  }
+
+  /**
+   * Get the ReliefWeb report publication message for email notifications.
+   *
+   * @return string
+   *   The report publication message.
+   */
+  public static function getReportPublicationEmailMessage(): string {
+    return \Drupal::state()->get('reliefweb_report_publication_email_message', '');
   }
 
   /**

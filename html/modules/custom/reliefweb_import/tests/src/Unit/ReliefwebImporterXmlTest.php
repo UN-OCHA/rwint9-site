@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\reliefweb_import\Unit;
 
-use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionXml;
 use Drupal\Tests\reliefweb_import\Unit\Stub\ReliefwebImportCommandStub;
+use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionXml;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Handler\MockHandler;
