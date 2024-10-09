@@ -87,6 +87,7 @@ class UserPostsService extends ModerationServiceBase {
     return [
       'job',
       'training',
+      'report',
     ];
   }
 
@@ -229,7 +230,7 @@ class UserPostsService extends ModerationServiceBase {
           $cells['deadline'] = $this->formatDate($entity->field_registration_deadline->value);
         }
       }
-      else {
+      elseif ($entity->bundle() === 'job') {
         $cells['deadline'] = $this->formatDate($entity->field_job_closing_date->value);
       }
 
@@ -261,6 +262,14 @@ class UserPostsService extends ModerationServiceBase {
     ];
 
     // Filter by bundle.
+    $allowed_bundles = [
+      'job' => $this->t('Job'),
+      'training' => $this->t('Training'),
+    ];
+    if ($this->currentUser->hasPermission('create report content')) {
+      $allowed_bundles['report'] = $this->t('Report');
+    }
+
     $definitions['bundle'] = [
       'type' => 'property',
       'field' => 'type',
@@ -268,10 +277,7 @@ class UserPostsService extends ModerationServiceBase {
       'shortcut' => 'ty',
       'form' => 'other',
       'operator' => 'OR',
-      'values' => [
-        'job' => $this->t('Job'),
-        'training' => $this->t('Training'),
-      ],
+      'values' => $allowed_bundles,
     ];
 
     // Limit sources.
@@ -354,6 +360,9 @@ class UserPostsService extends ModerationServiceBase {
           $allowed_sources[] = $source;
         }
         elseif (isset($rights[$source->value]['training']) && $rights[$source->value]['training'] > $min_right) {
+          $allowed_sources[] = $source;
+        }
+        elseif (isset($rights[$source->value]['report']) && $rights[$source->value]['report'] > $min_right) {
           $allowed_sources[] = $source;
         }
       }
@@ -461,6 +470,9 @@ class UserPostsService extends ModerationServiceBase {
     }
     if (empty($filters['bundle']) || !empty($filters['bundle']['training'])) {
       $types[] = 'training';
+    }
+    if (empty($filters['bundle']) || !empty($filters['bundle']['report'])) {
+      $types[] = 'report';
     }
 
     // Get the user rights keyed by source ids and store the ones

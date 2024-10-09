@@ -127,7 +127,7 @@ class UserController extends ControllerBase {
       'mail' => ['data' => $this->t('Mail'), 'field' => 'u.mail'],
       'status' => ['data' => $this->t('Status'), 'field' => 'u.status'],
       'role' => $this->t('Roles'),
-      'sources' => $this->t('Sources (Job, Training)'),
+      'sources' => $this->t('Sources (Job, Training, Reports)'),
       'created' => ['data' => $this->t('Member for'), 'field' => 'u.created'],
       'access' => ['data' => $this->t('Last access'), 'field' => 'u.access'],
       'edit' => $this->t('Edit'),
@@ -170,13 +170,16 @@ class UserController extends ControllerBase {
     }
 
     // Posting rights filter.
-    if (isset($filters['job_rights']) || isset($filters['training_rights'])) {
+    if (isset($filters['job_rights']) || isset($filters['training_rights']) || isset($filters['report_rights'])) {
       $query->innerJoin('taxonomy_term__field_user_posting_rights', 'fpr', '%alias.field_user_posting_rights_id = u.uid');
       if (isset($filters['job_rights'])) {
         $query->condition('fpr.field_user_posting_rights_job', $rights[$filters['job_rights']], '=');
       }
       if (isset($filters['training_rights'])) {
         $query->condition('fpr.field_user_posting_rights_training', $rights[$filters['training_rights']], '=');
+      }
+      if (isset($filters['report_rights'])) {
+        $query->condition('fpr.field_user_posting_rights_report', $rights[$filters['report_rights']], '=');
       }
     }
 
@@ -272,6 +275,7 @@ class UserController extends ControllerBase {
     $query->addField('f', 'field_user_posting_rights_id', 'uid');
     $query->addField('f', 'field_user_posting_rights_job', 'job');
     $query->addField('f', 'field_user_posting_rights_training', 'training');
+    $query->addField('f', 'field_user_posting_rights_report', 'report');
     $query->addField('f', 'entity_id', 'tid');
     $query->addExpression('COALESCE(fs.field_shortname_value, td.name)', 'name');
     $query->condition('f.field_user_posting_rights_id', array_keys($users), 'IN');
@@ -281,10 +285,12 @@ class UserController extends ControllerBase {
     foreach ($query->execute() as $record) {
       $job = $record->job;
       $training = $record->training;
+      $report = $record->report;
+
       $link = Link::fromTextAndUrl($record->name, URL::fromUserInput('/taxonomy/term/' . $record->tid . '/user-posting-rights', [
         'attributes' => ['target' => '_blank'],
       ]));
-      $row = '<li data-job="' . $job . '" data-training="' . $training . '">' . $link->toString() . '</li>';
+      $row = '<li data-job="' . $job . '" data-training="' . $training . '" data-report="' . $report . '">' . $link->toString() . '</li>';
       $sources[$record->uid][$record->tid] = $row;
     }
 

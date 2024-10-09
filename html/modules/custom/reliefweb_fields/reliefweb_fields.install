@@ -1,0 +1,65 @@
+<?php
+
+/**
+ * @file
+ * Install file for the ReliefWeb Fields module.
+ */
+
+use Drupal\Core\Database\Database;
+
+/**
+ * Update user posting rights field.
+ */
+function reliefweb_fields_update_10001() {
+  $kv_schema = \Drupal::keyValue('entity.storage_schema.sql')->get('taxonomy_term.field_schema_data.field_user_posting_rights');
+  foreach ($kv_schema as $table => &$info) {
+    $schema = Database::getConnection()->schema();
+    if (!$schema->fieldExists($table, 'field_user_posting_rights_report')) {
+      $spec = [
+        'description' => 'Report posting rights: 0 = unverified; 1 = blocked; 2 = allowed; 3 = trusted.',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => '',
+        'default' => 0,
+      ];
+      $schema->addField($table, 'field_user_posting_rights_report', $spec);
+
+      $spec = [
+        'fields' => [
+          'field_user_posting_rights_report' => [
+            'description' => 'Report posting rights: 0 = unverified; 1 = blocked; 2 = allowed; 3 = trusted.',
+            'type' => 'int',
+            'size' => 'tiny',
+            'not null' => '',
+            'default' => 0,
+          ],
+        ],
+        'indexes' => [
+          'field_user_posting_rights_report' => ['field_user_posting_rights_report'],
+        ],
+      ];
+
+      $schema->addIndex($table, 'field_user_posting_rights_report', [
+        'field_user_posting_rights_report',
+      ], $spec);
+    }
+
+    $info['fields']['field_user_posting_rights_report'] = [
+      'description' => 'Report posting rights: 0 = unverified; 1 = blocked; 2 = allowed; 3 = trusted.',
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => '',
+      'default' => 0,
+    ];
+    $info['indexes']['field_user_posting_rights_report'] = [
+      'field_user_posting_rights_report',
+    ];
+  }
+
+  \Drupal::keyValue('entity.storage_schema.sql')->set('taxonomy_term.field_schema_data.field_user_posting_rights', $kv_schema);
+
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $field_storage_definition = $entity_definition_update_manager->getFieldStorageDefinition('field_user_posting_rights', 'taxonomy_term');
+  $field_storage_definition->setSetting('column_changes_handled', TRUE);
+  $entity_definition_update_manager->updateFieldStorageDefinition($field_storage_definition);
+}

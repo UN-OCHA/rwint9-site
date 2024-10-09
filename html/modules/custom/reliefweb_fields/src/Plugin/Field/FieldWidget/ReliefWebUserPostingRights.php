@@ -174,6 +174,7 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
         'id' => intval($item['id'], 10),
         'job' => intval($item['job'], 10),
         'training' => intval($item['training'], 10),
+        'report' => intval($item['report'], 10),
         'notes' => $item['notes'],
       ];
     }
@@ -200,6 +201,7 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
     $data['id'] = intval($data['id'] ?? $data['uid'], 10);
     $data['job'] = isset($data['job']) ? intval($data['job'], 10) : 0;
     $data['training'] = isset($data['training']) ? intval($data['training'], 10) : 0;
+    $data['report'] = isset($data['report']) ? intval($data['report'], 10) : 0;
     $data['notes'] = isset($data['notes']) ? trim($data['notes']) : '';
 
     $data['name'] = trim($data['name']);
@@ -210,6 +212,7 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
     if ($data['status'] === 0) {
       $data['job'] = 1;
       $data['training'] = 1;
+      $data['report'] = 1;
     }
 
     return $data;
@@ -410,7 +413,8 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
           $query->condition($query
             ->orConditionGroup()
             ->condition($field_name . '.job', 1, '<>')
-            ->condition($field_name . '.training', 1, '<>'));
+            ->condition($field_name . '.training', 1, '<>')
+            ->condition($field_name . '.report', 1, '<>'));
         }
 
         $ids = $query?->execute();
@@ -435,9 +439,10 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
               }
               // Set the rights to 'blocked' if the account is blocked.
               elseif ($blocked) {
-                if ($item['job'] != 1 || $item['training'] != 1) {
+                if ($item['job'] != 1 || $item['training'] != 1 || $item['report'] != 1) {
                   $items[$delta]['job'] = 1;
                   $items[$delta]['training'] = 1;
+                  $items[$delta]['report'] = 1;
                   if (!empty($item['notes'])) {
                     $items[$delta]['notes'] .= ' ' . $message;
                   }
@@ -450,9 +455,10 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
               // Reset the rights to 'unverified' if the email changed but
               // preserve the 'blocked' rights.
               elseif ($email_changed) {
-                if ($item['job'] > 1 || $item['training'] > 1) {
+                if ($item['job'] > 1 || $item['training'] > 1 || $item['report'] > 1) {
                   $items[$delta]['job'] = $item['job'] == 1 ? 1 : 0;
                   $items[$delta]['training'] = $item['training'] == 1 ? 1 : 0;
+                  $items[$delta]['report'] = $item['report'] == 1 ? 1 : 0;
                   if (!empty($item['notes'])) {
                     $items[$delta]['notes'] .= ' ' . $message;
                   }

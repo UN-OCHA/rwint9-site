@@ -49,6 +49,8 @@ class ReliefwebEntraidLoginTest extends ExistingSiteBase {
    * @covers ::redirectLogin()
    */
   public function testRedirectLogin() {
+    global $base_url;
+
     // Get the EntraID configuration.
     $entraid_config = $this->container
       ->get('config.factory')
@@ -69,9 +71,9 @@ class ReliefwebEntraidLoginTest extends ExistingSiteBase {
     // Set the endpoints. We just point at the robots.txt as we know it exists
     // and so, if the reponse status code in 200, then the redirection worked.
     $data = $entraid_config->get();
-    $data['settings']['authorization_endpoint_wa'] = 'http://localhost/robots.txt';
-    $data['settings']['token_endpoint_wa'] = 'http://localhost/robots.txt';
-    $data['settings']['iss_allowed_domains'] = 'http://localhost/robots.txt';
+    $data['settings']['authorization_endpoint_wa'] = $base_url . '/robots.txt';
+    $data['settings']['token_endpoint_wa'] = $base_url . '/robots.txt';
+    $data['settings']['iss_allowed_domains'] = $base_url . '/robots.txt';
     $entraid_config->setData($data)->save();
 
     // If the redirection works, a 200 will be returned.
