@@ -96,8 +96,8 @@
   }
 }
 
-/* Ensure long URLs in WYSIWYG wrap */
-.rw-article__content a {
+/* Ensure long strings wrap. */
+.rw-article__content {
   overflow-wrap: anywhere;
 }
 
