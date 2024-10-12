@@ -119,7 +119,8 @@
             "orakili/composer-drupal-info-file-patch-helper": true,
             "phpstan/extension-installer": true,
             "symfony/flex": true,
-            "php-http/discovery": true
+            "php-http/discovery": true,
+            "tbachert/spi": false
         },
         "audit": {
             "abandoned": "report",

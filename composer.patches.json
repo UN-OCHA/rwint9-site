@@ -27,9 +27,6 @@
         "drupal/openid_connect_windows_aad": {
             "Failed to get authentication tokens for Windows Azure AD": "PATCHES/openid_connect_windows_aad-3346603-5.patch"
         },
-        "drupal/svg_image": {
-            "Drupal 10.2 compatibility": "PATCHES/svg_image--3413668--drupal-10.2-compatibility.patch"
-        },
         "drupal/username_enumeration_prevention": {
             "Avoid leaking the path via Drupal.settings json": "PATCHES/username_enumeration_prevention-user-login-block-form-3312288.patch"
         },
