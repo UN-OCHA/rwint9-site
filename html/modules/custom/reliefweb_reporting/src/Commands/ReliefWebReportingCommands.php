@@ -10,6 +10,9 @@ use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_reporting\ApiIndexerResource\ReportExtended;
 use Drush\Commands\DrushCommands;
+use Google\Client;
+use Google\Service\Drive;
+use Google\Service\Drive\DriveFile;
 use RWAPIIndexer\Database\DatabaseConnection;
 use RWAPIIndexer\Elasticsearch;
 use RWAPIIndexer\Options;
@@ -501,8 +504,9 @@ class ReliefWebReportingCommands extends DrushCommands {
    *   Include the report body in the export. Defaults to FALSE.
    * @option gdrive-upload-folder
    *   Upload the generated report file to the GDrive folder with this ID.
-   *   Expects the folder to exist and the GOOGLE_APPLICATION_CREDENTIALS
-   *   environment variable to contain valid credentials.
+   *   Expects the folder to exist.
+   *   The GOOGLE_APPLICATION_CREDENTIALS environment variable needs to point
+   *   at a valid JSON credential file or contain valid JSON credential data.
    *   Requires --output to be a file and not stdout.
    *
    * @default $options [
@@ -773,19 +777,26 @@ class ReliefWebReportingCommands extends DrushCommands {
     }
 
     if ($upload) {
-      $client = new Google\Client();
-      if (getenv('GOOGLE_APPLICATION_CREDENTIALS')) {
-        $client->useApplicationDefaultCredentials();
-      } else {
+      $client = new Client();
+      if ($credentials = getenv('GOOGLE_APPLICATION_CREDENTIALS')) {
+        // Suppress error to avoid echoing the credential in a traceback.
+        if (!@file_exists($credentials)) {
+          $client->setAuthConfig($credentials);
+        }
+        else {
+          $client->useApplicationDefaultCredentials();
+        }
+      }
+      else {
         $this->logger->error('Error: No credentials defined in the GOOGLE_APPLICATION_CREDENTIALS environment.');
         return FALSE;
       }
 
       $client->setApplicationName("Reliefweb Reports Data Uploader");
       $client->setScopes(['https://www.googleapis.com/auth/drive']);
-      $service = new Google\Service\Drive($client);
+      $service = new Drive($client);
 
-      $file = new Google\Service\Drive\DriveFile();
+      $file = new DriveFile();
       $file->setName(basename($output));
       $file->setParents([$options['gdrive-upload-folder']]);
 
@@ -793,13 +804,14 @@ class ReliefWebReportingCommands extends DrushCommands {
         $result = $service->files->create($file, [
           'data' => file_get_contents($output),
           'mimeType' => 'application/octet-stream',
-          'uploadType' => 'multipart'
-          ]);
+          'uploadType' => 'multipart',
+        ]);
       }
       catch (\Exception $exception) {
         $this->logger->error(strtr('Error: @message.', [
           '@message' => $exception->getMessage(),
         ]));
+
         return FALSE;
       }
       finally {
