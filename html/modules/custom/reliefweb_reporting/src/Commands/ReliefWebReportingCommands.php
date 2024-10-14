@@ -499,6 +499,11 @@ class ReliefWebReportingCommands extends DrushCommands {
    *   export. See `replace-properties` option.
    * @option include-body
    *   Include the report body in the export. Defaults to FALSE.
+   * @option gdrive-upload-folder
+   *   Upload the generated report file to the GDrive folder with this ID.
+   *   Expects the folder to exist and the GOOGLE_APPLICATION_CREDENTIALS
+   *   environment variable to contain valid credentials.
+   *   Requires --output to be a file and not stdout.
    *
    * @default $options [
    *   'output' => 'php://stdout',
@@ -509,9 +514,12 @@ class ReliefWebReportingCommands extends DrushCommands {
    *   'extra-properties' => NULL,
    *   'exclude-properties' => NULL,
    *   'include-body' => NULL,
+   *   'gdrive-upload-folder' => NULL,
    * ]
    *
    * @usage reliefweb_reporting:export-report-data "2021-01-01T00:00:01+00:00" "now" --output=/tmp/report-data-export.tsv
+   *   Export data from 2021 to now into /tmp/report-data-export.tsv.
+   * @usage reliefweb_reporting:export-report-data "2021-01-01T00:00:01+00:00" "now" --output=/tmp/report-data-export.tsv --upload-grive-folder=9frh70y744yyr49
    *   Export data from 2021 to now into /tmp/report-data-export.tsv.
    * @usage reliefweb_reporting:export-report-data --filter="country:syria,yemen" --include-properties=id,title,date.created
    *   Export reports for Syria and Yemen, including only id, title, and
@@ -531,10 +539,14 @@ class ReliefWebReportingCommands extends DrushCommands {
       'extra-properties' => NULL,
       'exclude-properties' => NULL,
       'include-body' => NULL,
+      'gdrive-upload-folder' => NULL,
     ],
   ): bool {
     $output = $options['output'] ?? 'php://stdout';
     $batch_size = (int) ($options['batch-size'] ?? 1000);
+
+    // Are we uploading the result?
+    $upload = (!empty($options['gdrive-upload-folder']) && $output != 'php://stdout');
 
     $bundle = 'report';
     $entity_type = 'node';
@@ -758,6 +770,44 @@ class ReliefWebReportingCommands extends DrushCommands {
     }
     finally {
       fclose($file);
+    }
+
+    if ($upload) {
+      $client = new Google\Client();
+      if (getenv('GOOGLE_APPLICATION_CREDENTIALS')) {
+        $client->useApplicationDefaultCredentials();
+      } else {
+        $this->logger->error('Error: No credentials defined in the GOOGLE_APPLICATION_CREDENTIALS environment.');
+        return FALSE;
+      }
+
+      $client->setApplicationName("Reliefweb Reports Data Uploader");
+      $client->setScopes(['https://www.googleapis.com/auth/drive']);
+      $service = new Google\Service\Drive($client);
+
+      $file = new Google\Service\Drive\DriveFile();
+      $file->setName(basename($output));
+      $file->setParents([$options['gdrive-upload-folder']]);
+
+      try {
+        $result = $service->files->create($file, [
+          'data' => file_get_contents($output),
+          'mimeType' => 'application/octet-stream',
+          'uploadType' => 'multipart'
+          ]);
+      }
+      catch (\Exception $exception) {
+        $this->logger->error(strtr('Error: @message.', [
+          '@message' => $exception->getMessage(),
+        ]));
+        return FALSE;
+      }
+      finally {
+        $this->logger->info(strtr('@file uploaded as ID @id', [
+          '@file' => basename($output),
+          '@id'   => $result->getId(),
+        ]));
+      }
     }
 
     return TRUE;
