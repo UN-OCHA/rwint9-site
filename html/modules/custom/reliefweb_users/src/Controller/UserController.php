@@ -290,14 +290,47 @@ class UserController extends ControllerBase {
       $link = Link::fromTextAndUrl($record->name, URL::fromUserInput('/taxonomy/term/' . $record->tid . '/user-posting-rights', [
         'attributes' => ['target' => '_blank'],
       ]));
-      $row = '<li data-job="' . $job . '" data-training="' . $training . '" data-report="' . $report . '">' . $link->toString() . '</li>';
-      $sources[$record->uid][$record->tid] = $row;
+      $row = [
+        '<li data-job="' . $job . '" data-training="' . $training . '" data-report="' . $report . '">',
+        $link->toString(),
+        '<span class="posting-rights--wrapper">',
+        '<span data-posting-right="' . $job . '" class="posting-rights posting-rights--job" title="' . $this->getRightsLabel('job', $job) . '">' . $this->getRightsLabel('job', $job) . '</span>',
+        '<span data-posting-right="' . $training . '" class="posting-rights posting-rights--training" title="' . $this->getRightsLabel('training', $training) . '">' . $this->getRightsLabel('training', $training) . '</span>',
+        '<span data-posting-right="' . $report . '" class="posting-rights posting-rights--report" title="' . $this->getRightsLabel('report', $report) . '">' . $this->getRightsLabel('report', $report) . '</span>',
+        '</span>',
+        '</li>',
+      ];
+      $sources[$record->uid][$record->tid] = implode(' ', $row);
     }
 
     // Add the formatted list of sources to the user objects.
     foreach ($sources as $uid => $rows) {
       $users[$uid]->sources = '<ol>' . implode('', $rows) . '</ol>';
     }
+  }
+
+  /**
+   * Get human readable rights.
+   */
+  protected function getRightsLabel(string $type, string $right) {
+    $types = [
+      'job' => $this->t('Job'),
+      'training' => $this->t('Training'),
+      'report' => $this->t('Report'),
+    ];
+    $rights = [
+      0 => $this->t('Unverified'),
+      1 => $this->t('Blocked'),
+      2 => $this->t('Allowed'),
+      3 => $this->t('Trusted'),
+    ];
+
+    $label = [
+      $types[$type],
+      $rights[$right],
+    ];
+
+    return implode(' - ', $label);
   }
 
 }
