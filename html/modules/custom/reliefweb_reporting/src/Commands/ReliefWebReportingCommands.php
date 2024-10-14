@@ -803,7 +803,7 @@ class ReliefWebReportingCommands extends DrushCommands {
       try {
         $result = $service->files->create($file, [
           'data' => file_get_contents($output),
-          'mimeType' => 'application/octet-stream',
+          'mimeType' => 'text/tab-separated-values',
           'uploadType' => 'multipart',
         ]);
       }
