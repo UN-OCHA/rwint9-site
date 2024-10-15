@@ -9,6 +9,7 @@ dependencies:
     - media
     - node
     - reliefweb_files
+    - reliefweb_form
 id: contributor
 label: Contributor
 weight: 9
@@ -19,6 +20,7 @@ permissions:
   - 'create report content'
   - 'delete media'
   - 'delete own image_report media'
+  - 'display source attention messages'
   - 'edit own image_report media'
   - 'edit own report content'
   - 'update media'
