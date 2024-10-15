@@ -8,11 +8,13 @@ dependencies:
   module:
     - media
     - node
+    - reliefweb_files
 id: contributor
 label: Contributor
 weight: 9
 is_admin: null
 permissions:
+  - 'access reliefweb private files'
   - 'create image_report media'
   - 'create report content'
   - 'delete media'
