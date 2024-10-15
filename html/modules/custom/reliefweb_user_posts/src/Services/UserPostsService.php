@@ -117,6 +117,7 @@ class UserPostsService extends ModerationServiceBase {
       'refused' => $this->t('refused'),
       'expired' => $this->t('expired'),
       'duplicate' => $this->t('duplicate'),
+      'to-review' => $this->t('to-review'),
     ];
   }
 
