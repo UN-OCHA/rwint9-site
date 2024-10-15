@@ -250,7 +250,7 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
         '@date' => DateHelper::format($this->field_embargo_date->value, 'custom', 'd M Y H:i e'),
       ]);
 
-      $log = trim($this->getRevisionLogMessage());
+      $log = !empty($this->getRevisionLogMessage()) ? trim($this->getRevisionLogMessage()) : '';
       $log = $message . (!empty($log) ? "\n" . $log : '');
       $this->setRevisionLogMessage($log);
     }
