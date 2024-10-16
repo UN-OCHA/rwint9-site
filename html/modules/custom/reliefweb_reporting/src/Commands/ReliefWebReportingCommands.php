@@ -969,7 +969,7 @@ class ReliefWebReportingCommands extends DrushCommands {
       $chunk = fread($stream, 8192);
       $byteCount += strlen($chunk);
       $returnChunk .= $chunk;
-      if ($byteCount >= $chunkSize) {
+      if ($byteCount >= $size) {
         return $returnChunk;
       }
     }
