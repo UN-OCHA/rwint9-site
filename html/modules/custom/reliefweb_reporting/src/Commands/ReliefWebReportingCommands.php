@@ -525,7 +525,7 @@ class ReliefWebReportingCommands extends DrushCommands {
    * @usage reliefweb_reporting:export-report-data "2021-01-01T00:00:01+00:00" "now" --output=/tmp/report-data-export.tsv
    *   Export data from 2021 to now into /tmp/report-data-export.tsv.
    * @usage reliefweb_reporting:export-report-data "2021-01-01T00:00:01+00:00" "now" --output=/tmp/report-data-export.tsv --upload-grive-folder=9frh70y744yyr49
-   *   Export data from 2021 to now into /tmp/report-data-export.tsv.
+   *   Export data from 2021 to now into /tmp/report-data-export.tsv and then upload it to Google Drive.
    * @usage reliefweb_reporting:export-report-data --filter="country:syria,yemen" --include-properties=id,title,date.created
    *   Export reports for Syria and Yemen, including only id, title, and
    *   creation date.
