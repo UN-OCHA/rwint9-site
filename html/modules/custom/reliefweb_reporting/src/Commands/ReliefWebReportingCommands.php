@@ -551,6 +551,13 @@ class ReliefWebReportingCommands extends DrushCommands {
 
     // Are we uploading the result?
     $upload = (!empty($options['gdrive-upload-folder']) && $output != 'php://stdout');
+    $credentials = getenv('GOOGLE_APPLICATION_CREDENTIALS');
+
+    // Early exit if upload is requested but credentials are absent.
+    if ($upload === TRUE && empty($credentials)) {
+      $this->logger->error('Error: Upload requested but no credentials provided.');
+      return FALSE;
+    }
 
     $bundle = 'report';
     $entity_type = 'node';
@@ -778,18 +785,13 @@ class ReliefWebReportingCommands extends DrushCommands {
 
     if ($upload) {
       $client = new Client();
-      if ($credentials = getenv('GOOGLE_APPLICATION_CREDENTIALS')) {
-        // Suppress error to avoid echoing the credential in a traceback.
-        if (!@file_exists($credentials)) {
-          $client->setAuthConfig($credentials);
-        }
-        else {
-          $client->useApplicationDefaultCredentials();
-        }
+
+      // Suppress error to avoid echoing the credential in a traceback.
+      if (!@file_exists($credentials)) {
+        $client->setAuthConfig($credentials);
       }
       else {
-        $this->logger->error('Error: No credentials defined in the GOOGLE_APPLICATION_CREDENTIALS environment.');
-        return FALSE;
+        $client->useApplicationDefaultCredentials();
       }
 
       $client->setApplicationName("Reliefweb Reports Data Uploader");
