@@ -11,6 +11,7 @@ use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_reporting\ApiIndexerResource\ReportExtended;
 use Drush\Commands\DrushCommands;
 use Google\Client;
+use Google\Http\MediaFileUpload;
 use Google\Service\Drive;
 use Google\Service\Drive\DriveFile;
 use RWAPIIndexer\Database\DatabaseConnection;
@@ -796,25 +797,52 @@ class ReliefWebReportingCommands extends DrushCommands {
 
       $client->setApplicationName("Reliefweb Reports Data Uploader");
       $client->setScopes(['https://www.googleapis.com/auth/drive']);
+      $client->setDefer(TRUE);
       $service = new Drive($client);
 
       $file = new DriveFile();
       $file->setName(basename($output));
       $file->setParents([$options['gdrive-upload-folder']]);
 
+      // Upload files in 1 MB chunks.
+      $upload_chunk_size = 1 * 1024 * 1024;
+
       try {
-        $result = $service->files->create($file, [
-          'data' => file_get_contents($output),
-          'mimeType' => 'text/tab-separated-values',
-          'uploadType' => 'multipart',
-        ]);
+        $request = $service->files->create($file);
+
+        // A MediaFileUpload allows us to chunk the upload.
+        $upload = new MediaFileUpload(
+          $client,
+          $request,
+          'text/tab-separated-values',
+          NULL,
+          TRUE,
+          $upload_chunk_size
+        );
+        $upload->setFileSize(filesize($output));
+
+        $status = FALSE;
+        $stream = fopen($output, "rb");
+        while (!$status && !feof($stream)) {
+          $chunk = $this->readFileChunk($stream, $upload_chunk_size);
+          $status = $upload->nextChunk($chunk);
+        }
+
+        // The final $status should contain the DriveFile object.
+        $result = FALSE;
+        if ($status != FALSE) {
+          $result = $status;
+        }
+
       }
       catch (\Exception $exception) {
         $this->logger->error(strtr('Error: @message.', [
           '@message' => $exception->getMessage(),
         ]));
-
         return FALSE;
+      }
+      finally {
+        fclose($stream);
       }
 
       $this->logger->info(strtr('@file uploaded as ID @id', [
@@ -917,6 +945,34 @@ class ReliefWebReportingCommands extends DrushCommands {
       // Handle single object or scalar.
       return $this->getNestedValues($value, $path);
     }
+  }
+
+  /**
+   * Read and return chunks of a file.
+   *
+   * @param resource $stream
+   *   An open file handle.
+   * @param int $size
+   *   The maximum size of a file chunk to return.
+   *
+   * @return string
+   *   A data string read from a file.
+   *
+   * @see https://github.com/googleapis/google-api-php-client/blob/76c312e2696575d315f56aba31f8979d06da06ff/examples/large-file-upload.php#L135
+   */
+  private function readFileChunk($stream, $size) {
+    $byteCount = 0;
+    $returnChunk = '';
+
+    while (!feof($stream)) {
+      $chunk = fread($stream, 8192);
+      $byteCount += strlen($chunk);
+      $returnChunk .= $chunk;
+      if ($byteCount >= $chunkSize) {
+        return $returnChunk;
+      }
+    }
+    return $returnChunk;
   }
 
 }
