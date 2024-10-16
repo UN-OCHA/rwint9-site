@@ -10,6 +10,10 @@ use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_reporting\ApiIndexerResource\ReportExtended;
 use Drush\Commands\DrushCommands;
+use Google\Client;
+use Google\Http\MediaFileUpload;
+use Google\Service\Drive;
+use Google\Service\Drive\DriveFile;
 use RWAPIIndexer\Database\DatabaseConnection;
 use RWAPIIndexer\Elasticsearch;
 use RWAPIIndexer\Options;
@@ -499,6 +503,12 @@ class ReliefWebReportingCommands extends DrushCommands {
    *   export. See `replace-properties` option.
    * @option include-body
    *   Include the report body in the export. Defaults to FALSE.
+   * @option gdrive-upload-folder
+   *   Upload the generated report file to the GDrive folder with this ID.
+   *   Expects the folder to exist.
+   *   The GOOGLE_APPLICATION_CREDENTIALS environment variable needs to point
+   *   at a valid JSON credential file or contain valid JSON credential data.
+   *   Requires --output to be a file and not stdout.
    *
    * @default $options [
    *   'output' => 'php://stdout',
@@ -509,10 +519,14 @@ class ReliefWebReportingCommands extends DrushCommands {
    *   'extra-properties' => NULL,
    *   'exclude-properties' => NULL,
    *   'include-body' => NULL,
+   *   'gdrive-upload-folder' => NULL,
    * ]
    *
    * @usage reliefweb_reporting:export-report-data "2021-01-01T00:00:01+00:00" "now" --output=/tmp/report-data-export.tsv
    *   Export data from 2021 to now into /tmp/report-data-export.tsv.
+   * @usage reliefweb_reporting:export-report-data "2021-01-01T00:00:01+00:00" "now" --output=/tmp/report-data-export.tsv --upload-grive-folder=9frh70y744yyr49
+   *   Export data from 2021 to now into /tmp/report-data-export.tsv and
+   *   then upload it to Google Drive.
    * @usage reliefweb_reporting:export-report-data --filter="country:syria,yemen" --include-properties=id,title,date.created
    *   Export reports for Syria and Yemen, including only id, title, and
    *   creation date.
@@ -531,10 +545,21 @@ class ReliefWebReportingCommands extends DrushCommands {
       'extra-properties' => NULL,
       'exclude-properties' => NULL,
       'include-body' => NULL,
+      'gdrive-upload-folder' => NULL,
     ],
   ): bool {
     $output = $options['output'] ?? 'php://stdout';
     $batch_size = (int) ($options['batch-size'] ?? 1000);
+
+    // Are we uploading the result?
+    $upload = (!empty($options['gdrive-upload-folder']) && $output != 'php://stdout');
+    $credentials = getenv('GOOGLE_APPLICATION_CREDENTIALS');
+
+    // Early exit if upload is requested but credentials are absent.
+    if ($upload === TRUE && empty($credentials)) {
+      $this->logger->error('Error: Upload requested but no credentials provided.');
+      return FALSE;
+    }
 
     $bundle = 'report';
     $entity_type = 'node';
@@ -760,6 +785,73 @@ class ReliefWebReportingCommands extends DrushCommands {
       fclose($file);
     }
 
+    if ($upload) {
+      $client = new Client();
+
+      // Suppress error to avoid echoing the credential in a traceback.
+      if (!@file_exists($credentials)) {
+        $client->setAuthConfig(json_decode($credentials, TRUE));
+      }
+      else {
+        $client->useApplicationDefaultCredentials();
+      }
+
+      $client->setApplicationName("Reliefweb Reports Data Uploader");
+      $client->setScopes(['https://www.googleapis.com/auth/drive']);
+      $client->setDefer(TRUE);
+      $service = new Drive($client);
+
+      $file = new DriveFile();
+      $file->setName(basename($output));
+      $file->setParents([$options['gdrive-upload-folder']]);
+
+      // Upload files in 1 MB chunks.
+      $upload_chunk_size = 1 * 1024 * 1024;
+
+      try {
+        $request = $service->files->create($file);
+
+        // A MediaFileUpload allows us to chunk the upload.
+        $upload = new MediaFileUpload(
+          $client,
+          $request,
+          'text/tab-separated-values',
+          NULL,
+          TRUE,
+          $upload_chunk_size
+        );
+        $upload->setFileSize(filesize($output));
+
+        $status = FALSE;
+        $stream = fopen($output, "rb");
+        while (!$status && !feof($stream)) {
+          $chunk = $this->readFileChunk($stream, $upload_chunk_size);
+          $status = $upload->nextChunk($chunk);
+        }
+
+        // The final $status should contain the DriveFile object.
+        $result = FALSE;
+        if ($status != FALSE) {
+          $result = $status;
+        }
+
+      }
+      catch (\Exception $exception) {
+        $this->logger->error(strtr('Error: @message.', [
+          '@message' => $exception->getMessage(),
+        ]));
+        return FALSE;
+      }
+      finally {
+        fclose($stream);
+      }
+
+      $this->logger->info(strtr('@file uploaded as ID @id', [
+        '@file' => basename($output),
+        '@id'   => $result->getId(),
+      ]));
+    }
+
     return TRUE;
   }
 
@@ -854,6 +946,34 @@ class ReliefWebReportingCommands extends DrushCommands {
       // Handle single object or scalar.
       return $this->getNestedValues($value, $path);
     }
+  }
+
+  /**
+   * Read and return chunks of a file.
+   *
+   * @param resource $stream
+   *   An open file handle.
+   * @param int $size
+   *   The maximum size of a file chunk to return.
+   *
+   * @return string
+   *   A data string read from a file.
+   *
+   * @see https://github.com/googleapis/google-api-php-client/blob/76c312e2696575d315f56aba31f8979d06da06ff/examples/large-file-upload.php#L135
+   */
+  private function readFileChunk($stream, $size) {
+    $byteCount = 0;
+    $returnChunk = '';
+
+    while (!feof($stream)) {
+      $chunk = fread($stream, 8192);
+      $byteCount += strlen($chunk);
+      $returnChunk .= $chunk;
+      if ($byteCount >= $size) {
+        return $returnChunk;
+      }
+    }
+    return $returnChunk;
   }
 
 }
