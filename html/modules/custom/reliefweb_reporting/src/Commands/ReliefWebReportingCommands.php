@@ -816,12 +816,11 @@ class ReliefWebReportingCommands extends DrushCommands {
 
         return FALSE;
       }
-      finally {
-        $this->logger->info(strtr('@file uploaded as ID @id', [
-          '@file' => basename($output),
-          '@id'   => $result->getId(),
-        ]));
-      }
+
+      $this->logger->info(strtr('@file uploaded as ID @id', [
+        '@file' => basename($output),
+        '@id'   => $result->getId(),
+      ]));
     }
 
     return TRUE;
