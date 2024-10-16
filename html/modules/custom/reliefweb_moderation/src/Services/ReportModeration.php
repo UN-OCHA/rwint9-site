@@ -280,6 +280,10 @@ class ReportModeration extends ModerationServiceBase {
     }
     // Other users can submit for review (or publish directly if trusted).
     else {
+      $buttons['draft'] = [
+        '#value' => $this->t('Save as draft'),
+      ];
+
       $buttons['to-review'] = [
         '#value' => $new ? $this->t('Submit') : $this->t('Submit changes'),
       ];
