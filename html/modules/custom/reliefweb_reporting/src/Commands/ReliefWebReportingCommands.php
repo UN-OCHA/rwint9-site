@@ -790,7 +790,7 @@ class ReliefWebReportingCommands extends DrushCommands {
 
       // Suppress error to avoid echoing the credential in a traceback.
       if (!@file_exists($credentials)) {
-        $client->setAuthConfig($credentials);
+        $client->setAuthConfig(json_decode($credentials, TRUE));
       }
       else {
         $client->useApplicationDefaultCredentials();
