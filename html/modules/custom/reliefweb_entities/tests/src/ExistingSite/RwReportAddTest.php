@@ -218,22 +218,8 @@ class RwReportAddTest extends RwReportBase {
     $this->drupalGet('node/add/report');
     $this->submitForm($edit, 'Save as draft');
 
-    // Check that the report has been created.
-    $this->assertSession()->titleEquals($title . ' - Belgium | ' . $site_name);
-    $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created.');
-    $this->assertSession()->pageTextContains('Belgium');
-    $this->assertSession()->pageTextContains('ABC Color');
-    $this->assertSession()->pageTextContains('UN Document');
-    $this->assertSession()->pageTextContains('English');
-
-    // Check as anonymous.
-    $this->drupalGet('user/logout');
-    $node = $this->getNodeByTitle($title);
-    $this->drupalGet($node->toUrl());
-    $this->assertSession()->statusCodeEquals(404);
-
-    // Check moderation status.
-    $this->assertEquals($node->moderation_status->value, 'draft');
+    // Check that the report has thrown an error.
+    $this->assertSession()->pageTextContains('Publications from "ABC Color" are not allowed.');
   }
 
   /**
@@ -273,22 +259,8 @@ class RwReportAddTest extends RwReportBase {
     $this->drupalGet('node/add/report');
     $this->submitForm($edit, 'Submit');
 
-    // Check that the report has been created.
-    $this->assertSession()->titleEquals($title . ' - Belgium | ' . $site_name);
-    $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created.');
-    $this->assertSession()->pageTextContains('Belgium');
-    $this->assertSession()->pageTextContains('ABC Color');
-    $this->assertSession()->pageTextContains('UN Document');
-    $this->assertSession()->pageTextContains('English');
-
-    // Check as anonymous.
-    $this->drupalGet('user/logout');
-    $node = $this->getNodeByTitle($title);
-    $this->drupalGet($node->toUrl());
-    $this->assertSession()->statusCodeEquals(404);
-
-    // Check moderation status.
-    $this->assertEquals($node->moderation_status->value, 'refused');
+    // Check that the report has thrown an error.
+    $this->assertSession()->pageTextContains('Publications from "ABC Color" are not allowed.');
   }
 
   /**

@@ -123,21 +123,8 @@ class RwReportAddMultipleSourcesTest extends RwReportBase {
     $this->drupalGet('node/add/report');
     $this->submitForm($edit, 'Submit');
 
-    // Check that the report has been created.
-    $this->assertSession()->titleEquals($title . ' - Belgium | ' . $site_name);
-    $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created.');
-    $this->assertSession()->pageTextContains('Belgium');
-    $this->assertSession()->pageTextContains('UN Document');
-    $this->assertSession()->pageTextContains('English');
-
-    // Check as anonymous.
-    $this->drupalGet('user/logout');
-    $node = $this->getNodeByTitle($title);
-    $this->drupalGet($node->toUrl());
-    $this->assertSession()->statusCodeEquals(404);
-
-    // Check moderation status.
-    $this->assertEquals($node->moderation_status->value, 'refused');
+    // Check that the report has thrown an error.
+    $this->assertSession()->pageTextContains('Publications from "Src blocked" are not allowed.');
   }
 
   /**
@@ -249,7 +236,6 @@ class RwReportAddMultipleSourcesTest extends RwReportBase {
    * Test adding a report - blocked.
    */
   public function testAddReportAsContributorBlockedWithRandom() {
-    $site_name = \Drupal::config('system.site')->get('name');
     $title = $this->randomMachineName(32);
 
     $this->drupalLogin($this->contributor);
@@ -266,21 +252,8 @@ class RwReportAddMultipleSourcesTest extends RwReportBase {
     $this->drupalGet('node/add/report');
     $this->submitForm($edit, 'Submit');
 
-    // Check that the report has been created.
-    $this->assertSession()->titleEquals($title . ' - Belgium | ' . $site_name);
-    $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created.');
-    $this->assertSession()->pageTextContains('Belgium');
-    $this->assertSession()->pageTextContains('UN Document');
-    $this->assertSession()->pageTextContains('English');
-
-    // Check as anonymous.
-    $this->drupalGet('user/logout');
-    $node = $this->getNodeByTitle($title);
-    $this->drupalGet($node->toUrl());
-    $this->assertSession()->statusCodeEquals(404);
-
-    // Check moderation status.
-    $this->assertEquals($node->moderation_status->value, 'refused');
+    // Check that the report has thrown an error.
+    $this->assertSession()->pageTextContains('Publications from "Src blocked" are not allowed.');
   }
 
   /**
