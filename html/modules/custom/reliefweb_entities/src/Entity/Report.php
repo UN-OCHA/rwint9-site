@@ -392,36 +392,36 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
         }
 
         // Get the user's posting right for the document.
-        $right = UserPostingRightsHelper::getUserConsolidatedPostingRight($user, $this->bundle(), $sources);
+        $rights = [];
+        foreach (UserPostingRightsHelper::getUserPostingRights($user, $sources) as $tid => $data) {
+          $rights[$data[$this->bundle()] ?? 0][] = $tid;
+        }
 
-        // Update the status based on the user's right.
-        // Note: we don't use `t()` because those are log messages for editors.
-        switch ($right['name']) {
-          // Unverified for some sources => on-hold + flag.
-          case 'unverified':
-            $status = 'on-hold';
-            $message = strtr('Unverified user for @sources.', [
-              '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($right['sources'])),
-            ]);
-            break;
-
-          // Blocked for some sources => refused + flag.
-          case 'blocked':
-            $status = 'refused';
-            $message = strtr('Blocked user for @sources.', [
-              '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($right['sources'])),
-            ]);
-            break;
-
-          // Allowed for all sources => on-hold.
-          case 'allowed':
-            $status = 'to-review';
-            break;
-
-          // Trusted for all the sources => published.
-          case 'trusted':
-            $status = 'published';
-            break;
+        // Blocked for some sources.
+        if (!empty($rights[1])) {
+          $status = 'refused';
+          $message = strtr('Blocked user for @sources.', [
+            '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[1])),
+          ]);
+        }
+        // Trusted for all the sources.
+        elseif (isset($rights[3]) && count($rights[3]) === count($sources)) {
+          $status = 'published';
+        }
+        // Trusted for at least 1.
+        elseif (isset($rights[3]) && count($rights[3]) > 0) {
+          $status = 'to-review';
+        }
+        // Allowed for at least 1.
+        elseif (isset($rights[2]) && count($rights[2]) > 0) {
+          $status = 'to-review';
+        }
+        // Unverified for some sources.
+        else {
+          $status = 'on-hold';
+          $message = strtr('Unverified user for @sources.', [
+            '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[0])),
+          ]);
         }
 
         $this->setModerationStatus($status);

@@ -170,10 +170,10 @@ class RwReportAddMultipleSourcesTest extends RwReportBase {
     $this->drupalGet('user/logout');
     $node = $this->getNodeByTitle($title);
     $this->drupalGet($node->toUrl());
-    $this->assertSession()->statusCodeEquals(404);
+    $this->assertSession()->statusCodeEquals(200);
 
     // Check moderation status.
-    $this->assertEquals($node->moderation_status->value, 'on-hold');
+    $this->assertEquals($node->moderation_status->value, 'to-review');
   }
 
   /**
@@ -314,10 +314,10 @@ class RwReportAddMultipleSourcesTest extends RwReportBase {
     $this->drupalGet('user/logout');
     $node = $this->getNodeByTitle($title);
     $this->drupalGet($node->toUrl());
-    $this->assertSession()->statusCodeEquals(404);
+    $this->assertSession()->statusCodeEquals(200);
 
     // Check moderation status.
-    $this->assertEquals($node->moderation_status->value, 'on-hold');
+    $this->assertEquals($node->moderation_status->value, 'to-review');
   }
 
   /**
@@ -345,11 +345,6 @@ class RwReportAddMultipleSourcesTest extends RwReportBase {
     $this->assertSession()->pageTextContains('Belgium');
     $this->assertSession()->pageTextContains('UN Document');
     $this->assertSession()->pageTextContains('English');
-
-    // @todo: Fix logic in #RW-1099.
-    $this->markTestIncomplete(
-      'Decide on the proper logic.',
-    );
 
     // Check as anonymous.
     $this->drupalGet('user/logout');
@@ -386,11 +381,6 @@ class RwReportAddMultipleSourcesTest extends RwReportBase {
     $this->assertSession()->pageTextContains('UN Document');
     $this->assertSession()->pageTextContains('English');
 
-    // @todo: Fix logic in #RW-1099.
-    $this->markTestIncomplete(
-      'Decide on the proper logic.',
-    );
-
     // Check as anonymous.
     $this->drupalGet('user/logout');
     $node = $this->getNodeByTitle($title);
@@ -398,7 +388,7 @@ class RwReportAddMultipleSourcesTest extends RwReportBase {
     $this->assertSession()->statusCodeEquals(200);
 
     // Check moderation status.
-    $this->assertEquals($node->moderation_status->value, 'published');
+    $this->assertEquals($node->moderation_status->value, 'to-review');
   }
 
   protected function getEditFields($title) {
