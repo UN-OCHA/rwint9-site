@@ -175,8 +175,8 @@ class UserPostingRightsHelper {
    *   the right applies.
    */
   public static function getUserConsolidatedPostingRight(AccountInterface $account, $bundle, array $sources) {
-    // Not a job nor training or no sources, consider the user 'unverified'.
-    if (empty($account->uid) || ($bundle !== 'job' && $bundle !== 'training' && $bundle !== 'report') || empty($sources)) {
+    // Not a job, training nor report or no sources, 'unverified'.
+    if (empty($account->id()) || ($bundle !== 'job' && $bundle !== 'training' && $bundle !== 'report') || empty($sources)) {
       return [
         'code' => 0,
         'name' => 'unverified',

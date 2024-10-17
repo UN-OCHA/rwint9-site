@@ -132,9 +132,9 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
       }
     }
 
-    $rights = UserPostingRightsHelper::getUserConsolidatedPostingRight($this->currentUser->getAccount(), 'report', $ids);
+    $rights = UserPostingRightsHelper::getUserConsolidatedPostingRight($this->currentUser, 'report', $ids);
     // Blocked for at least one source.
-    if (!empty($rights) && isset($rights['code']) && $rights['code'] == 0) {
+    if (!empty($rights) && isset($rights['code']) && $rights['code'] == 1) {
       $sources = $this->getEntityTypeManager()
         ->getStorage('taxonomy_term')
         ->loadMultiple($rights['sources']);
