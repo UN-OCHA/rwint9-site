@@ -52,6 +52,7 @@
 }
 .rw-user-dashboard li + li {
   margin-top: 32px;
+  break-inside: avoid;
 }
 [dir="ltr"] .rw-user-dashboard li {
   padding-right: 32px;
