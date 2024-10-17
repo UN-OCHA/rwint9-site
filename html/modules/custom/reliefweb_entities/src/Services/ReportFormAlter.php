@@ -9,6 +9,7 @@ use Drupal\Core\Url;
 use Drupal\reliefweb_entities\Entity\Report;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
 use Drupal\reliefweb_form\Helpers\FormHelper;
+use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
@@ -110,6 +111,43 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
 
     // Prevent saving from a blocked source.
     $form['#validate'][] = [$this, 'validateBlockedSource'];
+
+    // Prevent saving if user is blocked for a source.
+    $form['#validate'][] = [$this, 'validatePostingRightsBlockedSource'];
+  }
+
+  /**
+   * Prevent saving if user is blocked for a source.
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  public function validatePostingRightsBlockedSource(array $form, FormStateInterface &$form_state) {
+    $ids = [];
+    foreach ($form_state->getValue('field_source', []) as $item) {
+      if (!empty($item['target_id'])) {
+        $ids[] = $item['target_id'];
+      }
+    }
+
+    $rights = UserPostingRightsHelper::getUserConsolidatedPostingRight($this->currentUser->getAccount(), 'report', $ids);
+    // Blocked for at least one source.
+    if (!empty($rights) && isset($rights['code']) && $rights['code'] == 0) {
+      $sources = $this->getEntityTypeManager()
+        ->getStorage('taxonomy_term')
+        ->loadMultiple($rights['sources']);
+
+      /** @var \Drupal\taxonomy\Entity\Term $term */
+      array_walk($sources, function (&$term) {
+        $term = $term->label();
+      });
+
+      $form_state->setErrorByName('field_source', $this->t('Publications from "@sources" are not allowed.', [
+        '@sources' => implode('", "', $sources),
+      ]));
+    }
   }
 
   /**
