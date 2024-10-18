@@ -117,6 +117,7 @@
       container.setAttribute('data-status', data.status ? 'active' : 'blocked');
       container.setAttribute('data-job', data.job);
       container.setAttribute('data-training', data.training);
+      container.setAttribute('data-report', data.report);
 
       // User info.
       var info = document.createElement('div');
@@ -147,6 +148,7 @@
       // Rights.
       actions.appendChild(this.createSelect('job', data.job, disabled));
       actions.appendChild(this.createSelect('training', data.training, disabled));
+      actions.appendChild(this.createSelect('report', data.report, disabled));
 
       // Remove.
       actions.appendChild(this.createButton('remove', t('Remove'), true, '', disabled));
@@ -205,6 +207,7 @@
       container.setAttribute('data-filters', '');
       container.setAttribute('data-job', 'all');
       container.setAttribute('data-training', 'all');
+      container.setAttribute('data-report', 'all');
 
       var title = document.createElement('span');
       title.appendChild(document.createTextNode(t('Filter: ')));
@@ -213,6 +216,7 @@
       // Rights filters.
       container.appendChild(this.createSelect('job', '', false, true));
       container.appendChild(this.createSelect('training', '', false, true));
+      container.appendChild(this.createSelect('report', '', false, true));
 
       return container;
     },
@@ -418,6 +422,7 @@
         id: element.getAttribute('data-id'),
         job: Math.max(element.querySelector('select[data-name="job"]').selectedIndex, 0),
         training: Math.max(element.querySelector('select[data-name="training"]').selectedIndex, 0),
+        report: Math.max(element.querySelector('select[data-name="report"]').selectedIndex, 0),
         notes: element.querySelector('textarea').value.trim()
       };
     },
@@ -511,7 +516,7 @@
         var name = target.getAttribute('data-name');
 
         // Update the rights attributes of the user row.
-        if (name === 'job' || name === 'training') {
+        if (name === 'job' || name === 'training' || name === 'report') {
           var parent = target.parentNode.parentNode;
 
           // If the parent is not the filter container, then it's a select

@@ -36,14 +36,24 @@
         <a href="/user/{{ user.id() }}/bookmarks">{% trans %}Manage your bookmarks{% endtrans %}</a>
         <p>{% trans %}Track content relevant to you on the site.{% endtrans %}</p>
       </li>
+      {% if user.hasPermission('create job content') %}
       <li>
         <a href="/node/add/job">{% trans %}Post a job vacancy{% endtrans %}</a>
         <p>{% trans %}Advertise job, consulting and internships vacancies.{% endtrans %}</p>
       </li>
+      {% if user.hasPermission('create training content') %}
+      {% endif %}
       <li>
         <a href="/node/add/training">{% trans %}Post a training program{% endtrans %}</a>
         <p>{% trans %}Advertise training programs for the humanitarian community.{% endtrans %}</p>
       </li>
+      {% endif %}
+      {% if user.hasPermission('create report content') %}
+      <li>
+        <a href="/node/add/report">{% trans %}Post a report{% endtrans %}</a>
+        <p>{% trans %}Post a report for the humanitarian community.{% endtrans %}</p>
+      </li>
+      {% endif %}
       <li>
         <a href="/user/{{ user.id() }}/posts">{% trans %}View your posts{% endtrans %}</a>
         <p>{% trans %}Manage the Job vacancies or Training programs you posted.{% endtrans %}</p>
