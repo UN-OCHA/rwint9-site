@@ -74,7 +74,7 @@
   content: none;
 }
 /* Hide format icons */
-.rw-document > footer .rw-entity-meta__tag-value:before {
+.rw-document > footer .rw-entity-meta__tag-value.rw-entity-meta__tag-value--format:before {
   content: none;
 }
 
@@ -96,8 +96,8 @@
   }
 }
 
-/* Ensure long URLs in WYSIWYG wrap */
-.rw-article__content a {
+/* Ensure long strings wrap. */
+.rw-article__content {
   overflow-wrap: anywhere;
 }
 
