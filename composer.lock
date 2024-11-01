@@ -4550,7 +4550,7 @@
             ],
             "authors": [
                 {
-                    "name": "TR",
+                    "name": "tr",
                     "homepage": "https://www.drupal.org/user/202830"
                 }
             ],
@@ -4635,13 +4635,13 @@
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/openid_connect.git",
-                "reference": "d10926f866959b8b57204fcd3fa9584a739142fd"
+                "reference": "772f39b1a07bcca7072bb4bd50a2c90c48f1e8e1"
             },
             "require": {
-                "drupal/core": "^9.3 || ^10",
+                "drupal/core": "^9.5 || ^10.2 || ^11",
                 "drupal/externalauth": "^2.0",
                 "ext-json": "*",
-                "php": ">=7.1.0"
+                "php": ">=8.1.0"
             },
             "type": "drupal-module",
             "extra": {
@@ -4649,8 +4649,8 @@
                     "dev-3.x": "3.x-dev"
                 },
                 "drupal": {
-                    "version": "3.0.0-alpha3+1-dev",
-                    "datestamp": "1717345768",
+                    "version": "3.0.0-alpha3+2-dev",
+                    "datestamp": "1730370989",
                     "security-coverage": {
                         "status": "not-covered",
                         "message": "Dev releases are not covered by Drupal security advisories."
@@ -18691,6 +18691,6 @@
     "platform": {
         "php": ">=8.2"
     },
-    "platform-dev": {},
+    "platform-dev": [],
     "plugin-api-version": "2.6.0"
 }
