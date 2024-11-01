@@ -21,3 +21,4 @@ jobs:
         slack_bot_token: ${{ secrets.SLACK_BOT_TOKEN }}
         slack_channel_name: ${{ vars.SLACK_CHANNEL }}
         source_directory: html/modules/custom,html/themes/custom
+        output_format: "table"
