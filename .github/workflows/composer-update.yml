@@ -20,4 +20,4 @@ jobs:
         patch_maintainers: ${{ secrets.DRUPAL_MAINTAINERS }}
         slack_bot_token: ${{ secrets.SLACK_BOT_TOKEN }}
         slack_channel_name: ${{ vars.SLACK_CHANNEL }}
-        source_directory: html/modules/custom,html/themes
+        source_directory: html/modules/custom,html/themes/custom
