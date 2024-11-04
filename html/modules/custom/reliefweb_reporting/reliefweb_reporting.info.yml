@@ -3,3 +3,5 @@ name: ReliefWeb Reporting
 description: 'Provides various reporting drush commands.'
 package: reliefweb
 core_version_requirement: ^9 || ^10
+dependencies:
+  - drupal:reliefweb_api

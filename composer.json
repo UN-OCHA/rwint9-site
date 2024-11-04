@@ -69,6 +69,7 @@
         "drush/drush": "^12",
         "elasticsearch/elasticsearch": "^8",
         "google/analytics-data": "^0.8.4",
+        "google/apiclient": "^2.17",
         "google/auth": "^1.21",
         "league/commonmark": "^2.2",
         "league/html-to-markdown": "^5.0",
@@ -120,7 +121,8 @@
             "orakili/composer-drupal-info-file-patch-helper": true,
             "phpstan/extension-installer": true,
             "symfony/flex": true,
-            "php-http/discovery": true
+            "php-http/discovery": true,
+            "tbachert/spi": false
         },
         "audit": {
             "abandoned": "report",
@@ -144,6 +146,7 @@
         "pre-pool-create": [
             "scripts\\composer\\DrupalLenientRequirement::changeVersionConstraint"
         ],
+        "pre-autoload-dump": "Google\\Task\\Composer::cleanup",
         "git-hooks": "test -d .git && git config core.hooksPath git-hooks || exit 0",
         "sass-prepare": "cd html/themes/custom/common_design_subtheme && npm install",
         "sass-build": "cd html/themes/custom/common_design_subtheme && ./node_modules/.bin/sass sass:build",
@@ -162,6 +165,9 @@
         "patchLevel": {
             "drupal/core": "-p2"
         },
+        "google/apiclient-services": [
+                "Drive"
+        ],
         "installer-paths": {
             "html/core": [
                 "type:drupal-core"

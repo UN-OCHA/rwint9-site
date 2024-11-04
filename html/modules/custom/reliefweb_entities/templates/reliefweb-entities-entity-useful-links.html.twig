@@ -31,7 +31,7 @@
       <li class="rw-entity-useful-links__list__item">
         <a href="{{ link.url }}" target="_blank" rel="noopener" class="rw-entity-useful-links__link">
         {%- if link.logo is not empty -%}
-          <img src="{{ link.logo }}" alt="{{ link.title }}" class="rw-entity-useful-links__link__logo">
+          <img src="{{ link.logo }}" alt="{{ link.title }}" class="rw-entity-useful-links__link__logo" loading="lazy">
         {%- else -%}
           {{ link.title }}
         {%- endif -%}
