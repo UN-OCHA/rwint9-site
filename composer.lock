@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1f3e0fa9095d4985e62c7f0d65f93b5d",
+    "content-hash": "1c74a5092fd54d1c497bc2ca8ff76cae",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -4328,7 +4328,7 @@
                 "shasum": "fc8ea60619b6b4682bade340e13fb4565d3a7e0c"
             },
             "require": {
-                "drupal/core": "^9.1 || ^10"
+                "drupal/core": "^10"
             },
             "type": "drupal-module",
             "extra": {
@@ -4527,7 +4527,7 @@
                 "shasum": "c25246747dac4372c7d5a5a5fd0f276d9e468eff"
             },
             "require": {
-                "drupal/core": "^9.3 || ^10",
+                "drupal/core": "^10",
                 "drupal/mailsystem": "^4"
             },
             "require-dev": {
@@ -5432,7 +5432,7 @@
                 "shasum": "edb3038bf21c327706793cd1328a1734a7db48e6"
             },
             "require": {
-                "drupal/core": "^10.3 || ^11",
+                "drupal/core": "^10",
                 "enshrined/svg-sanitize": ">=0.15 <1.0"
             },
             "type": "drupal-module",
@@ -5592,7 +5592,7 @@
                 "shasum": "9ea9eee91cf75f21fcc939704baa6a7ec10d7748"
             },
             "require": {
-                "drupal/core": "^8.9 || ^9 || ^10"
+                "drupal/core": "^10"
             },
             "type": "drupal-module",
             "extra": {
@@ -17738,6 +17738,61 @@
             "time": "2024-09-13T03:48:18+00:00"
         },
         {
+            "name": "unocha/ocha_entraid",
+            "version": "dev-develop",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/UN-OCHA/ocha_entraid.git",
+                "reference": "9441afa80db94418168a74221636b3479b872975"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_entraid/zipball/9441afa80db94418168a74221636b3479b872975",
+                "reference": "9441afa80db94418168a74221636b3479b872975",
+                "shasum": ""
+            },
+            "require": {
+                "drupal/core": "^10",
+                "drupal/honeypot": "^2",
+                "drupal/openid_connect": "dev-3.x",
+                "drupal/openid_connect_windows_aad": "^2.0@beta",
+                "php": ">=8.3"
+            },
+            "require-dev": {
+                "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+                "drupal/coder": "^8.3",
+                "phpcompatibility/php-compatibility": "^9.3"
+            },
+            "default-branch": true,
+            "type": "drupal-module",
+            "scripts": {
+                "phpcs": [
+                    "vendor/bin/phpcs -p ."
+                ],
+                "phpcbf": [
+                    "vendor/bin/phpcbf -p ."
+                ],
+                "test": [
+                    "@phpcs"
+                ]
+            },
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "UNOCHA",
+                    "role": ""
+                }
+            ],
+            "description": "OCHA EntraID module",
+            "support": {
+                "source": "https://github.com/UN-OCHA/ocha_entraid/tree/develop",
+                "issues": "https://github.com/UN-OCHA/ocha_entraid/issues"
+            },
+            "time": "2024-11-03T06:04:15+00:00"
+        },
+        {
             "name": "unocha/ocha_monitoring",
             "version": "1.0.18",
             "source": {
@@ -18684,7 +18739,8 @@
         "drupal/inline_entity_form": 5,
         "drupal/mimemail": 15,
         "drupal/openid_connect": 20,
-        "drupal/openid_connect_windows_aad": 10
+        "drupal/openid_connect_windows_aad": 10,
+        "unocha/ocha_entraid": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,

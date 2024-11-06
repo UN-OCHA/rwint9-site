@@ -17,6 +17,10 @@
         {
             "type": "composer",
             "url": "https://asset-packagist.org"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/UN-OCHA/ocha_entraid"
         }
     ],
     "require": {
@@ -84,6 +88,7 @@
         "unocha/common_design": "^9.4",
         "unocha/gtm_barebones": "^1.1",
         "unocha/ocha_ai": "^1",
+        "unocha/ocha_entraid": "dev-develop",
         "unocha/ocha_monitoring": "^1.0",
         "webflo/drupal-finder": "^1.2.2"
     },
