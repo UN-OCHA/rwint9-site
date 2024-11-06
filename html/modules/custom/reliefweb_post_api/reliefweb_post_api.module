@@ -12,12 +12,14 @@ use Drupal\reliefweb_post_api\Entity\Provider;
 /**
  * Implements hook_reliefweb_api_post_indexing().
  */
-function reliefweb_post_api_reliefweb_api_post_indexing(string $entity_type_id, string $bundle, string|int $id) {
+function reliefweb_post_api_reliefweb_api_post_indexing(string $entity_type_id, string $bundle, string|int|null $entity_id = NULL) {
   // We notify the POST API provider, if any, after the document is indexed in
   // the API otherwise the provider's webhook implementation will not be able to
   // to retrieve the data from the API to confirm the status.
-  $entity = \Drupal::entityTypeManager()->getStorage($entity_type_id)->load($id);
-  if (!empty($entity)) {
-    Provider::notifyProvider($entity);
+  if (isset($entity_id)) {
+    $entity = \Drupal::entityTypeManager()->getStorage($entity_type_id)->load($entity_id);
+    if (!empty($entity)) {
+      Provider::notifyProvider($entity);
+    }
   }
 }
