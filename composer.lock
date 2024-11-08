@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0debce0984444d78401149a34675f1bb",
+    "content-hash": "539c9502a8918b515146d02d9afbec99",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -17692,16 +17692,16 @@
         },
         {
             "name": "unocha/ocha_ai",
-            "version": "v1.7.0",
+            "version": "dev-RW-1109",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_ai.git",
-                "reference": "429d08696d2df972df5b801fb271c503918e8c66"
+                "reference": "115bf35a23c442553a08faba3cca44d29cb63441"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/429d08696d2df972df5b801fb271c503918e8c66",
-                "reference": "429d08696d2df972df5b801fb271c503918e8c66",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/115bf35a23c442553a08faba3cca44d29cb63441",
+                "reference": "115bf35a23c442553a08faba3cca44d29cb63441",
                 "shasum": ""
             },
             "require": {
@@ -17721,47 +17721,57 @@
                 "phpcompatibility/php-compatibility": "^9.3"
             },
             "type": "drupal-module",
-            "notification-url": "https://packagist.org/downloads/",
+            "scripts": {
+                "phpcs": [
+                    "vendor/bin/phpcs -p ."
+                ],
+                "phpcbf": [
+                    "vendor/bin/phpcbf -p ."
+                ],
+                "test": [
+                    "@phpcs"
+                ]
+            },
             "license": [
                 "GPL-2.0-or-later"
             ],
             "authors": [
                 {
-                    "name": "UNOCHA"
+                    "name": "UNOCHA",
+                    "role": ""
                 }
             ],
             "description": "OCHA AI module",
             "support": {
-                "issues": "https://github.com/UN-OCHA/ocha_ai/issues",
-                "source": "https://github.com/UN-OCHA/ocha_ai/tree/v1.7.0"
+                "source": "https://github.com/UN-OCHA/ocha_ai/tree/RW-1109",
+                "issues": "https://github.com/UN-OCHA/ocha_ai/issues"
             },
-            "time": "2024-10-22T23:17:13+00:00"
+            "time": "2024-11-08T09:10:57+00:00"
         },
         {
             "name": "unocha/ocha_content_classification",
-            "version": "dev-develop",
+            "version": "dev-RW-1109",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_content_classification.git",
-                "reference": "d23c9004728658ce48596681a29c136b02da4731"
+                "reference": "20d838ad195ee1a62411ea0c8113a405e1fd3af7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_content_classification/zipball/d23c9004728658ce48596681a29c136b02da4731",
-                "reference": "d23c9004728658ce48596681a29c136b02da4731",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_content_classification/zipball/20d838ad195ee1a62411ea0c8113a405e1fd3af7",
+                "reference": "20d838ad195ee1a62411ea0c8113a405e1fd3af7",
                 "shasum": ""
             },
             "require": {
                 "drupal/core": "^10",
                 "php": ">=8.3",
-                "unocha/ocha_ai": "^1.7"
+                "unocha/ocha_ai": "^1.7 | dev-RW-1109"
             },
             "require-dev": {
                 "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
                 "drupal/coder": "^8.3",
                 "phpcompatibility/php-compatibility": "^9.3"
             },
-            "default-branch": true,
             "type": "drupal-module",
             "scripts": {
                 "phpcs": [
@@ -17785,10 +17795,10 @@
             ],
             "description": "OCHA Content Classification module",
             "support": {
-                "source": "https://github.com/UN-OCHA/ocha_content_classification/tree/develop",
+                "source": "https://github.com/UN-OCHA/ocha_content_classification/tree/RW-1109",
                 "issues": "https://github.com/UN-OCHA/ocha_content_classification/issues"
             },
-            "time": "2024-11-08T07:15:01+00:00"
+            "time": "2024-11-08T09:38:57+00:00"
         },
         {
             "name": "unocha/ocha_monitoring",
@@ -18738,6 +18748,7 @@
         "drupal/mimemail": 15,
         "drupal/openid_connect": 20,
         "drupal/openid_connect_windows_aad": 10,
+        "unocha/ocha_ai": 20,
         "unocha/ocha_content_classification": 20
     },
     "prefer-stable": true,
