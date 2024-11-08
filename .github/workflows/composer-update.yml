@@ -11,7 +11,7 @@ jobs:
     steps:
     - name: Update The Thing
       id: update-action
-      uses: UN-OCHA/actions/composer-update@main
+      uses: UN-OCHA/actions/composer-update@dev
       with:
         aws_access_key_id: ${{ secrets.ECR_AWS_ACCESS_KEY_ID }}
         aws_secret_access_key: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }}
@@ -20,3 +20,5 @@ jobs:
         patch_maintainers: ${{ secrets.DRUPAL_MAINTAINERS }}
         slack_bot_token: ${{ secrets.SLACK_BOT_TOKEN }}
         slack_channel_name: ${{ vars.SLACK_CHANNEL }}
+        source_directory: html/modules/custom,html/themes/custom
+        output_format: "table"
