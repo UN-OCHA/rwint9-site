@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1f3e0fa9095d4985e62c7f0d65f93b5d",
+    "content-hash": "0debce0984444d78401149a34675f1bb",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -17738,6 +17738,59 @@
             "time": "2024-10-22T23:17:13+00:00"
         },
         {
+            "name": "unocha/ocha_content_classification",
+            "version": "dev-develop",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/UN-OCHA/ocha_content_classification.git",
+                "reference": "d23c9004728658ce48596681a29c136b02da4731"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_content_classification/zipball/d23c9004728658ce48596681a29c136b02da4731",
+                "reference": "d23c9004728658ce48596681a29c136b02da4731",
+                "shasum": ""
+            },
+            "require": {
+                "drupal/core": "^10",
+                "php": ">=8.3",
+                "unocha/ocha_ai": "^1.7"
+            },
+            "require-dev": {
+                "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+                "drupal/coder": "^8.3",
+                "phpcompatibility/php-compatibility": "^9.3"
+            },
+            "default-branch": true,
+            "type": "drupal-module",
+            "scripts": {
+                "phpcs": [
+                    "vendor/bin/phpcs -p ."
+                ],
+                "phpcbf": [
+                    "vendor/bin/phpcbf -p ."
+                ],
+                "test": [
+                    "@phpcs"
+                ]
+            },
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "UNOCHA",
+                    "role": ""
+                }
+            ],
+            "description": "OCHA Content Classification module",
+            "support": {
+                "source": "https://github.com/UN-OCHA/ocha_content_classification/tree/develop",
+                "issues": "https://github.com/UN-OCHA/ocha_content_classification/issues"
+            },
+            "time": "2024-11-08T07:15:01+00:00"
+        },
+        {
             "name": "unocha/ocha_monitoring",
             "version": "1.0.18",
             "source": {
@@ -18684,7 +18737,8 @@
         "drupal/inline_entity_form": 5,
         "drupal/mimemail": 15,
         "drupal/openid_connect": 20,
-        "drupal/openid_connect_windows_aad": 10
+        "drupal/openid_connect_windows_aad": 10,
+        "unocha/ocha_content_classification": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,

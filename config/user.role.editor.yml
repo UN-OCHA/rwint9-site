@@ -29,6 +29,7 @@ dependencies:
     - guidelines
     - media
     - node
+    - ocha_content_classification
     - path
     - reliefweb_bookmarks
     - reliefweb_fields
@@ -36,7 +37,6 @@ dependencies:
     - reliefweb_form
     - reliefweb_guidelines
     - reliefweb_homepage
-    - reliefweb_job_tagger
     - reliefweb_moderation
     - reliefweb_revisions
     - reliefweb_topics
@@ -63,7 +63,7 @@ permissions:
   - 'administer community topics'
   - 'administer url aliases'
   - 'archive content'
-  - 'bypass ocha ai job tag'
+  - 'bypass ocha content classification'
   - 'create announcement content'
   - 'create blog_post content'
   - 'create book content'
