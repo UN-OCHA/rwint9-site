@@ -146,6 +146,7 @@ permissions:
   - 'edit terms in source'
   - 'edit terms in tag'
   - 'edit user posting rights'
+  - 'requeue entity for ocha content classification'
   - 'revert all taxonomy revisions'
   - 'revert announcement revisions'
   - 'revert blog_post revisions'
