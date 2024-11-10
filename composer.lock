@@ -4635,7 +4635,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/openid_connect.git",
-                "reference": "772f39b1a07bcca7072bb4bd50a2c90c48f1e8e1"
+                "reference": "1c1f25f39570a77ee41ceab85f774b3425b67ea3"
             },
             "require": {
                 "drupal/core": "^9.5 || ^10.2 || ^11",
@@ -4649,8 +4649,8 @@
                     "dev-3.x": "3.x-dev"
                 },
                 "drupal": {
-                    "version": "3.0.0-alpha3+2-dev",
-                    "datestamp": "1730370989",
+                    "version": "3.0.0-alpha3+3-dev",
+                    "datestamp": "1730974732",
                     "security-coverage": {
                         "status": "not-covered",
                         "message": "Dev releases are not covered by Drupal security advisories."
@@ -17698,12 +17698,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_ai.git",
-                "reference": "115bf35a23c442553a08faba3cca44d29cb63441"
+                "reference": "157197bef7593ef6c9d1a944305c32fdd7ebc808"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/115bf35a23c442553a08faba3cca44d29cb63441",
-                "reference": "115bf35a23c442553a08faba3cca44d29cb63441",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/157197bef7593ef6c9d1a944305c32fdd7ebc808",
+                "reference": "157197bef7593ef6c9d1a944305c32fdd7ebc808",
                 "shasum": ""
             },
             "require": {
@@ -17748,7 +17748,7 @@
                 "source": "https://github.com/UN-OCHA/ocha_ai/tree/RW-1109",
                 "issues": "https://github.com/UN-OCHA/ocha_ai/issues"
             },
-            "time": "2024-11-08T09:10:57+00:00"
+            "time": "2024-11-10T05:33:45+00:00"
         },
         {
             "name": "unocha/ocha_content_classification",
@@ -17756,12 +17756,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_content_classification.git",
-                "reference": "20d838ad195ee1a62411ea0c8113a405e1fd3af7"
+                "reference": "8f53da3fafeef15aa5c8a4ba0738cea961d16cde"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_content_classification/zipball/20d838ad195ee1a62411ea0c8113a405e1fd3af7",
-                "reference": "20d838ad195ee1a62411ea0c8113a405e1fd3af7",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_content_classification/zipball/8f53da3fafeef15aa5c8a4ba0738cea961d16cde",
+                "reference": "8f53da3fafeef15aa5c8a4ba0738cea961d16cde",
                 "shasum": ""
             },
             "require": {
@@ -17800,7 +17800,7 @@
                 "source": "https://github.com/UN-OCHA/ocha_content_classification/tree/RW-1109",
                 "issues": "https://github.com/UN-OCHA/ocha_content_classification/issues"
             },
-            "time": "2024-11-08T09:38:57+00:00"
+            "time": "2024-11-10T06:58:25+00:00"
         },
         {
             "name": "unocha/ocha_monitoring",
