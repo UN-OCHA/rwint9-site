@@ -65,7 +65,7 @@ class ReliefwebEntraidLoginTest extends ExistingSiteBase {
 
     // The incomplete config will results in an exception and 404 response
     // will be returned.
-    $this->drupalGet('/user/login/entraid');
+    $this->drupalGet('/user/login/reliefweb-entraid-direct');
     $this->assertSession()->statusCodeEquals(404);
 
     // Set the endpoints. We just point at the robots.txt as we know it exists
