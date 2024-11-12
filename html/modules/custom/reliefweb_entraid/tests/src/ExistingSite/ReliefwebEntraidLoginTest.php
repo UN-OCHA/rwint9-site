@@ -77,7 +77,7 @@ class ReliefwebEntraidLoginTest extends ExistingSiteBase {
     $entraid_config->setData($data)->save();
 
     // If the redirection works, a 200 will be returned.
-    $this->drupalGet('/user/login/entraid');
+    $this->drupalGet('/user/login/reliefweb-entraid-direct');
     $this->assertSession()->statusCodeEquals(200);
     $this->assertStringContainsString('Disallow:', $this->getSession()->getPage()->getContent());
   }
