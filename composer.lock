@@ -17745,12 +17745,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_entraid.git",
-                "reference": "9441afa80db94418168a74221636b3479b872975"
+                "reference": "bc788a50b42971f4dbbfb101c619cf033cdceb4d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_entraid/zipball/9441afa80db94418168a74221636b3479b872975",
-                "reference": "9441afa80db94418168a74221636b3479b872975",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_entraid/zipball/bc788a50b42971f4dbbfb101c619cf033cdceb4d",
+                "reference": "bc788a50b42971f4dbbfb101c619cf033cdceb4d",
                 "shasum": ""
             },
             "require": {
@@ -17787,12 +17787,12 @@
                     "role": ""
                 }
             ],
-            "description": "OCHA EntraID module",
+            "description": "OCHA Entra ID module",
             "support": {
                 "source": "https://github.com/UN-OCHA/ocha_entraid/tree/develop",
                 "issues": "https://github.com/UN-OCHA/ocha_entraid/issues"
             },
-            "time": "2024-11-03T06:04:15+00:00"
+            "time": "2024-11-12T06:36:39+00:00"
         },
         {
             "name": "unocha/ocha_monitoring",
