@@ -119,6 +119,7 @@ class UserPostsService extends ModerationServiceBase {
       'duplicate' => $this->t('Duplicate'),
       'to-review' => $this->t('To review'),
       'embargoed' => $this->t('Embargoed'),
+      'reference' => $this->t('Reference'),
     ];
   }
 
