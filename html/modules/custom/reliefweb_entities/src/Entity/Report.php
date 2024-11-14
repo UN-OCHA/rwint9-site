@@ -418,7 +418,15 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
         }
         // Unverified for some sources.
         else {
-          $status = 'on-hold';
+          // If a single source, set status to to-review.
+          // @see https://humanitarian.atlassian.net/browse/RW-1117
+          if (count($sources) == 1) {
+            $status = 'to-review';
+          }
+          else {
+            $status = 'on-hold';
+          }
+
           $message = strtr('Unverified user for @sources.', [
             '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[0])),
           ]);
