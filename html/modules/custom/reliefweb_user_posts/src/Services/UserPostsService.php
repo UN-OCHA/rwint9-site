@@ -110,14 +110,15 @@ class UserPostsService extends ModerationServiceBase {
    */
   public function getStatuses() {
     return [
-      'draft' => $this->t('draft'),
-      'pending' => $this->t('pending'),
-      'published' => $this->t('published'),
-      'on-hold' => $this->t('on-hold'),
-      'refused' => $this->t('refused'),
-      'expired' => $this->t('expired'),
-      'duplicate' => $this->t('duplicate'),
-      'to-review' => $this->t('to-review'),
+      'draft' => $this->t('Draft'),
+      'pending' => $this->t('Pending'),
+      'published' => $this->t('Published'),
+      'on-hold' => $this->t('On-hold'),
+      'refused' => $this->t('Refused'),
+      'expired' => $this->t('Expired'),
+      'duplicate' => $this->t('Duplicate'),
+      'to-review' => $this->t('To review'),
+      'embargoed' => $this->t('Embargoed'),
     ];
   }
 
