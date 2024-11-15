@@ -22,6 +22,7 @@ class RwReportAddTest extends RwReportBase {
     $this->drupalLogin($admin);
 
     $edit = $this->getEditFields($title);
+    $edit['field_origin_notes[0][value]'] = 'https://example.com/' . $title;
     $this->drupalGet('node/add/report');
     $this->submitForm($edit, 'Publish');
 
@@ -52,6 +53,7 @@ class RwReportAddTest extends RwReportBase {
     $this->drupalLogin($admin);
 
     $edit = $this->getEditFields($title);
+    $edit['field_origin_notes[0][value]'] = 'https://example.com/' . $title;
     $this->drupalGet('node/add/report');
     $this->submitForm($edit, 'Save as draft');
 
