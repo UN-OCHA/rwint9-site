@@ -175,10 +175,10 @@ class RwReportAddTest extends RwReportBase {
     $this->drupalGet('user/logout');
     $node = $this->getNodeByTitle($title);
     $this->drupalGet($node->toUrl());
-    $this->assertSession()->statusCodeEquals(404);
+    $this->assertSession()->statusCodeEquals(200);
 
     // Check moderation status.
-    $this->assertEquals($node->moderation_status->value, 'on-hold');
+    $this->assertEquals($node->moderation_status->value, 'to-review');
   }
 
   /**

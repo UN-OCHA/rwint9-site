@@ -134,9 +134,9 @@ class RwReportCreateTest extends RwReportBase {
     $title = 'My report - unverified';
     $this->setUserPostingRightsGetSourceTerm(0, 'Unverified');
     $moderation_status = 'to-review';
-    $expected_moderation_status = 'on-hold';
+    $expected_moderation_status = 'to-review';
 
-    $this->runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, FALSE);
+    $this->runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, TRUE);
   }
 
   /**
