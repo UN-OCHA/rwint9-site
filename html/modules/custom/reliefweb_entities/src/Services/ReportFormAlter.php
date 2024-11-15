@@ -103,6 +103,11 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
       );
     }
 
+    // Special tweaks for contributors.
+    if ($this->currentUser->hasRole('contributor')) {
+      $this->alterFieldsForContributors($form, $form_state);
+    }
+
     // Validate the attachments.
     $form['#validate'][] = [$this, 'validateAttachment'];
 
@@ -436,6 +441,34 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     if (!empty($embargo_date) && $embargo_date instanceof DrupalDateTime && $embargo_date->getTimestamp() < time()) {
       $form_state->setErrorByName('field_embargo_date][0][value', $this->t('The embargo date cannot be in the past.'));
     }
+  }
+
+  /**
+   * Make alterations for Contributor role.
+   *
+   * Embargo date cannot be in the past as that would not make sense.
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  protected function alterFieldsForContributors(array &$form, FormStateInterface $form_state) {
+    // Default to submit.
+    $form['field_origin']['widget']['#default_value'] = 1;
+
+    // Hide fields.
+    $form['field_origin']['#access'] = FALSE;
+    $form['field_origin_notes']['#access'] = FALSE;
+
+    $form['field_bury']['#access'] = FALSE;
+    $form['field_feature']['#access'] = FALSE;
+    $form['field_notify']['#access'] = FALSE;
+
+    $form['field_headline']['#access'] = FALSE;
+    $form['field_headline_title']['#access'] = FALSE;
+    $form['field_headline_summary']['#access'] = FALSE;
+    $form['field_headline_image']['#access'] = FALSE;
   }
 
 }
