@@ -14,9 +14,9 @@ dependencies:
     - media
     - node
     - ocha_ai_chat
+    - ocha_content_classification
     - reliefweb_bookmarks
     - reliefweb_form
-    - reliefweb_job_tagger
     - reliefweb_moderation
     - reliefweb_subscriptions
     - reliefweb_user_posts
@@ -30,6 +30,7 @@ is_admin: false
 permissions:
   - 'access content'
   - 'access ocha ai chat'
+  - 'apply ocha content classification'
   - 'bookmark content'
   - 'clone content entities'
   - 'create job content'
@@ -38,7 +39,6 @@ permissions:
   - 'delete own training content'
   - 'edit own job content'
   - 'edit own training content'
-  - 'enforce ocha ai job tag'
   - 'manage own subscriptions'
   - 'subscribe to OCHA situation reports'
   - 'subscribe to appeals'
