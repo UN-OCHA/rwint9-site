@@ -14,7 +14,7 @@ field_name: body
 entity_type: node
 bundle: report
 label: Body
-description: 'To add image tracking code (ex: <code>&lt;img src="..."&gt;</code> for The Conversation source), please use the <strong>Markdown</strong> text format.'
+description: ''
 required: false
 translatable: true
 default_value: {  }
