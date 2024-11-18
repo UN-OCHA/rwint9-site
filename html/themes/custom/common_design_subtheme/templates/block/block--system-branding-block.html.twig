@@ -1,0 +1,10 @@
+{#
+/**
+ * @file
+ * Theme override for system branding block (site logo).
+ */
+#}
+<a href="{{ path('<front>') }}" title="{{ 'Front page'|t }}" rel="home" class="cd-site-logo">
+  <img src="{{ site_logo }}" alt="{{ site_name }} {{ 'logo'|t }}" aria-hidden="true" width="160" height="40">
+  <span class="visually-hidden">{{ site_name }}</span>
+</a>
