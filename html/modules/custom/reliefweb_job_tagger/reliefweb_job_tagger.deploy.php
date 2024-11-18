@@ -11,7 +11,7 @@
  * Create ocha content classification progress records for the jobs queued in
  * the reliefweb_job_tagger queue and empty it.
  */
-function reliefweb_job_tagger_deploy_content_classification_queue_cmigration(array &$sandbox): string {
+function reliefweb_job_tagger_deploy_content_classification_queue_migration(array &$sandbox): string {
   /** @var \Drupal\Core\Queue\QueueFactory $queue_factory */
   $queue_factory = \Drupal::service('queue');
 
