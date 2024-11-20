@@ -111,7 +111,7 @@
   {{ form.field_theme }}
 </fieldset>
 
-{% if not 'contributor' in user.getroles(TRUE)  %}
+{% if 'contributor' not in user.getroles(TRUE)  %}
   <fieldset id="headline">
     <legend>{% trans %}Headline information{% endtrans %}</legend>
     {{ form.field_headline }}
