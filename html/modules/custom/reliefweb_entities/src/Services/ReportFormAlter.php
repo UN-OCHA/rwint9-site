@@ -446,8 +446,6 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
   /**
    * Make alterations for Contributor role.
    *
-   * Embargo date cannot be in the past as that would not make sense.
-   *
    * @param array $form
    *   Form to alter.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
