@@ -120,7 +120,7 @@
   height: 12px;
   border-radius: 4px;
   background: var(--cd-reliefweb-orange);
-  color:rgba(0,0,0,0);
+  color: rgba(0,0,0,0);
 }
 .posting-rights--wrapper .posting-rights[data-posting-right="1"] {
   background: var(--cd-reliefweb-red);
