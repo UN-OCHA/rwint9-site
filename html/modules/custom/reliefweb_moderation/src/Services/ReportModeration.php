@@ -6,6 +6,7 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Link;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
+use Drupal\node\NodeInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
@@ -110,8 +111,12 @@ class ReportModeration extends ModerationServiceBase {
 
       // Country and source info.
       $info = [];
+
       // User posting rights.
-      $info['posting_rights'] = UserPostingRightsHelper::renderRight(UserPostingRightsHelper::getEntityAuthorPostingRights($entity));
+      if ($entity instanceof NodeInterface && $entity->getOwner()->hasRole('contributor')) {
+        $info['posting_rights'] = UserPostingRightsHelper::renderRight(UserPostingRightsHelper::getEntityAuthorPostingRights($entity));
+      }
+
       // Country.
       $country_link = $this->getTaxonomyTermLink($entity->field_primary_country->first());
       if (!empty($country_link)) {
