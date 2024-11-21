@@ -121,7 +121,7 @@
   </fieldset>
 {% endif %}
 
-{% if not 'contributor' in user.getroles(TRUE)  %}
+{% if 'contributor' not in user.getroles(TRUE)  %}
   <fieldset id="editorial-flags">
     <legend>{% trans %}Editorial flags{% endtrans %}</legend>
     {{ form.field_bury }}
