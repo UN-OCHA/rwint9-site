@@ -236,6 +236,9 @@ class UserPostsService extends ModerationServiceBase {
       elseif ($entity->bundle() === 'job') {
         $cells['deadline'] = $this->formatDate($entity->field_job_closing_date->value);
       }
+      else {
+        $cells['deadline'] = $this->t('N/A');
+      }
 
       $rows[] = $cells;
     }
