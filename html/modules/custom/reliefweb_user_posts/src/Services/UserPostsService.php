@@ -109,7 +109,7 @@ class UserPostsService extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function getStatuses() {
-    return [
+    $statuses = [
       'draft' => $this->t('Draft'),
       'pending' => $this->t('Pending'),
       'published' => $this->t('Published'),
@@ -117,10 +117,17 @@ class UserPostsService extends ModerationServiceBase {
       'refused' => $this->t('Refused'),
       'expired' => $this->t('Expired'),
       'duplicate' => $this->t('Duplicate'),
-      'to-review' => $this->t('To review'),
-      'embargoed' => $this->t('Embargoed'),
-      'reference' => $this->t('Reference'),
     ];
+
+    if ($this->currentUser->hasRole('contributor')) {
+      $statuses += [
+        'to-review' => $this->t('To review'),
+        'embargoed' => $this->t('Embargoed'),
+        'reference' => $this->t('Reference'),
+      ];
+    }
+
+    return $statuses;
   }
 
   /**
