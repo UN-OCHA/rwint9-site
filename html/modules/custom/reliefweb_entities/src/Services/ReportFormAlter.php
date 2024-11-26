@@ -66,8 +66,10 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     $this->alterHeadlineFields($form, $form_state);
 
     // Alter the origin fields, setting the origin notes as mandatory when
-    // 'URL' is selected.
-    $this->alterOriginFields($form, $form_state);
+    // 'URL' is selected, except for contributors.
+    if (!$this->currentUser->hasRole('contributor')) {
+      $this->alterOriginFields($form, $form_state);
+    }
 
     // Alter the OCHA product field, ensuring only 1 is selectable and making
     // mandatory when OCHA is selected as source or hidden otherwise.
@@ -456,9 +458,6 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     $form['field_origin']['widget']['#default_value'] = 1;
 
     // Hide fields.
-    $form['field_origin']['#access'] = FALSE;
-    $form['field_origin_notes']['#access'] = FALSE;
-
     $form['field_bury']['#access'] = FALSE;
     $form['field_feature']['#access'] = FALSE;
     $form['field_notify']['#access'] = FALSE;
