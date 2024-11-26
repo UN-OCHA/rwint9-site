@@ -5,7 +5,7 @@
     "type": "object",
     "properties": {
         "url": {
-            "description": "Unique URL to identify the document. Use the original canonical of the document if available.",
+            "description": "Unique URL to identify the training opportunity. Use the original canonical url if available.",
             "type": "string",
             "format": "iri",
             "maxLength": 2048
@@ -54,7 +54,7 @@
             "maxItems": 2
         },
         "country": {
-            "description": "Training country(ies) as a list of IDs from https://api.reliefweb.int/v1/countries. Mandatory when the training format contains on-site otherwise not allowed.",
+            "description": "Training country(ies) as a list of IDs from https://api.reliefweb.int/v1/countries. Mandatory when the training format is 'on-site', otherwise not allowed.",
             "type": "array",
             "items": {
                 "type": "integer"
@@ -169,7 +169,7 @@
             "maxItems": 3
         },
         "theme": {
-            "description": "Training theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes.",
+            "description": "Training theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes. Over-tagging often results in reduced discoverability.",
             "type": "array",
             "items": {
                 "type": "integer"
@@ -177,7 +177,7 @@
             "maxItems": 3
         },
         "language": {
-            "description": "Language(s) in which this advertisment is written as a list of IDs from https://api.reliefweb.int/v1/references/languages.",
+            "description": "Language(s) in which this advertisement is written as a list of IDs from https://api.reliefweb.int/v1/references/languages.",
             "type": "array",
             "items": {
                 "type": "integer"
@@ -231,7 +231,7 @@
     },
     "allOf": [
         {
-            "description": "The country field is mandatory if the training format contains on-site otherwise the country field is not allowed",
+            "description": "The country field is mandatory if the training format is 'on-site' otherwise the country field is not allowed",
             "if": {
                 "properties": {
                     "format": {

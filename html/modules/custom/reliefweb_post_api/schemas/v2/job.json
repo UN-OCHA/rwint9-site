@@ -5,7 +5,7 @@
     "type": "object",
     "properties": {
         "url": {
-            "description": "Unique URL to identify the document. Use the original canonical of the document if available.",
+            "description": "Unique URL to identify the job posting. Use the original canonical url if available.",
             "type": "string",
             "format": "iri",
             "maxLength": 2048
@@ -142,7 +142,7 @@
             "maxItems": 1
         },
         "theme": {
-            "description": "Job theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes.",
+            "description": "Job theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes. Over-tagging often results in reduced discoverability.",
             "type": "array",
             "items": {
                 "type": "integer"
