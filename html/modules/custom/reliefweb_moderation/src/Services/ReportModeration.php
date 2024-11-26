@@ -283,14 +283,18 @@ class ReportModeration extends ModerationServiceBase {
         ],
       ];
     }
-    // Other users can submit for review (or publish directly if trusted).
+    // Other users can submit for review, on-hold or published if trusted.
     else {
-      $buttons['draft'] = [
-        '#value' => $this->t('Save as draft'),
-      ];
-
-      $buttons['to-review'] = [
-        '#value' => $new ? $this->t('Submit') : $this->t('Submit changes'),
+      $buttons = [
+        'draft' => [
+          '#value' => $this->t('Save as draft'),
+        ],
+        'to-review' => [
+          '#value' => $new ? $this->t('Submit') : $this->t('Submit changes'),
+        ],
+        'on-hold' => [
+          '#value' => $this->t('On-hold'),
+        ],
       ];
 
       // Add confirmation when attempting to change published document.
