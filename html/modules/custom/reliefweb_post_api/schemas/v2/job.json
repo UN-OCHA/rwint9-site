@@ -142,7 +142,7 @@
             "maxItems": 1
         },
         "theme": {
-            "description": "Job theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes. Over-tagging often results in reduced discoverability. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
+            "description": "Job theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes. Only select the most relevant themes as over-tagging often results in reduced discoverability. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
             "type": "array",
             "items": {
                 "type": "integer"

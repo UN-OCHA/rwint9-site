@@ -161,7 +161,7 @@
             "maxItems": 10
         },
         "professional_function": {
-            "description": "Professional function(s) as a list of IDs from https://api.reliefweb.int/v1/references/career-categories. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
+            "description": "Professional function(s) as a list of IDs from https://api.reliefweb.int/v1/references/career-categories. Only select the most relevant functions as over-tagging often results in reduced discoverability. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
             "type": "array",
             "items": {
                 "type": "integer"
@@ -169,7 +169,7 @@
             "maxItems": 3
         },
         "theme": {
-            "description": "Training theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes. Over-tagging often results in reduced discoverability. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
+            "description": "Training theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes. Only select the most relevant themes as over-tagging often results in reduced discoverability. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
             "type": "array",
             "items": {
                 "type": "integer"
