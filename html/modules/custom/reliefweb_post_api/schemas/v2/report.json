@@ -45,7 +45,7 @@
             "maxItems": 30
         },
         "country": {
-             "description": "Document country(ies) as a list of IDs from https://api.reliefweb.int/v1/countries. The first country in the list is considered the primary country, meaning the most relevant to the content of the document. Otherwise, enter them alphabetically. Only tag the most relevant countries.",
+             "description": "Document country(ies) as a list of IDs from https://api.reliefweb.int/v1/countries. The first country in the list is considered the primary country, meaning the most relevant to the content of the document. Otherwise, enter them alphabetically. Only tag the most relevant countries as over-tagging often results in reduced discoverability.",
             "type": "array",
             "items": {
                 "type": "integer"

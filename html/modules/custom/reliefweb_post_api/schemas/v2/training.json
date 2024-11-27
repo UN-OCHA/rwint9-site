@@ -54,7 +54,7 @@
             "maxItems": 2
         },
         "country": {
-            "description": "Training country(ies) as a list of IDs from https://api.reliefweb.int/v1/countries. Mandatory when the training format is 'on-site', otherwise not allowed.",
+            "description": "Training country(ies) as a list of IDs from https://api.reliefweb.int/v1/countries. Mandatory when the training format includes 'on-site', otherwise not allowed.",
             "type": "array",
             "items": {
                 "type": "integer"
@@ -231,7 +231,7 @@
     },
     "allOf": [
         {
-            "description": "The country field is mandatory if the training format is 'on-site' otherwise the country field is not allowed",
+            "description": "The country field is mandatory if the training format includes 'on-site' otherwise the country field is not allowed",
             "if": {
                 "properties": {
                     "format": {
