@@ -242,7 +242,7 @@
             "required": ["url", "uuid", "checksum", "description", "copyright"]
         },
         "disaster": {
-            "description": "Document disaster(s) as a list of IDs from https://api.reliefweb.int/v1/disasters. Only select the most relevant terms for the document. Over-tagging often results in reduced discoverability.",
+            "description": "Document disaster(s) as a list of IDs from https://api.reliefweb.int/v1/disasters. Only select the most relevant disasters as over-tagging often results in reduced discoverability.",
             "type": "array",
             "items": {
                 "type": "integer"
@@ -250,7 +250,7 @@
             "maxItems": 30
         },
         "disaster_type": {
-            "description": "Document disaster type(s) as a list of IDs from https://api.reliefweb.int/v1/references/disaster-types. Over-tagging often results in reduced discoverability.",
+            "description": "Document disaster type(s) as a list of IDs from https://api.reliefweb.int/v1/references/disaster-types. Only select the most relevant disaster types as over-tagging often results in reduced discoverability.",
             "type": "array",
             "items": {
                 "type": "integer"
@@ -258,7 +258,7 @@
             "maxItems": 30
         },
         "theme": {
-            "description": "Document theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes. Over-tagging often results in reduced discoverability.",
+            "description": "Document theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes. Only select the most relevant themes as over-tagging often results in reduced discoverability.",
             "type": "array",
             "items": {
                 "type": "integer"
