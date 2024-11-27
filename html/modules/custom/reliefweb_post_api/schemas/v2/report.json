@@ -54,7 +54,7 @@
             "maxItems": 300
         },
         "format": {
-            "description": "Document format as a single ID from https://api.reliefweb.int/v1/references/content-formats.",
+            "description": "Document format as a single ID from https://api.reliefweb.int/v1/references/content-formats. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
             "type": "array",
             "items": {
                 "type": "integer"
@@ -97,7 +97,7 @@
             }
         },
         "embargoed": {
-            "description": "Embargo date (ISO 8601) until which the document should not be published on ReliefWeb.",
+            "description": "Date (ISO 8601) until when the document is embargoed. It will be automatically published on that date. It must be a UTC/GMT date.",
             "type": "string",
             "format": "date-time"
         },
@@ -258,7 +258,7 @@
             "maxItems": 30
         },
         "theme": {
-            "description": "Document theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes. Only select the most relevant themes as over-tagging often results in reduced discoverability.",
+            "description": "Document theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes. Only select the most relevant themes as over-tagging often results in reduced discoverability. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
             "type": "array",
             "items": {
                 "type": "integer"
