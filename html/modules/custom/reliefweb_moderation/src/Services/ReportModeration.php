@@ -6,6 +6,7 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Link;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
+use Drupal\node\NodeInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
@@ -110,8 +111,12 @@ class ReportModeration extends ModerationServiceBase {
 
       // Country and source info.
       $info = [];
+
       // User posting rights.
-      $info['posting_rights'] = UserPostingRightsHelper::renderRight(UserPostingRightsHelper::getEntityAuthorPostingRights($entity));
+      if ($entity instanceof NodeInterface && $entity->getOwner()->hasRole('contributor')) {
+        $info['posting_rights'] = UserPostingRightsHelper::renderRight(UserPostingRightsHelper::getEntityAuthorPostingRights($entity));
+      }
+
       // Country.
       $country_link = $this->getTaxonomyTermLink($entity->field_primary_country->first());
       if (!empty($country_link)) {
@@ -204,6 +209,7 @@ class ReportModeration extends ModerationServiceBase {
       'draft' => $this->t('Draft'),
       'on-hold' => $this->t('On-hold'),
       'to-review' => $this->t('To review'),
+      'pending' => $this->t('Pending'),
       'published' => $this->t('Published'),
       'embargoed' => $this->t('Embargoed'),
       'refused' => $this->t('Refused'),
@@ -278,14 +284,18 @@ class ReportModeration extends ModerationServiceBase {
         ],
       ];
     }
-    // Other users can submit for review (or publish directly if trusted).
+    // Other users can submit for review, on-hold or published if trusted.
     else {
-      $buttons['draft'] = [
-        '#value' => $this->t('Save as draft'),
-      ];
-
-      $buttons['to-review'] = [
-        '#value' => $new ? $this->t('Submit') : $this->t('Submit changes'),
+      $buttons = [
+        'draft' => [
+          '#value' => $this->t('Save as draft'),
+        ],
+        'to-review' => [
+          '#value' => $new ? $this->t('Submit') : $this->t('Submit changes'),
+        ],
+        'on-hold' => [
+          '#value' => $this->t('On-hold'),
+        ],
       ];
 
       // Add confirmation when attempting to change published document.

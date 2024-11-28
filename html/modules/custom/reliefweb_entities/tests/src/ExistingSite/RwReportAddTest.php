@@ -22,6 +22,7 @@ class RwReportAddTest extends RwReportBase {
     $this->drupalLogin($admin);
 
     $edit = $this->getEditFields($title);
+    $edit['field_origin_notes[0][value]'] = 'https://example.com/' . $title;
     $this->drupalGet('node/add/report');
     $this->submitForm($edit, 'Publish');
 
@@ -52,6 +53,7 @@ class RwReportAddTest extends RwReportBase {
     $this->drupalLogin($admin);
 
     $edit = $this->getEditFields($title);
+    $edit['field_origin_notes[0][value]'] = 'https://example.com/' . $title;
     $this->drupalGet('node/add/report');
     $this->submitForm($edit, 'Save as draft');
 
@@ -178,7 +180,7 @@ class RwReportAddTest extends RwReportBase {
     $this->assertSession()->statusCodeEquals(404);
 
     // Check moderation status.
-    $this->assertEquals($node->moderation_status->value, 'on-hold');
+    $this->assertEquals($node->moderation_status->value, 'pending');
   }
 
   /**
@@ -500,7 +502,6 @@ class RwReportAddTest extends RwReportBase {
     $edit['field_country[]'] = [$term_country->id()];
     $edit['field_primary_country'] = $term_country->id();
     $edit['field_content_format'] = $term_format->id();
-    $edit['field_origin_notes[0][value]'] = 'https://example.com/' . $title;
     $edit['field_source[]'] = [$term_source->id()];
 
     return $edit;

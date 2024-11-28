@@ -66,8 +66,10 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     $this->alterHeadlineFields($form, $form_state);
 
     // Alter the origin fields, setting the origin notes as mandatory when
-    // 'URL' is selected.
-    $this->alterOriginFields($form, $form_state);
+    // 'URL' is selected, except for contributors.
+    if (!$this->currentUser->hasRole('contributor')) {
+      $this->alterOriginFields($form, $form_state);
+    }
 
     // Alter the OCHA product field, ensuring only 1 is selectable and making
     // mandatory when OCHA is selected as source or hidden otherwise.
@@ -101,6 +103,11 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
         $description->getArguments(),
         $description->getOptions()
       );
+    }
+
+    // Special tweaks for contributors.
+    if ($this->currentUser->hasRole('contributor')) {
+      $this->alterFieldsForContributors($form, $form_state);
     }
 
     // Validate the attachments.
@@ -436,6 +443,29 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     if (!empty($embargo_date) && $embargo_date instanceof DrupalDateTime && $embargo_date->getTimestamp() < time()) {
       $form_state->setErrorByName('field_embargo_date][0][value', $this->t('The embargo date cannot be in the past.'));
     }
+  }
+
+  /**
+   * Make alterations for Contributor role.
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  protected function alterFieldsForContributors(array &$form, FormStateInterface $form_state) {
+    // Default to submit.
+    $form['field_origin']['widget']['#default_value'] = 1;
+
+    // Hide fields.
+    $form['field_bury']['#access'] = FALSE;
+    $form['field_feature']['#access'] = FALSE;
+    $form['field_notify']['#access'] = FALSE;
+
+    $form['field_headline']['#access'] = FALSE;
+    $form['field_headline_title']['#access'] = FALSE;
+    $form['field_headline_summary']['#access'] = FALSE;
+    $form['field_headline_image']['#access'] = FALSE;
   }
 
 }

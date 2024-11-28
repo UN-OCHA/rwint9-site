@@ -109,16 +109,25 @@ class UserPostsService extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function getStatuses() {
-    return [
-      'draft' => $this->t('draft'),
-      'pending' => $this->t('pending'),
-      'published' => $this->t('published'),
-      'on-hold' => $this->t('on-hold'),
-      'refused' => $this->t('refused'),
-      'expired' => $this->t('expired'),
-      'duplicate' => $this->t('duplicate'),
-      'to-review' => $this->t('to-review'),
+    $statuses = [
+      'draft' => $this->t('Draft'),
+      'pending' => $this->t('Pending'),
+      'published' => $this->t('Published'),
+      'on-hold' => $this->t('On-hold'),
+      'refused' => $this->t('Refused'),
+      'expired' => $this->t('Expired'),
+      'duplicate' => $this->t('Duplicate'),
     ];
+
+    if ($this->currentUser->hasRole('contributor')) {
+      $statuses += [
+        'to-review' => $this->t('To review'),
+        'embargoed' => $this->t('Embargoed'),
+        'reference' => $this->t('Reference'),
+      ];
+    }
+
+    return $statuses;
   }
 
   /**
@@ -233,6 +242,9 @@ class UserPostsService extends ModerationServiceBase {
       }
       elseif ($entity->bundle() === 'job') {
         $cells['deadline'] = $this->formatDate($entity->field_job_closing_date->value);
+      }
+      else {
+        $cells['deadline'] = $this->t('N/A');
       }
 
       $rows[] = $cells;

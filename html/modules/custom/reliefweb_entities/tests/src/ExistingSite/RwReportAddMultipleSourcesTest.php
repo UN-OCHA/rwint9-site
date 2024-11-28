@@ -381,7 +381,6 @@ class RwReportAddMultipleSourcesTest extends RwReportBase {
     $edit['field_country[]'] = [$term_country->id()];
     $edit['field_primary_country'] = $term_country->id();
     $edit['field_content_format'] = $term_format->id();
-    $edit['field_origin_notes[0][value]'] = 'https://example.com/' . $title;
     $edit['field_source[]'] = [$term_source->id()];
 
     return $edit;

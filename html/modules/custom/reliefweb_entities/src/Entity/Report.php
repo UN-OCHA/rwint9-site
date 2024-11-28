@@ -380,7 +380,7 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
 
     // For non editors, we determine the real status based on the user
     // posting rights for the selected sources.
-    if (!UserHelper::userHasRoles(['editor'], $user) && in_array($status, ['on-hold', 'to-review'])) {
+    if (!UserHelper::userHasRoles(['editor'], $user) && in_array($status, ['to-review'])) {
       // Retrieve the list of sources and check the user rights.
       if (!$this->field_source->isEmpty()) {
         // Extract source ids.
@@ -411,6 +411,9 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
         // Trusted for at least 1.
         elseif (isset($rights[3]) && count($rights[3]) > 0) {
           $status = 'to-review';
+          $message = strtr('Allowed user for @sources.', [
+            '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[3])),
+          ]);
         }
         // Allowed for at least 1.
         elseif (isset($rights[2]) && count($rights[2]) > 0) {
@@ -418,7 +421,8 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
         }
         // Unverified for some sources.
         else {
-          $status = 'on-hold';
+          $status = 'pending';
+
           $message = strtr('Unverified user for @sources.', [
             '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[0])),
           ]);
