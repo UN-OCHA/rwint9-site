@@ -411,6 +411,9 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
         // Trusted for at least 1.
         elseif (isset($rights[3]) && count($rights[3]) > 0) {
           $status = 'to-review';
+          $message = strtr('Allowed user for @sources.', [
+            '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[3])),
+          ]);
         }
         // Allowed for at least 1.
         elseif (isset($rights[2]) && count($rights[2]) > 0) {
@@ -418,14 +421,7 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
         }
         // Unverified for some sources.
         else {
-          // If a single source, set status to to-review.
-          // @see https://humanitarian.atlassian.net/browse/RW-1117
-          if (count($sources) == 1) {
-            $status = 'to-review';
-          }
-          else {
-            $status = 'on-hold';
-          }
+          $status = 'pending';
 
           $message = strtr('Unverified user for @sources.', [
             '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[0])),

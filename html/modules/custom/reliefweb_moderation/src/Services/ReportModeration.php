@@ -209,6 +209,7 @@ class ReportModeration extends ModerationServiceBase {
       'draft' => $this->t('Draft'),
       'on-hold' => $this->t('On-hold'),
       'to-review' => $this->t('To review'),
+      'pending' => $this->t('Pending'),
       'published' => $this->t('Published'),
       'embargoed' => $this->t('Embargoed'),
       'refused' => $this->t('Refused'),

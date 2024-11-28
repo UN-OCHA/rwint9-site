@@ -128,15 +128,15 @@ class RwReportCreateTest extends RwReportBase {
   }
 
   /**
-   * Test report as contributor unverified, to-review.
+   * Test report as contributor unverified, pending.
    */
   public function testCreateReportAsContributorUnverifiedToReview() {
     $title = 'My report - unverified';
     $this->setUserPostingRightsGetSourceTerm(0, 'Unverified');
-    $moderation_status = 'to-review';
-    $expected_moderation_status = 'to-review';
+    $moderation_status = 'pending';
+    $expected_moderation_status = 'pending';
 
-    $this->runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, TRUE);
+    $this->runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, FALSE);
   }
 
   /**
