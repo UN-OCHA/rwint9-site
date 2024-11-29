@@ -1,0 +1,64 @@
+<?php
+
+/**
+ * @file
+ * ReliefWeb AI module file.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function reliefweb_ai_form_ocha_ai_chat_chat_form_alter(array &$form, FormStateInterface $form_state, string $form_id) {
+  $config = \Drupal::config('reliefweb_ai.settings');
+  $current_user = \Drupal::currentUser();
+
+  if (!$current_user->isAnonymous() || $config->get('ocha_ai_chat.allow_for_anonymous') === TRUE) {
+    return;
+  }
+
+  $login_instructions = $config->get('ocha_ai_chat.login_instructions') ?? '';
+
+  // Check whether we are requested to replace the instructions or append the
+  // login instructions.
+  $replace = $config->get('ocha_ai_chat.login_instructions_replace') === TRUE || !isset($form['chat']['content']);
+
+  if ($replace) {
+    $instructions = $login_instructions;
+  }
+  else {
+    // We cannot just append the instructions to the current ones because of
+    // the text format may include sanitation that removes the target
+    // attributes. We indeed need to preserve those attributes in the login
+    // instructions so the login and register links open in parent window
+    // and not in the chat iframe.
+    // So first we format the current instructions and then append the login
+    // ones.
+    $text = $form['chat']['content']['#text'] ?? '';
+    $format = $form['chat']['content']['#format'] ?? 'markdown_editor';
+    $instructions = (string) check_markup($text, $format);
+    $instructions .= $login_instructions;
+  }
+
+  // Replace the instructions with a simple markup render element.
+  $form['chat']['content'] = [
+    '#type' => 'markup',
+    '#markup' => $instructions,
+    '#prefix' => '<div id="ocha-ai-chat-instructions" class="ocha-ai-chat-chat-form__instructions">',
+    '#suffix' => '</div>',
+  ];
+
+  // Disable or hide the reset of the form.
+  foreach (Element::children($form['chat']) as $key) {
+    if ($key !== 'content') {
+      $form['chat'][$key]['#access'] = FALSE;
+    }
+  }
+  foreach (Element::children($form) as $key) {
+    if ($key !== 'chat') {
+      $form[$key]['#disabled'] = TRUE;
+    }
+  }
+}

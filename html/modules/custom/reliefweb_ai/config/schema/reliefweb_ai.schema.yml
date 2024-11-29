@@ -1,0 +1,18 @@
+reliefweb_ai.settings:
+  type: config_object
+  label: 'ReliefWeb AI settings.'
+  mapping:
+    ocha_ai_chat:
+      type: mapping
+      label: 'Settings for the OCHA AI chat.'
+      mapping:
+        allow_for_anonymous:
+          type: boolean
+          label: 'Allow anonymous user to access the chat.'
+        login_instructions_replace:
+          type: boolean
+          label: 'If TRUE, replace the chat instructions or otherwise append the login instructions.'
+        login_instructions:
+          type: text
+          label: 'Login or register instructions for anonymous users.'
+

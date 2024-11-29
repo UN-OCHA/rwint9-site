@@ -1,0 +1,7 @@
+ocha_ai_chat:
+  allow_for_anonymous: false
+  login_instructions_replace: false
+  login_instructions: |
+    <p>The use of <strong>Ask ReliefWeb</strong> requires an account on ReliefWeb.</p>
+    <p>Please <a href="/user/login" target="_parent">login</a> or <a href="https://auth.humanitarian.id/register" target="_parent">create a new account</a>.</p>
+
