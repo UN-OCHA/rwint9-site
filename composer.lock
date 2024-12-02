@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b8b3d79cb86b6b8956b17662a2b2dba7",
+    "content-hash": "44aba325c78bc76813d54e96d5698924",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -17721,6 +17721,49 @@
                 "source": "https://github.com/UN-OCHA/ocha_content_classification/tree/v1.0.1"
             },
             "time": "2024-11-15T07:26:19+00:00"
+        },
+        {
+            "name": "unocha/ocha_entraid",
+            "version": "v1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/UN-OCHA/ocha_entraid.git",
+                "reference": "bc788a50b42971f4dbbfb101c619cf033cdceb4d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_entraid/zipball/bc788a50b42971f4dbbfb101c619cf033cdceb4d",
+                "reference": "bc788a50b42971f4dbbfb101c619cf033cdceb4d",
+                "shasum": ""
+            },
+            "require": {
+                "drupal/core": "^10",
+                "drupal/honeypot": "^2",
+                "drupal/openid_connect": "dev-3.x",
+                "drupal/openid_connect_windows_aad": "^2.0@beta",
+                "php": ">=8.3"
+            },
+            "require-dev": {
+                "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+                "drupal/coder": "^8.3",
+                "phpcompatibility/php-compatibility": "^9.3"
+            },
+            "type": "drupal-module",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "UNOCHA"
+                }
+            ],
+            "description": "OCHA Entra ID module",
+            "support": {
+                "issues": "https://github.com/UN-OCHA/ocha_entraid/issues",
+                "source": "https://github.com/UN-OCHA/ocha_entraid/tree/v1.0.0"
+            },
+            "time": "2024-11-12T06:36:39+00:00"
         },
         {
             "name": "unocha/ocha_monitoring",

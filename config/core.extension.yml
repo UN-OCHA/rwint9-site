@@ -61,6 +61,7 @@ module:
   ocha_ai: 0
   ocha_ai_chat: 0
   ocha_ai_tag: 0
+  ocha_entraid: 0
   ocha_content_classification: 0
   ocha_monitoring: 0
   openid_connect: 0
