@@ -1,0 +1,5 @@
+# Importer plugin base settings.
+reliefweb_import.plugin.importer:
+  type: mapping
+  label: 'ReliefWeb importer plugin base settings.'
+  mapping:
