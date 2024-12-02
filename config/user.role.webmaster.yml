@@ -29,7 +29,6 @@ dependencies:
     - ocha_ai_chat
     - reliefweb_bookmarks
     - reliefweb_guidelines
-    - reliefweb_job_tagger
     - reliefweb_users
     - system
     - taxonomy
@@ -44,7 +43,6 @@ permissions:
   - 'access taxonomy overview'
   - 'add content to books'
   - 'add guideline entities'
-  - 'bypass ocha ai job tag'
   - 'create new books'
   - 'create terms in career_category'
   - 'create terms in content_format'
