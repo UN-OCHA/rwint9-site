@@ -49,6 +49,12 @@ class ReliefwebEntraidLoginTest extends ExistingSiteBase {
    * @covers ::redirectLogin()
    */
   public function testRedirectLogin() {
+    // Skip if the module is not installed.
+    if (!$this->container->get('module_handler')->moduleExists('reliefweb_entraid')) {
+      $this->assertTrue(TRUE);
+      return;
+    }
+
     // Get the EntraID configuration.
     $entraid_config = $this->container
       ->get('config.factory')
