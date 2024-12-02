@@ -1,14 +1,14 @@
 <?php
 
-namespace Drupal\reliefweb_import\Command;
+declare(strict_types=1);
 
-use Consolidation\SiteAlias\SiteAliasManagerAwareInterface;
-use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
-use Consolidation\SiteProcess\ProcessManagerAwareTrait;
+namespace Drupal\reliefweb_import\Service;
+
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
+use Drupal\Core\Session\AccountSwitcherInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_entities\Entity\Job;
 use Drupal\reliefweb_entities\Plugin\Validation\Constraint\DateNotInPastConstraint;
@@ -20,109 +20,46 @@ use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 use Drupal\taxonomy\Entity\Term;
-use Drush\Commands\DrushCommands;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\RequestException;
 use League\HTMLToMarkdown\HtmlConverter;
 
 /**
- * ReliefWeb Import Drush commandfile.
+ * ReliefWeb job feeds importer service.
  */
-class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAwareInterface {
-
-  // Drush traits.
-  use ProcessManagerAwareTrait;
-  use SiteAliasManagerAwareTrait;
-
-  /**
-   * The database connection.
-   *
-   * @var \Drupal\Core\Database\Connection
-   */
-  protected $database;
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
-   * The account switcher.
-   *
-   * @var \Drupal\Core\Session\AccountSwitcherInterface
-   */
-  protected $accountSwitcher;
-
-  /**
-   * An http client.
-   *
-   * @var \GuzzleHttp\ClientInterface
-   */
-  protected $httpClient;
-
-  /**
-   * The logger factory.
-   *
-   * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface
-   */
-  protected $loggerFactory;
-
-  /**
-   * The state store.
-   *
-   * @var \Drupal\Core\State\StateInterface
-   */
-  protected $state;
+class JobFeedsImporter implements JobFeedsImporterInterface {
 
   /**
    * The source URL.
    *
    * @var string
    */
-  protected $url;
+  protected string $url;
 
   /**
    * Loaded term IDs.
    *
    * @var array
    */
-  protected $loadedTermIds = [];
+  protected array $loadedTermIds = [];
 
   /**
    * {@inheritdoc}
    */
   public function __construct(
-    Connection $database,
-    EntityTypeManagerInterface $entity_type_manager,
-    $account_switcher,
-    ClientInterface $http_client,
-    LoggerChannelFactoryInterface $logger_factory,
-    StateInterface $state,
-  ) {
-    $this->database = $database;
-    $this->entityTypeManager = $entity_type_manager;
-    $this->accountSwitcher = $account_switcher;
-    $this->httpClient = $http_client;
-    $this->loggerFactory = $logger_factory;
-    $this->state = $state;
-  }
+    protected Connection $database,
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected AccountSwitcherInterface $accountSwitcher,
+    protected ClientInterface $httpClient,
+    protected LoggerChannelFactoryInterface $loggerFactory,
+    protected StateInterface $state,
+  ) {}
 
   /**
-   * Import jobs.
-   *
-   * @param int $limit
-   *   Max number of items to send.
-   *
-   * @command reliefweb_import:jobs
-   * @usage reliefweb_import:jobs
-   *   Send emails.
-   * @validate-module-enabled reliefweb_import
-   * @aliases reliefweb-import-jobs
+   * {@inheritdoc}
    */
-  public function jobs($limit = 50) {
+  public function importJobs(int $limit = 50): void {
     // Load terms having a job URL.
     $query = $this->entityTypeManager->getStorage('taxonomy_term')->getQuery();
     $query->condition('vid', 'source');
@@ -140,9 +77,9 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    * @param \Drupal\taxonomy\Entity\Term $term
    *   Source term.
    */
-  public function fetchJobs(Term $term) {
+  public function fetchJobs(Term $term): void {
     $label = $term->label();
-    $source_id = $term->id();
+    $source_id = (int) $term->id();
     $base_url = $term->field_job_import_feed->first()->base_url ?? '';
     $uid = $term->field_job_import_feed->first()->uid ?? FALSE;
     $this->url = $term->field_job_import_feed->first()->feed_url;
@@ -163,6 +100,9 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
       ]));
       return;
     }
+
+    // Ensure the user ID is an integer.
+    $uid = (int) $uid;
 
     // Fetch the XML.
     try {
@@ -214,8 +154,13 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    *
    * @return string
    *   Feed's content.
+   *
+   * @throws \Drupal\reliefweb_import\Exception\ReliefwebImportExceptionXml
+   *   If the feed XML data could not be retrieved.
+   * @throws \Psr\Http\Client\Throwable
+   *   If there is an error during the request.
    */
-  protected function fetchXml($url) {
+  protected function fetchXml(string $url): string {
     $response = $this->httpClient->request('GET', $url);
     // Check status code.
     if ($response->getStatusCode() !== 200) {
@@ -246,8 +191,13 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    *   Feed's base URL.
    * @param int $source_id
    *   ID of the source term the feed belongs to.
+   *
+   * @throws \Drupal\reliefweb_import\Exception\ReliefwebImportExceptionViolation
+   *   If there an error perventing the processing of a job.
+   * @throws \Drupal\reliefweb_import\Exception\ReliefwebImportExceptionSoftViolation
+   *   If the processed job was not completely valid.
    */
-  protected function processXml($name, $body, $uid, $base_url, $source_id) {
+  protected function processXml(string $name, string $body, int $uid, string $base_url, int $source_id): void {
     $xml = new \SimpleXMLElement($body);
 
     if ($xml->count() === 0) {
@@ -318,13 +268,13 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    *   ID of the source term the feed belongs to.
    *
    * @throws \Drupal\reliefweb_import\Exception\ReliefwebImportExceptionViolation
-   *   Import expection.
+   *   If the mandatory fields are not all present or valid.
    */
-  protected function checkMandatoryFields(\SimpleXMLElement $data, $base_url, $source_id) {
+  protected function checkMandatoryFields(\SimpleXMLElement $data, string $base_url, int $source_id): void {
     try {
-      $this->validateLink($data->link[0], $base_url);
-      $this->validateTitle($data->title[0]);
-      $this->validateSource((string) $data->field_source[0], $source_id);
+      $this->validateLink((string) ($data->link[0] ?? ''), $base_url);
+      $this->validateTitle((string) ($data->title[0] ?? ''));
+      $this->validateSource((string) ($data->field_source[0] ?? ''), $source_id);
     }
     catch (\Exception $exception) {
       throw new ReliefwebImportExceptionViolation($exception->getMessage());
@@ -340,7 +290,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    * @return bool
    *   TRUE if the job was already imported.
    */
-  protected function jobExists($guid) {
+  protected function jobExists(string $guid): bool {
     $ids = $this->entityTypeManager
       ->getStorage('node')
       ->getQuery()
@@ -359,7 +309,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    * @return \Drupal\reliefweb_entities\Entity\Job|null
    *   The job entity if it exists.
    */
-  protected function loadJobByGuid($guid) {
+  protected function loadJobByGuid(string $guid): ?Job {
     $entities = $this->entityTypeManager
       ->getStorage('node')
       ->loadByProperties([
@@ -380,7 +330,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    * @param int $source_id
    *   Source ID.
    */
-  protected function createJob($guid, \SimpleXMLElement $data, $uid, $source_id) {
+  protected function createJob(string $guid, \SimpleXMLElement $data, int $uid, int $source_id): void {
     $values = [
       'type' => 'job',
       'uid' => $uid,
@@ -399,7 +349,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    * @param \SimpleXMLElement $data
    *   XML data for the job.
    */
-  protected function updateJob(Job $job, \SimpleXMLElement $data) {
+  protected function updateJob(Job $job, \SimpleXMLElement $data): void {
     $fields = [
       'title' => [
         'callback' => 'setJobTitle',
@@ -481,7 +431,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    * @param \SimpleXMLElement $data
    *   Data from the XML feed.
    */
-  protected function setJobTitle(Job $job, \SimpleXMLElement $data) {
+  protected function setJobTitle(Job $job, \SimpleXMLElement $data): void {
     $job->title = $this->validateTitle((string) $data);
   }
 
@@ -493,7 +443,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    * @param \SimpleXMLElement $data
    *   Data from the XML feed.
    */
-  protected function setJobBody(Job $job, \SimpleXMLElement $data) {
+  protected function setJobBody(Job $job, \SimpleXMLElement $data): void {
     $job->body = [
       'value' => $this->validateBody($data->asXML() ?: ''),
       'summary' => NULL,
@@ -509,7 +459,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    * @param \SimpleXMLElement $data
    *   Data from the XML feed.
    */
-  protected function setJobHowToApply(Job $job, \SimpleXMLElement $data) {
+  protected function setJobHowToApply(Job $job, \SimpleXMLElement $data): void {
     $job->field_how_to_apply = [
       'value' => $this->validateHowToApply($data->asXML() ?: ''),
       'format' => 'markdown_editor',
@@ -524,7 +474,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    * @param \SimpleXMLElement $data
    *   Data from the XML feed.
    */
-  protected function setJobClosingDate(Job $job, \SimpleXMLElement $data) {
+  protected function setJobClosingDate(Job $job, \SimpleXMLElement $data): void {
     $job->field_job_closing_date = $this->validateJobClosingDate((string) $data);
   }
 
@@ -536,7 +486,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    * @param \SimpleXMLElement $data
    *   Data from the XML feed.
    */
-  protected function setJobType(Job $job, \SimpleXMLElement $data) {
+  protected function setJobType(Job $job, \SimpleXMLElement $data): void {
     $ids = $this->getTermIds('job_type');
     // Silently skip invalid term ids and limit to 1 term.
     $job->field_job_type = array_slice(array_intersect((array) $data, $ids), 0, 1);
@@ -550,7 +500,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    * @param \SimpleXMLElement $data
    *   Data from the XML feed.
    */
-  protected function setJobExperience(Job $job, \SimpleXMLElement $data) {
+  protected function setJobExperience(Job $job, \SimpleXMLElement $data): void {
     $ids = $this->getTermIds('job_experience');
     // Silently skip invalid term ids.
     $job->field_job_experience = $this->validateJobExperience(array_intersect((array) $data, $ids));
@@ -564,7 +514,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    * @param \SimpleXMLElement $data
    *   Data from the XML feed.
    */
-  protected function setJobCareerCategories(Job $job, \SimpleXMLElement $data) {
+  protected function setJobCareerCategories(Job $job, \SimpleXMLElement $data): void {
     $ids = $this->getTermIds('career_category');
     // Silently skip invalid term ids.
     $job->field_career_categories = array_intersect((array) $data, $ids);
@@ -578,7 +528,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    * @param \SimpleXMLElement $data
    *   Data from the XML feed.
    */
-  protected function setJobThemes(Job $job, \SimpleXMLElement $data) {
+  protected function setJobThemes(Job $job, \SimpleXMLElement $data): void {
     $ids = $this->getTermIds('theme');
     // Silently skip invalid term ids and limit to 3 themes.
     $job->field_theme = array_slice(array_intersect((array) $data, $ids), 0, 3);
@@ -592,7 +542,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    * @param \SimpleXMLElement $data
    *   Data from the XML feed.
    */
-  protected function setJobCountry(Job $job, \SimpleXMLElement $data) {
+  protected function setJobCountry(Job $job, \SimpleXMLElement $data): void {
     $job->field_country = $this->mapCountries((array) $data);
   }
 
@@ -604,7 +554,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    * @param \SimpleXMLElement $data
    *   Data from the XML feed.
    */
-  protected function setJobCity(Job $job, \SimpleXMLElement $data) {
+  protected function setJobCity(Job $job, \SimpleXMLElement $data): void {
     if (!$job->field_country->isEmpty()) {
       $job->field_city = $this->validateCity((string) $data);
     }
@@ -622,7 +572,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    * @return array
    *   List of term IDs.
    */
-  protected function getTermIds($vocabulary) {
+  protected function getTermIds(string $vocabulary): array {
     if (!isset($this->loadedTermIds[$vocabulary])) {
       $ids = $this->entityTypeManager
         ->getStorage('taxonomy_term')
@@ -644,7 +594,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    * @throws \Drupal\reliefweb_import\Exception\ReliefwebImportExceptionSoftViolation
    *   Exception if there were validation errors so they can be logged.
    */
-  protected function validateAndSaveJob(Job $job) {
+  protected function validateAndSaveJob(Job $job): void {
     // Revision user is always 'System'.
     $job->setRevisionUserId($job->getOwnerId());
     $job->setNewRevision(TRUE);
@@ -727,6 +677,9 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
 
   /**
    * Our logger.
+   *
+   * @return \Drupal\Core\Logger\LoggerChannelInterface
+   *   Logger.
    */
   protected function getLogger(): LoggerChannelInterface {
     return $this->loggerFactory->get('reliefweb_import');
@@ -734,13 +687,26 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
 
   /**
    * Validate user.
+   *
+   * @param mixed $uid
+   *   User ID.
+   *
+   * @throws \Drupal\reliefweb_import\Exception\ReliefwebImportException
+   *   If invalid.
    */
-  protected function validateUser($uid) {
-    if (empty(trim($uid))) {
-      throw new ReliefwebImportException('User Id is not defined.');
-    }
+  protected function validateUser(mixed $uid): void {
+    if (is_string($uid)) {
+      if (trim($uid) === '') {
+        throw new ReliefwebImportException('User Id is not defined.');
+      }
 
-    if (!is_numeric($uid)) {
+      if (!is_numeric($uid)) {
+        throw new ReliefwebImportException('User Id is not numeric.');
+      }
+
+      $uid = (int) $uid;
+    }
+    elseif (!is_int($uid)) {
       throw new ReliefwebImportException('User Id is not numeric.');
     }
 
@@ -751,9 +717,16 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
 
   /**
    * Validate base URL.
+   *
+   * @param string $base_url
+   *   Base URL.
+   *
+   * @throws \Drupal\reliefweb_import\Exception\ReliefwebImportException
+   *   If invalid.
    */
-  protected function validateBaseUrl($base_url) {
-    if (empty(trim($base_url))) {
+  protected function validateBaseUrl(string $base_url): void {
+    $base_url = trim($base_url);
+    if ($base_url === '') {
       throw new ReliefwebImportException('Base URL is empty.');
     }
 
@@ -764,9 +737,18 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
 
   /**
    * Validate link.
+   *
+   * @param string $link
+   *   Raw job link.
+   * @param string $base_url
+   *   Base URL for the job links.
+   *
+   * @throws \Drupal\reliefweb_import\Exception\ReliefwebImportException
+   *   If invalid.
    */
-  protected function validateLink($link, $base_url) {
-    if (empty(trim($link))) {
+  protected function validateLink(string $link, string $base_url): void {
+    $link = trim($link);
+    if ($link === '') {
       throw new ReliefwebImportException('Feed item found without a link.');
     }
 
@@ -780,10 +762,20 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
   }
 
   /**
-   * Validate title.
+   * Validate and sanitize title.
+   *
+   * @param string $title
+   *   Raw title.
+   *
+   * @return string
+   *   Sanitized title.
+   *
+   * @throws \Drupal\reliefweb_import\Exception\ReliefwebImportException
+   *   If invalid.
    */
-  protected function validateTitle($title) {
-    if (empty(trim($title))) {
+  protected function validateTitle(string $title): string {
+    $title = trim($title);
+    if ($title === '') {
       throw new ReliefwebImportException('Job found with empty title.');
     }
 
@@ -796,8 +788,8 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
     ];
     $title = TextHelper::cleanText($title, $options);
 
-    // Ensure the title size is reasonable. The max length matches the one from
-    // the job form.
+    // Ensure the title size is reasonable. The max length matches the one
+    // from the job form.
     $length = mb_strlen($title);
     if ($length < 10 || $length > 150) {
       throw new ReliefwebImportException('Invalid title length.');
@@ -808,15 +800,29 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
 
   /**
    * Validate source.
+   *
+   * @param string $source
+   *   Raw source.
+   * @param int $source_id
+   *   ID of the source term being processed.
+   *
+   * @return int
+   *   Valid source ID.
+   *
+   * @throws \Drupal\reliefweb_import\Exception\ReliefwebImportException
+   *   If invalid.
    */
-  protected function validateSource($source, $source_id) {
-    if (empty(trim($source))) {
+  protected function validateSource(string $source, int $source_id): int {
+    $source = trim($source);
+    if ($source === '') {
       throw new ReliefwebImportException('Job found with empty source.');
     }
 
     if (!is_numeric($source)) {
       throw new ReliefwebImportException('Job found with non numeric source.');
     }
+
+    $source = (int) $source;
 
     if ($source !== $source_id) {
       throw new ReliefwebImportException(strtr('Invalid job source: expected @source_id, got @source.', [
@@ -833,8 +839,14 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    *
    * @param string $data
    *   Raw data from XML.
+   *
+   * @return string
+   *   Sanitized body.
+   *
+   * @throws \Drupal\reliefweb_import\Exception\ReliefwebImportException
+   *   If invalid.
    */
-  protected function validateBody($data) {
+  protected function validateBody(string $data): string {
     // Clean the body field.
     $body = $this->sanitizeText('body', $data);
 
@@ -854,8 +866,14 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    *
    * @param string $data
    *   Raw data from XML.
+   *
+   * @return string
+   *   Sanitized How to apply field.
+   *
+   * @throws \Drupal\reliefweb_import\Exception\ReliefwebImportException
+   *   If invalid.
    */
-  protected function validateHowToApply($data) {
+  protected function validateHowToApply(string $data): string {
     // Clean the field.
     $field_how_to_apply = $this->sanitizeText('field_how_to_apply', $data, 3);
 
@@ -875,8 +893,14 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    *
    * @param string $data
    *   Raw data from XML.
+   *
+   * @return string
+   *   Sanitized job closing date.
+   *
+   * @throws \Drupal\reliefweb_import\Exception\ReliefwebImportException
+   *   If invalid.
    */
-  protected function validateJobClosingDate($data) {
+  protected function validateJobClosingDate(string $data): string {
     // Clean the field.
     $field_job_closing_date = mb_substr($data, 0, 10);
 
@@ -899,11 +923,18 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
   }
 
   /**
-   * Validate the job_experience field for the feed item.
+   * Validate and sanitize the job_experience field for the feed item.
+   *
+   * @param array $values
+   *   Job experience term IDs.
+   *
+   * @return array
+   *   Valid job experience term IDs.
    */
-  protected function validateJobExperience(array $values) {
+  protected function validateJobExperience(array $values): array {
     // Map "N/A" to "0-3 years" to accomodate changes to the specifications.
     foreach ($values as &$value) {
+      // Not using strict equality since it may be a string.
       if ($value == 262) {
         $value = 258;
       }
@@ -913,12 +944,18 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
   }
 
   /**
-   * Validate city field.
+   * Validate and sanitize the city field.
    *
    * @param string $data
    *   Raw data from XML.
+   *
+   * @return string
+   *   Sanitized city.
+   *
+   * @throws \Drupal\reliefweb_import\Exception\ReliefwebImportException
+   *   If invalid.
    */
-  protected function validateCity($data) {
+  protected function validateCity(string $data): string {
     // Clean the field.
     $field_city = TextHelper::cleanText(strip_tags($data), [
       'line_breaks' => TRUE,
@@ -954,7 +991,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    * @return string
    *   Sanitized content.
    */
-  protected function sanitizeText($field, $text, $max_heading_level = 2) {
+  protected function sanitizeText(string $field, string $text, int $max_heading_level = 2): string {
     if (!is_string($text)) {
       return '';
     }
@@ -1024,7 +1061,7 @@ class ReliefwebImportCommand extends DrushCommands implements SiteAliasManagerAw
    * @param array $values
    *   List of values.
    */
-  protected function mapCountries(array $values) {
+  protected function mapCountries(array $values): array {
     // Load the country ISO3 -> ID mapping.
     static $ids;
     if (!isset($ids)) {
