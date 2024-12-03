@@ -9,9 +9,9 @@ reliefweb_ai.settings:
         allow_for_anonymous:
           type: boolean
           label: 'Allow anonymous user to access the chat.'
-        login_instructions_replace:
+        instructions_replace:
           type: boolean
-          label: 'If TRUE, replace the chat instructions or otherwise append the login instructions.'
+          label: 'If TRUE, replace the chat instructions when the chat is disabled (error, anonymous access etc.), otherwise append the extra instructions.'
         login_instructions:
           type: text
           label: 'Login or register instructions for anonymous users.'

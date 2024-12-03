@@ -5,60 +5,150 @@
  * ReliefWeb AI module file.
  */
 
+use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Block\BlockPluginInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\reliefweb_ai\OchaAiChatPopupBlockHandler;
 
 /**
- * Implements hook_form_FORM_ID_alter().
+ * Implements hook_form_FORM_ID_alter() for `ocha_ai_chat_chat_form`.
  */
 function reliefweb_ai_form_ocha_ai_chat_chat_form_alter(array &$form, FormStateInterface $form_state, string $form_id) {
   $config = \Drupal::config('reliefweb_ai.settings');
   $current_user = \Drupal::currentUser();
+  $url = \Drupal::request()?->query?->get('url');
 
-  if (!$current_user->isAnonymous() || $config->get('ocha_ai_chat.allow_for_anonymous') === TRUE) {
+  // Add some caching context and tags.
+  $form['#cache']['contexts'] = array_merge($form['#cache']['contexts'] ?? [], [
+    'user.roles', 'url.query_args',
+  ]);
+  $form['#cache']['tags'] = array_merge($form['#cache']['tags'] ?? [], [
+    'config:reliefweb_ai.settings',
+  ]);
+
+  // Add a more unique ID ot the chat submit button.
+  if (isset($form['actions']['submit'])) {
+    $form['actions']['submit']['#attributes']['id'] = 'ocha-ai-chat-ask';
+  }
+
+  // Message to display if the form is disabled for any reason.
+  $disabled = '';
+
+  // Check if the user is anonymous and not allowed to access the chat.
+  if ($current_user->isAnonymous() && !$config->get('ocha_ai_chat.allow_for_anonymous')) {
+    $disabled = $config->get('ocha_ai_chat.login_instructions') ?? '';
+
+    // Redirect to the current page if possible.
+    if (!empty($url)) {
+      $disabled = strtr($disabled, [
+        '@destination' => UrlHelper::encodePath(parse_url($url, \PHP_URL_PATH)),
+      ]);
+    }
+  }
+
+  if (empty($disabled)) {
+    // Check if we have a URL to allow the chat.
+    if (empty($url)) {
+      $instructions = t('<p>Something went wrong.</p>');
+    }
+    // Otherwise check if the language or type of the document.
+    else {
+      $router = \Drupal::service('router.no_access_checks');
+      $parameters = $router->match($url);
+      $node = $parameters['node'] ?? NULL;
+
+      // Disable the form if it's not a report.
+      if (!isset($node) || $node->bundle() !== 'report') {
+        $disabled = t('<p>Something went wrong.</p>');
+      }
+      else {
+        // No need to show the source when chatting with a single report.
+        if (isset($form['source'])) {
+          $form['source']['#access'] = FALSE;
+        }
+
+        // Only English documents are supported due to LLM limitations.
+        $is_english_report = FALSE;
+        foreach ($node->field_language as $item) {
+          if ($item->target_id == 267) {
+            $is_english_report = TRUE;
+            break;
+          }
+        }
+        if (!$is_english_report) {
+          $disabled = t('<p>Sorry, only <strong>English</strong> reports are supported.</p>');
+        }
+
+        // Non supported content formats.
+        foreach ($node->field_content_format as $item) {
+          if ($item->target_id == 12) {
+            $disabled = t('<p>Sorry, <strong>maps</strong> are not supported.</p>');
+            break;
+          }
+          elseif ($item->target_id == 12570) {
+            $disabled = t('<p>Sorry, <strong>infographics</strong> are not supported.</p>');
+            break;
+          }
+          elseif ($item->target_id == 38974) {
+            $disabled = t('<p>Sorry, <strong>interactive reports</strong> are not supported.</p>');
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  if (!empty($disabled)) {
+    // Check whether we are requested to replace the instructions or append the
+    // disabled instructions.
+    $replace = $config->get('ocha_ai_chat.instructions_replace') === TRUE || !isset($form['chat']['content']);
+
+    if (!$replace) {
+      // We cannot just append the instructions to the current ones because of
+      // the text format may include sanitation that removes the target
+      // attributes. We indeed need to preserve those attributes in the login
+      // instructions so the login and register links open in parent window
+      // and not in the chat iframe.
+      // So first we format the current instructions and then append the extra
+      // instructions.
+      $text = $form['chat']['content']['#text'] ?? '';
+      $format = $form['chat']['content']['#format'] ?? 'markdown_editor';
+      $instructions = (string) check_markup($text, $format);
+      $disabled = $instructions . $disabled;
+    }
+
+    // Replace the instructions with a simple markup render element.
+    $form['chat']['content'] = [
+      '#type' => 'markup',
+      '#markup' => $disabled,
+      '#prefix' => '<div id="ocha-ai-chat-instructions" class="ocha-ai-chat-chat-form__instructions">',
+      '#suffix' => '</div>',
+    ];
+
+    // Disable or hide the reset of the form.
+    foreach (Element::children($form['chat']) as $key) {
+      if ($key !== 'content') {
+        $form['chat'][$key]['#access'] = FALSE;
+      }
+    }
+    foreach (Element::children($form) as $key) {
+      if ($key !== 'chat') {
+        $form[$key]['#disabled'] = TRUE;
+      }
+    }
+
+    $form['#cache']['max-age'] = 3600;
+  }
+}
+
+/**
+ * Implements hook_block_view_alter().
+ */
+function reliefweb_ai_block_view_alter(array &$build, BlockPluginInterface $block): void {
+  // Alter the chat popup block, notably to adjust the caching.
+  if ($block->getPluginId() === 'ocha_ai_chat_chat_popup') {
+    $build['#pre_render'][] = [OchaAiChatPopupBlockHandler::class, 'alterBuild'];
     return;
-  }
-
-  $login_instructions = $config->get('ocha_ai_chat.login_instructions') ?? '';
-
-  // Check whether we are requested to replace the instructions or append the
-  // login instructions.
-  $replace = $config->get('ocha_ai_chat.login_instructions_replace') === TRUE || !isset($form['chat']['content']);
-
-  if ($replace) {
-    $instructions = $login_instructions;
-  }
-  else {
-    // We cannot just append the instructions to the current ones because of
-    // the text format may include sanitation that removes the target
-    // attributes. We indeed need to preserve those attributes in the login
-    // instructions so the login and register links open in parent window
-    // and not in the chat iframe.
-    // So first we format the current instructions and then append the login
-    // ones.
-    $text = $form['chat']['content']['#text'] ?? '';
-    $format = $form['chat']['content']['#format'] ?? 'markdown_editor';
-    $instructions = (string) check_markup($text, $format);
-    $instructions .= $login_instructions;
-  }
-
-  // Replace the instructions with a simple markup render element.
-  $form['chat']['content'] = [
-    '#type' => 'markup',
-    '#markup' => $instructions,
-    '#prefix' => '<div id="ocha-ai-chat-instructions" class="ocha-ai-chat-chat-form__instructions">',
-    '#suffix' => '</div>',
-  ];
-
-  // Disable or hide the reset of the form.
-  foreach (Element::children($form['chat']) as $key) {
-    if ($key !== 'content') {
-      $form['chat'][$key]['#access'] = FALSE;
-    }
-  }
-  foreach (Element::children($form) as $key) {
-    if ($key !== 'chat') {
-      $form[$key]['#disabled'] = TRUE;
-    }
   }
 }
