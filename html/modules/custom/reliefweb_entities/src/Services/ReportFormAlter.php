@@ -66,10 +66,8 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     $this->alterHeadlineFields($form, $form_state);
 
     // Alter the origin fields, setting the origin notes as mandatory when
-    // 'URL' is selected, except for contributors.
-    if (!$this->currentUser->hasRole('contributor')) {
-      $this->alterOriginFields($form, $form_state);
-    }
+    // 'URL' is selected.
+    $this->alterOriginFields($form, $form_state);
 
     // Alter the OCHA product field, ensuring only 1 is selectable and making
     // mandatory when OCHA is selected as source or hidden otherwise.
@@ -454,8 +452,15 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
    *   Form state.
    */
   protected function alterFieldsForContributors(array &$form, FormStateInterface $form_state) {
-    // Default to submit.
-    $form['field_origin']['widget']['#default_value'] = 1;
+    // Default to submit for new documents otherwise preserve the value, for
+    // example when editing a report created by an editor.
+    if ($form_state->getFormObject()?->getEntity()?->isNew() === TRUE) {
+      $form['field_origin']['widget']['#default_value'] = '1';
+    }
+    // Change the field to 'hidden' to hide it while perserving its value so
+    // that the alteration and validation of the origin notes field still work.
+    // @see ::alterOriginFields()
+    $form['field_origin']['widget']['#type'] = 'hidden';
 
     // Hide fields.
     $form['field_bury']['#access'] = FALSE;
