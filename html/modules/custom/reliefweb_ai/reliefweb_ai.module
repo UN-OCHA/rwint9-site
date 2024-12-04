@@ -27,9 +27,9 @@ function reliefweb_ai_form_ocha_ai_chat_chat_form_alter(array &$form, FormStateI
     'config:reliefweb_ai.settings',
   ]);
 
-  // Add a more unique ID ot the chat submit button.
+  // Add a more unique class to the chat submit button.
   if (isset($form['actions']['submit'])) {
-    $form['actions']['submit']['#attributes']['id'] = 'ocha-ai-chat-ask';
+    $form['actions']['submit']['#attributes']['class'][] = 'ocha-ai-chat-ask';
   }
 
   // Message to display if the form is disabled for any reason.
