@@ -16,7 +16,7 @@
             "format": "uuid"
         },
         "title": {
-            "description": "Document title.",
+            "description": "Document title. Use the original title of the article or file. If the title is from a series, add the date and other information as appropriate.",
             "type": "string",
             "minLength": 10,
             "maxLength": 255,
@@ -45,7 +45,7 @@
             "maxItems": 30
         },
         "country": {
-             "description": "Document country(ies) as a list of IDs from https://api.reliefweb.int/v1/countries. The first country in the list is considered the primary country, meaning the most relevant to the content of the document.",
+             "description": "Document country(ies) as a list of IDs from https://api.reliefweb.int/v1/countries. The first country in the list is considered the primary country, meaning the most relevant to the content of the document. Otherwise, enter them alphabetically. Only tag the most relevant countries as over-tagging often results in reduced discoverability.",
             "type": "array",
             "items": {
                 "type": "integer"
@@ -54,7 +54,7 @@
             "maxItems": 300
         },
         "format": {
-            "description": "Document format as a single ID from https://api.reliefweb.int/v1/references/content-formats.",
+            "description": "Document format as a single ID from https://api.reliefweb.int/v1/references/content-formats. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
             "type": "array",
             "items": {
                 "type": "integer"
@@ -63,7 +63,7 @@
             "maxItems": 1
         },
         "language": {
-            "description": "Document language(s) as a list of IDs from https://api.reliefweb.int/v1/references/languages.",
+            "description": "Document language(s) as a list of IDs from https://api.reliefweb.int/v1/references/languages. If an attachment is not in one of the official UN languages, mention that in the description of the attachment.",
             "type": "array",
             "items": {
                 "type": "integer"
@@ -77,7 +77,7 @@
             "format": "date-time"
         },
         "body": {
-            "description": "Document content in markdown or html (supported tags: <h1> <h2> <h3> <h4> <h5> <h6> <br> <p> <strong> <em> <a> <ul> <ol> <li> <blockquote>).",
+            "description": "Document content in markdown or html (supported tags: <h1> <h2> <h3> <h4> <h5> <h6> <br> <p> <strong> <em> <a> <ul> <ol> <li> <blockquote>). For a textual article, put the entire content. For attachments, use an executive summary, overview or key points of the core document. Use the file field for the attachment.",
             "type": "string",
             "minLength": 10,
             "maxLength": 100000,
@@ -97,7 +97,7 @@
             }
         },
         "embargoed": {
-            "description": "Embargo date until which the document should not be published on ReliefWeb.",
+            "description": "Date (ISO 8601) until when the document is embargoed. It will be automatically published on that date. It must be a UTC/GMT date.",
             "type": "string",
             "format": "date-time"
         },
@@ -242,7 +242,7 @@
             "required": ["url", "uuid", "checksum", "description", "copyright"]
         },
         "disaster": {
-            "description": "Document disaster(s) as a list of IDs from https://api.reliefweb.int/v1/disasters.",
+            "description": "Document disaster(s) as a list of IDs from https://api.reliefweb.int/v1/disasters. Only select the most relevant disasters as over-tagging often results in reduced discoverability.",
             "type": "array",
             "items": {
                 "type": "integer"
@@ -250,7 +250,7 @@
             "maxItems": 30
         },
         "disaster_type": {
-            "description": "Document disaster type(s) as a list of IDs from https://api.reliefweb.int/v1/references/disaster-types.",
+            "description": "Document disaster type(s) as a list of IDs from https://api.reliefweb.int/v1/references/disaster-types. Only select the most relevant disaster types as over-tagging often results in reduced discoverability.",
             "type": "array",
             "items": {
                 "type": "integer"
@@ -258,7 +258,7 @@
             "maxItems": 30
         },
         "theme": {
-            "description": "Document theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes.",
+            "description": "Document theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes. Only select the most relevant themes as over-tagging often results in reduced discoverability. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
             "type": "array",
             "items": {
                 "type": "integer"
