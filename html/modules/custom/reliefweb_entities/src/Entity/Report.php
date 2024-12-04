@@ -400,9 +400,6 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
         // Blocked for some sources.
         if (!empty($rights[1])) {
           $status = 'refused';
-          $message = strtr('Blocked user for @sources.', [
-            '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[1])),
-          ]);
         }
         // Trusted for all the sources.
         elseif (isset($rights[3]) && count($rights[3]) === count($sources)) {
@@ -411,24 +408,40 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
         // Trusted for at least 1.
         elseif (isset($rights[3]) && count($rights[3]) > 0) {
           $status = 'to-review';
-          $message = strtr('Allowed user for @sources.', [
-            '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[3])),
-          ]);
         }
-        // Allowed for at least 1.
-        elseif (isset($rights[2]) && count($rights[2]) > 0) {
+        // Allowed for all the sources.
+        elseif (isset($rights[2]) && count($rights[2]) === count($sources)) {
           $status = 'to-review';
         }
         // Unverified for some sources.
         else {
           $status = 'pending';
-
-          $message = strtr('Unverified user for @sources.', [
-            '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[0])),
-          ]);
         }
 
         $this->setModerationStatus($status);
+
+        // Add messages indicating the posting rights for easier review.
+        $message = '';
+        if (!empty($rights[1])) {
+          $message = trim($message . strtr(' Blocked user for @sources.', [
+            '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[1])),
+          ]));
+        }
+        if (!empty($rights[0])) {
+          $message = trim($message . strtr(' Unverified user for @sources.', [
+            '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[0])),
+          ]));
+        }
+        if (!empty($rights[2])) {
+          $message = trim($message . strtr(' Allowed user for @sources.', [
+            '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[2])),
+          ]));
+        }
+        if (!empty($rights[3])) {
+          $message = trim($message . strtr(' Trusted user for @sources.', [
+            '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[3])),
+          ]));
+        }
 
         // Update the log message.
         if (!empty($message)) {
