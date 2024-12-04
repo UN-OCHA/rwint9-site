@@ -2,6 +2,8 @@
 
 namespace Drupal\reliefweb_ai\EventSubscriber;
 
+use Drupal\Core\Cache\CacheableResponseInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
@@ -15,10 +17,13 @@ class OchaAiChatCacheSubscriber implements EventSubscriberInterface {
   /**
    * Constructor.
    *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
+   *   The config factory.
    * @param \Drupal\Core\Session\AccountProxyInterface $currentUser
    *   The current user.
    */
   public function __construct(
+    protected ConfigFactoryInterface $configFactory,
     protected AccountProxyInterface $currentUser,
   ) {}
 
@@ -41,14 +46,26 @@ class OchaAiChatCacheSubscriber implements EventSubscriberInterface {
 
     if ($route === 'ocha_ai_chat.chat_form' || $route === 'ocha_ai_chat.chat_form.popup') {
       $response = $event->getResponse();
-      $cache_metadata = $response->getCacheableMetadata();
 
-      $cache_metadata->addCacheContexts(['user.roles:anonymous']);
-      if ($this->currentUser->isAnonymous()) {
-        // Cache for 1 hour.
-        $cache_metadata->setCacheMaxAge(3600);
-        // Ensure varnish for example can cache the page.
-        $response->headers->set('Cache-Control', 'public, max-age=3600');
+      // Ajax response are not cacheable so only handle normal form response.
+      if ($response instanceof CacheableResponseInterface) {
+        $config = $this->configFactory->get('reliefweb_ai.settings');
+
+        $cache_metadata = $response->getCacheableMetadata();
+
+        // Vary the cache by role, url parameters and config since they control
+        // what is displayed to the user.
+        $cache_metadata->addCacheContexts(['user.roles', 'url.query_args']);
+        $cache_metadata->addCacheTags(['config:reliefweb_ai.settings']);
+
+        // Cache the response for 1 hour for anonymous user when we just show
+        // a disabled form asking to log in or register.
+        if ($this->currentUser->isAnonymous() && !$config->get('ocha_ai_chat.allow_for_anonymous')) {
+          // Cache for 1 hour.
+          $cache_metadata->setCacheMaxAge(3600);
+          // Ensure varnish for example can cache the page.
+          $response->headers->set('Cache-Control', 'public, max-age=3600');
+        }
       }
     }
   }
