@@ -15,6 +15,7 @@ dependencies:
     - field.field.node.job.field_job_experience
     - field.field.node.job.field_job_tagger_queue_count
     - field.field.node.job.field_job_type
+    - field.field.node.job.field_post_api_provider
     - field.field.node.job.field_source
     - field.field.node.job.field_theme
     - field.field.node.job.reliefweb_job_tagger_info
@@ -61,6 +62,7 @@ hidden:
   field_job_experience: true
   field_job_tagger_queue_count: true
   field_job_type: true
+  field_post_api_provider: true
   field_theme: true
   langcode: true
   links: true

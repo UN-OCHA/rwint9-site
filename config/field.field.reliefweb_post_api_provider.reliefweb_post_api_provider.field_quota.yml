@@ -1,0 +1,26 @@
+uuid: c3c92661-6018-4152-86a2-c1d2fa1da84e
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.reliefweb_post_api_provider.field_quota
+  module:
+    - reliefweb_post_api
+id: reliefweb_post_api_provider.reliefweb_post_api_provider.field_quota
+field_name: field_quota
+entity_type: reliefweb_post_api_provider
+bundle: reliefweb_post_api_provider
+label: 'Request quota'
+description: 'Number of allowed requests per day.'
+required: true
+translatable: false
+default_value:
+  -
+    value: 50
+default_value_callback: ''
+settings:
+  min: 1
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

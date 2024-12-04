@@ -1,0 +1,26 @@
+uuid: 7927f837-fa9e-453a-a6c1-e551991bd6b1
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_post_api_provider
+    - node.type.training
+id: node.training.field_post_api_provider
+field_name: field_post_api_provider
+entity_type: node
+bundle: training
+label: 'POST API provider'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:reliefweb_post_api_provider'
+  handler_settings:
+    target_bundles: null
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+field_type: entity_reference

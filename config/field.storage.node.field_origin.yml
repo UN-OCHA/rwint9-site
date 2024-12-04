@@ -20,6 +20,9 @@ settings:
     -
       value: 2
       label: 'Reliefweb product'
+    -
+      value: 3
+      label: 'API'
   allowed_values_function: ''
 module: options
 locked: false

@@ -68,6 +68,7 @@
 }
 .rw-document > footer dl.rw-entity-meta dd li:last-child:after,
 .rw-document > footer dl.rw-entity-meta dd li.rw-entity-meta__tag-value__list__item--last:after {
+  margin: 0;
   content: "";
 }
 .rw-entity-details dl.rw-entity-meta.rw-article-meta dd::after {

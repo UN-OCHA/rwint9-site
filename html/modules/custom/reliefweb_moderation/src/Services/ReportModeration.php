@@ -47,6 +47,9 @@ class ReportModeration extends ModerationServiceBase {
       'data' => [
         'label' => $this->t('Report'),
       ],
+      'origin' => [
+        'label' => $this->t('Origin'),
+      ],
       'date' => [
         'label' => $this->t('Posted'),
         'type' => 'property',
@@ -171,8 +174,15 @@ class ReportModeration extends ModerationServiceBase {
           '@name' => Link::fromTextAndUrl($key_content_data['name'], Url::fromUri('entity:taxonomy_term/' . $key_content_data['tid']))->toString(),
         ]);
       }
-      // Author.
-      $details['author'] = $this->getEntityAuthorData($entity);
+
+      // Author and reviewer.
+      $details['author'] = $this->t('author: @author', [
+        '@author' => $this->getEntityAuthorData($entity),
+      ]);
+      $details['reviewer'] = $this->t('reviewer: @reviewer', [
+        '@reviewer' => $this->getEntityReviewerData($entity),
+      ]);
+
       $data['details'] = array_filter($details);
 
       // Revision information.
@@ -180,6 +190,10 @@ class ReportModeration extends ModerationServiceBase {
 
       // Filter out empty data.
       $cells['data'] = array_filter($data);
+
+      // Retrieve the origin of the document.
+      $options = $entity->field_origin->first()->getPossibleOptions();
+      $cells['origin'] = $options[$entity->field_origin->value] ?? $this->t('N/A');
 
       // Date cell.
       $cells['date'] = [
@@ -203,8 +217,10 @@ class ReportModeration extends ModerationServiceBase {
       'to-review' => $this->t('To review'),
       'published' => $this->t('Published'),
       'embargoed' => $this->t('Embargoed'),
-      'archive' => $this->t('Archived'),
       'reference' => $this->t('Reference'),
+      'pending' => $this->t('Pending'),
+      'refused' => $this->t('Refused'),
+      'archive' => $this->t('Archived'),
     ];
   }
 
@@ -214,6 +230,7 @@ class ReportModeration extends ModerationServiceBase {
   public function getFilterDefaultStatuses() {
     $statuses = $this->getFilterStatuses();
     unset($statuses['archive']);
+    unset($statuses['refused']);
     return array_keys($statuses);
   }
 
@@ -238,6 +255,16 @@ class ReportModeration extends ModerationServiceBase {
         '#value' => $this->t('Reference'),
       ],
     ];
+
+    // Add the extra buttons to manage content submitted via the API.
+    if ($entity->hasField('field_post_api_provider') && !empty($entity->field_post_api_provider?->target_id)) {
+      $buttons['pending'] = [
+        '#value' => $this->t('Pending'),
+      ];
+      $buttons['refused'] = [
+        '#value' => $this->t('Refused'),
+      ];
+    }
 
     // @todo replace with permission.
     if (UserHelper::userHasRoles(['administrator', 'webmaster'])) {
@@ -326,6 +353,7 @@ class ReportModeration extends ModerationServiceBase {
       'headline',
       'bury',
       'key_content',
+      'origin',
     ]);
 
     // Values are hardcoded to avoid the use of a query.

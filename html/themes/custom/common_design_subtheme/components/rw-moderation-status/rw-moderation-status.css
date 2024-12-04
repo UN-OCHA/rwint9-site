@@ -48,10 +48,13 @@
   background: var(--cd-reliefweb-yellow--bg);
 }
 [data-moderation-status="pending"],
-[data-moderation-status="embargoed"],
 [data-moderation-status="external-archive"] {
   border-color: var(--cd-reliefweb-cyan);
   background-color: var(--cd-reliefweb-cyan--bg);
+}
+[data-moderation-status="embargoed"] {
+  border-color: var(--cd-reliefweb-purple--light);
+  background-color: var(--cd-reliefweb-purple--light--bg);
 }
 
 .rw-moderation-status[data-moderation-status] {
