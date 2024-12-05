@@ -49,7 +49,14 @@ class ReliefwebEntraidLoginTest extends ExistingSiteBase {
    * @covers ::redirectLogin()
    */
   public function testRedirectLogin() {
+
     global $base_url;
+
+    // Skip if the module is not installed.
+    if (!$this->container->get('module_handler')->moduleExists('reliefweb_entraid')) {
+      $this->assertTrue(TRUE);
+      return;
+    }
 
     // Get the EntraID configuration.
     $entraid_config = $this->container
@@ -65,7 +72,7 @@ class ReliefwebEntraidLoginTest extends ExistingSiteBase {
 
     // The incomplete config will results in an exception and 404 response
     // will be returned.
-    $this->drupalGet('/user/login/entraid');
+    $this->drupalGet('/user/login/reliefweb-entraid-direct');
     $this->assertSession()->statusCodeEquals(404);
 
     // Set the endpoints. We just point at the robots.txt as we know it exists
@@ -77,7 +84,7 @@ class ReliefwebEntraidLoginTest extends ExistingSiteBase {
     $entraid_config->setData($data)->save();
 
     // If the redirection works, a 200 will be returned.
-    $this->drupalGet('/user/login/entraid');
+    $this->drupalGet('/user/login/reliefweb-entraid-direct');
     $this->assertSession()->statusCodeEquals(200);
     $this->assertStringContainsString('Disallow:', $this->getSession()->getPage()->getContent());
   }
