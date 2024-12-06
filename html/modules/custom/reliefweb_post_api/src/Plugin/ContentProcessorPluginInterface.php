@@ -92,11 +92,14 @@ interface ContentProcessorPluginInterface {
    *
    * @param array $data
    *   POST API data.
+   * @param ?string $schema
+   *   Optional schema override. That can be used to make some fields non
+   *   mandatory for example or lighten the validation.
    *
    * @return \Drupal\Core\Entity\ContentEntityInterface|null
    *   The created entity or NULL if it could not be created.
    */
-  public function process(array $data): ?ContentEntityInterface;
+  public function process(array $data, ?string $schema = NULL): ?ContentEntityInterface;
 
   /**
    * Checks of the entity with the give UUID can be processed/submitted.
@@ -117,22 +120,28 @@ interface ContentProcessorPluginInterface {
    *
    * @param array $data
    *   POST API data.
+   * @param ?string $schema
+   *   Optional schema override. That can be used to make some fields non
+   *   mandatory for example or lighten the validation.
    *
    * @throws \Drupal\reliefweb_post_api\Plugin\ContentProcessorException
    *   Exception if the data is not valid.
    */
-  public function validate(array $data): void;
+  public function validate(array $data, ?string $schema = NULL): void;
 
   /**
    * Validate POST API data against the JSON schema for the managed bundle.
    *
    * @param array $data
    *   POST API data.
+   * @param ?string $schema
+   *   Optional schema override. That can be used to make some fields non
+   *   mandatory for example or lighten the validation.
    *
    * @throws \Drupal\reliefweb_post_api\Plugin\ContentProcessorException
    *   An exception with the schema errors.
    */
-  public function validateSchema(array $data): void;
+  public function validateSchema(array $data, ?string $schema = NULL): void;
 
   /**
    * Validate the POST API data sources against the provider allowed sources.

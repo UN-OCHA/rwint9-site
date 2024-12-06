@@ -237,7 +237,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   /**
    * {@inheritdoc}
    */
-  abstract public function process(array $data): ?ContentEntityInterface;
+  abstract public function process(array $data, ?string $schema = NULL): ?ContentEntityInterface;
 
   /**
    * {@inheritdoc}
@@ -261,8 +261,8 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   /**
    * {@inheritdoc}
    */
-  public function validate(array $data): void {
-    $this->validateSchema($data);
+  public function validate(array $data, ?string $schema = NULL): void {
+    $this->validateSchema($data, $schema);
     $this->validateUuid($data);
     $this->validateSources($data);
     $this->validateUrls($data);
@@ -272,11 +272,12 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   /**
    * {@inheritdoc}
    */
-  public function validateSchema(array $data): void {
+  public function validateSchema(array $data, ?string $schema = NULL): void {
     unset($data['bundle']);
     unset($data['provider']);
     $data = Helper::toJSON($data);
-    $result = $this->getSchemaValidator()->validate($data, $this->getJsonSchema());
+    $schema ??= $this->getJsonSchema();
+    $result = $this->getSchemaValidator()->validate($data, $schema);
     if (!$result->isValid()) {
       $formatter = new ErrorFormatter();
       $errors = $formatter->formatKeyed($result->error());
