@@ -1,6 +1,6 @@
 services:
   reliefweb_import.commands:
     class: \Drupal\reliefweb_import\Drush\Commands\ReliefwebImport
-    arguments: ['@reliefweb_import.job_feeds_importer']
+    arguments: ['@config.factory', '@reliefweb_import.job_feeds_importer', '@plugin.manager.reliefweb_import.reliefweb_importer']
     tags:
       - { name: drush.command }

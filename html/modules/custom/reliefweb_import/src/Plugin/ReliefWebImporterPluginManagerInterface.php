@@ -7,4 +7,4 @@ namespace Drupal\reliefweb_import\Plugin;
 /**
  * Interface for the importer plugin manager.
  */
-interface ImporterPluginManagerInterface {}
+interface ReliefWebImporterPluginManagerInterface {}

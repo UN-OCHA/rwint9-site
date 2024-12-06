@@ -3,6 +3,6 @@ services:
     class: \Drupal\reliefweb_import\Service\JobFeedsImporter
     arguments: ['@database', '@entity_type.manager', '@account_switcher', '@http_client', '@logger.factory', '@state']
 
-  plugin.manager.reliefweb_import.importer:
-    class: Drupal\reliefweb_import\Plugin\ImporterPluginManager
+  plugin.manager.reliefweb_import.reliefweb_importer:
+    class: Drupal\reliefweb_import\Plugin\ReliefWebImporterPluginManager
     parent: default_plugin_manager

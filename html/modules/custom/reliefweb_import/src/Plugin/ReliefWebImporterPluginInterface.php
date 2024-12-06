@@ -9,7 +9,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Interface for the importer plugins.
  */
-interface ImporterPluginInterface {
+interface ReliefWebImporterPluginInterface {
 
   /**
    * Get the plugin label.
@@ -26,6 +26,14 @@ interface ImporterPluginInterface {
    *   The plugin type.
    */
   public function getPluginType(): string;
+
+  /**
+   * Check if the plugin is enabled.
+   *
+   * @return bool
+   *   TRUE if enabled.
+   */
+  public function enabled(): bool;
 
   /**
    * Get the plugin logger.
@@ -64,5 +72,45 @@ interface ImporterPluginInterface {
    *   TRUE if the batch import was successful.
    */
   public function importContent(int $limit = 50): bool;
+
+  /**
+   * Get the list of allowed extensions for the report attachments.
+   *
+   * @return array
+   *   List of allowed extensions.
+   */
+  public function getReportAttachmentAllowedExtensions(): array;
+
+  /**
+   * Get the allowed max size of the report attachments.
+   *
+   * @return int
+   *   Allowed max size in bytes.
+   */
+  public function getReportAttachmentAllowedMaxSize(): int;
+
+  /**
+   * Retrieve a Post API schema.
+   *
+   * @param string $bundle
+   *   Resource bundle.
+   *
+   * @return string
+   *   Schema.
+   */
+  public function getJsonSchema(string $bundle): string;
+
+  /**
+   * Generate a UUID for a string (ex: URL).
+   *
+   * @param string $string
+   *   String for which to generate a UUID.
+   * @param string|null $namespace
+   *   Optional namespace. Defaults to `Uuid::NAMESPACE_URL`.
+   *
+   * @return string
+   *   UUID.
+   */
+  public function generateUuid(string $string, ?string $namespace = NULL): string;
 
 }

@@ -7,12 +7,12 @@ namespace Drupal\reliefweb_import\Plugin;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
-use Drupal\reliefweb_import\Attribute\Importer;
+use Drupal\reliefweb_import\Attribute\ReliefWebImporter;
 
 /**
- * Plugin manager for the importer plugins.
+ * Plugin manager for the ReliefWeb importer plugins.
  */
-class ImporterPluginManager extends DefaultPluginManager implements ImporterPluginManagerInterface {
+class ReliefWebImporterPluginManager extends DefaultPluginManager implements ReliefWebImporterPluginManagerInterface {
 
   /**
    * {@inheritdoc}
@@ -26,8 +26,8 @@ class ImporterPluginManager extends DefaultPluginManager implements ImporterPlug
       'Plugin/ReliefWebImporter',
       $namespaces,
       $module_handler,
-      ImporterPluginInterface::class,
-      Importer::class
+      ReliefWebImporterPluginInterface::class,
+      ReliefWebImporter::class
     );
 
     $this->setCacheBackend($cache_backend, 'reliefweb_import_reliefweb_importer_plugins');
