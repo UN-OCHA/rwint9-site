@@ -82,7 +82,7 @@ function reliefweb_entities_entity_bundle_field_info_alter(array &$fields, Entit
  * Add bundle classes to nodes and terms to handle business logic.
  */
 function reliefweb_entities_entity_bundle_info_alter(&$bundles) {
-  $namespace = '\Drupal\reliefweb_entities\Entity';
+  $namespace = 'Drupal\reliefweb_entities\Entity';
 
   foreach ($bundles as $entity_type_id => $items) {
     foreach ($items as $bundle => $info) {
@@ -92,6 +92,8 @@ function reliefweb_entities_entity_bundle_info_alter(&$bundles) {
       }
       if ($class !== FALSE && is_subclass_of($class, BundleEntityInterface::class)) {
         $label = ucwords(str_replace(['_', '-'], ' ', $bundle));
+        // No leading \ otherwise EntityTypeRepository::getEntityTypeFromClass
+        // fails.
         $bundles[$entity_type_id][$bundle]['class'] = $class;
         $bundles[$entity_type_id][$bundle]['label'] = $label;
       }

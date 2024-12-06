@@ -61,6 +61,7 @@ module:
   ocha_ai: 0
   ocha_ai_chat: 0
   ocha_ai_tag: 0
+  ocha_entraid: 0
   ocha_content_classification: 0
   ocha_monitoring: 0
   openid_connect: 0
@@ -78,7 +79,6 @@ module:
   reliefweb_disaster_map: 0
   reliefweb_dsr: 0
   reliefweb_entities: 0
-  reliefweb_entraid: 0
   reliefweb_fields: 0
   reliefweb_files: 0
   reliefweb_form: 0

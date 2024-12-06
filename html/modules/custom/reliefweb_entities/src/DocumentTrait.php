@@ -4,6 +4,7 @@ namespace Drupal\reliefweb_entities;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Entity\EntityPublishedInterface;
+use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\Core\Field\EntityReferenceFieldItemList;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
@@ -390,6 +391,44 @@ trait DocumentTrait {
         $source->setRevisionUserId(2);
         $source->setRevisionCreationTime(time());
         $source->save();
+      }
+    }
+  }
+
+  /**
+   * Update the status to refused if any of the sources is blocked.
+   */
+  protected function updateModerationStatusFromSourceStatus() {
+    if (!$this->hasField('field_source') || $this->field_source->isEmpty()) {
+      return;
+    }
+
+    $blocked = [];
+    foreach ($this->field_source as $item) {
+      $source = $item->entity;
+      if (empty($source) || !($source instanceof Source)) {
+        continue;
+      }
+
+      if ($source->getModerationStatus() === 'blocked') {
+        $blocked[] = $source->label();
+      }
+    }
+
+    if (!empty($blocked)) {
+      $this->setModerationStatus('refused');
+
+      // Add a message to the revision log.
+      if ($this instanceof RevisionLogInterface) {
+        $message = 'Submissions from "' . implode('", "', $blocked) . '" are no longer allowed.';
+
+        $log = $this->getRevisionLogMessage();
+        if (empty($log)) {
+          $this->setRevisionLogMessage($message);
+        }
+        else {
+          $this->setRevisionLogMessage($message . ' ' . $log);
+        }
       }
     }
   }

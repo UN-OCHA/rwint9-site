@@ -927,6 +927,7 @@ class EntityHistory {
       'removed' => array_diff_key($previous, $current),
       'modified-training' => [],
       'modified-job' => [],
+      'modified-report' => [],
       'modified-notes' => [],
     ];
 
@@ -935,6 +936,7 @@ class EntityHistory {
       'removed' => $this->t('Removed'),
       'modified-training' => $this->t('Modified Training'),
       'modified-job' => $this->t('Modified Job'),
+      'modified-report' => $this->t('Modified Report'),
       'modified-notes' => $this->t('Modified Notes'),
     ];
 
@@ -951,7 +953,7 @@ class EntityHistory {
       $previous_item = $previous[$key];
       $current_item = $current[$key];
       // Rights change.
-      foreach (['job', 'training'] as $type) {
+      foreach (['job', 'training', 'report'] as $type) {
         if ($previous_item[$type] !== $current_item[$type]) {
           $item['change'] = new FormattableMarkup('@before &rarr; @after', [
             '@before' => UserPostingRightsHelper::renderRight($rights[$previous_item[$type]]),
@@ -995,9 +997,10 @@ class EntityHistory {
 
           // Add the rights when a user is added.
           if ($category === 'added') {
-            $markup[] = '(job: @job, training: @training)';
+            $markup[] = '(job: @job, training: @training, report: @report)';
             $replacements['@job'] = UserPostingRightsHelper::renderRight($rights[$item['job']]);
             $replacements['@training'] = UserPostingRightsHelper::renderRight($rights[$item['training']]);
+            $replacements['@report'] = UserPostingRightsHelper::renderRight($rights[$item['report']]);
           }
 
           // Add the rights changes.

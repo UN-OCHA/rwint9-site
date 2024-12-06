@@ -1,0 +1,27 @@
+uuid: 42dacb5f-f71a-4e37-858e-d4cf46729e39
+langcode: en
+status: true
+dependencies:
+  config:
+    - media.type.image_report
+    - node.type.report
+  module:
+    - media
+    - node
+    - reliefweb_files
+    - reliefweb_form
+id: contributor
+label: Contributor
+weight: 9
+is_admin: null
+permissions:
+  - 'access reliefweb private files'
+  - 'create image_report media'
+  - 'create report content'
+  - 'delete media'
+  - 'delete own image_report media'
+  - 'display source attention messages'
+  - 'edit own image_report media'
+  - 'edit own report content'
+  - 'update media'
+  - 'view own unpublished media'
