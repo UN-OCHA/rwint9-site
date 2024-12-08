@@ -1716,7 +1716,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
         /**
          * {@inheritdoc}
          */
-        public function process(array $data): ?ContentEntityInterface {
+        public function process(array $data, ?string $schema = NULL): ?ContentEntityInterface {
           return NULL;
         }
 

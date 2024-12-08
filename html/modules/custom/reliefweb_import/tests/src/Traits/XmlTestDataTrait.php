@@ -1,6 +1,6 @@
 <?php
 
-// phpcs:ignoreFile
+declare(strict_types=1);
 
 namespace Drupal\Tests\reliefweb_import\Traits;
 
@@ -11,8 +11,11 @@ trait XmlTestDataTrait {
 
   /**
    * Test data 1.
+   *
+   * @return string
+   *   XML data.
    */
-  private function getTestXml1() {
+  private function getTestXml1(): string {
     $year = date('Y') + 1;
     return <<<XML
 <?xml version="1.0" standalone="yes"?><channel><item>
@@ -61,8 +64,11 @@ XML;
 
   /**
    * Test data 2.
+   *
+   * @return string
+   *   XML data.
    */
-  private function getTestXml2() {
+  private function getTestXml2(): string {
     $year = date('Y') + 1;
     return <<<XML
 <?xml version="1.0" standalone="yes"?><channel><item>
@@ -110,8 +116,11 @@ XML;
 
   /**
    * Test data 3.
+   *
+   * @return string
+   *   XML data.
    */
-  private function getTestXml3() {
+  private function getTestXml3(): string {
     $year = date('Y') + 1;
 
     return <<<XML
@@ -127,8 +136,11 @@ XML;
 
   /**
    * Test data 4.
+   *
+   * @return string
+   *   XML data.
    */
-  private function getTestXml4() {
+  private function getTestXml4(): string {
     return <<<XML
 <?xml version="1.0" standalone="yes"?><channel><item>
  <link>https://www.aplitrak.com?adid=20</link>
@@ -148,8 +160,11 @@ XML;
 
   /**
    * Test data 5.
+   *
+   * @return string
+   *   XML data.
    */
-  private function getTestXml5() {
+  private function getTestXml5(): string {
     $year = date('Y') - 1;
 
     return <<<XML
@@ -173,8 +188,11 @@ XML;
    * Test data 6.
    *
    * City without country.
+   *
+   * @return string
+   *   XML data.
    */
-  private function getTestXml6() {
+  private function getTestXml6(): string {
     $year = date('Y') + 1;
 
     return <<<XML
@@ -197,8 +215,11 @@ XML;
    * Test data 7.
    *
    * How to apply too short.
+   *
+   * @return string
+   *   XML data.
    */
-  private function getTestXml7() {
+  private function getTestXml7(): string {
     $year = date('Y') + 1;
 
     return <<<XML

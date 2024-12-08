@@ -1,6 +1,6 @@
 <?php
 
-// phpcs:ignoreFile
+declare(strict_types=1);
 
 namespace Drupal\Tests\reliefweb_import\Unit\ExistingSite;
 
@@ -20,9 +20,9 @@ class LoggerStub implements LoggerChannelInterface {
   /**
    * Store the logs.
    *
-   * @var array.
+   * @var array
    */
-  protected $messages = [];
+  protected array $messages = [];
 
   /**
    * Sets the request stack.
@@ -30,7 +30,7 @@ class LoggerStub implements LoggerChannelInterface {
    * @param \Symfony\Component\HttpFoundation\RequestStack|null $requestStack
    *   The current request object.
    */
-  public function setRequestStack(RequestStack $requestStack = NULL) {
+  public function setRequestStack(?RequestStack $requestStack = NULL): void {
   }
 
   /**
@@ -39,7 +39,7 @@ class LoggerStub implements LoggerChannelInterface {
    * @param \Drupal\Core\Session\AccountInterface|null $current_user
    *   The current user object.
    */
-  public function setCurrentUser(AccountInterface $current_user = NULL) {
+  public function setCurrentUser(?AccountInterface $current_user = NULL): void {
   }
 
   /**
@@ -48,7 +48,7 @@ class LoggerStub implements LoggerChannelInterface {
    * @param array $loggers
    *   An array of arrays of \Psr\Log\LoggerInterface keyed by priority.
    */
-  public function setLoggers(array $loggers) {
+  public function setLoggers(array $loggers): void {
   }
 
   /**
@@ -59,18 +59,18 @@ class LoggerStub implements LoggerChannelInterface {
    * @param int $priority
    *   The priority of the logger being added.
    */
-  public function addLogger(LoggerInterface $logger, $priority = 0) {
+  public function addLogger(LoggerInterface $logger, $priority = 0): void {
   }
 
   /**
    * System is unusable.
    *
-   * @param string  $message
+   * @param \Stringable|string $message
+   *   Message.
    * @param mixed[] $context
-   *
-   * @return void
+   *   Context.
    */
-  public function emergency($message, array $context = array()): void {
+  public function emergency(\Stringable|string $message, array $context = []): void {
     $this->messages['emergency'][] = $message;
   }
 
@@ -80,12 +80,12 @@ class LoggerStub implements LoggerChannelInterface {
    * Example: Entire website down, database unavailable, etc. This should
    * trigger the SMS alerts and wake you up.
    *
-   * @param string  $message
+   * @param \Stringable|string $message
+   *   Message.
    * @param mixed[] $context
-   *
-   * @return void
+   *   Context.
    */
-  public function alert($message, array $context = array()): void {
+  public function alert(\Stringable|string $message, array $context = []): void {
     $this->messages['alert'][] = $message;
   }
 
@@ -94,25 +94,24 @@ class LoggerStub implements LoggerChannelInterface {
    *
    * Example: Application component unavailable, unexpected exception.
    *
-   * @param string  $message
+   * @param \Stringable|string $message
+   *   Message.
    * @param mixed[] $context
-   *
-   * @return void
+   *   Context.
    */
-  public function critical($message, array $context = array()): void {
+  public function critical(\Stringable|string $message, array $context = []): void {
     $this->messages['critical'][] = $message;
   }
 
   /**
-   * Runtime errors that do not require immediate action but should typically
-   * be logged and monitored.
+   * Runtime errors that do not require immediate action.
    *
-   * @param string  $message
+   * @param \Stringable|string $message
+   *   Message.
    * @param mixed[] $context
-   *
-   * @return void
+   *   Context.
    */
-  public function error($message, array $context = array()): void {
+  public function error(\Stringable|string $message, array $context = []): void {
     $this->messages['error'][] = $message;
   }
 
@@ -122,24 +121,24 @@ class LoggerStub implements LoggerChannelInterface {
    * Example: Use of deprecated APIs, poor use of an API, undesirable things
    * that are not necessarily wrong.
    *
-   * @param string  $message
+   * @param \Stringable|string $message
+   *   Message.
    * @param mixed[] $context
-   *
-   * @return void
+   *   Context.
    */
-  public function warning($message, array $context = array()): void {
+  public function warning(\Stringable|string $message, array $context = []): void {
     $this->messages['warning'][] = $message;
   }
 
   /**
    * Normal but significant events.
    *
-   * @param string  $message
+   * @param \Stringable|string $message
+   *   Message.
    * @param mixed[] $context
-   *
-   * @return void
+   *   Context.
    */
-  public function notice($message, array $context = array()): void {
+  public function notice(\Stringable|string $message, array $context = []): void {
     $this->messages['notice'][] = $message;
   }
 
@@ -148,39 +147,40 @@ class LoggerStub implements LoggerChannelInterface {
    *
    * Example: User logs in, SQL logs.
    *
-   * @param string  $message
+   * @param \Stringable|string $message
+   *   Message.
    * @param mixed[] $context
-   *
-   * @return void
+   *   Context.
    */
-  public function info($message, array $context = array()): void {
+  public function info(\Stringable|string $message, array $context = []): void {
     $this->messages['info'][] = $message;
   }
 
   /**
    * Detailed debug information.
    *
-   * @param string  $message
+   * @param \Stringable|string $message
+   *   Message.
    * @param mixed[] $context
-   *
-   * @return void
+   *   Context.
    */
-  public function debug($message, array $context = array()): void {
+  public function debug(\Stringable|string $message, array $context = []): void {
     $this->messages['debug'][] = $message;
   }
 
   /**
    * Logs with an arbitrary level.
    *
-   * @param mixed   $level
-   * @param string  $message
+   * @param string $level
+   *   Log level.
+   * @param \Stringable|string $message
+   *   Message.
    * @param mixed[] $context
-   *
-   * @return void
+   *   Context.
    *
    * @throws \Psr\Log\InvalidArgumentException
    */
-  public function log($level, $message, array $context = array()): void {
+  public function log($level, \Stringable|string $message, array $context = []): void {
     $this->messages[$level][] = $message;
   }
 
@@ -193,7 +193,7 @@ class LoggerStub implements LoggerChannelInterface {
    * @return string
    *   Concatenated logged messages.
    */
-  public function getMessages($type) {
+  public function getMessages(string $type): string {
     return implode("\n", $this->messages[$type] ?? []);
   }
 
@@ -203,16 +203,17 @@ class LoggerStub implements LoggerChannelInterface {
    * @param string $type
    *   Message type (ex: error).
    *
-   * @return bool.
+   * @return bool
+   *   TRUE if the logger has messages.
    */
-  public function hasMessages($type) {
+  public function hasMessages(string $type): bool {
     return !empty($this->messages[$type]);
   }
 
   /**
    * Reset messages.
    */
-  public function resetMessages() {
+  public function resetMessages(): void {
     $this->messages = [];
   }
 

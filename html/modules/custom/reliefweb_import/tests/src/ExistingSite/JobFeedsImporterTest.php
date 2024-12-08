@@ -1,16 +1,23 @@
 <?php
 
-// phpcs:ignoreFile
+declare(strict_types=1);
 
 namespace Drupal\Tests\reliefweb_import\ExistingSite;
 
+use Drupal\Core\Database\Connection;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Session\AccountSwitcherInterface;
+use Drupal\Core\State\StateInterface;
+use Drupal\Tests\reliefweb_import\Traits\XmlTestDataTrait;
+use Drupal\Tests\reliefweb_import\Unit\ExistingSite\JobFeedsImporterWrapper;
+use Drupal\Tests\reliefweb_import\Unit\ExistingSite\LoggerStub;
+use Drupal\reliefweb_entities\Entity\Job;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
-use Drupal\Tests\reliefweb_import\Traits\XmlTestDataTrait;
-use Drupal\Tests\reliefweb_import\Unit\ExistingSite\LoggerStub;
-use Drupal\Tests\reliefweb_import\Unit\ExistingSite\ReliefwebImportCommandWrapper;
 use Drupal\user\Entity\User;
 use GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Handler\MockHandler;
@@ -22,48 +29,60 @@ use weitzman\DrupalTestTraits\ExistingSiteBase;
 /**
  * Tests reliefweb importer.
  *
- * @covers \Drupal\reliefweb_import\Command\ReliefwebImportCommand
+ * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter
  */
-class DrushCommandsTest extends ExistingSiteBase {
+class JobFeedsImporterTest extends ExistingSiteBase {
 
   use XmlTestDataTrait;
 
   /**
    * The database connection.
+   *
+   * @var \Drupal\Core\Database\Connection
    */
-  protected $database;
+  protected Connection $database;
 
   /**
    * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $entityTypeManager;
+  protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
    * The account switcher.
+   *
+   * @var \Drupal\Core\Session\AccountSwitcherInterface
    */
-  protected $accountSwitcher;
+  protected AccountSwitcherInterface $accountSwitcher;
 
   /**
    * An http client.
+   *
+   * @var \GuzzleHttp\ClientInterface
    */
-  protected $httpClient;
+  protected ClientInterface $httpClient;
 
   /**
    * The logger factory.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface
    */
-  protected $loggerFactory;
+  protected LoggerChannelFactoryInterface $loggerFactory;
 
   /**
    * The state store.
+   *
+   * @var \Drupal\Core\State\StateInterface
    */
-  protected $state;
+  protected StateInterface $state;
 
   /**
    * Reliefweb importer.
    *
-   * @var \Drupal\reliefweb_import\Command\ReliefwebImportCommand
+   * @var \Drupal\Tests\reliefweb_import\Unit\ExistingSite\JobFeedsImporterWrapper
    */
-  protected $reliefwebImporter;
+  protected JobFeedsImporterWrapper $jobImporter;
 
   /**
    * {@inheritdoc}
@@ -93,14 +112,23 @@ class DrushCommandsTest extends ExistingSiteBase {
 
     $handlerStack = HandlerStack::create($mock);
     $this->httpClient = new Client(['handler' => $handlerStack]);
-    $this->reliefwebImporter = new ReliefwebImportCommandWrapper($this->database, $this->entityTypeManager, $this->accountSwitcher, $this->httpClient, $this->loggerFactory, $this->state);
-    $this->reliefwebImporter->setLogger(new LoggerStub());
+    $this->jobImporter = new JobFeedsImporterWrapper(
+      $this->database,
+      $this->entityTypeManager,
+      $this->accountSwitcher,
+      $this->httpClient,
+      $this->loggerFactory,
+      $this->state,
+    );
+    $this->jobImporter->setLogger(new LoggerStub());
   }
 
   /**
    * Test XML import.
+   *
+   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::importJobs
    */
-  public function testSourceImport() {
+  public function testSourceImport(): void {
     // Create system user.
     if (!User::load(2)) {
       $this->createUser([], 'System user', TRUE, [
@@ -160,14 +188,14 @@ class DrushCommandsTest extends ExistingSiteBase {
         'tid' => 999991,
         'field_iso3' => [
           'value' => 'AFG',
-        ]
+        ],
       ],
       [
         'vocabulary' => 'country',
         'tid' => 999992,
         'field_iso3' => [
           'value' => 'COL',
-        ]
+        ],
       ],
     ];
 
@@ -186,7 +214,7 @@ class DrushCommandsTest extends ExistingSiteBase {
 
     // Import jobs.
     // Data from getTestXml1().
-    $this->reliefwebImporter->jobs();
+    $this->jobImporter->importJobs();
     $job = $this->getJobFromImportUrl('https://www.aplitrak.com?adid=1');
     $this->assertStringContainsStringIgnoringCase('imported from', $job->getRevisionLogMessage());
     $this->assertSame($job->title->value, 'Head of Supply Chain');
@@ -195,66 +223,66 @@ class DrushCommandsTest extends ExistingSiteBase {
 
     // Import jobs again, triggering updates.
     // Data from getTestXml2().
-    $this->reliefwebImporter->getLogger()->resetMessages();
-    $this->reliefwebImporter->fetchJobs($source);
+    $this->jobImporter->getLogger()->resetMessages();
+    $this->jobImporter->fetchJobs($source);
     $this->assertStringContainsStringIgnoringCase('updated from', $job->getRevisionLogMessage());
     $this->assertSame($job->title->value, 'The head of Supply Chain');
 
     // Import job without title.
     // Data from getTestXml3().
-    $this->reliefwebImporter->getLogger()->resetMessages();
-    $this->reliefwebImporter->fetchJobs($source);
-    $this->assertStringContainsStringIgnoringCase('Job found with empty title.', $this->reliefwebImporter->getLogger()->getMessages('error'));
+    $this->jobImporter->getLogger()->resetMessages();
+    $this->jobImporter->fetchJobs($source);
+    $this->assertStringContainsStringIgnoringCase('Job found with empty title.', $this->jobImporter->getLogger()->getMessages('error'));
 
     // Import job in the past: allowed, no errors or warnings.
     // Data from getTestXml4().
-    $this->reliefwebImporter->getLogger()->resetMessages();
-    $this->reliefwebImporter->fetchJobs($source);
-    $this->assertFalse($this->reliefwebImporter->getLogger()->hasMessages('error'));
-    $this->assertFalse($this->reliefwebImporter->getLogger()->hasMessages('warning'));
+    $this->jobImporter->getLogger()->resetMessages();
+    $this->jobImporter->fetchJobs($source);
+    $this->assertFalse($this->jobImporter->getLogger()->hasMessages('error'));
+    $this->assertFalse($this->jobImporter->getLogger()->hasMessages('warning'));
 
     // Import job in the past.
     // Data from getTestXml5().
     // @todo check another type of error.
-    $this->reliefwebImporter->getLogger()->resetMessages();
-    $this->reliefwebImporter->fetchJobs($source);
-    $this->assertFalse($this->reliefwebImporter->getLogger()->hasMessages('error'));
-    $this->assertFalse($this->reliefwebImporter->getLogger()->hasMessages('warning'));
+    $this->jobImporter->getLogger()->resetMessages();
+    $this->jobImporter->fetchJobs($source);
+    $this->assertFalse($this->jobImporter->getLogger()->hasMessages('error'));
+    $this->assertFalse($this->jobImporter->getLogger()->hasMessages('warning'));
 
     // Import job with city, no country: city should be empty.
     // Data from getTestXml6().
-    $this->reliefwebImporter->getLogger()->resetMessages();
-    $this->reliefwebImporter->fetchJobs($source);
-    $this->assertFalse($this->reliefwebImporter->getLogger()->hasMessages('error'));
-    $this->assertFalse($this->reliefwebImporter->getLogger()->hasMessages('warning'));
+    $this->jobImporter->getLogger()->resetMessages();
+    $this->jobImporter->fetchJobs($source);
+    $this->assertFalse($this->jobImporter->getLogger()->hasMessages('error'));
+    $this->assertFalse($this->jobImporter->getLogger()->hasMessages('warning'));
     $job = $this->getJobFromImportUrl('https://www.aplitrak.com?adid=21');
     $this->assertTrue($job->field_city->isEmpty());
 
     // Import job with too short how to apply.
     // Data from getTestXml7().
-    $this->reliefwebImporter->getLogger()->resetMessages();
-    $this->reliefwebImporter->fetchJobs($source);
-    $this->assertFalse($this->reliefwebImporter->getLogger()->hasMessages('error'));
-    $this->assertTrue($this->reliefwebImporter->getLogger()->hasMessages('warning'));
-    $this->assertStringContainsStringIgnoringCase('Invalid field size for field_how_to_apply, 13 characters found, has to be between 100 and 10000', $this->reliefwebImporter->getLogger()->getMessages('warning'));
+    $this->jobImporter->getLogger()->resetMessages();
+    $this->jobImporter->fetchJobs($source);
+    $this->assertFalse($this->jobImporter->getLogger()->hasMessages('error'));
+    $this->assertTrue($this->jobImporter->getLogger()->hasMessages('warning'));
+    $this->assertStringContainsStringIgnoringCase('Invalid field size for field_how_to_apply, 13 characters found, has to be between 100 and 10000', $this->jobImporter->getLogger()->getMessages('warning'));
 
     // Client exception.
-    $this->reliefwebImporter->getLogger()->resetMessages();
-    $this->reliefwebImporter->jobs();
-    $this->assertTrue($this->reliefwebImporter->getLogger()->hasMessages('error'));
-    $this->assertStringContainsStringIgnoringCase('Client Exception', $this->reliefwebImporter->getLogger()->getMessages('error'));
+    $this->jobImporter->getLogger()->resetMessages();
+    $this->jobImporter->importJobs();
+    $this->assertTrue($this->jobImporter->getLogger()->hasMessages('error'));
+    $this->assertStringContainsStringIgnoringCase('Client Exception', $this->jobImporter->getLogger()->getMessages('error'));
 
     // Request exception.
-    $this->reliefwebImporter->getLogger()->resetMessages();
-    $this->reliefwebImporter->jobs();
-    $this->assertTrue($this->reliefwebImporter->getLogger()->hasMessages('error'));
-    $this->assertStringContainsStringIgnoringCase('Request Exception', $this->reliefwebImporter->getLogger()->getMessages('error'));
+    $this->jobImporter->getLogger()->resetMessages();
+    $this->jobImporter->importJobs();
+    $this->assertTrue($this->jobImporter->getLogger()->hasMessages('error'));
+    $this->assertStringContainsStringIgnoringCase('Request Exception', $this->jobImporter->getLogger()->getMessages('error'));
 
     // General exception.
-    $this->reliefwebImporter->getLogger()->resetMessages();
-    $this->reliefwebImporter->jobs();
-    $this->assertTrue($this->reliefwebImporter->getLogger()->hasMessages('error'));
-    $this->assertStringContainsStringIgnoringCase('General Exception', $this->reliefwebImporter->getLogger()->getMessages('error'));
+    $this->jobImporter->getLogger()->resetMessages();
+    $this->jobImporter->importJobs();
+    $this->assertTrue($this->jobImporter->getLogger()->hasMessages('error'));
+    $this->assertStringContainsStringIgnoringCase('General Exception', $this->jobImporter->getLogger()->getMessages('error'));
   }
 
   /**
@@ -266,13 +294,12 @@ class DrushCommandsTest extends ExistingSiteBase {
    * @return \Drupal\reliefweb_entities\Entity\Job|null
    *   Job entity.
    */
-  protected function getJobFromImportUrl($url) {
-    $query = $this->entityTypeManager->getStorage('node')->getQuery();
-    $query->condition('type', 'job');
-    $query->condition('field_import_guid', $url);
-    $nids = $query->accessCheck(TRUE)->execute();
-    $jobs = $this->entityTypeManager->getStorage('node')->loadMultiple($nids);
-    return reset($jobs);
+  protected function getJobFromImportUrl(string $url): ?Job {
+    $jobs = $this->entityTypeManager->getStorage('node')->loadByProperties([
+      'type' => 'job',
+      'field_import_guid' => $url,
+    ]);
+    return reset($jobs) ?: NULL;
   }
 
 }
