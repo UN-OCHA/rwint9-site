@@ -171,11 +171,6 @@ rw-document:
     theme:
       components/rw-document/rw-document.css: {}
 
-rw-dsr:
-  css:
-    theme:
-      components/rw-dsr/rw-dsr.css: {}
-
 rw-entity-meta:
   css:
     theme:

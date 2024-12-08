@@ -57,7 +57,6 @@ class Country extends Term implements BundleEntityInterface, EntityModeratedInte
    */
   public function getPageSections() {
     $sections = [];
-    $sections['digital-sitrep'] = $this->getDigitalSitrepSection();
 
     $queries = [];
 
@@ -119,20 +118,6 @@ class Country extends Term implements BundleEntityInterface, EntityModeratedInte
         ],
       ],
     ];
-  }
-
-  /**
-   * Get the Digital Situation Report for the country.
-   *
-   * @return array
-   *   Render array for the Digital Situation Report section.
-   */
-  protected function getDigitalSitrepSection() {
-    $client = \Drupal::service('reliefweb_dsr.client');
-    $iso3 = $this->field_iso3->value;
-    $ongoing = $this->getModerationStatus() === 'ongoing';
-
-    return $client->getDigitalSitrepBuild($iso3, $ongoing);
   }
 
   /**
