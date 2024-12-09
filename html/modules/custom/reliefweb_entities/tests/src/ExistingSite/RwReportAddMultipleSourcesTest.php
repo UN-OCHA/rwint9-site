@@ -236,6 +236,7 @@ class RwReportAddMultipleSourcesTest extends RwReportBase {
    * Test adding a report - blocked.
    */
   public function testAddReportAsContributorBlockedWithRandom() {
+    $site_name = \Drupal::config('system.site')->get('name');
     $title = $this->randomMachineName(32);
 
     $this->drupalLogin($this->contributor);
