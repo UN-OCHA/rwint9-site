@@ -246,34 +246,6 @@ function reliefweb_job_tagger_node_presave(EntityInterface $node) {
     $node->set('reliefweb_job_tagger_status', '');
     return;
   }
-
-  // Check permissions.
-  $user = \Drupal::currentUser();
-  if ($user->hasPermission('bypass ocha ai job tag')) {
-    return;
-  }
-
-  if (!$user->hasPermission('enforce ocha ai job tag')) {
-    return;
-  }
-
-  // Only queue it when fields are empty.
-  if (!$node->field_career_categories->isEmpty()) {
-    return;
-  }
-
-  if (!$node->field_theme->isEmpty()) {
-    return;
-  }
-
-  // Queue node when status is empty.
-  if ($node->reliefweb_job_tagger_status->isEmpty()) {
-    $node->set('reliefweb_job_tagger_status', 'queue');
-
-    $log_message = $node->getRevisionLogMessage();
-    $log_message .= (empty($log_message) ? '' : ' ') . 'Job has been queued for tagging.';
-    $node->setRevisionLogMessage($log_message);
-  }
 }
 
 /**
