@@ -198,7 +198,7 @@ function reliefweb_job_tagger_node_presave(EntityInterface $node) {
     return;
   }
 
-  if ($node instanceof Node) {
+  if (!$node instanceof Node) {
     return;
   }
 }
