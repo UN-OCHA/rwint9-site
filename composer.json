@@ -110,6 +110,7 @@
     "prefer-stable": true,
     "config": {
         "bin-dir": "vendor/bin/",
+        "discard-changes": true,
         "sort-packages": true,
         "allow-plugins": {
             "composer/installers": true,
