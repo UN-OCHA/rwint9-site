@@ -211,72 +211,6 @@ function reliefweb_job_tagger_node_presave(EntityInterface $node) {
   if (\Drupal::isConfigSyncing()) {
     return;
   }
-
-  if (!$node instanceof Node) {
-    return;
-  }
-
-  if ($node->bundle() != 'job') {
-    return;
-  }
-
-  // Skip queued and processed nodes.
-  if (!$node->hasField('reliefweb_job_tagger_status')) {
-    return;
-  }
-
-  // Track changes to AI fields.
-  reliefweb_job_tagger_log_manual_changes_to_tagging($node);
-
-  // Already queued, nothing left to do.
-  if ($node->reliefweb_job_tagger_status->value == 'queued' || $node->reliefweb_job_tagger_status->value == 'processed') {
-    return;
-  }
-
-  // Skipped, nothing to do.
-  if ($node->reliefweb_job_tagger_status->value == 'skipped') {
-    return;
-  }
-
-  // If queue it was queued on previous save.
-  if ($node->reliefweb_job_tagger_status->value == 'queue') {
-    // Mark it as queued.
-    $node->set('reliefweb_job_tagger_status', 'queued');
-    return;
-  }
-
-  if ($node->moderation_status->value != 'pending') {
-    $node->set('reliefweb_job_tagger_status', '');
-    return;
-  }
-
-  // Check permissions.
-  $user = \Drupal::currentUser();
-  if ($user->hasPermission('bypass ocha ai job tag')) {
-    return;
-  }
-
-  if (!$user->hasPermission('enforce ocha ai job tag')) {
-    return;
-  }
-
-  // Only queue it when fields are empty.
-  if (!$node->field_career_categories->isEmpty()) {
-    return;
-  }
-
-  if (!$node->field_theme->isEmpty()) {
-    return;
-  }
-
-  // Queue node when status is empty.
-  if ($node->reliefweb_job_tagger_status->isEmpty()) {
-    $node->set('reliefweb_job_tagger_status', 'queue');
-
-    $log_message = $node->getRevisionLogMessage();
-    $log_message .= (empty($log_message) ? '' : ' ') . 'Job has been queued for tagging.';
-    $node->setRevisionLogMessage($log_message);
-  }
 }
 
 /**
@@ -309,18 +243,6 @@ function reliefweb_job_tagger_menu_local_tasks_alter(&$data, $route_name, Refina
   $user = \Drupal::currentUser();
   if (!$user->hasPermission('ocha ai job tag requeue job')) {
     $data['tabs'][0]['reliefweb_job_tagger.requeue']['#access'] = FALSE;
-    return;
-  }
-}
-
-/**
- * Check for manual changes to the AI tagging and log them.
- *
- * @param \Drupal\Entity\EntityInterface $entity
- *   Changed entity.
- */
-function reliefweb_job_tagger_log_manual_changes_to_tagging(EntityInterface $entity) {
-  if (!isset($entity->original) || !$entity->original->hasField('reliefweb_job_tagger_status')) {
     return;
   }
 }
