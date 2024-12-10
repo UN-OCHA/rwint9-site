@@ -224,28 +224,6 @@ function reliefweb_job_tagger_node_presave(EntityInterface $node) {
   if (!$node->hasField('reliefweb_job_tagger_status')) {
     return;
   }
-
-  // Already queued, nothing left to do.
-  if ($node->reliefweb_job_tagger_status->value == 'queued' || $node->reliefweb_job_tagger_status->value == 'processed') {
-    return;
-  }
-
-  // Skipped, nothing to do.
-  if ($node->reliefweb_job_tagger_status->value == 'skipped') {
-    return;
-  }
-
-  // If queue it was queued on previous save.
-  if ($node->reliefweb_job_tagger_status->value == 'queue') {
-    // Mark it as queued.
-    $node->set('reliefweb_job_tagger_status', 'queued');
-    return;
-  }
-
-  if ($node->moderation_status->value != 'pending') {
-    $node->set('reliefweb_job_tagger_status', '');
-    return;
-  }
 }
 
 /**
