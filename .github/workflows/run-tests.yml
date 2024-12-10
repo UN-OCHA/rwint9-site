@@ -147,8 +147,8 @@ jobs:
         uses: cafuego/command-output@main
         with:
           run: |
-            docker cp "$(docker compose -f tests/docker-compose.yml ps -q drupal)":/srv/www/html/build/logs/clover.xml .
-            docker cp "$(docker compose -f tests/docker-compose.yml ps -q drupal)":/srv/www/html/build/output .
+            docker compose -f tests/docker-compose.yml cp drupal:/srv/www/html/build/logs/clover.xml .
+            docker compose -f tests/docker-compose.yml cp drupal:/srv/www/html/build .
 
       - name: Attach Artifacts
         id: artifacts
@@ -156,7 +156,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: browsertest-output
-          path: output/**
+          path: |
+            build/
+            output/
 
       - name: Monitor coverage
         uses: slavcodev/coverage-monitor-action@v1
