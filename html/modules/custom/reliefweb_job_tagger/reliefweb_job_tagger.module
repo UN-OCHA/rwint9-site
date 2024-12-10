@@ -215,15 +215,6 @@ function reliefweb_job_tagger_node_presave(EntityInterface $node) {
   if (!$node instanceof Node) {
     return;
   }
-
-  if ($node->bundle() != 'job') {
-    return;
-  }
-
-  // Skip queued and processed nodes.
-  if (!$node->hasField('reliefweb_job_tagger_status')) {
-    return;
-  }
 }
 
 /**
