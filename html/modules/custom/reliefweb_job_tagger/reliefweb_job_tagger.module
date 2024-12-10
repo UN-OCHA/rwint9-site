@@ -190,6 +190,20 @@ function reliefweb_job_tagger_validate_mandatory_fields($form, FormStateInterfac
 }
 
 /**
+ * Implements hook_module_implements_alter().
+ */
+function reliefweb_job_tagger_module_implements_alter(&$implementations, $hook) {
+  switch ($hook) {
+    // Move our hook_entity_type_alter() implementation to the end of the list.
+    case 'node_presave':
+      $group = $implementations['reliefweb_job_tagger'];
+      unset($implementations['reliefweb_job_tagger']);
+      $implementations['reliefweb_job_tagger'] = $group;
+      break;
+  }
+}
+
+/**
  * Implements hook_ENTITY_TYPE_presave().
  */
 function reliefweb_job_tagger_node_presave(EntityInterface $node) {
