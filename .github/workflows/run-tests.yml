@@ -145,12 +145,11 @@ jobs:
 
       - name: Attach Artifacts
         id: artifacts
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: browsertest-output
           path: output/
-        env:
-          fail-fast: true
 
       - name: Monitor coverage
         uses: slavcodev/coverage-monitor-action@v1
