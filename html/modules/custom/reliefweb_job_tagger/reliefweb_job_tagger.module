@@ -211,10 +211,6 @@ function reliefweb_job_tagger_node_presave(EntityInterface $node) {
   if (\Drupal::isConfigSyncing()) {
     return;
   }
-
-  if (!$node instanceof Node) {
-    return;
-  }
 }
 
 /**
