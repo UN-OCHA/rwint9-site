@@ -190,6 +190,20 @@ function reliefweb_job_tagger_validate_mandatory_fields($form, FormStateInterfac
 }
 
 /**
+ * Implements hook_ENTITY_TYPE_presave().
+ */
+function reliefweb_job_tagger_node_presave(EntityInterface $node) {
+  // We don't want to react to configuration imports.
+  if (\Drupal::isConfigSyncing()) {
+    return;
+  }
+
+  if ($node instanceof Node) {
+    return;
+  }
+}
+
+/**
  * Implements hook_menu_local_tasks_alter().
  */
 function reliefweb_job_tagger_menu_local_tasks_alter(&$data, $route_name, RefinableCacheableDependencyInterface &$cacheability) {
