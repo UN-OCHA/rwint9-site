@@ -323,39 +323,6 @@ function reliefweb_job_tagger_log_manual_changes_to_tagging(EntityInterface $ent
   if (!isset($entity->original) || !$entity->original->hasField('reliefweb_job_tagger_status')) {
     return;
   }
-  $original = $entity->original;
-
-  // Skip if the original was not processed by the AI.
-  if ($original->reliefweb_job_tagger_status->value !== 'processed') {
-    return;
-  }
-
-  $editor = UserHelper::userHasRoles(['editor']);
-  $logger = \Drupal::logger('reliefweb_job_tagger');
-
-  $fields = [
-    'field_theme',
-    'field_career_categories',
-  ];
-
-  foreach ($fields as $field) {
-    if ($entity->hasField($field) && !$entity->get($field)->equals($original->get($field))) {
-      $old = [];
-      $new = [];
-      foreach ($original->get($field) as $item) {
-        $old[] = $item->entity?->label() ?? $item->target_id;
-      }
-      foreach ($entity->get($field) as $item) {
-        $new[] = $item->entity?->label() ?? $item->target_id;
-      }
-      $logger->info(strtr('Manual change to the @field tagging by @user: @old --> @new', [
-        '@field' => $field,
-        '@user' => $editor ? 'editor' : 'non editor',
-        '@old' => implode(', ', $old),
-        '@new' => implode(', ', $new),
-      ]));
-    }
-  }
 }
 
 /**
