@@ -61,8 +61,8 @@ module:
   ocha_ai: 0
   ocha_ai_chat: 0
   ocha_ai_tag: 0
-  ocha_entraid: 0
   ocha_content_classification: 0
+  ocha_entraid: 0
   ocha_monitoring: 0
   openid_connect: 0
   openid_connect_windows_aad: 0
@@ -84,7 +84,6 @@ module:
   reliefweb_guidelines: 0
   reliefweb_homepage: 0
   reliefweb_import: 0
-  reliefweb_job_tagger: 0
   reliefweb_meta: 0
   reliefweb_moderation: 0
   reliefweb_reporting: 0
