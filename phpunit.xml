@@ -11,7 +11,9 @@
          beStrictAboutChangesToGlobalState="true"
          failOnWarning="true"
          printerClass="\Drupal\Tests\Listeners\HtmlOutputPrinter"
-         cacheResult="false">
+         cacheResult="false"
+         processIsolation="true"
+  >
   <php>
     <!-- Set error reporting to E_ALL. -->
     <ini name="error_reporting" value="32767"/>
