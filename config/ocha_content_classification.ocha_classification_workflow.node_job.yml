@@ -16,8 +16,6 @@ fields:
       enabled: true
     field_how_to_apply:
       enabled: false
-    reliefweb_job_tagger_info:
-      enabled: false
   classifiable:
     field_career_categories:
       enabled: true
