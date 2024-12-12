@@ -85,6 +85,42 @@
     },
 
     /**
+     * Create a filter for users.
+     */
+    createUserSelect: function () {
+      let data = this.getFieldData();
+      let name = 'name';
+
+      var select = document.createElement('select');
+      select.setAttribute('data-name', name);
+
+      var span = document.createElement('span');
+      span.appendChild(document.createTextNode(name));
+
+      var label = document.createElement('label');
+      label.appendChild(span);
+
+      var option = document.createElement('option');
+      option.appendChild(document.createTextNode(t('Any')));
+      option.setAttribute('value', 'all');
+      option.setAttribute('selected', '');
+      select.appendChild(option);
+
+      // List content in reverse order (most recently added first).
+      for (var i = data.length - 1; i >= 0; i--) {
+        var option = document.createElement('option');
+        option.appendChild(document.createTextNode(data[i].name));
+        option.setAttribute('value', data[i].name);
+        select.appendChild(option);
+      }
+
+      label.appendChild(select);
+      label.className = name;
+
+      return label;
+    },
+
+    /**
      * Create the user notes field.
      */
     createEntryNotes: function (data, disabled) {
@@ -118,6 +154,7 @@
       container.setAttribute('data-job', data.job);
       container.setAttribute('data-training', data.training);
       container.setAttribute('data-report', data.report);
+      container.setAttribute('data-name', data.name);
 
       // User info.
       var info = document.createElement('div');
@@ -208,6 +245,7 @@
       container.setAttribute('data-job', 'all');
       container.setAttribute('data-training', 'all');
       container.setAttribute('data-report', 'all');
+      container.setAttribute('data-name', 'all');
 
       var title = document.createElement('span');
       title.appendChild(document.createTextNode(t('Filter: ')));
@@ -217,6 +255,9 @@
       container.appendChild(this.createSelect('job', '', false, true));
       container.appendChild(this.createSelect('training', '', false, true));
       container.appendChild(this.createSelect('report', '', false, true));
+
+      // User filter.
+      container.appendChild(this.createUserSelect());
 
       return container;
     },
@@ -516,7 +557,7 @@
         var name = target.getAttribute('data-name');
 
         // Update the rights attributes of the user row.
-        if (name === 'job' || name === 'training' || name === 'report') {
+        if (name === 'job' || name === 'training' || name === 'report' || name === 'name') {
           var parent = target.parentNode.parentNode;
 
           // If the parent is not the filter container, then it's a select
@@ -529,6 +570,17 @@
           parent.setAttribute('data-' + name, target.value);
           parent.setAttribute('data-modified', '');
           this.updateData();
+
+          // Filter on user name.
+          if (parent.hasAttribute('data-filters') && name === 'name') {
+            let grandParent = parent.parentNode;
+            if (grandParent.querySelector('li[data-user-filtered]')) {
+              grandParent.querySelector('li[data-user-filtered]').removeAttribute('data-user-filtered');
+            }
+            if (target.value !== 'all') {
+              grandParent.querySelector('li[data-name="' + target.value + '"]').setAttribute('data-user-filtered', '');
+            }
+          }
         }
       }
     },

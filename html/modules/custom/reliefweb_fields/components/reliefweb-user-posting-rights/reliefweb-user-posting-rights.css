@@ -41,9 +41,18 @@
   flex-wrap: wrap;
   align-items: center;
 }
+
 .field--type-reliefweb-user-posting-rights div[data-filters][data-job="all"][data-training="all"][data-report="all"] ~ ul li {
   display: flex;
 }
+
+.field--type-reliefweb-user-posting-rights div[data-filters]:not([data-name="all"]) ~ ul li {
+  display: none !important;
+}
+.field--type-reliefweb-user-posting-rights div[data-filters]:not([data-name="all"]) ~ ul li[data-user-filtered] {
+  display: flex !important;
+}
+
 .field--type-reliefweb-user-posting-rights div[data-filters][data-job="0"] ~ ul li[data-job="0"] {
   display: flex;
 }
