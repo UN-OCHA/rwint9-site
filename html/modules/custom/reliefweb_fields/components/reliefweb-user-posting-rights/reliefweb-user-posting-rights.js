@@ -106,8 +106,9 @@
       option.setAttribute('selected', '');
       select.appendChild(option);
 
-      // List content in reverse order (most recently added first).
-      for (var i = data.length - 1; i >= 0; i--) {
+      // List alphabetically.
+      data = data.sort((a, b) => a.name.localeCompare(b.name));
+      for (var i = 0; i < data.length; i++) {
         var option = document.createElement('option');
         option.appendChild(document.createTextNode(data[i].name));
         option.setAttribute('value', data[i].name);
