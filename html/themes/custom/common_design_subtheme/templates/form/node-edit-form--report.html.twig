@@ -45,6 +45,7 @@
   }%}
 
   {% set submission_sections = {
+    'editorial-flags': 'Notify'|t,
     'actions': 'Save'|t,
     'edit-revision-information': 'Revisions'|t,
   }%}
@@ -126,6 +127,11 @@
     <legend>{% trans %}Editorial flags{% endtrans %}</legend>
     {{ form.field_bury }}
     {{ form.field_feature }}
+    {{ form.field_notify }}
+  </fieldset>
+{% else %}
+  <fieldset id="editorial-flags">
+    <legend>{% trans %}Notify{% endtrans %}</legend>
     {{ form.field_notify }}
   </fieldset>
 {% endif %}

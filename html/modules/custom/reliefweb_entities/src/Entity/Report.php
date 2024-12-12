@@ -242,8 +242,15 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
       }
     }
 
+    // Update the entity status based on the user posting rights.
+    $this->updateModerationStatusFromPostingRights();
+
     // Change the status to `embargoed` if there is an embargo date.
-    if (!empty($this->field_embargo_date->value) && $this->getModerationStatus() !== 'draft') {
+    if (!empty($this->field_embargo_date->value) && !in_array($this->getModerationStatus(), [
+      'draft',
+      'pending',
+      'refused',
+    ])) {
       $this->setModerationStatus('embargoed');
 
       $message = strtr('Embargoed (to be automatically published on @date).', [
@@ -257,9 +264,6 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
 
     // Prepare notifications.
     $this->preparePublicationNotification();
-
-    // Update the entity status based on the user posting rights.
-    $this->updateModerationStatusFromPostingRights();
 
     // Update the entity status based on the source(s) moderation status.
     $this->updateModerationStatusFromSourceStatus();

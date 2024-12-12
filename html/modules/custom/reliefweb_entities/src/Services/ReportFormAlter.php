@@ -465,7 +465,6 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     // Hide fields.
     $form['field_bury']['#access'] = FALSE;
     $form['field_feature']['#access'] = FALSE;
-    $form['field_notify']['#access'] = FALSE;
 
     $form['field_headline']['#access'] = FALSE;
     $form['field_headline_title']['#access'] = FALSE;
