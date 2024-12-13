@@ -25,3 +25,4 @@ permissions:
   - 'edit own report content'
   - 'update media'
   - 'view own unpublished media'
+  - 'view report revisions'
