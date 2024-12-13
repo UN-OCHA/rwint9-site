@@ -87,7 +87,7 @@
     /**
      * Create a filter for users.
      */
-    createUserSelect: function () {
+    createUserFilter: function () {
       let name = 'name';
 
       var select = document.createElement('input');
@@ -95,7 +95,7 @@
       select.setAttribute('data-name', name);
 
       var span = document.createElement('span');
-      span.appendChild(document.createTextNode(name));
+      span.appendChild(document.createTextNode(t('Id, name, email')));
 
       var label = document.createElement('label');
       label.appendChild(span);
@@ -242,7 +242,7 @@
       container.appendChild(this.createSelect('report', '', false, true));
 
       // User filter.
-      container.appendChild(this.createUserSelect());
+      container.appendChild(this.createUserFilter());
 
       return container;
     },
