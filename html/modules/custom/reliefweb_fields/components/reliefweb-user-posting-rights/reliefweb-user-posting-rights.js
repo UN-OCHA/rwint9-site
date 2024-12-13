@@ -88,10 +88,10 @@
      * Create a filter for users.
      */
     createUserSelect: function () {
-      let data = this.getFieldData();
       let name = 'name';
 
-      var select = document.createElement('select');
+      var select = document.createElement('input');
+      select.setAttribute('type', 'text');
       select.setAttribute('data-name', name);
 
       var span = document.createElement('span');
@@ -99,22 +99,6 @@
 
       var label = document.createElement('label');
       label.appendChild(span);
-
-      var option = document.createElement('option');
-      option.appendChild(document.createTextNode(t('Any')));
-      option.setAttribute('value', 'all');
-      option.setAttribute('selected', '');
-      select.appendChild(option);
-
-      // List alphabetically.
-      data = data.sort((a, b) => a.name.localeCompare(b.name));
-      for (var i = 0; i < data.length; i++) {
-        var option = document.createElement('option');
-        option.appendChild(document.createTextNode(data[i].name));
-        option.setAttribute('value', data[i].name);
-        select.appendChild(option);
-      }
-
       label.appendChild(select);
       label.className = name;
 
@@ -155,7 +139,7 @@
       container.setAttribute('data-job', data.job);
       container.setAttribute('data-training', data.training);
       container.setAttribute('data-report', data.report);
-      container.setAttribute('data-name', data.name);
+      container.setAttribute('data-name', [data.id, data.name, data.mail].join(', '));
 
       // User info.
       var info = document.createElement('div');
@@ -246,7 +230,7 @@
       container.setAttribute('data-job', 'all');
       container.setAttribute('data-training', 'all');
       container.setAttribute('data-report', 'all');
-      container.setAttribute('data-name', 'all');
+      container.setAttribute('data-name', '');
 
       var title = document.createElement('span');
       title.appendChild(document.createTextNode(t('Filter: ')));
@@ -301,6 +285,7 @@
 
       // Handle change events on the different select elements in the form.
       container.addEventListener('change', this.handleChange.bind(this));
+      container.addEventListener('keyup', this.handleChange.bind(this));
 
       // Handle focus out events from notes fields.
       container.addEventListener('focusout', this.handleFocusOut.bind(this));
@@ -558,7 +543,7 @@
         var name = target.getAttribute('data-name');
 
         // Update the rights attributes of the user row.
-        if (name === 'job' || name === 'training' || name === 'report' || name === 'name') {
+        if (name === 'job' || name === 'training' || name === 'report') {
           var parent = target.parentNode.parentNode;
 
           // If the parent is not the filter container, then it's a select
@@ -571,17 +556,29 @@
           parent.setAttribute('data-' + name, target.value);
           parent.setAttribute('data-modified', '');
           this.updateData();
+        }
+      }
+      else if (target && target.tagName === 'INPUT') {
+        var name = target.getAttribute('data-name');
+        var parent = target.parentNode.parentNode;
 
-          // Filter on user name.
-          if (parent.hasAttribute('data-filters') && name === 'name') {
-            let grandParent = parent.parentNode;
-            if (grandParent.querySelector('li[data-user-filtered]')) {
-              grandParent.querySelector('li[data-user-filtered]').removeAttribute('data-user-filtered');
-            }
-            if (target.value !== 'all') {
-              grandParent.querySelector('li[data-name="' + target.value + '"]').setAttribute('data-user-filtered', '');
-            }
+        // Filter on user name.
+        if (parent.hasAttribute('data-filters') && name === 'name') {
+          let grandParent = parent.parentNode;
+          if (grandParent.querySelectorAll('li[data-user-filtered]').length > 0) {
+            Array.from(grandParent.querySelectorAll('li[data-user-filtered]'))
+              .forEach(e => e.removeAttribute('data-user-filtered'));
           }
+
+          if (target.value !== '') {
+            Array.from(grandParent.querySelectorAll('li[data-name*="' + target.value + '"]'))
+              .forEach(e => e.setAttribute('data-user-filtered', ''));
+          }
+
+          // Set the attribute to the value of the select element.
+          parent.setAttribute('data-' + name, target.value);
+          parent.setAttribute('data-modified', '');
+          this.updateData();
         }
       }
     },

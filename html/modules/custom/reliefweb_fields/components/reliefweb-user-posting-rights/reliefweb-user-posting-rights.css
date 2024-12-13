@@ -28,12 +28,14 @@
   margin: 0 8px;
 }
 .field--type-reliefweb-user-posting-rights label span,
-.field--type-reliefweb-user-posting-rights label select {
+.field--type-reliefweb-user-posting-rights label select,
+.field--type-reliefweb-user-posting-rights label input[type="text"] {
   display: inline-block;
   margin: 0 8px 0 0;
   vertical-align: middle;
 }
-.field--type-reliefweb-user-posting-rights label select {
+.field--type-reliefweb-user-posting-rights label select,
+.field--type-reliefweb-user-posting-rights label input[type="text"] {
   width: auto;
 }
 .field--type-reliefweb-user-posting-rights div[data-filters] ~ ul li {
@@ -46,10 +48,10 @@
   display: flex;
 }
 
-.field--type-reliefweb-user-posting-rights div[data-filters]:not([data-name="all"]) ~ ul li {
+.field--type-reliefweb-user-posting-rights div[data-filters]:not([data-name=""]) ~ ul li {
   display: none !important;
 }
-.field--type-reliefweb-user-posting-rights div[data-filters]:not([data-name="all"]) ~ ul li[data-user-filtered] {
+.field--type-reliefweb-user-posting-rights div[data-filters]:not([data-name=""]) ~ ul li[data-user-filtered] {
   display: flex !important;
 }
 
