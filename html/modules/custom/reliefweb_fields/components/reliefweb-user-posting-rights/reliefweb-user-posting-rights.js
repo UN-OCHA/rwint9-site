@@ -95,7 +95,7 @@
       select.setAttribute('data-name', name);
 
       var span = document.createElement('span');
-      span.appendChild(document.createTextNode(t('Id, name, email')));
+      span.appendChild(document.createTextNode(t('user id, name, email')));
 
       var label = document.createElement('label');
       label.appendChild(span);
