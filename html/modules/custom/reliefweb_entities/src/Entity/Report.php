@@ -246,10 +246,9 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
     $this->updateModerationStatusFromPostingRights();
 
     // Change the status to `embargoed` if there is an embargo date.
-    if (!empty($this->field_embargo_date->value) && !in_array($this->getModerationStatus(), [
-      'draft',
-      'pending',
-      'refused',
+    if (!empty($this->field_embargo_date->value) && in_array($this->getModerationStatus(), [
+      'to-review',
+      'published',
     ])) {
       $this->setModerationStatus('embargoed');
 
