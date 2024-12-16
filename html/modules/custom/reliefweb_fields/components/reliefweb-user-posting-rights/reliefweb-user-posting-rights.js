@@ -85,6 +85,27 @@
     },
 
     /**
+     * Create a filter for users.
+     */
+    createUserFilter: function () {
+      let name = 'name';
+
+      var select = document.createElement('input');
+      select.setAttribute('type', 'text');
+      select.setAttribute('data-name', name);
+
+      var span = document.createElement('span');
+      span.appendChild(document.createTextNode(t('user id, name, email')));
+
+      var label = document.createElement('label');
+      label.appendChild(span);
+      label.appendChild(select);
+      label.className = name;
+
+      return label;
+    },
+
+    /**
      * Create the user notes field.
      */
     createEntryNotes: function (data, disabled) {
@@ -118,6 +139,7 @@
       container.setAttribute('data-job', data.job);
       container.setAttribute('data-training', data.training);
       container.setAttribute('data-report', data.report);
+      container.setAttribute('data-name', [data.id, data.name, data.mail].join(', '));
 
       // User info.
       var info = document.createElement('div');
@@ -208,6 +230,7 @@
       container.setAttribute('data-job', 'all');
       container.setAttribute('data-training', 'all');
       container.setAttribute('data-report', 'all');
+      container.setAttribute('data-name', '');
 
       var title = document.createElement('span');
       title.appendChild(document.createTextNode(t('Filter: ')));
@@ -217,6 +240,9 @@
       container.appendChild(this.createSelect('job', '', false, true));
       container.appendChild(this.createSelect('training', '', false, true));
       container.appendChild(this.createSelect('report', '', false, true));
+
+      // User filter.
+      container.appendChild(this.createUserFilter());
 
       return container;
     },
@@ -259,6 +285,7 @@
 
       // Handle change events on the different select elements in the form.
       container.addEventListener('change', this.handleChange.bind(this));
+      container.addEventListener('keyup', this.handleChange.bind(this));
 
       // Handle focus out events from notes fields.
       container.addEventListener('focusout', this.handleFocusOut.bind(this));
@@ -523,6 +550,29 @@
           // from a user row and we get the list element.
           if (!parent.hasAttribute('data-filters')) {
             parent = this.getParentElement(target, 'LI');
+          }
+
+          // Set the attribute to the value of the select element.
+          parent.setAttribute('data-' + name, target.value);
+          parent.setAttribute('data-modified', '');
+          this.updateData();
+        }
+      }
+      else if (target && target.tagName === 'INPUT') {
+        var name = target.getAttribute('data-name');
+        var parent = target.parentNode.parentNode;
+
+        // Filter on user name.
+        if (parent.hasAttribute('data-filters') && name === 'name') {
+          let grandParent = parent.parentNode;
+          if (grandParent.querySelectorAll('li[data-user-filtered]').length > 0) {
+            Array.from(grandParent.querySelectorAll('li[data-user-filtered]'))
+              .forEach(e => e.removeAttribute('data-user-filtered'));
+          }
+
+          if (target.value !== '') {
+            Array.from(grandParent.querySelectorAll('li[data-name*="' + target.value + '"]'))
+              .forEach(e => e.setAttribute('data-user-filtered', ''));
           }
 
           // Set the attribute to the value of the select element.
