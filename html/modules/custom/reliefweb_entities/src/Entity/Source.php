@@ -146,18 +146,20 @@ class Source extends Term implements BundleEntityInterface, EntityModeratedInter
     $meta = [];
 
     // Organization type.
-    $type = $this->field_organization_type->entity->label();
-    $meta['type'] = [
-      'type' => 'link',
-      'label' => $this->t('Organization type'),
-      'value' => [
-        'url' => RiverServiceBase::getRiverUrl('source', [
-          'search' => 'type.exact:"' . $type . '"',
-        ]),
-        'title' => $type,
-        'external' => FALSE,
-      ],
-    ];
+    if ($this->hasField('field_organization_type') && !$this->get('field_organization_type')->isEmpty()) {
+      $type = $this->field_organization_type->entity->label();
+      $meta['type'] = [
+        'type' => 'link',
+        'label' => $this->t('Organization type'),
+        'value' => [
+          'url' => RiverServiceBase::getRiverUrl('source', [
+            'search' => 'type.exact:"' . $type . '"',
+          ]),
+          'title' => $type,
+          'external' => FALSE,
+        ],
+      ];
+    }
 
     // Headquarters.
     $countries = [];

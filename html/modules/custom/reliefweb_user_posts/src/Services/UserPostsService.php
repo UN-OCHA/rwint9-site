@@ -87,6 +87,7 @@ class UserPostsService extends ModerationServiceBase {
     return [
       'job',
       'training',
+      'report',
     ];
   }
 
@@ -108,15 +109,25 @@ class UserPostsService extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function getStatuses() {
-    return [
-      'draft' => $this->t('draft'),
-      'pending' => $this->t('pending'),
-      'published' => $this->t('published'),
-      'on-hold' => $this->t('on-hold'),
-      'refused' => $this->t('refused'),
-      'expired' => $this->t('expired'),
-      'duplicate' => $this->t('duplicate'),
+    $statuses = [
+      'draft' => $this->t('Draft'),
+      'pending' => $this->t('Pending'),
+      'published' => $this->t('Published'),
+      'on-hold' => $this->t('On-hold'),
+      'refused' => $this->t('Refused'),
+      'expired' => $this->t('Expired'),
+      'duplicate' => $this->t('Duplicate'),
     ];
+
+    if ($this->currentUser->hasRole('contributor')) {
+      $statuses += [
+        'to-review' => $this->t('To review'),
+        'embargoed' => $this->t('Embargoed'),
+        'reference' => $this->t('Reference'),
+      ];
+    }
+
+    return $statuses;
   }
 
   /**
@@ -229,8 +240,11 @@ class UserPostsService extends ModerationServiceBase {
           $cells['deadline'] = $this->formatDate($entity->field_registration_deadline->value);
         }
       }
-      else {
+      elseif ($entity->bundle() === 'job') {
         $cells['deadline'] = $this->formatDate($entity->field_job_closing_date->value);
+      }
+      else {
+        $cells['deadline'] = $this->t('N/A');
       }
 
       $rows[] = $cells;
@@ -261,6 +275,14 @@ class UserPostsService extends ModerationServiceBase {
     ];
 
     // Filter by bundle.
+    $allowed_bundles = [
+      'job' => $this->t('Job'),
+      'training' => $this->t('Training'),
+    ];
+    if ($this->currentUser->hasPermission('create report content')) {
+      $allowed_bundles['report'] = $this->t('Report');
+    }
+
     $definitions['bundle'] = [
       'type' => 'property',
       'field' => 'type',
@@ -268,10 +290,7 @@ class UserPostsService extends ModerationServiceBase {
       'shortcut' => 'ty',
       'form' => 'other',
       'operator' => 'OR',
-      'values' => [
-        'job' => $this->t('Job'),
-        'training' => $this->t('Training'),
-      ],
+      'values' => $allowed_bundles,
     ];
 
     // Limit sources.
@@ -354,6 +373,9 @@ class UserPostsService extends ModerationServiceBase {
           $allowed_sources[] = $source;
         }
         elseif (isset($rights[$source->value]['training']) && $rights[$source->value]['training'] > $min_right) {
+          $allowed_sources[] = $source;
+        }
+        elseif (isset($rights[$source->value]['report']) && $rights[$source->value]['report'] > $min_right) {
           $allowed_sources[] = $source;
         }
       }
@@ -461,6 +483,9 @@ class UserPostsService extends ModerationServiceBase {
     }
     if (empty($filters['bundle']) || !empty($filters['bundle']['training'])) {
       $types[] = 'training';
+    }
+    if (empty($filters['bundle']) || !empty($filters['bundle']['report'])) {
+      $types[] = 'report';
     }
 
     // Get the user rights keyed by source ids and store the ones

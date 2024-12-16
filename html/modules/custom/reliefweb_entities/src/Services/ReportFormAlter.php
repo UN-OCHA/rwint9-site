@@ -9,6 +9,7 @@ use Drupal\Core\Url;
 use Drupal\reliefweb_entities\Entity\Report;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
 use Drupal\reliefweb_form\Helpers\FormHelper;
+use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
@@ -102,6 +103,11 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
       );
     }
 
+    // Special tweaks for contributors.
+    if ($this->currentUser->hasRole('contributor')) {
+      $this->alterFieldsForContributors($form, $form_state);
+    }
+
     // Validate the attachments.
     $form['#validate'][] = [$this, 'validateAttachment'];
 
@@ -110,6 +116,43 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
 
     // Prevent saving from a blocked source.
     $form['#validate'][] = [$this, 'validateBlockedSource'];
+
+    // Prevent saving if user is blocked for a source.
+    $form['#validate'][] = [$this, 'validatePostingRightsBlockedSource'];
+  }
+
+  /**
+   * Prevent saving if user is blocked for a source.
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  public function validatePostingRightsBlockedSource(array $form, FormStateInterface &$form_state) {
+    $ids = [];
+    foreach ($form_state->getValue('field_source', []) as $item) {
+      if (!empty($item['target_id'])) {
+        $ids[] = $item['target_id'];
+      }
+    }
+
+    $rights = UserPostingRightsHelper::getUserConsolidatedPostingRight($this->currentUser, 'report', $ids);
+    // Blocked for at least one source.
+    if (!empty($rights) && isset($rights['code']) && $rights['code'] == 1) {
+      $sources = $this->getEntityTypeManager()
+        ->getStorage('taxonomy_term')
+        ->loadMultiple($rights['sources']);
+
+      /** @var \Drupal\taxonomy\Entity\Term $term */
+      array_walk($sources, function (&$term) {
+        $term = $term->label();
+      });
+
+      $form_state->setErrorByName('field_source', $this->t('Publications from "@sources" are not allowed.', [
+        '@sources' => implode('", "', $sources),
+      ]));
+    }
   }
 
   /**
@@ -398,6 +441,35 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     if (!empty($embargo_date) && $embargo_date instanceof DrupalDateTime && $embargo_date->getTimestamp() < time()) {
       $form_state->setErrorByName('field_embargo_date][0][value', $this->t('The embargo date cannot be in the past.'));
     }
+  }
+
+  /**
+   * Make alterations for Contributor role.
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  protected function alterFieldsForContributors(array &$form, FormStateInterface $form_state) {
+    // Default to submit for new documents otherwise preserve the value, for
+    // example when editing a report created by an editor.
+    if ($form_state->getFormObject()?->getEntity()?->isNew() === TRUE) {
+      $form['field_origin']['widget']['#default_value'] = '1';
+    }
+    // Change the field to 'hidden' to hide it while perserving its value so
+    // that the alteration and validation of the origin notes field still work.
+    // @see ::alterOriginFields()
+    $form['field_origin']['widget']['#type'] = 'hidden';
+
+    // Hide fields.
+    $form['field_bury']['#access'] = FALSE;
+    $form['field_feature']['#access'] = FALSE;
+
+    $form['field_headline']['#access'] = FALSE;
+    $form['field_headline_title']['#access'] = FALSE;
+    $form['field_headline_summary']['#access'] = FALSE;
+    $form['field_headline_image']['#access'] = FALSE;
   }
 
 }

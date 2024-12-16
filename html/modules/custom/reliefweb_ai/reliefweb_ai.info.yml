@@ -1,0 +1,7 @@
+type: module
+name: ReliefWeb AI
+description: 'AI usage for ReliefWeb'
+package: reliefweb
+core_version_requirement: ^10
+dependencies:
+  - drupal:ocha_ai
