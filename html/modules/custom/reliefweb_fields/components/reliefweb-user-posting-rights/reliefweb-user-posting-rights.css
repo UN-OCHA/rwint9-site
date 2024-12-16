@@ -35,7 +35,7 @@
   vertical-align: middle;
 }
 .field--type-reliefweb-user-posting-rights label select,
-.field--type-reliefweb-user-posting-rights label input[type="text"] {
+.field--type-reliefweb-user-posting-rights [data-filters] label input[type="text"] {
   width: auto;
 }
 .field--type-reliefweb-user-posting-rights div[data-filters] ~ ul li {
