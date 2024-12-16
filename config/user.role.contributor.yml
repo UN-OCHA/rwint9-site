@@ -10,6 +10,7 @@ dependencies:
     - node
     - reliefweb_files
     - reliefweb_form
+    - reliefweb_revisions
 id: contributor
 label: Contributor
 weight: 9
@@ -24,5 +25,5 @@ permissions:
   - 'edit own image_report media'
   - 'edit own report content'
   - 'update media'
+  - 'view entity history'
   - 'view own unpublished media'
-  - 'view report revisions'
