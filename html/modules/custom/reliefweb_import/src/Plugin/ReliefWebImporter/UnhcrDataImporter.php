@@ -270,7 +270,7 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
     // Japan.
     128 => 658,
     // Jordan.
-    129 => 70,
+    129 => 36,
     // Kazakhstan.
     130 => 659,
     // Kenya.
@@ -683,6 +683,8 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
 
       $url = rtrim($api_url, '/') . '/' . trim($list_endpoint, '?/') . '?' . $query;
 
+      $this->getLogger()->info('Retrieving documents from the UNHCR data API.');
+
       $response = $this->httpClient->get($url, [
         'connect_timeout' => $timeout,
         'timeout' => $timeout,
@@ -704,9 +706,20 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
       }
     }
     catch (\Exception $exception) {
-      $this->getLogger()->error($exception->getMessage());
+      $message = $exception->getMessage();
+
+      // Make sure we do not leak the API key.
+      if (isset($api_key)) {
+        $message = str_replace($api_key, 'REDACTED_API_KEY', $message);
+      }
+
+      $this->getLogger()->error($message);
       return FALSE;
     }
+
+    $this->getLogger()->info(strtr('Retrieved @count UNHCR documents.', [
+      '@count' => count($documents),
+    ]));
 
     $processed = $this->processDocuments($documents, $provider_uuid, $plugin);
 
@@ -731,13 +744,16 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
   protected function processDocuments(array $documents, string $provider_uuid, ContentProcessorPluginInterface $plugin): int {
     $schema = $this->getJsonSchema('report');
 
+    // Override some plugin settings to accommodate for specifities of the data.
+    $plugin->setPluginSetting('schema', $schema);
+    $plugin->setPluginSetting('attachments.allowed_mimetypes', ['application/pdf', 'application/octet-stream']);
+
+    // Disable content type validation because the files to download do not have
+    // consistent content type headers (ex: pdf instead of application/pdf).
+    $plugin->setPluginSetting('validate_file_content_type', FALSE);
+
     // Source: UNHCR.
     $source = [2868];
-
-    // @todo we use that currently to allow the submissions because the body
-    // field is mandatory but this should be replaced with something else or
-    // allow an empty body.
-    $default_description = 'Please refer to the attachment.';
 
     // The original mapping is ReliefWeb country ID to UNHCR country code for
     // convenience in keeping it up to date. We need to flip it to easiy look
@@ -749,16 +765,23 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
     foreach ($documents as $document) {
       // Retrieve the document ID.
       if (!isset($document['id'])) {
-        $this->getLogger()->notice('Undefined document ID, skipping document import.');
+        $this->getLogger()->notice('Undefined UNHCR document ID, skipping document import.');
+        continue;
       }
+      $id = $document['id'];
 
       // Retrieve the document URL.
       if (!isset($document['documentLink'])) {
-        $this->getLogger()->notice(strtr('Undefined document URL for document ID: @id, skipping document import.', [
-          '@id' => $document['id'],
+        $this->getLogger()->notice(strtr('Undefined document URL for UNHCR document ID @id, skipping document import.', [
+          '@id' => $id,
         ]));
+        continue;
       }
       $url = $document['documentLink'];
+
+      $this->getLogger()->info(strtr('Processing UNHCR document @id.', [
+        '@id' => $id,
+      ]));
 
       // Generate the UUID for the document.
       $uuid = $this->generateUuid($url);
@@ -772,14 +795,17 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
       $node = $this->entityRepository->loadEntityByUuid('node', $uuid);
       if (isset($node)) {
         $processed++;
+        $this->getLogger()->info(strtr('UNHCR document @id already imported, skipping.', [
+          '@id' => $id,
+        ]));
         continue;
       }
 
       // Retrieve the title and clean it.
-      $title = trim($document['title'] ?? '');
+      $title = $this->sanitizeText($document['title'] ?? '');
 
-      // Retrieve the description and use the default one if empty.
-      $body = trim($document['description'] ?? '') ?: $default_description;
+      // Retrieve the description.
+      $body = $this->sanitizeText($document['description'] ?? '', TRUE);
 
       // Retrieve the publication date.
       $published = $document['publishDate'] ?? $document['created'] ?? NULL;
@@ -812,7 +838,18 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
       foreach ($document['location'] ?? [] as $location) {
         // Note: UNHCR location items have a 'code' property.
         if (isset($country_mapping[$location['code']])) {
-          $countries[$location['code']] = $country_mapping[$location['code']];
+          $country = [$location['code'] => $country_mapping[$location['code']]];
+          // If the location is in the title, add it at the beginning so it is
+          // considered the primary country.
+          if (isset($location['name'])) {
+            $country_name = trim(str_replace(' (country)', '', $location['name']));
+            if (mb_stripos($title, $country_name) !== FALSE) {
+              $countries = $country + $countries;
+              continue;
+            }
+          }
+          // Otherwise, add it at the end.
+          $countries = $countries + $country;
         }
       }
 
@@ -840,7 +877,7 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
       }
 
       // Submission data.
-      $data = array_filter([
+      $data = [
         'provider' => $provider_uuid,
         'bundle' => 'report',
         'url' => $url,
@@ -853,18 +890,25 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
         'language' => array_values($languages),
         'country' => array_values($countries),
         'format' => array_values($formats),
+      ];
+
+      // Add the optional fields.
+      $data += array_filter([
         'theme' => array_values($themes),
         'file' => array_values($files),
       ]);
 
       // Submit the document directly, no need to go through the queue.
       try {
-        $plugin->process($data, $schema);
+        $plugin->process($data);
         $processed++;
+        $this->getLogger()->info(strtr('Successfully processed UNHCR document @id.', [
+          '@id' => $id,
+        ]));
       }
       catch (\Exception $exception) {
-        $this->getLogger()->error(strtr('Unable to process document @id: @exception', [
-          '@id' => $document['id'],
+        $this->getLogger()->error(strtr('Unable to process UNHCR document @id: @exception', [
+          '@id' => $id,
           '@exception' => $exception->getMessage(),
         ]));
       }
@@ -964,44 +1008,6 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
   }
 
   /**
-   * Sanitize a file name.
-   *
-   * @param string $filename
-   *   File name to sanitize.
-   * @param array $allowed_extensions
-   *   Allowed file name extensions.
-   *
-   * @return string
-   *   Sanitized file name.
-   *
-   * @see \Drupal\system\EventSubscriber\SecurityFileUploadEventSubscriber::sanitizeName()
-   */
-  protected function sanitizeFileName(string $filename, array $allowed_extensions = []): string {
-    if (empty($allowed_extensions)) {
-      return '';
-    }
-
-    // Always rename dot files.
-    $filename = trim($filename, '.');
-    // Remove any null bytes.
-    // @see https://php.net/manual/security.filesystem.nullbytes.php
-    $filename = str_replace(chr(0), '', $filename);
-    // Split up the filename by periods. The first part becomes the basename,
-    // the last part the final extension.
-    $filename_parts = explode('.', $filename);
-    // Remove file basename.
-    $basename = array_shift($filename_parts);
-    // Remove final extension.
-    $extension = strtolower((string) array_pop($filename_parts));
-
-    // Ensure the extension is allowed.
-    if (!in_array($extension, $allowed_extensions)) {
-      return '';
-    }
-    return $basename . '.' . $extension;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function getJsonSchema(string $bundle): string {
@@ -1010,6 +1016,10 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
     if ($decoded) {
       // Allow attachment URLs without a PDF extension.
       unset($decoded['properties']['file']['items']['properties']['url']['pattern']);
+      // Allow empty strings as body.
+      unset($decoded['properties']['body']['minLength']);
+      unset($decoded['properties']['body']['allOf']);
+      unset($decoded['properties']['body']['not']);
       $schema = Json::encode($decoded);
     }
     return $schema;
