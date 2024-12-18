@@ -7,6 +7,7 @@ namespace Drupal\reliefweb_post_api\Plugin;
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Component\Utility\Bytes;
 use Drupal\Component\Utility\Environment;
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
@@ -69,6 +70,13 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
    * @var array
    */
   protected array $providers = [];
+
+  /**
+   * Plugin settings.
+   *
+   * @var array
+   */
+  protected array $settings = [];
 
   /**
    * Constructs a \Drupal\Component\Plugin\PluginBase object.
@@ -237,7 +245,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   /**
    * {@inheritdoc}
    */
-  abstract public function process(array $data, ?string $schema = NULL): ?ContentEntityInterface;
+  abstract public function process(array $data): ?ContentEntityInterface;
 
   /**
    * {@inheritdoc}
@@ -261,8 +269,8 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   /**
    * {@inheritdoc}
    */
-  public function validate(array $data, ?string $schema = NULL): void {
-    $this->validateSchema($data, $schema);
+  public function validate(array $data): void {
+    $this->validateSchema($data);
     $this->validateUuid($data);
     $this->validateSources($data);
     $this->validateUrls($data);
@@ -272,11 +280,11 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   /**
    * {@inheritdoc}
    */
-  public function validateSchema(array $data, ?string $schema = NULL): void {
+  public function validateSchema(array $data): void {
     unset($data['bundle']);
     unset($data['provider']);
     $data = Helper::toJSON($data);
-    $schema ??= $this->getJsonSchema();
+    $schema = $this->getPluginSetting('schema', $this->getJsonSchema());
     $result = $this->getSchemaValidator()->validate($data, $schema);
     if (!$result->isValid()) {
       $formatter = new ErrorFormatter();
@@ -516,9 +524,8 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     $field = $entity->get($field_name);
     $definition = $field->getItemDefinition();
 
-    // @todo retrieve that from the configuration?
-    $mimetypes = ['application/pdf'];
-    $max_size = '20MB';
+    $mimetypes = $this->getPluginSetting('attachments.allowed_mimetypes', ['application/pdf']);
+    $max_size = $this->getPluginSetting('attachments.allowed_max_size', '20MB');
 
     // Map the existing attached files from their field item UUID to their
     // file UUID so that we can determine if they need to be updated.
@@ -535,6 +542,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
       }
 
       $url = $file['url'];
+      $file_name = $file['filename'];
       $checksum = $file['checksum'];
       $uuid = $this->generateUuid($url, $entity->uuid());
       $file_uuid = $this->generateUuid($uuid . $checksum, $entity->uuid());
@@ -546,8 +554,10 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
         }
         // If the file has changed or didn't exist, then download it.
         else {
-          $mimetype = $this->guessFileMimeType($url, $mimetypes);
-          $item = $this->createReliefWebFileFieldItem($definition, $file_uuid, $url, $checksum, $mimetype, $max_size);
+          // We use the file name to guess the mimetype not the URL because it
+          // may not have an extension.
+          $mimetype = $this->guessFileMimeType($file_name, $mimetypes);
+          $item = $this->createReliefWebFileFieldItem($definition, $file_uuid, $file_name, $url, $checksum, $mimetype, $max_size);
         }
 
         // Update the file description and language.
@@ -590,9 +600,8 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
 
     // Attempt to create a new media.
     if (!isset($media)) {
-      // @todo retrieve that from the configuration?
-      $mimetypes = ['image/jpeg', 'image/png', 'image/webp'];
-      $max_size = '5MB';
+      $mimetypes = $this->getPluginSetting('images.allowed_mimetypes', ['image/jpeg', 'image/png', 'image/webp']);
+      $max_size = $this->getPluginSetting('images.allowed_max_size', '5MB');
 
       try {
         $bundle = 'image_' . $entity->bundle();
@@ -685,12 +694,9 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   /**
    * {@inheritdoc}
    */
-  public function createReliefWebFileFieldItem(DataDefinitionInterface $definition, string $uuid, string $url, string $checksum, string $mimetype, string $max_size = ''): ?ReliefWebFile {
+  public function createReliefWebFileFieldItem(DataDefinitionInterface $definition, string $uuid, string $file_name, string $url, string $checksum, string $mimetype, string $max_size = ''): ?ReliefWebFile {
     // Create a new field item.
     $item = ReliefWebFile::createInstance($definition);
-
-    // Extract the file name from the URL.
-    $file_name = pathinfo($url, \PATHINFO_BASENAME);
 
     // Generate a private URI for the file. It will be changed to public
     // when the entity the file is attached to is published.
@@ -834,18 +840,24 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
         ],
       ]);
 
-      if ($response->getHeaderLine('Content-Type') !== $mimetype) {
-        throw new \Exception(strtr('File type is not "@mimetype".', [
+      // Validate the content type.
+      $validate_content_type = $this->getPluginSetting('validate_file_content_type', TRUE);
+      $content_type = $response->getHeaderLine('Content-Type');
+      if ($validate_content_type && $content_type !== $mimetype) {
+        throw new \Exception(strtr('File type "@content_type" is not "@mimetype".', [
           '@mimetype' => $mimetype,
+          '@content_type' => $content_type,
         ]));
       }
 
+      // Validate file size.
       if ($max_size > 0 && $response->getHeaderLine('Content-Length') > $max_size) {
         throw new \Exception('File is too large.');
       }
 
       $body = $response->getBody();
 
+      // Read in the body in chiunk so that we can check the actual size.
       if ($max_size > 0) {
         $size = 0;
         while (!$body->eof()) {
@@ -912,12 +924,12 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   /**
    * {@inheritdoc}
    */
-  public function guessFileMimeType(string $uri, array $allowed_mimetypes = []): string {
-    $mimetype = $this->mimeTypeGuesser->guessMimeType($uri);
+  public function guessFileMimeType(string $path, array $allowed_mimetypes = []): string {
+    $mimetype = $this->mimeTypeGuesser->guessMimeType($path);
     if (empty($mimetype) || (!empty($allowed_mimetypes) && !in_array($mimetype, $allowed_mimetypes))) {
-      throw new ContentProcessorException(strtr('Unsupported @mimetype mimetype for @uri.', [
+      throw new ContentProcessorException(strtr('Unsupported @mimetype mimetype for @path.', [
         '@mimetype' => $mimetype ?? 'unknown',
-        '@uri' => $uri,
+        '@path' => $path,
       ]));
     }
     return $mimetype;
@@ -928,6 +940,20 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
    */
   public function getDefaultLangcode(): string {
     return $this->languageManager->getDefaultLanguage()->getId();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setPluginSetting(string $name, mixed $value): void {
+    NestedArray::setValue($this->settings, explode('.', $name), $value);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPluginSetting(string $name, mixed $default = NULL): mixed {
+    return NestedArray::getValue($this->settings, explode('.', $name)) ?? $default;
   }
 
 }

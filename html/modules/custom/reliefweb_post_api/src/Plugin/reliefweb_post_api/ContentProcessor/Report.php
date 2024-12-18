@@ -85,9 +85,9 @@ class Report extends ContentProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function process(array $data, ?string $schema = NULL): ?ContentEntityInterface {
+  public function process(array $data): ?ContentEntityInterface {
     // Ensure the data is valid.
-    $this->validate($data, $schema);
+    $this->validate($data);
 
     $bundle = $this->getbundle();
     $provider = $this->getProvider($data['provider'] ?? '');
