@@ -23,7 +23,7 @@ class ReliefWebFileNameConstraintValidator extends BaseFileConstraintValidator {
       throw new UnexpectedTypeException($constraint, ReliefWebFileNameConstraint::class);
     }
 
-    $error = ReliefWebFile::validateFileName($file->getFileName(), $constraint->expectedExtension);
+    $error = (string) ReliefWebFile::validateFileName($file->getFileName(), $constraint->expectedExtension);
     if (!empty($error)) {
       $this->context->addViolation($error);
     }
