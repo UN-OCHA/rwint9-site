@@ -1,6 +1,0 @@
-services:
-  reliefweb_job_tagger.commands:
-    class: \Drupal\reliefweb_job_tagger\Commands\ReliefJobTaggerCommands
-    arguments: ['@entity_type.manager', '@ocha_ai_tag.tagger']
-    tags:
-      - { name: drush.command }
