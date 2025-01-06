@@ -1,7 +1,0 @@
-name: 'Relieweb Entra ID'
-description: Tweaks for Entra ID and/or Azure B2C.
-type: module
-core_version_requirement: ^9 || ^10
-package: reliefweb
-dependencies:
-  - openid_connect_windows_aad:openid_connect_windows_aad
