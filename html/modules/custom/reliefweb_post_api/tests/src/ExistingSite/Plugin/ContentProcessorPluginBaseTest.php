@@ -783,14 +783,14 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
 
     $data1 = [
       'url' => 'https://test.test/test1.pdf',
-      'file_name' => 'test1.pdf',
+      'filename' => 'test1.pdf',
       'checksum' => hash('sha256', 'test1'),
       'description' => 'test file1',
     ];
 
     $data2 = [
       'url' => 'https://test.test/test2.pdf',
-      'file_name' => 'test2.pdf',
+      'filename' => 'test2.pdf',
       'checksum' => hash('sha256', 'test2'),
       'description' => 'test file2',
     ];
@@ -1127,7 +1127,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
     $item = $plugin->createReliefWebFileFieldItem(
       definition: $definition,
       uuid: 'bda0e2da-4229-53aa-9206-db72dfdac519',
-      file_name: 'test.pdf',
+      filename: 'test.pdf',
       url: 'https://test.test/test.pdf',
       checksum: hash('sha256', 'test'),
       mimetype: 'application/pdf',
