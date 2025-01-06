@@ -66,4 +66,3 @@ COPY --from=builder /srv/www/docker/etc/nginx/apps/drupal/drupal.conf /etc/nginx
 COPY --from=builder /srv/www/docker/etc/nginx/custom /etc/nginx/custom/
 COPY --from=builder /srv/www/docker/etc/nginx/sites-enabled/01_uuid.conf /etc/nginx/sites-enabled/01_uuid.conf
 COPY --from=builder /srv/www/docker/etc/nginx/sites-enabled/02_mapbox_proxy_cache.conf /etc/nginx/sites-enabled/02_mapbox_proxy_cache.conf
-COPY --from=builder /srv/www/docker/etc/php83/php.ini /etc/php83/php.ini
