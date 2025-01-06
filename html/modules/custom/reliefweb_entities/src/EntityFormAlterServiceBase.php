@@ -582,7 +582,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
   }
 
   /**
-   * Add the user information to a job/training node form.
+   * Add the user information to a job/training/report node form.
    *
    * @param array $form
    *   The entity form.
@@ -594,7 +594,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
     $entity_id = $entity->id();
     $bundle = $entity->bundle();
 
-    // It's only for jobs and training.
+    // It's only for jobs and trainings.
     if (!in_array($bundle, ['job', 'training'])) {
       return;
     }

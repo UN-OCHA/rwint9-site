@@ -119,7 +119,7 @@ class ReliefwebMetaTestImages extends ExistingSiteBase {
   /**
    * Test report - disaster type.
    */
-  public function testDisaserTypeImage() {
+  public function testDisasterTypeImage() {
     global $base_url;
 
     $site_name = \Drupal::config('system.site')->get('name');

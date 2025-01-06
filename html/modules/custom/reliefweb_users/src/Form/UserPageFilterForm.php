@@ -113,6 +113,13 @@ class UserPageFilterForm extends FormBase {
       '#default_value' => $filters['training_rights'] ?? 'any',
     ];
 
+    $form['filters']['report_rights'] = [
+      '#type' => 'radios',
+      '#title' => $this->t('Report posting rights'),
+      '#options' => ['any' => 'Any'] + $rights,
+      '#default_value' => $filters['report_rights'] ?? 'any',
+    ];
+
     $form['filters']['name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
@@ -197,6 +204,7 @@ class UserPageFilterForm extends FormBase {
         'posted' => isset($inputs['posted']) && is_array($inputs['posted']) ? array_intersect_key($content_types, $inputs['posted']) : NULL,
         'job_rights' => isset($inputs['job_rights'], $rights[$inputs['job_rights']]) ? $inputs['job_rights'] : NULL,
         'training_rights' => isset($inputs['training_rights'], $rights[$inputs['training_rights']]) ? $inputs['training_rights'] : NULL,
+        'report_rights' => isset($inputs['report_rights'], $rights[$inputs['report_rights']]) ? $inputs['report_rights'] : NULL,
       ];
     }
 

@@ -6,7 +6,9 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Link;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
+use Drupal\node\NodeInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
+use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
 
@@ -109,6 +111,12 @@ class ReportModeration extends ModerationServiceBase {
 
       // Country and source info.
       $info = [];
+
+      // User posting rights.
+      if ($entity instanceof NodeInterface && $entity->getOwner()->hasRole('contributor')) {
+        $info['posting_rights'] = UserPostingRightsHelper::renderRight(UserPostingRightsHelper::getEntityAuthorPostingRights($entity));
+      }
+
       // Country.
       $country_link = $this->getTaxonomyTermLink($entity->field_primary_country->first());
       if (!empty($country_link)) {
@@ -201,8 +209,10 @@ class ReportModeration extends ModerationServiceBase {
       'draft' => $this->t('Draft'),
       'on-hold' => $this->t('On-hold'),
       'to-review' => $this->t('To review'),
+      'pending' => $this->t('Pending'),
       'published' => $this->t('Published'),
       'embargoed' => $this->t('Embargoed'),
+      'refused' => $this->t('Refused'),
       'archive' => $this->t('Archived'),
       'reference' => $this->t('Reference'),
     ];
@@ -221,29 +231,90 @@ class ReportModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function getEntityFormSubmitButtons($status, EntityModeratedInterface $entity) {
-    $buttons = [
-      'draft' => [
-        '#value' => $this->t('Save as draft'),
-      ],
-      'to-review' => [
-        '#value' => $this->t('To review'),
-      ],
-      'published' => [
-        '#value' => $this->t('Publish'),
-      ],
-      'on-hold' => [
-        '#value' => $this->t('On-hold'),
-      ],
-      'reference' => [
-        '#value' => $this->t('Reference'),
-      ],
-    ];
+    $buttons = [];
+    $new = empty($status) || $status === 'draft' || $entity->isNew();
 
-    // @todo replace with permission.
-    if (UserHelper::userHasRoles(['administrator', 'webmaster'])) {
-      $buttons['archive'] = [
-        '#value' => $this->t('Archive'),
+    // Only show save as draft for non-published but editable documents.
+    if ($new || in_array($status, ['draft', 'on-hold'])) {
+      $buttons['draft'] = [
+        '#value' => $this->t('Save as draft'),
       ];
+    }
+
+    // Editors can publish, put on hold or refuse a document.
+    // @todo use permission.
+    if (UserHelper::userHasRoles(['editor'])) {
+      $buttons = [
+        'draft' => [
+          '#value' => $this->t('Save as draft'),
+        ],
+        'to-review' => [
+          '#value' => $this->t('To review'),
+        ],
+        'published' => [
+          '#value' => $this->t('Publish'),
+        ],
+        'on-hold' => [
+          '#value' => $this->t('On-hold'),
+        ],
+        'reference' => [
+          '#value' => $this->t('Reference'),
+        ],
+      ];
+    }
+    elseif (UserHelper::userHasRoles(['administrator', 'webmaster'])) {
+      $buttons = [
+        'draft' => [
+          '#value' => $this->t('Save as draft'),
+        ],
+        'to-review' => [
+          '#value' => $this->t('To review'),
+        ],
+        'published' => [
+          '#value' => $this->t('Publish'),
+        ],
+        'on-hold' => [
+          '#value' => $this->t('On-hold'),
+        ],
+        'reference' => [
+          '#value' => $this->t('Reference'),
+        ],
+        'archive' => [
+          '#value' => $this->t('Archive'),
+        ],
+      ];
+    }
+    // Other users can submit for review, on-hold or published if trusted.
+    else {
+      $buttons = [
+        'draft' => [
+          '#value' => $this->t('Save as draft'),
+        ],
+        'to-review' => [
+          '#value' => $new ? $this->t('Submit') : $this->t('Submit changes'),
+        ],
+        'on-hold' => [
+          '#value' => $this->t('On-hold'),
+        ],
+      ];
+
+      // Add confirmation when attempting to change published document.
+      if ($status === 'published') {
+        $message = $this->t('Press OK to submit the changes for review by the ReliefWeb editors. The report may become unpublished while being reviewed.');
+        $buttons['to-review']['#attributes']['onclick'] = 'return confirm("' . $message . '")';
+      }
+    }
+
+    if (UserHelper::userHasRoles(['contributor'])) {
+      // Warning message when saving as a draft.
+      if (isset($buttons['draft'])) {
+        $message = $this->t('You are saving this document as a draft. It will not be visible to visitors. If you wish to proceed with the publication kindly click on @buttons instead.', [
+          '@buttons' => implode(' or ', array_map(function ($item) {
+            return $item['#value'];
+          }, array_slice($buttons, 1))),
+        ]);
+        $buttons['draft']['#attributes']['onclick'] = 'return confirm("' . $message . '")';
+      }
     }
 
     return $buttons;
@@ -260,7 +331,7 @@ class ReportModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function isEditableStatus($status, ?AccountInterface $account = NULL) {
-    if ($status === 'archive') {
+    if ($status === 'archive' || $status === 'refused') {
       return UserHelper::userHasRoles(['administrator', 'webmaster'], $account);
     }
     return TRUE;
@@ -316,6 +387,7 @@ class ReportModeration extends ModerationServiceBase {
       'original_publication_date',
       'author',
       'user_role',
+      'posting_rights',
       'reviewer',
       'reviewed',
       'comments',

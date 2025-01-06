@@ -50,6 +50,13 @@ class ReliefWebUserPostingRights extends FieldItemBase {
           'not null' => TRUE,
           'default' => 0,
         ],
+        'report' => [
+          'description' => 'Report posting rights: 0 = unverified; 1 = blocked; 2 = allowed; 3 = trusted.',
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => TRUE,
+          'default' => 0,
+        ],
         'notes' => [
           'description' => 'Notes',
           'type' => 'text',
@@ -60,6 +67,7 @@ class ReliefWebUserPostingRights extends FieldItemBase {
         'id' => ['id'],
         'job' => ['job'],
         'training' => ['training'],
+        'report' => ['report'],
       ],
     ];
   }
@@ -78,6 +86,10 @@ class ReliefWebUserPostingRights extends FieldItemBase {
 
     $properties['training'] = DataDefinition::create('integer')
       ->setLabel(new TranslatableMarkup('Training'))
+      ->setRequired(FALSE);
+
+    $properties['report'] = DataDefinition::create('integer')
+      ->setLabel(new TranslatableMarkup('Report'))
       ->setRequired(FALSE);
 
     $properties['notes'] = DataDefinition::create('string')
@@ -136,6 +148,17 @@ class ReliefWebUserPostingRights extends FieldItemBase {
         ],
       ],
     ]);
+    $constraints[] = $constraint_manager->create('ComplexData', [
+      'report' => [
+        'AllowedValues' => [
+          'choices' => [0, 1, 2, 3],
+          'strict' => TRUE,
+          'message' => $this->t('%name: the Report rights must be one of 0, 1, 2 or 3.', [
+            '%name' => $this->getFieldDefinition()->getLabel(),
+          ]),
+        ],
+      ],
+    ]);
 
     return $constraints;
   }
@@ -147,6 +170,7 @@ class ReliefWebUserPostingRights extends FieldItemBase {
     $values['url'] = mt_rand(3, 1000000);
     $values['job'] = mt_rand(0, 3);
     $values['training'] = mt_rand(0, 3);
+    $values['report'] = mt_rand(0, 3);
 
     return $values;
   }
