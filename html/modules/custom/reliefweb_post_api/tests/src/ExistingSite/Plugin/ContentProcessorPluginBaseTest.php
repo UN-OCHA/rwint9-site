@@ -1127,7 +1127,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
     $item = $plugin->createReliefWebFileFieldItem(
       definition: $definition,
       uuid: 'bda0e2da-4229-53aa-9206-db72dfdac519',
-      filename: 'test.pdf',
+      file_name: 'test.pdf',
       url: 'https://test.test/test.pdf',
       checksum: hash('sha256', 'test'),
       mimetype: 'application/pdf',
