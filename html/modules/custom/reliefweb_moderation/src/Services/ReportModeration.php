@@ -247,6 +247,7 @@ class ReportModeration extends ModerationServiceBase {
    */
   public function getEntityFormSubmitButtons($status, EntityModeratedInterface $entity) {
     $buttons = [];
+    $new = empty($status) || $status === 'draft' || $entity->isNew();
 
     // Editors can publish, put on hold or refuse a document.
     // @todo use permission.
