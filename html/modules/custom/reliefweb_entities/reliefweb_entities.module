@@ -5,7 +5,6 @@
  * Entity management for ReliefWeb.
  */
 
-use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Entity\EntityInterface;
@@ -15,12 +14,9 @@ use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Session\AccountInterface;
-use Drupal\block\Entity\Block;
 use Drupal\media\MediaInterface;
 use Drupal\reliefweb_entities\BundleEntityInterface;
 use Drupal\reliefweb_entities\BundleEntityStorageInterface;
-use Drupal\reliefweb_entities\Entity\Report;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
 use Drupal\reliefweb_utility\Helpers\ClassHelper;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
@@ -86,7 +82,7 @@ function reliefweb_entities_entity_bundle_field_info_alter(array &$fields, Entit
  * Add bundle classes to nodes and terms to handle business logic.
  */
 function reliefweb_entities_entity_bundle_info_alter(&$bundles) {
-  $namespace = '\Drupal\reliefweb_entities\Entity';
+  $namespace = 'Drupal\reliefweb_entities\Entity';
 
   foreach ($bundles as $entity_type_id => $items) {
     foreach ($items as $bundle => $info) {
@@ -96,6 +92,8 @@ function reliefweb_entities_entity_bundle_info_alter(&$bundles) {
       }
       if ($class !== FALSE && is_subclass_of($class, BundleEntityInterface::class)) {
         $label = ucwords(str_replace(['_', '-'], ' ', $bundle));
+        // No leading \ otherwise EntityTypeRepository::getEntityTypeFromClass
+        // fails.
         $bundles[$entity_type_id][$bundle]['class'] = $class;
         $bundles[$entity_type_id][$bundle]['label'] = $label;
       }
@@ -827,91 +825,4 @@ function reliefweb_entities_node_delete(EntityInterface $entity) {
       }
     }
   }
-}
-
-/**
- * Implements hook_form_FORM_ID_alter() for `ocha_ai_chat_chat_form`.
- */
-function reliefweb_entities_form_ocha_ai_chat_chat_form_alter(array &$form, FormStateInterface $form_state, string $form_id) {
-  $url = \Drupal::request()?->query?->get('url');
-  if (isset($url)) {
-    $router = \Drupal::service('router.no_access_checks');
-    $parameters = $router->match($url);
-    $node = $parameters['node'] ?? NULL;
-
-    if (isset($node) && $node instanceof Report) {
-      // No need to show the source when chatting with a single report.
-      if (isset($form['source'])) {
-        $form['source']['#access'] = FALSE;
-      }
-
-      // Only English documents are supported due to LLM limitations.
-      $is_english_report = FALSE;
-      foreach ($node->field_language as $item) {
-        if ($item->target_id == 267) {
-          $is_english_report = TRUE;
-          break;
-        }
-      }
-      if (!$is_english_report) {
-        $reason = t('Sorry, only English reports are supported.');
-      }
-
-      // Non supported content formats.
-      foreach ($node->field_content_format as $item) {
-        if ($item->target_id == 12) {
-          $reason = t('Sorry, maps are not supported.');
-          break;
-        }
-        elseif ($item->target_id == 12570) {
-          $reason = t('Sorry, infographics are not supported.');
-          break;
-        }
-        elseif ($item->target_id == 38974) {
-          $reason = t('Sorry, interactive reports are not supported.');
-          break;
-        }
-      }
-
-      if (!empty($reason)) {
-        foreach (Element::children($form) as $key) {
-          $form[$key]['#access'] = FALSE;
-        }
-        $form['unsupported'] = [
-          '#type' => 'inline_template',
-          '#template' => '<p class="ocha-ai-chat-chat-form__unsupported">{{ reason }}</p>',
-          '#context' => [
-            'reason' => $reason,
-          ],
-        ];
-      }
-    }
-  }
-}
-
-/**
- * Implements hook_block_access().
- */
-function reliefweb_entities_block_access(Block $block, $operation, AccountInterface $account) {
-  // Disable the AI chat on map, infographic and interactive content since they
-  // don't have much content that can be used by the AI.
-  if ($operation === 'view' && $block->getPluginId() === 'ocha_ai_chat_chat_popup') {
-    $router = \Drupal::service('router.no_access_checks');
-    try {
-      $parameters = $router->matchRequest(\Drupal::request());
-    }
-    catch (\Exception $exception) {
-      return AccessResult::forbidden();
-    }
-
-    $node = $parameters['node'] ?? NULL;
-
-    if (isset($node) && $node instanceof Report) {
-      if (in_array($node->field_content_format->target_id, [12, 12570, 38974])) {
-        return AccessResult::forbidden();
-      }
-    }
-  }
-  // No opinion.
-  return AccessResult::neutral();
 }

@@ -47,43 +47,6 @@ function reliefweb_reporting_get_weekly_ai_tagging_stats() {
   $schema = \Drupal::database()->schema();
   $records = [];
 
-  // To avoid losing data when transitioning, we fetch the information from the
-  // previous tagging system and concatenate it with the new one.
-  if ($schema->tableExists('node_revision__reliefweb_job_tagger_status')) {
-    $old_records = $connection->query("
-        SELECT
-          nr.nid AS nid,
-          nr.vid As vid,
-          IFNULL(GROUP_CONCAT(DISTINCT ur.roles_target_id ORDER BY ur.roles_target_id SEPARATOR ','), '') AS roles,
-          GROUP_CONCAT(DISTINCT nfcc.field_career_categories_target_id ORDER BY nfcc.field_career_categories_target_id SEPARATOR ',') AS career_categories,
-          GROUP_CONCAT(DISTINCT nft.field_theme_target_id ORDER BY nft.field_theme_target_id SEPARATOR ',') AS themes
-        FROM node_revision AS nr
-        INNER JOIN node_field_data AS n
-          ON n.nid = nr.nid
-        INNER JOIN node_revision__reliefweb_job_tagger_status AS njts
-          ON njts.entity_id = n.nid
-          AND njts.revision_id = nr.vid
-          AND njts.reliefweb_job_tagger_status_value = 'processed'
-        LEFT JOIN user__roles AS ur
-          ON ur.entity_id = nr.revision_uid
-        LEFT JOIN node_revision__field_career_categories AS nfcc
-          ON nfcc.entity_id = nr.nid
-          AND nfcc.revision_id = nr.vid
-        LEFT JOIN node_revision__field_theme AS nft
-          ON nft.entity_id = nr.nid
-          AND nft.revision_id = nr.vid
-        WHERE n.type = 'job'
-          AND n.created >= UNIX_TIMESTAMP(DATE_SUB(DATE(NOW()), INTERVAL DAYOFWEEK(NOW()) + 6 DAY))
-          AND n.created < UNIX_TIMESTAMP(DATE_SUB(DATE(NOW()), INTERVAL DAYOFWEEK(NOW()) - 1 DAY))
-        GROUP BY nr.vid
-        ORDER BY nr.vid
-      ")->fetchAll(\PDO::FETCH_ASSOC);
-
-    foreach ($old_records as $record) {
-      $records[$record['nid']][$record['vid']] = $record;
-    }
-  }
-
   if ($schema->tableExists('ocha_content_classification_progress')) {
     $new_records = $connection->query("
       SELECT

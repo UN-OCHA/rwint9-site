@@ -51,7 +51,10 @@ class NodeForm extends ControllerBase {
 
     // For reports, we simply load the messages from the report attention field.
     if ($bundle === 'report') {
-      $messages = $this->loadSourceAttentionMessages($bundle, $ids);
+      // No messages for contributors.
+      if (!$this->currentUser()->hasRole('contributor')) {
+        $messages = $this->loadSourceAttentionMessages($bundle, $ids);
+      }
     }
     // For jobs or training, we combine the job and training attention messages
     // as the information is useful for both teams.

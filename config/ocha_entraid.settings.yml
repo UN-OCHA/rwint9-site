@@ -1,0 +1,30 @@
+_core:
+  default_config_hash: NAmQvdKWBfPlHEZzOU3fgGjxcYBQTfz7xn9goDv0r80
+uimc_api:
+  token_url: ''
+  registration_url: ''
+  user_details_url: ''
+  group_management_url: ''
+  username: ''
+  password: ''
+  consumer_key: ''
+  consumer_secret: ''
+  send_email: false
+  verify_ssl: true
+  request_timeout: 10
+  default_group: ''
+  encryption_key: ''
+messages:
+  invalid_email: 'Invalid valid email address.'
+  login_explanation: '<p>Please enter your email address to access your account.</p>'
+  login_account_blocked: 'We encountered an issue with your account. Please reach out for assistance.'
+  login_account_not_found: 'We were unable to find your account. Please check your information and try again.'
+  login_account_verification_error: 'We encountered an issue while verifying your account. Please try again later or reach out for assistance if the problem persists.'
+  login_redirection_error: 'We are experiencing difficulties with the login process. Please try again later or reach out for assistance if the issue continues.'
+  registration_explanation: '<p>Create an account to easily access our services.<br>If you already possess a UN email address, please <a href="/user/login/entraid">log in here</a> directly.</p>'
+  registration_invalid_first_name: 'First name must contain only letters, spaces, hyphens, or apostrophes and be no longer than 30 characters.'
+  registration_invalid_last_name: 'Last name must contain only letters, spaces, hyphens, or apostrophes and be no longer than 30 characters.'
+  registration_invalid_email: 'Email must contain only letters, numbers, hyphens, or periods and be no longer than 100 characters.'
+  registration_success: 'Thank you for signing up. Please wait a moment and then log in to finalize your registration.'
+  registration_success_with_email: 'Thank you for signing up! A confirmation email has been sent to your mailbox. Please check your email and follow the instructions to finalize your registration.'
+  registration_failure: 'We encountered an issue while processing your registration. Please try again later or reach out for assistance.'

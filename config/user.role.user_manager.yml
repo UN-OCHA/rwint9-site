@@ -16,6 +16,7 @@ permissions:
   - 'administer subscriptions'
   - 'administer users'
   - 'assign beta_tester role'
+  - 'assign contributor role'
   - 'assign editor role'
   - 'assign external_disaster_manager role'
   - 'assign job_importer role'

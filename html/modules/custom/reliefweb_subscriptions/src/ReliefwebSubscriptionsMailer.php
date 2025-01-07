@@ -1156,14 +1156,6 @@ class ReliefwebSubscriptionsMailer {
         ],
       ],
     ];
-    // Add link to Digital sitrep if there is one.
-    $dsr_url = $this->config('reliefweb_dsr')->get('ocha_dsr_url');
-    if (!empty($dsr_url) && isset($data['origin']) && strpos($data['origin'], $dsr_url) === 0) {
-      array_unshift($prefooter_parts, [
-        'text' => 'Digital Situation Report for ' . $country_name,
-        'link' => $data['origin'],
-      ]);
-    }
     $variables['#prefooter'] = $this->prepareFooterLinks($prefooter_parts, $subscription);
 
     return $variables;

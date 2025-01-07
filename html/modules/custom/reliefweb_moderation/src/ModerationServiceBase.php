@@ -1929,8 +1929,8 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
       return '';
     }
 
-    // This is only valid for jobs and training. Skip it otherwise.
-    if ($bundle !== 'job' && $bundle !== 'training') {
+    // This is only valid for jobs, trainings and reports. Skip it otherwise.
+    if ($bundle !== 'job' && $bundle !== 'training' && $bundle !== 'report') {
       return '';
     }
 

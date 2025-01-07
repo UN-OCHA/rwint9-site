@@ -18,32 +18,56 @@
 {{ attach_library('common_design_subtheme/rw-form') }}
 
 {# Table of contents. #}
-{{
-  render_var({
+{% set field_sections = {
+  'content': 'Content'|t,
+  'files': 'Files'|t,
+  'dates': 'Dates'|t,
+  'source': 'Source'|t,
+  'countries-disasters': 'Countries & Disasters'|t,
+  'details': 'Details'|t,
+  'headline': 'Headline'|t,
+}%}
+
+{% set submission_sections = {
+  'editorial-flags': 'Editorial flags'|t,
+  'actions': 'Save'|t,
+  'edit-revision-information': 'Revisions'|t,
+}%}
+
+{% if 'contributor' in user.getroles(TRUE)  %}
+  {% set field_sections = {
+    'content': 'Content'|t,
+    'files': 'Files'|t,
+    'dates': 'Dates'|t,
+    'source': 'Source'|t,
+    'countries-disasters': 'Countries & Disasters'|t,
+    'details': 'Details'|t,
+  }%}
+
+  {% set submission_sections = {
+    'editorial-flags': 'Notify'|t,
+    'actions': 'Save'|t,
+    'edit-revision-information': 'Revisions'|t,
+  }%}
+{% endif %}
+
+{% set toc = {
     '#theme': 'reliefweb_entities_table_of_contents',
     '#sections': {
       'fields': {
         'title': 'Fields'|t,
-        'sections': {
-          'content': 'Content'|t,
-          'files': 'Files'|t,
-          'dates': 'Dates'|t,
-          'source': 'Source'|t,
-          'countries-disasters': 'Countries & Disasters'|t,
-          'details': 'Details'|t,
-          'headline': 'Headline'|t,
-        },
+        'sections': field_sections,
       },
       'submission': {
         'title': 'Submission'|t,
-        'sections': {
-          'editorial-flags': 'Editorial flags'|t,
-          'actions': 'Save'|t,
-          'edit-revision-information': 'Revisions'|t,
-        },
+        'sections': submission_sections,
       },
     },
-  })
+  }
+%}
+
+{{
+  render_var(toc)
 }}
 
 {# Form content. #}
@@ -88,20 +112,29 @@
   {{ form.field_theme }}
 </fieldset>
 
-<fieldset id="headline">
-  <legend>{% trans %}Headline information{% endtrans %}</legend>
-  {{ form.field_headline }}
-  {{ form.field_headline_title }}
-  {{ form.field_headline_summary }}
-  {{ form.field_headline_image }}
-</fieldset>
+{% if 'contributor' not in user.getroles(TRUE)  %}
+  <fieldset id="headline">
+    <legend>{% trans %}Headline information{% endtrans %}</legend>
+    {{ form.field_headline }}
+    {{ form.field_headline_title }}
+    {{ form.field_headline_summary }}
+    {{ form.field_headline_image }}
+  </fieldset>
+{% endif %}
 
-<fieldset id="editorial-flags">
-  <legend>{% trans %}Editorial flags{% endtrans %}</legend>
-  {{ form.field_bury }}
-  {{ form.field_feature }}
-  {{ form.field_notify }}
-</fieldset>
+{% if 'contributor' not in user.getroles(TRUE)  %}
+  <fieldset id="editorial-flags">
+    <legend>{% trans %}Editorial flags{% endtrans %}</legend>
+    {{ form.field_bury }}
+    {{ form.field_feature }}
+    {{ form.field_notify }}
+  </fieldset>
+{% else %}
+  <fieldset id="editorial-flags">
+    <legend>{% trans %}Notify{% endtrans %}</legend>
+    {{ form.field_notify }}
+  </fieldset>
+{% endif %}
 
 <fieldset id="actions">
   <legend class="visually-hidden">{% trans %}Form submission and other actions{% endtrans %}</legend>
