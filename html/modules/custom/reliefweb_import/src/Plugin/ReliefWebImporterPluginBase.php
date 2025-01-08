@@ -203,8 +203,6 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
     // Retrieve the provider UUID from the state.
     $configuration['provider_uuid'] = $this->state->get($key . '.provider_uuid', '');
 
-    print_r($configuration);
-
     return $configuration;
   }
 
