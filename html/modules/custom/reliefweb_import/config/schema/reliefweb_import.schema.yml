@@ -6,6 +6,9 @@ reliefweb_import.plugin.importer:
     enabled:
       type: bool
       label: 'Whether the plugin is enabled or not.'
+    provider_uuid:
+      type: string
+      label: 'UUID of the Post API provider used associated with this importer plugin.'
 
 # UNHCR Data importer plugin settings.
 reliefweb_import.plugin.importer.unhcr_data:
@@ -27,7 +30,4 @@ reliefweb_import.plugin.importer.unhcr_data:
     timeout:
       type: int
       label: 'Connection and request timeout.'
-    provider_uuid:
-      type: string
-      label: 'UUID of the Post API provider used associated with this imported plugin.'
 

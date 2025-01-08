@@ -11,12 +11,14 @@ use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_import\Exception\InvalidConfigurationException;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
 use GuzzleHttp\ClientInterface;
@@ -48,6 +50,8 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
    *   The plugin implementation definition.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The config factory service.
+   * @param \Drupal\Core\State\StateInterface $state
+   *   The state service.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerFactory
    *   The logger factory service.
    * @param \GuzzleHttp\ClientInterface $httpClient
@@ -56,6 +60,8 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
    *   The mime type guesser.
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
    *   The entity field manager.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager.
    * @param \Drupal\Core\Entity\EntityRepositoryInterface $entityRepository
    *   The entity repository.
    * @param \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface $contentProcessorPluginManager
@@ -68,10 +74,12 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
     $plugin_id,
     $plugin_definition,
     protected ConfigFactoryInterface $configFactory,
+    protected StateInterface $state,
     protected LoggerChannelFactoryInterface $loggerFactory,
     protected ClientInterface $httpClient,
     protected MimeTypeGuesserInterface $mimeTypeGuesser,
     protected EntityFieldManagerInterface $entityFieldManager,
+    protected EntityTypeManagerInterface $entityTypeManager,
     protected EntityRepositoryInterface $entityRepository,
     protected ContentProcessorPluginManagerInterface $contentProcessorPluginManager,
     protected ExtensionPathResolver $pathResolver,
@@ -92,10 +100,12 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
       $plugin_id,
       $plugin_definition,
       $container->get('config.factory'),
+      $container->get('state'),
       $container->get('logger.factory'),
       $container->get('http_client'),
       $container->get('file.mime_type.guesser.extension'),
       $container->get('entity_field.manager'),
+      $container->get('entity_type.manager'),
       $container->get('entity.repository'),
       $container->get('plugin.manager.reliefweb_post_api.content_processor'),
       $container->get('extension.path.resolver'),
@@ -121,7 +131,7 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
    * {@inheritdoc}
    */
   public function enabled(): bool {
-    return $this->getPluginSetting('enabled', FALSE, FALSE);
+    return (bool) $this->getPluginSetting('enabled', FALSE, FALSE);
   }
 
   /**
@@ -184,7 +194,77 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
   /**
    * {@inheritdoc}
    */
+  public function loadConfiguration(): array {
+    $key = $this->getConfigurationKey();
+
+    // Retrieve the plugin configuration.
+    $configuration = $this->configFactory->get($key)?->get() ?? [];
+
+    // Retrieve the provider UUID from the state.
+    $configuration['provider_uuid'] = $this->state->get($key . '.provider_uuid', '');
+
+    print_r($configuration);
+
+    return $configuration;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function saveConfiguration(array $configuration): void {
+    $key = $this->getConfigurationKey();
+
+    // Exclude the provider UUID since that's content. We save it in the state
+    // instead.
+    $provider_uuid = $configuration['provider_uuid'] ?? '';
+    unset($configuration['provider_uuid']);
+
+    // Update the plugin configuration.
+    $config = $this->configFactory->getEditable($key);
+    $config->setData($configuration);
+    $config->save();
+
+    // Store the provider UUID associated with the importer.
+    $this->state->set($key . '.provider_uuid', $provider_uuid);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfigurationKey(): string {
+    return 'reliefweb_import.plugin.importer.' . $this->getPluginId();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
+    $form['enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enabled'),
+      '#default_value' => $form_state->getValue('enabled', $this->enabled()),
+    ];
+
+    // Retrieve the list of available Post API providers.
+    $provider_options = [];
+    $storage = $this->entityTypeManager->getStorage('reliefweb_post_api_provider');
+    $providers = $storage->loadMultiple();
+    foreach ($providers as $provider) {
+      $provider_options[$provider->uuid()] = $provider->label();
+    }
+
+    $provider_uuid = $form_state->getValue('provider_uuid', $this->getPluginSetting('provider_uuid', '', FALSE));
+    $provider_uuid = isset($provider_options[$provider_uuid]) ? $provider_uuid : '';
+
+    $form['provider_uuid'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Post API Provider'),
+      '#description' => $this->t('The Post API provider associated with this importer.'),
+      '#options' => $provider_options,
+      '#default_value' => $provider_uuid,
+      '#empty_option' => $this->t('- Select a provider -'),
+    ];
+
     return $form;
   }
 
@@ -198,7 +278,7 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
    * {@inheritdoc}
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state): void {
-    $this->setConfiguration($form_state->getValues());
+    $this->setConfiguration($form_state->cleanValues()->getValues());
   }
 
   /**

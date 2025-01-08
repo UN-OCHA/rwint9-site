@@ -63,6 +63,30 @@ interface ReliefWebImporterPluginInterface {
   public function getPluginSetting(string $key, mixed $default = NULL, bool $throw_if_null = TRUE): mixed;
 
   /**
+   * Load the plugin configuration.
+   *
+   * @return array
+   *   The plugin configuration.
+   */
+  public function loadConfiguration(): array;
+
+  /**
+   * Save the plugin configuration.
+   *
+   * @param array $configuration
+   *   The plugin configuration to save.
+   */
+  public function saveConfiguration(array $configuration): void;
+
+  /**
+   * Get the name of the configuration for this plugin.
+   *
+   * @return string
+   *   Configuration name.
+   */
+  public function getConfigurationKey(): string;
+
+  /**
    * Import newest and update content.
    *
    * @param int $limit

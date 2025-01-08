@@ -1,0 +1,5 @@
+reliefweb_import.reliefweb_importer.plugin.list:
+  title: 'ReliefWeb Content Importers'
+  route_name: reliefweb_import.reliefweb_importer.plugin.list
+  description: 'Manage ReliefWeb content importer plugins.'
+  parent: system.admin_config_content

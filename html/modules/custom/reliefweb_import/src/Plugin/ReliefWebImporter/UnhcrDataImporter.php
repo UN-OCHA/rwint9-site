@@ -653,6 +653,47 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
     $form = parent::buildConfigurationForm($form, $form_state);
 
+    $form['api_url'] = [
+      '#type' => 'url',
+      '#title' => $this->t('API URL'),
+      '#description' => $this->t('The base URL of the UNHCR Data API.'),
+      '#default_value' => $form_state->getValue('api_url', $this->getPluginSetting('api_url', '', FALSE)),
+      '#required' => TRUE,
+    ];
+
+    $form['api_key'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('API Key'),
+      '#description' => $this->t('The API key for authentication.'),
+      '#default_value' => $form_state->getValue('api_key', $this->getPluginSetting('api_key', '', FALSE)),
+      '#required' => TRUE,
+    ];
+
+    $form['list_endpoint'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('List Endpoint'),
+      '#description' => $this->t('The endpoint path to get a list of documents.'),
+      '#default_value' => $form_state->getValue('list_endpoint', $this->getPluginSetting('list_endpoint', '', FALSE)),
+      '#required' => TRUE,
+    ];
+
+    $form['document_endpoint'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Document Endpoint'),
+      '#description' => $this->t('The endpoint path to get a single document.'),
+      '#default_value' => $form_state->getValue('document_endpoint', $this->getPluginSetting('document_endpoint', '', FALSE)),
+      '#required' => TRUE,
+    ];
+
+    $form['timeout'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Timeout'),
+      '#description' => $this->t('Connection and request timeout in seconds.'),
+      '#default_value' => $form_state->getValue('timeout', $this->getPluginSetting('timeout', 5, FALSE)),
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
     return $form;
   }
 
@@ -662,7 +703,7 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
   public function importContent(int $limit = 50): bool {
     // Get list of documents.
     try {
-      $timeout = $this->getPluginSetting('timeout') ?? 5;
+      $timeout = $this->getPluginSetting('timeout', 5, FALSE);
       $api_url = $this->getPluginSetting('api_url');
       $api_key = $this->getPluginSetting('api_key');
       $list_endpoint = $this->getPluginSetting('list_endpoint');

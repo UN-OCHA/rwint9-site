@@ -34,4 +34,18 @@ class ReliefWebImporterPluginManager extends DefaultPluginManager implements Rel
     $this->alterInfo('reliefweb_import_reliefweb_importer_info');
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getPlugin(string $plugin_id): ?ReliefWebImporterPluginInterface {
+    if (!$this->hasDefinition($plugin_id)) {
+      return NULL;
+    }
+
+    $plugin = $this->createInstance($plugin_id);
+    $plugin->setConfiguration($plugin->loadConfiguration());
+
+    return $plugin;
+  }
+
 }

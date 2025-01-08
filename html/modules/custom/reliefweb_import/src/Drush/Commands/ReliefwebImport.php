@@ -5,7 +5,6 @@ namespace Drupal\reliefweb_import\Drush\Commands;
 use Consolidation\SiteAlias\SiteAliasManagerAwareInterface;
 use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
 use Consolidation\SiteProcess\ProcessManagerAwareTrait;
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\reliefweb_import\Plugin\ReliefwebImporterPluginManagerInterface;
 use Drupal\reliefweb_import\Service\JobFeedsImporterInterface;
 use Drush\Commands\DrushCommands;
@@ -23,7 +22,6 @@ class ReliefwebImport extends DrushCommands implements SiteAliasManagerAwareInte
    * {@inheritdoc}
    */
   public function __construct(
-    protected ConfigFactoryInterface $configFactory,
     protected JobFeedsImporterInterface $jobImporter,
     protected ReliefwebImporterPluginManagerInterface $importerPluginManager,
   ) {}
@@ -72,19 +70,8 @@ class ReliefwebImport extends DrushCommands implements SiteAliasManagerAwareInte
       return FALSE;
     }
 
-    $settings = $this->configFactory
-      ->get('reliefweb_import')
-      ->get('plugin.reliefweb_import.importer.' . $plugin_id);
-
-    if (empty($settings)) {
-      $this->logger()->error(strtr('No settings for importer plugin: @plugin_id.', [
-        'plugin_id' => $plugin_id,
-      ]));
-      return FALSE;
-    }
-
-    /** @var \Drupal\reliefweb_import\Plugin\ImporterPluginInterface|null $plugin */
-    $plugin = $this->importerPluginManager->createInstance($plugin_id, $settings);
+    /** @var ?\Drupal\reliefweb_import\Plugin\ReliefWebImporterPluginInterface $plugin */
+    $plugin = $this->importerPluginManager->getPlugin($plugin_id);
     if (empty($plugin)) {
       $this->logger()->error(strtr('Unable to create importer plugin: @plugin_id.', [
         'plugin_id' => $plugin_id,
