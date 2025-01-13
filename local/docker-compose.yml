@@ -92,8 +92,8 @@ services:
       # - "../html/modules/contrib:/srv/www/html/modules/contrib:rw"
       # - "../html/themes/contrib:/srv/www/html/themes/contrib:rw"
       # Mount nginx custom configuration.
-      - "../docker/etc/nginx/apps/drupal/drupal.conf:/etc/nginx/apps/drupal/drupal.conf"
-      - "../docker/etc/nginx/custom:/etc/nginx/custom"
+      # - "../docker/etc/nginx/apps/drupal/drupal.conf:/etc/nginx/apps/drupal/drupal.conf"
+      # - "../docker/etc/nginx/custom:/etc/nginx/custom"
     environment:
       TERM: xterm
       ENVIRONMENT: local
