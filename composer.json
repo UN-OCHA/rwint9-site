@@ -50,7 +50,7 @@
         "drupal/memcache": "^2.5",
         "drupal/metatag": "^2",
         "drupal/mimemail": "^1.0@alpha",
-        "drupal/openid_connect": "dev-3.x",
+        "drupal/openid_connect": "^3.0",
         "drupal/openid_connect_windows_aad": "^2.0@beta",
         "drupal/pathauto": "^1.11",
         "drupal/redirect": "^1.8",
