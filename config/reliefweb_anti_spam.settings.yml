@@ -1,0 +1,15 @@
+_core:
+  default_config_hash: VtU3f6WKNIyX9_daOVXiXfzX2-dlruf6cVe0s-LKreM
+post_limit:
+  enabled: true
+  number: 1
+  frequency: day
+validation:
+  blacklisted_domains: ''
+  title_min_words: 2
+  title_min_length: 10
+  body_min_words: 20
+  body_min_length: 100
+error_messages:
+  content_quality: 'The content of your submission does not meet our quality standards. Please review and revise.'
+  submission_frequency: 'You have reached the maximum number of submissions allowed at this time. Please try again later.'
