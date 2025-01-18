@@ -156,6 +156,13 @@
   font-size: 16px;
   font-weight: bold;
 }
+.rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__embargo-date {
+  font-size: 14px;
+  font-style: italic;
+}
+.rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__embargo-date em {
+  font-weight: bold;
+}
 .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__info {
   font-size: 15px;
 }
