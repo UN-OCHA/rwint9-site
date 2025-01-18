@@ -2,7 +2,7 @@ _core:
   default_config_hash: VtU3f6WKNIyX9_daOVXiXfzX2-dlruf6cVe0s-LKreM
 post_limit:
   enabled: true
-  number: 1
+  number: 5
   frequency: day
 validation:
   blacklisted_domains: ''
