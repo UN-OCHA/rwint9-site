@@ -509,6 +509,25 @@
         }
       });
 
+      // Allow clicking on the total "status" numbers to check the corresponding
+      // status filter and uncheck the othe ones. Clicking total selects all the
+      // statuses.
+      document.querySelector('.rw-moderation-content__total-list').addEventListener('click', function (event) {
+        const target = event.target;
+        if (target) {
+          const parent = target.closest('[data-moderation-status]');
+          if (parent) {
+            const status = parent.getAttribute('data-moderation-status');
+            const name = 'filters[status][' + status + ']';
+            const checkboxes = document.querySelectorAll('input[type="checkbox"][name^="filters[status]"]');
+
+            checkboxes.forEach(checkbox => {
+              checkbox.checked = checkbox.name === name || status === 'total';
+            });
+          }
+        }
+      });
+
       // Initialize the widget.
       active = changeWidget(omnibox, select, active, false);
     }

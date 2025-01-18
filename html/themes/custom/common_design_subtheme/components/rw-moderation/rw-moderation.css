@@ -127,12 +127,16 @@
   flex-direction: column;
   justify-content: flex-end;
   padding: 0 0 8px 0;
+  cursor: pointer;
   text-transform: none;
   border-bottom-width: 4px;
   border-bottom-style: solid;
   border-left: none;
   background: none;
   font-weight: normal;
+}
+.rw-moderation-content__total-list [data-moderation-status]:is(:hover,:focus,:active) {
+  background: var(--cd-reliefweb-brand-grey--light);
 }
 .rw-moderation-content__total-list [data-moderation-status] strong {
   margin-top: 8px;
