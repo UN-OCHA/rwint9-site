@@ -52,6 +52,10 @@
           {% if cell.headline_title %}
             <div class="rw-moderation-table__cell__headline-title">{{ cell.headline_title }}</div>
           {% endif %}
+          {# Embargo date for reports. #}
+          {% if cell.embargo_date %}
+            <div class="rw-moderation-table__cell__embargo-date">{{ 'Embargo date: %date UTC'|t({'%date': cell.embargo_date|date('j M Y h:s')}) }}</div>
+          {% endif %}
           {# Info like country and source. #}
           <div class="rw-moderation-table__cell__info">
           {% for id, item in cell.info %}
