@@ -1,0 +1,6 @@
+reliefweb_anti_spam.settings:
+  title: 'ReliefWeb Anti-Spam'
+  description: 'Configure ReliefWeb Anti-Spam settings.'
+  parent: system.admin_config_content
+  route_name: reliefweb_anti_spam.settings
+  weight: 100

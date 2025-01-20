@@ -1,0 +1,7 @@
+type: module
+name: ReliefWeb Anti-Spam
+description: Limits job and training post spamming on ReliefWeb by implementing submission restrictions.
+package: ReliefWeb
+core_version_requirement: ^10 || ^11
+dependencies:
+  - reliefweb_moderation:reliefweb_moderation

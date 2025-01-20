@@ -272,6 +272,7 @@ class JobModeration extends ModerationServiceBase {
       'title',
       'body',
       'how_to_apply',
+      'automated_classification',
     ]);
     $definitions['country']['exclude'] = ReliefWebStateHelper::getJobIrrelevantCountries();
     $definitions['theme']['exclude'] = ReliefWebStateHelper::getJobIrrelevantThemes();

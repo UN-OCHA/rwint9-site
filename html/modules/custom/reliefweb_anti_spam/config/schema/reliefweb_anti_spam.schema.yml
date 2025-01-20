@@ -1,0 +1,46 @@
+reliefweb_anti_spam.settings:
+  type: config_object
+  label: 'ReliefWeb Anti-Spam settings'
+  mapping:
+    post_limit:
+      type: mapping
+      label: 'Post limit settings'
+      mapping:
+        enabled:
+          type: boolean
+          label: 'Enable post limit'
+        number:
+          type: integer
+          label: 'Number of posts'
+        frequency:
+          type: string
+          label: 'Frequency'
+    validation:
+      type: mapping
+      label: 'Validation settings'
+      mapping:
+        blacklisted_domains:
+          type: string
+          label: 'Blacklisted domains'
+        title_min_words:
+          type: integer
+          label: 'Minimum words in title'
+        title_min_length:
+          type: integer
+          label: 'Minimum length of title'
+        body_min_words:
+          type: integer
+          label: 'Minimum words in body'
+        body_min_length:
+          type: integer
+          label: 'Minimum length of body'
+    error_messages:
+      type: mapping
+      label: 'Error messages'
+      mapping:
+        content_quality:
+          type: string
+          label: 'Content quality error message'
+        submission_frequency:
+          type: string
+          label: 'Submission frequency error message'
