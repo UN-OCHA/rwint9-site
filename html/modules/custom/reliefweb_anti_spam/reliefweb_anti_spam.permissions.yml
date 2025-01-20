@@ -1,0 +1,7 @@
+administer reliefweb anti-spam settings:
+  title: 'Administer ReliefWeb Anti-Spam settings'
+  description: 'Allow access to the ReliefWeb Anti-Spam settings form.'
+
+bypass reliefweb anti spam:
+  title: 'Bypass ReliefWeb Anti-Spam validation'
+  description: 'Allow users to bypass the anti-spam checks when submitting job or training posts.'

@@ -27,6 +27,7 @@ dependencies:
     - guidelines
     - ocha_ai
     - ocha_ai_chat
+    - reliefweb_anti_spam
     - reliefweb_bookmarks
     - reliefweb_guidelines
     - reliefweb_users
@@ -43,6 +44,7 @@ permissions:
   - 'access taxonomy overview'
   - 'add content to books'
   - 'add guideline entities'
+  - 'administer reliefweb anti-spam settings'
   - 'create new books'
   - 'create terms in career_category'
   - 'create terms in content_format'
