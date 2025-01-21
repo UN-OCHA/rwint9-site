@@ -44,4 +44,20 @@ class User extends UserBase implements EntityRevisionedInterface {
     return reliefweb_user_history_get_account_history_content($this);
   }
 
+  /**
+   * Get the entity's revision history cache tag.
+   *
+   * @see \Drupal\reliefweb_revisions\EntityRevisionedInterface::getHistoryCacheTags()
+   */
+  public function getHistoryCacheTag(): string {
+    return implode(':', [
+      'reliefweb_revisions',
+      'history',
+      'entity',
+      $this->getEntityTypeId(),
+      $this->bundle(),
+      $this->id(),
+    ]);
+  }
+
 }

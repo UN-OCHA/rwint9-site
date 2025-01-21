@@ -166,7 +166,7 @@ class EntityHistory {
       ])->toString(),
       '#cache' => [
         'contexts' => ['user.permissions'],
-        'tags' => $entity->getCacheTags(),
+        'tags' => $this->getRevisionHistoryEntityCacheTags($entity),
       ],
     ];
   }
@@ -188,7 +188,7 @@ class EntityHistory {
     }
 
     $cache_id = 'reliefweb_revisions:history:entity:' . $entity->getEntityTypeId() . ':' . $entity->id();
-    $cache_tags = $entity->getCacheTags();
+    $cache_tags = $this->getRevisionHistoryEntityCacheTags($entity);
     $cache_tags[] = 'taxonomy_term_list';
     $cache_tags[] = 'media_list';
 
@@ -290,9 +290,24 @@ class EntityHistory {
       '#ignored' => $data['ignored'] ?? 0,
       '#cache' => [
         'contexts' => ['user.permissions'],
-        'tags' => $entity->getCacheTags(),
+        'tags' => $this->getRevisionHistoryEntityCacheTags($entity),
       ],
     ];
+  }
+
+  /**
+   * Get the cache tags for the revision history of the given entity.
+   *
+   * @param \Drupal\reliefweb_revisions\EntityRevisionedInterface $entity
+   *   Entity.
+   *
+   * @return array
+   *   Cache tags.
+   */
+  protected function getRevisionHistoryEntityCacheTags(EntityRevisionedInterface $entity) {
+    $tags = $entity->getCacheTags();
+    $tags[] = $entity->getHistoryCacheTag();
+    return $tags;
   }
 
   /**
