@@ -1,0 +1,23 @@
+diff --git a/amazon_ses.module b/amazon_ses.module
+new file mode 100644
+index 0000000..b778644
+--- /dev/null
++++ b/amazon_ses.module
+@@ -0,0 +1,17 @@
++<?php
++
++/**
++ * @file
++ * Hooks for the amazon_ses module.
++ */
++
++/**
++ * Implements hook_queue_info_alter().
++ */
++function amazon_ses_hook_queue_info_alter(&$queues) {
++  $enabled = \Drupal::config('amazon_ses.settings')->get('queue');
++
++  if (!$enabled && isset($queues['amazon_ses_mail_queue']['cron'])) {
++    unset($queues['amazon_ses_mail_queue']['cron']);
++  }
++}
