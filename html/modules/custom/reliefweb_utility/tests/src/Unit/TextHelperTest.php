@@ -81,6 +81,64 @@ class TextHelperTest extends UnitTestCase {
   }
 
   /**
+   * Test sanitize text.
+   *
+   * @covers \Drupal\reliefweb_utility\Helpers\TextHelper::sanitizeText
+   */
+  public function testSanitizeText() {
+    $tests = [
+      [
+        'input' => "  Multiple   spaces   and\ttabs  ",
+        'expected' => "Multiple spaces and tabs",
+        'preserve_newline' => FALSE,
+      ],
+      [
+        'input' => "Line breaks\nshould be\r\nremoved",
+        'expected' => "Line breaks should be removed",
+        'preserve_newline' => FALSE,
+      ],
+      [
+        'input' => "Line breaks\nshould be\r\npreserved",
+        'expected' => "Line breaks\nshould be\npreserved",
+        'preserve_newline' => TRUE,
+      ],
+      [
+        'input' => "Unicode\u{200B}zero-width\u{200B}space",
+        'expected' => "Unicodezero-widthspace",
+        'preserve_newline' => FALSE,
+      ],
+      [
+        'input' => "Multiple\n\n\nNewlines",
+        'expected' => "Multiple\nNewlines",
+        'preserve_newline' => TRUE,
+      ],
+      [
+        'input' => "Non-breaking\u{00A0}space",
+        'expected' => "Non-breaking space",
+        'preserve_newline' => FALSE,
+      ],
+      [
+        'input' => "Control\u{0007}character",
+        'expected' => "Controlcharacter",
+        'preserve_newline' => FALSE,
+      ],
+      [
+        'input' => "HTML&nbsp;non-breaking-space",
+        'expected' => "HTML non-breaking-space",
+        'preserve_newline' => FALSE,
+      ],
+    ];
+
+    foreach ($tests as $test) {
+      $this->assertEquals(
+        $test['expected'],
+        TextHelper::sanitizeText($test['input'], $test['preserve_newline']),
+        'Failed sanitizing: ' . $test['input']
+      );
+    }
+  }
+
+  /**
    * Test strip embedded content..
    *
    * @covers \Drupal\reliefweb_utility\Helpers\TextHelper::stripEmbeddedContent

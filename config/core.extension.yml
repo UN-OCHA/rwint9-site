@@ -72,6 +72,7 @@ module:
   redirect: 0
   reliefweb_ai: 0
   reliefweb_analytics: 0
+  reliefweb_anti_spam: 0
   reliefweb_api: 0
   reliefweb_bookmarks: 0
   reliefweb_contact: 0
