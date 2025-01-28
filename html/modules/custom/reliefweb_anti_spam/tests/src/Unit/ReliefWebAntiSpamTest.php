@@ -184,6 +184,29 @@ class ReliefWebAntiSpamTest extends UnitTestCase {
   }
 
   /**
+   * Test text fields are different.
+   */
+  public function testCheckContentIsDifferent(): void {
+    // Test fields with same content.
+    $text_fields = [
+      'field1' => 'text',
+      'field2' => 'another text',
+      'field3' => 'text',
+    ];
+    $result = reliefweb_anti_spam_check_text_field_equality($text_fields);
+    $this->assertTrue($result);
+
+    // Test clean content.
+    $text_fields = [
+      'field1' => 'text',
+      'field2' => 'another text',
+      'field3' => 'another another text',
+    ];
+    $result = reliefweb_anti_spam_check_text_field_equality($text_fields);
+    $this->assertFalse($result);
+  }
+
+  /**
    * Test blacklisted domains checking.
    */
   public function testCheckBlacklistedDomains(): void {
