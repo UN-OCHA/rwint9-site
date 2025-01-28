@@ -2472,28 +2472,28 @@
         },
         {
             "name": "drupal/amazon_ses",
-            "version": "3.0.1",
+            "version": "3.1.0",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/amazon_ses.git",
-                "reference": "3.0.1"
+                "reference": "3.1.0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/amazon_ses-3.0.1.zip",
-                "reference": "3.0.1",
-                "shasum": "2dbb10219056e21f0bb60d37df5b459caea635e2"
+                "url": "https://ftp.drupal.org/files/projects/amazon_ses-3.1.0.zip",
+                "reference": "3.1.0",
+                "shasum": "0a598eee62c85d7ee8cbb55ad43ce00ece217bae"
             },
             "require": {
                 "aws/aws-sdk-php": "^3.54",
                 "drupal/aws": "^2.0",
-                "drupal/core": "^9.1 || ^10"
+                "drupal/core": "^9.1 || ^10 || ^11"
             },
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "3.0.1",
-                    "datestamp": "1671308264",
+                    "version": "3.1.0",
+                    "datestamp": "1737386574",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
@@ -4326,7 +4326,7 @@
                 "shasum": "fc8ea60619b6b4682bade340e13fb4565d3a7e0c"
             },
             "require": {
-                "drupal/core": "^9.1 || ^10"
+                "drupal/core": "^10"
             },
             "type": "drupal-module",
             "extra": {
@@ -4529,7 +4529,7 @@
                 "shasum": "c25246747dac4372c7d5a5a5fd0f276d9e468eff"
             },
             "require": {
-                "drupal/core": "^9.3 || ^10",
+                "drupal/core": "^10",
                 "drupal/mailsystem": "^4"
             },
             "require-dev": {
@@ -5441,7 +5441,7 @@
                 "shasum": "4623b9d0de4c624857df10daaa8c68793942ad87"
             },
             "require": {
-                "drupal/core": "^10.3 || ^11",
+                "drupal/core": "^10",
                 "enshrined/svg-sanitize": ">=0.15 <1.0"
             },
             "type": "drupal-module",
@@ -5601,7 +5601,7 @@
                 "shasum": "4aa9b119c9c992fd9930fa50f97cd89959c3bafb"
             },
             "require": {
-                "drupal/core": "^8.9 || ^9 || ^10 || ^11"
+                "drupal/core": "^10"
             },
             "type": "drupal-module",
             "extra": {
