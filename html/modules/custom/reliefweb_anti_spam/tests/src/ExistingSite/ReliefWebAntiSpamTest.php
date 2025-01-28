@@ -249,4 +249,31 @@ class ReliefWebAntiSpamTest extends ExistingSiteBase {
     $this->assertSession()->pageTextContains($message);
   }
 
+  /**
+   * Tests that a user cannot submit a body containing only URLs.
+   */
+  public function testTextFieldsWithSameContent(): void {
+    // Create a user with permissions to create job nodes and log in.
+    $user = $this->createUser(['create job content']);
+    $this->drupalLogin($user);
+
+    // Navigate to the form page.
+    $this->drupalGet('/node/add/job');
+
+    // Submit the form with body containing only URLs.
+    $this->submitForm([
+      'title[0][value]' => 'Valid Job Title',
+      'body[0][value]' => "This is some text.",
+      'field_how_to_apply[0][value]' => 'This is some text.',
+    ], 'Submit');
+
+    // Get the error message for body only URLs validation.
+    $message = $this->container->get('config.factory')
+      ->get('reliefweb_anti_spam.settings')
+      ->get('error_messages.content_quality');
+
+    // Assert that an error message is displayed for body containing only URLs.
+    $this->assertSession()->pageTextContains($message);
+  }
+
 }
