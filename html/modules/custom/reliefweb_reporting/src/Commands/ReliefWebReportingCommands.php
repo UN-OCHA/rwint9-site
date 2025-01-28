@@ -9,6 +9,7 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_reporting\ApiIndexerResource\ReportExtended;
+use Drupal\reliefweb_reporting\AutomatedClassificationReporting;
 use Drush\Commands\DrushCommands;
 use Google\Client;
 use Google\Http\MediaFileUpload;
@@ -974,6 +975,190 @@ class ReliefWebReportingCommands extends DrushCommands {
       }
     }
     return $returnChunk;
+  }
+
+  /**
+   * Export manually retagged content to TSV format.
+   *
+   * This command exports data (id, url, title, changed fields)
+   *
+   * @param string $entity_type_id
+   *   Entity type ID.
+   * @param string $bundle
+   *   Entity bundle.
+   * @param string $start
+   *   Starting date for the export (inclusive). Reports created after this date
+   *   will be included. Defaults to "-1 month".
+   * @param string $end
+   *   End date for the export (exclusive). Reports created up to this date
+   *   will be included. Defaults to "now".
+   * @param array $options
+   *   Additional options for the command (see below).
+   *
+   * @command reliefweb_reporting:export-manually-retagged-content
+   * @aliases rw-export-manually-retagged-content
+   *
+   * @option output
+   *   The export TSV file path. Defaults to standard output (php://stdout).
+   * @option gdrive-upload-folder
+   *   Upload the generated report file to the GDrive folder with this ID.
+   *   Expects the folder to exist.
+   *   The GOOGLE_APPLICATION_CREDENTIALS environment variable needs to point
+   *   at a valid JSON credential file or contain valid JSON credential data.
+   *   Requires --output to be a file and not stdout.
+   *
+   * @default $options [
+   *   'output' => 'php://stdout',
+   *   'gdrive-upload-folder' => NULL,
+   * ]
+   *
+   * @usage reliefweb_reporting:export-manually-retagged-content "2021-01-01T00:00:01+00:00" "now" --output=/tmp/report-data-export.tsv
+   *   Export data from 2021 to now into /tmp/report-data-export.tsv.
+   * @usage reliefweb_reporting:export-manually-retagged-content "2021-01-01T00:00:01+00:00" "now" --output=/tmp/report-data-export.tsv --upload-grive-folder=9frh70y744yyr49
+   *   Export data from 2021 to now into /tmp/report-data-export.tsv and
+   *   then upload it to Google Drive.
+   *
+   * @validate-module-enabled reliefweb_reporting
+   */
+  public function exportManuallyRetaggedContent(
+    string $entity_type_id = 'node',
+    string $bundle = 'job',
+    string $start = '-1 month',
+    string $end = 'now',
+    array $options = [
+      'output' => 'php://stdout',
+      'gdrive-upload-folder' => NULL,
+    ],
+  ): bool {
+    $output = $options['output'] ?? 'php://stdout';
+
+    // Are we uploading the result?
+    $upload = (!empty($options['gdrive-upload-folder']) && $output != 'php://stdout');
+    $credentials = getenv('GOOGLE_APPLICATION_CREDENTIALS');
+
+    // Early exit if upload is requested but credentials are absent.
+    if ($upload === TRUE && empty($credentials)) {
+      $this->logger->error('Error: Upload requested but no credentials provided.');
+      return FALSE;
+    }
+
+    // Retrieve the list of manually retagged content.
+    $data = (new AutomatedClassificationReporting())
+      ->getManuallyRetaggedContent($entity_type_id, $bundle, $start, $end);
+    $total = count($data);
+
+    if (empty($total)) {
+      $this->logger->info('No manually retagged content found for the given date range.');
+      return TRUE;
+    }
+    else {
+      $this->logger->info(strtr('Found @total manually retagged content to export.', [
+        '@total' => $total,
+      ]));
+    }
+
+    // Open the output file.
+    $file = fopen($output, 'w');
+    if ($file === FALSE) {
+      $this->logger->error(strtr('Unable to write output to @output.', [
+        '@output' => $output,
+      ]));
+      return FALSE;
+    }
+
+    // Write the headers to the TSV file.
+    fputcsv($file, array_keys(reset($data)), "\t");
+
+    try {
+      // Flatten and write to the TSV file.
+      foreach ($data as $row) {
+        if (!fputcsv($file, $row, "\t")) {
+          $this->logger->error('Unable to write TSV row');
+        }
+      }
+    }
+    catch (\Exception $exception) {
+      $this->logger->error(strtr('Error: @message.', [
+        '@message' => $exception->getMessage(),
+      ]));
+      return FALSE;
+    }
+    finally {
+      fclose($file);
+    }
+
+    $this->logger->info(strtr('Exported @total entries', [
+      '@total' => $total,
+    ]));
+
+    if ($upload) {
+      $client = new Client();
+
+      // Suppress error to avoid echoing the credential in a traceback.
+      if (!@file_exists($credentials)) {
+        $client->setAuthConfig(json_decode($credentials, TRUE));
+      }
+      else {
+        $client->useApplicationDefaultCredentials();
+      }
+
+      $client->setApplicationName("Reliefweb Reports Data Uploader");
+      $client->setScopes(['https://www.googleapis.com/auth/drive']);
+      $client->setDefer(TRUE);
+      $service = new Drive($client);
+
+      $file = new DriveFile();
+      $file->setName(basename($output));
+      $file->setParents([$options['gdrive-upload-folder']]);
+
+      // Upload files in 1 MB chunks.
+      $upload_chunk_size = 1 * 1024 * 1024;
+
+      try {
+        $request = $service->files->create($file);
+
+        // A MediaFileUpload allows us to chunk the upload.
+        $upload = new MediaFileUpload(
+          $client,
+          $request,
+          'text/tab-separated-values',
+          NULL,
+          TRUE,
+          $upload_chunk_size
+        );
+        $upload->setFileSize(filesize($output));
+
+        $status = FALSE;
+        $stream = fopen($output, "rb");
+        while (!$status && !feof($stream)) {
+          $chunk = $this->readFileChunk($stream, $upload_chunk_size);
+          $status = $upload->nextChunk($chunk);
+        }
+
+        // The final $status should contain the DriveFile object.
+        $result = FALSE;
+        if ($status != FALSE) {
+          $result = $status;
+        }
+
+      }
+      catch (\Exception $exception) {
+        $this->logger->error(strtr('Error: @message.', [
+          '@message' => $exception->getMessage(),
+        ]));
+        return FALSE;
+      }
+      finally {
+        fclose($stream);
+      }
+
+      $this->logger->info(strtr('@file uploaded as ID @id', [
+        '@file' => basename($output),
+        '@id'   => $result->getId(),
+      ]));
+    }
+
+    return TRUE;
   }
 
 }
