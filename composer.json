@@ -37,7 +37,6 @@
         "drupal/core-recommended": "^10",
         "drupal/environment_indicator": "^4.0",
         "drupal/geofield": "^1.52",
-        "drupal/google_tag": "^1.6",
         "drupal/guidelines": "^1.0",
         "drupal/honeypot": "2.1.4",
         "drupal/imageapi_optimize_binaries": "^1.0@beta",

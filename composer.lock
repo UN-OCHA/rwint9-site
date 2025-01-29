@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "21fd82c3e6440c1c7b5f270d31c104de",
+    "content-hash": "2d7b796e9e7f1356ad2af30815556e7e",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -3609,66 +3609,6 @@
             }
         },
         {
-            "name": "drupal/google_tag",
-            "version": "1.7.0",
-            "source": {
-                "type": "git",
-                "url": "https://git.drupalcode.org/project/google_tag.git",
-                "reference": "8.x-1.7"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/google_tag-8.x-1.7.zip",
-                "reference": "8.x-1.7",
-                "shasum": "e46c24b62c3c3c6b5d7232f3b679b46b1fe0c7a9"
-            },
-            "require": {
-                "drupal/core": "^8.8 || ^9 || ^10"
-            },
-            "type": "drupal-module",
-            "extra": {
-                "drupal": {
-                    "version": "8.x-1.7",
-                    "datestamp": "1710888941",
-                    "security-coverage": {
-                        "status": "covered",
-                        "message": "Covered by Drupal's security advisory policy"
-                    }
-                }
-            },
-            "notification-url": "https://packages.drupal.org/8/downloads",
-            "license": [
-                "GPL-2.0-or-later"
-            ],
-            "authors": [
-                {
-                    "name": "acquia",
-                    "homepage": "https://www.drupal.org/user/1231722"
-                },
-                {
-                    "name": "japerry",
-                    "homepage": "https://www.drupal.org/user/45640"
-                },
-                {
-                    "name": "kaynen",
-                    "homepage": "https://www.drupal.org/user/733308"
-                },
-                {
-                    "name": "mglaman",
-                    "homepage": "https://www.drupal.org/user/2416470"
-                },
-                {
-                    "name": "solotandem",
-                    "homepage": "https://www.drupal.org/user/240748"
-                }
-            ],
-            "description": "Allows your website analytics to be managed using Google Tag Manager.",
-            "homepage": "https://www.drupal.org/project/google_tag",
-            "support": {
-                "source": "https://git.drupalcode.org/project/google_tag"
-            }
-        },
-        {
             "name": "drupal/guidelines",
             "version": "1.0.5",
             "source": {
@@ -4326,7 +4266,7 @@
                 "shasum": "fc8ea60619b6b4682bade340e13fb4565d3a7e0c"
             },
             "require": {
-                "drupal/core": "^9.1 || ^10"
+                "drupal/core": "^10"
             },
             "type": "drupal-module",
             "extra": {
@@ -4529,7 +4469,7 @@
                 "shasum": "c25246747dac4372c7d5a5a5fd0f276d9e468eff"
             },
             "require": {
-                "drupal/core": "^9.3 || ^10",
+                "drupal/core": "^10",
                 "drupal/mailsystem": "^4"
             },
             "require-dev": {
@@ -5441,7 +5381,7 @@
                 "shasum": "4623b9d0de4c624857df10daaa8c68793942ad87"
             },
             "require": {
-                "drupal/core": "^10.3 || ^11",
+                "drupal/core": "^10",
                 "enshrined/svg-sanitize": ">=0.15 <1.0"
             },
             "type": "drupal-module",
@@ -5601,7 +5541,7 @@
                 "shasum": "4aa9b119c9c992fd9930fa50f97cd89959c3bafb"
             },
             "require": {
-                "drupal/core": "^8.9 || ^9 || ^10 || ^11"
+                "drupal/core": "^10"
             },
             "type": "drupal-module",
             "extra": {
