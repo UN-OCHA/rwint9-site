@@ -22,3 +22,14 @@ user.email.confirmation.process:
     _maintenance_access: FALSE
     no_cache: TRUE
 
+reliefweb_users.posting_rights:
+  path: '/user/{user}/posting-rights'
+  defaults:
+    _controller: '\Drupal\reliefweb_users\Controller\UserPostingRightsController::content'
+    _title: 'Posting Rights'
+  requirements:
+    _permission: 'access user posting rights page'
+  options:
+    parameters:
+      user:
+        type: entity:user
