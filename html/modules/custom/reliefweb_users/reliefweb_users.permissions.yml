@@ -6,5 +6,9 @@ manage user roles:
   title: 'Manage user roles'
   description: 'Allow users to manager user roles on other accounts.'
 
+access user posting rights page:
+  title: 'Access posting user rights page'
+  description: 'Allow users to access the user posting rights page.'
+
 permission_callbacks:
   - Drupal\reliefweb_users\UserPermissions::permissions

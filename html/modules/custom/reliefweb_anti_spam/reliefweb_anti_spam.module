@@ -74,9 +74,28 @@ function reliefweb_anti_spam_node_form_validate(array &$form, FormStateInterface
   // Check content quality.
   $title = TextHelper::sanitizeText($form_state->getValue('title')[0]['value'] ?? '');
   $body = TextHelper::sanitizeText(strip_tags($form_state->getValue('body')[0]['value'] ?? ''), TRUE);
-  $how_to_apply = TextHelper::sanitizeText(strip_tags($form_state->getValue('field_how_to_apply')[0]['value'] ?? ''), TRUE);
+  $text_fields = ['title' => $title, 'body' => $body];
 
-  if (reliefweb_anti_spam_check_blacklisted_domains($title . ' ' . $body . ' ' . $how_to_apply)) {
+  // Retrieve the registration/application field if any and check it's different
+  // than the title or body.
+  $registration_field = match ($bundle) {
+    'job' => 'field_how_to_apply',
+    'training' => 'field_how_to_register',
+    default => NULL,
+  };
+
+  if (!empty($registration_field)) {
+    $registration_field_text = TextHelper::sanitizeText(strip_tags($form_state->getValue($registration_field)[0]['value'] ?? ''), TRUE);
+    $text_fields[$registration_field] = $registration_field_text;
+
+    if (reliefweb_anti_spam_check_text_field_equality($text_fields)) {
+      $form_state->setError($form, $config->get('error_messages.content_quality'));
+      $logger->warning('Field texts cannot have the same content in submission from user @uid', ['@uid' => $user->id()]);
+      return;
+    }
+  }
+
+  if (reliefweb_anti_spam_check_blacklisted_domains(implode(' ', $text_fields))) {
     $form_state->setError($form, $config->get('error_messages.content_quality'));
     $logger->warning('Blacklisted domain detected in submission from user @uid', ['@uid' => $user->id()]);
     return;
@@ -174,6 +193,19 @@ function reliefweb_anti_spam_get_frequency_time(string $frequency): int {
     'year' => 31536000,
     default => 0,
   };
+}
+
+/**
+ * Check if some fields have the same content.
+ *
+ * @param array<string,string> $text_fields
+ *   Associative array of text field name to value.
+ *
+ * @return bool
+ *   TRUE if at least 2 text fields have the same content.
+ */
+function reliefweb_anti_spam_check_text_field_equality(array $text_fields): bool {
+  return count(array_unique($text_fields)) !== count($text_fields);
 }
 
 /**

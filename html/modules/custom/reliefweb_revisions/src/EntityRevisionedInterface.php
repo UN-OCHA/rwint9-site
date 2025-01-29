@@ -25,4 +25,12 @@ interface EntityRevisionedInterface {
    */
   public function getHistoryContent();
 
+  /**
+   * Get the entity's revision history cache tag.
+   *
+   * @return string
+   *   Cache tag.
+   */
+  public function getHistoryCacheTag(): string;
+
 }

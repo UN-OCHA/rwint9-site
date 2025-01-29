@@ -59,6 +59,7 @@ permissions:
   - 'access reliefweb private files'
   - 'access reliefweb user posting rights field validation'
   - 'access user contact forms'
+  - 'access user posting rights page'
   - 'access user profiles'
   - 'add content to books'
   - 'administer community topics'

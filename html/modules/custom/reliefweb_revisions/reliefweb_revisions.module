@@ -5,7 +5,10 @@
  * ReliefWeb revisions module file.
  */
 
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_revisions\Services\EntityHistory;
 
 /**
@@ -146,4 +149,13 @@ function reliefweb_revisions_form_node_form_alter(array &$form, FormStateInterfa
  */
 function reliefweb_revisions_form_taxonomy_term_form_alter(array &$form, FormStateInterface $form_state) {
   EntityHistory::addHistoryToForm($form, $form_state);
+}
+
+/**
+ * Implements hook_entity_revision_delete().
+ */
+function reliefweb_revisions_entity_revision_delete(EntityInterface $entity) {
+  if ($entity instanceof EntityRevisionedInterface) {
+    Cache::invalidateTags([$entity->getHistoryCacheTag()]);
+  }
 }

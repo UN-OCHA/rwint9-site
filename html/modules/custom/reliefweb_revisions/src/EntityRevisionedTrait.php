@@ -35,6 +35,22 @@ trait EntityRevisionedTrait {
   }
 
   /**
+   * Get the entity's revision history cache tag.
+   *
+   * @see \Drupal\reliefweb_revisions\EntityRevisionedInterface::getHistoryCacheTags()
+   */
+  public function getHistoryCacheTag(): string {
+    return implode(':', [
+      'reliefweb_revisions',
+      'history',
+      'entity',
+      $this->getEntityTypeId(),
+      $this->bundle(),
+      $this->id(),
+    ]);
+  }
+
+  /**
    * Get the entity history service.
    *
    * @return \Drupal\reliefweb_revisions\Services\EntityHistory
