@@ -278,3 +278,11 @@ function reliefweb_users_get_email_confirmation_hash(UserInterface $user, $times
   $data = implode('/', [$user->id(), $timestamp, $email, $confirmed]);
   return Crypt::hmacBase64($data, Settings::getHashSalt() . $email);
 }
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function reliefweb_users_entity_type_alter(array &$entity_types) {
+  /** @var \Drupal\Core\Entity\EntityTypeInterface[] $entity_types */
+  $entity_types['user']->setLinkTemplate('posting-rights', '/user/{user}/posting-rights');
+}
