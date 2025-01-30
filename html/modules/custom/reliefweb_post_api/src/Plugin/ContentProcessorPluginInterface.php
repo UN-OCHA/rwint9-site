@@ -401,6 +401,8 @@ interface ContentProcessorPluginInterface {
    *   Field item definition.
    * @param string $uuid
    *   File UUID.
+   * @param string $file_name
+   *   File name.
    * @param string $url
    *   Remote file URL.
    * @param string $checksum
@@ -413,7 +415,7 @@ interface ContentProcessorPluginInterface {
    * @return \Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile|null
    *   ReliefWeb file field item.
    */
-  public function createReliefWebFileFieldItem(DataDefinitionInterface $definition, string $uuid, string $url, string $checksum, string $mimetype, string $max_size = ''): ?ReliefWebFile;
+  public function createReliefWebFileFieldItem(DataDefinitionInterface $definition, string $uuid, string $file_name, string $url, string $checksum, string $mimetype, string $max_size = ''): ?ReliefWebFile;
 
   /**
    * Create and validate a file.
@@ -490,8 +492,8 @@ interface ContentProcessorPluginInterface {
   /**
    * Get the mime of the file.
    *
-   * @param string $uri
-   *   File uri.
+   * @param string $path
+   *   File path or URI.
    * @param array $allowed_mimetypes
    *   List of allowed mimetypes. An empty list means any mime type is accepted.
    *
@@ -501,7 +503,7 @@ interface ContentProcessorPluginInterface {
    * @throws \Drupal\reliefweb_post_api\Plugin\ContentProcessorException
    *   Exception if the mimetype could be guessed or is not allowed.
    */
-  public function guessFileMimeType(string $uri, array $allowed_mimetypes = []): string;
+  public function guessFileMimeType(string $path, array $allowed_mimetypes = []): string;
 
   /**
    * Get the default language code.
@@ -510,5 +512,25 @@ interface ContentProcessorPluginInterface {
    *   The default language ID.
    */
   public function getDefaultLangcode(): string;
+
+  /**
+   * Set a setting for the plugin.
+   *
+   * @param string $name
+   *   Setting name. Can be a nested property in the form parent.child.subchild.
+   * @param mixed $value
+   *   Setting value.
+   */
+  public function setPluginSetting(string $name, mixed $value): void;
+
+  /**
+   * Get a setting for the plugin.
+   *
+   * @param string $name
+   *   Setting name. Can be a nested property in the form parent.child.subchild.
+   * @param mixed $default
+   *   Default value.
+   */
+  public function getPluginSetting(string $name, mixed $default = NULL): mixed;
 
 }

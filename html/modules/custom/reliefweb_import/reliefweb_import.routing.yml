@@ -1,0 +1,15 @@
+reliefweb_import.reliefweb_importer.plugin.list:
+  path: '/admin/config/reliefweb/content-importers'
+  defaults:
+    _controller: '\Drupal\reliefweb_import\Controller\ReliefWebImporterListController::listImporters'
+    _title: 'ReliefWeb Content Importers'
+  requirements:
+    _permission: 'administer reliefweb content importers'
+
+reliefweb_import.reliefweb_importer.plugin.configure:
+  path: '/admin/config/reliefweb/content-importers/{plugin_id}/configure'
+  defaults:
+    _form: '\Drupal\reliefweb_import\Form\ReliefWebImporterConfigForm'
+    _title_callback: '\Drupal\reliefweb_import\Form\ReliefWebImporterConfigForm::getTitle'
+  requirements:
+    _permission: 'administer reliefweb content importers'

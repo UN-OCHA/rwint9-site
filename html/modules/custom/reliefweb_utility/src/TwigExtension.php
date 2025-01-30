@@ -170,7 +170,7 @@ class TwigExtension extends AbstractExtension {
   /**
    * Get an entity's Link.
    *
-   * @param \Drupal\Core\Entity\EntityInterface $entity
+   * @param \Drupal\Core\Entity\EntityInterface|null $entity
    *   Entity.
    * @param string|null $text
    *   The link text for the anchor tag as a translated string. If NULL, it will
@@ -184,8 +184,8 @@ class TwigExtension extends AbstractExtension {
    * @return \Drupal\Core\GeneratedLink
    *   The entity link HTML.
    */
-  public static function getEntityLink(EntityInterface $entity, $text = NULL, $rel = 'canonical', array $options = []) {
-    return $entity->toLink($text, $rel, $options)->toString();
+  public static function getEntityLink(?EntityInterface $entity = NULL, $text = NULL, $rel = 'canonical', array $options = []) {
+    return $entity?->toLink($text, $rel, $options)?->toString() ?? $text ?? t('Unknown');
   }
 
   /**

@@ -13,11 +13,14 @@ use Drupal\reliefweb_entities\DocumentInterface;
 use Drupal\reliefweb_entities\DocumentTrait;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\EntityModeratedTrait;
+use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_revisions\EntityRevisionedTrait;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\ReliefWebStateHelper;
+use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
+use Drupal\reliefweb_utility\Helpers\UserHelper;
 
 /**
  * Bundle class for report nodes.
@@ -210,8 +213,6 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
    * {@inheritdoc}
    */
   public function preSave(EntityStorageInterface $storage) {
-    parent::preSave($storage);
-
     // Change the publication date if bury is selected, to the original
     // publication date.
     if (!empty($this->field_bury->value) && !$this->field_original_publication_date->isEmpty()) {
@@ -241,6 +242,9 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
       }
     }
 
+    // Update the entity status based on the user posting rights.
+    $this->updateModerationStatusFromPostingRights();
+
     // Change the status to `embargoed` if there is an embargo date.
     $embargo_statuses = ['embargoed', 'to-review', 'published'];
     if (!empty($this->field_embargo_date->value) && in_array($this->getModerationStatus(), $embargo_statuses)) {
@@ -250,13 +254,18 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
         '@date' => DateHelper::format($this->field_embargo_date->value, 'custom', 'd M Y H:i e'),
       ]);
 
-      $log = trim($this->getRevisionLogMessage() ?? '');
+      $log = trim($this->getRevisionLogMessage() ?: '');
       $log = $message . (!empty($log) ? "\n" . $log : '');
       $this->setRevisionLogMessage($log);
     }
 
     // Prepare notifications.
     $this->preparePublicationNotification();
+
+    // Update the entity status based on the source(s) moderation status.
+    $this->updateModerationStatusFromSourceStatus();
+
+    parent::preSave($storage);
   }
 
   /**
@@ -352,6 +361,102 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
     // Send the email.
     \Drupal::service('plugin.manager.mail')
       ->mail('reliefweb_entities', 'report_publication_notification', $to, $langcode, $parameters, $from, TRUE);
+  }
+
+  /**
+   * Update the status for the entity based on the user posting rights.
+   */
+  protected function updateModerationStatusFromPostingRights() {
+    // In theory the revision user here, is the current user saving the entity.
+    /** @var \Drupal\user\UserInterface|null $user */
+    $user = $this->getRevisionUser();
+    $status = $this->getModerationStatus();
+
+    // Skip if there is no revision user. That should normally not happen with
+    // new content but some old revisions may reference users that don't exist
+    // anymore (which should not happen either but...).
+    if (empty($user)) {
+      return;
+    }
+
+    // For non editors, we determine the real status based on the user
+    // posting rights for the selected sources.
+    if (!UserHelper::userHasRoles(['editor'], $user) && in_array($status, ['pending'])) {
+      // Retrieve the list of sources and check the user rights.
+      if (!$this->field_source->isEmpty()) {
+        // Extract source ids.
+        $sources = [];
+        foreach ($this->field_source as $item) {
+          if (!empty($item->target_id)) {
+            $sources[] = $item->target_id;
+          }
+        }
+
+        // Get the user's posting right for the document.
+        $rights = [];
+        foreach (UserPostingRightsHelper::getUserPostingRights($user, $sources) as $tid => $data) {
+          $rights[$data[$this->bundle()] ?? 0][] = $tid;
+        }
+
+        // Blocked for some sources.
+        if (!empty($rights[1])) {
+          $status = 'refused';
+        }
+        // Trusted for all the sources.
+        elseif (isset($rights[3]) && count($rights[3]) === count($sources)) {
+          $status = 'published';
+        }
+        // Trusted for at least 1.
+        elseif (isset($rights[3]) && count($rights[3]) > 0) {
+          $status = 'to-review';
+        }
+        // Allowed for all the sources.
+        elseif (isset($rights[2]) && count($rights[2]) === count($sources)) {
+          $status = 'to-review';
+        }
+        // Unverified for some sources.
+        else {
+          $status = 'pending';
+        }
+
+        $this->setModerationStatus($status);
+
+        // Add messages indicating the posting rights for easier review.
+        $message = '';
+        if (!empty($rights[1])) {
+          $message = trim($message . strtr(' Blocked user for @sources.', [
+            '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[1])),
+          ]));
+        }
+        if (!empty($rights[0])) {
+          $message = trim($message . strtr(' Unverified user for @sources.', [
+            '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[0])),
+          ]));
+        }
+        if (!empty($rights[2])) {
+          $message = trim($message . strtr(' Allowed user for @sources.', [
+            '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[2])),
+          ]));
+        }
+        if (!empty($rights[3])) {
+          $message = trim($message . strtr(' Trusted user for @sources.', [
+            '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[3])),
+          ]));
+        }
+
+        // Update the log message.
+        if (!empty($message)) {
+          $revision_log_field = $this->getEntityType()
+            ->getRevisionMetadataKey('revision_log_message');
+
+          if (!empty($revision_log_field)) {
+            $log = trim($this->{$revision_log_field}->value ?? '');
+            $log = $message . (!empty($log) ? ' ' . $log : '');
+            $this->{$revision_log_field}->value = $log;
+          }
+        }
+      }
+    }
   }
 
   /**

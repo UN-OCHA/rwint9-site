@@ -1,0 +1,33 @@
+# Importer plugin base settings.
+reliefweb_import.plugin.importer:
+  type: mapping
+  label: 'ReliefWeb importer plugin base settings.'
+  mapping:
+    enabled:
+      type: bool
+      label: 'Whether the plugin is enabled or not.'
+    provider_uuid:
+      type: string
+      label: 'UUID of the Post API provider used associated with this importer plugin.'
+
+# UNHCR Data importer plugin settings.
+reliefweb_import.plugin.importer.unhcr_data:
+  type: reliefweb_import.plugin.importer
+  label: 'UNHCR Data importer plugin base settings.'
+  mapping:
+    api_url:
+      type: string
+      label: 'API URL.'
+    api_key:
+      type: string
+      label: 'API key.'
+    list_endpoint:
+      type: string
+      label: 'Endpoint path to get a list of documents.'
+    document_endpoint:
+      type: string
+      label: 'Endpoint path to get a document.'
+    timeout:
+      type: int
+      label: 'Connection and request timeout.'
+
