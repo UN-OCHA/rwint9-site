@@ -1,0 +1,7 @@
+reliefweb_anti_spam.settings:
+  path: '/admin/config/content/reliefweb-anti-spam'
+  defaults:
+    _form: '\Drupal\reliefweb_anti_spam\Form\ReliefWebAntiSpamSettingsForm'
+    _title: 'ReliefWeb Anti-Spam Settings'
+  requirements:
+    _permission: 'administer reliefweb anti-spam settings'

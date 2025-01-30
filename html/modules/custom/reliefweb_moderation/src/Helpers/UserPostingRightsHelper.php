@@ -295,6 +295,47 @@ class UserPostingRightsHelper {
   }
 
   /**
+   * Check if a user is allowed or trusted for any source.
+   *
+   * @param \Drupal\Core\Session\AccountInterface|null $account
+   *   A user's account object or the current user if NULL.
+   * @param string $bundle
+   *   Entity bundle (job, training, or report).
+   *
+   * @return bool
+   *   TRUE if the user is allowed or trusted for any source, FALSE otherwise.
+   */
+  public static function isUserAllowedOrTrustedForAnySource(?AccountInterface $account = NULL, string $bundle = 'job'): bool {
+    $account = $account ?: \Drupal::currentUser();
+
+    // Anonymous users are never allowed or trusted.
+    if ($account->isAnonymous()) {
+      return FALSE;
+    }
+
+    // Validate the bundle.
+    if (!in_array($bundle, ['job', 'training', 'report'])) {
+      throw new \InvalidArgumentException("Invalid bundle: $bundle. Must be 'job', 'training', or 'report'.");
+    }
+
+    $helper = new self();
+    $database = $helper->getDatabase();
+    $table = $helper->getFieldTableName('taxonomy_term', 'field_user_posting_rights');
+    $id_field = $helper->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'id');
+    $bundle_field = $helper->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', $bundle);
+
+    $query = $database->select($table, $table);
+    $query->condition($table . '.bundle', 'source', '=');
+    $query->condition($table . '.' . $id_field, $account->id(), '=');
+    $query->condition($table . '.' . $bundle_field, 2, '>=');
+    $query->range(0, 1);
+
+    $result = $query->countQuery()->execute()->fetchField();
+
+    return (bool) $result;
+  }
+
+  /**
    * Format a user posting right.
    *
    * @param string $right

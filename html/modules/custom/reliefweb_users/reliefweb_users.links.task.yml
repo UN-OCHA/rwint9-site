@@ -1,0 +1,4 @@
+reliefweb_users.posting_rights:
+  route_name: reliefweb_users.posting_rights
+  title: 'Posting Rights'
+  base_route: entity.user.canonical

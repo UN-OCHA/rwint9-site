@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_moderation\Services;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Database\Query\Select;
 use Drupal\Core\Link;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
@@ -110,6 +111,12 @@ class ReportModeration extends ModerationServiceBase {
       $headline_title = $entity->field_headline_title->value;
       if (!empty($headline) && !empty($headline_title)) {
         $data['headline_title'] = $headline_title;
+      }
+
+      // Embargo date.
+      $embargo_date = $entity->field_embargo_date->value;
+      if (!empty($embargo_date)) {
+        $data['embargo_date'] = $embargo_date;
       }
 
       // Country and source info.
@@ -416,7 +423,7 @@ class ReportModeration extends ModerationServiceBase {
     ]);
 
     // Values are hardcoded to avoid the use of a query.
-    return array_merge_recursive($definitions, [
+    $definitions = array_merge_recursive($definitions, [
       'feature' => [
         'type' => 'field',
         'label' => $this->t('Feature'),
@@ -429,6 +436,65 @@ class ReportModeration extends ModerationServiceBase {
         ],
       ],
     ]);
+
+    // Add a filter to restrict to content with an embargo date.
+    $definitions['embargo_date'] = [
+      'type' => 'field',
+      'label' => $this->t('Embargo date'),
+      'field' => 'field_embargo_date',
+      'column' => 'value',
+      'form' => 'other',
+      // No specific widget as the join is enough.
+      'widget' => 'none',
+      'join_callback' => 'joinEmbargoDate',
+    ];
+
+    // Add a filter to restrict to content posted by a Contributor.
+    $definitions['contribution'] = [
+      'type' => 'other',
+      'field' => 'roles_target_id',
+      // Not naming that 'Contribution' to avoid confusion with the Donor
+      // Contributions theme.
+      'label' => $this->t('From contributor'),
+      'form' => 'other',
+      // No specific widget as the join is enough.
+      'widget' => 'none',
+      'join_callback' => 'joinContribution',
+    ];
+
+    return $definitions;
+  }
+
+  /**
+   * Contribution join callback.
+   *
+   * @see ::joinField()
+   */
+  protected function joinContribution(Select $query, array $definition, $entity_type_id, $entity_base_table, $entity_id_field, $or = FALSE, $values = []) {
+    // Join the users_roles table restricting to the contributor role.
+    $table = 'user__roles';
+    $query->innerJoin($table, $table, "%alias.entity_id = {$entity_base_table}.uid AND %alias.bundle = :bundle AND %alias.roles_target_id = :role", [
+      ':bundle' => 'user',
+      ':role' => 'contributor',
+    ]);
+
+    // No field to return as the inner join is enough.
+    return '';
+  }
+
+  /**
+   * Emnbargo date join callback.
+   *
+   * @see ::joinField()
+   */
+  protected function joinEmbargoDate(Select $query, array $definition, $entity_type_id, $entity_base_table, $entity_id_field, $or = FALSE, $values = []) {
+    // Join the embargo date field and restrict to content with a value.
+    $table = $this->getFieldTableName('node', 'field_embargo_date');
+    $field_name = $this->getFieldColumnName('node', 'field_embargo_date', 'value');
+    $query->innerJoin($table, $table, "%alias.entity_id = {$entity_base_table}.{$entity_id_field} AND %alias.{$field_name} IS NOT NULL");
+
+    // No field to return as the inner join is enough.
+    return '';
   }
 
 }

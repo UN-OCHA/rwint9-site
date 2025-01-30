@@ -31,6 +31,7 @@ dependencies:
     - node
     - ocha_content_classification
     - path
+    - reliefweb_anti_spam
     - reliefweb_bookmarks
     - reliefweb_fields
     - reliefweb_files
@@ -58,12 +59,14 @@ permissions:
   - 'access reliefweb private files'
   - 'access reliefweb user posting rights field validation'
   - 'access user contact forms'
+  - 'access user posting rights page'
   - 'access user profiles'
   - 'add content to books'
   - 'administer community topics'
   - 'administer url aliases'
   - 'archive content'
   - 'bypass ocha content classification'
+  - 'bypass reliefweb anti spam'
   - 'create announcement content'
   - 'create blog_post content'
   - 'create book content'
