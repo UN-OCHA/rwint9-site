@@ -4,6 +4,7 @@ namespace Drupal\reliefweb_entities;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Entity\EntityPublishedInterface;
+use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\Core\Field\EntityReferenceFieldItemList;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
@@ -91,12 +92,12 @@ trait DocumentTrait {
         ],
       ]),
     ];
-    $links['twitter'] = [
-      'title' => $this->t('Share this on Twitter'),
-      'url' => Url::fromUri('https://twitter.com/share', [
+    $links['x'] = [
+      'title' => $this->t('Share this on X'),
+      'url' => Url::fromUri('https://x.com/share', [
         'query' => [
-          'url' => $url . '&utm_source=twitter.com',
-          // Truncate the title as text for twitter to stay within the allowed
+          'url' => $url . '&utm_source=x.com',
+          // Truncate the title as text for X to stay within the allowed
           // number of characters.
           'text' => Unicode::truncate($title, 90, FALSE, TRUE),
           'via' => 'reliefweb',
@@ -353,11 +354,14 @@ trait DocumentTrait {
    * @see Drupal\reliefweb_entities\DocumentInterface::createDate()
    */
   public function createDate($date) {
-    if (empty($date)) {
-      return NULL;
+    if (is_string($date) || is_int($date)) {
+      $date = is_numeric($date) ? '@' . $date : $date;
+      return new \DateTime((string) $date, new \DateTimeZone('UTC'));
     }
-    $date = is_numeric($date) ? '@' . $date : $date;
-    return new \DateTime($date, new \DateTimeZone('UTC'));
+    elseif (is_a($date, \DateTime::class)) {
+      return $date;
+    }
+    return NULL;
   }
 
   /**
@@ -387,6 +391,44 @@ trait DocumentTrait {
         $source->setRevisionUserId(2);
         $source->setRevisionCreationTime(time());
         $source->save();
+      }
+    }
+  }
+
+  /**
+   * Update the status to refused if any of the sources is blocked.
+   */
+  protected function updateModerationStatusFromSourceStatus() {
+    if (!$this->hasField('field_source') || $this->field_source->isEmpty()) {
+      return;
+    }
+
+    $blocked = [];
+    foreach ($this->field_source as $item) {
+      $source = $item->entity;
+      if (empty($source) || !($source instanceof Source)) {
+        continue;
+      }
+
+      if ($source->getModerationStatus() === 'blocked') {
+        $blocked[] = $source->label();
+      }
+    }
+
+    if (!empty($blocked)) {
+      $this->setModerationStatus('refused');
+
+      // Add a message to the revision log.
+      if ($this instanceof RevisionLogInterface) {
+        $message = 'Submissions from "' . implode('", "', $blocked) . '" are no longer allowed.';
+
+        $log = $this->getRevisionLogMessage();
+        if (empty($log)) {
+          $this->setRevisionLogMessage($message);
+        }
+        else {
+          $this->setRevisionLogMessage($message . ' ' . $log);
+        }
       }
     }
   }

@@ -3,10 +3,13 @@
 namespace Drupal\reliefweb_moderation\Services;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Database\Query\Select;
 use Drupal\Core\Link;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
+use Drupal\node\NodeInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
+use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
 
@@ -110,8 +113,20 @@ class ReportModeration extends ModerationServiceBase {
         $data['headline_title'] = $headline_title;
       }
 
+      // Embargo date.
+      $embargo_date = $entity->field_embargo_date->value;
+      if (!empty($embargo_date)) {
+        $data['embargo_date'] = $embargo_date;
+      }
+
       // Country and source info.
       $info = [];
+
+      // User posting rights.
+      if ($entity instanceof NodeInterface && $entity->getOwner()->hasRole('contributor')) {
+        $info['posting_rights'] = UserPostingRightsHelper::renderRight(UserPostingRightsHelper::getEntityAuthorPostingRights($entity));
+      }
+
       // Country.
       $country_link = $this->getTaxonomyTermLink($entity->field_primary_country->first());
       if (!empty($country_link)) {
@@ -238,39 +253,89 @@ class ReportModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function getEntityFormSubmitButtons($status, EntityModeratedInterface $entity) {
-    $buttons = [
-      'draft' => [
-        '#value' => $this->t('Save as draft'),
-      ],
-      'to-review' => [
-        '#value' => $this->t('To review'),
-      ],
-      'published' => [
-        '#value' => $this->t('Publish'),
-      ],
-      'on-hold' => [
-        '#value' => $this->t('On-hold'),
-      ],
-      'reference' => [
-        '#value' => $this->t('Reference'),
-      ],
-    ];
+    $buttons = [];
+    $new = empty($status) || $status === 'draft' || $entity->isNew();
 
-    // Add the extra buttons to manage content submitted via the API.
-    if ($entity->hasField('field_post_api_provider') && !empty($entity->field_post_api_provider?->target_id)) {
-      $buttons['pending'] = [
-        '#value' => $this->t('Pending'),
+    // Editors can publish, put on hold or refuse a document.
+    // @todo use permission.
+    if (UserHelper::userHasRoles(['editor'])) {
+      $buttons = [
+        'draft' => [
+          '#value' => $this->t('Save as draft'),
+        ],
+        'to-review' => [
+          '#value' => $this->t('To review'),
+        ],
+        'published' => [
+          '#value' => $this->t('Publish'),
+        ],
+        'on-hold' => [
+          '#value' => $this->t('On-hold'),
+        ],
+        'reference' => [
+          '#value' => $this->t('Reference'),
+        ],
       ];
-      $buttons['refused'] = [
-        '#value' => $this->t('Refused'),
+
+      // Add extra buttons to manage content submitted via the API.
+      if ($entity->hasField('field_post_api_provider') && !empty($entity->field_post_api_provider?->target_id)) {
+        $buttons['pending'] = [
+          '#value' => $this->t('Pending'),
+        ];
+        // Note: once refused the document is not editable anymore unless
+        // the current user is also an administrator or webmaster.
+        // @see ::isEditableStatus().
+        $buttons['refused'] = [
+          '#value' => $this->t('Refused'),
+        ];
+      }
+    }
+    // Other users can save as draft, submit as pending or set on-hold.
+    else {
+      $buttons = [
+        'draft' => [
+          '#value' => $this->t('Save as draft'),
+        ],
+        'pending' => [
+          '#value' => $new ? $this->t('Submit') : $this->t('Submit changes'),
+        ],
+        'on-hold' => [
+          '#value' => $this->t('On-hold'),
+        ],
       ];
+
+      // Add confirmation when attempting to change published document.
+      if ($status === 'to-review' || $status === 'published') {
+        $message = $this->t('Press OK to submit the changes for review by the ReliefWeb editors. The report may become unpublished while being reviewed.');
+        $buttons['to-review']['#attributes']['onclick'] = 'return confirm("' . $message . '")';
+      }
     }
 
-    // @todo replace with permission.
+    // Admin and webmasters can also edit archived or refused documents.
+    // @see ::isEditableStatus().
     if (UserHelper::userHasRoles(['administrator', 'webmaster'])) {
       $buttons['archive'] = [
         '#value' => $this->t('Archive'),
       ];
+
+      // Allow to refuse already refused documents (from contributors or API).
+      if ($status === 'refused') {
+        $buttons['refused'] = [
+          '#value' => $this->t('Refused'),
+        ];
+      }
+    }
+
+    if (UserHelper::userHasRoles(['contributor'])) {
+      // Warning message when saving as a draft.
+      if (isset($buttons['draft'])) {
+        $message = $this->t('You are saving this document as a draft. It will not be visible to visitors. If you wish to proceed with the publication kindly click on @buttons instead.', [
+          '@buttons' => implode(' or ', array_map(function ($item) {
+            return $item['#value'];
+          }, array_slice($buttons, 1))),
+        ]);
+        $buttons['draft']['#attributes']['onclick'] = 'return confirm("' . $message . '")';
+      }
     }
 
     return $buttons;
@@ -287,7 +352,7 @@ class ReportModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function isEditableStatus($status, ?AccountInterface $account = NULL) {
-    if ($status === 'archive') {
+    if ($status === 'archive' || $status === 'refused') {
       return UserHelper::userHasRoles(['administrator', 'webmaster'], $account);
     }
     return TRUE;
@@ -343,6 +408,7 @@ class ReportModeration extends ModerationServiceBase {
       'original_publication_date',
       'author',
       'user_role',
+      'posting_rights',
       'reviewer',
       'reviewed',
       'comments',
@@ -357,7 +423,7 @@ class ReportModeration extends ModerationServiceBase {
     ]);
 
     // Values are hardcoded to avoid the use of a query.
-    return array_merge_recursive($definitions, [
+    $definitions = array_merge_recursive($definitions, [
       'feature' => [
         'type' => 'field',
         'label' => $this->t('Feature'),
@@ -370,6 +436,65 @@ class ReportModeration extends ModerationServiceBase {
         ],
       ],
     ]);
+
+    // Add a filter to restrict to content with an embargo date.
+    $definitions['embargo_date'] = [
+      'type' => 'field',
+      'label' => $this->t('Embargo date'),
+      'field' => 'field_embargo_date',
+      'column' => 'value',
+      'form' => 'other',
+      // No specific widget as the join is enough.
+      'widget' => 'none',
+      'join_callback' => 'joinEmbargoDate',
+    ];
+
+    // Add a filter to restrict to content posted by a Contributor.
+    $definitions['contribution'] = [
+      'type' => 'other',
+      'field' => 'roles_target_id',
+      // Not naming that 'Contribution' to avoid confusion with the Donor
+      // Contributions theme.
+      'label' => $this->t('From contributor'),
+      'form' => 'other',
+      // No specific widget as the join is enough.
+      'widget' => 'none',
+      'join_callback' => 'joinContribution',
+    ];
+
+    return $definitions;
+  }
+
+  /**
+   * Contribution join callback.
+   *
+   * @see ::joinField()
+   */
+  protected function joinContribution(Select $query, array $definition, $entity_type_id, $entity_base_table, $entity_id_field, $or = FALSE, $values = []) {
+    // Join the users_roles table restricting to the contributor role.
+    $table = 'user__roles';
+    $query->innerJoin($table, $table, "%alias.entity_id = {$entity_base_table}.uid AND %alias.bundle = :bundle AND %alias.roles_target_id = :role", [
+      ':bundle' => 'user',
+      ':role' => 'contributor',
+    ]);
+
+    // No field to return as the inner join is enough.
+    return '';
+  }
+
+  /**
+   * Emnbargo date join callback.
+   *
+   * @see ::joinField()
+   */
+  protected function joinEmbargoDate(Select $query, array $definition, $entity_type_id, $entity_base_table, $entity_id_field, $or = FALSE, $values = []) {
+    // Join the embargo date field and restrict to content with a value.
+    $table = $this->getFieldTableName('node', 'field_embargo_date');
+    $field_name = $this->getFieldColumnName('node', 'field_embargo_date', 'value');
+    $query->innerJoin($table, $table, "%alias.entity_id = {$entity_base_table}.{$entity_id_field} AND %alias.{$field_name} IS NOT NULL");
+
+    // No field to return as the inner join is enough.
+    return '';
   }
 
 }

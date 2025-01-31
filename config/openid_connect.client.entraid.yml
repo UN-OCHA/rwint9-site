@@ -1,0 +1,28 @@
+uuid: ff1f957d-f7d8-44e2-ac3c-2050bc2befa9
+langcode: en
+status: true
+dependencies:
+  module:
+    - openid_connect_windows_aad
+id: entraid
+label: 'Unite ID'
+plugin: windows_aad
+settings:
+  client_id: entraid_client_id
+  client_secret: entraid_client_secret
+  iss_allowed_domains: ''
+  authorization_endpoint_wa: ''
+  token_endpoint_wa: ''
+  end_session_endpoint: ''
+  userinfo_endpoint_wa: ''
+  map_ad_groups_to_roles: false
+  group_mapping:
+    method: 0
+    mappings: ''
+    strict: false
+  userinfo_graph_api_wa: 0
+  userinfo_graph_api_use_other_mails: false
+  userinfo_update_email: true
+  hide_email_address_warning: false
+  subject_key: sub
+  front_channel_logout_url: ''

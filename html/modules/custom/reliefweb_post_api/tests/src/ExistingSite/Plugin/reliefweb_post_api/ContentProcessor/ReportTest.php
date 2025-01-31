@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Drupal\Tests\reliefweb_post_api\ExistingSite\Plugin\reliefweb_post_api\ContentProcessor;
 
 use Drupal\Core\Entity\EntityRepositoryInterface;
-use Drupal\reliefweb_post_api\Plugin\ContentProcessorException;
 use Drupal\Tests\reliefweb_post_api\ExistingSite\Plugin\ContentProcessorPluginBaseTest;
+use Drupal\reliefweb_post_api\Plugin\ContentProcessorException;
 
 /**
  * Tests the Report content processor plugin.
@@ -158,29 +158,29 @@ class ReportTest extends ContentProcessorPluginBaseTest {
   }
 
   /**
-   * @covers ::validateUrls
+   * @covers ::validateFiles
    */
-  public function testValidateUrlsUnallowedImageUrl(): void {
+  public function testValidateFilesUnallowedImageUrl(): void {
     $data = $this->getPostApiData();
     $data['image']['url'] = 'https://wrong.test/test.jpg';
 
     // Unallowed image URL.
     $this->expectException(ContentProcessorException::class);
     $this->expectExceptionMessage('Unallowed image URL');
-    $this->plugin->validateUrls($data);
+    $this->plugin->validateFiles($data);
   }
 
   /**
-   * @covers ::validateUrls
+   * @covers ::validateFiles
    */
-  public function testValidateUrlsUnallowedFileUrl(): void {
+  public function testValidateFilesUnallowedFileUrl(): void {
     $data = $this->getPostApiData();
     $data['file'][0]['url'] = 'https://wrong.test/test.pdf';
 
     // Unallowed file URL.
     $this->expectException(ContentProcessorException::class);
     $this->expectExceptionMessage('Unallowed file URL');
-    $this->plugin->validateUrls($data);
+    $this->plugin->validateFiles($data);
   }
 
 }

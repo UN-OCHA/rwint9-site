@@ -80,7 +80,7 @@ interface ContentProcessorPluginInterface {
   public function getJsonSchema(): string;
 
   /**
-   * Get the POST API provider for the given ID.
+   * Get the Post API provider for the given ID.
    *
    * @return \Drupal\reliefweb_post_api\Entity\ProviderInterface
    *   Provider.
@@ -88,10 +88,10 @@ interface ContentProcessorPluginInterface {
   public function getProvider(string $id): ProviderInterface;
 
   /**
-   * Validate and generate an entity from the given POST API data.
+   * Validate and generate an entity from the given Post API data.
    *
    * @param array $data
-   *   POST API data.
+   *   Post API data.
    *
    * @return \Drupal\Core\Entity\ContentEntityInterface|null
    *   The created entity or NULL if it could not be created.
@@ -113,10 +113,10 @@ interface ContentProcessorPluginInterface {
   public function isProcessable(string $uuid): bool;
 
   /**
-   * Validate POST API data.
+   * Validate Post API data.
    *
    * @param array $data
-   *   POST API data.
+   *   Post API data.
    *
    * @throws \Drupal\reliefweb_post_api\Plugin\ContentProcessorException
    *   Exception if the data is not valid.
@@ -124,10 +124,10 @@ interface ContentProcessorPluginInterface {
   public function validate(array $data): void;
 
   /**
-   * Validate POST API data against the JSON schema for the managed bundle.
+   * Validate Post API data against the JSON schema for the managed bundle.
    *
    * @param array $data
-   *   POST API data.
+   *   Post API data.
    *
    * @throws \Drupal\reliefweb_post_api\Plugin\ContentProcessorException
    *   An exception with the schema errors.
@@ -135,10 +135,10 @@ interface ContentProcessorPluginInterface {
   public function validateSchema(array $data): void;
 
   /**
-   * Validate the POST API data sources against the provider allowed sources.
+   * Validate the Post API data sources against the provider allowed sources.
    *
    * @param array $data
-   *   POST API data.
+   *   Post API data.
    *
    * @throws \Drupal\reliefweb_post_api\Plugin\ContentProcessorException
    *   An exception if the sources are not allowed.
@@ -146,10 +146,10 @@ interface ContentProcessorPluginInterface {
   public function validateSources(array $data): void;
 
   /**
-   * Validate the POST API data URLs against the provider URL pattern.
+   * Validate the Post API data URLs against the provider URL pattern.
    *
    * @param array $data
-   *   POST API data.
+   *   Post API data.
    *
    * @throws \Drupal\reliefweb_post_api\Plugin\ContentProcessorException
    *   An exception if some URLs don't follow the allowed pattern.
@@ -168,6 +168,28 @@ interface ContentProcessorPluginInterface {
    *   TRUE if the URL matches the pattern.
    */
   public function validateUrl(string $url, string $pattern): bool;
+
+  /**
+   * Validate the Post API data UUID.
+   *
+   * @param array $data
+   *   Post API data.
+   *
+   * @throws \Drupal\reliefweb_post_api\Plugin\ContentProcessorException
+   *   An exception if the UUID is invalid.
+   */
+  public function validateUuid(array $data): void;
+
+  /**
+   * Validate the Post API data attachment and image files if any.
+   *
+   * @param array $data
+   *   Post API data.
+   *
+   * @throws \Drupal\reliefweb_post_api\Plugin\ContentProcessorException
+   *   An exception when a file is invalid.
+   */
+  public function validateFiles(array $data): void;
 
   /**
    * Return a list of terms that actually exist.
@@ -328,7 +350,7 @@ interface ContentProcessorPluginInterface {
    * @param string $field_name
    *   Field name.
    * @param array $files
-   *   List of file data from the POST API with URL, description, language and
+   *   List of file data from the Post API with URL, description, language and
    *   checksum.
    */
   public function setReliefWebFileField(ContentEntityInterface $entity, string $field_name, array $files): void;
@@ -341,7 +363,7 @@ interface ContentProcessorPluginInterface {
    * @param string $field_name
    *   Field name.
    * @param array $image
-   *   Image data from the POST API with URL, caption, copyright and
+   *   Image data from the Post API with URL, caption, copyright and
    *   checksum.
    */
   public function setImageField(ContentEntityInterface $entity, string $field_name, array $image): void;
@@ -379,6 +401,8 @@ interface ContentProcessorPluginInterface {
    *   Field item definition.
    * @param string $uuid
    *   File UUID.
+   * @param string $file_name
+   *   File name.
    * @param string $url
    *   Remote file URL.
    * @param string $checksum
@@ -391,7 +415,7 @@ interface ContentProcessorPluginInterface {
    * @return \Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile|null
    *   ReliefWeb file field item.
    */
-  public function createReliefWebFileFieldItem(DataDefinitionInterface $definition, string $uuid, string $url, string $checksum, string $mimetype, string $max_size = ''): ?ReliefWebFile;
+  public function createReliefWebFileFieldItem(DataDefinitionInterface $definition, string $uuid, string $file_name, string $url, string $checksum, string $mimetype, string $max_size = ''): ?ReliefWebFile;
 
   /**
    * Create and validate a file.
@@ -468,8 +492,8 @@ interface ContentProcessorPluginInterface {
   /**
    * Get the mime of the file.
    *
-   * @param string $uri
-   *   File uri.
+   * @param string $path
+   *   File path or URI.
    * @param array $allowed_mimetypes
    *   List of allowed mimetypes. An empty list means any mime type is accepted.
    *
@@ -479,7 +503,7 @@ interface ContentProcessorPluginInterface {
    * @throws \Drupal\reliefweb_post_api\Plugin\ContentProcessorException
    *   Exception if the mimetype could be guessed or is not allowed.
    */
-  public function guessFileMimeType(string $uri, array $allowed_mimetypes = []): string;
+  public function guessFileMimeType(string $path, array $allowed_mimetypes = []): string;
 
   /**
    * Get the default language code.
@@ -488,5 +512,25 @@ interface ContentProcessorPluginInterface {
    *   The default language ID.
    */
   public function getDefaultLangcode(): string;
+
+  /**
+   * Set a setting for the plugin.
+   *
+   * @param string $name
+   *   Setting name. Can be a nested property in the form parent.child.subchild.
+   * @param mixed $value
+   *   Setting value.
+   */
+  public function setPluginSetting(string $name, mixed $value): void;
+
+  /**
+   * Get a setting for the plugin.
+   *
+   * @param string $name
+   *   Setting name. Can be a nested property in the form parent.child.subchild.
+   * @param mixed $default
+   *   Default value.
+   */
+  public function getPluginSetting(string $name, mixed $default = NULL): mixed;
 
 }

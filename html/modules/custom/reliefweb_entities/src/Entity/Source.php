@@ -146,18 +146,20 @@ class Source extends Term implements BundleEntityInterface, EntityModeratedInter
     $meta = [];
 
     // Organization type.
-    $type = $this->field_organization_type->entity->label();
-    $meta['type'] = [
-      'type' => 'link',
-      'label' => $this->t('Organization type'),
-      'value' => [
-        'url' => RiverServiceBase::getRiverUrl('source', [
-          'search' => 'type.exact:"' . $type . '"',
-        ]),
-        'title' => $type,
-        'external' => FALSE,
-      ],
-    ];
+    if ($this->hasField('field_organization_type') && !$this->get('field_organization_type')->isEmpty()) {
+      $type = $this->field_organization_type->entity->label();
+      $meta['type'] = [
+        'type' => 'link',
+        'label' => $this->t('Organization type'),
+        'value' => [
+          'url' => RiverServiceBase::getRiverUrl('source', [
+            'search' => 'type.exact:"' . $type . '"',
+          ]),
+          'title' => $type,
+          'external' => FALSE,
+        ],
+      ];
+    }
 
     // Headquarters.
     $countries = [];
@@ -207,27 +209,45 @@ class Source extends Term implements BundleEntityInterface, EntityModeratedInter
   protected function getOrganizationSocialMediaLinks() {
     $links = [];
 
-    if (!$this->field_links->isEmpty()) {
-      // Get the list of allowed social media.
-      $allowed = \Drupal::config('reliefweb_entities.settings')
-        ->get('allowed_social_media_links') ?? [];
+    if ($this->field_links->isEmpty()) {
+      return [];
+    }
 
-      // Prepare the links.
-      foreach ($this->field_links as $link) {
-        $host = parse_url($link->uri, PHP_URL_HOST);
-        foreach ($allowed as $key => $name) {
-          if ($host && mb_strpos($host, $key) !== FALSE) {
-            $links[$key] = [
-              'url' => UrlHelper::encodeUrl($link->uri),
-              'title' => $name,
-            ];
-            break;
-          }
+    // Get the list of allowed social media.
+    $allowed = \Drupal::config('reliefweb_entities.settings')
+      ->get('allowed_social_media_links') ?? [];
+
+    if (empty($allowed)) {
+      return [];
+    }
+
+    // Build array of allowed domains.
+    $allowed_domains = [];
+    foreach ($allowed as $domain => $name) {
+      $allowed_domains[str_replace('_', '.', $domain)] = $name;
+    }
+
+    // Prepare the links.
+    foreach ($this->field_links as $link) {
+      $host = parse_url($link->uri, PHP_URL_HOST);
+      if (!$host) {
+        continue;
+      }
+
+      foreach ($allowed_domains as $domain => $name) {
+        if (mb_strpos($host, $domain) !== FALSE) {
+          $links[$name] = [
+            'url' => UrlHelper::encodeUrl($link->uri),
+            'title' => $name,
+          ];
+          break;
         }
       }
     }
 
     if (!empty($links)) {
+      LocalizationHelper::collatedAsort($links, 'title');
+
       return [
         '#theme' => 'reliefweb_entities_entity_social_media_links',
         '#links' => $links,

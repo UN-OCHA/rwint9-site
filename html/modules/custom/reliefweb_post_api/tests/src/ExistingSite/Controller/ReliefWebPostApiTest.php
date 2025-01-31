@@ -10,12 +10,12 @@ use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Database\Query\Upsert;
 use Drupal\Core\Database\StatementInterface;
 use Drupal\Core\Extension\ExtensionPathResolver;
-use Drupal\Core\Queue\QueueFactory;
-use Drupal\Core\Queue\QueueInterface;
 use Drupal\reliefweb_post_api\Controller\ReliefWebPostApi;
 use Drupal\reliefweb_post_api\Entity\ProviderInterface;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
+use Drupal\reliefweb_post_api\Queue\ReliefWebPostApiDatabaseQueue;
+use Drupal\reliefweb_post_api\Queue\ReliefWebPostApiDatabaseQueueFactory;
 use Symfony\Component\HttpFoundation\HeaderBag;
 use Symfony\Component\HttpFoundation\InputBag;
 use Symfony\Component\HttpFoundation\Request;
@@ -27,7 +27,7 @@ use Symfony\Component\Uid\Uuid;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
- * Tests the ReliefWeb POST API controller.
+ * Tests the ReliefWeb Post API controller.
  *
  * @coversDefaultClass \Drupal\reliefweb_post_api\Controller\ReliefWebPostApi
  *
@@ -43,7 +43,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   protected array $providers;
 
   /**
-   * Loaded POST API data.
+   * Loaded Post API data.
    *
    * @var array
    */
@@ -448,18 +448,37 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   /**
    * @covers ::postContent
    */
+  public function testPostContentDocumentUuidMismatch(): void {
+    $request = $this->createMockRequest(methods: [
+      'getContent' => '{"uuid": "78c21042-4fcd-11ef-8393-325096b39f47"}',
+    ]);
+
+    $request_stack = $this->createMockRequestStack($request);
+
+    $controller = $this->createTestController([
+      'request_stack' => $request_stack,
+    ]);
+
+    $response = $controller->postContent('reports', $this->getTestUuid());
+    $this->assertSame(400, $response->getStatusCode());
+    $this->assertStringContainsString('Document UUID mistmatch.', $response->getContent());
+  }
+
+  /**
+   * @covers ::postContent
+   */
   public function testPostContentQueueException(): void {
     $request = $this->createMockRequest();
 
     $request_stack = $this->createMockRequestStack($request);
 
-    $queue_factory = $this->createMock(QueueFactory::class);
+    $queue_factory = $this->createMock(ReliefWebPostApiDatabaseQueueFactory::class);
     $queue_factory->expects($this->any())
       ->method('get')
       ->willThrowException(new \Exception());
 
     $controller = $this->createTestController([
-      'queue' => $queue_factory,
+      'reliefweb_post_api.queue.database' => $queue_factory,
       'request_stack' => $request_stack,
     ]);
 
@@ -476,21 +495,21 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
 
     $request_stack = $this->createMockRequestStack($request);
 
-    $queue = $this->createConfiguredMock(QueueInterface::class, [
+    $queue = $this->createConfiguredMock(ReliefWebPostApiDatabaseQueue::class, [
       'createItem' => TRUE,
     ]);
 
-    $queue_factory = $this->createConfiguredMock(QueueFactory::class, [
+    $queue_factory = $this->createConfiguredMock(ReliefWebPostApiDatabaseQueueFactory::class, [
       'get' => $queue,
     ]);
 
     $controller = $this->createTestController([
-      'queue' => $queue_factory,
+      'reliefweb_post_api.queue.database' => $queue_factory,
       'request_stack' => $request_stack,
     ]);
 
     $response = $controller->postContent('reports', $this->getTestUuid());
-    $this->assertSame(200, $response->getStatusCode());
+    $this->assertSame(202, $response->getStatusCode());
     $this->assertStringContainsString('Document queued for processing.', $response->getContent());
   }
 
@@ -632,7 +651,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
 
     $services = [
       $services['request_stack'] ?? $container->get('request_stack'),
-      $services['queue'] ?? $container->get('queue'),
+      $services['reliefweb_post_api.queue.database'] ?? $container->get('reliefweb_post_api.queue.database'),
       $services['extension.path.resolver'] ?? $container->get('extension.path.resolver'),
       $services['database'] ?? $container->get('database'),
       $services['datetime.time'] ?? $container->get('datetime.time'),
@@ -643,7 +662,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
-   * Get some POST API test data.
+   * Get some Post API test data.
    *
    * @param string $bundle
    *   The bundle of the data.

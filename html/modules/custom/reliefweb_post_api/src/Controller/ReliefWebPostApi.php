@@ -8,9 +8,10 @@ use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Extension\ExtensionPathResolver;
-use Drupal\Core\Queue\QueueFactory;
 use Drupal\reliefweb_post_api\Entity\ProviderInterface;
+use Drupal\reliefweb_post_api\Plugin\ContentProcessorException;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
+use Drupal\reliefweb_post_api\Queue\ReliefWebPostApiDatabaseQueueFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -24,7 +25,7 @@ use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * Controller for the POST API.
+ * Controller for the Post API.
  */
 class ReliefWebPostApi extends ControllerBase {
 
@@ -33,8 +34,8 @@ class ReliefWebPostApi extends ControllerBase {
    *
    * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
    *   The request stack.
-   * @param \Drupal\Core\Queue\QueueFactory $queueFactory
-   *   The queue factory.
+   * @param \Drupal\reliefweb_post_api\Queue\ReliefWebPostApiDatabaseQueueFactory $queueFactory
+   *   The ReliefWeb Post API queue factory.
    * @param \Drupal\Core\Extension\ExtensionPathResolver $pathResolver
    *   The path resolver service.
    * @param \Drupal\Core\Database\Connection $database
@@ -42,11 +43,11 @@ class ReliefWebPostApi extends ControllerBase {
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The time service.
    * @param \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface $contentProcessorPluginManager
-   *   The ReliefWeb POST API content processor plugin manager.
+   *   The ReliefWeb Post API content processor plugin manager.
    */
   public function __construct(
     protected RequestStack $requestStack,
-    protected QueueFactory $queueFactory,
+    protected ReliefWebPostApiDatabaseQueueFactory $queueFactory,
     protected ExtensionPathResolver $pathResolver,
     protected Connection $database,
     protected TimeInterface $time,
@@ -59,7 +60,9 @@ class ReliefWebPostApi extends ControllerBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('request_stack'),
-      $container->get('queue'),
+      // We use our own queue that stores unique submissions based on the
+      // resource UUID.
+      $container->get('reliefweb_post_api.queue.database'),
       $container->get('extension.path.resolver'),
       $container->get('database'),
       $container->get('datetime.time'),
@@ -154,6 +157,10 @@ class ReliefWebPostApi extends ControllerBase {
         throw new BadRequestHttpException('Invalid JSON body.');
       }
 
+      if (isset($data['uuid']) && $data['uuid'] !== $uuid) {
+        throw new BadRequestHttpException('Document UUID mistmatch.');
+      }
+
       // Add the UUID if not already in the payload.
       $data['uuid'] = $data['uuid'] ?? $uuid;
 
@@ -173,16 +180,32 @@ class ReliefWebPostApi extends ControllerBase {
         throw new BadRequestHttpException("Invalid data:\n\n" . $exception->getMessage());
       }
 
-      // Queue the data so it can be processed later (ex: drush command).
-      try {
-        $queue = $this->queueFactory->get('reliefweb_post_api');
-        $queue->createItem($data);
-      }
-      catch (\Exception $exception) {
-        throw new HttpException(500, 'Internal server error.');
-      }
+      // Process the document directly.
+      if ($provider->skipQueue()) {
+        try {
+          $plugin->process($data);
+        }
+        catch (ContentProcessorException $exception) {
+          throw new BadRequestHttpException("Invalid data:\n\n" . $exception->getMessage());
+        }
+        catch (\Exception $exception) {
+          throw new HttpException(500, 'Internal server error.');
+        }
 
-      $response = new JsonResponse('Document queued for processing.', 200);
+        $response = new JsonResponse('Document processed.', 200);
+      }
+      // Queue the data so it can be processed later (ex: drush command).
+      else {
+        try {
+          $queue = $this->queueFactory->get('reliefweb_post_api');
+          $queue->createItem($data);
+        }
+        catch (\Exception $exception) {
+          throw new HttpException(500, 'Internal server error.');
+        }
+
+        $response = new JsonResponse('Document queued for processing.', 202);
+      }
     }
     catch (HttpException $exception) {
       $response = new JsonResponse($exception->getMessage(), $exception->getStatusCode());

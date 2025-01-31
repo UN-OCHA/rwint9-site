@@ -1,0 +1,12 @@
+diff --git a/src/MyPdf.php b/src/MyPdf.php
+index e6e09a0..5c06034 100644
+--- a/src/MyPdf.php
++++ b/src/MyPdf.php
+@@ -21,6 +21,7 @@ class MyPdf extends TCPDF
+     protected $_transf      = array();
+     protected $_myLastPageGroup = null;
+     protected $_myLastPageGroupNb = 0;
++    protected $tcpdflink = false;
+ 
+     // used to make a radius with bezier : (4/3 * (sqrt(2) - 1))
+     const MY_ARC = 0.5522847498;

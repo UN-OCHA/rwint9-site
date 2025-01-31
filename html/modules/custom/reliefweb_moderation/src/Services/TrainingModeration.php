@@ -47,6 +47,9 @@ class TrainingModeration extends ModerationServiceBase {
       'data' => [
         'label' => $this->t('Training'),
       ],
+      'origin' => [
+        'label' => $this->t('Origin'),
+      ],
       'date' => [
         'label' => $this->t('Posted'),
         'type' => 'property',
@@ -150,6 +153,14 @@ class TrainingModeration extends ModerationServiceBase {
 
       // Filter out empty data.
       $cells['data'] = array_filter($data);
+
+      // Retrieve the origin of the document.
+      if ($entity->hasField('field_post_api_provider') && !empty($entity->field_post_api_provider?->target_id)) {
+        $cells['origin'] = $this->t('API');
+      }
+      else {
+        $cells['origin'] = $this->t('Form');
+      }
 
       // Date cell.
       $cells['date'] = [

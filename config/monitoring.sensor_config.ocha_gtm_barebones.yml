@@ -1,7 +1,9 @@
-uuid: null
+uuid: 3e985c4d-01d9-41a2-9239-81231aeedb2d
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  module:
+    - ocha_monitoring
 id: ocha_gtm_barebones
 label: 'GTM Barebones'
 description: 'GTM Barebones'
@@ -10,7 +12,7 @@ plugin_id: ocha_gtm_barebones
 result_class: null
 value_label: 'GTM Id'
 value_type: string
-caching_time: 3600
+caching_time: 86400
 settings: {  }
 thresholds:
   type: none

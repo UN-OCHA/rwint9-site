@@ -1121,6 +1121,20 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
           'widget' => 'search',
           'join_callback' => 'joinReview',
         ],
+        'automated_classification' => [
+          'type' => 'other',
+          'label' => $this->t('Automated classification'),
+          'field' => 'status',
+          'form' => 'automated_classification',
+          // No specific widget as the join is enough.
+          'widget' => 'none',
+          'join_callback' => 'joinAutomatedClassification',
+          'values' => [
+            'queued' => 'Queued',
+            'failed' => 'Failed',
+            'completed' => 'Completed',
+          ],
+        ],
       ];
     }
 
@@ -1929,8 +1943,8 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
       return '';
     }
 
-    // This is only valid for jobs and training. Skip it otherwise.
-    if ($bundle !== 'job' && $bundle !== 'training') {
+    // This is only valid for jobs, trainings and reports. Skip it otherwise.
+    if ($bundle !== 'job' && $bundle !== 'training' && $bundle !== 'report') {
       return '';
     }
 
@@ -2015,6 +2029,23 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     $query->innerJoin($subquery, NULL, "%alias.{$entity_id_field} = {$entity_base_table}.{$entity_id_field}");
 
     // No field to return as the inner join of the subquery is enough.
+    return '';
+  }
+
+  /**
+   * Automated lassification join callback.
+   *
+   * @see ::joinField()
+   */
+  protected function joinAutomatedClassification(Select $query, array $definition, $entity_type_id, $entity_base_table, $entity_id_field, $or = FALSE, $values = []) {
+    // Join the ocha_content_classification_progress table.
+    $table = 'ocha_content_classification_progress';
+    $query->innerJoin($table, $table, "%alias.entity_id = {$entity_base_table}.{$entity_id_field} AND %alias.entity_type_id = :entity_type_id AND %alias.status IN (:statuses[])", [
+      ':entity_type_id' => $entity_type_id,
+      ':statuses[]' => $values,
+    ]);
+
+    // No field to return as the inner join is enough.
     return '';
   }
 

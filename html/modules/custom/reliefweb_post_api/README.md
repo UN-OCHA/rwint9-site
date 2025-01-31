@@ -1,8 +1,8 @@
-ReliefWeb POST API
+ReliefWeb Post API
 ==================
 
 
-This module provides a simple POST API to allow partners to submit content.
+This module provides a simple API to allow partners to submit content.
 
 TODO
 ----

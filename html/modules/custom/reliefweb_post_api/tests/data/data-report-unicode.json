@@ -1,6 +1,6 @@
 {
   "url": "https://テスト.テスト/test/report",
-  "uuid": "22ce51c2-d7ed-59b2-b71a-23fb56685df9",
+  "uuid": "c5b8036f-478d-5b53-ae45-ace3b11c3ac1",
   "title": "This a テスト document - report",
   "source": [1503],
   "country": [13, 14],
@@ -12,12 +12,16 @@
   "file": [
     {
       "url": "https://テスト.テスト/テスト1.pdf",
+      "uuid": "f44d1678-a5b1-5a99-b9af-27717b4f8b31",
+      "filename": "テスト1.pdf",
       "checksum": "42fffa6c0e84ebab15f0f1ead8319efc448d0d883a0b492528997b4f17989755",
       "description": "First テスト　attachment",
       "language": "en"
     },
     {
       "url": "https://テスト.テスト/テスト2.pdf",
+      "uuid": "a7d9da5d-57ae-5da4-a1c9-0e6c3a5dc532",
+      "filename": "テスト2.pdf",
       "checksum": "0b071d7d2a430d5f4ecbd919995a8a6e18a248bccbad4dc910c9dd1e906a2e79",
       "description": "Second テスト　attachment",
       "language": "fr"
@@ -25,6 +29,7 @@
   ],
   "image": {
     "url": "https://テスト.テスト/テスト1.png",
+    "uuid": "fc55b6c7-a0c7-5cf6-91cc-f4eaef7b1cca",
     "checksum": "c24863f6aa2065dd5071a831ee78439260ea72983799dd3e88fbfb4aa08fdc18",
     "description": "Test テスト　image",
     "copyright": "Test テスト　NGO"

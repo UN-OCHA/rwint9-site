@@ -22,7 +22,7 @@ class ModerationPageFilterForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, ModerationServiceInterface $service = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?ModerationServiceInterface $service = NULL) {
     if (empty($service)) {
       return [];
     }
@@ -47,7 +47,9 @@ class ModerationPageFilterForm extends FormBase {
     // Add the filters to the appropriate form container.
     foreach ($definitions as $name => $filter) {
       if (isset($filter['form'], $filter['label'])) {
-        switch ($filter['form']) {
+        $group = $filter['form'];
+
+        switch ($group) {
           // Entity status.
           case 'status':
             if (!isset($form['filters']['status'])) {
@@ -83,7 +85,7 @@ class ModerationPageFilterForm extends FormBase {
                 '#title' => $this->t('Omnibox'),
                 '#tree' => TRUE,
                 '#parents' => ['omnibox'],
-                '#weight' => 2,
+                '#weight' => 3,
                 '#optional' => FALSE,
                 '#attributes' => [
                   'class' => [
@@ -118,15 +120,22 @@ class ModerationPageFilterForm extends FormBase {
             ];
             break;
 
-          case 'other':
-            if (!isset($form['filters']['other'])) {
-              $form['filters']['other'] = [
+          default:
+            if (!isset($form['filters'][$group])) {
+              if ($group === 'other') {
+                $label = $this->t('Properties');
+              }
+              else {
+                $label = $filter['form_label'] ?? ucfirst(strtr($group, '_', ' '));
+              }
+              $form['filters'][$group] = [
                 '#type' => 'fieldset',
-                '#title' => $this->t('Properties'),
+                '#title' => $label,
                 '#attributes' => [
                   'class' => [
                     'rw-moderation-filter-other',
                     'rw-moderation-filter-group',
+                    'rw-moderation-filter-' . $group,
                   ],
                 ],
                 '#weight' => 2,
@@ -134,7 +143,7 @@ class ModerationPageFilterForm extends FormBase {
               ];
             }
             if (empty($filter['values'])) {
-              $form['filters']['other'][$name] = [
+              $form['filters'][$group][$name] = [
                 '#type' => 'checkbox',
                 '#title' => $filter['label'],
                 '#parents' => ['filters', $name],
@@ -142,7 +151,7 @@ class ModerationPageFilterForm extends FormBase {
               ];
             }
             else {
-              $form['filters']['other'][$name] = [
+              $form['filters'][$group][$name] = [
                 '#type' => 'checkboxes',
                 '#options' => $filter['values'],
                 '#parents' => ['filters', $name],

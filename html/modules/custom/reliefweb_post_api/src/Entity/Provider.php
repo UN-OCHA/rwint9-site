@@ -10,19 +10,20 @@ use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\reliefweb_post_api\Helpers\UrlHelper;
 
 /**
  * Defines a provider entity.
  *
  * @ContentEntityType(
  *   id = "reliefweb_post_api_provider",
- *   label = @Translation("ReliefWeb POST API provider"),
- *   label_collection = @Translation("ReliefWeb POST API providers"),
- *   label_singular = @Translation("ReliefWeb POST API provider"),
- *   label_plural = @Translation("ReliefWeb POST API providers"),
+ *   label = @Translation("ReliefWeb Post API provider"),
+ *   label_collection = @Translation("ReliefWeb Post API providers"),
+ *   label_singular = @Translation("ReliefWeb Post API provider"),
+ *   label_plural = @Translation("ReliefWeb Post API providers"),
  *   label_count = @PluralTranslation(
- *     singular = "@count ReliefWeb POST API provider",
- *     plural = "@count ReliefWeb POST API providers"
+ *     singular = "@count ReliefWeb Post API provider",
+ *     plural = "@count ReliefWeb Post API providers"
  *   ),
  *   handlers = {
  *     "storage" = "Drupal\reliefweb_post_api\ProviderStorage",
@@ -259,6 +260,17 @@ class Provider extends ContentEntityBase implements ProviderInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function skipQueue(): bool {
+    $field = 'field_skip_queue';
+    if (!$this->hasField($field)) {
+      return FALSE;
+    }
+    return !empty($this->get($field)->value);
+  }
+
+  /**
    * Notify the provider of an entity.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
@@ -268,15 +280,29 @@ class Provider extends ContentEntityBase implements ProviderInterface {
     if ($entity instanceof ContentEntityInterface && $entity->hasField('field_post_api_provider')) {
       $provider = $entity->field_post_api_provider->entity;
       if (!empty($provider)) {
+        // Wait for 1 second to ensure the data is available in the API.
+        // Elasticsearch refreshes its indices every second.
+        // @see https://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules.html#dynamic-index-settings (index.refresh_interval).
+        sleep(1);
+
         $client = \Drupal::httpClient();
         $timeout = \Drupal::state()->get('reliefweb_post_api.timeout', 1);
         $logger = \Drupal::logger('reliefweb_post_api.webhook');
 
         foreach ($provider->field_webhook_url as $item) {
           if (!empty($item->uri)) {
-            $url = $item->uri . '/' . $entity->uuid();
+            $url = rtrim($item->uri, '/') . '/' . $entity->uuid();
             try {
-              $client->get($url, ['timeout' => $timeout]);
+              // @todo maybe that should be a POST method to avoid caching
+              // isssues and we should provide some things to verify the request
+              // like the provider ID or a token?
+              //
+              // @todo Maybe we should have unique Webhook URLs per entities
+              // provided as part of the initial Post API request and stored
+              // in place of the `field_post_api_provider`.
+              $client->get(UrlHelper::replaceBaseUrl($url), [
+                'timeout' => $timeout,
+              ]);
 
               $logger->info(strtr('Request sent to @url for provider @provider.', [
                 '@url' => $url,

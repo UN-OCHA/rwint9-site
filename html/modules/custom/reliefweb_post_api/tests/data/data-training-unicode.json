@@ -1,7 +1,7 @@
 {
-  "url": "https://test.test/test/report",
-  "uuid": "22ce51c2-d7ed-59b2-b71a-23fb56685df9",
-  "title": "This a test document - report",
+  "url": "https://test.test/test/training",
+  "uuid": "bd581c49-e9e5-5b75-baed-1b52d2ebf3a0",
+  "title": "This a test document - training",
   "source": [1503],
   "country": [13, 14],
   "body": "This テスト the **body** text in markdown format.\n\nIt has some paragraphs  \nand a line break.\n<h1>TITLE</h1><p>paragraph 1 <strong>bold</strong></p><ul><li>item1</li><li>item2</li></ul><p>paragraph 2 <a href=\"https://link.test\">link</a></p>",

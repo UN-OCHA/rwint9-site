@@ -1,0 +1,65 @@
+{#
+
+/**
+ * @file
+ * Template for the blog notifications.
+ *
+ * Important note: the formmatting of this template and the use of the twig
+ * spaceless indicator `-` are on purpose to ensure a clean conversion to
+ * plain text without excessive line breaks and indentation.
+ *
+ * Available variables are:
+ * - preheader: string for preheader.
+ * - title: blog post title.
+ * - image: optional array with the URL, caption and copyright of the image.
+ * - body: blog post body.
+ * - social_media: associative array of social media, keyed by URL.
+ * - reliefweb_address: ReliefWeb physical address.
+ * - prefooter: string for prefooter.
+ */
+?>
+
+#}
+{%- embed '@reliefweb_subscriptions/reliefweb-subscriptions-content.html.twig' -%}
+
+{%- block content -%}
+<div class="email-title-wrapper">
+<div class="email-title-prefix">New article on the ReliefWeb blog: </div>
+<h1 class="email-title-simple"><a href="{{ url }}">{{ title }}</a></h1>
+</div>
+
+{% if summary is empty %}
+{% if image is not empty %}
+<div class="email-image">
+<img class="email-image-image" src="{{ image.url }}" alt="{{ image.description }}">
+<div class="email-image-description">{{ image.caption }}</div>
+<div class="email-image-copyright">{{ image.copyright }}</div>
+</div>
+{% endif %}
+<div class="email-body">{{ body }}</div>
+{% else %}
+<div class="email-body">
+{{- summary|raw }}
+<p><a class="email-resource-read-more" href="{{ url }}">Read the full article on ReliefWeb</a></p>
+</div>
+{% endif %}
+
+<div class="email-social-media">
+<div>Follow ReliefWeb on social media:</div>
+{% apply spaceless %}
+<div>
+<a href="https://www.facebook.com/reliefweb">Facebook</a><span> - </span>
+<a href="https://x.com/reliefweb">X</a><span> - </span>
+<a href="https://www.linkedin.com/company/reliefweb">LinkedIn</a><span> - </span>
+<a href="https://www.instagram.com/reliefweb1996/">Instagram</a><span> - </span>
+<a href="https://t.me/+8QT4PI32MbY3MDdh">Telegram</a>
+</div>
+{% endapply %}
+</div>
+
+{% if reliefweb_address is not empty %}
+<div class="email-reliefweb-address">{{ reliefweb_address }}</div>
+{% endif %}
+{%- endblock -%}
+
+{%- endembed -%}

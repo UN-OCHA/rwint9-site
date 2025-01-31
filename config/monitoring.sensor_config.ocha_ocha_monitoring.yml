@@ -1,0 +1,18 @@
+uuid: 07741598-6bb1-4bf3-8f05-4df391f11086
+langcode: en
+status: true
+dependencies:
+  module:
+    - ocha_monitoring
+id: ocha_ocha_monitoring
+label: 'OCHA Monitoring'
+description: 'OCHA Monitoring'
+category: OCHA
+plugin_id: ocha_ocha_monitoring
+result_class: null
+value_label: Version
+value_type: string
+caching_time: 86400
+settings: {  }
+thresholds:
+  type: none

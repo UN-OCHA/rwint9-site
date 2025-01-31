@@ -93,7 +93,7 @@ class AnyTermSelection extends DefaultSelection {
     ModuleHandlerInterface $module_handler,
     AccountInterface $current_user,
     EntityFieldManagerInterface $entity_field_manager,
-    EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL,
+    EntityTypeBundleInfoInterface $entity_type_bundle_info,
     EntityRepositoryInterface $entity_repository,
     Connection $database,
     LanguageManagerInterface $language_manager,

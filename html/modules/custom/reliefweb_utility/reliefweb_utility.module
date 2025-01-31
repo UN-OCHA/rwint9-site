@@ -5,6 +5,7 @@
  * Helper functions that applies to a variety of things on ReliefWeb.
  */
 
+use Drupal\Core\File\Exception\FileException;
 use Drupal\Core\Template\Attribute;
 use Drupal\file\FileInterface;
 

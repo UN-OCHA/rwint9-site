@@ -166,7 +166,7 @@ class EntityHistory {
       ])->toString(),
       '#cache' => [
         'contexts' => ['user.permissions'],
-        'tags' => $entity->getCacheTags(),
+        'tags' => $this->getRevisionHistoryEntityCacheTags($entity),
       ],
     ];
   }
@@ -188,7 +188,7 @@ class EntityHistory {
     }
 
     $cache_id = 'reliefweb_revisions:history:entity:' . $entity->getEntityTypeId() . ':' . $entity->id();
-    $cache_tags = $entity->getCacheTags();
+    $cache_tags = $this->getRevisionHistoryEntityCacheTags($entity);
     $cache_tags[] = 'taxonomy_term_list';
     $cache_tags[] = 'media_list';
 
@@ -290,9 +290,24 @@ class EntityHistory {
       '#ignored' => $data['ignored'] ?? 0,
       '#cache' => [
         'contexts' => ['user.permissions'],
-        'tags' => $entity->getCacheTags(),
+        'tags' => $this->getRevisionHistoryEntityCacheTags($entity),
       ],
     ];
+  }
+
+  /**
+   * Get the cache tags for the revision history of the given entity.
+   *
+   * @param \Drupal\reliefweb_revisions\EntityRevisionedInterface $entity
+   *   Entity.
+   *
+   * @return array
+   *   Cache tags.
+   */
+  protected function getRevisionHistoryEntityCacheTags(EntityRevisionedInterface $entity) {
+    $tags = $entity->getCacheTags();
+    $tags[] = $entity->getHistoryCacheTag();
+    return $tags;
   }
 
   /**
@@ -927,6 +942,7 @@ class EntityHistory {
       'removed' => array_diff_key($previous, $current),
       'modified-training' => [],
       'modified-job' => [],
+      'modified-report' => [],
       'modified-notes' => [],
     ];
 
@@ -935,6 +951,7 @@ class EntityHistory {
       'removed' => $this->t('Removed'),
       'modified-training' => $this->t('Modified Training'),
       'modified-job' => $this->t('Modified Job'),
+      'modified-report' => $this->t('Modified Report'),
       'modified-notes' => $this->t('Modified Notes'),
     ];
 
@@ -951,7 +968,7 @@ class EntityHistory {
       $previous_item = $previous[$key];
       $current_item = $current[$key];
       // Rights change.
-      foreach (['job', 'training'] as $type) {
+      foreach (['job', 'training', 'report'] as $type) {
         if ($previous_item[$type] !== $current_item[$type]) {
           $item['change'] = new FormattableMarkup('@before &rarr; @after', [
             '@before' => UserPostingRightsHelper::renderRight($rights[$previous_item[$type]]),
@@ -995,9 +1012,10 @@ class EntityHistory {
 
           // Add the rights when a user is added.
           if ($category === 'added') {
-            $markup[] = '(job: @job, training: @training)';
+            $markup[] = '(job: @job, training: @training, report: @report)';
             $replacements['@job'] = UserPostingRightsHelper::renderRight($rights[$item['job']]);
             $replacements['@training'] = UserPostingRightsHelper::renderRight($rights[$item['training']]);
+            $replacements['@report'] = UserPostingRightsHelper::renderRight($rights[$item['report']]);
           }
 
           // Add the rights changes.

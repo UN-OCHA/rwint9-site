@@ -24,20 +24,35 @@ class UserPostsPageFilterForm extends ModerationPageFilterForm {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, ModerationServiceInterface $service = NULL, UserInterface $user = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?ModerationServiceInterface $service = NULL, ?UserInterface $user = NULL) {
     $form = parent::buildForm($form, $form_state, $service);
 
     // Link to create a new entity.
     $url_options = ['attributes' => ['target' => '_blank']];
 
-    $links = $this->t('Create a new <a href="@job_url">Job vacancy</a> or a new <a href="@training_url">Training program</a>', [
-      '@job_url' => Url::fromRoute('node.add', [
-        'node_type' => 'job',
-      ], $url_options)->toString(),
-      '@training_url' => Url::fromRoute('node.add', [
-        'node_type' => 'training',
-      ], $url_options)->toString(),
-    ]);
+    if ($user && $user->hasPermission('create report content')) {
+      $links = $this->t('Create a new <a href="@job_url">Job vacancy</a>, a new <a href="@training_url">Training program</a> or a new <a href="@report_url">Report</a>', [
+        '@job_url' => Url::fromRoute('node.add', [
+          'node_type' => 'job',
+        ], $url_options)->toString(),
+        '@training_url' => Url::fromRoute('node.add', [
+          'node_type' => 'training',
+        ], $url_options)->toString(),
+        '@report_url' => Url::fromRoute('node.add', [
+          'node_type' => 'report',
+        ], $url_options)->toString(),
+      ]);
+    }
+    else {
+      $links = $this->t('Create a new <a href="@job_url">Job vacancy</a> or a new <a href="@training_url">Training program</a>', [
+        '@job_url' => Url::fromRoute('node.add', [
+          'node_type' => 'job',
+        ], $url_options)->toString(),
+        '@training_url' => Url::fromRoute('node.add', [
+          'node_type' => 'training',
+        ], $url_options)->toString(),
+      ]);
+    }
 
     // Add intro.
     $form['intro'] = [

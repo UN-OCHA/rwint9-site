@@ -8,7 +8,19 @@ use Drupal\Core\Language\LanguageDefault;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\State\StateInterface;
+use Drupal\reliefweb_reporting\ApiIndexerResource\ReportExtended;
+use Drupal\reliefweb_reporting\AutomatedClassificationReporting;
 use Drush\Commands\DrushCommands;
+use Google\Client;
+use Google\Http\MediaFileUpload;
+use Google\Service\Drive;
+use Google\Service\Drive\DriveFile;
+use RWAPIIndexer\Database\DatabaseConnection;
+use RWAPIIndexer\Elasticsearch;
+use RWAPIIndexer\Options;
+use RWAPIIndexer\Processor;
+use RWAPIIndexer\Query as QueryHandler;
+use RWAPIIndexer\References;
 
 /**
  * ReliefWeb Reporting Drush commands.
@@ -450,6 +462,703 @@ class ReliefWebReportingCommands extends DrushCommands {
       'body' => [$body],
       'attachments' => $attachments,
     ], $from, TRUE);
+  }
+
+  /**
+   * Export report data to TSV format.
+   *
+   * This command exports report data created between the specified start and
+   * end dates to a TSV file or standard output.
+   *
+   * @param string $start
+   *   Starting date for the export (inclusive). Reports created after this date
+   *   will be included. Defaults to "-1 month".
+   * @param string $end
+   *   End date for the export (inclusive). Reports created up to this date
+   *   will be included. Defaults to "now".
+   * @param array $options
+   *   Additional options for the command (see below).
+   *
+   * @command reliefweb_reporting:export-report-data
+   * @aliases rw-export-reports
+   *
+   * @option output
+   *   The export TSV file path. Defaults to standard output (php://stdout).
+   * @option batch-size
+   *   The number of reports to retrieve in each DB request. Defaults to 1000.
+   * @option limit
+   *   The maxiumum number of reports to export. Defaults to no limit.
+   * @option filter
+   *   Filter for documents to retrieve. Format:
+   *   'field1:value1,value2+field2:value1,value2'.
+   * @option properties
+   *   JSON-encoded associative array to override default property mappings.
+   *   Keys are dot-notation paths of ReliefWeb API fields, values are custom
+   *   TSV column headers. Example: '{"id":"Report ID",
+   *   "date.created":"Creation Date"}'
+   * @option extra-properties
+   *   JSON-encoded associative array with extra properties to include in the
+   *   export. See `replace-properties` option.
+   * @option exclude-properties
+   *   JSON-encoded associative array with extra properties to exclude from the
+   *   export. See `replace-properties` option.
+   * @option include-body
+   *   Include the report body in the export. Defaults to FALSE.
+   * @option gdrive-upload-folder
+   *   Upload the generated report file to the GDrive folder with this ID.
+   *   Expects the folder to exist.
+   *   The GOOGLE_APPLICATION_CREDENTIALS environment variable needs to point
+   *   at a valid JSON credential file or contain valid JSON credential data.
+   *   Requires --output to be a file and not stdout.
+   *
+   * @default $options [
+   *   'output' => 'php://stdout',
+   *   'batch-size' => 1000,
+   *   'limit' => NULL,
+   *   'filter' => NULL,
+   *   'properties' => NULL,
+   *   'extra-properties' => NULL,
+   *   'exclude-properties' => NULL,
+   *   'include-body' => NULL,
+   *   'gdrive-upload-folder' => NULL,
+   * ]
+   *
+   * @usage reliefweb_reporting:export-report-data "2021-01-01T00:00:01+00:00" "now" --output=/tmp/report-data-export.tsv
+   *   Export data from 2021 to now into /tmp/report-data-export.tsv.
+   * @usage reliefweb_reporting:export-report-data "2021-01-01T00:00:01+00:00" "now" --output=/tmp/report-data-export.tsv --upload-grive-folder=9frh70y744yyr49
+   *   Export data from 2021 to now into /tmp/report-data-export.tsv and
+   *   then upload it to Google Drive.
+   * @usage reliefweb_reporting:export-report-data --filter="country:syria,yemen" --include-properties=id,title,date.created
+   *   Export reports for Syria and Yemen, including only id, title, and
+   *   creation date.
+   *
+   * @validate-module-enabled reliefweb_reporting
+   */
+  public function exportReportData(
+    string $start = "-1 month",
+    string $end = "now",
+    array $options = [
+      'output' => 'php://stdout',
+      'batch-size' => 1000,
+      'limit' => NULL,
+      'filter' => NULL,
+      'properties' => NULL,
+      'extra-properties' => NULL,
+      'exclude-properties' => NULL,
+      'include-body' => NULL,
+      'gdrive-upload-folder' => NULL,
+    ],
+  ): bool {
+    $output = $options['output'] ?? 'php://stdout';
+    $batch_size = (int) ($options['batch-size'] ?? 1000);
+
+    // Are we uploading the result?
+    $upload = (!empty($options['gdrive-upload-folder']) && $output != 'php://stdout');
+    $credentials = getenv('GOOGLE_APPLICATION_CREDENTIALS');
+
+    // Early exit if upload is requested but credentials are absent.
+    if ($upload === TRUE && empty($credentials)) {
+      $this->logger->error('Error: Upload requested but no credentials provided.');
+      return FALSE;
+    }
+
+    $bundle = 'report';
+    $entity_type = 'node';
+    $index = 'reports';
+
+    // Options to retrieve the report resources.
+    $indexer_options = new Options(reliefweb_api_get_indexer_base_options());
+
+    // Create the database connection.
+    $dbname = $indexer_options->get('database');
+    $host = $indexer_options->get('mysql-host');
+    $port = $indexer_options->get('mysql-port');
+    $dsn = "mysql:dbname={$dbname};host={$host};port={$port};charset=utf8";
+    $user = $indexer_options->get('mysql-user');
+    $password = $indexer_options->get('mysql-pass');
+    $connection = new DatabaseConnection($dsn, $user, $password);
+
+    // Create a new reference handler.
+    $references = new References();
+
+    // Create a new elasticsearch handler.
+    $elasticsearch = new Elasticsearch(
+      $indexer_options->get('elasticsearch'),
+      $indexer_options->get('base-index-name'),
+      $indexer_options->get('tag'),
+    );
+
+    // Create a new field processor object to prepare items before indexing.
+    $processor = new Processor($indexer_options->get('website'), $connection, $references);
+
+    // Create a new resource to get the report data.
+    $resource = new ReportExtended(
+      $bundle,
+      $entity_type,
+      $index,
+      $elasticsearch,
+      $connection,
+      $processor,
+      $references,
+      $indexer_options,
+      !empty($options['include-body']),
+    );
+
+    // Retrieve the timestamps from the start and end dates.
+    $timezone = new \DateTimeZone('UTC');
+    $start_date = new \DateTime($start, $timezone);
+    $end_date = new \DateTime($end, $timezone);
+    $start_timestamp = $start_date->getTimestamp();
+    $end_timestamp = $end_date->getTimestamp();
+
+    // We need to build a query handler to be able to apply the filter if any.
+    $query_handler = new QueryHandler($connection, $entity_type, $bundle);
+
+    // Base query to get the IDs of the reports for the given date range.
+    $base_query = $query_handler->newQuery();
+    $base_query->condition('node_field_data.type', $bundle, '=');
+    $base_query->condition('node_field_data.created', $start_timestamp, '>=');
+    $base_query->condition('node_field_data.created', $end_timestamp, '<=');
+
+    // Add the extra conditions from the provided filter.
+    if (!empty($options['filter'])) {
+      $conditions = $resource->parseFilters($options['filter']);
+      $query_handler->setFilters($base_query, $conditions);
+    }
+
+    // Get the total of reports for the date range.
+    $count_query = clone $base_query;
+    $count_query->count();
+    $total = $count_query->execute()?->fetchField() ?? 0;
+    $total = min($options['limit'] ?? $total, $total);
+
+    if (empty($total)) {
+      $this->logger->info('No reports found for the given date range.');
+      return TRUE;
+    }
+    else {
+      $this->logger->info(strtr('Found @total reports to export.', [
+        '@total' => $total,
+      ]));
+    }
+
+    // Open the output file.
+    $file = fopen($output, 'w');
+    if ($file === FALSE) {
+      $this->logger->error(strtr('Unable to write output to @output.', [
+        '@output' => $output,
+      ]));
+      return FALSE;
+    }
+
+    // Default properties.
+    $properties = [
+      'id' => 'id',
+      'status' => 'status',
+      'title' => 'title',
+      'url' => 'url',
+      'url_alias' => 'url_alias',
+      'origin' => 'origin',
+      'origin_type' => 'origin_type',
+      'language.name' => 'language.name',
+      'language.code' => 'language.code',
+      'language.id' => 'language.id',
+      'source.name' => 'source.name',
+      'source.shortname' => 'source.shortname',
+      'source.id' => 'source.id',
+      'source.type.name' => 'source.type.name',
+      'source.type.id' => 'source.type.id',
+      'primary_country.name' => 'primary_country.name',
+      'primary_country.id' => 'primary_country.id',
+      'primary_country.iso3' => 'primary_country.iso3',
+      'country.name' => 'country.name',
+      'country.id' => 'country.id',
+      'country.iso3' => 'country.iso3',
+      'disaster.name' => 'disaster.name',
+      'disaster.id' => 'disaster.id',
+      'disaster.glide' => 'disaster.glide',
+      'disaster.type.name' => 'disaster.type.name',
+      'disaster.type.id' => 'disaster.type.id',
+      'disaster.type.code' => 'disaster.type.code',
+      'disaster_type.name' => 'disaster_type.name',
+      'disaster_type.id' => 'disaster_type.id',
+      'disaster_type.code' => 'disaster_type.code',
+      'format.name' => 'format.name',
+      'format.id' => 'format.id',
+      'theme.name' => 'theme.name',
+      'theme.id' => 'theme.id',
+      'ocha_product.name' => 'ocha_product.name',
+      'ocha_product.id' => 'ocha_product.id',
+      'file.filename' => 'file.filename',
+      'file.url' => 'file.url',
+      'file.filesize' => 'file.filesize',
+      'image.url' => 'image.url',
+      'image.copyright' => 'image.copyright',
+      'headline.title' => 'headline.title',
+      'date.created' => 'date.created',
+      'date.changed' => 'date.changed',
+      'date.original' => 'date.original',
+      'user.id' => 'user.id',
+      'user.name' => 'user.name',
+      'user.role' => 'user.role',
+    ];
+
+    // Replace the default properties.
+    if (!empty($options['properties'])) {
+      $properties = json_decode($options['properties'], TRUE) ?: $properties;
+    }
+
+    // Add extra properties.
+    if (!empty($options['extra-properties'])) {
+      $extra_properties = json_decode($options['extra-properties'], TRUE);
+      if (!empty($extra_properties)) {
+        $properties = array_merge($properties, $extra_properties);
+      }
+    }
+
+    // Remove some properties.
+    if (!empty($options['exclude-properties'])) {
+      $exclude_properties = json_decode($options['exclude-properties'], TRUE);
+      if (!empty($exclude_properties)) {
+        $properties = array_diff_key($properties, $exclude_properties);
+      }
+    }
+
+    if (empty($properties)) {
+      $this->logger->error('No properties to export.');
+      return FALSE;
+    }
+
+    // Write the headers to the TSV file.
+    fputcsv($file, array_values($properties), "\t");
+
+    try {
+      $count = 0;
+      $last_id = NULL;
+      $batch_size = min($total, $batch_size);
+
+      // Retrieve reports in batch.
+      while (TRUE) {
+        $query = clone $base_query;
+        $query->addField('node_field_data', 'nid', 'nid');
+        if (isset($last_id)) {
+          $query->condition('node_field_data.nid', $last_id, '<');
+        }
+        $query->orderBy('node_field_data.nid', 'DESC');
+        $query->range(0, $batch_size);
+        $ids = $query->execute()?->fetchCol();
+
+        if (empty($ids)) {
+          break;
+        }
+
+        // Retrieve the data in format similar to the results of the API.
+        $items = $resource->getItems(count($ids), 0, $ids);
+        $count += count($items);
+
+        // Flatten and write to the TSV file.
+        foreach ($items as $item) {
+          $row = $this->flattenReportData($item, $properties);
+          if (!fputcsv($file, $row, "\t")) {
+            $this->logger->error('Unable to write TSV row');
+          }
+        }
+
+        $last_id = end($ids);
+
+        $this->logger->info(strtr('Exported @count / @total reports', [
+          '@count' => $count,
+          '@total' => $total,
+        ]));
+
+        if ($count >= $total) {
+          break;
+        }
+      }
+    }
+    catch (\Exception $exception) {
+      $this->logger->error(strtr('Error: @message.', [
+        '@message' => $exception->getMessage(),
+      ]));
+      return FALSE;
+    }
+    finally {
+      fclose($file);
+    }
+
+    if ($upload) {
+      $client = new Client();
+
+      // Suppress error to avoid echoing the credential in a traceback.
+      if (!@file_exists($credentials)) {
+        $client->setAuthConfig(json_decode($credentials, TRUE));
+      }
+      else {
+        $client->useApplicationDefaultCredentials();
+      }
+
+      $client->setApplicationName("Reliefweb Reports Data Uploader");
+      $client->setScopes(['https://www.googleapis.com/auth/drive']);
+      $client->setDefer(TRUE);
+      $service = new Drive($client);
+
+      $file = new DriveFile();
+      $file->setName(basename($output));
+      $file->setParents([$options['gdrive-upload-folder']]);
+
+      // Upload files in 1 MB chunks.
+      $upload_chunk_size = 1 * 1024 * 1024;
+
+      try {
+        $request = $service->files->create($file);
+
+        // A MediaFileUpload allows us to chunk the upload.
+        $upload = new MediaFileUpload(
+          $client,
+          $request,
+          'text/tab-separated-values',
+          NULL,
+          TRUE,
+          $upload_chunk_size
+        );
+        $upload->setFileSize(filesize($output));
+
+        $status = FALSE;
+        $stream = fopen($output, "rb");
+        while (!$status && !feof($stream)) {
+          $chunk = $this->readFileChunk($stream, $upload_chunk_size);
+          $status = $upload->nextChunk($chunk);
+        }
+
+        // The final $status should contain the DriveFile object.
+        $result = FALSE;
+        if ($status != FALSE) {
+          $result = $status;
+        }
+
+      }
+      catch (\Exception $exception) {
+        $this->logger->error(strtr('Error: @message.', [
+          '@message' => $exception->getMessage(),
+        ]));
+        return FALSE;
+      }
+      finally {
+        fclose($stream);
+      }
+
+      $this->logger->info(strtr('@file uploaded as ID @id', [
+        '@file' => basename($output),
+        '@id'   => $result->getId(),
+      ]));
+    }
+
+    return TRUE;
+  }
+
+  /**
+   * Flattens an item array based on specified property paths.
+   *
+   * @param array $item
+   *   The item array to flatten.
+   * @param array $properties
+   *   An associative array where keys are property paths and values are labels.
+   *
+   * @return array
+   *   A flattened array where keys are property labels and values are the
+   *   retrieved values.
+   */
+  protected function flattenReportData(array $item, array $properties): array {
+    $result = [];
+
+    foreach ($properties as $path => $label) {
+      $values = $this->getNestedValues($item, explode('.', $path));
+      $result[$label] = $this->flattenValues($values);
+    }
+
+    return $result;
+  }
+
+  /**
+   * Flattens an array of values into a string.
+   *
+   * @param array $values
+   *   The values to flatten.
+   *
+   * @return string
+   *   The flattened values as a pipe-separated string.
+   */
+  private function flattenValues(array $values): string {
+    $flattened = array_map(function ($value) {
+      if (is_array($value)) {
+        return implode('|', array_filter($value, function ($item) {
+          return $item !== '' && $item !== NULL && !is_array($item);
+        }));
+      }
+      return $value;
+    }, $values);
+
+    return implode('|', array_filter($flattened, function ($value) {
+      return $value !== '' && $value !== NULL;
+    }));
+  }
+
+  /**
+   * Recursively retrieves nested values from data using a path.
+   *
+   * @param mixed $data
+   *   The data to search in (array or scalar).
+   * @param array $path
+   *   The path to the desired value.
+   *
+   * @return array
+   *   An array of all values found at the specified path.
+   */
+  private function getNestedValues(mixed $data, array $path): array {
+    if (empty($path)) {
+      return [$data];
+    }
+
+    $current = array_shift($path);
+
+    if (!is_array($data)) {
+      return [];
+    }
+
+    if (!isset($data[$current])) {
+      return [];
+    }
+
+    $value = $data[$current];
+
+    if (empty($path)) {
+      return [$value];
+    }
+
+    if (is_array($value) && isset($value[0])) {
+      // Handle array of arrays/objects.
+      $results = [];
+      foreach ($value as $item) {
+        $results = array_merge($results, $this->getNestedValues($item, $path));
+      }
+      return array_unique($results);
+    }
+    else {
+      // Handle single object or scalar.
+      return $this->getNestedValues($value, $path);
+    }
+  }
+
+  /**
+   * Read and return chunks of a file.
+   *
+   * @param resource $stream
+   *   An open file handle.
+   * @param int $size
+   *   The maximum size of a file chunk to return.
+   *
+   * @return string
+   *   A data string read from a file.
+   *
+   * @see https://github.com/googleapis/google-api-php-client/blob/76c312e2696575d315f56aba31f8979d06da06ff/examples/large-file-upload.php#L135
+   */
+  private function readFileChunk($stream, $size) {
+    $byteCount = 0;
+    $returnChunk = '';
+
+    while (!feof($stream)) {
+      $chunk = fread($stream, 8192);
+      $byteCount += strlen($chunk);
+      $returnChunk .= $chunk;
+      if ($byteCount >= $size) {
+        return $returnChunk;
+      }
+    }
+    return $returnChunk;
+  }
+
+  /**
+   * Export manually retagged content to TSV format.
+   *
+   * This command exports data (id, url, title, changed fields)
+   *
+   * @param string $entity_type_id
+   *   Entity type ID.
+   * @param string $bundle
+   *   Entity bundle.
+   * @param string $start
+   *   Starting date for the export (inclusive). Reports created after this date
+   *   will be included. Defaults to "-1 month".
+   * @param string $end
+   *   End date for the export (exclusive). Reports created up to this date
+   *   will be included. Defaults to "now".
+   * @param array $options
+   *   Additional options for the command (see below).
+   *
+   * @command reliefweb_reporting:export-manually-retagged-content
+   * @aliases rw-export-manually-retagged-content
+   *
+   * @option output
+   *   The export TSV file path. Defaults to standard output (php://stdout).
+   * @option gdrive-upload-folder
+   *   Upload the generated report file to the GDrive folder with this ID.
+   *   Expects the folder to exist.
+   *   The GOOGLE_APPLICATION_CREDENTIALS environment variable needs to point
+   *   at a valid JSON credential file or contain valid JSON credential data.
+   *   Requires --output to be a file and not stdout.
+   *
+   * @default $options [
+   *   'output' => 'php://stdout',
+   *   'gdrive-upload-folder' => NULL,
+   * ]
+   *
+   * @usage reliefweb_reporting:export-manually-retagged-content "2021-01-01T00:00:01+00:00" "now" --output=/tmp/report-data-export.tsv
+   *   Export data from 2021 to now into /tmp/report-data-export.tsv.
+   * @usage reliefweb_reporting:export-manually-retagged-content "2021-01-01T00:00:01+00:00" "now" --output=/tmp/report-data-export.tsv --upload-grive-folder=9frh70y744yyr49
+   *   Export data from 2021 to now into /tmp/report-data-export.tsv and
+   *   then upload it to Google Drive.
+   *
+   * @validate-module-enabled reliefweb_reporting
+   */
+  public function exportManuallyRetaggedContent(
+    string $entity_type_id = 'node',
+    string $bundle = 'job',
+    string $start = '-1 month',
+    string $end = 'now',
+    array $options = [
+      'output' => 'php://stdout',
+      'gdrive-upload-folder' => NULL,
+    ],
+  ): bool {
+    $output = $options['output'] ?? 'php://stdout';
+
+    // Are we uploading the result?
+    $upload = (!empty($options['gdrive-upload-folder']) && $output != 'php://stdout');
+    $credentials = getenv('GOOGLE_APPLICATION_CREDENTIALS');
+
+    // Early exit if upload is requested but credentials are absent.
+    if ($upload === TRUE && empty($credentials)) {
+      $this->logger->error('Error: Upload requested but no credentials provided.');
+      return FALSE;
+    }
+
+    // Retrieve the list of manually retagged content.
+    $data = (new AutomatedClassificationReporting())
+      ->getManuallyRetaggedContent($entity_type_id, $bundle, $start, $end);
+    $total = count($data);
+
+    if (empty($total)) {
+      $this->logger->info('No manually retagged content found for the given date range.');
+      return TRUE;
+    }
+    else {
+      $this->logger->info(strtr('Found @total manually retagged content to export.', [
+        '@total' => $total,
+      ]));
+    }
+
+    // Open the output file.
+    $file = fopen($output, 'w');
+    if ($file === FALSE) {
+      $this->logger->error(strtr('Unable to write output to @output.', [
+        '@output' => $output,
+      ]));
+      return FALSE;
+    }
+
+    // Write the headers to the TSV file.
+    fputcsv($file, array_keys(reset($data)), "\t");
+
+    try {
+      // Flatten and write to the TSV file.
+      foreach ($data as $row) {
+        if (!fputcsv($file, $row, "\t")) {
+          $this->logger->error('Unable to write TSV row');
+        }
+      }
+    }
+    catch (\Exception $exception) {
+      $this->logger->error(strtr('Error: @message.', [
+        '@message' => $exception->getMessage(),
+      ]));
+      return FALSE;
+    }
+    finally {
+      fclose($file);
+    }
+
+    $this->logger->info(strtr('Exported @total entries', [
+      '@total' => $total,
+    ]));
+
+    if ($upload) {
+      $client = new Client();
+
+      // Suppress error to avoid echoing the credential in a traceback.
+      if (!@file_exists($credentials)) {
+        $client->setAuthConfig(json_decode($credentials, TRUE));
+      }
+      else {
+        $client->useApplicationDefaultCredentials();
+      }
+
+      $client->setApplicationName("Reliefweb Reports Data Uploader");
+      $client->setScopes(['https://www.googleapis.com/auth/drive']);
+      $client->setDefer(TRUE);
+      $service = new Drive($client);
+
+      $file = new DriveFile();
+      $file->setName(basename($output));
+      $file->setParents([$options['gdrive-upload-folder']]);
+
+      // Upload files in 1 MB chunks.
+      $upload_chunk_size = 1 * 1024 * 1024;
+
+      try {
+        $request = $service->files->create($file);
+
+        // A MediaFileUpload allows us to chunk the upload.
+        $upload = new MediaFileUpload(
+          $client,
+          $request,
+          'text/tab-separated-values',
+          NULL,
+          TRUE,
+          $upload_chunk_size
+        );
+        $upload->setFileSize(filesize($output));
+
+        $status = FALSE;
+        $stream = fopen($output, "rb");
+        while (!$status && !feof($stream)) {
+          $chunk = $this->readFileChunk($stream, $upload_chunk_size);
+          $status = $upload->nextChunk($chunk);
+        }
+
+        // The final $status should contain the DriveFile object.
+        $result = FALSE;
+        if ($status != FALSE) {
+          $result = $status;
+        }
+
+      }
+      catch (\Exception $exception) {
+        $this->logger->error(strtr('Error: @message.', [
+          '@message' => $exception->getMessage(),
+        ]));
+        return FALSE;
+      }
+      finally {
+        fclose($stream);
+      }
+
+      $this->logger->info(strtr('@file uploaded as ID @id', [
+        '@file' => basename($output),
+        '@id'   => $result->getId(),
+      ]));
+    }
+
+    return TRUE;
   }
 
 }

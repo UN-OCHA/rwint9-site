@@ -1,0 +1,97 @@
+uuid: 22e9b2af-029c-4675-a328-6a45a524f51d
+langcode: en
+status: true
+dependencies: {  }
+id: node_job
+label: Jobs
+limit: 3
+target:
+  entity_type_id: node
+  bundle: job
+fields:
+  analyzable:
+    title:
+      enabled: true
+    body:
+      enabled: true
+    field_how_to_apply:
+      enabled: false
+  classifiable:
+    field_career_categories:
+      enabled: true
+      min: 1
+      max: 1
+    field_country:
+      enabled: false
+      min: 0
+      max: -1
+    field_job_experience:
+      enabled: false
+      min: 1
+      max: 1
+    field_job_type:
+      enabled: false
+      min: 1
+      max: 1
+    field_source:
+      enabled: false
+      min: 0
+      max: -1
+    field_theme:
+      enabled: true
+      min: 0
+      max: 3
+classifier:
+  id: inference
+  settings:
+    analyzable:
+      fields:
+        title:
+          placeholder: job_title
+          processor: trimmed
+        body:
+          placeholder: job_description
+          processor: trimmed
+    classifiable:
+      fields:
+        field_career_categories:
+          placeholder: career_category
+          terms:
+            6863: 'Human Resources Management and Capacity Building'
+            6864: 'Administration, Financial Management, and Auditing'
+            6865: 'Advocacy, Communications, Public Relations, Social Media, and Translation Services'
+            6866: 'Information and Communications Technology (ICT) Infrastructure and Systems Management'
+            6867: 'Program/Project Management, Implementation, and Quality Assurance'
+            6868: 'Project Monitoring, Evaluation, Best Practices, and Lessons Learned'
+            20966: 'Donor Relations, Fundraising, and Grants Management'
+            20971: 'Information Management, Data Analysis, and Mapping/Visualization'
+            36601: 'Logistics, Procurement, Supply Chain, Asset Maintenance, and Operational Security'
+        field_theme:
+          placeholder: focus_areas
+          terms:
+            4587: 'Agriculture: Fisheries, animal husbandry, food security, agricultural training.'
+            4588: 'Climate Change and Environment: Climate-induced humanitarian impacts, vulnerability, displacement.'
+            4589: 'Contributions: Financial/in-kind aid reporting and announcements.'
+            4590: 'Coordination: Inter-cluster, civil-military, and private sector partnerships.'
+            4591: 'Disaster Management: Early warning, preparedness, prevention, risk reduction, mitigation.'
+            4592: 'Education: Temporary learning spaces, school supplies, teacher support, infrastructure rehabilitation.'
+            4593: 'Food and Nutrition: Food security, aid distribution, feeding programs.'
+            4594: 'Gender: Gender-specific emergency issues, women as change agents.'
+            4595: 'Health: Emergency medical services, disease control, reproductive health, psychosocial support.'
+            4596: 'HIV/AIDS: Emergency services, high prevalence consequences.'
+            4597: 'Humanitarian Financing: Donorship, funding mechanisms, accountability, partnerships.'
+            4598: 'Logistics and Telecommunications: Aid supply chain, transportation, ICT services.'
+            4599: 'Peacekeeping/Peacebuilding: Conflict resolution, social/political restoration, disarmament, electoral support.'
+            4600: 'Protection and Human Rights: Rights violations, gender-based violence, humanitarian law, access.'
+            4601: 'Recovery and Reconstruction: Asset/infrastructure restoration, early recovery, relief-to-development transition.'
+            4602: 'Safety and Security: Aid worker safety policies, field security measures.'
+            4603: 'Shelter and Non-Food Items: Shelter materials, household items, camp management.'
+            4604: 'Water Sanitation Hygiene: Emergency water provision, sanitation, hygiene promotion.'
+            12033: 'Mine Action: Landmine/UXO clearance, education, victim assistance.'
+            49458: 'Camp Coordination/Management: Displaced persons services, life quality, post-displacement preparation.'
+    inference:
+      plugin_id: aws_bedrock_titan_text_premier_v1
+      temperature: 0.0
+      top_p: 0.2
+      max_tokens: 512
+      prompt: "You are tasked with analyzing humanitarian job offers and classifying them according to specific career categories and focus areas. Your analysis will be conducted in three steps and should be presented in a clear XML format.\r\n\r\nPlease analyze the following job offer:\r\n\r\n<job>\r\nTitle: {job_title}\r\nDescription:\r\n{job_description}\r\n</job>\r\n\r\nBefore you begin, understand these key distinctions:\r\n\r\nCareer Categories in Humanitarian Work represent functional roles and professional specializations within the humanitarian sector. These categories describe the types of jobs and skill sets needed to perform humanitarian work, regardless of the specific intervention area.\r\n\r\nHumanitarian Focus Areas describe the thematic sectors or domains in which humanitarian interventions take place. These areas represent the specific fields of action or issues addressed by humanitarian work, distinct from the job functions themselves.\r\n\r\nFor your analysis, follow these steps:\r\n\r\n1. Provide a concise summary capturing the essence and important context of the job offer.\r\n2. Select the best matching category (only one) from the Career Categories list. Use the corresponding item number (e.g., A1, A2).\r\n3. Select the most relevant Humanitarian Focus Areas (minimum 0, maximum 3). Use the corresponding item numbers (e.g., B1, B2) in a comma-separated list.\r\n\r\nCareer Categories:\r\n{career_category}\r\n\r\nHumanitarian Focus Areas:\r\n{focus_areas}\r\n\r\nPresent your analysis STRICTLY in this XML format:\r\n\r\n<job_analysis>\r\n  <summary>Concise summary of the job offer</summary>\r\n  <career_category>Single item number (A1-A9)</career_category>\r\n  <focus_areas>Comma-separated list of item numbers (B1-B20), 0-3 items</focus_areas>\r\n</job_analysis>\r\n\r\nExample output:\r\n\r\n<job_analysis>\r\n  <summary>Managing water and sanitation projects in refugee camps.</summary>\r\n  <career_category>A5</career_category>\r\n  <focus_areas>B18,B20,B17</focus_areas>\r\n</job_analysis>\r\n\r\nIMPORTANT:\r\n1. Use ONLY the XML structure above.\r\n2. Ensure valid XML with proper opening and closing tags.\r\n3. If no focus areas apply, use: <focus_areas></focus_areas>\r\n4. Do not include ANY text or explanations outside of the XML tags.\r\n5. Your entire response must be valid XML."

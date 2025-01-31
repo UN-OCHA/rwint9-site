@@ -1,0 +1,296 @@
+<?php
+
+/**
+ * @file
+ * Module file for the reliefweb_anti_spam module.
+ */
+
+declare(strict_types=1);
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
+use Drupal\reliefweb_utility\Helpers\TextHelper;
+
+/**
+ * Implements hook_form_alter().
+ *
+ * Adds custom validation to job and training node forms.
+ */
+function reliefweb_anti_spam_form_alter(array &$form, FormStateInterface $form_state, string $form_id): void {
+  // Job and training creation form.
+  $form_ids = [
+    'node_job_form',
+    'node_training_form',
+  ];
+
+  // Add the anti spam validation early to bail out quickly.
+  if (in_array($form_id, $form_ids)) {
+    if (isset($form['#validate'])) {
+      $form['#validate'][] = 'reliefweb_anti_spam_node_form_validate';
+    }
+    else {
+      $form['#validate'] = ['reliefweb_anti_spam_node_form_validate'];
+    }
+  }
+}
+
+/**
+ * Custom validation handler for job and training node forms.
+ *
+ * @param array $form
+ *   The form array.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The current state of the form.
+ */
+function reliefweb_anti_spam_node_form_validate(array &$form, FormStateInterface $form_state): void {
+  /** @var \Drupal\Core\Session\AccountInterface $user */
+  $user = \Drupal::currentUser();
+
+  // Check if the user has permission to bypass anti-spam validation.
+  if ($user->hasPermission('bypass reliefweb anti spam')) {
+    return;
+  }
+
+  /** @var \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory */
+  $logger_factory = \Drupal::service('logger.factory');
+  $logger = $logger_factory->get('reliefweb_anti_spam');
+
+  $config = \Drupal::config('reliefweb_anti_spam.settings');
+  $node = $form_state->getFormObject()->getEntity();
+  $bundle = $node->bundle();
+  $node_id = (int) $node->id();
+
+  // Check submission frequency if the user has never been validated for any
+  // source, meaning the user is not allowed or trusted for any source.
+  if (!UserPostingRightsHelper::isUserAllowedOrTrustedForAnySource($user, $bundle)) {
+    if ($config->get('post_limit.enabled') && !reliefweb_anti_spam_check_submission_frequency($user, $bundle, $node_id)) {
+      $form_state->setError($form, $config->get('error_messages.submission_frequency'));
+      $logger->warning('Submission frequency limit exceeded for user @uid', ['@uid' => $user->id()]);
+      return;
+    }
+  }
+
+  // Check content quality.
+  $title = TextHelper::sanitizeText($form_state->getValue('title')[0]['value'] ?? '');
+  $body = TextHelper::sanitizeText(strip_tags($form_state->getValue('body')[0]['value'] ?? ''), TRUE);
+  $text_fields = ['title' => $title, 'body' => $body];
+
+  // Retrieve the registration/application field if any and check it's different
+  // than the title or body.
+  $registration_field = match ($bundle) {
+    'job' => 'field_how_to_apply',
+    'training' => 'field_how_to_register',
+    default => NULL,
+  };
+
+  if (!empty($registration_field)) {
+    $registration_field_text = TextHelper::sanitizeText(strip_tags($form_state->getValue($registration_field)[0]['value'] ?? ''), TRUE);
+    $text_fields[$registration_field] = $registration_field_text;
+
+    if (reliefweb_anti_spam_check_text_field_equality($text_fields)) {
+      $form_state->setError($form, $config->get('error_messages.content_quality'));
+      $logger->warning('Field texts cannot have the same content in submission from user @uid', ['@uid' => $user->id()]);
+      return;
+    }
+  }
+
+  if (reliefweb_anti_spam_check_blacklisted_domains(implode(' ', $text_fields))) {
+    $form_state->setError($form, $config->get('error_messages.content_quality'));
+    $logger->warning('Blacklisted domain detected in submission from user @uid', ['@uid' => $user->id()]);
+    return;
+  }
+
+  if (reliefweb_anti_spam_contains_url($title)) {
+    $form_state->setError($form, $config->get('error_messages.content_quality'));
+    $logger->warning('URL detected in title of submission from user @uid', ['@uid' => $user->id()]);
+    return;
+  }
+
+  if (reliefweb_anti_spam_only_contains_urls($body)) {
+    $form_state->setError($form, $config->get('error_messages.content_quality'));
+    $logger->warning('Body only contains URLs in submission from user @uid', ['@uid' => $user->id()]);
+    return;
+  }
+
+  if (!reliefweb_anti_spam_check_word_count('title', $title)) {
+    $form_state->setError($form, $config->get('error_messages.content_quality'));
+    $logger->warning('Title word count requirements not met in submission from user @uid', ['@uid' => $user->id()]);
+    return;
+  }
+
+  if (!reliefweb_anti_spam_check_content_length('title', $title)) {
+    $form_state->setError($form, $config->get('error_messages.content_quality'));
+    $logger->warning('Title content length requirements not met in submission from user @uid', ['@uid' => $user->id()]);
+    return;
+  }
+
+  if (!reliefweb_anti_spam_check_word_count('body', $body)) {
+    $form_state->setError($form, $config->get('error_messages.content_quality'));
+    $logger->warning('Body word count requirements not met in submission from user @uid', ['@uid' => $user->id()]);
+    return;
+  }
+
+  if (!reliefweb_anti_spam_check_content_length('body', $body)) {
+    $form_state->setError($form, $config->get('error_messages.content_quality'));
+    $logger->warning('Body content length requirements not met in submission from user @uid', ['@uid' => $user->id()]);
+    return;
+  }
+}
+
+/**
+ * Check if the user has exceeded the submission frequency limit.
+ *
+ * @param \Drupal\Core\Session\AccountInterface $user
+ *   The user to check.
+ * @param string $bundle
+ *   Entity bundle.
+ * @param ?int $node_id
+ *   Node ID to exclude when retrieving the number of submissions for the user.
+ *
+ * @return bool
+ *   TRUE if the user has not exceeded the limit, FALSE otherwise.
+ */
+function reliefweb_anti_spam_check_submission_frequency(AccountInterface $user, string $bundle, ?int $node_id = NULL): bool {
+  $config = \Drupal::config('reliefweb_anti_spam.settings');
+  $limit = (int) $config->get('post_limit.number');
+  $frequency = $config->get('post_limit.frequency');
+
+  $query = \Drupal::entityQuery('node')
+    ->condition('type', $bundle, '=')
+    ->condition('uid', $user->id())
+    ->accessCheck(FALSE)
+    ->count();
+
+  if (isset($node_id)) {
+    $query->condition('nid', $node_id, '<>');
+  }
+
+  if ($frequency !== 'ever') {
+    $query->condition('created', \Drupal::time()->getRequestTime() - reliefweb_anti_spam_get_frequency_time($frequency), '>=');
+  }
+
+  $count = $query->execute();
+
+  return $count < $limit;
+}
+
+/**
+ * Convert frequency string to seconds.
+ *
+ * @param string $frequency
+ *   The frequency string (hour, day, week, month, year, or ever).
+ *
+ * @return int
+ *   The number of seconds for the given frequency.
+ */
+function reliefweb_anti_spam_get_frequency_time(string $frequency): int {
+  return match ($frequency) {
+    'hour' => 3600,
+    'day' => 86400,
+    'week' => 604800,
+    'month' => 2592000,
+    'year' => 31536000,
+    default => 0,
+  };
+}
+
+/**
+ * Check if some fields have the same content.
+ *
+ * @param array<string,string> $text_fields
+ *   Associative array of text field name to value.
+ *
+ * @return bool
+ *   TRUE if at least 2 text fields have the same content.
+ */
+function reliefweb_anti_spam_check_text_field_equality(array $text_fields): bool {
+  return count(array_unique($text_fields)) !== count($text_fields);
+}
+
+/**
+ * Check if content contains blacklisted domains.
+ *
+ * @param string $content
+ *   The content to check.
+ *
+ * @return bool
+ *   TRUE if blacklisted domains are found, FALSE otherwise.
+ */
+function reliefweb_anti_spam_check_blacklisted_domains(string $content): bool {
+  $config = \Drupal::config('reliefweb_anti_spam.settings');
+  $blacklisted_domains = explode("\n", $config->get('validation.blacklisted_domains'));
+
+  foreach ($blacklisted_domains as $domain) {
+    $domain = trim($domain);
+    if (!empty($domain) && mb_stripos($content, $domain) !== FALSE) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * Check if a string contains a URL.
+ *
+ * @param string $text
+ *   The text to check.
+ *
+ * @return bool
+ *   TRUE if the text contains a URL, FALSE otherwise.
+ */
+function reliefweb_anti_spam_contains_url(string $text): bool {
+  return (bool) preg_match('/https?:\/\//u', $text);
+}
+
+/**
+ * Check if a string only contains URLs.
+ *
+ * @param string $text
+ *   The text to check.
+ *
+ * @return bool
+ *   TRUE if the text only contains URLs, FALSE otherwise.
+ */
+function reliefweb_anti_spam_only_contains_urls(string $text): bool {
+  return (bool) preg_match('/^(https?:\/\/\S+\s*)+$/u', $text);
+}
+
+/**
+ * Check if content meets minimum word count requirements.
+ *
+ * @param string $field
+ *   Field to check (title or body).
+ * @param string $value
+ *   Field value.
+ *
+ * @return bool
+ *   TRUE if content meets requirements, FALSE otherwise.
+ */
+function reliefweb_anti_spam_check_word_count(string $field, string $value): bool {
+  $min = \Drupal::config('reliefweb_anti_spam.settings')
+    ->get('validation.' . $field . '_min_words');
+
+  $word_count = count(preg_split('/\s+/u', $value, -1, PREG_SPLIT_NO_EMPTY));
+
+  return $word_count >= $min;
+}
+
+/**
+ * Check if content meets minimum length requirements.
+ *
+ * @param string $field
+ *   Field to check (title or body).
+ * @param string $value
+ *   Field value.
+ *
+ * @return bool
+ *   TRUE if content meets requirements, FALSE otherwise.
+ */
+function reliefweb_anti_spam_check_content_length(string $field, string $value): bool {
+  $min = \Drupal::config('reliefweb_anti_spam.settings')
+    ->get('validation.' . $field . '_min_length');
+
+  return mb_strlen($value) >= $min;
+}

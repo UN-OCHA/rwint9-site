@@ -27,7 +27,7 @@
 }
 .rw-moderation-filters .rw-moderation-filter-status .form-checkboxes {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   grid-gap: 0 24px;
   margin-bottom: -12px;
 }
@@ -127,12 +127,16 @@
   flex-direction: column;
   justify-content: flex-end;
   padding: 0 0 8px 0;
+  cursor: pointer;
   text-transform: none;
   border-bottom-width: 4px;
   border-bottom-style: solid;
   border-left: none;
   background: none;
   font-weight: normal;
+}
+.rw-moderation-content__total-list [data-moderation-status]:is(:hover,:focus,:active) {
+  background: var(--cd-reliefweb-brand-grey--light);
 }
 .rw-moderation-content__total-list [data-moderation-status] strong {
   margin-top: 8px;
@@ -154,6 +158,13 @@
 }
 .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__title {
   font-size: 16px;
+  font-weight: bold;
+}
+.rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__embargo-date {
+  font-size: 14px;
+  font-style: italic;
+}
+.rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__embargo-date em {
   font-weight: bold;
 }
 .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__info {

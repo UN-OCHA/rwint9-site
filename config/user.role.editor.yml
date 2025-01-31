@@ -29,14 +29,15 @@ dependencies:
     - guidelines
     - media
     - node
+    - ocha_content_classification
     - path
+    - reliefweb_anti_spam
     - reliefweb_bookmarks
     - reliefweb_fields
     - reliefweb_files
     - reliefweb_form
     - reliefweb_guidelines
     - reliefweb_homepage
-    - reliefweb_job_tagger
     - reliefweb_moderation
     - reliefweb_revisions
     - reliefweb_topics
@@ -44,7 +45,6 @@ dependencies:
     - reliefweb_users
     - system
     - taxonomy
-    - taxonomy_term_revision
 id: editor
 label: Editor
 weight: 2
@@ -59,12 +59,14 @@ permissions:
   - 'access reliefweb private files'
   - 'access reliefweb user posting rights field validation'
   - 'access user contact forms'
+  - 'access user posting rights page'
   - 'access user profiles'
   - 'add content to books'
   - 'administer community topics'
   - 'administer url aliases'
   - 'archive content'
-  - 'bypass ocha ai job tag'
+  - 'bypass ocha content classification'
+  - 'bypass reliefweb anti spam'
   - 'create announcement content'
   - 'create blog_post content'
   - 'create book content'
@@ -147,12 +149,13 @@ permissions:
   - 'edit terms in source'
   - 'edit terms in tag'
   - 'edit user posting rights'
+  - 'requeue entity for ocha content classification'
+  - 'revert all taxonomy revisions'
   - 'revert announcement revisions'
   - 'revert blog_post revisions'
   - 'revert book revisions'
   - 'revert job revisions'
   - 'revert report revisions'
-  - 'revert term revision'
   - 'revert topic revisions'
   - 'revert training revisions'
   - 'see other bookmarks'
@@ -163,6 +166,7 @@ permissions:
   - 'use text format html'
   - 'use text format markdown'
   - 'view all media revisions'
+  - 'view all taxonomy revisions'
   - 'view announcement revisions'
   - 'view any content'
   - 'view blog_post revisions'
@@ -176,8 +180,6 @@ permissions:
   - 'view published guideline entities'
   - 'view reliefweb admin menu'
   - 'view report revisions'
-  - 'view term revision data'
-  - 'view term revision list'
   - 'view the administration theme'
   - 'view topic revisions'
   - 'view training revisions'

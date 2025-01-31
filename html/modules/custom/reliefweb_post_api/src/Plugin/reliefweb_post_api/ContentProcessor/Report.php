@@ -25,21 +25,60 @@ class Report extends ContentProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function validateUrls(array $data): void {
+  public function validateFiles(array $data): void {
     parent::validateUrls($data);
 
-    $provider = $this->getProvider($data['provider'] ?? '');
-
-    $image_pattern = $provider->getUrlPattern('image');
-    if (!empty($data['image']['url']) && !$this->validateUrl($data['image']['url'], $image_pattern)) {
-      throw new ContentProcessorException('Unallowed image URL: ' . $data['image']['url']);
+    if (!empty($data['image'])) {
+      $this->validateFileData($data, $data['image'], 'image');
     }
 
-    $file_pattern = $provider->getUrlPattern('file');
     foreach ($data['file'] ?? [] as $file) {
-      if (!empty($file['url']) && !$this->validateUrl($file['url'], $file_pattern)) {
-        throw new ContentProcessorException('Unallowed file URL: ' . $file['url']);
-      }
+      $this->validateFileData($data, $file, 'file');
+    }
+  }
+
+  /**
+   * Validate an attachment or image file.
+   *
+   * @param array $data
+   *   The submitted data.
+   * @param array $file
+   *   The file data.
+   * @param string $type
+   *   The file type (file or image).
+   *
+   * @throws \Drupal\reliefweb_post_api\Plugin\ContentProcessorException
+   *   An exception of the file URL or UUID is invalid.
+   */
+  public function validateFileData(array $data, array $file, string $type): void {
+    if (empty($file['url'])) {
+      throw new ContentProcessorException(strtr('Missing @type URL.', [
+        '@type' => $type,
+      ]));
+    }
+
+    if (empty($file['uuid'])) {
+      throw new ContentProcessorException(strtr('Missing @type UUID.', [
+        '@type' => $type,
+      ]));
+    }
+
+    $provider = $this->getProvider($data['provider'] ?? '');
+    $pattern = $provider->getUrlPattern($type);
+
+    if (!empty($file['url']) && !$this->validateUrl($file['url'], $pattern)) {
+      throw new ContentProcessorException(strtr('Unallowed @type URL: @url.', [
+        '@type' => $type,
+        '@url' => $file['url'],
+      ]));
+    }
+
+    if ($this->generateUuid($file['url'], $data['uuid']) !== $file['uuid']) {
+      throw new ContentProcessorException(strtr('The @type UUID @uuid is not derived from the @type url and document UUID.', [
+        '@type' => $type,
+        '@uuid' => $file['uuid'],
+        '@url' => $file['url'],
+      ]));
     }
   }
 
@@ -129,7 +168,7 @@ class Report extends ContentProcessorPluginBase {
     $node->setModerationStatus($provider->getDefaultResourceStatus());
 
     // Set the log message based on whether it was updated or created.
-    $message = $node->isNew() ? 'Automatic creation from POST API.' : 'Automatic update from POST API.';
+    $message = $node->isNew() ? 'Automatic creation from Post API.' : 'Automatic update from Post API.';
 
     // Save the node.
     $node->setNewRevision(TRUE);

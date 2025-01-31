@@ -21,11 +21,41 @@ function reliefweb_subscriptions_subscriptions() {
     return $subscriptions;
   }
 
+  // Blog posts.
+  $subscriptions['blog'] = [
+    'id' => 'blog',
+    'name' => t('New ReliefWeb blog post'),
+    'description' => t('New ReliefWeb blog post (when published)'),
+    'permission' => 'subscribe to blog posts',
+    'group' => 'global',
+    // Sengrid category.
+    'category' => 'Blog',
+    'type' => 'triggered',
+    'trigger' => 'triggerBlogNotification',
+    'template' => 'blog',
+    'subject callback' => 'blogSubject',
+    'from_label' => 'ReliefWeb Blog',
+    'bundle' => 'blog_post',
+    'entity_type_id' => 'node',
+    'resource' => 'blog',
+    'payload' => [
+      'fields' => [
+        'include' => [
+          '*',
+        ],
+      ],
+      'sort' => ['date.created:desc'],
+      'limit' => 1,
+    ],
+  ];
+
   // Headlines.
   $subscriptions['headlines'] = [
     'id' => 'headlines',
     'name' => t('ReliefWeb Headlines'),
     'description' => t('ReliefWeb Headlines (daily)'),
+    'permission' => 'subscribe to headlines',
+    'group' => 'global',
     // Sengrid category.
     'category' => 'Headlines',
     'type' => 'scheduled',
@@ -66,6 +96,8 @@ function reliefweb_subscriptions_subscriptions() {
     'id' => 'appeals',
     'name' => t('All Appeals'),
     'description' => t('Latest Appeals (weekly)'),
+    'permission' => 'subscribe to appeals',
+    'group' => 'global',
     // Sengrid cateogry.
     'category' => 'Appeals',
     'type' => 'scheduled',
@@ -104,6 +136,7 @@ function reliefweb_subscriptions_subscriptions() {
     'id' => 'jobs',
     'name' => t('All Jobs'),
     'description' => t('All Jobs (bi-weekly: Monday, Thursday)'),
+    'permission' => 'subscribe to jobs',
     'group' => 'global',
     // Sengrid cateogry.
     'category' => 'Jobs digest',
@@ -138,6 +171,7 @@ function reliefweb_subscriptions_subscriptions() {
     'id' => 'training',
     'name' => t('All Training Programs'),
     'description' => t('All Training Programs (weekly: Wednesday)'),
+    'permission' => 'subscribe to training',
     'group' => 'global',
     // Sengrid cateogry.
     'category' => 'Training programs digest',
@@ -174,6 +208,7 @@ function reliefweb_subscriptions_subscriptions() {
     'id' => 'disaster',
     'name' => t('New alert or ongoing disaster'),
     'description' => t('New alert or ongoing disaster (when published)'),
+    'permission' => 'subscribe to disasters',
     'group' => 'global',
     // Sengrid cateogry.
     'category' => 'New Disasters',
@@ -207,7 +242,8 @@ function reliefweb_subscriptions_subscriptions() {
   $subscriptions['ocha_sitrep'] = [
     'id' => 'ocha_sitrep',
     'name' => t('New OCHA situation report'),
-    'description' => t('New OCHA situation report'),
+    'description' => t('New OCHA situation report (when published)'),
+    'permission' => 'subscribe to OCHA situation reports',
     'group' => 'global',
     // Sengrid cateogry.
     'category' => 'OCHA Sitreps',
@@ -262,6 +298,7 @@ function reliefweb_subscriptions_subscriptions() {
       'id' => $sid,
       'name' => t('Updates on @country', ['@country' => $name]),
       'description' => t('Updates on @country (daily)', ['@country' => $name]),
+      'permission' => 'subscribe to country updates',
       'group' => 'country_updates',
       // This is just for convenience for the `My subscriptions` page and the
       // template preprocess function.
@@ -403,6 +440,18 @@ function reliefweb_subscriptions_theme() {
         'info' => '',
         'summary' => '',
         'url' => '',
+        'prefooter' => NULL,
+      ],
+    ],
+    'reliefweb_subscriptions_content__blog' => [
+      'variables' => [
+        'preheader' => NULL,
+        'url' => '',
+        'title' => '',
+        'image' => NULL,
+        'body' => NULL,
+        'summary' => NULL,
+        'reliefweb_address' => '',
         'prefooter' => NULL,
       ],
     ],

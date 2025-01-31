@@ -71,7 +71,7 @@ class ImageStyleDownloadController extends OriginalImageStyleDownloadController 
     LockBackendInterface $lock,
     ImageFactory $image_factory,
     StreamWrapperManagerInterface $stream_wrapper_manager,
-    FileSystemInterface $file_system = NULL,
+    ?FileSystemInterface $file_system = NULL,
   ) {
     parent::__construct($lock, $image_factory, $stream_wrapper_manager, $file_system);
 
@@ -98,7 +98,7 @@ class ImageStyleDownloadController extends OriginalImageStyleDownloadController 
   /**
    * {@inheritdoc}
    */
-  public function deliver(Request $request, $scheme, ImageStyleInterface $image_style = NULL) {
+  public function deliver(Request $request, $scheme, ImageStyleInterface $image_style, string $required_derivative_scheme) {
     if (empty($image_style)) {
       throw new NotFoundHttpException();
     }
@@ -122,13 +122,13 @@ class ImageStyleDownloadController extends OriginalImageStyleDownloadController 
     // Let other modules handle the file if it's not a file matching the pattern
     // used for the reliefweb files.
     if (preg_match($pattern, $uri) !== 1) {
-      return parent::deliver($request, $scheme, $image_style);
+      return parent::deliver($request, $scheme, $image_style, $required_derivative_scheme);
     }
 
     // Check the image token. We return a 404 as it's more likely to be cached
     // than a 403 and the token is just of DDOS protection and caching helps
     // as well with that.
-    if (!$this->validateToken($request, $uri, $image_style)) {
+    if (!$this->validateToken($request, $uri, $image_style, $required_derivative_scheme)) {
       throw new NotFoundHttpException();
     }
 
@@ -139,6 +139,11 @@ class ImageStyleDownloadController extends OriginalImageStyleDownloadController 
 
     // Get the deriative image URI.
     $derivative_uri = $image_style->buildUri($uri);
+    $derivative_scheme = $this->streamWrapperManager->getScheme($derivative_uri);
+
+    if ($required_derivative_scheme !== $derivative_scheme) {
+      throw new AccessDeniedHttpException("The scheme for this image doesn't match the scheme for the original image");
+    }
 
     // Generate the derivative image if doesn't exist.
     if (!file_exists($derivative_uri)) {

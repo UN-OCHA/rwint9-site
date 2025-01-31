@@ -7,7 +7,7 @@ namespace Drupal\reliefweb_post_api\Entity;
 use Drupal\Core\Entity\ContentEntityInterface;
 
 /**
- * Interface for a POST API provider.
+ * Interface for a Post API provider.
  */
 interface ProviderInterface extends ContentEntityInterface {
 
@@ -69,6 +69,14 @@ interface ProviderInterface extends ContentEntityInterface {
    *   Rate limit.
    */
   public function getRateLimit(): int;
+
+  /**
+   * Get whether to skip the queue and process the submissions directly.
+   *
+   * @return bool
+   *   TRUE if the submission should be processed directly.
+   */
+  public function skipQueue(): bool;
 
   /**
    * Check if a provider with the given ID exits and its API key is valid.

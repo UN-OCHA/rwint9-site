@@ -7,7 +7,7 @@ namespace Drupal\reliefweb_post_api;
 use Drupal\Core\Entity\EntityAccessControlHandler;
 
 /**
- * Defines the control handler class for the ReliefWeb POST API providers.
+ * Defines the control handler class for the ReliefWeb Post API providers.
  */
 class ProviderAccessControlHandler extends EntityAccessControlHandler {
 

@@ -22,7 +22,7 @@ services:
       MEMCACHE_MAX_MEMORY: 64
 
   mysql:
-    image: public.ecr.aws/unocha/mysql:10.11
+    image: public.ecr.aws/unocha/mysql:11
     hostname: rwint-test-mysql
     container_name: rwint-test-mysql
     environment:
@@ -44,6 +44,8 @@ services:
       - mysql
     volumes:
       - "./settings:/srv/www/shared/settings:ro"
+      # Mount config.
+      - "../config:/srv/www/config:rw"
       # Mount the attachment redirections to pass the requests to Drupal.
       - "./etc/nginx/custom/01_attachment_redirections.conf:/etc/nginx/custom/01_attachment_redirections.conf:ro"
       # Mount volumes for the private and public files.
@@ -69,5 +71,9 @@ services:
       - DRUPAL_DB_DRIVER=mysql
       - PHP_ENVIRONMENT=dev
       - PHP_XDEBUG=true
+      - NGINX_LIMIT_BOTS=1024r/s
+      - NGINX_BURST_BOTS=1024
+      - NGINX_LIMIT_HUMANS=1024r/s
+      - NGINX_BURST_HUMANS=1024
     networks:
       - default

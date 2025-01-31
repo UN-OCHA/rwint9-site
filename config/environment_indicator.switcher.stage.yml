@@ -5,7 +5,7 @@ dependencies: {  }
 machine: stage
 description: null
 name: Stage
-weight: ''
+weight: null
 url: ''
 fg_color: '#000000'
 bg_color: '#34cc32'

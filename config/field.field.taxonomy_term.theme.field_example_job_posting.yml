@@ -1,0 +1,19 @@
+uuid: 95dd0b94-6bd9-48fa-94b4-58b69fb00763
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_example_job_posting
+    - taxonomy.vocabulary.theme
+id: taxonomy_term.theme.field_example_job_posting
+field_name: field_example_job_posting
+entity_type: taxonomy_term
+bundle: theme
+label: 'Example job posting'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

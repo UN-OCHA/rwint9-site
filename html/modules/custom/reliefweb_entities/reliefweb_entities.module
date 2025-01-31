@@ -17,7 +17,6 @@ use Drupal\Core\Render\Element;
 use Drupal\media\MediaInterface;
 use Drupal\reliefweb_entities\BundleEntityInterface;
 use Drupal\reliefweb_entities\BundleEntityStorageInterface;
-use Drupal\reliefweb_entities\Entity\Report;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
 use Drupal\reliefweb_utility\Helpers\ClassHelper;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
@@ -83,7 +82,7 @@ function reliefweb_entities_entity_bundle_field_info_alter(array &$fields, Entit
  * Add bundle classes to nodes and terms to handle business logic.
  */
 function reliefweb_entities_entity_bundle_info_alter(&$bundles) {
-  $namespace = '\Drupal\reliefweb_entities\Entity';
+  $namespace = 'Drupal\reliefweb_entities\Entity';
 
   foreach ($bundles as $entity_type_id => $items) {
     foreach ($items as $bundle => $info) {
@@ -93,6 +92,8 @@ function reliefweb_entities_entity_bundle_info_alter(&$bundles) {
       }
       if ($class !== FALSE && is_subclass_of($class, BundleEntityInterface::class)) {
         $label = ucwords(str_replace(['_', '-'], ' ', $bundle));
+        // No leading \ otherwise EntityTypeRepository::getEntityTypeFromClass
+        // fails.
         $bundles[$entity_type_id][$bundle]['class'] = $class;
         $bundles[$entity_type_id][$bundle]['label'] = $label;
       }
@@ -497,22 +498,6 @@ function reliefweb_entities_form_alter(array &$form, FormStateInterface $form_st
 }
 
 /**
- * Implements hook_module_implements_alter().
- */
-function reliefweb_entities_module_implements_alter(array &$implementation, $hook) {
-  // Remove the hook_entity_presave() implementation from the
-  // taxonomy_term_revision module because it doesn't allow us to speify the
-  // revision user or timestamp. This is replaced by
-  // reliefweb_entities_set_taxonomy_term_revision().
-  //
-  // @see taxonomy_term_revision_entity_presave()
-  // @see reliefweb_entities_set_taxonomy_term_revision()
-  if ($hook === 'entity_presave') {
-    unset($implementation['taxonomy_term_revision']);
-  }
-}
-
-/**
  * Implements hook_theme_registry_alter().
  */
 function reliefweb_entities_theme_registry_alter(array &$theme_registry) {
@@ -577,13 +562,8 @@ function reliefweb_entities_entity_presave(EntityInterface $entity) {
 /**
  * Set a taxonomy term's revision information.
  *
- * Note: this replaces the taxonomy_term_revision_entity_presave() which
- * is not flexible and forces the revision user ID and creation time.
- *
  * @param \Drupal\Core\Entity\EntityInterface $entity
  *   Entity.
- *
- * @see taxonomy_term_revision_entity_presave()
  */
 function reliefweb_entities_set_taxonomy_term_revision(EntityInterface $entity) {
   // Saving new revision of term on each save.
@@ -842,66 +822,6 @@ function reliefweb_entities_node_delete(EntityInterface $entity) {
 
       foreach ($media_entities as $media) {
         $media->delete();
-      }
-    }
-  }
-}
-
-/**
- * Implements hook_form_FORM_ID_alter() for `ocha_ai_chat_chat_form`.
- */
-function reliefweb_entities_form_ocha_ai_chat_chat_form_alter(array &$form, FormStateInterface $form_state, string $form_id) {
-  $url = \Drupal::request()?->query?->get('url');
-  if (isset($url)) {
-    $router = \Drupal::service('router.no_access_checks');
-    $parameters = $router->match($url);
-    $node = $parameters['node'] ?? NULL;
-
-    if (isset($node) && $node instanceof Report) {
-      // No need to show the source when chatting with a single report.
-      if (isset($form['source'])) {
-        $form['source']['#access'] = FALSE;
-      }
-
-      // Only English documents are supported due to LLM limitations.
-      $is_english_report = FALSE;
-      foreach ($node->field_language as $item) {
-        if ($item->target_id == 267) {
-          $is_english_report = TRUE;
-          break;
-        }
-      }
-      if (!$is_english_report) {
-        $reason = t('Sorry, only English reports are supported.');
-      }
-
-      // Non supported content formats.
-      foreach ($node->field_content_format as $item) {
-        if ($item->target_id == 12) {
-          $reason = t('Sorry, maps are not supported.');
-          break;
-        }
-        elseif ($item->target_id == 12570) {
-          $reason = t('Sorry, infographics are not supported.');
-          break;
-        }
-        elseif ($item->target_id == 38974) {
-          $reason = t('Sorry, interactive reports are not supported.');
-          break;
-        }
-      }
-
-      if (!empty($reason)) {
-        foreach (Element::children($form) as $key) {
-          $form[$key]['#access'] = FALSE;
-        }
-        $form['unsupported'] = [
-          '#type' => 'inline_template',
-          '#template' => '<p class="ocha-ai-chat-chat-form__unsupported">{{ reason }}</p>',
-          '#context' => [
-            'reason' => $reason,
-          ],
-        ];
       }
     }
   }

@@ -25,9 +25,9 @@ class Training extends ContentProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function process(array $data): ?ContentEntityInterface {
+  public function process(array $data, ?string $schema = NULL): ?ContentEntityInterface {
     // Ensure the data is valid.
-    $this->validate($data);
+    $this->validate($data, $schema);
 
     $bundle = $this->getbundle();
     $provider = $this->getProvider($data['provider'] ?? '');
@@ -100,7 +100,7 @@ class Training extends ContentProcessorPluginBase {
     $node->setModerationStatus($provider->getDefaultResourceStatus());
 
     // Set the log message based on whether it was updated or created.
-    $message = $node->isNew() ? 'Automatic creation from POST API.' : 'Automatic update from POST API.';
+    $message = $node->isNew() ? 'Automatic creation from Post API.' : 'Automatic update from Post API.';
 
     // Save the node.
     $node->setNewRevision(TRUE);

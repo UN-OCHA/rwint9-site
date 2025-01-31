@@ -310,6 +310,14 @@ interface RiverServiceInterface {
   public function getApiLink();
 
   /**
+   * Get the link to the user subscriptions page.
+   *
+   * @return string
+   *   Link to the subscriptions page.
+   */
+  public function getSubscribeLink();
+
+  /**
    * Get the base ReliefWeb API payload for the given river and view.
    *
    * @return array
@@ -350,7 +358,7 @@ interface RiverServiceInterface {
    * @return array
    *   List of resource data as returned by ::parseApiData().
    */
-  public function getApiData($limit = 20, $paginated = TRUE, array $payload = NULL, $view = NULL);
+  public function getApiData($limit = 20, $paginated = TRUE, ?array $payload = NULL, $view = NULL);
 
   /**
    * Parse the data from the ReliefWeb API to use in rivers.
@@ -447,7 +455,7 @@ interface RiverServiceInterface {
    * @return string
    *   ISO 639-1 language code.
    */
-  public static function getLanguageCode(array &$data = NULL);
+  public static function getLanguageCode(?array &$data = NULL);
 
   /**
    * Convert a ISO 6901 date to a \DateTime object.

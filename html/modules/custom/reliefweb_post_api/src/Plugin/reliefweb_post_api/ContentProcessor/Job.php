@@ -25,9 +25,9 @@ class Job extends ContentProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function process(array $data): ?ContentEntityInterface {
+  public function process(array $data, ?string $schema = NULL): ?ContentEntityInterface {
     // Ensure the data is valid.
-    $this->validate($data);
+    $this->validate($data, $schema);
 
     $bundle = $this->getbundle();
     $provider = $this->getProvider($data['provider'] ?? '');
@@ -76,7 +76,7 @@ class Job extends ContentProcessorPluginBase {
     $this->setTermField($node, 'field_country', 'country', $data['country'] ?? []);
     $this->setStringField($node, 'field_city', $data['city'] ?? '');
 
-    $this->setTermField($node, 'field_career_categories', 'career_category', $data['career_categories'] ?? []);
+    $this->setTermField($node, 'field_career_categories', 'career_category', $data['career_category'] ?? []);
     $this->setTermField($node, 'field_theme', 'theme', $data['theme'] ?? []);
 
     // Set the provider.
@@ -86,7 +86,7 @@ class Job extends ContentProcessorPluginBase {
     $node->setModerationStatus($provider->getDefaultResourceStatus());
 
     // Set the log message based on whether it was updated or created.
-    $message = $node->isNew() ? 'Automatic creation from POST API.' : 'Automatic update from POST API.';
+    $message = $node->isNew() ? 'Automatic creation from Post API.' : 'Automatic update from Post API.';
 
     // Save the node.
     $node->setNewRevision(TRUE);

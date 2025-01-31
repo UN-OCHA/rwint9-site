@@ -397,6 +397,14 @@ class SourceRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
+  public function getSubscribeLink() {
+    // No subscriptions for organizations.
+    return '';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getRiverCacheTags() {
     return [
       $this->getEntityTypeId() . '_list:' . $this->getBundle(),

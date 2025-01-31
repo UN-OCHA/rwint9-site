@@ -1,11 +1,11 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://reliefweb.int/post-api-schemas/v2/job.json",
-    "title": "ReliefWeb POST API schema - job resource",
+    "title": "ReliefWeb Post API schema - job resource",
     "type": "object",
     "properties": {
         "url": {
-            "description": "Unique URL to identify the document. Use the original canonical of the document if available.",
+            "description": "Unique URL to identify the job posting. Use the original canonical url if available.",
             "type": "string",
             "format": "iri",
             "maxLength": 2048
@@ -16,7 +16,7 @@
             "format": "uuid"
         },
         "title": {
-            "description": "Job title.",
+            "description": "Job title.  The best job titles are brief and specific. Please refrain from indicating location, salary and other details in the title, if possible.",
             "type": "string",
             "minLength": 10,
             "maxLength": 255,
@@ -45,12 +45,12 @@
             "maxItems": 1
         },
         "closing_date": {
-            "description": "Closing date (ISO 8601) of the job.",
+            "description": "Closing date (ISO 8601) of the job. Please make sure it matches the closing date on your ad and/or job application portal, if applicable.",
             "type": "string",
             "format": "date-time"
         },
         "body": {
-            "description": "Job description in markdown or html (supported tags: <h1> <h2> <h3> <h4> <h5> <h6> <br> <p> <strong> <em> <a> <ul> <ol> <li> <blockquote>).",
+            "description": "Job description in markdown or html (supported tags: <h1> <h2> <h3> <h4> <h5> <h6> <br> <p> <strong> <em> <a> <ul> <ol> <li> <blockquote>). The description should be long enough and sufficient in order to attract qualified candidates.",
             "type": "string",
             "minLength": 10,
             "maxLength": 100000,
@@ -70,7 +70,7 @@
             }
         },
         "how_to_apply": {
-            "description": "Instructions on how to apply for the job in markdown or html (supported tags: <h1> <h2> <h3> <h4> <h5> <h6> <br> <p> <strong> <em> <a> <ul> <ol> <li> <blockquote>).",
+            "description": "Instructions on how to apply for the job in markdown or html (supported tags: <h1> <h2> <h3> <h4> <h5> <h6> <br> <p> <strong> <em> <a> <ul> <ol> <li> <blockquote>). Brief and clear instructions how to apply only. Not to be used to duplicate the job description.",
             "type": "string",
             "minLength": 10,
             "maxLength": 100000,
@@ -118,25 +118,23 @@
             }
         },
         "job_type": {
-            "description": "Job type as a single ID from https://api.reliefweb.int/v1/references/job-types.",
+            "description": "Job type as a single ID from https://api.reliefweb.int/v1/references/job-types. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
             "type": "array",
             "items": {
                 "type": "integer"
             },
-            "minItems": 1,
             "maxItems": 1
         },
         "job_experience": {
-            "description": "Job experience as a single ID from https://api.reliefweb.int/v1/references/job-experience.",
+            "description": "Job experience as a single ID from https://api.reliefweb.int/v1/references/job-experience. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
             "type": "array",
             "items": {
                 "type": "integer"
             },
-            "minItems": 1,
             "maxItems": 1
         },
-        "career_categories": {
-            "description": "Job career category as a single ID from https://api.reliefweb.int/v1/references/career-categories. Optionally leave blank for automatic tagging by AI based on the job's title and body.",
+        "career_category": {
+            "description": "Job career category as a single ID from https://api.reliefweb.int/v1/references/career-categories. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
             "type": "array",
             "items": {
                 "type": "integer"
@@ -144,7 +142,7 @@
             "maxItems": 1
         },
         "theme": {
-            "description": "Job theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes. Optionally leave blank for automatic tagging by AI based on the job's title and body.",
+            "description": "Job theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes. Only select the most relevant themes as over-tagging often results in reduced discoverability. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
             "type": "array",
             "items": {
                 "type": "integer"
@@ -161,10 +159,11 @@
         "title",
         "source",
         "closing_date",
+        "body",
+        "how_to_apply",
         "job_type",
         "job_experience",
-        "body",
-        "how_to_apply"
+        "career_category"
     ],
-    "additionalProperties": false
+    "unevaluatedProperties": false
 }

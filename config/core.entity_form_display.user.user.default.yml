@@ -24,8 +24,8 @@ content:
     settings: {  }
     third_party_settings: {  }
   display_name:
-    type: string_textfield
-    weight: 0
+    type: text_textfield
+    weight: -1
     region: content
     settings:
       size: 60

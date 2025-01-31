@@ -47,7 +47,7 @@ services:
       - default
 
   mysql:
-    image: public.ecr.aws/unocha/mysql:10.11
+    image: public.ecr.aws/unocha/mysql:11.4
     hostname: $PROJECT_NAME-mysql
     container_name: $PROJECT_NAME-mysql
     environment:
@@ -107,6 +107,8 @@ services:
       DRUPAL_DB_DRIVER: mysql
       PHP_ENVIRONMENT:
       # Rate limiting.
+      NGINX_LIMIT_BOTS: 1024r/s
+      NGINX_BURST_BOTS: 1024
       NGINX_LIMIT_HUMANS: 1024r/s
       NGINX_BURST_HUMANS: 1024
       # Local proxy.

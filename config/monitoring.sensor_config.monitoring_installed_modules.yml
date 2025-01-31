@@ -1,9 +1,7 @@
-uuid: d99c44f1-d9b9-488f-9dbe-23a417d08b63
+uuid: 5110183d-9d64-43b3-80a9-413029579f72
 langcode: en
 status: true
 dependencies: {  }
-_core:
-  default_config_hash: HaL0P0uZ-Ej7bGqTmmN6ZhrX1cK-IJEWfQv8xDom61A
 id: monitoring_installed_modules
 label: 'Installed modules'
 description: 'Installed only expected modules'

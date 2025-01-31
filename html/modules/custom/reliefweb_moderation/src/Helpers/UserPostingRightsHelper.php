@@ -98,7 +98,7 @@ class UserPostingRightsHelper {
    *   Posting rights as an associative array keyed by source id.
    */
   public static function getUserPostingRights(?AccountInterface $account = NULL, array $sources = []) {
-    static $users;
+    $users = &drupal_static('reliefweb_moderation_getUserPostingRights');
 
     $helper = new UserPostingRightsHelper();
     $account = $account ?: \Drupal::currentUser();
@@ -117,12 +117,14 @@ class UserPostingRightsHelper {
       $id_field = $helper->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'id');
       $job_field = $helper->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'job');
       $training_field = $helper->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'training');
+      $report_field = $helper->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'report');
 
       // Get the rights associated with the user id.
       $query = $helper->getDatabase()->select($table, $table);
       $query->addField($table, 'entity_id', 'tid');
       $query->addField($table, $job_field, 'job');
       $query->addField($table, $training_field, 'training');
+      $query->addField($table, $report_field, 'report');
       $query->condition($table . '.bundle', 'source', '=');
       $query->condition($table . '.' . $id_field, $account->id(), '=');
       if (!empty($sources)) {
@@ -142,6 +144,7 @@ class UserPostingRightsHelper {
           'tid' => $tid,
           'job' => 0,
           'training' => 0,
+          'report' => 0,
         ];
       }
     }
@@ -158,7 +161,7 @@ class UserPostingRightsHelper {
    * Compute the "final" posting right for a document based on an account's
    * rights for the given sources.
    *
-   * Currently only for jobs and training.
+   * Currently only for jobs, trainings and reports.
    *
    * @param \Drupal\Core\Session\AccountInterface $account
    *   A user's account object or the current user if NULL.
@@ -172,8 +175,8 @@ class UserPostingRightsHelper {
    *   the right applies.
    */
   public static function getUserConsolidatedPostingRight(AccountInterface $account, $bundle, array $sources) {
-    // Not a job nor training or no sources, consider the user 'unverified'.
-    if (empty($account->uid) || ($bundle !== 'job' && $bundle !== 'training') || empty($sources)) {
+    // Not a job, training nor report or no sources, 'unverified'.
+    if (empty($account->id()) || ($bundle !== 'job' && $bundle !== 'training' && $bundle !== 'report') || empty($sources)) {
       return [
         'code' => 0,
         'name' => 'unverified',
@@ -251,8 +254,8 @@ class UserPostingRightsHelper {
       $owner = $entity->getOwnerId() === $account->id() && $account->id() > 0;
     }
 
-    // Only applies to job and training.
-    if ($bundle === 'job' || $bundle === 'training') {
+    // Only applies to job, training and report.
+    if ($bundle === 'job' || $bundle === 'training' || $bundle === 'report') {
       // Check for sources for which the user is blocked, allowed or trusted.
       //
       // Note: if there is no source or the user in unverified for the sources
@@ -289,6 +292,47 @@ class UserPostingRightsHelper {
 
     // Owner can edit their own posts (unless blocked for a source, see above).
     return $allowed || $owner;
+  }
+
+  /**
+   * Check if a user is allowed or trusted for any source.
+   *
+   * @param \Drupal\Core\Session\AccountInterface|null $account
+   *   A user's account object or the current user if NULL.
+   * @param string $bundle
+   *   Entity bundle (job, training, or report).
+   *
+   * @return bool
+   *   TRUE if the user is allowed or trusted for any source, FALSE otherwise.
+   */
+  public static function isUserAllowedOrTrustedForAnySource(?AccountInterface $account = NULL, string $bundle = 'job'): bool {
+    $account = $account ?: \Drupal::currentUser();
+
+    // Anonymous users are never allowed or trusted.
+    if ($account->isAnonymous()) {
+      return FALSE;
+    }
+
+    // Validate the bundle.
+    if (!in_array($bundle, ['job', 'training', 'report'])) {
+      throw new \InvalidArgumentException("Invalid bundle: $bundle. Must be 'job', 'training', or 'report'.");
+    }
+
+    $helper = new self();
+    $database = $helper->getDatabase();
+    $table = $helper->getFieldTableName('taxonomy_term', 'field_user_posting_rights');
+    $id_field = $helper->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'id');
+    $bundle_field = $helper->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', $bundle);
+
+    $query = $database->select($table, $table);
+    $query->condition($table . '.bundle', 'source', '=');
+    $query->condition($table . '.' . $id_field, $account->id(), '=');
+    $query->condition($table . '.' . $bundle_field, 2, '>=');
+    $query->range(0, 1);
+
+    $result = $query->countQuery()->execute()->fetchField();
+
+    return (bool) $result;
   }
 
   /**

@@ -1,0 +1,6 @@
+services:
+  reliefweb_reporting.ai_job_tagging.access_checker:
+    class: Drupal\reliefweb_reporting\Access\ReliefWebReportingAccess
+    arguments: ['@request_stack', '@config.factory']
+    tags:
+      - { name: access_check, applies_to: _reliefweb_reporting_ai_job_tagging_access_check }

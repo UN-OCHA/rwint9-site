@@ -14,3 +14,11 @@ advanced-search:
 disaster-map:
   js:
     js/disaster-map.js: {}
+
+# Search converter enhancement.
+search-converter:
+  css:
+    theme:
+      css/search-converter.css: {}
+  js:
+    js/search-converter.js: {}

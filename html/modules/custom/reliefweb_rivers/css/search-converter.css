@@ -1,0 +1,17 @@
+.rw-search-converter__results__section {
+  position: relative;
+  margin-bottom: 2rem;
+}
+
+.rw-search-converter__results__section h3 {
+  padding-top: 8px;
+}
+
+.rw-search-converter__results__section__actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  gap: .5rem;
+  align-items: center;
+}

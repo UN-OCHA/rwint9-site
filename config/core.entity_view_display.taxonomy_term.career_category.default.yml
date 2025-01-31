@@ -1,0 +1,24 @@
+uuid: fef95ead-4c02-40c3-b873-87b5dd8a5d4b
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.career_category.field_example_job_posting
+    - taxonomy.vocabulary.career_category
+  module:
+    - text
+id: taxonomy_term.career_category.default
+targetEntityType: taxonomy_term
+bundle: career_category
+mode: default
+content:
+  description:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  field_example_job_posting: true
+  langcode: true

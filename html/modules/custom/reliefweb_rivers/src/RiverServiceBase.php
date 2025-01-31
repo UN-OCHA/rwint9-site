@@ -5,6 +5,7 @@ namespace Drupal\reliefweb_rivers;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Link;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Pager\PagerParametersInterface;
 use Drupal\Core\Render\RendererInterface;
@@ -706,6 +707,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
       '#links' => array_filter([
         'rss' => $this->getRssLink(),
         'api' => $this->getApiLink(),
+        'subscribe' => $this->getSubscribeLink(),
       ]),
       '#cache' => [
         '#contexts' => [
@@ -713,6 +715,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
           'url.query_args:search',
           'url.query_args:view',
           'url.query_args.pagers:0',
+          'user.roles',
         ],
       ],
     ];
@@ -722,11 +725,13 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * {@inheritdoc}
    */
   public function getRssLink() {
+    $url = Url::fromRoute('reliefweb_rivers.' . $this->getBundle() . '.rss', [], [
+      'query' => $this->getParameters()->getAllSorted(['list']),
+      'absolute' => TRUE,
+    ]);
+
     try {
-      return Url::fromRoute('reliefweb_rivers.' . $this->getBundle() . '.rss', [], [
-        'query' => $this->getParameters()->getAllSorted(['list']),
-        'absolute' => TRUE,
-      ])->toString();
+      return Link::fromTextAndUrl($this->t('RSS'), $url)->toString();
     }
     catch (RouteNotFoundException $exception) {
       return '';
@@ -752,11 +757,43 @@ abstract class RiverServiceBase implements RiverServiceInterface {
       ->get('search_converter_url');
 
     if (!empty($url)) {
-      return Url::fromUri($url, $options);
+      $url = Url::fromUri($url, $options);
+    }
+    // Otherwise use the search converter route.
+    else {
+      $url = Url::fromRoute('reliefweb_rivers.search.converter', [], $options);
     }
 
-    // Otherwise use the search converter route.
-    return Url::fromRoute('reliefweb_rivers.search.converter', [], $options);
+    try {
+      return Link::fromTextAndUrl($this->t('API'), $url)->toString();
+    }
+    catch (RouteNotFoundException $exception) {
+      return '';
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSubscribeLink() {
+    if ($this->currentUser->isAnonymous()) {
+      $url = URL::fromUserInput('/help', [
+        'fragment' => 'subscriptions',
+        'absolute' => TRUE,
+      ]);
+    }
+    else {
+      $url = URL::fromRoute('reliefweb_subscriptions.subscription_form.current_user', [], [
+        'absolute' => TRUE,
+      ]);
+    }
+
+    try {
+      return Link::fromTextAndUrl($this->t('Subscribe'), $url);
+    }
+    catch (RouteNotFoundException $exception) {
+      return '';
+    }
   }
 
   /**
@@ -811,7 +848,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function getApiData($limit = 20, $paginated = TRUE, array $payload = NULL, $view = NULL) {
+  public function getApiData($limit = 20, $paginated = TRUE, ?array $payload = NULL, $view = NULL) {
     $view = $this->validateView($view) ?? $this->getSelectedView();
     $payload = $payload ?? $this->prepareApiRequest($limit, $paginated, $view);
 
@@ -995,7 +1032,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getLanguageCode(array &$data = NULL) {
+  public static function getLanguageCode(?array &$data = NULL) {
     if (isset($data['langcode'])) {
       $langcode = $data['langcode'];
     }

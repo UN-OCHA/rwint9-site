@@ -1,6 +1,6 @@
 uuid: f56298fa-014b-462a-a177-b767582d60c1
 langcode: en
-status: true
+status: false
 dependencies:
   module:
     - system
@@ -8,7 +8,7 @@ dependencies:
     - common_design_subtheme
 id: soft_footer
 theme: common_design_subtheme
-region: footer_soft
+region: header_top
 weight: 0
 provider: null
 plugin: system_powered_by_block

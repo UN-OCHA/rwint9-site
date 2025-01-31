@@ -58,7 +58,6 @@
 
                   // Repurpose the observer to observe changes to the toggler.
                   var toggler = document.querySelector('[aria-controls="{{ content_id }}"]');
-                  console.log(toggler);
                   if (toggler) {
                     observer.observe(toggler, {attributes: true, attributeOldValue: true});
                   }
