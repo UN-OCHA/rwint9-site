@@ -8,7 +8,7 @@ use Symfony\Component\Uid\Uuid;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
- * Tests the ReliefWeb POST API provider list builder.
+ * Tests the ReliefWeb Post API provider list builder.
  *
  * @coversDefaultClass \Drupal\reliefweb_post_api\ProviderListBuilder
  *

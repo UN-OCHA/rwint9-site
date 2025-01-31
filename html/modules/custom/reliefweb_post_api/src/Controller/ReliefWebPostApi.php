@@ -25,7 +25,7 @@ use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * Controller for the POST API.
+ * Controller for the Post API.
  */
 class ReliefWebPostApi extends ControllerBase {
 
@@ -35,7 +35,7 @@ class ReliefWebPostApi extends ControllerBase {
    * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
    *   The request stack.
    * @param \Drupal\reliefweb_post_api\Queue\ReliefWebPostApiDatabaseQueueFactory $queueFactory
-   *   The ReliefWeb POST API queue factory.
+   *   The ReliefWeb Post API queue factory.
    * @param \Drupal\Core\Extension\ExtensionPathResolver $pathResolver
    *   The path resolver service.
    * @param \Drupal\Core\Database\Connection $database
@@ -43,7 +43,7 @@ class ReliefWebPostApi extends ControllerBase {
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The time service.
    * @param \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface $contentProcessorPluginManager
-   *   The ReliefWeb POST API content processor plugin manager.
+   *   The ReliefWeb Post API content processor plugin manager.
    */
   public function __construct(
     protected RequestStack $requestStack,

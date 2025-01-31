@@ -9,7 +9,7 @@ use Drupal\reliefweb_post_api\Queue\ReliefWebPostApiDatabaseQueueFactory;
 use Drush\Commands\DrushCommands;
 
 /**
- * ReliefWeb POST API Drush commandfile.
+ * ReliefWeb Post API Drush commandfile.
  */
 class ReliefWebPostApiCommands extends DrushCommands {
 
@@ -17,9 +17,9 @@ class ReliefWebPostApiCommands extends DrushCommands {
    * Constructor.
    *
    * @param \Drupal\reliefweb_post_api\Queue\ReliefWebPostApiDatabaseQueueFactory $queueFactory
-   *   The ReliefWeb POST API queue factory.
+   *   The ReliefWeb Post API queue factory.
    * @param \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface $contentProcessorPluginManager
-   *   The ReliefWeb POST API content processor plugin manager.
+   *   The ReliefWeb Post API content processor plugin manager.
    */
   public function __construct(
     protected ReliefWebPostApiDatabaseQueueFactory $queueFactory,
@@ -27,7 +27,7 @@ class ReliefWebPostApiCommands extends DrushCommands {
   ) {}
 
   /**
-   * Process content submitted to the ReliefWeb POST API.
+   * Process content submitted to the ReliefWeb Post API.
    *
    * @param array $options
    *   Options for the command.

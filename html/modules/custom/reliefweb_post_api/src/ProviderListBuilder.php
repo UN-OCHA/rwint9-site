@@ -8,7 +8,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
 
 /**
- * Defines the list builder for ReliefWeb POST API provider entities.
+ * Defines the list builder for ReliefWeb Post API provider entities.
  */
 class ProviderListBuilder extends EntityListBuilder {
 

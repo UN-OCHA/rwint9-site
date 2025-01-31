@@ -15,7 +15,7 @@ use Drupal\Core\TypedData\DataDefinition;
  *
  * @FieldType(
  *   id = "reliefweb_post_api_key",
- *   label = @Translation("ReliefWeb POST API key"),
+ *   label = @Translation("ReliefWeb Post API key"),
  *   description = @Translation("An entity field containing an API key value."),
  *   default_widget = "reliefweb_post_api_key",
  *   default_formatter = "reliefweb_post_api_key"

@@ -52,7 +52,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   protected array $providers = [];
 
   /**
-   * Loaded POST API data.
+   * Loaded Post API data.
    *
    * @var array
    */
@@ -1728,7 +1728,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * Get some POST API test data.
+   * Get some Post API test data.
    *
    * @param string $bundle
    *   The bundle of the data.

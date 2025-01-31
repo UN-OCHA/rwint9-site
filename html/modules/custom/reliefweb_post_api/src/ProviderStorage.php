@@ -7,7 +7,7 @@ namespace Drupal\reliefweb_post_api;
 use Drupal\Core\Entity\Sql\SqlContentEntityStorage;
 
 /**
- * Defines the ReliefWeb POST API provider storage.
+ * Defines the ReliefWeb Post API provider storage.
  */
 class ProviderStorage extends SqlContentEntityStorage implements ProviderStorageInterface {
 

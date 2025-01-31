@@ -13,7 +13,7 @@ use Drupal\reliefweb_post_api\Entity\Provider;
  * Implements hook_reliefweb_api_post_indexing().
  */
 function reliefweb_post_api_reliefweb_api_post_indexing(string $entity_type_id, string $bundle, string|int|null $entity_id = NULL) {
-  // We notify the POST API provider, if any, after the document is indexed in
+  // We notify the Post API provider, if any, after the document is indexed in
   // the API otherwise the provider's webhook implementation will not be able to
   // to retrieve the data from the API to confirm the status.
   if (isset($entity_id)) {

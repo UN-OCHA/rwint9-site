@@ -86,7 +86,7 @@ class Job extends ContentProcessorPluginBase {
     $node->setModerationStatus($provider->getDefaultResourceStatus());
 
     // Set the log message based on whether it was updated or created.
-    $message = $node->isNew() ? 'Automatic creation from POST API.' : 'Automatic update from POST API.';
+    $message = $node->isNew() ? 'Automatic creation from Post API.' : 'Automatic update from Post API.';
 
     // Save the node.
     $node->setNewRevision(TRUE);

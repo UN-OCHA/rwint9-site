@@ -27,7 +27,7 @@ use Symfony\Component\Uid\Uuid;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
- * Tests the ReliefWeb POST API controller.
+ * Tests the ReliefWeb Post API controller.
  *
  * @coversDefaultClass \Drupal\reliefweb_post_api\Controller\ReliefWebPostApi
  *
@@ -43,7 +43,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   protected array $providers;
 
   /**
-   * Loaded POST API data.
+   * Loaded Post API data.
    *
    * @var array
    */
@@ -662,7 +662,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
-   * Get some POST API test data.
+   * Get some Post API test data.
    *
    * @param string $bundle
    *   The bundle of the data.

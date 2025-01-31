@@ -7,7 +7,7 @@ namespace Drupal\reliefweb_post_api;
 use Drupal\Core\Entity\ContentEntityStorageInterface;
 
 /**
- * Defines the interface for ReliefWeb POST API provider storage.
+ * Defines the interface for ReliefWeb Post API provider storage.
  */
 interface ProviderStorageInterface extends ContentEntityStorageInterface {
 

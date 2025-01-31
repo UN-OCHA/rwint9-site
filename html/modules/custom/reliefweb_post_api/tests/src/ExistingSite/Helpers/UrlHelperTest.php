@@ -9,7 +9,7 @@ use Drupal\reliefweb_post_api\Helpers\UrlHelper;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
- * Tests the ReliefWeb POST API URL helper.
+ * Tests the ReliefWeb Post API URL helper.
  *
  * @coversDefaultClass \Drupal\reliefweb_post_api\Helpers\UrlHelper
  *

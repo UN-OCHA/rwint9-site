@@ -7,7 +7,7 @@ namespace Drupal\reliefweb_post_api\Entity;
 use Drupal\Core\Entity\ContentEntityInterface;
 
 /**
- * Interface for a POST API provider.
+ * Interface for a Post API provider.
  */
 interface ProviderInterface extends ContentEntityInterface {
 

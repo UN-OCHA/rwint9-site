@@ -157,7 +157,7 @@ class ReliefWebPostApiCommandsTest extends ExistingSiteBase {
     $entity = $this->createConfiguredMock(Node::class, [
       'id' => 123,
       'uuid' => 'ba98249e-f453-4bff-92a7-5ffa7229d62b',
-      'getRevisionLogMessage' => 'Automatic creation from POST API.',
+      'getRevisionLogMessage' => 'Automatic creation from Post API.',
     ]);
 
     $plugin = $this->createConfiguredMock(ContentProcessorPluginInterface::class, [
