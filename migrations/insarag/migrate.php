@@ -10,8 +10,8 @@ use Symfony\Component\Console\Output\ConsoleOutput;
 const XML_FILE = __DIR__ . '/posts.xml';
 const XML_FILE_MEDIA = __DIR__ . '/media.xml';
 const LOGFILE = __DIR__ . '/reports.csv';
-const MAX_ITEMS = 9999;
-const FORCE_UPDATE = FALSE;
+const MAX_ITEMS = 99;
+const FORCE_UPDATE = TRUE;
 global $source_id;
 
 function migrateItems(&$global_categories, &$global_tags, $media_items) {
@@ -34,11 +34,13 @@ function migrateItems(&$global_categories, &$global_tags, $media_items) {
       'status' => 0,
       'uid' => 2,
       'field_bury' => 1,
-      'field_theme' => 4597,
+      'field_theme' => [
+        4590,
+        4591,
+      ],
       'field_language' => 267,
-      'field_content_format' => 8,
+      'field_content_format' => 9,
       'field_source' => 1503,
-      'field_ocha_product' => 12353,
       'title' => (string) $child->title,
       'body' => [
         'value' => str_replace([
@@ -48,8 +50,10 @@ function migrateItems(&$global_categories, &$global_tags, $media_items) {
         'format' => 'markdown_editor',
       ],
       'field_origin_notes' => '',
-      'field_primary_country' => NULL,
-      'field_country' => [],
+      'field_primary_country' => 254,
+      'field_country' => [
+        254,
+      ],
       'field_original_publication_date' => '',
       'field_image' => '',
       'post_id' => '',
@@ -228,7 +232,12 @@ function importMediaItems() {
   return $items;
 }
 
+$output = new ConsoleOutput();
+
+$output->writeln('<info>Importing media items.</info>');
 $media_items = importMediaItems();
+
+$output->writeln('<info>Adding Insarag as source.</info>');
 $source_id = createSourceInsarag();
 
 $global_categories = [];
@@ -285,10 +294,11 @@ fputcsv($log, [
   'nid',
 ]);
 
-$output = new ConsoleOutput();
 $file_mapping = [];
 
 foreach ($items as &$item) {
+  $item['field_content_format'] = $source_id;
+
   $output->writeln('<info>Processing "' . $item['title'] . '"</info>');
   if (empty($item['title'])) {
     continue;
@@ -471,6 +481,7 @@ foreach ($items as &$item) {
   $item['categories'] = implode(', ', $item['categories']);
   $item['tags'] = implode(', ', $item['tags']);
   $item['field_country'] = implode(', ', $item['field_country']);
+  $item['field_theme'] = implode(', ', $item['field_theme']);
 
   fputcsv($log, $item);
   sleep(1);
