@@ -122,7 +122,6 @@ module:
   minimal: 1000
 theme:
   stable: 0
-  classy: 0
   common_design: 0
   common_design_subtheme: 0
   claro: 0
