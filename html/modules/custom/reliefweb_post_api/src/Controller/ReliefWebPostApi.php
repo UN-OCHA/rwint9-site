@@ -124,8 +124,24 @@ class ReliefWebPostApi extends ControllerBase {
         throw new AccessDeniedHttpException('Invalid provider.');
       }
 
-      // Check access.
-      if (!$provider->validateKey($headers->get('X-RW-POST-API-KEY', ''))) {
+      // Check the validity of the API key.
+      $api_key = $headers->get('X-RW-POST-API-KEY', '');
+      if (empty($api_key)) {
+        throw new AccessDeniedHttpException('Invalid API key.');
+      }
+
+      // If the API key matches the provider's own API key then we'll use the
+      // default user associated with the provider as owner of the content.
+      if ($provider->validateKey($api_key)) {
+        $user_id = $provider->getUserId();
+      }
+      // Otherwise, we try to check if this is the API key of a trusted user
+      // associated with the provider.
+      else {
+        $user_id = $provider->findTrustedUserIdFromApiKey($api_key);
+      }
+
+      if (is_null($user_id)) {
         throw new AccessDeniedHttpException('Invalid API key.');
       }
 
@@ -171,6 +187,9 @@ class ReliefWebPostApi extends ControllerBase {
       // Add the provider ID so we can perform additional checks like verifying
       // the URLs of attachments.
       $data['provider'] = $provider->uuid();
+
+      // Add the user ID that will be used as owner of the content.
+      $data['user'] = $user_id;
 
       // Validate the content against the schema for the bundle.
       try {

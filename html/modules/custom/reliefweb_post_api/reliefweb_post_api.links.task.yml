@@ -16,8 +16,8 @@ entity.reliefweb_post_api_provider.delete_form:
   route_name: entity.reliefweb_post_api_provider.delete_form
   base_route: entity.reliefweb_post_api_provider.canonical
 
-reliefweb_post_api.user.api_key:
-  title: Generate API Key
-  route_name: reliefweb_post_api.user.api_key
+reliefweb_post_api.api_user_dashboard:
+  title: API Dashboard
+  route_name: reliefweb_post_api.api_user_dashboard
   base_route: entity.user.canonical
-  weight: 1000
+  weight: 200

@@ -262,6 +262,40 @@ class Provider extends ContentEntityBase implements ProviderInterface {
   /**
    * {@inheritdoc}
    */
+  public function findTrustedUserIdFromApiKey(string $key): ?int {
+    if (!$this->hasField('field_trusted_users') || $this->field_trusted_users->isEmpty()) {
+      return NULL;
+    }
+
+    $user_ids = array_column($this->field_trusted_users->getValue(), 'target_id');
+    if (empty($user_ids)) {
+      return NULL;
+    }
+
+    $records = \Drupal::database()
+      ->select('user__field_api_key', 'f')
+      ->fields('f', ['entity_id', 'field_api_key_value'])
+      ->condition('f.entity_id', $user_ids, 'IN')
+      ->execute()
+      ?->fetchAllKeyed(0, 1) ?? [];
+
+    if (empty($records)) {
+      return NULL;
+    }
+
+    $password = \Drupal::service('password');
+    foreach ($records as $user_id => $user_api_key) {
+      if ($password->check($key, $user_api_key)) {
+        return $user_id;
+      }
+    }
+
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function skipQueue(): bool {
     $field = 'field_skip_queue';
     if (!$this->hasField($field)) {

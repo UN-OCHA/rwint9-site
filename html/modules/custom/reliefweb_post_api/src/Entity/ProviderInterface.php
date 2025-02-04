@@ -89,4 +89,15 @@ interface ProviderInterface extends ContentEntityInterface {
    */
   public function validateKey(string $key): bool;
 
+  /**
+   * Retrieve the trusted user ID assoaciated with the API key for the provider.
+   *
+   * @param string $key
+   *   Trusted user API key.
+   *
+   * @return int|null
+   *   The ID of the user associatted with the API key or NULL.
+   */
+  public function findTrustedUserIdFromApiKey(string $key): ?int;
+
 }

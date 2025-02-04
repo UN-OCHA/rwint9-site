@@ -1,0 +1,30 @@
+{#
+
+/**
+ * @file
+ * Template file for the API user dashboard.
+ *
+ * Available variables;
+ * - attributes: container attributes
+ * - api_key: API key section with form to generate a new one
+ * - providers: list of Post API providers associated with the user.
+ */
+
+#}
+{{ attach_library('reliefweb_post_api/reliefweb-api-user-dashboard') }}
+
+<div{{ attributes.addClass('rw-api-user-dashboard') }}>
+<section class="rw-api-user-dashboard__section rw-api-user-dashboard__api-key">
+  <h2 class="rw-api-user-dashboard__section__title">{{ 'API key'|t }}</h2>
+  <div class="rw-api-user-dashboard__section__content">
+  {{ api_key }}
+  </div>
+</section>
+
+<section class="rw-api-user-dashboard__section rw-api-user-dashboard__providers">
+  <h2 class="rw-api-user-dashboard__section__title">{{ 'Linked Post API providers'|t }}</h2>
+  <div class="rw-api-user-dashboard__section__content">
+  {{ providers }}
+  </div>
+</section>
+</div>

@@ -10,6 +10,24 @@ declare(strict_types=1);
 use Drupal\reliefweb_post_api\Entity\Provider;
 
 /**
+ * Implements hook_theme().
+ */
+function reliefweb_post_api_theme() {
+  return [
+    'reliefweb_api_user_dashboard' => [
+      'variables' => [
+        // Container attributes.
+        'attributes' => NULL,
+        // API key section with form to generate new key.
+        'api_key' => NULL,
+        // This is a list of API providers associated with the user.
+        'providers' => NULL,
+      ],
+    ],
+  ];
+}
+
+/**
  * Implements hook_reliefweb_api_post_indexing().
  */
 function reliefweb_post_api_reliefweb_api_post_indexing(string $entity_type_id, string $bundle, string|int|null $entity_id = NULL) {
