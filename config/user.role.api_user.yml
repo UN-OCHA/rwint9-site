@@ -1,0 +1,14 @@
+uuid: 9acc3e8b-5543-43df-8376-c190d6d92517
+langcode: en
+status: true
+dependencies:
+  module:
+    - reliefweb_post_api
+id: api_user
+label: 'API user'
+weight: 10
+is_admin: null
+permissions:
+  - 'access own reliefweb api user dashboard'
+  - 'generate reliefweb api key'
+  - 'view linked reliefweb post api providers'
