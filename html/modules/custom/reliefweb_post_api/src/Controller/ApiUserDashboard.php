@@ -12,7 +12,6 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Messenger\MessengerInterface;
-use Drupal\Core\Password\PasswordInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
@@ -41,13 +40,6 @@ class ApiUserDashboard extends ControllerBase {
   protected TimeInterface $time;
 
   /**
-   * The password service.
-   *
-   * @var \Drupal\Core\Password\PasswordInterface
-   */
-  protected PasswordInterface $password;
-
-  /**
    * Constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -66,8 +58,6 @@ class ApiUserDashboard extends ControllerBase {
    *   The time service.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The string translation service.
-   * @param \Drupal\Core\Password\PasswordInterface $password
-   *   The password service.
    */
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
@@ -78,7 +68,6 @@ class ApiUserDashboard extends ControllerBase {
     MessengerInterface $messenger,
     TimeInterface $time,
     TranslationInterface $string_translation,
-    PasswordInterface $password,
   ) {
     // Assign injected services to class properties.
     $this->entityTypeManager = $entity_type_manager;
@@ -86,7 +75,6 @@ class ApiUserDashboard extends ControllerBase {
     $this->tempStoreFactory = $temp_store_factory;
     $this->formBuilder = $form_builder;
     $this->time = $time;
-    $this->password = $password;
 
     $this->setLoggerFactory($logger_factory);
     $this->setMessenger($messenger);
@@ -105,8 +93,7 @@ class ApiUserDashboard extends ControllerBase {
       $container->get('logger.factory'),
       $container->get('messenger'),
       $container->get('datetime.time'),
-      $container->get('string_translation'),
-      $container->get('password')
+      $container->get('string_translation')
     );
   }
 
@@ -219,11 +206,9 @@ class ApiUserDashboard extends ControllerBase {
     // Generate a cryptographically secure random API key.
     $raw_key = bin2hex(random_bytes(32));
 
-    // Hash the key for storage.
-    $hashed_key = $this->password->hash($raw_key);
-
-    // Store only the hashed version of the key in the user's field.
-    $user->set('field_api_key', $hashed_key);
+    // The raw key will be stored hash.
+    // @see \Drupal\reliefweb_post_api\Plugin\Field\FieldType\ApiKeyItem::preSave().
+    $user->set('field_api_key', $raw_key);
     $user->save();
 
     // Log successful API key generation.
