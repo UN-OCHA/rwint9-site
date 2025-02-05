@@ -191,6 +191,10 @@ class ReliefWebPostApi extends ControllerBase {
       // Add the user ID that will be used as owner of the content.
       $data['user'] = $user_id;
 
+      // Make sure we don't have an unwanted hash property. This will be
+      // generated when saving the entity.
+      unset($data['hash']);
+
       // Validate the content against the schema for the bundle.
       try {
         $plugin->validate($data);

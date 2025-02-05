@@ -99,6 +99,26 @@ interface ContentProcessorPluginInterface {
   public function process(array $data): ?ContentEntityInterface;
 
   /**
+   * Save an entity that was processed from the given Post API data.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity to save.
+   * @param \Drupal\reliefweb_post_api\Entity\ProviderInterface $provider
+   *   The Post API provider.
+   * @param array $data
+   *   The Post API data.
+   *
+   * @return int
+   *   Either SAVED_NEW or SAVED_UPDATED, depending on the operation performed.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   *   If the save operation failed.
+   *
+   * @see \Drupal\Core\Entity\EntityInterface::save()
+   */
+  public function save(ContentEntityInterface $entity, ProviderInterface $provider, array $data): int;
+
+  /**
    * Checks of the entity with the give UUID can be processed/submitted.
    *
    * By default, entities marked as refused by the editorial team are not

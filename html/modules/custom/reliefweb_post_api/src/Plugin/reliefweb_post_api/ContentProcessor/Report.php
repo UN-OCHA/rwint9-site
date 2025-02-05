@@ -162,21 +162,8 @@ class Report extends ContentProcessorPluginBase {
     $node->field_feature->setValue(NULL);
     $node->field_ocha_product->setValue(NULL);
 
-    // Set the provider.
-    $this->setField($node, 'field_post_api_provider', $provider);
-
-    // Set the new status.
-    $node->setModerationStatus($provider->getDefaultResourceStatus());
-
-    // Set the log message based on whether it was updated or created.
-    $message = $node->isNew() ? 'Automatic creation from Post API.' : 'Automatic update from Post API.';
-
-    // Save the node.
-    $node->setNewRevision(TRUE);
-    $node->setRevisionCreationTime(time());
-    $node->setRevisionUserId($user_id);
-    $node->setRevisionLogMessage($message);
-    $node->save();
+    // Save the entity.
+    $this->save($node, $provider, $data);
 
     return $node;
   }

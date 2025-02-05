@@ -24,6 +24,7 @@ dependencies:
     - field.field.node.report.field_origin
     - field.field.node.report.field_origin_notes
     - field.field.node.report.field_original_publication_date
+    - field.field.node.report.field_post_api_hash
     - field.field.node.report.field_post_api_provider
     - field.field.node.report.field_primary_country
     - field.field.node.report.field_source
@@ -110,6 +111,7 @@ hidden:
   field_ocha_product: true
   field_origin: true
   field_origin_notes: true
+  field_post_api_hash: true
   field_post_api_provider: true
   field_theme: true
   field_vulnerable_groups: true

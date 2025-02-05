@@ -20,6 +20,7 @@ use Drupal\file\FileInterface;
 use Drupal\media\MediaInterface;
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile;
 use Drupal\reliefweb_post_api\Entity\ProviderInterface;
+use Drupal\reliefweb_post_api\Helpers\HashHelper;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorException;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginBase;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface;
@@ -91,6 +92,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
         'field_document_url' => ['https://test.test/'],
         'field_file_url' => ['https://test.test/'],
         'field_image_url' => ['https://test.test/'],
+        'field_resource_status' => 'pending',
       ]);
     $provider->save();
     $this->markEntityForCleanup($provider);
@@ -1564,6 +1566,82 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
+   * Tests the save() method for a new content entity.
+   *
+   * @covers ::save
+   */
+  public function testSaveNewEntity(): void {
+    // Create a new entity using the createEntity method.
+    $entity = $this->createEntity('node', 'report', 1);
+    $entity->enforceIsNew();
+
+    // Get the provider.
+    $provider = $this->getTestProvider('test-provider');
+
+    // Data with a pre-calculated hash and user override.
+    $data = [
+      'user' => 30,
+      'hash' => 'pre-calculated-hash',
+      'url' => 'https://test.test',
+    ];
+
+    // Call the save() method.
+    $result = $this->plugin->save($entity, $provider, $data);
+
+    // Assert that fields were set correctly.
+    $this->assertEquals($provider, $entity->field_post_api_provider->entity);
+    $this->assertEquals('pre-calculated-hash', $entity->field_post_api_hash->value);
+
+    // Assert moderation status and revision settings.
+    $this->assertEquals($provider->getDefaultResourceStatus(), $entity->moderation_status->value);
+    $this->assertTrue($entity->isNewRevision());
+    $this->assertEquals(30, $entity->getRevisionUserId());
+    $this->assertStringContainsString('Automatic creation from Post API.', $entity->getRevisionLogMessage());
+
+    // Assert save return value.
+    $this->assertEquals(1, $result);
+  }
+
+  /**
+   * Tests the save() method for an updated content entity.
+   *
+   * @covers ::save
+   */
+  public function testSaveUpdatedEntity(): void {
+    // Create an existing entity using the createEntity method.
+    $entity = $this->createEntity('node', 'report', 2);
+    $entity->set('nid', 123);
+    $entity->enforceIsNew(FALSE);
+
+    // Get the provider.
+    $provider = $this->getTestProvider('test-provider');
+
+    // Data without a pre-calculated hash (hash will be generated).
+    $data = [
+      'url' => 'https://test.test',
+    ];
+
+    // Call the save() method.
+    $result = $this->plugin->save($entity, $provider, $data);
+
+    // Assert that fields were set correctly.
+    $expected_hash = HashHelper::generateHash($data, ['provider', 'user']);
+    $this->assertEquals($provider, $entity->field_post_api_provider->entity);
+    $this->assertEquals($expected_hash, $entity->field_post_api_hash->value);
+
+    // Assert moderation status and revision settings.
+    $this->assertEquals($provider->getDefaultResourceStatus(), $entity->moderation_status->value);
+    $this->assertTrue($entity->isNewRevision());
+
+    // Since no user is provided in data, provider's user ID should be used.
+    $this->assertEquals($provider->getUserId(), $entity->getRevisionUserId());
+
+    // Assert log message and save return value.
+    $this->assertStringContainsString('Automatic update from Post API.', $entity->getRevisionLogMessage());
+    $this->assertEquals(2, $result);
+  }
+
+  /**
    * Create a mock of a select query statement.
    *
    * @param string $method
@@ -1654,11 +1732,13 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
    * @param string|null $bundle
    *   The entity bundle. Defaults to the one handled by the content processor
    *   plugin.
+   * @param int $return_value
+   *   The value returned by the save method.
    *
    * @return \Drupal\Core\Entity\ContentEntityInterface
    *   The entity.
    */
-  protected function createEntity(?string $entity_type_id = NULL, ?string $bundle = NULL): ContentEntityInterface {
+  protected function createEntity(?string $entity_type_id = NULL, ?string $bundle = NULL, int $return_value = 0): ContentEntityInterface {
     $entity_type_id = $entity_type_id ?? $this->plugin->getEntityType();
     $bundle = $bundle ?? $this->plugin->getBundle();
 
@@ -1668,7 +1748,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
 
     // phpcs:ignore Drupal.Functions.DiscouragedFunctions.Discouraged
     return eval("return new class([], '$entity_type_id', '$bundle') extends $class {
-      public function save() { return NULL; }
+      public function save() { return $return_value; }
     };");
   }
 

@@ -9,7 +9,7 @@ id: node.training.field_post_api_provider
 field_name: field_post_api_provider
 entity_type: node
 bundle: training
-label: 'POST API provider'
+label: 'Post API provider'
 description: ''
 required: false
 translatable: false

@@ -9,7 +9,7 @@ id: node.job.field_post_api_provider
 field_name: field_post_api_provider
 entity_type: node
 bundle: job
-label: 'POST API provider'
+label: 'Post API provider'
 description: ''
 required: false
 translatable: false

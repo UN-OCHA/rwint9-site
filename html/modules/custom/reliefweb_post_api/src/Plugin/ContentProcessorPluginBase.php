@@ -25,6 +25,7 @@ use Drupal\file\Validation\FileValidatorInterface;
 use Drupal\media\MediaInterface;
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile;
 use Drupal\reliefweb_post_api\Entity\ProviderInterface;
+use Drupal\reliefweb_post_api\Helpers\HashHelper;
 use Drupal\reliefweb_post_api\Helpers\UrlHelper;
 use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
@@ -250,6 +251,37 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   /**
    * {@inheritdoc}
    */
+  public function save(ContentEntityInterface $entity, ProviderInterface $provider, array $data): int {
+    $user_id = $data['user'] ?? $provider->getUserId();
+
+    // Set the provider.
+    $this->setField($entity, 'field_post_api_provider', $provider);
+
+    // Store the hash of the Post API data.
+    //
+    // We allow providing the hash already to help with content importer that
+    // may want to alter the content to hash.
+    $hash = $data['hash'] ?? HashHelper::generateHash($data, ['provider', 'user']);
+    $this->setField($entity, 'field_post_api_hash', $hash);
+
+    // Set the new status.
+    $entity->setModerationStatus($provider->getDefaultResourceStatus());
+
+    // Set the log message based on whether it was updated or created.
+    $message = $entity->isNew() ? 'Automatic creation from Post API.' : 'Automatic update from Post API.';
+
+    // Save the entity.
+    $entity->setNewRevision(TRUE);
+    $entity->setRevisionCreationTime(time());
+    $entity->setRevisionUserId($user_id);
+    $entity->setRevisionLogMessage($message);
+
+    return $entity->save();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function isProcessable(string $uuid): bool {
     $storage = $this->entityTypeManager->getStorage($this->getEntityType());
     $uuid_key = $storage->getEntityType()->getKey('uuid');
@@ -284,6 +316,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     unset($data['bundle']);
     unset($data['provider']);
     unset($data['user']);
+    unset($data['hash']);
     $data = Helper::toJSON($data);
     $schema = $this->getPluginSetting('schema', $this->getJsonSchema());
     $result = $this->getSchemaValidator()->validate($data, $schema);

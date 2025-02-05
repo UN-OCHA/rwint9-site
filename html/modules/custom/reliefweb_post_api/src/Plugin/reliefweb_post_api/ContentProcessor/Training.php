@@ -94,21 +94,8 @@ class Training extends ContentProcessorPluginBase {
     $this->setTermField($node, 'field_career_categories', 'career_category', $data['professional_function'] ?? []);
     $this->setTermField($node, 'field_theme', 'theme', $data['theme'] ?? []);
 
-    // Set the provider.
-    $this->setField($node, 'field_post_api_provider', $provider);
-
-    // Set the new status.
-    $node->setModerationStatus($provider->getDefaultResourceStatus());
-
-    // Set the log message based on whether it was updated or created.
-    $message = $node->isNew() ? 'Automatic creation from Post API.' : 'Automatic update from Post API.';
-
-    // Save the node.
-    $node->setNewRevision(TRUE);
-    $node->setRevisionCreationTime(time());
-    $node->setRevisionUserId($user_id);
-    $node->setRevisionLogMessage($message);
-    $node->save();
+    // Save the entity.
+    $this->save($node, $provider, $data);
 
     return $node;
   }

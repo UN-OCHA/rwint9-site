@@ -9,7 +9,7 @@ id: node.report.field_post_api_provider
 field_name: field_post_api_provider
 entity_type: node
 bundle: report
-label: 'POST API provider'
+label: 'Post API provider'
 description: ''
 required: false
 translatable: false
