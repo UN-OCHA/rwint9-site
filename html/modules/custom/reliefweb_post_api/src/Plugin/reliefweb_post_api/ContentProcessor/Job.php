@@ -31,6 +31,7 @@ class Job extends ContentProcessorPluginBase {
 
     $bundle = $this->getbundle();
     $provider = $this->getProvider($data['provider'] ?? '');
+    $user_id = $data['user'] ?? $provider->getUserId();
 
     // Generate the UUID corresponding to the document URL.
     $uuid = $this->generateUuid($data['url']);
@@ -41,7 +42,7 @@ class Job extends ContentProcessorPluginBase {
               'uuid' => $uuid,
               'type' => $bundle,
               'langcode' => $this->getDefaultLangcode(),
-              'uid' => $provider->getUserId(),
+              'uid' => $user_id,
             ]);
 
     // Verify the bundle if the entity already exists.
@@ -86,12 +87,12 @@ class Job extends ContentProcessorPluginBase {
     $node->setModerationStatus($provider->getDefaultResourceStatus());
 
     // Set the log message based on whether it was updated or created.
-    $message = $node->isNew() ? 'Automatic creation from POST API.' : 'Automatic update from POST API.';
+    $message = $node->isNew() ? 'Automatic creation from Post API.' : 'Automatic update from Post API.';
 
     // Save the node.
     $node->setNewRevision(TRUE);
     $node->setRevisionCreationTime(time());
-    $node->setRevisionUserId(2);
+    $node->setRevisionUserId($user_id);
     $node->setRevisionLogMessage($message);
     $node->save();
 

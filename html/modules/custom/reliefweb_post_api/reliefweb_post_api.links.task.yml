@@ -15,3 +15,9 @@ entity.reliefweb_post_api_provider.delete_form:
   title: Delete
   route_name: entity.reliefweb_post_api_provider.delete_form
   base_route: entity.reliefweb_post_api_provider.canonical
+
+reliefweb_post_api.api_user_dashboard:
+  title: API Dashboard
+  route_name: reliefweb_post_api.api_user_dashboard
+  base_route: entity.user.canonical
+  weight: 200

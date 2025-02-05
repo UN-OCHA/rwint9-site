@@ -25,3 +25,24 @@ reliefweb_post_api.schema:
   requirements:
     _access: 'TRUE'
     schema: '^[a-z][a-z_-]+[a-z]\.json$'
+
+reliefweb_post_api.api_user_dashboard:
+  path: '/user/{user}/reliefweb-api-dashboard'
+  defaults:
+    _controller: '\Drupal\reliefweb_post_api\Controller\ApiUserDashboard::getContent'
+    _title: 'API Dashboard'
+  options:
+    parameters:
+      user:
+        type: 'entity:user'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _custom_access: '\Drupal\reliefweb_post_api\Controller\ApiUserDashboard::checkPageAccess'
+
+reliefweb_post_api.api_user_dashboard.current_user:
+  path: '/user/reliefweb-api-dashboard'
+  defaults:
+    _controller: '\Drupal\reliefweb_post_api\Controller\ApiUserDashboard::redirectCurrentUser'
+    _title: 'API Dashboard'
+  requirements:
+    _user_is_logged_in: 'TRUE'

@@ -1,7 +1,7 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://reliefweb.int/post-api-schemas/v2/training.json",
-    "title": "ReliefWeb POST API schema - training resource",
+    "title": "ReliefWeb Post API schema - training resource",
     "type": "object",
     "properties": {
         "url": {

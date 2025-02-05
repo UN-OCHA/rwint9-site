@@ -1,0 +1,8 @@
+reliefweb-api-user-dashboard:
+  css:
+    component:
+      components/reliefweb-api-user-dashboard/reliefweb-api-user-dashboard.css: {}
+  js:
+    components/reliefweb-api-user-dashboard/reliefweb-api-user-dashboard.js: {}
+  dependencies:
+    - core/drupal

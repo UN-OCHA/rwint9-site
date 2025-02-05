@@ -283,6 +283,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   public function validateSchema(array $data): void {
     unset($data['bundle']);
     unset($data['provider']);
+    unset($data['user']);
     $data = Helper::toJSON($data);
     $schema = $this->getPluginSetting('schema', $this->getJsonSchema());
     $result = $this->getSchemaValidator()->validate($data, $schema);

@@ -17,13 +17,13 @@ use Drupal\reliefweb_post_api\Helpers\UrlHelper;
  *
  * @ContentEntityType(
  *   id = "reliefweb_post_api_provider",
- *   label = @Translation("ReliefWeb POST API provider"),
- *   label_collection = @Translation("ReliefWeb POST API providers"),
- *   label_singular = @Translation("ReliefWeb POST API provider"),
- *   label_plural = @Translation("ReliefWeb POST API providers"),
+ *   label = @Translation("ReliefWeb Post API provider"),
+ *   label_collection = @Translation("ReliefWeb Post API providers"),
+ *   label_singular = @Translation("ReliefWeb Post API provider"),
+ *   label_plural = @Translation("ReliefWeb Post API providers"),
  *   label_count = @PluralTranslation(
- *     singular = "@count ReliefWeb POST API provider",
- *     plural = "@count ReliefWeb POST API providers"
+ *     singular = "@count ReliefWeb Post API provider",
+ *     plural = "@count ReliefWeb Post API providers"
  *   ),
  *   handlers = {
  *     "storage" = "Drupal\reliefweb_post_api\ProviderStorage",
@@ -262,6 +262,40 @@ class Provider extends ContentEntityBase implements ProviderInterface {
   /**
    * {@inheritdoc}
    */
+  public function findTrustedUserIdFromApiKey(string $key): ?int {
+    if (!$this->hasField('field_trusted_users') || $this->field_trusted_users->isEmpty()) {
+      return NULL;
+    }
+
+    $user_ids = array_column($this->field_trusted_users->getValue(), 'target_id');
+    if (empty($user_ids)) {
+      return NULL;
+    }
+
+    $records = \Drupal::database()
+      ->select('user__field_api_key', 'f')
+      ->fields('f', ['entity_id', 'field_api_key_value'])
+      ->condition('f.entity_id', $user_ids, 'IN')
+      ->execute()
+      ?->fetchAllKeyed(0, 1) ?? [];
+
+    if (empty($records)) {
+      return NULL;
+    }
+
+    $password = \Drupal::service('password');
+    foreach ($records as $user_id => $user_api_key) {
+      if ($password->check($key, $user_api_key)) {
+        return $user_id;
+      }
+    }
+
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function skipQueue(): bool {
     $field = 'field_skip_queue';
     if (!$this->hasField($field)) {
@@ -298,7 +332,7 @@ class Provider extends ContentEntityBase implements ProviderInterface {
               // like the provider ID or a token?
               //
               // @todo Maybe we should have unique Webhook URLs per entities
-              // provided as part of the initial POST API request and stored
+              // provided as part of the initial Post API request and stored
               // in place of the `field_post_api_provider`.
               $client->get(UrlHelper::replaceBaseUrl($url), [
                 'timeout' => $timeout,

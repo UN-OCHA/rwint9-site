@@ -11,7 +11,7 @@ use Drupal\Core\Form\FormStateInterface;
  *
  * @FieldWidget(
  *   id = "reliefweb_post_api_key",
- *   label = @Translation("ReliefWeb POST API key"),
+ *   label = @Translation("ReliefWeb Post API key"),
  *   field_types = {
  *     "reliefweb_post_api_key"
  *   }

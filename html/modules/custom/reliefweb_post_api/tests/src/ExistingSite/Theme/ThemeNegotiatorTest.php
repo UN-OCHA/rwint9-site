@@ -9,7 +9,7 @@ use Drupal\reliefweb_post_api\Theme\ThemeNegotiator;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
- * Tests the ReliefWeb POST API theme negotiator.
+ * Tests the ReliefWeb Post API theme negotiator.
  *
  * @coversDefaultClass \Drupal\reliefweb_post_api\Theme\ThemeNegotiator
  *

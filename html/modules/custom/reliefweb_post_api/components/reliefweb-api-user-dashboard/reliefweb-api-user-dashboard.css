@@ -1,0 +1,29 @@
+.rw-api-user-dashboard .rw-api-user-dashboard__section {
+  margin-top: 2rem;
+}
+.rw-api-user-dashboard .rw-api-user-dashboard__section + .rw-api-user-dashboard__section {
+  margin-top: 3rem;
+}
+.rw-api-user-dashboard .rw-api-user-dashboard__section__title {
+  margin-bottom: 1rem;
+  font-size: 20px;
+}
+.rw-api-user-dashboard .rw-api-user-dashboard__section .form-actions {
+  margin-top: 0;
+}
+
+.rw-api-user-dashboard .copy-to-clipboard-button {
+  margin-left: 2rem;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  color: white;
+  border: 1px solid black;
+  border-radius: 3px;
+  background-color: black;
+  font-size: 0.8em;
+}
+
+.rw-api-user-dashboard .copy-to-clipboard-button:hover {
+  color: black;
+  background-color: #ccc;
+}

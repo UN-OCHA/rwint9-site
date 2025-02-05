@@ -25,7 +25,7 @@ class ProviderTest extends ExistingSiteBase {
    *
    * @var array
    */
-  protected $data = [
+  protected array $data = [
     'name' => 'test-provider',
     'uuid' => '7603a5e4-d168-4509-8979-f3c89c16f1f0',
     'key' => 'test-provider-key',
@@ -243,6 +243,34 @@ class ProviderTest extends ExistingSiteBase {
     unset($data['key']);
     $provider = $this->createProvider($data);
     $this->assertFalse($provider->validateKey($this->data['key']));
+  }
+
+  /**
+   * @covers ::findTrustedUserIdFromApiKey
+   */
+  public function testFindTrustedUserIdFromApiKey(): void {
+    $data = $this->data;
+
+    // Test empty trusted users field.
+    $provider = $this->createProvider($data);
+    $this->assertNull($provider->findTrustedUserIdFromApiKey('test-trusted-user-api-key'));
+
+    // Add a trusted user without an api key.
+    $user_without_api_key = $this->createUser();
+    $provider->field_trusted_users->setValue([$user_without_api_key->id()]);
+
+    // Test trusted user without API key.
+    $this->assertNull($provider->findTrustedUserIdFromApiKey('test-trusted-user-api-key'));
+
+    // Add a trusted user with an API key.
+    $user_with_api_key = $this->createUser(values: ['field_api_key' => 'test-trusted-user-api-key']);
+    $provider->field_trusted_users->setValue([$user_with_api_key->id()]);
+
+    // Test no user found for the key.
+    $this->assertNull($provider->findTrustedUserIdFromApiKey('test-trusted-user-api-key-other'));
+
+    // Test user found for the key.
+    $this->assertEquals($provider->findTrustedUserIdFromApiKey('test-trusted-user-api-key'), $user_with_api_key->id());
   }
 
   /**

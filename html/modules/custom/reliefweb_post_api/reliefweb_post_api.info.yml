@@ -1,6 +1,6 @@
 type: module
-name: ReliefWeb POST API
-description: 'Provides as simple POST API.'
+name: ReliefWeb Post API
+description: 'Provides as simple API to submit content.'
 package: reliefweb
 core_version_requirement: ^10
 dependencies:

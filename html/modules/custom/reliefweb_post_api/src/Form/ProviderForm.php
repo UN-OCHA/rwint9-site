@@ -15,7 +15,7 @@ use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Defines the form for a ReliefWeb POST API provider entity.
+ * Defines the form for a ReliefWeb Post API provider entity.
  */
 class ProviderForm extends ContentEntityForm {
 
@@ -31,7 +31,7 @@ class ProviderForm extends ContentEntityForm {
    * @param \Drupal\Core\Password\PasswordInterface $password
    *   The password service.
    * @param \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface $contentProcessorPluginManager
-   *   The ReliefWeb POST API content processor plugin manager.
+   *   The ReliefWeb Post API content processor plugin manager.
    */
   public function __construct(
     EntityRepositoryInterface $entity_repository,

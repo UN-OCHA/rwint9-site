@@ -30,6 +30,7 @@ dependencies:
     - reliefweb_anti_spam
     - reliefweb_bookmarks
     - reliefweb_guidelines
+    - reliefweb_post_api
     - reliefweb_users
     - system
     - taxonomy
@@ -39,12 +40,14 @@ weight: 4
 is_admin: null
 permissions:
   - 'access administration pages'
+  - 'access any reliefweb api user dashboard'
   - 'access editorial guidelines'
   - 'access ocha ai chat'
   - 'access taxonomy overview'
   - 'add content to books'
   - 'add guideline entities'
   - 'administer reliefweb anti-spam settings'
+  - 'administer reliefweb post api providers'
   - 'create new books'
   - 'create terms in career_category'
   - 'create terms in content_format'

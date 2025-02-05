@@ -7,7 +7,7 @@ namespace Drupal\reliefweb_post_api\Entity;
 use Drupal\Core\Entity\ContentEntityInterface;
 
 /**
- * Interface for a POST API provider.
+ * Interface for a Post API provider.
  */
 interface ProviderInterface extends ContentEntityInterface {
 
@@ -88,5 +88,16 @@ interface ProviderInterface extends ContentEntityInterface {
    *   TRUE if the provider exists and the API key belongs to it.
    */
   public function validateKey(string $key): bool;
+
+  /**
+   * Retrieve the trusted user ID assoaciated with the API key for the provider.
+   *
+   * @param string $key
+   *   Trusted user API key.
+   *
+   * @return int|null
+   *   The ID of the user associatted with the API key or NULL.
+   */
+  public function findTrustedUserIdFromApiKey(string $key): ?int;
 
 }

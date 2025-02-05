@@ -11,7 +11,7 @@ use Drupal\reliefweb_post_api\Form\ProviderForm;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
- * Tests the ReliefWeb POST API provider form.
+ * Tests the ReliefWeb Post API provider form.
  *
  * @coversDefaultClass \Drupal\reliefweb_post_api\Form\ProviderForm
  *
