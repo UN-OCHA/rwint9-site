@@ -491,7 +491,33 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
    * @covers ::postContent
    */
   public function testPostContent(): void {
-    $request = $this->createMockRequest();
+    $request = $this->createMockRequest(api_key: 'test-provider-key');
+
+    $request_stack = $this->createMockRequestStack($request);
+
+    $queue = $this->createConfiguredMock(ReliefWebPostApiDatabaseQueue::class, [
+      'createItem' => TRUE,
+    ]);
+
+    $queue_factory = $this->createConfiguredMock(ReliefWebPostApiDatabaseQueueFactory::class, [
+      'get' => $queue,
+    ]);
+
+    $controller = $this->createTestController([
+      'reliefweb_post_api.queue.database' => $queue_factory,
+      'request_stack' => $request_stack,
+    ]);
+
+    $response = $controller->postContent('reports', $this->getTestUuid());
+    $this->assertSame(202, $response->getStatusCode());
+    $this->assertStringContainsString('Document queued for processing.', $response->getContent());
+  }
+
+  /**
+   * @covers ::postContent
+   */
+  public function testPostContentTrustedUser(): void {
+    $request = $this->createMockRequest(api_key: 'test-trusted-user-api-key');
 
     $request_stack = $this->createMockRequestStack($request);
 
@@ -557,14 +583,16 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
    *   Headers.
    * @param array $methods
    *   Methods for the mock request.
+   * @param string $api_key
+   *   API key.
    *
    * @return \Symfony\Component\HttpFoundation\Request
    *   The mock request.
    */
-  protected function createMockRequest(array $headers = [], array $methods = []): Request {
+  protected function createMockRequest(array $headers = [], array $methods = [], string $api_key = 'test-provider-key'): Request {
     $headers += [
       'X-RW-POST-API-PROVIDER' => $this->getTestProvider('test-provider')->uuid(),
-      'X-RW-POST-API-KEY' => 'test-provider-key',
+      'X-RW-POST-API-KEY' => $api_key,
     ];
 
     $methods += [
@@ -708,6 +736,11 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
    */
   protected function getTestProvider(string $name = 'test-provider'): ?ProviderInterface {
     if (!isset($this->providers)) {
+      // Trusted user.
+      $user = $this->createUser(values: [
+        'field_api_key' => 'test-trusted-user-api-key',
+      ]);
+
       /** @var \Drupal\reliefweb_post_api\EntityProviderInterface $provider */
       $provider = \Drupal::entityTypeManager()
         ->getStorage('reliefweb_post_api_provider')
@@ -724,6 +757,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
           'field_image_url' => ['https://test.test/'],
           'field_quota' => 2,
           'field_rate_limit' => 2,
+          'field_trusted_users' => [$user->id()],
         ]);
       $provider->save();
       $this->markEntityForCleanup($provider);
