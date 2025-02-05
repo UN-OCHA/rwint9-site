@@ -157,7 +157,11 @@ class ApiUserDashboard extends ControllerBase {
    *   Render array for the API key generation section.
    */
   protected function buildApiKeySection(AccountInterface $user): array {
-    if (!$user->hasPermission('generate reliefweb api key')) {
+    $same_user = $user->id() === $this->currentUser()->id();
+    if ($same_user && !$user->hasPermission('generate reliefweb api key')) {
+      return [];
+    }
+    elseif (!$same_user && !$this->currentUser()->hasPermission('access any reliefweb api user dashboard')) {
       return [];
     }
 
@@ -268,6 +272,14 @@ class ApiUserDashboard extends ControllerBase {
    *   Render array for the providers table.
    */
   protected function buildProvidersTable(AccountInterface $user): array {
+    $same_user = $user->id() === $this->currentUser()->id();
+    if ($same_user && !$user->hasPermission('view linked reliefweb post api providers')) {
+      return [];
+    }
+    elseif (!$same_user && !$this->currentUser()->hasPermission('access any reliefweb api user dashboard')) {
+      return [];
+    }
+
     /** @var \Drupal\reliefweb_post_api\Entity\ProviderInterface[] */
     $providers = $this->entityTypeManager()
       ->getStorage('reliefweb_post_api_provider')
@@ -283,15 +295,29 @@ class ApiUserDashboard extends ControllerBase {
       $this->t('Resource Type'),
     ];
 
+    $admin = $this->currentUser()->hasPermission('administer reliefweb post api providers');
+
     // Populate table rows.
     $rows = [];
     foreach ($providers as $provider) {
+      $label = $provider->label();
+      if ($admin) {
+        $label = [
+          'data' => [
+            '#type' => 'link',
+            '#title' => $label,
+          ] + $provider->toUrl('edit-form')->toRenderArray(),
+        ];
+      }
+
       $rows[] = [
-        'name' => $provider->label(),
+        'name' => $label,
         'uuid' => $provider->uuid(),
-        'resource' => $provider->resource->view([
-          'label' => 'hidden',
-        ]),
+        'resource' => [
+          'data' => $provider->resource->view([
+            'label' => 'hidden',
+          ]),
+        ],
       ];
     }
 

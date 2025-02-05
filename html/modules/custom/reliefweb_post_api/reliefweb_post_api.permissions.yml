@@ -15,3 +15,7 @@ access any reliefweb api user dashboard:
 generate reliefweb api key:
   title: 'Generate ReliefWeb API key'
   description: 'Allow a user to generate a key for the ReliefWeb API.'
+
+view linked reliefweb post api providers:
+  title: 'View linked ReliefWeb Post API providers'
+  description: 'Allow a user to view the ReliefWeb Post API providers they are trusted for.'
