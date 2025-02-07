@@ -14,9 +14,11 @@ class BundleNodeStorage extends NodeStorage implements BundleEntityStorageInterf
    * {@inheritdoc}
    */
   public function save(EntityInterface $entity) {
-    parent::save($entity);
+    $result = parent::save($entity);
 
     $this->invokeHook('after_save', $entity);
+
+    return $result;
   }
 
 }
