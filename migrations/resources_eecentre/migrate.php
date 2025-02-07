@@ -10,10 +10,13 @@ use Symfony\Component\Console\Output\ConsoleOutput;
 const XML_FILE = __DIR__ . '/resources.xml';
 const XML_FILE_MEDIA = __DIR__ . '/media.xml';
 const LOGFILE = __DIR__ . '/reports.csv';
-const MAX_ITEMS = 9999;
-const FORCE_UPDATE = FALSE;
+const MAX_ITEMS = 25;
+const FORCE_UPDATE = TRUE;
 const DRY_RUN = FALSE;
 global $source_id;
+global $base_url;
+
+include_once __DIR__ . '/create_reliefweb_file.php';
 
 function migrateItems($media_items) {
   $items = [];
@@ -452,7 +455,7 @@ fputcsv($log, [
 $file_mapping = [];
 
 foreach ($items as &$item) {
-  // Extract attachments.
+  // Extract attachments as absolute links.
   $attachments = [];
   if (!empty($item['extra'])) {
     foreach (range(0, 15) as $i) {
@@ -474,7 +477,6 @@ foreach ($items as &$item) {
 
     // Avoid duplicates.
     $attachments = array_unique($attachments);
-    $item['attachments'] = $attachments;
   }
 
   // Remove extra.
@@ -521,10 +523,10 @@ foreach ($items as &$item) {
           }
         }
       }
-
       if (!empty($new_path)) {
         $link->setAttribute('href', $new_path);
-        $item['attachments'][] = $new_path;
+
+        $attachments[] = rtrim($base_url, '/') . $new_path;
       }
     }
   }
@@ -580,45 +582,8 @@ foreach ($items as &$item) {
     continue;
   }
 
-  // Process all attachments.
-  $item['attachments'] = array_unique($item['attachments']);
-  foreach ($item['attachments'] as $key => &$attachment) {
-    $path = str_replace('/wp-content/uploads/', '/sites/default/files/resources_eecentre/', $attachment);
-    $uri = str_replace('/wp-content/uploads/', 'public://resources_eecentre/', $attachment);
-
-    // Existing file.
-    if (isset($file_mapping[$path])) {
-      $attachment = $file_repository->loadByUri($file_mapping[$path]);
-    }
-    else {
-      $file = $file_repository->loadByUri($uri);
-      if (!$file) {
-        try {
-          $data = (string) \Drupal::httpClient()->get($attachment)->getBody();
-          $file_system->prepareDirectory(dirname($uri), FileSystemInterface::CREATE_DIRECTORY);
-          /** @var \Drupal\file\FileInterface $file */
-          $file = $file_repository->writeData($data, $uri, FileExists::Replace);
-          $new_path = $file_url_generator->generate($file->getFileUri())->toString();
-          $file_mapping[$path] = $new_path;
-        }
-        catch (\Exception $e) {
-          unset($item['attachments'][$key]);
-        }
-      }
-
-      if ($file) {
-        $attachment = $file;
-        $output->writeln('<info>Attachment added "' . $file->id() . '"</info>');
-      }
-      else {
-        unset($item['attachments'][$key]);
-      }
-    }
-  }
-
-  if (!empty($item['attachments'])) {
-    $item['field_file'] = $item['attachments'];
-  }
+  // Processing will be done by create_reliefweb_file.
+  $attachments = array_unique($attachments);
 
   // Get image if needed.
   if (isset($item['image']) && !empty($item['image'])) {
@@ -684,9 +649,7 @@ foreach ($items as &$item) {
       $output->writeln('<comment>Deleting "' . $item['title'] . '"</comment>');
       $report->delete();
       $report = Report::create($item);
-      if ($item['status']) {
-        $report->setPublished();
-      }
+
       try {
         $report->save();
       }
@@ -697,6 +660,20 @@ foreach ($items as &$item) {
         print_r($item);
       }
     }
+  }
+
+  // Add files to report.
+  if (!empty($attachments)) {
+    $output->writeln('<info>Adding attachments to "' . $report->id() . '"</info>');
+    $output->writeln('<info>Files: ' . implode(', ', $attachments) . '</info>');
+
+    $files = array_map(fn($attachment) => [
+      'url' => $attachment,
+      'filename' => basename($attachment),
+    ], $attachments);
+
+    set_reliefweb_file_field($report, 'field_file', $files);
+    $report->save();
   }
 
   $item['new_url'] = $report->toUrl()->toString();
