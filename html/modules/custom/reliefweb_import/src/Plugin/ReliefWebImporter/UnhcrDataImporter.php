@@ -10,6 +10,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\reliefweb_import\Attribute\ReliefWebImporter;
 use Drupal\reliefweb_import\Plugin\ReliefWebImporterPluginBase;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface;
+use Drupal\reliefweb_post_api\Helpers\HashHelper;
 
 /**
  * Import reports from the UNHCR Data API.
@@ -703,10 +704,6 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
   public function importContent(int $limit = 50): bool {
     // Get list of documents.
     try {
-      $timeout = $this->getPluginSetting('timeout', 5, FALSE);
-      $api_url = $this->getPluginSetting('api_url');
-      $api_key = $this->getPluginSetting('api_key');
-      $list_endpoint = $this->getPluginSetting('list_endpoint');
       $provider_uuid = $this->getPluginSetting('provider_uuid');
 
       // Retrieve the POST API content processor plugin.
@@ -715,16 +712,63 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
       // Ensure the provider is valid.
       $plugin->getProvider($provider_uuid);
 
+      $this->getLogger()->info('Retrieving documents from the UNHCR data API.');
+
+      // Retrieve the latest created documents.
+      $documents = $this->getDocuments($limit);
+
+      if (empty($documents)) {
+        $this->getLogger()->notice('No documents.');
+        return TRUE;
+      }
+    }
+    catch (\Exception $exception) {
+      $this->getLogger()->error($exception->getMessage());
+      return FALSE;
+    }
+
+    $this->getLogger()->info(strtr('Retrieved @count UNHCR documents.', [
+      '@count' => count($documents),
+    ]));
+
+    // Sort the documents by ID ascending to process the oldest ones first.
+    ksort($documents);
+
+    // Process the documents importing new ones and updated ones.
+    $processed = $this->processDocuments($documents, $provider_uuid, $plugin);
+
+    // @todo check if we want to return TRUE only if there was no errors or if
+    // return TRUE for partial success is fine enough.
+    return $processed > 0;
+  }
+
+  /**
+   * Retrieve documents from the UNHCR API.
+   *
+   * @param int $limit
+   *   Maximum number of documents to retrieve at once.
+   * @param string $order_property
+   *   Property to use to sort the documents.
+   *
+   * @return array
+   *   List of documents keyed by IDs.
+   */
+  protected function getDocuments(int $limit, string $order_property = 'created'): array {
+    // Get list of documents.
+    try {
+      $timeout = $this->getPluginSetting('timeout', 5, FALSE);
+      $api_url = $this->getPluginSetting('api_url');
+      $api_key = $this->getPluginSetting('api_key');
+      $list_endpoint = $this->getPluginSetting('list_endpoint');
+
       // Query the UNHCR API.
       $query = http_build_query([
         'API_KEY' => $api_key,
-        'order' => ['created' => 'desc'],
+        'order' => [$order_property => 'desc'],
         'limit' => $limit,
       ]);
 
       $url = rtrim($api_url, '/') . '/' . trim($list_endpoint, '?/') . '?' . $query;
-
-      $this->getLogger()->info('Retrieving documents from the UNHCR data API.');
 
       $response = $this->httpClient->get($url, [
         'connect_timeout' => $timeout,
@@ -742,8 +786,7 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
         $documents = json_decode($content, TRUE, flags: \JSON_THROW_ON_ERROR);
       }
       else {
-        $this->getLogger()->notice('No documents');
-        return TRUE;
+        return [];
       }
     }
     catch (\Exception $exception) {
@@ -754,19 +797,19 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
         $message = str_replace($api_key, 'REDACTED_API_KEY', $message);
       }
 
-      $this->getLogger()->error($message);
-      return FALSE;
+      throw new \Exception($message);
     }
 
-    $this->getLogger()->info(strtr('Retrieved @count UNHCR documents.', [
-      '@count' => count($documents),
-    ]));
+    // Map the document's data to the document's ID.
+    $map = [];
+    foreach ($documents as $document) {
+      if (!isset($document['id'])) {
+        continue;
+      }
+      $map[$document['id']] = $document;
+    }
 
-    $processed = $this->processDocuments($documents, $provider_uuid, $plugin);
-
-    // @todo check if we want to return TRUE only if there was no errors or if
-    // return TRUE for partial success is fine enough.
-    return $processed > 0;
+    return $map;
   }
 
   /**
@@ -785,9 +828,14 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
   protected function processDocuments(array $documents, string $provider_uuid, ContentProcessorPluginInterface $plugin): int {
     $schema = $this->getJsonSchema('report');
 
+    // This is the list of extensions supported by the report attachment field.
+    $extensions = explode(' ', 'csv doc docx jpg jpeg odp ods odt pdf png pps ppt pptx svg xls xlsx zip');
+    $allowed_mimetypes = array_filter(array_map(fn($extension) => $this->mimeTypeGuesser->guessMimeType('dummy.' . $extension), $extensions));
+    $allowed_mimetypes[] = 'application/octet-stream';
+
     // Override some plugin settings to accommodate for specifities of the data.
     $plugin->setPluginSetting('schema', $schema);
-    $plugin->setPluginSetting('attachments.allowed_mimetypes', ['application/pdf', 'application/octet-stream']);
+    $plugin->setPluginSetting('attachments.allowed_mimetypes', $allowed_mimetypes);
 
     // Disable content type validation because the files to download do not have
     // consistent content type headers (ex: pdf instead of application/pdf).
@@ -827,17 +875,25 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
       // Generate the UUID for the document.
       $uuid = $this->generateUuid($url);
 
-      // Skip if there is already an entity with the same UUID. There is no
-      // good data in the UNHCR API that we can use to determine if the document
-      // has changed so we assume it hasn't and skip its processing.
-      //
-      // @todo maybe we can store the `updated` date of the document somewhere
-      // and use that to determine if the document has been updated.
-      $node = $this->entityRepository->loadEntityByUuid('node', $uuid);
-      if (isset($node)) {
+      // Generate a hash from the UNHCR API data without the updated date and
+      // download count since those change everytime the document is downloaded.
+      $hash = HashHelper::generateHash($document, ['updated', 'downloadCount']);
+
+      // Skip if there is already an entity with the same UUID and same content
+      // hash since it means the document has been not updated since the last
+      // time it was imported.
+      $records = $this->entityTypeManager
+        ->getStorage('node')
+        ->getQuery()
+        ->accessCheck(FALSE)
+        ->condition('uuid', $uuid, '=')
+        ->condition('field_post_api_hash', $hash, '=')
+        ->execute();
+      if (!empty($records)) {
         $processed++;
-        $this->getLogger()->info(strtr('UNHCR document @id already imported, skipping.', [
+        $this->getLogger()->info(strtr('UNHCR document @id (entity @entity_id) already imported and not changed, skipping.', [
           '@id' => $id,
+          '@entity_id' => reset($records),
         ]));
         continue;
       }
@@ -921,6 +977,7 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
       $data = [
         'provider' => $provider_uuid,
         'bundle' => 'report',
+        'hash' => $hash,
         'url' => $url,
         'uuid' => $uuid,
         'title' => $title,
@@ -941,10 +998,11 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
 
       // Submit the document directly, no need to go through the queue.
       try {
-        $plugin->process($data);
+        $entity = $plugin->process($data);
         $processed++;
-        $this->getLogger()->info(strtr('Successfully processed UNHCR document @id.', [
+        $this->getLogger()->info(strtr('Successfully processed UNHCR document @id to entity @entity_id.', [
           '@id' => $id,
+          '@entity_id' => $entity->id(),
         ]));
       }
       catch (\Exception $exception) {
