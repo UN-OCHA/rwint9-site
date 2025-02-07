@@ -41,3 +41,12 @@ function reliefweb_post_api_reliefweb_api_post_indexing(string $entity_type_id, 
     }
   }
 }
+
+/**
+ * Implements hook_reliefweb_revisions_disallowed_fields_alter().
+ */
+function reliefweb_post_api_reliefweb_revisions_disallowed_fields_alter(array &$allowed, string $entity_type_id, string $bundle) {
+  // Hide the post API fields.
+  $allowed['field_post_api_provider'] = TRUE;
+  $allowed['field_post_api_hash'] = TRUE;
+}
