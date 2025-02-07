@@ -291,7 +291,8 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
           $form_state->setErrorByName('field_origin_notes][0][value', $this->t('Identify the origin of this report (URL starting with https or http).'));
         }
       }
-      elseif ($origin === '1') {
+      // Submit or API.
+      elseif ($origin === '1' || $origin === '3') {
         if (!empty($notes) && !UrlHelper::isValid($notes, TRUE)) {
           $form_state->setErrorByName('field_origin_notes][0][value', $this->t('Invalid origin notes. It must be empty or the origin URL of the document (starting with https or http).'));
         }
