@@ -21,6 +21,7 @@ use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_import\Exception\InvalidConfigurationException;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
+use Drupal\reliefweb_utility\Helpers\TextHelper;
 use GuzzleHttp\ClientInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -384,14 +385,6 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
   /**
    * Sanitize a UTF-8 string.
    *
-   * This method performs the following operations:
-   * 1. Replaces all whitespace characters with a single space.
-   * 2. Replaces consecutive spaces with a single space.
-   * 3. Removes all Unicode control characters.
-   * 4. Removes heading and trailing spaces from the text.
-   *
-   * Optionally it also preserves new lines but collapses consecutive ones.
-   *
    * @param string $text
    *   The input UTF-8 string to be processed.
    * @param bool $preserve_newline
@@ -399,29 +392,11 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
    *
    * @return string
    *   Sanitized text.
+   *
+   * @see \Drupal\reliefweb_utility\Helpers\TextHelper::sanitizeText()
    */
   protected function sanitizeText(string $text, bool $preserve_newline = FALSE): string {
-    if ($preserve_newline) {
-      // Remove new lines with a placeholder.
-      $text = preg_replace('/(?:\n\r?)+/', '{{{{NEWLINE}}}}', $text);
-    }
-
-    // Replace all whitespace characters (including non-breaking spaces) with
-    // a single space.
-    $text = preg_replace('/\p{Z}+/u', ' ', $text);
-
-    // Replace consecutive spaces with a single space.
-    $text = preg_replace('/\s+/u', ' ', $text);
-
-    // Remove all control and format characters.
-    $text = preg_replace('/\p{C}/u', '', $text);
-
-    if ($preserve_newline) {
-      // Remove new lines with a placeholder.
-      $text = str_replace('{{{{NEWLINE}}}}', "\n", $text);
-    }
-
-    return trim($text);
+    return TextHelper::sanitizeText($text, $preserve_newline);
   }
 
 }
