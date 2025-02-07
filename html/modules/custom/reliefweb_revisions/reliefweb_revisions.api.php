@@ -19,9 +19,27 @@ use Drupal\Core\Field\FieldDefinitionInterface;
  * @param string $bundle
  *   Entity bundle.
  */
-function hook_reliefweb_revisions_allowed_base_fields_alter(array &$allowed, $entity_type_id, $bundle) {
+function hook_reliefweb_revisions_allowed_base_fields_alter(array &$allowed, string $entity_type_id, string $bundle) {
   if ($entity_type_id === 'user') {
     $allowed['mail'] = TRUE;
+  }
+}
+
+/**
+ * Alter the list of fields that should NOT be shown in the revision history.
+ *
+ * @param array $disallowed
+ *   List of fields keyed by the field name that should NOT be shown in the
+ *   revision history for the given entity type and bundle. Set the value to
+ *   TRUE to disallow computing differences for the field.
+ * @param string $entity_type_id
+ *   Entity type id.
+ * @param string $bundle
+ *   Entity bundle.
+ */
+function hook_reliefweb_revisions_disallowed_fields_alter(array &$disallowed, string $entity_type_id, string $bundle) {
+  if ($entity_type_id === 'node') {
+    $disallowed['body'] = TRUE;
   }
 }
 
