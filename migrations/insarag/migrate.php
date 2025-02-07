@@ -116,12 +116,6 @@ function migrateItems(&$global_categories, &$global_tags, $media_items) {
           $item['caption'] = $media_items[(string) $property->meta_value]['caption'];
         }
       }
-      elseif ($property->getName() == 'status') {
-        if ((string) $property == 'publish') {
-          $item['moderation_status'] = 'published';
-          $item['status'] = 1;
-        }
-      }
     }
 
     // Only posts.
@@ -276,7 +270,6 @@ fputcsv($log, [
   'field_language',
   'field_content_format',
   'field_source',
-  'field_ocha_product',
   'title',
   'body',
   'field_origin_notes',
@@ -476,9 +469,6 @@ foreach ($items as &$item) {
 
   if (empty($reports)) {
     $report = Report::create($item);
-    if ($item['status']) {
-      $report->setPublished();
-    }
     $report->save();
   }
   else {
@@ -487,9 +477,7 @@ foreach ($items as &$item) {
       $output->writeln('<comment>Deleting "' . $item['title'] . '"</comment>');
       $report->delete();
       $report = Report::create($item);
-      if ($item['status']) {
-        $report->setPublished();
-      }
+
       try {
         $report->save();
       }
