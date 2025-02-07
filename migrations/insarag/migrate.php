@@ -10,9 +10,12 @@ use Symfony\Component\Console\Output\ConsoleOutput;
 const XML_FILE = __DIR__ . '/posts.xml';
 const XML_FILE_MEDIA = __DIR__ . '/media.xml';
 const LOGFILE = __DIR__ . '/reports.csv';
-const MAX_ITEMS = 99;
+const MAX_ITEMS = 9999;
 const FORCE_UPDATE = TRUE;
 global $source_id;
+global $base_url;
+
+include_once __DIR__ . '/create_reliefweb_file.php';
 
 function migrateItems(&$global_categories, &$global_tags, $media_items) {
   $items = [];
@@ -102,7 +105,7 @@ function migrateItems(&$global_categories, &$global_tags, $media_items) {
         $item['post_link'] = 'https://insarag.org/?p=' . $item['post_id'];
       }
       elseif ($property->getName() == 'attachment_url') {
-        $item['image'] = (string) $property;
+        $item['attachment_url'] = (string) $property;
       }
       elseif ($property->getName() == 'post_type') {
         $item['post_type'] = (string) $property;
@@ -297,15 +300,16 @@ fputcsv($log, [
 $file_mapping = [];
 
 foreach ($items as &$item) {
-  $item['field_content_format'] = $source_id;
+  $attachments = [];
+
+  // Set source.
+  $item['field_source'] = $source_id;
 
   $output->writeln('<info>Processing "' . $item['title'] . '"</info>');
   if (empty($item['title'])) {
+    $output->writeln('<comment>Skipping, no title.</comment>');
     continue;
   }
-
-  // Extract inline images.
-  //print_r($item['body']['value']);
 
   // Parse the HTML string.
   $flags = LIBXML_NONET | LIBXML_NOBLANKS | LIBXML_NOERROR | LIBXML_NOWARNING;
@@ -319,6 +323,16 @@ foreach ($items as &$item) {
     $url = $link->getAttribute('href');
     $source = parse_url($url);
     if (!empty($source) && isset($source['host']) && $source['host'] == 'insarag.org') {
+      // Ignore images.
+      if (
+        str_ends_with(strtolower($source['path']), '.jpg')
+        || str_ends_with(strtolower($source['path']), '.jpeg')
+        || str_ends_with(strtolower($source['path']), '.png')
+      ) {
+        continue;
+      }
+
+      $attachments[] = $url;
       $path = str_replace('/wp-content/uploads/', '/sites/default/files/insarag/', $source['path']);
       $uri = str_replace('/wp-content/uploads/', 'public://insarag/', $source['path']);
 
@@ -349,7 +363,21 @@ foreach ($items as &$item) {
     }
   }
 
-  $images = $dom->getElementsByTagName('a');
+  if (isset($item['attachment_url'])) {
+    if (!empty($item['attachment_url'])) {
+      $attachments[] = $item['attachment_url'];
+    }
+    unset($item['attachment_url']);
+  }
+
+  // Avoid duplicates.
+  $attachments = array_unique($attachments);
+  if (empty($attachments)) {
+    $output->writeln('<comment>Skipping, no attachments found.</comment>');
+    continue;
+  }
+
+  $images = $dom->getElementsByTagName('img');
   foreach ($images as $image) {
     $url = $image->getAttribute('src');
     $source = parse_url($url);
@@ -472,6 +500,20 @@ foreach ($items as &$item) {
         print_r($item);
       }
     }
+  }
+
+  // Add files to report.
+  if (!empty($attachments)) {
+    $output->writeln('<info>Adding attachments to "' . $report->id() . '"</info>');
+    $output->writeln('<info>Files: ' . implode(', ', $attachments) . '</info>');
+
+    $files = array_map(fn($attachment) => [
+      'url' => $attachment,
+      'filename' => basename($attachment),
+    ], $attachments);
+
+    set_reliefweb_file_field($report, 'field_file', $files);
+    $report->save();
   }
 
   $item['new_url'] = $report->toUrl()->toString();

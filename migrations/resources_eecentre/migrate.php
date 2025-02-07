@@ -105,7 +105,7 @@ function migrateItems($media_items) {
         $item['post_link'] = 'https://resources.eecentre.org/?p=' . $item['post_id'];
       }
       elseif ($property->getName() == 'attachment_url') {
-        $item['image'] = (string) $property;
+        $item['attachment_url'] = (string) $property;
       }
       elseif ($property->getName() == 'post_type') {
         $item['post_type'] = (string) $property;
@@ -499,6 +499,15 @@ foreach ($items as &$item) {
     $url = $link->getAttribute('href');
     $source = parse_url($url);
     if (!empty($source) && isset($source['host']) && ($source['host'] == 'resources.eecentre.org' || $source['host'] == 'eecentre.org')) {
+      // Ignore images.
+      if (
+        str_ends_with(strtolower($source['path']), '.jpg')
+        || str_ends_with(strtolower($source['path']), '.jpeg')
+        || str_ends_with(strtolower($source['path']), '.png')
+      ) {
+        continue;
+      }
+
       $new_path = '';
       $path = str_replace('/wp-content/uploads/', '/sites/default/files/resources_eecentre/', $source['path']);
       $uri = str_replace('/wp-content/uploads/', 'public://resources_eecentre/', $source['path']);
@@ -529,6 +538,20 @@ foreach ($items as &$item) {
         $attachments[] = rtrim($base_url, '/') . $new_path;
       }
     }
+  }
+
+  if (isset($item['attachment_url'])) {
+    if (!empty($item['attachment_url'])) {
+      $attachments[] = $item['attachment_url'];
+    }
+    unset($item['attachment_url']);
+  }
+
+  // Avoid duplicates.
+  $attachments = array_unique($attachments);
+  if (empty($attachments)) {
+    $output->writeln('<comment>Skipping, no attachments found.</comment>');
+    continue;
   }
 
   $images = $dom->getElementsByTagName('img');
