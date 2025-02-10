@@ -16,7 +16,7 @@
             "format": "uuid"
         },
         "title": {
-            "description": "Job title.  The best job titles are brief and specific. Please refrain from indicating location, salary and other details in the title, if possible.",
+            "description": "Job title. The best job titles are brief and specific. Please refrain from indicating location, salary and other details in the title, if possible.",
             "type": "string",
             "minLength": 10,
             "maxLength": 255,
