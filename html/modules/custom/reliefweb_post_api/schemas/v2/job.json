@@ -1,0 +1,169 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://reliefweb.int/post-api-schemas/v2/job.json",
+    "title": "ReliefWeb Post API schema - job resource",
+    "type": "object",
+    "properties": {
+        "url": {
+            "description": "Unique URL to identify the job posting. Use the original canonical url if available.",
+            "type": "string",
+            "format": "iri",
+            "maxLength": 2048
+        },
+        "uuid": {
+            "description": "The universally unique identifier (UUID) version 5 generated from the URL property above, with the namespace: '8e27a998-c362-5d1f-b152-d474e1d36af2'.",
+            "type": "string",
+            "format": "uuid"
+        },
+        "title": {
+            "description": "Job title.  The best job titles are brief and specific. Please refrain from indicating location, salary and other details in the title, if possible.",
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 255,
+            "allOf": [
+                {
+                    "description": "Must contain letters (any language).",
+                    "pattern": "\\p{L}+"
+                },
+                {
+                    "description": "No control characters or separators except for spaces.",
+                    "pattern": "^([^\\p{Z}\\p{C}]|[ \u3000])+$"
+                }
+            ],
+            "not": {
+                "description": "No leading, trailing or consecutive spaces.",
+                "pattern": "(?:^[ \u3000]|[ \u3000]$|[ \u3000]{2,})"
+            }
+        },
+        "source": {
+            "description": "Job source as a single ID from https://api.reliefweb.int/v1/sources.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "minItems": 1,
+            "maxItems": 1
+        },
+        "closing_date": {
+            "description": "Closing date (ISO 8601) of the job. Please make sure it matches the closing date on your ad and/or job application portal, if applicable.",
+            "type": "string",
+            "format": "date-time"
+        },
+        "body": {
+            "description": "Job description in markdown or html (supported tags: <h1> <h2> <h3> <h4> <h5> <h6> <br> <p> <strong> <em> <a> <ul> <ol> <li> <blockquote>). The description should be long enough and sufficient in order to attract qualified candidates.",
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 100000,
+            "allOf": [
+                {
+                    "description": "Must contain letters (any language).",
+                    "pattern": "\\p{L}+"
+                },
+                {
+                    "description": "No control characters or separators except for spaces and new lines.",
+                    "pattern": "^(?:[^\\p{Z}\\p{C}]|[ \u3000\\n])+$"
+                }
+            ],
+            "not": {
+                "description": "No leading, trailing or consecutive spaces and new lines (except at the end of a line to support markdown linebreaks).",
+                "pattern": "(?:^[ \u3000\\n]|[ \u3000\\n]$|[ \u3000]{2,}[^ \u3000\\n])"
+            }
+        },
+        "how_to_apply": {
+            "description": "Instructions on how to apply for the job in markdown or html (supported tags: <h1> <h2> <h3> <h4> <h5> <h6> <br> <p> <strong> <em> <a> <ul> <ol> <li> <blockquote>). Brief and clear instructions how to apply only. Not to be used to duplicate the job description.",
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 100000,
+            "allOf": [
+                {
+                    "description": "Must contain letters (any language).",
+                    "pattern": "\\p{L}+"
+                },
+                {
+                    "description": "No control characters or separators except for spaces and new lines.",
+                    "pattern": "^(?:[^\\p{Z}\\p{C}]|[ \u3000\\n])+$"
+                }
+            ],
+            "not": {
+                "description": "No leading, trailing or consecutive spaces and new lines (except at the end of a line to support markdown linebreaks).",
+                "pattern": "(?:^[ \u3000\\n]|[ \u3000\\n]$|[ \u3000]{2,}[^ \u3000\\n])"
+            }
+        },
+        "country": {
+            "description": "Job country(ies) as a list of IDs from https://api.reliefweb.int/v1/countries. Leave blank for remote location, roster/roving or location to be determined.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "maxItems": 10
+        },
+        "city": {
+            "description": "City. Optional and only relevant when a country is also set.",
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 255,
+            "allOf": [
+                {
+                    "description": "Must contain letters (any language).",
+                    "pattern": "\\p{L}+"
+                },
+                {
+                    "description": "No control characters or separators except for spaces.",
+                    "pattern": "^([^\\p{Z}\\p{C}]|[ \u3000])+$"
+                }
+            ],
+            "not": {
+                "description": "No leading, trailing or consecutive spaces.",
+                "pattern": "(?:^[ \u3000]|[ \u3000]$|[ \u3000]{2,})"
+            }
+        },
+        "job_type": {
+            "description": "Job type as a single ID from https://api.reliefweb.int/v1/references/job-types. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "maxItems": 1
+        },
+        "job_experience": {
+            "description": "Job experience as a single ID from https://api.reliefweb.int/v1/references/job-experience. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "maxItems": 1
+        },
+        "career_category": {
+            "description": "Job career category as a single ID from https://api.reliefweb.int/v1/references/career-categories. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "maxItems": 1
+        },
+        "theme": {
+            "description": "Job theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes. Only select the most relevant themes as over-tagging often results in reduced discoverability. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "maxItems": 3
+        }
+    },
+    "dependentRequired": {
+        "city": ["country"]
+    },
+    "required": [
+        "url",
+        "uuid",
+        "title",
+        "source",
+        "closing_date",
+        "body",
+        "how_to_apply",
+        "job_type",
+        "job_experience",
+        "career_category"
+    ],
+    "unevaluatedProperties": false
+}

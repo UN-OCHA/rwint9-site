@@ -72,6 +72,7 @@
         "league/commonmark": "^2.2",
         "league/html-to-markdown": "^5.0",
         "lolli42/finediff": "^1.0",
+        "opis/json-schema": "^2.2",
         "orakili/composer-drupal-info-file-patch-helper": "^1",
         "pelago/emogrifier": "^7.0",
         "reliefweb/api-indexer": "^v2.8",

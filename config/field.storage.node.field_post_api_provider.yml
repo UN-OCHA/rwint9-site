@@ -1,0 +1,20 @@
+uuid: 7993dd10-8926-4c2c-ae65-0d4527502749
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - reliefweb_post_api
+id: node.field_post_api_provider
+field_name: field_post_api_provider
+entity_type: node
+type: entity_reference
+settings:
+  target_type: reliefweb_post_api_provider
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

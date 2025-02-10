@@ -1,0 +1,21 @@
+administer reliefweb post api providers:
+  title: 'Administer ReliefWeb Post API providers'
+  description: 'Administer ReliefWeb Post API providers.'
+  restrict access: true
+
+access own reliefweb api user dashboard:
+  title: 'Access own ReliefWeb API user dashboard'
+  description: 'Allow a user to access the page to generate an API key and see associated Post API providers.'
+
+access any reliefweb api user dashboard:
+  title: 'Access any ReliefWeb API user dashboard'
+  description: 'Allow a user to access the page to generate an API key and see associated Post API providers of any user.'
+  restrict access: true
+
+generate reliefweb api key:
+  title: 'Generate ReliefWeb API key'
+  description: 'Allow a user to generate a key for the ReliefWeb API.'
+
+view linked reliefweb post api providers:
+  title: 'View linked ReliefWeb Post API providers'
+  description: 'Allow a user to view the ReliefWeb Post API providers they are trusted for.'

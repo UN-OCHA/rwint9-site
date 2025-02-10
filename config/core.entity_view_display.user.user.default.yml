@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.user.user.field_api_key
     - field.field.user.user.field_email_confirmed
     - field.field.user.user.field_notes
   module:
@@ -14,6 +15,7 @@ mode: default
 content: {  }
 hidden:
   display_name: true
+  field_api_key: true
   field_email_confirmed: true
   field_notes: true
   langcode: true

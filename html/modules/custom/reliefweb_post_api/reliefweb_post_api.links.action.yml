@@ -1,0 +1,6 @@
+reliefweb_post_api_provider.add:
+  route_name: entity.reliefweb_post_api_provider.add_form
+  title: 'Add provider'
+  appears_on:
+    - entity.reliefweb_post_api_provider.collection
+

@@ -1,0 +1,22 @@
+uuid: e61ae584-476f-4b69-a560-421db571f92b
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.reliefweb_post_api_provider.field_skip_queue
+  module:
+    - reliefweb_post_api
+id: reliefweb_post_api_provider.reliefweb_post_api_provider.field_skip_queue
+field_name: field_skip_queue
+entity_type: reliefweb_post_api_provider
+bundle: reliefweb_post_api_provider
+label: 'Skip queue'
+description: 'Skip the queue and process the submissions directly.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

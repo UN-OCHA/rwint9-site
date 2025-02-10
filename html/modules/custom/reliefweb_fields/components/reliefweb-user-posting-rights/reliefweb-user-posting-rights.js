@@ -567,12 +567,12 @@
           let grandParent = parent.parentNode;
           if (grandParent.querySelectorAll('li[data-user-filtered]').length > 0) {
             Array.from(grandParent.querySelectorAll('li[data-user-filtered]'))
-              .forEach(e => e.removeAttribute('data-user-filtered'));
+            .forEach(e => e.removeAttribute('data-user-filtered'));
           }
 
           if (target.value !== '') {
             Array.from(grandParent.querySelectorAll('li[data-name*="' + target.value + '"]'))
-              .forEach(e => e.setAttribute('data-user-filtered', ''));
+            .forEach(e => e.setAttribute('data-user-filtered', ''));
           }
 
           // Set the attribute to the value of the select element.

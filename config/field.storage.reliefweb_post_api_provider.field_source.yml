@@ -1,0 +1,20 @@
+uuid: c30134fe-0960-4547-8da8-91f99a2fd066
+langcode: en
+status: true
+dependencies:
+  module:
+    - reliefweb_post_api
+    - taxonomy
+id: reliefweb_post_api_provider.field_source
+field_name: field_source
+entity_type: reliefweb_post_api_provider
+type: entity_reference
+settings:
+  target_type: taxonomy_term
+module: core
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

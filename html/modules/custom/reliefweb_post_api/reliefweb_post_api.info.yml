@@ -1,0 +1,7 @@
+type: module
+name: ReliefWeb Post API
+description: 'Provides as simple API to submit content.'
+package: reliefweb
+core_version_requirement: ^10
+dependencies:
+  - drupal:reliefweb_utility

@@ -1,0 +1,302 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://reliefweb.int/post-api-schemas/v2/training.json",
+    "title": "ReliefWeb Post API schema - training resource",
+    "type": "object",
+    "properties": {
+        "url": {
+            "description": "Unique URL to identify the training opportunity. Use the original canonical url if available.",
+            "type": "string",
+            "format": "iri",
+            "maxLength": 2048
+        },
+        "uuid": {
+            "description": "The universally unique identifier (UUID) version 5 generated from the URL property above, with the namespace: '8e27a998-c362-5d1f-b152-d474e1d36af2'.",
+            "type": "string",
+            "format": "uuid"
+        },
+        "title": {
+            "description": "The title of the training. Other information such as location, date and Organization should not be included in this field.",
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 255,
+            "allOf": [
+                {
+                    "description": "Must contain letters (any language).",
+                    "pattern": "\\p{L}+"
+                },
+                {
+                    "description": "No control characters or separators except for spaces.",
+                    "pattern": "^([^\\p{Z}\\p{C}]|[ 　])+$"
+                }
+            ],
+            "not": {
+                "description": "No leading, trailing or consecutive spaces.",
+                "pattern": "(?:^[ 　]|[ 　]$|[ 　]{2,})"
+            }
+        },
+        "source": {
+            "description": "Training source(s) as a list of IDs from https://api.reliefweb.int/v1/sources.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "minItems": 1,
+            "maxItems": 30
+        },
+        "format": {
+            "description": "Training format (on-site and/or online) as a list of IDs from https://api.reliefweb.int/v1/references/training-formats.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "minItems": 1,
+            "maxItems": 2
+        },
+        "country": {
+            "description": "Training country(ies) as a list of IDs from https://api.reliefweb.int/v1/countries. Mandatory when the training format includes 'on-site', otherwise not allowed.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "minItems": 1,
+            "maxItems": 300
+        },
+        "city": {
+            "description": "City. Optional and only relevant when a country is also set.",
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 255,
+            "allOf": [
+                {
+                    "description": "Must contain letters (any language).",
+                    "pattern": "\\p{L}+"
+                },
+                {
+                    "description": "No control characters or separators except for spaces.",
+                    "pattern": "^([^\\p{Z}\\p{C}]|[ 　])+$"
+                }
+            ],
+            "not": {
+                "description": "No leading, trailing or consecutive spaces.",
+                "pattern": "(?:^[ 　]|[ 　]$|[ 　]{2,})"
+            }
+        },
+        "dates": {
+            "description": "Training dates. Leave blank if the training is ongoing (recurrent/always available).",
+            "type": "object",
+            "properties": {
+                "start": {
+                    "description": "Training start date (ISO 8601) of the document.",
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "end": {
+                    "description": "Training end date (ISO 8601) of the document.",
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "registration_deadline": {
+                    "description": "Registration deadline (ISO 8601) of the document. All advertisements should include a registration deadline unless it is an 'ongoing course'. Advertisements immediately expire after the registration deadline has passed. Advertisements tagged with 'Call for Papers' usually include a submission deadline in the body text, so they should not be ongoing ads. For Universities, any ads advertising degrees should not be ongoing ads and should have a deadline.",
+                    "type": "string",
+                    "format": "date-time"
+                }
+            },
+            "required": [
+                "start",
+                "end",
+                "registration_deadline"
+            ]
+        },
+        "event_url": {
+            "description": "Event URL where more information can be found about the training opportunity. No social media URL should be used in this field, although it can be mentioned in the Body field.",
+            "type": "string",
+            "format": "iri",
+            "maxLength": 2048
+        },
+        "cost": {
+            "description": "Whether the training is free or a fee is required.",
+            "type": "string",
+            "enum": [
+                "free",
+                "fee-based"
+            ]
+        },
+        "fee_information": {
+            "description": "This plain text field must contain the exact course fee (including what it does and does not cover) and cannot be substituted by providing a link.",
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 100000,
+            "allOf": [
+                {
+                    "description": "Must contain letters (any language).",
+                    "pattern": "\\p{L}+"
+                },
+                {
+                    "description": "No control characters or separators except for spaces and new lines.",
+                    "pattern": "^(?:[^\\p{Z}\\p{C}]|[ 　\\n])+$"
+                }
+            ],
+            "not": {
+                "description": "No leading, trailing or consecutive spaces and new lines (except at the end of a line to support markdown linebreaks).",
+                "pattern": "(?:^[ 　\\n]|[ 　\\n]$|[ 　]{2,}[^ 　\\n])"
+            }
+        },
+        "category": {
+            "description": "Training category as a single ID from https://api.reliefweb.int/v1/references/training-types. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "minItems": 1,
+            "maxItems": 1
+        },
+        "training_language": {
+            "description": "Language(s) in which the course/event will be held as a list of IDs from https://api.reliefweb.int/v1/references/languages.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "minItems": 1,
+            "maxItems": 10
+        },
+        "professional_function": {
+            "description": "Professional function(s) as a list of IDs from https://api.reliefweb.int/v1/references/career-categories. Only select the most relevant functions as over-tagging often results in reduced discoverability. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "maxItems": 3
+        },
+        "theme": {
+            "description": "Training theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes. Only select the most relevant themes as over-tagging often results in reduced discoverability. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "maxItems": 3
+        },
+        "language": {
+            "description": "Language(s) in which this advertisement is written as a list of IDs from https://api.reliefweb.int/v1/references/languages. ReliefWeb accepts advertisements submitted in English, Spanish or French. This Advertisement Language refers to the language in which the submitted advertisement is written, not the actual language that will be used in the training/event.",
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "minItems": 1,
+            "maxItems": 10
+        },
+        "body": {
+            "description": "Training content in markdown or html (supported tags: <h1> <h2> <h3> <h4> <h5> <h6> <br> <p> <strong> <em> <a> <ul> <ol> <li> <blockquote>). The Body field must contain the complete description of the training opportunity (ex: introduction, methodology, objectives, target audience). This core information cannot be substituted by providing a link for 'further details'.",
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 100000,
+            "allOf": [
+                {
+                    "description": "Must contain letters (any language).",
+                    "pattern": "\\p{L}+"
+                },
+                {
+                    "description": "No control characters or separators except for spaces and new lines.",
+                    "pattern": "^(?:[^\\p{Z}\\p{C}]|[ 　\\n])+$"
+                }
+            ],
+            "not": {
+                "description": "No leading, trailing or consecutive spaces and new lines (except at the end of a line to support markdown linebreaks).",
+                "pattern": "(?:^[ 　\\n]|[ 　\\n]$|[ 　]{2,}[^ 　\\n])"
+            }
+        },
+        "how_to_register": {
+            "description": "How to register for the course/event with the application procedure/condition(s) and contact details. This core information cannot be substituted by providing a link for 'further details'. If no registration is required, provide contact details, a link to the advertisement (on the Organization’s website) or include the text: 'No registration required.'",
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 100000,
+            "allOf": [
+                {
+                    "description": "Must contain letters (any language).",
+                    "pattern": "\\p{L}+"
+                },
+                {
+                    "description": "No control characters or separators except for spaces and new lines.",
+                    "pattern": "^(?:[^\\p{Z}\\p{C}]|[ 　\\n])+$"
+                }
+            ],
+            "not": {
+                "description": "No leading, trailing or consecutive spaces and new lines (except at the end of a line to support markdown linebreaks).",
+                "pattern": "(?:^[ 　\\n]|[ 　\\n]$|[ 　]{2,}[^ 　\\n])"
+            }
+        }
+    },
+    "dependentRequired": {
+        "city": ["country"]
+    },
+    "allOf": [
+        {
+            "description": "The country field is mandatory if the training format includes 'on-site' otherwise the country field is not allowed",
+            "if": {
+                "properties": {
+                    "format": {
+                        "contains": {
+                            "description": "ID for on-site",
+                            "const": 4606
+                        }
+                    }
+                }
+            },
+            "then": {
+                "description": "The country field is mandatory.",
+                "required": [
+                    "country"
+                ]
+            },
+            "else": {
+                "description": "The country field is not allowed.",
+                "not": {
+                    "required": [
+                        "country"
+                    ]
+                }
+            }
+        },
+        {
+            "description": "The fee information field is mandatory if the cost is fee-based otherwise the fee information field is not allowed",
+            "if": {
+                "properties": {
+                    "cost": {
+                        "contains": {
+                            "const": "fee-based"
+                        }
+                    }
+                }
+            },
+            "then": {
+                "description": "The fee information field is mandatory.",
+                "required": [
+                    "fee_information"
+                ]
+            },
+            "else": {
+                "description": "The fee information field is not allowed.",
+                "not": {
+                    "required": [
+                        "fee_information"
+                    ]
+                }
+            }
+        }
+    ],
+    "required": [
+        "url",
+        "uuid",
+        "title",
+        "source",
+        "format",
+        "event_url",
+        "cost",
+        "category",
+        "training_language",
+        "language",
+        "body",
+        "how_to_register"
+    ],
+    "unevaluatedProperties": false
+}

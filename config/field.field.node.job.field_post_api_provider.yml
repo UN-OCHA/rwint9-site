@@ -1,0 +1,26 @@
+uuid: c5a31abb-9f8c-4756-9aa5-852e38b51186
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_post_api_provider
+    - node.type.job
+id: node.job.field_post_api_provider
+field_name: field_post_api_provider
+entity_type: node
+bundle: job
+label: 'Post API provider'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:reliefweb_post_api_provider'
+  handler_settings:
+    target_bundles: null
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+field_type: entity_reference

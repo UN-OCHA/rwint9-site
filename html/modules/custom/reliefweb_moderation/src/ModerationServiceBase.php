@@ -1022,6 +1022,22 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
           'form' => 'omnibox',
           'widget' => 'search',
         ],
+        'origin' => [
+          'type' => 'field',
+          'label' => $this->t('Origin'),
+          'field' => 'field_origin',
+          'column' => 'value',
+          'shortcut' => 'ori',
+          'form' => 'omnibox',
+          'widget' => 'autocomplete',
+          'operator' => 'OR',
+          'values' => [
+            0 => 'URL',
+            1 => 'Submit mailbox',
+            2 => 'ReliefWeb product',
+            3 => 'API',
+          ],
+        ],
         'headline' => [
           'type' => 'field',
           'label' => $this->t('Headline'),
@@ -2578,6 +2594,34 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     $author_parameter = 'selection[author][]';
     $author_value = $author_id . ':' . $author_title;
     return $this->getFilterLink($author_title, $author_parameter, $author_value);
+  }
+
+  /**
+   * Get the entity reviewer.
+   *
+   * @param \Drupal\reliefweb_moderation\EntityModeratedInterface $entity
+   *   Entity.
+   *
+   * @return \Drupal\Core\GeneratedLink|null
+   *   Link to the page filtered by the user or NULL if the reviewer couldn't be
+   *   determined.
+   */
+  protected function getEntityReviewerData(EntityModeratedInterface $entity) {
+    $reviewer = $entity->getRevisionUser();
+    if (!isset($reviewer)) {
+      return NULL;
+    }
+
+    $reviewer_label = $reviewer->label();
+    if (empty($reviewer_label)) {
+      return NULL;
+    }
+
+    $reviewer_email = $reviewer->getEmail() ?? $this->t('email missing');
+
+    $parameter = 'selection[reviewer][]';
+    $value = $reviewer->id() . ':' . $reviewer_label . ' (' . $reviewer_email . ')';
+    return $this->getFilterLink($reviewer_label, $parameter, $value);
   }
 
   /**

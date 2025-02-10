@@ -1,13 +1,19 @@
 <?php
 
+declare (strict_types=1);
+
 namespace Drupal\reliefweb_api\Services;
 
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Url;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Promise\Utils;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * ReliefWeb API client service class.
@@ -15,39 +21,54 @@ use GuzzleHttp\Promise\Utils;
 class ReliefWebApiClient {
 
   /**
-   * The default cache backend.
+   * The base API URL.
    *
-   * @var \Drupal\Core\Cache\CacheBackendInterface
+   * @var string
    */
-  protected $cache;
+  protected string $apiUrl;
 
   /**
-   * ReliefWeb API config.
+   * The external API URL.
    *
-   * @var \Drupal\Core\Config\ImmutableConfig
+   * @var string
    */
-  protected $config;
+  protected string $apiUrlExternal;
+
 
   /**
-   * The time service.
+   * The appname parameter to pass to the API request.
    *
-   * @var \Drupal\Component\Datetime\TimeInterface
+   * @var string
    */
-  protected $time;
+  protected string $appname;
 
   /**
-   * The HTTP client service.
+   * Whether to verify the certificate when performing a request.
    *
-   * @var \GuzzleHttp\ClientInterface
+   * @var bool
    */
-  protected $httpClient;
+  protected bool $verifySsl;
 
   /**
-   * The logger service.
+   * Flag to indicate if the API request results should be cached.
    *
-   * @var \Psr\Log\LoggerInterface
+   * @var bool
    */
-  protected $logger;
+  protected bool $cacheEnabled;
+
+  /**
+   * The cache lifetime in seconds.
+   *
+   * @var int
+   */
+  protected int $cacheLifetime;
+
+  /**
+   * The cache namespace for the cache Ids and tags.
+   *
+   * @var string
+   */
+  protected string $cacheNamespace;
 
   /**
    * Map API resources to cache tags.
@@ -64,31 +85,38 @@ class ReliefWebApiClient {
   /**
    * Constructor.
    *
-   * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
+   * @param \Drupal\Core\Cache\CacheBackendInterface $cacheBackend
    *   The cache backend.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The config factory service.
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The time service.
-   * @param \GuzzleHttp\ClientInterface $http_client
+   * @param \GuzzleHttp\ClientInterface $httpClient
    *   The HTTP client service.
-   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerFactory
    *   The logger factory service.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
+   *   The request stack.
    */
-  public function __construct(CacheBackendInterface $cache_backend, ConfigFactoryInterface $config_factory, TimeInterface $time, ClientInterface $http_client, LoggerChannelFactoryInterface $logger_factory) {
-    $this->cache = $cache_backend;
-    $this->config = $config_factory->get('reliefweb_api.settings');
-    $this->time = $time;
-    $this->httpClient = $http_client;
-    $this->logger = $logger_factory->get('reliefweb_api');
+  public function __construct(
+    protected CacheBackendInterface $cacheBackend,
+    protected ConfigFactoryInterface $configFactory,
+    protected TimeInterface $time,
+    protected ClientInterface $httpClient,
+    protected LoggerChannelFactoryInterface $loggerFactory,
+    protected RequestStack $requestStack,
+  ) {
   }
 
   /**
-   * Perform a POST request against the ReliefWeb API.
+   * Perform a request against the ReliefWeb API.
+   *
+   * Note: the order of the parameters is to preserve the compatibility with the
+   * code calling the previous version of this method.
    *
    * @param string $resource
    *   API resource endpoint (ex: reports).
-   * @param array $payload
+   * @param ?array $payload
    *   API request payload (with fields, filters, sort etc.)
    * @param bool $decode
    *   Whether to decode (json) the output or not.
@@ -96,30 +124,51 @@ class ReliefWebApiClient {
    *   Request timeout.
    * @param bool $cache_enabled
    *   Whether to cache the queries or not.
+   * @param string $method
+   *   The method (GET, POST, PUT or PATCH) to use for the request.
+   * @param array $headers
+   *   Extra request headers.
+   * @param bool $refresh
+   *   If TRUE, skip the cached data and call the API to refresh it.
    *
-   * @return array|null
+   * @return array|string|null
    *   The data from the API response or NULL in case of error.
    */
-  public function request($resource, array $payload, $decode = TRUE, $timeout = 5, $cache_enabled = TRUE) {
+  public function request(
+    string $resource,
+    ?array $payload = NULL,
+    bool $decode = TRUE,
+    int $timeout = 5,
+    bool $cache_enabled = TRUE,
+    string $method = 'POST',
+    array $headers = [],
+    bool $refresh = FALSE,
+  ): array|string|null {
     $queries = [
       $resource => [
+        'method' => $method,
         'resource' => $resource,
         'payload' => $payload,
+        'headers' => $headers,
+        'refresh' => $refresh,
       ],
     ];
 
     $results = $this->requestMultiple($queries, $decode, $timeout, $cache_enabled);
-    return $results[$resource];
+    return $results[$resource] ?? NULL;
   }
 
   /**
    * Perform parallel queries to the API.
    *
-   * This only deals with POST requests.
-   *
    * @param array $queries
    *   List of queries to perform in parallel. Each item is an associative
-   *   array with the resource and the query payload.
+   *   array with the following properties:
+   *   - method: request method
+   *   - resource: API resource
+   *   - payload: optional API payload
+   *   - headers: optional headers
+   *   - refresh: optional flag to refresh the cached data.
    * @param bool $decode
    *   Whether to decode (json) the output or not.
    * @param int $timeout
@@ -133,21 +182,28 @@ class ReliefWebApiClient {
    *
    * @see https://docs.guzzlephp.org/en/stable/quickstart.html#concurrent-requests
    */
-  public function requestMultiple(array $queries, $decode = TRUE, $timeout = 5, $cache_enabled = TRUE) {
+  public function requestMultiple(
+    array $queries,
+    bool $decode = TRUE,
+    int $timeout = 5,
+    bool $cache_enabled = TRUE,
+  ): array {
     $results = [];
-    $api_url = $this->config->get('api_url');
-    $appname = $this->config->get('appname') ?: 'reliefweb.int';
-    $cache_enabled = $cache_enabled && ($this->config->get('cache_enabled') ?? TRUE);
-    $verify_ssl = $this->config->get('verify_ssl');
+    $api_url = $this->getApiUrl();
+    $appname = $this->getAppName();
+    $cache_enabled = $cache_enabled && $this->isCacheEnabled();
+    $verify_ssl = $this->verifySsl();
 
     // Initialize the result array and retrieve the data for the cached queries.
     $cache_ids = [];
     foreach ($queries as $index => $query) {
-      $payload = $query['payload'] ?? '';
+      $method = $query['method'] ?? 'POST';
+      $payload = $query['payload'] ?? [];
+      $refresh = !empty($query['refresh']);
 
       // Sanitize the query payload.
       if (is_array($payload)) {
-        $payload = static::sanitizePayload($payload);
+        $payload = $this->sanitizePayload($payload);
       }
 
       // Update the query payload.
@@ -157,11 +213,11 @@ class ReliefWebApiClient {
       $results[$index] = NULL;
       if ($cache_enabled) {
         // Retrieve the cache id for the query.
-        $cache_id = static::getCacheId($query['resource'], $payload);
+        $cache_id = $this->getCacheIdFromPayload($query['resource'], $method, $payload);
         $cache_ids[$index] = $cache_id;
         // Attempt to retrieve the cached data for the query.
-        $cache = $this->cache->get($cache_id);
-        if (isset($cache->data)) {
+        $cache = $this->cacheBackend->get($cache_id);
+        if (!$refresh && isset($cache->data)) {
           $results[$index] = $cache->data;
         }
       }
@@ -175,35 +231,56 @@ class ReliefWebApiClient {
         continue;
       }
 
-      $url = $api_url . '/' . $query['resource'] . '?appname=' . $appname;
+      $method = $query['method'] ?? 'POST';
+      $payload = $query['payload'] ?? [];
 
-      // Encode the payload if needed. It may already be an encoded JSON string.
-      $payload = $query['payload'] ?? '';
-      if (is_array($payload)) {
-        $payload = json_encode($payload);
+      $parameters = [
+        'appname' => $appname,
+      ];
 
-        // Skip the request if something is wrong with the payload.
-        if ($payload === FALSE) {
-          $results[$index] = NULL;
-          $this->logger->error('Could not encode payload when requesting @url: @payload', [
-            '@url' => $api_url . '/' . $query['resource'],
-            '@payload' => print_r($query['payload'], TRUE),
-          ]);
-          continue;
+      if ($method === 'GET') {
+        // If the payload is a string, we assume, it is a query string.
+        if (!is_array($payload)) {
+          parse_str($payload, $parameters);
+        }
+        else {
+          $parameters += $payload;
+        }
+      }
+      else {
+        // Encode the payload if it's not already.
+        if (is_array($payload)) {
+          $payload = json_encode($payload);
+
+          // Skip the request if something is wrong with the payload.
+          if ($payload === FALSE) {
+            $results[$index] = NULL;
+            $this->getLogger()->error('Could not encode payload when requesting @url: @payload', [
+              '@url' => $api_url . '/' . $query['resource'],
+              '@payload' => strtr(print_r($query['payload'], TRUE), "\n", " "),
+            ]);
+            continue;
+          }
         }
       }
 
+      $url = $api_url . '/' . $query['resource'] . '?' . http_build_query($parameters);
+      $headers = $query['headers'] ?? [];
+
       try {
-        $promises[$index] = $this->httpClient->postAsync($url, [
-          'headers' => ['Content-Type: application/json'],
-          'body' => $payload,
+        $options = [
           'timeout' => $timeout,
           'connect_timeout' => $timeout,
           'verify' => $verify_ssl,
-        ]);
+        ];
+        if ($method === 'POST' || $method === 'PUT' || $method === 'PATCH') {
+          $options['headers'] = ['Content-Type' => 'application/json'] + $headers;
+          $options['body'] = $payload;
+        }
+        $promises[$index] = $this->httpClient->requestAsync($method, $url, $options);
       }
       catch (\Exception $exception) {
-        $this->logger->error('Exception while querying @url: @exception', [
+        $this->getLogger()->error('Exception while querying @url: @exception', [
           '@url' => $api_url . '/' . $query['resource'],
           '@exception' => $exception->getMessage(),
         ]);
@@ -225,20 +302,20 @@ class ReliefWebApiClient {
           $data = (string) $response->getBody();
         }
         else {
-          $this->logger->notice('Unable to retrieve API data (code: @code) when requesting @url with payload @payload', [
+          $this->getLogger()->notice('Unable to retrieve API data (code: @code) when requesting @url with payload @payload', [
             '@code' => $response->getStatusCode(),
             '@url' => $api_url . '/' . $queries[$index]['resource'],
-            '@payload' => print_r($queries[$index]['payload'], TRUE),
+            '@payload' => strtr(print_r($queries[$index]['payload'], TRUE), "\n", " "),
           ]);
           $data = '';
         }
       }
       // Otherwise log the error.
       else {
-        $this->logger->notice('Unable to retrieve API data (code: @code) when requesting @url with payload @payload: @reason', [
+        $this->getLogger()->notice('Unable to retrieve API data (code: @code) when requesting @url with payload @payload: @reason', [
           '@code' => $result['reason']->getCode(),
           '@url' => $api_url . '/' . $queries[$index]['resource'],
-          '@payload' => print_r($queries[$index]['payload'], TRUE),
+          '@payload' => strtr(print_r($queries[$index]['payload'], TRUE), "\n", " "),
           '@reason' => $result['reason']->getMessage(),
         ]);
       }
@@ -246,8 +323,8 @@ class ReliefWebApiClient {
       // Cache the data unless cache is disabled or there was an issue with the
       // request in which case $data is NULL.
       if (isset($cache, $cache_ids[$index], $queries[$index]['resource'])) {
-        $tags = static::getCacheTags($queries[$index]['resource']);
-        $this->cache->set($cache_ids[$index], $data, $this->cache::CACHE_PERMANENT, $tags);
+        $tags = $this->getCacheTags($queries[$index]['resource']);
+        $this->cacheBackend->set($cache_ids[$index], $data, $this->getCacheExpiration(), $tags);
       }
 
       $results[$index] = $data;
@@ -264,15 +341,10 @@ class ReliefWebApiClient {
           }
           catch (\Exception $exception) {
             $data = NULL;
-            $this->logger->notice('Unable to decode ReliefWeb API data for request @url with payload @payload', [
+            $this->getLogger()->notice('Unable to decode ReliefWeb API data for request @url with payload @payload', [
               '@url' => $api_url . '/' . $queries[$index]['resource'],
-              '@payload' => print_r($queries[$index]['payload'], TRUE),
+              '@payload' => strtr(print_r($queries[$index]['payload'], TRUE), "\n", " "),
             ]);
-          }
-
-          // Ensure the URL aliases of the resources point to the current site.
-          if (!empty($data['data'])) {
-            static::updateApiUrls($data['data']);
           }
 
           // Add the resulting data with same index as the query.
@@ -298,16 +370,20 @@ class ReliefWebApiClient {
    * @return string
    *   API URL.
    */
-  public function buildApiUrl($resource, array $parameters = [], $suggest_url = TRUE) {
+  public function buildApiUrl(
+    string $resource,
+    array $parameters = [],
+    bool $suggest_url = TRUE,
+  ): string {
     // We use a potentially different api url for the facets because it's
     // called from javascript. This is notably useful for dev/stage as the
     // reliefweb_api_url points to an interal url that cannot be used
     // client-side.
-    $api_url = $this->config->get('api_url_external') ?: $this->config->get('api_url');
+    $api_url = $this->getApiUrlExternal();
 
     // Defaults.
     if (empty($parameters['appname'])) {
-      $parameters['appname'] = $this->config->get('appname') ?: 'reliefweb.int';
+      $parameters['appname'] = $this->getAppName();
     }
     if (empty($parameters['preset'])) {
       $parameters['preset'] = $suggest_url ? 'suggest' : 'latest';
@@ -339,6 +415,202 @@ class ReliefWebApiClient {
   }
 
   /**
+   * Submit content.
+   *
+   * @param string $resource
+   *   API resource.
+   * @param array $payload
+   *   Content to submit.
+   * @param array $headers
+   *   Request headers. This notably must include the X-RW-POST-API-KEY and
+   *   X-RW-POST-API-PROVIDER headers.
+   * @param int $timeout
+   *   Request timeout.
+   *
+   * @return array
+   *   An associative array with the response status code and data.
+   *
+   * @throws \Exception
+   *   An exception if the request was not successful.
+   *
+   * @todo review the return value.
+   */
+  public function submitContent(
+    string $resource,
+    array $payload,
+    array $headers,
+    int $timeout = 5,
+  ): array {
+    $api_url = $this->getApiUrl();
+    $appname = $this->getAppName();
+    $verify_ssl = $this->verifySsl();
+
+    $url = rtrim($api_url) . '/' . ltrim($resource, '/');
+    $url .= '?' . http_build_query(['appname' => $appname]);
+
+    if (!isset($headers['X-RW-POST-API-KEY'])) {
+      $this->getLogger()->error('Exception while submitting content for @url: @exception', [
+        '@url' => $url,
+        '@exception' => 'Missing API key.',
+      ]);
+      // @todo review this message.
+      throw new \Exception('Missing API key.');
+    }
+
+    if (!isset($headers['X-RW-POST-API-PROVIDER'])) {
+      $this->getLogger()->error('Exception while submitting content for @url: @exception', [
+        '@url' => $url,
+        '@exception' => 'Missing API provider.',
+      ]);
+      // @todo review this message.
+      throw new \Exception('Missing API provider.');
+    }
+
+    $options = [
+      'timeout' => $timeout,
+      'connect_timeout' => $timeout,
+      'verify' => $verify_ssl,
+      'headers' => ['Content-Type' => 'application/json'] + $headers,
+      'body' => json_encode($payload),
+    ];
+
+    try {
+      $response = $this->httpClient->request('PUT', $url, options: $options);
+    }
+    catch (\Exception $exception) {
+      $this->getLogger()->error('Exception while submitting content for @url: @exception', [
+        '@url' => $url,
+        '@exception' => $exception->getMessage(),
+      ]);
+      // @todo review this message, for example, check the type of exception
+      // (timeout etc.).
+      throw new \Exception('Exception while submitting content.');
+    }
+
+    $code = $response->getStatusCode();
+
+    // Retrieve the raw response's data.
+    if ($code === 200 || $code === 202) {
+      $data = (string) $response->getBody();
+    }
+    else {
+      $error = (string) $response->getBody();
+
+      $this->getLogger()->error('Error while submitting content for @url (code @code): @error.', [
+        '@url' => $url,
+        '@code' => $code,
+        '@error' => $error,
+      ]);
+
+      throw new \Exception(strtr('@code @error.', [
+        '@code' => $code,
+        '@error' => $error,
+      ]), $code);
+    }
+
+    // Decode the data, skip if invalid.
+    try {
+      $data = json_decode($data, TRUE, 512, \JSON_THROW_ON_ERROR);
+    }
+    catch (\Exception $exception) {
+      $this->getLogger()->error('Unable to decode POST API JSON schema for request @url.', [
+        '@url' => $url,
+      ]);
+      throw new \Exception('Invalid response data.');
+    }
+
+    return [
+      'code' => $code,
+      'data' => $data,
+    ];
+  }
+
+  /**
+   * Retrieve a POST API JSON schema for a resource type.
+   *
+   * @param string $type
+   *   Resource type.
+   *
+   * @return array|null
+   *   Associative array with the `raw` JSON Schema string and the `decoded`
+   *   version. NULL if the schema could not be retrieved or decoded.
+   */
+  protected function getPostApiJsonSchema(string $type): ?array {
+    $cache_id = $this->getCacheNamespace() . ':post_api:schema:' . $type;
+    $cache = $this->cacheBackend->get($cache_id);
+
+    if (!isset($cache->data)) {
+      $schema_file = $type . '.json';
+      // Check if we can retrieve the POST API URL from the route provided
+      // by the reliefweb_post_api module.
+      try {
+        $url = Url::fromRoute('reliefweb_post_api.schema', [
+          'schema' => $schema_file,
+        ], [
+          'absolute' => TRUE,
+        ])->toString();
+      }
+      // Otherwise retrieve it from the config.
+      catch (\Exception $exception) {
+        $url = $this->config()->get('post_api_schema_url');
+        if (empty($url)) {
+          throw new \Exception('Missing or invalid ReliefWeb POST API schema URL');
+        }
+        $url = rtrim($url, '/') . '/' . $schema_file;
+      }
+
+      $timeout = 5;
+
+      try {
+        $response = $this->httpClient->get($url, options: [
+          'timeout' => $timeout,
+          'connect_timeout' => $timeout,
+        ]);
+      }
+      catch (\Exception $exception) {
+        $this->getLogger()->error('Exception while querying @url: @exception', [
+          '@url' => $url,
+          '@exception' => $exception->getMessage(),
+        ]);
+        return NULL;
+      }
+
+      // Retrieve the raw response's data.
+      if ($response->getStatusCode() === 200) {
+        $data = (string) $response->getBody();
+      }
+      else {
+        $this->getLogger()->error('Unable to retrieve POST API JSON schema (code: @code) for request @url.', [
+          '@code' => $response->getStatusCode(),
+          '@url' => $url,
+        ]);
+        return NULL;
+      }
+
+      // Decode the data, skip if invalid.
+      try {
+        $decoded = json_decode($data, TRUE, 512, \JSON_THROW_ON_ERROR);
+      }
+      catch (\Exception $exception) {
+        $this->getLogger()->error('Unable to decode POST API JSON schema for request @url.', [
+          '@url' => $url,
+        ]);
+        return NULL;
+      }
+
+      $schema = [
+        'raw' => $data,
+        'decoded' => $decoded,
+      ];
+
+      $this->cacheBackend->set($cache_id, $schema);
+      return $schema;
+    }
+
+    return $cache->data;
+  }
+
+  /**
    * Sanitize and simplify an API query payload.
    *
    * @param array $payload
@@ -349,14 +621,17 @@ class ReliefWebApiClient {
    * @return array
    *   Sanitized payload.
    */
-  public static function sanitizePayload(array $payload, $combine = FALSE) {
+  public function sanitizePayload(array $payload, bool $combine = FALSE): array {
+    if (empty($payload)) {
+      return [];
+    }
     // Remove search value and fields if the value is empty.
     if (empty($payload['query']['value'])) {
       unset($payload['query']);
     }
     // Optimize the filter if any.
     if (isset($payload['filter'])) {
-      $filter = static::optimizeFilter($payload['filter'], $combine);
+      $filter = $this->optimizeFilter($payload['filter'], $combine);
 
       if (!empty($filter)) {
         $payload['filter'] = $filter;
@@ -369,7 +644,7 @@ class ReliefWebApiClient {
     if (isset($payload['facets'])) {
       foreach ($payload['facets'] as $key => $facet) {
         if (isset($facet['filter'])) {
-          $filter = static::optimizeFilter($facet['filter'], $combine);
+          $filter = $this->optimizeFilter($facet['filter'], $combine);
           if (!empty($filter)) {
             $payload['facets'][$key]['filter'] = $filter;
           }
@@ -393,14 +668,14 @@ class ReliefWebApiClient {
    * @return array|null
    *   Optimized filter.
    */
-  public static function optimizeFilter(array $filter, $combine = FALSE) {
+  protected function optimizeFilter(array $filter, bool $combine = FALSE): ?array {
     if (isset($filter['conditions'])) {
       if (isset($filter['operator'])) {
         $filter['operator'] = strtoupper($filter['operator']);
       }
 
       foreach ($filter['conditions'] as $key => $condition) {
-        $condition = static::optimizeFilter($condition, $combine);
+        $condition = $this->optimizeFilter($condition, $combine);
         if (isset($condition)) {
           $filter['conditions'][$key] = $condition;
         }
@@ -412,7 +687,7 @@ class ReliefWebApiClient {
       // filters with same field and same negation inside a conditional filter.
       if (!empty($filter['conditions'])) {
         if ($combine) {
-          $filter['conditions'] = static::combineConditions($filter['conditions'], $filter['operator'] ?? NULL);
+          $filter['conditions'] = $this->combineConditions($filter['conditions'], $filter['operator'] ?? NULL);
         }
         if (count($filter['conditions']) === 1) {
           $condition = reset($filter['conditions']);
@@ -440,7 +715,7 @@ class ReliefWebApiClient {
    * @return array
    *   Combined and simplied filter conditions.
    */
-  public static function combineConditions(array $conditions, $operator = 'AND') {
+  protected function combineConditions(array $conditions, string $operator = 'AND'): array {
     $operator = $operator ?: 'AND';
     $filters = [];
     $result = [];
@@ -452,7 +727,7 @@ class ReliefWebApiClient {
 
       // Nested conditions - flatten the condition's conditions.
       if (!empty($condition['conditions'])) {
-        $condition['conditions'] = static::combineConditions($condition['conditions'], $condition_operator);
+        $condition['conditions'] = $this->combineConditions($condition['conditions'], $condition_operator);
         $result[] = $condition;
       }
       // Existence filter - keep as is.
@@ -496,40 +771,15 @@ class ReliefWebApiClient {
   }
 
   /**
-   * Determine the cache id of an API query.
-   *
-   * @param string $resource
-   *   API resource.
-   * @param array|string|null $payload
-   *   API payload.
+   * Get the ReliefWeb UUID namespace.
    *
    * @return string
-   *   Cache id.
+   *   UUID to use as namespace to generate V5 UUIDs.
    */
-  public static function getCacheId($resource, $payload) {
-    $hash = hash('sha256', serialize($payload ?? ''));
-    return 'reliefweb_api:queries:' . $resource . ':' . $hash;
-  }
-
-  /**
-   * Determine the cache tags of an API query's resource.
-   *
-   * @param string $resource
-   *   API resource.
-   *
-   * @return array
-   *   Cache tags.
-   */
-  public static function getCacheTags($resource) {
-    $tags = static::$cacheTags[$resource] ?? [];
-    // We also always invalidate the cached queries when a term is changed
-    // because many different entities may reference the updated term.
-    //
-    // @todo we could try to go through the list of entities, see which
-    // vocabularies they reference and add tags for them only but it's probably
-    // not worthy.
-    $tags[] = 'taxonomy_term_list';
-    return $tags;
+  public function getNamespaceUuid(): string {
+    /* The default namespace is the UUID generated with
+     * Uuid::v5(Uuid::fromString(Uuid::NAMESPACE_DNS), 'reliefweb.int')->toRfc4122(); */
+    return '8e27a998-c362-5d1f-b152-d474e1d36af2';
   }
 
   /**
@@ -541,7 +791,7 @@ class ReliefWebApiClient {
    * @param array $data
    *   API data.
    */
-  public static function updateApiUrls(array &$data) {
+  public static function updateApiUrls(array &$data): void {
     $request = \Drupal::request();
     $host = $request->getHost();
     $scheme = $request->getScheme();
@@ -559,6 +809,194 @@ class ReliefWebApiClient {
         }
       }
     }
+  }
+
+  /**
+   * Get the ReliefWeb API URL.
+   *
+   * @return string
+   *   ReliefWeb API URL.
+   */
+  protected function getApiUrl(): string {
+    if (!isset($this->apiUrl)) {
+      $api_url = $this->config()->get('api_url');
+      if (empty($api_url) && !is_string($api_url)) {
+        throw new \Exception('Missing or invalid ReliefWeb API URL');
+      }
+      $this->apiUrl = rtrim($api_url, '/');
+    }
+    return $this->apiUrl;
+  }
+
+  /**
+   * Get the ReliefWeb API URL for client side requests.
+   *
+   * @return string
+   *   ReliefWeb API URL.
+   */
+  protected function getApiUrlExternal(): string {
+    if (!isset($this->apiUrlExternal)) {
+      $api_url = $this->config()->get('api_url_external') ?: $this->getApiUrl();
+      $this->apiUrlExternal = rtrim($api_url, '/');
+    }
+    return $this->apiUrlExternal;
+  }
+
+  /**
+   * Get the appname parameter to use in the API queries.
+   *
+   * @return string
+   *   Appname.
+   */
+  protected function getAppName(): string {
+    if (!isset($this->appname)) {
+      $this->appname = $this->config()->get('appname') ?:
+                       $this->getRequestStack()->getCurrentRequest()->getHttpHost();
+    }
+    return $this->appname;
+  }
+
+  /**
+   * Check if certificate verification is enabled.
+   *
+   * @return bool
+   *   TRUE to verify the certificate.
+   */
+  public function verifySsl(): bool {
+    if (!isset($this->verifySsl)) {
+      $this->verifySsl = $this->config()->get('verify_ssl') ?: TRUE;
+    }
+    return $this->verifySsl;
+  }
+
+  /**
+   * Get whether caching is enabled or not.
+   *
+   * @var bool
+   *   TRUE if caching is enabled.
+   */
+  protected function isCacheEnabled(): bool {
+    if (!isset($this->cacheEnabled)) {
+      $this->cacheEnabled = $this->config()->get('cache_enabled');
+    }
+    return $this->cacheEnabled;
+  }
+
+  /**
+   * Get the cache lifetime in seconds.
+   *
+   * @var int
+   *   Cache lifetime.
+   */
+  protected function getCacheLifetime(): ?int {
+    if (!isset($this->cacheLifetime)) {
+      $this->cacheLifetime = $this->config()->get('cache_lifetime') ?? 0;
+    }
+    return $this->cacheLifetime;
+  }
+
+  /**
+   * Get the cache expiration date.
+   *
+   * @var int
+   *   Cache expiration.
+   */
+  protected function getCacheExpiration(): ?int {
+    if ($this->getCacheLifetime() > 0) {
+      return $this->time->getRequestTime() + $this->getCacheLifetime();
+    }
+    return CacheBackendInterface::CACHE_PERMANENT;
+  }
+
+  /**
+   * Determine the cache id of an API query.
+   *
+   * @param string $resource
+   *   API resource.
+   * @param string $method
+   *   API request method.
+   * @param array|string|null $payload
+   *   API payload.
+   *
+   * @return string
+   *   Cache id.
+   */
+  protected function getCacheIdFromPayload(string $resource, string $method, array|string|null $payload): string {
+    $hash = hash('sha256', serialize($payload ?? ''));
+    return $this->getCacheNamespace() . ':queries:' . $resource . ':' . $method . ':' . $hash;
+  }
+
+  /**
+   * Determine the cache tags of an API query's resource.
+   *
+   * @param string $resource
+   *   API resource.
+   *
+   * @return array
+   *   Cache tags.
+   */
+  protected function getCacheTags(string $resource): array {
+    // @todo review what tags would make sense.
+    $tags = $this->cacheTags[$resource] ?? [];
+    $tags[] = $this->getCacheNamespace() . ':' . $resource;
+
+    // We also always invalidate the cached queries when a term is changed
+    // because many different entities may reference the updated term.
+    //
+    // @todo we could try to go through the list of entities, see which
+    // vocabularies they reference and add tags for them only but it's probably
+    // not worthy.
+    $tags[] = 'taxonomy_term_list';
+    return $tags;
+  }
+
+  /**
+   * Get the namespace for the cache Ids.
+   *
+   * @return string
+   *   Namespace.
+   */
+  protected function getCacheNamespace(): string {
+    if (!isset($this->cacheNamespace)) {
+      $this->cacheNamespace = $this->config()->get('cache_namespace') ?: 'reliefweb:api';
+    }
+    return $this->cacheNamespace;
+  }
+
+  /**
+   * Get the module configuration.
+   *
+   * @param string $name
+   *   Config name.
+   *
+   * @return \Drupal\Core\Config\ImmutableConfig
+   *   The module configuration.
+   */
+  protected function config(string $name = 'reliefweb_api.settings'): ImmutableConfig {
+    return $this->configFactory->get($name);
+  }
+
+  /**
+   * Get the module logger.
+   *
+   * @param string $channel
+   *   Logger channel. Defaults to `ocha_reliefweb`.
+   *
+   * @return \Psr\Log\LoggerInterface
+   *   Logger.
+   */
+  protected function getLogger(string $channel = 'reliefweb_api'): LoggerInterface {
+    return $this->loggerFactory->get($channel);
+  }
+
+  /**
+   * Get the request stack.
+   *
+   * @return \Symfony\Component\HttpFoundation\RequestStack
+   *   The request stack.
+   */
+  protected function getRequestStack(): RequestStack {
+    return $this->requestStack;
   }
 
 }
