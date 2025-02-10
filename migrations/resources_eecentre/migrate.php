@@ -10,7 +10,7 @@ use Symfony\Component\Console\Output\ConsoleOutput;
 const XML_FILE = __DIR__ . '/resources.xml';
 const XML_FILE_MEDIA = __DIR__ . '/media.xml';
 const LOGFILE = __DIR__ . '/reports.csv';
-const MAX_ITEMS = 25;
+const MAX_ITEMS = 9999;
 const FORCE_UPDATE = TRUE;
 const DRY_RUN = FALSE;
 global $source_id;
