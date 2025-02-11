@@ -103,6 +103,16 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
       );
     }
 
+    $entity = $form_state->getFormObject()?->getEntity();
+    // Only keep the "API" origin if the document was submitted via the API.
+    if (isset($entity) && $entity->hasField('field_post_api_provider') && !empty($entity->field_post_api_provider?->target_id)) {
+      FormHelper::removeOptions($form, 'field_origin', [0, 1, 2]);
+    }
+    // Otherwise hide it.
+    else {
+      FormHelper::removeOptions($form, 'field_origin', [3]);
+    }
+
     // Special tweaks for contributors.
     if ($this->currentUser->hasRole('contributor')) {
       $this->alterFieldsForContributors($form, $form_state);
@@ -281,7 +291,8 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
           $form_state->setErrorByName('field_origin_notes][0][value', $this->t('Identify the origin of this report (URL starting with https or http).'));
         }
       }
-      elseif ($origin === '1') {
+      // Submit or API.
+      elseif ($origin === '1' || $origin === '3') {
         if (!empty($notes) && !UrlHelper::isValid($notes, TRUE)) {
           $form_state->setErrorByName('field_origin_notes][0][value', $this->t('Invalid origin notes. It must be empty or the origin URL of the document (starting with https or http).'));
         }

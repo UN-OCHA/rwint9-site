@@ -1,0 +1,48 @@
+reliefweb_post_api.post:
+  path: '/api/v2/{resource}/{uuid}'
+  defaults:
+    _controller: '\Drupal\reliefweb_post_api\Controller\ReliefWebPostApi::postContent'
+  # The controller validates the supported methods.
+  methods:
+    - HEAD
+    - OPTIONS
+    - GET
+    - POST
+    - PATCH
+    - PUT
+    - DELETE
+  requirements:
+    _access: 'TRUE'
+    resource: '^[a-z][a-z_-]+[a-z]$'
+    uuid: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+
+reliefweb_post_api.schema:
+  path: '/post-api-schemas/v2/{schema}'
+  defaults:
+    _controller: '\Drupal\reliefweb_post_api\Controller\ReliefWebPostApi::getJsonSchema'
+  methods:
+    - GET
+  requirements:
+    _access: 'TRUE'
+    schema: '^[a-z][a-z_-]+[a-z]\.json$'
+
+reliefweb_post_api.api_user_dashboard:
+  path: '/user/{user}/reliefweb-api-dashboard'
+  defaults:
+    _controller: '\Drupal\reliefweb_post_api\Controller\ApiUserDashboard::getContent'
+    _title: 'API Dashboard'
+  options:
+    parameters:
+      user:
+        type: 'entity:user'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _custom_access: '\Drupal\reliefweb_post_api\Controller\ApiUserDashboard::checkPageAccess'
+
+reliefweb_post_api.api_user_dashboard.current_user:
+  path: '/user/reliefweb-api-dashboard'
+  defaults:
+    _controller: '\Drupal\reliefweb_post_api\Controller\ApiUserDashboard::redirectCurrentUser'
+    _title: 'API Dashboard'
+  requirements:
+    _user_is_logged_in: 'TRUE'

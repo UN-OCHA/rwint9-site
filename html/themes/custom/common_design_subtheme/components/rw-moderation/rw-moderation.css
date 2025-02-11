@@ -196,6 +196,10 @@
 .rw-moderation-list .rw-moderation-table .rw-moderation-table__cell__details__cost em {
   font-weight: normal;
 }
+.rw-moderation-list .rw-moderation-table__cell--origin {
+  text-align: center;
+  font-size: 15px;
+}
 .rw-moderation-list .rw-moderation-table__cell__date {
   text-align: center;
   white-space: pre;

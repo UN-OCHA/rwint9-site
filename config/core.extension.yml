@@ -86,6 +86,7 @@ module:
   reliefweb_import: 0
   reliefweb_meta: 0
   reliefweb_moderation: 0
+  reliefweb_post_api: 0
   reliefweb_reporting: 0
   reliefweb_revisions: 0
   reliefweb_rivers: 0
@@ -122,7 +123,6 @@ module:
   minimal: 1000
 theme:
   stable: 0
-  classy: 0
   common_design: 0
   common_design_subtheme: 0
   claro: 0

@@ -1,0 +1,20 @@
+uuid: 000755d1-44d5-4f08-a094-90d8e2f7f301
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.reliefweb_post_api_provider.field_notify
+  module:
+    - reliefweb_post_api
+id: reliefweb_post_api_provider.reliefweb_post_api_provider.field_notify
+field_name: field_notify
+entity_type: reliefweb_post_api_provider
+bundle: reliefweb_post_api_provider
+label: 'Notification emails'
+description: 'Email addresses to notify when a document is published.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: email

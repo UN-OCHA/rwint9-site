@@ -130,7 +130,7 @@ class RwReportCreateTest extends RwReportBase {
   /**
    * Test report as contributor unverified, pending.
    */
-  public function testCreateReportAsContributorUnverifiedToReview() {
+  public function testCreateReportAsContributorUnverifiedPending() {
     $title = 'My report - unverified';
     $this->setUserPostingRightsGetSourceTerm(0, 'Unverified');
     $moderation_status = 'pending';
@@ -152,12 +152,12 @@ class RwReportCreateTest extends RwReportBase {
   }
 
   /**
-   * Test report as contributor blocked, to-review.
+   * Test report as contributor blocked, pending.
    */
-  public function testCreateReportAsContributorBlockedToReview() {
+  public function testCreateReportAsContributorBlockedPending() {
     $title = 'My report - blocked';
     $this->setUserPostingRightsGetSourceTerm(1, 'blocked');
-    $moderation_status = 'to-review';
+    $moderation_status = 'pending';
     $expected_moderation_status = 'refused';
 
     $this->runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, FALSE);
@@ -178,10 +178,10 @@ class RwReportCreateTest extends RwReportBase {
   /**
    * Test report as contributor allowed, to-review.
    */
-  public function testCreateReportAsContributorAllowedToReview() {
+  public function testCreateReportAsContributorAllowedPending() {
     $title = 'My report - allowed';
     $this->setUserPostingRightsGetSourceTerm(2, 'allowed');
-    $moderation_status = 'to-review';
+    $moderation_status = 'pending';
     $expected_moderation_status = 'to-review';
 
     $this->runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, TRUE);
@@ -200,28 +200,28 @@ class RwReportCreateTest extends RwReportBase {
   }
 
   /**
-   * Test report as contributor trusted, to-review.
+   * Test report as contributor trusted, pending.
    */
-  public function testCreateReportAsContributorTrustedToReview() {
+  public function testCreateReportAsContributorTrustedPending() {
     $title = 'My report - trusted';
     $this->setUserPostingRightsGetSourceTerm(3, 'trusted');
-    $moderation_status = 'to-review';
+    $moderation_status = 'pending';
     $expected_moderation_status = 'published';
 
     $this->runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, TRUE);
   }
 
   /**
-   * Test report as contributor trusted, to-review but blocked source.
+   * Test report as contributor trusted, pending but blocked source.
    */
-  public function testCreateReportAsContributorTrustedToReviewBlockedSource() {
+  public function testCreateReportAsContributorTrustedPendingBlockedSource() {
     $title = 'My report - trusted';
     $term_source = $this->setUserPostingRightsGetSourceTerm(3, 'trusted', 2884910, 999999, 'Blocked source');
     $term_source
       ->set('moderation_status', 'blocked')
       ->save();
 
-    $moderation_status = 'to-review';
+    $moderation_status = 'pending';
     $expected_moderation_status = 'refused';
 
     $this->runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, FALSE, [

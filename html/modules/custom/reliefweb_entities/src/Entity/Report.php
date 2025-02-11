@@ -246,18 +246,15 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
     $this->updateModerationStatusFromPostingRights();
 
     // Change the status to `embargoed` if there is an embargo date.
-    if (!empty($this->field_embargo_date->value) && in_array($this->getModerationStatus(), [
-      'embargoed',
-      'to-review',
-      'published',
-    ])) {
+    $embargo_statuses = ['embargoed', 'to-review', 'published'];
+    if (!empty($this->field_embargo_date->value) && in_array($this->getModerationStatus(), $embargo_statuses)) {
       $this->setModerationStatus('embargoed');
 
       $message = strtr('Embargoed (to be automatically published on @date).', [
         '@date' => DateHelper::format($this->field_embargo_date->value, 'custom', 'd M Y H:i e'),
       ]);
 
-      $log = !empty($this->getRevisionLogMessage()) ? trim($this->getRevisionLogMessage()) : '';
+      $log = trim($this->getRevisionLogMessage() ?: '');
       $log = $message . (!empty($log) ? "\n" . $log : '');
       $this->setRevisionLogMessage($log);
     }
@@ -384,7 +381,7 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
 
     // For non editors, we determine the real status based on the user
     // posting rights for the selected sources.
-    if (!UserHelper::userHasRoles(['editor'], $user) && in_array($status, ['to-review'])) {
+    if (!UserHelper::userHasRoles(['editor'], $user) && in_array($status, ['pending'])) {
       // Retrieve the list of sources and check the user rights.
       if (!$this->field_source->isEmpty()) {
         // Extract source ids.

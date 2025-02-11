@@ -1,0 +1,31 @@
+{
+  "url": "https://test.test/test/1",
+  "title": "This a test document",
+  "source": [123],
+  "country": [123, 456],
+  "format": [123],
+  "language": [123, 456],
+  "published": "2024-06-06T01:00:00+00:00",
+  "body": "This is the **body** text in markdown format.\n\nIt has some paragraphs  \nand a line break.",
+  "embargoed": "2024-06-06T01:00:00+00:00",
+  "file": [
+    {
+      "url": "https://test.test/test-file1.pdf",
+      "description": "First attachment",
+      "language": "en"
+    },
+    {
+      "url": "https://test.test/test-file2.pdf",
+      "description": "Second attachment. German Version."
+    }
+  ],
+  "image": {
+    "url": "https://test.test/test-image.jpg",
+    "caption": "First attachment",
+    "copyright": "Test NGO"
+  },
+  "disaster": [123],
+  "disaster_type": [123, 456],
+  "theme": [123, 456, 789],
+  "origin": "https://test.test/test/1"
+}

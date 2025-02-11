@@ -50,6 +50,9 @@ class ReportModeration extends ModerationServiceBase {
       'data' => [
         'label' => $this->t('Report'),
       ],
+      'origin' => [
+        'label' => $this->t('Origin'),
+      ],
       'date' => [
         'label' => $this->t('Posted'),
         'type' => 'property',
@@ -186,8 +189,15 @@ class ReportModeration extends ModerationServiceBase {
           '@name' => Link::fromTextAndUrl($key_content_data['name'], Url::fromUri('entity:taxonomy_term/' . $key_content_data['tid']))->toString(),
         ]);
       }
-      // Author.
-      $details['author'] = $this->getEntityAuthorData($entity);
+
+      // Author and reviewer.
+      $details['author'] = $this->t('author: @author', [
+        '@author' => $this->getEntityAuthorData($entity),
+      ]);
+      $details['reviewer'] = $this->t('reviewer: @reviewer', [
+        '@reviewer' => $this->getEntityReviewerData($entity),
+      ]);
+
       $data['details'] = array_filter($details);
 
       // Revision information.
@@ -195,6 +205,15 @@ class ReportModeration extends ModerationServiceBase {
 
       // Filter out empty data.
       $cells['data'] = array_filter($data);
+
+      // Retrieve the origin of the document.
+      $options = $entity->field_origin->first()->getPossibleOptions();
+      if ($entity instanceof NodeInterface && $entity->getOwner()->hasRole('contributor')) {
+        $cells['origin'] = $this->t('Contributor');
+      }
+      else {
+        $cells['origin'] = $options[$entity->field_origin->value] ?? $this->t('N/A');
+      }
 
       // Date cell.
       $cells['date'] = [
@@ -216,12 +235,12 @@ class ReportModeration extends ModerationServiceBase {
       'draft' => $this->t('Draft'),
       'on-hold' => $this->t('On-hold'),
       'to-review' => $this->t('To review'),
-      'pending' => $this->t('Pending'),
       'published' => $this->t('Published'),
       'embargoed' => $this->t('Embargoed'),
+      'reference' => $this->t('Reference'),
+      'pending' => $this->t('Pending'),
       'refused' => $this->t('Refused'),
       'archive' => $this->t('Archived'),
-      'reference' => $this->t('Reference'),
     ];
   }
 
@@ -231,6 +250,7 @@ class ReportModeration extends ModerationServiceBase {
   public function getFilterDefaultStatuses() {
     $statuses = $this->getFilterStatuses();
     unset($statuses['archive']);
+    unset($statuses['refused']);
     return array_keys($statuses);
   }
 
@@ -240,13 +260,6 @@ class ReportModeration extends ModerationServiceBase {
   public function getEntityFormSubmitButtons($status, EntityModeratedInterface $entity) {
     $buttons = [];
     $new = empty($status) || $status === 'draft' || $entity->isNew();
-
-    // Only show save as draft for non-published but editable documents.
-    if ($new || in_array($status, ['draft', 'on-hold'])) {
-      $buttons['draft'] = [
-        '#value' => $this->t('Save as draft'),
-      ];
-    }
 
     // Editors can publish, put on hold or refuse a document.
     // @todo use permission.
@@ -268,36 +281,27 @@ class ReportModeration extends ModerationServiceBase {
           '#value' => $this->t('Reference'),
         ],
       ];
+
+      // Add extra buttons to manage content submitted via the API.
+      if ($entity->hasField('field_post_api_provider') && !empty($entity->field_post_api_provider?->target_id)) {
+        $buttons['pending'] = [
+          '#value' => $this->t('Pending'),
+        ];
+        // Note: once refused the document is not editable anymore unless
+        // the current user is also an administrator or webmaster.
+        // @see ::isEditableStatus().
+        $buttons['refused'] = [
+          '#value' => $this->t('Refused'),
+        ];
+      }
     }
-    elseif (UserHelper::userHasRoles(['administrator', 'webmaster'])) {
-      $buttons = [
-        'draft' => [
-          '#value' => $this->t('Save as draft'),
-        ],
-        'to-review' => [
-          '#value' => $this->t('To review'),
-        ],
-        'published' => [
-          '#value' => $this->t('Publish'),
-        ],
-        'on-hold' => [
-          '#value' => $this->t('On-hold'),
-        ],
-        'reference' => [
-          '#value' => $this->t('Reference'),
-        ],
-        'archive' => [
-          '#value' => $this->t('Archive'),
-        ],
-      ];
-    }
-    // Other users can submit for review, on-hold or published if trusted.
+    // Other users can save as draft, submit as pending or set on-hold.
     else {
       $buttons = [
         'draft' => [
           '#value' => $this->t('Save as draft'),
         ],
-        'to-review' => [
+        'pending' => [
           '#value' => $new ? $this->t('Submit') : $this->t('Submit changes'),
         ],
         'on-hold' => [
@@ -306,9 +310,24 @@ class ReportModeration extends ModerationServiceBase {
       ];
 
       // Add confirmation when attempting to change published document.
-      if ($status === 'published') {
+      if ($status === 'to-review' || $status === 'published') {
         $message = $this->t('Press OK to submit the changes for review by the ReliefWeb editors. The report may become unpublished while being reviewed.');
         $buttons['to-review']['#attributes']['onclick'] = 'return confirm("' . $message . '")';
+      }
+    }
+
+    // Admin and webmasters can also edit archived or refused documents.
+    // @see ::isEditableStatus().
+    if (UserHelper::userHasRoles(['administrator', 'webmaster'])) {
+      $buttons['archive'] = [
+        '#value' => $this->t('Archive'),
+      ];
+
+      // Allow to refuse already refused documents (from contributors or API).
+      if ($status === 'refused') {
+        $buttons['refused'] = [
+          '#value' => $this->t('Refused'),
+        ];
       }
     }
 
@@ -405,6 +424,7 @@ class ReportModeration extends ModerationServiceBase {
       'headline',
       'bury',
       'key_content',
+      'origin',
     ]);
 
     // Values are hardcoded to avoid the use of a query.

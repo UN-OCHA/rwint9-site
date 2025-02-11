@@ -1,0 +1,187 @@
+uuid: 15416736-1f4f-421a-ac0d-b677b0e5fcf3
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_document_url
+    - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_file_url
+    - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_image_url
+    - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_notify
+    - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_quota
+    - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_rate_limit
+    - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_resource_status
+    - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_skip_queue
+    - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_source
+    - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_trusted_users
+    - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_user
+    - field.field.reliefweb_post_api_provider.reliefweb_post_api_provider.field_webhook_url
+  module:
+    - link
+    - reliefweb_fields
+    - reliefweb_post_api
+id: reliefweb_post_api_provider.reliefweb_post_api_provider.default
+targetEntityType: reliefweb_post_api_provider
+bundle: reliefweb_post_api_provider
+mode: default
+content:
+  field_document_url:
+    type: link_default
+    weight: 6
+    region: content
+    settings:
+      placeholder_url: ''
+      placeholder_title: ''
+    third_party_settings: {  }
+  field_file_url:
+    type: link_default
+    weight: 8
+    region: content
+    settings:
+      placeholder_url: ''
+      placeholder_title: ''
+    third_party_settings: {  }
+  field_image_url:
+    type: link_default
+    weight: 7
+    region: content
+    settings:
+      placeholder_url: ''
+      placeholder_title: ''
+    third_party_settings: {  }
+  field_notify:
+    type: email_default
+    weight: 11
+    region: content
+    settings:
+      placeholder: ''
+      size: 60
+    third_party_settings: {  }
+  field_quota:
+    type: number
+    weight: 9
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+  field_rate_limit:
+    type: number
+    weight: 10
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+  field_resource_status:
+    type: options_select
+    weight: 2
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_skip_queue:
+    type: boolean_checkbox
+    weight: 14
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  field_source:
+    type: reliefweb_entity_reference_select
+    weight: 3
+    region: content
+    settings:
+      sort: label
+      extra_data:
+        'source:field_shortname': 'source:field_shortname'
+        'source:tid': '0'
+        'source:uuid': '0'
+        'source:revision_id': '0'
+        'source:langcode': '0'
+        'source:vid': '0'
+        'source:revision_created': '0'
+        'source:revision_user': '0'
+        'source:revision_log_message': '0'
+        'source:status': '0'
+        'source:name': '0'
+        'source:description': '0'
+        'source:weight': '0'
+        'source:parent': '0'
+        'source:changed': '0'
+        'source:default_langcode': '0'
+        'source:revision_default': '0'
+        'source:revision_translation_affected': '0'
+        'source:created': '0'
+        'source:moderation_status': '0'
+        'source:field_aliases': '0'
+        'source:field_allowed_content_types': '0'
+        'source:field_attention_job': '0'
+        'source:field_attention_report': '0'
+        'source:field_attention_training': '0'
+        'source:field_country': '0'
+        'source:field_disclaimer': '0'
+        'source:field_fts_id': '0'
+        'source:field_homepage': '0'
+        'source:field_job_import_feed': '0'
+        'source:field_links': '0'
+        'source:field_logo': '0'
+        'source:field_longname': '0'
+        'source:field_organization_type': '0'
+        'source:field_spanish_name': '0'
+        'source:field_user_posting_rights': '0'
+    third_party_settings: {  }
+  field_trusted_users:
+    type: entity_reference_autocomplete
+    weight: 14
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_user:
+    type: entity_reference_autocomplete
+    weight: 4
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_webhook_url:
+    type: link_default
+    weight: 12
+    region: content
+    settings:
+      placeholder_url: ''
+      placeholder_title: ''
+    third_party_settings: {  }
+  key:
+    type: reliefweb_post_api_key
+    weight: 5
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  name:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  resource:
+    type: options_select
+    weight: 1
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  status:
+    type: boolean_checkbox
+    weight: 13
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+hidden: {  }

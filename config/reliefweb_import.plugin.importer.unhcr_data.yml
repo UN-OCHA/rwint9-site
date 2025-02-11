@@ -1,0 +1,6 @@
+enabled: 1
+api_url: 'https://data.unhcr.org'
+api_key: REPLACE_WITH_API_KEY
+list_endpoint: /api-content/documents.json
+document_endpoint: '/api-content/documents/{{id}}.json'
+timeout: '10'

@@ -98,6 +98,13 @@ class EntityHistory {
   protected $allowedBaseFields = [];
 
   /**
+   * Fields for which to NOT show revisions grouped by entity type and bundle.
+   *
+   * @var array
+   */
+  protected $disallowedFields = [];
+
+  /**
    * Constructor.
    *
    * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
@@ -1479,9 +1486,22 @@ class EntityHistory {
     }
     $allowed = $this->allowedBaseFields[$entity_type_id][$bundle];
 
+    // Fields for which diffs should NOT be computed.
+    if (!isset($this->disallowedFields[$entity_type_id][$bundle])) {
+      $disallowed = [];
+
+      $this->moduleHandler->alter('reliefweb_revisions_disallowed_fields', $disallowed, $entity_type_id, $bundle);
+      $this->disallowedFields[$entity_type_id][$bundle] = $disallowed;
+    }
+    $disallowed = $this->disallowedFields[$entity_type_id][$bundle];
+
     // Compute the revision differences.
     $diff = [];
     foreach ($field_definitions as $field_name => $field_definition) {
+      if (!empty($disallowed[$field_name])) {
+        continue;
+      }
+
       $storage_definition = $field_definition->getFieldStorageDefinition();
       $is_revisionable = $storage_definition->isRevisionable();
       $is_base_field = $storage_definition->isBaseField();

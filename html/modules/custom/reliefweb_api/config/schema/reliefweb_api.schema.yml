@@ -8,12 +8,21 @@ reliefweb_api.settings:
     api_url_external:
       type: string
       label: 'ReliefWeb API URL external, for autocomplete calls from the frontend (JS).'
+    post_api_schema_url:
+      type: string
+      label: 'Base URL of the POST API schemas.'
     appname:
       type: string
       label: 'App name parameter to indentify the API requests.'
     cache_enabled:
       type: boolean
       label: 'Cache the query results.'
+    cache_lifetime:
+      type: integer
+      label: 'Cache duration (in seconds) for the query results.'
+    cache_namespace:
+      type: string
+      label: 'Namespace for the API caching.'
     verify_ssl:
       type: boolean
       label: 'Verify the SSL certificate of the API query performing requests.'

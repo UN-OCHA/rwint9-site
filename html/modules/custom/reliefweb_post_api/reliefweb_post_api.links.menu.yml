@@ -1,0 +1,6 @@
+entity.reliefweb_post_api_provider.collection:
+  title: 'ReliefWeb Post API providers'
+  route_name: entity.reliefweb_post_api_provider.collection
+  description: 'List of ReliefWeb Post API provider entities.'
+  parent: system.admin_structure
+  weight: 110

@@ -12,6 +12,8 @@ dependencies:
     - field.field.node.training.field_how_to_register
     - field.field.node.training.field_language
     - field.field.node.training.field_link
+    - field.field.node.training.field_post_api_hash
+    - field.field.node.training.field_post_api_provider
     - field.field.node.training.field_registration_deadline
     - field.field.node.training.field_source
     - field.field.node.training.field_theme
@@ -158,5 +160,7 @@ content:
     region: content
 hidden:
   field_language: true
+  field_post_api_hash: true
+  field_post_api_provider: true
   langcode: true
   links: true
