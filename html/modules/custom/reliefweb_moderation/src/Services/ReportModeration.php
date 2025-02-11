@@ -208,7 +208,12 @@ class ReportModeration extends ModerationServiceBase {
 
       // Retrieve the origin of the document.
       $options = $entity->field_origin->first()->getPossibleOptions();
-      $cells['origin'] = $options[$entity->field_origin->value] ?? $this->t('N/A');
+      if ($entity instanceof NodeInterface && $entity->getOwner()->hasRole('contributor')) {
+        $cells['origin'] = $this->t('Contributor');
+      }
+      else {
+        $cells['origin'] = $options[$entity->field_origin->value] ?? $this->t('N/A');
+      }
 
       // Date cell.
       $cells['date'] = [
