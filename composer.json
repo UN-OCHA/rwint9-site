@@ -27,7 +27,6 @@
         "drupal/allowed_formats": "^3",
         "drupal/amazon_ses": "^3",
         "drupal/aws": "dev-2.0.x",
-        "drupal/classy": "^1.0",
         "drupal/components": "^3.0@beta",
         "drupal/config_split": "^2.0.0@rc",
         "drupal/content_entity_clone": "^1.0.0",

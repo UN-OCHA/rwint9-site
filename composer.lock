@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "22773fb04a5272297f0b36917d6975ec",
+    "content-hash": "6a5a1cad282a8f8ec0f1eab4e6338bdc",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -2586,60 +2586,6 @@
             }
         },
         {
-            "name": "drupal/classy",
-            "version": "1.0.2",
-            "source": {
-                "type": "git",
-                "url": "https://git.drupalcode.org/project/classy.git",
-                "reference": "1.0.2"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/classy-1.0.2.zip",
-                "reference": "1.0.2",
-                "shasum": "c2f4fbfd9ae7d4e0cbd952d96247d00a0759da06"
-            },
-            "require": {
-                "drupal/core": "^9 || ^10",
-                "drupal/stable": "^2.0.0"
-            },
-            "type": "drupal-theme",
-            "extra": {
-                "drupal": {
-                    "version": "1.0.2",
-                    "datestamp": "1663949784",
-                    "security-coverage": {
-                        "status": "covered",
-                        "message": "Covered by Drupal's security advisory policy"
-                    }
-                }
-            },
-            "notification-url": "https://packages.drupal.org/8/downloads",
-            "license": [
-                "GPL-2.0-or-later"
-            ],
-            "authors": [
-                {
-                    "name": "bnjmnm",
-                    "homepage": "https://www.drupal.org/user/2369194"
-                },
-                {
-                    "name": "davidhernandez",
-                    "homepage": "https://www.drupal.org/user/274559"
-                },
-                {
-                    "name": "lauriii",
-                    "homepage": "https://www.drupal.org/user/1078742"
-                }
-            ],
-            "description": "The Classy base theme from Drupal 8/9 moved to contrib",
-            "homepage": "https://drupal.org/project/classy",
-            "support": {
-                "source": "https://git.drupalcode.org/project/classy",
-                "issues": "https://drupal.org/project/issues/classy"
-            }
-        },
-        {
             "name": "drupal/coder",
             "version": "8.3.28",
             "source": {
@@ -4197,7 +4143,7 @@
                 "shasum": "fc8ea60619b6b4682bade340e13fb4565d3a7e0c"
             },
             "require": {
-                "drupal/core": "^9.1 || ^10"
+                "drupal/core": "^10"
             },
             "type": "drupal-module",
             "extra": {
@@ -4400,7 +4346,7 @@
                 "shasum": "c25246747dac4372c7d5a5a5fd0f276d9e468eff"
             },
             "require": {
-                "drupal/core": "^9.3 || ^10",
+                "drupal/core": "^10",
                 "drupal/mailsystem": "^4"
             },
             "require-dev": {
@@ -5252,7 +5198,7 @@
                 "shasum": "4623b9d0de4c624857df10daaa8c68793942ad87"
             },
             "require": {
-                "drupal/core": "^10.3 || ^11",
+                "drupal/core": "^10",
                 "enshrined/svg-sanitize": ">=0.15 <1.0"
             },
             "type": "drupal-module",
@@ -5412,7 +5358,7 @@
                 "shasum": "4aa9b119c9c992fd9930fa50f97cd89959c3bafb"
             },
             "require": {
-                "drupal/core": "^8.9 || ^9 || ^10 || ^11"
+                "drupal/core": "^10"
             },
             "type": "drupal-module",
             "extra": {
@@ -6113,16 +6059,16 @@
         },
         {
             "name": "firebase/php-jwt",
-            "version": "v6.10.2",
+            "version": "v6.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/firebase/php-jwt.git",
-                "reference": "30c19ed0f3264cb660ea496895cfb6ef7ee3653b"
+                "reference": "8f718f4dfc9c5d5f0c994cdfd103921b43592712"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/firebase/php-jwt/zipball/30c19ed0f3264cb660ea496895cfb6ef7ee3653b",
-                "reference": "30c19ed0f3264cb660ea496895cfb6ef7ee3653b",
+                "url": "https://api.github.com/repos/firebase/php-jwt/zipball/8f718f4dfc9c5d5f0c994cdfd103921b43592712",
+                "reference": "8f718f4dfc9c5d5f0c994cdfd103921b43592712",
                 "shasum": ""
             },
             "require": {
@@ -6170,9 +6116,9 @@
             ],
             "support": {
                 "issues": "https://github.com/firebase/php-jwt/issues",
-                "source": "https://github.com/firebase/php-jwt/tree/v6.10.2"
+                "source": "https://github.com/firebase/php-jwt/tree/v6.11.0"
             },
-            "time": "2024-11-24T11:22:49+00:00"
+            "time": "2025-01-23T05:11:06+00:00"
         },
         {
             "name": "google/analytics-data",
@@ -6295,16 +6241,16 @@
         },
         {
             "name": "google/apiclient-services",
-            "version": "v0.389.0",
+            "version": "v0.394.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-api-php-client-services.git",
-                "reference": "6274e67ee52b1a416ccee0a4eaf337d1139cdaf8"
+                "reference": "17fa8210d62c02c398fb4985ed4bc461d18989c1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/google-api-php-client-services/zipball/6274e67ee52b1a416ccee0a4eaf337d1139cdaf8",
-                "reference": "6274e67ee52b1a416ccee0a4eaf337d1139cdaf8",
+                "url": "https://api.github.com/repos/googleapis/google-api-php-client-services/zipball/17fa8210d62c02c398fb4985ed4bc461d18989c1",
+                "reference": "17fa8210d62c02c398fb4985ed4bc461d18989c1",
                 "shasum": ""
             },
             "require": {
@@ -6333,22 +6279,22 @@
             ],
             "support": {
                 "issues": "https://github.com/googleapis/google-api-php-client-services/issues",
-                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.389.0"
+                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.394.0"
             },
-            "time": "2025-01-05T01:04:21+00:00"
+            "time": "2025-02-10T01:06:23+00:00"
         },
         {
             "name": "google/auth",
-            "version": "v1.45.0",
+            "version": "v1.45.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-auth-library-php.git",
-                "reference": "cfcb93162341ed5022fa976e621f0fa2b05ba6ad"
+                "reference": "c70b987a3c2685c78e5e86280f9d259d4603839b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/google-auth-library-php/zipball/cfcb93162341ed5022fa976e621f0fa2b05ba6ad",
-                "reference": "cfcb93162341ed5022fa976e621f0fa2b05ba6ad",
+                "url": "https://api.github.com/repos/googleapis/google-auth-library-php/zipball/c70b987a3c2685c78e5e86280f9d259d4603839b",
+                "reference": "c70b987a3c2685c78e5e86280f9d259d4603839b",
                 "shasum": ""
             },
             "require": {
@@ -6385,31 +6331,31 @@
                 "Apache-2.0"
             ],
             "description": "Google Auth Library for PHP",
-            "homepage": "http://github.com/google/google-auth-library-php",
+            "homepage": "https://github.com/google/google-auth-library-php",
             "keywords": [
                 "Authentication",
                 "google",
                 "oauth2"
             ],
             "support": {
-                "docs": "https://googleapis.github.io/google-auth-library-php/main/",
+                "docs": "https://cloud.google.com/php/docs/reference/auth/latest",
                 "issues": "https://github.com/googleapis/google-auth-library-php/issues",
-                "source": "https://github.com/googleapis/google-auth-library-php/tree/v1.45.0"
+                "source": "https://github.com/googleapis/google-auth-library-php/tree/v1.45.4"
             },
-            "time": "2024-12-11T02:10:48+00:00"
+            "time": "2025-02-10T18:04:06+00:00"
         },
         {
             "name": "google/common-protos",
-            "version": "4.8.3",
+            "version": "4.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/common-protos-php.git",
-                "reference": "38a9a8bb459fa618da797d25d7bf36bb21d1103d"
+                "reference": "88bb76504910ddfe8fec457b622145c5731ab8ea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/common-protos-php/zipball/38a9a8bb459fa618da797d25d7bf36bb21d1103d",
-                "reference": "38a9a8bb459fa618da797d25d7bf36bb21d1103d",
+                "url": "https://api.github.com/repos/googleapis/common-protos-php/zipball/88bb76504910ddfe8fec457b622145c5731ab8ea",
+                "reference": "88bb76504910ddfe8fec457b622145c5731ab8ea",
                 "shasum": ""
             },
             "require": {
@@ -6453,9 +6399,9 @@
                 "google"
             ],
             "support": {
-                "source": "https://github.com/googleapis/common-protos-php/tree/v4.8.3"
+                "source": "https://github.com/googleapis/common-protos-php/tree/v4.10.0"
             },
-            "time": "2024-09-07T01:37:15+00:00"
+            "time": "2025-02-03T23:47:57+00:00"
         },
         {
             "name": "google/gax",
@@ -6561,16 +6507,16 @@
         },
         {
             "name": "google/longrunning",
-            "version": "0.4.6",
+            "version": "0.4.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/php-longrunning.git",
-                "reference": "4eb04d47bba8095d5a47f75334b9204c2a4a7ac6"
+                "reference": "624cabb874c10e5ddc9034c999f724894b70a3d3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/php-longrunning/zipball/4eb04d47bba8095d5a47f75334b9204c2a4a7ac6",
-                "reference": "4eb04d47bba8095d5a47f75334b9204c2a4a7ac6",
+                "url": "https://api.github.com/repos/googleapis/php-longrunning/zipball/624cabb874c10e5ddc9034c999f724894b70a3d3",
+                "reference": "624cabb874c10e5ddc9034c999f724894b70a3d3",
                 "shasum": ""
             },
             "require-dev": {
@@ -6599,9 +6545,9 @@
             ],
             "description": "Google LongRunning Client for PHP",
             "support": {
-                "source": "https://github.com/googleapis/php-longrunning/tree/v0.4.6"
+                "source": "https://github.com/googleapis/php-longrunning/tree/v0.4.7"
             },
-            "time": "2024-12-12T21:15:35+00:00"
+            "time": "2025-01-24T21:24:06+00:00"
         },
         {
             "name": "google/protobuf",
@@ -9240,16 +9186,16 @@
         },
         {
             "name": "opis/json-schema",
-            "version": "2.3.0",
+            "version": "2.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opis/json-schema.git",
-                "reference": "c48df6d7089a45f01e1c82432348f2d5976f9bfb"
+                "reference": "712827751c62b465daae6e725bf0cf5ffbf965e1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opis/json-schema/zipball/c48df6d7089a45f01e1c82432348f2d5976f9bfb",
-                "reference": "c48df6d7089a45f01e1c82432348f2d5976f9bfb",
+                "url": "https://api.github.com/repos/opis/json-schema/zipball/712827751c62b465daae6e725bf0cf5ffbf965e1",
+                "reference": "712827751c62b465daae6e725bf0cf5ffbf965e1",
                 "shasum": ""
             },
             "require": {
@@ -9299,22 +9245,22 @@
             ],
             "support": {
                 "issues": "https://github.com/opis/json-schema/issues",
-                "source": "https://github.com/opis/json-schema/tree/2.3.0"
+                "source": "https://github.com/opis/json-schema/tree/2.4.1"
             },
-            "time": "2022-01-08T20:38:03+00:00"
+            "time": "2024-12-30T20:20:21+00:00"
         },
         {
             "name": "opis/string",
-            "version": "2.0.1",
+            "version": "2.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opis/string.git",
-                "reference": "9ebf1a1f873f502f6859d11210b25a4bf5d141e7"
+                "reference": "ba0b9607b9809462b0e28a11e4881a8d77431feb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opis/string/zipball/9ebf1a1f873f502f6859d11210b25a4bf5d141e7",
-                "reference": "9ebf1a1f873f502f6859d11210b25a4bf5d141e7",
+                "url": "https://api.github.com/repos/opis/string/zipball/ba0b9607b9809462b0e28a11e4881a8d77431feb",
+                "reference": "ba0b9607b9809462b0e28a11e4881a8d77431feb",
                 "shasum": ""
             },
             "require": {
@@ -9361,9 +9307,9 @@
             ],
             "support": {
                 "issues": "https://github.com/opis/string/issues",
-                "source": "https://github.com/opis/string/tree/2.0.1"
+                "source": "https://github.com/opis/string/tree/2.0.2"
             },
-            "time": "2022-01-14T15:42:23+00:00"
+            "time": "2024-12-30T21:43:22+00:00"
         },
         {
             "name": "opis/uri",
@@ -17263,16 +17209,16 @@
         },
         {
             "name": "tecnickcom/tcpdf",
-            "version": "6.8.0",
+            "version": "6.8.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/TCPDF.git",
-                "reference": "14ffa0e308f5634aa2489568b4b90b24073b6731"
+                "reference": "f7a781073e1645062f163e058139e2f89355d420"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/TCPDF/zipball/14ffa0e308f5634aa2489568b4b90b24073b6731",
-                "reference": "14ffa0e308f5634aa2489568b4b90b24073b6731",
+                "url": "https://api.github.com/repos/tecnickcom/TCPDF/zipball/f7a781073e1645062f163e058139e2f89355d420",
+                "reference": "f7a781073e1645062f163e058139e2f89355d420",
                 "shasum": ""
             },
             "require": {
@@ -17324,7 +17270,7 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/TCPDF/issues",
-                "source": "https://github.com/tecnickcom/TCPDF/tree/6.8.0"
+                "source": "https://github.com/tecnickcom/TCPDF/tree/6.8.2"
             },
             "funding": [
                 {
@@ -17332,7 +17278,7 @@
                     "type": "custom"
                 }
             ],
-            "time": "2024-12-23T13:34:57+00:00"
+            "time": "2025-01-26T14:03:12+00:00"
         },
         {
             "name": "theseer/tokenizer",
