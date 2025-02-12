@@ -41,7 +41,10 @@ function migrateItems($media_items) {
       'field_theme' => [],
       'field_language' => 267,
       'field_content_format' => 9,
-      'field_source' => [],
+      'field_source' => [
+        1482, # UNEP
+        1503, # OCHA
+      ],
       'field_disaster_type' => [],
       'field_ocha_product' => '',
       'title' => (string) $child->title,
