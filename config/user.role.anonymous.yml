@@ -5,6 +5,7 @@ dependencies:
   module:
     - media
     - ocha_ai_chat
+    - ocha_entraid
     - system
 _core:
   default_config_hash: j5zLMOdJBqC0bMvSdth5UebkprJB8g_2FXHqhfpJzow
@@ -15,4 +16,5 @@ is_admin: false
 permissions:
   - 'access content'
   - 'access ocha ai chat'
+  - 'access ocha entraid direct login'
   - 'view media'
