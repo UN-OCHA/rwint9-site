@@ -118,16 +118,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.339.11",
+            "version": "3.339.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "692055cc451a442690ecb839ae1d0cca5c018c77"
+                "reference": "a63e79c15a972c54bf015a16cce3f3572e0c8221"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/692055cc451a442690ecb839ae1d0cca5c018c77",
-                "reference": "692055cc451a442690ecb839ae1d0cca5c018c77",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/a63e79c15a972c54bf015a16cce3f3572e0c8221",
+                "reference": "a63e79c15a972c54bf015a16cce3f3572e0c8221",
                 "shasum": ""
             },
             "require": {
@@ -209,9 +209,9 @@
             "support": {
                 "forum": "https://github.com/aws/aws-sdk-php/discussions",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.339.11"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.339.12"
             },
-            "time": "2025-02-11T19:45:23+00:00"
+            "time": "2025-02-12T19:08:43+00:00"
         },
         {
             "name": "behat/mink",
@@ -2691,17 +2691,17 @@
         },
         {
             "name": "drupal/config_split",
-            "version": "2.0.1",
+            "version": "2.0.2",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/config_split.git",
-                "reference": "2.0.1"
+                "reference": "2.0.2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/config_split-2.0.1.zip",
-                "reference": "2.0.1",
-                "shasum": "e033a277995753c564f3a4681b88cd112e19ba2a"
+                "url": "https://ftp.drupal.org/files/projects/config_split-2.0.2.zip",
+                "reference": "2.0.2",
+                "shasum": "efde01f790ca6f6023982e918fe51740da931d3e"
             },
             "require": {
                 "drupal/core": "^8.8 || ^9 || ^10 || ^11"
@@ -2719,8 +2719,8 @@
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "2.0.1",
-                    "datestamp": "1711022056",
+                    "version": "2.0.2",
+                    "datestamp": "1739381800",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
@@ -4143,7 +4143,7 @@
                 "shasum": "fc8ea60619b6b4682bade340e13fb4565d3a7e0c"
             },
             "require": {
-                "drupal/core": "^10"
+                "drupal/core": "^9.1 || ^10"
             },
             "type": "drupal-module",
             "extra": {
@@ -4346,7 +4346,7 @@
                 "shasum": "c25246747dac4372c7d5a5a5fd0f276d9e468eff"
             },
             "require": {
-                "drupal/core": "^10",
+                "drupal/core": "^9.3 || ^10",
                 "drupal/mailsystem": "^4"
             },
             "require-dev": {
@@ -5198,7 +5198,7 @@
                 "shasum": "4623b9d0de4c624857df10daaa8c68793942ad87"
             },
             "require": {
-                "drupal/core": "^10",
+                "drupal/core": "^10.3 || ^11",
                 "enshrined/svg-sanitize": ">=0.15 <1.0"
             },
             "type": "drupal-module",
@@ -5358,7 +5358,7 @@
                 "shasum": "4aa9b119c9c992fd9930fa50f97cd89959c3bafb"
             },
             "require": {
-                "drupal/core": "^10"
+                "drupal/core": "^8.9 || ^9 || ^10 || ^11"
             },
             "type": "drupal-module",
             "extra": {
@@ -8359,16 +8359,16 @@
         },
         {
             "name": "myclabs/deep-copy",
-            "version": "1.12.1",
+            "version": "1.13.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/myclabs/DeepCopy.git",
-                "reference": "123267b2c49fbf30d78a7b2d333f6be754b94845"
+                "reference": "024473a478be9df5fdaca2c793f2232fe788e414"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/123267b2c49fbf30d78a7b2d333f6be754b94845",
-                "reference": "123267b2c49fbf30d78a7b2d333f6be754b94845",
+                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/024473a478be9df5fdaca2c793f2232fe788e414",
+                "reference": "024473a478be9df5fdaca2c793f2232fe788e414",
                 "shasum": ""
             },
             "require": {
@@ -8407,7 +8407,7 @@
             ],
             "support": {
                 "issues": "https://github.com/myclabs/DeepCopy/issues",
-                "source": "https://github.com/myclabs/DeepCopy/tree/1.12.1"
+                "source": "https://github.com/myclabs/DeepCopy/tree/1.13.0"
             },
             "funding": [
                 {
@@ -8415,7 +8415,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-11-08T17:47:46+00:00"
+            "time": "2025-02-12T12:17:51+00:00"
         },
         {
             "name": "nette/schema",
@@ -17527,16 +17527,16 @@
         },
         {
             "name": "unocha/ocha_ai",
-            "version": "v1.9.0",
+            "version": "v1.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_ai.git",
-                "reference": "c27391402556d15ef535378b324f5371e816d2fa"
+                "reference": "5d47ee65536e6c3a6628e44e451d7eb744c128d4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/c27391402556d15ef535378b324f5371e816d2fa",
-                "reference": "c27391402556d15ef535378b324f5371e816d2fa",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/5d47ee65536e6c3a6628e44e451d7eb744c128d4",
+                "reference": "5d47ee65536e6c3a6628e44e451d7eb744c128d4",
                 "shasum": ""
             },
             "require": {
@@ -17568,9 +17568,9 @@
             "description": "OCHA AI module",
             "support": {
                 "issues": "https://github.com/UN-OCHA/ocha_ai/issues",
-                "source": "https://github.com/UN-OCHA/ocha_ai/tree/v1.9.0"
+                "source": "https://github.com/UN-OCHA/ocha_ai/tree/v1.10.0"
             },
-            "time": "2025-01-28T08:35:31+00:00"
+            "time": "2025-02-12T22:09:27+00:00"
         },
         {
             "name": "unocha/ocha_content_classification",
