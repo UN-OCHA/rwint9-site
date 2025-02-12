@@ -6,8 +6,8 @@ post_limit:
   frequency: day
 validation:
   blacklisted_domains: ''
-  title_min_words: 2
-  title_min_length: 10
+  title_min_words: 1
+  title_min_length: 5
   body_min_words: 20
   body_min_length: 100
 error_messages:
