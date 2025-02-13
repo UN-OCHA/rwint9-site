@@ -122,12 +122,6 @@ function migrateItems($media_items) {
           $item['extra'][(string) $property->meta_key] = (string) $property->meta_value;
         }
       }
-      elseif ($property->getName() == 'status') {
-        if ((string) $property == 'publish') {
-          $item['moderation_status'] = 'published';
-          $item['status'] = 1;
-        }
-      }
     }
 
     // Only posts.
