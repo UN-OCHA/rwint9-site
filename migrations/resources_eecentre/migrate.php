@@ -509,31 +509,8 @@ foreach ($items as &$item) {
       $path = str_replace('/wp-content/uploads/', '/sites/default/files/resources_eecentre/', $source['path']);
       $uri = str_replace('/wp-content/uploads/', 'public://resources_eecentre/', $source['path']);
 
-      // Existing file.
-      if (isset($file_mapping[$path])) {
-        $new_path = $file_mapping[$path];
-      }
-      else {
-        $file = $file_repository->loadByUri($uri);
-        if (!$file) {
-          try {
-            $data = (string) \Drupal::httpClient()->get($url)->getBody();
-            $file_system->prepareDirectory(dirname($uri), FileSystemInterface::CREATE_DIRECTORY);
-            /** @var \Drupal\file\FileInterface $file */
-            $file = $file_repository->writeData($data, $uri, FileExists::Replace);
-            $new_path = $file_url_generator->generate($file->getFileUri())->toString();
-            $file_mapping[$path] = $new_path;
-          }
-          catch (\Exception $e) {
-            $new_path = '';
-          }
-        }
-      }
-      if (!empty($new_path)) {
-        $link->setAttribute('href', $new_path);
-
-        $attachments[] = rtrim($base_url, '/') . $new_path;
-      }
+      // Add source URL, will be replaced later.
+      $attachments[] = $url;
     }
   }
 
@@ -550,52 +527,6 @@ foreach ($items as &$item) {
     $output->writeln('<comment>Skipping, no attachments found.</comment>');
     continue;
   }
-
-  $images = $dom->getElementsByTagName('img');
-  foreach ($images as $image) {
-    $url = $image->getAttribute('src');
-    $source = parse_url($url);
-    if (!empty($source) && isset($source['host']) && ($source['host'] == 'resources.eecentre.org' || $source['host'] == 'eecentre.org')) {
-      $new_path = '';
-      $path = str_replace('/wp-content/uploads/', '/sites/default/files/resources_eecentre/', $source['path']);
-      $uri = str_replace('/wp-content/uploads/', 'public://resources_eecentre/', $source['path']);
-
-      // Existing file.
-      if (isset($file_mapping[$path])) {
-        $new_path = $file_mapping[$path];
-      }
-      else {
-        $file = $file_repository->loadByUri($uri);
-        if (!$file) {
-          try {
-            $data = (string) \Drupal::httpClient()->get($url)->getBody();
-            $file_system->prepareDirectory(dirname($uri), FileSystemInterface::CREATE_DIRECTORY);
-            /** @var \Drupal\file\FileInterface $file */
-            $file = $file_repository->writeData($data, $uri, FileExists::Replace);
-            $new_path = $file_url_generator->generate($file->getFileUri())->toString();
-            $file_mapping[$path] = $new_path;
-          }
-          catch (\Exception $e) {
-            $new_path = '';
-          }
-        }
-      }
-      if (!empty($new_path)) {
-        $image->setAttribute('src', $path);
-      }
-    }
-  }
-
-  $html = $dom->saveHTML();
-  // Search for the body tag and return its content.
-  $start = mb_strpos($html, '<body>');
-  $end = mb_strrpos($html, '</body>');
-  if ($start !== FALSE && $end !== FALSE) {
-    $start += 6;
-    $html = trim(mb_substr($html, $start, $end - $start));
-  }
-
-  $item['body']['value'] = $html;
 
   if (DRY_RUN) {
     print_r($item);
@@ -692,7 +623,15 @@ foreach ($items as &$item) {
       'filename' => basename($attachment),
     ], $attachments);
 
-    set_reliefweb_file_field($report, 'field_file', $files);
+    $file_mapping = set_reliefweb_file_field($report, 'field_file', $files);
+
+    // Rewrite body.
+    if (!empty($file_mapping)) {
+      foreach($file_mapping as $old => $new) {
+        $report->body->value = str_replace($old, $new, $report->body->value);
+      }
+    }
+
     $report->save();
   }
 

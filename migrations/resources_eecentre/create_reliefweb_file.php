@@ -19,15 +19,16 @@ use Symfony\Component\Uid\Uuid;
  * @param array $files
  *   List of file data with URL and optional description and language.
  */
-function set_reliefweb_file_field(ContentEntityInterface $entity, string $field_name, array $files): void {
+function set_reliefweb_file_field(ContentEntityInterface $entity, string $field_name, array $files): array {
   static $mimetypes;
+  $mapping = [];
 
   if (!$entity->hasField($field_name)) {
-    return;
+    return $mapping;
   }
 
   if (empty($files)) {
-    return;
+    return $mapping;
   }
 
   /** @var \Drupal\Core\Field\FieldItemListInterface $field **/
@@ -80,6 +81,7 @@ function set_reliefweb_file_field(ContentEntityInterface $entity, string $field_
       $item->get('description')->setValue($file['description'] ?? '');
       $item->get('language')->setValue($file['language'] ?? '');
 
+      $mapping[$url] = \Drupal::service('file_url_generator')->generateAbsoluteString($item->getPermanentUri());
       $values[] = $item->getValue();
     }
     catch (\Exception $exception) {
@@ -89,6 +91,8 @@ function set_reliefweb_file_field(ContentEntityInterface $entity, string $field_
 
   // Relace the field values.
   $field->setValue($values);
+
+  return $mapping;
 }
 
 /**
@@ -154,6 +158,11 @@ function create_reliefWeb_file_field_item(
   // Retrieve the upload validators to validate the created file as if
   // uploaded via the form.
   $validators = $item->getUploadValidators() ?? [];
+  foreach ($validators as $validator => &$info) {
+    if ($validator == 'FileSizeLimit') {
+      $info = '40000000';
+    }
+  }
 
   // Create the file entity with the content.
   $file = create_file($uuid, $file_uri, $file_name, $mimetype, $url, $max_size, $validators);
