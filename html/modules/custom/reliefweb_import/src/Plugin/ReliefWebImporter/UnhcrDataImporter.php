@@ -949,6 +949,10 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
           $countries = $countries + $country;
         }
       }
+      // Tag with World if empty so that, at least, we can import.
+      if (empty($countries)) {
+        $countries = [254];
+      }
 
       // Retrieve the themes.
       $themes = [];
