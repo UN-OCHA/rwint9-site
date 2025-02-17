@@ -964,7 +964,7 @@ class JobFeedsImporter implements JobFeedsImporterInterface {
 
     // Skip if the city is empty.
     if (empty($field_city)) {
-      return [];
+      return '';
     }
 
     // Ensure the field size is reasonable.
