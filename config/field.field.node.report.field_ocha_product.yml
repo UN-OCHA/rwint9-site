@@ -6,6 +6,8 @@ dependencies:
     - field.storage.node.field_ocha_product
     - node.type.report
     - taxonomy.vocabulary.ocha_product
+  content:
+    - 'taxonomy_term:ocha_product:a3ba79f0-7af9-40d0-bb1a-bf1e4d80613f'
 id: node.report.field_ocha_product
 field_name: field_ocha_product
 entity_type: node
@@ -14,7 +16,9 @@ label: 'OCHA product'
 description: ''
 required: false
 translatable: false
-default_value: {  }
+default_value:
+  -
+    target_uuid: a3ba79f0-7af9-40d0-bb1a-bf1e4d80613f
 default_value_callback: ''
 settings:
   handler: any_term
@@ -23,7 +27,7 @@ settings:
       ocha_product: ocha_product
     sort:
       field: name
-      direction: asc
-    auto_create: false
+      direction: ASC
+    auto_create: 0
     auto_create_bundle: ''
 field_type: entity_reference
