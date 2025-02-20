@@ -32,7 +32,9 @@ use Drupal\reliefweb_utility\Helpers\TextHelper;
 use GuzzleHttp\ClientInterface;
 use League\HTMLToMarkdown\HtmlConverter;
 use Opis\JsonSchema\Errors\ErrorFormatter;
+use Opis\JsonSchema\Errors\ValidationError;
 use Opis\JsonSchema\Helper;
+use Opis\JsonSchema\JsonPointer;
 use Opis\JsonSchema\Validator;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -322,10 +324,95 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     $result = $this->getSchemaValidator()->validate($data, $schema);
     if (!$result->isValid()) {
       $formatter = new ErrorFormatter();
-      $errors = $formatter->formatKeyed($result->error());
+      $errors = $formatter->formatKeyed(
+        error: $result->error(),
+        formatter: [$this, 'schemaErrorFormatter'],
+      );
       $message = json_encode($errors, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
       throw new ContentProcessorException($message);
     }
+  }
+
+  /**
+   * Custom JSON schema error formatter.
+   *
+   * This mixes the code from ErrorFormatter::formatErrorMessage() and
+   * ErrorFormatter::getDefaultArgs().
+   *
+   * @param \Opis\JsonSchema\Errors\ValidationError $error
+   *   Validation error.
+   * @param ?string $message
+   *   Error message override.
+   *
+   * @return string
+   *   The formatted error message.
+   *
+   * @see \Opis\JsonSchema\Errors\ErrorFormatter::formatErrorMessage()
+   * @see \Opis\JsonSchema\Errors\ErrorFormatter::getDefaultArgs()
+   */
+  public function schemaErrorFormatter(ValidationError $error, ?string $message = NULL): string {
+    $message ??= $error->message();
+
+    $data = $error->data();
+    $info = $error->schema()->info();
+
+    $keyword = $error->keyword();
+    if (in_array($keyword, ['not', 'allOf', 'anyOf', 'pattern'])) {
+      $info_data = $info->data();
+      $keyword_data = $info_data?->{$keyword};
+
+      // The ReliefWeb POST API specifications contain descriptions that are
+      // more useful indications of what to do than the obscure regex pattern
+      // etc. so we use them are error messages.
+      if (isset($keyword_data->description)) {
+        return $keyword_data->description;
+      }
+      elseif (isset($info_data->description)) {
+        return $info_data->description;
+      }
+    }
+
+    // Code from ErrorFormatter::getDefaultArgs().
+    $path = $info->path();
+    $path[] = $error->keyword();
+
+    $args = [
+      'data:type' => $data->type(),
+      'data:value' => $data->value(),
+      'data:path' => JsonPointer::pathToString($data->fullPath()),
+
+      'schema:id' => $info->id(),
+      'schema:root' => $info->root(),
+      'schema:base' => $info->base(),
+      'schema:draft' => $info->draft(),
+      'schema:keyword' => $error->keyword(),
+      'schema:path' => JsonPointer::pathToString($path),
+    ] + $error->args();
+
+    $args += $error->args();
+
+    // Code from ErrorFormatter::formatErrorMessage().
+    if (!$args) {
+      return $message;
+    }
+
+    return preg_replace_callback(
+      '~{([^}]+)}~imu',
+      static function (array $m) use ($args) {
+        if (!isset($args[$m[1]])) {
+          return $m[0];
+        }
+
+        $value = $args[$m[1]];
+
+        if (is_array($value)) {
+          return implode(', ', $value);
+        }
+
+        return (string) $value;
+      },
+      $message
+    );
   }
 
   /**
