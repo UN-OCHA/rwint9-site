@@ -8,6 +8,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\reliefweb_guidelines\GuidelineLoadTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -15,26 +16,14 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class GuidelineSinglePageController extends ControllerBase {
 
+  use GuidelineLoadTrait;
+
   /**
    * The default cache backend.
    *
    * @var \Drupal\Core\Cache\CacheBackendInterface
    */
-  protected $cache;
-
-  /**
-   * The current user.
-   *
-   * @var \Drupal\Core\Session\AccountProxyInterface
-   */
-  protected $currentUser;
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
+  protected CacheBackendInterface $cache;
 
   /**
    * Constructor.
@@ -84,7 +73,7 @@ class GuidelineSinglePageController extends ControllerBase {
       }),
       '#cache' => [
         'tags' => ['guideline_list'],
-        'contexts' => ['user.permissions'],
+        'contexts' => ['user.permissions', 'user.roles'],
       ],
       '#attached' => [
         'library' => ['reliefweb_guidelines/reliefweb-guidelines'],
@@ -101,8 +90,17 @@ class GuidelineSinglePageController extends ControllerBase {
    *   The list of guidelines to render.
    */
   protected function getGuidelineList() {
-    // Cache information.
-    $cache_id = 'reliefweb_guidelines:single-page';
+    $list = [];
+    $storage = $this->entityTypeManager()->getStorage('guideline');
+
+    // Retrieve the guideline lists accessible to the current user.
+    $guideline_list_ids = $this->getAccessibleGuidelineListIds($this->currentUser());
+    if (empty($guideline_list_ids)) {
+      return [];
+    }
+
+    // Generate the cache ID based on the list of guideline lists.
+    $cache_id = $this->getGuidelineListCacheId($guideline_list_ids);
 
     // Attempt to get the data from the cache.
     $cache = $this->cache->get($cache_id);
@@ -110,27 +108,32 @@ class GuidelineSinglePageController extends ControllerBase {
       return $cache->data;
     }
 
-    $list = [];
-    $storage = $this->entityTypeManager->getStorage('guideline');
+    /** @var \Drupal\reliefweb_guidelines\Entity\GuidelineList[] $guideline_lists */
+    $guideline_lists = $storage->loadMultiple($guideline_list_ids);
 
-    $ids = $storage
+    foreach ($guideline_lists as $guideline_list) {
+      $list[$guideline_list->id()]['title'] = $guideline_list->label();
+    }
+
+    // Retrieve the guidelines that are children of those guideline lists.
+    $guideline_ids = $storage
       ->getQuery()
-      ->condition('status', 1)
+      ->condition('status', 1, '=')
+      ->condition('type', 'field_guideline', '=')
+      ->condition('parent', $guideline_list_ids, 'IN')
       ->sort('type', 'DESC')
       ->sort('weight', 'ASC')
       ->accessCheck(TRUE)
       ->execute();
 
     /** @var \Drupal\guidelines\Entity\Guideline[] $guidelines */
-    $guidelines = $storage->loadMultiple($ids);
+    $guidelines = $storage->loadMultiple($guideline_ids);
 
     // Prepare the guideline children.
     foreach ($guidelines as $guideline) {
-      if ($guideline->bundle() === 'guideline_list') {
-        $list[$guideline->id()]['title'] = $guideline->label();
-      }
-      elseif (!empty($guideline->getParentIds())) {
-        $parent = $guideline->getParentIds()[0];
+      // There's supposed to be only one hierarchical level of guidelines.
+      $parent = $guideline->getParentIds()[0] ?? NULL;
+      if (isset($parent, $list[$parent])) {
         $id = $guideline->field_short_link->value;
         $description = $guideline->field_description->value ?? '';
 
@@ -160,10 +163,29 @@ class GuidelineSinglePageController extends ControllerBase {
       }
     }
 
+    // Filter out guideline lists without children.
+    $list = array_filter($list, fn($item) => isset($item['children']));
+
     // Cache the list of letters permanently. It will be rebuilt when a source
     // is modified.
     $this->cache->set($cache_id, $list, CacheBackendInterface::CACHE_PERMANENT, ['guideline_list']);
     return $list;
+  }
+
+  /**
+   * Get the cache ID for the guidelines.
+   *
+   * @param array $guideline_list_ids
+   *   IDs of the guideline lists.
+   *
+   * @return string
+   *   Cache ID.
+   */
+  protected function getGuidelineListCacheId(array $guideline_list_ids): string {
+    sort($guideline_list_ids);
+    $hash = hash('sha256', serialize($guideline_list_ids));
+
+    return 'reliefweb_guidelines:single-page:' . $hash;
   }
 
   /**

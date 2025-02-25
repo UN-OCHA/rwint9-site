@@ -47,3 +47,14 @@
   color: white;
   outline: 3px solid var(--cd-reliefweb-brand-blue);
 }
+
+.cd-user-menu.navigation:not(.menu--account) > .menu > .menu-item:not(:last-child) > a[href="/guidelines"]::after {
+  position: absolute;
+  top: 50%;
+  right: -1px;
+  width: 1.5px;
+  height: calc(35px / 3);
+  content: "";
+  transform: translateY(-50%);
+  background: var(--cd-white);
+}
