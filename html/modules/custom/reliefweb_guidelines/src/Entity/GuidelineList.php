@@ -70,6 +70,10 @@ class GuidelineList extends GuidelineBase implements EntityModeratedInterface, E
       return [
         '#theme' => 'links',
         '#links' => $links,
+        '#heading' => [
+          'text' => $this->t('Guidelines'),
+          'level' => 'h2',
+        ],
         '#cache' => [
           'tags' => ['guideline_list'],
         ],
