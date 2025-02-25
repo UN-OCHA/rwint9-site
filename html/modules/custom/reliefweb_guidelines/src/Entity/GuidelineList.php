@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_guidelines\Entity;
 
+use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\guidelines\Entity\Guideline as GuidelineBase;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
@@ -22,6 +23,22 @@ class GuidelineList extends GuidelineBase implements EntityModeratedInterface, E
    */
   public function getDefaultModerationStatus() {
     return 'published';
+  }
+
+  /**
+   * Return the label of the guideline list prefixed by its target user role.
+   *
+   * @return \Drupal\Core\Entity\EntityStorageInterface
+   *   Markup with the prefixed label.
+   */
+  public function getRoleAndLabel(): MarkupInterface {
+    if (!$this->hasField('field_role') || $this->field_role?->isEmpty()) {
+      $role = $this->t('Editor');
+    }
+    else {
+      $role = $this->field_role->entity->label();
+    }
+    return $this->t('[@role] @label', ['@role' => $role, '@label' => $this->label()]);
   }
 
   /**

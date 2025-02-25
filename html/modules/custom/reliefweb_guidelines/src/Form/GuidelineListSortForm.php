@@ -100,7 +100,7 @@ class GuidelineListSortForm extends FormBase {
 
       // Label.
       $form['order'][$id]['label'] = $entity
-        ?->toLink($entity->label(), 'edit-form')
+        ?->toLink($entity->getRoleAndLabel(), 'edit-form')
         ?->toRenderable();
 
       // Weight.

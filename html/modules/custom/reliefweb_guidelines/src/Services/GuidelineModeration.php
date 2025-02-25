@@ -86,7 +86,7 @@ class GuidelineModeration extends ModerationServiceBase {
       $info = [];
       $list = $entity->getGuidelineList();
       if (!empty($list)) {
-        $info['list'] = $list->toLink()->toString();
+        $info['list'] = $list->toLink($list->getRoleAndLabel())->toString();
       }
       $info['link'] = $entity->getLinkToGuidelines($this->t('<em>guidelines</em>'));
       $data['info'] = array_filter($info);
