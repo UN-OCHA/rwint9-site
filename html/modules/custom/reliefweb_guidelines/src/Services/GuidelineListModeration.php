@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_guidelines\Services;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Database\Query\Select;
 use Drupal\Core\Link;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
@@ -47,6 +48,12 @@ class GuidelineListModeration extends ModerationServiceBase {
         'label' => $this->t('Guideline List'),
         'type' => 'property',
         'specifier' => 'name',
+        'sortable' => TRUE,
+      ],
+      'role' => [
+        'label' => $this->t('Role'),
+        'type' => 'field',
+        'specifier' => 'field_role',
         'sortable' => TRUE,
       ],
       'date' => [
@@ -102,6 +109,9 @@ class GuidelineListModeration extends ModerationServiceBase {
 
       // Filter out empty data.
       $cells['data'] = array_filter($data);
+
+      // User role.
+      $cells['role'] = $entity->field_role?->entity?->label() ?? 'Editor';
 
       // Date cell.
       $cells['date'] = [
@@ -188,6 +198,18 @@ class GuidelineListModeration extends ModerationServiceBase {
       'name',
       'created',
     ]);
+
+    $definitions['role'] = [
+      'type' => 'other',
+      'label' => $this->t('Role'),
+      'field' => 'field_role',
+      'form' => 'role',
+      // No specific widget as the join is enough.
+      'widget' => 'none',
+      'join_callback' => 'joinRole',
+      'values' => user_role_names(TRUE),
+    ];
+
     $definitions['changed'] = [
       'type' => 'property',
       'field' => 'changed',
@@ -197,6 +219,22 @@ class GuidelineListModeration extends ModerationServiceBase {
       'widget' => 'datepicker',
     ];
     return $definitions;
+  }
+
+  /**
+   * Users roles join callback.
+   *
+   * @see ::joinField()
+   */
+  protected function joinRole(Select $query, array $definition, $entity_type_id, $entity_base_table, $entity_id_field, $or = FALSE, $values = []) {
+    // Join the users_roles table.
+    $table = 'guideline__field_role';
+    $query->innerJoin($table, $table, "%alias.entity_id = {$entity_base_table}.{$entity_id_field} AND %alias.field_role_target_id IN (:roles[])", [
+      ':roles[]' => $values,
+    ]);
+
+    // No field to return as the inner join is enough.
+    return '';
   }
 
   /**
