@@ -1,0 +1,23 @@
+uuid: 59be6684-bb69-43bd-8b87-a4a4b047c7cd
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.guideline.field_role
+    - guidelines.guideline_type.guideline_list
+id: guideline.guideline_list.field_role
+field_name: field_role
+entity_type: guideline
+bundle: guideline_list
+label: Role
+description: 'Select which user roles allow access to this guideline list.'
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:user_role'
+  handler_settings:
+    target_bundles: null
+    auto_create: false
+field_type: entity_reference
