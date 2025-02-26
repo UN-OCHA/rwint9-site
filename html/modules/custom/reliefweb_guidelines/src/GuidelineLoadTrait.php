@@ -61,7 +61,7 @@ trait GuidelineLoadTrait {
    *   TRUE if administrator.
    */
   public function isUserAdmin(AccountInterface $user): bool {
-    return $user->id() == 1 || in_array('adminitrator', $user->getRoles());
+    return $user->id() == 1 || in_array('administrator', $user->getRoles());
   }
 
 }
