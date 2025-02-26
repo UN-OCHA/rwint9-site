@@ -207,7 +207,7 @@ class GuidelineListModeration extends ModerationServiceBase {
       // No specific widget as the join is enough.
       'widget' => 'none',
       'join_callback' => 'joinRole',
-      'values' => user_role_names(TRUE),
+      'values' => reliefweb_guidelines_get_user_roles(),
     ];
 
     $definitions['changed'] = [
@@ -227,7 +227,7 @@ class GuidelineListModeration extends ModerationServiceBase {
    * @see ::joinField()
    */
   protected function joinRole(Select $query, array $definition, $entity_type_id, $entity_base_table, $entity_id_field, $or = FALSE, $values = []) {
-    // Join the users_roles table.
+    // Join the role field table.
     $table = 'guideline__field_role';
     $query->innerJoin($table, $table, "%alias.entity_id = {$entity_base_table}.{$entity_id_field} AND %alias.field_role_target_id IN (:roles[])", [
       ':roles[]' => $values,

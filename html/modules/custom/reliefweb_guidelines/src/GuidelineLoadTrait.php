@@ -28,7 +28,6 @@ trait GuidelineLoadTrait {
       ->getQuery()
       ->condition('status', 1, '=')
       ->condition('type', 'guideline_list', '=')
-      ->sort('type', 'DESC')
       ->sort('weight', 'ASC')
       ->accessCheck(TRUE);
 
@@ -36,7 +35,7 @@ trait GuidelineLoadTrait {
     $user_roles = $user->getRoles();
 
     // Skip the role filtering for admins.
-    if ($user->id() != 1 && !in_array('adminitrator', $user_roles)) {
+    if (!$this->isUserAdmin($user)) {
       $role_conditions = $guideline_list_query->orConditionGroup();
       $role_conditions->condition('field_role', $user_roles, 'IN');
       // Consider guideline lists without a role, guidelines for editors.
@@ -50,6 +49,19 @@ trait GuidelineLoadTrait {
     $guideline_list_ids = $guideline_list_query->execute();
 
     return $guideline_list_ids;
+  }
+
+  /**
+   * Check if a user is an administrator.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $user
+   *   User.
+   *
+   * @return bool
+   *   TRUE if administrator.
+   */
+  public function isUserAdmin(AccountInterface $user): bool {
+    return $user->id() == 1 || in_array('adminitrator', $user_roles);
   }
 
 }

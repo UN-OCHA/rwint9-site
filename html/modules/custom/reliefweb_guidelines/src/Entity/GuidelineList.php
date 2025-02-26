@@ -26,19 +26,16 @@ class GuidelineList extends GuidelineBase implements EntityModeratedInterface, E
   }
 
   /**
-   * Return the label of the guideline list prefixed by its target user role.
-   *
-   * @return \Drupal\Core\Entity\EntityStorageInterface
-   *   Markup with the prefixed label.
+   * {@inheritdoc}
    */
-  public function getRoleAndLabel(): MarkupInterface {
+  public function label(): string|MarkupInterface|null {
     if (!$this->hasField('field_role') || $this->field_role?->isEmpty()) {
       $role = $this->t('Editor');
     }
     else {
       $role = $this->field_role->entity->label();
     }
-    return $this->t('[@role] @label', ['@role' => $role, '@label' => $this->label()]);
+    return $this->t('[@role] @label', ['@role' => $role, '@label' => parent::label()]);
   }
 
   /**

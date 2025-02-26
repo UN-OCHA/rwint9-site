@@ -230,3 +230,20 @@ function reliefweb_guidelines_file_access(EntityInterface $entity, $operation, A
   }
   return AccessResult::neutral();
 }
+
+/**
+ * Get a sanitized list of roles suitable for the guidelines.
+ *
+ * @return array
+ *   Associative array of role ids to role names.
+ */
+function reliefweb_guidelines_get_user_roles(): array {
+  $roles = user_role_names(TRUE);
+
+  $allowed_roles = \Drupal::state()->get('reliefweb_guidelines_allowed_roles', [
+    'editor' => 'editor',
+    'contributor' => 'contributor',
+  ]);
+
+  return array_intersect_key($roles, $allowed_roles);
+}

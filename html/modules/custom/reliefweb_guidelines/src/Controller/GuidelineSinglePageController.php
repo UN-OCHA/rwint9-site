@@ -109,10 +109,17 @@ class GuidelineSinglePageController extends ControllerBase {
     }
 
     /** @var \Drupal\reliefweb_guidelines\Entity\GuidelineList[] $guideline_lists */
-    $guideline_lists = $storage->loadMultiple($guideline_list_ids);
+    $guideline_lists = $this->loadOrderedGuidelines($guideline_list_ids);
+
+    $is_admin = $this->isUserAdmin($this->currentUser());
 
     foreach ($guideline_lists as $guideline_list) {
-      $list[$guideline_list->id()]['title'] = $guideline_list->label();
+      // Admins can see all the guidelines so we use the prefixed label to
+      // differentiate the guideline lists. For other users, they normally only
+      // see one type of guideline (ex: guidelines for editors), in which case
+      // we use ::getName() to show the non prefixed label for better
+      // readability.
+      $list[$guideline_list->id()]['title'] = $is_admin ? $guideline_list->label() : $guideline_list->getName();
     }
 
     // Retrieve the guidelines that are children of those guideline lists.
@@ -121,13 +128,12 @@ class GuidelineSinglePageController extends ControllerBase {
       ->condition('status', 1, '=')
       ->condition('type', 'field_guideline', '=')
       ->condition('parent', $guideline_list_ids, 'IN')
-      ->sort('type', 'DESC')
       ->sort('weight', 'ASC')
       ->accessCheck(TRUE)
       ->execute();
 
     /** @var \Drupal\guidelines\Entity\Guideline[] $guidelines */
-    $guidelines = $storage->loadMultiple($guideline_ids);
+    $guidelines = $this->loadOrderedGuidelines($guideline_ids);
 
     // Prepare the guideline children.
     foreach ($guidelines as $guideline) {
@@ -170,6 +176,22 @@ class GuidelineSinglePageController extends ControllerBase {
     // is modified.
     $this->cache->set($cache_id, $list, CacheBackendInterface::CACHE_PERMANENT, ['guideline_list']);
     return $list;
+  }
+
+  /**
+   * Load guidelines and return them in the same order of their IDs.
+   *
+   * @param array $ids
+   *   Guideline entity IDs.
+   *
+   * @return array
+   *   Asscociative array of loaded entities keyed by their IDs.
+   */
+  protected function loadOrderedGuidelines(array $ids): array {
+    $entities = $this->entityTypeManager()->getStorage('guideline')->loadMultiple($ids);
+    $ordered_entities = array_intersect_key(array_flip($ids), $entities);
+    $ordered_entities = array_replace($ordered_entities, $entities);
+    return $ordered_entities;
   }
 
   /**
