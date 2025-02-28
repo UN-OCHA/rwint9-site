@@ -5,8 +5,8 @@
  * Retagging script for RW-1179.
  */
 
-$proceed = FALSE;
-$save = FALSE;
+$proceed = TRUE;
+$save = TRUE;
 
 $nids = \Drupal::database()->query("
   SELECT DISTINCT g.id
@@ -22,7 +22,7 @@ $nids = \Drupal::database()->query("
 
 $total = count($nids);
 
-echo "Found " . $total . " guidelines to update" . PHP_EOL;
+echo "Found " . $total . " guideline lists to update" . PHP_EOL;
 
 if (!empty($proceed)) {
   $storage = \Drupal::entityTypeManager()->getStorage("guideline");
@@ -32,7 +32,7 @@ if (!empty($proceed)) {
 
   foreach (array_chunk($nids, $chunk_size) as $chunk) {
     foreach ($storage->loadMultiple($chunk) as $entity) {
-      $entity->field_role->target_id = 'editor';
+      $entity->field_role->target_id = "editor";
       $entity->setRevisionLogMessage("Automatic addition of editor role (Ref: RW-1179).");
       $entity->setRevisionUserId(2);
       $entity->setRevisionCreationTime($now);
