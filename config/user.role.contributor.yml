@@ -10,12 +10,14 @@ dependencies:
     - node
     - reliefweb_files
     - reliefweb_form
+    - reliefweb_guidelines
     - reliefweb_revisions
 id: contributor
 label: Contributor
 weight: 9
 is_admin: null
 permissions:
+  - 'access editorial guidelines'
   - 'access reliefweb private files'
   - 'create image_report media'
   - 'create report content'

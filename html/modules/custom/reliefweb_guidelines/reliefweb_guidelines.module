@@ -5,9 +5,12 @@
  * Contains integration for guidelines.
  */
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
 use Drupal\reliefweb_guidelines\Controller\GuidelineSinglePageController;
@@ -45,9 +48,9 @@ function reliefweb_guidelines_theme() {
  * Add bundle classes to guideline entities to handle business logic.
  */
 function reliefweb_guidelines_entity_bundle_info_alter(&$bundles) {
-  $bundles['guideline']['field_guideline']['class'] = '\Drupal\reliefweb_guidelines\Entity\Guideline';
+  $bundles['guideline']['field_guideline']['class'] = 'Drupal\reliefweb_guidelines\Entity\Guideline';
   $bundles['guideline']['field_guideline']['label'] = 'Guideline';
-  $bundles['guideline']['guideline_list']['class'] = '\Drupal\reliefweb_guidelines\Entity\GuidelineList';
+  $bundles['guideline']['guideline_list']['class'] = 'Drupal\reliefweb_guidelines\Entity\GuidelineList';
   $bundles['guideline']['guideline_list']['label'] = 'Guideline List';
 }
 
@@ -187,4 +190,60 @@ function reliefweb_guidelines_menu_local_tasks_alter(&$data, $route_name, Refina
       $data['tabs'][0] = array_diff_key($data['tabs'][0], $tasks);
     }
   }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_access() for 'file'.
+ */
+function reliefweb_guidelines_file_access(EntityInterface $entity, $operation, AccountInterface $account) {
+  $uri = $entity->getFileUri();
+  if (strpos($uri, 'private://images/guidelines/') === 0) {
+    if ($account->isAnonymous()) {
+      return AccessResult::forbidden();
+    }
+
+    $database = \Drupal::database();
+    $user_roles = $account->getRoles();
+
+    // Administrators always have access.
+    if ($account->id() == 1 || in_array('adminitrator', $user_roles)) {
+      return AccessResult::allowed();
+    }
+
+    $query = $database->select('file_managed', 'fm');
+    $query->fields('fm', ['fid']);
+    $query->condition('fm.uri', $uri);
+
+    // Find the field_guideline entity the image is attached to.
+    $query->join('guideline__field_images', 'gfi', 'gfi.field_images_target_id = fm.fid');
+
+    // Find the guideline_list entity the field_guideline entity is attached to.
+    $query->join('guideline__parent', 'ggp', 'ggp.entity_id = gfi.entity_id');
+
+    // Check if the current user has access to the guideline_list entity.
+    $query->join('guideline__field_role', 'gfr', 'gfr.entity_id = ggp.parent_target_id');
+    $query->condition('gfr.field_role_target_id', $user_roles, 'IN');
+
+    $result = $query->countQuery()->execute()?->fetchField() ?? 0;
+
+    return $result > 0 ? AccessResult::allowed() : AccessResult::forbidden();
+  }
+  return AccessResult::neutral();
+}
+
+/**
+ * Get a sanitized list of roles suitable for the guidelines.
+ *
+ * @return array
+ *   Associative array of role ids to role names.
+ */
+function reliefweb_guidelines_get_user_roles(): array {
+  $roles = user_role_names(TRUE);
+
+  $allowed_roles = \Drupal::state()->get('reliefweb_guidelines_allowed_roles', [
+    'editor' => 'editor',
+    'contributor' => 'contributor',
+  ]);
+
+  return array_intersect_key($roles, $allowed_roles);
 }
