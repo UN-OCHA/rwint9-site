@@ -3,12 +3,21 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.guideline.guideline_list.field_role
     - guidelines.guideline_type.guideline_list
 id: guideline.guideline_list.default
 targetEntityType: guideline
 bundle: guideline_list
 mode: default
 content:
+  field_role:
+    type: entity_reference_label
+    label: inline
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 1
+    region: content
   name:
     type: string
     label: hidden
