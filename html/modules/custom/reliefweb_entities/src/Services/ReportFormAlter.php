@@ -474,6 +474,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     $form['field_origin']['widget']['#type'] = 'hidden';
 
     // Hide fields.
+    $form['field_embargo_date']['#access'] = FALSE;
     $form['field_bury']['#access'] = FALSE;
     $form['field_feature']['#access'] = FALSE;
 
