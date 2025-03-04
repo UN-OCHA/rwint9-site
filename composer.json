@@ -25,7 +25,7 @@
         "cweagans/composer-patches": "^1.7",
         "drupal/admin_denied": "^2.0",
         "drupal/allowed_formats": "^3",
-        "drupal/amazon_ses": "^3",
+        "drupal/amazon_ses": "^3.1",
         "drupal/aws": "dev-2.0.x",
         "drupal/components": "^3.0@beta",
         "drupal/config_split": "^2.0.0@rc",
