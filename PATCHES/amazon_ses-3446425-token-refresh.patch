@@ -1,0 +1,87 @@
+diff --git a/amazon_ses.info.yml b/amazon_ses.info.yml
+index 35de049b6899e392447557a100353d3597b0b13d..7a85c091686d40c8b53989f8b670b861e1028918 100644
+--- a/amazon_ses.info.yml
++++ b/amazon_ses.info.yml
+@@ -2,7 +2,7 @@ name: 'Amazon SES'
+ description: 'Allows site email to be sent using Amazon SES.'
+ type: module
+ package: Mail
+-core_version_requirement: ^9.1 || ^10 || ^11
++core_version_requirement: ^10 || ^11
+ 
+ dependencies:
+   - aws:aws
+diff --git a/src/AmazonSesHandler.php b/src/AmazonSesHandler.php
+index b453e7172f156c6e2f8c0a7f0d9d8977fc8d1f93..2e9096933efd591c5aff957f8bd7043ecaa9d2e9 100644
+--- a/src/AmazonSesHandler.php
++++ b/src/AmazonSesHandler.php
+@@ -34,6 +34,13 @@ class AmazonSesHandler implements AmazonSesHandlerInterface {
+    */
+   protected $quota = [];
+ 
++  /**
++   * The number of attempts to refresh expired credentials.
++   *
++   * @var int
++   */
++  protected $retry = 2;
++
+   public function __construct(
+     protected AwsClientFactoryInterface $awsClientFactory,
+     protected LoggerChannelInterface $logger,
+@@ -62,6 +69,11 @@ class AmazonSesHandler implements AmazonSesHandlerInterface {
+    * {@inheritdoc}
+    */
+   public function send(Email $email) {
++    // Avoid an infinite loop on expired (temporary) credentials.
++    if ($this->retry <= 0) {
++      return FALSE;
++    }
++
+     try {
+       $result = $this->client->sendEmail([
+         'Content' => [
+@@ -90,6 +102,12 @@ class AmazonSesHandler implements AmazonSesHandlerInterface {
+       return FALSE;
+     }
+     catch (SesV2Exception $e) {
++      // If the credential has expired, request a new one and try again.
++      if ($e->getAwsErrorCode() == 'ExpiredTokenException') {
++        $this->retry--;
++        $this->refreshClient();
++        return $this->send($email);
++      }
+       $this->logger->error($e->getAwsErrorMessage());
+       return FALSE;
+     }
+@@ -208,4 +226,16 @@ class AmazonSesHandler implements AmazonSesHandlerInterface {
+     return $array;
+   }
+ 
++  /**
++   * Get a new SesClient.
++   *
++   * This helps us if a mail run takes over an hour, in which case the
++   * authentication token expires. This should generate us a new one
++   * so we can continue.
++   */
++  protected function refreshClient() {
++    $this->client = $this->awsClientFactory->getClient('sesv2');
++    $this->logger->info('Refreshing the SesV2 client after the session token expired');
++  }
++
+ }
+diff --git a/tests/src/Unit/HandlerTest.php b/tests/src/Unit/HandlerTest.php
+index f74b1309ffe8a205c1447a2c4b74f46977be8afc..0063efb71a89b1378b67a342627aa2246b514594 100644
+--- a/tests/src/Unit/HandlerTest.php
++++ b/tests/src/Unit/HandlerTest.php
+@@ -49,6 +49,9 @@ class HandlerTest extends UnitTestCase {
+    */
+   public function testFailedSend($message) {
+     $exception = $this->prophesize(SesV2Exception::class);
++    $exception
++      ->getAwsErrorCode()
++      ->willReturn(NULL);
+     $exception
+       ->getAwsErrorMessage()
+       ->willReturn('Error message');
