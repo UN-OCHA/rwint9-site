@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_guidelines\Services;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Database\Query\Select;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\reliefweb_guidelines\Plugin\Field\FieldWidget\GuidelineFieldTargetSelectWidget;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
@@ -48,6 +49,12 @@ class GuidelineModeration extends ModerationServiceBase {
         'specifier' => 'name',
         'sortable' => TRUE,
       ],
+      'role' => [
+        'label' => $this->t('Role'),
+        'type' => 'field',
+        'specifier' => 'field_role',
+        'sortable' => FALSE,
+      ],
       'date' => [
         'label' => $this->t('Updated'),
         'type' => 'property',
@@ -86,7 +93,7 @@ class GuidelineModeration extends ModerationServiceBase {
       $info = [];
       $list = $entity->getGuidelineList();
       if (!empty($list)) {
-        $info['list'] = $list->toLink()->toString();
+        $info['list'] = $list->toLink($list->label())->toString();
       }
       $info['link'] = $entity->getLinkToGuidelines($this->t('<em>guidelines</em>'));
       $data['info'] = array_filter($info);
@@ -113,6 +120,9 @@ class GuidelineModeration extends ModerationServiceBase {
 
       // Filter out empty data.
       $cells['data'] = array_filter($data);
+
+      // User role.
+      $cells['role'] = $list?->field_role?->entity?->label() ?? 'Editor';
 
       // Date cell.
       $cells['date'] = [
@@ -272,7 +282,37 @@ class GuidelineModeration extends ModerationServiceBase {
       'operator' => 'OR',
       'allow_no_value' => TRUE,
     ];
+    $definitions['role'] = [
+      'type' => 'other',
+      'label' => $this->t('Role'),
+      'field' => 'field_role',
+      'form' => 'role',
+      // No specific widget as the join is enough.
+      'widget' => 'none',
+      'join_callback' => 'joinRole',
+      'values' => reliefweb_guidelines_get_user_roles(),
+    ];
     return $definitions;
+  }
+
+  /**
+   * Users roles join callback.
+   *
+   * @see ::joinField()
+   */
+  protected function joinRole(Select $query, array $definition, $entity_type_id, $entity_base_table, $entity_id_field, $or = FALSE, $values = []) {
+    // Join the parent table.
+    $parent_table = 'guideline__parent';
+    $query->innerJoin($parent_table, $parent_table, "%alias.entity_id = {$entity_base_table}.{$entity_id_field}");
+
+    // Join the role field table.
+    $role_table = 'guideline__field_role';
+    $query->innerJoin($role_table, $role_table, "%alias.entity_id = {$parent_table}.parent_target_id AND %alias.field_role_target_id IN (:roles[])", [
+      ':roles[]' => $values,
+    ]);
+
+    // No field to return as the inner join is enough.
+    return '';
   }
 
   /**

@@ -1,0 +1,23 @@
+uuid: 9e4f7f13-f094-44af-9621-56340de4577d
+langcode: en
+status: true
+dependencies:
+  config:
+    - filter.format.markdown
+    - media.type.image_topic
+    - node.type.topic
+  module:
+    - filter
+    - media
+    - node
+id: topic_editor
+label: 'Topic editor'
+weight: 11
+is_admin: null
+permissions:
+  - 'create image_topic media'
+  - 'create topic content'
+  - 'delete any image_topic media'
+  - 'edit any image_topic media'
+  - 'edit any topic content'
+  - 'use text format markdown'
