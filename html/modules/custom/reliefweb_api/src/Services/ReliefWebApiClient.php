@@ -75,7 +75,7 @@ class ReliefWebApiClient {
    *
    * @var array
    */
-  protected static $cacheTags = [
+  protected array $cacheTags = [
     'blog' => ['node_list:blog_post'],
     'reports' => ['node_list:report'],
     'jobs' => ['node_list:job'],
@@ -322,7 +322,7 @@ class ReliefWebApiClient {
 
       // Cache the data unless cache is disabled or there was an issue with the
       // request in which case $data is NULL.
-      if (isset($cache, $cache_ids[$index], $queries[$index]['resource'])) {
+      if (isset($cache_ids, $cache_ids[$index], $queries[$index]['resource'])) {
         $tags = $this->getCacheTags($queries[$index]['resource']);
         $this->cacheBackend->set($cache_ids[$index], $data, $this->getCacheExpiration(), $tags);
       }
