@@ -1,0 +1,14 @@
+uuid: 4f0355db-bb6f-4b9c-a206-907ce07510b1
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.topic_editor
+  module:
+    - user
+id: user_add_role_action.topic_editor
+label: 'Add the Topic editor role to the selected user(s)'
+type: user
+plugin: user_add_role_action
+configuration:
+  rid: topic_editor

@@ -41,6 +41,7 @@
 <fieldset id="description">
   <legend>{% trans %}Description{% endtrans %}</legend>
   {{ form.name }}
+  {{ form.field_role }}
 </fieldset>
 
 <fieldset id="actions">
@@ -53,6 +54,7 @@
 {{
   form|without([
     'name',
+    'field_role',
     'revision_information',
     'actions',
   ])

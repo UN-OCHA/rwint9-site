@@ -1,0 +1,14 @@
+uuid: 7bb10b57-3148-4053-831f-b69d2fdfff32
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.topic_editor
+  module:
+    - user
+id: user_remove_role_action.topic_editor
+label: 'Remove the Topic editor role from the selected user(s)'
+type: user
+plugin: user_remove_role_action
+configuration:
+  rid: topic_editor
