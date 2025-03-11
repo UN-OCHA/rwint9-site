@@ -80,8 +80,8 @@
         "symfony/uid": "^6.2",
         "unocha/common_design": "^9.4",
         "unocha/gtm_barebones": "^1.1",
-        "unocha/ocha_ai": "^1.7",
-        "unocha/ocha_content_classification": "^1.0",
+        "unocha/ocha_ai": "dev-RW-1172",
+        "unocha/ocha_content_classification": "dev-RW-1172",
         "unocha/ocha_entraid": "^1.0",
         "unocha/ocha_monitoring": "^1.0",
         "webflo/drupal-finder": "^1.2.2"

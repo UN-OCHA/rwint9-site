@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7154ca0a3d4e75a473be768d490a542c",
+    "content-hash": "dadc75e9a7438f2a8ed8f9813f7d2522",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -4143,7 +4143,7 @@
                 "shasum": "fc8ea60619b6b4682bade340e13fb4565d3a7e0c"
             },
             "require": {
-                "drupal/core": "^9.1 || ^10"
+                "drupal/core": "^10"
             },
             "type": "drupal-module",
             "extra": {
@@ -4346,7 +4346,7 @@
                 "shasum": "c25246747dac4372c7d5a5a5fd0f276d9e468eff"
             },
             "require": {
-                "drupal/core": "^9.3 || ^10",
+                "drupal/core": "^10",
                 "drupal/mailsystem": "^4"
             },
             "require-dev": {
@@ -5202,7 +5202,7 @@
                 "shasum": "4623b9d0de4c624857df10daaa8c68793942ad87"
             },
             "require": {
-                "drupal/core": "^10.3 || ^11",
+                "drupal/core": "^10",
                 "enshrined/svg-sanitize": ">=0.15 <1.0"
             },
             "type": "drupal-module",
@@ -5362,7 +5362,7 @@
                 "shasum": "4aa9b119c9c992fd9930fa50f97cd89959c3bafb"
             },
             "require": {
-                "drupal/core": "^8.9 || ^9 || ^10 || ^11"
+                "drupal/core": "^10"
             },
             "type": "drupal-module",
             "extra": {
@@ -17518,16 +17518,16 @@
         },
         {
             "name": "unocha/ocha_ai",
-            "version": "v1.10.0",
+            "version": "dev-RW-1172",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_ai.git",
-                "reference": "5d47ee65536e6c3a6628e44e451d7eb744c128d4"
+                "reference": "c0ad99c582c3ece2c79c758e8fd756113f0c39d7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/5d47ee65536e6c3a6628e44e451d7eb744c128d4",
-                "reference": "5d47ee65536e6c3a6628e44e451d7eb744c128d4",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/c0ad99c582c3ece2c79c758e8fd756113f0c39d7",
+                "reference": "c0ad99c582c3ece2c79c758e8fd756113f0c39d7",
                 "shasum": ""
             },
             "require": {
@@ -17559,28 +17559,28 @@
             "description": "OCHA AI module",
             "support": {
                 "issues": "https://github.com/UN-OCHA/ocha_ai/issues",
-                "source": "https://github.com/UN-OCHA/ocha_ai/tree/v1.10.0"
+                "source": "https://github.com/UN-OCHA/ocha_ai/tree/RW-1172"
             },
-            "time": "2025-02-12T22:09:27+00:00"
+            "time": "2025-03-11T02:20:16+00:00"
         },
         {
             "name": "unocha/ocha_content_classification",
-            "version": "v1.0.1",
+            "version": "dev-RW-1172",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_content_classification.git",
-                "reference": "f5238292c74ebc29992de49e0ce7112ae02ed41b"
+                "reference": "b9b77d78f9d818ce337fd8f054ba716f10419601"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_content_classification/zipball/f5238292c74ebc29992de49e0ce7112ae02ed41b",
-                "reference": "f5238292c74ebc29992de49e0ce7112ae02ed41b",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_content_classification/zipball/b9b77d78f9d818ce337fd8f054ba716f10419601",
+                "reference": "b9b77d78f9d818ce337fd8f054ba716f10419601",
                 "shasum": ""
             },
             "require": {
                 "drupal/core": "^10",
                 "php": ">=8.3",
-                "unocha/ocha_ai": "^1.7"
+                "unocha/ocha_ai": "dev-RW-1172"
             },
             "require-dev": {
                 "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
@@ -17600,9 +17600,9 @@
             "description": "OCHA Content Classification module",
             "support": {
                 "issues": "https://github.com/UN-OCHA/ocha_content_classification/issues",
-                "source": "https://github.com/UN-OCHA/ocha_content_classification/tree/v1.0.1"
+                "source": "https://github.com/UN-OCHA/ocha_content_classification/tree/RW-1172"
             },
-            "time": "2024-11-15T07:26:19+00:00"
+            "time": "2025-03-11T02:33:39+00:00"
         },
         {
             "name": "unocha/ocha_entraid",
@@ -18593,7 +18593,9 @@
         "drupal/imageapi_optimize_binaries": 10,
         "drupal/inline_entity_form": 5,
         "drupal/mimemail": 15,
-        "drupal/openid_connect_windows_aad": 10
+        "drupal/openid_connect_windows_aad": 10,
+        "unocha/ocha_ai": 20,
+        "unocha/ocha_content_classification": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
