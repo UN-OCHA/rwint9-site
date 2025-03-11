@@ -44,14 +44,16 @@ bundle: report
 mode: default
 content:
   body:
-    type: reliefweb_formatted_text
+    type: reliefweb_formatted_text_with_summary
     weight: 2
     region: content
     settings:
-      max_heading_level: 2
-      strip_embedded_content: true
-      rows: 20
+      rows: '20'
       placeholder: ''
+      max_heading_level: '2'
+      strip_embedded_content: '1'
+      summary_rows: '5'
+      show_summary: 0
     third_party_settings:
       allowed_formats:
         hide_help: '0'
