@@ -14,33 +14,19 @@ fields:
       enabled: true
     body:
       enabled: true
-    field_how_to_apply:
-      enabled: false
   classifiable:
     field_career_categories:
       enabled: true
       min: 1
       max: 1
-    field_country:
-      enabled: false
-      min: 0
-      max: -1
-    field_job_experience:
-      enabled: false
-      min: 1
-      max: 1
-    field_job_type:
-      enabled: false
-      min: 1
-      max: 1
-    field_source:
-      enabled: false
-      min: 0
-      max: -1
+      hide: true
+      force: false
     field_theme:
       enabled: true
       min: 0
       max: 3
+      hide: true
+      force: false
 classifier:
   id: inference
   settings:
@@ -48,14 +34,17 @@ classifier:
       fields:
         title:
           placeholder: job_title
-          processor: trimmed
+          processor: strip_and_trim
+          file: false
         body:
           placeholder: job_description
-          processor: trimmed
+          processor: strip_and_trim
+          file: false
     classifiable:
       fields:
         field_career_categories:
           placeholder: career_category
+          property: custom
           terms:
             6863: 'Human Resources Management and Capacity Building'
             6864: 'Administration, Financial Management, and Auditing'
@@ -68,6 +57,7 @@ classifier:
             36601: 'Logistics, Procurement, Supply Chain, Asset Maintenance, and Operational Security'
         field_theme:
           placeholder: focus_areas
+          property: custom
           terms:
             4587: 'Agriculture: Fisheries, animal husbandry, food security, agricultural training.'
             4588: 'Climate Change and Environment: Climate-induced humanitarian impacts, vulnerability, displacement.'
@@ -89,9 +79,12 @@ classifier:
             4604: 'Water Sanitation Hygiene: Emergency water provision, sanitation, hygiene promotion.'
             12033: 'Mine Action: Landmine/UXO clearance, education, victim assistance.'
             49458: 'Camp Coordination/Management: Displaced persons services, life quality, post-displacement preparation.'
+    fillable:
+      fields: {  }
     inference:
       plugin_id: aws_bedrock_nova_micro_v1
       temperature: 0.0
       top_p: 0.2
       max_tokens: 512
+      system_prompt: ''
       prompt: "You are tasked with analyzing humanitarian job offers and classifying them according to specific career categories and focus areas. Your analysis will be conducted in three steps and should be presented in a clear XML format.\r\n\r\nPlease analyze the following job offer:\r\n\r\n<job>\r\nTitle: {job_title}\r\nDescription:\r\n{job_description}\r\n</job>\r\n\r\nBefore you begin, understand these key distinctions:\r\n\r\nCareer Categories in Humanitarian Work represent functional roles and professional specializations within the humanitarian sector. These categories describe the types of jobs and skill sets needed to perform humanitarian work, regardless of the specific intervention area.\r\n\r\nHumanitarian Focus Areas describe the thematic sectors or domains in which humanitarian interventions take place. These areas represent the specific fields of action or issues addressed by humanitarian work, distinct from the job functions themselves.\r\n\r\nFor your analysis, follow these steps:\r\n\r\n1. Provide a concise summary capturing the essence and important context of the job offer.\r\n2. Select the best matching category (only one) from the Career Categories list. Use the corresponding item number (e.g., A1, A2).\r\n3. Select the minimum number of Humanitarian Focus Areas (maximum 3) that are central and explicitly stated. Do not include indirectly related or implied focus areas. Opt for an empty selection rather than vague relevance. If unsure, prioritize focus areas most strongly tied to the job's main objectives.\r\n\r\nCareer Categories:\r\n{career_category}\r\n\r\nHumanitarian Focus Areas:\r\n{focus_areas}\r\n\r\nPresent your analysis STRICTLY in this XML format:\r\n\r\n<job_analysis>\r\n  <summary>Concise summary of the job offer</summary>\r\n  <career_category>Single item number (A1-A9)</career_category>\r\n  <focus_areas>Comma-separated list of item numbers (B1-B20), 0-3 items</focus_areas>\r\n</job_analysis>\r\n\r\nExample output:\r\n\r\n<job_analysis>\r\n  <summary>Managing water and sanitation projects in refugee camps.</summary>\r\n  <career_category>A5</career_category>\r\n  <focus_areas>B18</focus_areas>\r\n</job_analysis>\r\n\r\nIMPORTANT:\r\n1. Use ONLY the XML structure above.\r\n2. Ensure valid XML with proper opening and closing tags.\r\n3. If no focus areas apply, use: <focus_areas></focus_areas>\r\n4. Do not include ANY text or explanations outside of the XML tags.\r\n5. Your entire response must be valid XML."
