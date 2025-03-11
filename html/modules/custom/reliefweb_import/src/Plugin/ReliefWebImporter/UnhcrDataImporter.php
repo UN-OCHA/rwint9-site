@@ -901,8 +901,9 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
       // Retrieve the title and clean it.
       $title = $this->sanitizeText($document['title'] ?? '');
 
-      // Retrieve the description.
-      $body = $this->sanitizeText($document['description'] ?? '', TRUE);
+      // The documents in the UNHCR API seldom have descriptions or good ones
+      // so we simply skip the body.
+      $body = '';
 
       // Retrieve the publication date.
       $published = $document['publishDate'] ?? $document['created'] ?? NULL;
