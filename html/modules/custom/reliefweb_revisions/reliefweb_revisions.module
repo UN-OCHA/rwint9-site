@@ -133,6 +133,17 @@ function reliefweb_revisions_theme() {
         'text' => '',
       ],
     ],
+    'reliefweb_revisions_diff_text_with_summary' => [
+      'variables' => [
+        // Wrapper attributes.
+        'attributes' => NULL,
+        // Inline differences of the current and previous versions of the text.
+        'text' => '',
+        // Inline differences of the current and previous versions of the
+        // summary.
+        'summary' => '',
+      ],
+    ],
   ];
   return $themes;
 }
