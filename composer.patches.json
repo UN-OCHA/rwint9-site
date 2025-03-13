@@ -1,7 +1,8 @@
 {
     "patches": {
         "drupal/amazon_ses": {
-            "Client credentials expired for long running tasks": "PATCHES/amazon_ses-3446425-token-refresh.patch"
+            "Client credentials expired for long running tasks": "PATCHES/amazon_ses-3446425-token-refresh.patch",
+            "PHP warning in test form": "PATCHES/amazon_ses-3508814-test-form-fix.patch"
         },
         "drupal/core" : {
             "https://www.drupal.org/project/drupal/issues/3008292": "PATCHES/core--drupal--3008292-image-upload-validators.patch",
