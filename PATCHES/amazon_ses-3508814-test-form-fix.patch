@@ -1,0 +1,21 @@
+diff --git a/src/Form/AmazonSesTestForm.php b/src/Form/AmazonSesTestForm.php
+index a666abc6d461aa51162da42fb0bacfaa847ebc49..f8dcf8dd8b048b10051765af2849993d1946d00a 100644
+--- a/src/Form/AmazonSesTestForm.php
++++ b/src/Form/AmazonSesTestForm.php
+@@ -76,12 +76,14 @@ class AmazonSesTestForm extends AmazonSesFormBase {
+    * {@inheritdoc}
+    */
+   public function submitForm(array &$form, FormStateInterface $form_state) {
++    $config = $this->config('amazon_ses.settings');
++
+     $to = $form_state->getValue('to');
+     $body = $this->t('This is a test of the Amazon SES module. The module has
+       been configured successfully!');
+ 
+-    $name = $this->config->get('from_name');
+-    $address = $this->config->get('from_address');
++    $name = $config->get('from_name');
++    $address = $config->get('from_address');
+     $from = "$name <$address>";
+ 
+     $message = [
