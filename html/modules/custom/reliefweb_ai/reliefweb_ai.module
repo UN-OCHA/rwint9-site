@@ -7,9 +7,12 @@
 
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Block\BlockPluginInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\reliefweb_ai\OchaAiChatPopupBlockHandler;
+use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
+use Drupal\ocha_content_classification\Plugin\ClassifierPluginInterface;
 
 /**
  * Implements hook_form_FORM_ID_alter() for `ocha_ai_chat_chat_form`.
@@ -151,4 +154,183 @@ function reliefweb_ai_block_view_alter(array &$build, BlockPluginInterface $bloc
     $build['#pre_render'][] = [OchaAiChatPopupBlockHandler::class, 'alterBuild'];
     return;
   }
+}
+
+/**
+ * Implements hook_ocha_content_classification_post_classify_entity().
+ *
+ * Try to tag disasters after the usual report classification workflow.
+ *
+ * @todo replace when the ocha_content_classification module handles multi-steps
+ * classification.
+ */
+function reliefweb_ai_ocha_content_classification_post_classify_entity(
+  EntityInterface $entity,
+  ClassificationWorkflowInterface $workflow,
+  ClassifierPluginInterface $classifier,
+  bool $updated,
+  array $data,
+) {
+
+  // Prevent processing again the entity.
+  if (isset($entity->postClassificationDone)) {
+    return $updated;
+  }
+  $entity->postClassificationDone = TRUE;
+
+  // This hook currently only handle reports.
+  if ($entity->getEntityTypeId() !== 'node' && $entity->bundle() !== 'report') {
+    return $updated;
+  }
+
+  // Only the inference classifier is supported here.
+  if ($classifier->getPluginId() !== 'inference') {
+    return $updated;
+  }
+
+  // Skip if we don't have the data necessary for the disaster classification.
+  if ($entity->field_country->isEmpty() || $entity->field_disaster_type->isEmpty() || empty($entity->body->summary)) {
+    return $updated;
+  }
+
+  $country_ids = [];
+  foreach ($entity->field_country as $item) {
+    if (!empty($item->target_id)) {
+      $country_ids[$item->target_id] = $item->target_id;
+    }
+  }
+
+  $disaster_type_ids = [];
+  foreach ($entity->field_disaster_type as $item) {
+    if (!empty($item->target_id)) {
+      $disaster_type_ids[$item->target_id] = $item->target_id;
+    }
+  }
+
+  // Retrieve the name of the disasters tagged with the disaster types and
+  // countries.
+  // @todo add a date filter.
+  $disaster_ids = \Drupal::entityTypeManager()
+    ->getStorage('taxonomy_term')
+    ->getQuery()
+    ->accessCheck(FALSE)
+    ->condition('vid', 'disaster')
+    ->condition('moderation_status', ['draft', 'past', 'alert', 'ongoing'], 'IN')
+    ->condition('field_country', $country_ids, 'IN')
+    ->condition('field_disaster_type', $disaster_type_ids, 'IN')
+    ->execute() ?? [];
+
+  // Execute the query to get the disaster term IDs.
+  if (empty($disaster_ids)) {
+    return $updated;
+  }
+
+  // Retrieve the disaster names.
+  $disasters = \Drupal::database()
+    ->select('taxonomy_term_field_data', 't')
+    ->fields('t', ['tid', 'name'])
+    ->condition('t.tid', $disaster_ids, 'IN')
+    ->orderBy('t.tid', 'DESC')
+    ->execute()
+    ?->fetchAllKeyed() ?? [];
+  if (empty($disasters)) {
+    return $updated;
+  }
+
+  // Query the classifier inference model with the summary, title and potential
+  // disasters.
+  $prompt = <<<'EOT'
+    Your task is to analyze the following humanitarian document summary and identify which disasters are CURRENTLY relevant to the document. Present your analysis in a clear XML format.
+
+    Select the fewest disasters ({disasters:range}) that are DIRECTLY relevant to the document's CURRENT humanitarian situation. Use disaster codes only (e.g., {disasters:random}).
+
+    SELECTION CRITERIA - A disaster is relevant ONLY if it meets AT LEAST ONE of these conditions:
+    1. It is occurring at the time of the document's publication or is explicitly described as imminent
+    2. The humanitarian response discussed is CURRENTLY addressing this specific disaster
+    3. The impacts described are CURRENT consequences of this disaster
+    4. The document EXPLICITLY states ongoing preparedness or response activities for this disaster
+
+    CRITICAL GUIDELINES:
+    1. **VERIFY DATES** - A disaster must typically be from within 3-6 months of the document's publication date unless EXPLICITLY stated to be causing current needs
+    2. **REJECT HISTORICAL REFERENCES** - References to past disasters for context do not make them relevant
+    3. **REQUIRE DIRECT CONNECTIONS** - Reconstruction activities must be explicitly linked to a specific disaster
+    4. **ASSESS IMMINENT THREATS CAREFULLY** - Only include forecasted disasters if the document indicates active preparation
+
+    Title:
+    {title}
+
+    Publication Date:
+    {publication_date}
+
+    Summary:
+    {summary}
+
+    Disasters:
+    {disasters}
+
+    Present your analysis STRICTLY in this XML format:
+
+    <analysis>
+      <disasters>
+        <disaster>...</disaster>
+      </disasters>
+    </analysis>
+
+    Example output:
+
+    <analysis>
+      <disasters>
+        <disaster>{disasters:random}</disaster>
+      </disasters>
+    </analysis>
+
+    IMPORTANT:
+    1. If you're uncertain about a disaster's relevance, exclude it.
+    2. Use ONLY the XML structure above with proper opening and closing tags.
+    3. If no disasters from the list are relevant to the document, use: <disasters></disasters>
+    4. Your entire response must be valid XML without any explanations outside the tags.
+    EOT;
+
+  // Override the analyzable and classifiable fields to bypass the workflow's
+  // enabled fields.
+  $fields = [
+    'analyzable' => [
+      'title' => [
+        'type' => 'analyzable',
+        'name' => 'title',
+        'placeholder' => 'title',
+        'value' => $entity->title->value,
+      ],
+      'field_original_publication_date' => [
+        'type' => 'analyzable',
+        'name' => 'field_original_publication_date',
+        'placeholder' => 'publication_date',
+        'value' => $entity->field_original_publication_date->value,
+      ],
+      'body__sumary' => [
+        'type' => 'analyzable',
+        'name' => 'body__sumary',
+        'placeholder' => 'summary',
+        'value' => $entity->body->summary,
+      ],
+    ],
+    'classifiable' => [
+      'field_disaster' => [
+        'type' => 'classifiable',
+        'name' => 'field_disaster',
+        'placeholder' => 'disasters',
+        'terms' => $disasters,
+        'min' => 0,
+        'max' => -1,
+      ],
+    ],
+  ];
+
+  try {
+    return $classifier->queryModel($entity, $workflow, NULL, $prompt, $fields);
+  }
+  catch (\Exception $exception) {
+    \Drupal::logger('reliefweb_ai.post_classification')->error($exception->getMessage());
+  }
+  return FALSE;
 }

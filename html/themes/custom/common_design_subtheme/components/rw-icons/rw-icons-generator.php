@@ -264,7 +264,7 @@ function generate_css(array $settings, array $icons) {
   $categories = [];
 
   // Generate the CSS file.
-  $base = 'url("' . $path . '/img/rw-icons-sprite.svg?v=' . $version . '") @x @y no-repeat;';
+  $base = 'var(--rw-icons-sprite) @x @y no-repeat;';
   $x = 0;
   foreach ($icons as $category => $ids) {
     $sizes = $settings['icons'][$category]['sizes'];
@@ -292,7 +292,9 @@ function generate_css(array $settings, array $icons) {
   }
 
   // Group the variables per icon id.
-  $variables = [];
+  $variables = [
+    '--rw-icons-sprite: url("' . $path . '/img/rw-icons-sprite.svg?v=' . $version . '");',
+  ];
   foreach ($categories as $items) {
     foreach ($items as $item) {
       $variables[] = $item;

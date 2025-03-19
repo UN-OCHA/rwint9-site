@@ -142,3 +142,31 @@
 .rw-document.rw-article--book .rw-article__content a[href^="/user/login/"]:active {
   background: var(--cd-reliefweb-brand-red--dark);
 }
+
+/**
+ * Style the disclaimer for AI summaries.
+ */
+.rw-document .rw-article__content .rw-document__content__disclaimer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 1em 0;
+  padding: 1em;
+  border-radius: 8px;
+  background-color: var(--brand-grey);
+
+  &::before {
+    display: inline-block;
+    flex: 0 0 auto;
+    width: 64px;
+    height: 64px;
+    content: '';
+    background: var(--rw-icons--ai--avatar--64--dark-grey);
+  }
+}
+
+.rw-document .rw-article__content .rw-document__content__disclaimer .rw-document__content__disclaimer__text {
+  font-size: 0.875em;
+  font-weight: bold;
+  line-height: 1.4;
+}

@@ -177,6 +177,44 @@
           "dark-red"
         ]
       }
+    },
+    "ai": {
+      "source": "img/icons/ai",
+      "include": [
+        "avatar"
+      ],
+      "sizes": {
+        "32": [
+          "dark-grey"
+        ],
+        "48": [
+          "dark-grey"
+        ],
+        "64": [
+          "dark-grey"
+        ]
+      }
+    },
+    "chat": {
+      "source": "img/icons/chat",
+      "include": [
+        "chat",
+        "copy",
+        "thumbs-down",
+        "thumbs-up"
+      ],
+      "sizes": {
+        "16": [
+          "dark-blue",
+          "dark-red",
+          "dark-grey"
+        ],
+        "40": [
+          "dark-blue",
+          "dark-red",
+          "dark-grey"
+        ]
+      }
     }
   }
 }

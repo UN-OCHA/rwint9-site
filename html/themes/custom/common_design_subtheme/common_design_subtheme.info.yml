@@ -101,6 +101,11 @@ libraries-override:
     css:
       component:
         components/preview/guidelines.preview.css: components/rw-guidelines/rw-guidelines--preview.css
+  # The common_design_subtheme/rw-icons component contains all that is needed.
+  ocha_ai_chat/rw-icons:
+    css:
+      theme:
+        components/rw-icons/rw-icons.css: false
 
 ###
 # Custom namespace - requires Components module

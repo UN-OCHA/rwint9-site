@@ -1,0 +1,55 @@
+{#
+
+/**
+ * @file
+ * Template file for a text field revision differences.
+ *
+ * Available variables:
+ * - attributes: wrapper attributes
+ * - text: the diff-ed text.
+ * - text: the diff-ed summary.
+ */
+
+#}
+<div{{ attributes.addClass('rw-revisions-diff-text', 'rw-revisions-diff-text-with-summary') }}>
+  {% if text and not summary %}
+    {% if text|length > 400 %}
+      <details>
+        <summary>{{ 'View changes'|t }}</summary>
+        {{ text }}
+      </details>
+    {% else %}
+      {{ text }}
+    {% endif %}
+  {% else %}
+    <dl>
+      {% if text %}
+      <dt class="rw-revisions-diff-text-with-summary__text">{{ 'Text'|t }}</dt>
+      <dd>
+      {% if text|length > 400 %}
+        <details>
+          <summary>{{ 'View changes'|t }}</summary>
+          {{- text -}}
+        </details>
+      {% else %}
+        {{- text -}}
+      {% endif %}
+      </dd>
+      {% endif %}
+      {% if summary %}
+      <dt class="rw-revisions-diff-text-with-summary__summary">{{ 'Summary'|t }}</dt>
+      <dd>
+      {% if summary|length > 400 %}
+        <details>
+          <summary>{{ 'View changes'|t }}</summary>
+          {{- summary -}}
+        </details>
+      {% else %}
+        {{- summary -}}
+      {% endif %}
+      </dd>
+      {% endif %}
+    </dl>
+  {% endif %}
+</div>
+
