@@ -31,3 +31,15 @@ reliefweb_import.plugin.importer.unhcr_data:
       type: int
       label: 'Connection and request timeout.'
 
+# Echo Flash Data importer plugin settings.
+reliefweb_import.plugin.importer.echo_data:
+  type: reliefweb_import.plugin.importer
+  label: 'Echo Flash Data importer plugin base settings.'
+  mapping:
+    api_url:
+      type: string
+      label: 'API URL.'
+    timeout:
+      type: int
+      label: 'Connection and request timeout.'
+
