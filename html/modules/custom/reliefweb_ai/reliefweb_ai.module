@@ -260,9 +260,12 @@ function reliefweb_ai_post_classification_language_update(
     return NULL;
   }
 
+  $title = (string) $entity->label();
+
   // Retrieve the text samples extracted from the source document.
   $text = $classifier->extractTaggedContent($data['output'], 'extracts');
   $text = trim(strip_tags($text));
+  $text = $title . ' ' . $text;
   if (empty($text)) {
     return NULL;
   }
