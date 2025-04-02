@@ -11,6 +11,26 @@ use Drupal\reliefweb_fields\Plugin\Field\FieldWidget\ReliefWebLinks;
 use Drupal\reliefweb_fields\Plugin\Field\FieldWidget\ReliefWebUserPostingRights;
 
 /**
+ * Implements hook_theme().
+ */
+function reliefweb_fields_theme() {
+  return [
+    'reliefweb_text_with_summary' => [
+      'variables' => [
+        // Section heading level.
+        'level' => 2,
+        // Section attributes.
+        'attributes' => NULL,
+        // Text.
+        'text' => NULL,
+        // Summary.
+        'summary' => NULL,
+      ],
+    ],
+  ];
+}
+
+/**
  * Implements hook_entity_type_build().
  */
 function reliefweb_fields_entity_type_build(array &$entity_types) {
