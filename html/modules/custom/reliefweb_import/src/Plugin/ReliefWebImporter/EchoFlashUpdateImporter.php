@@ -112,7 +112,7 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
       $this->getLogger()->info('Retrieving documents from the Echo Flash Update API.');
 
       // Retrieve the latest created documents.
-      $documents = $this->getDocuments();
+      $documents = $this->getDocuments($limit);
 
       if (empty($documents)) {
         $this->getLogger()->notice('No documents.');
@@ -145,11 +145,16 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
    * @return array
    *   List of documents keyed by IDs.
    */
-  protected function getDocuments(): array {
+  protected function getDocuments(int $limit = 50): array {
     // Get list of documents.
     try {
       $timeout = $this->getPluginSetting('timeout', 10, FALSE);
       $api_url = $this->getPluginSetting('api_url');
+
+      $api_parts = parse_url($api_url);
+      parse_str($api_parts['query'] ?? '', $query);
+      $query['ItemsPageSize'] = $limit;
+      $api_url = $api_parts['scheme'] . '://' . $api_parts['host'] . $api_parts['path'] . '?' . http_build_query($query);
 
       $response = $this->httpClient->get($api_url, [
         'connect_timeout' => $timeout,
