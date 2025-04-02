@@ -7,12 +7,35 @@
 
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Block\BlockPluginInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Template\Attribute;
 use Drupal\reliefweb_ai\OchaAiChatPopupBlockHandler;
+use Drupal\reliefweb_utility\Helpers\DateHelper;
+use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
+use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
+use Drupal\reliefweb_utility\Helpers\LanguageHelper;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
 use Drupal\ocha_content_classification\Plugin\ClassifierPluginInterface;
+use Drupal\ocha_content_classification\Enum\ClassificationStatus;
+
+/**
+ * Implements hook_theme().
+ */
+function reliefweb_ai_theme() {
+  return [
+    'reliefweb_ai_summary_disclaimer' => [
+      'variables' => [
+        // Section attributes.
+        'attributes' => NULL,
+        // Text.
+        'disclaimer' => NULL,
+      ],
+    ],
+  ];
+}
 
 /**
  * Implements hook_form_FORM_ID_alter() for `ocha_ai_chat_chat_form`.
@@ -168,128 +191,153 @@ function reliefweb_ai_ocha_content_classification_post_classify_entity(
   EntityInterface $entity,
   ClassificationWorkflowInterface $workflow,
   ClassifierPluginInterface $classifier,
-  bool $updated,
+  array $updated_fields,
   array $data,
-) {
-
+): ?array {
   // Prevent processing again the entity.
   if (isset($entity->postClassificationDone)) {
-    return $updated;
+    return NULL;
   }
   $entity->postClassificationDone = TRUE;
 
-  // This hook currently only handle reports.
-  if ($entity->getEntityTypeId() !== 'node' && $entity->bundle() !== 'report') {
-    return $updated;
+  // This hook currently only handles reports.
+  if ($entity->getEntityTypeId() !== 'node' || $entity->bundle() !== 'report') {
+    return NULL;
   }
 
   // Only the inference classifier is supported here.
   if ($classifier->getPluginId() !== 'inference') {
-    return $updated;
+    return NULL;
   }
 
-  // Skip if we don't have the data necessary for the disaster classification.
-  if ($entity->field_country->isEmpty() || $entity->field_disaster_type->isEmpty() || empty($entity->body->summary)) {
-    return $updated;
+  // Attempt to retrieve the language.
+  $updated_fields_1 = reliefweb_ai_post_classification_language_update(
+    $entity,
+    $workflow,
+    $classifier,
+    $updated_fields,
+    $data,
+  ) ?? [];
+
+  // Proceed with a second inference to retrieve extra data like disasters.
+  $updated_fields_2 = reliefweb_ai_post_classification_second_inference(
+    $entity,
+    $workflow,
+    $classifier,
+    $updated_fields,
+    $data,
+  ) ?? [];
+
+  return array_unique(array_merge($updated_fields_1, $updated_fields_2)) ?: NULL;
+}
+
+/**
+ * Update the language field of an entity based on some extracted text samples.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   The entity being classified.
+ * @param \Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface $workflow
+ *   The classification workflow.
+ * @param \Drupal\ocha_content_classification\Plugin\ClassifierPluginInterface $classifier
+ *   The classifier plugin for the classification.
+ * @param array $updated_fields
+ *   The list of fields that have been updated during the classification so far.
+ * @param array $data
+ *   Additional data from the classifier. For the inference classifier, this
+ *   contains an `output` key with the raw output from the LLM.
+ *
+ * @return ?array
+ *   An array with the language field if it was updated.
+ */
+function reliefweb_ai_post_classification_language_update(
+  EntityInterface $entity,
+  ClassificationWorkflowInterface $workflow,
+  ClassifierPluginInterface $classifier,
+  array $updated_fields,
+  array $data,
+): ?array {
+  if (!$entity->hasField('field_language') || empty($data['output'])) {
+    return NULL;
   }
 
-  $country_ids = [];
-  foreach ($entity->field_country as $item) {
-    if (!empty($item->target_id)) {
-      $country_ids[$item->target_id] = $item->target_id;
-    }
+  // Retrieve the text samples extracted from the source document.
+  $text = $classifier->extractTaggedContent($data['output'], 'extracts');
+  $text = trim(strip_tags($text));
+  if (empty($text)) {
+    return NULL;
   }
 
-  $disaster_type_ids = [];
-  foreach ($entity->field_disaster_type as $item) {
-    if (!empty($item->target_id)) {
-      $disaster_type_ids[$item->target_id] = $item->target_id;
-    }
-  }
+  // Detect the language from the extracts returned by the AI.
+  $language = LanguageHelper::detectTextLanguage($text);
 
-  // Retrieve the name of the disasters tagged with the disaster types and
-  // countries.
-  // @todo add a date filter.
-  $disaster_ids = \Drupal::entityTypeManager()
-    ->getStorage('taxonomy_term')
-    ->getQuery()
-    ->accessCheck(FALSE)
-    ->condition('vid', 'disaster')
-    ->condition('moderation_status', ['draft', 'past', 'alert', 'ongoing'], 'IN')
-    ->condition('field_country', $country_ids, 'IN')
-    ->condition('field_disaster_type', $disaster_type_ids, 'IN')
-    ->execute() ?? [];
-
-  // Execute the query to get the disaster term IDs.
-  if (empty($disaster_ids)) {
-    return $updated;
-  }
-
-  // Retrieve the disaster names.
-  $disasters = \Drupal::database()
-    ->select('taxonomy_term_field_data', 't')
-    ->fields('t', ['tid', 'name'])
-    ->condition('t.tid', $disaster_ids, 'IN')
-    ->orderBy('t.tid', 'DESC')
+  // Retrieve the available languages.
+  $languages = \Drupal::database()
+    ->select('taxonomy_term__field_language_code', 't')
+    ->fields('t', ['field_language_code_value', 'entity_id'])
+    ->condition('t.field_language_code_value', 'ot', '<>')
     ->execute()
     ?->fetchAllKeyed() ?? [];
-  if (empty($disasters)) {
-    return $updated;
+  $languages = array_change_key_case($languages, \CASE_LOWER);
+
+  // Default to English if there is no matching term for the language code.
+  $language_term_id = $languages[$language] ?? $languages['en'] ?? NULL;
+
+  // Update the entity with the detected language.
+  if ($language_term_id != $entity->field_language?->target_id) {
+    $entity->set('field_language', $language_term_id);
+    return ['field_language'];
   }
 
-  // Query the classifier inference model with the summary, title and potential
-  // disasters.
-  $prompt = <<<'EOT'
-    Your task is to analyze the following humanitarian document summary and identify which disasters are CURRENTLY relevant to the document. Present your analysis in a clear XML format.
+  return NULL;
+}
 
-    Select the fewest disasters ({disasters:range}) that are DIRECTLY relevant to the document's CURRENT humanitarian situation. Use disaster codes only (e.g., {disasters:random}).
+/**
+ * Perform an another inference step to retrieve additional data.
+ *
+ * Currently, this applies only to reports and retrieve the following:
+ * - disasters
+ * - headline-style summary.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   The entity being classified.
+ * @param \Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface $workflow
+ *   The classification workflow.
+ * @param \Drupal\ocha_content_classification\Plugin\ClassifierPluginInterface $classifier
+ *   The classifier plugin for the classification.
+ * @param array $updated_fields
+ *   The list of fields that have been updated during the classification so far.
+ * @param array $data
+ *   Additional data from the classifier. For the inference classifier, this
+ *   contains an `output` key with the raw output from the LLM.
+ *
+ * @return ?array
+ *   An array with the updated fields.
+ */
+function reliefweb_ai_post_classification_second_inference(
+  EntityInterface $entity,
+  ClassificationWorkflowInterface $workflow,
+  ClassifierPluginInterface $classifier,
+  array $updated_fields,
+  array $data,
+): ?array {
+  // This hook currently only handle reports.
+  if ($entity->getEntityTypeId() !== 'node' || $entity->bundle() !== 'report') {
+    return NULL;
+  }
 
-    SELECTION CRITERIA - A disaster is relevant ONLY if it meets AT LEAST ONE of these conditions:
-    1. It is occurring at the time of the document's publication or is explicitly described as imminent
-    2. The humanitarian response discussed is CURRENTLY addressing this specific disaster
-    3. The impacts described are CURRENT consequences of this disaster
-    4. The document EXPLICITLY states ongoing preparedness or response activities for this disaster
+  // Only the inference classifier is supported here.
+  if ($classifier->getPluginId() !== 'inference') {
+    return NULL;
+  }
 
-    CRITICAL GUIDELINES:
-    1. **VERIFY DATES** - A disaster must typically be from within 3-6 months of the document's publication date unless EXPLICITLY stated to be causing current needs
-    2. **REJECT HISTORICAL REFERENCES** - References to past disasters for context do not make them relevant
-    3. **REQUIRE DIRECT CONNECTIONS** - Reconstruction activities must be explicitly linked to a specific disaster
-    4. **ASSESS IMMINENT THREATS CAREFULLY** - Only include forecasted disasters if the document indicates active preparation
+  // Skip if we don't have a summary to use to retrieve the disasters and
+  // headline-style summary.
+  if ($entity->title->isEmpty() || empty($entity->body->value)) {
+    return NULL;
+  }
 
-    Title:
-    {title}
-
-    Publication Date:
-    {publication_date}
-
-    Summary:
-    {summary}
-
-    Disasters:
-    {disasters}
-
-    Present your analysis STRICTLY in this XML format:
-
-    <analysis>
-      <disasters>
-        <disaster>...</disaster>
-      </disasters>
-    </analysis>
-
-    Example output:
-
-    <analysis>
-      <disasters>
-        <disaster>{disasters:random}</disaster>
-      </disasters>
-    </analysis>
-
-    IMPORTANT:
-    1. If you're uncertain about a disaster's relevance, exclude it.
-    2. Use ONLY the XML structure above with proper opening and closing tags.
-    3. If no disasters from the list are relevant to the document, use: <disasters></disasters>
-    4. Your entire response must be valid XML without any explanations outside the tags.
-    EOT;
+  // Use the creation date if there is no publication date.
+  $date = $entity->field_original_publication_date->value || $entity->getCreatedTime();
 
   // Override the analyzable and classifiable fields to bypass the workflow's
   // enabled fields.
@@ -305,26 +353,236 @@ function reliefweb_ai_ocha_content_classification_post_classify_entity(
         'type' => 'analyzable',
         'name' => 'field_original_publication_date',
         'placeholder' => 'publication_date',
-        'value' => $entity->field_original_publication_date->value,
+        'value' => DateHelper::format($date, 'custom', 'Y-m-d'),
       ],
-      'body__sumary' => [
+      'body__value' => [
         'type' => 'analyzable',
-        'name' => 'body__sumary',
-        'placeholder' => 'summary',
-        'value' => $entity->body->summary,
+        'name' => 'body__value',
+        'placeholder' => 'content',
+        'value' => $entity->body->value,
       ],
     ],
-    'classifiable' => [
-      'field_disaster' => [
-        'type' => 'classifiable',
-        'name' => 'field_disaster',
-        'placeholder' => 'disasters',
-        'terms' => $disasters,
-        'min' => 0,
-        'max' => -1,
+    'fillable' => [
+      'body__summary' => [
+        'type' => 'analyzable',
+        'name' => 'body__summary',
+        'placeholder' => 'summary',
+        'value' => $entity->body->value,
       ],
     ],
   ];
+
+  // Retrieve the potential disasters that could be used to tag the entity.
+  $disasters = [];
+  if (!$entity->field_country->isEmpty() && !$entity->field_disaster_type->isEmpty()) {
+    $country_ids = [];
+    foreach ($entity->field_country as $item) {
+      if (!empty($item->target_id)) {
+        $country_ids[$item->target_id] = $item->target_id;
+      }
+    }
+
+    $disaster_type_ids = [];
+    foreach ($entity->field_disaster_type as $item) {
+      if (!empty($item->target_id)) {
+        $disaster_type_ids[$item->target_id] = $item->target_id;
+      }
+    }
+
+    // Retrieve the name of the disasters tagged with the disaster types and
+    // countries.
+    // @todo add a date filter.
+    $disaster_ids = \Drupal::entityTypeManager()
+      ->getStorage('taxonomy_term')
+      ->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('vid', 'disaster')
+      ->condition('moderation_status', ['draft', 'past', 'alert', 'ongoing'], 'IN')
+      ->condition('field_country', $country_ids, 'IN')
+      ->condition('field_disaster_type', $disaster_type_ids, 'IN')
+      // Limit to "recent" disasters to avoid invalid tagging of old disasters.
+      // @todo Map disaster type to date interval to distinguish between long
+      // lasting disasters vs short lived ones. Alternatively look at other
+      // documents for the same country and disaster type to see what disasters
+      // where recently tagged. For now simplicity is enough.
+      ->condition('field_disaster_date', date('Y-m-d', strtotime('-2 years')), '>')
+      ->execute() ?? [];
+
+    // Execute the query to get the disaster term IDs.
+    if (!empty($disaster_ids)) {
+      // Retrieve the disaster names.
+      $disasters = \Drupal::database()
+        ->select('taxonomy_term_field_data', 't')
+        ->fields('t', ['tid', 'name'])
+        ->condition('t.tid', $disaster_ids, 'IN')
+        ->orderBy('t.tid', 'DESC')
+        ->execute()
+        ?->fetchAllKeyed() ?? [];
+    }
+  }
+
+  // If there are no potential disasters, retrieve the headline summary only.
+  if (empty($disasters)) {
+    // Prompt to generate a headline-style summary.
+    $prompt = <<<'EOT'
+      Your task is to analyze the following humanitarian document and generate a brief headline-style summary. Present your analysis in XML format.
+
+      SUMMARY GUIDELINES:
+      Create a VERY BRIEF one sentence headline-style summary (25-35 words maximum) that:
+      - Captures only the most essential information about the crisis and response
+      - Includes key statistics if available
+      - Uses concise, direct language suitable for a website headline
+      - Focuses only on the most critical aspects of the situation
+
+      Title:
+      {title}
+
+      Publication Date:
+      {publication_date}
+
+      Content:
+      {content}
+
+      Present your analysis STRICTLY in this XML format:
+
+      <analysis>
+        <{summary:name}>...</{summary:name}>
+      </analysis>
+
+      EXAMPLE:
+
+      Input:
+      Title: Somalia: Drought and Food Insecurity Situation Report - March 2025
+
+      Publication Date: 2025-03-25
+
+      Content: The humanitarian situation in Somalia continues to deteriorate as the country faces its worst drought in 40 years. Over 7.1 million people are experiencing acute food insecurity, with 213,000 people facing catastrophic hunger. Recent assessments indicate that failed rains have decimated crops and livestock, with over 3 million animals lost since January. Humanitarian organizations have scaled up response, reaching 2.1 million people with food assistance in February, but funding gaps threaten continuation of programs. Water shortages have led to increased displacement, with 258,000 people leaving their homes in the past three months. Health partners report rising cases of malnutrition and water-borne diseases in displacement camps.
+
+      Example output:
+
+      <analysis>
+        <summary>Somalia's worst drought in 40 years leaves 7.1 million food insecure; 258,000 displaced. Aid reaches 2.1 million but faces funding gaps.</summary>
+      </analysis>
+
+      IMPORTANT:
+      1. Use ONLY the XML structure above with proper opening and closing tags.
+      2. Your entire response must be valid XML without any explanations outside the tags.
+      3. Keep the summary extremely concise (25-35 words maximum).
+      EOT;
+  }
+  // Other try to retrieve the disasters and summary at once.
+  else {
+    // Prompt that mixes the summarization and the disaster classification.
+    $prompt = <<<'EOT'
+      Your task is to analyze the following humanitarian document, identify currently relevant disasters, and generate a brief headline-style summary. Present your analysis in XML format.
+
+      DISASTER SELECTION CRITERIA:
+      Select the fewest disasters ({disasters:range}) that are DIRECTLY relevant to the document's CURRENT humanitarian situation. A disaster is relevant ONLY if it meets AT LEAST ONE of these conditions:
+      1. It is occurring at the time of the document's publication or is explicitly described as imminent
+      2. The humanitarian response discussed is CURRENTLY addressing this specific disaster
+      3. The impacts described are CURRENT consequences of this disaster
+      4. The document EXPLICITLY states ongoing preparedness or response activities for this disaster
+
+      CRITICAL GUIDELINES:
+      1. Disasters must typically be from within 3-6 months of publication unless EXPLICITLY causing current needs
+      2. Reject historical references to past disasters used only for context
+      3. Reconstruction activities must be explicitly linked to a specific disaster
+      4. Include forecasted disasters only if active preparation is indicated
+
+      SUMMARY GUIDELINES:
+      Create a VERY BRIEF one sentence headline-style summary (25-35 words maximum) that:
+      - Captures only the most essential information about the crisis and response
+      - Includes key statistics if available
+      - Uses concise, direct language suitable for a website headline
+      - Focuses only on the most critical aspects of the situation
+
+      Title:
+      {title}
+
+      Publication Date:
+      {publication_date}
+
+      Content:
+      {content}
+
+      Disasters:
+      {disasters}
+
+      Present your analysis STRICTLY in this XML format:
+
+      <analysis>
+        <{summary:name}>...</{summary:name}>
+        <disasters>
+          <disaster>...</disaster>
+        </disasters>
+      </analysis>
+
+      EXAMPLE 1:
+
+      Input:
+      Title: Somalia: Drought and Food Insecurity Situation Report - March 2025
+
+      Publication Date: 2025-03-15
+
+      Content: The humanitarian situation in Somalia continues to deteriorate as the country faces its worst drought in 40 years. Over 7.1 million people are experiencing acute food insecurity, with 213,000 people facing catastrophic hunger. Recent assessments indicate that failed rains have decimated crops and livestock, with over 3 million animals lost since January. Humanitarian organizations have scaled up response, reaching 2.1 million people with food assistance in February, but funding gaps threaten continuation of programs. Water shortages have led to increased displacement, with 258,000 people leaving their homes in the past three months. Health partners report rising cases of malnutrition and water-borne diseases in displacement camps.
+
+      Disasters:
+      A1) Somalia: Conflict - Feb 2025
+      A2) Somalia: Drought - Oct 2024
+      A3) Somalia: Floods - Nov 2024
+      A4) Somalia: Drought - Jan 2023
+      A5) No Relevant Disasters
+
+      Example output:
+
+      <analysis>
+        <summary>Somalia's worst drought in 40 years leaves 7.1 million food insecure; 258,000 displaced. Aid reaches 2.1 million but faces funding gaps as malnutrition and diseases rise in camps.</summary>
+        <disasters>
+          <disaster>A2</disaster>
+        </disasters>
+      </analysis>
+
+      EXAMPLE 2:
+
+      Title: Global Health Systems Strengthening Report - April 2025
+
+      Publication Date: 2025-04-01
+
+      Content: This report highlights the global efforts to strengthen health systems in low-income countries. It provides an overview of ongoing initiatives to improve healthcare infrastructure, train medical personnel, and increase access to essential medicines. The report emphasizes the importance of building resilient health systems to address future crises but does not focus on any specific ongoing disaster. Case studies from multiple countries illustrate successful interventions, though these are historical examples rather than responses to current emergencies.
+
+      Disasters:
+      A1) Global: COVID-19 Pandemic - Dec 2019
+      A2) Sierra Leone: Ebola Outbreak - 2014
+      A3) No Relevant Disasters
+
+      <analysis>
+        <summary>Global report emphasizes strengthening health systems in low-income countries through infrastructure development, medical training, and improved access to medicines for future crisis resilience.</summary>
+        <disasters>
+          <disaster>A3</disaster>
+        </disasters>
+      </analysis>
+
+      IMPORTANT:
+      1. If uncertain about a disaster's relevance, exclude it. No disasters is better than incorrect ones.
+      2. Use ONLY the XML structure above with proper opening and closing tags.
+      3. Your entire response must be valid XML without any explanations outside the tags.
+      4. Keep the summary extremely concise (25-35 words maximum).
+      EOT;
+
+    // Add an empty option to the list of disasters that the AI can select if
+    // there is no good disaster to select.
+    $terms['empty'] = 'No Relevant Disasters: Select this code if no disasters meet the relevance criteria. Use when the document does not mention any current disasters directly causing the humanitarian situation or when all mentioned disasters are historical/contextual only.';
+
+    // Add the disaster field so it can be populated by the classifier.
+    $fields['classifiable']['field_disaster'] = [
+      'type' => 'classifiable',
+      'name' => 'field_disaster',
+      'placeholder' => 'disasters',
+      'terms' => $disasters,
+      'min' => 0,
+      'max' => -1,
+    ];
+  }
 
   try {
     return $classifier->queryModel($entity, $workflow, NULL, $prompt, $fields);
@@ -332,5 +590,160 @@ function reliefweb_ai_ocha_content_classification_post_classify_entity(
   catch (\Exception $exception) {
     \Drupal::logger('reliefweb_ai.post_classification')->error($exception->getMessage());
   }
-  return FALSE;
+  return NULL;
+}
+
+/**
+ * Implements hook_preprocess_reliefweb_entities_entity_meta().
+ *
+ * Add a class to the fields that have been updated by an AI.
+ */
+function reliefweb_ai_preprocess_reliefweb_entities_entity_meta(array &$variables): void {
+  if (!isset($variables['entity'])) {
+    return;
+  }
+
+  $entity = $variables['entity'];
+  if (!isset($entity->ai_updated_fields)) {
+    return;
+  }
+
+  foreach ($variables['meta'] ?? [] as $key => $data) {
+    if (isset($data['field'], $entity->ai_updated_fields[$data['field']])) {
+      $label_attributes = $data['label_attributes'] ?? new Attribute();
+      $label_attributes->addClass('rw-ai-generated');
+      $variables['meta'][$key]['label_attributes'] = $label_attributes;
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_view().
+ *
+ * Add the AI disclaimer to the entity view render array if the entity's body
+ * was modified by AI.
+ */
+function reliefweb_ai_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode): void {
+  if (isset($entity->ai_updated_fields['body'])) {
+    $ai_summary_disclaimer = \Drupal::state()->get('reliefweb_ai_summary_disclaimer');
+    if (!empty($ai_summary_disclaimer)) {
+      $build['ai_summary_disclaimer'] = [
+        '#theme' => 'reliefweb_ai_summary_disclaimer',
+        '#disclaimer' => $ai_summary_disclaimer,
+      ];
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_view().
+ *
+ * Retrieve the entity fields that were updated by an AI, if any.
+ */
+function reliefweb_ai_entity_prepare_view(string $entity_type_id, array $entities, array $displays, string $view_mode): void {
+  if ($view_mode !== 'full') {
+    return;
+  }
+
+  foreach ($entities as $entity) {
+    reliefweb_ai_add_ai_updated_fields_to_entity($entity);
+  }
+}
+
+/**
+ * Add a list of the fields updated by an AI to the given entity.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   Entity.
+ */
+function reliefweb_ai_add_ai_updated_fields_to_entity(EntityInterface $entity): void {
+  // Get the classification record for the entity if any.
+  $record = \Drupal::database()
+    ->select('ocha_content_classification_progress', 'ocp')
+    ->fields('ocp', ['entity_revision_id', 'updated_fields'])
+    ->condition('entity_type_id', $entity->getEntityTypeId())
+    ->condition('entity_bundle', $entity->bundle())
+    ->condition('entity_id', $entity->id())
+    ->condition('status', ClassificationStatus::Completed->value)
+    ->execute()
+    ?->fetch(\PDO::FETCH_OBJ);
+  if (empty($record) || empty($record->entity_revision_id) || empty($record->updated_fields)) {
+    return;
+  }
+
+  $updated_fields = json_decode($record->updated_fields);
+  if (empty($updated_fields)) {
+    return;
+  }
+
+  // Not using strict equality because they may be numeric strings.
+  if ($entity->getRevisionId() != $record->entity_revision_id) {
+    $revision = \Drupal::entityTypeManager()
+      ->getStorage($entity->getEntityTypeId())
+      ->loadRevision($record->entity_revision_id);
+
+    if (empty($revision)) {
+      return;
+    }
+
+    // Remove fields that have been updated since the classification. They are
+    // considered to have been manually updated so not generated by an AI
+    // anymore.
+    foreach ($updated_fields as $index => $field_name) {
+      if (!$entity->get($field_name)->equals($revision->get($field_name))) {
+        unset($updated_fields[$index]);
+      }
+    }
+
+    if (empty($updated_fields)) {
+      return;
+    }
+  }
+
+  // Store the list of fields that were populated by the AI for easy lookup.
+  $entity->ai_updated_fields = array_flip($updated_fields);
+}
+
+/**
+ * Implements hook_preprocess_reliefweb_rivers_page__updates().
+ *
+ * Retrieve the AI summary from the database.
+ *
+ * @todo remove after the `summary` field is added to the API.
+ */
+function reliefweb_ai_preprocess_reliefweb_rivers_page__updates(array &$variables): void {
+  // No need to retrieve the summary if we are showing the headlines since we
+  // already display the headline summary.
+  if (isset($variables['view']) && $variables['view'] === 'headlines') {
+    return;
+  }
+
+  // Retrieve the summary from the database.
+  $query = \Drupal::database()->select('node', 'n');
+  $query->leftJoin('node__field_headline_summary', 's', '%alias.entity_id = n.nid');
+  $query->leftJoin('node__body', 'b', '%alias.entity_id = n.nid');
+  $query->condition('n.nid', array_keys($variables['content']['#entities']), 'IN');
+  $query->addField('n', 'nid', 'id');
+  $query->addField('s', 'field_headline_summary_value', 'headline_summary');
+  $query->addField('b', 'body_summary', 'summary');
+
+  foreach ($query->execute() ?? [] as $record) {
+    $summary = '';
+    if (!empty($record->headline_summary)) {
+      $summary = $record->headline_summary;
+    }
+    elseif (!empty($record->summary)) {
+      if (mb_strlen($record->summary) > 250) {
+        $summary = HtmlSanitizer::sanitize($record->summary);
+        $summary = HtmlSummarizer::summarize($summary, 250);
+      }
+      else {
+        $summary = preg_replace('/\s+/', ' ', $record->summary);
+      }
+    }
+    if (!empty($summary)) {
+      $variables['content']['#entities'][$record->id]['summary'] = $summary;
+    }
+  }
+
 }

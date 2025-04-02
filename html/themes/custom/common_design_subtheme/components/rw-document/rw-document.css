@@ -146,7 +146,7 @@
 /**
  * Style the disclaimer for AI summaries.
  */
-.rw-document .rw-article__content .rw-document__content__disclaimer {
+.rw-document .rw-article__content .rw-ai-summary-disclaimer {
   display: flex;
   align-items: center;
   gap: 16px;
@@ -165,7 +165,7 @@
   }
 }
 
-.rw-document .rw-article__content .rw-document__content__disclaimer .rw-document__content__disclaimer__text {
+.rw-document .rw-article__content .rw-ai-summary-disclaimer .rw-ai-summary-disclaimer__text {
   font-size: 0.875em;
   font-weight: bold;
   line-height: 1.4;
