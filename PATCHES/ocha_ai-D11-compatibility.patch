@@ -1,3 +1,28 @@
+diff --git a/modules/ocha_ai_chat/ocha_ai_chat.info.yml b/modules/ocha_ai_chat/ocha_ai_chat.info.yml
+index 52994a1..e477008 100644
+--- a/modules/ocha_ai_chat/ocha_ai_chat.info.yml
++++ b/modules/ocha_ai_chat/ocha_ai_chat.info.yml
+@@ -2,6 +2,6 @@ type: module
+ name: OCHA AI Chat
+ description: 'Provides AI integration to chat with documents.'
+ package: ocha
+-core_version_requirement: ^9 || ^10
++core_version_requirement: ^10 || ^11
+ dependencies:
+   - unocha:ocha_ai
+diff --git a/modules/ocha_ai_tag/ocha_ai_tag.info.yml b/modules/ocha_ai_tag/ocha_ai_tag.info.yml
+index 5429bab..37332ea 100644
+--- a/modules/ocha_ai_tag/ocha_ai_tag.info.yml
++++ b/modules/ocha_ai_tag/ocha_ai_tag.info.yml
+@@ -2,7 +2,7 @@ type: module
+ name: OCHA AI tag
+ description: 'Classify and tag text.'
+ package: ocha
+-core_version_requirement: ^9 || ^10
++core_version_requirement: ^10 || ^11
+ dependencies:
+   - unocha:ocha_ai
+   - unocha:ocha_ai_chat
 diff --git a/ocha_ai.info.yml b/ocha_ai.info.yml
 index a591cb9..6762162 100644
 --- a/ocha_ai.info.yml
