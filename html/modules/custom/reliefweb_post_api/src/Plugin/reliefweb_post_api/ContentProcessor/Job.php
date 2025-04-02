@@ -43,6 +43,9 @@ class Job extends ContentProcessorPluginBase {
               'type' => $bundle,
               'langcode' => $this->getDefaultLangcode(),
               'uid' => $user_id,
+              // This is important to avoid content imported in the same batch
+              // to have the exact same timestamp.
+              'created' => time(),
             ]);
 
     // Verify the bundle if the entity already exists.
