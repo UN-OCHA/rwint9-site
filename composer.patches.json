@@ -10,20 +10,28 @@
             "https://www.drupal.org/project/drupal/issues/3418098": "PATCHES/core--drupal--3418098-php-mailer.patch"
         },
         "drupal/guidelines": {
-            "Drupal 10 compatibility": "PATCHES/guidelines-drupal-10-compatibility.patch"
+            "Drupal 10 compatibility": "PATCHES/guidelines-drupal-10-compatibility.patch",
+            "Drupal 11 compatibility - version number": "PATCHES/guidelines-drupal-11-compatibility.patch"
         },
         "drupal/imageapi_optimize_webp": {
             "Fix derivatives for webp source images": "PATCHES/imageapi_optimize_webp-webp-source-image.patch",
             "Support imagemagick toolkit": "PATCHES/imageapi_optimize_webp-imagemagick-toolkit.patch"
         },
         "drupal/jsonlog": {
-            "Direct logging to Elastic cluster": "PATCHES/jsonlog--3460929--elastic-direct-logging.patch"
+            "Direct logging to Elastic cluster": "PATCHES/jsonlog--3460929--elastic-direct-logging.patch",
+            "D11 compatibility - #3455244": "PATCHES/jsonlog-D11-compatibility-3455244.patch"
+        },
+        "drupal/maintenance200": {
+            "D11 compatibility - #3431791": "PATCHES/maintenance200-D11-compatibility-3431791.patch"
         },
         "drupal/openid_connect": {
             "Handle case if user is in blocked state after SSO Authorization": "PATCHES/openid_connect-3390668-6.patch"
         },
         "drupal/openid_connect_windows_aad": {
             "Failed to get authentication tokens for Windows Azure AD": "PATCHES/openid_connect_windows_aad-3346603-5.patch"
+        },
+        "drupal/social_auth": {
+            "Type Error - #3496656": "PATCHES/social_auth-type-error-3496656.patch"
         },
         "drupal/username_enumeration_prevention": {
             "Avoid leaking the path via Drupal.settings json": "PATCHES/username_enumeration_prevention-user-login-block-form-3312288.patch"
@@ -36,6 +44,15 @@
         },
         "unocha/common_design": {
             "https://humanitarian.atlassian.net/browse/CD-519": "PATCHES/common_design--default-logo-remove.patch"
+        },
+        "unocha/ocha_ai": {
+            "D11 compatibility": "PATCHES/ocha_ai-D11-compatibility.patch"
+        },
+        "unocha/ocha_content_classification": {
+            "D11 compatibility": "PATCHES/ocha_content_classification-D11-compatibility.patch"
+        },
+        "unocha/ocha_entraid": {
+            "D11 compatibility": "PATCHES/ocha_entraid-D11-compatibility.patch"
         }
     }
 }

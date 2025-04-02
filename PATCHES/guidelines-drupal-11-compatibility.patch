@@ -1,0 +1,12 @@
+diff --git a/guidelines.info.yml b/guidelines.info.yml
+index 5a119c1..a24b81e 100644
+--- a/guidelines.info.yml
++++ b/guidelines.info.yml
+@@ -1,6 +1,6 @@
+ name: 'Guidelines'
+ type: module
+ description: 'Add guidelines to entities and fields'
+-core_version_requirement: ^9 || ^10
++core_version_requirement: ^10 || ^11
+ package: 'Custom'
+ configure: guidelines.settings

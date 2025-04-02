@@ -1,0 +1,13 @@
+diff --git a/composer.json b/composer.json
+index 0dddaac..1f47803 100644
+--- a/composer.json
++++ b/composer.json
+@@ -17,7 +17,7 @@
+     ],
+     "require": {
+         "php": ">=8.3",
+-        "drupal/core": "^10",
++        "drupal/core": "^10 || ^11",
+         "unocha/ocha_ai": "^1.7"
+     },
+     "require-dev": {
