@@ -1,16 +1,16 @@
 diff --git a/core/modules/file/src/Plugin/rest/resource/FileUploadResource.php b/core/modules/file/src/Plugin/rest/resource/FileUploadResource.php
-index 7aa90224fc..5fe8ded036 100644
+index 97bb0e4b458..3331245fb8a 100644
 --- a/core/modules/file/src/Plugin/rest/resource/FileUploadResource.php
 +++ b/core/modules/file/src/Plugin/rest/resource/FileUploadResource.php
-@@ -7,6 +7,7 @@
- use Drupal\Core\DependencyInjection\DeprecatedServicePropertyTrait;
+@@ -6,6 +6,7 @@
+ use Drupal\Component\Utility\Crypt;
  use Drupal\Core\Entity\EntityFieldManagerInterface;
  use Drupal\Core\Entity\EntityTypeManagerInterface;
 +use Drupal\Core\Field\FieldDefinitionInterface;
- use Drupal\Core\File\Event\FileUploadSanitizeNameEvent;
  use Drupal\Core\File\Exception\FileException;
  use Drupal\Core\File\Exception\FileExistsException;
-@@ -156,6 +157,29 @@ public static function create(ContainerInterface $container, array $configuratio
+ use Drupal\Core\File\FileExists;
+@@ -101,6 +102,29 @@ public static function create(ContainerInterface $container, array $configuratio
      );
    }
  
@@ -41,7 +41,7 @@ index 7aa90224fc..5fe8ded036 100644
     * {@inheritdoc}
     */
 diff --git a/core/modules/file/tests/src/Kernel/FileItemValidationTest.php b/core/modules/file/tests/src/Kernel/FileItemValidationTest.php
-index 6358163c86..119553e085 100644
+index 6358163c866..119553e0856 100644
 --- a/core/modules/file/tests/src/Kernel/FileItemValidationTest.php
 +++ b/core/modules/file/tests/src/Kernel/FileItemValidationTest.php
 @@ -10,7 +10,6 @@
@@ -104,10 +104,10 @@ index 6358163c86..119553e085 100644
      // Refer to a file that does not exist.
      $entity_test = EntityTest::create([
 diff --git a/core/modules/image/src/Plugin/Field/FieldType/ImageItem.php b/core/modules/image/src/Plugin/Field/FieldType/ImageItem.php
-index 29fa146d48..f18e767ca4 100644
+index 50e7111a479..070a8569661 100644
 --- a/core/modules/image/src/Plugin/Field/FieldType/ImageItem.php
 +++ b/core/modules/image/src/Plugin/Field/FieldType/ImageItem.php
-@@ -525,4 +525,36 @@ public function isDisplayed() {
+@@ -526,4 +526,36 @@ public function isDisplayed() {
      return TRUE;
    }
  
@@ -145,7 +145,7 @@ index 29fa146d48..f18e767ca4 100644
 +
  }
 diff --git a/core/modules/image/src/Plugin/Field/FieldWidget/ImageWidget.php b/core/modules/image/src/Plugin/Field/FieldWidget/ImageWidget.php
-index bae25d84ff..bd9f484b46 100644
+index 80fc00fbbba..c59b164122c 100644
 --- a/core/modules/image/src/Plugin/Field/FieldWidget/ImageWidget.php
 +++ b/core/modules/image/src/Plugin/Field/FieldWidget/ImageWidget.php
 @@ -140,29 +140,10 @@ protected function formMultipleElements(FieldItemListInterface $items, array &$f
@@ -180,10 +180,10 @@ index bae25d84ff..bd9f484b46 100644
      $element['#accept'] = 'image/*';
  
 diff --git a/core/modules/image/tests/src/Functional/ImageFieldWidgetTest.php b/core/modules/image/tests/src/Functional/ImageFieldWidgetTest.php
-index 2bf7c652ea..39e2b37021 100644
+index dd2e6929a97..9edb33ecb8f 100644
 --- a/core/modules/image/tests/src/Functional/ImageFieldWidgetTest.php
 +++ b/core/modules/image/tests/src/Functional/ImageFieldWidgetTest.php
-@@ -47,13 +47,13 @@ public function testWidgetElement(): void {
+@@ -48,13 +48,13 @@ public function testWidgetElement(): void {
      $field_config = FieldConfig::loadByName('node', 'article', $field_name);
      $field_config->setSetting('file_extensions', 'png gif jpg jpeg webp tiff')->save();
      $this->drupalGet('node/add/article');
@@ -200,10 +200,10 @@ index 2bf7c652ea..39e2b37021 100644
  
  }
 diff --git a/core/modules/image/tests/src/Kernel/ImageItemTest.php b/core/modules/image/tests/src/Kernel/ImageItemTest.php
-index 28561deb38..8046c91abe 100644
+index aad34b9efab..8304b08a99e 100644
 --- a/core/modules/image/tests/src/Kernel/ImageItemTest.php
 +++ b/core/modules/image/tests/src/Kernel/ImageItemTest.php
-@@ -200,4 +200,46 @@ public function testImageItemMalformed(): void {
+@@ -198,4 +198,46 @@ public function testImageItemMalformed(): void {
      $this->assertEmpty($entity->image_test->height);
    }
  
@@ -251,7 +251,7 @@ index 28561deb38..8046c91abe 100644
 +
  }
 diff --git a/core/modules/media_library/src/Form/FileUploadForm.php b/core/modules/media_library/src/Form/FileUploadForm.php
-index fd2bc14a41..40733877a4 100644
+index e9e25f108fc..85a628ec58e 100644
 --- a/core/modules/media_library/src/Form/FileUploadForm.php
 +++ b/core/modules/media_library/src/Form/FileUploadForm.php
 @@ -5,7 +5,6 @@
@@ -284,72 +284,8 @@ index fd2bc14a41..40733877a4 100644
    }
  
    /**
-diff --git a/core/modules/media_library/tests/src/FunctionalJavascript/MediaLibraryImageUploadTest.php b/core/modules/media_library/tests/src/FunctionalJavascript/MediaLibraryImageUploadTest.php
-new file mode 100644
-index 0000000000..6d4d9ce161
---- /dev/null
-+++ b/core/modules/media_library/tests/src/FunctionalJavascript/MediaLibraryImageUploadTest.php
-@@ -0,0 +1,58 @@
-+<?php
-+
-+declare(strict_types=1);
-+
-+namespace Drupal\Tests\media_library\FunctionalJavascript;
-+
-+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
-+use Drupal\Tests\media\Traits\MediaTypeCreationTrait;
-+
-+/**
-+ * Tests the handling of images uploaded to the media library.
-+ *
-+ * @group media_library
-+ */
-+class MediaLibraryImageUploadTest extends MediaLibraryTestBase {
-+
-+  use EntityReferenceFieldCreationTrait;
-+  use MediaTypeCreationTrait;
-+
-+  /**
-+   * Tests that oversized images are automatically resized on upload.
-+   */
-+  public function testImageResizing() {
-+    // Create a media type that only accepts images up to 16x16 in size.
-+    $media_type = $this->createMediaType('image');
-+    $media_type->getSource()
-+      ->getSourceFieldDefinition($media_type)
-+      ->setSetting('max_resolution', '16x16')
-+      ->save();
-+
-+    $node_type = $this->drupalCreateContentType()->id();
-+    $this->createEntityReferenceField('node', $node_type, 'field_icon', 'Icon', 'media');
-+    $this->container->get('entity_display.repository')
-+      ->getFormDisplay('node', $node_type)
-+      ->setComponent('field_icon', [
-+        'type' => 'media_library_widget',
-+      ])
-+      ->save();
-+
-+    $account = $this->drupalCreateUser([
-+      "create $node_type content",
-+      'create ' . $media_type->id() . ' media',
-+    ]);
-+    $this->drupalLogin($account);
-+    $this->drupalGet("/node/add/$node_type");
-+    $this->openMediaLibraryForField('field_icon');
-+
-+    $image_uri = uniqid('public://') . '.png';
-+    $image_uri = $this->getRandomGenerator()->image($image_uri, '16x16', '32x32');
-+    $image_path = $this->container->get('file_system')->realpath($image_uri);
-+    $this->assertNotEmpty($image_path);
-+    $this->assertFileExists($image_path);
-+
-+    $this->waitForFieldExists('Add file')->attachFile($image_path);
-+    $this->waitForText('The image was resized to fit within the maximum allowed dimensions of 16x16 pixels.');
-+  }
-+
-+}
 diff --git a/core/modules/rest/tests/src/Functional/FileUploadResourceTestBase.php b/core/modules/rest/tests/src/Functional/FileUploadResourceTestBase.php
-index 1dfe440577..3da874a4f9 100644
+index e4c1db6435d..96d3da4e1ab 100644
 --- a/core/modules/rest/tests/src/Functional/FileUploadResourceTestBase.php
 +++ b/core/modules/rest/tests/src/Functional/FileUploadResourceTestBase.php
 @@ -92,6 +92,20 @@ abstract class FileUploadResourceTestBase extends ResourceTestBase {
@@ -416,7 +352,7 @@ index 1dfe440577..3da874a4f9 100644
      $this->assertTrue($this->fileStorage->loadUnchanged(1)->isTemporary());
  
      // Verify that we can create an entity that references the uploaded file.
-@@ -286,11 +303,11 @@ public function testPostFileUploadInvalidHeaders(): void {
+@@ -287,11 +304,11 @@ public function testPostFileUploadInvalidHeaders(): void {
  
      // An invalid key-value pair in the Content-Disposition header should return
      // a 400.
@@ -430,7 +366,7 @@ index 1dfe440577..3da874a4f9 100644
      $this->assertResourceErrorResponse(400, 'The extended "filename*" format is currently not supported in the "Content-Disposition" header.', $response);
    }
  
-@@ -320,11 +337,11 @@ public function testPostFileUploadDuplicateFile(): void {
+@@ -321,11 +338,11 @@ public function testPostFileUploadDuplicateFile(): void {
      $this->assertSame(201, $response->getStatusCode());
  
      // Loading expected normalized data for file 2, the duplicate file.
@@ -444,7 +380,7 @@ index 1dfe440577..3da874a4f9 100644
    }
  
    /**
-@@ -351,11 +368,11 @@ public function testPostFileUploadDuplicateFileRaceCondition(): void {
+@@ -352,11 +369,11 @@ public function testPostFileUploadDuplicateFileRaceCondition(): void {
      // time, by removing the first uploaded file from disk (leaving the entry in
      // the file_managed table) before trying to upload another file with the
      // same name.
@@ -458,7 +394,7 @@ index 1dfe440577..3da874a4f9 100644
    }
  
    /**
-@@ -372,24 +389,24 @@ public function testFileUploadStrippedFilePath(): void {
+@@ -373,24 +390,24 @@ public function testFileUploadStrippedFilePath(): void {
  
      $uri = Url::fromUri('base:' . static::$postUri);
  
@@ -491,7 +427,7 @@ index 1dfe440577..3da874a4f9 100644
  
      // Check a path from the root. Extensions have to be empty to allow a file
      // with no extension to pass validation.
-@@ -405,7 +422,7 @@ public function testFileUploadStrippedFilePath(): void {
+@@ -406,7 +423,7 @@ public function testFileUploadStrippedFilePath(): void {
      $this->assertResponseData($expected, $response);
  
      // Check the actual file data. It should have been written to the configured
@@ -500,7 +436,7 @@ index 1dfe440577..3da874a4f9 100644
      $this->assertSame($this->testFileData, file_get_contents('public://foobar/passwd'));
    }
  
-@@ -423,11 +440,11 @@ public function testFileUploadUnicodeFilename(): void {
+@@ -424,11 +441,11 @@ public function testFileUploadUnicodeFilename(): void {
  
      // It is important that the filename starts with a unicode character. See
      // https://bugs.php.net/bug.php?id=77239.
@@ -515,7 +451,7 @@ index 1dfe440577..3da874a4f9 100644
    }
  
    /**
-@@ -451,7 +468,7 @@ public function testFileUploadZeroByteFile(): void {
+@@ -452,7 +469,7 @@ public function testFileUploadZeroByteFile(): void {
      $this->assertResponseData($expected, $response);
  
      // Check the actual file data.
@@ -524,7 +460,7 @@ index 1dfe440577..3da874a4f9 100644
    }
  
    /**
-@@ -468,11 +485,11 @@ public function testFileUploadInvalidFileType(): void {
+@@ -469,11 +486,11 @@ public function testFileUploadInvalidFileType(): void {
  
      // Test with a JSON file.
      $response = $this->fileRequest($uri, '{"test":123}', ['Content-Disposition' => 'filename="example.json"']);
@@ -538,7 +474,7 @@ index 1dfe440577..3da874a4f9 100644
    }
  
    /**
-@@ -498,7 +515,7 @@ public function testFileUploadLargerFileSize(): void {
+@@ -499,7 +516,7 @@ public function testFileUploadLargerFileSize(): void {
  
      // Make sure that no file was saved.
      $this->assertEmpty(File::load(1));
@@ -547,7 +483,7 @@ index 1dfe440577..3da874a4f9 100644
    }
  
    /**
-@@ -521,25 +538,26 @@ public function testFileUploadMaliciousExtension(): void {
+@@ -522,25 +539,26 @@ public function testFileUploadMaliciousExtension(): void {
  
      // Test using a masked exploit file.
      $response = $this->fileRequest($uri, $php_string, ['Content-Disposition' => 'filename="example.php"']);
@@ -583,7 +519,7 @@ index 1dfe440577..3da874a4f9 100644
      $this->assertFileDoesNotExist('public://foobar/example_2.php');
  
      // Allow .doc file uploads and ensure even a mis-configured apache will not
-@@ -588,18 +606,18 @@ public function testFileUploadMaliciousExtension(): void {
+@@ -589,18 +607,18 @@ public function testFileUploadMaliciousExtension(): void {
      $this->assertResponseData($expected, $response);
      $this->assertFileExists('public://foobar/example_5.php_.png');
  
@@ -608,7 +544,7 @@ index 1dfe440577..3da874a4f9 100644
      $this->field->setSetting('file_extensions', 'php')->save();
      $this->refreshTestStateAfterRestConfigChange();
  
-@@ -608,7 +626,7 @@ public function testFileUploadMaliciousExtension(): void {
+@@ -609,7 +627,7 @@ public function testFileUploadMaliciousExtension(): void {
  
      // Make sure that no file was saved.
      $this->assertFileDoesNotExist('public://foobar/example_7.php');
@@ -617,7 +553,7 @@ index 1dfe440577..3da874a4f9 100644
  
      // Now allow insecure uploads.
      \Drupal::configFactory()
-@@ -645,11 +663,11 @@ public function testFileUploadNoExtensionSetting(): void {
+@@ -646,11 +664,11 @@ public function testFileUploadNoExtensionSetting(): void {
        ->save();
      $this->refreshTestStateAfterRestConfigChange();
  
@@ -632,7 +568,7 @@ index 1dfe440577..3da874a4f9 100644
    }
  
    /**
-@@ -681,7 +699,9 @@ protected function getExpectedUnauthorizedAccessMessage($method) {
+@@ -682,7 +700,9 @@ protected function getExpectedUnauthorizedAccessMessage($method) {
     * @return array
     *   The expected normalized data array.
     */
@@ -643,7 +579,7 @@ index 1dfe440577..3da874a4f9 100644
      $author = User::load(static::$auth ? $this->account->id() : 0);
      $file = File::load($fid);
      $this->assertInstanceOf(FileInterface::class, $file);
-@@ -712,7 +732,7 @@ protected function getExpectedNormalizedEntity($fid = 1, $expected_filename = 'e
+@@ -713,7 +733,7 @@ protected function getExpectedNormalizedEntity($fid = 1, $expected_filename = 'e
        ],
        'filename' => [
          [
@@ -652,7 +588,7 @@ index 1dfe440577..3da874a4f9 100644
          ],
        ],
        'uri' => [
-@@ -778,7 +798,7 @@ protected function fileRequest(Url $url, $file_contents, array $headers = []) {
+@@ -780,7 +800,7 @@ protected function fileRequest(Url $url, $file_contents, array $headers = []): R
        // Set the required (and only accepted) content type for the request.
        'Content-Type' => 'application/octet-stream',
        // Set the required Content-Disposition header for the file name.
