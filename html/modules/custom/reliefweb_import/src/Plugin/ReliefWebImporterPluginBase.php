@@ -337,6 +337,27 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function skipContentClassification(): bool {
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function alterContentClassificationSpecifiedFieldCheck(array &$fields): void {
+    // Nothing to do.
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function alterContentClassificationForceFieldUpdate(array &$fields): void {
+    // Nothing to do.
+  }
+
+  /**
    * Sanitize a file name.
    *
    * @param string $filename

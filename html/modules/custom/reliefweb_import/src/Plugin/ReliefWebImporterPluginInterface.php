@@ -137,4 +137,29 @@ interface ReliefWebImporterPluginInterface {
    */
   public function generateUuid(string $string, ?string $namespace = NULL): string;
 
+  /**
+   * Check if the automatic classification should be skipped for this importer.
+   *
+   * @return bool
+   *   TRUE if the automated classification should be skipped for content from
+   *   imported with this plugin.
+   */
+  public function skipContentClassification(): bool;
+
+  /**
+   * Alter the list of fields that should prevent the classification if filled.
+   *
+   * @param array $fields
+   *   List of fields managed by the classification workflow.
+   */
+  public function alterContentClassificationSpecifiedFieldCheck(array &$fields): void;
+
+  /**
+   * Alter the list of fields that can be overridden during classification.
+   *
+   * @param array $fields
+   *   List of fields managed by the classification workflow.
+   */
+  public function alterContentClassificationForceFieldUpdate(array &$fields): void;
+
 }

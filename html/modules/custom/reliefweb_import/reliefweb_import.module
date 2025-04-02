@@ -67,12 +67,12 @@ function reliefweb_import_ocha_content_classification_specified_field_check_alte
     return;
   }
 
-  // Mark all the field as optional so that the classification is not skipped
-  // if any of the field is already filled.
-  //
-  // @todo add a method to the importer plugins to determine what fields can
-  // be updated by the automated classification.
-  $fields = array_map(fn($item) => FALSE, $fields);
+  if ($importer->skipContentClassification()) {
+    return;
+  }
+
+  // Let the importer alter the list of fields to check.
+  $importer->alterContentClassificationSpecifiedFieldCheck($fields);
 }
 
 /**
@@ -88,12 +88,8 @@ function reliefweb_import_ocha_content_classification_force_field_update_alter(a
     return;
   }
 
-  // Force the update of the fields with the data from the classifier even
-  // if they alrady had a value.
-  //
-  // @todo add a method to the importer plugins to determine what fields can
-  // be updated by the automated classification.
-  $fields = array_map(fn($item) => TRUE, $fields);
+  // Let the importer decide which fields can be forcibly updated.
+  $importer->alterContentClassificationForceFieldUpdate($fields);
 }
 
 /**

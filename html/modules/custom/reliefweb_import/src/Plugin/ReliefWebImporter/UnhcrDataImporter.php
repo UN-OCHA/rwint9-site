@@ -1129,4 +1129,29 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
     return $schema;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function skipContentClassification(): bool {
+    return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function alterContentClassificationSpecifiedFieldCheck(array &$fields): void {
+    // Mark all the field as optional so that the classification is not skipped
+    // if any of the field is already filled.
+    $fields = array_map(fn($item) => FALSE, $fields);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function alterContentClassificationForceFieldUpdate(array &$fields): void {
+    // Force the update of the fields with the data from the classifier even
+    // if they already had a value.
+    $fields = array_map(fn($item) => TRUE, $fields);
+  }
+
 }
