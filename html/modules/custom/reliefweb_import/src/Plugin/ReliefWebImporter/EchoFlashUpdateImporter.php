@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\reliefweb_import\Plugin\ReliefWebImporter;
 
-use Drupal\Component\Serialization\Json;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\reliefweb_import\Attribute\ReliefWebImporter;
@@ -13,14 +12,14 @@ use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface;
 use Drupal\reliefweb_post_api\Helpers\HashHelper;
 
 /**
- * Import reports from the ECHO Flash Data API.
+ * Import reports from the ECHO Flash Update API.
  */
 #[ReliefWebImporter(
-  id: 'echo_data',
-  label: new TranslatableMarkup('Echo Flash Data importer'),
-  description: new TranslatableMarkup('Import reports from the Echo Flash Data API.')
+  id: 'echo_flash_update',
+  label: new TranslatableMarkup('Echo Flash Update Update importer'),
+  description: new TranslatableMarkup('Import reports from the Echo Flash Update API.')
 )]
-class EchoDataImporter extends ReliefWebImporterPluginBase {
+class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
 
   /**
    * Find country by iso code.
@@ -58,7 +57,7 @@ class EchoDataImporter extends ReliefWebImporterPluginBase {
         ->getStorage('taxonomy_term')
         ->loadByProperties(['vid' => 'disaster_type']);
       foreach ($disasters as $disaster) {
-        $disaster_code = strtolower($disaster->get('field_code')->value);
+        $disaster_code = strtolower($disaster->get('field_disaster_type_code')->value);
         if (in_array($disaster_code, ['ce', 'ot'])) {
           continue;
         }
@@ -79,7 +78,7 @@ class EchoDataImporter extends ReliefWebImporterPluginBase {
     $form['api_url'] = [
       '#type' => 'url',
       '#title' => $this->t('API URL'),
-      '#description' => $this->t('The base URL of the UNHCR Data API.'),
+      '#description' => $this->t('The URL of the Echo Flash Update API including ItemsPageSize.'),
       '#default_value' => $form_state->getValue('api_url', $this->getPluginSetting('api_url', '', FALSE)),
       '#required' => TRUE,
     ];
@@ -110,10 +109,10 @@ class EchoDataImporter extends ReliefWebImporterPluginBase {
       // Ensure the provider is valid.
       $plugin->getProvider($provider_uuid);
 
-      $this->getLogger()->info('Retrieving documents from the UNHCR data API.');
+      $this->getLogger()->info('Retrieving documents from the Echo Flash Update API.');
 
       // Retrieve the latest created documents.
-      $documents = $this->getDocuments($limit);
+      $documents = $this->getDocuments();
 
       if (empty($documents)) {
         $this->getLogger()->notice('No documents.');
@@ -125,7 +124,7 @@ class EchoDataImporter extends ReliefWebImporterPluginBase {
       return FALSE;
     }
 
-    $this->getLogger()->info(strtr('Retrieved @count Echo Flash documents.', [
+    $this->getLogger()->info(strtr('Retrieved @count Echo Flash Update documents.', [
       '@count' => count($documents),
     ]));
 
@@ -141,17 +140,12 @@ class EchoDataImporter extends ReliefWebImporterPluginBase {
   }
 
   /**
-   * Retrieve documents from the Echo Flash API.
-   *
-   * @param int $limit
-   *   Maximum number of documents to retrieve at once.
-   * @param string $order_property
-   *   Property to use to sort the documents.
+   * Retrieve documents from the Echo Flash Update API.
    *
    * @return array
    *   List of documents keyed by IDs.
    */
-  protected function getDocuments(int $limit, string $order_property = 'created'): array {
+  protected function getDocuments(): array {
     // Get list of documents.
     try {
       $timeout = $this->getPluginSetting('timeout', 10, FALSE);
@@ -198,10 +192,10 @@ class EchoDataImporter extends ReliefWebImporterPluginBase {
   }
 
   /**
-   * Process the documents retrieved from the Echo Flash API.
+   * Process the documents retrieved from the Echo Flash Update API.
    *
    * @param array $documents
-   *   Echo Flash documents.
+   *   Echo Flash Update documents.
    * @param string $provider_uuid
    *   The provider UUID.
    * @param \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface $plugin
@@ -211,22 +205,7 @@ class EchoDataImporter extends ReliefWebImporterPluginBase {
    *   The number of documents that were skipped or imported successfully.
    */
   protected function processDocuments(array $documents, string $provider_uuid, ContentProcessorPluginInterface $plugin): int {
-    $schema = $this->getJsonSchema('report');
-
-    // This is the list of extensions supported by the report attachment field.
-    $extensions = explode(' ', 'csv doc docx jpg jpeg odp ods odt pdf png pps ppt pptx svg xls xlsx zip');
-    $allowed_mimetypes = array_filter(array_map(fn($extension) => $this->mimeTypeGuesser->guessMimeType('dummy.' . $extension), $extensions));
-    $allowed_mimetypes[] = 'application/octet-stream';
-
-    // Override some plugin settings to accommodate for specifities of the data.
-    $plugin->setPluginSetting('schema', $schema);
-    $plugin->setPluginSetting('attachments.allowed_mimetypes', $allowed_mimetypes);
-
-    // Disable content type validation because the files to download do not have
-    // consistent content type headers (ex: pdf instead of application/pdf).
-    $plugin->setPluginSetting('validate_file_content_type', FALSE);
-
-    // Source: Echo Flash.
+    // Source: Echo Flash Update.
     $source = [620];
 
     // Prepare the documents and submit them.
@@ -234,21 +213,21 @@ class EchoDataImporter extends ReliefWebImporterPluginBase {
     foreach ($documents as $document) {
       // Retrieve the document ID.
       if (!isset($document['ContentItemId'])) {
-        $this->getLogger()->notice('Undefined Echo Flash document ID, skipping document import.');
+        $this->getLogger()->notice('Undefined Echo Flash Update document ID, skipping document import.');
         continue;
       }
       $id = $document['ContentItemId'];
 
       // Retrieve the document URL.
       if (!isset($document['Link'])) {
-        $this->getLogger()->notice(strtr('Undefined document URL for Echo Flash document ID @id, skipping document import.', [
+        $this->getLogger()->notice(strtr('Undefined document URL for Echo Flash Update document ID @id, skipping document import.', [
           '@id' => $id,
         ]));
         continue;
       }
       $url = $document['Link'];
 
-      $this->getLogger()->info(strtr('Processing Echo Flash document @id.', [
+      $this->getLogger()->info(strtr('Processing Echo Flash Update document @id.', [
         '@id' => $id,
       ]));
 
@@ -268,7 +247,7 @@ class EchoDataImporter extends ReliefWebImporterPluginBase {
         ->execute();
       if (!empty($records)) {
         $processed++;
-        $this->getLogger()->info(strtr('Echo Flash document @id (entity @entity_id) already imported and not changed, skipping.', [
+        $this->getLogger()->info(strtr('Echo Flash Update document @id (entity @entity_id) already imported and not changed, skipping.', [
           '@id' => $id,
           '@entity_id' => reset($records),
         ]));
@@ -307,7 +286,6 @@ class EchoDataImporter extends ReliefWebImporterPluginBase {
       }
 
       $countries = array_unique($countries);
-      $country = reset($countries);
 
       // Disaster type.
       $disaster_types = [];
@@ -354,13 +332,13 @@ class EchoDataImporter extends ReliefWebImporterPluginBase {
       try {
         $entity = $plugin->process($data);
         $processed++;
-        $this->getLogger()->info(strtr('Successfully processed UNHCR document @id to entity @entity_id.', [
+        $this->getLogger()->info(strtr('Successfully processed Echo Flash Update document @id to entity @entity_id.', [
           '@id' => $id,
           '@entity_id' => $entity->id(),
         ]));
       }
       catch (\Exception $exception) {
-        $this->getLogger()->error(strtr('Unable to process UNHCR document @id: @exception', [
+        $this->getLogger()->error(strtr('Unable to process Echo Flash Update document @id: @exception', [
           '@id' => $id,
           '@exception' => $exception->getMessage(),
         ]));
@@ -368,24 +346,6 @@ class EchoDataImporter extends ReliefWebImporterPluginBase {
     }
 
     return $processed;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getJsonSchema(string $bundle): string {
-    $schema = parent::getJsonSchema($bundle);
-    $decoded = Json::decode($schema);
-    if ($decoded) {
-      // Allow attachment URLs without a PDF extension.
-      unset($decoded['properties']['file']['items']['properties']['url']['pattern']);
-      // Allow empty strings as body.
-      unset($decoded['properties']['body']['minLength']);
-      unset($decoded['properties']['body']['allOf']);
-      unset($decoded['properties']['body']['not']);
-      $schema = Json::encode($decoded);
-    }
-    return $schema;
   }
 
 }
