@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "dadc75e9a7438f2a8ed8f9813f7d2522",
+    "content-hash": "e87c86ed132d06e65363994ba60cfe62",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -8626,6 +8626,58 @@
                 "source": "https://github.com/nikic/PHP-Parser/tree/v5.4.0"
             },
             "time": "2024-12-30T11:07:19+00:00"
+        },
+        {
+            "name": "nitotm/efficient-language-detector",
+            "version": "v3.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nitotm/efficient-language-detector.git",
+                "reference": "f7f999d8bfd7e4aaf3fb1cf4ba8ca91ea9bbddab"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/nitotm/efficient-language-detector/zipball/f7f999d8bfd7e4aaf3fb1cf4ba8ca91ea9bbddab",
+                "reference": "f7f999d8bfd7e4aaf3fb1cf4ba8ca91ea9bbddab",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mbstring": "*",
+                "php": "^7.4 || ^8.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Nitotm\\Eld\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Nito T.M.",
+                    "homepage": "https://github.com/nitotm"
+                }
+            ],
+            "description": "Fast and accurate natural language detection. Detector written in PHP. Nito-ELD, ELD.",
+            "homepage": "https://github.com/nitotm/efficient-language-detector",
+            "keywords": [
+                "detection",
+                "detector",
+                "language",
+                "language classification",
+                "language detection",
+                "language detector",
+                "language identification",
+                "language recognition"
+            ],
+            "support": {
+                "issues": "https://github.com/nitotm/efficient-language-detector/issues",
+                "source": "https://github.com/nitotm/efficient-language-detector/tree/v3.0.0"
+            },
+            "time": "2024-10-10T17:53:50+00:00"
         },
         {
             "name": "nyholm/psr7-server",
@@ -17569,12 +17621,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_content_classification.git",
-                "reference": "86dee5c2cbd4a293e6f6e8c21173395ef4a0fa2a"
+                "reference": "5db8fe711497d30c079f3a3245e1abb79ecb4bd4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_content_classification/zipball/86dee5c2cbd4a293e6f6e8c21173395ef4a0fa2a",
-                "reference": "86dee5c2cbd4a293e6f6e8c21173395ef4a0fa2a",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_content_classification/zipball/5db8fe711497d30c079f3a3245e1abb79ecb4bd4",
+                "reference": "5db8fe711497d30c079f3a3245e1abb79ecb4bd4",
                 "shasum": ""
             },
             "require": {
@@ -17602,7 +17654,7 @@
                 "issues": "https://github.com/UN-OCHA/ocha_content_classification/issues",
                 "source": "https://github.com/UN-OCHA/ocha_content_classification/tree/RW-1172"
             },
-            "time": "2025-03-19T05:13:41+00:00"
+            "time": "2025-04-02T06:16:46+00:00"
         },
         {
             "name": "unocha/ocha_entraid",
