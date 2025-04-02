@@ -174,12 +174,8 @@
 
       {{ attachments ? attachments|merge({'#lazy_load_first_preview': image is not empty}) }}
 
-      {% if content.body[0]['#disclaimer'] %}
-      <p class="rw-document__content__disclaimer" data-nosnippet>
-        <small class="rw-document__content__disclaimer__text">{{ content.body[0]['#disclaimer'] }}</small>
-      </p>
-      {% endif %}
-      {{ content.body.0|render|sanitize_html(false, 1) }}
+      {{ content.ai_summary_disclaimer }}
+      {{ content.body|render|sanitize_html(false, 1) }}
 
       {{ node.getSourceDisclaimers() }}
 
@@ -203,6 +199,7 @@
           'value': countries|slice(0, 1),
           'count': 1,
           'sort': null,
+          'field': 'field_primary_country',
         },
         'country': {
           'type': 'taglist',
@@ -210,6 +207,7 @@
           'value': countries|slice(1),
           'count': null,
           'sort': null,
+          'field': 'field_country',
         },
         'source': {
           'type': 'taglist',
@@ -217,6 +215,7 @@
           'value': meta.source,
           'count': null,
           'sort': 'name',
+          'field': 'field_source',
         },
         'disaster': {
           'type': 'taglist',
@@ -224,6 +223,7 @@
           'value': meta.disaster,
           'count': null,
           'sort': 'name',
+          'field': 'field_disaster',
         },
         'format': {
           'type': 'taglist',
@@ -231,6 +231,7 @@
           'value': meta.format|slice(0, 1),
           'count': 1,
           'sort': 'name',
+          'field': 'field_content_format',
         },
         'theme': {
           'type': 'taglist',
@@ -238,6 +239,7 @@
           'value': meta.theme,
           'count': null,
           'sort': 'name',
+          'field': 'field_theme',
         },
         'disaster-type': {
           'type': 'taglist',
@@ -245,6 +247,7 @@
           'value': meta.disaster_type,
           'count': null,
           'sort': 'name',
+          'field': 'field_disaster_type',
         },
         'language': {
           'type': 'taglist',
@@ -252,8 +255,10 @@
           'value': meta.language,
           'count': null,
           'sort': 'name',
+          'field': 'field_language',
         },
       },
+      '#entity': node,
       '#cache': {
         'tags': [
           'taxonomy_term_list:content_format',

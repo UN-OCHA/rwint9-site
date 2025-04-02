@@ -199,6 +199,8 @@ function reliefweb_entities_theme() {
         // and end date or list of tags). For tag lists, there are also count
         // and sort properties.
         'meta' => [],
+        // The entity.
+        'entity' => NULL,
       ],
     ],
     'reliefweb_entities_entity_text' => [
@@ -241,6 +243,8 @@ function reliefweb_entities_theme() {
         'meta' => '',
         // Meta information attributes.
         'meta_attributes' => NULL,
+        // The entity.
+        'entity' => NULL,
       ],
     ],
     'reliefweb_entities_entity_social_media_links' => [
