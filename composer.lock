@@ -17574,12 +17574,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_ai.git",
-                "reference": "c0ad99c582c3ece2c79c758e8fd756113f0c39d7"
+                "reference": "53404a6848fdeff96281fbc49831d9820a5ec5b8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/c0ad99c582c3ece2c79c758e8fd756113f0c39d7",
-                "reference": "c0ad99c582c3ece2c79c758e8fd756113f0c39d7",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/53404a6848fdeff96281fbc49831d9820a5ec5b8",
+                "reference": "53404a6848fdeff96281fbc49831d9820a5ec5b8",
                 "shasum": ""
             },
             "require": {
@@ -17613,7 +17613,7 @@
                 "issues": "https://github.com/UN-OCHA/ocha_ai/issues",
                 "source": "https://github.com/UN-OCHA/ocha_ai/tree/RW-1172"
             },
-            "time": "2025-03-11T02:20:16+00:00"
+            "time": "2025-04-03T08:46:07+00:00"
         },
         {
             "name": "unocha/ocha_content_classification",
@@ -17621,12 +17621,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_content_classification.git",
-                "reference": "7f90a91224baac9c02fae950d0619d7cef57faf6"
+                "reference": "d61f95b1caba8f2c70314b85468402fd69f01528"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_content_classification/zipball/7f90a91224baac9c02fae950d0619d7cef57faf6",
-                "reference": "7f90a91224baac9c02fae950d0619d7cef57faf6",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_content_classification/zipball/d61f95b1caba8f2c70314b85468402fd69f01528",
+                "reference": "d61f95b1caba8f2c70314b85468402fd69f01528",
                 "shasum": ""
             },
             "require": {
@@ -17654,7 +17654,7 @@
                 "issues": "https://github.com/UN-OCHA/ocha_content_classification/issues",
                 "source": "https://github.com/UN-OCHA/ocha_content_classification/tree/RW-1172"
             },
-            "time": "2025-04-02T12:26:49+00:00"
+            "time": "2025-04-03T10:21:35+00:00"
         },
         {
             "name": "unocha/ocha_entraid",
