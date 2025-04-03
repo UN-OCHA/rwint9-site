@@ -4,6 +4,7 @@ namespace Drupal\reliefweb_files\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
+use Drupal\Core\StringTranslation\ByteSizeMarkup;
 
 /**
  * Plugin implementation of the 'reliefweb_file' formatter.
@@ -43,7 +44,7 @@ class ReliefWebFile extends FormatterBase {
           'label' => $item->getFileName(),
           'description' => '(' . implode(' | ', array_filter([
             mb_strtoupper($item->getFileExtension()),
-            format_size($item->getFileSize()),
+            ByteSizeMarkup::create($item->getFileSize()),
             implode(' - ', array_filter([
               $item->getFileDescription(),
               $version,

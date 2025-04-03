@@ -16,6 +16,7 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\file\Entity\File;
 use Drupal\file\Validation\FileValidatorInterface;
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile as ReliefWebFileType;
@@ -1356,7 +1357,7 @@ class ReliefWebFile extends WidgetBase {
     return $this->t('@file_name (@file_extension | @file_size)', [
       '@file_name' => $file_name,
       '@file_extension' => mb_strtoupper($file_extension),
-      '@file_size' => format_size($file_size),
+      '@file_size' => ByteSizeMarkup::create($file_size),
     ]);
   }
 
