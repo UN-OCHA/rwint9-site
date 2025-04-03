@@ -409,6 +409,10 @@ function reliefweb_ai_preprocess_reliefweb_rivers_page__updates(array &$variable
     return;
   }
 
+  if (empty($variables['content']['#entities'])) {
+    return;
+  }
+
   // Retrieve the summary from the database.
   $query = \Drupal::database()->select('node', 'n');
   $query->leftJoin('node__field_headline_summary', 's', '%alias.entity_id = n.nid');
