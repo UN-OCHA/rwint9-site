@@ -1142,7 +1142,7 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
   public function alterContentClassificationSpecifiedFieldCheck(array &$fields): void {
     // Mark all the field as optional so that the classification is not skipped
     // if any of the field is already filled.
-    $fields = array_map(fn($item) => FALSE, $fields);
+    $fields = array_map(fn($field) => FALSE, $fields);
   }
 
   /**
@@ -1151,7 +1151,10 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
   public function alterContentClassificationForceFieldUpdate(array &$fields): void {
     // Force the update of the fields with the data from the classifier even
     // if they already had a value.
-    $fields = array_map(fn($item) => TRUE, $fields);
+    $fields = array_map(fn($field) => TRUE, $fields);
+    // Keep the original title and source.
+    $fields['title__value'] = FALSE;
+    $fields['field_source'] = FALSE;
   }
 
 }
