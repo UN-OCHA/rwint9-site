@@ -1,0 +1,13 @@
+diff --git a/composer.json b/composer.json
+index 821fe0a..a2854b4 100644
+--- a/composer.json
++++ b/composer.json
+@@ -17,7 +17,7 @@
+     ],
+     "require": {
+         "php": ">=8.3",
+-        "drupal/core": "^10",
++        "drupal/core": "^10 || ^11",
+         "drupal/honeypot": "^2",
+         "drupal/openid_connect": "^3.0",
+         "drupal/openid_connect_windows_aad": "^2.0@beta"

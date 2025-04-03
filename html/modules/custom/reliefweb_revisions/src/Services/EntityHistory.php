@@ -16,6 +16,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
@@ -1170,7 +1171,7 @@ class EntityHistory {
           $file = $files[$item['file_uuid']];
           $label = new FormattableMarkup('@file_name (@file_size)', [
             '@file_name' => $file['filename'],
-            '@file_size' => format_size($file['filesize']),
+            '@file_size' => ByteSizeMarkup::create($file['filesize']),
           ]);
 
           $uri = UrlHelper::getAbsoluteFileUri($file['uri']);
@@ -1209,7 +1210,7 @@ class EntityHistory {
               $original_file = $files[$original_item['file_uuid']];
               $original_label = new FormattableMarkup('@file_name (@file_size)', [
                 '@file_name' => $original_file['filename'],
-                '@file_size' => format_size($original_file['filesize']),
+                '@file_size' => ByteSizeMarkup::create($original_file['filesize']),
               ]);
 
               $original_uri = UrlHelper::getAbsoluteFileUri($original_file['uri']);

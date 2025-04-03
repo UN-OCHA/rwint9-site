@@ -2,7 +2,7 @@ type: module
 name: ReliefWeb Import
 description: 'Handles importing content into ReliefWeb.'
 package: reliefweb
-core_version_requirement: ^10
+core_version_requirement: ^11
 dependencies:
   - drupal:reliefweb_api
   - drupal:reliefweb_entities
