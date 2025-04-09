@@ -989,13 +989,17 @@ class ReliefWebFile extends FieldItemBase {
     }
     // Only people with access to the private files can have a link to the file.
     elseif ($private) {
-      if (!$this->getCurrentUser()->hasPermission('access reliefweb private files')) {
+      if ($this->getCurrentUser()->hasPermission('access own reliefweb private files')) {
+        if ($this->getEntity()?->getOwnerId() != $this->getCurrentUser()->id()) {
+          return NULL;
+        }
+      }
+      elseif (!$this->getCurrentUser()->hasPermission('access reliefweb private files')) {
         return NULL;
       }
-      else {
-        $url = UrlHelper::getAbsoluteFileUri($uri);
-        return empty($url) ? NULL : Url::fromUri($url);
-      }
+
+      $url = UrlHelper::getAbsoluteFileUri($uri);
+      return empty($url) ? NULL : Url::fromUri($url);
     }
     // New or replaced files have an empty revision id and there should be a
     // file on disk for them. However we need to check for the page count to
