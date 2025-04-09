@@ -178,7 +178,7 @@ function migrateItems($media_items) {
 
     $item['categories'] = $categories;
     $item['tags'] = $tags;
-    $item['body']['value'] .= '<p><em>#JEU</em></p>';
+    $item['body']['value'] .= '<p><em>#EECentreResources</em></p>';
 
     if (!empty($categories['themes'] ?? [])) {
       sort($categories['themes']);
