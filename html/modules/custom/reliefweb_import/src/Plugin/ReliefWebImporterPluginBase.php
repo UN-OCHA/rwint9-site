@@ -18,7 +18,9 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\State\StateInterface;
+use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
 use Drupal\reliefweb_import\Exception\InvalidConfigurationException;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
@@ -339,21 +341,36 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
   /**
    * {@inheritdoc}
    */
-  public function skipContentClassification(): bool {
-    return TRUE;
+  public function alterContentClassificationSkipClassification(bool &$skip, ClassificationWorkflowInterface $workflow, array $context): void {
+    // Skip the classification by default.
+    $skip = TRUE;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function alterContentClassificationSpecifiedFieldCheck(array &$fields): void {
+  public function alterContentClassificationUserPermissionCheck(bool &$check, AccountInterface $account, array $context): void {
     // Nothing to do.
   }
 
   /**
    * {@inheritdoc}
    */
-  public function alterContentClassificationForceFieldUpdate(array &$fields): void {
+  public function alterContentClassificationSpecifiedFieldCheck(array &$fields, ClassificationWorkflowInterface $workflow, array $context): void {
+    // Nothing to do.
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function alterContentClassificationForceFieldUpdate(array &$fields, ClassificationWorkflowInterface $workflow, array $context): void {
+    // Nothing to do.
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function alterContentClassificationClassifiedFields(array &$fields, ClassificationWorkflowInterface $workflow, array $context): void {
     // Nothing to do.
   }
 

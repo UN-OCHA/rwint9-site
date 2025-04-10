@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\reliefweb_import\Plugin;
 
+use Drupal\Core\Session\AccountInterface;
+use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -138,28 +140,84 @@ interface ReliefWebImporterPluginInterface {
   public function generateUuid(string $string, ?string $namespace = NULL): string;
 
   /**
-   * Check if the automatic classification should be skipped for this importer.
+   * Alter the skip classification flag.
    *
-   * @return bool
-   *   TRUE if the automated classification should be skipped for content from
-   *   imported with this plugin.
+   * This allows to bypass the check on the emptiness of a classifiable or
+   * fillable field when determining if the classification should proceed.
+   *
+   * @param bool $skip
+   *   Flag to indicate whether the classification should be skipped or not.
+   * @param \Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface $workflow
+   *   The workflow being used for classification.
+   * @param array $context
+   *   An array containing contextual information:
+   *   - entity: The entity being classified.
    */
-  public function skipContentClassification(): bool;
+  public function alterContentClassificationSkipClassification(bool &$skip, ClassificationWorkflowInterface $workflow, array $context): void;
 
   /**
-   * Alter the list of fields that should prevent the classification if filled.
+   * Alter whether user permissions should be checked before classification.
    *
-   * @param array $fields
-   *   List of fields managed by the classification workflow.
+   * @param bool $check
+   *   Whether to check user permissions. Set to FALSE to bypass permission
+   *   checks.
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The user account for which to check permissions.
+   * @param array $context
+   *   An array containing contextual information:
+   *   - workflow: The classification workflow.
+   *   - entity: The entity being classified.
    */
-  public function alterContentClassificationSpecifiedFieldCheck(array &$fields): void;
+  public function alterContentClassificationUserPermissionCheck(bool &$check, AccountInterface $account, array $context): void;
 
   /**
-   * Alter the list of fields that can be overridden during classification.
+   * Alter the fields to check to proceed with the classification.
+   *
+   * This allows to bypass the check on the emptiness of a classifiable or
+   * fillable field when determining if the classification should proceed.
    *
    * @param array $fields
-   *   List of fields managed by the classification workflow.
+   *   Associative array with the field names as keys and TRUE or FALSE as
+   *   values. The check on a field is performed only if the value for the field
+   *   is TRUE.
+   * @param \Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface $workflow
+   *   The workflow being used for classification.
+   * @param array $context
+   *   An array containing contextual information:
+   *   - entity: The entity being classified.
    */
-  public function alterContentClassificationForceFieldUpdate(array &$fields): void;
+  public function alterContentClassificationSpecifiedFieldCheck(array &$fields, ClassificationWorkflowInterface $workflow, array $context): void;
+
+  /**
+   * Alter the fields that should be forcibly updated during classification.
+   *
+   * @param array $fields
+   *   Associative array of fields to always update with field names as keys and
+   *   TRUE or FALSE as values. Set to TRUE to force the update of the field and
+   *   set to FALSE to skip if the field already has a value.
+   * @param \Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface $workflow
+   *   The workflow being used for classification.
+   * @param array $context
+   *   An array containing contextual information:
+   *   - entity: The entity being classified.
+   */
+  public function alterContentClassificationForceFieldUpdate(array &$fields, ClassificationWorkflowInterface $workflow, array $context): void;
+
+  /**
+   * Alter the fields to update on the entity after the classification.
+   *
+   * @param array $fields
+   *   The list of fields that the classifier handled, keyed by type:
+   *   classifiable or fillable with the list of fields keyed by field names
+   *   as values.
+   * @param \Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface $workflow
+   *   The workflow used for classification.
+   * @param array $context
+   *   An array containing contextual information:
+   *   - entity: the entity being classified
+   *   - classifier: the classifier plugin
+   *   - data: the raw data used by the classifier (depends on the classifier).
+   */
+  public function alterContentClassificationClassifiedFields(array &$fields, ClassificationWorkflowInterface $workflow, array $context): void;
 
 }

@@ -35,6 +35,22 @@ function reliefweb_import_node_presave(EntityInterface $entity): void {
 }
 
 /**
+ * Implements hook_ocha_content_classification_skip_classification_alter().
+ */
+function reliefweb_import_ocha_content_classification_skip_classification_alter(bool &$skip, ClassificationWorkflowInterface $workflow, array $context) {
+  if (!isset($context['entity'])) {
+    return;
+  }
+
+  $importer = reliefweb_import_get_entity_importer($context['entity']);
+  if (!isset($importer)) {
+    return;
+  }
+
+  $importer->alterContentClassificationSkipClassification($skip, $workflow, $context);
+}
+
+/**
  * Implements hook_ocha_content_classification_user_permission_check_alter().
  */
 function reliefweb_import_ocha_content_classification_user_permission_check_alter(bool &$check, AccountInterface $account, array $context) {
@@ -47,11 +63,7 @@ function reliefweb_import_ocha_content_classification_user_permission_check_alte
     return;
   }
 
-  // Bypass the user permission check for imported documents.
-  //
-  // @todo add a method to the importer plugins to decide whether or not to
-  // skip the user permission check.
-  $check = FALSE;
+  $importer->alterContentClassificationUserPermissionCheck($check, $account, $context);
 }
 
 /**
@@ -67,12 +79,8 @@ function reliefweb_import_ocha_content_classification_specified_field_check_alte
     return;
   }
 
-  if ($importer->skipContentClassification()) {
-    return;
-  }
-
   // Let the importer alter the list of fields to check.
-  $importer->alterContentClassificationSpecifiedFieldCheck($fields);
+  $importer->alterContentClassificationSpecifiedFieldCheck($fields, $workflow, $context);
 }
 
 /**
@@ -89,7 +97,24 @@ function reliefweb_import_ocha_content_classification_force_field_update_alter(a
   }
 
   // Let the importer decide which fields can be forcibly updated.
-  $importer->alterContentClassificationForceFieldUpdate($fields);
+  $importer->alterContentClassificationForceFieldUpdate($fields, $workflow, $context);
+}
+
+/**
+ * Implements hook_ocha_content_classification_force_field_update_alter().
+ */
+function reliefweb_import_ocha_content_classification_classified_fields_alter(array &$fields, ClassificationWorkflowInterface $workflow, array $context) {
+  if (!isset($context['entity'])) {
+    return;
+  }
+
+  $importer = reliefweb_import_get_entity_importer($context['entity']);
+  if (!isset($importer)) {
+    return;
+  }
+
+  // Let the importer decide which entity fields to update.
+  $importer->alterContentClassificationClassifiedFields($fields, $workflow, $context);
 }
 
 /**
@@ -104,7 +129,12 @@ function reliefweb_import_ocha_content_classification_force_field_update_alter(a
  * @todo Maybe we should store a reference to the importer in the entity.
  */
 function reliefweb_import_get_entity_importer(EntityInterface $entity): ?ReliefWebImporterPluginInterface {
+  if (isset($entity->reliefweb_importer)) {
+    return $entity->reliefweb_importer ?: NULL;
+  }
+
   if (!$entity->hasField('field_post_api_provider') || $entity->get('field_post_api_provider')->isEmpty()) {
+    $entity->reliefweb_importer = FALSE;
     return NULL;
   }
 
@@ -113,12 +143,14 @@ function reliefweb_import_get_entity_importer(EntityInterface $entity): ?ReliefW
   // Get the list of import plugins.
   $definitions = $plugin_manager->getDefinitions();
   if (empty($definitions)) {
+    $entity->reliefweb_importer = FALSE;
     return NULL;
   }
 
   // Retrieve the provider UUID from the entity.
   $provider_uuid = $entity->get('field_post_api_provider')->entity?->uuid();
   if (empty($provider_uuid)) {
+    $entity->reliefweb_importer = FALSE;
     return NULL;
   }
 
@@ -126,9 +158,13 @@ function reliefweb_import_get_entity_importer(EntityInterface $entity): ?ReliefW
   foreach (array_keys($definitions) as $plugin_id) {
     $key = 'reliefweb_import.plugin.importer.' . $plugin_id . '.provider_uuid';
     if ($state->get($key) === $provider_uuid) {
-      return $plugin_manager->getPlugin($plugin_id);
+      // Store the importer so we don't have to retrieve in the multiple
+      // hook implementations.
+      $entity->reliefweb_importer = $plugin_manager->getPlugin($plugin_id);
+      return $entity->reliefweb_importer;
     }
   }
 
+  $entity->reliefweb_importer = FALSE;
   return NULL;
 }

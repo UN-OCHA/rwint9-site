@@ -6,7 +6,9 @@ namespace Drupal\reliefweb_import\Plugin\ReliefWebImporter;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
 use Drupal\reliefweb_import\Attribute\ReliefWebImporter;
 use Drupal\reliefweb_import\Plugin\ReliefWebImporterPluginBase;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface;
@@ -1132,14 +1134,25 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function skipContentClassification(): bool {
-    return FALSE;
+  public function alterContentClassificationSkipClassification(bool &$skip, ClassificationWorkflowInterface $workflow, array $context): void {
+    // Allow the automated classification.
+    $skip = FALSE;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function alterContentClassificationSpecifiedFieldCheck(array &$fields): void {
+  public function alterContentClassificationUserPermissionCheck(bool &$check, AccountInterface $account, array $context): void {
+    // Bypass the user permission check for the classification since the user
+    // associated with the provider may not be authorized to use the automated
+    // classification.
+    $check = FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function alterContentClassificationSpecifiedFieldCheck(array &$fields, ClassificationWorkflowInterface $workflow, array $context): void {
     // Mark all the field as optional so that the classification is not skipped
     // if any of the field is already filled.
     $fields = array_map(fn($field) => FALSE, $fields);
@@ -1148,7 +1161,7 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function alterContentClassificationForceFieldUpdate(array &$fields): void {
+  public function alterContentClassificationForceFieldUpdate(array &$fields, ClassificationWorkflowInterface $workflow, array $context): void {
     // Force the update of the fields with the data from the classifier even
     // if they already had a value.
     $fields = array_map(fn($field) => TRUE, $fields);
