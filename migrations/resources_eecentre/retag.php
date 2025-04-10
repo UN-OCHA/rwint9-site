@@ -52,6 +52,7 @@ global $base_url;
 */
 
 $replace = [
+  '*#JEU*' => '*#EECentreResources*',
   '*\#JEU*' => '*\#EECentreResources*',
   '<p><em>#JEU</em></p>' => '<p><em>#EECentreResources</em></p>',
 ];
@@ -74,6 +75,10 @@ foreach ($results as $nid) {
   }
   else {
     $output->writeln('<comment>Processing ' . $nid . '</comment>');
+    $report->setNewRevision(TRUE);
+    $report->revision_log = 'Replaced #JEU with #EECentreResource';
+    $report->setRevisionCreationTime(REQUEST_TIME);
+    $report->setRevisionUserId(2);
     $report->body->value = strtr($report->body->value, $replace);
     try {
       $report->save();
