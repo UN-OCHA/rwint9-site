@@ -181,7 +181,7 @@ function reliefweb_ai_block_view_alter(array &$build, BlockPluginInterface $bloc
 /**
  * Implements hook_ocha_content_classification_post_classify_entity().
  *
- * Try to tag disasters after the usual report classification workflow.
+ * Try to determine the language after the usual report classification workflow.
  *
  * @todo replace when the ocha_content_classification module handles multi-steps
  * classification.
@@ -440,5 +440,4 @@ function reliefweb_ai_preprocess_reliefweb_rivers_page__updates(array &$variable
       $variables['content']['#entities'][$record->id]['summary'] = $summary;
     }
   }
-
 }
