@@ -16,6 +16,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\Element;
 use Drupal\media\MediaInterface;
+use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
 use Drupal\ocha_content_classification\Enum\ClassificationStatus;
 use Drupal\pathauto\PathautoState;
 use Drupal\reliefweb_entities\BundleEntityInterface;
@@ -749,6 +750,15 @@ function reliefweb_entities_ocha_content_classification_post_entity_presave(Enti
     // Update the moderation status.
     $entity->setModerationStatus($status);
   }
+}
+
+/**
+ * Implements hook_ocha_content_classification_force_field_update_alter().
+ */
+function reliefweb_entities_ocha_content_classification_classified_fields_alter(array &$fields, ClassificationWorkflowInterface $workflow, array $context) {
+  // Temporarily do not update the body field.
+  // @see RW-1189
+  unset($fields['fillable']['body']);
 }
 
 /**
