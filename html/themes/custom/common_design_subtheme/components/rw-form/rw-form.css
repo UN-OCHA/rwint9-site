@@ -564,3 +564,23 @@ form:not(.rw-entity-form-altered) .form-actions.form-item {
   font-size: 16px;
   font-weight: bold;
 }
+
+/* Report form */
+.rw-entity-form--report--submitter {
+  margin-top: 2rem;
+
+  .rw-form-fieldset {
+    > .form-wrapper + .form-wrapper {
+       margin-top: 2rem;
+    }
+    > .form-wrapper > .form-item > :is(label, legend) {
+      font-size: 1.25rem;
+    }
+    > .form-wrapper > label {
+      font-size: 1.25rem;
+    }
+    .rw-file-widget > legend {
+      font-size: 1.25rem;
+    }
+  }
+}

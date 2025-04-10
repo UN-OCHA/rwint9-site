@@ -1,0 +1,46 @@
+{#
+/**
+ * @file
+ * Theme override for a node edit form.
+ *
+ * This template will be used when a node edit form specifies 'node_edit_form'
+ * as its #theme callback.  Otherwise, by default, node add/edit forms will be
+ * themed by form.html.twig.
+ *
+ * Available variables:
+ * - form: The node add/edit form.
+ *
+ * @see seven_form_node_form_alter()
+ *
+ * @todo review revision section.
+ */
+#}
+{{ attach_library('common_design_subtheme/rw-form') }}
+
+<fieldset id="content" class="rw-form-fieldset">
+  <legend class="visually-hidden">{% trans %}Content{% endtrans %}</legend>
+  {{ form.title }}
+  {{ form.field_source }}
+  {{ form.field_file }}
+  {{ form.field_original_publication_date }}
+  {{ form.field_origin_notes }}
+</fieldset>
+
+<fieldset id="actions">
+  <legend class="visually-hidden">{% trans %}Form submission and other actions{% endtrans %}</legend>
+  {{ form.actions }}
+</fieldset>
+
+{{
+  form|without([
+    'title',
+    'field_file',
+    'field_original_publication_date',
+    'field_source',
+    'field_origin_notes',
+    'actions',
+    'revision_information',
+    'advanced',
+    'path'
+  ])
+}}
