@@ -32,7 +32,7 @@ interface EntityModeratedInterface {
   public function getModerationStatusLabel();
 
   /**
-   * Get the list of allowed statuses for the enitity.
+   * Get the list of allowed statuses for the entity.
    *
    * @return array
    *   List of moderation statuses keyed by status and with labels as values.
