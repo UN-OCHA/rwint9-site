@@ -4,6 +4,7 @@ namespace Drupal\reliefweb_user_posts\Form;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\reliefweb_moderation\Form\ModerationPageFilterForm;
 use Drupal\reliefweb_moderation\ModerationServiceInterface;
@@ -30,34 +31,41 @@ class UserPostsPageFilterForm extends ModerationPageFilterForm {
     // Link to create a new entity.
     $url_options = ['attributes' => ['target' => '_blank']];
 
-    if ($user && $user->hasPermission('create report content')) {
-      $links = $this->t('Create a new <a href="@job_url">Job vacancy</a>, a new <a href="@training_url">Training program</a> or a new <a href="@report_url">Report</a>', [
-        '@job_url' => Url::fromRoute('node.add', [
-          'node_type' => 'job',
-        ], $url_options)->toString(),
-        '@training_url' => Url::fromRoute('node.add', [
-          'node_type' => 'training',
-        ], $url_options)->toString(),
-        '@report_url' => Url::fromRoute('node.add', [
-          'node_type' => 'report',
-        ], $url_options)->toString(),
-      ]);
+    // URLs to the creation forms.
+    $types = [
+      'job' => $this->t('Job vacancy'),
+      'training' => $this->t('Training program'),
+      'report' => $this->t('Report'),
+    ];
+
+    $links = [];
+    foreach ($types as $type => $label) {
+      $url = Url::fromRoute('node.add', ['node_type' => $type], $url_options);
+      if ($url->access($user)) {
+        $links[$type] = Link::fromTextAndUrl($label, $url);
+      }
     }
-    else {
-      $links = $this->t('Create a new <a href="@job_url">Job vacancy</a> or a new <a href="@training_url">Training program</a>', [
-        '@job_url' => Url::fromRoute('node.add', [
-          'node_type' => 'job',
-        ], $url_options)->toString(),
-        '@training_url' => Url::fromRoute('node.add', [
-          'node_type' => 'training',
-        ], $url_options)->toString(),
-      ]);
+
+    // No filters if the user is not allowed to post anything.
+    if (empty($links)) {
+      return [];
+    }
+
+    $pattern = match(count($links)) {
+      3 => 'Create a new @link1, a new @link2 or a new @link3',
+      2 => 'Create a new @link1 or a new @link2',
+      1 => 'Create a new @link1',
+    };
+
+    $replacements = [];
+    foreach (array_values($links) as $index => $link) {
+      $replacements['@link' . ($index + 1)] = $link->toString();
     }
 
     // Add intro.
     $form['intro'] = [
       '#weight' => -100,
-      '#markup' => new FormattableMarkup('<div class="rw-moderation-intro">' . $links . '</div>', []),
+      '#markup' => new FormattableMarkup('<div class="rw-moderation-intro">' . $pattern . '</div>', $replacements),
     ];
 
     // Add the filter labels to the properties.
@@ -82,6 +90,10 @@ class UserPostsPageFilterForm extends ModerationPageFilterForm {
     $form['#attributes']['id'] = 'reliefweb-moderation-page-filter-form';
     if (isset($form['filters']['other']['poster']) && !isset($form['filters']['other']['poster']['#default_value'])) {
       $form['filters']['other']['poster']['#default_value'] = ['me'];
+    }
+
+    if (!empty($form['filters']['other']['bundle']['#options'])) {
+      $form['filters']['other']['bundle']['#options'] = array_intersect_key($form['filters']['other']['bundle']['#options'], $links);
     }
 
     return $form;
