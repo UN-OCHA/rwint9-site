@@ -27,6 +27,7 @@ dependencies:
     - guidelines
     - ocha_ai
     - ocha_ai_chat
+    - ocha_content_classification
     - reliefweb_anti_spam
     - reliefweb_bookmarks
     - reliefweb_guidelines
@@ -48,6 +49,8 @@ permissions:
   - 'add guideline entities'
   - 'administer reliefweb anti-spam settings'
   - 'administer reliefweb post api providers'
+  - 'bypass ocha content classification for node job'
+  - 'bypass ocha content classification for node report'
   - 'create new books'
   - 'create terms in career_category'
   - 'create terms in content_format'
@@ -121,6 +124,8 @@ permissions:
   - 'guideline_list revert revisions'
   - 'guideline_list view revisions'
   - 'manage ocha ai chat config'
+  - 'requeue node job for ocha content classification'
+  - 'requeue node report for ocha content classification'
   - 'revert all guideline revisions'
   - 'revert all taxonomy revisions'
   - 'see other bookmarks'
