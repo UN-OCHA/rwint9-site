@@ -398,26 +398,74 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
           $rights[$data[$this->bundle()] ?? 0][] = $tid;
         }
 
+        $role = match(TRUE) {
+          $user->hasRole('contributor') => 'contributor',
+          $user->hasRole('submitter') =>  'submitter',
+          default => '*',
+        };
+
         // Blocked for some sources.
         if (!empty($rights[1])) {
-          $status = 'refused';
+          $right = 'blocked';
+          $default = match($role) {
+            'contributor' => 'refused',
+            'submitter' => 'refused',
+            default => 'refused',
+          };
         }
         // Trusted for all the sources.
         elseif (isset($rights[3]) && count($rights[3]) === count($sources)) {
-          $status = 'published';
+          $right = 'trusted';
+          $default = match($role) {
+            'contributor' => 'published',
+            'submitter' => 'published',
+            default => 'published',
+          };
         }
         // Trusted for at least 1.
         elseif (isset($rights[3]) && count($rights[3]) > 0) {
-          $status = 'to-review';
+          $right = 'trusted_partial';
+          $default = match($role) {
+            'contributor' => 'to-review',
+            'submitter' => 'to-review',
+            default => 'to-review',
+          };
         }
         // Allowed for all the sources.
         elseif (isset($rights[2]) && count($rights[2]) === count($sources)) {
-          $status = 'to-review';
+          $right = 'allowed';
+          $default = match($role) {
+            'contributor' => 'to-review',
+            'submitter' => 'pending',
+            default => 'pending',
+          };
         }
-        // Unverified for some sources.
+        // Allowed for some sources.
+        elseif (isset($rights[2]) && count($rights[2]) > 0) {
+          $right = 'allowed_partial';
+          $default = match($role) {
+            'contributor' => 'pending',
+            'submitter' => 'pending',
+            default => 'pending',
+          };
+        }
+        // Unverified for all sources.
         else {
-          $status = 'pending';
+          $right = 'unverified';
+          $default = match($role) {
+            'contributor' => 'pending',
+            'submitter' => 'pending',
+            default => 'pending',
+          };
         }
+
+        $status = ReliefWebStateHelper::getPostingRightsDefaultModerationStatus(
+          $this->getEntityTypeId(),
+          $this->bundle(),
+          $role,
+          $right,
+          $default,
+        );
 
         $this->setModerationStatus($status);
 
