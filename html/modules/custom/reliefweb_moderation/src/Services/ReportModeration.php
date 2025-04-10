@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_moderation\Services;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Database\Query\Select;
 use Drupal\Core\Link;
 use Drupal\Core\Session\AccountInterface;
@@ -208,8 +209,16 @@ class ReportModeration extends ModerationServiceBase {
 
       // Retrieve the origin of the document.
       $options = $entity->field_origin->first()->getPossibleOptions();
-      if ($entity instanceof NodeInterface && $entity->getOwner()->hasRole('contributor')) {
-        $cells['origin'] = $this->t('Contributor');
+      if ($entity instanceof NodeInterface) {
+        if ($entity->getOwner()->hasRole('contributor')) {
+          $cells['origin'] = $this->t('Contributor');
+        }
+        elseif ($entity->getOwner()->hasRole('submitter')) {
+          $cells['origin'] = $this->t('Submitter');
+        }
+        else {
+          $cells['origin'] = $options[$entity->field_origin->value] ?? $this->t('N/A');
+        }
       }
       else {
         $cells['origin'] = $options[$entity->field_origin->value] ?? $this->t('N/A');
@@ -258,62 +267,61 @@ class ReportModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function getEntityFormSubmitButtons($status, EntityModeratedInterface $entity) {
-    $buttons = [];
-    $new = empty($status) || $status === 'draft' || $entity->isNew();
-
-    // Editors can publish, put on hold or refuse a document.
-    // @todo use permission.
     if (UserHelper::userHasRoles(['editor'])) {
-      $buttons = [
-        'draft' => [
-          '#value' => $this->t('Save as draft'),
-        ],
-        'to-review' => [
-          '#value' => $this->t('To review'),
-        ],
-        'published' => [
-          '#value' => $this->t('Publish'),
-        ],
-        'on-hold' => [
-          '#value' => $this->t('On-hold'),
-        ],
-        'reference' => [
-          '#value' => $this->t('Reference'),
-        ],
-      ];
-
-      // Add extra buttons to manage content submitted via the API.
-      if ($entity->hasField('field_post_api_provider') && !empty($entity->field_post_api_provider?->target_id)) {
-        $buttons['pending'] = [
-          '#value' => $this->t('Pending'),
-        ];
-        // Note: once refused the document is not editable anymore unless
-        // the current user is also an administrator or webmaster.
-        // @see ::isEditableStatus().
-        $buttons['refused'] = [
-          '#value' => $this->t('Refused'),
-        ];
-      }
+      return $this->getButtonsForEditors($status, $entity);
     }
-    // Other users can save as draft, submit as pending or set on-hold.
-    else {
-      $buttons = [
-        'draft' => [
-          '#value' => $this->t('Save as draft'),
-        ],
-        'pending' => [
-          '#value' => $new ? $this->t('Submit') : $this->t('Submit changes'),
-        ],
-        'on-hold' => [
-          '#value' => $this->t('On-hold'),
-        ],
-      ];
+    elseif (UserHelper::userHasRoles(['contributor'])) {
+      return $this->getButtonsForContributors($status, $entity);
+    }
+    elseif (UserHelper::userHasRoles(['submitter'])) {
+      return $this->getButtonsForSubmitters($status, $entity);
+    }
 
-      // Add confirmation when attempting to change published document.
-      if ($status === 'to-review' || $status === 'published') {
-        $message = $this->t('Press OK to submit the changes for review by the ReliefWeb editors. The report may become unpublished while being reviewed.');
-        $buttons['to-review']['#attributes']['onclick'] = 'return confirm("' . $message . '")';
-      }
+    return [];
+  }
+
+  /**
+   * Get the buttons for the editors.
+   *
+   * @param string $status
+   *   Current entity status.
+   * @param \Drupal\reliefweb_moderation\EntityModeratedInterface $entity
+   *   Entity.
+   *
+   * @return array
+   *   Buttons.
+   */
+  protected function getButtonsForEditors(string $status, EntityModeratedInterface $entity): array {
+    // Editors can publish, put on hold or refuse a document.
+    $buttons = [
+      'draft' => [
+        '#value' => $this->t('Save as draft'),
+      ],
+      'to-review' => [
+        '#value' => $this->t('To review'),
+      ],
+      'published' => [
+        '#value' => $this->t('Publish'),
+      ],
+      'on-hold' => [
+        '#value' => $this->t('On-hold'),
+      ],
+      'reference' => [
+        '#value' => $this->t('Reference'),
+      ],
+    ];
+
+    // Add extra buttons to manage content submitted via the API.
+    if ($entity->hasField('field_post_api_provider') && !empty($entity->field_post_api_provider?->target_id)) {
+      $buttons['pending'] = [
+        '#value' => $this->t('Pending'),
+      ];
+      // Note: once refused the document is not editable anymore unless
+      // the current user is also an administrator or webmaster.
+      // @see ::isEditableStatus().
+      $buttons['refused'] = [
+        '#value' => $this->t('Refused'),
+      ];
     }
 
     // Admin and webmasters can also edit archived or refused documents.
@@ -331,16 +339,81 @@ class ReportModeration extends ModerationServiceBase {
       }
     }
 
-    if (UserHelper::userHasRoles(['contributor'])) {
-      // Warning message when saving as a draft.
-      if (isset($buttons['draft'])) {
-        $message = $this->t('You are saving this document as a draft. It will not be visible to visitors. If you wish to proceed with the publication kindly click on @buttons instead.', [
-          '@buttons' => implode(' or ', array_map(function ($item) {
-            return $item['#value'];
-          }, array_slice($buttons, 1))),
-        ]);
-        $buttons['draft']['#attributes']['onclick'] = 'return confirm("' . $message . '")';
-      }
+    return $buttons;
+  }
+
+  /**
+   * Get the buttons for the contributors.
+   *
+   * @param string $status
+   *   Current entity status.
+   * @param \Drupal\reliefweb_moderation\EntityModeratedInterface $entity
+   *   Entity.
+   *
+   * @return array
+   *   Buttons.
+   */
+  protected function getButtonsForContributors(string $status, EntityModeratedInterface $entity): array {
+    $new = empty($status) || $status === 'draft' || $entity->isNew();
+
+    $buttons = [
+      'draft' => [
+        '#value' => $this->t('Save as draft'),
+      ],
+      'pending' => [
+        '#value' => $new ? $this->t('Submit') : $this->t('Submit changes'),
+      ],
+      'on-hold' => [
+        '#value' => $this->t('On-hold'),
+      ],
+    ];
+
+    // Add confirmation when attempting to change published document.
+    if ($status === 'to-review' || $status === 'published') {
+      $message = $this->t('Press OK to submit the changes for review by the ReliefWeb editors. The report may become unpublished while being reviewed.');
+      $buttons['pending']['#attributes']['onclick'] = 'return confirm("' . $message . '")';
+    }
+
+    // Warning message when saving as a draft.
+    if (isset($buttons['draft'])) {
+      $message = $this->t('You are saving this document as a draft. It will not be visible to visitors. If you wish to proceed with the publication kindly click on @buttons instead.', [
+        '@buttons' => implode(' or ', array_map(function ($item) {
+          return $item['#value'];
+        }, array_slice($buttons, 1))),
+      ]);
+      $buttons['draft']['#attributes']['onclick'] = 'return confirm("' . $message . '")';
+    }
+
+    return $buttons;
+  }
+
+  /**
+   * Get the buttons for the submitters.
+   *
+   * @param string $status
+   *   Current entity status.
+   * @param \Drupal\reliefweb_moderation\EntityModeratedInterface $entity
+   *   Entity.
+   *
+   * @return array
+   *   Buttons.
+   */
+  protected function getButtonsForSubmitters(string $status, EntityModeratedInterface $entity): array {
+    $new = empty($status) || $status === 'draft' || $entity->isNew();
+
+    $buttons = [
+      'pending' => [
+        '#value' => $new ? $this->t('Submit') : $this->t('Submit changes'),
+      ],
+      'on-hold' => [
+        '#value' => $this->t('On-hold'),
+      ],
+    ];
+
+    // Add confirmation when attempting to change published document.
+    if ($status === 'to-review' || $status === 'published') {
+      $message = $this->t('Press OK to submit the changes for review by the ReliefWeb editors. The report may become unpublished while being reviewed.');
+      $buttons['pending']['#attributes']['onclick'] = 'return confirm("' . $message . '")';
     }
 
     return $buttons;
@@ -377,6 +450,8 @@ class ReportModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function entityAccess(EntityModeratedInterface $entity, $operation = 'view', ?AccountInterface $account = NULL) {
+    $account = $account ?: $this->currentUser;
+
     $access_result = parent::entityAccess($entity, $operation, $account);
 
     if ($operation !== 'view') {
@@ -388,6 +463,53 @@ class ReportModeration extends ModerationServiceBase {
       $access_result = $access ? $access_result : AccessResult::forbidden();
     }
 
+    if ($account->hasRole('submitter') && !$access_result->isForbidden()) {
+      $access_result = $this->entityAccessForSubmitters($entity, $operation, $account, $access_result);
+    }
+
+    return $access_result;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function entityCreateAccess(AccountInterface $account): AccessResultInterface {
+    $access_result = parent::entityCreateAccess($account);
+    // Disallow report creation for submitters without posting rights.
+    if ($account->hasRole('submitter') && !UserPostingRightsHelper::isUserAllowedOrTrustedForAnySource($account, $this->getBundle())) {
+      return AccessResult::forbidden();
+    }
+    return $access_result;
+  }
+
+  /**
+   * Perform addition access check for submitters.
+   *
+   * @param \Drupal\reliefweb_moderation\EntityModeratedInterface $entity
+   *   Entity being accessed.
+   * @param string $operation
+   *   Access operation being performed.
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   User trying to access.
+   * @param \Drupal\Core\Access\AccessResultInterface $access_result
+   *   Current access result.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   The updated access result.
+   */
+  protected function entityAccessForSubmitters(EntityModeratedInterface $entity, string $operation, AccountInterface $account, AccessResultInterface $access_result): AccessResultInterface {
+    $owner = $entity->getOwnerId() === $account->id() && $account->id() > 0;
+
+    $allowed = match($operation) {
+      'view' => $owner,
+      'create' => UserPostingRightsHelper::isUserAllowedOrTrustedForAnySource($account, $this->getBundle()),
+      'update' => $owner && UserPostingRightsHelper::isUserAllowedOrTrustedForAnySource($account, $this->getBundle()),
+      'delete' => FALSE,
+      'view_moderation_information' => !$access_result->isForbidden(),
+      default => !$access_result->isForbidden(),
+    };
+
+    $access_result->forbiddenIf(!$allowed);
     return $access_result;
   }
 
@@ -425,6 +547,7 @@ class ReportModeration extends ModerationServiceBase {
       'bury',
       'key_content',
       'origin',
+      'automated_classification',
     ]);
 
     // Values are hardcoded to avoid the use of a query.
@@ -455,33 +578,59 @@ class ReportModeration extends ModerationServiceBase {
     ];
 
     // Add a filter to restrict to content posted by a Contributor.
-    $definitions['contribution'] = [
+    $definitions['document_origin'] = [
       'type' => 'other',
       'field' => 'roles_target_id',
-      // Not naming that 'Contribution' to avoid confusion with the Donor
-      // Contributions theme.
-      'label' => $this->t('From contributor'),
-      'form' => 'other',
+      'label' => $this->t('Document origin'),
+      'form' => 'document_origin',
       // No specific widget as the join is enough.
       'widget' => 'none',
-      'join_callback' => 'joinContribution',
+      'values' => [
+        'api' => $this->t('API'),
+        'contributor' => $this->t('Contributor'),
+        'submitter' => $this->t('Submitter'),
+        'editor' => $this->t('Editor'),
+      ],
+      'join_callback' => 'joinDocumentOrigin',
     ];
 
     return $definitions;
   }
 
   /**
-   * Contribution join callback.
+   * Document origin join callback.
    *
    * @see ::joinField()
    */
-  protected function joinContribution(Select $query, array $definition, $entity_type_id, $entity_base_table, $entity_id_field, $or = FALSE, $values = []) {
-    // Join the users_roles table restricting to the contributor role.
-    $table = 'user__roles';
-    $query->innerJoin($table, $table, "%alias.entity_id = {$entity_base_table}.uid AND %alias.bundle = :bundle AND %alias.roles_target_id = :role", [
-      ':bundle' => 'user',
-      ':role' => 'contributor',
-    ]);
+  protected function joinDocumentOrigin(Select $query, array $definition, $entity_type_id, $entity_base_table, $entity_id_field, $or = FALSE, $values = []) {
+    $values = array_flip($values);
+
+    // Join the origin field, restricting to API submissions.
+    if (isset($values['api'])) {
+      $origin_table = 'node__field_origin';
+      $origin_alias = $query->leftJoin($origin_table, $origin_table, "%alias.entity_id = {$entity_base_table}.{$entity_id_field}");
+
+      $or_group ??= $query->conditionGroupFactory('OR');
+      $or_group->condition($origin_alias . '.field_origin_value', 3, '=');
+      unset($values['api']);
+    }
+
+    // Join the users_roles table, restricting to some roles.
+    if (!empty($values)) {
+      $role_table = 'user__roles';
+      $role_alias = $query->leftJoin($role_table, $role_table, "%alias.entity_id = {$entity_base_table}.uid AND %alias.bundle = :bundle", [
+        ':bundle' => 'user',
+      ]);
+
+      $or_group ??= $query->conditionGroupFactory('OR');
+      foreach (array_keys($values) as $role) {
+        $or_group->condition($role_alias . '.roles_target_id', $role, '=');
+      }
+    }
+
+    if (isset($or_group)) {
+      $query->condition($or_group);
+    }
 
     // No field to return as the inner join is enough.
     return '';
