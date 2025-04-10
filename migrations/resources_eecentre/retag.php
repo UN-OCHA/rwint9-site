@@ -58,28 +58,22 @@ $replace = [
 
 $output = new ConsoleOutput();
 
-$log = fopen(LOGFILE, "r");
-if(!$log)
-  die('Oops: ' . LOGFILE);
+$results = \Drupal::entityQuery('node')
+  ->condition('type', 'report')
+  ->condition('body', '%#JEU%', 'LIKE')
+  ->sort('nid', 'ASC')
+  ->accessCheck(FALSE)
+  ->execute();
 
-// header.
-$item = fgetcsv($log);
-
-while(!feof($log)) {
-  $item = fgetcsv($log, null, ",", "\"", "\\");
-  if (empty($item))
-    continue;
-
-  if (count($item) < 28)
-    die(print_r($item));
+foreach ($results as $nid) {
 
   // Load the report, it should exist!
-  $report = Node::load($item[26]);
+  $report = Node::load($nid);
   if (empty($report)) {
-    $output->writeln('<comment>Oops, could not load report ' . $item[26] . '</comment>');
+    $output->writeln('<comment>Oops, could not load report ' . $nid . '</comment>');
   }
   else {
-    $output->writeln('<comment>Processing ' . $item[25] . '</comment>');
+    $output->writeln('<comment>Processing ' . $nid . '</comment>');
     $report->body->value = strtr($report->body->value, $replace);
     try {
       $report->save();
@@ -93,11 +87,9 @@ while(!feof($log)) {
       die();
     }
 
-    $output->writeln('<comment>Updated /node/' .  $item[26] . '</comment>');
+    $output->writeln('<comment>Updated /node/' . $nid . '</comment>');
 
   }
   unset($report);
   sleep(1);
 }
-
-fclose($log);
