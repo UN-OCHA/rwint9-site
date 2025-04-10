@@ -756,9 +756,14 @@ function reliefweb_entities_ocha_content_classification_post_entity_presave(Enti
  * Implements hook_ocha_content_classification_force_field_update_alter().
  */
 function reliefweb_entities_ocha_content_classification_classified_fields_alter(array &$fields, ClassificationWorkflowInterface $workflow, array $context) {
-  // Temporarily do not update the body field.
+  // Get a list of fields to ignore.
   // @see RW-1189
-  unset($fields['fillable']['body']);
+  $key = 'reliefweb_ignore_classified_fields:' . $workflow->id();
+  $ignore_fields = \Drupal::state()->get($key, []);
+  $ignore_fields = array_flip($ignore_fields);
+  foreach ($fields as $type => $field_list) {
+    $fields[$type] = array_diff_key($field_list, $ignore_fields);
+  }
 }
 
 /**
