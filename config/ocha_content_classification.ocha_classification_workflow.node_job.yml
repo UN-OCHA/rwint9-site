@@ -5,6 +5,8 @@ dependencies: {  }
 id: node_job
 label: Jobs
 limit: 3
+validation:
+  empty: true
 target:
   entity_type_id: node
   bundle: job
