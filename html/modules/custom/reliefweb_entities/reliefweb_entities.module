@@ -660,6 +660,53 @@ function reliefweb_entities_entity_presave(EntityInterface $entity) {
 }
 
 /**
+ * Implements hook_ocha_content_classification_pre_entity_presave().
+ *
+ * Requeue entity for classification when edited by a "Submitter".
+ *
+ * @todo add a permission or something so we can apply this behavior to other
+ * roles.
+ */
+function reliefweb_entities_ocha_content_classification_pre_entity_presave(EntityInterface $entity): void {
+  if (!\Drupal::currentUser()->hasRole('submitter')) {
+    return;
+  }
+
+  // This is restricted to reports for now to handle the "Document drop".
+  // @see RW-1188
+  if ($entity->bundle() !== 'report') {
+    return;
+  }
+
+  if (!isset($entity->original)) {
+    return;
+  }
+
+  // Check if the attachments have changed.
+  // @todo we probably need to override the `equals` method in the
+  // ReliefWebFileList to only check the UUIDs and hashes.
+  if ($entity->field_file->equals($entity->original->field_file)) {
+    return;
+  }
+
+  try {
+    $content_entity_classifier = \Drupal::service('ocha_content_classification.content_entity_classifier');
+  }
+  catch (\Exception) {
+    return;
+  }
+
+  /** @var \Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface $workflow */
+  $workflow = $content_entity_classifier->getWorkflowForEntity($entity);
+  if (empty($workflow)) {
+    return;
+  }
+
+  // Delete any existing classification record so we can requeue the entity.
+  $workflow->deleteClassificationProgress($entity);
+}
+
+/**
  * Implements hook_ocha_content_classification_post_entity_presave().
  *
  * Update the entity moderation status based on the classification status.
