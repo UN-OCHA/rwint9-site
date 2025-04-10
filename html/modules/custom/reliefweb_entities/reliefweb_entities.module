@@ -129,6 +129,42 @@ function reliefweb_entities_entity_type_alter(array &$entity_types) {
 }
 
 /**
+ * Implements hook_entity_form_mode_alter().
+ *
+ * Set the form view mode for the submitters.
+ */
+function reliefweb_entities_entity_form_mode_alter(string &$form_mode, EntityInterface $entity): void {
+  // Set the report form mode depending on the user role.
+  if ($entity->getEntityTypeId() === 'node' && $entity->bundle() === 'report') {
+    $user = \Drupal::currentUser();
+    // @todo also create a form mode for the contributor role.
+    if ($user->hasRole('submitter') && !$user->hasRole('contributor') && !$user->hasRole('editor')) {
+      $form_mode = 'submitter';
+    }
+  }
+}
+
+/**
+ * Implements hook_field_widget_complete_WIDGET_TYPE_form_alter().
+ *
+ * Disable the automatic generation of the url alias for submitters. The alias
+ * will be created when the document is published. This is necessary because
+ * the submitter form doesn't expose the primary country which is needed to
+ * generate the correct url alias.
+ */
+function reliefweb_entities_field_widget_complete_path_form_alter(array &$field_widget_complete_form, FormStateInterface $form_state, array $context) {
+  $entity = $form_state->getFormObject()?->getEntity();
+
+  if (isset($entity) && $entity->getEntityTypeId() === 'node' && $entity->bundle() === 'report') {
+    $user = \Drupal::currentUser();
+    if ($user->hasRole('submitter') && !$user->hasRole('contributor') && !$user->hasRole('editor')) {
+      $field_widget_complete_form['widget'][0]['pathauto']['#default_value'] = 0;
+      $field_widget_complete_form['#access'] = FALSE;
+    }
+  }
+}
+
+/**
  * Implements hook_entity_insert().
  */
 function reliefweb_entities_entity_insert(EntityInterface $entity): void {
