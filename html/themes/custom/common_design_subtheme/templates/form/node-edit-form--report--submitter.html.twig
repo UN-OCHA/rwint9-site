@@ -28,7 +28,7 @@
 
 <fieldset id="actions">
   <legend class="visually-hidden">{% trans %}Form submission and other actions{% endtrans %}</legend>
-  {{ form.actions }}
+  {{ form.actions|without(['preview']) }}
 </fieldset>
 
 {{
