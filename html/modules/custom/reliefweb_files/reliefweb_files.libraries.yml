@@ -1,3 +1,7 @@
 file.rename:
   js:
     js/file.rename.js: {}
+
+file.autoupload:
+  js:
+    js/file.autoupload.js: {}

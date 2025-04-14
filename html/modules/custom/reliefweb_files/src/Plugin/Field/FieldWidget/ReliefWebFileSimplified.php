@@ -33,6 +33,7 @@ class ReliefWebFileSimplified extends ReliefWebFile {
       ];
     }
     $elements['#theme'] = 'reliefweb_file_widget__simplified';
+    $elements['#attached']['library'][] = 'reliefweb_files/file.autoupload';
     return $elements;
   }
 
