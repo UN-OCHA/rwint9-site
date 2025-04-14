@@ -21,6 +21,7 @@ permissions:
   - 'assign editor role'
   - 'assign external_disaster_manager role'
   - 'assign job_importer role'
+  - 'assign submitter role'
   - 'assign topic_editor role'
   - 'assign user_manager role'
   - 'assign webmaster role'
