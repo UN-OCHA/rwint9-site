@@ -163,40 +163,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
       $this->alterFieldsForContributors($form, $form_state);
     }
     elseif ($this->currentUser->hasRole('submitter')) {
-      $form['#attributes']['class'][] = 'rw-entity-form--report--submitter';
-
-      // Simplify title.
-      $form['title']['widget'][0]['value']['#rows'] = 1;
-      unset($form['title']['widget'][0]['value']['#attributes']['data-with-formatting']);
-
-      // Default to submit for new documents otherwise preserve the value, for
-      // example when editing a report created by an editor.
-      if ($form_state->getFormObject()?->getEntity()?->isNew() === TRUE) {
-        $form['field_origin']['widget']['#default_value'] = '1';
-      }
-      $form['field_origin_notes']['widget'][0]['value']['#title'] = $this->t('Origin URL');
-
-      // Make the attachment field mandatory.
-      $form['field_file']['widget']['#element_validate'][] = [$this, 'validateMandatoryFileField'];
-      $form['field_file']['widget']['#required'] = TRUE;
-    }
-  }
-
-  /**
-   * Validate the file field.
-   *
-   * Check that there is at least one attachment.
-   *
-   * @param array $form
-   *   Form to alter.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   Form state.
-   */
-  public function validateMandatoryFileField(array $form, FormStateInterface $form_state) {
-    $values = $form_state->getValue('field_file', []);
-    unset($values['add_more']);
-    if (empty($values)) {
-      $form_state->setErrorByName('field_file', $this->t('At least one attachment is required.'));
+      $this->alterFieldsForSubmitters($form, $form_state);
     }
   }
 
@@ -228,6 +195,60 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     $form['field_headline_title']['#access'] = FALSE;
     $form['field_headline_summary']['#access'] = FALSE;
     $form['field_headline_image']['#access'] = FALSE;
+  }
+
+  /**
+   * Make alterations for Submitter role.
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  protected function alterFieldsForSubmitters(array &$form, FormStateInterface $form_state) {
+    $new = $form_state->getFormObject()?->getEntity()?->isNew() === TRUE;
+
+    // Indicate that we are using the submitter form.
+    $form['#attributes']['class'][] = 'rw-entity-form--report--submitter';
+
+    // Simplify title.
+    $form['title']['widget'][0]['value']['#rows'] = 1;
+    unset($form['title']['widget'][0]['value']['#attributes']['data-with-formatting']);
+
+    // Default to submit for new documents otherwise preserve the value, for
+    // example when editing a report created by an editor.
+    if ($new) {
+      $form['field_origin']['widget']['#default_value'] = '1';
+    }
+    $form['field_origin_notes']['widget'][0]['value']['#title'] = $this->t('Origin URL');
+
+    // Make the attachment field mandatory.
+    $form['field_file']['widget']['#element_validate'][] = [$this, 'validateMandatoryFileField'];
+    $form['field_file']['widget']['#required'] = TRUE;
+
+    // Populate the notify field with the submitter email address so that
+    // they can be notified when their submission is published.
+    if ($new) {
+      $form['field_notify']['widget'][0]['value']['#default_value'] = $this->currentUser->getEmail();
+    }
+  }
+
+  /**
+   * Validate the file field.
+   *
+   * Check that there is at least one attachment.
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  public function validateMandatoryFileField(array $form, FormStateInterface $form_state) {
+    $values = $form_state->getValue('field_file', []);
+    unset($values['add_more']);
+    if (empty($values)) {
+      $form_state->setErrorByName('field_file', $this->t('At least one attachment is required.'));
+    }
   }
 
   /**
