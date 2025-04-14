@@ -767,6 +767,31 @@ function reliefweb_entities_ocha_content_classification_classified_fields_alter(
 }
 
 /**
+ * Implements hook_ocha_content_classification_prepare_entity_alter().
+ */
+function reliefweb_entities_ocha_content_classification_prepare_entity_alter(EntityInterface &$prepared_entity, ClassificationWorkflowInterface $workflow, array $context) {
+  if ($prepared_entity->bundle() === 'report') {
+    $classifier = $context['classifier'];
+    if ($classifier->getPluginId() == 'inference') {
+      $analyzable_fields = $classifier->getEnabledFields('analyzable');
+
+      // Remove the body field if there are attachments to analyze.
+      // The body may already be the result of a previous classification
+      // attempt and currently we don't have a good way to know that at that
+      // stage. For example if the entity was re-queued then the previous
+      // classification record was deleted so we cannot retrieve the list of
+      // fields that were classified.
+      // @todo review if the classification progress is changed to keep the
+      // history in which case we could check if the body was processed or not
+      // by the classifier.
+      if (!empty($analyzable_fields['field_file']['file']) && $prepared_entity->hasField('field_file') && !$prepared_entity->get('field_file')->isEmpty()) {
+        $prepared_entity->set('body', NULL);
+      }
+    }
+  }
+}
+
+/**
  * Set a taxonomy term's revision information.
  *
  * @param \Drupal\Core\Entity\EntityInterface $entity
