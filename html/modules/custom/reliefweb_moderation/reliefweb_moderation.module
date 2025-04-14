@@ -183,12 +183,14 @@ function reliefweb_moderation_entity_access(EntityInterface $entity, $operation,
 /**
  * Implements hook_entity_create_access().
  */
-function reliefweb_moderation_entity_create_access(AccountInterface $account, array $context, string $entity_bundle): ?AccessResultInterface {
-  $service = ModerationServiceBase::getModerationService($entity_bundle);
-  if (!empty($service)) {
-    $access_result = $service->entityCreateAccess($account);
-    if (!$access_result->isNeutral()) {
-      return $access_result;
+function reliefweb_moderation_entity_create_access(AccountInterface $account, array $context, ?string $entity_bundle): ?AccessResultInterface {
+  if (!empty($entity_bundle)) {
+    $service = ModerationServiceBase::getModerationService($entity_bundle);
+    if (!empty($service)) {
+      $access_result = $service->entityCreateAccess($account);
+      if (!$access_result->isNeutral()) {
+        return $access_result;
+      }
     }
   }
   return AccessResult::neutral();
