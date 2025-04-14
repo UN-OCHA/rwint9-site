@@ -17577,12 +17577,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_ai.git",
-                "reference": "53404a6848fdeff96281fbc49831d9820a5ec5b8"
+                "reference": "3d5016506f0966701379b109a94d51bc25c8109a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/53404a6848fdeff96281fbc49831d9820a5ec5b8",
-                "reference": "53404a6848fdeff96281fbc49831d9820a5ec5b8",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/3d5016506f0966701379b109a94d51bc25c8109a",
+                "reference": "3d5016506f0966701379b109a94d51bc25c8109a",
                 "shasum": ""
             },
             "require": {
@@ -17616,7 +17616,7 @@
                 "issues": "https://github.com/UN-OCHA/ocha_ai/issues",
                 "source": "https://github.com/UN-OCHA/ocha_ai/tree/RW-1172"
             },
-            "time": "2025-04-03T08:46:07+00:00"
+            "time": "2025-04-14T10:39:24+00:00"
         },
         {
             "name": "unocha/ocha_content_classification",
