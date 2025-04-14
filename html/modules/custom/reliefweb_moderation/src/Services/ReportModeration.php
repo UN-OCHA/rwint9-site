@@ -405,10 +405,13 @@ class ReportModeration extends ModerationServiceBase {
       'pending' => [
         '#value' => $new ? $this->t('Submit') : $this->t('Submit changes'),
       ],
-      'on-hold' => [
-        '#value' => $this->t('On-hold'),
-      ],
     ];
+
+    if (!$new) {
+      $buttons['on-hold'] = [
+        '#value' => $this->t('On-hold'),
+      ];
+    }
 
     // Add confirmation when attempting to change published document.
     if ($status === 'to-review' || $status === 'published') {
