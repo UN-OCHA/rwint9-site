@@ -4,6 +4,7 @@ namespace Drupal\reliefweb_files\Controller;
 
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Image\ImageFactory;
@@ -63,6 +64,8 @@ class ImageStyleDownloadController extends OriginalImageStyleDownloadController 
    *   The stream wrapper manager.
    * @param \Drupal\Core\File\FileSystemInterface $file_system
    *   The file system service.
+   * @param \Drupal\Core\Database\Connection $database
+   *   The database.
    */
   public function __construct(
     ConfigFactoryInterface $config_factory,
@@ -72,6 +75,7 @@ class ImageStyleDownloadController extends OriginalImageStyleDownloadController 
     ImageFactory $image_factory,
     StreamWrapperManagerInterface $stream_wrapper_manager,
     ?FileSystemInterface $file_system = NULL,
+    protected ?Connection $database = NULL,
   ) {
     parent::__construct($lock, $image_factory, $stream_wrapper_manager, $file_system);
 
@@ -91,7 +95,8 @@ class ImageStyleDownloadController extends OriginalImageStyleDownloadController 
       $container->get('lock'),
       $container->get('image.factory'),
       $container->get('stream_wrapper_manager'),
-      $container->get('file_system')
+      $container->get('file_system'),
+      $container->get('database')
     );
   }
 
@@ -133,8 +138,25 @@ class ImageStyleDownloadController extends OriginalImageStyleDownloadController 
     }
 
     // Deny access if the user doesn't have the proper permission.
-    if ($scheme === 'private' && !$this->currentUser->hasPermission('access reliefweb private files')) {
-      throw new AccessDeniedHttpException();
+    if ($scheme === 'private') {
+      if ($this->currentUser->hasPermission('access own reliefweb private files')) {
+        if (!isset($this->database)) {
+          throw new AccessDeniedHttpException();
+        }
+        // Check if the user uploaded the file the image was generated from.
+        $query = $this->database->select('file_managed', 'fm');
+        $query->fields('fm', ['fid']);
+        $query->innerJoin('node__field_file', 'nff', '%alias.field_file_preview_uuid = fm.uuid');
+        $query->innerJoin('node_field_data', 'nfd', '%alias.nid = nff.entity_id');
+        $query->condition('fm.uri', $uri, '=');
+        $query->condition('nfd.uid', $this->currentUser->id());
+        if ($query->execute()?->fetchField() === NULL) {
+          throw new AccessDeniedHttpException();
+        }
+      }
+      elseif (!$this->currentUser->hasPermission('access reliefweb private files')) {
+        throw new AccessDeniedHttpException();
+      }
     }
 
     // Get the deriative image URI.

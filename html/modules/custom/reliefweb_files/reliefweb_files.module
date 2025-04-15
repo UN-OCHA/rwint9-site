@@ -23,6 +23,14 @@ function reliefweb_files_theme() {
     'reliefweb_file_widget_item' => [
       'render element' => 'element',
     ],
+    // Theme for a file list form widget.
+    'reliefweb_file_widget__simplified' => [
+      'render element' => 'element',
+    ],
+    // Theme for a file item form widget.
+    'reliefweb_file_widget_item__simplified' => [
+      'render element' => 'element',
+    ],
     // Theme for a list of files.
     'reliefweb_file_list' => [
       'variables' => [

@@ -113,4 +113,31 @@ class ReliefWebStateHelper {
     return \Drupal::state()->get('reliefweb_training_irrelevant_training_languages', $default);
   }
 
+  /**
+   * Get the default moderation status of a role and entity type and bundle.
+   *
+   * @param string $entity_type_id
+   *   Entity type ID.
+   * @param string $bundle
+   *   Entity bundle.
+   * @param string $role
+   *   User role.
+   * @param string $right
+   *   User posting right.
+   * @param string $default
+   *   Default status.
+   *
+   * @return string
+   *   Moderation status.
+   */
+  public static function getPostingRightsDefaultModerationStatus(
+    string $entity_type_id,
+    string $bundle,
+    string $role,
+    string $right,
+    string $default,
+  ): string {
+    return \Drupal::state()->get("reliefweb_role_default_moderation_status:$entity_type_id:$bundle:$role:$right", $default);
+  }
+
 }

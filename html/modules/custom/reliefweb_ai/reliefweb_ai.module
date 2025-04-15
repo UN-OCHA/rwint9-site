@@ -7,9 +7,34 @@
 
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Block\BlockPluginInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Template\Attribute;
 use Drupal\reliefweb_ai\OchaAiChatPopupBlockHandler;
+use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
+use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
+use Drupal\reliefweb_utility\Helpers\LanguageHelper;
+use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
+use Drupal\ocha_content_classification\Plugin\ClassifierPluginInterface;
+use Drupal\ocha_content_classification\Enum\ClassificationStatus;
+
+/**
+ * Implements hook_theme().
+ */
+function reliefweb_ai_theme() {
+  return [
+    'reliefweb_ai_summary_disclaimer' => [
+      'variables' => [
+        // Section attributes.
+        'attributes' => NULL,
+        // Text.
+        'disclaimer' => NULL,
+      ],
+    ],
+  ];
+}
 
 /**
  * Implements hook_form_FORM_ID_alter() for `ocha_ai_chat_chat_form`.
@@ -150,5 +175,269 @@ function reliefweb_ai_block_view_alter(array &$build, BlockPluginInterface $bloc
   if ($block->getPluginId() === 'ocha_ai_chat_chat_popup') {
     $build['#pre_render'][] = [OchaAiChatPopupBlockHandler::class, 'alterBuild'];
     return;
+  }
+}
+
+/**
+ * Implements hook_ocha_content_classification_post_classify_entity().
+ *
+ * Try to determine the language after the usual report classification workflow.
+ *
+ * @todo replace when the ocha_content_classification module handles multi-steps
+ * classification.
+ */
+function reliefweb_ai_ocha_content_classification_post_classify_entity(
+  EntityInterface $entity,
+  ClassificationWorkflowInterface $workflow,
+  ClassifierPluginInterface $classifier,
+  array $updated_fields,
+  array $data,
+): ?array {
+  // Prevent processing again the entity.
+  if (isset($entity->postClassificationDone)) {
+    return NULL;
+  }
+  $entity->postClassificationDone = TRUE;
+
+  // This hook currently only handles reports.
+  if ($entity->getEntityTypeId() !== 'node' || $entity->bundle() !== 'report') {
+    return NULL;
+  }
+
+  // Only the inference classifier is supported here.
+  if ($classifier->getPluginId() !== 'inference') {
+    return NULL;
+  }
+
+  // Attempt to retrieve the language.
+  $updated_fields = reliefweb_ai_post_classification_language_update(
+    $entity,
+    $workflow,
+    $classifier,
+    $updated_fields,
+    $data,
+  ) ?? [];
+
+  return array_unique($updated_fields) ?: NULL;
+}
+
+/**
+ * Update the language field of an entity based on some extracted text samples.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   The entity being classified.
+ * @param \Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface $workflow
+ *   The classification workflow.
+ * @param \Drupal\ocha_content_classification\Plugin\ClassifierPluginInterface $classifier
+ *   The classifier plugin for the classification.
+ * @param array $updated_fields
+ *   The list of fields that have been updated during the classification so far.
+ * @param array $data
+ *   Additional data from the classifier. For the inference classifier, this
+ *   contains an `output` key with the raw output from the LLM.
+ *
+ * @return ?array
+ *   An array with the language field if it was updated.
+ */
+function reliefweb_ai_post_classification_language_update(
+  EntityInterface $entity,
+  ClassificationWorkflowInterface $workflow,
+  ClassifierPluginInterface $classifier,
+  array $updated_fields,
+  array $data,
+): ?array {
+  if (!$entity->hasField('field_language') || empty($data['output'])) {
+    return NULL;
+  }
+
+  $title = (string) $entity->label();
+
+  // Retrieve the text samples extracted from the source document.
+  $text = $classifier->extractTaggedContent($data['output'], 'extracts');
+  $text = trim(strip_tags($text));
+  $text = $title . ' ' . $text;
+  if (empty($text)) {
+    return NULL;
+  }
+
+  // Detect the language from the extracts returned by the AI.
+  $language = LanguageHelper::detectTextLanguage($text);
+
+  // Retrieve the available languages.
+  $languages = \Drupal::database()
+    ->select('taxonomy_term__field_language_code', 't')
+    ->fields('t', ['field_language_code_value', 'entity_id'])
+    ->condition('t.field_language_code_value', 'ot', '<>')
+    ->execute()
+    ?->fetchAllKeyed() ?? [];
+  $languages = array_change_key_case($languages, \CASE_LOWER);
+
+  // Default to English if there is no matching term for the language code.
+  $language_term_id = $languages[$language] ?? $languages['en'] ?? NULL;
+
+  // Update the entity with the detected language.
+  if ($language_term_id != $entity->field_language?->target_id) {
+    $entity->set('field_language', $language_term_id);
+    return ['field_language'];
+  }
+
+  return NULL;
+}
+
+/**
+ * Implements hook_preprocess_reliefweb_entities_entity_meta().
+ *
+ * Add a class to the fields that have been updated by an AI.
+ */
+function reliefweb_ai_preprocess_reliefweb_entities_entity_meta(array &$variables): void {
+  if (!isset($variables['entity'])) {
+    return;
+  }
+
+  $entity = $variables['entity'];
+  if (!isset($entity->ai_updated_fields)) {
+    return;
+  }
+
+  foreach ($variables['meta'] ?? [] as $key => $data) {
+    if (isset($data['field'], $entity->ai_updated_fields[$data['field']])) {
+      $label_attributes = $data['label_attributes'] ?? new Attribute();
+      $label_attributes->addClass('rw-ai-generated');
+      $variables['meta'][$key]['label_attributes'] = $label_attributes;
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_view().
+ *
+ * Add the AI disclaimer to the entity view render array if the entity's body
+ * was modified by AI.
+ */
+function reliefweb_ai_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode): void {
+  if (isset($entity->ai_updated_fields['body'])) {
+    $ai_summary_disclaimer = \Drupal::state()->get('reliefweb_ai_summary_disclaimer');
+    if (!empty($ai_summary_disclaimer)) {
+      $build['ai_summary_disclaimer'] = [
+        '#theme' => 'reliefweb_ai_summary_disclaimer',
+        '#disclaimer' => $ai_summary_disclaimer,
+      ];
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_view().
+ *
+ * Retrieve the entity fields that were updated by an AI, if any.
+ */
+function reliefweb_ai_entity_prepare_view(string $entity_type_id, array $entities, array $displays, string $view_mode): void {
+  if ($view_mode !== 'full') {
+    return;
+  }
+
+  foreach ($entities as $entity) {
+    reliefweb_ai_add_ai_updated_fields_to_entity($entity);
+  }
+}
+
+/**
+ * Add a list of the fields updated by an AI to the given entity.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   Entity.
+ */
+function reliefweb_ai_add_ai_updated_fields_to_entity(EntityInterface $entity): void {
+  // Get the classification record for the entity if any.
+  $record = \Drupal::database()
+    ->select('ocha_content_classification_progress', 'ocp')
+    ->fields('ocp', ['entity_revision_id', 'updated_fields'])
+    ->condition('entity_type_id', $entity->getEntityTypeId())
+    ->condition('entity_bundle', $entity->bundle())
+    ->condition('entity_id', $entity->id())
+    ->condition('status', ClassificationStatus::Completed->value)
+    ->execute()
+    ?->fetch(\PDO::FETCH_OBJ);
+  if (empty($record) || empty($record->entity_revision_id) || empty($record->updated_fields)) {
+    return;
+  }
+
+  $updated_fields = json_decode($record->updated_fields);
+  if (empty($updated_fields)) {
+    return;
+  }
+
+  // Not using strict equality because they may be numeric strings.
+  if ($entity->getRevisionId() != $record->entity_revision_id) {
+    $revision = \Drupal::entityTypeManager()
+      ->getStorage($entity->getEntityTypeId())
+      ->loadRevision($record->entity_revision_id);
+
+    if (empty($revision)) {
+      return;
+    }
+
+    // Remove fields that have been updated since the classification. They are
+    // considered to have been manually updated so not generated by an AI
+    // anymore.
+    foreach ($updated_fields as $index => $field_name) {
+      if (!$entity->get($field_name)->equals($revision->get($field_name))) {
+        unset($updated_fields[$index]);
+      }
+    }
+
+    if (empty($updated_fields)) {
+      return;
+    }
+  }
+
+  // Store the list of fields that were populated by the AI for easy lookup.
+  $entity->ai_updated_fields = array_flip($updated_fields);
+}
+
+/**
+ * Implements hook_preprocess_reliefweb_rivers_page__updates().
+ *
+ * Retrieve the AI summary from the database.
+ *
+ * @todo remove after the `summary` field is added to the API.
+ */
+function reliefweb_ai_preprocess_reliefweb_rivers_page__updates(array &$variables): void {
+  // No need to retrieve the summary if we are showing the headlines since we
+  // already display the headline summary.
+  if (isset($variables['view']) && $variables['view'] === 'headlines') {
+    return;
+  }
+
+  if (empty($variables['content']['#entities'])) {
+    return;
+  }
+
+  // Retrieve the summary from the database.
+  $query = \Drupal::database()->select('node', 'n');
+  $query->leftJoin('node__field_headline_summary', 's', '%alias.entity_id = n.nid');
+  $query->leftJoin('node__body', 'b', '%alias.entity_id = n.nid');
+  $query->condition('n.nid', array_keys($variables['content']['#entities']), 'IN');
+  $query->addField('n', 'nid', 'id');
+  $query->addField('s', 'field_headline_summary_value', 'headline_summary');
+  $query->addField('b', 'body_summary', 'summary');
+
+  foreach ($query->execute() ?? [] as $record) {
+    $summary = '';
+    if (!empty($record->headline_summary)) {
+      $summary = $record->headline_summary;
+    }
+    elseif (!empty($record->summary)) {
+      if (mb_strlen($record->summary) > 250) {
+        $summary = HtmlSanitizer::sanitize($record->summary);
+        $summary = HtmlSummarizer::summarize($summary, 250);
+      }
+      else {
+        $summary = preg_replace('/\s+/', ' ', $record->summary);
+      }
+    }
+    if (!empty($summary)) {
+      $variables['content']['#entities'][$record->id]['summary'] = $summary;
+    }
   }
 }

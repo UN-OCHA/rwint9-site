@@ -318,21 +318,70 @@ class UserPostingRightsHelper {
       throw new \InvalidArgumentException("Invalid bundle: $bundle. Must be 'job', 'training', or 'report'.");
     }
 
+    $sources = static::getSourcesWithPostingRightsForUser($account, [$bundle => [2, 3]], limit: 1);
+    return !empty($sources);
+  }
+
+  /**
+   * Get the sources the user has posting rights for.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   User for which to retrieve the sources.
+   * @param array $bundles
+   *   Bundle rights filters in the form of an associative array with the
+   *   bundles (job, training, report) as keys and a list of rights (0, 1, 2, 3)
+   *   as values.
+   * @param string $operator
+   *   How to combine the bundle rights conditions.
+   * @param ?int $limit
+   *   Number of sources to retrieve.
+   *
+   * @return array
+   *   Associative array with the source IDs as keys and the corresponding
+   *   posting rights as values.
+   */
+  public static function getSourcesWithPostingRightsForUser(AccountInterface $account, array $bundles = [], string $operator = 'AND', ?int $limit = NULL): array {
     $helper = new self();
     $database = $helper->getDatabase();
     $table = $helper->getFieldTableName('taxonomy_term', 'field_user_posting_rights');
     $id_field = $helper->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'id');
-    $bundle_field = $helper->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', $bundle);
+
+    $bundle_fields['job'] = $helper->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'job');
+    $bundle_fields['training'] = $helper->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'training');
+    $bundle_fields['report'] = $helper->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'report');
 
     $query = $database->select($table, $table);
+    $query->fields($table, ['entity_id']);
     $query->condition($table . '.bundle', 'source', '=');
     $query->condition($table . '.' . $id_field, $account->id(), '=');
-    $query->condition($table . '.' . $bundle_field, 2, '>=');
-    $query->range(0, 1);
 
-    $result = $query->countQuery()->execute()->fetchField();
+    foreach ($bundle_fields as $bundle => $bundle_field) {
+      $query->addField($table, $bundle_field, $bundle);
 
-    return (bool) $result;
+      // Filter by bundle rights.
+      if (!empty($bundles[$bundle])) {
+        $condition_group ??= $query->conditionGroupFactory($operator);
+        $condition_group->condition($table . '.' . $bundle_field, $bundles[$bundle], 'IN');
+      }
+    }
+
+    if (isset($condition_group)) {
+      $query->condition($condition_group);
+    }
+
+    // Filter by bundle rights.
+    foreach ($bundles as $bundle => $rights) {
+      if (isset($bundle_fields[$bundle]) && !empty($rights)) {
+        $query->condition($table . '.' . $bundle_fields[$bundle], $rights, 'IN');
+      }
+    }
+
+    // Limit the result.
+    if (!empty($limit)) {
+      $query->range(0, $limit);
+    }
+
+    return $query->execute()?->fetchAllAssoc('entity_id', \PDO::FETCH_ASSOC);
   }
 
   /**

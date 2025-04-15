@@ -8,6 +8,7 @@
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
@@ -15,9 +16,13 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\Element;
 use Drupal\media\MediaInterface;
+use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
+use Drupal\ocha_content_classification\Enum\ClassificationStatus;
+use Drupal\pathauto\PathautoState;
 use Drupal\reliefweb_entities\BundleEntityInterface;
 use Drupal\reliefweb_entities\BundleEntityStorageInterface;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
+use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_utility\Helpers\ClassHelper;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\MailHelper;
@@ -125,6 +130,98 @@ function reliefweb_entities_entity_type_alter(array &$entity_types) {
 }
 
 /**
+ * Implements hook_entity_form_mode_alter().
+ *
+ * Set the form view mode for the submitters.
+ */
+function reliefweb_entities_entity_form_mode_alter(string &$form_mode, EntityInterface $entity): void {
+  // Set the report form mode depending on the user role.
+  if ($entity->getEntityTypeId() === 'node' && $entity->bundle() === 'report') {
+    $user = \Drupal::currentUser();
+    // @todo also create a form mode for the contributor role.
+    if ($user->hasRole('submitter') && !$user->hasRole('contributor') && !$user->hasRole('editor')) {
+      $form_mode = 'submitter';
+    }
+  }
+}
+
+/**
+ * Implements hook_field_widget_complete_WIDGET_TYPE_form_alter().
+ *
+ * Disable the automatic generation of the url alias for submitters. The alias
+ * will be created when the document is published. This is necessary because
+ * the submitter form doesn't expose the primary country which is needed to
+ * generate the correct url alias.
+ */
+function reliefweb_entities_field_widget_complete_path_form_alter(array &$field_widget_complete_form, FormStateInterface $form_state, array $context) {
+  $entity = $form_state->getFormObject()?->getEntity();
+
+  if (isset($entity) && $entity->getEntityTypeId() === 'node' && $entity->bundle() === 'report') {
+    $user = \Drupal::currentUser();
+    if ($user->hasRole('submitter') && !$user->hasRole('contributor') && !$user->hasRole('editor')) {
+      $field_widget_complete_form['widget'][0]['pathauto']['#default_value'] = 0;
+      $field_widget_complete_form['#access'] = FALSE;
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_insert().
+ */
+function reliefweb_entities_entity_insert(EntityInterface $entity): void {
+  reliefweb_entities_create_path_alias($entity);
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function reliefweb_entities_entity_update(EntityInterface $entity): void {
+  reliefweb_entities_create_path_alias($entity);
+}
+
+/**
+ * Create a path alias when publishing an entity if it doesn't have one.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   The entity for which to create an alias.
+ */
+function reliefweb_entities_create_path_alias(EntityInterface $entity): void {
+  // Skip for entities we don't manage in this module or cannot have a path.
+  if (!($entity instanceof BundleEntityInterface) || !$entity->hasField('path')) {
+    return;
+  }
+  // Skip if the entity is not published.
+  if (!($entity instanceof EntityPublishedInterface) || !$entity->isPublished()) {
+    return;
+  }
+  // Tell pathauto to create an alias if there is none.
+  if (empty($entity->path->pid)) {
+    $entity->path->pathauto = PathautoState::CREATE;
+  }
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function reliefweb_entities_module_implements_alter(&$implementations, $hook) {
+  // Ensure we run before pathauto so that we can set `$entity->path->pathauto`.
+  if (in_array($hook, ['entity_insert', 'entity_update']) && isset($implementations['reliefweb_entities'], $implementations['pathauto'])) {
+    $reliefweb_entities_implementation = $implementations['reliefweb_entities'];
+    unset($implementations['reliefweb_entities']);
+
+    $new_implementations = [];
+    foreach ($implementations as $module => $implementation) {
+      if ($module === 'pathauto') {
+        $new_implementations['reliefweb_entities'] = $reliefweb_entities_implementation;
+      }
+      $new_implementations[$module] = $implementation;
+    }
+
+    $implementations = $new_implementations;
+  }
+}
+
+/**
  * Implements hook_theme_suggestions_HOOK_alter().
  *
  * Add suggestions for the view mode of the taxonomy terms.
@@ -199,6 +296,8 @@ function reliefweb_entities_theme() {
         // and end date or list of tags). For tag lists, there are also count
         // and sort properties.
         'meta' => [],
+        // The entity.
+        'entity' => NULL,
       ],
     ],
     'reliefweb_entities_entity_text' => [
@@ -241,6 +340,8 @@ function reliefweb_entities_theme() {
         'meta' => '',
         // Meta information attributes.
         'meta_attributes' => NULL,
+        // The entity.
+        'entity' => NULL,
       ],
     ],
     'reliefweb_entities_entity_social_media_links' => [
@@ -419,7 +520,7 @@ function reliefweb_entities_form_taxonomy_term_form_alter(array &$form, FormStat
   }
   $form['revision']['#default_value'] = TRUE;
 
-  // Add an entity builder callback that will ensure the proper revisio
+  // Add an entity builder callback that will ensure the proper revision
   // user id and timestamp are set.
   $form['#entity_builders'][] = 'reliefweb_entities_term_form_entity_builder';
 }
@@ -557,6 +658,137 @@ function reliefweb_entities_entity_presave(EntityInterface $entity) {
 
   // Set the taxonomy term revision.
   reliefweb_entities_set_taxonomy_term_revision($entity);
+}
+
+/**
+ * Implements hook_ocha_content_classification_pre_entity_presave().
+ *
+ * Requeue entity for classification when edited by a "Submitter".
+ *
+ * @todo add a permission or something so we can apply this behavior to other
+ * roles.
+ */
+function reliefweb_entities_ocha_content_classification_pre_entity_presave(EntityInterface $entity): void {
+  if (!\Drupal::currentUser()->hasRole('submitter')) {
+    return;
+  }
+
+  // This is restricted to reports for now to handle the "Document drop".
+  // @see RW-1188
+  if ($entity->bundle() !== 'report') {
+    return;
+  }
+
+  if (!isset($entity->original)) {
+    return;
+  }
+
+  // Check if the attachments have changed.
+  // @todo we probably need to override the `equals` method in the
+  // ReliefWebFileList to only check the UUIDs and hashes.
+  if ($entity->field_file->equals($entity->original->field_file)) {
+    return;
+  }
+
+  try {
+    $content_entity_classifier = \Drupal::service('ocha_content_classification.content_entity_classifier');
+  }
+  catch (\Exception) {
+    return;
+  }
+
+  /** @var \Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface $workflow */
+  $workflow = $content_entity_classifier->getWorkflowForEntity($entity);
+  if (empty($workflow)) {
+    return;
+  }
+
+  // Delete any existing classification record so we can requeue the entity.
+  $workflow->deleteClassificationProgress($entity);
+}
+
+/**
+ * Implements hook_ocha_content_classification_post_entity_presave().
+ *
+ * Update the entity moderation status based on the classification status.
+ */
+function reliefweb_entities_ocha_content_classification_post_entity_presave(EntityInterface $entity): void {
+  if (!($entity instanceof EntityModeratedInterface)) {
+    return;
+  }
+
+  // This flag is set when the classification failed or completed or when the
+  // entity is going to be queued (or is already being queued) if the user who
+  // triggered the entity saving was allowed to use the classification workflow.
+  if (!isset($entity->ocha_content_classification_status)) {
+    return;
+  }
+
+  $status = match($entity->ocha_content_classification_status) {
+    // Prevent publication if the document is queued for classification.
+    ClassificationStatus::Queued => 'pending',
+    // Prevent publication if the document classification failed. A human should
+    // review manually.
+    ClassificationStatus::Failed => 'on-hold',
+    // For successful classification, we keep the current status.
+    ClassificationStatus::Completed => $entity->getModerationStatus(),
+    // This default case should not happen.
+    default => $entity->getModerationStatus(),
+  };
+
+  if ($status !== $entity->getModerationStatus()) {
+    $allowed_statuses = $entity->getAllowedModerationStatuses();
+    // Ensure the new status is available otherwise default to draft or the
+    // default moderation status for the entity. The point is to try to prevent
+    // unsafe publication.
+    $status = match(TRUE) {
+      isset($allowed_statuses[$status]) => $status,
+      isset($allowed_statuses['draft']) => 'draft',
+      default => $entity->getDefaultModerationStatus(),
+    };
+
+    // Update the moderation status.
+    $entity->setModerationStatus($status);
+  }
+}
+
+/**
+ * Implements hook_ocha_content_classification_force_field_update_alter().
+ */
+function reliefweb_entities_ocha_content_classification_classified_fields_alter(array &$fields, ClassificationWorkflowInterface $workflow, array $context) {
+  // Get a list of fields to ignore.
+  // @see RW-1189
+  $key = 'reliefweb_ignore_classified_fields:' . $workflow->id();
+  $ignore_fields = \Drupal::state()->get($key, []);
+  $ignore_fields = array_flip($ignore_fields);
+  foreach ($fields as $type => $field_list) {
+    $fields[$type] = array_diff_key($field_list, $ignore_fields);
+  }
+}
+
+/**
+ * Implements hook_ocha_content_classification_prepare_entity_alter().
+ */
+function reliefweb_entities_ocha_content_classification_prepare_entity_alter(EntityInterface &$prepared_entity, ClassificationWorkflowInterface $workflow, array $context) {
+  if ($prepared_entity->bundle() === 'report') {
+    $classifier = $context['classifier'];
+    if ($classifier->getPluginId() == 'inference') {
+      $analyzable_fields = $classifier->getEnabledFields('analyzable');
+
+      // Remove the body field if there are attachments to analyze.
+      // The body may already be the result of a previous classification
+      // attempt and currently we don't have a good way to know that at that
+      // stage. For example if the entity was re-queued then the previous
+      // classification record was deleted so we cannot retrieve the list of
+      // fields that were classified.
+      // @todo review if the classification progress is changed to keep the
+      // history in which case we could check if the body was processed or not
+      // by the classifier.
+      if (!empty($analyzable_fields['field_file']['file']) && $prepared_entity->hasField('field_file') && !$prepared_entity->get('field_file')->isEmpty()) {
+        $prepared_entity->set('body', NULL);
+      }
+    }
+  }
 }
 
 /**
@@ -806,7 +1038,7 @@ function reliefweb_entities_node_predelete(EntityInterface $entity) {
 }
 
 /**
- * Implements hook_ENTITY_TYPE_revision_delete().
+ * Implements hook_ENTITY_TYPE_delete().
  *
  * Remove referenced media that are not used anymore.
  */

@@ -1,0 +1,21 @@
+{#
+
+/**
+ * @file
+ * Template file for a text with summary field.
+ *
+ * Available variables;
+ * - level: heading level (defaults to 2)
+ * - attributes: section attributes
+ * - text: text (preprocessed_text type)
+ * - text_attributes: text attributes
+ * - summary: summary (preprocessed_text type)
+ * - summary_attributes: summary attributes.
+ */
+
+#}
+{% if text is not empty %}
+{{ text}}
+{% elseif summary is not empty %}
+{{ summary }}
+{% endif %}

@@ -29,7 +29,7 @@ is_admin: false
 permissions:
   - 'access content'
   - 'access ocha ai chat'
-  - 'apply ocha content classification'
+  - 'apply ocha content classification to node job'
   - 'bookmark content'
   - 'clone content entities'
   - 'create job content'

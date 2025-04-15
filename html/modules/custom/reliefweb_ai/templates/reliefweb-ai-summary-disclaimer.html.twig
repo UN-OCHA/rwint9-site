@@ -1,0 +1,17 @@
+{#
+
+/**
+ * @file
+ * Template file for the AI summary disclaimer.
+ *
+ * Available variables;
+ * - attributes: section attributes
+ * - disclaimer: disclaimer
+ */
+
+#}
+{% if disclaimer is not empty %}
+<p{{ attributes.addClass('rw-ai-summary-disclaimer').setAttribute('data-nosnippet', '')}}>
+  <small class="rw-ai-summary-disclaimer__text">{{ disclaimer }}</small>
+</p>
+{% endif %}

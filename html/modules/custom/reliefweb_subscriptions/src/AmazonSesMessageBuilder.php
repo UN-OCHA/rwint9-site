@@ -52,6 +52,10 @@ class AmazonSesMessageBuilder extends MessageBuilder {
       /** @var Symfony\Component\Mime\Headers $headers */
       $headers = $email->getHeaders();
       foreach ($message['params']['headers'] as $header => $value) {
+        // Remove existing unique headers to use our version.
+        if ($headers->has($header) && $headers::isUniqueHeader($header)) {
+          $headers->remove($header);
+        }
         $headers->addHeader($header, $value);
       }
     }

@@ -403,10 +403,12 @@ class EntityHistory {
     switch ($field_definition->getType()) {
       case 'text':
       case 'text_long':
-      case 'text_with_summary':
       case 'string':
       case 'string_long':
         return $this->formatTextFieldDiff($field_definition, $diff);
+
+      case 'text_with_summary':
+        return $this->formatTextWithSummaryFieldDiff($field_definition, $diff);
 
       case 'entity_reference':
         return $this->formatEntityReferenceFieldDiff($field_definition, $diff);
@@ -482,6 +484,52 @@ class EntityHistory {
     return empty($diff_text) ? NULL : [
       '#theme' => 'reliefweb_revisions_diff_text',
       '#text' => Markup::create($diff_text),
+    ];
+  }
+
+  /**
+   * Format text with summary field differences.
+   *
+   * Note: there are no text fields on ReliefWeb which accept multiple values
+   * so we only deal with the first value.
+   *
+   * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
+   *   Field definition.
+   * @param array $diff
+   *   Field value differences.
+   *
+   * @return array|null
+   *   The render array for the difference or NULL if there is no difference.
+   */
+  protected function formatTextWithSummaryFieldDiff(FieldDefinitionInterface $field_definition, array $diff) {
+    if (empty($diff['added']) && empty($diff['removed'])) {
+      return NULL;
+    }
+
+    // Get the differences between the 2 texts.
+    $from_text = $diff['removed'][0]['value'] ?? '';
+    $to_text = $diff['added'][0]['value'] ?? '';
+    if ($from_text !== $to_text) {
+      $diff_text = TextHelper::getTextDiff($from_text, $to_text);
+    }
+    else {
+      $diff_text = '';
+    }
+
+    // Get the differences between the 2 smmaries.
+    $from_summary = $diff['removed'][0]['summary'] ?? '';
+    $to_summary = $diff['added'][0]['summary'] ?? '';
+    if ($from_summary !== $to_summary) {
+      $diff_summary = TextHelper::getTextDiff($from_summary, $to_summary);
+    }
+    else {
+      $diff_summary = '';
+    }
+
+    return empty($diff_text) && empty($diff_summary) ? NULL : [
+      '#theme' => 'reliefweb_revisions_diff_text_with_summary',
+      '#text' => Markup::create($diff_text),
+      '#summary' => Markup::create($diff_summary),
     ];
   }
 

@@ -8,3 +8,4 @@ dependencies:
   - drupal:reliefweb_entities
   - drupal:reliefweb_post_api
   - drupal:reliefweb_utility
+  - ocha_content_classification:ocha_content_classification
