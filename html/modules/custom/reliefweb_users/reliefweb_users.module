@@ -286,3 +286,69 @@ function reliefweb_users_entity_type_alter(array &$entity_types) {
   /** @var \Drupal\Core\Entity\EntityTypeInterface[] $entity_types */
   $entity_types['user']->setLinkTemplate('posting-rights', '/user/{user}/posting-rights');
 }
+
+/**
+ * Implements hook_preprocess_HOOK() for user templates.
+ */
+function reliefweb_users_preprocess_user(array &$variables): void {
+  $user = $variables['user'] ?? \Drupal::currentUser();
+
+  $potential_links = [
+    [
+      'title' => t('Edit your account details'),
+      'url' => Url::fromUri('internal:/user/' . $user->id() . '/edit'),
+      'description' => t('Edit your credentials and account information.'),
+    ],
+    [
+      'title' => t('Manage your subscriptions'),
+      'url' => Url::fromUri('internal:/user/' . $user->id() . '/notifications'),
+      'description' => t('Setup and manage your email subscriptions to new reports, jobs and more.'),
+    ],
+    [
+      'title' => t('Manage your bookmarks'),
+      'url' => Url::fromUri('internal:/user/' . $user->id() . '/bookmarks'),
+      'description' => t('Track content relevant to you on the site.'),
+    ],
+    [
+      'title' => t('Post a job vacancy'),
+      'url' => Url::fromUri('internal:/node/add/job'),
+      'description' => t('Advertise job, consulting and internships vacancies.'),
+    ],
+    [
+      'title' => t('Post a training program'),
+      'url' => Url::fromUri('internal:/node/add/training'),
+      'description' => t('Advertise training programs for the humanitarian community.'),
+    ],
+    [
+      'title' => t('Post a report'),
+      'url' => Url::fromUri('internal:/node/add/report'),
+      'description' => t('Post a report for the humanitarian community.'),
+    ],
+    [
+      'title' => t('View your posts'),
+      'url' => Url::fromUri('internal:/user/' . $user->id() . '/posts'),
+      'description' => t('Manage the Job vacancies, Training programs or Reports you posted.'),
+    ],
+  ];
+
+  // Only keep links the user has access to.
+  foreach ($potential_links as $link_info) {
+    if ($link_info['url']->access($user)) {
+      $links[] = [
+        '#type' => 'link',
+        '#title' => $link_info['title'],
+        '#url' => $link_info['url'],
+        '#attributes' => ['class' => ['user-link']],
+        '#suffix' => '<p>' . $link_info['description'] . '</p>',
+      ];
+    }
+  }
+
+  if (!empty($links)) {
+    $variables['user_links'] = [
+      '#theme' => 'item_list',
+      '#items' => $links,
+      '#attributes' => ['class' => ['user-links-list']],
+    ];
+  }
+}

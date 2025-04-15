@@ -17,13 +17,14 @@
   word-break: break-all;
 }
 .rw-file-widget__table td.rw-file-widget-item__weight {
+  width: 28px;
   padding: 0;
   text-align: center;
 }
 .rw-file-widget-item__weight .tabledrag-handle + .form-item {
   display: none;
 }
-.rw-file-widget-item__weight a.tabledrag-handle {
+.rw-file-widget-item .rw-file-widget-item__weight a.tabledrag-handle {
   display: flex;
   float: none;
   align-items: center;
@@ -152,4 +153,44 @@
 .rw-file-widget .rw-file-widget-item__file-name-details :invalid {
   outline: 2px solid var(--cd-reliefweb-brand-red);
   outline-offset: -2px;
+}
+
+.rw-file-widget--simplified {
+    .rw-file-widget-item__operations {
+      width: 200px;
+
+      &:has([open]) {
+        width: 300px;
+      }
+    }
+
+  .rw-file-widget__add-more {
+    margin-top: 0;
+
+    .fieldset-wrapper {
+      display: grid;
+      grid-template-areas: "select upload" "description description";
+      grid-template-columns: 1fr min-content;
+      column-gap: 9px;
+      raw-gap: 9px;
+
+      .form-type-file {
+        grid-area: select;
+      }
+      .form-submit {
+        grid-area: upload;
+        margin: 0;
+        white-space: nowrap;
+        border-width: 1px;
+      }
+      .form-item-field-file-add-more-description {
+        grid-area: description;
+        margin: 0;
+
+        .description {
+          margin: 0;
+        }
+      }
+    }
+  }
 }

@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_files\Controller;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Session\AccountProxyInterface;
@@ -74,6 +75,8 @@ class FileDownloadController extends OriginalFileDownloadController {
    *   The logger factory service.
    * @param \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface $stream_wrapper_manager
    *   The stream wrapper manager.
+   * @param \Drupal\Core\Database\Connection $database
+   *   The database.
    */
   public function __construct(
     ConfigFactoryInterface $config_factory,
@@ -82,6 +85,7 @@ class FileDownloadController extends OriginalFileDownloadController {
     EntityTypeManagerInterface $entity_type_manager,
     LoggerChannelFactoryInterface $logger_factory,
     StreamWrapperManagerInterface $stream_wrapper_manager,
+    protected Connection $database,
   ) {
     parent::__construct($stream_wrapper_manager);
 
@@ -102,7 +106,8 @@ class FileDownloadController extends OriginalFileDownloadController {
       $container->get('reliefweb_files.client'),
       $container->get('entity_type.manager'),
       $container->get('logger.factory'),
-      $container->get('stream_wrapper_manager')
+      $container->get('stream_wrapper_manager'),
+      $container->get('database')
     );
   }
 
@@ -133,8 +138,25 @@ class FileDownloadController extends OriginalFileDownloadController {
     }
 
     // Deny access if the user doesn't have the proper permission.
-    if ($scheme === 'private' && !$this->currentUser->hasPermission('access reliefweb private files')) {
-      throw new AccessDeniedHttpException();
+    if ($scheme === 'private') {
+      if ($this->currentUser->hasPermission('access own reliefweb private files')) {
+        if (!isset($this->database)) {
+          throw new AccessDeniedHttpException();
+        }
+        // Check if the user uploaded the file the image was generated from.
+        $query = $this->database->select('file_managed', 'fm');
+        $query->fields('fm', ['fid']);
+        $query->innerJoin('node__field_file', 'nff', '%alias.field_file_uuid = fm.uuid');
+        $query->innerJoin('node_field_data', 'nfd', '%alias.nid = nff.entity_id');
+        $query->condition('fm.uri', $uri, '=');
+        $query->condition('nfd.uid', $this->currentUser->id());
+        if ($query->execute()?->fetchField() === NULL) {
+          throw new AccessDeniedHttpException();
+        }
+      }
+      elseif (!$this->currentUser->hasPermission('access reliefweb private files')) {
+        throw new AccessDeniedHttpException();
+      }
     }
 
     /** @var \Drupal\file\FileInterface|null $file */

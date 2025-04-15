@@ -1,3 +1,4 @@
 enabled: 1
+max_import_attempts: 3
 api_url: 'https://erccportal.jrc.ec.europa.eu/API/ERCC/EchoFlash/GetPagedItems?ItemsCurrentPageIndex=1&ItemsPageSize=50&Filter%5BStatus%5D%5B%5D=Published'
 timeout: '10'

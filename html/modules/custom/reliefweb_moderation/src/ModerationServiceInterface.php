@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_moderation;
 
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 
@@ -11,7 +12,7 @@ use Drupal\Core\Session\AccountInterface;
 interface ModerationServiceInterface {
 
   /**
-   * Get the entity bundle assocatiated with the service.
+   * Get the entity bundle associated with the service.
    *
    * @return string
    *   Entity bundle.
@@ -19,7 +20,7 @@ interface ModerationServiceInterface {
   public function getBundle();
 
   /**
-   * Get the entity type id assocatiated with the service.
+   * Get the entity type id associated with the service.
    *
    * @return string
    *   Entity type id.
@@ -174,6 +175,17 @@ interface ModerationServiceInterface {
    *   Access result.
    */
   public function entityAccess(EntityModeratedInterface $entity, $operation = 'view', ?AccountInterface $account = NULL);
+
+  /**
+   * Check access to create an entity.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   User trying to get access.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   The access result.
+   */
+  public function entityCreateAccess(AccountInterface $account): AccessResultInterface;
 
   /**
    * Alter the entity form, to add the moderation status submit buttons.

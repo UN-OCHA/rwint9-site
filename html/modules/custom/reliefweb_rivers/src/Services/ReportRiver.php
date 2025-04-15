@@ -301,8 +301,6 @@ class ReportRiver extends RiverServiceBase {
           'value' => [12, 12570, 38974],
           'operator' => 'OR',
         ];
-        $payload['fields']['include'][] = 'title';
-        $payload['fields']['include'][] = 'body-html';
         break;
 
       // Reports only.
@@ -315,15 +313,18 @@ class ReportRiver extends RiverServiceBase {
           'operator' => 'OR',
           'negate' => TRUE,
         ];
-        $payload['fields']['include'][] = 'title';
-        $payload['fields']['include'][] = 'body-html';
         break;
 
-      // All updates.
-      default:
-        $payload['fields']['include'][] = 'title';
-        $payload['fields']['include'][] = 'body-html';
+    }
 
+    // For headlines there is always a summary so we don't need to retrieve the
+    // body and title as we'll use the headline summary and headline title.
+    if ($view !== 'headlines') {
+      $payload['fields']['include'][] = 'title';
+      $payload['fields']['include'][] = 'headline.summary';
+      $payload['fields']['include'][] = 'body-html';
+      // @todo unable when the field is added to the API.
+      // $payload['fields']['include'][] = 'summary';
     }
 
     return $payload;
@@ -352,11 +353,14 @@ class ReportRiver extends RiverServiceBase {
       }
 
       // Summary.
-      // @todo do the summarization in the template instead?
       $summary = '';
-      if ($headlines && !empty($fields['headline']['summary'])) {
+      // Always show the headline summary if available.
+      if (!empty($fields['headline']['summary'])) {
         // The headline summary is plain text.
         $summary = $fields['headline']['summary'];
+      }
+      elseif (!empty($fields['summary'])) {
+        $summary = $fields['summary'];
       }
       elseif (!empty($fields['body-html'])) {
         // Summarize the body. The average headline summary length is 182
@@ -364,6 +368,7 @@ class ReportRiver extends RiverServiceBase {
         // date or location information at the beginning of the normal body
         // text, so we add a bit of margin to have more useful information in
         // the generated summary.
+        // @todo do the summarization in the template instead?
         $body = HtmlSanitizer::sanitize($fields['body-html']);
         $summary = HtmlSummarizer::summarize($body, 200);
       }

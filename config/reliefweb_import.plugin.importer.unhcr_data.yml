@@ -1,4 +1,5 @@
 enabled: 1
+max_import_attempts: 3
 api_url: 'https://data.unhcr.org'
 api_key: REPLACE_WITH_API_KEY
 list_endpoint: /api-content/documents.json

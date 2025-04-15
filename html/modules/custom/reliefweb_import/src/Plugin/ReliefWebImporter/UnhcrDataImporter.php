@@ -6,7 +6,9 @@ namespace Drupal\reliefweb_import\Plugin\ReliefWebImporter;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
 use Drupal\reliefweb_import\Attribute\ReliefWebImporter;
 use Drupal\reliefweb_import\Plugin\ReliefWebImporterPluginBase;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface;
@@ -841,6 +843,9 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
     // consistent content type headers (ex: pdf instead of application/pdf).
     $plugin->setPluginSetting('validate_file_content_type', FALSE);
 
+    // Max import attempts.
+    $max_import_attempts = $this->getPluginSetting('max_import_attempts', 3, FALSE);
+
     // Source: UNHCR.
     $source = [2868];
 
@@ -849,15 +854,48 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
     // up the ID from the UNHCR code below.
     $country_mapping = array_flip(array_filter($this->countryMapping));
 
+    // Retrieve the list of documents manually posted so we can exclude them
+    // from the import.
+    $ids = array_filter(array_map(fn($item) => $item['id'] ?? NULL, $documents));
+    $manually_posted = $this->getManuallyPostedDocuments(
+      $ids,
+      'https://data.unhcr.org/%/documents/%/{id}%',
+      '#^https://data.unhcr.org/(?:[^/]+/)?documents/[^/]+/(\d+)[^/]*$#i',
+    );
+
+    // Retrieve the list of existing import records for the documents.
+    $uuids = array_filter(array_map(fn($item) => $this->generateUuid($item['documentLink'] ?? ''), $documents));
+    $existing_import_records = $this->getExistingImportRecords($uuids);
+
     // Prepare the documents and submit them.
     $processed = 0;
+    $import_records = [];
     foreach ($documents as $document) {
+      $import_record = [
+        'importer' => $this->getPluginId(),
+        'provider_uuid' => $provider_uuid,
+        'entity_type_id' => 'node',
+        'entity_bundle' => 'report',
+        'status' => 'pending',
+        'message' => '',
+        'attempts' => 0,
+      ];
+
       // Retrieve the document ID.
       if (!isset($document['id'])) {
         $this->getLogger()->notice('Undefined UNHCR document ID, skipping document import.');
         continue;
       }
       $id = $document['id'];
+      $import_record['imported_item_id'] = $id;
+
+      if (isset($manually_posted[$id])) {
+        $this->getLogger()->notice(strtr('UNHCR document @id already manually posted as report @report_id.', [
+          '@id' => $id,
+          '@report_id' => $manually_posted[$id],
+        ]));
+        continue;
+      }
 
       // Retrieve the document URL.
       if (!isset($document['documentLink'])) {
@@ -867,17 +905,25 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
         continue;
       }
       $url = $document['documentLink'];
+      $import_record['imported_item_url'] = $url;
+
+      // Generate the UUID for the document.
+      $uuid = $this->generateUuid($url);
+      $import_record['imported_item_uuid'] = $uuid;
+
+      // Merge with existing record if available.
+      if (isset($existing_import_records[$uuid])) {
+        $import_record = $existing_import_records[$uuid] + $import_record;
+      }
 
       $this->getLogger()->info(strtr('Processing UNHCR document @id.', [
         '@id' => $id,
       ]));
 
-      // Generate the UUID for the document.
-      $uuid = $this->generateUuid($url);
-
       // Generate a hash from the UNHCR API data without the updated date and
       // download count since those change everytime the document is downloaded.
       $hash = HashHelper::generateHash($document, ['updated', 'downloadCount']);
+      $import_record['imported_data_hash'] = $hash;
 
       // Skip if there is already an entity with the same UUID and same content
       // hash since it means the document has been not updated since the last
@@ -898,11 +944,24 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
         continue;
       }
 
+      // Check if how many times we tried to import this item.
+      if (!empty($import_record['attempts']) && $import_record['attempts'] >= $max_import_attempts) {
+        $import_record['status'] = 'error';
+        $import_record['message'] = 'Too many attempts.';
+        $import_records[$import_record['imported_item_uuid']] = $import_record;
+
+        $this->getLogger()->error(strtr('Too many import attempts for UNHCR document @id, skipping.', [
+          '@id' => $id,
+        ]));
+        continue;
+      }
+
       // Retrieve the title and clean it.
       $title = $this->sanitizeText($document['title'] ?? '');
 
-      // Retrieve the description.
-      $body = $this->sanitizeText($document['description'] ?? '', TRUE);
+      // The documents in the UNHCR API seldom have descriptions or good ones
+      // so we simply skip the body.
+      $body = '';
 
       // Retrieve the publication date.
       $published = $document['publishDate'] ?? $document['created'] ?? NULL;
@@ -1003,6 +1062,11 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
       // Submit the document directly, no need to go through the queue.
       try {
         $entity = $plugin->process($data);
+        $import_record['status'] = 'success';
+        $import_record['message'] = '';
+        $import_record['attempts'] = 0;
+        $import_record['entity_id'] = $entity->id();
+        $import_record['entity_revision_id'] = $entity->getRevisionId();
         $processed++;
         $this->getLogger()->info(strtr('Successfully processed UNHCR document @id to entity @entity_id.', [
           '@id' => $id,
@@ -1010,12 +1074,21 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
         ]));
       }
       catch (\Exception $exception) {
+        $import_record['status'] = 'error';
+        $import_record['message'] = $exception->getMessage();
+        $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
         $this->getLogger()->error(strtr('Unable to process UNHCR document @id: @exception', [
           '@id' => $id,
           '@exception' => $exception->getMessage(),
         ]));
       }
+      finally {
+        $import_records[$import_record['imported_item_uuid']] = $import_record;
+      }
     }
+
+    // Create or update the import records.
+    $this->saveImportRecords($import_records);
 
     return $processed;
   }
@@ -1126,6 +1199,45 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
       $schema = Json::encode($decoded);
     }
     return $schema;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function alterContentClassificationSkipClassification(bool &$skip, ClassificationWorkflowInterface $workflow, array $context): void {
+    // Allow the automated classification.
+    $skip = FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function alterContentClassificationUserPermissionCheck(bool &$check, AccountInterface $account, array $context): void {
+    // Bypass the user permission check for the classification since the user
+    // associated with the provider may not be authorized to use the automated
+    // classification.
+    $check = FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function alterContentClassificationSpecifiedFieldCheck(array &$fields, ClassificationWorkflowInterface $workflow, array $context): void {
+    // Mark all the field as optional so that the classification is not skipped
+    // if any of the field is already filled.
+    $fields = array_map(fn($field) => FALSE, $fields);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function alterContentClassificationForceFieldUpdate(array &$fields, ClassificationWorkflowInterface $workflow, array $context): void {
+    // Force the update of the fields with the data from the classifier even
+    // if they already had a value.
+    $fields = array_map(fn($field) => TRUE, $fields);
+    // Keep the original title and source.
+    $fields['title__value'] = FALSE;
+    $fields['field_source'] = FALSE;
   }
 
 }

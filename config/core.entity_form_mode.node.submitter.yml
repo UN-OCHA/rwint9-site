@@ -1,0 +1,11 @@
+uuid: 1389a556-7cce-4651-a607-8583cb3699f4
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: node.submitter
+label: Submitter
+description: 'Simplified form for people with the Submitter role.'
+targetEntityType: node
+cache: true

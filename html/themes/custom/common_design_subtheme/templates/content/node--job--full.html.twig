@@ -155,11 +155,13 @@
           'value': meta.country,
           'count': null,
           'sort': 'name',
+          'field': 'field_country',
         },
         'city': {
           'type': 'simple',
           'label': 'City'|t,
           'value': meta.city,
+          'field': 'field_city',
         },
         'source': {
           'type': 'taglist',
@@ -167,6 +169,7 @@
           'value': meta.source,
           'count': null,
           'sort': 'name',
+          'field': 'field_source',
         },
         'type': {
           'type': 'taglist',
@@ -174,6 +177,7 @@
           'value': meta.type,
           'count': null,
           'sort': 'name',
+          'field': 'field_type',
         },
         'career-category': {
           'type': 'taglist',
@@ -181,12 +185,14 @@
           'value': meta.career_category,
           'count': null,
           'sort': 'name',
+          'field': 'field_career_category',
         },
         'experience': {
           'type': 'taglist',
           'label': 'Years of experience'|t,
           'value': meta.experience,
           'count': null,
+          'field': 'field_job_experience',
         },
         'theme': {
           'type': 'taglist',
@@ -194,8 +200,10 @@
           'value': meta.theme,
           'count': null,
           'sort': 'name',
+          'field': 'field_theme',
         },
       },
+      '#entity': node,
       '#cache': {
         'tags': [
           'taxonomy_term_list:career_category',

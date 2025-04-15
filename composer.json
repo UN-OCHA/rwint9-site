@@ -70,6 +70,7 @@
         "league/commonmark": "^2.2",
         "league/html-to-markdown": "^5.0",
         "lolli42/finediff": "^1.0",
+        "nitotm/efficient-language-detector": "^3.0",
         "opis/json-schema": "^2.2",
         "orakili/composer-drupal-info-file-patch-helper": "^1",
         "pelago/emogrifier": "^7.0",
@@ -80,8 +81,8 @@
         "symfony/uid": "^6.2",
         "unocha/common_design": "^9.4",
         "unocha/gtm_barebones": "^1.1",
-        "unocha/ocha_ai": "^1.7",
-        "unocha/ocha_content_classification": "^1.0",
+        "unocha/ocha_ai": "^1.11",
+        "unocha/ocha_content_classification": "^1.1",
         "unocha/ocha_entraid": "^1.0",
         "unocha/ocha_monitoring": "^1.0",
         "webflo/drupal-finder": "^1.2.2"

@@ -34,14 +34,14 @@ class ReliefWebEntityReferenceSelect extends OptionsSelectWidget {
    *
    * @var array
    */
-  private $extraDataFields;
+  protected $extraDataFields;
 
   /**
    * List of option attributes.
    *
    * @var array
    */
-  private $optionAttributes;
+  protected $optionAttributes;
 
   /**
    * {@inheritdoc}

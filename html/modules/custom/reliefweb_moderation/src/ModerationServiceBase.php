@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_moderation;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\Condition;
 use Drupal\Core\Database\Query\Select;
@@ -404,6 +405,14 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     }
 
     return $access ? AccessResult::allowed() : AccessResult::forbidden();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function entityCreateAccess(AccountInterface $account): AccessResultInterface {
+    // No opinion, let the permission system handles the access by default.
+    return AccessResult::neutral();
   }
 
   /**

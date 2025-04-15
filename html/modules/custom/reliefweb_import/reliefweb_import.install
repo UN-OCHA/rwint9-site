@@ -1,0 +1,121 @@
+<?php
+
+/**
+ * @file
+ * Install, update, and uninstall functions for the ReliefWeb Import module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function reliefweb_import_schema() {
+  $schema['reliefweb_import_records'] = [
+    'description' => 'Stores the records of imported items.',
+    'fields' => [
+      'imported_item_uuid' => [
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'description' => 'The UUID of the imported item.',
+      ],
+      'imported_item_url' => [
+        'type' => 'varchar',
+        'length' => 2048,
+        'not null' => TRUE,
+        'description' => 'The URL of the imported item.',
+      ],
+      'imported_item_id' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'description' => 'The ID of the imported item from the import feed.',
+      ],
+      'imported_data_hash' => [
+        'type' => 'varchar',
+        'length' => 64,
+        'description' => 'SHA256 hash of the imported data for integrity verification.',
+      ],
+      'importer' => [
+        'type' => 'varchar_ascii',
+        'length' => 128,
+        'description' => 'The machine name of the importer used.',
+      ],
+      'provider_uuid' => [
+        'type' => 'varchar',
+        'length' => 128,
+        'description' => 'The UUID of the provider of the imported item.',
+      ],
+      'entity_type_id' => [
+        'type' => 'varchar_ascii',
+        'length' => 128,
+        'description' => 'The entity type of the imported item.',
+      ],
+      'entity_bundle' => [
+        'type' => 'varchar_ascii',
+        'length' => 128,
+        'description' => 'The bundle of the imported item.',
+      ],
+      'entity_id' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'description' => 'The ID of the imported entity (only filled in case of successful import).',
+      ],
+      'entity_revision_id' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'description' => 'The revision ID of the imported entity.',
+      ],
+      'status' => [
+        'type' => 'varchar_ascii',
+        'length' => 32,
+        'not null' => TRUE,
+        'description' => 'The status of the import (e.g., queued, error, success).',
+      ],
+      'attempts' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The number of import attempts.',
+      ],
+      'created' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'The Unix timestamp when the item was first queued for import.',
+      ],
+      'changed' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'The Unix timestamp of the last update to this record.',
+      ],
+      'message' => [
+        'type' => 'text',
+        'size' => 'big',
+        'description' => 'The message for the last update of this record (e.g., error message).',
+      ],
+    ],
+    'primary key' => ['imported_item_uuid'],
+    'indexes' => [
+      'status' => ['status'],
+      'entity_type_bundle' => ['entity_type_id', 'entity_bundle'],
+      'importer' => ['importer'],
+      'imported_item_url' => ['imported_item_url'],
+      'imported_item_id' => ['imported_item_id'],
+    ],
+  ];
+
+  return $schema;
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * Create the reliefweb_import_records table.
+ */
+function reliefweb_import_update_10001(array &$sandbox) {
+  $schema = \Drupal::database()->schema();
+  $table_name = 'reliefweb_import_records';
+
+  if (!$schema->tableExists($table_name)) {
+    $table_schema = reliefweb_import_schema();
+    $schema->createTable($table_name, $table_schema[$table_name]);
+  }
+}

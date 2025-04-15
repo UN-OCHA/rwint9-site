@@ -306,8 +306,11 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
    *   Form state.
    */
   protected function alterPrimaryField($field, array &$form, FormStateInterface $form_state) {
+    if (!isset($form[$field])) {
+      return;
+    }
     $widget = &$form[$field]['widget'];
-    $options = $widget['#options'];
+    $options = $widget['#options'] ?? [];
 
     // Ensure there is an empty value option available so that we can
     // remove the selected value when modifying the country field.

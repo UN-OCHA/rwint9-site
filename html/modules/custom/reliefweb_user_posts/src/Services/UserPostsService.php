@@ -122,8 +122,11 @@ class UserPostsService extends ModerationServiceBase {
     if ($this->currentUser->hasRole('contributor')) {
       $statuses += [
         'to-review' => $this->t('To review'),
-        'embargoed' => $this->t('Embargoed'),
-        'reference' => $this->t('Reference'),
+      ];
+    }
+    elseif ($this->currentUser->hasRole('submitter')) {
+      $statuses += [
+        'to-review' => $this->t('To review'),
       ];
     }
 
@@ -278,10 +281,8 @@ class UserPostsService extends ModerationServiceBase {
     $allowed_bundles = [
       'job' => $this->t('Job'),
       'training' => $this->t('Training'),
+      'report' => $this->t('Report'),
     ];
-    if ($this->currentUser->hasPermission('create report content')) {
-      $allowed_bundles['report'] = $this->t('Report');
-    }
 
     $definitions['bundle'] = [
       'type' => 'property',

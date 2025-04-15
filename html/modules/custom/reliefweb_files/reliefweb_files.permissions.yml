@@ -1,3 +1,7 @@
 access reliefweb private files:
   title: 'Access ReliefWeb private files'
   description: 'Allow users to access the ReliefWeb private files.'
+
+access own reliefweb private files:
+  title: 'Access own ReliefWeb private files'
+  description: 'Allow users to access the ReliefWeb private files they uploaded.'

@@ -8,6 +8,7 @@ dependencies:
   module:
     - media
     - node
+    - ocha_content_classification
     - reliefweb_files
     - reliefweb_form
     - reliefweb_guidelines
@@ -19,6 +20,7 @@ is_admin: null
 permissions:
   - 'access editorial guidelines'
   - 'access reliefweb private files'
+  - 'bypass ocha content classification for node report'
   - 'create image_report media'
   - 'create report content'
   - 'delete media'
