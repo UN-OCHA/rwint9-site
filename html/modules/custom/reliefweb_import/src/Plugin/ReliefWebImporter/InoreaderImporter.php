@@ -436,13 +436,35 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         case 'UNHCR Global Focus - All Publications':
           $sources = [2868];
 
-          $pdf = $document['canonical']['href'] ?? '';
+          $pdf = $document['canonical'][0]['href'] ?? '';
 
           break;
 
         case 'UNHCR - Global All docs':
-          $pdf = $document['canonical']['href'] ?? '';
-          $pdf = str_replace('/details/', '/download', $pdf);
+          $sources = [2868];
+
+          $pdf = $document['canonical'][0]['href'] ?? '';
+          $pdf = str_replace('/details/', '/download/', $pdf);
+
+          break;
+
+        case 'Global Protection Cluster - Publications':
+          if (!empty($document['canonical'][0]['href'] ?? '')) {
+            $sources = [2868];
+            $html = file_get_contents($document['canonical'][0]['href'] ?? '');
+            if ($html === FALSE) {
+              $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id.', [
+                '@id' => $id,
+              ]));
+            }
+            else {
+              $pdf = $this->extractPdfUrl($html, 'a', 'href', 'btn-primary', 'pdf');
+              if (!empty($pdf) && strpos($pdf, 'http') !== 0) {
+                $pdf = 'https://globalprotectioncluster.org' . $pdf;
+              }
+            }
+          }
+
           break;
 
         default:
@@ -585,14 +607,22 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
   /**
    * Extract the PDF URL from the HTML content.
    */
-  protected function extractPdfUrl(string $html, string $tag, string $attribute): ?string {
-    if (preg_match('/<' . preg_quote($tag) . '[^>]+?href=[\'"]([^\'"]+)[\'"]/i', $html, $matches)) {
-      print_r(['one' => $matches]);
-      return $matches[1];
-    }
-    if (preg_match('/<' . preg_quote($tag) . '[^>]+?' . preg_quote($attribute) . '=[\'"]([^\'"]+)[\'"]/i', $html, $matches)) {
-      print_r(['two' => $matches]);
-      return $matches[1];
+  protected function extractPdfUrl(string $html, string $tag, string $attribute, string $class = '', string $extension = ''): ?string {
+    $dom = new \DOMDocument();
+    @$dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+    $xpath = new \DOMXPath($dom);
+    $elements = $xpath->query("//{$tag}[@{$attribute}]");
+
+    /** @var \DOMNode $element */
+    foreach ($elements as $element) {
+      $url = $element->getAttribute($attribute);
+      if (!empty($class) && $element->hasAttribute('class') && preg_match('/\b' . preg_quote($class, '/') . '\b/', $element->getAttribute('class'))) {
+        return $url;
+      }
+
+      if (!empty($extension) && preg_match('/\.' . $extension . '$/i', $url)) {
+        return $url;
+      }
     }
 
     return NULL;
