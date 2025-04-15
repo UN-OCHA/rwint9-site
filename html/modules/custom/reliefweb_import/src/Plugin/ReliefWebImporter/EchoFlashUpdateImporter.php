@@ -10,6 +10,7 @@ use Drupal\reliefweb_import\Attribute\ReliefWebImporter;
 use Drupal\reliefweb_import\Plugin\ReliefWebImporterPluginBase;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface;
 use Drupal\reliefweb_post_api\Helpers\HashHelper;
+use Drupal\reliefweb_utility\Helpers\DateHelper;
 
 /**
  * Import reports from the ECHO Flash Update API.
@@ -20,6 +21,34 @@ use Drupal\reliefweb_post_api\Helpers\HashHelper;
   description: new TranslatableMarkup('Import reports from the Echo Flash Update API.')
 )]
 class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
+
+  /**
+   * Theme mapping.
+   *
+   * @var array<string, int>
+   */
+  protected array $themeMapping = [
+    // Epidemic --> Health.
+    'EP' => 4595,
+    // Food Security --> Food and Nutrition.
+    'FD' => 4593,
+    // Health --> Health.
+    'HE' => 4595,
+    // Insect Infestation --> Agriculture.
+    'IN' => 4587,
+    // Mine --> Mine Action.
+    'MN' => 12033,
+    // Nutrition --> Food and Nutrition.
+    'MN' => 4593,
+    // Phytosanitary Emergency --> Agriculture.
+    'PE' => 4587,
+    // Preparedness/Advisory --> Disaster Management.
+    'PA' => 4591,
+    // Resources --> Humanitarian Financing.
+    'RS' => 4597,
+    // UCPM --> Coordination.
+    'CPM' => 4590,
+  ];
 
   /**
    * Find country by iso code.
@@ -319,11 +348,25 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
       // Retrieve the title and clean it.
       $title = $this->sanitizeText($document['Title'] ?? '');
 
-      // Retrieve the description.
-      $body = $this->sanitizeText($document['Description'] ?? '', TRUE);
+      // Retrieve the sources.
+      $sources = array_map(fn($item) => $this->sanitizeText($item['Name'] ?? ''), $document['ItemSources']);
+      $sources = array_unique(array_filter($sources));
 
       // Retrieve the publication date.
-      $published = $document['PublishedOnDate'] ?? $document['CreatedOnDate'] ?? NULL;
+      $published = $document['PublishedOnDate'] ?? $document['CreatedOnDate'] ?? time();
+      $published = DateHelper::format($published, 'custom', 'c');
+
+      // Title + (sources) + (ECHO Daily Flash of dd MM YYYY).
+      if (!empty($title)) {
+        $title = implode(' ', array_filter([
+          $title,
+          !empty($sources) ? '(' . implode(', ', $sources) . ')' : '',
+          '(ECHO Daily Flash of ' . DateHelper::format($published, 'custom', 'j F Y') . ')',
+        ]));
+      }
+
+      // Retrieve the description.
+      $body = $this->sanitizeText($document['Description'] ?? '', TRUE);
 
       // Retrieve the countries.
       $countries = [];
@@ -349,25 +392,37 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
 
       $countries = array_unique($countries);
 
-      // Disaster type.
-      $disaster_types = [];
+      // Extract the event types.
+      $event_type_codes = [];
       if (isset($document['EventTypeCode'])) {
-        if ($type = $this->getDisasterTypeByCode($document['EventTypeCode'])) {
-          $disaster_types[] = $type;
-        }
+        $event_type_code = strtoupper($document['EventTypeCode']);
+        $event_type_codes[$event_type_code] = $event_type_code;
       }
-
+      elseif (isset($document['EventType']['Code'])) {
+        $event_type_code = strtoupper($document['EventType']['Code']);
+        $event_type_codes[$event_type_code] = $event_type_code;
+      }
       if (isset($document['EventTypes'])) {
         foreach ($document['EventTypes'] ?? [] as $event_type) {
           if (isset($event_type['Code'])) {
-            if ($type = $this->getDisasterTypeByCode($event_type['Code'])) {
-              $disaster_types[] = $type;
-            }
+            $event_type_code = strtoupper($event_type['Code']);
+            $event_type_codes[$event_type_code] = $event_type_code;
           }
         }
       }
 
-      $disaster_types = array_unique($disaster_types);
+      // Disaster types and themes.
+      $disaster_types = [];
+      $themes = [];
+      foreach ($event_type_codes as $event_type_code) {
+        $disaster_type_code = $this->getDisasterTypeByCode($document['EventTypeCode']);
+        if (isset($disaster_type_code)) {
+          $disaster_types[$event_type_code] = $disaster_type_code;
+        }
+        if (isset($this->themeMapping[$event_type_code])) {
+          $themes[$event_type_code] = $this->themeMapping[$event_type_code];
+        }
+      }
 
       // Submission data.
       $data = [
@@ -388,6 +443,9 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
 
       if (!empty($disaster_types)) {
         $data['disaster_type'] = array_values($disaster_types);
+      }
+      if (!empty($themes)) {
+        $data['theme'] = array_values($themes);
       }
 
       // Submit the document directly, no need to go through the queue.
