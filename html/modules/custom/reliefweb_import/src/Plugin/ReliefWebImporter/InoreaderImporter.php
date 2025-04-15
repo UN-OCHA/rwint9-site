@@ -449,6 +449,9 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
           break;
 
         case 'Global Protection Cluster - Publications':
+          // Clear body.
+          $body = '';
+
           if (!empty($document['canonical'][0]['href'] ?? '')) {
             $sources = [2868];
             $html = file_get_contents($document['canonical'][0]['href'] ?? '');

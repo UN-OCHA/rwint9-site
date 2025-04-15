@@ -428,6 +428,11 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
     // Remove final extension.
     $extension = strtolower((string) array_pop($filename_parts));
 
+    // Assume empty extension is PDF.
+    if (empty($extension)) {
+      $extension = 'pdf';
+    }
+
     // Ensure the extension is allowed.
     if (!in_array($extension, $allowed_extensions)) {
       return '';
