@@ -9,6 +9,7 @@ use Drupal\Component\Utility\Bytes;
 use Drupal\Component\Utility\Environment;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -67,6 +68,8 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
    *   The entity type manager.
    * @param \Drupal\Core\Entity\EntityRepositoryInterface $entityRepository
    *   The entity repository.
+   * @param \Drupal\Core\Database\Connection $database
+   *   The database.
    * @param \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface $contentProcessorPluginManager
    *   The Post API content processor plugin manager.
    * @param \Drupal\Core\Extension\ExtensionPathResolver $pathResolver
@@ -84,6 +87,7 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
     protected EntityFieldManagerInterface $entityFieldManager,
     protected EntityTypeManagerInterface $entityTypeManager,
     protected EntityRepositoryInterface $entityRepository,
+    protected Connection $database,
     protected ContentProcessorPluginManagerInterface $contentProcessorPluginManager,
     protected ExtensionPathResolver $pathResolver,
   ) {
@@ -110,6 +114,7 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
       $container->get('entity_field.manager'),
       $container->get('entity_type.manager'),
       $container->get('entity.repository'),
+      $container->get('database'),
       $container->get('plugin.manager.reliefweb_post_api.content_processor'),
       $container->get('extension.path.resolver'),
     );
@@ -266,6 +271,14 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
       '#empty_option' => $this->t('- Select a provider -'),
     ];
 
+    $max_import_attemps = $form_state->getValue('max_import_attempts', $this->getPluginSetting('max_import_attempts', '', FALSE));
+    $form['max_import_attempts'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Max import attemps'),
+      '#default_value' => $max_import_attemps,
+      '#min' => 1,
+    ];
+
     return $form;
   }
 
@@ -332,6 +345,9 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
    * {@inheritdoc}
    */
   public function generateUuid(string $string, ?string $namespace = NULL): string {
+    if (empty($string)) {
+      return '';
+    }
     /* The default namespace is the UUID generated with
      * Uuid::v5(Uuid::fromString(Uuid::NAMESPACE_DNS), 'reliefweb.int')->toRfc4122(); */
     $namespace = $namespace ?? '8e27a998-c362-5d1f-b152-d474e1d36af2';
@@ -435,6 +451,173 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
    */
   protected function sanitizeText(string $text, bool $preserve_newline = FALSE): string {
     return TextHelper::sanitizeText($text, $preserve_newline);
+  }
+
+  /**
+   * Get the list of manually posted documents matching the given patterns.
+   *
+   * @param array $document_ids
+   *   An array of external document IDs to check.
+   * @param string $url_pattern_template
+   *   A URL pattern template with '{id}' placeholder for the document ID.
+   *   Ex: 'https://data.unhcr.org/%/documents/%/{id}%'.
+   * @param string $id_extraction_regex
+   *   A regex pattern to extract the document ID from the URL.
+   *   Must contain one capturing group for the ID.
+   *   Ex: '#^https://data.unhcr.org/(?:[^/]+/)?documents/[^/]+/(\d+)[^/]*$#'.
+   *
+   * @return array
+   *   Associative array mapping external document IDs (keys) to their
+   *   corresponding report node IDs (values).
+   */
+  protected function getManuallyPostedDocuments(
+    array $document_ids,
+    string $url_pattern_template,
+    string $id_extraction_regex,
+  ): array {
+    if (empty($document_ids)) {
+      return [];
+    }
+
+    // Query to find existing manually posted records with these document IDs.
+    $query = $this->database->select('node__field_origin_notes', 'fon');
+    $query->addField('fon', 'entity_id', 'entity_id');
+    $query->addField('fon', 'field_origin_notes_value', 'url');
+    $query->condition('fon.bundle', 'report', '=');
+
+    // Join the provider table. Manually posted content do not have one.
+    $query->leftJoin('node__field_post_api_provider', 'fpap', '%alias.entity_id = fon.entity_id');
+    $query->isNull('fpap.field_post_api_provider_target_id');
+
+    // Use OR condition group for MySQL compatibility.
+    $or_group = $query->orConditionGroup();
+    foreach ($document_ids as $document_id) {
+      $pattern = str_replace('{id}', (string) $document_id, $url_pattern_template);
+      $or_group->condition('fon.field_origin_notes_value', $pattern, 'LIKE');
+    }
+    $query->condition($or_group);
+
+    // Get the list of records keyed by the entity ID.
+    $records = $query->execute()?->fetchAllKeyed() ?? [];
+    if (empty($records)) {
+      return [];
+    }
+
+    $manually_posted = [];
+    $document_ids = array_flip($document_ids);
+    foreach ($records as $entity_id => $url) {
+      $matches = [];
+      if (preg_match($id_extraction_regex, $url, $matches) && isset($matches[1], $document_ids[$matches[1]])) {
+        $manually_posted[$matches[1]] = $entity_id;
+      }
+    }
+
+    return $manually_posted;
+  }
+
+  /**
+   * Retrieve existing import records for the given URLs.
+   *
+   * @param array $uuids
+   *   An array of import item UUIDs to look up.
+   *
+   * @return array
+   *   An array of import records keyed by the import item UUID.
+   */
+  protected function getExistingImportRecords(array $uuids): array {
+    if (empty($uuids)) {
+      return [];
+    }
+
+    $records = $this->database->select('reliefweb_import_records', 'r')
+      ->fields('r')
+      ->condition('imported_item_uuid', $uuids, 'IN')
+      ->execute()
+      ?->fetchAllAssoc('imported_item_uuid', \PDO::FETCH_ASSOC) ?? [];
+
+    return $records;
+  }
+
+  /**
+   * Save import records (create new or update existing).
+   *
+   * @param array $records
+   *   List of import records. Each record must contain at least the 'uuid' key.
+   *   Other fields will be created or updated as provided.
+   *
+   * @return array
+   *   Array of results with counts of records created, updated or skipped if
+   *   unchanged.
+   */
+  protected function saveImportRecords(array $records): array {
+    if (empty($records)) {
+      return [
+        'created' => 0,
+        'updated' => 0,
+        'skipped' => 0,
+      ];
+    }
+
+    $created = 0;
+    $updated = 0;
+    $skipped = 0;
+
+    // Get all URLs from the records to check which ones already exist.
+    $urls = array_column($records, 'imported_item_uuid');
+    $existing_records = $this->getExistingImportRecords($urls);
+
+    foreach ($records as $record) {
+      // Skip records without a URL.
+      if (empty($record['imported_item_uuid'])) {
+        continue;
+      }
+
+      // Set timestamp for changed field.
+      $record['changed'] = time();
+
+      // Check if this record already exists.
+      $url = $record['imported_item_uuid'];
+      if (isset($existing_records[$url])) {
+        // Get existing record.
+        $existing_record = $existing_records[$url];
+
+        // Create comparison copies without the 'changed' timestamp.
+        $compare_existing = $existing_record;
+        $compare_new = $record;
+        unset($compare_existing['changed']);
+        unset($compare_new['changed']);
+
+        // Only update if the record has actually changed.
+        if ($compare_existing != $compare_new) {
+          $this->database->update('reliefweb_import_records')
+            ->fields($record)
+            ->condition('imported_item_uuid', $url)
+            ->execute();
+          $updated++;
+        }
+        else {
+          $skipped++;
+        }
+      }
+      else {
+        // Set timestamp for created field if not provided.
+        if (!isset($record['created'])) {
+          $record['created'] = time();
+        }
+
+        // Insert new record.
+        $this->database->insert('reliefweb_import_records')
+          ->fields($record)
+          ->execute();
+        $created++;
+      }
+    }
+
+    return [
+      'created' => $created,
+      'updated' => $updated,
+      'skipped' => $skipped,
+    ];
   }
 
 }

@@ -9,6 +9,9 @@ reliefweb_import.plugin.importer:
     provider_uuid:
       type: string
       label: 'UUID of the Post API provider used associated with this importer plugin.'
+    max_import_attempts:
+      type: integer
+      label: 'Maximum number of import attempts for an item before considering the import as failure.'
 
 # UNHCR Data importer plugin settings.
 reliefweb_import.plugin.importer.unhcr_data:

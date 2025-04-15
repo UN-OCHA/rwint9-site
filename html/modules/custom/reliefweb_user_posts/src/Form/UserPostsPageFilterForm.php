@@ -92,10 +92,6 @@ class UserPostsPageFilterForm extends ModerationPageFilterForm {
       $form['filters']['other']['poster']['#default_value'] = ['me'];
     }
 
-    if (!empty($form['filters']['other']['bundle']['#options'])) {
-      $form['filters']['other']['bundle']['#options'] = array_intersect_key($form['filters']['other']['bundle']['#options'], $links);
-    }
-
     return $form;
   }
 

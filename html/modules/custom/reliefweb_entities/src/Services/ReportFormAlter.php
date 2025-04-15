@@ -32,28 +32,48 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     }
 
     // Add an autocomplete widget to the country and source fields.
-    $form['field_country']['#attributes']['data-with-autocomplete'] = '';
-    $form['field_primary_country']['#attributes']['data-with-autocomplete'] = 'primary';
-    $form['field_source']['#attributes']['data-with-autocomplete'] = 'sources';
-    $form['field_source']['#attributes']['data-selection-messages'] = '';
-    $form['field_source']['#attributes']['data-autocomplete-path'] = Url::fromRoute('reliefweb_form.node_form.source_attention_messages', [
-      'bundle' => 'report',
-    ])->toString();
+    if (isset($form['field_country'])) {
+      $form['field_country']['#attributes']['data-with-autocomplete'] = '';
+    }
+    if (isset($form['field_primary_country'])) {
+      $form['field_primary_country']['#attributes']['data-with-autocomplete'] = 'primary';
+    }
+    if (isset($form['field_source'])) {
+      $form['field_source']['#attributes']['data-with-autocomplete'] = 'sources';
+      $form['field_source']['#attributes']['data-selection-messages'] = '';
+      $form['field_source']['#attributes']['data-autocomplete-path'] = Url::fromRoute('reliefweb_form.node_form.source_attention_messages', [
+        'bundle' => 'report',
+      ])->toString();
+    }
 
     // Add an autocomplete widget to the disaster field.
-    $form['field_disaster']['#attributes']['data-with-autocomplete'] = 'disasters';
+    if (isset($form['field_disaster'])) {
+      $form['field_disaster']['#attributes']['data-with-autocomplete'] = 'disasters';
+    }
 
     // Add an autocomplete widget to the tags.
-    $form['field_disaster_type']['#attributes']['data-with-autocomplete'] = '';
-    $form['field_content_format']['#attributes']['data-with-autocomplete'] = '';
-    $form['field_theme']['#attributes']['data-with-autocomplete'] = '';
-    $form['field_vulnerable_groups']['#attributes']['data-with-autocomplete'] = '';
+    if (isset($form['field_disaster_type'])) {
+      $form['field_disaster_type']['#attributes']['data-with-autocomplete'] = '';
+    }
+    if (isset($form['field_content_format'])) {
+      $form['field_content_format']['#attributes']['data-with-autocomplete'] = '';
+    }
+    if (isset($form['field_theme'])) {
+      $form['field_theme']['#attributes']['data-with-autocomplete'] = '';
+    }
+    if (isset($form['field_vulnerable_groups'])) {
+      $form['field_vulnerable_groups']['#attributes']['data-with-autocomplete'] = '';
+    }
 
     // Add a datepicker widget to the report date field.
-    $form['field_original_publication_date']['widget'][0]['value']['#attributes']['data-with-datepicker'] = '';
+    if (isset($form['field_original_publication_date'])) {
+      $form['field_original_publication_date']['widget'][0]['value']['#attributes']['data-with-datepicker'] = '';
+    }
 
     // Add PDF formatting widget to the body field.
-    $form['body']['#attributes']['data-with-formatting'] = 'pdf';
+    if (isset($form['body'])) {
+      $form['body']['#attributes']['data-with-formatting'] = 'pdf';
+    }
 
     // Alter the primary country field, ensuring it's using a value among
     // the selected country values.
@@ -94,6 +114,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
 
     // Change the description of the file field to indicate that only PDF files
     // are accepted in terms of editorial guidance.
+    // @todo review if that should apply to roles other than editor.
     if (isset($form['field_file']['widget']['add_more']['files']['#description'])) {
       $description = $form['field_file']['widget']['add_more']['files']['#description'];
       $form['field_file']['widget']['add_more']['files']['#description'] = $this->t(
@@ -113,11 +134,6 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
       FormHelper::removeOptions($form, 'field_origin', [3]);
     }
 
-    // Special tweaks for contributors.
-    if ($this->currentUser->hasRole('contributor')) {
-      $this->alterFieldsForContributors($form, $form_state);
-    }
-
     // Validate the attachments.
     $form['#validate'][] = [$this, 'validateAttachment'];
 
@@ -129,6 +145,110 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
 
     // Prevent saving if user is blocked for a source.
     $form['#validate'][] = [$this, 'validatePostingRightsBlockedSource'];
+
+    $this->addRoleFormAlterations($form, $form_state);
+  }
+
+  /**
+   * Alter the form based on the current user role.
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  protected function addRoleFormAlterations(array &$form, FormStateInterface $form_state): void {
+    // Special tweaks for contributors.
+    if ($this->currentUser->hasRole('contributor')) {
+      $this->alterFieldsForContributors($form, $form_state);
+    }
+    elseif ($this->currentUser->hasRole('submitter')) {
+      $this->alterFieldsForSubmitters($form, $form_state);
+    }
+  }
+
+  /**
+   * Make alterations for Contributor role.
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  protected function alterFieldsForContributors(array &$form, FormStateInterface $form_state) {
+    // Default to submit for new documents otherwise preserve the value, for
+    // example when editing a report created by an editor.
+    if ($form_state->getFormObject()?->getEntity()?->isNew() === TRUE) {
+      $form['field_origin']['widget']['#default_value'] = '1';
+    }
+    // Change the field to 'hidden' to hide it while perserving its value so
+    // that the alteration and validation of the origin notes field still work.
+    // @see ::alterOriginFields()
+    $form['field_origin']['widget']['#type'] = 'hidden';
+
+    // Hide fields.
+    $form['field_embargo_date']['#access'] = FALSE;
+    $form['field_bury']['#access'] = FALSE;
+    $form['field_feature']['#access'] = FALSE;
+
+    $form['field_headline']['#access'] = FALSE;
+    $form['field_headline_title']['#access'] = FALSE;
+    $form['field_headline_summary']['#access'] = FALSE;
+    $form['field_headline_image']['#access'] = FALSE;
+  }
+
+  /**
+   * Make alterations for Submitter role.
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  protected function alterFieldsForSubmitters(array &$form, FormStateInterface $form_state) {
+    $new = $form_state->getFormObject()?->getEntity()?->isNew() === TRUE;
+
+    // Indicate that we are using the submitter form.
+    $form['#attributes']['class'][] = 'rw-entity-form--report--submitter';
+
+    // Simplify title.
+    $form['title']['widget'][0]['value']['#rows'] = 1;
+    unset($form['title']['widget'][0]['value']['#attributes']['data-with-formatting']);
+
+    // Default to submit for new documents otherwise preserve the value, for
+    // example when editing a report created by an editor.
+    if ($new) {
+      $form['field_origin']['widget']['#default_value'] = '1';
+    }
+    $form['field_origin_notes']['widget'][0]['value']['#title'] = $this->t('Origin URL');
+
+    // Make the attachment field mandatory.
+    $form['field_file']['widget']['#element_validate'][] = [$this, 'validateMandatoryFileField'];
+    $form['field_file']['widget']['#required'] = TRUE;
+
+    // Populate the notify field with the submitter email address so that
+    // they can be notified when their submission is published.
+    if ($new) {
+      $form['field_notify']['widget'][0]['value']['#default_value'] = $this->currentUser->getEmail();
+    }
+  }
+
+  /**
+   * Validate the file field.
+   *
+   * Check that there is at least one attachment.
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  public function validateMandatoryFileField(array $form, FormStateInterface $form_state) {
+    $values = $form_state->getValue('field_file', []);
+    unset($values['add_more']);
+    if (empty($values)) {
+      $form_state->setErrorByName('field_file', $this->t('At least one attachment is required.'));
+    }
   }
 
   /**
@@ -140,6 +260,9 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
    *   Form state.
    */
   public function validatePostingRightsBlockedSource(array $form, FormStateInterface &$form_state) {
+    if (!isset($form['field_source'])) {
+      return;
+    }
     $ids = [];
     foreach ($form_state->getValue('field_source', []) as $item) {
       if (!empty($item['target_id'])) {
@@ -178,6 +301,9 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
    * @see https://www.drupal.org/project/drupal/issues/2836054
    */
   protected function alterEmbargoDateField(array &$form, FormStateInterface $form_state) {
+    if (!isset($form['field_embargo_date'])) {
+      return;
+    }
     $min_year = gmdate('Y');
     $max_year = $min_year + 1;
 
@@ -193,21 +319,34 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
    *   Form state.
    */
   protected function alterHeadlineFields(array &$form, FormStateInterface $form_state) {
-    $form['field_headline_summary']['widget'][0]['value']['#rows'] = 3;
-    // Add the length checker widget to the summary field. As of December 2019,
-    // the average length for the headline summary is 182 characters with the
-    // majority of the summaries between 160 and 200 characters.
-    $form['field_headline_summary']['#attributes']['data-with-lengthchecker'] = '160-200';
-
-    // Mark the headline fields as mandatory when headline is checked.
     $condition = [
       ':input[name="field_headline[value]"]' => ['checked' => TRUE],
     ];
-    $form['field_headline_title']['widget'][0]['value']['#states']['required'] = $condition;
-    $form['field_headline_summary']['widget'][0]['value']['#states']['required'] = $condition;
+
+    if (isset($form['field_headline_title'])) {
+      // Mark the headline title field as mandatory when headline is checked.
+      if (isset($form['field_headline'])) {
+        $form['field_headline_title']['widget'][0]['value']['#states']['required'] = $condition;
+      }
+    }
+
+    if (isset($form['field_headline_summary'])) {
+      $form['field_headline_summary']['widget'][0]['value']['#rows'] = 3;
+      // Add the length checker widget to the summary field. As of December
+      // 2019, the average length for the headline summary is 182 characters
+      // with the majority of the summaries between 160 and 200 characters.
+      $form['field_headline_summary']['#attributes']['data-with-lengthchecker'] = '160-200';
+
+      // Mark the headline summary field as mandatory when headline is checked.
+      if (isset($form['field_headline'])) {
+        $form['field_headline_summary']['widget'][0]['value']['#states']['required'] = $condition;
+      }
+    }
 
     // Validate headline title.
-    $form['#validate'][] = [$this, 'validateHeadlineFields'];
+    if (isset($form['field_headline'])) {
+      $form['#validate'][] = [$this, 'validateHeadlineFields'];
+    }
   }
 
   /**
@@ -225,17 +364,21 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     $headline = $form_state->getValue(['field_headline', 'value']);
     if (!empty($headline)) {
       // Check the title.
-      $headline_title = $form_state
-        ->getValue(['field_headline_title', 0, 'value']);
-      if (empty($headline_title)) {
-        $form_state->setErrorByName('field_headline_title][0][value', $this->t('You must enter a headline title if you set this document as a headline.'));
+      if (isset($form['field_headline_title'])) {
+        $headline_title = $form_state
+          ->getValue(['field_headline_title', 0, 'value']);
+        if (empty($headline_title)) {
+          $form_state->setErrorByName('field_headline_title][0][value', $this->t('You must enter a headline title if you set this document as a headline.'));
+        }
       }
 
       // Check the summary.
-      $headline_summary = $form_state
-        ->getValue(['field_headline_summary', 0, 'value']);
-      if (empty($headline_summary)) {
-        $form_state->setErrorByName('field_headline_summary][0][value', $this->t('You must enter a headline summary if you set this document as a headline.'));
+      if (isset($form['field_headline_summary'])) {
+        $headline_summary = $form_state
+          ->getValue(['field_headline_summary', 0, 'value']);
+        if (empty($headline_summary)) {
+          $form_state->setErrorByName('field_headline_summary][0][value', $this->t('You must enter a headline summary if you set this document as a headline.'));
+        }
       }
     }
   }
@@ -251,14 +394,17 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
    *   Form state.
    */
   protected function alterOriginFields(array &$form, FormStateInterface $form_state) {
-    // Make the origin notes field mandatory when URL is selected as origin.
-    $condition = [
-      ':input[name="field_origin"]' => ['value' => '0'],
-    ];
-    $form['field_origin_notes']['widget'][0]['value']['#states']['required'] = $condition;
+    if (isset($form['field_origin'], $form['field_origin_notes'])) {
+      // Make the origin notes field mandatory when URL is selected as origin.
+      $condition = [
+        ':input[name="field_origin"]' => ['value' => '0'],
+      ];
 
-    // Validate the origin notes field when URL is selected as origin.
-    $form['#validate'][] = [$this, 'validateOriginFields'];
+      $form['field_origin_notes']['widget'][0]['value']['#states']['required'] = $condition;
+
+      // Validate the origin notes field when URL is selected as origin.
+      $form['#validate'][] = [$this, 'validateOriginFields'];
+    }
   }
 
   /**
@@ -272,6 +418,9 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
    *   Form state.
    */
   public function validateOriginFields(array $form, FormStateInterface &$form_state) {
+    if (!isset($form['field_origin']) || !isset($form['field_origin_notes'])) {
+      return;
+    }
     $origin = $form_state->getValue(['field_origin', 0, 'value']);
 
     // The origin field is mandatory so if it's not set, then an error will be
@@ -328,21 +477,23 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
    * @see reliefweb_form/widget.autocomplete
    */
   protected function alterOchaProductField(array &$form, FormStateInterface $form_state) {
-    $widget = &$form['field_ocha_product']['widget'];
+    if (isset($form['field_ocha_product'])) {
+      $widget = &$form['field_ocha_product']['widget'];
 
-    // Remove "Press Review" (12351) OCHA product option if not selected as it's
-    // not to be used anymore but we still want to preserve the docs already
-    // tagged with it. (https://trello.com/c/kTiP7N2E)
-    if (empty($widget['#default_value']) || $widget['#default_value'] == 12351) {
-      FormHelper::removeOptions($form, 'field_ocha_product', [12351]);
+      // Remove "Press Review" (12351) OCHA product option if not selected as
+      // it's not to be used anymore but we still want to preserve the docs
+      // already tagged with it. (https://trello.com/c/kTiP7N2E)
+      if (empty($widget['#default_value']) || $widget['#default_value'] == 12351) {
+        FormHelper::removeOptions($form, 'field_ocha_product', [12351]);
+      }
+
+      // Remove the empty option.
+      unset($widget['#options']['_none']);
+
+      // Add a validation callback to ensure that an OCHA product is selected
+      // when OCHA is selected as source.
+      $form['#validate'][] = [$this, 'validateOchaProductField'];
     }
-
-    // Remove the empty option.
-    unset($widget['#options']['_none']);
-
-    // Add a validation callback to ensure that an OCHA product is selected
-    // when OCHA is selected as source.
-    $form['#validate'][] = [$this, 'validateOchaProductField'];
   }
 
   /**
@@ -357,6 +508,9 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
    *   Form state.
    */
   public function validateOchaProductField(array $form, FormStateInterface &$form_state) {
+    if (!isset($form['field_ocha_product'])) {
+      return;
+    }
     $ocha_product = $form_state->getValue(['field_ocha_product', 0, 'target_id']);
 
     // Check if OCHA (id: 1503) is selected.
@@ -391,6 +545,9 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
    *   Form state.
    */
   public function validateAttachment(array $form, FormStateInterface &$form_state) {
+    if (!isset($form['field_file'])) {
+      return;
+    }
     $visual_formats = [
       '12' => 'Map',
       '12570' => 'Infographic',
@@ -446,42 +603,15 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
    *   Form state.
    */
   public function validateEmbargoDate(array $form, FormStateInterface &$form_state) {
+    if (!isset($form['field_embargo_date'])) {
+      return;
+    }
     $embargo_date = $form_state->getValue(['field_embargo_date', 0, 'value']);
     // If there is a valid date (with year, month etc.), then $embargo_date
     // is a \Drupal\Core\Datetime\DrupalDateTime instance...
     if (!empty($embargo_date) && $embargo_date instanceof DrupalDateTime && $embargo_date->getTimestamp() < time()) {
       $form_state->setErrorByName('field_embargo_date][0][value', $this->t('The embargo date cannot be in the past.'));
     }
-  }
-
-  /**
-   * Make alterations for Contributor role.
-   *
-   * @param array $form
-   *   Form to alter.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   Form state.
-   */
-  protected function alterFieldsForContributors(array &$form, FormStateInterface $form_state) {
-    // Default to submit for new documents otherwise preserve the value, for
-    // example when editing a report created by an editor.
-    if ($form_state->getFormObject()?->getEntity()?->isNew() === TRUE) {
-      $form['field_origin']['widget']['#default_value'] = '1';
-    }
-    // Change the field to 'hidden' to hide it while perserving its value so
-    // that the alteration and validation of the origin notes field still work.
-    // @see ::alterOriginFields()
-    $form['field_origin']['widget']['#type'] = 'hidden';
-
-    // Hide fields.
-    $form['field_embargo_date']['#access'] = FALSE;
-    $form['field_bury']['#access'] = FALSE;
-    $form['field_feature']['#access'] = FALSE;
-
-    $form['field_headline']['#access'] = FALSE;
-    $form['field_headline_title']['#access'] = FALSE;
-    $form['field_headline_summary']['#access'] = FALSE;
-    $form['field_headline_image']['#access'] = FALSE;
   }
 
 }

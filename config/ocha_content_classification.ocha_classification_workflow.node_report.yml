@@ -5,6 +5,8 @@ dependencies: {  }
 id: node_report
 label: Reports
 limit: 3
+validation:
+  empty: false
 target:
   entity_type_id: node
   bundle: report

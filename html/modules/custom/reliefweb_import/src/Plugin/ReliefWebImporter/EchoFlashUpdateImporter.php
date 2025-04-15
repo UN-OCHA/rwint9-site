@@ -10,6 +10,7 @@ use Drupal\reliefweb_import\Attribute\ReliefWebImporter;
 use Drupal\reliefweb_import\Plugin\ReliefWebImporterPluginBase;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface;
 use Drupal\reliefweb_post_api\Helpers\HashHelper;
+use Drupal\reliefweb_utility\Helpers\DateHelper;
 
 /**
  * Import reports from the ECHO Flash Update API.
@@ -20,6 +21,34 @@ use Drupal\reliefweb_post_api\Helpers\HashHelper;
   description: new TranslatableMarkup('Import reports from the Echo Flash Update API.')
 )]
 class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
+
+  /**
+   * Theme mapping.
+   *
+   * @var array<string, int>
+   */
+  protected array $themeMapping = [
+    // Epidemic --> Health.
+    'EP' => 4595,
+    // Food Security --> Food and Nutrition.
+    'FD' => 4593,
+    // Health --> Health.
+    'HE' => 4595,
+    // Insect Infestation --> Agriculture.
+    'IN' => 4587,
+    // Mine --> Mine Action.
+    'MN' => 12033,
+    // Nutrition --> Food and Nutrition.
+    'MN' => 4593,
+    // Phytosanitary Emergency --> Agriculture.
+    'PE' => 4587,
+    // Preparedness/Advisory --> Disaster Management.
+    'PA' => 4591,
+    // Resources --> Humanitarian Financing.
+    'RS' => 4597,
+    // UCPM --> Coordination.
+    'CPM' => 4590,
+  ];
 
   /**
    * Find country by iso code.
@@ -213,15 +242,51 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
     // Source: Echo Flash Update.
     $source = [620];
 
+    // Retrieve the list of documents manually posted so we can exclude them
+    // from the import.
+    $ids = array_filter(array_map(fn($item) => $item['ContentItemId'] ?? NULL, $documents));
+    $manually_posted = $this->getManuallyPostedDocuments(
+      $ids,
+      'https://erccportal.jrc.ec.europa.eu/ECHO%Products%/Echo%Flash#/%/{id}',
+      '#^https://erccportal\.jrc\.ec\.europa\.eu/ECHO[^/]*Products[/]*/Echo[^/]*Flash[#]?/[^/]+/(\d+)[^/]*$#i'
+    );
+
+    // Retrieve the list of existing import records for the documents.
+    $uuids = array_filter(array_map(fn($item) => $this->generateUuid($item['Link'] ?? ''), $documents));
+    $existing_import_records = $this->getExistingImportRecords($uuids);
+
+    // Max import attempts.
+    $max_import_attempts = $this->getPluginSetting('max_import_attempts', 3, FALSE);
+
     // Prepare the documents and submit them.
     $processed = 0;
+    $import_records = [];
     foreach ($documents as $document) {
+      $import_record = [
+        'importer' => $this->getPluginId(),
+        'provider_uuid' => $provider_uuid,
+        'entity_type_id' => 'node',
+        'entity_bundle' => 'report',
+        'status' => 'pending',
+        'message' => '',
+        'attempts' => 0,
+      ];
+
       // Retrieve the document ID.
       if (!isset($document['ContentItemId'])) {
         $this->getLogger()->notice('Undefined Echo Flash Update document ID, skipping document import.');
         continue;
       }
       $id = $document['ContentItemId'];
+      $import_record['imported_item_id'] = $id;
+
+      if (isset($manually_posted[$id])) {
+        $this->getLogger()->notice(strtr('ECHO Flash Update document @id already manually posted as report @report_id.', [
+          '@id' => $id,
+          '@report_id' => $manually_posted[$id],
+        ]));
+        continue;
+      }
 
       // Retrieve the document URL.
       if (!isset($document['Link'])) {
@@ -231,14 +296,35 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
         continue;
       }
       $url = $document['Link'];
+      $import_record['imported_item_url'] = $url;
+
+      // Generate the UUID for the document.
+      $uuid = $this->generateUuid($url);
+      $import_record['imported_item_uuid'] = $uuid;
+
+      // Merge with existing record if available.
+      if (isset($existing_import_records[$uuid])) {
+        $import_record = $existing_import_records[$uuid] + $import_record;
+      }
 
       $this->getLogger()->info(strtr('Processing Echo Flash Update document @id.', [
         '@id' => $id,
       ]));
 
-      // Generate the UUID for the document.
-      $uuid = $this->generateUuid($url);
+      // Check if how many times we tried to import this item.
+      if (!empty($import_record['attempts']) && $import_record['attempts'] >= $max_import_attempts) {
+        $import_record['status'] = 'error';
+        $import_record['message'] = 'Too many attempts.';
+        $import_records[$import_record['imported_item_uuid']] = $import_record;
+
+        $this->getLogger()->error(strtr('Too many import attempts for Echo Flash Update document @id, skipping.', [
+          '@id' => $id,
+        ]));
+        continue;
+      }
+      // Generate hash.
       $hash = HashHelper::generateHash($document);
+      $import_record['imported_data_hash'] = $hash;
 
       // Skip if there is already an entity with the same UUID and same content
       // hash since it means the document has been not updated since the last
@@ -262,11 +348,25 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
       // Retrieve the title and clean it.
       $title = $this->sanitizeText($document['Title'] ?? '');
 
-      // Retrieve the description.
-      $body = $this->sanitizeText($document['Description'] ?? '', TRUE);
+      // Retrieve the sources.
+      $sources = array_map(fn($item) => $this->sanitizeText($item['Name'] ?? ''), $document['ItemSources']);
+      $sources = array_unique(array_filter($sources));
 
       // Retrieve the publication date.
-      $published = $document['PublishedOnDate'] ?? $document['CreatedOnDate'] ?? NULL;
+      $published = $document['PublishedOnDate'] ?? $document['CreatedOnDate'] ?? time();
+      $published = DateHelper::format($published, 'custom', 'c');
+
+      // Title + (sources) + (ECHO Daily Flash of dd MM YYYY).
+      if (!empty($title)) {
+        $title = implode(' ', array_filter([
+          $title,
+          !empty($sources) ? '(' . implode(', ', $sources) . ')' : '',
+          '(ECHO Daily Flash of ' . DateHelper::format($published, 'custom', 'j F Y') . ')',
+        ]));
+      }
+
+      // Retrieve the description.
+      $body = $this->sanitizeText($document['Description'] ?? '', TRUE);
 
       // Retrieve the countries.
       $countries = [];
@@ -292,25 +392,37 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
 
       $countries = array_unique($countries);
 
-      // Disaster type.
-      $disaster_types = [];
+      // Extract the event types.
+      $event_type_codes = [];
       if (isset($document['EventTypeCode'])) {
-        if ($type = $this->getDisasterTypeByCode($document['EventTypeCode'])) {
-          $disaster_types[] = $type;
-        }
+        $event_type_code = strtoupper($document['EventTypeCode']);
+        $event_type_codes[$event_type_code] = $event_type_code;
       }
-
+      elseif (isset($document['EventType']['Code'])) {
+        $event_type_code = strtoupper($document['EventType']['Code']);
+        $event_type_codes[$event_type_code] = $event_type_code;
+      }
       if (isset($document['EventTypes'])) {
         foreach ($document['EventTypes'] ?? [] as $event_type) {
           if (isset($event_type['Code'])) {
-            if ($type = $this->getDisasterTypeByCode($event_type['Code'])) {
-              $disaster_types[] = $type;
-            }
+            $event_type_code = strtoupper($event_type['Code']);
+            $event_type_codes[$event_type_code] = $event_type_code;
           }
         }
       }
 
-      $disaster_types = array_unique($disaster_types);
+      // Disaster types and themes.
+      $disaster_types = [];
+      $themes = [];
+      foreach ($event_type_codes as $event_type_code) {
+        $disaster_type_code = $this->getDisasterTypeByCode($document['EventTypeCode']);
+        if (isset($disaster_type_code)) {
+          $disaster_types[$event_type_code] = $disaster_type_code;
+        }
+        if (isset($this->themeMapping[$event_type_code])) {
+          $themes[$event_type_code] = $this->themeMapping[$event_type_code];
+        }
+      }
 
       // Submission data.
       $data = [
@@ -332,10 +444,18 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
       if (!empty($disaster_types)) {
         $data['disaster_type'] = array_values($disaster_types);
       }
+      if (!empty($themes)) {
+        $data['theme'] = array_values($themes);
+      }
 
       // Submit the document directly, no need to go through the queue.
       try {
         $entity = $plugin->process($data);
+        $import_record['status'] = 'success';
+        $import_record['message'] = '';
+        $import_record['attempts'] = 0;
+        $import_record['entity_id'] = $entity->id();
+        $import_record['entity_revision_id'] = $entity->getRevisionId();
         $processed++;
         $this->getLogger()->info(strtr('Successfully processed Echo Flash Update document @id to entity @entity_id.', [
           '@id' => $id,
@@ -343,12 +463,21 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
         ]));
       }
       catch (\Exception $exception) {
+        $import_record['status'] = 'error';
+        $import_record['message'] = $exception->getMessage();
+        $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
         $this->getLogger()->error(strtr('Unable to process Echo Flash Update document @id: @exception', [
           '@id' => $id,
           '@exception' => $exception->getMessage(),
         ]));
       }
+      finally {
+        $import_records[$import_record['imported_item_uuid']] = $import_record;
+      }
     }
+
+    // Create or update the import records.
+    $this->saveImportRecords($import_records);
 
     return $processed;
   }

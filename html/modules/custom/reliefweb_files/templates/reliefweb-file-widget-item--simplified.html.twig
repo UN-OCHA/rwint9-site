@@ -1,0 +1,50 @@
+{#
+
+/**
+ * @file
+ * Template for the reliefweb_file form widget file item.
+ *
+ * Available variables:
+ * - element: the form element.
+ */
+
+#}
+{%
+  set rendered = [
+    'link',
+    'replaced_file',
+    'uploaded_file_name',
+    '_new_file_name',
+    'description',
+    'language',
+    'preview',
+    'preview_page',
+    'preview_rotation',
+    'operations',
+    '_weight',
+  ]
+%}
+{% set attributes = create_attribute(element['#attributes'] ?? {}) %}
+<tr{{ attributes.setAttribute('id', element['#id']).addClass(['rw-file-widget-item', 'rw-file-widget-item--simplified', 'draggable']) }}>
+  <td class="rw-file-widget-item__weight">
+    {{ element._weight }}
+  </td>
+  <td class="rw-file-widget-item__information">
+    {% if element['#errors'] is not empty %}
+      <div class="form-item--error-message">{{ element['#errors'] }}</div>
+    {% endif %}
+    {{ element.link }}
+    {% if element.replaced_file %}
+    <div class="rw-file-widget-item__information__replaced"><small>
+      {{- 'Replaced: %file'|t({'%file': element.replaced_file|render}) -}}
+    </small></div>
+    {% endif %}
+    {# Make sure all the element children are rendered. #}
+    {% for key, child in element|without(rendered) %}
+      {{ key|first != '#' ? child }}
+    {% endfor %}
+  </td>
+  <td class="rw-file-widget-item__operations">
+    {{ element.operations }}
+  </td>
+</tr>
