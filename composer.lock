@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e87c86ed132d06e65363994ba60cfe62",
+    "content-hash": "73ab0d34138685cd059ca4ce40e9ceae",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -17573,16 +17573,16 @@
         },
         {
             "name": "unocha/ocha_ai",
-            "version": "dev-RW-1172",
+            "version": "v1.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_ai.git",
-                "reference": "3d5016506f0966701379b109a94d51bc25c8109a"
+                "reference": "c7f669b3d0489799795b718745ca84287f1ed1f4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/3d5016506f0966701379b109a94d51bc25c8109a",
-                "reference": "3d5016506f0966701379b109a94d51bc25c8109a",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/c7f669b3d0489799795b718745ca84287f1ed1f4",
+                "reference": "c7f669b3d0489799795b718745ca84287f1ed1f4",
                 "shasum": ""
             },
             "require": {
@@ -17614,28 +17614,27 @@
             "description": "OCHA AI module",
             "support": {
                 "issues": "https://github.com/UN-OCHA/ocha_ai/issues",
-                "source": "https://github.com/UN-OCHA/ocha_ai/tree/RW-1172"
+                "source": "https://github.com/UN-OCHA/ocha_ai/tree/v1.11.0"
             },
-            "time": "2025-04-14T10:39:24+00:00"
+            "time": "2025-04-15T06:30:47+00:00"
         },
         {
             "name": "unocha/ocha_content_classification",
-            "version": "dev-RW-1172",
+            "version": "v1.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_content_classification.git",
-                "reference": "8e5a564b3fe8cab3ffc2c80ac09e58355489d612"
+                "reference": "a488570b3e531d98a34158eb01346e8c3dfd84af"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_content_classification/zipball/8e5a564b3fe8cab3ffc2c80ac09e58355489d612",
-                "reference": "8e5a564b3fe8cab3ffc2c80ac09e58355489d612",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_content_classification/zipball/a488570b3e531d98a34158eb01346e8c3dfd84af",
+                "reference": "a488570b3e531d98a34158eb01346e8c3dfd84af",
                 "shasum": ""
             },
             "require": {
-                "drupal/core": "^10",
                 "php": ">=8.3",
-                "unocha/ocha_ai": "dev-RW-1172"
+                "unocha/ocha_ai": "^1.11"
             },
             "require-dev": {
                 "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
@@ -17655,9 +17654,9 @@
             "description": "OCHA Content Classification module",
             "support": {
                 "issues": "https://github.com/UN-OCHA/ocha_content_classification/issues",
-                "source": "https://github.com/UN-OCHA/ocha_content_classification/tree/RW-1172"
+                "source": "https://github.com/UN-OCHA/ocha_content_classification/tree/v1.1.1"
             },
-            "time": "2025-04-14T11:26:07+00:00"
+            "time": "2025-04-15T07:30:43+00:00"
         },
         {
             "name": "unocha/ocha_entraid",
@@ -18648,9 +18647,7 @@
         "drupal/imageapi_optimize_binaries": 10,
         "drupal/inline_entity_form": 5,
         "drupal/mimemail": 15,
-        "drupal/openid_connect_windows_aad": 10,
-        "unocha/ocha_ai": 20,
-        "unocha/ocha_content_classification": 20
+        "drupal/openid_connect_windows_aad": 10
     },
     "prefer-stable": true,
     "prefer-lowest": false,
