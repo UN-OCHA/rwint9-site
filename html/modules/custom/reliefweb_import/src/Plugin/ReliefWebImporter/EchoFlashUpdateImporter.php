@@ -213,15 +213,51 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
     // Source: Echo Flash Update.
     $source = [620];
 
+    // Retrieve the list of documents manually posted so we can exclude them
+    // from the import.
+    $ids = array_filter(array_map(fn($item) => $item['ContentItemId'] ?? NULL, $documents));
+    $manually_posted = $this->getManuallyPostedDocuments(
+      $ids,
+      'https://erccportal.jrc.ec.europa.eu/ECHO%Products%/Echo%Flash#/%/{id}',
+      '#^https://erccportal\.jrc\.ec\.europa\.eu/ECHO[^/]*Products[/]*/Echo[^/]*Flash[#]?/[^/]+/(\d+)[^/]*$#i'
+    );
+
+    // Retrieve the list of existing import records for the documents.
+    $uuids = array_filter(array_map(fn($item) => $this->generateUuid($item['Link'] ?? ''), $documents));
+    $existing_import_records = $this->getExistingImportRecords($uuids);
+
+    // Max import attempts.
+    $max_import_attempts = $this->getPluginSetting('max_import_attempts', 3, FALSE);
+
     // Prepare the documents and submit them.
     $processed = 0;
+    $import_records = [];
     foreach ($documents as $document) {
+      $import_record = [
+        'importer' => $this->getPluginId(),
+        'provider_uuid' => $provider_uuid,
+        'entity_type_id' => 'node',
+        'entity_bundle' => 'report',
+        'status' => 'pending',
+        'message' => '',
+        'attempts' => 0,
+      ];
+
       // Retrieve the document ID.
       if (!isset($document['ContentItemId'])) {
         $this->getLogger()->notice('Undefined Echo Flash Update document ID, skipping document import.');
         continue;
       }
       $id = $document['ContentItemId'];
+      $import_record['imported_item_id'] = $id;
+
+      if (isset($manually_posted[$id])) {
+        $this->getLogger()->notice(strtr('ECHO Flash Update document @id already manually posted as report @report_id.', [
+          '@id' => $id,
+          '@report_id' => $manually_posted[$id],
+        ]));
+        continue;
+      }
 
       // Retrieve the document URL.
       if (!isset($document['Link'])) {
@@ -231,14 +267,35 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
         continue;
       }
       $url = $document['Link'];
+      $import_record['imported_item_url'] = $url;
+
+      // Generate the UUID for the document.
+      $uuid = $this->generateUuid($url);
+      $import_record['imported_item_uuid'] = $uuid;
+
+      // Merge with existing record if available.
+      if (isset($existing_import_records[$uuid])) {
+        $import_record = $existing_import_records[$uuid] + $import_record;
+      }
 
       $this->getLogger()->info(strtr('Processing Echo Flash Update document @id.', [
         '@id' => $id,
       ]));
 
-      // Generate the UUID for the document.
-      $uuid = $this->generateUuid($url);
+      // Check if how many times we tried to import this item.
+      if (!empty($import_record['attempts']) && $import_record['attempts'] >= $max_import_attempts) {
+        $import_record['status'] = 'error';
+        $import_record['message'] = 'Too many attempts.';
+        $import_records[$import_record['imported_item_uuid']] = $import_record;
+
+        $this->getLogger()->error(strtr('Too many import attempts for Echo Flash Update document @id, skipping.', [
+          '@id' => $id,
+        ]));
+        continue;
+      }
+      // Generate hash.
       $hash = HashHelper::generateHash($document);
+      $import_record['imported_data_hash'] = $hash;
 
       // Skip if there is already an entity with the same UUID and same content
       // hash since it means the document has been not updated since the last
@@ -336,6 +393,11 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
       // Submit the document directly, no need to go through the queue.
       try {
         $entity = $plugin->process($data);
+        $import_record['status'] = 'success';
+        $import_record['message'] = '';
+        $import_record['attempts'] = 0;
+        $import_record['entity_id'] = $entity->id();
+        $import_record['entity_revision_id'] = $entity->getRevisionId();
         $processed++;
         $this->getLogger()->info(strtr('Successfully processed Echo Flash Update document @id to entity @entity_id.', [
           '@id' => $id,
@@ -343,12 +405,21 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
         ]));
       }
       catch (\Exception $exception) {
+        $import_record['status'] = 'error';
+        $import_record['message'] = $exception->getMessage();
+        $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
         $this->getLogger()->error(strtr('Unable to process Echo Flash Update document @id: @exception', [
           '@id' => $id,
           '@exception' => $exception->getMessage(),
         ]));
       }
+      finally {
+        $import_records[$import_record['imported_item_uuid']] = $import_record;
+      }
     }
+
+    // Create or update the import records.
+    $this->saveImportRecords($import_records);
 
     return $processed;
   }
