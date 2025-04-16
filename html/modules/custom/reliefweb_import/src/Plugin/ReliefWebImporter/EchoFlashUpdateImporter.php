@@ -248,7 +248,7 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
     $manually_posted = $this->getManuallyPostedDocuments(
       $ids,
       'https://erccportal.jrc.ec.europa.eu/ECHO%Products%/Echo%Flash#/%/{id}',
-      '#^https://erccportal\.jrc\.ec\.europa\.eu/ECHO[^/]*Products[/]*/Echo[^/]*Flash[#]?/[^/]+/(\d+)[^/]*$#i'
+      '#^https://erccportal\.jrc\.ec\.europa\.eu/ECHO[^/]*Products[/]*/Echo[^/]*Flash.?/[^/]+/(\d+)[^/]*$#i'
     );
 
     // Retrieve the list of existing import records for the documents.
