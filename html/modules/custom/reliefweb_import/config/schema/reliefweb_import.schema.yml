@@ -31,7 +31,7 @@ reliefweb_import.plugin.importer.unhcr_data:
       type: string
       label: 'Endpoint path to get a document.'
     timeout:
-      type: int
+      type: integer
       label: 'Connection and request timeout.'
 
 # Echo Flash Update importer plugin settings.
@@ -43,6 +43,6 @@ reliefweb_import.plugin.importer.echo_flash_update:
       type: string
       label: 'API URL.'
     timeout:
-      type: int
+      type: integer
       label: 'Connection and request timeout.'
 
