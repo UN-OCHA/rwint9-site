@@ -425,6 +425,11 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       $pdf = '';
 
       switch ($origin_title) {
+        case '[decom] ECHO - Flash':
+        case 'ECHO - Flash':
+          // Skip it.
+          break;
+
         case 'IOM DTM - Displacement Reports':
           $sources = [1255];
 
@@ -441,6 +446,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
           break;
 
         case 'UNHCR - Global All docs':
+        case '[decom] UNHCR - Global All docs':
           $sources = [2868];
 
           $pdf = $document['canonical'][0]['href'] ?? '';
@@ -448,12 +454,20 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
           break;
 
+        case 'IFRC - Appeals':
+          $sources = [1242];
+
+          $pdf = $document['canonical'][0]['href'] ?? '';
+
+          break;
+
         case 'Global Protection Cluster - Publications':
+          $sources = [8619];
+
           // Clear body.
           $body = '';
 
           if (!empty($document['canonical'][0]['href'] ?? '')) {
-            $sources = [2868];
             $html = file_get_contents($document['canonical'][0]['href'] ?? '');
             if ($html === FALSE) {
               $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id.', [
@@ -470,8 +484,51 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
           break;
 
+        case 'Global CCCM Cluster - Documents':
+          $sources = [9677];
+
+          // Clear body.
+          $body = '';
+
+          if (!empty($document['canonical'][0]['href'] ?? '')) {
+            $html = file_get_contents($document['canonical'][0]['href'] ?? '');
+            if ($html === FALSE) {
+              $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id.', [
+                '@id' => $id,
+              ]));
+            }
+            else {
+              $pdf = $this->extractPdfUrl($html, 'a', 'href', '', 'pdf');
+              if (!empty($pdf) && strpos($pdf, 'http') !== 0) {
+                $pdf = 'https://www.cccmcluster.org' . $pdf;
+              }
+            }
+          }
+
+          break;
+
+        case 'ECHO - Emergency Maps':
+          $sources = [620];
+
+          if (!empty($document['canonical'][0]['href'] ?? '')) {
+            $html = file_get_contents($document['canonical'][0]['href'] ?? '');
+            if ($html === FALSE) {
+              $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id.', [
+                '@id' => $id,
+              ]));
+            }
+            else {
+              $pdf = $this->extractPdfUrl($html, 'a', 'href', 'zoom-in', 'pdf');
+              if (!empty($pdf) && strpos($pdf, 'http') !== 0) {
+                $pdf = 'https://erccportal.jrc.ec.europa.eu' . $pdf;
+              }
+            }
+          }
+
+          break;
+
         default:
-          $this->getLogger()->warning(strtr('Unknown source for Inoreader document @id: @source.', [
+          $this->getLogger()->error(strtr('Unknown source for Inoreader document @id: @source.', [
             '@id' => $id,
             '@source' => $origin_title,
           ]));
@@ -519,22 +576,23 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
       // Queue the document.
       try {
-        $queue = $this->queueFactory->get('reliefweb_post_api');
-        $queue->createItem($data);
-
-        $import_record['status'] = 'queued';
+        $entity = $plugin->process($data);
+        $import_record['status'] = 'success';
         $import_record['message'] = '';
         $import_record['attempts'] = 0;
+        $import_record['entity_id'] = $entity->id();
+        $import_record['entity_revision_id'] = $entity->getRevisionId();
         $processed++;
-        $this->getLogger()->info(strtr('Successfully queued Inoreader document @id.', [
+        $this->getLogger()->info(strtr('Successfully processed Inoreader @id to entity @entity_id.', [
           '@id' => $id,
+          '@entity_id' => $entity->id(),
         ]));
       }
       catch (\Exception $exception) {
         $import_record['status'] = 'error';
         $import_record['message'] = $exception->getMessage();
         $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
-        $this->getLogger()->error(strtr('Unable to process Inoreader document @id: @exception', [
+        $this->getLogger()->error(strtr('Unable to process Inoreader @id: @exception', [
           '@id' => $id,
           '@exception' => $exception->getMessage(),
         ]));
@@ -626,9 +684,13 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       if (!empty($extension) && preg_match('/\.' . $extension . '$/i', $url)) {
         return $url;
       }
+
+      if (empty($class) && empty($extension)) {
+        return $url;
+      }
     }
 
-    return NULL;
+    return '';
   }
 
 }
