@@ -1,0 +1,8 @@
+enabled: 1
+max_import_attempts: '3'
+email: inoreader@example.com
+password: mypassword
+app_id: '123'
+app_key: apikey
+api_url: 'https://www.inoreader.com/reader/api/0/stream/contents/user%2F-%2Flabel%2Fautomationpilot?n=100&r=o'
+timeout: '10'

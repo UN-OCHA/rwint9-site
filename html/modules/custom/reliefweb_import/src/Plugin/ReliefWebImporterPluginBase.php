@@ -428,6 +428,11 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
     // Remove final extension.
     $extension = strtolower((string) array_pop($filename_parts));
 
+    // Assume empty extension is PDF.
+    if (empty($extension)) {
+      $extension = 'pdf';
+    }
+
     // Ensure the extension is allowed.
     if (!in_array($extension, $allowed_extensions)) {
       return '';
@@ -617,6 +622,118 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
       'created' => $created,
       'updated' => $updated,
       'skipped' => $skipped,
+    ];
+  }
+
+  /**
+   * Get the checksum and filename of a remote file.
+   *
+   * @param string $url
+   *   Remote file URL.
+   * @param string $max_size
+   *   Maximum file size (ex: 2MB). Defaults to the environment upload max size.
+   *
+   * @return array
+   *   Checksum and filenamne of the remote file.
+   */
+  protected function getRemoteFileInfo(string $url, string $max_size = ''): array {
+    $max_size = $this->getReportAttachmentAllowedMaxSize();
+    if (empty($max_size)) {
+      throw new \Exception('No allowed file max size.');
+    }
+
+    $allowed_extensions = $this->getReportAttachmentAllowedExtensions();
+    if (empty($allowed_extensions)) {
+      throw new \Exception('No allowed file extensions.');
+    }
+
+    try {
+      $response = $this->httpClient->get($url, [
+        'stream' => TRUE,
+        // @todo retrieve that from the configuration.
+        'connect_timeout' => 30,
+        'timeout' => 600,
+        'headers' => [
+          'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
+          'Accept' => '*/*',
+        ],
+      ]);
+
+      if ($response->getStatusCode() == 406) {
+        // Stream not supported.
+        $response = $this->httpClient->get($url, [
+          'stream' => FALSE,
+          // @todo retrieve that from the configuration.
+          'connect_timeout' => 30,
+          'timeout' => 600,
+          'headers' => [
+            'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
+            'Accept' => '*/*',
+          ],
+        ]);
+      }
+
+      if ($max_size > 0 && $response->getHeaderLine('Content-Length') > $max_size) {
+        throw new \Exception('File is too large.');
+      }
+
+      // Retrieve the filename.
+      $content_disposition = $response->getHeaderLine('Content-Disposition') ?? '';
+      if (preg_match('/filename="?([^"]+)"?/i', $content_disposition, $matches) !== 1) {
+        // Fallback to the URL if no filename is provided.
+        $matches = [];
+        if (preg_match('/\/([^\/]+)$/', $url, $matches) !== 1) {
+          throw new \Exception('Unable to retrieve file name.');
+        }
+      }
+
+      // Sanitize the file name.
+      $filename = $this->sanitizeFileName(urldecode($matches[1]), $allowed_extensions);
+      if (empty($filename)) {
+        throw new \Exception(strtr('Invalid filename: @filename.', [
+          '@filename' => $matches[1],
+        ]));
+      }
+
+      $body = $response->getBody();
+
+      $content = '';
+      if ($max_size > 0) {
+        $size = 0;
+        while (!$body->eof()) {
+          $chunk = $body->read(1024);
+          $size += strlen($chunk);
+          if ($size > $max_size) {
+            $body->close();
+            throw new \Exception('File is too large.');
+          }
+          else {
+            $content .= $chunk;
+          }
+        }
+      }
+      else {
+        $content = $body->getContents();
+      }
+
+      $checksum = hash('sha256', $content);
+    }
+    catch (\Exception $exception) {
+      $this->getLogger()->notice(strtr('Unable to retrieve file information for @url: @exception', [
+        '@url' => $url,
+        '@exception' => $exception->getMessage(),
+      ]));
+      return [];
+    }
+    finally {
+      if (isset($body)) {
+        $body->close();
+      }
+    }
+
+    return [
+      'checksum' => $checksum,
+      'filename' => $filename,
     ];
   }
 
