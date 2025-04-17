@@ -201,6 +201,14 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
    *   List of documents keyed by IDs.
    */
   protected function getDocuments(int $limit = 50): array {
+    $real_limit = $limit;
+    $continuation = '';
+    $use_continuation = FALSE;
+    if ($limit > 100) {
+      $use_continuation = TRUE;
+      $limit = 100;
+    }
+
     // Get list of documents.
     try {
       $timeout = $this->getPluginSetting('timeout', 10, FALSE);
@@ -243,34 +251,57 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         throw new \Exception('Unable to retrieve auth token.');
       }
 
-      $api_parts = parse_url($api_url);
-      parse_str($api_parts['query'] ?? '', $query);
-      $query['n'] = $limit;
-      $api_url = $api_parts['scheme'] . '://' . $api_parts['host'] . $api_parts['path'] . '?' . http_build_query($query);
+      while ($real_limit > 0) {
+        $api_parts = parse_url($api_url);
+        parse_str($api_parts['query'] ?? '', $query);
+        $query['n'] = $limit;
+        if (!empty($continuation)) {
+          $query['c'] = $continuation;
+        }
+        $api_url = $api_parts['scheme'] . '://' . $api_parts['host'] . $api_parts['path'] . '?' . http_build_query($query);
 
-      $response = $this->httpClient->get($api_url, [
-        'connect_timeout' => $timeout,
-        'timeout' => $timeout,
-        'headers' => [
-          'Content-Type' => 'application/json',
-          'Accept' => 'application/json',
-          'AppId' => $app_id,
-          'AppKey' => $app_key,
-          'Authorization' => 'GoogleLogin auth=' . $auth,
-        ],
-      ]);
+        $response = $this->httpClient->get($api_url, [
+          'connect_timeout' => $timeout,
+          'timeout' => $timeout,
+          'headers' => [
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+            'AppId' => $app_id,
+            'AppKey' => $app_key,
+            'Authorization' => 'GoogleLogin auth=' . $auth,
+          ],
+        ]);
 
-      if ($response->getStatusCode() !== 200) {
-        // @todo try to retrieve the error message.
-        throw new \Exception('Failure with response code: ' . $response->getStatusCode());
-      }
+        if ($response->getStatusCode() !== 200) {
+          // @todo try to retrieve the error message.
+          throw new \Exception('Failure with response code: ' . $response->getStatusCode());
+        }
 
-      $content = $response->getBody()->getContents();
-      if (!empty($content)) {
-        $documents = json_decode($content, TRUE, flags: \JSON_THROW_ON_ERROR);
-      }
-      else {
-        return [];
+        $content = $response->getBody()->getContents();
+        if (!empty($content)) {
+          $result = json_decode($content, TRUE, flags: \JSON_THROW_ON_ERROR);
+          if (isset($result['items'])) {
+            foreach ($result['items'] as $document) {
+              if (!isset($result['id'])) {
+                continue;
+              }
+
+              $documents[$document['id']] = $document;
+            }
+          }
+          if ($use_continuation && isset($result['continuation'])) {
+            $continuation = $result['continuation'];
+            $real_limit -= $limit;
+          }
+          else {
+            $continuation = '';
+            $real_limit = 0;
+          }
+        }
+        else {
+          $continuation = '';
+          $real_limit = 0;
+        }
       }
     }
     catch (\Exception $exception) {
@@ -278,20 +309,17 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       throw new \Exception($message);
     }
 
-    if (!isset($documents['items'])) {
-      return [];
+    $f = fopen('/var/www/inoreader.json', 'w');
+    if ($f) {
+      fwrite($f, json_encode($documents, JSON_PRETTY_PRINT));
+      fclose($f);
     }
-
-    // Map the document's data to the document's ID.
-    $map = [];
-    foreach ($documents['items'] as $document) {
-      if (!isset($document['id'])) {
-        continue;
-      }
-      $map[$document['id']] = $document;
+    else {
+      $this->getLogger()->error('Unable to open file for writing.');
     }
+    $this->getLogger()->info('Inoreader documents written to /tmp/inoreader.json');
 
-    return $map;
+    return $documents;
   }
 
   /**
@@ -468,10 +496,11 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
           $body = '';
 
           if (!empty($document['canonical'][0]['href'] ?? '')) {
-            $html = file_get_contents($document['canonical'][0]['href'] ?? '');
-            if ($html === FALSE) {
-              $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id.', [
+            $html = $this->downloadHtmlPage($document['canonical'][0]['href'] ?? '');
+            if (empty($html)) {
+              $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
                 '@id' => $id,
+                '@url' => $document['canonical'][0]['href'] ?? '',
               ]));
             }
             else {
@@ -491,10 +520,11 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
           $body = '';
 
           if (!empty($document['canonical'][0]['href'] ?? '')) {
-            $html = file_get_contents($document['canonical'][0]['href'] ?? '');
-            if ($html === FALSE) {
-              $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id.', [
+            $html = $this->downloadHtmlPage($document['canonical'][0]['href'] ?? '');
+            if (empty($html)) {
+              $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
                 '@id' => $id,
+                '@url' => $document['canonical'][0]['href'] ?? '',
               ]));
             }
             else {
@@ -511,10 +541,11 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
           $sources = [620];
 
           if (!empty($document['canonical'][0]['href'] ?? '')) {
-            $html = file_get_contents($document['canonical'][0]['href'] ?? '');
-            if ($html === FALSE) {
-              $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id.', [
+            $html = $this->downloadHtmlPage($document['canonical'][0]['href'] ?? '');
+            if (empty($html)) {
+              $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
                 '@id' => $id,
+                '@url' => $document['canonical'][0]['href'] ?? '',
               ]));
             }
             else {
@@ -522,6 +553,46 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
               if (!empty($pdf) && strpos($pdf, 'http') !== 0) {
                 $pdf = 'https://erccportal.jrc.ec.europa.eu' . $pdf;
               }
+            }
+          }
+
+          break;
+
+        case 'ACLED - Regional Overview and Analysis':
+          // Skipping, no PDF file.
+          break;
+
+        case 'Emergency Telecommunications Cluster (ETC) - Operational Updates':
+          $sources = [13799];
+
+          if (!empty($document['canonical'][0]['href'] ?? '')) {
+            $html = $this->downloadHtmlPage($document['canonical'][0]['href'] ?? '');
+            if (empty($html)) {
+              $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
+                '@id' => $id,
+                '@url' => $document['canonical'][0]['href'] ?? '',
+              ]));
+            }
+            else {
+              $pdf = $this->extractPdfUrl($html, 'a', 'href', 'zoom-in', 'pdf');
+            }
+          }
+
+          break;
+
+        case 'WFP - Publications':
+          $sources = [1741];
+
+          if (!empty($document['canonical'][0]['href'] ?? '')) {
+            $html = $this->downloadHtmlPage($document['canonical'][0]['href'] ?? '');
+            if (empty($html)) {
+              $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
+                '@id' => $id,
+                '@url' => $document['canonical'][0]['href'] ?? '',
+              ]));
+            }
+            else {
+              $pdf = $this->extractPdfUrl($html, 'a', 'href', 'button-new--primary', '', 'section.document-links-table');
             }
           }
 
@@ -668,11 +739,20 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
   /**
    * Extract the PDF URL from the HTML content.
    */
-  protected function extractPdfUrl(string $html, string $tag, string $attribute, string $class = '', string $extension = ''): ?string {
+  protected function extractPdfUrl(string $html, string $tag, string $attribute, string $class = '', string $extension = '', string $wrapper = ''): ?string {
     $dom = new \DOMDocument();
     @$dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
     $xpath = new \DOMXPath($dom);
-    $elements = $xpath->query("//{$tag}[@{$attribute}]");
+
+    $elements = [];
+    if (empty($wrapper)) {
+      $elements = $xpath->query("//{$tag}[@{$attribute}]");
+    }
+    else {
+      [$wrapper_element, $wrapper_class] = explode('.', $wrapper);
+      $parent = $xpath->query("//{$wrapper_element}[@class='{$wrapper_class}']")->item(0);
+      $elements = $xpath->query(".//{$tag}[@{$attribute}]", $parent);
+    }
 
     /** @var \DOMNode $element */
     foreach ($elements as $element) {
@@ -688,6 +768,32 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       if (empty($class) && empty($extension)) {
         return $url;
       }
+    }
+
+    return '';
+  }
+
+  /**
+   * Download HTML page as string.
+   */
+  protected function downloadHtmlPage($url) {
+    $timeout = $this->getPluginSetting('timeout', 10, FALSE);
+    try {
+      $response = $this->httpClient->get($url, [
+        'connect_timeout' => $timeout,
+        'timeout' => $timeout,
+        'headers' => [
+          'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
+        ],
+      ]);
+
+      if ($response->getStatusCode() !== 200) {
+        throw new \Exception('Failure with response code: ' . $response->getStatusCode());
+      }
+      return $response->getBody()->getContents();
+    }
+    catch (\Exception $exception) {
+      return '';
     }
 
     return '';

@@ -957,7 +957,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
         'connect_timeout' => 30,
         'timeout' => 600,
         'headers' => [
-          'Accept' => $mimetype,
+          'Accept' => '*/*',
         ],
       ]);
 

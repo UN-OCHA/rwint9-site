@@ -653,7 +653,25 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
         // @todo retrieve that from the configuration.
         'connect_timeout' => 30,
         'timeout' => 600,
+        'headers' => [
+          'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
+          'Accept' => '*/*',
+        ],
       ]);
+
+      if ($response->getStatusCode() == 406) {
+        // Stream not supported.
+        $response = $this->httpClient->get($url, [
+          'stream' => FALSE,
+          // @todo retrieve that from the configuration.
+          'connect_timeout' => 30,
+          'timeout' => 600,
+          'headers' => [
+            'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
+            'Accept' => '*/*',
+          ],
+        ]);
+      }
 
       if ($max_size > 0 && $response->getHeaderLine('Content-Length') > $max_size) {
         throw new \Exception('File is too large.');
