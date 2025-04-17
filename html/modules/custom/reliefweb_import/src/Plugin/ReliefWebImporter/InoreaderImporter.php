@@ -452,6 +452,55 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       $sources = [];
       $pdf = '';
 
+      // Check for tags.
+      if (strpos($origin_title, '[source:') !== FALSE) {
+        $parts = explode(' ', $origin_title);
+        $tags = array_pop($parts);
+        $tags = str_replace(['[', ']'], '', $tags);
+        $tags = explode('|', $tags);
+        foreach ($tags as $tag) {
+          [$key, $value] = explode(':', $tag);
+          switch ($key) {
+            case 'source':
+              $sources = [(int) $value];
+              break;
+
+            case 'body':
+              switch ($value) {
+                case 'clear':
+                case 'ignore':
+                  $body = '';
+                  break;
+
+                case 'ignore':
+                  // Already set.
+                  break;
+              }
+
+              break;
+
+            case 'pdf':
+              switch ($value) {
+                case 'canonical':
+                  $pdf = $document['canonical'][0]['href'] ?? '';
+                  break;
+
+                case 'content-iframe-src':
+                  $pdf = $this->extractPdfUrl($document['summary']['content'] ?? '', 'iframe', 'src');
+                  $pdf = str_replace('?iframe=true', '', $pdf);
+                  break;
+
+                case 'page-a-tag':
+                  $pdf = $this->extractPdfUrl($document['summary']['content'] ?? '', 'a', 'href');
+                  break;
+
+              }
+
+              break;
+          }
+        }
+      }
+
       switch ($origin_title) {
         case '[decom] ECHO - Flash':
         case 'ECHO - Flash':
