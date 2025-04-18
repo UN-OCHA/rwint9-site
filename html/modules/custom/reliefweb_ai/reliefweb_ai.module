@@ -441,3 +441,28 @@ function reliefweb_ai_preprocess_reliefweb_rivers_page__updates(array &$variable
     }
   }
 }
+
+/**
+ * Implements hook_entity_prepare_form().
+ *
+ * Show a message when editing an entity being classified.
+ */
+function reliefweb_ai_entity_prepare_form(EntityInterface $entity, string $operation, FormStateInterface $form_state): void {
+  if ($operation === 'edit' && !$entity->isNew()) {
+    $workflow = \Drupal::service('ocha_content_classification.content_entity_classifier')->getWorkflowForEntity($entity);
+    if (!isset($workflow)) {
+      return;
+    }
+    // Display a warning message when trying to edit a document with an ongoing
+    // classification.
+    $record = $workflow->getClassificationProgress($entity);
+    if (isset($record['status']) && $record['status'] === ClassificationStatus::Queued) {
+      $key = "ocha_content_classification_ongoing_warning:{$workflow->id()}";
+      $message = \Drupal::state()->get($key);
+      if (!empty($message)) {
+        // phpcs:ignore Drupal.Semantics.FunctionT.NotLiteralString
+        \Drupal::messenger()->addWarning(t($message));
+      }
+    }
+  }
+}
