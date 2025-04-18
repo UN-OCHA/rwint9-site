@@ -279,6 +279,49 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
       '#min' => 1,
     ];
 
+    $classification_settings = $form_state->getValue('classification', $this->getPluginSetting('classification', [], FALSE));
+
+    $form['classification'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Classification settings'),
+      '#open' => TRUE,
+      '#tree' => TRUE,
+    ];
+
+    $form['classification']['enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enabled'),
+      '#default_value' => !empty($classification_settings['enabled']),
+    ];
+    $form['classification']['check_user_permissions'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Check user permissions'),
+      '#default_value' => !empty($classification_settings['check_user_permissions']),
+    ];
+    $form['classification']['prevent_publication'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Prevent publication during classification'),
+      '#default_value' => !empty($classification_settings['prevent_publication']),
+    ];
+    $form['classification']['specifield_field_check'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Field emptiness check rules'),
+      '#description' => $this->t('Control which fields should be checked for emptiness before classification. Format: "field:yes/no" (one per line). Use "*:yes/no" to set default behavior for all fields. "yes" = check if field is empty, "no" = ignore emptiness.'),
+      '#default_value' => $classification_settings['specifield_field_check'] ?? NULL,
+    ];
+    $form['classification']['force_field_update'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Force field update rules'),
+      '#description' => $this->t('Control which fields should be updated even if already filled. Format: "field:yes/no" (one per line). Use "*:yes/no" to set default behavior for all fields. "yes" = always update field, "no" = only update if empty.'),
+      '#default_value' => $classification_settings['force_field_update'] ?? NULL,
+    ];
+    $form['classification']['classified_fields'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Classified field rules'),
+      '#description' => $this->t('Control which fields should be updated with classifier results. Format: "field:yes/no" (one per line). Use "*:yes/no" to set the default. "yes" = update field, "no" = skip field.'),
+      '#default_value' => $classification_settings['classified_fields'] ?? NULL,
+    ];
+
     return $form;
   }
 
@@ -358,36 +401,106 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
    * {@inheritdoc}
    */
   public function alterContentClassificationSkipClassification(bool &$skip, ClassificationWorkflowInterface $workflow, array $context): void {
-    // Skip the classification by default.
-    $skip = TRUE;
+    // Skip if classification is not enabled for this plugin.
+    $setting = $this->getPluginSetting('classification.enabled', FALSE, FALSE);
+    $skip = empty($setting);
   }
 
   /**
    * {@inheritdoc}
    */
   public function alterContentClassificationUserPermissionCheck(bool &$check, AccountInterface $account, array $context): void {
-    // Nothing to do.
+    $setting = $this->getPluginSetting('classification.check_user_permissions', TRUE, FALSE);
+    $check = !empty($setting);
   }
 
   /**
    * {@inheritdoc}
    */
   public function alterContentClassificationSpecifiedFieldCheck(array &$fields, ClassificationWorkflowInterface $workflow, array $context): void {
-    // Nothing to do.
+    $setting = $this->getPluginSetting('classification.specifield_field_check', '', FALSE);
+    $rules = $this->parseFieldRules($setting);
+
+    if (!empty($rules)) {
+      foreach ($fields as $field => $check) {
+        $fields[$field] = $rules[$field] ?? $rules['*'] ?? $check;
+      }
+    }
   }
 
   /**
    * {@inheritdoc}
    */
   public function alterContentClassificationForceFieldUpdate(array &$fields, ClassificationWorkflowInterface $workflow, array $context): void {
-    // Nothing to do.
+    $setting = $this->getPluginSetting('classification.force_field_update', '', FALSE);
+    $rules = $this->parseFieldRules($setting);
+
+    if (!empty($rules)) {
+      foreach ($fields as $field => $force_update) {
+        $fields[$field] = $rules[$field] ?? $rules['*'] ?? $force_update;
+      }
+    }
   }
 
   /**
    * {@inheritdoc}
    */
   public function alterContentClassificationClassifiedFields(array &$fields, ClassificationWorkflowInterface $workflow, array $context): void {
-    // Nothing to do.
+    $setting = $this->getPluginSetting('classification.classified_fields', '', FALSE);
+    $rules = $this->parseFieldRules($setting);
+
+    if (!empty($rules)) {
+      foreach ($fields as $type => $field_list) {
+        foreach ($field_list as $field => $value) {
+          $update = $rules[$field] ?? $rules['*'] ?? TRUE;
+          if (!$update) {
+            unset($fields[$type][$field]);
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Parses field rules string into an associative array.
+   *
+   * Converts a multi-line string of field rules in the format "field:yes/no"
+   * into an associative array with field names as keys and boolean values.
+   *
+   * @param string $input
+   *   Text containing field rules, one per line, in the format "field:yes/no".
+   *   The wildcard "*" can be used to set a default rule for all fields.
+   *
+   * @return array
+   *   Associative array where:
+   *   - Keys are field names (or "*" for default rule)
+   *   - Values are booleans: TRUE for "yes", FALSE for "no"
+   *
+   * @example
+   *   Input:
+   *   ```
+   *   *:no
+   *   field1:yes
+   *   field2:yes
+   *   ```
+   *
+   *   Output:
+   *   ```
+   *   [
+   *     '*' => FALSE,
+   *     'field1' => TRUE,
+   *     'field2' => TRUE,
+   *   ]
+   *   ```
+   */
+  protected function parseFieldRules(string $input): array {
+    $input = strtolower($input);
+    preg_match_all('/^\s*(?<field>[^:]+)\s*:\s*(?<value>yes|no)\s*$/nim', $input, $matches, \PREG_SET_ORDER);
+
+    return array_reduce($matches, function ($result, $match) {
+      $result[$match['field']] = ($match['value'] === 'yes');
+      return $result;
+    }, []);
   }
 
   /**
