@@ -724,7 +724,7 @@ function reliefweb_entities_ocha_content_classification_post_entity_presave(Enti
     default => $this->currentUser,
   };
 
-  if ($account?->hasPermission("adjust {$entity->bundle()} moderation status based on classification status")) {
+  if ($account?->id() != 1 && $account?->hasPermission("adjust {$entity->bundle()} moderation status based on classification status")) {
     reliefweb_entities_adjust_moderation_status_based_on_classification_status($entity);
   }
 }
