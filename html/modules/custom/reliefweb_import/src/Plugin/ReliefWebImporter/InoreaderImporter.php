@@ -465,6 +465,10 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
               $sources = [(int) $value];
               break;
 
+            case 'sources':
+              $sources = explode(',', $value);
+              break;
+
             case 'body':
               switch ($value) {
                 case 'clear':
