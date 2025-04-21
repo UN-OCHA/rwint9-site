@@ -918,10 +918,28 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
         '@id' => $id,
       ]));
 
-      // Generate a hash from the UNHCR API data without the updated date and
-      // download count since those change everytime the document is downloaded.
-      $hash = HashHelper::generateHash($document, ['updated', 'downloadCount']);
+      // Generate a hash from the data we use to import the document. This is
+      // used to detect changes that can affect the document on ReliefWeb.
+      $filtered_document = $this->filterArrayByKeys($document, [
+        'id',
+        'title',
+        'created',
+        'languageName.name',
+        'publishDate',
+        'sectorName',
+        'docTypeName',
+        'location.code',
+        'location.name',
+        'downloadLink',
+        'documentLink',
+      ]);
+      $hash = HashHelper::generateHash($filtered_document);
       $import_record['imported_data_hash'] = $hash;
+
+      // Legacy hash.
+      // @todo possibly remove in a few months (now is 2025-04-21).
+      // @see RW-1196
+      $legacy_hash = HashHelper::generateHash($document, ['updated', 'downloadCount']);
 
       // Skip if there is already an entity with the same UUID and same content
       // hash since it means the document has been not updated since the last
@@ -931,7 +949,7 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
         ->getQuery()
         ->accessCheck(FALSE)
         ->condition('uuid', $uuid, '=')
-        ->condition('field_post_api_hash', $hash, '=')
+        ->condition('field_post_api_hash', [$legacy_hash, $hash], 'IN')
         ->execute();
       if (!empty($records)) {
         $processed++;

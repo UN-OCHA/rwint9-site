@@ -733,4 +733,104 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
     ];
   }
 
+  /**
+   * Filters an associative array using dot notation with wildcard support.
+   *
+   * This function allows retrieving all values for a specific key within nested
+   * arrays without specifying individual array indices.
+   *
+   * @param array $data
+   *   The original associative array to filter.
+   * @param array $paths
+   *   Array of property paths in dot notation format to keep.
+   *
+   * @return array
+   *   The filtered array containing only the specified keys.
+   */
+  protected function filterArrayByKeys(array $data, array $paths): array {
+    $result = [];
+
+    foreach ($paths as $path) {
+      // Split the dot notation path into segments.
+      $segments = explode('.', $path);
+
+      // Extract values based on the dot path and add to result.
+      $this->extractNestedValues($data, $segments, $result);
+    }
+
+    return $result;
+  }
+
+  /**
+   * Recursively extracts values from nested arrays.
+   *
+   * @param array $source
+   *   The source array to extract values from.
+   * @param array $segments
+   *   The remaining segments of the dot notation path.
+   * @param array &$target
+   *   The target array where extracted values will be stored.
+   * @param array $current_path
+   *   The current path in the target array.
+   */
+  protected function extractNestedValues(array $source, array $segments, array &$target, array $current_path = []): void {
+    // Get the current segment and remaining segments.
+    $current_segment = array_shift($segments);
+
+    if (empty($current_segment)) {
+      return;
+    }
+
+    // If this is a direct key in the source array.
+    if (isset($source[$current_segment])) {
+      $value = $source[$current_segment];
+
+      // If we're at the last segment, add the value to the result.
+      if (empty($segments)) {
+        $this->setNestedValue($target, [...$current_path, $current_segment], $value);
+        return;
+      }
+
+      // If value is an array, continue recursion.
+      if (is_array($value)) {
+        // If the value is a list of arrays, process each item.
+        if (array_is_list($value)) {
+          foreach ($value as $index => $item) {
+            if (is_array($item)) {
+              // Process each item with the remaining segments.
+              $this->extractNestedValues($item, $segments, $target, [...$current_path, $current_segment, $index]);
+            }
+          }
+        }
+        else {
+          // Continue with the next segment for associative arrays.
+          $this->extractNestedValues($value, $segments, $target, [...$current_path, $current_segment]);
+        }
+      }
+    }
+  }
+
+  /**
+   * Sets a nested value in an array based on a path.
+   *
+   * @param array &$array
+   *   The array to modify.
+   * @param array $path
+   *   The path to set the value at.
+   * @param mixed $value
+   *   The value to set.
+   */
+  protected function setNestedValue(array &$array, array $path, mixed $value): void {
+    $current = &$array;
+
+    foreach ($path as $key) {
+      if (!isset($current[$key]) || !is_array($current[$key])) {
+        $current[$key] = [];
+      }
+      $current = &$current[$key];
+    }
+
+    $current = $value;
+  }
+
 }
