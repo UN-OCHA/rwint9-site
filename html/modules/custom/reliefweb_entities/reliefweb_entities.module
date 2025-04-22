@@ -31,6 +31,7 @@ use Drupal\reliefweb_utility\Helpers\ReliefWebStateHelper;
 use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\taxonomy\TermInterface;
+use Drupal\user\EntityOwnerInterface;
 use Symfony\Component\HttpKernel\Exception\GoneHttpException;
 
 /**
@@ -717,6 +718,28 @@ function reliefweb_entities_ocha_content_classification_post_entity_presave(Enti
     return;
   }
 
+  $account = match(TRUE) {
+    $entity instanceof RevisionLogInterface => $entity->getRevisionUser(),
+    $entity instanceof EntityOwnerInterface => $entity->getOwner(),
+    default => $this->currentUser,
+  };
+
+  if ($account?->id() != 1 && $account?->hasPermission("adjust {$entity->bundle()} moderation status based on classification status")) {
+    reliefweb_entities_adjust_moderation_status_based_on_classification_status($entity);
+  }
+}
+
+/**
+ * Adjust the entity moderation status based on the classification status.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   Entity.
+ */
+function reliefweb_entities_adjust_moderation_status_based_on_classification_status(EntityInterface $entity): void {
+  if (!($entity instanceof EntityModeratedInterface)) {
+    return;
+  }
+
   // This flag is set when the classification failed or completed or when the
   // entity is going to be queued (or is already being queued) if the user who
   // triggered the entity saving was allowed to use the classification workflow.
@@ -726,7 +749,10 @@ function reliefweb_entities_ocha_content_classification_post_entity_presave(Enti
 
   $status = match($entity->ocha_content_classification_status) {
     // Prevent publication if the document is queued for classification.
-    ClassificationStatus::Queued => 'pending',
+    // If the document is already in a non-published state then keep the current
+    // status. This allows for example, to quickly mark a document as refused
+    // or on-hold.
+    ClassificationStatus::Queued => $entity->isPublishedModerationStatus() ? 'pending' : $entity->getModerationStatus(),
     // Prevent publication if the document classification failed. A human should
     // review manually.
     ClassificationStatus::Failed => 'on-hold',

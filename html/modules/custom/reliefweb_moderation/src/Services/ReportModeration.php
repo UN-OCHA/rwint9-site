@@ -479,7 +479,7 @@ class ReportModeration extends ModerationServiceBase {
   public function entityCreateAccess(AccountInterface $account): AccessResultInterface {
     $access_result = parent::entityCreateAccess($account);
     // Disallow report creation for submitters without posting rights.
-    if ($account->hasRole('submitter') && !UserPostingRightsHelper::isUserAllowedOrTrustedForAnySource($account, $this->getBundle())) {
+    if ($account->hasPermission('create report only if allowed or trusted for a source') && !UserPostingRightsHelper::isUserAllowedOrTrustedForAnySource($account, $this->getBundle())) {
       return AccessResult::forbidden();
     }
     return $access_result;
