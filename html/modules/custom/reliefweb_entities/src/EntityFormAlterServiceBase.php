@@ -341,6 +341,12 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
   public function validatePrimaryField(array &$element, FormStateInterface $form_state, array &$form) {
     $field = $element['#field_name'];
     $non_primary_field = str_replace('_primary', '', $field);
+
+    // Skip if the non primary field doesn't exist.
+    if (!isset($form[$non_primary_field])) {
+      return;
+    }
+
     $key_column = $element['#key_column'];
     $primary_value = $form_state->getValue([$field, 0, $key_column]);
 
