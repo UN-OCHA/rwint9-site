@@ -7,6 +7,7 @@
 
 declare(strict_types=1);
 
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
@@ -31,6 +32,23 @@ function reliefweb_import_node_presave(EntityInterface $entity): void {
     // the Job::preSave() uses the user associated with the import feed when
     // determining the status to use based on the user posting rights.
     $entity->setRevisionUserId(2);
+  }
+}
+
+/**
+ * Implements hook_ocha_content_classification_post_entity_presave().
+ *
+ * Update the entity moderation status based on the classification status.
+ */
+function reliefweb_import_ocha_content_classification_post_entity_presave(EntityInterface $entity): void {
+  $importer = reliefweb_import_get_entity_importer($entity);
+  if (!isset($importer)) {
+    return;
+  }
+
+  $prevent_publication = $importer->getPluginSetting('classification.prevent_publication', FALSE, FALSE);
+  if (!empty($prevent_publication)) {
+    reliefweb_entities_adjust_moderation_status_based_on_classification_status($entity);
   }
 }
 
@@ -131,6 +149,10 @@ function reliefweb_import_ocha_content_classification_classified_fields_alter(ar
 function reliefweb_import_get_entity_importer(EntityInterface $entity): ?ReliefWebImporterPluginInterface {
   if (isset($entity->reliefweb_importer)) {
     return $entity->reliefweb_importer ?: NULL;
+  }
+
+  if (!$entity instanceof ContentEntityInterface) {
+    return NULL;
   }
 
   if (!$entity->hasField('field_post_api_provider') || $entity->get('field_post_api_provider')->isEmpty()) {

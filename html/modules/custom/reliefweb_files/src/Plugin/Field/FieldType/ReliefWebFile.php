@@ -296,6 +296,9 @@ class ReliefWebFile extends FieldItemBase {
     // Validate the filename.
     $validators['ReliefWebFileName'] = [];
 
+    // Validate the real mime type.
+    $validators['ReliefWebFileRealMimeType'] = [];
+
     return $validators;
   }
 
