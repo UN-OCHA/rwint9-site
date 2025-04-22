@@ -303,11 +303,11 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
       '#title' => $this->t('Prevent publication during classification'),
       '#default_value' => !empty($classification_settings['prevent_publication']),
     ];
-    $form['classification']['specifield_field_check'] = [
+    $form['classification']['specified_field_check'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Field emptiness check rules'),
       '#description' => $this->t('Control which fields should be checked for emptiness before classification. Format: "field:yes/no" (one per line). Use "*:yes/no" to set default behavior for all fields. "yes" = check if field is empty, "no" = ignore emptiness.'),
-      '#default_value' => $classification_settings['specifield_field_check'] ?? NULL,
+      '#default_value' => $classification_settings['specified_field_check'] ?? NULL,
     ];
     $form['classification']['force_field_update'] = [
       '#type' => 'textarea',
@@ -418,7 +418,7 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
    * {@inheritdoc}
    */
   public function alterContentClassificationSpecifiedFieldCheck(array &$fields, ClassificationWorkflowInterface $workflow, array $context): void {
-    $setting = $this->getPluginSetting('classification.specifield_field_check', '', FALSE);
+    $setting = $this->getPluginSetting('classification.specified_field_check', '', FALSE);
     $rules = $this->parseFieldRules($setting);
 
     if (!empty($rules)) {

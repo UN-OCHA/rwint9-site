@@ -25,7 +25,7 @@ reliefweb_import.plugin.importer:
         prevent_publication:
           type: boolean
           label: 'Prevent entity publication while being classified'
-        specifield_field_check:
+        specified_field_check:
           type: string
           label: 'Control which fields should be checked for emptiness before classification.'
         force_field_update:
