@@ -39,3 +39,14 @@ field.field_settings.reliefweb_file:
     preview_min_dimensions:
       type: string
       label: 'Preview minimum dimensions in the form WIDTHxHEIGHT'
+
+field.widget.settings.reliefweb_file_simplified:
+  type: mapping
+  label: 'ReliefWeb File Simplified widget settings'
+  mapping:
+    extensions:
+      type: string
+      label: 'Allowed file extensions.'
+    max_file_size:
+      type: integer
+      label: 'Allowed max file size.'

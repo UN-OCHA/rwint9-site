@@ -46,7 +46,7 @@ content:
     region: content
     settings:
       extensions: 'csv, doc, docx, jpg, jpeg, odp, ods, odt, pdf, png, pps, ppt, pptx, svg, xls, xlsx, zip'
-      max_file_size: '26214400'
+      max_file_size: 26214400
     third_party_settings: {  }
   field_language:
     type: options_buttons
