@@ -167,14 +167,25 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       // Ensure the provider is valid.
       $plugin->getProvider($provider_uuid);
 
-      $this->getLogger()->info('Retrieving documents from the Inoreader.');
+      if (TRUE) {
+        $this->getLogger()->info('Retrieving documents from disk.');
+        $documents = file_get_contents('/var/www/inoreader.json');
+        if ($documents === FALSE) {
+          $this->getLogger()->error('Unable to retrieve the Inoreader documents.');
+          return FALSE;
+        }
+        $documents = json_decode($documents, TRUE, flags: \JSON_THROW_ON_ERROR);
+      }
+      else {
+        $this->getLogger()->info('Retrieving documents from the Inoreader.');
 
-      // Retrieve the latest created documents.
-      $documents = $this->getDocuments($limit);
+        // Retrieve the latest created documents.
+        $documents = $this->getDocuments($limit);
 
-      if (empty($documents)) {
-        $this->getLogger()->notice('No documents.');
-        return TRUE;
+        if (empty($documents)) {
+          $this->getLogger()->notice('No documents.');
+          return TRUE;
+        }
       }
     }
     catch (\Exception $exception) {
@@ -452,211 +463,202 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       $sources = [];
       $pdf = '';
 
-      // Check for tags.
-      if (strpos($origin_title, '[source:') !== FALSE) {
-        $parts = explode(' ', $origin_title);
-        $tags = array_pop($parts);
-        $tags = str_replace(['[', ']'], '', $tags);
-        $tags = explode('|', $tags);
-        foreach ($tags as $tag) {
-          [$key, $value] = explode(':', $tag);
-          switch ($key) {
-            case 'source':
-              $sources = [(int) $value];
-              break;
+      if (strpos($origin_title, '[source:') > 0) {
+        preg_match_all('/\[(.*?)\]/', $origin_title, $matches);
+        $matches = $matches[1];
+        foreach ($matches as $match) {
+          print_r([$match]);
+          if (preg_match('/^source:(\d+)$/', $match, $source_matches)) {
+            $sources[] = (int) $source_matches[1];
+          }
+          elseif (preg_match('/^pdf:(.+)$/', $match, $pdf_matches)) {
+            switch ($pdf_matches[1]) {
+              case 'canonical':
+                $pdf = $document['canonical'][0]['href'] ?? '';
+                break;
 
-            case 'sources':
-              $sources = explode(',', $value);
-              break;
-
-            case 'body':
-              switch ($value) {
-                case 'clear':
-                case 'ignore':
-                  $body = '';
-                  break;
-
-                case 'ignore':
-                  // Already set.
-                  break;
-              }
-
-              break;
-
-            case 'pdf':
-              switch ($value) {
-                case 'canonical':
-                  $pdf = $document['canonical'][0]['href'] ?? '';
-                  break;
-
-                case 'content-iframe-src':
-                  $pdf = $this->extractPdfUrl($document['summary']['content'] ?? '', 'iframe', 'src');
-                  $pdf = str_replace('?iframe=true', '', $pdf);
-                  break;
-
-                case 'page-a-tag':
-                  $pdf = $this->extractPdfUrl($document['summary']['content'] ?? '', 'a', 'href');
-                  break;
-
-              }
-
-              break;
+              case 'summary:link':
+                $pdf = $this->extractPdfUrl($document['summary']['content'] ?? '', 'a', 'href');
+                break;
+            }
+          }
+          elseif (preg_match('/^content:(.+)$/', $match, $content_matches)) {
+            switch ($content_matches[1]) {
+              case 'clear':
+              case 'ignore':
+                $body = '';
+                break;
+            }
+          }
+          elseif (preg_match('/^title:(.+)$/', $match, $title_matches)) {
+            switch ($title_matches[1]) {
+              case 'filename':
+              case 'canonical':
+                $title = basename($document['canonical'][0]['href'] ?? '');
+                $title = str_replace('.pdf', '', $title);
+                $title = str_replace(['-', '_'], ' ', $title);
+                break;
+            }
           }
         }
+
+        print_r([$sources, $pdf]);
       }
 
-      switch ($origin_title) {
-        case '[decom] ECHO - Flash':
-        case 'ECHO - Flash':
-          // Skip it.
-          break;
+      if (empty($sources)) {
+        switch ($origin_title) {
+          case '[decom] ECHO - Flash':
+          case 'ECHO - Flash':
+            // Skip it.
+            break;
 
-        case 'IOM DTM - Displacement Reports':
-          $sources = [1255];
+          case 'IOM DTM - Displacement Reports':
+            $sources = [1255];
 
-          $pdf = $this->extractPdfUrl($document['summary']['content'] ?? '', 'iframe', 'src');
-          $pdf = str_replace('?iframe=true', '', $pdf);
+            $pdf = $this->extractPdfUrl($document['summary']['content'] ?? '', 'iframe', 'src');
+            $pdf = str_replace('?iframe=true', '', $pdf);
 
-          break;
+            break;
 
-        case 'UNHCR Global Focus - All Publications':
-          $sources = [2868];
+          case 'UNHCR Global Focus - All Publications':
+            $sources = [2868];
 
-          $pdf = $document['canonical'][0]['href'] ?? '';
+            $pdf = $document['canonical'][0]['href'] ?? '';
 
-          break;
+            break;
 
-        case 'UNHCR - Global All docs':
-        case '[decom] UNHCR - Global All docs':
-          $sources = [2868];
+          case 'UNHCR - Global All docs':
+          case '[decom] UNHCR - Global All docs':
+            $sources = [2868];
 
-          $pdf = $document['canonical'][0]['href'] ?? '';
-          $pdf = str_replace('/details/', '/download/', $pdf);
+            $pdf = $document['canonical'][0]['href'] ?? '';
+            $pdf = str_replace('/details/', '/download/', $pdf);
 
-          break;
+            break;
 
-        case 'IFRC - Appeals':
-          $sources = [1242];
+          case 'IFRC - Appeals':
+            $sources = [1242];
 
-          $pdf = $document['canonical'][0]['href'] ?? '';
+            $pdf = $document['canonical'][0]['href'] ?? '';
 
-          break;
+            break;
 
-        case 'Global Protection Cluster - Publications':
-          $sources = [8619];
+          case 'Global Protection Cluster - Publications':
+            $sources = [8619];
 
-          // Clear body.
-          $body = '';
+            // Clear body.
+            $body = '';
 
-          if (!empty($document['canonical'][0]['href'] ?? '')) {
-            $html = $this->downloadHtmlPage($document['canonical'][0]['href'] ?? '');
-            if (empty($html)) {
-              $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
-                '@id' => $id,
-                '@url' => $document['canonical'][0]['href'] ?? '',
-              ]));
-            }
-            else {
-              $pdf = $this->extractPdfUrl($html, 'a', 'href', 'btn-primary', 'pdf');
-              if (!empty($pdf) && strpos($pdf, 'http') !== 0) {
-                $pdf = 'https://globalprotectioncluster.org' . $pdf;
+            if (!empty($document['canonical'][0]['href'] ?? '')) {
+              $html = $this->downloadHtmlPage($document['canonical'][0]['href'] ?? '');
+              if (empty($html)) {
+                $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
+                  '@id' => $id,
+                  '@url' => $document['canonical'][0]['href'] ?? '',
+                ]));
+              }
+              else {
+                $pdf = $this->extractPdfUrl($html, 'a', 'href', 'btn-primary', 'pdf');
+                if (!empty($pdf) && strpos($pdf, 'http') !== 0) {
+                  $pdf = 'https://globalprotectioncluster.org' . $pdf;
+                }
               }
             }
-          }
 
-          break;
+            break;
 
-        case 'Global CCCM Cluster - Documents':
-          $sources = [9677];
+          case 'Global CCCM Cluster - Documents':
+            $sources = [9677];
 
-          // Clear body.
-          $body = '';
+            // Clear body.
+            $body = '';
 
-          if (!empty($document['canonical'][0]['href'] ?? '')) {
-            $html = $this->downloadHtmlPage($document['canonical'][0]['href'] ?? '');
-            if (empty($html)) {
-              $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
-                '@id' => $id,
-                '@url' => $document['canonical'][0]['href'] ?? '',
-              ]));
-            }
-            else {
-              $pdf = $this->extractPdfUrl($html, 'a', 'href', '', 'pdf');
-              if (!empty($pdf) && strpos($pdf, 'http') !== 0) {
-                $pdf = 'https://www.cccmcluster.org' . $pdf;
+            if (!empty($document['canonical'][0]['href'] ?? '')) {
+              $html = $this->downloadHtmlPage($document['canonical'][0]['href'] ?? '');
+              if (empty($html)) {
+                $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
+                  '@id' => $id,
+                  '@url' => $document['canonical'][0]['href'] ?? '',
+                ]));
+              }
+              else {
+                $pdf = $this->extractPdfUrl($html, 'a', 'href', '', 'pdf');
+                if (!empty($pdf) && strpos($pdf, 'http') !== 0) {
+                  $pdf = 'https://www.cccmcluster.org' . $pdf;
+                }
               }
             }
-          }
 
-          break;
+            break;
 
-        case 'ECHO - Emergency Maps':
-          $sources = [620];
+          case 'ECHO - Emergency Maps':
+            $sources = [620];
 
-          if (!empty($document['canonical'][0]['href'] ?? '')) {
-            $html = $this->downloadHtmlPage($document['canonical'][0]['href'] ?? '');
-            if (empty($html)) {
-              $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
-                '@id' => $id,
-                '@url' => $document['canonical'][0]['href'] ?? '',
-              ]));
-            }
-            else {
-              $pdf = $this->extractPdfUrl($html, 'a', 'href', 'zoom-in', 'pdf');
-              if (!empty($pdf) && strpos($pdf, 'http') !== 0) {
-                $pdf = 'https://erccportal.jrc.ec.europa.eu' . $pdf;
+            if (!empty($document['canonical'][0]['href'] ?? '')) {
+              $html = $this->downloadHtmlPage($document['canonical'][0]['href'] ?? '');
+              if (empty($html)) {
+                $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
+                  '@id' => $id,
+                  '@url' => $document['canonical'][0]['href'] ?? '',
+                ]));
+              }
+              else {
+                $pdf = $this->extractPdfUrl($html, 'a', 'href', 'zoom-in', 'pdf');
+                if (!empty($pdf) && strpos($pdf, 'http') !== 0) {
+                  $pdf = 'https://erccportal.jrc.ec.europa.eu' . $pdf;
+                }
               }
             }
-          }
 
-          break;
+            break;
 
-        case 'ACLED - Regional Overview and Analysis':
-          // Skipping, no PDF file.
-          break;
+          case 'ACLED - Regional Overview and Analysis':
+            // Skipping, no PDF file.
+            break;
 
-        case 'Emergency Telecommunications Cluster (ETC) - Operational Updates':
-          $sources = [13799];
+          case 'Emergency Telecommunications Cluster (ETC) - Operational Updates':
+            $sources = [13799];
 
-          if (!empty($document['canonical'][0]['href'] ?? '')) {
-            $html = $this->downloadHtmlPage($document['canonical'][0]['href'] ?? '');
-            if (empty($html)) {
-              $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
-                '@id' => $id,
-                '@url' => $document['canonical'][0]['href'] ?? '',
-              ]));
+            if (!empty($document['canonical'][0]['href'] ?? '')) {
+              $html = $this->downloadHtmlPage($document['canonical'][0]['href'] ?? '');
+              if (empty($html)) {
+                $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
+                  '@id' => $id,
+                  '@url' => $document['canonical'][0]['href'] ?? '',
+                ]));
+              }
+              else {
+                $pdf = $this->extractPdfUrl($html, 'a', 'href', 'zoom-in', 'pdf');
+              }
             }
-            else {
-              $pdf = $this->extractPdfUrl($html, 'a', 'href', 'zoom-in', 'pdf');
+
+            break;
+
+          case 'WFP - Publications':
+            $sources = [1741];
+
+            if (!empty($document['canonical'][0]['href'] ?? '')) {
+              $html = $this->downloadHtmlPage($document['canonical'][0]['href'] ?? '');
+              if (empty($html)) {
+                $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
+                  '@id' => $id,
+                  '@url' => $document['canonical'][0]['href'] ?? '',
+                ]));
+              }
+              else {
+                $pdf = $this->extractPdfUrl($html, 'a', 'href', 'button-new--primary', '', 'section.document-links-table');
+              }
             }
-          }
 
-          break;
+            break;
 
-        case 'WFP - Publications':
-          $sources = [1741];
-
-          if (!empty($document['canonical'][0]['href'] ?? '')) {
-            $html = $this->downloadHtmlPage($document['canonical'][0]['href'] ?? '');
-            if (empty($html)) {
-              $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
-                '@id' => $id,
-                '@url' => $document['canonical'][0]['href'] ?? '',
-              ]));
-            }
-            else {
-              $pdf = $this->extractPdfUrl($html, 'a', 'href', 'button-new--primary', '', 'section.document-links-table');
-            }
-          }
-
-          break;
-
-        default:
-          $this->getLogger()->error(strtr('Unknown source for Inoreader document @id: @source.', [
-            '@id' => $id,
-            '@source' => $origin_title,
-          ]));
-          break;
+          default:
+            $this->getLogger()->error(strtr('Unknown source for Inoreader document @id: @source.', [
+              '@id' => $id,
+              '@source' => $origin_title,
+            ]));
+            break;
+        }
       }
 
       if (empty($sources)) {
