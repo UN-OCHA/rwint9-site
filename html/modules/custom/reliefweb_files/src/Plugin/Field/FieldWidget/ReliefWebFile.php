@@ -789,7 +789,8 @@ class ReliefWebFile extends WidgetBase {
    *   Form state.
    */
   protected function uploadFiles(array $element, FormStateInterface $form_state) {
-    return $this->processUploadedFiles($element, $form_state, $element['#name']);
+    $validators = $this->createFieldItem()->getUploadValidators();
+    return $this->processUploadedFiles($element, $form_state, $element['#name'], $validators);
   }
 
   /**
@@ -1149,8 +1150,14 @@ class ReliefWebFile extends WidgetBase {
     // Set the file size.
     $file->setSize(@filesize($path) ?? 0);
 
+    // For the validation to work, we need to use the current file path.
+    $file->setFileUri($path);
+
     // Validate the file.
     $validation_errors = $this->validateFile($file, $validators);
+
+    // Now we can set the target URI.
+    $file->setFileUri($uri);
 
     // Bail out if the uploaded file is invalid.
     if (!empty($validation_errors)) {
