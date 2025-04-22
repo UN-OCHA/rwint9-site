@@ -466,32 +466,88 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       if (strpos($origin_title, '[source:') > 0) {
         preg_match_all('/\[(.*?)\]/', $origin_title, $matches);
         $matches = $matches[1];
+
+        // Parse everything so we can reference it easily.
+        $tags = [];
         foreach ($matches as $match) {
-          print_r([$match]);
-          if (preg_match('/^source:(\d+)$/', $match, $source_matches)) {
-            $sources[] = (int) $source_matches[1];
+          $tag_parts = explode(':', $match);
+          $tag_key = reset($tag_parts);
+          array_shift($tag_parts);
+          $tag_value = implode(':', $tag_parts);
+
+          if (isset($tags[$tag_key])) {
+            $tags[$tag_key] = [
+              $tags[$tag_key],
+            ];
           }
-          elseif (preg_match('/^pdf:(.+)$/', $match, $pdf_matches)) {
-            switch ($pdf_matches[1]) {
+          if (isset($tags[$tag_key]) && is_array($tags[$tag_key])) {
+            $tags[$tag_key][] = $tag_value;
+          }
+          else {
+            $tags[$tag_key] = $tag_value;
+          }
+        }
+
+        // Source is mandatory, so present.
+        $sources = [
+          (int) $tags['source'],
+        ];
+        unset($tags['source']);
+
+        foreach ($tags as $tag_key => $tag_value) {
+          if ($tag_key == 'pdf') {
+            switch ($tag_value) {
               case 'canonical':
                 $pdf = $document['canonical'][0]['href'] ?? '';
                 break;
 
-              case 'summary:link':
+              case 'summary-link':
                 $pdf = $this->extractPdfUrl($document['summary']['content'] ?? '', 'a', 'href');
                 break;
+
+              case 'page-link':
+                $page_url = $document['canonical'][0]['href'] ?? '';
+                $html = $this->downloadHtmlPage($page_url);
+                if (empty($html)) {
+                  $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
+                    '@id' => $id,
+                    '@url' => $page_url,
+                  ]));
+                }
+                else {
+                  $pdf = $this->tryToExtractPdfFromHtml($page_url, $html, $tags);
+                  if (isset($tags['follow'])) {
+                    // Follow link and fetch PDF from that page.
+                    if (strpos($pdf, $tags['follow']) !== FALSE) {
+                      $page_url = $pdf;
+                      $html = $this->downloadHtmlPage($page_url);
+                      if (empty($html)) {
+                        $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
+                          '@id' => $id,
+                          '@url' => $page_url,
+                        ]));
+                      }
+                      else {
+                        $pdf = $this->tryToExtractPdfFromHtml($page_url, $html, $tags);
+                      }
+                    }
+                  }
+                }
+
+                break;
+
             }
           }
-          elseif (preg_match('/^content:(.+)$/', $match, $content_matches)) {
-            switch ($content_matches[1]) {
+          elseif ($tag_key == 'content') {
+            switch ($tag_value) {
               case 'clear':
               case 'ignore':
                 $body = '';
                 break;
             }
           }
-          elseif (preg_match('/^title:(.+)$/', $match, $title_matches)) {
-            switch ($title_matches[1]) {
+          elseif ($tag_key == 'title') {
+            switch ($tag_value) {
               case 'filename':
               case 'canonical':
                 $title = basename($document['canonical'][0]['href'] ?? '');
@@ -501,8 +557,6 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
             }
           }
         }
-
-        print_r([$sources, $pdf]);
       }
 
       if (empty($sources)) {
@@ -792,9 +846,48 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
   }
 
   /**
+   * Try to extract the link to a PDF file from HTML content.
+   * */
+  protected function tryToExtractPdfFromHtml($page_url, $html, $tags) {
+    $pdf = '';
+    $contains = [];
+    if (isset($tags['url'])) {
+      if (is_array($tags['url'])) {
+        $contains = $tags['url'];
+      }
+      else {
+        $contains[] = $tags['url'];
+      }
+    }
+
+    if (isset($tags['wrapper'])) {
+      if (is_array($tags['wrapper'])) {
+        foreach ($tags['wrapper'] as $wrapper) {
+          $pdf = $this->extractPdfUrl($html, 'a', 'href', '', '', $wrapper, $contains);
+          if ($pdf) {
+            break;
+          }
+        }
+      }
+      else {
+        $pdf = $this->extractPdfUrl($html, 'a', 'href', '', '', $tags['wrapper'], $contains);
+      }
+    }
+    else {
+      $pdf = $this->extractPdfUrl($html, 'a', 'href', '', '', '', $contains);
+    }
+    if (!empty($pdf) && strpos($pdf, 'http') !== 0) {
+      $url_parts = parse_url($page_url);
+      $pdf = ($url_parts['scheme'] ?? 'https') . '://' . $url_parts['host'] . $pdf;
+    }
+
+    return $pdf;
+  }
+
+  /**
    * Extract the PDF URL from the HTML content.
    */
-  protected function extractPdfUrl(string $html, string $tag, string $attribute, string $class = '', string $extension = '', string $wrapper = ''): ?string {
+  protected function extractPdfUrl(string $html, string $tag, string $attribute, string $class = '', string $extension = '', string $wrapper = '', array $contains = []): ?string {
     $dom = new \DOMDocument();
     @$dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
     $xpath = new \DOMXPath($dom);
@@ -806,22 +899,57 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
     else {
       [$wrapper_element, $wrapper_class] = explode('.', $wrapper);
       $parent = $xpath->query("//{$wrapper_element}[@class='{$wrapper_class}']")->item(0);
+      if (!$parent) {
+        return '';
+      }
+
       $elements = $xpath->query(".//{$tag}[@{$attribute}]", $parent);
     }
 
     /** @var \DOMNode $element */
     foreach ($elements as $element) {
       $url = $element->getAttribute($attribute);
+      if (empty($url) || $url == '#') {
+        continue;
+      }
+
       if (!empty($class) && $element->hasAttribute('class') && preg_match('/\b' . preg_quote($class, '/') . '\b/', $element->getAttribute('class'))) {
-        return $url;
+        if (!empty($contains)) {
+          foreach ($contains as $contain) {
+            if (strpos($url, $contain) !== FALSE) {
+              return $url;
+            }
+          }
+        }
+        else {
+          return $url;
+        }
       }
 
       if (!empty($extension) && preg_match('/\.' . $extension . '$/i', $url)) {
-        return $url;
+        if (!empty($contains)) {
+          foreach ($contains as $contain) {
+            if (strpos($url, $contain) !== FALSE) {
+              return $url;
+            }
+          }
+        }
+        else {
+          return $url;
+        }
       }
 
       if (empty($class) && empty($extension)) {
-        return $url;
+        if (!empty($contains)) {
+          foreach ($contains as $contain) {
+            if (strpos($url, $contain) !== FALSE) {
+              return $url;
+            }
+          }
+        }
+        else {
+          return $url;
+        }
       }
     }
 
