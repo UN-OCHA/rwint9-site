@@ -5,6 +5,7 @@
  * Entity management for ReliefWeb.
  */
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Entity\EntityInterface;
@@ -15,6 +16,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Url;
 use Drupal\media\MediaInterface;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
 use Drupal\ocha_content_classification\Enum\ClassificationStatus;
@@ -989,7 +991,23 @@ function reliefweb_entities_menu_local_tasks_alter(&$data, $route_name, Refinabl
   // Open the clone entity form in a new tab.
   if (isset($data['tabs'][0]['content_entity_clone.clone']['#link'])) {
     $data['tabs'][0]['content_entity_clone.clone']['#link']['localized_options']['attributes']['target'] = '_blank';
+
+    // Hide the report clone local task for submitters.
+    // @todo remove if the granular permissions are added to the
+    // content_entity_clone module.
+    if (\Drupal::currentUser()->hasRole('submitter')) {
+      $url = $data['tabs'][0]['content_entity_clone.clone']['#link']['url'] ?? NULL;
+      if ($url instanceof Url) {
+        $route_parameters = $url->getRouteParameters();
+        if (isset($route_parameters['node_type']) && $route_parameters['node_type'] === 'report') {
+          $data['tabs'][0]['content_entity_clone.clone']['#access'] = AccessResult::forbidden();
+        }
+      }
+    }
   }
+
+  // Add cache context for roles since the visibility depends on user roles.
+  $cacheability->addCacheContexts(['user.roles']);
 }
 
 /**
