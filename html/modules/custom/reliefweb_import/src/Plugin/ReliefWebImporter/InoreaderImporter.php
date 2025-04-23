@@ -499,10 +499,12 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
             switch ($tag_value) {
               case 'canonical':
                 $pdf = $document['canonical'][0]['href'] ?? '';
+                $pdf = $this->rewritePdfLink($pdf, $tags);
                 break;
 
               case 'summary-link':
                 $pdf = $this->extractPdfUrl($document['summary']['content'] ?? '', 'a', 'href');
+                $pdf = $this->rewritePdfLink($pdf, $tags);
                 break;
 
               case 'page-link':
@@ -553,6 +555,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
                 $title = basename($document['canonical'][0]['href'] ?? '');
                 $title = str_replace('.pdf', '', $title);
                 $title = str_replace(['-', '_'], ' ', $title);
+                $title = $this->sanitizeText($title);
                 break;
             }
           }
@@ -560,175 +563,27 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       }
 
       if (empty($sources)) {
-        switch ($origin_title) {
-          case '[decom] ECHO - Flash':
-          case 'ECHO - Flash':
-            // Skip it.
-            break;
-
-          case 'IOM DTM - Displacement Reports':
-            $sources = [1255];
-
-            $pdf = $this->extractPdfUrl($document['summary']['content'] ?? '', 'iframe', 'src');
-            $pdf = str_replace('?iframe=true', '', $pdf);
-
-            break;
-
-          case 'UNHCR Global Focus - All Publications':
-            $sources = [2868];
-
-            $pdf = $document['canonical'][0]['href'] ?? '';
-
-            break;
-
-          case 'UNHCR - Global All docs':
-          case '[decom] UNHCR - Global All docs':
-            $sources = [2868];
-
-            $pdf = $document['canonical'][0]['href'] ?? '';
-            $pdf = str_replace('/details/', '/download/', $pdf);
-
-            break;
-
-          case 'IFRC - Appeals':
-            $sources = [1242];
-
-            $pdf = $document['canonical'][0]['href'] ?? '';
-
-            break;
-
-          case 'Global Protection Cluster - Publications':
-            $sources = [8619];
-
-            // Clear body.
-            $body = '';
-
-            if (!empty($document['canonical'][0]['href'] ?? '')) {
-              $html = $this->downloadHtmlPage($document['canonical'][0]['href'] ?? '');
-              if (empty($html)) {
-                $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
-                  '@id' => $id,
-                  '@url' => $document['canonical'][0]['href'] ?? '',
-                ]));
-              }
-              else {
-                $pdf = $this->extractPdfUrl($html, 'a', 'href', 'btn-primary', 'pdf');
-                if (!empty($pdf) && strpos($pdf, 'http') !== 0) {
-                  $pdf = 'https://globalprotectioncluster.org' . $pdf;
-                }
-              }
-            }
-
-            break;
-
-          case 'Global CCCM Cluster - Documents':
-            $sources = [9677];
-
-            // Clear body.
-            $body = '';
-
-            if (!empty($document['canonical'][0]['href'] ?? '')) {
-              $html = $this->downloadHtmlPage($document['canonical'][0]['href'] ?? '');
-              if (empty($html)) {
-                $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
-                  '@id' => $id,
-                  '@url' => $document['canonical'][0]['href'] ?? '',
-                ]));
-              }
-              else {
-                $pdf = $this->extractPdfUrl($html, 'a', 'href', '', 'pdf');
-                if (!empty($pdf) && strpos($pdf, 'http') !== 0) {
-                  $pdf = 'https://www.cccmcluster.org' . $pdf;
-                }
-              }
-            }
-
-            break;
-
-          case 'ECHO - Emergency Maps':
-            $sources = [620];
-
-            if (!empty($document['canonical'][0]['href'] ?? '')) {
-              $html = $this->downloadHtmlPage($document['canonical'][0]['href'] ?? '');
-              if (empty($html)) {
-                $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
-                  '@id' => $id,
-                  '@url' => $document['canonical'][0]['href'] ?? '',
-                ]));
-              }
-              else {
-                $pdf = $this->extractPdfUrl($html, 'a', 'href', 'zoom-in', 'pdf');
-                if (!empty($pdf) && strpos($pdf, 'http') !== 0) {
-                  $pdf = 'https://erccportal.jrc.ec.europa.eu' . $pdf;
-                }
-              }
-            }
-
-            break;
-
-          case 'ACLED - Regional Overview and Analysis':
-            // Skipping, no PDF file.
-            break;
-
-          case 'Emergency Telecommunications Cluster (ETC) - Operational Updates':
-            $sources = [13799];
-
-            if (!empty($document['canonical'][0]['href'] ?? '')) {
-              $html = $this->downloadHtmlPage($document['canonical'][0]['href'] ?? '');
-              if (empty($html)) {
-                $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
-                  '@id' => $id,
-                  '@url' => $document['canonical'][0]['href'] ?? '',
-                ]));
-              }
-              else {
-                $pdf = $this->extractPdfUrl($html, 'a', 'href', 'zoom-in', 'pdf');
-              }
-            }
-
-            break;
-
-          case 'WFP - Publications':
-            $sources = [1741];
-
-            if (!empty($document['canonical'][0]['href'] ?? '')) {
-              $html = $this->downloadHtmlPage($document['canonical'][0]['href'] ?? '');
-              if (empty($html)) {
-                $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
-                  '@id' => $id,
-                  '@url' => $document['canonical'][0]['href'] ?? '',
-                ]));
-              }
-              else {
-                $pdf = $this->extractPdfUrl($html, 'a', 'href', 'button-new--primary', '', 'section.document-links-table');
-              }
-            }
-
-            break;
-
-          default:
-            $this->getLogger()->error(strtr('Unknown source for Inoreader document @id: @source.', [
-              '@id' => $id,
-              '@source' => $origin_title,
-            ]));
-            break;
-        }
-      }
-
-      if (empty($sources)) {
+        $this->getLogger()->info(strtr('No source defined for Inoreader @id, skipping.', [
+          '@id' => $id,
+        ]));
         continue;
       }
 
-      if (!empty($pdf)) {
-        $info = $this->getRemoteFileInfo($pdf);
-        if (!empty($info)) {
-          $file_url = $pdf;
-          $file_uuid = $this->generateUuid($file_url, $uuid);
-          $files[] = [
-            'url' => $file_url,
-            'uuid' => $file_uuid,
-          ] + $info;
-        }
+      if (empty($pdf)) {
+        $this->getLogger()->info(strtr('No PDF found for Inoreader @id, skipping.', [
+          '@id' => $id,
+        ]));
+        continue;
+      }
+
+      $info = $this->getRemoteFileInfo($pdf);
+      if (!empty($info)) {
+        $file_url = $pdf;
+        $file_uuid = $this->generateUuid($file_url, $uuid);
+        $files[] = [
+          'url' => $file_url,
+          'uuid' => $file_uuid,
+        ] + $info;
       }
 
       // Submission data.
@@ -967,6 +822,8 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         'timeout' => $timeout,
         'headers' => [
           'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
+          'accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+          'accept-language' => 'en-US,en;q=0.9',
         ],
       ]);
 
@@ -980,6 +837,18 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
     }
 
     return '';
+  }
+
+  /**
+   * Rewrite PDF link.
+   */
+  protected function rewritePdfLink($pdf, $tags) {
+    if (isset($tags['replace'])) {
+      [$from, $to] = explode(':', $tags['replace']);
+      $pdf = str_replace($from, $to, $pdf);
+    }
+
+    return $pdf;
   }
 
 }
