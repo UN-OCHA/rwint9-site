@@ -538,6 +538,19 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
                 break;
 
+              case 'page-object':
+                $page_url = $document['canonical'][0]['href'] ?? '';
+                $html = $this->downloadHtmlPage($page_url);
+                if (empty($html)) {
+                  $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
+                    '@id' => $id,
+                    '@url' => $page_url,
+                  ]));
+                }
+                $pdf = $this->extractPdfUrl($html, 'object', 'data');
+
+                break;
+
             }
           }
           elseif ($tag_key == 'content') {
@@ -563,8 +576,9 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       }
 
       if (empty($sources)) {
-        $this->getLogger()->info(strtr('No source defined for Inoreader @id, skipping.', [
+        $this->getLogger()->info(strtr('No source defined for Inoreader @id, skipping. Origin is set to @origin_title', [
           '@id' => $id,
+          '@origin_title' => $origin_title,
         ]));
         continue;
       }

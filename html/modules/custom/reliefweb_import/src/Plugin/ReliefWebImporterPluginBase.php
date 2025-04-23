@@ -414,6 +414,16 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
     // Always rename dot files.
     $filename = trim($filename, '.');
 
+    // Remove ? and any following characters.
+    if (strpos($filename, '?') !== FALSE) {
+      $filename = substr($filename, 0, strpos($filename, '?'));
+    }
+
+    // Remove # and any following characters.
+    if (strpos($filename, '#') !== FALSE) {
+      $filename = substr($filename, 0, strpos($filename, '#'));
+    }
+
     // Remove any null bytes.
     // @see https://php.net/manual/security.filesystem.nullbytes.php
     $filename = str_replace(chr(0), '', $filename);
