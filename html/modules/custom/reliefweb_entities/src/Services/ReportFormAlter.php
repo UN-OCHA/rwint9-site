@@ -215,21 +215,58 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     $form['title']['widget'][0]['value']['#rows'] = 1;
     unset($form['title']['widget'][0]['value']['#attributes']['data-with-formatting']);
 
+    // Do not restrict the values selectable for the primary country if the
+    // country field is not there otherwise the user cannot select anything.
+    if (isset($form['field_primary_country']) && !isset($form['field_country'])) {
+      $form['field_primary_country']['#attributes']['data-with-autocomplete'] = '';
+    }
+
     // Default to submit for new documents otherwise preserve the value, for
     // example when editing a report created by an editor.
-    if ($new) {
-      $form['field_origin']['widget']['#default_value'] = '1';
+    if (isset($form['field_origin'])) {
+      if ($new) {
+        $form['field_origin']['widget']['#default_value'] = '1';
+      }
+      // Hide the origin field.
+      $form['field_origin']['widget']['#type'] = 'hidden';
     }
-    $form['field_origin_notes']['widget'][0]['value']['#title'] = $this->t('Origin URL');
+
+    if (isset($form['field_origin_notes'])) {
+      $form['field_origin_notes']['widget'][0]['value']['#title'] = $this->t('Origin URL');
+    }
 
     // Make the attachment field mandatory.
     $form['field_file']['widget']['#element_validate'][] = [$this, 'validateMandatoryFileField'];
     $form['field_file']['widget']['#required'] = TRUE;
 
-    // Populate the notify field with the submitter email address so that
-    // they can be notified when their submission is published.
-    if ($new) {
-      $form['field_notify']['widget'][0]['value']['#default_value'] = $this->currentUser->getEmail();
+    if (isset($form['field_notify'])) {
+      // Populate the notify field with the submitter email address so that
+      // they can be notified when their submission is published.
+      // This only applies if the document goes through the AI processing.
+      if ($new && $this->currentUser->hasPermission('apply ocha content classification to node report')) {
+        $form['field_notify']['widget'][0]['value']['#default_value'] = $this->currentUser->getEmail();
+      }
+      // Hide the notify field.
+      $form['field_notify']['widget']['#type'] = 'hidden';
+    }
+
+    // Improve labels and descriptions.
+    if (isset($form['field_source'])) {
+      $form['field_source']['widget']['#title'] = $this->t('Organization(s)');
+    }
+    if (isset($form['field_language'])) {
+      $form['field_language']['widget']['#title'] = $this->t('Language(s)');
+    }
+    if (isset($form['field_primary_country'])) {
+      $form['field_primary_country']['widget']['#description'] = $this->t('For global content, select World.');
+    }
+
+    // Disallow selecting a publication date in the future.
+    if (isset($form['field_original_publication_date']['widget'][0]['value'])) {
+      $form['field_original_publication_date']['widget'][0]['#element_validate'][] = [
+        $this,
+        'validateDateNotInFuture',
+      ];
     }
   }
 

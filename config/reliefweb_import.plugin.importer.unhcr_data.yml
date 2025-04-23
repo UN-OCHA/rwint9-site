@@ -1,5 +1,12 @@
-enabled: 1
+enabled: true
 max_import_attempts: 3
+classification:
+  enabled: true
+  check_user_permissions: false
+  prevent_publication: true
+  specified_field_check: '*:no'
+  force_field_update: "*:yes\r\ntitle__value:no\r\nfield_source:no"
+  classified_fields: '*:yes'
 api_url: 'https://data.unhcr.org'
 api_key: REPLACE_WITH_API_KEY
 list_endpoint: /api-content/documents.json

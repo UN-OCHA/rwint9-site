@@ -346,7 +346,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
               break;
 
             case 'view_moderation_information':
-              if ($account->hasPermission('view moderation information')) {
+              if ($account->hasPermission('view ' . $bundle . ' moderation information') || $account->hasPermission('view moderation information')) {
                 if ($account->hasPermission('edit any ' . $bundle . ' content')) {
                   $access = TRUE;
                 }

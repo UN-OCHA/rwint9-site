@@ -6,7 +6,6 @@ dependencies:
     - node.type.report
   module:
     - node
-    - ocha_content_classification
     - reliefweb_files
 id: submitter
 label: Submitter
@@ -14,6 +13,5 @@ weight: 12
 is_admin: null
 permissions:
   - 'access own reliefweb private files'
-  - 'apply ocha content classification to node report'
   - 'create report content'
   - 'edit own report content'

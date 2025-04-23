@@ -341,6 +341,12 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
   public function validatePrimaryField(array &$element, FormStateInterface $form_state, array &$form) {
     $field = $element['#field_name'];
     $non_primary_field = str_replace('_primary', '', $field);
+
+    // Skip if the non primary field doesn't exist.
+    if (!isset($form[$non_primary_field])) {
+      return;
+    }
+
     $key_column = $element['#key_column'];
     $primary_value = $form_state->getValue([$field, 0, $key_column]);
 
@@ -372,6 +378,41 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
         '%primary_field' => $element['#title'],
         '%field' => $form[$non_primary_field]['widget']['#title'],
       ]));
+    }
+  }
+
+  /**
+   * Validate that a date is not in the future.
+   *
+   * @param array $element
+   *   The form element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   * @param array $complete_form
+   *   The complete form.
+   */
+  public function validateDateNotInFuture(array $element, FormStateInterface $form_state, array $complete_form): void {
+    $value = $form_state->getValue($element['#parents']);
+
+    // Skip validation if the field is empty.
+    if (empty($value['value'])) {
+      return;
+    }
+
+    try {
+      $date_value = new \DateTime((string) $value['value']);
+      $now = new \DateTime();
+
+      // Compare dates only.
+      $date_value->setTime(0, 0, 0);
+      $now->setTime(0, 0, 0);
+
+      if ($date_value > $now) {
+        $form_state->setError($element['value'], $this->t('The date cannot be in the future.'));
+      }
+    }
+    catch (\Exception) {
+      // If date parsing fails, let Drupal's built-in validation handle it.
     }
   }
 
