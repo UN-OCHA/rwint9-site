@@ -608,7 +608,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         'url' => $url,
         'uuid' => $uuid,
         'title' => $title,
-        'body' => $body,
+        'body' => substr($body ?? '', 0, 100000),
         'published' => $published,
         'origin' => $url,
         'source' => $sources,
