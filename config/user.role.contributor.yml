@@ -12,6 +12,7 @@ dependencies:
     - reliefweb_files
     - reliefweb_form
     - reliefweb_guidelines
+    - reliefweb_moderation
     - reliefweb_revisions
 id: contributor
 label: Contributor
@@ -31,3 +32,4 @@ permissions:
   - 'update media'
   - 'view entity history'
   - 'view own unpublished media'
+  - 'view report moderation information'

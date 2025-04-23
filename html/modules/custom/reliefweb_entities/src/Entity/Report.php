@@ -512,8 +512,11 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
 
           if (!empty($revision_log_field)) {
             $log = trim($this->{$revision_log_field}->value ?? '');
-            $log = $message . (!empty($log) ? ' ' . $log : '');
-            $this->{$revision_log_field}->value = $log;
+            // Only add the message if not already in the revision log.
+            if (mb_stripos($log, $message) === FALSE) {
+              $log = $message . (!empty($log) ? ' ' . $log : '');
+              $this->{$revision_log_field}->value = $log;
+            }
           }
         }
       }

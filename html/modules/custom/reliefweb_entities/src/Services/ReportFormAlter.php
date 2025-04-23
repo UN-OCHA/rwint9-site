@@ -249,6 +249,25 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
       // Hide the notify field.
       $form['field_notify']['widget']['#type'] = 'hidden';
     }
+
+    // Improve labels and descriptions.
+    if (isset($form['field_source'])) {
+      $form['field_source']['widget']['#title'] = $this->t('Organization(s)');
+    }
+    if (isset($form['field_language'])) {
+      $form['field_language']['widget']['#title'] = $this->t('Language(s)');
+    }
+    if (isset($form['field_primary_country'])) {
+      $form['field_primary_country']['widget']['#description'] = $this->t('For global content, select World.');
+    }
+
+    // Disallow selecting a publication date in the future.
+    if (isset($form['field_original_publication_date']['widget'][0]['value'])) {
+      $form['field_original_publication_date']['widget'][0]['#element_validate'][] = [
+        $this,
+        'validateDateNotInFuture',
+      ];
+    }
   }
 
   /**
