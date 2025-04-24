@@ -562,6 +562,17 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
               break;
 
+            case 'page-iframe-data-src':
+              $page_url = $document['canonical'][0]['href'] ?? '';
+              $html = $this->downloadHtmlPage($page_url);
+              if (empty($html)) {
+                $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
+                  '@id' => $id,
+                  '@url' => $page_url,
+                ]));
+              }
+              $pdf = $this->extractPdfUrl($html, 'iframe', 'data-src');
+              break;
           }
         }
         elseif ($tag_key == 'content') {
