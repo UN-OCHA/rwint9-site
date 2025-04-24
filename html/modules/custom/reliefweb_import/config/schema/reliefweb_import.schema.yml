@@ -68,3 +68,26 @@ reliefweb_import.plugin.importer.echo_flash_update:
       type: integer
       label: 'Connection and request timeout.'
 
+# Inoreader importer plugin settings.
+reliefweb_import.plugin.importer.inoreader:
+  type: reliefweb_import.plugin.importer
+  label: 'Inoreader importer plugin settings.'
+  mapping:
+    email:
+      type: string
+      label: 'Email.'
+    password:
+      type: string
+      label: 'Password.'
+    app_id:
+      type: string
+      label: 'App Id.'
+    app_key:
+      type: string
+      label: 'App key.'
+    api_url:
+      type: string
+      label: 'API URL.'
+    local_file:
+      type: boolean
+      label: 'Dump json to local file.'
