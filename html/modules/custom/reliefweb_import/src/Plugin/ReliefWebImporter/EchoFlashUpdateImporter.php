@@ -248,7 +248,7 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
     $manually_posted = $this->getManuallyPostedDocuments(
       $ids,
       'https://erccportal.jrc.ec.europa.eu/ECHO%Products%/Echo%Flash#/%/{id}',
-      '#^https://erccportal\.jrc\.ec\.europa\.eu/ECHO[^/]*Products[/]*/Echo[^/]*Flash[#]?/[^/]+/(\d+)[^/]*$#i'
+      '#^https://erccportal\.jrc\.ec\.europa\.eu/ECHO[^/]*Products[/]*/Echo[^/]*Flash.?/[^/]+/(\d+)[^/]*$#i'
     );
 
     // Retrieve the list of existing import records for the documents.
@@ -322,9 +322,30 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
         ]));
         continue;
       }
-      // Generate hash.
-      $hash = HashHelper::generateHash($document);
+
+      // Generate a hash from the data we use to import the document. This is
+      // used to detect changes that can affect the document on ReliefWeb.
+      $filtered_document = $this->filterArrayByKeys($document, [
+        'ContentItemId',
+        'Link',
+        'Title',
+        'ItemSources.Name',
+        'PublishedOnDate',
+        'CreatedOnDate',
+        'Description',
+        'Country.Iso3',
+        'Countries.Iso3',
+        'EventTypeCode',
+        'EventType.Code',
+        'EventTypes.Code',
+      ]);
+      $hash = HashHelper::generateHash($filtered_document);
       $import_record['imported_data_hash'] = $hash;
+
+      // Legacy hash.
+      // @todo possibly remove in a few months (now is 2025-04-21).
+      // @see RW-1196
+      $legacy_hash = HashHelper::generateHash($document);
 
       // Skip if there is already an entity with the same UUID and same content
       // hash since it means the document has been not updated since the last
@@ -334,7 +355,7 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
         ->getQuery()
         ->accessCheck(FALSE)
         ->condition('uuid', $uuid, '=')
-        ->condition('field_post_api_hash', $hash, '=')
+        ->condition('field_post_api_hash', [$legacy_hash, $hash], 'IN')
         ->execute();
       if (!empty($records)) {
         $processed++;
@@ -415,7 +436,7 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
       $disaster_types = [];
       $themes = [];
       foreach ($event_type_codes as $event_type_code) {
-        $disaster_type_code = $this->getDisasterTypeByCode($document['EventTypeCode']);
+        $disaster_type_code = $this->getDisasterTypeByCode($event_type_code);
         if (isset($disaster_type_code)) {
           $disaster_types[$event_type_code] = $disaster_type_code;
         }

@@ -29,3 +29,7 @@ view moderation information revision message:
 view moderation information revision message author:
   title: 'View moderation information revision message author'
   description: 'Allow users to view the moderation revision message author.'
+
+create report only if allowed or trusted for a source:
+  title: 'Create report only if allowed or trusted for a source'
+  descrition: 'Restrict report creation to people with allowed or trusted user posting rights for a source.'

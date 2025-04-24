@@ -1,0 +1,11 @@
+adjust job moderation status based on classification status:
+  title: 'Adjust job moderation status based on classification status'
+  description: 'Adjust the moderation status of a job being saved based on its automated classification status.'
+
+adjust report moderation status based on classification status:
+  title: 'Adjust report moderation status based on classification status'
+  description: 'Adjust the moderation status of a report being saved based on its automated classification status.'
+
+adjust training moderation status based on classification status:
+  title: 'Adjust training moderation status based on classification status'
+  description: 'Adjust the moderation status of a training being saved based on its automated classification status.'

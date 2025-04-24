@@ -6,9 +6,7 @@ namespace Drupal\reliefweb_import\Plugin\ReliefWebImporter;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
 use Drupal\reliefweb_import\Attribute\ReliefWebImporter;
 use Drupal\reliefweb_import\Plugin\ReliefWebImporterPluginBase;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface;
@@ -920,10 +918,28 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
         '@id' => $id,
       ]));
 
-      // Generate a hash from the UNHCR API data without the updated date and
-      // download count since those change everytime the document is downloaded.
-      $hash = HashHelper::generateHash($document, ['updated', 'downloadCount']);
+      // Generate a hash from the data we use to import the document. This is
+      // used to detect changes that can affect the document on ReliefWeb.
+      $filtered_document = $this->filterArrayByKeys($document, [
+        'id',
+        'title',
+        'created',
+        'languageName.name',
+        'publishDate',
+        'sectorName',
+        'docTypeName',
+        'location.code',
+        'location.name',
+        'downloadLink',
+        'documentLink',
+      ]);
+      $hash = HashHelper::generateHash($filtered_document);
       $import_record['imported_data_hash'] = $hash;
+
+      // Legacy hash.
+      // @todo possibly remove in a few months (now is 2025-04-21).
+      // @see RW-1196
+      $legacy_hash = HashHelper::generateHash($document, ['updated', 'downloadCount']);
 
       // Skip if there is already an entity with the same UUID and same content
       // hash since it means the document has been not updated since the last
@@ -933,7 +949,7 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
         ->getQuery()
         ->accessCheck(FALSE)
         ->condition('uuid', $uuid, '=')
-        ->condition('field_post_api_hash', $hash, '=')
+        ->condition('field_post_api_hash', [$legacy_hash, $hash], 'IN')
         ->execute();
       if (!empty($records)) {
         $processed++;
@@ -1109,45 +1125,6 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
       $schema = Json::encode($decoded);
     }
     return $schema;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function alterContentClassificationSkipClassification(bool &$skip, ClassificationWorkflowInterface $workflow, array $context): void {
-    // Allow the automated classification.
-    $skip = FALSE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function alterContentClassificationUserPermissionCheck(bool &$check, AccountInterface $account, array $context): void {
-    // Bypass the user permission check for the classification since the user
-    // associated with the provider may not be authorized to use the automated
-    // classification.
-    $check = FALSE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function alterContentClassificationSpecifiedFieldCheck(array &$fields, ClassificationWorkflowInterface $workflow, array $context): void {
-    // Mark all the field as optional so that the classification is not skipped
-    // if any of the field is already filled.
-    $fields = array_map(fn($field) => FALSE, $fields);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function alterContentClassificationForceFieldUpdate(array &$fields, ClassificationWorkflowInterface $workflow, array $context): void {
-    // Force the update of the fields with the data from the classifier even
-    // if they already had a value.
-    $fields = array_map(fn($field) => TRUE, $fields);
-    // Keep the original title and source.
-    $fields['title__value'] = FALSE;
-    $fields['field_source'] = FALSE;
   }
 
 }

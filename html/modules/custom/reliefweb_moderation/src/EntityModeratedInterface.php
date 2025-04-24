@@ -32,6 +32,14 @@ interface EntityModeratedInterface {
   public function getModerationStatusLabel();
 
   /**
+   * Check if the document is published.
+   *
+   * @return bool
+   *   TRUE if the the document has a moderation status equivalent to published.
+   */
+  public function isPublishedModerationStatus(): bool;
+
+  /**
    * Get the list of allowed statuses for the entity.
    *
    * @return array

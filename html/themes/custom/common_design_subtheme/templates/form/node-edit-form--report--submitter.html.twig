@@ -20,10 +20,12 @@
 <fieldset id="content" class="rw-form-fieldset">
   <legend class="visually-hidden">{% trans %}Content{% endtrans %}</legend>
   {{ form.title }}
+  {{ form.field_country }}
+  {{ form.field_primary_country }}
   {{ form.field_source }}
+  {{ form.field_language }}
   {{ form.field_file }}
   {{ form.field_original_publication_date }}
-  {{ form.field_origin_notes }}
 </fieldset>
 
 <fieldset id="actions">
@@ -34,9 +36,12 @@
 {{
   form|without([
     'title',
+    'field_country',
+    'field_primary_country',
+    'field_source',
+    'field_language',
     'field_file',
     'field_original_publication_date',
-    'field_source',
     'field_origin',
     'field_origin_notes',
     'field_notify',

@@ -17620,16 +17620,16 @@
         },
         {
             "name": "unocha/ocha_content_classification",
-            "version": "v1.1.1",
+            "version": "v1.1.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_content_classification.git",
-                "reference": "a488570b3e531d98a34158eb01346e8c3dfd84af"
+                "reference": "7e1e6a2e9fcbdeec871f3026e96721287289d300"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_content_classification/zipball/a488570b3e531d98a34158eb01346e8c3dfd84af",
-                "reference": "a488570b3e531d98a34158eb01346e8c3dfd84af",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_content_classification/zipball/7e1e6a2e9fcbdeec871f3026e96721287289d300",
+                "reference": "7e1e6a2e9fcbdeec871f3026e96721287289d300",
                 "shasum": ""
             },
             "require": {
@@ -17654,9 +17654,9 @@
             "description": "OCHA Content Classification module",
             "support": {
                 "issues": "https://github.com/UN-OCHA/ocha_content_classification/issues",
-                "source": "https://github.com/UN-OCHA/ocha_content_classification/tree/v1.1.1"
+                "source": "https://github.com/UN-OCHA/ocha_content_classification/tree/v1.1.3"
             },
-            "time": "2025-04-15T07:30:43+00:00"
+            "time": "2025-04-21T05:31:04+00:00"
         },
         {
             "name": "unocha/ocha_entraid",
