@@ -11,5 +11,5 @@ email: info@example.com
 password: xyzzy
 app_id: '123'
 app_key: abc
-api_url: 'https://www.inoreader.com/reader/api/0/stream/contents/user%2F-%2Flabel%2Fautomationpilot?n=100&r=o'
+api_url: 'https://www.inoreader.com/reader/api/0/stream/contents/user%2F-%2Flabel%2Fautomation_good?n=100&r=o'
 timeout: '10'
