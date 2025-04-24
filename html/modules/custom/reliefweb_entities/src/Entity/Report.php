@@ -245,7 +245,7 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
     // Ensure the country contains the primary field (as first value).
     if (!$this->field_primary_country->isEmpty()) {
       $primary_country_target_id = $this->field_primary_country->target_id;
-      $country_values = ['target_id' => $primary_country_target_id];
+      $country_values = [['target_id' => $primary_country_target_id]];
       foreach ($this->field_country as $item) {
         if ($item->isEmpty() || $item->target_id == $primary_country_target_id) {
           continue;
