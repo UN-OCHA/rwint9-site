@@ -778,6 +778,10 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
    * Extract the PDF URL from the HTML content.
    */
   protected function extractPdfUrl(string $html, string $tag, string $attribute, string $class = '', string $extension = '', string $wrapper = '', array $contains = []): ?string {
+    if (empty($html)) {
+      return '';
+    }
+
     $dom = new \DOMDocument();
     @$dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
     $xpath = new \DOMXPath($dom);
