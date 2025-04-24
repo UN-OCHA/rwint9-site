@@ -148,7 +148,7 @@ function reliefweb_disaster_map_get_disaster_map_token_replacement($token, ?Bubb
 function reliefweb_disaster_map_metatags_alter(array &$metatags, array &$context) {
   $route_name = \Drupal::routeMatch()->getRouteName();
 
-  if (strpos($route_name, 'reliefweb_disaster_map.map.embeddable') === 0) {
+  if (!empty($route_name) && strpos($route_name, 'reliefweb_disaster_map.map.embeddable') === 0) {
     $metatags = [
       'title' => t('Disaster map'),
     ];
