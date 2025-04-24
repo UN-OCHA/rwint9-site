@@ -167,7 +167,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       // Ensure the provider is valid.
       $plugin->getProvider($provider_uuid);
 
-      if (FALSE) {
+      if ($this->getPluginSetting('local_file', FALSE, FALSE)) {
         $this->getLogger()->info('Retrieving documents from disk.');
         $documents = file_get_contents('/var/www/inoreader.json');
         if ($documents === FALSE) {
@@ -320,15 +320,17 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       throw new \Exception($message);
     }
 
-    $f = fopen('/var/www/inoreader.json', 'w');
-    if ($f) {
-      fwrite($f, json_encode($documents, JSON_PRETTY_PRINT));
-      fclose($f);
+    if ($this->getPluginSetting('local_file', FALSE, FALSE)) {
+      $f = fopen('/var/www/inoreader.json', 'w');
+      if ($f) {
+        fwrite($f, json_encode($documents, JSON_PRETTY_PRINT));
+        fclose($f);
+      }
+      else {
+        $this->getLogger()->error('Unable to open file for writing.');
+      }
+      $this->getLogger()->info('Inoreader documents written to /tmp/inoreader.json');
     }
-    else {
-      $this->getLogger()->error('Unable to open file for writing.');
-    }
-    $this->getLogger()->info('Inoreader documents written to /tmp/inoreader.json');
 
     return $documents;
   }
