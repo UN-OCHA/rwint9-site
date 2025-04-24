@@ -31,6 +31,7 @@ dependencies:
     - reliefweb_anti_spam
     - reliefweb_bookmarks
     - reliefweb_guidelines
+    - reliefweb_moderation
     - reliefweb_post_api
     - reliefweb_users
     - system
@@ -134,6 +135,8 @@ permissions:
   - 'use text format guideline'
   - 'view all guideline revisions'
   - 'view all taxonomy revisions'
+  - 'view moderation information'
+  - 'view moderation information revision message author'
   - 'view ocha ai admin config menu'
   - 'view ocha ai chat logs'
   - 'view published guideline entities'

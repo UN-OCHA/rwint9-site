@@ -382,6 +382,41 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
   }
 
   /**
+   * Validate that a date is not in the future.
+   *
+   * @param array $element
+   *   The form element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   * @param array $complete_form
+   *   The complete form.
+   */
+  public function validateDateNotInFuture(array $element, FormStateInterface $form_state, array $complete_form): void {
+    $value = $form_state->getValue($element['#parents']);
+
+    // Skip validation if the field is empty.
+    if (empty($value['value'])) {
+      return;
+    }
+
+    try {
+      $date_value = new \DateTime((string) $value['value']);
+      $now = new \DateTime();
+
+      // Compare dates only.
+      $date_value->setTime(0, 0, 0);
+      $now->setTime(0, 0, 0);
+
+      if ($date_value > $now) {
+        $form_state->setError($element['value'], $this->t('The date cannot be in the future.'));
+      }
+    }
+    catch (\Exception) {
+      // If date parsing fails, let Drupal's built-in validation handle it.
+    }
+  }
+
+  /**
    * Add the fields to add a potential new source.
    *
    * @param array $form

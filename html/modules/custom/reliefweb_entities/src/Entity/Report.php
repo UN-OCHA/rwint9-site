@@ -245,7 +245,7 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
     // Ensure the country contains the primary field (as first value).
     if (!$this->field_primary_country->isEmpty()) {
       $primary_country_target_id = $this->field_primary_country->target_id;
-      $country_values = ['target_id' => $primary_country_target_id];
+      $country_values = [['target_id' => $primary_country_target_id]];
       foreach ($this->field_country as $item) {
         if ($item->isEmpty() || $item->target_id == $primary_country_target_id) {
           continue;
@@ -512,8 +512,11 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
 
           if (!empty($revision_log_field)) {
             $log = trim($this->{$revision_log_field}->value ?? '');
-            $log = $message . (!empty($log) ? ' ' . $log : '');
-            $this->{$revision_log_field}->value = $log;
+            // Only add the message if not already in the revision log.
+            if (mb_stripos($log, $message) === FALSE) {
+              $log = $message . (!empty($log) ? ' ' . $log : '');
+              $this->{$revision_log_field}->value = $log;
+            }
           }
         }
       }
