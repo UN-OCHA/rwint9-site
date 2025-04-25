@@ -433,8 +433,11 @@ class ReportModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function isEditableStatus($status, ?AccountInterface $account = NULL) {
-    if ($status === 'archive' || $status === 'refused') {
+    if ($status === 'archive') {
       return UserHelper::userHasRoles(['administrator', 'webmaster'], $account);
+    }
+    elseif ($status === 'refused') {
+      return UserHelper::userHasRoles(['administrator', 'editor', 'webmaster'], $account);
     }
     return TRUE;
   }
