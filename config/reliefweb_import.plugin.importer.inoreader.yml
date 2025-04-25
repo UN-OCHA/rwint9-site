@@ -6,7 +6,7 @@ classification:
   prevent_publication: false
   force_field_update: '*:no'
   classified_fields: '*:yes'
-  specifield_field_check: '*:no'
+  specified_field_check: '*:no'
 email: info@example.com
 password: xyzzy
 app_id: '123'
