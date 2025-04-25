@@ -860,8 +860,8 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         'connect_timeout' => $timeout,
         'timeout' => $timeout,
         'headers' => [
-          'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
-          'accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+          'User-Agent' => 'Mozilla/5.0 AppleWebKit Chrome/134.0.0.0 Safari/537.36',
+          'accept' => 'text/html,application/xhtml+xml,application/xml,*/*',
           'accept-language' => 'en-US,en;q=0.9',
         ],
       ]);
@@ -869,10 +869,27 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       if ($response->getStatusCode() !== 200) {
         throw new \Exception('Failure with response code: ' . $response->getStatusCode());
       }
+
       return $response->getBody()->getContents();
     }
     catch (\Exception $exception) {
-      return '';
+      try {
+        // Try without headers.
+        $response = $this->httpClient->get($url, [
+          'connect_timeout' => $timeout,
+          'timeout' => $timeout,
+        ]);
+
+        if ($response->getStatusCode() !== 200) {
+          throw new \Exception('Failure with response code: ' . $response->getStatusCode());
+        }
+
+        return $response->getBody()->getContents();
+      }
+      catch (\Exception $exception) {
+        // Fail silently.
+        return '';
+      }
     }
 
     return '';
