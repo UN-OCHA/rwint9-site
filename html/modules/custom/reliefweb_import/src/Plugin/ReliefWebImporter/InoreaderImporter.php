@@ -727,12 +727,12 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
    * {@inheritdoc}
    */
   public function alterContentClassificationForceFieldUpdate(array &$fields, ClassificationWorkflowInterface $workflow, array $context): void {
-    // Force the update of the fields with the data from the classifier even
-    // if they already had a value.
-    $fields = array_map(fn($field) => TRUE, $fields);
-    // Keep the original title and source.
-    $fields['title__value'] = FALSE;
-    $fields['field_source'] = FALSE;
+    parent::alterContentClassificationForceFieldUpdate($fields, $workflow, $context);
+    if (isset($context['entity'])) {
+      if (preg_match('#^https?://#i', $context['entity']->title->value)) {
+        $fields['title__value'] = TRUE;
+      }
+    }
   }
 
   /**
