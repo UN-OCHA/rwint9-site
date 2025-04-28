@@ -4146,7 +4146,7 @@
                 "shasum": "fc8ea60619b6b4682bade340e13fb4565d3a7e0c"
             },
             "require": {
-                "drupal/core": "^9.1 || ^10"
+                "drupal/core": "^10"
             },
             "type": "drupal-module",
             "extra": {
@@ -4349,7 +4349,7 @@
                 "shasum": "c25246747dac4372c7d5a5a5fd0f276d9e468eff"
             },
             "require": {
-                "drupal/core": "^9.3 || ^10",
+                "drupal/core": "^10",
                 "drupal/mailsystem": "^4"
             },
             "require-dev": {
@@ -5205,7 +5205,7 @@
                 "shasum": "4623b9d0de4c624857df10daaa8c68793942ad87"
             },
             "require": {
-                "drupal/core": "^10.3 || ^11",
+                "drupal/core": "^10",
                 "enshrined/svg-sanitize": ">=0.15 <1.0"
             },
             "type": "drupal-module",
@@ -5365,7 +5365,7 @@
                 "shasum": "4aa9b119c9c992fd9930fa50f97cd89959c3bafb"
             },
             "require": {
-                "drupal/core": "^8.9 || ^9 || ^10 || ^11"
+                "drupal/core": "^10"
             },
             "type": "drupal-module",
             "extra": {
@@ -17573,16 +17573,16 @@
         },
         {
             "name": "unocha/ocha_ai",
-            "version": "v1.11.0",
+            "version": "v1.12.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_ai.git",
-                "reference": "c7f669b3d0489799795b718745ca84287f1ed1f4"
+                "reference": "aaf71e53723aaad6dc49ae016b835be9fda1f2ad"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/c7f669b3d0489799795b718745ca84287f1ed1f4",
-                "reference": "c7f669b3d0489799795b718745ca84287f1ed1f4",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/aaf71e53723aaad6dc49ae016b835be9fda1f2ad",
+                "reference": "aaf71e53723aaad6dc49ae016b835be9fda1f2ad",
                 "shasum": ""
             },
             "require": {
@@ -17614,9 +17614,9 @@
             "description": "OCHA AI module",
             "support": {
                 "issues": "https://github.com/UN-OCHA/ocha_ai/issues",
-                "source": "https://github.com/UN-OCHA/ocha_ai/tree/v1.11.0"
+                "source": "https://github.com/UN-OCHA/ocha_ai/tree/v1.12.0"
             },
-            "time": "2025-04-15T06:30:47+00:00"
+            "time": "2025-04-28T07:47:39+00:00"
         },
         {
             "name": "unocha/ocha_content_classification",
