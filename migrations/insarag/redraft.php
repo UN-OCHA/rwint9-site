@@ -9,6 +9,7 @@ use Drupal\taxonomy\Entity\Term;
 use Symfony\Component\Console\Output\ConsoleOutput;
 
 const LOGFILE = __DIR__ . '/redraft.csv';
+const EXPORTFILE =  __DIR__ . '/insarag-draft-reports.csv';
 const MAX_ITEMS = 9999;
 const FORCE_UPDATE = TRUE;
 const DRY_RUN = FALSE;
@@ -22,7 +23,7 @@ $output = new ConsoleOutput();
 $results = \Drupal::entityQuery('node')
   ->condition('type', 'report')
   ->condition('moderation_status', 'to-review', '=')
-  ->condition('source', 'International Search and Rescue Advisory Group (INSARAG)', '=') // 52287
+  ->condition('field_source', 52287, '=') // tid 52287 - International Search and Rescue Advisory Group (INSARAG)
   ->condition('uid', 2, '=')
   ->sort('nid', 'ASC')
   ->accessCheck(FALSE)
@@ -41,12 +42,11 @@ foreach ($results as $nid) {
   }
   else {
     $output->writeln('<comment>Processing ' . $nid . '</comment>');
-/*
+    $report->setModerationStatus('draft');
     $report->setNewRevision(TRUE);
-    $report->revision_log = 'Replaced #JEU with #EECentreResources';
+    $report->revision_log = 'Set report back to draft status';
     $report->setRevisionCreationTime(REQUEST_TIME);
     $report->setRevisionUserId(2);
-    $report->body->value = strtr($report->body->value, $replace);
     try {
       $report->save();
     }
@@ -60,12 +60,34 @@ foreach ($results as $nid) {
     }
 
     $output->writeln('<comment>Updated /node/' . $nid . '</comment>');
-*/
     fputcsv($log, [$nid, $report->toUrl('canonical', $node_options)->toString()]);
 
   }
   unset($report);
   sleep(1);
+}
+
+fclose($log);
+
+$results = \Drupal::entityQuery('node')
+  ->condition('type', 'report')
+  ->condition('moderation_status', 'draft', '=')
+  ->condition('field_source', 52287, '=') // tid 52287 - International Search and Rescue Advisory Group (INSARAG)
+  ->condition('uid', 2, '=')
+  ->sort('nid', 'ASC')
+  ->accessCheck(FALSE)
+  ->execute();
+
+$log = fopen(EXPORTFILE, "w");
+if (!$log) die(EXPORTFILE);
+fputcsv($log, ['nid','url', 'edit']);
+
+foreach ($results as $nid) {
+
+  // Load the report, it should exist!
+  $report = Node::load($nid);
+  fputcsv($log, [$nid, $report->toUrl('canonical', $node_options)->toString(), 'https://reliefweb.int/node/' . $nid . '/edit']);
+  unset($report);
 }
 
 fclose($log);
