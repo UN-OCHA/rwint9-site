@@ -34,6 +34,22 @@ reliefweb_import.plugin.importer:
         classified_fields:
           type: string
           label: 'Control which fields should be updated with classifier results.'
+    reimport:
+      type: mapping
+      label: 'Reimport settings'
+      mapping:
+        enabled:
+          type: boolean
+          label: 'Enable reimport.'
+        type:
+          type: string
+          label: 'Type of reimport based on entity moderation status.'
+        fields:
+          type: string
+          label: 'Control which fields should be updated when reimporting.'
+        statuses:
+          type: string
+          label: 'Moderation status mapping.'
 
 # UNHCR Data importer plugin settings.
 reliefweb_import.plugin.importer.unhcr_data:

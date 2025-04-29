@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\reliefweb_post_api\Plugin;
 
 use Drupal\Component\Render\MarkupInterface;
+use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Bytes;
 use Drupal\Component\Utility\Environment;
 use Drupal\Component\Utility\NestedArray;
@@ -267,10 +268,18 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     $this->setField($entity, 'field_post_api_hash', $hash);
 
     // Set the new status.
-    $entity->setModerationStatus($provider->getDefaultResourceStatus());
+    $status = match(TRUE) {
+      !empty($data['status']) => $data['status'],
+      default => $provider->getDefaultResourceStatus(),
+    };
+    $entity->setModerationStatus($status);
 
     // Set the log message based on whether it was updated or created.
-    $message = $entity->isNew() ? 'Automatic creation from Post API.' : 'Automatic update from Post API.';
+    $message = match(TRUE) {
+      $entity->isNew() =>  'Automatic creation from Post API.',
+      !empty($data['partial']) => 'Automatic partial update from Post API.',
+      default => 'Automatic update from Post API.',
+    };
 
     // Save the entity.
     $entity->setNewRevision(TRUE);
@@ -319,8 +328,27 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     unset($data['provider']);
     unset($data['user']);
     unset($data['hash']);
+    unset($data['status']);
+
+    // Partial update.
+    $partial = !empty($data['partial']);
+    unset($data['partial']);
+
     $data = Helper::toJSON($data);
     $schema = $this->getPluginSetting('schema', $this->getJsonSchema());
+
+    // When doing a partial update, disable the check on the mandatory fields.
+    if ($partial) {
+      $decoded = Json::decode($schema);
+      if ($decoded) {
+        // Only preserve the URL and UUID as mandatory fields.
+        $decoded['required'] = ['url', 'uuid'];
+        $schema = Json::encode($decoded);
+      }
+    }
+
+    // Validate the schema.
+    // @todo improve error handling. See the `ocha_reliefweb` module.
     $result = $this->getSchemaValidator()->validate($data, $schema);
     if (!$result->isValid()) {
       $formatter = new ErrorFormatter();
@@ -440,6 +468,12 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
    * {@inheritdoc}
    */
   public function validateSources(array $data): void {
+    // In case of partial update, the source may not be present in which case
+    // we skip the validation.
+    if (!empty($data['partial']) && empty($data['source'])) {
+      return;
+    }
+
     $provider = $this->getProvider($data['provider'] ?? '');
     $sources = $provider->getAllowedSources() ?? [];
     // Empty allowed sources means any source is allowed.

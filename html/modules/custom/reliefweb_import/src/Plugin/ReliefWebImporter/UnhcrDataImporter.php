@@ -826,6 +826,9 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
    *   The number of documents that were skipped or imported successfully.
    */
   protected function processDocuments(array $documents, string $provider_uuid, ContentProcessorPluginInterface $plugin): int {
+    $entity_type_id = $this->getEntityTypeId();
+    $bundle = $this->getEntityBundle();
+
     $schema = $this->getJsonSchema('report');
 
     // This is the list of extensions supported by the report attachment field.
@@ -844,13 +847,10 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
     // Max import attempts.
     $max_import_attempts = $this->getPluginSetting('max_import_attempts', 3, FALSE);
 
-    // Source: UNHCR.
-    $source = [2868];
-
     // The original mapping is ReliefWeb country ID to UNHCR country code for
-    // convenience in keeping it up to date. We need to flip it to easiy look
+    // convenience in keeping it up to date. We need to flip it to easily look
     // up the ID from the UNHCR code below.
-    $country_mapping = array_flip(array_filter($this->countryMapping));
+    $this->countryMapping = array_flip(array_filter($this->countryMapping));
 
     // Retrieve the list of documents manually posted so we can exclude them
     // from the import.
@@ -872,8 +872,8 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
       $import_record = [
         'importer' => $this->getPluginId(),
         'provider_uuid' => $provider_uuid,
-        'entity_type_id' => 'node',
-        'entity_bundle' => 'report',
+        'entity_type_id' => $entity_type_id,
+        'entity_bundle' => $bundle,
         'status' => 'pending',
         'message' => '',
         'attempts' => 0,
@@ -972,108 +972,20 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
         continue;
       }
 
-      // Retrieve the title and clean it.
-      $title = $this->sanitizeText($document['title'] ?? '');
-
-      // The documents in the UNHCR API seldom have descriptions or good ones
-      // so we simply skip the body.
-      $body = '';
-
-      // Retrieve the publication date.
-      $published = $document['publishDate'] ?? $document['created'] ?? NULL;
-
-      // Retrieve the document languages and default to English if none of the
-      // supported languages were found.
-      $languages = [];
-      foreach ($document['languageName'] ?? [] as $language) {
-        // Note: UNHCR language items have a 'name' property.
-        if (isset($this->languageMapping[$language['name']])) {
-          $languages[$language['name']] = $this->languageMapping[$language['name']];
-        }
-      }
-      if (empty($languages)) {
-        $languages['English'] = $this->languageMapping['English'];
+      // Process the item data into importable data.
+      $data = $this->getImportData($uuid, $document);
+      if (empty($data)) {
+        $this->getLogger()->notice(strtr('No data to import for UNHCR document @id.', [
+          '@id' => $id,
+        ]));
       }
 
-      // Retrieve the content format and map it to 'Other' if there is no match.
-      $formats = [9];
-      foreach ($document['docTypeName'] ?? [] as $type) {
-        // Note: UNHCR doc type items are name strings directly.
-        if (isset($this->formatMapping[$type])) {
-          $formats = [$this->formatMapping[$type]];
-          break;
-        }
-      }
-
-      // Retrieve the countries. Consider the first one as the primary country.
-      $countries = [];
-      foreach ($document['location'] ?? [] as $location) {
-        // Note: UNHCR location items have a 'code' property.
-        if (isset($country_mapping[$location['code']])) {
-          $country = [$location['code'] => $country_mapping[$location['code']]];
-          // If the location is in the title, add it at the beginning so it is
-          // considered the primary country.
-          if (isset($location['name'])) {
-            $country_name = trim(str_replace(' (country)', '', $location['name']));
-            if (mb_stripos($title, $country_name) !== FALSE) {
-              $countries = $country + $countries;
-              continue;
-            }
-          }
-          // Otherwise, add it at the end.
-          $countries = $countries + $country;
-        }
-      }
-      // Tag with World if empty so that, at least, we can import.
-      if (empty($countries)) {
-        $countries = [254];
-      }
-
-      // Retrieve the themes.
-      $themes = [];
-      foreach ($document['sectorName'] ?? [] as $sector) {
-        // Note: UNHCR sector items are name strings directly.
-        if (isset($this->themeMapping[$sector])) {
-          $themes[$sector] = $this->themeMapping[$sector];
-        }
-      }
-
-      // Retrieve the data for the attachment if any.
-      $files = [];
-      if (isset($document['downloadLink'])) {
-        $info = $this->getRemoteFileInfo($document['downloadLink']);
-        if (!empty($info)) {
-          $file_url = $document['downloadLink'];
-          $file_uuid = $this->generateUuid($file_url, $uuid);
-          $files[] = [
-            'url' => $file_url,
-            'uuid' => $file_uuid,
-          ] + $info;
-        }
-      }
-
-      // Submission data.
-      $data = [
-        'provider' => $provider_uuid,
-        'bundle' => 'report',
-        'hash' => $hash,
-        'url' => $url,
-        'uuid' => $uuid,
-        'title' => $title,
-        'body' => $body,
-        'source' => $source,
-        'published' => $published,
-        'origin' => $url,
-        'language' => array_values($languages),
-        'country' => array_values($countries),
-        'format' => array_values($formats),
-      ];
-
-      // Add the optional fields.
-      $data += array_filter([
-        'theme' => array_values($themes),
-        'file' => array_values($files),
-      ]);
+      // Mandatory information.
+      $data['provider'] = $provider_uuid;
+      $data['bundle'] = 'report';
+      $data['hash'] = $hash;
+      $data['uuid'] = $uuid;
+      $data['url'] = $url;
 
       // Submit the document directly, no need to go through the queue.
       try {
@@ -1107,6 +1019,209 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
     $this->saveImportRecords($import_records);
 
     return $processed;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function processDocumentData(string $uuid, array $document): array {
+    $data = [];
+
+    // Source: UNHCR.
+    $source = [2868];
+
+    // Document URL.
+    $url = $document['documentLink'];
+
+    // Retrieve the title and clean it.
+    $title = $this->sanitizeText($document['title'] ?? '');
+
+    // The documents in the UNHCR API seldom have descriptions or good ones
+    // so we simply skip the body.
+    $body = '';
+
+    // Retrieve the publication date.
+    $published = $document['publishDate'] ?? $document['created'] ?? NULL;
+
+    // Retrieve the document languages and default to English if none of the
+    // supported languages were found.
+    $languages = [];
+    foreach ($document['languageName'] ?? [] as $language) {
+      // Note: UNHCR language items have a 'name' property.
+      if (isset($this->languageMapping[$language['name']])) {
+        $languages[$language['name']] = $this->languageMapping[$language['name']];
+      }
+    }
+    if (empty($languages)) {
+      $languages['English'] = $this->languageMapping['English'];
+    }
+
+    // Retrieve the content format and map it to 'Other' if there is no match.
+    $formats = [9];
+    foreach ($document['docTypeName'] ?? [] as $type) {
+      // Note: UNHCR doc type items are name strings directly.
+      if (isset($this->formatMapping[$type])) {
+        $formats = [$this->formatMapping[$type]];
+        break;
+      }
+    }
+
+    // Retrieve the countries. Consider the first one as the primary country.
+    $countries = [];
+    foreach ($document['location'] ?? [] as $location) {
+      // Note: UNHCR location items have a 'code' property.
+      if (isset($this->countryMapping[$location['code']])) {
+        $country = [$location['code'] => $this->countryMapping[$location['code']]];
+        // If the location is in the title, add it at the beginning so it is
+        // considered the primary country.
+        if (isset($location['name'])) {
+          $country_name = trim(str_replace(' (country)', '', $location['name']));
+          if (mb_stripos($title, $country_name) !== FALSE) {
+            $countries = $country + $countries;
+            continue;
+          }
+        }
+        // Otherwise, add it at the end.
+        $countries = $countries + $country;
+      }
+    }
+    // Tag with World if empty so that, at least, we can import.
+    if (empty($countries)) {
+      $countries = [254];
+    }
+
+    // Retrieve the themes.
+    $themes = [];
+    foreach ($document['sectorName'] ?? [] as $sector) {
+      // Note: UNHCR sector items are name strings directly.
+      if (isset($this->themeMapping[$sector])) {
+        $themes[$sector] = $this->themeMapping[$sector];
+      }
+    }
+
+    // Retrieve the data for the attachment if any.
+    $files = [];
+    if (isset($document['downloadLink'])) {
+      $info = $this->getRemoteFileInfo($document['downloadLink']);
+      if (!empty($info)) {
+        $file_url = $document['downloadLink'];
+        $file_uuid = $this->generateUuid($file_url, $uuid);
+        $files[] = [
+          'url' => $file_url,
+          'uuid' => $file_uuid,
+        ] + $info;
+      }
+    }
+
+    // Submission data.
+    $data = [
+      'title' => $title,
+      'body' => $body,
+      'source' => $source,
+      'published' => $published,
+      'origin' => $url,
+      'language' => array_values($languages),
+      'country' => array_values($countries),
+      'format' => array_values($formats),
+    ];
+
+    // Add the optional fields.
+    $data += array_filter([
+      'theme' => array_values($themes),
+      'file' => array_values($files),
+    ]);
+
+    return $data;
+  }
+
+  /**
+   * Get the checksum and filename of a remote file.
+   *
+   * @param string $url
+   *   Remote file URL.
+   * @param string $max_size
+   *   Maximum file size (ex: 2MB). Defaults to the environment upload max size.
+   *
+   * @return array
+   *   Checksum and filenamne of the remote file.
+   */
+  protected function getRemoteFileInfo(string $url, string $max_size = ''): array {
+    $max_size = $this->getReportAttachmentAllowedMaxSize();
+    if (empty($max_size)) {
+      throw new \Exception('No allowed file max size.');
+    }
+
+    $allowed_extensions = $this->getReportAttachmentAllowedExtensions();
+    if (empty($allowed_extensions)) {
+      throw new \Exception('No allowed file extensions.');
+    }
+
+    try {
+      $response = $this->httpClient->get($url, [
+        'stream' => TRUE,
+        // @todo retrieve that from the configuration.
+        'connect_timeout' => 30,
+        'timeout' => 600,
+      ]);
+
+      if ($max_size > 0 && $response->getHeaderLine('Content-Length') > $max_size) {
+        throw new \Exception('File is too large.');
+      }
+
+      // Retrieve the filename.
+      $content_disposition = $response->getHeaderLine('Content-Disposition') ?? '';
+      if (preg_match('/filename="?([^"]+)"?/i', $content_disposition, $matches) !== 1) {
+        throw new \Exception('Unable to retrieve file name.');
+      }
+
+      // Sanitize the file name.
+      $filename = $this->sanitizeFileName(urldecode($matches[1]), $allowed_extensions);
+      if (empty($filename)) {
+        throw new \Exception(strtr('Invalid filename: @filename.', [
+          '@filename' => $matches[1],
+        ]));
+      }
+
+      $body = $response->getBody();
+
+      $content = '';
+      if ($max_size > 0) {
+        $size = 0;
+        while (!$body->eof()) {
+          $chunk = $body->read(1024);
+          $size += strlen($chunk);
+          if ($size > $max_size) {
+            $body->close();
+            throw new \Exception('File is too large.');
+          }
+          else {
+            $content .= $chunk;
+          }
+        }
+      }
+      else {
+        $content = $body->getContents();
+      }
+
+      $checksum = hash('sha256', $content);
+    }
+    catch (\Exception $exception) {
+      $this->getLogger()->notice(strtr('Unable to retrieve file information for @url: @exception', [
+        '@url' => $url,
+        '@exception' => $exception->getMessage(),
+      ]));
+      return [];
+    }
+    finally {
+      if (isset($body)) {
+        $body->close();
+      }
+    }
+
+    return [
+      'checksum' => $checksum,
+      'filename' => $filename,
+    ];
   }
 
   /**
