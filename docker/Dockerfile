@@ -44,6 +44,8 @@ LABEL info.humanitarianresponse.build.date=$BUILD_DATE \
       info.humanitarianresponse.build.vcs-ref=$VCS_REF
 
 RUN mkdir -p /etc/nginx/custom && \
+    # Install the lua cjson library.
+    apk add -U --no-cache lua5.1-cjson && \
     # Install lua resty library to generate UUIDs.
     cd /tmp && \
     git clone --branch=0.0.7 https://github.com/thibaultcha/lua-resty-jit-uuid.git && \
