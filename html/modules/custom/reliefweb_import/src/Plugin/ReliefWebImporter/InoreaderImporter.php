@@ -451,14 +451,14 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       }
 
       // Retrieve the title and clean it.
-      $title = $this->sanitizeText($document['title'] ?? '');
+      $title = $this->sanitizeText(html_entity_decode($document['title'] ?? ''));
 
       // Retrieve the publication date.
       $published = $document['published'] ?? time();
       $published = DateHelper::format($published, 'custom', 'c');
 
       // Retrieve the description.
-      $body = $this->sanitizeText($document['summary']['content'] ?? '', TRUE);
+      $body = $this->sanitizeText(html_entity_decode($document['summary']['content'] ?? ''), TRUE);
 
       $origin_title = trim($this->sanitizeText($document['origin']['title'] ?? ''));
       $files = [];
