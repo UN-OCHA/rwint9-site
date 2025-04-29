@@ -30,7 +30,6 @@ use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\MailHelper;
 use Drupal\reliefweb_utility\Helpers\MediaHelper;
 use Drupal\reliefweb_utility\Helpers\ReliefWebStateHelper;
-use Drupal\reliefweb_utility\Helpers\StateHelper;
 use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\taxonomy\TermInterface;
@@ -750,7 +749,7 @@ function reliefweb_entities_adjust_moderation_status_based_on_classification_sta
     return;
   }
 
-  $publication_protection_default_status = StateHelper::getPublicationPreventionDefaultModerationStatus(
+  $publication_protection_default_status = ReliefWebStateHelper::getPublicationPreventionDefaultModerationStatus(
     $entity->getEntityTypeId(),
     $entity->bundle(),
   );
