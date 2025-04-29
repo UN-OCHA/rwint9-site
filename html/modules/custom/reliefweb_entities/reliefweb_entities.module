@@ -30,6 +30,7 @@ use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\MailHelper;
 use Drupal\reliefweb_utility\Helpers\MediaHelper;
 use Drupal\reliefweb_utility\Helpers\ReliefWebStateHelper;
+use Drupal\reliefweb_utility\Helpers\StateHelper;
 use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\taxonomy\TermInterface;
@@ -749,15 +750,20 @@ function reliefweb_entities_adjust_moderation_status_based_on_classification_sta
     return;
   }
 
+  $publication_protection_default_status = StateHelper::getPublicationPreventionDefaultModerationStatus(
+    $entity->getEntityTypeId(),
+    $entity->bundle(),
+  );
+
   $status = match($entity->ocha_content_classification_status) {
     // Prevent publication if the document is queued for classification.
     // If the document is already in a non-published state then keep the current
     // status. This allows for example, to quickly mark a document as refused
     // or on-hold.
-    ClassificationStatus::Queued => $entity->isPublishedModerationStatus() ? 'pending' : $entity->getModerationStatus(),
+    ClassificationStatus::Queued => $entity->isPublishedModerationStatus() ? $publication_protection_default_status : $entity->getModerationStatus(),
     // Prevent publication if the document classification failed. A human should
     // review manually.
-    ClassificationStatus::Failed => 'on-hold',
+    ClassificationStatus::Failed => $entity->isPublishedModerationStatus() ? $publication_protection_default_status : $entity->getModerationStatus(),
     // For successful classification, we keep the current status.
     ClassificationStatus::Completed => $entity->getModerationStatus(),
     // This default case should not happen.
