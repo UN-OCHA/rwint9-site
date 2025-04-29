@@ -167,7 +167,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       // Ensure the provider is valid.
       $plugin->getProvider($provider_uuid);
 
-      if ($this->getPluginSetting('local_file', FALSE, FALSE)) {
+      if ($this->getPluginSetting('local_file_load', FALSE, FALSE)) {
         $this->getLogger()->info('Retrieving documents from disk.');
         $documents = file_get_contents('/var/www/inoreader.json');
         if ($documents === FALSE) {
@@ -320,7 +320,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       throw new \Exception($message);
     }
 
-    if ($this->getPluginSetting('local_file', FALSE, FALSE)) {
+    if ($this->getPluginSetting('local_file_save', FALSE, FALSE)) {
       $f = fopen('/var/www/inoreader.json', 'w');
       if ($f) {
         fwrite($f, json_encode($documents, JSON_PRETTY_PRINT));
@@ -427,6 +427,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         ]));
         continue;
       }
+
       // Generate hash.
       $hash = HashHelper::generateHash($document);
       $import_record['imported_data_hash'] = $hash;
@@ -450,199 +451,15 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         continue;
       }
 
-      // Retrieve the title and clean it.
-      $title = $this->sanitizeText(html_entity_decode($document['title'] ?? ''));
+      $document['provider_uuid'] = $provider_uuid;
+      $data = $this->processDocumentData($uuid, $document);
 
-      // Retrieve the publication date.
-      $published = $document['published'] ?? time();
-      $published = DateHelper::format($published, 'custom', 'c');
-
-      // Retrieve the description.
-      $body = $this->sanitizeText(html_entity_decode($document['summary']['content'] ?? ''), TRUE);
-
-      $origin_title = trim($this->sanitizeText($document['origin']['title'] ?? ''));
-      $files = [];
-      $sources = [];
-      $pdf = '';
-
-      if (strpos($origin_title, '[source:') === FALSE) {
-        if (empty($sources)) {
-          $this->getLogger()->info(strtr('No source defined for Inoreader @id, skipping. Origin is set to @origin_title', [
-            '@id' => $id,
-            '@origin_title' => $origin_title,
-          ]));
-          continue;
-        }
-      }
-
-      preg_match_all('/\[(.*?)\]/', $origin_title, $matches);
-      $matches = $matches[1];
-
-      // Parse everything so we can reference it easily.
-      $tags = [];
-      foreach ($matches as $match) {
-        $tag_parts = explode(':', $match);
-        $tag_key = reset($tag_parts);
-        array_shift($tag_parts);
-        $tag_value = implode(':', $tag_parts);
-
-        if (isset($tags[$tag_key])) {
-          $tags[$tag_key] = [
-            $tags[$tag_key],
-          ];
-        }
-        if (isset($tags[$tag_key]) && is_array($tags[$tag_key])) {
-          $tags[$tag_key][] = $tag_value;
-        }
-        else {
-          $tags[$tag_key] = $tag_value;
-        }
-      }
-
-      // Source is mandatory, so present.
-      $sources = [
-        (int) $tags['source'],
-      ];
-      unset($tags['source']);
-
-      foreach ($tags as $tag_key => $tag_value) {
-        if ($tag_key == 'pdf') {
-          switch ($tag_value) {
-            case 'canonical':
-              $pdf = $document['canonical'][0]['href'] ?? '';
-              $pdf = $this->rewritePdfLink($pdf, $tags);
-              break;
-
-            case 'summary-link':
-              $pdf = $this->extractPdfUrl($document['summary']['content'] ?? '', 'a', 'href');
-              $pdf = $this->rewritePdfLink($pdf, $tags);
-              break;
-
-            case 'page-link':
-              $page_url = $document['canonical'][0]['href'] ?? '';
-              $html = $this->downloadHtmlPage($page_url);
-              if (empty($html)) {
-                $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
-                  '@id' => $id,
-                  '@url' => $page_url,
-                ]));
-              }
-              else {
-                $pdf = $this->tryToExtractPdfFromHtml($page_url, $html, $tags);
-                if (isset($tags['follow'])) {
-                  // Follow link and fetch PDF from that page.
-                  if (strpos($pdf, $tags['follow']) !== FALSE) {
-                    $page_url = $pdf;
-                    $html = $this->downloadHtmlPage($page_url);
-                    if (empty($html)) {
-                      $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
-                        '@id' => $id,
-                        '@url' => $page_url,
-                      ]));
-                    }
-                    else {
-                      $pdf = $this->tryToExtractPdfFromHtml($page_url, $html, $tags);
-                    }
-                  }
-                }
-              }
-
-              break;
-
-            case 'page-object':
-              $page_url = $document['canonical'][0]['href'] ?? '';
-              $html = $this->downloadHtmlPage($page_url);
-              if (empty($html)) {
-                $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
-                  '@id' => $id,
-                  '@url' => $page_url,
-                ]));
-              }
-              $pdf = $this->extractPdfUrl($html, 'object', 'data');
-
-              break;
-
-            case 'page-iframe-data-src':
-              $page_url = $document['canonical'][0]['href'] ?? '';
-              $html = $this->downloadHtmlPage($page_url);
-              if (empty($html)) {
-                $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
-                  '@id' => $id,
-                  '@url' => $page_url,
-                ]));
-              }
-              $pdf = $this->extractPdfUrl($html, 'iframe', 'data-src');
-              break;
-          }
-        }
-        elseif ($tag_key == 'content') {
-          switch ($tag_value) {
-            case 'clear':
-            case 'ignore':
-              $body = '';
-              break;
-          }
-        }
-        elseif ($tag_key == 'title') {
-          switch ($tag_value) {
-            case 'filename':
-            case 'canonical':
-              $title = basename($document['canonical'][0]['href'] ?? '');
-              $title = str_replace('.pdf', '', $title);
-              $title = str_replace(['-', '_'], ' ', $title);
-              $title = $this->sanitizeText($title);
-              break;
-          }
-        }
-      }
-
-      if (empty($sources)) {
-        $this->getLogger()->info(strtr('No source defined for Inoreader @id, skipping. Origin is set to @origin_title', [
-          '@id' => $id,
-          '@origin_title' => $origin_title,
-        ]));
-        continue;
-      }
-
-      if (empty($pdf)) {
-        $this->getLogger()->info(strtr('No PDF found for Inoreader @id, skipping.', [
+      if (empty($data)) {
+        $this->getLogger()->info(strtr('Inoreader document @id has no data to import, skipping.', [
           '@id' => $id,
         ]));
         continue;
       }
-
-      $info = $this->getRemoteFileInfo($pdf);
-      if (!empty($info)) {
-        $file_url = $pdf;
-        $file_uuid = $this->generateUuid($file_url, $uuid);
-        $files[] = [
-          'url' => $file_url,
-          'uuid' => $file_uuid,
-        ] + $info;
-      }
-
-      // Submission data.
-      $data = [
-        'provider' => $provider_uuid,
-        'bundle' => 'report',
-        'hash' => $hash,
-        'url' => $url,
-        'uuid' => $uuid,
-        'title' => $title,
-        'body' => substr($body ?? '', 0, 100000),
-        'published' => $published,
-        'origin' => $url,
-        'source' => $sources,
-        'language' => [267],
-        'country' => [254],
-        'format' => [8],
-        'user' => 2,
-      ];
-
-      // Add the optional fields.
-      $data += array_filter([
-        'file' => array_values($files),
-      ]);
 
       // Queue the document.
       try {
@@ -676,6 +493,223 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
     $this->saveImportRecords($import_records);
 
     return $processed;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function processDocumentData(string $uuid, array $document): array {
+    $provider_uuid = '';
+    if (isset($document['provider_uuid'])) {
+      $provider_uuid = $document['provider_uuid'];
+      unset($document['provider_uuid']);
+    }
+
+    $id = $document['id'];
+    $url = $document['canonical'][0]['href'];
+    $hash = HashHelper::generateHash($document);
+
+    // Retrieve the title and clean it.
+    $title = $this->sanitizeText(html_entity_decode($document['title'] ?? ''));
+
+    // Retrieve the publication date.
+    $published = $document['published'] ?? time();
+    $published = DateHelper::format($published, 'custom', 'c');
+
+    // Retrieve the description.
+    $body = $this->sanitizeText(html_entity_decode($document['summary']['content'] ?? ''), TRUE);
+
+    $origin_title = trim($this->sanitizeText($document['origin']['title'] ?? ''));
+    $files = [];
+    $sources = [];
+    $pdf = '';
+
+    if (strpos($origin_title, '[source:') === FALSE) {
+      if (empty($sources)) {
+        $this->getLogger()->info(strtr('No source defined for Inoreader @id, skipping. Origin is set to @origin_title', [
+          '@id' => $id,
+          '@origin_title' => $origin_title,
+        ]));
+
+        return [];
+      }
+    }
+
+    preg_match_all('/\[(.*?)\]/', $origin_title, $matches);
+    $matches = $matches[1];
+
+    // Parse everything so we can reference it easily.
+    $tags = [];
+    foreach ($matches as $match) {
+      $tag_parts = explode(':', $match);
+      $tag_key = reset($tag_parts);
+      array_shift($tag_parts);
+      $tag_value = implode(':', $tag_parts);
+
+      if (isset($tags[$tag_key])) {
+        $tags[$tag_key] = [
+          $tags[$tag_key],
+        ];
+      }
+      if (isset($tags[$tag_key]) && is_array($tags[$tag_key])) {
+        $tags[$tag_key][] = $tag_value;
+      }
+      else {
+        $tags[$tag_key] = $tag_value;
+      }
+    }
+
+    // Source is mandatory, so present.
+    $sources = [
+      (int) $tags['source'],
+    ];
+    unset($tags['source']);
+
+    foreach ($tags as $tag_key => $tag_value) {
+      if ($tag_key == 'pdf') {
+        switch ($tag_value) {
+          case 'canonical':
+            $pdf = $document['canonical'][0]['href'] ?? '';
+            $pdf = $this->rewritePdfLink($pdf, $tags);
+            break;
+
+          case 'summary-link':
+            $pdf = $this->extractPdfUrl($document['summary']['content'] ?? '', 'a', 'href');
+            $pdf = $this->rewritePdfLink($pdf, $tags);
+            break;
+
+          case 'page-link':
+            $page_url = $document['canonical'][0]['href'] ?? '';
+            $html = $this->downloadHtmlPage($page_url);
+            if (empty($html)) {
+              $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
+                '@id' => $id,
+                '@url' => $page_url,
+              ]));
+            }
+            else {
+              $pdf = $this->tryToExtractPdfFromHtml($page_url, $html, $tags);
+              if (isset($tags['follow'])) {
+                // Follow link and fetch PDF from that page.
+                if (strpos($pdf, $tags['follow']) !== FALSE) {
+                  $page_url = $pdf;
+                  $html = $this->downloadHtmlPage($page_url);
+                  if (empty($html)) {
+                    $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
+                      '@id' => $id,
+                      '@url' => $page_url,
+                    ]));
+                  }
+                  else {
+                    $pdf = $this->tryToExtractPdfFromHtml($page_url, $html, $tags);
+                  }
+                }
+              }
+            }
+
+            break;
+
+          case 'page-object':
+            $page_url = $document['canonical'][0]['href'] ?? '';
+            $html = $this->downloadHtmlPage($page_url);
+            if (empty($html)) {
+              $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
+                '@id' => $id,
+                '@url' => $page_url,
+              ]));
+            }
+            $pdf = $this->extractPdfUrl($html, 'object', 'data');
+
+            break;
+
+          case 'page-iframe-data-src':
+            $page_url = $document['canonical'][0]['href'] ?? '';
+            $html = $this->downloadHtmlPage($page_url);
+            if (empty($html)) {
+              $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
+                '@id' => $id,
+                '@url' => $page_url,
+              ]));
+            }
+            $pdf = $this->extractPdfUrl($html, 'iframe', 'data-src');
+            break;
+        }
+      }
+      elseif ($tag_key == 'content') {
+        switch ($tag_value) {
+          case 'clear':
+          case 'ignore':
+            $body = '';
+            break;
+        }
+      }
+      elseif ($tag_key == 'title') {
+        switch ($tag_value) {
+          case 'filename':
+          case 'canonical':
+            $title = basename($document['canonical'][0]['href'] ?? '');
+            $title = str_replace('.pdf', '', $title);
+            $title = str_replace(['-', '_'], ' ', $title);
+            $title = $this->sanitizeText($title);
+            break;
+        }
+      }
+    }
+
+    if (empty($sources)) {
+      $this->getLogger()->info(strtr('No source defined for Inoreader @id, skipping. Origin is set to @origin_title', [
+        '@id' => $id,
+        '@origin_title' => $origin_title,
+      ]));
+
+      return [];
+    }
+
+    if (empty($pdf)) {
+      $this->getLogger()->info(strtr('No PDF found for Inoreader @id, skipping.', [
+        '@id' => $id,
+      ]));
+
+      return [];
+    }
+
+    $info = $this->getRemoteFileInfo($pdf);
+    if (!empty($info)) {
+      $file_url = $pdf;
+      $file_uuid = $this->generateUuid($file_url, $uuid);
+      $files[] = [
+        'url' => $file_url,
+        'uuid' => $file_uuid,
+      ] + $info;
+    }
+
+    // Submission data.
+    $data = [
+      'title' => $title,
+      'body' => substr($body ?? '', 0, 100000),
+      'published' => $published,
+      'origin' => $url,
+      'source' => $sources,
+      'language' => [267],
+      'country' => [254],
+      'format' => [8],
+    ];
+
+    if (!empty($provider_uuid)) {
+      $data['provider'] = $provider_uuid;
+      $data['hash'] = $hash;
+      $data['bundle'] = 'report';
+      $data['url'] = $url;
+      $data['uuid'] = $uuid;
+      $data['user'] = 2;
+    }
+
+    // Add the optional fields.
+    $data += array_filter([
+      'file' => array_values($files),
+    ]);
+
+    return $data;
   }
 
   /**

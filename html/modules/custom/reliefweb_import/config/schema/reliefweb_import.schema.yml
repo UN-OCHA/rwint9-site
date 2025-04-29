@@ -104,6 +104,25 @@ reliefweb_import.plugin.importer.inoreader:
     api_url:
       type: string
       label: 'API URL.'
-    local_file:
+    local_file_load:
+      type: boolean
+      label: 'Load json from local file.'
+    local_file_save:
       type: boolean
       label: 'Dump json to local file.'
+    reimport:
+      type: mapping
+      label: 'Reimport settings'
+      mapping:
+        enabled:
+          type: boolean
+          label: 'Enable reimport.'
+        type:
+          type: string
+          label: 'Type of reimport based on entity moderation status.'
+        fields:
+          type: string
+          label: 'Control which fields should be updated when reimporting.'
+        statuses:
+          type: string
+          label: 'Moderation status mapping.'

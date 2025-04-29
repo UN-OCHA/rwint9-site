@@ -11,8 +11,10 @@ dependencies:
     - field.storage.node.field_source
     - field.storage.node.field_theme
     - node.type.report
+    - taxonomy.vocabulary.source
   module:
     - node
+    - taxonomy
     - user
 id: inoreader_reports
 label: 'Inoreader reports'
@@ -909,29 +911,27 @@ display:
             default_group: All
             default_group_multiple: {  }
             group_items: {  }
-        langcode:
-          id: langcode
-          table: node
-          field: langcode
+        field_source_target_id:
+          id: field_source_target_id
+          table: node__field_source
+          field: field_source_target_id
           relationship: none
           group_type: group
           admin_label: ''
-          entity_type: node
-          entity_field: langcode
-          plugin_id: language
-          operator: in
+          plugin_id: taxonomy_index_tid
+          operator: or
           value: {  }
           group: 1
           exposed: true
           expose:
-            operator_id: langcode_op
-            label: 'Original language'
+            operator_id: field_source_target_id_op
+            label: Organization
             description: ''
             use_operator: false
-            operator: langcode_op
+            operator: field_source_target_id_op
             operator_limit_selection: false
             operator_list: {  }
-            identifier: langcode
+            identifier: field_source_target_id
             required: false
             remember: false
             multiple: false
@@ -962,6 +962,12 @@ display:
             default_group: All
             default_group_multiple: {  }
             group_items: {  }
+          reduce_duplicates: false
+          vid: source
+          type: textfield
+          hierarchy: false
+          limit: true
+          error_message: true
       style:
         type: table
         options:
