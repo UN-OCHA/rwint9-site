@@ -140,4 +140,25 @@ class ReliefWebStateHelper {
     return \Drupal::state()->get("reliefweb_role_default_moderation_status:$entity_type_id:$bundle:$role:$right", $default);
   }
 
+  /**
+   * Get the publication protection default moderation status.
+   *
+   * @param string $entity_type_id
+   *   Entity type ID.
+   * @param string $bundle
+   *   Entity bundle.
+   * @param string $default
+   *   Default status.
+   *
+   * @return string
+   *   Moderation status.
+   */
+  public static function getPublicationPreventionDefaultModerationStatus(
+    string $entity_type_id,
+    string $bundle,
+    string $default = 'pending',
+  ): string {
+    return \Drupal::state()->get("reliefweb_publication_prevention_default_moderation_status:$entity_type_id:$bundle", $default);
+  }
+
 }
