@@ -9,9 +9,9 @@ classification:
   classified_fields: '*:yes'
 reimport:
   enabled: true
+  type: "*:none\r\npending:full\r\non-hold:partial\r\npublished:partial\r\nto-review:partial\r\nembargoed:partial"
   fields: "*:no\r\nfile:yes"
   statuses: "published:to-review\r\nto-review:to-review\r\nrefused:refused"
-  type: "*:none\r\npending:full\r\non-hold:partial\r\npublished:partial\r\nto-review:partial\r\nembargoed:partial"
 api_url: 'https://data.unhcr.org'
 api_key: REPLACE_WITH_API_KEY
 list_endpoint: /api-content/documents.json
