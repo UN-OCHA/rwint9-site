@@ -278,7 +278,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     $message = match(TRUE) {
       $entity->isNew() =>  'Automatic creation from Post API.',
       !empty($data['partial']) => 'Automatic partial update from Post API.',
-      default => 'Automatic partial update from Post API.',
+      default => 'Automatic update from Post API.',
     };
 
     // Save the entity.
