@@ -14,6 +14,7 @@ dependencies:
     - taxonomy.vocabulary.source
   module:
     - node
+    - reliefweb_post_api
     - taxonomy
     - user
 id: inoreader_reports
@@ -922,19 +923,18 @@ display:
           hierarchy: false
           limit: true
           error_message: true
-        field_post_api_provider_target_id:
-          id: field_post_api_provider_target_id
-          table: node__field_post_api_provider
-          field: field_post_api_provider_target_id
-          relationship: none
+        name:
+          id: name
+          table: reliefweb_post_api_provider
+          field: name
+          relationship: field_post_api_provider
           group_type: group
           admin_label: ''
-          plugin_id: numeric
+          entity_type: reliefweb_post_api_provider
+          entity_field: name
+          plugin_id: string
           operator: '='
-          value:
-            min: ''
-            max: ''
-            value: '10'
+          value: Inoreader
           group: 1
           exposed: false
           expose:
@@ -951,8 +951,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-            min_placeholder: ''
-            max_placeholder: ''
             placeholder: ''
           is_grouped: false
           group_info:
@@ -1067,7 +1065,16 @@ display:
           distinct: false
           replica: false
           query_tags: {  }
-      relationships: {  }
+      relationships:
+        field_post_api_provider:
+          id: field_post_api_provider
+          table: node__field_post_api_provider
+          field: field_post_api_provider
+          relationship: none
+          group_type: group
+          admin_label: 'field_post_api_provider: ReliefWeb Post API provider'
+          plugin_id: standard
+          required: false
       header: {  }
       footer: {  }
       display_extenders: {  }
