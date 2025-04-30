@@ -1,5 +1,6 @@
 <?php
 
+use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\media\Entity\Media;
@@ -28,6 +29,9 @@ $results = \Drupal::entityQuery('node')
   ->sort('nid', 'ASC')
   ->accessCheck(FALSE)
   ->execute();
+
+$output->writeln('<comment>Found ' . count($results) . ' nodes</comment>');
+$redrafted = $results;
 
 $log = fopen(LOGFILE, "w");
 if (!$log) die(LOGFILE);
@@ -80,13 +84,26 @@ $results = \Drupal::entityQuery('node')
 
 $log = fopen(EXPORTFILE, "w");
 if (!$log) die(EXPORTFILE);
-fputcsv($log, ['nid','url', 'edit']);
+fputcsv($log, ['nid','redraft','title','summary','orig_pub_date','created','changed','url', 'edit']);
 
 foreach ($results as $nid) {
 
   // Load the report, it should exist!
   $report = Node::load($nid);
-  fputcsv($log, [$nid, $report->toUrl('canonical', $node_options)->toString(), 'https://reliefweb.int/node/' . $nid . '/edit']);
+  $created = DrupalDateTime::createFromTimestamp($report->getCreatedTime());
+  $changed = DrupalDateTime::createFromTimestamp($report->getChangedTime());
+
+  fputcsv($log, [
+    $nid,
+    in_array($nid, $redrafted) ? 'yes' : 'no',
+    $report->label(),
+    $report->body->value,
+    $report->field_original_publication_date->value,
+    $created->format("Y-m-d H:i:s"),
+    $changed->format("Y-m-d H:i:s"),
+    $report->toUrl('canonical', $node_options)->toString(),
+    'https://reliefweb.int/node/' . $nid . '/edit',
+  ]);
   unset($report);
 }
 
