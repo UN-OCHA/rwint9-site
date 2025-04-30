@@ -984,6 +984,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     $content = '';
     $max_size = !empty($max_size) ? Bytes::toNumber($max_size) : Environment::getUploadMaxSize();
 
+    $body = NULL;
     try {
       $response = $this->httpClient->get(UrlHelper::replaceBaseUrl($url), [
         'stream' => TRUE,
@@ -991,9 +992,13 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
         'connect_timeout' => 30,
         'timeout' => 600,
         'headers' => [
-          'Accept' => $mimetype,
+          'Accept' => '*/*',
         ],
       ]);
+
+      if ($response->getStatusCode() !== 200) {
+        throw new \Exception('Unexpected HTTP status: ' . $response->getStatusCode());
+      }
 
       // Validate the content type.
       $validate_content_type = $this->getPluginSetting('validate_file_content_type', TRUE);
@@ -1006,7 +1011,8 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
       }
 
       // Validate file size.
-      if ($max_size > 0 && $response->getHeaderLine('Content-Length') > $max_size) {
+      $content_length = $response->getHeaderLine('Content-Length');
+      if ($content_length !== '' && $max_size > 0 && ((int) $content_length) > $max_size) {
         throw new \Exception('File is too large.');
       }
 

@@ -339,7 +339,7 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
       // hash since it means the document has been not updated since the last
       // time it was imported.
       $records = $this->entityTypeManager
-        ->getStorage('node')
+        ->getStorage($entity_type_id)
         ->getQuery()
         ->accessCheck(FALSE)
         ->condition('uuid', $uuid, '=')
@@ -354,7 +354,7 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
         continue;
       }
 
-      // Check if how many times we tried to import this item.
+      // Check how many times we tried to import this item.
       if (!empty($import_record['attempts']) && $import_record['attempts'] >= $max_import_attempts) {
         $import_record['status'] = 'error';
         $import_record['message'] = 'Too many attempts.';
@@ -363,6 +363,7 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
         $this->getLogger()->error(strtr('Too many import attempts for Echo Flash Update document @id, skipping.', [
           '@id' => $id,
         ]));
+
         continue;
       }
 
@@ -372,11 +373,13 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
         $this->getLogger()->notice(strtr('No data to import for Echo Flash Update document @id.', [
           '@id' => $id,
         ]));
+
+        continue;
       }
 
       // Mandatory information.
       $data['provider'] = $provider_uuid;
-      $data['bundle'] = 'report';
+      $data['bundle'] = $bundle;
       $data['hash'] = $hash;
       $data['uuid'] = $uuid;
       $data['url'] = $url;

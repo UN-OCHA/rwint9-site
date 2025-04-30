@@ -26,6 +26,7 @@ use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
 use Drupal\reliefweb_import\Exception\InvalidConfigurationException;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
+use Drupal\reliefweb_utility\Helpers\UrlHelper;
 use GuzzleHttp\ClientInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -757,13 +758,15 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
    *   File name to sanitize.
    * @param array $allowed_extensions
    *   Allowed file name extensions.
+   * @param string $default_extension
+   *   Default file extension if none could be extracted from the file name.
    *
    * @return string
    *   Sanitized file name.
    *
    * @see \Drupal\system\EventSubscriber\SecurityFileUploadEventSubscriber::sanitizeName()
    */
-  protected function sanitizeFileName(string $filename, array $allowed_extensions = []): string {
+  protected function sanitizeFileName(string $filename, array $allowed_extensions = [], string $default_extension = 'pdf'): string {
     if (empty($allowed_extensions)) {
       return '';
     }
@@ -786,10 +789,16 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
     $basename = array_shift($filename_parts);
 
     // Remove final extension.
-    $extension = strtolower((string) array_pop($filename_parts));
+    if (!empty($filename_parts)) {
+      $extension = strtolower((string) array_pop($filename_parts));
+    }
+    // Use the default extension if none was found.
+    else {
+      $extension = $default_extension;
+    }
 
     // Ensure the extension is allowed.
-    if (!in_array($extension, $allowed_extensions)) {
+    if (empty($extension) || !in_array($extension, $allowed_extensions)) {
       return '';
     }
 
@@ -979,6 +988,130 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
       'created' => $created,
       'updated' => $updated,
       'skipped' => $skipped,
+    ];
+  }
+
+  /**
+   * Get the checksum and filename of a remote file.
+   *
+   * @param string $url
+   *   Remote file URL.
+   * @param string $default_extension
+   *   Default file extension if none could be extracted from the file name.
+   *
+   * @return array
+   *   Checksum and filenamne of the remote file.
+   */
+  protected function getRemoteFileInfo(string $url, string $default_extension = 'pdf'): array {
+    $max_size = $this->getReportAttachmentAllowedMaxSize();
+    if (empty($max_size)) {
+      throw new \Exception('No allowed file max size.');
+    }
+
+    $allowed_extensions = $this->getReportAttachmentAllowedExtensions();
+    if (empty($allowed_extensions)) {
+      throw new \Exception('No allowed file extensions.');
+    }
+
+    $body = NULL;
+    try {
+      $response = $this->httpClient->get($url, [
+        'stream' => TRUE,
+        // @todo retrieve that from the configuration.
+        'connect_timeout' => 30,
+        'timeout' => 600,
+        'headers' => [
+          'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
+          'Accept' => '*/*',
+        ],
+      ]);
+
+      if ($response->getStatusCode() == 406) {
+        // Stream not supported.
+        $response = $this->httpClient->get($url, [
+          'stream' => FALSE,
+          // @todo retrieve that from the configuration.
+          'connect_timeout' => 30,
+          'timeout' => 600,
+          'headers' => [
+            'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
+            'Accept' => '*/*',
+          ],
+        ]);
+      }
+
+      if ($response->getStatusCode() !== 200) {
+        throw new \Exception('Unexpected HTTP status: ' . $response->getStatusCode());
+      }
+
+      $content_length = $response->getHeaderLine('Content-Length');
+      if ($content_length !== '' && $max_size > 0 && ((int) $content_length) > $max_size) {
+        throw new \Exception('File is too large.');
+      }
+
+      // Try to get the filename from the Content Disposition header.
+      $content_disposition = $response->getHeaderLine('Content-Disposition') ?? '';
+      $extracted_filename = UrlHelper::getFilenameFromContentDisposition($content_disposition);
+
+      // Fallback to the URL if no filename is provided.
+      if (empty($extracted_filename)) {
+        $matches = [];
+        $clean_url = UrlHelper::stripParametersAndFragment($url);
+        if (preg_match('/\/([^\/]+)$/', $clean_url, $matches) === 1) {
+          $extracted_filename = rawurldecode($matches[1]);
+        }
+        else {
+          throw new \Exception('Unable to retrieve file name.');
+        }
+      }
+
+      // Sanitize the file name.
+      $filename = $this->sanitizeFileName($extracted_filename, $allowed_extensions, $default_extension);
+      if (empty($filename)) {
+        throw new \Exception(strtr('Invalid filename: @filename.', [
+          '@filename' => $extracted_filename,
+        ]));
+      }
+
+      $body = $response->getBody();
+
+      $content = '';
+      if ($max_size > 0) {
+        $size = 0;
+        while (!$body->eof()) {
+          $chunk = $body->read(1024);
+          $size += strlen($chunk);
+          if ($size > $max_size) {
+            $body->close();
+            throw new \Exception('File is too large.');
+          }
+          else {
+            $content .= $chunk;
+          }
+        }
+      }
+      else {
+        $content = $body->getContents();
+      }
+
+      $checksum = hash('sha256', $content);
+    }
+    catch (\Exception $exception) {
+      $this->getLogger()->notice(strtr('Unable to retrieve file information for @url: @exception', [
+        '@url' => $url,
+        '@exception' => $exception->getMessage(),
+      ]));
+      return [];
+    }
+    finally {
+      if (isset($body)) {
+        $body->close();
+      }
+    }
+
+    return [
+      'checksum' => $checksum,
+      'filename' => $filename,
     ];
   }
 
