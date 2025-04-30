@@ -407,6 +407,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         $this->getLogger()->error(strtr('Too many import attempts for Inoreader document @id, skipping.', [
           '@id' => $id,
         ]));
+
         continue;
       }
 
@@ -416,6 +417,8 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         $this->getLogger()->info(strtr('Inoreader document @id has no data to import, skipping.', [
           '@id' => $id,
         ]));
+
+        continue;
       }
 
       // Mandatory information.
