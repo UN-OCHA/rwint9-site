@@ -6,7 +6,6 @@ namespace Drupal\reliefweb_import\Plugin\ReliefWebImporter;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
 use Drupal\reliefweb_import\Attribute\ReliefWebImporter;
@@ -673,36 +672,11 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function alterContentClassificationSkipClassification(bool &$skip, ClassificationWorkflowInterface $workflow, array $context): void {
-    // Allow the automated classification.
-    $skip = FALSE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function alterContentClassificationUserPermissionCheck(bool &$check, AccountInterface $account, array $context): void {
-    // Bypass the user permission check for the classification since the user
-    // associated with the provider may not be authorized to use the automated
-    // classification.
-    $check = FALSE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function alterContentClassificationSpecifiedFieldCheck(array &$fields, ClassificationWorkflowInterface $workflow, array $context): void {
-    // Mark all the field as optional so that the classification is not skipped
-    // if any of the field is already filled.
-    $fields = array_map(fn($field) => FALSE, $fields);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function alterContentClassificationForceFieldUpdate(array &$fields, ClassificationWorkflowInterface $workflow, array $context): void {
     parent::alterContentClassificationForceFieldUpdate($fields, $workflow, $context);
     if (isset($context['entity'])) {
+      // Allow overriding the title with the AI extracted one if the title
+      // contains a link.
       if (preg_match('#^https?://#i', $context['entity']->title->value)) {
         $fields['title__value'] = TRUE;
       }
