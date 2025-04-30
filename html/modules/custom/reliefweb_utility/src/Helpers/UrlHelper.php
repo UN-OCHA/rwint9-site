@@ -263,6 +263,10 @@ class UrlHelper extends DrupalUrlHelper {
    *   The extracted filename or an empty string if not found.
    */
   public static function getFilenameFromContentDisposition(string $header): string {
+    if (empty($header)) {
+      return '';
+    }
+
     // Prefer filename* (RFC 5987) if present, allowing single or double quotes.
     if (preg_match(
       '/filename\*\s*=\s*([\'"])?([a-zA-Z0-9\-_]+)\\\?\'(?:[a-zA-Z0-9\-_]*)\\\?\'([^;\'"]+)\1?/i',
