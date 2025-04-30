@@ -12,6 +12,8 @@ target:
   bundle: report
 fields:
   analyzable:
+    body:
+      enabled: true
     field_file:
       enabled: true
   classifiable:
@@ -70,6 +72,10 @@ classifier:
   settings:
     analyzable:
       fields:
+        body:
+          placeholder: source_content
+          processor: reliefweb_body
+          file: true
         field_file:
           placeholder: source_document
           processor: reliefweb_attachment

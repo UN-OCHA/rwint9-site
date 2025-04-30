@@ -223,4 +223,94 @@ class UrlHelper extends DrupalUrlHelper {
     return parent::isValid($url, $absolute);
   }
 
+  /**
+   * Retrieve a URL without its parameters and fragment.
+   *
+   * @param string $url
+   *   The URL.
+   *
+   * @return string
+   *   The URL without its parameters and fragment.
+   */
+  public static function stripParametersAndFragment(string $url): string {
+    if (empty($url)) {
+      return '';
+    }
+
+    $parts = parse_url($url);
+
+    $scheme = isset($parts['scheme']) ? $parts['scheme'] . '://' : '';
+    $user = $parts['user'] ?? '';
+    $pass = isset($parts['pass']) ? ':' . $parts['pass'] : '';
+    $pass = ($user || $pass) ? "$pass@" : '';
+    $host = $parts['host'] ?? '';
+    $port = isset($parts['port']) ? ':' . $parts['port'] : '';
+    $path = $parts['path'] ?? '';
+
+    return "$scheme$user$pass$host$port$path";
+  }
+
+  /**
+   * Extracts the filename from a Content-Disposition header.
+   *
+   * Handles both filename* (RFC 5987) and filename (quoted or unquoted).
+   * Accepts both single and double quotes for robustness.
+   *
+   * @param string $header
+   *   The Content-Disposition header value.
+   *
+   * @return string
+   *   The extracted filename or an empty string if not found.
+   */
+  public static function getFilenameFromContentDisposition(string $header): string {
+    if (empty($header)) {
+      return '';
+    }
+
+    // Prefer filename* (RFC 5987) if present, allowing single or double quotes.
+    if (preg_match(
+      '/filename\*\s*=\s*([\'"])?([a-zA-Z0-9\-_]+)\\\?\'(?:[a-zA-Z0-9\-_]*)\\\?\'([^;\'"]+)\1?/i',
+      $header,
+      $matches
+    )) {
+      $charset = $matches[2];
+      $encoded_filename = $matches[3];
+      // Remove any surrounding whitespace and quotes.
+      $encoded_filename = trim($encoded_filename, "\"' ");
+      // Decode percent-encoding.
+      $decoded_filename = rawurldecode($encoded_filename);
+      // Convert to UTF-8 if necessary.
+      if (strtolower($charset) !== 'utf-8') {
+        $converted_filename = @mb_convert_encoding($decoded_filename, 'UTF-8', $charset);
+        if ($converted_filename !== FALSE) {
+          $decoded_filename = $converted_filename;
+        }
+      }
+      // Return only the base filename to prevent directory traversal.
+      return basename($decoded_filename);
+    }
+
+    // Fallback to quoted filename (double or single quotes).
+    if (preg_match('/filename\s*=\s*([\'"])(.*?)\1/i', $header, $matches)) {
+      $quoted_filename = $matches[2];
+      // Decode percent-encoding for robustness, as browsers do.
+      $quoted_filename = rawurldecode($quoted_filename);
+      // Return only the base filename to prevent directory traversal.
+      return basename($quoted_filename);
+    }
+
+    // Fallback to unquoted filename.
+    if (preg_match('/filename\s*=\s*([^;\s]+)/i', $header, $matches)) {
+      $unquoted_filename = $matches[1];
+      // Remove any surrounding quotes just in case.
+      $unquoted_filename = trim($unquoted_filename, "\"' ");
+      // Decode percent-encoding for robustness.
+      $unquoted_filename = rawurldecode($unquoted_filename);
+      // Return only the base filename to prevent directory traversal.
+      return basename($unquoted_filename);
+    }
+
+    return '';
+  }
+
 }

@@ -69,4 +69,122 @@ class UrlHelperTest extends UnitTestCase {
     $this->assertEquals(UrlHelper::getImageUriFromUrl($uri, $preserve_style), $expected);
   }
 
+  /**
+   * Tests stripParametersAndFragment method.
+   *
+   * @covers ::stripParametersAndFragment
+   */
+  public function testStripParametersAndFragment() {
+    $testCases = [
+      // URL with query and fragment.
+      ['http://example.com/path?query=123#fragment', 'http://example.com/path'],
+      // URL with credentials, port, query, and fragment.
+      ['https://user:pass@example.com:8080/path/to/page?foo=bar#section', 'https://user:pass@example.com:8080/path/to/page'],
+      // URL without path, query, or fragment.
+      ['http://example.com', 'http://example.com'],
+      // URL with only query.
+      ['http://example.com?query=123', 'http://example.com'],
+      // URL with only fragment.
+      ['http://example.com#fragment', 'http://example.com'],
+      // URL with just a path.
+      ['http://example.com/path', 'http://example.com/path'],
+      // FTP URL with credentials and query.
+      ['ftp://user@example.com/path?param=value', 'ftp://user@example.com/path'],
+      // Invalid URL. This method is not a URL validator to this is expected.
+      ['not a url', 'not a url'],
+      // Empty string.
+      ['', ''],
+    ];
+
+    foreach ($testCases as [$input, $expected]) {
+      $this->assertEquals(
+        $expected,
+        UrlHelper::stripParametersAndFragment($input),
+        "Failed asserting that '$input' is stripped correctly."
+      );
+    }
+  }
+
+  /**
+   * Data provider for testGetFilenameFromContentDisposition().
+   *
+   * @return array
+   *   Test cases: [header, expected filename].
+   */
+  public function providerTestGetFilenameFromContentDisposition() {
+    return [
+      // Basic quoted filename (double quotes).
+      ['attachment; filename="example.txt"', 'example.txt'],
+      // Basic quoted filename (single quotes).
+      ["attachment; filename='example.txt'", 'example.txt'],
+      // Basic unquoted filename.
+      ['attachment; filename=example.txt', 'example.txt'],
+      // RFC 5987 encoded filename* with UTF-8 (unquoted).
+      ["attachment; filename*=UTF-8''ex%C3%A9mple.txt", 'exémple.txt'],
+      // RFC 5987 encoded filename* with UTF-8 (double quotes).
+      ['attachment; filename*="UTF-8\'\'ex%C3%A9mple.txt"', 'exémple.txt'],
+      // RFC 5987 encoded filename* with UTF-8 (single quotes).
+      ["attachment; filename*='UTF-8\'\'ex%C3%A9mple.txt'", 'exémple.txt'],
+      // RFC 5987 encoded filename* with ISO-8859-1 (unquoted).
+      ["attachment; filename*=ISO-8859-1''ex%E9mple.txt", 'exémple.txt'],
+      // RFC 5987 encoded filename* with ISO-8859-1 (double quotes).
+      ['attachment; filename*="ISO-8859-1\'\'ex%E9mple.txt"', 'exémple.txt'],
+      // RFC 5987 encoded filename* with ISO-8859-1 (single quotes).
+      ["attachment; filename*='ISO-8859-1\'\'ex%E9mple.txt'", 'exémple.txt'],
+      // filename* with language (unquoted).
+      ["attachment; filename*=UTF-8'en'%E2%82%AC%20rates.txt", '€ rates.txt'],
+      // filename* with language (double quotes).
+      ['attachment; filename*="UTF-8\'en\'%E2%82%AC%20rates.txt"', '€ rates.txt'],
+      // filename* with language (single quotes).
+      ["attachment; filename*='UTF-8\'en\'%E2%82%AC%20rates.txt'", '€ rates.txt'],
+      // filename* with path (should return basename only).
+      ["attachment; filename*=UTF-8''%2Ftmp%2Fevil.txt", 'evil.txt'],
+      // filename* with path and quotes.
+      ['attachment; filename*="UTF-8\'\'%2Ftmp%2Fevil.txt"', 'evil.txt'],
+      ["attachment; filename*='UTF-8\'\'%2Ftmp%2Fevil.txt'", 'evil.txt'],
+      // filename with path (should return basename only).
+      ['attachment; filename="/tmp/evil.txt"', 'evil.txt'],
+      ["attachment; filename='/tmp/evil.txt'", 'evil.txt'],
+      // filename with semicolon (quoted).
+      ['attachment; filename="weird;name.txt"', 'weird;name.txt'],
+      // filename with percent encoding (unquoted).
+      ['attachment; filename=ex%20ample.txt', 'ex ample.txt'],
+      // filename with percent encoding (quoted).
+      ['attachment; filename="ex%20ample.txt"', 'ex ample.txt'],
+      // Multiple parameters, filename* first.
+      ["attachment; filename*=UTF-8''file%C3%A9.txt; filename=\"fallback.txt\"", 'fileé.txt'],
+      // Multiple parameters, filename* after filename.
+      ["attachment; filename=\"fallback.txt\"; filename*=UTF-8''file%C3%A9.txt", 'fileé.txt'],
+      // Only disposition, no filename.
+      ['attachment', ''],
+      // Empty header.
+      ['', ''],
+      // Random header.
+      ['inline; foo=bar', ''],
+      // filename* with both quotes (non-standard, should handle).
+      ['attachment; filename*=\'UTF-8\'\'singlequote.txt\'', 'singlequote.txt'],
+      ['attachment; filename*="UTF-8\'\'doublequote.txt"', 'doublequote.txt'],
+      // filename with both quotes (non-standard, should handle).
+      ["attachment; filename='singlequote.txt'", 'singlequote.txt'],
+      ['attachment; filename="doublequote.txt"', 'doublequote.txt'],
+    ];
+  }
+
+  /**
+   * Tests getFilenameFromContentDisposition().
+   *
+   * @dataProvider providerTestGetFilenameFromContentDisposition
+   *
+   * @param string $header
+   *   The Content-Disposition header value.
+   * @param string $expected
+   *   The expected filename.
+   */
+  public function testGetFilenameFromContentDisposition($header, $expected) {
+    $this->assertSame(
+      $expected,
+      UrlHelper::getFilenameFromContentDisposition($header)
+    );
+  }
+
 }

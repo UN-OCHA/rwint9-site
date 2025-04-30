@@ -195,6 +195,16 @@ class ReliefWebPostApi extends ControllerBase {
       // generated when saving the entity.
       unset($data['hash']);
 
+      // Make sure we don't have an unwanted status property. This will be
+      // set when saving the entity.
+      unset($data['status']);
+
+      // Disallow partial update for now.
+      // @todo review if/when we allow PATCH requests since we need to modify
+      // the schema validation in that case as well as a clean way to handle
+      // removing a non mandatory field value (ex: report theme).
+      unset($data['partial']);
+
       // Validate the content against the schema for the bundle.
       try {
         $plugin->validate($data);

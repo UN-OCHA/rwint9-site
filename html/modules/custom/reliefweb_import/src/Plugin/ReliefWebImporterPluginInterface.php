@@ -89,6 +89,22 @@ interface ReliefWebImporterPluginInterface {
   public function getConfigurationKey(): string;
 
   /**
+   * Get the entity type ID the importer works with.
+   *
+   * @return string
+   *   Entity type ID.
+   */
+  public function getEntityTypeId(): string;
+
+  /**
+   * Get the entity bundle the importer works with.
+   *
+   * @return string
+   *   Entity bundle.
+   */
+  public function getEntityBundle(): string;
+
+  /**
    * Import newest and update content.
    *
    * @param int $limit
