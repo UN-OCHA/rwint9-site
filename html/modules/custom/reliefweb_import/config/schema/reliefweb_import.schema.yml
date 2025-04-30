@@ -113,3 +113,6 @@ reliefweb_import.plugin.importer.inoreader:
     local_file_save:
       type: boolean
       label: 'Dump json to local file.'
+    local_file_path:
+      type: string
+      label: 'Local file path.'

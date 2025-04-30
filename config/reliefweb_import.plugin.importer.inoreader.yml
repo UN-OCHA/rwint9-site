@@ -20,3 +20,4 @@ api_url: 'https://www.inoreader.com/reader/api/0/stream/contents/user%2F-%2Flabe
 timeout: 30
 local_file_load: false
 local_file_save: false
+local_file_path: /var/www/inoreader.json

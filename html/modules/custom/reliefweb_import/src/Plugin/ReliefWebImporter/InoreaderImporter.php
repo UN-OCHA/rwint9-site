@@ -162,6 +162,12 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       '#default_value' => $form_state->getValue('local_file_save', $this->getPluginSetting('local_file_save', FALSE, FALSE)),
     ];
 
+    $form['local_file_path'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Local file path'),
+      '#default_value' => $form_state->getValue('local_file_path', $this->getPluginSetting('local_file_path', '/var/www/inoreader.json', FALSE)),
+    ];
+
     return $form;
   }
 
@@ -180,8 +186,9 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       $plugin->getProvider($provider_uuid);
 
       if ($this->getPluginSetting('local_file_load', FALSE, FALSE)) {
+        $local_file_path = $this->getPluginSetting('local_file_path', '/var/www/inoreader.json', FALSE);
         $this->getLogger()->info('Retrieving documents from disk.');
-        $documents = file_get_contents('/var/www/inoreader.json');
+        $documents = file_get_contents($local_file_path);
         if ($documents === FALSE) {
           $this->getLogger()->error('Unable to retrieve the Inoreader documents.');
           return FALSE;
@@ -333,15 +340,16 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
     }
 
     if ($this->getPluginSetting('local_file_save', FALSE, FALSE)) {
-      $f = fopen('/var/www/inoreader.json', 'w');
+      $local_file_path = $this->getPluginSetting('local_file_path', '/var/www/inoreader.json', FALSE);
+      $f = fopen($local_file_path, 'w');
       if ($f) {
-        fwrite($f, json_encode($documents, JSON_PRETTY_PRINT));
+        fwrite($f, json_encode($documents, \JSON_PRETTY_PRINT));
         fclose($f);
+        $this->getLogger()->info('Inoreader documents written to ' . $local_file_path);
       }
       else {
-        $this->getLogger()->error('Unable to open file for writing.');
+        $this->getLogger()->error('Unable to open file ' . $local_file_path . ' for writing.');
       }
-      $this->getLogger()->info('Inoreader documents written to /tmp/inoreader.json');
     }
 
     return $documents;
