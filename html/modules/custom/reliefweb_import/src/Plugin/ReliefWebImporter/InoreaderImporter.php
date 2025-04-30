@@ -144,6 +144,13 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
     // Process the documents importing new ones and updated ones.
     $processed = $this->processDocuments($documents, $provider_uuid, $plugin);
 
+    // Retrieve the timestamp (microseconds) of the most recent document.
+    $most_recent_timestamp = max(array_column($documents, 'timestampUsec'));
+    if (is_numeric($most_recent_timestamp) && $most_recent_timestamp > 0) {
+      // Casting to int is safe because we are on a 64 bits system.
+      $this->state->set('reliefweb_importer_inoreader_most_recent_timestamp', (int) $most_recent_timestamp);
+    }
+
     // @todo check if we want to return TRUE only if there was no errors or if
     // return TRUE for partial success is fine enough.
     return $processed > 0;
@@ -172,7 +179,17 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       $app_id = $this->getPluginSetting('app_id');
       $app_key = $this->getPluginSetting('app_key');
       $api_url = $this->getPluginSetting('api_url');
-      $max_age = $this->state->get('reliefweb_importer_inoreader_max_age', 24 * 60 * 60);
+      $max_age = (int) $this->state->get('reliefweb_importer_inoreader_max_age', 24 * 60 * 60);
+      $most_recent_timestamp = (int) $this->state->get('reliefweb_importer_inoreader_most_recent_timestamp', 0);
+
+      // This is mostly for the first run.
+      if (empty($most_recent_timestamp)) {
+        $most_recent_timestamp = (time() - $max_age) * 1_000_000;
+      }
+      else {
+        // 1 minute margin.
+        $most_recent_timestamp -= (60 * 1_000_000);
+      }
 
       // Get auth token.
       $response = $this->httpClient->post("https://www.inoreader.com/accounts/ClientLogin", [
@@ -215,8 +232,8 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
           $query['c'] = $continuation;
         }
 
-        // Add filter on start date.
-        $query['ot'] = time() - $max_age;
+        // Add filter on start date (microseconds timestamp).
+        $query['ot'] = $most_recent_timestamp;
 
         // Exclude starred items.
         $query['xt'] = 'user/-/state/com.google/starred';
