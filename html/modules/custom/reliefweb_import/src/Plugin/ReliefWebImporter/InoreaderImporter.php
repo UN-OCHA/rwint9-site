@@ -172,6 +172,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       $app_id = $this->getPluginSetting('app_id');
       $app_key = $this->getPluginSetting('app_key');
       $api_url = $this->getPluginSetting('api_url');
+      $max_age = $this->state->get('reliefweb_importer_inoreader_max_age', 24 * 60 * 60);
 
       // Get auth token.
       $response = $this->httpClient->post("https://www.inoreader.com/accounts/ClientLogin", [
@@ -213,6 +214,14 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         if (!empty($continuation)) {
           $query['c'] = $continuation;
         }
+
+        // Add filter on start date.
+        $query['ot'] = time() - $max_age;
+
+        // Exclude starred items.
+        $query['xt'] = 'user/-/state/com.google/starred';
+
+        // Rebuild the URL.
         $api_url = $api_parts['scheme'] . '://' . $api_parts['host'] . $api_parts['path'] . '?' . http_build_query($query);
 
         $response = $this->httpClient->get($api_url, [
