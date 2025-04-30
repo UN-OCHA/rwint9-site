@@ -829,7 +829,7 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
     $entity_type_id = $this->getEntityTypeId();
     $bundle = $this->getEntityBundle();
 
-    $schema = $this->getJsonSchema('report');
+    $schema = $this->getJsonSchema($bundle);
 
     // This is the list of extensions supported by the report attachment field.
     $extensions = explode(' ', 'csv doc docx jpg jpeg odp ods odt pdf png pps ppt pptx svg xls xlsx zip');
@@ -945,7 +945,7 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
       // hash since it means the document has been not updated since the last
       // time it was imported.
       $records = $this->entityTypeManager
-        ->getStorage('node')
+        ->getStorage($entity_type_id)
         ->getQuery()
         ->accessCheck(FALSE)
         ->condition('uuid', $uuid, '=')
@@ -960,7 +960,7 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
         continue;
       }
 
-      // Check if how many times we tried to import this item.
+      // Check how many times we tried to import this item.
       if (!empty($import_record['attempts']) && $import_record['attempts'] >= $max_import_attempts) {
         $import_record['status'] = 'error';
         $import_record['message'] = 'Too many attempts.';
@@ -982,7 +982,7 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
 
       // Mandatory information.
       $data['provider'] = $provider_uuid;
-      $data['bundle'] = 'report';
+      $data['bundle'] = $bundle;
       $data['hash'] = $hash;
       $data['uuid'] = $uuid;
       $data['url'] = $url;
@@ -1132,96 +1132,6 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
     ]);
 
     return $data;
-  }
-
-  /**
-   * Get the checksum and filename of a remote file.
-   *
-   * @param string $url
-   *   Remote file URL.
-   * @param string $max_size
-   *   Maximum file size (ex: 2MB). Defaults to the environment upload max size.
-   *
-   * @return array
-   *   Checksum and filenamne of the remote file.
-   */
-  protected function getRemoteFileInfo(string $url, string $max_size = ''): array {
-    $max_size = $this->getReportAttachmentAllowedMaxSize();
-    if (empty($max_size)) {
-      throw new \Exception('No allowed file max size.');
-    }
-
-    $allowed_extensions = $this->getReportAttachmentAllowedExtensions();
-    if (empty($allowed_extensions)) {
-      throw new \Exception('No allowed file extensions.');
-    }
-
-    try {
-      $response = $this->httpClient->get($url, [
-        'stream' => TRUE,
-        // @todo retrieve that from the configuration.
-        'connect_timeout' => 30,
-        'timeout' => 600,
-      ]);
-
-      if ($max_size > 0 && $response->getHeaderLine('Content-Length') > $max_size) {
-        throw new \Exception('File is too large.');
-      }
-
-      // Retrieve the filename.
-      $content_disposition = $response->getHeaderLine('Content-Disposition') ?? '';
-      if (preg_match('/filename="?([^"]+)"?/i', $content_disposition, $matches) !== 1) {
-        throw new \Exception('Unable to retrieve file name.');
-      }
-
-      // Sanitize the file name.
-      $filename = $this->sanitizeFileName(urldecode($matches[1]), $allowed_extensions);
-      if (empty($filename)) {
-        throw new \Exception(strtr('Invalid filename: @filename.', [
-          '@filename' => $matches[1],
-        ]));
-      }
-
-      $body = $response->getBody();
-
-      $content = '';
-      if ($max_size > 0) {
-        $size = 0;
-        while (!$body->eof()) {
-          $chunk = $body->read(1024);
-          $size += strlen($chunk);
-          if ($size > $max_size) {
-            $body->close();
-            throw new \Exception('File is too large.');
-          }
-          else {
-            $content .= $chunk;
-          }
-        }
-      }
-      else {
-        $content = $body->getContents();
-      }
-
-      $checksum = hash('sha256', $content);
-    }
-    catch (\Exception $exception) {
-      $this->getLogger()->notice(strtr('Unable to retrieve file information for @url: @exception', [
-        '@url' => $url,
-        '@exception' => $exception->getMessage(),
-      ]));
-      return [];
-    }
-    finally {
-      if (isset($body)) {
-        $body->close();
-      }
-    }
-
-    return [
-      'checksum' => $checksum,
-      'filename' => $filename,
-    ];
   }
 
   /**

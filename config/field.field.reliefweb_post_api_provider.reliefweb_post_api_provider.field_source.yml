@@ -12,8 +12,8 @@ field_name: field_source
 entity_type: reliefweb_post_api_provider
 bundle: reliefweb_post_api_provider
 label: 'Allowed source(s)'
-description: 'Sources that the provider is allowed to post for.'
-required: true
+description: 'Sources that the provider is allowed to post for. <strong>Careful: </strong> leave empty to allow any source.'
+required: false
 translatable: false
 default_value: {  }
 default_value_callback: ''

@@ -5,28 +5,14 @@ declare(strict_types=1);
 namespace Drupal\reliefweb_import\Plugin\ReliefWebImporter;
 
 use Drupal\Component\Serialization\Json;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Database\Connection;
-use Drupal\Core\Entity\EntityFieldManagerInterface;
-use Drupal\Core\Entity\EntityRepositoryInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\State\StateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
 use Drupal\reliefweb_import\Attribute\ReliefWebImporter;
 use Drupal\reliefweb_import\Plugin\ReliefWebImporterPluginBase;
 use Drupal\reliefweb_post_api\Helpers\HashHelper;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface;
-use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
-use Drupal\reliefweb_post_api\Queue\ReliefWebPostApiDatabaseQueueFactory;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
-use GuzzleHttp\ClientInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\Mime\MimeTypeGuesserInterface;
 
 /**
  * Import reports from the Inoreader.
@@ -37,67 +23,6 @@ use Symfony\Component\Mime\MimeTypeGuesserInterface;
   description: new TranslatableMarkup('Import reports from the Inoreader.')
 )]
 class InoreaderImporter extends ReliefWebImporterPluginBase {
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct(
-    array $configuration,
-    $plugin_id,
-    $plugin_definition,
-    protected ConfigFactoryInterface $configFactory,
-    protected StateInterface $state,
-    protected LoggerChannelFactoryInterface $loggerFactory,
-    protected ClientInterface $httpClient,
-    protected MimeTypeGuesserInterface $mimeTypeGuesser,
-    protected EntityFieldManagerInterface $entityFieldManager,
-    protected EntityTypeManagerInterface $entityTypeManager,
-    protected EntityRepositoryInterface $entityRepository,
-    protected Connection $database,
-    protected ContentProcessorPluginManagerInterface $contentProcessorPluginManager,
-    protected ExtensionPathResolver $pathResolver,
-    protected ReliefWebPostApiDatabaseQueueFactory $queueFactory,
-  ) {
-    parent::__construct(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $configFactory,
-      $state,
-      $loggerFactory,
-      $httpClient,
-      $mimeTypeGuesser,
-      $entityFieldManager,
-      $entityTypeManager,
-      $entityRepository,
-      $database,
-      $contentProcessorPluginManager,
-      $pathResolver,
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('config.factory'),
-      $container->get('state'),
-      $container->get('logger.factory'),
-      $container->get('http_client'),
-      $container->get('file.mime_type.guesser.extension'),
-      $container->get('entity_field.manager'),
-      $container->get('entity_type.manager'),
-      $container->get('entity.repository'),
-      $container->get('database'),
-      $container->get('plugin.manager.reliefweb_post_api.content_processor'),
-      $container->get('extension.path.resolver'),
-      $container->get('reliefweb_post_api.queue.database'),
-    );
-  }
 
   /**
    * {@inheritdoc}
@@ -150,6 +75,24 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       '#required' => TRUE,
     ];
 
+    $form['local_file_load'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Load json from local file'),
+      '#default_value' => $form_state->getValue('local_file_load', $this->getPluginSetting('local_file_load', FALSE, FALSE)),
+    ];
+
+    $form['local_file_save'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Dump json to local file'),
+      '#default_value' => $form_state->getValue('local_file_save', $this->getPluginSetting('local_file_save', FALSE, FALSE)),
+    ];
+
+    $form['local_file_path'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Local file path'),
+      '#default_value' => $form_state->getValue('local_file_path', $this->getPluginSetting('local_file_path', '/var/www/inoreader.json', FALSE)),
+    ];
+
     return $form;
   }
 
@@ -168,8 +111,9 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       $plugin->getProvider($provider_uuid);
 
       if ($this->getPluginSetting('local_file_load', FALSE, FALSE)) {
+        $local_file_path = $this->getPluginSetting('local_file_path', '/var/www/inoreader.json', FALSE);
         $this->getLogger()->info('Retrieving documents from disk.');
-        $documents = file_get_contents('/var/www/inoreader.json');
+        $documents = file_get_contents($local_file_path);
         if ($documents === FALSE) {
           $this->getLogger()->error('Unable to retrieve the Inoreader documents.');
           return FALSE;
@@ -321,15 +265,16 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
     }
 
     if ($this->getPluginSetting('local_file_save', FALSE, FALSE)) {
-      $f = fopen('/var/www/inoreader.json', 'w');
+      $local_file_path = $this->getPluginSetting('local_file_path', '/var/www/inoreader.json', FALSE);
+      $f = fopen($local_file_path, 'w');
       if ($f) {
-        fwrite($f, json_encode($documents, JSON_PRETTY_PRINT));
+        fwrite($f, json_encode($documents, \JSON_PRETTY_PRINT));
         fclose($f);
+        $this->getLogger()->info('Inoreader documents written to ' . $local_file_path);
       }
       else {
-        $this->getLogger()->error('Unable to open file for writing.');
+        $this->getLogger()->error('Unable to open file ' . $local_file_path . ' for writing.');
       }
-      $this->getLogger()->info('Inoreader documents written to /tmp/inoreader.json');
     }
 
     return $documents;
@@ -349,7 +294,10 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
    *   The number of documents that were skipped or imported successfully.
    */
   protected function processDocuments(array $documents, string $provider_uuid, ContentProcessorPluginInterface $plugin): int {
-    $schema = $this->getJsonSchema('report');
+    $entity_type_id = $this->getEntityTypeId();
+    $bundle = $this->getEntityBundle();
+
+    $schema = $this->getJsonSchema($bundle);
 
     // This is the list of extensions supported by the report attachment field.
     $extensions = explode(' ', 'csv doc docx jpg jpeg odp ods odt pdf png pps ppt pptx svg xls xlsx zip');
@@ -378,8 +326,8 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       $import_record = [
         'importer' => $this->getPluginId(),
         'provider_uuid' => $provider_uuid,
-        'entity_type_id' => 'node',
-        'entity_bundle' => 'report',
+        'entity_type_id' => $entity_type_id,
+        'entity_bundle' => $bundle,
         'status' => 'pending',
         'message' => '',
         'attempts' => 0,
@@ -416,20 +364,19 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         '@id' => $id,
       ]));
 
-      // Check if how many times we tried to import this item.
-      if (!empty($import_record['attempts']) && $import_record['attempts'] >= $max_import_attempts) {
-        $import_record['status'] = 'error';
-        $import_record['message'] = 'Too many attempts.';
-        $import_records[$import_record['imported_item_uuid']] = $import_record;
-
-        $this->getLogger()->error(strtr('Too many import attempts for Inoreader document @id, skipping.', [
-          '@id' => $id,
-        ]));
-        continue;
-      }
-
-      // Generate hash.
-      $hash = HashHelper::generateHash($document);
+      // Generate a hash from the data we use to import the document. This is
+      // used to detect changes that can affect the document on ReliefWeb.
+      // We do not include the source because it can change for example when
+      // editing the title and it's not used directly as imported data.
+      $filtered_document = $this->filterArrayByKeys($document, [
+        'id',
+        'title',
+        'published',
+        'canonical',
+        'alternate',
+        'summary',
+      ]);
+      $hash = HashHelper::generateHash($filtered_document);
       $import_record['imported_data_hash'] = $hash;
 
       // Skip if there is already an entity with the same UUID and same content
@@ -451,15 +398,32 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         continue;
       }
 
-      $document['provider_uuid'] = $provider_uuid;
-      $data = $this->processDocumentData($uuid, $document);
+      // Check how many times we tried to import this item.
+      if (!empty($import_record['attempts']) && $import_record['attempts'] >= $max_import_attempts) {
+        $import_record['status'] = 'error';
+        $import_record['message'] = 'Too many attempts.';
+        $import_records[$import_record['imported_item_uuid']] = $import_record;
 
-      if (empty($data)) {
-        $this->getLogger()->info(strtr('Inoreader document @id has no data to import, skipping.', [
+        $this->getLogger()->error(strtr('Too many import attempts for Inoreader document @id, skipping.', [
           '@id' => $id,
         ]));
         continue;
       }
+
+      // Process the item data into importable data.
+      $data = $this->getImportData($uuid, $document);
+      if (empty($data)) {
+        $this->getLogger()->info(strtr('Inoreader document @id has no data to import, skipping.', [
+          '@id' => $id,
+        ]));
+      }
+
+      // Mandatory information.
+      $data['provider'] = $provider_uuid;
+      $data['bundle'] = $bundle;
+      $data['hash'] = $hash;
+      $data['uuid'] = $uuid;
+      $data['url'] = $url;
 
       // Queue the document.
       try {
@@ -499,15 +463,10 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
    * {@inheritdoc}
    */
   protected function processDocumentData(string $uuid, array $document): array {
-    $provider_uuid = '';
-    if (isset($document['provider_uuid'])) {
-      $provider_uuid = $document['provider_uuid'];
-      unset($document['provider_uuid']);
-    }
+    $data = [];
 
     $id = $document['id'];
     $url = $document['canonical'][0]['href'];
-    $hash = HashHelper::generateHash($document);
 
     // Retrieve the title and clean it.
     $title = $this->sanitizeText(html_entity_decode($document['title'] ?? ''));
@@ -695,15 +654,6 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       'format' => [8],
     ];
 
-    if (!empty($provider_uuid)) {
-      $data['provider'] = $provider_uuid;
-      $data['hash'] = $hash;
-      $data['bundle'] = 'report';
-      $data['url'] = $url;
-      $data['uuid'] = $uuid;
-      $data['user'] = 2;
-    }
-
     // Add the optional fields.
     $data += array_filter([
       'file' => array_values($files),
@@ -733,36 +683,11 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function alterContentClassificationSkipClassification(bool &$skip, ClassificationWorkflowInterface $workflow, array $context): void {
-    // Allow the automated classification.
-    $skip = FALSE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function alterContentClassificationUserPermissionCheck(bool &$check, AccountInterface $account, array $context): void {
-    // Bypass the user permission check for the classification since the user
-    // associated with the provider may not be authorized to use the automated
-    // classification.
-    $check = FALSE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function alterContentClassificationSpecifiedFieldCheck(array &$fields, ClassificationWorkflowInterface $workflow, array $context): void {
-    // Mark all the field as optional so that the classification is not skipped
-    // if any of the field is already filled.
-    $fields = array_map(fn($field) => FALSE, $fields);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function alterContentClassificationForceFieldUpdate(array &$fields, ClassificationWorkflowInterface $workflow, array $context): void {
     parent::alterContentClassificationForceFieldUpdate($fields, $workflow, $context);
     if (isset($context['entity'])) {
+      // Allow overriding the title with the AI extracted one if the title
+      // contains a link.
       if (preg_match('#^https?://#i', $context['entity']->title->value)) {
         $fields['title__value'] = TRUE;
       }

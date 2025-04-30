@@ -26,6 +26,7 @@ use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
 use Drupal\reliefweb_import\Exception\InvalidConfigurationException;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
+use Drupal\reliefweb_utility\Helpers\UrlHelper;
 use GuzzleHttp\ClientInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -757,13 +758,15 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
    *   File name to sanitize.
    * @param array $allowed_extensions
    *   Allowed file name extensions.
+   * @param string $default_extension
+   *   Default file extension if none could be extracted from the file name.
    *
    * @return string
    *   Sanitized file name.
    *
    * @see \Drupal\system\EventSubscriber\SecurityFileUploadEventSubscriber::sanitizeName()
    */
-  protected function sanitizeFileName(string $filename, array $allowed_extensions = []): string {
+  protected function sanitizeFileName(string $filename, array $allowed_extensions = [], string $default_extension = 'pdf'): string {
     if (empty($allowed_extensions)) {
       return '';
     }
@@ -773,16 +776,6 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
 
     // Always rename dot files.
     $filename = trim($filename, '.');
-
-    // Remove ? and any following characters.
-    if (strpos($filename, '?') !== FALSE) {
-      $filename = substr($filename, 0, strpos($filename, '?'));
-    }
-
-    // Remove # and any following characters.
-    if (strpos($filename, '#') !== FALSE) {
-      $filename = substr($filename, 0, strpos($filename, '#'));
-    }
 
     // Remove any null bytes.
     // @see https://php.net/manual/security.filesystem.nullbytes.php
@@ -796,15 +789,16 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
     $basename = array_shift($filename_parts);
 
     // Remove final extension.
-    $extension = strtolower((string) array_pop($filename_parts));
-
-    // Assume empty extension is PDF.
-    if (empty($extension)) {
-      $extension = 'pdf';
+    if (!empty($filename_parts)) {
+      $extension = strtolower((string) array_pop($filename_parts));
+    }
+    // Use the default extension if none was found.
+    else {
+      $extension = $default_extension;
     }
 
     // Ensure the extension is allowed.
-    if (!in_array($extension, $allowed_extensions)) {
+    if (empty($extension) || !in_array($extension, $allowed_extensions)) {
       return '';
     }
 
@@ -1002,13 +996,13 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
    *
    * @param string $url
    *   Remote file URL.
-   * @param string $max_size
-   *   Maximum file size (ex: 2MB). Defaults to the environment upload max size.
+   * @param string $default_extension
+   *   Default file extension if none could be extracted from the file name.
    *
    * @return array
    *   Checksum and filenamne of the remote file.
    */
-  protected function getRemoteFileInfo(string $url, string $max_size = ''): array {
+  protected function getRemoteFileInfo(string $url, string $default_extension = 'pdf'): array {
     $max_size = $this->getReportAttachmentAllowedMaxSize();
     if (empty($max_size)) {
       throw new \Exception('No allowed file max size.');
@@ -1019,6 +1013,7 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
       throw new \Exception('No allowed file extensions.');
     }
 
+    $body = NULL;
     try {
       $response = $this->httpClient->get($url, [
         'stream' => TRUE,
@@ -1045,25 +1040,36 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
         ]);
       }
 
-      if ($max_size > 0 && $response->getHeaderLine('Content-Length') > $max_size) {
+      if ($response->getStatusCode() !== 200) {
+        throw new \Exception('Unexpected HTTP status: ' . $response->getStatusCode());
+      }
+
+      $content_length = $response->getHeaderLine('Content-Length');
+      if ($content_length !== '' && $max_size > 0 && ((int) $content_length) > $max_size) {
         throw new \Exception('File is too large.');
       }
 
-      // Retrieve the filename.
+      // Try to get the filename from the Content Disposition header.
       $content_disposition = $response->getHeaderLine('Content-Disposition') ?? '';
-      if (preg_match('/filename="?([^"]+)"?/i', $content_disposition, $matches) !== 1) {
-        // Fallback to the URL if no filename is provided.
+      $extracted_filename = UrlHelper::getFilenameFromContentDisposition($content_disposition);
+
+      // Fallback to the URL if no filename is provided.
+      if (empty($extracted_filename)) {
         $matches = [];
-        if (preg_match('/\/([^\/]+)$/', $url, $matches) !== 1) {
+        $clean_url = UrlHelper::stripParametersAndFragment($url);
+        if (preg_match('/\/([^\/]+)$/', $clean_url, $matches) === 1) {
+          $extracted_filename = rawurldecode($matches[1]);
+        }
+        else {
           throw new \Exception('Unable to retrieve file name.');
         }
       }
 
       // Sanitize the file name.
-      $filename = $this->sanitizeFileName(urldecode($matches[1]), $allowed_extensions);
+      $filename = $this->sanitizeFileName($extracted_filename, $allowed_extensions, $default_extension);
       if (empty($filename)) {
         throw new \Exception(strtr('Invalid filename: @filename.', [
-          '@filename' => $matches[1],
+          '@filename' => $extracted_filename,
         ]));
       }
 
