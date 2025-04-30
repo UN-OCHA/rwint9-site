@@ -969,6 +969,7 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
         $this->getLogger()->error(strtr('Too many import attempts for UNHCR document @id, skipping.', [
           '@id' => $id,
         ]));
+
         continue;
       }
 
@@ -978,6 +979,8 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
         $this->getLogger()->notice(strtr('No data to import for UNHCR document @id.', [
           '@id' => $id,
         ]));
+
+        continue;
       }
 
       // Mandatory information.
