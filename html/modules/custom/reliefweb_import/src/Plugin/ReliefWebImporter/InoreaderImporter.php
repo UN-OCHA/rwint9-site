@@ -150,6 +150,18 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       '#required' => TRUE,
     ];
 
+    $form['local_file_load'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Load json from local file'),
+      '#default_value' => $form_state->getValue('local_file_load', $this->getPluginSetting('local_file_load', FALSE, FALSE)),
+    ];
+
+    $form['local_file_save'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Dump json to local file'),
+      '#default_value' => $form_state->getValue('local_file_save', $this->getPluginSetting('local_file_save', FALSE, FALSE)),
+    ];
+
     return $form;
   }
 
