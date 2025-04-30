@@ -5,28 +5,15 @@ declare(strict_types=1);
 namespace Drupal\reliefweb_import\Plugin\ReliefWebImporter;
 
 use Drupal\Component\Serialization\Json;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Database\Connection;
-use Drupal\Core\Entity\EntityFieldManagerInterface;
-use Drupal\Core\Entity\EntityRepositoryInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\State\StateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
 use Drupal\reliefweb_import\Attribute\ReliefWebImporter;
 use Drupal\reliefweb_import\Plugin\ReliefWebImporterPluginBase;
 use Drupal\reliefweb_post_api\Helpers\HashHelper;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface;
-use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
-use Drupal\reliefweb_post_api\Queue\ReliefWebPostApiDatabaseQueueFactory;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
-use GuzzleHttp\ClientInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\Mime\MimeTypeGuesserInterface;
 
 /**
  * Import reports from the Inoreader.
@@ -37,67 +24,6 @@ use Symfony\Component\Mime\MimeTypeGuesserInterface;
   description: new TranslatableMarkup('Import reports from the Inoreader.')
 )]
 class InoreaderImporter extends ReliefWebImporterPluginBase {
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct(
-    array $configuration,
-    $plugin_id,
-    $plugin_definition,
-    protected ConfigFactoryInterface $configFactory,
-    protected StateInterface $state,
-    protected LoggerChannelFactoryInterface $loggerFactory,
-    protected ClientInterface $httpClient,
-    protected MimeTypeGuesserInterface $mimeTypeGuesser,
-    protected EntityFieldManagerInterface $entityFieldManager,
-    protected EntityTypeManagerInterface $entityTypeManager,
-    protected EntityRepositoryInterface $entityRepository,
-    protected Connection $database,
-    protected ContentProcessorPluginManagerInterface $contentProcessorPluginManager,
-    protected ExtensionPathResolver $pathResolver,
-    protected ReliefWebPostApiDatabaseQueueFactory $queueFactory,
-  ) {
-    parent::__construct(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $configFactory,
-      $state,
-      $loggerFactory,
-      $httpClient,
-      $mimeTypeGuesser,
-      $entityFieldManager,
-      $entityTypeManager,
-      $entityRepository,
-      $database,
-      $contentProcessorPluginManager,
-      $pathResolver,
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('config.factory'),
-      $container->get('state'),
-      $container->get('logger.factory'),
-      $container->get('http_client'),
-      $container->get('file.mime_type.guesser.extension'),
-      $container->get('entity_field.manager'),
-      $container->get('entity_type.manager'),
-      $container->get('entity.repository'),
-      $container->get('database'),
-      $container->get('plugin.manager.reliefweb_post_api.content_processor'),
-      $container->get('extension.path.resolver'),
-      $container->get('reliefweb_post_api.queue.database'),
-    );
-  }
 
   /**
    * {@inheritdoc}
