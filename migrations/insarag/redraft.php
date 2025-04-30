@@ -99,7 +99,7 @@ foreach ($results as $nid) {
     $nid,
     in_array($nid, $redrafted) ? 'yes' : 'no',
     $report->label(),
-    str_replace(["\n", "\r"], ' ', substr($report->body->value, 0, 100) . ' ...');
+    str_replace(["\n", "\r"], ' ', substr($report->body->value, 0, 100) . ' ...'),
     $report->field_country->value,
     $report->field_theme->value,
     $report->field_original_publication_date->value,
