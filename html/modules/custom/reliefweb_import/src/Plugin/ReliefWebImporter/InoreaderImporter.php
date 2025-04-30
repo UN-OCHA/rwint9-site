@@ -364,8 +364,19 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         '@id' => $id,
       ]));
 
-      // Generate hash.
-      $hash = HashHelper::generateHash($document);
+      // Generate a hash from the data we use to import the document. This is
+      // used to detect changes that can affect the document on ReliefWeb.
+      // We do not include the source because it can change for example when
+      // editing the title and it's not used directly as imported data.
+      $filtered_document = $this->filterArrayByKeys($document, [
+        'id',
+        'title',
+        'published',
+        'canonical',
+        'alternate',
+        'summary',
+      ]);
+      $hash = HashHelper::generateHash($filtered_document);
       $import_record['imported_data_hash'] = $hash;
 
       // Skip if there is already an entity with the same UUID and same content
