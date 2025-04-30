@@ -295,7 +295,10 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
    *   The number of documents that were skipped or imported successfully.
    */
   protected function processDocuments(array $documents, string $provider_uuid, ContentProcessorPluginInterface $plugin): int {
-    $schema = $this->getJsonSchema('report');
+    $entity_type_id = $this->getEntityTypeId();
+    $bundle = $this->getEntityBundle();
+
+    $schema = $this->getJsonSchema($bundle);
 
     // This is the list of extensions supported by the report attachment field.
     $extensions = explode(' ', 'csv doc docx jpg jpeg odp ods odt pdf png pps ppt pptx svg xls xlsx zip');
@@ -324,8 +327,8 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       $import_record = [
         'importer' => $this->getPluginId(),
         'provider_uuid' => $provider_uuid,
-        'entity_type_id' => 'node',
-        'entity_bundle' => 'report',
+        'entity_type_id' => $entity_type_id,
+        'entity_bundle' => $bundle,
         'status' => 'pending',
         'message' => '',
         'attempts' => 0,
@@ -362,18 +365,6 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         '@id' => $id,
       ]));
 
-      // Check if how many times we tried to import this item.
-      if (!empty($import_record['attempts']) && $import_record['attempts'] >= $max_import_attempts) {
-        $import_record['status'] = 'error';
-        $import_record['message'] = 'Too many attempts.';
-        $import_records[$import_record['imported_item_uuid']] = $import_record;
-
-        $this->getLogger()->error(strtr('Too many import attempts for Inoreader document @id, skipping.', [
-          '@id' => $id,
-        ]));
-        continue;
-      }
-
       // Generate hash.
       $hash = HashHelper::generateHash($document);
       $import_record['imported_data_hash'] = $hash;
@@ -397,15 +388,32 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         continue;
       }
 
-      $document['provider_uuid'] = $provider_uuid;
-      $data = $this->processDocumentData($uuid, $document);
+      // Check how many times we tried to import this item.
+      if (!empty($import_record['attempts']) && $import_record['attempts'] >= $max_import_attempts) {
+        $import_record['status'] = 'error';
+        $import_record['message'] = 'Too many attempts.';
+        $import_records[$import_record['imported_item_uuid']] = $import_record;
 
-      if (empty($data)) {
-        $this->getLogger()->info(strtr('Inoreader document @id has no data to import, skipping.', [
+        $this->getLogger()->error(strtr('Too many import attempts for Inoreader document @id, skipping.', [
           '@id' => $id,
         ]));
         continue;
       }
+
+      // Process the item data into importable data.
+      $data = $this->getImportData($uuid, $document);
+      if (empty($data)) {
+        $this->getLogger()->info(strtr('Inoreader document @id has no data to import, skipping.', [
+          '@id' => $id,
+        ]));
+      }
+
+      // Mandatory information.
+      $data['provider'] = $provider_uuid;
+      $data['bundle'] = $bundle;
+      $data['hash'] = $hash;
+      $data['uuid'] = $uuid;
+      $data['url'] = $url;
 
       // Queue the document.
       try {
@@ -445,15 +453,10 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
    * {@inheritdoc}
    */
   protected function processDocumentData(string $uuid, array $document): array {
-    $provider_uuid = '';
-    if (isset($document['provider_uuid'])) {
-      $provider_uuid = $document['provider_uuid'];
-      unset($document['provider_uuid']);
-    }
+    $data = [];
 
     $id = $document['id'];
     $url = $document['canonical'][0]['href'];
-    $hash = HashHelper::generateHash($document);
 
     // Retrieve the title and clean it.
     $title = $this->sanitizeText(html_entity_decode($document['title'] ?? ''));
@@ -640,15 +643,6 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       'country' => [254],
       'format' => [8],
     ];
-
-    if (!empty($provider_uuid)) {
-      $data['provider'] = $provider_uuid;
-      $data['hash'] = $hash;
-      $data['bundle'] = 'report';
-      $data['url'] = $url;
-      $data['uuid'] = $uuid;
-      $data['user'] = 2;
-    }
 
     // Add the optional fields.
     $data += array_filter([

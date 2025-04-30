@@ -829,7 +829,7 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
     $entity_type_id = $this->getEntityTypeId();
     $bundle = $this->getEntityBundle();
 
-    $schema = $this->getJsonSchema('report');
+    $schema = $this->getJsonSchema($bundle);
 
     // This is the list of extensions supported by the report attachment field.
     $extensions = explode(' ', 'csv doc docx jpg jpeg odp ods odt pdf png pps ppt pptx svg xls xlsx zip');
@@ -945,7 +945,7 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
       // hash since it means the document has been not updated since the last
       // time it was imported.
       $records = $this->entityTypeManager
-        ->getStorage('node')
+        ->getStorage($entity_type_id)
         ->getQuery()
         ->accessCheck(FALSE)
         ->condition('uuid', $uuid, '=')
@@ -960,7 +960,7 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
         continue;
       }
 
-      // Check if how many times we tried to import this item.
+      // Check how many times we tried to import this item.
       if (!empty($import_record['attempts']) && $import_record['attempts'] >= $max_import_attempts) {
         $import_record['status'] = 'error';
         $import_record['message'] = 'Too many attempts.';
@@ -982,7 +982,7 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
 
       // Mandatory information.
       $data['provider'] = $provider_uuid;
-      $data['bundle'] = 'report';
+      $data['bundle'] = $bundle;
       $data['hash'] = $hash;
       $data['uuid'] = $uuid;
       $data['url'] = $url;
