@@ -996,15 +996,13 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
    *
    * @param string $url
    *   Remote file URL.
-   * @param string $max_size
-   *   Maximum file size (ex: 2MB). Defaults to the environment upload max size.
    * @param string $default_extension
    *   Default file extension if none could be extracted from the file name.
    *
    * @return array
    *   Checksum and filenamne of the remote file.
    */
-  protected function getRemoteFileInfo(string $url, string $max_size = '', string $default_extension = 'pdf'): array {
+  protected function getRemoteFileInfo(string $url, string $default_extension = 'pdf'): array {
     $max_size = $this->getReportAttachmentAllowedMaxSize();
     if (empty($max_size)) {
       throw new \Exception('No allowed file max size.');
@@ -1015,6 +1013,7 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
       throw new \Exception('No allowed file extensions.');
     }
 
+    $body = NULL;
     try {
       $response = $this->httpClient->get($url, [
         'stream' => TRUE,
@@ -1041,20 +1040,25 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
         ]);
       }
 
-      if ($max_size > 0 && $response->getHeaderLine('Content-Length') > $max_size) {
+      if ($response->getStatusCode() !== 200) {
+        throw new \Exception('Unexpected HTTP status: ' . $response->getStatusCode());
+      }
+
+      $content_length = $response->getHeaderLine('Content-Length');
+      if ($content_length !== '' && $max_size > 0 && ((int) $content_length) > $max_size) {
         throw new \Exception('File is too large.');
       }
 
       // Try to get the filename from the Content Disposition header.
       $content_disposition = $response->getHeaderLine('Content-Disposition') ?? '';
-      $filename = UrlHelper::getFilenameFromContentDisposition($content_disposition);
+      $extracted_filename = UrlHelper::getFilenameFromContentDisposition($content_disposition);
 
       // Fallback to the URL if no filename is provided.
-      if (empty($filename)) {
+      if (empty($extracted_filename)) {
         $matches = [];
         $clean_url = UrlHelper::stripParametersAndFragment($url);
         if (preg_match('/\/([^\/]+)$/', $clean_url, $matches) === 1) {
-          $filename = rawurldecode($matches[1]);
+          $extracted_filename = rawurldecode($matches[1]);
         }
         else {
           throw new \Exception('Unable to retrieve file name.');
@@ -1062,10 +1066,10 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
       }
 
       // Sanitize the file name.
-      $filename = $this->sanitizeFileName($filename, $allowed_extensions, $default_extension);
+      $filename = $this->sanitizeFileName($extracted_filename, $allowed_extensions, $default_extension);
       if (empty($filename)) {
         throw new \Exception(strtr('Invalid filename: @filename.', [
-          '@filename' => $matches[1],
+          '@filename' => $extracted_filename,
         ]));
       }
 
