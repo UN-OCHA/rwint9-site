@@ -82,9 +82,11 @@ $results = \Drupal::entityQuery('node')
   ->accessCheck(FALSE)
   ->execute();
 
+$output->writeln('<comment>Found ' . count($results) . ' nodes</comment>');
+
 $log = fopen(EXPORTFILE, "w");
 if (!$log) die(EXPORTFILE);
-fputcsv($log, ['nid','redraft','title','summary','orig_pub_date','created','changed','url', 'edit']);
+fputcsv($log, ['nid','redraft','title','summary','country','theme','orig_pub_date','created','changed','url', 'edit']);
 
 foreach ($results as $nid) {
 
@@ -97,7 +99,9 @@ foreach ($results as $nid) {
     $nid,
     in_array($nid, $redrafted) ? 'yes' : 'no',
     $report->label(),
-    $report->body->value,
+    str_replace(["\n", "\r"], ' ', substr($report->body->value, 0, 100) . ' ...');
+    $report->field_country->value,
+    $report->field_theme->value,
     $report->field_original_publication_date->value,
     $created->format("Y-m-d H:i:s"),
     $changed->format("Y-m-d H:i:s"),
