@@ -171,6 +171,8 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       $limit = 100;
     }
 
+    $documents = [];
+
     // Get list of documents.
     try {
       $timeout = $this->getPluginSetting('timeout', 10, FALSE);
