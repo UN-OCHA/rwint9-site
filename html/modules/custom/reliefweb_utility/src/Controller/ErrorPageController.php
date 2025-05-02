@@ -5,12 +5,14 @@ namespace Drupal\reliefweb_utility\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\field\Entity\FieldStorageConfig;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * ErrorPage controller.
@@ -91,7 +93,17 @@ class ErrorPageController extends ControllerBase {
 
     // Get the field that caused the problem.
     $field_name = $request->query->get('field_parents');
+    if (empty($field_name)) {
+      throw new NotFoundHttpException();
+    }
+
     $field_config = FieldStorageConfig::loadByName('node', $field_name);
+    if (empty($field_config)) {
+      throw new NotFoundHttpException();
+    }
+
+    // What size was the file the user tried?
+    $size = ByteSizeMarkup::create($request->query->get('size') ?? 0);
 
     // Instantiate the field, so we can ask about its max size.
     $field_item_definition = $this->typedDataManager->createDataDefinition('field_item:' . $field_config->getType());
@@ -100,16 +112,23 @@ class ErrorPageController extends ControllerBase {
       'parent' => NULL,
       'data_definition' => $field_item_definition,
     ]);
-    $max_size = $this->ByteSizeMarkup::create($field_item->getMaxFileSize());
+    $max_size = ByteSizeMarkup::create($field_item->getMaxFileSize());
 
-    $message = $this->t("The file you are trying to upload exceeds the maximum allowed size of @max_size. Please compress the file or choose a smaller one before trying again. If you need help reducing file size or have questions about upload limits, contact support: submit@reliefweb.int", ['@max_size' => $max_size]);
+    $message = $this->t("The file you are trying to upload is %size, which exceeds the maximum allowed size of %max_size. Please compress the file or choose a smaller one before trying again. If you need help reducing file size or have questions about upload limits, contact support: submit@reliefweb.int",
+      [
+        '%size' => $size,
+        '%max_size' => $max_size,
+      ]
+    );
 
     if ($request->isXmlHttpRequest()) {
       $response = [
-        'selector' => 'input.js-form-file',
-        'command'  => 'insert',
-        'method'   => 'append',
-        'data'     => '<div class="form-item--error-message">' . $message . '</div>',
+        [
+          'selector' => '#edit-' . strtr($field_name, ['_' => '-']),
+          'command'  => 'insert',
+          'method'   => 'append',
+          'data'     => '<div class="form-item--error-message">' . $message . '</div>',
+        ],
       ];
       return new JsonResponse($response, 200);
     }
