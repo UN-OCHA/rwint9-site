@@ -8,6 +8,7 @@
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\User;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
@@ -350,5 +351,80 @@ function reliefweb_users_preprocess_user(array &$variables): void {
       '#items' => $links,
       '#attributes' => ['class' => ['user-links-list']],
     ];
+  }
+}
+
+/**
+ * Implements hook_user_login().
+ */
+function reliefweb_users_user_login(UserInterface $user): void {
+  reliefweb_users_assign_submitter_role($user);
+}
+
+/**
+ * Assign the submitted role to a user.
+ *
+ * @param \Drupal\user\UserInterface $user
+ *   User account.
+ */
+function reliefweb_users_assign_submitter_role(UserInterface $user): void {
+  // Skip if the user already has the submitter role.
+  if ($user->hasRole('submitter')) {
+    return;
+  }
+  // Retrieve the user email address.
+  $email = $user->getEmail();
+  if (empty($email) || strpos($email, '@') === FALSE) {
+    return;
+  }
+  // Retrieve the list of domains allowed for automatic assignment of the
+  // submitter role.
+  $domains = \Drupal::state()->get('reliefweb_users_submitter_allowed_domains', ['un.org']);
+  if (empty($domains)) {
+    return;
+  }
+  // Check if the email address's domain is allowed.
+  [, $domain] = explode('@', $email, 2);
+  if (!in_array($domain, $domains)) {
+    return;
+  }
+  // Check if the user has a connected entraid account.
+  $uid = \Drupal::database()
+    ->select('authmap', 'am')
+    ->fields('am', ['uid'])
+    ->condition('am.provider', 'openid_connect.entraid', '=')
+    ->condition('am.uid', $user->id())
+    ->execute()
+    ?->fetchField();
+  if (empty($uid)) {
+    return;
+  }
+  // Load the system user.
+  $system_user = User::load(2);
+  if (empty($system_user)) {
+    return;
+  }
+  // Switch the current user to the system user temporarily so that the
+  // user history record shows the system user as modification user.
+  // @see reliefweb_user_history_user_entity_to_record().
+  $account_switcher = \Drupal::service('account_switcher');
+  $account_switcher->switchTo($system_user);
+  try {
+    // Add the new role.
+    $user->addRole('submitter');
+    $user->save();
+    \Drupal::logger('reliefweb_users')->info(strtr('Assigned submitte role to user @id', [
+      '@id' => $user->id(),
+    ]));
+  }
+  catch (\Exception $exception) {
+    \Drupal::logger('reliefweb_users')->info(strtr('Unable to assign submitte role to user @id: @error', [
+      '@id' => $user->id(),
+      '@error' => $exception->getMessage(),
+    ]));
+  }
+  finally {
+    // Make sure we switch back to the current user.
+    $account_switcher->switchBack();
   }
 }
