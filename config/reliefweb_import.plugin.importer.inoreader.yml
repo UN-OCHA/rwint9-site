@@ -5,15 +5,19 @@ classification:
   check_user_permissions: false
   prevent_publication: true
   specified_field_check: '*:no'
-  force_field_update: "*:yes\r\ntitle__value:no\r\nfield_source:no"
+  force_field_update: "*:yes\r\ntitle__value:no\r\nfield_source:no\r\nbody__value:no\r\nbody__summary:no"
   classified_fields: '*:yes'
 reimport:
   enabled: true
   type: "*:none\r\npending:full\r\non-hold:partial\r\npublished:partial\r\nto-review:partial\r\nembargoed:partial"
   fields: "*:no\r\nfile:yes"
   statuses: "published:to-review\r\nto-review:to-review\r\nrefused:refused"
-api_url: 'https://data.unhcr.org'
-api_key: REPLACE_WITH_API_KEY
-list_endpoint: /api-content/documents.json
-document_endpoint: '/api-content/documents/{{id}}.json'
+email: info@example.com
+password: xyzzy
+app_id: '123'
+app_key: abc
+api_url: 'https://www.inoreader.com/reader/api/0/stream/contents/user%2F-%2Flabel%2Fautomation_production?n=100&r=o'
 timeout: 30
+local_file_load: false
+local_file_save: false
+local_file_path: /var/www/inoreader.json

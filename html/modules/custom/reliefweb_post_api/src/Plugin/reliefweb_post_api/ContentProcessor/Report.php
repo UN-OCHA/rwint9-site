@@ -124,46 +124,77 @@ class Report extends ContentProcessorPluginBase {
       ]));
     }
 
+    // Partial update?
+    $partial = !$node->isNew() && !empty($data['partial']);
+
     // Set the mandatory fields.
-    $node->title = $this->sanitizeString($data['title']);
-
-    $this->setTextField($node, 'body', $data['body'], format: 'markdown');
-    $this->setDateField($node, 'field_original_publication_date', $data['published']);
-
-    $this->setTermField($node, 'field_content_format', 'content_format', $data['format']);
-    $this->setTermField($node, 'field_language', 'language', $data['language']);
-    $this->setTermField($node, 'field_source', 'source', $data['source']);
-    $this->setTermField($node, 'field_country', 'country', $data['country']);
-    $this->setField($node, 'field_primary_country', $node->field_country?->first()?->getValue());
-
-    // Set the origin to "API".
-    $this->setField($node, 'field_origin', 3);
+    if (!$partial || array_key_exists('title', $data)) {
+      $this->setStringField($node, 'title', $data['title']);
+    }
+    if (!$partial || array_key_exists('body', $data)) {
+      $this->setTextField($node, 'body', $data['body'], format: 'markdown');
+    }
+    if (!$partial || array_key_exists('published', $data)) {
+      $this->setDateField($node, 'field_original_publication_date', $data['published']);
+    }
+    if (!$partial || array_key_exists('format', $data)) {
+      $this->setTermField($node, 'field_content_format', 'content_format', $data['format']);
+    }
+    if (!$partial || array_key_exists('language', $data)) {
+      $this->setTermField($node, 'field_language', 'language', $data['language']);
+    }
+    if (!$partial || array_key_exists('source', $data)) {
+      $this->setTermField($node, 'field_source', 'source', $data['source']);
+    }
+    if (!$partial || array_key_exists('country', $data)) {
+      $this->setTermField($node, 'field_country', 'country', $data['country']);
+      $this->setField($node, 'field_primary_country', $node->field_country?->first()?->getValue());
+    }
 
     // Set the optional fields.
-    $this->setUrlField($node, 'field_origin_notes', $data['origin'] ?? '', $provider->getUrlPattern());
-    $this->setTermField($node, 'field_disaster', 'disaster', $data['disaster'] ?? []);
-    $this->setTermField($node, 'field_disaster_type', 'disaster_type', $data['disaster_type'] ?? []);
-    $this->setTermField($node, 'field_theme', 'theme', $data['theme'] ?? []);
-    $this->setDateField($node, 'field_embargo_date', $data['embargoed'] ?? '', FALSE);
-
-    // Emails to notify when the document is published.
-    $emails = implode(',', $data['notify'] ?? $provider->getEmailsToNotify() ?? []);
-    $this->setField($node, 'field_notify', $emails ?: NULL);
+    if (!$partial || array_key_exists('origin', $data)) {
+      $this->setUrlField($node, 'field_origin_notes', $data['origin'] ?? '', $provider->getUrlPattern());
+    }
+    if (!$partial || array_key_exists('disaster', $data)) {
+      $this->setTermField($node, 'field_disaster', 'disaster', $data['disaster'] ?? []);
+    }
+    if (!$partial || array_key_exists('disaster_type', $data)) {
+      $this->setTermField($node, 'field_disaster_type', 'disaster_type', $data['disaster_type'] ?? []);
+    }
+    if (!$partial || array_key_exists('theme', $data)) {
+      $this->setTermField($node, 'field_theme', 'theme', $data['theme'] ?? []);
+    }
+    if (!$partial || array_key_exists('embargoed', $data)) {
+      $this->setDateField($node, 'field_embargo_date', $data['embargoed'] ?? '', FALSE);
+    }
 
     // Add the optional files (attachments and image).
-    $this->setReliefWebFileField($node, 'field_file', $data['file'] ?? []);
-    $this->setImageField($node, 'field_image', $data['image'] ?? []);
+    if (!$partial || array_key_exists('file', $data)) {
+      $this->setReliefWebFileField($node, 'field_file', $data['file'] ?? []);
+    }
+    if (!$partial || array_key_exists('image', $data)) {
+      $this->setImageField($node, 'field_image', $data['image'] ?? []);
+    }
 
     // Empty some other fields.
     // This is to remove changes made by editors when updating the document
     // since those changes may not be relevant or accurate anymore.
     // @todo review if we actually want to do that.
-    $node->field_headline->setValue(NULL);
-    $node->field_headline_title->setValue(NULL);
-    $node->field_headline_summary->setValue(NULL);
-    $node->field_headline_image->setValue(NULL);
-    $node->field_feature->setValue(NULL);
-    $node->field_ocha_product->setValue(NULL);
+    if (!$partial) {
+      $node->field_headline->setValue(0);
+      $node->field_headline_title->setValue(NULL);
+      $node->field_headline_summary->setValue(NULL);
+      $node->field_headline_image->setValue(NULL);
+      $node->field_feature->setValue(NULL);
+      $node->field_ocha_product->setValue(NULL);
+    }
+
+    // Emails to notify when the document is published.
+    $emails = implode(',', $data['notify'] ?? $provider->getEmailsToNotify() ?? []);
+    $this->setField($node, 'field_notify', $emails ?: NULL);
+
+    // Set the origin to "API".
+    $this->setField($node, 'field_origin', 3);
 
     // Save the entity.
     $this->save($node, $provider, $data);
