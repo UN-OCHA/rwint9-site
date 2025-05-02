@@ -47,20 +47,27 @@ class ProviderListBuilder extends EntityListBuilder {
       'label' => 'hidden',
     ]);
 
-    $sources = [];
-    foreach ($entity->field_source as $item) {
-      $source = $item->entity;
-      if (!empty($source)) {
-        $sources[] = $this->t('@link (@id)', [
-          '@link' => $source->toLink($source->field_shortname?->value ?? $source->label())->toString(),
-          '@id' => $source->id(),
-        ]);
+    if (!$entity->field_source->isEmpty()) {
+      $sources = [];
+      foreach ($entity->field_source as $item) {
+        $source = $item->entity;
+        if (!empty($source)) {
+          $sources[] = $this->t('@link (@id)', [
+            '@link' => $source->toLink($source->field_shortname?->value ?? $source->label())->toString(),
+            '@id' => $source->id(),
+          ]);
+        }
       }
+      $row['source']['data'] = [
+        '#theme' => 'item_list',
+        '#items' => $sources,
+      ];
     }
-    $row['source']['data'] = [
-      '#theme' => 'item_list',
-      '#items' => $sources,
-    ];
+    else {
+      $row['source']['data'] = [
+        '#markup' => $this->t('Any source'),
+      ];
+    }
 
     $row['status']['data'] = $entity->status->view([
       'label' => 'hidden',
