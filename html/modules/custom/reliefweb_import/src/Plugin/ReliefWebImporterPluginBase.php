@@ -1220,4 +1220,51 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
     $current = $value;
   }
 
+  /**
+   * Find country by iso code.
+   */
+  protected function getCountryByIso(string $iso3): ?int {
+    if (empty($iso3)) {
+      return 254;
+    }
+
+    static $country_mapping = [];
+    if (empty($country_mapping)) {
+      $countries = $this->entityTypeManager
+        ->getStorage('taxonomy_term')
+        ->loadByProperties(['vid' => 'country']);
+      foreach ($countries as $country) {
+        $country_mapping[strtolower($country->get('field_iso3')->value)] = (int) $country->id();
+      }
+    }
+
+    $iso3 = strtolower($iso3);
+    return $country_mapping[$iso3] ?? 254;
+  }
+
+  /**
+   * Find source by name or short name.
+   */
+  protected function getSourceByName(string $name): ?int {
+    if (empty($iso3)) {
+      return 0;
+    }
+
+    static $source_mapping = [];
+    if (empty($source_mapping)) {
+      $sources = $this->entityTypeManager
+        ->getStorage('taxonomy_term')
+        ->loadByProperties(['vid' => 'source']);
+      foreach ($sources as $source) {
+        $source_mapping[strtolower($source->label())] = (int) $source->id();
+        if ($source->hasField('field_shortname') && !$source->get('field_shortname')->isEmpty()) {
+          $source_mapping[strtolower($source->get('field_shortname')->value)] = (int) $source->id();
+        }
+      }
+    }
+
+    $name = strtolower($name);
+    return $source_mapping[$name] ?? 0;
+  }
+
 }

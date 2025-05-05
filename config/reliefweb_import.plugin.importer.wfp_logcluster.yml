@@ -1,0 +1,17 @@
+enabled: 1
+max_import_attempts: '3'
+classification:
+  enabled: 1
+  check_user_permissions: 0
+  prevent_publication: 0
+  specified_field_check: '*:no'
+  force_field_update: "*:yes\r\nfield_source:no"
+  classified_fields: "*:yes\r\nfield_source:no"
+reimport:
+  enabled: 0
+  type: ''
+  fields: ''
+  statuses: ''
+api_url: 'https://api.logcluster.org/1.0.0/en/documents?page=0'
+api_key: xyzzy
+timeout: '10'
