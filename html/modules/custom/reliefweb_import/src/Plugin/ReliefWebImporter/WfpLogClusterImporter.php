@@ -528,11 +528,12 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
     // Retrieve the document languages and default to English if none of the
     // supported languages were found.
     $languages = [];
-    foreach ($document['languages'] ?? [] as $language) {
-      if (isset($this->languageMapping[$language])) {
-        $languages[$language] = $this->languageMapping[$language];
+    if (isset($document['langcode'])) {
+      if (isset($this->languageMapping[$document['langcode']])) {
+        $languages[$document['langcode']] = $this->languageMapping[$document['langcode']];
       }
     }
+
     if (empty($languages)) {
       $languages['English'] = $this->languageMapping['English'];
     }
