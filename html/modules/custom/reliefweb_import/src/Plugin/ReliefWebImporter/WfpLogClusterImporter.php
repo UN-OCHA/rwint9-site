@@ -157,6 +157,14 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
       '#required' => TRUE,
     ];
 
+    $form['max_age'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Max age in days of documents to retrieve'),
+      '#description' => $this->t('The maximum age in days of documents to retrieve.'),
+      '#default_value' => $form_state->getValue('max_age', $this->getPluginSetting('max_age', '', FALSE)),
+      '#required' => TRUE,
+    ];
+
     $form['timeout'] = [
       '#type' => 'number',
       '#title' => $this->t('Timeout'),
@@ -230,10 +238,13 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
       $timeout = $this->getPluginSetting('timeout', 5, FALSE);
       $api_url = $this->getPluginSetting('api_url');
       $api_key = $this->getPluginSetting('api_key');
+      $max_age = max(1, $this->getPluginSetting('max_age', 3, FALSE));
+      $last_update = date('Y-m-d', strtotime('-' . $max_age . ' day'));
 
-      // Query the UNHCR API.
+      // Query the Log Cluster API.
       $query = http_build_query([
-        'order' => [$order_property => 'desc'],
+        // Get documents created or updated in the last x days.
+        'last_update' => $last_update,
         'limit' => $limit,
       ]);
 
