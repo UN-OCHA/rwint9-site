@@ -1,0 +1,17 @@
+# Spanish translation of Reliefweb Utility
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Reliefweb Utility\n"
+"POT-Creation-Date: 2025-05-06 07:58+0000\n"
+"PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n>1);\n"
+
+msgid "File Too Large"
+msgstr "Fichero demasiado grande"
+
+msgid "The file you are trying to upload is %size, which exceeds the maximum allowed size of %max_size. Please compress the file or choose a smaller one before trying again. If you need help reducing file size or have questions about upload limits, contact support: submit@reliefweb.int"
+msgstr "El archivo que está intentando cargar excede el tamaño máximo permitido de %max_size. Comprima el archivo o elija uno más pequeño antes de volver a intentarlo. Si necesita ayuda para reducir el tamaño del archivo o tiene preguntas sobre los límites de carga, comuníquese con soporte: submit@reliefweb.int"

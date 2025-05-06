@@ -131,7 +131,7 @@ class ErrorPageController extends ControllerBase {
     }
 
     // Show an error box, for consistency.
-    $this->messenger->addError($this->t("Upload Failed"));
+    $this->messenger->addError($this->t("File Too Large"));
 
     $message = $this->t("The file you are trying to upload is %size, which exceeds the maximum allowed size of %max_size. Please compress the file or choose a smaller one before trying again. If you need help reducing file size or have questions about upload limits, contact support: submit@reliefweb.int",
       [
