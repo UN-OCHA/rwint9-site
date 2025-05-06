@@ -32,7 +32,7 @@ Imports tagged items from the [automation_production](https://www.inoreader.com/
 ### Supported tags
 
 | tag | mandatory | multiple | example |
-| - | - | - |
+| - | - | - | - |
 | source | Yes | No | [source:1242] |
 | pdf | Yes | No | [pdf:canonical] |
 | content | No | No | [content:clear] |
