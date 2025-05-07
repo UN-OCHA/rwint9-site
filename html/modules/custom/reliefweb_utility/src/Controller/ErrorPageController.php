@@ -106,7 +106,9 @@ class ErrorPageController extends ControllerBase {
     $this->messenger->addError($this->t("File Too Large"));
 
     return [
-      '#markup' => $message,
+      '#type' => 'inline_template',
+      '#template' => '<p class="rw-error-413">{{ message }}</p>',
+      '#context' => ['message' => $message],
     ];
   }
 
