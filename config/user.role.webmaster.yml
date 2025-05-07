@@ -50,6 +50,7 @@ permissions:
   - 'add guideline entities'
   - 'administer reliefweb anti-spam settings'
   - 'administer reliefweb post api providers'
+  - 'administer submitter allowed domains'
   - 'bypass ocha content classification for node job'
   - 'bypass ocha content classification for node report'
   - 'create new books'
