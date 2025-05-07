@@ -10,5 +10,9 @@ access user posting rights page:
   title: 'Access posting user rights page'
   description: 'Allow users to access the user posting rights page.'
 
+administer submitter allowed domains:
+  title: 'Administer submitter allowed domains'
+  description: 'Configure domains allowed for automatic assignment of the submitter role.'
+
 permission_callbacks:
   - Drupal\reliefweb_users\UserPermissions::permissions

@@ -9,3 +9,7 @@ adjust report moderation status based on classification status:
 adjust training moderation status based on classification status:
   title: 'Adjust training moderation status based on classification status'
   description: 'Adjust the moderation status of a training being saved based on its automated classification status.'
+
+requeue report for classification on change:
+  title: 'Requeue report for classification on change'
+  description: 'Requeue a report for classification when saving its changes.'
