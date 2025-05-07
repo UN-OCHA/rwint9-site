@@ -55,12 +55,12 @@ class ErrorPageController extends ControllerBase {
     AccountInterface $account,
     RequestStack $request_stack,
     MessengerInterface $messenger,
-    TypedDataManagerInterface $typedDataManager,
+    TypedDataManagerInterface $typed_data_manager,
   ) {
     $this->account = $account;
     $this->requestStack = $request_stack;
     $this->messenger = $messenger;
-    $this->typedDataManager = $typedDataManager;
+    $this->typedDataManager = $typed_data_manager;
   }
 
   /**
