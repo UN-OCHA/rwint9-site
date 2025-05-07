@@ -1,0 +1,17 @@
+# Chinese translation of Reliefweb Utility
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Reliefweb Utility\n"
+"POT-Creation-Date: 2025-05-06 07:58+0000\n"
+"PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n>1);\n"
+
+msgid "File Too Large"
+msgstr "文件过大"
+
+msgid "The file you are trying to upload is %size, which exceeds the maximum allowed size of %max_size. Please compress the file or choose a smaller one before trying again. If you need help reducing file size or have questions about upload limits, contact support: submit@reliefweb.int"
+msgstr "您尝试上传的文件超过了 %max_size 的最大允许大小。请压缩文件或选择较小的文件，然后再试一次。如果您需要有关缩小文件大小的帮助或对上传限制有疑问，请联系支持人员：submit@reliefweb.int"
