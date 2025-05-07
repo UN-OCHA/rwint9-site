@@ -57,7 +57,6 @@ class SubmitterAllowedDomainsForm extends FormBase {
       '#title' => $this->t('Allowed domains'),
       '#description' => $this->t('Enter one domain per line. Users with email addresses from these domains will automatically be assigned the submitter role upon login if they have a connected Entra ID account.'),
       '#default_value' => implode("\n", $domains),
-      '#required' => TRUE,
       '#rows' => 10,
     ];
 
