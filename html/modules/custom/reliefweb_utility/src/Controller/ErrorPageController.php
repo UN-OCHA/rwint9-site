@@ -3,15 +3,14 @@
 namespace Drupal\reliefweb_utility\Controller;
 
 use Drupal\Component\Utility\Environment;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\MessageCommand;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\Core\TypedData\TypedDataManagerInterface;
-use Drupal\field\Entity\FieldStorageConfig;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -43,25 +42,16 @@ class ErrorPageController extends ControllerBase {
   protected $messenger;
 
   /**
-   * Include the typed data manager service.
-   *
-   * @var \Drupal\Core\TypedData\TypedDataManagerInterface
-   */
-  protected $typedDataManager;
-
-  /**
    * {@inheritdoc}
    */
   public function __construct(
     AccountInterface $account,
     RequestStack $request_stack,
     MessengerInterface $messenger,
-    TypedDataManagerInterface $typed_data_manager,
   ) {
     $this->account = $account;
     $this->requestStack = $request_stack;
     $this->messenger = $messenger;
-    $this->typedDataManager = $typed_data_manager;
   }
 
   /**
@@ -72,7 +62,6 @@ class ErrorPageController extends ControllerBase {
       $container->get('current_user'),
       $container->get('request_stack'),
       $container->get('messenger'),
-      $container->get('typed_data_manager'),
     );
   }
 
@@ -98,48 +87,23 @@ class ErrorPageController extends ControllerBase {
     // What is the max size the site allows?
     $max_size = ByteSizeMarkup::create(Environment::getUploadMaxSize());
 
-    // If this is an ajax callback, we can look up the field.
-    if ($request->isXmlHttpRequest()) {
-
-      $field_name = $request->query->get('field_parents');
-      $field_config = FieldStorageConfig::loadByName('node', $field_name);
-
-      // Instantiate the field, so we can ask about its max size.
-      $field_item_definition = $this->typedDataManager->createDataDefinition('field_item:' . $field_config->getType());
-      $field_item = $this->typedDataManager->createInstance('field_item:' . $field_config->getType(), [
-        'name' => 'wibble',
-        'parent' => NULL,
-        'data_definition' => $field_item_definition,
-      ]);
-      $max_size = ByteSizeMarkup::create($field_item->getMaxFileSize());
-
-      $message = $this->t("The file you are trying to upload is %size, which exceeds the maximum allowed size of %max_size. Please compress the file or choose a smaller one before trying again. If you need help reducing file size or have questions about upload limits, contact support: submit@reliefweb.int",
-        [
-          '%size' => $size,
-          '%max_size' => $max_size,
-        ]
-      );
-
-      $response = [
-        [
-          'selector' => '#edit-' . strtr($field_name, ['_' => '-']),
-          'command'  => 'insert',
-          'method'   => 'append',
-          'data'     => '<div class="form-item--error-message">' . $message . '</div>',
-        ],
-      ];
-      return new JsonResponse($response, 200);
-    }
-
-    // Show an error box, for consistency.
-    $this->messenger->addError($this->t("File Too Large"));
-
+    // WHat do we tell the user?
     $message = $this->t("The file you are trying to upload is %size, which exceeds the maximum allowed size of %max_size. Please compress the file or choose a smaller one before trying again. If you need help reducing file size or have questions about upload limits, contact support: submit@reliefweb.int",
       [
         '%size' => $size,
         '%max_size' => $max_size,
       ]
     );
+
+    // If this is an ajax callback, return an ajax response.
+    if ($request->isXmlHttpRequest()) {
+      $response = new AjaxResponse();
+      $response->addCommand(new MessageCommand($message, NULL, ['type' => 'error']));
+      return $response;
+    }
+
+    // Show an error box, for consistency.
+    $this->messenger->addError($this->t("File Too Large"));
 
     return [
       '#markup' => $message,
