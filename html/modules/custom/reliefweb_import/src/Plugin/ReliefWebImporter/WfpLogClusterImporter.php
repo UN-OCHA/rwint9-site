@@ -30,10 +30,15 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
    */
   protected array $languageMapping = [
     'ar' => 6876,
+    'Arabic' => 6876,
     'en' => 267,
+    'English' => 267,
     'fr' => 268,
+    'French' => 268,
     'ru' => 10906,
+    'Russian' => 10906,
     'es' => 269,
+    'Spanish' => 269,
   ];
 
   /**
@@ -245,7 +250,7 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
       $query = http_build_query([
         // Get documents created or updated in the last x days.
         'last_update' => $last_update,
-        'limit' => $limit,
+        'pagination_size' => $limit,
       ]);
 
       $url = rtrim($api_url, '/') . '/?' . $query;
@@ -396,8 +401,7 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
         'title',
         'path',
         'date',
-        'langcode',
-        'last_update',
+        'document_language',
         'countries',
         'document_type',
         'logistical_category',
@@ -528,9 +532,9 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
     // Retrieve the document languages and default to English if none of the
     // supported languages were found.
     $languages = [];
-    if (isset($document['langcode'])) {
-      if (isset($this->languageMapping[$document['langcode']])) {
-        $languages[$document['langcode']] = $this->languageMapping[$document['langcode']];
+    if (isset($document['document_language'])) {
+      if (isset($this->languageMapping[$document['document_language']])) {
+        $languages[$document['document_language']] = $this->languageMapping[$document['document_language']];
       }
     }
 
@@ -548,14 +552,12 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
       }
     }
 
-    // Retrieve the countries. Consider the first one as the primary country.
+    // Retrieve the county.
     $countries = [];
     foreach ($document['countries'] ?? [] as $location) {
-      // Note: UNHCR location items have a 'code' property.
-      if (isset($this->countryMapping[$location])) {
-        $country = $this->getCountryByIso($location);
-        $countries = $countries + $country;
-      }
+      $country = $this->getCountryByIso($location);
+      $countries[] = $country;
+      $countries = array_unique($countries);
     }
 
     // Tag with World if empty so that, at least, we can import.
