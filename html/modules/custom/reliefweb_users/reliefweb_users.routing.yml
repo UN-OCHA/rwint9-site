@@ -33,3 +33,14 @@ reliefweb_users.posting_rights:
     parameters:
       user:
         type: entity:user
+
+reliefweb_users.submitter_allowed_domains:
+  path: '/admin/config/people/submitter-allowed-domains'
+  defaults:
+    _form: '\Drupal\reliefweb_users\Form\SubmitterAllowedDomainsForm'
+    _title: 'Submitter Allowed Domains'
+  requirements:
+    _permission: 'administer submitter allowed domains'
+  options:
+    _admin_route: TRUE
+

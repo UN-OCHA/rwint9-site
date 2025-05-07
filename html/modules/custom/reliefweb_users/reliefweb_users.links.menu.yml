@@ -1,0 +1,6 @@
+reliefweb_users.submitter_allowed_domains:
+  title: 'Submitter Allowed Domains'
+  description: 'Configure domains allowed for automatic assignment of the submitter role.'
+  route_name: reliefweb_users.submitter_allowed_domains
+  parent: user.admin_index
+  weight: 99

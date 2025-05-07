@@ -158,11 +158,16 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
    *   Form state.
    */
   protected function addRoleFormAlterations(array &$form, FormStateInterface $form_state): void {
-    // Special tweaks for contributors.
-    if ($this->currentUser->hasRole('contributor')) {
+    if ($this->currentUser->hasRole('editor')) {
+      // Nothing to do. The form is already configured for that role.
+      return;
+    }
+    elseif ($this->currentUser->hasRole('contributor')) {
+      // Tweak the form for contributors.
       $this->alterFieldsForContributors($form, $form_state);
     }
     elseif ($this->currentUser->hasRole('submitter')) {
+      // Tweak the form for submitters.
       $this->alterFieldsForSubmitters($form, $form_state);
     }
   }
