@@ -40,7 +40,7 @@ function reliefweb_meta_metatags_alter(array &$metatags, array &$context) {
   $route_name = \Drupal::routeMatch()->getRouteName();
 
   // Skip if the page is not found or accessible.
-  if ($route_name === 'system.403' || $route_name === 'system.404') {
+  if (empty($route_name) || $route_name === 'system.403' || $route_name === 'system.404') {
     return;
   }
 

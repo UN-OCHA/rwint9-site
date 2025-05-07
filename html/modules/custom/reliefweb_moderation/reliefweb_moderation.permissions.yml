@@ -29,3 +29,26 @@ view moderation information revision message:
 view moderation information revision message author:
   title: 'View moderation information revision message author'
   description: 'Allow users to view the moderation revision message author.'
+
+create report only if allowed or trusted for a source:
+  title: 'Create report only if allowed or trusted for a source'
+  descrition: 'Restrict report creation to people with allowed or trusted user posting rights for a source.'
+
+# @todo use a permission callback instead to generate those permissions
+# dynamically.
+view job moderation information:
+  title: 'View job moderation information'
+  description: 'Allow users to view the job moderation status and revision message.'
+
+view report moderation information:
+  title: 'View report moderation information'
+  description: 'Allow users to view the report moderation status and revision message.'
+
+view topic moderation information:
+  title: 'View topic moderation information'
+  description: 'Allow users to view the topic moderation status and revision message.'
+
+view training moderation information:
+  title: 'View training moderation information'
+  description: 'Allow users to view the training moderation status and revision message.'
+

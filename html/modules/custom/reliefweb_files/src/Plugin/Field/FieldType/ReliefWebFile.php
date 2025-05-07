@@ -296,6 +296,9 @@ class ReliefWebFile extends FieldItemBase {
     // Validate the filename.
     $validators['ReliefWebFileName'] = [];
 
+    // Validate the real mime type.
+    $validators['ReliefWebFileRealMimeType'] = [];
+
     return $validators;
   }
 
@@ -391,14 +394,36 @@ class ReliefWebFile extends FieldItemBase {
   /**
    * Get the description with the allowed extensions and file size.
    *
+   * @param ?array $extensions
+   *   Extension list override. Only the extensions present in the default
+   *   allowed extension list will be used.
+   * @param ?int $max_file_size
+   *   Max file size override. The minimum between the override and the default
+   *   max file size will be used.
+   *
    * @return \Drupal\Component\Render\MarkupInterface
    *   The upload description.
    */
-  public function getUploadDescription() {
-    $extensions = $this->getAllowedFileExtensions();
+  public function getUploadDescription(?array $extensions = NULL, ?int $max_file_size = NULL) {
+    $default_extensions = $this->getAllowedFileExtensions();
+    if (!empty($extensions) && !empty($default_extensions)) {
+      $extensions = array_intersect($default_extensions, $extensions);
+    }
+    else {
+      $extensions = $default_extensions;
+    }
+
+    $default_max_file_size = $this->getMaxFileSize();
+    if (!empty($max_file_size) && $max_file_size > 0) {
+      $max_file_size = min($default_max_file_size, $max_file_size);
+    }
+    else {
+      $max_file_size = $default_max_file_size;
+    }
+
     return $this->t('Allowed extensions: %extensions. Max file size: %max_filesize.', [
       '%extensions' => !empty($extensions) ? implode(', ', $extensions) : $this->t('any'),
-      '%max_filesize' => format_size($this->getMaxFileSize()),
+      '%max_filesize' => format_size($max_file_size),
     ]);
   }
 

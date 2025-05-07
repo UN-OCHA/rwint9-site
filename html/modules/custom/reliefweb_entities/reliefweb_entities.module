@@ -5,6 +5,7 @@
  * Entity management for ReliefWeb.
  */
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Entity\EntityInterface;
@@ -15,6 +16,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Url;
 use Drupal\media\MediaInterface;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
 use Drupal\ocha_content_classification\Enum\ClassificationStatus;
@@ -31,6 +33,7 @@ use Drupal\reliefweb_utility\Helpers\ReliefWebStateHelper;
 use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\taxonomy\TermInterface;
+use Drupal\user\EntityOwnerInterface;
 use Symfony\Component\HttpKernel\Exception\GoneHttpException;
 
 /**
@@ -717,6 +720,28 @@ function reliefweb_entities_ocha_content_classification_post_entity_presave(Enti
     return;
   }
 
+  $account = match(TRUE) {
+    $entity instanceof RevisionLogInterface => $entity->getRevisionUser(),
+    $entity instanceof EntityOwnerInterface => $entity->getOwner(),
+    default => $this->currentUser,
+  };
+
+  if ($account?->id() != 1 && $account?->hasPermission("adjust {$entity->bundle()} moderation status based on classification status")) {
+    reliefweb_entities_adjust_moderation_status_based_on_classification_status($entity);
+  }
+}
+
+/**
+ * Adjust the entity moderation status based on the classification status.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   Entity.
+ */
+function reliefweb_entities_adjust_moderation_status_based_on_classification_status(EntityInterface $entity): void {
+  if (!($entity instanceof EntityModeratedInterface)) {
+    return;
+  }
+
   // This flag is set when the classification failed or completed or when the
   // entity is going to be queued (or is already being queued) if the user who
   // triggered the entity saving was allowed to use the classification workflow.
@@ -724,12 +749,20 @@ function reliefweb_entities_ocha_content_classification_post_entity_presave(Enti
     return;
   }
 
+  $publication_protection_default_status = ReliefWebStateHelper::getPublicationPreventionDefaultModerationStatus(
+    $entity->getEntityTypeId(),
+    $entity->bundle(),
+  );
+
   $status = match($entity->ocha_content_classification_status) {
     // Prevent publication if the document is queued for classification.
-    ClassificationStatus::Queued => 'pending',
+    // If the document is already in a non-published state then keep the current
+    // status. This allows for example, to quickly mark a document as refused
+    // or on-hold.
+    ClassificationStatus::Queued => $entity->isPublishedModerationStatus() ? $publication_protection_default_status : $entity->getModerationStatus(),
     // Prevent publication if the document classification failed. A human should
     // review manually.
-    ClassificationStatus::Failed => 'on-hold',
+    ClassificationStatus::Failed => $entity->isPublishedModerationStatus() ? $publication_protection_default_status : $entity->getModerationStatus(),
     // For successful classification, we keep the current status.
     ClassificationStatus::Completed => $entity->getModerationStatus(),
     // This default case should not happen.
@@ -963,7 +996,23 @@ function reliefweb_entities_menu_local_tasks_alter(&$data, $route_name, Refinabl
   // Open the clone entity form in a new tab.
   if (isset($data['tabs'][0]['content_entity_clone.clone']['#link'])) {
     $data['tabs'][0]['content_entity_clone.clone']['#link']['localized_options']['attributes']['target'] = '_blank';
+
+    // Hide the report clone local task for submitters.
+    // @todo remove if the granular permissions are added to the
+    // content_entity_clone module.
+    if (\Drupal::currentUser()->hasRole('submitter')) {
+      $url = $data['tabs'][0]['content_entity_clone.clone']['#link']['url'] ?? NULL;
+      if ($url instanceof Url) {
+        $route_parameters = $url->getRouteParameters();
+        if (isset($route_parameters['node_type']) && $route_parameters['node_type'] === 'report') {
+          $data['tabs'][0]['content_entity_clone.clone']['#access'] = AccessResult::forbidden();
+        }
+      }
+    }
   }
+
+  // Add cache context for roles since the visibility depends on user roles.
+  $cacheability->addCacheContexts(['user.roles']);
 }
 
 /**

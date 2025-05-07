@@ -433,8 +433,11 @@ class ReportModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function isEditableStatus($status, ?AccountInterface $account = NULL) {
-    if ($status === 'archive' || $status === 'refused') {
+    if ($status === 'archive') {
       return UserHelper::userHasRoles(['administrator', 'webmaster'], $account);
+    }
+    elseif ($status === 'refused') {
+      return UserHelper::userHasRoles(['administrator', 'editor', 'webmaster'], $account);
     }
     return TRUE;
   }
@@ -479,7 +482,7 @@ class ReportModeration extends ModerationServiceBase {
   public function entityCreateAccess(AccountInterface $account): AccessResultInterface {
     $access_result = parent::entityCreateAccess($account);
     // Disallow report creation for submitters without posting rights.
-    if ($account->hasRole('submitter') && !UserPostingRightsHelper::isUserAllowedOrTrustedForAnySource($account, $this->getBundle())) {
+    if ($account->hasPermission('create report only if allowed or trusted for a source') && !UserPostingRightsHelper::isUserAllowedOrTrustedForAnySource($account, $this->getBundle())) {
       return AccessResult::forbidden();
     }
     return $access_result;

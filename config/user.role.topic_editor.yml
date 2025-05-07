@@ -10,6 +10,7 @@ dependencies:
     - filter
     - media
     - node
+    - reliefweb_moderation
 id: topic_editor
 label: 'Topic editor'
 weight: 11
@@ -21,3 +22,4 @@ permissions:
   - 'edit any image_topic media'
   - 'edit any topic content'
   - 'use text format markdown'
+  - 'view topic moderation information'

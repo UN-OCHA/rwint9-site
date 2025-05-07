@@ -59,6 +59,16 @@ trait EntityModeratedTrait {
   }
 
   /**
+   * Check if the entity's current status is equivalent to published.
+   *
+   * @see \Drupal\reliefweb_moderation\EntityModeratedInterface::isPublishedModerationStatus()
+   */
+  public function isPublishedModerationStatus(): bool {
+    $status = $this->getModerationStatus();
+    return $this->getModerationService()?->isPublishedStatus($status) ?: $status === 'published';
+  }
+
+  /**
    * Get the list of allowed statuses for the enitity.
    *
    * @see \Drupal\reliefweb_moderation\EntityModeratedInterface::getAllowedModerationStatuses()

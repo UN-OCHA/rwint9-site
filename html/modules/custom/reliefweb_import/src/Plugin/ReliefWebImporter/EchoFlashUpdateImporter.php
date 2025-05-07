@@ -239,8 +239,8 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
    *   The number of documents that were skipped or imported successfully.
    */
   protected function processDocuments(array $documents, string $provider_uuid, ContentProcessorPluginInterface $plugin): int {
-    // Source: Echo Flash Update.
-    $source = [620];
+    $entity_type_id = $this->getEntityTypeId();
+    $bundle = $this->getEntityBundle();
 
     // Retrieve the list of documents manually posted so we can exclude them
     // from the import.
@@ -265,8 +265,8 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
       $import_record = [
         'importer' => $this->getPluginId(),
         'provider_uuid' => $provider_uuid,
-        'entity_type_id' => 'node',
-        'entity_bundle' => 'report',
+        'entity_type_id' => $entity_type_id,
+        'entity_bundle' => $bundle,
         'status' => 'pending',
         'message' => '',
         'attempts' => 0,
@@ -311,30 +311,39 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
         '@id' => $id,
       ]));
 
-      // Check if how many times we tried to import this item.
-      if (!empty($import_record['attempts']) && $import_record['attempts'] >= $max_import_attempts) {
-        $import_record['status'] = 'error';
-        $import_record['message'] = 'Too many attempts.';
-        $import_records[$import_record['imported_item_uuid']] = $import_record;
-
-        $this->getLogger()->error(strtr('Too many import attempts for Echo Flash Update document @id, skipping.', [
-          '@id' => $id,
-        ]));
-        continue;
-      }
-      // Generate hash.
-      $hash = HashHelper::generateHash($document);
+      // Generate a hash from the data we use to import the document. This is
+      // used to detect changes that can affect the document on ReliefWeb.
+      $filtered_document = $this->filterArrayByKeys($document, [
+        'ContentItemId',
+        'Link',
+        'Title',
+        'ItemSources.Name',
+        'PublishedOnDate',
+        'CreatedOnDate',
+        'Description',
+        'Country.Iso3',
+        'Countries.Iso3',
+        'EventTypeCode',
+        'EventType.Code',
+        'EventTypes.Code',
+      ]);
+      $hash = HashHelper::generateHash($filtered_document);
       $import_record['imported_data_hash'] = $hash;
+
+      // Legacy hash.
+      // @todo possibly remove in a few months (now is 2025-04-21).
+      // @see RW-1196
+      $legacy_hash = HashHelper::generateHash($document);
 
       // Skip if there is already an entity with the same UUID and same content
       // hash since it means the document has been not updated since the last
       // time it was imported.
       $records = $this->entityTypeManager
-        ->getStorage('node')
+        ->getStorage($entity_type_id)
         ->getQuery()
         ->accessCheck(FALSE)
         ->condition('uuid', $uuid, '=')
-        ->condition('field_post_api_hash', $hash, '=')
+        ->condition('field_post_api_hash', [$legacy_hash, $hash], 'IN')
         ->execute();
       if (!empty($records)) {
         $processed++;
@@ -345,108 +354,35 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
         continue;
       }
 
-      // Retrieve the title and clean it.
-      $title = $this->sanitizeText($document['Title'] ?? '');
+      // Check how many times we tried to import this item.
+      if (!empty($import_record['attempts']) && $import_record['attempts'] >= $max_import_attempts) {
+        $import_record['status'] = 'error';
+        $import_record['message'] = 'Too many attempts.';
+        $import_records[$import_record['imported_item_uuid']] = $import_record;
 
-      // Retrieve the sources.
-      $sources = array_map(fn($item) => $this->sanitizeText($item['Name'] ?? ''), $document['ItemSources']);
-      $sources = array_unique(array_filter($sources));
-
-      // Retrieve the publication date.
-      $published = $document['PublishedOnDate'] ?? $document['CreatedOnDate'] ?? time();
-      $published = DateHelper::format($published, 'custom', 'c');
-
-      // Title + (sources) + (ECHO Daily Flash of dd MM YYYY).
-      if (!empty($title)) {
-        $title = implode(' ', array_filter([
-          $title,
-          !empty($sources) ? '(' . implode(', ', $sources) . ')' : '',
-          '(ECHO Daily Flash of ' . DateHelper::format($published, 'custom', 'j F Y') . ')',
+        $this->getLogger()->error(strtr('Too many import attempts for Echo Flash Update document @id, skipping.', [
+          '@id' => $id,
         ]));
+
+        continue;
       }
 
-      // Retrieve the description.
-      $body = $this->sanitizeText($document['Description'] ?? '', TRUE);
+      // Process the item data into importable data.
+      $data = $this->getImportData($uuid, $document);
+      if (empty($data)) {
+        $this->getLogger()->notice(strtr('No data to import for Echo Flash Update document @id.', [
+          '@id' => $id,
+        ]));
 
-      // Retrieve the countries.
-      $countries = [];
-      if (isset($document['Country']['Iso3'])) {
-        $country = $this->getCountryByIso($document['Country']['Iso3']);
-        if (!empty($country)) {
-          $countries[] = $country;
-        }
-      }
-      foreach ($document['Countries'] ?? [] as $location) {
-        if (isset($location['Iso3'])) {
-          $country = $this->getCountryByIso($location['Iso3']);
-          if (!empty($country)) {
-            $countries[] = $country;
-          }
-        }
+        continue;
       }
 
-      // Tag with World if empty so that, at least, we can import.
-      if (empty($countries)) {
-        $countries = [254];
-      }
-
-      $countries = array_unique($countries);
-
-      // Extract the event types.
-      $event_type_codes = [];
-      if (isset($document['EventTypeCode'])) {
-        $event_type_code = strtoupper($document['EventTypeCode']);
-        $event_type_codes[$event_type_code] = $event_type_code;
-      }
-      elseif (isset($document['EventType']['Code'])) {
-        $event_type_code = strtoupper($document['EventType']['Code']);
-        $event_type_codes[$event_type_code] = $event_type_code;
-      }
-      if (isset($document['EventTypes'])) {
-        foreach ($document['EventTypes'] ?? [] as $event_type) {
-          if (isset($event_type['Code'])) {
-            $event_type_code = strtoupper($event_type['Code']);
-            $event_type_codes[$event_type_code] = $event_type_code;
-          }
-        }
-      }
-
-      // Disaster types and themes.
-      $disaster_types = [];
-      $themes = [];
-      foreach ($event_type_codes as $event_type_code) {
-        $disaster_type_code = $this->getDisasterTypeByCode($document['EventTypeCode']);
-        if (isset($disaster_type_code)) {
-          $disaster_types[$event_type_code] = $disaster_type_code;
-        }
-        if (isset($this->themeMapping[$event_type_code])) {
-          $themes[$event_type_code] = $this->themeMapping[$event_type_code];
-        }
-      }
-
-      // Submission data.
-      $data = [
-        'provider' => $provider_uuid,
-        'bundle' => 'report',
-        'hash' => $hash,
-        'url' => $url,
-        'uuid' => $uuid,
-        'title' => $title,
-        'body' => $body,
-        'source' => $source,
-        'published' => $published,
-        'origin' => $url,
-        'language' => [267],
-        'country' => array_values($countries),
-        'format' => [8],
-      ];
-
-      if (!empty($disaster_types)) {
-        $data['disaster_type'] = array_values($disaster_types);
-      }
-      if (!empty($themes)) {
-        $data['theme'] = array_values($themes);
-      }
+      // Mandatory information.
+      $data['provider'] = $provider_uuid;
+      $data['bundle'] = $bundle;
+      $data['hash'] = $hash;
+      $data['uuid'] = $uuid;
+      $data['url'] = $url;
 
       // Submit the document directly, no need to go through the queue.
       try {
@@ -480,6 +416,119 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
     $this->saveImportRecords($import_records);
 
     return $processed;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function processDocumentData(string $uuid, array $document): array {
+    $data = [];
+
+    // Source: Echo Flash Update.
+    $source = [620];
+
+    // Document URL.
+    $url = $document['Link'];
+
+    // Retrieve the title and clean it.
+    $title = $this->sanitizeText($document['Title'] ?? '');
+
+    // Retrieve the sources.
+    $sources = array_map(fn($item) => $this->sanitizeText($item['Name'] ?? ''), $document['ItemSources']);
+    $sources = array_unique(array_filter($sources));
+
+    // Retrieve the publication date.
+    $published = $document['PublishedOnDate'] ?? $document['CreatedOnDate'] ?? time();
+    $published = DateHelper::format($published, 'custom', 'c');
+
+    // Title + (sources) + (ECHO Daily Flash of dd MM YYYY).
+    if (!empty($title)) {
+      $title = implode(' ', array_filter([
+        $title,
+        !empty($sources) ? '(' . implode(', ', $sources) . ')' : '',
+        '(ECHO Daily Flash of ' . DateHelper::format($published, 'custom', 'j F Y') . ')',
+      ]));
+    }
+
+    // Retrieve the description.
+    $body = $this->sanitizeText($document['Description'] ?? '', TRUE);
+
+    // Retrieve the countries.
+    $countries = [];
+    if (isset($document['Country']['Iso3'])) {
+      $country = $this->getCountryByIso($document['Country']['Iso3']);
+      if (!empty($country)) {
+        $countries[] = $country;
+      }
+    }
+    foreach ($document['Countries'] ?? [] as $location) {
+      if (isset($location['Iso3'])) {
+        $country = $this->getCountryByIso($location['Iso3']);
+        if (!empty($country)) {
+          $countries[] = $country;
+        }
+      }
+    }
+
+    // Tag with World if empty so that, at least, we can import.
+    if (empty($countries)) {
+      $countries = [254];
+    }
+
+    $countries = array_unique($countries);
+
+    // Extract the event types.
+    $event_type_codes = [];
+    if (isset($document['EventTypeCode'])) {
+      $event_type_code = strtoupper($document['EventTypeCode']);
+      $event_type_codes[$event_type_code] = $event_type_code;
+    }
+    elseif (isset($document['EventType']['Code'])) {
+      $event_type_code = strtoupper($document['EventType']['Code']);
+      $event_type_codes[$event_type_code] = $event_type_code;
+    }
+    if (isset($document['EventTypes'])) {
+      foreach ($document['EventTypes'] ?? [] as $event_type) {
+        if (isset($event_type['Code'])) {
+          $event_type_code = strtoupper($event_type['Code']);
+          $event_type_codes[$event_type_code] = $event_type_code;
+        }
+      }
+    }
+
+    // Disaster types and themes.
+    $disaster_types = [];
+    $themes = [];
+    foreach ($event_type_codes as $event_type_code) {
+      $disaster_type_code = $this->getDisasterTypeByCode($event_type_code);
+      if (isset($disaster_type_code)) {
+        $disaster_types[$event_type_code] = $disaster_type_code;
+      }
+      if (isset($this->themeMapping[$event_type_code])) {
+        $themes[$event_type_code] = $this->themeMapping[$event_type_code];
+      }
+    }
+
+    // Submission data.
+    $data = [
+      'title' => $title,
+      'body' => $body,
+      'source' => $source,
+      'published' => $published,
+      'origin' => $url,
+      'language' => [267],
+      'country' => array_values($countries),
+      'format' => [8],
+    ];
+
+    if (!empty($disaster_types)) {
+      $data['disaster_type'] = array_values($disaster_types);
+    }
+    if (!empty($themes)) {
+      $data['theme'] = array_values($themes);
+    }
+
+    return $data;
   }
 
 }

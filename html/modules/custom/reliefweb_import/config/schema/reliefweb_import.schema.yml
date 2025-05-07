@@ -4,7 +4,7 @@ reliefweb_import.plugin.importer:
   label: 'ReliefWeb importer plugin base settings.'
   mapping:
     enabled:
-      type: bool
+      type: boolean
       label: 'Whether the plugin is enabled or not.'
     provider_uuid:
       type: string
@@ -12,6 +12,44 @@ reliefweb_import.plugin.importer:
     max_import_attempts:
       type: integer
       label: 'Maximum number of import attempts for an item before considering the import as failure.'
+    classification:
+      type: mapping
+      label: 'Automated classification settings'
+      mapping:
+        enabled:
+          type: boolean
+          label: 'Enable classification.'
+        check_user_permissions:
+          type: boolean
+          label: 'Check the user permissions to use the classification.'
+        prevent_publication:
+          type: boolean
+          label: 'Prevent entity publication while being classified'
+        specified_field_check:
+          type: string
+          label: 'Control which fields should be checked for emptiness before classification.'
+        force_field_update:
+          type: string
+          label: 'Control which fields should be updated even if already filled.'
+        classified_fields:
+          type: string
+          label: 'Control which fields should be updated with classifier results.'
+    reimport:
+      type: mapping
+      label: 'Reimport settings'
+      mapping:
+        enabled:
+          type: boolean
+          label: 'Enable reimport.'
+        type:
+          type: string
+          label: 'Type of reimport based on entity moderation status.'
+        fields:
+          type: string
+          label: 'Control which fields should be updated when reimporting.'
+        statuses:
+          type: string
+          label: 'Moderation status mapping.'
 
 # UNHCR Data importer plugin settings.
 reliefweb_import.plugin.importer.unhcr_data:
@@ -46,3 +84,35 @@ reliefweb_import.plugin.importer.echo_flash_update:
       type: integer
       label: 'Connection and request timeout.'
 
+# Inoreader importer plugin settings.
+reliefweb_import.plugin.importer.inoreader:
+  type: reliefweb_import.plugin.importer
+  label: 'Inoreader importer plugin settings.'
+  mapping:
+    email:
+      type: string
+      label: 'Email.'
+    password:
+      type: string
+      label: 'Password.'
+    app_id:
+      type: string
+      label: 'App Id.'
+    app_key:
+      type: string
+      label: 'App key.'
+    api_url:
+      type: string
+      label: 'API URL.'
+    timeout:
+      type: integer
+      label: 'Connection and request timeout.'
+    local_file_load:
+      type: boolean
+      label: 'Load json from local file.'
+    local_file_save:
+      type: boolean
+      label: 'Dump json to local file.'
+    local_file_path:
+      type: string
+      label: 'Local file path.'

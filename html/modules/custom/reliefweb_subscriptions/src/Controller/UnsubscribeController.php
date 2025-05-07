@@ -29,7 +29,7 @@ class UnsubscribeController extends ControllerBase {
   protected $account;
 
   /**
-   * Account.
+   * Request.
    *
    * @var \Symfony\Component\HttpFoundation\RequestStack
    */
