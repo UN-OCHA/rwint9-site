@@ -247,6 +247,13 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
+    // Load without overrides.
+    $key = $this->getConfigurationKey();
+    $configuration = $this->configFactory->get($key)->getOriginal('', FALSE) ?? [];
+    // Preserve the provider UUID since it's from the state.
+    $configuration['provider_uuid'] = $this->getConfiguration()['provider_uuid'] ?? '';
+    $this->setConfiguration($configuration);
+
     $form['enabled'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Enabled'),
