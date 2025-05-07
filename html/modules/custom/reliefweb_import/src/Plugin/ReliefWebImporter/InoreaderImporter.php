@@ -183,6 +183,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       $api_url = $this->getPluginSetting('api_url');
       $max_age = (int) $this->state->get('reliefweb_importer_inoreader_max_age', 24 * 60 * 60);
       $most_recent_timestamp = (int) $this->state->get('reliefweb_importer_inoreader_most_recent_timestamp', 0);
+      $ignore_timestamp = (bool) $this->state->get('reliefweb_importer_inoreader_ignore_timestamp', FALSE);
 
       // This is mostly for the first run.
       if (empty($most_recent_timestamp)) {
@@ -234,11 +235,13 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
           $query['c'] = $continuation;
         }
 
-        // Add filter on start date (microseconds timestamp).
-        $query['ot'] = $most_recent_timestamp;
+        if (!$ignore_timestamp) {
+          // Add filter on start date (microseconds timestamp).
+          $query['ot'] = $most_recent_timestamp;
 
-        // Exclude starred items.
-        $query['xt'] = 'user/-/state/com.google/starred';
+          // Exclude starred items.
+          $query['xt'] = 'user/-/state/com.google/starred';
+        }
 
         // Rebuild the URL.
         $api_url = $api_parts['scheme'] . '://' . $api_parts['host'] . $api_parts['path'] . '?' . http_build_query($query);
