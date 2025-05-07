@@ -119,12 +119,7 @@ class UserPostsService extends ModerationServiceBase {
       'duplicate' => $this->t('Duplicate'),
     ];
 
-    if ($this->currentUser->hasRole('contributor')) {
-      $statuses += [
-        'to-review' => $this->t('To review'),
-      ];
-    }
-    elseif ($this->currentUser->hasRole('submitter')) {
+    if ($this->currentUser->hasRole('editor') || $this->currentUser->hasRole('contributor') || $this->currentUser->hasRole('submitter')) {
       $statuses += [
         'to-review' => $this->t('To review'),
       ];

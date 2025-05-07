@@ -666,13 +666,12 @@ function reliefweb_entities_entity_presave(EntityInterface $entity) {
 /**
  * Implements hook_ocha_content_classification_pre_entity_presave().
  *
- * Requeue entity for classification when edited by a "Submitter".
+ * Requeue entity for classification when changed.
  *
- * @todo add a permission or something so we can apply this behavior to other
- * roles.
+ * @todo handle other bundles than report.
  */
 function reliefweb_entities_ocha_content_classification_pre_entity_presave(EntityInterface $entity): void {
-  if (!\Drupal::currentUser()->hasRole('submitter')) {
+  if (!\Drupal::currentUser()->hasPermission('requeue report for classification on change')) {
     return;
   }
 
@@ -1000,7 +999,8 @@ function reliefweb_entities_menu_local_tasks_alter(&$data, $route_name, Refinabl
     // Hide the report clone local task for submitters.
     // @todo remove if the granular permissions are added to the
     // content_entity_clone module.
-    if (\Drupal::currentUser()->hasRole('submitter')) {
+    $current_user = \Drupal::currentUser();
+    if ($current_user->hasRole('submitter') && !$current_user->hasRole('contributor') && !$current_user->hasRole('editor')) {
       $url = $data['tabs'][0]['content_entity_clone.clone']['#link']['url'] ?? NULL;
       if ($url instanceof Url) {
         $route_parameters = $url->getRouteParameters();
