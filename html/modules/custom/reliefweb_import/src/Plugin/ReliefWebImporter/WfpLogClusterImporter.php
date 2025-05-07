@@ -227,7 +227,7 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
   }
 
   /**
-   * Retrieve documents from the UNHCR API.
+   * Retrieve documents from the API.
    *
    * @param int $limit
    *   Maximum number of documents to retrieve at once.
@@ -303,7 +303,7 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
   }
 
   /**
-   * Process the documents retrieved from the UNHCR API.
+   * Process the documents retrieved from the API.
    *
    * @param array $documents
    *   WFP Logcluster documents.
@@ -521,8 +521,7 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
     // Retrieve the title and clean it.
     $title = $this->sanitizeText($document['title'] ?? '');
 
-    // The documents in the UNHCR API seldom have descriptions or good ones
-    // so we simply skip the body.
+    // No body text is available in the API for the WFP Logcluster documents.
     $body = '';
 
     // Retrieve the publication date.
@@ -545,7 +544,6 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
     // Retrieve the content format and map it to 'Other' if there is no match.
     $formats = [9];
     foreach ($document['document_type'] ?? [] as $type) {
-      // Note: UNHCR doc type items are name strings directly.
       if (isset($this->formatMapping[$type])) {
         $formats = [$this->formatMapping[$type]];
         break;
@@ -568,7 +566,6 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
     // Retrieve the themes.
     $themes = [];
     foreach ($document['logistical_category'] ?? [] as $sector) {
-      // Note: UNHCR sector items are name strings directly.
       if (isset($this->themeMapping[$sector])) {
         $themes[$sector] = $this->themeMapping[$sector];
       }
