@@ -96,46 +96,6 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
   ];
 
   /**
-   * Theme mapping.
-   *
-   * @var array<string, int>
-   */
-  protected array $themeMapping = [
-    // Shelter and Non-Food Items.
-    'Basic Needs' => 4603,
-    // No good match.
-    'Bureau' => NULL,
-    // Camp Coordination and Camp Management.
-    'Camp Coordination and Management' => 49458,
-    // Humanitarian Financing.
-    'Cash Assistance' => 4597,
-    // No good match.
-    'Country Operation' => NULL,
-    // Recovery and Reconstruction.
-    'Early Recovery' => 4601,
-    // Education.
-    'Education' => 4592,
-    // Shelter and Non-Food Items.
-    'Emergency Shelter and NFI' => 4603,
-    // Logistics and Telecommunications.
-    'Emergency Telecommunications' => 4598,
-    // Food and Nutrition.
-    'Food Security' => 4593,
-    // Health.
-    'Health' => 4595,
-    // Protection and Human Rights.
-    'Human Trafficking' => 4600,
-    // Logistics and Telecommunications.
-    'Logistics' => 4598,
-    // No good match.
-    'Other' => NULL,
-    // Protection and Human Rights.
-    'Protection' => 4600,
-    // Water Sanitation Hygiene.
-    'Water Sanitation Hygiene' => 4604,
-  ];
-
-  /**
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
@@ -222,7 +182,7 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
   }
 
   /**
-   * Retrieve documents from the UNHCR API.
+   * Retrieve documents from the API.
    *
    * @param int $limit
    *   Maximum number of documents to retrieve at once.
@@ -245,7 +205,7 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
       $query = http_build_query([
         // Get documents created or updated in the last x days.
         'last_update' => $last_update,
-        'limit' => $limit,
+        'page_size' => $limit,
       ]);
 
       $url = rtrim($api_url, '/') . '/?' . $query;
@@ -298,7 +258,7 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
   }
 
   /**
-   * Process the documents retrieved from the UNHCR API.
+   * Process the documents retrieved from the API.
    *
    * @param array $documents
    *   WFP Logcluster documents.
@@ -400,7 +360,6 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
         'last_update',
         'countries',
         'document_type',
-        'logistical_category',
         'organisations',
         'document_url',
       ]);
@@ -517,8 +476,7 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
     // Retrieve the title and clean it.
     $title = $this->sanitizeText($document['title'] ?? '');
 
-    // The documents in the UNHCR API seldom have descriptions or good ones
-    // so we simply skip the body.
+    // Skip the body.
     $body = '';
 
     // Retrieve the publication date.
@@ -541,7 +499,6 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
     // Retrieve the content format and map it to 'Other' if there is no match.
     $formats = [9];
     foreach ($document['document_type'] ?? [] as $type) {
-      // Note: UNHCR doc type items are name strings directly.
       if (isset($this->formatMapping[$type])) {
         $formats = [$this->formatMapping[$type]];
         break;
@@ -551,7 +508,6 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
     // Retrieve the countries. Consider the first one as the primary country.
     $countries = [];
     foreach ($document['countries'] ?? [] as $location) {
-      // Note: UNHCR location items have a 'code' property.
       if (isset($this->countryMapping[$location])) {
         $country = $this->getCountryByIso($location);
         $countries = $countries + $country;
@@ -561,15 +517,6 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
     // Tag with World if empty so that, at least, we can import.
     if (empty($countries)) {
       $countries = [254];
-    }
-
-    // Retrieve the themes.
-    $themes = [];
-    foreach ($document['logistical_category'] ?? [] as $sector) {
-      // Note: UNHCR sector items are name strings directly.
-      if (isset($this->themeMapping[$sector])) {
-        $themes[$sector] = $this->themeMapping[$sector];
-      }
     }
 
     // Retrieve the data for the attachment if any.
@@ -611,7 +558,6 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
 
     // Add the optional fields.
     $data += array_filter([
-      'theme' => array_values($themes),
       'file' => array_values($files),
     ]);
 
