@@ -1,0 +1,17 @@
+# French translation of Reliefweb Utility
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Reliefweb Utility\n"
+"POT-Creation-Date: 2025-05-06 07:58+0000\n"
+"PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n>1);\n"
+
+msgid "File Too Large"
+msgstr "Fichier trop volumineux"
+
+msgid "The file you are trying to upload is %size, which exceeds the maximum allowed size of %max_size. Please compress the file or choose a smaller one before trying again. If you need help reducing file size or have questions about upload limits, contact support: submit@reliefweb.int"
+msgstr "Le fichier que vous tentez de télécharger dépasse la taille maximale autorisée de %max_size. Veuillez compresser le fichier ou en choisir un plus petit avant de réessayer. Si vous avez besoin d'aide pour réduire la taille du fichier ou si vous avez des questions sur les limites de téléchargement, contactez le support: submit@reliefweb.int"

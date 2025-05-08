@@ -469,7 +469,8 @@ class ReportModeration extends ModerationServiceBase {
       $access_result = $access ? $access_result : AccessResult::forbidden();
     }
 
-    if ($account->hasRole('submitter') && !$access_result->isForbidden()) {
+    // Submitters have stricter access rules.
+    if ($account->hasRole('submitter') && !$account->hasRole('contributor') && !$account->hasRole('editor') && !$access_result->isForbidden()) {
       $access_result = $this->entityAccessForSubmitters($entity, $operation, $account, $access_result);
     }
 
