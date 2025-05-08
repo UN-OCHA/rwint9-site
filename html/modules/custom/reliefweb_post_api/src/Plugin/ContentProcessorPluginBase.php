@@ -981,12 +981,17 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
         // Use gs to convert the images to JPEG.
         exec('gs -sDEVICE=pdfwrite -dNOPAUSE -dQUIET -dBATCH -dCompatibilityLevel=1.4 -o ' . escapeshellarg($this->fileSystem->realpath($temp_file)) . ' ' . escapeshellarg($this->fileSystem->realpath($uri)));
 
-        // Replace the file.
-        $this->fileSystem->copy($temp_file, $uri, FileExists::Replace);
+        // Replace the file if it exists.
+        if (file_exists($this->fileSystem->realpath($temp_file))) {
+          $this->fileSystem->copy($temp_file, $uri, FileExists::Replace);
 
-        // Calculate new size.
-        $content = file_get_contents($this->fileSystem->realpath($uri));
-        $file->setSize(strlen($content) ?? 0);
+          // Calculate new size.
+          $content = file_get_contents($this->fileSystem->realpath($uri));
+          $file->setSize(strlen($content) ?? 0);
+
+          // Remove temp file.
+          $this->fileSystem->delete($temp_file);
+        }
       }
     }
 
