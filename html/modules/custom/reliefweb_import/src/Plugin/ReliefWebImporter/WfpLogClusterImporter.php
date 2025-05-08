@@ -510,7 +510,8 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
     foreach ($document['countries'] ?? [] as $location) {
       if (isset($this->countryMapping[$location])) {
         $country = $this->getCountryByIso($location);
-        $countries = $countries + $country;
+        $countries[] = $country;
+        $countries = array_unique($countries);
       }
     }
 
