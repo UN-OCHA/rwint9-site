@@ -47,97 +47,47 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
    * @var array<string, int>
    */
   protected array $formatMapping = [
-    // Analysis.
-    '3RP Documents' => 3,
-    'Assessments' => 3,
-    'Policy Papers' => 3,
-    'Population Profiling' => 3,
-    'Reports' => 3,
-    'Reports and Assessments' => 3,
-    'Reports and Policy Papers' => 3,
-    // Appeal.
-    'National Refugee Response Plans' => 4,
-    'Regional Response Plans' => 4,
-    'Regional RRP Documents' => 4,
-    // Assessment.
-    'CORE' => 5,
-    // Evaluation and Lessons Learned.
-    'Promising Practices and Case Studies' => 6,
-    // Manual and Guideline.
-    'Accountability and Inclusion' => 7,
-    'Communication with Communities' => 7,
-    'Countering Violent Extremism (CVE)' => 7,
-    'CRRF' => 7,
+    'Academic Marketplace Resources' => 9,
+    'Action Plan' => 7,
+    'Administration' => 9,
+    'Administrative Documents' => 9,
+    'Agenda' => 9,
+    'Annexes' => 9,
+    'Assessment' => 5,
+    'Cargo transport schedule' => 9,
+    'Communications' => 9,
+    'Concept Note' => 7,
+    'Concept of Operations' => 10,
+    'Contingency Plan' => 7,
+    'Form' => 7,
+    'Gaps and Needs Analysis (GNA)' => 5,
     'Guidance' => 7,
-    'Training Materials' => 7,
-    // News and Press Release.
-    'Flash Update' => 8,
-    'Media Reports' => 8,
-    'Press Releases' => 8,
-    'Protection Brief' => 8,
-    'Updates' => 8,
-    // Other.
-    '3W' => 9,
-    'Contact List' => 9,
-    'COVID-19' => 9,
-    'Funding' => 9,
+    'Handouts' => 7,
+    'Infographic' => 12570,
+    'Lessons Learned' => 6,
+    'Main documents' => 9,
+    'Maps' => 'Map',
     'Meeting Minutes' => 9,
-    'Operations Cell' => 9,
-    'Site Profiles' => 9,
-    'Strategy Documents' => 9,
-    'Terms of Reference (TOR)' => 9,
-    'Webinars' => 9,
-    'Who What Where' => 9,
-    // Situation Report.
-    'Situation Reports' => 10,
-    'Situation Reports / Updates' => 10,
-    'Situation Updates' => 10,
-    // Map.
-    'Maps' => 12,
-    // Infographic.
-    'Dashboards & Factsheets' => 12570,
-    'Data & Statistics' => 12570,
-    'Statistics' => 12570,
-  ];
-
-  /**
-   * Theme mapping.
-   *
-   * @var array<string, int>
-   */
-  protected array $themeMapping = [
-    // Shelter and Non-Food Items.
-    'Basic Needs' => 4603,
-    // No good match.
-    'Bureau' => NULL,
-    // Camp Coordination and Camp Management.
-    'Camp Coordination and Management' => 49458,
-    // Humanitarian Financing.
-    'Cash Assistance' => 4597,
-    // No good match.
-    'Country Operation' => NULL,
-    // Recovery and Reconstruction.
-    'Early Recovery' => 4601,
-    // Education.
-    'Education' => 4592,
-    // Shelter and Non-Food Items.
-    'Emergency Shelter and NFI' => 4603,
-    // Logistics and Telecommunications.
-    'Emergency Telecommunications' => 4598,
-    // Food and Nutrition.
-    'Food Security' => 4593,
-    // Health.
-    'Health' => 4595,
-    // Protection and Human Rights.
-    'Human Trafficking' => 4600,
-    // Logistics and Telecommunications.
-    'Logistics' => 4598,
-    // No good match.
-    'Other' => NULL,
-    // Protection and Human Rights.
-    'Protection' => 4600,
-    // Water Sanitation Hygiene.
-    'Water Sanitation Hygiene' => 4604,
+    'NFR' => 9,
+    'Operation Overview' => 9,
+    'Operational Information' => 10,
+    'Other' => 9,
+    'Pre-reading Material' => 9,
+    'Presentation Slides' => 9,
+    'Reference Documents' => 7,
+    'Report' => 10,
+    'Reporting' => 10,
+    'Research / Paper' => 3,
+    'Resources' => 7,
+    'Schedule' => 9,
+    'Situation Update' => 10,
+    'Snapshots' => 12570,
+    'SOP' => 7,
+    'Strategy' => 7,
+    'Tools' => 7,
+    'Training' => 7,
+    'Training Material' => 7,
+    'Training Report' => 7,
   ];
 
   /**
@@ -250,7 +200,7 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
       $query = http_build_query([
         // Get documents created or updated in the last x days.
         'last_update' => $last_update,
-        'pagination_size' => $limit,
+        'page_size' => $limit,
       ]);
 
       $url = rtrim($api_url, '/') . '/?' . $query;
@@ -404,7 +354,6 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
         'document_language',
         'countries',
         'document_type',
-        'logistical_category',
         'organisations',
         'document_url',
       ]);
@@ -542,7 +491,6 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
     }
 
     // Retrieve the content format and map it to 'Other' if there is no match.
-    $formats = [9];
     foreach ($document['document_type'] ?? [] as $type) {
       if (isset($this->formatMapping[$type])) {
         $formats = [$this->formatMapping[$type]];
@@ -550,25 +498,23 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
       }
     }
 
-    // Retrieve the county.
+    if (empty($formats)) {
+      $formats = [9];
+    }
+
+    // Retrieve the countries. Consider the first one as the primary country.
     $countries = [];
     foreach ($document['countries'] ?? [] as $location) {
-      $country = $this->getCountryByIso($location);
-      $countries[] = $country;
-      $countries = array_unique($countries);
+      if (isset($this->countryMapping[$location])) {
+        $country = $this->getCountryByIso($location);
+        $countries[] = $country;
+        $countries = array_unique($countries);
+      }
     }
 
     // Tag with World if empty so that, at least, we can import.
     if (empty($countries)) {
       $countries = [254];
-    }
-
-    // Retrieve the themes.
-    $themes = [];
-    foreach ($document['logistical_category'] ?? [] as $sector) {
-      if (isset($this->themeMapping[$sector])) {
-        $themes[$sector] = $this->themeMapping[$sector];
-      }
     }
 
     // Retrieve the data for the attachment if any.
@@ -610,7 +556,6 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
 
     // Add the optional fields.
     $data += array_filter([
-      'theme' => array_values($themes),
       'file' => array_values($files),
     ]);
 
