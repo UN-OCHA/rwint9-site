@@ -12,7 +12,7 @@ reimport:
   type: ''
   fields: ''
   statuses: ''
-api_url: 'https://api.logcluster.org/1.0.0/en/documents'
+api_url: 'https://api.logcluster.org/1.0.0/en/activity-documents'
 api_key: xyzzy
 max_age: 5
 timeout: '10'
