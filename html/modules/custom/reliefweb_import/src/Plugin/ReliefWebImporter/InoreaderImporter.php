@@ -722,7 +722,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
     if (isset($context['entity'])) {
       // Allow overriding the title with the AI extracted one if the title
       // contains a link.
-      if (preg_match('#^https?://#i', $context['entity']->title->value)) {
+      if (preg_match('#https?://#i', $context['entity']->title->value)) {
         $fields['title__value'] = TRUE;
       }
     }
