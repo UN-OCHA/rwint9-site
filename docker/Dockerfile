@@ -44,6 +44,8 @@ LABEL info.humanitarianresponse.build.date=$BUILD_DATE \
       info.humanitarianresponse.build.vcs-ref=$VCS_REF
 
 RUN mkdir -p /etc/nginx/custom && \
+    # Install ghostscript to convert JPX images embedded in PDFs.
+    apk add --no-cache ghostscript && \
     # Install lua resty library to generate UUIDs.
     cd /tmp && \
     git clone --branch=0.0.7 https://github.com/thibaultcha/lua-resty-jit-uuid.git && \
