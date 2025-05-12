@@ -1,5 +1,5 @@
 diff --git a/amazon_ses.info.yml b/amazon_ses.info.yml
-index 35de049b6899e392447557a100353d3597b0b13d..7a85c091686d40c8b53989f8b670b861e1028918 100644
+index 35de049..7a85c09 100644
 --- a/amazon_ses.info.yml
 +++ b/amazon_ses.info.yml
 @@ -2,7 +2,7 @@ name: 'Amazon SES'
@@ -12,10 +12,18 @@ index 35de049b6899e392447557a100353d3597b0b13d..7a85c091686d40c8b53989f8b670b861
  dependencies:
    - aws:aws
 diff --git a/src/AmazonSesHandler.php b/src/AmazonSesHandler.php
-index b453e7172f156c6e2f8c0a7f0d9d8977fc8d1f93..2e9096933efd591c5aff957f8bd7043ecaa9d2e9 100644
+index b453e71..995c64d 100644
 --- a/src/AmazonSesHandler.php
 +++ b/src/AmazonSesHandler.php
-@@ -34,6 +34,13 @@ class AmazonSesHandler implements AmazonSesHandlerInterface {
+@@ -7,6 +7,7 @@ use Aws\Result;
+ use Aws\SesV2\Exception\SesV2Exception;
+ use Drupal\amazon_ses\Event\MailSentEvent;
+ use Drupal\aws\AwsClientFactoryInterface;
++use Drupal\aws\Entity\ProfileInterface;
+ use Drupal\Core\Config\ConfigFactoryInterface;
+ use Drupal\Core\Logger\LoggerChannelInterface;
+ use Drupal\Core\Messenger\MessengerInterface;
+@@ -34,6 +35,13 @@ class AmazonSesHandler implements AmazonSesHandlerInterface {
     */
    protected $quota = [];
  
@@ -24,37 +32,41 @@ index b453e7172f156c6e2f8c0a7f0d9d8977fc8d1f93..2e9096933efd591c5aff957f8bd7043e
 +   *
 +   * @var int
 +   */
-+  protected $retry = 2;
++  protected $retry = 6;
 +
    public function __construct(
      protected AwsClientFactoryInterface $awsClientFactory,
      protected LoggerChannelInterface $logger,
-@@ -62,6 +69,11 @@ class AmazonSesHandler implements AmazonSesHandlerInterface {
+@@ -62,6 +70,12 @@ class AmazonSesHandler implements AmazonSesHandlerInterface {
     * {@inheritdoc}
     */
    public function send(Email $email) {
 +    // Avoid an infinite loop on expired (temporary) credentials.
 +    if ($this->retry <= 0) {
++      $this->logger->error('Exhausted the maximum number of retries to refresh credentials.');
 +      return FALSE;
 +    }
 +
      try {
        $result = $this->client->sendEmail([
          'Content' => [
-@@ -90,6 +102,12 @@ class AmazonSesHandler implements AmazonSesHandlerInterface {
+@@ -90,7 +104,14 @@ class AmazonSesHandler implements AmazonSesHandlerInterface {
        return FALSE;
      }
      catch (SesV2Exception $e) {
+-      $this->logger->error($e->getAwsErrorMessage());
 +      // If the credential has expired, request a new one and try again.
 +      if ($e->getAwsErrorCode() == 'ExpiredTokenException') {
-+        $this->retry--;
++        // Log the error we got!
++        $this->logger->notice('AWS Error @code: @message', ['@code' => $e->getAwsErrorCode(), '@message' => $e->getAwsErrorMessage()]);
 +        $this->refreshClient();
 +        return $this->send($email);
 +      }
-       $this->logger->error($e->getAwsErrorMessage());
++      $this->logger->error('AWS Error @code: @message', ['@code' => $e->getAwsErrorCode(), '@message' => $e->getAwsErrorMessage()]);
        return FALSE;
      }
-@@ -208,4 +226,16 @@ class AmazonSesHandler implements AmazonSesHandlerInterface {
+   }
+@@ -208,4 +229,30 @@ class AmazonSesHandler implements AmazonSesHandlerInterface {
      return $array;
    }
  
@@ -66,13 +78,27 @@ index b453e7172f156c6e2f8c0a7f0d9d8977fc8d1f93..2e9096933efd591c5aff957f8bd7043e
 +   * so we can continue.
 +   */
 +  protected function refreshClient() {
++    // During a drush job, REQUEST_TIME is set to the start of the job and
++    // never updates. That means the cached credentials will *never* expire
++    // and that means we need to manually delete them.
++    //
++    // @see Drupal\aws\Entity\Profile::getTemporaryCredentials()
++    //
++    // @todo Dependency injection.
++    $aws_profile = \Drupal::service('aws')->getProfile('sesv2');
++    if (isset($aws_profile)) {
++      $this->logger->info('Deleting keyvalue.expirable aws_profile @id', ['@id' => $aws_profile->id()]);
++      \Drupal::service('keyvalue.expirable')->get('aws_profile')->delete($aws_profile->id());
++    }
++
++    $this->retry--;
++    $this->logger->info('Refreshing the SesV2 client after the session token expired. Attempt @attempt of 6', ['@attempt' => (6 - $retry)]);
 +    $this->client = $this->awsClientFactory->getClient('sesv2');
-+    $this->logger->info('Refreshing the SesV2 client after the session token expired');
 +  }
 +
  }
 diff --git a/tests/src/Unit/HandlerTest.php b/tests/src/Unit/HandlerTest.php
-index f74b1309ffe8a205c1447a2c4b74f46977be8afc..0063efb71a89b1378b67a342627aa2246b514594 100644
+index f74b130..0063efb 100644
 --- a/tests/src/Unit/HandlerTest.php
 +++ b/tests/src/Unit/HandlerTest.php
 @@ -49,6 +49,9 @@ class HandlerTest extends UnitTestCase {
