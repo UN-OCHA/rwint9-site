@@ -1,0 +1,61 @@
+<?php
+
+/**
+ * @file
+ * Install file for the reliefweb_file module.
+ */
+
+/**
+ * Implements hook_update_N().
+ *
+ * Update the node field_file storage definition to add the file_hash field.
+ */
+function reliefweb_files_update_10001() {
+  // Get the cached schema data for the field.
+  $kv_schema = \Drupal::keyValue('entity.storage_schema.sql')->get('node.field_schema_data.field_file');
+
+  foreach ($kv_schema as $table => &$info) {
+    $schema = \Drupal::database()->schema();
+    if (!$schema->fieldExists($table, 'field_file_file_hash')) {
+      $spec = [
+        'type' => 'varchar_ascii',
+        'length' => 64,
+        'not null' => FALSE,
+      ];
+      $schema->addField($table, 'field_file_file_hash', $spec);
+    }
+
+    // Add index if appropriate.
+    if (!$schema->indexExists($table, 'field_file_file_hash')) {
+      $schema->addIndex($table, 'field_file_file_hash', ['field_file_file_hash'], [
+        'fields' => [
+          'field_file_file_hash' => [
+            'type' => 'varchar_ascii',
+            'length' => 64,
+            'not null' => FALSE,
+          ],
+        ],
+        'indexes' => [
+          'field_file_file_hash' => ['field_file_file_hash'],
+        ],
+      ]);
+    }
+
+    // Update schema info in the key-value storage.
+    $info['fields']['field_file_file_hash'] = [
+      'type' => 'varchar_ascii',
+      'length' => 64,
+      'not null' => FALSE,
+    ];
+    $info['indexes']['field_file_file_hash'] = ['field_file_file_hash'];
+  }
+
+  // Save the updated schema info.
+  \Drupal::keyValue('entity.storage_schema.sql')->set('node.field_schema_data.field_file', $kv_schema);
+
+  // Update field storage definition with flag to prevent auto schema updates.
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $field_storage_definition = $entity_definition_update_manager->getFieldStorageDefinition('field_file', 'node');
+  $field_storage_definition->setSetting('column_changes_handled', TRUE);
+  $entity_definition_update_manager->updateFieldStorageDefinition($field_storage_definition);
+}

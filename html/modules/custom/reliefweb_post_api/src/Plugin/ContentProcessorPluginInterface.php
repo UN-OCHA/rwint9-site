@@ -419,6 +419,8 @@ interface ContentProcessorPluginInterface {
    *
    * @param \Drupal\Core\TypedData\DataDefinitionInterface $definition
    *   Field item definition.
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   Entity the file field item will be attached to.
    * @param string $uuid
    *   File UUID.
    * @param string $file_name
@@ -435,7 +437,7 @@ interface ContentProcessorPluginInterface {
    * @return \Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile|null
    *   ReliefWeb file field item.
    */
-  public function createReliefWebFileFieldItem(DataDefinitionInterface $definition, string $uuid, string $file_name, string $url, string $checksum, string $mimetype, string $max_size = ''): ?ReliefWebFile;
+  public function createReliefWebFileFieldItem(DataDefinitionInterface $definition, ContentEntityInterface $entity, string $uuid, string $file_name, string $url, string $checksum, string $mimetype, string $max_size = ''): ?ReliefWebFile;
 
   /**
    * Create and validate a file.
