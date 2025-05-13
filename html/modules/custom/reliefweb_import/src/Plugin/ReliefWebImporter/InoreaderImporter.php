@@ -676,6 +676,14 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       ] + $info;
     }
 
+    if (empty($files)) {
+      $this->getLogger()->info(strtr('No files found for Inoreader @id, skipping.', [
+        '@id' => $id,
+      ]));
+
+      return [];
+    }
+
     // Submission data.
     $data = [
       'title' => $title,
