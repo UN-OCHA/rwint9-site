@@ -505,11 +505,9 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
     // Retrieve the countries. Consider the first one as the primary country.
     $countries = [];
     foreach ($document['countries'] ?? [] as $location) {
-      if (isset($this->countryMapping[$location])) {
-        $country = $this->getCountryByIso($location);
-        $countries[] = $country;
-        $countries = array_unique($countries);
-      }
+      $country = $this->getCountryByIso($location);
+      $countries[] = $country;
+      $countries = array_unique($countries);
     }
 
     // Tag with World if empty so that, at least, we can import.
