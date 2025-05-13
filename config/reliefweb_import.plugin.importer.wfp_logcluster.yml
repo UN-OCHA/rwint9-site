@@ -1,7 +1,7 @@
 enabled: 1
 max_import_attempts: '3'
 classification:
-  enabled: 1
+  enabled: false
   check_user_permissions: 0
   prevent_publication: 0
   specified_field_check: '*:no'
