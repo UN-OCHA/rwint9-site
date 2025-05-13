@@ -1,0 +1,18 @@
+enabled: 1
+max_import_attempts: '3'
+classification:
+  enabled: false
+  check_user_permissions: 0
+  prevent_publication: 0
+  specified_field_check: '*:no'
+  force_field_update: "*:yes\r\nfield_source:no"
+  classified_fields: "*:yes\r\nfield_source:no"
+reimport:
+  enabled: 0
+  type: ''
+  fields: ''
+  statuses: ''
+api_url: 'https://api.logcluster.org/1.0.0/en/activity-documents'
+api_key: xyzzy
+max_age: 5
+timeout: '10'
