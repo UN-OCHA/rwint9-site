@@ -90,21 +90,24 @@ class Report extends ContentProcessorPluginBase {
         ]));
       }
 
-      $query = $this->database->select('node_field_data', 'n');
+      $query = $this->database->select('node_field_data', 'nfd');
+      $query->join('node', 'n', 'nfd.nid = n.nid');
       $query->join('node__field_file', 'ff', 'n.nid = ff.entity_id');
       $query->leftJoin('path_alias', 'pa', "pa.path = CONCAT('/node/', n.nid)");
 
       $result = $query
-        ->fields('n', ['title'])
+        ->fields('nfd', ['nid', 'title'])
         ->fields('pa', ['alias'])
-        ->condition('n.type', 'report')
-        ->condition('ff.field_file_file_hash', $file['checksum'])
-        ->orderBy('n.nid', 'ASC')
+        ->condition('nfd.type', 'report', '=')
+        ->condition('n.uuid', $data['uuid'], '<>')
+        ->condition('ff.field_file_file_hash', $file['checksum'], '=')
+        ->orderBy('nfd.nid', 'ASC')
         ->range(0, 1)
         ->execute()
         ?->fetchAssoc();
 
       if (!empty($result)) {
+        $nid = $results['nid'];
         $url = Url::fromUserInput($result['alias'] ?: '/node/' . $nid, ['absolute' => TRUE]);
         throw new DuplicateException(strtr('Duplicate detected: file "@uuid" is already attached to "@label" (:url).', [
           '@uuid' => $file['uuid'],
