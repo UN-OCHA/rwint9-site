@@ -9,8 +9,9 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\reliefweb_import\Attribute\ReliefWebImporter;
 use Drupal\reliefweb_import\Plugin\ReliefWebImporterPluginBase;
-use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface;
+use Drupal\reliefweb_post_api\Exception\DuplicateException;
 use Drupal\reliefweb_post_api\Helpers\HashHelper;
+use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
 
 /**
@@ -426,7 +427,13 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
       catch (\Exception $exception) {
         $import_record['status'] = 'error';
         $import_record['message'] = $exception->getMessage();
-        $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
+        // In case of duplication, we do not try further imports.
+        if ($exception instanceof DuplicateException) {
+          $import_record['attempts'] = $max_import_attempts;
+        }
+        else {
+          $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
+        }
         $this->getLogger()->error(strtr('Unable to process WFP Logcluster document @id: @exception', [
           '@id' => $id,
           '@exception' => $exception->getMessage(),
