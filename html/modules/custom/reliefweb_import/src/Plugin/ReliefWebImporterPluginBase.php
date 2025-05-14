@@ -894,6 +894,38 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
   }
 
   /**
+   * Get the list of manually posted documents matching the given urls.
+   *
+   * @param array $urls
+   *   An array of origin URLs to check.
+   *
+   * @return array
+   *   Associative array mapping the origin URLs (keys) to their corresponding
+   *   report node IDs (values).
+   *
+   * @todo this assumes report nodes currently. Should be extended.
+   */
+  protected function getManuallyPostedDocumentsFromUrls(array $urls): array {
+    if (empty($urls)) {
+      return [];
+    }
+
+    // Query to find existing manually posted records with these origin URLs.
+    $query = $this->database->select('node__field_origin_notes', 'fon');
+    $query->addField('fon', 'field_origin_notes_value', 'url');
+    $query->addField('fon', 'entity_id', 'entity_id');
+    $query->condition('fon.bundle', 'report', '=');
+    $query->condition('fon.field_origin_notes_value', $urls, 'IN');
+
+    // Join the provider table. Manually posted content do not have one.
+    $query->leftJoin('node__field_post_api_provider', 'fpap', '%alias.entity_id = fon.entity_id');
+    $query->isNull('fpap.field_post_api_provider_target_id');
+
+    // Get the list of records keyed by the original URL.
+    return $query->execute()?->fetchAllKeyed() ?? [];
+  }
+
+  /**
    * Retrieve existing import records for the given URLs.
    *
    * @param array $uuids

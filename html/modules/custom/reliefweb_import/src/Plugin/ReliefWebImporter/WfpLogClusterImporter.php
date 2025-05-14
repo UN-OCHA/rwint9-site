@@ -67,7 +67,7 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
     'Infographic' => 12570,
     'Lessons Learned' => 6,
     'Main documents' => 9,
-    'Maps' => 'Map',
+    'Maps' => 12,
     'Meeting Minutes' => 9,
     'NFR' => 9,
     'Operation Overview' => 9,
@@ -114,10 +114,20 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
     ];
 
     $form['max_age'] = [
-      '#type' => 'textfield',
+      '#type' => 'number',
       '#title' => $this->t('Max age in days of documents to retrieve'),
       '#description' => $this->t('The maximum age in days of documents to retrieve.'),
-      '#default_value' => $form_state->getValue('max_age', $this->getPluginSetting('max_age', '', FALSE)),
+      '#default_value' => $form_state->getValue('max_age', $this->getPluginSetting('max_age', 3, FALSE)),
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['skip_document_types'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Skip document types'),
+      '#description' => $this->t('List of Logistic Cluster document types to skip. One per line.'),
+      '#default_value' => $form_state->getValue('skip_document_types', $this->getPluginSetting('skip_document_types', '', FALSE)),
+      '#min' => 1,
       '#required' => TRUE,
     ];
 
@@ -288,6 +298,36 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
     // Max import attempts.
     $max_import_attempts = $this->getPluginSetting('max_import_attempts', 3, FALSE);
 
+    // Fix the document paths.
+    // Make sure the document path is to the Logistic Cluster site not its API.
+    // The path is correct when using the `documents` endpoint but incorrect
+    // when using the `activity-documents` endpoint.
+    $document_urls = [];
+    foreach ($documents as $key => $document) {
+      if (isset($document['path'])) {
+        $url = str_replace('://api.', '://', $document['path'] ?? '');
+        $documents[$key]['path'] = $url;
+        // Store the url to retrieve any manually posted document using it.
+        $document_urls[] = $url;
+      }
+    }
+
+    // Retrieve the list of documents manually posted so we can exclude them
+    // from the import.
+    $manually_posted = $this->getManuallyPostedDocumentsFromUrls($document_urls);
+
+    // Get the list of document types to skip.
+    $skip_document_types = [];
+    $skip_document_types_setting = $this->getPluginSetting('skip_document_types', '', FALSE);
+    if (!empty($skip_document_types_setting)) {
+      foreach (explode("\n", $skip_document_types_setting) as $document_type) {
+        $document_type = trim($document_type);
+        if (!empty($document_type)) {
+          $skip_document_types[] = $document_type;
+        }
+      }
+    }
+
     // Retrieve the list of existing import records for the documents.
     $uuids = array_filter(array_map(fn($item) => $this->generateUuid($item['path'] ?? ''), $documents));
     $existing_import_records = $this->getExistingImportRecords($uuids);
@@ -314,14 +354,6 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
       $id = $document['id'];
       $import_record['imported_item_id'] = $id;
 
-      if (isset($manually_posted[$id])) {
-        $this->getLogger()->notice(strtr('WFP Logcluster document @id already manually posted as report @report_id.', [
-          '@id' => $id,
-          '@report_id' => $manually_posted[$id],
-        ]));
-        continue;
-      }
-
       // Retrieve the document URL.
       if (!isset($document['path'])) {
         $this->getLogger()->notice(strtr('Undefined document URL for WFP Logcluster document ID @id, skipping document import.', [
@@ -331,6 +363,27 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
       }
       $url = $document['path'];
       $import_record['imported_item_url'] = $url;
+
+      // Check if the document should be skipped based on its type.
+      if (!empty($skip_document_types)) {
+        $disallowed_document_types = array_intersect($skip_document_types, $document['document_type'] ?? []);
+        if (count($disallowed_document_types) > 0) {
+          $this->getLogger()->notice(strtr('WFP Logcluster document @id is of disallowed document type: "@document_type", skipping.', [
+            '@id' => $id,
+            '@document_type' => reset($disallowed_document_types),
+          ]));
+          continue;
+        }
+      }
+
+      // Check if the document was not already manually posted.
+      if (isset($manually_posted[$url])) {
+        $this->getLogger()->notice(strtr('WFP Logcluster document @id already manually posted as report @report_id.', [
+          '@id' => $id,
+          '@report_id' => $manually_posted[$url],
+        ]));
+        continue;
+      }
 
       // Generate the UUID for the document.
       $uuid = $this->generateUuid($url);
@@ -481,7 +534,7 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
     $body = '';
 
     // Retrieve the publication date.
-    $published = strtotime($document['last_update'] ?? $document['date']);
+    $published = strtotime($document['date'] ?? $document['last_update']);
     $published = DateHelper::format($published, 'custom', 'c');
 
     // Retrieve the document languages and default to English if none of the
