@@ -499,7 +499,7 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
     $body = '';
 
     // Retrieve the publication date.
-    $published = strtotime($document['last_update'] ?? $document['date']);
+    $published = strtotime($document['date'] ?? $document['last_update']);
     $published = DateHelper::format($published, 'custom', 'c');
 
     // Retrieve the document languages and default to English if none of the
