@@ -292,12 +292,19 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
     // Make sure the document path is to the Logistic Cluster site not its API.
     // The path is correct when using the `documents` endpoint but incorrect
     // when using the `activity-documents` endpoint.
+    $document_urls = [];
     foreach ($documents as $key => $document) {
       if (isset($document['path'])) {
         $url = str_replace('://api.', '://', $document['path'] ?? '');
         $documents[$key]['path'] = $url;
+        // Store the url to retrieve any manually posted document using it.
+        $document_urls[] = $url;
       }
     }
+
+    // Retrieve the list of documents manually posted so we can exclude them
+    // from the import.
+    $manually_posted = $this->getManuallyPostedDocumentsFromUrls($document_urls);
 
     // Retrieve the list of existing import records for the documents.
     $uuids = array_filter(array_map(fn($item) => $this->generateUuid($item['path'] ?? ''), $documents));
@@ -325,14 +332,6 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
       $id = $document['id'];
       $import_record['imported_item_id'] = $id;
 
-      if (isset($manually_posted[$id])) {
-        $this->getLogger()->notice(strtr('WFP Logcluster document @id already manually posted as report @report_id.', [
-          '@id' => $id,
-          '@report_id' => $manually_posted[$id],
-        ]));
-        continue;
-      }
-
       // Retrieve the document URL.
       if (!isset($document['path'])) {
         $this->getLogger()->notice(strtr('Undefined document URL for WFP Logcluster document ID @id, skipping document import.', [
@@ -342,6 +341,14 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
       }
       $url = $document['path'];
       $import_record['imported_item_url'] = $url;
+
+      if (isset($manually_posted[$url])) {
+        $this->getLogger()->notice(strtr('WFP Logcluster document @id already manually posted as report @report_id.', [
+          '@id' => $id,
+          '@report_id' => $manually_posted[$url],
+        ]));
+        continue;
+      }
 
       // Generate the UUID for the document.
       $uuid = $this->generateUuid($url);
