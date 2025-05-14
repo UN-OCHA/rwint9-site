@@ -6,7 +6,9 @@ namespace Drupal\reliefweb_post_api\Plugin\reliefweb_post_api\ContentProcessor;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Url;
 use Drupal\reliefweb_post_api\Attribute\ContentProcessor;
+use Drupal\reliefweb_post_api\Exception\DuplicateException;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorException;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginBase;
 
@@ -79,6 +81,40 @@ class Report extends ContentProcessorPluginBase {
         '@uuid' => $file['uuid'],
         '@url' => $file['url'],
       ]));
+    }
+
+    if ($type === 'file') {
+      if (empty($file['checksum'])) {
+        throw new ContentProcessorException(strtr('Missing @type checksum.', [
+          '@type' => $type,
+        ]));
+      }
+
+      $query = $this->database->select('node_field_data', 'nfd');
+      $query->join('node', 'n', 'nfd.nid = n.nid');
+      $query->join('node__field_file', 'ff', 'n.nid = ff.entity_id');
+      $query->leftJoin('path_alias', 'pa', "pa.path = CONCAT('/node/', n.nid)");
+
+      $result = $query
+        ->fields('nfd', ['nid', 'title'])
+        ->fields('pa', ['alias'])
+        ->condition('nfd.type', 'report', '=')
+        ->condition('n.uuid', $data['uuid'], '<>')
+        ->condition('ff.field_file_file_hash', $file['checksum'], '=')
+        ->orderBy('nfd.nid', 'ASC')
+        ->range(0, 1)
+        ->execute()
+        ?->fetchAssoc();
+
+      if (!empty($result)) {
+        $nid = $results['nid'];
+        $url = Url::fromUserInput($result['alias'] ?: '/node/' . $nid, ['absolute' => TRUE]);
+        throw new DuplicateException(strtr('Duplicate detected: file "@uuid" is already attached to "@label" (:url).', [
+          '@uuid' => $file['uuid'],
+          '@label' => $result['title'],
+          ':url' => $url->toString(),
+        ]));
+      }
     }
   }
 

@@ -5,6 +5,7 @@
  * Form improvements.
  */
 
+use Drupal\Component\Utility\Environment;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Template\Attribute;
@@ -32,6 +33,15 @@ function reliefweb_form_element_info_alter(array &$info) {
 
   foreach ($info as $key => $item) {
     $info[$key]['#process'][] = 'reliefweb_form_mark_optional';
+  }
+
+  if (!empty($info['file']) || !empty($info['managed_file'])) {
+    if (!empty($info['file'])) {
+      $info['file']['#process'][] = 'reliefweb_form_file_process';
+    }
+    if (!empty($info['managed_file'])) {
+      $info['managed_file']['#process'][] = 'reliefweb_form_file_process';
+    }
   }
 }
 
@@ -392,4 +402,55 @@ function reliefweb_form_hide_format_help($form_element, FormStateInterface $form
   }
 
   return $form_element;
+}
+
+/**
+ * Process function to extend the file and managed_file element types.
+ */
+function reliefweb_form_file_process(array $element, FormStateInterface $form_state, array $form): array {
+  // Add the file size validation library to the element.
+  $element['#attached']['library'][] = 'reliefweb_form/file-size-validation';
+
+  // Retrieve the file size limit from the upload validators for the file.
+  $file_size_limit = Environment::getUploadMaxSize();
+  if (!empty($element['#upload_validators']['FileSizeLimit']['fileLimit'])) {
+    $file_size_limit = min($file_size_limit, $element['#upload_validators']['FileSizeLimit']['fileLimit']);
+  }
+
+  // For standard file element.
+  if (isset($element['#attributes'])) {
+    $element['#attributes']['data-max-filesize'] = $file_size_limit;
+  }
+  else {
+    $element['#attributes'] = ['data-max-filesize' => $file_size_limit];
+  }
+
+  // For managed_file element, we need to add it to the upload button.
+  if (isset($element['upload'])) {
+    if (isset($element['upload']['#attributes'])) {
+      $element['upload']['#attributes']['data-max-filesize'] = $file_size_limit;
+    }
+    else {
+      $element['upload']['#attributes'] = ['data-max-filesize' => $file_size_limit];
+    }
+  }
+
+  return $element;
+}
+
+/**
+ * Implements hook_library_info_alter().
+ */
+function reliefweb_form_library_info_alter(&$libraries, $extension): void {
+  // Make the core file library depend on the file size validation library so
+  // that the validation can happen before the autoupload.
+  if ($extension === 'file' && isset($libraries['drupal.file'])) {
+    $libraries['drupal.file']['dependencies'][] = 'reliefweb_form/file-size-validation';
+  }
+
+  // For the same reason, also make the reliefweb_files autoupload library
+  // depend on the validation library.
+  if ($extension === 'reliefweb_files' && isset($libraries['file.autoupload'])) {
+    $libraries['file.autoupload']['dependencies'][] = 'reliefweb_form/file-size-validation';
+  }
 }

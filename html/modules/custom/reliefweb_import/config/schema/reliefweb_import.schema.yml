@@ -129,8 +129,11 @@ reliefweb_import.plugin.importer.wfp_logcluster:
       type: string
       label: 'API Key.'
     max_age:
-      type: string
+      type: integer
       label: 'Max age in days.'
+    skip_document_types:
+      type: string
+      label: List of Logistic Cluster document types to skip.'
     timeout:
       type: integer
       label: 'Connection and request timeout.'

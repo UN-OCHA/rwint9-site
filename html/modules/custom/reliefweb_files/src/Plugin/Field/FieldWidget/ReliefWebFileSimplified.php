@@ -174,6 +174,10 @@ class ReliefWebFileSimplified extends ReliefWebFile {
       $elements['add_more']['files']['#attributes']['accept'] = '.' . implode(',.', $extensions);
     }
 
+    if (isset($elements['add_more']['files']['#upload_validators']['FileSizeLimit']['fileLimit'])) {
+      $elements['add_more']['files']['#upload_validators']['FileSizeLimit']['fileLimit'] = $max_file_size;
+    }
+
     $elements['#theme'] = 'reliefweb_file_widget__simplified';
     $elements['#attached']['library'][] = 'reliefweb_files/file.autoupload';
     return $elements;
@@ -191,7 +195,8 @@ class ReliefWebFileSimplified extends ReliefWebFile {
    *   Form state.
    */
   protected function uploadFiles(array $element, FormStateInterface $form_state) {
-    $validators = $this->createFieldItem()->getUploadValidators();
+    $entity = $form_state->getFormObject()->getEntity();
+    $validators = $this->createFieldItem()->getUploadValidators($entity, TRUE);
 
     $extensions = $this->getExtensionsSetting();
     if (!empty($extensions)) {
