@@ -15,4 +15,5 @@ reimport:
 api_url: 'https://api.logcluster.org/1.0.0/en/documents'
 api_key: xyzzy
 max_age: 3
+skip_document_types: 'Meeting Minutes'
 timeout: 10
