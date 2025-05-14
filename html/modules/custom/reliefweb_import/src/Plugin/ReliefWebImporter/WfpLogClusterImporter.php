@@ -122,6 +122,15 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
       '#required' => TRUE,
     ];
 
+    $form['skip_document_types'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Skip document types'),
+      '#description' => $this->t('List of Logistic Cluster document types to skip. One per line.'),
+      '#default_value' => $form_state->getValue('skip_document_types', $this->getPluginSetting('skip_document_types', '', FALSE)),
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
     $form['timeout'] = [
       '#type' => 'number',
       '#title' => $this->t('Timeout'),
@@ -307,6 +316,18 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
     // from the import.
     $manually_posted = $this->getManuallyPostedDocumentsFromUrls($document_urls);
 
+    // Get the list of document types to skip.
+    $skip_document_types = [];
+    $skip_document_types_setting = $this->getPluginSetting('skip_document_types', '', FALSE);
+    if (!empty($skip_document_types_setting)) {
+      foreach (explode("\n", $skip_document_types_setting) as $document_type) {
+        $document_type = trim($document_type);
+        if (!empty($document_type)) {
+          $skip_document_types[] = $document_type;
+        }
+      }
+    }
+
     // Retrieve the list of existing import records for the documents.
     $uuids = array_filter(array_map(fn($item) => $this->generateUuid($item['path'] ?? ''), $documents));
     $existing_import_records = $this->getExistingImportRecords($uuids);
@@ -343,6 +364,19 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
       $url = $document['path'];
       $import_record['imported_item_url'] = $url;
 
+      // Check if the document should be skipped based on its type.
+      if (!empty($skip_document_types)) {
+        $disallowed_document_types = array_intersect($skip_document_types, $document['document_type'] ?? []);
+        if (count($disallowed_document_types) > 0) {
+          $this->getLogger()->notice(strtr('WFP Logcluster document @id is of disallowed document type: "@document_type", skipping.', [
+            '@id' => $id,
+            '@document_type' => reset($disallowed_document_types),
+          ]));
+          continue;
+        }
+      }
+
+      // Check if the document was not already manually posted.
       if (isset($manually_posted[$url])) {
         $this->getLogger()->notice(strtr('WFP Logcluster document @id already manually posted as report @report_id.', [
           '@id' => $id,
