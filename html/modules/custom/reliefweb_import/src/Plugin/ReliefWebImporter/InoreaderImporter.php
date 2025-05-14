@@ -793,7 +793,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
     }
     else {
       [$wrapper_element, $wrapper_class] = explode('.', $wrapper);
-      $parent = $xpath->query("//{$wrapper_element}[@class='{$wrapper_class}']")->item(0);
+      $parent = $xpath->query("//{$wrapper_element}[contains(@class, '{$wrapper_class}')]")->item(0);
       if (!$parent) {
         return '';
       }
