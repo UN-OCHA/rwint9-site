@@ -7,6 +7,7 @@
 
 declare(strict_types=1);
 
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
@@ -189,4 +190,63 @@ function reliefweb_import_get_entity_importer(EntityInterface $entity): ?ReliefW
 
   $entity->reliefweb_importer = FALSE;
   return NULL;
+}
+
+/**
+ * Use Puppeteer to extract PDF file from the page.
+ */
+function reliefweb_import_extract_pdf_file(string $url, string $selector, string $pdf_element, string $attribute = 'href'): ?string {
+  $snap_url = \Drupal::config('reliefweb_import.settings')->get('snap_url');
+
+  $query = [
+    'service' => 'reliefweb_import',
+    'url' => $url,
+    'selector' => $selector,
+    'element' => $pdf_element,
+    'attribute' => $attribute,
+  ];
+
+  $snap_url .= '?' . UrlHelper::buildQuery($query);
+  $options = [
+    'headers' => [
+      'X-Forwarded-For' => Drupal::request()->getClientIp(),
+      'User-Agent'      => $_SERVER['HTTP_USER_AGENT'],
+      'http_errors'     => FALSE,
+    ],
+    'method' => 'POST',
+  ];
+
+  // Use CHR if installed, otherwise use Drupal built-in http_request.
+  if (\Drupal::service('module_handler')->moduleExists('chr')) {
+    $output = chr_curl_http_request($snap_url, $options);
+  }
+  else {
+    try {
+      $output = \Drupal::httpClient()->post($snap_url, $options);
+    }
+    catch (Exception $e) {
+      \Drupal::logger('reliefweb_import')->error('%e Exception: Failed to get a response for "%u".', [
+        '%e' => get_class($e),
+        '%u' => $url,
+      ]);
+
+      return '';
+    }
+  }
+
+  // Basic error checking.
+  if ($output->getStatusCode() != 200) {
+    \Drupal::logger('ocha_snap')->error('Failed to extract PDF from "%u".', ['%u' => $url]);
+    return '';
+  }
+
+  $body = $output->getBody()->getContents();
+  if (empty($body)) {
+    \Drupal::logger('ocha_snap')->error('Failed to extract PDF from "%u".', ['%u' => $url]);
+    return '';
+  }
+
+  $body = json_decode($body, TRUE);
+
+  return $body['pdf'] ?? '';
 }
