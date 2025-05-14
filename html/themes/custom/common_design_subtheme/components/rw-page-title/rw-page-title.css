@@ -3,6 +3,7 @@
   margin: 0;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--cd-reliefweb-brand-red--dark);
+  overflow-wrap: anywhere;
 }
 
 .rw-403 .rw-page-title,

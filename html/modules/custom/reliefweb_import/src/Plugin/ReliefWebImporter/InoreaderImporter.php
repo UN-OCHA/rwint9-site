@@ -10,6 +10,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
 use Drupal\reliefweb_import\Attribute\ReliefWebImporter;
 use Drupal\reliefweb_import\Plugin\ReliefWebImporterPluginBase;
+use Drupal\reliefweb_post_api\Exception\DuplicateException;
 use Drupal\reliefweb_post_api\Helpers\HashHelper;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
@@ -183,6 +184,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       $api_url = $this->getPluginSetting('api_url');
       $max_age = (int) $this->state->get('reliefweb_importer_inoreader_max_age', 24 * 60 * 60);
       $most_recent_timestamp = (int) $this->state->get('reliefweb_importer_inoreader_most_recent_timestamp', 0);
+      $ignore_timestamp = (bool) $this->state->get('reliefweb_importer_inoreader_ignore_timestamp', FALSE);
 
       // This is mostly for the first run.
       if (empty($most_recent_timestamp)) {
@@ -234,11 +236,13 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
           $query['c'] = $continuation;
         }
 
-        // Add filter on start date (microseconds timestamp).
-        $query['ot'] = $most_recent_timestamp;
+        if (!$ignore_timestamp) {
+          // Add filter on start date (microseconds timestamp).
+          $query['ot'] = $most_recent_timestamp;
 
-        // Exclude starred items.
-        $query['xt'] = 'user/-/state/com.google/starred';
+          // Exclude starred items.
+          $query['xt'] = 'user/-/state/com.google/starred';
+        }
 
         // Rebuild the URL.
         $api_url = $api_parts['scheme'] . '://' . $api_parts['host'] . $api_parts['path'] . '?' . http_build_query($query);
@@ -473,7 +477,13 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       catch (\Exception $exception) {
         $import_record['status'] = 'error';
         $import_record['message'] = $exception->getMessage();
-        $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
+        // In case of duplication, we do not try further imports.
+        if ($exception instanceof DuplicateException) {
+          $import_record['attempts'] = $max_import_attempts;
+        }
+        else {
+          $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
+        }
         $this->getLogger()->error(strtr('Unable to process Inoreader @id: @exception', [
           '@id' => $id,
           '@exception' => $exception->getMessage(),
@@ -673,6 +683,14 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       ] + $info;
     }
 
+    if (empty($files)) {
+      $this->getLogger()->info(strtr('No files found for Inoreader @id, skipping.', [
+        '@id' => $id,
+      ]));
+
+      return [];
+    }
+
     // Submission data.
     $data = [
       'title' => $title,
@@ -719,7 +737,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
     if (isset($context['entity'])) {
       // Allow overriding the title with the AI extracted one if the title
       // contains a link.
-      if (preg_match('#^https?://#i', $context['entity']->title->value)) {
+      if (preg_match('#https?://#i', $context['entity']->title->value)) {
         $fields['title__value'] = TRUE;
       }
     }
@@ -782,7 +800,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
     }
     else {
       [$wrapper_element, $wrapper_class] = explode('.', $wrapper);
-      $parent = $xpath->query("//{$wrapper_element}[@class='{$wrapper_class}']")->item(0);
+      $parent = $xpath->query("//{$wrapper_element}[contains(@class, '{$wrapper_class}')]")->item(0);
       if (!$parent) {
         return '';
       }

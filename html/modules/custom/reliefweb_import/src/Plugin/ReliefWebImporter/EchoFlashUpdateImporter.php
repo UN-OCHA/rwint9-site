@@ -8,8 +8,9 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\reliefweb_import\Attribute\ReliefWebImporter;
 use Drupal\reliefweb_import\Plugin\ReliefWebImporterPluginBase;
-use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface;
+use Drupal\reliefweb_post_api\Exception\DuplicateException;
 use Drupal\reliefweb_post_api\Helpers\HashHelper;
+use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
 
 /**
@@ -49,28 +50,6 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
     // UCPM --> Coordination.
     'CPM' => 4590,
   ];
-
-  /**
-   * Find country by iso code.
-   */
-  protected function getCountryByIso(string $iso3): ?int {
-    if (empty($iso3)) {
-      return 254;
-    }
-
-    static $country_mapping = [];
-    if (empty($country_mapping)) {
-      $countries = $this->entityTypeManager
-        ->getStorage('taxonomy_term')
-        ->loadByProperties(['vid' => 'country']);
-      foreach ($countries as $country) {
-        $country_mapping[strtolower($country->get('field_iso3')->value)] = (int) $country->id();
-      }
-    }
-
-    $iso3 = strtolower($iso3);
-    return $country_mapping[$iso3] ?? 254;
-  }
 
   /**
    * Find disaster type by code.
@@ -401,7 +380,13 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
       catch (\Exception $exception) {
         $import_record['status'] = 'error';
         $import_record['message'] = $exception->getMessage();
-        $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
+        // In case of duplication, we do not try further imports.
+        if ($exception instanceof DuplicateException) {
+          $import_record['attempts'] = $max_import_attempts;
+        }
+        else {
+          $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
+        }
         $this->getLogger()->error(strtr('Unable to process Echo Flash Update document @id: @exception', [
           '@id' => $id,
           '@exception' => $exception->getMessage(),

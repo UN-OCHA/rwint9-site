@@ -6,6 +6,7 @@ use Drupal\Component\Utility\Bytes;
 use Drupal\Component\Utility\Environment;
 use Drupal\Component\Utility\Random;
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemBase;
@@ -266,11 +267,16 @@ class ReliefWebFile extends FieldItemBase {
   /**
    * Retrieves the upload validators for a file field.
    *
+   * @param ?\Drupal\Core\Entity\EntityInterface $entity
+   *   Entity the field item may be added to.
+   * @param bool $in_form
+   *   Flag to indicate whether we are validating inside a form or not.
+   *
    * @return array
    *   An array suitable for passing to file_save_upload() or the file field
    *   element's '#upload_validators' property.
    */
-  public function getUploadValidators() {
+  public function getUploadValidators(?EntityInterface $entity, bool $in_form = TRUE) {
     $validators = [];
 
     // Validate the extension, limiting to the current one if defined, to
@@ -298,6 +304,13 @@ class ReliefWebFile extends FieldItemBase {
 
     // Validate the real mime type.
     $validators['ReliefWebFileRealMimeType'] = [];
+
+    // Validate the hash (duplication).
+    $validators['ReliefWebFileHash'] = [
+      'fieldItem' => $this,
+      'entity' => $entity,
+      'inForm' => $in_form,
+    ];
 
     return $validators;
   }
@@ -497,6 +510,12 @@ class ReliefWebFile extends FieldItemBase {
       ->setDescription(new TranslatableMarkup('The file size in bytes.'))
       ->setRequired(TRUE);
 
+    // The SHA-256 hash of the file.
+    $properties['file_hash'] = DataDefinition::create('string')
+      ->setLabel(new TranslatableMarkup('File Hash'))
+      ->setDescription(new TranslatableMarkup('The file hash.'))
+      ->setRequired(FALSE);
+
     // The ISO 639-1 code of the main language of the file content.
     $properties['language'] = DataDefinition::create('string')
       ->setLabel(new TranslatableMarkup('Language'))
@@ -574,6 +593,11 @@ class ReliefWebFile extends FieldItemBase {
           'size' => 'big',
           'not null' => TRUE,
         ],
+        'file_hash' => [
+          'type' => 'varchar_ascii',
+          'length' => 64,
+          'not null' => FALSE,
+        ],
         'language' => [
           'type' => 'varchar_ascii',
           'length' => 12,
@@ -608,6 +632,7 @@ class ReliefWebFile extends FieldItemBase {
       'indexes' => [
         'uuid' => ['uuid'],
         'file_uuid' => ['file_uuid'],
+        'file_hash' => ['file_hash'],
       ],
     ];
   }
@@ -643,6 +668,7 @@ class ReliefWebFile extends FieldItemBase {
     $values['file_name'] = $random->string(mt_rand(1, 250)) . '.' . $random->string(mt_rand(1, 4));
     $values['file_mime'] = $random->string(mt_rand(32, 128));
     $values['file_size'] = mt_rand(1111, 99999);
+    $values['file_hash'] = $random->string(64);
     $values['language'] = ['en', 'fr', 'sp'][mt_rand(0, 2)];
     $values['description'] = $random->sentences(mt_rand(1, 5));
     $values['page_count'] = mt_rand(1, 100);
@@ -1616,6 +1642,16 @@ class ReliefWebFile extends FieldItemBase {
   }
 
   /**
+   * Get the file hash.
+   *
+   * @return string
+   *   File hash.
+   */
+  public function getFileHash() {
+    return $this->get('file_hash')->getValue();
+  }
+
+  /**
    * Get the file language.
    *
    * @return string
@@ -1837,6 +1873,9 @@ class ReliefWebFile extends FieldItemBase {
           $original_item->archiveFile();
         }
 
+        // Update the file hash with the one from the new file.
+        $this->updateFileHash();
+
         // Update the field item file.
         if ($this->storeLocally()) {
           $this->updateLocalFile();
@@ -1854,6 +1893,12 @@ class ReliefWebFile extends FieldItemBase {
 
         // Update the preview if any.
         $this->updatePreviewFile();
+      }
+
+      // Ensure we have a file hash.
+      $hash = $this->getFileHash();
+      if (empty($hash)) {
+        $this->updateFileHash();
       }
 
       // Ensure that the file is saved as permanent.
@@ -1884,6 +1929,51 @@ class ReliefWebFile extends FieldItemBase {
     }
 
     return parent::postSave($updated);
+  }
+
+  /**
+   * Update the file item's file hash.
+   *
+   * @return string
+   *   The new file hash.
+   */
+  public function updateFileHash(): string {
+    $file = $this->loadFile();
+    if (empty($file)) {
+      throw new \Exception('Unable to load the new local file to update the hash.');
+    }
+
+    $hash = $this->calculateFileHashFromUri($file->getFileUri());
+    $this->setFileHash($hash);
+    return $hash;
+  }
+
+  /**
+   * Set the file hash.
+   *
+   * @param ?string $hash
+   *   The file hash.
+   *
+   * @return $this
+   *   This file item.
+   */
+  public function setFileHash(?string $hash): static {
+    $this->get('file_hash')->setValue($hash);
+    return $this;
+  }
+
+  /**
+   * Calculate the hash of a file from its URI.
+   *
+   * @param string $uri
+   *   File URI.
+   *
+   * @return string
+   *   File's content hash.
+   */
+  public function calculateFileHashFromUri(string $uri): string {
+    $real_path = $this->getFileSystem()->realpath($uri);
+    return file_exists($real_path) ? hash_file('sha256', $real_path) : NULL;
   }
 
   /**

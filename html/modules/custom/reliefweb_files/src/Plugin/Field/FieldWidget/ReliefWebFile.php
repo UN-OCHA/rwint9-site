@@ -149,6 +149,7 @@ class ReliefWebFile extends WidgetBase {
     $field_name = $this->fieldDefinition->getName();
     $field_parents = array_merge($parents, [$field_name]);
     $required = $this->fieldDefinition->isRequired();
+    $entity = $form_state->getFormObject()->getEntity();
 
     // Load the items for form rebuilds from the field state as they might not
     // be in $form_state->getValues() because of validation limitations. Also,
@@ -203,12 +204,18 @@ class ReliefWebFile extends WidgetBase {
         '#required' => $required && $delta == 0,
       ];
 
+      // Get the upload validators but remove the hash one since it needs
+      // a real item with a real UUID.
+      $upload_validators = $dummy_item->getUploadValidators($entity, TRUE);
+      unset($upload_validators['ReliefWebFileHash']);
+
       // File upload widget.
       $elements['add_more']['files'] = [
         '#type' => 'file',
         '#name' => implode('-', array_merge($field_parents, ['files'])),
         '#multiple' => TRUE,
         '#description' => $dummy_item->getUploadDescription(),
+        '#upload_validators' => $upload_validators,
       ];
 
       // Limit the type of files that can be uplaoded.
@@ -486,6 +493,7 @@ class ReliefWebFile extends WidgetBase {
       'file_name',
       'file_mime',
       'file_size',
+      'file_hash',
       'page_count',
       'preview_uuid',
     ];
@@ -789,7 +797,8 @@ class ReliefWebFile extends WidgetBase {
    *   Form state.
    */
   protected function uploadFiles(array $element, FormStateInterface $form_state) {
-    $validators = $this->createFieldItem()->getUploadValidators();
+    $entity = $form_state->getFormObject()?->getEntity();
+    $validators = $this->createFieldItem()->getUploadValidators($entity);
     return $this->processUploadedFiles($element, $form_state, $element['#name'], $validators);
   }
 
@@ -856,7 +865,8 @@ class ReliefWebFile extends WidgetBase {
 
     // Retrieve the upload validators for the original item. This will
     // ensure the replacement is of the same type.
-    $validators = $previous_item->getUploadValidators();
+    $entity = $form_state->getFormObject()?->getEntity();
+    $validators = $previous_item->getUploadValidators($entity);
 
     // Create a new field item with associated managed files and replace the
     // original values with its values.
@@ -1242,6 +1252,9 @@ class ReliefWebFile extends WidgetBase {
     // Save the file.
     $file->setTemporary();
     $file->save();
+
+    // Set the file hash if there was no validation errors.
+    $item->updateFileHash();
 
     return $item;
   }

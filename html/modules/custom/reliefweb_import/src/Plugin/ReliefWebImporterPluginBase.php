@@ -894,6 +894,38 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
   }
 
   /**
+   * Get the list of manually posted documents matching the given urls.
+   *
+   * @param array $urls
+   *   An array of origin URLs to check.
+   *
+   * @return array
+   *   Associative array mapping the origin URLs (keys) to their corresponding
+   *   report node IDs (values).
+   *
+   * @todo this assumes report nodes currently. Should be extended.
+   */
+  protected function getManuallyPostedDocumentsFromUrls(array $urls): array {
+    if (empty($urls)) {
+      return [];
+    }
+
+    // Query to find existing manually posted records with these origin URLs.
+    $query = $this->database->select('node__field_origin_notes', 'fon');
+    $query->addField('fon', 'field_origin_notes_value', 'url');
+    $query->addField('fon', 'entity_id', 'entity_id');
+    $query->condition('fon.bundle', 'report', '=');
+    $query->condition('fon.field_origin_notes_value', $urls, 'IN');
+
+    // Join the provider table. Manually posted content do not have one.
+    $query->leftJoin('node__field_post_api_provider', 'fpap', '%alias.entity_id = fon.entity_id');
+    $query->isNull('fpap.field_post_api_provider_target_id');
+
+    // Get the list of records keyed by the original URL.
+    return $query->execute()?->fetchAllKeyed() ?? [];
+  }
+
+  /**
    * Retrieve existing import records for the given URLs.
    *
    * @param array $uuids
@@ -1220,6 +1252,53 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
     }
 
     $current = $value;
+  }
+
+  /**
+   * Find country by iso code.
+   */
+  protected function getCountryByIso(string $iso3): ?int {
+    if (empty($iso3)) {
+      return 254;
+    }
+
+    static $country_mapping = [];
+    if (empty($country_mapping)) {
+      $countries = $this->entityTypeManager
+        ->getStorage('taxonomy_term')
+        ->loadByProperties(['vid' => 'country']);
+      foreach ($countries as $country) {
+        $country_mapping[strtolower($country->get('field_iso3')->value)] = (int) $country->id();
+      }
+    }
+
+    $iso3 = strtolower($iso3);
+    return $country_mapping[$iso3] ?? 254;
+  }
+
+  /**
+   * Find source by name or short name.
+   */
+  protected function getSourceByName(string $name): ?int {
+    if (empty($iso3)) {
+      return 0;
+    }
+
+    static $source_mapping = [];
+    if (empty($source_mapping)) {
+      $sources = $this->entityTypeManager
+        ->getStorage('taxonomy_term')
+        ->loadByProperties(['vid' => 'source']);
+      foreach ($sources as $source) {
+        $source_mapping[strtolower($source->label())] = (int) $source->id();
+        if ($source->hasField('field_shortname') && !$source->get('field_shortname')->isEmpty()) {
+          $source_mapping[strtolower($source->get('field_shortname')->value)] = (int) $source->id();
+        }
+      }
+    }
+
+    $name = strtolower($name);
+    return $source_mapping[$name] ?? 0;
   }
 
 }

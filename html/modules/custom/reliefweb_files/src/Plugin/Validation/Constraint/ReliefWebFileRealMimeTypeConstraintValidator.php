@@ -108,7 +108,7 @@ class ReliefWebFileRealMimeTypeConstraintValidator extends BaseFileConstraintVal
 
     $uri = $file->getFileUri();
     if (!file_exists($uri)) {
-      $this->context->addViolation($constraint->fileMissingError, [
+      $this->context->addViolation($constraint->missingFileError, [
         '%uri' => $uri,
       ]);
       return;

@@ -19,16 +19,19 @@
       widget.classList.add('rw-file-widget--autoupload');
 
       element.addEventListener('change', function (event) {
-        const parent = event.target.closest('.rw-file-widget__add-more');
-        if (parent) {
-          const button = parent.querySelector('.form-submit');
-          if (button) {
-            const mouseEvent = new MouseEvent('mousedown', {
-              bubbles: true,
-              cancelable: true,
-              view: window
-            });
-            button.dispatchEvent(mouseEvent);
+        const input = event.target;
+        if (input.value) {
+          const parent = input.closest('.rw-file-widget__add-more');
+          if (parent) {
+            const button = parent.querySelector('.form-submit');
+            if (button) {
+              const mouseEvent = new MouseEvent('mousedown', {
+                bubbles: true,
+                cancelable: true,
+                view: window
+              });
+              button.dispatchEvent(mouseEvent);
+            }
           }
         }
       });

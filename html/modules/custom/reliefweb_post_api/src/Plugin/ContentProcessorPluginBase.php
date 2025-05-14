@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\reliefweb_post_api\Plugin;
 
 use Drupal\Component\Render\MarkupInterface;
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Bytes;
 use Drupal\Component\Utility\Environment;
@@ -25,7 +26,9 @@ use Drupal\file\FileInterface;
 use Drupal\file\Validation\FileValidatorInterface;
 use Drupal\media\MediaInterface;
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile;
+use Drupal\reliefweb_files\Plugin\Validation\Constraint\ReliefWebFileHashConstraint;
 use Drupal\reliefweb_post_api\Entity\ProviderInterface;
+use Drupal\reliefweb_post_api\Exception\DuplicateException;
 use Drupal\reliefweb_post_api\Helpers\HashHelper;
 use Drupal\reliefweb_post_api\Helpers\UrlHelper;
 use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
@@ -712,7 +715,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
           // We use the file name to guess the mimetype not the URL because it
           // may not have an extension.
           $mimetype = $this->guessFileMimeType($file_name, $mimetypes);
-          $item = $this->createReliefWebFileFieldItem($definition, $file_uuid, $file_name, $url, $checksum, $mimetype, $max_size);
+          $item = $this->createReliefWebFileFieldItem($definition, $entity, $file_uuid, $file_name, $url, $checksum, $mimetype, $max_size);
         }
 
         // Update the file description and language.
@@ -720,6 +723,16 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
         $item->get('language')->setValue($file['language'] ?? '');
 
         $values[] = $item->getValue();
+      }
+      catch (DuplicateException $exception) {
+        $message = $exception->getMessage();
+        $this->getLogger()->error($message);
+
+        // Throw an exception so that upstream can refuse the submission.
+        // We replace the file UUID with the UUID provided in the payload
+        // to help the submitter identify which file is the duplicate.
+        $message = strtr($message, $file_uuid, $uuid);
+        throw new DuplicateException($message);
       }
       catch (\Exception $exception) {
         $this->getLogger()->error($exception->getMessage());
@@ -849,7 +862,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   /**
    * {@inheritdoc}
    */
-  public function createReliefWebFileFieldItem(DataDefinitionInterface $definition, string $uuid, string $file_name, string $url, string $checksum, string $mimetype, string $max_size = ''): ?ReliefWebFile {
+  public function createReliefWebFileFieldItem(DataDefinitionInterface $definition, ContentEntityInterface $entity, string $uuid, string $file_name, string $url, string $checksum, string $mimetype, string $max_size = ''): ?ReliefWebFile {
     // Create a new field item.
     $item = ReliefWebFile::createInstance($definition);
 
@@ -860,7 +873,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
 
     // Retrieve the upload validators to validate the created file as if
     // uploaded via the form.
-    $validators = $item->getUploadValidators() ?? [];
+    $validators = $item->getUploadValidators($entity, FALSE) ?? [];
 
     // Create the file entity with the content.
     $file = $this->createFile($uuid, $file_uri, $file_name, $mimetype, $url, $checksum, $max_size, $validators);
@@ -1066,6 +1079,12 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
 
     $errors = [];
     foreach ($violations as $violation) {
+      $constraint = $violation->getConstraint();
+      // Handle file duplication differently since we refuse duplicates.
+      if (isset($constraint) && $constraint instanceof ReliefWebFileHashConstraint) {
+        $message = new FormattableMarkup($violation->getMessage(), $violation->getParameters());
+        throw new DuplicateException((string) $message);
+      }
       $errors[] = $violation->getMessage();
     }
 

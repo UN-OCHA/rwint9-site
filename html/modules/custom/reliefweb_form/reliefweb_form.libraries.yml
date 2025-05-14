@@ -36,6 +36,13 @@ form.main:
   js:
     js/form.main.js: {}
 
+# File size validation.
+file-size-validation:
+  js:
+    js/file-size-validation.js: {}
+  dependencies:
+    - core/drupal
+
 # Drupal states extension.
 drupal.states:
   js:

@@ -26,7 +26,7 @@ class ReliefWebFileRealMimeTypeConstraint extends SymfonyConstraint {
   public string $mimetypeMismatchError = 'Content type mismatch: This file claims to be %current_mimetype but is actually %content_mimetype.';
 
   /**
-   * File missing error message.
+   * Missing file error message.
    *
    * @var string
    */
