@@ -67,7 +67,7 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
     'Infographic' => 12570,
     'Lessons Learned' => 6,
     'Main documents' => 9,
-    'Maps' => 'Map',
+    'Maps' => 12,
     'Meeting Minutes' => 9,
     'NFR' => 9,
     'Operation Overview' => 9,
