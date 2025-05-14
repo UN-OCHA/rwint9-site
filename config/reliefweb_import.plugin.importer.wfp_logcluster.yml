@@ -14,5 +14,5 @@ reimport:
   statuses: ''
 api_url: 'https://api.logcluster.org/1.0.0/en/documents'
 api_key: xyzzy
-max_age: 5
+max_age: 3
 timeout: 10
