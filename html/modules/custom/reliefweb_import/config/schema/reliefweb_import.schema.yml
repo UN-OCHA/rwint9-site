@@ -129,7 +129,7 @@ reliefweb_import.plugin.importer.wfp_logcluster:
       type: string
       label: 'API Key.'
     max_age:
-      type: string
+      type: integer
       label: 'Max age in days.'
     timeout:
       type: integer

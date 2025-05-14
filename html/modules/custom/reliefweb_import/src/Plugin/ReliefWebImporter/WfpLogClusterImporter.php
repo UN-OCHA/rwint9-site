@@ -114,10 +114,11 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
     ];
 
     $form['max_age'] = [
-      '#type' => 'textfield',
+      '#type' => 'number',
       '#title' => $this->t('Max age in days of documents to retrieve'),
       '#description' => $this->t('The maximum age in days of documents to retrieve.'),
-      '#default_value' => $form_state->getValue('max_age', $this->getPluginSetting('max_age', '', FALSE)),
+      '#default_value' => $form_state->getValue('max_age', $this->getPluginSetting('max_age', 3, FALSE)),
+      '#min' => 1,
       '#required' => TRUE,
     ];
 
