@@ -288,6 +288,17 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
     // Max import attempts.
     $max_import_attempts = $this->getPluginSetting('max_import_attempts', 3, FALSE);
 
+    // Fix the document paths.
+    // Make sure the document path is to the Logistic Cluster site not its API.
+    // The path is correct when using the `documents` endpoint but incorrect
+    // when using the `activity-documents` endpoint.
+    foreach ($documents as $key => $document) {
+      if (isset($document['path'])) {
+        $url = str_replace('://api.', '://', $document['path'] ?? '');
+        $documents[$key]['path'] = $url;
+      }
+    }
+
     // Retrieve the list of existing import records for the documents.
     $uuids = array_filter(array_map(fn($item) => $this->generateUuid($item['path'] ?? ''), $documents));
     $existing_import_records = $this->getExistingImportRecords($uuids);
