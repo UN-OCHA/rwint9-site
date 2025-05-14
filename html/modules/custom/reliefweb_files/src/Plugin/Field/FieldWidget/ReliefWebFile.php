@@ -149,6 +149,7 @@ class ReliefWebFile extends WidgetBase {
     $field_name = $this->fieldDefinition->getName();
     $field_parents = array_merge($parents, [$field_name]);
     $required = $this->fieldDefinition->isRequired();
+    $entity = $form_state->getFormObject()->getEntity();
 
     // Load the items for form rebuilds from the field state as they might not
     // be in $form_state->getValues() because of validation limitations. Also,
@@ -203,12 +204,18 @@ class ReliefWebFile extends WidgetBase {
         '#required' => $required && $delta == 0,
       ];
 
+      // Get the upload validators but remove the hash one since it needs
+      // a real item with a real UUID.
+      $upload_validators = $dummy_item->getUploadValidators($entity, TRUE);
+      unset($upload_validators['ReliefWebFileHash']);
+
       // File upload widget.
       $elements['add_more']['files'] = [
         '#type' => 'file',
         '#name' => implode('-', array_merge($field_parents, ['files'])),
         '#multiple' => TRUE,
         '#description' => $dummy_item->getUploadDescription(),
+        '#upload_validators' => $upload_validators,
       ];
 
       // Limit the type of files that can be uplaoded.
