@@ -679,6 +679,19 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
               ]));
             }
             $pdf = $this->extractPdfUrl($html, 'iframe', 'data-src');
+
+            break;
+
+          case 'page-iframe-src':
+            $page_url = $document['canonical'][0]['href'] ?? '';
+            $html = $this->downloadHtmlPage($page_url);
+            if (empty($html)) {
+              $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
+                '@id' => $id,
+                '@url' => $page_url,
+              ]));
+            }
+            $pdf = $this->extractPdfUrl($html, 'iframe', 'src');
             break;
 
           case 'js':
@@ -950,6 +963,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       }
       catch (\Exception $exception) {
         // Fail silently.
+        $this->getLogger()->info('Failure with response code: ' . $exception->getMessage());
         return '';
       }
     }

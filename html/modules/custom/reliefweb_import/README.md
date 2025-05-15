@@ -57,6 +57,7 @@ This is mandatory and points to the location of the PDF file. For the moment onl
 | summary-link | There's a link in the summary in Inoreader to the PDF file |
 | page-link | The importer will fetch the source page and will search for a link to the PDF file |
 | page-object | The importer will fetch the source page and will search for an object tag with the PDF file |
+| page-iframe-src | The importer will fetch the source page and will search for an iframe with an `src` attribute pointing to the PDF file |
 | page-iframe-data-src | The importer will fetch the source page and will search for an iframe with an `data-src` attribute pointing to the PDF file |
 | js | Uses puppeteer to render and analyze the page |
 
