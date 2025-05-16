@@ -40,6 +40,8 @@ Imports tagged items from the [automation_production](https://www.inoreader.com/
 | follow | No | No | [follow:https://wedocs.unep.org] |
 | wrapper | No | Yes | [wrapper:div.content_sidebar] |
 | url | No | Yes | [url:/docs/] |
+| puppeteer | No | No | [puppeteer:ds-file-download-link a] |
+| puppeteer-attrib | No | No | [puppeteer-attrib:href] |
 
 #### `source` tag
 
@@ -55,7 +57,9 @@ This is mandatory and points to the location of the PDF file. For the moment onl
 | summary-link | There's a link in the summary in Inoreader to the PDF file |
 | page-link | The importer will fetch the source page and will search for a link to the PDF file |
 | page-object | The importer will fetch the source page and will search for an object tag with the PDF file |
+| page-iframe-src | The importer will fetch the source page and will search for an iframe with an `src` attribute pointing to the PDF file |
 | page-iframe-data-src | The importer will fetch the source page and will search for an iframe with an `data-src` attribute pointing to the PDF file |
+| js | Uses puppeteer to render and analyze the page |
 
 #### `content` tag
 
@@ -82,6 +86,14 @@ This will restrict searching in an HTML file to a certain region on the page.
 #### `url` tag
 
 This will filter possible links to PDF files to a certain pattern.
+
+#### `puppeteer` tag
+
+Used to select the html element containg the PDF link.
+
+#### `puppeteer-attribute` tag
+
+Defines the attribute to extract from the element.
 
 ## UNHCR importer
 

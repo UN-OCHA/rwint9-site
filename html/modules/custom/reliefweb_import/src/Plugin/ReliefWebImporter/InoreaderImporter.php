@@ -138,8 +138,9 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       return FALSE;
     }
 
-    $this->getLogger()->info(strtr('Retrieved @count Inoreader documents.', [
+    $this->getLogger()->info(strtr('Retrieved @count Inoreader documents from @url.', [
       '@count' => count($documents),
+      '@url' => $this->getPluginSetting('api_url'),
     ]));
 
     // Process the documents importing new ones and updated ones.
@@ -155,6 +156,52 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
     // @todo check if we want to return TRUE only if there was no errors or if
     // return TRUE for partial success is fine enough.
     return $processed > 0;
+  }
+
+  /**
+   * Get authorization token from Inoreader.
+   */
+  protected function getAuthToken(): string {
+    $timeout = $this->getPluginSetting('timeout', 10, FALSE);
+    $email = $this->getPluginSetting('email');
+    $password = $this->getPluginSetting('password');
+    $app_id = $this->getPluginSetting('app_id');
+    $app_key = $this->getPluginSetting('app_key');
+
+    // Get auth token.
+    $response = $this->httpClient->post("https://www.inoreader.com/accounts/ClientLogin", [
+      'connect_timeout' => $timeout,
+      'timeout' => $timeout,
+      'headers' => [
+        'Content-Type' => 'application/x-www-form-urlencoded',
+        'AppId' => $app_id,
+        'AppKey' => $app_key,
+      ],
+      'form_params' => [
+        'Email' => $email,
+        'Passwd' => $password,
+      ],
+    ]);
+
+    if ($response->getStatusCode() !== 200) {
+      // @todo try to retrieve the error message.
+      throw new \Exception('Failure with response code: ' . $response->getStatusCode());
+    }
+
+    $auth = '';
+    $content = $response->getBody()->getContents();
+    foreach (explode("\n", $content) as $line) {
+      if (preg_match('/Auth=([^&]+)/', $line, $matches)) {
+        $auth = $matches[1];
+        break;
+      }
+    }
+
+    if (empty($auth)) {
+      throw new \Exception('Unable to retrieve auth token.');
+    }
+
+    return $auth;
   }
 
   /**
@@ -177,8 +224,6 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
     // Get list of documents.
     try {
       $timeout = $this->getPluginSetting('timeout', 10, FALSE);
-      $email = $this->getPluginSetting('email');
-      $password = $this->getPluginSetting('password');
       $app_id = $this->getPluginSetting('app_id');
       $app_key = $this->getPluginSetting('app_key');
       $api_url = $this->getPluginSetting('api_url');
@@ -195,38 +240,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         $most_recent_timestamp -= (60 * 1_000_000);
       }
 
-      // Get auth token.
-      $response = $this->httpClient->post("https://www.inoreader.com/accounts/ClientLogin", [
-        'connect_timeout' => $timeout,
-        'timeout' => $timeout,
-        'headers' => [
-          'Content-Type' => 'application/x-www-form-urlencoded',
-          'AppId' => $app_id,
-          'AppKey' => $app_key,
-        ],
-        'form_params' => [
-          'Email' => $email,
-          'Passwd' => $password,
-        ],
-      ]);
-
-      if ($response->getStatusCode() !== 200) {
-        // @todo try to retrieve the error message.
-        throw new \Exception('Failure with response code: ' . $response->getStatusCode());
-      }
-
-      $auth = '';
-      $content = $response->getBody()->getContents();
-      foreach (explode("\n", $content) as $line) {
-        if (preg_match('/Auth=([^&]+)/', $line, $matches)) {
-          $auth = $matches[1];
-          break;
-        }
-      }
-
-      if (empty($auth)) {
-        throw new \Exception('Unable to retrieve auth token.');
-      }
+      $auth = $this->getAuthToken();
 
       while ($real_limit > 0) {
         $api_parts = parse_url($api_url);
@@ -313,6 +327,39 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
   }
 
   /**
+   * Add tag to an inoreader item.
+   */
+  protected function addTagToItem($id, $tag) {
+    $auth = $this->getAuthToken();
+
+    try {
+      $timeout = $this->getPluginSetting('timeout', 10, FALSE);
+      $app_id = $this->getPluginSetting('app_id');
+      $app_key = $this->getPluginSetting('app_key');
+
+      $this->httpClient->post('https://www.inoreader.com/reader/api/0/edit-tag', [
+        'connect_timeout' => $timeout,
+        'timeout' => $timeout,
+        'headers' => [
+          'Content-Type' => 'application/x-www-form-urlencoded',
+          'AppId' => $app_id,
+          'AppKey' => $app_key,
+          'Authorization' => 'GoogleLogin auth=' . $auth,
+        ],
+        'query' => [
+          'a' => $tag,
+          'r' => 'user/-/state/com.google/read',
+          'i' => $id,
+        ],
+      ]);
+    }
+    catch (\Exception $exception) {
+      $this->getLogger()->error($exception->getMessage());
+      return FALSE;
+    }
+  }
+
+  /**
    * Process the documents retrieved from the Inoreader.
    *
    * @param array $documents
@@ -373,6 +420,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       $id = $document['id'];
       $import_record['imported_item_id'] = $id;
 
+      // $this->addTagToItem($id, 'rw-imported');
       // Retrieve the document URL.
       if (!isset($document['canonical'][0]['href'])) {
         $this->getLogger()->notice(strtr('Undefined document URL for Inoreader document ID @id, skipping document import.', [
@@ -632,7 +680,26 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
               ]));
             }
             $pdf = $this->extractPdfUrl($html, 'iframe', 'data-src');
+
             break;
+
+          case 'page-iframe-src':
+            $page_url = $document['canonical'][0]['href'] ?? '';
+            $html = $this->downloadHtmlPage($page_url);
+            if (empty($html)) {
+              $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
+                '@id' => $id,
+                '@url' => $page_url,
+              ]));
+            }
+            $pdf = $this->extractPdfUrl($html, 'iframe', 'src');
+            break;
+
+          case 'js':
+            $page_url = $document['canonical'][0]['href'] ?? '';
+            $pdf = $this->tryToExtractPdfUsingPuppeteer($page_url, $tags);
+            break;
+
         }
       }
       elseif ($tag_key == 'content') {
@@ -896,6 +963,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       }
       catch (\Exception $exception) {
         // Fail silently.
+        $this->getLogger()->info('Failure with response code: ' . $exception->getMessage());
         return '';
       }
     }
@@ -910,6 +978,36 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
     if (isset($tags['replace'])) {
       [$from, $to] = explode(':', $tags['replace']);
       $pdf = str_replace($from, $to, $pdf);
+    }
+
+    return $pdf;
+  }
+
+  /**
+   * Try to extract the link to a PDF file from HTML content.
+   * */
+  protected function tryToExtractPdfUsingPuppeteer($page_url, $tags) {
+    $pdf = '';
+
+    if (isset($tags['wrapper'])) {
+      if (!is_array($tags['wrapper'])) {
+        $tags['wrapper'] = [$tags['wrapper']];
+      }
+
+      foreach ($tags['wrapper'] as $wrapper) {
+        $pdf = reliefweb_import_extract_pdf_file($page_url, $wrapper, $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href');
+        if ($pdf) {
+          break;
+        }
+      }
+    }
+    else {
+      $pdf = reliefweb_import_extract_pdf_file($page_url, '', $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href');
+    }
+
+    if (!empty($pdf) && strpos($pdf, 'http') !== 0) {
+      $url_parts = parse_url($page_url);
+      $pdf = ($url_parts['scheme'] ?? 'https') . '://' . $url_parts['host'] . $pdf;
     }
 
     return $pdf;
