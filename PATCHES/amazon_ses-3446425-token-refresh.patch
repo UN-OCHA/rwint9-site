@@ -92,7 +92,7 @@ index b453e71..995c64d 100644
 +    }
 +
 +    $this->retry--;
-+    $this->logger->info('Refreshing the SesV2 client after the session token expired. Attempt @attempt of 6', ['@attempt' => (6 - $retry)]);
++    $this->logger->info('Refreshing the SesV2 client after the session token expired. Attempt @attempt of 6', ['@attempt' => (6 - $this->retry)]);
 +    $this->client = $this->awsClientFactory->getClient('sesv2');
 +  }
 +
