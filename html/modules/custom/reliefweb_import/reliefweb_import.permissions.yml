@@ -1,3 +1,6 @@
 administer reliefweb content importers:
   title: 'Administer ReliefWeb content importers'
   description: 'Allow users to administer ReliefWeb content importers.'
+access reliefweb failed import records:
+  title: 'View failed import records'
+  description: 'Allow users to view failed import records.'

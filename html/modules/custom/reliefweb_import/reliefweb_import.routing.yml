@@ -13,3 +13,11 @@ reliefweb_import.reliefweb_importer.plugin.configure:
     _title_callback: '\Drupal\reliefweb_import\Form\ReliefWebImporterConfigForm::getTitle'
   requirements:
     _permission: 'administer reliefweb content importers'
+
+reliefweb_import.reliefweb_importer.failed_import_records:
+  path: '/admin/content/reliefweb-failed-import-records'
+  defaults:
+    _controller: '\Drupal\reliefweb_import\Controller\ReliefWebImporterImportRecordsController::listFailedImportRecords'
+    _title: 'ReliefWeb Failed Import Records'
+  requirements:
+    _permission: 'access reliefweb failed import records'
