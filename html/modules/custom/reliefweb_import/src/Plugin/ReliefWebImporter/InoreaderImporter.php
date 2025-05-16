@@ -138,8 +138,9 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       return FALSE;
     }
 
-    $this->getLogger()->info(strtr('Retrieved @count Inoreader documents.', [
+    $this->getLogger()->info(strtr('Retrieved @count Inoreader documents from @url.', [
       '@count' => count($documents),
+      '@url' => $this->getPluginSetting('api_url'),
     ]));
 
     // Process the documents importing new ones and updated ones.
@@ -697,7 +698,6 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
           case 'js':
             $page_url = $document['canonical'][0]['href'] ?? '';
             $pdf = $this->tryToExtractPdfUsingPuppeteer($page_url, $tags);
-            $pdf = reliefweb_import_extract_pdf_file('https://openknowledge.fao.org/items/acfdfe70-8a7f-4234-bbda-c5b4974af9bf', '.item-page-thumbnail-container', 'ds-file-download-link a', 'href');
             break;
 
         }
