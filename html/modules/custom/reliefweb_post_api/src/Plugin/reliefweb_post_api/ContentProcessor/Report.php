@@ -107,7 +107,7 @@ class Report extends ContentProcessorPluginBase {
         ?->fetchAssoc();
 
       if (!empty($result)) {
-        $nid = $results['nid'];
+        $nid = $result['nid'];
         $url = Url::fromUserInput($result['alias'] ?: '/node/' . $nid, ['absolute' => TRUE]);
         throw new DuplicateException(strtr('Duplicate detected: file "@uuid" is already attached to "@label" (:url).', [
           '@uuid' => $file['uuid'],
