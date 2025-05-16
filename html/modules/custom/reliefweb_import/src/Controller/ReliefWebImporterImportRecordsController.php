@@ -6,6 +6,7 @@ namespace Drupal\reliefweb_import\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -19,6 +20,7 @@ class ReliefWebImporterImportRecordsController extends ControllerBase {
    */
   public function __construct(
     protected Connection $database,
+    protected PagerManagerInterface $pager_manager,
   ) {}
 
   /**
@@ -26,7 +28,8 @@ class ReliefWebImporterImportRecordsController extends ControllerBase {
    */
   public static function create(ContainerInterface $container): self {
     return new static(
-      $container->get('database')
+      $container->get('database'),
+      $container->get('pager.manager'),
     );
   }
 
@@ -37,12 +40,16 @@ class ReliefWebImporterImportRecordsController extends ControllerBase {
    *   Render array with a table of the available content importer plugins.
    */
   public function listFailedImportRecords(): array {
-    $records = $this->getFailedImportRecords();
-    if (empty($records)) {
+    $limit = 20;
+    $count = count($this->getFailedImportRecords(0, 999999));
+    if ($count == 0) {
       return [
         '#markup' => $this->t('No failed import records found.'),
       ];
     }
+
+    $pager = $this->pager_manager->createPager($count, $limit);
+    $records = $this->getFailedImportRecords($pager->getCurrentPage(), $limit);
 
     $build = [];
     $headers = [
@@ -81,6 +88,11 @@ class ReliefWebImporterImportRecordsController extends ControllerBase {
       '#empty' => $this->t('No ReliefWeb Importer plugins found.'),
     ];
 
+    // Add pager.
+    $build['pager'] = [
+      '#type' => 'pager',
+    ];
+
     return $build;
   }
 
@@ -90,10 +102,12 @@ class ReliefWebImporterImportRecordsController extends ControllerBase {
    * @return array
    *   An array of import records keyed by the import item UUID.
    */
-  protected function getFailedImportRecords(): array {
+  protected function getFailedImportRecords(int $page = 0, int $limit = 20): array {
     $records = $this->database->select('reliefweb_import_records', 'r')
       ->fields('r')
       ->condition('status', 'success', '!=')
+      ->range($page * $limit, $limit)
+      ->orderBy('created', 'DESC')
       ->execute()
       ?->fetchAllAssoc('imported_item_uuid', \PDO::FETCH_ASSOC) ?? [];
 
