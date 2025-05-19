@@ -21,8 +21,9 @@
           editor.session.setTabSize(2);
           editor.setTheme('ace/theme/chrome');
           editor.setOptions({
-            minLines: 3,
-            maxLines: 20
+            minLines: 10,
+            maxLines: 30,
+            enableAutoIndent: true,
           });
 
           // Update Drupal textarea value.
