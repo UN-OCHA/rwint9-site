@@ -327,39 +327,6 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
   }
 
   /**
-   * Add tag to an inoreader item.
-   */
-  protected function addTagToItem($id, $tag) {
-    $auth = $this->getAuthToken();
-
-    try {
-      $timeout = $this->getPluginSetting('timeout', 10, FALSE);
-      $app_id = $this->getPluginSetting('app_id');
-      $app_key = $this->getPluginSetting('app_key');
-
-      $this->httpClient->post('https://www.inoreader.com/reader/api/0/edit-tag', [
-        'connect_timeout' => $timeout,
-        'timeout' => $timeout,
-        'headers' => [
-          'Content-Type' => 'application/x-www-form-urlencoded',
-          'AppId' => $app_id,
-          'AppKey' => $app_key,
-          'Authorization' => 'GoogleLogin auth=' . $auth,
-        ],
-        'query' => [
-          'a' => $tag,
-          'r' => 'user/-/state/com.google/read',
-          'i' => $id,
-        ],
-      ]);
-    }
-    catch (\Exception $exception) {
-      $this->getLogger()->error($exception->getMessage());
-      return FALSE;
-    }
-  }
-
-  /**
    * Process the documents retrieved from the Inoreader.
    *
    * @param array $documents
@@ -420,7 +387,6 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       $id = $document['id'];
       $import_record['imported_item_id'] = $id;
 
-      // $this->addTagToItem($id, 'rw-imported');
       // Retrieve the document URL.
       if (!isset($document['canonical'][0]['href'])) {
         $this->getLogger()->notice(strtr('Undefined document URL for Inoreader document ID @id, skipping document import.', [
