@@ -573,23 +573,39 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       }
     }
 
+    // Get extra tags from state.
+    $extra_tags = $this->state->get('reliefweb_importer_inoreader_extra_tags', []);
+
+    if (!empty($extra_tags[$tags['source']])) {
+      foreach ($extra_tags[$tags['source']] as $key => $value) {
+        if (isset($tags[$key])) {
+          if (!is_array($tags[$key])) {
+            $tags[$key] = [
+              $tags[$key],
+            ];
+          }
+          $tags[$key] = array_merge($tags[$key], $value);
+        }
+        else {
+          $tags[$key] = $value;
+        }
+      }
+    }
+
     // Source is mandatory, so present.
     $sources = [
       (int) $tags['source'],
     ];
-    unset($tags['source']);
 
     foreach ($tags as $tag_key => $tag_value) {
       if ($tag_key == 'pdf') {
         switch ($tag_value) {
           case 'canonical':
             $pdf = $document['canonical'][0]['href'] ?? '';
-            $pdf = $this->rewritePdfLink($pdf, $tags);
             break;
 
           case 'summary-link':
             $pdf = $this->extractPdfUrl($document['summary']['content'] ?? '', 'a', 'href');
-            $pdf = $this->rewritePdfLink($pdf, $tags);
             break;
 
           case 'page-link':
@@ -667,6 +683,8 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
             break;
 
         }
+
+        $pdf = $this->rewritePdfLink($pdf, $tags);
       }
       elseif ($tag_key == 'content') {
         switch ($tag_value) {
@@ -941,8 +959,20 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
    * Rewrite PDF link.
    */
   protected function rewritePdfLink($pdf, $tags) {
-    if (isset($tags['replace'])) {
-      [$from, $to] = explode(':', $tags['replace']);
+    if (empty($pdf)) {
+      return $pdf;
+    }
+
+    if (!isset($tags['replace'])) {
+      return $pdf;
+    }
+
+    if (!is_array($tags['replace'])) {
+      $tags['replace'] = [$tags['replace']];
+    }
+
+    foreach ($tags['replace'] as $replace) {
+      [$from, $to] = explode(':', $replace);
       $pdf = str_replace($from, $to, $pdf);
     }
 

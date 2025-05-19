@@ -1,0 +1,8 @@
+inoreader_yaml_editor:
+  js:
+    js/editor.js: {}
+    js/ace/ace.js: { minified: true }
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/once

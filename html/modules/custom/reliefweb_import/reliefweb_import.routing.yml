@@ -14,6 +14,14 @@ reliefweb_import.reliefweb_importer.plugin.configure:
   requirements:
     _permission: 'administer reliefweb content importers'
 
+reliefweb_import.reliefweb_importer.inoreader.extra_tags:
+  path: '/admin/config/reliefweb/content-importers/inoreader_extra_tags'
+  defaults:
+    _form: '\Drupal\reliefweb_import\Form\ReliefWebImporterInoreaderForm'
+    _title: 'Inoreader extra tags'
+  requirements:
+    _permission: 'administer reliefweb content importers'
+
 reliefweb_import.reliefweb_importer.failed_import_records:
   path: '/admin/content/reliefweb-failed-import-records'
   defaults:
