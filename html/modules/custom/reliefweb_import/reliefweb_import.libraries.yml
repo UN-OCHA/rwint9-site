@@ -1,7 +1,7 @@
 inoreader_yaml_editor:
   js:
     js/editor.js: {}
-    js/ace/ace.js: { minified: true }
+    js/ace/ace.js: { preprocess: false, minified: true }
   dependencies:
     - core/jquery
     - core/drupal
