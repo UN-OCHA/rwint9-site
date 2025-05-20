@@ -32,6 +32,44 @@
         return element.hasAttribute(attribute);
       }
 
+      // Show a selection error message if the input contains an invalid date.
+      function toggleInvalidDateMessage(datepicker, format, clear) {
+        var input = datepicker.options.element;
+        if (!input) {
+          return;
+        }
+
+        var date = datepicker.createDate(input.value + ' UTC');
+
+        // Show an error message if the input is not a valid date.
+        if (clear !== true && date.invalid() && !datepicker.visible()) {
+          // Add the form error message.
+          var errorContainer = input.parentNode.querySelector('.rw-datepicker-error');
+          if (!errorContainer) {
+            errorContainer = document.createElement('div');
+            errorContainer.classList.add('rw-datepicker-error', 'form-item--error-message');
+            input.parentNode.insertBefore(errorContainer, input.nextSibling);
+          }
+
+          // Set the error message.
+          errorContainer.innerHTML = Drupal.t('Invalid date. Please enter a date in the format %format (e.g., %example).', {
+            '%format': format,
+            '%example': datepicker.createDate().format(format)
+          });
+
+          // Mark the input as having an error.
+          input.classList.add('error');
+        }
+        // Clear any error state.
+        else {
+          var errorContainer = input.parentNode.querySelector('.rw-datepicker-error');
+          if (errorContainer) {
+            input.parentNode.removeChild(errorContainer);
+          }
+          input.classList.remove('error');
+        }
+      }
+
       // Update the datepicker date based on the input value.
       function updateDatepicker(datepicker, value, trigger) {
         // Set the selected date from the value in the input field if valid.
@@ -43,6 +81,17 @@
             value = value.length === 7 ? value + '-01' : value;
             value = value.replaceAll('-', '/');
           }
+          // DD, DD-MM, DD-MM-YYYY formats.
+          else if (value.match(/^\d{2}([/-]\d{2}([/-]\d{4})?)?$/)) {
+            value = value.trim().split('-').reverse().join('-');
+            if (value.length === 2) {
+              value = datepicker.createDate(null, true).format('YYYY-MM-') + value;
+            }
+            else if (value.length === 5) {
+              value = datepicker.createDate(null, true).format('YYYY-') + value;
+            }
+            value = value.replaceAll('-', '/');
+          }
           // D format.
           else if (value.match(/^\d{1,2} ?$/)) {
             value = value.trim() + datepicker.createDate(null, true).format(' MMM YYYY');
@@ -52,8 +101,8 @@
             value = value.trim() + datepicker.createDate(null, true).format(' YYYY');
           }
           // D MMM YYYY format.
-          else if (!value.match(/^\d{1,2} \D{3} \d{4}$/)) {
-            return;
+          else if (value.match(/^\d{1,2} \D{3} \d{4}$/)) {
+            // Nothing to do. It's already in an accepted format.
           }
 
           var date = datepicker.createDate(value + ' UTC');
@@ -112,6 +161,9 @@
 
         // Localized date format.
         var localizedFormat = t('D MMM YYYY');
+        if (element.hasAttribute('data-date-format')) {
+          localizedFormat = element.getAttribute('data-date-format');
+        }
 
         // Add the datepicker widget.
         var datepicker = SimpleDatePicker.datepicker({
@@ -141,8 +193,16 @@
         .hide();
 
         datepicker.on('opened', function (event) {
+          toggleInvalidDateMessage(datepicker, localizedFormat, true);
           focusedElement = element;
           updateDatepicker(datepicker, element.value);
+        });
+
+        datepicker.on('closed', function (event) {
+          // Use a delay to ensure the datepicker is closed.
+          setTimeout(function () {
+            toggleInvalidDateMessage(datepicker, localizedFormat);
+          }, 100);
         });
 
         datepicker.on('select', function (event) {
