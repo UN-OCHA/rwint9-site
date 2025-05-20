@@ -417,23 +417,18 @@ function reliefweb_form_file_process(array $element, FormStateInterface $form_st
     $file_size_limit = min($file_size_limit, $element['#upload_validators']['FileSizeLimit']['fileLimit']);
   }
 
-  // For standard file element.
-  if (isset($element['#attributes'])) {
-    $element['#attributes']['data-max-filesize'] = $file_size_limit;
-  }
-  else {
-    $element['#attributes'] = ['data-max-filesize' => $file_size_limit];
+  // Retrieve the error message.
+  $file_size_limit_error = '';
+  if (!empty($element['#upload_validators']['FileSizeLimit']['maxFileSizeMessage'])) {
+    $file_size_limit_error = $element['#upload_validators']['FileSizeLimit']['maxFileSizeMessage'];
   }
 
-  // For managed_file element, we need to add it to the upload button.
-  if (isset($element['upload'])) {
-    if (isset($element['upload']['#attributes'])) {
-      $element['upload']['#attributes']['data-max-filesize'] = $file_size_limit;
-    }
-    else {
-      $element['upload']['#attributes'] = ['data-max-filesize' => $file_size_limit];
-    }
-  }
+  $attributes = array_filter([
+    'data-max-filesize' => $file_size_limit,
+    'data-max-filesize-error' => $file_size_limit_error,
+  ]);
+
+  $element['#attributes'] = $attributes + ($element['#attributes'] ?? []);
 
   return $element;
 }

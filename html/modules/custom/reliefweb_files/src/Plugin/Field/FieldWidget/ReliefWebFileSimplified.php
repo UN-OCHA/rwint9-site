@@ -198,6 +198,10 @@ class ReliefWebFileSimplified extends ReliefWebFile {
     $entity = $form_state->getFormObject()->getEntity();
     $validators = $this->createFieldItem()->getUploadValidators($entity, TRUE);
 
+    if (!empty($element['#upload_validators']['ReliefWebFileHash']['duplicateFileFormError'])) {
+      $validators['ReliefWebFileHash']['duplicateFileFormError'] = $element['#upload_validators']['ReliefWebFileHash']['duplicateFileFormError'];
+    }
+
     $extensions = $this->getExtensionsSetting();
     if (!empty($extensions)) {
       $validators['FileExtension'] = ['extensions' => implode(' ', $extensions)];

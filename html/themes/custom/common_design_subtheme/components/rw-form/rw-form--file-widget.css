@@ -179,6 +179,7 @@
       }
       .form-submit {
         grid-area: upload;
+        max-height: 43px;
         margin: 0;
         white-space: nowrap;
         border-width: 1px;
