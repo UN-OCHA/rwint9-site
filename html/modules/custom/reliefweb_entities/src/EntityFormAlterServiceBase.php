@@ -400,7 +400,18 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
     }
 
     try {
-      $date_value = new \DateTime((string) $value['value']);
+      if (is_scalar($value['value'])) {
+        $date_string = (string) $value['value'];
+      }
+      elseif (isset($value['value']['date']) && is_scalar($value['value']['date'])) {
+        $date_string = (string) $value['value']['date'];
+      }
+      else {
+        // Let the normal date validation take effect.
+        return;
+      }
+
+      $date_value = new \DateTime($date_string);
       $now = new \DateTime();
 
       // Compare dates only.
