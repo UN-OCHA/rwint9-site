@@ -68,7 +68,20 @@ class ReliefWebImporterImportRecordsController extends ControllerBase {
       $extra_items = [];
       if (isset($record['extra'])) {
         foreach ($record['extra']['inoreader'] as $label => $item) {
-          $extra_items[] = ucfirst(str_replace('_', ' ', $label)) . ': ' . $item;
+          // Convert the label to a human-readable format.
+          $label = ucfirst(str_replace('_', ' ', $label));
+
+          if (strpos($item, 'http') === 0) {
+            $item = [
+              '#type' => 'link',
+              '#title' => $label,
+              '#url' => Url::fromUri($item),
+            ];
+            $extra_items[] = $item;
+          }
+          else {
+            $extra_items[] = $label . ': ' . $item;
+          }
         }
       }
 
