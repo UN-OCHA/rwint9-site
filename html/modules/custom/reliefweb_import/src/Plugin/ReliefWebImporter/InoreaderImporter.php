@@ -585,16 +585,16 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       array_shift($tag_parts);
       $tag_value = implode(':', $tag_parts);
 
-      if (isset($tags[$tag_key])) {
-        $tags[$tag_key] = [
-          $tags[$tag_key],
-        ];
-      }
-      if (isset($tags[$tag_key]) && is_array($tags[$tag_key])) {
-        $tags[$tag_key][] = $tag_value;
+      if (!isset($tags[$tag_key])) {
+        $tags[$tag_key] = $tag_value;
       }
       else {
-        $tags[$tag_key] = $tag_value;
+        if (!is_array($tags[$tag_key])) {
+          $tags[$tag_key] = [
+            $tags[$tag_key],
+          ];
+        }
+        $tags[$tag_key][] = $tag_value;
       }
     }
 
