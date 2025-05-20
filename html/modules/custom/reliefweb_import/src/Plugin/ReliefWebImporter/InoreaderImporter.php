@@ -527,6 +527,8 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
    * {@inheritdoc}
    */
   protected function processDocumentData(string $uuid, array $document): array {
+    $fetch_timeout = $this->getPluginSetting('fetch_timeout', 10, FALSE);
+
     $data = [];
 
     $id = $document['id'];
@@ -606,6 +608,12 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       (int) $tags['source'],
     ];
 
+    // Check for custom fetch timeout.
+    if (isset($tags['timeout'])) {
+      $fetch_timeout = (int) $tags['timeout'];
+      unset($tags['timeout']);
+    }
+
     foreach ($tags as $tag_key => $tag_value) {
       if ($tag_key == 'pdf') {
         switch ($tag_value) {
@@ -619,7 +627,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
           case 'page-link':
             $page_url = $document['canonical'][0]['href'] ?? '';
-            $html = $this->downloadHtmlPage($page_url);
+            $html = $this->downloadHtmlPage($page_url, $fetch_timeout);
             if (empty($html)) {
               $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
                 '@id' => $id,
@@ -632,7 +640,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
                 // Follow link and fetch PDF from that page.
                 if (strpos($pdf, $tags['follow']) !== FALSE) {
                   $page_url = $pdf;
-                  $html = $this->downloadHtmlPage($page_url);
+                  $html = $this->downloadHtmlPage($page_url, $fetch_timeout);
                   if (empty($html)) {
                     $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
                       '@id' => $id,
@@ -650,7 +658,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
           case 'page-object':
             $page_url = $document['canonical'][0]['href'] ?? '';
-            $html = $this->downloadHtmlPage($page_url);
+            $html = $this->downloadHtmlPage($page_url, $fetch_timeout);
             if (empty($html)) {
               $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
                 '@id' => $id,
@@ -663,7 +671,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
           case 'page-iframe-data-src':
             $page_url = $document['canonical'][0]['href'] ?? '';
-            $html = $this->downloadHtmlPage($page_url);
+            $html = $this->downloadHtmlPage($page_url, $fetch_timeout);
             if (empty($html)) {
               $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
                 '@id' => $id,
@@ -676,7 +684,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
           case 'page-iframe-src':
             $page_url = $document['canonical'][0]['href'] ?? '';
-            $html = $this->downloadHtmlPage($page_url);
+            $html = $this->downloadHtmlPage($page_url, $fetch_timeout);
             if (empty($html)) {
               $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
                 '@id' => $id,
@@ -688,7 +696,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
           case 'js':
             $page_url = $document['canonical'][0]['href'] ?? '';
-            $pdf = $this->tryToExtractPdfUsingPuppeteer($page_url, $tags);
+            $pdf = $this->tryToExtractPdfUsingPuppeteer($page_url, $tags, $fetch_timeout);
             break;
 
         }
@@ -921,9 +929,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
   /**
    * Download HTML page as string.
    */
-  protected function downloadHtmlPage($url) {
-    $fetch_timeout = $this->getPluginSetting('fetch_timeout', 10, FALSE);
-
+  protected function downloadHtmlPage($url, $fetch_timeout) {
     try {
       $response = $this->httpClient->get($url, [
         'connect_timeout' => $fetch_timeout,
@@ -992,8 +998,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
   /**
    * Try to extract the link to a PDF file from HTML content.
    * */
-  protected function tryToExtractPdfUsingPuppeteer($page_url, $tags) {
-    $fetch_timeout = $this->getPluginSetting('fetch_timeout', 10, FALSE);
+  protected function tryToExtractPdfUsingPuppeteer($page_url, $tags, $fetch_timeout) {
     $pdf = '';
 
     if (isset($tags['wrapper'])) {

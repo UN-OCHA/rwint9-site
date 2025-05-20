@@ -42,6 +42,7 @@ Imports tagged items from the [automation_production](https://www.inoreader.com/
 | url | No | Yes | [url:/docs/] |
 | puppeteer | No | No | [puppeteer:ds-file-download-link a] |
 | puppeteer-attrib | No | No | [puppeteer-attrib:href] |
+| timeout | No | No | [timeout:30] |
 
 #### `source` tag
 
@@ -94,6 +95,10 @@ Used to select the html element containg the PDF link.
 #### `puppeteer-attribute` tag
 
 Defines the attribute to extract from the element.
+
+#### `timeout` tag
+
+Defines a custom timeout for fetching external data.
 
 ## UNHCR importer
 
