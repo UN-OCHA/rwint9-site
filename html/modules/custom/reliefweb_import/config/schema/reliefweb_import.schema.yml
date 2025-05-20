@@ -2,7 +2,7 @@ reliefweb_import.settings:
   type: config_object
   label: 'ReliefWeb import settings'
   mapping:
-    snap_url:
+    extract_url:
       type: string
       label: 'The URL of the snap service.'
 
