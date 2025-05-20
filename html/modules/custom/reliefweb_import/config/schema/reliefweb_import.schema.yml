@@ -115,6 +115,9 @@ reliefweb_import.plugin.importer.inoreader:
     timeout:
       type: integer
       label: 'Connection and request timeout.'
+    fetch_timeout:
+      type: integer
+      label: 'Connection and request timeout to grab external pages.'
     local_file_load:
       type: boolean
       label: 'Load json from local file.'
