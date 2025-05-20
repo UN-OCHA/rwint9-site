@@ -400,7 +400,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
     }
 
     try {
-      if (is_scalar($value['value'])) {
+      if (!is_array($value['value'])) {
         $date_string = (string) $value['value'];
       }
       elseif (isset($value['value']['date']) && is_scalar($value['value']['date'])) {
