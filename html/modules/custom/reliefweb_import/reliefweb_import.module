@@ -236,7 +236,7 @@ function reliefweb_import_extract_pdf_file(string $url, string $selector, string
 
   // Basic error checking.
   if ($output->getStatusCode() != 200) {
-    \Drupal::logger('ocha_snap')->error('Failed to extract PDF from "%u".', ['%u' => $url]);
+    \Drupal::logger('reliefweb_import')->error('Failed to extract PDF from "%u".', ['%u' => $url]);
     return '';
   }
 
