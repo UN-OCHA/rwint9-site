@@ -1014,6 +1014,12 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
    * */
   protected function tryToExtractPdfUsingPuppeteer($page_url, $tags, $fetch_timeout) {
     $pdf = '';
+    $blob = FALSE;
+
+    // Check if we need to request the PDF as Blob.
+    if (isset($tags['puppeteer-blob'])) {
+      $blob = TRUE;
+    }
 
     if (isset($tags['wrapper'])) {
       if (!is_array($tags['wrapper'])) {
@@ -1021,22 +1027,43 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       }
 
       foreach ($tags['wrapper'] as $wrapper) {
-        $pdf = reliefweb_import_extract_pdf_file($page_url, $wrapper, $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout);
+        $pdf = reliefweb_import_extract_pdf_file($page_url, $wrapper, $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob);
         if ($pdf) {
           break;
         }
       }
     }
     else {
-      $pdf = reliefweb_import_extract_pdf_file($page_url, '', $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout);
+      $pdf = reliefweb_import_extract_pdf_file($page_url, '', $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob);
     }
 
-    if (!empty($pdf) && strpos($pdf, 'http') !== 0) {
-      $url_parts = parse_url($page_url);
-      $pdf = ($url_parts['scheme'] ?? 'https') . '://' . $url_parts['host'] . $pdf;
+    if (empty($pdf)) {
+      return '';
     }
 
-    return $pdf;
+    if (!$blob) {
+      if (!empty($pdf['pdf']) && strpos($pdf['pdf'], 'http') !== 0) {
+        $url_parts = parse_url($page_url);
+        $pdf['pdf'] = ($url_parts['scheme'] ?? 'https') . '://' . $url_parts['host'] . $pdf['pdf'];
+      }
+
+      return $pdf['pdf'];
+    }
+
+    // Save the blob to a file.
+    $local_file_path = '/tmp/' . basename($pdf['pdf']);
+    $f = fopen($local_file_path, 'w');
+    if ($f) {
+      fwrite($f, $pdf['blob']);
+      fclose($f);
+      $this->getLogger()->info('Inoreader PDF blob written to ' . $local_file_path);
+      return 'file://' . $local_file_path;
+    }
+    else {
+      $this->getLogger()->error('Unable to open file ' . $local_file_path . ' for writing.');
+    }
+
+    return '';
   }
 
 }

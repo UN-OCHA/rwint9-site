@@ -250,5 +250,5 @@ function reliefweb_import_extract_pdf_file(string $url, string $selector, string
 
   $body = json_decode($body, TRUE);
 
-  return $body['pdf'] ?? '';
+  return $body ?? [];
 }
