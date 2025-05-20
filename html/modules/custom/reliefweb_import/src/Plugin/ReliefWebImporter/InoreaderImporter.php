@@ -473,6 +473,12 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
           '@id' => $id,
         ]));
 
+        // Log it.
+        $import_record['status'] = 'skipped';
+        $import_record['message'] = 'No data to import.';
+        $import_record['attempts'] = 1;
+        $import_records[$import_record['imported_item_uuid']] = $import_record;
+
         continue;
       }
 
