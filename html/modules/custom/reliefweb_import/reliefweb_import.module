@@ -196,7 +196,7 @@ function reliefweb_import_get_entity_importer(EntityInterface $entity): ?ReliefW
  * Use Puppeteer to extract PDF file from the page.
  */
 function reliefweb_import_extract_pdf_file(string $url, string $selector, string $pdf_element, string $attribute = 'href'): ?string {
-  $snap_url = \Drupal::config('reliefweb_import.settings')->get('snap_url');
+  $extract_url = \Drupal::config('reliefweb_import.settings')->get('extract_url');
 
   $query = [
     'service' => 'reliefweb_import',
