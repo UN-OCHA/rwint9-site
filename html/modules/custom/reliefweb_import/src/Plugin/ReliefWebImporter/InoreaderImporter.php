@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\reliefweb_import\Plugin\ReliefWebImporter;
 
 use Drupal\Component\Serialization\Json;
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
@@ -386,6 +387,13 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         'status' => 'pending',
         'message' => '',
         'attempts' => 0,
+        'extra' => [
+          'inoreader' => [
+            'feed_name' => $document['origin']['title'] ?? '',
+            'feed_url' => 'https://www.inoreader.com/' . $document['origin']['streamId'] ?? '',
+            'feed_origin' => $document['origin']['htmlUrl'] ?? '',
+          ],
+        ],
       ];
 
       // Retrieve the document ID.
@@ -412,7 +420,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
       // Merge with existing record if available.
       if (isset($existing_import_records[$uuid])) {
-        $import_record = $existing_import_records[$uuid] + $import_record;
+        $import_record = NestedArray::mergeDeep($existing_import_records[$uuid], $import_record);
       }
 
       $this->getLogger()->info(strtr('Processing Inoreader document @id.', [
@@ -476,7 +484,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         // Log it.
         $import_record['status'] = 'skipped';
         $import_record['message'] = 'No data to import.';
-        $import_record['attempts'] = 1;
+        $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
         $import_records[$import_record['imported_item_uuid']] = $import_record;
 
         continue;

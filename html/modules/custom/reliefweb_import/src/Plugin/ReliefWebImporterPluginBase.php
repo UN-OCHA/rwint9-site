@@ -945,6 +945,13 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
       ->execute()
       ?->fetchAllAssoc('imported_item_uuid', \PDO::FETCH_ASSOC) ?? [];
 
+    // Deserialize the extra field.
+    foreach ($records as &$record) {
+      if (isset($record['extra'])) {
+        $record['extra'] = json_decode($record['extra'], TRUE);
+      }
+    }
+
     return $records;
   }
 
@@ -984,6 +991,11 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
 
       // Set timestamp for changed field.
       $record['changed'] = time();
+
+      // Serialize json data.
+      if (isset($record['extra'])) {
+        $record['extra'] = json_encode($record['extra']);
+      }
 
       // Check if this record already exists.
       $url = $record['imported_item_uuid'];
