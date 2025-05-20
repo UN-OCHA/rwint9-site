@@ -213,6 +213,43 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
   protected function alterFieldsForSubmitters(array &$form, FormStateInterface $form_state) {
     $new = $form_state->getFormObject()?->getEntity()?->isNew() === TRUE;
 
+    // Retrieve the form settings.
+    $settings = $this->state->get('reliefweb_users_submitter_form_settings', []);
+
+    // Add the instructions at the top and bottom of the form.
+    if (!empty($settings['instructions']['header']['value'])) {
+      $form['header_instructions'] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => [
+            'rw-form-instructions',
+            'rw-form-instructions--header',
+          ],
+        ],
+        'text' => [
+          '#type' => 'processed_text',
+          '#text' => $settings['instructions']['header']['value'],
+          '#format' => $settings['instructions']['header']['format'] ?? 'markdown_editor',
+        ],
+      ];
+    }
+    if (!empty($settings['instructions']['footer']['value'])) {
+      $form['footer_instructions'] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => [
+            'rw-form-instructions',
+            'rw-form-instructions--footer',
+          ],
+        ],
+        'text' => [
+          '#type' => 'processed_text',
+          '#text' => $settings['instructions']['footer']['value'],
+          '#format' => $settings['instructions']['footer']['format'] ?? 'markdown_editor',
+        ],
+      ];
+    }
+
     // Indicate that we are using the submitter form.
     $form['#attributes']['class'][] = 'rw-entity-form--report--submitter';
 
@@ -241,8 +278,23 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     }
 
     // Make the attachment field mandatory.
-    $form['field_file']['widget']['#element_validate'][] = [$this, 'validateMandatoryFileField'];
-    $form['field_file']['widget']['#required'] = TRUE;
+    if (isset($form['field_file'])) {
+      $form['field_file']['widget']['#element_validate'][] = [$this, 'validateMandatoryFileField'];
+      $form['field_file']['widget']['#required'] = TRUE;
+    }
+
+    if (isset($form['field_file']['widget']['add_more']['files'])) {
+      // Add the custom file size limit error message.
+      if (!empty($settings['errors']['file_too_large']['value'])) {
+        $message = check_markup($settings['errors']['file_too_large']['value'], $settings['errors']['file_too_large']['format']);
+        $form['field_file']['widget']['add_more']['files']['#upload_validators']['FileSizeLimit']['maxFileSizeMessage'] = (string) $message;
+      }
+      // Add the custom file duplicate error.
+      if (!empty($settings['errors']['file_duplicate']['value'])) {
+        $message = check_markup($settings['errors']['file_duplicate']['value'], $settings['errors']['file_duplicate']['format']);
+        $form['field_file']['widget']['add_more']['files']['#upload_validators']['ReliefWebFileHash']['duplicateFileFormError'] = (string) $message;
+      }
+    }
 
     if (isset($form['field_notify'])) {
       // Populate the notify field with the submitter email address so that
@@ -257,7 +309,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
 
     // Improve labels and descriptions.
     if (isset($form['field_source'])) {
-      $form['field_source']['widget']['#title'] = $this->t('Organization(s)');
+      $form['field_source']['widget']['#title'] = $this->t('Source(s)');
     }
     if (isset($form['field_language'])) {
       $form['field_language']['widget']['#title'] = $this->t('Language(s)');
@@ -271,6 +323,37 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
       $form['field_original_publication_date']['widget'][0]['#element_validate'][] = [
         $this,
         'validateDateNotInFuture',
+      ];
+
+      // Change format.
+      // @see RW-1231
+      $form['field_original_publication_date']['widget'][0]['value']['#attributes']['data-date-format'] = 'DD-MM-YYYY';
+    }
+
+    // Set the custom field descriptions.
+    foreach ($settings['fields'] ?? [] as $field => $field_instructions) {
+      if (isset($form[$field]['widget']) && !empty($field_instructions['value'])) {
+        $field_description = check_markup($field_instructions['value'], $field_instructions['format']);
+        $form[$field]['widget']['#description'] = $field_description;
+      }
+    }
+
+    // Set the custom save buttons descriptions.
+    if ($new && !empty($settings['buttons']['create']['value'])) {
+      $buttons_description = check_markup($settings['buttons']['create']['value'], $settings['buttons']['create']['format']);
+    }
+    elseif (!$new && !empty($settings['buttons']['update']['value'])) {
+      $buttons_description = check_markup($settings['buttons']['update']['value'], $settings['buttons']['update']['format']);
+    }
+    if (!empty($buttons_description)) {
+      // We are not adding a `$form['actions']['#description]` because, first
+      // it's removed by the moderation service when adding the buttons and,
+      // secondly, it's not displayed because the actions use a `container`
+      // theme wrapper.
+      $form['buttons_description'] = [
+        '#type' => 'item',
+        '#description_display' => 'after',
+        '#description' => $buttons_description,
       ];
     }
   }
