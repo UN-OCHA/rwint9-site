@@ -195,8 +195,8 @@ function reliefweb_import_get_entity_importer(EntityInterface $entity): ?ReliefW
 /**
  * Use Puppeteer to extract PDF file from the page.
  */
-function reliefweb_import_extract_pdf_file(string $url, string $selector, string $pdf_element, string $attribute = 'href'): ?string {
-  $snap_url = \Drupal::config('reliefweb_import.settings')->get('snap_url');
+function reliefweb_import_extract_pdf_file(string $url, string $selector, string $pdf_element, string $attribute = 'href', int $timeout = 15): ?string {
+  $extract_url = \Drupal::config('reliefweb_import.settings')->get('extract_url');
 
   $query = [
     'service' => 'reliefweb_import',
@@ -206,8 +206,10 @@ function reliefweb_import_extract_pdf_file(string $url, string $selector, string
     'attribute' => $attribute,
   ];
 
-  $snap_url .= '?' . UrlHelper::buildQuery($query);
+  $extract_url .= '?' . UrlHelper::buildQuery($query);
   $options = [
+    'connect_timeout' => $timeout,
+    'timeout' => $timeout,
     'headers' => [
       'X-Forwarded-For' => Drupal::request()->getClientIp(),
       'User-Agent'      => $_SERVER['HTTP_USER_AGENT'],
@@ -218,11 +220,11 @@ function reliefweb_import_extract_pdf_file(string $url, string $selector, string
 
   // Use CHR if installed, otherwise use Drupal built-in http_request.
   if (\Drupal::service('module_handler')->moduleExists('chr')) {
-    $output = chr_curl_http_request($snap_url, $options);
+    $output = chr_curl_http_request($extract_url, $options);
   }
   else {
     try {
-      $output = \Drupal::httpClient()->post($snap_url, $options);
+      $output = \Drupal::httpClient()->post($extract_url, $options);
     }
     catch (Exception $e) {
       \Drupal::logger('reliefweb_import')->error('%e Exception: Failed to get a response for "%u".', [
@@ -236,13 +238,13 @@ function reliefweb_import_extract_pdf_file(string $url, string $selector, string
 
   // Basic error checking.
   if ($output->getStatusCode() != 200) {
-    \Drupal::logger('ocha_snap')->error('Failed to extract PDF from "%u".', ['%u' => $url]);
+    \Drupal::logger('reliefweb_import')->error('Failed to extract PDF from "%u".', ['%u' => $url]);
     return '';
   }
 
   $body = $output->getBody()->getContents();
   if (empty($body)) {
-    \Drupal::logger('ocha_snap')->error('Failed to extract PDF from "%u".', ['%u' => $url]);
+    \Drupal::logger('reliefweb_import')->error('Failed to extract PDF from "%u".', ['%u' => $url]);
     return '';
   }
 

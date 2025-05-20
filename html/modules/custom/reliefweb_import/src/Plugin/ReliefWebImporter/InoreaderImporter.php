@@ -76,6 +76,15 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       '#required' => TRUE,
     ];
 
+    $form['fetch_timeout'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Fetch timeout'),
+      '#description' => $this->t('Connection and request timeout in seconds to grab external HTML.'),
+      '#default_value' => $form_state->getValue('fetch_timeout', $this->getPluginSetting('fetch_timeout', 15, FALSE)),
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
     $form['local_file_load'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Load json from local file'),
@@ -913,11 +922,12 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
    * Download HTML page as string.
    */
   protected function downloadHtmlPage($url) {
-    $timeout = $this->getPluginSetting('timeout', 10, FALSE);
+    $fetch_timeout = $this->getPluginSetting('fetch_timeout', 10, FALSE);
+
     try {
       $response = $this->httpClient->get($url, [
-        'connect_timeout' => $timeout,
-        'timeout' => $timeout,
+        'connect_timeout' => $fetch_timeout,
+        'timeout' => $fetch_timeout,
         'headers' => [
           'User-Agent' => 'Mozilla/5.0 AppleWebKit Chrome/134.0.0.0 Safari/537.36',
           'accept' => 'text/html,application/xhtml+xml,application/xml,*/*',
@@ -935,8 +945,8 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       try {
         // Try without headers.
         $response = $this->httpClient->get($url, [
-          'connect_timeout' => $timeout,
-          'timeout' => $timeout,
+          'connect_timeout' => $fetch_timeout,
+          'timeout' => $fetch_timeout,
         ]);
 
         if ($response->getStatusCode() !== 200) {
@@ -983,6 +993,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
    * Try to extract the link to a PDF file from HTML content.
    * */
   protected function tryToExtractPdfUsingPuppeteer($page_url, $tags) {
+    $fetch_timeout = $this->getPluginSetting('fetch_timeout', 10, FALSE);
     $pdf = '';
 
     if (isset($tags['wrapper'])) {
@@ -991,14 +1002,14 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       }
 
       foreach ($tags['wrapper'] as $wrapper) {
-        $pdf = reliefweb_import_extract_pdf_file($page_url, $wrapper, $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href');
+        $pdf = reliefweb_import_extract_pdf_file($page_url, $wrapper, $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout);
         if ($pdf) {
           break;
         }
       }
     }
     else {
-      $pdf = reliefweb_import_extract_pdf_file($page_url, '', $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href');
+      $pdf = reliefweb_import_extract_pdf_file($page_url, '', $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout);
     }
 
     if (!empty($pdf) && strpos($pdf, 'http') !== 0) {
