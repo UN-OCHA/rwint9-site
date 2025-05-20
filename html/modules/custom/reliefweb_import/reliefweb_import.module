@@ -206,7 +206,7 @@ function reliefweb_import_extract_pdf_file(string $url, string $selector, string
     'attribute' => $attribute,
   ];
 
-  $snap_url .= '?' . UrlHelper::buildQuery($query);
+  $extract_url .= '?' . UrlHelper::buildQuery($query);
   $options = [
     'headers' => [
       'X-Forwarded-For' => Drupal::request()->getClientIp(),
