@@ -218,11 +218,11 @@ function reliefweb_import_extract_pdf_file(string $url, string $selector, string
 
   // Use CHR if installed, otherwise use Drupal built-in http_request.
   if (\Drupal::service('module_handler')->moduleExists('chr')) {
-    $output = chr_curl_http_request($snap_url, $options);
+    $output = chr_curl_http_request($extract_url, $options);
   }
   else {
     try {
-      $output = \Drupal::httpClient()->post($snap_url, $options);
+      $output = \Drupal::httpClient()->post($extract_url, $options);
     }
     catch (Exception $e) {
       \Drupal::logger('reliefweb_import')->error('%e Exception: Failed to get a response for "%u".', [
