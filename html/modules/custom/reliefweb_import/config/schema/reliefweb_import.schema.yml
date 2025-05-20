@@ -4,7 +4,7 @@ reliefweb_import.settings:
   mapping:
     extract_url:
       type: string
-      label: 'The URL of the snap service.'
+      label: 'The URL of the extract service.'
 
 # Importer plugin base settings.
 reliefweb_import.plugin.importer:
