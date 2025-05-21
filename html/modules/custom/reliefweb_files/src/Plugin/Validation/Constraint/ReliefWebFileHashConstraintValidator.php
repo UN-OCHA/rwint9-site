@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\reliefweb_files\Plugin\Validation\Constraint;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\file\Plugin\Validation\Constraint\BaseFileConstraintValidator;
@@ -39,6 +40,11 @@ class ReliefWebFileHashConstraintValidator extends BaseFileConstraintValidator i
    * {@inheritdoc}
    */
   public function validate(mixed $value, Constraint $constraint) {
+    // Skip if we don't have a ReliefWeb file field item.
+    if (!isset($constraint->fieldItem)) {
+      return;
+    }
+
     $file = $this->assertValueIsFile($value);
     if (!$constraint instanceof ReliefWebFileHashConstraint) {
       throw new UnexpectedTypeException($constraint, ReliefWebFileHashConstraint::class);
@@ -78,7 +84,13 @@ class ReliefWebFileHashConstraintValidator extends BaseFileConstraintValidator i
     }
 
     $entity_id = $constraint->entity?->id();
-    $url_options = ['absolute' => TRUE];
+
+    $url_options = [
+      'absolute' => TRUE,
+      'attributes' => [
+        'target' => '_blank',
+      ],
+    ];
 
     // If there is an entity other than the one the file is attached to,
     // then flag this as a duplication error.
@@ -87,10 +99,13 @@ class ReliefWebFileHashConstraintValidator extends BaseFileConstraintValidator i
       if ($entity->id() !== $entity_id) {
         $this->context->setConstraint($constraint);
         if ($constraint->inForm) {
-          $this->context->addViolation($constraint->duplicateFileFormError, [
-            '@label' => $entity->label(),
-            ':url' => $entity->toUrl(options: $url_options)->toString(),
+          // We cannot pass the link as a parameter to the addViolation because
+          // it's HTML escaped in that case. So we replace it in the error
+          // message before hand.
+          $message = new FormattableMarkup($constraint->duplicateFileFormError, [
+            '@link' => $entity->toLink(options: $url_options)->toString(),
           ]);
+          $this->context->addViolation((string) $message);
         }
         else {
           $this->context->addViolation($constraint->duplicateFileError, [

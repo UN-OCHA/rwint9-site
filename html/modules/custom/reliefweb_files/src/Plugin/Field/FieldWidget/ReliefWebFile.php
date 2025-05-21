@@ -133,6 +133,135 @@ class ReliefWebFile extends WidgetBase {
   /**
    * {@inheritdoc}
    */
+  public static function defaultSettings() {
+    // Add a setting with a list of extra information to retrieve from
+    // the fields of the referenced entity bundles.
+    return [
+      'extensions' => 'pdf',
+      'max_file_size' => 40 * 1024 * 1024,
+    ] + parent::defaultSettings();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsForm(array $form, FormStateInterface $form_state) {
+    $element = [];
+
+    $dummy_item = $this->createFieldItem();
+
+    $default_extensions = $dummy_item->getAllowedFileExtensions();
+    $extensions = $this->getExtensionsSetting() ?: $default_extensions;
+    $element['extensions'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Extensions'),
+      '#description' => $this->t('Comma separated list of extensions among: @extensions', [
+        '@extensions' => implode(', ', $default_extensions ?: [$this->t('any')]),
+      ]),
+      '#default_value' => $form_state->getValue('extensions', implode(', ', $extensions ?: [])),
+      '#element_validate' => [[$this, 'validateExtensionsSetting']],
+    ];
+
+    $default_max_files_size = $dummy_item->getMaxFileSize();
+    $max_file_size = $this->getMaxFileSizeSetting() ?: $default_max_files_size;
+    $element['max_file_size'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Max file size'),
+      '#description' => $this->t('Max file size, up to: @max_file_size', [
+        '@max_file_size' => $default_max_files_size,
+      ]),
+      '#default_value' => $form_state->getValue('max_file_size', $max_file_size),
+      '#min' => 1,
+      '#max' => $default_max_files_size,
+      '#element_validate' => [[$this, 'validateMaxFileSizeSetting']],
+    ];
+
+    return $element;
+  }
+
+  /**
+   * Validate the extensions setting.
+   *
+   * @param array $element
+   *   The form element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  public function validateExtensionsSetting(array $element, FormStateInterface $form_state) {
+    $dummy_item = $this->createFieldItem();
+    $default_extensions = $dummy_item->getAllowedFileExtensions();
+    $extensions = preg_split('/[, ]+/', $form_state->getValue($element['#parents'], ''));
+    if (!empty($extensions) && !empty($default_extensions) && count(array_diff($extensions, $default_extensions)) > 0) {
+      $form_state->setError($element, $this->t('Only the following extensions are allowed: @extensions.', [
+        '@extensions' => implode(', ', $default_extensions),
+      ]));
+    }
+  }
+
+  /**
+   * Validate the max file size setting.
+   *
+   * @param array $element
+   *   The form element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  public function validateMaxFileSizeSetting(array $element, FormStateInterface $form_state) {
+    $dummy_item = $this->createFieldItem();
+    $default_max_files_size = $dummy_item->getMaxFileSize();
+    $max_file_size = $form_state->getValue($element['#parents']);
+    if (empty($max_file_size) || $max_file_size < 0 || $max_file_size > $default_max_files_size) {
+      $form_state->setError($element, $this->t('The max file size must be between @min and @max.', [
+        '@min' => format_size(1),
+        '@max' => format_size($default_max_files_size),
+      ]));
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsSummary() {
+    $summary = parent::settingsSummary();
+
+    $summary[] = $this->t('Extensions: @extensions', [
+      '@extensions' => implode(', ', $this->getExtensionsSetting() ?: [$this->t('any')]),
+    ]);
+
+    $summary[] = $this->t('Max file size: @max_file_size', [
+      '@max_file_size' => format_size($this->getMaxFileSizeSetting()),
+    ]);
+
+    return $summary;
+  }
+
+  /**
+   * Get the allowed extensions setting.
+   *
+   * @return ?array
+   *   List of allowed extensions or NULL.
+   */
+  protected function getExtensionsSetting(): ?array {
+    $extensions = trim($this->getSetting('extensions') ?: '');
+    if (empty($extensions)) {
+      return NULL;
+    }
+    return preg_split('/[, ]+/', $extensions);
+  }
+
+  /**
+   * Get the max file size setting.
+   *
+   * @return int
+   *   Max file size.
+   */
+  protected function getMaxFileSizeSetting(): int {
+    return $this->getSetting('max_file_size');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected function handlesMultipleValues() {
     return FALSE;
   }
@@ -149,7 +278,6 @@ class ReliefWebFile extends WidgetBase {
     $field_name = $this->fieldDefinition->getName();
     $field_parents = array_merge($parents, [$field_name]);
     $required = $this->fieldDefinition->isRequired();
-    $entity = $form_state->getFormObject()->getEntity();
 
     // Load the items for form rebuilds from the field state as they might not
     // be in $form_state->getValues() because of validation limitations. Also,
@@ -192,8 +320,7 @@ class ReliefWebFile extends WidgetBase {
     // Add one more empty row for new uploads except when this is a programmed
     // multiple form as it is not necessary.
     if (!$form_state->isProgrammed()) {
-      // Dummy item to get the default upload description and allowed
-      // file extensions.
+      // Dummy item to get the default upload validators and description.
       $dummy_item = $this->createFieldItem();
 
       // Wrapper to add more files.
@@ -204,24 +331,22 @@ class ReliefWebFile extends WidgetBase {
         '#required' => $required && $delta == 0,
       ];
 
-      // Get the upload validators but remove the hash one since it needs
-      // a real item with a real UUID.
-      $upload_validators = $dummy_item->getUploadValidators($entity, TRUE);
-      unset($upload_validators['ReliefWebFileHash']);
+      // Get the upload validators.
+      $upload_validators = $this->getUploadValidators($form_state, field_item: $dummy_item);
 
       // File upload widget.
       $elements['add_more']['files'] = [
         '#type' => 'file',
         '#name' => implode('-', array_merge($field_parents, ['files'])),
         '#multiple' => TRUE,
-        '#description' => $dummy_item->getUploadDescription(),
+        '#description' => $this->getUploadDescription($upload_validators, field_item: $dummy_item),
         '#upload_validators' => $upload_validators,
       ];
 
-      // Limit the type of files that can be uplaoded.
-      $extensions = $dummy_item->getAllowedFileExtensions();
+      // Limit the type of files that can be uploaded.
+      $extensions = $upload_validators['FileExtension']['extensions'] ?? '';
       if (!empty($extensions)) {
-        $elements['add_more']['files']['#attributes']['accept'] = '.' . implode(',.', $extensions);
+        $elements['add_more']['files']['#attributes']['accept'] = '.' . str_replace(' ', ',.', $extensions);
       }
 
       // Upload button.
@@ -251,6 +376,11 @@ class ReliefWebFile extends WidgetBase {
     $elements['#field_name'] = $field_name;
     $elements['#field_parents'] = $parents;
 
+    // No need to have the optional mark on the add file.
+    $elements['add_more']['#not_required'] = FALSE;
+
+    // Automatic upload.
+    $elements['#attached']['library'][] = 'reliefweb_files/file.autoupload';
     return $elements;
   }
 
@@ -436,11 +566,16 @@ class ReliefWebFile extends WidgetBase {
       '#action' => 'delete',
     ];
 
+    // Get the upload validators.
+    $upload_validators = $this->getUploadValidators($form_state, field_item: $item);
+
     // Add a file widget to upload a replacement.
     $element['operations']['file'] = [
       '#type' => 'file',
       '#name' => implode('-', array_merge($element_parents, ['file'])),
       '#multiple' => FALSE,
+      '#upload_validators' => $upload_validators,
+      '#description' => $this->getUploadDescription($upload_validators, field_item: $item),
     ];
 
     // Add a button to replace the file.
@@ -797,9 +932,67 @@ class ReliefWebFile extends WidgetBase {
    *   Form state.
    */
   protected function uploadFiles(array $element, FormStateInterface $form_state) {
-    $entity = $form_state->getFormObject()?->getEntity();
-    $validators = $this->createFieldItem()->getUploadValidators($entity);
+    $validators = $this->getUploadValidators($form_state, $element);
     return $this->processUploadedFiles($element, $form_state, $element['#name'], $validators);
+  }
+
+  /**
+   * Update the upload validators with the settings.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   * @param ?array $element
+   *   The form element.
+   * @param ?\Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile $field_item
+   *   The field item.
+   * @param ?array $values
+   *   Values to use to create the field item if not defined.
+   *
+   * @return array
+   *   The list of upload validators.
+   */
+  protected function getUploadValidators(FormStateInterface $form_state, ?array $element = NULL, ?ReliefWebFileType $field_item = NULL, ?array $values = NULL): array {
+    $entity = $form_state->getFormObject()->getEntity();
+    $field_item ??= $this->createFieldItem($values);
+    $validators = $field_item->getUploadValidators($entity, TRUE);
+
+    if (!empty($element['#upload_validators']['ReliefWebFileHash']['duplicateFileFormError'])) {
+      $validators['ReliefWebFileHash']['duplicateFileFormError'] = $element['#upload_validators']['ReliefWebFileHash']['duplicateFileFormError'];
+    }
+
+    $extensions = $this->getExtensionsSetting();
+    if (!empty($extensions)) {
+      $validators['FileExtension'] = ['extensions' => implode(' ', $extensions)];
+    }
+    $max_file_size = $this->getMaxFileSizeSetting();
+    if (!empty($max_file_size)) {
+      $validators['FileSizeLimit'] = ['fileLimit' => $max_file_size];
+    }
+
+    return $validators;
+  }
+
+  /**
+   * Get the upload description from the upload validators.
+   *
+   * @param array $validators
+   *   The upload validators.
+   * @param ?\Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile $field_item
+   *   The field item.
+   *
+   * @return \Drupal\Component\Render\MarkupInterface
+   *   The upload description.
+   */
+  protected function getUploadDescription(array $validators, ?ReliefWebFileType $field_item = NULL) {
+    $field_item ??= $this->createFieldItem();
+
+    $extensions = explode(' ', $validators['FileExtension']['extensions'] ?? '') ?: NULL;
+    $max_file_size = $validators['FileSizeLimit']['fileLimit'] ?? NULL;
+
+    return $field_item->getUploadDescription(
+      extensions: $extensions,
+      max_file_size: $max_file_size,
+    );
   }
 
   /**
@@ -865,8 +1058,7 @@ class ReliefWebFile extends WidgetBase {
 
     // Retrieve the upload validators for the original item. This will
     // ensure the replacement is of the same type.
-    $entity = $form_state->getFormObject()?->getEntity();
-    $validators = $previous_item->getUploadValidators($entity);
+    $validators = $this->getUploadValidators($form_state, $element['operations']['file'], $previous_item);
 
     // Create a new field item with associated managed files and replace the
     // original values with its values.
@@ -1486,6 +1678,13 @@ class ReliefWebFile extends WidgetBase {
 
       // This will replace the widget with the new one in the form.
       $response->addCommand(new ReplaceCommand(NULL, $widget));
+    }
+
+    // If the request is an ajax one, then we want to remove the file validation
+    // error messages from the messenger to avoid showing them again after
+    // saving the form for example.
+    if (\Drupal::request()->isXmlHttpRequest()) {
+      \Drupal::messenger()->deleteAll();
     }
 
     return $response;

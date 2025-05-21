@@ -17,6 +17,8 @@
 #}
 {{ attach_library('common_design_subtheme/rw-form') }}
 
+{{ form.header_instructions }}
+
 <fieldset id="content" class="rw-form-fieldset">
   <legend class="visually-hidden">{% trans %}Content{% endtrans %}</legend>
   {{ form.title }}
@@ -24,17 +26,22 @@
   {{ form.field_primary_country }}
   {{ form.field_source }}
   {{ form.field_language }}
-  {{ form.field_file }}
   {{ form.field_original_publication_date }}
+  {{ form.field_file }}
 </fieldset>
 
 <fieldset id="actions">
   <legend class="visually-hidden">{% trans %}Form submission and other actions{% endtrans %}</legend>
   {{ form.actions|without(['preview']) }}
+  {{ form.buttons_description }}
 </fieldset>
+
+{{ form.footer_instructions }}
 
 {{
   form|without([
+    'header_instructions',
+    'footer_instructions',
     'title',
     'field_country',
     'field_primary_country',
@@ -46,6 +53,7 @@
     'field_origin_notes',
     'field_notify',
     'actions',
+    'buttons_description',
     'revision_information',
     'advanced',
     'path'

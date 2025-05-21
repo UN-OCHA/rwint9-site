@@ -834,7 +834,7 @@ display:
           entity_type: node
           entity_field: nid
           plugin_id: standard
-          order: ASC
+          order: DESC
           expose:
             label: ''
             field_identifier: ''
@@ -934,7 +934,7 @@ display:
           entity_field: name
           plugin_id: string
           operator: '='
-          value: Inoreader
+          value: 'Import - Inoreader'
           group: 1
           exposed: false
           expose:
@@ -982,11 +982,12 @@ display:
             field_content_format: field_content_format
             field_disaster: field_disaster
             field_disaster_type: field_disaster_type
+            revision_log: revision_log
           default: nid
           info:
             nid:
               sortable: true
-              default_sort_order: asc
+              default_sort_order: desc
               align: ''
               separator: ''
               empty_column: false
@@ -1045,6 +1046,13 @@ display:
               empty_column: false
               responsive: ''
             field_disaster_type:
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            revision_log:
+              sortable: false
+              default_sort_order: asc
               align: ''
               separator: ''
               empty_column: false

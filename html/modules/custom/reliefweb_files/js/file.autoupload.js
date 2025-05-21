@@ -7,7 +7,7 @@
 
   Drupal.behaviors.reliefwebFilesAutoupload = {
     attach: function (context, settings) {
-      const elements = document.querySelectorAll('.rw-file-widget--simplified input.js-form-file:not([data-reliefweb-files-autoupload-processed])');
+      const elements = document.querySelectorAll('.rw-file-widget input.js-form-file:not([data-reliefweb-files-autoupload-processed])');
       for (let i = 0, l = elements.length; i < l; i++) {
         this.addFileAutoUpload(elements[i]);
       }
@@ -15,7 +15,7 @@
     addFileAutoUpload: function (element) {
       element.setAttribute('data-reliefweb-files-autoupload-processed', '');
 
-      const widget = element.closest('.rw-file-widget--simplified');
+      const widget = element.closest('.rw-file-widget');
       widget.classList.add('rw-file-widget--autoupload');
 
       element.addEventListener('change', function (event) {
