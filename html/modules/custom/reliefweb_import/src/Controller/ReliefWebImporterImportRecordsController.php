@@ -54,16 +54,37 @@ class ReliefWebImporterImportRecordsController extends ControllerBase {
     $build = [];
     $headers = [
       $this->t('Imported item'),
-      $this->t('importer'),
-      $this->t('status'),
-      $this->t('attempts'),
-      $this->t('created'),
-      $this->t('changed'),
-      $this->t('message'),
+      $this->t('Importer'),
+      $this->t('Status'),
+      $this->t('Attempts'),
+      $this->t('Created'),
+      $this->t('Changed'),
+      $this->t('Message'),
+      $this->t('Extra'),
     ];
 
     $rows = [];
     foreach ($records as $record) {
+      $extra_items = [];
+      if (isset($record['extra'])) {
+        foreach ($record['extra']['inoreader'] as $label => $item) {
+          // Convert the label to a human-readable format.
+          $label = ucfirst(str_replace('_', ' ', $label));
+
+          if (strpos($item, 'http') === 0) {
+            $item = [
+              '#type' => 'link',
+              '#title' => $label,
+              '#url' => Url::fromUri($item),
+            ];
+            $extra_items[] = $item;
+          }
+          else {
+            $extra_items[] = $label . ': ' . $item;
+          }
+        }
+      }
+
       $rows[] = [
         [
           'data' => [
@@ -78,6 +99,12 @@ class ReliefWebImporterImportRecordsController extends ControllerBase {
         date('c', (int) $record['created']),
         date('c', (int) $record['changed']),
         $record['message'],
+        [
+          'data' => [
+            '#theme' => 'item_list',
+            '#items' => $extra_items,
+          ],
+        ],
       ];
     }
 
@@ -110,6 +137,13 @@ class ReliefWebImporterImportRecordsController extends ControllerBase {
       ->orderBy('created', 'DESC')
       ->execute()
       ?->fetchAllAssoc('imported_item_uuid', \PDO::FETCH_ASSOC) ?? [];
+
+    // Deserialize the extra field.
+    foreach ($records as &$record) {
+      if (isset($record['extra'])) {
+        $record['extra'] = json_decode($record['extra'], TRUE);
+      }
+    }
 
     return $records;
   }

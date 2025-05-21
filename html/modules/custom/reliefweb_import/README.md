@@ -42,6 +42,7 @@ Imports tagged items from the [automation_production](https://www.inoreader.com/
 | url | No | Yes | [url:/docs/] |
 | puppeteer | No | No | [puppeteer:ds-file-download-link a] |
 | puppeteer-attrib | No | No | [puppeteer-attrib:href] |
+| timeout | No | No | [timeout:30] |
 
 #### `source` tag
 
@@ -94,6 +95,25 @@ Used to select the html element containg the PDF link.
 #### `puppeteer-attribute` tag
 
 Defines the attribute to extract from the element.
+
+#### `timeout` tag
+
+Defines a custom timeout for fetching external data.
+
+### Override tags in the UI
+
+You can go to and `/admin/config/reliefweb/content-importers/inoreader_extra_tags` add extra tags.
+
+```yaml
+2836:
+  replace:
+    - 'openknowledge.fao.org/bitstreams/:openknowledge.fao.org/server/api/core/bitstreams/'
+    - '/download:/content'
+  content: ignore
+1980:
+  wrapper:
+    - div.dynamic-content__figure-container
+```
 
 ## UNHCR importer
 
