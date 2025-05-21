@@ -4,3 +4,10 @@ reliefweb_users.submitter_allowed_domains:
   route_name: reliefweb_users.submitter_allowed_domains
   parent: user.admin_index
   weight: 99
+
+reliefweb_users.submitter_form_settings:
+  title: 'Submitter Form Settings'
+  description: 'Configure settings for the submitter form.'
+  route_name: reliefweb_users.submitter_form_settings
+  parent: user.admin_index
+  weight: 100

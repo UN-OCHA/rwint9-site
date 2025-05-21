@@ -51,6 +51,7 @@ permissions:
   - 'administer reliefweb anti-spam settings'
   - 'administer reliefweb post api providers'
   - 'administer submitter allowed domains'
+  - 'administer submitter form settings'
   - 'bypass ocha content classification for node job'
   - 'bypass ocha content classification for node report'
   - 'create new books'
