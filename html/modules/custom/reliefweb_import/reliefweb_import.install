@@ -140,7 +140,6 @@ function reliefweb_import_update_10002(array &$sandbox) {
 
   if (!$schema->fieldExists($table_name, $field_name)) {
     $table_schema = reliefweb_import_schema();
-    print_r([$table_name, $field_name, $table_schema[$table_name]['fields'][$field_name]]);
     $schema->addField($table_name, $field_name, $table_schema[$table_name]['fields'][$field_name]);
   }
 }

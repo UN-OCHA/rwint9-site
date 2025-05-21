@@ -88,7 +88,7 @@ class ReliefWebImporterInoreaderForm extends FormBase {
    */
   public function validateForm(array &$form, FormStateInterface $form_state): void {
     try {
-      $extra_tags = $form_state->getValue('extra_tags');
+      $extra_tags = $form_state->getValue('extra_tags', '');
       $extra_tags = Yaml::parse($extra_tags, Yaml::PARSE_OBJECT);
 
       if (!is_array($extra_tags)) {
