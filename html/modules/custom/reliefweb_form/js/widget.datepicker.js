@@ -32,19 +32,69 @@
         return element.hasAttribute(attribute);
       }
 
-      // Update the datepicker date based on the input value.
-      function updateDatepicker(datepicker, value, trigger) {
-        // Set the selected date from the value in the input field if valid.
-        if (value) {
-          value = value.trim();
-          // YYYY, YYYY-MM and YYYY-MM-DD formats.
-          if (value.match(/^\d{4}([/-]\d{2}){0,2}$/)) {
-            value = value.length === 4 ? value + '-01-01' : value;
-            value = value.length === 7 ? value + '-01' : value;
-            value = value.replaceAll('-', '/');
+      // Parse a date from the input in different format.
+      function parseDateValue(datepicker, value, format) {
+        value = value.trim();
+        if (!value) {
+          return null;
+        }
+
+        value = value.replaceAll('/', '-');
+        format = format.replaceAll('/', '-');
+
+        var year = datepicker.createDate(null, true).format('YYYY');
+        var month = '01';
+        var day = '01';
+
+        // YYYY, YYYY-MM and YYYY-MM-DD formats.
+        if (value.match(/^\d{4}([-]\d{2}){0,2}$/)) {
+          if (value.length === 4) {
+            year = value;
           }
+          else if (value.length === 7) {
+            [year, month] = value.split('-');
+          }
+          else {
+            [year, month, day] = value.split('-');
+          }
+          value = [year, month, day].join('-');
+          console.log(format, value);
+          return datepicker.createDate(value + 'T00:00:00+00:00');
+        }
+        // DD, DD-MM, DD-MM-YYYY formats.
+        else if (format === 'DD-MM-YYYY' && value.match(/^\d{2}([-]\d{2}([-]\d{4})?)?$/)) {
+          if (value.length === 2) {
+            day = value;
+          }
+          else if (value.length === 5) {
+            [day, month] = value.split('-');
+          }
+          else {
+            [day, month, year] = value.split('-');
+          }
+          value = [year, month, day].join('-');
+          console.log(format, value);
+          return datepicker.createDate(value + 'T00:00:00+00:00');
+        }
+        // MM, MM-DD, MM-DD-YYYY formats.
+        else if (format === 'MM-DD-YYYY' && value.match(/^\d{2}([-]\d{2}([-]\d{4})?)?$/)) {
+          if (value.length === 2) {
+            month = value;
+          }
+          else if (value.length === 5) {
+            [month, day] = value.split('-');
+          }
+          else {
+            [month, day, year] = value.split('-');
+          }
+          value = [year, month, day].join('-');
+          console.log(format, value);
+          return datepicker.createDate(value + 'T00:00:00+00:00');
+        }
+        // D, D MMM, D MMM YYYY format.
+        else if (format === 'D MMM YYYY') {
           // D format.
-          else if (value.match(/^\d{1,2} ?$/)) {
+          if (value.match(/^\d{1,2} ?$/)) {
             value = value.trim() + datepicker.createDate(null, true).format(' MMM YYYY');
           }
           // D MMM format.
@@ -52,18 +102,69 @@
             value = value.trim() + datepicker.createDate(null, true).format(' YYYY');
           }
           // D MMM YYYY format.
-          else if (!value.match(/^\d{1,2} \D{3} \d{4}$/)) {
-            return;
+          else if (value.match(/^\d{1,2} \D{3} \d{4}$/)) {
+            // Nothing to do. It's already in an accepted format.
+          }
+          console.log(format, value);
+          return datepicker.createDate(value + ' UTC');
+        }
+
+        return null;
+      }
+
+      // Show a selection error message if the input contains an invalid date.
+      function toggleInvalidDateMessage(datepicker, format, clear) {
+        var input = datepicker.options.element;
+        if (!input) {
+          return;
+        }
+
+        var value = input.value;
+        var date = parseDateValue(datepicker, value, format, false);
+        var valid = date && !date.invalid() && date.format(format) === value;
+        console.log(value);
+        console.log(format);
+        console.log(date ? date.format(format) : null);
+        console.log(valid);
+
+        // Show an error message if the input is not a valid date.
+        if (clear !== true && !valid && !datepicker.visible()) {
+          // Add the form error message.
+          var errorContainer = input.parentNode.querySelector('.rw-datepicker-error');
+          if (!errorContainer) {
+            errorContainer = document.createElement('div');
+            errorContainer.classList.add('rw-datepicker-error', 'form-item--error-message');
+            input.parentNode.insertBefore(errorContainer, input.nextSibling);
           }
 
-          var date = datepicker.createDate(value + ' UTC');
-          if (!date.invalid()) {
-            // Update the selected date.
-            datepicker.setSelection([date], trigger === true);
+          // Set the error message.
+          errorContainer.innerHTML = Drupal.t('Invalid date. Please enter a date in the format %format (e.g., %example).', {
+            '%format': format,
+            '%example': datepicker.createDate().format(format)
+          });
+
+          // Mark the input as having an error.
+          input.classList.add('error');
+        }
+        // Clear any error state.
+        else {
+          var errorContainer = input.parentNode.querySelector('.rw-datepicker-error');
+          if (errorContainer) {
+            input.parentNode.removeChild(errorContainer);
           }
-          else if (trigger) {
-            datepicker.hide();
-          }
+          input.classList.remove('error');
+        }
+      }
+
+      // Update the datepicker date based on the input value.
+      function updateDatepicker(datepicker, value, format, trigger) {
+        var date = parseDateValue(datepicker, value, format);
+        if (date && !date.invalid()) {
+          // Update the selected date.
+          datepicker.setSelection([date], trigger === true);
+        }
+        else if (trigger) {
+          datepicker.hide();
         }
       }
 
@@ -112,6 +213,9 @@
 
         // Localized date format.
         var localizedFormat = t('D MMM YYYY');
+        if (element.hasAttribute('data-date-format')) {
+          localizedFormat = element.getAttribute('data-date-format');
+        }
 
         // Add the datepicker widget.
         var datepicker = SimpleDatePicker.datepicker({
@@ -141,8 +245,16 @@
         .hide();
 
         datepicker.on('opened', function (event) {
+          toggleInvalidDateMessage(datepicker, localizedFormat, true);
           focusedElement = element;
-          updateDatepicker(datepicker, element.value);
+          updateDatepicker(datepicker, element.value, localizedFormat);
+        });
+
+        datepicker.on('closed', function (event) {
+          // Use a delay to ensure the datepicker is closed.
+          setTimeout(function () {
+            toggleInvalidDateMessage(datepicker, localizedFormat);
+          }, 100);
         });
 
         datepicker.on('select', function (event) {
@@ -176,12 +288,12 @@
           else if (event.key === 'Enter') {
             // Update the datepicker selection, trigger the select event and
             // close the datepicker.
-            updateDatepicker(datepicker, element.value, true);
+            updateDatepicker(datepicker, element.value, localizedFormat, true);
           }
           else {
             // Ensure the date picker is visible and update its selection.
             datepicker.show();
-            updateDatepicker(datepicker, element.value);
+            updateDatepicker(datepicker, element.value, localizedFormat);
           }
         });
 
@@ -217,11 +329,8 @@
         if (form) {
           form.addEventListener('submit', function (event) {
             if (element.value) {
-              var value = element.value.trim();
-              if (value.match(/^\d{1,2} \D{3} \d{4}$/)) {
-                var date = datepicker.createDate(value + ' UTC');
-                element.value = !date.invalid() ? date.format('YYYY-MM-DD') : value;
-              }
+              var date = parseDateValue(datepicker, element.value, localizedFormat);
+              element.value = date && !date.invalid() ? date.format('YYYY-MM-DD') : value;
             }
           });
         }

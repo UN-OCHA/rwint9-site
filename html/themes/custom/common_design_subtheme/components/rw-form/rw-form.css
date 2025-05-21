@@ -569,6 +569,13 @@ form:not(.rw-entity-form-altered) .form-actions.form-item {
 .rw-entity-form--report--submitter {
   margin-top: 2rem;
 
+  .rw-form-instructions {
+    padding: 12px;
+    border: 1px solid var(--cd-reliefweb-brand-grey--light);
+    background: var(--cd-reliefweb-brand-grey--light);
+    background: rgba(230, 236, 239, 0.4);
+  }
+
   .rw-form-fieldset {
     > .form-wrapper + .form-wrapper {
        margin-top: 2rem;
@@ -582,5 +589,17 @@ form:not(.rw-entity-form-altered) .form-actions.form-item {
     .rw-file-widget > legend {
       font-size: 1.25rem;
     }
+    .form-item--error-message p {
+      display: inline;
+    }
+    .form-required::after {
+      display: inline-block;
+      content: "";
+      vertical-align: top;
+    }
+  }
+
+  .form-item-buttons-description {
+    margin-top: 3px;
   }
 }

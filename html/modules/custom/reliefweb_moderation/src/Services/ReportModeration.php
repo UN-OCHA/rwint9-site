@@ -409,7 +409,7 @@ class ReportModeration extends ModerationServiceBase {
 
     if (!$new) {
       $buttons['on-hold'] = [
-        '#value' => $this->t('On-hold'),
+        '#value' => $this->t('Unpublish'),
       ];
     }
 
