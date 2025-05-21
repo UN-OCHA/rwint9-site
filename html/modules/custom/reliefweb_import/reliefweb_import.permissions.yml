@@ -4,3 +4,6 @@ administer reliefweb content importers:
 access reliefweb failed import records:
   title: 'View failed import records'
   description: 'Allow users to view failed import records.'
+override reliefweb inoreader extra tags:
+  title: 'Override Inoreader extra tags'
+  description: 'Allow users to override Inoreader extra tags.'

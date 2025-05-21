@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\reliefweb_import\Plugin\ReliefWebImporter;
 
 use Drupal\Component\Serialization\Json;
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
@@ -336,39 +337,6 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
   }
 
   /**
-   * Add tag to an inoreader item.
-   */
-  protected function addTagToItem($id, $tag) {
-    $auth = $this->getAuthToken();
-
-    try {
-      $timeout = $this->getPluginSetting('timeout', 10, FALSE);
-      $app_id = $this->getPluginSetting('app_id');
-      $app_key = $this->getPluginSetting('app_key');
-
-      $this->httpClient->post('https://www.inoreader.com/reader/api/0/edit-tag', [
-        'connect_timeout' => $timeout,
-        'timeout' => $timeout,
-        'headers' => [
-          'Content-Type' => 'application/x-www-form-urlencoded',
-          'AppId' => $app_id,
-          'AppKey' => $app_key,
-          'Authorization' => 'GoogleLogin auth=' . $auth,
-        ],
-        'query' => [
-          'a' => $tag,
-          'r' => 'user/-/state/com.google/read',
-          'i' => $id,
-        ],
-      ]);
-    }
-    catch (\Exception $exception) {
-      $this->getLogger()->error($exception->getMessage());
-      return FALSE;
-    }
-  }
-
-  /**
    * Process the documents retrieved from the Inoreader.
    *
    * @param array $documents
@@ -419,6 +387,13 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         'status' => 'pending',
         'message' => '',
         'attempts' => 0,
+        'extra' => [
+          'inoreader' => [
+            'feed_name' => $document['origin']['title'] ?? '',
+            'feed_url' => 'https://www.inoreader.com/' . $document['origin']['streamId'] ?? '',
+            'feed_origin' => $document['origin']['htmlUrl'] ?? '',
+          ],
+        ],
       ];
 
       // Retrieve the document ID.
@@ -429,7 +404,6 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       $id = $document['id'];
       $import_record['imported_item_id'] = $id;
 
-      // $this->addTagToItem($id, 'rw-imported');
       // Retrieve the document URL.
       if (!isset($document['canonical'][0]['href'])) {
         $this->getLogger()->notice(strtr('Undefined document URL for Inoreader document ID @id, skipping document import.', [
@@ -446,7 +420,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
       // Merge with existing record if available.
       if (isset($existing_import_records[$uuid])) {
-        $import_record = $existing_import_records[$uuid] + $import_record;
+        $import_record = NestedArray::mergeDeep($existing_import_records[$uuid], $import_record);
       }
 
       $this->getLogger()->info(strtr('Processing Inoreader document @id.', [
@@ -507,6 +481,12 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
           '@id' => $id,
         ]));
 
+        // Log it.
+        $import_record['status'] = 'skipped';
+        $import_record['message'] = 'No data to import.';
+        $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
+        $import_records[$import_record['imported_item_uuid']] = $import_record;
+
         continue;
       }
 
@@ -561,6 +541,8 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
    * {@inheritdoc}
    */
   protected function processDocumentData(string $uuid, array $document): array {
+    $fetch_timeout = $this->getPluginSetting('fetch_timeout', 10, FALSE);
+
     $data = [];
 
     $id = $document['id'];
@@ -603,16 +585,35 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       array_shift($tag_parts);
       $tag_value = implode(':', $tag_parts);
 
-      if (isset($tags[$tag_key])) {
-        $tags[$tag_key] = [
-          $tags[$tag_key],
-        ];
-      }
-      if (isset($tags[$tag_key]) && is_array($tags[$tag_key])) {
-        $tags[$tag_key][] = $tag_value;
+      if (!isset($tags[$tag_key])) {
+        $tags[$tag_key] = $tag_value;
       }
       else {
-        $tags[$tag_key] = $tag_value;
+        if (!is_array($tags[$tag_key])) {
+          $tags[$tag_key] = [
+            $tags[$tag_key],
+          ];
+        }
+        $tags[$tag_key][] = $tag_value;
+      }
+    }
+
+    // Get extra tags from state.
+    $extra_tags = $this->state->get('reliefweb_importer_inoreader_extra_tags', []);
+
+    if (!empty($extra_tags[$tags['source']])) {
+      foreach ($extra_tags[$tags['source']] as $key => $value) {
+        if (isset($tags[$key])) {
+          if (!is_array($tags[$key])) {
+            $tags[$key] = [
+              $tags[$key],
+            ];
+          }
+          $tags[$key] = array_merge($tags[$key], $value);
+        }
+        else {
+          $tags[$key] = $value;
+        }
       }
     }
 
@@ -620,24 +621,27 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
     $sources = [
       (int) $tags['source'],
     ];
-    unset($tags['source']);
+
+    // Check for custom fetch timeout.
+    if (isset($tags['timeout'])) {
+      $fetch_timeout = (int) $tags['timeout'];
+      unset($tags['timeout']);
+    }
 
     foreach ($tags as $tag_key => $tag_value) {
       if ($tag_key == 'pdf') {
         switch ($tag_value) {
           case 'canonical':
             $pdf = $document['canonical'][0]['href'] ?? '';
-            $pdf = $this->rewritePdfLink($pdf, $tags);
             break;
 
           case 'summary-link':
             $pdf = $this->extractPdfUrl($document['summary']['content'] ?? '', 'a', 'href');
-            $pdf = $this->rewritePdfLink($pdf, $tags);
             break;
 
           case 'page-link':
             $page_url = $document['canonical'][0]['href'] ?? '';
-            $html = $this->downloadHtmlPage($page_url);
+            $html = $this->downloadHtmlPage($page_url, $fetch_timeout);
             if (empty($html)) {
               $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
                 '@id' => $id,
@@ -650,7 +654,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
                 // Follow link and fetch PDF from that page.
                 if (strpos($pdf, $tags['follow']) !== FALSE) {
                   $page_url = $pdf;
-                  $html = $this->downloadHtmlPage($page_url);
+                  $html = $this->downloadHtmlPage($page_url, $fetch_timeout);
                   if (empty($html)) {
                     $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
                       '@id' => $id,
@@ -668,7 +672,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
           case 'page-object':
             $page_url = $document['canonical'][0]['href'] ?? '';
-            $html = $this->downloadHtmlPage($page_url);
+            $html = $this->downloadHtmlPage($page_url, $fetch_timeout);
             if (empty($html)) {
               $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
                 '@id' => $id,
@@ -681,7 +685,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
           case 'page-iframe-data-src':
             $page_url = $document['canonical'][0]['href'] ?? '';
-            $html = $this->downloadHtmlPage($page_url);
+            $html = $this->downloadHtmlPage($page_url, $fetch_timeout);
             if (empty($html)) {
               $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
                 '@id' => $id,
@@ -694,7 +698,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
           case 'page-iframe-src':
             $page_url = $document['canonical'][0]['href'] ?? '';
-            $html = $this->downloadHtmlPage($page_url);
+            $html = $this->downloadHtmlPage($page_url, $fetch_timeout);
             if (empty($html)) {
               $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
                 '@id' => $id,
@@ -706,10 +710,12 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
           case 'js':
             $page_url = $document['canonical'][0]['href'] ?? '';
-            $pdf = $this->tryToExtractPdfUsingPuppeteer($page_url, $tags);
+            $pdf = $this->tryToExtractPdfUsingPuppeteer($page_url, $tags, $fetch_timeout);
             break;
 
         }
+
+        $pdf = $this->rewritePdfLink($pdf, $tags);
       }
       elseif ($tag_key == 'content') {
         switch ($tag_value) {
@@ -937,9 +943,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
   /**
    * Download HTML page as string.
    */
-  protected function downloadHtmlPage($url) {
-    $fetch_timeout = $this->getPluginSetting('fetch_timeout', 10, FALSE);
-
+  protected function downloadHtmlPage($url, $fetch_timeout) {
     try {
       $response = $this->httpClient->get($url, [
         'connect_timeout' => $fetch_timeout,
@@ -985,8 +989,20 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
    * Rewrite PDF link.
    */
   protected function rewritePdfLink($pdf, $tags) {
-    if (isset($tags['replace'])) {
-      [$from, $to] = explode(':', $tags['replace']);
+    if (empty($pdf)) {
+      return $pdf;
+    }
+
+    if (!isset($tags['replace'])) {
+      return $pdf;
+    }
+
+    if (!is_array($tags['replace'])) {
+      $tags['replace'] = [$tags['replace']];
+    }
+
+    foreach ($tags['replace'] as $replace) {
+      [$from, $to] = explode(':', $replace);
       $pdf = str_replace($from, $to, $pdf);
     }
 
@@ -996,8 +1012,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
   /**
    * Try to extract the link to a PDF file from HTML content.
    * */
-  protected function tryToExtractPdfUsingPuppeteer($page_url, $tags) {
-    $fetch_timeout = $this->getPluginSetting('fetch_timeout', 10, FALSE);
+  protected function tryToExtractPdfUsingPuppeteer($page_url, $tags, $fetch_timeout) {
     $pdf = '';
 
     if (isset($tags['wrapper'])) {

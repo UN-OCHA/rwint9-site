@@ -91,6 +91,14 @@ function reliefweb_import_schema() {
         'size' => 'big',
         'description' => 'The message for the last update of this record (e.g., error message).',
       ],
+      'extra' => [
+        'type' => 'json',
+        'pgsql_type' => 'json',
+        'mysql_type' => 'json',
+        'sqlite_type' => 'text',
+        'not null' => FALSE,
+        'description' => 'Store extra information.',
+      ],
     ],
     'primary key' => ['imported_item_uuid'],
     'indexes' => [
@@ -117,5 +125,21 @@ function reliefweb_import_update_10001(array &$sandbox) {
   if (!$schema->tableExists($table_name)) {
     $table_schema = reliefweb_import_schema();
     $schema->createTable($table_name, $table_schema[$table_name]);
+  }
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * Add extra column to the reliefweb_import_records table.
+ */
+function reliefweb_import_update_10002(array &$sandbox) {
+  $schema = \Drupal::database()->schema();
+  $table_name = 'reliefweb_import_records';
+  $field_name = 'extra';
+
+  if (!$schema->fieldExists($table_name, $field_name)) {
+    $table_schema = reliefweb_import_schema();
+    $schema->addField($table_name, $field_name, $table_schema[$table_name]['fields'][$field_name]);
   }
 }
