@@ -14,7 +14,6 @@
           $textarea.addClass('visually-hidden');
 
           // Init ace editor.
-          ace.config.set('basePath', 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/');
           var editor = ace.edit($editDiv[0]);
           editor.session.setValue($textarea.val());
           editor.session.setMode("ace/mode/yaml");

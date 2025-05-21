@@ -20,7 +20,7 @@ reliefweb_import.reliefweb_importer.inoreader.extra_tags:
     _form: '\Drupal\reliefweb_import\Form\ReliefWebImporterInoreaderForm'
     _title: 'Inoreader extra tags'
   requirements:
-    _permission: 'administer reliefweb content importers'
+    _permission: 'override reliefweb inoreader extra tags'
 
 reliefweb_import.reliefweb_importer.failed_import_records:
   path: '/admin/content/reliefweb-failed-import-records'

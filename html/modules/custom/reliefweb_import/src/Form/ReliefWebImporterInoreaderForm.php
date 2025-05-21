@@ -6,7 +6,9 @@ namespace Drupal\reliefweb_import\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
 use Drupal\Core\State\StateInterface;
+use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
@@ -66,6 +68,9 @@ class ReliefWebImporterInoreaderForm extends FormBase {
       '#attributes' => [
         'data-inoreader-yaml-editor' => 'true',
       ],
+      '#description' => $this->t('Add extra tags to the imported items. The top level keys are organization ids, the next level is the tag name and beneath that you can specify tag values. Check the @readme for more information', [
+        '@readme' => Link::fromTextAndUrl($this->t('README'), Url::fromUri('https://github.com/UN-OCHA/rwint9-site/blob/develop/html/modules/custom/reliefweb_import/README.md'))->toString(),
+      ]),
     ];
 
     $form['actions']['#type'] = 'actions';
@@ -83,7 +88,7 @@ class ReliefWebImporterInoreaderForm extends FormBase {
    */
   public function validateForm(array &$form, FormStateInterface $form_state): void {
     try {
-      $extra_tags = $form_state->getValue('extra_tags');
+      $extra_tags = $form_state->getValue('extra_tags', '');
       $extra_tags = Yaml::parse($extra_tags, Yaml::PARSE_OBJECT);
 
       if (!is_array($extra_tags)) {

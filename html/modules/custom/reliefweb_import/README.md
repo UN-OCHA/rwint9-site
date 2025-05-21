@@ -100,6 +100,21 @@ Defines the attribute to extract from the element.
 
 Defines a custom timeout for fetching external data.
 
+### Override tags in the UI
+
+You can go to and `/admin/config/reliefweb/content-importers/inoreader_extra_tags` add extra tags.
+
+```yaml
+2836:
+  replace:
+    - 'openknowledge.fao.org/bitstreams/:openknowledge.fao.org/server/api/core/bitstreams/'
+    - '/download:/content'
+  content: ignore
+1980:
+  wrapper:
+    - div.dynamic-content__figure-container
+```
+
 ## UNHCR importer
 
 Imports reports from [their API](https://data.unhcr.org)
