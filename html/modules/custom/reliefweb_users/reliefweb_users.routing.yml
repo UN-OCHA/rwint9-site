@@ -44,3 +44,12 @@ reliefweb_users.submitter_allowed_domains:
   options:
     _admin_route: TRUE
 
+reliefweb_users.submitter_form_settings:
+  path: '/admin/config/people/submitter-form-settings'
+  defaults:
+    _form: '\Drupal\reliefweb_users\Form\SubmitterFormSettingsForm'
+    _title: 'Submitter Form Settings'
+  requirements:
+    _permission: 'administer submitter form settings'
+  options:
+    _admin_route: TRUE

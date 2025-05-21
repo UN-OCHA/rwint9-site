@@ -14,5 +14,9 @@ administer submitter allowed domains:
   title: 'Administer submitter allowed domains'
   description: 'Configure domains allowed for automatic assignment of the submitter role.'
 
+administer submitter form settings:
+  title: 'Administer submitter form settings'
+  description: 'Configure settings for the submitter form.'
+
 permission_callbacks:
   - Drupal\reliefweb_users\UserPermissions::permissions

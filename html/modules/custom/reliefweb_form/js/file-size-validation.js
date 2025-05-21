@@ -59,11 +59,22 @@
           // unwanted submission due to autoupload for example.
           event.stopImmediatePropagation();
 
-          // Create error message with proper Drupal styling.
-          const errorMessage = Drupal.t('Unable to upload the file <em class="placeholder">@filename</em>. The file exceeds the maximum file size of <em class="placeholder">@maxsize</em>.', {
-            '@filename': file.name,
-            '@maxsize': formatFileSize(maxFileSize)
-          });
+          // Retrieve the error message.
+          let errorMessage;
+          if (fileInput.hasAttribute('data-max-filesize-error')) {
+            errorMessage = Drupal.t(fileInput.getAttribute('data-max-filesize-error'), {
+              '%filename': file.name,
+              '%filesize': formatFileSize(file.size),
+              '%maxsize': formatFileSize(maxFileSize)
+            });
+          }
+          else {
+            errorMessage = Drupal.t('Unable to upload the file %filename. The file is %filesize exceeding the maximum file size of %maxsize.', {
+              '%filename': file.name,
+              '%filesize': formatFileSize(file.size),
+              '%maxsize': formatFileSize(maxFileSize)
+            });
+          }
 
           // Create error element with Drupal's error class.
           const errorElement = document.createElement('div');
@@ -72,9 +83,15 @@
 
           // Insert error after the file input.
           if (managedFile) {
+            // Clear other/previous form errors.
+            parentElement.parentNode.querySelectorAll('.form-item--error-message').forEach(element => element.remove());
+            // Add the file size validation error.
             parentElement.parentNode.insertBefore(errorElement, parentElement.nextSibling);
           }
           else {
+            // Clear other/previous form errors.
+            parentElement.querySelectorAll('.form-item--error-message').forEach(element => element.remove());
+            // Add the file size validation error.
             parentElement.insertBefore(errorElement, fileInput.nextSibling);
           }
 

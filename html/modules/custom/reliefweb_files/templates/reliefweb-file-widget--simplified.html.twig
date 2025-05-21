@@ -12,9 +12,10 @@
 {% set files = element|without(['add_more'])|filter((v, k) => k|first != '#') %}
 {% set add_more = element['add_more'] %}
 {% set attributes = create_attribute(element['#attributes'] ?? {}) %}
+{% set legend_attributes = create_attribute(element['#title_attributes'] ?? {}) %}
 
 <fieldset{{ attributes.addClass('rw-file-widget', 'rw-file-widget--simplified', 'form-wrapper').setAttribute('id', element['#id']) }}>
-  <legend{{ legend_attributes }}>
+  <legend{{ legend_attributes.addClass(element['#required'] ? 'form-required') }}>
     <span class="fieldset-legend">{{ element['#title'] }}</span>
   </legend>
 
