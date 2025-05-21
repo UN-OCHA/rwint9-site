@@ -39,7 +39,7 @@
   margin: 0;
   padding: 0;
 }
-.rw-file-widget .description {
+.rw-file-widget .rw-file-widget__add-more .description {
   margin-bottom: 1rem;
 }
 .rw-file-widget .rw-file-widget-item__preview {
@@ -155,15 +155,7 @@
   outline-offset: -2px;
 }
 
-.rw-file-widget--simplified {
-    .rw-file-widget-item__operations {
-      width: 200px;
-
-      &:has([open]) {
-        width: 300px;
-      }
-    }
-
+.rw-file-widget--autoupload {
   .rw-file-widget__add-more {
     margin-top: 0;
 
@@ -179,18 +171,25 @@
       }
       .form-submit {
         grid-area: upload;
+        max-height: 43px;
         margin: 0;
         white-space: nowrap;
         border-width: 1px;
       }
-      .form-item-field-file-add-more-description {
+      .description {
         grid-area: description;
         margin: 0;
-
-        .description {
-          margin: 0;
-        }
       }
+    }
+  }
+}
+
+.rw-file-widget--simplified {
+  .rw-file-widget-item__operations {
+    width: 200px;
+
+    &:has([open]) {
+      width: 300px;
     }
   }
 }

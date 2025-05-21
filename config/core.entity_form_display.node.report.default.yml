@@ -174,7 +174,9 @@ content:
     type: reliefweb_file
     weight: 24
     region: content
-    settings: {  }
+    settings:
+      extensions: 'csv, doc, docx, jpg, jpeg, odp, ods, odt, pdf, png, pps, ppt, pptx, svg, xls, xlsx, zip'
+      max_file_size: '41943040'
     third_party_settings: {  }
   field_headline:
     type: boolean_checkbox
