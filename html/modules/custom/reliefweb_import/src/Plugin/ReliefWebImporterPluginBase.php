@@ -1065,6 +1065,38 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
     }
 
     $body = NULL;
+
+    // Support file protocol.
+    if (strpos($url, 'file') === 0) {
+      $url = str_replace('file://', '', $url);
+      $content = file_get_contents($url);
+      if ($content === FALSE) {
+        throw new \Exception('Unable to retrieve file.');
+      }
+
+      $content_length = strlen($content);
+      if ($content_length !== '' && $max_size > 0 && ((int) $content_length) > $max_size) {
+        throw new \Exception('File is too large.');
+      }
+
+      // Sanitize the file name.
+      $extracted_filename = basename($url);
+      $filename = $this->sanitizeFileName($extracted_filename, $allowed_extensions, $default_extension);
+      if (empty($filename)) {
+        throw new \Exception(strtr('Invalid filename: @filename.', [
+          '@filename' => $extracted_filename,
+        ]));
+      }
+
+      $checksum = hash('sha256', $content);
+
+      return [
+        'checksum' => $checksum,
+        'filename' => $filename,
+      ];
+    }
+
+    // Remote file.
     try {
       $response = $this->httpClient->get($url, [
         'stream' => TRUE,

@@ -68,7 +68,7 @@ class Report extends ContentProcessorPluginBase {
     $provider = $this->getProvider($data['provider'] ?? '');
     $pattern = $provider->getUrlPattern($type);
 
-    if (!empty($file['url']) && !$this->validateUrl($file['url'], $pattern)) {
+    if (!empty($file['url']) && (strpos($file['url'], 'file://') !== 0) && !$this->validateUrl($file['url'], $pattern)) {
       throw new ContentProcessorException(strtr('Unallowed @type URL: @url.', [
         '@type' => $type,
         '@url' => $file['url'],

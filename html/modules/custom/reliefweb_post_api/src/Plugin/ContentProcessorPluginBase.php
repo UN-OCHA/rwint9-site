@@ -935,8 +935,16 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     $file = $this->entityRepository->loadEntityByUuid('file', $uuid);
 
     if (empty($file)) {
-      // Skip if we cannot retrieve the new image.
-      $content = $this->getRemoteFileContent($url, $checksum, $mimetype, $max_size);
+      // Allow file protocol.
+      if (strpos($url, 'file://') === 0) {
+        $url = substr($url, 7);
+        $content = file_get_contents($url);
+      }
+      else {
+        $content = $this->getRemoteFileContent($url, $checksum, $mimetype, $max_size);
+      }
+
+      // Skip if we cannot retrieve the new file.
       if (empty($content)) {
         return NULL;
       }

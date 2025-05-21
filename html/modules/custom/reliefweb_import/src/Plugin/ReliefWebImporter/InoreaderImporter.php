@@ -130,6 +130,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
           return FALSE;
         }
         $documents = json_decode($documents, TRUE, flags: \JSON_THROW_ON_ERROR);
+        $documents = array_slice($documents, 0, $limit);
       }
       else {
         $this->getLogger()->info('Retrieving documents from the Inoreader.');
@@ -549,7 +550,10 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
     $url = $document['canonical'][0]['href'];
 
     // Retrieve the title and clean it.
-    $title = $this->sanitizeText(html_entity_decode($document['title'] ?? ''));
+    $title = $this->sanitizeText(html_entity_decode($document['title'] ?? ''), TRUE);
+    if (empty($title)) {
+      $title = $url;
+    }
 
     // Retrieve the publication date.
     $published = $document['published'] ?? time();
@@ -1059,10 +1063,11 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
     }
 
     // Save the blob to a file.
-    $local_file_path = '/tmp/' . basename($pdf['pdf']);
+    $tmp = '/tmp';
+    $local_file_path = $tmp . '/' . basename($pdf['pdf']);
     $f = fopen($local_file_path, 'w');
     if ($f) {
-      fwrite($f, $pdf['blob']);
+      fwrite($f, base64_decode($pdf['blob']));
       fclose($f);
       $this->getLogger()->info('Inoreader PDF blob written to ' . $local_file_path);
       return 'file://' . $local_file_path;
