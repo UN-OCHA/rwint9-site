@@ -5,6 +5,7 @@ namespace Drupal\reliefweb_entities\Services;
 use Drupal\Component\Utility\SortArray;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
 use Drupal\Core\Url;
 use Drupal\reliefweb_entities\Entity\Report;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
@@ -111,18 +112,6 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
 
     // Remove Complex Emergency (41764) option for disaster type field.
     FormHelper::removeOptions($form, 'field_disaster_type', [41764]);
-
-    // Change the description of the file field to indicate that only PDF files
-    // are accepted in terms of editorial guidance.
-    // @todo review if that should apply to roles other than editor.
-    if (isset($form['field_file']['widget']['add_more']['files']['#description'])) {
-      $description = $form['field_file']['widget']['add_more']['files']['#description'];
-      $form['field_file']['widget']['add_more']['files']['#description'] = $this->t(
-        'PDF only. Max file size: %max_filesize.',
-        $description->getArguments(),
-        $description->getOptions()
-      );
-    }
 
     $entity = $form_state->getFormObject()?->getEntity();
     // Only keep the "API" origin if the document was submitted via the API.
@@ -284,16 +273,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     }
 
     if (isset($form['field_file']['widget']['add_more']['files'])) {
-      // Add the custom file size limit error message.
-      if (!empty($settings['errors']['file_too_large']['value'])) {
-        $message = check_markup($settings['errors']['file_too_large']['value'], $settings['errors']['file_too_large']['format']);
-        $form['field_file']['widget']['add_more']['files']['#upload_validators']['FileSizeLimit']['maxFileSizeMessage'] = (string) $message;
-      }
-      // Add the custom file duplicate error.
-      if (!empty($settings['errors']['file_duplicate']['value'])) {
-        $message = check_markup($settings['errors']['file_duplicate']['value'], $settings['errors']['file_duplicate']['format']);
-        $form['field_file']['widget']['add_more']['files']['#upload_validators']['ReliefWebFileHash']['duplicateFileFormError'] = (string) $message;
-      }
+      $form['field_file']['#process'][] = [$this, 'fileFieldUpdateValidators'];
     }
 
     if (isset($form['field_notify'])) {
@@ -356,6 +336,62 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
         '#description' => $buttons_description,
       ];
     }
+  }
+
+  /**
+   * Process callback for the file field to update validation error messages.
+   *
+   * Check that there is at least one attachment.
+   *
+   * @param array $element
+   *   Form element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   *
+   * @return array
+   *   Form element.
+   */
+  public function fileFieldUpdateValidators(array $element, FormStateInterface $form_state): array {
+    if (!isset($element['widget'])) {
+      return $element;
+    }
+
+    // Retrieve the "add more" and existing "replace" file form elements.
+    $file_elements = [];
+    foreach (Element::Children($element['widget']) as $key) {
+      $child = $element['widget'][$key];
+      if (isset($child['files']['#upload_validators'])) {
+        $file_elements[] = &$element['widget'][$key]['files'];
+      }
+      elseif (isset($child['operations']['file']['#upload_validators'])) {
+        $file_elements[] = &$element['widget'][$key]['operations']['file'];
+      }
+    }
+
+    if (empty($file_elements)) {
+      return $element;
+    }
+
+    // Retrieve the form settings.
+    $settings = $this->state->get('reliefweb_users_submitter_form_settings', []);
+
+    // Add the custom file size limit error message.
+    if (!empty($settings['errors']['file_too_large']['value'])) {
+      $message = (string) check_markup($settings['errors']['file_too_large']['value'], $settings['errors']['file_too_large']['format']);
+
+      foreach ($file_elements as &$file_element) {
+        $file_element['#upload_validators']['FileSizeLimit']['maxFileSizeMessage'] = $message;
+      }
+    }
+    // Add the custom file duplicate error.
+    if (!empty($settings['errors']['file_duplicate']['value'])) {
+      $message = (string) check_markup($settings['errors']['file_duplicate']['value'], $settings['errors']['file_duplicate']['format']);
+      foreach ($file_elements as &$file_element) {
+        $file_element['#upload_validators']['ReliefWebFileHash']['duplicateFileFormError'] = $message;
+      }
+    }
+
+    return $element;
   }
 
   /**
