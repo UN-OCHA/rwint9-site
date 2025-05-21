@@ -83,9 +83,15 @@
 
           // Insert error after the file input.
           if (managedFile) {
+            // Clear other/previous form errors.
+            parentElement.parentNode.querySelectorAll('.form-item--error-message').forEach(element => element.remove());
+            // Add the file size validation error.
             parentElement.parentNode.insertBefore(errorElement, parentElement.nextSibling);
           }
           else {
+            // Clear other/previous form errors.
+            parentElement.querySelectorAll('.form-item--error-message').forEach(element => element.remove());
+            // Add the file size validation error.
             parentElement.insertBefore(errorElement, fileInput.nextSibling);
           }
 
