@@ -4150,7 +4150,7 @@
                 "shasum": "fc8ea60619b6b4682bade340e13fb4565d3a7e0c"
             },
             "require": {
-                "drupal/core": "^9.1 || ^10"
+                "drupal/core": "^10"
             },
             "type": "drupal-module",
             "extra": {
@@ -4353,7 +4353,7 @@
                 "shasum": "c25246747dac4372c7d5a5a5fd0f276d9e468eff"
             },
             "require": {
-                "drupal/core": "^9.3 || ^10",
+                "drupal/core": "^10",
                 "drupal/mailsystem": "^4"
             },
             "require-dev": {
@@ -5209,7 +5209,7 @@
                 "shasum": "4623b9d0de4c624857df10daaa8c68793942ad87"
             },
             "require": {
-                "drupal/core": "^10.3 || ^11",
+                "drupal/core": "^10",
                 "enshrined/svg-sanitize": ">=0.15 <1.0"
             },
             "type": "drupal-module",
@@ -5369,7 +5369,7 @@
                 "shasum": "4aa9b119c9c992fd9930fa50f97cd89959c3bafb"
             },
             "require": {
-                "drupal/core": "^8.9 || ^9 || ^10 || ^11"
+                "drupal/core": "^10"
             },
             "type": "drupal-module",
             "extra": {
@@ -17672,16 +17672,16 @@
         },
         {
             "name": "unocha/ocha_entraid",
-            "version": "v1.0.2",
+            "version": "v1.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_entraid.git",
-                "reference": "2b5899e9c42872acf9b2ce5f0503dbb76618e695"
+                "reference": "e0c230fcf29358ba6ff937d67b858dbb3cf3210b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_entraid/zipball/2b5899e9c42872acf9b2ce5f0503dbb76618e695",
-                "reference": "2b5899e9c42872acf9b2ce5f0503dbb76618e695",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_entraid/zipball/e0c230fcf29358ba6ff937d67b858dbb3cf3210b",
+                "reference": "e0c230fcf29358ba6ff937d67b858dbb3cf3210b",
                 "shasum": ""
             },
             "require": {
@@ -17708,9 +17708,9 @@
             "description": "OCHA Entra ID module",
             "support": {
                 "issues": "https://github.com/UN-OCHA/ocha_entraid/issues",
-                "source": "https://github.com/UN-OCHA/ocha_entraid/tree/v1.0.2"
+                "source": "https://github.com/UN-OCHA/ocha_entraid/tree/v1.1.1"
             },
-            "time": "2025-04-04T23:44:25+00:00"
+            "time": "2025-05-21T07:44:00+00:00"
         },
         {
             "name": "unocha/ocha_monitoring",
