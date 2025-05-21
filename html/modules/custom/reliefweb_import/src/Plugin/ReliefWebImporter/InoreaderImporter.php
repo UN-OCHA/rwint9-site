@@ -1050,6 +1050,14 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       return $pdf['pdf'];
     }
 
+    if (empty($pdf['blob'])) {
+      $this->getLogger()->error(strtr('Unable to retrieve the PDF blob for Inoreader document @id -- @url.', [
+        '@id' => $page_url,
+        '@url' => $pdf['pdf'],
+      ]));
+      return '';
+    }
+
     // Save the blob to a file.
     $local_file_path = '/tmp/' . basename($pdf['pdf']);
     $f = fopen($local_file_path, 'w');
