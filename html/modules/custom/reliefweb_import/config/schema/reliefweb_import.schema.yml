@@ -80,14 +80,29 @@ reliefweb_import.plugin.importer.unhcr_data:
       type: integer
       label: 'Connection and request timeout.'
 
-# Echo Flash Update importer plugin settings.
+# ECHO Flash Update importer plugin settings.
 reliefweb_import.plugin.importer.echo_flash_update:
   type: reliefweb_import.plugin.importer
-  label: 'Echo Flash Update importer plugin base settings.'
+  label: 'ECHO Flash Update importer plugin base settings.'
   mapping:
     api_url:
       type: string
       label: 'API URL.'
+    timeout:
+      type: integer
+      label: 'Connection and request timeout.'
+
+# ECHO Map importer plugin settings.
+reliefweb_import.plugin.importer.echo_map:
+  type: reliefweb_import.plugin.importer
+  label: 'ECHO Map importer plugin base settings.'
+  mapping:
+    api_url:
+      type: string
+      label: 'API URL.'
+    file_url_pattern:
+      type: string
+      label: 'File download URL pattern with a `@id` placeholder that is replaced by the document ID.'
     timeout:
       type: integer
       label: 'Connection and request timeout.'
