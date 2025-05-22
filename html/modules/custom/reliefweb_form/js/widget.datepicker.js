@@ -58,7 +58,6 @@
             [year, month, day] = value.split('-');
           }
           value = [year, month, day].join('-');
-          console.log(format, value);
           return datepicker.createDate(value + 'T00:00:00+00:00');
         }
         // DD, DD-MM, DD-MM-YYYY formats.
@@ -73,7 +72,6 @@
             [day, month, year] = value.split('-');
           }
           value = [year, month, day].join('-');
-          console.log(format, value);
           return datepicker.createDate(value + 'T00:00:00+00:00');
         }
         // MM, MM-DD, MM-DD-YYYY formats.
@@ -88,7 +86,6 @@
             [month, day, year] = value.split('-');
           }
           value = [year, month, day].join('-');
-          console.log(format, value);
           return datepicker.createDate(value + 'T00:00:00+00:00');
         }
         // D, D MMM, D MMM YYYY format.
@@ -105,7 +102,6 @@
           else if (value.match(/^\d{1,2} \D{3} \d{4}$/)) {
             // Nothing to do. It's already in an accepted format.
           }
-          console.log(format, value);
           return datepicker.createDate(value + ' UTC');
         }
 
@@ -122,10 +118,6 @@
         var value = input.value;
         var date = parseDateValue(datepicker, value, format, false);
         var valid = date && !date.invalid() && date.format(format) === value;
-        console.log(value);
-        console.log(format);
-        console.log(date ? date.format(format) : null);
-        console.log(valid);
 
         // Show an error message if the input is not a valid date.
         if (clear !== true && !valid && !datepicker.visible()) {

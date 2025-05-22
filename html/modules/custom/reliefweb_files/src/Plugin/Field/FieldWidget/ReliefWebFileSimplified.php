@@ -23,7 +23,7 @@ class ReliefWebFileSimplified extends ReliefWebFile {
    */
   protected function formMultipleElements(FieldItemListInterface $items, array &$form, FormStateInterface $form_state) {
     $elements = parent::formMultipleElements($items, $form, $form_state);
-    $elements['#attached']['library'][] = 'reliefweb_files/file.autoupload';
+    $elements['#theme'] = 'reliefweb_file_widget__simplified';
     return $elements;
   }
 

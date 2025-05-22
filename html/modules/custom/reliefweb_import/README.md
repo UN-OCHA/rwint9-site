@@ -25,6 +25,11 @@ drush reliefweb_import:jobs --verbose
 
 Imports ECHO Flash updates from [their API](https://erccportal.jrc.ec.europa.eu/API/ERCC/EchoFlash/GetPagedItems)
 
+## ECHO Maps
+
+Imports ECHO Maps from [their API](https://erccportal.jrc.ec.europa.eu/API/ERCC/Maps/GetPagedItems)
+
+
 ## Inoreader importer
 
 Imports tagged items from the [automation_production](https://www.inoreader.com/folder/automation_production)
