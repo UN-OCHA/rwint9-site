@@ -314,6 +314,7 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
   protected function getSourceValues() {
     $query = $this->database->select('reliefweb_import_records', 'r')
       ->fields('r', ['source'])
+      ->condition('r.source', NULL, 'IS NOT NULL')
       ->distinct()
       ->orderBy('source');
 
