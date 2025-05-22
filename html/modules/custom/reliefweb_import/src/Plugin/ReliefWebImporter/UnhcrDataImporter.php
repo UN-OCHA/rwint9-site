@@ -878,6 +878,7 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
         'status' => 'pending',
         'message' => '',
         'attempts' => 0,
+        'source' => 'UNHCR Data',
       ];
 
       // Retrieve the document ID.

@@ -344,6 +344,7 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
         'status' => 'pending',
         'message' => '',
         'attempts' => 0,
+        'source' => 'WFP Logcluster',
       ];
 
       // Retrieve the document ID.

@@ -295,6 +295,7 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
         'status' => 'pending',
         'message' => '',
         'attempts' => 0,
+        'source' => $this->sourceName,
       ];
 
       // Retrieve the document ID.
