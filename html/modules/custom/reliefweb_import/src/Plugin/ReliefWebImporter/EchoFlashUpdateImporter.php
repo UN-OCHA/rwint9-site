@@ -18,10 +18,51 @@ use Drupal\reliefweb_utility\Helpers\DateHelper;
  */
 #[ReliefWebImporter(
   id: 'echo_flash_update',
-  label: new TranslatableMarkup('Echo Flash Update Update importer'),
-  description: new TranslatableMarkup('Import reports from the Echo Flash Update API.')
+  label: new TranslatableMarkup('ECHO Flash Update importer'),
+  description: new TranslatableMarkup('Import reports from the ECHO Flash Update API.')
 )]
 class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
+
+  /**
+   * Source name.
+   *
+   * @var string
+   */
+  protected string $sourceName = 'ECHO Flash Update';
+
+  /**
+   * ID extraction regex to find the ID from the manually posted documents.
+   *
+   * @var string
+   */
+  protected string $manualPostUrlPatternTemplate = 'https://erccportal.jrc.ec.europa.eu/ECHO%Products%/Echo%Flash#/%/{id}';
+
+  /**
+   * Pattern.
+   *
+   * @var string
+   */
+  protected string $manualPostIdExtractionRegex = '#^https://erccportal\.jrc\.ec\.europa\.eu/ECHO[^/]*Products[/]*/Echo[^/]*Flash.?/[^/]+/(\d+)[^/]*$#i';
+
+  /**
+   * Properties to use to generate the hash.
+   *
+   * @var array
+   */
+  protected array $hashDataProperties = [
+    'ContentItemId',
+    'Link',
+    'Title',
+    'ItemSources.Name',
+    'PublishedOnDate',
+    'CreatedOnDate',
+    'Description',
+    'Country.Iso3',
+    'Countries.Iso3',
+    'EventTypeCode',
+    'EventType.Code',
+    'EventTypes.Code',
+  ];
 
   /**
    * Theme mapping.
@@ -86,7 +127,9 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
     $form['api_url'] = [
       '#type' => 'url',
       '#title' => $this->t('API URL'),
-      '#description' => $this->t('The URL of the Echo Flash Update API including ItemsPageSize.'),
+      '#description' => $this->t('The URL of the @source API including ItemsPageSize.', [
+        '@source' => $this->sourceName,
+      ]),
       '#default_value' => $form_state->getValue('api_url', $this->getPluginSetting('api_url', '', FALSE)),
       '#required' => TRUE,
     ];
@@ -117,7 +160,9 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
       // Ensure the provider is valid.
       $plugin->getProvider($provider_uuid);
 
-      $this->getLogger()->info('Retrieving documents from the Echo Flash Update API.');
+      $this->getLogger()->info(strtr('Retrieving documents from the @source API.', [
+        '@source' => $this->sourceName,
+      ]));
 
       // Retrieve the latest created documents.
       $documents = $this->getDocuments($limit);
@@ -132,8 +177,9 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
       return FALSE;
     }
 
-    $this->getLogger()->info(strtr('Retrieved @count Echo Flash Update documents.', [
+    $this->getLogger()->info(strtr('Retrieved @count @source documents.', [
       '@count' => count($documents),
+      '@source' => $this->sourceName,
     ]));
 
     // Sort the documents by ID ascending to process the oldest ones first.
@@ -226,8 +272,8 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
     $ids = array_filter(array_map(fn($item) => $item['ContentItemId'] ?? NULL, $documents));
     $manually_posted = $this->getManuallyPostedDocuments(
       $ids,
-      'https://erccportal.jrc.ec.europa.eu/ECHO%Products%/Echo%Flash#/%/{id}',
-      '#^https://erccportal\.jrc\.ec\.europa\.eu/ECHO[^/]*Products[/]*/Echo[^/]*Flash.?/[^/]+/(\d+)[^/]*$#i'
+      $this->manualPostUrlPatternTemplate,
+      $this->manualPostIdExtractionRegex
     );
 
     // Retrieve the list of existing import records for the documents.
@@ -253,14 +299,17 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
 
       // Retrieve the document ID.
       if (!isset($document['ContentItemId'])) {
-        $this->getLogger()->notice('Undefined Echo Flash Update document ID, skipping document import.');
+        $this->getLogger()->notice(strtr('Undefined @source document ID, skipping document import.', [
+          '@source' => $this->sourceName,
+        ]));
         continue;
       }
       $id = $document['ContentItemId'];
       $import_record['imported_item_id'] = $id;
 
       if (isset($manually_posted[$id])) {
-        $this->getLogger()->notice(strtr('ECHO Flash Update document @id already manually posted as report @report_id.', [
+        $this->getLogger()->notice(strtr('@source document @id already manually posted as report @report_id.', [
+          '@source' => $this->sourceName,
           '@id' => $id,
           '@report_id' => $manually_posted[$id],
         ]));
@@ -269,7 +318,8 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
 
       // Retrieve the document URL.
       if (!isset($document['Link'])) {
-        $this->getLogger()->notice(strtr('Undefined document URL for Echo Flash Update document ID @id, skipping document import.', [
+        $this->getLogger()->notice(strtr('Undefined document URL for @source document ID @id, skipping document import.', [
+          '@source' => $this->sourceName,
           '@id' => $id,
         ]));
         continue;
@@ -286,26 +336,14 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
         $import_record = $existing_import_records[$uuid] + $import_record;
       }
 
-      $this->getLogger()->info(strtr('Processing Echo Flash Update document @id.', [
+      $this->getLogger()->info(strtr('Processing @source document @id.', [
+        '@source' => $this->sourceName,
         '@id' => $id,
       ]));
 
       // Generate a hash from the data we use to import the document. This is
       // used to detect changes that can affect the document on ReliefWeb.
-      $filtered_document = $this->filterArrayByKeys($document, [
-        'ContentItemId',
-        'Link',
-        'Title',
-        'ItemSources.Name',
-        'PublishedOnDate',
-        'CreatedOnDate',
-        'Description',
-        'Country.Iso3',
-        'Countries.Iso3',
-        'EventTypeCode',
-        'EventType.Code',
-        'EventTypes.Code',
-      ]);
+      $filtered_document = $this->filterArrayByKeys($document, $this->hashDataProperties);
       $hash = HashHelper::generateHash($filtered_document);
       $import_record['imported_data_hash'] = $hash;
 
@@ -326,7 +364,8 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
         ->execute();
       if (!empty($records)) {
         $processed++;
-        $this->getLogger()->info(strtr('Echo Flash Update document @id (entity @entity_id) already imported and not changed, skipping.', [
+        $this->getLogger()->info(strtr('@source document @id (entity @entity_id) already imported and not changed, skipping.', [
+          '@source' => $this->sourceName,
           '@id' => $id,
           '@entity_id' => reset($records),
         ]));
@@ -339,7 +378,8 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
         $import_record['message'] = 'Too many attempts.';
         $import_records[$import_record['imported_item_uuid']] = $import_record;
 
-        $this->getLogger()->error(strtr('Too many import attempts for Echo Flash Update document @id, skipping.', [
+        $this->getLogger()->error(strtr('Too many import attempts for @source document @id, skipping.', [
+          '@source' => $this->sourceName,
           '@id' => $id,
         ]));
 
@@ -349,7 +389,8 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
       // Process the item data into importable data.
       $data = $this->getImportData($uuid, $document);
       if (empty($data)) {
-        $this->getLogger()->notice(strtr('No data to import for Echo Flash Update document @id.', [
+        $this->getLogger()->notice(strtr('No data to import for @source document @id.', [
+          '@source' => $this->sourceName,
           '@id' => $id,
         ]));
 
@@ -372,7 +413,8 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
         $import_record['entity_id'] = $entity->id();
         $import_record['entity_revision_id'] = $entity->getRevisionId();
         $processed++;
-        $this->getLogger()->info(strtr('Successfully processed Echo Flash Update document @id to entity @entity_id.', [
+        $this->getLogger()->info(strtr('Successfully processed @source document @id to entity @entity_id.', [
+          '@source' => $this->sourceName,
           '@id' => $id,
           '@entity_id' => $entity->id(),
         ]));
@@ -387,7 +429,8 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
         else {
           $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
         }
-        $this->getLogger()->error(strtr('Unable to process Echo Flash Update document @id: @exception', [
+        $this->getLogger()->error(strtr('Unable to process @source document @id: @exception', [
+          '@source' => $this->sourceName,
           '@id' => $id,
           '@exception' => $exception->getMessage(),
         ]));
@@ -409,7 +452,7 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
   protected function processDocumentData(string $uuid, array $document): array {
     $data = [];
 
-    // Source: Echo Flash Update.
+    // Source: ECHO.
     $source = [620];
 
     // Document URL.
