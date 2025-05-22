@@ -46,7 +46,7 @@ class EchoMapImporter extends EchoFlashUpdateImporter {
    *
    * @var array
    */
-  protected array $hashDataproperties = [
+  protected array $hashDataProperties = [
     'ContentItemId',
     'Link',
     'Title',

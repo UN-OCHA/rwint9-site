@@ -49,7 +49,7 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
    *
    * @var array
    */
-  protected array $hashDataproperties = [
+  protected array $hashDataProperties = [
     'ContentItemId',
     'Link',
     'Title',
@@ -343,7 +343,7 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
 
       // Generate a hash from the data we use to import the document. This is
       // used to detect changes that can affect the document on ReliefWeb.
-      $filtered_document = $this->filterArrayByKeys($document, $this->hashDataproperties);
+      $filtered_document = $this->filterArrayByKeys($document, $this->hashDataProperties);
       $hash = HashHelper::generateHash($filtered_document);
       $import_record['imported_data_hash'] = $hash;
 
