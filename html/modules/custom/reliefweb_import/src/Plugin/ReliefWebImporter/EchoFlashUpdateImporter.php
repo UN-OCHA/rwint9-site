@@ -420,16 +420,15 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
           '@entity_id' => $entity->id(),
         ]));
       }
+      catch (DuplicateException $exception) {
+        $import_record['status'] = 'duplicate';
+        $import_record['message'] = $exception->getMessage();
+        $import_record['attempts'] = $max_import_attempts;
+      }
       catch (\Exception $exception) {
         $import_record['status'] = 'error';
         $import_record['message'] = $exception->getMessage();
-        // In case of duplication, we do not try further imports.
-        if ($exception instanceof DuplicateException) {
-          $import_record['attempts'] = $max_import_attempts;
-        }
-        else {
-          $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
-        }
+        $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
         $this->getLogger()->error(strtr('Unable to process @source document @id: @exception', [
           '@source' => $this->sourceName,
           '@id' => $id,
