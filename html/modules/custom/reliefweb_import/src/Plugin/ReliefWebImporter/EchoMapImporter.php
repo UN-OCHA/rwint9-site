@@ -144,7 +144,7 @@ class EchoMapImporter extends EchoFlashUpdateImporter {
       $title_description = Html::decodeEntities($title_description);
 
       // Combine to create the title.
-      $data['title'] = $this->sanitizeText(implode(' ', array_filter([
+      $title = $this->sanitizeText(implode(' ', array_filter([
         $title_description,
         '-',
         $map_source,
@@ -152,6 +152,15 @@ class EchoMapImporter extends EchoFlashUpdateImporter {
         '|',
         $title_date,
       ])));
+
+      // For some maps the description is not just the map title but a
+      // description of its content and we may end up with a title which is
+      // too long. In that case we just use the "Daily Map of ..." title so
+      // that the map can at least be imported and the editorial team will
+      // fix the title later on.
+      if (strlen($title) < 255) {
+        $data['title'] = $title;
+      }
     }
 
     // Remove the body since it's actually the map title.
