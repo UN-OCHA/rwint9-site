@@ -482,7 +482,8 @@ class Parameters {
   public static function createFromUrl($url, array $exclude = ['q', 'page']) {
     $query = [];
     if (is_string($url)) {
-      parse_str(parse_url($url, PHP_URL_QUERY), $query);
+      $parsed = parse_url($url, PHP_URL_QUERY) ?? '';
+      parse_str($parsed, $query);
     }
     return new static($query, $exclude);
   }

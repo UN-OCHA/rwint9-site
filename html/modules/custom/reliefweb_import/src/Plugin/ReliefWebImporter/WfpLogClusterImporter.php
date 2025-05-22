@@ -128,7 +128,7 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
       '#description' => $this->t('List of Logistic Cluster document types to skip. One per line.'),
       '#default_value' => $form_state->getValue('skip_document_types', $this->getPluginSetting('skip_document_types', '', FALSE)),
       '#min' => 1,
-      '#required' => TRUE,
+      '#required' => FALSE,
     ];
 
     $form['timeout'] = [
@@ -523,6 +523,7 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
         }
       }
     }
+    $sources = array_unique($sources);
 
     // Document URL.
     $url = $document['path'];

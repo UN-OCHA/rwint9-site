@@ -1,3 +1,11 @@
+reliefweb_import.settings:
+  type: config_object
+  label: 'ReliefWeb import settings'
+  mapping:
+    extract_url:
+      type: string
+      label: 'The URL of the extract service.'
+
 # Importer plugin base settings.
 reliefweb_import.plugin.importer:
   type: mapping
@@ -107,6 +115,9 @@ reliefweb_import.plugin.importer.inoreader:
     timeout:
       type: integer
       label: 'Connection and request timeout.'
+    fetch_timeout:
+      type: integer
+      label: 'Connection and request timeout to grab external pages.'
     local_file_load:
       type: boolean
       label: 'Load json from local file.'
