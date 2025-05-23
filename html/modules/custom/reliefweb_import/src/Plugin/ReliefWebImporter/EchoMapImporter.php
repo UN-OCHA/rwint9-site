@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\reliefweb_import\Plugin\ReliefWebImporter;
 
 use Drupal\Component\Serialization\Json;
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\reliefweb_import\Attribute\ReliefWebImporter;
@@ -126,25 +127,40 @@ class EchoMapImporter extends EchoFlashUpdateImporter {
 
     // Retrieve the map source and map type so we can generate a title
     // consistent with what was published on ReliefWeb.
+    // All recent ECHO maps seem to use `DG ECHO` in the title on ReliefWeb.
     $map_source = 'DG ECHO';
     $map_type = $document['MapType'] ?? 'Daily Map';
 
     // Create the title.
-    if (!empty($data['body'])) {
+    if (!empty($document['Description'])) {
       // Extract the date part from the ISO date.
       $title_date = substr($document['MapOf'] ?? $data['published'], 0, 10);
       // Convert to DD-MM-YYYY.
       $title_date = implode('/', array_reverse(explode('-', $title_date)));
 
+      // The actual map tile is contained in the document description
+      // which is in HTML. We need to strip the tags and decode it.
+      $title_description = strip_tags($document['Description']);
+      $title_description = Html::decodeEntities($title_description);
+
       // Combine to create the title.
-      $data['title'] = implode(' ', array_filter([
-        strip_tags($data['body']),
+      $title = $this->sanitizeText(implode(' ', array_filter([
+        $title_description,
         '-',
         $map_source,
         $map_type,
         '|',
         $title_date,
-      ]));
+      ])));
+
+      // For some maps the description is not just the map title but a
+      // description of its content and we may end up with a title which is
+      // too long. In that case we just use the "Daily Map of ..." title so
+      // that the map can at least be imported and the editorial team will
+      // fix the title later on.
+      if (strlen($title) < 255) {
+        $data['title'] = $title;
+      }
     }
 
     // Remove the body since it's actually the map title.
