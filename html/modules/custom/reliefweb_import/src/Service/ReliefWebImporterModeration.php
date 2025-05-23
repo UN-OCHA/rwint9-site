@@ -78,6 +78,9 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
       'imported-item' => [
         'label' => $this->t('Imported item'),
       ],
+      'data' => [
+        'label' => $this->t('Report'),
+      ],
       'importer' => [
         'label' => $this->t('Importer'),
       ],
@@ -87,13 +90,11 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
       'source' => [
         'label' => $this->t('Source'),
       ],
-      'data' => [
-        'label' => $this->t('Report'),
+      'changed' => [
+        'label' => $this->t('Import changed'),
       ],
-      'date' => [
-        'label' => $this->t('Created'),
-        'type' => 'property',
-        'specifier' => 'created',
+      'node_created' => [
+        'label' => $this->t('Report created'),
       ],
     ];
   }
@@ -128,10 +129,6 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
           ],
         ],
       ];
-
-      $cells['importer'] = $record['importer'];
-      $cells['status'] = $record['status'];
-      $cells['source'] = $record['source'];
 
       // Entity data cell.
       $data = [];
@@ -226,10 +223,30 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
         $cells['info'] = array_filter($data);
       }
 
+      $cells['importer'] = $record['importer'];
+      $cells['status'] = $record['status'];
+      $cells['source'] = $record['source'];
+
       // Date cell.
-      $cells['date'] = [
-        'date' => date('c', (int) $record['created']),
+      $cells['changed'] = [
+        'data' => [
+          '#type' => 'markup',
+          '#markup' => $this->dateFormatter->format($record['changed'], 'custom', 'd/m/Y H:i:s'),
+        ],
       ];
+
+      // Report date cell.
+      if ($entity) {
+        $cells['node_created'] = [
+          'data' => [
+            '#type' => 'markup',
+            '#markup' => $this->dateFormatter->format($entity->getCreatedTime(), 'custom', 'd/m/Y H:i:s'),
+          ],
+        ];
+      }
+      else {
+        $cells['node_created'] = $this->t('N/A');
+      }
 
       $rows[] = $cells;
     }
@@ -438,7 +455,7 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
     // Wrap the query.
     $wrapper = $this->getDatabase()->select($query, 'subquery');
     $wrapper->addField('subquery', 'imported_item_uuid', 'entity_id');
-    $wrapper->addField('subquery', 'created', 'sort');
+    $wrapper->addField('subquery', 'changed', 'sort');
 
     // Keep track of the subquery.
     // @todo review if that's still necessary.
