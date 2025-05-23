@@ -953,24 +953,8 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     // Attempt to load the file if already exists.
     $file = $this->entityRepository->loadEntityByUuid('file', $uuid);
 
-    // Retrieve the file allowed max size.
-    $max_size = !empty($max_size) ? Bytes::toNumber($max_size) : Environment::getUploadMaxSize();
-
     if (empty($file)) {
-      // Use the raw bytes directly.
-      if (!empty($bytes)) {
-        $content = $bytes;
-        if (strlen($content) > $max_size) {
-          throw new \Exception('File is too large.');
-        }
-        if (hash('sha256', $content) !== $checksum) {
-          throw new \Exception('Invalid file checksum.');
-        }
-      }
-      // Fetch the remote file.
-      else {
-        $content = $this->getRemoteFileContent($url, $checksum, $mimetype, $max_size);
-      }
+      $content = $this->getRemoteFileContent($url, $checksum, $mimetype, $max_size, $bytes);
 
       // Skip if we cannot retrieve the new file.
       if (empty($content)) {
@@ -1029,9 +1013,20 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   /**
    * {@inheritdoc}
    */
-  public function getRemoteFileContent(string $url, string $checksum, string $mimetype, string $max_size = ''): string {
+  public function getRemoteFileContent(string $url, string $checksum, string $mimetype, string $max_size = '', ?string $bytes = NULL): string {
     $content = '';
     $max_size = !empty($max_size) ? Bytes::toNumber($max_size) : Environment::getUploadMaxSize();
+
+    // Use the raw bytes directly if available.
+    if (!empty($bytes)) {
+      if ($max_size > 0 && strlen($bytes) > $max_size) {
+        throw new \Exception('File is too large.');
+      }
+      if (hash('sha256', $bytes) !== $checksum) {
+        throw new \Exception('Invalid file checksum.');
+      }
+      return $bytes;
+    }
 
     $body = NULL;
     try {

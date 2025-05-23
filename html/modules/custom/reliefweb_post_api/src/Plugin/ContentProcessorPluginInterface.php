@@ -484,11 +484,13 @@ interface ContentProcessorPluginInterface {
    *   Accepted mimetype.
    * @param string $max_size
    *   Maximum file size (ex: 2MB). Defaults to the environment upload max size.
+   * @param ?string $bytes
+   *   Optional file raw bytes.
    *
    * @return string
    *   Downloaded content.
    */
-  public function getRemoteFileContent(string $url, string $checksum, string $mimetype, string $max_size = ''): string;
+  public function getRemoteFileContent(string $url, string $checksum, string $mimetype, string $max_size = '', ?string $bytes = NULL): string;
 
   /**
    * Validate a file against a list of validators.
