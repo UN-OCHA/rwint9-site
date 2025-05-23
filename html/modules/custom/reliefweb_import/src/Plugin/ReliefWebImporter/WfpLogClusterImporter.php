@@ -482,6 +482,10 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
         $import_record['status'] = 'duplicate';
         $import_record['message'] = $exception->getMessage();
         $import_record['attempts'] = $max_import_attempts;
+        $this->getLogger()->error(strtr('Unable to process WFP Logcluster document @id: @exception', [
+          '@id' => $id,
+          '@exception' => $exception->getMessage(),
+        ]));
       }
       catch (\Exception $exception) {
         $import_record['status'] = 'error';
