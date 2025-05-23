@@ -554,7 +554,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
     $url = $document['canonical'][0]['href'];
 
     // Retrieve the title and clean it.
-    $title = $this->sanitizeText(html_entity_decode($document['title'] ?? ''), TRUE);
+    $title = $this->sanitizeText(html_entity_decode($document['title'] ?? ''));
     if (empty($title)) {
       $title = $url;
     }
