@@ -388,7 +388,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         'status' => 'pending',
         'message' => '',
         'attempts' => 0,
-        'source' => trim(substr($document['origin']['title'] ?? '', 0, strpos($document['origin']['title'] ?? '', '[source:'))),
+        'source' => trim(substr($document['origin']['title'] ?? '', 0, strpos($document['origin']['title'] ?? '', '[source:') ?: NULL)),
         'extra' => [
           'inoreader' => [
             'feed_name' => $document['origin']['title'] ?? '',
