@@ -6,3 +6,7 @@ services:
   plugin.manager.reliefweb_import.reliefweb_importer:
     class: Drupal\reliefweb_import\Plugin\ReliefWebImporterPluginManager
     parent: default_plugin_manager
+
+  reliefweb_moderation.reliefweb_import.moderation:
+    class: Drupal\reliefweb_import\Service\ReliefWebImporterModeration
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@plugin.manager.reliefweb_import.reliefweb_importer']

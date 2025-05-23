@@ -91,6 +91,11 @@ function reliefweb_import_schema() {
         'size' => 'big',
         'description' => 'The message for the last update of this record (e.g., error message).',
       ],
+      'source' => [
+        'type' => 'varchar_ascii',
+        'length' => '254',
+        'description' => 'The source name.',
+      ],
       'extra' => [
         'type' => 'json',
         'pgsql_type' => 'json',
@@ -141,5 +146,28 @@ function reliefweb_import_update_10002(array &$sandbox) {
   if (!$schema->fieldExists($table_name, $field_name)) {
     $table_schema = reliefweb_import_schema();
     $schema->addField($table_name, $field_name, $table_schema[$table_name]['fields'][$field_name]);
+  }
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * Add extra column to the reliefweb_import_records table.
+ */
+function reliefweb_import_update_10003(array &$sandbox) {
+  $schema = \Drupal::database()->schema();
+  $table_name = 'reliefweb_import_records';
+  $field_name = 'source';
+
+  if (!$schema->fieldExists($table_name, $field_name)) {
+    $table_schema = reliefweb_import_schema();
+    $schema->addField($table_name, $field_name, $table_schema[$table_name]['fields'][$field_name]);
+
+    // Update existing records.
+    \Drupal::database()->query("UPDATE {reliefweb_import_records} SET source = SUBSTR(SUBSTRING_INDEX(json_extract(extra, '$.inoreader.feed_name'), '[source:', 1), 2) where extra is not null");
+    \Drupal::database()->query("UPDATE {reliefweb_import_records} SET source = 'ECHO Flash Update' where importer = 'echo_flash_update'");
+    \Drupal::database()->query("UPDATE {reliefweb_import_records} SET source = 'ECHO Map' where importer = 'echo_map'");
+    \Drupal::database()->query("UPDATE {reliefweb_import_records} SET source = 'UNHCR Data' where importer = 'unhcr_data'");
+    \Drupal::database()->query("UPDATE {reliefweb_import_records} SET source = 'WFP Logcluster' where importer = 'wfp_logcluster'");
   }
 }
