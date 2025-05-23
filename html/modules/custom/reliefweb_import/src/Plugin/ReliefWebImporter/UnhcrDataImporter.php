@@ -832,6 +832,9 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
 
     $schema = $this->getJsonSchema($bundle);
 
+    // Allow passing raw bytes for files.
+    $plugin->setPluginSetting('allow_raw_bytes', TRUE);
+
     // This is the list of extensions supported by the report attachment field.
     $extensions = explode(' ', 'csv doc docx jpg jpeg odp ods odt pdf png pps ppt pptx svg xls xlsx zip');
     $allowed_mimetypes = array_filter(array_map(fn($extension) => $this->mimeTypeGuesser->guessMimeType('dummy.' . $extension), $extensions));
