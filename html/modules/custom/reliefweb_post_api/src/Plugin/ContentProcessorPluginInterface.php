@@ -405,6 +405,8 @@ interface ContentProcessorPluginInterface {
    *   Maximum file size (ex: 2MB). Defaults to the environment upload max size.
    * @param string $alt
    *   Alternative text for the image.
+   * @param ?string $bytes
+   *   Optional file raw bytes.
    *
    * @return \Drupal\media\MediaInterface|null
    *   The image media.
@@ -412,7 +414,7 @@ interface ContentProcessorPluginInterface {
    * @throws \Exception
    *   Exception if the image could not be retrieved or the media created.
    */
-  public function createImageMedia(string $bundle, string $uuid, string $url, string $checksum, string $mimetype, string $max_size, string $alt): ?MediaInterface;
+  public function createImageMedia(string $bundle, string $uuid, string $url, string $checksum, string $mimetype, string $max_size, string $alt, ?string $bytes = NULL): ?MediaInterface;
 
   /**
    * Create a ReliefWeb file field item from a remote file.
@@ -433,11 +435,13 @@ interface ContentProcessorPluginInterface {
    *   Accepted mimetype.
    * @param string $max_size
    *   Maximum file size (ex: 2MB). Defaults to the environment upload max size.
+   * @param ?string $bytes
+   *   Optional file raw bytes.
    *
    * @return \Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile|null
    *   ReliefWeb file field item.
    */
-  public function createReliefWebFileFieldItem(DataDefinitionInterface $definition, ContentEntityInterface $entity, string $uuid, string $file_name, string $url, string $checksum, string $mimetype, string $max_size = ''): ?ReliefWebFile;
+  public function createReliefWebFileFieldItem(DataDefinitionInterface $definition, ContentEntityInterface $entity, string $uuid, string $file_name, string $url, string $checksum, string $mimetype, string $max_size = '', ?string $bytes = NULL): ?ReliefWebFile;
 
   /**
    * Create and validate a file.
@@ -458,6 +462,8 @@ interface ContentProcessorPluginInterface {
    *   Maximum file size (ex: 2MB). Defaults to the environment upload max size.
    * @param array $validators
    *   The file validators.
+   * @param ?string $bytes
+   *   Optional file raw bytes.
    *
    * @return \Drupal\file\FileInterface|null
    *   The created file entity or NULL if there was no retrievable content.
@@ -465,7 +471,7 @@ interface ContentProcessorPluginInterface {
    * @throws \Exception
    *   An exception of the file could not be saved.
    */
-  public function createFile(string $uuid, string $uri, string $name, string $mimetype, string $url, string $checksum, string $max_size, array $validators = []): ?FileInterface;
+  public function createFile(string $uuid, string $uri, string $name, string $mimetype, string $url, string $checksum, string $max_size, array $validators = [], ?string $bytes = NULL): ?FileInterface;
 
   /**
    * Get the content of remote file.

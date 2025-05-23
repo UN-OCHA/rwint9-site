@@ -59,6 +59,13 @@ class Report extends ContentProcessorPluginBase {
       ]));
     }
 
+    $allow_raw_bytes = $this->getPluginSetting('allow_raw_bytes', FALSE);
+    if (!$allow_raw_bytes && !empty($file['bytes'])) {
+      throw new ContentProcessorException(strtr('Raw bytes not allowed for @type.', [
+        '@type' => $type,
+      ]));
+    }
+
     if (empty($file['uuid'])) {
       throw new ContentProcessorException(strtr('Missing @type UUID.', [
         '@type' => $type,
@@ -68,7 +75,7 @@ class Report extends ContentProcessorPluginBase {
     $provider = $this->getProvider($data['provider'] ?? '');
     $pattern = $provider->getUrlPattern($type);
 
-    if (!empty($file['url']) && (strpos($file['url'], 'file://') !== 0) && !$this->validateUrl($file['url'], $pattern)) {
+    if (!empty($file['url']) && !$this->validateUrl($file['url'], $pattern)) {
       throw new ContentProcessorException(strtr('Unallowed @type URL: @url.', [
         '@type' => $type,
         '@url' => $file['url'],

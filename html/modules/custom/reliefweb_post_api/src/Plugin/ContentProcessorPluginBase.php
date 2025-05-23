@@ -350,6 +350,23 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
       }
     }
 
+    // Add the file/image bytes property to pass validation.
+    $allow_raw_bytes = $this->getPluginSetting('allow_raw_bytes', FALSE);
+    if ($allow_raw_bytes) {
+      if (isset($schema['file']['properties'])) {
+        $schema['file']['properties']['bytes'] = [
+          'description' => 'Raw bytes of the file content.',
+          'type' => 'string',
+        ];
+      }
+      if (isset($schema['image']['properties'])) {
+        $schema['image']['properties']['bytes'] = [
+          'description' => 'Raw bytes of the image content.',
+          'type' => 'string',
+        ];
+      }
+    }
+
     // Validate the schema.
     // @todo improve error handling. See the `ocha_reliefweb` module.
     $result = $this->getSchemaValidator()->validate($data, $schema);
@@ -702,6 +719,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
       $url = $file['url'];
       $file_name = $file['filename'];
       $checksum = $file['checksum'];
+      $bytes = $file['bytes'] ?? NULL;
       $uuid = $this->generateUuid($url, $entity->uuid());
       $file_uuid = $this->generateUuid($uuid . $checksum, $entity->uuid());
 
@@ -715,7 +733,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
           // We use the file name to guess the mimetype not the URL because it
           // may not have an extension.
           $mimetype = $this->guessFileMimeType($file_name, $mimetypes);
-          $item = $this->createReliefWebFileFieldItem($definition, $entity, $file_uuid, $file_name, $url, $checksum, $mimetype, $max_size);
+          $item = $this->createReliefWebFileFieldItem($definition, $entity, $file_uuid, $file_name, $url, $checksum, $mimetype, $max_size, $bytes);
         }
 
         // Update the file description and language.
@@ -756,6 +774,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
 
     $url = $image['url'];
     $checksum = $image['checksum'];
+    $bytes = $image['bytes'] ?? NULL;
     $uuid = $this->generateUuid($checksum . $url, $entity->uuid());
 
     // Attempt to load the media for the given image.
@@ -775,7 +794,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
         $bundle = 'image_' . $entity->bundle();
         $mimetype = $this->guessFileMimeType($url, $mimetypes);
         $alt = $image['description'] ?? '';
-        $media = $this->createImageMedia($bundle, $uuid, $url, $checksum, $mimetype, $max_size, $alt);
+        $media = $this->createImageMedia($bundle, $uuid, $url, $checksum, $mimetype, $max_size, $alt, $bytes);
       }
       catch (\Exception $exception) {
         $this->getLogger()->error($exception->getMessage());
@@ -800,7 +819,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   /**
    * {@inheritdoc}
    */
-  public function createImageMedia(string $bundle, string $uuid, string $url, string $checksum, string $mimetype, string $max_size, string $alt): ?MediaInterface {
+  public function createImageMedia(string $bundle, string $uuid, string $url, string $checksum, string $mimetype, string $max_size, string $alt, ?string $bytes = NULL): ?MediaInterface {
     $file_info = pathinfo($url);
     $file_name = $file_info['basename'];
     $file_uuid = $this->generateUuid($uuid, $uuid);
@@ -839,7 +858,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     $validators = $item->getUploadValidators() ?? [];
 
     // Create the file entity with the content.
-    $file = $this->createFile($file_uuid, $file_uri, $file_name, $mimetype, $url, $checksum, $max_size, $validators);
+    $file = $this->createFile($file_uuid, $file_uri, $file_name, $mimetype, $url, $checksum, $max_size, $validators, $bytes);
 
     // Save the file permanently.
     $file->setPermanent();
@@ -862,7 +881,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   /**
    * {@inheritdoc}
    */
-  public function createReliefWebFileFieldItem(DataDefinitionInterface $definition, ContentEntityInterface $entity, string $uuid, string $file_name, string $url, string $checksum, string $mimetype, string $max_size = ''): ?ReliefWebFile {
+  public function createReliefWebFileFieldItem(DataDefinitionInterface $definition, ContentEntityInterface $entity, string $uuid, string $file_name, string $url, string $checksum, string $mimetype, string $max_size = '', ?string $bytes = NULL): ?ReliefWebFile {
     // Create a new field item.
     $item = ReliefWebFile::createInstance($definition);
 
@@ -876,7 +895,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     $validators = $item->getUploadValidators($entity, FALSE) ?? [];
 
     // Create the file entity with the content.
-    $file = $this->createFile($uuid, $file_uri, $file_name, $mimetype, $url, $checksum, $max_size, $validators);
+    $file = $this->createFile($uuid, $file_uri, $file_name, $mimetype, $url, $checksum, $max_size, $validators, $bytes);
 
     // Set the properties of the ReliefWeb file field item so it's fully
     // constructed and can be added to the field item list.
@@ -929,17 +948,26 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   /**
    * {@inheritdoc}
    */
-  public function createFile(string $uuid, string $uri, string $name, string $mimetype, string $url, string $checksum, string $max_size, array $validators = []): ?FileInterface {
+  public function createFile(string $uuid, string $uri, string $name, string $mimetype, string $url, string $checksum, string $max_size, array $validators = [], ?string $bytes = NULL): ?FileInterface {
 
     // Attempt to load the file if already exists.
     $file = $this->entityRepository->loadEntityByUuid('file', $uuid);
 
+    // Retrieve the file allowed max size.
+    $max_size = !empty($max_size) ? Bytes::toNumber($max_size) : Environment::getUploadMaxSize();
+
     if (empty($file)) {
-      // Allow file protocol.
-      if (strpos($url, 'file://') === 0) {
-        $url = substr($url, 7);
-        $content = file_get_contents($url);
+      // Use the raw bytes directly.
+      if (!empty($bytes)) {
+        $content = $bytes;
+        if (strlen($content) > $max_size) {
+          throw new \Exception('File is too large.');
+        }
+        if (hash('sha256', $content) !== $checksum) {
+          throw new \Exception('Invalid file checksum.');
+        }
       }
+      // Fetch the remote file.
       else {
         $content = $this->getRemoteFileContent($url, $checksum, $mimetype, $max_size);
       }
