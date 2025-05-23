@@ -1080,6 +1080,8 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       return [];
     }
 
+    $pdf['blob'] = base64_decode($pdf['blob']);
+
     return $pdf;
   }
 
