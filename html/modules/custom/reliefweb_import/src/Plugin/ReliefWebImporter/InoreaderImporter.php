@@ -356,6 +356,9 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
     $schema = $this->getJsonSchema($bundle);
 
+    // Allow passing raw bytes for files.
+    $plugin->setPluginSetting('allow_raw_bytes', TRUE);
+
     // This is the list of extensions supported by the report attachment field.
     $extensions = explode(' ', 'csv doc docx jpg jpeg odp ods odt pdf png pps ppt pptx svg xls xlsx zip');
     $allowed_mimetypes = array_filter(array_map(fn($extension) => $this->mimeTypeGuesser->guessMimeType('dummy.' . $extension), $extensions));
@@ -548,6 +551,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
     $id = $document['id'];
     $url = $document['canonical'][0]['href'];
+    $pdf_bytes = NULL;
 
     // Retrieve the title and clean it.
     $title = $this->sanitizeText(html_entity_decode($document['title'] ?? ''), TRUE);
@@ -714,7 +718,9 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
           case 'js':
             $page_url = $document['canonical'][0]['href'] ?? '';
-            $pdf = $this->tryToExtractPdfUsingPuppeteer($page_url, $tags, $fetch_timeout);
+            $puppeteer_result = $this->tryToExtractPdfUsingPuppeteer($page_url, $tags, $fetch_timeout);
+            $pdf = $puppeteer_result['pdf'] ?? '';
+            $pdf_bytes = $puppeteer_result['blob'] ?? NULL;
             break;
 
         }
@@ -759,7 +765,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       return [];
     }
 
-    $info = $this->getRemoteFileInfo($pdf);
+    $info = $this->getRemoteFileInfo($pdf, 'pdf', $pdf_bytes);
     if (!empty($info)) {
       $file_url = $pdf;
       $file_uuid = $this->generateUuid($file_url, $uuid);
@@ -1015,9 +1021,21 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
   /**
    * Try to extract the link to a PDF file from HTML content.
-   * */
-  protected function tryToExtractPdfUsingPuppeteer($page_url, $tags, $fetch_timeout) {
-    $pdf = '';
+   *
+   * @param string $page_url
+   *   URL of page to fetch.
+   * @param array $tags
+   *   Inoreader feed tags.
+   * @param int $fetch_timeout
+   *   Fetch timeout.
+   *
+   * @return array
+   *   Associative array with a `pdf` key for the PDF URL and an optional
+   *   `blob` key for the raw bytes of the file; or an empty array in case
+   *   of failure.
+   */
+  protected function tryToExtractPdfUsingPuppeteer(string $page_url, array $tags, int $fetch_timeout): array {
+    $pdf = [];
     $blob = FALSE;
 
     // Check if we need to request the PDF as Blob.
@@ -1042,7 +1060,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
     }
 
     if (empty($pdf)) {
-      return '';
+      return [];
     }
 
     if (!$blob) {
@@ -1051,7 +1069,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         $pdf['pdf'] = ($url_parts['scheme'] ?? 'https') . '://' . $url_parts['host'] . $pdf['pdf'];
       }
 
-      return $pdf['pdf'];
+      return $pdf;
     }
 
     if (empty($pdf['blob'])) {
@@ -1059,24 +1077,10 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         '@id' => $page_url,
         '@url' => $pdf['pdf'],
       ]));
-      return '';
+      return [];
     }
 
-    // Save the blob to a file.
-    $tmp = '/tmp';
-    $local_file_path = $tmp . '/' . basename($pdf['pdf']);
-    $f = fopen($local_file_path, 'w');
-    if ($f) {
-      fwrite($f, base64_decode($pdf['blob']));
-      fclose($f);
-      $this->getLogger()->info('Inoreader PDF blob written to ' . $local_file_path);
-      return 'file://' . $local_file_path;
-    }
-    else {
-      $this->getLogger()->error('Unable to open file ' . $local_file_path . ' for writing.');
-    }
-
-    return '';
+    return $pdf;
   }
 
 }

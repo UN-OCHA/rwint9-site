@@ -74,6 +74,9 @@ class EchoMapImporter extends EchoFlashUpdateImporter {
     $schema = $this->getJsonSchema($bundle);
     $plugin->setPluginSetting('schema', $schema);
 
+    // Allow passing raw bytes for files.
+    $plugin->setPluginSetting('allow_raw_bytes', TRUE);
+
     return parent::processDocuments($documents, $provider_uuid, $plugin);
   }
 
