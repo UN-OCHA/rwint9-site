@@ -417,6 +417,11 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         continue;
       }
       $url = $document['canonical'][0]['href'];
+      // Force url to use HTTPS.
+      if (strpos($url, 'http://') === 0) {
+        $url = 'https://' . substr($url, 7);
+      }
+
       $import_record['imported_item_url'] = $url;
 
       // Generate the UUID for the document.
@@ -769,12 +774,16 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       return [];
     }
 
+    // Force PDF to use HTTPS.
+    if (strpos($pdf, 'http://') === 0) {
+      $pdf = str_replace('http://', 'https://', $pdf);
+    }
+
     $info = $this->getRemoteFileInfo($pdf, 'pdf', $pdf_bytes);
     if (!empty($info)) {
-      $file_url = $pdf;
-      $file_uuid = $this->generateUuid($file_url, $uuid);
+      $file_uuid = $this->generateUuid($pdf, $uuid);
       $files[] = [
-        'url' => $file_url,
+        'url' => $pdf,
         'uuid' => $file_uuid,
       ] + $info;
     }
@@ -785,6 +794,21 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       ]));
 
       return [];
+    }
+
+    // Make sure the title is not too long or too short.
+    if (strlen($title) > 255) {
+      // Limit the title to 255 characters.
+      $title = substr($title, 0, 240) . '...';
+    }
+    elseif (strlen($title) < 10) {
+      // If the title is too short, use the URL instead.
+      $title = $url;
+    }
+
+    // Force origin to use HTTPS.
+    if (strpos($url, 'http://') === 0) {
+      $url = str_replace('http://', 'https://', $url);
     }
 
     // Submission data.
