@@ -130,6 +130,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
           return FALSE;
         }
         $documents = json_decode($documents, TRUE, flags: \JSON_THROW_ON_ERROR);
+        $documents = array_slice($documents, 0, $limit);
       }
       else {
         $this->getLogger()->info('Retrieving documents from the Inoreader.');
@@ -355,6 +356,9 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
     $schema = $this->getJsonSchema($bundle);
 
+    // Allow passing raw bytes for files.
+    $plugin->setPluginSetting('allow_raw_bytes', TRUE);
+
     // This is the list of extensions supported by the report attachment field.
     $extensions = explode(' ', 'csv doc docx jpg jpeg odp ods odt pdf png pps ppt pptx svg xls xlsx zip');
     $allowed_mimetypes = array_filter(array_map(fn($extension) => $this->mimeTypeGuesser->guessMimeType('dummy.' . $extension), $extensions));
@@ -387,6 +391,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         'status' => 'pending',
         'message' => '',
         'attempts' => 0,
+        'source' => trim(substr($document['origin']['title'] ?? '', 0, strpos($document['origin']['title'] ?? '', '[source:') ?: NULL)),
         'extra' => [
           'inoreader' => [
             'feed_name' => $document['origin']['title'] ?? '',
@@ -511,16 +516,19 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
           '@entity_id' => $entity->id(),
         ]));
       }
+      catch (DuplicateException $exception) {
+        $import_record['status'] = 'duplicate';
+        $import_record['message'] = $exception->getMessage();
+        $import_record['attempts'] = $max_import_attempts;
+        $this->getLogger()->error(strtr('Unable to process Inoreader @id: @exception', [
+          '@id' => $id,
+          '@exception' => $exception->getMessage(),
+        ]));
+      }
       catch (\Exception $exception) {
         $import_record['status'] = 'error';
         $import_record['message'] = $exception->getMessage();
-        // In case of duplication, we do not try further imports.
-        if ($exception instanceof DuplicateException) {
-          $import_record['attempts'] = $max_import_attempts;
-        }
-        else {
-          $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
-        }
+        $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
         $this->getLogger()->error(strtr('Unable to process Inoreader @id: @exception', [
           '@id' => $id,
           '@exception' => $exception->getMessage(),
@@ -547,9 +555,13 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
     $id = $document['id'];
     $url = $document['canonical'][0]['href'];
+    $pdf_bytes = NULL;
 
     // Retrieve the title and clean it.
     $title = $this->sanitizeText(html_entity_decode($document['title'] ?? ''));
+    if (empty($title)) {
+      $title = $url;
+    }
 
     // Retrieve the publication date.
     $published = $document['published'] ?? time();
@@ -710,7 +722,9 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
           case 'js':
             $page_url = $document['canonical'][0]['href'] ?? '';
-            $pdf = $this->tryToExtractPdfUsingPuppeteer($page_url, $tags, $fetch_timeout);
+            $puppeteer_result = $this->tryToExtractPdfUsingPuppeteer($page_url, $tags, $fetch_timeout);
+            $pdf = $puppeteer_result['pdf'] ?? '';
+            $pdf_bytes = $puppeteer_result['blob'] ?? NULL;
             break;
 
         }
@@ -755,7 +769,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       return [];
     }
 
-    $info = $this->getRemoteFileInfo($pdf);
+    $info = $this->getRemoteFileInfo($pdf, 'pdf', $pdf_bytes);
     if (!empty($info)) {
       $file_url = $pdf;
       $file_uuid = $this->generateUuid($file_url, $uuid);
@@ -1011,9 +1025,27 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
   /**
    * Try to extract the link to a PDF file from HTML content.
-   * */
-  protected function tryToExtractPdfUsingPuppeteer($page_url, $tags, $fetch_timeout) {
-    $pdf = '';
+   *
+   * @param string $page_url
+   *   URL of page to fetch.
+   * @param array $tags
+   *   Inoreader feed tags.
+   * @param int $fetch_timeout
+   *   Fetch timeout.
+   *
+   * @return array
+   *   Associative array with a `pdf` key for the PDF URL and an optional
+   *   `blob` key for the raw bytes of the file; or an empty array in case
+   *   of failure.
+   */
+  protected function tryToExtractPdfUsingPuppeteer(string $page_url, array $tags, int $fetch_timeout): array {
+    $pdf = [];
+    $blob = FALSE;
+
+    // Check if we need to request the PDF as Blob.
+    if (isset($tags['puppeteer-blob'])) {
+      $blob = TRUE;
+    }
 
     if (isset($tags['wrapper'])) {
       if (!is_array($tags['wrapper'])) {
@@ -1021,20 +1053,38 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       }
 
       foreach ($tags['wrapper'] as $wrapper) {
-        $pdf = reliefweb_import_extract_pdf_file($page_url, $wrapper, $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout);
+        $pdf = reliefweb_import_extract_pdf_file($page_url, $wrapper, $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob);
         if ($pdf) {
           break;
         }
       }
     }
     else {
-      $pdf = reliefweb_import_extract_pdf_file($page_url, '', $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout);
+      $pdf = reliefweb_import_extract_pdf_file($page_url, '', $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob);
     }
 
-    if (!empty($pdf) && strpos($pdf, 'http') !== 0) {
-      $url_parts = parse_url($page_url);
-      $pdf = ($url_parts['scheme'] ?? 'https') . '://' . $url_parts['host'] . $pdf;
+    if (empty($pdf)) {
+      return [];
     }
+
+    if (!$blob) {
+      if (!empty($pdf['pdf']) && strpos($pdf['pdf'], 'http') !== 0) {
+        $url_parts = parse_url($page_url);
+        $pdf['pdf'] = ($url_parts['scheme'] ?? 'https') . '://' . $url_parts['host'] . $pdf['pdf'];
+      }
+
+      return $pdf;
+    }
+
+    if (empty($pdf['blob'])) {
+      $this->getLogger()->error(strtr('Unable to retrieve the PDF blob for Inoreader document @id -- @url.', [
+        '@id' => $page_url,
+        '@url' => $pdf['pdf'],
+      ]));
+      return [];
+    }
+
+    $pdf['blob'] = base64_decode($pdf['blob']);
 
     return $pdf;
   }

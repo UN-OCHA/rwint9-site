@@ -832,6 +832,9 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
 
     $schema = $this->getJsonSchema($bundle);
 
+    // Allow passing raw bytes for files.
+    $plugin->setPluginSetting('allow_raw_bytes', TRUE);
+
     // This is the list of extensions supported by the report attachment field.
     $extensions = explode(' ', 'csv doc docx jpg jpeg odp ods odt pdf png pps ppt pptx svg xls xlsx zip');
     $allowed_mimetypes = array_filter(array_map(fn($extension) => $this->mimeTypeGuesser->guessMimeType('dummy.' . $extension), $extensions));
@@ -878,6 +881,7 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
         'status' => 'pending',
         'message' => '',
         'attempts' => 0,
+        'source' => 'UNHCR Data',
       ];
 
       // Retrieve the document ID.
@@ -1005,16 +1009,19 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
           '@entity_id' => $entity->id(),
         ]));
       }
+      catch (DuplicateException $exception) {
+        $import_record['status'] = 'duplicate';
+        $import_record['message'] = $exception->getMessage();
+        $import_record['attempts'] = $max_import_attempts;
+        $this->getLogger()->error(strtr('Unable to process UNHCR document @id: @exception', [
+          '@id' => $id,
+          '@exception' => $exception->getMessage(),
+        ]));
+      }
       catch (\Exception $exception) {
         $import_record['status'] = 'error';
         $import_record['message'] = $exception->getMessage();
-        // In case of duplication, we do not try further imports.
-        if ($exception instanceof DuplicateException) {
-          $import_record['attempts'] = $max_import_attempts;
-        }
-        else {
-          $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
-        }
+        $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
         $this->getLogger()->error(strtr('Unable to process UNHCR document @id: @exception', [
           '@id' => $id,
           '@exception' => $exception->getMessage(),
