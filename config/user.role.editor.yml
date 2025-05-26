@@ -38,6 +38,7 @@ dependencies:
     - reliefweb_form
     - reliefweb_guidelines
     - reliefweb_homepage
+    - reliefweb_import
     - reliefweb_moderation
     - reliefweb_revisions
     - reliefweb_topics
@@ -55,6 +56,7 @@ permissions:
   - 'access content moderation features'
   - 'access editorial guidelines'
   - 'access media overview'
+  - 'access reliefweb failed import records'
   - 'access reliefweb links field validation'
   - 'access reliefweb private files'
   - 'access reliefweb user posting rights field validation'
