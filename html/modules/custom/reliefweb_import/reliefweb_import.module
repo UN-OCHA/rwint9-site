@@ -203,6 +203,7 @@ function reliefweb_import_extract_pdf_file(string $url, string $selector, string
     'url' => $url,
     'element' => $pdf_element,
     'attribute' => $attribute,
+    'delay' => 3000,
   ];
 
   if (!empty($selector)) {
