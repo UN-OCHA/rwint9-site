@@ -1041,10 +1041,15 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
   protected function tryToExtractPdfUsingPuppeteer(string $page_url, array $tags, int $fetch_timeout): array {
     $pdf = [];
     $blob = FALSE;
+    $delay = 3000;
 
     // Check if we need to request the PDF as Blob.
     if (isset($tags['puppeteer-blob'])) {
       $blob = TRUE;
+    }
+
+    if (isset($tags['delay'])) {
+      $delay = (int) $tags['delay'];
     }
 
     if (isset($tags['wrapper'])) {
@@ -1053,14 +1058,14 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       }
 
       foreach ($tags['wrapper'] as $wrapper) {
-        $pdf = reliefweb_import_extract_pdf_file($page_url, $wrapper, $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob);
+        $pdf = reliefweb_import_extract_pdf_file($page_url, $wrapper, $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay);
         if ($pdf) {
           break;
         }
       }
     }
     else {
-      $pdf = reliefweb_import_extract_pdf_file($page_url, '', $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob);
+      $pdf = reliefweb_import_extract_pdf_file($page_url, '', $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay);
     }
 
     if (empty($pdf)) {

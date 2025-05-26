@@ -29,7 +29,6 @@ Imports ECHO Flash updates from [their API](https://erccportal.jrc.ec.europa.eu/
 
 Imports ECHO Maps from [their API](https://erccportal.jrc.ec.europa.eu/API/ERCC/Maps/GetPagedItems)
 
-
 ## Inoreader importer
 
 Imports tagged items from the [automation_production](https://www.inoreader.com/folder/automation_production)
@@ -48,6 +47,7 @@ Imports tagged items from the [automation_production](https://www.inoreader.com/
 | puppeteer | No | No | [puppeteer:ds-file-download-link a] |
 | puppeteer-attrib | No | No | [puppeteer-attrib:href] |
 | timeout | No | No | [timeout:30] |
+| delay | No | No | [delay:5000]
 
 #### `source` tag
 
@@ -104,6 +104,10 @@ Defines the attribute to extract from the element.
 #### `timeout` tag
 
 Defines a custom timeout for fetching external data.
+
+#### `delay` tag
+
+Defines a custom delay (ms) for fetching external data.
 
 ### Override tags in the UI
 
