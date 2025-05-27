@@ -195,18 +195,27 @@ function reliefweb_import_get_entity_importer(EntityInterface $entity): ?ReliefW
 /**
  * Use Puppeteer to extract PDF file from the page.
  */
-function reliefweb_import_extract_pdf_file(string $url, string $selector, string $pdf_element, string $attribute = 'href', int $timeout = 15): ?string {
+function reliefweb_import_extract_pdf_file(string $url, string $selector, string $pdf_element, string $attribute = 'href', int $timeout = 15, bool $blob = FALSE, int $delay = 3000): array {
   $extract_url = \Drupal::config('reliefweb_import.settings')->get('extract_url');
 
   $query = [
     'service' => 'reliefweb_import',
     'url' => $url,
-    'selector' => $selector,
     'element' => $pdf_element,
     'attribute' => $attribute,
+    'delay' => $delay,
   ];
 
+  if (!empty($selector)) {
+    $query['selector'] = $selector;
+  }
+
+  if ($blob) {
+    $query['file'] = '1';
+  }
+
   $extract_url .= '?' . UrlHelper::buildQuery($query);
+
   $options = [
     'connect_timeout' => $timeout,
     'timeout' => $timeout,
@@ -232,23 +241,23 @@ function reliefweb_import_extract_pdf_file(string $url, string $selector, string
         '%u' => $url,
       ]);
 
-      return '';
+      return [];
     }
   }
 
   // Basic error checking.
   if ($output->getStatusCode() != 200) {
     \Drupal::logger('reliefweb_import')->error('Failed to extract PDF from "%u".', ['%u' => $url]);
-    return '';
+    return [];
   }
 
   $body = $output->getBody()->getContents();
   if (empty($body)) {
     \Drupal::logger('reliefweb_import')->error('Failed to extract PDF from "%u".', ['%u' => $url]);
-    return '';
+    return [];
   }
 
   $body = json_decode($body, TRUE);
 
-  return $body['pdf'] ?? '';
+  return $body ?? [];
 }
