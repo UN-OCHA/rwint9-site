@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\reliefweb_import\Service\InoreaderService;
+use EliasHaeussler\TransientLogger\TransientLogger;
 
 /**
  * Provides a form to test Inoreader feed import.
@@ -103,6 +104,7 @@ class InoreaderTestForm extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $url = $form_state->getValue('inoreader_url');
     $tags = $form_state->getValue('tags') ?? '';
+    $logger = new TransientLogger();
 
     $settings = $this->config('reliefweb_import.plugin.importer.inoreader')->get();
     $settings['api_url'] = 'https://www.inoreader.com/reader/api/0/stream/contents/';
@@ -110,7 +112,7 @@ class InoreaderTestForm extends FormBase {
 
     // Fetch data using the InoreaderService.
     $this->inoreaderService->setSettings($settings);
-    $this->inoreaderService->setLogger($this->getLogger('reliefweb_import.inoreader.test'));
+    $this->inoreaderService->setLogger($logger);
     $data = $this->inoreaderService->getDocuments(10);
 
     $form_state->setRebuild();
@@ -129,6 +131,8 @@ class InoreaderTestForm extends FormBase {
 
         $document['origin']['title'] .= ' ' . $tags;
       }
+
+      $logger->flushLog();
       $record = $this->inoreaderService->processDocumentData($document);
 
       if (isset($record['file_data']['bytes'])) {
@@ -138,6 +142,7 @@ class InoreaderTestForm extends FormBase {
         $record['body'] = substr($record['body'], 0, 30) . '...';
       }
 
+      $record['logs'] = $logger->getAll();
       $records[] = $record;
     }
 
