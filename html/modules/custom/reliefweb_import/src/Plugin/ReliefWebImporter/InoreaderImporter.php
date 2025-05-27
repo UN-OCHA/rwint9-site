@@ -420,6 +420,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
     $pdf = $data['file_data']['pdf'] ?? '';
     $pdf_bytes = $data['file_data']['bytes'] ?? NULL;
 
+    $files = [];
     $info = $this->getRemoteFileInfo($pdf, 'pdf', $pdf_bytes);
     if (!empty($info)) {
       $file_uuid = $this->generateUuid($pdf, $uuid);
