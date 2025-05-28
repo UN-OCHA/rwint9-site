@@ -30,3 +30,10 @@ reliefweb_import.reliefweb_importer.failed_import_records:
   requirements:
     _permission: 'access reliefweb failed import records'
 
+reliefweb_import.reliefweb_importer.inoreader.test_form:
+  path: '/admin/config/reliefweb/content-importers/inoreader_test_form'
+  defaults:
+    _form: '\Drupal\reliefweb_import\Form\InoreaderTestForm'
+    _title: 'Inoreader test form'
+  requirements:
+    _permission: 'access reliefweb failed import records'
