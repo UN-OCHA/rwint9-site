@@ -246,7 +246,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         'extra' => [
           'inoreader' => [
             'feed_name' => $document['origin']['title'] ?? '',
-            'feed_url' => 'https://www.inoreader.com/' . $document['origin']['streamId'] ?? '',
+            'feed_url' => 'https://www.inoreader.com/' . urlencode($document['origin']['streamId'] ?? ''),
             'feed_origin' => $document['origin']['htmlUrl'] ?? '',
           ],
         ],
