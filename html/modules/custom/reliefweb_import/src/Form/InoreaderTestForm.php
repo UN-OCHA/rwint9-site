@@ -58,6 +58,14 @@ class InoreaderTestForm extends FormBase {
       '#maxlength' => 255,
     ];
 
+    $form['limit'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Limit'),
+      '#required' => TRUE,
+      '#description' => $this->t('Max items to test.'),
+      '#default_value' => 3,
+    ];
+
     $form['tags'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Tags'),
@@ -104,51 +112,62 @@ class InoreaderTestForm extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $url = $form_state->getValue('inoreader_url');
     $tags = $form_state->getValue('tags') ?? '';
+    $limit = $form_state->getValue('limit') ?? 3;
     $logger = new TransientLogger();
+    $form_state->setRebuild();
 
     $settings = $this->config('reliefweb_import.plugin.importer.inoreader')->get();
     $settings['api_url'] = 'https://www.inoreader.com/reader/api/0/stream/contents/';
-    $settings['api_url'] .= str_replace('https://www.inoreader.com/', '', $url);
+    $url = str_replace('https://www.inoreader.com/', '', $url);
+    $settings['api_url'] .= $url;
 
     // Fetch data using the InoreaderService.
-    $this->inoreaderService->setSettings($settings);
-    $this->inoreaderService->setLogger($logger);
-    $data = $this->inoreaderService->getDocuments(10);
+    try {
+      $this->inoreaderService->setSettings($settings);
+      $this->inoreaderService->setLogger($logger);
+      $data = $this->inoreaderService->getDocuments($limit);
 
-    $form_state->setRebuild();
-    if (empty($data)) {
+      if (empty($data)) {
+        return;
+      }
+
+      // Process the data to extract records.
+      $records = [];
+      foreach ($data as $document) {
+        if (!empty($tags)) {
+          // Remove any existing tags.
+          if (strpos($document['origin']['title'], '[source:') !== FALSE) {
+            $document['origin']['title'] = substr($document['origin']['title'], 0, strpos($document['origin']['title'], '[source:'));
+          }
+
+          $document['origin']['title'] .= ' ' . $tags;
+        }
+
+        $logger->flushLog();
+        $record = $this->inoreaderService->processDocumentData($document);
+
+        if (isset($record['file_data']['bytes'])) {
+          $record['file_data']['bytes'] = substr($record['file_data']['bytes'], 0, 30) . '...';
+        }
+        if (isset($record['body'])) {
+          $record['body'] = substr($record['body'], 0, 30) . '...';
+        }
+
+        $record['logs'] = $logger->getAll();
+        $records[] = $record;
+      }
+
+      // Store data in form state for display.
+      $form_state->set('inoreader_data', $data);
+      $form_state->set('inoreader_records', $records);
+    }
+    catch (\Exception $e) {
+      $logger->error($this->t('Error fetching data from Inoreader: @message', ['@message' => $e->getMessage()]));
+      $form_state->setErrorByName('inoreader_url', $this->t('Failed to fetch data from Inoreader.'));
+      $form_state->set('inoreader_data', $e->getMessage());
       return;
     }
 
-    // Process the data to extract records.
-    $records = [];
-    foreach ($data as $document) {
-      if (!empty($tags)) {
-        // Remove any existing tags.
-        if (strpos($document['origin']['title'], '[source:') !== FALSE) {
-          $document['origin']['title'] = substr($document['origin']['title'], 0, strpos($document['origin']['title'], '[source:'));
-        }
-
-        $document['origin']['title'] .= ' ' . $tags;
-      }
-
-      $logger->flushLog();
-      $record = $this->inoreaderService->processDocumentData($document);
-
-      if (isset($record['file_data']['bytes'])) {
-        $record['file_data']['bytes'] = substr($record['file_data']['bytes'], 0, 30) . '...';
-      }
-      if (isset($record['body'])) {
-        $record['body'] = substr($record['body'], 0, 30) . '...';
-      }
-
-      $record['logs'] = $logger->getAll();
-      $records[] = $record;
-    }
-
-    // Store data in form state for display.
-    $form_state->set('inoreader_data', $data);
-    $form_state->set('inoreader_records', $records);
   }
 
 }
