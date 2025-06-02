@@ -413,13 +413,17 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
     $id = $document['id'];
 
     $data = $this->inoreaderService->processDocumentData($document);
-
     if (!isset($data['file_data'])) {
       $this->logger->info(strtr('No file data found for Inoreader @id, skipping.', [
         '@id' => $id,
       ]));
 
       return [];
+    }
+
+    if (isset($data['_tags'])) {
+      // Remove the tags from the data as they are not needed.
+      unset($data['_tags']);
     }
 
     $pdf = $data['file_data']['pdf'] ?? '';

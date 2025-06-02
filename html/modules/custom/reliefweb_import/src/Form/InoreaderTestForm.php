@@ -154,7 +154,15 @@ class InoreaderTestForm extends FormBase {
         }
 
         $record['logs'] = $logger->getAll();
-        $records[] = $record;
+        $used_tags = [];
+        if (isset($record['_tags'])) {
+          $used_tags = $record['_tags'];
+          unset($record['_tags']);
+        }
+        $records[] = [
+          'tags' => $used_tags,
+          'report' => $record,
+        ];
       }
 
       // Store data in form state for display.

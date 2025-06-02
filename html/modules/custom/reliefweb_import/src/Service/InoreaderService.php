@@ -511,6 +511,7 @@ class InoreaderService {
         'pdf' => $pdf,
         'bytes' => $pdf_bytes,
       ],
+      '_tags' => $tags,
     ];
 
     return $data;
