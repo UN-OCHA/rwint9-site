@@ -656,11 +656,7 @@ class InoreaderService {
       $response = $this->httpClient->get($url, [
         'connect_timeout' => $fetch_timeout,
         'timeout' => $fetch_timeout,
-        'headers' => [
-          'User-Agent' => 'Mozilla/5.0 AppleWebKit Chrome/134.0.0.0 Safari/537.36',
-          'accept' => 'text/html,application/xhtml+xml,application/xml,*/*',
-          'accept-language' => 'en-US,en;q=0.9',
-        ],
+        'headers' => $this->getHttpHeaders(),
       ]);
 
       if ($response->getStatusCode() !== 200) {
@@ -856,10 +852,7 @@ class InoreaderService {
         // @todo retrieve that from the configuration.
         'connect_timeout' => 30,
         'timeout' => 600,
-        'headers' => [
-          'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
-          'Accept' => '*/*',
-        ],
+        'headers' => $this->getHttpHeaders(),
       ]);
 
       if ($response->getStatusCode() == 406) {
@@ -869,10 +862,7 @@ class InoreaderService {
           // @todo retrieve that from the configuration.
           'connect_timeout' => 30,
           'timeout' => 600,
-          'headers' => [
-            'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
-            'Accept' => '*/*',
-          ],
+          'headers' => $this->getHttpHeaders(),
         ]);
       }
 
@@ -951,6 +941,27 @@ class InoreaderService {
       // Return the raw bytes so that we don't have to download the file again
       // in the post api content processor.
       'bytes' => $content,
+    ];
+  }
+
+  /**
+   * Get HTTP headers.
+   */
+  protected function getHttpHeaders(): array {
+    return [
+      'accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+      'accept-language' => 'en-BE,en;q=0.9',
+      'dnt' => '1',
+      'priority' => 'u=0, i',
+      'sec-ch-ua' => '"Google Chrome";v="137", "Chromium";v="137", "Not/A)Brand";v="24"',
+      'sec-ch-ua-mobile' => ' ?0',
+      'sec-ch-ua-platform' => '"Linux"',
+      'sec-fetch-dest' => 'document',
+      'sec-fetch-mode' => 'navigate',
+      'sec-fetch-site' => 'none',
+      'sec-fetch-user' => '?1',
+      'upgrade-insecure-requests' => '1',
+      'user-agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
     ];
   }
 

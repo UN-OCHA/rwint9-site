@@ -124,6 +124,12 @@ You can go to and `/admin/config/reliefweb/content-importers/inoreader_extra_tag
     - div.dynamic-content__figure-container
 ```
 
+### Fix sources
+
+```shell
+drush sqlq "UPDATE reliefweb_import_records SET source = SUBSTR(SUBSTRING_INDEX(json_extract(extra, \"$.inoreader.feed_name\"), \"[source:\", 1), 2) where extra is not null"
+```
+
 ## UNHCR importer
 
 Imports reports from [their API](https://data.unhcr.org)
