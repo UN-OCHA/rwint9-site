@@ -71,6 +71,7 @@ class InoreaderTestForm extends FormBase {
       '#title' => $this->t('Tags'),
       '#description' => $this->t('Enter tags.'),
       '#placeholder' => '[source:123][pdf:canonical]',
+      '#maxlength' => 255,
     ];
 
     $form['actions'] = [

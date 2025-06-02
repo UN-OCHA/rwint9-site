@@ -45,6 +45,19 @@ class InoreaderService {
    */
   protected array $settings;
 
+  /**
+   * Mapping of tag aliases to their actual values.
+   */
+  protected array $tagAliases = [
+    'w' => 'wrapper',
+    'r' => 'replace',
+    'p' => 'puppeteer',
+    'p2' => 'puppeteer2',
+    'pa' => 'puppeteer-attrib',
+    'pb' => 'puppeteer-blob',
+    'd' => 'delay',
+  ];
+
   public function __construct(
     ClientInterface $http_client,
     StateInterface $state,
@@ -127,7 +140,7 @@ class InoreaderService {
    *   List of documents keyed by IDs.
    */
   public function getDocuments(int $limit = 50): array {
-
+    // Check if we are using a local file for testing.
     if ($this->settings['local_file_load']) {
       $local_file_path = $this->settings['local_file_path'];
       $this->logger->info('Retrieving documents from disk.');
@@ -302,6 +315,10 @@ class InoreaderService {
     foreach ($matches as $match) {
       $tag_parts = explode(':', $match);
       $tag_key = reset($tag_parts);
+      if (isset($this->tagAliases[$tag_key])) {
+        $tag_key = $this->tagAliases[$tag_key];
+      }
+
       array_shift($tag_parts);
       $tag_value = implode(':', $tag_parts);
 
@@ -323,6 +340,10 @@ class InoreaderService {
 
     if (!empty($extra_tags[$tags['source']])) {
       foreach ($extra_tags[$tags['source']] as $key => $value) {
+        if (isset($this->tagAliases[$key])) {
+          $key = $this->tagAliases[$key];
+        }
+
         if (isset($tags[$key])) {
           if (!is_array($tags[$key])) {
             $tags[$key] = [
@@ -749,14 +770,14 @@ class InoreaderService {
       }
 
       foreach ($tags['wrapper'] as $wrapper) {
-        $pdf = reliefweb_import_extract_pdf_file($page_url, $wrapper, $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay);
+        $pdf = reliefweb_import_extract_pdf_file($page_url, $wrapper, $tags['puppeteer'], $tags['puppeteer2'] ?? '', $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay);
         if ($pdf) {
           break;
         }
       }
     }
     else {
-      $pdf = reliefweb_import_extract_pdf_file($page_url, '', $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay);
+      $pdf = reliefweb_import_extract_pdf_file($page_url, '', $tags['puppeteer'], $tags['puppeteer2'] ?? '', $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay);
     }
 
     if (empty($pdf)) {
