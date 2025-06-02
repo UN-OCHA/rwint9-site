@@ -149,6 +149,11 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       '@url' => $this->getPluginSetting('api_url'),
     ]));
 
+    if (empty($documents)) {
+      $this->getLogger()->info('No Inoreader documents to process.');
+      return FALSE;
+    }
+
     // Process the documents importing new ones and updated ones.
     $processed = $this->processDocuments($documents, $provider_uuid, $plugin);
 
