@@ -50,12 +50,14 @@ class InoreaderService {
    */
   protected array $tagAliases = [
     'w' => 'wrapper',
+    'u' => 'url',
     'r' => 'replace',
     'p' => 'puppeteer',
     'p2' => 'puppeteer2',
     'pa' => 'puppeteer-attrib',
     'pb' => 'puppeteer-blob',
     'd' => 'delay',
+    't' => 'timeout',
   ];
 
   public function __construct(

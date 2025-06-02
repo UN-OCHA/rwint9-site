@@ -35,19 +35,21 @@ Imports tagged items from the [automation_production](https://www.inoreader.com/
 
 ### Supported tags
 
-| tag | mandatory | multiple | example |
-| - | - | - | - |
-| source | Yes | No | [source:1242] |
-| pdf | Yes | No | [pdf:canonical] |
-| content | No | No | [content:clear] |
-| title | No | No | [title:filename] |
-| follow | No | No | [follow:https://wedocs.unep.org] |
-| wrapper | No | Yes | [wrapper:div.content_sidebar] |
-| url | No | Yes | [url:/docs/] |
-| puppeteer | No | No | [puppeteer:ds-file-download-link a] |
-| puppeteer-attrib | No | No | [puppeteer-attrib:href] |
-| timeout | No | No | [timeout:30] |
-| delay | No | No | [delay:5000]
+| tag | alias | mandatory | multiple | example |
+| - | - | - | - | - |
+| source | - | Yes | No | [source:1242] |
+| pdf | - | Yes | No | [pdf:canonical] |
+| content | - | No | No | [content:clear] |
+| title | - | No | No | [title:filename] |
+| follow | - | No | No | [follow:https://wedocs.unep.org] |
+| wrapper | w | No | Yes | [wrapper:div.content_sidebar] |
+| url | u | No | Yes | [url:/docs/] |
+| puppeteer | p | No | No | [puppeteer:ds-file-download-link a] |
+| puppeteer2 | p2 | No | No | [puppeteer:ds-file-download-link a] |
+| puppeteer-attrib | pa | No | No | [puppeteer-attrib:href] |
+| puppeteer-blob | pb | No | No | [puppeteer-attrib:href] |
+| timeout | t | No | No | [timeout:30] |
+| delay | d | No | No | [delay:5000]
 
 #### `source` tag
 
@@ -100,6 +102,10 @@ Used to select the html element containg the PDF link.
 #### `puppeteer-attribute` tag
 
 Defines the attribute to extract from the element.
+
+#### `puppeteer-blob` tag
+
+Returns file data as part of json response.
 
 #### `timeout` tag
 
