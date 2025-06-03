@@ -101,6 +101,10 @@ module:
   seckit: 0
   social_api: 0
   social_auth: 0
+  social_auth_facebook: 0
+  social_auth_google: 0
+  social_auth_linkedin: 0
+  social_auth_microsoft: 0
   sophron: 0
   svg_image: 0
   syslog: 0
