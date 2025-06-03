@@ -11,7 +11,7 @@ dependencies:
 id: footer
 theme: common_design_subtheme
 region: footer_navigation
-weight: 0
+weight: -5
 provider: null
 plugin: 'system_menu_block:footer'
 settings:

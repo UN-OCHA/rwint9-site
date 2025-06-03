@@ -1,0 +1,5 @@
+client_id: ANSIBLE_SECRET
+client_secret: ANSIBLE_SECRET
+scopes: ''
+endpoints: ''
+restricted_domain: ''

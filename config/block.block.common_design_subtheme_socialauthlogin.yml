@@ -1,0 +1,25 @@
+uuid: 20fbbb6c-fc07-4eca-86f6-ff31d27fe6e0
+langcode: en
+status: true
+dependencies:
+  module:
+    - social_auth
+    - system
+  theme:
+    - common_design_subtheme
+id: common_design_subtheme_socialauthlogin
+theme: common_design_subtheme
+region: footer_navigation
+weight: -6
+provider: null
+plugin: social_auth_login
+settings:
+  id: social_auth_login
+  label: 'Log in using your social social media account.'
+  label_display: visible
+  provider: social_auth
+visibility:
+  request_path:
+    id: request_path
+    negate: false
+    pages: /user/login
