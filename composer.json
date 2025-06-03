@@ -54,7 +54,6 @@
         "drupal/seckit": "^2.0",
         "drupal/social_auth_facebook": "^3",
         "drupal/social_auth_google": "^3",
-        "drupal/social_auth_hid": "^3.2",
         "drupal/social_auth_linkedin": "^3",
         "drupal/stable": "^2.0",
         "drupal/stage_file_proxy": "^3.1",
