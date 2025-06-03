@@ -14,6 +14,6 @@ reimport:
   statuses: ''
 api_url: 'https://search.worldbank.org/api/v3/wds'
 max_age: 15
-themes_to_import: "FY17 - Disaster Risk Management\r\nFY17 - Fragility, Conflict and Violence\r\nFY17 - Food Security"
+themes_to_import: "FY17 - Disaster Risk Management\r\nFY17 - Disease Control\r\nFY17 - Water Resource Management\r\nFY17 - Disaster Preparedness\r\nFY17 - Pandemic Response\r\nFY17 - Flood and Drought Risk Management\r\nFY17 - Disaster Risk Reduction\r\nFY17 - Disaster Response and Recovery\r\nFY17 - Fragility, Conflict and Violence\r\nFY17 - Food Security\r\nFY17 - Nutrition\r\nFY17 - Forced Displacement"
 skip_document_types: ''
 timeout: 10
