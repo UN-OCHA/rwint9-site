@@ -55,6 +55,7 @@
         "drupal/social_auth_apple": "^2.0",
         "drupal/social_auth_facebook": "^4",
         "drupal/social_auth_google": "^4",
+        "drupal/social_auth_hid": "^5",
         "drupal/social_auth_linkedin": "^4",
         "drupal/social_auth_microsoft": "^4",
         "drupal/stable": "^2.0",

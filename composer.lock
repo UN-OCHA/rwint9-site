@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "77b0a7c62b1c78aa0f6892c5d6d6f9d4",
+    "content-hash": "3d35b779be06b115d94a72402bd75dae",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -5129,6 +5129,65 @@
             "support": {
                 "source": "https://git.drupalcode.org/project/social_auth_google",
                 "issues": "https://www.drupal.org/project/issues/social_auth_google"
+            }
+        },
+        {
+            "name": "drupal/social_auth_hid",
+            "version": "5.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupalcode.org/project/social_auth_hid.git",
+                "reference": "5.0.0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/social_auth_hid-5.0.0.zip",
+                "reference": "5.0.0",
+                "shasum": "f7f704839e1ea135f94cd7a0469fdae46fd5bbee"
+            },
+            "require": {
+                "drupal/core": "^9 || ^10 || ^11",
+                "drupal/social_auth": "^4.0",
+                "un-ocha/oauth2-hid": "^1.0.2"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "drupal": {
+                    "version": "5.0.0",
+                    "datestamp": "1739953549",
+                    "security-coverage": {
+                        "status": "covered",
+                        "message": "Covered by Drupal's security advisory policy"
+                    }
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0+"
+            ],
+            "authors": [
+                {
+                    "name": "Guillaume Viguier-Just (guillaumev)",
+                    "homepage": "https://www.drupal.org/user/105002",
+                    "email": "guillaume@gvj-web.com"
+                },
+                {
+                    "name": "guillaumev",
+                    "homepage": "https://www.drupal.org/user/849890"
+                },
+                {
+                    "name": "orakili",
+                    "homepage": "https://www.drupal.org/user/1287634"
+                }
+            ],
+            "description": "Social Auth integration for Humanitarian ID.",
+            "homepage": "https://www.drupal.org/project/social_auth_hid",
+            "keywords": [
+                "Drupal"
+            ],
+            "support": {
+                "source": "http://cgit.drupalcode.org/social_auth_hid",
+                "issues": "https://www.drupal.org/project/issues/social_auth_hid"
             }
         },
         {
@@ -18034,6 +18093,64 @@
                 }
             ],
             "time": "2025-01-29T07:06:14+00:00"
+        },
+        {
+            "name": "un-ocha/oauth2-hid",
+            "version": "v1.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/UN-OCHA/oauth2-hid.git",
+                "reference": "8589bd00d692d6e1977644537e0f30069084a2c0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/UN-OCHA/oauth2-hid/zipball/8589bd00d692d6e1977644537e0f30069084a2c0",
+                "reference": "8589bd00d692d6e1977644537e0f30069084a2c0",
+                "shasum": ""
+            },
+            "require": {
+                "league/oauth2-client": "^2.0"
+            },
+            "require-dev": {
+                "mockery/mockery": "~0.9",
+                "phpunit/phpunit": "~4.0",
+                "squizlabs/php_codesniffer": "~2.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "League\\OAuth2\\Client\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Guillaume Viguier-Just",
+                    "email": "guillaume@gvj-web.com"
+                }
+            ],
+            "description": "Humanitarian ID OAuth 2.0 Client Provider for The PHP League OAuth2-Client",
+            "keywords": [
+                "authorisation",
+                "authorization",
+                "client",
+                "humanitarian id",
+                "oauth",
+                "oauth2"
+            ],
+            "support": {
+                "issues": "https://github.com/UN-OCHA/oauth2-hid/issues",
+                "source": "https://github.com/UN-OCHA/oauth2-hid/tree/v1.0.2"
+            },
+            "time": "2019-10-01T10:01:54+00:00"
         },
         {
             "name": "unocha/common_design",
