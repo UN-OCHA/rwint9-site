@@ -1,12 +1,12 @@
 enabled: true
 max_import_attempts: 3
 classification:
-  enabled: false
+  enabled: true
   check_user_permissions: false
   prevent_publication: false
   specified_field_check: ''
-  force_field_update: ''
-  classified_fields: ''
+  force_field_update: "field_theme:yes\r\nfield_content_format:yes"
+  classified_fields: "field_theme:yes\r\nfield_content_format:yes"
 reimport:
   enabled: false
   type: ''
