@@ -151,7 +151,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
     if (empty($documents)) {
       $this->getLogger()->info('No Inoreader documents to process.');
-      return FALSE;
+      return TRUE;
     }
 
     // Process the documents importing new ones and updated ones.
