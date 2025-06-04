@@ -163,3 +163,24 @@ reliefweb_import.plugin.importer.wfp_logcluster:
     timeout:
       type: integer
       label: 'Connection and request timeout.'
+
+# Worldbank importer plugin settings.
+reliefweb_import.plugin.importer.worldbank:
+  type: reliefweb_import.plugin.importer
+  label: 'Worldbank importer plugin base settings.'
+  mapping:
+    api_url:
+      type: string
+      label: 'API URL.'
+    max_age:
+      type: integer
+      label: 'Max age in days.'
+    themes_to_import:
+      type: string
+      label: List of Worldbank themes to import.'
+    skip_document_types:
+      type: string
+      label: List of Worldbank document types to skip.'
+    timeout:
+      type: integer
+      label: 'Connection and request timeout.'
