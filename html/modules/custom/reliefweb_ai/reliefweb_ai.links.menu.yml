@@ -1,0 +1,5 @@
+reliefweb_ai.settings:
+  title: 'ReliefWeb AI Settings'
+  description: 'Configure ReliefWeb AI settings including OCHA AI chat, language detection, and text extraction.'
+  route_name: reliefweb_ai.settings
+  parent: system.admin_config_content

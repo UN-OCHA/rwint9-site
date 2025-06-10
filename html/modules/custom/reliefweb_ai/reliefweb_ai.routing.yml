@@ -1,0 +1,7 @@
+reliefweb_ai.settings:
+  path: '/admin/config/reliefweb-ai/settings'
+  defaults:
+    _form: '\Drupal\reliefweb_ai\Form\ReliefWebAiSettingsForm'
+    _title: 'ReliefWeb AI Settings'
+  requirements:
+    _permission: 'administer site configuration'

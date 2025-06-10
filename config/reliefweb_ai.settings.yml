@@ -3,6 +3,19 @@ _core:
 ocha_ai_chat:
   allow_for_anonymous: false
   instructions_replace: false
-  login_instructions: |
-    <p>The use of <strong>Ask ReliefWeb</strong> requires an account on ReliefWeb.</p>
-    <p>Please <a href="/user/login/hid?destination=@destination" target="_parent">login</a> or <a href="https://auth.humanitarian.id/register" target="_parent">create a new account</a>.</p>
+  login_instructions: "<p>The use of <strong>Ask ReliefWeb</strong> requires an account on ReliefWeb.</p>\r\n<p>Please <a href=\"/user/login/hid?destination=@destination\" target=\"_parent\">login</a> or <a href=\"https://auth.humanitarian.id/register\" target=\"_parent\">create a new account</a>.</p>\r\n"
+language_detection:
+  tag: content
+  use_title: false
+text_extract_fix:
+  tag: content
+  line_matching:
+    endpoint: 'https://ocha-ai-helper.test/text/match/lines'
+    threshold: 70
+  inference:
+    plugin_id: aws_bedrock_nova_lite_v1
+    temperature: 0.0
+    top_p: 0.9
+    max_tokens: 4000
+    system_prompt: "You are an expert document corrector specializing in humanitarian texts. Your task is to reconstruct accurate text from potentially flawed extractions.\r\n\r\nYour responsibilities:\r\n- Compare extracted text with source lines carefully\r\n- Create corrected versions that ALWAYS prioritize the wording, spelling, and terminology from the SOURCE LINES\r\n- Pay special attention to acronyms, names, dates, numbers, and specialized terminology\r\n- Maintain the same paragraph structure as the LLM extracted text\r\n- Remove hallucinated information not found in source lines\r\n- Include important missing information from source lines that belongs in the same context\r\n\r\nOutput requirements:\r\n- Provide ONLY the corrected text without explanations\r\n- Preserve the formatting (paragraphs) of the original extraction\r\n- Ensure all words, phrases, and especially acronyms match exactly what appears in the source lines\r\n- Output the corrected text STRICTLY in the specified XML format\r\n"
+    prompt: "Please correct the following extracted text using the provided source lines:\r\n\r\n## LLM EXTRACTED TEXT\r\n{extracted_text}\r\n\r\n## SOURCE LINES\r\n{source_lines}\r\n\r\n## OUTPUT FORMAT\r\n\r\nOutput the corrected text STRICTLY in the following XML format:\r\n\r\n<corrected_text>...</corrected_text>\r\n"
