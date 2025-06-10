@@ -143,8 +143,8 @@ class InoreaderService {
    */
   public function getDocuments(int $limit = 50): array {
     // Check if we are using a local file for testing.
-    if ($this->settings['local_file_load']) {
-      $local_file_path = $this->settings['local_file_path'];
+    if (!empty($this->settings['local_file_load'])) {
+      $local_file_path = $this->settings['local_file_path'] ?? '/var/www/inoreader.json';
       $this->logger->info('Retrieving documents from disk.');
       $documents = file_get_contents($local_file_path);
       if ($documents === FALSE) {
