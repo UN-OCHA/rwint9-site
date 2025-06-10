@@ -178,9 +178,9 @@ reliefweb_import.plugin.importer.worldbank:
     themes_to_import:
       type: string
       label: List of Worldbank themes to import.'
-    skip_document_types:
+    document_types_to_import:
       type: string
-      label: List of Worldbank document types to skip.'
+      label: List of Worldbank document types to import.'
     timeout:
       type: integer
       label: 'Connection and request timeout.'

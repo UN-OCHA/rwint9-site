@@ -43,55 +43,6 @@ class WorldbankImporter extends ReliefWebImporterPluginBase {
   ];
 
   /**
-   * Content format mapping.
-   *
-   * @var array<string, int>
-   */
-  protected array $formatMapping = [
-    'Academic Marketplace Resources' => 9,
-    'Action Plan' => 7,
-    'Administration' => 9,
-    'Administrative Documents' => 9,
-    'Agenda' => 9,
-    'Annexes' => 9,
-    'Assessment' => 5,
-    'Cargo transport schedule' => 9,
-    'Communications' => 9,
-    'Concept Note' => 7,
-    'Concept of Operations' => 10,
-    'Contingency Plan' => 7,
-    'Form' => 7,
-    'Gaps and Needs Analysis (GNA)' => 5,
-    'Guidance' => 7,
-    'Handouts' => 7,
-    'Infographic' => 12570,
-    'Lessons Learned' => 6,
-    'Main documents' => 9,
-    'Maps' => 12,
-    'Meeting Minutes' => 9,
-    'NFR' => 9,
-    'Operation Overview' => 9,
-    'Operational Information' => 10,
-    'Other' => 9,
-    'Pre-reading Material' => 9,
-    'Presentation Slides' => 9,
-    'Reference Documents' => 7,
-    'Report' => 10,
-    'Reporting' => 10,
-    'Research / Paper' => 3,
-    'Resources' => 7,
-    'Schedule' => 9,
-    'Situation Update' => 10,
-    'Snapshots' => 12570,
-    'SOP' => 7,
-    'Strategy' => 7,
-    'Tools' => 7,
-    'Training' => 7,
-    'Training Material' => 7,
-    'Training Report' => 7,
-  ];
-
-  /**
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
@@ -123,11 +74,11 @@ class WorldbankImporter extends ReliefWebImporterPluginBase {
       '#required' => FALSE,
     ];
 
-    $form['skip_document_types'] = [
+    $form['document_types_to_import'] = [
       '#type' => 'textarea',
-      '#title' => $this->t('Skip document types'),
-      '#description' => $this->t('List of Worldbank document types to skip. One per line.'),
-      '#default_value' => $form_state->getValue('skip_document_types', $this->getPluginSetting('skip_document_types', '', FALSE)),
+      '#title' => $this->t('Document types to import'),
+      '#description' => $this->t('List of Worldbank document types to import. One per line.'),
+      '#default_value' => $form_state->getValue('document_types_to_import', $this->getPluginSetting('document_types_to_import', '', FALSE)),
       '#min' => 1,
       '#required' => FALSE,
     ];
@@ -331,13 +282,13 @@ class WorldbankImporter extends ReliefWebImporterPluginBase {
     $manually_posted = $this->getManuallyPostedDocumentsFromUrls($document_urls);
 
     // Get the list of document types to skip.
-    $skip_document_types = [];
-    $skip_document_types_setting = $this->getPluginSetting('skip_document_types', '', FALSE);
-    if (!empty($skip_document_types_setting)) {
-      foreach (explode("\n", $skip_document_types_setting) as $document_type) {
+    $document_types_to_import = [];
+    $document_types_to_import_setting = $this->getPluginSetting('document_types_to_import', '', FALSE);
+    if (!empty($document_types_to_import_setting)) {
+      foreach (explode("\n", $document_types_to_import_setting) as $document_type) {
         $document_type = trim($document_type);
         if (!empty($document_type)) {
-          $skip_document_types[] = $document_type;
+          $document_types_to_import[] = $document_type;
         }
       }
     }
@@ -379,13 +330,12 @@ class WorldbankImporter extends ReliefWebImporterPluginBase {
       $url = str_replace('http://', 'https://', $document['url']);
       $import_record['imported_item_url'] = $url;
 
-      // Check if the document should be skipped based on its type.
-      if (!empty($skip_document_types)) {
-        $disallowed_document_types = array_intersect($skip_document_types, $document['document_type'] ?? []);
-        if (count($disallowed_document_types) > 0) {
+      // Check if the document should be imported based on its type.
+      if (!empty($document_types_to_import)) {
+        if (!in_array($document['document_type'] ?? '', $document_types_to_import)) {
           $this->getLogger()->notice(strtr('Worldbank document @id is of disallowed document type: "@document_type", skipping.', [
             '@id' => $id,
-            '@document_type' => reset($disallowed_document_types),
+            '@document_type' => $document['document_type'] ?? 'undefined',
           ]));
           continue;
         }
@@ -555,18 +505,8 @@ class WorldbankImporter extends ReliefWebImporterPluginBase {
       $languages['English'] = $this->languageMapping['English'];
     }
 
-    // Retrieve the content format and map it to 'Other' if there is no match.
-    if (isset($document['docty'])) {
-      if (isset($this->formatMapping[$document['docty']])) {
-        $formats = [
-          $this->formatMapping[$document['docty']],
-        ];
-      }
-    }
-
-    if (empty($formats)) {
-      $formats = [9];
-    }
+    // Set content format to 'Other'.
+    $formats = [9];
 
     // Retrieve the countries. Consider the first one as the primary country.
     $countries = [];
