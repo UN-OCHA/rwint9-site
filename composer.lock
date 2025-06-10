@@ -4154,7 +4154,7 @@
                 "shasum": "fc8ea60619b6b4682bade340e13fb4565d3a7e0c"
             },
             "require": {
-                "drupal/core": "^9.1 || ^10"
+                "drupal/core": "^10"
             },
             "type": "drupal-module",
             "extra": {
@@ -4357,7 +4357,7 @@
                 "shasum": "c25246747dac4372c7d5a5a5fd0f276d9e468eff"
             },
             "require": {
-                "drupal/core": "^9.3 || ^10",
+                "drupal/core": "^10",
                 "drupal/mailsystem": "^4"
             },
             "require-dev": {
@@ -5213,7 +5213,7 @@
                 "shasum": "4623b9d0de4c624857df10daaa8c68793942ad87"
             },
             "require": {
-                "drupal/core": "^10.3 || ^11",
+                "drupal/core": "^10",
                 "enshrined/svg-sanitize": ">=0.15 <1.0"
             },
             "type": "drupal-module",
@@ -5373,7 +5373,7 @@
                 "shasum": "4aa9b119c9c992fd9930fa50f97cd89959c3bafb"
             },
             "require": {
-                "drupal/core": "^8.9 || ^9 || ^10 || ^11"
+                "drupal/core": "^10"
             },
             "type": "drupal-module",
             "extra": {
@@ -17679,16 +17679,16 @@
         },
         {
             "name": "unocha/ocha_content_classification",
-            "version": "v1.1.4",
+            "version": "v1.1.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_content_classification.git",
-                "reference": "a3f88dff23b6931109ff25a72406b5290a50f51b"
+                "reference": "fc7c76145bfd33bc42ec26f271505758cc84d834"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_content_classification/zipball/a3f88dff23b6931109ff25a72406b5290a50f51b",
-                "reference": "a3f88dff23b6931109ff25a72406b5290a50f51b",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_content_classification/zipball/fc7c76145bfd33bc42ec26f271505758cc84d834",
+                "reference": "fc7c76145bfd33bc42ec26f271505758cc84d834",
                 "shasum": ""
             },
             "require": {
@@ -17713,9 +17713,9 @@
             "description": "OCHA Content Classification module",
             "support": {
                 "issues": "https://github.com/UN-OCHA/ocha_content_classification/issues",
-                "source": "https://github.com/UN-OCHA/ocha_content_classification/tree/v1.1.4"
+                "source": "https://github.com/UN-OCHA/ocha_content_classification/tree/v1.1.5"
             },
-            "time": "2025-05-08T07:19:09+00:00"
+            "time": "2025-06-10T02:35:32+00:00"
         },
         {
             "name": "unocha/ocha_entraid",
