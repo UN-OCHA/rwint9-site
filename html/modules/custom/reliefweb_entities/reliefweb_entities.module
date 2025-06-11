@@ -603,7 +603,7 @@ function reliefweb_entities_change_submit_message(array $form, FormStateInterfac
           ],
           'copy_button' => [
             '#type' => 'button',
-            '#value' => t('Copy link'),
+            '#value' => t('Share link'),
             '#attributes' => [
               'class' => ['copy-link-button'],
               'data-copy-url' => $entity_url,

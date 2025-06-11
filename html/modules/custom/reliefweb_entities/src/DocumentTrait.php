@@ -135,12 +135,12 @@ trait DocumentTrait {
     ])->toString();
 
     if ($this->getEntityTypeId() === 'node') {
-      $label = $this->t('Copy @type link', [
+      $label = $this->t('Share @type link', [
         '@type' => mb_strtolower($this->type->entity->label()),
       ]);
     }
     else {
-      $label = $this->t('Copy link');
+      $label = $this->t('Share link');
     }
 
     return [
