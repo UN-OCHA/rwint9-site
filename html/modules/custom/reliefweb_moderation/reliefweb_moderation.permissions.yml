@@ -52,3 +52,6 @@ view training moderation information:
   title: 'View training moderation information'
   description: 'Allow users to view the training moderation status and revision message.'
 
+display simplified report moderation information status:
+  title: 'Display simplified report moderation information status'
+  description: 'Allow users to view the report moderation status simply as published or unpublished.'

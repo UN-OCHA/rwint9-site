@@ -239,19 +239,37 @@ function reliefweb_moderation_preprocess_page(&$variables) {
     '#access' => $entity->access('view_moderation_information'),
   ];
 
+  $bundle = $entity->bundle();
+
   // Get the moderation status.
   if ($user->hasPermission('view moderation information status')) {
-    $element['#status'] = [
-      'value' => $entity->getModerationStatus(),
-      'label' => $entity->getModerationStatusLabel(),
-    ];
+    if ($user->hasPermission('display simplified ' . $bundle . ' moderation information status')) {
+      if ($entity->isPublishedModerationStatus()) {
+        $element['#status'] = [
+          'value' => 'published',
+          'label' => t('Published'),
+        ];
+      }
+      else {
+        $element['#status'] = [
+          'value' => 'draft',
+          'label' => t('Unpublished'),
+        ];
+      }
+    }
+    else {
+      $element['#status'] = [
+        'value' => $entity->getModerationStatus(),
+        'label' => $entity->getModerationStatusLabel(),
+      ];
+    }
   }
 
   // Get the moderation revision message.
   //
-  // Note: when comming back from the preview, the original revision log will
+  // Note: when coming back from the preview, the original revision log will
   // not be available...
-  if ($user->hasPermission('view moderation information revision message')) {
+  if ($user->hasPermission('view moderation information revision message') && !$user->hasPermission('display simplified ' . $bundle . ' moderation information status')) {
     $message = $entity->getOriginalRevisionLogMessage();
     if (!empty($message)) {
       $element['#message'] = [
@@ -288,4 +306,23 @@ function reliefweb_moderation_get_moderation_status_label($bundle, $status) {
     }
   }
   return ucfirst($status);
+}
+
+/**
+ * Implements hook_page_attachments().
+ *
+ * Check if there are status messages that might contain our copy button.
+ */
+function reliefweb_moderation_page_attachments(array &$attachments): void {
+  $messages = \Drupal::messenger()->messagesByType('status');
+  if (!empty($messages)) {
+    // Check if any message contains our copy button class.
+    foreach ($messages as $message) {
+      $message = (string) $message;
+      if (strpos($message, 'copy-link-button') !== FALSE) {
+        $attachments['#attached']['library'][] = 'reliefweb_utility/copy_link';
+        break;
+      }
+    }
+  }
 }
