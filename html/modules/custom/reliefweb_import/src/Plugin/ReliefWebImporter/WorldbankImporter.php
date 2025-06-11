@@ -332,10 +332,10 @@ class WorldbankImporter extends ReliefWebImporterPluginBase {
 
       // Check if the document should be imported based on its type.
       if (!empty($document_types_to_import)) {
-        if (!in_array($document['document_type'] ?? '', $document_types_to_import)) {
-          $this->getLogger()->notice(strtr('Worldbank document @id is of disallowed document type: "@document_type", skipping.', [
+        if (!in_array($document['docty'] ?? '', $document_types_to_import)) {
+          $this->getLogger()->notice(strtr('Worldbank document @id is of disallowed document type: "@docty", skipping.', [
             '@id' => $id,
-            '@document_type' => $document['document_type'] ?? 'undefined',
+            '@docty' => $document['docty'] ?? 'undefined',
           ]));
           continue;
         }
