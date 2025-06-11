@@ -148,7 +148,7 @@ class RwReportAddMultipleSourcesTest extends RwReportBase {
 
     // Check that the report has been created.
     $this->assertSession()->titleEquals($title . ' - Belgium | ' . $site_name);
-    $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created.');
+    $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created');
     $this->assertSession()->pageTextContains('Belgium');
     $this->assertSession()->pageTextContains('UN Document');
     $this->assertSession()->pageTextContains('English');
@@ -183,7 +183,7 @@ class RwReportAddMultipleSourcesTest extends RwReportBase {
 
     // Check that the report has been created.
     $this->assertSession()->titleEquals($title . ' - Belgium | ' . $site_name);
-    $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created.');
+    $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created');
     $this->assertSession()->pageTextContains('Belgium');
     $this->assertSession()->pageTextContains('UN Document');
     $this->assertSession()->pageTextContains('English');
@@ -217,7 +217,7 @@ class RwReportAddMultipleSourcesTest extends RwReportBase {
 
     // Check that the report has been created.
     $this->assertSession()->titleEquals($title . ' - Belgium | ' . $site_name);
-    $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created.');
+    $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created');
     $this->assertSession()->pageTextContains('Belgium');
     $this->assertSession()->pageTextContains('UN Document');
     $this->assertSession()->pageTextContains('English');
@@ -278,7 +278,7 @@ class RwReportAddMultipleSourcesTest extends RwReportBase {
 
     // Check that the report has been created.
     $this->assertSession()->titleEquals($title . ' - Belgium | ' . $site_name);
-    $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created.');
+    $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created');
     $this->assertSession()->pageTextContains('Belgium');
     $this->assertSession()->pageTextContains('UN Document');
     $this->assertSession()->pageTextContains('English');
@@ -314,7 +314,7 @@ class RwReportAddMultipleSourcesTest extends RwReportBase {
 
     // Check that the report has been created.
     $this->assertSession()->titleEquals($title . ' - Belgium | ' . $site_name);
-    $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created.');
+    $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created');
     $this->assertSession()->pageTextContains('Belgium');
     $this->assertSession()->pageTextContains('UN Document');
     $this->assertSession()->pageTextContains('English');
@@ -349,7 +349,7 @@ class RwReportAddMultipleSourcesTest extends RwReportBase {
 
     // Check that the report has been created.
     $this->assertSession()->titleEquals($title . ' - Belgium | ' . $site_name);
-    $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created.');
+    $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created');
     $this->assertSession()->pageTextContains('Belgium');
     $this->assertSession()->pageTextContains('UN Document');
     $this->assertSession()->pageTextContains('English');

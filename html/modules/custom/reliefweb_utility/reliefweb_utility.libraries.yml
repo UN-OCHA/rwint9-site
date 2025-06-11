@@ -1,0 +1,5 @@
+copy_link:
+  js:
+    js/copy-link.js: {}
+  dependencies:
+    - core/drupal

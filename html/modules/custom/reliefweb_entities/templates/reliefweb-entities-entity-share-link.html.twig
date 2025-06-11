@@ -1,0 +1,17 @@
+{#
+
+/**
+ * @file
+ * Template for displaying entity link for sharing.
+ *
+ * Available variables:
+ * - attributes: HTML attributes for the wrapper element.
+ * - label: The button label.
+ * - url: The URL for the entity.
+ * - button_attributes: HTML attributes for the copy button.
+ */
+
+#}
+<div{{ attributes.addClass('rw-entity-share-link-wrapper') }}>
+  <button{{ button_attributes.addClass('rw-entity-share-link', 'copy-link-button', 'button').setAttribute('data-copy-url', url).setAttribute('type', 'button') }}>{{ label }}</button>
+</div>

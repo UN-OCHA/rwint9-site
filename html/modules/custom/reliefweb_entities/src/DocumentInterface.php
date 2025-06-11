@@ -32,6 +32,14 @@ interface DocumentInterface {
   public function getShareLinks();
 
   /**
+   * Get the link of the document for sharing.
+   *
+   * @return array
+   *   Render array for the link.
+   */
+  public function getShareLink(): array;
+
+  /**
    * Get the reports related to the entity.
    *
    * @param int $limit
