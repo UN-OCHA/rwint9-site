@@ -423,6 +423,18 @@ function reliefweb_entities_theme() {
         'new_source' => NULL,
       ],
     ],
+    'reliefweb_entities_entity_share_link' => [
+      'variables' => [
+        // Container attributes.
+        'attributes' => NULL,
+        // Label.
+        'label' => NULL,
+        // Entity URL.
+        'url' => NULL,
+        // Button attributes.
+        'button_attributes' => NULL,
+      ],
+    ],
   ];
 }
 

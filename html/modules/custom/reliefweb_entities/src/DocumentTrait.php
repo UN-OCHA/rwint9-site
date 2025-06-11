@@ -126,6 +126,40 @@ trait DocumentTrait {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getShareLink(): array {
+    $url = $this->toUrl('canonical', [
+      'absolute' => TRUE,
+      'alias' => TRUE,
+    ])->toString();
+
+    if ($this->getEntityTypeId() === 'node') {
+      $label = $this->t('Copy @type link', [
+        '@type' => mb_strtolower($this->type->entity->label()),
+      ]);
+    }
+    else {
+      $label = $this->t('Copy link');
+    }
+
+    return [
+      '#theme' => 'reliefweb_entities_entity_share_link',
+      '#label' => $label,
+      '#url' => $url,
+      '#attached' => [
+        'library' => [
+          'reliefweb_utility/copy_link',
+        ],
+      ],
+      '#cache' => [
+        'contexts' => ['url'],
+        'tags' => $this->getCacheTags(),
+      ],
+    ];
+  }
+
+  /**
    * Get the reports related to the entity.
    *
    * @see Drupal\reliefweb_entities\DocumentInterface::getRelatedContent()
