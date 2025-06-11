@@ -462,7 +462,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
     // Make sure body is present and not empty.
     if (empty($data['body'])) {
-      $this->logger->info(strtr('No body found for Inoreader @id, skipping.', [
+      $this->logger->info(strtr('No body or PDF found for Inoreader @id, skipping.', [
         '@id' => $id,
       ]));
 
