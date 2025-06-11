@@ -155,12 +155,21 @@ class InoreaderTestForm extends FormBase {
         }
 
         $record['logs'] = $logger->getAll();
+
         $used_tags = [];
         if (isset($record['_tags'])) {
           $used_tags = $record['_tags'];
           unset($record['_tags']);
         }
+
+        $has_pdf = FALSE;
+        if (isset($record['_has_pdf'])) {
+          $has_pdf = $record['_has_pdf'];
+          unset($record['_has_pdf']);
+        }
+
         $records[] = [
+          'has_pdf' => $has_pdf,
           'tags' => $used_tags,
           'report' => $record,
         ];

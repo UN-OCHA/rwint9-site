@@ -53,7 +53,15 @@ Imports tagged items from the [automation_production](https://www.inoreader.com/
 
 #### `source` tag
 
-This is mandatory and has to be numeric.
+This is mandatory, since multiple feeds can map to the same source id, but might need different settings,
+it's allowed to add an extra identifier like `[source:1242-food]`, this identifier can be used to overwrite
+tags defined at `/admin/config/reliefweb/content-importers/inoreader_extra_tags` like
+
+```yaml
+1242-food:
+  wrapper:
+    - div.dynamic-content__figure-container
+```
 
 #### `pdf` tag
 
@@ -68,6 +76,7 @@ This is mandatory and points to the location of the PDF file. For the moment onl
 | page-iframe-src | The importer will fetch the source page and will search for an iframe with an `src` attribute pointing to the PDF file |
 | page-iframe-data-src | The importer will fetch the source page and will search for an iframe with an `data-src` attribute pointing to the PDF file |
 | js | Uses puppeteer to render and analyze the page |
+| content | Uses summary of inoreader as body |
 
 #### `content` tag
 

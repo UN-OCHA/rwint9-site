@@ -7,7 +7,9 @@ namespace Drupal\reliefweb_import\Service;
 use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
+use Drupal\reliefweb_utility\HtmlToMarkdown\Converters\TextConverter;
 use GuzzleHttp\ClientInterface;
+use League\HTMLToMarkdown\HtmlConverter;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -247,8 +249,8 @@ class InoreaderService {
       throw $exception;
     }
 
-    if (!empty($settings['local_file_save'])) {
-      $local_file_path = $settings['local_file_path'] ?? '/var/www/inoreader.json';
+    if (!empty($this->settings['local_file_save'])) {
+      $local_file_path = $this->settings['local_file_path'] ?? '/var/www/inoreader.json';
       $f = fopen($local_file_path, 'w');
       if ($f) {
         fwrite($f, json_encode($documents, \JSON_PRETTY_PRINT));
@@ -280,6 +282,7 @@ class InoreaderService {
     $id = $document['id'];
     $url = $document['canonical'][0]['href'];
     $pdf_bytes = NULL;
+    $body = '';
 
     // Retrieve the title and clean it.
     $title = $this->sanitizeText(html_entity_decode($document['title'] ?? ''));
@@ -290,9 +293,6 @@ class InoreaderService {
     // Retrieve the publication date.
     $published = $document['published'] ?? time();
     $published = DateHelper::format($published, 'custom', 'c');
-
-    // Retrieve the description.
-    $body = $this->sanitizeText(html_entity_decode($document['summary']['content'] ?? ''), TRUE);
 
     $origin_title = trim($this->sanitizeText($document['origin']['title'] ?? ''));
     $sources = [];
@@ -359,8 +359,13 @@ class InoreaderService {
     }
 
     // Source is mandatory, so present.
+    $source_id = $tags['source'] ?? '';
+    if (strpos($tags['source'], '-') !== FALSE) {
+      [$source_id] = explode('-', $tags['source']);
+    }
+
     $sources = [
-      (int) $tags['source'],
+      (int) $source_id,
     ];
 
     // Check for custom fetch timeout.
@@ -456,6 +461,10 @@ class InoreaderService {
             $pdf_bytes = $puppeteer_result['blob'] ?? NULL;
             break;
 
+          case 'content':
+            $body = $this->cleanBodyText($document['summary']['content'] ?? '');
+            break;
+
         }
 
         $pdf = $this->rewritePdfLink($pdf, $tags);
@@ -490,16 +499,10 @@ class InoreaderService {
       return [];
     }
 
-    if (empty($pdf)) {
-      $this->logger->info(strtr('No PDF found for Inoreader @id, skipping.', [
-        '@id' => $id,
-      ]));
-
-      return [];
-    }
+    $has_pdf = !empty($pdf);
 
     // Force PDF to use HTTPS.
-    if (strpos($pdf, 'http://') === 0) {
+    if ($has_pdf && strpos($pdf, 'http://') === 0) {
       $pdf = str_replace('http://', 'https://', $pdf);
     }
 
@@ -533,6 +536,7 @@ class InoreaderService {
         'bytes' => $pdf_bytes,
       ],
       '_tags' => $tags,
+      '_has_pdf' => $has_pdf,
     ];
 
     return $data;
@@ -553,6 +557,26 @@ class InoreaderService {
    */
   protected function sanitizeText(string $text, bool $preserve_newline = FALSE): string {
     return TextHelper::sanitizeText($text, $preserve_newline);
+  }
+
+  /**
+   * Clean body text.
+   */
+  protected function cleanBodyText(string $text): string {
+    // Decode it first.
+    $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+    // Convert to markdown.
+    $converter = new HtmlConverter();
+    $converter->getConfig()->setOption('strip_tags', TRUE);
+    $converter->getConfig()->setOption('use_autolinks', FALSE);
+    $converter->getConfig()->setOption('header_style', 'atx');
+    $converter->getConfig()->setOption('strip_placeholder_links', TRUE);
+
+    // Use our own text converter to avoid unwanted character escaping.
+    $converter->getEnvironment()->addConverter(new TextConverter());
+
+    return trim($converter->convert($text));
   }
 
   /**
