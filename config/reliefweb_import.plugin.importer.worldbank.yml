@@ -1,0 +1,19 @@
+enabled: true
+max_import_attempts: 3
+classification:
+  enabled: true
+  check_user_permissions: false
+  prevent_publication: false
+  specified_field_check: ''
+  force_field_update: "field_theme:yes\r\nfield_content_format:yes"
+  classified_fields: "field_theme:yes\r\nfield_content_format:yes"
+reimport:
+  enabled: false
+  type: ''
+  fields: ''
+  statuses: ''
+api_url: 'https://search.worldbank.org/api/v3/wds'
+max_age: 15
+themes_to_import: "FY17 - Disaster Risk Management\r\nFY17 - Disease Control\r\nFY17 - Water Resource Management\r\nFY17 - Disaster Preparedness\r\nFY17 - Pandemic Response\r\nFY17 - Flood and Drought Risk Management\r\nFY17 - Disaster Risk Reduction\r\nFY17 - Disaster Response and Recovery\r\nFY17 - Fragility, Conflict and Violence\r\nFY17 - Food Security\r\nFY17 - Nutrition\r\nFY17 - Forced Displacement"
+document_types_to_import: Publication
+timeout: 10

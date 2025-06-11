@@ -14,7 +14,7 @@ use Drupal\reliefweb_import\Plugin\ReliefWebImporterPluginBase;
 use Drupal\reliefweb_post_api\Exception\DuplicateException;
 use Drupal\reliefweb_post_api\Helpers\HashHelper;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface;
-use Drupal\reliefweb_utility\Helpers\DateHelper;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Import reports from the Inoreader.
@@ -25,6 +25,22 @@ use Drupal\reliefweb_utility\Helpers\DateHelper;
   description: new TranslatableMarkup('Import reports from the Inoreader.')
 )]
 class InoreaderImporter extends ReliefWebImporterPluginBase {
+
+  /**
+   * Inoreader service.
+   *
+   * @var \Drupal\reliefweb_import\Service\InoreaderService
+   */
+  protected $inoreaderService;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->inoreaderService = $container->get('reliefweb_import.inoreader_service');
+    return $instance;
+  }
 
   /**
    * {@inheritdoc}
@@ -121,28 +137,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       // Ensure the provider is valid.
       $plugin->getProvider($provider_uuid);
 
-      if ($this->getPluginSetting('local_file_load', FALSE, FALSE)) {
-        $local_file_path = $this->getPluginSetting('local_file_path', '/var/www/inoreader.json', FALSE);
-        $this->getLogger()->info('Retrieving documents from disk.');
-        $documents = file_get_contents($local_file_path);
-        if ($documents === FALSE) {
-          $this->getLogger()->error('Unable to retrieve the Inoreader documents.');
-          return FALSE;
-        }
-        $documents = json_decode($documents, TRUE, flags: \JSON_THROW_ON_ERROR);
-        $documents = array_slice($documents, 0, $limit);
-      }
-      else {
-        $this->getLogger()->info('Retrieving documents from the Inoreader.');
-
-        // Retrieve the latest created documents.
-        $documents = $this->getDocuments($limit);
-
-        if (empty($documents)) {
-          $this->getLogger()->notice('No documents.');
-          return TRUE;
-        }
-      }
+      $documents = $this->getDocuments($limit);
     }
     catch (\Exception $exception) {
       $this->getLogger()->error($exception->getMessage());
@@ -153,6 +148,11 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       '@count' => count($documents),
       '@url' => $this->getPluginSetting('api_url'),
     ]));
+
+    if (empty($documents)) {
+      $this->getLogger()->info('No Inoreader documents to process.');
+      return TRUE;
+    }
 
     // Process the documents importing new ones and updated ones.
     $processed = $this->processDocuments($documents, $provider_uuid, $plugin);
@@ -170,171 +170,27 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
   }
 
   /**
-   * Get authorization token from Inoreader.
-   */
-  protected function getAuthToken(): string {
-    $timeout = $this->getPluginSetting('timeout', 10, FALSE);
-    $email = $this->getPluginSetting('email');
-    $password = $this->getPluginSetting('password');
-    $app_id = $this->getPluginSetting('app_id');
-    $app_key = $this->getPluginSetting('app_key');
-
-    // Get auth token.
-    $response = $this->httpClient->post("https://www.inoreader.com/accounts/ClientLogin", [
-      'connect_timeout' => $timeout,
-      'timeout' => $timeout,
-      'headers' => [
-        'Content-Type' => 'application/x-www-form-urlencoded',
-        'AppId' => $app_id,
-        'AppKey' => $app_key,
-      ],
-      'form_params' => [
-        'Email' => $email,
-        'Passwd' => $password,
-      ],
-    ]);
-
-    if ($response->getStatusCode() !== 200) {
-      // @todo try to retrieve the error message.
-      throw new \Exception('Failure with response code: ' . $response->getStatusCode());
-    }
-
-    $auth = '';
-    $content = $response->getBody()->getContents();
-    foreach (explode("\n", $content) as $line) {
-      if (preg_match('/Auth=([^&]+)/', $line, $matches)) {
-        $auth = $matches[1];
-        break;
-      }
-    }
-
-    if (empty($auth)) {
-      throw new \Exception('Unable to retrieve auth token.');
-    }
-
-    return $auth;
-  }
-
-  /**
    * Retrieve documents from the Inoreader.
    *
    * @return array
    *   List of documents keyed by IDs.
    */
   protected function getDocuments(int $limit = 50): array {
-    $real_limit = $limit;
-    $continuation = '';
-    $use_continuation = FALSE;
-    if ($limit > 100) {
-      $use_continuation = TRUE;
-      $limit = 100;
-    }
+    $this->inoreaderService->setLogger($this->getLogger());
+    $this->inoreaderService->setSettings([
+      'email' => $this->getPluginSetting('email'),
+      'password' => $this->getPluginSetting('password'),
+      'app_id' => $this->getPluginSetting('app_id'),
+      'app_key' => $this->getPluginSetting('app_key'),
+      'api_url' => $this->getPluginSetting('api_url'),
+      'timeout' => $this->getPluginSetting('timeout', 10, FALSE),
+      'fetch_timeout' => $this->getPluginSetting('fetch_timeout', 15, FALSE),
+      'local_file_load' => $this->getPluginSetting('local_file_load', FALSE, FALSE),
+      'local_file_save' => $this->getPluginSetting('local_file_save', FALSE, FALSE),
+      'local_file_path' => $this->getPluginSetting('local_file_path', '/var/www/inoreader.json', FALSE),
+    ]);
 
-    $documents = [];
-
-    // Get list of documents.
-    try {
-      $timeout = $this->getPluginSetting('timeout', 10, FALSE);
-      $app_id = $this->getPluginSetting('app_id');
-      $app_key = $this->getPluginSetting('app_key');
-      $api_url = $this->getPluginSetting('api_url');
-      $max_age = (int) $this->state->get('reliefweb_importer_inoreader_max_age', 24 * 60 * 60);
-      $most_recent_timestamp = (int) $this->state->get('reliefweb_importer_inoreader_most_recent_timestamp', 0);
-      $ignore_timestamp = (bool) $this->state->get('reliefweb_importer_inoreader_ignore_timestamp', FALSE);
-
-      // This is mostly for the first run.
-      if (empty($most_recent_timestamp)) {
-        $most_recent_timestamp = (time() - $max_age) * 1_000_000;
-      }
-      else {
-        // 1 minute margin.
-        $most_recent_timestamp -= (60 * 1_000_000);
-      }
-
-      $auth = $this->getAuthToken();
-
-      while ($real_limit > 0) {
-        $api_parts = parse_url($api_url);
-        parse_str($api_parts['query'] ?? '', $query);
-        $query['n'] = $limit;
-        if (!empty($continuation)) {
-          $query['c'] = $continuation;
-        }
-
-        if (!$ignore_timestamp) {
-          // Add filter on start date (microseconds timestamp).
-          $query['ot'] = $most_recent_timestamp;
-
-          // Exclude starred items.
-          $query['xt'] = 'user/-/state/com.google/starred';
-        }
-
-        // Rebuild the URL.
-        $api_url = $api_parts['scheme'] . '://' . $api_parts['host'] . $api_parts['path'] . '?' . http_build_query($query);
-
-        $response = $this->httpClient->get($api_url, [
-          'connect_timeout' => $timeout,
-          'timeout' => $timeout,
-          'headers' => [
-            'Content-Type' => 'application/json',
-            'Accept' => 'application/json',
-            'AppId' => $app_id,
-            'AppKey' => $app_key,
-            'Authorization' => 'GoogleLogin auth=' . $auth,
-          ],
-        ]);
-
-        if ($response->getStatusCode() !== 200) {
-          // @todo try to retrieve the error message.
-          throw new \Exception('Failure with response code: ' . $response->getStatusCode());
-        }
-
-        $content = $response->getBody()->getContents();
-        if (!empty($content)) {
-          $result = json_decode($content, TRUE, flags: \JSON_THROW_ON_ERROR);
-          if (isset($result['items'])) {
-            foreach ($result['items'] as $document) {
-              if (!isset($result['id'])) {
-                continue;
-              }
-
-              $documents[$document['id']] = $document;
-            }
-          }
-          if ($use_continuation && isset($result['continuation'])) {
-            $continuation = $result['continuation'];
-            $real_limit -= $limit;
-          }
-          else {
-            $continuation = '';
-            $real_limit = 0;
-          }
-        }
-        else {
-          $continuation = '';
-          $real_limit = 0;
-        }
-      }
-    }
-    catch (\Exception $exception) {
-      $message = $exception->getMessage();
-      throw new \Exception($message);
-    }
-
-    if ($this->getPluginSetting('local_file_save', FALSE, FALSE)) {
-      $local_file_path = $this->getPluginSetting('local_file_path', '/var/www/inoreader.json', FALSE);
-      $f = fopen($local_file_path, 'w');
-      if ($f) {
-        fwrite($f, json_encode($documents, \JSON_PRETTY_PRINT));
-        fclose($f);
-        $this->getLogger()->info('Inoreader documents written to ' . $local_file_path);
-      }
-      else {
-        $this->getLogger()->error('Unable to open file ' . $local_file_path . ' for writing.');
-      }
-    }
-
-    return $documents;
+    return $this->inoreaderService->getDocuments($limit);
   }
 
   /**
@@ -395,7 +251,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         'extra' => [
           'inoreader' => [
             'feed_name' => $document['origin']['title'] ?? '',
-            'feed_url' => 'https://www.inoreader.com/' . $document['origin']['streamId'] ?? '',
+            'feed_url' => 'https://www.inoreader.com/' . urlencode($document['origin']['streamId'] ?? ''),
             'feed_origin' => $document['origin']['htmlUrl'] ?? '',
           ],
         ],
@@ -554,231 +410,26 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
    * {@inheritdoc}
    */
   protected function processDocumentData(string $uuid, array $document): array {
-    $fetch_timeout = $this->getPluginSetting('fetch_timeout', 10, FALSE);
-
-    $data = [];
-
     $id = $document['id'];
-    $url = $document['canonical'][0]['href'];
-    $pdf_bytes = NULL;
 
-    // Retrieve the title and clean it.
-    $title = $this->sanitizeText(html_entity_decode($document['title'] ?? ''));
-    if (empty($title)) {
-      $title = $url;
+    $data = $this->inoreaderService->processDocumentData($document);
+    if (!isset($data['file_data'])) {
+      $this->logger->info(strtr('No file data found for Inoreader @id, skipping.', [
+        '@id' => $id,
+      ]));
+
+      return [];
     }
 
-    // Retrieve the publication date.
-    $published = $document['published'] ?? time();
-    $published = DateHelper::format($published, 'custom', 'c');
+    if (isset($data['_tags'])) {
+      // Remove the tags from the data as they are not needed.
+      unset($data['_tags']);
+    }
 
-    // Retrieve the description.
-    $body = $this->sanitizeText(html_entity_decode($document['summary']['content'] ?? ''), TRUE);
+    $pdf = $data['file_data']['pdf'] ?? '';
+    $pdf_bytes = $data['file_data']['bytes'] ?? NULL;
 
-    $origin_title = trim($this->sanitizeText($document['origin']['title'] ?? ''));
     $files = [];
-    $sources = [];
-    $pdf = '';
-
-    if (strpos($origin_title, '[source:') === FALSE) {
-      if (empty($sources)) {
-        $this->getLogger()->info(strtr('No source defined for Inoreader @id, skipping. Origin is set to @origin_title', [
-          '@id' => $id,
-          '@origin_title' => $origin_title,
-        ]));
-
-        return [];
-      }
-    }
-
-    preg_match_all('/\[(.*?)\]/', $origin_title, $matches);
-    $matches = $matches[1];
-
-    // Parse everything so we can reference it easily.
-    $tags = [];
-    foreach ($matches as $match) {
-      $tag_parts = explode(':', $match);
-      $tag_key = reset($tag_parts);
-      array_shift($tag_parts);
-      $tag_value = implode(':', $tag_parts);
-
-      if (!isset($tags[$tag_key])) {
-        $tags[$tag_key] = $tag_value;
-      }
-      else {
-        if (!is_array($tags[$tag_key])) {
-          $tags[$tag_key] = [
-            $tags[$tag_key],
-          ];
-        }
-        $tags[$tag_key][] = $tag_value;
-      }
-    }
-
-    // Get extra tags from state.
-    $extra_tags = $this->state->get('reliefweb_importer_inoreader_extra_tags', []);
-
-    if (!empty($extra_tags[$tags['source']])) {
-      foreach ($extra_tags[$tags['source']] as $key => $value) {
-        if (isset($tags[$key])) {
-          if (!is_array($tags[$key])) {
-            $tags[$key] = [
-              $tags[$key],
-            ];
-          }
-          $tags[$key] = array_merge($tags[$key], $value);
-        }
-        else {
-          $tags[$key] = $value;
-        }
-      }
-    }
-
-    // Source is mandatory, so present.
-    $sources = [
-      (int) $tags['source'],
-    ];
-
-    // Check for custom fetch timeout.
-    if (isset($tags['timeout'])) {
-      $fetch_timeout = (int) $tags['timeout'];
-      unset($tags['timeout']);
-    }
-
-    foreach ($tags as $tag_key => $tag_value) {
-      if ($tag_key == 'pdf') {
-        switch ($tag_value) {
-          case 'canonical':
-            $pdf = $document['canonical'][0]['href'] ?? '';
-            break;
-
-          case 'summary-link':
-            $pdf = $this->extractPdfUrl($document['summary']['content'] ?? '', 'a', 'href');
-            break;
-
-          case 'page-link':
-            $page_url = $document['canonical'][0]['href'] ?? '';
-            $html = $this->downloadHtmlPage($page_url, $fetch_timeout);
-            if (empty($html)) {
-              $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
-                '@id' => $id,
-                '@url' => $page_url,
-              ]));
-            }
-            else {
-              $pdf = $this->tryToExtractPdfFromHtml($page_url, $html, $tags);
-              if (isset($tags['follow'])) {
-                // Follow link and fetch PDF from that page.
-                if (strpos($pdf, $tags['follow']) !== FALSE) {
-                  $page_url = $pdf;
-                  $html = $this->downloadHtmlPage($page_url, $fetch_timeout);
-                  if (empty($html)) {
-                    $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
-                      '@id' => $id,
-                      '@url' => $page_url,
-                    ]));
-                  }
-                  else {
-                    $pdf = $this->tryToExtractPdfFromHtml($page_url, $html, $tags);
-                  }
-                }
-              }
-            }
-
-            break;
-
-          case 'page-object':
-            $page_url = $document['canonical'][0]['href'] ?? '';
-            $html = $this->downloadHtmlPage($page_url, $fetch_timeout);
-            if (empty($html)) {
-              $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
-                '@id' => $id,
-                '@url' => $page_url,
-              ]));
-            }
-            $pdf = $this->extractPdfUrl($html, 'object', 'data');
-
-            break;
-
-          case 'page-iframe-data-src':
-            $page_url = $document['canonical'][0]['href'] ?? '';
-            $html = $this->downloadHtmlPage($page_url, $fetch_timeout);
-            if (empty($html)) {
-              $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
-                '@id' => $id,
-                '@url' => $page_url,
-              ]));
-            }
-            $pdf = $this->extractPdfUrl($html, 'iframe', 'data-src');
-
-            break;
-
-          case 'page-iframe-src':
-            $page_url = $document['canonical'][0]['href'] ?? '';
-            $html = $this->downloadHtmlPage($page_url, $fetch_timeout);
-            if (empty($html)) {
-              $this->getLogger()->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
-                '@id' => $id,
-                '@url' => $page_url,
-              ]));
-            }
-            $pdf = $this->extractPdfUrl($html, 'iframe', 'src');
-            break;
-
-          case 'js':
-            $page_url = $document['canonical'][0]['href'] ?? '';
-            $puppeteer_result = $this->tryToExtractPdfUsingPuppeteer($page_url, $tags, $fetch_timeout);
-            $pdf = $puppeteer_result['pdf'] ?? '';
-            $pdf_bytes = $puppeteer_result['blob'] ?? NULL;
-            break;
-
-        }
-
-        $pdf = $this->rewritePdfLink($pdf, $tags);
-      }
-      elseif ($tag_key == 'content') {
-        switch ($tag_value) {
-          case 'clear':
-          case 'ignore':
-            $body = '';
-            break;
-        }
-      }
-      elseif ($tag_key == 'title') {
-        switch ($tag_value) {
-          case 'filename':
-          case 'canonical':
-            $title = basename($document['canonical'][0]['href'] ?? '');
-            $title = str_replace('.pdf', '', $title);
-            $title = str_replace(['-', '_'], ' ', $title);
-            $title = $this->sanitizeText($title);
-            break;
-        }
-      }
-    }
-
-    if (empty($sources)) {
-      $this->getLogger()->info(strtr('No source defined for Inoreader @id, skipping. Origin is set to @origin_title', [
-        '@id' => $id,
-        '@origin_title' => $origin_title,
-      ]));
-
-      return [];
-    }
-
-    if (empty($pdf)) {
-      $this->getLogger()->info(strtr('No PDF found for Inoreader @id, skipping.', [
-        '@id' => $id,
-      ]));
-
-      return [];
-    }
-
-    // Force PDF to use HTTPS.
-    if (strpos($pdf, 'http://') === 0) {
-      $pdf = str_replace('http://', 'https://', $pdf);
-    }
-
     $info = $this->getRemoteFileInfo($pdf, 'pdf', $pdf_bytes);
     if (!empty($info)) {
       $file_uuid = $this->generateUuid($pdf, $uuid);
@@ -788,45 +439,19 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       ] + $info;
     }
 
-    if (empty($files)) {
-      $this->getLogger()->info(strtr('No files found for Inoreader @id, skipping.', [
+    unset($data['file_data']);
+
+    $data += array_filter([
+      'file' => array_values($files),
+    ]);
+
+    if (empty($data['file'])) {
+      $this->logger->info(strtr('No files found for Inoreader @id, skipping.', [
         '@id' => $id,
       ]));
 
       return [];
     }
-
-    // Make sure the title is not too long or too short.
-    if (strlen($title) > 255) {
-      // Limit the title to 255 characters.
-      $title = substr($title, 0, 240) . '...';
-    }
-    elseif (strlen($title) < 10) {
-      // If the title is too short, use the URL instead.
-      $title = $url;
-    }
-
-    // Force origin to use HTTPS.
-    if (strpos($url, 'http://') === 0) {
-      $url = str_replace('http://', 'https://', $url);
-    }
-
-    // Submission data.
-    $data = [
-      'title' => $title,
-      'body' => substr($body ?? '', 0, 100000),
-      'published' => $published,
-      'origin' => $url,
-      'source' => $sources,
-      'language' => [267],
-      'country' => [254],
-      'format' => [8],
-    ];
-
-    // Add the optional fields.
-    $data += array_filter([
-      'file' => array_values($files),
-    ]);
 
     return $data;
   }
@@ -861,261 +486,6 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         $fields['title__value'] = TRUE;
       }
     }
-  }
-
-  /**
-   * Try to extract the link to a PDF file from HTML content.
-   * */
-  protected function tryToExtractPdfFromHtml($page_url, $html, $tags) {
-    $pdf = '';
-    $contains = [];
-    if (isset($tags['url'])) {
-      if (is_array($tags['url'])) {
-        $contains = $tags['url'];
-      }
-      else {
-        $contains[] = $tags['url'];
-      }
-    }
-
-    if (isset($tags['wrapper'])) {
-      if (is_array($tags['wrapper'])) {
-        foreach ($tags['wrapper'] as $wrapper) {
-          $pdf = $this->extractPdfUrl($html, 'a', 'href', '', '', $wrapper, $contains);
-          if ($pdf) {
-            break;
-          }
-        }
-      }
-      else {
-        $pdf = $this->extractPdfUrl($html, 'a', 'href', '', '', $tags['wrapper'], $contains);
-      }
-    }
-    else {
-      $pdf = $this->extractPdfUrl($html, 'a', 'href', '', '', '', $contains);
-    }
-    if (!empty($pdf) && strpos($pdf, 'http') !== 0) {
-      $url_parts = parse_url($page_url);
-      $pdf = ($url_parts['scheme'] ?? 'https') . '://' . $url_parts['host'] . $pdf;
-    }
-
-    return $pdf;
-  }
-
-  /**
-   * Extract the PDF URL from the HTML content.
-   */
-  protected function extractPdfUrl(string $html, string $tag, string $attribute, string $class = '', string $extension = '', string $wrapper = '', array $contains = []): ?string {
-    if (empty($html)) {
-      return '';
-    }
-
-    $dom = new \DOMDocument();
-    @$dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-    $xpath = new \DOMXPath($dom);
-
-    $elements = [];
-    if (empty($wrapper)) {
-      $elements = $xpath->query("//{$tag}[@{$attribute}]");
-    }
-    else {
-      [$wrapper_element, $wrapper_class] = explode('.', $wrapper);
-      $parent = $xpath->query("//{$wrapper_element}[contains(@class, '{$wrapper_class}')]")->item(0);
-      if (!$parent) {
-        return '';
-      }
-
-      $elements = $xpath->query(".//{$tag}[@{$attribute}]", $parent);
-    }
-
-    /** @var \DOMNode $element */
-    foreach ($elements as $element) {
-      $url = $element->getAttribute($attribute);
-      if (empty($url) || $url == '#') {
-        continue;
-      }
-
-      if (!empty($class) && $element->hasAttribute('class') && preg_match('/\b' . preg_quote($class, '/') . '\b/', $element->getAttribute('class'))) {
-        if (!empty($contains)) {
-          foreach ($contains as $contain) {
-            if (strpos($url, $contain) !== FALSE) {
-              return $url;
-            }
-          }
-        }
-        else {
-          return $url;
-        }
-      }
-
-      if (!empty($extension) && preg_match('/\.' . $extension . '$/i', $url)) {
-        if (!empty($contains)) {
-          foreach ($contains as $contain) {
-            if (strpos($url, $contain) !== FALSE) {
-              return $url;
-            }
-          }
-        }
-        else {
-          return $url;
-        }
-      }
-
-      if (empty($class) && empty($extension)) {
-        if (!empty($contains)) {
-          foreach ($contains as $contain) {
-            if (strpos($url, $contain) !== FALSE) {
-              return $url;
-            }
-          }
-        }
-        else {
-          return $url;
-        }
-      }
-    }
-
-    return '';
-  }
-
-  /**
-   * Download HTML page as string.
-   */
-  protected function downloadHtmlPage($url, $fetch_timeout) {
-    try {
-      $response = $this->httpClient->get($url, [
-        'connect_timeout' => $fetch_timeout,
-        'timeout' => $fetch_timeout,
-        'headers' => [
-          'User-Agent' => 'Mozilla/5.0 AppleWebKit Chrome/134.0.0.0 Safari/537.36',
-          'accept' => 'text/html,application/xhtml+xml,application/xml,*/*',
-          'accept-language' => 'en-US,en;q=0.9',
-        ],
-      ]);
-
-      if ($response->getStatusCode() !== 200) {
-        throw new \Exception('Failure with response code: ' . $response->getStatusCode());
-      }
-
-      return $response->getBody()->getContents();
-    }
-    catch (\Exception $exception) {
-      try {
-        // Try without headers.
-        $response = $this->httpClient->get($url, [
-          'connect_timeout' => $fetch_timeout,
-          'timeout' => $fetch_timeout,
-        ]);
-
-        if ($response->getStatusCode() !== 200) {
-          throw new \Exception('Failure with response code: ' . $response->getStatusCode());
-        }
-
-        return $response->getBody()->getContents();
-      }
-      catch (\Exception $exception) {
-        // Fail silently.
-        $this->getLogger()->info('Failure with response code: ' . $exception->getMessage());
-        return '';
-      }
-    }
-
-    return '';
-  }
-
-  /**
-   * Rewrite PDF link.
-   */
-  protected function rewritePdfLink($pdf, $tags) {
-    if (empty($pdf)) {
-      return $pdf;
-    }
-
-    if (!isset($tags['replace'])) {
-      return $pdf;
-    }
-
-    if (!is_array($tags['replace'])) {
-      $tags['replace'] = [$tags['replace']];
-    }
-
-    foreach ($tags['replace'] as $replace) {
-      [$from, $to] = explode(':', $replace);
-      $pdf = str_replace($from, $to, $pdf);
-    }
-
-    return $pdf;
-  }
-
-  /**
-   * Try to extract the link to a PDF file from HTML content.
-   *
-   * @param string $page_url
-   *   URL of page to fetch.
-   * @param array $tags
-   *   Inoreader feed tags.
-   * @param int $fetch_timeout
-   *   Fetch timeout.
-   *
-   * @return array
-   *   Associative array with a `pdf` key for the PDF URL and an optional
-   *   `blob` key for the raw bytes of the file; or an empty array in case
-   *   of failure.
-   */
-  protected function tryToExtractPdfUsingPuppeteer(string $page_url, array $tags, int $fetch_timeout): array {
-    $pdf = [];
-    $blob = FALSE;
-    $delay = 3000;
-
-    // Check if we need to request the PDF as Blob.
-    if (isset($tags['puppeteer-blob'])) {
-      $blob = TRUE;
-    }
-
-    if (isset($tags['delay'])) {
-      $delay = (int) $tags['delay'];
-    }
-
-    if (isset($tags['wrapper'])) {
-      if (!is_array($tags['wrapper'])) {
-        $tags['wrapper'] = [$tags['wrapper']];
-      }
-
-      foreach ($tags['wrapper'] as $wrapper) {
-        $pdf = reliefweb_import_extract_pdf_file($page_url, $wrapper, $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay);
-        if ($pdf) {
-          break;
-        }
-      }
-    }
-    else {
-      $pdf = reliefweb_import_extract_pdf_file($page_url, '', $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay);
-    }
-
-    if (empty($pdf)) {
-      return [];
-    }
-
-    if (!$blob) {
-      if (!empty($pdf['pdf']) && strpos($pdf['pdf'], 'http') !== 0) {
-        $url_parts = parse_url($page_url);
-        $pdf['pdf'] = ($url_parts['scheme'] ?? 'https') . '://' . $url_parts['host'] . $pdf['pdf'];
-      }
-
-      return $pdf;
-    }
-
-    if (empty($pdf['blob'])) {
-      $this->getLogger()->error(strtr('Unable to retrieve the PDF blob for Inoreader document @id -- @url.', [
-        '@id' => $page_url,
-        '@url' => $pdf['pdf'],
-      ]));
-      return [];
-    }
-
-    $pdf['blob'] = base64_decode($pdf['blob']);
-
-    return $pdf;
   }
 
 }

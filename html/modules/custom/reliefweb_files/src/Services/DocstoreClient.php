@@ -465,7 +465,7 @@ class DocstoreClient {
   protected function createDocstoreUrl($endpoint = '') {
     $docstore_url = $this->config->get('docstore_url');
     if (empty($docstore_url)) {
-      throw  new \Exception('The docstore URL is not defined');
+      throw new \Exception('The docstore URL is not defined');
     }
     if (!empty($endpoint)) {
       return rtrim($docstore_url, '/') . '/' . ltrim($endpoint, '/');
