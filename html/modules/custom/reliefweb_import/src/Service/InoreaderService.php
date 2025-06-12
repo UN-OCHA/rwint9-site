@@ -850,7 +850,7 @@ class InoreaderService {
           if (!is_array($value)) {
             $value = [$value];
           }
-          $tags[$key] = array_merge($tags[$key], $value);
+          $tags[$key] = array_unique(array_merge($tags[$key], $value));
         }
         else {
           $tags[$key] = $value;
