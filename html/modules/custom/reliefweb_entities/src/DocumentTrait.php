@@ -129,6 +129,12 @@ trait DocumentTrait {
    * {@inheritdoc}
    */
   public function getShareLink(): array {
+    // Skip if the document doesn't have an ID to avoid toUrl() to throw
+    // an exception...
+    if (empty($this->id())) {
+      return [];
+    }
+
     $url = $this->toUrl('canonical', [
       'absolute' => TRUE,
       'alias' => TRUE,
