@@ -307,55 +307,19 @@ class InoreaderService {
       return [];
     }
 
+    // Extract tags from the origin title.
     preg_match_all('/\[(.*?)\]/', $origin_title, $matches);
     $matches = $matches[1];
 
     // Parse everything so we can reference it easily.
-    $tags = [];
-    foreach ($matches as $match) {
-      $tag_parts = explode(':', $match);
-      $tag_key = reset($tag_parts);
-      if (isset($this->tagAliases[$tag_key])) {
-        $tag_key = $this->tagAliases[$tag_key];
-      }
-
-      array_shift($tag_parts);
-      $tag_value = implode(':', $tag_parts);
-
-      if (!isset($tags[$tag_key])) {
-        $tags[$tag_key] = $tag_value;
-      }
-      else {
-        if (!is_array($tags[$tag_key])) {
-          $tags[$tag_key] = [
-            $tags[$tag_key],
-          ];
-        }
-        $tags[$tag_key][] = $tag_value;
-      }
-    }
+    $tags = $this->parseTags($matches);
 
     // Get extra tags from state.
     $extra_tags = $this->state->get('reliefweb_importer_inoreader_extra_tags', []);
 
+    // Merge extra tags if they exist.
     if (!empty($extra_tags[$tags['source']])) {
-      foreach ($extra_tags[$tags['source']] as $key => $value) {
-        if (isset($this->tagAliases[$key])) {
-          $key = $this->tagAliases[$key];
-        }
-
-        if (isset($tags[$key])) {
-          if (!is_array($tags[$key])) {
-            $tags[$key] = [
-              $tags[$key],
-            ];
-          }
-          $tags[$key] = array_merge($tags[$key], $value);
-        }
-        else {
-          $tags[$key] = $value;
-        }
-      }
+      $tags = $this->mergeTags($tags, $extra_tags[$tags['source']]);
     }
 
     // Source is mandatory, so present.
@@ -794,26 +758,27 @@ class InoreaderService {
       }
 
       foreach ($tags['wrapper'] as $wrapper) {
-        $pdf = reliefweb_import_extract_pdf_file($page_url, $wrapper, $tags['puppeteer'], $tags['puppeteer2'] ?? '', $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay);
+        $pdf = reliefweb_import_extract_pdf_file($page_url, $wrapper, $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay);
         if ($pdf) {
           break;
         }
       }
     }
     else {
-      $pdf = reliefweb_import_extract_pdf_file($page_url, '', $tags['puppeteer'], $tags['puppeteer2'] ?? '', $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay);
+      $pdf = reliefweb_import_extract_pdf_file($page_url, '', $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay);
     }
 
     if (empty($pdf)) {
       return [];
     }
 
-    if (!$blob) {
-      if (!empty($pdf['pdf']) && strpos($pdf['pdf'], 'http') !== 0) {
-        $url_parts = parse_url($page_url);
-        $pdf['pdf'] = ($url_parts['scheme'] ?? 'https') . '://' . $url_parts['host'] . $pdf['pdf'];
-      }
+    // If the PDF is a relative URL, convert it to an absolute URL.
+    if (!empty($pdf['pdf']) && strpos($pdf['pdf'], 'http') !== 0) {
+      $url_parts = parse_url($page_url);
+      $pdf['pdf'] = ($url_parts['scheme'] ?? 'https') . '://' . $url_parts['host'] . $pdf['pdf'];
+    }
 
+    if (!$blob) {
       return $pdf;
     }
 
@@ -849,6 +814,107 @@ class InoreaderService {
       'upgrade-insecure-requests' => '1',
       'user-agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
     ];
+  }
+
+  /**
+   * Check if a tag is a multi-value tag.
+   */
+  protected function isMultiValueTag(string $tag): bool {
+    $multi_value_tags = [
+      'wrapper',
+      'url',
+      'puppeteer',
+    ];
+
+    return in_array($tag, $multi_value_tags);
+  }
+
+  /**
+   * Merge tags.
+   */
+  protected function mergeTags(array $tags, array $extra_tags): array {
+    foreach ($extra_tags as $key => $value) {
+      // Resolve tag aliases.
+      if (isset($this->tagAliases[$key])) {
+        $key = $this->tagAliases[$key];
+      }
+
+      if (isset($tags[$key])) {
+        // If the tag is a multi-value tag, ensure it is an array.
+        if ($this->isMultiValueTag($key)) {
+          if (!is_array($tags[$key])) {
+            $tags[$key] = [
+              $tags[$key],
+            ];
+          }
+          if (!is_array($value)) {
+            $value = [$value];
+          }
+          $tags[$key] = array_merge($tags[$key], $value);
+        }
+        else {
+          $tags[$key] = $value;
+        }
+      }
+      else {
+        $tags[$key] = $value;
+      }
+    }
+
+    $tags = $this->fixLegacyPuppeteer2Tag($tags);
+
+    return $tags;
+  }
+
+  /**
+   * Parse tags.
+   */
+  protected function parseTags(array $matches): array {
+    $tags = [];
+
+    foreach ($matches as $match) {
+      $tag_parts = explode(':', $match);
+      $tag_key = reset($tag_parts);
+
+      // Resolve tag aliases.
+      if (isset($this->tagAliases[$tag_key])) {
+        $tag_key = $this->tagAliases[$tag_key];
+      }
+
+      array_shift($tag_parts);
+      $tag_value = implode(':', $tag_parts);
+
+      if (!isset($tags[$tag_key])) {
+        $tags[$tag_key] = $tag_value;
+      }
+      else {
+        if (!is_array($tags[$tag_key])) {
+          $tags[$tag_key] = [
+            $tags[$tag_key],
+          ];
+        }
+        $tags[$tag_key][] = $tag_value;
+      }
+    }
+
+    $tags = $this->fixLegacyPuppeteer2Tag($tags);
+
+    return $tags;
+  }
+
+  /**
+   * Fix legacy puppeteer2 tag.
+   */
+  protected function fixLegacyPuppeteer2Tag(array $tags): array {
+    // Combine puppeteer and puppeteer2 tags.
+    if (isset($tags['puppeteer']) && isset($tags['puppeteer2'])) {
+      // Make sure both are strings.
+      if (is_string($tags['puppeteer']) && is_string($tags['puppeteer2'])) {
+        $tags['puppeteer'] .= '|' . $tags['puppeteer2'];
+      }
+    }
+
+    return $tags;
   }
 
 }

@@ -44,8 +44,8 @@ Imports tagged items from the [automation_production](https://www.inoreader.com/
 | follow | - | No | No | [follow:https://wedocs.unep.org] |
 | wrapper | w | No | Yes | [wrapper:div.content_sidebar] |
 | url | u | No | Yes | [url:/docs/] |
-| puppeteer | p | No | No | [puppeteer:ds-file-download-link a] |
-| puppeteer2 | p2 | No | No | [puppeteer:ds-file-download-link a] |
+| puppeteer | p | No | Yes | [puppeteer:ds-file-download-link a] |
+| ~~puppeteer2~~ | p2 | No | No | [puppeteer:ds-file-download-link a] |
 | puppeteer-attrib | pa | No | No | [puppeteer-attrib:href] |
 | puppeteer-blob | pb | No | No | [puppeteer-attrib:href] |
 | timeout | t | No | No | [timeout:30] |
@@ -107,6 +107,8 @@ This will filter possible links to PDF files to a certain pattern.
 #### `puppeteer` tag
 
 Used to select the html element containg the PDF link.
+
+If you need to click on 2 elements, you can use a pipe (`|`) to separate the selectors.
 
 #### `puppeteer-attribute` tag
 
