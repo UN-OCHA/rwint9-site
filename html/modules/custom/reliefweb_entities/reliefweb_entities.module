@@ -542,6 +542,12 @@ function reliefweb_entities_change_submit_message(array $form, FormStateInterfac
     return;
   }
 
+  // Skip if the document doesn't have an ID to avoid toUrl() to throw
+  // an exception..
+  if (empty($entity->id())) {
+    return;
+  }
+
   $messenger = \Drupal::messenger();
 
   // Get all current status messages.
