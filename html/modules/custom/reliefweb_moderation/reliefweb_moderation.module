@@ -266,6 +266,27 @@ function reliefweb_moderation_preprocess_page(&$variables) {
   }
 
   $variables['page']['content']['moderation-information'] = $element;
+
+  // If the document is unpublished, show a status indicate it.
+  if (!$entity->isPublishedModerationStatus()) {
+    $variables['page']['content']['moderation-unpublished'] = [
+      '#theme' => 'reliefweb_moderation_information',
+      '#status' => [
+        'value' => t('unpublished'),
+        'label' => t('Unpublished'),
+      ],
+      '#weight' => -99,
+      '#cache' => [
+        '#contexts' => [
+          'user.permissions',
+        ],
+        '#tags' => [
+          $entity->getEntityTypeId() . ':' . $entity->id(),
+        ],
+      ],
+      '#access' => $entity->access('view'),
+    ];
+  }
 }
 
 /**
