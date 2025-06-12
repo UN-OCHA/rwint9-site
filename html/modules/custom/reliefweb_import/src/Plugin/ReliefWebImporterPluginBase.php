@@ -1322,6 +1322,28 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
   }
 
   /**
+   * Find country by name.
+   */
+  protected function getCountryByName(string $name): ?int {
+    if (empty($name)) {
+      return 254;
+    }
+
+    static $country_mapping = [];
+    if (empty($country_mapping)) {
+      $countries = $this->entityTypeManager
+        ->getStorage('taxonomy_term')
+        ->loadByProperties(['vid' => 'country']);
+      foreach ($countries as $country) {
+        $country_mapping[strtolower($country->label())] = (int) $country->id();
+      }
+    }
+
+    $name = strtolower($name);
+    return $country_mapping[$name] ?? 254;
+  }
+
+  /**
    * Find source by name or short name.
    */
   protected function getSourceByName(string $name): ?int {

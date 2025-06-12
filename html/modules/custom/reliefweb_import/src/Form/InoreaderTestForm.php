@@ -55,7 +55,7 @@ class InoreaderTestForm extends FormBase {
       '#title' => $this->t('Inoreader Feed URL'),
       '#required' => TRUE,
       '#description' => $this->t('Enter the Inoreader feed URL.'),
-      '#maxlength' => 255,
+      '#maxlength' => 2550,
     ];
 
     $form['limit'] = [
@@ -172,7 +172,6 @@ class InoreaderTestForm extends FormBase {
     }
     catch (\Exception $e) {
       $logger->error($this->t('Error fetching data from Inoreader: @message', ['@message' => $e->getMessage()]));
-      $form_state->setErrorByName('inoreader_url', $this->t('Failed to fetch data from Inoreader.'));
       $form_state->set('inoreader_data', $e->getMessage());
       return;
     }

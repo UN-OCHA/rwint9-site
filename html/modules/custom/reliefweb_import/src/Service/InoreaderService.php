@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace Drupal\reliefweb_import\Service;
 
-use Drupal\Component\Utility\Environment;
 use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use GuzzleHttp\ClientInterface;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Uid\Uuid;
 
 /**
  * Service to interact with the Inoreader API.
@@ -806,166 +804,6 @@ class InoreaderService {
     $pdf['blob'] = base64_decode($pdf['blob']);
 
     return $pdf;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function generateUuid(string $string, ?string $namespace = NULL): string {
-    if (empty($string)) {
-      return '';
-    }
-    /* The default namespace is the UUID generated with
-     * Uuid::v5(Uuid::fromString(Uuid::NAMESPACE_DNS), 'reliefweb.int')->toRfc4122(); */
-    $namespace = $namespace ?? '8e27a998-c362-5d1f-b152-d474e1d36af2';
-    return Uuid::v5(Uuid::fromString($namespace), $string)->toRfc4122();
-  }
-
-  /**
-   * Get the checksum and filename of a remote file.
-   *
-   * @param string $url
-   *   Remote file URL.
-   * @param string $default_extension
-   *   Default file extension if none could be extracted from the file name.
-   * @param ?string $bytes
-   *   Raw bytes of the file content.
-   *
-   * @return array
-   *   Checksum, filename and raw bytes of the remote file.
-   */
-  protected function getRemoteFileInfo(string $url, string $default_extension = 'pdf', ?string $bytes = NULL): array {
-    $max_size = Environment::getUploadMaxSize();
-    $allowed_extensions = $this->getReportAttachmentAllowedExtensions();
-    if (empty($allowed_extensions)) {
-      throw new \Exception('No allowed file extensions.');
-    }
-
-    // Support raw bytes.
-    if (!empty($bytes)) {
-      // Validate the size.
-      if ($max_size > 0 && strlen($bytes) > $max_size) {
-        throw new \Exception('File is too large.');
-      }
-
-      // Sanitize the file name.
-      $extracted_filename = basename($url);
-      $filename = $this->sanitizeFileName($extracted_filename, $allowed_extensions, $default_extension);
-      if (empty($filename)) {
-        throw new \Exception(strtr('Invalid filename: @filename.', [
-          '@filename' => $extracted_filename,
-        ]));
-      }
-
-      // Compute the checksum.
-      $checksum = hash('sha256', $bytes);
-
-      return [
-        'checksum' => $checksum,
-        'filename' => $filename,
-        'bytes' => $bytes,
-      ];
-    }
-
-    $body = NULL;
-
-    // Remote file.
-    try {
-      $response = $this->httpClient->get($url, [
-        'stream' => TRUE,
-        // @todo retrieve that from the configuration.
-        'connect_timeout' => 30,
-        'timeout' => 600,
-        'headers' => $this->getHttpHeaders(),
-      ]);
-
-      if ($response->getStatusCode() == 406) {
-        // Stream not supported.
-        $response = $this->httpClient->get($url, [
-          'stream' => FALSE,
-          // @todo retrieve that from the configuration.
-          'connect_timeout' => 30,
-          'timeout' => 600,
-          'headers' => $this->getHttpHeaders(),
-        ]);
-      }
-
-      if ($response->getStatusCode() !== 200) {
-        throw new \Exception('Unexpected HTTP status: ' . $response->getStatusCode());
-      }
-
-      $content_length = $response->getHeaderLine('Content-Length');
-      if ($content_length !== '' && $max_size > 0 && ((int) $content_length) > $max_size) {
-        throw new \Exception('File is too large.');
-      }
-
-      // Try to get the filename from the Content Disposition header.
-      $content_disposition = $response->getHeaderLine('Content-Disposition') ?? '';
-      $extracted_filename = UrlHelper::getFilenameFromContentDisposition($content_disposition);
-
-      // Fallback to the URL if no filename is provided.
-      if (empty($extracted_filename)) {
-        $matches = [];
-        $clean_url = UrlHelper::stripParametersAndFragment($url);
-        if (preg_match('/\/([^\/]+)$/', $clean_url, $matches) === 1) {
-          $extracted_filename = rawurldecode($matches[1]);
-        }
-        else {
-          throw new \Exception('Unable to retrieve file name.');
-        }
-      }
-
-      // Sanitize the file name.
-      $filename = $this->sanitizeFileName($extracted_filename, $allowed_extensions, $default_extension);
-      if (empty($filename)) {
-        throw new \Exception(strtr('Invalid filename: @filename.', [
-          '@filename' => $extracted_filename,
-        ]));
-      }
-
-      $body = $response->getBody();
-
-      $content = '';
-      if ($max_size > 0) {
-        $size = 0;
-        while (!$body->eof()) {
-          $chunk = $body->read(1024);
-          $size += strlen($chunk);
-          if ($size > $max_size) {
-            $body->close();
-            throw new \Exception('File is too large.');
-          }
-          else {
-            $content .= $chunk;
-          }
-        }
-      }
-      else {
-        $content = $body->getContents();
-      }
-
-      $checksum = hash('sha256', $content);
-    }
-    catch (\Exception $exception) {
-      $this->getLogger()->notice(strtr('Unable to retrieve file information for @url: @exception', [
-        '@url' => $url,
-        '@exception' => $exception->getMessage(),
-      ]));
-      return [];
-    }
-    finally {
-      if (isset($body)) {
-        $body->close();
-      }
-    }
-
-    return [
-      'checksum' => $checksum,
-      'filename' => $filename,
-      // Return the raw bytes so that we don't have to download the file again
-      // in the post api content processor.
-      'bytes' => $content,
-    ];
   }
 
   /**
