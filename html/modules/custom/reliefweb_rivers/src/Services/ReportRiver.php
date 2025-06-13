@@ -188,10 +188,6 @@ class ReportRiver extends RiverServiceBase {
         'name' => $this->t('Language'),
         'type' => 'reference',
         'vocabulary' => 'language',
-        'exclude' => [
-          // Other.
-          31996,
-        ],
         'field' => 'language.id',
         'widget' => [
           'type' => 'options',

@@ -107,9 +107,6 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     // Remove Key document (2) option for feature field.
     FormHelper::removeOptions($form, 'field_feature', [2]);
 
-    // Remove Other language (31996) option for language field.
-    FormHelper::removeOptions($form, 'field_language', [31996]);
-
     // Remove Complex Emergency (41764) option for disaster type field.
     FormHelper::removeOptions($form, 'field_disaster_type', [41764]);
 
