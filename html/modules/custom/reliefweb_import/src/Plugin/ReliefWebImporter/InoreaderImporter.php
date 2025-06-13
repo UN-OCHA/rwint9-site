@@ -426,32 +426,55 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       unset($data['_tags']);
     }
 
-    $pdf = $data['file_data']['pdf'] ?? '';
-    $pdf_bytes = $data['file_data']['bytes'] ?? NULL;
-
-    $files = [];
-    $info = $this->getRemoteFileInfo($pdf, 'pdf', $pdf_bytes);
-    if (!empty($info)) {
-      $file_uuid = $this->generateUuid($pdf, $uuid);
-      $files[] = [
-        'url' => $pdf,
-        'uuid' => $file_uuid,
-      ] + $info;
+    if (isset($data['_screenshot'])) {
+      // Remove the screenshot from the data as they are not needed.
+      unset($data['_screenshot']);
     }
 
-    unset($data['file_data']);
+    $has_pdf = $data['_has_pdf'] ?? FALSE;
+    unset($data['_has_pdf']);
 
-    $data += array_filter([
-      'file' => array_values($files),
-    ]);
+    if ($has_pdf) {
+      $pdf = $data['file_data']['pdf'] ?? '';
+      $pdf_bytes = $data['file_data']['bytes'] ?? NULL;
 
-    if (empty($data['file'])) {
-      $this->logger->info(strtr('No files found for Inoreader @id, skipping.', [
+      $files = [];
+      $info = $this->getRemoteFileInfo($pdf, 'pdf', $pdf_bytes);
+      if (!empty($info)) {
+        $file_uuid = $this->generateUuid($pdf, $uuid);
+        $files[] = [
+          'url' => $pdf,
+          'uuid' => $file_uuid,
+        ] + $info;
+      }
+
+      unset($data['file_data']);
+
+      $data += array_filter([
+        'file' => array_values($files),
+      ]);
+
+      if (empty($data['file'])) {
+        $this->logger->info(strtr('No files found for Inoreader @id, skipping.', [
+          '@id' => $id,
+        ]));
+
+        return [];
+      }
+
+      return $data;
+    }
+
+    // Make sure body is present and not empty.
+    if (empty($data['body'])) {
+      $this->logger->info(strtr('No body or PDF found for Inoreader @id, skipping.', [
         '@id' => $id,
       ]));
 
       return [];
     }
+
+    unset($data['file_data']);
 
     return $data;
   }

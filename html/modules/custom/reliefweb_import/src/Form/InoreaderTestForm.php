@@ -93,7 +93,14 @@ class InoreaderTestForm extends FormBase {
         ],
       ];
 
+      $screenshots = [];
       $records = $form_state->get('inoreader_records') ?? [];
+      foreach ($records as &$record) {
+        if (isset($record['report']['_screenshot'])) {
+          $screenshots[] = '<img src="data:image/png;base64, ' . $record['report']['_screenshot'] . '" />';
+          unset($record['report']['_screenshot']);
+        }
+      }
       $form['records'] = [
         '#type' => 'details',
         '#title' => $this->t('Parsed output'),
@@ -102,6 +109,18 @@ class InoreaderTestForm extends FormBase {
           '#markup' => '<pre>' . htmlspecialchars(print_r($records, TRUE)) . '</pre>',
         ],
       ];
+
+      $form['screenshots'] = [
+        '#type' => 'container',
+        '#title' => $this->t('Screenshots'),
+      ];
+
+      foreach ($screenshots as $screenshot) {
+        $form['screenshots']['screenshot'][] = [
+          '#type' => 'inline_template',
+          '#template' => $screenshot,
+        ];
+      }
     }
 
     return $form;
@@ -155,12 +174,21 @@ class InoreaderTestForm extends FormBase {
         }
 
         $record['logs'] = $logger->getAll();
+
         $used_tags = [];
         if (isset($record['_tags'])) {
           $used_tags = $record['_tags'];
           unset($record['_tags']);
         }
+
+        $has_pdf = FALSE;
+        if (isset($record['_has_pdf'])) {
+          $has_pdf = $record['_has_pdf'];
+          unset($record['_has_pdf']);
+        }
+
         $records[] = [
+          'has_pdf' => $has_pdf,
           'tags' => $used_tags,
           'report' => $record,
         ];

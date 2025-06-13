@@ -97,8 +97,27 @@ class ReliefWebImporterInoreaderForm extends FormBase {
       else {
         // Make sure all keys are numeric.
         foreach ($extra_tags as $key => $value) {
-          if (!is_numeric($key)) {
-            $form_state->setErrorByName('extra_tags', $this->t('Invalid YAML format: @message', ['@message' => 'All keys must be numeric.']));
+          $check = $key;
+          if (!is_int($key) && strpos($key, '-') !== FALSE) {
+            $parts = explode('-', $key);
+            if (count($parts) != 2) {
+              $form_state->setErrorByName('extra_tags', $this->t('Invalid YAML format: @message (@key)', [
+                '@message' => 'Key can only contain 1 dash.',
+                '@key' => $key,
+              ]));
+
+              // Stop the loop.
+              return;
+            }
+
+            $check = reset($parts);
+          }
+
+          if (!is_numeric($check)) {
+            $form_state->setErrorByName('extra_tags', $this->t('Invalid YAML format: @message (@key)', [
+              '@message' => 'All keys must be numeric.',
+              '@key' => $key,
+            ]));
 
             // Stop the loop.
             return;
