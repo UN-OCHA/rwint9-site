@@ -449,7 +449,7 @@ function reliefweb_ai_post_classification_body_update(
     $source_lines = implode("\n", $data['lines'] ?? []);
   }
   catch (\Exception $exception) {
-    $this->getLogger()->error(strtr('Error while trying to find the matching source lines: @error', [
+    \Drupal::logger('reliefweb_ai')->error(strtr('Error while trying to find the matching source lines: @error', [
       '@error' => strtr($exception->getMessage(), "\n", ' '),
     ]));
     return NULL;
