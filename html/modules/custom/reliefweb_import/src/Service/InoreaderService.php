@@ -813,6 +813,7 @@ class InoreaderService {
       'sec-fetch-user' => '?1',
       'upgrade-insecure-requests' => '1',
       'user-agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
+      'X-ReliefWeb-Import' => '2',
     ];
   }
 
