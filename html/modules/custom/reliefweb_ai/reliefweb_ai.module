@@ -319,13 +319,12 @@ function reliefweb_ai_post_classification_language_update(
   $languages = \Drupal::database()
     ->select('taxonomy_term__field_language_code', 't')
     ->fields('t', ['field_language_code_value', 'entity_id'])
-    ->condition('t.field_language_code_value', 'ot', '<>')
     ->execute()
     ?->fetchAllKeyed() ?? [];
   $languages = array_change_key_case($languages, \CASE_LOWER);
 
-  // Default to English if there is no matching term for the language code.
-  $language_term_id = $languages[$language] ?? $languages['en'] ?? NULL;
+  // Default to Other if there is no matching term for the language code.
+  $language_term_id = $languages[$language] ?? $languages['ot'] ?? NULL;
 
   // Update the entity with the detected language.
   if ($language_term_id != $entity->field_language?->target_id) {
