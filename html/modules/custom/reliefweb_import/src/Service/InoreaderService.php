@@ -282,6 +282,7 @@ class InoreaderService {
     $id = $document['id'];
     $url = $document['canonical'][0]['href'];
     $pdf_bytes = NULL;
+    $screenshot = NULL;
     $body = '';
 
     // Retrieve the title and clean it.
@@ -423,6 +424,7 @@ class InoreaderService {
             $puppeteer_result = $this->tryToExtractPdfUsingPuppeteer($page_url, $tags, $fetch_timeout);
             $pdf = $puppeteer_result['pdf'] ?? '';
             $pdf_bytes = $puppeteer_result['blob'] ?? NULL;
+            $screenshot = $puppeteer_result['screenshot'] ?? NULL;
             break;
 
           case 'content':
@@ -501,6 +503,7 @@ class InoreaderService {
       ],
       '_tags' => $tags,
       '_has_pdf' => $has_pdf,
+      '_screenshot' => $screenshot,
     ];
 
     return $data;

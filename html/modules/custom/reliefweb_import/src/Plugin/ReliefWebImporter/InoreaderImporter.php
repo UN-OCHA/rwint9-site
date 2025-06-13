@@ -426,6 +426,11 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       unset($data['_tags']);
     }
 
+    if (isset($data['_screenshot'])) {
+      // Remove the screenshot from the data as they are not needed.
+      unset($data['_screenshot']);
+    }
+
     $has_pdf = $data['_has_pdf'] ?? FALSE;
     unset($data['_has_pdf']);
 
