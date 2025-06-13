@@ -195,15 +195,17 @@ function reliefweb_import_get_entity_importer(EntityInterface $entity): ?ReliefW
 /**
  * Use Puppeteer to extract PDF file from the page.
  */
-function reliefweb_import_extract_pdf_file(string $url, string $selector, string $pdf_element, string $attribute = 'href', int $timeout = 15, bool $blob = FALSE, int $delay = 3000): array {
+function reliefweb_import_extract_pdf_file(string $url, string $selector, string $pdf_element, string $pdf_element2, string $attribute = 'href', int $timeout = 15, bool $blob = FALSE, int $delay = 3000): array {
   $extract_url = \Drupal::config('reliefweb_import.settings')->get('extract_url');
 
   $query = [
     'service' => 'reliefweb_import',
     'url' => $url,
     'element' => $pdf_element,
+    'element2' => $pdf_element2,
     'attribute' => $attribute,
     'delay' => $delay,
+    'header' => 'X-ReliefWeb-Import=1',
   ];
 
   if (!empty($selector)) {

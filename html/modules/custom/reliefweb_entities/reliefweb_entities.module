@@ -423,6 +423,18 @@ function reliefweb_entities_theme() {
         'new_source' => NULL,
       ],
     ],
+    'reliefweb_entities_entity_share_link' => [
+      'variables' => [
+        // Container attributes.
+        'attributes' => NULL,
+        // Label.
+        'label' => NULL,
+        // Entity URL.
+        'url' => NULL,
+        // Button attributes.
+        'button_attributes' => NULL,
+      ],
+    ],
   ];
 }
 
@@ -478,6 +490,12 @@ function reliefweb_entities_tokens($type, $tokens, array $data, array $options, 
  */
 function reliefweb_entities_form_node_form_alter(array &$form, FormStateInterface $form_state) {
   EntityFormAlterServiceBase::alterEntityForm($form, $form_state);
+
+  foreach (Element::children($form['actions']) as $key) {
+    if (isset($form['actions'][$key]['#submit'])) {
+      $form['actions'][$key]['#submit'][] = 'reliefweb_entities_change_submit_message';
+    }
+  }
 }
 
 /**
@@ -506,6 +524,119 @@ function reliefweb_entities_form_taxonomy_term_form_alter(array &$form, FormStat
   // Add an entity builder callback that will ensure the proper revision
   // user id and timestamp are set.
   $form['#entity_builders'][] = 'reliefweb_entities_term_form_entity_builder';
+}
+
+/**
+ * Change the message when submitting an entity.
+ *
+ * @param array $form
+ *   The form.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The form state.
+ */
+function reliefweb_entities_change_submit_message(array $form, FormStateInterface $form_state): void {
+  $entity = $form_state->getFormObject()->getEntity();
+
+  // Only for nodes currently.
+  if ($entity->getEntityTypeId() !== 'node') {
+    return;
+  }
+
+  // Skip if the document doesn't have an ID to avoid toUrl() to throw
+  // an exception..
+  if (empty($entity->id())) {
+    return;
+  }
+
+  $messenger = \Drupal::messenger();
+
+  // Get all current status messages.
+  $messages = $messenger->messagesByType('status');
+  if (empty($messages)) {
+    return;
+  }
+
+  $message_args = [
+    '@type' => node_get_type_label($entity),
+    '%title' => $entity->toLink()->toString(),
+  ];
+
+  // Existing possible creation/update message.
+  // @see \Drupal\node\NodeForm::save()
+  $created_message = (string) t('@type %title has been created.', $message_args);
+  $updated_message = (string) t('@type %title has been updated.', $message_args);
+
+  // Search for the update message and replace it.
+  $found_update_message = FALSE;
+  foreach ($messages as $key => $message) {
+    $message = (string) $message;
+    if ($message === $created_message || $message === $updated_message) {
+      // Get the publication status from the current and previous revisions.
+      $statuses = \Drupal::database()
+        ->select('node_field_revision', 'nfr')
+        ->fields('nfr', ['status'])
+        ->condition('nfr.nid', $entity->id())
+        ->orderBy('nfr.vid', 'DESC')
+        ->range(0, 2)
+        ->execute()
+        ?->fetchCol() ?? [];
+
+      // Convert to integers so we can properly match the values.
+      $statuses = array_map(fn($status) => (int) $status, $statuses);
+
+      // Replace the message based on the publication status.
+      $status_message = match($statuses) {
+        [0] => t('@type %title has been created but is not yet published.', $message_args),
+        [1] => t('@type %title has been created and published.', $message_args),
+        [1, 0] => t('@type %title has been published.', $message_args),
+        [0, 1] => t('@type %title has been unpublished.', $message_args),
+        default => t('@type %title has been updated.', $message_args),
+      };
+
+      // Show a button to copy the link when the document is published.
+      if (!empty($statuses[0])) {
+        // Create the message with copy link button.
+        $entity_url = $entity->toUrl('canonical', [
+          'absolute' => TRUE,
+          'alias' => TRUE,
+        ])->toString();
+
+        $message_markup = [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['status-message-with-button']],
+          'message' => [
+            '#markup' => $status_message,
+          ],
+          'copy_button' => [
+            '#type' => 'button',
+            '#value' => t('Share link'),
+            '#attributes' => [
+              'class' => ['copy-link-button'],
+              'data-copy-url' => $entity_url,
+            ],
+          ],
+        ];
+
+        $messages[$key] = \Drupal::service('renderer')->render($message_markup);
+      }
+      else {
+        $messages[$key] = $status_message;
+      }
+
+      $found_update_message = TRUE;
+      break;
+    }
+  }
+
+  if ($found_update_message) {
+    // Clear all status messages.
+    $messenger->deleteByType('status');
+
+    // Add the updated messages.
+    foreach ($messages as $message) {
+      $messenger->addStatus($message);
+    }
+  }
 }
 
 /**
