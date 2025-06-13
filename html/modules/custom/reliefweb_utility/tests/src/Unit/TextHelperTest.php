@@ -163,4 +163,114 @@ class TextHelperTest extends UnitTestCase {
     $this->assertEquals(TextHelper::getTextDiff($from_text, $to_text), $expected);
   }
 
+  /**
+   * Test get text similarity.
+   *
+   * @covers \Drupal\reliefweb_utility\Helpers\TextHelper::getTextSimilarity
+   */
+  public function testGetTextSimilarity() {
+    // Test identical strings.
+    $this->assertEquals(100.0, TextHelper::getTextSimilarity('hello', 'hello'));
+
+    // Test empty strings.
+    $this->assertEquals(100.0, TextHelper::getTextSimilarity('', ''));
+    $this->assertEquals(0.0, TextHelper::getTextSimilarity('hello', ''));
+    $this->assertEquals(0.0, TextHelper::getTextSimilarity('', 'hello'));
+
+    // Test completely different strings.
+    $this->assertEquals(0.0, TextHelper::getTextSimilarity('abc', 'xyz'));
+
+    // Test case sensitivity.
+    $this->assertEquals(100.0, TextHelper::getTextSimilarity('Hello', 'hello', FALSE));
+    $this->assertEquals(80.0, TextHelper::getTextSimilarity('Hello', 'hello', TRUE));
+
+    // Test partial similarity.
+    $similarity = TextHelper::getTextSimilarity('hello world', 'hello world!');
+    $this->assertGreaterThan(90.0, $similarity);
+    $this->assertLessThan(100.0, $similarity);
+
+    // Test Unicode characters.
+    $this->assertEquals(100.0, TextHelper::getTextSimilarity('café', 'café'));
+    $similarity = TextHelper::getTextSimilarity('café', 'cafe');
+    $this->assertGreaterThan(70.0, $similarity);
+    $this->assertLessThan(80.0, $similarity);
+
+    // Test whitespace normalization.
+    $this->assertEquals(100.0, TextHelper::getTextSimilarity('hello  world', 'hello world', FALSE, TRUE));
+    $similarity = TextHelper::getTextSimilarity('hello  world', 'hello world', FALSE, FALSE);
+    $this->assertGreaterThan(90.0, $similarity);
+    $this->assertLessThan(100.0, $similarity);
+
+    // Test complex Unicode text.
+    $text1 = '自然環境保護';
+    $text2 = '自然環境保全';
+    $similarity = TextHelper::getTextSimilarity($text1, $text2);
+    $this->assertGreaterThan(80.0, $similarity);
+    $this->assertLessThan(100.0, $similarity);
+
+    // Test with special characters and whitespace.
+    $text1 = "Hello\n\tWorld!";
+    $text2 = "Hello World!";
+    $similarity = TextHelper::getTextSimilarity($text1, $text2, FALSE, TRUE);
+    $this->assertEquals(100.0, $similarity);
+
+    // Test longer texts.
+    $text1 = 'The quick brown fox jumps over the lazy dog';
+    $text2 = 'The quick brown fox jumps over a lazy dog';
+    $similarity = TextHelper::getTextSimilarity($text1, $text2);
+    $this->assertGreaterThan(90.0, $similarity);
+    $this->assertLessThan(100.0, $similarity);
+  }
+
+  /**
+   * Test calculate Unicode Levenshtein distance.
+   *
+   * @covers \Drupal\reliefweb_utility\Helpers\TextHelper::calculateUnicodeLevenshteinDistance
+   */
+  public function testCalculateUnicodeLevenshteinDistance() {
+    // Use reflection to access the protected method.
+    $reflection = new \ReflectionClass(TextHelper::class);
+    $method = $reflection->getMethod('calculateUnicodeLevenshteinDistance');
+    $method->setAccessible(TRUE);
+
+    // Test identical strings.
+    $this->assertEquals(0, $method->invoke(NULL, 'hello', 'hello'));
+
+    // Test empty strings.
+    $this->assertEquals(0, $method->invoke(NULL, '', ''));
+    $this->assertEquals(5, $method->invoke(NULL, 'hello', ''));
+    $this->assertEquals(5, $method->invoke(NULL, '', 'hello'));
+
+    // Test single character difference.
+    $this->assertEquals(1, $method->invoke(NULL, 'hello', 'hallo'));
+
+    // Test insertion.
+    $this->assertEquals(1, $method->invoke(NULL, 'hello', 'helloo'));
+
+    // Test deletion.
+    $this->assertEquals(1, $method->invoke(NULL, 'hello', 'hell'));
+
+    // Test substitution.
+    $this->assertEquals(1, $method->invoke(NULL, 'hello', 'hxllo'));
+
+    // Test Unicode characters.
+    $this->assertEquals(0, $method->invoke(NULL, 'café', 'café'));
+    $this->assertEquals(1, $method->invoke(NULL, 'café', 'cafe'));
+
+    // Test complex Unicode.
+    $this->assertEquals(1, $method->invoke(NULL, '自然環境', '自然環保'));
+
+    // Test multiple operations.
+    $this->assertEquals(3, $method->invoke(NULL, 'kitten', 'sitting'));
+
+    // Test completely different strings.
+    $this->assertEquals(3, $method->invoke(NULL, 'abc', 'xyz'));
+
+    // Test case sensitivity (method should be case sensitive).
+    $this->assertEquals(1, $method->invoke(NULL, 'Hello', 'hello'));
+
+    // Test with special Unicode characters (`​` between test and space).
+    $this->assertEquals(1, $method->invoke(NULL, 'test​space', 'testspace'));
+  }
+
 }
