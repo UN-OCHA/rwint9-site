@@ -177,12 +177,14 @@ class ReportExtended extends Report {
 
     $records = $this->getImportRecords($ids);
     foreach ($items as &$item) {
-      $item_id = $item['id'];
-      if (isset($records[$item_id])) {
-        $item['importer'] = [
-          'name' => $records[$item_id]['importer'],
-          'source' => $records[$item_id]['source'] ?? '',
-        ];
+      if (isset($item['id'])) {
+        $item_id = $item['id'];
+        if (isset($records[$item_id])) {
+          $item['importer'] = [
+            'name' => $records[$item_id]['importer'] ?? '',
+            'source' => $records[$item_id]['source'] ?? '',
+          ];
+        }
       }
     }
 
@@ -200,6 +202,7 @@ class ReportExtended extends Report {
     $query->addField('r', 'importer', 'importer');
     $query->addField('r', 'source', 'source');
     $query->condition('r.entity_id', $ids, 'IN');
+    $query->condition('r.entity_bundle', 'report', '=');
     $records = $query->execute()?->fetchAllAssoc('entity_id', \PDO::FETCH_ASSOC) ?? [];
 
     // Deserialize the extra field.
