@@ -239,6 +239,9 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
     $processed = 0;
     $import_records = [];
     foreach ($documents as $document) {
+      $source_title = trim(substr($document['origin']['title'] ?? '', 0, strpos($document['origin']['title'] ?? '', '[source:') ?: NULL));
+      $source_title = $this->sanitizeText($source_title);
+
       $import_record = [
         'importer' => $this->getPluginId(),
         'provider_uuid' => $provider_uuid,
@@ -247,7 +250,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         'status' => 'pending',
         'message' => '',
         'attempts' => 0,
-        'source' => trim(substr($document['origin']['title'] ?? '', 0, strpos($document['origin']['title'] ?? '', '[source:') ?: NULL)),
+        'source' => $source_title,
         'extra' => [
           'inoreader' => [
             'feed_name' => $document['origin']['title'] ?? '',
