@@ -158,6 +158,7 @@ class AnyTermSelection extends DefaultSelection {
     $label_field = $this->getEntityTypeLabelField($entity_type_id);
     $bundle_field = $this->getEntityTypeBundleField($entity_type_id);
     $langcode_field = $this->getEntityTypeLangcodeField($entity_type_id);
+    $weight_field = 'weight';
 
     // Get the current and default language codes.
     $current_langcode = $this->languageManager->getCurrentLanguage()->getId();
@@ -177,7 +178,11 @@ class AnyTermSelection extends DefaultSelection {
     $query->condition($table . '.' . $langcode_field, $langcodes, 'IN');
 
     // Add the sort option.
-    $sortable_fields = [$id_field => TRUE, $label_field => TRUE];
+    $sortable_fields = [
+      $id_field => TRUE,
+      $label_field => TRUE,
+      $weight_field => TRUE,
+    ];
     if (isset($sortable_fields[$sort['field']])) {
       $query->orderBy($sort['field'], $sort['direction']);
     }

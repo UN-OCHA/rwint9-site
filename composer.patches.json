@@ -36,6 +36,12 @@
         },
         "unocha/common_design": {
             "https://humanitarian.atlassian.net/browse/CD-519": "PATCHES/common_design--default-logo-remove.patch"
+        },
+        "drupal/social_auth": {
+          "Return either string or null": "https://git.drupalcode.org/project/social_auth/-/merge_requests/34.diff"
+        },
+        "drupal/social_auth_linkedin": {
+          "https://www.drupal.org/project/social_auth_linkedin/issues/3399739": "https://git.drupalcode.org/project/social_auth_linkedin/-/merge_requests/4.diff"
         }
     }
 }
