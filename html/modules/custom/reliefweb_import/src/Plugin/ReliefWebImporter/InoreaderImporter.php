@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Drupal\reliefweb_import\Plugin\ReliefWebImporter;
 
 use Drupal\Component\Serialization\Json;
-use Drupal\Component\Transliteration\PhpTransliteration;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -237,13 +236,11 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
     $max_import_attempts = $this->getPluginSetting('max_import_attempts', 3, FALSE);
 
     // Prepare the documents and submit them.
-    $trans = new PhpTransliteration();
     $processed = 0;
     $import_records = [];
     foreach ($documents as $document) {
       $source_title = trim(substr($document['origin']['title'] ?? '', 0, strpos($document['origin']['title'] ?? '', '[source:') ?: NULL));
       $source_title = $this->sanitizeText($source_title);
-      $source_title = $trans->transliterate($source_title);
 
       $import_record = [
         'importer' => $this->getPluginId(),
