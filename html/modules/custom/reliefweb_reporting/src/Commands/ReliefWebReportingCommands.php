@@ -701,6 +701,8 @@ class ReliefWebReportingCommands extends DrushCommands {
       'user.id' => 'user.id',
       'user.name' => 'user.name',
       'user.role' => 'user.role',
+      'importer.name' => 'importer.name',
+      'importer.source' => 'importer.source',
     ];
 
     // Replace the default properties.

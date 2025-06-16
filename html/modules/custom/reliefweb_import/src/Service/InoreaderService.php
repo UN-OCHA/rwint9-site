@@ -7,7 +7,9 @@ namespace Drupal\reliefweb_import\Service;
 use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
+use Drupal\reliefweb_utility\HtmlToMarkdown\Converters\TextConverter;
 use GuzzleHttp\ClientInterface;
+use League\HTMLToMarkdown\HtmlConverter;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -247,8 +249,8 @@ class InoreaderService {
       throw $exception;
     }
 
-    if (!empty($settings['local_file_save'])) {
-      $local_file_path = $settings['local_file_path'] ?? '/var/www/inoreader.json';
+    if (!empty($this->settings['local_file_save'])) {
+      $local_file_path = $this->settings['local_file_path'] ?? '/var/www/inoreader.json';
       $f = fopen($local_file_path, 'w');
       if ($f) {
         fwrite($f, json_encode($documents, \JSON_PRETTY_PRINT));
@@ -280,6 +282,8 @@ class InoreaderService {
     $id = $document['id'];
     $url = $document['canonical'][0]['href'];
     $pdf_bytes = NULL;
+    $screenshot = NULL;
+    $body = '';
 
     // Retrieve the title and clean it.
     $title = $this->sanitizeText(html_entity_decode($document['title'] ?? ''));
@@ -290,9 +294,6 @@ class InoreaderService {
     // Retrieve the publication date.
     $published = $document['published'] ?? time();
     $published = DateHelper::format($published, 'custom', 'c');
-
-    // Retrieve the description.
-    $body = $this->sanitizeText(html_entity_decode($document['summary']['content'] ?? ''), TRUE);
 
     $origin_title = trim($this->sanitizeText($document['origin']['title'] ?? ''));
     $sources = [];
@@ -307,60 +308,29 @@ class InoreaderService {
       return [];
     }
 
+    // Extract tags from the origin title.
     preg_match_all('/\[(.*?)\]/', $origin_title, $matches);
     $matches = $matches[1];
 
     // Parse everything so we can reference it easily.
-    $tags = [];
-    foreach ($matches as $match) {
-      $tag_parts = explode(':', $match);
-      $tag_key = reset($tag_parts);
-      if (isset($this->tagAliases[$tag_key])) {
-        $tag_key = $this->tagAliases[$tag_key];
-      }
-
-      array_shift($tag_parts);
-      $tag_value = implode(':', $tag_parts);
-
-      if (!isset($tags[$tag_key])) {
-        $tags[$tag_key] = $tag_value;
-      }
-      else {
-        if (!is_array($tags[$tag_key])) {
-          $tags[$tag_key] = [
-            $tags[$tag_key],
-          ];
-        }
-        $tags[$tag_key][] = $tag_value;
-      }
-    }
+    $tags = $this->parseTags($matches);
 
     // Get extra tags from state.
     $extra_tags = $this->state->get('reliefweb_importer_inoreader_extra_tags', []);
 
+    // Merge extra tags if they exist.
     if (!empty($extra_tags[$tags['source']])) {
-      foreach ($extra_tags[$tags['source']] as $key => $value) {
-        if (isset($this->tagAliases[$key])) {
-          $key = $this->tagAliases[$key];
-        }
-
-        if (isset($tags[$key])) {
-          if (!is_array($tags[$key])) {
-            $tags[$key] = [
-              $tags[$key],
-            ];
-          }
-          $tags[$key] = array_merge($tags[$key], $value);
-        }
-        else {
-          $tags[$key] = $value;
-        }
-      }
+      $tags = $this->mergeTags($tags, $extra_tags[$tags['source']]);
     }
 
     // Source is mandatory, so present.
+    $source_id = $tags['source'] ?? '';
+    if (strpos($tags['source'], '-') !== FALSE) {
+      [$source_id] = explode('-', $tags['source']);
+    }
+
     $sources = [
-      (int) $tags['source'],
+      (int) $source_id,
     ];
 
     // Check for custom fetch timeout.
@@ -454,6 +424,11 @@ class InoreaderService {
             $puppeteer_result = $this->tryToExtractPdfUsingPuppeteer($page_url, $tags, $fetch_timeout);
             $pdf = $puppeteer_result['pdf'] ?? '';
             $pdf_bytes = $puppeteer_result['blob'] ?? NULL;
+            $screenshot = $puppeteer_result['screenshot'] ?? NULL;
+            break;
+
+          case 'content':
+            $body = $this->cleanBodyText($document['summary']['content'] ?? '');
             break;
 
         }
@@ -490,16 +465,10 @@ class InoreaderService {
       return [];
     }
 
-    if (empty($pdf)) {
-      $this->logger->info(strtr('No PDF found for Inoreader @id, skipping.', [
-        '@id' => $id,
-      ]));
-
-      return [];
-    }
+    $has_pdf = !empty($pdf);
 
     // Force PDF to use HTTPS.
-    if (strpos($pdf, 'http://') === 0) {
+    if ($has_pdf && strpos($pdf, 'http://') === 0) {
       $pdf = str_replace('http://', 'https://', $pdf);
     }
 
@@ -533,6 +502,8 @@ class InoreaderService {
         'bytes' => $pdf_bytes,
       ],
       '_tags' => $tags,
+      '_has_pdf' => $has_pdf,
+      '_screenshot' => $screenshot,
     ];
 
     return $data;
@@ -553,6 +524,26 @@ class InoreaderService {
    */
   protected function sanitizeText(string $text, bool $preserve_newline = FALSE): string {
     return TextHelper::sanitizeText($text, $preserve_newline);
+  }
+
+  /**
+   * Clean body text.
+   */
+  protected function cleanBodyText(string $text): string {
+    // Decode it first.
+    $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+    // Convert to markdown.
+    $converter = new HtmlConverter();
+    $converter->getConfig()->setOption('strip_tags', TRUE);
+    $converter->getConfig()->setOption('use_autolinks', FALSE);
+    $converter->getConfig()->setOption('header_style', 'atx');
+    $converter->getConfig()->setOption('strip_placeholder_links', TRUE);
+
+    // Use our own text converter to avoid unwanted character escaping.
+    $converter->getEnvironment()->addConverter(new TextConverter());
+
+    return trim($converter->convert($text));
   }
 
   /**
@@ -770,26 +761,27 @@ class InoreaderService {
       }
 
       foreach ($tags['wrapper'] as $wrapper) {
-        $pdf = reliefweb_import_extract_pdf_file($page_url, $wrapper, $tags['puppeteer'], $tags['puppeteer2'] ?? '', $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay);
+        $pdf = reliefweb_import_extract_pdf_file($page_url, $wrapper, $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay);
         if ($pdf) {
           break;
         }
       }
     }
     else {
-      $pdf = reliefweb_import_extract_pdf_file($page_url, '', $tags['puppeteer'], $tags['puppeteer2'] ?? '', $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay);
+      $pdf = reliefweb_import_extract_pdf_file($page_url, '', $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay);
     }
 
     if (empty($pdf)) {
       return [];
     }
 
-    if (!$blob) {
-      if (!empty($pdf['pdf']) && strpos($pdf['pdf'], 'http') !== 0) {
-        $url_parts = parse_url($page_url);
-        $pdf['pdf'] = ($url_parts['scheme'] ?? 'https') . '://' . $url_parts['host'] . $pdf['pdf'];
-      }
+    // If the PDF is a relative URL, convert it to an absolute URL.
+    if (!empty($pdf['pdf']) && strpos($pdf['pdf'], 'http') !== 0) {
+      $url_parts = parse_url($page_url);
+      $pdf['pdf'] = ($url_parts['scheme'] ?? 'https') . '://' . $url_parts['host'] . $pdf['pdf'];
+    }
 
+    if (!$blob) {
       return $pdf;
     }
 
@@ -824,7 +816,109 @@ class InoreaderService {
       'sec-fetch-user' => '?1',
       'upgrade-insecure-requests' => '1',
       'user-agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
+      'X-ReliefWeb-Import' => '2',
     ];
+  }
+
+  /**
+   * Check if a tag is a multi-value tag.
+   */
+  protected function isMultiValueTag(string $tag): bool {
+    $multi_value_tags = [
+      'wrapper',
+      'url',
+      'puppeteer',
+    ];
+
+    return in_array($tag, $multi_value_tags);
+  }
+
+  /**
+   * Merge tags.
+   */
+  protected function mergeTags(array $tags, array $extra_tags): array {
+    foreach ($extra_tags as $key => $value) {
+      // Resolve tag aliases.
+      if (isset($this->tagAliases[$key])) {
+        $key = $this->tagAliases[$key];
+      }
+
+      if (isset($tags[$key])) {
+        // If the tag is a multi-value tag, ensure it is an array.
+        if ($this->isMultiValueTag($key)) {
+          if (!is_array($tags[$key])) {
+            $tags[$key] = [
+              $tags[$key],
+            ];
+          }
+          if (!is_array($value)) {
+            $value = [$value];
+          }
+          $tags[$key] = array_unique(array_merge($tags[$key], $value));
+        }
+        else {
+          $tags[$key] = $value;
+        }
+      }
+      else {
+        $tags[$key] = $value;
+      }
+    }
+
+    $tags = $this->fixLegacyPuppeteer2Tag($tags);
+
+    return $tags;
+  }
+
+  /**
+   * Parse tags.
+   */
+  protected function parseTags(array $matches): array {
+    $tags = [];
+
+    foreach ($matches as $match) {
+      $tag_parts = explode(':', $match);
+      $tag_key = reset($tag_parts);
+
+      // Resolve tag aliases.
+      if (isset($this->tagAliases[$tag_key])) {
+        $tag_key = $this->tagAliases[$tag_key];
+      }
+
+      array_shift($tag_parts);
+      $tag_value = implode(':', $tag_parts);
+
+      if (!isset($tags[$tag_key])) {
+        $tags[$tag_key] = $tag_value;
+      }
+      else {
+        if (!is_array($tags[$tag_key])) {
+          $tags[$tag_key] = [
+            $tags[$tag_key],
+          ];
+        }
+        $tags[$tag_key][] = $tag_value;
+      }
+    }
+
+    $tags = $this->fixLegacyPuppeteer2Tag($tags);
+
+    return $tags;
+  }
+
+  /**
+   * Fix legacy puppeteer2 tag.
+   */
+  protected function fixLegacyPuppeteer2Tag(array $tags): array {
+    // Combine puppeteer and puppeteer2 tags.
+    if (isset($tags['puppeteer']) && isset($tags['puppeteer2'])) {
+      // Make sure both are strings.
+      if (is_string($tags['puppeteer']) && is_string($tags['puppeteer2'])) {
+        $tags['puppeteer'] .= '|' . $tags['puppeteer2'];
+      }
+    }
+
+    return $tags;
   }
 
 }
