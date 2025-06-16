@@ -234,11 +234,20 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
     // Max import attempts.
     $max_import_attempts = $this->getPluginSetting('max_import_attempts', 3, FALSE);
-
     // Prepare the documents and submit them.
     $processed = 0;
     $import_records = [];
     foreach ($documents as $document) {
+      $source_title = trim(substr($document['origin']['title'] ?? '', 0, strpos($document['origin']['title'] ?? '', '[source:') ?: NULL));
+      $source_title = $this->sanitizeText($source_title);
+
+      // Ex: feed/webfeed://https%3A%2F%2Fwww.unicef.org%2Freports--44f158e4
+      // We need to URL encode everything after `feed/` to build a working
+      // inoreader feed URL.
+      $feed_url = $document['origin']['streamId'] ?? '';
+      $feed_url = str_starts_with($feed_url, 'feed/') ? 'feed/' . urlencode(substr($feed_url, 5)) : $feed_url;
+      $feed_url = 'https://www.inoreader.com/' . $feed_url;
+
       $import_record = [
         'importer' => $this->getPluginId(),
         'provider_uuid' => $provider_uuid,
@@ -247,11 +256,11 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         'status' => 'pending',
         'message' => '',
         'attempts' => 0,
-        'source' => trim(substr($document['origin']['title'] ?? '', 0, strpos($document['origin']['title'] ?? '', '[source:') ?: NULL)),
+        'source' => $source_title,
         'extra' => [
           'inoreader' => [
             'feed_name' => $document['origin']['title'] ?? '',
-            'feed_url' => 'https://www.inoreader.com/' . urlencode($document['origin']['streamId'] ?? ''),
+            'feed_url' => $feed_url,
             'feed_origin' => $document['origin']['htmlUrl'] ?? '',
           ],
         ],

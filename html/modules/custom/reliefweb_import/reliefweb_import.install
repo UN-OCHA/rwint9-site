@@ -92,7 +92,7 @@ function reliefweb_import_schema() {
         'description' => 'The message for the last update of this record (e.g., error message).',
       ],
       'source' => [
-        'type' => 'varchar_ascii',
+        'type' => 'varchar',
         'length' => '254',
         'description' => 'The source name.',
       ],
@@ -169,5 +169,21 @@ function reliefweb_import_update_10003(array &$sandbox) {
     \Drupal::database()->query("UPDATE {reliefweb_import_records} SET source = 'ECHO Map' where importer = 'echo_map'");
     \Drupal::database()->query("UPDATE {reliefweb_import_records} SET source = 'UNHCR Data' where importer = 'unhcr_data'");
     \Drupal::database()->query("UPDATE {reliefweb_import_records} SET source = 'WFP Logcluster' where importer = 'wfp_logcluster'");
+  }
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * Change source to varchar.
+ */
+function reliefweb_import_update_10004(array &$sandbox) {
+  $schema = \Drupal::database()->schema();
+  $table_name = 'reliefweb_import_records';
+  $field_name = 'source';
+
+  if ($schema->fieldExists($table_name, $field_name)) {
+    $table_schema = reliefweb_import_schema();
+    $schema->changeField($table_name, $field_name, $field_name, $table_schema[$table_name]['fields'][$field_name]);
   }
 }
