@@ -22,8 +22,8 @@ settings:
     target_bundles:
       language: language
     sort:
-      field: name
-      direction: asc
-    auto_create: false
+      field: weight
+      direction: ASC
+    auto_create: 0
     auto_create_bundle: ''
 field_type: entity_reference
