@@ -111,7 +111,7 @@ class InoreaderTestForm extends FormBase {
       ];
 
       $form['screenshots'] = [
-        '#type' => 'container',
+        '#type' => 'details',
         '#title' => $this->t('Screenshots'),
       ];
 
