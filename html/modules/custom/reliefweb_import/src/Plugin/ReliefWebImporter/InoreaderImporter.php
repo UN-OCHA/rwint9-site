@@ -234,11 +234,20 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
     // Max import attempts.
     $max_import_attempts = $this->getPluginSetting('max_import_attempts', 3, FALSE);
-
     // Prepare the documents and submit them.
     $processed = 0;
     $import_records = [];
     foreach ($documents as $document) {
+      $source_title = trim(substr($document['origin']['title'] ?? '', 0, strpos($document['origin']['title'] ?? '', '[source:') ?: NULL));
+      $source_title = $this->sanitizeText($source_title);
+
+      // Ex: feed/webfeed://https%3A%2F%2Fwww.unicef.org%2Freports--44f158e4
+      // We need to URL encode everything after `feed/` to build a working
+      // inoreader feed URL.
+      $feed_url = $document['origin']['streamId'] ?? '';
+      $feed_url = str_starts_with($feed_url, 'feed/') ? 'feed/' . urlencode(substr($feed_url, 5)) : $feed_url;
+      $feed_url = 'https://www.inoreader.com/' . $feed_url;
+
       $import_record = [
         'importer' => $this->getPluginId(),
         'provider_uuid' => $provider_uuid,
@@ -247,11 +256,11 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         'status' => 'pending',
         'message' => '',
         'attempts' => 0,
-        'source' => trim(substr($document['origin']['title'] ?? '', 0, strpos($document['origin']['title'] ?? '', '[source:') ?: NULL)),
+        'source' => $source_title,
         'extra' => [
           'inoreader' => [
             'feed_name' => $document['origin']['title'] ?? '',
-            'feed_url' => 'https://www.inoreader.com/' . urlencode($document['origin']['streamId'] ?? ''),
+            'feed_url' => $feed_url,
             'feed_origin' => $document['origin']['htmlUrl'] ?? '',
           ],
         ],
@@ -426,32 +435,53 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       unset($data['_tags']);
     }
 
-    $pdf = $data['file_data']['pdf'] ?? '';
-    $pdf_bytes = $data['file_data']['bytes'] ?? NULL;
+    // Remove the screenshot from the data as they are not needed.
+    unset($data['_screenshot']);
 
-    $files = [];
-    $info = $this->getRemoteFileInfo($pdf, 'pdf', $pdf_bytes);
-    if (!empty($info)) {
-      $file_uuid = $this->generateUuid($pdf, $uuid);
-      $files[] = [
-        'url' => $pdf,
-        'uuid' => $file_uuid,
-      ] + $info;
+    $has_pdf = $data['_has_pdf'] ?? FALSE;
+    unset($data['_has_pdf']);
+
+    if ($has_pdf) {
+      $pdf = $data['file_data']['pdf'] ?? '';
+      $pdf_bytes = $data['file_data']['bytes'] ?? NULL;
+
+      $files = [];
+      $info = $this->getRemoteFileInfo($pdf, 'pdf', $pdf_bytes);
+      if (!empty($info)) {
+        $file_uuid = $this->generateUuid($pdf, $uuid);
+        $files[] = [
+          'url' => $pdf,
+          'uuid' => $file_uuid,
+        ] + $info;
+      }
+
+      unset($data['file_data']);
+
+      $data += array_filter([
+        'file' => array_values($files),
+      ]);
+
+      if (empty($data['file'])) {
+        $this->logger->info(strtr('No files found for Inoreader @id, skipping.', [
+          '@id' => $id,
+        ]));
+
+        return [];
+      }
+
+      return $data;
     }
 
-    unset($data['file_data']);
-
-    $data += array_filter([
-      'file' => array_values($files),
-    ]);
-
-    if (empty($data['file'])) {
-      $this->logger->info(strtr('No files found for Inoreader @id, skipping.', [
+    // Make sure body is present and not empty.
+    if (empty($data['body'])) {
+      $this->logger->info(strtr('No body or PDF found for Inoreader @id, skipping.', [
         '@id' => $id,
       ]));
 
       return [];
     }
+
+    unset($data['file_data']);
 
     return $data;
   }
