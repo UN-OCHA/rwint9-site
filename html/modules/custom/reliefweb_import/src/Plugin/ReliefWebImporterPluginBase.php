@@ -638,6 +638,13 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function alterReliefWebEntitiesModerationStatusAdjustment(bool &$bypass, EntityInterface $entity): void {
+    // Nothing to do.
+  }
+
+  /**
    * Parse field rules string into an associative array.
    *
    * Convert a multi-line string of field rules in the format "field:yes/no"

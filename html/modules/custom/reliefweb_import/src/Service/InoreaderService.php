@@ -310,19 +310,7 @@ class InoreaderService {
     }
 
     // Extract tags from the origin title.
-    preg_match_all('/\[(.*?)\]/', $origin_title, $matches);
-    $matches = $matches[1];
-
-    // Parse everything so we can reference it easily.
-    $tags = $this->parseTags($matches);
-
-    // Get extra tags from state.
-    $extra_tags = $this->state->get('reliefweb_importer_inoreader_extra_tags', []);
-
-    // Merge extra tags if they exist.
-    if (!empty($extra_tags[$tags['source']])) {
-      $tags = $this->mergeTags($tags, $extra_tags[$tags['source']]);
-    }
+    $tags = $this->extractTags($origin_title);
 
     // Source is mandatory, so present.
     $source_id = $tags['source'] ?? '';
@@ -877,6 +865,42 @@ class InoreaderService {
     }
 
     $tags = $this->fixLegacyPuppeteer2Tag($tags);
+
+    return $tags;
+  }
+
+  /**
+   * Extract tags from a feed title.
+   *
+   * @param string $feed_name
+   *   Inoreader feed name.
+   *
+   * @return array
+   *   Tags.
+   */
+  public function extractTags(string $feed_name): array {
+    if (empty($feed_name)) {
+      return [];
+    }
+
+    // Extract the tags from the feed name.
+    $tags = [];
+    if (preg_match_all('/\[(.*?)\]/', $feed_name, $matches) > 0) {
+      $matches = $matches[1] ?? [];
+
+      // Parse everything so we can reference it easily.
+      $tags = $this->parseTags($matches);
+    }
+
+    // Get extra tags from state.
+    if (isset($tags['source'])) {
+      $extra_tags = $this->state->get('reliefweb_importer_inoreader_extra_tags', []);
+
+      // Merge extra tags if they exist.
+      if (!empty($extra_tags[$tags['source']])) {
+        $tags = $this->mergeTags($tags, $extra_tags[$tags['source']]);
+      }
+    }
 
     return $tags;
   }
