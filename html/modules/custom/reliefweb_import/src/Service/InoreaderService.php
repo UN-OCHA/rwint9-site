@@ -58,6 +58,7 @@ class InoreaderService {
     'pb' => 'puppeteer-blob',
     'd' => 'delay',
     't' => 'timeout',
+    's' => 'status',
   ];
 
   public function __construct(
@@ -339,6 +340,9 @@ class InoreaderService {
       unset($tags['timeout']);
     }
 
+    // Status of the new report.
+    $status = '';
+
     foreach ($tags as $tag_key => $tag_value) {
       if ($tag_key == 'pdf') {
         switch ($tag_value) {
@@ -454,6 +458,9 @@ class InoreaderService {
             break;
         }
       }
+      elseif ($tag_key == 'status') {
+        $status = $tag_value;
+      }
     }
 
     if (empty($sources)) {
@@ -505,6 +512,10 @@ class InoreaderService {
       '_has_pdf' => $has_pdf,
       '_screenshot' => $screenshot,
     ];
+
+    if (!empty($status)) {
+      $data['status'] = $status;
+    }
 
     return $data;
   }

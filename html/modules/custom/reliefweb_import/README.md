@@ -50,6 +50,7 @@ Imports tagged items from the [automation_production](https://www.inoreader.com/
 | puppeteer-blob | pb | No | No | [puppeteer-attrib:href] |
 | timeout | t | No | No | [timeout:30] |
 | delay | d | No | No | [delay:5000]
+| status | s | No | No | [status:published] |
 
 #### `source` tag
 
@@ -125,6 +126,10 @@ Defines a custom timeout for fetching external data.
 #### `delay` tag
 
 Defines a custom delay (ms) for fetching external data.
+
+#### `status` tag
+
+Defines the status of the new report.
 
 ### Override tags in the UI
 
