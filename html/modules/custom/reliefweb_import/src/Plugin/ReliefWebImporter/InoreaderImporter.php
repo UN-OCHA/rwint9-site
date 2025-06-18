@@ -6,6 +6,7 @@ namespace Drupal\reliefweb_import\Plugin\ReliefWebImporter;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
@@ -518,6 +519,26 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       if (preg_match('#https?://#i', $context['entity']->title->value)) {
         $fields['title__value'] = TRUE;
       }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function alterReliefWebEntitiesModerationStatusAdjustment(bool &$bypass, EntityInterface $entity): void {
+    // @todo retrieve the import record and check if there is a defined status
+    $records = $this->getExistingImportRecords([$entity->uuid()]);
+    if (empty($records)) {
+      return;
+    }
+
+    $record = reset($records);
+    $extra = json_decode($record['extra'] ?? [], TRUE);
+    $feed_name = $extra['feed_name'] ?? '';
+
+    $tags = $this->inoreaderService->extractTags($feed_name);
+    if (isset($tags['status'])) {
+      $bypass = TRUE;
     }
   }
 

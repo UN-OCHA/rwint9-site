@@ -137,6 +137,19 @@ function reliefweb_import_ocha_content_classification_classified_fields_alter(ar
 }
 
 /**
+ * Implements hook_reliefweb_entities_moderation_status_adjustment_bypass_alter().
+ */
+function reliefweb_import_reliefweb_entities_moderation_status_adjustment_bypass_alter(bool &$bypass, EntityInterface $entity): void {
+  $importer = reliefweb_import_get_entity_importer($entity);
+  if (!isset($importer)) {
+    return;
+  }
+
+  // Let the importer decide if the status moderation adjustment should apply.
+  $importer->alterReliefWebEntitiesModerationStatusAdjustment($bypass, $entity);
+}
+
+/**
  * Get the plugin used to import the entity.
  *
  * @param \Drupal\Core\Entity\EntityInterface $entity
