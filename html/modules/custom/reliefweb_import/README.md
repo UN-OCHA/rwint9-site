@@ -25,27 +25,44 @@ drush reliefweb_import:jobs --verbose
 
 Imports ECHO Flash updates from [their API](https://erccportal.jrc.ec.europa.eu/API/ERCC/EchoFlash/GetPagedItems)
 
+## ECHO Maps
+
+Imports ECHO Maps from [their API](https://erccportal.jrc.ec.europa.eu/API/ERCC/Maps/GetPagedItems)
+
 ## Inoreader importer
 
 Imports tagged items from the [automation_production](https://www.inoreader.com/folder/automation_production)
 
 ### Supported tags
 
-| tag | mandatory | multiple | example |
-| - | - | - | - |
-| source | Yes | No | [source:1242] |
-| pdf | Yes | No | [pdf:canonical] |
-| content | No | No | [content:clear] |
-| title | No | No | [title:filename] |
-| follow | No | No | [follow:https://wedocs.unep.org] |
-| wrapper | No | Yes | [wrapper:div.content_sidebar] |
-| url | No | Yes | [url:/docs/] |
-| puppeteer | No | No | [puppeteer:ds-file-download-link a] |
-| puppeteer-attrib | No | No | [puppeteer-attrib:href] |
+| tag | alias | mandatory | multiple | example |
+| - | - | - | - | - |
+| source | - | Yes | No | [source:1242] |
+| pdf | - | Yes | No | [pdf:canonical] |
+| content | - | No | No | [content:clear] |
+| title | - | No | No | [title:filename] |
+| follow | - | No | No | [follow:https://wedocs.unep.org] |
+| wrapper | w | No | Yes | [wrapper:div.content_sidebar] |
+| url | u | No | Yes | [url:/docs/] |
+| puppeteer | p | No | Yes | [puppeteer:ds-file-download-link a] |
+| ~~puppeteer2~~ | p2 | No | No | [puppeteer:ds-file-download-link a] |
+| puppeteer-attrib | pa | No | No | [puppeteer-attrib:href] |
+| puppeteer-blob | pb | No | No | [puppeteer-attrib:href] |
+| timeout | t | No | No | [timeout:30] |
+| delay | d | No | No | [delay:5000]
+| status | s | No | No | [status:published] |
 
 #### `source` tag
 
-This is mandatory and has to be numeric.
+This is mandatory, since multiple feeds can map to the same source id, but might need different settings,
+it's allowed to add an extra identifier like `[source:1242-food]`, this identifier can be used to overwrite
+tags defined at `/admin/config/reliefweb/content-importers/inoreader_extra_tags` like
+
+```yaml
+1242-food:
+  wrapper:
+    - div.dynamic-content__figure-container
+```
 
 #### `pdf` tag
 
@@ -60,6 +77,7 @@ This is mandatory and points to the location of the PDF file. For the moment onl
 | page-iframe-src | The importer will fetch the source page and will search for an iframe with an `src` attribute pointing to the PDF file |
 | page-iframe-data-src | The importer will fetch the source page and will search for an iframe with an `data-src` attribute pointing to the PDF file |
 | js | Uses puppeteer to render and analyze the page |
+| content | Uses summary of inoreader as body |
 
 #### `content` tag
 
@@ -91,9 +109,48 @@ This will filter possible links to PDF files to a certain pattern.
 
 Used to select the html element containg the PDF link.
 
+If you need to click on 2 elements, you can use a pipe (`|`) to separate the selectors.
+
 #### `puppeteer-attribute` tag
 
 Defines the attribute to extract from the element.
+
+#### `puppeteer-blob` tag
+
+Returns file data as part of json response.
+
+#### `timeout` tag
+
+Defines a custom timeout for fetching external data.
+
+#### `delay` tag
+
+Defines a custom delay (ms) for fetching external data.
+
+#### `status` tag
+
+Defines the status of the new report.
+
+### Override tags in the UI
+
+You can go to and `/admin/config/reliefweb/content-importers/inoreader_extra_tags` add extra tags.
+
+```yaml
+2836:
+  replace:
+    - 'openknowledge.fao.org/bitstreams/:openknowledge.fao.org/server/api/core/bitstreams/'
+    - '/download:/content'
+  content: ignore
+1980:
+  wrapper:
+    - div.dynamic-content__figure-container
+```
+
+### Fix sources
+
+```shell
+drush sqlq "UPDATE reliefweb_import_records SET source = SUBSTR(SUBSTRING_INDEX(json_extract(extra, \"$.inoreader.feed_name\"), \"[source:\", 1), 2) where extra is not null"
+```
 
 ## UNHCR importer
 

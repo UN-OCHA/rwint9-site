@@ -87,6 +87,7 @@ class ReportExtended extends Report {
     $items = parent::getItems($limit, $offset, $ids);
 
     $this->updateUserData($items);
+    $this->updateImporterData($items, $ids);
 
     return $items;
   }
@@ -151,6 +152,67 @@ class ReportExtended extends Report {
         }
       }
     }
+  }
+
+  /**
+   * Update the import data for the given entity items.
+   *
+   * @param array<mixed> $items
+   *   Entity items to update.
+   * @param array<mixed> $ids
+   *   Entity ids to update.
+   */
+  public function updateImporterData(array &$items, array $ids = []): void {
+    if (empty($ids)) {
+      foreach ($items as $item) {
+        if (isset($item['id'])) {
+          $ids[] = $item['id'];
+        }
+      }
+    }
+
+    if (empty($ids)) {
+      return;
+    }
+
+    $records = $this->getImportRecords($ids);
+    foreach ($items as &$item) {
+      if (isset($item['id'])) {
+        $item_id = $item['id'];
+        if (isset($records[$item_id])) {
+          $item['importer'] = [
+            'name' => $records[$item_id]['importer'] ?? '',
+            'source' => $records[$item_id]['source'] ?? '',
+          ];
+        }
+      }
+    }
+
+  }
+
+  /**
+   * Retrieve import records.
+   *
+   * @return array
+   *   An array of import records keyed by the import item id.
+   */
+  protected function getImportRecords(array $ids): array {
+    $query = new DatabaseQuery('reliefweb_import_records', 'r', $this->connection);
+    $query->addField('r', 'entity_id', 'entity_id');
+    $query->addField('r', 'importer', 'importer');
+    $query->addField('r', 'source', 'source');
+    $query->condition('r.entity_id', $ids, 'IN');
+    $query->condition('r.entity_bundle', 'report', '=');
+    $records = $query->execute()?->fetchAllAssoc('entity_id', \PDO::FETCH_ASSOC) ?? [];
+
+    // Deserialize the extra field.
+    foreach ($records as &$record) {
+      if (isset($record['extra'])) {
+        $record['extra'] = json_decode($record['extra'], TRUE);
+      }
+    }
+
+    return $records;
   }
 
 }

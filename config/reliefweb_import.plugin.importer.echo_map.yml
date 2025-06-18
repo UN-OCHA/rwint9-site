@@ -1,0 +1,17 @@
+enabled: true
+max_import_attempts: 3
+classification:
+  enabled: false
+  check_user_permissions: false
+  prevent_publication: false
+  specified_field_check: ''
+  force_field_update: ''
+  classified_fields: ''
+reimport:
+  enabled: true
+  type: "*:none\r\npending:full\r\non-hold:partial\r\npublished:partial\r\nto-review:partial\r\nembargoed:partial"
+  fields: "*:no\r\ntitle:yes\r\nfile:yes"
+  statuses: "published:to-review\r\nto-review:to-review\r\nrefused:refused"
+api_url: 'https://erccportal.jrc.ec.europa.eu/API/ERCC/Maps/GetPagedItems?ItemsCurrentPageIndex=1&ItemsPageSize=50&Filter%5BStatus%5D%5B%5D=Published'
+file_url_pattern: 'https://erccportal.jrc.ec.europa.eu/API/ERCC/Maps/DownloadPublicMap?contentItemID=@id&fileN=MainFile&forceDownload=False&ext=.pdf'
+timeout: 60

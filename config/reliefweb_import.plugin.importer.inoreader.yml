@@ -3,7 +3,7 @@ max_import_attempts: 3
 classification:
   enabled: true
   check_user_permissions: false
-  prevent_publication: true
+  prevent_publication: false
   specified_field_check: '*:no'
   force_field_update: "*:yes\r\ntitle__value:no\r\nfield_source:no\r\nbody__value:no\r\nbody__summary:no\r\n"
   classified_fields: "*:yes\r\nfield_theme:no\r\nfield_disaster_type:no"

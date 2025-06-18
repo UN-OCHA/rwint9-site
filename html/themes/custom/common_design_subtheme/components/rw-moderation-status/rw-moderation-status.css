@@ -56,6 +56,10 @@
   border-color: var(--cd-reliefweb-purple--light);
   background-color: var(--cd-reliefweb-purple--light--bg);
 }
+[data-moderation-status="unpublished"] {
+  border-color: #000;
+  background-color: #f5f5f5;
+}
 
 .rw-moderation-status[data-moderation-status] {
   display: block;

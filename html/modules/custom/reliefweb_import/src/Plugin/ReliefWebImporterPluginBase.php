@@ -945,6 +945,13 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
       ->execute()
       ?->fetchAllAssoc('imported_item_uuid', \PDO::FETCH_ASSOC) ?? [];
 
+    // Deserialize the extra field.
+    foreach ($records as &$record) {
+      if (isset($record['extra'])) {
+        $record['extra'] = json_decode($record['extra'], TRUE);
+      }
+    }
+
     return $records;
   }
 
@@ -984,6 +991,11 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
 
       // Set timestamp for changed field.
       $record['changed'] = time();
+
+      // Serialize json data.
+      if (isset($record['extra'])) {
+        $record['extra'] = json_encode($record['extra']);
+      }
 
       // Check if this record already exists.
       $url = $record['imported_item_uuid'];
@@ -1037,11 +1049,13 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
    *   Remote file URL.
    * @param string $default_extension
    *   Default file extension if none could be extracted from the file name.
+   * @param ?string $bytes
+   *   Raw bytes of the file content.
    *
    * @return array
-   *   Checksum and filenamne of the remote file.
+   *   Checksum, filename and raw bytes of the remote file.
    */
-  protected function getRemoteFileInfo(string $url, string $default_extension = 'pdf'): array {
+  protected function getRemoteFileInfo(string $url, string $default_extension = 'pdf', ?string $bytes = NULL): array {
     $max_size = $this->getReportAttachmentAllowedMaxSize();
     if (empty($max_size)) {
       throw new \Exception('No allowed file max size.');
@@ -1052,7 +1066,35 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
       throw new \Exception('No allowed file extensions.');
     }
 
+    // Support raw bytes.
+    if (!empty($bytes)) {
+      // Validate the size.
+      if ($max_size > 0 && strlen($bytes) > $max_size) {
+        throw new \Exception('File is too large.');
+      }
+
+      // Sanitize the file name.
+      $extracted_filename = basename($url);
+      $filename = $this->sanitizeFileName($extracted_filename, $allowed_extensions, $default_extension);
+      if (empty($filename)) {
+        throw new \Exception(strtr('Invalid filename: @filename.', [
+          '@filename' => $extracted_filename,
+        ]));
+      }
+
+      // Compute the checksum.
+      $checksum = hash('sha256', $bytes);
+
+      return [
+        'checksum' => $checksum,
+        'filename' => $filename,
+        'bytes' => $bytes,
+      ];
+    }
+
     $body = NULL;
+
+    // Remote file.
     try {
       $response = $this->httpClient->get($url, [
         'stream' => TRUE,
@@ -1151,6 +1193,9 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
     return [
       'checksum' => $checksum,
       'filename' => $filename,
+      // Return the raw bytes so that we don't have to download the file again
+      // in the post api content processor.
+      'bytes' => $content,
     ];
   }
 
@@ -1274,6 +1319,28 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
 
     $iso3 = strtolower($iso3);
     return $country_mapping[$iso3] ?? 254;
+  }
+
+  /**
+   * Find country by name.
+   */
+  protected function getCountryByName(string $name): ?int {
+    if (empty($name)) {
+      return 254;
+    }
+
+    static $country_mapping = [];
+    if (empty($country_mapping)) {
+      $countries = $this->entityTypeManager
+        ->getStorage('taxonomy_term')
+        ->loadByProperties(['vid' => 'country']);
+      foreach ($countries as $country) {
+        $country_mapping[strtolower($country->label())] = (int) $country->id();
+      }
+    }
+
+    $name = strtolower($name);
+    return $country_mapping[$name] ?? 254;
   }
 
   /**

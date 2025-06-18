@@ -32,7 +32,7 @@ class ReliefWebFileHashConstraint extends SymfonyConstraint {
    *
    * @var string
    */
-  public string $duplicateFileFormError = 'Duplicate detected: this file is already attached to <a href=":url" target="_blank">@label</a>.';
+  public string $duplicateFileFormError = 'Duplicate detected: this file is already attached to @link.';
 
   /**
    * Missing file error message.

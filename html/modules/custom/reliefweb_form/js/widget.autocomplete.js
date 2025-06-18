@@ -48,6 +48,40 @@
        * Autocomplete selection.
        */
 
+      // Show a selection error message if the input contains an invalid option.
+      function toggleInvalidOptionMessage(autocomplete) {
+        var input = autocomplete.getElement();
+        if (!input) {
+          return;
+        }
+
+        // Show an error message if the input contains a string that doesn't
+        // match any selectable options.
+        if (input.value !== '' && !autocomplete.selectorIsOpen()) {
+          // Add the form error message.
+          var errorContainer = input.parentNode.querySelector('.rw-autocomplete-error');
+          if (!errorContainer) {
+            errorContainer = document.createElement('div');
+            errorContainer.classList.add('rw-autocomplete-error', 'form-item--error-message');
+            input.parentNode.appendChild(errorContainer);
+          }
+
+          // Set the error message.
+          errorContainer.innerHTML = Drupal.t('No match. Edit your text or click the arrow to see all choices, then select an option from the dropdown.');
+
+          // Mark the input as having an error.
+          input.classList.add('error');
+        }
+        // Clear any error state.
+        else {
+          var errorContainer = input.parentNode.querySelector('.rw-autocomplete-error');
+          if (errorContainer) {
+            input.parentNode.removeChild(errorContainer);
+          }
+          input.classList.remove('error');
+        }
+      }
+
       // Find the closest selection item to insert a new item before.
       function findClosestItem(selection, index) {
         var items = selection.childNodes;
@@ -765,7 +799,19 @@
           // Prepare the source.
           prepare: function (query, source) {
             var data = typeof source === 'function' ? source() : source;
-            return query !== '' ? this.match(query, data) : data;
+            var results = query !== '' ? this.match(query, data) : data;
+
+            // If we have a query but no results, show the invalid option
+            // error message.
+            if (query !== '' && results.length === 0) {
+              // Use setTimeout to ensure this runs after the current execution
+              // context with a slight delay to be less abrupt.
+              setTimeout(function () {
+                toggleInvalidOptionMessage(autocomplete, query);
+              }, 200);
+            }
+
+            return results;
           },
           // Update the select element and the selection.
           select: function (suggestion) {
@@ -808,10 +854,15 @@
         })
         // Keep track of the selector open state.
         .on('opened', function (event) {
+          toggleInvalidOptionMessage(event.target);
           container.setAttribute('aria-expanded', 'true');
         })
         .on('closed', function (event) {
           container.setAttribute('aria-expanded', 'false');
+          toggleInvalidOptionMessage(event.target);
+          // Remove the current query to allow showing the selector when the
+          // input gains focus again.
+          event.target.query = '';
         });
 
         // Update the container with the id of the autocomplete selector

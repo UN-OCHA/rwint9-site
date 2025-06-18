@@ -128,7 +128,7 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
       '#description' => $this->t('List of Logistic Cluster document types to skip. One per line.'),
       '#default_value' => $form_state->getValue('skip_document_types', $this->getPluginSetting('skip_document_types', '', FALSE)),
       '#min' => 1,
-      '#required' => TRUE,
+      '#required' => FALSE,
     ];
 
     $form['timeout'] = [
@@ -282,6 +282,9 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
 
     $schema = $this->getJsonSchema($bundle);
 
+    // Allow passing raw bytes for files.
+    $plugin->setPluginSetting('allow_raw_bytes', TRUE);
+
     // This is the list of extensions supported by the report attachment field.
     $extensions = explode(' ', 'csv doc docx jpg jpeg odp ods odt pdf png pps ppt pptx svg xls xlsx zip');
     $allowed_mimetypes = array_filter(array_map(fn($extension) => $this->mimeTypeGuesser->guessMimeType('dummy.' . $extension), $extensions));
@@ -344,6 +347,7 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
         'status' => 'pending',
         'message' => '',
         'attempts' => 0,
+        'source' => 'WFP Logcluster',
       ];
 
       // Retrieve the document ID.
@@ -477,16 +481,19 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
           '@entity_id' => $entity->id(),
         ]));
       }
+      catch (DuplicateException $exception) {
+        $import_record['status'] = 'duplicate';
+        $import_record['message'] = $exception->getMessage();
+        $import_record['attempts'] = $max_import_attempts;
+        $this->getLogger()->error(strtr('Unable to process WFP Logcluster document @id: @exception', [
+          '@id' => $id,
+          '@exception' => $exception->getMessage(),
+        ]));
+      }
       catch (\Exception $exception) {
         $import_record['status'] = 'error';
         $import_record['message'] = $exception->getMessage();
-        // In case of duplication, we do not try further imports.
-        if ($exception instanceof DuplicateException) {
-          $import_record['attempts'] = $max_import_attempts;
-        }
-        else {
-          $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
-        }
+        $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
         $this->getLogger()->error(strtr('Unable to process WFP Logcluster document @id: @exception', [
           '@id' => $id,
           '@exception' => $exception->getMessage(),
@@ -523,6 +530,7 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
         }
       }
     }
+    $sources = array_unique($sources);
 
     // Document URL.
     $url = $document['path'];
