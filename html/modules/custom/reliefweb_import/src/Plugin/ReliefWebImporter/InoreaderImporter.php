@@ -430,16 +430,14 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       return [];
     }
 
-    if (isset($data['_tags'])) {
-      // Remove the tags from the data as they are not needed.
-      unset($data['_tags']);
-    }
-
-    // Remove the screenshot from the data as they are not needed.
-    unset($data['_screenshot']);
-
     $has_pdf = $data['_has_pdf'] ?? FALSE;
-    unset($data['_has_pdf']);
+
+    // Remove all keys starting with an underscore.
+    foreach ($data as $key => $value) {
+      if (strpos($key, '_') === 0) {
+        unset($data[$key]);
+      }
+    }
 
     if ($has_pdf) {
       $pdf = $data['file_data']['pdf'] ?? '';

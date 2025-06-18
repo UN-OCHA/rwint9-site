@@ -101,6 +101,7 @@ class InoreaderTestForm extends FormBase {
           unset($record['report']['_screenshot']);
         }
       }
+
       $form['records'] = [
         '#type' => 'details',
         '#title' => $this->t('Parsed output'),
