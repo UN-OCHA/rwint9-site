@@ -859,6 +859,13 @@ function reliefweb_entities_adjust_moderation_status_based_on_classification_sta
     return;
   }
 
+  // Allow other modules to bypass the status adjustment.
+  $bypass = FALSE;
+  \Drupal::moduleHandler()->alter('reliefweb_entities_moderation_status_adjustment_bypass', $bypass, $entity);
+  if ($bypass) {
+    return;
+  }
+
   $publication_protection_default_status = ReliefWebStateHelper::getPublicationPreventionDefaultModerationStatus(
     $entity->getEntityTypeId(),
     $entity->bundle(),

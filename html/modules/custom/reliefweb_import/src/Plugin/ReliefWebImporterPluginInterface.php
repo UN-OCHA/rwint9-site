@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\reliefweb_import\Plugin;
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
 use Psr\Log\LoggerInterface;
@@ -235,5 +236,22 @@ interface ReliefWebImporterPluginInterface {
    *   - data: the raw data used by the classifier (depends on the classifier).
    */
   public function alterContentClassificationClassifiedFields(array &$fields, ClassificationWorkflowInterface $workflow, array $context): void;
+
+  /**
+   * Alter the bypass flag for ReliefWeb entities moderation status adjustment.
+   *
+   * This method can be used to bypass the automatic moderation status
+   * adjustment based on classification status for specific entities or
+   * conditions.
+   *
+   * @param bool $bypass
+   *   The bypass flag passed by reference. Set to TRUE to bypass the status
+   *   adjustment, FALSE to allow normal processing.
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity being processed for moderation status adjustment.
+   *
+   * @see reliefweb_import_reliefweb_entities_moderation_status_adjustment_bypass_alter()
+   */
+  public function alterReliefWebEntitiesModerationStatusAdjustment(bool &$bypass, EntityInterface $entity): void;
 
 }
