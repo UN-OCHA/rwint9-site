@@ -759,6 +759,8 @@ class InoreaderService {
     $pdf = [];
     $blob = FALSE;
     $delay = 3000;
+    $screenshot = FALSE;
+    $debug = FALSE;
 
     // Check if we need to request the PDF as Blob.
     if (isset($tags['puppeteer-blob'])) {
@@ -768,6 +770,12 @@ class InoreaderService {
     if (isset($tags['delay'])) {
       $delay = (int) $tags['delay'];
     }
+    if (isset($tags['screenshot'])) {
+      $screenshot = TRUE;
+    }
+    if (isset($tags['debug'])) {
+      $debug = TRUE;
+    }
 
     if (isset($tags['wrapper'])) {
       if (!is_array($tags['wrapper'])) {
@@ -775,14 +783,14 @@ class InoreaderService {
       }
 
       foreach ($tags['wrapper'] as $wrapper) {
-        $pdf = reliefweb_import_extract_pdf_file($page_url, $wrapper, $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay);
+        $pdf = reliefweb_import_extract_pdf_file($page_url, $wrapper, $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay, $screenshot, $debug);
         if ($pdf) {
           break;
         }
       }
     }
     else {
-      $pdf = reliefweb_import_extract_pdf_file($page_url, '', $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay);
+      $pdf = reliefweb_import_extract_pdf_file($page_url, '', $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay, $screenshot, $debug);
     }
 
     if (empty($pdf)) {
