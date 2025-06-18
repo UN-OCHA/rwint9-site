@@ -18,7 +18,7 @@ app_id: '123'
 app_key: abc
 api_url: 'https://www.inoreader.com/reader/api/0/stream/contents/user%2F-%2Flabel%2Fautomation_production?n=100&r=o'
 timeout: 30
-fetch_timeout: 15
+fetch_timeout: 29
 local_file_load: false
 local_file_save: false
 local_file_path: /var/www/inoreader.json
