@@ -901,6 +901,7 @@ class InoreaderService {
     foreach ($matches as $match) {
       $tag_parts = explode(':', $match);
       $tag_key = reset($tag_parts);
+      $tag_key = trim($tag_key);
 
       // Resolve tag aliases.
       if (isset($this->tagAliases[$tag_key])) {
@@ -908,7 +909,7 @@ class InoreaderService {
       }
 
       array_shift($tag_parts);
-      $tag_value = implode(':', $tag_parts);
+      $tag_value = trim(implode(':', $tag_parts));
 
       if (!isset($tags[$tag_key])) {
         $tags[$tag_key] = $tag_value;
