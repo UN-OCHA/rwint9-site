@@ -96,11 +96,12 @@ class InoreaderTestForm extends FormBase {
       $screenshots = [];
       $records = $form_state->get('inoreader_records') ?? [];
       foreach ($records as &$record) {
-        if (isset($record['report']['_screenshot'])) {
+        if (isset($record['report']['_screenshot']) && !empty($record['report']['_screenshot'])) {
           $screenshots[] = '<img src="data:image/png;base64, ' . $record['report']['_screenshot'] . '" />';
           unset($record['report']['_screenshot']);
         }
       }
+
       $form['records'] = [
         '#type' => 'details',
         '#title' => $this->t('Parsed output'),
@@ -110,16 +111,18 @@ class InoreaderTestForm extends FormBase {
         ],
       ];
 
-      $form['screenshots'] = [
-        '#type' => 'details',
-        '#title' => $this->t('Screenshots'),
-      ];
-
-      foreach ($screenshots as $screenshot) {
-        $form['screenshots']['screenshot'][] = [
-          '#type' => 'inline_template',
-          '#template' => $screenshot,
+      if (!empty($screenshots)) {
+        $form['screenshots'] = [
+          '#type' => 'details',
+          '#title' => $this->t('Screenshots'),
         ];
+
+        foreach ($screenshots as $screenshot) {
+          $form['screenshots']['screenshot'][] = [
+            '#type' => 'inline_template',
+            '#template' => $screenshot,
+          ];
+        }
       }
     }
 

@@ -284,6 +284,7 @@ class InoreaderService {
     $url = $document['canonical'][0]['href'];
     $pdf_bytes = NULL;
     $screenshot = NULL;
+    $logMessages = [];
     $body = '';
 
     // Retrieve the title and clean it.
@@ -417,6 +418,7 @@ class InoreaderService {
             $pdf = $puppeteer_result['pdf'] ?? '';
             $pdf_bytes = $puppeteer_result['blob'] ?? NULL;
             $screenshot = $puppeteer_result['screenshot'] ?? NULL;
+            $logMessages = $puppeteer_result['log'] ?? NULL;
             break;
 
           case 'content':
@@ -499,6 +501,7 @@ class InoreaderService {
       '_tags' => $tags,
       '_has_pdf' => $has_pdf,
       '_screenshot' => $screenshot,
+      '_log' => $logMessages,
     ];
 
     if (!empty($status)) {
@@ -744,6 +747,8 @@ class InoreaderService {
     $pdf = [];
     $blob = FALSE;
     $delay = 3000;
+    $screenshot = FALSE;
+    $debug = FALSE;
 
     // Check if we need to request the PDF as Blob.
     if (isset($tags['puppeteer-blob'])) {
@@ -753,6 +758,12 @@ class InoreaderService {
     if (isset($tags['delay'])) {
       $delay = (int) $tags['delay'];
     }
+    if (isset($tags['screenshot'])) {
+      $screenshot = TRUE;
+    }
+    if (isset($tags['debug'])) {
+      $debug = TRUE;
+    }
 
     if (isset($tags['wrapper'])) {
       if (!is_array($tags['wrapper'])) {
@@ -760,14 +771,14 @@ class InoreaderService {
       }
 
       foreach ($tags['wrapper'] as $wrapper) {
-        $pdf = reliefweb_import_extract_pdf_file($page_url, $wrapper, $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay);
+        $pdf = reliefweb_import_extract_pdf_file($page_url, $wrapper, $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay, $screenshot, $debug);
         if ($pdf) {
           break;
         }
       }
     }
     else {
-      $pdf = reliefweb_import_extract_pdf_file($page_url, '', $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay);
+      $pdf = reliefweb_import_extract_pdf_file($page_url, '', $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay, $screenshot, $debug);
     }
 
     if (empty($pdf)) {
@@ -914,6 +925,7 @@ class InoreaderService {
     foreach ($matches as $match) {
       $tag_parts = explode(':', $match);
       $tag_key = reset($tag_parts);
+      $tag_key = trim($tag_key);
 
       // Resolve tag aliases.
       if (isset($this->tagAliases[$tag_key])) {
@@ -921,7 +933,7 @@ class InoreaderService {
       }
 
       array_shift($tag_parts);
-      $tag_value = implode(':', $tag_parts);
+      $tag_value = trim(implode(':', $tag_parts));
 
       if (!isset($tags[$tag_key])) {
         $tags[$tag_key] = $tag_value;

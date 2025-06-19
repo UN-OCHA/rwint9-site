@@ -431,29 +431,32 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       return [];
     }
 
-    if (isset($data['_tags'])) {
-      // Remove the tags from the data as they are not needed.
-      unset($data['_tags']);
-    }
-
-    // Remove the screenshot from the data as they are not needed.
-    unset($data['_screenshot']);
-
     $has_pdf = $data['_has_pdf'] ?? FALSE;
-    unset($data['_has_pdf']);
+
+    // Remove all keys starting with an underscore.
+    foreach ($data as $key => $value) {
+      if (strpos($key, '_') === 0) {
+        unset($data[$key]);
+      }
+    }
 
     if ($has_pdf) {
       $pdf = $data['file_data']['pdf'] ?? '';
       $pdf_bytes = $data['file_data']['bytes'] ?? NULL;
 
       $files = [];
-      $info = $this->getRemoteFileInfo($pdf, 'pdf', $pdf_bytes);
-      if (!empty($info)) {
-        $file_uuid = $this->generateUuid($pdf, $uuid);
-        $files[] = [
-          'url' => $pdf,
-          'uuid' => $file_uuid,
-        ] + $info;
+      try {
+        $info = $this->getRemoteFileInfo($pdf, 'pdf', $pdf_bytes);
+        if (!empty($info)) {
+          $file_uuid = $this->generateUuid($pdf, $uuid);
+          $files[] = [
+            'url' => $pdf,
+            'uuid' => $file_uuid,
+          ] + $info;
+        }
+      }
+      catch (\Exception $e) {
+        $this->getLogger()->error($e->getMessage());
       }
 
       unset($data['file_data']);
