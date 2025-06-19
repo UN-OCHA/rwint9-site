@@ -119,10 +119,13 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
 
       $cells = [];
 
+      $imported_item_id = $record['imported_item_id'] ?? '';
+      $id_parts = explode('/', $imported_item_id);
+      $short_id = end($id_parts);
       $cells['imported-item'] = [
         'data' => [
           '#type' => 'link',
-          '#title' => substr($record['imported_item_id'], 0, 10),
+          '#title' => $short_id,
           '#url' => Url::fromUri($record['imported_item_url']),
           '#attributes' => [
             'title' => $record['imported_item_id'],

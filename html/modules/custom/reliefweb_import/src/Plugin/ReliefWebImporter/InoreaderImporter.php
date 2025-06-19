@@ -300,6 +300,11 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         $import_record = NestedArray::mergeDeep($existing_import_records[$uuid], $import_record);
       }
 
+      // Bail out if status is manually set.
+      if (!empty($import_record['attempts']) && $import_record['attempts'] == 99) {
+        continue;
+      }
+
       $this->getLogger()->info(strtr('Processing Inoreader document @id.', [
         '@id' => $id,
       ]));

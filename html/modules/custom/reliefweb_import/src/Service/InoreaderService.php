@@ -6,6 +6,7 @@ namespace Drupal\reliefweb_import\Service;
 
 use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionEmptyBody;
+use Drupal\reliefweb_import\Exception\ReliefwebImportExceptioNoSourceTag;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\reliefweb_utility\HtmlToMarkdown\Converters\TextConverter;
@@ -308,7 +309,9 @@ class InoreaderService {
         '@origin_title' => $origin_title,
       ]));
 
-      return [];
+      throw new ReliefwebImportExceptioNoSourceTag(strtr('No source defined for Inoreader @id.', [
+        '@id' => $id,
+      ]));
     }
 
     // Extract tags from the origin title.
@@ -469,7 +472,9 @@ class InoreaderService {
         '@origin_title' => $origin_title,
       ]));
 
-      return [];
+      throw new ReliefwebImportExceptioNoSourceTag(strtr('No source defined for Inoreader @id.', [
+        '@id' => $id,
+      ]));
     }
 
     $has_pdf = !empty($pdf);
