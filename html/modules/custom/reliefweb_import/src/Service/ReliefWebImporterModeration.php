@@ -253,6 +253,7 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
           'manual',
           'no_pdf',
           'no_body',
+          '404',
         ];
 
         foreach ($statuses as $status) {
