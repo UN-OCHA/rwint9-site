@@ -262,7 +262,7 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
           ]);
           $status_links[] = [
             '#type' => 'link',
-            '#title' => ucfirst($status),
+            '#title' => ucfirst(str_replace('_', ' ', $status)),
             '#url' => $link,
           ];
         }
