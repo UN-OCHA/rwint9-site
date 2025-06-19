@@ -257,7 +257,6 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         'entity_bundle' => $bundle,
         'status' => 'pending',
         'message' => '',
-        'attempts' => 0,
         'source' => $source_title,
         'extra' => [
           'inoreader' => [
@@ -302,6 +301,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
       // Bail out if status is manually set.
       if (!empty($import_record['attempts']) && $import_record['attempts'] == 99) {
+        unset($existing_import_records[$uuid]);
         continue;
       }
 
