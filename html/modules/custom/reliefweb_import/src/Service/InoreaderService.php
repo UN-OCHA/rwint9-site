@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\reliefweb_import\Service;
 
 use Drupal\Core\State\StateInterface;
+use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionEmptyBody;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\reliefweb_utility\HtmlToMarkdown\Converters\TextConverter;
@@ -423,6 +424,15 @@ class InoreaderService {
 
           case 'content':
             $body = $this->cleanBodyText($document['summary']['content'] ?? '');
+            if (empty($body)) {
+              $this->logger->error(strtr('Unable to retrieve the body content for Inoreader document @id.', [
+                '@id' => $id,
+              ]));
+
+              throw new ReliefwebImportExceptionEmptyBody(strtr('No body content found for Inoreader document @id.', [
+                '@id' => $id,
+              ]));
+            }
             break;
 
         }
@@ -675,7 +685,7 @@ class InoreaderService {
       ]);
 
       if ($response->getStatusCode() !== 200) {
-        throw new \Exception('Failure with response code: ' . $response->getStatusCode());
+        throw new \Exception('Failure (1) with response code: ' . $response->getStatusCode());
       }
 
       return $response->getBody()->getContents();
@@ -689,7 +699,7 @@ class InoreaderService {
         ]);
 
         if ($response->getStatusCode() !== 200) {
-          throw new \Exception('Failure with response code: ' . $response->getStatusCode());
+          throw new \Exception('Failure (2) with response code: ' . $response->getStatusCode());
         }
 
         return $response->getBody()->getContents();
@@ -697,7 +707,7 @@ class InoreaderService {
       catch (\Exception $exception) {
         // Fail silently.
         $this->logger->info('Failure with response code: ' . $exception->getMessage());
-        return '';
+        throw new \Exception('Failure (3) with response code: ' . $exception->getMessage());
       }
     }
 

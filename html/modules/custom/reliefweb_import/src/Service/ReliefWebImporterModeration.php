@@ -245,7 +245,29 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
         ];
       }
       else {
-        $cells['node_created'] = $this->t('N/A');
+        $status_links = [];
+        $statuses = [
+          'manual',
+          'no_pdf',
+          'no_body',
+        ];
+
+        foreach ($statuses as $status) {
+          $link = Url::fromRoute('reliefweb_import.reliefweb_importer.change_status', [
+            'uuid' => $record['imported_item_uuid'],
+            'status' => $status,
+          ]);
+          $status_links[] = [
+            '#type' => 'link',
+            '#title' => ucfirst($status),
+            '#url' => $link,
+          ];
+        }
+
+        $cells['node_created'] = [
+          '#theme' => 'item_list',
+          '#items' => $status_links,
+        ];
       }
 
       $rows[] = $cells;
@@ -258,12 +280,7 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function getStatuses() {
-    return [
-      'success' => $this->t('success'),
-      'skipped' => $this->t('skipped'),
-      'error' => $this->t('Error'),
-      'duplicate' => $this->t('Duplicate'),
-    ];
+    return $this->getStatusValues();
   }
 
   /**
@@ -324,6 +341,27 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
     }
 
     asort($values);
+
+    return $values;
+  }
+
+  /**
+   * Get status values from database.
+   */
+  protected function getStatusValues() {
+    $query = $this->database->select('reliefweb_import_records', 'r')
+      ->fields('r', ['status'])
+      ->condition('r.status', NULL, 'IS NOT NULL')
+      ->distinct()
+      ->orderBy('status');
+
+    $results = $query->execute()
+      ?->fetchCol();
+
+    $values = [];
+    foreach ($results as $status) {
+      $values[$status] = ucfirst(str_replace('_', ' ', $status));
+    }
 
     return $values;
   }

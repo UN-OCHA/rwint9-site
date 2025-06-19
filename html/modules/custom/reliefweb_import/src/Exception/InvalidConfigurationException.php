@@ -7,4 +7,10 @@ namespace Drupal\reliefweb_import\Exception;
 /**
  * Invalid configuration.
  */
-class InvalidConfigurationException extends \Exception implements ExceptionInterface {}
+class InvalidConfigurationException extends ReliefwebImportException implements ExceptionInterface {
+  /**
+   * {@inheritdoc}
+   */
+  protected string $status = 'invalid_config';
+
+}

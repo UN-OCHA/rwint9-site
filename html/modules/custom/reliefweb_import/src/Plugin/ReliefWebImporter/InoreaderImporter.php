@@ -11,6 +11,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
 use Drupal\reliefweb_import\Attribute\ReliefWebImporter;
+use Drupal\reliefweb_import\Exception\ReliefwebImportException;
 use Drupal\reliefweb_import\Plugin\ReliefWebImporterPluginBase;
 use Drupal\reliefweb_post_api\Exception\DuplicateException;
 use Drupal\reliefweb_post_api\Helpers\HashHelper;
@@ -351,15 +352,36 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       }
 
       // Process the item data into importable data.
-      $data = $this->getImportData($uuid, $document);
-      if (empty($data)) {
-        $this->getLogger()->info(strtr('Inoreader document @id has no data to import, skipping.', [
+      try {
+        $data = $this->getImportData($uuid, $document);
+        if (empty($data)) {
+          $this->getLogger()->info(strtr('Inoreader document @id has no data to import, skipping.', [
+            '@id' => $id,
+          ]));
+
+          // Log it.
+          $import_record['status'] = 'skipped';
+          $import_record['message'] = 'No data to import.';
+          $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
+          $import_records[$import_record['imported_item_uuid']] = $import_record;
+
+          continue;
+        }
+      }
+      catch (\Exception $e) {
+        $this->getLogger()->error(strtr('Error processing Inoreader document @id: @message', [
           '@id' => $id,
+          '@message' => $e->getMessage(),
         ]));
 
-        // Log it.
-        $import_record['status'] = 'skipped';
-        $import_record['message'] = 'No data to import.';
+        if ($e instanceof ReliefwebImportException) {
+          $import_record['status'] = $e->getStatus();
+        }
+        else {
+          $import_record['status'] = 'error';
+        }
+
+        $import_record['message'] = $e->getMessage();
         $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
         $import_records[$import_record['imported_item_uuid']] = $import_record;
 
@@ -445,18 +467,13 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       $pdf_bytes = $data['file_data']['bytes'] ?? NULL;
 
       $files = [];
-      try {
-        $info = $this->getRemoteFileInfo($pdf, 'pdf', $pdf_bytes);
-        if (!empty($info)) {
-          $file_uuid = $this->generateUuid($pdf, $uuid);
-          $files[] = [
-            'url' => $pdf,
-            'uuid' => $file_uuid,
-          ] + $info;
-        }
-      }
-      catch (\Exception $e) {
-        $this->getLogger()->error($e->getMessage());
+      $info = $this->getRemoteFileInfo($pdf, 'pdf', $pdf_bytes);
+      if (!empty($info)) {
+        $file_uuid = $this->generateUuid($pdf, $uuid);
+        $files[] = [
+          'url' => $pdf,
+          'uuid' => $file_uuid,
+        ] + $info;
       }
 
       unset($data['file_data']);
