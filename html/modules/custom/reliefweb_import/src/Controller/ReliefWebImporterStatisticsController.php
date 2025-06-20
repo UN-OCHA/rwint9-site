@@ -43,6 +43,7 @@ class ReliefWebImporterStatisticsController extends ControllerBase {
         $table_data[$importer] = [
           'headers' => [
             'source' => 'Source',
+            'total' => 'Total',
             'success' => 'Success',
             'skipped' => 'Skipped',
             'error' => 'Error',
@@ -68,6 +69,10 @@ class ReliefWebImporterStatisticsController extends ControllerBase {
       if (!isset($table_data[$importer]['rows'][$record['source']][$key])) {
         $table_data[$importer]['rows'][$record['source']][$key] = $record['num'];
       }
+      if (!isset($table_data[$importer]['rows'][$record['source']]['total'])) {
+        $table_data[$importer]['rows'][$record['source']]['total'] = 0;
+      }
+      $table_data[$importer]['rows'][$record['source']]['total'] += $record['num'];
     }
 
     foreach ($table_data as $importer => $data) {
@@ -75,6 +80,13 @@ class ReliefWebImporterStatisticsController extends ControllerBase {
       $rows = [];
       foreach ($data['rows'] as $row_data) {
         $row = [];
+        $percentage = 0;
+
+        if ($row_data['total'] > 0) {
+          $percentage = round(($row_data['success'] ?? 0) / $row_data['total'] * 100);
+          $row_data['success'] = ($row_data['success'] ?? 0) . ' (' . $percentage . '%)';
+        }
+
         foreach ($data['headers'] as $header => $header_label) {
           // If the header is 'source', we need to create a link to the source.
           if ($header === 'source') {
@@ -106,7 +118,24 @@ class ReliefWebImporterStatisticsController extends ControllerBase {
             }
           }
         }
-        $rows[] = $row;
+
+        $class = '';
+        if ($percentage < 50) {
+          $class = 'reliefweb-importer-statistics-low';
+        }
+        elseif ($percentage < 80) {
+          $class = 'reliefweb-importer-statistics-medium';
+        }
+        elseif ($percentage < 100) {
+          $class = 'reliefweb-importer-statistics-high';
+        }
+        else {
+          $class = 'reliefweb-importer-statistics-perfect';
+        }
+        $rows[] = [
+          'data' => $row,
+          'class' => [$class],
+        ];
       }
 
       $build[$importer] = [
@@ -117,6 +146,12 @@ class ReliefWebImporterStatisticsController extends ControllerBase {
         '#sticky' => TRUE,
       ];
     }
+
+    $build['#cache'] = [
+      'max-age' => 60,
+    ];
+
+    $build['#attached']['library'][] = 'common_design_subtheme/rw-moderation';
 
     return $build;
   }

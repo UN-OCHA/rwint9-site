@@ -304,3 +304,13 @@
 .js .dropbutton-multiple.open .dropbutton--rw-moderation .dropbutton-action {
   margin-bottom: .5rem;
 }
+
+.reliefweb-importer-statistics-low {
+  background-color: #e47474 !important;
+}
+.reliefweb-importer-statistics-medium {
+  background-color: #e7ba69 !important;
+}
+.reliefweb-importer-statistics-high {
+  background-color: #7aed88 !important;
+}
