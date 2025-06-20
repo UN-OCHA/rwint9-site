@@ -136,6 +136,7 @@
   border-radius: 3px;
   background: var(--cd-reliefweb-brand-blue--dark);
   font-weight: bold;
+  text-decoration: none;
 }
 .rw-document.rw-article--book .rw-article__content a[href^="/user/login/"]:hover,
 .rw-document.rw-article--book .rw-article__content a[href^="/user/login/"]:focus,
