@@ -46,3 +46,5 @@ reliefweb_import.reliefweb_importer.stats:
     _title: 'ReliefWeb Content Importers Statistics'
   requirements:
     _permission: 'access reliefweb failed import records'
+  options:
+    _admin_route: false

@@ -305,8 +305,8 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
    */
   public function getStatuses() {
     return [
-      'success' => $this->t('success'),
-      'skipped' => $this->t('skipped'),
+      'success' => $this->t('Success'),
+      'skipped' => $this->t('Skipped'),
       'error' => $this->t('Error'),
       'duplicate' => $this->t('Duplicate'),
     ];

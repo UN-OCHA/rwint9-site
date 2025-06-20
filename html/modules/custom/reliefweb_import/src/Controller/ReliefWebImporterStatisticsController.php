@@ -43,16 +43,20 @@ class ReliefWebImporterStatisticsController extends ControllerBase {
         $table_data[$importer] = [
           'headers' => [
             'source' => 'Source',
+            'success' => 'Success',
+            'skipped' => 'Skipped',
+            'error' => 'Error',
+            'duplicate' => 'Duplicate',
           ],
           'rows' => [],
         ];
       }
 
       if (!isset($table_data[$importer]['headers'][$record['status']])) {
-        $table_data[$importer]['headers'][$record['status']] = $record['status'];
+        $table_data[$importer]['headers'][$record['status']] = ucfirst(str_replace('_', ' ', $record['status']));
       }
       if (!empty($record['status_type']) && !isset($table_data[$importer]['headers'][$record['status'] . '::' . $record['status_type']])) {
-        $table_data[$importer]['headers'][$record['status'] . '::' . $record['status_type']] = $record['status_type'];
+        $table_data[$importer]['headers'][$record['status'] . '::' . $record['status_type']] = ucfirst(str_replace('_', ' ', $record['status_type']));
       }
 
       $key = $record['status'] . (empty($record['status_type']) ? '' : '::' . $record['status_type']);
