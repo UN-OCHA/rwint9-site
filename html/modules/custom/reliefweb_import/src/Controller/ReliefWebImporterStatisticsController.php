@@ -138,6 +138,11 @@ class ReliefWebImporterStatisticsController extends ControllerBase {
         ];
       }
 
+      $build[$importer . '_header'] = [
+        '#type' => 'markup',
+        '#markup' => '<h2>' . $this->t('Statistics for @importer', ['@importer' => $importer]) . '</h2>',
+      ];
+
       $build[$importer] = [
         '#type' => 'table',
         '#header' => $data['headers'],
