@@ -1,0 +1,7 @@
+reliefweb_moderation.content.reliefweb_import:
+  route_name: reliefweb_moderation.content
+  base_route: reliefweb_moderation.content
+  route_parameters:
+    service: reliefweb_import
+  title: Imported content
+  weight: 99

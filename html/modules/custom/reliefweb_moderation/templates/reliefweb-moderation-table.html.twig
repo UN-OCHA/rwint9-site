@@ -36,7 +36,13 @@
 
   <tbody>
   {% for row in rows %}
-    <tr>
+    {% if row.id is defined %}
+      <tr id="{{ row.id }}">
+      {% set row = row.data %}
+    {% else %}
+      <tr>
+    {% endif %}
+
     {% for id, cell in row %}
       <td{{ create_attribute()
         .addClass([

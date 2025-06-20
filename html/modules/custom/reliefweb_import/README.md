@@ -162,6 +162,12 @@ You can go to and `/admin/config/reliefweb/content-importers/inoreader_extra_tag
 drush sqlq "UPDATE reliefweb_import_records SET source = SUBSTR(SUBSTRING_INDEX(json_extract(extra, \"$.inoreader.feed_name\"), \"[source:\", 1), 2) where extra is not null"
 ```
 
+### Problematic feeds
+
+| Feed | Problem | Tags |
+| ---- | ------- | ---- |
+| `https://www.inoreader.com/feed/webfeed%3A%2F%2Fhttps%253A%252F%252Fwww.icrc.org%252Ffr%252Fresource-centre%252Fresult%253Ft%253D%2526f%25255B0%25255D%253Dtype%25253Apublication--c3b1806e` | Links to other page | `[source:1048][pdf:js][p:div.content-download_link a\|div.box-download a][pb:1]` |
+
 ## UNHCR importer
 
 Imports reports from [their API](https://data.unhcr.org)

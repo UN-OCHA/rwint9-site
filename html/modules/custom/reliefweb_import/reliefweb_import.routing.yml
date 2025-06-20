@@ -22,13 +22,14 @@ reliefweb_import.reliefweb_importer.inoreader.extra_tags:
   requirements:
     _permission: 'override reliefweb inoreader extra tags'
 
-reliefweb_import.reliefweb_importer.failed_import_records:
-  path: '/admin/content/reliefweb-failed-import-records'
+reliefweb_import.reliefweb_importer.change_status:
+  path: '/admin/content/reliefweb/content-importers/inoreader_change_status/{uuid}/{status}'
   defaults:
-    _controller: '\Drupal\reliefweb_import\Controller\ReliefWebImporterImportRecordsController::listFailedImportRecords'
-    _title: 'ReliefWeb Failed Import Records'
+    _controller: '\Drupal\reliefweb_import\Controller\ReliefWebImporterImportRecordsController::changeStatus'
+    _title: 'ReliefWeb change import record status'
   requirements:
-    _permission: 'access reliefweb failed import records'
+    _permission: 'change reliefweb failed import records'
+    _csrf_token: 'TRUE'
 
 reliefweb_import.reliefweb_importer.inoreader.test_form:
   path: '/admin/config/reliefweb/content-importers/inoreader_test_form'
@@ -37,3 +38,13 @@ reliefweb_import.reliefweb_importer.inoreader.test_form:
     _title: 'Inoreader test form'
   requirements:
     _permission: 'access reliefweb failed import records'
+
+reliefweb_import.reliefweb_importer.stats:
+  path: '/admin/config/reliefweb/content-importers/stats'
+  defaults:
+    _controller: '\Drupal\reliefweb_import\Controller\ReliefWebImporterStatisticsController::listStatistics'
+    _title: 'ReliefWeb Content Importers Statistics'
+  requirements:
+    _permission: 'access reliefweb failed import records'
+  options:
+    _admin_route: false
