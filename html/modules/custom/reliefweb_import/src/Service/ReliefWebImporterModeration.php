@@ -11,6 +11,7 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Link;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Pager\PagerParametersInterface;
 use Drupal\Core\Session\AccountProxyInterface;
@@ -67,7 +68,12 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function getTitle() {
-    return $this->t('ReliefWeb Importer');
+    return $this->t('ReliefWeb Importer (@stats)', [
+      '@stats' => Link::fromTextAndUrl(
+        $this->t('Statistics'),
+        Url::fromRoute('reliefweb_import.reliefweb_importer.stats')
+      )->toString(),
+    ]);
   }
 
   /**
@@ -267,6 +273,9 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
           $status_links[$status_info['id']] = [
             'title' => $status_info['label'],
             'url' => $link,
+            'attributes' => [
+              'title' => $status_info['description'],
+            ],
           ];
         }
 

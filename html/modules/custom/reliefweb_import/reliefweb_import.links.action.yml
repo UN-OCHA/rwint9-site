@@ -1,0 +1,5 @@
+reliefweb_import.reliefweb_importer.stats:
+  route_name: reliefweb_import.reliefweb_importer.stats
+  title: 'Statistics'
+  appears_on:
+    - reliefweb_moderation.content.reliefweb_import
