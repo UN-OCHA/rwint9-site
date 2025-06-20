@@ -259,11 +259,14 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
           $link = Url::fromRoute('reliefweb_import.reliefweb_importer.change_status', [
             'uuid' => $record['imported_item_uuid'],
             'status' => $status,
+          ], [
+            'query' => [
+              'destination' => $this->requestStack->getCurrentRequest()->getRequestUri() . '#row-' . $short_id,
+            ],
           ]);
-          $status_links[] = [
-            '#type' => 'link',
-            '#title' => $status_info['label'],
-            '#url' => $link,
+          $status_links[$status_info['id']] = [
+            'title' => $status_info['label'],
+            'url' => $link,
           ];
         }
 
@@ -271,9 +274,18 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
           '#theme' => 'item_list',
           '#items' => $status_links,
         ];
+
+        $cells['node_created'] = [
+          '#type' => 'dropbutton',
+          '#dropbutton_type' => 'small',
+          '#links' => $status_links,
+        ];
       }
 
-      $rows[] = $cells;
+      $rows[] = [
+        'id' => 'row-' . $short_id,
+        'data' => $cells,
+      ];
     }
 
     return $rows;

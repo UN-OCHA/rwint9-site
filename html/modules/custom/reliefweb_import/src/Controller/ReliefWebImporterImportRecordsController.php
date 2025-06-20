@@ -58,6 +58,10 @@ class ReliefWebImporterImportRecordsController extends ControllerBase {
       ->execute();
 
     // Redirect to the import record page.
+    if ($destination = $request->query->get('destination')) {
+      return new RedirectResponse($destination);
+    }
+
     $previousUrl = $request->server->get('HTTP_REFERER');
     $response = new RedirectResponse($previousUrl);
 
