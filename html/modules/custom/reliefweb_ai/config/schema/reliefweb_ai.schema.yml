@@ -15,4 +15,52 @@ reliefweb_ai.settings:
         login_instructions:
           type: text
           label: 'Login or register instructions for anonymous users.'
-
+    language_detection:
+      type: mapping
+      label: 'Settings for the language detection.'
+      mapping:
+        tag:
+          type: string
+          label: 'XML tag in the LLM response from which to retrieve the text extracts.'
+        use_title:
+          type: boolean
+          label: 'Whether to also use the title for the language detection.'
+    text_extract_fix:
+      type: mapping
+      label: 'Settings for the text extraction fix.'
+      mapping:
+        tag:
+          type: string
+          label: 'XML tag in the LLM response from which to retrieve the extracted text.'
+        line_matching:
+          type: mapping
+          label: 'Settings for the line matching between extracted text and original text.'
+          mapping:
+            endpoint:
+              type: string
+              label: 'OCHA AI helper to match lines.'
+            threshold:
+              type: integer
+              label: 'Similary threshold.'
+        inference:
+          type: mapping
+          label: 'Inference settings for the AI text fix.'
+          mapping:
+            plugin_id:
+              type: string
+              label: 'OCHA AI completion plugin ID.'
+            temperature:
+              type: float
+              label: 'Temperature.'
+            top_p:
+              type: float
+              label: 'Nucleus sampling (top_p).'
+            max_tokens:
+              type: integer
+              label: 'Max tokens.'
+            system_prompt:
+              type: text
+              label: 'System prompt.'
+            prompt:
+              type: text
+              label: 'Prompt.'
