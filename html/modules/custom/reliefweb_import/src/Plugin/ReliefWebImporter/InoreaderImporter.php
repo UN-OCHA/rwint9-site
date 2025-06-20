@@ -6,6 +6,7 @@ namespace Drupal\reliefweb_import\Plugin\ReliefWebImporter;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
@@ -430,29 +431,32 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       return [];
     }
 
-    if (isset($data['_tags'])) {
-      // Remove the tags from the data as they are not needed.
-      unset($data['_tags']);
-    }
-
-    // Remove the screenshot from the data as they are not needed.
-    unset($data['_screenshot']);
-
     $has_pdf = $data['_has_pdf'] ?? FALSE;
-    unset($data['_has_pdf']);
+
+    // Remove all keys starting with an underscore.
+    foreach ($data as $key => $value) {
+      if (strpos($key, '_') === 0) {
+        unset($data[$key]);
+      }
+    }
 
     if ($has_pdf) {
       $pdf = $data['file_data']['pdf'] ?? '';
       $pdf_bytes = $data['file_data']['bytes'] ?? NULL;
 
       $files = [];
-      $info = $this->getRemoteFileInfo($pdf, 'pdf', $pdf_bytes);
-      if (!empty($info)) {
-        $file_uuid = $this->generateUuid($pdf, $uuid);
-        $files[] = [
-          'url' => $pdf,
-          'uuid' => $file_uuid,
-        ] + $info;
+      try {
+        $info = $this->getRemoteFileInfo($pdf, 'pdf', $pdf_bytes);
+        if (!empty($info)) {
+          $file_uuid = $this->generateUuid($pdf, $uuid);
+          $files[] = [
+            'url' => $pdf,
+            'uuid' => $file_uuid,
+          ] + $info;
+        }
+      }
+      catch (\Exception $e) {
+        $this->getLogger()->error($e->getMessage());
       }
 
       unset($data['file_data']);
@@ -515,6 +519,26 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       if (preg_match('#https?://#i', $context['entity']->title->value)) {
         $fields['title__value'] = TRUE;
       }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function alterReliefWebEntitiesModerationStatusAdjustment(bool &$bypass, EntityInterface $entity): void {
+    // @todo retrieve the import record and check if there is a defined status
+    $records = $this->getExistingImportRecords([$entity->uuid()]);
+    if (empty($records)) {
+      return;
+    }
+
+    $record = reset($records);
+    $extra = json_decode($record['extra'] ?? [], TRUE);
+    $feed_name = $extra['feed_name'] ?? '';
+
+    $tags = $this->inoreaderService->extractTags($feed_name);
+    if (isset($tags['status'])) {
+      $bypass = TRUE;
     }
   }
 

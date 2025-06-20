@@ -137,6 +137,19 @@ function reliefweb_import_ocha_content_classification_classified_fields_alter(ar
 }
 
 /**
+ * Implements hook_reliefweb_entities_moderation_status_adjustment_bypass_alter().
+ */
+function reliefweb_import_reliefweb_entities_moderation_status_adjustment_bypass_alter(bool &$bypass, EntityInterface $entity): void {
+  $importer = reliefweb_import_get_entity_importer($entity);
+  if (!isset($importer)) {
+    return;
+  }
+
+  // Let the importer decide if the status moderation adjustment should apply.
+  $importer->alterReliefWebEntitiesModerationStatusAdjustment($bypass, $entity);
+}
+
+/**
  * Get the plugin used to import the entity.
  *
  * @param \Drupal\Core\Entity\EntityInterface $entity
@@ -195,8 +208,12 @@ function reliefweb_import_get_entity_importer(EntityInterface $entity): ?ReliefW
 /**
  * Use Puppeteer to extract PDF file from the page.
  */
-function reliefweb_import_extract_pdf_file(string $url, string $selector, string|array $pdf_element, string $attribute = 'href', int $timeout = 15, bool $blob = FALSE, int $delay = 3000): array {
+function reliefweb_import_extract_pdf_file(string $url, string $selector, string|array $pdf_element, string $attribute = 'href', int $timeout = 15, bool $blob = FALSE, int $delay = 3000, $screenshot = FALSE, $debug = FALSE): array {
   $extract_url = \Drupal::config('reliefweb_import.settings')->get('extract_url');
+
+  if (!is_array($pdf_element)) {
+    $pdf_element = [$pdf_element];
+  }
 
   $query = [
     'service' => 'reliefweb_import',
@@ -214,6 +231,13 @@ function reliefweb_import_extract_pdf_file(string $url, string $selector, string
   if ($blob) {
     $query['file'] = '1';
   }
+  if ($screenshot) {
+    $query['screenshot'] = '1';
+  }
+  if ($debug) {
+    $query['debug'] = '1';
+  }
+
   $extract_url .= '?' . UrlHelper::buildQuery($query);
 
   $options = [

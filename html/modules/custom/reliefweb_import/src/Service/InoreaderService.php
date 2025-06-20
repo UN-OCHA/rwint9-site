@@ -58,6 +58,7 @@ class InoreaderService {
     'pb' => 'puppeteer-blob',
     'd' => 'delay',
     't' => 'timeout',
+    's' => 'status',
   ];
 
   public function __construct(
@@ -283,6 +284,7 @@ class InoreaderService {
     $url = $document['canonical'][0]['href'];
     $pdf_bytes = NULL;
     $screenshot = NULL;
+    $logMessages = [];
     $body = '';
 
     // Retrieve the title and clean it.
@@ -309,19 +311,7 @@ class InoreaderService {
     }
 
     // Extract tags from the origin title.
-    preg_match_all('/\[(.*?)\]/', $origin_title, $matches);
-    $matches = $matches[1];
-
-    // Parse everything so we can reference it easily.
-    $tags = $this->parseTags($matches);
-
-    // Get extra tags from state.
-    $extra_tags = $this->state->get('reliefweb_importer_inoreader_extra_tags', []);
-
-    // Merge extra tags if they exist.
-    if (!empty($extra_tags[$tags['source']])) {
-      $tags = $this->mergeTags($tags, $extra_tags[$tags['source']]);
-    }
+    $tags = $this->extractTags($origin_title);
 
     // Source is mandatory, so present.
     $source_id = $tags['source'] ?? '';
@@ -338,6 +328,9 @@ class InoreaderService {
       $fetch_timeout = (int) $tags['timeout'];
       unset($tags['timeout']);
     }
+
+    // Status of the new report.
+    $status = '';
 
     foreach ($tags as $tag_key => $tag_value) {
       if ($tag_key == 'pdf') {
@@ -425,6 +418,7 @@ class InoreaderService {
             $pdf = $puppeteer_result['pdf'] ?? '';
             $pdf_bytes = $puppeteer_result['blob'] ?? NULL;
             $screenshot = $puppeteer_result['screenshot'] ?? NULL;
+            $logMessages = $puppeteer_result['log'] ?? NULL;
             break;
 
           case 'content':
@@ -453,6 +447,9 @@ class InoreaderService {
             $title = $this->sanitizeText($title);
             break;
         }
+      }
+      elseif ($tag_key == 'status') {
+        $status = $tag_value;
       }
     }
 
@@ -504,7 +501,12 @@ class InoreaderService {
       '_tags' => $tags,
       '_has_pdf' => $has_pdf,
       '_screenshot' => $screenshot,
+      '_log' => $logMessages,
     ];
+
+    if (!empty($status)) {
+      $data['status'] = $status;
+    }
 
     return $data;
   }
@@ -745,6 +747,8 @@ class InoreaderService {
     $pdf = [];
     $blob = FALSE;
     $delay = 3000;
+    $screenshot = FALSE;
+    $debug = FALSE;
 
     // Check if we need to request the PDF as Blob.
     if (isset($tags['puppeteer-blob'])) {
@@ -754,6 +758,12 @@ class InoreaderService {
     if (isset($tags['delay'])) {
       $delay = (int) $tags['delay'];
     }
+    if (isset($tags['screenshot'])) {
+      $screenshot = TRUE;
+    }
+    if (isset($tags['debug'])) {
+      $debug = TRUE;
+    }
 
     if (isset($tags['wrapper'])) {
       if (!is_array($tags['wrapper'])) {
@@ -761,14 +771,14 @@ class InoreaderService {
       }
 
       foreach ($tags['wrapper'] as $wrapper) {
-        $pdf = reliefweb_import_extract_pdf_file($page_url, $wrapper, $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay);
+        $pdf = reliefweb_import_extract_pdf_file($page_url, $wrapper, $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay, $screenshot, $debug);
         if ($pdf) {
           break;
         }
       }
     }
     else {
-      $pdf = reliefweb_import_extract_pdf_file($page_url, '', $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay);
+      $pdf = reliefweb_import_extract_pdf_file($page_url, '', $tags['puppeteer'], $tags['puppeteer-attrib'] ?? 'href', $fetch_timeout, $blob, $delay, $screenshot, $debug);
     }
 
     if (empty($pdf)) {
@@ -871,6 +881,42 @@ class InoreaderService {
   }
 
   /**
+   * Extract tags from a feed title.
+   *
+   * @param string $feed_name
+   *   Inoreader feed name.
+   *
+   * @return array
+   *   Tags.
+   */
+  public function extractTags(string $feed_name): array {
+    if (empty($feed_name)) {
+      return [];
+    }
+
+    // Extract the tags from the feed name.
+    $tags = [];
+    if (preg_match_all('/\[(.*?)\]/', $feed_name, $matches) > 0) {
+      $matches = $matches[1] ?? [];
+
+      // Parse everything so we can reference it easily.
+      $tags = $this->parseTags($matches);
+    }
+
+    // Get extra tags from state.
+    if (isset($tags['source'])) {
+      $extra_tags = $this->state->get('reliefweb_importer_inoreader_extra_tags', []);
+
+      // Merge extra tags if they exist.
+      if (!empty($extra_tags[$tags['source']])) {
+        $tags = $this->mergeTags($tags, $extra_tags[$tags['source']]);
+      }
+    }
+
+    return $tags;
+  }
+
+  /**
    * Parse tags.
    */
   protected function parseTags(array $matches): array {
@@ -879,6 +925,7 @@ class InoreaderService {
     foreach ($matches as $match) {
       $tag_parts = explode(':', $match);
       $tag_key = reset($tag_parts);
+      $tag_key = trim($tag_key);
 
       // Resolve tag aliases.
       if (isset($this->tagAliases[$tag_key])) {
@@ -886,7 +933,7 @@ class InoreaderService {
       }
 
       array_shift($tag_parts);
-      $tag_value = implode(':', $tag_parts);
+      $tag_value = trim(implode(':', $tag_parts));
 
       if (!isset($tags[$tag_key])) {
         $tags[$tag_key] = $tag_value;

@@ -47,9 +47,12 @@ Imports tagged items from the [automation_production](https://www.inoreader.com/
 | puppeteer | p | No | Yes | [puppeteer:ds-file-download-link a] |
 | ~~puppeteer2~~ | p2 | No | No | [puppeteer:ds-file-download-link a] |
 | puppeteer-attrib | pa | No | No | [puppeteer-attrib:href] |
-| puppeteer-blob | pb | No | No | [puppeteer-attrib:href] |
+| puppeteer-blob | pb | No | No | [puppeteer-blob:1] |
 | timeout | t | No | No | [timeout:30] |
 | delay | d | No | No | [delay:5000]
+| status | s | No | No | [status:published] |
+| screenshot | - | No | No | [screenshot:1] |
+| debug | - | No | No | [debug:1] |
 
 #### `source` tag
 
@@ -125,6 +128,18 @@ Defines a custom timeout for fetching external data.
 #### `delay` tag
 
 Defines a custom delay (ms) for fetching external data.
+
+#### `status` tag
+
+Defines the status of the new report.
+
+#### `screenshot` tag
+
+Only use for debugging, capture a screenshot of the page.
+
+#### `debug` tag
+
+Only use for debugging, capture all logs.
 
 ### Override tags in the UI
 

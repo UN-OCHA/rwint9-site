@@ -833,7 +833,7 @@ function reliefweb_entities_ocha_content_classification_post_entity_presave(Enti
   $account = match(TRUE) {
     $entity instanceof RevisionLogInterface => $entity->getRevisionUser(),
     $entity instanceof EntityOwnerInterface => $entity->getOwner(),
-    default => $this->currentUser,
+    default => \Drupal::currentUser(),
   };
 
   if ($account?->id() != 1 && $account?->hasPermission("adjust {$entity->bundle()} moderation status based on classification status")) {
@@ -856,6 +856,13 @@ function reliefweb_entities_adjust_moderation_status_based_on_classification_sta
   // entity is going to be queued (or is already being queued) if the user who
   // triggered the entity saving was allowed to use the classification workflow.
   if (!isset($entity->ocha_content_classification_status)) {
+    return;
+  }
+
+  // Allow other modules to bypass the status adjustment.
+  $bypass = FALSE;
+  \Drupal::moduleHandler()->alter('reliefweb_entities_moderation_status_adjustment_bypass', $bypass, $entity);
+  if ($bypass) {
     return;
   }
 
