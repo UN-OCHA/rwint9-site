@@ -277,7 +277,7 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
 
         $cells['node_created'] = [
           '#type' => 'dropbutton',
-          '#dropbutton_type' => 'small',
+          '#dropbutton_type' => 'rw-moderation',
           '#links' => $status_links,
         ];
       }
