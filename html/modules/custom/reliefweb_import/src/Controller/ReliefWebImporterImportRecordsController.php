@@ -41,10 +41,16 @@ class ReliefWebImporterImportRecordsController extends ControllerBase {
       throw new \InvalidArgumentException('Import record not found for UUID: ' . $uuid);
     }
 
-    $record['status'] = $status;
+    $statuses = reliefweb_import_status_type_values();
+    if (!isset($statuses[$status])) {
+      throw new \InvalidArgumentException('Invalid status type: ' . $status);
+    }
+
+    $status_info = $statuses[$status];
     $this->database->update('reliefweb_import_records')
       ->fields([
-        'status' => $status,
+        'status' => $status_info['status'],
+        'status_type' => $status_info['id'],
         'changed' => time(),
         'attempts' => 99,
       ])

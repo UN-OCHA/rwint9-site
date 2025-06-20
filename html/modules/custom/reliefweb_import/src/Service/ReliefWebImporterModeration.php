@@ -112,6 +112,8 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
     /** @var \Drupal\reliefweb_moderation\EntityModeratedInterface[] $entities */
     $entities = $results['entities'];
 
+    $status_types = reliefweb_import_status_type_values();
+
     // Prepare the table rows' data from the entities.
     $rows = [];
     foreach ($records as $record) {
@@ -228,6 +230,9 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
 
       $cells['importer'] = $record['importer'];
       $cells['status'] = $record['status'];
+      if (isset($status_types[$record['status_type']])) {
+        $cells['status'] .= ' (' . $status_types[$record['status_type']]['label'] . ')';
+      }
       $cells['source'] = $record['source'];
 
       // Date cell.
@@ -249,21 +254,15 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
       }
       else {
         $status_links = [];
-        $statuses = [
-          'manual',
-          'no_pdf',
-          'no_body',
-          '404',
-        ];
 
-        foreach ($statuses as $status) {
+        foreach ($status_types as $status => $status_info) {
           $link = Url::fromRoute('reliefweb_import.reliefweb_importer.change_status', [
             'uuid' => $record['imported_item_uuid'],
             'status' => $status,
           ]);
           $status_links[] = [
             '#type' => 'link',
-            '#title' => ucfirst(str_replace('_', ' ', $status)),
+            '#title' => $status_info['label'],
             '#url' => $link,
           ];
         }
@@ -284,7 +283,12 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function getStatuses() {
-    return $this->getStatusValues();
+    return [
+      'success' => $this->t('success'),
+      'skipped' => $this->t('skipped'),
+      'error' => $this->t('Error'),
+      'duplicate' => $this->t('Duplicate'),
+    ];
   }
 
   /**
@@ -310,6 +314,16 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
     $definitions = parent::initFilterDefinitions([
       'status',
     ]);
+
+    $definitions['status_type'] = [
+      'form' => 'status_type',
+      'type' => 'field',
+      'label' => $this->t('Status type'),
+      'field' => 'status_type',
+      'column' => 'value',
+      'operator' => 'OR',
+      'values' => $this->getStatusTypeValues(),
+    ];
 
     $definitions['importer'] = [
       'form' => 'importer',
@@ -350,21 +364,14 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
   }
 
   /**
-   * Get status values from database.
+   * Get status type values from database.
    */
-  protected function getStatusValues() {
-    $query = $this->database->select('reliefweb_import_records', 'r')
-      ->fields('r', ['status'])
-      ->condition('r.status', NULL, 'IS NOT NULL')
-      ->distinct()
-      ->orderBy('status');
-
-    $results = $query->execute()
-      ?->fetchCol();
-
+  protected function getStatusTypeValues() {
     $values = [];
-    foreach ($results as $status) {
-      $values[$status] = ucfirst(str_replace('_', ' ', $status));
+
+    $status_types = reliefweb_import_status_type_values();
+    foreach ($status_types as $status_type) {
+      $values[$status_type['id']] = $status_type['label'];
     }
 
     return $values;
