@@ -1,0 +1,16 @@
+enabled: 1
+max_import_attempts: '3'
+classification:
+  enabled: 1
+  check_user_permissions: 0
+  prevent_publication: 0
+  specified_field_check: ''
+  force_field_update: ''
+  classified_fields: '*:yes'
+reimport:
+  enabled: 0
+  type: ''
+  fields: ''
+  statuses: ''
+api_url: 'https://data-in-emergencies.fao.org/api/search/v1/collections/document/items'
+timeout: '5'

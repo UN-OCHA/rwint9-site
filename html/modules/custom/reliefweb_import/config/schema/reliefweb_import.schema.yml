@@ -184,3 +184,15 @@ reliefweb_import.plugin.importer.worldbank:
     timeout:
       type: integer
       label: 'Connection and request timeout.'
+
+# FAO data importer plugin settings.
+reliefweb_import.plugin.importer.fao_data:
+  type: reliefweb_import.plugin.importer
+  label: 'FAO data importer plugin base settings.'
+  mapping:
+    api_url:
+      type: string
+      label: 'API URL.'
+    timeout:
+      type: integer
+      label: 'Connection and request timeout.'
