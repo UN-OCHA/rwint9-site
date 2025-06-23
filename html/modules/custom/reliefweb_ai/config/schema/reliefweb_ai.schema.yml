@@ -29,9 +29,15 @@ reliefweb_ai.settings:
       type: mapping
       label: 'Settings for the text extraction fix.'
       mapping:
+        enabled:
+          type: boolean
+          label: 'Enable text extraction fix step.'
         tag:
           type: string
           label: 'XML tag in the LLM response from which to retrieve the extracted text.'
+        summary_tag:
+          type: string
+          label: 'XML tag in the LLM response from which to retrieve the summary, if any.'
         line_matching:
           type: mapping
           label: 'Settings for the line matching between extracted text and original text.'

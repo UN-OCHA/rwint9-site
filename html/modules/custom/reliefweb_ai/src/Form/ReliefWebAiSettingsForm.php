@@ -96,6 +96,13 @@ class ReliefWebAiSettingsForm extends ConfigFormBase {
       '#tree' => TRUE,
     ];
 
+    $form['text_extract_fix']['enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enabled'),
+      '#description' => $this->t('Enable text extraction fix.'),
+      '#default_value' => $config->get('text_extract_fix.enabled') ?? FALSE,
+    ];
+
     $form['text_extract_fix']['tag'] = [
       '#type' => 'textfield',
       '#title' => $this->t('XML tag for extracted text'),
@@ -103,6 +110,14 @@ class ReliefWebAiSettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('text_extract_fix.tag') ?? '',
       '#maxlength' => 255,
       '#required' => TRUE,
+    ];
+
+    $form['text_extract_fix']['summary_tag'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('XML tag for an optional summary'),
+      '#description' => $this->t('XML tag in the LLM response from which to retrieve the summary, if any.'),
+      '#default_value' => $config->get('text_extract_fix.summary_tag') ?? '',
+      '#maxlength' => 255,
     ];
 
     // Line Matching subsection.
@@ -250,6 +265,12 @@ class ReliefWebAiSettingsForm extends ConfigFormBase {
       $form_state->setErrorByName('text_extract_fix][tag',
         $this->t('XML tag must contain only letters, numbers, underscores, and hyphens.'));
     }
+
+    $summary_tag = $form_state->getValue(['text_extract_fix', 'summary_tag']);
+    if (!empty($summary_tag) && !preg_match('/^[a-zA-Z_][a-zA-Z0-9_-]*$/', $summary_tag)) {
+      $form_state->setErrorByName('text_extract_fix][summary_tag',
+        $this->t('XML tag must contain only letters, numbers, underscores, and hyphens.'));
+    }
   }
 
   /**
@@ -273,8 +294,12 @@ class ReliefWebAiSettingsForm extends ConfigFormBase {
       $form_state->getValue(['language_detection', 'use_title']));
 
     // Save Text Extract Fix settings.
+    $config->set('text_extract_fix.enabled',
+      !empty($form_state->getValue(['text_extract_fix', 'enabled'])));
     $config->set('text_extract_fix.tag',
       $form_state->getValue(['text_extract_fix', 'tag']));
+    $config->set('text_extract_fix.summary_tag',
+      $form_state->getValue(['text_extract_fix', 'summary_tag']));
     $config->set('text_extract_fix.line_matching.endpoint',
       $form_state->getValue(['text_extract_fix', 'line_matching', 'endpoint']));
     $config->set('text_extract_fix.line_matching.threshold',
