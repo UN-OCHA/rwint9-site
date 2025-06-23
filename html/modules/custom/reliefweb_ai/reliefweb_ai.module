@@ -512,7 +512,7 @@ function reliefweb_ai_post_classification_body_update(
         throw new \Exception('Corrected summary too dissimilar.');
       }
 
-      $body_value = $summary;
+      $body_value = $corrected_summary;
     }
     else {
       $body_value = $corrected_text;
