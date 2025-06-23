@@ -9,6 +9,6 @@ class ReliefwebImportExceptionXml extends ReliefwebImportException {
   /**
    * {@inheritdoc}
    */
-  protected string $status = 'xml_error';
+  protected string $statusType = 'xml_error';
 
 }

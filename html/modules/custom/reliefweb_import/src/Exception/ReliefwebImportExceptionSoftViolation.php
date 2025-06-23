@@ -9,6 +9,6 @@ class ReliefwebImportExceptionSoftViolation extends ReliefwebImportException {
   /**
    * {@inheritdoc}
    */
-  protected string $status = 'soft_violation';
+  protected string $statusType = 'soft_violation';
 
 }

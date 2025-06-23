@@ -7,17 +7,17 @@ namespace Drupal\reliefweb_import\Exception;
  */
 class ReliefwebImportException extends \Exception {
   /**
-   * The status of the exception.
+   * The status_type of the exception.
    *
    * @var string
    */
-  protected string $status = 'general_error';
+  protected string $statusType = 'general_error';
 
   /**
    * Get the status of the exception.
    */
-  public function getStatus(): string {
-    return $this->status;
+  public function getStatusType(): string {
+    return $this->statusType;
   }
 
 }

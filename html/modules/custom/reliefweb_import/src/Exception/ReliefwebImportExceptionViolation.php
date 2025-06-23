@@ -9,6 +9,6 @@ class ReliefwebImportExceptionViolation extends ReliefwebImportException {
   /**
    * {@inheritdoc}
    */
-  protected string $status = 'violation';
+  protected string $statusType = 'violation';
 
 }

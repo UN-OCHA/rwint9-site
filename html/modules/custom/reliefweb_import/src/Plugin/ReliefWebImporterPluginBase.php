@@ -24,7 +24,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
 use Drupal\reliefweb_import\Exception\InvalidConfigurationException;
-use Drupal\reliefweb_import\Exception\ReliefwebImportExceptioIllegalFilename;
+use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionIllegalFilename;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionFileTooBig;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorException;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
@@ -1087,7 +1087,7 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
       $extracted_filename = basename($url);
       $filename = $this->sanitizeFileName($extracted_filename, $allowed_extensions, $default_extension);
       if (empty($filename)) {
-        throw new ReliefwebImportExceptioIllegalFilename(strtr('Invalid filename: @filename.', [
+        throw new ReliefwebImportExceptionIllegalFilename(strtr('Invalid filename: @filename.', [
           '@filename' => $extracted_filename,
         ]));
       }

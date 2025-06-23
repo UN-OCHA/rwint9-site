@@ -9,6 +9,6 @@ class ReliefwebImportExceptionFileTooBig extends ReliefwebImportException {
   /**
    * {@inheritdoc}
    */
-  protected string $status = 'file_too_big';
+  protected string $statusType = 'file_too_big';
 
 }

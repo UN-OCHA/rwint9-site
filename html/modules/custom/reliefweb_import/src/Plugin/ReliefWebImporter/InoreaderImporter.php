@@ -380,7 +380,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         ]));
 
         if ($e instanceof ReliefwebImportException) {
-          $import_record['status'] = $e->getStatus();
+          $import_record['status_type'] = $e->getStatusType();
         }
         else {
           $import_record['status'] = 'error';

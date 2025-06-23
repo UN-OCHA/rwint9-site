@@ -11,6 +11,6 @@ class InvalidConfigurationException extends ReliefwebImportException implements 
   /**
    * {@inheritdoc}
    */
-  protected string $status = 'invalid_config';
+  protected string $statusType = 'invalid_config';
 
 }
