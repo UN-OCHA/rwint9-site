@@ -24,6 +24,9 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
 use Drupal\reliefweb_import\Exception\InvalidConfigurationException;
+use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionIllegalFilename;
+use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionFileTooBig;
+use Drupal\reliefweb_post_api\Plugin\ContentProcessorException;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
@@ -1065,26 +1068,26 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
   protected function getRemoteFileInfo(string $url, string $default_extension = 'pdf', ?string $bytes = NULL): array {
     $max_size = $this->getReportAttachmentAllowedMaxSize();
     if (empty($max_size)) {
-      throw new \Exception('No allowed file max size.');
+      throw new InvalidConfigurationException('No allowed file max size.');
     }
 
     $allowed_extensions = $this->getReportAttachmentAllowedExtensions();
     if (empty($allowed_extensions)) {
-      throw new \Exception('No allowed file extensions.');
+      throw new InvalidConfigurationException('No allowed file extensions.');
     }
 
     // Support raw bytes.
     if (!empty($bytes)) {
       // Validate the size.
       if ($max_size > 0 && strlen($bytes) > $max_size) {
-        throw new \Exception('File is too large.');
+        throw new ReliefwebImportExceptionFileTooBig('File is too large.');
       }
 
       // Sanitize the file name.
       $extracted_filename = basename($url);
       $filename = $this->sanitizeFileName($extracted_filename, $allowed_extensions, $default_extension);
       if (empty($filename)) {
-        throw new \Exception(strtr('Invalid filename: @filename.', [
+        throw new ReliefwebImportExceptionIllegalFilename(strtr('Invalid filename: @filename.', [
           '@filename' => $extracted_filename,
         ]));
       }
