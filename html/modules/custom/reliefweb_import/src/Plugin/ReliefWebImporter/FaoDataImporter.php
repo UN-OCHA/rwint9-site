@@ -279,7 +279,6 @@ class FaoDataImporter extends ReliefWebImporterPluginBase {
         'id',
         'title',
         'created',
-        'modified',
         'documentLink',
       ]);
       $hash = HashHelper::generateHash($filtered_document);
