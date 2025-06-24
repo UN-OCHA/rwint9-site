@@ -1,5 +1,5 @@
 diff --git a/core/modules/file/src/Plugin/rest/resource/FileUploadResource.php b/core/modules/file/src/Plugin/rest/resource/FileUploadResource.php
-index 7aa90224fc..5fe8ded036 100644
+index 7aa90224fc0..5fe8ded0366 100644
 --- a/core/modules/file/src/Plugin/rest/resource/FileUploadResource.php
 +++ b/core/modules/file/src/Plugin/rest/resource/FileUploadResource.php
 @@ -7,6 +7,7 @@
@@ -41,7 +41,7 @@ index 7aa90224fc..5fe8ded036 100644
     * {@inheritdoc}
     */
 diff --git a/core/modules/file/tests/src/Kernel/FileItemValidationTest.php b/core/modules/file/tests/src/Kernel/FileItemValidationTest.php
-index 6358163c86..119553e085 100644
+index 2b843d6d345..69e8a6c06f9 100644
 --- a/core/modules/file/tests/src/Kernel/FileItemValidationTest.php
 +++ b/core/modules/file/tests/src/Kernel/FileItemValidationTest.php
 @@ -10,7 +10,6 @@
@@ -85,13 +85,12 @@ index 6358163c86..119553e085 100644
        'uid' => $this->user->id(),
      ]);
      $file->setPermanent();
-@@ -107,12 +101,14 @@ public function testFileValidationConstraint($file_type): void {
-       ],
-     ]);
+@@ -110,11 +104,13 @@ public function testFileValidationConstraint($file_type): void {
+     // Enforce the file to be new as file size is checked only for new files.
+     $entity_test->field_test_file->entity->enforceIsNew();
      $result = $entity_test->validate();
 -    $this->assertCount(2, $result);
 +    $this->assertCount(3, $result);
- 
      $this->assertEquals('field_test_file.0', $result->get(0)->getPropertyPath());
 -    $this->assertEquals('The file is <em class="placeholder">2.93 KB</em> exceeding the maximum file size of <em class="placeholder">2 KB</em>.', (string) $result->get(0)->getMessage());
 +    $this->assertEquals('You do not have access to the referenced entity (<em class="placeholder">file</em>: <em class="placeholder">1</em>).', (string) $result->get(0)->getMessage());
@@ -101,13 +100,13 @@ index 6358163c86..119553e085 100644
 +    $this->assertEquals('field_test_file.0', $result->get(2)->getPropertyPath());
 +    $this->assertEquals('Only files with the following extensions are allowed: <em class="placeholder">jpg</em>.', (string) $result->get(2)->getMessage());
  
-     // Refer to a file that does not exist.
-     $entity_test = EntityTest::create([
+     // File size is not checked for already existing files.
+     $entity_test->field_test_file->entity->enforceIsNew(FALSE);
 diff --git a/core/modules/image/src/Plugin/Field/FieldType/ImageItem.php b/core/modules/image/src/Plugin/Field/FieldType/ImageItem.php
-index 29fa146d48..f18e767ca4 100644
+index 1742f56fe28..87cd65185a6 100644
 --- a/core/modules/image/src/Plugin/Field/FieldType/ImageItem.php
 +++ b/core/modules/image/src/Plugin/Field/FieldType/ImageItem.php
-@@ -525,4 +525,36 @@ public function isDisplayed() {
+@@ -526,4 +526,36 @@ public function isDisplayed() {
      return TRUE;
    }
  
@@ -145,7 +144,7 @@ index 29fa146d48..f18e767ca4 100644
 +
  }
 diff --git a/core/modules/image/src/Plugin/Field/FieldWidget/ImageWidget.php b/core/modules/image/src/Plugin/Field/FieldWidget/ImageWidget.php
-index bae25d84ff..bd9f484b46 100644
+index 80fc00fbbba..c59b164122c 100644
 --- a/core/modules/image/src/Plugin/Field/FieldWidget/ImageWidget.php
 +++ b/core/modules/image/src/Plugin/Field/FieldWidget/ImageWidget.php
 @@ -140,29 +140,10 @@ protected function formMultipleElements(FieldItemListInterface $items, array &$f
@@ -180,7 +179,7 @@ index bae25d84ff..bd9f484b46 100644
      $element['#accept'] = 'image/*';
  
 diff --git a/core/modules/image/tests/src/Functional/ImageFieldWidgetTest.php b/core/modules/image/tests/src/Functional/ImageFieldWidgetTest.php
-index 2bf7c652ea..39e2b37021 100644
+index 2bf7c652ea4..39e2b370216 100644
 --- a/core/modules/image/tests/src/Functional/ImageFieldWidgetTest.php
 +++ b/core/modules/image/tests/src/Functional/ImageFieldWidgetTest.php
 @@ -47,13 +47,13 @@ public function testWidgetElement(): void {
@@ -200,11 +199,11 @@ index 2bf7c652ea..39e2b37021 100644
  
  }
 diff --git a/core/modules/image/tests/src/Kernel/ImageItemTest.php b/core/modules/image/tests/src/Kernel/ImageItemTest.php
-index 28561deb38..8046c91abe 100644
+index 0598b25e9db..430b5fce99f 100644
 --- a/core/modules/image/tests/src/Kernel/ImageItemTest.php
 +++ b/core/modules/image/tests/src/Kernel/ImageItemTest.php
-@@ -200,4 +200,46 @@ public function testImageItemMalformed(): void {
-     $this->assertEmpty($entity->image_test->height);
+@@ -225,4 +225,46 @@ public function testDisplayDefaultValue(): void {
+     self::assertEquals(1, $form_state->getValue(['image_test', 0, 'display']));
    }
  
 +  /**
@@ -251,7 +250,7 @@ index 28561deb38..8046c91abe 100644
 +
  }
 diff --git a/core/modules/media_library/src/Form/FileUploadForm.php b/core/modules/media_library/src/Form/FileUploadForm.php
-index fd2bc14a41..40733877a4 100644
+index e9e25f108fc..85a628ec58e 100644
 --- a/core/modules/media_library/src/Form/FileUploadForm.php
 +++ b/core/modules/media_library/src/Form/FileUploadForm.php
 @@ -5,7 +5,6 @@
@@ -286,7 +285,7 @@ index fd2bc14a41..40733877a4 100644
    /**
 diff --git a/core/modules/media_library/tests/src/FunctionalJavascript/MediaLibraryImageUploadTest.php b/core/modules/media_library/tests/src/FunctionalJavascript/MediaLibraryImageUploadTest.php
 new file mode 100644
-index 0000000000..6d4d9ce161
+index 00000000000..6d4d9ce1611
 --- /dev/null
 +++ b/core/modules/media_library/tests/src/FunctionalJavascript/MediaLibraryImageUploadTest.php
 @@ -0,0 +1,58 @@
@@ -349,7 +348,7 @@ index 0000000000..6d4d9ce161
 +
 +}
 diff --git a/core/modules/rest/tests/src/Functional/FileUploadResourceTestBase.php b/core/modules/rest/tests/src/Functional/FileUploadResourceTestBase.php
-index 1dfe440577..3da874a4f9 100644
+index 1dfe440577c..3da874a4f9a 100644
 --- a/core/modules/rest/tests/src/Functional/FileUploadResourceTestBase.php
 +++ b/core/modules/rest/tests/src/Functional/FileUploadResourceTestBase.php
 @@ -92,6 +92,20 @@ abstract class FileUploadResourceTestBase extends ResourceTestBase {
