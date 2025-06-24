@@ -147,7 +147,9 @@
         wrapper.appendChild(button);
 
         // Add the widget after the omnibox.
-        omnibox.parentNode.insertBefore(container, omnibox.nextSibling);
+        if (omnibox) {
+          omnibox.parentNode.insertBefore(container, omnibox.nextSibling);
+        }
 
         // Datepicker widget.
         var widget = {
@@ -440,6 +442,11 @@
       var select = form.querySelector('select[name="omnibox[select]"]');
       var omnibox = form.querySelector('input[name="omnibox[input]"]');
       var selection = form.querySelector('[data-selection]');
+
+      if (!omnibox || !select || !selection) {
+        // Skip if the form is not properly configured.
+        return;
+      }
 
       // Create the widgets.
       var datepicker = createDatePickerWidget(omnibox, select, selection);
