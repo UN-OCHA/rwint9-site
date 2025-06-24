@@ -24,6 +24,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
 use Drupal\reliefweb_import\Exception\InvalidConfigurationException;
+use Drupal\reliefweb_import\Exception\ReliefwebImportException;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionIllegalFilename;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionFileTooBig;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorException;
@@ -1134,7 +1135,7 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
       ];
 
       $response = NULL;
-      foreach ($user_agents as $user_agent) {
+      foreach ($user_agents as $index => $user_agent) {
         $response = $this->httpClient->get($url, [
           'stream' => $user_agent['stream'],
           // @todo retrieve that from the configuration.
@@ -1149,15 +1150,30 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
         if ($response->getStatusCode() == 200) {
           break;
         }
+
+        // Check if we are rate limited.
+        // @todo we need to do something there, like checking the retry-after
+        // header and possibly stop the import to try later.
+        if ($response->getStatusCode() == 429) {
+          $this->getLogger()->notice(strtr('Rate limited on attempt @attempt for @url with user agent "@agent".', [
+            '@attempt' => $index + 1,
+            '@url' => $url,
+            '@agent' => $user_agent['ua'],
+          ]));
+          break;
+        }
+
+        // 2-second delay between user agent attempts to be respectful.
+        sleep(2);
       }
 
       if ($response->getStatusCode() !== 200) {
-        throw new \Exception('Unexpected HTTP status: ' . $response->getStatusCode());
+        throw new ReliefwebImportException('Unexpected HTTP status: ' . $response->getStatusCode());
       }
 
       $content_length = $response->getHeaderLine('Content-Length');
       if ($content_length !== '' && $max_size > 0 && ((int) $content_length) > $max_size) {
-        throw new \Exception('File is too large.');
+        throw new ReliefwebImportExceptionFileTooBig('File is too large.');
       }
 
       // Try to get the filename from the Content Disposition header.
@@ -1172,14 +1188,14 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
           $extracted_filename = rawurldecode($matches[1]);
         }
         else {
-          throw new \Exception('Unable to retrieve file name.');
+          throw new ReliefwebImportExceptionIllegalFilename('Unable to retrieve file name.');
         }
       }
 
       // Sanitize the file name.
       $filename = $this->sanitizeFileName($extracted_filename, $allowed_extensions, $default_extension);
       if (empty($filename)) {
-        throw new \Exception(strtr('Invalid filename: @filename.', [
+        throw new ReliefwebImportExceptionIllegalFilename(strtr('Invalid filename: @filename.', [
           '@filename' => $extracted_filename,
         ]));
       }
@@ -1194,7 +1210,7 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
           $size += strlen($chunk);
           if ($size > $max_size) {
             $body->close();
-            throw new \Exception('File is too large.');
+            throw new ReliefwebImportExceptionFileTooBig('File is too large.');
           }
           else {
             $content .= $chunk;
