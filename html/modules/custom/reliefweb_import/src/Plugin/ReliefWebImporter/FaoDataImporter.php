@@ -111,13 +111,29 @@ class FaoDataImporter extends ReliefWebImporterPluginBase {
       $timeout = $this->getPluginSetting('timeout', 5, FALSE);
       $api_url = $this->getPluginSetting('api_url');
 
-      // Query the FAO API.
-      $query = http_build_query([
+      $most_recent_timestamp = (int) $this->state->get('reliefweb_importer_fao_data_most_recent_timestamp', 0);
+      $ignore_timestamp = (bool) $this->state->get('reliefweb_importer_fao_data_ignore_timestamp', FALSE);
+
+      if (empty($most_recent_timestamp)) {
+        $most_recent_timestamp = time() - 24 * 60 * 60;
+      }
+
+      $parameters = [
         'limit' => $limit,
         'type' => 'PDF',
         'sortBy' => '+properties.created',
-      ]);
+      ];
 
+      if (!$ignore_timestamp) {
+        // If we are not ignoring the timestamp, we only want to retrieve
+        // documents created after the last import.
+        unset($parameters['type']);
+        $parameters['filter'] = '(type=PDF AND (created BETWEEN ' . $most_recent_timestamp . ' AND ' . time() . '))';
+        $this->state->set('reliefweb_importer_fao_data_most_recent_timestamp', time());
+      }
+
+      // Query the FAO API.
+      $query = http_build_query($parameters);
       $url = rtrim($api_url, '/') . '?' . $query;
 
       $response = $this->httpClient->get($url, [
