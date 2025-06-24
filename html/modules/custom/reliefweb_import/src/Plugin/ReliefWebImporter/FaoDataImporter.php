@@ -284,11 +284,6 @@ class FaoDataImporter extends ReliefWebImporterPluginBase {
       $hash = HashHelper::generateHash($filtered_document);
       $import_record['imported_data_hash'] = $hash;
 
-      // Legacy hash.
-      // @todo possibly remove in a few months (now is 2025-04-21).
-      // @see RW-1196
-      $legacy_hash = HashHelper::generateHash($document, ['updated', 'downloadCount']);
-
       // Skip if there is already an entity with the same UUID and same content
       // hash since it means the document has been not updated since the last
       // time it was imported.
@@ -297,7 +292,7 @@ class FaoDataImporter extends ReliefWebImporterPluginBase {
         ->getQuery()
         ->accessCheck(FALSE)
         ->condition('uuid', $uuid, '=')
-        ->condition('field_post_api_hash', [$legacy_hash, $hash], 'IN')
+        ->condition('field_post_api_hash', $hash)
         ->execute();
       if (!empty($records)) {
         $processed++;
