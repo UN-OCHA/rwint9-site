@@ -256,6 +256,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         'entity_type_id' => $entity_type_id,
         'entity_bundle' => $bundle,
         'status' => 'pending',
+        'status_type' => 'to_process',
         'message' => '',
         'source' => $source_title,
         'extra' => [
@@ -382,6 +383,9 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         if ($e instanceof ReliefwebImportException) {
           $import_record['status_type'] = $e->getStatusType();
         }
+        else {
+          $import_record['status_type'] = 'to_process';
+        }
 
         $import_record['status'] = 'error';
         $import_record['message'] = $e->getMessage();
@@ -402,6 +406,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       try {
         $entity = $plugin->process($data);
         $import_record['status'] = 'success';
+        $import_record['status_type'] = 'processed';
         $import_record['message'] = '';
         $import_record['attempts'] = 0;
         $import_record['entity_id'] = $entity->id();
@@ -414,6 +419,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       }
       catch (DuplicateException $exception) {
         $import_record['status'] = 'duplicate';
+        $import_record['status_type'] = 'processed';
         $import_record['message'] = $exception->getMessage();
         $import_record['attempts'] = $max_import_attempts;
         $this->getLogger()->error(strtr('Unable to process Inoreader @id: @exception', [
@@ -423,6 +429,13 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       }
       catch (\Exception $exception) {
         $import_record['status'] = 'error';
+        if ($e instanceof ReliefwebImportException) {
+          $import_record['status_type'] = $e->getStatusType();
+        }
+        else {
+          $import_record['status_type'] = 'to_process';
+        }
+
         $import_record['message'] = $exception->getMessage();
         $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
         $this->getLogger()->error(strtr('Unable to process Inoreader @id: @exception', [
