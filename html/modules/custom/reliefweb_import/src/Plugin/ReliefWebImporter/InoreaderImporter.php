@@ -382,10 +382,8 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         if ($e instanceof ReliefwebImportException) {
           $import_record['status_type'] = $e->getStatusType();
         }
-        else {
-          $import_record['status'] = 'error';
-        }
 
+        $import_record['status'] = 'error';
         $import_record['message'] = $e->getMessage();
         $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
         $import_records[$import_record['imported_item_uuid']] = $import_record;

@@ -5,6 +5,7 @@
  * ReliefWeb AI module file.
  */
 
+use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Block\BlockPluginInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
@@ -16,6 +17,7 @@ use Drupal\reliefweb_ai\OchaAiChatPopupBlockHandler;
 use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
 use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
 use Drupal\reliefweb_utility\Helpers\LanguageHelper;
+use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
 use Drupal\ocha_content_classification\Plugin\ClassifierPluginInterface;
 use Drupal\ocha_content_classification\Enum\ClassificationStatus;
@@ -179,6 +181,35 @@ function reliefweb_ai_block_view_alter(array &$build, BlockPluginInterface $bloc
 }
 
 /**
+ * Implements hook_ocha_content_classification_classified_fields_alter().
+ *
+ * Sanitize the data returned by the AI.
+ */
+function reliefweb_ai_ocha_content_classification_classified_fields_alter(
+  array &$classified_fields,
+  ClassificationWorkflowInterface $workflow,
+  array &$context,
+) {
+  // Only the inference classifier is supported here.
+  if ($context['classifier']->getPluginId() !== 'inference') {
+    return NULL;
+  }
+
+  // Sanitize the fillable text fields.
+  foreach ($classified_fields['fillable'] ?? [] as $field_name => $values) {
+    foreach ($values as $property => $value) {
+      if (!empty($value)) {
+        $preserve_whitespaces = $field_name === 'body' && $property === 'value';
+        $value = Html::decodeEntities($value);
+        $value = strip_tags($value);
+        $value = TextHelper::sanitizeText($value, $preserve_whitespaces);
+        $classified_fields['fillable'][$field_name][$property] = $value;
+      }
+    }
+  }
+}
+
+/**
  * Implements hook_ocha_content_classification_post_classify_entity().
  *
  * Try to determine the language after the usual report classification workflow.
@@ -218,6 +249,15 @@ function reliefweb_ai_ocha_content_classification_post_classify_entity(
     $data,
   ) ?? [];
 
+  // Attempt to fix the body.
+  $updated_fields = reliefweb_ai_post_classification_body_update(
+    $entity,
+    $workflow,
+    $classifier,
+    $updated_fields,
+    $data,
+  ) ?? [];
+
   return array_unique($updated_fields) ?: NULL;
 }
 
@@ -250,18 +290,30 @@ function reliefweb_ai_post_classification_language_update(
     return NULL;
   }
 
-  $title = (string) $entity->label();
-
-  // Retrieve the text samples extracted from the source document.
-  $text = $classifier->extractTaggedContent($data['output'], 'extracts');
-  $text = trim(strip_tags($text));
-  $text = $title . ' ' . $text;
-  if (empty($text)) {
+  $settings = \Drupal::config('reliefweb_ai.settings')->get('language_detection');
+  if (empty($settings)) {
     return NULL;
   }
 
-  // Detect the language from the extracts returned by the AI.
-  $language = LanguageHelper::detectTextLanguage($text);
+  // Retrieve the text samples extracted from the source document.
+  $tag = $settings['tag'] ?? 'content';
+  $text = reliefweb_ai_extract_text_from_llm_output($data['output'], $tag, $classifier);
+
+  // Add the title.
+  if (!empty($settings['user_title'])) {
+    $title = (string) $entity->label();
+    $text = $title . ' ' . $text;
+  }
+
+  $text = trim(strip_tags($text));
+  if (!empty($text)) {
+    // Detect the language from the content returned by the AI.
+    $language = LanguageHelper::detectTextLanguage($text);
+  }
+  else {
+    // Default to English.
+    $language = 'en';
+  }
 
   // Retrieve the available languages.
   $languages = \Drupal::database()
@@ -281,6 +333,281 @@ function reliefweb_ai_post_classification_language_update(
   }
 
   return NULL;
+}
+
+/**
+ * Update the body field of an entity based using the fixed AI extracted text.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   The entity being classified.
+ * @param \Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface $workflow
+ *   The classification workflow.
+ * @param \Drupal\ocha_content_classification\Plugin\ClassifierPluginInterface $classifier
+ *   The classifier plugin for the classification.
+ * @param array $updated_fields
+ *   The list of fields that have been updated during the classification so far.
+ * @param array $data
+ *   Additional data from the classifier. For the inference classifier, this
+ *   contains an `output` key with the raw output from the LLM.
+ *
+ * @return ?array
+ *   An array with the body field if it was updated.
+ */
+function reliefweb_ai_post_classification_body_update(
+  EntityInterface $entity,
+  ClassificationWorkflowInterface $workflow,
+  ClassifierPluginInterface $classifier,
+  array $updated_fields,
+  array $data,
+): ?array {
+  if (!$entity->hasField('body') || !$entity->hasField('field_file') || $entity->get('field_file')->isEmpty() || empty($data['output'])) {
+    return NULL;
+  }
+
+  // Skip if there is no setting to fix the text extraction.
+  $settings = \Drupal::config('reliefweb_ai.settings')->get('text_extract_fix');
+  if (empty($settings)) {
+    return NULL;
+  }
+
+  // Skip if the text extraction fix step is not enabled.
+  if (empty($settings['enabled'])) {
+    return NULL;
+  }
+
+  // Skip if the file field is not used for the analysis.
+  $analyzable_fields = $classifier->getEnabledFields('analyzable');
+  if (empty($analyzable_fields['field_file']['file']) || empty($analyzable_fields['field_file']['processor'])) {
+    return NULL;
+  }
+
+  // Retrieve the AI plugin.
+  $ai_plugin = \Drupal::service('plugin.manager.ocha_ai.completion')
+    ->getPlugin($settings['inference']['plugin_id']);
+  if (empty($ai_plugin)) {
+    return NULL;
+  }
+
+  // Retrieve the text samples extracted from the source document.
+  $tag = $settings['tag'] ?? 'content';
+  $extracted_text = reliefweb_ai_extract_text_from_llm_output($data['output'], $tag, $classifier);
+  if (empty($extracted_text)) {
+    return NULL;
+  }
+
+  // Create a clone of the entity ready for classification, so that we can
+  // filter the file field without altering the original entity.
+  $entity_clone = clone $entity;
+  $file_field = $entity_clone->get('field_file');
+
+  // Filter out files that are not supported or too large.
+  // @see \Drupal\ocha_content_classification\Plugin\OchaContentClassifier\InferenceClassifier::prepareEntity()
+  $supported_file_types = $ai_plugin->getSupportedFileTypes();
+  $processor_plugin_manager = \Drupal::service('plugin.manager.ocha_content_classification.analyzable_field_processor');
+  $processor_plugin_id = $analyzable_fields['field_file']['processor'];
+  $processor_plugin = $processor_plugin_manager->createInstance($processor_plugin_id);
+  $processor_plugin->filterFiles($file_field, $supported_file_types);
+
+  // Skip if there is no file left.
+  if ($file_field->isEmpty()) {
+    return NULL;
+  }
+
+  // Extract the file text.
+  $file_lines = [];
+  foreach ($file_field as $item) {
+    $file_text = $item->extractText();
+    if (!empty($file_text)) {
+      foreach (explode("\n", $file_text) as $line) {
+        $line = trim($line);
+        if ($line !== '') {
+          $file_lines[] = $line;
+        }
+      }
+    }
+  }
+  if (empty($file_lines)) {
+    return NULL;
+  }
+
+  $source_lines = '';
+  try {
+    $endpoint = $settings['line_matching']['endpoint'] ?? '';
+    if (empty($endpoint)) {
+      return NULL;
+    }
+
+    $response = \Drupal::httpClient()->post($endpoint, [
+      'json' => [
+        // Doesn't matter for this endpoint.
+        'language' => 'en',
+        'text' => $extracted_text,
+        'lines' => $file_lines,
+        'threshold' => $settings['line_matching']['threshold'] ?? 70,
+      ],
+    ]);
+
+    $response_data = $response->getBody()->getContents();
+    $response_data = json_decode($response_data, TRUE, flags: \JSON_THROW_ON_ERROR);
+
+    $source_lines = implode("\n", $response_data['lines'] ?? []);
+  }
+  catch (\Exception $exception) {
+    \Drupal::logger('reliefweb_ai')->error(strtr('Error while trying to find the matching source lines: @error', [
+      '@error' => strtr($exception->getMessage(), "\n", ' '),
+    ]));
+    return NULL;
+  }
+
+  // Skip if there is no matching source lines.
+  if (empty($source_lines)) {
+    return NULL;
+  }
+
+  // Retrieve the summary if any.
+  $summary_tag = $settings['summary_tag'] ?? '';
+  $summary = reliefweb_ai_extract_text_from_llm_output($data['output'], $summary_tag, $classifier);
+
+  // Call the LLM to fix the extracted text.
+  try {
+    if (empty($settings['inference']['plugin_id']) || empty($settings['inference']['prompt'])) {
+      return NULL;
+    }
+
+    // Retrieve the model parameters.
+    $parameters = [
+      'temperature' => (float) ($settings['inference']['temperature'] ?? 0.0),
+      'top_p' => (float) ($settings['inference']['top_p'] ?? 0.9),
+      'max_tokens' => (int) ($settings['inference']['max_tokens'] ?? 4000),
+    ];
+
+    // Retrieve the prompt and inject the extracted text and source lines.
+    $system_prompt = $settings['inference']['system_prompt'] ?? '';
+    $prompt = strtr($settings['inference']['prompt'], [
+      '{extracted_text}' => $extracted_text,
+      '{source_lines}' => $source_lines,
+      '{summary}' => $summary,
+    ]);
+
+    // Query the LLM to classify the job.
+    $output = $ai_plugin->query($prompt, $system_prompt, $parameters, TRUE);
+    if (empty($output)) {
+      throw new \Exception('Empty output.');
+    }
+
+    // Retrieve the corrected text.
+    $corrected_text = reliefweb_ai_extract_text_from_llm_output($output, 'corrected_text', $classifier, TRUE, TRUE);
+
+    // Basic similarity check.
+    if (TextHelper::getTextSimilarity($extracted_text, $corrected_text) < 70) {
+      throw new \Exception('Corrected text too dissimilar.');
+    }
+
+    if (!empty($summary)) {
+      // Retrieve the corrected text.
+      $corrected_summary = reliefweb_ai_extract_text_from_llm_output($output, 'corrected_summary', $classifier, TRUE, TRUE);
+
+      // Basic similarity check.
+      if (TextHelper::getTextSimilarity($summary, $corrected_summary) < 70) {
+        throw new \Exception('Corrected summary too dissimilar.');
+      }
+
+      $body_value = $corrected_summary;
+    }
+    else {
+      $body_value = $corrected_text;
+    }
+
+    $body = $entity->get('body');
+    // Retrieve the first field item or create a new one.
+    $body_item = $body->first() ?? $body->appendItem()->applyDefaultValue(FALSE);
+    // Update the body value and use the default format.
+    $body_item->set('value', $body_value);
+    $body_item->set('format', 'markdown');
+
+    return ['body'];
+  }
+  catch (\Exception $exception) {
+    \Drupal::logger('reliefweb_ai')->error(strtr('Unable to fix AI extracted text: @error', [
+      '@error' => $exception->getMessage(),
+    ]));
+    return NULL;
+  }
+
+  return NULL;
+}
+
+/**
+ * Extract text from a LLM output.
+ *
+ * @param string $output
+ *   LLM output.
+ * @param string $tag
+ *   XML tag contaning the text to extract.
+ * @param \Drupal\ocha_content_classification\Plugin\ClassifierPluginInterface $classifier
+ *   Classifier plugib.
+ * @param bool $preserve_new_lines
+ *   TRUE to preserve new lines when sanitizing the text.
+ * @param bool $throw_if_missing
+ *   TRUE to throw an exception if the tag was not found in the output.
+ *
+ * @return string
+ *   Sanitized extracted text.
+ */
+function reliefweb_ai_extract_text_from_llm_output(
+  string $output,
+  string $tag,
+  ClassifierPluginInterface $classifier,
+  bool $preserve_new_lines = TRUE,
+  bool $throw_if_missing = FALSE,
+): string {
+  if (empty($output) || empty($tag)) {
+    return '';
+  }
+
+  // Extract the text content for the fillable field.
+  //
+  // Note: we assume the content is plain text (or markdown) without
+  // XML/HTML tags.
+  //
+  // @todo we may need something more robust to handle different formats.
+  try {
+    $content = $classifier->extractTaggedContent($output, $tag);
+  }
+  catch (\Exception $exception) {
+    if ($throw_if_missing) {
+      throw $exception;
+    }
+    else {
+      return '';
+    }
+  }
+
+  if (!empty($content)) {
+    // The extracted values may be between tags like paragraph tags.
+    if (mb_strpos($content, "</") !== FALSE) {
+      $parts = $classifier->extractValuesBetweenTags($content);
+      if (!empty($parts)) {
+        $parts = array_map(fn($part) => TextHelper::sanitizeText($part, $preserve_new_lines), $parts);
+        // We "glue" the parts using 2 line breaks which is the standard way
+        // to separate paragraphs in markdown.
+        $content = implode("\n\n", $parts);
+      }
+      else {
+        $content = '';
+      }
+    }
+    else {
+      $content = TextHelper::sanitizeText($content, $preserve_new_lines);
+    }
+  }
+
+  if (!empty($content)) {
+    $content = Html::decodeEntities($content);
+    $content = strip_tags($content);
+  }
+
+  return $content;
 }
 
 /**
