@@ -239,6 +239,9 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
       if (isset($status_types[$record['status_type']])) {
         $cells['status'] .= ' (' . $status_types[$record['status_type']]['label'] . ')';
       }
+      elseif (!empty($record['status_type'])) {
+        $cells['status'] .= ' (' . $record['status_type'] . ')';
+      }
       $cells['source'] = $record['source'];
 
       // Date cell.
