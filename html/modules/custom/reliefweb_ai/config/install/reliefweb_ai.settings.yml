@@ -8,7 +8,9 @@ language_detection:
   tag: 'content'
   use_title: false
 text_extract_fix:
+  enabled: true
   tag: 'content'
+  summary_tag: ''
   line_matching:
     endpoint: 'https://ocha-ai-helper.test/text/match/lines'
     threshold: 70

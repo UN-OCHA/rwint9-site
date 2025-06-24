@@ -297,7 +297,7 @@ function reliefweb_ai_post_classification_language_update(
 
   // Retrieve the text samples extracted from the source document.
   $tag = $settings['tag'] ?? 'content';
-  $text = $classifier->extractTaggedContent($data['output'], $tag);
+  $text = reliefweb_ai_extract_text_from_llm_output($data['output'], $tag, $classifier);
 
   // Add the title.
   if (!empty($settings['user_title'])) {
@@ -370,6 +370,11 @@ function reliefweb_ai_post_classification_body_update(
     return NULL;
   }
 
+  // Skip if the text extraction fix step is not enabled.
+  if (empty($settings['enabled'])) {
+    return NULL;
+  }
+
   // Skip if the file field is not used for the analysis.
   $analyzable_fields = $classifier->getEnabledFields('analyzable');
   if (empty($analyzable_fields['field_file']['file']) || empty($analyzable_fields['field_file']['processor'])) {
@@ -385,8 +390,7 @@ function reliefweb_ai_post_classification_body_update(
 
   // Retrieve the text samples extracted from the source document.
   $tag = $settings['tag'] ?? 'content';
-  $extracted_text = $classifier->extractTaggedContent($data['output'], $tag);
-  $extracted_text = trim($extracted_text);
+  $extracted_text = reliefweb_ai_extract_text_from_llm_output($data['output'], $tag, $classifier);
   if (empty($extracted_text)) {
     return NULL;
   }
@@ -443,10 +447,10 @@ function reliefweb_ai_post_classification_body_update(
       ],
     ]);
 
-    $data = $response->getBody()->getContents();
-    $data = json_decode($data, TRUE, flags: \JSON_THROW_ON_ERROR);
+    $response_data = $response->getBody()->getContents();
+    $response_data = json_decode($response_data, TRUE, flags: \JSON_THROW_ON_ERROR);
 
-    $source_lines = implode("\n", $data['lines'] ?? []);
+    $source_lines = implode("\n", $response_data['lines'] ?? []);
   }
   catch (\Exception $exception) {
     \Drupal::logger('reliefweb_ai')->error(strtr('Error while trying to find the matching source lines: @error', [
@@ -459,6 +463,10 @@ function reliefweb_ai_post_classification_body_update(
   if (empty($source_lines)) {
     return NULL;
   }
+
+  // Retrieve the summary if any.
+  $summary_tag = $settings['summary_tag'] ?? '';
+  $summary = reliefweb_ai_extract_text_from_llm_output($data['output'], $summary_tag, $classifier);
 
   // Call the LLM to fix the extracted text.
   try {
@@ -478,6 +486,7 @@ function reliefweb_ai_post_classification_body_update(
     $prompt = strtr($settings['inference']['prompt'], [
       '{extracted_text}' => $extracted_text,
       '{source_lines}' => $source_lines,
+      '{summary}' => $summary,
     ]);
 
     // Query the LLM to classify the job.
@@ -486,23 +495,34 @@ function reliefweb_ai_post_classification_body_update(
       throw new \Exception('Empty output.');
     }
 
-    $corrected_text = $classifier->extractTaggedContent($output, 'corrected_text');
-
-    // Sanitize the text.
-    $corrected_text = Html::decodeEntities($corrected_text);
-    $corrected_text = strip_tags($corrected_text);
-    $corrected_text = TextHelper::sanitizeText($corrected_text, TRUE);
+    // Retrieve the corrected text.
+    $corrected_text = reliefweb_ai_extract_text_from_llm_output($output, 'corrected_text', $classifier, TRUE, TRUE);
 
     // Basic similarity check.
     if (TextHelper::getTextSimilarity($extracted_text, $corrected_text) < 70) {
-      throw new \Exception('Output too dissimilar.');
+      throw new \Exception('Corrected text too dissimilar.');
+    }
+
+    if (!empty($summary)) {
+      // Retrieve the corrected text.
+      $corrected_summary = reliefweb_ai_extract_text_from_llm_output($output, 'corrected_summary', $classifier, TRUE, TRUE);
+
+      // Basic similarity check.
+      if (TextHelper::getTextSimilarity($summary, $corrected_summary) < 70) {
+        throw new \Exception('Corrected summary too dissimilar.');
+      }
+
+      $body_value = $corrected_summary;
+    }
+    else {
+      $body_value = $corrected_text;
     }
 
     $body = $entity->get('body');
     // Retrieve the first field item or create a new one.
     $body_item = $body->first() ?? $body->appendItem()->applyDefaultValue(FALSE);
     // Update the body value and use the default format.
-    $body_item->set('value', $corrected_text);
+    $body_item->set('value', $body_value);
     $body_item->set('format', 'markdown');
 
     return ['body'];
@@ -515,6 +535,79 @@ function reliefweb_ai_post_classification_body_update(
   }
 
   return NULL;
+}
+
+/**
+ * Extract text from a LLM output.
+ *
+ * @param string $output
+ *   LLM output.
+ * @param string $tag
+ *   XML tag contaning the text to extract.
+ * @param \Drupal\ocha_content_classification\Plugin\ClassifierPluginInterface $classifier
+ *   Classifier plugib.
+ * @param bool $preserve_new_lines
+ *   TRUE to preserve new lines when sanitizing the text.
+ * @param bool $throw_if_missing
+ *   TRUE to throw an exception if the tag was not found in the output.
+ *
+ * @return string
+ *   Sanitized extracted text.
+ */
+function reliefweb_ai_extract_text_from_llm_output(
+  string $output,
+  string $tag,
+  ClassifierPluginInterface $classifier,
+  bool $preserve_new_lines = TRUE,
+  bool $throw_if_missing = FALSE,
+): string {
+  if (empty($output) || empty($tag)) {
+    return '';
+  }
+
+  // Extract the text content for the fillable field.
+  //
+  // Note: we assume the content is plain text (or markdown) without
+  // XML/HTML tags.
+  //
+  // @todo we may need something more robust to handle different formats.
+  try {
+    $content = $classifier->extractTaggedContent($output, $tag);
+  }
+  catch (\Exception $exception) {
+    if ($throw_if_missing) {
+      throw $exception;
+    }
+    else {
+      return '';
+    }
+  }
+
+  if (!empty($content)) {
+    // The extracted values may be between tags like paragraph tags.
+    if (mb_strpos($content, "</") !== FALSE) {
+      $parts = $classifier->extractValuesBetweenTags($content);
+      if (!empty($parts)) {
+        $parts = array_map(fn($part) => TextHelper::sanitizeText($part, $preserve_new_lines), $parts);
+        // We "glue" the parts using 2 line breaks which is the standard way
+        // to separate paragraphs in markdown.
+        $content = implode("\n\n", $parts);
+      }
+      else {
+        $content = '';
+      }
+    }
+    else {
+      $content = TextHelper::sanitizeText($content, $preserve_new_lines);
+    }
+  }
+
+  if (!empty($content)) {
+    $content = Html::decodeEntities($content);
+    $content = strip_tags($content);
+  }
+
+  return $content;
 }
 
 /**
