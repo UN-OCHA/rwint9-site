@@ -256,7 +256,6 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         'entity_type_id' => $entity_type_id,
         'entity_bundle' => $bundle,
         'status' => 'pending',
-        'status_type' => 'to_process',
         'message' => '',
         'source' => $source_title,
         'extra' => [
@@ -406,7 +405,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       try {
         $entity = $plugin->process($data);
         $import_record['status'] = 'success';
-        $import_record['status_type'] = 'processed';
+        $import_record['status_type'] = '';
         $import_record['message'] = '';
         $import_record['attempts'] = 0;
         $import_record['entity_id'] = $entity->id();

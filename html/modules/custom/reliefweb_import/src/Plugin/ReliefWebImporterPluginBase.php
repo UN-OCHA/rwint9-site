@@ -1106,18 +1106,29 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
 
     // Remote file.
     try {
-      $response = $this->httpClient->get($url, [
-        'stream' => TRUE,
-        // @todo retrieve that from the configuration.
-        'connect_timeout' => 30,
-        'timeout' => 600,
-        'headers' => [
-          'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
-          'Accept' => '*/*',
-        ],
-      ]);
+      $user_agents = [
+        'curl/8.5.0',
+        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
+      ];
 
-      if ($response->getStatusCode() == 406) {
+      $response = NULL;
+      foreach ($user_agents as $user_agent) {
+        // Try to get the file with streaming first.
+        $response = $this->httpClient->get($url, [
+          'stream' => TRUE,
+          // @todo retrieve that from the configuration.
+          'connect_timeout' => 30,
+          'timeout' => 600,
+          'headers' => [
+            'User-Agent' => $user_agent,
+            'Accept' => '*/*',
+          ],
+        ]);
+
+        if ($response->getStatusCode() == 200) {
+          break;
+        }
+
         // Stream not supported.
         $response = $this->httpClient->get($url, [
           'stream' => FALSE,
@@ -1125,10 +1136,14 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
           'connect_timeout' => 30,
           'timeout' => 600,
           'headers' => [
-            'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
+            'User-Agent' => $user_agent,
             'Accept' => '*/*',
           ],
         ]);
+
+        if ($response->getStatusCode() == 200) {
+          break;
+        }
       }
 
       if ($response->getStatusCode() !== 200) {
