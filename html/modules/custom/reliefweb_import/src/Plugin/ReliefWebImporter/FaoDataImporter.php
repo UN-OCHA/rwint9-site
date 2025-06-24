@@ -133,7 +133,7 @@ class FaoDataImporter extends ReliefWebImporterPluginBase {
       }
 
       // Query the FAO API.
-      $query = http_build_query($parameters);
+      $query = http_build_query($parameters, '', '&', PHP_QUERY_RFC3986);
       $url = rtrim($api_url, '/') . '?' . $query;
 
       $response = $this->httpClient->get($url, [
