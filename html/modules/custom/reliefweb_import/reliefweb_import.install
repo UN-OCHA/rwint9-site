@@ -104,6 +104,11 @@ function reliefweb_import_schema() {
         'not null' => FALSE,
         'description' => 'Store extra information.',
       ],
+      'status_type' => [
+        'type' => 'varchar',
+        'length' => '254',
+        'description' => 'The status type, provides more granular info.',
+      ],
     ],
     'primary key' => ['imported_item_uuid'],
     'indexes' => [
@@ -185,5 +190,21 @@ function reliefweb_import_update_10004(array &$sandbox) {
   if ($schema->fieldExists($table_name, $field_name)) {
     $table_schema = reliefweb_import_schema();
     $schema->changeField($table_name, $field_name, $field_name, $table_schema[$table_name]['fields'][$field_name]);
+  }
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * Add status_type column to the reliefweb_import_records table.
+ */
+function reliefweb_import_update_10005(array &$sandbox) {
+  $schema = \Drupal::database()->schema();
+  $table_name = 'reliefweb_import_records';
+  $field_name = 'status_type';
+
+  if (!$schema->fieldExists($table_name, $field_name)) {
+    $table_schema = reliefweb_import_schema();
+    $schema->addField($table_name, $field_name, $table_schema[$table_name]['fields'][$field_name]);
   }
 }
