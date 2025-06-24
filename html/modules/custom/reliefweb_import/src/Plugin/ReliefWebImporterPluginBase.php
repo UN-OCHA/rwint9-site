@@ -1107,36 +1107,41 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
     // Remote file.
     try {
       $user_agents = [
-        'curl/8.5.0',
-        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
+        [
+          'ua' => 'curl/8.5.0',
+          'stream' => TRUE,
+        ],
+        [
+          'ua' => 'curl/8.5.0',
+          'stream' => FALSE,
+        ],
+        [
+          'ua' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
+          'stream' => TRUE,
+        ],
+        [
+          'ua' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
+          'stream' => FALSE,
+        ],
+        [
+          'ua' => 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:138.0) Gecko/20100101 Firefox/138.0',
+          'stream' => TRUE,
+        ],
+        [
+          'ua' => 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:138.0) Gecko/20100101 Firefox/138.0',
+          'stream' => FALSE,
+        ],
       ];
 
       $response = NULL;
       foreach ($user_agents as $user_agent) {
-        // Try to get the file with streaming first.
         $response = $this->httpClient->get($url, [
-          'stream' => TRUE,
+          'stream' => $user_agent['stream'],
           // @todo retrieve that from the configuration.
           'connect_timeout' => 30,
           'timeout' => 600,
           'headers' => [
-            'User-Agent' => $user_agent,
-            'Accept' => '*/*',
-          ],
-        ]);
-
-        if ($response->getStatusCode() == 200) {
-          break;
-        }
-
-        // Stream not supported.
-        $response = $this->httpClient->get($url, [
-          'stream' => FALSE,
-          // @todo retrieve that from the configuration.
-          'connect_timeout' => 30,
-          'timeout' => 600,
-          'headers' => [
-            'User-Agent' => $user_agent,
+            'User-Agent' => $user_agent['ua'],
             'Accept' => '*/*',
           ],
         ]);
