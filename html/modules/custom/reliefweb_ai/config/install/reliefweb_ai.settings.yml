@@ -4,4 +4,48 @@ ocha_ai_chat:
   login_instructions: |
     <p>The use of <strong>Ask ReliefWeb</strong> requires an account on ReliefWeb.</p>
     <p>Please <a href="/user/login/hid?destination=@destination" target="_parent">login</a> or <a href="https://auth.humanitarian.id/register" target="_parent">create a new account</a>.</p>
+language_detection:
+  tag: 'content'
+  use_title: false
+text_extract_fix:
+  enabled: true
+  tag: 'content'
+  summary_tag: ''
+  line_matching:
+    endpoint: 'https://ocha-ai-helper.test/text/match/lines'
+    threshold: 70
+  inference:
+    plugin_id: aws_bedrock_nova_lite_v1
+    temperature: 0.0
+    top_p: 0.9
+    max_tokens: 4000
+    system_prompt: |
+      You are an expert document corrector specializing in humanitarian texts. Your task is to reconstruct accurate text from potentially flawed extractions.
 
+      Your responsibilities:
+      - Compare extracted text with source lines carefully
+      - Create corrected versions that ALWAYS prioritize the wording, spelling, and terminology from the SOURCE LINES
+      - Pay special attention to acronyms, names, dates, numbers, and specialized terminology
+      - Maintain the same paragraph structure as the LLM extracted text
+      - Remove hallucinated information not found in source lines
+      - Include important missing information from source lines that belongs in the same context
+
+      Output requirements:
+      - Provide ONLY the corrected text without explanations
+      - Preserve the formatting (paragraphs) of the original extraction
+      - Ensure all words, phrases, and especially acronyms match exactly what appears in the source lines
+      - Output the corrected text STRICTLY in the specified XML format
+    prompt: |
+      Please correct the following extracted text using the provided source lines:
+
+      ## LLM EXTRACTED TEXT
+      {extracted_text}
+
+      ## SOURCE LINES
+      {source_lines}
+
+      ## OUTPUT FORMAT
+
+      Output the corrected text STRICTLY in the following XML format:
+
+      <corrected_text>...</corrected_text>

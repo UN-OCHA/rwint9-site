@@ -154,4 +154,114 @@ class TextHelper {
     return $diff->render($from_text, $to_text);
   }
 
+  /**
+   * Calculate the percentage of similarity between two Unicode texts.
+   *
+   * This method uses the Levenshtein distance algorithm to calculate the
+   * similarity between two texts. The similarity is calculated as:
+   * (1 - (levenshtein_distance / max_length)) * 100
+   *
+   * @param string $text1
+   *   First text to compare.
+   * @param string $text2
+   *   Second text to compare.
+   * @param bool $case_sensitive
+   *   Whether the comparison should be case sensitive. Defaults to FALSE.
+   * @param bool $normalize_whitespace
+   *   Whether to normalize whitespace before comparison. Defaults to TRUE.
+   *
+   * @return float
+   *   Percentage of similarity between the two texts (0-100).
+   */
+  public static function getTextSimilarity(string $text1, string $text2, bool $case_sensitive = FALSE, bool $normalize_whitespace = TRUE): float {
+    // Handle empty strings.
+    if ($text1 === '' && $text2 === '') {
+      return 100.0;
+    }
+    if ($text1 === '' || $text2 === '') {
+      return 0.0;
+    }
+
+    // Normalize texts if requested.
+    if (!$case_sensitive) {
+      $text1 = mb_strtolower($text1, 'UTF-8');
+      $text2 = mb_strtolower($text2, 'UTF-8');
+    }
+
+    if ($normalize_whitespace) {
+      $text1 = static::sanitizeText($text1);
+      $text2 = static::sanitizeText($text2);
+    }
+
+    // If both texts are identical after normalization.
+    if ($text1 === $text2) {
+      return 100.0;
+    }
+
+    // Calculate character-based similarity using Levenshtein distance.
+    $length1 = mb_strlen($text1, 'UTF-8');
+    $length2 = mb_strlen($text2, 'UTF-8');
+    $max_length = max($length1, $length2);
+
+    // Calculate Levenshtein distance for Unicode strings.
+    $levenshtein_distance = static::calculateUnicodeLevenshteinDistance($text1, $text2);
+
+    // Calculate similarity percentage.
+    $similarity = (1 - ($levenshtein_distance / $max_length)) * 100;
+
+    // Ensure the result is between 0 and 100.
+    return max(0.0, min(100.0, $similarity));
+  }
+
+  /**
+   * Calculate Levenshtein distance for Unicode strings.
+   *
+   * This is a Unicode-safe implementation of the Levenshtein distance
+   * algorithm that works with multibyte characters.
+   *
+   * @param string $string1
+   *   First string.
+   * @param string $string2
+   *   Second string.
+   *
+   * @return int
+   *   The Levenshtein distance between the two strings.
+   */
+  protected static function calculateUnicodeLevenshteinDistance(string $string1, string $string2): int {
+    // Convert strings to arrays of Unicode characters.
+    $chars1 = preg_split('//u', $string1, -1, PREG_SPLIT_NO_EMPTY);
+    $chars2 = preg_split('//u', $string2, -1, PREG_SPLIT_NO_EMPTY);
+
+    $length1 = count($chars1);
+    $length2 = count($chars2);
+
+    // Create a matrix to store distances.
+    $matrix = [];
+
+    // Initialize first row and column.
+    for ($i = 0; $i <= $length1; $i++) {
+      $matrix[$i][0] = $i;
+    }
+    for ($j = 0; $j <= $length2; $j++) {
+      $matrix[0][$j] = $j;
+    }
+
+    // Fill the matrix.
+    for ($i = 1; $i <= $length1; $i++) {
+      for ($j = 1; $j <= $length2; $j++) {
+        $cost = ($chars1[$i - 1] === $chars2[$j - 1]) ? 0 : 1;
+        $matrix[$i][$j] = min(
+          // Deletion.
+          $matrix[$i - 1][$j] + 1,
+          // Insertion.
+          $matrix[$i][$j - 1] + 1,
+          // Substitution.
+          $matrix[$i - 1][$j - 1] + $cost
+        );
+      }
+    }
+
+    return $matrix[$length1][$length2];
+  }
+
 }

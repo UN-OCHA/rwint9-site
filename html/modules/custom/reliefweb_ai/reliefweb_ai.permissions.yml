@@ -1,0 +1,4 @@
+administer reliefweb ai:
+  title: 'Administer ReliefWeb AI'
+  description: 'Configure ReliefWeb AI settings including OCHA AI chat, language detection, and text extraction.'
+  restrict access: true
