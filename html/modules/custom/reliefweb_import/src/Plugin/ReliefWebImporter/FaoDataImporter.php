@@ -115,7 +115,7 @@ class FaoDataImporter extends ReliefWebImporterPluginBase {
       $ignore_timestamp = (bool) $this->state->get('reliefweb_importer_fao_data_ignore_timestamp', FALSE);
 
       if (empty($most_recent_timestamp)) {
-        $most_recent_timestamp = time() - 30 * 24 * 60 * 60;
+        $most_recent_timestamp = time() - 90 * 24 * 60 * 60;
       }
 
       $parameters = [
@@ -128,7 +128,7 @@ class FaoDataImporter extends ReliefWebImporterPluginBase {
         // If we are not ignoring the timestamp, we only want to retrieve
         // documents created after the last import.
         unset($parameters['type']);
-        $parameters['filter'] = 'created BETWEEN ' . $most_recent_timestamp * 1000 . ' AND ' . time() * 1000;
+        $parameters['filter'] = '(type=PDF AND (created BETWEEN ' . $most_recent_timestamp * 1000 . ' AND ' . time() * 1000 . '))';
         $this->state->set('reliefweb_importer_fao_data_most_recent_timestamp', time());
       }
 
