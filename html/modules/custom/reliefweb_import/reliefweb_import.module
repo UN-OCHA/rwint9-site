@@ -291,24 +291,6 @@ function reliefweb_import_extract_pdf_file(string $url, string $selector, string
  */
 function reliefweb_import_status_type_values(): array {
   return [
-    'to_process' => [
-      'id' => 'to_process',
-      'label' => t('To process'),
-      'description' => t('Someone needs to have a look.'),
-      'status' => 'skipped',
-    ],
-    'manual' => [
-      'id' => 'manual',
-      'label' => t('Manually posted'),
-      'description' => t('The status was set manually.'),
-      'status' => 'success',
-    ],
-    'not_posted' => [
-      'id' => 'not_posted',
-      'label' => t('Not posted'),
-      'description' => t('The item was not posted.'),
-      'status' => 'skipped',
-    ],
     'no_pdf' => [
       'id' => 'no_pdf',
       'label' => t('No PDF'),
@@ -333,6 +315,33 @@ function reliefweb_import_status_type_values(): array {
       'description' => t('The import record attempts were reset.'),
       'status' => 'skipped',
       'attempts' => 0,
+    ],
+  ];
+}
+
+/**
+ * Provide a list of editorial status values.
+ */
+function reliefweb_import_editorial_flow_values(): array {
+  return [
+    'to_process' => [
+      'id' => 'to_process',
+      'label' => t('To process'),
+      'description' => t('Someone needs to have a look.'),
+      'status' => 'skipped',
+      'attempts' => 0,
+    ],
+    'manual' => [
+      'id' => 'manual',
+      'label' => t('Manually posted'),
+      'description' => t('The status was set manually.'),
+      'status' => 'success',
+    ],
+    'not_posted' => [
+      'id' => 'not_posted',
+      'label' => t('Not posted'),
+      'description' => t('The item was not posted.'),
+      'status' => 'skipped',
     ],
   ];
 }
