@@ -6,10 +6,12 @@ namespace Drupal\reliefweb_import\Plugin\ReliefWebImporter;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
 use Drupal\reliefweb_import\Attribute\ReliefWebImporter;
+use Drupal\reliefweb_import\Exception\ReliefwebImportException;
 use Drupal\reliefweb_import\Plugin\ReliefWebImporterPluginBase;
 use Drupal\reliefweb_post_api\Exception\DuplicateException;
 use Drupal\reliefweb_post_api\Helpers\HashHelper;
@@ -255,7 +257,6 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         'entity_bundle' => $bundle,
         'status' => 'pending',
         'message' => '',
-        'attempts' => 0,
         'source' => $source_title,
         'extra' => [
           'inoreader' => [
@@ -296,6 +297,12 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       // Merge with existing record if available.
       if (isset($existing_import_records[$uuid])) {
         $import_record = NestedArray::mergeDeep($existing_import_records[$uuid], $import_record);
+      }
+
+      // Bail out if status is manually set.
+      if (!empty($import_record['attempts']) && $import_record['attempts'] == 99) {
+        unset($existing_import_records[$uuid]);
+        continue;
       }
 
       $this->getLogger()->info(strtr('Processing Inoreader document @id.', [
@@ -350,15 +357,37 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       }
 
       // Process the item data into importable data.
-      $data = $this->getImportData($uuid, $document);
-      if (empty($data)) {
-        $this->getLogger()->info(strtr('Inoreader document @id has no data to import, skipping.', [
+      try {
+        $data = $this->getImportData($uuid, $document);
+        if (empty($data)) {
+          $this->getLogger()->info(strtr('Inoreader document @id has no data to import, skipping.', [
+            '@id' => $id,
+          ]));
+
+          // Log it.
+          $import_record['status'] = 'skipped';
+          $import_record['message'] = 'No data to import.';
+          $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
+          $import_records[$import_record['imported_item_uuid']] = $import_record;
+
+          continue;
+        }
+      }
+      catch (\Exception $e) {
+        $this->getLogger()->error(strtr('Error processing Inoreader document @id: @message', [
           '@id' => $id,
+          '@message' => $e->getMessage(),
         ]));
 
-        // Log it.
-        $import_record['status'] = 'skipped';
-        $import_record['message'] = 'No data to import.';
+        if ($e instanceof ReliefwebImportException) {
+          $import_record['status_type'] = $e->getStatusType();
+        }
+        else {
+          $import_record['status_type'] = 'to_process';
+        }
+
+        $import_record['status'] = 'error';
+        $import_record['message'] = $e->getMessage();
         $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
         $import_records[$import_record['imported_item_uuid']] = $import_record;
 
@@ -376,6 +405,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       try {
         $entity = $plugin->process($data);
         $import_record['status'] = 'success';
+        $import_record['status_type'] = '';
         $import_record['message'] = '';
         $import_record['attempts'] = 0;
         $import_record['entity_id'] = $entity->id();
@@ -388,6 +418,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       }
       catch (DuplicateException $exception) {
         $import_record['status'] = 'duplicate';
+        $import_record['status_type'] = 'processed';
         $import_record['message'] = $exception->getMessage();
         $import_record['attempts'] = $max_import_attempts;
         $this->getLogger()->error(strtr('Unable to process Inoreader @id: @exception', [
@@ -397,6 +428,13 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       }
       catch (\Exception $exception) {
         $import_record['status'] = 'error';
+        if ($e instanceof ReliefwebImportException) {
+          $import_record['status_type'] = $e->getStatusType();
+        }
+        else {
+          $import_record['status_type'] = 'to_process';
+        }
+
         $import_record['message'] = $exception->getMessage();
         $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
         $this->getLogger()->error(strtr('Unable to process Inoreader @id: @exception', [
@@ -430,16 +468,14 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       return [];
     }
 
-    if (isset($data['_tags'])) {
-      // Remove the tags from the data as they are not needed.
-      unset($data['_tags']);
-    }
-
-    // Remove the screenshot from the data as they are not needed.
-    unset($data['_screenshot']);
-
     $has_pdf = $data['_has_pdf'] ?? FALSE;
-    unset($data['_has_pdf']);
+
+    // Remove all keys starting with an underscore.
+    foreach ($data as $key => $value) {
+      if (strpos($key, '_') === 0) {
+        unset($data[$key]);
+      }
+    }
 
     if ($has_pdf) {
       $pdf = $data['file_data']['pdf'] ?? '';
@@ -515,6 +551,26 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       if (preg_match('#https?://#i', $context['entity']->title->value)) {
         $fields['title__value'] = TRUE;
       }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function alterReliefWebEntitiesModerationStatusAdjustment(bool &$bypass, EntityInterface $entity): void {
+    // @todo retrieve the import record and check if there is a defined status
+    $records = $this->getExistingImportRecords([$entity->uuid()]);
+    if (empty($records)) {
+      return;
+    }
+
+    $record = reset($records);
+    $extra = json_decode($record['extra'] ?? [], TRUE);
+    $feed_name = $extra['feed_name'] ?? '';
+
+    $tags = $this->inoreaderService->extractTags($feed_name);
+    if (isset($tags['status'])) {
+      $bypass = TRUE;
     }
   }
 

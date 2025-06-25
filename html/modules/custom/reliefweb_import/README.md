@@ -47,9 +47,12 @@ Imports tagged items from the [automation_production](https://www.inoreader.com/
 | puppeteer | p | No | Yes | [puppeteer:ds-file-download-link a] |
 | ~~puppeteer2~~ | p2 | No | No | [puppeteer:ds-file-download-link a] |
 | puppeteer-attrib | pa | No | No | [puppeteer-attrib:href] |
-| puppeteer-blob | pb | No | No | [puppeteer-attrib:href] |
+| puppeteer-blob | pb | No | No | [puppeteer-blob:1] |
 | timeout | t | No | No | [timeout:30] |
 | delay | d | No | No | [delay:5000]
+| status | s | No | No | [status:published] |
+| screenshot | - | No | No | [screenshot:1] |
+| debug | - | No | No | [debug:1] |
 
 #### `source` tag
 
@@ -126,6 +129,18 @@ Defines a custom timeout for fetching external data.
 
 Defines a custom delay (ms) for fetching external data.
 
+#### `status` tag
+
+Defines the status of the new report.
+
+#### `screenshot` tag
+
+Only use for debugging, capture a screenshot of the page.
+
+#### `debug` tag
+
+Only use for debugging, capture all logs.
+
 ### Override tags in the UI
 
 You can go to and `/admin/config/reliefweb/content-importers/inoreader_extra_tags` add extra tags.
@@ -146,6 +161,12 @@ You can go to and `/admin/config/reliefweb/content-importers/inoreader_extra_tag
 ```shell
 drush sqlq "UPDATE reliefweb_import_records SET source = SUBSTR(SUBSTRING_INDEX(json_extract(extra, \"$.inoreader.feed_name\"), \"[source:\", 1), 2) where extra is not null"
 ```
+
+### Problematic feeds
+
+| Feed | Problem | Tags |
+| ---- | ------- | ---- |
+| `https://www.inoreader.com/feed/webfeed%3A%2F%2Fhttps%253A%252F%252Fwww.icrc.org%252Ffr%252Fresource-centre%252Fresult%253Ft%253D%2526f%25255B0%25255D%253Dtype%25253Apublication--c3b1806e` | Links to other page | `[source:1048][pdf:js][p:div.content-download_link a\|div.box-download a][pb:1]` |
 
 ## UNHCR importer
 
