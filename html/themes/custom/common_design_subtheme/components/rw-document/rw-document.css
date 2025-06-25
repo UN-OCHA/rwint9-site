@@ -129,7 +129,7 @@
  * a button like it was on the RW7 site. */
 .rw-document.rw-article--book .rw-article__content a[href^="/user/login/"] {
   display: inline-block;
-  margin: 1rem 0 0 1rem;
+  margin: 1rem 0 0 0;
   padding: 12px 18px;
   color: white;
   border: none;
