@@ -52,7 +52,7 @@ class ReliefWebImporterImportRecordsController extends ControllerBase {
         'status' => $status_info['status'],
         'status_type' => $status_info['id'],
         'changed' => time(),
-        'attempts' => 99,
+        'attempts' => $status_info['attempts'] ?? 99,
       ])
       ->condition('imported_item_uuid', $uuid)
       ->execute();

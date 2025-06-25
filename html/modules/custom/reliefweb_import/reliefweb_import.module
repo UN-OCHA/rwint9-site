@@ -291,11 +291,23 @@ function reliefweb_import_extract_pdf_file(string $url, string $selector, string
  */
 function reliefweb_import_status_type_values(): array {
   return [
+    'to_process' => [
+      'id' => 'to_process',
+      'label' => t('To process'),
+      'description' => t('Someone needs to have a look.'),
+      'status' => 'skipped',
+    ],
     'manual' => [
       'id' => 'manual',
-      'label' => t('Manual'),
+      'label' => t('Manually posted'),
       'description' => t('The status was set manually.'),
       'status' => 'success',
+    ],
+    'not_posted' => [
+      'id' => 'not_posted',
+      'label' => t('Not posted'),
+      'description' => t('The item was not posted.'),
+      'status' => 'skipped',
     ],
     'no_pdf' => [
       'id' => 'no_pdf',
@@ -314,6 +326,13 @@ function reliefweb_import_status_type_values(): array {
       'label' => t('404 Not Found'),
       'description' => t('The item URL returned a 404 Not Found error.'),
       'status' => 'error',
+    ],
+    'reset_attempts' => [
+      'id' => 'reset_attempts',
+      'label' => t('Reset attempts'),
+      'description' => t('The import record attempts were reset.'),
+      'status' => 'skipped',
+      'attempts' => 0,
     ],
   ];
 }
