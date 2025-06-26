@@ -31,6 +31,15 @@ reliefweb_import.reliefweb_importer.change_status:
     _permission: 'change reliefweb failed import records'
     _csrf_token: 'TRUE'
 
+reliefweb_import.reliefweb_importer.change_editor:
+  path: '/admin/content/reliefweb/content-importers/inoreader_change_editor/{uuid}/{editor}'
+  defaults:
+    _controller: '\Drupal\reliefweb_import\Controller\ReliefWebImporterImportRecordsController::changeEditor'
+    _title: 'ReliefWeb change import record editor'
+  requirements:
+    _permission: 'change reliefweb failed import records'
+    _csrf_token: 'TRUE'
+
 reliefweb_import.reliefweb_importer.inoreader.test_form:
   path: '/admin/config/reliefweb/content-importers/inoreader_test_form'
   defaults:

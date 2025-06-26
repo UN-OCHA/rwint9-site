@@ -119,6 +119,7 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
     $entities = $results['entities'];
 
     $status_types = reliefweb_import_status_type_values();
+    $editor_flows = reliefweb_import_editorial_flow_values();
 
     // Prepare the table rows' data from the entities.
     $rows = [];
@@ -263,6 +264,7 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
       }
       else {
         $status_links = [];
+        $editor_links = [];
 
         foreach ($status_types as $status => $status_info) {
           $link = Url::fromRoute('reliefweb_import.reliefweb_importer.change_status', [
@@ -280,15 +282,53 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
               'title' => $status_info['description'],
             ],
           ];
+
+          // Move current status to the first position.
+          if ($status_info['id'] === $record['status_type']) {
+            $status_links = [$status_info['id'] => $status_links[$status_info['id']]] + $status_links;
+          }
         }
 
-        $cells['node_created'] = [
-          '#theme' => 'item_list',
-          '#items' => $status_links,
+        foreach ($editor_flows as $editor => $editor_info) {
+          $link = Url::fromRoute('reliefweb_import.reliefweb_importer.change_editor', [
+            'uuid' => $record['imported_item_uuid'],
+            'editor' => $editor,
+          ], [
+            'query' => [
+              'destination' => $this->requestStack->getCurrentRequest()->getRequestUri() . '#row-' . $short_id,
+            ],
+          ]);
+          $editor_links[$editor_info['id']] = [
+            'title' => $editor_info['label'],
+            'url' => $link,
+            'attributes' => [
+              'title' => $editor_info['description'],
+            ],
+          ];
+
+          // Move current editor to the first position.
+          if ($editor_info['id'] === $record['editorial_flow']) {
+            $editor_links = [$editor_info['id'] => $editor_links[$editor_info['id']]] + $editor_links;
+          }
+        }
+
+        $cells['node_created']['editor_label'] = [
+          '#type' => 'markup',
+          '#markup' => $this->t('Workflow'),
+        ];
+        $cells['node_created']['editor'] = [
+          '#type' => 'dropbutton',
+          '#dropbutton_type' => 'rw-moderation',
+          '#links' => $editor_links,
         ];
 
-        $cells['node_created'] = [
+        $cells['node_created']['status_type_label'] = [
+          '#type' => 'markup',
+          '#markup' => $this->t('Change status type'),
+        ];
+        $cells['node_created']['status_type'] = [
           '#type' => 'dropbutton',
+          '#label' => $this->t('Change status type'),
           '#dropbutton_type' => 'rw-moderation',
           '#links' => $status_links,
         ];
@@ -338,6 +378,16 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
     $definitions = parent::initFilterDefinitions([
       'status',
     ]);
+
+    $definitions['editorial_flow'] = [
+      'form' => 'editorial_flow',
+      'type' => 'field',
+      'label' => $this->t('Editorial flow'),
+      'field' => 'editorial_flow',
+      'column' => 'value',
+      'operator' => 'OR',
+      'values' => $this->getEditorialFlowValues(),
+    ];
 
     $definitions['status_type'] = [
       'form' => 'status_type',
@@ -394,6 +444,20 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
     $values = [];
 
     $status_types = reliefweb_import_status_type_values();
+    foreach ($status_types as $status_type) {
+      $values[$status_type['id']] = $status_type['label'];
+    }
+
+    return $values;
+  }
+
+  /**
+   * Get editorial flow values from database.
+   */
+  protected function getEditorialFlowValues() {
+    $values = [];
+
+    $status_types = reliefweb_import_editorial_flow_values();
     foreach ($status_types as $status_type) {
       $values[$status_type['id']] = $status_type['label'];
     }
