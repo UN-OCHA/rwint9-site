@@ -31,11 +31,11 @@ reliefweb_import.reliefweb_importer.change_status:
     _permission: 'change reliefweb failed import records'
     _csrf_token: 'TRUE'
 
-reliefweb_import.reliefweb_importer.change_editor:
-  path: '/admin/content/reliefweb/content-importers/inoreader_change_editor/{uuid}/{editor}'
+reliefweb_import.reliefweb_importer.change_editorial_flow:
+  path: '/admin/content/reliefweb/content-importers/inoreader_change_editorial_flow/{uuid}/{editorial_flow}'
   defaults:
-    _controller: '\Drupal\reliefweb_import\Controller\ReliefWebImporterImportRecordsController::changeEditor'
-    _title: 'ReliefWeb change import record editor'
+    _controller: '\Drupal\reliefweb_import\Controller\ReliefWebImporterImportRecordsController::changeEditorialFlow'
+    _title: 'ReliefWeb change import record editorial flow'
   requirements:
     _permission: 'change reliefweb failed import records'
     _csrf_token: 'TRUE'

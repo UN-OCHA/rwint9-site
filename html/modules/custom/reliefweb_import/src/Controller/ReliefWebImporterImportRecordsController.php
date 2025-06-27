@@ -69,20 +69,20 @@ class ReliefWebImporterImportRecordsController extends ControllerBase {
   }
 
   /**
-   * Change status of an import record.
+   * Change editorial flow of an import record.
    */
-  public function changeEditor(Request $request, string $uuid, string $editor) : Response {
+  public function changeEditorialFlow(Request $request, string $uuid, string $editorial_flow) : Response {
     $record = $this->getImportRecord($uuid);
     if (empty($record)) {
       throw new \InvalidArgumentException('Import record not found for UUID: ' . $uuid);
     }
 
-    $statuses = reliefweb_import_editorial_flow_values();
-    if (!isset($statuses[$editor])) {
-      throw new \InvalidArgumentException('Invalid editorial flow: ' . $editor);
+    $editorial_flows = reliefweb_import_editorial_flow_values();
+    if (!isset($editorial_flows[$editorial_flow])) {
+      throw new \InvalidArgumentException('Invalid editorial flow: ' . $editorial_flow);
     }
 
-    $editorial_flow = $statuses[$editor];
+    $editorial_flow = $editorial_flows[$editorial_flow];
     $this->database->update('reliefweb_import_records')
       ->fields([
         'status' => $editorial_flow['status'],
