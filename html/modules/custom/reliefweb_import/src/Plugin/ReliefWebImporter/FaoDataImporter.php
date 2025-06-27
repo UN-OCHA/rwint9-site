@@ -120,7 +120,6 @@ class FaoDataImporter extends ReliefWebImporterPluginBase {
 
       $parameters = [
         'limit' => $limit,
-        'type' => 'PDF',
         'sortBy' => '+properties.created',
       ];
 
@@ -128,7 +127,7 @@ class FaoDataImporter extends ReliefWebImporterPluginBase {
         // If we are not ignoring the timestamp, we only want to retrieve
         // documents created after the last import.
         unset($parameters['type']);
-        $parameters['filter'] = '(type=PDF AND (created BETWEEN ' . $most_recent_timestamp * 1000 . ' AND ' . time() * 1000 . '))';
+        $parameters['filter'] = 'created BETWEEN ' . $most_recent_timestamp * 1000 . ' AND ' . time() * 1000;
         $this->state->set('reliefweb_importer_fao_data_most_recent_timestamp', time());
       }
 
@@ -420,19 +419,46 @@ class FaoDataImporter extends ReliefWebImporterPluginBase {
 
     // Retrieve the data for the attachment if any.
     $files = [];
-    if (isset($document['pdfLink'])) {
-      $info = $this->getRemoteFileInfo($document['pdfLink']);
-      if (!empty($info)) {
-        $file_url = $document['pdfLink'];
-        $file_uuid = $this->generateUuid($file_url, $uuid);
-        $files[] = [
-          'url' => $file_url,
-          'uuid' => $file_uuid,
-        ] + $info;
-      }
-    }
-    $published = $published / 1000;
 
+    switch ($document['type'] ?? NULL) {
+      case 'Document Link':
+        // Grab the PDF using puppeteer.
+        $puppeteer_result = reliefweb_import_extract_pdf_file($url, 'ds-file-download-link', 'ds-file-download-link a', 'href', 15, TRUE);
+        if (!empty($pdf)) {
+          $puppeteer_result['blob'] = base64_decode($puppeteer_result['blob'] ?? '');
+          $pdf = $puppeteer_result['pdf'] ?? '';
+          $pdf_bytes = $puppeteer_result['blob'] ?? NULL;
+          $info = $this->getRemoteFileInfo($pdf, 'pdf', $pdf_bytes);
+          if (!empty($info)) {
+            $file_uuid = $this->generateUuid($pdf, $uuid);
+            $files[] = [
+              'url' => $pdf,
+              'uuid' => $file_uuid,
+            ] + $info;
+          }
+        }
+        break;
+
+      case 'PDF':
+        if (isset($document['pdfLink'])) {
+          $info = $this->getRemoteFileInfo($document['pdfLink']);
+          if (!empty($info)) {
+            $file_url = $document['pdfLink'];
+            $file_uuid = $this->generateUuid($file_url, $uuid);
+            $files[] = [
+              'url' => $file_url,
+              'uuid' => $file_uuid,
+            ] + $info;
+          }
+        }
+        break;
+
+      default:
+        return [];
+
+    }
+
+    $published = $published / 1000;
     $published = DateHelper::format($published, 'custom', 'c');
 
     // Submission data.
