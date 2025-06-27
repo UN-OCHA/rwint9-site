@@ -236,36 +236,19 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
       }
 
       $cells['importer'] = $record['importer'];
-      $cells['status'] = $record['status'];
+      $cells['status']['label'] = [
+        '#type' => 'markup',
+        '#markup' => $record['status'],
+      ];
       if (isset($status_types[$record['status_type']])) {
-        $cells['status'] .= ' (' . $status_types[$record['status_type']]['label'] . ')';
+        $cells['status']['label']['#markup'] .= ' (' . $status_types[$record['status_type']]['label'] . ')';
       }
       elseif (!empty($record['status_type'])) {
-        $cells['status'] .= ' (' . $record['status_type'] . ')';
+        $cells['status']['label']['#markup'] .= ' (' . $record['status_type'] . ')';
       }
-      $cells['source'] = $record['source'];
 
-      // Date cell.
-      $cells['changed'] = [
-        'data' => [
-          '#type' => 'markup',
-          '#markup' => $this->dateFormatter->format($record['changed'], 'custom', 'd/m/Y H:i:s'),
-        ],
-      ];
-
-      // Report date cell.
-      if ($entity) {
-        $cells['node_created'] = [
-          'data' => [
-            '#type' => 'markup',
-            '#markup' => $this->dateFormatter->format($entity->getCreatedTime(), 'custom', 'd/m/Y H:i:s'),
-          ],
-        ];
-      }
-      else {
+      if (!$entity) {
         $status_links = [];
-        $editorial_links = [];
-
         foreach ($status_types as $status => $status_info) {
           $link = Url::fromRoute('reliefweb_import.reliefweb_importer.change_status', [
             'uuid' => $record['imported_item_uuid'],
@@ -289,6 +272,35 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
           }
         }
 
+        $cells['status']['status_type'] = [
+          '#type' => 'dropbutton',
+          '#label' => $this->t('Change status type'),
+          '#dropbutton_type' => 'rw-moderation',
+          '#links' => $status_links,
+        ];
+      }
+
+      $cells['source'] = $record['source'];
+
+      // Date cell.
+      $cells['changed'] = [
+        'data' => [
+          '#type' => 'markup',
+          '#markup' => $this->dateFormatter->format($record['changed'], 'custom', 'd/m/Y H:i:s'),
+        ],
+      ];
+
+      // Report date cell.
+      if ($entity) {
+        $cells['node_created'] = [
+          'data' => [
+            '#type' => 'markup',
+            '#markup' => $this->dateFormatter->format($entity->getCreatedTime(), 'custom', 'd/m/Y H:i:s'),
+          ],
+        ];
+      }
+      else {
+        $editorial_links = [];
         foreach ($editorial_flows as $editorial_flow => $editorial_flow_info) {
           $link = Url::fromRoute('reliefweb_import.reliefweb_importer.change_editorial_flow', [
             'uuid' => $record['imported_item_uuid'],
@@ -320,17 +332,6 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
           '#type' => 'dropbutton',
           '#dropbutton_type' => 'rw-moderation',
           '#links' => $editorial_links,
-        ];
-
-        $cells['node_created']['status_type_label'] = [
-          '#type' => 'markup',
-          '#markup' => $this->t('Change status type'),
-        ];
-        $cells['node_created']['status_type'] = [
-          '#type' => 'dropbutton',
-          '#label' => $this->t('Change status type'),
-          '#dropbutton_type' => 'rw-moderation',
-          '#links' => $status_links,
         ];
       }
 
