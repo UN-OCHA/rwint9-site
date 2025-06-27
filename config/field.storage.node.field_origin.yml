@@ -22,7 +22,7 @@ settings:
       label: 'Reliefweb product'
     -
       value: 3
-      label: 'API'
+      label: API
   allowed_values_function: ''
 module: options
 locked: false
