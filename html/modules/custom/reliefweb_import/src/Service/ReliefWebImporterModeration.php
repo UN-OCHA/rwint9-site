@@ -312,11 +312,11 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
           }
         }
 
-        $cells['node_created']['editor_label'] = [
+        $cells['node_created']['editorial_flow_label'] = [
           '#type' => 'markup',
           '#markup' => $this->t('Workflow'),
         ];
-        $cells['node_created']['editor'] = [
+        $cells['node_created']['editorial_flow_'] = [
           '#type' => 'dropbutton',
           '#dropbutton_type' => 'rw-moderation',
           '#links' => $editorial_links,
