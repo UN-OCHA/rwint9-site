@@ -118,16 +118,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.347.2",
+            "version": "3.348.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "34dca6ffe2c307c5a617c6412efdc559b5e89af8"
+                "reference": "7ad94071b0429470e8d4f714c0bead44ea080ef2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/34dca6ffe2c307c5a617c6412efdc559b5e89af8",
-                "reference": "34dca6ffe2c307c5a617c6412efdc559b5e89af8",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/7ad94071b0429470e8d4f714c0bead44ea080ef2",
+                "reference": "7ad94071b0429470e8d4f714c0bead44ea080ef2",
                 "shasum": ""
             },
             "require": {
@@ -209,9 +209,9 @@
             "support": {
                 "forum": "https://github.com/aws/aws-sdk-php/discussions",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.347.2"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.348.0"
             },
-            "time": "2025-06-25T18:12:42+00:00"
+            "time": "2025-06-26T18:14:07+00:00"
         },
         {
             "name": "behat/mink",
@@ -1896,25 +1896,25 @@
         },
         {
             "name": "dealerdirect/phpcodesniffer-composer-installer",
-            "version": "v1.1.0",
+            "version": "v1.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPCSStandards/composer-installer.git",
-                "reference": "18a95476797ed480b3f2598984bc6f7e1eecc9a8"
+                "reference": "4be43904336affa5c2f70744a348312336afd0da"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPCSStandards/composer-installer/zipball/18a95476797ed480b3f2598984bc6f7e1eecc9a8",
-                "reference": "18a95476797ed480b3f2598984bc6f7e1eecc9a8",
+                "url": "https://api.github.com/repos/PHPCSStandards/composer-installer/zipball/4be43904336affa5c2f70744a348312336afd0da",
+                "reference": "4be43904336affa5c2f70744a348312336afd0da",
                 "shasum": ""
             },
             "require": {
-                "composer-plugin-api": "^2.2",
+                "composer-plugin-api": "^1.0 || ^2.0",
                 "php": ">=5.4",
                 "squizlabs/php_codesniffer": "^2.0 || ^3.1.0 || ^4.0"
             },
             "require-dev": {
-                "composer/composer": "^2.2",
+                "composer/composer": "*",
                 "ext-json": "*",
                 "ext-zip": "*",
                 "php-parallel-lint/php-parallel-lint": "^1.3.1",
@@ -1937,9 +1937,9 @@
             "authors": [
                 {
                     "name": "Franck Nijhof",
-                    "email": "opensource@frenck.dev",
-                    "homepage": "https://frenck.dev",
-                    "role": "Open source developer"
+                    "email": "franck.nijhof@dealerdirect.com",
+                    "homepage": "http://www.frenck.nl",
+                    "role": "Developer / IT Manager"
                 },
                 {
                     "name": "Contributors",
@@ -1947,6 +1947,7 @@
                 }
             ],
             "description": "PHP_CodeSniffer Standards Composer Installer Plugin",
+            "homepage": "http://www.dealerdirect.com",
             "keywords": [
                 "PHPCodeSniffer",
                 "PHP_CodeSniffer",
@@ -1967,28 +1968,9 @@
             ],
             "support": {
                 "issues": "https://github.com/PHPCSStandards/composer-installer/issues",
-                "security": "https://github.com/PHPCSStandards/composer-installer/security/policy",
                 "source": "https://github.com/PHPCSStandards/composer-installer"
             },
-            "funding": [
-                {
-                    "url": "https://github.com/PHPCSStandards",
-                    "type": "github"
-                },
-                {
-                    "url": "https://github.com/jrfnl",
-                    "type": "github"
-                },
-                {
-                    "url": "https://opencollective.com/php_codesniffer",
-                    "type": "open_collective"
-                },
-                {
-                    "url": "https://thanks.dev/u/gh/phpcsstandards",
-                    "type": "thanks_dev"
-                }
-            ],
-            "time": "2025-05-28T16:05:48+00:00"
+            "time": "2023-01-05T11:28:13+00:00"
         },
         {
             "name": "dflydev/dot-access-data",
@@ -2835,16 +2817,16 @@
         },
         {
             "name": "drupal/core",
-            "version": "10.5.0",
+            "version": "10.5.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/drupal/core.git",
-                "reference": "105e9c770e55798fb07d624e9289538757c099a4"
+                "reference": "551442fec1db69cf6eedb1601a348d8a6268060f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/drupal/core/zipball/105e9c770e55798fb07d624e9289538757c099a4",
-                "reference": "105e9c770e55798fb07d624e9289538757c099a4",
+                "url": "https://api.github.com/repos/drupal/core/zipball/551442fec1db69cf6eedb1601a348d8a6268060f",
+                "reference": "551442fec1db69cf6eedb1601a348d8a6268060f",
                 "shasum": ""
             },
             "require": {
@@ -2993,13 +2975,13 @@
             ],
             "description": "Drupal is an open source content management platform powering millions of websites and applications.",
             "support": {
-                "source": "https://github.com/drupal/core/tree/10.5.0"
+                "source": "https://github.com/drupal/core/tree/10.5.1"
             },
-            "time": "2025-06-19T00:37:21+00:00"
+            "time": "2025-06-26T14:05:15+00:00"
         },
         {
             "name": "drupal/core-composer-scaffold",
-            "version": "10.5.0",
+            "version": "10.5.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/drupal/core-composer-scaffold.git",
@@ -3043,13 +3025,13 @@
                 "drupal"
             ],
             "support": {
-                "source": "https://github.com/drupal/core-composer-scaffold/tree/10.5.0"
+                "source": "https://github.com/drupal/core-composer-scaffold/tree/10.5.1"
             },
             "time": "2024-08-22T14:31:30+00:00"
         },
         {
             "name": "drupal/core-dev",
-            "version": "10.5.0",
+            "version": "10.5.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/drupal/core-dev.git",
@@ -3099,22 +3081,22 @@
             ],
             "description": "require-dev dependencies from drupal/drupal; use in addition to drupal/core-recommended to run tests from drupal/core.",
             "support": {
-                "source": "https://github.com/drupal/core-dev/tree/10.5.0"
+                "source": "https://github.com/drupal/core-dev/tree/10.5.1"
             },
             "time": "2025-05-14T07:11:14+00:00"
         },
         {
             "name": "drupal/core-recommended",
-            "version": "10.5.0",
+            "version": "10.5.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/drupal/core-recommended.git",
-                "reference": "e64c11c725d726779fb14ac0e46b177ceb9f3491"
+                "reference": "60b76ba11c2ae9088283a1e6963b929ca976f4fc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/drupal/core-recommended/zipball/e64c11c725d726779fb14ac0e46b177ceb9f3491",
-                "reference": "e64c11c725d726779fb14ac0e46b177ceb9f3491",
+                "url": "https://api.github.com/repos/drupal/core-recommended/zipball/60b76ba11c2ae9088283a1e6963b929ca976f4fc",
+                "reference": "60b76ba11c2ae9088283a1e6963b929ca976f4fc",
                 "shasum": ""
             },
             "require": {
@@ -3123,7 +3105,7 @@
                 "doctrine/annotations": "~1.14.4",
                 "doctrine/deprecations": "~1.1.5",
                 "doctrine/lexer": "~2.1.1",
-                "drupal/core": "10.5.0",
+                "drupal/core": "10.5.1",
                 "egulias/email-validator": "~4.0.4",
                 "guzzlehttp/guzzle": "~7.9.3",
                 "guzzlehttp/promises": "~2.2.0",
@@ -3184,9 +3166,9 @@
             ],
             "description": "Core and its dependencies with known-compatible minor versions. Require this project INSTEAD OF drupal/core.",
             "support": {
-                "source": "https://github.com/drupal/core-recommended/tree/10.5.0"
+                "source": "https://github.com/drupal/core-recommended/tree/10.5.1"
             },
-            "time": "2025-06-19T00:37:21+00:00"
+            "time": "2025-06-26T14:05:15+00:00"
         },
         {
             "name": "drupal/ctools",
@@ -4420,17 +4402,17 @@
         },
         {
             "name": "drupal/monitoring",
-            "version": "1.18.0",
+            "version": "1.19.0",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/monitoring.git",
-                "reference": "8.x-1.18"
+                "reference": "8.x-1.19"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/monitoring-8.x-1.18.zip",
-                "reference": "8.x-1.18",
-                "shasum": "ed81815f93f39f36d32c43622b23094e43ad7d20"
+                "url": "https://ftp.drupal.org/files/projects/monitoring-8.x-1.19.zip",
+                "reference": "8.x-1.19",
+                "shasum": "6ce5a56d0d2245ace363a27cb09ae9d69023c041"
             },
             "require": {
                 "drupal/core": "^10.2 || ^11"
@@ -4453,8 +4435,8 @@
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "8.x-1.18",
-                    "datestamp": "1747394072",
+                    "version": "8.x-1.19",
+                    "datestamp": "1750928263",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
