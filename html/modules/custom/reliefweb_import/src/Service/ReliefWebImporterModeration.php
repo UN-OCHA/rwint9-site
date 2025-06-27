@@ -119,7 +119,7 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
     $entities = $results['entities'];
 
     $status_types = reliefweb_import_status_type_values();
-    $editor_flows = reliefweb_import_editorial_flow_values();
+    $editorial_flows = reliefweb_import_editorial_flow_values();
 
     // Prepare the table rows' data from the entities.
     $rows = [];
@@ -289,26 +289,26 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
           }
         }
 
-        foreach ($editor_flows as $editor => $editor_info) {
-          $link = Url::fromRoute('reliefweb_import.reliefweb_importer.change_editor', [
+        foreach ($editorial_flows as $editorial_flow => $editorial_flow_info) {
+          $link = Url::fromRoute('reliefweb_import.reliefweb_importer.change_editorial_flow', [
             'uuid' => $record['imported_item_uuid'],
-            'editor' => $editor,
+            'editorial_flow' => $editorial_flow,
           ], [
             'query' => [
               'destination' => $this->requestStack->getCurrentRequest()->getRequestUri() . '#row-' . $short_id,
             ],
           ]);
-          $editor_links[$editor_info['id']] = [
-            'title' => $editor_info['label'],
+          $editor_links[$editorial_flow_info['id']] = [
+            'title' => $editorial_flow_info['label'],
             'url' => $link,
             'attributes' => [
-              'title' => $editor_info['description'],
+              'title' => $editorial_flow_info['description'],
             ],
           ];
 
           // Move current editor to the first position.
-          if ($editor_info['id'] === $record['editorial_flow']) {
-            $editor_links = [$editor_info['id'] => $editor_links[$editor_info['id']]] + $editor_links;
+          if ($editorial_flow_info['id'] === $record['editorial_flow']) {
+            $editor_links = [$editorial_flow_info['id'] => $editor_links[$editorial_flow_info['id']]] + $editor_links;
           }
         }
 
