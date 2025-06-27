@@ -453,6 +453,20 @@ class FaoDataImporter extends ReliefWebImporterPluginBase {
         }
         break;
 
+      case 'Microsoft Excel':
+        if (isset($document['pdfLink'])) {
+          $info = $this->getRemoteFileInfo($document['pdfLink'], 'xlsx');
+          if (!empty($info)) {
+            $file_url = $document['pdfLink'];
+            $file_uuid = $this->generateUuid($file_url, $uuid);
+            $files[] = [
+              'url' => $file_url,
+              'uuid' => $file_uuid,
+            ] + $info;
+          }
+        }
+        break;
+
       default:
         return [];
 
