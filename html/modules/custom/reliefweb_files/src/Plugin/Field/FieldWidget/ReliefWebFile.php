@@ -16,6 +16,7 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\file\Entity\File;
 use Drupal\file\Validation\FileValidatorInterface;
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile as ReliefWebFileType;
@@ -212,8 +213,8 @@ class ReliefWebFile extends WidgetBase {
     $max_file_size = $form_state->getValue($element['#parents']);
     if (empty($max_file_size) || $max_file_size < 0 || $max_file_size > $default_max_files_size) {
       $form_state->setError($element, $this->t('The max file size must be between @min and @max.', [
-        '@min' => format_size(1),
-        '@max' => format_size($default_max_files_size),
+        '@min' => ByteSizeMarkup::create(1),
+        '@max' => ByteSizeMarkup::create($default_max_files_size),
       ]));
     }
   }
@@ -229,7 +230,7 @@ class ReliefWebFile extends WidgetBase {
     ]);
 
     $summary[] = $this->t('Max file size: @max_file_size', [
-      '@max_file_size' => format_size($this->getMaxFileSizeSetting()),
+      '@max_file_size' => ByteSizeMarkup::create($this->getMaxFileSizeSetting()),
     ]);
 
     return $summary;
@@ -1568,7 +1569,7 @@ class ReliefWebFile extends WidgetBase {
     return $this->t('@file_name (@file_extension | @file_size)', [
       '@file_name' => $file_name,
       '@file_extension' => mb_strtoupper($file_extension),
-      '@file_size' => format_size($file_size),
+      '@file_size' => ByteSizeMarkup::create($file_size),
     ]);
   }
 
