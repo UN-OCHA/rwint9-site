@@ -264,7 +264,7 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
       }
       else {
         $status_links = [];
-        $editor_links = [];
+        $editorial_links = [];
 
         foreach ($status_types as $status => $status_info) {
           $link = Url::fromRoute('reliefweb_import.reliefweb_importer.change_status', [
@@ -298,7 +298,7 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
               'destination' => $this->requestStack->getCurrentRequest()->getRequestUri() . '#row-' . $short_id,
             ],
           ]);
-          $editor_links[$editorial_flow_info['id']] = [
+          $editorial_links[$editorial_flow_info['id']] = [
             'title' => $editorial_flow_info['label'],
             'url' => $link,
             'attributes' => [
@@ -308,7 +308,7 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
 
           // Move current editor to the first position.
           if ($editorial_flow_info['id'] === $record['editorial_flow']) {
-            $editor_links = [$editorial_flow_info['id'] => $editor_links[$editorial_flow_info['id']]] + $editor_links;
+            $editorial_links = [$editorial_flow_info['id'] => $editorial_links[$editorial_flow_info['id']]] + $editorial_links;
           }
         }
 
@@ -319,7 +319,7 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
         $cells['node_created']['editor'] = [
           '#type' => 'dropbutton',
           '#dropbutton_type' => 'rw-moderation',
-          '#links' => $editor_links,
+          '#links' => $editorial_links,
         ];
 
         $cells['node_created']['status_type_label'] = [
