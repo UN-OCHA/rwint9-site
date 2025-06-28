@@ -36,7 +36,7 @@
         "drupal/core-recommended": "^10",
         "drupal/environment_indicator": "^4.0",
         "drupal/geofield": "^1.52",
-        "drupal/guidelines": "^1.0",
+        "drupal/guidelines": "1.0.x-dev#1a63c54",
         "drupal/honeypot": "^2",
         "drupal/imageapi_optimize_binaries": "^1.0@beta",
         "drupal/imageapi_optimize_webp": "^2.0",

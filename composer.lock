@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "44c71317f9d1149365f82fc3284f690b",
+    "content-hash": "52386e492f99c48f4e703ec6ae1169cb",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -3607,29 +3607,26 @@
         },
         {
             "name": "drupal/guidelines",
-            "version": "1.0.5",
+            "version": "dev-1.0.x",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/guidelines.git",
-                "reference": "1.0.5"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/guidelines-1.0.5.zip",
-                "reference": "1.0.5",
-                "shasum": "47b9cf54f85d45fbd6aad3c1a13ec3cdced90311"
+                "reference": "1a63c54"
             },
             "require": {
                 "drupal/core": "^9 || ^10"
             },
             "type": "drupal-module",
             "extra": {
+                "branch-alias": {
+                    "dev-1.0.x": "1.0.x-dev"
+                },
                 "drupal": {
-                    "version": "1.0.5",
-                    "datestamp": "1663831047",
+                    "version": "1.0.5+1-dev",
+                    "datestamp": "1739356961",
                     "security-coverage": {
-                        "status": "covered",
-                        "message": "Covered by Drupal's security advisory policy"
+                        "status": "not-covered",
+                        "message": "Dev releases are not covered by Drupal security advisories."
                     }
                 }
             },
@@ -19330,6 +19327,7 @@
         "drupal/aws": 20,
         "drupal/components": 10,
         "drupal/config_split": 5,
+        "drupal/guidelines": 20,
         "drupal/imageapi_optimize_binaries": 10,
         "drupal/inline_entity_form": 5,
         "drupal/mimemail": 15,
