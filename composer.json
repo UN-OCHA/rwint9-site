@@ -42,7 +42,7 @@
         "drupal/imageapi_optimize_binaries": "^1.2@beta",
         "drupal/imageapi_optimize_webp": "^2.1",
         "drupal/imagemagick": "^4.0",
-        "drupal/inline_entity_form": "^1.0@rc",
+        "drupal/inline_entity_form": "^3.0@RC",
         "drupal/jsonlog": "^4.0",
         "drupal/mailsystem": "^4.4",
         "drupal/maintenance200": "^2",
