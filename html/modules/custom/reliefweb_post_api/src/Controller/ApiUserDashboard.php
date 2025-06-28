@@ -17,6 +17,7 @@ use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\reliefweb_post_api\Form\GenerateApiKeyForm;
+use Drupal\reliefweb_utility\Helpers\UrlHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
@@ -306,7 +307,7 @@ class ApiUserDashboard extends ControllerBase {
           'data' => [
             '#type' => 'link',
             '#title' => $label,
-          ] + $provider->toUrl('edit-form')->toRenderArray(),
+          ] + UrlHelper::toRenderArray($provider->toUrl('edit-form')),
         ];
       }
 
