@@ -233,12 +233,11 @@
             "merge-extra": false
         },
         "drupal-lenient": {
-            "constraint": "^10",
+            "constraint": "^11",
             "allowed-list": [
-                "drupal/mimemail",
-                "drupal/maintenance200",
-                "drupal/svg_image",
-                "drupal/theme_switcher"
+                "drupal/guidelines",
+                "drupal/jsonlog",
+                "drupal/maintenance200"
             ]
         }
     }
