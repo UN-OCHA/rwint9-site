@@ -20,6 +20,9 @@
             "Direct logging to Elastic cluster": "PATCHES/jsonlog--3460929--elastic-direct-logging.patch",
             "Drupal 11 compatibility": "PATCHES/jsonlog--3455244-drupal-11-compatibility.patch"
         },
+        "drupal/maintenance200": {
+            "Drupal 11 compatibility": "PATCHES/maintenance200--3431791-drupal-11-compatibility.patch"
+        },
         "drupal/openid_connect": {
             "Handle case if user is in blocked state after SSO Authorization": "PATCHES/openid_connect-3390668-6.patch"
         },
