@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "52386e492f99c48f4e703ec6ae1169cb",
+    "content-hash": "c2d8c25909a96111f829c439729e74f9",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -3719,29 +3719,29 @@
         },
         {
             "name": "drupal/imageapi_optimize",
-            "version": "4.0.1",
+            "version": "4.1.0-beta1",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/imageapi_optimize.git",
-                "reference": "4.0.1"
+                "reference": "4.1.0-beta1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/imageapi_optimize-4.0.1.zip",
-                "reference": "4.0.1",
-                "shasum": "6139e7d5d5d5dd28bf51b15118c8c84d6ff91614"
+                "url": "https://ftp.drupal.org/files/projects/imageapi_optimize-4.1.0-beta1.zip",
+                "reference": "4.1.0-beta1",
+                "shasum": "01ef7fc3903f83b8cd8b50fb988e737ed374a788"
             },
             "require": {
-                "drupal/core": "^9 || ^10"
+                "drupal/core": "^9 || ^10 || ^11"
             },
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "4.0.1",
-                    "datestamp": "1671725073",
+                    "version": "4.1.0-beta1",
+                    "datestamp": "1727502254",
                     "security-coverage": {
-                        "status": "covered",
-                        "message": "Covered by Drupal's security advisory policy"
+                        "status": "not-covered",
+                        "message": "Beta releases are not covered by Drupal security advisories."
                     }
                 }
             },
@@ -19328,6 +19328,7 @@
         "drupal/components": 10,
         "drupal/config_split": 5,
         "drupal/guidelines": 20,
+        "drupal/imageapi_optimize": 10,
         "drupal/imageapi_optimize_binaries": 10,
         "drupal/inline_entity_form": 5,
         "drupal/mimemail": 15,
