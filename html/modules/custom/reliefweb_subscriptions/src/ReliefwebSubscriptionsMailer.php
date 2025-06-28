@@ -29,6 +29,7 @@ use Drupal\reliefweb_entities\Entity\BlogPost;
 use Drupal\reliefweb_entities\Entity\Disaster;
 use Drupal\reliefweb_entities\Entity\Report;
 use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
+use Drupal\reliefweb_utility\Helpers\UserHelper;
 
 /**
  * Subscription mailer.
@@ -1489,7 +1490,7 @@ class ReliefwebSubscriptionsMailer {
     $sid = $subscription['id'];
 
     // Get the roles that have the permission for the subscription.
-    $roles = user_role_names(TRUE, $subscription['permission']);
+    $roles = UserHelper::getRoles(TRUE, $subscription['permission']);
     if (empty($roles)) {
       return [];
     }
