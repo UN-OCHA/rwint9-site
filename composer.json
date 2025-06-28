@@ -92,6 +92,7 @@
         "webflo/drupal-finder": "^1.2.2"
     },
     "require-dev": {
+        "dealerdirect/phpcodesniffer-composer-installer": "1.0.0",
         "drupal/coder": "^8.3",
         "drupal/devel": "^5.0",
         "drupal/devel_php": "^1.3",
