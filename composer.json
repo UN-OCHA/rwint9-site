@@ -233,7 +233,7 @@
             "merge-extra": false
         },
         "drupal-lenient": {
-            "constraint": "^11",
+            "constraint": "^10",
             "allowed-list": [
                 "drupal/guidelines",
                 "drupal/jsonlog",

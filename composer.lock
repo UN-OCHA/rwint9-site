@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "632caca7ccb0de04d3deb60ed9cd1b83",
+    "content-hash": "3cff3e71aecb43db64572be2784c5617",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -3614,7 +3614,7 @@
                 "reference": "1a63c54"
             },
             "require": {
-                "drupal/core": "^9 || ^10"
+                "drupal/core": "^10"
             },
             "type": "drupal-module",
             "extra": {
@@ -18296,21 +18296,20 @@
         },
         {
             "name": "unocha/ocha_ai",
-            "version": "v1.13.0",
+            "version": "v1.14.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_ai.git",
-                "reference": "74c12f036b4285bda5f8df7ee8c8e2ecaf1e911a"
+                "reference": "dcfd61ec9b1ea0c08bb69378dfe3f0885b37bc10"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/74c12f036b4285bda5f8df7ee8c8e2ecaf1e911a",
-                "reference": "74c12f036b4285bda5f8df7ee8c8e2ecaf1e911a",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/dcfd61ec9b1ea0c08bb69378dfe3f0885b37bc10",
+                "reference": "dcfd61ec9b1ea0c08bb69378dfe3f0885b37bc10",
                 "shasum": ""
             },
             "require": {
                 "aws/aws-sdk-php": "^3.283",
-                "drupal/core": "^10",
                 "drupal/honeypot": "^2",
                 "openai-php/client": "^0.7",
                 "pear/text_languagedetect": "^1.0",
@@ -18337,9 +18336,9 @@
             "description": "OCHA AI module",
             "support": {
                 "issues": "https://github.com/UN-OCHA/ocha_ai/issues",
-                "source": "https://github.com/UN-OCHA/ocha_ai/tree/v1.13.0"
+                "source": "https://github.com/UN-OCHA/ocha_ai/tree/v1.14.1"
             },
-            "time": "2025-05-09T07:23:43+00:00"
+            "time": "2025-06-28T07:44:33+00:00"
         },
         {
             "name": "unocha/ocha_content_classification",
