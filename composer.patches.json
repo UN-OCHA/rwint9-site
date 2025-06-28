@@ -33,7 +33,8 @@
             "Avoid leaking the path via Drupal.settings json": "PATCHES/username_enumeration_prevention-user-login-block-form-3312288.patch"
         },
         "drush/drush": {
-            "https://humanitarian.atlassian.net/browse/OPS-8026": "PATCHES/drush--timeout-override.patch"
+            "https://humanitarian.atlassian.net/browse/OPS-8026": "PATCHES/drush--timeout-override.patch",
+            "PHP 8.3 compatibility": "PATCHES/drush--6242-php83-compatibility.patch"
         },
         "spipu/html2pdf": {
             "Remove promo link": "PATCHES/remove-tcpdf-footer.patch"
