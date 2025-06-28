@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "75e1e556b274a30ccc4fc39981d2106e",
+    "content-hash": "632caca7ccb0de04d3deb60ed9cd1b83",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -4456,33 +4456,30 @@
         },
         {
             "name": "drupal/mimemail",
-            "version": "1.0.0-alpha6",
+            "version": "dev-2.0.x",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/mimemail.git",
-                "reference": "8.x-1.0-alpha6"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/mimemail-8.x-1.0-alpha6.zip",
-                "reference": "8.x-1.0-alpha6",
-                "shasum": "c25246747dac4372c7d5a5a5fd0f276d9e468eff"
+                "reference": "8bae776d"
             },
             "require": {
                 "drupal/core": "^10",
                 "drupal/mailsystem": "^4"
             },
             "require-dev": {
-                "drupal/rules": "^3"
+                "drupal/rules": "^4.0"
             },
             "type": "drupal-module",
             "extra": {
+                "branch-alias": {
+                    "dev-2.0.x": "2.0.x-dev"
+                },
                 "drupal": {
-                    "version": "8.x-1.0-alpha6",
-                    "datestamp": "1697143284",
+                    "version": "2.0.x-dev",
+                    "datestamp": "1729229442",
                     "security-coverage": {
                         "status": "not-covered",
-                        "message": "Alpha releases are not covered by Drupal security advisories."
+                        "message": "Dev releases are not covered by Drupal security advisories."
                     }
                 }
             },
@@ -19374,7 +19371,7 @@
         "drupal/imageapi_optimize": 10,
         "drupal/imageapi_optimize_binaries": 10,
         "drupal/inline_entity_form": 5,
-        "drupal/mimemail": 15,
+        "drupal/mimemail": 20,
         "drupal/openid_connect_windows_aad": 10
     },
     "prefer-stable": true,
