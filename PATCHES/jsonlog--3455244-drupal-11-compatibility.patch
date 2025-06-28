@@ -1,0 +1,12 @@
+diff --git a/jsonlog.info.yml b/jsonlog.info.yml
+index e56338d..3066772 100644
+--- a/jsonlog.info.yml
++++ b/jsonlog.info.yml
+@@ -1,6 +1,6 @@
+ name: JSON Log
+ type: module
+ description: Logs watchdog events JSON-formatted to file.
+-core_version_requirement: ^10
++core_version_requirement: ^10 || ^11
+ package: Administration
+ configure: system.logging_settings
