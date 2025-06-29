@@ -32,8 +32,9 @@ function reliefweb_user_history_user_update(EntityInterface $entity) {
   }
 
   // Save the changes to the user account if any.
-  if (isset($entity->original) && reliefweb_user_history_check_changes($entity, $entity->original)) {
-    reliefweb_user_history_record_changes($entity, $entity->original);
+  $original_entity = $entity->getOriginal();
+  if (isset($original_entity) && reliefweb_user_history_check_changes($entity, $original_entity)) {
+    reliefweb_user_history_record_changes($entity, $original_entity);
   }
 }
 

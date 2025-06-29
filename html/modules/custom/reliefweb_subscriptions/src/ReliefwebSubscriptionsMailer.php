@@ -2253,7 +2253,7 @@ class ReliefwebSubscriptionsMailer {
       // When this is called in a hook_entity_update, then the previous
       // revision is stored as the "original" property. Otherwise, for example,
       // when queueing via drush, then we load the previous revision.
-      $previous = $report->original ?? $this->loadPreviousEntityRevision($report);
+      $previous = $report->getOriginal() ?? $this->loadPreviousEntityRevision($report);
 
       // If there is no previous revision, check the current status.
       if ($previous === $report) {
@@ -2293,7 +2293,7 @@ class ReliefwebSubscriptionsMailer {
       // When this is called in a hook_entity_update, then the previous
       // revision is stored as the "original" property. Otherwise, for example,
       // when queueing via drush, then we load the previous revision.
-      $previous = $disaster->original ?? $this->loadPreviousEntityRevision($disaster);
+      $previous = $disaster->getOriginal() ?? $this->loadPreviousEntityRevision($disaster);
 
       // If there is no previous revision, check the current status.
       if ($previous === $disaster) {
@@ -2337,7 +2337,7 @@ class ReliefwebSubscriptionsMailer {
       // When this is called in a hook_entity_update, then the previous
       // revision is stored as the "original" property. Otherwise, for example,
       // when queueing via drush, then we load the previous revision.
-      $previous = $blog->original ?? $this->loadPreviousEntityRevision($blog);
+      $previous = $blog->getOriginal() ?? $this->loadPreviousEntityRevision($blog);
 
       // If there is no previous revision, check the current status.
       if ($previous === $blog) {

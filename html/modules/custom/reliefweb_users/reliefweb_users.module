@@ -181,7 +181,7 @@ function reliefweb_users_user_presave(EntityInterface $entity) {
   }
   // Add a flag to send an email confirmation message.
   elseif (empty($entity->_bypass_email_confirmation)) {
-    $previous_email = $entity->original?->getEmail() ?? '';
+    $previous_email = $entity->getOriginal()?->getEmail() ?? '';
     $current_email = $entity->getEmail() ?? '';
     $confirmed = !empty($entity->field_email_confirmed?->value);
 
