@@ -6,5 +6,6 @@ core_version_requirement: ^10 || ^11
 dependencies:
   - drupal:reliefweb_moderation
   - drupal:reliefweb_revisions
+  - drupal:reliefweb_files
   - drupal:reliefweb_form
   - drupal:reliefweb_utility
