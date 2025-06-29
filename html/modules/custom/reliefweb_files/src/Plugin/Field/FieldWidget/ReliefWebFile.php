@@ -150,6 +150,7 @@ class ReliefWebFile extends WidgetBase {
     $element = [];
 
     $dummy_item = $this->createFieldItem();
+    $form_state->set('dummy_item', $dummy_item);
 
     $default_extensions = $dummy_item->getAllowedFileExtensions();
     $extensions = $this->getExtensionsSetting() ?: $default_extensions;
@@ -160,7 +161,7 @@ class ReliefWebFile extends WidgetBase {
         '@extensions' => implode(', ', $default_extensions ?: [$this->t('any')]),
       ]),
       '#default_value' => $form_state->getValue('extensions', implode(', ', $extensions ?: [])),
-      '#element_validate' => [[$this, 'validateExtensionsSetting']],
+      '#element_validate' => [[static::class, 'validateExtensionsSetting']],
     ];
 
     $default_max_files_size = $dummy_item->getMaxFileSize();
@@ -174,7 +175,7 @@ class ReliefWebFile extends WidgetBase {
       '#default_value' => $form_state->getValue('max_file_size', $max_file_size),
       '#min' => 1,
       '#max' => $default_max_files_size,
-      '#element_validate' => [[$this, 'validateMaxFileSizeSetting']],
+      '#element_validate' => [[static::class, 'validateMaxFileSizeSetting']],
     ];
 
     return $element;
@@ -188,12 +189,12 @@ class ReliefWebFile extends WidgetBase {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   Form state.
    */
-  public function validateExtensionsSetting(array $element, FormStateInterface $form_state) {
-    $dummy_item = $this->createFieldItem();
+  public static function validateExtensionsSetting(array $element, FormStateInterface $form_state) {
+    $dummy_item = $form_state->get('dummy_item');
     $default_extensions = $dummy_item->getAllowedFileExtensions();
     $extensions = preg_split('/[, ]+/', $form_state->getValue($element['#parents'], ''));
     if (!empty($extensions) && !empty($default_extensions) && count(array_diff($extensions, $default_extensions)) > 0) {
-      $form_state->setError($element, $this->t('Only the following extensions are allowed: @extensions.', [
+      $form_state->setError($element, t('Only the following extensions are allowed: @extensions.', [
         '@extensions' => implode(', ', $default_extensions),
       ]));
     }
@@ -207,12 +208,12 @@ class ReliefWebFile extends WidgetBase {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   Form state.
    */
-  public function validateMaxFileSizeSetting(array $element, FormStateInterface $form_state) {
-    $dummy_item = $this->createFieldItem();
+  public static function validateMaxFileSizeSetting(array $element, FormStateInterface $form_state) {
+    $dummy_item = $form_state->get('dummy_item');
     $default_max_files_size = $dummy_item->getMaxFileSize();
     $max_file_size = $form_state->getValue($element['#parents']);
     if (empty($max_file_size) || $max_file_size < 0 || $max_file_size > $default_max_files_size) {
-      $form_state->setError($element, $this->t('The max file size must be between @min and @max.', [
+      $form_state->setError($element, t('The max file size must be between @min and @max.', [
         '@min' => ByteSizeMarkup::create(1),
         '@max' => ByteSizeMarkup::create($default_max_files_size),
       ]));
