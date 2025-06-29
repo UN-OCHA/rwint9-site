@@ -324,7 +324,7 @@ class UrlHelper extends DrupalUrlHelper {
    * @return array
    *   Render array.
    */
-  public function toRenderArray(Url $url): array {
+  public static function toRenderArray(Url $url): array {
     $render_array = [
       '#url' => $url,
       '#options' => $url->getOptions(),
