@@ -146,13 +146,11 @@
   padding: 6px;
   font-size: 12px;
 }
-
 .rw-moderation-list .rw-moderation-table tr td:first-child {
   text-align: center;
 }
 .rw-moderation-list .rw-moderation-table tr td:nth-child(2) {
   width: 100%;
-  max-width: 500px;
   word-break: break-word;
 }
 .rw-moderation-list .rw-moderation-table tr td:nth-child(2) div + div {
@@ -320,6 +318,10 @@
 .rw-moderation-list--reliefweb-import .cd-container {
   width: 100%;
   max-width: 80vw;
+}
+
+.rw-moderation-list--reliefweb-import .rw-moderation-table tr td:nth-child(2) {
+  max-width: 500px;
 }
 
 .rw-moderation-list--reliefweb-import .rw-moderation-table tr td:nth-child(4),
