@@ -346,6 +346,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       // Check how many times we tried to import this item.
       if (!empty($import_record['attempts']) && $import_record['attempts'] >= $max_import_attempts) {
         $import_record['status'] = 'error';
+        $import_record['editorial_flow'] = 'to_process';
         $import_record['message'] = 'Too many attempts.';
         $import_records[$import_record['imported_item_uuid']] = $import_record;
 
@@ -366,6 +367,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
 
           // Log it.
           $import_record['status'] = 'skipped';
+          $import_record['editorial_flow'] = 'to_process';
           $import_record['message'] = 'No data to import.';
           $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
           $import_records[$import_record['imported_item_uuid']] = $import_record;
@@ -387,6 +389,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         }
 
         $import_record['status'] = 'error';
+        $import_record['editorial_flow'] = 'to_process';
         $import_record['message'] = $e->getMessage();
         $import_record['attempts'] = ($import_record['attempts'] ?? 0) + 1;
         $import_records[$import_record['imported_item_uuid']] = $import_record;
@@ -406,6 +409,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         $entity = $plugin->process($data);
         $import_record['status'] = 'success';
         $import_record['status_type'] = '';
+        $import_record['editorial_flow'] = 'to_process';
         $import_record['message'] = '';
         $import_record['attempts'] = 0;
         $import_record['entity_id'] = $entity->id();
@@ -428,11 +432,9 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       }
       catch (\Exception $exception) {
         $import_record['status'] = 'error';
+        $import_record['editorial_flow'] = 'to_process';
         if ($e instanceof ReliefwebImportException) {
           $import_record['status_type'] = $e->getStatusType();
-        }
-        else {
-          $import_record['status_type'] = 'to_process';
         }
 
         $import_record['message'] = $exception->getMessage();
