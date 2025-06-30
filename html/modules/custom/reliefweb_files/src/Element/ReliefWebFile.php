@@ -3,15 +3,15 @@
 namespace Drupal\reliefweb_files\Element;
 
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Core\Render\Element\RenderElementBase;
 use Drupal\Core\Security\TrustedCallbackInterface;
 
 /**
  * Render element for the ReliefWebFile widget.
  *
- * @RenderElement("reliefweb_file")
+ * @RenderElementBase("reliefweb_file")
  */
-class ReliefWebFile extends RenderElement implements TrustedCallbackInterface {
+class ReliefWebFile extends RenderElementBase implements TrustedCallbackInterface {
 
   /**
    * {@inheritdoc}

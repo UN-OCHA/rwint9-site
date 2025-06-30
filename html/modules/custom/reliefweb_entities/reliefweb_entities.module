@@ -792,14 +792,15 @@ function reliefweb_entities_ocha_content_classification_pre_entity_presave(Entit
     return;
   }
 
-  if (!isset($entity->original)) {
+  $original_entity = $entity->getOriginal();
+  if (!isset($original_entity)) {
     return;
   }
 
   // Check if the attachments have changed.
   // @todo we probably need to override the `equals` method in the
   // ReliefWebFileList to only check the UUIDs and hashes.
-  if ($entity->field_file->equals($entity->original->field_file)) {
+  if ($entity->field_file->equals($original_entity->field_file)) {
     return;
   }
 

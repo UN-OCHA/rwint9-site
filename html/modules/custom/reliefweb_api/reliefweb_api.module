@@ -163,11 +163,10 @@ function reliefweb_api_execute(array $options, $entity_type_id) {
  *   Entity that might require re-indexing.
  */
 function reliefweb_api_check_reindexing(EntityInterface $entity) {
-
-  if (!isset($entity->original)) {
+  $original_entity = $entity->getOriginal();
+  if (!isset($original_entity)) {
     return;
   }
-  $original_entity = $entity->original;
 
   switch ($entity->bundle()) {
     case 'country':

@@ -21,6 +21,7 @@ use Drupal\reliefweb_guidelines\Form\GuidelineSortForm;
 use Drupal\reliefweb_guidelines\ModeratedGuidelineStorageSchema;
 use Drupal\reliefweb_guidelines\Services\GuidelineListModeration;
 use Drupal\reliefweb_revisions\Services\EntityHistory;
+use Drupal\reliefweb_utility\Helpers\UserHelper;
 
 /**
  * Implements hook_theme().
@@ -238,12 +239,12 @@ function reliefweb_guidelines_file_access(EntityInterface $entity, $operation, A
  *   Associative array of role ids to role names.
  */
 function reliefweb_guidelines_get_user_roles(): array {
-  $roles = user_role_names(TRUE);
+  $roles_names = UserHelper::getRoleNames(TRUE);
 
   $allowed_roles = \Drupal::state()->get('reliefweb_guidelines_allowed_roles', [
     'editor' => 'editor',
     'contributor' => 'contributor',
   ]);
 
-  return array_intersect_key($roles, $allowed_roles);
+  return array_intersect_key($roles_names, $allowed_roles);
 }

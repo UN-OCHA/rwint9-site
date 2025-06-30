@@ -26,6 +26,7 @@ use Drupal\Core\Url;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_utility\Helpers\EntityHelper;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
+use Drupal\reliefweb_utility\Helpers\UserHelper;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
 use Drupal\user\EntityOwnerInterface;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
@@ -2271,7 +2272,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     $suggestions = [];
     $term = mb_strtolower($term);
 
-    foreach (user_roles(TRUE) as $id => $role) {
+    foreach (UserHelper::getRoles(TRUE) as $id => $role) {
       $label = $role->label();
       if (mb_strpos($id, $term) !== FALSE || mb_strpos(mb_strtolower($label), $term) !== FALSE) {
         $suggestions[$id] = (object) [

@@ -12,6 +12,7 @@ use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\EntityHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
+use Drupal\reliefweb_utility\Helpers\UserHelper;
 use Drupal\user\UserInterface;
 
 /**
@@ -31,8 +32,9 @@ function reliefweb_user_history_user_update(EntityInterface $entity) {
   }
 
   // Save the changes to the user account if any.
-  if (isset($entity->original) && reliefweb_user_history_check_changes($entity, $entity->original)) {
-    reliefweb_user_history_record_changes($entity, $entity->original);
+  $original_entity = $entity->getOriginal();
+  if (isset($original_entity) && reliefweb_user_history_check_changes($entity, $original_entity)) {
+    reliefweb_user_history_record_changes($entity, $original_entity);
   }
 }
 
@@ -356,7 +358,7 @@ function reliefweb_user_history_get_account_history_content(UserInterface $user)
 function reliefweb_user_history_get_user_role_labels($roles) {
   static $role_names;
   if (!isset($role_names)) {
-    $role_names = user_role_names();
+    $role_names = UserHelper::getRoleNames();
   }
   $labels = [];
   if (!empty($roles)) {

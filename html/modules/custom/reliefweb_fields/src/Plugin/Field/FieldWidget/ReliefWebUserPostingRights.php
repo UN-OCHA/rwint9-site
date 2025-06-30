@@ -343,7 +343,8 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
 
     $uid = $user->id();
     $blocked = $user->isBlocked();
-    $email_changed = isset($user->original) && $user->getEmail() !== $user->original->getEmail();
+    $original_entity = $user->getOriginal();
+    $email_changed = isset($original_entity) && $user->getEmail() !== $original_entity->getEmail();
     $message = '';
     $date = date_format(date_create(), 'Y-m-d');
 

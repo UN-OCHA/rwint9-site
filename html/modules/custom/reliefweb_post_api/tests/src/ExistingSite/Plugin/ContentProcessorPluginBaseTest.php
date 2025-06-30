@@ -710,11 +710,11 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
 
     $this->plugin->setTextField($entity, $field_name, 'test');
     $this->assertSame('test', $entity->get($field_name)->value);
-    $this->assertSame(NULL, $entity->get($field_name)->first()->format);
+    $this->assertNull($entity->get($field_name)->first()->format);
 
     $this->plugin->setTextField($entity, $field_name, '<h1>test</h1>', 3);
     $this->assertSame('### test', $entity->get($field_name)->value);
-    $this->assertSame(NULL, $entity->get($field_name)->first()->format);
+    $this->assertNull($entity->get($field_name)->first()->format);
 
     $this->plugin->setTextField($entity, $field_name, '<h1>test</h1>', 3, 'markdown');
     $this->assertSame('### test', $entity->get($field_name)->value);

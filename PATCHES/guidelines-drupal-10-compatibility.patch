@@ -1,18 +1,17 @@
-diff --git a/guidelines.module b/guidelines.module
-index e1a148c..bfdf0dd 100644
---- a/guidelines.module
-+++ b/guidelines.module
-@@ -142,7 +142,7 @@ function guidelines_attach_to_widget(&$element, FormStateInterface &$form_state,
-   if (isset($descriptions[$entity_type][$key])) {
-     $view_builder = \Drupal::entityTypeManager()->getViewBuilder('guideline');
-     $pre_render = $view_builder->view($descriptions[$entity_type][$key], 'default');
--    $render_output = render($pre_render);
-+    $render_output = \Drupal::service('renderer')->render($pre_render);
- 
-     if (isset($element['#description'])) {
-       $element['#description'] = $render_output;
+diff --git a/guidelines.info.yml b/guidelines.info.yml
+index 5a119c1..a24b81e 100644
+--- a/guidelines.info.yml
++++ b/guidelines.info.yml
+@@ -1,6 +1,6 @@
+ name: 'Guidelines'
+ type: module
+ description: 'Add guidelines to entities and fields'
+-core_version_requirement: ^9 || ^10
++core_version_requirement: ^10 || ^11
+ package: 'Custom'
+ configure: guidelines.settings
 diff --git a/src/Controller/GuidelineJsonController.php b/src/Controller/GuidelineJsonController.php
-index afbf49f..5adca06 100644
+index 13cd3db..5adca06 100644
 --- a/src/Controller/GuidelineJsonController.php
 +++ b/src/Controller/GuidelineJsonController.php
 @@ -4,6 +4,7 @@ namespace Drupal\guidelines\Controller;
@@ -69,7 +68,7 @@ index afbf49f..5adca06 100644
          if (!empty($bundle) && $bundle === $b) {
            $view_builder = $this->entityTypeManager()->getViewBuilder('guideline');
            $pre_render = $view_builder->view($guideline, 'default');
--          $render_output = render($pre_render);
+-          $render_output = \Drupal::service('renderer')->render($pre_render);
 +          $render_output = $this->renderer->render($pre_render);
  
            if (!empty($guideline->field_title->value)) {
@@ -212,3 +211,20 @@ index e6b5ee6..2dd1d6b 100644
    }
  
  }
+diff --git a/templates/guideline-content-add-list.html.twig b/templates/guideline-content-add-list.html.twig
+index 0dec8eb..5eafe81 100644
+--- a/templates/guideline-content-add-list.html.twig
++++ b/templates/guideline-content-add-list.html.twig
+@@ -14,10 +14,10 @@
+  * @ingroup themeable
+  */
+ #}
+-{% spaceless %}
++{% apply spaceless %}
+   <dl>
+     {% for type in types %}
+       <dt>{{ type.link }}</dt>
+     {% endfor %}
+   </dl>
+-{% endspaceless %}
++{% endapply %}

@@ -119,9 +119,11 @@ class BlogPost extends Node implements BundleEntityInterface, EntityModeratedInt
   public function preSave(EntityStorageInterface $storage) {
     // Set the creation date to the changed date when publishing the blog
     // post from an unpublished state.
-    if (isset($this->original) &&
+    $original_entity = $this->getOriginal();
+    if (
+      isset($original_entity) &&
       $this->getModerationStatus() === 'published' &&
-      $this->original->getModerationStatus() !== 'published'
+      $original_entity->getModerationStatus() !== 'published'
     ) {
       $this->setCreatedTime($this->getChangedTime());
     }

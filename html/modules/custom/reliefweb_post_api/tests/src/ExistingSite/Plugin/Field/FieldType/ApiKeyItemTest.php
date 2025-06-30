@@ -59,7 +59,7 @@ class ApiKeyItemTest extends ExistingSiteBase {
     ]);
     $item->preSave();
     $this->assertSame($hashed_value, $item->value);
-    $this->assertSame(FALSE, $item->pre_hashed);
+    $this->assertFalse($item->pre_hashed);
 
     $item->setValue([]);
     $item->preSave();

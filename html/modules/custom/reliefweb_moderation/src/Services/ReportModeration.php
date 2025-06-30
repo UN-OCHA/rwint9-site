@@ -446,7 +446,7 @@ class ReportModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function disableNotifications(EntityModeratedInterface $entity, $status) {
-    $previous_status = isset($entity->original) ? $entity->original->getModerationStatus() : '';
+    $previous_status = $entity->getOriginal()?->getModerationStatus() ?? '';
     // Disable if not published or previously published to avoid resending
     // notifications when making modification to a published report.
     $entity->notifications_content_disable = $status !== 'published' || $previous_status === 'published';
