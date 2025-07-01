@@ -10,16 +10,17 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Session\AccountSwitcherInterface;
 use Drupal\Core\State\State;
+use Drupal\reliefweb_import\Service\JobFeedsImporter;
 use Drupal\Tests\UnitTestCase;
 use Drupal\Tests\reliefweb_import\Unit\Stub\JobFeedsImporterStub;
 use GuzzleHttp\ClientInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
 use Prophecy\Prophecy\ObjectProphecy;
 
 /**
  * Tests reliefweb importer.
- *
- * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter
  */
+#[CoversClass(JobFeedsImporter::class)]
 class JobFeedsImporterTestBase extends UnitTestCase {
 
   /**

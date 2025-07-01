@@ -13,6 +13,7 @@ use Drupal\Tests\reliefweb_import\Traits\XmlTestDataTrait;
 use Drupal\Tests\reliefweb_import\Unit\ExistingSite\JobFeedsImporterWrapper;
 use Drupal\Tests\reliefweb_import\Unit\ExistingSite\LoggerStub;
 use Drupal\reliefweb_entities\Entity\Job;
+use Drupal\reliefweb_import\Service\JobFeedsImporter;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
 use Drupal\user\Entity\User;
@@ -24,13 +25,13 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
+use PHPUnit\Framework\Attributes\CoversClass;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
  * Tests reliefweb importer.
- *
- * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter
  */
+#[CoversClass(JobFeedsImporter::class)]
 class JobFeedsImporterTest extends ExistingSiteBase {
 
   use XmlTestDataTrait;
@@ -125,8 +126,6 @@ class JobFeedsImporterTest extends ExistingSiteBase {
 
   /**
    * Test XML import.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::importJobs
    */
   public function testSourceImport(): void {
     // Create system user.
