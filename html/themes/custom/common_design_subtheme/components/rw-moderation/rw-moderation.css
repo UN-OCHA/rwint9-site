@@ -314,3 +314,17 @@
 .reliefweb-importer-statistics-high {
   background-color: #7aed88 !important;
 }
+
+.rw-moderation-list--reliefweb-import .cd-container {
+  width: 100%;
+  max-width: 80vw;
+}
+
+.rw-moderation-list--reliefweb-import .rw-moderation-table tr td:nth-child(2) {
+  max-width: 500px;
+}
+
+.rw-moderation-list--reliefweb-import .rw-moderation-table tr td:nth-child(4),
+.rw-moderation-list--reliefweb-import .rw-moderation-table tr td:nth-child(7) {
+  min-width: 210px;
+}

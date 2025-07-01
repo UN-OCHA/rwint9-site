@@ -69,6 +69,42 @@ class ReliefWebImporterImportRecordsController extends ControllerBase {
   }
 
   /**
+   * Change editorial flow of an import record.
+   */
+  public function changeEditorialFlow(Request $request, string $uuid, string $editorial_flow) : Response {
+    $record = $this->getImportRecord($uuid);
+    if (empty($record)) {
+      throw new \InvalidArgumentException('Import record not found for UUID: ' . $uuid);
+    }
+
+    $editorial_flows = reliefweb_import_editorial_flow_values();
+    if (!isset($editorial_flows[$editorial_flow])) {
+      throw new \InvalidArgumentException('Invalid editorial flow: ' . $editorial_flow);
+    }
+
+    $editorial_flow = $editorial_flows[$editorial_flow];
+    $this->database->update('reliefweb_import_records')
+      ->fields([
+        'status' => $editorial_flow['status'],
+        'editorial_flow' => $editorial_flow['id'],
+        'changed' => time(),
+        'attempts' => $editorial_flow['attempts'] ?? 99,
+      ])
+      ->condition('imported_item_uuid', $uuid)
+      ->execute();
+
+    // Redirect to the import record page.
+    if ($destination = $request->query->get('destination')) {
+      return new RedirectResponse($destination);
+    }
+
+    $previousUrl = $request->server->get('HTTP_REFERER');
+    $response = new RedirectResponse($previousUrl);
+
+    return $response;
+  }
+
+  /**
    * Retrieve failed import records.
    *
    * @return array
