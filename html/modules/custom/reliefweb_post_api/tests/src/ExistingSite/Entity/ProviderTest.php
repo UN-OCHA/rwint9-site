@@ -8,16 +8,16 @@ use Drupal\Core\Logger\LoggerChannelFactory;
 use Drupal\reliefweb_post_api\Entity\Provider;
 use Drupal\reliefweb_post_api\Entity\ProviderInterface;
 use GuzzleHttp\Client;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\ErrorHandler\BufferingLogger;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
  * Tests the provider entity.
- *
- * @coversDefaultClass \Drupal\reliefweb_post_api\Entity\Provider
- *
- * @group reliefweb_post_api
  */
+#[CoversClass(Provider::class)]
+#[Group('reliefweb_post_api')]
 class ProviderTest extends ExistingSiteBase {
 
   /**
@@ -43,7 +43,7 @@ class ProviderTest extends ExistingSiteBase {
   ];
 
   /**
-   * @covers ::baseFieldDefinitions
+   * Test base field definitions.
    */
   public function testBaseFieldDefinitions(): void {
     $entity_type = \Drupal::entityTypeManager()->getDefinition('reliefweb_post_api_provider');
@@ -53,7 +53,7 @@ class ProviderTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::getUrlPattern
+   * Test get url pattern.
    */
   public function testGetUrlPattern(): void {
     $data = $this->data;
@@ -86,7 +86,7 @@ class ProviderTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::getEmailsToNotify
+   * Test get emails to notify.
    */
   public function testGetEmailsToNotify(): void {
     $data = $this->data;
@@ -109,7 +109,7 @@ class ProviderTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::getAllowedSources
+   * Test get allowed sources.
    */
   public function testGetAllowedSources(): void {
     $data = $this->data;
@@ -132,7 +132,7 @@ class ProviderTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::getUserId
+   * Test get user id.
    */
   public function testGetUserId(): void {
     $data = $this->data;
@@ -155,7 +155,7 @@ class ProviderTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::getDefaultResourceStatus
+   * Test get default resource status.
    */
   public function testGetDefaultResourceStatus(): void {
     $data = $this->data;
@@ -179,7 +179,7 @@ class ProviderTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::getQuota
+   * Test get quota.
    */
   public function testGetQuota(): void {
     $data = $this->data;
@@ -203,7 +203,7 @@ class ProviderTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::getRateLimit
+   * Test get rate limit.
    */
   public function testRateLimit(): void {
     $data = $this->data;
@@ -227,7 +227,7 @@ class ProviderTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::validateKey
+   * Test validate key.
    */
   public function testValidateKey(): void {
     $data = $this->data;
@@ -246,7 +246,7 @@ class ProviderTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::findTrustedUserIdFromApiKey
+   * Test find trusted user id from api key.
    */
   public function testFindTrustedUserIdFromApiKey(): void {
     $data = $this->data;
@@ -274,7 +274,7 @@ class ProviderTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::notifyProvider
+   * Test notify provider.
    */
   public function testNotifyProvider(): void {
     $data = $this->data;

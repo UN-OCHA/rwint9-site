@@ -7,15 +7,15 @@ namespace Drupal\Tests\reliefweb_post_api\ExistingSite\Plugin;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManager;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
 use Drupal\reliefweb_post_api\Plugin\reliefweb_post_api\ContentProcessor\Report;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
  * Tests the content processor plugin manager.
- *
- * @coversDefaultClass \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManager
- *
- * @group reliefweb_post_api
  */
+#[CoversClass(ContentProcessorPluginManager::class)]
+#[Group('reliefweb_post_api')]
 class ContentProcessorPluginManagerTest extends ExistingSiteBase {
 
   /**
@@ -35,7 +35,7 @@ class ContentProcessorPluginManagerTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::__construct
+   * Test constructor.
    */
   public function testConstructor(): void {
     $container = \drupal::getContainer();
@@ -50,7 +50,7 @@ class ContentProcessorPluginManagerTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::getPlugin
+   * Test get plugin.
    */
   public function testGetPlugin(): void {
     $plugin = $this->contentProcessorPluginManager->getPlugin('reliefweb_post_api.content_processor.report');
@@ -61,7 +61,7 @@ class ContentProcessorPluginManagerTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::getPluginFromProperty
+   * Test get plugin from property.
    */
   public function testGetPluginFromProperty(): void {
     $plugin = $this->contentProcessorPluginManager->getPluginFromProperty('bundle', 'report');
@@ -75,7 +75,7 @@ class ContentProcessorPluginManagerTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::getPluginByBundle
+   * Test get plugin by bundle.
    */
   public function testGetPluginByBundle(): void {
     $plugin = $this->contentProcessorPluginManager->getPluginByBundle('report');
@@ -89,7 +89,7 @@ class ContentProcessorPluginManagerTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::getPluginByResource
+   * Test get plugin by resource.
    */
   public function testGetPluginByResource(): void {
     $plugin = $this->contentProcessorPluginManager->getPluginByResource('reports');

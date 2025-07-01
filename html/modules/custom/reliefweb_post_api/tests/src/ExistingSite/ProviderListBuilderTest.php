@@ -4,20 +4,21 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\reliefweb_post_api\ExistingSite;
 
+use Drupal\reliefweb_post_api\ProviderListBuilder;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\Uid\Uuid;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
  * Tests the ReliefWeb Post API provider list builder.
- *
- * @coversDefaultClass \Drupal\reliefweb_post_api\ProviderListBuilder
- *
- * @group reliefweb_post_api
  */
+#[CoversClass(ProviderListBuilder::class)]
+#[Group('reliefweb_post_api')]
 class ProviderListBuilderTest extends ExistingSiteBase {
 
   /**
-   * @covers ::buildHeader
+   * Test build header.
    */
   public function testBuildHeader(): void {
     $list_builder = \Drupal::entityTypeManager()->getListBuilder('reliefweb_post_api_provider');
@@ -25,7 +26,7 @@ class ProviderListBuilderTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::buildRow
+   * Test build row.
    */
   public function testBuildRow(): void {
     $source = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->create([

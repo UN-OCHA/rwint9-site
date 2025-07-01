@@ -16,6 +16,8 @@ use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
 use Drupal\reliefweb_post_api\Queue\ReliefWebPostApiDatabaseQueue;
 use Drupal\reliefweb_post_api\Queue\ReliefWebPostApiDatabaseQueueFactory;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\HeaderBag;
 use Symfony\Component\HttpFoundation\InputBag;
 use Symfony\Component\HttpFoundation\Request;
@@ -28,11 +30,9 @@ use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
  * Tests the ReliefWeb Post API controller.
- *
- * @coversDefaultClass \Drupal\reliefweb_post_api\Controller\ReliefWebPostApi
- *
- * @group reliefweb_post_api
  */
+#[CoversClass(ReliefWebPostApi::class)]
+#[Group('reliefweb_post_api')]
 class ReliefWebPostApiTest extends ExistingSiteBase {
 
   /**
@@ -50,14 +50,14 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   protected array $postApiData = [];
 
   /**
-   * @covers ::__construct
+   * Test constructor.
    */
   public function testContructor(): void {
     $this->assertInstanceOf(ReliefWebPostApi::class, $this->createTestController());
   }
 
   /**
-   * @covers ::create
+   * Test create.
    */
   public function testCreate(): void {
     $controller = ReliefWebPostApi::create(\Drupal::getContainer());
@@ -65,7 +65,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::postContent
+   * Test post content with unknown exception.
    */
   public function testPostContentUnknownException(): void {
     $request_stack = $this->createMock(RequestStack::class);
@@ -83,7 +83,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::postContent
+   * Test post content with missing appname.
    */
   public function testPostContentMissingAppname(): void {
     $request = $this->createMockRequest(methods: [
@@ -103,7 +103,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::postContent
+   * Test post content with method not allowed.
    */
   public function testPostContentMethodNotAllowed(): void {
     $request = $this->createMockRequest(methods: [
@@ -122,7 +122,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::postContent
+   * Test post content with invalid provider.
    */
   public function testPostContentInvalidProvider(): void {
     $request = $this->createMockRequest([
@@ -141,7 +141,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::postContent
+   * Test post content with invalid api key.
    */
   public function testPostContentInvalidApiKey(): void {
     $request = $this->createMockRequest([
@@ -160,7 +160,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::postContent
+   * Test post content with invalid endpoint resource.
    */
   public function testPostContentInvalidEndpointResource(): void {
     $request = $this->createMockRequest();
@@ -177,7 +177,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::postContent
+   * Test post content with invalid endpoint UUID.
    */
   public function testPostContentInvalidEndpointUuid(): void {
     $request = $this->createMockRequest();
@@ -194,7 +194,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::postContent
+   * Test post content with unknown endpoint.
    */
   public function testPostContentUnknownEndpoint(): void {
     $request = $this->createMockRequest();
@@ -211,7 +211,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::checkRateLimits()
+   * Test check rate limits with no quota.
    */
   public function testCheckRateLimitsNoQuota(): void {
     $provider = $this->createConfiguredMock(ProviderInterface::class, [
@@ -227,7 +227,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::checkRateLimits()
+   * Test check rate limits with invalid timestamp.
    */
   public function testCheckRateLimitsInvalidTimestamp(): void {
     $provider = $this->createConfiguredMock(ProviderInterface::class, [
@@ -250,7 +250,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::checkRateLimits()
+   * Test check rate limits with limit exceeded.
    */
   public function testCheckRateLimitsRateLimitExceeded(): void {
     $provider = $this->createConfiguredMock(ProviderInterface::class, [
@@ -275,7 +275,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::checkRateLimits()
+   * Test check rate limits with daily quota exceeded.
    */
   public function testCheckRateLimitsDailyQuotaExceeded(): void {
     $provider = $this->createConfiguredMock(ProviderInterface::class, [
@@ -300,7 +300,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::checkRateLimits()
+   * Test check rate limits.
    */
   public function testCheckRateLimits(): void {
     $provider = $this->createConfiguredMock(ProviderInterface::class, [
@@ -324,7 +324,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::postContent
+   * Test post content with unprocessable data.
    */
   public function testPostContentUnprocessable(): void {
     $plugin = $this->createConfiguredMock(ContentProcessorPluginInterface::class, [
@@ -351,7 +351,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::postContent
+   * Test post content with invalid content format.
    */
   public function testPostContentInvalidContentFormat(): void {
     $request = $this->createMockRequest(methods: [
@@ -370,7 +370,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::postContent
+   * Test post content with missing request body.
    */
   public function testPostContentMissingRequestBody(): void {
     $request = $this->createMockRequest(methods: [
@@ -389,7 +389,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::postContent
+   * Test post content with invalid request body.
    */
   public function testPostContentInvalidRequestBody(): void {
     $request = $this->createMockRequest(methods: [
@@ -408,7 +408,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::postContent
+   * Test post content with invalid json body.
    */
   public function testPostContentInvalidJsonBody(): void {
     $request = $this->createMockRequest(methods: [
@@ -427,7 +427,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::postContent
+   * Test post content with invalid data.
    */
   public function testPostContentInvalidData(): void {
     $request = $this->createMockRequest(methods: [
@@ -446,7 +446,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::postContent
+   * Test post content with document uuid mismatch.
    */
   public function testPostContentDocumentUuidMismatch(): void {
     $request = $this->createMockRequest(methods: [
@@ -465,7 +465,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::postContent
+   * Test post content with queue exception.
    */
   public function testPostContentQueueException(): void {
     $request = $this->createMockRequest();
@@ -488,7 +488,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::postContent
+   * Test post content.
    */
   public function testPostContent(): void {
     $request = $this->createMockRequest(api_key: 'test-provider-key');
@@ -514,7 +514,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::postContent
+   * Test post content with trusted user.
    */
   public function testPostContentTrustedUser(): void {
     $request = $this->createMockRequest(api_key: 'test-trusted-user-api-key');
@@ -540,7 +540,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::getJsonSchema
+   * Test get json schema.
    */
   public function testGetJsonSchema(): void {
     $controller = $this->createTestController();
@@ -560,7 +560,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::getJsonSchema
+   * Test get json schema with empty schema.
    */
   public function testGetJsonSchemaEmpty(): void {
     $path_resolver = $this->createConfiguredMock(ExtensionPathResolver::class, [
@@ -652,18 +652,16 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
         'fetchAssoc' => $rate_limit_info,
       ]);
 
-      $select = $this->createConfiguredMock(SelectInterface::class, [
-        'fields' => $this->returnSelf(),
-        'condition' => $this->returnSelf(),
-        'execute' => $statement,
-      ]);
+      $select = $this->createMock(SelectInterface::class);
+      $select->method('fields')->willReturnSelf();
+      $select->method('condition')->willReturnSelf();
+      $select->method('execute')->willReturn($statement);
 
-      $upsert = $this->createConfiguredMock(Upsert::class, [
-        'fields' => $this->returnSelf(),
-        'key' => $this->returnSelf(),
-        'values' => $this->returnSelf(),
-        'execute' => 1,
-      ]);
+      $upsert = $this->createMock(Upsert::class);
+      $upsert->method('fields')->willReturnSelf();
+      $upsert->method('key')->willReturnSelf();
+      $upsert->method('values')->willReturnSelf();
+      $upsert->method('execute')->willReturn(1);
 
       $services['database'] = $this->createConfiguredMock(Connection::class, [
         'select' => $select,

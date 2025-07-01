@@ -5,17 +5,19 @@ declare(strict_types=1);
 namespace Drupal\Test\reliefweb_post_api\Unit\Helpers;
 
 use Drupal\reliefweb_post_api\Helpers\HashHelper;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @coversDefaultClass \Drupal\reliefweb_post_api\Helpers\HashHelper
+ * Tests the HashHelper class.
  */
+#[CoversClass(HashHelper::class)]
+#[Group('reliefweb_post_api')]
 final class HashHelperTest extends TestCase {
 
   /**
    * Test that equivalent data produces same hashes irrespective of key order.
-   *
-   * @covers ::generateHash
    */
   public function testHashConsistencyForEquivalentData(): void {
     $data_one = [
@@ -47,9 +49,6 @@ final class HashHelperTest extends TestCase {
 
   /**
    * Test that float values are normalized to fixed 6-decimal strings.
-   *
-   * @covers ::normalizeData
-   * @covers ::generateHash
    */
   public function testFloatNormalization(): void {
     $data = [
@@ -76,10 +75,6 @@ final class HashHelperTest extends TestCase {
 
   /**
    * Test that excluded properties are properly removed before hashing.
-   *
-   * @covers ::removeExclusions
-   * @covers ::removePropertyPath
-   * @covers ::generateHash
    */
   public function testExclusionsRemoveSpecificProperties(): void {
     $data_one = [
@@ -111,10 +106,6 @@ final class HashHelperTest extends TestCase {
 
   /**
    * Test that an exclusion path that does not exist does not alter the hash.
-   *
-   * @covers ::removeExclusions
-   * @covers ::removePropertyPath
-   * @covers ::generateHash
    */
   public function testNonExistentExclusionPath(): void {
     $data = [
