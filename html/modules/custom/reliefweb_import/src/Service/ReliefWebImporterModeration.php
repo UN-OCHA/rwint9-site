@@ -247,39 +247,6 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
         $cells['status']['label']['#markup'] .= ' (' . $record['status_type'] . ')';
       }
 
-      if (!$entity) {
-        $status_links = [];
-        foreach ($status_types as $status => $status_info) {
-          $link = Url::fromRoute('reliefweb_import.reliefweb_importer.change_status', [
-            'uuid' => $record['imported_item_uuid'],
-            'status' => $status,
-          ], [
-            'query' => [
-              'destination' => $this->requestStack->getCurrentRequest()->getRequestUri() . '#row-' . $short_id,
-            ],
-          ]);
-          $status_links[$status_info['id']] = [
-            'title' => $status_info['label'],
-            'url' => $link,
-            'attributes' => [
-              'title' => $status_info['description'],
-            ],
-          ];
-
-          // Move current status to the first position.
-          if ($status_info['id'] === $record['status_type']) {
-            $status_links = [$status_info['id'] => $status_links[$status_info['id']]] + $status_links;
-          }
-        }
-
-        $cells['status']['status_type'] = [
-          '#type' => 'dropbutton',
-          '#label' => $this->t('Change status type'),
-          '#dropbutton_type' => 'rw-moderation',
-          '#links' => $status_links,
-        ];
-      }
-
       $cells['source'] = $record['source'];
 
       // Date cell.
@@ -362,6 +329,7 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
   public function getFilterDefaultStatuses() {
     $statuses = $this->getFilterStatuses();
     unset($statuses['success']);
+    unset($statuses['duplicate']);
     return array_keys($statuses);
   }
 
@@ -458,9 +426,9 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
   protected function getEditorialFlowValues() {
     $values = [];
 
-    $status_types = reliefweb_import_editorial_flow_values();
-    foreach ($status_types as $status_type) {
-      $values[$status_type['id']] = $status_type['label'];
+    $editorial_flows = reliefweb_import_editorial_flow_values();
+    foreach ($editorial_flows as $editorial_flow) {
+      $values[$editorial_flow['id']] = $editorial_flow['label'];
     }
 
     return $values;
@@ -660,6 +628,10 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
           }
           elseif ($name === 'importer') {
             $query->condition('r.importer', $values, 'IN');
+            continue;
+          }
+          elseif ($name === 'editorial_flow') {
+            $query->condition('r.editorial_flow', $values, 'IN');
             continue;
           }
         }

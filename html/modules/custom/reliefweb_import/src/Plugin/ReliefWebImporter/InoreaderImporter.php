@@ -422,7 +422,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       }
       catch (DuplicateException $exception) {
         $import_record['status'] = 'duplicate';
-        $import_record['status_type'] = 'processed';
+        $import_record['status_type'] = '';
         $import_record['message'] = $exception->getMessage();
         $import_record['attempts'] = $max_import_attempts;
         $this->getLogger()->error(strtr('Unable to process Inoreader @id: @exception', [

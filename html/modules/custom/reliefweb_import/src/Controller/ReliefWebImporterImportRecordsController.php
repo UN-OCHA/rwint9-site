@@ -47,13 +47,16 @@ class ReliefWebImporterImportRecordsController extends ControllerBase {
     }
 
     $status_info = $statuses[$status];
+    $payload = [
+      'status_type' => $status_info['id'],
+      'changed' => time(),
+      'attempts' => $status_info['attempts'] ?? 99,
+    ];
+    if (isset($status_info['status'])) {
+      $payload['status'] = $status_info['status'];
+    }
     $this->database->update('reliefweb_import_records')
-      ->fields([
-        'status' => $status_info['status'],
-        'status_type' => $status_info['id'],
-        'changed' => time(),
-        'attempts' => $status_info['attempts'] ?? 99,
-      ])
+      ->fields($payload)
       ->condition('imported_item_uuid', $uuid)
       ->execute();
 
@@ -83,13 +86,16 @@ class ReliefWebImporterImportRecordsController extends ControllerBase {
     }
 
     $editorial_flow = $editorial_flows[$editorial_flow];
+    $payload = [
+      'editorial_flow' => $editorial_flow['id'],
+      'changed' => time(),
+      'attempts' => $editorial_flow['attempts'] ?? 99,
+    ];
+    if (isset($editorial_flow['status'])) {
+      $payload['status'] = $editorial_flow['status'];
+    }
     $this->database->update('reliefweb_import_records')
-      ->fields([
-        'status' => $editorial_flow['status'],
-        'editorial_flow' => $editorial_flow['id'],
-        'changed' => time(),
-        'attempts' => $editorial_flow['attempts'] ?? 99,
-      ])
+      ->fields($payload)
       ->condition('imported_item_uuid', $uuid)
       ->execute();
 
