@@ -1,23 +1,21 @@
 <?php
 
-// phpcs:ignoreFile
-
 namespace Drupal\Tests\reliefweb_utility\Unit;
 
-use Drupal\Tests\UnitTestCase;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
+use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * Tests date helper.
- *
- * @covers \Drupal\reliefweb_utility\Helpers\TextHelper
+ * Tests text helper.
  */
+#[CoversClass(TextHelper::class)]
+#[Group('reliefweb_utility')]
 class TextHelperTest extends UnitTestCase {
 
   /**
    * Test clean text.
-   *
-   * @covers \Drupal\reliefweb_utility\Helpers\TextHelper::cleanText
    */
   public function testCleanText() {
     $text = $expected = '';
@@ -63,27 +61,21 @@ class TextHelperTest extends UnitTestCase {
 
   /**
    * Test trim text.
-   *
-   * @covers \Drupal\reliefweb_utility\Helpers\TextHelper::trimText
    */
   public function testTrimText() {
     $text = '   trim around ';
     $expected = 'trim around';
-    $options = [];
     $this->assertEquals(TextHelper::trimText($text), $expected);
 
     // This string contains `\u200b` (zero width space) characters at the start,
     // end and middle. The start and end ones should be removed.
     $text = '​自然​環境​​';
     $expected = '自然​環境';
-    $options = [];
     $this->assertEquals(TextHelper::trimText($text), $expected);
   }
 
   /**
    * Test sanitize text.
-   *
-   * @covers \Drupal\reliefweb_utility\Helpers\TextHelper::sanitizeText
    */
   public function testSanitizeText() {
     $tests = [
@@ -127,12 +119,56 @@ class TextHelperTest extends UnitTestCase {
         'expected' => "HTML non-breaking-space",
         'preserve_newline' => FALSE,
       ],
+      [
+        'input' => "Single\nNewline",
+        'expected' => "Single\nNewline",
+        'preserve_newline' => TRUE,
+        'max_consecutive_newlines' => 2,
+      ],
+      [
+        'input' => "Double\n\nNewlines",
+        'expected' => "Double\n\nNewlines",
+        'preserve_newline' => TRUE,
+        'max_consecutive_newlines' => 2,
+      ],
+      [
+        'input' => "Triple\n\n\nNewlines",
+        'expected' => "Triple\n\nNewlines",
+        'preserve_newline' => TRUE,
+        'max_consecutive_newlines' => 2,
+      ],
+      [
+        'input' => "Many\n\n\n\n\nNewlines",
+        'expected' => "Many\n\n\nNewlines",
+        'preserve_newline' => TRUE,
+        'max_consecutive_newlines' => 3,
+      ],
+      [
+        'input' => "Mixed\nSingle\n\n\nConsecutive\nLines",
+        'expected' => "Mixed\nSingle\n\nConsecutive\nLines",
+        'preserve_newline' => TRUE,
+        'max_consecutive_newlines' => 2,
+      ],
+      [
+        'input' => "Windows\r\n\r\n\r\nNewlines",
+        'expected' => "Windows\n\nNewlines",
+        'preserve_newline' => TRUE,
+        'max_consecutive_newlines' => 2,
+      ],
+      [
+        'input' => "Default\n\n\nBehavior",
+        'expected' => "Default\nBehavior",
+        'preserve_newline' => TRUE,
+        // max_consecutive_newlines defaults to 1.
+      ],
     ];
 
     foreach ($tests as $test) {
+      $max_consecutive_newlines = $test['max_consecutive_newlines'] ?? 1;
+
       $this->assertEquals(
         $test['expected'],
-        TextHelper::sanitizeText($test['input'], $test['preserve_newline']),
+        TextHelper::sanitizeText($test['input'], $test['preserve_newline'], $max_consecutive_newlines),
         'Failed sanitizing: ' . $test['input']
       );
     }
@@ -140,8 +176,6 @@ class TextHelperTest extends UnitTestCase {
 
   /**
    * Test strip embedded content..
-   *
-   * @covers \Drupal\reliefweb_utility\Helpers\TextHelper::stripEmbeddedContent
    */
   public function testStripEmbeddedContent() {
     $text = 'just a string';
@@ -152,8 +186,6 @@ class TextHelperTest extends UnitTestCase {
 
   /**
    * Test get text diff.
-   *
-   * @covers \Drupal\reliefweb_utility\Helpers\TextHelper::getTextDiff
    */
   public function testGetTextDiff() {
     $from_text = 'Totam est quasi aliquam sit quibusdam';
@@ -165,8 +197,6 @@ class TextHelperTest extends UnitTestCase {
 
   /**
    * Test get text similarity.
-   *
-   * @covers \Drupal\reliefweb_utility\Helpers\TextHelper::getTextSimilarity
    */
   public function testGetTextSimilarity() {
     // Test identical strings.
@@ -224,8 +254,6 @@ class TextHelperTest extends UnitTestCase {
 
   /**
    * Test calculate Unicode Levenshtein distance.
-   *
-   * @covers \Drupal\reliefweb_utility\Helpers\TextHelper::calculateUnicodeLevenshteinDistance
    */
   public function testCalculateUnicodeLevenshteinDistance() {
     // Use reflection to access the protected method.

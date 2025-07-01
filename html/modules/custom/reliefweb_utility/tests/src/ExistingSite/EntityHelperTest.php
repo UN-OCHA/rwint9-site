@@ -7,14 +7,15 @@ use Drupal\Core\Routing\RouteObjectInterface;
 use Drupal\node\Entity\Node;
 use Drupal\reliefweb_utility\Helpers\EntityHelper;
 use Symfony\Component\HttpFoundation\Request;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
  * Tests entity helper.
- *
- * @covers \Drupal\reliefweb_utility\Helpers\EntityHelper
- * @coversDefaultClass \Drupal\reliefweb_utility\Helpers\EntityHelper
  */
+#[CoversClass(EntityHelper::class)]
+#[Group('reliefweb_utility')]
 class EntityHelperTest extends ExistingSiteBase {
 
   /**
@@ -53,7 +54,7 @@ class EntityHelperTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::getEntityFromRequest
+   * Test get entity from request.
    */
   public function testGetEntityFromRequest() {
     $request = $this->createRequestFromRoute('entity.node.canonical', [
@@ -64,7 +65,7 @@ class EntityHelperTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::getEntityFromRoute
+   * Test get entity from route.
    */
   public function testGetEntityFromRoute() {
     $request = $this->createRequestFromRoute('entity.node.canonical', [

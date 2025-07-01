@@ -1,30 +1,31 @@
 <?php
 
-// phpcs:ignoreFile
-
 namespace Drupal\Tests\reliefweb_utility\Unit;
 
 use Drupal\reliefweb_utility\Plugin\Filter\ReliefwebTokenFilter;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * Tests date helper.
- *
- * @covers \Drupal\reliefweb_utility\Plugin\Filter\ReliefwebTokenFilter
- * @coversDefaultClass \Drupal\reliefweb_utility\Plugin\Filter\ReliefwebTokenFilter
+ * Tests reliefweb token filter.
  */
+#[CoversClass(ReliefwebTokenFilter::class)]
+#[Group('reliefweb_utility')]
 class ReliefwebTokenFilterTest extends UnitTestCase {
 
   /**
-   * @covers ::tokenCallback
+   * Test token callback.
    *
-   * @dataProvider providerTokenCallback
-   *
-   * @param string $html
-   *   Input HTML.
+   * @param array $replacements
+   *   Token replacements.
    * @param array $expected
-   *   The expected output string.
+   *   Expected output.
+   * @param array $options
+   *   Callback options.
    */
+  #[DataProvider('providerTokenCallback')]
   public function testTokenCallback($replacements, $expected, $options) {
     $data = [];
     $bubbleable_metadata = [];
@@ -37,9 +38,9 @@ class ReliefwebTokenFilterTest extends UnitTestCase {
    * Provides data for testTokenCallback.
    *
    * @return array
-   *   An array of test data.
+   *   Test data.
    */
-  public function providerTokenCallback() {
+  public static function providerTokenCallback() {
     return [
       [
         [],
