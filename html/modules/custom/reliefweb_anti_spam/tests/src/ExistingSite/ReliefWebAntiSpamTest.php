@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\reliefweb_anti_spam\ExistingSite;
 
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\Group;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
  * Tests for the ReliefWeb Anti-Spam module.
- *
- * @group reliefweb_anti_spam
  */
+#[CoversNothing]
+#[Group('reliefweb_anti_spam')]
 class ReliefWebAntiSpamTest extends ExistingSiteBase {
 
   /**
