@@ -291,24 +291,6 @@ function reliefweb_import_extract_pdf_file(string $url, string $selector, string
  */
 function reliefweb_import_status_type_values(): array {
   return [
-    'to_process' => [
-      'id' => 'to_process',
-      'label' => t('To process'),
-      'description' => t('Someone needs to have a look.'),
-      'status' => 'skipped',
-    ],
-    'manual' => [
-      'id' => 'manual',
-      'label' => t('Manually posted'),
-      'description' => t('The status was set manually.'),
-      'status' => 'success',
-    ],
-    'not_posted' => [
-      'id' => 'not_posted',
-      'label' => t('Not posted'),
-      'description' => t('The item was not posted.'),
-      'status' => 'skipped',
-    ],
     'no_pdf' => [
       'id' => 'no_pdf',
       'label' => t('No PDF'),
@@ -327,6 +309,37 @@ function reliefweb_import_status_type_values(): array {
       'description' => t('The item URL returned a 404 Not Found error.'),
       'status' => 'error',
     ],
+    'duplicate' => [
+      'id' => 'duplicate',
+      'label' => t('Duplicate'),
+      'description' => t('The item is a duplicate of an existing item.'),
+      'status' => 'skipped',
+    ],
+  ];
+}
+
+/**
+ * Provide a list of editorial status values.
+ */
+function reliefweb_import_editorial_flow_values(): array {
+  return [
+    'to_process' => [
+      'id' => 'to_process',
+      'label' => t('To process'),
+      'description' => t('Someone needs to have a look.'),
+      'status' => 'skipped',
+      'attempts' => 0,
+    ],
+    'manual' => [
+      'id' => 'manual',
+      'label' => t('Manually posted'),
+      'description' => t('The status was set manually.'),
+    ],
+    'not_posted' => [
+      'id' => 'not_posted',
+      'label' => t('Not posted'),
+      'description' => t('The item was not posted.'),
+    ],
     'reset_attempts' => [
       'id' => 'reset_attempts',
       'label' => t('Reset attempts'),
@@ -334,5 +347,26 @@ function reliefweb_import_status_type_values(): array {
       'status' => 'skipped',
       'attempts' => 0,
     ],
+    'duplicate' => [
+      'id' => 'duplicate',
+      'label' => t('Is a duplicate'),
+      'description' => t('The import record is a duplicate.'),
+      'status' => 'duplicate',
+      'attempts' => 99,
+    ],
   ];
+}
+
+/**
+ * Implements hook_preprocess_html().
+ */
+function reliefweb_import_preprocess_html(&$variables) {
+  $paths = [
+    '/moderation/content/reliefweb_import',
+    '/admin/config/reliefweb/content-importers/stats',
+  ];
+  $current_path = \Drupal::service('path.current')->getPath();
+  if (in_array($current_path, $paths)) {
+    $variables['attributes']['class'][] = 'rw-moderation-list--reliefweb-import';
+  }
 }
