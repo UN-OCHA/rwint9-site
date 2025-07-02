@@ -57,7 +57,7 @@ class ReliefWebImporterStatisticsController extends ControllerBase {
         $table_data[$importer]['headers'][$record['status']] = ucfirst(str_replace('_', ' ', $record['status']));
       }
       if (!empty($record['status_type']) && !isset($table_data[$importer]['headers'][$record['status'] . '::' . $record['status_type']])) {
-        $table_data[$importer]['headers'][$record['status'] . '::' . $record['status_type']] = ucfirst(str_replace('_', ' ', $record['status_type']));
+        $table_data[$importer]['headers'][$record['status'] . '::' . $record['status_type']] = ucfirst(str_replace('_', ' ', $record['status'])) . ': ' . ucfirst(str_replace('_', ' ', $record['status_type']));
       }
 
       $key = $record['status'] . (empty($record['status_type']) ? '' : '::' . $record['status_type']);
@@ -137,6 +137,11 @@ class ReliefWebImporterStatisticsController extends ControllerBase {
           'class' => [$class],
         ];
       }
+
+      // Sort the rows by source.
+      usort($rows, function ($a, $b) {
+        return strcmp($a['data'][0]['data']['#title'], $b['data'][0]['data']['#title']);
+      });
 
       $build[$importer . '_header'] = [
         '#type' => 'markup',
