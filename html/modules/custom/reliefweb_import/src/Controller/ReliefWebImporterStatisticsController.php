@@ -50,14 +50,29 @@ class ReliefWebImporterStatisticsController extends ControllerBase {
             'duplicate' => 'Duplicate',
           ],
           'rows' => [],
+          'totals' => [
+            'source' => 'Totals',
+            'total' => 0,
+            'success' => 0,
+            'skipped' => 0,
+            'error' => 0,
+            'duplicate' => 0,
+          ],
         ];
       }
 
       if (!isset($table_data[$importer]['headers'][$record['status']])) {
         $table_data[$importer]['headers'][$record['status']] = ucfirst(str_replace('_', ' ', $record['status']));
+        $table_data[$importer]['totals'][$record['status']] = 0;
       }
-      if (!empty($record['status_type']) && !isset($table_data[$importer]['headers'][$record['status'] . '::' . $record['status_type']])) {
-        $table_data[$importer]['headers'][$record['status'] . '::' . $record['status_type']] = ucfirst(str_replace('_', ' ', $record['status'])) . ': ' . ucfirst(str_replace('_', ' ', $record['status_type']));
+      $table_data[$importer]['totals'][$record['status']] += $record['num'];
+
+      if (!empty($record['status_type'])) {
+        if (!isset($table_data[$importer]['headers'][$record['status'] . '::' . $record['status_type']])) {
+          $table_data[$importer]['headers'][$record['status'] . '::' . $record['status_type']] = ucfirst(str_replace('_', ' ', $record['status'])) . ': ' . ucfirst(str_replace('_', ' ', $record['status_type']));
+          $table_data[$importer]['totals'][$record['status'] . '::' . $record['status_type']] = 0;
+        }
+        $table_data[$importer]['totals'][$record['status'] . '::' . $record['status_type']] += $record['num'];
       }
 
       $key = $record['status'] . (empty($record['status_type']) ? '' : '::' . $record['status_type']);
@@ -73,6 +88,7 @@ class ReliefWebImporterStatisticsController extends ControllerBase {
         $table_data[$importer]['rows'][$record['source']]['total'] = 0;
       }
       $table_data[$importer]['rows'][$record['source']]['total'] += $record['num'];
+      $table_data[$importer]['totals']['total'] += $record['num'];
     }
 
     foreach ($table_data as $importer => $data) {
@@ -142,6 +158,9 @@ class ReliefWebImporterStatisticsController extends ControllerBase {
       usort($rows, function ($a, $b) {
         return strcmp($a['data'][0]['data']['#title'], $b['data'][0]['data']['#title']);
       });
+
+      // Add totals row.
+      $rows[] = $data['totals'];
 
       $build[$importer . '_header'] = [
         '#type' => 'markup',
