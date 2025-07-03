@@ -240,6 +240,7 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
         '#type' => 'markup',
         '#markup' => $record['status'],
       ];
+
       if (isset($status_types[$record['status_type']])) {
         $cells['status']['label']['#markup'] .= ' (' . $status_types[$record['status_type']]['label'] . ')';
       }
