@@ -119,6 +119,7 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
     $entities = $results['entities'];
 
     $status_types = reliefweb_import_status_type_values();
+    $editorial_flows = reliefweb_import_editorial_flow_values();
 
     // Prepare the table rows' data from the entities.
     $rows = [];
@@ -235,13 +236,17 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
       }
 
       $cells['importer'] = $record['importer'];
-      $cells['status'] = $record['status'];
+      $cells['status']['label'] = [
+        '#type' => 'markup',
+        '#markup' => $record['status'],
+      ];
       if (isset($status_types[$record['status_type']])) {
-        $cells['status'] .= ' (' . $status_types[$record['status_type']]['label'] . ')';
+        $cells['status']['label']['#markup'] .= ' (' . $status_types[$record['status_type']]['label'] . ')';
       }
       elseif (!empty($record['status_type'])) {
-        $cells['status'] .= ' (' . $record['status_type'] . ')';
+        $cells['status']['label']['#markup'] .= ' (' . $record['status_type'] . ')';
       }
+
       $cells['source'] = $record['source'];
 
       // Date cell.
@@ -262,35 +267,38 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
         ];
       }
       else {
-        $status_links = [];
-
-        foreach ($status_types as $status => $status_info) {
-          $link = Url::fromRoute('reliefweb_import.reliefweb_importer.change_status', [
+        $editorial_links = [];
+        foreach ($editorial_flows as $editorial_flow => $editorial_flow_info) {
+          $link = Url::fromRoute('reliefweb_import.reliefweb_importer.change_editorial_flow', [
             'uuid' => $record['imported_item_uuid'],
-            'status' => $status,
+            'editorial_flow' => $editorial_flow,
           ], [
             'query' => [
               'destination' => $this->requestStack->getCurrentRequest()->getRequestUri() . '#row-' . $short_id,
             ],
           ]);
-          $status_links[$status_info['id']] = [
-            'title' => $status_info['label'],
+          $editorial_links[$editorial_flow_info['id']] = [
+            'title' => $editorial_flow_info['label'],
             'url' => $link,
             'attributes' => [
-              'title' => $status_info['description'],
+              'title' => $editorial_flow_info['description'],
             ],
           ];
+
+          // Move current editor to the first position.
+          if ($editorial_flow_info['id'] === $record['editorial_flow']) {
+            $editorial_links = [$editorial_flow_info['id'] => $editorial_links[$editorial_flow_info['id']]] + $editorial_links;
+          }
         }
 
-        $cells['node_created'] = [
-          '#theme' => 'item_list',
-          '#items' => $status_links,
+        $cells['node_created']['editorial_flow_label'] = [
+          '#type' => 'markup',
+          '#markup' => $this->t('Workflow'),
         ];
-
-        $cells['node_created'] = [
+        $cells['node_created']['editorial_flow_'] = [
           '#type' => 'dropbutton',
           '#dropbutton_type' => 'rw-moderation',
-          '#links' => $status_links,
+          '#links' => $editorial_links,
         ];
       }
 
@@ -321,6 +329,7 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
   public function getFilterDefaultStatuses() {
     $statuses = $this->getFilterStatuses();
     unset($statuses['success']);
+    unset($statuses['duplicate']);
     return array_keys($statuses);
   }
 
@@ -338,6 +347,16 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
     $definitions = parent::initFilterDefinitions([
       'status',
     ]);
+
+    $definitions['editorial_flow'] = [
+      'form' => 'editorial_flow',
+      'type' => 'field',
+      'label' => $this->t('Editorial flow'),
+      'field' => 'editorial_flow',
+      'column' => 'value',
+      'operator' => 'OR',
+      'values' => $this->getEditorialFlowValues(),
+    ];
 
     $definitions['status_type'] = [
       'form' => 'status_type',
@@ -396,6 +415,20 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
     $status_types = reliefweb_import_status_type_values();
     foreach ($status_types as $status_type) {
       $values[$status_type['id']] = $status_type['label'];
+    }
+
+    return $values;
+  }
+
+  /**
+   * Get editorial flow values from database.
+   */
+  protected function getEditorialFlowValues() {
+    $values = [];
+
+    $editorial_flows = reliefweb_import_editorial_flow_values();
+    foreach ($editorial_flows as $editorial_flow) {
+      $values[$editorial_flow['id']] = $editorial_flow['label'];
     }
 
     return $values;
@@ -595,6 +628,10 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
           }
           elseif ($name === 'importer') {
             $query->condition('r.importer', $values, 'IN');
+            continue;
+          }
+          elseif ($name === 'editorial_flow') {
+            $query->condition('r.editorial_flow', $values, 'IN');
             continue;
           }
         }

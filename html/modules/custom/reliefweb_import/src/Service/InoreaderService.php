@@ -779,6 +779,9 @@ class InoreaderService {
     if (isset($tags['debug'])) {
       $debug = TRUE;
     }
+    if (isset($tags['timeout'])) {
+      $fetch_timeout = (int) $tags['timeout'];
+    }
 
     if (isset($tags['wrapper'])) {
       if (!is_array($tags['wrapper'])) {
