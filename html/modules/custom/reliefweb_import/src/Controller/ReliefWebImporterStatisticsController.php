@@ -160,7 +160,7 @@ class ReliefWebImporterStatisticsController extends ControllerBase {
       });
 
       // Add totals row.
-      $rows[] = $data['totals'];
+      array_unshift($rows, $data['totals']);
 
       $build[$importer . '_header'] = [
         '#type' => 'markup',
