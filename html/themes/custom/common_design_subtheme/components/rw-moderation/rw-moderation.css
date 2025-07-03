@@ -328,3 +328,7 @@
 .rw-moderation-list--reliefweb-import .rw-moderation-table tr td:nth-child(7) {
   min-width: 210px;
 }
+
+.rw-moderation-list--reliefweb-import .cd-table--striped tr:nth-child(even) {
+  background: none;
+}
