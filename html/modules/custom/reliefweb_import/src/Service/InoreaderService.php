@@ -459,6 +459,10 @@ class InoreaderService {
             $title = str_replace(['-', '_'], ' ', $title);
             $title = $this->sanitizeText($title);
             break;
+
+          case 'url':
+            $title = $url;
+            break;
         }
       }
       elseif ($tag_key == 'status') {
