@@ -313,29 +313,4 @@ class UrlHelper extends DrupalUrlHelper {
     return '';
   }
 
-  /**
-   * Get a render array for a URL.
-   *
-   * This replaces the deprecated \Drupal\Core\Url::toRenderArray().
-   *
-   * @param \Drupal\Core\Url $url
-   *   URL.
-   *
-   * @return array
-   *   Render array.
-   */
-  public static function toRenderArray(Url $url): array {
-    $render_array = [
-      '#url' => $url,
-      '#options' => $url->getOptions(),
-    ];
-    if ($url->isRouted()) {
-      $render_array['#access_callback'] = [
-        get_class($url),
-        'renderAccess',
-      ];
-    }
-    return $render_array;
-  }
-
 }

@@ -6,7 +6,6 @@ namespace Drupal\reliefweb_post_api;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
-use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
  * Defines the list builder for ReliefWeb Post API provider entities.
@@ -31,10 +30,7 @@ class ProviderListBuilder extends EntityListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity): array {
-    $row['name']['data'] = [
-      '#type' => 'link',
-      '#title' => $entity->label(),
-    ] + UrlHelper::toRenderArray($entity->toUrl());
+    $row['name']['data'] = $entity->toLink()->toRenderable();
 
     $row['uuid']['data'] = $entity->uuid->view([
       'label' => 'hidden',
