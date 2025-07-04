@@ -333,6 +333,7 @@
   background: none;
 }
 
+.rw-moderation-list--reliefweb-import table.rw-moderation-table thead,
 .rw-moderation-list--reliefweb-import table.sticky-header thead {
   position: sticky;
   z-index: 500;
