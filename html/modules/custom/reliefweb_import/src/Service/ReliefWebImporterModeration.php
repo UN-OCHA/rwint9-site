@@ -359,16 +359,6 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
       'values' => $this->getEditorialFlowValues(),
     ];
 
-    $definitions['status_type'] = [
-      'form' => 'status_type',
-      'type' => 'field',
-      'label' => $this->t('Status type'),
-      'field' => 'status_type',
-      'column' => 'value',
-      'operator' => 'OR',
-      'values' => $this->getStatusTypeValues(),
-    ];
-
     $definitions['importer'] = [
       'form' => 'importer',
       'type' => 'field',
