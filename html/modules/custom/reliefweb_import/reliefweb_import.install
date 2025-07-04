@@ -246,3 +246,13 @@ function reliefweb_import_update_10007(array &$sandbox) {
   \Drupal::database()->query("update {reliefweb_import_records} set status_type = '' where status_type = 'to_process'");
   \Drupal::database()->query("update {reliefweb_import_records} set status_type = '' where status_type = 'reset_attempts'");
 }
+
+/**
+ * Implements hook_update_N().
+ *
+ * Cleanup status and editorial flow.
+ */
+function reliefweb_import_update_10008(array &$sandbox) {
+  \Drupal::database()->query("update {reliefweb_import_records} set editorial_flow = 'to_process' where editorial_flow is null and status in ('skipped', 'error')");
+  \Drupal::database()->query("update {reliefweb_import_records} set editorial_flow = '' where status in ('success', 'duplicate')");
+}
