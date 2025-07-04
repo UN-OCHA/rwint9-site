@@ -208,6 +208,11 @@ class ReliefWebImporterStatisticsController extends ControllerBase {
         '#empty' => $this->t('No ReliefWeb Importer records found.'),
         '#sticky' => TRUE,
         '#no_striping' => TRUE,
+        '#attributes' => [
+          'class' => [
+            'reliefweb-import-stats',
+          ],
+        ],
       ];
     }
 
