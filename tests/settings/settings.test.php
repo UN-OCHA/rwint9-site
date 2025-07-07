@@ -205,3 +205,5 @@ if (file_exists('sites/default/memcache.services.yml')) {
     ],
   ];
 }
+
+$settings['cache']['bins']['config'] = 'cache.backend.null';
