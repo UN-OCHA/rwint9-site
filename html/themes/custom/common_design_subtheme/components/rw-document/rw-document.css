@@ -156,6 +156,10 @@
   text-decoration: underline;
 }
 
+.rw-document.rw-article--book .rw-article__content a[href^="/user/login/entraid"]::before {
+  content: url('../../img/auth/un_logo_white.svg');
+}
+
 .rw-document.rw-article--book .rw-article__content a[href^="/user/login/hid"]::before {
   content: url('../../img/auth/hid_logo.svg');
 }
