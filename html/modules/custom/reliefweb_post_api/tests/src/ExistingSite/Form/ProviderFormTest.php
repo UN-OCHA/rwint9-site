@@ -195,7 +195,14 @@ class ProviderFormTest extends ExistingSiteBase {
        * {@inheritdoc}
        */
       public function save() {
-        return 1;
+        return NULL;
+      }
+
+      /**
+       * {@inheritdoc}
+       */
+      public function label() {
+        return 'test';
       }
 
     };
