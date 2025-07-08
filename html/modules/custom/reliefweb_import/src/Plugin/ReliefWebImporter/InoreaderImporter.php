@@ -385,7 +385,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
           $import_record['status_type'] = $e->getStatusType();
         }
         else {
-          $import_record['status_type'] = 'to_process';
+          $import_record['status_type'] = '';
         }
 
         $import_record['status'] = 'error';

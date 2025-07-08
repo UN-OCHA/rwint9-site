@@ -345,6 +345,7 @@ function reliefweb_import_editorial_flow_values(): array {
       'label' => t('Reset attempts'),
       'description' => t('The import record attempts were reset.'),
       'status' => 'skipped',
+      'editorial_flow' => 'to_process',
       'attempts' => 0,
     ],
     'duplicate' => [
@@ -352,6 +353,7 @@ function reliefweb_import_editorial_flow_values(): array {
       'label' => t('Is a duplicate'),
       'description' => t('The import record is a duplicate.'),
       'status' => 'duplicate',
+      'editorial_flow' => '',
       'attempts' => 99,
     ],
   ];

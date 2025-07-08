@@ -328,3 +328,21 @@
 .rw-moderation-list--reliefweb-import .rw-moderation-table tr td:nth-child(7) {
   min-width: 210px;
 }
+
+.rw-moderation-list--reliefweb-import .cd-table--striped tr:nth-child(even) {
+  background: none;
+}
+
+.rw-moderation-list--reliefweb-import table.rw-moderation-table thead,
+.rw-moderation-list--reliefweb-import table.sticky-header thead {
+  position: sticky;
+  z-index: 500;
+  top: var(--drupal-displace-offset-top, 0);
+}
+
+.rw-moderation-list--reliefweb-import .reliefweb-import-stats td:nth-child(2),
+.rw-moderation-list--reliefweb-import .reliefweb-import-stats th:nth-child(2),
+.rw-moderation-list--reliefweb-import .reliefweb-import-stats td:nth-child(6),
+.rw-moderation-list--reliefweb-import .reliefweb-import-stats th:nth-child(6) {
+  border-right: solid 3px #000;
+}

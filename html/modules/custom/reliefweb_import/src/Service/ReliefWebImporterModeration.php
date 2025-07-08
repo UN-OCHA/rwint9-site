@@ -240,6 +240,7 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
         '#type' => 'markup',
         '#markup' => $record['status'],
       ];
+
       if (isset($status_types[$record['status_type']])) {
         $cells['status']['label']['#markup'] .= ' (' . $status_types[$record['status_type']]['label'] . ')';
       }
@@ -356,16 +357,6 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
       'column' => 'value',
       'operator' => 'OR',
       'values' => $this->getEditorialFlowValues(),
-    ];
-
-    $definitions['status_type'] = [
-      'form' => 'status_type',
-      'type' => 'field',
-      'label' => $this->t('Status type'),
-      'field' => 'status_type',
-      'column' => 'value',
-      'operator' => 'OR',
-      'values' => $this->getStatusTypeValues(),
     ];
 
     $definitions['importer'] = [

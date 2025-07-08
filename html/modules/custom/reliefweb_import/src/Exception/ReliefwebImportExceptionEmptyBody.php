@@ -9,6 +9,6 @@ class ReliefwebImportExceptionEmptyBody extends ReliefwebImportException {
   /**
    * {@inheritdoc}
    */
-  protected string $statusType = 'empty_body';
+  protected string $statusType = 'no_body';
 
 }
