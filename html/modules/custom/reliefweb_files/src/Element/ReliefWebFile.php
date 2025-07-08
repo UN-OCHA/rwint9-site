@@ -9,7 +9,7 @@ use Drupal\Core\Security\TrustedCallbackInterface;
 /**
  * Render element for the ReliefWebFile widget.
  *
- * @RenderElementBase("reliefweb_file")
+ * @RenderElement("reliefweb_file")
  */
 class ReliefWebFile extends RenderElementBase implements TrustedCallbackInterface {
 
