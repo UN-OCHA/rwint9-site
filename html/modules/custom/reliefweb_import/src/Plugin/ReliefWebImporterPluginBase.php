@@ -8,6 +8,7 @@ use Drupal\Component\Plugin\ConfigurableInterface;
 use Drupal\Component\Utility\Bytes;
 use Drupal\Component\Utility\Environment;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityInterface;
@@ -989,6 +990,9 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
     $created = 0;
     $updated = 0;
     $skipped = 0;
+    $tags = [
+      'reliefweb_import_records:list',
+    ];
 
     // Get all URLs from the records to check which ones already exist.
     $urls = array_column($records, 'imported_item_uuid');
@@ -1027,6 +1031,7 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
             ->condition('imported_item_uuid', $url)
             ->execute();
           $updated++;
+          $tags[] = 'reliefweb_import_records:' . $record['imported_item_uuid'];
         }
         else {
           $skipped++;
@@ -1043,8 +1048,11 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
           ->fields($record)
           ->execute();
         $created++;
+        $tags[] = 'reliefweb_import_records:' . $record['imported_item_uuid'];
       }
     }
+
+    Cache::invalidateTags($tags);
 
     return [
       'created' => $created,

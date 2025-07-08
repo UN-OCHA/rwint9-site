@@ -2025,10 +2025,10 @@ class ReliefWebFile extends FieldItemBase {
    * @param string $uri
    *   File URI.
    *
-   * @return string
+   * @return ?string
    *   File's content hash.
    */
-  public function calculateFileHashFromUri(string $uri): string {
+  public function calculateFileHashFromUri(string $uri): ?string {
     $real_path = $this->getFileSystem()->realpath($uri);
     return file_exists($real_path) ? hash_file('sha256', $real_path) : NULL;
   }

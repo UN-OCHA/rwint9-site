@@ -109,6 +109,11 @@ function reliefweb_import_schema() {
         'length' => '254',
         'description' => 'The status type, provides more granular info.',
       ],
+      'editorial_flow' => [
+        'type' => 'varchar',
+        'length' => '254',
+        'description' => 'The editorial flow.',
+      ],
     ],
     'primary key' => ['imported_item_uuid'],
     'indexes' => [
@@ -207,4 +212,47 @@ function reliefweb_import_update_10005(array &$sandbox) {
     $table_schema = reliefweb_import_schema();
     $schema->addField($table_name, $field_name, $table_schema[$table_name]['fields'][$field_name]);
   }
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * Add editorial_flow column to the reliefweb_import_records table.
+ */
+function reliefweb_import_update_10006(array &$sandbox) {
+  $schema = \Drupal::database()->schema();
+  $table_name = 'reliefweb_import_records';
+  $field_name = 'editorial_flow';
+
+  if (!$schema->fieldExists($table_name, $field_name)) {
+    $table_schema = reliefweb_import_schema();
+    $schema->addField($table_name, $field_name, $table_schema[$table_name]['fields'][$field_name]);
+
+    // Update records to set the editorial flow to 'to_process'.
+    \Drupal::database()->query("UPDATE {reliefweb_import_records} SET editorial_flow = 'to_process', status_type = '' WHERE status_type = 'to_process';");
+  }
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * Cleanup status and editorial flow.
+ */
+function reliefweb_import_update_10007(array &$sandbox) {
+  \Drupal::database()->query("update {reliefweb_import_records} set status_type = '' where status_type = 'processed'");
+  \Drupal::database()->query("update {reliefweb_import_records} set status_type = '' where status = 'success'");
+  \Drupal::database()->query("update {reliefweb_import_records} set editorial_flow = 'manual', status_type = '' where status_type = 'manual'");
+  \Drupal::database()->query("update {reliefweb_import_records} set status_type = 'no_body' where status_type = 'empty_body'");
+  \Drupal::database()->query("update {reliefweb_import_records} set status_type = '' where status_type = 'to_process'");
+  \Drupal::database()->query("update {reliefweb_import_records} set status_type = '' where status_type = 'reset_attempts'");
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * Cleanup status and editorial flow.
+ */
+function reliefweb_import_update_10008(array &$sandbox) {
+  \Drupal::database()->query("update {reliefweb_import_records} set editorial_flow = 'to_process' where editorial_flow is null and status in ('skipped', 'error')");
+  \Drupal::database()->query("update {reliefweb_import_records} set editorial_flow = '' where status in ('success', 'duplicate')");
 }

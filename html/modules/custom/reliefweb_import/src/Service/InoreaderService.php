@@ -459,6 +459,10 @@ class InoreaderService {
             $title = str_replace(['-', '_'], ' ', $title);
             $title = $this->sanitizeText($title);
             break;
+
+          case 'url':
+            $title = $url;
+            break;
         }
       }
       elseif ($tag_key == 'status') {
@@ -778,6 +782,9 @@ class InoreaderService {
     }
     if (isset($tags['debug'])) {
       $debug = TRUE;
+    }
+    if (isset($tags['timeout'])) {
+      $fetch_timeout = (int) $tags['timeout'];
     }
 
     if (isset($tags['wrapper'])) {
