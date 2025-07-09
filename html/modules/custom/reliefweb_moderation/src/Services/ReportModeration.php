@@ -624,15 +624,50 @@ class ReportModeration extends ModerationServiceBase {
 
     // Join the users_roles table, restricting to some roles.
     if (!empty($values)) {
+      $poster_roles = ['contributor', 'editor', 'submitter'];
+
       $role_table = 'user__roles';
-      $role_alias = $query->leftJoin($role_table, $role_table, "%alias.entity_id = {$entity_base_table}.uid AND %alias.bundle = :bundle", [
+      $role_field = $role_table . '.roles_target_id';
+
+      // Retrieve the contributor, submitter or editor users so that we
+      // filter on their user ids instead of trying to join the user roles
+      // table which can results in duplicate entries in the count query
+      // due to the fact users may have several of those roles.
+      // There is a limited number of users who post reports so this is a
+      // reasonable approach in terms of performance.
+      $user_query = $this->database->select($entity_base_table, $entity_base_table);
+      $user_query->innerJoin($role_table, $role_table, "%alias.entity_id = {$entity_base_table}.uid AND %alias.bundle = :bundle", [
         ':bundle' => 'user',
       ]);
+      $user_query->addField($entity_base_table, 'uid', 'uid');
+      $user_query->addExpression("GROUP_CONCAT(DISTINCT {$role_field} ORDER BY {$role_field} ASC)", 'roles');
+      $user_query->condition($role_table . '.roles_target_id', $poster_roles, 'IN');
+      $user_query->groupBy($entity_base_table . '.uid');
+      $user_records = $user_query->execute();
+
+      // Use 0 as default to ensure there is always a condition and empty
+      // results are properly displayed when there is no user with the selected
+      // roles.
+      $user_ids = [0 => 0];
+
+      // Filter users to exclude those with more poster roles that the filtered
+      // ones. This way when selecting 'submitter' for example, then only users
+      // with the submitter role and without the contributor or editor role will
+      // be considered.
+      foreach ($user_records as $record) {
+        $roles = explode(',', $record->roles);
+        // Skip the user if it has a poster role that is not in the list of
+        // selected roles in the filter.
+        foreach ($roles as $role) {
+          if (!isset($values[$role])) {
+            continue 2;
+          }
+        }
+        $user_ids[$record->uid] = $record->uid;
+      }
 
       $or_group ??= $query->conditionGroupFactory('OR');
-      foreach (array_keys($values) as $role) {
-        $or_group->condition($role_alias . '.roles_target_id', $role, '=');
-      }
+      $or_group->condition($entity_base_table . '.uid', $user_ids, 'IN');
     }
 
     if (isset($or_group)) {
