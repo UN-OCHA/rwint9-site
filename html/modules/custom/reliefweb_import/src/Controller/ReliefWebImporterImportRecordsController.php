@@ -94,6 +94,10 @@ class ReliefWebImporterImportRecordsController extends ControllerBase {
     if (isset($editorial_flow['status'])) {
       $payload['status'] = $editorial_flow['status'];
     }
+    if (isset($editorial_flow['editorial_flow'])) {
+      $payload['editorial_flow'] = $editorial_flow['editorial_flow'];
+    }
+
     $this->database->update('reliefweb_import_records')
       ->fields($payload)
       ->condition('imported_item_uuid', $uuid)

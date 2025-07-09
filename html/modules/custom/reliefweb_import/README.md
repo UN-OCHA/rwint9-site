@@ -94,6 +94,7 @@ This is mandatory and points to the location of the PDF file. For the moment onl
 | - | - |
 | filename | Use the filename as title for the report |
 | canonical | Use the filename as title for the report |
+| url | Force the title to be the URL so AI will rewrite it |
 
 #### `follow` tag
 
