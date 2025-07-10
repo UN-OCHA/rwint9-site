@@ -426,7 +426,15 @@ class InoreaderService {
             break;
 
           case 'content':
-            $body = $this->cleanBodyText($document['summary']['content'] ?? '');
+            $body = $document['summary']['content'] ?? '';
+
+            // Remove specified HTML elements.
+            if (isset($tags['remove'])) {
+              $body = $this->removeHtmlElements($body, $tags['remove']);
+            }
+
+            $clean_body = ($tags['content'] == 'clean') ?? FALSE;
+            $body = $this->cleanAndConvertBody($body, $clean_body);
             if (empty($body)) {
               $this->logger->error(strtr('Unable to retrieve the body content for Inoreader document @id.', [
                 '@id' => $id,
@@ -550,7 +558,7 @@ class InoreaderService {
   /**
    * Clean body text.
    */
-  protected function cleanBodyText(string $text): string {
+  protected function cleanAndConvertBody(string $text, $clean_body = FALSE): string {
     // Decode it first.
     $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
@@ -561,10 +569,75 @@ class InoreaderService {
     $converter->getConfig()->setOption('header_style', 'atx');
     $converter->getConfig()->setOption('strip_placeholder_links', TRUE);
 
+    // If we want to clean the body, remove HTML tags.
+    if ($clean_body) {
+      $converter->getConfig()->setOption('remove_nodes', 'figure figcaption img picture video audio iframe object embed script style');
+    }
+
     // Use our own text converter to avoid unwanted character escaping.
     $converter->getEnvironment()->addConverter(new TextConverter());
 
     return trim($converter->convert($text));
+  }
+
+  /**
+   * Remove specified HTML elements from the body.
+   *
+   * @param string $body
+   *   The HTML body content.
+   * @param string|array $selectors
+   *   The HTML elements to remove.
+   *
+   * @return string
+   *   The cleaned HTML body content.
+   */
+  protected function removeHtmlElements(string $body, string|array $selectors): string {
+    if (empty($body)) {
+      return $body;
+    }
+
+    $dom = new \DOMDocument();
+    @$dom->loadHTML($body, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+    $xpath = new \DOMXPath($dom);
+
+    if (!is_array($selectors)) {
+      $selectors = [$selectors];
+    }
+
+    foreach ($selectors as $selector) {
+      $el = '';
+      $class = '';
+
+      if (strpos($selector, '.') === FALSE) {
+        // No class, just the HTML tag.
+        $el = $selector;
+        $class = '';
+        $elements = $xpath->query("//{$selector}");
+      }
+      else {
+        [$el, $class] = explode('.', $selector);
+        // Only a class.
+        if (empty($el)) {
+          $elements = $xpath->query("//*[contains(@class, '{$class}')]");
+        }
+        else {
+          $elements = $xpath->query("//{$el}[contains(@class, '{$class}')]");
+        }
+      }
+
+      foreach ($elements as $element) {
+        if (!empty($class) && $element->hasAttribute('class')) {
+          $classes = explode(' ', $element->getAttribute('class'));
+          if (!in_array($class, $classes)) {
+            continue;
+          }
+        }
+
+        $element->parentNode->removeChild($element);
+      }
+    }
+
+    return trim($dom->saveHTML());
   }
 
   /**
@@ -860,6 +933,7 @@ class InoreaderService {
       'wrapper',
       'url',
       'puppeteer',
+      'remove',
     ];
 
     return in_array($tag, $multi_value_tags);
