@@ -1,5 +1,8 @@
-copy_link:
+copy-link:
+  css:
+    component:
+      components/copy-link/copy-link.css: {}
   js:
-    js/copy-link.js: {}
+    components/copy-link/copy-link.js: {}
   dependencies:
     - core/drupal
