@@ -13,6 +13,7 @@ use Drupal\reliefweb_utility\HtmlToMarkdown\Converters\TextConverter;
 use GuzzleHttp\ClientInterface;
 use League\HTMLToMarkdown\HtmlConverter;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DomCrawler\Crawler;
 
 /**
  * Service to interact with the Inoreader API.
@@ -433,7 +434,7 @@ class InoreaderService {
               $body = $this->removeHtmlElements($body, $tags['remove']);
             }
 
-            $clean_body = ($tags['content'] == 'clean') ?? FALSE;
+            $clean_body = isset($tags['content']) && $tags['content'] == 'clean';
             $body = $this->cleanAndConvertBody($body, $clean_body);
             if (empty($body)) {
               $this->logger->error(strtr('Unable to retrieve the body content for Inoreader document @id.', [
@@ -592,52 +593,23 @@ class InoreaderService {
    *   The cleaned HTML body content.
    */
   protected function removeHtmlElements(string $body, string|array $selectors): string {
-    if (empty($body)) {
+    if (empty($body) || empty($selectors)) {
       return $body;
     }
-
-    $dom = new \DOMDocument();
-    @$dom->loadHTML($body, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-    $xpath = new \DOMXPath($dom);
 
     if (!is_array($selectors)) {
       $selectors = [$selectors];
     }
 
+    $crawler = new Crawler($body);
+
     foreach ($selectors as $selector) {
-      $el = '';
-      $class = '';
-
-      if (strpos($selector, '.') === FALSE) {
-        // No class, just the HTML tag.
-        $el = $selector;
-        $class = '';
-        $elements = $xpath->query("//{$selector}");
-      }
-      else {
-        [$el, $class] = explode('.', $selector);
-        // Only a class.
-        if (empty($el)) {
-          $elements = $xpath->query("//*[contains(@class, '{$class}')]");
-        }
-        else {
-          $elements = $xpath->query("//{$el}[contains(@class, '{$class}')]");
-        }
-      }
-
-      foreach ($elements as $element) {
-        if (!empty($class) && $element->hasAttribute('class')) {
-          $classes = explode(' ', $element->getAttribute('class'));
-          if (!in_array($class, $classes)) {
-            continue;
-          }
-        }
-
-        $element->parentNode->removeChild($element);
-      }
+      $crawler->filter($selector)->each(function (Crawler $node) {
+        $node->getNode(0)->parentNode->removeChild($node->getNode(0));
+      });
     }
 
-    return trim($dom->saveHTML());
+    return $crawler->html();
   }
 
   /**
