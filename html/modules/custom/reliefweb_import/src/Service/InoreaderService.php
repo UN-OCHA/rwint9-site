@@ -659,67 +659,46 @@ class InoreaderService {
       return '';
     }
 
-    $dom = new \DOMDocument();
-    @$dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-    $xpath = new \DOMXPath($dom);
+    $selectors = [];
+    $base_selector = '';
+    if (!empty($wrapper)) {
+      $base_selector = $wrapper . ' ';
+    }
 
-    $elements = [];
-    if (empty($wrapper)) {
-      $elements = $xpath->query("//{$tag}[@{$attribute}]");
+    $base_selector .= $tag;
+    if (!empty($class)) {
+      $base_selector .= '.' . $class;
+    }
+
+    if (empty($contains)) {
+      $selector = $base_selector;
+      if (!empty($extension)) {
+        $selector .= '[' . $attribute . '$="' . $extension . '" i]';
+      }
+      $selectors[] = $selector;
     }
     else {
-      [$wrapper_element, $wrapper_class] = explode('.', $wrapper);
-      $parent = $xpath->query("//{$wrapper_element}[contains(@class, '{$wrapper_class}')]")->item(0);
-      if (!$parent) {
-        return '';
+      foreach ($contains as $contain) {
+        $selector = $base_selector;
+        if (!empty($extension)) {
+          $selector .= '[' . $attribute . '$="' . $extension . '"]';
+        }
+        $selector .= '[' . $attribute . '*="' . $contain . '"]';
+        $selectors[] = $selector;
       }
-
-      $elements = $xpath->query(".//{$tag}[@{$attribute}]", $parent);
     }
 
-    /** @var \DOMNode $element */
-    foreach ($elements as $element) {
-      $url = $element->getAttribute($attribute);
-      if (empty($url) || $url == '#') {
+    $crawler = new Crawler($html);
+
+    foreach ($selectors as $selector) {
+      $elements = $crawler->filter($selector);
+      if ($elements->count() == 0) {
         continue;
       }
-
-      if (!empty($class) && $element->hasAttribute('class') && preg_match('/\b' . preg_quote($class, '/') . '\b/', $element->getAttribute('class'))) {
-        if (!empty($contains)) {
-          foreach ($contains as $contain) {
-            if (strpos($url, $contain) !== FALSE) {
-              return $url;
-            }
-          }
-        }
-        else {
-          return $url;
-        }
-      }
-
-      if (!empty($extension) && preg_match('/\.' . $extension . '$/i', $url)) {
-        if (!empty($contains)) {
-          foreach ($contains as $contain) {
-            if (strpos($url, $contain) !== FALSE) {
-              return $url;
-            }
-          }
-        }
-        else {
-          return $url;
-        }
-      }
-
-      if (empty($class) && empty($extension)) {
-        if (!empty($contains)) {
-          foreach ($contains as $contain) {
-            if (strpos($url, $contain) !== FALSE) {
-              return $url;
-            }
-          }
-        }
-        else {
-          return $url;
+      if ($first = $elements->first()) {
+        $value = $first->attr($attribute);
+        if (!empty($value)) {
+          return $value;
         }
       }
     }
