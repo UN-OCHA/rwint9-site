@@ -155,7 +155,7 @@ trait DocumentTrait {
       '#url' => $url,
       '#attached' => [
         'library' => [
-          'reliefweb_utility/copy_link',
+          'reliefweb_utility/copy-link',
         ],
       ],
       '#cache' => [
