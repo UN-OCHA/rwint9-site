@@ -624,7 +624,8 @@ class ReportModeration extends ModerationServiceBase {
 
     // Join the users_roles table, restricting to some roles.
     if (!empty($values)) {
-      $poster_roles = ['contributor', 'editor', 'submitter'];
+      // Poster roles in hierarchical order (higher level first).
+      $poster_roles = ['editor', 'contributor', 'submitter'];
 
       $role_table = 'user__roles';
       $role_field = $role_table . '.roles_target_id';
@@ -650,20 +651,22 @@ class ReportModeration extends ModerationServiceBase {
       // roles.
       $user_ids = [0 => 0];
 
-      // Filter users to exclude those with more poster roles that the filtered
-      // ones. This way when selecting 'submitter' for example, then only users
-      // with the submitter role and without the contributor or editor role will
-      // be considered.
+      // Filter users, so that we only keep users with roles matching the
+      // level of the selected poster roles. For example, keep editors only if
+      // editor is selected, keep contributor only if contributor is selected
+      // and the user is not also an editor and keep submitter only if submitter
+      // is selected and the user is not also an editor or a contributor.
       foreach ($user_records as $record) {
-        $roles = explode(',', $record->roles);
-        // Skip the user if it has a poster role that is not in the list of
-        // selected roles in the filter.
-        foreach ($roles as $role) {
-          if (!isset($values[$role])) {
+        $roles = array_flip(explode(',', $record->roles));
+
+        foreach ($poster_roles as $role) {
+          if (isset($roles[$role])) {
+            if (isset($values[$role])) {
+              $user_ids[$record->uid] = $record->uid;
+            }
             continue 2;
           }
         }
-        $user_ids[$record->uid] = $record->uid;
       }
 
       $or_group ??= $query->conditionGroupFactory('OR');
