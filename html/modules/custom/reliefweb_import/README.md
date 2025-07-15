@@ -53,6 +53,7 @@ Imports tagged items from the [automation_production](https://www.inoreader.com/
 | status | s | No | No | [status:published] |
 | screenshot | - | No | No | [screenshot:1] |
 | debug | - | No | No | [debug:1] |
+| remove | r | No | Yes | [remove:.hero-text-container-article]
 
 #### `source` tag
 
@@ -87,6 +88,7 @@ This is mandatory and points to the location of the PDF file. For the moment onl
 | - | - |
 | clear | Do not use the Inoreader summary as body |
 | ignore | Do not use the Inoreader summary as body |
+| clean | Remove all `figure`, `figcaption`, `img`, `picture`, `video`, `audio`, `iframe`, `object`, `embed`, `script`, `style` tags |
 
 #### `title` tag
 
@@ -141,6 +143,10 @@ Only use for debugging, capture a screenshot of the page.
 #### `debug` tag
 
 Only use for debugging, capture all logs.
+
+#### `remove` tag
+
+Remove HTML elements based on tag and/or class.
 
 ### Override tags in the UI
 
