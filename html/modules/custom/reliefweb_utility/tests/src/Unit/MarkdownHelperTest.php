@@ -1,34 +1,31 @@
 <?php
 
-// phpcs:ignoreFile
-
 namespace Drupal\Tests\reliefweb_utility\Unit;
 
 use Drupal\reliefweb_utility\Helpers\MarkdownHelper;
 use Drupal\Tests\UnitTestCase;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\RequestStack;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests markdown helper.
- *
- * @covers \Drupal\reliefweb_utility\Helpers\MarkdownHelper
  */
+#[CoversClass(MarkdownHelper::class)]
+#[Group('reliefweb_utility')]
 class MarkdownHelperTest extends UnitTestCase {
 
   /**
-   * @covers \Drupal\reliefweb_utility\Helpers\MarkdownHelper::convertToHtml
-   *
-   * @dataProvider providerMarkdown
+   * Test convert to html.
    *
    * @param string $text
    *   Markdown text.
    * @param array $expected
-   *   The expected output string.
+   *   Expected output.
    * @param array $internal_hosts
    *   List of internal hosts to determine if a link is external or not.
    */
+  #[DataProvider('providerMarkdown')]
   public function testConvertToHtml($text, $expected, array $internal_hosts = ['reliefweb.int']) {
     $this->assertEquals($expected, MarkdownHelper::convertToHtml($text, $internal_hosts));
   }
@@ -37,9 +34,9 @@ class MarkdownHelperTest extends UnitTestCase {
    * Provides data for testMarkdown.
    *
    * @return array
-   *   An array of test data.
+   *   Test data.
    */
-  public function providerMarkdown() {
+  public static function providerMarkdown() {
     return [
       [
         'Just a string',
@@ -98,7 +95,7 @@ class MarkdownHelperTest extends UnitTestCase {
   }
 
   /**
-   * @covers \Drupal\reliefweb_utility\Helpers\MarkdownHelper::convertInlinesOnly
+   * Test convert inlines only.
    */
   public function testConvertInlinesOnly() {
     $text = "test [link](https://test.test)\n\nthis **not** a paragraph\n\n* list item 1\n* list item 2\n";

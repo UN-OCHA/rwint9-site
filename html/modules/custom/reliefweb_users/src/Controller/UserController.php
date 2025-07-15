@@ -203,11 +203,16 @@ class UserController extends ControllerBase {
     // Prepare the table rows.
     $rows = [];
     if (!empty($users)) {
-      $users_roles = $this->database->select('user__roles', 'ur')
+      $results = $this->database->select('user__roles', 'ur')
         ->fields('ur', ['entity_id', 'roles_target_id'])
         ->condition('ur.entity_id', array_keys($users), 'IN')
         ->execute()
-        ->fetchAll(\PDO::FETCH_COLUMN | \PDO::FETCH_GROUP);
+        ?->fetchAll() ?? [];
+
+      $users_roles = [];
+      foreach ($results as $row) {
+        $users_roles[$row->entity_id][] = $row->roles_target_id;
+      }
 
       // Get the sources and posting rights.
       $this->getUserSources($users);

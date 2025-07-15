@@ -303,10 +303,7 @@ class ApiUserDashboard extends ControllerBase {
       $label = $provider->label();
       if ($admin) {
         $label = [
-          'data' => [
-            '#type' => 'link',
-            '#title' => $label,
-          ] + $provider->toUrl('edit-form')->toRenderArray(),
+          'data' => $provider->toLink($label, 'edit-form')->toRenderable(),
         ];
       }
 

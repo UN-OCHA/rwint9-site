@@ -3,18 +3,17 @@
 namespace Drupal\Tests\reliefweb_import\Unit;
 
 use Drupal\Component\Utility\Html;
+use Drupal\reliefweb_import\Service\JobFeedsImporter;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests reliefweb importer.
- *
- * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter
  */
+#[CoversClass(JobFeedsImporter::class)]
 class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests for sanize text.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateBody
    */
   public function testsanitizeTextEmpty(): void {
     $test_string = '';
@@ -27,8 +26,6 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests for sanize text.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateBody
    */
   public function testsanitizeTextSpaces(): void {
     $test_string = '      ';
@@ -41,8 +38,6 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests for sanize text.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateBody
    */
   public function testsanitizeTextTooShort(): void {
     $test_string = $this->random->sentences(5);
@@ -55,8 +50,6 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests for sanize text.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateBody
    */
   public function testsanitizeTextTooLong(): void {
     $test_string = $this->random->sentences(25000);
@@ -69,8 +62,6 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests for sanize text.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateBody
    */
   public function testsanitizeTextPlain(): void {
     $test_string = $this->random->sentences(300);
@@ -79,8 +70,6 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests for sanize text.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::sanitizeText
    */
   public function testsanitizeTextClosingTag(): void {
     $test_string = $this->random->sentences(300);
@@ -89,8 +78,6 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests for sanize text wrapped in CDATA.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::sanitizeText
    */
   public function testsanitizeTextCdata(): void {
     $test_string = $this->random->sentences(300);
@@ -99,8 +86,6 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests for sanize markdown text.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::sanitizeText
    */
   public function testsanitizeMarkdown(): void {
     $test_string = "This is a test.\n\nWith a bith of __bold__ text and a [link](https://example.test)";
@@ -110,8 +95,6 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests for sanize markdown text wrapped in CDATA.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::sanitizeText
    */
   public function testsanitizeMarkdownWithCdata(): void {
     $test_string = "This is a test.\n\nWith a bith of __bold__ text and a [link](https://example.test)";
@@ -121,8 +104,6 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests for sanize markdown text wrapped in encoded CDATA.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::sanitizeText
    */
   public function testsanitizeMarkdownWithEncodedCdata(): void {
     $test_string = "This is a test.\n\nWith a bith of __bold__ text and a [link](https://example.test)";
@@ -132,8 +113,6 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests for sanize text with raw HTML.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::sanitizeText
    */
   public function testsanitizeHtml(): void {
     $test_string = '<p>This is a test.</p><p style="font-size: 16px;">With a bith of <strong>bold</strong> text and a <a unrecognized="attribute" href="https://example.test">link</a></p>';
@@ -143,8 +122,6 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests for sanize text with raw HTML wrapped in CDATA.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::sanitizeText
    */
   public function testsanitizeHtmlWithCdata(): void {
     $test_string = '<p>This is a test.</p><p style="font-size: 16px;">With a bith of <strong>bold</strong> text and a <a unrecognized="attribute" href="https://example.test">link</a></p>';
@@ -154,8 +131,6 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests for sanize text with raw HTML wrapped in CDATA.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::sanitizeText
    */
   public function testsanitizeHtmlWithEncodedCdata(): void {
     $test_string = '<p>This is a test.</p><p style="font-size: 16px;">With a bith of <strong>bold</strong> text and a <a unrecognized="attribute" href="https://example.test">link</a></p>';
@@ -165,8 +140,6 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests for sanize text with encoded HTML.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::sanitizeText
    */
   public function testsanitizeEncodedHtml(): void {
     $test_string = '<p>This is a test.</p><p style="font-size: 16px;">With a bith of <strong>bold</strong> text and a <a unrecognized="attribute" href="https://example.test">link</a></p>';
@@ -177,8 +150,6 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests for sanize text with encoded HTML wrapped in encoded CDATA.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::sanitizeText
    */
   public function testsanitizeEncodedHtmlWithCdata(): void {
     $test_string = '<p>This is a test.</p><p style="font-size: 16px;">With a bith of <strong>bold</strong> text and a <a unrecognized="attribute" href="https://example.test">link</a></p>';
@@ -189,8 +160,6 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests for sanize text with encoded HTML wrapped in encoded CDATA.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::sanitizeText
    */
   public function testsanitizeEncodedHtmlWithEncodedCdata(): void {
     $test_string = '<p>This is a test.</p><p style="font-size: 16px;">With a bith of <strong>bold</strong> text and a <a unrecognized="attribute" href="https://example.test">link</a></p>';
@@ -201,8 +170,6 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests for sanize text.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::sanitizeText
    */
   public function testsanitizeTextEmbedImage(): void {
     $test_string = $this->random->sentences(300);
@@ -211,8 +178,6 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests for sanize text.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::sanitizeText
    */
   public function testsanitizeTextPtag(): void {
     $test_string = '<p style="font-family: Arial;">The Opportunity</p>';
@@ -221,8 +186,6 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests for validateCity.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateCity
    */
   public function testValidateCity(): void {
     $test_strings = [
@@ -244,8 +207,6 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests for validateCity.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateCity
    */
   public function testValidateCity2(): void {
     $test_string = $this->random->sentences(100);
@@ -257,8 +218,6 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests for validateJobClosingDate.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateJobClosingDate
    */
   public function testValidateJobClosingDate(): void {
     $test_strings = [
@@ -281,8 +240,6 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests for validateJobClosingDate.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateJobClosingDate
    */
   public function testValidateJobClosingDate2(): void {
     $test_string = 'aaaa-bb-cc';
@@ -295,8 +252,6 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests for validateHowToApply.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateHowToApply
    */
   public function testValidateHowToApply(): void {
     $test_string = $this->random->sentences(50);
@@ -311,8 +266,6 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests for validateHowToApply.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateHowToApply
    */
   public function testValidateHowToApply2(): void {
     $test_string = $this->random->sentences(5000);

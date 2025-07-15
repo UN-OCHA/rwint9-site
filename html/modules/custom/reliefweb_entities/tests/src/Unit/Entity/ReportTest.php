@@ -9,12 +9,15 @@ use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
 use Drupal\Tests\UnitTestCase;
 use Drupal\reliefweb_entities\Entity\Report;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\DependencyInjection\Container;
 
 /**
- * @coversDefaultClass \Drupal\reliefweb_entities\Entity\Report
- * @group reliefweb_entities
+ * Test for the report entities.
  */
+#[CoversClass(Report::class)]
+#[Group('reliefweb_entities')]
 class ReportTest extends UnitTestCase {
 
   /**
@@ -58,8 +61,6 @@ class ReportTest extends UnitTestCase {
 
   /**
    * Tests sendPublicationNotification when there are no emails to notify.
-   *
-   * @covers ::sendPublicationNotification
    */
   public function testSendPublicationNotificationNoEmails(): void {
     $report = $this->getMockBuilder(Report::class)
@@ -82,8 +83,6 @@ class ReportTest extends UnitTestCase {
 
   /**
    * Tests sendPublicationNotification when there's no submit email.
-   *
-   * @covers ::sendPublicationNotification
    */
   public function testSendPublicationNotificationNoSubmitEmail(): void {
     $report = $this->getMockBuilder(Report::class)
@@ -125,8 +124,6 @@ class ReportTest extends UnitTestCase {
 
   /**
    * Tests sendPublicationNotification when there's no email message.
-   *
-   * @covers ::sendPublicationNotification
    */
   public function testSendPublicationNotificationNoMessage(): void {
     $report = $this->getMockBuilder(Report::class)
@@ -169,8 +166,6 @@ class ReportTest extends UnitTestCase {
 
   /**
    * Tests sendPublicationNotification when all conditions are met.
-   *
-   * @covers ::sendPublicationNotification
    */
   public function testSendPublicationNotificationSuccess(): void {
     $report = $this->getMockBuilder(Report::class)

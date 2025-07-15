@@ -1,0 +1,26 @@
+diff --git a/src/Commands/DrushCommands.php b/src/Commands/DrushCommands.php
+index 60404b741..918db6ca1 100644
+--- a/src/Commands/DrushCommands.php
++++ b/src/Commands/DrushCommands.php
+@@ -71,7 +71,7 @@ abstract class DrushCommands implements IOAwareInterface, LoggerAwareInterface,
+     /**
+      * Returns a logger object.
+      */
+-    public function logger(): ?DrushLoggerManager
++    public function logger()
+     {
+         assert(is_null($this->logger) || $this->logger instanceof DrushLoggerManager, 'Instead of using replacing Drush\'s logger, use $this->add() on DrushLoggerManager to add a custom logger. See https://github.com/drush-ops/drush/pull/5022');
+         return $this->logger;
+@@ -144,12 +144,4 @@ abstract class DrushCommands implements IOAwareInterface, LoggerAwareInterface,
+         $stack->push(Middleware::log($this->logger(), new MessageFormatter(Drush::debug() ? MessageFormatter::DEBUG : MessageFormatter::SHORT)));
+         return $stack;
+     }
+-
+-    /**
+-     * This method overrides the trait in order to provide a more specific return type.
+-     */
+-    public function processManager(): ProcessManager
+-    {
+-        return $this->processManager;
+-    }
+ }

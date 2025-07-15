@@ -241,7 +241,7 @@ class SubscriptionForm extends FormBase {
    */
   public function subscribe($uid, $sid) {
     $this->database->merge('reliefweb_subscriptions_subscriptions')
-      ->key(['sid' => $sid, 'uid' => $uid])
+      ->keys(['sid' => $sid, 'uid' => $uid])
       ->fields(['sid' => $sid, 'uid' => $uid])
       ->execute();
   }

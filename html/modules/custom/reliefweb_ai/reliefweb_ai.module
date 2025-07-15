@@ -588,7 +588,7 @@ function reliefweb_ai_extract_text_from_llm_output(
     if (mb_strpos($content, "</") !== FALSE) {
       $parts = $classifier->extractValuesBetweenTags($content);
       if (!empty($parts)) {
-        $parts = array_map(fn($part) => TextHelper::sanitizeText($part, $preserve_new_lines), $parts);
+        $parts = array_map(fn($part) => TextHelper::sanitizeText($part, $preserve_new_lines, 2), $parts);
         // We "glue" the parts using 2 line breaks which is the standard way
         // to separate paragraphs in markdown.
         $content = implode("\n\n", $parts);

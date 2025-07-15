@@ -50,9 +50,9 @@ class ReliefWebFileList extends FieldItemList {
     // Extract the original items so that we can process replaced files,
     // create revisions for old ones etc.
     $original_items = [];
-    $original = $entity->original;
-    if (isset($original)) {
-      foreach ($original->get($this->definition->getName()) as $item) {
+    $original_entity = $entity->getOriginal();
+    if (isset($original_entity)) {
+      foreach ($original_entity->get($this->definition->getName()) as $item) {
         if (!$item->isEmpty()) {
           $original_items[$item->getUuid()] = $item;
         }

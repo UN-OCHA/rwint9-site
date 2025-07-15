@@ -1,28 +1,31 @@
 <?php
 
-// phpcs:ignoreFile
-
 namespace Drupal\Tests\reliefweb_utility\Unit;
 
-use Drupal\Tests\UnitTestCase;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManager;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Drupal\Tests\reliefweb_utility\Unit\Stub\LocalizationHelperStub;
 use Drupal\Tests\reliefweb_utility\Unit\Stub\LocalizationHelperStubZeroError;
 use Drupal\Tests\reliefweb_utility\Unit\Stub\LocalizationHelperStubNoCollator;
+use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 /**
  * Tests localization helper.
- *
- * @covers \Drupal\reliefweb_utility\Helpers\LocalizationHelper
  */
+#[CoversClass(LocalizationHelper::class)]
+#[Group('reliefweb_utility')]
 class LocalizationHelperTest extends UnitTestCase {
 
   /**
    * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
    */
-  protected $language_manager;
+  protected $languageManager;
 
   /**
    * {@inheritdoc}
@@ -31,17 +34,15 @@ class LocalizationHelperTest extends UnitTestCase {
     parent::setUp();
     $sub = $this->prophesize(LanguageInterface::class);
     $sub->getId()->willReturn('fr');
-    $this->language_manager = $this->prophesize(LanguageManager::class);
-    $this->language_manager->getCurrentLanguage()->willReturn($sub->reveal());
+    $this->languageManager = $this->prophesize(LanguageManager::class);
+    $this->languageManager->getCurrentLanguage()->willReturn($sub->reveal());
     $container = new ContainerBuilder();
     \Drupal::setContainer($container);
-    $container->set('language_manager', $this->language_manager->reveal());
+    $container->set('language_manager', $this->languageManager->reveal());
   }
 
   /**
    * Test localization sort.
-   *
-   * @covers \Drupal\reliefweb_utility\Helpers\LocalizationHelper::collatedSort
    */
   public function testLocalizationHelpercollatedSort() {
     $items = [];
@@ -73,8 +74,6 @@ class LocalizationHelperTest extends UnitTestCase {
 
   /**
    * Test localization asort.
-   *
-   * @covers \Drupal\reliefweb_utility\Helpers\LocalizationHelper::collatedAsort
    */
   public function testLocalizationHelpercollatedAsort() {
     $items = [];
@@ -110,8 +109,6 @@ class LocalizationHelperTest extends UnitTestCase {
 
   /**
    * Test localization ksort.
-   *
-   * @covers \Drupal\reliefweb_utility\Helpers\LocalizationHelper::collatedKsort
    */
   public function testLocalizationHelpercollatedKsort() {
     $items = [];
@@ -165,8 +162,6 @@ class LocalizationHelperTest extends UnitTestCase {
 
   /**
    * Test localization sort.
-   *
-   * @covers \Drupal\reliefweb_utility\Helpers\LocalizationHelper::collatedSort
    */
   public function testLocalizationHelpercollatedSortZeroError() {
     $items = [];
@@ -198,8 +193,6 @@ class LocalizationHelperTest extends UnitTestCase {
 
   /**
    * Test localization asort.
-   *
-   * @covers \Drupal\reliefweb_utility\Helpers\LocalizationHelper::collatedAsort
    */
   public function testLocalizationHelpercollatedAsortZeroError() {
     $items = [];
@@ -235,8 +228,6 @@ class LocalizationHelperTest extends UnitTestCase {
 
   /**
    * Test localization ksort.
-   *
-   * @covers \Drupal\reliefweb_utility\Helpers\LocalizationHelper::collatedKsort
    */
   public function testLocalizationHelpercollatedKsortZeroError() {
     $items = [];
@@ -276,8 +267,6 @@ class LocalizationHelperTest extends UnitTestCase {
 
   /**
    * Test localization sort.
-   *
-   * @covers \Drupal\reliefweb_utility\Helpers\LocalizationHelper::collatedSort
    */
   public function testLocalizationHelpercollatedSortNoCollator() {
     $items = [];
@@ -309,8 +298,6 @@ class LocalizationHelperTest extends UnitTestCase {
 
   /**
    * Test localization asort.
-   *
-   * @covers \Drupal\reliefweb_utility\Helpers\LocalizationHelper::collatedAsort
    */
   public function testLocalizationHelpercollatedAsortNoCollator() {
     $items = [];
@@ -346,8 +333,6 @@ class LocalizationHelperTest extends UnitTestCase {
 
   /**
    * Test localization ksort.
-   *
-   * @covers \Drupal\reliefweb_utility\Helpers\LocalizationHelper::collatedKsort
    */
   public function testLocalizationHelpercollatedKsortNoCollator() {
     $items = [];

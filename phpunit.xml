@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<!-- TODO set checkForUnintentionallyCoveredCode="true" once https://www.drupal.org/node/2626832 is resolved. -->
-<!-- PHPUnit expects functional tests to be run with either a privileged user
- or your current system user. See core/tests/README.md and
- https://www.drupal.org/node/2116263 for details.
--->
-<phpunit bootstrap="./html/core/tests/bootstrap.php" colors="true"
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.5/phpunit.xsd"
+         bootstrap="./html/core/tests/bootstrap.php"
+         colors="true"
          beStrictAboutTestsThatDoNotTestAnything="true"
          beStrictAboutOutputDuringTests="true"
          beStrictAboutChangesToGlobalState="true"
          failOnWarning="true"
-         printerClass="\Drupal\Tests\Listeners\HtmlOutputPrinter"
-         cacheResult="false">
+         cacheResult="false"
+         displayDetailsOnTestsThatTriggerDeprecations="true"
+         displayDetailsOnTestsThatTriggerErrors="true"
+         displayDetailsOnTestsThatTriggerWarnings="true"
+         displayDetailsOnPhpunitDeprecations="true">
   <php>
     <!-- Set error reporting to E_ALL. -->
     <ini name="error_reporting" value="32767"/>
@@ -48,11 +48,7 @@
       <directory>./html/modules/custom/*/tests/src/ExistingSite</directory>
     </testsuite>
   </testsuites>
-  <coverage includeUncoveredFiles="false"
-            processUncoveredFiles="false"
-            pathCoverage="false"
-            ignoreDeprecatedCodeUnits="true"
-            disableCodeCoverageIgnore="true">
+  <source>
     <include>
       <directory suffix=".php">./html/modules/custom</directory>
       <directory suffix=".module">./html/modules/custom</directory>
@@ -66,14 +62,14 @@
       <directory>./html/modules/custom/*/*/tests</directory>
       <directory>./html/modules/custom/*/src/Exception</directory>
     </exclude>
+  </source>
+  <coverage pathCoverage="false"
+            ignoreDeprecatedCodeUnits="true"
+            disableCodeCoverageIgnore="true">
     <report>
       <html outputDirectory="coverage/html" lowUpperBound="50" highLowerBound="90"/>
       <text outputFile="coverage/coverage.txt" showUncoveredFiles="false"/>
       <xml outputDirectory="coverage/xml"/>
     </report>
   </coverage>
-  <listeners>
-    <listener class="\Drupal\Tests\Listeners\DrupalListener">
-    </listener>
-  </listeners>
 </phpunit>

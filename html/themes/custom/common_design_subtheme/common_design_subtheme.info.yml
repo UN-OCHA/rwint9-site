@@ -1,6 +1,6 @@
 name:  OCHA Common Design sub theme
 description: OCHA Common Design sub theme
-core_version_requirement: ^9 || ^10
+core_version_requirement: ^10 || ^11
 type: theme
 base theme: common_design
 logo: 'img/logos/rw-logo-desktop.svg'
@@ -76,7 +76,7 @@ libraries-extend:
   guidelines/guidelines-json:
     - common_design_subtheme/rw-guidelines
 
-  reliefweb-guidelines/reliefweb-guidelines:
+  reliefweb_guidelines/reliefweb-guidelines:
     - common_design_subtheme/rw-guidelines
 
   # Core ajax.

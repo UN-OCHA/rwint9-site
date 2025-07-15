@@ -29,6 +29,7 @@ use Drupal\reliefweb_entities\Entity\BlogPost;
 use Drupal\reliefweb_entities\Entity\Disaster;
 use Drupal\reliefweb_entities\Entity\Report;
 use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
+use Drupal\reliefweb_utility\Helpers\UserHelper;
 
 /**
  * Subscription mailer.
@@ -1489,7 +1490,7 @@ class ReliefwebSubscriptionsMailer {
     $sid = $subscription['id'];
 
     // Get the roles that have the permission for the subscription.
-    $roles = user_role_names(TRUE, $subscription['permission']);
+    $roles = UserHelper::getRoles(TRUE, $subscription['permission']);
     if (empty($roles)) {
       return [];
     }
@@ -2252,7 +2253,7 @@ class ReliefwebSubscriptionsMailer {
       // When this is called in a hook_entity_update, then the previous
       // revision is stored as the "original" property. Otherwise, for example,
       // when queueing via drush, then we load the previous revision.
-      $previous = $report->original ?? $this->loadPreviousEntityRevision($report);
+      $previous = $report->getOriginal() ?? $this->loadPreviousEntityRevision($report);
 
       // If there is no previous revision, check the current status.
       if ($previous === $report) {
@@ -2292,7 +2293,7 @@ class ReliefwebSubscriptionsMailer {
       // When this is called in a hook_entity_update, then the previous
       // revision is stored as the "original" property. Otherwise, for example,
       // when queueing via drush, then we load the previous revision.
-      $previous = $disaster->original ?? $this->loadPreviousEntityRevision($disaster);
+      $previous = $disaster->getOriginal() ?? $this->loadPreviousEntityRevision($disaster);
 
       // If there is no previous revision, check the current status.
       if ($previous === $disaster) {
@@ -2336,7 +2337,7 @@ class ReliefwebSubscriptionsMailer {
       // When this is called in a hook_entity_update, then the previous
       // revision is stored as the "original" property. Otherwise, for example,
       // when queueing via drush, then we load the previous revision.
-      $previous = $blog->original ?? $this->loadPreviousEntityRevision($blog);
+      $previous = $blog->getOriginal() ?? $this->loadPreviousEntityRevision($blog);
 
       // If there is no previous revision, check the current status.
       if ($previous === $blog) {

@@ -16,6 +16,7 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\file\Entity\File;
 use Drupal\file\Validation\FileValidatorInterface;
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile as ReliefWebFileType;
@@ -149,6 +150,7 @@ class ReliefWebFile extends WidgetBase {
     $element = [];
 
     $dummy_item = $this->createFieldItem();
+    $form_state->set('dummy_item', $dummy_item);
 
     $default_extensions = $dummy_item->getAllowedFileExtensions();
     $extensions = $this->getExtensionsSetting() ?: $default_extensions;
@@ -159,7 +161,7 @@ class ReliefWebFile extends WidgetBase {
         '@extensions' => implode(', ', $default_extensions ?: [$this->t('any')]),
       ]),
       '#default_value' => $form_state->getValue('extensions', implode(', ', $extensions ?: [])),
-      '#element_validate' => [[$this, 'validateExtensionsSetting']],
+      '#element_validate' => [[static::class, 'validateExtensionsSetting']],
     ];
 
     $default_max_files_size = $dummy_item->getMaxFileSize();
@@ -173,7 +175,7 @@ class ReliefWebFile extends WidgetBase {
       '#default_value' => $form_state->getValue('max_file_size', $max_file_size),
       '#min' => 1,
       '#max' => $default_max_files_size,
-      '#element_validate' => [[$this, 'validateMaxFileSizeSetting']],
+      '#element_validate' => [[static::class, 'validateMaxFileSizeSetting']],
     ];
 
     return $element;
@@ -187,12 +189,12 @@ class ReliefWebFile extends WidgetBase {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   Form state.
    */
-  public function validateExtensionsSetting(array $element, FormStateInterface $form_state) {
-    $dummy_item = $this->createFieldItem();
+  public static function validateExtensionsSetting(array $element, FormStateInterface $form_state) {
+    $dummy_item = $form_state->get('dummy_item');
     $default_extensions = $dummy_item->getAllowedFileExtensions();
     $extensions = preg_split('/[, ]+/', $form_state->getValue($element['#parents'], ''));
     if (!empty($extensions) && !empty($default_extensions) && count(array_diff($extensions, $default_extensions)) > 0) {
-      $form_state->setError($element, $this->t('Only the following extensions are allowed: @extensions.', [
+      $form_state->setError($element, t('Only the following extensions are allowed: @extensions.', [
         '@extensions' => implode(', ', $default_extensions),
       ]));
     }
@@ -206,14 +208,14 @@ class ReliefWebFile extends WidgetBase {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   Form state.
    */
-  public function validateMaxFileSizeSetting(array $element, FormStateInterface $form_state) {
-    $dummy_item = $this->createFieldItem();
+  public static function validateMaxFileSizeSetting(array $element, FormStateInterface $form_state) {
+    $dummy_item = $form_state->get('dummy_item');
     $default_max_files_size = $dummy_item->getMaxFileSize();
     $max_file_size = $form_state->getValue($element['#parents']);
     if (empty($max_file_size) || $max_file_size < 0 || $max_file_size > $default_max_files_size) {
-      $form_state->setError($element, $this->t('The max file size must be between @min and @max.', [
-        '@min' => format_size(1),
-        '@max' => format_size($default_max_files_size),
+      $form_state->setError($element, t('The max file size must be between @min and @max.', [
+        '@min' => ByteSizeMarkup::create(1),
+        '@max' => ByteSizeMarkup::create($default_max_files_size),
       ]));
     }
   }
@@ -229,7 +231,7 @@ class ReliefWebFile extends WidgetBase {
     ]);
 
     $summary[] = $this->t('Max file size: @max_file_size', [
-      '@max_file_size' => format_size($this->getMaxFileSizeSetting()),
+      '@max_file_size' => ByteSizeMarkup::create($this->getMaxFileSizeSetting()),
     ]);
 
     return $summary;
@@ -1568,7 +1570,7 @@ class ReliefWebFile extends WidgetBase {
     return $this->t('@file_name (@file_extension | @file_size)', [
       '@file_name' => $file_name,
       '@file_extension' => mb_strtoupper($file_extension),
-      '@file_size' => format_size($file_size),
+      '@file_size' => ByteSizeMarkup::create($file_size),
     ]);
   }
 

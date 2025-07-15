@@ -1,21 +1,23 @@
 <?php
 
-// phpcs:ignoreFile
-
 namespace Drupal\Tests\reliefweb_utility\Unit;
 
 use Drupal\reliefweb_utility\Plugin\Filter\IFrameFilter;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * Tests date helper.
- *
- * @covers \Drupal\reliefweb_utility\Plugin\Filter\IFrameFilter
- * @coversDefaultClass \Drupal\reliefweb_utility\Plugin\Filter\IFrameFilter
+ * Tests iframe filter.
  */
+#[CoversClass(IFrameFilter::class)]
+#[Group('reliefweb_utility')]
 class IFrameFilterTest extends UnitTestCase {
 
   /**
+   * Iframe filter.
+   *
    * @var \Drupal\reliefweb_utility\Plugin\Filter\IFrameFilter
    */
   protected $filter;
@@ -31,34 +33,29 @@ class IFrameFilterTest extends UnitTestCase {
       'provider' => 'test',
     ]);
 
-    $this->filter
-      ->setStringTranslation($this
-      ->getStringTranslationStub());
+    $this->filter->setStringTranslation($this->getStringTranslationStub());
   }
 
   /**
-   * @covers ::convertIframeMarkup
-   *
-   * @dataProvider providerIframeMarkup
+   * Test iframe markup.
    *
    * @param string $html
    *   Input HTML.
    * @param array $expected
-   *   The expected output string.
+   *   Expected output.
    */
+  #[DataProvider('providerIframeMarkup')]
   public function testIframeMarkup($html, $expected) {
-    $this
-      ->assertSame($expected, $this->filter
-      ->process($html, 'en')->__toString());
+    $this->assertSame($expected, $this->filter->process($html, 'en')->__toString());
   }
 
   /**
    * Provides data for testIframeMarkup.
    *
    * @return array
-   *   An array of test data.
+   *   Test data.
    */
-  public function providerIframeMarkup() {
+  public static function providerIframeMarkup() {
     return [
       [
         '[iframe]',

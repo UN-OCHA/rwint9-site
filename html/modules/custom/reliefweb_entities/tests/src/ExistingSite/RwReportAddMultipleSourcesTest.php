@@ -57,11 +57,9 @@ class RwReportAddMultipleSourcesTest extends RwReportBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->contributor = $this->createUserIfNeeded(2884910, 'report unverified');
-    if (!$this->contributor->hasRole('contributor')) {
-      $this->contributor->addRole('contributor');
-      $this->contributor->save();
-    }
+    $this->contributor = $this->createUser();
+    $this->contributor->addRole('contributor');
+    $this->contributor->save();
 
     $rights = [
       0 => 'unverified',

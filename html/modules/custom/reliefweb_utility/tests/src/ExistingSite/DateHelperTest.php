@@ -7,19 +7,19 @@ namespace Drupal\Tests\reliefweb_utility\ExistingSite;
 use DateTime;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
  * Tests date helper.
- *
- * @covers \Drupal\reliefweb_utility\Helpers\DateHelper
- * @coversDefaultClass \Drupal\reliefweb_utility\Helpers\DateHelper
  */
+#[CoversClass(DateHelper::class)]
+#[Group('reliefweb_utility')]
 class DateHelperTest extends ExistingSiteBase {
 
-
   /**
-   * @covers ::format
+   * Test format.
    */
   public function testFormat() {
     $date = '';

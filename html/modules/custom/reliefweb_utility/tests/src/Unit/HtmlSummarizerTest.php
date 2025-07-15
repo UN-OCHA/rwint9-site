@@ -1,18 +1,18 @@
 <?php
 
-// phpcs:ignoreFile
-
 namespace Drupal\Tests\reliefweb_utility\Unit;
 
 use Drupal\Component\Utility\Random;
 use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * Tests summarize.
- *
- * @covers \Drupal\reliefweb_utility\Helpers\HtmlSummarizer
+ * Tests html summarizer.
  */
+#[CoversClass(HtmlSummarizer::class)]
+#[Group('reliefweb_utility')]
 class HtmlSummarizerTest extends UnitTestCase {
 
   /**
@@ -32,8 +32,6 @@ class HtmlSummarizerTest extends UnitTestCase {
 
   /**
    * Test clean text.
-   *
-   * @covers \Drupal\reliefweb_utility\Helpers\HtmlSummarizer::summarize
    */
   public function testSummarize() {
     $html = $expected = '';
@@ -153,8 +151,6 @@ class HtmlSummarizerTest extends UnitTestCase {
 
   /**
    * Test whitespace sanitation.
-   *
-   * @covers \Drupal\reliefweb_utility\Helpers\HtmlSummarizer::sanitizeText
    */
   public function testSanitizeText() {
     $input = '';
@@ -177,8 +173,6 @@ class HtmlSummarizerTest extends UnitTestCase {
 
   /**
    * Test paragraph summaries.
-   *
-   * @covers \Drupal\reliefweb_utility\Helpers\HtmlSummarizer::summarizeParagraphs
    */
   public function testSummarizeParagraphs() {
     $input = [];

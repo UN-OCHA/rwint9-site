@@ -5,17 +5,18 @@ declare(strict_types=1);
 namespace Drupal\Tests\reliefweb_post_api\ExistingSite\Plugin\reliefweb_post_api\ContentProcessor;
 
 use Drupal\Core\Entity\EntityRepositoryInterface;
-use Drupal\Tests\reliefweb_post_api\ExistingSite\Plugin\ContentProcessorPluginBaseTest;
+use Drupal\Tests\reliefweb_post_api\ExistingSite\Plugin\ContentProcessorPluginBaseTestCase;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorException;
+use Drupal\reliefweb_post_api\Plugin\reliefweb_post_api\ContentProcessor\Report;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the Report content processor plugin.
- *
- * @coversDefaultClass \Drupal\reliefweb_post_api\Plugin\reliefweb_post_api\ContentProcessor\Report
- *
- * @group reliefweb_post_api
  */
-class ReportTest extends ContentProcessorPluginBaseTest {
+#[CoversClass(Report::class)]
+#[Group('reliefweb_post_api')]
+class ReportTest extends ContentProcessorPluginBaseTestCase {
 
   /**
    * {@inheritdoc}
@@ -27,35 +28,35 @@ class ReportTest extends ContentProcessorPluginBaseTest {
   }
 
   /**
-   * @covers ::getPluginLabel
+   * Test get plugin label.
    */
   public function testGetPluginLabel(): void {
     $this->assertEquals('Reports', (string) $this->plugin->getPluginLabel());
   }
 
   /**
-   * @covers ::getEntityType
+   * Test get entity type.
    */
   public function testGetEntityType(): void {
     $this->assertEquals('node', $this->plugin->getEntityType());
   }
 
   /**
-   * @covers ::getBundle
+   * Test get bundle.
    */
   public function testGetBundle(): void {
     $this->assertEquals('report', $this->plugin->getBundle());
   }
 
   /**
-   * @covers ::getResource
+   * Test get resource.
    */
   public function testGetResource(): void {
     $this->assertEquals('reports', $this->plugin->getResource());
   }
 
   /**
-   * @covers ::process
+   * Test process.
    */
   public function testProcess(): void {
     $entity_repository = $this->createMock(EntityRepositoryInterface::class);
@@ -91,7 +92,7 @@ class ReportTest extends ContentProcessorPluginBaseTest {
   }
 
   /**
-   * @covers ::process
+   * Test process with wrong bundle.
    */
   public function testProcessWrongBundle(): void {
     $entity_repository = $this->createMock(EntityRepositoryInterface::class);
@@ -124,7 +125,7 @@ class ReportTest extends ContentProcessorPluginBaseTest {
   }
 
   /**
-   * @covers ::process
+   * Test process with refused status.
    */
   public function testProcessRefused(): void {
     $entity_repository = $this->createMock(EntityRepositoryInterface::class);
@@ -158,7 +159,7 @@ class ReportTest extends ContentProcessorPluginBaseTest {
   }
 
   /**
-   * @covers ::validateFiles
+   * Test validate files with unallowed image url.
    */
   public function testValidateFilesUnallowedImageUrl(): void {
     $data = $this->getPostApiData();
@@ -171,7 +172,7 @@ class ReportTest extends ContentProcessorPluginBaseTest {
   }
 
   /**
-   * @covers ::validateFiles
+   * Test validate files with unallowed file url.
    */
   public function testValidateFilesUnallowedFileUrl(): void {
     $data = $this->getPostApiData();

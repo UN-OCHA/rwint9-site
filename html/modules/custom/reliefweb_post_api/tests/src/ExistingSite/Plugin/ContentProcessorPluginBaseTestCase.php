@@ -32,18 +32,18 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use Opis\JsonSchema\Validator;
 use Psr\Log\LoggerInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\Mime\MimeTypeGuesserInterface;
 use Symfony\Component\Uid\Uuid;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
  * Tests the content processor plugin manager.
- *
- * @coversDefaultClass \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginBase
- *
- * @group reliefweb_post_api
  */
-abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
+#[CoversClass(ContentProcessorPluginBase::class)]
+#[Group('reliefweb_post_api')]
+abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
 
   /**
    * Test providers.
@@ -128,7 +128,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::__construct
+   * Test constructor.
    */
   public function testConstructor(): void {
     $plugin = $this->createDummyPlugin();
@@ -136,7 +136,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::create
+   * Test create.
    */
   public function testCreate(): void {
     $plugin = $this->plugin::create(\Drupal::getContainer(), [], 'dummy', []);
@@ -144,36 +144,36 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::getPluginLabel
+   * Test get plugin label.
    */
   abstract public function testGetPluginLabel(): void;
 
   /**
-   * @covers ::getEntityType
+   * Test get entity type.
    */
   abstract public function testGetEntityType(): void;
 
   /**
-   * @covers ::getBundle
+   * Test get bundle.
    */
   abstract public function testGetBundle(): void;
 
   /**
-   * @covers ::getLogger
+   * Test get logger.
    */
   public function testGetLogger(): void {
     $this->assertInstanceOf(LoggerInterface::class, $this->plugin->getLogger());
   }
 
   /**
-   * @covers ::getSchemaValidator
+   * Test get schema validator.
    */
   public function testGetSchemaValidator(): void {
     $this->assertInstanceOf(Validator::class, $this->plugin->getSchemaValidator());
   }
 
   /**
-   * @covers ::getJsonSchema
+   * Test get json schema.
    */
   public function testGetJsonSchema(): void {
     // Valid schema.
@@ -182,7 +182,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::getJsonSchema
+   * Test get json schema with invalid schema.
    */
   public function testGetJsonSchemaInvalid(): void {
     $plugin = $this->createDummyPlugin();
@@ -193,7 +193,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::getProvider
+   * Test get provider.
    */
   public function testGetProvider(): void {
     $plugin = $this->createDummyPlugin();
@@ -209,7 +209,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::getProvider
+   * Test get provider with invalid uuid.
    */
   public function testGetProviderInvalidUuid(): void {
     $plugin = $this->createDummyPlugin();
@@ -222,7 +222,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::getProvider
+   * Test get provider with blocked provider.
    */
   public function testGetProviderBlocked(): void {
     $plugin = $this->createDummyPlugin();
@@ -235,7 +235,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::getProvider
+   * Test get provider with unknown provider.
    */
   public function testGetProviderUnknown(): void {
     $plugin = $this->createDummyPlugin();
@@ -248,7 +248,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::isProcessable
+   * Test is processable.
    */
   public function testIsProcessable(): void {
     $uuid1 = 'a07b9b6c-0374-11ef-90f5-325096b39f47';
@@ -258,10 +258,9 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
       'getKey' => 'uuid',
     ]);
 
-    $query = $this->createConfiguredMock(QueryInterface::class, [
-      'accessCheck' => $this->returnSelf(),
-      'condition' => $this->returnSelf(),
-    ]);
+    $query = $this->createMock(QueryInterface::class);
+    $query->method('accessCheck')->willReturnSelf();
+    $query->method('condition')->willReturnSelf();
     $query->method('execute')->willReturnOnConsecutiveCalls(['12345'], []);
 
     $storage = $this->createConfiguredMock(EntityStorageInterface::class, [
@@ -285,7 +284,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::validate
+   * Test validate.
    */
   public function testValidate(): void {
     $data = $this->getPostApiData();
@@ -296,7 +295,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::validate
+   * Test validate with invalid schema.
    */
   public function testValidateInvalidSchema(): void {
     $data = $this->getPostApiData();
@@ -307,7 +306,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::validate
+   * Test validate with invalid source.
    */
   public function testValidateInvalidSource(): void {
     $data = $this->getPostApiData();
@@ -319,7 +318,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::validate
+   * Test validate with invalid url.
    */
   public function testValidateInvalidUrl(): void {
     $data = $this->getPostApiData();
@@ -330,7 +329,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::validateSchema
+   * Test validate schema.
    */
   public function testValidateSchema(): void {
     $data = $this->getPostApiData();
@@ -341,7 +340,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::validateSchema
+   * Test validate schema with unicode content.
    */
   public function testValidateSchemaUnicode(): void {
     $bundle = $this->plugin->getBundle();
@@ -354,7 +353,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::validateSchema
+   * Test validate schema with invalid data.
    */
   public function testValidateSchemaInvalid(): void {
     $data = $this->getPostApiData();
@@ -366,7 +365,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::validateUuid
+   * Test validate uuid.
    */
   public function testValidateUuid(): void {
     $plugin = $this->createDummyPlugin();
@@ -379,7 +378,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::validateUuid
+   * Test validate uuid with missing url.
    */
   public function testValidateUuidMissingUrl(): void {
     $plugin = $this->createDummyPlugin();
@@ -391,7 +390,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::validateUuid
+   * Test validate uuid with missing uuid.
    */
   public function testValidateUuidMissingUuid(): void {
     $plugin = $this->createDummyPlugin();
@@ -403,7 +402,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::validateUuid
+   * Test validate uuid with invalid uuid.
    */
   public function testValidateUuidInvalidUuid(): void {
     $plugin = $this->createDummyPlugin();
@@ -416,7 +415,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::validateUuid
+   * Test validate uuid with mismatching uuid.
    */
   public function testValidateUuidMismatchingUuid(): void {
     $plugin = $this->createDummyPlugin();
@@ -429,7 +428,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::validateSources
+   * Test validate sources.
    */
   public function testValidateSources(): void {
     $data = $this->getPostApiData();
@@ -447,7 +446,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::validateSources
+   * Test validate sources with missing source.
    */
   public function testValidateSourcesMissingSource(): void {
     $data = $this->getPostApiData();
@@ -459,7 +458,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::validateSources
+   * Test validate sources with unallowed source.
    */
   public function testValidateSourcesUnallowedSource(): void {
     $data = $this->getPostApiData();
@@ -471,7 +470,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::validateSources
+   * Test validate sources with unallowed extra source.
    */
   public function testValidateSourcesUnallowedExtraSource(): void {
     $data = $this->getPostApiData();
@@ -483,7 +482,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::validateUrls
+   * Test validate urls.
    */
   public function testValidateUrls(): void {
     $data = $this->getPostApiData();
@@ -494,7 +493,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::validateUrls
+   * Test validate urls with any url.
    */
   public function testValidateUrlsAny(): void {
     $data = [
@@ -508,7 +507,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::validateUrls
+   * Test validate urls with empty document url.
    */
   public function testValidateUrlsEmptyDocumentUrl(): void {
     $data = $this->getPostApiData();
@@ -520,7 +519,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::validateUrls
+   * Test validate urls with unallowed document url.
    */
   public function testValidateUrlsUnallowedDocumentUrl(): void {
     $data = $this->getPostApiData();
@@ -532,7 +531,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginBase::validateUrls
+   * Test validate urls with base urls.
    */
   public function testValidateUrlsBase(): void {
     $plugin = $this->createDummyPlugin(use_plugin_class: FALSE);
@@ -547,7 +546,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginBase::validateUrls
+   * Test validate urls with base urls and any url.
    */
   public function testValidateUrlsBaseAny(): void {
     $plugin = $this->createDummyPlugin(use_plugin_class: FALSE);
@@ -562,7 +561,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginBase::validateUrls
+   * Test validate urls with base urls and empty document url.
    */
   public function testValidateUrlsBaseEmptyDocumentUrl(): void {
     $plugin = $this->createDummyPlugin(use_plugin_class: FALSE);
@@ -577,7 +576,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginBase::validateUrls
+   * Test validate urls with base urls and unallowed document url.
    */
   public function testValidateUrlsBaseUnallowedDocumentUrl(): void {
     $plugin = $this->createDummyPlugin(use_plugin_class: FALSE);
@@ -593,14 +592,14 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::validateUrl
+   * Test validate url.
    */
   public function testValidateUrl(): void {
     $this->assertTrue($this->plugin->validateUrl('https://test.test/test', '#^https://test\.test/#'));
   }
 
   /**
-   * @covers ::sanitizeTerms
+   * Test sanitize terms.
    */
   public function testSanitizeTerms(): void {
     $statement = $this->createStatementMock('fetchAllKeyed', [123 => 123]);
@@ -622,7 +621,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::sanitizeString
+   * Test sanitize string.
    */
   public function testSanitizeString(): void {
     $this->assertSame('', $this->plugin->sanitizeString(''));
@@ -630,7 +629,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::sanitizeText
+   * Test sanitize text.
    */
   public function testSanitizeText(): void {
     $this->assertSame('', $this->plugin->sanitizeText(''));
@@ -643,7 +642,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::sanitizeDate
+   * Test sanitize date.
    */
   public function testSanitizeDate(): void {
     $date = '2024-02-01T17:00:00-09:00';
@@ -654,7 +653,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::sanitizeUrl
+   * Test sanitize url.
    */
   public function testSanitizeUrl(): void {
     $pattern = '#^https://#';
@@ -664,7 +663,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::setField
+   * Test set field.
    */
   public function testSetField(): void {
     $entity = $this->createEntity('node', 'report');
@@ -691,7 +690,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::setStringField
+   * Test set string field.
    */
   public function testSetStringField(): void {
     $entity = $this->createEntity('node', 'report');
@@ -702,7 +701,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::setTextField
+   * Test set text field.
    */
   public function testSetTextField(): void {
     $entity = $this->createEntity('node', 'report');
@@ -710,11 +709,11 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
 
     $this->plugin->setTextField($entity, $field_name, 'test');
     $this->assertSame('test', $entity->get($field_name)->value);
-    $this->assertSame(NULL, $entity->get($field_name)->first()->format);
+    $this->assertNull($entity->get($field_name)->first()->format);
 
     $this->plugin->setTextField($entity, $field_name, '<h1>test</h1>', 3);
     $this->assertSame('### test', $entity->get($field_name)->value);
-    $this->assertSame(NULL, $entity->get($field_name)->first()->format);
+    $this->assertNull($entity->get($field_name)->first()->format);
 
     $this->plugin->setTextField($entity, $field_name, '<h1>test</h1>', 3, 'markdown');
     $this->assertSame('### test', $entity->get($field_name)->value);
@@ -722,7 +721,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::setDateField
+   * Test set date field.
    */
   public function testSetDateField(): void {
     $entity = $this->createEntity('node', 'report');
@@ -738,7 +737,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::setTermField
+   * Test set term field.
    */
   public function testSetTermField(): void {
     $statement = $this->createStatementMock('fetchAllKeyed', [123 => 123]);
@@ -757,7 +756,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::setUrlField
+   * Test set url field.
    */
   public function testSetUrlField(): void {
     $entity = $this->createEntity('node', 'report');
@@ -768,7 +767,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::setReliefWebFileField
+   * Test set relief web file field.
    */
   public function testSetReliefWebField(): void {
     $entity_repository = $this->createMock(EntityRepositoryInterface::class);
@@ -863,7 +862,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::setReliefWebFileField
+   * Test set relief web field with unknown field.
    */
   public function testSetReliefWebFieldUnknownField(): void {
     $plugin = $this->createDummyPlugin();
@@ -876,7 +875,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::setReliefWebFileField
+   * Test set relief web field with no files.
    */
   public function testSetReliefWebFieldNoFiles(): void {
     $plugin = $this->createDummyPlugin();
@@ -889,7 +888,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::setImageField
+   * Test set image field.
    */
   public function testSetImageField(): void {
     $entity_repository = $this->createMock(EntityRepositoryInterface::class);
@@ -1031,7 +1030,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::setImageField
+   * Test set image field with unknown field.
    */
   public function testSetImageFieldUnknownField(): void {
     $plugin = $this->createDummyPlugin();
@@ -1047,7 +1046,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::setImageField
+   * Test set image field with missing image properties.
    */
   public function testSetImageFieldMissingImageProperties(): void {
     $plugin = $this->createDummyPlugin();
@@ -1060,7 +1059,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::createImageMedia
+   * Test create image media.
    */
   public function testCreateImageMedia(): void {
     $file = $this->createConfiguredMock(File::class, [
@@ -1095,7 +1094,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::createReliefWebFileFieldItem
+   * Test create relief web file field item.
    */
   public function testCreateReliefWebFileFieldItem(): void {
     $file = $this->createConfiguredMock(File::class, [
@@ -1140,7 +1139,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::createReliefWebFileFieldItem
+   * Test create relief web file field item with exception validation.
    */
   public function testCreateReliefWebFileFieldItemExceptionValidation(): void {
     $file = $this->createConfiguredMock(File::class, [
@@ -1189,7 +1188,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::createFile
+   * Test create file.
    */
   public function testCreateFile(): void {
     $file_system = $this->createConfiguredMock(FileSystemInterface::class, [
@@ -1224,7 +1223,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::createFile
+   * Test create file with existing file.
    */
   public function testCreateFileExisting(): void {
     $entity_repository = $this->createConfiguredMock(EntityRepositoryInterface::class, [
@@ -1248,7 +1247,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::createFile
+   * Test create file with empty content.
    */
   public function testCreateFileEmptyContent(): void {
     $file_system = $this->createConfiguredMock(FileSystemInterface::class, [
@@ -1283,7 +1282,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::createFile
+   * Test create file with exception create directory.
    */
   public function testCreateFileExceptionCreateDirectory(): void {
     $file_system = $this->createConfiguredMock(FileSystemInterface::class, [
@@ -1321,7 +1320,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::createFile
+   * Test create file with exception save data.
    */
   public function testCreateFileExceptionSaveData(): void {
     $file_system = $this->createConfiguredMock(FileSystemInterface::class, [
@@ -1359,7 +1358,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::createFile
+   * Test create file with exception validation.
    */
   public function testCreateFileExceptionValidation(): void {
     $file_system = $this->createConfiguredMock(FileSystemInterface::class, [
@@ -1397,7 +1396,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::getRemoteFileContent
+   * Test get remote file content.
    */
   public function testGetRemoteFileContent(): void {
     $client = $this->createHttpClientMock([
@@ -1421,7 +1420,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::getRemoteFileContent
+   * Test get remote file content with invalid mimetype.
    */
   public function testGetRemoteFileContentInvalidMimetype(): void {
     $client = $this->createHttpClientMock([
@@ -1441,7 +1440,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::getRemoteFileContent
+   * Test get remote file content with too large header.
    */
   public function testGetRemoteFileContentTooLargeHeader(): void {
     $client = $this->createHttpClientMock([
@@ -1461,7 +1460,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::getRemoteFileContent
+   * Test get remote file content with too large content.
    */
   public function testGetRemoteFileContentTooLargeContent(): void {
     $client = $this->createHttpClientMock([
@@ -1480,7 +1479,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::getRemoteFileContent
+   * Test get remote file content with invalid checksum.
    */
   public function testGetRemoteFileContentInvalidChecksum(): void {
     $client = $this->createHttpClientMock([
@@ -1500,7 +1499,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::validateFile
+   * Test validate file.
    */
   public function testValidateFile(): void {
     $file = $this->createEntity('file', 'file');
@@ -1518,7 +1517,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::generateUuid
+   * Test generate uuid.
    */
   public function testGenerateUuid(): void {
     $uuid = 'c1cd5878-f50e-5b94-b8ed-029bd92ab1af';
@@ -1526,7 +1525,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::guessFileMimeType
+   * Test guess file mime type.
    */
   public function testGuessFileMimeType(): void {
     $uri = 'public://test.pdf';
@@ -1535,7 +1534,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::guessFileMimeType
+   * Test guess file mime type with unknown mime type.
    */
   public function testGuessFileMimeTypeUnknown(): void {
     $mime_type_guesser = $this->createConfiguredMock(MimeTypeGuesserInterface::class, [
@@ -1552,7 +1551,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::guessFileMimeType
+   * Test guess file mime type with unallowed mime type.
    */
   public function testGuessFileMimeTypeUnallowed(): void {
     $uri = 'public://test.pdf';
@@ -1561,16 +1560,14 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::getDefaultLangcode
+   * Test get default langcode.
    */
   public function testGetDefaultLangcode(): void {
     $this->assertSame(\Drupal::languageManager()->getDefaultLanguage()->getId(), $this->plugin->getDefaultLangcode());
   }
 
   /**
-   * Tests the save() method for a new content entity.
-   *
-   * @covers ::save
+   * Test save new entity.
    */
   public function testSaveNewEntity(): void {
     // Create a new entity using the createEntity method.
@@ -1605,9 +1602,7 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
   }
 
   /**
-   * Tests the save() method for an updated content entity.
-   *
-   * @covers ::save
+   * Test save updated entity.
    */
   public function testSaveUpdatedEntity(): void {
     // Create an existing entity using the createEntity method.
@@ -1678,11 +1673,11 @@ abstract class ContentProcessorPluginBaseTest extends ExistingSiteBase {
 
     $select->expects($this->any())
       ->method('fields')
-      ->will($this->returnSelf());
+      ->willReturnSelf();
 
     $select->expects($this->any())
       ->method('condition')
-      ->will($this->returnSelf());
+      ->willReturnSelf();
 
     $select->expects($this->any())
       ->method('execute')

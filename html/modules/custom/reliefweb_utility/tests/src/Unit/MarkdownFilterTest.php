@@ -1,25 +1,27 @@
 <?php
 
-// phpcs:ignoreFile
-
 namespace Drupal\Tests\reliefweb_utility\Unit;
 
 use Drupal\Core\Render\Renderer;
 use Drupal\reliefweb_utility\Plugin\Filter\MarkdownFilter;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Tests markdown filter.
- *
- * @covers \Drupal\reliefweb_utility\Plugin\Filter\MarkdownFilter
- * @coversDefaultClass \Drupal\reliefweb_utility\Plugin\Filter\MarkdownFilter
  */
+#[CoversClass(MarkdownFilter::class)]
+#[Group('reliefweb_utility')]
 class MarkdownFilterTest extends UnitTestCase {
 
   /**
+   * Markdown filter.
+   *
    * @var \Drupal\reliefweb_utility\Plugin\Filter\MarkdownFilter
    */
   protected $filter;
@@ -30,7 +32,6 @@ class MarkdownFilterTest extends UnitTestCase {
   protected function setUp(): void {
     parent::setUp();
 
-    //
     $request = $this->prophesize(Request::class);
     $request->getHost()->willReturn('internal.test');
 
@@ -47,34 +48,29 @@ class MarkdownFilterTest extends UnitTestCase {
       'provider' => 'test',
     ]);
 
-    $this->filter
-      ->setStringTranslation($this
-      ->getStringTranslationStub());
+    $this->filter->setStringTranslation($this->getStringTranslationStub());
   }
 
   /**
-   * @covers ::process
-   *
-   * @dataProvider providerMarkdown
+   * Test markdown.
    *
    * @param string $text
    *   Markdown text.
    * @param array $expected
-   *   The expected output string.
+   *   Expected output.
    */
+  #[DataProvider('providerMarkdown')]
   public function testMarkdown($text, $expected) {
-    $this
-      ->assertSame($expected, $this->filter
-      ->process($text, 'en')->__toString());
+    $this->assertSame($expected, $this->filter->process($text, 'en')->__toString());
   }
 
   /**
    * Provides data for testMarkdown.
    *
    * @return array
-   *   An array of test data.
+   *   Test data.
    */
-  public function providerMarkdown() {
+  public static function providerMarkdown() {
     return [
       [
         'Just a string',

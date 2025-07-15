@@ -10,16 +10,16 @@ use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
 use Drupal\reliefweb_post_api\Queue\ReliefWebPostApiDatabaseQueue;
 use Drupal\reliefweb_post_api\Queue\ReliefWebPostApiDatabaseQueueFactory;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\ErrorHandler\BufferingLogger;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
  * Tests the ReliefWeb Post API drush commands.
- *
- * @coversDefaultClass \Drupal\reliefweb_post_api\Commands\ReliefWebPostApiCommands
- *
- * @group reliefweb_post_api
  */
+#[CoversClass(ReliefWebPostApiCommands::class)]
+#[Group('reliefweb_post_api')]
 class ReliefWebPostApiCommandsTest extends ExistingSiteBase {
 
   /**
@@ -39,14 +39,14 @@ class ReliefWebPostApiCommandsTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::__construct
+   * Test constructor.
    */
   public function testConstructor(): void {
     $this->assertInstanceOf(ReliefWebPostApiCommands::class, $this->createTestCommandHandler());
   }
 
   /**
-   * @covers ::process
+   * Test process with an empty queue.
    */
   public function testProcessEmptyQueue(): void {
     $queue = $this->createConfiguredMock(ReliefWebPostApiDatabaseQueue::class, [
@@ -68,7 +68,7 @@ class ReliefWebPostApiCommandsTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::process
+   * Test process with an unsupported bundle.
    */
   public function testProcessUnsupportedBundle(): void {
     $item = new \stdClass();
@@ -95,7 +95,7 @@ class ReliefWebPostApiCommandsTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::process
+   * Test process with an exception.
    */
   public function testProcessProcessException(): void {
     $item = new \stdClass();
@@ -136,7 +136,7 @@ class ReliefWebPostApiCommandsTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::process
+   * Test process.
    */
   public function testProcess(): void {
     $item = new \stdClass();

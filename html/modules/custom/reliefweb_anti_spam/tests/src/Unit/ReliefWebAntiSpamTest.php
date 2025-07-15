@@ -11,13 +11,15 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\user\UserInterface;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Unit tests for the reliefweb_anti_spam module.
- *
- * @group reliefweb_anti_spam
  */
+#[CoversNothing()]
+#[Group('reliefweb_anti_spam')]
 class ReliefWebAntiSpamTest extends UnitTestCase {
 
   /**
@@ -127,7 +129,6 @@ class ReliefWebAntiSpamTest extends UnitTestCase {
 
     // Set up the container with the mocked entity type manager.
     $container->set('entity_type.manager', $entity_type_manager);
-    $this->query = $query;
   }
 
   /**
