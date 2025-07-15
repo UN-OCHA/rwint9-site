@@ -8,19 +8,19 @@ use Drupal\Core\Form\FormState;
 use Drupal\reliefweb_post_api\Entity\Provider;
 use Drupal\reliefweb_post_api\Entity\ProviderInterface;
 use Drupal\reliefweb_post_api\Form\ProviderForm;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
  * Tests the ReliefWeb Post API provider form.
- *
- * @coversDefaultClass \Drupal\reliefweb_post_api\Form\ProviderForm
- *
- * @group reliefweb_post_api
  */
+#[CoversClass(ProviderForm::class)]
+#[Group('reliefweb_post_api')]
 class ProviderFormTest extends ExistingSiteBase {
 
   /**
-   * @covers ::__construct()
+   * Test constructor.
    */
   public function testConstructor(): void {
     $container = \Drupal::getContainer();
@@ -36,7 +36,7 @@ class ProviderFormTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::create()
+   * Test create.
    */
   public function testCreate(): void {
     $form_object = ProviderForm::create(\Drupal::getContainer());
@@ -44,7 +44,7 @@ class ProviderFormTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::form()
+   * Test form.
    */
   public function testForm(): void {
     $form_object = \Drupal::entityTypeManager()
@@ -62,7 +62,7 @@ class ProviderFormTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::validateForm()
+   * Test validate form.
    */
   public function testValidateForm(): void {
     $provider = $this->createDummyProvider();
@@ -119,7 +119,7 @@ class ProviderFormTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::validateForm()
+   * Test validate form with unallowed status.
    */
   public function testValidateFormUnallowedStatus(): void {
     $provider = $this->createDummyProvider();
@@ -164,7 +164,7 @@ class ProviderFormTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::save()
+   * Test save.
    */
   public function testSave(): void {
     $form_object = \Drupal::entityTypeManager()
@@ -196,6 +196,13 @@ class ProviderFormTest extends ExistingSiteBase {
        */
       public function save() {
         return NULL;
+      }
+
+      /**
+       * {@inheritdoc}
+       */
+      public function label() {
+        return 'test';
       }
 
     };

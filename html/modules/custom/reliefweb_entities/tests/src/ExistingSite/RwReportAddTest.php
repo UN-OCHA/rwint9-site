@@ -18,8 +18,12 @@ class RwReportAddTest extends RwReportBase {
     $site_name = \Drupal::config('system.site')->get('name');
     $title = $this->randomMachineName(32);
 
-    $admin = User::load(1);
-    $this->drupalLogin($admin);
+    // $admin = User::load(1);
+    // $this->drupalLogin($admin);
+    $user = $this->createUser();
+    $user->addRole('editor');
+    $user->save();
+    $this->drupalLogin($user);
 
     $edit = $this->getEditFields($title);
     $edit['field_origin_notes[0][value]'] = 'https://example.com/' . $title;
@@ -49,8 +53,12 @@ class RwReportAddTest extends RwReportBase {
     $site_name = \Drupal::config('system.site')->get('name');
     $title = $this->randomMachineName(32);
 
-    $admin = User::load(1);
-    $this->drupalLogin($admin);
+    // $admin = User::load(1);
+    // $this->drupalLogin($admin);
+    $user = $this->createUser();
+    $user->addRole('editor');
+    $user->save();
+    $this->drupalLogin($user);
 
     $edit = $this->getEditFields($title);
     $edit['field_origin_notes[0][value]'] = 'https://example.com/' . $title;
@@ -80,11 +88,9 @@ class RwReportAddTest extends RwReportBase {
     $site_name = \Drupal::config('system.site')->get('name');
     $title = $this->randomMachineName(32);
 
-    $user = $this->createUserIfNeeded(2884910, 'report unverified');
-    if (!$user->hasRole('contributor')) {
-      $user->addRole('contributor');
-      $user->save();
-    }
+    $user = $this->createUser();
+    $user->addRole('contributor');
+    $user->save();
     $this->drupalLogin($user);
 
     // Create term first so we can assign posting rights.
@@ -135,11 +141,9 @@ class RwReportAddTest extends RwReportBase {
     $site_name = \Drupal::config('system.site')->get('name');
     $title = $this->randomMachineName(32);
 
-    $user = $this->createUserIfNeeded(2884910, 'report unverified');
-    if (!$user->hasRole('contributor')) {
-      $user->addRole('contributor');
-      $user->save();
-    }
+    $user = $this->createUser();
+    $user->addRole('contributor');
+    $user->save();
     $this->drupalLogin($user);
 
     // Create term first so we can assign posting rights.
@@ -190,11 +194,9 @@ class RwReportAddTest extends RwReportBase {
     $site_name = \Drupal::config('system.site')->get('name');
     $title = $this->randomMachineName(32);
 
-    $user = $this->createUserIfNeeded(2884910, 'report blocked');
-    if (!$user->hasRole('contributor')) {
-      $user->addRole('contributor');
-      $user->save();
-    }
+    $user = $this->createUser();
+    $user->addRole('contributor');
+    $user->save();
     $this->drupalLogin($user);
 
     // Create term first so we can assign posting rights.
@@ -231,11 +233,9 @@ class RwReportAddTest extends RwReportBase {
     $site_name = \Drupal::config('system.site')->get('name');
     $title = $this->randomMachineName(32);
 
-    $user = $this->createUserIfNeeded(2884910, 'report blocked');
-    if (!$user->hasRole('contributor')) {
-      $user->addRole('contributor');
-      $user->save();
-    }
+    $user = $this->createUser();
+    $user->addRole('contributor');
+    $user->save();
     $this->drupalLogin($user);
 
     // Create term first so we can assign posting rights.
@@ -272,11 +272,9 @@ class RwReportAddTest extends RwReportBase {
     $site_name = \Drupal::config('system.site')->get('name');
     $title = $this->randomMachineName(32);
 
-    $user = $this->createUserIfNeeded(2884910, 'report allowed');
-    if (!$user->hasRole('contributor')) {
-      $user->addRole('contributor');
-      $user->save();
-    }
+    $user = $this->createUser();
+    $user->addRole('contributor');
+    $user->save();
     $this->drupalLogin($user);
 
     // Create term first so we can assign posting rights.
@@ -327,11 +325,9 @@ class RwReportAddTest extends RwReportBase {
     $site_name = \Drupal::config('system.site')->get('name');
     $title = $this->randomMachineName(32);
 
-    $user = $this->createUserIfNeeded(2884910, 'report allowed');
-    if (!$user->hasRole('contributor')) {
-      $user->addRole('contributor');
-      $user->save();
-    }
+    $user = $this->createUser();
+    $user->addRole('contributor');
+    $user->save();
     $this->drupalLogin($user);
 
     // Create term first so we can assign posting rights.
@@ -382,11 +378,9 @@ class RwReportAddTest extends RwReportBase {
     $site_name = \Drupal::config('system.site')->get('name');
     $title = $this->randomMachineName(32);
 
-    $user = $this->createUserIfNeeded(2884910, 'report trusted');
-    if (!$user->hasRole('contributor')) {
-      $user->addRole('contributor');
-      $user->save();
-    }
+    $user = $this->createUser();
+    $user->addRole('contributor');
+    $user->save();
     $this->drupalLogin($user);
 
     // Create term first so we can assign posting rights.
@@ -437,11 +431,9 @@ class RwReportAddTest extends RwReportBase {
     $site_name = \Drupal::config('system.site')->get('name');
     $title = $this->randomMachineName(32);
 
-    $user = $this->createUserIfNeeded(2884910, 'report trusted');
-    if (!$user->hasRole('contributor')) {
-      $user->addRole('contributor');
-      $user->save();
-    }
+    $user = $this->createUser();
+    $user->addRole('contributor');
+    $user->save();
     $this->drupalLogin($user);
 
     // Create term first so we can assign posting rights.

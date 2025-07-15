@@ -4,4 +4,5 @@ description: Limits job and training post spamming on ReliefWeb by implementing 
 package: ReliefWeb
 core_version_requirement: ^10 || ^11
 dependencies:
+  - reliefweb_entities:reliefweb_entities
   - reliefweb_moderation:reliefweb_moderation

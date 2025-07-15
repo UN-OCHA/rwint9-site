@@ -892,18 +892,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              editor: '0'
-              user_manager: '0'
-              webmaster: '0'
-              administrator: '0'
-              external_disaster_manager: '0'
-              beta_tester: '0'
-              job_importer: '0'
-              contributor: '0'
-              api_user: '0'
-              topic_editor: '0'
-              submitter: '0'
             reduce: false
           is_grouped: false
           group_info:

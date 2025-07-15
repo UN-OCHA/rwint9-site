@@ -30,10 +30,7 @@ class ProviderListBuilder extends EntityListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity): array {
-    $row['name']['data'] = [
-      '#type' => 'link',
-      '#title' => $entity->label(),
-    ] + $entity->toUrl()->toRenderArray();
+    $row['name']['data'] = $entity->toLink()->toRenderable();
 
     $row['uuid']['data'] = $entity->uuid->view([
       'label' => 'hidden',

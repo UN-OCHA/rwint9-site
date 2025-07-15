@@ -1,23 +1,21 @@
 <?php
 
-// phpcs:ignoreFile
-
 namespace Drupal\Tests\reliefweb_utility\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * Tests date helper.
- *
- * @covers \Drupal\reliefweb_utility\Helpers\HtmlSanitizer
+ * Tests html sanitizer.
  */
+#[CoversClass(HtmlSanitizer::class)]
+#[Group('reliefweb_utility')]
 class HtmlSanitizerTest extends UnitTestCase {
 
   /**
-   * Test clean text.
-   *
-   * @covers \Drupal\reliefweb_utility\Helpers\HtmlSanitizer::sanitize
+   * Test sanitize.
    */
   public function testSanitize() {
     $html = $expected = '';
@@ -175,7 +173,7 @@ class HtmlSanitizerTest extends UnitTestCase {
     $this->assertEquals(HtmlSanitizer::sanitize($html, $iframe), $expected);
 
     $html = '<li>Single listitem</li>';
-    $expected = '<ul>' .$html . '</ul>';
+    $expected = '<ul>' . $html . '</ul>';
     $iframe = FALSE;
     $this->assertEquals(HtmlSanitizer::sanitize($html, $iframe), $expected);
 

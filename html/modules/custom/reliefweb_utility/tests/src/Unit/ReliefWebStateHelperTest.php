@@ -3,14 +3,17 @@
 namespace Drupal\Tests\reliefweb_utility\Unit\Helpers;
 
 use Drupal\Core\State\StateInterface;
-use Drupal\Tests\UnitTestCase;
 use Drupal\reliefweb_utility\Helpers\ReliefWebStateHelper;
+use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\DependencyInjection\Container;
 
 /**
- * @coversDefaultClass \Drupal\reliefweb_utility\Helpers\ReliefWebStateHelper
- * @group reliefweb_utility
+ * Tests relief web state helper.
  */
+#[CoversClass(ReliefWebStateHelper::class)]
+#[Group('reliefweb_utility')]
 class ReliefWebStateHelperTest extends UnitTestCase {
 
   /**
@@ -32,7 +35,7 @@ class ReliefWebStateHelperTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getSubmitEmail
+   * Test get submit email.
    */
   public function testGetSubmitEmail() {
     $expected_email = 'submit@example.com';
@@ -45,7 +48,7 @@ class ReliefWebStateHelperTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getReportPublicationEmailMessage
+   * Test get report publication email message.
    */
   public function testGetReportPublicationEmailMessage() {
     $expected_message = 'Your report has been published.';
@@ -58,7 +61,7 @@ class ReliefWebStateHelperTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getJobIrrelevantCountries
+   * Test get job irrelevant countries.
    */
   public function testGetJobIrrelevantCountries() {
     $expected_countries = [254, 255];
@@ -71,7 +74,7 @@ class ReliefWebStateHelperTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getJobIrrelevantThemes
+   * Test get job irrelevant themes.
    */
   public function testGetJobIrrelevantThemes() {
     $expected_themes = [4589, 4597, 4598, 4599];
@@ -84,7 +87,7 @@ class ReliefWebStateHelperTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getJobThemelessCategories
+   * Test get job themeless categories.
    */
   public function testGetJobThemelessCategories() {
     $expected_categories = [6863, 6864, 6866, 20966, 20967];
@@ -97,7 +100,7 @@ class ReliefWebStateHelperTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getTrainingIrrelevantThemes
+   * Test get training irrelevant themes.
    */
   public function testGetTrainingIrrelevantThemes() {
     $expected_themes = [4589, 4598, 49458, 49459];
@@ -110,7 +113,7 @@ class ReliefWebStateHelperTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getTrainingIrrelevantLanguages
+   * Test get training irrelevant languages.
    */
   public function testGetTrainingIrrelevantLanguages() {
     $expected_languages = [6876, 10906, 31996, 31997];
@@ -123,7 +126,7 @@ class ReliefWebStateHelperTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getTrainingIrrelevantTrainingLanguages
+   * Test get training irrelevant training languages.
    */
   public function testGetTrainingIrrelevantTrainingLanguages() {
     $expected_languages = [31996, 31997];

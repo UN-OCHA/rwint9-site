@@ -1,25 +1,23 @@
 <?php
 
-// phpcs:ignoreFile
-
 namespace Drupal\Tests\reliefweb_utility\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\reliefweb_utility\Helpers\HtmlOutliner;
 use Drupal\reliefweb_utility\Helpers\Outline;
 use Drupal\reliefweb_utility\Helpers\Section;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * Tests date helper.
- *
- * @covers \Drupal\reliefweb_utility\Helpers\HtmlOutliner
+ * Tests html outliner.
  */
+#[CoversClass(HtmlOutliner::class)]
+#[Group('reliefweb_utility')]
 class HtmlOutlinerTest extends UnitTestCase {
 
   /**
    * Test fix node heading hierarchy.
-   *
-   * @covers \Drupal\reliefweb_utility\Helpers\HtmlOutliner::fixNodeHeadingHierarchy
    */
   public function testFixNodeHeadingHierarchy() {
     $html = $expected = '';
@@ -48,8 +46,6 @@ class HtmlOutlinerTest extends UnitTestCase {
 
   /**
    * Test fix node heading hierarchy.
-   *
-   * @covers \Drupal\reliefweb_utility\Helpers\HtmlOutliner::getRankingHeading
    */
   public function testGetRankingHeading() {
     $html = $expected = '';
@@ -89,8 +85,6 @@ class HtmlOutlinerTest extends UnitTestCase {
 
   /**
    * Test outline.
-   *
-   * @covers \Drupal\reliefweb_utility\Helpers\Outline::getLastSection
    */
   public function testOutlineGetLastSection() {
     $html = $expected = '';
@@ -124,6 +118,7 @@ class HtmlOutlinerTest extends UnitTestCase {
    *   HTML string.
    *
    * @return \DomDocument
+   *   DOM document.
    */
   private function buildDom($html) {
     // Flags to load the HTML string.
@@ -143,9 +138,10 @@ class HtmlOutlinerTest extends UnitTestCase {
    * Convert DOM to HTML.
    *
    * @param \DomDocument $dom
-   *   DOM.
+   *   DOM document.
    *
    * @return string
+   *   HTML.
    */
   private function domToHtml($dom) {
     $html = $dom->saveHTML();
@@ -160,4 +156,5 @@ class HtmlOutlinerTest extends UnitTestCase {
 
     return '';
   }
+
 }

@@ -76,14 +76,25 @@ class TextHelper {
    *   The input UTF-8 string to be processed.
    * @param bool $preserve_newline
    *   If TRUE, ensure the new lines are preserved.
+   * @param int $max_consecutive_newlines
+   *   Maximum number of consecutive newlines to preserve (default: 1).
+   *   Only applies when $preserve_newline is TRUE and there are multiple
+   *   consecutive newlines.
    *
    * @return string
    *   Sanitized text.
    */
-  public static function sanitizeText(string $text, bool $preserve_newline = FALSE): string {
+  public static function sanitizeText(string $text, bool $preserve_newline = FALSE, int $max_consecutive_newlines = 1): string {
     if ($preserve_newline) {
-      // Remove new lines with a placeholder.
-      $text = preg_replace('/(?:\r?\n\r?)+/', '{{{{NEWLINE}}}}', $text);
+      // Ensure max_consecutive_newlines is at least 1.
+      $max_consecutive_newlines = max(1, $max_consecutive_newlines);
+
+      // Replace consecutive newlines (2 or more) with placeholders
+      // This preserves single newlines as-is.
+      $text = preg_replace('/(?:\r?\n\r?){2,}/', '{{{{CONSECUTIVE_NEWLINES}}}}', $text);
+
+      // Replace single newlines with a different placeholder.
+      $text = preg_replace('/(?:\r?\n\r?)/', '{{{{SINGLE_NEWLINE}}}}', $text);
     }
 
     // Replace HTML non breaking spaces.
@@ -100,8 +111,12 @@ class TextHelper {
     $text = preg_replace('/\p{C}/u', '', $text);
 
     if ($preserve_newline) {
-      // Remove new lines with a placeholder.
-      $text = str_replace('{{{{NEWLINE}}}}', "\n", $text);
+      // Replace consecutive newline placeholders with the specified maximum.
+      $consecutive_replacement = str_repeat("\n", $max_consecutive_newlines);
+      $text = str_replace('{{{{CONSECUTIVE_NEWLINES}}}}', $consecutive_replacement, $text);
+
+      // Replace single newline placeholders with single newlines.
+      $text = str_replace('{{{{SINGLE_NEWLINE}}}}', "\n", $text);
     }
 
     return static::trimText($text);

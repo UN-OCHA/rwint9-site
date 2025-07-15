@@ -14,12 +14,42 @@ use Drupal\user\Entity\User;
 class RwReportCreateTest extends RwReportBase {
 
   /**
+   * Contributor.
+   *
+   * @var \Drupal\user\Entity\User
+   */
+  protected $contributor;
+
+  /**
+   * Editor.
+   *
+   * @var \Drupal\user\Entity\User
+   */
+  protected $editor;
+
+  /**
+   * Create terms and assign permissions.
+   */
+  protected function setUp(): void {
+    parent::setUp();
+
+    $this->contributor = $this->createUser();
+    $this->contributor->addRole('contributor');
+    $this->contributor->save();
+
+    $this->editor = $this->createUser();
+    $this->editor->addRole('editor');
+    $this->editor->save();
+  }
+
+  /**
    * Test report.
    */
-  public function testCreateReportAsAdminDraft() {
+  public function testCreateReportAsEditorDraft() {
     $site_name = \Drupal::config('system.site')->get('name');
-    $title = 'My report';
-    $user = User::load(1);
+    $title = $this->randomMachineName(32);
+
+    $user = $this->editor;
     $this->drupalLogin($user);
 
     $term_language = $this->createTermIfNeeded('language', 267, 'English');
@@ -66,10 +96,11 @@ class RwReportCreateTest extends RwReportBase {
   /**
    * Test report.
    */
-  public function testCreateReportAsAdminPublished() {
+  public function testCreateReportAsEditorPublished() {
     $site_name = \Drupal::config('system.site')->get('name');
-    $title = 'My report';
-    $user = User::load(1);
+    $title = $this->randomMachineName(32);
+
+    $user = $this->editor;
     $this->drupalLogin($user);
 
     $term_language = $this->createTermIfNeeded('language', 267, 'English');
@@ -107,7 +138,7 @@ class RwReportCreateTest extends RwReportBase {
     $this->assertSession()->titleEquals($title . ' - Belgium | ' . $site_name);
     $this->assertSession()->elementTextEquals('css', '.rw-article__title.rw-page-title', $title);
 
-    // 404 for anonymous.
+    // OK for anonymous since it's published.
     $this->drupalGet('user/logout');
     $this->drupalGet($report->toUrl());
     $this->assertSession()->statusCodeEquals(200);
@@ -119,104 +150,95 @@ class RwReportCreateTest extends RwReportBase {
    * Test report as contributor unverified, draft.
    */
   public function testCreateReportAsContributorUnverifiedDraft() {
-    $title = 'My report - unverified';
     $this->setUserPostingRightsGetSourceTerm(0, 'Unverified');
     $moderation_status = 'draft';
     $expected_moderation_status = 'draft';
 
-    $this->runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, FALSE);
+    $this->runTestCreateReportAsContributor($moderation_status, $expected_moderation_status, FALSE);
   }
 
   /**
    * Test report as contributor unverified, pending.
    */
   public function testCreateReportAsContributorUnverifiedPending() {
-    $title = 'My report - unverified';
     $this->setUserPostingRightsGetSourceTerm(0, 'Unverified');
     $moderation_status = 'pending';
     $expected_moderation_status = 'pending';
 
-    $this->runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, FALSE);
+    $this->runTestCreateReportAsContributor($moderation_status, $expected_moderation_status, FALSE);
   }
 
   /**
    * Test report as contributor blocked, draft.
    */
   public function testCreateReportAsContributorBlockedDraft() {
-    $title = 'My report - blocked';
     $this->setUserPostingRightsGetSourceTerm(1, 'blocked');
     $moderation_status = 'draft';
     $expected_moderation_status = 'draft';
 
-    $this->runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, FALSE);
+    $this->runTestCreateReportAsContributor($moderation_status, $expected_moderation_status, FALSE);
   }
 
   /**
    * Test report as contributor blocked, pending.
    */
   public function testCreateReportAsContributorBlockedPending() {
-    $title = 'My report - blocked';
     $this->setUserPostingRightsGetSourceTerm(1, 'blocked');
     $moderation_status = 'pending';
     $expected_moderation_status = 'refused';
 
-    $this->runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, FALSE);
+    $this->runTestCreateReportAsContributor($moderation_status, $expected_moderation_status, FALSE);
   }
 
   /**
    * Test report as contributor allowed, draft.
    */
   public function testCreateReportAsContributorAllowedDraft() {
-    $title = 'My report - allowed';
     $this->setUserPostingRightsGetSourceTerm(2, 'allowed');
     $moderation_status = 'draft';
     $expected_moderation_status = 'draft';
 
-    $this->runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, FALSE);
+    $this->runTestCreateReportAsContributor($moderation_status, $expected_moderation_status, FALSE);
   }
 
   /**
    * Test report as contributor allowed, to-review.
    */
   public function testCreateReportAsContributorAllowedPending() {
-    $title = 'My report - allowed';
     $this->setUserPostingRightsGetSourceTerm(2, 'allowed');
     $moderation_status = 'pending';
     $expected_moderation_status = 'to-review';
 
-    $this->runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, TRUE);
+    $this->runTestCreateReportAsContributor($moderation_status, $expected_moderation_status, TRUE);
   }
 
   /**
    * Test report as contributor trusted, draft.
    */
   public function testCreateReportAsContributorTrustedDraft() {
-    $title = 'My report - trusted';
     $this->setUserPostingRightsGetSourceTerm(3, 'trusted');
     $moderation_status = 'draft';
     $expected_moderation_status = 'draft';
 
-    $this->runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, FALSE);
+    $this->runTestCreateReportAsContributor($moderation_status, $expected_moderation_status, FALSE);
   }
 
   /**
    * Test report as contributor trusted, pending.
    */
   public function testCreateReportAsContributorTrustedPending() {
-    $title = 'My report - trusted';
     $this->setUserPostingRightsGetSourceTerm(3, 'trusted');
     $moderation_status = 'pending';
     $expected_moderation_status = 'published';
 
-    $this->runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, TRUE);
+    $this->runTestCreateReportAsContributor($moderation_status, $expected_moderation_status, TRUE);
   }
 
   /**
    * Test report as contributor trusted, pending but blocked source.
    */
   public function testCreateReportAsContributorTrustedPendingBlockedSource() {
-    $title = 'My report - trusted';
-    $term_source = $this->setUserPostingRightsGetSourceTerm(3, 'trusted', 2884910, 999999, 'Blocked source');
+    $term_source = $this->setUserPostingRightsGetSourceTerm(3, 'trusted', 999999, 'Blocked source');
     $term_source
       ->set('moderation_status', 'blocked')
       ->save();
@@ -224,7 +246,7 @@ class RwReportCreateTest extends RwReportBase {
     $moderation_status = 'pending';
     $expected_moderation_status = 'refused';
 
-    $this->runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, FALSE, [
+    $this->runTestCreateReportAsContributor($moderation_status, $expected_moderation_status, FALSE, [
       'field_source' => [
         $term_source->id(),
       ],
@@ -234,10 +256,11 @@ class RwReportCreateTest extends RwReportBase {
   /**
    * Test report as contributor.
    */
-  protected function runTestCreateReportAsContributor($title, $moderation_status, $expected_moderation_status, $will_be_public, array $overrides = []) {
+  protected function runTestCreateReportAsContributor($moderation_status, $expected_moderation_status, $will_be_public, array $overrides = []) {
     $site_name = \Drupal::config('system.site')->get('name');
+    $title = $this->randomMachineName(32);
 
-    $user = User::load(2884910);
+    $user = $this->contributor;
     $this->drupalLogin($user);
 
     $term_language = $this->createTermIfNeeded('language', 267, 'English');
@@ -289,13 +312,7 @@ class RwReportCreateTest extends RwReportBase {
   /**
    * Set user posting rights.
    */
-  protected function setUserPostingRightsGetSourceTerm($right, $label, $uid = 2884910, $tid = 43679, $term_label = 'ABC Color') : Term {
-    $user = $this->createUserIfNeeded($uid, $label);
-    if (!$user->hasRole('contributor')) {
-      $user->addRole('contributor');
-      $user->save();
-    }
-
+  protected function setUserPostingRightsGetSourceTerm($right, $label, $tid = 43679, $term_label = 'ABC Color') : Term {
     // Create term first so we can assign posting rights.
     $term_source = $this->createTermIfNeeded('source', $tid, $term_label, [
       'field_allowed_content_types' => [
@@ -306,7 +323,7 @@ class RwReportCreateTest extends RwReportBase {
     // Set posting right to
     $term_source->set('field_user_posting_rights', [
       [
-        'id' => $user->id(),
+        'id' =>  $this->contributor->id(),
         'job' => '0',
         'training' => '0',
         'report' => $right,

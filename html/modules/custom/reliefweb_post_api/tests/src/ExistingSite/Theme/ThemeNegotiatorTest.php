@@ -6,19 +6,19 @@ namespace Drupal\Tests\reliefweb_post_api\ExistingSite\Theme;
 
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\reliefweb_post_api\Theme\ThemeNegotiator;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
  * Tests the ReliefWeb Post API theme negotiator.
- *
- * @coversDefaultClass \Drupal\reliefweb_post_api\Theme\ThemeNegotiator
- *
- * @group reliefweb_post_api
  */
+#[CoversClass(ThemeNegotiator::class)]
+#[Group('reliefweb_post_api')]
 class ThemeNegotiatorTest extends ExistingSiteBase {
 
   /**
-   * @covers ::applies
+   * Test applies.
    */
   public function testApplies(): void {
     $route_match = $this->createConfiguredMock(RouteMatchInterface::class, [
@@ -31,7 +31,7 @@ class ThemeNegotiatorTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::determineActiveTheme
+   * Test determine active theme.
    */
   public function testDetermineActiveTheme(): void {
     $route_match = $this->createMock(RouteMatchInterface::class);

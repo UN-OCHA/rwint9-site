@@ -6,19 +6,19 @@ namespace Drupal\Tests\reliefweb_post_api\ExistingSite\Helpers;
 
 use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_post_api\Helpers\UrlHelper;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
  * Tests the ReliefWeb Post API URL helper.
- *
- * @coversDefaultClass \Drupal\reliefweb_post_api\Helpers\UrlHelper
- *
- * @group reliefweb_post_api
  */
+#[CoversClass(UrlHelper::class)]
+#[Group('reliefweb_post_api')]
 class UrlHelperTest extends ExistingSiteBase {
 
   /**
-   * @covers ::replaceBaseUrl
+   * Test replace base url.
    */
   public function testReplaceBaseUrl(): void {
     $url = 'https://test.test/some/path';

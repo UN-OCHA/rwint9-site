@@ -269,9 +269,9 @@
 }
 
 .js td.rw-moderation-table__cell .dropbutton-wrapper {
+  min-width: 160px;
   margin-right: 0;
   padding-right: 0;
-  min-width: 160px;
 }
 .js td.rw-moderation-table__cell .dropbutton-multiple .dropbutton-widget {
   width: 100%
@@ -279,13 +279,13 @@
 
 .js .dropbutton-widget .dropbutton--rw-moderation,
 .js .dropbutton-multiple.open .dropbutton--rw-moderation {
+  padding: 0 1.5rem;
   color: white;
   border: 2px solid transparent;
   outline: none;
   background: var(--cd-reliefweb-brand-blue--dark);
   font-size: 13px;
   font-weight: bold;
-  padding: 0 1.5rem;
 }
 .js .dropbutton-widget .dropbutton--rw-moderation .dropbutton-action {
   border: 2px solid transparent;
@@ -294,9 +294,9 @@
   color: white;
 }
 .js .dropbutton-widget .dropbutton--rw-moderation .dropbutton-toggle {
+  max-height: 30px;
   color: white;
   background: var(--cd-reliefweb-brand-blue--dark);
-  max-height: 30px;
 }
 .js .dropbutton-multiple.open .dropbutton--rw-moderation .dropbutton-toggle button {
   background: var(--cd-reliefweb-brand-blue--dark);
