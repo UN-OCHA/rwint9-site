@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\reliefweb_import\Unit;
 
+use Drupal\reliefweb_import\Service\JobFeedsImporter;
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Tests reliefweb importer.
- *
- * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter
  */
+#[CoversClass(JobFeedsImporter::class)]
 class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
 
   /**
    * Test validate base URL.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateBaseUrl
    */
   public function testvalidateBaseUrlEmpty(): void {
     $link = '';
@@ -25,8 +25,6 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
 
   /**
    * Test validate base URL.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateBaseUrl
    */
   public function testvalidateBaseUrlSpaces(): void {
     $link = '';
@@ -37,8 +35,6 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
 
   /**
    * Test validate base URL.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateBaseUrl
    */
   public function testvalidateBaseUrlInvalidUrl(): void {
     $link = 'not a link';
@@ -49,8 +45,6 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
 
   /**
    * Test validate link.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateLink
    */
   public function testvalidateLinkEmpty(): void {
     $link = '';
@@ -61,8 +55,6 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
 
   /**
    * Test validate link.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateLink
    */
   public function testvalidateLinkSpaces(): void {
     $link = '    ';
@@ -73,8 +65,6 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
 
   /**
    * Test validate link.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateLink
    */
   public function testvalidateLinkInvalidUrl(): void {
     $link = 'not a link';
@@ -85,8 +75,6 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
 
   /**
    * Test validate link.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateLink
    */
   public function testvalidateLinkBase(): void {
     $link = 'https://example.com';
@@ -97,8 +85,6 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
 
   /**
    * Test validate title.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateTitle
    */
   public function testvalidateTitleEmpty(): void {
     $title = '';
@@ -109,8 +95,6 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
 
   /**
    * Test validate title.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateTitle
    */
   public function testvalidateTitleSpaces(): void {
     $title = '       ';
@@ -121,8 +105,6 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
 
   /**
    * Test validate title.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateTitle
    */
   public function testvalidateTitleTooShort(): void {
     $title = 'a';
@@ -133,8 +115,6 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
 
   /**
    * Test validate title.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateTitle
    */
   public function testvalidateTitleTooLong(): void {
     $title = $this->random->sentences(100);
@@ -145,8 +125,6 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
 
   /**
    * Test validate title.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateTitle
    */
   public function testvalidateTitleOk(): void {
     $title = $this->random->sentences(10);
@@ -161,8 +139,6 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
 
   /**
    * Test validate source.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateTitle
    */
   public function testvalidateSourceEmpty(): void {
     $source = '';
@@ -174,8 +150,6 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
 
   /**
    * Test validate source.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateTitle
    */
   public function testvalidateSourceNonNumeric(): void {
     $source = 'abcd';
@@ -187,8 +161,6 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
 
   /**
    * Test validate source.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateTitle
    */
   public function testvalidateSourceDifferent(): void {
     $source = '666';
@@ -203,8 +175,6 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
 
   /**
    * Test validate source.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateTitle
    */
   public function testvalidateSourceOk(): void {
     $source = '2865';
@@ -215,8 +185,6 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
 
   /**
    * Test validate user.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateTitle
    */
   public function testvalidateUserEmpty(): void {
     $uid = ' ';
@@ -227,8 +195,6 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
 
   /**
    * Test validate user.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateTitle
    */
   public function testvalidateUserNumeric(): void {
     $uid = 'abcd';
@@ -239,8 +205,6 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
 
   /**
    * Test validate user.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::validateTitle
    */
   public function testvalidateUserId(): void {
     $uid = 1;

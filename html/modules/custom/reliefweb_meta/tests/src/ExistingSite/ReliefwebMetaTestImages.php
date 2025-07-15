@@ -4,6 +4,7 @@
 
 namespace Drupal\Tests\reliefweb_meta\ExistingSite;
 
+use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\media\Entity\Media;
 use Drupal\node\Entity\Node;
@@ -224,10 +225,28 @@ class ReliefwebMetaTestImages extends ExistingSiteBase {
    * Create media item.
    */
   private function createMediaImage(string $name): Media {
-    $img = 'https://picsum.photos/200/300.jpg';
+    // Create a simple test 1x1 png image file directly.
+    $image_content = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
 
-    /** @var \Drupal\file\Entity\File $file */
-    $file = system_retrieve_file($img, 'public://images/' . $name, TRUE, FileSystemInterface::EXISTS_REPLACE);
+    $file_system = \Drupal::service('file_system');
+    $directory = 'public://images';
+
+    // Ensure the directory exists.
+    $file_system->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY);
+
+    $file_uri = $directory . '/' . $name;
+
+    // Write the image content to the file.
+    $file_system->saveData($image_content, $file_uri, FileExists::Replace);
+
+    // Create a file entity.
+    $file = \Drupal::entityTypeManager()->getStorage('file')->create([
+      'uri' => $file_uri,
+      'filename' => $name,
+      'filemime' => 'image/png',
+      'status' => 1,
+    ]);
+
     $file->save();
 
     $media = Media::create([

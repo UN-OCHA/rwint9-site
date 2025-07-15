@@ -5,7 +5,7 @@ dependencies: {  }
 machine: local
 description: null
 name: Local
-weight: ''
+weight: null
 url: 'https://rwint-local.test/'
 fg_color: '#ffffff'
 bg_color: '#0d0d0d'

@@ -8,19 +8,20 @@ use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\reliefweb_post_api\Entity\Provider;
+use Drupal\reliefweb_post_api\Plugin\Field\FieldWidget\ApiKeyWidget;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
  * Tests the 'reliefweb_post_api_key' field widget.
- *
- * @coversDefaultClass \Drupal\reliefweb_post_api\Plugin\Field\FieldWidget\ApiKeyWidget
- *
- * @group reliefweb_post_api
  */
+#[CoversClass(ApiKeyWidget::class)]
+#[Group('reliefweb_post_api')]
 class ApiKeyWidgetTest extends ExistingSiteBase {
 
   /**
-   * @covers ::formElement
+   * Test form element.
    */
   public function testFormElement(): void {
     $form = [];

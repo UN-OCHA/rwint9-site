@@ -5,6 +5,7 @@ namespace Drupal\reliefweb_guidelines\Services;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
 use Drupal\reliefweb_form\Helpers\FormHelper;
+use Drupal\reliefweb_utility\Helpers\UserHelper;
 
 /**
  * Guideline list form alteration service.
@@ -19,7 +20,7 @@ class GuidelineListFormAlter extends EntityFormAlterServiceBase {
     $form['path']['#access'] = FALSE;
 
     // Only keep allowed user roles as selectable roles.
-    $roles_to_remove = array_diff_key(user_role_names(), reliefweb_guidelines_get_user_roles());
+    $roles_to_remove = array_diff_key(UserHelper::getRoleNames(), reliefweb_guidelines_get_user_roles());
     FormHelper::removeOptions($form, 'field_role', array_keys($roles_to_remove));
   }
 

@@ -6,18 +6,19 @@ namespace Drupal\Tests\reliefweb_import\Unit;
 
 use Drupal\Tests\reliefweb_import\Unit\Stub\JobFeedsImporterStub;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionXml;
+use Drupal\reliefweb_import\Service\JobFeedsImporter;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests reliefweb importer.
- *
- * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter
  */
+#[CoversClass(JobFeedsImporter::class)]
 class JobFeedsImporterXmlTest extends JobFeedsImporterTestBase {
 
   /**
@@ -43,8 +44,6 @@ class JobFeedsImporterXmlTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests fetching.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::fetchXml
    */
   public function testfetchXmlException(): void {
     $url = '';
@@ -62,8 +61,6 @@ class JobFeedsImporterXmlTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests fetching.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::fetchXml
    */
   public function testfetchXmlStatusCode500(): void {
     $url = '';
@@ -81,8 +78,6 @@ class JobFeedsImporterXmlTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests fetching.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::fetchXml
    */
   public function testfetchXmlStatusCode404(): void {
     $url = '';
@@ -100,8 +95,6 @@ class JobFeedsImporterXmlTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests fetching.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::fetchXml
    */
   public function testfetchXmlStatusCode218(): void {
     $url = '';
@@ -119,8 +112,6 @@ class JobFeedsImporterXmlTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests fetching.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::fetchXml
    */
   public function testfetchXmlEmpty(): void {
     $url = '';
@@ -138,8 +129,6 @@ class JobFeedsImporterXmlTest extends JobFeedsImporterTestBase {
 
   /**
    * Tests fetching.
-   *
-   * @covers \Drupal\reliefweb_import\Service\JobFeedsImporter::fetchXml
    */
   public function testfetchXmlWithBody(): void {
     $url = '';

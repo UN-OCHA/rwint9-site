@@ -8,5 +8,5 @@ disable_default: true
 disable_password_fields: true
 disable_email_field: false
 disable_user_field: true
+disable_user_create: false
 maintenance_access: false
-disable_user_create: 0

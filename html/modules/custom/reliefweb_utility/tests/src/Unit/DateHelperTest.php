@@ -1,28 +1,29 @@
 <?php
 
-// phpcs:ignoreFile
-
 namespace Drupal\Tests\reliefweb_utility\Unit;
 
-use DateTime;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\Tests\UnitTestCase;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManager;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 /**
  * Tests date helper.
- *
- * @covers \Drupal\reliefweb_utility\Helpers\DateHelper
  */
+#[CoversClass(DateHelper::class)]
+#[Group('reliefweb_utility')]
 class DateHelperTest extends UnitTestCase {
 
   /**
    * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
    */
-  protected $language_manager;
+  protected $languageManager;
 
   /**
    * {@inheritdoc}
@@ -31,22 +32,20 @@ class DateHelperTest extends UnitTestCase {
     parent::setUp();
     $sub = $this->prophesize(LanguageInterface::class);
     $sub->getId()->willReturn('und');
-    $this->language_manager = $this->prophesize(LanguageManager::class);
-    $this->language_manager->getCurrentLanguage()->willReturn($sub->reveal());
+    $this->languageManager = $this->prophesize(LanguageManager::class);
+    $this->languageManager->getCurrentLanguage()->willReturn($sub->reveal());
     $container = new ContainerBuilder();
     \Drupal::setContainer($container);
-    $container->set('language_manager', $this->language_manager->reveal());
+    $container->set('language_manager', $this->languageManager->reveal());
   }
 
   /**
    * Test get date time timestamp.
-   *
-   * @covers \Drupal\reliefweb_utility\Helpers\DateHelper::getDateTimeStamp
    */
   public function testGetTimeStamp() {
     $this->assertEquals(DateHelper::getDateTimeStamp(''), NULL);
 
-    $date = new DateTime();
+    $date = new \DateTime();
     $this->assertEquals(DateHelper::getDateTimeStamp($date), $date->getTimestamp());
 
     $date = new DrupalDateTime();

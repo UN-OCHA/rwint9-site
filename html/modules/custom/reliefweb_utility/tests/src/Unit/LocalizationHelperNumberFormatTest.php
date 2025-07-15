@@ -1,27 +1,30 @@
 <?php
 
-// phpcs:ignoreFile
-
 namespace Drupal\Tests\reliefweb_utility\Unit;
 
-use Drupal\Tests\UnitTestCase;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManager;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Drupal\Tests\reliefweb_utility\Unit\Stub\LocalizationHelperStubNoNumberFormatter;
+use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 /**
  * Tests localization helper number formatting.
- *
- * @covers \Drupal\reliefweb_utility\Helpers\LocalizationHelper
  */
+#[CoversClass(LocalizationHelper::class)]
+#[Group('reliefweb_utility')]
 class LocalizationHelperNumberFormatTest extends UnitTestCase {
 
   /**
    * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
    */
-  protected $language_manager;
+  protected $languageManager;
 
   /**
    * {@inheritdoc}
@@ -30,27 +33,24 @@ class LocalizationHelperNumberFormatTest extends UnitTestCase {
     parent::setUp();
     $sub = $this->prophesize(LanguageInterface::class);
     $sub->getId()->willReturn('fr');
-    $this->language_manager = $this->prophesize(LanguageManager::class);
-    $this->language_manager->getCurrentLanguage()->willReturn($sub->reveal());
+    $this->languageManager = $this->prophesize(LanguageManager::class);
+    $this->languageManager->getCurrentLanguage()->willReturn($sub->reveal());
     $container = new ContainerBuilder();
     \Drupal::setContainer($container);
-    $container->set('language_manager', $this->language_manager->reveal());
+    $container->set('language_manager', $this->languageManager->reveal());
   }
 
   /**
    * Test localization formatNumber.
-   *
-   * @covers \Drupal\reliefweb_utility\Helpers\LocalizationHelper::formatNumber
-   *
-   * @dataProvider providerFormatNumber
    *
    * @param string|null $language
    *   Language code.
    * @param int|float $number
    *   Number to format.
    * @param string $expected
-   *   The expected output string.
+   *   Expected output.
    */
+  #[DataProvider('providerFormatNumber')]
   public function testFormatNumber($language, $number, $expected) {
     $formatted = LocalizationHelper::formatNumber($number, $language);
     $this->assertEquals($formatted, $expected);
@@ -59,10 +59,6 @@ class LocalizationHelperNumberFormatTest extends UnitTestCase {
   /**
    * Test localization formatNumber when there is no number formatter.
    *
-   * @covers \Drupal\reliefweb_utility\Helpers\LocalizationHelper::formatNumber
-   *
-   * @dataProvider providerFormatNumberNoNumberFormatter
-   *
    * @param string|null $language
    *   Language code.
    * @param int|float $number
@@ -70,6 +66,7 @@ class LocalizationHelperNumberFormatTest extends UnitTestCase {
    * @param string $expected
    *   The expected output string.
    */
+  #[DataProvider('providerFormatNumberNoNumberFormatter')]
   public function testFormatNumberNoNumberFormatter($language, $number, $expected) {
     $formatted = LocalizationHelperStubNoNumberFormatter::formatNumber($number, $language);
     $this->assertEquals($formatted, $expected);
@@ -79,9 +76,9 @@ class LocalizationHelperNumberFormatTest extends UnitTestCase {
    * Provides data for testFormatNumber.
    *
    * @return array
-   *   An array of test data.
+   *   Test data.
    */
-  public function providerFormatNumber() {
+  public static function providerFormatNumber() {
     return [
       [
         'en',
@@ -114,9 +111,9 @@ class LocalizationHelperNumberFormatTest extends UnitTestCase {
    * Provides data for testFormatNumber.
    *
    * @return array
-   *   An array of test data.
+   *   Test data.
    */
-  public function providerFormatNumberNoNumberFormatter() {
+  public static function providerFormatNumberNoNumberFormatter() {
     $expected = number_format(123456);
     // Defaults to number_format regardless of the language.
     return [

@@ -5,19 +5,20 @@ declare(strict_types=1);
 namespace Drupal\Tests\reliefweb_post_api\ExistingSite\Plugin\Field\FieldFormatter;
 
 use Drupal\reliefweb_post_api\Entity\Provider;
+use Drupal\reliefweb_post_api\Plugin\Field\FieldFormatter\ApiKeyFormatter;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
  * Tests the 'reliefweb_post_api_key' field formatter.
- *
- * @coversDefaultClass \Drupal\reliefweb_post_api\Plugin\Field\FieldFormatter\ApiKeyFormatter
- *
- * @group reliefweb_post_api
  */
+#[CoversClass(ApiKeyFormatter::class)]
+#[Group('reliefweb_post_api')]
 class ApiKeyFormatterTest extends ExistingSiteBase {
 
   /**
-   * @covers ::viewElements
+   * Test view elements.
    */
   public function testViewElements(): void {
     $entity = Provider::create(['id' => 123]);

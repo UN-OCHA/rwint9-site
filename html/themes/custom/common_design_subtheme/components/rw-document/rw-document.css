@@ -131,29 +131,29 @@
   display: inline-block;
   margin: 1rem 0 0 0;
   padding: 12px 18px;
+  text-decoration: none;
   color: white;
   border: none;
   border-radius: 2rem;
   background: var(--cd-reliefweb-brand-blue--dark);
   font-weight: bold;
-  text-decoration: none;
 }
 
 .rw-document.rw-article--book .rw-article__content a[href^="/user/login/"]::before {
   position: relative;
   top: 2px;
-  left: 0px;
+  left: 0;
+  display: inline-block;
   width: 1rem;
   height: 1rem;
-  display: inline-block;
   margin-right: 0.5rem;
 }
 
 .rw-document.rw-article--book .rw-article__content a[href^="/user/login/"]:hover,
 .rw-document.rw-article--book .rw-article__content a[href^="/user/login/"]:focus,
 .rw-document.rw-article--book .rw-article__content a[href^="/user/login/"]:active {
-  background: var(--cd-reliefweb-brand-red--dark);
   text-decoration: underline;
+  background: var(--cd-reliefweb-brand-red--dark);
 }
 
 .rw-document.rw-article--book .rw-article__content a[href^="/user/login/entraid"]::before {

@@ -50,7 +50,7 @@ class ReliefWebPostApiDatabaseQueue extends DatabaseQueue {
     try {
       $query = $this->connection
         ->merge('reliefweb_post_api_queue')
-        ->key(['uuid' => $uuid])
+        ->keys(['uuid' => $uuid])
         ->fields([
           'name' => $this->name,
           'data' => serialize($data),

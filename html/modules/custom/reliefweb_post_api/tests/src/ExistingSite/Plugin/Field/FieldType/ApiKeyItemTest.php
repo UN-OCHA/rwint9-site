@@ -8,19 +8,19 @@ use Drupal\Core\Entity\EntityMalformedException;
 use Drupal\Core\Password\PasswordInterface;
 use Drupal\reliefweb_post_api\Entity\Provider;
 use Drupal\reliefweb_post_api\Plugin\Field\FieldType\ApiKeyItem;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
  * Tests the 'reliefweb_post_api_key' field item.
- *
- * @coversDefaultClass \Drupal\reliefweb_post_api\Plugin\Field\FieldType\ApiKeyItem
- *
- * @group reliefweb_post_api
  */
+#[CoversClass(ApiKeyItem::class)]
+#[Group('reliefweb_post_api')]
 class ApiKeyItemTest extends ExistingSiteBase {
 
   /**
-   * @covers ::propertyDefinitions
+   * Test property definitions.
    */
   public function testPropertyDefinitions(): void {
     $entity = Provider::create(['id' => 123]);
@@ -33,7 +33,7 @@ class ApiKeyItemTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::preSave()
+   * Test pre save.
    */
   public function testPreSave(): void {
     $manager = \Drupal::service('plugin.manager.field.field_type');
@@ -43,7 +43,7 @@ class ApiKeyItemTest extends ExistingSiteBase {
     $hashed_value = $password->hash(trim($value));
 
     $entity = Provider::create(['id' => 123]);
-    $entity->original = Provider::create(['id' => 123, 'key' => 'other']);
+    $entity->setOriginal(Provider::create(['id' => 123, 'key' => 'other']));
 
     $item = $manager->createFieldItem($entity->key, 0, NULL);
     $item->setValue(['value' => $value]);
@@ -59,7 +59,7 @@ class ApiKeyItemTest extends ExistingSiteBase {
     ]);
     $item->preSave();
     $this->assertSame($hashed_value, $item->value);
-    $this->assertSame(FALSE, $item->pre_hashed);
+    $this->assertFalse($item->pre_hashed);
 
     $item->setValue([]);
     $item->preSave();
@@ -71,7 +71,7 @@ class ApiKeyItemTest extends ExistingSiteBase {
   }
 
   /**
-   * @covers ::isEmpty()
+   * Test is empty.
    */
   public function testIsEmpty(): void {
     $entity = Provider::create(['id' => 123]);

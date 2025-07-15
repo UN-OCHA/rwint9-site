@@ -20,6 +20,7 @@ class JobFeedsImporterWrapper extends JobFeedsImporter {
    *
    * @var \Drupal\Core\Logger\LoggerChannelInterface
    */
+  protected LoggerChannelInterface $logger;
 
   /**
    * {@inheritdoc}

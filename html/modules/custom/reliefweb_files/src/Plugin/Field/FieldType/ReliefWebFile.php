@@ -15,6 +15,7 @@ use Drupal\Core\File\Exception\FileException;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StreamWrapper\StreamWrapperManager;
+use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Core\Url;
@@ -120,7 +121,7 @@ class ReliefWebFile extends FieldItemBase {
       '#title' => $this->t('Maximum upload size'),
       '#default_value' => $settings['max_filesize'],
       '#description' => $this->t('Enter a value like "512" (bytes), "80 KB" (kilobytes) or "50 MB" (megabytes) in order to restrict the allowed file size. If left empty the file sizes will be limited only by PHP\'s maximum post and file upload sizes (current limit <strong>%limit</strong>).', [
-        '%limit' => format_size(Environment::getUploadMaxSize()),
+        '%limit' => ByteSizeMarkup::create(Environment::getUploadMaxSize()),
       ]),
       '#size' => 10,
       '#element_validate' => [[static::class, 'validateMaxFilesize']],
@@ -131,7 +132,7 @@ class ReliefWebFile extends FieldItemBase {
       '#title' => $this->t('Preview maximum upload size'),
       '#default_value' => $settings['preview_max_filesize'],
       '#description' => $this->t('Enter a value like "512" (bytes), "80 KB" (kilobytes) or "50 MB" (megabytes) in order to restrict the allowed file size. If left empty the file sizes will be limited only by PHP\'s maximum post and file upload sizes (current limit <strong>%limit</strong>).', [
-        '%limit' => format_size(Environment::getUploadMaxSize()),
+        '%limit' => ByteSizeMarkup::create(Environment::getUploadMaxSize()),
       ]),
       '#size' => 10,
       '#element_validate' => [[static::class, 'validatePreviewMaxFilesize']],
@@ -436,7 +437,7 @@ class ReliefWebFile extends FieldItemBase {
 
     return $this->t('Allowed extensions: %extensions. Max file size: %max_filesize.', [
       '%extensions' => !empty($extensions) ? implode(', ', $extensions) : $this->t('any'),
-      '%max_filesize' => format_size($max_file_size),
+      '%max_filesize' => ByteSizeMarkup::create($max_file_size),
     ]);
   }
 
@@ -449,7 +450,7 @@ class ReliefWebFile extends FieldItemBase {
   public function getPreviewUploadDescription() {
     return $this->t('PNG only. Max file size: %max_filesize. Minimum dimensions: %dimensions', [
       '%extension' => 'png',
-      '%max_filesize' => format_size($this->getPreviewMaxFileSize()),
+      '%max_filesize' => ByteSizeMarkup::create($this->getPreviewMaxFileSize()),
       '%dimensions' => $this->getPreviewMinDimensions() ?: $this->t('none'),
     ]);
   }

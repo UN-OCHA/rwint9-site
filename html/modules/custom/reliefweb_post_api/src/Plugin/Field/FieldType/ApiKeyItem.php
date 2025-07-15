@@ -47,7 +47,7 @@ class ApiKeyItem extends StringItem {
     $entity = $this->getEntity();
     $field = $this->getFieldDefinition()->getName();
     $value = trim($this->value ?? '');
-    $original_value = $entity->original?->get($field)->value ?? '';
+    $original_value = $entity->getOriginal()?->get($field)->value ?? '';
 
     if ($this->pre_hashed) {
       // Reset the pre_hashed value since it has now been used.
