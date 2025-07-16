@@ -694,10 +694,15 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
     $links = [];
     if (!empty($ids)) {
       // Get the revision timestamps to calculate the change frequency.
-      $revision_timestamps = $this->database->select('node_revision', 'nr')
+      $results = $this->database->select('node_revision', 'nr')
         ->fields('nr', ['nid', 'revision_timestamp'])
         ->condition('nr.nid', $ids, 'IN')
-        ->execute()->fetchAll(\PDO::FETCH_COLUMN | \PDO::FETCH_GROUP);
+        ->execute()->fetchAll();
+
+      $revision_timestamps = [];
+      foreach ($results as $result) {
+        $revision_timestamps[$result->nid][$result->revision_timestamp] = $result->revision_timestamp;
+      }
 
       // Get the url alias for each node.
       $aliases = $this->getEntityUrlAliases('node', $ids);
@@ -744,10 +749,15 @@ class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManag
     $links = [];
     if (!empty($ids)) {
       // Get the revision timestamps to calculate the change frequency.
-      $revision_timestamps = $this->database->select('taxonomy_term_field_revision', 'ttdr')
+      $results = $this->database->select('taxonomy_term_field_revision', 'ttdr')
         ->fields('ttdr', ['tid', 'changed'])
         ->condition('ttdr.tid', $ids, 'IN')
-        ->execute()->fetchAll(\PDO::FETCH_GROUP | \PDO::FETCH_UNIQUE | \PDO::FETCH_ASSOC);
+        ->execute()->fetchAll();
+
+      $revision_timestamps = [];
+      foreach ($results as $result) {
+        $revision_timestamps[$result->tid][$result->changed] = $result->changed;
+      }
 
       // Get the url alias for each term.
       $aliases = $this->getEntityUrlAliases('taxonomy_term', $ids);
