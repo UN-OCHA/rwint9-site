@@ -117,6 +117,13 @@ class ReportExtended extends Report {
     $query->addField('users', 'name', 'name');
     $query->addField('users', 'mail', 'mail');
     $query->condition('users.uid', $user_ids, 'IN');
+
+    // Join the user role table so we can determine if the user was an editor,
+    // contributor or submitter.
+    $query->leftJoin('user__roles', 'user__roles', 'user__roles.entity_id = users.uid');
+    $query->addExpression('GROUP_CONCAT(DISTINCT user__roles.roles_target_id)', 'roles');
+    $query->groupBy('users.uid');
+
     $users = $query->execute()?->fetchAllAssoc('uid', \PDO::FETCH_ASSOC) ?? [];
 
     // Add the user data to the items.
@@ -138,7 +145,15 @@ class ReportExtended extends Report {
           // addresses are only for editors.
           else {
             $name = $user['name'];
-            $role = str_contains($user['mail'], '@reliefweb.int') ? 'editor' : 'contributor';
+            $roles = $user['roles'] ?? '';
+
+            $role = match(TRUE) {
+              str_contains($roles, 'editor') => 'editor',
+              str_contains($roles, 'contributor') => 'contributor',
+              str_contains($roles, 'submitter') => 'submitter',
+              str_contains($user['mail'], '@reliefweb.int') => 'editor',
+              default => '',
+            };
           }
 
           $item['user'] = [
