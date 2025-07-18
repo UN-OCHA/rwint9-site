@@ -82,4 +82,39 @@ class AmazonSesMessageBuilder extends MessageBuilder {
     return $email_with_bcc;
   }
 
+  /**
+   * Get the content from a MIME message part with base64 decoding support.
+   *
+   * @param string $part
+   *   The message part.
+   *
+   * @return string|false
+   *   The content, or FALSE if it could not be parsed.
+   */
+  protected function getPartContent($part) {
+    $split = preg_split('#\r?\n\r?\n#', $part, 2);
+
+    if ($split && isset($split[1])) {
+      $headers = $split[0];
+      $content = $split[1];
+
+      // Check if the content is base64 encoded.
+      if (preg_match('/Content-Transfer-Encoding:\s*base64/i', $headers)) {
+        // Remove any whitespace and newlines from base64 content.
+        $content = preg_replace('/\s+/', '', $content);
+        $decoded = base64_decode($content);
+        return $decoded;
+      }
+      // Handle quoted-printable encoding.
+      elseif (preg_match('/Content-Transfer-Encoding:\s*quoted-printable/i', $headers)) {
+        return quoted_printable_decode($content);
+      }
+
+      // Return content as-is for other encodings (7bit, 8bit, binary).
+      return $content;
+    }
+
+    return FALSE;
+  }
+
 }
