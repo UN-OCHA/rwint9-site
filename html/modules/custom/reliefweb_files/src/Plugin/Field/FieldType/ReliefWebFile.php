@@ -1991,10 +1991,10 @@ class ReliefWebFile extends FieldItemBase {
   /**
    * Update the file item's file hash.
    *
-   * @return string
+   * @return ?string
    *   The new file hash.
    */
-  public function updateFileHash(): string {
+  public function updateFileHash(): ?string {
     $file = $this->loadFile();
     if (empty($file)) {
       throw new \Exception('Unable to load the new local file to update the hash.');
