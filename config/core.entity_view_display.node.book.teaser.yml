@@ -18,6 +18,7 @@ mode: teaser
 content: {  }
 hidden:
   body: true
+  book_navigation: true
   content_moderation_control: true
   field_attached_images: true
   langcode: true
