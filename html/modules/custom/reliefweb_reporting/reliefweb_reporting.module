@@ -5,6 +5,8 @@
  * ReliefWeb reporting module.
  */
 
+use Drupal\Core\Database\Statement\FetchAs;
+
 /**
  * Implements hook_mail().
  */
@@ -76,7 +78,7 @@ function reliefweb_reporting_get_weekly_ai_tagging_stats() {
         AND nr.vid >= occp.entity_revision_id
       GROUP BY nr.vid
       ORDER BY nr.vid
-    ")->fetchAll(\PDO::FETCH_ASSOC);
+    ")->fetchAll(FetchAs::Associative);
 
     // This will take precedence over the old records but normally there should
     // not be any overlap because, if the jobs have been processed by the

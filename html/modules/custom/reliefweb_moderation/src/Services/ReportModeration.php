@@ -5,6 +5,7 @@ namespace Drupal\reliefweb_moderation\Services;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Database\Query\Select;
+use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\Core\Link;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
@@ -91,7 +92,7 @@ class ReportModeration extends ModerationServiceBase {
     $query->addField('f', $key_content_active_field, 'active');
     $query->addExpression("SUBSTR(f.{$key_content_url_field}, 7)", 'nid');
     $query->condition("f.{$key_content_url_field}", $urls, 'IN');
-    $key_content = $query->execute()?->fetchAllAssoc('nid', \PDO::FETCH_ASSOC);
+    $key_content = $query->execute()?->fetchAllAssoc('nid', FetchAs::Associative);
 
     // Prepare the table rows' data from the entities.
     $rows = [];

@@ -6,6 +6,7 @@ namespace Drupal\reliefweb_import\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Statement\FetchAs;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -125,7 +126,7 @@ class ReliefWebImporterImportRecordsController extends ControllerBase {
       ->fields('r')
       ->condition('imported_item_uuid', $uuid)
       ->execute()
-      ?->fetchAllAssoc('imported_item_uuid', \PDO::FETCH_ASSOC) ?? [];
+      ?->fetchAllAssoc('imported_item_uuid', FetchAs::Associative) ?? [];
 
     // Deserialize the extra field.
     foreach ($records as &$record) {

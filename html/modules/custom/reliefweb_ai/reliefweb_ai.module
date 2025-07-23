@@ -8,6 +8,7 @@
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Block\BlockPluginInterface;
+use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -683,7 +684,7 @@ function reliefweb_ai_add_ai_updated_fields_to_entity(EntityInterface $entity): 
     ->condition('entity_id', $entity->id())
     ->condition('status', ClassificationStatus::Completed->value)
     ->execute()
-    ?->fetch(\PDO::FETCH_OBJ);
+    ?->fetch(FetchAs::Object);
   if (empty($record) || empty($record->entity_revision_id) || empty($record->updated_fields)) {
     return;
   }

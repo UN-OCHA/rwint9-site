@@ -6,6 +6,7 @@ namespace Drupal\reliefweb_import\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -237,7 +238,7 @@ class ReliefWebImporterStatisticsController extends ControllerBase {
       from reliefweb_import_records
       group by importer, source, status, status_type, editorial_flow
       order by importer, source, status, status_type, editorial_flow';
-    $records = $this->database->query($sql)->fetchAll(\PDO::FETCH_ASSOC);
+    $records = $this->database->query($sql)->fetchAll(FetchAs::Associative);
 
     return $records ?: [];
   }
