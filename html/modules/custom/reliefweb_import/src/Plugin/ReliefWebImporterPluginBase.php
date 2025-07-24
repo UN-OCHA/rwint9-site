@@ -11,6 +11,7 @@ use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
@@ -955,7 +956,7 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
       ->fields('r')
       ->condition('imported_item_uuid', $uuids, 'IN')
       ->execute()
-      ?->fetchAllAssoc('imported_item_uuid', \PDO::FETCH_ASSOC) ?? [];
+      ?->fetchAllAssoc('imported_item_uuid', FetchAs::Associative) ?? [];
 
     // Deserialize the extra field.
     foreach ($records as &$record) {

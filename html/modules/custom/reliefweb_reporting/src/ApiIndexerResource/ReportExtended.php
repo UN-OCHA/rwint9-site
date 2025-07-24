@@ -124,6 +124,9 @@ class ReportExtended extends Report {
     $query->addExpression('GROUP_CONCAT(DISTINCT user__roles.roles_target_id)', 'roles');
     $query->groupBy('users.uid');
 
+    // Note: not using Drupal\Core\Database\Statement\FetchAs::Associative
+    // since this uses the database query class from the API indexer not the
+    // the Drupal one and it expects a PDO constant.
     $users = $query->execute()?->fetchAllAssoc('uid', \PDO::FETCH_ASSOC) ?? [];
 
     // Add the user data to the items.
@@ -218,6 +221,10 @@ class ReportExtended extends Report {
     $query->addField('r', 'source', 'source');
     $query->condition('r.entity_id', $ids, 'IN');
     $query->condition('r.entity_bundle', 'report', '=');
+
+    // Note: not using Drupal\Core\Database\Statement\FetchAs::Associative
+    // since this uses the database query class from the API indexer not the
+    // the Drupal one and it expects a PDO constant.
     $records = $query->execute()?->fetchAllAssoc('entity_id', \PDO::FETCH_ASSOC) ?? [];
 
     // Deserialize the extra field.

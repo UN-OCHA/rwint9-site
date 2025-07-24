@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_fields\Plugin\Field\FieldWidget;
 
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -136,7 +137,7 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
         ->fields('u', ['uid', 'name', 'mail', 'status'])
         ->condition('u.uid', $ids, 'IN')
         ->execute()
-        ?->fetchAllAssoc('uid', \PDO::FETCH_ASSOC) ?? [];
+        ?->fetchAllAssoc('uid', FetchAs::Associative) ?? [];
 
       foreach ($items as $item) {
         if (isset($users[$item['id']])) {

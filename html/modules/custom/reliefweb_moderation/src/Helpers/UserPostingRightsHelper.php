@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_moderation\Helpers;
 
+use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Field\EntityReferenceFieldItemList;
 use Drupal\Core\Session\AccountInterface;
@@ -131,7 +132,7 @@ class UserPostingRightsHelper {
         $query->condition($table . '.entity_id', $sources, 'IN');
       }
 
-      $results = $query->execute()?->fetchAllAssoc('tid', \PDO::FETCH_ASSOC);
+      $results = $query->execute()?->fetchAllAssoc('tid', FetchAs::Associative);
     }
     else {
       $results = [];
@@ -381,7 +382,7 @@ class UserPostingRightsHelper {
       $query->range(0, $limit);
     }
 
-    return $query->execute()?->fetchAllAssoc('entity_id', \PDO::FETCH_ASSOC);
+    return $query->execute()?->fetchAllAssoc('entity_id', FetchAs::Associative);
   }
 
   /**

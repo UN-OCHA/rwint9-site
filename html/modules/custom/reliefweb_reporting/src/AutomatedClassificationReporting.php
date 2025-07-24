@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\reliefweb_reporting;
 
+use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\Core\Logger\LoggerChannelTrait;
 use Drupal\Core\Url;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
@@ -130,7 +131,7 @@ class AutomatedClassificationReporting {
     $query->orderBy("{$revision_table}.{$revision_id_field}");
 
     // Retrieve the revisions.
-    $records = $query->execute()?->fetchAll(\PDO::FETCH_ASSOC);
+    $records = $query->execute()?->fetchAll(FetchAs::Associative);
 
     // Group the revisions by entity id and revision id.
     $entity_revisions = [];

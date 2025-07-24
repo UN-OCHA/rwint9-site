@@ -4,6 +4,7 @@ namespace Drupal\reliefweb_reporting\Commands;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\Core\Language\LanguageDefault;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Mail\MailManagerInterface;
@@ -287,7 +288,7 @@ class ReliefWebReportingCommands extends DrushCommands {
         AND n.created >= UNIX_TIMESTAMP(DATE_SUB(DATE(NOW()), INTERVAL DAYOFWEEK(NOW()) + 6 DAY))
         AND n.created < UNIX_TIMESTAMP(DATE_SUB(DATE(NOW()), INTERVAL DAYOFWEEK(NOW()) - 1 DAY))
       ORDER BY n.nid DESC
-    ")->fetchAll(\PDO::FETCH_ASSOC);
+    ")->fetchAll(FetchAs::Associative);
 
     $attachments = [];
 
