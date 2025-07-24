@@ -7,6 +7,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -1155,7 +1156,7 @@ class EntityHistory {
         ->fields('fm', ['uuid', 'uri', 'filename', 'filesize'])
         ->condition('uuid', $file_uuids, 'IN')
         ->execute()
-        ?->fetchAllAssoc('uuid', \PDO::FETCH_ASSOC) ?? [];
+        ?->fetchAllAssoc('uuid', FetchAs::Associative) ?? [];
     }
 
     // Properties to display in the revisions.
