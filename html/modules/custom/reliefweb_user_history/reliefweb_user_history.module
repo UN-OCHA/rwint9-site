@@ -5,6 +5,7 @@
  * Module file for the reliefweb_user_history module.
  */
 
+use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
@@ -205,7 +206,7 @@ function reliefweb_user_history_get_account_history_content(UserInterface $user)
       ->condition('uid', $user->id())
       ->orderBy('modification_id', 'ASC')
       ->execute()
-      ?->fetchAll(\PDO::FETCH_ASSOC) ?? [];
+      ?->fetchAll(FetchAs::Associative) ?? [];
 
     // Add the current version to the list of records.
     $records[] = reliefweb_user_history_user_entity_to_record($user, $user, $user);

@@ -2,12 +2,9 @@
 
 namespace Drupal\reliefweb_import\Service;
 
-use Drupal\Core\Database\Query\Select;
-use Drupal\Core\Url;
-use Drupal\reliefweb_moderation\EntityModeratedInterface;
-use Drupal\reliefweb_moderation\ModerationServiceBase;
-
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Query\Select;
+use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -16,7 +13,10 @@ use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Pager\PagerParametersInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\Core\Url;
 use Drupal\reliefweb_import\Plugin\ReliefWebImporterPluginManager;
+use Drupal\reliefweb_moderation\EntityModeratedInterface;
+use Drupal\reliefweb_moderation\ModerationServiceBase;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -642,7 +642,7 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
       ->condition('imported_item_uuid', $ids, 'IN')
       ->orderBy('created', 'DESC')
       ->execute()
-      ?->fetchAllAssoc('imported_item_uuid', \PDO::FETCH_ASSOC) ?? [];
+      ?->fetchAllAssoc('imported_item_uuid', FetchAs::Associative) ?? [];
 
     // Deserialize the extra field.
     foreach ($records as &$record) {

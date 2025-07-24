@@ -5,6 +5,7 @@ namespace Drupal\reliefweb_users\Controller;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormState;
@@ -198,7 +199,7 @@ class UserController extends ControllerBase {
     // Get the users.
     $currentPage = $this->pagerManager->createPager($count, $items_per_page)->getCurrentPage();
     $query->range($currentPage * $items_per_page, $items_per_page);
-    $users = $query->execute()->fetchAllAssoc('uid', \PDO::FETCH_OBJ);
+    $users = $query->execute()->fetchAllAssoc('uid', FetchAs::Object);
 
     // Prepare the table rows.
     $rows = [];

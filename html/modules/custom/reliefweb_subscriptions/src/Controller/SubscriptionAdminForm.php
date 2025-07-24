@@ -4,6 +4,7 @@ namespace Drupal\reliefweb_subscriptions\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\Core\Datetime\DateFormatter;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
@@ -67,7 +68,7 @@ class SubscriptionAdminForm extends ControllerBase {
     $query = $this->database->select('reliefweb_subscriptions_logs', 'l');
     $query->fields('l', ['sid', 'last', 'next']);
     $result = $query->execute();
-    $logs = !empty($result) ? $result->fetchAllAssoc('sid', \PDO::FETCH_ASSOC) : [];
+    $logs = !empty($result) ? $result->fetchAllAssoc('sid', FetchAs::Associative) : [];
 
     // Get number of subscribers per subscription.
     $query = $this->database->select('reliefweb_subscriptions_subscriptions', 's');
