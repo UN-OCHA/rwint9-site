@@ -305,8 +305,9 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         continue;
       }
 
-      $this->getLogger()->info(strtr('Processing Inoreader document @id.', [
+      $this->getLogger()->info(strtr('Processing Inoreader document @id, from @url', [
         '@id' => $id,
+        '@url' => $url,
       ]));
 
       // Generate a hash from the data we use to import the document. This is
