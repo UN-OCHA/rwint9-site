@@ -81,6 +81,7 @@ This is mandatory and points to the location of the PDF file. For the moment onl
 | page-iframe-data-src | The importer will fetch the source page and will search for an iframe with an `data-src` attribute pointing to the PDF file |
 | js | Uses puppeteer to render and analyze the page |
 | content | Uses summary of inoreader as body |
+| html | Uses the HTML page as body |
 
 #### `content` tag
 

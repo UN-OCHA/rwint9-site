@@ -447,6 +447,38 @@ class InoreaderService {
             }
             break;
 
+          case 'html':
+            $page_url = $document['canonical'][0]['href'] ?? '';
+            $body = $this->downloadHtmlPage($page_url, $fetch_timeout);
+
+            if (empty($body)) {
+              $this->logger->warning(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
+                '@id' => $id,
+                '@url' => $page_url,
+              ]));
+              $body = $document['summary']['content'] ?? '';
+            }
+            elseif (isset($tags['wrapper'])) {
+              $body = $this->extractPartFromHtml($body, $tags['wrapper']);
+            }
+
+            // Remove specified HTML elements.
+            if (isset($tags['remove'])) {
+              $body = $this->removeHtmlElements($body, $tags['remove']);
+            }
+
+            $clean_body = isset($tags['content']) && $tags['content'] == 'clean';
+            $body = $this->cleanAndConvertBody($body, $clean_body);
+            if (empty($body)) {
+              $this->logger->error(strtr('Unable to retrieve the body content for Inoreader document @id.', [
+                '@id' => $id,
+              ]));
+
+              throw new ReliefwebImportExceptionEmptyBody(strtr('No body content found for Inoreader document @id.', [
+                '@id' => $id,
+              ]));
+            }
+            break;
         }
 
         $pdf = $this->rewritePdfLink($pdf, $tags);
@@ -613,6 +645,33 @@ class InoreaderService {
   }
 
   /**
+   * Extract part of an HTML page.
+   */
+  protected function extractPartFromHtml(string $html, array|string $selector = ''): ?string {
+    if (empty($html)) {
+      return NULL;
+    }
+
+    if (empty($selector)) {
+      return $html;
+    }
+
+    if (is_array($selector)) {
+      $selector = reset($selector);
+    }
+
+    $crawler = new Crawler($html);
+
+    if ($elements = $crawler->filter($selector)) {
+      if ($first = $elements->first()) {
+        return $first->outerHtml();
+      }
+    }
+
+    return NULL;
+  }
+
+  /**
    * Try to extract the link to a PDF file from HTML content.
    * */
   protected function tryToExtractPdfFromHtml($page_url, $html, $tags) {
@@ -711,7 +770,7 @@ class InoreaderService {
    */
   protected function downloadHtmlPage($url, $fetch_timeout) {
     try {
-      $response = $this->httpClient->get($url, [
+      $response = $this->httpClient->request('GET', $url, [
         'connect_timeout' => $fetch_timeout,
         'timeout' => $fetch_timeout,
         'headers' => $this->getHttpHeaders(),
@@ -726,7 +785,7 @@ class InoreaderService {
     catch (\Exception $exception) {
       try {
         // Try without headers.
-        $response = $this->httpClient->get($url, [
+        $response = $this->httpClient->request('GET', $url, [
           'connect_timeout' => $fetch_timeout,
           'timeout' => $fetch_timeout,
         ]);
@@ -861,7 +920,10 @@ class InoreaderService {
     return [
       'accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
       'accept-language' => 'en-BE,en;q=0.9',
+      'accept-language' => 'en-BE,en;q=0.9,nl-BE;q=0.8,nl;q=0.7,fr-BE;q=0.6,fr;q=0.5,en-GB;q=0.4,en-US;q=0.3',
+      'cache-control' => 'no-cache',
       'dnt' => '1',
+      'pragma' => 'no-cache',
       'priority' => 'u=0, i',
       'sec-ch-ua' => '"Google Chrome";v="137", "Chromium";v="137", "Not/A)Brand";v="24"',
       'sec-ch-ua-mobile' => ' ?0',
