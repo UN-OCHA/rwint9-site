@@ -184,3 +184,24 @@ reliefweb_import.plugin.importer.worldbank:
     timeout:
       type: integer
       label: 'Connection and request timeout.'
+
+# UNEP importer plugin settings.
+reliefweb_import.plugin.importer.unep:
+  type: reliefweb_import.plugin.importer
+  label: 'UNEP importer plugin base settings.'
+  mapping:
+    api_url:
+      type: string
+      label: 'API URL.'
+    api_key:
+      type: string
+      label: 'API Key.'
+    max_age:
+      type: integer
+      label: 'Max age in days.'
+    document_types:
+      type: string
+      label: List of document types to import.'
+    timeout:
+      type: integer
+      label: 'Connection and request timeout.'
