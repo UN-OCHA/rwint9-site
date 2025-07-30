@@ -211,6 +211,10 @@ class InoreaderTestForm extends FormBase {
     $logger = new TransientLogger();
     $form_state->setRebuild();
 
+    // Clear data.
+    $form_state->set('inoreader_data', []);
+    $form_state->set('inoreader_records', []);
+
     $settings = $this->config('reliefweb_import.plugin.importer.inoreader')->get();
     $settings['api_url'] = 'https://www.inoreader.com/reader/api/0/stream/contents/';
     $url = str_replace('https://www.inoreader.com/', '', $url);
