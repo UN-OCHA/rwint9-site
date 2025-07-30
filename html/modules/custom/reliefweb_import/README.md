@@ -43,6 +43,7 @@ Imports tagged items from the [automation_production](https://www.inoreader.com/
 | title | - | No | No | [title:filename] |
 | follow | - | No | No | [follow:https://wedocs.unep.org] |
 | wrapper | w | No | Yes | [wrapper:div.content_sidebar] |
+| html | h | No | Yes | [html:div.content_main] |
 | url | u | No | Yes | [url:/docs/] |
 | puppeteer | p | No | Yes | [puppeteer:ds-file-download-link a] |
 | ~~puppeteer2~~ | p2 | No | No | [puppeteer:ds-file-download-link a] |
@@ -53,7 +54,8 @@ Imports tagged items from the [automation_production](https://www.inoreader.com/
 | status | s | No | No | [status:published] |
 | screenshot | - | No | No | [screenshot:1] |
 | debug | - | No | No | [debug:1] |
-| remove | r | No | Yes | [remove:.hero-text-container-article]
+| remove | r | No | Yes | [remove:.hero-text-container-article] |
+| fallback | f | No | No | [fallback: content] |
 
 #### `source` tag
 
@@ -107,6 +109,10 @@ If set the HTML page will be fetched and will search for a link matching what is
 
 This will restrict searching in an HTML file to a certain region on the page.
 
+#### `html` tag
+
+This will extract part of an HTML file. To be used when using `[pdf:html]`.
+
 #### `url` tag
 
 This will filter possible links to PDF files to a certain pattern.
@@ -148,6 +154,12 @@ Only use for debugging, capture all logs.
 #### `remove` tag
 
 Remove HTML elements based on tag and/or class.
+
+#### `fallback` tag
+
+If no PDF is found use the `content` or `html` method.
+
+When using `html` make sure to specify `[html:div.body]` tag to limit the content.
 
 ### Override tags in the UI
 
