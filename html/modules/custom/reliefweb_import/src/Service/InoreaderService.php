@@ -53,6 +53,7 @@ class InoreaderService {
    */
   protected array $tagAliases = [
     'w' => 'wrapper',
+    'h' => 'html',
     'u' => 'url',
     'r' => 'replace',
     'p' => 'puppeteer',
@@ -62,6 +63,7 @@ class InoreaderService {
     'd' => 'delay',
     't' => 'timeout',
     's' => 'status',
+    'f' => 'fallback',
   ];
 
   public function __construct(
@@ -427,61 +429,28 @@ class InoreaderService {
             break;
 
           case 'content':
-            $body = $document['summary']['content'] ?? '';
-
-            // Remove specified HTML elements.
-            if (isset($tags['remove'])) {
-              $body = $this->removeHtmlElements($body, $tags['remove']);
-            }
-
-            $clean_body = isset($tags['content']) && $tags['content'] == 'clean';
-            $body = $this->cleanAndConvertBody($body, $clean_body);
-            if (empty($body)) {
-              $this->logger->error(strtr('Unable to retrieve the body content for Inoreader document @id.', [
-                '@id' => $id,
-              ]));
-
-              throw new ReliefwebImportExceptionEmptyBody(strtr('No body content found for Inoreader document @id.', [
-                '@id' => $id,
-              ]));
-            }
+            $body = $this->extractAndCleanBodyFromContent($document, $tags, $id);
             break;
 
           case 'html':
-            $page_url = $document['canonical'][0]['href'] ?? '';
-            $body = $this->downloadHtmlPage($page_url, $fetch_timeout);
-
-            if (empty($body)) {
-              $this->logger->warning(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
-                '@id' => $id,
-                '@url' => $page_url,
-              ]));
-              $body = $document['summary']['content'] ?? '';
-            }
-            elseif (isset($tags['wrapper'])) {
-              $body = $this->extractPartFromHtml($body, $tags['wrapper']);
-            }
-
-            // Remove specified HTML elements.
-            if (isset($tags['remove'])) {
-              $body = $this->removeHtmlElements($body, $tags['remove']);
-            }
-
-            $clean_body = isset($tags['content']) && $tags['content'] == 'clean';
-            $body = $this->cleanAndConvertBody($body, $clean_body);
-            if (empty($body)) {
-              $this->logger->error(strtr('Unable to retrieve the body content for Inoreader document @id.', [
-                '@id' => $id,
-              ]));
-
-              throw new ReliefwebImportExceptionEmptyBody(strtr('No body content found for Inoreader document @id.', [
-                '@id' => $id,
-              ]));
-            }
+            $body = $this->extractAndCleanBodyFromHtml($document, $tags, $id, $fetch_timeout);
             break;
         }
 
         $pdf = $this->rewritePdfLink($pdf, $tags);
+
+        // Fallback to content if PDF is not found.
+        if (empty($pdf) && !empty($tags['fallback'])) {
+          switch ($tags['fallback']) {
+            case 'content':
+              $body = $this->extractAndCleanBodyFromContent($document, $tags, $id);
+              break;
+
+            case 'html':
+              $body = $this->extractAndCleanBodyFromHtml($document, $tags, $id, $fetch_timeout);
+              break;
+          }
+        }
       }
       elseif ($tag_key == 'content') {
         switch ($tag_value) {
@@ -1083,6 +1052,97 @@ class InoreaderService {
     }
 
     return $tags;
+  }
+
+  /**
+   * Extract and clean the body content from a document.
+   *
+   * @param array $document
+   *   The Inoreader document.
+   * @param array $tags
+   *   The extracted tags.
+   * @param string $id
+   *   The document ID.
+   *
+   * @return string
+   *   The cleaned body content.
+   *
+   * @throws \Drupal\reliefweb_import\Exception\ReliefwebImportExceptionEmptyBody
+   */
+  protected function extractAndCleanBodyFromContent(array $document, array $tags, string $id): string {
+    $body = $document['summary']['content'] ?? '';
+
+    // Remove specified HTML elements.
+    if (isset($tags['remove'])) {
+      $body = $this->removeHtmlElements($body, $tags['remove']);
+    }
+
+    $clean_body = isset($tags['content']) && $tags['content'] == 'clean';
+    $body = $this->cleanAndConvertBody($body, $clean_body);
+
+    if (empty($body)) {
+      $this->logger->error(strtr('Unable to retrieve the body content for Inoreader document @id.', [
+        '@id' => $id,
+      ]));
+
+      throw new ReliefwebImportExceptionEmptyBody(strtr('No body content found for Inoreader document @id.', [
+        '@id' => $id,
+      ]));
+    }
+
+    return $body;
+  }
+
+  /**
+   * Extract and clean the body content from HTML.
+   *
+   * @param array $document
+   *   The Inoreader document.
+   * @param array $tags
+   *   The extracted tags.
+   * @param string $id
+   *   The document ID.
+   * @param int $fetch_timeout
+   *   The fetch timeout in seconds.
+   *
+   * @return string
+   *   The cleaned body content.
+   *
+   * @throws \Drupal\reliefweb_import\Exception\ReliefwebImportExceptionEmptyBody
+   */
+  protected function extractAndCleanBodyFromHtml(array $document, array $tags, string $id, int $fetch_timeout): string {
+    $page_url = $document['canonical'][0]['href'] ?? '';
+    $body = $this->downloadHtmlPage($page_url, $fetch_timeout);
+
+    if (empty($body)) {
+      $this->logger->warning(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
+        '@id' => $id,
+        '@url' => $page_url,
+      ]));
+      $body = $document['summary']['content'] ?? '';
+    }
+    elseif (isset($tags['html'])) {
+      $body = $this->extractPartFromHtml($body, $tags['html']);
+    }
+
+    // Remove specified HTML elements.
+    if (isset($tags['remove'])) {
+      $body = $this->removeHtmlElements($body, $tags['remove']);
+    }
+
+    $clean_body = isset($tags['content']) && $tags['content'] == 'clean';
+    $body = $this->cleanAndConvertBody($body, $clean_body);
+    if (empty($body)) {
+      $this->logger->error(strtr('Unable to retrieve the body content for Inoreader document @id.', [
+        '@id' => $id,
+      ]));
+
+      throw new ReliefwebImportExceptionEmptyBody(strtr('No body content found for Inoreader document @id.', [
+        '@id' => $id,
+      ]));
+    }
+
+    return $body;
   }
 
 }
