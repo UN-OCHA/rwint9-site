@@ -104,12 +104,84 @@ class InoreaderTestForm extends FormBase {
 
       $form['records'] = [
         '#type' => 'details',
-        '#title' => $this->t('Parsed output'),
-        '#open' => TRUE,
+        '#title' => $this->t('Raw output'),
+        '#open' => FALSE,
         'content' => [
           '#markup' => '<pre>' . htmlspecialchars(print_r($records, TRUE)) . '</pre>',
         ],
       ];
+
+      $form['readable'] = [
+        '#type' => 'details',
+        '#title' => $this->t('Parsed output'),
+        '#open' => TRUE,
+      ];
+
+      $taglist = [];
+      foreach ($records[0]['tags'] ?? [] as $tag_name => $tag_value) {
+        $tag_name = ucfirst(str_replace('_', ' ', $tag_name));
+        if (is_array($tag_value)) {
+          $taglist[] = $tag_name . ': ' . implode(', ', $tag_value);
+        }
+        else {
+          $taglist[] = $tag_name . ': ' . $tag_value;
+        }
+      }
+
+      $form['readable']['tags'] = [
+        '#theme' => 'item_list',
+        '#title' => 'Used tags',
+        '#items' => $taglist,
+      ];
+
+      foreach ($records as $key => $record) {
+        $form['readable'][$key] = [
+          '#type' => 'details',
+          '#title' => $record['report']['title'],
+          '#open' => TRUE,
+        ];
+
+        $form['readable'][$key][] = [
+          '#type' => 'inline_template',
+          '#template' => '<p>Origin: <a href="' . $record['report']['origin'] . '" target="_blank">' . $record['report']['origin'] . '</a></p>',
+        ];
+
+        if (!empty($record['report']['body']) && $record['report']['body'] != '...') {
+          $form['readable'][$key][] = [
+            '#type' => 'inline_template',
+            '#template' => '<pre>' . $record['report']['body'] . '</pre>',
+          ];
+        }
+
+        if (!empty($record['has_pdf'])) {
+          $form['readable'][$key][] = [
+            '#type' => 'inline_template',
+            '#template' => '<p><strong>PDF available</strong></p>',
+          ];
+          $form['readable'][$key][] = [
+            '#type' => 'inline_template',
+            '#template' => '<p><a href="' . $record['report']['file_data']['pdf'] . '" target="_blank">' . $record['report']['file_data']['pdf'] . '</a></p>',
+          ];
+        }
+        else {
+          $form['readable'][$key][] = [
+            '#type' => 'inline_template',
+            '#template' => '<p><strong>No PDF available</strong></p>',
+          ];
+        }
+
+        if (!empty($record['report']['logs'])) {
+          $form['readable'][$key]['logs'] = [
+            '#theme' => 'item_list',
+            '#title' => 'Logs',
+            '#items' => [],
+          ];
+
+          foreach ($record['report']['logs'] as $log) {
+            $form['readable'][$key]['logs']['#items'][] = $log->message . ' (' . $log->level->name . ')';
+          }
+        }
+      }
 
       if (!empty($screenshots)) {
         $form['screenshots'] = [
@@ -173,7 +245,7 @@ class InoreaderTestForm extends FormBase {
           $record['file_data']['bytes'] = substr($record['file_data']['bytes'], 0, 30) . '...';
         }
         if (isset($record['body'])) {
-          $record['body'] = substr($record['body'], 0, 30) . '...';
+          $record['body'] = substr($record['body'], 0, 500) . '...';
         }
 
         $record['logs'] = $logger->getAll();

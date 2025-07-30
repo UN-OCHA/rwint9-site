@@ -852,6 +852,14 @@ class InoreaderService {
     $screenshot = FALSE;
     $debug = FALSE;
 
+    if (!isset($tags['puppeteer']) || empty($tags['puppeteer'])) {
+      $this->logger->error(strtr('Inoreader document @id does not have a puppeteer tag defined.', [
+        '@id' => $page_url,
+      ]));
+
+      return [];
+    }
+
     // Check if we need to request the PDF as Blob.
     if (isset($tags['puppeteer-blob'])) {
       $blob = TRUE;
