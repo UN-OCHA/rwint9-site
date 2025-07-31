@@ -152,52 +152,50 @@ class UnepImporter extends ReliefWebImporterPluginBase {
       $max_age = max(1, $this->getPluginSetting('max_age', 3, FALSE));
       $last_update = (int) 1000 * (time() - ($max_age * 24 * 60 * 60));
 
-      $payload = '
-        {
-          "track_total_hits": true,
-          "size": ' . $limit . ',
-          "_source": false,
-          "fields": [
-            "title",
-            "links.uri",
-            "publication_date",
-            "path"
+      $payload = [
+        'track_total_hits' => TRUE,
+        'size' => $limit,
+        '_source' => FALSE,
+        'fields' => [
+          'title',
+          'links.uri',
+          'publication_date',
+          'path',
+        ],
+        'query' => [
+          'bool' => [
+            'must' => [
+              [
+                'match' => [
+                  'type' => [
+                    'query' => implode(' ', $document_types),
+                    'operator' => 'or',
+                  ],
+                ],
+              ],
+              [
+                'regexp' => [
+                  'links.uri' => '.*.pdf',
+                ],
+              ],
+              [
+                'range' => [
+                  'publication_date' => [
+                    'gte' => $last_update,
+                  ],
+                ],
+              ],
+            ],
           ],
-          "query": {
-            "bool": {
-              "must": [
-                {
-                  "match": {
-                    "type": {
-                      "query": "' . implode(' ', $document_types) . '",
-                      "operator": "or"
-                    }
-                  }
-                },
-                {
-                  "regexp": {
-                    "links.uri": ".*.pdf"
-                  }
-                },
-                {
-                  "range": {
-                    "publication_date": {
-                      "gte": ' . $last_update . '
-                    }
-                  }
-                }
-              ]
-            }
-          },
-          "sort": [
-            {
-              "publication_date": {
-                "order": "desc"
-              }
-            }
-          ]
-        }
-      ';
+        ],
+        'sort' => [
+          [
+            'publication_date' => [
+              'order' => 'desc',
+            ],
+          ],
+        ],
+      ];
 
       $response = $this->httpClient->request('GET', $api_url, [
         'connect_timeout' => $timeout,
@@ -207,7 +205,7 @@ class UnepImporter extends ReliefWebImporterPluginBase {
           'Accept' => 'application/json',
           'Authorization' => 'Basic ' . $api_key,
         ],
-        'json' => json_decode($payload, TRUE),
+        'json' => $payload,
       ]);
 
       if ($response->getStatusCode() !== 200) {
@@ -241,6 +239,7 @@ class UnepImporter extends ReliefWebImporterPluginBase {
       if (!isset($document['_id'])) {
         continue;
       }
+
       $map[$document['_id']] = [
         'id' => $document['_id'],
         'title' => $document['fields']['title'][0] ?? '',
@@ -370,7 +369,7 @@ class UnepImporter extends ReliefWebImporterPluginBase {
         'title',
         'path',
         'publication_date',
-        'links.uri',
+        'links',
       ]);
       $hash = HashHelper::generateHash($filtered_document);
       $import_record['imported_data_hash'] = $hash;
