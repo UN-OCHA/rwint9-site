@@ -221,7 +221,7 @@ class InoreaderServiceTest extends TestCase {
   }
 
   /**
-   *
+   * Test downloadHtmlPage success with valid HTML.
    */
   public function testDownloadHtmlPageSuccess() {
     $url = 'https://example.com/test.html';
@@ -243,7 +243,7 @@ class InoreaderServiceTest extends TestCase {
   }
 
   /**
-   *
+   * Test downloadHtmlPage with fallback to HTML content.
    */
   public function testDownloadHtmlPageFallbackSuccess() {
     $url = 'https://example.com/test.html';
@@ -265,7 +265,7 @@ class InoreaderServiceTest extends TestCase {
   }
 
   /**
-   *
+   * Test downloadHtmlPage failure with exception.
    */
   public function testDownloadHtmlPageFailure() {
     $url = 'https://example.com/test.html';
