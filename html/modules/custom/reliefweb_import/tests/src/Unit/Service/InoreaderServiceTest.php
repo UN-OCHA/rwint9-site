@@ -305,4 +305,39 @@ class InoreaderServiceTest extends TestCase {
     $method->invokeArgs($this->service, [$url, 5]);
   }
 
+  /**
+   * Test extractPartFromHtml method.
+   */
+  public function testExtractPartFromHtml() {
+    $reflection = new \ReflectionClass($this->service);
+    $method = $reflection->getMethod('extractPartFromHtml');
+    $method->setAccessible(TRUE);
+
+    $html = '<div><section><p class="main">Hello World</p></section><p>Other</p></div>';
+
+    // Test extracting by class selector.
+    $result = $method->invokeArgs($this->service, [$html, '.main']);
+    $this->assertStringContainsString('Hello World', $result);
+
+    // Test extracting by tag selector.
+    $result = $method->invokeArgs($this->service, [$html, 'section']);
+    $this->assertStringContainsString('<section><p class="main">Hello World</p></section>', $result);
+
+    // Test extracting with empty selector (should return full HTML).
+    $result = $method->invokeArgs($this->service, [$html, '']);
+    $this->assertEquals($html, $result);
+
+    // Test extracting with array selector.
+    $result = $method->invokeArgs($this->service, [$html, ['.main']]);
+    $this->assertStringContainsString('Hello World', $result);
+
+    // Test extracting with non-existing selector (should return NULL).
+    $result = $method->invokeArgs($this->service, [$html, '.notfound']);
+    $this->assertNull($result);
+
+    // Test extracting with empty HTML (should return NULL).
+    $result = $method->invokeArgs($this->service, ['', '.main']);
+    $this->assertNull($result);
+  }
+
 }
