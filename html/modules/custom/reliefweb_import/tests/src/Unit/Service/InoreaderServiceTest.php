@@ -205,6 +205,23 @@ class InoreaderServiceTest extends TestCase {
   }
 
   /**
+   * Test extractPdfUrl method.
+   */
+  public function testExtractPdfUrl() {
+    // Use reflection to access the protected method.
+    $reflection = new \ReflectionClass($this->service);
+    $method = $reflection->getMethod('extractPdfUrl');
+    $method->setAccessible(TRUE);
+
+    $html = '<a href="https://example.com/path/to/file.pdf">Link</a>';
+    $tag = 'a';
+    $attribute = 'href';
+    $expected = 'https://example.com/path/to/file.pdf';
+    $result = $method->invokeArgs($this->service, [$html, $tag, $attribute]);
+    $this->assertEquals($expected, $result);
+  }
+
+  /**
    * Test exception.
    */
   public function testExtractAndCleanBodyFromContentThrowsExceptionOnEmptyBody() {
