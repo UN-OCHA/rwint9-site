@@ -242,8 +242,22 @@ class InoreaderTestForm extends FormBase {
           $document['origin']['title'] .= ' ' . $tags;
         }
 
-        $logger->flushLog();
-        $record = $this->inoreaderService->processDocumentData($document);
+        try {
+          $logger->flushLog();
+          $record = $this->inoreaderService->processDocumentData($document);
+        }
+        catch (\Exception $e) {
+          $logger->error($this->t('Error processing document: @message', ['@message' => $e->getMessage()]));
+          $record['logs'] = $logger->getAll();
+
+          $records[] = [
+            'has_pdf' => FALSE,
+            'tags' => [],
+            'report' => $record,
+          ];
+
+          continue;
+        }
 
         if (isset($record['file_data']['bytes'])) {
           $record['file_data']['bytes'] = substr($record['file_data']['bytes'], 0, 30) . '...';
