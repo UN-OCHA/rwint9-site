@@ -8,6 +8,7 @@ use Drupal\reliefweb_import\Service\InoreaderService;
 use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionEmptyBody;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
@@ -24,16 +25,30 @@ class InoreaderServiceTest extends TestCase {
   protected $service;
 
   /**
+   * Http client mock.
+   *
+   * @var \GuzzleHttp\ClientInterface
+   */
+  protected $httpClient;
+
+  /**
+   * Logger mock.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
-    $http_client = $this->createMock(ClientInterface::class);
+    $this->httpClient = $this->createMock(ClientInterface::class);
     $state = $this->createMock(StateInterface::class);
     $state->method('get')->willReturn([]);
-    $logger = $this->createMock(LoggerInterface::class);
+    $this->logger = $this->createMock(LoggerInterface::class);
 
-    $this->service = new InoreaderService($http_client, $state);
-    $this->service->setLogger($logger);
+    $this->service = new InoreaderService($this->httpClient, $state);
+    $this->service->setLogger($this->logger);
   }
 
   /**
@@ -203,6 +218,74 @@ class InoreaderServiceTest extends TestCase {
 
     $this->expectException(ReliefwebImportExceptionEmptyBody::class);
     $method->invokeArgs($this->service, [$document, $tags, $id]);
+  }
+
+  /**
+   *
+   */
+  public function testDownloadHtmlPageSuccess() {
+    $url = 'https://example.com/test.html';
+    $html = '<html><body>Test</body></html>';
+    $response = new Response(200, [], $html);
+
+    $this->httpClient
+      ->expects($this->once())
+      ->method('request')
+      ->with('GET', $url, $this->arrayHasKey('timeout'))
+      ->willReturn($response);
+
+    $reflection = new \ReflectionClass($this->service);
+    $method = $reflection->getMethod('downloadHtmlPage');
+    $method->setAccessible(TRUE);
+
+    $result = $method->invokeArgs($this->service, [$url, 5]);
+    $this->assertEquals($html, $result);
+  }
+
+  /**
+   *
+   */
+  public function testDownloadHtmlPageFallbackSuccess() {
+    $url = 'https://example.com/test.html';
+    $html = '<html><body>Fallback</body></html>';
+    $response = new Response(200, [], $html);
+
+    $this->httpClient
+      ->expects($this->exactly(1))
+      ->method('request')
+      ->with('GET', $url, $this->arrayHasKey('timeout'))
+      ->willReturn($response);
+
+    $reflection = new \ReflectionClass($this->service);
+    $method = $reflection->getMethod('downloadHtmlPage');
+    $method->setAccessible(TRUE);
+
+    $result = $method->invokeArgs($this->service, [$url, 5]);
+    $this->assertEquals($html, $result);
+  }
+
+  /**
+   *
+   */
+  public function testDownloadHtmlPageFailure() {
+    $url = 'https://example.com/test.html';
+
+    $this->httpClient
+      ->expects($this->exactly(2))
+      ->method('request')
+      ->will($this->throwException(new \Exception('Network error')));
+
+    $this->logger
+      ->expects($this->atLeastOnce())
+      ->method('info')
+      ->with($this->stringContains('Failure with response code: Network error'));
+
+    $reflection = new \ReflectionClass($this->service);
+    $method = $reflection->getMethod('downloadHtmlPage');
+    $method->setAccessible(TRUE);
+
+    $this->expectException(\Exception::class);
+    $method->invokeArgs($this->service, [$url, 5]);
   }
 
 }
