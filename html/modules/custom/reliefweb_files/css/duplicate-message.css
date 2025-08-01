@@ -1,0 +1,34 @@
+.duplicate-files-message {
+  margin: 1em 0;
+}
+
+.duplicate-files-message .messages--warning {
+  margin: 0;
+  padding: 0.75em 1em;
+  color: #734c00;
+  border: 1px solid #f4daa6;
+  border-radius: 3px;
+  background-color: #fdf8ed;
+}
+
+.duplicate-files-message .messages__content {
+  margin: 0;
+}
+
+.duplicate-files-list {
+  margin: 0.5em 0 0 0;
+  padding-left: 1.5em;
+}
+
+.duplicate-files-list li {
+  margin-bottom: 0.25em;
+}
+
+.duplicate-files-list a {
+  text-decoration: none;
+  color: #0071b8;
+}
+
+.duplicate-files-list a:hover {
+  text-decoration: underline;
+}
