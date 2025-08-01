@@ -340,4 +340,67 @@ class InoreaderServiceTest extends TestCase {
     $this->assertNull($result);
   }
 
+  /**
+   * Test removeHtmlElements method.
+   */
+  public function testRemoveHtmlElements() {
+    $reflection = new \ReflectionClass($this->service);
+    $method = $reflection->getMethod('removeHtmlElements');
+    $method->setAccessible(TRUE);
+
+    // Test case with HTML elements present in the body content.
+    $htmlContent = '<p>This is a paragraph of text.</p><span>This is another element.</span>';
+    $removeSelector = 'span';
+    $result = $method->invokeArgs($this->service, [$htmlContent, $removeSelector]);
+    $expectedResult = '<p>This is a paragraph of text.</p>';
+
+    // Assert that the result matches the expected output.
+    $this->assertEquals($expectedResult, $result);
+
+    // Test case with no HTML elements in the body content.
+    $htmlContent = '';
+    $removeSelector = 'span';
+    $result = $method->invokeArgs($this->service, [$htmlContent, $removeSelector]);
+    $expectedResult = '';
+
+    // Assert that the result matches the expected output.
+    $this->assertEquals($expectedResult, $result);
+
+    // Test case with a single HTML element in the body content.
+    $htmlContent = '<p>This is a paragraph of text.</p>';
+    $removeSelector = 'span';
+    $result = $method->invokeArgs($this->service, [$htmlContent, $removeSelector]);
+    $expectedResult = '<p>This is a paragraph of text.</p>';
+
+    // Assert that the result matches the expected output.
+    $this->assertEquals($expectedResult, $result);
+
+    // Test case with multiple HTML elements in the body content.
+    $htmlContent = '<div><p>This is a paragraph of text.</p><span>This is another element.</span></div>';
+    $removeSelector = 'span';
+    $result = $method->invokeArgs($this->service, [$htmlContent, $removeSelector]);
+    $expectedResult = '<div><p>This is a paragraph of text.</p></div>';
+
+    // Assert that the result matches the expected output.
+    $this->assertEquals($expectedResult, $result);
+
+    // Test case with no HTML elements in the body.
+    $htmlContent = '';
+    $removeSelector = '';
+    $result = $method->invokeArgs($this->service, [$htmlContent, $removeSelector]);
+    $expectedResult = '';
+
+    // Assert that the result matches the expected output.
+    $this->assertEquals($expectedResult, $result);
+
+    // Test case with HTML element in removeSelector array.
+    $htmlContent = '<div><p>This is a paragraph of text.</p><span>This is another element.</span></div>';
+    $removeSelector = 'span';
+    $result = $method->invokeArgs($this->service, [$htmlContent, $removeSelector]);
+    $expectedResult = '<div><p>This is a paragraph of text.</p></div>';
+
+    // Assert that the result matches the expected output.
+    $this->assertEquals($expectedResult, $result);
+  }
+
 }

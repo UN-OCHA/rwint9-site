@@ -610,7 +610,11 @@ class InoreaderService {
       });
     }
 
-    return $crawler->html();
+    if ($crawler->filter('body')->count() === 0) {
+      return $crawler->html();
+    }
+
+    return $crawler->filter('body')->html();
   }
 
   /**
