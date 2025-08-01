@@ -631,10 +631,16 @@ class InoreaderService {
 
     $crawler = new Crawler($html);
 
-    if ($elements = $crawler->filter($selector)) {
-      if ($first = $elements->first()) {
-        return $first->outerHtml();
+    try {
+      if ($elements = $crawler->filter($selector)) {
+        if ($first = $elements->first()) {
+          return $first->outerHtml();
+        }
       }
+    }
+    catch (\Exception $e) {
+      $this->logger->error('InoreaderService: ' . $e->getMessage());
+      return NULL;
     }
 
     return NULL;
