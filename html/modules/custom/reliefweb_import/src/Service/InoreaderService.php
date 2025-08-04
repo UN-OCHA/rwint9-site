@@ -1140,10 +1140,21 @@ class InoreaderService {
       $body = $this->removeHtmlElements($body, $tags['remove']);
     }
 
+    if (empty($body)) {
+      $this->logger->warning(strtr('Empty body for Inoreader document @id -- @url.', [
+        '@id' => $id,
+        '@url' => $page_url,
+      ]));
+
+      throw new ReliefwebImportExceptionEmptyBody(strtr('No body content found for Inoreader document @id.', [
+        '@id' => $id,
+      ]));
+    }
+
     $clean_body = isset($tags['content']) && $tags['content'] == 'clean';
     $body = $this->cleanAndConvertBody($body, $clean_body);
     if (empty($body)) {
-      $this->logger->error(strtr('Unable to retrieve the body content for Inoreader document @id.', [
+      $this->logger->error(strtr('Empty body after cleaning for Inoreader document @id.', [
         '@id' => $id,
       ]));
 
