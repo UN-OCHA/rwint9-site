@@ -43,9 +43,6 @@ class JobFormAlter extends EntityFormAlterServiceBase {
       ])->toString();
     }
 
-    // Add the fields to a potential new source.
-    $this->addPotentialNewSourceFields($form, $form_state);
-
     // Alter and regroup the location fields, adding the possibility to select
     // an unspecified location.
     $this->alterJobLocationFields($form, $form_state);
