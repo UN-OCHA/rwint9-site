@@ -7,7 +7,6 @@ namespace Drupal\reliefweb_import\Service;
 use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionEmptyBody;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionNoSourceTag;
-use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\reliefweb_utility\HtmlToMarkdown\Converters\TextConverter;
 use GuzzleHttp\ClientInterface;
@@ -300,7 +299,7 @@ class InoreaderService {
 
     // Retrieve the publication date.
     $published = $document['published'] ?? time();
-    $published = DateHelper::format($published, 'custom', 'c');
+    $published = date('c', $published);
 
     $origin_title = trim($this->sanitizeText($document['origin']['title'] ?? ''));
     $sources = [];

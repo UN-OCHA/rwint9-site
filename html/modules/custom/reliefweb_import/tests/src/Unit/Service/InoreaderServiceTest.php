@@ -683,4 +683,74 @@ class InoreaderServiceTest extends TestCase {
     $this->assertEquals($expected, $result);
   }
 
+  /**
+   * Test processDocumentData method.
+   */
+  public function testProcessDocumentData() {
+    $service = $this->service;
+
+    // Mock dependencies.
+    $service->setLogger($this->logger);
+    $service->setSettings(['fetch_timeout' => 5]);
+
+    // Minimal valid document with [source:123] tag.
+    $document = [
+      'id' => 'doc-1',
+      'title' => 'Test Title',
+      'published' => 1720000000,
+      'canonical' => [
+        ['href' => 'https://example.com/test.pdf'],
+      ],
+      'origin' => [
+        'title' => '[source:123] [pdf:canonical]',
+      ],
+      'summary' => [
+        'content' => '<p>Body content</p>',
+      ],
+    ];
+
+    // Patch sanitizeText and DateHelper::format for deterministic output.
+    $service = $this->getMockBuilder(get_class($service))
+      ->onlyMethods(['sanitizeText'])
+      ->setConstructorArgs([$this->httpClient, $this->createMock(StateInterface::class)])
+      ->getMock();
+    $service->setLogger($this->logger);
+    $service->setSettings(['fetch_timeout' => 5]);
+    $service->method('sanitizeText')->willReturnCallback(function ($text) {
+      return $text;
+    });
+
+    $result = $service->processDocumentData($document);
+
+    $this->assertEquals('Test Title', $result['title']);
+    $this->assertEquals('', $result['body']);
+    $this->assertEquals('https://example.com/test.pdf', $result['origin']);
+    $this->assertEquals('2024-07-03T19:46:40+10:00', $result['published']);
+    $this->assertEquals([123], $result['source']);
+    $this->assertEquals([267], $result['language']);
+    $this->assertEquals([254], $result['country']);
+    $this->assertEquals([8], $result['format']);
+    $this->assertEquals('https://example.com/test.pdf', $result['file_data']['pdf']);
+    $this->assertTrue($result['_has_pdf']);
+    $this->assertEquals(['source' => '123', 'pdf' => 'canonical'], $result['_tags']);
+    $this->assertArrayHasKey('published', $result);
+    $this->assertArrayHasKey('_screenshot', $result);
+    $this->assertArrayHasKey('_log', $result);
+
+    // Test fallback to URL for empty title.
+    $document['title'] = '';
+    $result = $service->processDocumentData($document);
+    $this->assertEquals('https://example.com/test.pdf', $result['title']);
+
+    // Test title truncation.
+    $document['title'] = str_repeat('A', 300);
+    $result = $service->processDocumentData($document);
+    $this->assertTrue(strlen($result['title']) <= 255);
+
+    // Test short title fallback.
+    $document['title'] = 'Short';
+    $result = $service->processDocumentData($document);
+    $this->assertEquals('https://example.com/test.pdf', $result['title']);
+  }
+
 }
