@@ -579,7 +579,12 @@ class InoreaderService {
     // Use our own text converter to avoid unwanted character escaping.
     $converter->getEnvironment()->addConverter(new TextConverter());
 
-    return trim($converter->convert($text));
+    $text = trim($converter->convert($text));
+
+    // Remove empty lines.
+    $text = preg_replace('/\n(\s*\n){2,}/', "\n\n", $text);
+
+    return $text;
   }
 
   /**
