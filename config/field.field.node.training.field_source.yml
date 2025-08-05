@@ -11,8 +11,8 @@ field_name: field_source
 entity_type: node
 bundle: training
 label: Organization
-description: ''
-required: false
+description: '<strong>NOTE: We are not accepting new organizations at this time.</strong>'
+required: true
 translatable: true
 default_value: {  }
 default_value_callback: ''
@@ -23,7 +23,7 @@ settings:
       source: source
     sort:
       field: name
-      direction: asc
-    auto_create: false
+      direction: ASC
+    auto_create: 0
     auto_create_bundle: ''
 field_type: entity_reference
