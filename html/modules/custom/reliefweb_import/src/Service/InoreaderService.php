@@ -807,6 +807,14 @@ class InoreaderService {
     }
 
     foreach ($tags['replace'] as $replace) {
+      if (strpos($replace, ':') === FALSE) {
+        $this->logger->error(strtr('Invalid replace tag @replace for Inoreader document @id.', [
+          '@replace' => $replace,
+          '@id' => $pdf,
+        ]));
+        continue;
+      }
+
       [$from, $to] = explode(':', $replace);
       $pdf = str_replace($from, $to, $pdf);
     }
@@ -965,7 +973,7 @@ class InoreaderService {
           if (!is_array($value)) {
             $value = [$value];
           }
-          $tags[$key] = array_unique(array_merge($tags[$key], $value));
+          $tags[$key] = array_values(array_unique(array_merge($tags[$key], $value)));
         }
         else {
           $tags[$key] = $value;

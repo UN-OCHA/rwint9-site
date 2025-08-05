@@ -403,4 +403,284 @@ class InoreaderServiceTest extends TestCase {
     $this->assertEquals($expectedResult, $result);
   }
 
+  /**
+   * Test tryToExtractPdfFromHtml method.
+   */
+  public function testTryToExtractPdfFromHtml() {
+    $reflection = new \ReflectionClass($this->service);
+    $method = $reflection->getMethod('tryToExtractPdfFromHtml');
+    $method->setAccessible(TRUE);
+
+    $page_url = 'https://example.com/page.html';
+
+    // Case 1: Simple PDF link, no wrapper, no url filter.
+    $html = '<div><a href="https://example.com/file.pdf">PDF</a></div>';
+    $tags = [];
+    $result = $method->invokeArgs($this->service, [$page_url, $html, $tags]);
+    $this->assertEquals('https://example.com/file.pdf', $result);
+
+    // Case 2: PDF link inside wrapper.
+    $html = '<div class="main"><a href="https://example.com/wrapped.pdf">PDF</a></div>';
+    $tags = ['wrapper' => '.main'];
+    $result = $method->invokeArgs($this->service, [$page_url, $html, $tags]);
+    $this->assertEquals('https://example.com/wrapped.pdf', $result);
+
+    // Case 3: PDF link with url filter (contains).
+    $html = '<div><a href="https://example.com/file-abc.pdf">PDF</a><a href="https://example.com/file-def.pdf">PDF2</a></div>';
+    $tags = ['url' => 'def'];
+    $result = $method->invokeArgs($this->service, [$page_url, $html, $tags]);
+    $this->assertEquals('https://example.com/file-def.pdf', $result);
+
+    // Case 3b: PDF link with url filter as array (multiple contains).
+    $html = '<div><a href="https://example.com/file-abc.pdf">PDF</a><a href="https://example.com/file-def.pdf">PDF2</a><a href="https://example.com/file-xyz.pdf">PDF3</a></div>';
+    $tags = ['url' => ['def', 'xyz']];
+    $result = $method->invokeArgs($this->service, [$page_url, $html, $tags]);
+    // Should match the first found: file-def.pdf.
+    $this->assertEquals('https://example.com/file-def.pdf', $result);
+
+    // Case 4: PDF link with wrapper and url filter.
+    $html = '<div class="main"><a href="/relative.pdf">PDF</a></div>';
+    $tags = ['wrapper' => '.main', 'url' => 'relative'];
+    $result = $method->invokeArgs($this->service, [$page_url, $html, $tags]);
+    $this->assertEquals('https://example.com/relative.pdf', $result);
+
+    // Case 4b: PDF link with wrapper and url filter as array.
+    $html = '<div class="main"><a href="/relative.pdf">PDF</a><a href="/other.pdf">PDF2</a></div>';
+    $tags = ['wrapper' => '.main', 'url' => ['relative', 'other']];
+    $result = $method->invokeArgs($this->service, [$page_url, $html, $tags]);
+    // Should match /relative.pdf first.
+    $this->assertEquals('https://example.com/relative.pdf', $result);
+
+    // Case 5: No PDF link found, but link to txt file.
+    $html = '<div><a href="https://example.com/file.txt">TXT</a></div>';
+    $tags = [];
+    $result = $method->invokeArgs($this->service, [$page_url, $html, $tags]);
+    $this->assertEquals('https://example.com/file.txt', $result);
+
+    // Case 6: Empty HTML.
+    $html = '';
+    $tags = [];
+    $result = $method->invokeArgs($this->service, [$page_url, $html, $tags]);
+    $this->assertEquals('', $result);
+
+    // Case 7: Multiple wrappers, first match wins.
+    $html = '<div class="main"><a href="https://example.com/first.pdf">PDF1</a></div><div class="sidebar"><a href="https://example.com/second.pdf">PDF2</a></div>';
+    $tags = ['wrapper' => ['.main', '.sidebar']];
+    $result = $method->invokeArgs($this->service, [$page_url, $html, $tags]);
+    $this->assertEquals('https://example.com/first.pdf', $result);
+
+    // Case 8: url filter does not match any link.
+    $html = '<div><a href="https://example.com/file-abc.pdf">PDF</a><a href="https://example.com/file-def.pdf">PDF2</a></div>';
+    $tags = ['url' => 'notfound'];
+    $result = $method->invokeArgs($this->service, [$page_url, $html, $tags]);
+    $this->assertEquals('', $result);
+
+    // Case 9: url filter as array, none match.
+    $html = '<div><a href="https://example.com/file-abc.pdf">PDF</a><a href="https://example.com/file-def.pdf">PDF2</a></div>';
+    $tags = ['url' => ['notfound1', 'notfound2']];
+    $result = $method->invokeArgs($this->service, [$page_url, $html, $tags]);
+    $this->assertEquals('', $result);
+  }
+
+  /**
+   * Data provider for testRewritePdfLink.
+   */
+  public static function rewritePdfLinkProvider() {
+    return [
+      // No replace tag, PDF unchanged.
+      [
+        'https://example.com/file.pdf',
+        [],
+        'https://example.com/file.pdf',
+      ],
+      // Single replace: replace 'file.pdf' with 'newfile.pdf'.
+      [
+        'https://example.com/file.pdf',
+        [
+          'replace' => 'file.pdf:newfile.pdf',
+        ],
+        'https://example.com/newfile.pdf',
+      ],
+      // Multiple replaces: first match wins.
+      [
+        'https://example.com/file.pdf',
+        [
+          'replace' => [
+            'file.pdf:first.pdf',
+            'file.pdf:second.pdf',
+          ],
+        ],
+        'https://example.com/first.pdf',
+      ],
+      // Replace tag is not an array, should ignore.
+      [
+        'https://example.com/file.pdf',
+        ['replace' => 'not-an-array'],
+        'https://example.com/file.pdf',
+      ],
+      // Empty PDF, should return empty.
+      [
+        '',
+        ['replace' => ['file.pdf:newfile.pdf']],
+        '',
+      ],
+    ];
+  }
+
+  /**
+   * Test rewritePdfLink method.
+   *
+   * @dataProvider rewritePdfLinkProvider
+   */
+  public function testRewritePdfLink($pdf, $tags, $expected) {
+    $reflection = new \ReflectionClass($this->service);
+    $method = $reflection->getMethod('rewritePdfLink');
+    $method->setAccessible(TRUE);
+
+    $result = $method->invokeArgs($this->service, [$pdf, $tags]);
+    $this->assertEquals($expected, $result);
+  }
+
+  /**
+   * Data provider for testMergeTags.
+   */
+  public static function mergeTagsProvider() {
+    return [
+      // 1. Simple merge, no overlap.
+      [
+        ['source' => '123'],
+        ['wrapper' => '.main'],
+        ['source' => '123', 'wrapper' => '.main'],
+      ],
+      // 2. Overwrite single-value tag.
+      [
+        ['source' => '123', 'status' => 'draft'],
+        ['status' => 'published'],
+        ['source' => '123', 'status' => 'published'],
+      ],
+      // 3. Merge multi-value tag (wrapper).
+      [
+        ['wrapper' => '.main'],
+        ['wrapper' => '.sidebar'],
+        ['wrapper' => ['.main', '.sidebar']],
+      ],
+      // 4. Merge multi-value tag (url) with array.
+      [
+        ['url' => ['abc']],
+        ['url' => ['def']],
+        ['url' => ['abc', 'def']],
+      ],
+      // 5. Merge multi-value tag (url) with string.
+      [
+        ['url' => 'abc'],
+        ['url' => 'def'],
+        ['url' => ['abc', 'def']],
+      ],
+      // 6. Merge multi-value tag (wrapper) with array and string.
+      [
+        ['wrapper' => ['.main']],
+        ['wrapper' => '.sidebar'],
+        ['wrapper' => ['.main', '.sidebar']],
+      ],
+      // 7. Merge multi-value tag (wrapper) with duplicate values.
+      [
+        ['wrapper' => ['.main']],
+        ['wrapper' => ['.main', '.sidebar']],
+        ['wrapper' => ['.main', '.sidebar']],
+      ],
+      // 8. Merge with tag alias (w => wrapper).
+      [
+        [],
+        ['w' => '.main'],
+        ['wrapper' => '.main'],
+      ],
+      // 9. Merge with tag alias (u => url).
+      [
+        [],
+        ['u' => 'abc'],
+        ['url' => 'abc'],
+      ],
+      // 10. Merge with tag alias (r => replace).
+      [
+        [],
+        ['r' => 'foo:bar'],
+        ['replace' => 'foo:bar'],
+      ],
+      // 11. Merge with tag alias (t => timeout).
+      [
+        [],
+        ['t' => '30'],
+        ['timeout' => '30'],
+      ],
+      // 12. Merge with tag alias (s => status).
+      [
+        [],
+        ['s' => 'published'],
+        ['status' => 'published'],
+      ],
+      // 13. Merge with tag alias (f => fallback).
+      [
+        [],
+        ['f' => 'content'],
+        ['fallback' => 'content'],
+      ],
+      // 14. Merge with tag alias (p => puppeteer).
+      [
+        [],
+        ['p' => 'selector'],
+        ['puppeteer' => 'selector'],
+      ],
+      // 15. Merge with tag alias (pa => puppeteer-attrib).
+      [
+        [],
+        ['pa' => 'href'],
+        ['puppeteer-attrib' => 'href'],
+      ],
+      // 16. Merge with tag alias (pb => puppeteer-blob).
+      [
+        [],
+        ['pb' => '1'],
+        ['puppeteer-blob' => '1'],
+      ],
+      // 17. Merge with tag alias (h => html).
+      [
+        [],
+        ['h' => '.content'],
+        ['html' => '.content'],
+      ],
+      // 18. Merge with tag alias (d => delay).
+      [
+        [],
+        ['d' => '1000'],
+        ['delay' => '1000'],
+      ],
+      // 19. Merge multi-value tag with both arrays.
+      [
+        ['wrapper' => ['.main']],
+        ['wrapper' => ['.sidebar', '.footer']],
+        ['wrapper' => ['.main', '.sidebar', '.footer']],
+      ],
+      // 20. Merge multi-value tag with array and duplicate string.
+      [
+        ['url' => ['abc', 'def']],
+        ['url' => 'def'],
+        ['url' => ['abc', 'def']],
+      ],
+    ];
+  }
+
+  /**
+   * Test mergeTags method.
+   *
+   * @dataProvider mergeTagsProvider
+   */
+  public function testMergeTags($tags, $extra_tags, $expected) {
+    $reflection = new \ReflectionClass($this->service);
+    $method = $reflection->getMethod('mergeTags');
+    $method->setAccessible(TRUE);
+
+    $result = $method->invokeArgs($this->service, [$tags, $extra_tags]);
+    $this->assertEquals($expected, $result);
+  }
+
 }
