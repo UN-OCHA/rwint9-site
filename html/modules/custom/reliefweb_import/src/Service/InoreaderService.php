@@ -664,17 +664,13 @@ class InoreaderService {
   /**
    * Extract part of an HTML page.
    */
-  protected function extractPartFromHtml(string $html, array|string $selector = ''): ?string {
+  protected function extractPartFromHtml(string $html, string $selector = ''): ?string {
     if (empty($html)) {
       return NULL;
     }
 
     if (empty($selector)) {
       return $html;
-    }
-
-    if (is_array($selector)) {
-      $selector = reset($selector);
     }
 
     $crawler = new Crawler($html);
@@ -1015,6 +1011,7 @@ class InoreaderService {
       'puppeteer',
       'remove',
       'selector',
+      'html',
     ];
 
     return in_array($tag, $multi_value_tags);
@@ -1225,7 +1222,14 @@ class InoreaderService {
       $body = $document['summary']['content'] ?? '';
     }
     elseif (isset($tags['html'])) {
-      $body = $this->extractPartFromHtml($body, $tags['html']);
+      foreach ($tags['html'] as $tag) {
+        // Extract the part of the HTML we want.
+        $html = $this->extractPartFromHtml($body, $tag);
+        if (!empty($html)) {
+          $body = $html;
+          break;
+        }
+      }
     }
 
     // Remove specified HTML elements.

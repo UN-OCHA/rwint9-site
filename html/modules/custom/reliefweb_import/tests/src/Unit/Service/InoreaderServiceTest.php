@@ -328,7 +328,7 @@ class InoreaderServiceTest extends TestCase {
     $this->assertEquals($html, $result);
 
     // Test extracting with array selector.
-    $result = $method->invokeArgs($this->service, [$html, ['.main']]);
+    $result = $method->invokeArgs($this->service, [$html, '.main']);
     $this->assertStringContainsString('Hello World', $result);
 
     // Test extracting with non-existing selector (should return NULL).
