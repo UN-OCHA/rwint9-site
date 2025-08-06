@@ -137,14 +137,16 @@ class InoreaderTestForm extends FormBase {
       foreach ($records as $key => $record) {
         $form['readable'][$key] = [
           '#type' => 'details',
-          '#title' => $record['report']['title'],
+          '#title' => $record['report']['title'] ?? 'No title found',
           '#open' => TRUE,
         ];
 
-        $form['readable'][$key][] = [
-          '#type' => 'inline_template',
-          '#template' => '<p>Origin: <a href="' . $record['report']['origin'] . '" target="_blank">' . $record['report']['origin'] . '</a></p>',
-        ];
+        if (!empty($record['report']['origin'])) {
+          $form['readable'][$key][] = [
+            '#type' => 'inline_template',
+            '#template' => '<p>Origin: <a href="' . $record['report']['origin'] . '" target="_blank">' . $record['report']['origin'] . '</a></p>',
+          ];
+        }
 
         if (!empty($record['report']['body']) && $record['report']['body'] != '...') {
           $form['readable'][$key][] = [
@@ -247,7 +249,7 @@ class InoreaderTestForm extends FormBase {
           $record = $this->inoreaderService->processDocumentData($document);
         }
         catch (\Exception $e) {
-          $logger->error($this->t('Error processing document: @message', ['@message' => $e->getMessage()]));
+          $logger->error('Error processing document: @message', ['@message' => $e->getMessage()]);
           $record['logs'] = $logger->getAll();
 
           $records[] = [
@@ -263,7 +265,9 @@ class InoreaderTestForm extends FormBase {
           $record['file_data']['bytes'] = substr($record['file_data']['bytes'], 0, 30) . '...';
         }
         if (isset($record['body'])) {
-          $record['body'] = substr($record['body'], 0, 500) . '...';
+          if (strlen($record['body']) > 2500) {
+            $record['body'] = substr($record['body'], 0, 2500) . '...';
+          }
         }
 
         $record['logs'] = $logger->getAll();
@@ -292,7 +296,7 @@ class InoreaderTestForm extends FormBase {
       $form_state->set('inoreader_records', $records);
     }
     catch (\Exception $e) {
-      $logger->error($this->t('Error fetching data from Inoreader: @message', ['@message' => $e->getMessage()]));
+      $logger->error('Error fetching data from Inoreader: @message', ['@message' => $e->getMessage()]);
       $form_state->set('inoreader_data', $e->getMessage());
       return;
     }

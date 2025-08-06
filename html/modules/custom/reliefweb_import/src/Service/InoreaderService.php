@@ -7,7 +7,6 @@ namespace Drupal\reliefweb_import\Service;
 use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionEmptyBody;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionNoSourceTag;
-use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\reliefweb_utility\HtmlToMarkdown\Converters\TextConverter;
 use GuzzleHttp\ClientInterface;
@@ -300,7 +299,7 @@ class InoreaderService {
 
     // Retrieve the publication date.
     $published = $document['published'] ?? time();
-    $published = DateHelper::format($published, 'custom', 'c');
+    $published = date('c', $published);
 
     $origin_title = trim($this->sanitizeText($document['origin']['title'] ?? ''));
     $sources = [];
@@ -579,7 +578,12 @@ class InoreaderService {
     // Use our own text converter to avoid unwanted character escaping.
     $converter->getEnvironment()->addConverter(new TextConverter());
 
-    return trim($converter->convert($text));
+    $text = trim($converter->convert($text));
+
+    // Remove empty lines.
+    $text = preg_replace('/\n(\s*\n){2,}/', "\n\n", $text);
+
+    return $text;
   }
 
   /**
@@ -802,6 +806,14 @@ class InoreaderService {
     }
 
     foreach ($tags['replace'] as $replace) {
+      if (strpos($replace, ':') === FALSE) {
+        $this->logger->error(strtr('Invalid replace tag @replace for Inoreader document @id.', [
+          '@replace' => $replace,
+          '@id' => $pdf,
+        ]));
+        continue;
+      }
+
       [$from, $to] = explode(':', $replace);
       $pdf = str_replace($from, $to, $pdf);
     }
@@ -960,7 +972,7 @@ class InoreaderService {
           if (!is_array($value)) {
             $value = [$value];
           }
-          $tags[$key] = array_unique(array_merge($tags[$key], $value));
+          $tags[$key] = array_values(array_unique(array_merge($tags[$key], $value)));
         }
         else {
           $tags[$key] = $value;
