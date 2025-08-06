@@ -753,4 +753,162 @@ class InoreaderServiceTest extends TestCase {
     $this->assertEquals('https://example.com/test.pdf', $result['title']);
   }
 
+  /**
+   * Data provider for testExtractPdfUrlUsingSelectors.
+   */
+  public static function extractPdfUrlUsingSelectorsProvider() {
+    return [
+      // 1. Simple <a> tag with href.
+      [
+        '<div><a href="https://example.com/file.pdf">PDF</a></div>',
+        ['a'],
+        'https://example.com/file.pdf',
+      ],
+      // 2. <iframe> tag with src.
+      [
+        '<iframe src="https://example.com/doc.pdf"></iframe>',
+        ['iframe|src'],
+        'https://example.com/doc.pdf',
+      ],
+      // 3. <a> tag with custom attribute.
+      [
+        '<a data-link="https://example.com/custom.pdf">PDF</a>',
+        ['a|data-link'],
+        'https://example.com/custom.pdf',
+      ],
+      // 4. Selector does not match anything.
+      [
+        '<div><a href="https://example.com/file.pdf">PDF</a></div>',
+        ['iframe'],
+        NULL,
+      ],
+      // 5. Multiple selectors, first match wins.
+      [
+        '<div><a href="https://example.com/file1.pdf">PDF1</a><a href="https://example.com/file2.pdf">PDF2</a></div>',
+        ['a', 'a'],
+        'https://example.com/file1.pdf',
+      ],
+      // 6. Multiple selectors, second matches.
+      [
+        '<div><span class="extra"></span><a href="https://example.com/file2.pdf">PDF2</a></div>',
+        ['span|data', 'a'],
+        'https://example.com/file2.pdf',
+      ],
+      // 7. Empty HTML.
+      [
+        '',
+        ['a'],
+        NULL,
+      ],
+      // 8. Empty selectors.
+      [
+        '<a href="https://example.com/file.pdf">PDF</a>',
+        [],
+        NULL,
+      ],
+      // 9. Selector with attribute override, but attribute missing.
+      [
+        '<a href="https://example.com/file.pdf">PDF</a>',
+        ['a|data-link'],
+        NULL,
+      ],
+      // 10. Multiple selectors, none match.
+      [
+        '<div><span>Nothing</span></div>',
+        ['iframe', 'object'],
+        NULL,
+      ],
+    ];
+  }
+
+  /**
+   * Test extractPdfUrlUsingSelectors method.
+   *
+   * @dataProvider extractPdfUrlUsingSelectorsProvider
+   */
+  public function testExtractPdfUrlUsingSelectors($html, $selectors, $expected) {
+    $reflection = new \ReflectionClass($this->service);
+    $method = $reflection->getMethod('extractPdfUrlUsingSelectors');
+    $method->setAccessible(TRUE);
+
+    $result = $method->invokeArgs($this->service, [$html, $selectors]);
+    $this->assertEquals($expected, $result);
+  }
+
+  /**
+   * Data provider for testMakePdfLinkAbsolute.
+   */
+  public static function makePdfLinkAbsoluteProvider() {
+    return [
+      // Absolute PDF URL, should remain unchanged.
+      [
+        'https://example.com/file.pdf',
+        'https://example.com/page.html',
+        'https://example.com/file.pdf',
+      ],
+      // Relative PDF URL, should be made absolute using page_url.
+      [
+        '/file.pdf',
+        'https://example.com/page.html',
+        'https://example.com/file.pdf',
+      ],
+      // Relative PDF URL, page_url with http scheme.
+      [
+        '/docs/file.pdf',
+        'https://example.org/some/page',
+        'https://example.org/docs/file.pdf',
+      ],
+      // PDF URL missing leading slash.
+      [
+        'docs/file.pdf',
+        'https://example.com/page.html',
+        'https://example.com/docs/file.pdf',
+      ],
+      // Empty PDF URL, should return empty string.
+      [
+        '',
+        'https://example.com/page.html',
+        '',
+      ],
+      // PDF URL is already absolute with http.
+      [
+        'http://example.com/file.pdf',
+        'https://example.com/page.html',
+        'http://example.com/file.pdf',
+      ],
+      // PDF URL is already absolute with https.
+      [
+        'https://example.com/file.pdf',
+        'http://example.com/page.html',
+        'https://example.com/file.pdf',
+      ],
+      // PDF URL is relative, page_url has port.
+      [
+        '/file.pdf',
+        'https://example.com:8080/page.html',
+        'https://example.com/file.pdf',
+      ],
+      // PDF URL is relative, page_url is just domain.
+      [
+        '/file.pdf',
+        'https://example.com',
+        'https://example.com/file.pdf',
+      ],
+    ];
+  }
+
+  /**
+   * Test makePdfLinkAbsolute method.
+   *
+   * @dataProvider makePdfLinkAbsoluteProvider
+   */
+  public function testMakePdfLinkAbsolute($pdf, $page_url, $expected) {
+    $reflection = new \ReflectionClass($this->service);
+    $method = $reflection->getMethod('makePdfLinkAbsolute');
+    $method->setAccessible(TRUE);
+
+    $result = $method->invokeArgs($this->service, [$pdf, $page_url]);
+    $this->assertEquals($expected, $result);
+  }
+
 }

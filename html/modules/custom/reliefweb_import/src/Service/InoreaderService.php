@@ -573,7 +573,7 @@ class InoreaderService {
 
     if (!empty($pdf) && strpos($pdf, 'http') !== 0) {
       $url_parts = parse_url($page_url);
-      $pdf = ($url_parts['scheme'] ?? 'https') . '://' . $url_parts['host'] . $pdf;
+      $pdf = ($url_parts['scheme'] ?? 'https') . '://' . $url_parts['host'] . '/' . ltrim($pdf, '/');
     }
 
     return $pdf;
