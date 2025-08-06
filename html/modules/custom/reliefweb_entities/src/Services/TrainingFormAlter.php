@@ -49,9 +49,6 @@ class TrainingFormAlter extends EntityFormAlterServiceBase {
       ])->toString();
     }
 
-    // Add the fields to a potential new source.
-    $this->addPotentialNewSourceFields($form, $form_state);
-
     // Limit the number of selectable themes and categories.
     $this->addSelectionLimit($form, 'field_theme', 3);
     $this->addSelectionLimit($form, 'field_career_categories', 3);

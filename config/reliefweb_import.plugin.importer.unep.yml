@@ -1,0 +1,19 @@
+enabled: 1
+max_import_attempts: '3'
+classification:
+  enabled: 1
+  check_user_permissions: 0
+  prevent_publication: 0
+  specified_field_check: ''
+  force_field_update: ''
+  classified_fields: '*:yes'
+reimport:
+  enabled: 0
+  type: ''
+  fields: ''
+  statuses: ''
+api_url: 'https://search'
+api_key: xyzzy
+max_age: '30'
+document_types: "resource\r\nreport_flagship\r\ntechnical_highlight"
+timeout: '5'

@@ -1145,7 +1145,7 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
 
       $response = NULL;
       foreach ($user_agents as $index => $user_agent) {
-        $response = $this->httpClient->get($url, [
+        $response = $this->httpClient->request('GET', $url, [
           'stream' => $user_agent['stream'],
           // @todo retrieve that from the configuration.
           'connect_timeout' => 30,
@@ -1153,6 +1153,7 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
           'headers' => [
             'User-Agent' => $user_agent['ua'],
             'Accept' => '*/*',
+            'X-ReliefWeb-Import' => '2',
           ],
         ]);
 
