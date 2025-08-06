@@ -79,8 +79,8 @@ class InoreaderServiceTest extends TestCase {
         [
           'source' => '456',
           'pdf' => 'summary-link',
-          'wrapper' => '.main',
-          'remove' => '.ads',
+          'wrapper' => ['.main'],
+          'remove' => ['.ads'],
         ],
       ],
       [
@@ -88,7 +88,7 @@ class InoreaderServiceTest extends TestCase {
         [
           'source' => '789',
           'pdf' => 'page-link',
-          'url' => 'reliefweb',
+          'url' => ['reliefweb'],
           'fallback' => 'content',
         ],
       ],
@@ -133,8 +133,8 @@ class InoreaderServiceTest extends TestCase {
         [
           'source' => '456',
           'pdf' => 'summary-link',
-          'wrapper' => '.main',
-          'remove' => '.ads',
+          'wrapper' => ['.main'],
+          'remove' => ['.ads'],
         ],
       ],
       [
@@ -142,7 +142,7 @@ class InoreaderServiceTest extends TestCase {
         [
           'source' => '789',
           'pdf' => 'page-link',
-          'url' => 'reliefweb',
+          'url' => ['reliefweb'],
           'fallback' => 'content',
         ],
       ],
@@ -442,14 +442,14 @@ class InoreaderServiceTest extends TestCase {
     $html = '<div class="main"><a href="/relative.pdf">PDF</a></div>';
     $tags = ['wrapper' => '.main', 'url' => 'relative'];
     $result = $method->invokeArgs($this->service, [$page_url, $html, $tags]);
-    $this->assertEquals('https://example.com/relative.pdf', $result);
+    $this->assertEquals('/relative.pdf', $result);
 
     // Case 4b: PDF link with wrapper and url filter as array.
     $html = '<div class="main"><a href="/relative.pdf">PDF</a><a href="/other.pdf">PDF2</a></div>';
     $tags = ['wrapper' => '.main', 'url' => ['relative', 'other']];
     $result = $method->invokeArgs($this->service, [$page_url, $html, $tags]);
     // Should match /relative.pdf first.
-    $this->assertEquals('https://example.com/relative.pdf', $result);
+    $this->assertEquals('/relative.pdf', $result);
 
     // Case 5: No PDF link found, but link to txt file.
     $html = '<div><a href="https://example.com/file.txt">TXT</a></div>';

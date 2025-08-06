@@ -63,6 +63,7 @@ class InoreaderService {
     't' => 'timeout',
     's' => 'status',
     'f' => 'fallback',
+    'sel' => 'selector',
   ];
 
   public function __construct(
@@ -343,10 +344,14 @@ class InoreaderService {
         switch ($tag_value) {
           case 'canonical':
             $pdf = $document['canonical'][0]['href'] ?? '';
+
             break;
 
           case 'summary-link':
+            $page_url = $document['canonical'][0]['href'] ?? '';
             $pdf = $this->extractPdfUrl($document['summary']['content'] ?? '', 'a', 'href');
+            $pdf = $this->makePdfLinkAbsolute($pdf, $page_url);
+
             break;
 
           case 'page-link':
@@ -377,6 +382,7 @@ class InoreaderService {
                 }
               }
             }
+            $pdf = $this->makePdfLinkAbsolute($pdf, $page_url);
 
             break;
 
@@ -390,6 +396,7 @@ class InoreaderService {
               ]));
             }
             $pdf = $this->extractPdfUrl($html, 'object', 'data');
+            $pdf = $this->makePdfLinkAbsolute($pdf, $page_url);
 
             break;
 
@@ -403,6 +410,7 @@ class InoreaderService {
               ]));
             }
             $pdf = $this->extractPdfUrl($html, 'iframe', 'data-src');
+            $pdf = $this->makePdfLinkAbsolute($pdf, $page_url);
 
             break;
 
@@ -416,6 +424,22 @@ class InoreaderService {
               ]));
             }
             $pdf = $this->extractPdfUrl($html, 'iframe', 'src');
+            $pdf = $this->makePdfLinkAbsolute($pdf, $page_url);
+
+            break;
+
+          case 'page-selector':
+            $page_url = $document['canonical'][0]['href'] ?? '';
+            $html = $this->downloadHtmlPage($page_url, $fetch_timeout);
+            if (empty($html)) {
+              $this->logger->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
+                '@id' => $id,
+                '@url' => $page_url,
+              ]));
+            }
+            $pdf = $this->extractPdfUrlUsingSelectors($html, $tags['selector'] ?? []);
+            $pdf = $this->makePdfLinkAbsolute($pdf, $page_url);
+
             break;
 
           case 'js':
@@ -537,6 +561,22 @@ class InoreaderService {
     }
 
     return $data;
+  }
+
+  /**
+   * Make sure PDF link is absolute.
+   */
+  protected function makePdfLinkAbsolute(string|null $pdf, string $page_url) {
+    if (empty($pdf)) {
+      return '';
+    }
+
+    if (!empty($pdf) && strpos($pdf, 'http') !== 0) {
+      $url_parts = parse_url($page_url);
+      $pdf = ($url_parts['scheme'] ?? 'https') . '://' . $url_parts['host'] . $pdf;
+    }
+
+    return $pdf;
   }
 
   /**
@@ -685,12 +725,40 @@ class InoreaderService {
     else {
       $pdf = $this->extractPdfUrl($html, 'a', 'href', '', '', '', $contains);
     }
-    if (!empty($pdf) && strpos($pdf, 'http') !== 0) {
-      $url_parts = parse_url($page_url);
-      $pdf = ($url_parts['scheme'] ?? 'https') . '://' . $url_parts['host'] . $pdf;
-    }
 
     return $pdf;
+  }
+
+  /**
+   * Extract the PDF URL from the HTML content using selectors.
+   */
+  protected function extractPdfUrlUsingSelectors(string $html, array $selectors): ?string {
+    if (empty($html) || empty($selectors)) {
+      return NULL;
+    }
+
+    $crawler = new Crawler($html);
+
+    foreach ($selectors as $selector_obj) {
+      $attribute = 'href';
+      $selector = $selector_obj;
+      if (strpos($selector_obj, '|') !== FALSE) {
+        [$selector, $attribute] = explode('|', $selector_obj, 2);
+      }
+
+      $elements = $crawler->filter($selector);
+      if ($elements->count() == 0) {
+        continue;
+      }
+      if ($first = $elements->first()) {
+        $value = $first->attr($attribute);
+        if (!empty($value)) {
+          return $value;
+        }
+      }
+    }
+
+    return NULL;
   }
 
   /**
@@ -946,6 +1014,7 @@ class InoreaderService {
       'url',
       'puppeteer',
       'remove',
+      'selector',
     ];
 
     return in_array($tag, $multi_value_tags);
@@ -1006,7 +1075,6 @@ class InoreaderService {
     $tags = [];
     if (preg_match_all('/\[(.*?)\]/', $feed_name, $matches) > 0) {
       $matches = $matches[1] ?? [];
-
       // Parse everything so we can reference it easily.
       $tags = $this->parseTags($matches);
     }
@@ -1043,17 +1111,30 @@ class InoreaderService {
       array_shift($tag_parts);
       $tag_value = trim(implode(':', $tag_parts));
 
-      if (!isset($tags[$tag_key])) {
-        $tags[$tag_key] = $tag_value;
-      }
-      else {
-        if (!is_array($tags[$tag_key])) {
-          $tags[$tag_key] = [
-            $tags[$tag_key],
-          ];
+      // Replace brackets with square brackets.
+      $tag_value = str_replace(['(', ')'], ['[', ']'], $tag_value);
+
+      // If the tag is a multi-value tag, ensure it is an array.
+      if ($this->isMultiValueTag($tag_key)) {
+        if (!isset($tags[$tag_key])) {
+          $tags[$tag_key] = [];
         }
         $tags[$tag_key][] = $tag_value;
       }
+      else {
+        if (!isset($tags[$tag_key])) {
+          $tags[$tag_key] = $tag_value;
+        }
+        else {
+          if (!is_array($tags[$tag_key])) {
+            $tags[$tag_key] = [
+              $tags[$tag_key],
+            ];
+          }
+          $tags[$tag_key][] = $tag_value;
+        }
+      }
+
     }
 
     $tags = $this->fixLegacyPuppeteer2Tag($tags);
