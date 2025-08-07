@@ -536,16 +536,20 @@ class InoreaderService {
       $url = str_replace('http://', 'https://', $url);
     }
 
-    // Submission data. The language, country, and format IDs are hardcoded for ReliefWeb (see documentation).
+    // Submission data. The language, country, and format IDs are hardcoded.
     $data = [
       'title' => $title,
-      'body' => substr($body ?? '', 0, 100000), // Limit body length for submission safety.
+      // Limit body length for submission safety.
+      'body' => substr($body ?? '', 0, 100000),
       'published' => $published,
       'origin' => $url,
       'source' => $sources,
-      'language' => [267], // 267 = English
-      'country' => [254],  // 254 = Global
-      'format' => [8],     // 8 = Report
+      // 267 = English
+      'language' => [267],
+      // 254 = Global
+      'country' => [254],
+      // 8 = Report
+      'format' => [8],
       'file_data' => [
         'pdf' => $pdf,
         'bytes' => $pdf_bytes,
