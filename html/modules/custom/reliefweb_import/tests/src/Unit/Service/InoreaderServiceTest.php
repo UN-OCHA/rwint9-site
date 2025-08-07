@@ -911,4 +911,28 @@ class InoreaderServiceTest extends TestCase {
     $this->assertEquals($expected, $result);
   }
 
+  /**
+   * Test isMultiValueTag method.
+   */
+  public function testIsMultiValueTag() {
+    // Test the isMultiValueTag method to check if a tag is multi-value.
+    $reflection = new \ReflectionClass($this->service);
+    $method = $reflection->getMethod('isMultiValueTag');
+    $method->setAccessible(TRUE);
+    $this->assertTrue($method->invokeArgs($this->service, ['wrapper']));
+    $this->assertFalse($method->invokeArgs($this->service, ['status']));
+  }
+
+  /**
+   * Test fixLegacyPuppeteer2Tag method.
+   */
+  public function testFixLegacyPuppeteer2Tag() {
+    $reflection = new \ReflectionClass($this->service);
+    $method = $reflection->getMethod('fixLegacyPuppeteer2Tag');
+    $method->setAccessible(TRUE);
+    $tags = ['puppeteer' => 'foo', 'puppeteer2' => 'bar'];
+    $result = $method->invokeArgs($this->service, [$tags]);
+    $this->assertEquals('foo|bar', $result['puppeteer']);
+  }
+
 }
