@@ -53,8 +53,10 @@ class InoreaderImportForm extends FormBase {
       '#type' => 'number',
       '#title' => $this->t('Limit'),
       '#required' => TRUE,
-      '#description' => $this->t('Max items to test.'),
+      '#description' => $this->t('Max items to import, limited to max 10 items.'),
       '#default_value' => 3,
+      '#max' => 10,
+      '#min' => 1,
     ];
 
     $form['actions'] = [
