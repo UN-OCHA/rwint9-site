@@ -167,6 +167,13 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
   /**
    * {@inheritdoc}
    */
+  public function setLogger(LoggerInterface $logger): void {
+    $this->logger = $logger;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getPluginSetting(string $key, mixed $default = NULL, bool $throw_if_null = TRUE): mixed {
     if (empty($key)) {
       return NULL;
