@@ -47,6 +47,11 @@ interface ReliefWebImporterPluginInterface {
   public function getLogger(): LoggerInterface;
 
   /**
+   * Set the plugin logger.
+   */
+  public function setLogger(LoggerInterface $logger): void;
+
+  /**
    * Get a plugin setting.
    *
    * @param string $key
