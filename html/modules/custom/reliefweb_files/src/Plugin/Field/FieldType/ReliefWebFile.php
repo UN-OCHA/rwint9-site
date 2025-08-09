@@ -20,6 +20,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;
+use Drupal\reliefweb_utility\Helpers\FileHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
 
@@ -951,47 +952,12 @@ class ReliefWebFile extends FieldItemBase {
    *   The extracted text content or empty string in case of failure.
    */
   public function extractText(?string $source_uri = NULL, ?int $page = NULL): string {
-    // Currently we only support this features for PDF files.
-    if (!$this->getFileMime() === 'application/pdf') {
-      return '';
-    }
-
     $source_uri ??= $this->loadFile()?->getFileUri();
     if (empty($source_uri)) {
       return '';
     }
 
-    $file_system = $this->getFileSystem();
-
-    // Get the real path of the source file.
-    $source_path = $file_system->realpath($source_uri);
-    if (empty($source_path)) {
-      // @todo log the error.
-      return FALSE;
-    }
-
-    $source = escapeshellarg($source_path);
-
-    // Prepare the page parameter if specified.
-    $page_param = '';
-    if ($page !== NULL) {
-      $page_param = ' ' . escapeshellarg($page);
-    }
-
-    $mutool = \Drupal::state()->get('mutool', '/usr/bin/mutool');
-    if (is_executable($mutool)) {
-      $options = \Drupal::state()->get('mutool_text_options', '');
-      $command = "{$mutool} draw -F txt {$options} {$source}{$page_param}";
-
-      exec($command, $output, $return_val);
-
-      if (empty($return_val)) {
-        // Join the output array into a single string.
-        return implode("\n", $output);
-      }
-    }
-
-    return '';
+    return FileHelper::extractText($source_uri, $this->getFileMime(), $page);
   }
 
   /**
