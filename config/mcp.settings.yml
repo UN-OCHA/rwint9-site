@@ -1,0 +1,17 @@
+enable_auth: false
+auth_settings: {  }
+plugins:
+  content:
+    enabled: true
+    config:
+      content_types:
+        announcement: 0
+        blog_post: 0
+        book: 0
+        job: 0
+        report: 1
+        topic: 0
+        training: 0
+  general:
+    enabled: true
+    config: {  }

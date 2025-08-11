@@ -39,12 +39,15 @@ module:
   inline_entity_form: 0
   inline_form_errors: 0
   jsonlog: 0
+  jsonrpc: 0
   key: 0
   language: 0
   link: 0
   locale: 0
   mailsystem: 0
   maintenance200: 0
+  mcp: 0
+  mcp_dev_tools: 0
   media: 0
   media_library: 0
   memcache: 0
@@ -84,6 +87,7 @@ module:
   reliefweb_guidelines: 0
   reliefweb_homepage: 0
   reliefweb_import: 0
+  reliefweb_mcp: 0
   reliefweb_meta: 0
   reliefweb_moderation: 0
   reliefweb_post_api: 0

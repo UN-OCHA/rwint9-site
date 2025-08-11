@@ -1,0 +1,7 @@
+type: module
+name: ReliefWeb MCP
+description: 'Provides model context protocol.'
+package: reliefweb
+core_version_requirement: ^10 || ^11
+dependencies:
+  - mcp:mcp

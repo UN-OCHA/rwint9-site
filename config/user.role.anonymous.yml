@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   module:
+    - mcp
     - media
     - ocha_ai_chat
     - ocha_entraid
@@ -17,4 +18,5 @@ permissions:
   - 'access content'
   - 'access ocha ai chat'
   - 'access ocha entraid direct login'
+  - 'use mcp server'
   - 'view media'

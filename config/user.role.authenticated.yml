@@ -10,6 +10,7 @@ dependencies:
   module:
     - content_entity_clone
     - filter
+    - mcp
     - media
     - node
     - ocha_ai_chat
@@ -48,6 +49,7 @@ permissions:
   - 'subscribe to jobs'
   - 'subscribe to training'
   - 'use enhanced input forms'
+  - 'use mcp server'
   - 'use text format markdown_editor'
   - 'use text format token_markdown'
   - 'view job moderation information'
