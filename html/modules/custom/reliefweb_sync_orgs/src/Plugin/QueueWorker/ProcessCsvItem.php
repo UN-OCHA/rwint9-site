@@ -184,7 +184,7 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
     if (!empty($search_results)) {
       $best_match = reset($search_results);
 
-      if ($best_match['score'] < 0.2) {
+      if ($best_match['score'] < 0.1) {
         $import_record['tid'] = $best_match['item']['tid'];
         $import_record['status'] = 'partial';
         $import_record = $this->saveImportRecords($source, $id, $import_record);
@@ -429,6 +429,7 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
    * Build a fuse search of all terms.
    */
   protected function buildFuseSearchForName(): Fuse {
+    // @todo cache it for 10-15 minutes.
     $terms = $this->database
       ->select('taxonomy_term_field_data', 't')
       ->fields('t', ['tid', 'name'])
