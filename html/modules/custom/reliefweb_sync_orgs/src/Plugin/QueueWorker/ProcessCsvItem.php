@@ -7,6 +7,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\taxonomy\Entity\Term;
+use Fuse\Fuse;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -118,6 +119,11 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
       $import_record = $this->constructReliefwebSyncOrgsRecord($source, $id, $item);
     }
 
+    // Skip if already processed.
+    if ($import_record['status'] === 'success') {
+      return;
+    }
+
     // If fts_id is available, try to load the term by fts_id.
     if (!empty($item['fts_id'])) {
       $term = $this->loadSourceTermByFtsId($item['fts_id']);
@@ -170,6 +176,26 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
       $import_record['status'] = 'success';
       $import_record = $this->saveImportRecords($source, $id, $import_record);
       return;
+    }
+
+    // Try searching with fuse.
+    $fuse = $this->buildFuseSearchForName();
+    $search_results = $fuse->search($item['name']);
+    if (!empty($search_results)) {
+      $best_match = reset($search_results);
+
+      if ($best_match['score'] < 0.2) {
+        $import_record['tid'] = $best_match['item']['tid'];
+        $import_record['status'] = 'partial';
+        $import_record = $this->saveImportRecords($source, $id, $import_record);
+        return;
+      }
+      else {
+        $import_record['tid'] = $best_match['item']['tid'];
+        $import_record['status'] = 'mismatch';
+        $import_record = $this->saveImportRecords($source, $id, $import_record);
+        return;
+      }
     }
 
     $import_record['status'] = 'skipped';
@@ -397,6 +423,29 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
     }
 
     return $record;
+  }
+
+  /**
+   * Build a fuse search of all terms.
+   */
+  protected function buildFuseSearchForName(): Fuse {
+    $terms = $this->database
+      ->select('taxonomy_term_field_data', 't')
+      ->fields('t', ['tid', 'name'])
+      ->condition('vid', 'source')
+      ->execute()
+      ->fetchAll(\PDO::FETCH_ASSOC);
+
+    $fuse = new Fuse($terms, [
+      'keys' => ['name'],
+      'isCaseSensitive' => FALSE,
+      'ignoreDiacritics' => TRUE,
+      'threshold' => 0.3,
+      'includeScore' => TRUE,
+      'minMatchCharLength' => 3,
+    ]);
+
+    return $fuse;
   }
 
 }

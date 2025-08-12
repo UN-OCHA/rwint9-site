@@ -75,6 +75,7 @@
         "google/auth": "^1.21",
         "league/commonmark": "^2.2",
         "league/html-to-markdown": "^5.0",
+        "loilo/fuse": "^7.1",
         "lolli42/finediff": "^1.0",
         "nitotm/efficient-language-detector": "^3.0",
         "opis/json-schema": "^2.2",

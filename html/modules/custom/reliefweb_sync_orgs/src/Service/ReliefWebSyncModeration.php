@@ -146,18 +146,6 @@ class ReliefWebSyncModeration extends ModerationServiceBase {
           ]);
         }
 
-        if (isset($record['csv_item'])) {
-          foreach ($record['csv_item'] as $label => $item) {
-            if (!in_array($label, ['name', 'display_name', 'org_acronym', 'org abbreviation', 'org name'])) {
-              continue;
-            }
-
-            // Convert the label to a human-readable format.
-            $label = ucfirst(str_replace('_', ' ', $label));
-            $extra_items[] = $label . ': ' . substr($item ?? '', 0, 250) . (strlen($item) > 250 ? '...' : '');
-          }
-        }
-
         $data['extra'] = [
           '#theme' => 'item_list',
           '#items' => $extra_items,
@@ -167,7 +155,26 @@ class ReliefWebSyncModeration extends ModerationServiceBase {
         $cells['info'] = array_filter($data);
       }
 
-      $cells['importer'] = $record['importer'] ?? $this->t('Unknown');
+      $extra_items = [];
+      if (isset($record['csv_item'])) {
+        foreach ($record['csv_item'] as $label => $item) {
+          if (!in_array($label, ['name', 'display_name', 'org_acronym', 'org abbreviation', 'org name'])) {
+            continue;
+          }
+
+          // Convert the label to a human-readable format.
+          $label = ucfirst(str_replace('_', ' ', $label));
+          $extra_items[] = $label . ': ' . substr($item ?? '', 0, 250) . (strlen($item) > 250 ? '...' : '');
+        }
+      }
+
+      $data['extra'] = [
+        '#theme' => 'item_list',
+        '#items' => $extra_items,
+      ];
+
+      // Filter out empty data.
+      $cells['importer'] = $data['extra'];
       $cells['status']['label'] = [
         '#type' => 'markup',
         '#markup' => $record['status'],
@@ -209,8 +216,8 @@ class ReliefWebSyncModeration extends ModerationServiceBase {
     return [
       'success' => $this->t('Success'),
       'skipped' => $this->t('Skipped'),
-      'error' => $this->t('Error'),
-      'duplicate' => $this->t('Duplicate'),
+      'mismatch' => $this->t('Mismatch'),
+      'partial' => $this->t('Partial'),
       'queued' => $this->t('Queued'),
     ];
   }
@@ -220,8 +227,6 @@ class ReliefWebSyncModeration extends ModerationServiceBase {
    */
   public function getFilterDefaultStatuses() {
     $statuses = $this->getFilterStatuses();
-    unset($statuses['success']);
-    unset($statuses['duplicate']);
     return array_keys($statuses);
   }
 
