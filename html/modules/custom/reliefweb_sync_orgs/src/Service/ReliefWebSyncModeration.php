@@ -12,7 +12,6 @@ use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Pager\PagerParametersInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
-use Drupal\reliefweb_import\Plugin\ReliefWebImporterPluginManager;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -35,7 +34,6 @@ class ReliefWebSyncModeration extends ModerationServiceBase {
     PagerParametersInterface $pager_parameters,
     RequestStack $request_stack,
     TranslationInterface $string_translation,
-    protected ReliefWebImporterPluginManager $pluginManager,
   ) {
     $this->currentUser = $current_user;
     $this->database = $database;
