@@ -39,6 +39,7 @@ module:
   inline_entity_form: 0
   inline_form_errors: 0
   jsonlog: 0
+  jsonrpc: 0
   key: 0
   language: 0
   link: 0
@@ -91,6 +92,7 @@ module:
   reliefweb_revisions: 0
   reliefweb_rivers: 0
   reliefweb_subscriptions: 0
+  reliefweb_sync_orgs: 0
   reliefweb_topics: 0
   reliefweb_user_history: 0
   reliefweb_user_posts: 0

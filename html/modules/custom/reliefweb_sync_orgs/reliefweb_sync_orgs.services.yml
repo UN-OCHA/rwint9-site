@@ -1,0 +1,4 @@
+services:
+  reliefweb_moderation.sync_orgs.moderation:
+    class: Drupal\reliefweb_sync_orgs\Service\ReliefWebSyncModeration
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@plugin.manager.reliefweb_import.reliefweb_importer']
