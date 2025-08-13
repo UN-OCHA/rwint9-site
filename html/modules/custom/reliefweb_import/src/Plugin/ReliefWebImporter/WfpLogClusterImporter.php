@@ -368,6 +368,9 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
       $url = $document['path'];
       $import_record['imported_item_url'] = $url;
 
+      // Keep track of publish_status.
+      $publish_status = $document['publish_status'] ?? FALSE;
+
       // Check if the document should be skipped based on its type.
       if (!empty($skip_document_types)) {
         $disallowed_document_types = array_intersect($skip_document_types, $document['document_type'] ?? []);
@@ -386,6 +389,27 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
           '@id' => $id,
           '@report_id' => $manually_posted[$url],
         ]));
+
+        // Unpublish the report if it was manually posted.
+        if (!$publish_status) {
+          /** @var \Drupal\node\Entity\Node $report */
+          $report = $this->entityTypeManager
+            ->getStorage($entity_type_id)
+            ->load($manually_posted[$url]);
+          if ($report) {
+            $report->setUnpublished();
+            $report->setModerationStatus('refused');
+            $report->setRevisionLogMessage(strtr('Unpublished WFP Logcluster document @id.', [
+              '@id' => $id,
+            ]));
+            $report->save();
+            $this->getLogger()->info(strtr('WFP Logcluster document @id report @report_id unpublished.', [
+              '@id' => $id,
+              '@report_id' => $report->id(),
+            ]));
+          }
+        }
+
         continue;
       }
 
@@ -401,6 +425,36 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
       $this->getLogger()->info(strtr('Processing WFP Logcluster document @id.', [
         '@id' => $id,
       ]));
+
+      if (!$publish_status) {
+        // Unpublish the report if it was already imported.
+        if (isset($import_record['entity_id'])) {
+          /** @var \Drupal\node\Entity\Node $report */
+          $report = $this->entityTypeManager
+            ->getStorage($entity_type_id)
+            ->load($import_record['entity_id']);
+          if ($report) {
+            $report->setUnpublished();
+            $report->setModerationStatus('refused');
+            $report->setRevisionLogMessage(strtr('Unpublished WFP Logcluster document @id.', [
+              '@id' => $id,
+            ]));
+            $report->save();
+            $this->getLogger()->info(strtr('WFP Logcluster document @id (node/@report_id) unpublished.', [
+              '@id' => $id,
+              '@report_id' => $report->id(),
+            ]));
+          }
+        }
+        else {
+          // If the document is not published, we do not need to import it.
+          $this->getLogger()->info(strtr('WFP Logcluster document @id not published, skipping.', [
+            '@id' => $id,
+          ]));
+        }
+
+        continue;
+      }
 
       // Generate a hash from the data we use to import the document. This is
       // used to detect changes that can affect the document on ReliefWeb.
@@ -433,6 +487,15 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
         $this->getLogger()->info(strtr('WFP Logcluster document @id (entity @entity_id) already imported and not changed, skipping.', [
           '@id' => $id,
           '@entity_id' => reset($records),
+        ]));
+        continue;
+      }
+
+      // For new reports, skip the ones that are not published.
+      if (!$publish_status) {
+        print_r($import_record);
+        $this->getLogger()->notice(strtr('WFP Logcluster document @id is not published, skipping.', [
+          '@id' => $id,
         ]));
         continue;
       }
