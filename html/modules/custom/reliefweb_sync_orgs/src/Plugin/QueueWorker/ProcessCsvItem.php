@@ -2,12 +2,13 @@
 
 namespace Drupal\reliefweb_sync_orgs\Plugin\QueueWorker;
 
+use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
+use Drupal\reliefweb_sync_orgs\Service\FuzySearchService;
 use Drupal\taxonomy\Entity\Term;
-use Fuse\Fuse;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -36,6 +37,13 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
   protected $database;
 
   /**
+   * The cache.
+   *
+   * @var \Drupal\Core\Cache\CacheBackendInterface
+   */
+  protected $cacheBackend;
+
+  /**
    * Main constructor.
    *
    * @param array $configuration
@@ -48,12 +56,15 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
    *   The entity type manager.
    * @param \Drupal\Core\Database\Connection $database
    *   The database connection.
+   * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
+   *   The cache backend.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, Connection $database) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, Connection $database, CacheBackendInterface $cache_backend) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->entityTypeManager = $entity_type_manager;
     $this->database = $database;
+    $this->cacheBackend = $cache_backend;
   }
 
   /**
@@ -68,6 +79,7 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
       $plugin_definition,
       $container->get('entity_type.manager'),
       $container->get('database'),
+      $container->get('cache.reliefweb_sync_orgs'),
     );
   }
 
@@ -146,8 +158,10 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
       }
 
       // First try exact matches on the fields.
+      $message = '';
       foreach ($fields_to_check as $field) {
         if (!empty($item[$field])) {
+          $message = "Matched by $field: {$item[$field]}";
           $term = $this->loadSourceTermByName($item[$field]);
           if ($term) {
             break;
@@ -174,28 +188,22 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
     if ($term) {
       $import_record['tid'] = $term->id();
       $import_record['status'] = 'success';
+      $import_record['message'] = $message;
       $import_record = $this->saveImportRecords($source, $id, $import_record);
       return;
     }
 
     // Try searching with fuse.
-    $fuse = $this->buildFuseSearchForName();
-    $search_results = $fuse->search($item['name']);
-    if (!empty($search_results)) {
-      $best_match = reset($search_results);
+    $message = "No exact match found. Attempting fuzzy search.";
+    $fuzzy_search = $this->buildFuseSearchForName();
+    $search_result = $fuzzy_search->search($item['display_name']);
 
-      if ($best_match['score'] < 0.1) {
-        $import_record['tid'] = $best_match['item']['tid'];
-        $import_record['status'] = 'partial';
-        $import_record = $this->saveImportRecords($source, $id, $import_record);
-        return;
-      }
-      else {
-        $import_record['tid'] = $best_match['item']['tid'];
-        $import_record['status'] = 'mismatch';
-        $import_record = $this->saveImportRecords($source, $id, $import_record);
-        return;
-      }
+    if (!empty($search_result)) {
+      $import_record['status'] = $search_result['status'] ?? 'partial';
+      $import_record['tid'] = $search_result['tid'] ?? NULL;
+      $import_record['message'] = "Fuzzy match found: {$search_result['name']} with score {$search_result['score']}.";
+      $import_record = $this->saveImportRecords($source, $id, $import_record);
+      return;
     }
 
     $import_record['status'] = 'skipped';
@@ -428,25 +436,26 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
   /**
    * Build a fuse search of all terms.
    */
-  protected function buildFuseSearchForName(): Fuse {
-    // @todo cache it for 10-15 minutes.
-    $terms = $this->database
-      ->select('taxonomy_term_field_data', 't')
-      ->fields('t', ['tid', 'name'])
-      ->condition('vid', 'source')
-      ->execute()
-      ->fetchAll(\PDO::FETCH_ASSOC);
+  protected function buildFuseSearchForName(): FuzySearchService {
+    $cid = 'reliefweb_sync_orgs:source_terms';
+    $cache = $this->cacheBackend->get($cid);
 
-    $fuse = new Fuse($terms, [
-      'keys' => ['name'],
-      'isCaseSensitive' => FALSE,
-      'ignoreDiacritics' => TRUE,
-      'threshold' => 0.3,
-      'includeScore' => TRUE,
-      'minMatchCharLength' => 3,
-    ]);
+    if ($cache && $cache->data) {
+      $terms = $cache->data;
+    }
+    else {
+      $terms = $this->database
+        ->select('taxonomy_term_field_data', 't')
+        ->fields('t', ['tid', 'name'])
+        ->condition('vid', 'source')
+        ->execute()
+        ->fetchAll(\PDO::FETCH_ASSOC);
 
-    return $fuse;
+      // Cache for 15 minutes.
+      $this->cacheBackend->set($cid, $terms, time() + 15 * 60);
+    }
+
+    return new FuzySearchService($terms);
   }
 
 }

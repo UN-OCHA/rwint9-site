@@ -166,6 +166,13 @@ class ReliefWebSyncModeration extends ModerationServiceBase {
           $label = ucfirst(str_replace('_', ' ', $label));
           $extra_items[] = $label . ': ' . substr($item ?? '', 0, 250) . (strlen($item) > 250 ? '...' : '');
         }
+
+        // Add the message if set.
+        if (!empty($record['message'])) {
+          $extra_items[] = $this->t('Message: @message', [
+            '@message' => $record['message'] ?? '',
+          ]);
+        }
       }
 
       $data['extra'] = [
