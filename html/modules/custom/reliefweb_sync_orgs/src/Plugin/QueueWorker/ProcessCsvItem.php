@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\reliefweb_sync_orgs\Service\FuzySearchService;
+use Drupal\reliefweb_sync_orgs\Service\ImportRecordService;
 use Drupal\taxonomy\Entity\Term;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -44,6 +45,13 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
   protected $cacheBackend;
 
   /**
+   * The import record service.
+   *
+   * @var \Drupal\reliefweb_sync_orgs\Service\ImportRecordService
+   */
+  protected $importRecordService;
+
+  /**
    * Main constructor.
    *
    * @param array $configuration
@@ -55,16 +63,19 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
    * @param \Drupal\Core\Database\Connection $database
-   *   The database connection.
+   *   The database.
    * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
    *   The cache backend.
+   * @param \Drupal\reliefweb_sync_orgs\Service\ImportRecordService $import_record_service
+   *   The import record service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, Connection $database, CacheBackendInterface $cache_backend) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, Connection $database, CacheBackendInterface $cache_backend, ImportRecordService $import_record_service) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->entityTypeManager = $entity_type_manager;
     $this->database = $database;
     $this->cacheBackend = $cache_backend;
+    $this->importRecordService = $import_record_service;
   }
 
   /**
@@ -80,6 +91,7 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
       $container->get('entity_type.manager'),
       $container->get('database'),
       $container->get('cache.reliefweb_sync_orgs'),
+      $container->get('reliefweb_sync_orgs.import_record_service'),
     );
   }
 
@@ -126,9 +138,9 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
     $id = $item['id'];
     $term = NULL;
 
-    $import_record = $this->getExistingImportRecord($source, $id);
+    $import_record = $this->importRecordService->getExistingImportRecord($source, $id);
     if (empty($import_record)) {
-      $import_record = $this->constructReliefwebSyncOrgsRecord($source, $id, $item);
+      $import_record = $this->importRecordService->constructReliefwebSyncOrgsRecord($source, $id, $item);
     }
 
     // Skip if already processed.
@@ -189,7 +201,7 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
       $import_record['tid'] = $term->id();
       $import_record['status'] = 'success';
       $import_record['message'] = $message;
-      $import_record = $this->saveImportRecords($source, $id, $import_record);
+      $import_record = $this->importRecordService->saveImportRecords($source, $id, $import_record);
       return;
     }
 
@@ -202,12 +214,12 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
       $import_record['status'] = $search_result['status'] ?? 'partial';
       $import_record['tid'] = $search_result['tid'] ?? NULL;
       $import_record['message'] = "Fuzzy match found: {$search_result['name']} with score {$search_result['score']}.";
-      $import_record = $this->saveImportRecords($source, $id, $import_record);
+      $import_record = $this->importRecordService->saveImportRecords($source, $id, $import_record);
       return;
     }
 
     $import_record['status'] = 'skipped';
-    $import_record = $this->saveImportRecords($source, $id, $import_record);
+    $import_record = $this->importRecordService->saveImportRecords($source, $id, $import_record);
   }
 
   /**
@@ -218,9 +230,9 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
     $id = $item['org id'];
     $term = NULL;
 
-    $import_record = $this->getExistingImportRecord($source, $id);
+    $import_record = $this->importRecordService->getExistingImportRecord($source, $id);
     if (empty($import_record)) {
-      $import_record = $this->constructReliefwebSyncOrgsRecord($source, $id, $item);
+      $import_record = $this->importRecordService->constructReliefwebSyncOrgsRecord($source, $id, $item);
     }
 
     // List of possible fields to check for existing terms.
@@ -257,12 +269,12 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
     if ($term) {
       $import_record['tid'] = $term->id();
       $import_record['status'] = 'success';
-      $import_record = $this->saveImportRecords($source, $id, $import_record);
+      $import_record = $this->importRecordService->saveImportRecords($source, $id, $import_record);
       return;
     }
 
     $import_record['status'] = 'skipped';
-    $import_record = $this->saveImportRecords($source, $id, $import_record);
+    $import_record = $this->importRecordService->saveImportRecords($source, $id, $import_record);
   }
 
   /**
@@ -353,84 +365,6 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
     }
 
     return reset($terms);
-  }
-
-  /**
-   * Construct a reliefweb_sync_orgs_records.
-   */
-  protected function constructReliefwebSyncOrgsRecord(string $source, string $id, array $item): array {
-    return [
-      'source' => $source,
-      'id' => $id,
-      'status' => $item['status'] ?? 'queued',
-      'created' => time(),
-      'changed' => time(),
-      'message' => '',
-      'csv_item' => $item,
-    ];
-  }
-
-  /**
-   * Retrieve existing records.
-   */
-  protected function getExistingImportRecord(string $source, string $id): array {
-    $record = $this->database->select('reliefweb_sync_orgs_records', 'r')
-      ->fields('r')
-      ->condition('source', $source)
-      ->condition('id', $id)
-      ->execute()
-      ?->fetch(\PDO::FETCH_ASSOC);
-
-    if (isset($record['csv_item'])) {
-      $record['csv_item'] = json_decode($record['csv_item'], TRUE);
-    }
-
-    return is_array($record) ? $record : [];
-  }
-
-  /**
-   * Save import records.
-   */
-  protected function saveImportRecords(string $source, string $id, array $record): array {
-    $existing_record = $this->getExistingImportRecord($source, $id);
-
-    // Set timestamp for changed field.
-    $record['changed'] = time();
-
-    // Serialize json data.
-    if (isset($record['csv_item'])) {
-      $record['csv_item'] = json_encode($record['csv_item']);
-    }
-
-    // Create comparison copies without the 'changed' timestamp.
-    $compare_existing = $existing_record;
-    $compare_new = $record;
-    unset($compare_existing['changed']);
-    unset($compare_new['changed']);
-
-    // Only update if the record has actually changed.
-    if (!empty($existing_record)) {
-      if ($compare_existing != $compare_new) {
-        $this->database->update('reliefweb_sync_orgs_records')
-          ->fields($record)
-          ->condition('source', $source)
-          ->condition('id', $id)
-          ->execute();
-      }
-    }
-    else {
-      // Set timestamp for created field if not provided.
-      if (!isset($record['created'])) {
-        $record['created'] = time();
-      }
-
-      // Insert new record.
-      $this->database->insert('reliefweb_sync_orgs_records')
-        ->fields($record)
-        ->execute();
-    }
-
-    return $record;
   }
 
   /**

@@ -2,16 +2,19 @@
 
 namespace Drupal\reliefweb_sync_orgs\Service;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\Select;
 use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Link;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Pager\PagerParametersInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\Core\Url;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -64,7 +67,12 @@ class ReliefWebSyncModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function getTitle() {
-    return $this->t('ReliefWeb Organization Sync');
+    return $this->t('ReliefWeb Organization Sync (@import)', [
+      '@import' => Link::fromTextAndUrl(
+        $this->t('Import items'),
+        Url::fromRoute('reliefweb_sync_orgs.import_items')
+      )->toString(),
+    ]);
   }
 
   /**
@@ -116,10 +124,11 @@ class ReliefWebSyncModeration extends ModerationServiceBase {
 
       $cells = [];
 
-      $id = implode('-', [
+      // Make a safe CSS id for the row.
+      $id = Html::cleanCssIdentifier(implode('-', [
         $record['source'] ?? '',
         $record['id'] ?? '',
-      ]);
+      ]));
 
       $cells['imported-item'] = $record['id'] ?? '';
 
@@ -206,6 +215,31 @@ class ReliefWebSyncModeration extends ModerationServiceBase {
           ],
         ];
       }
+      else {
+        $links = [];
+
+        $link = Url::fromRoute('reliefweb_sync_orgs.fix_organization_manually', [
+          'source' => $record['source'],
+          'id' => $record['id'],
+        ], [
+          'query' => [
+            'destination' => $this->requestStack->getCurrentRequest()->getRequestUri() . '#row-' . $id,
+          ],
+        ]);
+        $links[] = [
+          'title' => $this->t('Fix organization'),
+          'url' => $link,
+          'attributes' => [
+            'class' => ['button', 'button--primary'],
+          ],
+        ];
+
+        $cells['node_created'] = [
+          '#type' => 'dropbutton',
+          '#dropbutton_type' => 'rw-moderation',
+          '#links' => $links,
+        ];
+      }
 
       $rows[] = [
         'id' => 'row-' . $id,
@@ -225,7 +259,7 @@ class ReliefWebSyncModeration extends ModerationServiceBase {
       'skipped' => $this->t('Skipped'),
       'mismatch' => $this->t('Mismatch'),
       'partial' => $this->t('Partial'),
-      'queued' => $this->t('Queued'),
+      'fixed' => $this->t('Fixed'),
     ];
   }
 
