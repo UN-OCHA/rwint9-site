@@ -493,7 +493,6 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
 
       // For new reports, skip the ones that are not published.
       if (!$publish_status) {
-        print_r($import_record);
         $this->getLogger()->notice(strtr('WFP Logcluster document @id is not published, skipping.', [
           '@id' => $id,
         ]));
