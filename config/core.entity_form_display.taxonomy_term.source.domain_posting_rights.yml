@@ -1,9 +1,9 @@
-uuid: 73d61b3f-fe58-435d-bfec-31a327e58c74
+uuid: 39defa39-2ce3-477e-8dc1-a35b709efdb3
 langcode: en
 status: true
 dependencies:
   config:
-    - core.entity_form_mode.taxonomy_term.user_posting_rights
+    - core.entity_form_mode.taxonomy_term.domain_posting_rights
     - field.field.taxonomy_term.source.field_aliases
     - field.field.taxonomy_term.source.field_allowed_content_types
     - field.field.taxonomy_term.source.field_attention_job
@@ -25,13 +25,13 @@ dependencies:
     - taxonomy.vocabulary.source
   module:
     - reliefweb_fields
-id: taxonomy_term.source.user_posting_rights
+id: taxonomy_term.source.domain_posting_rights
 targetEntityType: taxonomy_term
 bundle: source
-mode: user_posting_rights
+mode: domain_posting_rights
 content:
-  field_user_posting_rights:
-    type: reliefweb_user_posting_rights
+  field_domain_posting_rights:
+    type: reliefweb_domain_posting_rights
     weight: 0
     region: content
     settings: {  }
@@ -45,7 +45,6 @@ hidden:
   field_attention_training: true
   field_country: true
   field_disclaimer: true
-  field_domain_posting_rights: true
   field_fts_id: true
   field_homepage: true
   field_job_import_feed: true
@@ -55,6 +54,7 @@ hidden:
   field_organization_type: true
   field_shortname: true
   field_spanish_name: true
+  field_user_posting_rights: true
   langcode: true
   name: true
   path: true

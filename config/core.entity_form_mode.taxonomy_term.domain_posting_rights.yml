@@ -1,0 +1,11 @@
+uuid: cc5689b5-dd2a-4abc-93a8-1e757bfbfade
+langcode: en
+status: true
+dependencies:
+  module:
+    - taxonomy
+id: taxonomy_term.domain_posting_rights
+label: 'Domain posting rights'
+description: null
+targetEntityType: taxonomy_term
+cache: true
