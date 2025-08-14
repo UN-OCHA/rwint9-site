@@ -26,3 +26,13 @@ reliefweb_sync_orgs..autocomplete.organizations:
     _format: json
   requirements:
     _permission: 'import organization records'
+
+reliefweb_sync_orgs.records:
+  path: '/reliefweb/sync_orgs'
+  defaults:
+    _form: '\Drupal\reliefweb_sync_orgs\Form\ListOrganizations'
+    _title: 'Organization Records'
+  requirements:
+    _permission: 'import organization records'
+  options:
+    _admin_route: false
