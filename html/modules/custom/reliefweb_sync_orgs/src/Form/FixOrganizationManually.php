@@ -79,7 +79,7 @@ class FixOrganizationManually extends FormBase {
       '#type' => 'textfield',
       '#title' => $this->t('Organization'),
       '#required' => TRUE,
-      '#autocomplete_route_name' => 'reliefweb_sync_orgs..autocomplete.organizations',
+      '#autocomplete_route_name' => 'reliefweb_sync_orgs.autocomplete.organizations',
     ];
 
     $form['source'] = [

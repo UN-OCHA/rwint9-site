@@ -1,0 +1,24 @@
+<?php
+
+/**
+ * @file
+ * Herlpers for the ReliefWeb Sync Orgs module.
+ */
+
+/**
+ * Return field mapping for a source.
+ */
+function reliefweb_sync_orgs_get_field_mapping(string $source): array {
+  $mapping = [
+    'hdx' => [
+      'display_name' => 'name',
+      'org_acronym' => 'shortname',
+      'description' => 'description',
+      'hdx_org_type' => 'field_organization_type',
+      'org_url' => 'field_homepage',
+      'fts_id' => 'field_fts_id',
+    ],
+  ];
+
+  return $mapping[$source] ?? [];
+}

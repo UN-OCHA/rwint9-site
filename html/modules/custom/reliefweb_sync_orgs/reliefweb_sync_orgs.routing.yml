@@ -1,34 +1,33 @@
 reliefweb_sync_orgs.import_items:
-  path: '/admin/config/reliefweb/sync_orgs'
+  path: '/reliefweb/sync_orgs/import'
   defaults:
     _form: '\Drupal\reliefweb_sync_orgs\Form\ImportAndQueueCsvFile'
     _title: 'Import csv file'
   requirements:
     _permission: 'import organization records'
 reliefweb_sync_orgs.fix_organization_manually:
-  path: '/admin/config/reliefweb/fix-organization-manually/{source}/{id}'
+  path: '/reliefweb/sync_orgs/fix-organization-manually/{source}/{id}'
   defaults:
     _form: '\Drupal\reliefweb_sync_orgs\Form\FixOrganizationManually'
-    _title: 'Fix Organization Manually'
+    _title: 'Fix Organization manually'
   requirements:
     _permission: 'import organization records'
 reliefweb_sync_orgs.create_organization_manually:
-  path: '/admin/config/reliefweb/create-organization-manually/{source}/{id}'
+  path: '/reliefweb/sync_orgs/create-organization-manually/{source}/{id}'
   defaults:
     _form: '\Drupal\reliefweb_sync_orgs\Form\CreateOrganizationManually'
-    _title: 'Create Organization Manually'
+    _title: 'Create Organization manually'
   requirements:
     _permission: 'import organization records'
-reliefweb_sync_orgs..autocomplete.organizations:
-  path: '/admin/config/reliefweb/autocomplete/organizations'
+reliefweb_sync_orgs.autocomplete.organizations:
+  path: '/reliefweb/sync_orgs/autocomplete/organizations'
   defaults:
     _controller: '\Drupal\reliefweb_sync_orgs\Controller\OrganizationsAutoCompleteController::handleAutocomplete'
     _format: json
   requirements:
     _permission: 'import organization records'
-
 reliefweb_sync_orgs.records:
-  path: '/reliefweb/sync_orgs'
+  path: '/reliefweb/sync_orgs/overview'
   defaults:
     _form: '\Drupal\reliefweb_sync_orgs\Form\ListOrganizations'
     _title: 'Organization Records'
