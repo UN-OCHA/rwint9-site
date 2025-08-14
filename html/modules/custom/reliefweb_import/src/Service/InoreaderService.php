@@ -565,12 +565,23 @@ class InoreaderService {
 
   /**
    * Make sure PDF link is absolute.
+   *
+   * If the PDF URL is relative, prepend the scheme and host from the page URL.
+   *
+   * @param string|null $pdf
+   *   The PDF URL, possibly relative.
+   * @param string $page_url
+   *   The page URL to use as base for absolute links.
+   *
+   * @return string
+   *   The absolute PDF URL, or empty string if input is empty.
    */
   protected function makePdfLinkAbsolute(string|null $pdf, string $page_url) {
     if (empty($pdf)) {
       return '';
     }
 
+    // If not already absolute, prepend scheme and host from page URL.
     if (!empty($pdf) && strpos($pdf, 'http') !== 0) {
       $url_parts = parse_url($page_url);
       $pdf = ($url_parts['scheme'] ?? 'https') . '://' . $url_parts['host'] . '/' . ltrim($pdf, '/');
@@ -580,7 +591,7 @@ class InoreaderService {
   }
 
   /**
-   * Sanitize a UTF-8 string.
+   * Sanitize a UTF-8 string using the project TextHelper.
    *
    * @param string $text
    *   The input UTF-8 string to be processed.
