@@ -81,7 +81,17 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
   /**
    * Used to grab functionality from the container.
    *
-   * @return static
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   *   The service container.
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin ID for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   *
+   * @return \Drupal\reliefweb_sync_orgs\Plugin\QueueWorker\ProcessCsvItem
+   *   A new instance of the queue worker plugin.
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     return new static(
@@ -112,6 +122,12 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
 
   /**
    * Try to merge with existing term, or create a new one.
+   *
+   * @param array $item
+   *   The raw item data from the queue (decoded CSV row + source metadata).
+   *
+   * @throws \Exception
+   *   Thrown when the source is unsupported.
    */
   protected function mergeOrganizationTerm($item) {
     $source = $item['_source'] ?? '';
@@ -132,6 +148,13 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
 
   /**
    * Merges an organization term based on a HDX item.
+   *
+   * Performs exact lookup attempts (fts_id, name, long name, short name,
+   * aliases) followed by a fuzzy search fallback. Updates and persists the
+   * corresponding import record with status (success | partial | skipped).
+   *
+   * @param array $item
+   *   The HDX organization data array.
    */
   protected function mergeHdxOrganizationTerm($item) {
     $source = 'hdx';
@@ -224,6 +247,12 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
 
   /**
    * Merges an organization term based on a HPC item.
+   *
+   * Attempts exact matches on abbreviation and name (including long/short
+   * names and aliases). Updates the import record accordingly.
+   *
+   * @param array $item
+   *   The HPC organization data array.
    */
   protected function mergeHpcOrganizationTerm($item) {
     $source = 'hpc';
@@ -278,7 +307,13 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
   }
 
   /**
-   * Load a source taxonmy term using the name.
+   * Load a source taxonomy term using the name.
+   *
+   * @param string $name
+   *   The term name to match.
+   *
+   * @return \Drupal\taxonomy\Entity\Term|null
+   *   The matching taxonomy term entity, or NULL if none found.
    */
   protected function loadSourceTermByName(string $name): ?Term {
     $terms = $this->entityTypeManager
@@ -297,6 +332,12 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
 
   /**
    * Load a source taxonomy term using the long name.
+   *
+   * @param string $long_name
+   *   The long (expanded) name to match against field_longname.
+   *
+   * @return \Drupal\taxonomy\Entity\Term|null
+   *   The matching taxonomy term entity, or NULL if none found.
    */
   protected function loadSourceTermByLongName(string $long_name): ?Term {
     $terms = $this->entityTypeManager
@@ -315,6 +356,12 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
 
   /**
    * Load a source taxonomy term using the short name.
+   *
+   * @param string $short_name
+   *   The short (abbreviated) name to match against field_shortname.
+   *
+   * @return \Drupal\taxonomy\Entity\Term|null
+   *   The matching taxonomy term entity, or NULL if none found.
    */
   protected function loadSourceTermByShortName(string $short_name): ?Term {
     $terms = $this->entityTypeManager
@@ -332,7 +379,13 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
   }
 
   /**
-   * Load a source taxonomy term using a alias.
+   * Load a source taxonomy term using an alias value.
+   *
+   * @param string $alias
+   *   The alias to match against field_aliases.
+   *
+   * @return \Drupal\taxonomy\Entity\Term|null
+   *   The matching taxonomy term entity, or NULL if none found.
    */
   protected function loadSourceTermByAlias(string $alias): ?Term {
     $terms = $this->entityTypeManager
@@ -351,6 +404,12 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
 
   /**
    * Load a source taxonomy term using the fts_id.
+   *
+   * @param string $fts_id
+   *   The Financial Tracking Service (FTS) identifier to match.
+   *
+   * @return \Drupal\taxonomy\Entity\Term|null
+   *   The matching taxonomy term entity, or NULL if none found.
    */
   protected function loadSourceTermByFtsId(string $fts_id): ?Term {
     $terms = $this->entityTypeManager
@@ -369,6 +428,13 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
 
   /**
    * Build a fuse search of all terms.
+   *
+   * Pulls (tid, name) for taxonomy terms in the 'source' vocabulary from
+   * cache (if available) or database (with a short-lived cache populate), and
+   * initializes a FuzySearchService instance for fuzzy name matching.
+   *
+   * @return \Drupal\reliefweb_sync_orgs\Service\FuzySearchService
+   *   A fuzzy search service preloaded with source term name data.
    */
   protected function buildFuseSearchForName(): FuzySearchService {
     $cid = 'reliefweb_sync_orgs:source_terms';
