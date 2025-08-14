@@ -7,7 +7,6 @@ namespace Drupal\reliefweb_import\Service;
 use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionEmptyBody;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionNoSourceTag;
-use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\reliefweb_utility\HtmlToMarkdown\Converters\TextConverter;
 use GuzzleHttp\ClientInterface;
@@ -53,6 +52,7 @@ class InoreaderService {
    */
   protected array $tagAliases = [
     'w' => 'wrapper',
+    'h' => 'html',
     'u' => 'url',
     'r' => 'replace',
     'p' => 'puppeteer',
@@ -62,6 +62,8 @@ class InoreaderService {
     'd' => 'delay',
     't' => 'timeout',
     's' => 'status',
+    'f' => 'fallback',
+    'sel' => 'selector',
   ];
 
   public function __construct(
@@ -298,7 +300,7 @@ class InoreaderService {
 
     // Retrieve the publication date.
     $published = $document['published'] ?? time();
-    $published = DateHelper::format($published, 'custom', 'c');
+    $published = date('c', $published);
 
     $origin_title = trim($this->sanitizeText($document['origin']['title'] ?? ''));
     $sources = [];
@@ -342,10 +344,14 @@ class InoreaderService {
         switch ($tag_value) {
           case 'canonical':
             $pdf = $document['canonical'][0]['href'] ?? '';
+
             break;
 
           case 'summary-link':
+            $page_url = $document['canonical'][0]['href'] ?? '';
             $pdf = $this->extractPdfUrl($document['summary']['content'] ?? '', 'a', 'href');
+            $pdf = $this->makePdfLinkAbsolute($pdf, $page_url);
+
             break;
 
           case 'page-link':
@@ -376,6 +382,7 @@ class InoreaderService {
                 }
               }
             }
+            $pdf = $this->makePdfLinkAbsolute($pdf, $page_url);
 
             break;
 
@@ -389,6 +396,7 @@ class InoreaderService {
               ]));
             }
             $pdf = $this->extractPdfUrl($html, 'object', 'data');
+            $pdf = $this->makePdfLinkAbsolute($pdf, $page_url);
 
             break;
 
@@ -402,6 +410,7 @@ class InoreaderService {
               ]));
             }
             $pdf = $this->extractPdfUrl($html, 'iframe', 'data-src');
+            $pdf = $this->makePdfLinkAbsolute($pdf, $page_url);
 
             break;
 
@@ -415,6 +424,22 @@ class InoreaderService {
               ]));
             }
             $pdf = $this->extractPdfUrl($html, 'iframe', 'src');
+            $pdf = $this->makePdfLinkAbsolute($pdf, $page_url);
+
+            break;
+
+          case 'page-selector':
+            $page_url = $document['canonical'][0]['href'] ?? '';
+            $html = $this->downloadHtmlPage($page_url, $fetch_timeout);
+            if (empty($html)) {
+              $this->logger->error(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
+                '@id' => $id,
+                '@url' => $page_url,
+              ]));
+            }
+            $pdf = $this->extractPdfUrlUsingSelectors($html, $tags['selector'] ?? []);
+            $pdf = $this->makePdfLinkAbsolute($pdf, $page_url);
+
             break;
 
           case 'js':
@@ -427,61 +452,28 @@ class InoreaderService {
             break;
 
           case 'content':
-            $body = $document['summary']['content'] ?? '';
-
-            // Remove specified HTML elements.
-            if (isset($tags['remove'])) {
-              $body = $this->removeHtmlElements($body, $tags['remove']);
-            }
-
-            $clean_body = isset($tags['content']) && $tags['content'] == 'clean';
-            $body = $this->cleanAndConvertBody($body, $clean_body);
-            if (empty($body)) {
-              $this->logger->error(strtr('Unable to retrieve the body content for Inoreader document @id.', [
-                '@id' => $id,
-              ]));
-
-              throw new ReliefwebImportExceptionEmptyBody(strtr('No body content found for Inoreader document @id.', [
-                '@id' => $id,
-              ]));
-            }
+            $body = $this->extractAndCleanBodyFromContent($document, $tags, $id);
             break;
 
           case 'html':
-            $page_url = $document['canonical'][0]['href'] ?? '';
-            $body = $this->downloadHtmlPage($page_url, $fetch_timeout);
-
-            if (empty($body)) {
-              $this->logger->warning(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
-                '@id' => $id,
-                '@url' => $page_url,
-              ]));
-              $body = $document['summary']['content'] ?? '';
-            }
-            elseif (isset($tags['wrapper'])) {
-              $body = $this->extractPartFromHtml($body, $tags['wrapper']);
-            }
-
-            // Remove specified HTML elements.
-            if (isset($tags['remove'])) {
-              $body = $this->removeHtmlElements($body, $tags['remove']);
-            }
-
-            $clean_body = isset($tags['content']) && $tags['content'] == 'clean';
-            $body = $this->cleanAndConvertBody($body, $clean_body);
-            if (empty($body)) {
-              $this->logger->error(strtr('Unable to retrieve the body content for Inoreader document @id.', [
-                '@id' => $id,
-              ]));
-
-              throw new ReliefwebImportExceptionEmptyBody(strtr('No body content found for Inoreader document @id.', [
-                '@id' => $id,
-              ]));
-            }
+            $body = $this->extractAndCleanBodyFromHtml($document, $tags, $id, $fetch_timeout);
             break;
         }
 
         $pdf = $this->rewritePdfLink($pdf, $tags);
+
+        // Fallback to content if PDF is not found.
+        if (empty($pdf) && !empty($tags['fallback'])) {
+          switch ($tags['fallback']) {
+            case 'content':
+              $body = $this->extractAndCleanBodyFromContent($document, $tags, $id);
+              break;
+
+            case 'html':
+              $body = $this->extractAndCleanBodyFromHtml($document, $tags, $id, $fetch_timeout);
+              break;
+          }
+        }
       }
       elseif ($tag_key == 'content') {
         switch ($tag_value) {
@@ -572,6 +564,22 @@ class InoreaderService {
   }
 
   /**
+   * Make sure PDF link is absolute.
+   */
+  protected function makePdfLinkAbsolute(string|null $pdf, string $page_url) {
+    if (empty($pdf)) {
+      return '';
+    }
+
+    if (!empty($pdf) && strpos($pdf, 'http') !== 0) {
+      $url_parts = parse_url($page_url);
+      $pdf = ($url_parts['scheme'] ?? 'https') . '://' . $url_parts['host'] . '/' . ltrim($pdf, '/');
+    }
+
+    return $pdf;
+  }
+
+  /**
    * Sanitize a UTF-8 string.
    *
    * @param string $text
@@ -610,7 +618,12 @@ class InoreaderService {
     // Use our own text converter to avoid unwanted character escaping.
     $converter->getEnvironment()->addConverter(new TextConverter());
 
-    return trim($converter->convert($text));
+    $text = trim($converter->convert($text));
+
+    // Remove empty lines.
+    $text = preg_replace('/\n(\s*\n){2,}/', "\n\n", $text);
+
+    return $text;
   }
 
   /**
@@ -641,13 +654,17 @@ class InoreaderService {
       });
     }
 
-    return $crawler->html();
+    if ($crawler->filter('body')->count() === 0) {
+      return $crawler->html();
+    }
+
+    return $crawler->filter('body')->html();
   }
 
   /**
    * Extract part of an HTML page.
    */
-  protected function extractPartFromHtml(string $html, array|string $selector = ''): ?string {
+  protected function extractPartFromHtml(string $html, string $selector = ''): ?string {
     if (empty($html)) {
       return NULL;
     }
@@ -656,16 +673,18 @@ class InoreaderService {
       return $html;
     }
 
-    if (is_array($selector)) {
-      $selector = reset($selector);
-    }
-
     $crawler = new Crawler($html);
 
-    if ($elements = $crawler->filter($selector)) {
-      if ($first = $elements->first()) {
-        return $first->outerHtml();
+    try {
+      if ($elements = $crawler->filter($selector)) {
+        if ($first = $elements->first()) {
+          return $first->outerHtml();
+        }
       }
+    }
+    catch (\Exception $e) {
+      $this->logger->error('InoreaderService: ' . $e->getMessage());
+      return NULL;
     }
 
     return NULL;
@@ -702,12 +721,40 @@ class InoreaderService {
     else {
       $pdf = $this->extractPdfUrl($html, 'a', 'href', '', '', '', $contains);
     }
-    if (!empty($pdf) && strpos($pdf, 'http') !== 0) {
-      $url_parts = parse_url($page_url);
-      $pdf = ($url_parts['scheme'] ?? 'https') . '://' . $url_parts['host'] . $pdf;
-    }
 
     return $pdf;
+  }
+
+  /**
+   * Extract the PDF URL from the HTML content using selectors.
+   */
+  protected function extractPdfUrlUsingSelectors(string $html, array $selectors): ?string {
+    if (empty($html) || empty($selectors)) {
+      return NULL;
+    }
+
+    $crawler = new Crawler($html);
+
+    foreach ($selectors as $selector_obj) {
+      $attribute = 'href';
+      $selector = $selector_obj;
+      if (strpos($selector_obj, '|') !== FALSE) {
+        [$selector, $attribute] = explode('|', $selector_obj, 2);
+      }
+
+      $elements = $crawler->filter($selector);
+      if ($elements->count() == 0) {
+        continue;
+      }
+      if ($first = $elements->first()) {
+        $value = $first->attr($attribute);
+        if (!empty($value)) {
+          return $value;
+        }
+      }
+    }
+
+    return NULL;
   }
 
   /**
@@ -823,6 +870,14 @@ class InoreaderService {
     }
 
     foreach ($tags['replace'] as $replace) {
+      if (strpos($replace, ':') === FALSE) {
+        $this->logger->error(strtr('Invalid replace tag @replace for Inoreader document @id.', [
+          '@replace' => $replace,
+          '@id' => $pdf,
+        ]));
+        continue;
+      }
+
       [$from, $to] = explode(':', $replace);
       $pdf = str_replace($from, $to, $pdf);
     }
@@ -851,6 +906,14 @@ class InoreaderService {
     $delay = 3000;
     $screenshot = FALSE;
     $debug = FALSE;
+
+    if (!isset($tags['puppeteer']) || empty($tags['puppeteer'])) {
+      $this->logger->error(strtr('Inoreader document @id does not have a puppeteer tag defined.', [
+        '@id' => $page_url,
+      ]));
+
+      return [];
+    }
 
     // Check if we need to request the PDF as Blob.
     if (isset($tags['puppeteer-blob'])) {
@@ -947,6 +1010,8 @@ class InoreaderService {
       'url',
       'puppeteer',
       'remove',
+      'selector',
+      'html',
     ];
 
     return in_array($tag, $multi_value_tags);
@@ -973,7 +1038,7 @@ class InoreaderService {
           if (!is_array($value)) {
             $value = [$value];
           }
-          $tags[$key] = array_unique(array_merge($tags[$key], $value));
+          $tags[$key] = array_values(array_unique(array_merge($tags[$key], $value)));
         }
         else {
           $tags[$key] = $value;
@@ -1007,7 +1072,6 @@ class InoreaderService {
     $tags = [];
     if (preg_match_all('/\[(.*?)\]/', $feed_name, $matches) > 0) {
       $matches = $matches[1] ?? [];
-
       // Parse everything so we can reference it easily.
       $tags = $this->parseTags($matches);
     }
@@ -1044,17 +1108,30 @@ class InoreaderService {
       array_shift($tag_parts);
       $tag_value = trim(implode(':', $tag_parts));
 
-      if (!isset($tags[$tag_key])) {
-        $tags[$tag_key] = $tag_value;
-      }
-      else {
-        if (!is_array($tags[$tag_key])) {
-          $tags[$tag_key] = [
-            $tags[$tag_key],
-          ];
+      // Replace brackets with square brackets.
+      $tag_value = str_replace(['(', ')'], ['[', ']'], $tag_value);
+
+      // If the tag is a multi-value tag, ensure it is an array.
+      if ($this->isMultiValueTag($tag_key)) {
+        if (!isset($tags[$tag_key])) {
+          $tags[$tag_key] = [];
         }
         $tags[$tag_key][] = $tag_value;
       }
+      else {
+        if (!isset($tags[$tag_key])) {
+          $tags[$tag_key] = $tag_value;
+        }
+        else {
+          if (!is_array($tags[$tag_key])) {
+            $tags[$tag_key] = [
+              $tags[$tag_key],
+            ];
+          }
+          $tags[$tag_key][] = $tag_value;
+        }
+      }
+
     }
 
     $tags = $this->fixLegacyPuppeteer2Tag($tags);
@@ -1075,6 +1152,115 @@ class InoreaderService {
     }
 
     return $tags;
+  }
+
+  /**
+   * Extract and clean the body content from a document.
+   *
+   * @param array $document
+   *   The Inoreader document.
+   * @param array $tags
+   *   The extracted tags.
+   * @param string $id
+   *   The document ID.
+   *
+   * @return string
+   *   The cleaned body content.
+   *
+   * @throws \Drupal\reliefweb_import\Exception\ReliefwebImportExceptionEmptyBody
+   */
+  protected function extractAndCleanBodyFromContent(array $document, array $tags, string $id): string {
+    $body = $document['summary']['content'] ?? '';
+
+    // Remove specified HTML elements.
+    if (isset($tags['remove'])) {
+      $body = $this->removeHtmlElements($body, $tags['remove']);
+    }
+
+    $clean_body = isset($tags['content']) && $tags['content'] == 'clean';
+    $body = $this->cleanAndConvertBody($body, $clean_body);
+
+    if (empty($body)) {
+      $this->logger->error(strtr('Unable to retrieve the body content for Inoreader document @id.', [
+        '@id' => $id,
+      ]));
+
+      throw new ReliefwebImportExceptionEmptyBody(strtr('No body content found for Inoreader document @id.', [
+        '@id' => $id,
+      ]));
+    }
+
+    return $body;
+  }
+
+  /**
+   * Extract and clean the body content from HTML.
+   *
+   * @param array $document
+   *   The Inoreader document.
+   * @param array $tags
+   *   The extracted tags.
+   * @param string $id
+   *   The document ID.
+   * @param int $fetch_timeout
+   *   The fetch timeout in seconds.
+   *
+   * @return string
+   *   The cleaned body content.
+   *
+   * @throws \Drupal\reliefweb_import\Exception\ReliefwebImportExceptionEmptyBody
+   */
+  protected function extractAndCleanBodyFromHtml(array $document, array $tags, string $id, int $fetch_timeout): string {
+    $page_url = $document['canonical'][0]['href'] ?? '';
+    $body = $this->downloadHtmlPage($page_url, $fetch_timeout);
+
+    if (empty($body)) {
+      $this->logger->warning(strtr('Unable to retrieve the HTML content for Inoreader document @id -- @url.', [
+        '@id' => $id,
+        '@url' => $page_url,
+      ]));
+      $body = $document['summary']['content'] ?? '';
+    }
+    elseif (isset($tags['html'])) {
+      foreach ($tags['html'] as $tag) {
+        // Extract the part of the HTML we want.
+        $html = $this->extractPartFromHtml($body, $tag);
+        if (!empty($html)) {
+          $body = $html;
+          break;
+        }
+      }
+    }
+
+    // Remove specified HTML elements.
+    if (isset($tags['remove'])) {
+      $body = $this->removeHtmlElements($body, $tags['remove']);
+    }
+
+    if (empty($body)) {
+      $this->logger->warning(strtr('Empty body for Inoreader document @id -- @url.', [
+        '@id' => $id,
+        '@url' => $page_url,
+      ]));
+
+      throw new ReliefwebImportExceptionEmptyBody(strtr('No body content found for Inoreader document @id.', [
+        '@id' => $id,
+      ]));
+    }
+
+    $clean_body = isset($tags['content']) && $tags['content'] == 'clean';
+    $body = $this->cleanAndConvertBody($body, $clean_body);
+    if (empty($body)) {
+      $this->logger->error(strtr('Empty body after cleaning for Inoreader document @id.', [
+        '@id' => $id,
+      ]));
+
+      throw new ReliefwebImportExceptionEmptyBody(strtr('No body content found for Inoreader document @id.', [
+        '@id' => $id,
+      ]));
+    }
+
+    return $body;
   }
 
 }

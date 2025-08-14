@@ -11,8 +11,8 @@ field_name: field_source
 entity_type: node
 bundle: job
 label: Organization
-description: 'The name of the organization issuing the hiring contract. Please check if your organization is already on our list. New organizations will undergo a brief verification by our team. Please use corporate email domain for your job submissions.'
-required: false
+description: 'The name of the organization issuing the hiring contract. Please use corporate email domain for your job submissions.<br><strong>NOTE: We are not accepting new organizations at this time.</strong>'
+required: true
 translatable: false
 default_value: {  }
 default_value_callback: ''
@@ -23,7 +23,7 @@ settings:
       source: source
     sort:
       field: name
-      direction: asc
-    auto_create: false
+      direction: ASC
+    auto_create: 0
     auto_create_bundle: ''
 field_type: entity_reference
