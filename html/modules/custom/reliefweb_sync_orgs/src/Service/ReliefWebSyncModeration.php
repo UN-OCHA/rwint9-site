@@ -234,6 +234,22 @@ class ReliefWebSyncModeration extends ModerationServiceBase {
           ],
         ];
 
+        $link = Url::fromRoute('reliefweb_sync_orgs.create_organization_manually', [
+          'source' => $record['source'],
+          'id' => $record['id'],
+        ], [
+          'query' => [
+            'destination' => $this->requestStack->getCurrentRequest()->getRequestUri() . '#row-' . $id,
+          ],
+        ]);
+        $links[] = [
+          'title' => $this->t('Create organization'),
+          'url' => $link,
+          'attributes' => [
+            'class' => ['button', 'button--primary'],
+          ],
+        ];
+
         $cells['node_created'] = [
           '#type' => 'dropbutton',
           '#dropbutton_type' => 'rw-moderation',

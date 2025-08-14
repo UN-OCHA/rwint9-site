@@ -2,16 +2,16 @@
 
 namespace Drupal\reliefweb_sync_orgs\Form;
 
-use Drupal\Core\Entity\Element\EntityAutocomplete;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\reliefweb_sync_orgs\Service\ImportRecordService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Form to manually select the proper organization.
+ * Form to manually create an organization.
  */
-class FixOrganizationManually extends FormBase {
+class CreateOrganizationManually extends FormBase {
 
   /**
    * The import record service.
@@ -21,10 +21,18 @@ class FixOrganizationManually extends FormBase {
   protected $importRecordService;
 
   /**
-   * Constructs a new FixOrganizationManually form.
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  public function __construct(ImportRecordService $import_record_service) {
+  protected $entityTypeManager;
+
+  /**
+   * Constructs a new form.
+   */
+  public function __construct(ImportRecordService $import_record_service, EntityTypeManagerInterface $entity_type_manager) {
     $this->importRecordService = $import_record_service;
+    $this->entityTypeManager = $entity_type_manager;
   }
 
   /**
@@ -33,6 +41,7 @@ class FixOrganizationManually extends FormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('reliefweb_sync_orgs.import_record_service'),
+      $container->get('entity_type.manager'),
     );
   }
 
@@ -40,7 +49,7 @@ class FixOrganizationManually extends FormBase {
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'reliefweb_sync_orgs_fix_organization_manually';
+    return 'reliefweb_sync_orgs_create_organization_manually';
   }
 
   /**
@@ -58,13 +67,6 @@ class FixOrganizationManually extends FormBase {
       throw new \InvalidArgumentException('No import record found for the provided source and ID.');
     }
 
-    $form['description'] = [
-      '#markup' => $this->t('Select the proper organization for source <strong>@source</strong> and ID <strong>@id</strong>.', [
-        '@source' => $source,
-        '@id' => $id,
-      ]),
-    ];
-
     // Display the raw csv_item for reference.
     $form['csv_item'] = [
       '#type' => 'textarea',
@@ -72,14 +74,13 @@ class FixOrganizationManually extends FormBase {
       '#default_value' => json_encode($record['csv_item'], JSON_PRETTY_PRINT),
       '#rows' => 20,
       '#disabled' => TRUE,
-      '#description' => $this->t('This is the raw CSV item that needs to be fixed.'),
+      '#description' => $this->t('This is the raw CSV item that needs to be created.'),
     ];
 
     $form['organization'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Organization'),
+      '#title' => $this->t('Name of new organization'),
       '#required' => TRUE,
-      '#autocomplete_route_name' => 'reliefweb_sync_orgs..autocomplete.organizations',
     ];
 
     $form['source'] = [
@@ -106,7 +107,6 @@ class FixOrganizationManually extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $selected_org = EntityAutocomplete::extractEntityIdFromAutocompleteInput($form_state->getValue('organization'));
     $source = $form_state->getValue('source');
     $id = $form_state->getValue('id');
 
@@ -120,13 +120,25 @@ class FixOrganizationManually extends FormBase {
       return;
     }
 
-    // Update the record with the selected organization.
-    $record['tid'] = $selected_org;
+    // Create a new taxonomy term for the organization.
+    $term = $this->entityTypeManager->getStorage('taxonomy_term')->create([
+      'name' => $form_state->getValue('organization'),
+      'vid' => 'source',
+      'field_shortname' => [
+        'value' => $form_state->getValue('organization'),
+      ],
+    ]);
+
+    // Save the term.
+    $term->save();
+
+    // Update the record with the created organization.
+    $record['tid'] = $term->id();
     $record['status'] = 'fixed';
     $this->importRecordService->saveImportRecords($source, $id, $record);
 
-    $this->messenger()->addStatus($this->t('Organization "@org" selected for source "@source" and ID "@id".', [
-      '@org' => $selected_org,
+    $this->messenger()->addStatus($this->t('Organization "@org" created for source "@source" and ID "@id".', [
+      '@org' => $term->label(),
       '@source' => $source,
       '@id' => $id,
     ]));

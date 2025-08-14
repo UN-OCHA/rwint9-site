@@ -12,6 +12,13 @@ reliefweb_sync_orgs.fix_organization_manually:
     _title: 'Fix Organization Manually'
   requirements:
     _permission: 'import organization records'
+reliefweb_sync_orgs.create_organization_manually:
+  path: '/admin/config/reliefweb/create-organization-manually/{source}/{id}'
+  defaults:
+    _form: '\Drupal\reliefweb_sync_orgs\Form\CreateOrganizationManually'
+    _title: 'Create Organization Manually'
+  requirements:
+    _permission: 'import organization records'
 reliefweb_sync_orgs..autocomplete.organizations:
   path: '/admin/config/reliefweb/autocomplete/organizations'
   defaults:
