@@ -156,55 +156,16 @@ class ListOrganizations extends FormBase {
       'operations' => $this->t('Operations'),
     ];
 
-    // Get total for pagination.
-    $parameters = [];
-    $status_query = 'select status, count(status) from reliefweb_sync_orgs_records
-      where status is not null';
-
-    if (!empty($active_filters['status'])) {
-      $status_query .= ' and status in (:status[])';
-      $parameters[':status[]'] = array_filter(array_values($active_filters['status']));
-    }
-    if (!empty($active_filters['source'])) {
-      $status_query .= ' and source in (:source[])';
-      $parameters[':source[]'] = array_filter(array_values($active_filters['source']));
-    }
-    if (!empty($active_filters['text'])) {
-      $status_query .= ' and id like :text';
-      $parameters[':text'] = '%' . $this->database->escapeLike($active_filters['text']) . '%';
-    }
-
-    $status_query .= '
-      group by status
-      order by status';
-
-    $total = 0;
-    $totals_by_status = $this->database->query($status_query, $parameters)->fetchAllKeyed();
-    foreach ($totals_by_status as $count) {
-      $total += $count;
-    }
+    // Get totals for pagination and status counts.
+    [$totals_by_status, $total] = $this->getTotalsByStatus($active_filters);
 
     // Initialize pager.
     $pager = $this->pagerManager->createPager((int) $total, $limit);
-    // Zero-based.
     $current_page = $pager->getCurrentPage();
     $offset = $current_page * $limit;
 
     // Main query limited by pager offset/limit.
-    $results_query = $this->database->select('reliefweb_sync_orgs_records', 'r')
-      ->fields('r')
-      ->orderBy('changed', 'DESC')
-      ->range($offset, $limit);
-
-    if (!empty($active_filters['status'])) {
-      $results_query->condition('r.status', array_keys($active_filters['status']), 'IN');
-    }
-    if (!empty($active_filters['source'])) {
-      $results_query->condition('r.source', array_keys($active_filters['source']), 'IN');
-    }
-
-    $results = $results_query->execute()
-      ->fetchAll(\PDO::FETCH_ASSOC);
+    $results = $this->getResults($active_filters, $offset, $limit);
 
     // Load all entities using tid.
     $entities = [];
@@ -341,6 +302,80 @@ class ListOrganizations extends FormBase {
     ];
 
     return $form;
+  }
+
+  /**
+   * Get totals by status and overall total for the current filters.
+   *
+   * @param array $filters
+   *   Active filters from the form state.
+   *
+   * @return array
+   *   Array of 2 elements: [totals_by_status, total].
+   */
+  protected function getTotalsByStatus(array $filters): array {
+    $parameters = [];
+    $sql = 'select status, count(status) from reliefweb_sync_orgs_records where status is not null';
+
+    if (!empty($filters['status'])) {
+      $sql .= ' and status in (:status[])';
+      $parameters[':status[]'] = array_filter(array_values($filters['status']));
+    }
+    if (!empty($filters['source'])) {
+      $sql .= ' and source in (:source[])';
+      $parameters[':source[]'] = array_filter(array_values($filters['source']));
+    }
+    if (!empty($filters['text'])) {
+      $sql .= ' and JSON_EXTRACT(csv_item, \'$.name\') like :text';
+      $parameters[':text'] = '%' . $this->database->escapeLike($filters['text']) . '%';
+    }
+
+    $sql .= ' group by status order by status';
+
+    $total = 0;
+    $totals_by_status = $this->database->query($sql, $parameters)->fetchAllKeyed();
+    foreach ($totals_by_status as $count) {
+      $total += $count;
+    }
+
+    return [$totals_by_status, $total];
+  }
+
+  /**
+   * Build the base results query with applied filters (without range/pager).
+   *
+   * @param array $filters
+   *   Active filters.
+   * @param int $offset
+   *   Offset for the results.
+   * @param int $limit
+   *   Limit for the results.
+   *
+   * @return \Drupal\Core\Database\Query\SelectInterface
+   *   The select query with conditions applied.
+   */
+  protected function getResults(array $filters, int $offset, int $limit): array {
+    $sql = 'SELECT * FROM {reliefweb_sync_orgs_records} where status is not null';
+    $parameters = [];
+
+    if (!empty($filters['status'])) {
+      $sql .= ' and status in (:status[])';
+      $parameters[':status[]'] = array_filter(array_values($filters['status']));
+    }
+    if (!empty($filters['source'])) {
+      $sql .= ' and source in (:source[])';
+      $parameters[':source[]'] = array_filter(array_values($filters['source']));
+    }
+    if (!empty($filters['text'])) {
+      $sql .= ' and JSON_EXTRACT(csv_item, \'$.name\') like :text';
+      $parameters[':text'] = '%' . $this->database->escapeLike($filters['text']) . '%';
+    }
+
+    $sql .= ' order by changed desc';
+    $sql .= ' limit ' . $limit;
+    $sql .= ' offset ' . $offset;
+
+    return $this->database->query($sql, $parameters)->fetchAll(\PDO::FETCH_ASSOC);
   }
 
   /**
