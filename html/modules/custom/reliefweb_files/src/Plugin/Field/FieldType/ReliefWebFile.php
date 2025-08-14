@@ -30,7 +30,7 @@ use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
  *   id = "reliefweb_file",
  *   label = @Translation("ReliefWeb File"),
  *   description = @Translation("File field with OCHA docstore backend"),
- *   category = @Translation("ReliefWeb"),
+ *   category = "reliefweb",
  *   default_widget = "reliefweb_file",
  *   default_formatter = "reliefweb_file",
  *   list_class = "\Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFileList",
