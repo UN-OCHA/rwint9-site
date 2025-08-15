@@ -82,10 +82,7 @@ class ImportAndQueueCsvFile extends FormBase {
     $form['source'] = [
       '#type' => 'select',
       '#title' => $this->t('Source'),
-      '#options' => [
-        'hdx' => $this->t('HDX'),
-        'hpc' => $this->t('HPC tools'),
-      ],
+      '#options' => reliefweb_sync_orgs_sources(),
       '#required' => TRUE,
     ];
 

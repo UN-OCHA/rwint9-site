@@ -157,9 +157,11 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
    *   The HDX organization data array.
    */
   protected function mergeHdxOrganizationTerm($item) {
+    $field_info = reliefweb_sync_orgs_field_info('hdx');
     $source = 'hdx';
-    $id = $item['id'];
+    $id = $item[$field_info['id']] ?? NULL;
     $term = NULL;
+    $message = '';
 
     $import_record = $this->importRecordService->getExistingImportRecord($source, $id);
     if (empty($import_record)) {
@@ -171,32 +173,32 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
       return;
     }
 
-    // If fts_id is available, try to load the term by fts_id.
-    if (!empty($item['fts_id'])) {
-      $term = $this->loadSourceTermByFtsId($item['fts_id']);
-    }
+    foreach ($field_info['matching'] as $field => $type) {
+      // Skip if we have a term.
+      if ($term) {
+        break;
+      }
 
-    // If term is not found by fts_id, try to load it by id.
-    if (empty($term)) {
-      // List of possible fields to check for existing terms.
-      $fields_to_check = [
-        'display_name',
-        'name',
-        'title',
-      ];
+      // Skip if the field is not set or empty.
+      if (!isset($item[$field]) || empty($item[$field])) {
+        continue;
+      }
 
-      // Remove " (inactive)" from display_name and name fields.
-      foreach ($fields_to_check as $field) {
-        if (isset($item[$field]) && is_string($item[$field])) {
-          $item[$field] = str_replace(' (inactive)', '', $item[$field]);
+      // Clean the field value if needed.
+      if (isset($field_info['clean'][$field]) && is_array($field_info['clean'][$field])) {
+        foreach ($field_info['clean'][$field] as $clean_value) {
+          $item[$field] = str_replace($clean_value, '', $item[$field]);
         }
       }
 
-      // First try exact matches on the fields.
-      $message = '';
-      foreach ($fields_to_check as $field) {
-        if (!empty($item[$field])) {
-          $message = "Matched by $field: {$item[$field]}";
+      // Attempt to load the term based on the field value.
+      $message = "Exact match by $field: {$item[$field]}";
+      switch ($type) {
+        case 'fts_id':
+          $term = $this->loadSourceTermByFtsId($item[$field]);
+          break;
+
+        case 'name':
           $term = $this->loadSourceTermByName($item[$field]);
           if ($term) {
             break;
@@ -206,17 +208,11 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
           if ($term) {
             break;
           }
+          break;
 
-          $term = $this->loadSourceTermByShortName($item[$field]);
-          if ($term) {
-            break;
-          }
-
-          $term = $this->loadSourceTermByAlias($item[$field]);
-          if ($term) {
-            break;
-          }
-        }
+        default:
+          // Skip unsupported matching type.
+          continue 2;
       }
     }
 
@@ -231,7 +227,25 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
     // Try searching with fuse.
     $message = "No exact match found. Attempting fuzzy search.";
     $fuzzy_search = $this->buildFuseSearchForName();
-    $search_result = $fuzzy_search->search($item['display_name']);
+
+    foreach ($field_info['fuzzy'] as $field) {
+      // Skip if the field is not set or empty.
+      if (!isset($item[$field]) || empty($item[$field])) {
+        continue;
+      }
+
+      // Clean the field value if needed.
+      if (isset($field_info['clean'][$field]) && is_array($field_info['clean'][$field])) {
+        foreach ($field_info['clean'][$field] as $clean_value) {
+          $item[$field] = str_replace($clean_value, '', $item[$field]);
+        }
+      }
+
+      $search_result = $fuzzy_search->search($item[$field]);
+      if (!empty($search_result)) {
+        break;
+      }
+    }
 
     if (!empty($search_result)) {
       $import_record['status'] = $search_result['status'] ?? 'partial';
@@ -242,6 +256,7 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
     }
 
     $import_record['status'] = 'skipped';
+    $import_record['message'] = 'No matching organization found.';
     $import_record = $this->importRecordService->saveImportRecords($source, $id, $import_record);
   }
 

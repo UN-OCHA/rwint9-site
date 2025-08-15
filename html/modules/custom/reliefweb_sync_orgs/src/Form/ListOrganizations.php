@@ -132,6 +132,12 @@ class ListOrganizations extends FormBase {
       '#value' => $this->t('Filter'),
       '#button_type' => 'primary',
     ];
+    $filters['actions']['reset'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Reset'),
+      '#button_type' => 'secondary',
+      '#submit' => [[$this, 'resetFilters']],
+    ];
 
     return $filters;
   }
@@ -151,6 +157,7 @@ class ListOrganizations extends FormBase {
       'status' => $this->t('Status'),
       'entity' => $this->t('Entity'),
       'item' => $this->t('Item'),
+      'message' => $this->t('Message'),
       'created' => $this->t('Created'),
       'changed' => $this->t('Updated'),
       'operations' => $this->t('Operations'),
@@ -231,6 +238,9 @@ class ListOrganizations extends FormBase {
         ],
         'item' => [
           'data' => $item_info,
+        ],
+        'message' => [
+          'data' => $record['message'] ?? '',
         ],
         'created' => [
           'data' => date('Y-m-d H:i', $record['created']),
@@ -359,23 +369,38 @@ class ListOrganizations extends FormBase {
     $parameters = [];
 
     if (!empty($filters['status'])) {
-      $sql .= ' and status in (:status[])';
+      $sql .= ' AND status IN (:status[])';
       $parameters[':status[]'] = array_filter(array_values($filters['status']));
     }
     if (!empty($filters['source'])) {
-      $sql .= ' and source in (:source[])';
+      $sql .= ' AND source IN (:source[])';
       $parameters[':source[]'] = array_filter(array_values($filters['source']));
     }
     if (!empty($filters['text'])) {
-      $sql .= ' and JSON_EXTRACT(csv_item, \'$.name\') like :text';
-      $parameters[':text'] = '%' . $this->database->escapeLike($filters['text']) . '%';
+      $sql .= ' AND ' . $this->buildWhereClauseForTextSearch();
+      $parameters[':text'] = '%' . $this->database->escapeLike(strtolower($filters['text'])) . '%';
     }
 
-    $sql .= ' order by changed desc';
-    $sql .= ' limit ' . $limit;
-    $sql .= ' offset ' . $offset;
+    $sql .= ' ORDER BY changed DESC';
+    $sql .= ' LIMIT ' . $limit;
+    $sql .= ' OFFSET ' . $offset;
 
     return $this->database->query($sql, $parameters)->fetchAll(\PDO::FETCH_ASSOC);
+  }
+
+  /**
+   * Build the where clause for the json searchable feeds.
+   */
+  protected function buildWhereClauseForTextSearch(): string {
+    $search_fields = reliefweb_sync_orgs_searchable_fields();
+    $query = '(';
+    $conditions = [];
+    foreach ($search_fields as $field) {
+      $conditions[] = "LOWER(JSON_EXTRACT(csv_item, '$.$field')) LIKE :text";
+    }
+    $query .= implode(' OR ', $conditions) . ')';
+
+    return $query;
   }
 
   /**
@@ -476,6 +501,17 @@ class ListOrganizations extends FormBase {
     $values = array_combine($results, $results);
 
     return $values;
+  }
+
+  /**
+   * Submit handler to reset all filters.
+   */
+  public function resetFilters(array &$form, FormStateInterface $form_state) {
+    // Redirect to the same page without filters.
+    $form_state->setRedirect('reliefweb_sync_orgs.overview');
+
+    // Rebuild the form.
+    $form_state->setRebuild(FALSE);
   }
 
 }
