@@ -24,72 +24,14 @@
  *   from its value prior to matching (basic sanitation rules).
  */
 function reliefweb_sync_orgs_field_info(string $source = ''): array {
-  $field_info = [
-    'hdx' => [
-      'id' => 'id',
-      'name' => 'HDX',
-      'label_field' => 'display_name',
-      'mapping' => [
-        'display_name' => 'name',
-      ],
-      'search' => [
-        'name',
-        'display_name',
-      ],
-      'matching' => [
-        'fts_id' => 'fts_id',
-        'display_name' => 'name',
-      ],
-      'fuzzy' => [
-        'display_name',
-      ],
-      'clean' => [
-        'display_name' => [
-          ' (inactive)',
-        ],
-      ],
-    ],
-    'hpc' => [
-      'id' => 'org_id',
-      'name' => 'HPC',
-      'label_field' => 'org_name',
-      'mapping' => [
-        'org_name' => 'name',
-      ],
-      'search' => [
-        'org_name',
-      ],
-      'matching' => [
-        'org_name' => 'name',
-      ],
-      'fuzzy' => [
-        'org_name',
-      ],
-    ],
-    'iati' => [
-      'id' => 'iati_organisation_identifier',
-      'name' => 'IATI',
-      'label_field' => 'publisher',
-      'mapping' => [
-        'publisher' => 'name',
-      ],
-      'search' => [
-        'publisher',
-      ],
-      'matching' => [
-        'publisher' => 'name',
-      ],
-      'fuzzy' => [
-        'publisher',
-      ],
-    ],
-  ];
+  $config = \Drupal::config('reliefweb_sync_orgs.sources');
+  $configured = $config->get();
 
   if (empty($source)) {
-    return $field_info;
+    return $configured;
   }
 
-  return $field_info[$source] ?? [];
+  return $configured[$source] ?? [];
 }
 
 /**
