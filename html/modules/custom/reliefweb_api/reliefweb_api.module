@@ -8,8 +8,10 @@
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\reliefweb_utility\Helpers\FileHelper;
 use RWAPIIndexer\Bundles;
 use RWAPIIndexer\Manager;
+use RWAPIIndexer\Resource;
 
 /**
  * Implements hook_ENTITY_TYPE_update().
@@ -84,6 +86,13 @@ function reliefweb_api_handle_entity(EntityInterface $entity, $delete = FALSE) {
     'remove' => $delete,
     'tag' => \Drupal::state()->get('reliefweb_api_index_tag_' . $bundle, ''),
   ];
+
+  // Allow some post processing of the items before they are actually added to
+  // the index.
+  $hook = 'reliefweb_api_post_process_item';
+  if (function_exists($hook)) {
+    $options['post-process-item-hook'] = $hook;
+  }
 
   // Index/delete the entity.
   reliefweb_api_execute($options, $entity_type_id);
@@ -268,4 +277,37 @@ function reliefweb_api_indexer_available() {
   }
 
   return $available;
+}
+
+/**
+ * Post process an item before indexing.
+ *
+ * @param \RWAPIIndexer\Resource $resource
+ *   API indexer resource.
+ * @param array $item
+ *   Data of the item to index.
+ *
+ * @see \RWAPIIndexer\Resource::processItem()
+ * @see \RWAPIIndexer\Resource::postProcessItem()
+ */
+function reliefweb_api_post_process_item(Resource $resource, array &$item): void {
+  if ($resource->getBundle() !== 'report' || empty($item['file'])) {
+    return;
+  }
+
+  $database = \Drupal::database();
+
+  foreach ($item['file'] as $key => $file) {
+    if (isset($file['id'], $file['mimetype'])) {
+      $uri = $database
+        ->select('file_managed', 'f')
+        ->fields('f', ['uri'])
+        ->condition('f.fid', $file['id'])
+        ->execute()
+        ->fetchField();
+
+      $content = FileHelper::extractText($uri, $file['mimetype']);
+      $item['file'][$key]['minhash_content'] = $content;
+    }
+  }
 }
