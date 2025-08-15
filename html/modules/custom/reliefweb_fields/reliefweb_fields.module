@@ -36,6 +36,7 @@ function reliefweb_fields_theme() {
 function reliefweb_fields_entity_type_build(array &$entity_types) {
   $entity_types['taxonomy_term']->setFormClass('profile', 'Drupal\reliefweb_fields\Form\TaxonomyTermProfile');
   $entity_types['taxonomy_term']->setFormClass('user_posting_rights', 'Drupal\reliefweb_fields\Form\TaxonomyTermUserPostingRights');
+  $entity_types['taxonomy_term']->setFormClass('domain_posting_rights', 'Drupal\reliefweb_fields\Form\TaxonomyTermDomainPostingRights');
 }
 
 /**

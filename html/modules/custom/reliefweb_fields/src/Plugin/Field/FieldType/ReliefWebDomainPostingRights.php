@@ -9,19 +9,19 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
 
 /**
- * Plugin implementation of the 'reliefweb_user_posting_rights' field type.
+ * Plugin implementation of the 'reliefweb_domain_posting_rights' field type.
  *
  * @FieldType(
- *   id = "reliefweb_user_posting_rights",
- *   label = @Translation("ReliefWeb User Posting Rights"),
- *   description = @Translation("A field to store user posting rights."),
+ *   id = "reliefweb_domain_posting_rights",
+ *   label = @Translation("ReliefWeb Domain Posting Rights"),
+ *   description = @Translation("A field to store email domain posting rights."),
  *   category = "reliefweb",
- *   default_widget = "reliefweb_user_posting_rights",
- *   default_formatter = "reliefweb_user_posting_rights",
+ *   default_widget = "reliefweb_domain_posting_rights",
+ *   default_formatter = "reliefweb_domain_posting_rights",
  *   cardinality = -1,
  * )
  */
-class ReliefWebUserPostingRights extends FieldItemBase {
+class ReliefWebDomainPostingRights extends FieldItemBase {
 
   /**
    * {@inheritdoc}
@@ -29,12 +29,11 @@ class ReliefWebUserPostingRights extends FieldItemBase {
   public static function schema(FieldStorageDefinitionInterface $field_definition) {
     return [
       'columns' => [
-        'id' => [
-          'description' => 'User ID.',
-          'type' => 'int',
-          'unsigned' => TRUE,
+        'domain' => [
+          'description' => 'Domain.',
+          'type' => 'varchar',
+          'length' => 255,
           'not null' => TRUE,
-          'default' => 0,
         ],
         'job' => [
           'description' => 'Job posting rights: 0 = unverified; 1 = blocked; 2 = allowed; 3 = trusted.',
@@ -64,7 +63,7 @@ class ReliefWebUserPostingRights extends FieldItemBase {
         ],
       ],
       'indexes' => [
-        'id' => ['id'],
+        'domain' => ['domain'],
         'job' => ['job'],
         'training' => ['training'],
         'report' => ['report'],
@@ -76,8 +75,8 @@ class ReliefWebUserPostingRights extends FieldItemBase {
    * {@inheritdoc}
    */
   public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
-    $properties['id'] = DataDefinition::create('integer')
-      ->setLabel(new TranslatableMarkup('Id'))
+    $properties['domain'] = DataDefinition::create('string')
+      ->setLabel(new TranslatableMarkup('Domain'))
       ->setRequired(TRUE);
 
     $properties['job'] = DataDefinition::create('integer')
@@ -103,7 +102,7 @@ class ReliefWebUserPostingRights extends FieldItemBase {
    * {@inheritdoc}
    */
   public function isEmpty() {
-    $url = $this->get('id')->getValue();
+    $url = $this->get('domain')->getValue();
     return empty($url);
   }
 
@@ -114,18 +113,6 @@ class ReliefWebUserPostingRights extends FieldItemBase {
     $constraint_manager = \Drupal::typedDataManager()->getValidationConstraintManager();
     $constraints = parent::getConstraints();
 
-    // @todo Add user id lookup validation?
-    $constraints[] = $constraint_manager->create('ComplexData', [
-      'id' => [
-        'Range' => [
-          'min' => 3,
-          'minMessage' => $this->t('%name: the User IS must be a number superior or equal to @min.', [
-            '%name' => $this->getFieldDefinition()->getLabel(),
-            '@min' => 3,
-          ]),
-        ],
-      ],
-    ]);
     $constraints[] = $constraint_manager->create('ComplexData', [
       'job' => [
         'AllowedValues' => [
@@ -167,7 +154,7 @@ class ReliefWebUserPostingRights extends FieldItemBase {
    * {@inheritdoc}
    */
   public static function generateSampleValue(FieldDefinitionInterface $field_definition) {
-    $values['url'] = mt_rand(3, 1000000);
+    $values['domain'] = $random->string(mt_rand(1, 250)) . '.' . $random->string(mt_rand(1, 4));
     $values['job'] = mt_rand(0, 3);
     $values['training'] = mt_rand(0, 3);
     $values['report'] = mt_rand(0, 3);
