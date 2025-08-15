@@ -1,0 +1,48 @@
+reliefweb_sync_orgs.sources:
+  type: sequence
+  label: 'Source definition'
+  sequence:
+    type: mapping
+    mapping:
+      id:
+        type: string
+        label: 'Identifier field'
+      name:
+        type: label
+        label: 'Source name'
+      label_field:
+        type: string
+        label: 'Label field'
+      mapping:
+        type: mapping
+        label: 'Field mapping'
+        mapping:
+          '*':
+            type: string
+            label: 'Destination field'
+      search:
+        type: sequence
+        label: 'Search fields'
+        sequence:
+          type: string
+      matching:
+        type: mapping
+        label: 'Matching fields'
+        mapping:
+          '*':
+            type: string
+            label: 'Local canonical field'
+      fuzzy:
+        type: sequence
+        label: 'Fuzzy fields'
+        sequence:
+          type: string
+      clean:
+        type: mapping
+        label: 'Cleaning rules'
+        mapping:
+          '*':
+            type: sequence
+            label: 'Substrings'
+            sequence:
+              type: string
