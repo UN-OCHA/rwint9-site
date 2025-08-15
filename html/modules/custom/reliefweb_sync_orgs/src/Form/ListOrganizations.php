@@ -8,6 +8,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Pager\PagerManagerInterface;
+use Drupal\Core\Queue\QueueInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_sync_orgs\Service\ImportRecordService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -16,6 +17,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Form to manually create an organization.
  */
 class ListOrganizations extends FormBase {
+
+  /**
+   * Queue name.
+   */
+  protected const QUEUE_NAME = 'reliefweb_sync_orgs_process_csv_item';
 
   /**
    * The import record service.
@@ -46,14 +52,21 @@ class ListOrganizations extends FormBase {
   protected $pagerManager;
 
   /**
+   * Queue factory.
+   *
+   * @var \Drupal\Core\Queue\QueueInterface
+   */
+  protected $queue;
+
+  /**
    * Constructs a new form.
    */
-  public function __construct(ImportRecordService $import_record_service, EntityTypeManagerInterface $entity_type_manager, Connection $database, PagerManagerInterface $pager_manager) {
+  public function __construct(ImportRecordService $import_record_service, EntityTypeManagerInterface $entity_type_manager, Connection $database, PagerManagerInterface $pager_manager, QueueInterface $queue_factory) {
     $this->importRecordService = $import_record_service;
     $this->entityTypeManager = $entity_type_manager;
     $this->database = $database;
     $this->pagerManager = $pager_manager;
-
+    $this->queue = $queue_factory;
   }
 
   /**
@@ -65,6 +78,7 @@ class ListOrganizations extends FormBase {
       $container->get('entity_type.manager'),
       $container->get('database'),
       $container->get('pager.manager'),
+      $container->get('queue')->get(self::QUEUE_NAME)
     );
   }
 
@@ -290,6 +304,26 @@ class ListOrganizations extends FormBase {
 
       $rows[$id] = $cells;
     }
+
+    // Add a message if the queue is not empty.
+    if ($this->queue->numberOfItems() > 0) {
+      $form['queue'] = [
+        '#type' => 'item',
+        '#markup' => $this->t('There are still <strong>@count</strong> items in the queue for processing.', [
+          '@count' => $this->queue->numberOfItems(),
+        ]),
+        '#weight' => -20,
+      ];
+    }
+
+    // Add a link to the import form.
+    $form['import'] = [
+      '#type' => 'link',
+      '#title' => $this->t('Import CSV file'),
+      '#url' => Url::fromRoute('reliefweb_sync_orgs.import_items'),
+      '#attributes' => ['class' => ['button']],
+      '#weight' => -20,
+    ];
 
     $form['filters'] = $this->getFilters($active_filters, $totals_by_source, $totals_by_status);
 
