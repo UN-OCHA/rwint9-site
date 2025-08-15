@@ -28,6 +28,7 @@ function reliefweb_sync_orgs_field_info(string $source = ''): array {
     'hdx' => [
       'id' => 'id',
       'name' => 'HDX',
+      'label_field' => 'display_name',
       'mapping' => [
         'display_name' => 'name',
         'org_acronym' => 'shortname',
@@ -51,6 +52,23 @@ function reliefweb_sync_orgs_field_info(string $source = ''): array {
         'display_name' => [
           ' (inactive)',
         ],
+      ],
+    ],
+    'hpc' => [
+      'id' => 'org_id',
+      'name' => 'HPC',
+      'label_field' => 'org_name',
+      'mapping' => [
+        'org_name' => 'name',
+      ],
+      'search' => [
+        'org_name',
+      ],
+      'matching' => [
+        'org_name' => 'name',
+      ],
+      'fuzzy' => [
+        'org_name',
       ],
     ],
   ];

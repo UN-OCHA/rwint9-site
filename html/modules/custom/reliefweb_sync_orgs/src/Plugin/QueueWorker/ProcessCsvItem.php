@@ -121,45 +121,27 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
   }
 
   /**
-   * Try to merge with existing term, or create a new one.
+   * Merges an organization term based on an item.
    *
    * @param array $item
-   *   The raw item data from the queue (decoded CSV row + source metadata).
-   *
-   * @throws \Exception
-   *   Thrown when the source is unsupported.
+   *   The organization data array.
    */
   protected function mergeOrganizationTerm($item) {
     $source = $item['_source'] ?? '';
-
-    switch ($source) {
-      case 'hdx':
-        $this->mergeHdxOrganizationTerm($item);
-        break;
-
-      case 'hpc':
-        $this->mergeHpcOrganizationTerm($item);
-        break;
-
-      default:
-        throw new \Exception("Unsupported source: $source");
+    if (empty($source)) {
+      throw new \Exception('Source must be provided in the item data.');
     }
-  }
 
-  /**
-   * Merges an organization term based on a HDX item.
-   *
-   * Performs exact lookup attempts (fts_id, name, long name, short name,
-   * aliases) followed by a fuzzy search fallback. Updates and persists the
-   * corresponding import record with status (success | partial | skipped).
-   *
-   * @param array $item
-   *   The HDX organization data array.
-   */
-  protected function mergeHdxOrganizationTerm($item) {
-    $field_info = reliefweb_sync_orgs_field_info('hdx');
-    $source = 'hdx';
+    $field_info = reliefweb_sync_orgs_field_info($source);
+    if (empty($field_info)) {
+      throw new \Exception("No field info found for source: $source");
+    }
+
     $id = $item[$field_info['id']] ?? NULL;
+    if (empty($id)) {
+      throw new \Exception("ID must be provided in the item data for source: $source");
+    }
+
     $term = NULL;
     $message = '';
 
@@ -257,67 +239,6 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
 
     $import_record['status'] = 'skipped';
     $import_record['message'] = 'No matching organization found.';
-    $import_record = $this->importRecordService->saveImportRecords($source, $id, $import_record);
-  }
-
-  /**
-   * Merges an organization term based on a HPC item.
-   *
-   * Attempts exact matches on abbreviation and name (including long/short
-   * names and aliases). Updates the import record accordingly.
-   *
-   * @param array $item
-   *   The HPC organization data array.
-   */
-  protected function mergeHpcOrganizationTerm($item) {
-    $source = 'hpc';
-    $id = $item['org id'];
-    $term = NULL;
-
-    $import_record = $this->importRecordService->getExistingImportRecord($source, $id);
-    if (empty($import_record)) {
-      $import_record = $this->importRecordService->constructReliefwebSyncOrgsRecord($source, $id, $item);
-    }
-
-    // List of possible fields to check for existing terms.
-    $fields_to_check = [
-      'org abbreviation',
-      'org name',
-    ];
-
-    // First try exact matches on the fields.
-    foreach ($fields_to_check as $field) {
-      if (!empty($item[$field])) {
-        $term = $this->loadSourceTermByName($item[$field]);
-        if ($term) {
-          break;
-        }
-
-        $term = $this->loadSourceTermByLongName($item[$field]);
-        if ($term) {
-          break;
-        }
-
-        $term = $this->loadSourceTermByShortName($item[$field]);
-        if ($term) {
-          break;
-        }
-
-        $term = $this->loadSourceTermByAlias($item[$field]);
-        if ($term) {
-          break;
-        }
-      }
-    }
-
-    if ($term) {
-      $import_record['tid'] = $term->id();
-      $import_record['status'] = 'success';
-      $import_record = $this->importRecordService->saveImportRecords($source, $id, $import_record);
-      return;
-    }
-
-    $import_record['status'] = 'skipped';
     $import_record = $this->importRecordService->saveImportRecords($source, $id, $import_record);
   }
 

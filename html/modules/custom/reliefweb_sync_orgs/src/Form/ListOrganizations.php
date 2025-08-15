@@ -155,6 +155,7 @@ class ListOrganizations extends FormBase {
       'checkbox' => '',
       'id' => $this->t('ID'),
       'status' => $this->t('Status'),
+      'source' => $this->t('Source'),
       'entity' => $this->t('Entity'),
       'item' => $this->t('Item'),
       'message' => $this->t('Message'),
@@ -189,6 +190,9 @@ class ListOrganizations extends FormBase {
     // Current URL.
     $current_url = Url::fromRoute('<current>', [], ['absolute' => FALSE])->toString();
 
+    // Field info.
+    $field_info = reliefweb_sync_orgs_field_info();
+
     $rows = [];
     foreach ($results as $record) {
       // Decode csv_item if it exists.
@@ -210,7 +214,8 @@ class ListOrganizations extends FormBase {
         $entity_info = $entity->toLink()->toString();
       }
 
-      $item_info = $record['csv_item']['display_name'] ?? '';
+      $source = $record['source'];
+      $item_info = $record['csv_item'][$field_info[$source]['label_field']] ?? '';
 
       $default_value[$id] = FALSE;
       $cells = [
@@ -232,6 +237,9 @@ class ListOrganizations extends FormBase {
         ],
         'status' => [
           'data' => $record['status'],
+        ],
+        'source' => [
+          'data' => $source,
         ],
         'entity' => [
           'data' => $entity_info,

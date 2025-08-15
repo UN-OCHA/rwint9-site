@@ -140,8 +140,11 @@ class ImportAndQueueCsvFile extends FormBase {
 
     $f = fopen($filename, 'r');
     $header = fgetcsv($f, NULL, ',');
-    $header_lowercase = array_map('strtolower', $header);
-    $header_lowercase = array_map('trim', $header_lowercase);
+
+    // Replace all spaces with underscores.
+    $header_lowercase = array_map(function ($value) {
+      return str_replace(' ', '_', trim(strtolower($value)));
+    }, $header);
 
     // Get data.
     while ($row = fgetcsv($f, NULL, ',')) {
