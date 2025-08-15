@@ -142,6 +142,9 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
       throw new \Exception("ID must be provided in the item data for source: $source");
     }
 
+    // Remove any / from the ID to avoid issues with routing.
+    $id = str_replace('/', '', $id);
+
     $term = NULL;
     $message = '';
 
