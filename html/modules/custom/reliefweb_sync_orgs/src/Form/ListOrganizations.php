@@ -78,7 +78,7 @@ class ListOrganizations extends FormBase {
   /**
    * Return a list of filters.
    */
-  public function getFilters(array $defaults = [], array $totals = []) {
+  public function getFilters(array $defaults = [], array $totals_by_source = [], array $totals_by_status = []) {
     $filters = [
       '#type' => 'fieldset',
       '#attributes' => [
@@ -92,13 +92,13 @@ class ListOrganizations extends FormBase {
       '#type' => 'checkboxes',
       '#title' => $this->t('Status'),
       '#options' => [
-        'success' => $this->t('Success (@count)', ['@count' => $totals['success'] ?? 0]),
-        'skipped' => $this->t('Skipped (@count)', ['@count' => $totals['skipped'] ?? 0]),
-        'exact' => $this->t('Exact match (@count)', ['@count' => $totals['exact'] ?? 0]),
-        'partial' => $this->t('Partial (@count)', ['@count' => $totals['partial'] ?? 0]),
-        'mismatch' => $this->t('Mismatch (@count)', ['@count' => $totals['mismatch'] ?? 0]),
-        'fixed' => $this->t('Fixed (@count)', ['@count' => $totals['fixed'] ?? 0]),
-        'ignored' => $this->t('Ignored (@count)', ['@count' => $totals['ignored'] ?? 0]),
+        'success' => $this->t('Success (@count)', ['@count' => $totals_by_status['success'] ?? 0]),
+        'skipped' => $this->t('Skipped (@count)', ['@count' => $totals_by_status['skipped'] ?? 0]),
+        'exact' => $this->t('Exact match (@count)', ['@count' => $totals_by_status['exact'] ?? 0]),
+        'partial' => $this->t('Partial (@count)', ['@count' => $totals_by_status['partial'] ?? 0]),
+        'mismatch' => $this->t('Mismatch (@count)', ['@count' => $totals_by_status['mismatch'] ?? 0]),
+        'fixed' => $this->t('Fixed (@count)', ['@count' => $totals_by_status['fixed'] ?? 0]),
+        'ignored' => $this->t('Ignored (@count)', ['@count' => $totals_by_status['ignored'] ?? 0]),
       ],
       '#default_value' => array_values($defaults['status'] ?? []),
       '#attributes' => [
@@ -108,7 +108,7 @@ class ListOrganizations extends FormBase {
     $filters['source'] = [
       '#type' => 'checkboxes',
       '#title' => $this->t('Source'),
-      '#options' => $this->getSourceValues(),
+      '#options' => $this->getSourceValues($totals_by_source),
       '#default_value' => array_values($defaults['source'] ?? []),
       '#attributes' => [
         'class' => ['form--inline'],
@@ -165,7 +165,7 @@ class ListOrganizations extends FormBase {
     ];
 
     // Get totals for pagination and status counts.
-    [$totals_by_status, $total] = $this->getTotalsByStatus($active_filters);
+    [$totals_by_source, $totals_by_status, $total] = $this->getTotalsByStatus($active_filters);
 
     // Initialize pager.
     $pager = $this->pagerManager->createPager((int) $total, $limit);
@@ -291,7 +291,7 @@ class ListOrganizations extends FormBase {
       $rows[$id] = $cells;
     }
 
-    $form['filters'] = $this->getFilters($active_filters, $totals_by_status);
+    $form['filters'] = $this->getFilters($active_filters, $totals_by_source, $totals_by_status);
 
     $form['table'] = [
       '#type' => 'table',
@@ -329,11 +329,11 @@ class ListOrganizations extends FormBase {
    *   Active filters from the form state.
    *
    * @return array
-   *   Array of 2 elements: [totals_by_status, total].
+   *   Array of 2 elements: [totals_by_source, totals_by_status, total].
    */
   protected function getTotalsByStatus(array $filters): array {
     $parameters = [];
-    $sql = 'select status, count(status) from reliefweb_sync_orgs_records where status is not null';
+    $sql = 'select source, status, count(status) as num from reliefweb_sync_orgs_records where status is not null';
 
     if (!empty($filters['status'])) {
       $sql .= ' and status in (:status[])';
@@ -344,19 +344,23 @@ class ListOrganizations extends FormBase {
       $parameters[':source[]'] = array_filter(array_values($filters['source']));
     }
     if (!empty($filters['text'])) {
-      $sql .= ' and JSON_EXTRACT(csv_item, \'$.name\') like :text';
-      $parameters[':text'] = '%' . $this->database->escapeLike($filters['text']) . '%';
+      $sql .= ' AND ' . $this->buildWhereClauseForTextSearch();
+      $parameters[':text'] = '%' . $this->database->escapeLike(strtolower($filters['text'])) . '%';
     }
 
-    $sql .= ' group by status order by status';
+    $sql .= ' group by source, status order by source, status';
 
     $total = 0;
-    $totals_by_status = $this->database->query($sql, $parameters)->fetchAllKeyed();
-    foreach ($totals_by_status as $count) {
-      $total += $count;
+    $totals_by_source = [];
+    $totals_by_status = [];
+    $totals = $this->database->query($sql, $parameters)->fetchAll(\PDO::FETCH_ASSOC);
+    foreach ($totals as $count) {
+      $total += $count['num'];
+      $totals_by_source[$count['source']] = ($totals_by_source[$count['source']] ?? 0) + $count['num'];
+      $totals_by_status[$count['status']] = ($totals_by_status[$count['status']] ?? 0) + $count['num'];
     }
 
-    return [$totals_by_status, $total];
+    return [$totals_by_source, $totals_by_status, $total];
   }
 
   /**
@@ -496,7 +500,7 @@ class ListOrganizations extends FormBase {
   /**
    * Get source values from database.
    */
-  protected function getSourceValues() {
+  protected function getSourceValues(array $totals_by_source = []) {
     $query = $this->database->select('reliefweb_sync_orgs_records', 'r')
       ->fields('r', ['source'])
       ->condition('r.source', NULL, 'IS NOT NULL')
@@ -506,7 +510,11 @@ class ListOrganizations extends FormBase {
     $results = $query->execute()
       ?->fetchCol();
 
-    $values = array_combine($results, $results);
+    $values = [];
+    foreach ($results as $source) {
+      $count = $totals_by_source[$source] ?? 0;
+      $values[$source] = $this->t('@source (@count)', ['@source' => $source, '@count' => $count]);
+    }
 
     return $values;
   }

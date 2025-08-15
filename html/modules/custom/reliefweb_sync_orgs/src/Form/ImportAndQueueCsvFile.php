@@ -78,7 +78,6 @@ class ImportAndQueueCsvFile extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    // Allow user to select the source of the CSV file.
     $form['source'] = [
       '#type' => 'select',
       '#title' => $this->t('Source'),
@@ -89,7 +88,7 @@ class ImportAndQueueCsvFile extends FormBase {
     $form['csv_file'] = [
       '#type' => 'file',
       '#title' => $this->t('CSV file'),
-      '#description' => $this->t('CSV file containing clients to import'),
+      '#description' => $this->t('CSV file containing records to import'),
     ];
 
     $form['submit'] = [

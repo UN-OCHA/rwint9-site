@@ -31,11 +31,6 @@ function reliefweb_sync_orgs_field_info(string $source = ''): array {
       'label_field' => 'display_name',
       'mapping' => [
         'display_name' => 'name',
-        'org_acronym' => 'shortname',
-        'description' => 'description',
-        'hdx_org_type' => 'field_organization_type',
-        'org_url' => 'field_homepage',
-        'fts_id' => 'field_fts_id',
       ],
       'search' => [
         'name',
@@ -69,6 +64,23 @@ function reliefweb_sync_orgs_field_info(string $source = ''): array {
       ],
       'fuzzy' => [
         'org_name',
+      ],
+    ],
+    'iati' => [
+      'id' => 'iati_organisation_identifier',
+      'name' => 'IATI',
+      'label_field' => 'publisher',
+      'mapping' => [
+        'publisher' => 'name',
+      ],
+      'search' => [
+        'publisher',
+      ],
+      'matching' => [
+        'publisher' => 'name',
+      ],
+      'fuzzy' => [
+        'publisher',
       ],
     ],
   ];
