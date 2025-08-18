@@ -94,7 +94,7 @@ class ListOrganizations extends FormBase {
    */
   public function getFilters(array $defaults = [], array $totals_by_source = [], array $totals_by_status = []) {
     $filters = [
-      '#type' => 'fieldset',
+      '#type' => 'details',
       '#attributes' => [
         'class' => ['table-filter'],
       ],
@@ -320,7 +320,11 @@ class ListOrganizations extends FormBase {
     $form['import'] = [
       '#type' => 'link',
       '#title' => $this->t('Import CSV file'),
-      '#url' => Url::fromRoute('reliefweb_sync_orgs.import_items'),
+      '#url' => Url::fromRoute('reliefweb_sync_orgs.import_items', [], [
+        'query' => [
+          'destination' => $current_url,
+        ],
+      ]),
       '#attributes' => ['class' => ['button']],
       '#weight' => -20,
     ];

@@ -135,6 +135,7 @@ class CreateOrganizationManually extends FormBase {
     // Update the record with the created organization.
     $record['tid'] = $term->id();
     $record['status'] = 'fixed';
+    $record['message'] = $this->t('Organization created manually.');
     $this->importRecordService->saveImportRecords($source, $id, $record);
 
     $this->messenger()->addStatus($this->t('Organization "@org" created for source "@source" and ID "@id".', [
