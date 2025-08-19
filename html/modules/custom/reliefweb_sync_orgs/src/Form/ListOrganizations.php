@@ -95,6 +95,7 @@ class ListOrganizations extends FormBase {
   public function getFilters(array $defaults = [], array $totals_by_source = [], array $totals_by_status = []) {
     $filters = [
       '#type' => 'details',
+      '#open' => !empty($defaults),
       '#attributes' => [
         'class' => ['table-filter'],
       ],
