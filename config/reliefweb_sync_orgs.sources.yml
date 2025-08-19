@@ -13,7 +13,7 @@ hdx:
   fuzzy:
     - display_name
   clean:
-    - display_name:
+    display_name:
       - ' (inactive)'
 hpc:
   id: org_id
@@ -26,8 +26,9 @@ hpc:
     primarytype: organization_type
   search:
     - org_name
+    - test
   matching:
-    - org_name: name
+    org_name: name
   fuzzy:
     - org_name
 iati:
@@ -39,6 +40,6 @@ iati:
   search:
     - publisher
   matching:
-    - publisher: name
+    publisher: name
   fuzzy:
     - publisher

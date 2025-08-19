@@ -127,11 +127,25 @@ class CreateOrganizationManually extends FormBase {
         '#value' => $this->t('Save'),
       ],
     ];
+
     // Prefill the form with existing data if available.
     $field_info = reliefweb_sync_orgs_field_info($source);
-    foreach ($field_info['mapping'] ?? [] as $field => $form_field) {
+    foreach ($field_info['mapping'] ?? [] as $field => $target) {
       if (isset($record['csv_item'][$field])) {
-        $form[$form_field]['#default_value'] = $record['csv_item'][$field];
+        $form[$target]['#default_value'] = $record['csv_item'][$field];
+        if ($target === 'country') {
+          // Try to load the country term if available.
+          $country_id = $this->entityTypeManager
+            ->getStorage('taxonomy_term')
+            ->loadByProperties([
+              'vid' => 'country',
+              'name' => $record['csv_item'][$field],
+            ]);
+
+          if ($country_id) {
+            $form[$target]['#default_value'] .= ' (' . reset($country_id)->id() . ')';
+          }
+        }
       }
     }
 
