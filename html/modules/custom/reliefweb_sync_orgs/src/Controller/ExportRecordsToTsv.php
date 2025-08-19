@@ -55,6 +55,7 @@ class ExportRecordsToTsv extends ControllerBase {
       'Term ID',
       'Parent Name',
       'Parent ID',
+      'Create New',
     ];
 
     // Convert to TSV.
@@ -118,6 +119,7 @@ class ExportRecordsToTsv extends ControllerBase {
         'term_id' => '',
         'parent_name' => '',
         'parent_id' => '',
+        'create_new' => '',
       ];
 
       // Add term information if available.
