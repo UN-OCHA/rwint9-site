@@ -5,6 +5,13 @@ reliefweb_sync_orgs.import_items:
     _title: 'Import csv file'
   requirements:
     _permission: 'import organization records'
+reliefweb_sync_orgs.import_items_from_export:
+  path: '/reliefweb/sync_orgs/import-from-export'
+  defaults:
+    _form: '\Drupal\reliefweb_sync_orgs\Form\ImportFromExport'
+    _title: 'Import from export'
+  requirements:
+    _permission: 'import organization records'
 
 reliefweb_sync_orgs.overview:
   path: '/reliefweb/sync_orgs/overview'

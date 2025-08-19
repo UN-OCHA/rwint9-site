@@ -123,7 +123,7 @@ class FixOrganizationManually extends FormBase {
     // Update the record with the selected organization.
     $record['tid'] = $selected_org;
     $record['status'] = 'fixed';
-    $record['message'] = $this->t('Organization selected manually.');
+    $record['message'] = 'Organization selected manually';
     $this->importRecordService->saveImportRecords($source, $id, $record);
 
     $this->messenger()->addStatus($this->t('Organization "@org" selected for source "@source" and ID "@id".', [

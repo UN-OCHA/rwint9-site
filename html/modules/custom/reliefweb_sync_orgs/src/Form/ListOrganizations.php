@@ -342,6 +342,19 @@ class ListOrganizations extends FormBase {
       '#weight' => -19,
     ];
 
+    // Add a link to the inprot from export form.
+    $form['import_from_export'] = [
+      '#type' => 'link',
+      '#title' => $this->t('Import from export'),
+      '#url' => Url::fromRoute('reliefweb_sync_orgs.import_items_from_export', [], [
+        'query' => [
+          'destination' => $current_url,
+        ],
+      ]),
+      '#attributes' => ['class' => ['button']],
+      '#weight' => -19,
+    ];
+
     $form['filters'] = $this->getFilters($active_filters, $totals_by_source, $totals_by_status);
 
     $form['table'] = [
