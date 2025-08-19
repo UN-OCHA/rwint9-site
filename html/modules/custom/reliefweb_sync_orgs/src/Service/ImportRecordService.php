@@ -101,4 +101,23 @@ class ImportRecordService {
     return $record;
   }
 
+  /**
+   * Get all import records.
+   */
+  public function getAllImportRecords(): array {
+    $query = $this->database->select('reliefweb_sync_orgs_records', 'r')
+      ->fields('r')
+      ->orderBy('created', 'DESC');
+
+    $records = $query->execute()->fetchAll(\PDO::FETCH_ASSOC);
+
+    foreach ($records as &$record) {
+      if (isset($record['csv_item'])) {
+        $record['csv_item'] = json_decode($record['csv_item'], TRUE);
+      }
+    }
+
+    return $records;
+  }
+
 }

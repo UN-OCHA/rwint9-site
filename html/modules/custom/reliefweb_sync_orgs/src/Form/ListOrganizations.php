@@ -329,6 +329,19 @@ class ListOrganizations extends FormBase {
       '#weight' => -20,
     ];
 
+    // Add a link to the export form.
+    $form['export'] = [
+      '#type' => 'link',
+      '#title' => $this->t('Export to CSV'),
+      '#url' => Url::fromRoute('reliefweb_sync_orgs.export.tsv', [], [
+        'query' => [
+          'destination' => $current_url,
+        ],
+      ]),
+      '#attributes' => ['class' => ['button']],
+      '#weight' => -19,
+    ];
+
     $form['filters'] = $this->getFilters($active_filters, $totals_by_source, $totals_by_status);
 
     $form['table'] = [

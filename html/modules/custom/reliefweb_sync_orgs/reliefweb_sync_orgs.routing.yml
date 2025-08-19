@@ -44,3 +44,10 @@ reliefweb_sync_orgs.autocomplete.countries:
     _format: json
   requirements:
     _permission: 'import organization records'
+
+reliefweb_sync_orgs.export.tsv:
+  path: '/reliefweb/sync_orgs/export'
+  defaults:
+    _controller: '\Drupal\reliefweb_sync_orgs\Controller\ExportRecordsToTsv::export'
+  requirements:
+    _permission: 'import organization records'
