@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_sync_orgs\Form;
 
+use Drupal\Core\Entity\Element\EntityAutocomplete;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -83,6 +84,33 @@ class CreateOrganizationManually extends FormBase {
       '#required' => TRUE,
     ];
 
+    $form['short_name'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Short name of new organization'),
+      '#required' => TRUE,
+    ];
+
+    $form['organization_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Organization type'),
+      '#options' => $this->getOrganizationTypes(),
+      '#required' => TRUE,
+    ];
+
+    $form['country'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Country'),
+      '#required' => TRUE,
+      '#autocomplete_route_name' => 'reliefweb_sync_orgs.autocomplete.countries',
+    ];
+
+    $form['parent_organization'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Parent organization'),
+      '#required' => FALSE,
+      '#autocomplete_route_name' => 'reliefweb_sync_orgs.autocomplete.organizations',
+    ];
+
     $form['source'] = [
       '#type' => 'hidden',
       '#value' => $source,
@@ -108,6 +136,12 @@ class CreateOrganizationManually extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $source = $form_state->getValue('source');
+    $organization = trim($form_state->getValue('organization') ?? '');
+    $short_name = trim($form_state->getValue('short_name') ?? '');
+    $organization_type = $form_state->getValue('organization_type');
+    $country = EntityAutocomplete::extractEntityIdFromAutocompleteInput($form_state->getValue('country'));
+    $parent_organization = EntityAutocomplete::extractEntityIdFromAutocompleteInput($form_state->getValue('parent_organization'));
+
     $id = $form_state->getValue('id');
 
     // Load the import record.
@@ -120,14 +154,31 @@ class CreateOrganizationManually extends FormBase {
       return;
     }
 
-    // Create a new taxonomy term for the organization.
-    $term = $this->entityTypeManager->getStorage('taxonomy_term')->create([
-      'name' => $form_state->getValue('organization'),
+    $payload = [
+      'name' => $organization,
       'vid' => 'source',
       'field_shortname' => [
-        'value' => $form_state->getValue('organization'),
+        'value' => $short_name,
       ],
-    ]);
+      'field_organization_type' => [
+        'target_id' => $organization_type,
+      ],
+      'field_country' => [
+        'target_id' => $country,
+      ],
+    ];
+
+    if ($parent_organization) {
+      $payload['parent'] = [
+        'target_id' => $parent_organization,
+      ];
+    }
+
+    // Create a new taxonomy term for the organization.
+    /** @var \Drupal\taxonomy\Entity\Term $term */
+    $term = $this->entityTypeManager
+      ->getStorage('taxonomy_term')
+      ->create($payload);
 
     // Save the term.
     $term->save();
@@ -143,6 +194,20 @@ class CreateOrganizationManually extends FormBase {
       '@source' => $source,
       '@id' => $id,
     ]));
+  }
+
+  /**
+   * Get a list of organization types.
+   */
+  protected function getOrganizationTypes() {
+    $options = [];
+
+    $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadByProperties(['vid' => 'organization_type']);
+    foreach ($terms as $term) {
+      $options[$term->id()] = $term->label();
+    }
+
+    return $options ?? [];
   }
 
 }

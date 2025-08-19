@@ -372,6 +372,10 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
    * cache (if available) or database (with a short-lived cache populate), and
    * initializes a FuzySearchService instance for fuzzy name matching.
    *
+   * Caching the Fuzy index is not recommended, as it is not expected to
+   * change frequently, and the Fuse library is designed to handle large
+   * datasets efficiently.
+   *
    * @return \Drupal\reliefweb_sync_orgs\Service\FuzySearchService
    *   A fuzzy search service preloaded with source term name data.
    */
