@@ -210,7 +210,7 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
     }
 
     // Try searching with fuse.
-    $message = "No exact match found. Attempting fuzzy search.";
+    $message = 'No exact match found. Attempting fuzzy search.';
     $fuzzy_search = $this->buildFuseSearchForName();
 
     foreach ($field_info['fuzzy'] as $field) {
