@@ -78,7 +78,7 @@ class CreateOrganizationManually extends FormBase {
       '#description' => $this->t('This is the raw CSV item that needs to be created.'),
     ];
 
-    $form['organization'] = [
+    $form['name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name of new organization'),
       '#required' => TRUE,
@@ -127,6 +127,13 @@ class CreateOrganizationManually extends FormBase {
         '#value' => $this->t('Save'),
       ],
     ];
+    // Prefill the form with existing data if available.
+    $field_info = reliefweb_sync_orgs_field_info($source);
+    foreach ($field_info['mapping'] ?? [] as $field => $form_field) {
+      if (isset($record['csv_item'][$field])) {
+        $form[$form_field]['#default_value'] = $record['csv_item'][$field];
+      }
+    }
 
     return $form;
   }
@@ -136,7 +143,7 @@ class CreateOrganizationManually extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $source = $form_state->getValue('source');
-    $organization = trim($form_state->getValue('organization') ?? '');
+    $organization = trim($form_state->getValue('name') ?? '');
     $short_name = trim($form_state->getValue('short_name') ?? '');
     $organization_type = $form_state->getValue('organization_type');
     $country = EntityAutocomplete::extractEntityIdFromAutocompleteInput($form_state->getValue('country'));

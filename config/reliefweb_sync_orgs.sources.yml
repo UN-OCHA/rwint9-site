@@ -3,13 +3,13 @@ hdx:
   name: 'HDX'
   label_field: display_name
   mapping:
-    - display_name: name
+    display_name: name
   search:
     - name
     - display_name
   matching:
-    - fts_id: fts_id
-    - display_name: name
+    fts_id: fts_id
+    display_name: name
   fuzzy:
     - display_name
   clean:
@@ -20,7 +20,10 @@ hpc:
   name: 'HPC'
   label_field: org_name
   mapping:
-    - org_name: name
+    org_name: name
+    org_abbreviation: short_name
+    country: country
+    primarytype: organization_type
   search:
     - org_name
   matching:
@@ -32,7 +35,7 @@ iati:
   name: 'IATI'
   label_field: publisher
   mapping:
-    - publisher: name
+    publisher: name
   search:
     - publisher
   matching:

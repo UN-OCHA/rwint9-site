@@ -159,10 +159,10 @@ class ProcessFromExport extends QueueWorkerBase implements ContainerFactoryPlugi
     // Do we need to create a new term?
     if (!empty($item['create_new']) && $item['create_new'] == '1') {
       $payload = [
-        'name' => $item['name'],
+        'name' => $term['term_name'] ?? $item['name'],
         'vid' => 'source',
         'field_shortname' => [
-          'value' => $item['name'],
+          'value' => $term['term_name'] ?? $item['name'],
         ],
       ];
 
