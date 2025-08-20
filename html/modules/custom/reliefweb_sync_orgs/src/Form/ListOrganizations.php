@@ -566,6 +566,7 @@ class ListOrganizations extends FormBase {
    * Get source values from database.
    */
   protected function getSourceValues(array $totals_by_source = []) {
+    $source_info = reliefweb_sync_orgs_sources();
     $query = $this->database->select('reliefweb_sync_orgs_records', 'r')
       ->fields('r', ['source'])
       ->condition('r.source', NULL, 'IS NOT NULL')
@@ -578,7 +579,13 @@ class ListOrganizations extends FormBase {
     $values = [];
     foreach ($results as $source) {
       $count = $totals_by_source[$source] ?? 0;
-      $values[$source] = $this->t('@source (@count)', ['@source' => $source, '@count' => $count]);
+
+      $label = $source;
+      if (isset($source_info[$source])) {
+        $label = $source_info[$source] ?? $source;
+      }
+
+      $values[$source] = $this->t('@source (@count)', ['@source' => $label, '@count' => $count]);
     }
 
     return $values;

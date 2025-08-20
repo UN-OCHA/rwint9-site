@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\reliefweb_sync_orgs\Service\ImportRecordService;
+use Drupal\reliefweb_sync_orgs\Traits\CleanIdFieldTrait;
 use Drupal\taxonomy\Entity\Term;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -21,6 +22,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class ProcessFromExport extends QueueWorkerBase implements ContainerFactoryPluginInterface {
+
+  use CleanIdFieldTrait;
 
   /**
    * The entity type manager.
@@ -141,8 +144,8 @@ class ProcessFromExport extends QueueWorkerBase implements ContainerFactoryPlugi
       throw new \Exception("ID must be provided in the item data for source: $source");
     }
 
-    // Remove any / from the ID to avoid issues with routing.
-    $id = str_replace('/', '', $id);
+    // Clean the ID to ensure it is safe for use.
+    $id = $this->cleanId($id);
 
     $term = NULL;
 

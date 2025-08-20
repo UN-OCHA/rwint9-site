@@ -14,35 +14,21 @@ reliefweb_sync_orgs.sources:
         type: string
         label: 'Label field'
       mapping:
-        type: mapping
+        type: ignore
         label: 'Field mapping'
-        mapping:
-          '*':
-            type: string
-            label: 'Destination field'
       search:
         type: sequence
         label: 'Search fields'
         sequence:
           type: string
       matching:
-        type: mapping
+        type: ignore
         label: 'Matching fields'
-        mapping:
-          '*':
-            type: string
-            label: 'Local canonical field'
       fuzzy:
         type: sequence
         label: 'Fuzzy fields'
         sequence:
           type: string
       clean:
-        type: mapping
+        type: ignore
         label: 'Cleaning rules'
-        mapping:
-          '*':
-            type: sequence
-            label: 'Substrings'
-            sequence:
-              type: string

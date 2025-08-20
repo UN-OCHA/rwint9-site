@@ -4,6 +4,8 @@ hdx:
   label_field: display_name
   mapping:
     display_name: name
+    hdx_org_type: organization_type
+    org_acronym: short_name
   search:
     - name
     - display_name
@@ -37,9 +39,24 @@ iati:
   label_field: publisher
   mapping:
     publisher: name
+    organization_type: organization_type
+    hq_country_or_region: country
   search:
     - publisher
   matching:
     publisher: name
   fuzzy:
     - publisher
+global3w:
+  id: organization
+  name: 'Global 3W'
+  label_field: organization
+  mapping:
+    organization: name
+    abbreviation: short_name
+  search:
+    - organization
+  matching:
+    organization: name
+  fuzzy:
+    - organization

@@ -152,6 +152,11 @@ class ImportAndQueueCsvFile extends FormBase {
         $data[$header_lowercase[$i]] = trim($row[$i] ?? '');
       }
 
+      // Skip empty rows.
+      if (empty(array_filter($data))) {
+        continue;
+      }
+
       // Add source to the data.
       $data['_source'] = $source;
 
