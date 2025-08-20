@@ -157,7 +157,7 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
     }
 
     // Skip if already processed.
-    if ($import_record['status'] === 'success') {
+    if ($import_record['status'] === 'success' || $import_record['status'] === 'fixed') {
       return;
     }
 
