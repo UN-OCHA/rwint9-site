@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Drupal\Tests\reliefweb_sync_orgs\Unit;
 
 use Drupal\reliefweb_sync_orgs\Service\FuzySearchService;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Test fuse matches for ReliefWeb Sync Orgs.
  */
-class FuseMatches extends TestCase {
+#[CoversClass(FuzySearchService::class)]
+class FuseMatchesTest extends TestCase {
 
   /**
    * Fuse.
@@ -21,9 +24,8 @@ class FuseMatches extends TestCase {
 
   /**
    * Test exact fuse matches.
-   *
-   * @dataProvider tagExtractionProvider
    */
+  #[DataProvider('tagExtractionProvider')]
   public function testExactFuseMatches($search, $expected, $status) {
     $terms = [
       [
