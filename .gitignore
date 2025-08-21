@@ -25,6 +25,7 @@ buildlog.txt
 /database/
 /private/
 /notes/
+/private_files/
 
 # Ignore local settings.
 /local/.env
