@@ -536,19 +536,15 @@ class InoreaderService {
       $url = str_replace('http://', 'https://', $url);
     }
 
-    // Submission data. The language, country, and format IDs are hardcoded.
+    // Submission data.
     $data = [
       'title' => $title,
-      // Limit body length for submission safety.
       'body' => substr($body ?? '', 0, 100000),
       'published' => $published,
       'origin' => $url,
       'source' => $sources,
-      // 267 = English
       'language' => [267],
-      // 254 = Global
       'country' => [254],
-      // 8 = Report
       'format' => [8],
       'file_data' => [
         'pdf' => $pdf,
