@@ -137,6 +137,11 @@ class ImportAndQueueCsvFile extends FormBase {
   public function importFromCsv(string $filename, string $source) {
     $count = 0;
 
+    $field_info = reliefweb_sync_orgs_field_info($source);
+    if (empty($field_info)) {
+      throw new \Exception("No field info found for source: $source");
+    }
+
     $f = fopen($filename, 'r');
     $header = fgetcsv($f, NULL, ',');
 
@@ -152,8 +157,16 @@ class ImportAndQueueCsvFile extends FormBase {
         $data[$header_lowercase[$i]] = trim($row[$i] ?? '');
       }
 
-      // Skip empty rows.
+      // Skip empty rows silently.
       if (empty(array_filter($data))) {
+        continue;
+      }
+
+      // Make sure Id field is present.
+      if (empty($data[$field_info['id']])) {
+        $this->messenger()->addError($this->t('Row @row_number is missing the ID field.', [
+          '@row_number' => $count + 1,
+        ]));
         continue;
       }
 
