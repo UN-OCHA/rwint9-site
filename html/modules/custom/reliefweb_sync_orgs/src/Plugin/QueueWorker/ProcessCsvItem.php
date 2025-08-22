@@ -7,7 +7,7 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
-use Drupal\reliefweb_sync_orgs\Service\FuzySearchService;
+use Drupal\reliefweb_sync_orgs\Service\FuzzySearchService;
 use Drupal\reliefweb_sync_orgs\Service\ImportRecordService;
 use Drupal\reliefweb_sync_orgs\Traits\CleanIdFieldTrait;
 use Drupal\taxonomy\Entity\Term;
@@ -373,16 +373,16 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
    *
    * Pulls (tid, name) for taxonomy terms in the 'source' vocabulary from
    * cache (if available) or database (with a short-lived cache populate), and
-   * initializes a FuzySearchService instance for fuzzy name matching.
+   * initializes a FuzzySearchService instance for fuzzy name matching.
    *
    * Caching the Fuzy index is not recommended, as it is not expected to
    * change frequently, and the Fuse library is designed to handle large
    * datasets efficiently.
    *
-   * @return \Drupal\reliefweb_sync_orgs\Service\FuzySearchService
+   * @return \Drupal\reliefweb_sync_orgs\Service\FuzzySearchService
    *   A fuzzy search service preloaded with source term name data.
    */
-  protected function buildFuseSearchForName(): FuzySearchService {
+  protected function buildFuseSearchForName(): FuzzySearchService {
     $cid = 'reliefweb_sync_orgs:source_terms';
     $cache = $this->cacheBackend->get($cid);
 
@@ -401,7 +401,7 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
       $this->cacheBackend->set($cid, $terms, time() + 15 * 60);
     }
 
-    return new FuzySearchService($terms);
+    return new FuzzySearchService($terms);
   }
 
 }

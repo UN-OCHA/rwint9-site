@@ -9,7 +9,7 @@ use Fuse\Fuse;
 /**
  * Service to do fuzzy search.
  */
-class FuzySearchService {
+class FuzzySearchService {
 
   /**
    * Default options.
@@ -32,7 +32,7 @@ class FuzySearchService {
   protected $fuse;
 
   /**
-   * Constructs a new FuzySearchService instance.
+   * Constructs a new FuzzySearchService instance.
    */
   public function __construct(array $collection, array $options = []) {
     if (empty($options)) {
