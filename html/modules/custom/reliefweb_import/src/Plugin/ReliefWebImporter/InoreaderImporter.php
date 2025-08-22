@@ -434,8 +434,8 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       catch (\Exception $exception) {
         $import_record['status'] = 'error';
         $import_record['editorial_flow'] = 'to_process';
-        if ($e instanceof ReliefwebImportException) {
-          $import_record['status_type'] = $e->getStatusType();
+        if ($exception instanceof ReliefwebImportException) {
+          $import_record['status_type'] = $exception->getStatusType();
         }
 
         $import_record['message'] = $exception->getMessage();
