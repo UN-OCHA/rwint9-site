@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\reliefweb_sync_orgs\Plugin\QueueWorker;
 
 use Drupal\Core\Cache\CacheBackendInterface;
@@ -119,7 +121,7 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
    * @throws \Drupal\Core\Entity\EntityStorageException
    * @throws \Exception
    */
-  public function processItem($queue_item) {
+  public function processItem($queue_item): void {
     $this->mergeOrganizationTerm($queue_item);
   }
 
@@ -129,7 +131,7 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
    * @param array $item
    *   The organization data array.
    */
-  protected function mergeOrganizationTerm($item) {
+  protected function mergeOrganizationTerm($item): void {
     $source = $item['_source'] ?? '';
     if (empty($source)) {
       throw new \Exception('Source must be provided in the item data.');
@@ -151,6 +153,7 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
     $term = NULL;
     $message = '';
 
+    // Load existing import record or create a new one.
     $import_record = $this->importRecordService->getExistingImportRecord($source, $id);
     if (empty($import_record)) {
       $import_record = $this->importRecordService->constructReliefwebSyncOrgsRecord($source, $id, $item);
@@ -161,6 +164,7 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
       return;
     }
 
+    // Try exact matching first.
     foreach ($field_info['matching'] as $field => $type) {
       // Skip if we have a term.
       if ($term) {
@@ -204,6 +208,7 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
       }
     }
 
+    // If we found a term, save and return.
     if ($term) {
       $import_record['tid'] = $term->id();
       $import_record['status'] = 'success';
@@ -229,12 +234,14 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
         }
       }
 
+      // Perform the fuzzy search.
       $search_result = $fuzzy_search->search($item[$field]);
       if (!empty($search_result)) {
         break;
       }
     }
 
+    // If we found a fuzzy match, save and return.
     if (!empty($search_result)) {
       $import_record['status'] = $search_result['status'] ?? 'partial';
       $import_record['tid'] = $search_result['tid'] ?? NULL;
@@ -243,6 +250,7 @@ class ProcessCsvItem extends QueueWorkerBase implements ContainerFactoryPluginIn
       return;
     }
 
+    // No match found.
     $import_record['status'] = 'skipped';
     $import_record['message'] = 'No matching organization found.';
     $import_record = $this->importRecordService->saveImportRecords($source, $id, $import_record);

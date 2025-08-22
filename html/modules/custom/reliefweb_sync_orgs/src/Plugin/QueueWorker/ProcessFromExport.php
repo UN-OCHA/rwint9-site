@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\reliefweb_sync_orgs\Plugin\QueueWorker;
 
 use Drupal\Core\Cache\CacheBackendInterface;
@@ -118,7 +120,7 @@ class ProcessFromExport extends QueueWorkerBase implements ContainerFactoryPlugi
    * @throws \Drupal\Core\Entity\EntityStorageException
    * @throws \Exception
    */
-  public function processItem($queue_item) {
+  public function processItem($queue_item): void {
     $this->updateOrCreateTerm($queue_item);
   }
 
@@ -128,7 +130,7 @@ class ProcessFromExport extends QueueWorkerBase implements ContainerFactoryPlugi
    * @param array $item
    *   The organization data array.
    */
-  protected function updateOrCreateTerm($item) {
+  protected function updateOrCreateTerm($item): void {
     $source = $item['source'] ?? '';
     if (empty($source)) {
       throw new \Exception('Source must be provided in the item data.');
@@ -149,13 +151,14 @@ class ProcessFromExport extends QueueWorkerBase implements ContainerFactoryPlugi
 
     $term = NULL;
 
+    // Load existing import record or throw an error if none found.
     $import_record = $this->importRecordService->getExistingImportRecord($source, $id);
     if (empty($import_record)) {
       throw new \Exception("No import record found for source: $source and ID: $id");
     }
 
     // Skip if already processed.
-    if ($import_record['status'] === 'success') {
+    if ($import_record['status'] === 'success' || $import_record['status'] === 'fixed') {
       return;
     }
 
