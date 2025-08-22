@@ -220,7 +220,7 @@ class CreateOrganizationManually extends FormBase {
   /**
    * Get a list of organization types.
    */
-  protected function getOrganizationTypes() {
+  protected function getOrganizationTypes(): array {
     $options = [];
 
     $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadByProperties(['vid' => 'organization_type']);

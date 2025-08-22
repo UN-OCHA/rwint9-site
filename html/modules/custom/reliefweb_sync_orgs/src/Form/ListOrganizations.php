@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\reliefweb_sync_orgs\Form;
 
 use Drupal\Component\Utility\Html;
@@ -85,14 +87,14 @@ class ListOrganizations extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'reliefweb_sync_orgs_list_organizations';
   }
 
   /**
    * Return a list of filters.
    */
-  public function getFilters(array $defaults = [], array $totals_by_source = [], array $totals_by_status = []) {
+  public function getFilters(array $defaults = [], array $totals_by_source = [], array $totals_by_status = []): array {
     $filters = [
       '#type' => 'details',
       '#open' => !empty($defaults),
@@ -160,7 +162,7 @@ class ListOrganizations extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     $limit = 30;
     $default_value = [];
 
@@ -266,10 +268,10 @@ class ListOrganizations extends FormBase {
           'data' => $record['message'] ?? '',
         ],
         'created' => [
-          'data' => date('Y-m-d H:i', $record['created']),
+          'data' => date('Y-m-d H:i', (int) $record['created']),
         ],
         'changed'  => [
-          'data' => date('Y-m-d H:i', $record['changed']),
+          'data' => date('Y-m-d H:i', (int) $record['changed']),
         ],
         'operations' => [
           'data' => [
@@ -483,7 +485,7 @@ class ListOrganizations extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     $active_filters = [];
     $input = $form_state->getUserInput();
     if (isset($input['filters'])) {
@@ -505,7 +507,7 @@ class ListOrganizations extends FormBase {
   /**
    * Submit handler for creating new organizations.
    */
-  public function createNewOnes(array &$form, FormStateInterface $form_state) {
+  public function createNewOnes(array &$form, FormStateInterface $form_state): void {
     $this->submitForm($form, $form_state);
     $record_ids = $form_state->getUserInput()['selected_records'] ?? [];
     if (empty($record_ids)) {
@@ -542,7 +544,7 @@ class ListOrganizations extends FormBase {
   /**
    * Submit handler for ignoring records.
    */
-  public function ignoreRecords(array &$form, FormStateInterface $form_state) {
+  public function ignoreRecords(array &$form, FormStateInterface $form_state): void {
     $this->submitForm($form, $form_state);
     $record_ids = $form_state->getUserInput()['selected_records'] ?? [];
     if (empty($record_ids)) {
@@ -565,7 +567,7 @@ class ListOrganizations extends FormBase {
   /**
    * Get source values from database.
    */
-  protected function getSourceValues(array $totals_by_source = []) {
+  protected function getSourceValues(array $totals_by_source = []): array {
     $source_info = reliefweb_sync_orgs_sources();
     $query = $this->database->select('reliefweb_sync_orgs_records', 'r')
       ->fields('r', ['source'])
@@ -594,7 +596,7 @@ class ListOrganizations extends FormBase {
   /**
    * Submit handler to reset all filters.
    */
-  public function resetFilters(array &$form, FormStateInterface $form_state) {
+  public function resetFilters(array &$form, FormStateInterface $form_state): void {
     // Redirect to the same page without filters.
     $form_state->setRedirect('reliefweb_sync_orgs.overview');
 
