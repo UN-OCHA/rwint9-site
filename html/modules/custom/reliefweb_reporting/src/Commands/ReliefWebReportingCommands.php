@@ -6,7 +6,6 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\Core\Language\LanguageDefault;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_reporting\ApiIndexerResource\ReportExtended;
@@ -71,14 +70,12 @@ class ReliefWebReportingCommands extends DrushCommands {
     Connection $database,
     MailManagerInterface $mail_manager,
     LanguageDefault $language_default,
-    LoggerChannelFactoryInterface $logger_factory,
     StateInterface $state,
   ) {
     $this->configFactory = $config_factory;
     $this->database = $database;
     $this->mailManager = $mail_manager;
     $this->languageDefault = $language_default;
-    $this->logger = $logger_factory->get('reliefweb_reporting');
     $this->state = $state;
   }
 
