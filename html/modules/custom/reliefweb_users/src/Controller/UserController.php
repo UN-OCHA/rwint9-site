@@ -226,8 +226,8 @@ class UserController extends ControllerBase {
 
         $rows[$user->uid] = [
           'uid' => $user->uid,
-          'name' => Link::fromTextAndUrl($user->name, URL::fromUserInput('/user/' . $user->uid)),
-          'mail' => Link::fromTextAndUrl($user->mail, URL::fromUserInput('/user/' . $user->uid)),
+          'name' => !empty($user->name) ? Link::fromTextAndUrl($user->name, URL::fromUserInput('/user/' . $user->uid)) : 'Unknown',
+          'mail' => !empty($user->mail) ? Link::fromTextAndUrl($user->mail, URL::fromUserInput('/user/' . $user->uid)) : 'Unknown',
           'status' => $statuses[empty($user->status) ? 'blocked' : 'active'],
           'role' => !empty($user_roles) ? new FormattableMarkup('<ol><li>' . implode('</li><li>', $user_roles) . '</li></ol>', []) : '',
           'sources' => isset($user->sources) ? new FormattableMarkup($user->sources, []) : '',
