@@ -146,7 +146,7 @@ class ListOrganizations extends FormBase {
     ];
     $filters['actions']['submit'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Filter'),
+      '#value' => $this->t('Apply'),
       '#button_type' => 'primary',
     ];
     $filters['actions']['reset'] = [
