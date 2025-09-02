@@ -13,6 +13,11 @@ class ListOrganizationsTest extends ImportBase {
    * Test overview page.
    */
   public function testOverviewPage() {
+    // Login if not already logged in.
+    if (!$this->loggedInUser) {
+      $this->drupalLogin($this->webmaster);
+    }
+
     // Clear database.
     $this->clearImportRecords();
 

@@ -13,6 +13,11 @@ class ImportHdxFromCsvTest extends ImportBase {
    * Test the import form.
    */
   public function testImportForm() {
+    // Login if not already logged in.
+    if (!$this->loggedInUser) {
+      $this->drupalLogin($this->webmaster);
+    }
+
     // Clear the queue.
     $this->clearQueue($this->queueName);
 
