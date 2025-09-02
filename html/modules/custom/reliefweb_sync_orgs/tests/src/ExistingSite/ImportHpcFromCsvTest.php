@@ -12,7 +12,7 @@ use weitzman\DrupalTestTraits\ExistingSiteBase;
 /**
  * Import organizations from CSV.
  */
-class ImportFromCsvTest extends ExistingSiteBase {
+class ImportHpcFromCsvTest extends ExistingSiteBase {
 
   use QueueRunnerTrait;
 
@@ -62,16 +62,16 @@ class ImportFromCsvTest extends ExistingSiteBase {
     $this->drupalGet('/reliefweb/sync_orgs/import');
     $this->assertSession()->statusCodeEquals(200);
 
-    // Upload an HDX file.
+    // Upload an HPC file.
     $this->submitForm([
-      'source' => 'hdx',
-      'files[csv_file]' => __DIR__ . '/fixtures/hdx_dataset.csv',
+      'source' => 'hpc',
+      'files[csv_file]' => __DIR__ . '/fixtures/hpc_dataset.csv',
     ], 'Import');
 
     $this->assertSession()->statusCodeEquals(200);
 
     // Assert the number of items in the queue.
-    $this->assertEquals(9, $this->queue->numberOfItems());
+    $this->assertEquals(20, $this->queue->numberOfItems());
     $this->runQueue($this->queueName);
     $this->assertEquals(0, $this->queue->numberOfItems());
   }
