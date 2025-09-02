@@ -10,6 +10,17 @@ namespace Drupal\Tests\reliefweb_sync_orgs\ExistingSite;
 class ListOrganizationsTest extends ImportBase {
 
   /**
+   * Create webmaster.
+   */
+  protected function setUp(): void {
+    parent::setUp();
+
+    $this->webmaster = $this->createUser();
+    $this->webmaster->addRole('webmaster');
+    $this->webmaster->save();
+  }
+
+  /**
    * Test overview page.
    */
   public function testOverviewPage() {
