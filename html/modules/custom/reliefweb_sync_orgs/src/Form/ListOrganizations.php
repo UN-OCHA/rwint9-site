@@ -345,7 +345,7 @@ class ListOrganizations extends FormBase {
       '#weight' => -19,
     ];
 
-    // Add a link to the inprot from export form.
+    // Add a link to the import from export form.
     $form['import_from_export'] = [
       '#type' => 'link',
       '#title' => $this->t('Import from export'),
