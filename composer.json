@@ -101,6 +101,7 @@
         "drupal/core-dev": "^11",
         "drupal/devel": "^5.0",
         "drupal/devel_php": "^1.3",
+        "drupaltest/queue-runner-trait": "^1.2",
         "kint-php/kint": "^5.0",
         "mikey179/vfsstream": "^1.6",
         "phpcompatibility/php-compatibility": "^9.3",
