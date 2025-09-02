@@ -10,24 +10,6 @@ namespace Drupal\Tests\reliefweb_sync_orgs\ExistingSite;
 class ListOrganizationsTest extends ImportBase {
 
   /**
-   * Web master.
-   *
-   * @var \Drupal\user\Entity\User
-   */
-  protected $webmaster;
-
-  /**
-   * Create webmaster.
-   */
-  protected function setUp(): void {
-    parent::setUp();
-
-    $this->webmaster = $this->createUser();
-    $this->webmaster->addRole('webmaster');
-    $this->webmaster->save();
-  }
-
-  /**
    * Test overview page.
    */
   public function testOverviewPage() {
@@ -42,7 +24,6 @@ class ListOrganizationsTest extends ImportBase {
     $this->runQueue($this->queueName);
 
     // Login as the webmaster.
-    $this->drupalLogin($this->webmaster);
     $this->drupalGet('/reliefweb/sync_orgs/overview');
     $this->assertSession()->statusCodeEquals(200);
 

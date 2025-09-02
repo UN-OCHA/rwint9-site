@@ -33,7 +33,7 @@ class ImportBase extends ExistingSiteBase {
    *
    * @var \Drupal\user\Entity\User
    */
-  protected $local_webmaster;
+  protected $webmaster;
 
   /**
    * Create webmaster.
@@ -41,9 +41,9 @@ class ImportBase extends ExistingSiteBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->local_webmaster = $this->createUser();
-    $this->local_webmaster->addRole('webmaster');
-    $this->local_webmaster->save();
+    $this->webmaster = $this->createUser();
+    $this->webmaster->addRole('webmaster');
+    $this->webmaster->save();
 
     $this->queue = $this->container->get('queue')->get($this->queueName);
   }
@@ -52,8 +52,8 @@ class ImportBase extends ExistingSiteBase {
    * Import csv file.
    */
   public function importCsvFile(string $source, string $file_path): void {
-    // Login as the local_webmaster.
-    $this->drupalLogin($this->local_webmaster);
+    // Login as the webmaster.
+    $this->drupalLogin($this->webmaster);
     $this->drupalGet('/reliefweb/sync_orgs/import');
     $this->assertSession()->statusCodeEquals(200);
 
