@@ -210,7 +210,7 @@ class ProcessFromExport extends QueueWorkerBase implements ContainerFactoryPlugi
     }
 
     // Check if we have a term name.
-    if (isset($item['term_name']) & !empty($item['term_name'])) {
+    if (isset($item['term_name']) && !empty($item['term_name'])) {
       $item['term_name'] = trim($item['term_name']);
       $term = $this->loadSourceTermByName($item['term_name']);
       if ($term) {
