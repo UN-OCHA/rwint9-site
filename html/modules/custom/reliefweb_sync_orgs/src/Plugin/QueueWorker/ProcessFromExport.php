@@ -222,6 +222,12 @@ class ProcessFromExport extends QueueWorkerBase implements ContainerFactoryPlugi
           return;
         }
       }
+      else {
+        $import_record['status'] = 'skipped';
+        $import_record['message'] = "Term not found: {$item['term_name']}";
+        $import_record = $this->importRecordService->saveImportRecords($source, $id, $import_record);
+        return;
+      }
     }
   }
 
