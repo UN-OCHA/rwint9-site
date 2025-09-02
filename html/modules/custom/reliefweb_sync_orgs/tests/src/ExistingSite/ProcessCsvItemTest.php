@@ -4,44 +4,10 @@
 
 namespace Drupal\Tests\reliefweb_sync_orgs\ExistingSite;
 
-use DrupalTest\QueueRunnerTrait\QueueRunnerTrait;
-use weitzman\DrupalTestTraits\ExistingSiteBase;
-
 /**
  * Test queue worker.
  */
-class ProcessCsvItemTest extends ExistingSiteBase {
-
-  use QueueRunnerTrait;
-
-  /**
-   * The queue to test with.
-   *
-   * @var string
-   */
-  protected $queueName = 'reliefweb_sync_orgs_process_csv_item';
-
-  /**
-   * The queue to test with.
-   *
-   * @var \Drupal\Core\Queue\QueueInterface
-   */
-  protected $queue;
-
-  /**
-   * Web master.
-   *
-   * @var \Drupal\user\Entity\User
-   */
-  protected $webmaster;
-
-  /**
-   * Setup.
-   */
-  protected function setUp(): void {
-    parent::setUp();
-    $this->queue = $this->container->get('queue')->get($this->queueName);
-  }
+class ProcessCsvItemTest extends ImportBase {
 
   /**
    * Test exception for missing source.

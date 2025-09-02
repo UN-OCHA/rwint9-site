@@ -52,8 +52,11 @@ class ImportBase extends ExistingSiteBase {
    * Import csv file.
    */
   public function importCsvFile(string $source, string $file_path): void {
-    // Login as the webmaster.
-    $this->drupalLogin($this->webmaster);
+    // Login if not already logged in.
+    if (!$this->loggedInUser) {
+      $this->drupalLogin($this->webmaster);
+    }
+
     $this->drupalGet('/reliefweb/sync_orgs/import');
     $this->assertSession()->statusCodeEquals(200);
 
