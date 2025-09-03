@@ -9,3 +9,7 @@ services:
   reliefweb_sync_orgs.import_record_service:
     class: Drupal\reliefweb_sync_orgs\Service\ImportRecordService
     arguments: ['@database']
+
+  reliefweb_sync_orgs.import_export_service:
+    class: Drupal\reliefweb_sync_orgs\Service\ImportExportService
+    arguments: ['@queue', '@reliefweb_sync_orgs.import_record_service']

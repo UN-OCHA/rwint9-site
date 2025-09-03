@@ -3,8 +3,8 @@
 namespace Drupal\reliefweb_sync_orgs\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\reliefweb_sync_orgs\Service\ImportExportService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\reliefweb_sync_orgs\Service\ImportRecordService;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
@@ -14,17 +14,17 @@ use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 class ExportRecordsToTsv extends ControllerBase {
 
   /**
-   * The import record service.
+   * Import export service.
    *
-   * @var \Drupal\reliefweb_sync_orgs\Service\ImportRecordService
+   * @var \Drupal\reliefweb_sync_orgs\Service\ImportExportService
    */
-  protected $importRecordService;
+  protected $importExportService;
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(ImportRecordService $importRecordService) {
-    $this->importRecordService = $importRecordService;
+  public function __construct(ImportExportService $importExportService) {
+    $this->importExportService = $importExportService;
   }
 
   /**
@@ -32,7 +32,7 @@ class ExportRecordsToTsv extends ControllerBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('reliefweb_sync_orgs.import_record_service')
+      $container->get('reliefweb_sync_orgs.import_export_service')
     );
   }
 
@@ -40,7 +40,7 @@ class ExportRecordsToTsv extends ControllerBase {
    * Exports organization records to a TSV file.
    */
   public function export() {
-    $data = $this->getRecordsForExport();
+    $data = $this->importExportService->getRecordsForExport($this->entityTypeManager());
 
     $filename = 'reliefweb_sync_orgs_records_' . date('Ymd_His') . '.tsv';
     $headers = [
@@ -77,71 +77,6 @@ class ExportRecordsToTsv extends ControllerBase {
     $response->setContent($csv);
 
     return $response;
-  }
-
-  /**
-   * Get all records for export and match terms.
-   */
-  public function getRecordsForExport() {
-    $records = $this->importRecordService->getAllImportRecords();
-
-    // Create a list of tid to load them all together.
-    $tids = [];
-    foreach ($records as $record) {
-      if (isset($record['tid'])) {
-        $tids[] = $record['tid'];
-      }
-    }
-
-    // Load all terms in one go.
-    $terms = $this->entityTypeManager()
-      ->getStorage('taxonomy_term')
-      ->loadMultiple($tids);
-
-    // Field info.
-    $field_info = reliefweb_sync_orgs_field_info();
-
-    $export_data = [];
-    foreach ($records as $record) {
-      $source = $record['source'] ?? '';
-      $name = $record['csv_item'][$field_info[$source]['label_field']] ?? '';
-
-      // Prepare each record for CSV export.
-      $row = [
-        'source' => $record['source'],
-        'id' => $record['id'],
-        'name' => $name,
-        'status' => $record['status'],
-        'created' => date('Y-m-d H:i:s', $record['created']),
-        'changed' => date('Y-m-d H:i:s', $record['changed']),
-        'message' => $record['message'],
-        'term_name' => '',
-        'term_id' => '',
-        'parent_name' => '',
-        'parent_id' => '',
-        'create_new' => '',
-      ];
-
-      // Add term information if available.
-      if (isset($record['tid']) && isset($terms[$record['tid']])) {
-        /** @var \Drupal\taxonomy\Entity\Term $term */
-        $term = $terms[$record['tid']];
-        $row['term_name'] = $term->getName();
-        $row['term_id'] = $term->id();
-
-        if ($term->hasField('parent') && !$term->get('parent')->isEmpty()) {
-          $parent = $term->get('parent')->entity;
-          if ($parent) {
-            $row['parent_name'] = $parent->getName();
-            $row['parent_id'] = $parent->id();
-          }
-        }
-      }
-
-      $export_data[] = $row;
-    }
-
-    return $export_data;
   }
 
 }

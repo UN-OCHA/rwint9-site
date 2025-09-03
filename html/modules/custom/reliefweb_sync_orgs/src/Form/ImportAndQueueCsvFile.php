@@ -6,8 +6,8 @@ use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelTrait;
-use Drupal\Core\Queue\QueueInterface;
 use Drupal\file\Validation\FileValidatorInterface;
+use Drupal\reliefweb_sync_orgs\Service\ImportExportService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -23,11 +23,11 @@ class ImportAndQueueCsvFile extends FormBase {
   protected const QUEUE_NAME = 'reliefweb_sync_orgs_process_csv_item';
 
   /**
-   * Queue factory.
+   * Import export service.
    *
-   * @var \Drupal\Core\Queue\QueueInterface
+   * @var \Drupal\reliefweb_sync_orgs\Service\ImportExportService
    */
-  protected $queue;
+  protected $importExportService;
 
   /**
    * File system.
@@ -44,14 +44,14 @@ class ImportAndQueueCsvFile extends FormBase {
   protected $fileValidator;
 
   /**
-   * Constructs a new InoreaderImportForm.
+   * Constructs a new form.
    */
   public function __construct(
-    QueueInterface $queue_factory,
+    ImportExportService $import_export_service,
     FileSystemInterface $file_system,
     FileValidatorInterface $file_validator,
   ) {
-    $this->queue = $queue_factory;
+    $this->importExportService = $import_export_service;
     $this->fileSystem = $file_system;
     $this->fileValidator = $file_validator;
   }
@@ -61,7 +61,7 @@ class ImportAndQueueCsvFile extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('queue')->get(self::QUEUE_NAME),
+      $container->get('reliefweb_sync_orgs.import_export_service'),
       $container->get('file_system'),
       $container->get('file.validator'),
     );
@@ -135,52 +135,18 @@ class ImportAndQueueCsvFile extends FormBase {
    * Import from csv.
    */
   public function importFromCsv(string $filename, string $source) {
-    $count = 0;
-
-    $field_info = reliefweb_sync_orgs_field_info($source);
-    if (empty($field_info)) {
-      throw new \Exception("No field info found for source: $source");
+    try {
+      $count = $this->importExportService->importFromCsv(self::QUEUE_NAME, $filename, $source);
     }
-
-    $f = fopen($filename, 'r');
-    $header = fgetcsv($f, NULL, ',');
-
-    // Replace all spaces with underscores.
-    $header_lowercase = array_map(function ($value) {
-      return str_replace(' ', '_', trim(strtolower($value)));
-    }, $header);
-
-    // Get data.
-    while ($row = fgetcsv($f, NULL, ',')) {
-      $data = [];
-      for ($i = 0; $i < count($row); $i++) {
-        $data[$header_lowercase[$i]] = trim($row[$i] ?? '');
-      }
-
-      // Skip empty rows silently.
-      if (empty(array_filter($data))) {
-        continue;
-      }
-
-      // Make sure Id field is present.
-      if (empty($data[$field_info['id']])) {
-        $this->messenger()->addError($this->t('Row @row_number is missing the ID field.', [
-          '@row_number' => $count + 1,
-        ]));
-        continue;
-      }
-
-      // Add source to the data.
-      $data['_source'] = $source;
-
-      // Add row number to the data.
-      $data['_row_number'] = $count + 1;
-
-      $this->queue->createItem($data);
-      $count++;
+    catch (\Exception $e) {
+      $this->messenger()->addError($this->t('Error importing from CSV: @message', [
+        '@message' => $e->getMessage(),
+      ]));
+      $this->getLogger('reliefweb_sync_orgs')->error('Error importing from CSV: @message', [
+        '@message' => $e->getMessage(),
+      ]);
+      return;
     }
-
-    fclose($f);
 
     $message = $this->t('Queued @count items.', [
       '@count' => $count,

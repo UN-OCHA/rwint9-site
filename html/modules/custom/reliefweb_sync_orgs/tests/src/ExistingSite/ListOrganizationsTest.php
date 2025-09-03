@@ -10,13 +10,10 @@ namespace Drupal\Tests\reliefweb_sync_orgs\ExistingSite;
 class ListOrganizationsTest extends ImportBase {
 
   /**
-   * Test overview page.
+   * Set up.
    */
-  public function testOverviewPage() {
-    // Login if not already logged in.
-    if (!$this->loggedInUser) {
-      $this->drupalLogin($this->webmaster);
-    }
+  protected function setUp(): void {
+    parent::setUp();
 
     // Clear database.
     $this->clearImportRecords();
@@ -27,8 +24,18 @@ class ListOrganizationsTest extends ImportBase {
 
     // Run the queue.
     $this->runQueue($this->queueName);
+  }
 
-    // Login as the webmaster.
+  /**
+   * Test overview page.
+   */
+  public function testOverviewPage() {
+    // Login if not already logged in.
+    if (!$this->loggedInUser) {
+      $this->drupalLogin($this->webmaster);
+    }
+
+    // Check overview page.
     $this->drupalGet('/reliefweb/sync_orgs/overview');
     $this->assertSession()->statusCodeEquals(200);
 
@@ -50,6 +57,39 @@ class ListOrganizationsTest extends ImportBase {
     // Check that the correct organizations are displayed.
     $this->assertSession()->pageTextContains('HDX (9)');
     $this->assertSession()->pageTextContains('HPC (0)');
+  }
+
+  /**
+   * Test create organization manually.
+   */
+  public function testCreateOrganizationManually() {
+    // Login if not already logged in.
+    if (!$this->loggedInUser) {
+      $this->drupalLogin($this->webmaster);
+    }
+
+    // Check create organization form.
+    $this->drupalGet('/reliefweb/sync_orgs/create-organization-manually/hdx/c832172a-2485-4951-8f2f-1295ce46809e');
+    $this->assertSession()->statusCodeEquals(200);
+
+    // Check that the organization info is displayed.
+    $this->assertSession()->pageTextContains('ACF West and Central Africa GIS and Surveillance System');
+
+    // Submit the form.
+    $this->submitForm([
+      'name' => 'ACF West and Central Africa GIS and Surveillance System',
+      'short_name' => 'ACF-ROWCA',
+      'organization_type' => 270,
+      'country' => 'Central African Republic (54)',
+    ], 'Save');
+
+    // Load the overview page.
+    $this->drupalGet('/reliefweb/sync_orgs/overview');
+    $this->assertSession()->statusCodeEquals(200);
+
+    // Check that the new organization is displayed.
+    $this->assertSession()->pageTextContains('ACF West and Central Africa GIS and Surveillance System');
+    $this->assertSession()->pageTextContains('Organization created manually');
   }
 
 }

@@ -46,6 +46,7 @@ class ImportBase extends ExistingSiteBase {
     $this->webmaster->save();
 
     $this->queue = $this->container->get('queue')->get($this->queueName);
+    $this->clearQueue($this->queueName);
   }
 
   /**

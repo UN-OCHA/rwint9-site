@@ -6,8 +6,8 @@ use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelTrait;
-use Drupal\Core\Queue\QueueInterface;
 use Drupal\file\Validation\FileValidatorInterface;
+use Drupal\reliefweb_sync_orgs\Service\ImportExportService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -23,11 +23,11 @@ class ImportFromExport extends FormBase {
   protected const QUEUE_NAME = 'reliefweb_sync_orgs_from_export';
 
   /**
-   * Queue factory.
+   * Import export service.
    *
-   * @var \Drupal\Core\Queue\QueueInterface
+   * @var \Drupal\reliefweb_sync_orgs\Service\ImportExportService
    */
-  protected $queue;
+  protected $importExportService;
 
   /**
    * File system.
@@ -47,11 +47,11 @@ class ImportFromExport extends FormBase {
    * Constructs a new InoreaderImportForm.
    */
   public function __construct(
-    QueueInterface $queue_factory,
+    ImportExportService $import_export_service,
     FileSystemInterface $file_system,
     FileValidatorInterface $file_validator,
   ) {
-    $this->queue = $queue_factory;
+    $this->importExportService = $import_export_service;
     $this->fileSystem = $file_system;
     $this->fileValidator = $file_validator;
   }
@@ -127,31 +127,14 @@ class ImportFromExport extends FormBase {
    * Import from tsv.
    */
   public function importFromTsv(string $filename) {
-    $count = 0;
-
-    $f = fopen($filename, 'r');
-    $header = fgetcsv($f, NULL, "\t");
-
-    // Replace all spaces with underscores.
-    $header_lowercase = array_map(function ($value) {
-      return str_replace(' ', '_', trim(strtolower($value)));
-    }, $header);
-
-    // Get data.
-    while ($row = fgetcsv($f, NULL, "\t")) {
-      $data = [];
-      for ($i = 0; $i < count($row); $i++) {
-        $data[$header_lowercase[$i]] = trim($row[$i] ?? '');
-      }
-
-      // Add row number to the data.
-      $data['_row_number'] = $count + 1;
-
-      $this->queue->createItem($data);
-      $count++;
+    try {
+      $count = $this->importExportService->importFromTsv(self::QUEUE_NAME, $filename);
     }
-
-    fclose($f);
+    catch (\Exception $e) {
+      $this->getLogger('reliefweb_sync_orgs')->error($e->getMessage());
+      $this->messenger()->addError($e->getMessage());
+      return;
+    }
 
     $message = $this->t('Queued @count items.', [
       '@count' => $count,
