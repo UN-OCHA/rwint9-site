@@ -4,6 +4,7 @@
 
 namespace Drupal\Tests\reliefweb_sync_orgs\ExistingSite;
 
+use Drupal\taxonomy\Entity\Term;
 use DrupalTest\QueueRunnerTrait\QueueRunnerTrait;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
@@ -47,6 +48,11 @@ class ImportBase extends ExistingSiteBase {
 
     $this->queue = $this->container->get('queue')->get($this->queueName);
     $this->clearQueue($this->queueName);
+
+    // Make sure organizations do exists as terms.
+    $this->createTermIfNeeded('source', 4536, 'Action on Armed Violence');
+    $this->createTermIfNeeded('source', 9417, 'ACAPS');
+    $this->createTermIfNeeded('source', 51822, '3iSolution');
   }
 
   /**
@@ -75,6 +81,24 @@ class ImportBase extends ExistingSiteBase {
    */
   public function clearImportRecords(): void {
     $this->container->get('database')->truncate('reliefweb_sync_orgs_records')->execute();
+  }
+
+  /**
+   * Create terms.
+   */
+  protected function createTermIfNeeded(string $vocabulary, int $id, string $title, array $extra = []) : Term {
+    if ($term = Term::load($id)) {
+      return $term;
+    }
+
+    $term = Term::create([
+      'vid' => $vocabulary,
+      'tid' => $id,
+      'name' => $title,
+    ] + $extra);
+    $term->save();
+
+    return $term;
   }
 
 }

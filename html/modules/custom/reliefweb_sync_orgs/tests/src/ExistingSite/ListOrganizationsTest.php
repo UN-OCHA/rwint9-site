@@ -63,6 +63,8 @@ class ListOrganizationsTest extends ImportBase {
    * Test create organization manually.
    */
   public function testCreateOrganizationManually() {
+    $organization_type = $this->createTermIfNeeded('organization_type', 270, 'Academic and Research Institution');
+
     // Login if not already logged in.
     if (!$this->loggedInUser) {
       $this->drupalLogin($this->webmaster);
@@ -79,7 +81,7 @@ class ListOrganizationsTest extends ImportBase {
     $this->submitForm([
       'name' => 'ACF West and Central Africa GIS and Surveillance System',
       'short_name' => 'ACF-ROWCA',
-      'organization_type' => 270,
+      'organization_type' => $organization_type->id(),
       'country' => 'Central African Republic (54)',
     ], 'Save');
 
