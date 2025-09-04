@@ -68,10 +68,18 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function getTitle() {
-    return $this->t('ReliefWeb Importer (@stats)', [
+    return $this->t('ReliefWeb Importer (@stats - @test - @import)', [
       '@stats' => Link::fromTextAndUrl(
         $this->t('Statistics'),
         Url::fromRoute('reliefweb_import.reliefweb_importer.stats')
+      )->toString(),
+      '@test' => Link::fromTextAndUrl(
+        $this->t('Test feed'),
+        Url::fromRoute('reliefweb_import.reliefweb_importer.inoreader.test_form')
+      )->toString(),
+      '@import' => Link::fromTextAndUrl(
+        $this->t('Import feed'),
+        Url::fromRoute('reliefweb_import.reliefweb_importer.inoreader.import_form')
       )->toString(),
     ]);
   }
