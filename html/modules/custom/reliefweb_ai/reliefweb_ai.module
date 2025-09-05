@@ -224,21 +224,21 @@ function reliefweb_ai_ocha_content_classification_post_classify_entity(
   ClassifierPluginInterface $classifier,
   array $updated_fields,
   array $data,
-): ?array {
+): array {
   // Prevent processing again the entity.
   if (isset($entity->postClassificationDone)) {
-    return NULL;
+    return $updated_fields;
   }
   $entity->postClassificationDone = TRUE;
 
   // This hook currently only handles reports.
   if ($entity->getEntityTypeId() !== 'node' || $entity->bundle() !== 'report') {
-    return NULL;
+    return $updated_fields;
   }
 
   // Only the inference classifier is supported here.
   if ($classifier->getPluginId() !== 'inference') {
-    return NULL;
+    return $updated_fields;
   }
 
   // Attempt to retrieve the language.
@@ -248,7 +248,7 @@ function reliefweb_ai_ocha_content_classification_post_classify_entity(
     $classifier,
     $updated_fields,
     $data,
-  ) ?? [];
+  );
 
   // Attempt to fix the body.
   $updated_fields = reliefweb_ai_post_classification_body_update(
@@ -257,9 +257,9 @@ function reliefweb_ai_ocha_content_classification_post_classify_entity(
     $classifier,
     $updated_fields,
     $data,
-  ) ?? [];
+  );
 
-  return array_unique($updated_fields) ?: NULL;
+  return $updated_fields;
 }
 
 /**
@@ -286,14 +286,14 @@ function reliefweb_ai_post_classification_language_update(
   ClassifierPluginInterface $classifier,
   array $updated_fields,
   array $data,
-): ?array {
+): array {
   if (!$entity->hasField('field_language') || empty($data['output'])) {
-    return NULL;
+    return $updated_fields;
   }
 
   $settings = \Drupal::config('reliefweb_ai.settings')->get('language_detection');
   if (empty($settings)) {
-    return NULL;
+    return $updated_fields;
   }
 
   // Retrieve the text samples extracted from the source document.
@@ -330,10 +330,10 @@ function reliefweb_ai_post_classification_language_update(
   // Update the entity with the detected language.
   if ($language_term_id != $entity->field_language?->target_id) {
     $entity->set('field_language', $language_term_id);
-    return ['field_language'];
+    $updated_fields[] = 'field_language';
   }
 
-  return NULL;
+  return $updated_fields;
 }
 
 /**
@@ -360,40 +360,40 @@ function reliefweb_ai_post_classification_body_update(
   ClassifierPluginInterface $classifier,
   array $updated_fields,
   array $data,
-): ?array {
+): array {
   if (!$entity->hasField('body') || !$entity->hasField('field_file') || $entity->get('field_file')->isEmpty() || empty($data['output'])) {
-    return NULL;
+    return $updated_fields;
   }
 
   // Skip if there is no setting to fix the text extraction.
   $settings = \Drupal::config('reliefweb_ai.settings')->get('text_extract_fix');
   if (empty($settings)) {
-    return NULL;
+    return $updated_fields;
   }
 
   // Skip if the text extraction fix step is not enabled.
   if (empty($settings['enabled'])) {
-    return NULL;
+    return $updated_fields;
   }
 
   // Skip if the file field is not used for the analysis.
   $analyzable_fields = $classifier->getEnabledFields('analyzable');
   if (empty($analyzable_fields['field_file']['file']) || empty($analyzable_fields['field_file']['processor'])) {
-    return NULL;
+    return $updated_fields;
   }
 
   // Retrieve the AI plugin.
   $ai_plugin = \Drupal::service('plugin.manager.ocha_ai.completion')
     ->getPlugin($settings['inference']['plugin_id']);
   if (empty($ai_plugin)) {
-    return NULL;
+    return $updated_fields;
   }
 
   // Retrieve the text samples extracted from the source document.
   $tag = $settings['tag'] ?? 'content';
   $extracted_text = reliefweb_ai_extract_text_from_llm_output($data['output'], $tag, $classifier);
   if (empty($extracted_text)) {
-    return NULL;
+    return $updated_fields;
   }
 
   // Create a clone of the entity ready for classification, so that we can
@@ -411,7 +411,7 @@ function reliefweb_ai_post_classification_body_update(
 
   // Skip if there is no file left.
   if ($file_field->isEmpty()) {
-    return NULL;
+    return $updated_fields;
   }
 
   // Extract the file text.
@@ -428,14 +428,14 @@ function reliefweb_ai_post_classification_body_update(
     }
   }
   if (empty($file_lines)) {
-    return NULL;
+    return $updated_fields;
   }
 
   $source_lines = '';
   try {
     $endpoint = $settings['line_matching']['endpoint'] ?? '';
     if (empty($endpoint)) {
-      return NULL;
+      return $updated_fields;
     }
 
     $response = \Drupal::httpClient()->post($endpoint, [
@@ -457,12 +457,12 @@ function reliefweb_ai_post_classification_body_update(
     \Drupal::logger('reliefweb_ai')->error(strtr('Error while trying to find the matching source lines: @error', [
       '@error' => strtr($exception->getMessage(), "\n", ' '),
     ]));
-    return NULL;
+    return $updated_fields;
   }
 
   // Skip if there is no matching source lines.
   if (empty($source_lines)) {
-    return NULL;
+    return $updated_fields;
   }
 
   // Retrieve the summary if any.
@@ -472,7 +472,7 @@ function reliefweb_ai_post_classification_body_update(
   // Call the LLM to fix the extracted text.
   try {
     if (empty($settings['inference']['plugin_id']) || empty($settings['inference']['prompt'])) {
-      return NULL;
+      return $updated_fields;
     }
 
     // Retrieve the model parameters.
@@ -526,16 +526,15 @@ function reliefweb_ai_post_classification_body_update(
     $body_item->set('value', $body_value);
     $body_item->set('format', 'markdown');
 
-    return ['body'];
+    $updated_fields[] = 'body';
   }
   catch (\Exception $exception) {
     \Drupal::logger('reliefweb_ai')->error(strtr('Unable to fix AI extracted text: @error', [
       '@error' => $exception->getMessage(),
     ]));
-    return NULL;
   }
 
-  return NULL;
+  return $updated_fields;
 }
 
 /**

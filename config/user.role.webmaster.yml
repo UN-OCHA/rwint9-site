@@ -33,6 +33,7 @@ dependencies:
     - reliefweb_guidelines
     - reliefweb_moderation
     - reliefweb_post_api
+    - reliefweb_sync_orgs
     - reliefweb_users
     - system
     - taxonomy
@@ -126,6 +127,7 @@ permissions:
   - 'guideline_list edit own entities'
   - 'guideline_list revert revisions'
   - 'guideline_list view revisions'
+  - 'import organization records'
   - 'manage ocha ai chat config'
   - 'requeue node job for ocha content classification'
   - 'requeue node report for ocha content classification'

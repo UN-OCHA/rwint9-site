@@ -653,6 +653,13 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
   /**
    * {@inheritdoc}
    */
+  public function alterContentClassificationPostClassify(EntityInterface $entity, array &$updated_fields): void {
+    // Perform operations after classification.
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function alterReliefWebEntitiesModerationStatusAdjustment(bool &$bypass, EntityInterface $entity): void {
     // Nothing to do.
   }
@@ -973,6 +980,32 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
     }
 
     return $records;
+  }
+
+  /**
+   * Get an import record for a given entity.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity to get the import record for.
+   *
+   * @return array|null
+   *   The import record, or NULL if not found.
+   */
+  protected function getImportRecordForEntity(EntityInterface $entity): ?array {
+    $record = $this->database->select('reliefweb_import_records', 'r')
+      ->fields('r')
+      ->condition('entity_type_id', $entity->getEntityTypeId())
+      ->condition('entity_bundle', $entity->bundle())
+      ->condition('entity_id', $entity->id())
+      ->execute()
+      ?->fetch(FetchAs::Associative) ?? [];
+
+    // Deserialize the extra field.
+    if (isset($record['extra'])) {
+      $record['extra'] = json_decode($record['extra'], TRUE);
+    }
+
+    return $record;
   }
 
   /**

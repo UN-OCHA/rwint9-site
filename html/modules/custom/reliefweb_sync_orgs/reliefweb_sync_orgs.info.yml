@@ -1,0 +1,5 @@
+type: module
+name: ReliefWeb Sync Organizations
+description: 'Import, merge organizations from different sources.'
+package: reliefweb
+core_version_requirement: ^10 || ^11

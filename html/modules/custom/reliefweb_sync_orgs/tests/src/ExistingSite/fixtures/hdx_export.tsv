@@ -1,0 +1,10 @@
+Source	ID	Name	Status	Created	Changed	Message	"Term Name"	"Term ID"	"Parent Name"	"Parent ID"	"Create New"
+hdx	921f24a0-52f5-429b-ae59-54674b3f177e	"Action on Armed Violence (inactive)"	success	"2025-09-03 08:58:56"	"2025-09-03 08:58:56"	"Exact match by display_name: Action on Armed Violence"	"Action on Armed Violence"	4536			
+hdx	c832172a-2485-4951-8f2f-1295ce46809e	"Action Contre la Faim - Regional Office West and Central Africa"	success	"2025-09-03 08:58:56"	"2025-09-03 08:58:56"	"Exact match by display_name: Action Contre la Faim - Regional Office West and Central Africa"	"Action Contre la Faim - Regional Office West and Central Africa"	51959			
+hdx	ca3e5890-5507-454d-b1e2-fa2e1a74c25e	"Acción contra el hambre - GIS4tech"	skipped	"2025-09-03 08:58:50"	"2025-09-03 08:58:56"	"No matching organization found."					
+hdx	c49c2e1a-f1d6-40de-99c4-311b4d526b68	"Accion contra el Hambre Colombia (inactive)"	skipped	"2025-09-03 08:58:48"	"2025-09-03 08:58:50"	"No matching organization found."					
+hdx	3d2ab9fe-d662-4ffa-98c2-1cef1a8abfe0	"ASARECA/ReSAKSS (inactive)"	skipped	"2025-09-03 08:58:47"	"2025-09-03 08:58:48"	"No matching organization found."					
+hdx	0974463c-5419-4e89-9b55-90e035074ccf	ACAPS	success	"2025-09-03 08:58:44"	"2025-09-03 08:58:44"	"Exact match by display_name: ACAPS"	ACAPS	9417			
+hdx	82b09bdf-3f2d-4803-9d0e-653165cc49f8	"ADF Haiti"	skipped	"2025-09-03 08:58:44"	"2025-09-03 08:58:44"	"No matching organization found."					
+hdx	82b43279-6668-4a2c-a163-2d33a42202df	3iSolution	success	"2025-09-03 08:58:44"	"2025-09-03 08:58:44"	"Exact match by display_name: 3iSolution"	3iSolution	51822			
+hdx	b446cff4-4a52-448f-913b-94a863d329d5	"ALHASAN Systems Private Limited"	skipped	"2025-09-03 08:58:44"	"2025-09-03 08:58:47"	"No matching organization found."
