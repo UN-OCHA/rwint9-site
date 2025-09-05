@@ -259,4 +259,12 @@ interface ReliefWebImporterPluginInterface {
    */
   public function alterReliefWebEntitiesModerationStatusAdjustment(bool &$bypass, EntityInterface $entity): void;
 
+  /**
+   * Respond to entity classification completion.
+   *
+   * This hook is invoked after an entity has been classified, allowing modules
+   * to perform additional operations.
+   */
+  public function alterContentClassificationPostClassify(EntityInterface $entity, array &$updated_fields): void;
+
 }
