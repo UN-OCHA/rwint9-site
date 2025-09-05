@@ -54,7 +54,7 @@ class ListOrganizations extends FormBase {
   protected $pagerManager;
 
   /**
-   * Queue factory.
+   * Queue.
    *
    * @var \Drupal\Core\Queue\QueueInterface
    */
@@ -63,12 +63,12 @@ class ListOrganizations extends FormBase {
   /**
    * Constructs a new form.
    */
-  public function __construct(ImportRecordService $import_record_service, EntityTypeManagerInterface $entity_type_manager, Connection $database, PagerManagerInterface $pager_manager, QueueInterface $queue_factory) {
+  public function __construct(ImportRecordService $import_record_service, EntityTypeManagerInterface $entity_type_manager, Connection $database, PagerManagerInterface $pager_manager, QueueInterface $queue) {
     $this->importRecordService = $import_record_service;
     $this->entityTypeManager = $entity_type_manager;
     $this->database = $database;
     $this->pagerManager = $pager_manager;
-    $this->queue = $queue_factory;
+    $this->queue = $queue;
   }
 
   /**

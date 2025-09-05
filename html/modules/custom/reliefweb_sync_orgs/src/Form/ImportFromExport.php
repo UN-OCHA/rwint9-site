@@ -61,7 +61,7 @@ class ImportFromExport extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('queue')->get(self::QUEUE_NAME),
+      $container->get('reliefweb_sync_orgs.import_export_service'),
       $container->get('file_system'),
       $container->get('file.validator'),
     );

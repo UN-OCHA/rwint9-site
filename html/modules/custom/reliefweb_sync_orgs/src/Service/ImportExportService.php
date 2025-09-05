@@ -79,6 +79,9 @@ class ImportExportService {
 
       // Make sure Id field is present.
       if (empty($data[$field_info['id']])) {
+        // Close the file.
+        fclose($f);
+
         throw new \Exception(strtr('Row @row_number is missing the ID field.', [
           '@row_number' => $count + 1,
         ]));

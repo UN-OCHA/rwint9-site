@@ -55,8 +55,8 @@ class OrganizationsAutoCompleteController extends ControllerBase {
     $query->addJoin('LEFT', 'taxonomy_term__field_shortname', 's', 's.entity_id = t.tid');
 
     $group = $query->orConditionGroup();
-    $group->condition('name', '%' . $input . '%', 'LIKE');
-    $group->condition('field_shortname_value', '%' . $input . '%', 'LIKE');
+    $group->condition('name', '%' . $query->escapeLike($input) . '%', 'LIKE');
+    $group->condition('field_shortname_value', '%' . $query->escapeLike($input) . '%', 'LIKE');
 
     $terms = $query->fields('t', ['tid', 'name', 'status'])
       ->fields('s', ['field_shortname_value'])
