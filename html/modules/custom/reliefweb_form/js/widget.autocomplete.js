@@ -776,6 +776,12 @@
             callback = handleSources(selection, element);
             // Compute the source already.
             source = source();
+            // If there is no callback, then set the initial selection.
+            // This is the case for non editors for which there is no attention
+            // messages displayed (data-autocomplete-path is not set).
+            if (!callback) {
+              updateSelection(selection, element);
+            }
             break;
 
           default:
@@ -783,7 +789,7 @@
             // so we can improve the performances by computing the source
             // already.
             source = source();
-            // Set the intitial selection.
+            // Set the initial selection.
             updateSelection(selection, element);
         }
 
