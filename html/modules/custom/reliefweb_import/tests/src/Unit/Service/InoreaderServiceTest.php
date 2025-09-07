@@ -147,6 +147,15 @@ class InoreaderServiceTest extends TestCase {
         ],
       ],
       [
+        ['source:789', 'pdf:page-link', 'u:reliefweb', 'f:content'],
+        [
+          'source' => '789',
+          'pdf' => 'page-link',
+          'url' => ['reliefweb'],
+          'fallback' => 'content',
+        ],
+      ],
+      [
         ['wrapper:.main', 'wrapper:.sidebar'],
         [
           'wrapper' => ['.main', '.sidebar'],
@@ -156,6 +165,55 @@ class InoreaderServiceTest extends TestCase {
       // No tags.
         [],
         [],
+      ],
+      [
+        ['keyonly:'],
+        [
+          'keyonly' => '',
+        ],
+      ],
+      [
+        [':valueonly'],
+        [
+          '' => 'valueonly',
+        ],
+      ],
+      [
+        ['key:val:with:colons'],
+        [
+          'key' => 'val:with:colons',
+        ],
+      ],
+      [
+        [' spaced : value '],
+        [
+          'spaced' => 'value',
+        ],
+      ],
+      [
+        ['duplicate:one', 'duplicate:two'],
+        [
+          'duplicate' => ['one', 'two'],
+        ],
+      ],
+      [
+        ['numkey1:123', 'numkey2:456'],
+        [
+          'numkey1' => '123',
+          'numkey2' => '456',
+        ],
+      ],
+      [
+        ['specialchars:!@#$%^&*'],
+        [
+          'specialchars' => '!@#$%^&*',
+        ],
+      ],
+      [
+        ['arraykey:val1', 'arraykey:val2', 'arraykey:val3'],
+        [
+          'arraykey' => ['val1', 'val2', 'val3'],
+        ],
       ],
     ];
   }
@@ -909,6 +967,29 @@ class InoreaderServiceTest extends TestCase {
 
     $result = $method->invokeArgs($this->service, [$pdf, $page_url]);
     $this->assertEquals($expected, $result);
+  }
+
+  /**
+   * Test isMultiValueTag method.
+   */
+  public function testIsMultiValueTag() {
+    $reflection = new \ReflectionClass($this->service);
+    $method = $reflection->getMethod('isMultiValueTag');
+    $method->setAccessible(TRUE);
+    $this->assertTrue($method->invokeArgs($this->service, ['wrapper']));
+    $this->assertFalse($method->invokeArgs($this->service, ['status']));
+  }
+
+  /**
+   * Test fixLegacyPuppeteer2Tag method.
+   */
+  public function testFixLegacyPuppeteer2Tag() {
+    $reflection = new \ReflectionClass($this->service);
+    $method = $reflection->getMethod('fixLegacyPuppeteer2Tag');
+    $method->setAccessible(TRUE);
+    $tags = ['puppeteer' => 'foo', 'puppeteer2' => 'bar'];
+    $result = $method->invokeArgs($this->service, [$tags]);
+    $this->assertEquals('foo|bar', $result['puppeteer']);
   }
 
 }

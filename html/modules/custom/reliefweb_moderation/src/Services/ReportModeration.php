@@ -209,20 +209,23 @@ class ReportModeration extends ModerationServiceBase {
       $cells['data'] = array_filter($data);
 
       // Retrieve the origin of the document.
-      $options = $entity->field_origin->first()->getPossibleOptions();
-      if ($entity instanceof NodeInterface) {
-        if ($entity->getOwner()->hasRole('contributor')) {
-          $cells['origin'] = $this->t('Contributor');
-        }
-        elseif ($entity->getOwner()->hasRole('submitter')) {
-          $cells['origin'] = $this->t('Submitter');
+      $origin = $entity->field_origin->first();
+      if (!empty($origin)) {
+        $options = $origin->getPossibleOptions();
+        if ($entity instanceof NodeInterface) {
+          if ($entity->getOwner()->hasRole('contributor')) {
+            $cells['origin'] = $this->t('Contributor');
+          }
+          elseif ($entity->getOwner()->hasRole('submitter')) {
+            $cells['origin'] = $this->t('Submitter');
+          }
+          else {
+            $cells['origin'] = $options[$entity->field_origin->value] ?? $this->t('N/A');
+          }
         }
         else {
           $cells['origin'] = $options[$entity->field_origin->value] ?? $this->t('N/A');
         }
-      }
-      else {
-        $cells['origin'] = $options[$entity->field_origin->value] ?? $this->t('N/A');
       }
 
       // Date cell.
