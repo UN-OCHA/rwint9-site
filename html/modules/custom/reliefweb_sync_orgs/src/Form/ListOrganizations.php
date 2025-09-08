@@ -511,7 +511,7 @@ class ListOrganizations extends FormBase {
     $this->submitForm($form, $form_state);
     $record_ids = $form_state->getUserInput()['selected_records'] ?? [];
     if (empty($record_ids)) {
-      $this->messenger()->addWarning($this->t('No records selected to ignore.'));
+      $this->messenger()->addWarning($this->t('No records selected to create organizations for.'));
       return;
     }
 
