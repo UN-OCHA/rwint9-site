@@ -158,16 +158,18 @@ function reliefweb_import_ocha_content_classification_post_classify_entity(
 }
 
 /**
- * Implements hook_module_implements_alter().
- *
- * Make sure we run last so we can fix the language field.
+ * Implements hook_reliefweb_ai_force_language().
  */
-function reliefweb_import_module_implements_alter(&$implementations, $hook) {
-  if ($hook == 'ocha_content_classification_post_classify_entity') {
-    $group = $implementations['reliefweb_import'];
-    unset($implementations['reliefweb_import']);
-    $implementations['reliefweb_import'] = $group;
+function reliefweb_import_reliefweb_ai_force_language(
+  EntityInterface $entity,
+): ?string {
+  $importer = reliefweb_import_get_entity_importer($entity);
+  if (!isset($importer)) {
+    return NULL;
   }
+
+  // Let the importer decide to update the language.
+  return $importer->forceContentLanguage($entity);
 }
 
 /**

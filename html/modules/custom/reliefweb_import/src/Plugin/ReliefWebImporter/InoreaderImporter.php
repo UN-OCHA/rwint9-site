@@ -582,11 +582,11 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function alterContentClassificationPostClassify(EntityInterface $entity, array &$updated_fields): void {
+  public function forceContentLanguage(EntityInterface $entity): ?string {
     // Retrieve the import record and check if there is a defined language.
     $record = $this->getImportRecordForEntity($entity);
     if (empty($record)) {
-      return;
+      return NULL;
     }
 
     $feed_name = $record['extra']['feed_name'] ?? '';
@@ -596,17 +596,13 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       $defined_languages = reliefweb_import_get_defined_languages();
       if (!isset($defined_languages[$tags['language']])) {
         // Language not defined, skip.
-        return;
+        return NULL;
       }
 
-      $lang_id = $defined_languages[$tags['language']];
-
-      // Update the entity with the detected language.
-      if ($lang_id != $entity->field_language?->target_id) {
-        $entity->set('field_language', $lang_id);
-        $updated_fields[] = 'field_language';
-      }
+      return $defined_languages[$tags['language']];
     }
+
+    return NULL;
   }
 
 }

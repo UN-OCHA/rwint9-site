@@ -665,6 +665,14 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function forceContentLanguage(EntityInterface $entity): ?string {
+    // Let AI determine the language.
+    return NULL;
+  }
+
+  /**
    * Parse field rules string into an associative array.
    *
    * Convert a multi-line string of field rules in the format "field:yes/no"

@@ -267,4 +267,9 @@ interface ReliefWebImporterPluginInterface {
    */
   public function alterContentClassificationPostClassify(EntityInterface $entity, array &$updated_fields): void;
 
+  /**
+   * Force content language for the entity.
+   */
+  public function forceContentLanguage(EntityInterface $entity): ?string;
+
 }
