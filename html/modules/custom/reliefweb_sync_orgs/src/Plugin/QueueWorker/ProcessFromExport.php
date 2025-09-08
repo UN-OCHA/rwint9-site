@@ -217,7 +217,7 @@ class ProcessFromExport extends QueueWorkerBase implements ContainerFactoryPlugi
         if ($import_record['tid'] != $term->id()) {
           $import_record['tid'] = $term->id();
           $import_record['status'] = 'fixed';
-          $import_record['message'] = "Term ID updated to {$item['term_id']}";
+          $import_record['message'] = "Term ID updated to {$term->id()}";
           $import_record = $this->importRecordService->saveImportRecords($source, $id, $import_record);
           return;
         }
