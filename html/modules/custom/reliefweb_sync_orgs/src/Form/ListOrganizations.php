@@ -515,6 +515,9 @@ class ListOrganizations extends FormBase {
       return;
     }
 
+    // Field info.
+    $field_info = reliefweb_sync_orgs_field_info();
+
     foreach ($record_ids as $record_id) {
       [$source, $id] = explode('--', $record_id, 2);
       $record = $this->importRecordService->getExistingImportRecord($source, $id);
@@ -522,13 +525,12 @@ class ListOrganizations extends FormBase {
         continue;
       }
 
+      $label = $record['csv_item'][$field_info[$source]['label_field']] ?? '';
+
       // Create a new taxonomy term for the organization.
       $term = $this->entityTypeManager->getStorage('taxonomy_term')->create([
-        'name' => $record['csv_item']['display_name'],
+        'name' => $label,
         'vid' => 'source',
-        'field_shortname' => [
-          'value' => $record['csv_item']['display_name'],
-        ],
       ]);
 
       // Save the term.
