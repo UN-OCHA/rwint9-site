@@ -32,7 +32,7 @@ class ImportAndQueueCsvFile extends FormBase {
   /**
    * File system.
    *
-   * @var Drupal\Core\File\FileSystem
+   * @var \Drupal\Core\File\FileSystemInterface
    */
   protected $fileSystem;
 
