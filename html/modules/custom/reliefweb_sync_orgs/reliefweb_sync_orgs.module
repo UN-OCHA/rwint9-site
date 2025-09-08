@@ -35,7 +35,7 @@ function reliefweb_sync_orgs_field_info(string $source = ''): array {
 }
 
 /**
- * Return a list of unique soruces.
+ * Return a list of unique sources.
  */
 function reliefweb_sync_orgs_sources(): array {
   $sources = [];
