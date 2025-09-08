@@ -242,7 +242,7 @@ function reliefweb_ai_ocha_content_classification_post_classify_entity(
   }
 
   // Attempt to retrieve the language.
-  $updated_fields = reliefweb_ai_post_classification_language_update(
+  $language_updated_fields = reliefweb_ai_post_classification_language_update(
     $entity,
     $workflow,
     $classifier,
@@ -251,7 +251,7 @@ function reliefweb_ai_ocha_content_classification_post_classify_entity(
   ) ?? [];
 
   // Attempt to fix the body.
-  $updated_fields = reliefweb_ai_post_classification_body_update(
+  $body_updated_fields = reliefweb_ai_post_classification_body_update(
     $entity,
     $workflow,
     $classifier,
@@ -259,7 +259,7 @@ function reliefweb_ai_ocha_content_classification_post_classify_entity(
     $data,
   ) ?? [];
 
-  return array_unique($updated_fields) ?: NULL;
+  return array_unique(array_merge($language_updated_fields, $body_updated_fields)) ?: NULL;
 }
 
 /**
