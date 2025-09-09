@@ -6,6 +6,8 @@ hdx:
     display_name: name
     hdx_org_type: organization_type
     org_acronym: short_name
+    description: description
+    org_url: field_homepage
   search:
     - name
     - display_name
