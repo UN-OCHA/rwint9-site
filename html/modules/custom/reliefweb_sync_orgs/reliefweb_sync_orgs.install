@@ -1,0 +1,69 @@
+<?php
+
+/**
+ * @file
+ * Install, update, and uninstall functions for the ReliefWeb Sync Orgs module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function reliefweb_sync_orgs_schema() {
+  $schema['reliefweb_sync_orgs_records'] = [
+    'description' => 'Stores the records of imported items.',
+    'fields' => [
+      'source' => [
+        'type' => 'varchar',
+        'length' => '254',
+        'description' => 'The source name.',
+        'not null' => TRUE,
+      ],
+      'id' => [
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'description' => 'The id of the imported item.',
+      ],
+      'tid' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'description' => 'The ID of the taxonomy term.',
+      ],
+      'status' => [
+        'type' => 'varchar_ascii',
+        'length' => 32,
+        'not null' => TRUE,
+        'description' => 'The status of the import (e.g., queued, error, success).',
+      ],
+      'created' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'The Unix timestamp when the item was first queued for import.',
+      ],
+      'changed' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'The Unix timestamp of the last update to this record.',
+      ],
+      'message' => [
+        'type' => 'text',
+        'size' => 'big',
+        'description' => 'The message for the last update of this record (e.g., error message).',
+      ],
+      'csv_item' => [
+        'type' => 'json',
+        'pgsql_type' => 'json',
+        'mysql_type' => 'json',
+        'sqlite_type' => 'text',
+        'not null' => FALSE,
+        'description' => 'The imported data.',
+      ],
+    ],
+    'primary key' => ['source', 'id'],
+    'indexes' => [
+      'source' => ['source'],
+    ],
+  ];
+
+  return $schema;
+}
