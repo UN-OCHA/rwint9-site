@@ -91,6 +91,7 @@ module:
   reliefweb_revisions: 0
   reliefweb_rivers: 0
   reliefweb_subscriptions: 0
+  reliefweb_sync_orgs: 0
   reliefweb_topics: 0
   reliefweb_user_history: 0
   reliefweb_user_posts: 0

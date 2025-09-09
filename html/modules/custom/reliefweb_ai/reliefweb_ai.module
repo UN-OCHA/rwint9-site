@@ -242,7 +242,7 @@ function reliefweb_ai_ocha_content_classification_post_classify_entity(
   }
 
   // Attempt to retrieve the language.
-  $updated_fields = reliefweb_ai_post_classification_language_update(
+  $language_updated_fields = reliefweb_ai_post_classification_language_update(
     $entity,
     $workflow,
     $classifier,
@@ -251,7 +251,7 @@ function reliefweb_ai_ocha_content_classification_post_classify_entity(
   ) ?? [];
 
   // Attempt to fix the body.
-  $updated_fields = reliefweb_ai_post_classification_body_update(
+  $body_updated_fields = reliefweb_ai_post_classification_body_update(
     $entity,
     $workflow,
     $classifier,
@@ -259,7 +259,7 @@ function reliefweb_ai_ocha_content_classification_post_classify_entity(
     $data,
   ) ?? [];
 
-  return array_unique($updated_fields) ?: NULL;
+  return array_unique(array_merge($language_updated_fields, $body_updated_fields)) ?: NULL;
 }
 
 /**
@@ -291,6 +291,21 @@ function reliefweb_ai_post_classification_language_update(
     return NULL;
   }
 
+  // Call the hook so other modules can set the language.
+  $module_handler = \Drupal::moduleHandler();
+  $lang_code = $module_handler->invokeAll('reliefweb_ai_force_language', [$entity]);
+  if ($lang_code) {
+    // If multiple modules return a language, use the first non-null one.
+    if (is_array($lang_code)) {
+      $lang_code = array_values($lang_code);
+      $lang_code = reset($lang_code);
+    }
+    if ($lang_code) {
+      $entity->set('field_language', $lang_code);
+      return ['field_language'];
+    }
+  }
+
   $settings = \Drupal::config('reliefweb_ai.settings')->get('language_detection');
   if (empty($settings)) {
     return NULL;
@@ -301,7 +316,7 @@ function reliefweb_ai_post_classification_language_update(
   $text = reliefweb_ai_extract_text_from_llm_output($data['output'], $tag, $classifier);
 
   // Add the title.
-  if (!empty($settings['user_title'])) {
+  if (!empty($settings['use_title'])) {
     $title = (string) $entity->label();
     $text = $title . ' ' . $text;
   }

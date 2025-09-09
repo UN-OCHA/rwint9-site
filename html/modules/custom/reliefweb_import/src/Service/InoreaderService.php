@@ -64,6 +64,7 @@ class InoreaderService {
     's' => 'status',
     'f' => 'fallback',
     'sel' => 'selector',
+    'l' => 'language',
   ];
 
   public function __construct(
@@ -536,6 +537,13 @@ class InoreaderService {
       $url = str_replace('http://', 'https://', $url);
     }
 
+    // Determine language.
+    $language = 267;
+    if (isset($tags['language'])) {
+      $defined_languages = reliefweb_import_get_defined_languages();
+      $language = $defined_languages[$tags['language']] ?? 267;
+    }
+
     // Submission data.
     $data = [
       'title' => $title,
@@ -543,7 +551,7 @@ class InoreaderService {
       'published' => $published,
       'origin' => $url,
       'source' => $sources,
-      'language' => [267],
+      'language' => [$language],
       'country' => [254],
       'format' => [8],
       'file_data' => [
