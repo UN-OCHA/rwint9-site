@@ -434,8 +434,8 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       catch (\Exception $exception) {
         $import_record['status'] = 'error';
         $import_record['editorial_flow'] = 'to_process';
-        if ($e instanceof ReliefwebImportException) {
-          $import_record['status_type'] = $e->getStatusType();
+        if ($exception instanceof ReliefwebImportException) {
+          $import_record['status_type'] = $exception->getStatusType();
         }
 
         $import_record['message'] = $exception->getMessage();
@@ -548,12 +548,17 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
    */
   public function alterContentClassificationForceFieldUpdate(array &$fields, ClassificationWorkflowInterface $workflow, array $context): void {
     parent::alterContentClassificationForceFieldUpdate($fields, $workflow, $context);
-    if (isset($context['entity'])) {
-      // Allow overriding the title with the AI extracted one if the title
-      // contains a link.
-      if (preg_match('#https?://#i', $context['entity']->title->value)) {
-        $fields['title__value'] = TRUE;
-      }
+    if (!isset($context['entity'])) {
+      return;
+    }
+
+    /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+    $entity = $context['entity'];
+
+    // Allow overriding the title with the AI extracted one if the title
+    // contains a link.
+    if (preg_match('#https?://#i', $entity->title->value)) {
+      $fields['title__value'] = TRUE;
     }
   }
 
@@ -561,20 +566,43 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
    * {@inheritdoc}
    */
   public function alterReliefWebEntitiesModerationStatusAdjustment(bool &$bypass, EntityInterface $entity): void {
-    // @todo retrieve the import record and check if there is a defined status
-    $records = $this->getExistingImportRecords([$entity->uuid()]);
-    if (empty($records)) {
+    // Retrieve the import record and check if there is a defined status.
+    $record = $this->getImportRecordForEntity($entity);
+    if (empty($record)) {
       return;
     }
 
-    $record = reset($records);
-    $extra = json_decode($record['extra'] ?? [], TRUE);
-    $feed_name = $extra['feed_name'] ?? '';
-
+    $feed_name = $record['extra']['feed_name'] ?? '';
     $tags = $this->inoreaderService->extractTags($feed_name);
     if (isset($tags['status'])) {
       $bypass = TRUE;
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function forceContentLanguage(EntityInterface $entity): ?string {
+    // Retrieve the import record and check if there is a defined language.
+    $record = $this->getImportRecordForEntity($entity);
+    if (empty($record)) {
+      return NULL;
+    }
+
+    $feed_name = $record['extra']['feed_name'] ?? '';
+    $tags = $this->inoreaderService->extractTags($feed_name);
+
+    if (isset($tags['language'])) {
+      $defined_languages = reliefweb_import_get_defined_languages();
+      if (!isset($defined_languages[$tags['language']])) {
+        // Language not defined, skip.
+        return NULL;
+      }
+
+      return $defined_languages[$tags['language']];
+    }
+
+    return NULL;
   }
 
 }

@@ -12,6 +12,7 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
+use Drupal\ocha_content_classification\Plugin\ClassifierPluginInterface;
 use Drupal\reliefweb_entities\Entity\Job;
 use Drupal\reliefweb_import\Plugin\ReliefWebImporterPluginInterface;
 
@@ -120,7 +121,7 @@ function reliefweb_import_ocha_content_classification_force_field_update_alter(a
 }
 
 /**
- * Implements hook_ocha_content_classification_force_field_update_alter().
+ * Implements hook_ocha_content_classification_classified_fields_alter().
  */
 function reliefweb_import_ocha_content_classification_classified_fields_alter(array &$fields, ClassificationWorkflowInterface $workflow, array $context) {
   if (!isset($context['entity'])) {
@@ -134,6 +135,59 @@ function reliefweb_import_ocha_content_classification_classified_fields_alter(ar
 
   // Let the importer decide which entity fields to update.
   $importer->alterContentClassificationClassifiedFields($fields, $workflow, $context);
+}
+
+/**
+ * Implements hook_ocha_content_classification_post_classify_entity().
+ */
+function reliefweb_import_ocha_content_classification_post_classify_entity(
+  EntityInterface $entity,
+  ClassificationWorkflowInterface $workflow,
+  ClassifierPluginInterface $classifier,
+  array $updated_fields,
+  array $data,
+): ?array {
+  $importer = reliefweb_import_get_entity_importer($entity);
+  if (!isset($importer)) {
+    return $updated_fields;
+  }
+
+  // Let the importer decide which entity fields to update.
+  $importer->alterContentClassificationPostClassify($entity, $updated_fields);
+  return array_unique(array_values($updated_fields));
+}
+
+/**
+ * Implements hook_reliefweb_ai_force_language().
+ */
+function reliefweb_import_reliefweb_ai_force_language(
+  EntityInterface $entity,
+): ?string {
+  $importer = reliefweb_import_get_entity_importer($entity);
+  if (!isset($importer)) {
+    return NULL;
+  }
+
+  // Let the importer decide to update the language.
+  return $importer->forceContentLanguage($entity);
+}
+
+/**
+ * Get a list of defined languages.
+ *
+ * @return array
+ *   An array of language term IDs.
+ */
+function reliefweb_import_get_defined_languages(): array {
+  // Retrieve the available languages.
+  $languages = \Drupal::database()
+    ->select('taxonomy_term__field_language_code', 't')
+    ->fields('t', ['field_language_code_value', 'entity_id'])
+    ->execute()
+    ?->fetchAllKeyed() ?? [];
+  $languages = array_change_key_case($languages, \CASE_LOWER);
+
+  return $languages;
 }
 
 /**

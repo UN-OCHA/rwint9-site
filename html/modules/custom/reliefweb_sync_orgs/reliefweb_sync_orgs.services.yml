@@ -1,0 +1,15 @@
+services:
+  cache.reliefweb_sync_orgs:
+    class: Drupal\Core\Cache\CacheBackendInterface
+    tags:
+      - { name: cache.bin }
+    factory: cache_factory:get
+    arguments: [reliefweb_sync_orgs]
+
+  reliefweb_sync_orgs.import_record_service:
+    class: Drupal\reliefweb_sync_orgs\Service\ImportRecordService
+    arguments: ['@database']
+
+  reliefweb_sync_orgs.import_export_service:
+    class: Drupal\reliefweb_sync_orgs\Service\ImportExportService
+    arguments: ['@queue', '@reliefweb_sync_orgs.import_record_service']
