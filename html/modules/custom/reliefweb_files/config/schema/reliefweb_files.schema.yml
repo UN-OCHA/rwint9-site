@@ -50,6 +50,15 @@ field.widget.settings.reliefweb_file:
     max_file_size:
       type: integer
       label: 'Allowed max file size.'
+    duplicate_max_documents:
+      type: integer
+      label: 'Maximum number of similar documents to return.'
+    duplicate_minimum_should_match:
+      type: string
+      label: 'Minimum similarity threshold for duplicate detection.'
+    duplicate_warning_message:
+      type: string
+      label: 'Warning message to display when duplicates are found.'
 
 field.widget.settings.reliefweb_file_simplified:
   type: field.widget.settings.reliefweb_file

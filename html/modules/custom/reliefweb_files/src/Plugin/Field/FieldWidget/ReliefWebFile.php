@@ -16,9 +16,11 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Url;
 use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\file\Entity\File;
 use Drupal\file\Validation\FileValidatorInterface;
+use Drupal\reliefweb_api\Services\ReliefWebApiFileDuplicationInterface;
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile as ReliefWebFileType;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -73,6 +75,13 @@ class ReliefWebFile extends WidgetBase {
   protected $fileValidator;
 
   /**
+   * The ReliefWeb API file duplication service.
+   *
+   * @var \Drupal\reliefweb_api\Services\ReliefWebApiFileDuplicationInterface
+   */
+  protected $fileDuplication;
+
+  /**
    * Ajax wrapper ID.
    *
    * @var string
@@ -93,6 +102,7 @@ class ReliefWebFile extends WidgetBase {
     RendererInterface $renderer,
     RequestStack $request_stack,
     FileValidatorInterface $file_validator,
+    ReliefWebApiFileDuplicationInterface $file_duplication,
   ) {
     parent::__construct(
       $plugin_id,
@@ -106,6 +116,7 @@ class ReliefWebFile extends WidgetBase {
     $this->renderer = $renderer;
     $this->requestStack = $request_stack;
     $this->fileValidator = $file_validator;
+    $this->fileDuplication = $file_duplication;
   }
 
   /**
@@ -127,7 +138,8 @@ class ReliefWebFile extends WidgetBase {
       $container->get('logger.factory'),
       $container->get('renderer'),
       $container->get('request_stack'),
-      $container->get('file.validator')
+      $container->get('file.validator'),
+      $container->get('reliefweb_api.file_duplication')
     );
   }
 
@@ -140,6 +152,9 @@ class ReliefWebFile extends WidgetBase {
     return [
       'extensions' => 'pdf',
       'max_file_size' => 40 * 1024 * 1024,
+      'duplicate_max_documents' => 5,
+      'duplicate_minimum_should_match' => '80%',
+      'duplicate_warning_message' => 'Possible duplicate file(s) found:',
     ] + parent::defaultSettings();
   }
 
@@ -176,6 +191,36 @@ class ReliefWebFile extends WidgetBase {
       '#min' => 1,
       '#max' => $default_max_files_size,
       '#element_validate' => [[static::class, 'validateMaxFileSizeSetting']],
+    ];
+
+    // Duplicate checking settings.
+    $duplicate_max_documents = $this->getDuplicateMaxDocumentsSetting();
+    $element['duplicate_max_documents'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Maximum similar documents'),
+      '#description' => $this->t('Maximum number of similar documents to return when checking for duplicates.'),
+      '#default_value' => $form_state->getValue('duplicate_max_documents', $duplicate_max_documents),
+      '#min' => 1,
+      '#max' => 100,
+    ];
+
+    $duplicate_minimum_should_match = $this->getDuplicateMinimumShouldMatchSetting();
+    $element['duplicate_minimum_should_match'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Minimum similarity threshold'),
+      '#description' => $this->t('Minimum similarity threshold for duplicate detection (e.g., "80%").'),
+      '#default_value' => $form_state->getValue('duplicate_minimum_should_match', $duplicate_minimum_should_match),
+      '#pattern' => '^\d+%$',
+      '#placeholder' => '80%',
+    ];
+
+    $duplicate_warning_message = $this->getDuplicateWarningMessageSetting();
+    $element['duplicate_warning_message'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Duplicate warning message'),
+      '#description' => $this->t('Message to display when potential duplicate files are found.'),
+      '#default_value' => $form_state->getValue('duplicate_warning_message', $duplicate_warning_message),
+      '#maxlength' => 255,
     ];
 
     return $element;
@@ -234,6 +279,11 @@ class ReliefWebFile extends WidgetBase {
       '@max_file_size' => ByteSizeMarkup::create($this->getMaxFileSizeSetting()),
     ]);
 
+    $summary[] = $this->t('Duplicate checking: @max_docs documents, @threshold threshold', [
+      '@max_docs' => $this->getDuplicateMaxDocumentsSetting(),
+      '@threshold' => $this->getDuplicateMinimumShouldMatchSetting(),
+    ]);
+
     return $summary;
   }
 
@@ -259,6 +309,36 @@ class ReliefWebFile extends WidgetBase {
    */
   protected function getMaxFileSizeSetting(): int {
     return $this->getSetting('max_file_size');
+  }
+
+  /**
+   * Get the duplicate max documents setting.
+   *
+   * @return int
+   *   Maximum number of similar documents to return.
+   */
+  protected function getDuplicateMaxDocumentsSetting(): int {
+    return $this->getSetting('duplicate_max_documents');
+  }
+
+  /**
+   * Get the duplicate minimum should match setting.
+   *
+   * @return string
+   *   Minimum similarity threshold.
+   */
+  protected function getDuplicateMinimumShouldMatchSetting(): string {
+    return $this->getSetting('duplicate_minimum_should_match');
+  }
+
+  /**
+   * Get the duplicate warning message setting.
+   *
+   * @return string
+   *   Warning message to display when duplicates are found.
+   */
+  protected function getDuplicateWarningMessageSetting(): string {
+    return $this->getSetting('duplicate_warning_message');
   }
 
   /**
@@ -640,6 +720,9 @@ class ReliefWebFile extends WidgetBase {
         '#value' => $item->get($default)->getValue(),
       ];
     }
+
+    // Check for duplicates and add a list of similar documents.
+    $this->addDuplicateList($element, $item, $form_state, $delta, $field_parents);
 
     return $element;
   }
@@ -1690,6 +1773,134 @@ class ReliefWebFile extends WidgetBase {
     }
 
     return $response;
+  }
+
+  /**
+   * Check for duplicates and display a list of similar documents if any.
+   *
+   * @param array $element
+   *   The form element to add the duplicate list to.
+   * @param \Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile $item
+   *   The field item.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   * @param int $delta
+   *   The delta of the field item.
+   * @param array $field_parents
+   *   The field parents array.
+   */
+  protected function addDuplicateList(
+    array &$element,
+    ReliefWebFileType $item,
+    FormStateInterface $form_state,
+    int $delta,
+    array $field_parents,
+  ) {
+    // Skip permanent files. We assume that they were checked when they were
+    // uploaded previously.
+    $revision_id = $item->getRevisionId();
+    if (!empty($revision_id)) {
+      return;
+    }
+
+    $entity = $form_state->getFormObject()->getEntity();
+    if (empty($entity)) {
+      return;
+    }
+    $bundle = $entity->bundle();
+    $entity_id = $entity->id();
+
+    // Use the passed field parents to access form state values.
+    $duplicate_list_parents = array_merge($field_parents, [$delta, '_duplicate_list']);
+
+    // Try to get existing duplicate list from form state.
+    $duplicates = $form_state->getValue($duplicate_list_parents);
+    if (!empty($duplicates)) {
+      $duplicates = json_decode($duplicates, TRUE) ?? [];
+    }
+    else {
+      // Extract text from the file.
+      $extracted_text = $item->extractText();
+      if (empty($extracted_text)) {
+        return;
+      }
+
+      // Check for duplicates.
+      $duplicates = $this->fileDuplication->findSimilarDocuments(
+        $extracted_text,
+        $bundle,
+        $this->getDuplicateMaxDocumentsSetting(),
+        $this->getDuplicateMinimumShouldMatchSetting(),
+        !empty($entity_id) ? [$entity_id] : [],
+      );
+    }
+
+    // Store the duplicates in a hidden field.
+    $element['_duplicate_list'] = [
+      '#type' => 'hidden',
+      '#value' => json_encode($duplicates),
+    ];
+
+    // Add the duplicate message.
+    $this->addDuplicateMessage($element, $duplicates);
+  }
+
+  /**
+   * Add duplicate message to the form element.
+   *
+   * @param array $element
+   *   The form element to add the duplicate message to.
+   * @param array $duplicates
+   *   Array of duplicate documents.
+   */
+  protected function addDuplicateMessage(array &$element, array $duplicates) {
+    if (empty($duplicates)) {
+      return;
+    }
+
+    $items = [];
+    foreach ($duplicates as $document) {
+      $items[] = [
+        '#type' => 'link',
+        '#title' => $document['title'] ?? 'Unknown document',
+        '#url' => Url::fromUri($document['url'] ?? ''),
+        '#attributes' => [
+          'target' => '_blank',
+        ],
+      ];
+    }
+
+    $element['duplicate_message'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['duplicate-files-message'],
+      ],
+      'warning' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#attributes' => [
+          'class' => ['messages', 'messages--warning'],
+        ],
+        'content' => [
+          '#type' => 'html_tag',
+          '#tag' => 'div',
+          '#attributes' => [
+            'class' => ['messages__content'],
+          ],
+          'text' => [
+            '#markup' => $this->getDuplicateWarningMessageSetting(),
+          ],
+        ],
+        'list' => [
+          '#theme' => 'item_list',
+          '#items' => $items,
+          '#attributes' => [
+            'class' => ['duplicate-files-list'],
+          ],
+        ],
+      ],
+      '#weight' => -1,
+    ];
   }
 
   /**
