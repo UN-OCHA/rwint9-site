@@ -178,7 +178,7 @@ class ProcessFromExport extends QueueWorkerBase implements ContainerFactoryPlugi
 
       // Add additional information.
       foreach ($field_info['mapping'] ?? [] as $field => $target) {
-        if (isset($import_record['csv_item'][$field]) && !empty(($import_record['csv_item'][$field]))) {
+        if (isset($import_record['csv_item'][$field]) && !empty($import_record['csv_item'][$field])) {
           switch ($target) {
             case 'description':
               $payload[$target] = [
