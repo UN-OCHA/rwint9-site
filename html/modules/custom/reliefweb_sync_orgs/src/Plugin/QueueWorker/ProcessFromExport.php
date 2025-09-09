@@ -229,7 +229,7 @@ class ProcessFromExport extends QueueWorkerBase implements ContainerFactoryPlugi
 
             default:
               $payload[$target] = [
-                'value' => ($import_record['csv_item'][$field]),
+                'value' => $import_record['csv_item'][$field],
               ];
           }
         }
