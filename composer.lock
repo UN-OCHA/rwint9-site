@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5522f12ff2fc532fd3a602cbab7e433f",
+    "content-hash": "8b0232fcb2f83f57d3dca5df4074f2a8",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -9958,16 +9958,16 @@
         },
         {
             "name": "reliefweb/api-indexer",
-            "version": "dev-RW-1241",
+            "version": "v2.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/rwint-api-indexer.git",
-                "reference": "6a743a155f72b9084f1c33ba0d2458321c7c83c2"
+                "reference": "193bbef71f7657a9a72d343609d2dd43fab84aab"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/rwint-api-indexer/zipball/6a743a155f72b9084f1c33ba0d2458321c7c83c2",
-                "reference": "6a743a155f72b9084f1c33ba0d2458321c7c83c2",
+                "url": "https://api.github.com/repos/UN-OCHA/rwint-api-indexer/zipball/193bbef71f7657a9a72d343609d2dd43fab84aab",
+                "reference": "193bbef71f7657a9a72d343609d2dd43fab84aab",
                 "shasum": ""
             },
             "require": {
@@ -9993,9 +9993,9 @@
             ],
             "support": {
                 "issues": "https://github.com/UN-OCHA/rwint-api-indexer/issues",
-                "source": "https://github.com/UN-OCHA/rwint-api-indexer/tree/RW-1241"
+                "source": "https://github.com/UN-OCHA/rwint-api-indexer/tree/v2.9.0"
             },
-            "time": "2025-08-01T09:17:19+00:00"
+            "time": "2025-09-09T07:11:30+00:00"
         },
         {
             "name": "reliefweb/simple-autocomplete",
@@ -19640,8 +19640,7 @@
         "drupal/imageapi_optimize_binaries": 10,
         "drupal/inline_entity_form": 5,
         "drupal/mimemail": 20,
-        "drupal/openid_connect_windows_aad": 10,
-        "reliefweb/api-indexer": 20
+        "drupal/openid_connect_windows_aad": 10
     },
     "prefer-stable": true,
     "prefer-lowest": false,
