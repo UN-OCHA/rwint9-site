@@ -200,7 +200,7 @@ class ProcessFromExport extends QueueWorkerBase implements ContainerFactoryPlugi
     // Check if we have a term ID.
     if (isset($item['term_id'])) {
       $item['term_id'] = trim($item['term_id']);
-      if ($import_record['tid'] != $item['term_id']) {
+      if (!empty($item['term_id']) && $import_record['tid'] != $item['term_id']) {
         $import_record['tid'] = $item['term_id'];
         $import_record['status'] = 'fixed';
         $import_record['message'] = "Term ID updated to {$item['term_id']}";
