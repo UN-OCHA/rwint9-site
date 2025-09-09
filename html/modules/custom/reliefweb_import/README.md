@@ -57,6 +57,7 @@ Imports tagged items from the [automation_production](https://www.inoreader.com/
 | debug | - | No | No | [debug:1] |
 | remove | r | No | Yes | [remove:.hero-text-container-article] |
 | fallback | f | No | No | [fallback: content] |
+| language | l | No | No | [language:en]
 
 #### `source` tag
 
@@ -162,6 +163,10 @@ Remove HTML elements based on tag and/or class.
 If no PDF is found use the `content` or `html` method.
 
 When using `html` make sure to specify `[html:div.body]` tag to limit the content.
+
+#### `language` tag
+
+Allows you to force the language for all items of a certain feed.
 
 #### `selectors` tag
 

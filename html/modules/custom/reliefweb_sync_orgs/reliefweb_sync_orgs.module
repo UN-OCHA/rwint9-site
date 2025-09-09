@@ -1,0 +1,62 @@
+<?php
+
+/**
+ * @file
+ * Helpers for the ReliefWeb Sync Orgs module.
+ */
+
+/**
+ * Get field information definitions for organization sync sources.
+ *
+ * When called without a source, returns the full registry indexed by the
+ * source machine name. When a $source is provided, returns only that source's
+ * definition (or an empty array if it doesn't exist).
+ *
+ * Source definition keys:
+ * - id: string (required) Source field name holding the unique identifier.
+ * - name: string (required) Human readable source label.
+ * - mapping: array<string,string> Map of source field => local Drupal field.
+ * - search: string[] List of source field names included in generic searches.
+ * - matching: array<string,string> Source field => local canonical field used
+ *   for exact matching / deduplication.
+ * - fuzzy: string[] Source field names eligible for fuzzy matching logic.
+ * - clean: array<string,string[]> For each source field, substrings to strip
+ *   from its value prior to matching (basic sanitation rules).
+ */
+function reliefweb_sync_orgs_field_info(string $source = ''): array {
+  $config = \Drupal::config('reliefweb_sync_orgs.sources');
+  $configured = $config->get();
+
+  if (empty($source)) {
+    return $configured;
+  }
+
+  return $configured[$source] ?? [];
+}
+
+/**
+ * Return a list of unique sources.
+ */
+function reliefweb_sync_orgs_sources(): array {
+  $sources = [];
+  foreach (reliefweb_sync_orgs_field_info() as $source => $info) {
+    $sources[$source] = $info['name'];
+  }
+
+  asort($sources);
+  return $sources;
+}
+
+/**
+ * Return a unique list of searchable fields for all sources.
+ */
+function reliefweb_sync_orgs_searchable_fields(): array {
+  $fields = [];
+  foreach (reliefweb_sync_orgs_field_info() as $info) {
+    if (isset($info['search'])) {
+      $fields = array_merge($fields, $info['search']);
+    }
+  }
+
+  return array_unique($fields);
+}
