@@ -301,7 +301,7 @@ function reliefweb_ai_post_classification_language_update(
   $text = reliefweb_ai_extract_text_from_llm_output($data['output'], $tag, $classifier);
 
   // Add the title.
-  if (!empty($settings['user_title'])) {
+  if (!empty($settings['use_title'])) {
     $title = (string) $entity->label();
     $text = $title . ' ' . $text;
   }
