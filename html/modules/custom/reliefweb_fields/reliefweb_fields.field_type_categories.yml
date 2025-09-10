@@ -1,0 +1,5 @@
+reliefweb:
+  label: 'ReliefWeb'
+  description: 'ReliefWeb-specific field types.'
+  weight: 0
+  libraries: []
