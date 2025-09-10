@@ -17,7 +17,7 @@ use Drupal\Core\TypedData\DataDefinition;
  *   id = "reliefweb_links",
  *   label = @Translation("ReliefWeb Links"),
  *   description = @Translation("A field to store a list of internal or external links."),
- *   category = @Translation("ReliefWeb"),
+ *   category = "reliefweb",
  *   default_widget = "reliefweb_links",
  *   default_formatter = "reliefweb_links",
  *   cardinality = -1,

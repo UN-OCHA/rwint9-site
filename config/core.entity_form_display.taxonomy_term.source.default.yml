@@ -10,6 +10,7 @@ dependencies:
     - field.field.taxonomy_term.source.field_attention_training
     - field.field.taxonomy_term.source.field_country
     - field.field.taxonomy_term.source.field_disclaimer
+    - field.field.taxonomy_term.source.field_domain_posting_rights
     - field.field.taxonomy_term.source.field_fts_id
     - field.field.taxonomy_term.source.field_homepage
     - field.field.taxonomy_term.source.field_job_import_feed
@@ -208,6 +209,7 @@ content:
     settings: {  }
     third_party_settings: {  }
 hidden:
+  field_domain_posting_rights: true
   field_user_posting_rights: true
   langcode: true
   status: true

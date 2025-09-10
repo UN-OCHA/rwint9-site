@@ -74,3 +74,34 @@ reliefweb_fields.validate.reliefweb_user_posting_rights:
     entity_type: '[a-z0-9_]+'
     bundle: '[a-z0-9_]+'
     field_name: '[a-z0-9_]+'
+
+reliefweb_fields.taxonomy_term.domain_posting_rights_form:
+  path: '/taxonomy/term/{taxonomy_term}/domain-posting-rights'
+  defaults:
+    _entity_form: 'taxonomy_term.domain_posting_rights'
+    _title: 'Domain posting rights'
+  options:
+    _admin_route: TRUE
+    parameters:
+      taxonomy_term:
+        type: 'entity:taxonomy_term'
+        bundle:
+          - source
+  requirements:
+    _entity_access: 'taxonomy_term.update'
+    _permission: 'edit domain posting rights'
+    taxonomy_term: \d+
+
+reliefweb_fields.validate.reliefweb_domain_posting_rights:
+  path: '/admin/reliefweb_fields/validate/reliefweb_domain_posting_rights/{entity_type_id}/{bundle}/{field_name}'
+  defaults:
+    _controller: '\Drupal\reliefweb_fields\Controller\ReliefWebDomainPostingRightsValidator::validateDomain'
+    _title: 'Domain validation for ReliefWeb domain posting rights fields'
+  methods: [POST]
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'access reliefweb domain posting rights field validation'
+    entity_type: '[a-z0-9_]+'
+    bundle: '[a-z0-9_]+'
+    field_name: '[a-z0-9_]+'
