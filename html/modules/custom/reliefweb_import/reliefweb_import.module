@@ -149,12 +149,19 @@ function reliefweb_import_ocha_content_classification_post_classify_entity(
 ): ?array {
   $importer = reliefweb_import_get_entity_importer($entity);
   if (!isset($importer)) {
-    return $updated_fields;
+    return NULL;
   }
 
   // Let the importer decide which entity fields to update.
-  $importer->alterContentClassificationPostClassify($entity, $updated_fields);
-  return array_unique(array_values($updated_fields));
+  $fields = $importer->contentClassificationPostClassify(
+    $entity,
+    $workflow,
+    $classifier,
+    $updated_fields,
+    $data
+  ) ?? [];
+
+  return array_values(array_unique($fields)) ?: NULL;
 }
 
 /**
@@ -162,7 +169,7 @@ function reliefweb_import_ocha_content_classification_post_classify_entity(
  */
 function reliefweb_import_reliefweb_ai_force_language(
   EntityInterface $entity,
-): ?string {
+): string|int|null {
   $importer = reliefweb_import_get_entity_importer($entity);
   if (!isset($importer)) {
     return NULL;

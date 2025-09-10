@@ -25,6 +25,7 @@ use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
+use Drupal\ocha_content_classification\Plugin\ClassifierPluginInterface;
 use Drupal\reliefweb_import\Exception\InvalidConfigurationException;
 use Drupal\reliefweb_import\Exception\ReliefwebImportException;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionIllegalFilename;
@@ -653,8 +654,16 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
   /**
    * {@inheritdoc}
    */
-  public function alterContentClassificationPostClassify(EntityInterface $entity, array &$updated_fields): void {
-    // Perform operations after classification.
+  public function contentClassificationPostClassify(
+    EntityInterface $entity,
+    ClassificationWorkflowInterface $workflow,
+    ClassifierPluginInterface $classifier,
+    array $updated_fields,
+    array $data,
+  ): ?array {
+    // Perform operations after classification and return a list of changed
+    // entity fields if any.
+    return NULL;
   }
 
   /**
@@ -667,7 +676,7 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
   /**
    * {@inheritdoc}
    */
-  public function forceContentLanguage(EntityInterface $entity): ?string {
+  public function forceContentLanguage(EntityInterface $entity): string|int|null {
     // Let AI determine the language.
     return NULL;
   }
