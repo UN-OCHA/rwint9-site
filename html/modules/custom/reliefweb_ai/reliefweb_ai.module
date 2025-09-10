@@ -734,7 +734,7 @@ function reliefweb_ai_add_ai_updated_fields_to_entity(EntityInterface $entity): 
   }
 
   // Store the list of fields that were populated by the AI for easy lookup.
-  $entity->ai_updated_fields = array_flip($updated_fields);
+  $entity->ai_updated_fields = array_flip((array) $updated_fields);
 }
 
 /**
