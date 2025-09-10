@@ -709,11 +709,6 @@ function reliefweb_ai_add_ai_updated_fields_to_entity(EntityInterface $entity): 
     return;
   }
 
-  // Make sure the updated fields are unique.
-  if (!is_array($updated_fields)) {
-    $updated_fields = (array) $updated_fields;
-  }
-
   // Not using strict equality because they may be numeric strings.
   if ($entity->getRevisionId() != $record->entity_revision_id) {
     $revision = \Drupal::entityTypeManager()
@@ -739,7 +734,7 @@ function reliefweb_ai_add_ai_updated_fields_to_entity(EntityInterface $entity): 
   }
 
   // Store the list of fields that were populated by the AI for easy lookup.
-  $entity->ai_updated_fields = array_flip((array) $updated_fields);
+  $entity->ai_updated_fields = array_flip($updated_fields);
 }
 
 /**
