@@ -7,6 +7,7 @@ namespace Drupal\reliefweb_sync_orgs\Plugin\QueueWorker;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Logger\LoggerChannelTrait;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\reliefweb_sync_orgs\Service\ImportRecordService;
@@ -26,6 +27,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ProcessFromExport extends QueueWorkerBase implements ContainerFactoryPluginInterface {
 
   use CleanIdFieldTrait;
+  use LoggerChannelTrait;
 
   /**
    * The entity type manager.
@@ -159,11 +161,13 @@ class ProcessFromExport extends QueueWorkerBase implements ContainerFactoryPlugi
 
     // Skip if already processed.
     if ($import_record['status'] === 'success' || $import_record['status'] === 'fixed') {
+      $this->getLogger('reliefweb_sync_orgs')->info('Skipping already processed item: @id', ['@id' => $id]);
       return;
     }
 
     // Do we need to create a new term?
     if (!empty($item['create_new']) && $item['create_new'] == '1') {
+      $this->getLogger('reliefweb_sync_orgs')->info('Creating new term for item: @id', ['@id' => $id]);
       $payload = [
         'name' => $item['name'],
         'vid' => 'source',
@@ -171,6 +175,65 @@ class ProcessFromExport extends QueueWorkerBase implements ContainerFactoryPlugi
           'value' => $item['name'],
         ],
       ];
+
+      // Add additional information.
+      foreach ($field_info['mapping'] ?? [] as $field => $target) {
+        if (isset($import_record['csv_item'][$field]) && !empty($import_record['csv_item'][$field])) {
+          switch ($target) {
+            case 'description':
+              $payload[$target] = [
+                'value' => $import_record['csv_item'][$field],
+                'format' => 'markdown',
+              ];
+              break;
+
+            case 'field_homepage':
+              $payload[$target] = [
+                'uri' => $import_record['csv_item'][$field],
+              ];
+              break;
+
+            case 'country':
+              // Try to load the country term if available.
+              $country_id = $this->entityTypeManager
+                ->getStorage('taxonomy_term')
+                ->loadByProperties([
+                  'vid' => 'country',
+                  'name' => $import_record['csv_item'][$field],
+                ]);
+
+              if ($country_id) {
+                $payload[$target] = [
+                  'target_id' => reset($country_id)->id(),
+                ];
+              }
+
+              break;
+
+            case 'organization_type':
+              // Try to load the organization type term if available.
+              $org_type_id = $this->entityTypeManager
+                ->getStorage('taxonomy_term')
+                ->loadByProperties([
+                  'vid' => 'organization_type',
+                  'name' => $import_record['csv_item'][$field],
+                ]);
+
+              if ($org_type_id) {
+                $payload[$target] = [
+                  'target_id' => reset($org_type_id)->id(),
+                ];
+              }
+
+              break;
+
+            default:
+              $payload[$target] = [
+                'value' => $import_record['csv_item'][$field],
+              ];
+          }
+        }
+      }
 
       // Do we need to set a parent term?
       if (!empty($item['parent_id'])) {
@@ -200,7 +263,12 @@ class ProcessFromExport extends QueueWorkerBase implements ContainerFactoryPlugi
     // Check if we have a term ID.
     if (isset($item['term_id'])) {
       $item['term_id'] = trim($item['term_id']);
-      if ($import_record['tid'] != $item['term_id']) {
+      if (!empty($item['term_id']) && $import_record['tid'] != $item['term_id']) {
+        $this->getLogger('reliefweb_sync_orgs')->info('Processing item @id with term ID: @tid', [
+          '@id' => $item['id'],
+          '@tid' => $item['term_id'],
+        ]);
+
         $import_record['tid'] = $item['term_id'];
         $import_record['status'] = 'fixed';
         $import_record['message'] = "Term ID updated to {$item['term_id']}";
@@ -212,6 +280,11 @@ class ProcessFromExport extends QueueWorkerBase implements ContainerFactoryPlugi
     // Check if we have a term name.
     if (isset($item['term_name']) && !empty($item['term_name'])) {
       $item['term_name'] = trim($item['term_name']);
+
+      $this->getLogger('reliefweb_sync_orgs')->info('Processing item @id with term name: @name', [
+        '@id' => $item['id'],
+        '@name' => $item['term_name'],
+      ]);
       $term = $this->loadSourceTermByName($item['term_name']);
       if ($term) {
         if ($import_record['tid'] != $term->id()) {
