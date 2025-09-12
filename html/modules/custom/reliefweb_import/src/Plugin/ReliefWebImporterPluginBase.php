@@ -25,6 +25,7 @@ use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
+use Drupal\ocha_content_classification\Plugin\ClassifierPluginInterface;
 use Drupal\reliefweb_import\Exception\InvalidConfigurationException;
 use Drupal\reliefweb_import\Exception\ReliefwebImportException;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionIllegalFilename;
@@ -162,6 +163,13 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
       ]));
     }
     return $this->logger;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setLogger(LoggerInterface $logger): void {
+    $this->logger = $logger;
   }
 
   /**
@@ -646,8 +654,31 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
   /**
    * {@inheritdoc}
    */
+  public function contentClassificationPostClassify(
+    EntityInterface $entity,
+    ClassificationWorkflowInterface $workflow,
+    ClassifierPluginInterface $classifier,
+    array $updated_fields,
+    array $data,
+  ): ?array {
+    // Perform operations after classification and return a list of changed
+    // entity fields if any.
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function alterReliefWebEntitiesModerationStatusAdjustment(bool &$bypass, EntityInterface $entity): void {
     // Nothing to do.
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function forceContentLanguage(EntityInterface $entity): string|int|null {
+    // Let AI determine the language.
+    return NULL;
   }
 
   /**
@@ -966,6 +997,32 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
     }
 
     return $records;
+  }
+
+  /**
+   * Get an import record for a given entity.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity to get the import record for.
+   *
+   * @return array|null
+   *   The import record, or NULL if not found.
+   */
+  protected function getImportRecordForEntity(EntityInterface $entity): ?array {
+    $record = $this->database->select('reliefweb_import_records', 'r')
+      ->fields('r')
+      ->condition('entity_type_id', $entity->getEntityTypeId())
+      ->condition('entity_bundle', $entity->bundle())
+      ->condition('entity_id', $entity->id())
+      ->execute()
+      ?->fetch(FetchAs::Associative) ?? [];
+
+    // Deserialize the extra field.
+    if (isset($record['extra'])) {
+      $record['extra'] = json_decode($record['extra'], TRUE);
+    }
+
+    return $record;
   }
 
   /**

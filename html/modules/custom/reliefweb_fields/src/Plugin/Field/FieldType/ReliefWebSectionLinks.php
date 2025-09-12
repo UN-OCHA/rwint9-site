@@ -17,7 +17,7 @@ use Drupal\Core\TypedData\DataDefinition;
  *   id = "reliefweb_section_links",
  *   label = @Translation("ReliefWeb Section links"),
  *   description = @Translation("A field to store a list of section links."),
- *   category = @Translation("ReliefWeb"),
+ *   category = "reliefweb",
  *   default_widget = "reliefweb_section_links",
  *   default_formatter = "reliefweb_section_links",
  * )

@@ -15,7 +15,7 @@ use Drupal\Core\TypedData\DataDefinition;
  *   id = "reliefweb_user_posting_rights",
  *   label = @Translation("ReliefWeb User Posting Rights"),
  *   description = @Translation("A field to store user posting rights."),
- *   category = @Translation("ReliefWeb"),
+ *   category = "reliefweb",
  *   default_widget = "reliefweb_user_posting_rights",
  *   default_formatter = "reliefweb_user_posting_rights",
  *   cardinality = -1,

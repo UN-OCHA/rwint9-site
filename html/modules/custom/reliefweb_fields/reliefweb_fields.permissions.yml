@@ -10,3 +10,9 @@ edit user posting rights:
 access reliefweb user posting rights field validation:
   title: 'Access reliefweb user posting rights field validation'
   description: "Allow ajax callbacks to the ReliefWeb User Posting Rights field validation."
+edit domain posting rights:
+  title: 'Edit domain posting rights'
+  description: "Allow domains to edit domain posting rights for an organization."
+access reliefweb domain posting rights field validation:
+  title: 'Access reliefweb domain posting rights field validation'
+  description: "Allow ajax callbacks to the ReliefWeb Domain Posting Rights field validation."

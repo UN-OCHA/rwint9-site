@@ -1981,6 +1981,12 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     $user_rights_bundle_field = $this->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', $bundle);
     $user_rights_alias = $subquery->leftJoin($user_rights_table, $user_rights_table, "%alias.entity_id = {$source_alias}.{$source_field} AND %alias.{$user_rights_id_field} = {$users_alias}.uid");
 
+    // Join the domain posting rights table.
+    $domain_rights_table = $this->getFieldTableName('taxonomy_term', 'field_domain_posting_rights');
+    $domain_rights_domain_field = $this->getFieldColumnName('taxonomy_term', 'field_domain_posting_rights', 'domain');
+    $domain_rights_bundle_field = $this->getFieldColumnName('taxonomy_term', 'field_domain_posting_rights', $bundle);
+    $domain_rights_alias = $subquery->leftJoin($domain_rights_table, $domain_rights_table, "%alias.entity_id = {$source_alias}.{$source_field} AND %alias.{$domain_rights_domain_field} = SUBSTRING_INDEX({$users_alias}.mail, '@', -1)");
+
     // Count the number of sources for a node for which the user has the
     // requested posting right. The computed right is then　compared to the
     // requested one, increasing the counter if it's a match.
@@ -1991,6 +1997,9 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     //
     // For 'allowed' and 'trusted', the user must be respectively allowed or
     // trusted for all the sources.
+    //
+    // Priority: user posting rights take precedence over domain posting rights.
+    // If no user posting rights exist, fall back to domain posting rights.
     $having = [];
     $count_sources = FALSE;
     foreach ($values as $value) {
@@ -2000,26 +2009,27 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
           // Unverified users include users with 'unverified' rights and users
           // with no posting rights records for a source or if there is no
           // sources (caught via the 0 at the end of the COALESCE).
-          $subquery->addExpression("SUM(IF(COALESCE({$user_rights_alias}.{$user_rights_bundle_field}, 0) = 0, 1, 0))", 'unverified');
+          // Use COALESCE to prioritize user rights over domain rights.
+          $subquery->addExpression("SUM(IF(COALESCE({$user_rights_alias}.{$user_rights_bundle_field}, {$domain_rights_alias}.{$domain_rights_bundle_field}, 0) = 0, 1, 0))", 'unverified');
           $having[] = 'unverified <> 0';
           break;
 
         // Blocked.
         case 1:
-          $subquery->addExpression("SUM(IF({$user_rights_alias}.{$user_rights_bundle_field} = 1, 1, 0))", 'blocked');
+          $subquery->addExpression("SUM(IF(COALESCE({$user_rights_alias}.{$user_rights_bundle_field}, {$domain_rights_alias}.{$domain_rights_bundle_field}, 0) = 1, 1, 0))", 'blocked');
           $having[] = 'blocked <> 0';
           break;
 
         // Allowed.
         case 2:
-          $subquery->addExpression("SUM(IF({$user_rights_alias}.{$user_rights_bundle_field} = 2, 1, 0))", 'allowed');
+          $subquery->addExpression("SUM(IF(COALESCE({$user_rights_alias}.{$user_rights_bundle_field}, {$domain_rights_alias}.{$domain_rights_bundle_field}, 0) = 2, 1, 0))", 'allowed');
           $having[] = '(sources <> 0 AND allowed = sources)';
           $count_sources = TRUE;
           break;
 
         // Trusted.
         case 3:
-          $subquery->addExpression("SUM(IF({$user_rights_alias}.{$user_rights_bundle_field} = 3, 1, 0))", 'trusted');
+          $subquery->addExpression("SUM(IF(COALESCE({$user_rights_alias}.{$user_rights_bundle_field}, {$domain_rights_alias}.{$domain_rights_bundle_field}, 0) = 3, 1, 0))", 'trusted');
           $having[] = '(sources <> 0 AND trusted = sources)';
           $count_sources = TRUE;
           break;

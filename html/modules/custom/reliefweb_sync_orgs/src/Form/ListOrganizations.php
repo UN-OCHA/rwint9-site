@@ -1,0 +1,609 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\reliefweb_sync_orgs\Form;
+
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Database\Connection;
+use Drupal\Core\Form\FormBase;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Pager\PagerManagerInterface;
+use Drupal\Core\Queue\QueueInterface;
+use Drupal\Core\Url;
+use Drupal\reliefweb_sync_orgs\Service\ImportRecordService;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
+/**
+ * Form to manually create an organization.
+ */
+class ListOrganizations extends FormBase {
+
+  /**
+   * Queue name.
+   */
+  protected const QUEUE_NAME = 'reliefweb_sync_orgs_process_csv_item';
+
+  /**
+   * The import record service.
+   *
+   * @var \Drupal\reliefweb_sync_orgs\Service\ImportRecordService
+   */
+  protected $importRecordService;
+
+  /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
+   * The database connection.
+   *
+   * @var \Drupal\Core\Database\Connection
+   */
+  protected $database;
+
+  /**
+   * The pager manager service.
+   *
+   * @var \Drupal\Core\Pager\PagerManagerInterface
+   */
+  protected $pagerManager;
+
+  /**
+   * Queue.
+   *
+   * @var \Drupal\Core\Queue\QueueInterface
+   */
+  protected $queue;
+
+  /**
+   * Constructs a new form.
+   */
+  public function __construct(ImportRecordService $import_record_service, EntityTypeManagerInterface $entity_type_manager, Connection $database, PagerManagerInterface $pager_manager, QueueInterface $queue) {
+    $this->importRecordService = $import_record_service;
+    $this->entityTypeManager = $entity_type_manager;
+    $this->database = $database;
+    $this->pagerManager = $pager_manager;
+    $this->queue = $queue;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('reliefweb_sync_orgs.import_record_service'),
+      $container->get('entity_type.manager'),
+      $container->get('database'),
+      $container->get('pager.manager'),
+      $container->get('queue')->get(self::QUEUE_NAME)
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFormId(): string {
+    return 'reliefweb_sync_orgs_list_organizations';
+  }
+
+  /**
+   * Return a list of filters.
+   */
+  public function getFilters(array $defaults = [], array $totals_by_source = [], array $totals_by_status = []): array {
+    $filters = [
+      '#type' => 'details',
+      '#open' => !empty($defaults),
+      '#attributes' => [
+        'class' => ['table-filter'],
+      ],
+      '#weight' => -10,
+      '#title' => $this->t('Filter'),
+      '#tree' => TRUE,
+    ];
+    $filters['status'] = [
+      '#type' => 'checkboxes',
+      '#title' => $this->t('Status'),
+      '#options' => [
+        'success' => $this->t('Success (@count)', ['@count' => $totals_by_status['success'] ?? 0]),
+        'skipped' => $this->t('Skipped (@count)', ['@count' => $totals_by_status['skipped'] ?? 0]),
+        'exact' => $this->t('Exact match (@count)', ['@count' => $totals_by_status['exact'] ?? 0]),
+        'partial' => $this->t('Partial (@count)', ['@count' => $totals_by_status['partial'] ?? 0]),
+        'mismatch' => $this->t('Mismatch (@count)', ['@count' => $totals_by_status['mismatch'] ?? 0]),
+        'fixed' => $this->t('Fixed (@count)', ['@count' => $totals_by_status['fixed'] ?? 0]),
+        'ignored' => $this->t('Ignored (@count)', ['@count' => $totals_by_status['ignored'] ?? 0]),
+      ],
+      '#default_value' => array_values($defaults['status'] ?? []),
+      '#attributes' => [
+        'class' => ['form--inline'],
+      ],
+    ];
+    $filters['source'] = [
+      '#type' => 'checkboxes',
+      '#title' => $this->t('Source'),
+      '#options' => $this->getSourceValues($totals_by_source),
+      '#default_value' => array_values($defaults['source'] ?? []),
+      '#attributes' => [
+        'class' => ['form--inline'],
+      ],
+    ];
+    $filters['text'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Name'),
+      '#size' => 30,
+      '#default_value' => $defaults['text'] ?? '',
+      '#attributes' => [
+        'class' => ['form--inline'],
+      ],
+    ];
+    $filters['actions'] = [
+      '#type' => 'actions',
+      '#attributes' => ['class' => ['form--inline']],
+    ];
+    $filters['actions']['submit'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Apply'),
+      '#button_type' => 'primary',
+    ];
+    $filters['actions']['reset'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Reset'),
+      '#button_type' => 'secondary',
+      '#submit' => [[$this, 'resetFilters']],
+    ];
+
+    return $filters;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildForm(array $form, FormStateInterface $form_state): array {
+    $limit = 30;
+    $default_value = [];
+
+    $active_filters = $form_state->get('active_filters') ?? [];
+
+    $header = [
+      'checkbox' => '',
+      'id' => $this->t('ID'),
+      'status' => $this->t('Status'),
+      'source' => $this->t('Source'),
+      'entity' => $this->t('Entity'),
+      'item' => $this->t('Item'),
+      'message' => $this->t('Message'),
+      'created' => $this->t('Created'),
+      'changed' => $this->t('Updated'),
+      'operations' => $this->t('Operations'),
+    ];
+
+    // Get totals for pagination and status counts.
+    [$totals_by_source, $totals_by_status, $total] = $this->getTotalsByStatus($active_filters);
+
+    // Initialize pager.
+    $pager = $this->pagerManager->createPager((int) $total, $limit);
+    $current_page = $pager->getCurrentPage();
+    $offset = $current_page * $limit;
+
+    // Main query limited by pager offset/limit.
+    $results = $this->getResults($active_filters, $offset, $limit);
+
+    // Load all entities using tid.
+    $entities = [];
+    $tids = [];
+    foreach ($results as $record) {
+      if (isset($record['tid']) && !empty($record['tid'])) {
+        $tids[] = $record['tid'];
+      }
+    }
+    if (!empty($tids)) {
+      $entities = $this->entityTypeManager->getStorage('taxonomy_term')->loadMultiple($tids);
+    }
+
+    // Current URL.
+    $current_url = Url::fromRoute('<current>', [], ['absolute' => FALSE])->toString();
+
+    // Field info.
+    $field_info = reliefweb_sync_orgs_field_info();
+
+    $rows = [];
+    foreach ($results as $record) {
+      // Decode csv_item if it exists.
+      if (isset($record['csv_item']) && is_string($record['csv_item'])) {
+        $record['csv_item'] = json_decode($record['csv_item'], TRUE);
+      }
+
+      // Make a safe CSS id for the row.
+      $id = Html::cleanCssIdentifier(implode('--', [
+        $record['source'] ?? '',
+        $record['id'] ?? '',
+      ]));
+
+      $entity_info = '';
+      $item_info = '';
+
+      if (isset($record['tid']) && isset($entities[$record['tid']])) {
+        $entity = $entities[$record['tid']];
+        $entity_info = $entity->toLink()->toString();
+      }
+
+      $source = $record['source'];
+      $item_info = $record['csv_item'][$field_info[$source]['label_field']] ?? '';
+
+      $default_value[$id] = FALSE;
+      $cells = [
+        'checkbox' => [
+          'data' => [
+            '#type' => 'checkbox',
+            '#title' => $this->t('Select'),
+            '#title_display' => 'invisible',
+            '#attributes' => ['class' => ['record-checkbox']],
+            '#return_value' => $id,
+            '#default_value' => $id,
+            '#name' => 'selected_records[]',
+          ],
+        ],
+        'id' => [
+          'id' => $id,
+          'data' => $record['id'],
+          'class' => ['record-id'],
+        ],
+        'status' => [
+          'data' => $record['status'],
+        ],
+        'source' => [
+          'data' => $source,
+        ],
+        'entity' => [
+          'data' => $entity_info,
+        ],
+        'item' => [
+          'data' => $item_info,
+        ],
+        'message' => [
+          'data' => $record['message'] ?? '',
+        ],
+        'created' => [
+          'data' => date('Y-m-d H:i', (int) $record['created']),
+        ],
+        'changed'  => [
+          'data' => date('Y-m-d H:i', (int) $record['changed']),
+        ],
+        'operations' => [
+          'data' => [
+            '#type' => 'operations',
+            '#links' => [],
+          ],
+        ],
+      ];
+
+      // Operations (dropbutton) column.
+      $cells['operations']['data']['#links']['create'] = [
+        'title' => $this->t('Create new'),
+        'url' => Url::fromRoute('reliefweb_sync_orgs.create_organization_manually', [
+          'source' => $record['source'],
+          'id' => $record['id'],
+        ], [
+          'query' => [
+            'destination' => $current_url . '#row-' . $id,
+          ],
+        ]),
+      ];
+      $cells['operations']['data']['#links']['fix'] = [
+        'title' => $this->t('Fix manually'),
+        'url' => Url::fromRoute('reliefweb_sync_orgs.fix_organization_manually', [
+          'source' => $record['source'],
+          'id' => $record['id'],
+        ], [
+          'query' => [
+            'destination' => $current_url . '#row-' . $id,
+          ],
+        ]),
+      ];
+
+      $rows[$id] = $cells;
+    }
+
+    // Add a message if the queue is not empty.
+    if ($this->queue->numberOfItems() > 0) {
+      $form['queue'] = [
+        '#type' => 'item',
+        '#markup' => $this->t('There are still <strong>@count</strong> items in the queue for processing.', [
+          '@count' => $this->queue->numberOfItems(),
+        ]),
+        '#weight' => -20,
+      ];
+    }
+
+    // Add a link to the import form.
+    $form['import'] = [
+      '#type' => 'link',
+      '#title' => $this->t('Import CSV file'),
+      '#url' => Url::fromRoute('reliefweb_sync_orgs.import_items', [], [
+        'query' => [
+          'destination' => $current_url,
+        ],
+      ]),
+      '#attributes' => ['class' => ['button']],
+      '#weight' => -20,
+    ];
+
+    // Add a link to the export form.
+    $form['export'] = [
+      '#type' => 'link',
+      '#title' => $this->t('Export to CSV'),
+      '#url' => Url::fromRoute('reliefweb_sync_orgs.export.tsv', [], [
+        'query' => [
+          'destination' => $current_url,
+        ],
+      ]),
+      '#attributes' => ['class' => ['button']],
+      '#weight' => -19,
+    ];
+
+    // Add a link to the import from export form.
+    $form['import_from_export'] = [
+      '#type' => 'link',
+      '#title' => $this->t('Import from export'),
+      '#url' => Url::fromRoute('reliefweb_sync_orgs.import_items_from_export', [], [
+        'query' => [
+          'destination' => $current_url,
+        ],
+      ]),
+      '#attributes' => ['class' => ['button']],
+      '#weight' => -19,
+    ];
+
+    $form['filters'] = $this->getFilters($active_filters, $totals_by_source, $totals_by_status);
+
+    $form['table'] = [
+      '#type' => 'table',
+      '#header' => $header,
+      '#rows' => $rows,
+      '#default_value' => $default_value,
+      '#empty' => $this->t('No organization records found.'),
+      '#js_select' => TRUE,
+      '#multiple' => TRUE,
+    ];
+
+    $form['actions'] = ['#type' => 'actions'];
+    $form['actions']['create'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Create new organizations'),
+      '#submit' => [[$this, 'createNewOnes']],
+    ];
+    $form['actions']['ignore'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Ignore these records'),
+      '#submit' => [[$this, 'ignoreRecords']],
+    ];
+
+    $form['pager'] = [
+      '#type' => 'pager',
+    ];
+
+    return $form;
+  }
+
+  /**
+   * Get totals by status and overall total for the current filters.
+   *
+   * @param array $filters
+   *   Active filters from the form state.
+   *
+   * @return array
+   *   Array of 2 elements: [totals_by_source, totals_by_status, total].
+   */
+  protected function getTotalsByStatus(array $filters): array {
+    $parameters = [];
+    $sql = 'select source, status, count(status) as num from reliefweb_sync_orgs_records where status is not null';
+
+    if (!empty($filters['status'])) {
+      $sql .= ' and status in (:status[])';
+      $parameters[':status[]'] = array_filter(array_values($filters['status']));
+    }
+    if (!empty($filters['source'])) {
+      $sql .= ' and source in (:source[])';
+      $parameters[':source[]'] = array_filter(array_values($filters['source']));
+    }
+    if (!empty($filters['text'])) {
+      $sql .= ' AND ' . $this->buildWhereClauseForTextSearch();
+      $parameters[':text'] = '%' . $this->database->escapeLike(strtolower($filters['text'])) . '%';
+    }
+
+    $sql .= ' group by source, status order by source, status';
+
+    $total = 0;
+    $totals_by_source = [];
+    $totals_by_status = [];
+    $totals = $this->database->query($sql, $parameters)->fetchAll(\PDO::FETCH_ASSOC);
+    foreach ($totals as $count) {
+      $total += $count['num'];
+      $totals_by_source[$count['source']] = ($totals_by_source[$count['source']] ?? 0) + $count['num'];
+      $totals_by_status[$count['status']] = ($totals_by_status[$count['status']] ?? 0) + $count['num'];
+    }
+
+    return [$totals_by_source, $totals_by_status, $total];
+  }
+
+  /**
+   * Build the base results query with applied filters (without range/pager).
+   *
+   * @param array $filters
+   *   Active filters.
+   * @param int $offset
+   *   Offset for the results.
+   * @param int $limit
+   *   Limit for the results.
+   *
+   * @return \Drupal\Core\Database\Query\SelectInterface
+   *   The select query with conditions applied.
+   */
+  protected function getResults(array $filters, int $offset, int $limit): array {
+    $sql = 'SELECT * FROM {reliefweb_sync_orgs_records} where status is not null';
+    $parameters = [];
+
+    if (!empty($filters['status'])) {
+      $sql .= ' AND status IN (:status[])';
+      $parameters[':status[]'] = array_filter(array_values($filters['status']));
+    }
+    if (!empty($filters['source'])) {
+      $sql .= ' AND source IN (:source[])';
+      $parameters[':source[]'] = array_filter(array_values($filters['source']));
+    }
+    if (!empty($filters['text'])) {
+      $sql .= ' AND ' . $this->buildWhereClauseForTextSearch();
+      $parameters[':text'] = '%' . $this->database->escapeLike(strtolower($filters['text'])) . '%';
+    }
+
+    $sql .= ' ORDER BY changed DESC';
+    $sql .= ' LIMIT ' . $limit;
+    $sql .= ' OFFSET ' . $offset;
+
+    return $this->database->query($sql, $parameters)->fetchAll(\PDO::FETCH_ASSOC);
+  }
+
+  /**
+   * Build the where clause for the json searchable feeds.
+   */
+  protected function buildWhereClauseForTextSearch(): string {
+    $search_fields = reliefweb_sync_orgs_searchable_fields();
+    $query = '(';
+    $conditions = [];
+    foreach ($search_fields as $field) {
+      $conditions[] = "LOWER(JSON_EXTRACT(csv_item, '$.$field')) LIKE :text";
+    }
+    $query .= implode(' OR ', $conditions) . ')';
+
+    return $query;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
+    $active_filters = [];
+    $input = $form_state->getUserInput();
+    if (isset($input['filters'])) {
+      $active_filters = $input['filters'];
+    }
+
+    // Clean the input.
+    if (isset($active_filters['status'])) {
+      $active_filters['status'] = array_filter($active_filters['status']);
+    }
+    if (isset($active_filters['source'])) {
+      $active_filters['source'] = array_filter($active_filters['source']);
+    }
+
+    $form_state->set('active_filters', $active_filters);
+    $form_state->setRebuild();
+  }
+
+  /**
+   * Submit handler for creating new organizations.
+   */
+  public function createNewOnes(array &$form, FormStateInterface $form_state): void {
+    $this->submitForm($form, $form_state);
+    $record_ids = $form_state->getUserInput()['selected_records'] ?? [];
+    if (empty($record_ids)) {
+      $this->messenger()->addWarning($this->t('No records selected to create organizations for.'));
+      return;
+    }
+
+    // Field info.
+    $field_info = reliefweb_sync_orgs_field_info();
+
+    foreach ($record_ids as $record_id) {
+      [$source, $id] = explode('--', $record_id, 2);
+      $record = $this->importRecordService->getExistingImportRecord($source, $id);
+      if (!$record) {
+        continue;
+      }
+
+      $label = $record['csv_item'][$field_info[$source]['label_field']] ?? '';
+
+      // Create a new taxonomy term for the organization.
+      $term = $this->entityTypeManager->getStorage('taxonomy_term')->create([
+        'name' => $label,
+        'vid' => 'source',
+      ]);
+
+      // Save the term.
+      $term->save();
+
+      // Update the record with the created organization.
+      $record['tid'] = $term->id();
+      $record['status'] = 'fixed';
+      $this->importRecordService->saveImportRecords($source, $id, $record);
+    }
+  }
+
+  /**
+   * Submit handler for ignoring records.
+   */
+  public function ignoreRecords(array &$form, FormStateInterface $form_state): void {
+    $this->submitForm($form, $form_state);
+    $record_ids = $form_state->getUserInput()['selected_records'] ?? [];
+    if (empty($record_ids)) {
+      $this->messenger()->addWarning($this->t('No records selected to ignore.'));
+      return;
+    }
+
+    foreach ($record_ids as $record_id) {
+      [$source, $id] = explode('--', $record_id, 2);
+      $record = $this->importRecordService->getExistingImportRecord($source, $id);
+      if (!$record) {
+        continue;
+      }
+
+      $record['status'] = 'ignored';
+      $this->importRecordService->saveImportRecords($source, $id, $record);
+    }
+  }
+
+  /**
+   * Get source values from database.
+   */
+  protected function getSourceValues(array $totals_by_source = []): array {
+    $source_info = reliefweb_sync_orgs_sources();
+    $query = $this->database->select('reliefweb_sync_orgs_records', 'r')
+      ->fields('r', ['source'])
+      ->condition('r.source', NULL, 'IS NOT NULL')
+      ->distinct()
+      ->orderBy('source');
+
+    $results = $query->execute()
+      ?->fetchCol();
+
+    $values = [];
+    foreach ($results as $source) {
+      $count = $totals_by_source[$source] ?? 0;
+
+      $label = $source;
+      if (isset($source_info[$source])) {
+        $label = $source_info[$source] ?? $source;
+      }
+
+      $values[$source] = $this->t('@source (@count)', ['@source' => $label, '@count' => $count]);
+    }
+
+    return $values;
+  }
+
+  /**
+   * Submit handler to reset all filters.
+   */
+  public function resetFilters(array &$form, FormStateInterface $form_state): void {
+    // Redirect to the same page without filters.
+    $form_state->setRedirect('reliefweb_sync_orgs.overview');
+
+    // Rebuild the form.
+    $form_state->setRebuild(FALSE);
+  }
+
+}

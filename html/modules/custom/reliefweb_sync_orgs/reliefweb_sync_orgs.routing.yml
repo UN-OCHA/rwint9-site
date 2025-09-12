@@ -1,0 +1,60 @@
+reliefweb_sync_orgs.import_items:
+  path: '/reliefweb/sync_orgs/import'
+  defaults:
+    _form: '\Drupal\reliefweb_sync_orgs\Form\ImportAndQueueCsvFile'
+    _title: 'Import csv file'
+  requirements:
+    _permission: 'import organization records'
+reliefweb_sync_orgs.import_items_from_export:
+  path: '/reliefweb/sync_orgs/import-from-export'
+  defaults:
+    _form: '\Drupal\reliefweb_sync_orgs\Form\ImportFromExport'
+    _title: 'Import from export'
+  requirements:
+    _permission: 'import organization records'
+
+reliefweb_sync_orgs.overview:
+  path: '/reliefweb/sync_orgs/overview'
+  defaults:
+    _form: '\Drupal\reliefweb_sync_orgs\Form\ListOrganizations'
+    _title: 'Organization Records'
+  requirements:
+    _permission: 'import organization records'
+  options:
+    _admin_route: true
+reliefweb_sync_orgs.fix_organization_manually:
+  path: '/reliefweb/sync_orgs/fix-organization-manually/{source}/{id}'
+  defaults:
+    _form: '\Drupal\reliefweb_sync_orgs\Form\FixOrganizationManually'
+    _title: 'Fix Organization manually'
+  requirements:
+    _permission: 'import organization records'
+reliefweb_sync_orgs.create_organization_manually:
+  path: '/reliefweb/sync_orgs/create-organization-manually/{source}/{id}'
+  defaults:
+    _form: '\Drupal\reliefweb_sync_orgs\Form\CreateOrganizationManually'
+    _title: 'Create Organization manually'
+  requirements:
+    _permission: 'import organization records'
+
+reliefweb_sync_orgs.autocomplete.organizations:
+  path: '/reliefweb/sync_orgs/autocomplete/organizations'
+  defaults:
+    _controller: '\Drupal\reliefweb_sync_orgs\Controller\OrganizationsAutoCompleteController::handleAutocomplete'
+    _format: json
+  requirements:
+    _permission: 'import organization records'
+reliefweb_sync_orgs.autocomplete.countries:
+  path: '/reliefweb/sync_orgs/autocomplete/countries'
+  defaults:
+    _controller: '\Drupal\reliefweb_sync_orgs\Controller\CountryAutoCompleteController::handleAutocomplete'
+    _format: json
+  requirements:
+    _permission: 'import organization records'
+
+reliefweb_sync_orgs.export.tsv:
+  path: '/reliefweb/sync_orgs/export'
+  defaults:
+    _controller: '\Drupal\reliefweb_sync_orgs\Controller\ExportRecordsToTsv::export'
+  requirements:
+    _permission: 'import organization records'
