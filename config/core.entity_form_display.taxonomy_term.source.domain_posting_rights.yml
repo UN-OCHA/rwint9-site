@@ -1,0 +1,61 @@
+uuid: 39defa39-2ce3-477e-8dc1-a35b709efdb3
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_form_mode.taxonomy_term.domain_posting_rights
+    - field.field.taxonomy_term.source.field_aliases
+    - field.field.taxonomy_term.source.field_allowed_content_types
+    - field.field.taxonomy_term.source.field_attention_job
+    - field.field.taxonomy_term.source.field_attention_report
+    - field.field.taxonomy_term.source.field_attention_training
+    - field.field.taxonomy_term.source.field_country
+    - field.field.taxonomy_term.source.field_disclaimer
+    - field.field.taxonomy_term.source.field_domain_posting_rights
+    - field.field.taxonomy_term.source.field_fts_id
+    - field.field.taxonomy_term.source.field_homepage
+    - field.field.taxonomy_term.source.field_job_import_feed
+    - field.field.taxonomy_term.source.field_links
+    - field.field.taxonomy_term.source.field_logo
+    - field.field.taxonomy_term.source.field_longname
+    - field.field.taxonomy_term.source.field_organization_type
+    - field.field.taxonomy_term.source.field_shortname
+    - field.field.taxonomy_term.source.field_spanish_name
+    - field.field.taxonomy_term.source.field_user_posting_rights
+    - taxonomy.vocabulary.source
+  module:
+    - reliefweb_fields
+id: taxonomy_term.source.domain_posting_rights
+targetEntityType: taxonomy_term
+bundle: source
+mode: domain_posting_rights
+content:
+  field_domain_posting_rights:
+    type: reliefweb_domain_posting_rights
+    weight: 0
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+hidden:
+  description: true
+  field_aliases: true
+  field_allowed_content_types: true
+  field_attention_job: true
+  field_attention_report: true
+  field_attention_training: true
+  field_country: true
+  field_disclaimer: true
+  field_fts_id: true
+  field_homepage: true
+  field_job_import_feed: true
+  field_links: true
+  field_logo: true
+  field_longname: true
+  field_organization_type: true
+  field_shortname: true
+  field_spanish_name: true
+  field_user_posting_rights: true
+  langcode: true
+  name: true
+  path: true
+  status: true

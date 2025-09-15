@@ -15,7 +15,7 @@ use Drupal\Core\TypedData\DataDefinition;
  *   id = "reliefweb_import_info",
  *   label = @Translation("Relief web import info"),
  *   description = @Translation("Import info field"),
- *   category = @Translation("ReliefWeb"),
+ *   category = "reliefweb",
  *   default_widget = "reliefweb_import_info",
  *   default_formatter = "reliefweb_import_info"
  * )

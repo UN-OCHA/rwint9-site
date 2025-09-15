@@ -7,6 +7,7 @@ namespace Drupal\reliefweb_import\Plugin;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
+use Drupal\ocha_content_classification\Plugin\ClassifierPluginInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -45,6 +46,11 @@ interface ReliefWebImporterPluginInterface {
    *   Logger.
    */
   public function getLogger(): LoggerInterface;
+
+  /**
+   * Set the plugin logger.
+   */
+  public function setLogger(LoggerInterface $logger): void;
 
   /**
    * Get a plugin setting.
@@ -253,5 +259,45 @@ interface ReliefWebImporterPluginInterface {
    * @see reliefweb_import_reliefweb_entities_moderation_status_adjustment_bypass_alter()
    */
   public function alterReliefWebEntitiesModerationStatusAdjustment(bool &$bypass, EntityInterface $entity): void;
+
+  /**
+   * Respond to entity classification completion.
+   *
+   * This hook is invoked after an entity has been classified, allowing modules
+   * to perform additional operations.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity that was classified.
+   * @param \Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface $workflow
+   *   The workflow used for classification.
+   * @param \Drupal\ocha_content_classification\Plugin\ClassifierPluginInterface $classifier
+   *   The classifier plugin that performed the classification.
+   * @param array $updated_fields
+   *   Fields of the entity that were updated during the classification.
+   * @param array $data
+   *   Data used for the classification. This depends on the classifier.
+   *
+   * @return ?array
+   *   List of changed entity fields, if any.
+   */
+  public function contentClassificationPostClassify(
+    EntityInterface $entity,
+    ClassificationWorkflowInterface $workflow,
+    ClassifierPluginInterface $classifier,
+    array $updated_fields,
+    array $data,
+  ): ?array;
+
+  /**
+   * Force content language for the entity.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity that is having its language field updated.
+   *
+   * @return string|int|null
+   *   The language taxonomy term ID to use for the language field or NULL to
+   *   let the existing field as is.
+   */
+  public function forceContentLanguage(EntityInterface $entity): string|int|null;
 
 }
