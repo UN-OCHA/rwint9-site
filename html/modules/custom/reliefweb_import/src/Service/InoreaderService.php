@@ -541,7 +541,9 @@ class InoreaderService {
     $language = 267;
     if (isset($tags['language'])) {
       $defined_languages = reliefweb_import_get_defined_languages();
-      $language = $defined_languages[$tags['language']] ?? 267;
+      if (isset($defined_languages[$tags['language']])) {
+        $language = (int) $defined_languages[$tags['language']];
+      }
     }
 
     // Submission data.
