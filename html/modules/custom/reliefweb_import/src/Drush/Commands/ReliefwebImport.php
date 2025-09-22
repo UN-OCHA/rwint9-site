@@ -74,17 +74,21 @@ class ReliefwebImport extends DrushCommands implements SiteAliasManagerAwareInte
     $plugin = $this->importerPluginManager->getPlugin($plugin_id);
     if (empty($plugin)) {
       $this->logger()->error(strtr('Unable to create importer plugin: @plugin_id.', [
-        'plugin_id' => $plugin_id,
+        '@plugin_id' => $plugin_id,
       ]));
       return FALSE;
     }
 
     if (!$plugin->enabled()) {
-      $this->logger()->notice(strtr('Importer plugin: @plugin_id not enabled.', [
-        'plugin_id' => $plugin_id,
+      $this->logger()->error(strtr('Importer plugin: @plugin_id not enabled.', [
+        '@plugin_id' => $plugin_id,
       ]));
       return TRUE;
     }
+
+    $this->logger()->info(strtr('Starting import plugin: @plugin_id.', [
+      '@plugin_id' => $plugin_id,
+    ]));
 
     return $plugin->importContent($limit);
   }
