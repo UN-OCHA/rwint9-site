@@ -3,3 +3,5 @@ name: ReliefWeb Files
 description: 'Handles file attachments and integration with the OCHA Document Store.'
 package: reliefweb
 core_version_requirement: ^10 || ^11
+dependencies:
+  - reliefweb_api
