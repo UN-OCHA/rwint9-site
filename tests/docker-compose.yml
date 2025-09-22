@@ -6,8 +6,36 @@ networks:
 volumes:
   site-public:
   site-private:
+  site-elasticsearch:
 
 services:
+  elasticsearch:
+    image: public.ecr.aws/unocha/elasticsearch:8.14.1
+    hostname: rwint-test-elasticsearch
+    container_name: rwint-test-elasticsearch
+    ulimits:
+      nproc: 65536
+      nofile: 65536
+      memlock: -1
+    environment:
+      ENVIRONMENT:
+      bootstrap.memory_lock: 'true'
+      http.compression: 'true'
+      ingest.geoip.downloader.enabled: 'false'
+      xpack.security.enabled: 'false'
+      discovery.type: single-node
+      discovery.seed_hosts: 127.0.0.1
+      node.name: rwint-test
+      network.bind_host: 0.0.0.0
+      cluster.name: rwint-test
+      ES_JAVA_OPTS: "-Xms768M -Xmx768M"
+    volumes:
+      - "site-elasticsearch:/usr/share/elasticsearch/data:rw"
+    expose:
+      - "9200"
+    networks:
+      - default
+
   memcache:
     restart: always
     image: public.ecr.aws/unocha/memcache:1.6
