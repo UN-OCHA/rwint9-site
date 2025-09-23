@@ -94,7 +94,7 @@ class ReliefwebImport extends DrushCommands implements SiteAliasManagerAwareInte
       $plugin->importContent($limit);
     }
     catch (\Exception $e) {
-      $this->logger()->info('Import complete: something went wrong.');
+      $this->logger()->error('Import complete: something went wrong.');
       $this->logger()->error(strtr('Importer plugin: @plugin_id setup failed with error: @message', [
         '@plugin_id' => $plugin_id,
         '@message' => $e->getMessage(),
