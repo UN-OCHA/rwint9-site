@@ -168,9 +168,20 @@ function reliefweb_files_entity_revision_delete(EntityInterface $entity) {
 }
 
 /**
- * Implements hook_entity_after_save().
+ * Implements hook_entity_insert().
  */
-function reliefweb_files_entity_after_save(EntityInterface $entity) {
+function reliefweb_files_entity_insert(EntityInterface $entity) {
+  // Handle file entity fingerprint indexing.
+  if ($entity->getEntityTypeId() === 'file') {
+    $file_duplication = \Drupal::service('reliefweb_files.file_duplication');
+    $file_duplication->indexFileFingerprint($entity);
+  }
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function reliefweb_files_entity_update(EntityInterface $entity) {
   // Handle file entity fingerprint indexing.
   if ($entity->getEntityTypeId() === 'file') {
     $file_duplication = \Drupal::service('reliefweb_files.file_duplication');

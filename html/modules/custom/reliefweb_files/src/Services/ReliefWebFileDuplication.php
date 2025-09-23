@@ -796,10 +796,14 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
       }
     }
     catch (RequestException $exception) {
-      $logger->error('Error deleting file fingerprint for file @id: @error', [
-        '@id' => $file_id,
-        '@error' => $exception->getMessage(),
-      ]);
+      // Don't log 404 errors as they are expected when the file fingerprint
+      // doesn't exist.
+      if ($exception->getCode() !== 404) {
+        $logger->error('Error deleting file fingerprint for file @id: @error', [
+          '@id' => $file_id,
+          '@error' => $exception->getMessage(),
+        ]);
+      }
     }
 
     return FALSE;
