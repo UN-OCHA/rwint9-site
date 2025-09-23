@@ -90,7 +90,20 @@ class ReliefwebImport extends DrushCommands implements SiteAliasManagerAwareInte
       '@plugin_id' => $plugin_id,
     ]));
 
-    return $plugin->importContent($limit);
+    try {
+      $plugin->importContent($limit);
+    }
+    catch (\Exception $e) {
+      $this->logger()->error('Import complete: something went wrong.');
+      $this->logger()->error(strtr('Importer plugin: @plugin_id setup failed with error: @message', [
+        '@plugin_id' => $plugin_id,
+        '@message' => $e->getMessage(),
+      ]));
+      return FALSE;
+    }
+
+    $this->logger()->info('Import complete: job well done.');
+    return TRUE;
   }
 
 }
