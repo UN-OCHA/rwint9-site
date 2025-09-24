@@ -81,7 +81,7 @@ class DocstoreClient {
    * @param int $timeout
    *   Request timeout.
    *
-   * @return Drupal\reliefweb_utility\Response\JsonResponse
+   * @return \Drupal\reliefweb_utility\Response\JsonResponse
    *   Response.
    */
   public function getFileRevision($uuid, $revision_id, $timeout = 5) {

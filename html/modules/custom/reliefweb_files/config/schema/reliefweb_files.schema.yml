@@ -23,6 +23,22 @@ reliefweb_files.settings:
     preview_directory:
       type: string
       label: 'Name of the directory for the local file previews.'
+    duplicate_detection:
+      type: mapping
+      label: 'Duplicate detection settings.'
+      mapping:
+        max_documents:
+          type: integer
+          label: 'Maximum number of documents to search for similarity.'
+        max_files:
+          type: integer
+          label: 'Maximum number of files to search for similarity.'
+        minimum_should_match:
+          type: string
+          label: 'Minimum similarity threshold for duplicate detection.'
+        only_published:
+          type: boolean
+          label: 'Whether to only include published documents.'
 
 field.field_settings.reliefweb_file:
   type: mapping

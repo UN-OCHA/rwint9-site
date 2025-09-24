@@ -36,6 +36,11 @@ function reliefweb_utility_file_presave(FileInterface $file) {
   $uuid = $file->uuid();
   $uri = $file->getFileUri();
 
+  // Skip files with no uuid or uri.
+  if (empty($uuid) || empty($uri)) {
+    return;
+  }
+
   // Skip the media icons.
   if (strpos($uri, 'public://media-icons/') === 0) {
     return;
@@ -51,9 +56,19 @@ function reliefweb_utility_file_presave(FileInterface $file) {
   $clone = clone $file;
   \Drupal::moduleHandler()->alter('reliefweb_utility_file_update', $clone, $apply);
 
-  // Only process files with a valid uuid and uri and if not already processed
-  // which can be determined by looking for the file uuid in its uri.
-  if ($apply && !empty($uuid) && !empty($uri) && preg_match('#/' . $uuid . '#', $uri) !== 1) {
+  // Skip files that should not be processed.
+  if (!$apply) {
+    return;
+  }
+
+  // Skip files that are already processed which can be determined by looking
+  // for the file uuid in its uri.
+  if (preg_match('#/' . $uuid . '#', $uri) === 1) {
+    return;
+  }
+
+  // Only process existing files.
+  if (file_exists($uri)) {
     $file_system = \Drupal::service('file_system');
     $logger = \Drupal::logger('reliefweb_utility');
 
@@ -72,21 +87,30 @@ function reliefweb_utility_file_presave(FileInterface $file) {
     $new_uri = $directory . '/' . $uuid . '.' . strtolower($info['extension']);
 
     // Prepare the destination directory.
-    if (!$file_system->prepareDirectory($directory, $file_system::CREATE_DIRECTORY)) {
-      $logger->warning('Unable to create the destination directory: @directory', [
-        '@directory' => $directory,
-      ]);
+    try {
+      if (!$file_system->prepareDirectory($directory, $file_system::CREATE_DIRECTORY)) {
+        $logger->warning('Unable to create the destination directory: @directory', [
+          '@directory' => $directory,
+        ]);
+      }
+      // Move the file.
+      elseif (!$file_system->move($uri, $new_uri, $file_system::EXISTS_ERROR)) {
+        $logger->warning('Unable to move file @uri to @new_uri', [
+          '@uri' => $uri,
+          '@new_uri' => $new_uri,
+        ]);
+      }
+      // Update the URI and save the file if the file could be moved.
+      else {
+        $file->setFileUri($new_uri);
+      }
     }
-    // Move the file.
-    elseif (!$file_system->move($uri, $new_uri, $file_system::EXISTS_ERROR)) {
-      $logger->warning('Unable to move file @uri to @new_uri', [
+    catch (\Exception $exception) {
+      $logger->warning('Unable to move file @uri to @new_uri: @error', [
         '@uri' => $uri,
         '@new_uri' => $new_uri,
+        '@error' => $exception->getMessage(),
       ]);
-    }
-    // Update the URI and save the file if the file could be moved.
-    else {
-      $file->setFileUri($new_uri);
     }
   }
 }

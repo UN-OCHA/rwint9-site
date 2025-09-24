@@ -41,3 +41,6 @@ reliefweb_api.settings:
     shards:
       type: integer
       label: 'Number of elasticsearch index shards'
+    log:
+      type: string
+      label: 'Log option for the API indexing.'

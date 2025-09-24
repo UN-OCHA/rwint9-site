@@ -18,3 +18,5 @@ website: https://reliefweb.int
 replicas: 0
 # Number of elasticsearch index shards.
 shards: 1
+# Log option for the API indexing.
+log: echo

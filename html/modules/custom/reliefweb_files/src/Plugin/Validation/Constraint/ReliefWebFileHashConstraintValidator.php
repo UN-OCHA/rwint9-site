@@ -64,7 +64,7 @@ class ReliefWebFileHashConstraintValidator extends BaseFileConstraintValidator i
     $entity_type_id = $field_definition->getTargetEntityTypeId();
 
     // Compute the file hash.
-    $hash = $field_item->calculateFileHashFromUri($uri);
+    $hash = $field_item->calculateFileHash($file);
     if (empty($hash)) {
       $this->context->addViolation($constraint->emptyHashError, [
         '%uri' => $uri,
