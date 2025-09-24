@@ -9,12 +9,15 @@ use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionEmptyBody;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Response;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
 /**
- * @coversDefaultClass \Drupal\reliefweb_import\Service\InoreaderService
+ * Test inoreader service.
  */
+#[CoversClass(InoreaderService::class)]
 class InoreaderServiceTest extends TestCase {
 
   /**
@@ -53,9 +56,8 @@ class InoreaderServiceTest extends TestCase {
 
   /**
    * Test extractTags method.
-   *
-   * @dataProvider tagExtractionProvider
    */
+  #[DataProvider('tagExtractionProvider')]
   public function testExtractTags($feed_name, $expected) {
     $tags = $this->service->extractTags($feed_name);
     $this->assertEquals($expected, $tags);
@@ -102,9 +104,8 @@ class InoreaderServiceTest extends TestCase {
 
   /**
    * Test parseTags method.
-   *
-   * @dataProvider parseTagsProvider
    */
+  #[DataProvider('parseTagsProvider')]
   public function testParseTags(array $matches, array $expected) {
     // Use reflection to access the protected method.
     $reflection = new \ReflectionClass($this->service);
@@ -220,9 +221,8 @@ class InoreaderServiceTest extends TestCase {
 
   /**
    * Test extractAndCleanBodyFromContent method.
-   *
-   * @dataProvider bodyContentProvider
    */
+  #[DataProvider('bodyContentProvider')]
   public function testExtractAndCleanBodyFromContent($document, $tags, $id, $expected) {
     // Use reflection to access the protected method.
     $reflection = new \ReflectionClass($this->service);
@@ -587,9 +587,8 @@ class InoreaderServiceTest extends TestCase {
 
   /**
    * Test rewritePdfLink method.
-   *
-   * @dataProvider rewritePdfLinkProvider
    */
+  #[DataProvider('rewritePdfLinkProvider')]
   public function testRewritePdfLink($pdf, $tags, $expected) {
     $reflection = new \ReflectionClass($this->service);
     $method = $reflection->getMethod('rewritePdfLink');
@@ -729,9 +728,8 @@ class InoreaderServiceTest extends TestCase {
 
   /**
    * Test mergeTags method.
-   *
-   * @dataProvider mergeTagsProvider
    */
+  #[DataProvider('mergeTagsProvider')]
   public function testMergeTags($tags, $extra_tags, $expected) {
     $reflection = new \ReflectionClass($this->service);
     $method = $reflection->getMethod('mergeTags');
@@ -881,9 +879,8 @@ class InoreaderServiceTest extends TestCase {
 
   /**
    * Test extractPdfUrlUsingSelectors method.
-   *
-   * @dataProvider extractPdfUrlUsingSelectorsProvider
    */
+  #[DataProvider('extractPdfUrlUsingSelectorsProvider')]
   public function testExtractPdfUrlUsingSelectors($html, $selectors, $expected) {
     $reflection = new \ReflectionClass($this->service);
     $method = $reflection->getMethod('extractPdfUrlUsingSelectors');
@@ -957,9 +954,8 @@ class InoreaderServiceTest extends TestCase {
 
   /**
    * Test makePdfLinkAbsolute method.
-   *
-   * @dataProvider makePdfLinkAbsoluteProvider
    */
+  #[DataProvider('makePdfLinkAbsoluteProvider')]
   public function testMakePdfLinkAbsolute($pdf, $page_url, $expected) {
     $reflection = new \ReflectionClass($this->service);
     $method = $reflection->getMethod('makePdfLinkAbsolute');

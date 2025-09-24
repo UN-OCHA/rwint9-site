@@ -207,3 +207,6 @@ if (file_exists('sites/default/memcache.services.yml')) {
 }
 
 $settings['cache']['bins']['config'] = 'cache.backend.null';
+
+# Disable logging for the API indexing to prevent risky tests.
+$config['reliefweb_api.settings']['log'] = '';

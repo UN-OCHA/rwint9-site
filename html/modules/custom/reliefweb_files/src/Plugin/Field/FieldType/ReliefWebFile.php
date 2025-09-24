@@ -942,22 +942,15 @@ class ReliefWebFile extends FieldItemBase {
   /**
    * Extract text content from the given PDF file.
    *
-   * @param ?string $source_uri
-   *   URI of the PDF file from which to extract text. Default to the file
-   *   attached to this field item.
    * @param ?int $page
    *   Specific page to extract text from (if not provided extracts all pages).
    *
    * @return string
    *   The extracted text content or empty string in case of failure.
    */
-  public function extractText(?string $source_uri = NULL, ?int $page = NULL): string {
-    $source_uri ??= $this->loadFile()?->getFileUri();
-    if (empty($source_uri)) {
-      return '';
-    }
-
-    return FileHelper::extractText($source_uri, $this->getFileMime(), $page);
+  public function extractText(?int $page = NULL): string {
+    $file = $this->loadFile();
+    return isset($file) ? FileHelper::extractText($file, $page) : '';
   }
 
   /**
@@ -1966,7 +1959,7 @@ class ReliefWebFile extends FieldItemBase {
       throw new \Exception('Unable to load the new local file to update the hash.');
     }
 
-    $hash = $this->calculateFileHashFromUri($file->getFileUri());
+    $hash = $this->calculateFileHash($file);
     $this->setFileHash($hash);
     return $hash;
   }
@@ -1986,17 +1979,16 @@ class ReliefWebFile extends FieldItemBase {
   }
 
   /**
-   * Calculate the hash of a file from its URI.
+   * Calculate the hash of a file.
    *
-   * @param string $uri
-   *   File URI.
+   * @param \Drupal\file\Entity\File $file
+   *   File.
    *
    * @return ?string
    *   File's content hash.
    */
-  public function calculateFileHashFromUri(string $uri): ?string {
-    $real_path = $this->getFileSystem()->realpath($uri);
-    return file_exists($real_path) ? hash_file('sha256', $real_path) : NULL;
+  public function calculateFileHash(File $file): ?string {
+    return FileHelper::generateFileHash($file, file_system: $this->getFileSystem());
   }
 
   /**

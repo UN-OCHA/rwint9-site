@@ -20,7 +20,7 @@ use Drupal\Core\Url;
 use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\file\Entity\File;
 use Drupal\file\Validation\FileValidatorInterface;
-use Drupal\reliefweb_api\Services\ReliefWebApiFileDuplicationInterface;
+use Drupal\reliefweb_files\Services\ReliefWebFileDuplicationInterface;
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile as ReliefWebFileType;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -77,7 +77,7 @@ class ReliefWebFile extends WidgetBase {
   /**
    * The ReliefWeb API file duplication service.
    *
-   * @var \Drupal\reliefweb_api\Services\ReliefWebApiFileDuplicationInterface
+   * @var \Drupal\reliefweb_files\Services\ReliefWebFileDuplicationInterface
    */
   protected $fileDuplication;
 
@@ -102,7 +102,7 @@ class ReliefWebFile extends WidgetBase {
     RendererInterface $renderer,
     RequestStack $request_stack,
     FileValidatorInterface $file_validator,
-    ReliefWebApiFileDuplicationInterface $file_duplication,
+    ReliefWebFileDuplicationInterface $file_duplication,
   ) {
     parent::__construct(
       $plugin_id,
@@ -139,7 +139,7 @@ class ReliefWebFile extends WidgetBase {
       $container->get('renderer'),
       $container->get('request_stack'),
       $container->get('file.validator'),
-      $container->get('reliefweb_api.file_duplication')
+      $container->get('reliefweb_files.file_duplication')
     );
   }
 
@@ -155,6 +155,8 @@ class ReliefWebFile extends WidgetBase {
       'duplicate_max_documents' => 5,
       'duplicate_minimum_should_match' => '80%',
       'duplicate_warning_message' => 'Possible duplicate file(s) found:',
+      'duplicate_max_files' => 20,
+      'duplicate_only_published' => TRUE,
     ] + parent::defaultSettings();
   }
 
@@ -223,6 +225,24 @@ class ReliefWebFile extends WidgetBase {
       '#maxlength' => 255,
     ];
 
+    $duplicate_max_files = $this->getDuplicateMaxFilesSetting();
+    $element['duplicate_max_files'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Maximum files to search'),
+      '#description' => $this->t('Maximum number of files to search for similarity.'),
+      '#default_value' => $form_state->getValue('duplicate_max_files', $duplicate_max_files),
+      '#min' => 1,
+      '#max' => 100,
+    ];
+
+    $duplicate_only_published = $this->getDuplicateOnlyPublishedSetting();
+    $element['duplicate_only_published'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Only published documents'),
+      '#description' => $this->t('Whether to only include published documents in duplicate detection.'),
+      '#default_value' => $form_state->getValue('duplicate_only_published', $duplicate_only_published),
+    ];
+
     return $element;
   }
 
@@ -279,9 +299,11 @@ class ReliefWebFile extends WidgetBase {
       '@max_file_size' => ByteSizeMarkup::create($this->getMaxFileSizeSetting()),
     ]);
 
-    $summary[] = $this->t('Duplicate checking: @max_docs documents, @threshold threshold', [
+    $summary[] = $this->t('Duplicate checking: @max_docs documents, @max_files files, @threshold threshold, @published_only', [
       '@max_docs' => $this->getDuplicateMaxDocumentsSetting(),
+      '@max_files' => $this->getDuplicateMaxFilesSetting(),
       '@threshold' => $this->getDuplicateMinimumShouldMatchSetting(),
+      '@published_only' => $this->getDuplicateOnlyPublishedSetting() ? $this->t('published only') : $this->t('all documents'),
     ]);
 
     return $summary;
@@ -339,6 +361,26 @@ class ReliefWebFile extends WidgetBase {
    */
   protected function getDuplicateWarningMessageSetting(): string {
     return $this->getSetting('duplicate_warning_message');
+  }
+
+  /**
+   * Get the duplicate max files setting.
+   *
+   * @return int
+   *   Maximum number of files to search for similarity.
+   */
+  protected function getDuplicateMaxFilesSetting(): int {
+    return $this->getSetting('duplicate_max_files');
+  }
+
+  /**
+   * Get the duplicate only published setting.
+   *
+   * @return bool
+   *   Whether to only include published documents.
+   */
+  protected function getDuplicateOnlyPublishedSetting(): bool {
+    return $this->getSetting('duplicate_only_published');
   }
 
   /**
@@ -1829,9 +1871,11 @@ class ReliefWebFile extends WidgetBase {
       $duplicates = $this->fileDuplication->findSimilarDocuments(
         $extracted_text,
         $bundle,
+        !empty($entity_id) ? [$entity_id] : [],
         $this->getDuplicateMaxDocumentsSetting(),
         $this->getDuplicateMinimumShouldMatchSetting(),
-        !empty($entity_id) ? [$entity_id] : [],
+        $this->getDuplicateMaxFilesSetting(),
+        $this->getDuplicateOnlyPublishedSetting(),
       );
     }
 

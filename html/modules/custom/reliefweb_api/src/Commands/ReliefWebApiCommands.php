@@ -8,12 +8,10 @@ use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\State\StateInterface;
-use Drupal\reliefweb_api\Services\ReliefWebApiFileDuplicationInterface;
 use Drush\Commands\DrushCommands;
 use GuzzleHttp\ClientInterface;
 use RWAPIIndexer\Bundles;
 use RWAPIIndexer\Manager;
-use Symfony\Component\Console\Helper\Table;
 
 /**
  * ReliefWeb API Drush commandfile.
@@ -63,13 +61,6 @@ class ReliefWebApiCommands extends DrushCommands {
   protected $httpClient;
 
   /**
-   * The file duplication service.
-   *
-   * @var \Drupal\reliefweb_api\Services\ReliefWebApiFileDuplicationInterface
-   */
-  protected $fileDuplication;
-
-  /**
    * {@inheritdoc}
    */
   public function __construct(
@@ -79,7 +70,6 @@ class ReliefWebApiCommands extends DrushCommands {
     ModuleHandlerInterface $module_handler,
     StateInterface $state,
     ClientInterface $http_client,
-    ReliefWebApiFileDuplicationInterface $file_duplication,
   ) {
     $this->apiConfig = $config_factory->get('reliefweb_api.settings');
     $this->entityFieldManager = $entity_field_manager;
@@ -87,7 +77,6 @@ class ReliefWebApiCommands extends DrushCommands {
     $this->moduleHandler = $module_handler;
     $this->state = $state;
     $this->httpClient = $http_client;
-    $this->fileDuplication = $file_duplication;
   }
 
   /**
@@ -475,72 +464,6 @@ class ReliefWebApiCommands extends DrushCommands {
 
     // Exclude bundles that are not indexed in the API.
     return array_keys(array_intersect_key(Bundles::$bundles, $bundles));
-  }
-
-  /**
-   * Find documents with files similar to the node file text.
-   *
-   * @param int $node_id
-   *   The node ID to use.
-   * @param int $max_documents
-   *   Number of similar documents to retrieve.
-   * @param string $minimum_should_match
-   *   Minimum similarity score (number of matching minhash tokens).
-   *
-   * @command reliefweb:similar-files
-   *
-   * @usage drush reliefweb:similar-files 12345
-   */
-  public function similarFiles(int $node_id, int $max_documents = 10, string $minimum_should_match = '80%'): void {
-    $node = $this->entityTypeManager->getStorage('node')->load($node_id);
-
-    if (!$node) {
-      $this->logger->error("Node not found: $node_id");
-      return;
-    }
-
-    // Check field_file exists and is not empty.
-    if ($node->field_file->isEmpty()) {
-      $this->logger->warning("Node $node_id: field_file is empty.");
-      return;
-    }
-
-    // Extract text from the file.
-    $text = $node->field_file->first()->extractText();
-    if (empty($text)) {
-      $this->logger->warning("Node $node_id: extracted text is empty.");
-      return;
-    }
-
-    // Use the file duplication service to find similar documents.
-    $bundle = $node->bundle();
-    $similar_documents = $this->fileDuplication->findSimilarDocuments(
-      $text,
-      $bundle,
-      $max_documents,
-      $minimum_should_match,
-      [$node_id],
-    );
-
-    if (empty($similar_documents)) {
-      $this->logger->notice("No similar documents found.");
-      return;
-    }
-
-    // Build the table rows for output.
-    $rows = [];
-    foreach ($similar_documents as $document) {
-      $rows[] = [
-        $document['id'],
-        $document['title'],
-        $document['url'],
-        $document['similarity_percentage'],
-      ];
-    }
-
-    $table = new Table($this->output());
-    $table->setHeaders(['ID', 'Title', 'URL', 'Similarity (%)'])->setRows($rows);
-    $table->render();
   }
 
 }
