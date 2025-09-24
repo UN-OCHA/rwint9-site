@@ -446,6 +446,9 @@ class EntityHistory {
       case 'reliefweb_section_links':
         return $this->formatReliefWebSectionLinksFieldDiff($field_definition, $diff);
 
+      case 'reliefweb_domain_posting_rights':
+        return $this->formatReliefWebDomainPostingRightsFieldDiff($field_definition, $diff);
+
       case 'reliefweb_user_posting_rights':
         return $this->formatReliefWebUserPostingRightsFieldDiff($field_definition, $diff);
 
@@ -1068,6 +1071,130 @@ class EntityHistory {
           $replacements['@link'] = Link::fromTextAndUrl($item['id'], $url)->toString();
 
           // Add the rights when a user is added.
+          if ($category === 'added') {
+            $markup[] = '(job: @job, training: @training, report: @report)';
+            $replacements['@job'] = UserPostingRightsHelper::renderRight($rights[$item['job']]);
+            $replacements['@training'] = UserPostingRightsHelper::renderRight($rights[$item['training']]);
+            $replacements['@report'] = UserPostingRightsHelper::renderRight($rights[$item['report']]);
+          }
+
+          // Add the rights changes.
+          if (isset($item['change'])) {
+            $markup[] = '(@change)';
+            $replacements['@change'] = $item['change'];
+          }
+
+          $changes[] = new FormattableMarkup(implode(' ', $markup), $replacements);
+          $change_count++;
+        }
+
+        $output['#categories'][$category] = [
+          'label' => $labels[$category],
+          'changes' => $changes,
+        ];
+      }
+    }
+
+    return empty($output) ? NULL : [
+      '#theme' => 'reliefweb_revisions_diff_categories',
+      '#change_count' => $change_count,
+    ] + $output;
+  }
+
+  /**
+   * Format domain posting rights field differences.
+   *
+   * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
+   *   Field definition.
+   * @param array $diff
+   *   Field value differences.
+   *
+   * @return array|null
+   *   The render array for the difference or NULL if there is no difference.
+   */
+  protected function formatReliefWebDomainPostingRightsFieldDiff(FieldDefinitionInterface $field_definition, array $diff) {
+    if (empty($diff['previous']) && empty($diff['current'])) {
+      return NULL;
+    }
+
+    // Previous revision domain info.
+    $previous = [];
+    foreach ($diff['previous'] as $item) {
+      $previous[$item['domain']] = $item;
+    }
+
+    // Current revision domain info.
+    $current = [];
+    foreach ($diff['current'] as $item) {
+      $current[$item['domain']] = $item;
+    }
+
+    $categories = [
+      'added' => array_diff_key($current, $previous),
+      'removed' => array_diff_key($previous, $current),
+      'modified-training' => [],
+      'modified-job' => [],
+      'modified-report' => [],
+      'modified-notes' => [],
+    ];
+
+    $labels = [
+      'added' => $this->t('Added'),
+      'removed' => $this->t('Removed'),
+      'modified-training' => $this->t('Modified Training'),
+      'modified-job' => $this->t('Modified Job'),
+      'modified-report' => $this->t('Modified Report'),
+      'modified-notes' => $this->t('Modified Notes'),
+    ];
+
+    $rights = [
+      0 => 'unverified',
+      1 => 'blocked',
+      2 => 'allowed',
+      3 => 'trusted',
+    ];
+
+    // Check if something changed for the domains that are in both current and
+    // previous revisions.
+    foreach (array_intersect_key($current, $previous) as $key => $item) {
+      $previous_item = $previous[$key];
+      $current_item = $current[$key];
+      // Rights change.
+      foreach (['job', 'training', 'report'] as $type) {
+        if ($previous_item[$type] !== $current_item[$type]) {
+          $item['change'] = new FormattableMarkup('@before &rarr; @after', [
+            '@before' => UserPostingRightsHelper::renderRight($rights[$previous_item[$type]]),
+            '@after' => UserPostingRightsHelper::renderRight($rights[$current_item[$type]]),
+          ]);
+          $categories['modified-' . $type][] = $item;
+        }
+      }
+      // Notes change.
+      if ($previous_item['notes'] !== $current_item['notes']) {
+        $text_diff = TextHelper::getTextDiff($previous_item['notes'], $current_item['notes']);
+        $item['change'] = Markup::create($text_diff);
+        $categories['modified-notes'][] = $item;
+      }
+    }
+
+    // Keep track of the number of changes to hide them if too many.
+    $change_count = 0;
+
+    // Prepare the changes.
+    $output = [];
+    foreach ($categories as $category => $items) {
+      if (!empty($items)) {
+        $changes = [];
+
+        foreach ($items as $item) {
+          $replacements = [];
+          $markup = [];
+
+          // Label. Show the domain.
+          $markup[] = 'Domain: %domain';
+          $replacements['%domain'] = $item['domain'];
+
+          // Add the rights when a domain is added.
           if ($category === 'added') {
             $markup[] = '(job: @job, training: @training, report: @report)';
             $replacements['@job'] = UserPostingRightsHelper::renderRight($rights[$item['job']]);
