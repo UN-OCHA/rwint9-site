@@ -368,8 +368,8 @@ function reliefweb_users_user_login(UserInterface $user): void {
  *   User account.
  */
 function reliefweb_users_assign_submitter_role(UserInterface $user): void {
-  // Skip if the user already has any role.
-  if (!empty($user->getRoles(TRUE))) {
+  // Skip if the user already has an editing role.
+  if ($user->hasRole('editor') || $user->hasRole('contributor') || $user->hasRole('submitter')) {
     return;
   }
 
