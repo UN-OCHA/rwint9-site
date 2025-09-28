@@ -25,7 +25,7 @@ user.email.confirmation.process:
 reliefweb_users.posting_rights:
   path: '/user/{user}/posting-rights'
   defaults:
-    _controller: '\Drupal\reliefweb_users\Controller\UserPostingRightsController::content'
+    _form: '\Drupal\reliefweb_users\Form\UserPostingRightsForm'
     _title: 'Posting Rights'
   requirements:
     _permission: 'access user posting rights page'
@@ -53,3 +53,10 @@ reliefweb_users.submitter_form_settings:
     _permission: 'administer submitter form settings'
   options:
     _admin_route: TRUE
+
+reliefweb_users.source_autocomplete:
+  path: '/reliefweb-users/source-autocomplete'
+  defaults:
+    _controller: '\Drupal\reliefweb_users\Controller\SourceAutocompleteController::autocomplete'
+  requirements:
+    _permission: 'access user posting rights page'
