@@ -637,6 +637,188 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     // Should not include sources where user only has domain rights (domain
     // rights are 2, not 3).
     $this->assertArrayNotHasKey($this->domainOnlySource->id(), $sources, 'Should not include source where user only has domain rights below threshold');
+
+    // Test integration: verify that the refactored method combines user and
+    // domain rights correctly.
+    $combined_sources = UserPostingRightsHelper::getSourcesWithPostingRightsForUser(
+      $this->testUser,
+      ['job' => [2, 3]],
+      'OR'
+    );
+
+    // Get user-only sources.
+    $user_sources = UserPostingRightsHelper::getSourcesWithUserPostingRightsForUser(
+      $this->testUser,
+      ['job' => [2, 3]],
+      'OR'
+    );
+
+    // Get domain-only sources.
+    $domain_sources = UserPostingRightsHelper::getSourcesWithDomainPostingRightsForUser(
+      $this->testUser,
+      ['job' => [2, 3]],
+      'OR'
+    );
+
+    // The combined result should include both user and domain sources.
+    $expected_sources = array_keys($user_sources + $domain_sources);
+    $actual_sources = array_keys($combined_sources);
+
+    $this->assertEquals(
+      count($expected_sources),
+      count($actual_sources),
+      'Combined sources should include both user and domain sources'
+    );
+
+    // Verify that user rights take precedence over domain rights for the same
+    // source.
+    if (isset($combined_sources[$this->testSource->id()])) {
+      // The testSource has both user and domain rights, so user rights should
+      // take precedence.
+      $this->assertEquals(2, $combined_sources[$this->testSource->id()]['job'], 'User rights should take precedence over domain rights for same source');
+      $this->assertEquals(3, $combined_sources[$this->testSource->id()]['training'], 'User rights should take precedence over domain rights for same source');
+      $this->assertEquals(1, $combined_sources[$this->testSource->id()]['report'], 'User rights should take precedence over domain rights for same source');
+    }
+  }
+
+  /**
+   * Test getSourcesWithUserPostingRightsForUser method.
+   */
+  public function testGetSourcesWithUserPostingRightsForUser(): void {
+    // Test getting sources with user posting rights only.
+    $sources = UserPostingRightsHelper::getSourcesWithUserPostingRightsForUser(
+      $this->testUser,
+      // Allowed or trusted.
+      ['job' => [2, 3]],
+      'OR'
+    );
+
+    // Should include sources where user has explicit posting rights.
+    $this->assertArrayHasKey($this->testSource->id(), $sources, 'Should return source with user posting rights');
+    $this->assertEquals(2, $sources[$this->testSource->id()]['job'], 'Should return correct job rights from user posting rights');
+    $this->assertEquals(3, $sources[$this->testSource->id()]['training'], 'Should return correct training rights from user posting rights');
+    $this->assertEquals(1, $sources[$this->testSource->id()]['report'], 'Should return correct report rights from user posting rights');
+
+    // Should include userOnlySource which has user posting rights.
+    $this->assertArrayHasKey($this->userOnlySource->id(), $sources, 'Should include source with user-only posting rights');
+    $this->assertEquals(3, $sources[$this->userOnlySource->id()]['job'], 'Should return trusted rights from user-only source');
+    $this->assertEquals(3, $sources[$this->userOnlySource->id()]['training'], 'Should return trusted rights from user-only source');
+    $this->assertEquals(3, $sources[$this->userOnlySource->id()]['report'], 'Should return trusted rights from user-only source');
+
+    // Should NOT include domainOnlySource (no user posting rights).
+    $this->assertArrayNotHasKey($this->domainOnlySource->id(), $sources, 'Should not include source with only domain posting rights');
+
+    // Should NOT include noRightsSource (no posting rights at all).
+    $this->assertArrayNotHasKey($this->noRightsSource->id(), $sources, 'Should not include source with no posting rights');
+
+    // Test with specific bundle filter.
+    $sources = UserPostingRightsHelper::getSourcesWithUserPostingRightsForUser(
+      $this->testUser,
+      // Trusted only.
+      ['training' => [3]],
+      'AND'
+    );
+
+    $this->assertArrayHasKey($this->testSource->id(), $sources, 'Should include source with trusted training rights');
+    $this->assertArrayHasKey($this->userOnlySource->id(), $sources, 'Should include user-only source with trusted training rights');
+    $this->assertEquals(3, $sources[$this->testSource->id()]['training'], 'Should return trusted training rights');
+    $this->assertEquals(3, $sources[$this->userOnlySource->id()]['training'], 'Should return trusted training rights from user-only source');
+
+    // Test with limit.
+    $sources = UserPostingRightsHelper::getSourcesWithUserPostingRightsForUser(
+      $this->testUser,
+      ['job' => [2, 3]],
+      'OR',
+      1
+    );
+
+    $this->assertCount(1, $sources, 'Should respect limit parameter');
+
+    // Test with no bundle filters (should return all user posting rights).
+    $sources = UserPostingRightsHelper::getSourcesWithUserPostingRightsForUser($this->testUser);
+    $this->assertNotEmpty($sources, 'Should return sources without bundle filters');
+    $this->assertArrayHasKey($this->testSource->id(), $sources, 'Should include test source');
+    $this->assertArrayHasKey($this->userOnlySource->id(), $sources, 'Should include user-only source');
+  }
+
+  /**
+   * Test getSourcesWithDomainPostingRightsForUser method.
+   */
+  public function testGetSourcesWithDomainPostingRightsForUser(): void {
+    // Test getting sources with domain posting rights only.
+    $sources = UserPostingRightsHelper::getSourcesWithDomainPostingRightsForUser(
+      $this->testUser,
+      // Allowed or trusted.
+      ['job' => [2, 3]],
+      'OR'
+    );
+
+    // Should include sources where domain has posting rights.
+    $this->assertArrayHasKey($this->testSource->id(), $sources, 'Should return source with domain posting rights');
+    $this->assertEquals(2, $sources[$this->testSource->id()]['job'], 'Should return correct job rights from domain posting rights');
+    $this->assertEquals(2, $sources[$this->testSource->id()]['training'], 'Should return correct training rights from domain posting rights');
+    $this->assertEquals(0, $sources[$this->testSource->id()]['report'], 'Should return correct report rights from domain posting rights');
+
+    // Should include domainOnlySource which has domain posting rights.
+    $this->assertArrayHasKey($this->domainOnlySource->id(), $sources, 'Should include source with domain-only posting rights');
+    $this->assertEquals(2, $sources[$this->domainOnlySource->id()]['job'], 'Should return allowed rights from domain-only source');
+    $this->assertEquals(2, $sources[$this->domainOnlySource->id()]['training'], 'Should return allowed rights from domain-only source');
+    $this->assertEquals(2, $sources[$this->domainOnlySource->id()]['report'], 'Should return allowed rights from domain-only source');
+
+    // Should NOT include userOnlySource (no domain posting rights).
+    $this->assertArrayNotHasKey($this->userOnlySource->id(), $sources, 'Should not include source with only user posting rights');
+
+    // Should NOT include noRightsSource (no posting rights at all).
+    $this->assertArrayNotHasKey($this->noRightsSource->id(), $sources, 'Should not include source with no posting rights');
+
+    // Test with specific bundle filter.
+    $sources = UserPostingRightsHelper::getSourcesWithDomainPostingRightsForUser(
+      $this->testUser,
+      // Allowed only.
+      ['job' => [2]],
+      'AND'
+    );
+
+    $this->assertArrayHasKey($this->testSource->id(), $sources, 'Should include source with allowed job rights');
+    $this->assertArrayHasKey($this->domainOnlySource->id(), $sources, 'Should include domain-only source with allowed job rights');
+    $this->assertEquals(2, $sources[$this->testSource->id()]['job'], 'Should return allowed job rights');
+    $this->assertEquals(2, $sources[$this->domainOnlySource->id()]['job'], 'Should return allowed job rights from domain-only source');
+
+    // Test with limit.
+    $sources = UserPostingRightsHelper::getSourcesWithDomainPostingRightsForUser(
+      $this->testUser,
+      ['job' => [2, 3]],
+      'OR',
+      1
+    );
+
+    $this->assertCount(1, $sources, 'Should respect limit parameter');
+
+    // Test with no bundle filters (should return all domain posting rights).
+    $sources = UserPostingRightsHelper::getSourcesWithDomainPostingRightsForUser($this->testUser);
+    $this->assertNotEmpty($sources, 'Should return sources without bundle filters');
+    $this->assertArrayHasKey($this->testSource->id(), $sources, 'Should include test source');
+    $this->assertArrayHasKey($this->domainOnlySource->id(), $sources, 'Should include domain-only source');
+
+    // Test with user without email domain.
+    $user_without_email = $this->createUser([], 'no_email_user', FALSE, [
+      'name' => 'no_email_user',
+      'mail' => '',
+      'status' => 1,
+    ]);
+
+    $sources = UserPostingRightsHelper::getSourcesWithDomainPostingRightsForUser($user_without_email);
+    $this->assertEmpty($sources, 'User without email should have no domain posting rights');
+
+    // Test with user with different email domain.
+    $user_different_domain = $this->createUser([], 'different_domain_user', FALSE, [
+      'name' => 'different_domain_user',
+      'mail' => 'user@different.com',
+      'status' => 1,
+    ]);
+
+    $sources = UserPostingRightsHelper::getSourcesWithDomainPostingRightsForUser($user_different_domain);
+    $this->assertEmpty($sources, 'User with different domain should have no domain posting rights');
   }
 
   /**
