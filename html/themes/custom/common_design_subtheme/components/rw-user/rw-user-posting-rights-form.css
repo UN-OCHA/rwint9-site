@@ -1,0 +1,20 @@
+/* Horizontal alignment for posting rights form elements. */
+.rw-user-posting-rights-form [data-drupal-selector="edit-add-rights-rights"] .fieldset-wrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  align-items: flex-start;
+  padding-top: 0.5rem;
+}
+
+.rw-user-posting-rights-form [data-drupal-selector="edit-add-rights-rights"] .fieldset-wrapper > .form-item {
+  margin: 0;
+}
+
+/* Responsive behavior - stack vertically on smaller screens. */
+@media (max-width: 768px) {
+  .rw-user-posting-rights-form [data-drupal-selector="edit-add-rights-rights"] .fieldset-wrapper {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
