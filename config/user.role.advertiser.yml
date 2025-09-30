@@ -1,0 +1,20 @@
+uuid: 0bf400d8-595c-41c0-82eb-ceccde23a71d
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.job
+    - node.type.training
+  module:
+    - node
+id: advertiser
+label: Advertiser
+weight: 13
+is_admin: false
+permissions:
+  - 'create job content'
+  - 'create training content'
+  - 'delete own job content'
+  - 'delete own training content'
+  - 'edit own job content'
+  - 'edit own training content'
