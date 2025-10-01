@@ -7,14 +7,19 @@ dependencies:
     - node.type.training
   module:
     - node
+    - ocha_content_classification
+    - reliefweb_moderation
 id: advertiser
 label: Advertiser
 weight: 13
 is_admin: false
 permissions:
+  - 'apply ocha content classification to node job'
   - 'create job content'
   - 'create training content'
   - 'delete own job content'
   - 'delete own training content'
   - 'edit own job content'
   - 'edit own training content'
+  - 'view job moderation information'
+  - 'view training moderation information'
