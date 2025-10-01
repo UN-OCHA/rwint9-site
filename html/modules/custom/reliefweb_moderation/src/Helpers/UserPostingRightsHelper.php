@@ -20,6 +20,32 @@ class UserPostingRightsHelper {
   use EntityDatabaseInfoTrait;
 
   /**
+   * Check if the entity supports posting rights.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   Entity.
+   *
+   * @return bool
+   *   TRUE if the entity supports posting rights, FALSE otherwise.
+   */
+  public static function entitySupportsPostingRights(EntityInterface $entity): bool {
+    return static::entityBundleSupportsPostingRights($entity->bundle());
+  }
+
+  /**
+   * Check if the entity bundle supports posting rights.
+   *
+   * @param string $bundle
+   *   Entity bundle.
+   *
+   * @return bool
+   *   TRUE if the entity supports posting rights, FALSE otherwise.
+   */
+  public static function entityBundleSupportsPostingRights(string $bundle): bool {
+    return in_array($bundle, ['report', 'job', 'training']);
+  }
+
+  /**
    * Get the user posting rights for an entity's author.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
@@ -504,6 +530,7 @@ class UserPostingRightsHelper {
     $query->condition($table . '.bundle', 'source', '=');
     $query->condition($table . '.' . $id_field, $account->id(), '=');
 
+    $condition_group = NULL;
     foreach ($bundle_fields as $bundle => $bundle_field) {
       $query->addField($table, $bundle_field, $bundle);
 
@@ -516,13 +543,6 @@ class UserPostingRightsHelper {
 
     if (isset($condition_group)) {
       $query->condition($condition_group);
-    }
-
-    // Filter by bundle rights.
-    foreach ($bundles as $bundle => $rights) {
-      if (isset($bundle_fields[$bundle]) && !empty($rights)) {
-        $query->condition($table . '.' . $bundle_fields[$bundle], $rights, 'IN');
-      }
     }
 
     // Limit the result.
@@ -588,6 +608,7 @@ class UserPostingRightsHelper {
     $query->condition($table . '.bundle', 'source', '=');
     $query->condition($table . '.' . $domain_field, $domain, '=');
 
+    $condition_group = NULL;
     foreach ($bundle_fields as $bundle => $bundle_field) {
       $query->addField($table, $bundle_field, $bundle);
 
@@ -600,13 +621,6 @@ class UserPostingRightsHelper {
 
     if (isset($condition_group)) {
       $query->condition($condition_group);
-    }
-
-    // Filter by bundle rights.
-    foreach ($bundles as $bundle => $rights) {
-      if (isset($bundle_fields[$bundle]) && !empty($rights)) {
-        $query->condition($table . '.' . $bundle_fields[$bundle], $rights, 'IN');
-      }
     }
 
     // Limit the result.

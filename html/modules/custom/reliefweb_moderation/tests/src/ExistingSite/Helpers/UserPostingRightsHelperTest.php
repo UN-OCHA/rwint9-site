@@ -742,6 +742,217 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
   }
 
   /**
+   * Test bundle filtering with AND operator for user posting rights.
+   */
+  public function testGetSourcesWithUserPostingRightsForUserWithAndOperator(): void {
+    // Create a source with mixed rights for the test user.
+    $mixedRightsSource = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Mixed Rights Source',
+      'field_user_posting_rights' => [
+        [
+          'id' => $this->testUser->id(),
+          // Trusted.
+          'job' => 3,
+          // Allowed.
+          'training' => 2,
+          // Blocked.
+          'report' => 1,
+        ],
+      ],
+    ]);
+
+    // Test AND operator: should only return sources that match ALL bundle
+    // conditions. Looking for sources where user is trusted for job (3) AND
+    // allowed for training (2).
+    $sources = UserPostingRightsHelper::getSourcesWithUserPostingRightsForUser(
+      $this->testUser,
+      [
+        // Trusted.
+        'job' => [3],
+        // Allowed.
+        'training' => [2],
+      ],
+      'AND'
+    );
+
+    // Should include the mixed rights source since it matches both conditions.
+    $this->assertArrayHasKey($mixedRightsSource->id(), $sources, 'Should include source that matches ALL AND conditions');
+    $this->assertEquals(3, $sources[$mixedRightsSource->id()]['job'], 'Should have trusted job rights');
+    $this->assertEquals(2, $sources[$mixedRightsSource->id()]['training'], 'Should have allowed training rights');
+
+    // Test AND operator with conflicting conditions.
+    $sources = UserPostingRightsHelper::getSourcesWithUserPostingRightsForUser(
+      $this->testUser,
+      [
+        // Trusted.
+        'job' => [3],
+        // Trusted to have a mismatch since the user is allowed (2).
+        'training' => [3],
+      ],
+      'AND'
+    );
+
+    // Should NOT include the mixed rights source since it doesn't match both
+    // conditions.
+    $this->assertArrayNotHasKey($mixedRightsSource->id(), $sources, 'Should not include source that does not match ALL AND conditions');
+  }
+
+  /**
+   * Test bundle filtering with OR operator for user posting rights.
+   *
+   * This test should FAIL due to the bug in the current implementation.
+   */
+  public function testGetSourcesWithUserPostingRightsForUserWithOrOperator(): void {
+    // Create a source with mixed rights for the test user.
+    $mixedRightsSource = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Mixed Rights Source',
+      'field_user_posting_rights' => [
+        [
+          'id' => $this->testUser->id(),
+          // Trusted.
+          'job' => 3,
+          // Allowed.
+          'training' => 2,
+          // Blocked.
+          'report' => 1,
+        ],
+      ],
+    ]);
+
+    // Test OR operator: should return sources that match ANY bundle condition.
+    // Looking for sources where user is trusted for job (3) OR allowed for
+    // training (2).
+    $sources = UserPostingRightsHelper::getSourcesWithUserPostingRightsForUser(
+      $this->testUser,
+      [
+        // Trusted.
+        'job' => [3],
+        // Allowed.
+        'training' => [2],
+      ],
+      'OR'
+    );
+
+    // Should include the mixed rights source since it matches at least one
+    // condition.
+    $this->assertArrayHasKey($mixedRightsSource->id(), $sources, 'Should include source that matches ANY OR condition');
+    $this->assertEquals(3, $sources[$mixedRightsSource->id()]['job'], 'Should have trusted job rights');
+    $this->assertEquals(2, $sources[$mixedRightsSource->id()]['training'], 'Should have allowed training rights');
+
+    // Test OR operator with one matching condition.
+    $sources = UserPostingRightsHelper::getSourcesWithUserPostingRightsForUser(
+      $this->testUser,
+      [
+        // Trusted.
+        'job' => [3],
+        // Trusted to have a mismatch since the user is allowed (2).
+        'training' => [3],
+      ],
+      'OR'
+    );
+
+    // Should include the mixed rights source since it matches the job
+    // condition.
+    $this->assertArrayHasKey($mixedRightsSource->id(), $sources, 'Should include source that matches at least one OR condition');
+  }
+
+  /**
+   * Test bundle filtering with AND operator for domain posting rights.
+   */
+  public function testGetSourcesWithDomainPostingRightsForUserWithAndOperator(): void {
+    // Create a source with domain posting rights.
+    $domainRightsSource = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Domain Rights Source',
+      'field_domain_posting_rights' => [
+        [
+          'domain' => 'example.com',
+          // Trusted.
+          'job' => 3,
+          // Allowed.
+          'training' => 2,
+          // Unverified.
+          'report' => 0,
+        ],
+      ],
+    ]);
+
+    // Test AND operator: should only return sources that match ALL bundle
+    // conditions.
+    $sources = UserPostingRightsHelper::getSourcesWithDomainPostingRightsForUser(
+      $this->testUser,
+      [
+        // Trusted.
+        'job' => [3],
+        // Allowed.
+        'training' => [2],
+      ],
+      'AND'
+    );
+
+    // Should include the domain rights source since it matches both conditions.
+    $this->assertArrayHasKey($domainRightsSource->id(), $sources, 'Should include source that matches ALL AND conditions');
+    $this->assertEquals(3, $sources[$domainRightsSource->id()]['job'], 'Should have trusted job rights');
+    $this->assertEquals(2, $sources[$domainRightsSource->id()]['training'], 'Should have allowed training rights');
+  }
+
+  /**
+   * Test bundle filtering with OR operator for domain posting rights.
+   *
+   * This test should FAIL due to the bug in the current implementation.
+   */
+  public function testGetSourcesWithDomainPostingRightsForUserWithOrOperator(): void {
+    // Create a source with domain posting rights.
+    $domainRightsSource = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Domain Rights Source',
+      'field_domain_posting_rights' => [
+        [
+          'domain' => 'example.com',
+          // Trusted.
+          'job' => 3,
+          // Allowed.
+          'training' => 2,
+          // Unverified.
+          'report' => 0,
+        ],
+      ],
+    ]);
+
+    // Test OR operator: should return sources that match ANY bundle condition.
+    $sources = UserPostingRightsHelper::getSourcesWithDomainPostingRightsForUser(
+      $this->testUser,
+      [
+        // Trusted.
+        'job' => [3],
+        // Allowed.
+        'training' => [2],
+      ],
+      'OR'
+    );
+
+    // Should include the domain rights source since it matches at least one
+    // condition.
+    $this->assertArrayHasKey($domainRightsSource->id(), $sources, 'Should include source that matches ANY OR condition');
+    $this->assertEquals(3, $sources[$domainRightsSource->id()]['job'], 'Should have trusted job rights');
+    $this->assertEquals(2, $sources[$domainRightsSource->id()]['training'], 'Should have allowed training rights');
+
+    // Test OR operator with one matching condition.
+    $sources = UserPostingRightsHelper::getSourcesWithDomainPostingRightsForUser(
+      $this->testUser,
+      [
+        // Trusted.
+        'job' => [3],
+        // Trusted to have a mismatch since the user is allowed (2).
+        'training' => [3],
+      ],
+      'OR'
+    );
+
+    // Should include the domain rights source since it matches the job
+    // condition.
+    $this->assertArrayHasKey($domainRightsSource->id(), $sources, 'Should include source that matches at least one OR condition');
+  }
+
+  /**
    * Test getSourcesWithDomainPostingRightsForUser method.
    */
   public function testGetSourcesWithDomainPostingRightsForUser(): void {
