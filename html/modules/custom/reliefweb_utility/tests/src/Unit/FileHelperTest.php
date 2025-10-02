@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\reliefweb_utility\Unit;
 
+use Drupal\Core\Config\Config;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
-use Drupal\Core\State\StateInterface;
 use Drupal\file\Entity\File;
 use Drupal\reliefweb_utility\Helpers\FileHelper;
 use Drupal\Tests\UnitTestCase;
@@ -40,6 +41,20 @@ class FileHelperTest extends UnitTestCase {
   protected $state;
 
   /**
+   * The config factory service.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
+
+  /**
+   * The config object.
+   *
+   * @var \Drupal\Core\Config\Config
+   */
+  protected $config;
+
+  /**
    * The logger channel factory service.
    *
    * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface
@@ -62,11 +77,31 @@ class FileHelperTest extends UnitTestCase {
     // Mock the file system service.
     $this->fileSystem = $this->prophesize(FileSystemInterface::class);
 
-    // Mock the state service.
-    $this->state = $this->prophesize(StateInterface::class);
-    $this->state->get('mutool', '/usr/bin/mutool')->willReturn('/usr/bin/mutool');
-    $this->state->get('mutool_text_options', '')->willReturn('');
-    $this->state->get('pandoc', '/usr/bin/pandoc')->willReturn('/usr/bin/pandoc');
+    // Mock the config services.
+    $this->config = $this->prophesize(Config::class);
+    $this->configFactory = $this->prophesize(ConfigFactoryInterface::class);
+    $this->configFactory->get('reliefweb_utility.settings')->willReturn($this->config->reveal());
+
+    // Set up default text extraction commands configuration.
+    $default_commands = [
+      'application/pdf' => [
+        'mimetype' => 'application/pdf',
+        'command' => '/usr/bin/mutool',
+        'args' => 'draw -F txt',
+        'options' => '',
+        'page' => TRUE,
+        'ignore_errors_if_output' => TRUE,
+      ],
+      'application/msword' => [
+        'mimetype' => 'application/msword',
+        'command' => '/usr/bin/pandoc',
+        'args' => '--to=plain',
+        'options' => '',
+        'page' => FALSE,
+        'ignore_errors_if_output' => FALSE,
+      ],
+    ];
+    $this->config->get('text_extraction.commands')->willReturn($default_commands);
 
     // Mock the logger services.
     $this->loggerChannel = $this->prophesize(LoggerChannelInterface::class);
@@ -76,7 +111,7 @@ class FileHelperTest extends UnitTestCase {
     // Set up Drupal container with mocked services.
     $container = new ContainerBuilder();
     $container->set('file_system', $this->fileSystem->reveal());
-    $container->set('state', $this->state->reveal());
+    $container->set('config.factory', $this->configFactory->reveal());
     $container->set('logger.factory', $this->loggerChannelFactory->reveal());
     \Drupal::setContainer($container);
   }
@@ -216,11 +251,21 @@ class FileHelperTest extends UnitTestCase {
     $file->getMimeType()->willReturn('application/pdf');
     $file->id()->willReturn(1);
 
+    // Create a temporary file for testing.
+    $temp_file = tempnam(sys_get_temp_dir(), 'test_file');
+    file_put_contents($temp_file, 'test content');
+
+    // Mock file system to return our temp file path.
+    $this->fileSystem->realpath('public://test.pdf')->willReturn($temp_file);
+
     // Test with 0 processes (should default to 1).
     $result = FileHelper::extractTextParallel([$file->reveal()], 0, 60, $this->fileSystem->reveal());
 
     $this->assertIsArray($result);
     $this->assertArrayHasKey(1, $result);
+
+    // Clean up.
+    unlink($temp_file);
   }
 
   /**
@@ -314,8 +359,14 @@ class FileHelperTest extends UnitTestCase {
     $file2->getMimeType()->willReturn('application/msword');
     $file2->id()->willReturn(2);
 
-    $this->fileSystem->realpath('public://test1.pdf')->willReturn('/tmp/test1.pdf');
-    $this->fileSystem->realpath('public://test2.doc')->willReturn('/tmp/test2.doc');
+    // Create temporary files for testing.
+    $temp_file1 = tempnam(sys_get_temp_dir(), 'test_file1');
+    $temp_file2 = tempnam(sys_get_temp_dir(), 'test_file2');
+    file_put_contents($temp_file1, 'test content 1');
+    file_put_contents($temp_file2, 'test content 2');
+
+    $this->fileSystem->realpath('public://test1.pdf')->willReturn($temp_file1);
+    $this->fileSystem->realpath('public://test2.doc')->willReturn($temp_file2);
 
     $files = [$file1->reveal(), $file2->reveal()];
     $result = FileHelper::extractTextParallel($files, 2, 30, $this->fileSystem->reveal());
@@ -325,6 +376,10 @@ class FileHelperTest extends UnitTestCase {
     $this->assertArrayHasKey(2, $result);
     $this->assertIsString($result[1]);
     $this->assertIsString($result[2]);
+
+    // Clean up.
+    unlink($temp_file1);
+    unlink($temp_file2);
   }
 
   /**
@@ -336,13 +391,120 @@ class FileHelperTest extends UnitTestCase {
     $file->getMimeType()->willReturn('application/pdf');
     $file->id()->willReturn(1);
 
-    $this->fileSystem->realpath('public://test.pdf')->willReturn('/tmp/test.pdf');
+    // Create a temporary file for testing.
+    $temp_file = tempnam(sys_get_temp_dir(), 'test_file');
+    file_put_contents($temp_file, 'test content');
+
+    $this->fileSystem->realpath('public://test.pdf')->willReturn($temp_file);
 
     // Test with custom timeout.
     $result = FileHelper::extractTextParallel([$file->reveal()], 1, 120, $this->fileSystem->reveal());
 
     $this->assertIsArray($result);
     $this->assertArrayHasKey(1, $result);
+
+    // Clean up.
+    unlink($temp_file);
+  }
+
+  /**
+   * Test getTextExtractionCommands with new state-based configuration.
+   */
+  public function testGetTextExtractionCommandsWithNewConfiguration() {
+    // Mock the new config-based configuration.
+    $mappings = [
+      'application/pdf' => [
+        'mimetype' => 'application/pdf',
+        'command' => '/usr/bin/mutool',
+        'args' => 'draw -F txt',
+        'options' => '',
+        'page' => TRUE,
+        'ignore_errors_if_output' => TRUE,
+      ],
+      'application/msword' => [
+        'mimetype' => 'application/msword',
+        'command' => '/usr/bin/pandoc',
+        'args' => '--to=plain',
+        'options' => '',
+        'page' => FALSE,
+        'ignore_errors_if_output' => FALSE,
+      ],
+    ];
+
+    $this->config->get('text_extraction.commands')->willReturn($mappings);
+
+    // Clear cache to force reload.
+    FileHelper::clearTextExtractionCommandsCache();
+
+    // Test that the method works with new configuration.
+    $file = $this->prophesize(File::class);
+    $file->getFileUri()->willReturn('public://test.pdf');
+    $file->getMimeType()->willReturn('application/pdf');
+    $file->id()->willReturn(1);
+
+    $this->fileSystem->realpath('public://test.pdf')->willReturn('/tmp/test.pdf');
+
+    $result = FileHelper::extractText($file->reveal(), NULL, $this->fileSystem->reveal());
+
+    $this->assertIsString($result);
+  }
+
+  /**
+   * Test getTextExtractionCommands with empty configuration.
+   */
+  public function testGetTextExtractionCommandsWithEmptyConfiguration() {
+    // Mock empty configuration.
+    $this->config->get('text_extraction.commands')->willReturn([]);
+
+    // Clear cache to force reload.
+    FileHelper::clearTextExtractionCommandsCache();
+
+    // Test that the method returns empty string when no commands are
+    // configured.
+    $file = $this->prophesize(File::class);
+    $file->getFileUri()->willReturn('public://test.pdf');
+    $file->getMimeType()->willReturn('application/pdf');
+    $file->id()->willReturn(1);
+
+    $this->fileSystem->realpath('public://test.pdf')->willReturn('/tmp/test.pdf');
+
+    $result = FileHelper::extractText($file->reveal(), NULL, $this->fileSystem->reveal());
+
+    // When no commands are configured, extractText should return empty string.
+    $this->assertEquals('', $result);
+  }
+
+  /**
+   * Test extractText with ignore_errors_if_output configuration.
+   */
+  public function testExtractTextWithIgnoreErrorsIfOutput() {
+    $file = $this->prophesize(File::class);
+    $file->getFileUri()->willReturn('public://test.pdf');
+    $file->getMimeType()->willReturn('application/pdf');
+    $file->id()->willReturn(1);
+
+    $this->fileSystem->realpath('public://test.pdf')->willReturn('/tmp/test.pdf');
+
+    // Mock configuration with ignore_errors_if_output enabled.
+    $mappings = [
+      'application/pdf' => [
+        'mimetype' => 'application/pdf',
+        'command' => '/usr/bin/mutool',
+        'args' => 'draw -F txt',
+        'options' => '',
+        'page' => TRUE,
+        'ignore_errors_if_output' => TRUE,
+      ],
+    ];
+
+    $this->config->get('text_extraction.commands')->willReturn($mappings);
+
+    // Clear cache to force reload.
+    FileHelper::clearTextExtractionCommandsCache();
+
+    $result = FileHelper::extractText($file->reveal(), NULL, $this->fileSystem->reveal());
+
+    $this->assertIsString($result);
   }
 
 }
