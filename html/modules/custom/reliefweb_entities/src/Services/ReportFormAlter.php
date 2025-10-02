@@ -5,10 +5,16 @@ namespace Drupal\reliefweb_entities\Services;
 use Drupal\Component\Utility\SortArray;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Drupal\reliefweb_entities\Entity\Report;
 use Drupal\reliefweb_entities\EntityFormAlterServiceBase;
+use Drupal\reliefweb_files\Plugin\Field\FieldWidget\ReliefWebFile as ReliefWebFileWidget;
+use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile as ReliefWebFileItem;
+use Drupal\reliefweb_files\Services\ReliefWebFileDuplicationInterface;
 use Drupal\reliefweb_form\Helpers\FormHelper;
 use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
@@ -17,6 +23,84 @@ use Drupal\reliefweb_utility\Helpers\UrlHelper;
  * Report form alteration service.
  */
 class ReportFormAlter extends EntityFormAlterServiceBase {
+
+  /**
+   * The ReliefWeb file duplication service.
+   *
+   * @var \Drupal\reliefweb_files\Services\ReliefWebFileDuplicationInterface
+   */
+  protected $fileDuplication;
+
+  /**
+   * The request stack.
+   *
+   * @var \Symfony\Component\HttpFoundation\RequestStack
+   */
+  protected $requestStack;
+
+  /**
+   * The renderer service.
+   *
+   * @var \Drupal\Core\Render\RendererInterface
+   */
+  protected $renderer;
+
+  /**
+   * The messenger service.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger;
+
+  /**
+   * Constructor.
+   *
+   * @param \Drupal\Core\Database\Connection $database
+   *   The database connection.
+   * @param \Drupal\Core\Session\AccountProxyInterface $current_user
+   *   The current user.
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
+   *   The entity field manager service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager service.
+   * @param \Drupal\Core\State\StateInterface $state
+   *   The state service.
+   * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
+   *   The translation manager service.
+   * @param \Drupal\reliefweb_files\Services\ReliefWebFileDuplicationInterface $file_duplication
+   *   The file duplication service.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   *   The request stack.
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   *   The renderer service.
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   The messenger service.
+   */
+  public function __construct(
+    $database,
+    $current_user,
+    $entity_field_manager,
+    $entity_type_manager,
+    $state,
+    $string_translation,
+    ReliefWebFileDuplicationInterface $file_duplication,
+    RequestStack $request_stack,
+    RendererInterface $renderer,
+    MessengerInterface $messenger,
+  ) {
+    parent::__construct(
+      $database,
+      $current_user,
+      $entity_field_manager,
+      $entity_type_manager,
+      $state,
+      $string_translation
+    );
+    $this->fileDuplication = $file_duplication;
+    $this->requestStack = $request_stack;
+    $this->renderer = $renderer;
+    $this->messenger = $messenger;
+  }
 
   /**
    * {@inheritdoc}
@@ -131,6 +215,9 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
 
     // Prevent saving if user is blocked for a source.
     $form['#validate'][] = [$this, 'validatePostingRightsBlockedSource'];
+
+    // Check for duplicate files and display warning message.
+    $this->checkForDuplicateFiles($form, $form_state);
 
     $this->addRoleFormAlterations($form, $form_state);
   }
@@ -771,6 +858,113 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     if (!empty($embargo_date) && $embargo_date instanceof DrupalDateTime && $embargo_date->getTimestamp() < time()) {
       $form_state->setErrorByName('field_embargo_date][0][value', $this->t('The embargo date cannot be in the past.'));
     }
+  }
+
+  /**
+   * Check for duplicate files and display warning message.
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  protected function checkForDuplicateFiles(array &$form, FormStateInterface $form_state) {
+    // Check if the user has permission to see duplicate file warnings.
+    if (!$this->currentUser->hasPermission('check for duplicate files')) {
+      return;
+    }
+
+    // Skip duplicate checking for AJAX requests to avoid performance issues.
+    if ($this->requestStack->getCurrentRequest()->isXmlHttpRequest()) {
+      return;
+    }
+
+    $entity = $form_state->getFormObject()?->getEntity();
+    if (!$entity instanceof Report) {
+      return;
+    }
+
+    // Only check for existing reports (not new ones).
+    if ($entity->isNew()) {
+      return;
+    }
+
+    // Check if the report has files.
+    if (!$entity->hasField('field_file') || $entity->field_file->isEmpty()) {
+      return;
+    }
+
+    $all_duplicates = [];
+    $bundle = $entity->bundle();
+    $entity_id = $entity->id();
+
+    // Retrieve the field_file widget.
+    $widget = $form_state
+      ->getFormObject()
+      ?->getFormDisplay($form_state)
+      ?->getRenderer('field_file');
+    if (empty($widget) || !($widget instanceof ReliefWebFileWidget)) {
+      return;
+    }
+
+    // Process all files attached to the report.
+    foreach ($entity->field_file as $field_item) {
+      // Skip if this is not a ReliefWeb file field item.
+      if (!$field_item instanceof ReliefWebFileItem) {
+        continue;
+      }
+
+      // Extract text from the file.
+      $extracted_text = $field_item->extractText();
+      if (empty($extracted_text)) {
+        continue;
+      }
+
+      $duplicates = $this->fileDuplication->findSimilarDocuments(
+        $extracted_text,
+        $bundle,
+        !empty($entity_id) ? [$entity_id] : [],
+        $widget->getDuplicateMaxDocumentsSetting(),
+        $widget->getDuplicateMinimumShouldMatchSetting(),
+        $widget->getDuplicateMaxFilesSetting(),
+        $widget->getDuplicateOnlyPublishedSetting(),
+      );
+
+      if (!empty($duplicates)) {
+        $all_duplicates = array_merge($all_duplicates, $duplicates);
+      }
+    }
+
+    // Skip if no duplicates are found.
+    if (empty($all_duplicates)) {
+      return;
+    }
+
+    // Ensure the uniqueness of the duplicates based on document ID, keeping
+    // the highest similarity.
+    $unique_duplicates = [];
+    foreach ($all_duplicates as $duplicate) {
+      if (empty($duplicate['id'])) {
+        continue;
+      }
+      $id = $duplicate['id'];
+      if (!isset($unique_duplicates[$id]) || $duplicate['similarity'] > $unique_duplicates[$id]['similarity']) {
+        $unique_duplicates[$id] = $duplicate;
+      }
+    }
+
+    // Sort by similarity score (highest first).
+    usort($unique_duplicates, function ($a, $b) {
+      return $b['similarity'] <=> $a['similarity'];
+    });
+
+    // Limit to top duplicates.
+    $unique_duplicates = array_slice($unique_duplicates, 0, $widget->getDuplicateMaxDocumentsSetting());
+
+    // Display duplicate warning message if duplicates are found.
+    $warning_message = $widget->buildDuplicateMessage($unique_duplicates);
+    $rendered_message = $this->renderer->render($warning_message);
+    $this->messenger->addWarning($rendered_message);
   }
 
 }

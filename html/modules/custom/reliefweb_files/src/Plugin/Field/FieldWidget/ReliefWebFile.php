@@ -315,7 +315,7 @@ class ReliefWebFile extends WidgetBase {
    * @return ?array
    *   List of allowed extensions or NULL.
    */
-  protected function getExtensionsSetting(): ?array {
+  public function getExtensionsSetting(): ?array {
     $extensions = trim($this->getSetting('extensions') ?: '');
     if (empty($extensions)) {
       return NULL;
@@ -329,7 +329,7 @@ class ReliefWebFile extends WidgetBase {
    * @return int
    *   Max file size.
    */
-  protected function getMaxFileSizeSetting(): int {
+  public function getMaxFileSizeSetting(): int {
     return $this->getSetting('max_file_size');
   }
 
@@ -339,7 +339,7 @@ class ReliefWebFile extends WidgetBase {
    * @return int
    *   Maximum number of similar documents to return.
    */
-  protected function getDuplicateMaxDocumentsSetting(): int {
+  public function getDuplicateMaxDocumentsSetting(): int {
     return $this->getSetting('duplicate_max_documents');
   }
 
@@ -349,7 +349,7 @@ class ReliefWebFile extends WidgetBase {
    * @return string
    *   Minimum similarity threshold.
    */
-  protected function getDuplicateMinimumShouldMatchSetting(): string {
+  public function getDuplicateMinimumShouldMatchSetting(): string {
     return $this->getSetting('duplicate_minimum_should_match');
   }
 
@@ -359,7 +359,7 @@ class ReliefWebFile extends WidgetBase {
    * @return string
    *   Warning message to display when duplicates are found.
    */
-  protected function getDuplicateWarningMessageSetting(): string {
+  public function getDuplicateWarningMessageSetting(): string {
     return $this->getSetting('duplicate_warning_message');
   }
 
@@ -369,7 +369,7 @@ class ReliefWebFile extends WidgetBase {
    * @return int
    *   Maximum number of files to search for similarity.
    */
-  protected function getDuplicateMaxFilesSetting(): int {
+  public function getDuplicateMaxFilesSetting(): int {
     return $this->getSetting('duplicate_max_files');
   }
 
@@ -379,7 +379,7 @@ class ReliefWebFile extends WidgetBase {
    * @return bool
    *   Whether to only include published documents.
    */
-  protected function getDuplicateOnlyPublishedSetting(): bool {
+  public function getDuplicateOnlyPublishedSetting(): bool {
     return $this->getSetting('duplicate_only_published');
   }
 
@@ -1886,20 +1886,27 @@ class ReliefWebFile extends WidgetBase {
     ];
 
     // Add the duplicate message.
-    $this->addDuplicateMessage($element, $duplicates);
+    if (!empty($duplicates)) {
+      $duplicate_message = $this->buildDuplicateMessage($duplicates);
+      $duplicate_message['#weight'] = -1;
+      $element['duplicate_message'] = $duplicate_message;
+    }
   }
 
   /**
-   * Add duplicate message to the form element.
+   * Build duplicate message render array.
    *
-   * @param array $element
-   *   The form element to add the duplicate message to.
    * @param array $duplicates
    *   Array of duplicate documents.
+   * @param string $warning_message
+   *   The warning message to display.
+   *
+   * @return array
+   *   The render array for the duplicate message.
    */
-  protected function addDuplicateMessage(array &$element, array $duplicates) {
+  public function buildDuplicateMessage(array $duplicates, string $warning_message = '') {
     if (empty($duplicates)) {
-      return;
+      return [];
     }
 
     $items = [];
@@ -1932,10 +1939,15 @@ class ReliefWebFile extends WidgetBase {
       ];
     }
 
-    $element['duplicate_message'] = [
+    $warning_message = $warning_message ?: $this->getDuplicateWarningMessageSetting();
+
+    return [
       '#type' => 'container',
       '#attributes' => [
         'class' => ['duplicate-files-message'],
+      ],
+      '#attached' => [
+        'library' => ['reliefweb_files/file.duplicate-message'],
       ],
       'warning' => [
         '#type' => 'html_tag',
@@ -1950,7 +1962,7 @@ class ReliefWebFile extends WidgetBase {
             'class' => ['messages__content'],
           ],
           'text' => [
-            '#markup' => $this->getDuplicateWarningMessageSetting(),
+            '#markup' => $warning_message,
           ],
         ],
         'list' => [
@@ -1961,7 +1973,6 @@ class ReliefWebFile extends WidgetBase {
           ],
         ],
       ],
-      '#weight' => -1,
     ];
   }
 
