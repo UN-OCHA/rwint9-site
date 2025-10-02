@@ -129,8 +129,11 @@ class ReportFormAlterTest extends UnitTestCase {
    * Tests that duplicate checking is skipped for AJAX requests.
    */
   public function testCheckForDuplicateFilesSkipsAjaxRequests(): void {
-    // Mock the request to return true for isXmlHttpRequest.
+    // Mock the request to return true for isXmlHttpRequest and GET method.
     $request = $this->createMock(Request::class);
+    $request->expects($this->once())
+      ->method('getMethod')
+      ->willReturn('GET');
     $request->expects($this->once())
       ->method('isXmlHttpRequest')
       ->willReturn(TRUE);
@@ -212,8 +215,11 @@ class ReportFormAlterTest extends UnitTestCase {
    * Tests that duplicate checking is skipped for new entities.
    */
   public function testCheckForDuplicateFilesSkipsNewEntities(): void {
-    // Mock the request to return false for isXmlHttpRequest.
+    // Mock the request to return false for isXmlHttpRequest and GET method.
     $request = $this->createMock(Request::class);
+    $request->expects($this->once())
+      ->method('getMethod')
+      ->willReturn('GET');
     $request->expects($this->once())
       ->method('isXmlHttpRequest')
       ->willReturn(FALSE);
@@ -270,11 +276,60 @@ class ReportFormAlterTest extends UnitTestCase {
   }
 
   /**
+   * Tests that duplicate checking is skipped for non-GET requests.
+   */
+  public function testCheckForDuplicateFilesSkipsNonGetRequests(): void {
+    // Mock user with permission.
+    $this->currentUser->expects($this->once())
+      ->method('hasPermission')
+      ->with('check for duplicate files')
+      ->willReturn(TRUE);
+
+    // Mock the request to return POST method.
+    $request = $this->createMock(Request::class);
+    $request->expects($this->once())
+      ->method('getMethod')
+      ->willReturn('POST');
+
+    $this->requestStack->expects($this->once())
+      ->method('getCurrentRequest')
+      ->willReturn($request);
+
+    $service = new ReportFormAlter(
+      $this->database,
+      $this->currentUser,
+      $this->entityFieldManager,
+      $this->entityTypeManager,
+      $this->state,
+      $this->stringTranslation,
+      $this->fileDuplication,
+      $this->requestStack,
+      $this->renderer,
+      $this->messenger
+    );
+
+    $form = [];
+    $formState = $this->createMock(FormStateInterface::class);
+
+    // The method should return early for non-GET requests, so no other methods
+    // should be called.
+    $this->fileDuplication->expects($this->never())->method('findSimilarDocuments');
+
+    $reflection = new \ReflectionClass($service);
+    $method = $reflection->getMethod('checkForDuplicateFiles');
+    $method->setAccessible(TRUE);
+    $method->invokeArgs($service, [&$form, $formState]);
+  }
+
+  /**
    * Tests that duplicate checking works for existing entities with files.
    */
   public function testCheckForDuplicateFilesWithExistingEntity(): void {
-    // Mock the request to return false for isXmlHttpRequest.
+    // Mock the request to return false for isXmlHttpRequest and GET method.
     $request = $this->createMock(Request::class);
+    $request->expects($this->once())
+      ->method('getMethod')
+      ->willReturn('GET');
     $request->expects($this->once())
       ->method('isXmlHttpRequest')
       ->willReturn(FALSE);

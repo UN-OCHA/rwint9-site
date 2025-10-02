@@ -874,8 +874,11 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
       return;
     }
 
-    // Skip duplicate checking for AJAX requests to avoid performance issues.
-    if ($this->requestStack->getCurrentRequest()->isXmlHttpRequest()) {
+    $request = $this->requestStack->getCurrentRequest();
+
+    // Skip if the form is not a GET request, for example when the form
+    // is being submitted or is an AJAX request.
+    if ($request->getMethod() !== 'GET' || $request->isXmlHttpRequest()) {
       return;
     }
 
