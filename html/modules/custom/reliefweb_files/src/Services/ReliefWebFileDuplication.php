@@ -165,6 +165,9 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
       }
     }
 
+    // Convert minimum_should_match percentage to decimal for comparison.
+    $minimum_similarity_threshold = floatval($minimum_should_match) / 100;
+
     // Build the final results.
     foreach ($report_data as $row) {
       $report_id = $row->entity_id;
@@ -175,6 +178,11 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
       }
 
       $similarity = $report_similarities[$report_id];
+
+      // Skip reports below the minimum similarity threshold.
+      if ($similarity < $minimum_similarity_threshold) {
+        continue;
+      }
 
       // Build the node URL.
       $url = Url::fromUri("internal:/node/$report_id", ['absolute' => TRUE])->toString();
