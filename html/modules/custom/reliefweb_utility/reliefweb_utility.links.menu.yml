@@ -1,0 +1,6 @@
+reliefweb_utility.text_extraction_command_mapping:
+  title: 'Text Extraction Configuration'
+  description: 'Configure text extraction command mapping'
+  parent: system.admin_config_content
+  route_name: reliefweb_utility.text_extraction_command_mapping
+  weight: 100
