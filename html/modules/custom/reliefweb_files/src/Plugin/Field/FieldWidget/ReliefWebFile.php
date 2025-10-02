@@ -1904,12 +1904,30 @@ class ReliefWebFile extends WidgetBase {
 
     $items = [];
     foreach ($duplicates as $document) {
+      $title = $document['title'] ?? 'Unknown document';
+      $similarity_percentage = $document['similarity_percentage'] ?? '';
+
+      // Create a container for the link and similarity percentage.
       $items[] = [
-        '#type' => 'link',
-        '#title' => $document['title'] ?? 'Unknown document',
-        '#url' => Url::fromUri($document['url'] ?? ''),
+        '#type' => 'container',
         '#attributes' => [
-          'target' => '_blank',
+          'class' => ['duplicate-document-item'],
+        ],
+        'link' => [
+          '#type' => 'link',
+          '#title' => $title,
+          '#url' => Url::fromUri($document['url'] ?? ''),
+          '#attributes' => [
+            'target' => '_blank',
+          ],
+        ],
+        'similarity' => [
+          '#type' => 'html_tag',
+          '#tag' => 'span',
+          '#attributes' => [
+            'class' => ['duplicate-similarity-percentage'],
+          ],
+          '#value' => $similarity_percentage,
         ],
       ];
     }
