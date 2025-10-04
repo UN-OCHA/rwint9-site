@@ -5,5 +5,10 @@ docstore_prefix: reliefweb_
 local: true
 file_directory: attachments
 preview_directory: previews
+duplicate_detection:
+  max_documents: 10
+  max_files: 20
+  minimum_should_match: 80%
+  skip_access_check: false
 _core:
   default_config_hash: p51VTBEaJE9L5iY3Imqr82p6ym3rNeOGMoKQ3VsimvA

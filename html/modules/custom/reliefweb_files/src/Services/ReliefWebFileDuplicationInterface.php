@@ -27,8 +27,8 @@ interface ReliefWebFileDuplicationInterface {
    *   Minimum should match percentage for Elasticsearch query.
    * @param int $max_files
    *   Maximum number of files to search for similarity.
-   * @param bool $only_published
-   *   Whether to only include published documents.
+   * @param bool $skip_access_check
+   *   Whether to skip access checks.
    *
    * @return array
    *   Array of matching documents with similarity scores.
@@ -47,7 +47,7 @@ interface ReliefWebFileDuplicationInterface {
     ?int $max_documents = NULL,
     ?string $minimum_should_match = NULL,
     ?int $max_files = NULL,
-    ?bool $only_published = NULL,
+    ?bool $skip_access_check = FALSE,
   ): array;
 
   /**

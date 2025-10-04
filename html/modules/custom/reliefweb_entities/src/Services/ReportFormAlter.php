@@ -930,7 +930,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
         $widget->getDuplicateMaxDocumentsSetting(),
         $widget->getDuplicateMinimumShouldMatchSetting(),
         $widget->getDuplicateMaxFilesSetting(),
-        $widget->getDuplicateOnlyPublishedSetting(),
+        $widget->getDuplicateSkipAccessCheckSetting(),
       );
 
       if (!empty($duplicates)) {

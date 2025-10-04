@@ -156,7 +156,7 @@ class ReliefWebFile extends WidgetBase {
       'duplicate_minimum_should_match' => '80%',
       'duplicate_warning_message' => 'Possible duplicate file(s) found:',
       'duplicate_max_files' => 20,
-      'duplicate_only_published' => TRUE,
+      'duplicate_skip_access_check' => FALSE,
     ] + parent::defaultSettings();
   }
 
@@ -235,12 +235,12 @@ class ReliefWebFile extends WidgetBase {
       '#max' => 100,
     ];
 
-    $duplicate_only_published = $this->getDuplicateOnlyPublishedSetting();
-    $element['duplicate_only_published'] = [
+    $duplicate_skip_access_check = $this->getDuplicateSkipAccessCheckSetting();
+    $element['duplicate_skip_access_check'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Only published documents'),
-      '#description' => $this->t('Whether to only include published documents in duplicate detection.'),
-      '#default_value' => $form_state->getValue('duplicate_only_published', $duplicate_only_published),
+      '#title' => $this->t('Skip report access checks'),
+      '#description' => $this->t('Whether to skip report access checks in duplicate detection.'),
+      '#default_value' => $form_state->getValue('duplicate_skip_access_check', $duplicate_skip_access_check),
     ];
 
     return $element;
@@ -303,7 +303,7 @@ class ReliefWebFile extends WidgetBase {
       '@max_docs' => $this->getDuplicateMaxDocumentsSetting(),
       '@max_files' => $this->getDuplicateMaxFilesSetting(),
       '@threshold' => $this->getDuplicateMinimumShouldMatchSetting(),
-      '@published_only' => $this->getDuplicateOnlyPublishedSetting() ? $this->t('published only') : $this->t('all documents'),
+      '@published_only' => $this->getDuplicateSkipAccessCheckSetting() ? $this->t('skip access checks') : $this->t('all documents'),
     ]);
 
     return $summary;
@@ -374,13 +374,13 @@ class ReliefWebFile extends WidgetBase {
   }
 
   /**
-   * Get the duplicate only published setting.
+   * Get the duplicate skip access check setting.
    *
    * @return bool
-   *   Whether to only include published documents.
+   *   Whether to skip report access checks.
    */
-  public function getDuplicateOnlyPublishedSetting(): bool {
-    return $this->getSetting('duplicate_only_published');
+  public function getDuplicateSkipAccessCheckSetting(): bool {
+    return $this->getSetting('duplicate_skip_access_check');
   }
 
   /**
@@ -1875,7 +1875,7 @@ class ReliefWebFile extends WidgetBase {
         $this->getDuplicateMaxDocumentsSetting(),
         $this->getDuplicateMinimumShouldMatchSetting(),
         $this->getDuplicateMaxFilesSetting(),
-        $this->getDuplicateOnlyPublishedSetting(),
+        $this->getDuplicateSkipAccessCheckSetting(),
       );
     }
 

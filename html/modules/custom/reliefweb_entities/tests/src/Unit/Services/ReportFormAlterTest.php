@@ -433,8 +433,8 @@ class ReportFormAlterTest extends UnitTestCase {
       ->method('getDuplicateMaxFilesSetting')
       ->willReturn(20);
     $widget->expects($this->exactly(2))
-      ->method('getDuplicateOnlyPublishedSetting')
-      ->willReturn(TRUE);
+      ->method('getDuplicateSkipAccessCheckSetting')
+      ->willReturn(FALSE);
 
     // Mock the form display to return the widget.
     $formDisplay = $this->createMock(EntityFormDisplayInterface::class);
@@ -457,7 +457,7 @@ class ReportFormAlterTest extends UnitTestCase {
         5,
         '80%',
         20,
-        TRUE
+        FALSE
       )
       ->willReturn($duplicates);
 
