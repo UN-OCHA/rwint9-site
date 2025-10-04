@@ -6,6 +6,7 @@ dependencies:
     - node.type.report
   module:
     - node
+    - reliefweb_entities
     - reliefweb_files
 id: submitter
 label: Submitter
@@ -13,5 +14,6 @@ weight: 12
 is_admin: null
 permissions:
   - 'access own reliefweb private files'
+  - 'check for duplicate files'
   - 'create report content'
   - 'edit own report content'
