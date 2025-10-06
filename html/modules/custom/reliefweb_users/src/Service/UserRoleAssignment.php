@@ -97,6 +97,11 @@ class UserRoleAssignment {
       return FALSE;
     }
 
+    // Skip if the user previously had the role assigned (per history table).
+    if ($this->wasRolePreviouslyAssigned($user, 'submitter')) {
+      return FALSE;
+    }
+
     // Support for legacy accounts.
     $legacy = $this->state->get('reliefweb_users_submitter_support_legacy_accounts', TRUE);
 
@@ -124,6 +129,11 @@ class UserRoleAssignment {
 
     // Skip if the user already has the advertiser role or is an editor.
     if ($user->hasRole('editor') || $user->hasRole('advertiser')) {
+      return FALSE;
+    }
+
+    // Skip if the user previously had the role assigned (per history table).
+    if ($this->wasRolePreviouslyAssigned($user, 'advertiser')) {
       return FALSE;
     }
 
@@ -309,6 +319,34 @@ class UserRoleAssignment {
     }
 
     return $assigned_roles;
+  }
+
+  /**
+   * Check if a role was previously assigned (recorded in history table).
+   *
+   * @param \Drupal\user\UserInterface $user
+   *   User account.
+   * @param string $role
+   *   Role to check.
+   *
+   * @return bool
+   *   TRUE if the role was previously assigned, FALSE otherwise.
+   */
+  public function wasRolePreviouslyAssigned(UserInterface $user, string $role): bool {
+    $query = $this->database
+      ->select('reliefweb_user_history', 'h')
+      ->fields('h', ['modification_id'])
+      ->condition('h.uid', $user->id(), '=')
+      ->condition('h.roles', NULL, 'IS NOT NULL');
+
+    // Roles are stored as comma-separated values. Use a safe contains check
+    // that matches full role names only.
+    $query->where("CONCAT(',', h.roles, ',') LIKE :role", [
+      ':role' => '%,' . $role . ',%',
+    ]);
+
+    $found = $query->execute()?->fetchField();
+    return !empty($found);
   }
 
 }
