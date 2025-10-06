@@ -294,3 +294,15 @@ function reliefweb_api_post_process_item(Resource $resource, array &$item): void
   // Currently no post processing is done.
   // This function is kept to ease adding post processing in the future.
 }
+
+/**
+ * Implements hook_mail().
+ */
+function reliefweb_api_mail(string $key, array &$message, array $params): void {
+  switch ($key) {
+    case 'reindex_notification':
+      $message['subject'] = $params['subject'];
+      $message['body'][] = $params['body'];
+      break;
+  }
+}

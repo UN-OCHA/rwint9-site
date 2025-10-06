@@ -92,8 +92,10 @@ class FileHelper {
     // Build command for this specific mimetype.
     $command = [$config['command']];
 
-    // Add base arguments.
-    $command = array_merge($command, $config['args']);
+    // Add base arguments if configured.
+    if (!empty($config['args'])) {
+      $command = array_merge($command, explode(' ', $config['args']));
+    }
 
     // Add options if configured.
     if (!empty($config['options'])) {
@@ -191,8 +193,10 @@ class FileHelper {
       $config = $base_commands[$mimetype];
       $command = [$config['command']];
 
-      // Add base arguments.
-      $command = array_merge($command, $config['args']);
+      // Add base arguments if configured.
+      if (!empty($config['args'])) {
+        $command = array_merge($command, explode(' ', $config['args']));
+      }
 
       // Add options if configured.
       if (!empty($config['options'])) {
@@ -271,40 +275,30 @@ class FileHelper {
       return static::$textExtractionCommands;
     }
 
-    $state = \Drupal::state();
-
-    $base_commands = [
-      'application/pdf' => [
-        'command' => $state->get('mutool', '/usr/bin/mutool'),
-        'args' => ['draw', '-F', 'txt'],
-        'options' => $state->get('mutool_text_options', ''),
-        'page' => TRUE,
-        'ignore_errors_if_output' => TRUE,
-      ],
-      'application/msword' => [
-        'command' => $state->get('pandoc', '/usr/bin/pandoc'),
-        'args' => ['--to=plain'],
-        'options' => '',
-        'page' => FALSE,
-        'ignore_errors_if_output' => FALSE,
-      ],
-    ];
+    $commands = \Drupal::config('reliefweb_utility.settings')
+      ->get('text_extraction.commands') ?: [];
 
     // Validate that required commands are available.
-    foreach ($base_commands as $mimetype => $config) {
-      if (!is_executable($config['command'])) {
+    $mapped_commands = [];
+    foreach ($commands as $command) {
+      if (empty($command['command']) || empty($command['mimetype'])) {
+        continue;
+      }
+      if (!is_executable($command['command'])) {
         \Drupal::logger('reliefweb_utility')->warning('Text extraction command is not executable for @mimetype at @path', [
-          '@mimetype' => $mimetype,
-          '@path' => $config['command'],
+          '@mimetype' => $command['mimetype'],
+          '@path' => $command['command'],
         ]);
-        unset($base_commands[$mimetype]);
+      }
+      else {
+        $mapped_commands[$command['mimetype']] = $command;
       }
     }
 
     // Cache the validated commands.
-    static::$textExtractionCommands = $base_commands;
+    static::$textExtractionCommands = $mapped_commands;
 
-    return $base_commands;
+    return $mapped_commands;
   }
 
   /**

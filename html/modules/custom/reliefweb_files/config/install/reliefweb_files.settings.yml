@@ -21,5 +21,5 @@ duplicate_detection:
   max_files: 20
   # Minimum similarity threshold for duplicate detection.
   minimum_should_match: 80%
-  # Whether to only include published documents.
-  only_published: true
+  # Whether to skip report access checks.
+  skip_access_check: false

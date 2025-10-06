@@ -1,0 +1,33 @@
+reliefweb_utility.settings:
+  type: config_object
+  label: 'ReliefWeb Utility settings'
+  mapping:
+    text_extraction:
+      type: mapping
+      label: 'Text extraction configuration'
+      mapping:
+        commands:
+          type: sequence
+          label: 'MIME type to command mappings'
+          sequence:
+            type: mapping
+            label: 'Command configuration'
+            mapping:
+              mimetype:
+                type: string
+                label: 'MIME type'
+              command:
+                type: string
+                label: 'Command executable path'
+              args:
+                type: string
+                label: 'Command arguments'
+              options:
+                type: string
+                label: 'Additional command options'
+              page:
+                type: boolean
+                label: 'Supports page parameter'
+              ignore_errors_if_output:
+                type: boolean
+                label: 'Ignore errors if output present'

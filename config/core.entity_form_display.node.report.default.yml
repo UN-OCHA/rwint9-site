@@ -180,8 +180,8 @@ content:
       duplicate_max_documents: 5
       duplicate_minimum_should_match: 80%
       duplicate_warning_message: 'Possible duplicate file(s) found:'
-      duplicate_max_files: '5'
-      duplicate_only_published: '1'
+      duplicate_max_files: 5
+      duplicate_skip_access_check: false
     third_party_settings: {  }
   field_headline:
     type: boolean_checkbox
