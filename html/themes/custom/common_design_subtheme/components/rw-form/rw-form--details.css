@@ -2,19 +2,20 @@
 /* Clean and simple details form element styling. */
 .rw-form-details {
     margin: 1rem 0;
-    border: 1px solid #e0e0e0;
-    background-color: #fff;
+    border: 1px solid var(--cd-reliefweb-brand-grey--light);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
 
   .rw-form-details__summary {
     position: relative;
-    padding: 0.7rem 1rem 0.7rem 2.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
     list-style: none;
     cursor: pointer;
     transition: color 0.2s ease;
     color: var(--cd-black);
-    background-color: transparent;
     font-weight: bold;
   }
 
@@ -25,22 +26,17 @@
 
   /* Custom arrow icon */
   .rw-form-details__summary::before {
-    position: absolute;
-    top: 50%;
-    left: 1rem;
-    width: 16px;
-    height: 16px;
+    width: 12px;
+    height: 12px;
     content: "";
     transition: transform 0.2s ease;
-    transform: translateY(-50%);
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3e%3cpath d='M5.21 1.314L3.79 2.723l5.302 5.353-5.303 5.354 1.422 1.408 6.697-6.762z' fill='%23545560'/%3e%3c/svg%3e");
+    background: var(--rw-icons--common--arrow-right--12--dark-blue);
     background-repeat: no-repeat;
-    background-size: contain;
   }
 
-  /* Rotate arrow when open */
+  /* Use down arrow when open */
   .rw-form-details[open] .rw-form-details__summary::before {
-    transform: translateY(-50%) rotate(-90deg);
+    background: var(--rw-icons--toggle--down--12--dark-blue);
   }
 
   /* Hover and focus states */
@@ -49,7 +45,7 @@
   }
 
   .rw-form-details__summary:hover {
-    background-color: var(--cd-reliefweb-brand-grey--light);
+    background-color: rgba(var(--cd-rgb-reliefweb-brand-grey--light), 0.5);
   }
 
   .rw-form-details__summary:is(:focus, :active) {
@@ -58,17 +54,17 @@
   }
 
   .rw-form-details__summary:is(:hover, :focus, :active)::before {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3e%3cpath d='M5.21 1.314L3.79 2.723l5.302 5.353-5.303 5.354 1.422 1.408 6.697-6.762z' fill='%23055372'/%3e%3c/svg%3e");
+    background: var(--rw-icons--common--arrow-right--12--dark-blue);
   }
 
   /* Content wrapper */
   .rw-form-details__wrapper {
     padding: 1.5rem;
-    border-top: 1px solid #e0e0e0;
+    border-top: 1px solid var(--cd-reliefweb-brand-grey--light);
     border-top: none;
   }
 
   /* Open state styling */
   .rw-form-details[open] .rw-form-details__summary {
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--cd-reliefweb-brand-grey--light);
   }
