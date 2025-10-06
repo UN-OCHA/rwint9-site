@@ -10,8 +10,8 @@ use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\State\StateInterface;
-use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\reliefweb_utility\Helpers\FileHelper;
 use GuzzleHttp\ClientInterface;
@@ -50,6 +50,8 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
    *   The entity type manager.
    * @param \Drupal\Core\File\FileSystemInterface $fileSystem
    *   The file system service.
+   * @param \Drupal\Core\Session\AccountInterface $currentUser
+   *   The current user.
    */
   public function __construct(
     protected StateInterface $state,
@@ -59,6 +61,7 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
     protected Connection $database,
     protected EntityTypeManagerInterface $entityTypeManager,
     protected FileSystemInterface $fileSystem,
+    protected AccountInterface $currentUser,
   ) {
   }
 
@@ -72,7 +75,7 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
     ?int $max_documents = NULL,
     ?string $minimum_should_match = NULL,
     ?int $max_files = NULL,
-    ?bool $only_published = NULL,
+    ?bool $skip_access_check = NULL,
   ): array {
     $logger = $this->getLogger();
 
@@ -94,7 +97,7 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
     $max_documents ??= $duplicate_config['max_documents'] ?? 10;
     $minimum_should_match ??= $duplicate_config['minimum_should_match'] ?? '80%';
     $max_files ??= $duplicate_config['max_files'] ?? 20;
-    $only_published ??= $duplicate_config['only_published'] ?? TRUE;
+    $skip_access_check ??= $duplicate_config['skip_access_check'] ?? FALSE;
 
     // 1. Get file IDs to exclude from the search results from the documents
     // to exclude.
@@ -119,7 +122,7 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
     // 4. Find reports that contain these files by querying the database.
     // Start with base query and customize for this specific use case
     $query = $this->createNodeFieldFileQuery($bundle);
-    $query->fields('nff', ['entity_id', 'field_file_file_uuid']);
+    $query->fields('nff', ['entity_id']);
     $query->condition('fm.fid', $file_ids, 'IN');
 
     // Add filter to exclude specific document IDs if provided.
@@ -127,85 +130,78 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
       $query->condition('nff.entity_id', $exclude_document_ids, 'NOT IN');
     }
 
-    // Join with node_field_data to get title and status.
-    $query->join('node_field_data', 'nfd', 'nff.entity_id = nfd.nid');
-    $query->fields('nfd', ['title', 'status']);
-
-    // Only include published nodes.
-    if ($only_published) {
-      $query->condition('nfd.status', 1);
-    }
-
-    $query->range(0, $max_documents);
-    $report_data = $query->execute()->fetchAll();
-
-    if (empty($report_data)) {
+    // Retrieve a mapping of file IDs to report IDs.
+    $id_mapping = $query->execute()->fetchAllKeyed();
+    if (empty($id_mapping)) {
       $logger->notice('No reports found with similar files.');
       return [];
-    }
-
-    // 5. Build results with similarity scores.
-    $results = [];
-    $report_similarities = [];
-
-    // Group file similarities by report ID for efficient lookup.
-    foreach ($report_data as $row) {
-      $report_id = $row->entity_id;
-      $file_uuid = $row->field_file_file_uuid;
-
-      // Find the similarity score for this file by matching UUID.
-      foreach ($similar_files as $similar_file) {
-        if ($similar_file['uuid'] === $file_uuid) {
-          // Keep the highest similarity score for this report.
-          if (!isset($report_similarities[$report_id]) || $similar_file['similarity'] > $report_similarities[$report_id]) {
-            $report_similarities[$report_id] = $similar_file['similarity'];
-          }
-          break;
-        }
-      }
     }
 
     // Convert minimum_should_match percentage to decimal for comparison.
     $minimum_similarity_threshold = floatval($minimum_should_match) / 100;
 
-    // Build the final results.
-    foreach ($report_data as $row) {
-      $report_id = $row->entity_id;
-
-      // Skip if we already processed this report or if it has no similarity.
-      if (!isset($report_similarities[$report_id]) || $report_similarities[$report_id] <= 0) {
+    // Create a mapping of report IDs to file information.
+    $report_data = [];
+    foreach ($similar_files as $similar_file) {
+      if (!isset($id_mapping[$similar_file['id']])) {
         continue;
       }
 
-      $similarity = $report_similarities[$report_id];
+      $file_id = $similar_file['id'];
+      $report_id = $id_mapping[$file_id];
+      $similarity = $similar_file['similarity'];
 
       // Skip reports below the minimum similarity threshold.
       if ($similarity < $minimum_similarity_threshold) {
         continue;
       }
 
-      // Build the node URL.
-      $url = Url::fromUri("internal:/node/$report_id", ['absolute' => TRUE])->toString();
-
-      $results[] = [
-        'id' => $report_id,
-        'title' => $row->title,
-        'url' => $url,
-        'similarity' => $similarity,
-        'similarity_percentage' => sprintf('%.1f%%', $similarity * 100),
-        'score' => $similarity,
-      ];
-
-      // Remove from similarities array to avoid duplicates.
-      unset($report_similarities[$report_id]);
+      // Store the file information for the file with the highest similarity.
+      if (isset($report_data[$report_id])) {
+        if ($similarity > $report_data[$report_id]['similarity']) {
+          $report_data[$report_id] = $similar_file;
+        }
+      }
+      else {
+        $report_data[$report_id] = $similar_file;
+      }
     }
 
-    // Sort by similarity score (descending).
-    usort($results, function ($a, $b) {
+    // Sort the report data by similarity score (descending).
+    uasort($report_data, function ($a, $b) {
       return $b['similarity'] <=> $a['similarity'];
     });
 
-    return array_slice($results, 0, $max_documents);
+    // Load the reports.
+    $report_ids = array_keys($report_data);
+    $reports = $this->getEntityTypeManager()->getStorage('node')->loadMultiple($report_ids);
+
+    // If skip_access_check is not TRUE, filter out reports that the current
+    // user does not have access to.
+    if ($skip_access_check !== TRUE) {
+      $reports = array_filter($reports, function ($report) {
+        return $report->access('view', $this->getCurrentUser());
+      });
+    }
+
+    // Limit to max_documents.
+    $reports = array_slice($reports, 0, $max_documents, TRUE);
+
+    // 5. Build results with similarity scores.
+    $results = [];
+    foreach ($reports as $id => $report) {
+      $file_data = $report_data[$id];
+      $results[] = [
+        'id' => $id,
+        'title' => $report->label(),
+        'url' => $report->toUrl('canonical', ['absolute' => TRUE])->toString(),
+        'similarity' => $file_data['similarity'],
+        'similarity_percentage' => sprintf('%.1f%%', $file_data['similarity'] * 100),
+        'score' => $file_data['score'],
+      ];
+    }
+
+    return $results;
   }
 
   /**
@@ -1177,6 +1173,16 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
    */
   protected function getFileSystem(): FileSystemInterface {
     return $this->fileSystem;
+  }
+
+  /**
+   * Get the current user.
+   *
+   * @return \Drupal\Core\Session\AccountInterface
+   *   The current user.
+   */
+  protected function getCurrentUser(): AccountInterface {
+    return $this->currentUser;
   }
 
   /**
