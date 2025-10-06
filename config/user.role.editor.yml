@@ -33,6 +33,7 @@ dependencies:
     - path
     - reliefweb_anti_spam
     - reliefweb_bookmarks
+    - reliefweb_entities
     - reliefweb_fields
     - reliefweb_files
     - reliefweb_form
@@ -72,6 +73,7 @@ permissions:
   - 'bypass ocha content classification for node report'
   - 'bypass reliefweb anti spam'
   - 'change reliefweb failed import records'
+  - 'check for duplicate files'
   - 'create announcement content'
   - 'create blog_post content'
   - 'create book content'
