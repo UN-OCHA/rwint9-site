@@ -95,35 +95,23 @@
   margin-top: 0.5rem;
 }
 /* Actions details element */
-.rw-file-widget summary {
-  display: flex;
-  align-items: baseline;
-  list-style-type: none;
-  cursor: pointer;
+.rw-file-widget .rw-form-details {
+  margin: 0;
+  border: none;
+  box-shadow: none;
 }
-.rw-file-widget summary > span {
-  display: inline-block;
+.rw-file-widget .rw-form-details__summary {
+  padding: 0.5rem 0;
+  background: none;
+  font-weight: normal;
 }
-/* Use custom icon */
-.rw-file-widget summary::-webkit-details-marker {
-  display: none;
+.rw-file-widget .rw-form-details__summary:is(:hover,:focus,:active) {
+  color: var(--cd-black);
+  outline: none;
+  background: none;
 }
-.rw-file-widget summary::before {
-  display: inline-block;
-  overflow: hidden;
-  width: 12px;
-  height: 12px;
-  margin-right: 6px;
-  content: "";
-  background: var(--rw-icons--common--arrow-right--12--dark-blue);
-}
-.rw-file-widget details[open] > summary {
-  margin-bottom: 8px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--cd-reliefweb-brand-grey--light);
-}
-.rw-file-widget details[open] > summary::before {
-  background: var(--rw-icons--toggle--down--12--dark-blue);
+.rw-file-widget .rw-form-details__wrapper {
+  padding: 1rem 0 0 0;
 }
 
 /* Warning when re-ordered. */
@@ -133,20 +121,22 @@
 
 /* File name details. */
 .rw-file-widget .rw-file-widget-item__file-name-details {
+  margin-top: 14px;
   font-size: 16px;
 }
-.rw-file-widget .rw-file-widget-item__file-name-details[open] > summary {
+.rw-file-widget .rw-file-widget-item__file-name-details .rw-form-details__summary,
+.rw-file-widget .rw-file-widget-item__file-name-details[open] > .rw-form-details__summary {
   margin: 0;
   padding: 0;
   border: none;
 }
-.rw-file-widget .rw-file-widget-item__file-name-details .details-wrapper {
+.rw-file-widget .rw-file-widget-item__file-name-details .rw-form-details__wrapper {
   margin-top: 12px;
   padding: 12px;
   border: 1px solid var(--cd-reliefweb-brand-grey--light);
   background: var(--cd-reliefweb-grey--disable);
 }
-.rw-file-widget .rw-file-widget-item__file-name-details .description {
+.rw-file-widget .rw-file-widget-item__file-name-details .rw-form-details__description {
   margin-bottom: 0;
   font-size: 14px;
 }
@@ -155,6 +145,7 @@
   outline-offset: -2px;
 }
 
+/* Autoupload */
 .rw-file-widget--autoupload {
   .rw-file-widget__add-more {
     margin-top: 0;
@@ -184,6 +175,7 @@
   }
 }
 
+/* Simplified widget */
 .rw-file-widget--simplified {
   .rw-file-widget-item__operations {
     width: 200px;
