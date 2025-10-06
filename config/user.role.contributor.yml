@@ -9,6 +9,7 @@ dependencies:
     - media
     - node
     - ocha_content_classification
+    - reliefweb_entities
     - reliefweb_files
     - reliefweb_form
     - reliefweb_guidelines
@@ -22,6 +23,7 @@ permissions:
   - 'access editorial guidelines'
   - 'access reliefweb private files'
   - 'bypass ocha content classification for node report'
+  - 'check for duplicate files'
   - 'create image_report media'
   - 'create report content'
   - 'delete media'

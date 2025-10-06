@@ -5,6 +5,8 @@ file.rename:
 file.autoupload:
   js:
     js/file.autoupload.js: {}
+
+file.duplicate-message:
   css:
     theme:
       css/duplicate-message.css: {}

@@ -52,3 +52,19 @@
   font-size: 0.9em;
   font-weight: bold;
 }
+
+/* Styling when the duplicate message is displayed via the messenger service. */
+.messages {
+  .duplicate-files-message {
+    margin: 0;
+  }
+
+  .duplicate-files-list a {
+    color: var(--brand-primary);
+
+    &:hover {
+      text-decoration: underline;
+      color: var(--brand-primary--dark);
+    }
+  }
+}
