@@ -47,11 +47,9 @@
   list-style: none;
   vertical-align: top;
 }
-.rw-user-dashboard li > * {
+.rw-user-dashboard li {
   display: inline-block;
-}
-.rw-user-dashboard li + li {
-  margin-top: 32px;
+  margin-bottom: 32px;
   break-inside: avoid;
 }
 [dir="ltr"] .rw-user-dashboard li {
@@ -59,6 +57,9 @@
 }
 [dir="rtl"] .rw-user-dashboard li {
   padding-left: 32px;
+}
+.rw-user-dashboard li > * {
+  display: inline-block;
 }
 .rw-user-dashboard li a {
   font-size: 18px;
