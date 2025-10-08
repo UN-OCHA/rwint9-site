@@ -6,6 +6,7 @@ namespace Drupal\reliefweb_moderation\Helpers;
 
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Database\Statement\FetchAs;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Field\EntityReferenceFieldItemList;
 use Drupal\Core\Session\AccountInterface;
@@ -90,6 +91,16 @@ class UserPostingRightsHelper {
 
     $source_entities = $source_item_list->referencedEntities();
     foreach ($source_entities as $source_entity) {
+      if (!($source_entity instanceof ContentEntityInterface)) {
+        continue;
+      }
+
+      // Skip this source if the current bundle is not allowed for this source.
+      $allowed_content_types = static::getAllowedContentTypes($source_entity);
+      if (empty($allowed_content_types[$bundle])) {
+        continue;
+      }
+
       // Default to unverified if the owner has no right defined for the source.
       $right = 'unverified';
       $user_right_found = FALSE;
@@ -200,6 +211,9 @@ class UserPostingRightsHelper {
       $results = [];
     }
 
+    // Filter results based on allowed content types.
+    $results = static::filterPostingRightsByAllowedContentTypes($results, $helper);
+
     // Add default rights for non matched sources.
     foreach ($sources as $tid) {
       if (!isset($results[$tid])) {
@@ -229,7 +243,7 @@ class UserPostingRightsHelper {
    * @return array<int, array<string, mixed>>
    *   Domain posting rights as an associative array keyed by source id.
    */
-  protected static function getDomainPostingRights(AccountInterface $account, array $sources = []): array {
+  public static function getDomainPostingRights(AccountInterface $account, array $sources = []): array {
     $helper = new self();
     $results = [];
 
@@ -265,7 +279,8 @@ class UserPostingRightsHelper {
 
     $results = $query->execute()?->fetchAllAssoc('tid', FetchAs::Associative);
 
-    return $results;
+    // Filter results based on allowed content types.
+    return static::filterPostingRightsByAllowedContentTypes($results, $helper);
   }
 
   /**
@@ -277,13 +292,100 @@ class UserPostingRightsHelper {
    * @return string|null
    *   Domain part of the email address or NULL if invalid.
    */
-  protected static function extractDomainFromEmail(string $email): ?string {
+  public static function extractDomainFromEmail(string $email): ?string {
     if (empty($email) || strpos($email, '@') === FALSE) {
       return NULL;
     }
 
     [, $domain] = explode('@', $email, 2);
     return mb_strtolower(trim($domain));
+  }
+
+  /**
+   * Get allowed content types for a source entity.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $source_entity
+   *   Source entity.
+   *
+   * @return array<string, bool>
+   *   Associative array of allowed content type bundles (job, training, report)
+   *   as keys and TRUE as values.
+   */
+  public static function getAllowedContentTypes(ContentEntityInterface $source_entity): array {
+    $allowed_content_types = [];
+
+    if ($source_entity->hasField('field_allowed_content_types')) {
+      foreach ($source_entity->get('field_allowed_content_types') as $item) {
+        if (!$item->isEmpty()) {
+          $bundle = match ((int) $item->value) {
+            0 => 'job',
+            1 => 'report',
+            2 => 'training',
+            default => NULL,
+          };
+          if (isset($bundle)) {
+            $allowed_content_types[$bundle] = TRUE;
+          }
+        }
+      }
+    }
+
+    return $allowed_content_types;
+  }
+
+  /**
+   * Filter posting rights based on allowed content types for sources.
+   *
+   * @param array<int, array<string, mixed>> $results
+   *   Posting rights results.
+   * @param \Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper|null $helper
+   *   Helper instance for database operations.
+   *
+   * @return array<int, array<string, mixed>>
+   *   Filtered posting rights results.
+   */
+  public static function filterPostingRightsByAllowedContentTypes(array $results, ?UserPostingRightsHelper $helper = NULL): array {
+    if (empty($results)) {
+      return $results;
+    }
+
+    $helper = $helper ?? new self();
+
+    // Get allowed content types for all sources.
+    $source_ids = array_keys($results);
+    $allowed_table = $helper->getFieldTableName('taxonomy_term', 'field_allowed_content_types');
+    $allowed_field = $helper->getFieldColumnName('taxonomy_term', 'field_allowed_content_types', 'value');
+
+    $query = $helper->getDatabase()->select($allowed_table, 'allowed');
+    $query->addField('allowed', 'entity_id', 'tid');
+    $query->addField('allowed', $allowed_field, 'value');
+    $query->condition('allowed.bundle', 'source', '=');
+    $query->condition('allowed.entity_id', $source_ids, 'IN');
+
+    $allowed_content_types = [];
+    foreach ($query->execute() as $row) {
+      $bundle = match ((int) $row->value) {
+        0 => 'job',
+        1 => 'report',
+        2 => 'training',
+        default => NULL,
+      };
+      if (isset($bundle)) {
+        $allowed_content_types[$row->tid][$bundle] = TRUE;
+      }
+    }
+
+    // Preserve original rights for allowed types; set to unverified (0)
+    // for types not allowed for the source.
+    foreach ($results as $tid => $data) {
+      $allowed_types = $allowed_content_types[$tid] ?? [];
+      $data['job'] = isset($allowed_types['job']) ? ($data['job'] ?? 0) : 0;
+      $data['report'] = isset($allowed_types['report']) ? ($data['report'] ?? 0) : 0;
+      $data['training'] = isset($allowed_types['training']) ? ($data['training'] ?? 0) : 0;
+      $results[$tid] = $data;
+    }
+
+    return $results;
   }
 
   /**
@@ -386,7 +488,7 @@ class UserPostingRightsHelper {
     }
 
     // Only applies to job, training and report.
-    if ($bundle === 'job' || $bundle === 'training' || $bundle === 'report') {
+    if (static::entitySupportsPostingRights($entity)) {
       // Check for sources for which the user is blocked, allowed or trusted.
       //
       // Note: if there is no source or the user in unverified for the sources
@@ -552,7 +654,8 @@ class UserPostingRightsHelper {
 
     $results = $query->execute()?->fetchAllAssoc('entity_id', FetchAs::Associative);
 
-    return $results;
+    // Filter results based on allowed content types.
+    return static::filterPostingRightsByAllowedContentTypes($results, $helper);
   }
 
   /**
@@ -628,7 +731,10 @@ class UserPostingRightsHelper {
       $query->range(0, $limit);
     }
 
-    return $query->execute()?->fetchAllAssoc('entity_id', FetchAs::Associative);
+    $results = $query->execute()?->fetchAllAssoc('entity_id', FetchAs::Associative);
+
+    // Filter results based on allowed content types.
+    return static::filterPostingRightsByAllowedContentTypes($results, $helper);
   }
 
   /**
