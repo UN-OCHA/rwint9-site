@@ -347,7 +347,7 @@ function reliefweb_users_preprocess_user(array &$variables): void {
 
   $variables['masquerade'] = [
     '#lazy_builder' => [
-      'masquerade.callbacks:renderCacheLink', [
+      'reliefweb_users.masquerade.callbacks:renderCacheLink', [
         $user->id(),
       ],
     ],

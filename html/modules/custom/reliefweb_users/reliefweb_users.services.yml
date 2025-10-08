@@ -7,3 +7,6 @@ services:
     class: Drupal\reliefweb_users\Access\SystemUserAccessCheck
     tags:
       - { name: access_check, applies_to: _reliefweb_user_access_check }
+  reliefweb_users.masquerade.callbacks:
+    class: Drupal\reliefweb_users\ReliefwebMasqueradeCallbacks
+    arguments: ['@entity_type.manager', '@masquerade', '@redirect.destination']
