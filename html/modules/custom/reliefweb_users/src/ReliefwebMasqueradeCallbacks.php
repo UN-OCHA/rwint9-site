@@ -22,7 +22,7 @@ class ReliefwebMasqueradeCallbacks extends MasqueradeCallbacks implements Truste
   protected $destination;
 
   /**
-   * MasqueradeCallbacks constructor.
+   * ReliefwebMasqueradeCallbacks constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
