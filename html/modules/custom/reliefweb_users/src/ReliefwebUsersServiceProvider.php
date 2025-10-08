@@ -7,7 +7,7 @@ use Drupal\Core\DependencyInjection\ServiceProviderBase;
 use Symfony\Component\DependencyInjection\Reference;
 
 /**
- * Modifies the language manager service.
+ * Modifies the masquerade callbacks service.
  */
 class ReliefwebUsersServiceProvider extends ServiceProviderBase {
 
