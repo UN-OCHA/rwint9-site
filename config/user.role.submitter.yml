@@ -8,6 +8,7 @@ dependencies:
     - node
     - reliefweb_entities
     - reliefweb_files
+    - reliefweb_user_posts
 id: submitter
 label: Submitter
 weight: 12
@@ -17,3 +18,4 @@ permissions:
   - 'check for duplicate files'
   - 'create report content'
   - 'edit own report content'
+  - 'view own posts'

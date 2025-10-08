@@ -9,6 +9,7 @@ dependencies:
     - node
     - ocha_content_classification
     - reliefweb_moderation
+    - reliefweb_user_posts
 id: advertiser
 label: Advertiser
 weight: 13
@@ -22,4 +23,5 @@ permissions:
   - 'edit own job content'
   - 'edit own training content'
   - 'view job moderation information'
+  - 'view own posts'
   - 'view training moderation information'
