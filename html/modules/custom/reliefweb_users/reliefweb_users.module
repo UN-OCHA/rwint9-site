@@ -347,7 +347,7 @@ function reliefweb_users_preprocess_user(array &$variables): void {
 
   $variables['masquerade'] = [
     '#lazy_builder' => [
-      'reliefweb_users.masquerade.callbacks:renderCacheLink', [
+      'masquerade.callbacks:renderCacheLink', [
         $user->id(),
       ],
     ],
@@ -444,4 +444,11 @@ function reliefweb_users_assign_submitter_role(UserInterface $user): void {
     // Make sure we switch back to the current user.
     $account_switcher->switchBack();
   }
+}
+
+/**
+ * Implmements hook_menu_links_discovered_alter().
+ */
+function reliefweb_users_menu_links_discovered_alter(&$links) {
+  $links['masquerade.unmasquerade']['options'] = ['query' => ['destination' => '/user']];
 }
