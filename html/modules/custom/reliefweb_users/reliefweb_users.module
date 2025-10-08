@@ -345,6 +345,15 @@ function reliefweb_users_preprocess_user(array &$variables): void {
     }
   }
 
+  $variables['masquerade'] = [
+    '#lazy_builder' => [
+      'masquerade.callbacks:renderCacheLink', [
+        $user->id(),
+      ],
+    ],
+    '#create_placeholder' => TRUE,
+  ];
+
   if (!empty($links)) {
     $variables['user_links'] = [
       '#theme' => 'item_list',
@@ -352,6 +361,7 @@ function reliefweb_users_preprocess_user(array &$variables): void {
       '#attributes' => ['class' => ['user-links-list']],
     ];
   }
+
 }
 
 /**
