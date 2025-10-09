@@ -43,6 +43,25 @@ function reliefweb_users_menu_local_tasks_alter(array &$data, $route_name, Refin
   if (isset($data['tabs'][0]['entity.user.canonical'])) {
     $data['tabs'][0]['entity.user.canonical']['#link']['title'] = t('Dashboard');
   }
+
+  if (isset($data['tabs'][0]['reliefweb_users.masquerade'])) {
+    $masquerade = \Drupal::service('masquerade');
+
+    // Hide the masquerade tab when already masquerading.
+    if ($masquerade->isMasquerading()) {
+      $data['tabs'][0]['reliefweb_users.masquerade']['#access'] = FALSE;
+    }
+
+    // Hide the masquerade tab when the current user is on own profile.
+    $current_user = \Drupal::currentUser();
+    $route_parameters = \Drupal::routeMatch()->getParameters()->all();
+    if (isset($route_parameters['user']) && $route_parameters['user'] instanceof UserInterface) {
+      $user = $route_parameters['user'];
+      if ($user->id() === $current_user->id()) {
+        $data['tabs'][0]['reliefweb_users.masquerade']['#access'] = FALSE;
+      }
+    }
+  }
 }
 
 /**
@@ -344,15 +363,6 @@ function reliefweb_users_preprocess_user(array &$variables): void {
       ];
     }
   }
-
-  $variables['masquerade'] = [
-    '#lazy_builder' => [
-      'masquerade.callbacks:renderCacheLink', [
-        $user->id(),
-      ],
-    ],
-    '#create_placeholder' => TRUE,
-  ];
 
   if (!empty($links)) {
     $variables['user_links'] = [
