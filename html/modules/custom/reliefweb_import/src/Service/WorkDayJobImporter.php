@@ -158,19 +158,19 @@ class WorkDayJobImporter extends JobFeedsImporterBase implements JobFeedsImporte
   }
 
   /**
-   * Process the WorkDay document data.
+   * Process the WorkDay documents data.
    *
-   * @param array $document
-   *   The WorkDay document data.
+   * @param array $documents
+   *   The WorkDay documents data.
    */
-  public function importDocuments(array $document): void {
+  public function importDocuments(array $documents): void {
     $source_id = $this->settings['source_id'] ?? '';
     $uid = $this->settings['uid'] ?? 2;
     $name = $source_id;
 
-    foreach ($document as $item) {
+    foreach ($documents as $item) {
       try {
-        $guid = trim($document['url'] ?? '');
+        $guid = trim($item['url'] ?? '');
         $this->url = $guid;
 
         // Check if job already exist.
