@@ -7,6 +7,7 @@ use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
 use Consolidation\SiteProcess\ProcessManagerAwareTrait;
 use Drupal\reliefweb_import\Plugin\ReliefwebImporterPluginManagerInterface;
 use Drupal\reliefweb_import\Service\JobFeedsImporterInterface;
+use Drupal\reliefweb_import\Service\WorkDayJobImporter;
 use Drush\Commands\DrushCommands;
 
 /**
@@ -23,6 +24,7 @@ class ReliefwebImport extends DrushCommands implements SiteAliasManagerAwareInte
    */
   public function __construct(
     protected JobFeedsImporterInterface $jobImporter,
+    protected WorkDayJobImporter $workdayJobImporter,
     protected ReliefwebImporterPluginManagerInterface $importerPluginManager,
   ) {}
 
@@ -42,6 +44,34 @@ class ReliefwebImport extends DrushCommands implements SiteAliasManagerAwareInte
    */
   public function importJobs(int $limit = 50): void {
     $this->jobImporter->importJobs($limit);
+  }
+
+  /**
+   * Import workday jobs.
+   *
+   * @param int $limit
+   *   Max number of items to import.
+   *
+   * @command reliefweb_import:workday
+   *
+   * @usage reliefweb_import:workday
+   *   Import workday jobs.
+   *
+   * @validate-module-enabled reliefweb_import
+   * @aliases reliefweb-import-workday
+   */
+  public function importWorkdayJobs(int $limit = 50): void {
+    $local_file_path = '/var/www/workday_jobs.json';
+    $config = file_get_contents($local_file_path);
+    if ($config) {
+      $data = json_decode($config, TRUE);
+      if (!empty($data['tenants'])) {
+        foreach ($data['tenants'] as $tenant_settings) {
+          $this->workdayJobImporter->setSettings($tenant_settings);
+          $this->workdayJobImporter->importJobs($limit);
+        }
+      }
+    }
   }
 
   /**
