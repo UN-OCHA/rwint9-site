@@ -457,7 +457,7 @@ function reliefweb_users_assign_submitter_role(UserInterface $user): void {
 }
 
 /**
- * Implmements hook_menu_links_discovered_alter().
+ * Implements hook_menu_links_discovered_alter().
  */
 function reliefweb_users_menu_links_discovered_alter(&$links) {
   $links['masquerade.unmasquerade']['options'] = ['query' => ['destination' => '/user']];
