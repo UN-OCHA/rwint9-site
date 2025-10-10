@@ -164,14 +164,14 @@ class WorkDayJobImporter extends JobFeedsImporterBase implements JobFeedsImporte
    *   The WorkDay documents data.
    */
   public function importDocuments(array $documents): void {
-    $source_id = $this->settings['source_id'] ?? '';
+    $source_id = $this->settings['source_id'] ?? 0;
     $uid = $this->settings['uid'] ?? 2;
-    $name = $source_id;
 
     $errors = [];
     $warnings = [];
 
     foreach ($documents as $item) {
+      $name = $item['title'] ?? 'unknown';
       try {
         $guid = trim($item['url'] ?? '');
         $this->url = $guid;
@@ -242,7 +242,7 @@ class WorkDayJobImporter extends JobFeedsImporterBase implements JobFeedsImporte
   }
 
   /**
-   * Create a new job.
+   * Update an existing job.
    *
    * @param \Drupal\reliefweb_entities\Entity\Job $job
    *   Job to update.
