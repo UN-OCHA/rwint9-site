@@ -2,7 +2,13 @@ uuid: 8468181e-6cde-42fa-a8a0-e67d5dd01960
 langcode: en
 status: true
 dependencies:
+  config:
+    - user.role.authenticated
+    - user.role.contributor
+    - user.role.submitter
+    - user.role.topic_editor
   module:
+    - masquerade
     - reliefweb_subscriptions
     - reliefweb_users
     - system
@@ -27,6 +33,10 @@ permissions:
   - 'assign webmaster role'
   - 'change own username'
   - 'manage user roles'
+  - 'masquerade as authenticated'
+  - 'masquerade as contributor'
+  - 'masquerade as submitter'
+  - 'masquerade as topic_editor'
   - 'view reliefweb admin menu'
   - 'view the administration theme'
   - 'view user email addresses'

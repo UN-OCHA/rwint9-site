@@ -2,3 +2,12 @@ reliefweb_users.posting_rights:
   route_name: reliefweb_users.posting_rights
   title: 'Posting Rights'
   base_route: entity.user.canonical
+
+reliefweb_users.masquerade:
+  title: 'Masquerade'
+  route_name: entity.user.masquerade
+  base_route: entity.user.canonical
+  weight: 999
+  options:
+    query:
+      destination: '/user'
