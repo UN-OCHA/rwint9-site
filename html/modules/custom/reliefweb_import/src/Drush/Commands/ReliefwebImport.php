@@ -5,6 +5,7 @@ namespace Drupal\reliefweb_import\Drush\Commands;
 use Consolidation\SiteAlias\SiteAliasManagerAwareInterface;
 use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
 use Consolidation\SiteProcess\ProcessManagerAwareTrait;
+use Drupal\Core\Config\ConfigFactory;
 use Drupal\reliefweb_import\Plugin\ReliefwebImporterPluginManagerInterface;
 use Drupal\reliefweb_import\Service\JobFeedsImporterInterface;
 use Drupal\reliefweb_import\Service\WorkDayJobImporter;
@@ -26,6 +27,7 @@ class ReliefwebImport extends DrushCommands implements SiteAliasManagerAwareInte
     protected JobFeedsImporterInterface $jobImporter,
     protected WorkDayJobImporter $workdayJobImporter,
     protected ReliefwebImporterPluginManagerInterface $importerPluginManager,
+    protected ConfigFactory $configFactory,
   ) {}
 
   /**
@@ -61,16 +63,31 @@ class ReliefwebImport extends DrushCommands implements SiteAliasManagerAwareInte
    * @aliases reliefweb-import-workday
    */
   public function importWorkdayJobs(int $limit = 50): void {
-    $local_file_path = '/var/www/workday_jobs.json';
-    $config = file_get_contents($local_file_path);
-    if ($config) {
-      $data = json_decode($config, TRUE);
-      if (!empty($data['tenants'])) {
-        foreach ($data['tenants'] as $tenant_settings) {
-          $this->workdayJobImporter->setSettings($tenant_settings);
-          $this->workdayJobImporter->importJobs($limit);
-        }
+    // Load configuration.
+    $tenants_config = $this->configFactory->listAll('reliefweb_import.workday.');
+
+    foreach ($tenants_config as $name) {
+      if ($name === 'reliefweb_import.workday') {
+        // Skip the base config.
+        continue;
       }
+
+      $config = $this->configFactory->get($name)->get();
+
+      // Skip if not enabled.
+      if (empty($config['enabled'])) {
+        $this->logger()->info(strtr('Skipping import for WorkDay tenant: @name.', [
+          '@name' => $config['name'] ?? $name,
+        ]));
+        continue;
+      }
+
+      $this->logger()->info(strtr('Starting import for WorkDay tenant: @name.', [
+        '@name' => $config['name'] ?? $name,
+      ]));
+
+      $this->workdayJobImporter->setSettings($config);
+      $this->workdayJobImporter->importJobs($limit);
     }
   }
 

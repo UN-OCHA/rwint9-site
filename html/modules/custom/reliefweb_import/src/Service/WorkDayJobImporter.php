@@ -168,6 +168,9 @@ class WorkDayJobImporter extends JobFeedsImporterBase implements JobFeedsImporte
     $uid = $this->settings['uid'] ?? 2;
     $name = $source_id;
 
+    $errors = [];
+    $warnings = [];
+
     foreach ($documents as $item) {
       try {
         $guid = trim($item['url'] ?? '');
@@ -220,14 +223,14 @@ class WorkDayJobImporter extends JobFeedsImporterBase implements JobFeedsImporte
    *
    * @param string $guid
    *   Feed item unique ID.
-   * @param \SimpleXMLElement $data
-   *   XML data for the job.
+   * @param object|array $data
+   *   Data for the job.
    * @param int $uid
    *   ID of the job owner.
    * @param int $source_id
    *   Source ID.
    */
-  protected function createJob(string $guid, $data, int $uid, int $source_id): void {
+  protected function createJob(string $guid, object|array $data, int $uid, int $source_id): void {
     $values = [
       'type' => 'job',
       'uid' => $uid,
@@ -243,10 +246,10 @@ class WorkDayJobImporter extends JobFeedsImporterBase implements JobFeedsImporte
    *
    * @param \Drupal\reliefweb_entities\Entity\Job $job
    *   Job to update.
-   * @param \SimpleXMLElement $data
-   *   XML data for the job.
+   * @param object|array $data
+   *   Data for the job.
    */
-  protected function updateJob(Job $job, $data): void {
+  protected function updateJob(Job $job, object|array $data): void {
     $fields = [
       'title' => [
         'callback' => 'setJobTitle',
