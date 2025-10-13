@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\Tests\reliefweb_moderation\ExistingSite\Helpers;
+namespace Drupal\Tests\reliefweb_moderation\ExistingSite\Services;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Render\RenderContext;
@@ -11,19 +11,19 @@ use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
 use Drupal\user\Entity\User;
 use Drupal\user\EntityOwnerInterface;
-use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
+use Drupal\reliefweb_moderation\Services\UserPostingRightsManager;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
- * Tests the UserPostingRightsHelper class.
+ * Tests the UserPostingRightsManager service.
  */
-#[CoversClass(UserPostingRightsHelper::class)]
+#[CoversClass(UserPostingRightsManager::class)]
 #[Group('reliefweb_moderation')]
 #[RunTestsInSeparateProcesses]
-class UserPostingRightsHelperTest extends ExistingSiteBase {
+class UserPostingRightsManagerTest extends ExistingSiteBase {
 
   /**
    * Source vocabulary.
@@ -61,14 +61,29 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
   protected Node $testEntity;
 
   /**
+   * User posting rights manager service.
+   */
+  protected UserPostingRightsManager $userPostingRightsManager;
+
+  /**
+   * Original posting rights status mapping.
+   */
+  protected array $originalPostingRightsStatusMapping;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
     parent::setUp();
 
+    // Get the service.
+    $this->userPostingRightsManager = \Drupal::service('reliefweb_moderation.user_posting_rights');
+
+    // Save the original posting rights status mapping.
+    $this->originalPostingRightsStatusMapping = $this->userPostingRightsManager->getUserPostingRightsToModerationStatusMapping();
+
     // Create a test user with email domain.
     $this->testUser = $this->createUser([], 'test_user', FALSE, [
-      'name' => 'test_user',
       'mail' => 'test@example.com',
       'status' => 1,
     ]);
@@ -197,7 +212,10 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
    */
   protected function tearDown(): void {
     // Reset static cache.
-    drupal_static_reset('reliefweb_moderation_getUserPostingRights');
+    $this->userPostingRightsManager->resetCache();
+
+    // Restore the original posting rights status mapping.
+    $this->userPostingRightsManager->setUserPostingRightsToModerationStatusMapping($this->originalPostingRightsStatusMapping);
 
     parent::tearDown();
   }
@@ -207,7 +225,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
    */
   public function testGetEntityAuthorPostingRights(): void {
     // Test with valid entity that has source field.
-    $rights = UserPostingRightsHelper::getEntityAuthorPostingRights($this->testEntity);
+    $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($this->testEntity);
     $this->assertEquals('allowed', $rights, 'Entity with allowed job rights should return allowed');
 
     // Test with entity without source field.
@@ -217,7 +235,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
       'uid' => $this->testUser->id(),
     ]);
 
-    $rights = UserPostingRightsHelper::getEntityAuthorPostingRights($entity_without_source);
+    $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($entity_without_source);
     $this->assertEquals('unknown', $rights, 'Entity without source field should return unknown');
 
     // Test with entity that doesn't implement EntityOwnerInterface.
@@ -225,7 +243,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $mock_entity->method('hasField')->with('field_source')->willReturn(TRUE);
     $mock_entity->method('bundle')->willReturn('job');
 
-    $rights = UserPostingRightsHelper::getEntityAuthorPostingRights($mock_entity);
+    $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($mock_entity);
     $this->assertEquals('unknown', $rights, 'Entity without getOwnerId method should return unknown');
   }
 
@@ -234,7 +252,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
    */
   public function testGetUserPostingRights(): void {
     // Test with specific sources.
-    $rights = UserPostingRightsHelper::getUserPostingRights($this->testUser, [$this->testSource->id()]);
+    $rights = $this->userPostingRightsManager->getUserPostingRights($this->testUser, [$this->testSource->id()]);
 
     $this->assertArrayHasKey($this->testSource->id(), $rights);
     $this->assertEquals(2, $rights[$this->testSource->id()]['job'], 'User should have allowed rights for job');
@@ -242,7 +260,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $this->assertEquals(1, $rights[$this->testSource->id()]['report'], 'User should have blocked rights for report');
 
     // Test with multiple sources including domain-only rights.
-    $rights = UserPostingRightsHelper::getUserPostingRights($this->testUser, [
+    $rights = $this->userPostingRightsManager->getUserPostingRights($this->testUser, [
       $this->testSource->id(),
       $this->domainOnlySource->id(),
       $this->noRightsSource->id(),
@@ -262,12 +280,12 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $this->assertEquals(0, $rights[$this->noRightsSource->id()]['job'], 'Source with no rights should return unverified');
 
     // Test without sources (should include domain rights).
-    $rights = UserPostingRightsHelper::getUserPostingRights($this->testUser);
+    $rights = $this->userPostingRightsManager->getUserPostingRights($this->testUser);
     $this->assertNotEmpty($rights, 'Should return rights including domain-based rights');
 
     // Test with anonymous user.
     $anonymous_user = User::getAnonymousUser();
-    $rights = UserPostingRightsHelper::getUserPostingRights($anonymous_user);
+    $rights = $this->userPostingRightsManager->getUserPostingRights($anonymous_user);
     $this->assertEmpty($rights, 'Anonymous user should have no posting rights');
   }
 
@@ -276,7 +294,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
    */
   public function testGetDomainPostingRights(): void {
     // Test with valid user and sources.
-    $rights = UserPostingRightsHelper::getUserPostingRights($this->testUser, [$this->testSource->id()]);
+    $rights = $this->userPostingRightsManager->getUserPostingRights($this->testUser, [$this->testSource->id()]);
 
     // The domain rights should be merged with user rights.
     $this->assertArrayHasKey($this->testSource->id(), $rights);
@@ -288,7 +306,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
       'status' => 1,
     ]);
 
-    $rights = UserPostingRightsHelper::getUserPostingRights($user_without_email, [$this->testSource->id()]);
+    $rights = $this->userPostingRightsManager->getUserPostingRights($user_without_email, [$this->testSource->id()]);
     $this->assertArrayHasKey($this->testSource->id(), $rights);
     $this->assertEquals(0, $rights[$this->testSource->id()]['job'], 'User without email should have unverified rights');
   }
@@ -313,7 +331,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
       ],
     ]);
 
-    $rights = UserPostingRightsHelper::getEntityAuthorPostingRights($multiSourceEntity);
+    $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($multiSourceEntity);
     $this->assertEquals('unverified', $rights, 'Entity with mixed rights should return unverified (most restrictive)');
 
     // Test entity with user-only and domain-only sources.
@@ -329,7 +347,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
       ],
     ]);
 
-    $rights = UserPostingRightsHelper::getEntityAuthorPostingRights($mixedRightsEntity);
+    $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($mixedRightsEntity);
     $this->assertEquals('allowed', $rights, 'Entity with trusted and allowed rights should return allowed');
 
     // Test entity with only domain-based rights.
@@ -343,7 +361,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
       ],
     ]);
 
-    $rights = UserPostingRightsHelper::getEntityAuthorPostingRights($domainOnlyEntity);
+    $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($domainOnlyEntity);
     $this->assertEquals('allowed', $rights, 'Entity with only domain rights should return allowed');
   }
 
@@ -352,7 +370,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
    */
   public function testDomainPostingRightsFallback(): void {
     // Test that domain rights are used when user rights don't exist.
-    $rights = UserPostingRightsHelper::getUserPostingRights($this->testUser, [$this->domainOnlySource->id()]);
+    $rights = $this->userPostingRightsManager->getUserPostingRights($this->testUser, [$this->domainOnlySource->id()]);
 
     $this->assertArrayHasKey($this->domainOnlySource->id(), $rights);
     $this->assertEquals(2, $rights[$this->domainOnlySource->id()]['job'], 'Should use domain rights when user rights don\'t exist');
@@ -360,7 +378,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $this->assertEquals(2, $rights[$this->domainOnlySource->id()]['report'], 'Should use domain rights when user rights don\'t exist');
 
     // Test that user rights take precedence over domain rights.
-    $rights = UserPostingRightsHelper::getUserPostingRights($this->testUser, [$this->testSource->id()]);
+    $rights = $this->userPostingRightsManager->getUserPostingRights($this->testUser, [$this->testSource->id()]);
 
     $this->assertArrayHasKey($this->testSource->id(), $rights);
     $this->assertEquals(2, $rights[$this->testSource->id()]['job'], 'User rights should take precedence over domain rights');
@@ -368,7 +386,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $this->assertEquals(1, $rights[$this->testSource->id()]['report'], 'User rights should take precedence over domain rights');
 
     // Test that no rights return unverified.
-    $rights = UserPostingRightsHelper::getUserPostingRights($this->testUser, [$this->noRightsSource->id()]);
+    $rights = $this->userPostingRightsManager->getUserPostingRights($this->testUser, [$this->noRightsSource->id()]);
 
     $this->assertArrayHasKey($this->noRightsSource->id(), $rights);
     $this->assertEquals(0, $rights[$this->noRightsSource->id()]['job'], 'Source with no rights should return unverified');
@@ -391,7 +409,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
       ],
     ]);
 
-    $allowed_types = UserPostingRightsHelper::getAllowedContentTypes($sourceWithTypes);
+    $allowed_types = $this->userPostingRightsManager->getAllowedContentTypes($sourceWithTypes);
     $this->assertArrayHasKey('job', $allowed_types, 'Should include job as allowed content type');
     $this->assertArrayHasKey('report', $allowed_types, 'Should include report as allowed content type');
     $this->assertArrayNotHasKey('training', $allowed_types, 'Should not include training as allowed content type');
@@ -403,7 +421,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
       'name' => 'Source without Allowed Types',
     ]);
 
-    $allowed_types = UserPostingRightsHelper::getAllowedContentTypes($sourceWithoutTypes);
+    $allowed_types = $this->userPostingRightsManager->getAllowedContentTypes($sourceWithoutTypes);
     $this->assertEmpty($allowed_types, 'Source without allowed content types should return empty array');
 
     // Create a source with all content types allowed.
@@ -419,7 +437,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
       ],
     ]);
 
-    $allowed_types = UserPostingRightsHelper::getAllowedContentTypes($sourceWithAllTypes);
+    $allowed_types = $this->userPostingRightsManager->getAllowedContentTypes($sourceWithAllTypes);
     $this->assertArrayHasKey('job', $allowed_types, 'Should include job as allowed content type');
     $this->assertArrayHasKey('report', $allowed_types, 'Should include report as allowed content type');
     $this->assertArrayHasKey('training', $allowed_types, 'Should include training as allowed content type');
@@ -463,7 +481,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
       $source2->id() => ['job' => 0, 'report' => 2, 'training' => 0],
     ];
 
-    $filtered_results = UserPostingRightsHelper::filterPostingRightsByAllowedContentTypes($results);
+    $filtered_results = $this->userPostingRightsManager->filterPostingRightsByAllowedContentTypes($results);
 
     // Source 1 should only have job and training rights (report should be 0).
     $this->assertEquals(2, $filtered_results[$source1->id()]['job'], 'Source 1 should keep job rights');
@@ -476,7 +494,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $this->assertEquals(0, $filtered_results[$source2->id()]['training'], 'Source 2 should reset training rights');
 
     // Test with empty results.
-    $empty_results = UserPostingRightsHelper::filterPostingRightsByAllowedContentTypes([]);
+    $empty_results = $this->userPostingRightsManager->filterPostingRightsByAllowedContentTypes([]);
     $this->assertEmpty($empty_results, 'Empty results should return empty array');
 
     // Test with source that has no allowed content types.
@@ -488,7 +506,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
       $sourceNoTypes->id() => ['job' => 2, 'report' => 1, 'training' => 3],
     ];
 
-    $filtered_results = UserPostingRightsHelper::filterPostingRightsByAllowedContentTypes($results_no_types);
+    $filtered_results = $this->userPostingRightsManager->filterPostingRightsByAllowedContentTypes($results_no_types);
     $this->assertEquals(0, $filtered_results[$sourceNoTypes->id()]['job'], 'Source with no allowed types should reset all rights');
     $this->assertEquals(0, $filtered_results[$sourceNoTypes->id()]['report'], 'Source with no allowed types should reset all rights');
     $this->assertEquals(0, $filtered_results[$sourceNoTypes->id()]['training'], 'Source with no allowed types should reset all rights');
@@ -524,7 +542,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
    */
   public function testGetUserConsolidatedPostingRight(): void {
     // Test with valid bundle and sources.
-    $rights = UserPostingRightsHelper::getUserConsolidatedPostingRight(
+    $rights = $this->userPostingRightsManager->getUserConsolidatedPostingRight(
       $this->testUser,
       'job',
       [$this->testSource->id()]
@@ -535,7 +553,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $this->assertContainsEquals($this->testSource->id(), $rights['sources'], 'Should include source in sources array');
 
     // Test with blocked rights.
-    $rights = UserPostingRightsHelper::getUserConsolidatedPostingRight(
+    $rights = $this->userPostingRightsManager->getUserConsolidatedPostingRight(
       $this->testUser,
       'report',
       [$this->testSource->id()]
@@ -545,7 +563,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $this->assertEquals('blocked', $rights['name'], 'Should return blocked name for report');
 
     // Test with trusted rights.
-    $rights = UserPostingRightsHelper::getUserConsolidatedPostingRight(
+    $rights = $this->userPostingRightsManager->getUserConsolidatedPostingRight(
       $this->testUser,
       'training',
       [$this->testSource->id()]
@@ -555,7 +573,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $this->assertEquals('trusted', $rights['name'], 'Should return trusted name for training');
 
     // Test with multiple sources including domain rights.
-    $rights = UserPostingRightsHelper::getUserConsolidatedPostingRight(
+    $rights = $this->userPostingRightsManager->getUserConsolidatedPostingRight(
       $this->testUser,
       'job',
       [
@@ -573,7 +591,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $this->assertContainsEquals($this->noRightsSource->id(), $rights['sources'], 'Should include unverified source in sources array');
 
     // Test with multiple sources where user has mixed rights.
-    $rights = UserPostingRightsHelper::getUserConsolidatedPostingRight(
+    $rights = $this->userPostingRightsManager->getUserConsolidatedPostingRight(
       $this->testUser,
       'training',
       [
@@ -588,7 +606,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $this->assertEquals('allowed', $rights['name'], 'Should return allowed name when mixing trusted and allowed rights');
 
     // Test with invalid bundle.
-    $rights = UserPostingRightsHelper::getUserConsolidatedPostingRight(
+    $rights = $this->userPostingRightsManager->getUserConsolidatedPostingRight(
       $this->testUser,
       'invalid_bundle',
       [$this->testSource->id()]
@@ -598,7 +616,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $this->assertEquals('unverified', $rights['name'], 'Should return unverified name for invalid bundle');
 
     // Test with empty sources.
-    $rights = UserPostingRightsHelper::getUserConsolidatedPostingRight(
+    $rights = $this->userPostingRightsManager->getUserConsolidatedPostingRight(
       $this->testUser,
       'job',
       []
@@ -609,7 +627,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
 
     // Test with anonymous user.
     $anonymous_user = User::getAnonymousUser();
-    $rights = UserPostingRightsHelper::getUserConsolidatedPostingRight(
+    $rights = $this->userPostingRightsManager->getUserConsolidatedPostingRight(
       $anonymous_user,
       'job',
       [$this->testSource->id()]
@@ -624,7 +642,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
    */
   public function testUserHasPostingRights(): void {
     // Test with user who has posting rights.
-    $has_rights = UserPostingRightsHelper::userHasPostingRights(
+    $has_rights = $this->userPostingRightsManager->userHasPostingRights(
       $this->testUser,
       $this->testEntity,
       'published'
@@ -632,7 +650,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $this->assertTrue($has_rights, 'User with allowed rights should have posting rights');
 
     // Test with user who is blocked.
-    $has_rights = UserPostingRightsHelper::userHasPostingRights(
+    $has_rights = $this->userPostingRightsManager->userHasPostingRights(
       $this->testUser,
       $this->testEntity,
       'published'
@@ -642,7 +660,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $this->assertTrue($has_rights, 'User with mixed rights should have posting rights');
 
     // Test with draft status for blocked user (should allow owner).
-    $has_rights = UserPostingRightsHelper::userHasPostingRights(
+    $has_rights = $this->userPostingRightsManager->userHasPostingRights(
       $this->testUser,
       $this->testEntity,
       'draft'
@@ -651,7 +669,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
 
     // Test with anonymous user.
     $anonymous_user = User::getAnonymousUser();
-    $has_rights = UserPostingRightsHelper::userHasPostingRights(
+    $has_rights = $this->userPostingRightsManager->userHasPostingRights(
       $anonymous_user,
       $this->testEntity,
       'published'
@@ -665,7 +683,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
       'uid' => $this->testUser->id(),
     ]);
 
-    $has_rights = UserPostingRightsHelper::userHasPostingRights(
+    $has_rights = $this->userPostingRightsManager->userHasPostingRights(
       $this->testUser,
       $new_entity,
       'draft'
@@ -678,14 +696,14 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
    */
   public function testIsUserAllowedOrTrustedForAnySource(): void {
     // Test with user who has allowed/trusted rights.
-    $is_allowed = UserPostingRightsHelper::isUserAllowedOrTrustedForAnySource($this->testUser, 'job');
+    $is_allowed = $this->userPostingRightsManager->isUserAllowedOrTrustedForAnySource($this->testUser, 'job');
     $this->assertTrue($is_allowed, 'User with allowed rights should be considered allowed');
 
-    $is_allowed = UserPostingRightsHelper::isUserAllowedOrTrustedForAnySource($this->testUser, 'training');
+    $is_allowed = $this->userPostingRightsManager->isUserAllowedOrTrustedForAnySource($this->testUser, 'training');
     $this->assertTrue($is_allowed, 'User with trusted rights should be considered allowed');
 
     // Test with user who has allowed/trusted rights for reports.
-    $is_allowed = UserPostingRightsHelper::isUserAllowedOrTrustedForAnySource($this->testUser, 'report');
+    $is_allowed = $this->userPostingRightsManager->isUserAllowedOrTrustedForAnySource($this->testUser, 'report');
     $this->assertTrue($is_allowed, 'User with trusted rights in userOnlySource and allowed rights in domainOnlySource should be considered allowed');
 
     // Test with user who has no allowed/trusted rights
@@ -718,17 +736,17 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
       ],
     ]);
 
-    $is_allowed = UserPostingRightsHelper::isUserAllowedOrTrustedForAnySource($blocked_user, 'job');
+    $is_allowed = $this->userPostingRightsManager->isUserAllowedOrTrustedForAnySource($blocked_user, 'job');
     $this->assertFalse($is_allowed, 'User with only blocked rights should not be considered allowed');
 
     // Test with anonymous user.
     $anonymous_user = User::getAnonymousUser();
-    $is_allowed = UserPostingRightsHelper::isUserAllowedOrTrustedForAnySource($anonymous_user, 'job');
+    $is_allowed = $this->userPostingRightsManager->isUserAllowedOrTrustedForAnySource($anonymous_user, 'job');
     $this->assertFalse($is_allowed, 'Anonymous user should not be considered allowed');
 
     // Test with invalid bundle.
     $this->expectException(\InvalidArgumentException::class);
-    UserPostingRightsHelper::isUserAllowedOrTrustedForAnySource($this->testUser, 'invalid_bundle');
+    $this->userPostingRightsManager->isUserAllowedOrTrustedForAnySource($this->testUser, 'invalid_bundle');
   }
 
   /**
@@ -736,7 +754,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
    */
   public function testGetSourcesWithPostingRightsForUser(): void {
     // Test getting sources with specific rights.
-    $sources = UserPostingRightsHelper::getSourcesWithPostingRightsForUser(
+    $sources = $this->userPostingRightsManager->getSourcesWithPostingRightsForUser(
       $this->testUser,
       // Allowed or trusted.
       ['job' => [2, 3]],
@@ -747,7 +765,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $this->assertEquals(2, $sources[$this->testSource->id()]['job'], 'Should return correct job rights');
 
     // Test with limit.
-    $sources = UserPostingRightsHelper::getSourcesWithPostingRightsForUser(
+    $sources = $this->userPostingRightsManager->getSourcesWithPostingRightsForUser(
       $this->testUser,
       // Trusted only.
       ['training' => [3]],
@@ -759,11 +777,11 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $this->assertEquals(3, $sources[$this->testSource->id()]['training'], 'Should return correct training rights');
 
     // Test with no bundle filters.
-    $sources = UserPostingRightsHelper::getSourcesWithPostingRightsForUser($this->testUser);
+    $sources = $this->userPostingRightsManager->getSourcesWithPostingRightsForUser($this->testUser);
     $this->assertNotEmpty($sources, 'Should return sources without bundle filters');
 
     // Test that domain rights are included when no user rights exist.
-    $sources = UserPostingRightsHelper::getSourcesWithPostingRightsForUser(
+    $sources = $this->userPostingRightsManager->getSourcesWithPostingRightsForUser(
       $this->testUser,
       // Allowed or trusted.
       ['job' => [2, 3]],
@@ -781,7 +799,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $this->assertArrayNotHasKey($this->noRightsSource->id(), $sources, 'Should not include source with no rights');
 
     // Test that user rights take precedence over domain rights.
-    $sources = UserPostingRightsHelper::getSourcesWithPostingRightsForUser(
+    $sources = $this->userPostingRightsManager->getSourcesWithPostingRightsForUser(
       $this->testUser,
       // Trusted only.
       ['training' => [3]],
@@ -798,21 +816,21 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
 
     // Test integration: verify that the refactored method combines user and
     // domain rights correctly.
-    $combined_sources = UserPostingRightsHelper::getSourcesWithPostingRightsForUser(
+    $combined_sources = $this->userPostingRightsManager->getSourcesWithPostingRightsForUser(
       $this->testUser,
       ['job' => [2, 3]],
       'OR'
     );
 
     // Get user-only sources.
-    $user_sources = UserPostingRightsHelper::getSourcesWithUserPostingRightsForUser(
+    $user_sources = $this->userPostingRightsManager->getSourcesWithUserPostingRightsForUser(
       $this->testUser,
       ['job' => [2, 3]],
       'OR'
     );
 
     // Get domain-only sources.
-    $domain_sources = UserPostingRightsHelper::getSourcesWithDomainPostingRightsForUser(
+    $domain_sources = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForUser(
       $this->testUser,
       ['job' => [2, 3]],
       'OR'
@@ -844,7 +862,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
    */
   public function testGetSourcesWithUserPostingRightsForUser(): void {
     // Test getting sources with user posting rights only.
-    $sources = UserPostingRightsHelper::getSourcesWithUserPostingRightsForUser(
+    $sources = $this->userPostingRightsManager->getSourcesWithUserPostingRightsForUser(
       $this->testUser,
       // Allowed or trusted.
       ['job' => [2, 3]],
@@ -870,7 +888,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $this->assertArrayNotHasKey($this->noRightsSource->id(), $sources, 'Should not include source with no posting rights');
 
     // Test with specific bundle filter.
-    $sources = UserPostingRightsHelper::getSourcesWithUserPostingRightsForUser(
+    $sources = $this->userPostingRightsManager->getSourcesWithUserPostingRightsForUser(
       $this->testUser,
       // Trusted only.
       ['training' => [3]],
@@ -883,7 +901,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $this->assertEquals(3, $sources[$this->userOnlySource->id()]['training'], 'Should return trusted training rights from user-only source');
 
     // Test with limit.
-    $sources = UserPostingRightsHelper::getSourcesWithUserPostingRightsForUser(
+    $sources = $this->userPostingRightsManager->getSourcesWithUserPostingRightsForUser(
       $this->testUser,
       ['job' => [2, 3]],
       'OR',
@@ -893,7 +911,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $this->assertCount(1, $sources, 'Should respect limit parameter');
 
     // Test with no bundle filters (should return all user posting rights).
-    $sources = UserPostingRightsHelper::getSourcesWithUserPostingRightsForUser($this->testUser);
+    $sources = $this->userPostingRightsManager->getSourcesWithUserPostingRightsForUser($this->testUser);
     $this->assertNotEmpty($sources, 'Should return sources without bundle filters');
     $this->assertArrayHasKey($this->testSource->id(), $sources, 'Should include test source');
     $this->assertArrayHasKey($this->userOnlySource->id(), $sources, 'Should include user-only source');
@@ -930,7 +948,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     // Test AND operator: should only return sources that match ALL bundle
     // conditions. Looking for sources where user is trusted for job (3) AND
     // allowed for training (2).
-    $sources = UserPostingRightsHelper::getSourcesWithUserPostingRightsForUser(
+    $sources = $this->userPostingRightsManager->getSourcesWithUserPostingRightsForUser(
       $this->testUser,
       [
         // Trusted.
@@ -947,7 +965,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $this->assertEquals(2, $sources[$mixedRightsSource->id()]['training'], 'Should have allowed training rights');
 
     // Test AND operator with conflicting conditions.
-    $sources = UserPostingRightsHelper::getSourcesWithUserPostingRightsForUser(
+    $sources = $this->userPostingRightsManager->getSourcesWithUserPostingRightsForUser(
       $this->testUser,
       [
         // Trusted.
@@ -996,7 +1014,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     // Test OR operator: should return sources that match ANY bundle condition.
     // Looking for sources where user is trusted for job (3) OR allowed for
     // training (2).
-    $sources = UserPostingRightsHelper::getSourcesWithUserPostingRightsForUser(
+    $sources = $this->userPostingRightsManager->getSourcesWithUserPostingRightsForUser(
       $this->testUser,
       [
         // Trusted.
@@ -1014,7 +1032,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $this->assertEquals(2, $sources[$mixedRightsSource->id()]['training'], 'Should have allowed training rights');
 
     // Test OR operator with one matching condition.
-    $sources = UserPostingRightsHelper::getSourcesWithUserPostingRightsForUser(
+    $sources = $this->userPostingRightsManager->getSourcesWithUserPostingRightsForUser(
       $this->testUser,
       [
         // Trusted.
@@ -1060,7 +1078,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
 
     // Test AND operator: should only return sources that match ALL bundle
     // conditions.
-    $sources = UserPostingRightsHelper::getSourcesWithDomainPostingRightsForUser(
+    $sources = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForUser(
       $this->testUser,
       [
         // Trusted.
@@ -1108,7 +1126,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     ]);
 
     // Test OR operator: should return sources that match ANY bundle condition.
-    $sources = UserPostingRightsHelper::getSourcesWithDomainPostingRightsForUser(
+    $sources = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForUser(
       $this->testUser,
       [
         // Trusted.
@@ -1126,7 +1144,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $this->assertEquals(2, $sources[$domainRightsSource->id()]['training'], 'Should have allowed training rights');
 
     // Test OR operator with one matching condition.
-    $sources = UserPostingRightsHelper::getSourcesWithDomainPostingRightsForUser(
+    $sources = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForUser(
       $this->testUser,
       [
         // Trusted.
@@ -1147,7 +1165,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
    */
   public function testGetSourcesWithDomainPostingRightsForUser(): void {
     // Test getting sources with domain posting rights only.
-    $sources = UserPostingRightsHelper::getSourcesWithDomainPostingRightsForUser(
+    $sources = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForUser(
       $this->testUser,
       // Allowed or trusted.
       ['job' => [2, 3]],
@@ -1173,7 +1191,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $this->assertArrayNotHasKey($this->noRightsSource->id(), $sources, 'Should not include source with no posting rights');
 
     // Test with specific bundle filter.
-    $sources = UserPostingRightsHelper::getSourcesWithDomainPostingRightsForUser(
+    $sources = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForUser(
       $this->testUser,
       // Allowed only.
       ['job' => [2]],
@@ -1186,7 +1204,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $this->assertEquals(2, $sources[$this->domainOnlySource->id()]['job'], 'Should return allowed job rights from domain-only source');
 
     // Test with limit.
-    $sources = UserPostingRightsHelper::getSourcesWithDomainPostingRightsForUser(
+    $sources = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForUser(
       $this->testUser,
       ['job' => [2, 3]],
       'OR',
@@ -1196,7 +1214,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $this->assertCount(1, $sources, 'Should respect limit parameter');
 
     // Test with no bundle filters (should return all domain posting rights).
-    $sources = UserPostingRightsHelper::getSourcesWithDomainPostingRightsForUser($this->testUser);
+    $sources = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForUser($this->testUser);
     $this->assertNotEmpty($sources, 'Should return sources without bundle filters');
     $this->assertArrayHasKey($this->testSource->id(), $sources, 'Should include test source');
     $this->assertArrayHasKey($this->domainOnlySource->id(), $sources, 'Should include domain-only source');
@@ -1208,7 +1226,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
       'status' => 1,
     ]);
 
-    $sources = UserPostingRightsHelper::getSourcesWithDomainPostingRightsForUser($user_without_email);
+    $sources = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForUser($user_without_email);
     $this->assertEmpty($sources, 'User without email should have no domain posting rights');
 
     // Test with user with different email domain.
@@ -1218,7 +1236,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
       'status' => 1,
     ]);
 
-    $sources = UserPostingRightsHelper::getSourcesWithDomainPostingRightsForUser($user_different_domain);
+    $sources = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForUser($user_different_domain);
     $this->assertEmpty($sources, 'User with different domain should have no domain posting rights');
   }
 
@@ -1231,22 +1249,22 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
 
     // Test rendering different rights within a render context.
     $rendered = $renderer->executeInRenderContext($context, function () {
-      return UserPostingRightsHelper::renderRight('allowed');
+      return $this->userPostingRightsManager->renderRight('allowed');
     });
     $this->assertNotEmpty($rendered, 'Should render allowed right');
 
     $rendered = $renderer->executeInRenderContext($context, function () {
-      return UserPostingRightsHelper::renderRight('blocked');
+      return $this->userPostingRightsManager->renderRight('blocked');
     });
     $this->assertNotEmpty($rendered, 'Should render blocked right');
 
     $rendered = $renderer->executeInRenderContext($context, function () {
-      return UserPostingRightsHelper::renderRight('trusted');
+      return $this->userPostingRightsManager->renderRight('trusted');
     });
     $this->assertNotEmpty($rendered, 'Should render trusted right');
 
     $rendered = $renderer->executeInRenderContext($context, function () {
-      return UserPostingRightsHelper::renderRight('unverified');
+      return $this->userPostingRightsManager->renderRight('unverified');
     });
     $this->assertNotEmpty($rendered, 'Should render unverified right');
   }
@@ -1276,7 +1294,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     ]);
 
     // Test getUserPostingRights with content type filtering.
-    $rights = UserPostingRightsHelper::getUserPostingRights($this->testUser, [$jobOnlySource->id()]);
+    $rights = $this->userPostingRightsManager->getUserPostingRights($this->testUser, [$jobOnlySource->id()]);
     $this->assertArrayHasKey($jobOnlySource->id(), $rights);
     $this->assertEquals(2, $rights[$jobOnlySource->id()]['job'], 'Should keep job rights for allowed content type');
     $this->assertEquals(0, $rights[$jobOnlySource->id()]['training'], 'Should reset training rights for non-allowed content type');
@@ -1303,7 +1321,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     ]);
 
     // Test domain posting rights with content type filtering.
-    $rights = UserPostingRightsHelper::getUserPostingRights($this->testUser, [$reportOnlySource->id()]);
+    $rights = $this->userPostingRightsManager->getUserPostingRights($this->testUser, [$reportOnlySource->id()]);
     $this->assertArrayHasKey($reportOnlySource->id(), $rights);
     $this->assertEquals(0, $rights[$reportOnlySource->id()]['job'], 'Should reset job rights for non-allowed content type');
     $this->assertEquals(0, $rights[$reportOnlySource->id()]['training'], 'Should reset training rights for non-allowed content type');
@@ -1319,7 +1337,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
       ],
     ]);
 
-    $rights = UserPostingRightsHelper::getEntityAuthorPostingRights($jobEntity);
+    $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($jobEntity);
     $this->assertEquals('allowed', $rights, 'Job entity with job-only source should have allowed rights');
 
     $reportEntity = $this->createNode([
@@ -1331,7 +1349,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
       ],
     ]);
 
-    $rights = UserPostingRightsHelper::getEntityAuthorPostingRights($reportEntity);
+    $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($reportEntity);
     $this->assertEquals('unverified', $rights, 'Report entity with job-only source should have unverified rights (source not allowed for reports)');
 
     // Test with source that has no allowed content types.
@@ -1348,7 +1366,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
       ],
     ]);
 
-    $rights = UserPostingRightsHelper::getUserPostingRights($this->testUser, [$noTypesSource->id()]);
+    $rights = $this->userPostingRightsManager->getUserPostingRights($this->testUser, [$noTypesSource->id()]);
     $this->assertArrayHasKey($noTypesSource->id(), $rights);
     $this->assertEquals(0, $rights[$noTypesSource->id()]['job'], 'Should reset all rights for source with no allowed content types');
     $this->assertEquals(0, $rights[$noTypesSource->id()]['training'], 'Should reset all rights for source with no allowed content types');
@@ -1402,7 +1420,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
 
     // Test getting sources with job rights - should include jobTrainingSource
     // but not reportOnlySource.
-    $sources = UserPostingRightsHelper::getSourcesWithPostingRightsForUser(
+    $sources = $this->userPostingRightsManager->getSourcesWithPostingRightsForUser(
       $this->testUser,
       ['job' => [2, 3]],
       'OR'
@@ -1414,7 +1432,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
 
     // Test getting sources with report rights - should include reportOnlySource
     // but not jobTrainingSource.
-    $sources = UserPostingRightsHelper::getSourcesWithPostingRightsForUser(
+    $sources = $this->userPostingRightsManager->getSourcesWithPostingRightsForUser(
       $this->testUser,
       ['report' => [2, 3]],
       'OR'
@@ -1459,7 +1477,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
       ],
     ]);
 
-    $has_rights = UserPostingRightsHelper::userHasPostingRights(
+    $has_rights = $this->userPostingRightsManager->userHasPostingRights(
       $this->testUser,
       $jobEntity,
       'published'
@@ -1477,7 +1495,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
       ],
     ]);
 
-    $has_rights = UserPostingRightsHelper::userHasPostingRights(
+    $has_rights = $this->userPostingRightsManager->userHasPostingRights(
       $this->testUser,
       $reportEntity,
       'published'
@@ -1495,7 +1513,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
       ],
     ]);
 
-    $has_rights = UserPostingRightsHelper::userHasPostingRights(
+    $has_rights = $this->userPostingRightsManager->userHasPostingRights(
       $this->testUser,
       $trainingEntity,
       'published'
@@ -1515,7 +1533,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
       'field_source' => [],
     ]);
 
-    $rights = UserPostingRightsHelper::getEntityAuthorPostingRights($entity_with_empty_source);
+    $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($entity_with_empty_source);
     $this->assertEquals('unverified', $rights, 'Entity with empty source field should return unknown');
 
     // Test with entity that has invalid source field type (mock).
@@ -1544,7 +1562,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $mock_entity->method('getOwner')
       ->willReturn($this->testUser);
 
-    $rights = UserPostingRightsHelper::getEntityAuthorPostingRights($mock_entity);
+    $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($mock_entity);
     $this->assertEquals('unknown', $rights, 'Entity with invalid source field type should return unknown');
   }
 
@@ -1553,16 +1571,621 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
    */
   public function testCaching(): void {
     // First call should populate cache.
-    $rights1 = UserPostingRightsHelper::getUserPostingRights($this->testUser, [$this->testSource->id()]);
+    $rights1 = $this->userPostingRightsManager->getUserPostingRights($this->testUser, [$this->testSource->id()]);
 
     // Second call should use cache.
-    $rights2 = UserPostingRightsHelper::getUserPostingRights($this->testUser, [$this->testSource->id()]);
+    $rights2 = $this->userPostingRightsManager->getUserPostingRights($this->testUser, [$this->testSource->id()]);
 
     $this->assertEquals($rights1, $rights2, 'Cached results should match first call');
 
     // Test that different source combinations create different cache keys.
-    $rights3 = UserPostingRightsHelper::getUserPostingRights($this->testUser, []);
+    $rights3 = $this->userPostingRightsManager->getUserPostingRights($this->testUser, []);
     $this->assertNotEquals($rights1, $rights3, 'Different source combinations should have different cache keys');
+  }
+
+  /**
+   * Test updateModerationStatusFromPostingRights with basic functionality.
+   */
+  public function testUpdateModerationStatusFromPostingRights(): void {
+    // Set up a test mapping for the method.
+    $mapping = [
+      'advertiser' => [
+        'job' => [
+          'blocked' => 'refused',
+          'trusted_all' => 'published',
+          'trusted_some_allowed' => 'published',
+          'trusted_some_unverified' => 'pending',
+          'allowed_all' => 'published',
+          'allowed_some_unverified' => 'pending',
+          'unverified_all' => 'pending',
+        ],
+      ],
+    ];
+    $this->userPostingRightsManager->setUserPostingRightsToModerationStatusMapping($mapping);
+
+    // Create a test user with advertiser role.
+    $advertiser_user = $this->createUser([], 'advertiser_user', FALSE, [
+      'name' => 'advertiser_user',
+      'mail' => 'advertiser@example.com',
+      'status' => 1,
+      'roles' => ['advertiser'],
+    ]);
+
+    // Create a job entity with pending status.
+    $job_entity = $this->createNode([
+      'type' => 'job',
+      'title' => 'Test Job for Status Update',
+      'uid' => $advertiser_user->id(),
+      'field_source' => [
+        ['target_id' => $this->testSource->id()],
+      ],
+      'moderation_status' => 'draft',
+      'field_job_closing_date' => date('Y-m-d', strtotime('+2 days')),
+    ]);
+
+    // Set the entity to pending status (simulating the moderation status).
+    $job_entity->set('moderation_status', 'pending');
+    $job_entity->save();
+
+    // Test the method - should update status based on posting rights.
+    $this->userPostingRightsManager->updateModerationStatusFromPostingRights(
+      $job_entity,
+      $advertiser_user,
+      ['pending']
+    );
+
+    // Reload the entity to get updated values.
+    $job_entity = \Drupal::entityTypeManager()->getStorage('node')->load($job_entity->id());
+
+    // Check that the moderation status was updated.
+    $this->assertEquals('published', $job_entity->get('moderation_status')->value, 'Entity status should be updated to published for allowed user');
+
+    // Check that a revision log message was added.
+    $revision_log = $job_entity->get('revision_log')->value;
+    $this->assertNotEmpty($revision_log, 'Revision log should contain posting rights information');
+    $this->assertStringContainsString('Allowed user for', $revision_log, 'Revision log should mention allowed user');
+  }
+
+  /**
+   * Test updateModerationStatusFromPostingRights with blocked user scenario.
+   */
+  public function testUpdateModerationStatusFromPostingRightsBlocked(): void {
+    // Set up a test mapping for blocked users.
+    $mapping = [
+      'submitter' => [
+        'report' => [
+          'blocked' => 'refused',
+          'trusted_all' => 'published',
+          'trusted_some_allowed' => 'published',
+          'trusted_some_unverified' => 'pending',
+          'allowed_all' => 'published',
+          'allowed_some_unverified' => 'pending',
+          'unverified_all' => 'pending',
+        ],
+      ],
+    ];
+    $this->userPostingRightsManager->setUserPostingRightsToModerationStatusMapping($mapping);
+
+    // Create a test user with submitter role.
+    $submitter_user = $this->createUser([], 'blocked_submitter', FALSE, [
+      'name' => 'blocked_submitter',
+      'mail' => 'blocked@blocked.test',
+      'status' => 1,
+      'roles' => ['submitter'],
+    ]);
+
+    // Create a source with blocked posting rights.
+    $blocked_source = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Blocked Source',
+      'field_allowed_content_types' => [
+        // Report.
+        ['value' => 1],
+      ],
+      'field_user_posting_rights' => [
+        [
+          'id' => $submitter_user->id(),
+           // Blocked.
+          'report' => '1',
+          'job' => '0',
+          'training' => '0',
+        ],
+      ],
+    ]);
+
+    // Create a report entity with pending status.
+    $report_entity = $this->createNode([
+      'type' => 'report',
+      'title' => 'Test Report for Blocked User',
+      'uid' => $submitter_user->id(),
+      'field_source' => [
+        ['target_id' => $blocked_source->id()],
+      ],
+      'moderation_status' => 'draft',
+    ]);
+
+    // Set the entity to pending status.
+    $report_entity->set('moderation_status', 'pending');
+    $report_entity->save();
+
+    // Test the method - should update status to refused for blocked user.
+    $this->userPostingRightsManager->updateModerationStatusFromPostingRights(
+      $report_entity,
+      $submitter_user,
+      ['pending']
+    );
+
+    // Reload the entity to get updated values.
+    $report_entity = \Drupal::entityTypeManager()->getStorage('node')->load($report_entity->id());
+
+    // Check that the moderation status was updated to refused.
+    $this->assertEquals('refused', $report_entity->get('moderation_status')->value, 'Entity status should be updated to refused for blocked user');
+
+    // Check that a revision log message was added.
+    $revision_log = $report_entity->get('revision_log')->value;
+    $this->assertNotEmpty($revision_log, 'Revision log should contain posting rights information');
+    $this->assertStringContainsString('Blocked user for', $revision_log, 'Revision log should mention blocked user');
+  }
+
+  /**
+   * Test updateModerationStatusFromPostingRights with trusted user scenario.
+   */
+  public function testUpdateModerationStatusFromPostingRightsTrusted(): void {
+    // Set up a test mapping for trusted users.
+    $mapping = [
+      'advertiser' => [
+        'training' => [
+          'blocked' => 'refused',
+          'trusted_all' => 'published',
+          'trusted_some_allowed' => 'published',
+          'trusted_some_unverified' => 'pending',
+          'allowed_all' => 'published',
+          'allowed_some_unverified' => 'pending',
+          'unverified_all' => 'pending',
+        ],
+      ],
+    ];
+    $this->userPostingRightsManager->setUserPostingRightsToModerationStatusMapping($mapping);
+
+    // Create a test user with advertiser role.
+    $advertiser_user = $this->createUser([], 'trusted_advertiser', FALSE, [
+      'name' => 'trusted_advertiser',
+      'mail' => 'trusted@example.com',
+      'status' => 1,
+      'roles' => ['advertiser'],
+    ]);
+
+    // Create a source that explicitly grants trusted training rights
+    // to this advertiser user and allows training content.
+    $trusted_training_source = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Trusted Training Source (Per-User)',
+      'field_allowed_content_types' => [
+        // Training.
+        ['value' => 2],
+      ],
+      'field_user_posting_rights' => [
+        [
+          'id' => $advertiser_user->id(),
+          'job' => 0,
+          // Trusted.
+          'training' => 3,
+          'report' => 0,
+        ],
+      ],
+    ]);
+
+    // Create a training entity with pending status.
+    $training_entity = $this->createNode([
+      'type' => 'training',
+      'title' => 'Test Training for Trusted User',
+      'uid' => $advertiser_user->id(),
+      'field_source' => [
+        ['target_id' => $trusted_training_source->id()],
+      ],
+      'moderation_status' => 'draft',
+      'field_registration_deadline' => date('Y-m-d', strtotime('+2 days')),
+      'field_training_date' => [
+        'start' => date('Y-m-d', strtotime('+3 days')),
+        'end' => date('Y-m-d', strtotime('+4 days')),
+      ],
+    ]);
+
+    // Set the entity to pending status.
+    $training_entity->set('moderation_status', 'pending');
+    $training_entity->save();
+
+    // Test the method - should update status to published for trusted user.
+    $this->userPostingRightsManager->updateModerationStatusFromPostingRights(
+      $training_entity,
+      $advertiser_user,
+      ['pending']
+    );
+
+    // Reload the entity to get updated values.
+    $training_entity = \Drupal::entityTypeManager()->getStorage('node')->load($training_entity->id());
+
+    // Check that the moderation status was updated to published.
+    $this->assertEquals('published', $training_entity->get('moderation_status')->value, 'Entity status should be updated to published for trusted user');
+
+    // Check that a revision log message was added.
+    $revision_log = $training_entity->get('revision_log')->value;
+    $this->assertNotEmpty($revision_log, 'Revision log should contain posting rights information');
+    $this->assertStringContainsString('Trusted user for', $revision_log, 'Revision log should mention trusted user');
+  }
+
+  /**
+   * Test updateModerationStatusFromPostingRights with unverified user scenario.
+   */
+  public function testUpdateModerationStatusFromPostingRightsUnverified(): void {
+    // Set up a test mapping for unverified users.
+    $mapping = [
+      'advertiser' => [
+        'job' => [
+          'blocked' => 'refused',
+          'trusted_all' => 'published',
+          'trusted_some_allowed' => 'published',
+          'trusted_some_unverified' => 'pending',
+          'allowed_all' => 'published',
+          'allowed_some_unverified' => 'pending',
+          'unverified_all' => 'pending',
+        ],
+      ],
+    ];
+    $this->userPostingRightsManager->setUserPostingRightsToModerationStatusMapping($mapping);
+
+    // Create a test user with advertiser role.
+    $advertiser_user = $this->createUser([], 'unverified_advertiser', FALSE, [
+      'name' => 'unverified_advertiser',
+      'mail' => 'unverified@example.com',
+      'status' => 1,
+      'roles' => ['advertiser'],
+    ]);
+
+    // Create a job entity with pending status.
+    $job_entity = $this->createNode([
+      'type' => 'job',
+      'title' => 'Test Job for Unverified User',
+      'uid' => $advertiser_user->id(),
+      'field_source' => [
+        ['target_id' => $this->noRightsSource->id()],
+      ],
+      'moderation_status' => 'draft',
+    ]);
+
+    // Set the entity to pending status.
+    $job_entity->set('moderation_status', 'pending');
+    $job_entity->save();
+
+    // Test the method - should keep status as pending for unverified user.
+    $this->userPostingRightsManager->updateModerationStatusFromPostingRights(
+      $job_entity,
+      $advertiser_user,
+      ['pending']
+    );
+
+    // Reload the entity to get updated values.
+    $job_entity = \Drupal::entityTypeManager()->getStorage('node')->load($job_entity->id());
+
+    // Check that the moderation status remains pending.
+    $this->assertEquals('pending', $job_entity->get('moderation_status')->value, 'Entity status should remain pending for unverified user');
+
+    // Check that a revision log message was added.
+    $revision_log = $job_entity->get('revision_log')->value;
+    $this->assertNotEmpty($revision_log, 'Revision log should contain posting rights information');
+    $this->assertStringContainsString('Unverified user for', $revision_log, 'Revision log should mention unverified user');
+  }
+
+  /**
+   * Test updateModerationStatusFromPostingRights edge cases.
+   */
+  public function testUpdateModerationStatusFromPostingRightsEdgeCases(): void {
+    // Test with anonymous user - should not update status.
+    $anonymous_user = User::getAnonymousUser();
+    $job_entity = $this->createNode([
+      'type' => 'job',
+      'title' => 'Test Job for Anonymous User',
+      'uid' => $this->testUser->id(),
+      'field_source' => [
+        ['target_id' => $this->testSource->id()],
+      ],
+      'moderation_status' => 'draft',
+    ]);
+
+    $job_entity->set('moderation_status', 'pending');
+    $job_entity->save();
+
+    $original_status = $job_entity->get('moderation_status')->value;
+    $this->userPostingRightsManager->updateModerationStatusFromPostingRights(
+      $job_entity,
+      $anonymous_user,
+      ['pending']
+    );
+
+    $job_entity = \Drupal::entityTypeManager()->getStorage('node')->load($job_entity->id());
+    $this->assertEquals($original_status, $job_entity->get('moderation_status')->value, 'Status should not change for anonymous user');
+
+    // Test with entity that has no sources - should not update status.
+    $job_entity_no_sources = $this->createNode([
+      'type' => 'job',
+      'title' => 'Test Job without Sources',
+      'uid' => $this->testUser->id(),
+      'moderation_status' => 'draft',
+    ]);
+
+    $job_entity_no_sources->set('moderation_status', 'pending');
+    $job_entity_no_sources->save();
+
+    $original_status = $job_entity_no_sources->get('moderation_status')->value;
+    $this->userPostingRightsManager->updateModerationStatusFromPostingRights(
+      $job_entity_no_sources,
+      $this->testUser,
+      ['pending']
+    );
+
+    $job_entity_no_sources = \Drupal::entityTypeManager()->getStorage('node')->load($job_entity_no_sources->id());
+    $this->assertEquals($original_status, $job_entity_no_sources->get('moderation_status')->value, 'Status should not change for entity without sources');
+
+    // Test with entity that has different status than expected.
+    $job_entity_published = $this->createNode([
+      'type' => 'job',
+      'title' => 'Test Job with Published Status',
+      'uid' => $this->testUser->id(),
+      'field_source' => [
+        ['target_id' => $this->testSource->id()],
+      ],
+      'moderation_status' => 'draft',
+    ]);
+
+    $job_entity_published->set('moderation_status', 'published');
+    $job_entity_published->save();
+
+    $original_status = $job_entity_published->get('moderation_status')->value;
+    $this->userPostingRightsManager->updateModerationStatusFromPostingRights(
+      $job_entity_published,
+      $this->testUser,
+      ['pending']
+    );
+
+    $job_entity_published = \Drupal::entityTypeManager()->getStorage('node')->load($job_entity_published->id());
+    $this->assertEquals($original_status, $job_entity_published->get('moderation_status')->value, 'Status should not change for entity with non-target status');
+
+    // Test with user that has no role mapping - should not update status.
+    $user_no_role = $this->createUser([], 'no_role_user', FALSE, [
+      'name' => 'no_role_user',
+      'mail' => 'norole@example.com',
+      'status' => 1,
+    ]);
+
+    $job_entity_no_role = $this->createNode([
+      'type' => 'job',
+      'title' => 'Test Job for User with No Role',
+      'uid' => $user_no_role->id(),
+      'field_source' => [
+        ['target_id' => $this->testSource->id()],
+      ],
+      'moderation_status' => 'draft',
+      'field_job_closing_date' => date('Y-m-d', strtotime('+2 days')),
+    ]);
+
+    $job_entity_no_role->set('moderation_status', 'pending');
+    $job_entity_no_role->save();
+
+    $original_status = $job_entity_no_role->get('moderation_status')->value;
+    $this->userPostingRightsManager->updateModerationStatusFromPostingRights(
+      $job_entity_no_role,
+      $user_no_role,
+      ['pending']
+    );
+
+    $job_entity_no_role = \Drupal::entityTypeManager()->getStorage('node')->load($job_entity_no_role->id());
+    $this->assertEquals($original_status, $job_entity_no_role->get('moderation_status')->value, 'Status should not change for user with no role mapping');
+  }
+
+  /**
+   * Test updateModerationStatusFromPostingRights with mixed posting rights.
+   */
+  public function testUpdateModerationStatusFromPostingRightsMixedRights(): void {
+    // Set up a test mapping for mixed rights scenarios.
+    $mapping = [
+      'advertiser' => [
+        'job' => [
+          'blocked' => 'refused',
+          'trusted_all' => 'published',
+          'trusted_some_allowed' => 'published',
+          'trusted_some_unverified' => 'pending',
+          'allowed_all' => 'published',
+          'allowed_some_unverified' => 'pending',
+          'unverified_all' => 'pending',
+        ],
+      ],
+    ];
+    $this->userPostingRightsManager->setUserPostingRightsToModerationStatusMapping($mapping);
+
+    // Create a test user with advertiser role.
+    $advertiser_user = $this->createUser([], 'mixed_rights_user', FALSE, [
+      'name' => 'mixed_rights_user',
+      'mail' => 'mixed@example.com',
+      'status' => 1,
+      'roles' => ['advertiser'],
+    ]);
+
+    // Create sources that explicitly grant trusted and allowed rights for job
+    // and allow job content.
+    $trusted_job_source = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Trusted Job Source (Per-User)',
+      'field_allowed_content_types' => [
+        // Job.
+        ['value' => 0],
+      ],
+      'field_user_posting_rights' => [
+        [
+          'id' => $advertiser_user->id(),
+          // Trusted job.
+          'job' => 3,
+          'training' => 0,
+          'report' => 0,
+        ],
+      ],
+    ]);
+
+    $allowed_job_source = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Allowed Job Source (Domain)',
+      'field_allowed_content_types' => [
+        // Job.
+        ['value' => 0],
+      ],
+      'field_domain_posting_rights' => [
+        [
+          'domain' => 'example.com',
+          // Allowed job.
+          'job' => 2,
+          'training' => 0,
+          'report' => 0,
+        ],
+      ],
+    ]);
+
+    // Create a job entity with multiple sources (trusted + allowed).
+    $job_entity = $this->createNode([
+      'type' => 'job',
+      'title' => 'Test Job with Mixed Rights',
+      'uid' => $advertiser_user->id(),
+      'field_source' => [
+        ['target_id' => $trusted_job_source->id()],
+        ['target_id' => $allowed_job_source->id()],
+      ],
+      'moderation_status' => 'draft',
+      'field_job_closing_date' => date('Y-m-d', strtotime('+2 days')),
+    ]);
+
+    $job_entity->set('moderation_status', 'pending');
+    $job_entity->save();
+
+    // Test the method - should update status based on mixed rights.
+    $this->userPostingRightsManager->updateModerationStatusFromPostingRights(
+      $job_entity,
+      $advertiser_user,
+      ['pending']
+    );
+
+    // Reload the entity to get updated values.
+    $job_entity = \Drupal::entityTypeManager()->getStorage('node')->load($job_entity->id());
+
+    // Check that the moderation status was updated to published.
+    $this->assertEquals('published', $job_entity->get('moderation_status')->value, 'Entity status should be updated to published for mixed trusted/allowed rights');
+
+    // Check that a revision log message was added with both rights mentioned.
+    $revision_log = $job_entity->get('revision_log')->value;
+    $this->assertNotEmpty($revision_log, 'Revision log should contain posting rights information');
+    $this->assertStringContainsString('Trusted user for', $revision_log, 'Revision log should mention trusted user');
+    $this->assertStringContainsString('Allowed user for', $revision_log, 'Revision log should mention allowed user');
+  }
+
+  /**
+   * Test job status publication and automatic expiration based on closing date.
+   */
+  public function testJobPublicationAndExpirationWithClosingDate(): void {
+    // Set up a test mapping for advertiser on job.
+    $mapping = [
+      'advertiser' => [
+        'job' => [
+          'blocked' => 'refused',
+          'trusted_all' => 'published',
+          'trusted_some_allowed' => 'published',
+          'trusted_some_unverified' => 'pending',
+          'allowed_all' => 'published',
+          'allowed_some_unverified' => 'pending',
+          'unverified_all' => 'pending',
+        ],
+      ],
+    ];
+    $this->userPostingRightsManager->setUserPostingRightsToModerationStatusMapping($mapping);
+
+    // Create a test user with advertiser role.
+    $advertiser_user = $this->createUser([], 'expiry_advertiser', FALSE, [
+      'name' => 'expiry_advertiser',
+      'mail' => 'expiry@example.com',
+      'status' => 1,
+      'roles' => ['advertiser'],
+    ]);
+
+    // Create a job source that allows job content and grants trusted job rights
+    // to this advertiser user.
+    $trusted_job_source = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Trusted Job Source for Expiry Test',
+      'field_allowed_content_types' => [
+        // Job.
+        ['value' => 0],
+      ],
+      'field_user_posting_rights' => [
+        [
+          'id' => $advertiser_user->id(),
+          // Trusted job.
+          'job' => 3,
+          'training' => 0,
+          'report' => 0,
+        ],
+      ],
+    ]);
+
+    // Case 1: Closing date in the future -> status should be published.
+    $future_job = $this->createNode([
+      'type' => 'job',
+      'title' => 'Job with Future Closing Date',
+      'uid' => $advertiser_user->id(),
+      'field_source' => [
+        ['target_id' => $trusted_job_source->id()],
+      ],
+      'moderation_status' => 'draft',
+      'field_job_closing_date' => date('Y-m-d', strtotime('+2 days')),
+    ]);
+
+    // Move to pending and save first to simulate workflow before update.
+    $future_job->set('moderation_status', 'pending');
+    $future_job->save();
+
+    // Update based on posting rights.
+    $this->userPostingRightsManager->updateModerationStatusFromPostingRights(
+      $future_job,
+      $advertiser_user,
+      ['pending']
+    );
+
+    // Save to persist the new status.
+    $future_job->save();
+
+    // Reload and check final status.
+    $future_job = \Drupal::entityTypeManager()->getStorage('node')->load($future_job->id());
+    $this->assertEquals('published', $future_job->get('moderation_status')->value, 'Job with future closing date should be published');
+
+    // Case 2: Closing date in the past -> status becomes expired after save.
+    $past_job = $this->createNode([
+      'type' => 'job',
+      'title' => 'Job with Past Closing Date',
+      'uid' => $advertiser_user->id(),
+      'field_source' => [
+        ['target_id' => $trusted_job_source->id()],
+      ],
+      'moderation_status' => 'draft',
+      'field_job_closing_date' => date('Y-m-d', strtotime('-2 days')),
+    ]);
+
+    // Move to pending and save first.
+    $past_job->set('moderation_status', 'pending');
+    $past_job->save();
+
+    // Update based on posting rights; this would set to published first.
+    $this->userPostingRightsManager->updateModerationStatusFromPostingRights(
+      $past_job,
+      $advertiser_user,
+      ['pending']
+    );
+
+    // Save to trigger preSave hooks that will convert published -> expired.
+    $past_job->save();
+
+    // Reload and check final status.
+    $past_job = \Drupal::entityTypeManager()->getStorage('node')->load($past_job->id());
+    $this->assertEquals('expired', $past_job->get('moderation_status')->value, 'Job with past closing date should be expired');
   }
 
   /**
@@ -1577,11 +2200,11 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
    *   The result of the method call.
    */
   protected function invokeProtectedMethod(string $methodName, array $arguments = []) {
-    $reflection = new \ReflectionClass(UserPostingRightsHelper::class);
+    $reflection = new \ReflectionClass($this->userPostingRightsManager);
     $method = $reflection->getMethod($methodName);
     $method->setAccessible(TRUE);
 
-    return $method->invokeArgs(NULL, $arguments);
+    return $method->invokeArgs($this->userPostingRightsManager, $arguments);
   }
 
 }

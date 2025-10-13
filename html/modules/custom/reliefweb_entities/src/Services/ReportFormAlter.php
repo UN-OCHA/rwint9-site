@@ -16,7 +16,7 @@ use Drupal\reliefweb_files\Plugin\Field\FieldWidget\ReliefWebFile as ReliefWebFi
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile as ReliefWebFileItem;
 use Drupal\reliefweb_files\Services\ReliefWebFileDuplicationInterface;
 use Drupal\reliefweb_form\Helpers\FormHelper;
-use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
+use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
@@ -53,6 +53,13 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
   protected $messenger;
 
   /**
+   * The user posting rights manager.
+   *
+   * @var \Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface
+   */
+  protected $userPostingRightsManager;
+
+  /**
    * Constructor.
    *
    * @param \Drupal\Core\Database\Connection $database
@@ -75,6 +82,8 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
    *   The renderer service.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger service.
+   * @param \Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface $user_posting_rights_manager
+   *   The user posting rights manager service.
    */
   public function __construct(
     $database,
@@ -87,6 +96,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     RequestStack $request_stack,
     RendererInterface $renderer,
     MessengerInterface $messenger,
+    UserPostingRightsManagerInterface $user_posting_rights_manager,
   ) {
     parent::__construct(
       $database,
@@ -100,6 +110,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     $this->requestStack = $request_stack;
     $this->renderer = $renderer;
     $this->messenger = $messenger;
+    $this->userPostingRightsManager = $user_posting_rights_manager;
   }
 
   /**
@@ -522,7 +533,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
       }
     }
 
-    $rights = UserPostingRightsHelper::getUserConsolidatedPostingRight($this->currentUser, 'report', $ids);
+    $rights = $this->userPostingRightsManager->getUserConsolidatedPostingRight($this->currentUser, 'report', $ids);
     // Blocked for at least one source.
     if (!empty($rights) && isset($rights['code']) && $rights['code'] == 1) {
       $sources = $this->getEntityTypeManager()

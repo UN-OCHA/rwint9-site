@@ -25,3 +25,4 @@ permissions:
   - 'view job moderation information'
   - 'view own posts'
   - 'view training moderation information'
+  - 'apply posting rights'

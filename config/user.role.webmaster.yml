@@ -49,6 +49,7 @@ permissions:
   - 'access taxonomy overview'
   - 'add content to books'
   - 'add guideline entities'
+  - 'administer posting rights mapping'
   - 'administer reliefweb anti-spam settings'
   - 'administer reliefweb post api providers'
   - 'administer submitter allowed domains'

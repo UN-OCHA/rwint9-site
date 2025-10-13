@@ -33,4 +33,19 @@ interface EntityRevisionedInterface {
    */
   public function getHistoryCacheTag(): string;
 
+  /**
+   * Update the revision log message with a new message.
+   *
+   * @param string $message
+   *   The message to add to the revision log.
+   * @param string $action
+   *   The action to perform on the revision log message:
+   *   - prepend: prepend the message to the revision log message.
+   *   - append: append the message to the revision log message.
+   *   - replace: replace the revision log message.
+   * @param bool $skip_if_present
+   *   Whether to skip if the message is already present in the revision log.
+   */
+  public function updateRevisionLogMessage(string $message, string $action = 'append', bool $skip_if_present = TRUE): void;
+
 }

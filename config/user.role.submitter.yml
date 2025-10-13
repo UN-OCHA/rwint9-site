@@ -19,3 +19,4 @@ permissions:
   - 'create report content'
   - 'edit own report content'
   - 'view own posts'
+  - 'apply posting rights'

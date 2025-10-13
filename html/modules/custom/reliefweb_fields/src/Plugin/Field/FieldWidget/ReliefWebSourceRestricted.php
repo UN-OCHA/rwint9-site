@@ -7,7 +7,7 @@ use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
+use Drupal\reliefweb_moderation\Traits\UserPostingRightsTrait;
 use Drupal\user\EntityOwnerInterface;
 
 /**
@@ -24,6 +24,8 @@ use Drupal\user\EntityOwnerInterface;
  * )
  */
 class ReliefWebSourceRestricted extends ReliefWebSource {
+
+  use UserPostingRightsTrait;
 
   /**
    * {@inheritdoc}
@@ -118,7 +120,7 @@ class ReliefWebSourceRestricted extends ReliefWebSource {
       // Restrict to the sources the entity's owner is allowed to post for.
       if ($entity instanceof EntityOwnerInterface) {
         $owner = $entity->getOwner();
-        $sources = UserPostingRightsHelper::getSourcesWithPostingRightsForUser($owner, [$bundle => [2, 3]]);
+        $sources = $this->getUserPostingRightsManager()->getSourcesWithPostingRightsForUser($owner, [$bundle => [2, 3]]);
         if (!empty($sources)) {
           $query->condition($table . '.' . $id_field, array_keys($sources), 'IN');
         }

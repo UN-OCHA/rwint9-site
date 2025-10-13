@@ -1,0 +1,95 @@
+/* Description styling */
+.posting-rights-description {
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  background-color: #f8f9fa;
+}
+
+.posting-rights-description p {
+  margin-bottom: 12px;
+}
+
+.posting-rights-description ul {
+  margin-bottom: 12px;
+  padding-left: 20px;
+}
+
+.posting-rights-description li {
+  margin-bottom: 4px;
+}
+
+.posting-rights-mapping-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.posting-rights-mapping-table th,
+.posting-rights-mapping-table td {
+  padding: 12px;
+  text-align: center;
+  border-right: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+}
+
+.posting-rights-mapping-table th {
+  background-color: #f5f5f5;
+  font-weight: bold;
+}
+
+.posting-rights-mapping-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+.posting-rights-mapping-table select {
+  width: 100%;
+  min-width: 120px;
+}
+
+.posting-rights-mapping-table .rights-cell {
+  min-width: 40px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* Color coding based on symbols, not posting rights */
+/* Accessible colors with WCAG AA contrast ratios */
+.posting-rights-mapping-table .rights-cell.symbol-some {
+  color: #1b5e20;
+  background-color: #c8e6c9;
+  font-weight: bold;
+}
+
+.posting-rights-mapping-table .rights-cell.symbol-maybe {
+  color: #e65100;
+  background-color: #ffe0b2;
+  font-weight: bold;
+}
+
+.posting-rights-mapping-table .rights-cell.symbol-none {
+  color: #424242;
+  background-color: #f5f5f5;
+  font-weight: normal;
+}
+
+/* Scenario column styling */
+.posting-rights-mapping-table .scenario-cell {
+  min-width: 120px;
+  text-align: left;
+  background-color: #f8f9fa;
+  font-weight: bold;
+}
+
+/* Status columns styling */
+.posting-rights-mapping-table th:nth-child(6),
+.posting-rights-mapping-table th:nth-child(7),
+.posting-rights-mapping-table th:nth-child(8) {
+  background-color: #e3f2fd;
+}
+
+.posting-rights-mapping-table td:nth-child(6),
+.posting-rights-mapping-table td:nth-child(7),
+.posting-rights-mapping-table td:nth-child(8) {
+  background-color: #f8f9fa;
+}

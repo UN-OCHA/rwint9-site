@@ -14,7 +14,6 @@ use Drupal\Core\Pager\PagerParametersInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
-use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -357,7 +356,7 @@ class UserPostsService extends ModerationServiceBase {
       $sources[] = $source->value;
     }
 
-    $rights = UserPostingRightsHelper::getUserPostingRights($user, $sources);
+    $rights = $this->userPostingRightsManager->getUserPostingRights($user, $sources);
 
     // For editors, we allow returning sources that are blocked for the user.
     $min_right = $this->currentUser->hasPermission('edit any job content') ? 0 : 1;
@@ -488,7 +487,7 @@ class UserPostsService extends ModerationServiceBase {
     // for which the user is allowed to post.
     $allowed = [];
     $blocked = [];
-    foreach (UserPostingRightsHelper::getUserPostingRights($user, []) as $tid => $rights) {
+    foreach ($this->userPostingRightsManager->getUserPostingRights($user, []) as $tid => $rights) {
       foreach ($types as $type) {
         if (isset($rights[$type])) {
           if ($rights[$type] > 1) {

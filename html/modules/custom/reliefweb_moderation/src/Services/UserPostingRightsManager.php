@@ -2,23 +2,67 @@
 
 declare(strict_types=1);
 
-namespace Drupal\reliefweb_moderation\Helpers;
+namespace Drupal\reliefweb_moderation\Services;
 
 use Drupal\Component\Render\MarkupInterface;
+use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\EntityReferenceFieldItemList;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\State\StateInterface;
+use Drupal\reliefweb_moderation\EntityModeratedInterface;
+use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
+use Drupal\reliefweb_utility\Helpers\UserHelper;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
 use Drupal\user\EntityOwnerInterface;
 
 /**
- * Helper to get user posting rights information.
+ * Manager for user posting rights information.
  */
-class UserPostingRightsHelper {
+class UserPostingRightsManager implements UserPostingRightsManagerInterface {
 
   use EntityDatabaseInfoTrait;
+
+  /**
+   * Static cache for user posting rights.
+   *
+   * @var array
+   */
+  protected array $userPostingRightsCache = [];
+
+  /**
+   * Constructs a UserPostingRightsManager object.
+   *
+   * @param \Drupal\Core\Database\Connection $database
+   *   The database connection.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager.
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   *   The renderer service.
+   * @param \Drupal\Core\Session\AccountProxyInterface $currentUser
+   *   The current user service.
+   * @param \Drupal\Core\State\StateInterface $state
+   *   The state service.
+   */
+  public function __construct(
+    protected Connection $database,
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected RendererInterface $renderer,
+    protected AccountProxyInterface $currentUser,
+    protected StateInterface $state,
+  ) {}
+
+  /**
+   * Reset the user posting rights cache.
+   */
+  public function resetCache(): void {
+    $this->userPostingRightsCache = [];
+  }
 
   /**
    * Check if the entity supports posting rights.
@@ -29,8 +73,8 @@ class UserPostingRightsHelper {
    * @return bool
    *   TRUE if the entity supports posting rights, FALSE otherwise.
    */
-  public static function entitySupportsPostingRights(EntityInterface $entity): bool {
-    return static::entityBundleSupportsPostingRights($entity->bundle());
+  public function entitySupportsPostingRights(EntityInterface $entity): bool {
+    return $this->entityBundleSupportsPostingRights($entity->bundle());
   }
 
   /**
@@ -42,7 +86,7 @@ class UserPostingRightsHelper {
    * @return bool
    *   TRUE if the entity supports posting rights, FALSE otherwise.
    */
-  public static function entityBundleSupportsPostingRights(string $bundle): bool {
+  public function entityBundleSupportsPostingRights(string $bundle): bool {
     return in_array($bundle, ['report', 'job', 'training']);
   }
 
@@ -64,7 +108,7 @@ class UserPostingRightsHelper {
    *
    * @todo consolidate with the other posting rights methods once ported.
    */
-  public static function getEntityAuthorPostingRights(EntityInterface $entity): string {
+  public function getEntityAuthorPostingRights(EntityInterface $entity): string {
     if (!$entity->hasField('field_source') || !($entity instanceof EntityOwnerInterface)) {
       return 'unknown';
     }
@@ -87,7 +131,7 @@ class UserPostingRightsHelper {
     $bundle = $entity->bundle();
     $uid = $entity->getOwnerId();
     $email = $entity->getOwner()?->getEmail() ?? '';
-    $domain = static::extractDomainFromEmail($email);
+    $domain = $this->extractDomainFromEmail($email);
 
     $source_entities = $source_item_list->referencedEntities();
     foreach ($source_entities as $source_entity) {
@@ -96,7 +140,7 @@ class UserPostingRightsHelper {
       }
 
       // Skip this source if the current bundle is not allowed for this source.
-      $allowed_content_types = static::getAllowedContentTypes($source_entity);
+      $allowed_content_types = $this->getAllowedContentTypes($source_entity);
       if (empty($allowed_content_types[$bundle])) {
         continue;
       }
@@ -157,30 +201,27 @@ class UserPostingRightsHelper {
    * @return array<int, array<string, mixed>>
    *   Posting rights as an associative array keyed by source id.
    */
-  public static function getUserPostingRights(?AccountInterface $account = NULL, array $sources = []): array {
-    $users = &drupal_static('reliefweb_moderation_getUserPostingRights');
+  public function getUserPostingRights(?AccountInterface $account = NULL, array $sources = []): array {
+    $account = $account ?: $this->currentUser;
 
-    $helper = new UserPostingRightsHelper();
-    $account = $account ?: \Drupal::currentUser();
-
-    // Static cache key for the combination account/soures.
+    // Static cache key for the combination account/sources.
     $key = $account->id() . ':' . implode('-', $sources);
 
-    // Returned the cached rights if any.
-    if (isset($users[$key])) {
-      return $users[$key];
+    // Return the cached rights if any.
+    if (isset($this->userPostingRightsCache[$key])) {
+      return $this->userPostingRightsCache[$key];
     }
 
     // Skip the query for the anonymous user.
     if (!empty($account->id())) {
-      $table = $helper->getFieldTableName('taxonomy_term', 'field_user_posting_rights');
-      $id_field = $helper->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'id');
-      $job_field = $helper->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'job');
-      $training_field = $helper->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'training');
-      $report_field = $helper->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'report');
+      $table = $this->getFieldTableName('taxonomy_term', 'field_user_posting_rights');
+      $id_field = $this->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'id');
+      $job_field = $this->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'job');
+      $training_field = $this->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'training');
+      $report_field = $this->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'report');
 
       // Get the rights associated with the user id.
-      $query = $helper->getDatabase()->select($table, $table);
+      $query = $this->database->select($table, $table);
       $query->addField($table, 'entity_id', 'tid');
       $query->addField($table, $job_field, 'job');
       $query->addField($table, $training_field, 'training');
@@ -196,14 +237,14 @@ class UserPostingRightsHelper {
       // If no sources are provided, check domain posting rights for all
       // sources.
       if (empty($sources)) {
-        $results += static::getDomainPostingRights($account);
+        $results += $this->getDomainPostingRights($account);
       }
       // Otherwise, check domain posting rights for the sources for which no
       // user posting rights were found.
       else {
         $missing_sources = array_diff($sources, array_keys($results));
         if (!empty($missing_sources)) {
-          $results += static::getDomainPostingRights($account, $missing_sources);
+          $results += $this->getDomainPostingRights($account, $missing_sources);
         }
       }
     }
@@ -212,7 +253,7 @@ class UserPostingRightsHelper {
     }
 
     // Filter results based on allowed content types.
-    $results = static::filterPostingRightsByAllowedContentTypes($results, $helper);
+    $results = $this->filterPostingRightsByAllowedContentTypes($results);
 
     // Add default rights for non matched sources.
     foreach ($sources as $tid) {
@@ -227,7 +268,7 @@ class UserPostingRightsHelper {
     }
 
     // Cache the rights.
-    $users[$key] = $results;
+    $this->userPostingRightsCache[$key] = $results;
 
     return $results;
   }
@@ -243,30 +284,29 @@ class UserPostingRightsHelper {
    * @return array<int, array<string, mixed>>
    *   Domain posting rights as an associative array keyed by source id.
    */
-  public static function getDomainPostingRights(AccountInterface $account, array $sources = []): array {
-    $helper = new self();
+  public function getDomainPostingRights(AccountInterface $account, array $sources = []): array {
     $results = [];
 
     // Get user's email domain.
-    $user = \Drupal::entityTypeManager()->getStorage('user')->load($account->id());
+    $user = $this->entityTypeManager->getStorage('user')->load($account->id());
     if (!$user || !$user->getEmail()) {
       return $results;
     }
 
-    $domain = static::extractDomainFromEmail($user->getEmail());
+    $domain = $this->extractDomainFromEmail($user->getEmail());
     if (!$domain) {
       return $results;
     }
 
     // Get domain posting rights table and field names.
-    $table = $helper->getFieldTableName('taxonomy_term', 'field_domain_posting_rights');
-    $domain_field = $helper->getFieldColumnName('taxonomy_term', 'field_domain_posting_rights', 'domain');
-    $job_field = $helper->getFieldColumnName('taxonomy_term', 'field_domain_posting_rights', 'job');
-    $training_field = $helper->getFieldColumnName('taxonomy_term', 'field_domain_posting_rights', 'training');
-    $report_field = $helper->getFieldColumnName('taxonomy_term', 'field_domain_posting_rights', 'report');
+    $table = $this->getFieldTableName('taxonomy_term', 'field_domain_posting_rights');
+    $domain_field = $this->getFieldColumnName('taxonomy_term', 'field_domain_posting_rights', 'domain');
+    $job_field = $this->getFieldColumnName('taxonomy_term', 'field_domain_posting_rights', 'job');
+    $training_field = $this->getFieldColumnName('taxonomy_term', 'field_domain_posting_rights', 'training');
+    $report_field = $this->getFieldColumnName('taxonomy_term', 'field_domain_posting_rights', 'report');
 
     // Query domain posting rights.
-    $query = $helper->getDatabase()->select($table, $table);
+    $query = $this->database->select($table, $table);
     $query->addField($table, 'entity_id', 'tid');
     $query->addField($table, $job_field, 'job');
     $query->addField($table, $training_field, 'training');
@@ -280,7 +320,7 @@ class UserPostingRightsHelper {
     $results = $query->execute()?->fetchAllAssoc('tid', FetchAs::Associative);
 
     // Filter results based on allowed content types.
-    return static::filterPostingRightsByAllowedContentTypes($results, $helper);
+    return $this->filterPostingRightsByAllowedContentTypes($results);
   }
 
   /**
@@ -292,7 +332,7 @@ class UserPostingRightsHelper {
    * @return string|null
    *   Domain part of the email address or NULL if invalid.
    */
-  public static function extractDomainFromEmail(string $email): ?string {
+  public function extractDomainFromEmail(string $email): ?string {
     if (empty($email) || strpos($email, '@') === FALSE) {
       return NULL;
     }
@@ -311,7 +351,7 @@ class UserPostingRightsHelper {
    *   Associative array of allowed content type bundles (job, training, report)
    *   as keys and TRUE as values.
    */
-  public static function getAllowedContentTypes(ContentEntityInterface $source_entity): array {
+  public function getAllowedContentTypes(ContentEntityInterface $source_entity): array {
     $allowed_content_types = [];
 
     if ($source_entity->hasField('field_allowed_content_types')) {
@@ -338,25 +378,21 @@ class UserPostingRightsHelper {
    *
    * @param array<int, array<string, mixed>> $results
    *   Posting rights results.
-   * @param \Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper|null $helper
-   *   Helper instance for database operations.
    *
    * @return array<int, array<string, mixed>>
    *   Filtered posting rights results.
    */
-  public static function filterPostingRightsByAllowedContentTypes(array $results, ?UserPostingRightsHelper $helper = NULL): array {
+  public function filterPostingRightsByAllowedContentTypes(array $results): array {
     if (empty($results)) {
       return $results;
     }
 
-    $helper = $helper ?? new self();
-
     // Get allowed content types for all sources.
     $source_ids = array_keys($results);
-    $allowed_table = $helper->getFieldTableName('taxonomy_term', 'field_allowed_content_types');
-    $allowed_field = $helper->getFieldColumnName('taxonomy_term', 'field_allowed_content_types', 'value');
+    $allowed_table = $this->getFieldTableName('taxonomy_term', 'field_allowed_content_types');
+    $allowed_field = $this->getFieldColumnName('taxonomy_term', 'field_allowed_content_types', 'value');
 
-    $query = $helper->getDatabase()->select($allowed_table, 'allowed');
+    $query = $this->database->select($allowed_table, 'allowed');
     $query->addField('allowed', 'entity_id', 'tid');
     $query->addField('allowed', $allowed_field, 'value');
     $query->condition('allowed.bundle', 'source', '=');
@@ -407,7 +443,7 @@ class UserPostingRightsHelper {
    *   Associative array with the right code and name, and the sources for which
    *   the right applies.
    */
-  public static function getUserConsolidatedPostingRight(AccountInterface $account, string $bundle, array $sources): array {
+  public function getUserConsolidatedPostingRight(AccountInterface $account, string $bundle, array $sources): array {
     // Not a job, training nor report or no sources, 'unverified'.
     if (empty($account->id()) || ($bundle !== 'job' && $bundle !== 'training' && $bundle !== 'report') || empty($sources)) {
       return [
@@ -419,7 +455,7 @@ class UserPostingRightsHelper {
 
     // Get the current user's posting rights for the selected sources.
     $rights = [];
-    foreach (static::getUserPostingRights($account, $sources) as $tid => $data) {
+    foreach ($this->getUserPostingRights($account, $sources) as $tid => $data) {
       $rights[$data[$bundle] ?? 0][] = $tid;
     }
 
@@ -468,7 +504,7 @@ class UserPostingRightsHelper {
    * @return bool
    *   Whether the user has posting rights or not.
    */
-  public static function userHasPostingRights(AccountInterface $account, EntityInterface $entity, string $status): bool {
+  public function userHasPostingRights(AccountInterface $account, EntityInterface $entity, string $status): bool {
     // Disallow for anonymous or undefined users.
     if ($account->id() === NULL || $account->id() === 0) {
       return FALSE;
@@ -488,7 +524,7 @@ class UserPostingRightsHelper {
     }
 
     // Only applies to job, training and report.
-    if (static::entitySupportsPostingRights($entity)) {
+    if ($this->entitySupportsPostingRights($entity)) {
       // Check for sources for which the user is blocked, allowed or trusted.
       //
       // Note: if there is no source or the user in unverified for the sources
@@ -503,7 +539,7 @@ class UserPostingRightsHelper {
         }
 
         // Check if the user is allowed or blocked.
-        foreach (static::getUserPostingRights($account, $sources) as $data) {
+        foreach ($this->getUserPostingRights($account, $sources) as $data) {
           $right = $data[$bundle] ?? 0;
           // If the user is blocked for one of the sources always disallow even
           // if the user is the owner of the document, except for drafts.
@@ -538,8 +574,8 @@ class UserPostingRightsHelper {
    * @return bool
    *   TRUE if the user is allowed or trusted for any source, FALSE otherwise.
    */
-  public static function isUserAllowedOrTrustedForAnySource(?AccountInterface $account = NULL, string $bundle = 'job'): bool {
-    $account = $account ?: \Drupal::currentUser();
+  public function isUserAllowedOrTrustedForAnySource(?AccountInterface $account = NULL, string $bundle = 'job'): bool {
+    $account = $account ?: $this->currentUser;
 
     // Anonymous users are never allowed or trusted.
     if ($account->isAnonymous()) {
@@ -551,7 +587,7 @@ class UserPostingRightsHelper {
       throw new \InvalidArgumentException("Invalid bundle: $bundle. Must be 'job', 'training', or 'report'.");
     }
 
-    $sources = static::getSourcesWithPostingRightsForUser($account, [$bundle => [2, 3]], limit: 1);
+    $sources = $this->getSourcesWithPostingRightsForUser($account, [$bundle => [2, 3]], limit: 1);
     return !empty($sources);
   }
 
@@ -573,19 +609,19 @@ class UserPostingRightsHelper {
    *   Associative array with the source IDs as keys and the corresponding
    *   posting rights as values.
    */
-  public static function getSourcesWithPostingRightsForUser(
+  public function getSourcesWithPostingRightsForUser(
     AccountInterface $account,
     array $bundles = [],
     string $operator = 'AND',
     ?int $limit = NULL,
   ): array {
     // Fetch the user posting rights.
-    $results = static::getSourcesWithUserPostingRightsForUser($account, $bundles, $operator, $limit);
+    $results = $this->getSourcesWithUserPostingRightsForUser($account, $bundles, $operator, $limit);
 
     // Fetch domain posting rights to merge with user posting rights.
     // We use the `+` operator to merge the results so that user posting rights
     // take precedence over domain posting rights.
-    $results += static::getSourcesWithDomainPostingRightsForUser($account, $bundles, $operator, $limit);
+    $results += $this->getSourcesWithDomainPostingRightsForUser($account, $bundles, $operator, $limit);
 
     return $results;
   }
@@ -608,26 +644,23 @@ class UserPostingRightsHelper {
    *   Associative array with the source IDs as keys and the corresponding
    *   posting rights as values.
    */
-  public static function getSourcesWithUserPostingRightsForUser(
+  public function getSourcesWithUserPostingRightsForUser(
     AccountInterface $account,
     array $bundles = [],
     string $operator = 'AND',
     ?int $limit = NULL,
   ): array {
-    $helper = new self();
-    $database = $helper->getDatabase();
-
     // Get user posting rights.
-    $table = $helper->getFieldTableName('taxonomy_term', 'field_user_posting_rights');
-    $id_field = $helper->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'id');
+    $table = $this->getFieldTableName('taxonomy_term', 'field_user_posting_rights');
+    $id_field = $this->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'id');
 
     /** @var array<string, string> $bundle_fields */
     $bundle_fields = [];
-    $bundle_fields['job'] = $helper->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'job');
-    $bundle_fields['training'] = $helper->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'training');
-    $bundle_fields['report'] = $helper->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'report');
+    $bundle_fields['job'] = $this->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'job');
+    $bundle_fields['training'] = $this->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'training');
+    $bundle_fields['report'] = $this->getFieldColumnName('taxonomy_term', 'field_user_posting_rights', 'report');
 
-    $query = $database->select($table, $table);
+    $query = $this->database->select($table, $table);
     $query->fields($table, ['entity_id']);
     $query->condition($table . '.bundle', 'source', '=');
     $query->condition($table . '.' . $id_field, $account->id(), '=');
@@ -655,7 +688,7 @@ class UserPostingRightsHelper {
     $results = $query->execute()?->fetchAllAssoc('entity_id', FetchAs::Associative);
 
     // Filter results based on allowed content types.
-    return static::filterPostingRightsByAllowedContentTypes($results, $helper);
+    return $this->filterPostingRightsByAllowedContentTypes($results);
   }
 
   /**
@@ -676,37 +709,34 @@ class UserPostingRightsHelper {
    *   Associative array with the source IDs as keys and the corresponding
    *   posting rights as values.
    */
-  public static function getSourcesWithDomainPostingRightsForUser(
+  public function getSourcesWithDomainPostingRightsForUser(
     AccountInterface $account,
     array $bundles = [],
     string $operator = 'AND',
     ?int $limit = NULL,
   ): array {
-    $helper = new self();
-    $database = $helper->getDatabase();
-
     // Get user's email domain.
-    $user = \Drupal::entityTypeManager()->getStorage('user')->load($account->id());
+    $user = $this->entityTypeManager->getStorage('user')->load($account->id());
     if (!$user || !$user->getEmail()) {
       return [];
     }
 
-    $domain = static::extractDomainFromEmail($user->getEmail());
+    $domain = $this->extractDomainFromEmail($user->getEmail());
     if (!$domain) {
       return [];
     }
 
     // Get domain posting rights.
-    $table = $helper->getFieldTableName('taxonomy_term', 'field_domain_posting_rights');
-    $domain_field = $helper->getFieldColumnName('taxonomy_term', 'field_domain_posting_rights', 'domain');
+    $table = $this->getFieldTableName('taxonomy_term', 'field_domain_posting_rights');
+    $domain_field = $this->getFieldColumnName('taxonomy_term', 'field_domain_posting_rights', 'domain');
 
     /** @var array<string, string> $bundle_fields */
     $bundle_fields = [];
-    $bundle_fields['job'] = $helper->getFieldColumnName('taxonomy_term', 'field_domain_posting_rights', 'job');
-    $bundle_fields['training'] = $helper->getFieldColumnName('taxonomy_term', 'field_domain_posting_rights', 'training');
-    $bundle_fields['report'] = $helper->getFieldColumnName('taxonomy_term', 'field_domain_posting_rights', 'report');
+    $bundle_fields['job'] = $this->getFieldColumnName('taxonomy_term', 'field_domain_posting_rights', 'job');
+    $bundle_fields['training'] = $this->getFieldColumnName('taxonomy_term', 'field_domain_posting_rights', 'training');
+    $bundle_fields['report'] = $this->getFieldColumnName('taxonomy_term', 'field_domain_posting_rights', 'report');
 
-    $query = $database->select($table, $table);
+    $query = $this->database->select($table, $table);
     $query->fields($table, ['entity_id']);
     $query->condition($table . '.bundle', 'source', '=');
     $query->condition($table . '.' . $domain_field, $domain, '=');
@@ -734,7 +764,7 @@ class UserPostingRightsHelper {
     $results = $query->execute()?->fetchAllAssoc('entity_id', FetchAs::Associative);
 
     // Filter results based on allowed content types.
-    return static::filterPostingRightsByAllowedContentTypes($results, $helper);
+    return $this->filterPostingRightsByAllowedContentTypes($results);
   }
 
   /**
@@ -746,12 +776,142 @@ class UserPostingRightsHelper {
    * @return \Drupal\Component\Render\MarkupInterface
    *   Formatted right.
    */
-  public static function renderRight(string $right): MarkupInterface {
+  public function renderRight(string $right): MarkupInterface {
     $build = [
       '#theme' => 'reliefweb_moderation_user_posting_right',
       '#right' => $right,
     ];
-    return \Drupal::service('renderer')->render($build);
+    return $this->renderer->render($build);
+  }
+
+  /**
+   * Get the user posting rights to moderation status mapping.
+   *
+   * @return array
+   *   Mapping of user posting rights to moderation status.
+   */
+  public function getUserPostingRightsToModerationStatusMapping(): array {
+    return $this->state->get('reliefweb_posting_rights_status_mapping', []);
+  }
+
+  /**
+   * Set the user posting rights to moderation status mapping.
+   *
+   * @param array $mapping
+   *   Mapping of user posting rights to moderation status.
+   */
+  public function setUserPostingRightsToModerationStatusMapping(array $mapping): void {
+    $this->state->set('reliefweb_posting_rights_status_mapping', $mapping);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function updateModerationStatusFromPostingRights(
+    EntityModeratedInterface $entity,
+    AccountInterface $user,
+    array $statuses = ['pending'],
+  ): bool {
+    // Get the current status and bundle.
+    $status = $entity->getModerationStatus();
+    $bundle = $entity->bundle();
+
+    // Skip if there is no user.
+    if (empty($user->id())) {
+      return FALSE;
+    }
+
+    // Check if the current status warrants a modification.
+    if (!in_array($status, $statuses)) {
+      return FALSE;
+    }
+
+    // Get the editing user role for the entity bundle and current user
+    // so we can retrieve the correct status mapping.
+    $role = UserHelper::getEditingUserRole($bundle, $user);
+    if (empty($role)) {
+      return FALSE;
+    }
+
+    // Retrieve the user posting rights to moderation status mapping.
+    $mapping = $this->getUserPostingRightsToModerationStatusMapping();
+    if (!isset($mapping[$role][$bundle])) {
+      return FALSE;
+    }
+
+    // Skip if there are no sources.
+    if (!$entity->hasField('field_source') || $entity->field_source->isEmpty()) {
+      return FALSE;
+    }
+
+    // Extract source ids.
+    $sources = [];
+    foreach ($entity->field_source as $item) {
+      if (!empty($item->target_id)) {
+        $sources[] = $item->target_id;
+      }
+    }
+
+    // Get the user's posting right for the document.
+    $rights = [0 => [], 1 => [], 2 => [], 3 => []];
+    foreach ($this->getUserPostingRights($user, $sources) as $tid => $data) {
+      $rights[$data[$bundle] ?? 0][] = $tid;
+    }
+
+    $scenario = match (TRUE) {
+      // Blocked for any source.
+      !empty($rights[1]) => 'blocked',
+      // Trusted for all the sources.
+      count($rights[3]) === count($sources) => 'trusted_all',
+      // Trusted for some sources with the rest allowed (since no unverified).
+      !empty($rights[3]) && empty($rights[0]) => 'trusted_some_allowed',
+      // Trusted for some sources with some unverified sources.
+      !empty($rights[3]) && !empty($rights[0]) => 'trusted_some_unverified',
+      // Allowed for all the sources.
+      count($rights[2]) === count($sources) => 'allowed_all',
+      // Allowed for some sources with the rest unverified.
+      !empty($rights[2]) && !empty($rights[0]) => 'allowed_some_unverified',
+      // Unverified for all sources or default scenario.
+      default => 'unverified_all',
+    };
+
+    // Skip if there no status for the scenario.
+    if (!isset($mapping[$role][$bundle][$scenario])) {
+      return FALSE;
+    }
+
+    // Get the updated status.
+    $status = $mapping[$role][$bundle][$scenario];
+
+    // Update the status.
+    $entity->setModerationStatus($status);
+
+    // Add messages indicating the posting rights for easier review.
+    $message = '';
+    if (!empty($rights[1])) {
+      $message = trim($message . strtr(' Blocked user for @sources.', [
+        '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[1])),
+      ]));
+    }
+    if (!empty($rights[0])) {
+      $message = trim($message . strtr(' Unverified user for @sources.', [
+        '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[0])),
+      ]));
+    }
+    if (!empty($rights[2])) {
+      $message = trim($message . strtr(' Allowed user for @sources.', [
+        '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[2])),
+      ]));
+    }
+    if (!empty($rights[3])) {
+      $message = trim($message . strtr(' Trusted user for @sources.', [
+        '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[3])),
+      ]));
+    }
+    // Prepend the message to the revision log.
+    $entity->updateRevisionLogMessage($message, 'prepend');
+
+    return TRUE;
   }
 
 }
