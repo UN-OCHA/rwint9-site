@@ -264,6 +264,9 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     // @see ::alterOriginFields()
     $form['field_origin']['widget']['#type'] = 'hidden';
 
+    // Remove autocomplete path to get attention messages for sources.
+    unset($form['field_source']['#attributes']['data-autocomplete-path']);
+
     // Hide fields.
     $form['field_embargo_date']['#access'] = FALSE;
     $form['field_ocha_product']['#access'] = FALSE;
@@ -382,6 +385,9 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     if (isset($form['field_primary_country'])) {
       $form['field_primary_country']['widget']['#description'] = $this->t('For global content, select World.');
     }
+
+    // Remove autocomplete path to get attention messages for sources.
+    unset($form['field_source']['#attributes']['data-autocomplete-path']);
 
     // Disallow selecting a publication date in the future.
     if (isset($form['field_original_publication_date']['widget'][0]['value'])) {

@@ -15,7 +15,6 @@ dependencies:
     - reliefweb_form
     - reliefweb_moderation
     - reliefweb_subscriptions
-    - reliefweb_user_posts
     - system
 _core:
   default_config_hash: dJ0L2DNSj5q6XVZAGsuVDpJTh5UeYkIPwKrUOOpr8YI
@@ -43,5 +42,4 @@ permissions:
   - 'view media'
   - 'view moderation information revision message'
   - 'view moderation information status'
-  - 'view own posts'
   - 'view own unpublished content'

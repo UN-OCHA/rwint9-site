@@ -15,6 +15,7 @@ dependencies:
     - reliefweb_guidelines
     - reliefweb_moderation
     - reliefweb_revisions
+    - reliefweb_user_posts
 id: contributor
 label: Contributor
 weight: 9
@@ -33,5 +34,6 @@ permissions:
   - 'edit own report content'
   - 'update media'
   - 'view entity history'
+  - 'view own posts'
   - 'view own unpublished media'
   - 'view report moderation information'

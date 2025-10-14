@@ -190,6 +190,7 @@ permissions:
   - 'view moderation information'
   - 'view moderation information revision message author'
   - 'view other user posts'
+  - 'view own posts'
   - 'view own unpublished content'
   - 'view own unpublished media'
   - 'view published guideline entities'

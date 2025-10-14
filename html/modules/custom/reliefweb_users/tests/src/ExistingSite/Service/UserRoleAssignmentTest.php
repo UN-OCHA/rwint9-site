@@ -8,6 +8,7 @@ use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
 use Drupal\user\Entity\User;
 use Drupal\user\Entity\Role;
+use Drupal\user\UserInterface;
 use Drupal\reliefweb_users\Service\UserRoleAssignment;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -884,6 +885,224 @@ class UserRoleAssignmentTest extends ExistingSiteBase {
     $user = User::load($user->id());
     $this->assertFalse($user->hasRole('submitter'), 'User should not have submitter role');
     $this->assertFalse($user->hasRole('advertiser'), 'User should not have advertiser role');
+  }
+
+  /**
+   * Test wasRolePreviouslyAssigned method.
+   */
+  public function testWasRolePreviouslyAssigned(): void {
+    // Test with user who has no history.
+    $this->assertFalse(
+      $this->userRoleAssignment->wasRolePreviouslyAssigned($this->testUser, 'submitter'),
+      'User with no history should not have previously assigned role'
+    );
+
+    // Create history entry for submitter role.
+    $this->createUserHistoryEntry($this->testUser, ['submitter']);
+
+    $this->assertTrue(
+      $this->userRoleAssignment->wasRolePreviouslyAssigned($this->testUser, 'submitter'),
+      'User with history should have previously assigned role'
+    );
+
+    // Test with different role.
+    $this->assertFalse(
+      $this->userRoleAssignment->wasRolePreviouslyAssigned($this->testUser, 'advertiser'),
+      'User should not have previously assigned different role'
+    );
+
+    // Test with multiple roles in history.
+    $this->createUserHistoryEntry($this->testUser, ['submitter', 'advertiser']);
+
+    $this->assertTrue(
+      $this->userRoleAssignment->wasRolePreviouslyAssigned($this->testUser, 'advertiser'),
+      'User should have previously assigned role from multiple roles'
+    );
+  }
+
+  /**
+   * Test that role assignment is skipped when role was previously assigned.
+   */
+  public function testSkipRoleAssignmentWhenPreviouslyAssigned(): void {
+    // Create a user who would normally be eligible for submitter role.
+    $user = $this->createUser([], 'history_test_user', FALSE, [
+      'mail' => 'history@un.org',
+      'status' => 1,
+    ]);
+
+    // Create history entry showing submitter role was previously assigned.
+    $this->createUserHistoryEntry($user, ['submitter']);
+
+    // User should not be eligible for submitter role due to history.
+    $this->assertFalse(
+      $this->userRoleAssignment->shouldAssignSubmitterRole($user),
+      'User with previously assigned submitter role should not be eligible again'
+    );
+
+    // Create another user who would normally be eligible for advertiser role.
+    $advertiser_user = $this->createUser([], 'history_advertiser_user', FALSE, [
+      'mail' => 'history_advertiser@example.com',
+      'status' => 1,
+    ]);
+
+    // Create some content for advertiser role eligibility.
+    $this->createNode([
+      'type' => 'job',
+      'title' => 'History Test Job',
+      'uid' => $advertiser_user->id(),
+    ]);
+
+    // Create history entry showing advertiser role was previously assigned.
+    $this->createUserHistoryEntry($advertiser_user, ['advertiser']);
+
+    // User should not be eligible for advertiser role due to history.
+    $this->assertFalse(
+      $this->userRoleAssignment->shouldAssignAdvertiserRole($advertiser_user),
+      'User with previously assigned advertiser role should not be eligible again'
+    );
+  }
+
+  /**
+   * Test that role assignment works when no history exists.
+   */
+  public function testRoleAssignmentWhenNoHistory(): void {
+    // Create a user who should be eligible for submitter role.
+    $user = $this->createUser([], 'no_history_user', FALSE, [
+      'mail' => 'no_history@un.org',
+      'status' => 1,
+    ]);
+
+    // User should be eligible for submitter role since no history exists.
+    $this->assertTrue(
+      $this->userRoleAssignment->shouldAssignSubmitterRole($user),
+      'User with no history should be eligible for submitter role'
+    );
+
+    // Create another user who should be eligible for advertiser role.
+    $advertiser_user = $this->createUser([], 'no_history_advertiser', FALSE, [
+      'mail' => 'no_history_advertiser@example.com',
+      'status' => 1,
+    ]);
+
+    // Create some content for advertiser role eligibility.
+    $this->createNode([
+      'type' => 'job',
+      'title' => 'No History Test Job',
+      'uid' => $advertiser_user->id(),
+    ]);
+
+    // User should be eligible for advertiser role since no history exists.
+    $this->assertTrue(
+      $this->userRoleAssignment->shouldAssignAdvertiserRole($advertiser_user),
+      'User with no history should be eligible for advertiser role'
+    );
+  }
+
+  /**
+   * Test that role assignment works when history exists but for different role.
+   */
+  public function testRoleAssignmentWhenHistoryForDifferentRole(): void {
+    // Create a user who should be eligible for submitter role.
+    $user = $this->createUser([], 'different_history_user', FALSE, [
+      'mail' => 'different_history@un.org',
+      'status' => 1,
+    ]);
+
+    // Create history entry for a different role (advertiser).
+    $this->createUserHistoryEntry($user, ['advertiser']);
+
+    // User should still be eligible for submitter role since history is for
+    // different role.
+    $this->assertTrue(
+      $this->userRoleAssignment->shouldAssignSubmitterRole($user),
+      'User with history for different role should be eligible for submitter role'
+    );
+
+    // Create another user who should be eligible for advertiser role.
+    $advertiser_user = $this->createUser([], 'different_history_advertiser', FALSE, [
+      'mail' => 'different_history_advertiser@example.com',
+      'status' => 1,
+    ]);
+
+    // Create some content for advertiser role eligibility.
+    $this->createNode([
+      'type' => 'job',
+      'title' => 'Different History Test Job',
+      'uid' => $advertiser_user->id(),
+    ]);
+
+    // Create history entry for a different role (submitter).
+    $this->createUserHistoryEntry($advertiser_user, ['submitter']);
+
+    // User should still be eligible for advertiser role since history is for
+    // different role.
+    $this->assertTrue(
+      $this->userRoleAssignment->shouldAssignAdvertiserRole($advertiser_user),
+      'User with history for different role should be eligible for advertiser role'
+    );
+  }
+
+  /**
+   * Test edge cases for wasRolePreviouslyAssigned method.
+   */
+  public function testWasRolePreviouslyAssignedEdgeCases(): void {
+    // Test with empty roles string.
+    $this->createUserHistoryEntry($this->testUser, []);
+
+    $this->assertFalse(
+      $this->userRoleAssignment->wasRolePreviouslyAssigned($this->testUser, 'submitter'),
+      'User with empty roles should not have previously assigned role'
+    );
+
+    // Test with partial role name match (should not match).
+    $this->createUserHistoryEntry($this->testUser, ['sub']);
+
+    $this->assertFalse(
+      $this->userRoleAssignment->wasRolePreviouslyAssigned($this->testUser, 'submitter'),
+      'Partial role name should not match'
+    );
+
+    // Test with role name that contains the target role as substring.
+    $this->createUserHistoryEntry($this->testUser, ['submitter_old']);
+
+    $this->assertFalse(
+      $this->userRoleAssignment->wasRolePreviouslyAssigned($this->testUser, 'submitter'),
+      'Role name containing target as substring should not match'
+    );
+
+    // Test with exact match.
+    $this->createUserHistoryEntry($this->testUser, ['submitter']);
+
+    $this->assertTrue(
+      $this->userRoleAssignment->wasRolePreviouslyAssigned($this->testUser, 'submitter'),
+      'Exact role name should match'
+    );
+  }
+
+  /**
+   * Create a user history entry for testing.
+   *
+   * @param \Drupal\user\UserInterface $user
+   *   The user to create history for.
+   * @param array $roles
+   *   Array of roles to include in the history entry.
+   */
+  protected function createUserHistoryEntry(UserInterface $user, array $roles): void {
+    $database = \Drupal::database();
+    $database->insert('reliefweb_user_history')
+      ->fields([
+        // System user.
+        'modification_user' => 2,
+        'modification_timestamp' => \Drupal::time()->getRequestTime(),
+        'uid' => $user->id(),
+        'name' => $user->getAccountName(),
+        'mail' => $user->getEmail(),
+        'status' => $user->get('status')->value,
+        'display_name' => (string) $user->getDisplayName(),
+        'roles' => implode(',', $roles),
+        'email_confirmed' => 1,
+      ])
+      ->execute();
   }
 
 }

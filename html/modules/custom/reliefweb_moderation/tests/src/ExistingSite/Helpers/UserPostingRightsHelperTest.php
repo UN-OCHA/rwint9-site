@@ -87,6 +87,14 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     // Create a test source with both user and domain posting rights.
     $this->testSource = $this->createTerm($this->sourceVocabulary, [
       'name' => 'Test Source - Mixed Rights',
+      'field_allowed_content_types' => [
+        // Job.
+        ['value' => 0],
+        // Training.
+        ['value' => 2],
+        // Report.
+        ['value' => 1],
+      ],
       'field_user_posting_rights' => [
         [
           'id' => $this->testUser->id(),
@@ -114,6 +122,14 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     // Create a source with only user posting rights.
     $this->userOnlySource = $this->createTerm($this->sourceVocabulary, [
       'name' => 'User Only Source',
+      'field_allowed_content_types' => [
+        // Job.
+        ['value' => 0],
+        // Training.
+        ['value' => 2],
+        // Report.
+        ['value' => 1],
+      ],
       'field_user_posting_rights' => [
         [
           'id' => $this->testUser->id(),
@@ -129,6 +145,14 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     // Create a source with only domain posting rights.
     $this->domainOnlySource = $this->createTerm($this->sourceVocabulary, [
       'name' => 'Domain Only Source',
+      'field_allowed_content_types' => [
+        // Job.
+        ['value' => 0],
+        // Training.
+        ['value' => 2],
+        // Report.
+        ['value' => 1],
+      ],
       // No user posting rights.
       'field_domain_posting_rights' => [
         [
@@ -144,6 +168,14 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     // Create a source with no posting rights.
     $this->noRightsSource = $this->createTerm($this->sourceVocabulary, [
       'name' => 'No Rights Source',
+      'field_allowed_content_types' => [
+        // Job.
+        ['value' => 0],
+        // Training.
+        ['value' => 2],
+        // Report.
+        ['value' => 1],
+      ],
       // No user or domain posting rights.
     ]);
 
@@ -176,7 +208,7 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
   public function testGetEntityAuthorPostingRights(): void {
     // Test with valid entity that has source field.
     $rights = UserPostingRightsHelper::getEntityAuthorPostingRights($this->testEntity);
-    $this->assertEquals('allowed', $rights, 'Entity with blocked report rights should return blocked');
+    $this->assertEquals('allowed', $rights, 'Entity with allowed job rights should return allowed');
 
     // Test with entity without source field.
     $entity_without_source = $this->createNode([
@@ -342,6 +374,124 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     $this->assertEquals(0, $rights[$this->noRightsSource->id()]['job'], 'Source with no rights should return unverified');
     $this->assertEquals(0, $rights[$this->noRightsSource->id()]['training'], 'Source with no rights should return unverified');
     $this->assertEquals(0, $rights[$this->noRightsSource->id()]['report'], 'Source with no rights should return unverified');
+  }
+
+  /**
+   * Test getAllowedContentTypes method.
+   */
+  public function testGetAllowedContentTypes(): void {
+    // Create a source with allowed content types.
+    $sourceWithTypes = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Source with Allowed Types',
+      'field_allowed_content_types' => [
+        // Job.
+        ['value' => 0],
+        // Report.
+        ['value' => 1],
+      ],
+    ]);
+
+    $allowed_types = UserPostingRightsHelper::getAllowedContentTypes($sourceWithTypes);
+    $this->assertArrayHasKey('job', $allowed_types, 'Should include job as allowed content type');
+    $this->assertArrayHasKey('report', $allowed_types, 'Should include report as allowed content type');
+    $this->assertArrayNotHasKey('training', $allowed_types, 'Should not include training as allowed content type');
+    $this->assertTrue($allowed_types['job'], 'Job should be marked as allowed');
+    $this->assertTrue($allowed_types['report'], 'Report should be marked as allowed');
+
+    // Create a source with no allowed content types.
+    $sourceWithoutTypes = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Source without Allowed Types',
+    ]);
+
+    $allowed_types = UserPostingRightsHelper::getAllowedContentTypes($sourceWithoutTypes);
+    $this->assertEmpty($allowed_types, 'Source without allowed content types should return empty array');
+
+    // Create a source with all content types allowed.
+    $sourceWithAllTypes = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Source with All Types',
+      'field_allowed_content_types' => [
+        // Job.
+        ['value' => 0],
+        // Report.
+        ['value' => 1],
+        // Training.
+        ['value' => 2],
+      ],
+    ]);
+
+    $allowed_types = UserPostingRightsHelper::getAllowedContentTypes($sourceWithAllTypes);
+    $this->assertArrayHasKey('job', $allowed_types, 'Should include job as allowed content type');
+    $this->assertArrayHasKey('report', $allowed_types, 'Should include report as allowed content type');
+    $this->assertArrayHasKey('training', $allowed_types, 'Should include training as allowed content type');
+    $this->assertTrue($allowed_types['job'], 'Job should be marked as allowed');
+    $this->assertTrue($allowed_types['report'], 'Report should be marked as allowed');
+    $this->assertTrue($allowed_types['training'], 'Training should be marked as allowed');
+  }
+
+  /**
+   * Test filterPostingRightsByAllowedContentTypes method.
+   */
+  public function testFilterPostingRightsByAllowedContentTypes(): void {
+    // Create test data with posting rights.
+    $results = [
+      1 => ['job' => 2, 'report' => 1, 'training' => 3],
+      2 => ['job' => 0, 'report' => 2, 'training' => 0],
+    ];
+
+    // Create sources with different allowed content types.
+    $source1 = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Source 1 - Job and Training Only',
+      'field_allowed_content_types' => [
+        // Job.
+        ['value' => 0],
+        // Training.
+        ['value' => 2],
+      ],
+    ]);
+
+    $source2 = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Source 2 - Report Only',
+      'field_allowed_content_types' => [
+        // Report.
+        ['value' => 1],
+      ],
+    ]);
+
+    // Update results to use actual source IDs.
+    $results = [
+      $source1->id() => ['job' => 2, 'report' => 1, 'training' => 3],
+      $source2->id() => ['job' => 0, 'report' => 2, 'training' => 0],
+    ];
+
+    $filtered_results = UserPostingRightsHelper::filterPostingRightsByAllowedContentTypes($results);
+
+    // Source 1 should only have job and training rights (report should be 0).
+    $this->assertEquals(2, $filtered_results[$source1->id()]['job'], 'Source 1 should keep job rights');
+    $this->assertEquals(0, $filtered_results[$source1->id()]['report'], 'Source 1 should reset report rights');
+    $this->assertEquals(3, $filtered_results[$source1->id()]['training'], 'Source 1 should keep training rights');
+
+    // Source 2 should only have report rights (job and training should be 0).
+    $this->assertEquals(0, $filtered_results[$source2->id()]['job'], 'Source 2 should reset job rights');
+    $this->assertEquals(2, $filtered_results[$source2->id()]['report'], 'Source 2 should keep report rights');
+    $this->assertEquals(0, $filtered_results[$source2->id()]['training'], 'Source 2 should reset training rights');
+
+    // Test with empty results.
+    $empty_results = UserPostingRightsHelper::filterPostingRightsByAllowedContentTypes([]);
+    $this->assertEmpty($empty_results, 'Empty results should return empty array');
+
+    // Test with source that has no allowed content types.
+    $sourceNoTypes = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Source with No Types',
+    ]);
+
+    $results_no_types = [
+      $sourceNoTypes->id() => ['job' => 2, 'report' => 1, 'training' => 3],
+    ];
+
+    $filtered_results = UserPostingRightsHelper::filterPostingRightsByAllowedContentTypes($results_no_types);
+    $this->assertEquals(0, $filtered_results[$sourceNoTypes->id()]['job'], 'Source with no allowed types should reset all rights');
+    $this->assertEquals(0, $filtered_results[$sourceNoTypes->id()]['report'], 'Source with no allowed types should reset all rights');
+    $this->assertEquals(0, $filtered_results[$sourceNoTypes->id()]['training'], 'Source with no allowed types should reset all rights');
   }
 
   /**
@@ -549,6 +699,14 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     // Create a source where this user only has blocked rights.
     $this->createTerm($this->sourceVocabulary, [
       'name' => 'Blocked User Source',
+      'field_allowed_content_types' => [
+        // Job.
+        ['value' => 0],
+        // Training.
+        ['value' => 2],
+        // Report.
+        ['value' => 1],
+      ],
       'field_user_posting_rights' => [
         [
           'id' => $blocked_user->id(),
@@ -748,6 +906,14 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     // Create a source with mixed rights for the test user.
     $mixedRightsSource = $this->createTerm($this->sourceVocabulary, [
       'name' => 'Mixed Rights Source',
+      'field_allowed_content_types' => [
+        // Job.
+        ['value' => 0],
+        // Training.
+        ['value' => 2],
+        // Report.
+        ['value' => 1],
+      ],
       'field_user_posting_rights' => [
         [
           'id' => $this->testUser->id(),
@@ -806,6 +972,14 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     // Create a source with mixed rights for the test user.
     $mixedRightsSource = $this->createTerm($this->sourceVocabulary, [
       'name' => 'Mixed Rights Source',
+      'field_allowed_content_types' => [
+        // Job.
+        ['value' => 0],
+        // Training.
+        ['value' => 2],
+        // Report.
+        ['value' => 1],
+      ],
       'field_user_posting_rights' => [
         [
           'id' => $this->testUser->id(),
@@ -863,6 +1037,14 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     // Create a source with domain posting rights.
     $domainRightsSource = $this->createTerm($this->sourceVocabulary, [
       'name' => 'Domain Rights Source',
+      'field_allowed_content_types' => [
+        // Job.
+        ['value' => 0],
+        // Training.
+        ['value' => 2],
+        // Report.
+        ['value' => 1],
+      ],
       'field_domain_posting_rights' => [
         [
           'domain' => 'example.com',
@@ -904,6 +1086,14 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
     // Create a source with domain posting rights.
     $domainRightsSource = $this->createTerm($this->sourceVocabulary, [
       'name' => 'Domain Rights Source',
+      'field_allowed_content_types' => [
+        // Job.
+        ['value' => 0],
+        // Training.
+        ['value' => 2],
+        // Report.
+        ['value' => 1],
+      ],
       'field_domain_posting_rights' => [
         [
           'domain' => 'example.com',
@@ -1059,6 +1249,258 @@ class UserPostingRightsHelperTest extends ExistingSiteBase {
       return UserPostingRightsHelper::renderRight('unverified');
     });
     $this->assertNotEmpty($rendered, 'Should render unverified right');
+  }
+
+  /**
+   * Test posting rights filtering with allowed content types.
+   */
+  public function testPostingRightsWithAllowedContentTypes(): void {
+    // Create a source that only allows job content.
+    $jobOnlySource = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Job Only Source',
+      'field_allowed_content_types' => [
+        // Job.
+        ['value' => 0],
+      ],
+      'field_user_posting_rights' => [
+        [
+          'id' => $this->testUser->id(),
+          // Allowed.
+          'job' => 2,
+          // Trusted.
+          'training' => 3,
+          // Blocked.
+          'report' => 1,
+        ],
+      ],
+    ]);
+
+    // Test getUserPostingRights with content type filtering.
+    $rights = UserPostingRightsHelper::getUserPostingRights($this->testUser, [$jobOnlySource->id()]);
+    $this->assertArrayHasKey($jobOnlySource->id(), $rights);
+    $this->assertEquals(2, $rights[$jobOnlySource->id()]['job'], 'Should keep job rights for allowed content type');
+    $this->assertEquals(0, $rights[$jobOnlySource->id()]['training'], 'Should reset training rights for non-allowed content type');
+    $this->assertEquals(0, $rights[$jobOnlySource->id()]['report'], 'Should reset report rights for non-allowed content type');
+
+    // Create a source that only allows report content.
+    $reportOnlySource = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Report Only Source',
+      'field_allowed_content_types' => [
+        // Report.
+        ['value' => 1],
+      ],
+      'field_domain_posting_rights' => [
+        [
+          'domain' => 'example.com',
+          // Allowed.
+          'job' => 2,
+          // Trusted.
+          'training' => 3,
+          // Allowed.
+          'report' => 2,
+        ],
+      ],
+    ]);
+
+    // Test domain posting rights with content type filtering.
+    $rights = UserPostingRightsHelper::getUserPostingRights($this->testUser, [$reportOnlySource->id()]);
+    $this->assertArrayHasKey($reportOnlySource->id(), $rights);
+    $this->assertEquals(0, $rights[$reportOnlySource->id()]['job'], 'Should reset job rights for non-allowed content type');
+    $this->assertEquals(0, $rights[$reportOnlySource->id()]['training'], 'Should reset training rights for non-allowed content type');
+    $this->assertEquals(2, $rights[$reportOnlySource->id()]['report'], 'Should keep report rights for allowed content type');
+
+    // Test getEntityAuthorPostingRights with content type filtering.
+    $jobEntity = $this->createNode([
+      'type' => 'job',
+      'title' => 'Job with Job-Only Source',
+      'uid' => $this->testUser->id(),
+      'field_source' => [
+        ['target_id' => $jobOnlySource->id()],
+      ],
+    ]);
+
+    $rights = UserPostingRightsHelper::getEntityAuthorPostingRights($jobEntity);
+    $this->assertEquals('allowed', $rights, 'Job entity with job-only source should have allowed rights');
+
+    $reportEntity = $this->createNode([
+      'type' => 'report',
+      'title' => 'Report with Job-Only Source',
+      'uid' => $this->testUser->id(),
+      'field_source' => [
+        ['target_id' => $jobOnlySource->id()],
+      ],
+    ]);
+
+    $rights = UserPostingRightsHelper::getEntityAuthorPostingRights($reportEntity);
+    $this->assertEquals('unverified', $rights, 'Report entity with job-only source should have unverified rights (source not allowed for reports)');
+
+    // Test with source that has no allowed content types.
+    $noTypesSource = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'No Types Source',
+      // No field_allowed_content_types - this is intentional for testing.
+      'field_user_posting_rights' => [
+        [
+          'id' => $this->testUser->id(),
+          'job' => 2,
+          'training' => 3,
+          'report' => 2,
+        ],
+      ],
+    ]);
+
+    $rights = UserPostingRightsHelper::getUserPostingRights($this->testUser, [$noTypesSource->id()]);
+    $this->assertArrayHasKey($noTypesSource->id(), $rights);
+    $this->assertEquals(0, $rights[$noTypesSource->id()]['job'], 'Should reset all rights for source with no allowed content types');
+    $this->assertEquals(0, $rights[$noTypesSource->id()]['training'], 'Should reset all rights for source with no allowed content types');
+    $this->assertEquals(0, $rights[$noTypesSource->id()]['report'], 'Should reset all rights for source with no allowed content types');
+  }
+
+  /**
+   * Test getSourcesWithPostingRightsForUser filtering by allowed content types.
+   */
+  public function testGetSourcesWithPostingRightsForUserWithContentTypes(): void {
+    // Create sources with different allowed content types.
+    $jobTrainingSource = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Job and Training Source',
+      'field_allowed_content_types' => [
+        // Job.
+        ['value' => 0],
+        // Training.
+        ['value' => 2],
+      ],
+      'field_user_posting_rights' => [
+        [
+          'id' => $this->testUser->id(),
+          // Allowed.
+          'job' => 2,
+          // Trusted.
+          'training' => 3,
+          // Blocked.
+          'report' => 1,
+        ],
+      ],
+    ]);
+
+    $reportOnlySource = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Report Only Source',
+      'field_allowed_content_types' => [
+        // Report.
+        ['value' => 1],
+      ],
+      'field_domain_posting_rights' => [
+        [
+          'domain' => 'example.com',
+          // Allowed.
+          'job' => 2,
+          // Trusted.
+          'training' => 3,
+          // Allowed.
+          'report' => 2,
+        ],
+      ],
+    ]);
+
+    // Test getting sources with job rights - should include jobTrainingSource
+    // but not reportOnlySource.
+    $sources = UserPostingRightsHelper::getSourcesWithPostingRightsForUser(
+      $this->testUser,
+      ['job' => [2, 3]],
+      'OR'
+    );
+
+    $this->assertArrayHasKey($jobTrainingSource->id(), $sources, 'Should include source with allowed job content type');
+    $this->assertEquals(2, $sources[$jobTrainingSource->id()]['job'], 'Should return job rights for allowed content type');
+    $this->assertEquals(0, $sources[$jobTrainingSource->id()]['report'], 'Should reset report rights for non-allowed content type');
+
+    // Test getting sources with report rights - should include reportOnlySource
+    // but not jobTrainingSource.
+    $sources = UserPostingRightsHelper::getSourcesWithPostingRightsForUser(
+      $this->testUser,
+      ['report' => [2, 3]],
+      'OR'
+    );
+
+    $this->assertArrayHasKey($reportOnlySource->id(), $sources, 'Should include source with allowed report content type');
+    $this->assertEquals(2, $sources[$reportOnlySource->id()]['report'], 'Should return report rights for allowed content type');
+    $this->assertEquals(0, $sources[$reportOnlySource->id()]['job'], 'Should reset job rights for non-allowed content type');
+  }
+
+  /**
+   * Test userHasPostingRights with allowed content types filtering.
+   */
+  public function testUserHasPostingRightsWithContentTypes(): void {
+    // Create a source that only allows job content.
+    $jobOnlySource = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Job Only Source',
+      'field_allowed_content_types' => [
+        // Job.
+        ['value' => 0],
+      ],
+      'field_user_posting_rights' => [
+        [
+          'id' => $this->testUser->id(),
+          // Allowed.
+          'job' => 2,
+          // Trusted.
+          'training' => 3,
+          // Blocked.
+          'report' => 1,
+        ],
+      ],
+    ]);
+
+    // Test with job entity - should have rights.
+    $jobEntity = $this->createNode([
+      'type' => 'job',
+      'title' => 'Job with Job-Only Source',
+      'uid' => $this->testUser->id(),
+      'field_source' => [
+        ['target_id' => $jobOnlySource->id()],
+      ],
+    ]);
+
+    $has_rights = UserPostingRightsHelper::userHasPostingRights(
+      $this->testUser,
+      $jobEntity,
+      'published'
+    );
+    $this->assertTrue($has_rights, 'User should have rights for job entity with job-only source');
+
+    // Test with report entity - should have rights because user is owner
+    // (content type filtering only affects posting rights values, not access).
+    $reportEntity = $this->createNode([
+      'type' => 'report',
+      'title' => 'Report with Job-Only Source',
+      'uid' => $this->testUser->id(),
+      'field_source' => [
+        ['target_id' => $jobOnlySource->id()],
+      ],
+    ]);
+
+    $has_rights = UserPostingRightsHelper::userHasPostingRights(
+      $this->testUser,
+      $reportEntity,
+      'published'
+    );
+    $this->assertTrue($has_rights, 'User should have rights for report entity because they are the owner');
+
+    // Test with training entity - should have rights because user is owner
+    // (content type filtering only affects posting rights values, not access).
+    $trainingEntity = $this->createNode([
+      'type' => 'training',
+      'title' => 'Training with Job-Only Source',
+      'uid' => $this->testUser->id(),
+      'field_source' => [
+        ['target_id' => $jobOnlySource->id()],
+      ],
+    ]);
+
+    $has_rights = UserPostingRightsHelper::userHasPostingRights(
+      $this->testUser,
+      $trainingEntity,
+      'published'
+    );
+    $this->assertTrue($has_rights, 'User should have rights for training entity because they are the owner');
   }
 
   /**
