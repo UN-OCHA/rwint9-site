@@ -15,6 +15,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
+use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -50,6 +51,8 @@ class UserPostsService extends ModerationServiceBase {
    *   The request stack.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The translation manager service.
+   * @param \Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface $user_posting_rights_manager
+   *   The user posting rights manager service.
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
    *   The route match service.
    */
@@ -63,6 +66,7 @@ class UserPostsService extends ModerationServiceBase {
     PagerParametersInterface $pager_parameters,
     RequestStack $request_stack,
     TranslationInterface $string_translation,
+    UserPostingRightsManagerInterface $user_posting_rights_manager,
     RouteMatchInterface $route_match,
   ) {
     parent::__construct(
@@ -74,7 +78,8 @@ class UserPostsService extends ModerationServiceBase {
       $pager_manager,
       $pager_parameters,
       $request_stack,
-      $string_translation
+      $string_translation,
+      $user_posting_rights_manager
     );
     $this->routeMatch = $route_match;
   }
