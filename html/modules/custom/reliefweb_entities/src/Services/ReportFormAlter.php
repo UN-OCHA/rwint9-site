@@ -74,6 +74,8 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
    *   The state service.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The translation manager service.
+   * @param \Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface $user_posting_rights_manager
+   *   The user posting rights manager service.
    * @param \Drupal\reliefweb_files\Services\ReliefWebFileDuplicationInterface $file_duplication
    *   The file duplication service.
    * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
@@ -82,8 +84,6 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
    *   The renderer service.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger service.
-   * @param \Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface $user_posting_rights_manager
-   *   The user posting rights manager service.
    */
   public function __construct(
     $database,
@@ -92,11 +92,11 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     $entity_type_manager,
     $state,
     $string_translation,
+    UserPostingRightsManagerInterface $user_posting_rights_manager,
     ReliefWebFileDuplicationInterface $file_duplication,
     RequestStack $request_stack,
     RendererInterface $renderer,
     MessengerInterface $messenger,
-    UserPostingRightsManagerInterface $user_posting_rights_manager,
   ) {
     parent::__construct(
       $database,
@@ -104,13 +104,13 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
       $entity_field_manager,
       $entity_type_manager,
       $state,
-      $string_translation
+      $string_translation,
+      $user_posting_rights_manager,
     );
     $this->fileDuplication = $file_duplication;
     $this->requestStack = $request_stack;
     $this->renderer = $renderer;
     $this->messenger = $messenger;
-    $this->userPostingRightsManager = $user_posting_rights_manager;
   }
 
   /**
