@@ -5,10 +5,10 @@ services:
       - { name: event_subscriber }
   reliefweb_moderation.field_guideline.moderation:
     class: Drupal\reliefweb_guidelines\Services\GuidelineModeration
-    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation']
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights']
   reliefweb_moderation.guideline_list.moderation:
     class: Drupal\reliefweb_guidelines\Services\GuidelineListModeration
-    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation']
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights']
   reliefweb_entities.field_guideline.form_alter:
     class: Drupal\reliefweb_guidelines\Services\GuidelineFormAlter
     arguments: ['@database', '@current_user', '@entity_field.manager', '@entity_type.manager', '@state', '@string_translation']

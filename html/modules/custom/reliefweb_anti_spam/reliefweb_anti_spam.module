@@ -9,7 +9,6 @@ declare(strict_types=1);
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 
 /**
@@ -63,7 +62,8 @@ function reliefweb_anti_spam_node_form_validate(array &$form, FormStateInterface
 
   // Check submission frequency if the user has never been validated for any
   // source, meaning the user is not allowed or trusted for any source.
-  if (!UserPostingRightsHelper::isUserAllowedOrTrustedForAnySource($user, $bundle)) {
+  $user_posting_rights_manager = \Drupal::service('reliefweb_moderation.user_posting_rights');
+  if (!$user_posting_rights_manager->isUserAllowedOrTrustedForAnySource($user, $bundle)) {
     if ($config->get('post_limit.enabled') && !reliefweb_anti_spam_check_submission_frequency($user, $bundle, $node_id)) {
       $form_state->setError($form, $config->get('error_messages.submission_frequency'));
       $logger->warning('Submission frequency limit exceeded for user @uid', ['@uid' => $user->id()]);

@@ -52,3 +52,10 @@ view training moderation information:
   title: 'View training moderation information'
   description: 'Allow users to view the training moderation status and revision message.'
 
+apply posting rights:
+  title: 'Apply posting rights'
+  description: 'Allow users to have posting rights that will be applied for status mapping configuration and moderation decisions.'
+
+administer posting rights mapping:
+  title: 'Administer posting rights mapping'
+  description: 'Allow users to access and configure the posting rights status mapping form.'

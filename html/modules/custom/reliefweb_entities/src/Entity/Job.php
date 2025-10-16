@@ -12,6 +12,7 @@ use Drupal\reliefweb_entities\OpportunityDocumentInterface;
 use Drupal\reliefweb_entities\OpportunityDocumentTrait;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\EntityModeratedTrait;
+use Drupal\reliefweb_moderation\EntityWithPostingRightsTrait;
 use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_revisions\EntityRevisionedTrait;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
@@ -25,6 +26,7 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
   use DocumentTrait;
   use EntityModeratedTrait;
   use EntityRevisionedTrait;
+  use EntityWithPostingRightsTrait;
   use OpportunityDocumentTrait;
   use StringTranslationTrait;
 

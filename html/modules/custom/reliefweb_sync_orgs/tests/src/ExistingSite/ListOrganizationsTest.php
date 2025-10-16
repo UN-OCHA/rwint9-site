@@ -4,9 +4,14 @@
 
 namespace Drupal\Tests\reliefweb_sync_orgs\ExistingSite;
 
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
- * Test queue worker.
+ * Test list organizations.
  */
+#[RunTestsInSeparateProcesses]
+#[PreserveGlobalState(FALSE)]
 class ListOrganizationsTest extends ImportBase {
 
   /**

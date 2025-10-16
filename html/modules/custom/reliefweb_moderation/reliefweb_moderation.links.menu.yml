@@ -1,0 +1,6 @@
+reliefweb_moderation.posting_rights_mapping:
+  title: 'Posting Rights Status Mapping'
+  description: 'Configure moderation status mapping for different posting rights scenarios'
+  route_name: reliefweb_moderation.posting_rights_mapping
+  parent: system.admin_config_content
+  weight: 101

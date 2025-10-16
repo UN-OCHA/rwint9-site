@@ -5,7 +5,6 @@ namespace Drupal\reliefweb_moderation\Services;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
-use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 use Drupal\reliefweb_utility\Helpers\ReliefWebStateHelper;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
@@ -87,7 +86,8 @@ class JobModeration extends ModerationServiceBase {
       // User, source and country info.
       $info = [];
       // User posting rights.
-      $info['posting_rights'] = UserPostingRightsHelper::renderRight(UserPostingRightsHelper::getEntityAuthorPostingRights($entity));
+      $posting_rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($entity);
+      $info['posting_rights'] = $this->userPostingRightsManager->renderRight($posting_rights);
       // Author.
       $info['author'] = $this->getEntityAuthorData($entity);
       // Source.

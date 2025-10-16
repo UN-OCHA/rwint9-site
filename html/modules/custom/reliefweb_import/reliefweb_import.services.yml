@@ -9,7 +9,7 @@ services:
 
   reliefweb_moderation.reliefweb_import.moderation:
     class: Drupal\reliefweb_import\Service\ReliefWebImporterModeration
-    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@plugin.manager.reliefweb_import.reliefweb_importer']
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights', '@plugin.manager.reliefweb_import.reliefweb_importer']
 
   reliefweb_import.inoreader_service:
     class: 'Drupal\reliefweb_import\Service\InoreaderService'

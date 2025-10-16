@@ -17,12 +17,20 @@ use Drupal\Core\Url;
 use Drupal\reliefweb_import\Plugin\ReliefWebImporterPluginManager;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
+use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Moderation service for the report nodes.
  */
 class ReliefWebImporterModeration extends ModerationServiceBase {
+
+  /**
+   * The plugin manager.
+   *
+   * @var \Drupal\reliefweb_import\Plugin\ReliefWebImporterPluginManager
+   */
+  protected $pluginManager;
 
   /**
    * {@inheritdoc}
@@ -37,17 +45,22 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
     PagerParametersInterface $pager_parameters,
     RequestStack $request_stack,
     TranslationInterface $string_translation,
-    protected ReliefWebImporterPluginManager $pluginManager,
+    UserPostingRightsManagerInterface $user_posting_rights_manager,
+    ReliefWebImporterPluginManager $plugin_manager,
   ) {
-    $this->currentUser = $current_user;
-    $this->database = $database;
-    $this->dateFormatter = $date_formatter;
-    $this->entityFieldManager = $entity_field_manager;
-    $this->entityTypeManager = $entity_type_manager;
-    $this->pagerManager = $pager_manager;
-    $this->pagerParameters = $pager_parameters;
-    $this->requestStack = $request_stack;
-    $this->stringTranslation = $string_translation;
+    parent::__construct(
+      $current_user,
+      $database,
+      $date_formatter,
+      $entity_field_manager,
+      $entity_type_manager,
+      $pager_manager,
+      $pager_parameters,
+      $request_stack,
+      $string_translation,
+      $user_posting_rights_manager
+    );
+    $this->pluginManager = $plugin_manager;
   }
 
   /**

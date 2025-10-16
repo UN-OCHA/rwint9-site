@@ -90,4 +90,27 @@ class UserHelper {
     return $roles;
   }
 
+  /**
+   * Get the editing user role for a user.
+   *
+   * @param string $bundle
+   *   Entity bundle.
+   * @param \Drupal\Core\Session\AccountInterface $user
+   *   User account.
+   *
+   * @return string|null
+   *   Editing user role.
+   */
+  public static function getEditingUserRole(string $bundle, AccountInterface $user): ?string {
+    // The roles are ordered by precedence.
+    return match (TRUE) {
+      $bundle === 'report' && $user->hasRole('editor') => 'editor',
+      $bundle === 'report' && $user->hasRole('contributor') => 'contributor',
+      $bundle === 'report' && $user->hasRole('submitter') => 'submitter',
+      $bundle === 'job' && $user->hasRole('advertiser') => 'advertiser',
+      $bundle === 'training' && $user->hasRole('advertiser') => 'advertiser',
+      default => NULL,
+    };
+  }
+
 }

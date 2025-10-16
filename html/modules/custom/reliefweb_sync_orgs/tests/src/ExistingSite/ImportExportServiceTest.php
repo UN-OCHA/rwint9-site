@@ -3,10 +3,14 @@
 namespace Drupal\Tests\reliefweb_sync_orgs\ExistingSite;
 
 use Drupal\reliefweb_sync_orgs\Service\ImportExportService;
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test import export service.
  */
+#[RunTestsInSeparateProcesses]
+#[PreserveGlobalState(FALSE)]
 class ImportExportServiceTest extends ImportBase {
 
   /**

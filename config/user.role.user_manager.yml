@@ -21,6 +21,7 @@ permissions:
   - 'access user profiles'
   - 'administer subscriptions'
   - 'administer users'
+  - 'assign advertiser role'
   - 'assign api_user role'
   - 'assign beta_tester role'
   - 'assign contributor role'

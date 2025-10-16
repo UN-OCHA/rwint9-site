@@ -21,6 +21,7 @@ use Drupal\reliefweb_entities\Services\ReportFormAlter;
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile;
 use Drupal\reliefweb_files\Plugin\Field\FieldWidget\ReliefWebFile as ReliefWebFileWidget;
 use Drupal\reliefweb_files\Services\ReliefWebFileDuplicationInterface;
+use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
 use Drupal\Tests\UnitTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -105,6 +106,13 @@ class ReportFormAlterTest extends UnitTestCase {
   protected $messenger;
 
   /**
+   * The mocked user posting rights manager.
+   *
+   * @var \Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface|\PHPUnit\Framework\MockObject\MockObject
+   */
+  protected $userPostingRightsManager;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
@@ -120,6 +128,7 @@ class ReportFormAlterTest extends UnitTestCase {
     $this->requestStack = $this->createMock(RequestStack::class);
     $this->renderer = $this->createMock(RendererInterface::class);
     $this->messenger = $this->createMock(MessengerInterface::class);
+    $this->userPostingRightsManager = $this->createMock(UserPostingRightsManagerInterface::class);
 
     $container = new Container();
     \Drupal::setContainer($container);
@@ -156,6 +165,7 @@ class ReportFormAlterTest extends UnitTestCase {
       $this->entityTypeManager,
       $this->state,
       $this->stringTranslation,
+      $this->userPostingRightsManager,
       $this->fileDuplication,
       $this->requestStack,
       $this->renderer,
@@ -192,6 +202,7 @@ class ReportFormAlterTest extends UnitTestCase {
       $this->entityTypeManager,
       $this->state,
       $this->stringTranslation,
+      $this->userPostingRightsManager,
       $this->fileDuplication,
       $this->requestStack,
       $this->renderer,
@@ -257,6 +268,7 @@ class ReportFormAlterTest extends UnitTestCase {
       $this->entityTypeManager,
       $this->state,
       $this->stringTranslation,
+      $this->userPostingRightsManager,
       $this->fileDuplication,
       $this->requestStack,
       $this->renderer,
@@ -302,6 +314,7 @@ class ReportFormAlterTest extends UnitTestCase {
       $this->entityTypeManager,
       $this->state,
       $this->stringTranslation,
+      $this->userPostingRightsManager,
       $this->fileDuplication,
       $this->requestStack,
       $this->renderer,
@@ -478,6 +491,7 @@ class ReportFormAlterTest extends UnitTestCase {
       $this->entityTypeManager,
       $this->state,
       $this->stringTranslation,
+      $this->userPostingRightsManager,
       $this->fileDuplication,
       $this->requestStack,
       $this->renderer,

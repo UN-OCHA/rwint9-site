@@ -1,35 +1,38 @@
 services:
   reliefweb_moderation.announcement.moderation:
     class: Drupal\reliefweb_moderation\Services\AnnouncementModeration
-    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation']
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights']
   reliefweb_moderation.blog_post.moderation:
     class: Drupal\reliefweb_moderation\Services\BlogPostModeration
-    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation']
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights']
   reliefweb_moderation.book.moderation:
     class: Drupal\reliefweb_moderation\Services\BookModeration
-    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation']
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights']
   reliefweb_moderation.country.moderation:
     class: Drupal\reliefweb_moderation\Services\CountryModeration
-    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation']
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights']
   reliefweb_moderation.disaster.moderation:
     class: Drupal\reliefweb_moderation\Services\DisasterModeration
-    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation']
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights']
   reliefweb_moderation.job.moderation:
     class: Drupal\reliefweb_moderation\Services\JobModeration
-    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation']
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights']
   reliefweb_moderation.report.moderation:
     class: Drupal\reliefweb_moderation\Services\ReportModeration
-    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation']
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights']
   reliefweb_moderation.source.moderation:
     class: Drupal\reliefweb_moderation\Services\SourceModeration
-    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation']
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights']
   reliefweb_moderation.topic.moderation:
     class: Drupal\reliefweb_moderation\Services\TopicModeration
-    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation']
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights']
   reliefweb_moderation.training.moderation:
     class: Drupal\reliefweb_moderation\Services\TrainingModeration
-    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation']
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights']
   reliefweb_moderation.service.param_converter:
     class: Drupal\reliefweb_moderation\ParamConverter\ModerationServiceConverter
     tags:
       - { name: paramconverter }
+  reliefweb_moderation.user_posting_rights:
+    class: Drupal\reliefweb_moderation\Services\UserPostingRightsManager
+    arguments: ['@database', '@entity_type.manager', '@renderer', '@current_user', '@state']

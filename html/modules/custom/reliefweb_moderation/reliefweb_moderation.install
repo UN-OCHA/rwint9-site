@@ -101,3 +101,70 @@ function reliefweb_moderation_add_moderation_status($entity_type_id, $storage_sc
     $manager->updateFieldStorageDefinition($definition);
   }
 }
+
+/**
+ * Set default posting rights status mapping configuration.
+ */
+function reliefweb_moderation_update_11001() {
+  $state = \Drupal::state();
+
+  // Check if the state variable already exists to avoid overwriting existing
+  // configuration.
+  if ($state->get('reliefweb_posting_rights_status_mapping') === NULL) {
+    $default_mapping = [
+      'reliefweb_posting_rights_status_mapping' => [
+        'contributor' => [
+          'report' => [
+            'blocked' => 'refused',
+            'trusted_all' => 'published',
+            'trusted_some_allowed' => 'published',
+            'trusted_some_unverified' => 'published',
+            'allowed_all' => 'to-review',
+            'allowed_some_unverified' => 'to-review',
+            'unverified_all' => 'to-review',
+          ],
+          'job' => [],
+          'training' => [],
+        ],
+        'submitter' => [
+          'report' => [
+            'blocked' => 'refused',
+            'trusted_all' => 'to-review',
+            'trusted_some_allowed' => 'to-review',
+            'trusted_some_unverified' => 'to-review',
+            'allowed_all' => 'to-review',
+            'allowed_some_unverified' => 'to-review',
+            'unverified_all' => 'pending',
+          ],
+          'job' => [],
+          'training' => [],
+        ],
+        'advertiser' => [
+          'report' => [],
+          'job' => [
+            'blocked' => 'refused',
+            'trusted_all' => 'published',
+            'trusted_some_allowed' => 'published',
+            'trusted_some_unverified' => 'pending',
+            'allowed_all' => 'pending',
+            'allowed_some_unverified' => 'pending',
+            'unverified_all' => 'pending',
+          ],
+          'training' => [
+            'blocked' => 'refused',
+            'trusted_all' => 'published',
+            'trusted_some_allowed' => 'published',
+            'trusted_some_unverified' => 'pending',
+            'allowed_all' => 'pending',
+            'allowed_some_unverified' => 'pending',
+            'unverified_all' => 'pending',
+          ],
+        ],
+      ],
+    ];
+
+    $state->set('reliefweb_posting_rights_status_mapping', $default_mapping['reliefweb_posting_rights_status_mapping']);
+
+    \Drupal::logger('reliefweb_moderation')->info('Set default posting rights status mapping configuration.');
+  }
+}

@@ -4,9 +4,14 @@
 
 namespace Drupal\Tests\reliefweb_sync_orgs\ExistingSite;
 
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Test export.
  */
+#[RunTestsInSeparateProcesses]
+#[PreserveGlobalState(FALSE)]
 class ExportRecordsToTsvTest extends ImportBase {
 
   /**

@@ -23,7 +23,7 @@ use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
-use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
+use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
 use Drupal\reliefweb_utility\Helpers\EntityHelper;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
@@ -112,6 +112,13 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   protected $definitions;
 
   /**
+   * The user posting rights manager service.
+   *
+   * @var \Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface
+   */
+  protected $userPostingRightsManager;
+
+  /**
    * Constructor.
    *
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
@@ -132,6 +139,8 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
    *   The request stack.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The translation manager service.
+   * @param \Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface $user_posting_rights_manager
+   *   The user posting rights manager service.
    */
   public function __construct(
     AccountProxyInterface $current_user,
@@ -143,6 +152,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     PagerParametersInterface $pager_parameters,
     RequestStack $request_stack,
     TranslationInterface $string_translation,
+    UserPostingRightsManagerInterface $user_posting_rights_manager,
   ) {
     $this->currentUser = $current_user;
     $this->database = $database;
@@ -153,6 +163,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     $this->pagerParameters = $pager_parameters;
     $this->requestStack = $request_stack;
     $this->stringTranslation = $string_translation;
+    $this->userPostingRightsManager = $user_posting_rights_manager;
   }
 
   /**
@@ -318,7 +329,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
                 // they don't have the posting rights on it (due to being
                 // blocked for one of the sources for example).
                 if (!$access && $account->hasPermission('view own unpublished content')) {
-                  $access = $owner || UserPostingRightsHelper::userHasPostingRights($account, $entity, $status);
+                  $access = $owner || $this->userPostingRightsManager->userHasPostingRights($account, $entity, $status);
                 }
               }
               break;
@@ -333,7 +344,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
                 $access = TRUE;
               }
               elseif ($editable && $account->hasPermission('edit own ' . $bundle . ' content')) {
-                $access = UserPostingRightsHelper::userHasPostingRights($account, $entity, $status);
+                $access = $this->userPostingRightsManager->userHasPostingRights($account, $entity, $status);
               }
               break;
 
@@ -342,7 +353,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
                 $access = TRUE;
               }
               elseif ($account->hasPermission('delete own ' . $bundle . ' content')) {
-                $access = UserPostingRightsHelper::userHasPostingRights($account, $entity, $status);
+                $access = $this->userPostingRightsManager->userHasPostingRights($account, $entity, $status);
               }
               break;
 
@@ -352,7 +363,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
                   $access = TRUE;
                 }
                 elseif ($account->hasPermission('edit own ' . $bundle . ' content')) {
-                  $access = UserPostingRightsHelper::userHasPostingRights($account, $entity, $status);
+                  $access = $this->userPostingRightsManager->userHasPostingRights($account, $entity, $status);
                 }
               }
               break;

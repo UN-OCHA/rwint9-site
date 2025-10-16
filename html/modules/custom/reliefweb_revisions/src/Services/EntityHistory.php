@@ -23,7 +23,7 @@ use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
 use Drupal\media\MediaInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
-use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
+use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
 use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_utility\Helpers\EntityHelper;
@@ -93,6 +93,13 @@ class EntityHistory {
   protected $moduleHandler;
 
   /**
+   * The user posting rights manager.
+   *
+   * @var \Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface
+   */
+  protected $userPostingRightsManager;
+
+  /**
    * Base fields for which to show revisions grouped by entity type and bundle.
    *
    * @var array
@@ -125,6 +132,8 @@ class EntityHistory {
    *   The module handler service.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The translation manager service.
+   * @param \Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface $user_posting_rights_manager
+   *   The user posting rights manager service.
    */
   public function __construct(
     CacheBackendInterface $cache_backend,
@@ -135,6 +144,7 @@ class EntityHistory {
     EntityTypeManagerInterface $entity_type_manager,
     ModuleHandlerInterface $module_handler,
     TranslationInterface $string_translation,
+    UserPostingRightsManagerInterface $user_posting_rights_manager,
   ) {
     $this->cache = $cache_backend;
     $this->config = $config_factory->get('reliefweb_revisions.settings');
@@ -144,6 +154,7 @@ class EntityHistory {
     $this->entityTypeManager = $entity_type_manager;
     $this->moduleHandler = $module_handler;
     $this->stringTranslation = $string_translation;
+    $this->userPostingRightsManager = $user_posting_rights_manager;
   }
 
   /**
@@ -1031,8 +1042,8 @@ class EntityHistory {
       foreach (['job', 'training', 'report'] as $type) {
         if ($previous_item[$type] !== $current_item[$type]) {
           $item['change'] = new FormattableMarkup('@before &rarr; @after', [
-            '@before' => UserPostingRightsHelper::renderRight($rights[$previous_item[$type]]),
-            '@after' => UserPostingRightsHelper::renderRight($rights[$current_item[$type]]),
+            '@before' => $this->userPostingRightsManager->renderRight($rights[$previous_item[$type]]),
+            '@after' => $this->userPostingRightsManager->renderRight($rights[$current_item[$type]]),
           ]);
           $categories['modified-' . $type][] = $item;
         }
@@ -1073,9 +1084,9 @@ class EntityHistory {
           // Add the rights when a user is added.
           if ($category === 'added') {
             $markup[] = '(job: @job, training: @training, report: @report)';
-            $replacements['@job'] = UserPostingRightsHelper::renderRight($rights[$item['job']]);
-            $replacements['@training'] = UserPostingRightsHelper::renderRight($rights[$item['training']]);
-            $replacements['@report'] = UserPostingRightsHelper::renderRight($rights[$item['report']]);
+            $replacements['@job'] = $this->userPostingRightsManager->renderRight($rights[$item['job']]);
+            $replacements['@training'] = $this->userPostingRightsManager->renderRight($rights[$item['training']]);
+            $replacements['@report'] = $this->userPostingRightsManager->renderRight($rights[$item['report']]);
           }
 
           // Add the rights changes.
@@ -1163,8 +1174,8 @@ class EntityHistory {
       foreach (['job', 'training', 'report'] as $type) {
         if ($previous_item[$type] !== $current_item[$type]) {
           $item['change'] = new FormattableMarkup('@before &rarr; @after', [
-            '@before' => UserPostingRightsHelper::renderRight($rights[$previous_item[$type]]),
-            '@after' => UserPostingRightsHelper::renderRight($rights[$current_item[$type]]),
+            '@before' => $this->userPostingRightsManager->renderRight($rights[$previous_item[$type]]),
+            '@after' => $this->userPostingRightsManager->renderRight($rights[$current_item[$type]]),
           ]);
           $categories['modified-' . $type][] = $item;
         }
@@ -1197,9 +1208,9 @@ class EntityHistory {
           // Add the rights when a domain is added.
           if ($category === 'added') {
             $markup[] = '(job: @job, training: @training, report: @report)';
-            $replacements['@job'] = UserPostingRightsHelper::renderRight($rights[$item['job']]);
-            $replacements['@training'] = UserPostingRightsHelper::renderRight($rights[$item['training']]);
-            $replacements['@report'] = UserPostingRightsHelper::renderRight($rights[$item['report']]);
+            $replacements['@job'] = $this->userPostingRightsManager->renderRight($rights[$item['job']]);
+            $replacements['@training'] = $this->userPostingRightsManager->renderRight($rights[$item['training']]);
+            $replacements['@report'] = $this->userPostingRightsManager->renderRight($rights[$item['report']]);
           }
 
           // Add the rights changes.

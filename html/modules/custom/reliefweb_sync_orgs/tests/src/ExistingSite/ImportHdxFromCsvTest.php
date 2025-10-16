@@ -4,9 +4,14 @@
 
 namespace Drupal\Tests\reliefweb_sync_orgs\ExistingSite;
 
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
- * Import organizations from CSV.
+ * Test import HDX from CSV.
  */
+#[RunTestsInSeparateProcesses]
+#[PreserveGlobalState(FALSE)]
 class ImportHdxFromCsvTest extends ImportBase {
 
   /**
