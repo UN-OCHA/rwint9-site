@@ -16,7 +16,7 @@ use Drupal\reliefweb_files\Plugin\Field\FieldWidget\ReliefWebFile as ReliefWebFi
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile as ReliefWebFileItem;
 use Drupal\reliefweb_files\Services\ReliefWebFileDuplicationInterface;
 use Drupal\reliefweb_form\Helpers\FormHelper;
-use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
+use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
@@ -53,6 +53,13 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
   protected $messenger;
 
   /**
+   * The user posting rights manager.
+   *
+   * @var \Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface
+   */
+  protected $userPostingRightsManager;
+
+  /**
    * Constructor.
    *
    * @param \Drupal\Core\Database\Connection $database
@@ -67,6 +74,8 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
    *   The state service.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The translation manager service.
+   * @param \Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface $user_posting_rights_manager
+   *   The user posting rights manager service.
    * @param \Drupal\reliefweb_files\Services\ReliefWebFileDuplicationInterface $file_duplication
    *   The file duplication service.
    * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
@@ -83,6 +92,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     $entity_type_manager,
     $state,
     $string_translation,
+    UserPostingRightsManagerInterface $user_posting_rights_manager,
     ReliefWebFileDuplicationInterface $file_duplication,
     RequestStack $request_stack,
     RendererInterface $renderer,
@@ -94,7 +104,8 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
       $entity_field_manager,
       $entity_type_manager,
       $state,
-      $string_translation
+      $string_translation,
+      $user_posting_rights_manager,
     );
     $this->fileDuplication = $file_duplication;
     $this->requestStack = $request_stack;
@@ -522,7 +533,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
       }
     }
 
-    $rights = UserPostingRightsHelper::getUserConsolidatedPostingRight($this->currentUser, 'report', $ids);
+    $rights = $this->userPostingRightsManager->getUserConsolidatedPostingRight($this->currentUser, 'report', $ids);
     // Blocked for at least one source.
     if (!empty($rights) && isset($rights['code']) && $rights['code'] == 1) {
       $sources = $this->getEntityTypeManager()

@@ -30,3 +30,13 @@ reliefweb_moderation.content.autocomplete:
     _custom_access: '\Drupal\reliefweb_moderation\Controller\ModerationPage::checkAccess'
     service: "[a-z0-9_]+"
     filter: "[a-z0-9_]+"
+
+reliefweb_moderation.posting_rights_mapping:
+  path: '/admin/config/reliefweb/posting-rights-mapping'
+  defaults:
+    _form: '\Drupal\reliefweb_moderation\Form\PostingRightsStatusMappingForm'
+    _title: 'Posting Rights Status Mapping'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'administer posting rights mapping'

@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\reliefweb_users\ExistingSite\Service;
 
-use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
+use Drupal\taxonomy\TermInterface;
+use Drupal\taxonomy\VocabularyInterface;
 use Drupal\user\Entity\User;
 use Drupal\user\Entity\Role;
 use Drupal\user\UserInterface;
+use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
 use Drupal\reliefweb_users\Service\UserRoleAssignment;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -25,51 +27,78 @@ class UserRoleAssignmentTest extends ExistingSiteBase {
 
   /**
    * Source vocabulary.
+   *
+   * @var \Drupal\taxonomy\VocabularyInterface
    */
-  protected Vocabulary $sourceVocabulary;
+  protected VocabularyInterface $sourceVocabulary;
 
   /**
    * Test user for role assignment tests.
+   *
+   * @var \Drupal\user\UserInterface
    */
-  protected User $testUser;
+  protected UserInterface $testUser;
 
   /**
    * Test user with un.org domain.
+   *
+   * @var \Drupal\user\UserInterface
    */
-  protected User $unUser;
+  protected UserInterface $unUser;
 
   /**
    * Test user with different domain.
+   *
+   * @var \Drupal\user\UserInterface
    */
-  protected User $otherDomainUser;
+  protected UserInterface $otherDomainUser;
 
   /**
    * Test source entity for posting rights tests.
+   *
+   * @var \Drupal\taxonomy\TermInterface
    */
-  protected Term $testSource;
+  protected TermInterface $testSource;
 
   /**
    * Test source with only user posting rights.
+   *
+   * @var \Drupal\taxonomy\TermInterface
    */
-  protected Term $userOnlySource;
+  protected TermInterface $userOnlySource;
 
   /**
    * Test source with only domain posting rights.
+   *
+   * @var \Drupal\taxonomy\TermInterface
    */
-  protected Term $domainOnlySource;
+  protected TermInterface $domainOnlySource;
 
   /**
    * Test source with no posting rights.
+   *
+   * @var \Drupal\taxonomy\TermInterface
    */
-  protected Term $noRightsSource;
+  protected TermInterface $noRightsSource;
 
   /**
    * UserRoleAssignment service.
+   *
+   * @var \Drupal\reliefweb_users\Service\UserRoleAssignment
    */
   protected UserRoleAssignment $userRoleAssignment;
 
   /**
+   * User posting rights manager service.
+   *
+   * @var \Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface
+   */
+  protected UserPostingRightsManagerInterface $userPostingRightsManager;
+
+  /**
    * Original state values to restore after tests.
+   *
+   * @var array
    */
   protected array $originalStateValues = [];
 
@@ -177,8 +206,11 @@ class UserRoleAssignmentTest extends ExistingSiteBase {
       'name' => 'No Rights Source',
     ]);
 
-    // Get the service.
+    // Get the user role assignment service.
     $this->userRoleAssignment = \Drupal::service('reliefweb_users.user_role_assignment');
+
+    // Get the user posting rights manager service.
+    $this->userPostingRightsManager = \Drupal::service('reliefweb_moderation.user_posting_rights');
 
     // Store original state values and set up test configuration.
     $this->storeOriginalStateValues();
@@ -190,7 +222,7 @@ class UserRoleAssignmentTest extends ExistingSiteBase {
    */
   protected function tearDown(): void {
     // Reset static cache.
-    drupal_static_reset('reliefweb_moderation_getUserPostingRights');
+    $this->userPostingRightsManager->resetCache();
 
     // Restore original state values.
     $this->restoreOriginalStateValues();

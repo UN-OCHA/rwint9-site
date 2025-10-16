@@ -7,7 +7,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
-use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
+use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -20,9 +20,12 @@ class UserPostingRightsForm extends FormBase {
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
+   * @param \Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface $userPostingRightsManager
+   *   The user posting rights manager service.
    */
   public function __construct(
     protected EntityTypeManagerInterface $entityTypeManager,
+    protected UserPostingRightsManagerInterface $userPostingRightsManager,
   ) {}
 
   /**
@@ -30,7 +33,8 @@ class UserPostingRightsForm extends FormBase {
    */
   public static function create(ContainerInterface $container): static {
     return new static(
-      $container->get('entity_type.manager')
+      $container->get('entity_type.manager'),
+      $container->get('reliefweb_moderation.user_posting_rights')
     );
   }
 
@@ -49,8 +53,8 @@ class UserPostingRightsForm extends FormBase {
     $form_state->set('user', $user);
 
     // Get user posting rights and domain posting rights separately.
-    $user_sources = UserPostingRightsHelper::getSourcesWithUserPostingRightsForUser($user);
-    $domain_sources = UserPostingRightsHelper::getSourcesWithDomainPostingRightsForUser($user);
+    $user_sources = $this->userPostingRightsManager->getSourcesWithUserPostingRightsForUser($user);
+    $domain_sources = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForUser($user);
 
     // Build the existing rights table.
     $user_entity = $this->entityTypeManager->getStorage('user')->load($user->id());

@@ -37,3 +37,4 @@ permissions:
   - 'view own posts'
   - 'view own unpublished media'
   - 'view report moderation information'
+  - 'apply posting rights'

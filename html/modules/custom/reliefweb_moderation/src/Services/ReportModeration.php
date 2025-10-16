@@ -11,7 +11,6 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
-use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
 
@@ -126,7 +125,8 @@ class ReportModeration extends ModerationServiceBase {
 
       // User posting rights.
       if ($entity instanceof NodeInterface && $entity->getOwner()->hasRole('contributor')) {
-        $info['posting_rights'] = UserPostingRightsHelper::renderRight(UserPostingRightsHelper::getEntityAuthorPostingRights($entity));
+        $posting_rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($entity);
+        $info['posting_rights'] = $this->userPostingRightsManager->renderRight($posting_rights);
       }
 
       // Country.
@@ -487,7 +487,7 @@ class ReportModeration extends ModerationServiceBase {
   public function entityCreateAccess(AccountInterface $account): AccessResultInterface {
     $access_result = parent::entityCreateAccess($account);
     // Disallow report creation for submitters without posting rights.
-    if ($account->hasPermission('create report only if allowed or trusted for a source') && !UserPostingRightsHelper::isUserAllowedOrTrustedForAnySource($account, $this->getBundle())) {
+    if ($account->hasPermission('create report only if allowed or trusted for a source') && !$this->userPostingRightsManager->isUserAllowedOrTrustedForAnySource($account, $this->getBundle())) {
       return AccessResult::forbidden();
     }
     return $access_result;
@@ -513,8 +513,8 @@ class ReportModeration extends ModerationServiceBase {
 
     $allowed = match($operation) {
       'view' => $owner,
-      'create' => UserPostingRightsHelper::isUserAllowedOrTrustedForAnySource($account, $this->getBundle()),
-      'update' => $owner && UserPostingRightsHelper::isUserAllowedOrTrustedForAnySource($account, $this->getBundle()),
+      'create' => $this->userPostingRightsManager->isUserAllowedOrTrustedForAnySource($account, $this->getBundle()),
+      'update' => $owner && $this->userPostingRightsManager->isUserAllowedOrTrustedForAnySource($account, $this->getBundle()),
       'delete' => FALSE,
       'view_moderation_information' => !$access_result->isForbidden(),
       default => !$access_result->isForbidden(),

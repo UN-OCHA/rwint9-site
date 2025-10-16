@@ -9,7 +9,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Session\AccountSwitcherInterface;
 use Drupal\Core\State\StateInterface;
-use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
+use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
 use Drupal\user\UserInterface;
 
 /**
@@ -30,6 +30,8 @@ class UserRoleAssignment {
    *   The database connection.
    * @param \Drupal\Core\State\StateInterface $state
    *   The state service.
+   * @param \Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface $userPostingRightsManager
+   *   The user posting rights manager service.
    */
   public function __construct(
     private readonly EntityTypeManagerInterface $entityTypeManager,
@@ -37,6 +39,7 @@ class UserRoleAssignment {
     private readonly LoggerChannelFactoryInterface $loggerFactory,
     private readonly Connection $database,
     private readonly StateInterface $state,
+    private readonly UserPostingRightsManagerInterface $userPostingRightsManager,
   ) {}
 
   /**
@@ -217,7 +220,7 @@ class UserRoleAssignment {
     }
 
     // Check if the user has job/training/report posting rights for any source.
-    $sources = UserPostingRightsHelper::getSourcesWithPostingRightsForUser($user, $bundle_rights, 'OR', 1);
+    $sources = $this->userPostingRightsManager->getSourcesWithPostingRightsForUser($user, $bundle_rights, 'OR', 1);
     return !empty($sources);
   }
 
