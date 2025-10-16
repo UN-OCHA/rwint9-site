@@ -1,6 +1,6 @@
 hdx:
   id: id
-  name: 'HDX'
+  name: HDX
   label_field: display_name
   mapping:
     display_name: name
@@ -21,7 +21,7 @@ hdx:
       - ' (inactive)'
 hpc:
   id: org_id
-  name: 'HPC'
+  name: HPC
   label_field: org_name
   mapping:
     org_name: name
@@ -37,7 +37,7 @@ hpc:
     - org_name
 iati:
   id: iati_organisation_identifier
-  name: 'IATI'
+  name: IATI
   label_field: publisher
   mapping:
     publisher: name

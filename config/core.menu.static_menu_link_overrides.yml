@@ -8,8 +8,8 @@ definitions:
     expanded: true
     enabled: true
   masquerade__unmasquerade:
-    weight: -43
-    parent: user.page
     menu_name: account
-    enabled: true
+    parent: user.page
+    weight: -43
     expanded: false
+    enabled: true
