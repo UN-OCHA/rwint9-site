@@ -22,11 +22,16 @@ dependencies:
     - taxonomy.vocabulary.disaster
     - taxonomy.vocabulary.source
     - taxonomy.vocabulary.tag
+    - user.role.authenticated
+    - user.role.contributor
+    - user.role.submitter
+    - user.role.topic_editor
   module:
     - book
     - contact
     - filter
     - guidelines
+    - masquerade
     - media
     - node
     - ocha_content_classification
@@ -161,6 +166,10 @@ permissions:
   - 'edit terms in source'
   - 'edit terms in tag'
   - 'edit user posting rights'
+  - 'masquerade as authenticated'
+  - 'masquerade as contributor'
+  - 'masquerade as submitter'
+  - 'masquerade as topic_editor'
   - 'requeue node job for ocha content classification'
   - 'requeue node report for ocha content classification'
   - 'revert all taxonomy revisions'

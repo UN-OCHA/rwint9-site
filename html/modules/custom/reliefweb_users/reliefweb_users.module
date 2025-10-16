@@ -42,6 +42,25 @@ function reliefweb_users_menu_local_tasks_alter(array &$data, $route_name, Refin
   if (isset($data['tabs'][0]['entity.user.canonical'])) {
     $data['tabs'][0]['entity.user.canonical']['#link']['title'] = t('Dashboard');
   }
+
+  if (isset($data['tabs'][0]['reliefweb_users.masquerade'])) {
+    $masquerade = \Drupal::service('masquerade');
+
+    // Hide the masquerade tab when already masquerading.
+    if ($masquerade->isMasquerading()) {
+      $data['tabs'][0]['reliefweb_users.masquerade']['#access'] = FALSE;
+    }
+
+    // Hide the masquerade tab when the current user is on own profile.
+    $current_user = \Drupal::currentUser();
+    $route_parameters = \Drupal::routeMatch()->getParameters()->all();
+    if (isset($route_parameters['user']) && $route_parameters['user'] instanceof UserInterface) {
+      $user = $route_parameters['user'];
+      if ($user->id() === $current_user->id()) {
+        $data['tabs'][0]['reliefweb_users.masquerade']['#access'] = FALSE;
+      }
+    }
+  }
 }
 
 /**
@@ -351,6 +370,7 @@ function reliefweb_users_preprocess_user(array &$variables): void {
       '#attributes' => ['class' => ['user-links-list']],
     ];
   }
+
 }
 
 /**
@@ -358,4 +378,11 @@ function reliefweb_users_preprocess_user(array &$variables): void {
  */
 function reliefweb_users_user_login(UserInterface $user): void {
   \Drupal::service('reliefweb_users.user_role_assignment')->assignEligibleRoles($user);
+}
+
+/**
+ * Implements hook_menu_links_discovered_alter().
+ */
+function reliefweb_users_menu_links_discovered_alter(&$links) {
+  $links['masquerade.unmasquerade']['options'] = ['query' => ['destination' => '/user']];
 }
