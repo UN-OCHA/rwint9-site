@@ -1017,8 +1017,8 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
       ->execute()
       ?->fetch(FetchAs::Associative) ?? [];
 
-    if (!is_array($record) || empty($record)) {
-      return [];
+    if (empty($record) || !is_array($record)) {
+      return NULL;
     }
 
     // Deserialize the extra field.
